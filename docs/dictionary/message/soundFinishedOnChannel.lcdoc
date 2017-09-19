@@ -2,7 +2,7 @@ Name: soundFinishedOnChannel
 
 Type: message
 
-Syntax: soundFinishedOnChannel <channel>, <sound>
+Syntax: soundFinishedOnChannel <pChannel>, <pSound>
 
 Summary:
 Sent to the object which played a sound when a sound finishes playing.
@@ -26,10 +26,10 @@ on soundFinishedOnChannel pChannel, pSound
 end soundFinishedOnChannel
 
 Parameters:
-channel:
+pChannel:
 The name of the channel the sound was played on.
 
-sound:
+pSound:
 The sound file that was played.
 
 Description:

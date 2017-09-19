@@ -303,7 +303,8 @@ enum MCExternalLicenseType
 {
 	kMCExternalLicenseTypeNone = 0,
 	kMCExternalLicenseTypeCommunity = 1000,
-	kMCExternalLicenseTypeIndy = 2000,
+    kMCExternalLicenseTypeCommunityPlus = 1500,
+    kMCExternalLicenseTypeIndy = 2000,
 	kMCExternalLicenseTypeBusiness = 3000,
 };
 

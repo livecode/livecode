@@ -23,6 +23,10 @@ else
 LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(LCS_TESTS_DIR)
 endif
 
+LCS_SERVER_ENGINE ?= $(bin_dir)/server-community
+LCS_SERVER_TESTRUNNER ?= $(top_srcdir)/tests/_testrunner.lc
+LCS_SERVER_CMD = $(LCS_SERVER_ENGINE) $(LCS_SERVER_TESTRUNNER) run $(LCS_TESTS_DIR)
+
 ########## LiveCode Builder test parameters
 
 MODULE_DIR ?= $(bin_dir)/modules/lci
@@ -76,7 +80,7 @@ LC_COMPILE_FFI_JAVA_LOG = _lc-compile-ffi-java_test_suite.log
 
 .DEFAULT: check
 
-check: lcs-check lcb-check compiler-check lc-compile-ffi-java-check lcs-parser-check
+check: lcs-check lcs-server-check lcb-check compiler-check lc-compile-ffi-java-check lcs-parser-check
 
 clean:
 	-rm -rf $(TEST_DIR) $(LCS_LOG) $(LCB_LOG)
@@ -146,6 +150,19 @@ lcs-check: $(LCS_ENGINE) lcm_compile
 	$$cmd
 
 .PHONY: lcs-check
+
+################################################################
+# Server-based tests
+################################################################
+
+lcs-server-check: $(LCS_SERVER_ENGINE) lcm_compile
+	@rm -f $(LCS_LOG)
+	@export TEST_SUITE_LOG_FILE="$(LCS_LOG)"; \
+	cmd="$(LCS_SERVER_CMD)"; \
+	echo "$$cmd" $(_PRINT_RULE); \
+	$$cmd
+
+.PHONY: lcs-server-check
 
 ################################################################
 # LCB compiler tests

@@ -677,6 +677,7 @@ typedef struct __MCStream *MCStreamRef;
 typedef struct __MCProperList *MCProperListRef;
 typedef struct __MCForeignValue *MCForeignValueRef;
 typedef struct __MCJavaObject *MCJavaObjectRef;
+typedef struct __MCObjcObject *MCObjcObjectRef;
 
 // Forward declaration
 typedef struct __MCLocale* MCLocaleRef;
@@ -1643,6 +1644,13 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCSIntPtrTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef MCForeignUIntPtrTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCForeignSIntPtrTypeInfo(void) ATTRIBUTE_PURE;
 
+MC_DLLEXPORT extern MCTypeInfoRef kMCNaturalUIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCNaturalSIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCNaturalFloatTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignNaturalUIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignNaturalSIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignNaturalFloatTypeInfo(void) ATTRIBUTE_PURE;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCCBoolTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef MCForeignCBoolTypeInfo(void) ATTRIBUTE_PURE;
 
@@ -1742,7 +1750,7 @@ MC_DLLEXPORT bool MCBuiltinTypeInfoCreate(MCValueTypeCode typecode, MCTypeInfoRe
 
 //////////
 
-enum MCForeignPrimitiveType
+enum MCForeignPrimitiveType : uint8_t
 {
     kMCForeignPrimitiveTypeVoid,
     kMCForeignPrimitiveTypeBool,
@@ -1769,13 +1777,21 @@ struct MCForeignTypeDescriptor
     bool (*initialize)(void *contents);
     void (*finalize)(void *contents);
     bool (*defined)(void *contents);
-    bool (*move)(void *source, void *target);
-    bool (*copy)(void *source, void *target);
-    bool (*equal)(void *left, void *right, bool& r_equal);
-    bool (*hash)(void *contents, hash_t& r_hash);
-    bool (*doimport)(void *contents, bool release, MCValueRef& r_value);
-    bool (*doexport)(MCValueRef value, bool release, void *contents);
-	bool (*describe)(void *contents, MCStringRef & r_desc);
+    bool (*move)(const MCForeignTypeDescriptor* desc, void *source, void *target);
+    bool (*copy)(const MCForeignTypeDescriptor* desc, void *source, void *target);
+    bool (*equal)(const MCForeignTypeDescriptor* desc, void *left, void *right, bool& r_equal);
+    bool (*hash)(const MCForeignTypeDescriptor* desc, void *contents, hash_t& r_hash);
+    bool (*doimport)(const MCForeignTypeDescriptor* desc, void *contents, bool release, MCValueRef& r_value);
+    bool (*doexport)(const MCForeignTypeDescriptor* desc, MCValueRef value, bool release, void *contents);
+	bool (*describe)(const MCForeignTypeDescriptor* desc, void *contents, MCStringRef & r_desc);
+    
+    /* The promotedtype typeinfo is the type to which this type must be promoted
+     * when passed through variadic parameters. The 'promote' method does the
+     * promotion. */
+    MCTypeInfoRef promotedtype;
+    /* Promote the value in contents as necessary. The slot ptr must be big enough
+     * to hold the promotedtype. */
+    void (*promote)(void *contents);
 };
 
 MC_DLLEXPORT bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *descriptor, MCTypeInfoRef& r_typeinfo);
@@ -1866,6 +1882,7 @@ enum MCHandlerTypeFieldMode
 	kMCHandlerTypeFieldModeIn,
 	kMCHandlerTypeFieldModeOut,
 	kMCHandlerTypeFieldModeInOut,
+    kMCHandlerTypeFieldModeVariadic,
 };
 
 struct MCHandlerTypeFieldInfo
@@ -1890,12 +1907,16 @@ MC_DLLEXPORT bool MCForeignHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *f
 
 // Returns true if the handler is of foreign type.
 MC_DLLEXPORT bool MCHandlerTypeInfoIsForeign(MCTypeInfoRef typeinfo);
+
+// Returns true if the handler is variadic.
+MC_DLLEXPORT bool MCHandlerTypeInfoIsVariadic(MCTypeInfoRef typeinfo);
     
 // Get the return type of the handler. A return-type of kMCNullTypeInfo means no
 // value is returned.
 MC_DLLEXPORT MCTypeInfoRef MCHandlerTypeInfoGetReturnType(MCTypeInfoRef typeinfo);
 
-// Get the number of parameters the handler takes.
+// Get the number of parameters the handler takes. If the handler is variadic,
+// this returns the number of fixed parameters.
 MC_DLLEXPORT uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef typeinfo);
 
 // Return the mode of the index'th parameter.
@@ -2010,54 +2031,6 @@ MC_DLLEXPORT extern MCNumberRef kMCMinusOne;
 #define DBL_INT_MAX     (1LL << DBL_MANT_DIG)   /* the maximum integer faithfully representable by a double */
 #define DBL_INT_MIN     (-DBL_INT_MAX)          /* the minimum integer faithfully representable by a double */
 
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  NAME DEFINITIONS
-//
-
-// Like MCSTR but for NameRefs
-MC_DLLEXPORT MCNameRef MCNAME(const char *);
-
-// Create a name using the given string.
-MC_DLLEXPORT bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
-// Create a name using chars.
-MC_DLLEXPORT bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
-// Create a name using native chars.
-MC_DLLEXPORT bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
-
-// Create a name using the given string, releasing the original.
-MC_DLLEXPORT bool MCNameCreateAndRelease(MCStringRef string, MCNameRef& r_name);
-
-// Looks for an existing name matching the given string.
-MC_DLLEXPORT MCNameRef MCNameLookup(MCStringRef string);
-
-// Returns a unsigned integer which can be used to order a table for a binary
-// search.
-MC_DLLEXPORT uintptr_t MCNameGetCaselessSearchKey(MCNameRef name);
-
-// Returns the string content of the name.
-MC_DLLEXPORT MCStringRef MCNameGetString(MCNameRef name);
-
-// Returns true if the given name is the empty name.
-MC_DLLEXPORT bool MCNameIsEmpty(MCNameRef name);
-
-}
-
-// Returns true if the names are equal (caselessly). Note that MCNameIsEqualTo
-// is *not* the same as MCValueIsEqualTo as it is a comparison up to case (of
-// the name's string) rather than exact.
-bool MCNameIsEqualTo(MCNameRef left, MCNameRef right);
-bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensitive, bool p_form_sensitive);
-
-extern "C" {
-
-// The empty name object;
-MC_DLLEXPORT extern MCNameRef kMCEmptyName;
-
-MC_DLLEXPORT extern MCNameRef kMCTrueName;
-MC_DLLEXPORT extern MCNameRef kMCFalseName;
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  STRING DEFINITIONS
@@ -2144,6 +2117,9 @@ MC_DLLEXPORT extern MCStringRef kMCLineEndString;
 
 // The default string for '\t'.
 MC_DLLEXPORT extern MCStringRef kMCTabString;
+
+// The default string for '\0'.
+MC_DLLEXPORT extern MCStringRef kMCNulString;
 
 /////////
 
@@ -2710,6 +2686,85 @@ MC_DLLEXPORT bool MCStringNormalizedCopyNFKD(MCStringRef, MCStringRef&);
 MC_DLLEXPORT bool MCStringSetNumericValue(MCStringRef self, double p_value);
 MC_DLLEXPORT bool MCStringGetNumericValue(MCStringRef self, double &r_value);
 
+enum MCStringLineEndingStyle
+{
+    kMCStringLineEndingStyleLF,
+    kMCStringLineEndingStyleCR,
+    kMCStringLineEndingStyleCRLF,
+#if defined(__CRLF__)
+    kMCStringLineEndingStyleLegacyNative = kMCStringLineEndingStyleCRLF,
+#elif defined(__CR__)
+    kMCStringLineEndingStyleLegacyNative = kMCStringLineEndingStyleCR,
+#elif defined(__LF__)
+    kMCStringLineEndingStyleLegacyNative = kMCStringLineEndingStyleLF,
+#else
+#error Unknown default line ending style (no __CRLF__, __CR__, __LF__ definition)
+#endif
+};
+
+typedef uint32_t MCStringLineEndingOptions;
+enum
+{
+  /* Normalize any occurrence of PS (paragraph separator) to the specified line-ending style */
+  kMCStringLineEndingOptionNormalizePSToLineEnding = 1 << 0,
+  /* Normalize any occurrence of LS (line separator) to VT (vertical tab) */
+  kMCStringLineEndingOptionNormalizeLSToVT = 1 << 1,
+};
+
+// Converts LF, CR, CRLF line endings in p_input to p_to_style line endings and
+// places the result into r_output. PS to p_to_style and LS to VTAB conversions
+// are performed if the appropriate flags are set in p_options. Detected line
+// endings of p_input are returned in r_original_style.
+MC_DLLEXPORT bool
+MCStringNormalizeLineEndings(MCStringRef p_input, 
+                             MCStringLineEndingStyle p_to_style, 
+                             MCStringLineEndingOptions p_options,
+                             MCStringRef& r_output, 
+                             MCStringLineEndingStyle* r_original_style);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  NAME DEFINITIONS
+//
+
+// Like MCSTR but for NameRefs
+MC_DLLEXPORT MCNameRef MCNAME(const char *);
+
+// Create a name using the given string.
+MC_DLLEXPORT bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
+// Create a name using chars.
+MC_DLLEXPORT bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
+// Create a name using native chars.
+MC_DLLEXPORT bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
+
+// Create a name using the given string, releasing the original.
+MC_DLLEXPORT bool MCNameCreateAndRelease(MCStringRef string, MCNameRef& r_name);
+
+// Looks for an existing name matching the given string.
+MC_DLLEXPORT MCNameRef MCNameLookupCaseless(MCStringRef string);
+
+// Returns a unsigned integer which can be used to order a table for a binary
+// search.
+MC_DLLEXPORT uintptr_t MCNameGetCaselessSearchKey(MCNameRef name);
+
+// Returns the string content of the name.
+MC_DLLEXPORT MCStringRef MCNameGetString(MCNameRef name);
+
+// Returns true if the given name is the empty name.
+MC_DLLEXPORT bool MCNameIsEmpty(MCNameRef name);
+
+// Returns true if the names are equal under the options specified by options.
+MC_DLLEXPORT bool MCNameIsEqualTo(MCNameRef left, MCNameRef right, MCStringOptions p_options);
+
+// Returns true if the names are equal caselessly.
+MC_DLLEXPORT bool MCNameIsEqualToCaseless(MCNameRef left, MCNameRef right);
+
+// The empty name object;
+MC_DLLEXPORT extern MCNameRef kMCEmptyName;
+
+MC_DLLEXPORT extern MCNameRef kMCTrueName;
+MC_DLLEXPORT extern MCNameRef kMCFalseName;
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  DATA DEFINITIONS
@@ -2799,13 +2854,9 @@ MC_DLLEXPORT extern MCArrayRef kMCEmptyArray;
 
 // Create an immutable array containing the given keys and values.
 MC_DLLEXPORT bool MCArrayCreate(bool case_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
-// Create an immutable array containing the given keys and values with the requested string comparison options.
-MC_DLLEXPORT bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
 
 // Create an empty mutable array.
 MC_DLLEXPORT bool MCArrayCreateMutable(MCArrayRef& r_array);
-// Create an empty mutable array with the requested string comparison options.
-MC_DLLEXPORT bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive, bool p_form_sensitive);
 
 // Make an immutable copy of the given array. If the 'copy and release' form is
 // used then the original array is released (has its reference count reduced by
@@ -2824,11 +2875,6 @@ MC_DLLEXPORT bool MCArrayIsMutable(MCArrayRef array);
 
 // Returns the number of elements in the array.
 MC_DLLEXPORT uindex_t MCArrayGetCount(MCArrayRef array);
-
-// Returns whether the keys of the array have been predesignated case sensitive or not.
-MC_DLLEXPORT bool MCArrayIsCaseSensitive(MCArrayRef array);
-// Returns whether the keys of the array have been predesignated form sensitive or not.
-MC_DLLEXPORT bool MCArrayIsFormSensitive(MCArrayRef array);
 
 // Fetch the value from the array with the given key. The returned value is
 // not retained. If being stored elsewhere ValueCopy should be used to make an
@@ -3001,8 +3047,19 @@ MC_DLLEXPORT bool MCHandlerCreate(MCTypeInfoRef typeinfo, const MCHandlerCallbac
 MC_DLLEXPORT void *MCHandlerGetContext(MCHandlerRef handler);
 MC_DLLEXPORT const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef handler);
     
+/* Invoke the given handler with the specified arguments. If an error is thrown
+ * then false is returned.
+ * Note: The normal version must be called from the engine thread. Use
+ *       ExternalInvoke if the current thread is unknown. */
 MC_DLLEXPORT bool MCHandlerInvoke(MCHandlerRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+MC_DLLEXPORT bool MCHandlerExternalInvoke(MCHandlerRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+
+/* Invoke the given handler with the specified arguments. If an error is thrown
+ * then the error object is returned.
+ * Note: The normal version must be called from the engine thread. Use
+ *       ExternalInvoke if the current thread is unknown. */
 MC_DLLEXPORT /*copy*/ MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef handler, MCProperListRef& x_arguments, MCValueRef& r_value);
+MC_DLLEXPORT /*copy*/ MCErrorRef MCHandlerTryToExternalInvokeWithList(MCHandlerRef handler, MCProperListRef& x_arguments, MCValueRef& r_value);
     
 MC_DLLEXPORT bool MCHandlerGetFunctionPtr(MCHandlerRef handler, void*& r_func_ptr);
 
@@ -3349,7 +3406,7 @@ typedef bool (*MCProperListMapCallback)(void *context, MCValueRef element, MCVal
 MC_DLLEXPORT bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list, void *context);
 
 // Sort list by comparing elements using the provided callback.
-typedef compare_t (*MCProperListQuickSortCallback)(const MCValueRef left, const MCValueRef right);
+typedef compare_t (*MCProperListQuickSortCallback)(const MCValueRef *left, const MCValueRef *right);
 MC_DLLEXPORT bool MCProperListSort(MCProperListRef list, bool p_reverse, MCProperListQuickSortCallback p_callback);
 
 typedef compare_t (*MCProperListCompareElementCallback)(void *context, const MCValueRef left, const MCValueRef right);
@@ -3403,6 +3460,58 @@ MC_DLLEXPORT bool MCProperListEndsWithList(MCProperListRef list, MCProperListRef
 MC_DLLEXPORT bool MCProperListIsListOfType(MCProperListRef list, MCValueTypeCode p_type);
 MC_DLLEXPORT bool MCProperListIsHomogeneous(MCProperListRef list, MCValueTypeCode& r_type);
     
+////////////////////////////////////////////////////////////////////////////////
+//
+//  OBJC DEFINITIONS
+//
+
+/* The ObjcObject type manages the lifetime of the obj-c object it contains.
+ * Specifcally, it sends 'release' to the object when the ObjcObject is dropped */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcObjectTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcObjectTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcId type describes an id which is passed into, or out of an obj-c
+ * method with no implicit action on its reference count. */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcIdTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcIdTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcRetainedId type describes an id which is passed into, or out of an
+ * obj-c method and is expected to already have been retained. (i.e. the
+ * caller or callee expects to receive it with +1 ref count). */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcRetainedIdTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcRetainedIdTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcAutoreleasedId type describes an id which has been placed in the
+ * innermost autorelease pool before being returned to the caller. */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcAutoreleasedIdTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcAutoreleasedIdTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcObjectCreateWithId function creates an ObjcObject out of a raw id
+ * value, retaining it to make sure it owns a reference to it. */
+MC_DLLEXPORT bool MCObjcObjectCreateWithId(void *value, MCObjcObjectRef& r_obj);
+
+/* The ObjcObjectCreateWithId function creates an ObjcObject out of a raw id
+ * value, taking a +1 reference count from it (i.e. it assumes the value has
+ * already been retained before being called). */
+MC_DLLEXPORT bool MCObjcObjectCreateWithRetainedId(void *value, MCObjcObjectRef& r_obj);
+
+/* The ObjcObjectCreateWithAutoreleasedId function creates an ObjcObject out of
+ * a raw id value which is in the innermost autorelease pool. Currently this
+ * means that it retains it. */
+MC_DLLEXPORT bool MCObjcObjectCreateWithAutoreleasedId(void *value, MCObjcObjectRef& r_obj);
+
+/* The ObjcObjectGetId function returns the raw id value contained within
+ * an ObjcObject. The retain count of the id remains unchanged. */
+MC_DLLEXPORT void *MCObjcObjectGetId(MCObjcObjectRef obj);
+
+/* The ObjcObjectGetRetainedId function returns the raw id value contained within
+ * an ObjcObject. The id is retained before being returned. */
+MC_DLLEXPORT void *MCObjcObjectGetRetainedId(MCObjcObjectRef obj);
+
+/* The ObjcObjectGetAutoreleasedId function returns the raw id value contained within
+ * an ObjcObject. The id is autoreleased before being returned. */
+MC_DLLEXPORT void *MCObjcObjectGetAutoreleasedId(MCObjcObjectRef obj);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPickleFieldType

@@ -2,30 +2,24 @@ Name: scriptParsingError
 
 Type: message
 
-Syntax: scriptParsingError <errorContents>
+Syntax: scriptParsingError <pErrorContents>
 
 Summary:
 Sent to an <object(glossary)> when its <script> cannot be
 <compile|compiled>. 
 
-Associations: stack, card, field, button, graphic, scrollbar, player,
-image
-
 Introduced: 1.0
+
+Deprecated: 6.0
 
 OS: mac, windows, linux, ios, android
 
 Platforms: desktop, server, mobile
 
 Parameters:
-errorContents:
-The errorContents specifies the details of the problem that caused the
-scriptParsingError message to be sent.
-
-The result:
->*Note:* The <scriptParsingError> message is no longer sent. Instead,
-> any parse error is now put into the result immediately after setting
-> the script of an object.
+pErrorContents:
+Specifies the details of the problem that caused the
+<scriptParsingError> message to be sent.
 
 Description:
 Handle the <scriptParsingError> <message> to prevent the standard error
@@ -43,13 +37,16 @@ the list with the following statement:
 
     answer the cScriptErrors of card 1 of stack "revErrorDisplay"
 
-
 >*Note:* The exact <format> of the <errorContents> may change from
 > release to release.
 
 Changes:
 The errorContents parameter was introduced in version 1.1. In previous
 versions, this information was stored in the scriptError property.
+
+>*Note:* The <scriptParsingError> message is no longer sent. Instead,
+> any parse error is now put into the result immediately after setting
+> the script of an object.
 
 References: format (function), object (glossary), handle (glossary),
 handler (glossary), error (glossary), message (glossary),

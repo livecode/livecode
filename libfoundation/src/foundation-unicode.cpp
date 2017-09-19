@@ -22,6 +22,8 @@
 #include "unicode/brkiter.h"
 #include "unicode/coll.h"
 #include "unicode/normalizer2.h"
+#include "unicode/udata.h"
+#include "unicode/uclean.h"
 
 #include "foundation-auto.h"
 #include "foundation-text.h"
@@ -140,9 +142,26 @@ const UProperty MCUnicodePropToICUProp[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern unsigned char s_icudata[];
 bool __MCUnicodeInitialize()
 {
-    return true;
+    bool t_success = true;
+
+    UErrorCode t_error = U_ZERO_ERROR;
+    udata_setCommonData(s_icudata, &t_error);
+    t_success = t_error == U_ZERO_ERROR;
+
+    // FG-2014-07-28: [[ Bugfix 12974 ]]
+    // This is required to work around an ICU crashing bug in 52.1 - according
+    // to the ICU docs, it is completely un-necessary. It also only happens in
+    // Linux standalones, strangely.
+    if (t_success)
+    {
+        u_init(&t_error);
+        t_success = t_error == U_ZERO_ERROR;
+    }
+
+    return t_success;
 }
 
 void __MCUnicodeFinalize()

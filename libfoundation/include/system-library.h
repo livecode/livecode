@@ -81,6 +81,13 @@ MCSLibraryCreateWithAddress(void *p_address,
  * static type, this returns the path of the loadable object which the library
  * is linked into. */
 MC_DLLEXPORT bool
+MCSLibraryCopyNativePath(MCSLibraryRef p_library,
+                         MCStringRef& r_path);
+
+/* Copy the full (non-native) path to the specified library. If the library is of
+ * static type, this returns the path of the loadable object which the library
+ * is linked into. */
+MC_DLLEXPORT bool
 MCSLibraryCopyPath(MCSLibraryRef p_library,
                    MCStringRef& r_path);
 

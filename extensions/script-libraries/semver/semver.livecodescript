@@ -229,7 +229,7 @@ Parse the version to an array with keys:
 - operator (ranges)
 
 The result:
-An error string if any occured or empty
+An error string if any occurred or empty
 
 */
 

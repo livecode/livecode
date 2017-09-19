@@ -10,12 +10,12 @@ my $varName		= $ARGV[2];
 # Read in the source file
 open INPUT, "<$sourceFile"
 	or die "Could not open source file \"$sourceFile\": $!";
-my @lines = <INPUT>;
+binmode INPUT;
+my $input = do { local( $/ ) ; <INPUT> } ;
 close INPUT;
-my $input = join('', @lines); 
 	
 # Split into bytes
-my @bytes = unpack('C*', $lines);
+my @bytes = unpack('C*', $input);
 
 # Convert to a list of uint8_t values appropriate for an array in C
 my $cArray = "";

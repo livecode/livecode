@@ -5,6 +5,7 @@ local sDebug -- True if the builder should run in debugging mode
 on startup
    set the itemdelimiter to slash
    start using stack (item 1 to -2 of the filename of me & slash & "builder_utilities.livecodescript")
+   start using stack (item 1 to -2 of the filename of me & slash & "edition_utilities.livecodescript")
    set the itemDelimiter to comma
    
    __loadExternal "revzip"
@@ -25,32 +26,38 @@ on startup
    put "community" into tEdition
    put "stable" into tBuild
    
-   local tEngineDir, tPrivateDir, tOutputDir, tWorkDir, tDocsDir, tBuiltDocsDir
+   local tEngineDir, tPrivateDir, tOutputDir, tWorkDir, tDocsDir, tBuiltDocsDir, tArch
    
    put 1 into tArgIndex
    repeat while tArgIndex is among the keys of tArgs
       if tArgs[tArgIndex] is "--platform" then
          get tArgs[tArgIndex + 1]
-         if it is not among the items of "windows,win,macosx,mac,linux,linux-x86,linux-x86_64" then
+         if it is not among the items of "windows,win,win-x86,win-x86_64,macosx,mac,linux,linux-x86,linux-x86_64,universal" then
             __builderLog "error", "Unknown platform '" & tArgs[tArgIndex + 1] & "'"
          end if
+         -- Hack the arch from the platform. This should really use
+         -- triples.
+         set the itemdelimiter to "-"
+         put item -1 of it into tArch
+         set the itemdelimiter to comma
+		 
          if it is "linux" then
             put true into tPlatforms["linux-x86"]
             put true into tPlatforms["linux-x86_64"]
          else
-            if it is "win" then get "windows"
+            if it begins with "win" then get "windows"
             if it is "mac" then get "macosx"
             put true into tPlatforms[it]
          end if
          add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--stage" then
-         if tArgs[tArgIndex + 1] is not among the items of "environment,tools,bundle,server,notes,docs,disk,guide" then
+         if tArgs[tArgIndex + 1] is not among the items of "environment,tools,bundle,server,notes,docs,disk,guide,fmpackage" then
             __builderLog "error", "Unknown stage '" & tArgs[tArgIndex + 1] & "'"
          end if
          put tArgs[tArgIndex + 1] into tStage
          add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--edition" then
-         if tArgs[tArgIndex + 1] is not among the items of "community,indy,business,commercial" then
+         if tArgs[tArgIndex + 1] is not among the items of editionNames() then
             __builderLog "error", "Unknown edition '" & tArgs[tArgIndex + 1] & "'"
          end if
          put tArgs[tArgIndex + 1] into tEdition
@@ -120,6 +127,10 @@ on startup
    end if
    
    set the name of this stack to "Builder"
+   
+   if tArch is not empty then
+      builderSetTargetArch tArch
+   end if
    
    if tEngineDir is not empty then
       builderSetEngineDir tEngineDir

@@ -2,7 +2,7 @@ Name: revEndXMLNode
 
 Type: message
 
-Syntax: revEndXMLNode <nodeName>
+Syntax: revEndXMLNode <pNodeName>
 
 Summary:
 Sent to the <current card> when the <revXMLCreateTreeFromFile>
@@ -26,7 +26,7 @@ on revEndXMLNode -- notify user how many nodes have been parsed
 end revEndXMLNode
 
 Parameters:
-nodeName (string):
+pNodeName (string):
 A string containing the name of the XML element currently being parsed.
 
 Description:

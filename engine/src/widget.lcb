@@ -724,7 +724,7 @@ end syntax
 /**
 Summary:        Determines the number of successive clicks within the click distance.
 
-Returns:        The number of clicks which have occured since the initial click within the standard 'click distance' from the original point.
+Returns:        The number of clicks which have occurred since the initial click within the standard 'click distance' from the original point.
 
 Example:
     variable tClickCount as integer

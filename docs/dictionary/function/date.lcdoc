@@ -2,9 +2,9 @@ Name: date
 
 Type: function
 
-Syntax: the [{ long | abbr[ev[iated]] | short }] [{ english | system | internet }] date
+Syntax: the [{ long | abbreviated | short }] [{ english | system }] date
 
-Syntax: the [internet] [{ english | system }] date
+Syntax: the internet date
 
 Syntax: date()
 

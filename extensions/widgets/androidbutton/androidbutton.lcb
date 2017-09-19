@@ -45,6 +45,7 @@ use com.livecode.library.widgetutils
 metadata version is "1.0.0"
 metadata author is "LiveCode"
 metadata title is "Android Native Button"
+metadata svgicon is "M25.34,0H2.1A2.1,2.1,0,0,0,0,2.1V13.19a2.1,2.1,0,0,0,2.1,2.1H25.34a2.1,2.1,0,0,0,2.1-2.1V2.1A2.1,2.1,0,0,0,25.34,0Zm-15,9.49a.76.76,0,0,1-1.51.15.85.85,0,0,1,0-.15q0-1.58,0-3.16a.76.76,0,0,1,1.51-.12.91.91,0,0,1,0,.13q0,.78,0,1.57T10.35,9.49Zm7.08,1.11a.8.8,0,0,1-.4.71.78.78,0,0,1-.42.12h-.49c-.05,0-.05,0-.05.05,0,.54,0,1.08,0,1.62a.76.76,0,0,1-1.51.13.75.75,0,0,1,0-.14q0-.81,0-1.62s0,0,0,0h-.94s0,0,0,0c0,.55,0,1.09,0,1.64a.76.76,0,0,1-1.51.12.76.76,0,0,1,0-.14q0-.81,0-1.62s0,0,0,0h-.5a.82.82,0,0,1-.81-.64.8.8,0,0,1,0-.18q0-2.44,0-4.88s0,0,0,0h6.71s0,0,0,0Q17.43,8.17,17.43,10.6Zm0-5.18H10.68s0,0,0,0a2.93,2.93,0,0,1,.14-.86,3,3,0,0,1,.49-.92,3.27,3.27,0,0,1,.89-.79l.18-.1s0,0,0,0l-.51-.92a.11.11,0,0,1,0-.16.11.11,0,0,1,.16,0l.17.3.35.64s0,0,.06,0a3.5,3.5,0,0,1,.93-.26,3.67,3.67,0,0,1,1.89.24h0c.07,0,.07,0,.1,0l.5-.9a.11.11,0,0,1,.12-.07.11.11,0,0,1,.09.08.12.12,0,0,1,0,.09l-.51.91s0,0,0,.07a3.23,3.23,0,0,1,1.35,1.34,2.91,2.91,0,0,1,.33,1.08c0,.09,0,.17,0,.26S17.43,5.42,17.41,5.42Zm1.82,2.49q0,.79,0,1.59a.76.76,0,0,1-1.51.11.85.85,0,0,1,0-.12q0-1.58,0-3.15a.76.76,0,0,1,1.51-.15.88.88,0,0,1,0,.16Q19.24,7.12,19.24,7.91Zm-3.35-4a.28.28,0,1,1-.28-.28A.29.29,0,0,1,15.89,3.89Zm-3.14,0a.28.28,0,1,1-.28-.28A.28.28,0,0,1,12.75,3.89Z"
 
 /**
 Syntax:
@@ -89,23 +90,33 @@ metadata labelColor.default is "0,0,0"
 metadata labelColor.editor is "com.livecode.pi.colorwithalpha"
 metadata labelColor.section is "Colors"
 
-foreign handler _JNI_GetAndroidEngine() returns JObject binds to "java:com.runrev.android.Engine>getEngine()Lcom/runrev/android/Engine;!static"
-foreign handler _JNI_GetEngineContext(in pEngine as JObject) returns JObject binds to "java:android.view.View>getContext()Landroid/content/Context;"
+__safe foreign handler _JNI_GetAndroidEngine() returns JObject \
+	binds to "java:com.runrev.android.Engine>getEngine()Lcom/runrev/android/Engine;!static"
+__safe foreign handler _JNI_GetEngineContext(in pEngine as JObject) returns JObject \
+	binds to "java:android.view.View>getContext()Landroid/content/Context;"
 
 // Handlers for creating and attaching view
-foreign handler _JNI_CreateButton(in pContext as JObject) returns JObject binds to "javaui:android.widget.Button>new(Landroid/content/Context;)"
-foreign handler _JNI_AddButtonView(in pParentView as JObject, in pChildView as JObject) returns nothing binds to "javaui:android.view.ViewGroup>addView(Landroid/view/View;)V"
+__safe foreign handler _JNI_CreateButton(in pContext as JObject) returns JObject \
+	binds to "java:android.widget.Button>new(Landroid/content/Context;)?ui"
+__safe foreign handler _JNI_AddButtonView(in pParentView as JObject, in pChildView as JObject) returns nothing \
+	binds to "java:android.view.ViewGroup>addView(Landroid/view/View;)V?ui"
 
 // Handlers for adding click listener
-handler type ClickCallback(in pView as JObject)
-foreign handler _JNI_OnClickListener(in pHandler as ClickCallback) returns JObject binds to "java:android.view.View$OnClickListener>interface()"
-foreign handler _JNI_SetOnClickListener(in pButton as JObject, in pListener as JObject) returns nothing binds to "javaui:android.view.View>setOnClickListener(Landroid/view/View$OnClickListener;)V"
+handler type ClickCallback(in pView as JObject) returns nothing
+__safe foreign handler _JNI_OnClickListener(in pHandler as ClickCallback) returns JObject \
+	binds to "java:android.view.View$OnClickListener>interface()"
+__safe foreign handler _JNI_SetOnClickListener(in pButton as JObject, in pListener as JObject) returns nothing \
+	binds to "java:android.view.View>setOnClickListener(Landroid/view/View$OnClickListener;)V?ui"
 
 // Property setters
-foreign handler _JNI_SetTextViewText(in pView as JObject, in pValue as JString) returns nothing binds to "javaui:android.widget.TextView>setText(Ljava/lang/CharSequence;)V"
-foreign handler _JNI_SetTextViewTextColor(in pView as JObject, in pValue as JInt) returns nothing binds to "javaui:android.widget.TextView>setTextColor(I)V"
-foreign handler _JNI_GetColorFromARGB(in pA as JInt, in pR as JInt, in pG as JInt, in pB as JInt) returns JInt binds to "java:android.graphics.Color>argb(IIII)I!static"
-foreign handler _JNI_SetTextViewEnabled(in pView as JObject, in pValue as JBoolean) returns nothing binds to "javaui:android.view.View>setEnabled(Z)V"
+__safe foreign handler _JNI_SetTextViewText(in pView as JObject, in pValue as JString) returns nothing \
+	binds to "java:android.widget.TextView>setText(Ljava/lang/CharSequence;)V?ui"
+__safe foreign handler _JNI_SetTextViewTextColor(in pView as JObject, in pValue as JInt) returns nothing \
+	binds to "java:android.widget.TextView>setTextColor(I)V?ui"
+__safe foreign handler _JNI_GetColorFromARGB(in pA as JInt, in pR as JInt, in pG as JInt, in pB as JInt) returns JInt \
+	binds to "java:android.graphics.Color>argb(IIII)I!static"
+__safe foreign handler _JNI_SetTextViewEnabled(in pView as JObject, in pValue as JBoolean) returns nothing \
+	binds to "java:android.view.View>setEnabled(Z)V?ui"
 
 private variable mLabel as String
 private variable mColor as String
@@ -117,7 +128,6 @@ private handler IsAndroid() returns Boolean
 end handler
 
 public handler OnCreate()
-    put false into mOpen
     put "" into mLabel
     put "0,0,0" into mColor
 end handler
@@ -132,7 +142,7 @@ public handler OnLoad(in pProperties as Array)
     put pProperties["color"] into mColor
 end handler
 
-private unsafe handler InitButtonView()
+private handler InitButtonView()
 	// Create an android button using the Engine Context
     variable tEngine as JObject
     put _JNI_GetAndroidEngine() into tEngine
@@ -166,7 +176,7 @@ private unsafe handler InitButtonView()
     updateProperties()
 end handler
 
-private unsafe handler FinalizeButtonView()
+private handler FinalizeButtonView()
     set my native layer to nothing
     put nothing into mButton
 end handler
@@ -178,24 +188,23 @@ private handler updateProperties()
 end handler
 
 public handler OnOpen()
-    put true into mOpen
     if IsAndroid() then
-        unsafe
-            InitButtonView()
-        end unsafe
+        InitButtonView()
     end if
 end handler
 
 public handler OnClose()
     if IsAndroid() then
-        unsafe
-            FinalizeButtonView()
-        end unsafe
+        FinalizeButtonView()
     end if
-    put false into mOpen
 end handler
 
-public handler ButtonClicked(in pView as JObject)
+public handler OnParentPropertyChanged()
+	// Ensure enabled state is up to date
+	SetEnabled(my enabled)
+end handler
+
+public handler ButtonClicked(in pView as JObject) returns nothing
 	post "mouseUp"
 	
 	// Wake the engine to deal with the posted signal
@@ -206,88 +215,43 @@ public handler OnClick()
 	post "mouseUp"
 end handler
 
-constant kSvgIcon is "M493 615Q509 615 520.5 603.5 532 592 532 576 532 560 520.5 548.5 509 537 493 537 477 537 466 548.5 455 560 455 576 455 592 466 603.5 477 615 493 615ZM915 615Q931 615 942 603.5 953 592 953 576 953 560 942 548.5 931 537 915 537 899 537 887.5 548.5 876 560 876 576 876 592 887.5 603.5 899 615 915 615ZM103 799Q145 799 175 829 205 859 205 901L205 1331Q205 1374 175.5 1404 146 1434 103 1434 60 1434 30 1404 0 1374 0 1331L0 901Q0 859 30 829 60 799 103 799ZM1163 818L1163 1484Q1163 1530 1131 1562 1099 1594 1054 1594L979 1594 979 1821Q979 1864 949 1894 919 1924 876 1924 833 1924 803 1894 773 1864 773 1821L773 1594 635 1594 635 1821Q635 1864 605 1894 575 1924 532 1924 490 1924 460 1894 430 1864 430 1821L429 1594 355 1594Q309 1594 277 1562 245 1530 245 1484L245 818 1163 818ZM931 413Q1038 468 1102 566.5 1166 665 1166 782L241 782Q241 665 305 566.5 369 468 477 413L406 282Q399 269 411 262 424 256 431 268L503 400Q598 358 704 358 810 358 905 400L977 268Q984 256 997 262 1009 269 1002 282ZM1408 901L1408 1331Q1408 1374 1378 1404 1348 1434 1305 1434 1263 1434 1233 1404 1203 1374 1203 1331L1203 901Q1203 858 1233 828.5 1263 799 1305 799 1348 799 1378 828.5 1408 858 1408 901Z"
-constant kBorderWidth is 5
-private handler expandRectangle(in pRect as Rectangle, in pExp as Number) returns Rectangle
-    return rectangle [ the left of pRect - pExp, the top of pRect - pExp, the right of pRect + pExp, the bottom of pRect + pExp]
-end handler
-
 public handler OnPaint()
-	variable tIsAndroid as Boolean
-	put IsAndroid() into tIsAndroid
-    if tIsAndroid then
-        updateProperties()
+    if IsAndroid() then
         return
     end if
     
-    // Draw placeholder image - the icon
-    variable tFillPaint as Paint
-    variable tStrokePaint as Paint
-    put solid paint with color [0.875, 0.875, 0.875] into tFillPaint
-    put solid paint with color [0.75, 0.75, 0.75] into tStrokePaint
-    variable tBounds as Rectangle
-    put my bounds into tBounds
-    set the paint of this canvas to tFillPaint
-    fill rectangle path of tBounds on this canvas
-    set the paint of this canvas to tStrokePaint
-    set the stroke width of this canvas to kBorderWidth
-    set the join style of this canvas to "bevel"
-    stroke rectangle path of expandRectangle(tBounds, -kBorderWidth / 2) on this canvas
-    variable tPath as Path
-    put path kSvgIcon into tPath
-    constrainPathToRect(expandRectangle(tBounds, -2 * kBorderWidth), tPath)
-    fill tPath on this canvas
-    // Draw the control name
-    put solid paint with color [1, 1, 1, 0.1] into tFillPaint
-    put solid paint with color [0.25, 0.25, 0.25] into tStrokePaint
-    variable tNameString as String
+    variable tLabel as String
     if mLabel is empty then
-        put my name into tNameString
+        put my name into tLabel
     else
-        put mLabel into tNameString
+        put mLabel into tLabel
     end if
-    set the font of this canvas to my font
     
-    variable tTextBounds as Rectangle
-    put the image bounds of text tNameString on this canvas into tTextBounds
-    translate this canvas by [ the width of tBounds / 2, the height of tBounds / 2]
-    translate this canvas by [ -(the width of tTextBounds / 2), the height of tTextBounds / 2]
-    set the paint of this canvas to tFillPaint
-    
-    variable tRect as Rectangle
-    put expandRectangle(tTextBounds, kBorderWidth) into tRect
-    fill rounded rectangle path of tRect with radius 5 on this canvas
-    set the paint of this canvas to solid paint with stringToColor(mColor)
-    fill text tNameString at center of tRect on this canvas
+    paintPlaceholderImage(this canvas, my bounds, placeholderIcon("android"), \
+        tLabel, my font, stringToColor(mColor))
 end handler
 
-public handler SetEnabled(in pValue as Boolean)
-    if mOpen and mButton is not nothing then
-        unsafe
-            _JNI_SetTextViewEnabled(mButton, pValue)
-        end unsafe
-        redraw all
+handler SetEnabled(in pValue as Boolean)
+    if mButton is not nothing then
+        _JNI_SetTextViewEnabled(mButton, pValue)
     end if
+    redraw all
 end handler
 
 public handler SetLabel(in pLabel as String)
     put pLabel into mLabel
-    if mOpen and mButton is not nothing then
-        unsafe
-            _JNI_SetTextViewText(mButton, StringToJString(mLabel))
-        end unsafe
-        redraw all
+    if mButton is not nothing then
+        _JNI_SetTextViewText(mButton, StringToJString(mLabel))
     end if
+    redraw all
 end handler
 
 public handler SetTextColor(in pColor as String)
     put pColor into mColor
-    if mOpen and mButton is not nothing then
-        unsafe
-            SetStringAndroidColor(pColor)
-        end unsafe
-        redraw all
+    if mButton is not nothing then
+        SetStringAndroidColor(pColor)
     end if
+    redraw all
 end handler
 
 private handler ColorComponentToInt(in pComponent as Real) returns Integer
@@ -296,7 +260,7 @@ private handler ColorComponentToInt(in pComponent as Real) returns Integer
     return pComponent
 end handler
 
-private unsafe handler SetStringAndroidColor(in pString as String)
+private handler SetStringAndroidColor(in pString as String)
     variable tColor as Color
     put stringToColor(pString) into tColor
     

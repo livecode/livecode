@@ -174,6 +174,8 @@ public:
 
 	// Return whether the parent script is blocked from resolution.
 	bool IsBlocked(void) const;
+    
+    bool CopyUses(MCArrayRef& r_use);
 
 private:
 	MCParentScript(void);

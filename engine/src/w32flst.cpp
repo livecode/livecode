@@ -202,17 +202,17 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	memset(&logfont, 0, sizeof(LOGFONTW));
 
     // Is the font name one of the special UI font names?
-    if (MCNameIsEqualTo(fname, MCN_font_usertext))
+    if (MCNameIsEqualToCaseless(fname, MCN_font_usertext))
         set_facename_for_message_font(logfont);
-    else if (MCNameIsEqualTo(fname, MCN_font_menutext))
+    else if (MCNameIsEqualToCaseless(fname, MCN_font_menutext))
         set_facename_for_menu_font(logfont);
-    else if (MCNameIsEqualTo(fname, MCN_font_content))
+    else if (MCNameIsEqualToCaseless(fname, MCN_font_content))
         set_facename_for_message_font(logfont);
-    else if (MCNameIsEqualTo(fname, MCN_font_message))
+    else if (MCNameIsEqualToCaseless(fname, MCN_font_message))
         set_facename_for_message_font(logfont);
-    else if (MCNameIsEqualTo(fname, MCN_font_tooltip))
+    else if (MCNameIsEqualToCaseless(fname, MCN_font_tooltip))
         set_facename_for_status_font(logfont);
-    else if (MCNameIsEqualTo(fname, MCN_font_system))
+    else if (MCNameIsEqualToCaseless(fname, MCN_font_system))
         set_facename_for_message_font(logfont);
     else
     {
@@ -308,7 +308,7 @@ MCFontStruct *MCFontnode::getfont(MCNameRef fname, uint2 size,
                                   uint2 style, Boolean printer)
 {
 	// MW-2012-05-03: [[ Values* ]] Match the font name caselessly. 
-	if (!MCNameIsEqualTo(fname, *reqname) || printer != reqprinter)
+	if (!MCNameIsEqualToCaseless(fname, *reqname) || printer != reqprinter)
 		return NULL;
 	if (size == 0)
 		return font;
@@ -368,45 +368,12 @@ void MCFontlist::freeprinterfonts()
 	while (tmp != fonts);
 }
 
-// SN-2015-03-02: [[ Bug 14661 ]] New context for the
-//  font listing callback function.
-//  An array is used to keep track of the font already
-//  added (hash comparison faster than that looking for
-//  a string in a list)
-struct MCFontListing
+static compare_t _MCFontListCompareNames(const MCValueRef *p_left, const MCValueRef *p_right)
 {
-	MCArrayRef array;
-	MCListRef list;
-};
+	MCAssert(MCValueGetTypeCode(*p_left) == kMCValueTypeCodeString);
+	MCAssert(MCValueGetTypeCode(*p_right) == kMCValueTypeCodeString);
 
-int CALLBACK fontnames_FontFamProc(const LOGFONTW * lpelf,
-								   const TEXTMETRICW * lpntm,
-								   DWORD FontType, LPARAM lParam)
-{
-	// SN-2015-03-02: [[ Bug 14661 ]] A MCFontListing struct
-	//  is now passed to the callback functions.
-	MCFontListing* t_fontlist = (MCFontListing*)lParam;
-	MCNewAutoNameRef t_name;
-
-	size_t t_length;
-	if (StringCchLengthW(lpelf->lfFaceName, LF_FACESIZE, &t_length) != S_OK)
-		return False;
-
-	if (!MCNameCreateWithChars(lpelf->lfFaceName, t_length, &t_name))
-		return False;
-
-	// SN-2015-03-02: [[ Bug 14661 ]] Skip names that 
-	//  we have already added to the array, comparing
-	//  full name to full name. That avoid to skip
-	//  "Segoe UI" if "Segoe UI Light" has already been 
-	//  loaded, like it was with MCStringContains
-	MCValueRef t_value;
-	if (MCArrayFetchValue(t_fontlist->array, true, *t_name, t_value))
-		return True;
-
-	// Add the font name in the array, and in the list.
-	MCArrayStoreValue(t_fontlist -> array, true, *t_name, kMCEmptyString);
-	return MCListAppend(t_fontlist->list, MCNameGetString(*t_name)) ? True : False;
+	return MCStringCompareTo(MCStringRef(*p_left), MCStringRef(*p_right), kMCStringOptionCompareExact);
 }
 
 bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
@@ -417,75 +384,29 @@ bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 		return true;
 	}
 
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
-	HDC hdc;
-#ifdef _DESKTOP
-	// MM-2013-09-13:: [[ RefactorGraphics ]] Tweak to get things compiling for server.
-	if (MCStringIsEqualToCString(p_type, "printer", kMCCompareCaseless))
-		hdc = static_cast<MCWindowsPrinter *>(MCsystemprinter) -> GetDC();
-	else
-#endif
-		hdc = pms->getsrchdc();
-	LOGFONTW lf;
-	lf.lfCharSet = DEFAULT_CHARSET;
-	lf.lfFaceName[0] = '\0';
-	lf.lfPitchAndFamily = 0;
+	MCAutoProperListRef t_names;
+	if (!MCGFontGetPlatformFontList(&t_names))
+		return false;
 
-	// SN-2015-03-02: [[ Bug 14661 ]] Initialise the
-	//  MCFontListing members.
-	bool t_success;
-	MCFontListing t_fontlist = {nil, nil};
+	MCAssert(MCProperListIsListOfType(*t_names, kMCValueTypeCodeString));
+	// sort list (of strings) alphabetically
+	if (!MCProperListSort(*t_names, false, _MCFontListCompareNames))
+		return false;
 
-	t_success = MCArrayCreateMutable(t_fontlist.array)
-				&& MCListCreateMutable('\n', t_fontlist.list);
+	MCAutoListRef t_name_list;
+	if (!MCListCreateMutable('\n', &t_name_list))
+		return false;
 
-	if (t_success)
-		t_success = EnumFontFamiliesExW(hdc, &lf, (FONTENUMPROCW)fontnames_FontFamProc, (LPARAM)(&t_fontlist), 0) == True;
-
-	if (t_success)
-		t_success = MCListCopy(t_fontlist.list, r_names);
-
-	// SN-2015-03-02: [[ Bug 14661 ]] Cleanup the
-	//  MCFontListing members.
-	MCValueRelease(t_fontlist . array);
-	MCValueRelease(t_fontlist . list);
-
-	return t_success;
-}
-
-typedef struct
-{
-	bool success;
-	MCListRef list;
-	uint2 *sizes;
-	uindex_t size_count;
-} fontsizes_context;
-
-int CALLBACK fontsizes_FontFamProc(const ENUMLOGFONTW* lpelf,
-								   const NEWTEXTMETRICW* lpntm,
-								   DWORD FontType, LPARAM lParam)
-{
-	fontsizes_context *context = (fontsizes_context*)lParam;
-	if (!(FontType & TRUETYPE_FONTTYPE))
-	{ //if not true-type font
-		uint2 size = uint2((((lpelf->elfLogFont.lfHeight * 72)
-		               / SCREEN_WIDTH_FOR_FONT_USE) * 8 / 7));
-		for (uindex_t i = 0; i < context->size_count; i++)
-			if (context->sizes[i] == size)
-				return True; //return to callback function again
-		context->success = MCMemoryResizeArray(context->size_count + 1, context->sizes, context->size_count);
-		if (context->success)
-		{
-			context->sizes[context->size_count - 1] = size;
-			context->success = MCListAppendInteger(context->list, size);
-		}
-		return context->success ? True : False;
+	uintptr_t t_index = 0;
+	MCValueRef t_element = nil;
+	while (MCProperListIterate(*t_names, t_index, t_element))
+	{
+		if (!MCListAppend(*t_name_list, t_element))
+			return false;
 	}
-	else
-	{ //if true-type font, size is always 0.
-		context->success = MCListAppendInteger(context->list, 0);
-		return False; //stop right here. no more callback function
-	}
+
+	r_names = t_name_list.Take();
+	return true;
 }
 
 bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
@@ -499,76 +420,12 @@ bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
-	fontsizes_context context;
-	context.list = *t_list;
-	context.success = true;
-	context.sizes = nil;
-	context.size_count = 0;
-
-	MCAutoStringRefAsWString t_fname_wstr;
-	if (!t_fname_wstr.Lock(p_fname))
+	// All DirectWrite fonts are scalable, so size is always 0.
+	if (!MCListAppendInteger(*t_list, 0))
 		return false;
 
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
-	HDC hdc = pms->getsrchdc();
-
-	LOGFONTW lf;
-	lf.lfCharSet = DEFAULT_CHARSET;
-	lf.lfPitchAndFamily = 0;
-
-	// Copy the font family name
-	if (StringCchCopyW(lf.lfFaceName, LF_FACESIZE, *t_fname_wstr) != S_OK)
-		return false;
-
-	EnumFontFamiliesExW(hdc, &lf, (FONTENUMPROCW)fontsizes_FontFamProc, (LPARAM)&context, 0);
-
-	MCMemoryDeleteArray(context.sizes);
-	if (context.success)
-		return MCListCopy(*t_list, r_sizes);
-
-	return false;
+	return MCListCopy(*t_list, r_sizes);
 }
-
-#ifdef FOR_TRUE_TYPE_ONLY
-static uint2 nfonts;
-static MCListRef s_style_list;
-enum FontQueryType {
-    FQ_NAMES,
-    FQ_SIZES,
-    FQ_STYLES,
-};
-
-int CALLBACK MyFontFamProc(ENUMLOGFONTA FAR* lpelf,
-                           NEWTEXTMETRICA FAR* lpntm,
-                           int FontType, LPARAM lParam)
-{
-	switch (lParam)
-	{
-	case FQ_STYLES:
-		{
-			if (!(FontType & TRUETYPE_FONTTYPE))
-			{ //not true-type font
-				/* UNCHECKED */ MCListAppend(s_style_list, MCN_plain) &&
-					MCListAppend(s_style_list, MCN_bold) &&
-					MCListAppend(s_style_list, MCN_italic) &&
-					MCListAppend(s_style_list, MCN_bold_italic);
-				return False;  //stop right here, do not continue looping through callback
-			}
-			char *style = (char *)lpelf->elfStyle;
-			if (strequal(style, "Regular"))
-				/* UNCHECKED */ MCListAppend(s_style_list, MCN_plain);
-			else if (strequal(style, "Bold Italic"))
-				/* UNCHECKED */ MCListAppend(s_style_list, MCN_bold_italic)
-			else
-				/* UNCHECKED */ MCListAppendCString(s_style_list, (char*)lpelf->elfStyle);
-			break;
-		}
-	default:
-		break;
-	}
-	return True;
-}
-#endif
 
 bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles)
 {
@@ -583,20 +440,10 @@ bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_st
 		return false;
 
 	bool t_success = true;
-#ifdef FOR_TRUE_TYPE_ONLY
-	s_style_list = *t_list;
-	nfonts = 0;
-	char mappedName[LF_FACESIZE];
-	mapfacename(mappedName, fname);
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
-	HDC hdc = pms->getmemsrchdc();
-	EnumFontFamiliesA(hdc, mappedName, (FONTENUMPROC)MyFontFamProc, FQ_STYLES);
-#else
 	t_success = MCListAppend(*t_list, MCN_plain) &&
 		MCListAppend(*t_list, MCN_bold) &&
 		MCListAppend(*t_list, MCN_italic) &&
 		MCListAppend(*t_list, MCN_bold_italic);
-#endif
 
 	return t_success && MCListCopy(*t_list, r_styles);
 }

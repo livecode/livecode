@@ -2,12 +2,10 @@ Name: browserDocumentFailed
 
 Type: message
 
-Syntax: browserDocumentFailed <instanceId>, <url>, <errorMessage>
+Syntax: browserDocumentFailed <pInstanceId>, <pUrl>, <pErrorMessage>
 
 Summary:
 Sent when a browser object has encountered an error when loading a url
-
-Associations: card
 
 Introduced: 6.7.3
 
@@ -24,16 +22,14 @@ on browserDocumentFailed pInstanceId, pUrl, pErrorMessage
 end browserDocumentFailed
 
 Parameters:
-instanceId:
-The integer identifer of the browser object
+pInstanceId:
+The integer identifier of the browser object
 
-url:
+pUrl:
 The url that has failed to load
 
-errorMessage:
-A message explaining why the url failed to load >*Note:* For general
-information on using the browser library, see the notes in the
-revBrowserOpen function reference.
+pErrorMessage:
+A message explaining why the url failed to load
 
 Description:
 The <browserDocumentFailed> message is sent to the current card of a

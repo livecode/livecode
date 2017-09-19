@@ -167,8 +167,8 @@ locked).
 >*Tip:*   To test whether a stack or card exists before trying to go to
 > it, use the there is a operator:
 
-if there is a card "Index" then go card "Index"
-if there is a stack myPath then go card 2 of stack myPath
+    if there is a card "Index" then go card "Index"
+    if there is a stack myPath then go card 2 of stack myPath
 
 The go... as sheet form was introduced in version 2.0. Previous versions
 did not support sheet dialogs.

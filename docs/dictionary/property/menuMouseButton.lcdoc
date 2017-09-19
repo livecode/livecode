@@ -2,7 +2,7 @@ Name: menuMouseButton
 
 Type: property
 
-Syntax: set the menuMouseButton of <button> to {zero | <buttonNumber>}
+Syntax: set the menuMouseButton of <button> to {zero | <pButtonNumber>}
 
 Summary:
 Specifies which <mouse button> can be used to access the <menu>
@@ -32,7 +32,10 @@ If the <menuMouseButton> is zero, any <mouse button> can be used to open
 the <menu>. If the <menuMouseButton> is a number from 1 to 3, only that
 <mouse button> opens the <menu>.
 
-The mouseButtonNumber specifies which <mouse button> was pressed:
+Parameters:
+
+pButtonNumber (enum):
+The pButtonNumber parameter specifies which <mouse button> was pressed:
 
 * 1 is the mouse button on Mac OS systems and the left button on Windows
   and Unix systems.

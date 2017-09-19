@@ -216,7 +216,7 @@ RTFReader::RTFReader(void)
 
 RTFReader::~RTFReader(void)
 {
-	MCNameDelete(m_attributes . text_link);
+	MCValueRelease(m_attributes . text_link);
     MCValueRelease(m_attributes . text_metadata);
 
 	if (m_font_name != NULL)
@@ -1192,7 +1192,8 @@ void RTFReader::ProcessField(void)
 	if (t_type != nil && t_data != nil)
 	{
 		MCNameRef t_name;
-		/* UNCHECKED */ MCNameCreateWithCString(t_data, t_name);
+		/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t *)t_data, strlen(t_data), t_name);
+        
         MCAutoStringRef t_string;
         /* UNCHECKED */ MCStringCreateWithCString(t_data, &t_string);
 		if (MCU_strcasecmp(t_type, "HYPERLINK") == 0)
@@ -1212,7 +1213,7 @@ void RTFReader::ProcessField(void)
         {
             m_state . SetParagraphMetadata(*t_string);
 		}
-		MCNameDelete(t_name);
+		MCValueRelease(t_name);
 	}
 
 	free(m_field_inst);
@@ -1589,7 +1590,7 @@ RTFStatus RTFReader::Flush(bool p_force)
 			t_block . text_shift = 0;
 		
 		if (m_state . GetHyperlink() != kMCEmptyName)
-			MCNameClone(m_state . GetHyperlink(), t_block . text_link);
+            t_block.text_link = MCValueRetain(m_state . GetHyperlink());
 		else
 			t_block . text_link = nil;
 
@@ -1639,7 +1640,7 @@ RTFStatus RTFReader::Flush(bool p_force)
 	if (t_changed)
 	{
         MCValueRelease(m_attributes . text_metadata);
-        MCNameDelete(m_attributes . text_link);
+        MCValueRelease(m_attributes . text_link);
 		memcpy(&m_attributes, &t_block, sizeof(MCTextBlock));
 		m_attributes_changed = false;
 	}
@@ -1694,7 +1695,7 @@ RTFStatus RTFReader::Paragraph(void)
 
 RTFStatus RTFReader::LookupKeyword(const char *p_keyword, int4 p_keyword_length, RTFToken& r_token)
 {
-	static RTFKeyword s_keywords[] =
+	static const RTFKeyword s_keywords[] =
 	{
 		{ "\n", kRTFTokenNewLine },
 		{ "line", kRTFTokenNewLine },

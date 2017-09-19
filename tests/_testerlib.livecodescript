@@ -25,6 +25,8 @@ on revLoadLibrary
 	insert the script of me into back
 end revLoadLibrary
 
+local sLogCallbackURL
+
 ----------------------------------------------------------------
 -- Script-only stack handling
 ----------------------------------------------------------------
@@ -117,7 +119,13 @@ function TesterParseTestCommandNames pFilename
 
       if tCommandNameSeen[tName] then
          -- Duplicate test name
-         write merge("Error: duplicate test name [[tName]] in [[pFilename]]\n") to stderr
+         
+         get merge("Error: duplicate test name [[tName]] in [[pFilename]]\n")
+         if sLogCallbackURL is not empty then
+            post "^err^N^"&it to sLogCallbackURL
+         else
+            write it to stderr
+         end if
          quit 1
       end if
 
@@ -314,21 +322,72 @@ command TesterLog pStatus, pDescription
       put space after tMessage
    end if
    
-   write tMessage && pDescription & return to stdout
+   get tMessage && pDescription & return
+   if sLogCallbackURL is not empty then
+      post "^out^N^"&it to sLogCallbackURL
+   else
+      write it to stdout
+   end if
 end TesterLog
 
 command TesterLogSummaryLine pTapResults, pTestName
    local tTotal, tPassed, tWorst, tMessage
-
+   
    put pTapResults["xpass"] + pTapResults["pass"] + pTapResults["skip"] into tPassed
    put TesterTapGetTestCount(pTapResults) into tTotal
-
+   
    put TesterTapGetWorstResult(pTapResults) into tWorst
    put pTestName into tMessage
    put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
    if pTapResults["failures"] is not empty then
       put return & pTapResults["failures"] after tMessage
    end if
-
+   
    TesterLog tWorst, tMessage
 end TesterLogSummaryLine
+
+command TesterLogSetCallbackURL pURL
+   put pURL into sLogCallbackURL
+end TesterLogSetCallbackURL
+
+
+-- Print out a table of statistics
+command TesterRunPrintSummary pAnalysis
+   local tSummaryString, tTotal, tDecoration
+   
+   put TesterTapGetTestCount(pAnalysis) into tTotal
+   
+   -- Format basic summary information
+   if pAnalysis["xfail"] is 0 and pAnalysis["fail"] is 0 then
+      put "All" && tTotal && "tests passed" into tSummaryString
+      
+   else if pAnalysis["fail"] is 0 then
+      put "All" && tTotal && "tests behaved as expected" into tSummaryString
+      
+   else
+      put pAnalysis["fail"] && "OF" && tTotal && "TESTS FAILED" into tSummaryString
+   end if
+   
+   put return after tSummaryString
+   
+   -- Add extra summary info from expected failure & skip directives
+   if pAnalysis["xpass"] > 0 then
+      put tab & pAnalysis["xpass"] && "unexpected passes" & return after tSummaryString
+   end if
+   if pAnalysis["xfail"] > 0 then
+      put tab & pAnalysis["xfail"] && "expected failures" & return after tSummaryString
+   end if
+   if pAnalysis["skip"] > 0 then
+      put tab & pAnalysis["skip"] && "skipped" & return after tSummaryString
+   end if
+   
+   put "================================================================" into tDecoration
+   put tDecoration & return before tSummaryString
+   put tDecoration & return after tSummaryString
+   
+   if sLogCallbackURL is not empty then
+      post "^out^N^"&tSummaryString to sLogCallbackURL
+   else
+      write tSummaryString to stdout
+   end if
+end TesterRunPrintSummary

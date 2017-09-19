@@ -81,7 +81,7 @@ typedef struct
 }
 SCCLUT;
 
-static SCCLUT sccolors[] =
+static const SCCLUT sccolors[] =
     {
         {255,255,255}, {255,255,204}, {255,255,153}, {255,255,102},
         {255,255,51}, {255,255,0}, {255,204,255}, {255,204,204},
@@ -140,7 +140,7 @@ static SCCLUT sccolors[] =
         {34,34,34}, {17,17,17}, {0,0,0}
     };
 
-static uint4 stdcmap[256] =
+static const uint4 stdcmap[256] =
     {
         0x000000, 0x800000, 0x008000, 0x808000, 0x000080,
         0x800080, 0x008080, 0xC0C0C0, 0xC0DCC0, 0xA6CAF0,
@@ -456,11 +456,15 @@ void MCUIDC::setmouseloc(MCStack *p_target, MCPoint p_loc)
 
 void MCUIDC::getmouseloc(MCStack *&r_target, MCPoint &r_loc)
 {
-	r_target = MCmousestackptr;
-	r_loc = MCPointMake(MCmousex, MCmousey);
-
-	if (MCmousestackptr)
-		r_loc = MCmousestackptr->stacktowindowloc(r_loc);
+    r_loc = MCPointMake(MCmousex, MCmousey);
+    
+    if (MCmousestackptr)
+    {
+        r_target = MCmousestackptr;
+        r_loc = MCmousestackptr->stacktowindowloc(r_loc);
+    }
+    else
+        r_target = nil;
 }
 
 void MCUIDC::setclickloc(MCStack *p_target, MCPoint p_loc)
@@ -478,11 +482,15 @@ void MCUIDC::setclickloc(MCStack *p_target, MCPoint p_loc)
 
 void MCUIDC::getclickloc(MCStack *&r_target, MCPoint &r_loc)
 {
-	r_target = MCclickstackptr;
-	r_loc = MCPointMake(MCclicklocx, MCclicklocy);
-
-	if (MCclickstackptr)
-		r_loc = MCclickstackptr->stacktowindowloc(r_loc);
+    r_loc = MCPointMake(MCclicklocx, MCclicklocy);
+    
+    if (MCclickstackptr)
+    {
+        r_target = MCclickstackptr;
+        r_loc = MCclickstackptr->stacktowindowloc(r_loc);
+    }
+    else
+        r_target = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1256,7 +1264,7 @@ void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr, MCValueRef subo
 	}
         
         if (t_msg.m_object.Get() == optr
-		        && (mptr == NULL || MCNameIsEqualTo(*t_msg.m_message, mptr, kMCCompareCaseless))
+		        && (mptr == NULL || MCNameIsEqualToCaseless(*t_msg.m_message, mptr))
                 && (subobject == NULL || (t_msg.m_params != nil &&
                                           t_msg.m_params -> getvalueref_argument() == subobject)))
 			cancelmessageindex(i - 1, true);
@@ -1351,7 +1359,7 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
         if (t_msg.m_time > curtime)
             break;
         
-        if (!dispatch && t_msg.m_id == 0 && MCNameIsEqualTo(*t_msg.m_message, MCM_idle, kMCCompareCaseless))
+        if (!dispatch && t_msg.m_id == 0 && MCNameIsEqualToCaseless(*t_msg.m_message, MCM_idle))
         {
             doshiftmessage(i, curtime + MCidleRate / 1000.0);
             continue;

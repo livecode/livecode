@@ -250,7 +250,7 @@ function revDocsParseDictionaryToLibraryArray pRootDir
    local tCount
    put 1 into tCount
    
-   local tText, tLibraryA, tParsedA
+   local tText, tLibraryA, tParsedA, tDisplayName, tSynonymA
    
    repeat for each item tRoot in (tDictionaryRoot & "," & tGlossaryRoot)
       repeat for each line tLine in folders(tRoot)
@@ -268,6 +268,22 @@ function revDocsParseDictionaryToLibraryArray pRootDir
             put revDocsParseDocText(tText, tFullPath) into tParsedA
             put tParsedA["doc"][1] into tLibraryA[tCount]
             add 1 to tCount
+            -- BWM fix for Bug 18305
+            -- add an additional entry to dictionary for each synonym to allow keyword search
+            if tParsedA["doc"][1]["Synonyms"] is not empty then
+               put tParsedA["doc"][1]["display name"] into tDisplayName
+               put tParsedA["doc"][1]["Synonyms"] into tSynonymA
+               repeat for each element tSynonymName in tSynonymA
+                  if tSynonymName is tDisplayName then next repeat -- glossary entries include themselves
+                  put tParsedA["doc"][1] into tLibraryA[tCount]
+                  put tSynonymName into tLibraryA[tCount]["display name"]
+                  if tParsedA["doc"][1]["Type"] is not "glossary" then
+                     put " (Synonym of " & tDisplayName & ")" after tLibraryA[tCount]["display name"]
+                  end if
+                  add 1 to tCount
+               end repeat
+            end if
+            -- end fix for Bug 18305
          end repeat
       end repeat
    end repeat
@@ -436,7 +452,7 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
    put false into tInComment
    put false into tInEntry
    
-   local tFirstWord, tEntryData
+   local tFirstWord, tEntryData, tTrimLine
    local tComment, tData
    local tHandlerData, tPhraseData
    
@@ -598,14 +614,23 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
       end if
       
       # If we are in an entry, add the line to the current data
-      if tInEntry then         
+      if tInEntry then
+         # handle line continuations
+         if char -2 of tData is "\" then
+            delete char -2 to -1 of tData
          # ignore empty lines
-         if tFirstWord is empty then 
+         else if tFirstWord is empty then
             next repeat
          else if tFirstWord is "end" then
             put true into tEntryEnded
          end if
-         put tLine & return after tData
+         # continuation character can have spaces afterwards [[Bug 19927]]
+         # trim trailing spaces before adding
+         if matchText(tLine, "^(.*\\)\s*$", tTrimLine) then
+            put tTrimLine & return after tData
+         else
+            put tLine & return after tData
+         end if
       end if
       
       # If the entry is ended, convert all the collected data to a structured array
@@ -1064,6 +1089,7 @@ private command __nameToKeyAndType pName, @rKey, @rType
       case "Changes"
       case "Introduced"
       case "Deprecated"
+      case "Edition"
          put "standard" into rType
          break
       case "Example"
@@ -1322,7 +1348,7 @@ function revDocsGroupElements pElementsA
    
 end revDocsGroupElements
 
-function revDocsParseDocText pText, pFilename
+function revDocsParseDocText pText, pFilename, pDefaults
    local tElementsA
    put revDocsExtractElements(pText) into tElementsA
    
@@ -1331,6 +1357,8 @@ function revDocsParseDocText pText, pFilename
    put 0 into tEntryCount
    
    local tParsedA
+   put pDefaults into tParsedA
+   
    # Get library-level data
    local tStartNum
    put 1 into tStartNum
@@ -1352,6 +1380,7 @@ function revDocsParseDocText pText, pFilename
             // Library entries can have examples
          case "Example"
          case "References"
+         case "Edition"
             put tElementsA[tStartNum]["content"] into tParsedA[it]
             add 1 to tStartNum
             break
@@ -1364,50 +1393,43 @@ function revDocsParseDocText pText, pFilename
    local tEntryElementCount
    put 0 into tEntryElementCount
    
-   local tSeenAssociations
-   put false into tSeenAssociations
+   local tSeen
    
-   local tSeenTags
-   put false into tSeenTags
-   
-   local tAssociationsDefault
-   put "Associations" into tAssociationsDefault["name"]
-   put tParsedA["name"] into tAssociationsDefault["content"]
+   put tParsedA["name"] into tParsedA["Associations"]
    repeat with tElementNum = tStartNum to the number of elements in tElementsA
       add 1 to tEntryElementCount
       local tElementA
       put tElementsA[tElementNum] into tElementA
       
       if tElementA["name"] is "Name" then
-         # Add the library name to the associations of this entry
-         if tParsedA["name"] is not empty and tSeenAssociations is not true and tEntryCount is not 0 then
-            put tAssociationsDefault into tEntriesA[tEntryCount]["elements"][tEntryElementCount]
-            add 1 to tEntryElementCount
-         end if
-         if tParsedA["tags"] is not empty and tSeenTags is not true and tEntryCount is not 0 then
-            put "Tags" into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["name"]
-            put tParsedA["tags"] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
-            add 1 to tEntryElementCount
-         end if
+         repeat for each key tKey in tParsedA
+            if not tSeen[tKey] and \
+                  tParsedA[tKey] is not empty and \
+                  tEntryCount is not 0 then
+               put tKey into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["name"]
+               put tParsedA[tKey] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
+               add 1 to tEntryElementCount
+            end if
+         end repeat
+         
          add 1 to tEntryCount
          put 1 into tEntryElementCount
-         put false into tSeenAssociations   
-         put false into tSeenTags
+         delete variable tSeen 
       end if
+      
+      put true into tSeen[tElementA["name"]]
       
       if tElementA["name"] is "Syntax" then
          __updateParamsFromSyntaxLine tElementA["content"], tEntriesA[tEntryCount]["params"]
       end if
       
       if tElementA["name"] is "Associations" then
-         put true into tSeenAssociations
          if tParsedA["name"] is not empty and tParsedA["name"] is not among the items of tElementA["content"] then
             put tParsedA["name"] & comma before tElementA["content"]
          end if
       end if
       
       if tElementA["name"] is "Tags" and tParsedA["tags"] is not empty then
-         put true into tSeenTags
          put tParsedA["tags"] & comma before tElementA["content"]
       end if
       
@@ -1415,15 +1437,15 @@ function revDocsParseDocText pText, pFilename
    end repeat
    
    // Add association and tag to the last element, if they were not found
-   if tParsedA["name"] is not empty and tSeenAssociations is not true and tEntryCount is not 0 then
-      add 1 to tEntryElementCount
-      put tAssociationsDefault into tEntriesA[tEntryCount]["elements"][tEntryElementCount]
-   end if
-   if tParsedA["tags"] is not empty and tSeenTags is not true and tEntryCount is not 0 then
-      add 1 to tEntryElementCount
-      put "Tags" into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["name"]
-      put tParsedA["tags"] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
-   end if
+   repeat for each key tKey in tParsedA
+      if not tSeen[tKey] and \
+            tParsedA[tKey] is not empty and \
+            tEntryCount is not 0 then
+         add 1 to tEntryElementCount
+         put tKey into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["name"]
+         put tParsedA[tKey] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
+      end if
+   end repeat
    
    // Add a library entry
    local tLibraryElements
@@ -1431,7 +1453,7 @@ function revDocsParseDocText pText, pFilename
    put 1 into tCount
    add 1 to tEntryCount
    
-   repeat for each item tItem in "name,description,author,type,example,references"
+   repeat for each item tItem in "name,description,author,type,example,references,edition"
       if tParsedA[tItem] is not empty then
          put tItem into tEntriesA[tEntryCount]["elements"][tCount]["name"]
          put tParsedA[tItem] into tEntriesA[tEntryCount]["elements"][tCount]["content"]
@@ -2255,6 +2277,9 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
    
    # Summary
    put outputElementIfExists("summary", pLibraryDataA, 3) after tJSON
+   
+   # Edition
+   put outputElementIfExists("edition", pLibraryDataA, 3) after tJSON
    
    # Introduced
    put outputElementIfExists("introduced", pLibraryDataA, 3) after tJSON

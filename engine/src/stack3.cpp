@@ -271,7 +271,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 		MCNameRef t_menubar;
 		if ((stat = IO_read_nameref_new(t_menubar, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return checkloadstat(stat);
-		MCNameDelete(_menubar);
+		MCValueRelease(_menubar);
 		_menubar = t_menubar;
 	}
 	
@@ -799,7 +799,7 @@ Exec_stat MCStack::resubstack(MCStringRef p_data)
 			// If t_val doesn't exist as a name, it can't exist as a substack name.
 			// t_val is always a stringref (fetched from an MCSplitString array)
 			MCNameRef t_name;
-			t_name = MCNameLookup((MCStringRef)t_val);
+			t_name = MCNameLookupCaseless((MCStringRef)t_val);
 		
 			if (t_name != nil)
 				while (tsub -> hasname(t_name))

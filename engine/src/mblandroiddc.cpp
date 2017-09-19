@@ -1956,6 +1956,11 @@ bool MCAndroidIsOnSystemThread(void)
     return s_android_ui_thread.IsCurrent();
 }
 
+bool MCAndroidIsOnEngineThread(void)
+{
+    return s_android_engine_thread.IsCurrent();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view) __attribute__((visibility("default")));

@@ -7,8 +7,6 @@ Syntax: adLoadFailed <adName>
 Summary:
 Sent when there is an error loading an ad.
 
-Associations: stack
-
 Introduced: 5.5
 
 OS: ios, android

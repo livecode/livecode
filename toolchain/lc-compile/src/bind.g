@@ -238,7 +238,7 @@
     'rule' DeclareParameters(parameterlist(parameter(_, _, Name, _), Tail)):
         DeclareId(Name)
         DeclareParameters(Tail)
-        
+
     'rule' DeclareParameters(nil):
         -- do nothing
 
@@ -334,7 +334,7 @@
     'rule' DefineParameters(ModuleId, parameterlist(parameter(_, _, Name, Type), Tail)):
         DefineSymbolId(Name, ModuleId, inferred, parameter, Type)
         DefineParameters(ModuleId, Tail)
-        
+
     'rule' DefineParameters(ModuleId, nil):
         -- do nothing
 
@@ -904,7 +904,8 @@
     'rule' DumpBindings(PARAMETER'parameter(_, _, Name, Type)):
         DumpId("parameter", Name)
         DumpBindings(Type)
-        
+
+
     'rule' DumpBindings(STATEMENT'variable(_, Name, Type)):
         DumpId("local variable", Name)
         DumpBindings(Type)

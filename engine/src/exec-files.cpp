@@ -285,7 +285,7 @@ void MCFilesEvalSpecialFolderPath(MCExecContext& ctxt, MCStringRef p_folder, MCS
     t_error = false;
     MCNameCreate(p_folder, &t_path);
     // We have a special, mode-specific resource folder
-    if (MCNameIsEqualTo(*t_path, MCN_resources, kMCStringOptionCompareCaseless))
+    if (MCNameIsEqualToCaseless(*t_path, MCN_resources))
         MCModeGetResourcesFolder(r_path);
     else if (!MCS_getspecialfolder(*t_path, r_path))
         t_error = true;
@@ -1953,8 +1953,20 @@ static void MCFilesReadComplete(MCExecContext& ctxt, MCValueRef p_output, IO_sta
         if (t_textmode)
         {
             MCAutoStringRef t_output;
-            /* UNCHECKED*/ MCStringConvertLineEndingsToLiveCode((MCStringRef)p_output, &t_output);
-            ctxt . SetItToValue(*t_output);
+            if (!MCStringNormalizeLineEndings((MCStringRef)p_output, 
+                                              kMCStringLineEndingStyleLF, 
+                                              kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                              kMCStringLineEndingOptionNormalizeLSToVT, 
+                                              &t_output, 
+                                              nullptr))
+            {
+                ctxt . SetItToEmpty();
+                ctxt . SetTheResultToStaticCString("error normalizing line endings");
+            }
+            else
+            {
+                ctxt . SetItToValue(*t_output);
+            }
         }
         else
         {
@@ -2210,9 +2222,6 @@ void MCFilesExecReadFromProcess(MCExecContext& ctxt, MCNameRef p_process, MCStri
     intenum_t t_encoding;
 	IO_stat t_stat = IO_NORMAL;
 	t_stream = MCprocesses[t_index].ihandle;
-#ifdef OLD_IO_HANDLE
-	MCshellfd = t_stream->gefd();
-#endif // OLD_IO_HANDLE
     t_encoding = MCprocesses[t_index].encoding;
 	MCAutoValueRef t_output;
 
@@ -2447,12 +2456,19 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 	}
 
     if (t_encoding != kMCFileEncodingBinary)
-	{
-		MCAutoStringRef t_text_data;
-		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, &t_text_data);
+    {
+        MCAutoStringRef t_text_data;
+        if (!MCStringNormalizeLineEndings(p_data, 
+                                          kMCStringLineEndingStyleLegacyNative, 
+                                          false, 
+                                          &t_text_data, 
+                                          nullptr))
+        {
+            return;
+        }
         MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_encoding, t_stat);
-	}
-	else
+    }
+    else
         MCFilesExecWriteToStream(ctxt, t_stream, p_data, p_unit_type, t_encoding, t_stat);
 
 	if (t_stat != IO_NORMAL)
@@ -2461,9 +2477,6 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 		return;
 	}
 	ctxt . SetTheResultToEmpty();
-#ifdef OLD_IO_HANDLE
-	t_stream->flags |= IO_WRITTEN;
-#endif
 
 #if !defined _WIN32 && !defined _MACOSX
 	MCS_flush(t_stream);
@@ -2510,7 +2523,14 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
     if (MCprocesses[t_index].encoding != EN_BINARY)
 	{
 		MCStringRef t_text_data;
-		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, t_text_data);
+        if (!MCStringNormalizeLineEndings(p_data, 
+                                          kMCStringLineEndingStyleLegacyNative,
+                                          false, 
+                                          t_text_data, 
+                                          nullptr))
+        {
+            return;
+        }
 		// MW-2004-11-17: EOD should only happen when writing to processes in text-mode
 		if (MCStringFirstIndexOfChar(t_text_data, '\004', 0, kMCCompareExact, t_offset))
 		{
@@ -2572,10 +2592,6 @@ void MCFilesExecSeekInFile(MCExecContext& ctxt, MCNameRef p_file, bool is_end, b
 		t_stat = MCS_seek_cur(t_stream, p_at);
 	else
 		t_stat = MCS_seek_set(t_stream, p_at);
-
-#ifdef OLD_IO_HANDLE
-	t_stream->flags |= IO_SEEKED;
-#endif
 
 	if (t_stat != IO_NORMAL)
 		ctxt . LegacyThrow(EE_SEEK_BADWHERE);

@@ -31,7 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0
+#if DEPLOY_DMG
 // A Mac OS X device image has the following structure:
 //   DeviceHeader
 //   DevicePartion*
@@ -671,7 +671,7 @@ Exec_stat MCDeployDmgBuild(MCDeployDmgParameters& p_params)
 {
     return ES_NORMAL;
     
-#if 0
+#if DEPLOY_DMG
 	bool t_success;
 	t_success = true;
 
@@ -1293,7 +1293,7 @@ Exec_stat MCDeployDmgBuild(MCDeployDmgParameters& p_params)
 
 typedef void (*log_callback)(void *, const char *, ...);
 
-#if 0
+#if DEPLOY_DMG
 static bool read_hfsplus_fork(MCDeployFileRef p_file, uint32_t p_offset, HFSPlusForkData& p_fork, uint8_t*& r_data)
 {
 	uint8_t *t_data;
@@ -1444,7 +1444,7 @@ bool MCDeployDmgDump(const char *p_dmg_file, log_callback p_log, void *p_context
 	bool t_success;
 	t_success = true;
 
-#if 0
+#if DEPLOY_DMG
 	MCDeployFileRef t_dmg;
 	t_dmg = nil;
 	if (t_success &&

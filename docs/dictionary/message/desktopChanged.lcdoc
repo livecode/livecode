@@ -5,8 +5,8 @@ Type: message
 Syntax: desktopChanged
 
 Summary:
-Sent to the current card of the defaultStack whenever the <screenRect
-Function> changes.
+Sent to the current card of the defaultStack whenever the <screenRect>
+<function> changes.
 
 Associations: card
 
@@ -34,7 +34,7 @@ application.
 > receives the notification from the OS - this is to improve consistency
 > with behaviour in standalone applications.
 
-References: screenRect Function (function), screenRect (function),
+References: screenRect (function), function (glossary), 
 resizeStack (message), screenMouseLoc (property),
 windowBoundingRect (property)
 

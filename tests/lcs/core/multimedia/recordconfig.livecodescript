@@ -16,11 +16,26 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+private function HasQT
+    if the platform is not "MacOS" and the platform is not "Win32" then
+       return false
+    end if
+    
+    if the qtversion is "0.0" then
+       return false
+    end if
+    
+    if the environment is "server" then
+       return false
+    end if
+    
+    return true
+end HasQT
+
 on TestRecordCompressionTypes
-	if (the platform is "MacOS" or the platform is "Win32") then
-		if the qtversion is not "0.0" then
-      			TestAssert "record compression types not empty", the recordCompressionTypes is not empty
-    		end if
+	if HasQT() then
+       TestAssert "record compression types not empty", \
+          the recordCompressionTypes is not empty
   	end if
   	
   	repeat for each line tCompressionType in the recordCompressionTypes
@@ -31,13 +46,12 @@ on TestRecordCompressionTypes
 end TestRecordCompressionTypes
 
 on TestRecordFormats
-	if (the platform is "MacOS" or the platform is "Win32") then
-		if the qtversion is not "0.0" then
-			local tExpectedFormats
-			put "aiff,wave,ulaw,movie" into tExpectedFormats
-			replace comma with return in tExpectedFormats
-      			TestAssert "QT record compression formats", the recordFormats is tExpectedFormats
-    		end if
+	if HasQT() then
+	   local tExpectedFormats
+	   put "aiff,wave,ulaw,movie" into tExpectedFormats
+	   replace comma with return in tExpectedFormats
+       TestAssert "QT record compression formats", \
+          the recordFormats is tExpectedFormats
   	end if
   	
   	repeat for each line tFormat in the recordFormats

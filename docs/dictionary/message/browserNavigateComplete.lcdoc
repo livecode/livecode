@@ -4,14 +4,12 @@ Synonyms: xbrowser_navigatecomplete
 
 Type: message
 
-Syntax: browserNavigateComplete <instanceId>, <url>
+Syntax: browserNavigateComplete <pInstanceId>, <pUrl>
 
-Syntax: XBrowser_NavigateComplete <url>, <instanceId>
+Syntax: XBrowser_NavigateComplete <pUrl>, <pInstanceId>
 
 Summary:
 Sent when a browser has finished navigating to a url.
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -27,12 +25,10 @@ on browserNavigateComplete pInstanceId, pUrl
 end browserNavigateComplete
 
 Parameters:
-instanceId:
-The integer identifier of the browser object >*Note:* For general
-information on using the browser library, see the notes in the
-revBrowserOpen function reference.
+pInstanceId:
+The integer identifier of the browser object
 
-url:
+pUrl:
 The url that the browser finished navigating to
 
 Description:

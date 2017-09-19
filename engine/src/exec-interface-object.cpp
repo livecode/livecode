@@ -52,6 +52,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+#include "module-engine.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct _PropList
@@ -61,7 +63,7 @@ typedef struct _PropList
 }
 PropList;
 
-static PropList stackprops[] =
+static const PropList stackprops[] =
     {
         {"altId", P_ALT_ID},
         {"alwaysBuffer", P_ALWAYS_BUFFER},
@@ -131,7 +133,7 @@ static PropList stackprops[] =
         {"windowShape", P_WINDOW_SHAPE}
     };
 
-static PropList cardprops[] =
+static const PropList cardprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -169,7 +171,7 @@ static PropList cardprops[] =
         {"topPattern", P_TOP_PATTERN}
     };
 
-static PropList groupprops[] =
+static const PropList groupprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -239,7 +241,7 @@ static PropList groupprops[] =
         {"vScrollbar", P_VSCROLLBAR}
     };
 
-static PropList buttonprops[] =
+static const PropList buttonprops[] =
     {
         {"accelKey", P_ACCELERATOR_KEY},
         {"accelMods", P_ACCELERATOR_MODIFIERS},
@@ -327,7 +329,7 @@ static PropList buttonprops[] =
         {"visitedIcon", P_VISITED_ICON}
     };
 
-static PropList fieldprops[] =
+static const PropList fieldprops[] =
     {
         {"altId", P_ALT_ID},
         {"autoHilite", P_AUTO_HILITE},
@@ -407,7 +409,7 @@ static PropList fieldprops[] =
         {"vScrollbar", P_VSCROLLBAR}
     };
 
-static PropList imageprops[] =
+static const PropList imageprops[] =
     {
         {"altId", P_ALT_ID},
         {"angle", P_ANGLE},
@@ -468,7 +470,7 @@ static PropList imageprops[] =
         {"yHot", P_YHOT}
     };
 
-static PropList graphicprops[] =
+static const PropList graphicprops[] =
     {
         {"altId", P_ALT_ID},
         {"angle", P_ANGLE},
@@ -547,7 +549,7 @@ static PropList graphicprops[] =
         {"miterLimit", P_MITER_LIMIT},
     };
 
-static PropList scrollbarprops[] =
+static const PropList scrollbarprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -605,7 +607,7 @@ static PropList scrollbarprops[] =
         {"thumbSize", P_THUMB_SIZE}
     };
 
-static PropList playerprops[] =
+static const PropList playerprops[] =
     {
         {"altId", P_ALT_ID},
         {"alwaysBuffer", P_ALWAYS_BUFFER},
@@ -666,7 +668,7 @@ static PropList playerprops[] =
         {"visible", P_VISIBLE},
     };
 
-static PropList epsprops[] =
+static const PropList epsprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -721,7 +723,7 @@ static PropList epsprops[] =
         {"yScale", P_Y_SCALE}
     };
 
-static PropList colorpaletteprops[] =
+static const PropList colorpaletteprops[] =
     {
         {"name", P_SHORT_NAME},
         {"id", P_ID},
@@ -729,7 +731,7 @@ static PropList colorpaletteprops[] =
         {"rect", P_RECTANGLE}
     };
 
-static PropList audioclipprops[] =
+static const PropList audioclipprops[] =
     {
         {"altID", P_ALT_ID},
         {"id", P_ID},
@@ -737,7 +739,7 @@ static PropList audioclipprops[] =
         {"playLoudness", P_PLAY_LOUDNESS},
     };
 
-static PropList videoclipprops[] =
+static const PropList videoclipprops[] =
     {
         {"altID", P_ALT_ID},
         {"dontRefresh", P_DONT_REFRESH},
@@ -1466,10 +1468,9 @@ void MCObject::SetName(MCExecContext& ctxt, MCStringRef p_name)
 	//   change case of names of objects.
 	if (t_success && getname() != *t_new_name)
 	{
-		MCAutoNameRef t_old_name;
-		t_old_name . Clone(getname());
+		MCNewAutoNameRef t_old_name = getname();
 		setname(*t_new_name);
-		message_with_valueref_args(MCM_name_changed, t_old_name, getname());
+		message_with_valueref_args(MCM_name_changed, *t_old_name, getname());
 	}
 	
 	if (t_success)
@@ -3294,7 +3295,7 @@ void MCObject::GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef
 
 void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props)
 {
-	PropList *table;
+	const PropList *table;
 	uint2 tablesize;
 
 	switch (gettype())
@@ -4507,27 +4508,21 @@ void MCObject::GetRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, M
         return;
     }
     
-    hlist -> enumerate(ctxt, true, r_count, r_handlers);
+    hlist -> enumerate(ctxt, true, true, r_count, r_handlers);
 }
 
-void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers)
+static bool get_message_path_object_list_for_object(MCObject* p_object, MCObjectList*& r_object_list)
 {
-    bool t_first;
-    t_first = true;
-    
-    MCAutoArray<MCStringRef> t_handlers;
-    
-    // IM-2014-02-25: [[ Bug 11841 ]] Collect non-repeating objects in the message path
-    MCObjectList *t_object_list;
-    t_object_list = nil;
     
     bool t_success;
     t_success = true;
     
-    // MM-2013-09-10: [[ Bug 10634 ]] Make we search both parent scripts and library stacks for handlers.
+    MCObjectList *t_object_list;
+    t_object_list = nil;
+    
     t_success = MCObjectListAppendObjectList(t_object_list, MCfrontscripts);
     
-    for (MCObject *t_object = this; t_success && t_object != NULL; t_object = t_object -> parent)
+    for (MCObject *t_object = p_object; t_success && t_object != NULL; t_object = t_object -> getparent())
     {
         t_success = MCObjectListAppendObjectAndBehaviors(t_object_list, t_object);
     }
@@ -4537,10 +4532,36 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
     
     for (uint32_t i = 0; t_success && i < MCnusing; i++)
     {
-        if (MCusing[i] == this)
+        if (MCusing[i] == p_object)
             continue;
         t_success = MCObjectListAppendObjectAndBehaviors(t_object_list, MCusing[i]);
     }
+    
+    if (!t_success && t_object_list)
+    {
+        MCObjectListFree(t_object_list);
+        t_object_list = nil;
+    }
+    
+    r_object_list = t_object_list;
+    
+    return t_success;
+}
+
+void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers)
+{
+    bool t_first;
+    t_first = true;
+    
+    MCAutoArray<MCStringRef> t_handlers;
+    
+    bool t_success;
+    t_success = true;
+    
+    // IM-2014-02-25: [[ Bug 11841 ]] Collect non-repeating objects in the message path
+    MCObjectList *t_object_list;
+    if (t_success)
+        t_success = get_message_path_object_list_for_object(this, t_object_list);
     
     // IM-2014-02-25: [[ Bug 11841 ]] Enumerate the handlers for each object
     if (t_success)
@@ -4566,7 +4587,7 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
                 t_handler_array = nil;
                 uindex_t t_count;
                 
-                t_first = t_handler_list -> enumerate(ctxt, t_first, t_count, t_handler_array);
+                t_first = t_handler_list -> enumerate(ctxt, t_object_ref->getobject() == this, t_first, t_count, t_handler_array);
             
                 for (uindex_t i = 0; i < t_count; i++)
                     t_handlers . Push(t_handler_array[i]);
@@ -4628,6 +4649,7 @@ void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MC
             ctxt . Throw();
             return;
         }
+        
         MCListCopyAsString(*t_list, r_variables);
         return;
     }
@@ -4699,3 +4721,123 @@ void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MC
     else
         r_variables = nil;
 }
+
+void MCObject::GetRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_status)
+{
+    if (!getstack() -> iskeyed())
+    {
+        ctxt . LegacyThrow(EE_STACK_NOKEY);
+        return;
+    }
+    
+    MCAutoValueRefBase<MCScriptObjectRef> t_object_ref;
+    
+    if (MCEngineScriptObjectCreate(this, 0, &t_object_ref))
+    {
+        r_status = MCEngineExecDescribeScriptOfScriptObject(*t_object_ref);
+        if (MCExtensionConvertToScriptType(ctxt, r_status))
+            return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCObject::GetEffectiveRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_descriptions)
+{
+    bool t_success;
+    t_success = true;
+    
+    MCAutoArrayRef t_descriptions;
+    t_success = MCArrayCreateMutable(&t_descriptions);
+    
+    MCObjectList *t_object_list;
+    if (t_success)
+        t_success = get_message_path_object_list_for_object(this, t_object_list);
+    
+    if (t_success)
+    {
+        MCObjectList *t_object_ref;
+        t_object_ref = t_object_list;
+        
+        index_t t_index = 1;
+        do
+        {
+            if (!t_object_ref -> getremoved() && t_object_ref -> getobject() -> getstack() -> iskeyed())
+            {
+                MCAutoValueRef t_description;
+                
+                MCAutoValueRefBase<MCScriptObjectRef> t_script_object_ref;
+                
+                if (t_success)
+                    t_success = MCEngineScriptObjectCreate(t_object_ref -> getobject(), 0, &t_script_object_ref);
+                
+                MCAutoArrayRef t_object_description;
+                if (t_success)
+                {
+                    t_description = MCEngineExecDescribeScriptOfScriptObject(*t_script_object_ref, t_object_ref -> getobject() == this);
+                
+                    MCAutoStringRef t_object_id;
+                    t_object_ref -> getobject() -> GetLongId(ctxt, 0, &t_object_id);
+                    
+                    MCNameRef t_keys[2];
+                    t_keys[0] = MCNAME("object");
+                    t_keys[1] = MCNAME("description");
+                    
+                    MCValueRef t_values[2];
+                    t_values[0] = *t_object_id;
+                    t_values[1] = *t_description;
+                    
+                    t_success = MCArrayCreate(false,
+                                              t_keys,
+                                              t_values,
+                                              sizeof(t_keys) / sizeof(t_keys[0]),
+                                              &t_object_description);
+                }
+                
+                if (t_success)
+                    t_success = MCArrayStoreValueAtIndex(*t_descriptions,
+                                                         t_index,
+                                                         *t_object_description);
+                
+                ++t_index;
+                
+            }
+            
+            t_object_ref = t_object_ref -> prev();
+        }
+        while(t_success && t_object_ref != t_object_list);
+    }
+    
+    MCObjectListFree(t_object_list);
+    
+    MCValueRef t_value;
+    if (t_success)
+    {
+        t_value = t_descriptions.Take();
+        t_success = MCExtensionConvertToScriptType(ctxt, t_value);
+    }
+    
+    if (!t_success)
+        ctxt . Throw();
+    else
+        r_descriptions = t_value;
+}
+
+void MCObject::GetRevBehaviorUses(MCExecContext& ctxt, MCArrayRef& r_objects)
+{
+    MCParentScript *t_parent;
+    t_parent = MCParentScript::Lookup(this);
+    
+    if (t_parent == nullptr)
+    {
+        r_objects = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
+    if (!t_parent->CopyUses(r_objects))
+    {
+        ctxt.Throw();
+        return;
+    }
+}
+

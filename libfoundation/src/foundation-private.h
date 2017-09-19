@@ -55,6 +55,7 @@ enum
 {
     kMCTypeInfoTypeCodeMask = 0xff,
     kMCTypeInfoFlagHandlerIsForeign = 1 << 8,
+    kMCTypeInfoFlagHandlerIsVariadic = 1 << 9,
     
     // We use typecodes well above the fixed ones we have to
     // indicate 'special' typeinfo (i.e. those with no real
@@ -307,10 +308,6 @@ enum
 	// If set then the array is indirect (i.e. contents is within another
 	// immutable array).
 	kMCArrayFlagIsIndirect = 1 << 7,
-    // If set then the array keys are case sensitive.
-    kMCArrayFlagIsCaseSensitive = 1 << 8,
-    // If set the the array keys are form sensitive.
-    kMCArrayFlagIsFormSensitive = 1 << 9,
 };
 
 struct __MCArrayKeyValue
@@ -594,6 +591,9 @@ void __MCStreamFinalize(void);
 
 bool __MCJavaInitialize(void);
 void __MCJavaFinalize(void);
+
+bool __MCObjcInitialize(void);
+void __MCObjcFinalize(void);
 
 /* Default implementations of each of the function members of struct &
  * MCValueCustomCallbacks */

@@ -116,9 +116,9 @@ sdks/
 
 # Ignore prebuilts #
 ###################
+prebuilt/bin
 prebuilt/include
 prebuilt/lib
-prebuilt/bin
 prebuilt/share
 prebuilt/build
 prebuilt/packaged
@@ -129,3 +129,9 @@ prebuilt/unpacked
 ###################################
 stamp-mlc*
 _mlc
+
+# Built Notes   #
+#################
+LiveCodeNotes-*
+LiveCodeUpdates-*
+LiveCodeUserGuide-*

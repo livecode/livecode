@@ -2,7 +2,7 @@ Name: scrollbarPageDec
 
 Type: message
 
-Syntax: scrollbarPageDec <newPosition>
+Syntax: scrollbarPageDec <pNewPosition>
 
 Summary:
 Sent to a <scrollbar> when the user clicks above or left of the
@@ -22,7 +22,7 @@ on scrollbarPageDec
 end scrollbarPageDec
 
 Parameters:
-newPosition:
+pNewPosition:
 The new position of the scrollbar thumb.
 
 Description:

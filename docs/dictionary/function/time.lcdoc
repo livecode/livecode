@@ -2,7 +2,7 @@ Name: time
 
 Type: function
 
-Syntax: the [{ long | abbr[ev[iated]] | short }] [{ english | system }] time
+Syntax: the [{ long | abbreviated | short }] [{ english | system }] time
 
 Syntax: time()
 

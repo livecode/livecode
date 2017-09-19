@@ -2,7 +2,7 @@ Name: revStartXMLNode
 
 Type: message
 
-Syntax: revStartXMLNode <nodeName>, <nodeAttributes>
+Syntax: revStartXMLNode <pNodeName>, <pNodeAttributes>
 
 Summary:
 Sent to the <current card> when the <revXMLCreateTreeFromFile>
@@ -28,10 +28,10 @@ on revStartXMLNode theAttributes -- create a new card for this node
 end revStartXMLNode
 
 Parameters:
-nodeName (string):
+pNodeName (string):
 A string containing the name of the XML element currently being parsed.
 
-nodeAttributes (string):
+pNodeAttributes (string):
 A string containing the attributes of the XML element currently being
 parsed, one attribute per line. Each attribute name is separated from
 its value by a comma.

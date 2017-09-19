@@ -1,0 +1,228 @@
+/*
+Copyright (C) 2017 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+Name: Mac Native Button
+
+Description: 
+This widget is a native push button on Mac.
+
+Name: enabled
+
+Syntax: 
+set the enabled of <widget> to {true | false}
+get the enabled of <widget>
+
+Description:
+Use the <enabled> property to enable or disable the native button. When
+disabled, the button has a greyed out appearance and does not accept 
+clicks or touches.
+*/
+widget com.livecode.widget.native.mac.button
+
+use com.livecode.foreign
+use com.livecode.objc
+use com.livecode.widget
+use com.livecode.canvas
+use com.livecode.engine
+use com.livecode.library.widgetutils
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "Mac Native Button"
+metadata svgicon is "m -19.375905,-4.8110434 c -1.108001,0 -2,0.892 -2,2 l 0,15.4453124 c 0,1.108 0.891999,2 2,2 l 27.5722648,0 c 1.108,0 2.0000002,-0.892 2.0000002,-2 l 0,-15.4453124 c 0,-1.108 -0.8920002,-2 -2.0000002,-2 l -27.5722648,0 z m 6.857421,2.3847656 13.8593751,0 c 0.588,0 1.0664531,0.4812187 1.0644531,1.0742188 l 0,9.8437501 c 0,0.594 -0.4764531,1.074219 -1.0644531,1.074219 l -5.3203125,0 c 0,0 0.5936093,2.1484369 3.22460934,2.1484369 l 0,0.537109 -3.49218744,0 -4.5683598,0 -1.8789057,0 0,-0.537109 c 2.5589997,0 3.4921873,-2.1484369 3.4921873,-2.1484369 l -5.3164063,0 c -0.589,-10e-7 -1.066406,-0.480219 -1.066406,-1.074219 l 0,-9.8437501 c 0,-0.593 0.477406,-1.0742188 1.066406,-1.0742188 z m 0.07617,1.1425781 0,9.1074219 13.7070312,0 0,-9.1074219 -13.7070312,0 z m 7.8105468,1.12890629 c 0.04,0.364 -0.1062656,0.7291875 -0.3222656,0.9921875 -0.217,0.26200001 -0.5709219,0.46450001 -0.9199219,0.43750001 -0.047,-0.35600001 0.128125,-0.72598441 0.328125,-0.95898441 0.225,-0.262 0.6020625,-0.4577031 0.9140625,-0.4707031 z m -0.00586,1.50195311 c 0.202,0.008 0.7707688,0.080281 1.1347656,0.6132813 -0.028,0.019 -0.6779219,0.3956406 -0.6699219,1.1816406 0.009,0.938 0.8220313,1.2508594 0.8320313,1.2558594 -0.008,0.021 -0.1296882,0.4448126 -0.4296876,0.8828125 -0.2579999,0.3770001 -0.5262187,0.7537187 -0.9492187,0.7617187 -0.415,0.008 -0.5474375,-0.2460937 -1.0234375,-0.2460937 -0.475,0 -0.6245782,0.2379062 -1.0175781,0.2539062 -0.4080001,0.015 -0.7185154,-0.4081561 -0.9785159,-0.7851562 -0.533,-0.7709999 -0.941531,-2.1769532 -0.394531,-3.1269532 0.272,-0.471 0.7581563,-0.7693437 1.2851562,-0.7773437 0.4,-0.007 0.7794376,0.2695313 1.0234376,0.2695313 0.246,0 0.7054999,-0.3322032 1.1875,-0.2832032 z M -5.5887964,8.147941 c -0.331,0 -0.5996094,0.2676561 -0.5996094,0.5976561 0,0.331 0.2686093,0.599609 0.5996094,0.599609 0.33,10e-7 0.5986093,-0.268609 0.5996093,-0.599609 10e-8,-0.33 -0.2696093,-0.5976561 -0.5996093,-0.5976561 z"
+
+/**
+Syntax:
+set the label of <widget> to <pLabel>
+get the label of <widget>
+
+Summary: The label displayed by the button.
+
+Value (string): The string to use as the button label
+
+Example:
+    set the label of widget "Mac Button" to "Click me!"
+
+Description:
+The <label> property is the label displayed by the button.
+*/
+
+property label get mLabel set SetLabel
+metadata label.editor is "com.livecode.pi.string"
+metadata label.default is ""
+
+private variable mLabel as String
+private variable mButtonView as optional ObjcObject
+private variable mButtonProxy as optional ObjcObject
+
+private handler IsMac() returns Boolean
+    return the operating system is "mac"
+end handler
+
+/**/
+
+public handler OnCreate()
+	put "" into mLabel
+end handler
+
+public handler OnDestroy()
+	put nothing into mButtonView
+end handler
+
+/**/
+
+public handler OnOpen()
+    if IsMac() then
+        unsafe
+            CreateButtonView()
+        end unsafe
+    end if
+end handler
+
+public handler OnClose()
+    if IsMac() then
+        unsafe
+            DestroyButtonView()
+        end unsafe
+    end if
+end handler
+
+/**/
+
+public handler OnPaint()
+	if IsMac() then
+		return
+	end if
+
+    variable tLabel as String
+    if mLabel is empty then
+        put my name into tLabel
+    else
+        put mLabel into tLabel
+    end if
+    
+    paintPlaceholderImage(this canvas, my bounds, placeholderIcon("mac"), \
+        tLabel, my font, nothing)
+end handler
+
+/**/
+
+public handler OnSave(out rProperties as Array)
+	put mLabel into rProperties["label"]
+end handler
+
+public handler OnLoad(in pProperties as Array)
+	put pProperties["label"] into mLabel
+end handler
+
+/**/
+
+public handler OnParentPropertyChanged()
+    unsafe
+        UpdateButtonView()
+    end unsafe
+end handler
+
+/**/
+
+private handler SetLabel(in pLabel as String) returns nothing
+	put pLabel into mLabel
+	unsafe
+		UpdateButtonView()
+	end unsafe
+    redraw all
+end handler
+
+/****/
+
+private handler ButtonActionCallback(in pSender as ObjcObject, in pContext as optional any) returns nothing
+	post "mouseUp"
+end handler
+
+/****/
+
+private type NSUInteger is CULong
+private foreign handler ObjC_NSButtonAlloc() returns ObjcRetainedId binds to "objc:NSButton.+alloc"
+private foreign handler ObjC_NSButtonInit(in pObj as ObjcId) returns ObjcId binds to "objc:NSButton.-init"
+private foreign handler ObjC_NSButtonSetEnabled(in pObj as ObjcId, in pEnabled as CBool) returns nothing binds to "objc:NSButton.-setEnabled:"
+private foreign handler ObjC_NSButtonSetFont(in pObj as ObjcId, in pFont as ObjcId) returns nothing binds to "objc:NSButton.-setFont:"
+private foreign handler ObjC_NSButtonSetButtonType(in pObj as ObjcId, in pStyle as NSUInteger) returns nothing binds to "objc:NSButton.-setButtonType:"
+private foreign handler ObjC_NSButtonSetBezelStyle(in pObj as ObjcId, in pStyle as NSUInteger) returns nothing binds to "objc:NSButton.-setBezelStyle:"
+private foreign handler ObjC_NSButtonSetBordered(in pObj as ObjcId, in pBordered as CBool) returns nothing binds to "objc:NSButton.-setBordered:"
+private foreign handler ObjC_NSButtonSetTitle(in pObj as ObjcId, in pTitle as ObjcId) returns nothing binds to "objc:NSButton.-setTitle:"
+private foreign handler ObjC_NSButtonSetTarget(in pObj as ObjcId, in pTarget as ObjcId) returns nothing binds to "objc:NSButton.-setTarget:"
+private foreign handler ObjC_NSButtonSetAction(in pObj as ObjcId, in pAction as UIntPtr) returns nothing binds to "objc:NSButton.-setAction:"
+
+private foreign handler MCCanvasFontGetHandle(in pFont as Font, out rHandle as ObjcId) returns nothing binds to "<builtin>"
+
+private unsafe handler CreateButtonView()
+	variable tButtonView as ObjcObject
+	put ObjC_NSButtonAlloc() into tButtonView
+	put ObjC_NSButtonInit(tButtonView) into tButtonView
+
+    /* For a standard push button we need:
+     *   buttonType to be NSMomentaryPushInButton = 7
+     *   bezelStyle to be NSRoundedBezelStyle = 1
+     *   bordered to be true */
+    ObjC_NSButtonSetButtonType(tButtonView, 7)
+    ObjC_NSButtonSetBezelStyle(tButtonView, 1)
+    ObjC_NSButtonSetBordered(tButtonView, true)
+
+    set my native layer to PointerFromObjcObject(tButtonView)
+	put tButtonView into mButtonView
+
+	put ObjcProxyGetTarget(ButtonActionCallback, nothing) into mButtonProxy
+	ObjC_NSButtonSetTarget(mButtonView, mButtonProxy)
+	ObjC_NSButtonSetAction(mButtonView, ObjcProxyGetAction())
+
+	UpdateButtonView()
+end handler
+
+private unsafe handler DestroyButtonView()
+	set my native layer to nothing
+	put nothing into mButtonView
+	put nothing into mButtonProxy
+end handler
+
+private unsafe handler UpdateButtonView()
+	if mButtonView is nothing then
+		return
+	end if
+	
+    /* Set the enabled state of the button to the host property. */
+    ObjC_NSButtonSetEnabled(mButtonView, my enabled)
+
+    /* Set the font of the button to the host property. */
+    variable tFontToUse as ObjcObject
+    MCCanvasFontGetHandle(my font, tFontToUse)
+    ObjC_NSButtonSetFont(mButtonView, tFontToUse)
+
+    /* Set the label of the button to mLabel, if not empty; otherwise to the
+     * name of the host. */
+    variable tLabelToUse as String
+    if mLabel is the empty string then
+        put my name into tLabelToUse
+    else
+        put mLabel into tLabelToUse
+    end if
+	ObjC_NSButtonSetTitle(mButtonView, StringToNSString(tLabelToUse))
+end handler
+
+/**/
+
+end widget

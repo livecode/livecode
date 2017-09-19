@@ -35,18 +35,17 @@ The <asin> <function> <return|returns> a number between -pi/2 and pi/2.
 The result:
 The result of the <asin> <function> is <return|returned> in
 <radian|radians>. To get this result in <degree|degrees>, use the
-following <custom function>:.
+following <custom function>:
+
+    function asinInDegrees pMagnitude
+        return asin(pMagnitude) * 180 / pi
+    end asinInDegrees
 
 Description:
 Use the <asin> <function> to find the arc sine of a number.
 
 The arc sine of <number> is an angle whose sine is equal to <number>. In
 other words, <asin> is an <inverse> of the <sin> <function>.
-
-    function asinInDegrees theMagnitude
-    return asin(theMagnitude) * 180 / pi
-
-    end asinInDegrees
 
 
 References: pi (constant), function (control structure), sin (function),

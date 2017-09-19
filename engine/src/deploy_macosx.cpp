@@ -1312,7 +1312,7 @@ template<typename T> bool MCDeployToMacOSXMainBody(const MCDeployParameters& p_p
 		t_old_project_offset = t_project_segment -> fileoff;
 		t_project_segment -> filesize = t_project_size;
 		t_project_segment -> vmsize = t_project_size;
-		((section *)(t_project_segment + 1))[0] . size = t_project_size;
+		((typename T::section *)(t_project_segment + 1))[0] . size = t_project_size;
         
 		if (t_payload_segment != nil)
 		{
@@ -1321,7 +1321,7 @@ template<typename T> bool MCDeployToMacOSXMainBody(const MCDeployParameters& p_p
 			t_old_payload_offset = t_payload_segment -> fileoff;
 			t_payload_segment -> filesize = t_payload_size;
 			t_payload_segment -> vmsize = t_payload_size;
-			((section *)(t_payload_segment + 1))[0] . size = t_payload_size;
+			((typename T::section *)(t_payload_segment + 1))[0] . size = t_payload_size;
 			relocate_segment_command<T>(t_project_segment, (t_payload_segment -> fileoff + t_payload_size) - t_old_project_offset, (t_payload_segment -> fileoff + t_payload_size) - t_old_project_offset);
 		}
 		
@@ -1585,7 +1585,7 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
     return t_success;
 }
 
-#if 0
+#if LEGACY_EMBEDDED_DEPLOY
 static bool MCDeployToMacOSXEmbedded(const MCDeployParameters& p_params, bool p_big_endian, MCDeployFileRef p_engine, uint32_t p_engine_offset, uint32_t p_engine_size, uint32_t& x_offset, MCDeployFileRef p_output)
 {
 	bool t_success;
@@ -1845,7 +1845,7 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
 		t_output_offset = 0;
 		if (!p_embedded)
             t_success = MCDeployToMacOSXMain(p_params, false, p_engine, 0, 0, t_output_offset, p_output, p_validate_header_callback);
-#if 0
+#if LEGACY_EMBEDDED_DEPLOY
 		else
 			t_success = MCDeployToMacOSXEmbedded(p_params, false, p_engine, 0, 0, t_output_offset, p_output);
 #endif
@@ -1906,7 +1906,7 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
                     // Write out this arch's portion.
                     if (!p_embedded)
                         t_success = MCDeployToMacOSXMain(p_params, false, p_engine, t_fat_arch . offset, t_fat_arch . size, t_output_offset, p_output, p_validate_header_callback);
-    #if 0
+    #if LEGACY_EMBEDDED_DEPLOY
                     else
                         t_success = MCDeployToMacOSXEmbedded(p_params, false, p_engine, 0, 0, t_output_offset, p_output);
     #endif

@@ -4,14 +4,12 @@ Synonyms: xbrowser_click
 
 Type: message
 
-Syntax: browserClick <instanceId>, <elementId>
+Syntax: browserClick <pInstanceId>, <pElementId>
 
-Syntax: XBrowser_Click <elementId>, <instanceId>
+Syntax: XBrowser_Click <pElementId>, <pInstanceId>
 
 Summary:
 Sent when the mouse is clicked in a browser object.
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -29,22 +27,11 @@ on browserClick pInstanceId, pElementId
 end browserClick
 
 Parameters:
-instanceId:
+pInstanceId:
 The integer identifier of the browser object
 
-elementId:
-The id of the html element that was clicked >*Note:* The browserClick
-message is only sent if advanced browser messages are turned on. To turn
-on advanced browser messages use the following command: revBrowserSet
-<instanceId>, "messages", "true" The browserClick message is currently
-only available on Windows.The id of an html element is the element's
-"id" attribute. For example <div id="navbar">. As this attribute is
-optional in most cases, not all html elements will have an id. If the
-html element that the mouse was clicked over does not have an id, then
-the elementId parameter will be empty. >*Note:* The browserClick message
-is not sent on OS X due to lack of system support in the underlying
-browser object. >*Note:* For general information on using the browser
-library, see the notes in the revBrowserOpen function reference.
+pElementId:
+The id of the html element that was clicked 
 
 Description:
 The <browserClick> message is sent to the current card of a stack
@@ -54,7 +41,7 @@ containing a browser object when the mouse is clicked in the browser.
 > messages are turned on. To turn on advanced browser messages use the
 > following command:
 
-<revBrowserSet> &lt;instanceId&gt;, "messages", "true"
+    revBrowserSet tInstanceId, "messages", "true"
 
 The <browserClick> message is currently only available on Windows.
 
@@ -72,4 +59,3 @@ parameter will be empty.
 
 References: revBrowserSet (command), revBrowserOpen (function), function (glossary),
 browserOver (message)
-

@@ -29,8 +29,8 @@ A LiveCode statement, a container with one or more statements, or a
 string that evaluates to a statement.
 
 The result:
-The <result> is
-affected by the LiveCode commands and functions in the script in the normal way.
+The <result> is affected by the LiveCode commands and functions in the 
+script in the normal way.
 
 Description:
 Use the <do> command to execute statements in a container, or to execute

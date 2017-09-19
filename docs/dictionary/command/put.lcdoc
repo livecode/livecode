@@ -11,7 +11,7 @@ Places a <value> into a <container>.
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
@@ -152,6 +152,14 @@ create the <resource fork>.
 > 1738](https://tools.ietf.org/html/rfc1738). Ensure that you
 > <URLEncode> any username and password fields appropriately for FTP
 > URLs.
+
+> *Cross-platform note:* The HTML5 engine only supports HTTP and HTTPs
+> protocols.
+
+> *Cross-platform note:* URLs fetched by the HTML5 engine from a domain
+> other than that of the hosting the page may be blocked by web browsers,
+> unless the server hosting the URL sets the "Access-Control-Origin" header
+> appropriately.
 
 References: delete URL (command),
 put (command), local (command),

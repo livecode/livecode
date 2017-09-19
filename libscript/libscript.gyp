@@ -29,6 +29,7 @@
 			'src/script-object.cpp',
 			'src/script-package.cpp',
 			'src/script-execute.cpp',
+			'src/script-execute-objc.mm',
 			'src/script-error.cpp',
 		],
 	},
@@ -73,6 +74,15 @@
 			
 			'conditions':
 			[
+				[
+					'OS != "mac" and OS != "ios"',
+					{
+						'sources!':
+						[
+							'src/script-execute-objc.mm',
+						],
+					},
+				],
 				[
 					'OS == "linux" or OS == "android"',
 					{

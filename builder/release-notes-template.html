@@ -611,14 +611,32 @@ table{border-spacing:1em 2px;}
     font-family: FontAwesome, "DejaVu Sans", sans-serif;
     page-break-inside: avoid;
   }
-
+  
   h1 {
+     color: #ffffff;
+     padding: 0;
+     border-radius: 1ex;
+     display: block;
+  }
+
+  h1.community {
     background: rgb(159,201,42);
-    color: #ffffff;
-    padding: 0;
     border: 1ex solid rgb(159,201,42);
-    border-radius: 1ex;
-    display: block;
+  }
+  
+  h1.business {
+    background: #000000;
+    border: 1ex solid #000000;
+ }
+  
+  h1.indy {
+    background: rgb(48,160,209);
+    border: 1ex solid rgb(48,160,209);
+ }
+  
+  h1.communityplus {
+    background: rgb(49,163,102);
+    border: 1ex solid rgb(49,163,102);
   }
 
   h1.title {
@@ -661,10 +679,33 @@ function regenerate() {
 			}
 			current_level = level;
 		}
-
-		return '<h' + level + ' id="' + escapedText + '">'
-			+ text +
-			'</h' + level + '>';
+      
+      if (level == 1)
+      {
+         var t_class = "community";
+         if (text.indexOf("Indy") !== -1)
+         {
+            t_class = "indy";
+         } 
+         else if (text.indexOf("Business") !== -1)
+         {
+            t_class = "business";
+         } 
+         else if (text.indexOf("Community Plus") !== -1)
+         {
+            t_class = "communityplus";
+         }
+         
+         return '<h' + level + ' class="' + t_class + '" id="' + escapedText + '">'
+   			+ text +
+   			'</h' + level + '>';
+      }
+      else
+      {
+         return '<h' + level + ' id="' + escapedText + '">'
+   			+ text +
+   			'</h' + level + '>';
+      }
 	}
 
 	// A paragraph containing just "[TOC]" is a table of contents

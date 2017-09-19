@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 on libraryStack
 end libraryStack
 
-private function GetBuildPlatform
+function GetBuildPlatform
 	switch the platform
 		case "MacOS"
 			if the processor is "x86_64" then

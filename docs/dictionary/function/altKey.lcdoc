@@ -29,11 +29,12 @@ The <altKey> <function> <return|returns> down if the key is pressed and
 up if it's not.
 
 Description:
-Use the <altKey> <function(control structure)> to check whether the <Alt
-key>, <Meta key>, or Option key is being pressed. You can use <altKey>
-to add alternative capabilities to user actions such as clicking.
+Use the <altKey> <function(control structure)> to check whether the 
+<Alt key>, <Meta key>, or <Option key> is being pressed. You can use 
+<altKey> to add alternative capabilities to user actions such as 
+clicking.
 
-The <altKey>, <optionKey>, and metaKey <function(glossary)|functions>
+The <altKey>, <optionKey>, and <metaKey> <function(glossary)|functions>
 all <return> the same <value>. Which one to use is a matter of
 preference. The terminology varies depending on platform. Users of
 different operating systems may know this key as the Option key (Mac OS

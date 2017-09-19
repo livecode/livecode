@@ -2,10 +2,12 @@ Name: keyUp
 
 Type: message
 
-Syntax: keyUp <keyname>
+Syntax: keyUp <pKeyName>
 
 Summary:
 Sent when the user releases a pressed key.
+
+Associations: card,field
 
 Introduced: 1.0
 
@@ -20,7 +22,7 @@ on keyUp -- play a keyclick sound
 end keyUp
 
 Parameters:
-keyName:
+pKeyName:
 The actual character of the pressed key.
 
 Description:

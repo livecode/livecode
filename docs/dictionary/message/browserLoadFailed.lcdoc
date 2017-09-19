@@ -2,7 +2,7 @@ Name: browserLoadFailed
 
 Type: message
 
-Syntax: browserLoadFailed <url>, <error>
+Syntax: browserLoadFailed <pUrl>, <pError>
 
 Summary:
 Sent when the given URL fails to load.
@@ -19,10 +19,10 @@ on browserLoadFailed pURL, pError
 end browserLoadFailed
 
 Parameters:
-url:
+pUrl:
 The URL that failed to load.
 
-error:
+pError:
 The error message.
 
 Description:

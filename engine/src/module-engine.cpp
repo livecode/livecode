@@ -34,11 +34,14 @@
 #include "redraw.h"
 #include "eventqueue.h"
 #include "globals.h"
+#include "hndlrlst.h"
 
 #include "dispatch.h"
 #include "notify.h"
 
 #include "module-engine.h"
+
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -881,6 +884,325 @@ MCEngineEvalTheItemDelimiter(MCStringRef& r_del)
             MCECptr != nil ? MCECptr->GetItemDelimiter() : MCSTR(",");
     
     r_del = MCValueRetain(t_del);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef &r_resource_path);
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalMyResourcesFolder(MCStringRef& r_folder)
+{
+    MCScriptModuleRef t_module = MCScriptGetCurrentModule();
+    if (t_module == nullptr)
+    {
+        r_folder = nullptr;
+        return;
+    }
+    
+    if (!MCEngineLookupResourcePathForModule(t_module,
+                                             r_folder))
+    {
+        r_folder = nullptr;
+        return;
+    }
+}
+    
+////////////////////////////////////////////////////////////////////////////////
+    
+static bool
+__MCEngineDescribeScriptOfScriptObject_ConstantCallback(void *p_context,
+                                                        MCHandlerConstantInfo *p_info)
+{
+    MCArrayRef t_array = (MCArrayRef)p_context;
+    
+    if (!MCArrayStoreValue(t_array,
+                           false,
+                           p_info->name,
+                           p_info->value))
+    {
+        return false;
+    }
+    
+    return true;
+}
+
+static bool
+__MCEngineDescribeScriptOfScriptObject_VariableCallback(void *p_context,
+                                                        MCVariable *p_variable)
+{
+    MCProperListRef t_list = (MCProperListRef)p_context;
+    
+    if (!MCProperListPushElementOntoBack(t_list,
+                           p_variable->getname()))
+    {
+        return false;
+    }
+    
+    return true;
+}
+
+static bool
+__MCEngineDescribeScriptOfScriptObject_HandlerCallback(void *p_context,
+                                                       Handler_type p_type,
+                                                       MCHandler* p_handler,
+                                                       bool p_include_all)
+{
+    
+    if (!p_include_all && p_handler->isprivate())
+    {
+        // skip
+        return true;
+    }
+    
+    MCArrayRef t_array = (MCArrayRef)p_context;
+    
+    MCAutoArrayRef t_entry;
+    if (!MCArrayCreateMutable(&t_entry))
+    {
+        return false;
+    }
+    
+    MCValueRef t_value;
+    switch(p_type)
+    {
+        case HT_MESSAGE:
+            t_value = MCNameGetString(MCNAME("command"));
+            break;
+        case HT_FUNCTION:
+            t_value = MCNameGetString(MCNAME("function"));
+            break;
+        case HT_GETPROP:
+            t_value = MCNameGetString(MCNAME("getprop"));
+            break;
+        case HT_SETPROP:
+            t_value = MCNameGetString(MCNAME("setprop"));
+            break;
+        case HT_BEFORE:
+            t_value = MCNameGetString(MCNAME("before"));
+            break;
+        case HT_AFTER:
+            t_value = MCNameGetString(MCNAME("after"));
+            break;
+        default:
+            MCUnreachable();
+            break;
+    }
+    
+    if (!MCArrayStoreValue(*t_entry,
+                           false,
+                           MCNAME("type"),
+                           t_value))
+    {
+        return false;
+    }
+    
+    if (!MCArrayStoreValue(*t_entry,
+                           false,
+                           MCNAME("is_private"),
+                           p_handler->isprivate() ? kMCTrue : kMCFalse))
+    {
+        return false;
+    }
+    
+    MCAutoProperListRef t_param_names;
+    if (!p_handler->getparamnames_as_properlist(&t_param_names))
+    {
+        return false;
+    }
+    
+    if (!MCArrayStoreValue(*t_entry,
+                           false,
+                           MCNAME("parameters"),
+                           *t_param_names))
+    {
+        return false;
+    }
+    
+    MCAutoNumberRef t_start_line;
+    if (!MCNumberCreateWithInteger(p_handler->getstartline(), &t_start_line))
+    {
+        return false;
+    }
+    
+    if (!MCArrayStoreValue(*t_entry,
+                           false,
+                           MCNAME("start_line"),
+                           *t_start_line))
+    {
+        return false;
+    }
+    
+    MCAutoNumberRef t_end_line;
+    if (!MCNumberCreateWithInteger(p_handler->getendline(), &t_end_line))
+    {
+        return false;
+    }
+    
+    if (!MCArrayStoreValue(*t_entry,
+                           false,
+                           MCNAME("end_line"),
+                           *t_end_line))
+    {
+        return false;
+    }
+    
+    if (p_include_all)
+    {
+        MCAutoProperListRef t_global_names;
+        if (!p_handler->getglobalnames_as_properlist(&t_global_names))
+        {
+            return false;
+        }
+        
+        if (!MCArrayStoreValue(*t_entry,
+                               false,
+                               MCNAME("globals"),
+                               *t_global_names))
+        {
+            return false;
+        }
+        
+        MCAutoProperListRef t_variable_names;
+        if (!p_handler->getvariablenames_as_properlist(&t_variable_names))
+        {
+            return false;
+        }
+        
+        if (!MCArrayStoreValue(*t_entry,
+                               false,
+                               MCNAME("locals"),
+                               *t_variable_names))
+        {
+            return false;
+        }
+        
+        MCAutoProperListRef t_constant_names;
+        if (!p_handler->getconstantnames_as_properlist(&t_constant_names))
+        {
+            return false;
+        }
+        
+        if (!MCArrayStoreValue(*t_entry,
+                               false,
+                               MCNAME("constants"),
+                               *t_constant_names))
+        {
+            return false;
+        }
+        
+    }
+    
+    if (!MCArrayStoreValue(t_array,
+                           false,
+                           p_handler->getname(),
+                           *t_entry))
+    {
+        return false;
+    }
+    
+    return true;
+}
+
+
+
+extern "C" MC_DLLEXPORT_DEF MCArrayRef MCEngineExecDescribeScriptOfScriptObject(MCScriptObjectRef p_object, bool p_include_all)
+{
+    // This does not require script access.
+    
+    MCObject *t_object = nil;
+    uint32_t t_part_id = 0;
+    if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
+    {
+        return nil;
+    }
+    
+    MCAutoArrayRef t_description;
+    if (!MCArrayCreateMutable(&t_description))
+    {
+        return nil;
+    }
+    
+    bool t_valid = t_object->parsescript(False);
+    
+    if (!MCArrayStoreValue(*t_description,
+                           false,
+                           MCNAME("valid"),
+                           t_valid ? kMCTrue : kMCFalse))
+    {
+        return nil;
+    }
+    
+    if (t_valid)
+    {
+        MCHandlerlist *t_hlist = t_object->gethandlers();
+        
+        if (p_include_all)
+        {
+            MCAutoArrayRef t_constants;
+            if (!MCArrayCreateMutable(&t_constants) ||
+                (t_hlist != nil &&
+                 !t_hlist->listconstants(__MCEngineDescribeScriptOfScriptObject_ConstantCallback,
+                                         *t_constants)) ||
+                !t_constants.MakeImmutable() ||
+                !MCArrayStoreValue(*t_description,
+                                   false,
+                                   MCNAME("constants"),
+                                   *t_constants))
+            {
+                return nil;
+            }
+        
+            MCAutoProperListRef t_variables;
+            if (!MCProperListCreateMutable(&t_variables) ||
+                (t_hlist != nil &&
+                 !t_hlist->listvariables(__MCEngineDescribeScriptOfScriptObject_VariableCallback,
+                                         *t_variables)) ||
+                !t_variables.MakeImmutable() ||
+                !MCArrayStoreValue(*t_description,
+                                   false,
+                                   MCNAME("locals"),
+                                   *t_variables))
+            {
+                return nil;
+            }
+
+            MCAutoProperListRef t_globals;
+            if (!MCProperListCreateMutable(&t_globals) ||
+                (t_hlist != nil &&
+                 !t_hlist->listglobals(__MCEngineDescribeScriptOfScriptObject_VariableCallback,
+                                         *t_globals)) ||
+                !t_globals.MakeImmutable() ||
+                !MCArrayStoreValue(*t_description,
+                                   false,
+                                   MCNAME("globals"),
+                                   *t_globals))
+            {
+                return nil;
+            }
+        }
+        
+        MCAutoArrayRef t_handlers;
+        if (!MCArrayCreateMutable(&t_handlers) ||
+            (t_hlist != nil &&
+             !t_hlist->listhandlers(__MCEngineDescribeScriptOfScriptObject_HandlerCallback,
+                                    *t_handlers, p_include_all)) ||
+            !t_handlers.MakeImmutable() ||
+            !MCArrayStoreValue(*t_description,
+                               false,
+                               MCNAME("handlers"),
+                               *t_handlers))
+        {
+            return nil;
+        }
+    }
+    
+    if (!t_description.MakeImmutable())
+    {
+        return nil;
+    }
+    
+    return t_description.Take();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

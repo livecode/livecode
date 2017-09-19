@@ -10,6 +10,8 @@ a <drag and drop>.
 
 Introduced: 2.0
 
+Associations: card, field, button, graphic, scrollbar, player, image
+
 OS: mac, windows, linux
 
 Platforms: desktop, server
@@ -40,14 +42,11 @@ the user releases the mouse button. For example, the following
 the mouse is over it:
 
     on dragEnter
-    set the borderColor of the target to "green"
-
+        set the borderColor of the target to "green"
     end dragEnter
 
-
     on dragLeave
-    set the borderColor of the target to empty
-
+        set the borderColor of the target to empty
     end dragLeave
 
 

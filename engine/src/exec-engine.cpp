@@ -50,6 +50,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "libscript/script.h"
 
+#include "license.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, Version, 1)
@@ -105,6 +107,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStack, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStackByName, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Dispatch, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Send, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Engine, SendScript, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, SendInTime, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Call, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, LockErrors, 0)
@@ -235,11 +238,11 @@ MCExecSetTypeInfo *kMCEngineSecurityCategoriesTypeInfo = &_kMCEngineSecurityCate
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern LT command_table[];
+extern const LT command_table[];
 extern const uint4 command_table_size;
-extern Cvalue constant_table[];
+extern const Cvalue constant_table[];
 extern const uint4 constant_table_size;
-extern LT factor_table[];
+extern const LT factor_table[];
 extern const uint4 factor_table_size;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1191,7 +1194,7 @@ Exec_stat _MCEngineExecDoDispatch(MCExecContext &ctxt, int p_handler_type, MCNam
 		t_object = ctxt . GetObjectPtr();
 		
 	// Fetch current default stack and target settings
-	MCStackHandle t_old_stack(MCdefaultstackptr->GetHandle());
+	MCStackHandle t_old_stack = MCdefaultstackptr;
 	
 	// Cache the current 'this stack' (used to see if we should switch back
 	// the default stack).
@@ -1474,6 +1477,32 @@ void MCEngineExecSend(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_
 void MCEngineExecCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target)
 {
 	MCEngineSendOrCall(ctxt, p_script, p_target, false);
+}
+
+void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target)
+{
+    MCObject *optr;
+    if (p_target == nil)
+        optr = ctxt . GetObject();
+    else
+        optr = p_target -> object;
+    
+    Boolean oldlock = MClockmessages;
+    MClockmessages = False;
+
+    Boolean added = False;
+    if (MCnexecutioncontexts < MAX_CONTEXTS)
+    {
+        MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+        added = True;
+    }
+    
+    if (optr->domess(p_script, nil, false) == ES_ERROR)
+        ctxt . Throw();
+    
+	if (added)
+		MCnexecutioncontexts--;
+	MClockmessages = oldlock;
 }
 
 void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr p_target, double p_delay, int p_units)
@@ -2042,32 +2071,12 @@ void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStr
 
 void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
 {
-    bool t_success;
-    switch (MClicenseparameters.license_class)
+    if (!MCStringFromLicenseClass(MClicenseparameters.license_class,
+                                     true,
+                                     r_edition))
     {
-        case kMCLicenseClassCommunity:
-            t_success = MCStringCreateWithCString("community", r_edition);
-            break;
-			
-		case kMCLicenseClassEvaluation:
-        case kMCLicenseClassCommercial:
-            t_success = MCStringCreateWithCString("commercial", r_edition);
-            break;
-			
-		case kMCLicenseClassProfessionalEvaluation:
-        case kMCLicenseClassProfessional:
-            t_success = MCStringCreateWithCString("professional", r_edition);
-            break;
-            
-        default:
-            t_success = false;
-            break;
+        ctxt . Throw();
     }
-    
-    if (t_success)
-        return;
-    
-    ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

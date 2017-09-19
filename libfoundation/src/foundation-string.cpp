@@ -1204,7 +1204,9 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 			t_value = va_arg(p_args, MCValueRef);
 			
 			MCAutoStringRef t_string;
-			if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeString)
+			if (t_value == nullptr)
+                t_string = MCSTR("(null)");
+            else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeString)
 				t_string = (MCStringRef)t_value;
             else
 				/* UNCHECKED */ MCValueCopyDescription (t_value, &t_string);
@@ -6377,6 +6379,7 @@ MC_DLLEXPORT_DEF MCStringRef kMCMixedString;
 MC_DLLEXPORT_DEF MCStringRef kMCCommaString;
 MC_DLLEXPORT_DEF MCStringRef kMCLineEndString;
 MC_DLLEXPORT_DEF MCStringRef kMCTabString;
+MC_DLLEXPORT_DEF MCStringRef kMCNulString;
 
 bool __MCStringInitialize(void)
 {
@@ -6405,6 +6408,9 @@ bool __MCStringInitialize(void)
     
     if (!MCStringCreateWithNativeChars((const char_t *)"\t", 1, kMCTabString))
 		return false;
+        
+    if (!MCStringCreateWithNativeChars((const char_t *)"\0", 1, kMCNulString))
+		return false;
 
 	return true;
 }
@@ -6426,6 +6432,8 @@ void __MCStringFinalize(void)
     kMCLineEndString = nil;
     MCValueRelease(kMCTabString);
     kMCTabString = nil;
+    MCValueRelease(kMCNulString);
+    kMCNulString = nil;
 
 #if defined(__LINUX__)
     __MCStringFinalizeIconv();
@@ -6959,6 +6967,108 @@ bool MCStringGetNumericValue(MCStringRef self, double &r_value)
     }
     else
         return false;
+}
+
+MC_DLLEXPORT bool
+MCStringNormalizeLineEndings(MCStringRef p_input, 
+                             MCStringLineEndingStyle p_to_style, 
+                             MCStringLineEndingOptions p_options,
+                             MCStringRef& r_output, 
+                             MCStringLineEndingStyle* r_original_style)
+{
+    MCStringLineEndingStyle t_original_style = kMCStringLineEndingStyleLF;
+    uindex_t t_first_lf = 0;
+    uindex_t t_first_cr = 0;
+    
+    if (MCStringFirstIndexOfChar(p_input, '\r', 0, kMCStringOptionCompareExact, t_first_cr))
+    {
+        if (MCStringFirstIndexOfChar(p_input, '\n', 0, kMCStringOptionCompareExact, t_first_lf))
+        {
+            if (t_first_cr + 1 == t_first_lf)
+            {
+                t_original_style = kMCStringLineEndingStyleCRLF;
+            }
+            else if (t_first_cr < t_first_lf)
+            {
+                t_original_style = kMCStringLineEndingStyleCR;
+            }
+        }
+        else
+        {
+            t_original_style = kMCStringLineEndingStyleCR;
+        }
+    }
+    
+    // normalize input to LF line endings first
+    MCAutoStringRef t_mutable_input;
+    if (!MCStringMutableCopy(p_input, &t_mutable_input))
+    {
+        return false;
+    }
+    if (!MCStringFindAndReplace(*t_mutable_input, 
+                                MCSTR("\r\n"), 
+                                MCSTR("\n"), 
+                                kMCStringOptionCompareExact))
+    {
+        return false;
+    }
+    if (!MCStringFindAndReplace(*t_mutable_input, 
+                                MCSTR("\r"), 
+                                MCSTR("\n"), 
+                                kMCStringOptionCompareExact))
+    {
+        return false;
+    }
+    
+    // AL-2014-07-21: [[ Bug 12162 ]] Convert PS to LF, and LS to VT on text import.
+    if (((p_options & kMCStringLineEndingOptionNormalizeLSToVT) != 0) &&
+        !MCStringFindAndReplaceChar(*t_mutable_input, 
+                                   (const codepoint_t)0x2028, 
+                                   (const codepoint_t)0x0B, 
+                                    kMCStringOptionCompareExact))
+    {
+        return false;
+    }
+    if (((p_options & kMCStringLineEndingOptionNormalizePSToLineEnding) != 0) &&
+        !MCStringFindAndReplaceChar(*t_mutable_input, 
+                                   (const codepoint_t)0x2029, 
+                                   (const codepoint_t)0x0A, 
+                                    kMCStringOptionCompareExact))
+    {
+        return false;
+    }
+    
+    // now convert the line endings to the proper version
+    if ((p_to_style == kMCStringLineEndingStyleCR) &&
+        !MCStringFindAndReplace(*t_mutable_input, 
+                                MCSTR("\n"), 
+                                MCSTR("\r"), 
+                                kMCStringOptionCompareExact))
+    {
+        return false;
+    }
+    else if ((p_to_style == kMCStringLineEndingStyleCRLF) &&
+             !MCStringFindAndReplace(*t_mutable_input, 
+                                     MCSTR("\n"), 
+                                     MCSTR("\r\n"), 
+                                     kMCStringOptionCompareExact))
+    {
+        return false;
+    }
+    
+    if (!t_mutable_input.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_output = t_mutable_input.Take();
+
+    if (r_original_style != nullptr)
+    {
+        *r_original_style = t_original_style;
+    }
+    
+    return true;
 }
 
 static void __MCStringCheck(MCStringRef self)

@@ -552,13 +552,6 @@ static ffi_type *__map_primitive_type(MCForeignPrimitiveType p_type)
         case kMCForeignPrimitiveTypeVoid:
             return &ffi_type_void;
         case kMCForeignPrimitiveTypeBool:
-            if (sizeof(bool) == 1)
-                return &ffi_type_uint8;
-            if (sizeof(bool) == 2)
-                return &ffi_type_uint16;
-            if (sizeof(bool) == 4)
-                return &ffi_type_uint32;
-            return &ffi_type_uint64;
         case kMCForeignPrimitiveTypeUInt8:
             return &ffi_type_uint8;
         case kMCForeignPrimitiveTypeSInt8:
@@ -647,6 +640,8 @@ bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCType
     self -> foreign . descriptor . doimport = p_descriptor -> doimport;
     self -> foreign . descriptor . doexport = p_descriptor -> doexport;
     self -> foreign . descriptor . describe = p_descriptor -> describe;
+    self -> foreign . descriptor . promotedtype = MCValueRetain(p_descriptor->promotedtype);
+    self -> foreign . descriptor . promote = p_descriptor -> promote;
     
     if (!__MCForeignTypeInfoComputeLayoutType(self))
     {
@@ -718,7 +713,7 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
 		 * in debug builds and will only happen once per type. */
 		for (index_t j = 0; j < i; ++j)
 		{
-			MCAssert(!MCNameIsEqualTo(p_fields[i] . name, p_fields[j] . name));
+			MCAssert(!MCNameIsEqualToCaseless(p_fields[i] . name, p_fields[j] . name));
 		}
         self -> record . fields[i] . name = MCValueRetain(p_fields[i] . name);
         self -> record . fields[i] . type = MCValueRetain(p_fields[i] . type);
@@ -803,6 +798,20 @@ static bool MCCommonHandlerTypeInfoCreate(bool p_is_foreign, const MCHandlerType
     for (index_t i = 0; i < p_field_count; ++i)
     {
 	    __MCAssertIsTypeInfo(p_fields[i].type);
+        
+        if (p_fields[i].mode == kMCHandlerTypeFieldModeVariadic)
+        {
+            if (i == 0 || p_field_count != i + 1)
+            {
+                MCValueRelease(self);
+                return MCErrorThrowGeneric(MCSTR("Variadic parameter cannot be first, and must be last"));
+            }
+            
+            p_field_count = i;
+            self->flags |= kMCTypeInfoFlagHandlerIsVariadic;
+            break;
+        }
+        
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
         self -> handler . fields[i] . mode = p_fields[i] . mode;
     }
@@ -842,6 +851,17 @@ bool MCHandlerTypeInfoIsForeign(MCTypeInfoRef unresolved_self)
     MCAssert(MCTypeInfoIsHandler(self));
 
     return (self -> flags & kMCTypeInfoFlagHandlerIsForeign) != 0;
+}
+
+MC_DLLEXPORT_DEF
+bool MCHandlerTypeInfoIsVariadic(MCTypeInfoRef unresolved_self)
+{
+    MCTypeInfoRef self;
+    self = __MCTypeInfoResolve(unresolved_self);
+
+    MCAssert(MCTypeInfoIsHandler(self));
+
+    return (self -> flags & kMCTypeInfoFlagHandlerIsVariadic) != 0;
 }
 
 MC_DLLEXPORT_DEF
@@ -1168,6 +1188,7 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
         MCValueRelease(self -> foreign . descriptor . basetype);
         MCValueRelease(self -> foreign . descriptor . bridgetype);
         MCMemoryDeleteArray(self -> foreign . descriptor . layout);
+        MCValueRelease(self->foreign.descriptor.promotedtype);
     }
     else if (t_ext_typecode == kMCValueTypeCodeRecord)
     {
@@ -1285,14 +1306,14 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
     t_code = __MCTypeInfoGetExtendedTypeCode(self);
     
     if (t_code == kMCTypeInfoTypeIsAlias)
-        return MCNameIsEqualTo(self -> alias . name, other_self -> alias . name) &&
+        return MCNameIsEqualToCaseless(self -> alias . name, other_self -> alias . name) &&
                 self -> alias . typeinfo == other_self -> alias . typeinfo;
     
     if (t_code == kMCTypeInfoTypeIsNamed)
     {
         if (self -> named . name == kMCEmptyName || other_self -> named . name == kMCEmptyName)
             return false;
-        return MCNameIsEqualTo(self -> named . name, other_self -> named . name);
+        return MCNameIsEqualToCaseless(self -> named . name, other_self -> named . name);
     }
     
     if (t_code == kMCTypeInfoTypeIsOptional)

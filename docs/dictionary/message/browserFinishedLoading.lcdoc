@@ -2,7 +2,7 @@ Name: browserFinishedLoading
 
 Type: message
 
-Syntax: browserFinishedLoading <url>
+Syntax: browserFinishedLoading <pUrl>
 
 Summary:
 Sent when the given url has finished loading.
@@ -20,7 +20,7 @@ on browserFinishedLoading pURL
 end browserFinishedLoading
 
 Parameters:
-url:
+pUrl:
 The URL that has loaded.
 
 Description:

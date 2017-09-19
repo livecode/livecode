@@ -1913,7 +1913,7 @@ end escape
 command docsBuilderGenerateDocsNew pEdition, pVersion   
    start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
    
-   builderExtUnpack pEdition
+   builderExtUnpack "Business"
    
    builderLog "report", "Building guide into" && builderGuideFolder(pEdition) & slash & "distributed_guide.js"
    pathEnsure (builderGuideFolder(pEdition))
@@ -1946,14 +1946,6 @@ private command addFolderToListIfExists pFolder, pThrowIfNot, @xArray
    end if
 end addFolderToListIfExists
 
-private function RepoIndyDocsFolder
-   return builderPrivateRepoFolder() & slash & "docs" & slash & "indy"
-end RepoIndyDocsFolder
-
-private function RepoBusinessDocsFolder
-   return builderPrivateRepoFolder() & slash & "docs" & slash & "business"
-end RepoBusinessDocsFolder
-
 private command docsBuilderGetGuideFolders pEdition, @xFolders
    local tRepoGuides
    put builderRepoFolder() & slash & "docs" & slash & "guides" into tRepoGuides
@@ -1963,54 +1955,29 @@ private command docsBuilderGetGuideFolders pEdition, @xFolders
    put builderIDEDocsFolder() & slash & "guides" into tIDEGuides
    addFolderToListIfExists tIDEGuides, true, xFolders
    
-   if pEdition is not "community" then
-      local tIndyGuides
-      put RepoIndyDocsFolder() & slash & "guides" into tIndyGuides
-      addFolderToListIfExists tIndyGuides, false, xFolders
-   end if
+   local tComponents
+   put builderComponentFolders() into tComponents
    
-   if pEdition is "business" then
-      local tBusinessGuides
-      put RepoBusinessDocsFolder() & slash & "guides" into tBusinessGuides
-      addFolderToListIfExists tBusinessGuides, false, xFolders
-   end if
-
+   repeat for each element tComponent in tComponents
+      -- each non-community guide should have notes on editon support
+      addFolderToListIfExists tComponent["folder"] & slash & "guides", false, xFolders
+   end repeat
+   
    addFolderToListIfExists builderBuiltGuidesFolder(), false, xFolders
 end docsBuilderGetGuideFolders
 
 private command docsBuilderAddExtFolders pEdition, @xFolders
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   
    local tTargetFolder
-   put builderUnpackFolder() & slash & "Ext" into tTargetFolder
-   set the defaultFolder to tTargetFolder
-   
-   repeat for each line tFolder in the folders
+   put builderUnpackFolder("Business") & slash & "Ext" into tTargetFolder
+   repeat for each line tFolder in folders(tTargetFolder)
       if tFolder is ".." then next repeat
       addFolderToListIfExists tTargetFolder & slash & tFolder, true, xFolders
    end repeat
-   
-   set the defaultFolder to tDefaultFolder
 end docsBuilderAddExtFolders
 
 private command docsBuilderGetAdditionalFolders pEdition, @xFolders
    docsBuilderAddExtFolders pEdition, xFolders
 end docsBuilderGetAdditionalFolders
-
-private command docsBuilderGetDictionaryFolders pEdition, @xFolders
-   local tCommunityDocs
-   put builderRepoFolder() & slash & "docs" into tCommunityDocs
-   addFolderToListIfExists tCommunityDocs, true, xFolders
-   
-   if pEdition is not "community" then
-      addFolderToListIfExists RepoIndyDocsFolder(), true, xFolders
-   end if
-   
-   if pEdition is "business" then
-      addFolderToListIfExists RepoBusinessDocsFolder(), false, xFolders
-   end if
-end docsBuilderGetDictionaryFolders
 
 command docsBuilderGenerateDistributedGuide pEdition
    local tGuideFoldersA
@@ -2054,26 +2021,38 @@ end docsFileGetUTF8Contents
 
 -- Find all lcdoc files in pFolder and add them to the list of docs 
 -- data in xLibraryA
-private command addToDictionaryFromFolder pFolder, @xLibraryA
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   
+private command addToDictionaryFromFolder pFolder, pDefaults, @xLibraryA
    docsBuilderProgressUpdate "", "Building dictionary from folder" && pFolder
-   set the defaultfolder to pFolder
-   get the files
+   get files(pFolder)
    filter it with "*.lcdoc"
    repeat for each line tFile in it
-      local tText, tParsedA
+      local tText, tParsedA, tDisplayName, tSynonymA
       wait 0 with messages
       put docsFileGetUTF8Contents(pFolder & slash & tFile, true) into tText
-      put revDocsParseDocText(tText) into tParsedA
+      put revDocsParseDocText(tText, pFolder & slash & tFile, pDefaults) into tParsedA
       repeat for each element tDoc in tParsedA["doc"]
+         put tDoc["display name"] into tDisplayName
          -- TODO: Work out why something empty is returned
-         if tDoc["display name"] is empty then next repeat
+         if tDisplayName is empty then next repeat
          addToList tDoc, xLibraryA
+		 -- BWM fix for Bug 18305
+		 -- add an additional entry to dictionary for each synonym to allow keyword search
+		 if tDoc["Synonyms"] is not empty then
+		    put tDoc["Synonyms"] into tSynonymA
+		    repeat for each element tSynonymName in tSynonymA
+		   	   local tSynonymDoc
+			   if tSynonymName is tDisplayName then next repeat -- glossary entries include themselves
+			   put tDoc into tSynonymDoc
+			   put tSynonymName into tSynonymDoc["display name"]
+			   if tDoc["Type"] is not "glossary" then
+			      put " (Synonym of " & tDisplayName & ")" after tSynonymDoc["display name"]
+			   end if
+			   addToList tSynonymDoc, xLibraryA
+		    end repeat
+		 end if
+		 -- end fix for Bug 18305
       end repeat
    end repeat
-   set the defaultFolder to tDefaultFolder
 end addToDictionaryFromFolder
 
 /*
@@ -2083,40 +2062,39 @@ pRootDirs (array): An array of paths to the relevant root folders of the
 dictionary.
 */
 
-command docsBuilderParseDictionaryToLibraryArray pRootDirs, @xDocsA
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   
-   # Get the list of canonical glossary entries
-   local tGlossaryA
-   repeat for each element tRootDir in pRootDirs
-      union tGlossaryA with revDocsCollectGlossarySynonyms(tRootDir)
-   end repeat
-   
-   repeat for each element tRootDir in pRootDirs      
+command docsBuilderParseDictionaryToLibraryArray pComponents, @xDocsA
+   repeat for each element tComponent in pComponents      
       local tDictionaryRoot, tGlossaryRoot
-      put tRootDir & slash & "dictionary" into tDictionaryRoot
-      put tRootDir & slash & "glossary" into tGlossaryRoot
+      put tComponent["folder"] & slash & "dictionary" into tDictionaryRoot
+      put tComponent["folder"] & slash & "glossary" into tGlossaryRoot
+      
+      local tDefaults
+      delete variable tDefaults
+      if tComponent["metadata"]["edition"] is not empty then
+         put editionDisplayName(tComponent["metadata"]["edition"]) into tDefaults["edition"]
+      end if
       
       repeat for each item tRoot in (tDictionaryRoot & "," & tGlossaryRoot)
-         set the defaultfolder to tRoot
-         repeat for each line tLine in the folders
+         if there is not a folder tRoot then
+            next repeat
+         end if
+         
+         repeat for each line tLine in folders(tRoot)
             if tLine is ".." then next repeat
-            addToDictionaryFromFolder tRoot & slash & tLine, xDocsA
+            addToDictionaryFromFolder tRoot & slash & tLine, tDefaults, xDocsA
          end repeat
       end repeat
    end repeat
-   set the defaultFolder to tDefaultFolder
 end docsBuilderParseDictionaryToLibraryArray
 
 command docsBuilderParseAdditionalFoldersToLibraryArray pDirs, @xDocsA
    local tFolder
    repeat for each element tFolder in pDirs      
-      addToDictionaryFromFolder tFolder, xDocsA
+      addToDictionaryFromFolder tFolder, empty, xDocsA
    end repeat
 end docsBuilderParseAdditionalFoldersToLibraryArray
 
-function docsBuilderParseDictionary pLibraryName, pAuthor, pRootDirsA, pAdditionalDirsA, pRecursive
+function docsBuilderParseDictionary pLibraryName, pAuthor, pComponents, pAdditionalDirsA, pRecursive
    local tLibraryA
    
    put revDocsModifyForUrl(pLibraryName) into tLibraryA["name"]
@@ -2125,7 +2103,7 @@ function docsBuilderParseDictionary pLibraryName, pAuthor, pRootDirsA, pAddition
    put "dictionary" into tLibraryA["type"]
    
    -- Special case for the dictionary / glossary data extraction
-   docsBuilderParseDictionaryToLibraryArray pRootDirsA, tLibraryA["doc"]
+   docsBuilderParseDictionaryToLibraryArray pComponents, tLibraryA["doc"]
    
    -- Add any additional docs to the dictionary
    docsBuilderParseAdditionalFoldersToLibraryArray pAdditionalDirsA, tLibraryA["doc"]
@@ -2138,14 +2116,23 @@ function docsBuilderParseDictionary pLibraryName, pAuthor, pRootDirsA, pAddition
 end docsBuilderParseDictionary
 
 command docsBuilderGenerateDistributedAPI pEdition
-   local tDictionaryFolders, tAdditionalFolders
-   docsBuilderGetDictionaryFolders pEdition, tDictionaryFolders
+   local tAdditionalFolders
    docsBuilderGetAdditionalFolders pEdition, tAdditionalFolders
    
    local tLibrariesA
    
+   local tComponents
+   put builderComponentFolders() into tComponents
+   
+   -- special case the main docs folder
+   local tIndex
+   put the number of elements of tComponents + 1 into tIndex
+   put builderRepoFolder() & "/docs" into tComponents[tIndex]["folder"]
+   put "engine" into tComponents[tIndex]["metadata"]["category"]
+   put "community" into tComponents[tIndex]["metadata"]["edition"]
+   
    local tLCSDictionaryA
-   put docsBuilderParseDictionary("LiveCode Script", "LiveCode", tDictionaryFolders, tAdditionalFolders, false) into tLCSDictionaryA
+   put docsBuilderParseDictionary("LiveCode Script", "LiveCode", tComponents, tAdditionalFolders, false) into tLCSDictionaryA
    
    if tLCSDictionaryA is empty then
       logError "Couldn't parse script dictionary data for" && pEdition
@@ -2270,8 +2257,7 @@ end docsBuilderPopulateDatabase
 
 private command docsBuilderGenerateZip pEdition, pVersion
    -- Ensure edition string is in titlecase
-   put toLower(pEdition) into pEdition
-   put toUpper(char 1 of pEdition) into char 1 of pEdition
+   put editionTitleCase(pEdition) into pEdition
    put replaceText(pVersion, "[-,\.]", "_") into pVersion
 
    local tInputs, tZipPath

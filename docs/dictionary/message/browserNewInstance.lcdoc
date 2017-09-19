@@ -4,14 +4,12 @@ Synonyms: xbrowser_newinstance
 
 Type: message
 
-Syntax: browserNewInstance <instanceId>
+Syntax: browserNewInstance <pInstanceId>
 
-Syntax: XBrowser_NewInstance <instanceId>
+Syntax: XBrowser_NewInstance <pInstanceId>
 
 Summary:
 Sent when a new browser instance is created.
-
-Associations: card
 
 Introduced: 2.8.1
 
@@ -27,10 +25,8 @@ on browserNewInstance pInstanceId
 end browserNewInstance
 
 Parameters:
-instanceId:
-The integer identifier of the new browser object >*Note:* For general
-information on using the browser library, see the notes in the
-revBrowserOpen function reference.
+pInstanceId:
+The integer identifier of the new browser object
 
 Description:
 The <browserNewInstance> message is sent to the current card of the
