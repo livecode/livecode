@@ -5,8 +5,8 @@ Type: property
 Syntax: set the cantAbort of <stack> to {true | false}
 
 Summary:
-Specifies whether the user can halt a <handler> with a <key
-combination>. 
+Specifies whether the user can halt a <handler> with a 
+<key combination>. 
 
 Associations: stack
 
