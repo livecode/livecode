@@ -5890,3 +5890,83 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
     delete t_doc;
 
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCS_get_browsers(MCStringRef &r_browsers)
+{
+    bool t_success = true;
+    
+    MCAutoListRef t_browser_list;
+    if (t_success)
+        t_success = MCListCreateMutable('\n', &t_browser_list);
+    
+    CFURLRef t_url = nullptr;
+    if (t_success)
+    {
+        t_url = CFURLCreateWithString(nullptr, CFSTR("http://localhost"), nullptr);
+        t_success = t_url != nullptr;
+    }
+    
+    CFArrayRef t_browsers = nullptr;
+    if (t_success)
+        t_browsers = LSCopyApplicationURLsForURL(t_url, kLSRolesAll);
+    
+    if (t_success && t_browsers != nullptr)
+    {
+        for (CFIndex i = 0; t_success && i < CFArrayGetCount(t_browsers); ++i)
+        {
+            CFURLRef t_browser_url = (CFURLRef)CFArrayGetValueAtIndex(t_browsers, i);
+            
+            CFStringRef t_browser_path = nullptr;
+            if (t_success)
+            {
+                t_browser_path = CFURLCopyFileSystemPath(t_browser_url, kCFURLPOSIXPathStyle);
+                t_success = t_browser_path != nullptr;
+            }
+            
+            CFBundleRef t_browser_bundle = CFBundleCreate(nullptr, t_browser_url);
+            if (t_success)
+            {
+                t_browser_bundle = CFBundleCreate(nullptr, t_browser_url);
+                t_success = t_browser_bundle != nullptr;
+            }
+            
+            CFStringRef t_browser_title = nullptr;
+            if (t_success)
+            {
+                
+                CFStringRef t_name = (CFStringRef)CFBundleGetValueForInfoDictionaryKey(t_browser_bundle, kCFBundleNameKey);
+                CFStringRef t_version = (CFStringRef)CFBundleGetValueForInfoDictionaryKey(t_browser_bundle, kCFBundleVersionKey);
+                t_browser_title = CFStringCreateWithFormat(nullptr, nullptr, CFSTR("%@ (%@),%@"), t_name, t_version, t_browser_path);
+                t_success = t_browser_title != nullptr;
+            }
+            
+            MCAutoStringRef t_browser_string;
+            if (t_success)
+                t_success = MCStringCreateWithCFString(t_browser_title, &t_browser_string);
+            
+            if (t_success)
+                t_success = MCListAppend(*t_browser_list, *t_browser_string);
+            
+            if (t_browser_path != nullptr)
+                CFRelease(t_browser_path);
+            if (t_browser_bundle != nullptr)
+                CFRelease(t_browser_bundle);
+            if (t_browser_title != nullptr)
+                CFRelease(t_browser_title);
+        }
+    }
+    
+    if (t_success)
+        t_success = MCListCopyAsString(*t_browser_list, r_browsers);
+    
+    if (t_browsers != nullptr)
+        CFRelease(t_browsers);
+    if (t_url != nullptr)
+        CFRelease(t_url);
+    
+    return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
