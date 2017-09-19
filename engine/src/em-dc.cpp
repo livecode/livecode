@@ -279,7 +279,7 @@ MCScreenDC::wait(real64_t p_duration,
 
 // These functions are implemented in javascript
 extern "C" int32_t MCEmscriptenDialogShowAlert(const unichar_t* p_message, size_t p_message_length);
-extern "C" int32_t MCEmscriptenDialogShowConfirm(const unichar_t* p_message, size_t p_message_length);
+extern "C" bool MCEmscriptenDialogShowConfirm(const unichar_t* p_message, size_t p_message_length);
 extern "C" int32_t MCEmscriptenDialogShowPrompt(const unichar_t* p_message, size_t p_message_length, const unichar_t* p_default, size_t p_default_length, unichar_t** r_result, size_t* r_result_length);
 
 int32_t
@@ -304,7 +304,21 @@ MCScreenDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, u
             
         case 2:
             // Two buttons - treat it as an "OK"/"Cancel" button pair
-            t_result = MCEmscriptenDialogShowConfirm(t_message_u16.Ptr(), t_message_u16.Size());
+            {
+                int32_t t_ok_button = 0, t_cancel_button = 1;
+                // check order of ok/cancel
+                if (MCStringIsEqualToCString(p_buttons[1], "ok", kMCStringOptionCompareCaseless) ||
+                    MCStringIsEqualToCString(p_buttons[0], "cancel", kMCStringOptionCompareCaseless))
+                {
+                    t_ok_button = 1;
+                    t_cancel_button = 0;
+                }
+                
+                if (MCEmscriptenDialogShowConfirm(t_message_u16.Ptr(), t_message_u16.Size()))
+                    t_result = t_ok_button;
+                else
+                    t_result = t_cancel_button;
+            }
             break;
             
         default:
