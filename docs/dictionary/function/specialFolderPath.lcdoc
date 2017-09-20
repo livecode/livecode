@@ -172,12 +172,21 @@ The following <folderIdentifier> values are supported:
 * "documents": The folder where application-specific data can be placed
   (typically valuable)
 * "cache": The folder where transient application-specific data can be 
-placed (typically not valuable)
+  placed (typically not valuable)
+* "temporary": Same as "cache"
 * "engine": The (virtual) folder containing the
   <application|application's> LiveCode <engine>  and other resources
   that were copied into the <application> at build time
 * "resources": Same as "engine".
+* "external documents": The folder on the primary shared/external 
+  storage device where application-specific data can be placed
+* "external cache": The folder on the primary shared/external 
+  storage device where transient application-specific data can be placed
+* "external temporary": same as "external cache"
 
+>*Note:* If using any external <folderIdentifier> values, ensure you 
+> have the 'Write External Storage' permission checked in the
+> application standalone settings
 
 **On Linux systems**, the following <folderIdentifier> values 
 are supported: 
@@ -228,4 +237,3 @@ platform (glossary), return (glossary), special folder (glossary),
 standalone application (glossary), defaultFolder (property)
 
 Tags: file system
-
