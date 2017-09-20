@@ -43,6 +43,6 @@ else
 # Write to the output file
 open OUTPUT, ">$destFile"
 	or die "Could not open output file \"$destFile\": $!";
-print OUTPUT "unsigned char ${varName}[] = \n{\n\t$cArray\n};\n";
+print OUTPUT "alignas(16) unsigned char ${varName}[] = \n{\n\t$cArray\n};\n";
 print OUTPUT "unsigned int ${varName}_length = $length;\n";
 close OUTPUT;
