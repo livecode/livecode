@@ -103,60 +103,60 @@ objc_id_finalize(void *contents)
 }
 
 static bool
-objc_id_move(void *from, void *to)
+objc_id_move(const MCForeignTypeDescriptor*, void *from, void *to)
 {
     *static_cast<void **>(to) = *static_cast<void **>(from);
     return true;
 }
 
 static bool
-objc_id_copy(void *from, void *to)
+objc_id_copy(const MCForeignTypeDescriptor*, void *from, void *to)
 {
     *static_cast<void **>(to) = *static_cast<void **>(from);
     return true;
 }
 
 static bool
-objc_id_equal(void *from, void *to, bool& r_equal)
+objc_id_equal(const MCForeignTypeDescriptor*, void *from, void *to, bool& r_equal)
 {
     r_equal = *static_cast<void **>(to) == *static_cast<void **>(to);
     return true;
 }
 
 static bool
-objc_id_hash(void *value, hash_t& r_hash)
+objc_id_hash(const MCForeignTypeDescriptor*, void *value, hash_t& r_hash)
 {
     r_hash = MCHashPointer(*static_cast<void **>(value));
     return true;
 }
 
 static bool
-objc_id_describe(void *value, MCStringRef& r_string)
+objc_id_describe(const MCForeignTypeDescriptor*, void *value, MCStringRef& r_string)
 {
     return MCStringFormat(r_string, "<objc id %p>", *static_cast<void **>(value));
 }
 
 static bool
-objc_retained_id_describe(void *value, MCStringRef& r_string)
+objc_retained_id_describe(const MCForeignTypeDescriptor*, void *value, MCStringRef& r_string)
 {
     return MCStringFormat(r_string, "<objc retained id %p>", *static_cast<void **>(value));
 }
 
 static bool
-objc_autoreleased_id_describe(void *value, MCStringRef& r_string)
+objc_autoreleased_id_describe(const MCForeignTypeDescriptor*, void *value, MCStringRef& r_string)
 {
     return MCStringFormat(r_string, "<objc autoreleased id %p>", *static_cast<void **>(value));
 }
 
 static bool
-objc_id_import(void *contents, bool p_release, MCValueRef& r_value)
+objc_id_import(const MCForeignTypeDescriptor*, void *contents, bool p_release, MCValueRef& r_value)
 {
     MCAssert(!p_release);
     return MCObjcObjectCreateWithId(*(void **)contents, (MCObjcObjectRef&)r_value);
 }
 
 static bool
-objc_id_export(MCValueRef p_value, bool p_release, void *contents)
+objc_id_export(const MCForeignTypeDescriptor*, MCValueRef p_value, bool p_release, void *contents)
 {
     MCAssert(!p_release);
     *(void **)contents = MCObjcObjectGetId((MCObjcObjectRef)p_value);
@@ -164,14 +164,14 @@ objc_id_export(MCValueRef p_value, bool p_release, void *contents)
 }
 
 static bool
-objc_retained_id_import(void *contents, bool p_release, MCValueRef& r_value)
+objc_retained_id_import(const MCForeignTypeDescriptor*, void *contents, bool p_release, MCValueRef& r_value)
 {
     MCAssert(!p_release);
     return MCObjcObjectCreateWithRetainedId(*(void **)contents, (MCObjcObjectRef&)r_value);
 }
 
 static bool
-objc_retained_id_export(MCValueRef p_value, bool p_release, void *contents)
+objc_retained_id_export(const MCForeignTypeDescriptor*, MCValueRef p_value, bool p_release, void *contents)
 {
     MCAssert(!p_release);
     *(void **)contents = MCObjcObjectGetRetainedId((MCObjcObjectRef)p_value);
@@ -179,14 +179,14 @@ objc_retained_id_export(MCValueRef p_value, bool p_release, void *contents)
 }
 
 static bool
-objc_autoreleased_id_import(void *contents, bool p_release, MCValueRef& r_value)
+objc_autoreleased_id_import(const MCForeignTypeDescriptor*, void *contents, bool p_release, MCValueRef& r_value)
 {
     MCAssert(!p_release);
     return MCObjcObjectCreateWithAutoreleasedId(*(void **)contents, (MCObjcObjectRef&)r_value);
 }
 
 static bool
-objc_autoreleased_id_export(MCValueRef p_value, bool p_release, void *contents)
+objc_autoreleased_id_export(const MCForeignTypeDescriptor*, MCValueRef p_value, bool p_release, void *contents)
 {
     MCAssert(!p_release);
     *(void **)contents = MCObjcObjectGetAutoreleasedId((MCObjcObjectRef)p_value);

@@ -285,7 +285,7 @@ void MCFilesEvalSpecialFolderPath(MCExecContext& ctxt, MCStringRef p_folder, MCS
     t_error = false;
     MCNameCreate(p_folder, &t_path);
     // We have a special, mode-specific resource folder
-    if (MCNameIsEqualTo(*t_path, MCN_resources, kMCStringOptionCompareCaseless))
+    if (MCNameIsEqualToCaseless(*t_path, MCN_resources))
         MCModeGetResourcesFolder(r_path);
     else if (!MCS_getspecialfolder(*t_path, r_path))
         t_error = true;
@@ -2222,9 +2222,6 @@ void MCFilesExecReadFromProcess(MCExecContext& ctxt, MCNameRef p_process, MCStri
     intenum_t t_encoding;
 	IO_stat t_stat = IO_NORMAL;
 	t_stream = MCprocesses[t_index].ihandle;
-#ifdef OLD_IO_HANDLE
-	MCshellfd = t_stream->gefd();
-#endif // OLD_IO_HANDLE
     t_encoding = MCprocesses[t_index].encoding;
 	MCAutoValueRef t_output;
 
@@ -2480,9 +2477,6 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 		return;
 	}
 	ctxt . SetTheResultToEmpty();
-#ifdef OLD_IO_HANDLE
-	t_stream->flags |= IO_WRITTEN;
-#endif
 
 #if !defined _WIN32 && !defined _MACOSX
 	MCS_flush(t_stream);
@@ -2598,10 +2592,6 @@ void MCFilesExecSeekInFile(MCExecContext& ctxt, MCNameRef p_file, bool is_end, b
 		t_stat = MCS_seek_cur(t_stream, p_at);
 	else
 		t_stat = MCS_seek_set(t_stream, p_at);
-
-#ifdef OLD_IO_HANDLE
-	t_stream->flags |= IO_SEEKED;
-#endif
 
 	if (t_stat != IO_NORMAL)
 		ctxt . LegacyThrow(EE_SEEK_BADWHERE);

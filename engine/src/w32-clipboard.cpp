@@ -317,7 +317,7 @@ MCStringRef MCWin32RawClipboardCommon::DecodeTransferredFileList(MCDataRef p_dat
     
     // Split the file name list into individual paths
     MCAutoArrayRef t_native_paths;
-    if (!MCStringSplit(*t_decoded, MCSTR("\0"), NULL, kMCStringOptionCompareExact, &t_native_paths))
+    if (!MCStringSplit(*t_decoded, kMCNulString, NULL, kMCStringOptionCompareExact, &t_native_paths))
         return nullptr;
     
     uindex_t npaths = MCArrayGetCount(*t_native_paths);

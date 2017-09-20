@@ -95,7 +95,7 @@ void check_export_raw(MCTypeInfoRef p_type_info, bool (*p_bridge)(W, U&), T p_va
     const MCForeignTypeDescriptor *t_desc = MCForeignTypeInfoGetDescriptor(p_type_info);
     EXPECT_TRUE(t_desc->doexport != nullptr);
     T t_exported_value;
-    EXPECT_TRUE(t_desc->doexport(*t_bridge_value, false, &t_exported_value));
+    EXPECT_TRUE(t_desc->doexport(t_desc, *t_bridge_value, false, &t_exported_value));
     EXPECT_EQ(t_exported_value, p_value);
 }
 
@@ -108,7 +108,7 @@ void check_integral_raw_export_overflow(MCTypeInfoRef p_type_info, MCTypeInfoRef
     EXPECT_TRUE(t_desc->doexport != nullptr);
     MCAutoForeignValueRef t_boxed_value;
     T t_exported_value = 0;
-    EXPECT_FALSE(t_desc->doexport(*t_bridge_value, false, &t_exported_value));
+    EXPECT_FALSE(t_desc->doexport(t_desc, *t_bridge_value, false, &t_exported_value));
     if (t_exported_value != 0)
     {
         MCAutoErrorRef t_error;
@@ -125,7 +125,7 @@ void check_import_raw(MCTypeInfoRef p_type_info, bool (*p_bridge)(W, U&), T p_va
     const MCForeignTypeDescriptor *t_desc = MCForeignTypeInfoGetDescriptor(p_type_info);
     EXPECT_TRUE(t_desc->doimport != nullptr);
     MCAutoValueRef t_imported_value;
-    EXPECT_TRUE(t_desc->doimport(&p_value, false, &t_imported_value));
+    EXPECT_TRUE(t_desc->doimport(t_desc, &p_value, false, &t_imported_value));
     if (t_imported_value.IsSet())
         EXPECT_TRUE(MCValueIsEqualTo(*t_imported_value, *t_bridge_value));
 }
@@ -136,7 +136,7 @@ void check_integral_raw_import_overflow(MCTypeInfoRef p_type_info, MCTypeInfoRef
     const MCForeignTypeDescriptor *t_desc = MCForeignTypeInfoGetDescriptor(p_type_info);
     EXPECT_TRUE(t_desc->doimport != nullptr);
     MCAutoValueRef t_imported_value;
-    EXPECT_FALSE(t_desc->doimport(&p_value, false, &t_imported_value));
+    EXPECT_FALSE(t_desc->doimport(t_desc, &p_value, false, &t_imported_value));
     if (!t_imported_value.IsSet())
     {
         MCAutoErrorRef t_error;
@@ -279,6 +279,15 @@ TEST(foreign, Double)
     test_numeric<double>(kMCDoubleTypeInfo, DBL_MIN, DBL_MAX, MCHashDouble, "<foreign double %lg>", MCNumberCreateWithReal);
 }
 
+TEST(foreign, NaturalFloat)
+{
+#ifdef __32_BIT__
+    test_numeric<float>(kMCNaturalFloatTypeInfo, FLT_MIN, FLT_MAX, MCHashDouble, "<foreign natural float %lg>", MCNumberCreateWithReal);
+#else
+    test_numeric<double>(kMCNaturalFloatTypeInfo, DBL_MIN, DBL_MAX, MCHashDouble, "<foreign natural float %lg>", MCNumberCreateWithReal);
+#endif
+}
+
 /* Integral Type Tests */
 
 template<typename T>
@@ -400,6 +409,9 @@ TEST_INTEGRAL(UIntSize, size_t, "unsigned size %zu")
 TEST_INTEGRAL(SIntSize, ssize_t, "signed size %zd")
 TEST_INTEGRAL(UIntPtr, uintptr_t, "unsigned intptr %zu")
 TEST_INTEGRAL(SIntPtr, intptr_t, "signed intptr %zd")
+
+TEST_INTEGRAL(NaturalUInt, uintptr_t, "natural unsigned integer %zu")
+TEST_INTEGRAL(NaturalSInt, intptr_t, "natural signed integer %zd")
 
 TEST_INTEGRAL(CChar, char, "c char '%c'");
 TEST_INTEGRAL(CUChar, unsigned char, "c unsigned char %u")

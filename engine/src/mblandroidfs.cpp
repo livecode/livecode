@@ -419,8 +419,8 @@ Boolean MCAndroidSystem::GetStandardFolder(MCNameRef p_folder, MCStringRef &r_fo
 {
     // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
     //   as the engine folder.
-    if (MCNameIsEqualTo(p_folder, MCN_engine, kMCCompareCaseless)
-            || MCNameIsEqualTo(p_folder, MCN_resources, kMCCompareCaseless))
+    if (MCNameIsEqualToCaseless(p_folder, MCN_engine)
+            || MCNameIsEqualToCaseless(p_folder, MCN_resources))
     {
         MCLog("GetStandardFolder(\"%@\") -> \"%@\"", MCNameGetString(p_folder), MCcmd);
 		return MCStringCopy(MCcmd, r_folder);

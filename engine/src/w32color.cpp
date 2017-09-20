@@ -100,7 +100,7 @@ MCColorTransformRef MCScreenDC::createcolortransform(const MCColorSpaceInfo& p_i
 	else if (p_info . type == kMCColorSpaceStandardRGB)
 	{
 		// TODO - This isn't quite right, disable for now
-#if 0
+#if WIN32_COLOR_PROFILE_FIX_ME
 		HPROFILE t_profiles[2];
 		t_profiles[0] = m_srgb_profile;
 		t_profiles[1] = m_srgb_profile;

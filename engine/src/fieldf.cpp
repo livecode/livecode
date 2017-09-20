@@ -1992,7 +1992,7 @@ void MCField::fcut(Field_translations function, MCStringRef p_string, KeySym key
 
 void MCField::fcutline(Field_translations function, MCStringRef p_string, KeySym key)
 {
-#ifdef OLD_CLIPBOARD
+#ifdef FIELD_CUTLINE_ACTION
 	if (!(state & CS_DELETING))
 		MCclipboard->clear();
 	unselect(False, True);

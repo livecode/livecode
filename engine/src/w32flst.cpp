@@ -202,17 +202,17 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	memset(&logfont, 0, sizeof(LOGFONTW));
 
     // Is the font name one of the special UI font names?
-    if (MCNameIsEqualTo(fname, MCN_font_usertext))
+    if (MCNameIsEqualToCaseless(fname, MCN_font_usertext))
         set_facename_for_message_font(logfont);
-    else if (MCNameIsEqualTo(fname, MCN_font_menutext))
+    else if (MCNameIsEqualToCaseless(fname, MCN_font_menutext))
         set_facename_for_menu_font(logfont);
-    else if (MCNameIsEqualTo(fname, MCN_font_content))
+    else if (MCNameIsEqualToCaseless(fname, MCN_font_content))
         set_facename_for_message_font(logfont);
-    else if (MCNameIsEqualTo(fname, MCN_font_message))
+    else if (MCNameIsEqualToCaseless(fname, MCN_font_message))
         set_facename_for_message_font(logfont);
-    else if (MCNameIsEqualTo(fname, MCN_font_tooltip))
+    else if (MCNameIsEqualToCaseless(fname, MCN_font_tooltip))
         set_facename_for_status_font(logfont);
-    else if (MCNameIsEqualTo(fname, MCN_font_system))
+    else if (MCNameIsEqualToCaseless(fname, MCN_font_system))
         set_facename_for_message_font(logfont);
     else
     {
@@ -308,7 +308,7 @@ MCFontStruct *MCFontnode::getfont(MCNameRef fname, uint2 size,
                                   uint2 style, Boolean printer)
 {
 	// MW-2012-05-03: [[ Values* ]] Match the font name caselessly. 
-	if (!MCNameIsEqualTo(fname, *reqname) || printer != reqprinter)
+	if (!MCNameIsEqualToCaseless(fname, *reqname) || printer != reqprinter)
 		return NULL;
 	if (size == 0)
 		return font;

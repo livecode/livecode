@@ -28,8 +28,8 @@ end mouseUp
 Description:
 Use the cancel printing command during a printing loop to cancel the
 current print job. After using this command, no print commands will have
-any effect until the current loop has been closed (by using <close
-printing>). 
+any effect until the current loop has been closed (by using 
+<close printing>). 
 
 References: close printing (command), print (command),
 open printing (command)

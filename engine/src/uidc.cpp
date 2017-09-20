@@ -1264,7 +1264,7 @@ void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr, MCValueRef subo
 	}
         
         if (t_msg.m_object.Get() == optr
-		        && (mptr == NULL || MCNameIsEqualTo(*t_msg.m_message, mptr, kMCCompareCaseless))
+		        && (mptr == NULL || MCNameIsEqualToCaseless(*t_msg.m_message, mptr))
                 && (subobject == NULL || (t_msg.m_params != nil &&
                                           t_msg.m_params -> getvalueref_argument() == subobject)))
 			cancelmessageindex(i - 1, true);
@@ -1359,7 +1359,7 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
         if (t_msg.m_time > curtime)
             break;
         
-        if (!dispatch && t_msg.m_id == 0 && MCNameIsEqualTo(*t_msg.m_message, MCM_idle, kMCCompareCaseless))
+        if (!dispatch && t_msg.m_id == 0 && MCNameIsEqualToCaseless(*t_msg.m_message, MCM_idle))
         {
             doshiftmessage(i, curtime + MCidleRate / 1000.0);
             continue;

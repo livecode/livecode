@@ -232,7 +232,7 @@ bool MCProperListGetNumberAtIndex(MCProperListRef p_list, uindex_t p_index, MCNu
         if (MCTypeInfoIsForeign(t_typeinfo))
         {
             const MCForeignTypeDescriptor* t_desc = MCForeignTypeInfoGetDescriptor(t_typeinfo);
-            if (t_desc->doimport(MCForeignValueGetContentsPtr(t_value), false, (MCValueRef&)r_number))
+            if (t_desc->doimport(t_desc, MCForeignValueGetContentsPtr(t_value), false, (MCValueRef&)r_number))
                 return true;
         }
     }

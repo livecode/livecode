@@ -83,7 +83,7 @@ public:
 	
 	bool hasname(MCNameRef other_name)
 	{
-		return MCNameIsEqualTo(name, other_name, kMCCompareCaseless);
+		return MCNameIsEqualToCaseless(name, other_name);
 	}
 
 	Parse_stat parse(MCScriptPoint &sp, Boolean isprop);

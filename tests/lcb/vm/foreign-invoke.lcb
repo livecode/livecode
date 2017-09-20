@@ -51,8 +51,44 @@ public handler TestForeignInvoke_Varargs()
       free(tOutputBuffer)
    end unsafe
    test "sprintf works with no variadic arguments" when tString1 is "no formats"
-   test diagnostic tString2
    test "sprintf works with variadic arguments" when tString2 is "1000 1000000000 1000000000000000 3.5 7.5"
 end handler
+
+--------
+
+public foreign type NSRect binds to "MCAggregateTypeInfo:qqqq"
+__safe foreign handler NSContainsRect(in aRect as NSRect, in bRect as NSRect) returns CBool binds to "<builtin>"
+
+public foreign type RECT binds to "MCAggregateTypeInfo:JJJJ"
+public foreign type POINT binds to "MCAggregateTypeInfo:JJ"
+__safe foreign handler PtInRect(inout pLPRC as RECT, in pPoint as POINT) returns CBool binds to "user32>PtInRect!stdcall"
+
+public handler TestForeignInvoke_AggregateByValue()
+   if the operating system is in [ "mac", "ios" ] then
+      test "aggregate by value works (NSContainsRect)" when NSContainsRect([10, 10, 200, 200], [15, 15, 100, 100])
+   end if
+   if the operating system is in [ "linux", "android" ] then
+      -- TODO
+   end if
+   if the operating system is in [ "windows" ] then
+      variable tRect as RECT
+      put [10, 10, 200, 200] into tRect
+      test "aggregate by value works (PtInRect)" when PtInRect(tRect, [15, 15])
+   end if
+end handler
+
+--------
+
+public foreign type ldiv_t binds to "MCAggregateTypeInfo:FF"
+
+__safe foreign handler ldiv(in pNumer as CSLong, in pDenom as CSLong) returns ldiv_t binds to "<builtin>"
+
+public handler TestForeignInvoke_AggregateReturnValue()
+   variable tResult as List
+   put ldiv(10000000, 314159) into tResult
+   test "aggregate return value of ldiv is correct" when tResult[1] * 314159 + tResult[2] is 10000000
+end handler
+
+--------
 
 end module

@@ -456,6 +456,10 @@ There are the standard machine types (defined in the foreign module):
  - Int64/SInt64 and UInt64 map to 64-bit integers
  - IntSize/SIntSize and UIntSize map to the integer size needed to hold a memory size
  - IntPtr/SIntPtr and UIntPtr map to the integer size needed to hold a pointer
+ - NaturalSInt and NaturalUInt map to 32-bit integers on 32-bit processors and
+   64-bit integers on 64-bit processors
+ - NaturalFloat maps to the 32-bit float type on 32-bit processors and the 64-bit
+   float (double) type on 64-bit processors
 
 There are the standard C primitive types (defined in the foreign module)
 
@@ -1178,3 +1182,63 @@ conforms to the following rules:
 
 Examples of foreign handlers which can be considered safe are all the foreign
 handlers which bind to syntax in the LCB standard library.
+
+### Foreign Aggregate Types
+
+C-style aggregates (e.g. structs) can now be accessed from LCB via the new
+aggregate parameterized type. This allows calling foreign functions which has
+arguments taking aggregates by value, or has an aggregate return value.
+
+Aggregate types are foreign types and can be used in C and Obj-C foreign
+handler definitions. They bridge to and from the List type, allowing an
+aggregate's contents to be viewed as a sequence of discrete values.
+
+Aggregate types are defined using a `foreign type` clause and binding string.
+e.g.
+
+    public foreign type NSRect binds to "MCAggregateTypeInfo:qqqq"
+
+The structure of the aggregate is defined by using a sequence of type codes
+after the ':', each type code represents a specific foreign (C) type:
+
+| Char | Type         |
+| ---- | ------------ |
+|  a   | CBool        |
+|  b   | CChar        |
+|  c   | CUChar       |
+|  C   | CSChar       |
+|  d   | CUShort      |
+|  D   | CSShort      |
+|  e   | CUInt        |
+|  E   | CSInt        |
+|  f   | CULong       |
+|  F   | CSLong       |
+|  g   | CULongLong   |
+|  G   | CSLongLong   |
+|  h   | UInt8        |
+|  H   | SInt8        |
+|  i   | UInt16       |
+|  I   | SInt16       |
+|  j   | UInt32       |
+|  J   | SInt32       |
+|  k   | UInt64       |
+|  K   | SInt64       |
+|  l   | UIntPtr      |
+|  L   | SIntPtr      | 
+|  m   | UIntSize     |  
+|  M   | SIntSize     |  
+|  n   | Float        |
+|  N   | Double       |
+|  o   | LCUInt       |
+|  O   | LCSInt       |
+|  p   | NaturalUInt  |
+|  P   | NaturalSInt  |
+|  q   | NaturalFloat |
+|  r   | Pointer      |
+
+When importing an aggregate to a List, each field in the aggregate is also
+bridged, except for Pointer types which are left as Pointer. When exporting
+an aggregate from a List, each element is bridged to the target field type.
+
+*Note*: Any foreign type binding to an aggregate must be public otherwise the
+type will not work correctly.

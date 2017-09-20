@@ -656,7 +656,7 @@ inline void RTFState::SetHyperlink(MCNameRef p_hyperlink)
 {
 	if (m_entries == NULL)
 		return;
-	MCNameClone(p_hyperlink, m_entries -> hyperlink);
+    m_entries->hyperlink = MCValueRetain(p_hyperlink);
 }
 
 inline MCNameRef RTFState::GetHyperlink(void)

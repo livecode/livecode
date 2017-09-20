@@ -593,7 +593,7 @@ bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, M
     MCAutoPointer<char> t_host_cstring;
     /* UNCHECKED */ MCStringConvertToCString(*t_host, &t_host_cstring);
 
-	if (MCNameIsEqualTo(p_message, kMCEmptyName))
+	if (MCNameIsEqualToCaseless(p_message, kMCEmptyName))
 	{
 		t_success = MCSocketHostNameResolve(*t_host_cstring, NULL, SOCK_STREAM, true, ntoa_callback, *t_list);
 	}
@@ -909,9 +909,7 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
     
 	if (s->datagram)
 	{
-		MCNameDelete(s->message);
-		/* UNCHECKED */ MCNameClone(mptr, s -> message);
-		
+        MCValueAssign(s->message, mptr);
 		s->object = ctxt . GetObject();
 	}
 	else
@@ -1385,14 +1383,14 @@ MCSocketread::MCSocketread(uint4 s, char *u, MCObject *o, MCNameRef m)
 	timeout = curtime + MCsockettimeout;
 	optr = o;
 	if (m != nil)
-		/* UNCHECKED */ MCNameClone(m, message);
-	else
+        message = MCValueRetain(m);
+    else
 		message = nil;
 }
 
 MCSocketread::~MCSocketread()
 {
-	MCNameDelete(message);
+	MCValueRelease(message);
 	delete until;
 }
 
@@ -1408,7 +1406,7 @@ MCSocketwrite::MCSocketwrite(MCStringRef d, MCObject *o, MCNameRef m, Boolean se
 	optr = o;
 	done = 0;
 	if (m != nil)
-		/* UNCHECKED */ MCNameClone(m, message);
+        message = MCValueRetain(m);
 	else
 		message = nil;
 }
@@ -1417,7 +1415,7 @@ MCSocketwrite::~MCSocketwrite()
 {
 	if (message != NULL)
 	{
-		MCNameDelete(message);
+		MCValueRelease(message);
 		delete buffer;
 	}
 }
@@ -1430,7 +1428,7 @@ MCSocket::MCSocket(MCNameRef n, MCNameRef f, MCObject *o, MCNameRef m, Boolean d
 	name = MCValueRetain(n);
 	object = o;
 	if (m != nil)
-		/* UNCHECKED */ MCNameClone(m, message);
+        message = MCValueRetain(m);
 	else
 		message = nil;
 	datagram = d;
@@ -1458,8 +1456,8 @@ MCSocket::MCSocket(MCNameRef n, MCNameRef f, MCObject *o, MCNameRef m, Boolean d
 
 MCSocket::~MCSocket()
 {
-	MCNameDelete(name);
-	MCNameDelete(message);
+	MCValueRelease(name);
+	MCValueRelease(message);
 	deletereads();
 	deletewrites();
 
@@ -1822,7 +1820,7 @@ void MCSocket::writesome()
 #endif
 		MCscreen->delaymessage(object, message, MCNameGetString(name));
 		added = True;
-		MCNameDelete(message);
+		MCValueRelease(message);
 		message = NULL;
 	}
 

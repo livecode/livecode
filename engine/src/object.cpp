@@ -346,7 +346,7 @@ const char *MCObject::gettypestring()
 // Object names are always compared effectively.
 bool MCObject::hasname(MCNameRef p_other_name)
 {
-	return MCNameIsEqualTo(getname(), p_other_name, kMCCompareCaseless);
+	return MCNameIsEqualToCaseless(getname(), p_other_name);
 }
 
 void MCObject::setname(MCNameRef p_new_name)
@@ -357,7 +357,7 @@ void MCObject::setname(MCNameRef p_new_name)
 void MCObject::setname_cstring(const char *p_new_name)
 {
 	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, &t_name);
+	/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)p_new_name, strlen(p_new_name), &t_name);
 	setname(*t_name);
 }
 
@@ -783,7 +783,7 @@ Boolean MCObject::doubleup(uint2 which)
 
 void MCObject::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_idle, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 	{
 		if (opened && hashandlers & HH_IDLE
 		        && getstack()->gettool(this) == T_BROWSE)
@@ -820,7 +820,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
                 domess(*t_mptr_string);
 
 		}
-		if (stat == ES_ERROR && !MCNameIsEqualTo(mptr, MCM_error_dialog, kMCCompareCaseless))
+		if (stat == ES_ERROR && !MCNameIsEqualToCaseless(mptr, MCM_error_dialog))
 			senderror();
 	}
 }
@@ -2067,7 +2067,7 @@ Exec_stat MCObject::conditionalmessage(uint32_t p_flag, MCNameRef p_message)
 Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParameter *p_params)
 {
 	// Fetch current default stack and target settings
-	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+	MCStackHandle t_old_defaultstack = MCdefaultstackptr;
     MCObjectPartHandle t_old_target = MCtargetptr;
 	
 	// Cache the current 'this stack' (used to see if we should switch back
@@ -2122,10 +2122,6 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || !parent || (flags & F_DISABLED && t_stack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
 			return ES_NOT_HANDLED;
 
-    // AL-2013-01-14: [[ Bug 11343 ]] Moved check and time addition to MCCard::mdown methods.
-	//if (MCNameIsEqualTo(mess, MCM_mouse_down, kMCCompareCaseless) && hashandlers & HH_MOUSE_STILL_DOWN)
-    //	MCscreen->addtimer(this, MCM_idle, MCidleRate);
-
 	MCscreen->flush(t_stack->getw());
 	
 	// Object's cannot be deleted whilst they are executing script. However,
@@ -2139,7 +2135,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	void *t_deletion_cookie;
 	MCDeletedObjectsOnObjectSuspendDeletion(this, t_deletion_cookie);
 	
-	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+	MCStackHandle t_old_defaultstack = MCdefaultstackptr;
     MCObjectPartHandle oldtargetptr = MCtargetptr;
 	if (changedefault)
 	{
@@ -4063,7 +4059,7 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
 			s_loaded_parent_script_reference = true;
 		}
 
-		MCNameDelete(t_stack);
+		MCValueRelease(t_stack);
 	}
 	
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_BITMAPEFFECTS) != 0)
@@ -4769,7 +4765,7 @@ bool MCObject::mapfont(bool recursive)
 
         // If the font is explicitly requesting the default font for this
         // control type, use the themed font
-        if (MCNameIsEqualTo(t_textfont, MCN_font_default))
+        if (MCNameIsEqualToCaseless(t_textfont, MCN_font_default))
         {
             // Don't inherit the parent's themed font
             if (recursive)
@@ -4889,7 +4885,7 @@ void MCObject::copyfontattrs(const MCObject& p_other)
 
 	/* UNCHECKED */ MCMemoryNew(m_font_attrs);
 	if ((m_font_flags & FF_HAS_TEXTFONT) != 0)
-		MCNameClone(p_other . m_font_attrs -> name, m_font_attrs -> name);
+        m_font_attrs -> name = MCValueRetain(p_other . m_font_attrs -> name);
 	if ((m_font_flags & FF_HAS_TEXTSIZE) != 0)
 		m_font_attrs -> size = p_other . m_font_attrs -> size;
 	if ((m_font_flags & FF_HAS_TEXTSTYLE) != 0)
@@ -4902,7 +4898,7 @@ void MCObject::clearfontattrs(void)
 	if (m_font_attrs == nil)
 		return;
 
-	MCNameDelete(m_font_attrs -> name);
+	MCValueRelease(m_font_attrs -> name);
 	MCMemoryDelete(m_font_attrs); /* Allocated with MCMemoryNew() */
 	m_font_attrs = nil;
 
@@ -4959,7 +4955,7 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 	if (p_which == 0)
 	{
 		if (m_font_attrs != nil)
-			MCNameDelete(m_font_attrs -> name);
+			MCValueRelease(m_font_attrs -> name);
 		delete m_font_attrs;
 		m_font_attrs = nil;
 		m_font_flags &= ~FF_HAS_ALL_FATTR;
@@ -4971,10 +4967,10 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 
 	if ((p_which & FF_HAS_TEXTFONT) != 0)
 	{
-		MCNameDelete(m_font_attrs -> name);
+		MCValueRelease(m_font_attrs -> name);
 		if (p_textfont != nil && !MCNameIsEmpty(p_textfont))
 		{
-			/* UNCHECKED */ MCNameClone(p_textfont, m_font_attrs -> name);
+            m_font_attrs -> name = MCValueRetain(p_textfont);
 			m_font_flags |= FF_HAS_TEXTFONT;
 		}
 		else
@@ -5017,9 +5013,9 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 //   using a c-string for the name.
 void MCObject::setfontattrs(MCStringRef p_textfont, uint2 p_textsize, uint2 p_textstyle)
 {
-	MCAutoNameRef t_textfont_name;
-	/* UNCHECKED */ MCNameCreate(p_textfont, t_textfont_name);
-	setfontattrs(FF_HAS_ALL_FATTR, t_textfont_name, p_textsize, p_textstyle);
+	MCNewAutoNameRef t_textfont_name;
+    /* UNCHECKED */ MCNameCreate(p_textfont, &t_textfont_name);
+	setfontattrs(FF_HAS_ALL_FATTR, *t_textfont_name, p_textsize, p_textstyle);
 }
 
 // MW-2012-02-19: [[ SplitTextAttrs ]] This method returns true if any of the font

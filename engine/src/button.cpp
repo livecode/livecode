@@ -1643,7 +1643,7 @@ Boolean MCButton::doubleup(uint2 which)
 #ifdef _MAC_DESKTOP
 void MCButton::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
 		if (state & CS_SHOW_DEFAULT)
 		{
@@ -2447,7 +2447,7 @@ public:
 		newbutton->menubutton = parent->menubutton;
 		newbutton->menucontrol = MENUCONTROL_ITEM;
         newbutton->m_theme_type = kMCPlatformControlTypeMenu;
-		if (MCNameGetCharAtIndex(newbutton -> getname(), 0) == '-')
+		if (MCStringGetNativeCharAtIndex(MCNameGetString(newbutton->getname()), 0) == '-')
 		{
 			newbutton->rect.height = 2;
 			newbutton->flags = DIVIDER_FLAGS;

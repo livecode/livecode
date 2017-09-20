@@ -2758,6 +2758,9 @@ enum Exec_errors
 
     // {EE-0903} snapshot: no screen
     EE_SNAPSHOT_FAILED,
+
+    // {EE-0904} stack: password protecting stacks not supported in this edition
+    EE_STACK_PASSWORD_NOT_SUPPORTED,
 };
 
 extern const char *MCexecutionerrors;

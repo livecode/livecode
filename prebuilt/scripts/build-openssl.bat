@@ -11,8 +11,13 @@ ECHO Build OpenSSL for %BUILDTRIPLE%
 SET OPENSSL_TGZ=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%.tar.gz
 SET OPENSSL_SRC=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%-%BUILDTRIPLE%-src
 SET OPENSSL_BIN=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%-%BUILDTRIPLE%-bin
-SET OPENSSL_TAR=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%-%BUILDTRIPLE%.tar
 SET OPENSSL_BUILD_LOG=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%-%BUILDTRIPLE%.log
+
+IF DEFINED OpenSSL_BUILDREVISION (
+	SET OPENSSL_TAR=%_PACKAGE_DIR%\OpenSSL-%OpenSSL_VERSION%-%BUILDTRIPLE%-%OpenSSL_BUILDREVISION%.tar
+) ELSE (
+	SET OPENSSL_TAR=%_PACKAGE_DIR%\OpenSSL-%OpenSSL_VERSION%-%BUILDTRIPLE%.tar
+)
 
 REM The files (relative to BIN) to include in the tar archive (UNIX path format)
 SET OPENSSL_FILES=lib/libeay32.lib lib/ssleay32.lib lib/ossl_static.pdb include/openssl

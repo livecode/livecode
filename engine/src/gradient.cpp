@@ -63,7 +63,7 @@ static Exec_stat MCGradientFillLookupProperty(MCNameRef p_token, MCGradientFillP
 	uint4 tablesize = ELEMENTS(gradientprops);
 	while (tablesize--)
 	{
-		if (MCNameIsEqualToCString(p_token, gradientprops[tablesize].token, kMCCompareCaseless))
+		if (MCStringIsEqualToCString(MCNameGetString(p_token), gradientprops[tablesize].token, kMCCompareCaseless))
 		{
 			r_prop = gradientprops[tablesize].value;
 			return ES_NORMAL;
@@ -244,22 +244,16 @@ bool MCGradientFillGetProperties(MCExecContext& ctxt, MCGradientFill* p_gradient
     while (t_success && tablesize--)
     {
         MCValueRef t_prop_value;
-        MCNewAutoNameRef t_key;
         
-        t_success = MCNameCreateWithCString(gradientprops[tablesize].token, &t_key);
-        
+        MCExecValue t_value;
+        t_success = MCGradientFillFetchProperty(ctxt, p_gradient, gradientprops[tablesize].value, t_value);
         if (t_success)
         {
-            MCExecValue t_value;
-            t_success = MCGradientFillFetchProperty(ctxt, p_gradient, gradientprops[tablesize].value, t_value);
-			if (t_success)
-			{
-				MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &t_prop_value);
-				t_success = !ctxt . HasError();
-			}
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &t_prop_value);
+            t_success = !ctxt . HasError();
         }
         if (t_success)
-            t_success = MCArrayStoreValue(*v, kMCCompareExact, *t_key, t_prop_value);
+            t_success = MCArrayStoreValue(*v, false, MCNAME(gradientprops[tablesize].token), t_prop_value);
     }
     
     MCerrorlock--;
@@ -529,7 +523,7 @@ bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill*& x_gradien
             {
                 MCValueRef t_prop_value;
                 
-                if (MCArrayFetchValue(*t_array, kMCCompareExact, MCNAME(gradientprops[tablesize].token), t_prop_value))
+                if (MCArrayFetchValue(*t_array, false, MCNAME(gradientprops[tablesize].token), t_prop_value))
                 {
                     MCExecValue t_value;
                     t_value . valueref_value = MCValueRetain(t_prop_value);

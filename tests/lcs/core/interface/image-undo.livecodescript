@@ -42,7 +42,8 @@ private command RandomFillImage pImage
 end RandomFillImage
 
 on TestClickImageWorks
-   TestSkipIf "environment", "command line"
+   TestSkipIfNot "ui"
+   TestSkipIf "environment", "server"
    TestSkipIfNot "wait"
   
     create stack
@@ -102,10 +103,8 @@ end TestFlipImageGetDataWorks
 
 
 on TestClickImageGetDataWorks
-    if the environment is "command line" then
-        TestSkip "crash on undoChanged when clicking image to fill image", "can't simulate click in -ui mode"
-        exit TestClickImageGetDataWorks        
-    end if 
+    TestSkipIfNot "ui"
+    TestSkipIf "environment", "server"
 
     create stack
     set the defaultStack to the short name of it
@@ -152,22 +151,20 @@ on TestFlipImageGetTransparencyWorks
 
     local tScript
     put "on undoChanged" into tScript
-    put return & "set the transData of this card to the alphaData of image 1" after tScript
+    put return & "set the cAlphaData of this card to the alphaData of image 1" after tScript
     put return & "end undoChanged" after tScript
     set the script of this card to tScript
 
     flip image 1 horizontal
 
-    TestAssert "check if undo worked", the transData of this card is not empty
+    TestAssert "check if undo worked", the cAlphaData of this card is not empty
 end TestFlipImageGetTransparencyWorks
 
 
 
 on TestClickImageGetTransparencyWorks
-    if the environment is "command line" then
-        TestSkip "crash on undoChanged when clicking image to fill image", "can't simulate click in -ui mode"
-        exit TestClickImageGetTransparencyWorks        
-    end if 
+    TestSkipIfNot "ui"
+    TestSkipIf "environment", "server"
 
     create stack
     set the defaultStack to the short name of it
@@ -177,14 +174,14 @@ on TestClickImageGetTransparencyWorks
 
     local tScript
     put "on undoChanged" into tScript
-    put return & "set the transData of this card to the alphaData of image 1" after tScript
+    put return & "set the cAlphaData of this card to the alphaData of image 1" after tScript
     put return & "end undoChanged" after tScript
     set the script of this card to tScript
 
     choose bucket tool
     click at the loc of image 1
 
-    TestAssert "check if undo worked", the transData of this card is not empty
+    TestAssert "check if undo worked", the cAlphaData of this card is not empty
 end TestClickImageGetTransparencyWorks
 
 
@@ -201,13 +198,13 @@ on TestRotateImageGetTransparencyWorks
     
     local tScript
     put "on undoChanged" into tScript
-    put return & "set the transData of this card to the alphaData of image 1" after tScript
+    put return & "set the cAlphaData of this card to the alphaData of image 1" after tScript
     put return & "end undoChanged" after tScript
     set the script of this card to tScript
 
     rotate image 1 by 20
 
-    TestAssert "check if undo worked", the transData of this card is not empty
+    TestAssert "check if undo worked", the cAlphaData of this card is not empty
 end TestRotateImageGetTransparencyWorks
 
 
