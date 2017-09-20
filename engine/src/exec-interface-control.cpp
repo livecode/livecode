@@ -274,7 +274,7 @@ void MCControl::SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip)
 	
 	MCValueAssign(tooltip, p_tooltip);
 	
-	if (focused == this)
+	if (focused.IsBoundTo(this))
 		MCtooltip->settip(tooltip);
 }
 
