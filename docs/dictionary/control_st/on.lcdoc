@@ -4,7 +4,10 @@ Synonyms: command
 
 Type: control structure
 
-Syntax: on <messageName> [<parametersList>] <statementList> end <messageName>
+Syntax:
+[private] on <messageName> [<parametersList>]
+   <statementList>
+end <messageName>
 
 Summary:
 Defines a <message handler>.

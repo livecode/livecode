@@ -2,7 +2,10 @@ Name: before
 
 Type: control structure
 
-Syntax: before <messageName> [<parametersList>] <statementList> end <messageName>
+Syntax:
+before <messageName> [<parametersList>]
+   <statementList>
+end <messageName>
 
 Summary:
 Defines a <message handler>.

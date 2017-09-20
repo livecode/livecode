@@ -2,11 +2,22 @@ Name: switch
 
 Type: control structure
 
-Syntax: switch [<switchExpression>]
-  case {<caseValue> | <caseCondition>}
-    [<statementList>]
-  [default
-    <defaultStatementList>]
+Syntax:
+switch <switchExpression>
+   case <caseValue>
+       <statementList>
+       [break]
+   [default
+       <defaultStatementList>]
+end switch
+
+Syntax:
+switch
+   case <caseCondition>
+       <statementList>
+       [break]
+   [default
+       <defaultStatementList>]
 end switch
 
 Summary:
