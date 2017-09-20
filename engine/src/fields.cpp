@@ -446,7 +446,7 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
 
         uint4 oldstate = state;
         bool t_refocus;
-        if (focused == this)
+        if (focused.IsBoundTo(this))
             t_refocus = true;
         else
             t_refocus = false;
