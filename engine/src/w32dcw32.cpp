@@ -308,6 +308,7 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 			msg.wParam = tptr->wParam;
 			msg.lParam = tptr->lParam;
 			msg.pt.x = msg.pt.y = 0;
+            msg.time = tptr->time;
 			delete tptr;
 		}
 
@@ -315,7 +316,6 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 		t_keymessage = msg.message == WM_KEYDOWN || msg.message == WM_KEYUP;
 		t_syskeymessage = msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP;
 
-		curinfo->live = True;
 		MCeventtime = msg.time;
 		if (t_keymessage || t_syskeymessage)
 			curinfo->keysym = getkeysym(msg.wParam, msg.lParam);
@@ -828,7 +828,9 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			//   a dead-key started sequence
 			// SN-2015-05-18: [[ Bug 15040 ]] We must send the char resulting
 			//  from an Alt+<number> sequence.
-			if (curinfo->keymove == KM_KEY_DOWN || deadcharfollower || isInAltPlusSequence)
+            // If the current event isn't live, then we cannot trust the keymove
+            // field, so we assume that we must process it.
+			if (!curinfo->live || curinfo->keymove == KM_KEY_DOWN || deadcharfollower || isInAltPlusSequence)
 			{
 				// Pressing Alt and the key "+" starts a number-typing sequence.
 				//  Otherwise, we are not in such a sequence - be it because a normal

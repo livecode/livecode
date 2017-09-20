@@ -29,7 +29,7 @@ use com.livecode.library.widgetutils
 
 metadata title is "Palette Actions"
 metadata author is "LiveCode"
-metadata version is "1.0.0"
+metadata version is "1.0.1"
 metadata userVisible is "false"
 
 property navNames		get getNavNames			set setNavNames

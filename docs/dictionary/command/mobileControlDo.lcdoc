@@ -4,7 +4,7 @@ Synonyms: iphonecontroldo
 
 Type: command
 
-Syntax: mobileControlDo <idOrName>, <action>, ...action specific parameters...
+Syntax: mobileControlDo <idOrName>, <action> [, <actionParameter> ...]
 
 Summary:
 Execute specific behaviors of native mobile controls created using
@@ -42,6 +42,7 @@ The id or name of the control.
 action (enum):
 The name of the <action> to perform. See Description for complete <action> listing.
 
+actionParameter: Additional parameter required for the action.
 
 Description:
 Use the <mobileControlDo> command to execute behaviors specific to a
