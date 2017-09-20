@@ -24,6 +24,7 @@ on TestPolygonPoints
  put "40,272" & CR & "71,226" & CR & "93,250" into tB
  
  create graphic "myGraphic"
+ set the style of graphic "myGraphic" to "polygon"
  -- CRs in a points list are used to separate different subpolygons
  set the points of graphic "myGraphic" to tA & CR & CR & CR & CR & tB
  put the points of graphic "myGraphic" into tPoints
