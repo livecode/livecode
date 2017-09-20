@@ -59,7 +59,7 @@ An entry may have a number of Syntax elements, if there are variations within th
 
 The following can be used to specify livecode syntax:
 - [optional]
-- ... (repeated)
+- [repeated optional ...]
 - { variant 1 | variant 2 }
 - <parameterName>
 
