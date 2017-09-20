@@ -1147,9 +1147,8 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
      * make. */
     if (t_valid)
     {
-        if (ffi_prep_cif_var(t_cif,
+        if (ffi_prep_cif(t_cif,
                              FFI_DEFAULT_ABI,
-                             2,
                              t_arg_count,
                              t_cif_return_type,
                              t_cif_arg_types) != FFI_OK)
