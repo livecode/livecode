@@ -924,23 +924,39 @@ void MCButton::SetMnemonic(MCExecContext& ctxt, uinteger_t p_mnemonic)
 
 void MCButton::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 {
-	// MW-2012-02-16: [[ FontRefs ]] As 'formatted' properties require
+    // MW-2012-02-16: [[ FontRefs ]] As 'formatted' properties require
 	//   access to the font, we must be open before we can compute them.
 	if (opened)
 	{
-		// MW-2007-07-05: [[ Bug 2328 ]] - Formatted width of tab buttons incorrect.
+        // MW-2007-07-05: [[ Bug 2328 ]] - Formatted width of tab buttons incorrect.
 		if (getstyleint(flags) == F_MENU && menumode == WM_TOP_LEVEL)
 			r_width = (uinteger_t)formattedtabwidth();
 		else
 		{
 			uint2 fwidth;
 			
-			MCStringRef t_label = getlabeltext();
+			MCStringRef const t_label = getlabeltext();
 			if (MCStringIsEmpty(t_label))
 				fwidth = 0;
-			else 
-                fwidth = leftmargin + rightmargin + MCFontMeasureText(m_font, t_label, getstack() -> getdevicetransform());
-			
+			else
+            {
+                MCArrayRef lines;
+                MCStringSplit(t_label, MCSTR("\n"), nil, kMCCompareExact, lines);
+                uindex_t line_count = MCArrayGetCount(lines);
+                int32_t max_length = 0;
+                
+                for (uindex_t i = 0; i < line_count; ++i)
+                {
+                    MCValueRef line = nil;
+                    MCArrayFetchValueAtIndex(lines, i + 1, line);
+                    MCStringRef const string_line = static_cast<MCStringRef const>(line);
+                    
+                    int32_t string_line_length = MCFontMeasureText(m_font, string_line, getstack() -> getdevicetransform());
+                    
+                    max_length = MCMax<int32_t>(max_length, string_line_length);
+                }
+                fwidth = leftmargin + rightmargin + max_length;
+            }
 			if (flags & F_SHOW_ICON && icons != NULL)
 			{
 				reseticon();
