@@ -218,6 +218,8 @@ end __deployLaunchURLInBrowser
 -- Callback from the HTTP deamon.
 -- In this case we just want to serve the requested file
 -- if it exists in the temp file space.
+-- POST requests to stdio.html are log messages from emscripten.
+-- Display these in the message box.
 --
 on deployEmscriptenNewHTTPRequest pSocketID, pRequest
    local tPath   
@@ -226,6 +228,35 @@ on deployEmscriptenNewHTTPRequest pSocketID, pRequest
    if there is a file tPath then
       httpdResponse pSocketID, 200, URL ("binfile:" & tPath)
    else
-      httpdResponse pSocketID, 404
+      set the itemDel to slash
+      if the last item pRequest["resource"] is "stdio.html" and pRequest["method"] is "POST" then
+         local tContent
+         put urlDecode(pRequest["content"]) into tContent
+         
+         -- Parse and display emscripten log messages in the message box.
+         -- Log messages from emscripten appear to be of the form
+         -- ^<err|out|pageload|exit>^[count^]<message>
+         -- Output a message header then the message body itself
+         local tMsgType, tMsgTypeCount, tMsgBody
+         put item 2 to -2 of pRequest["resource"] after msg
+         if matchText(tContent, "^\^(.+)\^([0-9]+)\^(.*)$", tMsgType, tMsgTypeCount, tMsgBody) then
+            put " -" && tMsgType && "#" & tMsgTypeCount & return after msg
+            if tMsgBody is not empty then
+               put tMsgBody & return after msg
+            end if
+         else if matchText(tContent, "^\^(.+)\^(.*)$", tMsgType, tMsgBody) then
+            put " -" && tMsgType & return after msg
+            if tMsgBody is not empty then
+               put tMsgBody & return after msg
+            end if
+         else
+            put tContent & return after msg
+         end if
+         
+         httpdResponse pSocketID, 200
+      else
+         httpdResponse pSocketID, 404
+      end if
+      set the itemDel to comma
    end if   
 end deployEmscriptenNewHTTPRequest
