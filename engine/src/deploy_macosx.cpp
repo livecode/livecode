@@ -2751,7 +2751,7 @@ template<typename T> static bool MCDeployExtractArchCallbackBody(MCDeployExtract
 	t_section = nil;
 	for(uint32_t i = 0; i < t_header . ncmds; i++)
 	{
-		if (t_commands[i] -> cmd != LC_SEGMENT)
+        if (t_commands[i] -> cmd != T::seg_load_command)
 			continue;
 		
 		typename T::segment_command *t_segment;

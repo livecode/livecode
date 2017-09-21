@@ -47,7 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
-MCControl *MCControl::focused;
+MCControlHandle MCControl::focused;
 int2 MCControl::defaultmargin = 4;
 int2 MCControl::xoffset;
 int2 MCControl::yoffset;
@@ -126,8 +126,8 @@ MCControl::MCControl(const MCControl &cref) : MCObject(cref)
 
 MCControl::~MCControl()
 {
-	if (focused == this)
-		focused = NULL;
+	if (focused.IsBoundTo(this))
+		focused = nullptr;
     
 	MCscreen->stopmove(this, False);
 
@@ -155,9 +155,10 @@ void MCControl::open()
 void MCControl::close()
 {
 	// MW-2008-01-09: [[ Bug 5739 ]] Changing group layer cancels mousedown
-	if (opened == 1)
-		if (focused == this)
-			focused = NULL;
+	if (opened == 1 && focused.IsBoundTo(this))
+    {
+        focused = nullptr;
+    }
 	MCObject::close();
 }
 
@@ -263,7 +264,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
     
 	if (is || state & CS_MFOCUSED)
 	{
-		if (focused == this || getstack() -> gettool(this) == T_POINTER)
+		if (focused.IsBoundTo(this) || getstack() -> gettool(this) == T_POINTER)
 		{
 			if (MCdispatcher -> isdragtarget())
 				message_with_args(MCM_drag_move, x, y);
@@ -300,7 +301,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 
 void MCControl::munfocus()
 {
-	if (focused == this)
+	if (focused.IsBoundTo(this))
 	{
 		if (state & CS_MFOCUSED)
 		{
@@ -1358,8 +1359,11 @@ void MCControl::newmessage()
 
 void MCControl::enter()
 {
-	if (focused != NULL && focused != this)
-		leave();
+    if (focused.IsValid() && !focused.IsBoundTo(this))
+    {
+    	leave();
+    }
+    
 	if (MCdispatcher -> isdragtarget())
 	{
 		MCdragaction = DRAG_ACTION_NONE;
@@ -1392,27 +1396,33 @@ void MCControl::enter()
 
 void MCControl::leave()
 {
-	MCControl *oldfocused = focused;
+	MCControlHandle oldfocused = focused;
 	if (MCdispatcher -> isdragtarget())
 	{
 		// MW-2013-08-08: [[ Bug 10655 ]] If oldfocused is a field and has dragText set,
 		//   then make sure we unset it (otherwise the caret will continue moving around
 		//   on mouseMove).
-		if (oldfocused->gettype() == CT_FIELD
+		if (oldfocused.IsValid())
+        {
+            if (oldfocused->gettype() == CT_FIELD
 		        && oldfocused -> getstate(CS_DRAG_TEXT))
-		{
-			MCField *fptr = (MCField *)oldfocused;
-			fptr->removecursor();
-			getstack()->clearibeam();
-			oldfocused->state &= ~(CS_DRAG_TEXT | CS_IBEAM);
-		}
-		oldfocused->message(MCM_drag_leave);
+            {
+                MCField *fptr = oldfocused.GetAs<MCField>();
+                fptr->removecursor();
+                getstack()->clearibeam();
+                oldfocused->state &= ~(CS_DRAG_TEXT | CS_IBEAM);
+            }
+            oldfocused->message(MCM_drag_leave);
+        }
 		MCdragaction = DRAG_ACTION_NONE;
 		MCdragdest = nil;
 	}
-	else
+	else if (oldfocused.IsValid())
+    {
 		oldfocused->message(MCM_mouse_leave);
-	focused = NULL;
+    }
+    
+    focused = nullptr;
 }
 
 Boolean MCControl::sbfocus(int2 x, int2 y, MCScrollbar *hsb, MCScrollbar *vsb)

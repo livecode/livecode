@@ -2,7 +2,10 @@ Name: after
 
 Type: control structure
 
-Syntax: after <messageName> [<parametersList>] <statementList> end <messageName>
+Syntax:
+after <messageName> [<parametersList>]
+   <statementList>
+end <messageName>
 
 Summary:
 Defines a <message handler>.

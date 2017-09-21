@@ -11,42 +11,36 @@ IF EXIST "%LOCKPATH%" (
 )
 
 IF "%1"=="" (
-	SET LIBS=openssl,curl,icu
+	SET PLATFORM=win32
 ) ELSE (
-	SET LIBS=%1
+	SET PLATFORM=%1
 )
 
+IF "%2"=="" (
+	SET ARCH=x86
+) ELSE (
+	SET ARCH=%2
+)
+
+SET PREBUILT_LIBS=openssl curl icu
+
+ECHO Building Libs %PREBUILT_LIBS%
+
 SET TOOL=14
-FOR /f "tokens=1* delims=," %%L IN ("%LIBS%") DO (
-	SET LIB=%%L
+FOR %%L IN (%PREBUILT_LIBS%) DO (
+	SET PREBUILT_LIB=%%L
 
-	ECHO Building !LIB! for four configurations
+	ECHO Building !PREBUILT_LIB! for all configurations
 
-	MKDIR %LOCKPATH%
+	ECHO Preparing !PREBUILT_LIB!
+	CALL build-libs.bat !PREBUILT_LIB! prepare
+
 	FOR %%M IN (debug,release) DO (
-		FOR %%A IN (x86,x86_64) DO (
-			SET MODE=%%M
-			SET ARCH=%%A
-
-			REM The prepare step is done synchronously
-			ECHO Preparing %%L-%%M-%%A
-			CALL build-libs.bat %%L prepare
-
-			REM The build step is done asynchronously
-			ECHO Starting %%L-%%M-%%A
-			START "%%L-%%M-%%A" 9>"%LOCKPATH%\%%L-%%M-%%A.lock" CMD /C build-libs.bat %%L
-		)
+		SET MODE=%%M
+		SET TRIPLE=!PREBUILT_LIB!-!MODE!-%ARCH%
+		ECHO Starting !TRIPLE!
+		CALL build-libs.bat !PREBUILT_LIB!
 	)
 
-	ECHO Waiting for all !LIB! builds to finish
-
-	:WaitForEnd
-	1>NUL 2>NUL PING /n 2 ::1
-	FOR %%K IN (!LIB!-debug-x86,!LIB!-release-x86,!LIB!-debug-x86_64,!LIB!-release-x86_64) DO (
-		(CALL ) 9>"%LOCKPATH%\%%K.lock" || GOTO :WaitForEnd
-	) 2>NUL
-
-	RMDIR /S /Q %LOCKPATH%
-	
-	ECHO Finished building !LIB! for four configurations
- )
+	ECHO Finished building !PREBUILT_LIB! for all configurations
+)

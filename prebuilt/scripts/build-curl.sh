@@ -2,12 +2,7 @@
 
 source "${BASEDIR}/scripts/platform.inc"
 source "${BASEDIR}/scripts/lib_versions.inc"
-
-# Only for desktop platforms
-if [ "${PLATFORM}" == "ios" -o "${PLATFORM}" == "android" ] ; then
-	echo "Curl not required for platform ${PLATFORM}"
-	exit 0
-fi
+source "${BASEDIR}/scripts/util.inc"
 
 # Configuration flags
 CURL_CONFIG="--disable-debug \
@@ -26,7 +21,7 @@ cd "${BUILDDIR}"
 if [ ! -d "$CURL_SRC" ] ; then
 	if [ ! -e "$CURL_TGZ" ] ; then
 		echo "Fetching Curl source"
-		curl https://curl.haxx.se/download/curl-${Curl_VERSION}.tar.gz -o ${CURL_TGZ}
+		fetchUrl "https://curl.haxx.se/download/curl-${Curl_VERSION}.tar.gz" "${CURL_TGZ}"
 		if [ $? != 0 ] ; then
 			echo "    failed"
 			if [ -e "${CURL_TGZ}" ] ; then 
@@ -41,10 +36,12 @@ if [ ! -d "$CURL_SRC" ] ; then
 fi
 				
 
-for ARCH in ${ARCHS}
-do
+function buildCurl {
+	local PLATFORM=$1
+	local ARCH=$2
+	local SUBPLATFORM=$3
+
 	CURL_ARCH_SRC="${CURL_SRC}-${PLATFORM}-${ARCH}"
-	CURL_ARCH_LOG="${CURL_ARCH_SRC}.log"
 	
 	CURL_ARCH_CONFIG="${CURL_CONFIG} --prefix=${INSTALL_DIR}/${PLATFORM}/${ARCH} --with-ssl=${INSTALL_DIR}/${PLATFORM}/${ARCH}"
 	
@@ -71,13 +68,13 @@ do
 	if [ "${CURL_ARCH_CONFIG}" != "${CURL_ARCH_CURRENT_CONFIG}" ] ; then
 		cd "${CURL_ARCH_SRC}"
 		echo "Configuring and building Curl for ${PLATFORM}/${ARCH}"
-		setCCForArch "${ARCH}"
+		setCCForTarget "${PLATFORM}" "${ARCH}" "${SUBPLATFORM}"
 		
 		if [ "${PLATFORM}" == "linux" ] ; then
 			export LDFLAGS="-Wl,-rpath,.,-rpath-link,${INSTALL_DIR}/${PLATFORM}/${ARCH}/lib"
 		fi
 		
-		./configure ${CURL_ARCH_CONFIG} > ${CURL_ARCH_LOG} 2>&1 && make clean >> ${CURL_ARCH_LOG} 2>&1 && make ${MAKEFLAGS} >> ${CURL_ARCH_LOG} 2>&1 && make install >> ${CURL_ARCH_LOG} 2>&1
+		./configure ${CURL_ARCH_CONFIG} && make clean && make ${MAKEFLAGS} && make install
 		RESULT=$?
 		cd ..
 		
@@ -85,7 +82,7 @@ do
 			echo "${CURL_ARCH_CONFIG}" > "${CURL_ARCH_SRC}/config.cmd"
 		else
 			echo "    failed"
-			exit
+			exit 1
 		fi
 	else
 		echo "Found existing Curl build for ${PLATFORM}/${ARCH}"
@@ -93,16 +90,25 @@ do
 	
 	CURL_LIBS+="${INSTALL_DIR}/${PLATFORM}/${ARCH}/lib/libcurl.a "
 	
-	if [ ! "${PLATFORM}" == "mac" ] ; then
+	if [ ! "${ARCH}" == "universal" ] ; then
 		mkdir -p "${OUTPUT_DIR}/lib/${PLATFORM}/${ARCH}"
 		cp "${INSTALL_DIR}/${PLATFORM}/${ARCH}/lib/libcurl.a" "${OUTPUT_DIR}/lib/${PLATFORM}/${ARCH}/libcurl.a"
 	fi
-done
+}
 
-# Create the universal libraries
-if [ "${PLATFORM}" == "mac" ] ; then
-	echo "Creating Curl mac universal libraries"
-	mkdir -p "${OUTPUT_DIR}/lib/mac"
-	lipo -create ${CURL_LIBS} -output "${OUTPUT_DIR}/lib/mac/libcurl.a"
+if [ "${ARCH}" == "universal" ] ; then
+	# perform build for universal architectures
+	for UARCH in ${UNIVERSAL_ARCHS} ; do
+		buildCurl "${PLATFORM}" "${UARCH}" "${SUBPLATFORM}"
+	done
+
+	# Create the universal libraries
+	echo "Creating Curl universal libraries"
+	mkdir -p "${OUTPUT_DIR}/lib/${PLATFORM}/${SUBPLATFORM}"
+	lipo -create ${CURL_LIBS} -output "${OUTPUT_DIR}/lib/${PLATFORM}/${SUBPLATFORM}/libcurl.a"
+	CURL_LIBS=
+else
+	buildCurl "${PLATFORM}" "${ARCH}" "${SUBPLATFORM}"
 fi
+
 	

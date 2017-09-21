@@ -1065,8 +1065,8 @@ void MCWidget::SetFocused(bool p_setting)
 {
     if (p_setting)
         focused = this;
-    else if (focused == this)
-        focused = nil;
+    else if (focused.IsBoundTo(this))
+        focused = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

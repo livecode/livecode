@@ -346,7 +346,7 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 		return;
 	uint4 oldstate = state & (CS_NO_MESSAGES | CS_SELECTED
 	                          | CS_MFOCUSED | CS_KFOCUSED);
-	MCControl *oldfocused = focused;
+	MCControlHandle oldfocused = focused;
 
 	state &= ~CS_SELECTED;
 	uint2 opencount = opened;
@@ -379,7 +379,7 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 
 	state |= oldstate;
 
-	if (oldfocused == this)
+	if (oldfocused.IsBoundTo(this))
 		focused = this;
 
 	// MW-2011-08-17: [[ Layers ]] Notify of the change in rect and invalidate.

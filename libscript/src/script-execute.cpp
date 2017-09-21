@@ -268,7 +268,7 @@ public:
         /* There are different variants of objc_msgSend we need to use
          * depending on architecture and return type:
          *   struct return
-         *     all: _stret
+         *     all but arm64: _stret
          *   float return
          *     arm: no difference
          *     i386: _fpret
@@ -289,7 +289,9 @@ public:
          
         ffi_cif *t_cif = (ffi_cif *)p_handler->objc.function_cif;
         void (*t_objc_msgSend)() = nullptr;
-#if defined(__ARM__)
+#if defined(__ARM64__)
+        t_objc_msgSend = (void(*)())objc_msgSend;
+#elif defined(__ARM__)
         if (t_cif->rtype->type == FFI_TYPE_STRUCT)
             t_objc_msgSend = (void(*)())objc_msgSend_stret;
         else
@@ -310,12 +312,14 @@ public:
             t_objc_msgSend = (void(*)())objc_msgSend_fpret;
         else
             t_objc_msgSend = (void(*)())objc_msgSend;
+#else
+#error unknown architecture for objc_msgSend
 #endif
         /* We must use a wrapper function written in an obj-c++ source file so that
          * we can capture any obj-c exceptions. */
         extern bool MCScriptCallObjCCatchingErrors(ffi_cif*, void (*)(), void *, void **);
         return MCScriptCallObjCCatchingErrors(t_cif,
-                                              (void(*)())objc_msgSend,
+                                              t_objc_msgSend,
                                               p_result_slot_ptr,
                                               t_objc_values);
 #else

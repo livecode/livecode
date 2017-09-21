@@ -3,7 +3,6 @@ Name: revOpenDatabase
 Synonyms: revdb_connect
 
 Type: function
-Syntax: revOpenDatabase(<databaseType>, {<hostAddress>, <databaseName>, [<userName>],[<passWord>],{[<useSSL>], [<socketAddr>], [<rwTimeout>], [<autoReconnect>] | [<cursorType>] | [<sslOption>],...} | <filePath>,[<sqliteOptions>]})
 
 Syntax: revOpenDatabase("mysql", <hostAddress>, <databaseName>, [<userName>],[<passWord>],[<useSSL>], [<socketAddr>], [<rwTimeout>], [<autoReconnect>])
 
@@ -11,7 +10,7 @@ Syntax: revOpenDatabase("odbc", <hostAddress>, <databaseName>, [<userName>],[<pa
 
 Syntax: revOpenDatabase("sqlite",<filePath>,[<sqliteOptions>])
 
-Syntax: revOpenDatabase("postgresql", <hostAddress>, <databaseName>, [<userName>], [<passWord>], [<sslOption>],...)
+Syntax: revOpenDatabase("postgresql", <hostAddress>, <databaseName>, [<userName>], [<passWord>] [, <sslOption> ...])
 
 Syntax: revOpenDatabase("oracle", <hostAddress>, <databaseName>, [<userName>],[<passWord>])
 
@@ -121,17 +120,6 @@ order of the items in the options parameter is not important):
 -   "extensions": Enable loadable extensions for the connection.
 -   "binary": Places binary data into the database verbatim (without
     LiveCode encoding).
-
-
-databaseType (enum):
-A string specifying the database type to use. One of the following:
-
-- "mysql"
-- "oracle"
-- "odbc"
-- "postgresql"
-- "valentina"
-- "sqlite"
 
 
 filePath (string):

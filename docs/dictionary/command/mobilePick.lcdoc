@@ -4,7 +4,7 @@ Synonyms: iphonepick
 
 Type: command
 
-Syntax: mobilePick <optionList>, <initialIndex> [, <optionList>, <initialIndex>, ...] [, <style> ] [, <button>] [, <view>]
+Syntax: mobilePick <optionList1>, <initialIndex1> [, <optionList2>, <initialIndex2> ...] [, <style> ] [, <button>] [, <view>]
 
 Summary:
 Presents the user with a native list picker dialog.
@@ -38,11 +38,14 @@ mobilePick tDays, 2, tMonths, 3, "checkmark"
 answer the result with "Okay"
 
 Parameters:
-optionList:
+optionList1:
 A return delimited list of options.
 
-initialIndex:
+initialIndex1:
 The (1-based) index of the item to be initially highlighted.
+
+optionList2:
+initialIndex2:
 
 style:
 The type of display used. On the iPad if "checkmark" is specified a

@@ -1441,14 +1441,14 @@ static bool MCPropertyFormatList(Formatter p_format,
     if (!MCListCreateMutable(p_delimiter, &t_list))
         return false;
 
-    for (uindex_t i = 0; i < p_count; ++i)
-    {
-        MCAutoStringRef t_formatted;
-        if (!p_format(p_list[i], &t_formatted))
-            return false;
-        if (!MCListAppend(*t_list, *t_formatted))
-            return false;
-    }
+	for (uindex_t i = 0; i < p_count; ++i)
+	{
+		MCAutoStringRef t_formatted;
+		if (!p_format(p_list[i], &t_formatted))
+			return false;
+		if (!MCListAppend(*t_list, *t_formatted))
+			return false;
+	}
 
     return MCListCopyAsString(*t_list, r_string);
 }
@@ -1474,8 +1474,16 @@ static bool MCPropertyFormatStringList(MCStringRef *p_list, uindex_t p_count, ch
 
 static bool MCPropertyFormatPointList(MCPoint *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
-    auto t_format =
-        [](MCPoint& p, MCStringRef& s) { return MCStringFormat(s, "%d,%d", p.x, p.y); };
+	auto t_format = [](MCPoint& p, MCStringRef& s)
+	{
+		if  (p.x == MININT2 && p.y == MININT2)
+		{
+			s = MCValueRetain(kMCEmptyString);
+			return s != nullptr;
+		}
+		else
+			return MCStringFormat(s, "%d,%d", p.x, p.y);
+	};
     return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, r_string);
 }
 
