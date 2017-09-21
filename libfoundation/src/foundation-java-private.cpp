@@ -1310,7 +1310,7 @@ static bool __MCJavaIsHandlerSuitableForListener(MCNameRef p_class_name, MCValue
         MCTypeInfoRef t_return_type = MCHandlerTypeInfoGetReturnType(t_type_info);
         
         // Check the return types match
-        if (t_return_class == t_void_type)
+        if (s_env->IsSameObject(t_return_class, t_void_type))
         {
             if (t_return_type == kMCNullTypeInfo)
                 return true;

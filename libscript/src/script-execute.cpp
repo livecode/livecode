@@ -334,6 +334,7 @@ public:
         switch(p_handler->language)
         {
             case kMCScriptForeignHandlerLanguageJava:
+            
                 return CallJava(p_handler, p_handler_signature, p_result_slot_ptr);
             
             case kMCScriptForeignHandlerLanguageC:
@@ -357,9 +358,9 @@ public:
     static void CallAnyTrampoline(void *p_context)
     {
         auto ctxt = static_cast<CallTrampolineContext *>(p_context);
-        ctxt->return_value = ctxt->invocation->CallObjC(ctxt->handler,
-                                                        ctxt->signature,
-                                                        ctxt->result_slot_ptr);
+        ctxt->return_value = ctxt->invocation->CallAny(ctxt->handler,
+                                                       ctxt->signature,
+                                                       ctxt->result_slot_ptr);
     }
     
 	// Call the foreign handler, taking into account which thread it must run
