@@ -52,7 +52,8 @@ MCScriptThrowPropertyUsedBeforeAssignedError(MCScriptInstanceRef p_instance,
 								 p_instance->module->name,
 								 "property",
 								 MCScriptGetNameOfDefinitionInModule(p_instance->module,
-																		   p_property_def));
+																		   p_property_def),
+                                 nil);
 }
 
 bool
