@@ -208,7 +208,7 @@ private command __UniqueBehaviorNameForObject pObject, @rBehaviorName
    
    repeat
       get the short name of pObject
-      if it is not empty then
+      if it is not empty and " id " is not in it then
          put toUpper(char 1 of it) & char 2 to -1 of it before tBehaviorName
       end if
       
