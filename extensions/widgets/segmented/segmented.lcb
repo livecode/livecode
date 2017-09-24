@@ -360,7 +360,7 @@ public handler OnClick() returns nothing
 		-- unselected. If it is selected, act according to toggleHilites property
 		variable tState as List
 		if mSegmentSelected[tSegmentIndex] and mToggleHilites then
-			put false into mSegmentSelected
+			put false into mSegmentSelected[tSegmentIndex]
 			post "hiliteChanged"
 			redraw all
 		else if not mSegmentSelected[tSegmentIndex] then
