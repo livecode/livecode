@@ -634,7 +634,7 @@ mergeInto(LibraryManager.library, {
 		// Wrapper for MCEventQueuePostMousePress
 		_postMousePress: function(stack, time, modifiers, state, button)
 		{
-			Module.ccall('MCEventQueuePostMousePress',
+			Module.ccall('MCEmscriptenHandleMousePress',
 						 'number', /* bool */
 						 ['number', /* MCStack *stack */
 						  'number', /* uint32_t time */

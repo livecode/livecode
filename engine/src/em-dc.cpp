@@ -51,8 +51,20 @@ MCEmscriptenGetCurrentStack()
 	return t_dc->GetCurrentStack();
 }
 
+MC_DLLEXPORT_DEF
+bool MCEmscriptenHandleMousePress(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, MCMousePressState p_state, int32_t p_button)
+{
+	if (MCnoui) return false;
+	
+	MCScreenDC *t_dc = static_cast<MCScreenDC *>(MCscreen);
+	
+	t_dc->handle_mouse_press(p_stack, p_time, p_modifiers, p_state, p_button);
+	
+	return true;
+}
+
 MCScreenDC::MCScreenDC()
-	: m_main_window(nil)
+	: m_main_window(nil), m_mouse_button_state(0)
 {
 }
 
@@ -334,6 +346,32 @@ MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_m
     return true;
 }
 
+
+void
+MCScreenDC::handle_mouse_press(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, MCMousePressState p_state, int32_t p_button)
+{
+	// track mouse button pressed state
+	/* NOTE - assumes there are no more than 32 mouse buttons */
+	if (p_button < 32)
+	{
+		if (p_state == kMCMousePressStateDown)
+			m_mouse_button_state |= 1UL << p_button;
+		else if (p_state == kMCMousePressStateUp)
+			m_mouse_button_state &= ~(1UL << p_button);
+	}
+	
+	MCEventQueuePostMousePress(p_stack, p_time, p_modifiers, p_state, p_button);
+}
+
+Boolean
+MCScreenDC::getmouse(uint2 p_button, Boolean& r_abort)
+{
+	// return recorded mouse button state
+	if (p_button < 32)
+		return (m_mouse_button_state & (1 << p_button)) != 0;
+		
+	return false;
+}
 
 void
 MCScreenDC::platform_querymouse(int16_t& r_x, int16_t& r_y)
