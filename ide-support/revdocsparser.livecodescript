@@ -250,7 +250,7 @@ function revDocsParseDictionaryToLibraryArray pRootDir
    local tCount
    put 1 into tCount
    
-   local tText, tLibraryA, tParsedA, tDisplayName, tSynonymA
+   local tText, tLibraryA, tParsedA
    
    repeat for each item tRoot in (tDictionaryRoot & "," & tGlossaryRoot)
       repeat for each line tLine in folders(tRoot)
@@ -268,22 +268,6 @@ function revDocsParseDictionaryToLibraryArray pRootDir
             put revDocsParseDocText(tText, tFullPath) into tParsedA
             put tParsedA["doc"][1] into tLibraryA[tCount]
             add 1 to tCount
-            -- BWM fix for Bug 18305
-            -- add an additional entry to dictionary for each synonym to allow keyword search
-            if tParsedA["doc"][1]["Synonyms"] is not empty then
-               put tParsedA["doc"][1]["display name"] into tDisplayName
-               put tParsedA["doc"][1]["Synonyms"] into tSynonymA
-               repeat for each element tSynonymName in tSynonymA
-                  if tSynonymName is tDisplayName then next repeat -- glossary entries include themselves
-                  put tParsedA["doc"][1] into tLibraryA[tCount]
-                  put tSynonymName into tLibraryA[tCount]["display name"]
-                  if tParsedA["doc"][1]["Type"] is not "glossary" then
-                     put " (Synonym of " & tDisplayName & ")" after tLibraryA[tCount]["display name"]
-                  end if
-                  add 1 to tCount
-               end repeat
-            end if
-            -- end fix for Bug 18305
          end repeat
       end repeat
    end repeat
