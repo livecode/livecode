@@ -130,6 +130,10 @@
 	<string>This application requires access to your Reminders</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This application requires access to Photo Library</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>This application requires access to read the user's health data</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>This application requires access to update the user's health data</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		${APP_URL_WHITELIST}
