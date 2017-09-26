@@ -578,7 +578,7 @@ end clearExtendedAttributes
 
 private function findSigningIdentity
    get shell("/usr/bin/security -q find-identity -v")
-   filter it with "*Developer ID Application: Runtime Revolution Ltd*"
+   filter it with "*Developer ID Application:*"
    return it
 end findSigningIdentity
 
@@ -712,7 +712,8 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
       end if
       builderLog "report", "Successfully signed macosx app bundle" && "'" & tAppBundle & "'"
    else
-      builderLog "warning", "No valid identity found for signing OSX app bundle"
+      builderLog "error", "No valid identity found for signing OSX app bundle"
+      throw "failure"
    end if
 
    -- One last permission change (but a non-signature-breaking one) to prevent accidental IDE modifications
