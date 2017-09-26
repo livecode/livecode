@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 constant kLinuxBrowserList = "Firefox=firefox/firefox,Firefox Beta=firefox_beta/firefox,Firefox Aurora=firefox_aurora/firefox,Firefox Nightly=firefox_nightly/firefox,Chrome Stable=google-chrome-stable/google-chrome-stable,Chrome=google-chrome/google-chrome"
+constant kPrivateModeSuffix = "[Private Mode]"
 
 local sBrowsers
 local sServerPort
@@ -26,6 +27,12 @@ command deployInitialize
    put __deployGetBrowserList() into tBrowserList
    split tBrowserList by return and comma
    put tBrowserList into sBrowsers
+   
+   repeat for each key tBrowser in tBrowserList
+      if __deployBrowserSupportsPrivateMode(tBrowser) then
+         put tBrowserList[tBrowser] into sBrowsers[tBrowser && kPrivateModeSuffix]
+      end if
+   end repeat
    
    put the temporary folder & slash & "livecode-emscripten-builds" into sHTTPFileSpace
    if not (there is a folder sHTTPFileSpace) then
@@ -102,7 +109,9 @@ command deployDo pTargetStack, pBrowser
    if tError is empty then
       revStandaloneProgress "Launching URL..."      
       
-      __deployLaunchURLInBrowser "http://localhost:" & sServerPort & slash & tStandalonePath, sBrowsers[pBrowser]
+      local tPrivateMode
+      put pBrowser ends with kPrivateModeSuffix into tPrivateMode
+      __deployLaunchURLInBrowser "http://localhost:" & sServerPort & slash & tStandalonePath, sBrowsers[pBrowser], tPrivateMode
       if the result is not empty then
          put "Could not open URL" && the result into tError
       end if
@@ -188,25 +197,79 @@ private function __deployGetBrowserList
    return tBrowserList
 end __deployGetBrowserList
 
-private command __deployLaunchURLInBrowser pURL, pBrowser
+-- Add any exta command line args that we might want to pass to the browser.
+-- e.g. javascript consoles, debug modes etc
+--
+-- Chrome - https://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/chrome_switches.cc
+-- Firefox - https://developer.mozilla.org/en-US/docs/Mozilla/Command_Line_Options
+-- Opera - http://www.opera.com/docs/switches/
+-- Safari doesn't support command line flags. We could potentially use applescript on OS X, though it's somewhat hacky.
+--
+private function __deployGetBrowserArgs pBrowser
+   return empty
+end __deployGetBrowserArgs pBrowser
+
+private function __deployBrowserSupportsPrivateMode pBrowser
+   return __deployGetBrowserPrivateModeArgs(pBrowser) is not empty
+end __deployBrowserSupportsPrivateMode
+
+private function __deployGetBrowserPrivateModeArgs pBrowser
+   switch
+      case pBrowser contains "chrome"
+         return "--incognito"
+      case pBrowser contains "iexplore"
+         return "-private"
+      case pBrowser contains "firefox"
+         -- We use the open command on OS X to launch browsers.
+         -- This takes care of managing multiple instances - if already running, the exisiting instance will be brought to the foreground with the given URL.
+         -- However, this means that if the browser is already open, command line args are lost.
+         -- So when we want to pass args, we force start a new instance - most browsers handle this appropriately.
+         -- However, firefox complains and exits (when running multiple instances on OS X), which means we can't fully support private mode using this method.
+         -- It will only work if firefox is not already running (or we could try a nasty apple script hack but that susceptible to menu/shortcut changes).
+         if the platform is "MacOS" then
+            return empty
+         end if
+         return "-private-window"
+      case pBrowser contains "opera"
+         return "-newprivatetab"
+      default
+         return empty
+   end switch
+end __deployGetBrowserPrivateModeArgs
+
+private command __deployLaunchURLInBrowser pURL, pBrowser, pPrivateMode
    if pBrowser is empty then
       launch URL pURL
       return the result
    else
+      local tArgs
+      put __deployGetBrowserArgs(pBrowser) into tArgs
+      if pPrivateMode then
+         if tArgs is not empty then
+            put space after tArgs
+         end if
+         put __deployGetBrowserPrivateModeArgs(pBrowser) after tArgs
+      end if
+      
       switch the platform
          case "MacOS"
-            return shell("open -a" && __wrapInQuotes(pBrowser) && __wrapInQuotes(pURL))
+            if tArgs is not empty then
+               -- If we want to pass any command line args to the browser, we need to force start a new instance using -n
+               -- Most browsers appear to handle relaunches in a graceful way.
+               put "-n --args " before tArgs
+            end if
+            return shell("open -a" && __wrapInQuotes(pBrowser) && tArgs && __wrapInQuotes(pURL))
             
          case "Win32"
             local tHideConsoleWindows
             put the hideConsoleWindows into tHideConsoleWindows
             set the hideConsoleWindows to true
-            get shell(__wrapInQuotes(pBrowser) &&  __wrapInQuotes(pURL))
+            get shell(__wrapInQuotes(pBrowser) && tArgs && __wrapInQuotes(pURL))
             set the hideConsoleWindows to tHideConsoleWindows            
             return it
             
          case "Linux"
-            return shell(__wrapInQuotes(pBrowser) &&  __wrapInQuotes(pURL))
+            return shell(__wrapInQuotes(pBrowser) &&  tArgs && __wrapInQuotes(pURL))
             
          default
             launch URL pURL
