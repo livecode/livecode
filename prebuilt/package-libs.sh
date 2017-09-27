@@ -66,6 +66,8 @@ function doPackage {
 	fi
 
 	local LIBPATH="lib/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"
+	local SHAREPATH="share/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"
+	local BINPATH="bin/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"
 
 	generateTarFileName OpenSSL "${SUFFIX}"
 	generateTarFileName Curl "${SUFFIX}"
@@ -87,24 +89,28 @@ function doPackage {
 	fi
 
 	# Package up ICU
-	local ICU_LIBS=
+	local ICU_FILES=
 	if [ -f "${LIBPATH}/libicudata.a" ] ; then
 		for LIB in data i18n io le lx tu uc ; do
 			if [ -f "${LIBPATH}/libicu${LIB}.a" ] ; then
-				ICU_LIBS+="${LIBPATH}/libicu${LIB}.a "
-			fi	
+				ICU_FILES+="${LIBPATH}/libicu${LIB}.a "
+			fi
 		done
-
-		tar -cf "${ICU_TAR}" ${ICU_LIBS}
-
 	elif [ -f "${LIBPATH}/sicudt.lib" ] ; then
 		for LIB in dt in io le lx tu uc ; do
 			if [ -f "${LIBPATH}/sicu${LIB}.lib" ] ; then
-				ICU_LIBS+="${LIBPATH}/sicu${LIB}.lib "
+				ICU_FILES+="${LIBPATH}/sicu${LIB}.lib "
 			fi
 		done
-
-		tar -cf "${ICU_TAR}" ${ICU_LIBS}
+	fi
+	if [ -f "${BINPATH}/pkgdata" ] ; then
+		ICU_FILES+="${BINPATH}/pkgdata "
+	fi
+	if [ -f "${BINPATH}/icupkg" ] ; then
+		ICU_FILES+="${BINPATH}/icupkg "
+	fi
+	if [ ! -z "${ICU_FILES}" ] ; then
+		tar -cf "${ICU_TAR}" ${ICU_FILES}
 	fi
 
 	# Package up CEF
@@ -150,11 +156,15 @@ if [ "${PLATFORM}" = "linux" -a "${ARCH}" = "x86_64" ] ; then
 		OPENSSL_HDR_NAME+="-${OpenSSL_BUILDREVISION}"
 	fi
 	ICU_HDR_NAME="ICU-${ICU_VERSION}-All-Universal-Headers"
+	ICU_DATA_NAME="ICU-${ICU_VERSION}-All-Universal-Data"
 	if [ ! -z "${ICU_BUILDREVISION}" ] ; then
 		ICU_HDR_NAME+="-${ICU_BUILDREVISION}"
+		ICU_DATA_NAME+="-${ICU_BUILDREVISION}"
 	fi
 	tar -cf "${PACKAGE_DIR}/${OPENSSL_HDR_NAME}.tar" include/openssl/*.h
 	tar -cf "${PACKAGE_DIR}/${ICU_HDR_NAME}.tar" include/unicode/*.h
+	tar -cf "${PACKAGE_DIR}/${ICU_DATA_NAME}.tar" share/icu*.dat
 	bzip2 -zf --best "${PACKAGE_DIR}/${OPENSSL_HDR_NAME}.tar"
 	bzip2 -zf --best "${PACKAGE_DIR}/${ICU_HDR_NAME}.tar"
+	bzip2 -zf --best "${PACKAGE_DIR}/${ICU_DATA_NAME}.tar"
 fi
