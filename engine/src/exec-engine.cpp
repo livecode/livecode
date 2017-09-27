@@ -169,6 +169,10 @@ MC_EXEC_DEFINE_EVAL_METHOD(Engine, TargetAsObject, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, ErrorObjectAsObject, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, FontfilesInUse, 1)
 
+MC_EXEC_DEFINE_EVAL_METHOD(Engine, CommandName, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Engine, CommandArguments, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Engine, CommandArgumentAtIndex, 2)
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCEngineNumberFormat
@@ -2170,3 +2174,26 @@ void MCEngineEvalIsNotStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, boo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCEngineEvalCommandName(MCExecContext& ctxt, MCStringRef& r_result)
+{
+    if (MCcommandname != nullptr)
+        r_result = MCValueRetain(MCcommandname);
+    else
+        r_result = MCValueRetain(kMCEmptyString);
+}
+
+void MCEngineEvalCommandArguments(MCExecContext& ctxt, MCArrayRef& r_result)
+{
+    r_result = MCValueRetain(MCcommandarguments);
+}
+
+void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index, MCStringRef& r_result)
+{
+    MCStringRef t_result = nullptr;
+    // If the index is wrong (< 0 or > argument count) then we return empty
+    if (!MCArrayFetchValueAtIndex(MCcommandarguments, t_index, (MCValueRef&)t_result))
+        t_result = kMCEmptyString;
+
+    r_result = MCValueRetain(t_result);
+}

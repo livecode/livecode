@@ -507,9 +507,12 @@ public:
 
 class MCCommandArguments : public MCFunction
 {
-    MCExpression* argument_index;
+    MCAutoPointer<MCExpression> argument_index;
 public:
-    MCCommandArguments() { argument_index = NULL; }
+    MCCommandArguments() :
+        argument_index(nullptr)
+    {
+    }
     virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
     virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
 };
