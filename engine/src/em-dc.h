@@ -27,10 +27,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "sysdefs.h"
 #include "stack.h"
 #include "uidc.h"
+#include "eventqueue.h"
 
 MCUIDC *MCCreateScreenDC(void);
 
 extern "C" MCStack *MCEmscriptenGetCurrentStack(void);
+extern "C" bool MCEmscriptenHandleMousePress(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, MCMousePressState p_state, int32_t p_button);
 
 /* ---------------------------------------------------------------- */
 
@@ -65,6 +67,8 @@ public:
     virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 
     /* Mouse management */
+	void handle_mouse_press(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, MCMousePressState p_state, int32_t p_button);
+	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
     virtual void platform_querymouse(int16_t& r_x, int16_t& r_y);
     
 protected:
@@ -73,6 +77,7 @@ protected:
 
 private:
 	Window m_main_window;
+	uint32_t m_mouse_button_state;
 };
 
 #endif /* ! __MC_EMSCRIPTEN_DC_H__ */
