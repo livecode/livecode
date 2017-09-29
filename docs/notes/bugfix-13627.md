@@ -1,1 +1,1 @@
-# Fixed error in example code in the mobileAddContact dictionary entry.
+# Fixed example code errors in the mobileAddContact and mobileUpdateContact dictionary entries.
