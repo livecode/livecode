@@ -7,4 +7,4 @@
 * The browser widget does not work on 32-bit Linux.
 
 * 64-bit standalones for Mac OS X do not have support for audio
-  recording or the revVideoGrabber external.
+  recording.
