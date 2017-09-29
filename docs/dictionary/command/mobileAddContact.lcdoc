@@ -17,7 +17,7 @@ Example:
 put "Just adding this" into tContact["note"]
 put "Jobs Ave" into tContact["address"]["home"][1]["street"]
 put "Job City" into tContact["address"]["home"][1]["city"]
-put "test@livecode.com" into tContactData["email"]["home"][1]
+put "test@livecode.com" into tContact["email"]["home"][1]
 mobileAddContact tContact
 
 Parameters:
