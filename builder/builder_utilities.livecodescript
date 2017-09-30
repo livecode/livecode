@@ -309,9 +309,9 @@ function builderIDEDocsFolder
    return builderIDEFolder() & slash & "Documentation"
 end builderIDEDocsFolder
 
-# Location for api js file in > LC8
-function builderAPIFolder pEdition
-   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/api"
+# Location for api js files in > LC8
+function builderAPIFolder pEdition, pWhich
+   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/api-" & pWhich
 end builderAPIFolder
 
 # Location for guide js file in > LC8

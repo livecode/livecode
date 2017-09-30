@@ -1908,26 +1908,44 @@ private function __tabs pNum
    return tOutput
 end __tabs
 
-function revDocsFormatLibraryArrayAsJSON pLibraryA
-   local tJSON
-   put "{" after tJSON
-   put return & __tabs(2) & keyValue("display name",pLibraryA["display name"]) & comma after tJSON
-   put return & __tabs(2) & keyValue("name",pLibraryA["name"]) & comma after tJSON
-   put return & __tabs(2) & keyValue("author",pLibraryA["author"]) & comma after tJSON
-   put return & __tabs(2) & escape("doc") & ":[" after tJSON
-   
+function revDocsFormatLibraryDocArrayAsJSON pLibraryName, pDocA
    local tCount
-   put the number of elements in pLibraryA["doc"] into tCount
+   put the number of elements in pDocA into tCount
    
+   local tJSON
    if tCount is not 0 then
-      repeat with tID = 1 to tCount
-         put revDocsFormatLibraryDataAsJSON(tID, pLibraryA["doc"][tID]) & comma after tJSON
+      repeat with tIndex = 1 to tCount
+         local tDoc, tId
+         put pDocA[tIndex] into tDoc
+         put pLibraryName & "-" & tIndex into tId
+         put revDocsFormatLibraryDataAsJSON(tId, tDoc) & comma after tJSON
       end repeat
       delete the last char of tJSON
    end if
+   return tJSON
+end revDocsFormatLibraryDocArrayAsJSON
+
+function revDocsCreateAPIJSON pLibraryTitle, pLibraryName, pAuthor, pDocContentJSON
+   local tJSON
+   put "{" after tJSON
+   put return & __tabs(2) & keyValue("display name",pLibraryTitle) & comma after tJSON
+   put return & __tabs(2) & keyValue("name",pLibraryName) & comma after tJSON
+   if pAuthor is not empty then
+      put return & __tabs(2) & keyValue("author",pAuthor) & comma after tJSON
+   end if
+   put return & __tabs(2) & escape("doc") & ":[" after tJSON
+   put pDocContentJSON after tJSON
    put "]" after tJSON
    put return & tab & "}" after tJSON
    return tJSON
+end revDocsCreateAPIJSON
+
+function revDocsFormatLibraryArrayAsJSON pLibraryA
+   local tDocContent
+   put revDocsFormatLibraryDocArrayAsJSON(pLibraryA["name"], pLibraryA["doc"]) \
+         into tDocContent
+   return revDocsCreateAPIJSON(pLibraryA["display name"], pLibraryA["name"], \
+         pLibraryA["author"], tDocContent)
 end revDocsFormatLibraryArrayAsJSON
 
 private function __revDocsParamIsDefinedType pType
