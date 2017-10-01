@@ -25,7 +25,6 @@ on revLoadLibrary
    
    if the environment contains "development" then
       set the _ideoverride of me to true
-      revSBAddAvailableLibrary the short name of me, "HTTP Server"
    end if
 end revLoadLibrary
 
@@ -38,9 +37,13 @@ on revUnloadLibrary
 end revUnloadLibrary
 
 /**
+Title: HTTPD Library
 
-Handle HTTP requests in your application
+Version: 1.0.0
 
+Author: LiveCode
+
+Description: Handle HTTP requests in your application
 */
 
 local sServers -- an array of server info keyed on server port

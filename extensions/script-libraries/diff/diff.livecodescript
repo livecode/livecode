@@ -26,7 +26,6 @@ on revLoadLibrary
    
    if the environment contains "development" then
       set the _ideoverride of me to true
-      revSBAddAvailableLibrary the short name of me, "Diff"
    end if
 end revLoadLibrary
 
@@ -39,6 +38,13 @@ on revUnloadLibrary
 end revUnloadLibrary
 
 /**
+Title: Unified Diff Library 
+
+Author: LiveCode
+
+Version: 1.0.0
+
+Description: 
 Text comparison library, handling differences in unified diff format
 */
 

@@ -26,7 +26,6 @@ on revLoadLibrary
    
    if the environment contains "development" then
       set the _ideoverride of me to true
-      revSBAddAvailableLibrary the short name of me, "Message Authentication"
    end if
 end revLoadLibrary
 
@@ -39,13 +38,17 @@ on revUnloadLibrary
 end revUnloadLibrary
 
 /**
+Title: Message Authentication Library
 
+Version: 1.0.0
+
+Author: LiveCode
+
+Description:
 This script library implements message authentication codes
-
 */
 
 /**
-
 Compute a message authentication code.
 
 Syntax:
