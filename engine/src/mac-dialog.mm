@@ -717,9 +717,9 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
     NSButton *t_cancel_button;
     
     // Get the colour picker's view and store it
-    mColorPanel = p_panel;
+    mColorPanel = [p_panel retain];
     
-    mColorPickerView = p_view;
+    mColorPickerView = [p_view retain];
     
     // Remove the colour picker's view
     [mColorPanel setContentView:0];
@@ -759,20 +759,26 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
 
 -(void)dealloc
 {
-    NSColorPanel *t_color_picker;
-    t_color_picker = [NSColorPanel sharedColorPanel];
     
-    [[mColorPickerView window] close];
+    [mColorPanel release];
+    [mColorPickerView release];
     
-    // Reset the color's picker view
-    [mColorPickerView removeFromSuperview];
-    [t_color_picker setContentView: mColorPickerView];
     
     [mOkButton release];
     [mCancelButton release];
     [mUpdatedView release];
     
     [super dealloc];
+}
+
+-(void)closePanel
+{
+    [mColorPanel close];
+    [mColorPanel setDelegate: nil];
+    
+    // Reset the color's picker view
+    [mColorPickerView removeFromSuperview];
+    [mColorPanel setContentView: mColorPickerView];
 }
 
 // Redrawing method - adapts the size of the buttons to the size of the picker
@@ -941,9 +947,7 @@ void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color)
                                                          alpha:1];
     [t_colorPicker setColor:t_initial_color];
     
-    NSView* t_pickerView;
-    t_pickerView = [t_colorPicker contentView];
-    [t_pickerView retain];
+    NSView* t_pickerView = [t_colorPicker contentView];
     
     s_color_dialog_result = kMCPlatformDialogResultContinue;
     s_color_dialog_delegate = [[com_runrev_livecode_MCColorPanelDelegate alloc] initWithColorPanel:t_colorPicker
@@ -969,7 +973,9 @@ MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_color)
             r_color = s_color_dialog_color;
         
         [NSApp becomePseudoModalFor: nil];
-        [s_color_dialog_delegate dealloc];
+    
+        [s_color_dialog_delegate closePanel];
+        [s_color_dialog_delegate release];
         s_color_dialog_delegate = NULL;
     }
     
