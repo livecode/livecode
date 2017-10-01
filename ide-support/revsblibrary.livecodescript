@@ -2461,9 +2461,9 @@ private command revSmartChecking pStackFilesList, @xSettings
       
    end if
    
-   local tWidgetKinds
-   put xSettings["extensions"] into tWidgetKinds
-   split tWidgetKinds by return as set
+   local tExtensionIDs
+   put xSettings["extensions"] into tExtensionIDs
+   split tExtensionIDs by return as set
    
    repeat for each line tStackFile in pStackFilesList
       put the short name of stack tStackFile & return & the substacks of stack tStackFile into tStacksList
@@ -2476,22 +2476,22 @@ private command revSmartChecking pStackFilesList, @xSettings
             end if
          end if
          
-         revCheckObject the long name of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
+         revCheckObject the long name of stack tStack, tUserLibs, tNewSettings, tExtensionIDs
          put the number of cards of stack tStack into tCardNum
          repeat with tCard=1 to tCardNum
-            revCheckObject the long id of cd tCard of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
+            revCheckObject the long id of cd tCard of stack tStack, tUserLibs, tNewSettings, tExtensionIDs
             put the number of controls of cd tCard of stack tStack into tControlNum
             repeat with tControl = 1 to tControlNum
-               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
+               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs, tNewSettings, tExtensionIDs
             end repeat
          end repeat
          repeat for each line tBg in the backgroundIDs of stack tStack
-            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
+            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs, tNewSettings, tExtensionIDs
          end repeat
       end repeat
    end repeat
    
-   put the keys of tWidgetKinds into tNewSettings["extensions"]
+   put the keys of tExtensionIDs into tNewSettings["extensions"]
    -- Update the output settings
    put tNewSettings into xSettings
    unlock messages
