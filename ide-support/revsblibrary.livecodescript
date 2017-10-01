@@ -2015,6 +2015,17 @@ private command prependToStringList pValue, @xList
    addToStringList false, pValue, xList
 end prependToStringList
 
+private command __LoadStackOnStartup pStackName, @xAuxStackFiles, @xStartupScript, @xGeneratedStartupScript
+   appendToStringList the effective filename of stack pStackName, xAuxStackFiles
+   appendToStringList "revInternal__LoadLibrary" && quote & pStackName & quote, xStartupScript
+   
+   -- allow libraries to generate some additional startup script
+   dispatch "revLibraryStartupScript" to stack pStackName
+   if it is "handled" then
+      appendToStringList the result, xGeneratedStartupScript
+   end if
+end __LoadStackOnStartup
+
 command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployParams
    local tModules, tAuxiliaryStackfiles, tStartupScript, tGeneratedStartupScript
    
@@ -2030,9 +2041,13 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
    # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
    repeat for each line tExtension in revIDEExtensionsOrderByDependency(pStandaloneSettings["extensions"])
-      local tExtensionFile
-      put revIDEExtensionModuleFile(tExtension) into tExtensionFile
-      appendToStringList tExtensionFile, tModules
+      local tExtensionFileDataA
+      put revIDEExtensionFileData(tExtension) into tExtensionFileDataA
+      if tExtensionFileDataA["type"] is "lcb" then
+         appendToStringList tExtensionFileDataA["file"], tModules
+      else
+         __LoadStackOnStartup tExtension, tAuxiliaryStackFiles, tStartupScript, tGeneratedStartupScript
+      end if
    end repeat
    
    local tLibraryStack, tIncludeDataGrid
@@ -2046,14 +2061,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
       # AL-2015-03-05: [[ Bug 14813 ]] Transform script library display name to stack name at deploy time
       put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
       if there is a stack tLibraryStack then
-         appendToStringList the effective filename of stack tLibraryStack, tAuxiliaryStackfiles
-         appendToStringList "revInternal__LoadLibrary" && quote & tLibraryStack & quote, tStartupScript
-         
-         -- allow libraries to generate some additional startup script
-         dispatch "revLibraryStartupScript" to stack tLibraryStack
-         if it is "handled" then
-            appendToStringList the result, tGeneratedStartupScript
-         end if
+         __LoadStackOnStartup tLibraryStack, tAuxiliaryStackFiles, tStartupScript, tGeneratedStartupScript
       end if
    end repeat
    
@@ -2072,14 +2080,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
          -- only include currently loaded libraries
          repeat for each key tLibrary in tLoadedLibraries
             if there is a stack tLibrary and the filename of stack tLibrary begins with tExtPath then
-               appendToStringList the effective filename of stack tLibrary, tAuxiliaryStackfiles
-               appendToStringList "revInternal__LoadLibrary" && quote & tLibrary & quote, tStartupScript
-               
-               -- allow libraries to generate some additional startup script
-               dispatch "revLibraryStartupScript" to stack tLibrary
-               if it is "handled" then
-                  appendToStringList the result, tGeneratedStartupScript
-               end if
+               __LoadStackOnStartup tLibrary, tAuxiliaryStackFiles, tStartupScript, tGeneratedStartupScript
             end if
          end repeat
       end if
