@@ -1840,34 +1840,6 @@ command revSBUpdateInclusions pInclusions, pExclusions, pStackName
    end repeat
 end revSBUpdateInclusions
 
-command revSBInclusionIconFromType pType, pID, @rIconName, @rIconPath
-   switch pType
-      case "widget"
-         put revIDEExtensionProperty(pID, "svgIcon") into rIconPath
-         put "wrench" into rIconName
-         break
-      case "library"
-         put "book" into rIconName
-         break
-      case "external"
-         put "external link" into rIconName
-         break
-      case "inclusion"
-      case "resource"
-         put "puzzle piece" into rIconName
-         break
-      case "database driver"
-         put "database" into rIconName
-         break
-      case "script library"
-         put "file text alt" into rIconName
-         break
-      default
-         put "circle" into rIconName
-         break
-   end switch
-end revSBInclusionIconFromType
-
 function revSBInclusionToMobileKey pName, pType, pPlatform
    local tToInclude
    switch pName
