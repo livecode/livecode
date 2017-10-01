@@ -2080,6 +2080,12 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    
    -- If the datagrid is used, then include the library as an aux stack
    if tIncludeDataGrid or "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+      local tStackFiles
+      put the stackFiles of stack "revDataGridLibrary" into tStackFiles
+      split tStackFiles by return and comma
+      repeat for each key tStack in tStackFiles
+         appendToStringList the effective filename of  stack tStack, tAuxiliaryStackFiles
+      end repeat
       appendToStringList the effective filename of stack "revDataGridLibrary", tAuxiliaryStackFiles
    end if
    
