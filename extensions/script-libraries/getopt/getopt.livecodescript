@@ -26,11 +26,17 @@ on revLoadLibrary
 
    if the environment contains "development" then
       set the _ideoverride of me to true
-      revSBAddAvailableLibrary the short name of me, "GetOpt"
    end if
 end revLoadLibrary
 
 /**
+Title: Command-line Option Parser
+
+Author: LiveCode
+
+Version: 1.0.0
+
+Description:
 Command-line argument parser library.
 */
 

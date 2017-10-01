@@ -26,7 +26,6 @@ on revLoadLibrary
    
    if the environment contains "development" then
       set the _ideoverride of me to true
-      revSBAddAvailableLibrary the short name of me, "MIME"
    end if
    
    __Initialize
@@ -41,11 +40,17 @@ on revUnloadLibrary
 end revUnloadLibrary
 
 /**
+Title: MIME Library
 
-This script library implements portions of Multipurpose Internet Mail Extensions (MIME)
-as described in RFCs 2045 - 2049. Use this library to implement common data formats such
-as email message bodies and form encoding in HTTP.
+Version: 1.0.0
 
+Author: LiveCode
+
+Description:
+This script library implements portions of Multipurpose Internet Mail 
+Extensions (MIME) as described in RFCs 2045 - 2049. Use this library to 
+implement common data formats such as email message bodies and form 
+encoding in HTTP.
 */
 
 local sMIMETypes
