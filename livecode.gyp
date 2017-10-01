@@ -31,7 +31,8 @@
 				'toolchain/toolchain.gyp:toolchain-all',
 
 				# Widgets and libraries
-				'extensions/extensions.gyp:extensions',
+				'extensions/extensions.gyp:lcs-extensions',				
+				'extensions/extensions.gyp:lcb-extensions',
 
 				# lcidlc
 				'lcidlc/lcidlc.gyp:lcidlc',

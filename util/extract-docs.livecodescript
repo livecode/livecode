@@ -43,7 +43,7 @@ on extractDocs
       
       replace numToByte(13) with numToByte(10) in tDocs
       
-      put tDocs into url ("binfile:" & tOutputDir & "/" & tolower(the short name of stack tArgs[tArg]) & ".lcdoc")
+      put tDocs into url ("binfile:" & tOutputDir & "/" & "api.lcdoc")
    end repeat
    
    quit 0

@@ -4,10 +4,100 @@
 		'../common.gypi',
 	],
 
+    'variables':
+    {
+        'conditions':
+        [
+            [
+                'host_os == "linux"',
+                {
+                    'engine': '<(PRODUCT_DIR)/server-community',
+                },
+            ],
+            [
+                'host_os == "mac"',
+                {
+                    'engine': '<(PRODUCT_DIR)/server-community',
+                },
+            ],
+            [
+                'host_os == "win"',
+                {
+                    'engine': '<(PRODUCT_DIR)/server-community.exe',
+                },
+            ],
+        ],
+    },
+
+    'all_dependent_settings':
+    {
+        'variables':
+        {
+            'dist_aux_files':
+            [
+                # Gyp will only use a recursive xcopy on Windows if the path ends with '/'
+                '<(PRODUCT_DIR)/packaged_extensions/',
+            ],
+        },
+    },
+
 	'targets':
 	[
 		{
-			'target_name': 'extensions',
+			'target_name': 'lcs-extensions',
+			'type': 'none',
+			
+			'dependencies':
+			[
+				# Requires a working LiveCode engine
+				'../engine/engine.gyp:server',
+			],
+			
+			'sources':
+			[
+				'script-libraries/oauth2/oauth2.livecodescript',
+				'script-libraries/getopt/getopt.livecodescript',
+				'script-libraries/mime/mime.livecodescript',
+				'script-libraries/dropbox/dropbox.livecodescript',
+				'script-libraries/diff/diff.livecodescript',
+				'script-libraries/messageauthentication/messageauthentication.livecodescript',
+				'script-libraries/httpd/httpd.livecodescript',
+				'script-libraries/qr/qr.livecodescript',
+			],
+            
+            'rules':
+			[
+				{
+					'rule_name': 'build_script_extension',
+					'extension': 'livecodescript',
+					'message': 'Building script extension <(RULE_INPUT_NAME)',
+										
+					'outputs':
+					[
+						'<(PRODUCT_DIR)/packaged_extensions/com.livecode.library.<(RULE_INPUT_ROOT)/<(RULE_INPUT_ROOT).livecodescript',
+					],
+					          
+					'action':
+					[
+						'<(engine)',
+						'../util/package_script_extension.livecodescript',
+						'dummy1',
+						'dummy2',
+						'dummy3',
+						'../util/extract-docs.livecodescript',
+						'../ide-support/revdocsparser.livecodescript',
+						'<(RULE_INPUT_PATH)',						
+						'<(RULE_INPUT_DIRNAME)',
+						'<(RULE_INPUT_ROOT)',
+						'<(PRODUCT_DIR)/packaged_extensions',
+						'false',
+					],
+				},
+			],
+		},
+		
+		{
+			'target_name': 'lcb-extensions',
 			'type': 'none',
 
 			'dependencies':
@@ -57,18 +147,6 @@
 				'widgets/tile/tile.lcb',
 				'widgets/spinner/spinner.lcb',
 			],
-
-			'all_dependent_settings':
-			{
-				'variables':
-				{
-					'dist_aux_files':
-					[
-						# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
-						'<(PRODUCT_DIR)/packaged_extensions/',
-					],
-				},
-			},
 
 			'actions':
 			[
