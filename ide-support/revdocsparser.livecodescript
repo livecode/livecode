@@ -1242,6 +1242,13 @@ function revDocsParseElements pExtractedA, pBlocksA, pFilename
       end if
    end repeat
    
+   if tParsedA["display name"] is empty then
+      put tParsedA["name"] into tParsedA["display name"]
+   end if
+   if tParsedA["description"] is empty then
+      put tParsedA["summary"] into tParsedA["description"]
+   end if
+   
    return tParsedA
 end revDocsParseElements
 
