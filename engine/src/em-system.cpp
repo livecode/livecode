@@ -161,7 +161,7 @@ MCEmscriptenSystem::Debug(MCStringRef p_string)
 		return;
 	}
 
-	emscripten_log(EM_LOG_CONSOLE, "%s", *t_utf8_string);
+	emscripten_log(0, "%s", *t_utf8_string);
 }
 
 /* ----------------------------------------------------------------
