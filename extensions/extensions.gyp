@@ -40,18 +40,30 @@
             ],
         },
     },
-
+    
 	'targets':
 	[
+	    {
+	        'target_name': 'extensions',
+			'type': 'none',
+			
+			'conditions':
+			[
+			    [
+                    'mobile == 0',
+                    {
+                        'dependencies':
+                        [
+                            'lcs-extensions',
+                            'lcb-extensions',
+                        ],			    
+                    },
+                ],
+			],
+	    },	    
 		{
 			'target_name': 'lcs-extensions',
 			'type': 'none',
-			
-			'dependencies':
-			[
-				# Requires a working LiveCode engine
-				'../engine/engine.gyp:server',
-			],
 			
 			'sources':
 			[
@@ -64,6 +76,12 @@
 				'script-libraries/httpd/httpd.livecodescript',
 				'script-libraries/qr/qr.livecodescript',
 			],
+			
+			'dependencies':
+		    [
+        		# Requires a working LiveCode engine
+		        '../engine/engine.gyp:server',
+    		],
             
             'rules':
 			[
@@ -103,6 +121,7 @@
 			[
 				'../toolchain/lc-compile/lc-compile.gyp:lc-compile',
 				'../engine/lcb-modules.gyp:engine_lcb_modules',
+				'../engine/engine.gyp:server',
 			],
 
 			'sources':
