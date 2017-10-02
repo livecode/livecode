@@ -47,7 +47,7 @@ References: arrayData (property)
 
 Name: actionInspect
 Type: message
-Syntax: actionInspect pPath
+Syntax: actionInspect <pPath>
 
 Summary: Sent when an the inspect icon is clicked in read only mode
 
@@ -62,7 +62,7 @@ element whose icon was clicked.
 
 Name: actionDoubleClick
 Type: message
-Syntax: actionDoubleClick pPath
+Syntax: actionDoubleClick <pPath>
 
 Summary: Sent when a leaf node of the tree view is double-clicked.
 

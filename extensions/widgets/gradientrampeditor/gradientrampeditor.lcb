@@ -19,20 +19,30 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 This widget is displays a gradient according to the value of its *gradientStops* property.
 
 Name: gradientStopsChanged
+
 Type: message
+
 Syntax: on gradientStopsChanged
+
+Summary: Sent when the gradientStops property of the widget changes
 
 Example:
     on gradientStopsChanged
-        set the fillGradient["ramp"] of graphic 1 to the gradientStops of the target
+        set the fillGradient["ramp"] of graphic 1 to \
+           the gradientStops of the target
     end gradientStopsChanged
 
 Description:
-Handle the <gradientStopsChanged> message to perform an operation when the gradientStops property of a gradient ramp editor widget changes.
+Handle the <gradientStopsChanged> message to perform an operation when 
+the gradientStops property of a gradient ramp editor widget changes.
 
-Name: selectedStopChanged pIndex
+Name: selectedStopChanged
+
 Type: message
-Syntax: on selectedStopChanged
+
+Syntax: on selectedStopChanged <pIndex>
+
+Summary: Sent when a new gradient stop is selected
 
 Parameters:
 pIndex: The new selected stop index, or 0 if no stop is selected.
@@ -54,7 +64,8 @@ Example:
     end selectedStopChanged
 
 Description:
-Handle the <selectedStopChanged> message to perform an operation when the selectedStop property of a gradient ramp editor widget changes.
+Handle the <selectedStopChanged> message to perform an operation when 
+the selectedStop property of a gradient ramp editor widget changes.
 
 **/
 
