@@ -198,7 +198,7 @@ Example:
 command LogAmplitude
    put androidRecorderGetMaxAmplitude()
    send "LogAmplitude" to me in 30 millisecs
-end UpdateAmplitudeAndTimer
+end LogAmplitude
     
 Description:
 Use the <androidRecorderGetMaxAmplitude> handler to retrieve the maximum
