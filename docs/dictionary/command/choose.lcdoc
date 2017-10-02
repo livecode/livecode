@@ -53,14 +53,14 @@ Use the <choose> <command> to <select> <object|objects>, create
 The tool you choose is effective for all editable windows, until you
 choose another tool. (The Browse tool is always in effect for stacks
 whose cantModify <property> is true, and for <stacks> being displayed as
-a <palette>, <modeless dialog box|modeless dialog>, or <modal dialog
-box|modal dialog>.)
+a <palette>, <modeless dialog box|modeless dialog>, or 
+<modal dialog box|modal dialog>.)
 
 All types of graphics are drawn with the single Graphic tool. To draw a
 specific shape, first draw with the Graphic tool, then set the style
 <property> of the new <graphic> to the shape you want. (You can also set
 the <style> of the <templateGraphic> to the shape you want, then draw
-the <graphic> with the Graphic <tool(function)>. The <graphic> icons on
+the <graphic> with the Graphic tool. The <graphic> icons on
 the Tools <palette> work this way: each one sets the <style> of the
 <templateGraphic>, then chooses the Graphic tool.)
 
