@@ -1353,7 +1353,7 @@ end revDocsGroupElements
 -- apply to all docs in the api
 constant kInheritedElements = "author,version,associations,tags,requires,uses"
 -- Elements that should be in the library's actual docs entry
-constant kLibraryEntryElements = "library,name,summary,description,type,example,references,edition"
+constant kLibraryEntryElements = "name,display name,summary,description,type,example,references,edition"
 function revDocsParseDocText pText, pFilename, pDefaults
    local tElementsA
    put revDocsExtractElements(pText) into tElementsA
@@ -1460,8 +1460,7 @@ function revDocsParseDocText pText, pFilename, pDefaults
    
    // Add a library entry
    local tLibraryElementsA
-   local tCount, tLibCount
-   put 1 into tCount
+   local tLibCount
    put 1 into tLibCount
    add 1 to tEntryCount
    
@@ -1470,11 +1469,6 @@ function revDocsParseDocText pText, pFilename, pDefaults
    -- essentially metadata
    repeat for each key tKey in tParsedA
       if tParsedA[tKey] is not empty then
-         if tKey is among the items of kLibraryEntryElements then
-            put tKey into tEntriesA[tEntryCount]["elements"][tCount]["name"]
-            put tParsedA[tKey] into tEntriesA[tEntryCount]["elements"][tCount]["content"]
-            add 1 to tCount
-         end if
          put tKey into tLibraryElementsA[tLibCount]["name"]            
          put tParsedA[tKey] into tLibraryElementsA[tLibCount]["content"]
          add 1 to tLibCount
@@ -1483,6 +1477,12 @@ function revDocsParseDocText pText, pFilename, pDefaults
    
    local tLibraryA
    put revDocsParseElements(tLibraryElementsA, empty, pFilename) into tLibraryA
+   
+   repeat for each key tLibElementKey in tLibraryA
+      if tLibElementKey is among the items of kLibraryEntryElements then
+         put tLibraryA[tLibElementKey] into tLibraryA["doc"][0][tLibElementKey]
+      end if
+   end repeat 
    
    repeat for each key tKey in tEntriesA
       put revDocsParseElements(tEntriesA[tKey]["elements"], tEntriesA[tKey], pFilename) into tLibraryA["doc"][tKey]
