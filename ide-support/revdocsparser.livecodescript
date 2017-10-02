@@ -463,9 +463,9 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
          put true into tInEntry
          
          switch tFirstWord
-            case "module"
+            case "module"      
             case "library"
-               put "library" into tEntryData["type"]
+               put tFirstWord into tEntryData["type"]
                put word 2 to -1 of tLine into tEntryData["name"]
                put true into tEntryEnded
                put true into tEntryData["need_docs"]
@@ -625,6 +625,7 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
             switch tEntryData["type"]
                case "library"
                case "widget"
+               case "module"
                   put tComment into tEntryData["comments"]
                   put tEntryData into tLibraryData
                   break
