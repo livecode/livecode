@@ -310,6 +310,10 @@ function TestGetExtractedDocsFolder
    return _TestGetBuildFolder() & slash & "extracted_docs"
 end TestGetExtractedDocsFolder
 
+function TestGetPackagedExtensionsFolder
+   return _TestGetBuildFolder() & slash & "packaged_extensions"
+end TestGetPackagedExtensionsFolder
+
 on TestLoadExtension pName
    if pName is among the lines of the loadedExtensions then
       return empty
