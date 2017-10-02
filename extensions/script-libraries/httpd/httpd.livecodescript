@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.httpd"
+﻿script "com.livecode.library.httpd"
 /*
 Copyright (C) 2017 LiveCode Ltd.
 

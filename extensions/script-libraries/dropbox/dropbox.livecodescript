@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.dropbox"
+﻿script "com.livecode.library.dropbox"
 /*
 Copyright (c) 2016 Gerard McCarthy
 The MIT License (MIT)

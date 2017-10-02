@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.semver"
+﻿script "com.livecode.library.semver"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 

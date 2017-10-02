@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.messageauthentication"
+﻿script "com.livecode.library.messageauthentication"
 /*
 Copyright (C) 2017 LiveCode Ltd.
 

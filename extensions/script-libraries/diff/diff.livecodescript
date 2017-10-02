@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.diff"
+﻿script "com.livecode.library.diff"
 /*
 Copyright (C) 2016-2017 LiveCode Ltd.
 

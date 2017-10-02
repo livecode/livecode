@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.mime"
+﻿script "com.livecode.library.mime"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 
