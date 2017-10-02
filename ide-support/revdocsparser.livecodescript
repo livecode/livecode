@@ -550,7 +550,8 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                # This is not a new entry
                put false into tInEntry
                # Check if this is a new comment block
-               if tFirstWord begins with "/**" then
+               if tFirstWord begins with "/**" and \
+                  not (tFirstWord begins with "/**/") then
                   
                   # If this is script, and this is an initial block of comments,
                   # then treat as the library description
