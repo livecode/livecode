@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.qr"
+﻿script "com.livecode.library.qr"
 /*
 
 This library is in the public domain.

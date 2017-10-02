@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.oauth2"
+﻿script "com.livecode.library.oauth2"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 

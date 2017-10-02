@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.getopt"
+﻿script "com.livecode.library.getopt"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 
