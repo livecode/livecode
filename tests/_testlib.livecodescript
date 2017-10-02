@@ -292,7 +292,16 @@ function TestGetExtractedDocsFolder
    return _TestGetBuildFolder() & slash & "extracted_docs"
 end TestGetExtractedDocsFolder
 
-on TestLoadExtension pName	
+
+function TestGetPackagedExtensionsFolder
+   return _TestGetBuildFolder() & slash & "packaged_extensions"
+end TestGetPackagedExtensionsFolder
+
+on TestLoadExtension pName
+   if pName is among the lines of the loadedExtensions then
+      return empty
+   end if
+   
    set the itemdelimiter to "."
    local tExtensionUnzipFolder
    put pName into tExtensionUnzipFolder
