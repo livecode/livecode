@@ -30,14 +30,18 @@ on extractDocs
    
    local tArg
    repeat with tArg = 4 to the number of elements of tArgs
-      
-      if there is not a stack tArgs[tArg] then
-         write "Error: stack not found: " & tArgs[tArg] & return to stderr
-         quit 3
-      end if
-            
+                
       local tDocs
-      put revDocsGenerateDocsFileFromText(the script of stack tArgs[tArg],the long id of stack tArgs[tArg]) into tDocs
+      if tArgs[tArg] ends with "lcb" then
+         write tArgs[tArg] to stdout
+         put revDocsGenerateDocsFileFromModularFile(tArgs[tArg]) into tDocs
+      else
+         if there is not a stack tArgs[tArg] then
+            write "Error: stack not found: " & tArgs[tArg] & return to stderr
+            quit 3
+         end if
+         put revDocsGenerateDocsFileFromText(the script of stack tArgs[tArg],the long id of stack tArgs[tArg]) into tDocs
+      end if
       
       put textEncode(tDocs, "UTF-8") into tDocs
       
