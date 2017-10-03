@@ -31,10 +31,10 @@ have the group on it, or closes the stack. Groups with their
 user goes to a card that the group is not placed on from one where it
 is, as well as when the stack is closed.
 
-The <closeControl> message is sent to groups just before the <closeCard
-message> is sent to the <card> being closed. For nested groups it is
-sent to the parent group first, then if passed or not handled, it passes
-through each child group in reverse layer order (from highest to
+The <closeControl> message is sent to groups just before the 
+<closeCard message> is sent to the <card> being closed. For nested groups
+it is sent to the parent group first, then if passed or not handled, it
+passes through each child group in reverse layer order (from highest to
 lowest). 
 
 For groups with their <backgroundBehavior> <property> set to true, the

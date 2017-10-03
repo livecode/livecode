@@ -7,7 +7,7 @@ Syntax: the clickChunk
 Syntax: clickChunk()
 
 Summary:
-<return|Returns> the position of the <word> or <grouped text> that  the
+<return|Returns> the position of the <word> or <grouped text> that the
 user last clicked.
 
 Introduced: 1.0
@@ -28,9 +28,9 @@ form char startChar to endChar of field fieldNumber.
 
 Description:
 Use the <clickChunk> function within a <mouseDown>, <mouseUp>, or
-<selectionChanged> <handler> to determine which <word> or <grouped
-text|text group> the user clicked, in order to provide <hypertext>
-(clickable text) or take some action based on the click.
+<selectionChanged> <handler> to determine which <word> or
+<grouped text|text group> the user clicked, in order to provide 
+<hypertext> (clickable text) or take some action based on the click.
 
 The <clickChunk> <function> is cleared at the next mouse click, as well
 as after some editing actions such as deleting text. If the last click
@@ -44,8 +44,8 @@ the first <character> of the <word>, and the endChar is the last
 group>. 
 
 >*Important:*  Words are defined a little differently by the
-> <clickChunk> <function> than the way they are used in <chunk
-> expression|chunk expressions>. A word, for purposes of the
+> <clickChunk> <function> than the way they are used in
+> <chunk expression|chunk expressions>. A word, for purposes of the
 > <clickChunk>, is any text delimited by spaces, tabs, returns, or
 > punctuation. If you click a punctuation <character>, only that
 > <character> is returned. This means that, for example, clicking a
