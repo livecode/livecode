@@ -53,7 +53,6 @@ void MCControl::layer_resetattrs(void)
 	m_layer_is_opaque = false;
 	m_layer_is_unadorned = false;
 	m_layer_is_sprite = false;
-	m_layer_is_direct = false;
 	m_layer_attr_changed = true;
 	m_layer_id = 0;
 }
@@ -74,7 +73,6 @@ MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
 		m_layer_is_opaque = false;
 		m_layer_is_unadorned = false;
 		m_layer_is_sprite = false;
-		m_layer_is_direct = false;
 	}
 
 	// The opacity of a control depends on what flags it has set - in particular
@@ -223,19 +221,6 @@ MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
 	else
 		t_is_sprite = false;
 
-	// And now the direct attribute.
-	bool t_is_direct;
-	if (t_is_sprite)
-	{
-		// An unadorned image or button are direct.
-		if (t_is_unadorned && (gettype() == CT_IMAGE || gettype() == CT_BUTTON))
-			t_is_direct = true;
-		else
-			t_is_direct = false;
-	}
-	else
-		t_is_direct = false;
-
 	// Finally, sync the attribtues.
 	if (p_commit)
 	{
@@ -243,7 +228,6 @@ MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
 		m_layer_is_opaque = t_is_opaque;
 		m_layer_is_unadorned = t_is_unadorned;
 		m_layer_is_sprite = t_is_sprite;
-		m_layer_is_direct = t_is_direct;
 
 		// We've updated the layer attrs now - yay!
 		m_layer_attr_changed = false;

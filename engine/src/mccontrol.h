@@ -81,9 +81,6 @@ protected:
 	// MW-2011-09-21: [[ Layers ]] Whether the layer should be considered
 	//   completely opaque.
 	bool m_layer_is_opaque : 1;
-	// MW-2011-09-21: [[ Layers ]] Whether the layer's content is simple
-	//   enough that it can be passed directly (images, buttons with icons).
-	bool m_layer_is_direct : 1;
 	// MW-2011-09-21: [[ Layers ]] Whether the layer's object is unadorned
 	//   (i.e. has no scrollbars, borders, effects etc.).
 	bool m_layer_is_unadorned : 1;

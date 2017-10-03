@@ -177,8 +177,6 @@ void MCTileCacheEndFrame(MCTileCacheRef self);
 void MCTileCacheRenderScenery(MCTileCacheRef self, MCTileCacheLayer& layer);
 // Render a sprite layer with the given parameters into the current frame.
 void MCTileCacheRenderSprite(MCTileCacheRef self, MCTileCacheLayer& layer);
-// Render a direct sprite layer with the given parameters into the current frame.
-void MCTileCacheRenderDirectSprite(MCTileCacheRef self, MCTileCacheLayer& layer, const void *color_bits, const void *alpha_bits);
 
 // Composite the current frame onto the given surface.
 bool MCTileCacheComposite(MCTileCacheRef self, MCStackSurface *surface, MCGRegionRef region);
