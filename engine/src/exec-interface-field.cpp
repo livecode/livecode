@@ -527,9 +527,6 @@ void MCField::SetStyle(MCExecContext& ctxt, intenum_t p_style)
 	}
 	if (flags != tflags)
 	{
-		// MW-2011-09-21: [[ Layers ]] Make sure we recompute the layer attrs since
-		//   various props have changed!
-		m_layer_attr_changed = true;
 		Redraw(true, t_oldx, t_oldy);
 	}
 }

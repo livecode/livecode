@@ -176,10 +176,6 @@ void MCControl::DoSetHScrollbar(MCExecContext& ctxt, MCScrollbar*& hsb, uint2& s
 		if (opened)
 			setsbrects();
 	}
-
-	// MW-2011-09-21: [[ Layers ]] Changing the property affects the
-	//   object's adorned status.
-	m_layer_attr_changed = true;
 }
 void MCControl::DoSetVScrollbar(MCExecContext& ctxt, MCScrollbar*& vsb, uint2& sbw)
 {
@@ -209,10 +205,6 @@ void MCControl::DoSetVScrollbar(MCExecContext& ctxt, MCScrollbar*& vsb, uint2& s
 		if (opened)
 			setsbrects();
 	}
-
-	// MW-2011-09-21: [[ Layers ]] Changing the property affects the
-	//   object's adorned status.
-	m_layer_attr_changed = true;
 }
 
 void MCControl::DoSetScrollbarWidth(MCExecContext& ctxt, uint2& sbw, uinteger_t p_width)
@@ -334,7 +326,6 @@ void MCControl::SetLayerMode(MCExecContext& ctxt, intenum_t p_mode)
 	// to redraw.
 	if (t_mode != m_layer_mode_hint)
 	{
-		m_layer_attr_changed = true;
 		m_layer_mode_hint = t_mode;
 		Redraw();
 	}
@@ -374,36 +365,6 @@ void MCControl::GetMargins(MCExecContext& ctxt, MCInterfaceMargins& r_margins)
         r_margins . margins[2] = rightmargin;
         r_margins . margins[3] = bottommargin;
     }
-}
-
-void MCControl::SetInk(MCExecContext& ctxt, intenum_t ink)
-{
-    MCObject::SetInk(ctxt, ink);
-    m_layer_attr_changed = true;
-}
-
-void MCControl::SetShowBorder(MCExecContext& ctxt, bool setting)
-{
-    MCObject::SetShowBorder(ctxt, setting);
-    m_layer_attr_changed = true;
-}
-
-void MCControl::SetShowFocusBorder(MCExecContext& ctxt, bool setting)
-{
-    MCObject::SetShowFocusBorder(ctxt, setting);
-    m_layer_attr_changed = true;
-}
-
-void MCControl::SetOpaque(MCExecContext& ctxt, bool setting)
-{
-    MCObject::SetOpaque(ctxt, setting);
-    m_layer_attr_changed = true;
-}
-
-void MCControl::SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow)
-{
-    MCObject::SetShadow(ctxt, p_shadow);
-    m_layer_attr_changed = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -464,9 +425,6 @@ MCExecEnumTypeInfo *kMCInterfaceBitmapEffectSourceTypeInfo = &_kMCInterfaceBitma
 
 void MCControl::EffectRedraw(MCRectangle p_old_rect)
 {
-    // MW-2011-09-21: [[ Layers ]] Mark the attrs as needing redrawn.
-    m_layer_attr_changed = true;
-            
     // MW-2011-08-17: [[ Layers ]] Make sure any redraw needed due to effects
     //   changing occur.
     layer_effectschanged(p_old_rect);

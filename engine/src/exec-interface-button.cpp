@@ -337,8 +337,6 @@ void MCButton::SetStyle(MCExecContext& ctxt, intenum_t p_style)
 	default:
 		break;
 	}
-	// MW-2011-09-21: [[ Layers ]] Make sure the layerattrs are recomputed.
-	m_layer_attr_changed = true;
 	Redraw();
 }
 
@@ -373,9 +371,6 @@ void MCButton::SetArmBorder(MCExecContext& ctxt, bool setting)
 {
 	if (changeflag(setting, F_ARM_BORDER))
 	{
-		// MW-2011-09-21: [[ Layers ]] Changing the armBorder property
-		//   affects the layer attrs.
-		m_layer_attr_changed = true;
 		Redraw();
 	}
 }
@@ -400,9 +395,6 @@ void MCButton::SetHiliteBorder(MCExecContext& ctxt, bool setting)
 {
 	if (changeflag(setting, F_HILITE_BORDER))
 	{
-		// MW-2011-09-21: [[ Layers ]] Changing the hiliteBorder property
-		//   affects the layer attrs.
-		m_layer_attr_changed = true;
 		Redraw();
 	}
 }
@@ -589,9 +581,6 @@ void MCButton::SetShowIcon(MCExecContext& ctxt, bool setting)
 {
 	if (changeflag(setting, F_SHOW_ICON))
 	{
-		// MW-2011-09-21: [[ Layers ]] Changing the showIcon property
-		//   affects the layer attrs.
-		m_layer_attr_changed = true;
 		Redraw();
 	}
 }
@@ -605,9 +594,6 @@ void MCButton::SetShowName(MCExecContext& ctxt, bool setting)
 {
 	if (changeflag(setting, F_SHOW_NAME))
 	{
-		// MW-2011-09-21: [[ Layers ]] Changing the showName property
-		//   affects the layer attrs.
-		m_layer_attr_changed = true;
 		Redraw();
 	}
 }

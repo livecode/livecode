@@ -3058,16 +3058,23 @@ void MCCard::drawselectedchildren(MCDC *dc)
 
 void MCCard::dirtyselection(const MCRectangle &p_rect)
 {
+    MCRectangle t_marquee_rect = MCU_reduce_rect(p_rect, -1);
+    
 	// redraw marquee rect
 	// selrect with 0 width or height will still draw a 1px line, so increase rect size to account for this.
-	layer_dirtyrect(MCU_reduce_rect(p_rect, -1));
+	layer_dirtyrect(t_marquee_rect);
 	
 	// redraw selection handles
 	MCRectangle t_handles[8];
 	MCControl::sizerects(p_rect, t_handles);
 
 	for (uint32_t i = 0; i < 8; i++)
+    {
 		layer_dirtyrect(t_handles[i]);
+        t_marquee_rect = MCU_union_rect(t_marquee_rect, t_handles[i]);
+    }
+    
+    layer_selectedrectchanged(t_marquee_rect, t_marquee_rect);
 }
 
 bool MCCard::updatechildselectedrect(MCRectangle& x_rect)

@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	CARD_H
 
 #include "object.h"
+#include "tilecache.h"
 
 typedef MCObjectProxy<MCCard>::Handle MCCardHandle;
 
@@ -245,12 +246,8 @@ public:
 
 	// MW-2011-08-26: [[ TileCache ]] Render all layers into the stack's tilecache.
 	void render(void);
-
-	// IM-2013-09-13: [[ RefactorGraphics ]] add tilecache_ prefix to render methods to make their purpose clearer
-	// MW-2011-09-23: [[ TileCache ]] Render the card's bg layer.
-	static bool tilecache_render_background(void *context, MCContext *target, const MCRectangle& dirty);
-	// MW-2011-09-23: [[ TileCache ]] Render the card's fg layer.
-	static bool tilecache_render_foreground(void *context, MCContext *target, const MCRectangle& dirty);
+    bool render_background(MCContext* p_dc, const MCRectangle& p_dirty);
+    bool render_foreground(MCContext* p_dc, const MCRectangle& p_dirty);
 
 	// MW-2012-06-08: [[ Relayer ]] This method returns the control on the card with
 	//   the given layer. If nil is returned the control doesn't exist.

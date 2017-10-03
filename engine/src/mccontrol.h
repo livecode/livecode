@@ -67,20 +67,11 @@ protected:
 	// MW-2011-08-24: [[ Layers ]] The layer id of the control.
 	MCTileCacheLayerId m_layer_id;
 	
-	// MW-2011-09-21: [[ Layers ]] Whether something about the control has
-	//   changed requiring a recompute the layer attributes.
-	bool m_layer_attr_changed : 1;
 	// MW-2011-09-21: [[ Layers ]] The layerMode as specified by the user
 	MCLayerModeHint m_layer_mode_hint : 3;
 	// MW-2011-09-21: [[ Layers ]] The effective layerMode as used in the
 	//   last frame.
 	MCLayerModeHint m_layer_mode : 3;
-	// MW-2011-09-21: [[ Layers ]] Whether the layer should be considered
-	//   completely opaque.
-	bool m_layer_is_opaque : 1;
-	// MW-2011-09-21: [[ Layers ]] Whether the layer is a sprite or scenery
-	//   layer.
-	bool m_layer_is_sprite : 1;
 
 	static int2 defaultmargin;
 	static int2 xoffset;
@@ -119,6 +110,12 @@ public:
 
 	// MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite) = 0;
+    
+    /* The 'render' method implements layer-based rendering for use with tilecache. */
+    virtual void render(MCTileCacheRef p_tilecache,
+                        bool p_reset,
+                        const MCGAffineTransform& p_transform,
+                        const MCRectangle& p_visible_rect);
 
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
 	virtual Boolean kfocusset(MCControl *target);
@@ -152,6 +149,9 @@ public:
 	void attach(Object_pos p, bool invisible);
 
 	void redraw(MCDC *dc, const MCRectangle &dirty);
+    
+    bool render_sprite_layer(MCContext *p_target, const MCRectangle& p_rectangle);
+    bool render_scenery_layer(MCContext *p_target, const MCRectangle& p_rectangle);
 
 	// IM-2016-09-26: [[ Bug 17247 ]] Return rect of selection handles for the given object rect
 	static void sizerects(const MCRectangle &p_object_rect, MCRectangle rects[8]);
@@ -236,21 +236,17 @@ public:
 	// MW-2011-09-22: [[ Layers ]] Returns the layer mode hint.
 	MCLayerModeHint layer_getmodehint(void) { return m_layer_mode_hint; }
 	// MW-2011-11-24: [[ LayerMode Save ]] Sets the layer mode hint (used by object unpickling).
-	void layer_setmodehint(MCLayerModeHint p_mode) { m_layer_mode_hint = p_mode; m_layer_attr_changed = true; }
+	void layer_setmodehint(MCLayerModeHint p_mode) { m_layer_mode_hint = p_mode; }
 	// MW-2011-09-21: [[ Layers ]] Calculates the effective layer mode.
-	MCLayerModeHint layer_geteffectivemode(void) { return layer_computeattrs(false); }
+	MCLayerModeHint layer_geteffectivemode(void) { return m_layer_mode; }
 	// MW-2011-09-07: [[ Layers ]] Returns the content rect of the layer (if scrolling).
 	MCRectangle layer_getcontentrect(void);
 
 	// MW-2011-09-21: [[ Layers ]] Returns whether the layer is a sprite or not.
-	bool layer_issprite(void) { return m_layer_is_sprite; }
+	bool layer_issprite(void) { return m_layer_mode != kMCLayerModeHintStatic; }
 	// MW-2011-09-21: [[ Layers ]] Returns whether the layer is scrolling or not.
 	bool layer_isscrolling(void) { return m_layer_mode == kMCLayerModeHintScrolling; }
-	// MW-2011-09-21: [[ Layers ]] Returns whether the layer is opaque or not.
-	bool layer_isopaque(void) { return m_layer_is_opaque; }
 
-	// MW-2011-09-21: [[ Layers ]] Make sure the layerMode attr's are accurate.
-	MCLayerModeHint layer_computeattrs(bool commit);
 	// MW-2011-09-21: [[ Layers ]] Reset the attributes to defaults.
 	void layer_resetattrs(void);
 
@@ -351,12 +347,6 @@ public:
     virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
     void GetMargins(MCExecContext& ctxt, MCInterfaceMargins& r_margins);
     
-    virtual void SetInk(MCExecContext& ctxt, intenum_t ink);
-    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
-	virtual void SetShowFocusBorder(MCExecContext& ctxt, bool setting);
-    virtual void SetOpaque(MCExecContext& ctxt, bool setting);
-	virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
-
     void GetDropShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value);
     void SetDropShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
     void GetInnerShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue& r_value);

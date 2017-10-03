@@ -45,192 +45,57 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCRedrawBeginDeviceSceneryLayer(MCObject* p_object, MCGContextRef p_target, const MCRectangle32& p_rectangle, MCContext*& r_user_context, MCRectangle& r_user_rect)
+{
+	// IM-2013-09-30: [[ FullscreenMode ]] Apply stack transform to device context
+	MCGAffineTransform t_transform;
+	t_transform = p_object->getstack()->getdevicetransform();
+	
+	MCGContextSave(p_target);
+	MCGContextConcatCTM(p_target, t_transform);
+	
+	/* UNCHECKED */ r_user_context = new (nothrow) MCGraphicsContext(p_target);
+	r_user_rect = MCRectangleGetTransformedBounds(p_rectangle, MCGAffineTransformInvert(t_transform));
+}
+
+void MCRedrawEndDeviceSceneryLayer(MCContext* p_user_context)
+{
+	MCGContextRestore(static_cast<MCGraphicsContext *>(p_user_context)->getgcontextref());
+	delete p_user_context;
+}
+
+void MCRedrawBeginDeviceSpriteLayer(MCObject* p_object, MCGContextRef p_target, const MCRectangle32& p_rectangle, MCContext*& r_user_context, MCRectangle& r_user_rect)
+{
+	// IM-2013-09-30: [[ FullscreenMode ]] Apply stack transform to device context
+	MCGAffineTransform t_transform;
+	t_transform = p_object->getstack()->getdevicetransform();
+	
+	// MW-2013-10-29: [[ Bug 11329 ]] Tilecache expects sprite rects to be
+	//   relative to top-left of sprite.
+    t_transform . tx = 0.0f;
+    t_transform . ty = 0.0f;
+    
+	MCGContextSave(p_target);
+	MCGContextConcatCTM(p_target, t_transform);
+	
+	/* UNCHECKED */ r_user_context = new (nothrow) MCGraphicsContext(p_target);
+	r_user_rect = MCRectangleGetTransformedBounds(p_rectangle, MCGAffineTransformInvert(t_transform));
+}
+
+void MCRedrawEndDeviceSpriteLayer(MCContext* p_user_context)
+{
+	MCGContextRestore(static_cast<MCGraphicsContext *>(p_user_context)->getgcontextref());
+	delete p_user_context;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // This method resets the layer-related attribtues to defaults and marks them
 // as needing recomputing.
 void MCControl::layer_resetattrs(void)
 {
 	m_layer_mode = kMCLayerModeHintStatic;
-	m_layer_is_opaque = false;
-	m_layer_is_sprite = false;
-	m_layer_attr_changed = true;
 	m_layer_id = 0;
-}
-
-// This method updates all the layer attributes of the control to make sure they
-// are consistent with the controls current set of flags. If commit is false,
-// then the new layermode is returned without changing anything.
-MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
-{
-	// If the attrs have not changed, there is nothing to do.
-	if (!m_layer_attr_changed)
-		return m_layer_mode;
-
-	// If the layer id is 0, then it means we should clear current settings.
-	if (m_layer_id == 0)
-	{
-		m_layer_mode = kMCLayerModeHintStatic;
-		m_layer_is_opaque = false;
-		m_layer_is_sprite = false;
-	}
-
-	// The opacity of a control depends on what flags it has set - in particular
-	// the 'opaque' flag. However, as 'opaque' determines themed bg rendering this
-	// is not a sufficient condition.
-	//
-	// If a control has external bitmap effects (drop shadow, outerglow) then it
-	// cannot be opaque. Similarly, if the control is rendered with themed bgs then
-	// it cannot be opaque.
-	//
-	// Opacity is more dynamic an attribute than adornedness and should be handled
-	// as a separate computation in the future.
-	//
-	bool t_is_opaque;
-	t_is_opaque = false;
-	if (MCBitmapEffectsIsInteriorOnly(getbitmapeffects()))
-	{
-		switch(gettype())
-		{
-		case CT_GROUP:
-			// Only consider groups unadorned groups to be opaque.
-			t_is_opaque = getflag(F_OPAQUE) &&
-				!getflag(F_HSCROLLBAR | F_VSCROLLBAR | F_SHOW_NAME | F_SHOW_BORDER);
-			break;
-		case CT_FIELD:
-			// Only consider unadorned fields to be opaque.
-			t_is_opaque = getflag(F_OPAQUE) && 
-				!getflag(F_HSCROLLBAR | F_VSCROLLBAR | F_SHOW_BORDER | F_SHADOW) && (extraflags & EF_NO_FOCUS_BORDER) != 0;
-			break;
-		case CT_BUTTON:
-		case CT_IMAGE:
-		case CT_SCROLLBAR:
-		case CT_GRAPHIC:
-		case CT_PLAYER:
-		default:
-			// The rest of the control types are hard to assess for opacity as
-			// that depends on their content / or complex theming considerations.
-			t_is_opaque = false;
-			break;
-		}
-	}
-	else
-		t_is_opaque = false;
-
-	// The unadorned state depends on control type, but in general  means that the
-	// control consists of background + content. For a group content is the child
-	// controls, for a field its the text, for an image its the bits, for a button
-	// its the icon (if any), for a graphic it means just its shape.
-	//
-	// If a control has bitmap effects, it is always adorned as this requires further
-	// processing of the image.
-	//
-	// If a control is selected, it is always adorned, since the selection handles
-	// are part of the object.
-	//
-	bool t_is_unadorned;
-	if (getbitmapeffects() == nil && !getstate(CS_SELECTED))
-	{
-		switch(gettype())
-		{
-		case CT_GROUP:
-			// A group is unadorned if it has no scrollbars, no border and doesn't
-			// show a name.
-			t_is_unadorned = !getflag(F_HSCROLLBAR | F_VSCROLLBAR | F_SHOW_NAME | F_SHOW_BORDER);
-				
-			uint16_t t_index;
-			// IM-2014-05-02: [[ Bugfix 12044 ]] An opaque group is unadorned if its background is a color and it disallows overscroll
-			t_is_unadorned &= !getflag(F_OPAQUE) || (getcindex(DI_BACK, t_index) && !getflag(F_UNBOUNDED_HSCROLL | F_UNBOUNDED_VSCROLL));
-			break;
-		case CT_FIELD:
-			// A field is unadorned if it has no shadow, no scrollbars, no border and no focus
-			// border.
-			t_is_unadorned = !getflag(F_HSCROLLBAR | F_VSCROLLBAR | F_SHOW_BORDER | F_SHADOW) && (extraflags & EF_NO_FOCUS_BORDER) != 0;
-			break;
-		case CT_BUTTON:
-			// A button is unadorned if it is not a combo-box is showing an icon, has no border,
-			// no name, no shadow, no hilite border, no arm border and no focus border.
-			if (((MCButton *)this) -> getmenumode() != WM_COMBO)
-				t_is_unadorned = getflag(F_SHOW_ICON) &&
-									!getflag(F_SHOW_BORDER | F_SHOW_NAME | F_SHADOW | F_HILITE_BORDER | F_ARM_BORDER) &&
-									(extraflags & EF_NO_FOCUS_BORDER) != 0;
-			else
-				t_is_unadorned = false;
-			break;
-		case CT_IMAGE:
-			// An image is unadorned if it is not a pict, has no border and no focus border.
-			if (static_cast<MCImage*>(this)->getcompression() != F_PICT)
-				t_is_unadorned = !getflag(F_SHOW_BORDER) && (extraflags & EF_NO_FOCUS_BORDER) != 0;
-			else
-				t_is_unadorned = false;
-			break;
-		case CT_SCROLLBAR:
-		case CT_GRAPHIC:
-		case CT_PLAYER:
-		default:
-			t_is_unadorned = false;
-			break;
-		}
-	}
-	else
-		t_is_unadorned = false;
-
-	// The actual type of layer we will use depends on opacity, adornedness,
-	// type and ink.
-	MCLayerModeHint t_layer_mode;
-	if (m_layer_mode_hint == kMCLayerModeHintStatic)
-	{
-		// To be a static layer, we must have an ink that is GXcopy or
-		// GXblendSrcOver.
-		if (ink == GXcopy || ink == GXblendSrcOver)
-			t_layer_mode = kMCLayerModeHintStatic;
-		else
-			t_layer_mode = kMCLayerModeHintDynamic;
-	}
-	else if (m_layer_mode_hint == kMCLayerModeHintDynamic)
-	{
-		// There is no restriction on what control props can be to be
-		// a dynamic layer.
-		t_layer_mode = kMCLayerModeHintDynamic;
-	}
-	else if (m_layer_mode_hint == kMCLayerModeHintScrolling)
-	{
-		// A scrolling layer must be unadorned and a group.
-		if (gettype() == CT_GROUP && t_is_unadorned)
-			t_layer_mode = kMCLayerModeHintScrolling;
-		else
-			t_layer_mode = kMCLayerModeHintDynamic;
-	}
-	else if (m_layer_mode_hint == kMCLayerModeHintContainer)
-	{
-		// A container layer must be unadorned, non-opaque and a group.
-		if (gettype() == CT_GROUP && !t_is_opaque && t_is_unadorned)
-			t_layer_mode = kMCLayerModeHintContainer;
-		else
-			t_layer_mode = kMCLayerModeHintStatic;
-	}
-    else
-    {
-        MCUnreachableReturn(m_layer_mode);
-    }
-
-	// Now compute the sprite attribute.
-	bool t_is_sprite;
-	if (t_layer_mode == kMCLayerModeHintDynamic || t_layer_mode == kMCLayerModeHintScrolling)
-		t_is_sprite = true;
-	else
-		t_is_sprite = false;
-
-	// Finally, sync the attribtues.
-	if (p_commit)
-	{
-		m_layer_mode = t_layer_mode;
-		m_layer_is_opaque = t_is_opaque;
-		m_layer_is_sprite = t_is_sprite;
-
-		// We've updated the layer attrs now - yay!
-		m_layer_attr_changed = false;
-	}
-
-	return m_layer_mode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -741,12 +606,9 @@ void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p
 		// Reset all the layer's attributes to defaults, including the layer id.
 		p_control -> layer_resetattrs();
 
-		// Recompute the control's attributes.
-		p_control -> layer_computeattrs(true);
-
 		// If the control is on a dynamic layer there is nothing to do (sprites will
 		// be created implicitly at first render).
-		if (p_control -> layer_issprite())
+		if (p_control -> layer_getmodehint() != kMCLayerModeHintStatic)
 			return;
 
 		// If the control is not being added between two existing layers then there
@@ -900,7 +762,8 @@ void MCCard::layer_selectedrectchanged(const MCRectangle& p_old_rect, const MCRe
 		MCRectangle32 t_new_device_rect, t_old_device_rect;
 		t_new_device_rect = MCRectangle32GetTransformedBounds(p_new_rect, t_transform);
 		t_old_device_rect = MCRectangle32GetTransformedBounds(p_old_rect, t_transform);
-		MCTileCacheReshapeScenery(t_tilecache, m_fg_layer_id, t_old_device_rect, t_new_device_rect);
+		MCTileCacheUpdateScenery(t_tilecache, m_fg_layer_id, t_old_device_rect);
+        MCTileCacheUpdateScenery(t_tilecache, m_fg_layer_id, t_new_device_rect);
 	}
 
 	layer_dirtyrect(p_old_rect);
@@ -914,157 +777,13 @@ void MCCard::layer_dirtyrect(const MCRectangle& p_dirty_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// IM-2013-08-21: [[ ResIndependence ]] callback wrapper function to create scaled MCContext
-// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-typedef bool (*MCTileCacheDeviceRenderCallback)(void *context, MCContext *target, const MCRectangle& region);
-static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback, void *p_context, MCGContextRef p_target, const MCRectangle32 &p_rectangle, bool p_is_sprite)
-{
-	MCControl *t_control;
-	t_control = static_cast<MCControl*>(p_context);
-	
-	// IM-2013-09-30: [[ FullscreenMode ]] Apply stack transform to device context
-	MCGAffineTransform t_transform;
-	t_transform = t_control->getstack()->getdevicetransform();
-	
-	// MW-2013-10-29: [[ Bug 11329 ]] Tilecache expects sprite rects to be
-	//   relative to top-left of sprite.
-	if (p_is_sprite)
-	{
-		t_transform . tx = 0.0f;
-		t_transform . ty = 0.0f;
-	}
-	
-	MCGContextSave(p_target);
-	MCGContextConcatCTM(p_target, t_transform);
-	
-	MCGraphicsContext *t_gfx_context;
-	/* UNCHECKED */ t_gfx_context = new (nothrow) MCGraphicsContext(p_target);
-	
-	MCRectangle t_user_rect;
-	t_user_rect = MCRectangleGetTransformedBounds(p_rectangle, MCGAffineTransformInvert(t_transform));
-	
-	bool t_success;
-	t_success = p_callback(p_context, t_gfx_context, t_user_rect);
-	
-	delete t_gfx_context;
-	
-	MCGContextRestore(p_target);
-	
-	return t_success;
-}
-
-static bool testtilecache_sprite_renderer(void *p_context, MCContext *p_target, const MCRectangle& p_rectangle)
-{
-	MCControl *t_control;
-	t_control = (MCControl *)p_context;
-				
-	// A scrolling layer is an unadorned group.
-	bool t_scrolling;
-	t_scrolling = t_control -> layer_isscrolling();
-
-	MCRectangle t_control_rect, t_dirty_rect;
-	if (!t_scrolling)
-	{
-		t_control_rect = t_control -> geteffectiverect();
-		t_dirty_rect = MCU_intersect_rect(t_control_rect, MCU_offset_rect(p_rectangle, t_control_rect . x, t_control_rect . y));
-	}
-	else
-	{
-		t_control_rect = t_control -> layer_getcontentrect();
-		t_dirty_rect = MCU_intersect_rect(t_control_rect, MCU_offset_rect(p_rectangle, t_control_rect . x, t_control_rect . y));
-	}
-	
-	if (MCU_empty_rect(t_dirty_rect))
-		return true;
-	
-	// IM-2014-07-03: [[ GraphicsPerformance ]] Context origin is the topleft of the sprite so adjust to card coords.
-	p_target -> setorigin(-t_control_rect . x, -t_control_rect . y);
-	p_target -> cliprect(t_dirty_rect);
-	p_target -> setfunction(GXcopy);
-	p_target -> setopacity(255);
-
-	t_control -> draw(p_target, t_dirty_rect, false, true);
-
-	return true;
-}
-
-static bool testtilecache_device_sprite_renderer(void *p_context, MCGContextRef p_target, const MCRectangle32& p_rectangle)
-{
-	return tilecache_device_renderer(testtilecache_sprite_renderer, p_context, p_target, p_rectangle, true);
-}
-
-static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target, const MCRectangle& p_rectangle)
-{
-	MCControl *t_control;
-	t_control = (MCControl *)p_context;
-
-	// IM-2014-07-02: [[ GraphicsPerformance ]] Use the redraw() method instead of 
-	// reproducing the visibility tests and context clipping here.
-	t_control->redraw(p_target, p_rectangle);
-
-	return true;
-}
-
-static bool testtilecache_device_scenery_renderer(void *p_context, MCGContextRef p_target, const MCRectangle32& p_rectangle)
-{
-	return tilecache_device_renderer(testtilecache_scenery_renderer, p_context, p_target, p_rectangle, false);
-}
-
-bool MCCard::tilecache_render_foreground(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
-{
-	MCCard *t_card;
-	t_card = (MCCard *)p_context;
-
-	// IM-2014-07-02: [[ GraphicsPerformance ]] Remove unnecessary setclip call - p_dirty is already the bounds of the clip.
-	
-	p_target -> setfunction(GXcopy);
-	p_target -> setopacity(255);
-
-	// IM-2013-09-13: [[ RefactorGraphics ]] Use shared code to render card foreground
-	t_card -> drawselectionrect(p_target);
-
-    t_card -> drawselectedchildren(p_target);
-	return true;
-}
-
-bool device_render_foreground(void *p_context, MCGContextRef p_target, const MCRectangle32& p_rectangle)
-{
-	return tilecache_device_renderer(MCCard::tilecache_render_foreground, p_context, p_target, p_rectangle, false);
-}
-
-bool MCCard::tilecache_render_background(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
-{
-	MCCard *t_card;
-	t_card = (MCCard *)p_context;
-	
-	// MW-2013-10-23: [[ FullscreenMode ]] Make sure we set the clip to the visible rect.
-	// IM-2013-12-20: [[ ShowAll ]] Use MCStack::getvisiblerect() to get the visible area
-	MCRectangle t_visible_rect;
-	t_visible_rect = t_card->getstack()->getvisiblerect();
-	
-	// IM-2014-07-02: [[ GraphicsPerformance ]] Use cliprect() to reduce the clipping region.
-	p_target -> cliprect(t_visible_rect);
-	p_target -> setfunction(GXcopy);
-	p_target -> setopacity(255);
-
-	// IM-2013-09-13: [[ RefactorGraphics ]] Use shared code to render card background
-	t_card -> drawbackground(p_target, p_dirty);
-
-	return true;
-}
-
-bool device_render_background(void *p_context, MCGContextRef p_target, const MCRectangle32& p_rectangle)
-{
-	return tilecache_device_renderer(MCCard::tilecache_render_background, p_context, p_target, p_rectangle, false);
-}
-
 void MCCard::render(void)
 {
-	MCTileCacheRef t_tiler;
-	t_tiler = getstack() -> view_gettilecache();
+	MCTileCacheRef t_tilecache;
+	t_tilecache = getstack() -> view_gettilecache();
 
 	bool t_reset_ids;
-	t_reset_ids = MCTileCacheIsClean(t_tiler);
+	t_reset_ids = MCTileCacheIsClean(t_tilecache);
 
 	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 	MCGAffineTransform t_transform;
@@ -1075,150 +794,72 @@ void MCCard::render(void)
 	MCRectangle t_visible_rect;
 	t_visible_rect = getstack()->getvisiblerect();
     
-    MCRectangle t_foreground_region;
-    t_foreground_region = selrect;
+    /* First emit the foreground layer. This consists of the selection marquee,
+     * the card border and selected control's selection handles. */
+    MCTileCacheLayer t_fg_layer;
+    t_fg_layer.id = m_fg_layer_id;
+    t_fg_layer.region = MCRectangle32GetTransformedBounds(rect, t_transform);
+    t_fg_layer.clip = MCRectangle32GetTransformedBounds(t_visible_rect, t_transform);
+    t_fg_layer.is_opaque = false;
+    t_fg_layer.opacity = 255;
+    t_fg_layer.ink = GXblendSrcOver;
+    t_fg_layer.callback = MCRedrawRenderDeviceSceneryLayer<MCCard, &MCCard::render_foreground>;
+    t_fg_layer.context = this;
+    MCTileCacheRenderScenery(t_tilecache, t_fg_layer);
+    m_fg_layer_id = t_fg_layer.id;
     
-    // Recursively update the redraw region for selected children
-    bool t_child_selected;
-    t_child_selected = updatechildselectedrect(t_foreground_region);
+    /* Next emit the object layers - starting at the front most object (which 
+     * is the last in the last) and working back to the rear most object (which
+     * is the first in the list. */
+    MCObjptr *t_objptrs = getobjptrs();
+    if (t_objptrs != nullptr)
+    {
+        MCObjptr *t_objptr = t_objptrs->prev();
+        do
+        {
+            /* Fetch the control and call its render method. */
+            MCControl *t_control = t_objptr->getref();
+            t_control->render(t_tilecache, t_reset_ids, t_transform, t_visible_rect);
+
+            /* Step to the control below */
+            t_objptr = t_objptr->prev();
+        }
+        while(t_objptr != t_objptrs -> prev());
+    }
     
-	if (getstate(CS_SIZE) || t_child_selected)
-	{
-		MCTileCacheLayer t_fg_layer;
-		t_fg_layer . id = m_fg_layer_id;
-		t_fg_layer . region = MCRectangle32GetTransformedBounds(t_foreground_region, t_transform);
-		t_fg_layer . clip = MCRectangle32GetTransformedBounds(t_visible_rect, t_transform);
-		t_fg_layer . is_opaque = false;
-		t_fg_layer . opacity = 255;
-		t_fg_layer . ink = GXblendSrcOver;
-		t_fg_layer . callback = device_render_foreground;
-		t_fg_layer . context = this;
-		MCTileCacheRenderScenery(t_tiler, t_fg_layer);
-		m_fg_layer_id = t_fg_layer . id;
-	}
-	else
-		m_fg_layer_id = 0;
-	
-    MCObjptr *t_objptrs;
-    t_objptrs = getobjptrs();
+    /* Finally emit the background layer which just consists of the rendered
+     * card / stack background. */
+    MCTileCacheLayer t_bg_layer;
+    t_bg_layer.id = m_bg_layer_id;
+    t_bg_layer.region = MCRectangle32GetTransformedBounds(rect, t_transform);
+    t_bg_layer.clip = MCRectangle32GetTransformedBounds(t_visible_rect, t_transform);
+    t_bg_layer.is_opaque = true;
+    t_bg_layer.opacity = 255;
+    t_bg_layer.ink = GXblendSrcOver;
+    t_bg_layer.callback = MCRedrawRenderDeviceSceneryLayer<MCCard, &MCCard::render_background>;
+    t_bg_layer.context = this;
+    MCTileCacheRenderScenery(t_tilecache, t_bg_layer);
+    m_bg_layer_id = t_bg_layer.id;
+}
+
+bool MCCard::render_background(MCContext *p_dc, const MCRectangle& p_dirty)
+{
+    drawbackground(p_dc, p_dirty);
+    return true;
+}
+
+bool MCCard::render_foreground(MCContext *p_dc, const MCRectangle& p_dirty)
+{
+    drawselectedchildren(p_dc);
     
-	if (t_objptrs != nil)
-	{
-		MCObjptr *t_objptr;
-		t_objptr = t_objptrs -> prev();
-		do
-		{
-			MCControl *t_control;
-			t_control = t_objptr -> getref();
-
-			// If the tilecache is 'clean' then we must reset the attrs to
-			// force a sync.
-			if (t_reset_ids)
-				t_control -> layer_resetattrs();
-
-			// Take note of whether the spriteness of a layer has changed.
-			bool t_old_is_sprite;
-			t_old_is_sprite = t_control -> layer_issprite();
-
-			// Sync the attributes, make sure we commit the new values.
-			t_control -> layer_computeattrs(true);
-
-			// Initialize the common layer props.
-			MCTileCacheLayer t_layer;
-			t_layer . id = t_control -> layer_getid();
-			t_layer . opacity = t_control -> getopacity();
-			t_layer . ink = t_control -> getink();
-			t_layer . context = t_control;
-
-			// The opaqueness of a layer has already been computed.
-			t_layer . is_opaque = t_control -> layer_isopaque();
-
-			// Now compute the layer's region/clip.
-			MCRectangle t_layer_region, t_layer_clip;
-			if (!t_control -> getflag(F_VISIBLE) && !showinvisible())
-			{
-				// Invisible layers just have empty region/clip.
-				t_layer_region = MCU_make_rect(0, 0, 0, 0);
-				t_layer_clip = MCU_make_rect(0, 0, 0, 0);
-			}
-			else if (!t_control -> layer_isscrolling())
-			{
-				// Non-scrolling layer's are the size of their effective rects.
-				t_layer_region = t_control -> geteffectiverect();
-				t_layer_clip = t_layer_region;
-			}
-			else
-			{
-				// For a scrolling layer, the clip is the bounds of the control, while
-				// the region we draw is the group's minrect.
-				t_layer_region = t_control -> layer_getcontentrect();
-				t_layer_clip = t_control -> geteffectiverect();
-			}
-
-			// IM-2013-10-14: [[ FullscreenMode ]] Constrain each layer to the visible area
-			t_layer_clip = MCU_intersect_rect(t_layer_clip, t_visible_rect);
-			
-			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
-			t_layer . region = MCRectangle32GetTransformedBounds(t_layer_region, t_transform);
-			t_layer . clip = MCRectangle32GetTransformedBounds(t_layer_clip, t_transform);
-			
-			// Now render the layer - what method we use depends on whether the
-			// layer is a sprite or not.
-			if (t_control -> layer_issprite())
-			{
-				// If the layer was not a sprite before, remove the scenery
-				// layer that it was.
-				if (!t_old_is_sprite && t_layer . id != 0)
-				{
-					// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-					// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
-					MCTileCacheRemoveScenery(t_tiler, t_layer . id, t_layer . region);
-					t_layer . id = 0;
-				}
-				
-				t_layer . callback = testtilecache_device_sprite_renderer;
-				MCTileCacheRenderSprite(t_tiler, t_layer);
-			}
-			else
-			{
-				// If the layer was a sprite before, remove the sprite
-				// layer that it was.
-				if (t_old_is_sprite && t_layer . id != 0)
-				{
-					MCTileCacheRemoveSprite(t_tiler, t_layer . id);
-					t_layer . id = 0;
-				}
-
-				// MW-2013-10-29: [[ Bug 11349 ]] Scenery layers regions are clipped
-				//   by the clip directly.
-				t_layer . region = MCRectangle32Intersect(t_layer . region, t_layer . clip);
-				
-				t_layer . callback = testtilecache_device_scenery_renderer;
-				MCTileCacheRenderScenery(t_tiler, t_layer);
-			}
-			
-			// Upate the id.
-			t_control -> layer_setid(t_layer . id);
-
-			// Advance to the object below.
-			t_objptr = t_objptr -> prev();
-		}
-		while(t_objptr != t_objptrs -> prev());
-	}
-
-	// IM-2013-10-14: [[ FullscreenMode ]] Render the background into the card's visible area
-	MCTileCacheLayer t_bg_layer;
-	t_bg_layer . id = m_bg_layer_id;
-	t_bg_layer . region = MCRectangle32GetTransformedBounds(t_visible_rect, t_transform);
-	t_bg_layer . clip = t_bg_layer . region;
-	t_bg_layer . is_opaque = true;
-	t_bg_layer . opacity = 255;
-	t_bg_layer . ink = GXblendSrcOver;
-	t_bg_layer . callback = device_render_background;
-	t_bg_layer . context = this;
-	MCTileCacheRenderScenery(t_tiler, t_bg_layer);
-	m_bg_layer_id = t_bg_layer . id;
+    drawcardborder(p_dc, p_dirty);
+    
+    if (getstate(CS_SIZE))
+    {
+        drawselectionrect(p_dc);
+    }
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
