@@ -39,7 +39,11 @@ The segmented control is great for:
 References: itemLabels (property), itemIcons (property),
 	hilitedItems (property), multipleHilites (property)
 
-+++ segmented control widget changes
+Name: hiliteChanged
+Type: message
+Syntax: on hiliteChanged
+
+Summary: Sent when the hilite of the segmented control widget changes
 
 Description:
 Handle the <hiliteChanged> message in order to respond to a change in the hilited items
