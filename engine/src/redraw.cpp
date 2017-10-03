@@ -51,7 +51,6 @@ void MCControl::layer_resetattrs(void)
 {
 	m_layer_mode = kMCLayerModeHintStatic;
 	m_layer_is_opaque = false;
-	m_layer_is_unadorned = false;
 	m_layer_is_sprite = false;
 	m_layer_attr_changed = true;
 	m_layer_id = 0;
@@ -71,7 +70,6 @@ MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
 	{
 		m_layer_mode = kMCLayerModeHintStatic;
 		m_layer_is_opaque = false;
-		m_layer_is_unadorned = false;
 		m_layer_is_sprite = false;
 	}
 
@@ -226,7 +224,6 @@ MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
 	{
 		m_layer_mode = t_layer_mode;
 		m_layer_is_opaque = t_is_opaque;
-		m_layer_is_unadorned = t_is_unadorned;
 		m_layer_is_sprite = t_is_sprite;
 
 		// We've updated the layer attrs now - yay!

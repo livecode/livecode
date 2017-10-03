@@ -74,16 +74,9 @@ protected:
 	// MW-2011-09-21: [[ Layers ]] The effective layerMode as used in the
 	//   last frame.
 	MCLayerModeHint m_layer_mode : 3;
-	// MW-2011-09-21: [[ Layers ]] Whether the layer is top-level or not.
-	//   A layer is considered top-level if it's parent is a group, or all
-	//   it's ancestors (up to card) are of 'container' type.
-	bool m_layer_is_toplevel : 1;
 	// MW-2011-09-21: [[ Layers ]] Whether the layer should be considered
 	//   completely opaque.
 	bool m_layer_is_opaque : 1;
-	// MW-2011-09-21: [[ Layers ]] Whether the layer's object is unadorned
-	//   (i.e. has no scrollbars, borders, effects etc.).
-	bool m_layer_is_unadorned : 1;
 	// MW-2011-09-21: [[ Layers ]] Whether the layer is a sprite or scenery
 	//   layer.
 	bool m_layer_is_sprite : 1;
