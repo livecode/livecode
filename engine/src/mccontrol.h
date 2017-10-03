@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __CONTROL_H
 
 #include "object.h"
+#include "tilecache.h"
 
 // This enum describes the 'hint' that is applied to the object via
 // the 'layerMode' property. The engine uses this to derive the actual
@@ -64,7 +65,7 @@ protected:
 	MCBitmapEffectsRef m_bitmap_effects;
 
 	// MW-2011-08-24: [[ Layers ]] The layer id of the control.
-	uint32_t m_layer_id;
+	MCTileCacheLayerId m_layer_id;
 	
 	// MW-2011-09-21: [[ Layers ]] Whether something about the control has
 	//   changed requiring a recompute the layer attributes.
@@ -228,9 +229,9 @@ public:
 	void layer_dirtycontentrect(const MCRectangle& content_rect, bool update_card);
 
 	// MW-2011-08-24: [[ TileCache ]] Returns the current layer id.
-	uint32_t layer_getid(void) { return m_layer_id; }
+	MCTileCacheLayerId layer_getid(void) { return m_layer_id; }
 	// MW-2011-08-24: [[ TileCache ]] Set thes layer id.
-	void layer_setid(uint32_t p_id) { m_layer_id = p_id; }
+	void layer_setid(MCTileCacheLayerId p_id) { m_layer_id = p_id; }
 
 	// MW-2011-09-22: [[ Layers ]] Returns the layer mode hint.
 	MCLayerModeHint layer_getmodehint(void) { return m_layer_mode_hint; }

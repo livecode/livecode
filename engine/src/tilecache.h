@@ -20,6 +20,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // The tilecache opaque handle.
 typedef struct MCTileCache *MCTileCacheRef;
 
+// The tilecache layer id type
+typedef uint32_t MCTileCacheLayerId;
+
 // The callback type required to render layers.
 typedef bool (*MCTileCacheRenderCallback)(void *context, MCGContextRef target, const MCRectangle32& region);
 
@@ -88,7 +91,7 @@ enum MCTileCacheCompositorType
 struct MCTileCacheLayer
 {
 	// The previous id of the layer (or zero if new).
-	uint32_t id;
+	MCTileCacheLayerId id;
 	// The region the layer touches.
 	MCRectangle32 region;
 	// This should be true if the layer is completely opaque in region.
@@ -153,20 +156,20 @@ void MCTileCacheFlush(MCTileCacheRef self);
 void MCTileCacheCompact(MCTileCacheRef self);
 
 // A scenery layer has been inserted before the given layer touching the given region.
-void MCTileCacheInsertScenery(MCTileCacheRef self, uint32_t before_layer, const MCRectangle32& region);
+void MCTileCacheInsertScenery(MCTileCacheRef self, MCTileCacheLayerId before_layer, const MCRectangle32& region);
 // The given scenery layer touching the given region has been removed.
-void MCTileCacheRemoveScenery(MCTileCacheRef self, uint32_t layer, const MCRectangle32& region);
+void MCTileCacheRemoveScenery(MCTileCacheRef self, MCTileCacheLayerId layer, const MCRectangle32& region);
 // The given scenery layer has been reshaped from the old region to the new region.
-void MCTileCacheReshapeScenery(MCTileCacheRef self, uint32_t layer, const MCRectangle32& old_region, const MCRectangle32& new_region);
+void MCTileCacheReshapeScenery(MCTileCacheRef self, MCTileCacheLayerId layer, const MCRectangle32& old_region, const MCRectangle32& new_region);
 // The given scenery layer has changed within the given region.
-void MCTileCacheUpdateScenery(MCTileCacheRef self, uint32_t layer, const MCRectangle32& region);
+void MCTileCacheUpdateScenery(MCTileCacheRef self, MCTileCacheLayerId layer, const MCRectangle32& region);
 
 // The given sprite has been removed.
-void MCTileCacheRemoveSprite(MCTileCacheRef self, uint32_t id);
+void MCTileCacheRemoveSprite(MCTileCacheRef self, MCTileCacheLayerId id);
 // The given sprite has changed within the given region.
-void MCTileCacheUpdateSprite(MCTileCacheRef self, uint32_t id, const MCRectangle32& region);
+void MCTileCacheUpdateSprite(MCTileCacheRef self, MCTileCacheLayerId id, const MCRectangle32& region);
 // The given sprite's cached tiles are scrolled by the given amount.
-void MCTileCacheScrollSprite(MCTileCacheRef self, uint32_t id, int32_t dx, int32_t dy);
+void MCTileCacheScrollSprite(MCTileCacheRef self, MCTileCacheLayerId id, int32_t dx, int32_t dy);
 
 // Start processing a new frame.
 void MCTileCacheBeginFrame(MCTileCacheRef self);

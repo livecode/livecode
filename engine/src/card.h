@@ -41,9 +41,9 @@ protected:
 	MCCdata *savedata;
 
 	// MW-2011-08-26: [[ TileCache ]] The layer id of the background.
-	uint32_t m_bg_layer_id;
+	MCTileCacheLayerId m_bg_layer_id;
 	// MW-2011-09-23: [[ TileCache ]] The layer id of the foreground (selection rect).
-	uint32_t m_fg_layer_id;
+	MCTileCacheLayerId m_fg_layer_id;
 	
 	// MM-2012-11-05: [[ Object selection started/ended message ]]
 	bool m_selecting_objects : 1;
