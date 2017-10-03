@@ -39,10 +39,11 @@ batch. The <close printing> <command> prints out this batch of
 <card(object)|cards> on a page.
 
 If no <print> <card(keyword)> <command|commands> have been
-<execute|executed> since the <open printing> <command>, the <close
-printing> <command> prints a blank page. If you used theform of the
-<open printing> <command>, and the user canceled the <dialog
-box|dialog>, you don't need to issue a <close printing> <command>.
+<execute|executed> since the <open printing> <command>, the 
+<close printing> <command> prints a blank page. If you used the form
+of the <open printing> <command>, and the user canceled the 
+<dialog box|dialog>, you don't need to issue a <close printing> 
+<command>.
 
 References: print (command), close (command), open printing (command),
 cancel printing (command), dialog box (glossary), print job (glossary),

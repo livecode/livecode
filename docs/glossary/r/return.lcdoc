@@ -8,7 +8,7 @@ Description:
 To send a <value> back to the <handler> that <call|called> a
 <function>. 
 
-Also, the carriage return character, ASCII 13.
+Also, the line feed character, ASCII 10.
 
 References: handler (glossary), function (glossary), value (glossary),
 call (glossary)
