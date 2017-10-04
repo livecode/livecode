@@ -75,8 +75,8 @@ reaches the <object(glossary)> whose <script> contains the <on>
 <execute|executed>. 
 
 >*Note:* If you want to declare a handler that is local to the script it
-> is contained in then you can use the <private keyword>, please see the
-> dictionary entry for the <private keyword> for more information
+> is contained in then you can use the <private> keyword, please see the
+> dictionary entry for the <private> keyword for more information
 
 References: dispatch (command), exit (control structure),
 return (control structure), result (function), commandNames (function),
