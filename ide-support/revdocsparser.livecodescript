@@ -1918,7 +1918,7 @@ function revDocsFormatLibraryDocArrayAsJSON pLibraryName, pDocA
          local tDoc, tId
          put pDocA[tIndex] into tDoc
          put pLibraryName & "-" & tIndex into tId
-         put revDocsFormatLibraryDataAsJSON(tId, tDoc) & comma after tJSON
+         put revDocsFormatLibraryDataAsJSON(tId, tDoc, pLibraryName) & comma after tJSON
       end repeat
       delete the last char of tJSON
    end if
@@ -2234,7 +2234,7 @@ end __revDocsFormatCustomArrayAsJSON
 Format the library array data as a JSON array as needed by the docs viewer
 */
 
-function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
+function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA, pAPIName
    local tJSON
    put "{" & return into tJSON
    
@@ -2256,6 +2256,8 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
    
    # Display Name
    put outputArrayElement("display name", pLibraryDataA, 3) after tJSON
+   
+   put outputElement("library", pAPIName, 3) after tJSON
    
    # Type
    put outputArrayElement("type", pLibraryDataA, 3, true) after tJSON
