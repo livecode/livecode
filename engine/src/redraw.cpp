@@ -747,29 +747,6 @@ void MCCard::layer_setviewport(int32_t p_x, int32_t p_y, int32_t p_width, int32_
 		layer_dirtyrect(rect);
 }
 
-void MCCard::layer_selectedrectchanged(const MCRectangle& p_old_rect, const MCRectangle& p_new_rect)
-{
-	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> view_gettilecache();
-
-	if (t_tilecache != nil)
-	{
-		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
-		MCGAffineTransform t_transform;
-		t_transform = getstack()->getdevicetransform();
-		
-		MCRectangle32 t_new_device_rect, t_old_device_rect;
-		t_new_device_rect = MCRectangle32GetTransformedBounds(p_new_rect, t_transform);
-		t_old_device_rect = MCRectangle32GetTransformedBounds(p_old_rect, t_transform);
-		MCTileCacheUpdateScenery(t_tilecache, m_fg_layer_id, t_old_device_rect);
-        MCTileCacheUpdateScenery(t_tilecache, m_fg_layer_id, t_new_device_rect);
-	}
-
-	layer_dirtyrect(p_old_rect);
-	layer_dirtyrect(p_new_rect);
-}
-
 void MCCard::layer_dirtyrect(const MCRectangle& p_dirty_rect)
 {
 	getstack() -> dirtyrect(p_dirty_rect);
@@ -850,15 +827,8 @@ bool MCCard::render_background(MCContext *p_dc, const MCRectangle& p_dirty)
 
 bool MCCard::render_foreground(MCContext *p_dc, const MCRectangle& p_dirty)
 {
-    drawselectedchildren(p_dc);
-    
     drawcardborder(p_dc, p_dirty);
-    
-    if (getstate(CS_SIZE))
-    {
-        drawselectionrect(p_dc);
-    }
-    
+    drawselection(p_dc, p_dirty);
     return true;
 }
 

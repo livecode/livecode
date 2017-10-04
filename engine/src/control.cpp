@@ -991,10 +991,14 @@ void MCControl::sizerects(const MCRectangle &p_object_rect, MCRectangle r_rects[
 			}
 }
 
-void MCControl::drawselected(MCDC *dc)
+void MCControl::drawselection(MCDC *dc, const MCRectangle& p_dirty)
 {
-    if (!opened || !(getflag(F_VISIBLE) || showinvisible()))
+    MCAssert(getopened() != 0 && (getflag(F_VISIBLE) || showinvisible()));
+    
+    if (!getselected())
+    {
         return;
+    }
     
 	if (MCdragging)
 		return;

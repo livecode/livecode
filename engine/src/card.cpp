@@ -56,6 +56,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "vclip.h"
 #include "redraw.h"
 #include "widget.h"
+#include "graphics_util.h"
 
 #include "globals.h"
 #include "mctheme.h"
@@ -648,6 +649,7 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 				MCRedrawLockScreen();
 				
 				MCRectangle oldrect = selrect;
+                
 				selrect = MCU_compute_rect(startx, starty, x, y);
 				MCRectangle drect = MCU_union_rect(oldrect, selrect);
 				if (objptrs != NULL)
@@ -666,7 +668,8 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 				MCRedrawUnlockScreen();
 
 				// MW-2011-08-19: [[ Layers ]] Ensure the selection rect is updated.
-				layer_selectedrectchanged(oldrect, selrect);
+                dirtyselection(oldrect);
+                dirtyselection(selrect);
 			}
 			message_with_args(MCM_mouse_move, x, y);
 			return true;
@@ -919,7 +922,7 @@ Boolean MCCard::mup(uint2 which, bool p_release)
 				{
 					state &= ~CS_SIZE;
 					// MW-2011-08-18: // MW-2011-08-19: [[ Layers ]] Ensure the selection rect is updated.
-					layer_dirtyrect(selrect);
+                    dirtyselection(selrect);
 					
 					// MM-2012-11-05: [[ Object selection started/ended message ]]
 					if (m_selecting_objects)
@@ -3029,84 +3032,50 @@ void MCCard::drawbackground(MCContext *p_context, const MCRectangle &p_dirty)
 }
 
 // IM-2013-09-13: [[ RefactorGraphics ]] Factor out card selection rect drawing to separate method
-void MCCard::drawselectionrect(MCContext *p_context)
-{
-    drawmarquee(p_context, selrect);
-}
-
-void MCCard::drawselectedchildren(MCDC *dc)
+void MCCard::drawselection(MCContext *p_context, const MCRectangle& p_dirty)
 {
     MCObjptr *tptr = objptrs;
     if (tptr == nil)
         return;
+
     do
     {
         MCControl *t_control = tptr->getref();
-        if (t_control != nullptr)
+        if (t_control != nullptr &&
+            t_control->getopened() != 0 &&
+            (t_control->getflag(F_VISIBLE) || showinvisible()))
         {
-            if (tptr -> getref() -> getstate(CS_SELECTED))
-                tptr->getref()->drawselected(dc);
-        
-            if (tptr -> getrefasgroup() != nil)
-                tptr -> getrefasgroup() -> drawselectedchildren(dc);
+            t_control->drawselection(p_context, p_dirty);
         }
-            
+        
         tptr = tptr->next();
     }
     while (tptr != objptrs);
+
+    if (getstate(CS_SIZE))
+    {
+        drawmarquee(p_context, selrect);
+    }
 }
 
 void MCCard::dirtyselection(const MCRectangle &p_rect)
 {
-    MCRectangle t_marquee_rect = MCU_reduce_rect(p_rect, -1);
+    MCRectangle t_rect = MCU_reduce_rect(p_rect, -(1 + MCsizewidth / 2));
     
-	// redraw marquee rect
-	// selrect with 0 width or height will still draw a 1px line, so increase rect size to account for this.
-	layer_dirtyrect(t_marquee_rect);
-	
-	// redraw selection handles
-	MCRectangle t_handles[8];
-	MCControl::sizerects(p_rect, t_handles);
-
-	for (uint32_t i = 0; i < 8; i++)
+    MCTileCacheRef t_tilecache = getstack() -> view_gettilecache();
+    if (t_tilecache != nil)
     {
-		layer_dirtyrect(t_handles[i]);
-        t_marquee_rect = MCU_union_rect(t_marquee_rect, t_handles[i]);
+        // IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+        // IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+        MCGAffineTransform t_transform;
+        t_transform = getstack()->getdevicetransform();
+        
+        MCRectangle32 t_device_rect;
+        t_device_rect = MCRectangle32GetTransformedBounds(t_rect, t_transform);
+        MCTileCacheUpdateScenery(t_tilecache, m_fg_layer_id, t_device_rect);
     }
     
-    layer_selectedrectchanged(t_marquee_rect, t_marquee_rect);
-}
-
-bool MCCard::updatechildselectedrect(MCRectangle& x_rect)
-{
-    bool t_updated;
-    t_updated = false;
-    
-    MCObjptr *t_objptr = objptrs;
-    if (t_objptr == nil)
-        return t_updated;
-    do
-    {
-        MCControl *t_control;
-        t_control = t_objptr -> getref();
-        
-        if (t_control -> getstate(CS_SELECTED))
-        {
-            x_rect = MCU_union_rect(t_control -> geteffectiverect(), x_rect);
-            t_updated = true;
-        }
-        
-        if (t_control -> gettype() == CT_GROUP)
-        {
-            MCGroup *t_group = static_cast<MCGroup *>(t_control);
-            t_updated = t_updated | t_group -> updatechildselectedrect(x_rect);
-        }
-        
-        t_objptr = t_objptr->next();
-    }
-    while (t_objptr != objptrs);
-    
-    return t_updated;
+    layer_dirtyrect(t_rect);
 }
 
 void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
@@ -3135,17 +3104,13 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 		while (tptr != objptrs);
 	}
     
-    // Draw the selection outline and handles on top of everything
-    drawselectedchildren(dc);
-    
 	dc -> setopacity(255);
 	dc -> setfunction(GXcopy);
 
 	if (t_draw_cardborder)
 		drawcardborder(dc, dirty);
 	
-	if (getstate(CS_SIZE))
-		drawselectionrect(dc);
+    drawselection(dc, dirty);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
