@@ -40,7 +40,7 @@ Whenever an implicit handler call is made (ie calling the handler
 simply by its name as opposed to using send or call), LiveCode will
 check the current script for a private handler before allowing the call
 to pass through the message path. If a private handler is found in the
-curent script, it will be directly called.
+current script, it will be directly called.
 
 > *Note:* Attempting to compile a private handler containing a <pass> 
 control structure will cause a compilation error because private 
