@@ -1,7 +1,5 @@
 Name: revProfile
 
-Synonyms: crevgeneral[&quot;profile&quot;], profile
-
 Type: property
 
 Syntax: set the revProfile of <object> to <profileName>
@@ -66,7 +64,7 @@ cRevGeneral["profile"].)
 >*Note:* When included in a standalone application, the Profile library
 > is implemented as a hidden group and made available when the group
 > receives its first openBackground message. During the first part of
-> the applicati startup process, before this message is sent, the
+> the application startup process, before this message is sent, the
 > <revProfile> property is not yet available. This may affect attempts
 > to use this property in startup, preOpenStack, openStack, or
 > preOpenCard hand in the main stack. Once the application has finished

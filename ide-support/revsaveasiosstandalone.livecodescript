@@ -402,7 +402,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          if tRawArchs contains "ARM64" and not pSettings["ios,32-bit only"] then
             put "arm64 " after tArchs
          end if
-         if tRawArchs contains "V7" then
+         if tRawArchs contains "V7" and pSettings["ios,minimum version"] < 11.0 then
             put "armv7 " after tArchs
          end if
          
