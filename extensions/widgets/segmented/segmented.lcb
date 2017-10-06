@@ -1290,6 +1290,7 @@ end handler
 
 public handler SetHorizontal(in pHorizontal as Boolean) returns nothing
 	put pHorizontal into mIsHorizontal
+	put true into mGeometryIsChanged
 	redraw all
 end handler
 
