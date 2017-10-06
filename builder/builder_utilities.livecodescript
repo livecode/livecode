@@ -293,7 +293,14 @@ end builderIDEDocsFolder
 
 # Location for api js files in > LC8
 function builderAPIFolder pEdition, pWhich
-   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/api-" & pWhich
+   local tFolder
+   put builderIDEDocsFolder() & "/html_viewer/resources/data/api" \
+         into tFolder
+   if pWhich is not empty then
+      put "_" & pWhich after tFolder
+   end if
+
+   return tFolder
 end builderAPIFolder
 
 # Location for guide js file in > LC8
