@@ -30,7 +30,7 @@ Use the <colorNames> <property> to check whether a particular color name
 can be used to specify <properties> such as <foregroundColor> and
 <backgroundColor>. 
 
-You can use the color names with the foregroundColor, <backgroundColor>,
+You can use the color names with the <foregroundColor>, <backgroundColor>,
 <focusColor>, <topColor>, <bottomColor>, <hiliteColor>, <borderColor>,
 <shadowColor>, <selectionHandleColor>, <accentColor>, <backdrop>,
 <brushColor>, and <penColor> <properties>.

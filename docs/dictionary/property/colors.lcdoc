@@ -34,10 +34,10 @@ Example:
 set the colors of this stack to the colors of stack "Home"
 
 Value:
-The <colors> of an <object(glossary)> is a list of <color
-reference|color references>, one per line. A color reference is any
-standard color name; or three comma-separated integers between zero and
-255, specifying the level of each of red, green, and blue; or an
+The <colors> of an <object(glossary)> is a list of 
+<color reference|color references>, one per line. A color reference is 
+any standard color name; or three comma-separated integers between zero 
+and 255, specifying the level of each of red, green, and blue; or an
 HTML-style color consisting of a hash mark (#) followed by three
 hexadecimal numbers, one for each of red, green, and blue.
 
