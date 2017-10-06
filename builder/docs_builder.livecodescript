@@ -2180,7 +2180,7 @@ command docsBuilderGenerateDistributedAPI pEdition
    put revDocsModifyForUrl("LiveCode Builder") into tLCBDictionaryA["name"]
    put "LiveCode" into tLCBDictionaryA["author"]
    put "dictionary" into tLCBDictionaryA["type"]
-   put "builder" into tLCSDictionaryA["filename"]
+   put "builder" into tLCBDictionaryA["filename"]
    put "livecode_builder" into tLCBDictionaryA["api"]
    addToList tLCBDictionaryA, tLibrariesA
    
@@ -2195,8 +2195,8 @@ command docsBuilderGenerateDistributedAPI pEdition
    end if
    
    put "dictionary" into tDataGridA["type"]
-   put "dg" into tLCSDictionaryA["filename"]
-   put "livecode_script" into tLCBDictionaryA["api"]
+   put "dg" into tDataGridA["filename"]
+   put "livecode_script" into tDataGridA["api"]
    
    addToList tDataGridA, tLibrariesA
    
@@ -2228,6 +2228,7 @@ command docsBuilderGenerateDistributedAPI pEdition
       local tJSON, tFolder
       put revDocsFormatLibraryDocArrayAsJSON(tLibA["name"], tLibA["doc"]) into tJSON
       put builderAPIFolder(pEdition, tLibA["api"]) into tFolder
+      pathEnsure tFolder
       put textEncode(tJSON, "utf-8") into url ("binfile:" & tFolder \
             & slash & tLibA["filename"] & ".js")
    end repeat
