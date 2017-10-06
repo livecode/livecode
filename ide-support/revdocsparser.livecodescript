@@ -2350,7 +2350,7 @@ on revDocsOpenAPIDatabase pFolder
    return tConnection
 end revDocsOpenAPIDatabase
 
-on revDocsUpdateDatabase pConnection, pLibraryA
+on revDocsUpdateDatabase pConnection, pAPI, pLibraryA
    if pConnection is empty then
       return "no database connection"
    end if
@@ -2358,40 +2358,31 @@ on revDocsUpdateDatabase pConnection, pLibraryA
    local tSQL, tResult
    
    # Create the libraries table. This might already exist, so do it unchecked.
-   put "CREATE TABLE libraries(library_id integer primary key, library_name text, author text, type text)" into tSQL
+   put "CREATE TABLE apis(api_id integer primary key, api_name text)" into tSQL
    revExecuteSQL pConnection, tSQL
    
-   local tName
-   put pLibraryA["name"] into tName
-   if tName is empty then
-      put revDocsModifyForURL(pLibraryA["display name"]) into tName
-   end if 
-   
-   local tAuthor
-   put pLibraryA["author"] into tAuthor
-   
-   local tType
-   put pLibraryA["type"] into tType
-   
    # Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
-   put "UPDATE libraries SET author = :1, type = :2 WHERE library_name = :3" into tSQL
-   revExecuteSQL pConnection, tSQL, "tAuthor", "tType", "tName" 
+   put "UPDATE apis SET api_name = :1 WHERE api_name = :1" into tSQL
+   revExecuteSQL pConnection, tSQL, "pAPI" 
    put the result into tResult
    if tResult is not a number or tResult is 0 then
-      put "INSERT into libraries VALUES(NULL, :1, :2, :3)" into tSQL
-      revExecuteSQL pConnection, tSQL, "tName", "tAuthor", "tType"
+      put "INSERT into apis VALUES(NULL, :1)" into tSQL
+      revExecuteSQL pConnection, tSQL, "pAPI"
       put the result into tResult
    end if
    
    if tResult is not a number then
-      return "unable to open table 'libraries'" & return & tResult
+      return "unable to open table 'apis'" & return & tResult
    end if
    
    # Create the library data table. This might already exist, so do it unchecked.
-   put "CREATE TABLE dictionary_data(library_id integer, entry_name text, entry_type text, entry_data blob)" into tSQL
+   put "CREATE TABLE dictionary_data(api_id integer, library_name text, entry_name text, entry_type text, entry_data blob)" into tSQL
    revExecuteSQL pConnection, tSQL
    
-   revDocsUpdateLibrary pConnection, tName, pLibraryA["doc"]
+   local tName
+   put pLibraryA["display name"] into tName
+   
+   revDocsUpdateLibrary pConnection, pAPI, tName, pLibraryA["doc"]
    if the result is not empty then
       return "unable to update data for library" && tName & return & the result
    end if
@@ -2399,35 +2390,33 @@ on revDocsUpdateDatabase pConnection, pLibraryA
    return empty
 end revDocsUpdateDatabase
 
-on revDocsUpdateLibrary pConnection, pName, pDocDataA
-   # Find the library id
-   local tSQL, tLibraryID
-   put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
-   put revDataFromQuery(comma, return, pConnection, tSQL, "pName") into tLibraryID
+on revDocsUpdateLibrary pConnection, pAPI, pName, pDocDataA
+   # Find the API id
+   local tSQL, tAPIID
+   put "SELECT api_id FROM apis WHERE api_name = :1" into tSQL
+   put revDataFromQuery(comma, return, pConnection, tSQL, "pAPI") into tAPIID
    
    if the result is not a number then
-      return "error finding library id for" && pName & return & the result
+      return "error finding api id for" && pAPI & return & the result
    end if
    
    local tDocA, tDocName
    repeat for each element tDocA in pDocDataA
-      put tDocA["name"] into tDocName
-      if tDocName is empty then
-         put revDocsModifyForURL(tDocA["display name"]) into tDocName
-      end if 
-      
+      put tDocA["display name"] into tDocName
+
       local tType
       put tDocA["type"] into tType
       
       local tEncodedData, tResult
       put arrayEncode(tDocA) into tEncodedData
       # Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
-      put "UPDATE dictionary_data SET entry_data = :1 WHERE entry_name = :2 AND entry_type = :3 AND library_id = :4" into tSQL
-      revExecuteSQL pConnection, tSQL, "*btEncodedData", "tDocName", "tType", "tLibraryID"
+      put "UPDATE dictionary_data SET entry_data = :1 WHERE library_name = :2" && \
+            "AND entry_name = :3 AND entry_type = :4 AND api_id = :5" into tSQL
+      revExecuteSQL pConnection, tSQL, "*btEncodedData", "pName", "tDocName", "tType", "tAPIID"
       put the result into tResult
       if tResult is not a number or tResult is 0 then
-         put "INSERT into dictionary_data VALUES(:1, :2, :3, :4)" into tSQL
-         revExecuteSQL pConnection, tSQL, "tLibraryID", "tDocName", "tType", "*btEncodedData"
+         put "INSERT into dictionary_data VALUES(:1, :2, :3, :4, :5)" into tSQL
+         revExecuteSQL pConnection, tSQL, "tAPIID", "pName", "tDocName", "tType", "*btEncodedData"
          put the result into tResult
       end if
       
@@ -2438,29 +2427,22 @@ on revDocsUpdateLibrary pConnection, pName, pDocDataA
    return empty
 end revDocsUpdateLibrary
 
-on revDocsRemoveLibrary pConnection, pName
+on revDocsRemoveLibrary pConnection, pAPI, pName
    # Find the library id
-   local tSQL, tLibraryID
-   put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
-   put revDataFromQuery(comma, return, pConnection, tSQL, pName) into tLibraryID
+   local tSQL, tAPIID
+   put "SELECT api_id FROM apis WHERE api_name = :1" into tSQL
+   put revDataFromQuery(comma, return, pConnection, tSQL, pAPI) into tAPIID
    
    if the result is not a number then
-      return "error finding library id for" && pName & return & the result
+      return "error finding api id for" && pAPI & return & the result
    end if
    
    # Delete all entries associated with this library
-   put "DELETE * FROM dictionary_data WHERE library_id = :1" into tSQL
-   revExecuteSQL pConnection, tSQL, "tLibraryID"
+   put "DELETE * FROM dictionary_data WHERE api_id = :1 AND library_name = :2" into tSQL
+   revExecuteSQL pConnection, tSQL, "tAPIID", "pName"
    if the result is not a number then
       return "unable to delete data for" && pName & return & the result
    end if
-   
-   # Delete the library entry from the libraries table
-   put "DELETE * FROM libraries WHERE library_name = :1" into tSQL
-   revExecuteSQL pConnection, tSQL, pName 
-   if the result is not a number then
-      return "unable to remove library" && pName && "from libraries table" & return & the result
-   end if	
    
    return empty
 end revDocsRemoveLibrary

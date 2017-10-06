@@ -2140,7 +2140,7 @@ command docsBuilderGenerateDistributedAPI pEdition
    end if
    
    put "script" into tLCSDictionaryA["filename"]
-   put "lcs" into tLCSDictionaryA["api"]
+   put "livecode_script" into tLCSDictionaryA["api"]
    addToList tLCSDictionaryA, tLibrariesA
    
    local tModuleList, tModularA, tModularCount, tBlocksA, tParsedA
@@ -2181,7 +2181,7 @@ command docsBuilderGenerateDistributedAPI pEdition
    put "LiveCode" into tLCBDictionaryA["author"]
    put "dictionary" into tLCBDictionaryA["type"]
    put "builder" into tLCSDictionaryA["filename"]
-   put "lcb" into tLCBDictionaryA["api"]
+   put "livecode_builder" into tLCBDictionaryA["api"]
    addToList tLCBDictionaryA, tLibrariesA
    
    local tDatagridA, tDGDocs
@@ -2196,7 +2196,7 @@ command docsBuilderGenerateDistributedAPI pEdition
    
    put "dictionary" into tDataGridA["type"]
    put "dg" into tLCSDictionaryA["filename"]
-   put "lcs" into tLCBDictionaryA["api"]
+   put "livecode_script" into tLCBDictionaryA["api"]
    
    addToList tDataGridA, tLibrariesA
    
@@ -2218,7 +2218,7 @@ command docsBuilderGenerateDistributedAPI pEdition
          exit docsBuilderGenerateDistributedAPI
       end if
       put tLibA["name"] into tLibA["filename"]
-      put "lcs" into tLibA["api"]
+      put "livecode_script" into tLibA["api"]
       
       addToList tLibA, tLibrariesA
    end repeat
@@ -2252,9 +2252,9 @@ on docsBuilderPopulateDatabase pEdition, pLibrariesA
    
    revExecuteSQL tConnection,"BEGIN TRANSACTION"
    
-   repeat for each key tKey in pLibrariesA   	  
-      builderLog "message", "adding library" && pLibrariesA[tKey]["display name"] && "to docs database"
-      revDocsUpdateDatabase tConnection, pLibrariesA[tKey]
+   repeat for each element tLib in pLibrariesA   	  
+      builderLog "message", "adding library" && tLib["display name"] && "to docs database"
+      revDocsUpdateDatabase tConnection, tLib["api"], tLib
       if the result is not empty then
          logError the result
          exit docsBuilderPopulateDatabase
