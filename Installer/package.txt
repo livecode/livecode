@@ -843,6 +843,7 @@ component Toolset
 	into [[ToolsFolder]]/Toolset/libraries place
 		stack ide-support:revdeploylibraryandroid.livecodescript
 		stack ide-support:revdeploylibraryios.livecodescript
+		stack ide-support:revdeploylibraryemscripten.livecodescript
 		stack ide-support:revliburl.livecodescript
 		stack ide-support:revsaveasandroidstandalone.livecodescript
 		stack ide-support:revsaveasemscriptenstandalone.livecodescript
