@@ -22,7 +22,7 @@ if char 3 of it is comma then get field "Circus"
 Description:
 Use the <comma> <constant> as an easier-to-read replacement for ",".
 
-References: constant (command), character (keyword),  (operator),
+References: constant (command), character (keyword), &#44; (operator),
 itemDelimiter (property)
 
 Tags: text processing
