@@ -19,6 +19,7 @@ Example:
 set the compositorTileSize of this stack to 128
 
 Example:
+local tTileSize
 put 256 into tTileSize
 set the compositorTileSize of this stack to tTileSize
 
