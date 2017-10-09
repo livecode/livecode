@@ -2737,6 +2737,10 @@ command revSBAddDeployInclusion pInclusion, pKey
    put empty into sDeployInclusions[pKey][pInclusion]
 end revSBAddDeployInclusion
 
+command revSBRemoveDeployInclusion pInclusion, pKey
+   delete variable sDeployInclusions[pKey][pInclusion]
+end revSBRemoveDeployInclusion
+
 -- Standalone settings are always set on the mainstack
 function revSBGetSettings pStack, pDeploy
    local tSettingsA
