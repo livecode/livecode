@@ -17,6 +17,7 @@ enum MCJavaCallType {
 };
 
 enum MCJavaType {
+    kMCJavaTypeUnknown,
     kMCJavaTypeVoid,
     kMCJavaTypeBoolean,
     kMCJavaTypeByte,

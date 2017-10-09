@@ -110,6 +110,9 @@ static bool __NextArgument(MCStringRef p_arguments, MCRange& x_range)
         t_length++;
     }
     
+    if (t_next_type == kMCJavaTypeUnknown)
+        return false;
+    
     if (t_next_type == kMCJavaTypeObject)
     {
         if (!MCStringFirstIndexOfChar(p_arguments, ';', x_range . offset, kMCStringOptionCompareExact, t_length))
@@ -596,6 +599,10 @@ static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method
         case kMCJavaTypeVoid:
             s_env -> CallVoidMethodA(p_instance, p_method_id, p_params);
             return true;
+            
+        // Should be unreachable
+        case kMCJavaTypeUnknown:
+            break;
     }
     
     MCUnreachableReturn(false);
@@ -677,6 +684,10 @@ static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, j
         case kMCJavaTypeVoid:
             s_env -> CallStaticVoidMethodA(p_class, p_method_id, p_params);
             return true;
+            
+        // Should be unreachable
+        case kMCJavaTypeUnknown:
+            break;
     }
     
     MCUnreachableReturn(false);
@@ -758,6 +769,10 @@ static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, 
         case kMCJavaTypeVoid:
             s_env -> CallNonvirtualVoidMethodA(p_instance, p_class, p_method_id, p_params);
             return true;
+            
+        // Should be unreachable
+        case kMCJavaTypeUnknown:
+            break;
     }
     
     MCUnreachableReturn(false);
@@ -838,6 +853,7 @@ static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, MCJ
             return true;
         }
         case kMCJavaTypeVoid:
+        case kMCJavaTypeUnknown:
             break;
     }
     
@@ -919,6 +935,7 @@ static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, M
             return true;
         }
         case kMCJavaTypeVoid:
+        case kMCJavaTypeUnknown:
             break;
     }
     
@@ -1003,6 +1020,7 @@ static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, con
                                     t_obj);
         }
         case kMCJavaTypeVoid:
+        case kMCJavaTypeUnknown:
             break;
     }
     
@@ -1088,6 +1106,7 @@ static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, c
             return;
         }
         case kMCJavaTypeVoid:
+        case kMCJavaTypeUnknown:
             break;
     }
     
@@ -1165,7 +1184,8 @@ static bool __JavaJNIGetParams(void **args, MCTypeInfoRef p_signature, jvalue *&
             case kMCJavaTypeDouble:
                 t_args[i].d = *(static_cast<jdouble *>(args[i]));
                 break;
-            default:
+            case kMCJavaTypeVoid:
+            case kMCJavaTypeUnknown:
                 MCUnreachableReturn(false);
         }
     }
