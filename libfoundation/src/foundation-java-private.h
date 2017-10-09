@@ -49,6 +49,8 @@ static const java_type_map type_map[] =
     {"J", kMCJavaTypeLong},
     {"F", kMCJavaTypeFloat},
     {"D", kMCJavaTypeDouble},
+    {"[", kMCJavaTypeArray},
+    {"L", kMCJavaTypeObject}
 };
 
 typedef struct __MCJavaObject *MCJavaObjectRef;

@@ -22,19 +22,18 @@
 
 static MCJavaType MCJavaMapTypeCodeSubstring(MCStringRef p_type_code, MCRange p_range)
 {
-    if (MCStringSubstringIsEqualToCString(p_type_code, p_range, "[",
-                                          kMCStringOptionCompareExact))
-        return kMCJavaTypeArray;
-    
     for (uindex_t i = 0; i < sizeof(type_map) / sizeof(type_map[0]); i++)
     {
-        if (MCStringSubstringIsEqualToCString(p_type_code, p_range, type_map[i] . name, kMCStringOptionCompareExact))
+        if (MCStringSubstringIsEqualToCString(p_type_code,
+                                              MCRangeMake(p_range.offset, 1),
+                                              type_map[i] . name,
+                                              kMCStringOptionCompareExact))
         {
             return type_map[i] . type;
         }
     }
     
-    return kMCJavaTypeObject;
+    return kMCJavaTypeUnknown;
 }
 
 MCJavaType MCJavaMapTypeCode(MCStringRef p_type_code)
@@ -86,6 +85,11 @@ static bool __MCTypeInfoConformsToJavaType(MCTypeInfoRef p_type, MCJavaType p_co
     MCJavaType t_code;
     if (!__GetExpectedTypeCode(p_type, t_code))
         return false;
+    
+    // At the moment we don't have a separate type for arrays.
+    if (p_code == kMCJavaTypeArray &&
+        t_code == kMCJavaTypeObject)
+        return true;
     
     return t_code == p_code;
 }
