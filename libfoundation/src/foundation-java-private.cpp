@@ -124,6 +124,9 @@ static bool __NextArgument(MCStringRef p_arguments, MCRange& x_range)
         
         // Consume the ;
         t_length++;
+        
+        // Correct the length for the starting point
+        t_length -= x_range.offset;
     }
     
     x_range . length = t_length;
