@@ -6841,9 +6841,26 @@ static void __MCStringCheck(MCStringRef self)
         
         if (!MCUnicodeIsGraphemeClusterBoundary(self -> chars[i], self -> chars[i + 1]))
         {
-            __MCStringSetFlags(self, kMCStringFlagNoChange, false, false);
-            t_can_be_native = false;
-            break;
+            /* There is no boundary between i and i+1, so check that the pair of
+             * codeunits won't map to native (e.g. e,acute).
+             * If they do map to native, check that there is a boundary after
+             * the second codeunit - otherwise it is more than 2 cu sequence which
+             * cannot be native. */
+            char_t t_native_char;
+            if (!MCUnicodeMapToNative(self->chars+i, 2, t_native_char) ||
+                (i+1 < self->char_count &&
+                 !MCUnicodeIsGraphemeClusterBoundary(self->chars[i+1], self->chars[i+2])))
+            {
+                __MCStringSetFlags(self, kMCStringFlagNoChange, false, false);
+                t_can_be_native = false;
+                break;
+            }
+            
+            /* At this point i is the first codeunit of a 2-codeunit combining
+             * sequence which maps to a native, so we can skip the combiner. */
+            i++;
+            
+            continue;
         }
         
         char_t t_native;

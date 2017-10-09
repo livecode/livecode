@@ -174,3 +174,19 @@ TEST(string, surrogate_unicode_props)
     const int kSPUA_B_Upper = 0x10FFFD + 1; // non-inclusive
     check_bidi_of_surrogate_range(kSPUA_B_Lower, kSPUA_B_Upper);
 }
+
+TEST(string, normalize_compare)
+{
+    MCAutoStringRef t_decomposed;
+    MCStringCreateWithWString((const unichar_t*)u"\u0065\u0301\u0065\u0301\u0065\u0301", &t_decomposed);
+    
+    MCAutoStringRef t_composed;
+    MCStringCreateWithWString((const unichar_t*)u"\u00e9\u00e9\u00e9", &t_composed);
+    
+    ASSERT_TRUE(MCStringIsEqualTo(*t_decomposed, *t_composed, kMCStringOptionCompareCaseless));
+    
+    MCRange t_range;
+    MCStringMapGraphemeIndices(*t_decomposed, MCRangeMake(0, 1), t_range);
+    
+    ASSERT_TRUE(MCStringIsEqualTo(*t_decomposed, *t_composed, kMCStringOptionCompareCaseless));
+}
