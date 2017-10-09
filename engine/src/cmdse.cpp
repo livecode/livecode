@@ -56,6 +56,275 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "syntax.h"
 
+template<typename T, MCExecValueType ExecValueType>
+struct MCEval_PrimitiveType
+{
+    typedef T ValueType;
+    
+    static constexpr MCExecValueType exec_value_type = ExecValueType;
+    
+    static void drop(T p_value)
+    {
+    }
+    
+    static bool eval(MCExecContext& ctxt, MCExpression* p_expr, ValueType& r_value) __attribute__((noinline))
+    {
+        MCExecValue t_value;
+        p_expr->eval_ctxt(ctxt, t_value);
+        if (ctxt.HasError())
+        {
+            return false;
+        }
+        
+        MCExecTypeConvertAndReleaseAlways(ctxt, t_value.type, &t_value, exec_value_type, &r_value);
+        if (ctxt.HasError())
+        {
+            return false;
+        }
+        
+        return true;
+    }
+};
+
+struct MCEval_BoolType: MCEval_PrimitiveType<bool, kMCExecValueTypeBool>
+{
+};
+
+struct MCEval_UIntType: MCEval_PrimitiveType<uinteger_t, kMCExecValueTypeUInt>
+{
+};
+
+struct MCEval_IntType: MCEval_PrimitiveType<integer_t, kMCExecValueTypeInt>
+{
+};
+
+struct MCEval_UInt16Type: MCEval_UIntType
+{
+    static bool eval(MCExecContext& ctxt, MCExpression* p_expr, uinteger_t& r_value) __attribute__((noinline))
+    {
+        uinteger_t t_value;
+        if (!MCEval_UIntType::eval(ctxt, p_expr, t_value))
+        {
+            return false;
+        }
+        if (t_value > UINT16_MAX)
+        {
+            return false;
+        }
+        r_value = t_value;
+        return true;
+    }
+};
+
+struct MCEval_LegacyPointType: MCEval_PrimitiveType<MCPoint, kMCExecValueTypePoint>
+{
+};
+
+template<typename T, MCExecValueType ExecValueType>
+struct MCEval_BoxedType
+{
+    typedef T ValueType;
+    
+    static constexpr MCExecValueType exec_value_type = ExecValueType;
+    
+    static void drop(T p_value)
+    {
+        MCValueRelease(p_value);
+    }
+    
+    static bool eval(MCExecContext& ctxt, MCExpression* p_expr, ValueType& r_value) __attribute__((noinline))
+    {
+        p_expr->eval_typed(ctxt, exec_value_type, &r_value);
+        return !ctxt.HasError();
+    }
+    
+};
+
+struct MCEval_NameRefType: MCEval_BoxedType<MCNameRef, kMCExecValueTypeNameRef> {};
+
+template<typename T>
+struct MCEval_Auto
+{
+    ~MCEval_Auto(void) {T::drop(m_value);}
+    typename T::ValueType m_value = {};
+    
+    typename T::ValueType& operator & (void) {return m_value;}
+    typename T::ValueType operator * (void) {return m_value;}
+};
+
+template<typename T>
+struct MCEval_ConstantArg
+{
+    typedef T Type;
+    typedef typename T::ValueType EvalType;
+    static Exec_errors eval(MCExecContext& ctxt, typename T::ValueType p_value, typename T::ValueType& r_value)
+    {
+        r_value = p_value;
+        return EE_UNDEFINED;
+    }
+};
+
+template<typename T, Exec_errors Error>
+struct MCEval_RequiredArg
+{
+    typedef T Type;
+    typedef MCExpression* EvalType;
+    static Exec_errors eval(MCExecContext& ctxt, MCExpression* p_expr, typename T::ValueType& r_value)
+    {
+        if (!T::eval(ctxt, p_expr, r_value))
+        {
+            return Error;
+        }
+        return EE_UNDEFINED;
+    }
+};
+
+template<typename T, typename T::ValueType Default, Exec_errors Error>
+struct MCEval_OptionalArg: public MCEval_RequiredArg<T, Error>
+{
+    static Exec_errors eval(MCExecContext& ctxt, MCExpression *p_expr, typename T::ValueType& r_value)
+    {
+        if (p_expr == nullptr)
+        {
+            r_value = Default;
+            return EE_UNDEFINED;
+        }
+        return MCEval_RequiredArg<T, Error>::eval(ctxt, p_expr, r_value);
+    }
+};
+
+template<typename T, Exec_errors Error>
+struct MCEval_DefaultArg: public MCEval_RequiredArg<T, Error>
+{
+    typedef std::pair<MCExpression*, typename T::ValueType> EvalType;
+    static Exec_errors eval(MCExecContext& ctxt, std::pair<MCExpression *, typename T::ValueType> p_exp_def, typename T::ValueType& r_value)
+    {
+        if (p_exp_def.first == nullptr)
+        {
+            r_value = p_exp_def.second;
+            return EE_UNDEFINED;
+        }
+        return MCEval_RequiredArg<T, Error>::eval(ctxt, p_exp_def.first, r_value);
+    }
+};
+
+////
+
+struct MCNetworkExecAcceptDatagramConnectionsOnPort_Desc
+{
+    typedef MCEval_RequiredArg<MCEval_UInt16Type, EE_ACCEPT_BADEXP> Arg1;
+    typedef MCEval_RequiredArg<MCEval_NameRefType, EE_ACCEPT_BADEXP> Arg2;
+    static constexpr auto Func = MCNetworkExecAcceptDatagramConnectionsOnPort;
+};
+
+struct MCNetworkExecAcceptSecureConnectionsOnPort_Desc
+{
+    typedef MCEval_RequiredArg<MCEval_UInt16Type, EE_ACCEPT_BADEXP> Arg1;
+    typedef MCEval_RequiredArg<MCEval_NameRefType, EE_ACCEPT_BADEXP> Arg2;
+    typedef MCEval_ConstantArg<MCEval_BoolType> Arg3;
+    static constexpr auto Func = MCNetworkExecAcceptSecureConnectionsOnPort;
+};
+
+struct MCNetworkExecAcceptConnectionsOnPort_Desc
+{
+    typedef MCEval_RequiredArg<MCEval_UInt16Type, EE_ACCEPT_BADEXP> Arg1;
+    typedef MCEval_RequiredArg<MCEval_NameRefType, EE_ACCEPT_BADEXP> Arg2;
+    static constexpr auto Func = MCNetworkExecAcceptConnectionsOnPort;
+};
+
+struct MCInterfaceExecBeep_Desc
+{
+    typedef MCEval_OptionalArg<MCEval_UIntType, 1, EE_BEEP_BADEXP> Arg1;
+    static constexpr auto Func = MCInterfaceExecBeep;
+};
+
+struct MCDebuggingExecBreakpoint_Desc
+{
+    typedef MCEval_ConstantArg<MCEval_UIntType> Arg1;
+    typedef MCEval_ConstantArg<MCEval_UIntType> Arg2;
+    static constexpr auto Func = MCDebuggingExecBreakpoint;
+};
+
+struct MCPrintingExecCancelPrinting_Desc
+{
+    static constexpr auto Func = MCPrintingExecCancelPrinting;
+};
+
+struct MCEngineExecCancelMessage_Desc
+{
+    typedef MCEval_RequiredArg<MCEval_IntType, EE_CANCEL_IDNAN> Arg1;
+    static constexpr auto Func = MCEngineExecCancelMessage;
+};
+
+struct MCInterfaceExecClickCmd_Desc
+{
+    typedef MCEval_DefaultArg<MCEval_UInt16Type, EE_CLICK_BADBUTTON> Arg1;
+    typedef MCEval_RequiredArg<MCEval_LegacyPointType, EE_CLICK_BADLOCATION> Arg2;
+    typedef MCEval_ConstantArg<MCEval_UInt16Type> Arg3;
+    static constexpr auto Func = MCInterfaceExecClickCmd;
+};
+
+////
+
+template<typename Desc>
+inline void MCDispatch(MCExecContext& ctxt)
+{
+    Desc::Func(ctxt);
+}
+
+template<typename Desc>
+inline void MCDispatch(MCExecContext& ctxt, typename Desc::Arg1::EvalType p_arg_1)
+{
+    MCEval_Auto<typename Desc::Arg1::Type> t_arg_1;
+    Exec_errors t_error;
+    if ((t_error = Desc::Arg1::eval(ctxt, p_arg_1, &t_arg_1)) == EE_UNDEFINED)
+    {
+        Desc::Func(ctxt, *t_arg_1);
+    }
+    else
+    {
+        ctxt.LegacyThrow(t_error);
+    }
+}
+
+template<typename Desc>
+inline void MCDispatch(MCExecContext& ctxt, typename Desc::Arg1::EvalType p_arg_1, typename Desc::Arg2::EvalType p_arg_2)
+{
+    MCEval_Auto<typename Desc::Arg1::Type> t_arg_1;
+    MCEval_Auto<typename Desc::Arg2::Type> t_arg_2;
+    
+    Exec_errors t_error;
+    if ((t_error = Desc::Arg1::eval(ctxt, p_arg_1, &t_arg_1)) == EE_UNDEFINED &&
+        (t_error = Desc::Arg2::eval(ctxt, p_arg_2, &t_arg_2)) == EE_UNDEFINED)
+    {
+        Desc::Func(ctxt, *t_arg_1, *t_arg_2);
+    }
+    else
+    {
+        ctxt.LegacyThrow(t_error);
+    }
+}
+
+template<typename Desc>
+inline void MCDispatch(MCExecContext& ctxt, typename Desc::Arg1::EvalType p_arg_1, typename Desc::Arg2::EvalType p_arg_2, typename Desc::Arg3::EvalType p_arg_3)
+{
+    MCEval_Auto<typename Desc::Arg1::Type> t_arg_1;
+    MCEval_Auto<typename Desc::Arg2::Type> t_arg_2;
+    MCEval_Auto<typename Desc::Arg3::Type> t_arg_3;
+    
+    Exec_errors t_error;
+    if ((t_error = Desc::Arg1::eval(ctxt, p_arg_1, &t_arg_1)) == EE_UNDEFINED &&
+        (t_error = Desc::Arg2::eval(ctxt, p_arg_2, &t_arg_2)) == EE_UNDEFINED &&
+        (t_error = Desc::Arg3::eval(ctxt, p_arg_3, &t_arg_3)) == EE_UNDEFINED)
+    {
+        Desc::Func(ctxt, *t_arg_1, *t_arg_2, *t_arg_3);
+    }
+    else
+    {
+        ctxt.LegacyThrow(t_error);
+    }
+}
+
 MCAccept::~MCAccept()
 {
 	delete port;
@@ -114,27 +383,12 @@ Parse_stat MCAccept::parse(MCScriptPoint &sp)
 
 void MCAccept::exec_ctxt(MCExecContext &ctxt)
 {
-    
-    uinteger_t t_port;
-    if (!ctxt . EvalExprAsUInt(port, EE_ACCEPT_BADEXP, t_port))
-        return;
-	
-	if (t_port > UINT16_MAX)
-	{
-		ctxt . LegacyThrow(EE_ACCEPT_BADEXP);
-		return;
-	}
-	
-    MCNewAutoNameRef t_message;
-    if (!ctxt . EvalExprAsNameRef(message, EE_ACCEPT_BADEXP, &t_message))
-        return;
-    
     if (datagram)
-		MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, uint16_t(t_port), *t_message);
-	else if (secure)
-		MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, uint16_t(t_port), *t_message, secureverify == True);
-	else
-		MCNetworkExecAcceptConnectionsOnPort(ctxt, uint16_t(t_port), *t_message);
+        MCDispatch<MCNetworkExecAcceptDatagramConnectionsOnPort_Desc>(ctxt, port, message);
+    else if (secure)
+        MCDispatch<MCNetworkExecAcceptSecureConnectionsOnPort_Desc>(ctxt, port, message, secureverify == True);
+    else
+        MCDispatch<MCNetworkExecAcceptConnectionsOnPort_Desc>(ctxt, port, message);
 }
 
 void MCAccept::compile(MCSyntaxFactoryRef ctxt)
@@ -180,11 +434,7 @@ Parse_stat MCBeep::parse(MCScriptPoint &sp)
 
 void MCBeep::exec_ctxt(MCExecContext& ctxt)
 {
-	uinteger_t t_count;
-	if (!ctxt . EvalOptionalExprAsUInt(times, 1, EE_BEEP_BADEXP, t_count))
-		return;
-	
-	MCInterfaceExecBeep(ctxt, t_count);
+    MCDispatch<MCInterfaceExecBeep_Desc>(ctxt, times);
 }
 
 void MCBeep::compile(MCSyntaxFactoryRef ctxt)
@@ -203,7 +453,7 @@ void MCBeep::compile(MCSyntaxFactoryRef ctxt)
 
 void MCBreakPoint::exec_ctxt(MCExecContext& ctxt)
 {
-    MCDebuggingExecBreakpoint(ctxt, line, pos);
+    MCDispatch<MCDebuggingExecBreakpoint_Desc>(ctxt, line, pos);
 }
 
 void MCBreakPoint::compile(MCSyntaxFactoryRef ctxt)
@@ -241,15 +491,9 @@ Parse_stat MCCancel::parse(MCScriptPoint &sp)
 void MCCancel::exec_ctxt(MCExecContext& ctxt)
 {
     if (m_id == NULL)
-		MCPrintingExecCancelPrinting(ctxt);
-	
+        MCDispatch<MCPrintingExecCancelPrinting_Desc>(ctxt);
 	else
-	{
-        integer_t t_id;
-        if (!ctxt . EvalExprAsInt(m_id, EE_CANCEL_IDNAN, t_id))
-            return;
-        MCEngineExecCancelMessage(ctxt, t_id);
-    }
+        MCDispatch<MCEngineExecCancelMessage_Desc>(ctxt, m_id);
 }
 
 void MCCancel::compile(MCSyntaxFactoryRef ctxt)
@@ -303,16 +547,7 @@ if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AT) != PS_NORMAL)
 
 void MCClickCmd::exec_ctxt(MCExecContext& ctxt)
 {
-    uinteger_t t_which;
-    if (!ctxt . EvalOptionalExprAsUInt(button, which, EE_CLICK_BADBUTTON, t_which))
-        return;
-    which = t_which;
-    
-    MCPoint t_location;
-    if (!ctxt . EvalExprAsPoint(location, EE_CLICK_BADLOCATION, t_location))
-        return;
-    
-    MCInterfaceExecClickCmd(ctxt, which, t_location, mstate);
+    MCDispatch<MCInterfaceExecClickCmd_Desc>(ctxt, std::make_pair(button, which), location, mstate);
 }
 
 void MCClickCmd::compile(MCSyntaxFactoryRef ctxt)
