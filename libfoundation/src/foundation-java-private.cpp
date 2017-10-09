@@ -37,9 +37,10 @@ static MCJavaType MCJavaMapTypeCodeSubstring(MCStringRef p_type_code, MCRange p_
     return kMCJavaTypeObject;
 }
 
-int MCJavaMapTypeCode(MCStringRef p_type_code)
+MCJavaType MCJavaMapTypeCode(MCStringRef p_type_code)
 {
-    return static_cast<int>(MCJavaMapTypeCodeSubstring(p_type_code,MCRangeMake(0,MCStringGetLength(p_type_code))));
+    return MCJavaMapTypeCodeSubstring(p_type_code,
+                                      MCRangeMake(0, MCStringGetLength(p_type_code)));
 }
 
 static bool __GetExpectedTypeCode(MCTypeInfoRef p_type, MCJavaType& r_code)
@@ -198,7 +199,7 @@ bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, 
             return __MCTypeInfoConformsToJavaType(t_return_type, kMCJavaTypeVoid);
         default:
         {
-            auto t_return_code = static_cast<MCJavaType>(MCJavaMapTypeCode(p_return));
+            auto t_return_code = MCJavaMapTypeCode(p_return);
             return __MCTypeInfoConformsToJavaType(t_return_type, t_return_code);
         }
     }
@@ -518,12 +519,11 @@ static jstring MCJavaGetJObjectClassName(jobject p_obj)
     return className;
 }
 
-static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method_id, jvalue *p_params, int p_return_type, void *r_result)
+static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method_id, jvalue *p_params, MCJavaType p_return_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_return_type = static_cast<MCJavaType>(p_return_type);
     
-    switch (t_return_type)
+    switch (p_return_type)
     {
         case kMCJavaTypeBoolean:
         {
@@ -601,12 +601,11 @@ static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method
     MCUnreachableReturn(false);
 }
 
-static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, jvalue *p_params, int p_return_type, void *r_result)
+static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, jvalue *p_params, MCJavaType p_return_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_return_type = static_cast<MCJavaType>(p_return_type);
     
-    switch (t_return_type) {
+    switch (p_return_type) {
         case kMCJavaTypeBoolean:
         {
             jboolean t_result =
@@ -683,12 +682,11 @@ static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, j
     MCUnreachableReturn(false);
 }
 
-static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, jmethodID p_method_id, jvalue *p_params, int p_return_type, void *r_result)
+static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, jmethodID p_method_id, jvalue *p_params, MCJavaType p_return_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_return_type = static_cast<MCJavaType>(p_return_type);
     
-    switch (t_return_type) {
+    switch (p_return_type) {
         case kMCJavaTypeBoolean:
         {
             jboolean t_result =
@@ -765,12 +763,12 @@ static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, 
     MCUnreachableReturn(false);
 }
 
-static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int p_return_type, void *r_result)
+static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, MCJavaType p_return_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_return_type = static_cast<MCJavaType>(p_return_type);
     
-    switch (t_return_type) {
+    switch (p_return_type)
+    {
         case kMCJavaTypeBoolean:
         {
             jboolean t_result =
@@ -846,12 +844,12 @@ static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int
     MCUnreachableReturn(false);
 }
 
-static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, int p_field_type, void *r_result)
+static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, MCJavaType p_field_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_field_type = static_cast<MCJavaType>(p_field_type);
     
-    switch (t_field_type) {
+    switch (p_field_type)
+    {
         case kMCJavaTypeBoolean:
         {
             jboolean t_result =
@@ -927,12 +925,11 @@ static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, i
     MCUnreachableReturn(false);
 }
 
-static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, const void *p_param, int p_field_type)
+static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, const void *p_param, MCJavaType p_field_type)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_field_type = static_cast<MCJavaType>(p_field_type);
     
-    switch (t_field_type)
+    switch (p_field_type)
     {
         case kMCJavaTypeBoolean:
         {
@@ -1012,12 +1009,11 @@ static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, con
     MCUnreachable();
 }
 
-static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, const void *p_param, int p_field_type)
+static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, const void *p_param, MCJavaType p_field_type)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_field_type = static_cast<MCJavaType>(p_field_type);
     
-    switch (t_field_type)
+    switch (p_field_type)
     {
         case kMCJavaTypeBoolean:
         {
