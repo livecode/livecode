@@ -341,14 +341,18 @@ bool initialise_jvm()
     vm_args.version = JNI_VERSION_1_6;
     init_jvm_args(&vm_args);
     
+    char t_option[PATH_MAX];
+    const char *t_option_prefix = "-Djava.class.path=";
+    strcpy(t_option, t_option_prefix);
+    
     const char *t_class_path = getenv("CLASSPATH");
-    if (t_class_path == nullptr)
+    if (t_class_path == nullptr ||
+        strlen(t_option_prefix) + strlen(t_class_path) >= PATH_MAX)
     {
         t_class_path = "/usr/lib/java";
     }
-    
-    char *t_option = strdup("-Djava.class.path=");
-    t_option = strcat(t_option, t_class_path);
+    strcat(t_option, t_class_path);
+    t_option[strlen(t_option_prefix)+strlen(t_class_path)] = '\0';
     
     JavaVMOption* options = new (nothrow) JavaVMOption[1];
     options[0].optionString = t_option;
@@ -357,9 +361,7 @@ bool initialise_jvm()
     vm_args.options = options;
     vm_args.ignoreUnrecognized = false;
     
-    bool t_success = create_jvm(&vm_args);
-    free(t_option);
-    return t_success;
+    return create_jvm(&vm_args);
 #endif
     return true;
 }
