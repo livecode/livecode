@@ -391,6 +391,8 @@ component Documentation
 
 	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
 		rfolder "ide:Documentation/html_viewer/resources/data/api"
+		rfolder "ide:Documentation/html_viewer/resources/data/api_livecode_script"
+		rfolder "ide:Documentation/html_viewer/resources/data/api_livecode_builder"				
 		rfolder "ide:Documentation/html_viewer/resources/data/guide"
 	
 	into [[ToolsFolder]]/Documentation/pdf place
