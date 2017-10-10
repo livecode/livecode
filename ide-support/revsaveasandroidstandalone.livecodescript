@@ -1213,38 +1213,34 @@ end doShellCommand
 
 ################################################################################
 
+constant kDeployLibrary = "revDeployLibraryAndroid"
 private function pathToRootClasses pRoot
-   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
-   dispatch function "pathToRootClasses" to stack "revDeployLibraryAndroid" with pRoot
+   dispatch function "pathToRootClasses" to stack kDeployLibrary with pRoot
    return the result
 end pathToRootClasses
 
 private function pathToSDKClasses pRoot
-   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
-   dispatch function "pathToSDKClasses" to stack "revDeployLibraryAndroid" with pRoot
+   dispatch function "pathToSDKClasses" to stack kDeployLibrary with pRoot
    return the result
 end pathToSDKClasses
 
 private function pathToCommonClasses pRoot
-   dispatch function "pathToCommonClasses" to stack "revDeployLibraryAndroid" with pRoot
+   dispatch function "pathToCommonClasses" to stack kDeployLibrary with pRoot
    return the result
 end pathToCommonClasses
 
 private function pathToAapt pRoot
-   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
-   dispatch function "pathToAapt" to stack "revDeployLibraryAndroid" with pRoot
+   dispatch function "pathToAapt" to stack kDeployLibrary with pRoot
    return the result
 end pathToAapt
 
 private function pathToAdb pRoot
-   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
-   dispatch function "pathToAdb" to stack "revDeployLibraryAndroid" with pRoot
+   dispatch function "pathToAdb" to stack kDeployLibrary with pRoot
    return the result
 end pathToAdb
 
 private function pathToZipAlign pRoot
-   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
-   dispatch function "pathToZipAlign" to stack "revDeployLibraryAndroid" with pRoot
+   dispatch function "pathToZipAlign" to stack kDeployLibrary with pRoot
    return the result
 end pathToZipAlign
 
@@ -1260,28 +1256,29 @@ private function pathToRepoAndroidBinaries
 end pathToRepoAndroidBinaries
 
 private function pathToDex pRoot
-   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
-   dispatch function "pathToDex" to stack "revDeployLibraryAndroid" with pRoot
+   dispatch function "pathToDex" to stack kDeployLibrary with pRoot
    return the result
 end pathToDex
 
 private function pathToJavaC pRoot
-   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
-   dispatch function "pathToJavaC" to stack "revDeployLibraryAndroid" with pRoot
+   dispatch function "pathToJavaC" to stack kDeployLibrary with pRoot
    return the result
 end pathToJavaC
 
 private function pathToJava pRoot
-   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
-   dispatch function "pathToJava" to stack "revDeployLibraryAndroid" with pRoot
+   dispatch function "pathToJava" to stack kDeployLibrary with pRoot
    return the result
 end pathToJava
 
 private function pathToJarSigner pRoot
-   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
-   dispatch function "pathToJarSigner" to stack "revDeployLibraryAndroid" with pRoot
+   dispatch function "pathToJarSigner" to stack kDeployLibrary with pRoot
    return the result
 end pathToJarSigner
+
+private function pathToJar pRoot
+   dispatch function "pathToJar" to stack kDeployLibrary with pRoot
+   return the result
+end pathToJar
 
 ################################################################################
 
