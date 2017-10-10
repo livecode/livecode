@@ -684,6 +684,17 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       put tBuildFolder & slash & "classes_app/" & tCompiledClassFilePath & "/AppProvider.class" & return after tBuiltClassFiles
       
+      local tFolder
+      put the folder into tFolder         
+      set the folder to tBuildFolder & slash & "classes_app"
+      repeat for each line tJarFile in pSettings["jarFiles"]
+         executeShellCommand pathToJar(), "xf", tJarFile
+         if the result is not empty then
+            throw "could not extract jar file" && tJarFile & return & the result 
+         end if
+      end repeat
+      set the folder to tFolder
+      
       local tClassesFile
       put tBuildFolder & slash & "classes.dex" into tClassesFile
       executeShellCommand pathToDex(), "--dex", "--output=" & quote & tClassesFile & quote, tClassesBuildFolder, tLiveCodeClassesFile
