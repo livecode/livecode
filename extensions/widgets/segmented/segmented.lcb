@@ -212,6 +212,8 @@ constant kDefaultSegmentLabel is "Label"
 constant kDefaultSegmentMinExtent is 50
 constant kDefaultSelectedLabelColor is [1,1,1]
 
+constant kPostMessage is true
+constant kDontPostMessage is false
 --
 
 public handler OnSave(out rProperties as Array)
@@ -252,12 +254,11 @@ public handler OnLoad(in pProperties as Array)
 		put pProperties["segmentMinExtent"]	into mSegmentMinExtent
 	end if
 	put pProperties["showFrameBorder"]	into mShowFrameBorder
-	setSelected(pProperties["selectedSegment"])
+	setSelected(pProperties["selectedSegment"], kDontPostMessage)
 
 	if "selectedLabelColor" is among the keys of pProperties then
 		put stringToColor(pProperties["selectedLabelColor"]) into mSelectedLabelColor
 	end if
-
 	
 end handler
 
@@ -270,10 +271,10 @@ public handler OnCreate()
 	put ["Label 1","Label 2","Label 3"] into mSegmentLabels
 	put ["align left","align center","align right"] into mSegmentIcons
 	put ["align left","align center","align right"] into mSelectedIcons
+	put [false, false, false] into mSegmentSelected
 	
 	put "text" into mSegmentDisplay
 	put [kDefaultSegmentMinExtent, kDefaultSegmentMinExtent, kDefaultSegmentMinExtent] into mSegmentMinExtent
-	setSelected([])
 	
 	put true into mShowFrameBorder
 	put true into mIsHorizontal	
@@ -355,9 +356,9 @@ public handler OnClick() returns nothing
 		-- deselect the currently selected segment. If the clicked-on segment is
 		-- already selected, then act according to toggleHilites property
 		if mSegmentSelected[tSegmentIndex] and mToggleHilites then
-				setSelected([])
+				setSelected([], kPostMessage)
 		else if not mSegmentSelected[tSegmentIndex] then
-			setSelected([tSegmentIndex])
+			setSelected([tSegmentIndex], kPostMessage)
 		end if
 	else
 		-- If can multiselect, then select the clicked-on segment if it is
@@ -668,7 +669,7 @@ private handler setSelectedLabelColor(in pColor as String)
 	redraw all
 end handler
 
-handler setSelected(in pIndices as List) returns nothing
+handler setSelected(in pIndices as List, in pPostMessage as Boolean) returns nothing
 	variable tState as List
 	variable tIndex as Number
 
@@ -697,7 +698,9 @@ handler setSelected(in pIndices as List) returns nothing
 
 	put tState into mSegmentSelected
 	redraw all
-	post "hiliteChanged"
+	if pPostMessage then
+		post "hiliteChanged"
+	end if
 end handler
 
 handler getSelected() returns List
@@ -714,7 +717,7 @@ handler getSelected() returns List
 end handler
 
 handler updateSelected()
-	setSelected(getSelected())
+	setSelected(getSelected(), kPostMessage)
 end handler
 
 ----------------------------------------------------------------
@@ -1104,7 +1107,7 @@ private handler setMultiSelect(in pCanMultiSelect as Boolean)
 	-- the selection
 	if not pCanMultiSelect and \
 			the number of elements in getSelected() > 1 then
-		setSelected([])
+		setSelected([], kPostMessage)
 	end if
 end handler
 
@@ -1226,7 +1229,7 @@ private handler setSelectedSegmentIndices(in pIndices as String) returns nothing
 		end if
 	end repeat
 
-	setSelected(tIndices)
+	setSelected(tIndices, kPostMessage)
 end handler
 
 private handler getSelectedSegmentIndices() returns String
@@ -1276,7 +1279,7 @@ private handler setSelectedSegmentNames(in pItemNames as String) returns nothing
 		end if
 	end repeat
 
-	setSelected(tIndices)
+	setSelected(tIndices, kPostMessage)
 end handler
 
 private handler getSelectedSegmentNames() returns String
