@@ -23,6 +23,7 @@
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',
+				'libraries/objectrepository/objectrepository.lcb',
 
 				'widgets/browser/browser.lcb',
 				#’widgets/chart/chart.lcb',
