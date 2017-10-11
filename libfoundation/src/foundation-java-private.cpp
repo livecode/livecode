@@ -22,24 +22,24 @@
 
 static MCJavaType MCJavaMapTypeCodeSubstring(MCStringRef p_type_code, MCRange p_range)
 {
-    if (MCStringSubstringIsEqualToCString(p_type_code, p_range, "[",
-                                          kMCStringOptionCompareExact))
-        return kMCJavaTypeArray;
-    
     for (uindex_t i = 0; i < sizeof(type_map) / sizeof(type_map[0]); i++)
     {
-        if (MCStringSubstringIsEqualToCString(p_type_code, p_range, type_map[i] . name, kMCStringOptionCompareExact))
+        if (MCStringSubstringIsEqualToCString(p_type_code,
+                                              MCRangeMake(p_range.offset, 1),
+                                              type_map[i] . name,
+                                              kMCStringOptionCompareExact))
         {
             return type_map[i] . type;
         }
     }
     
-    return kMCJavaTypeObject;
+    return kMCJavaTypeUnknown;
 }
 
-int MCJavaMapTypeCode(MCStringRef p_type_code)
+MCJavaType MCJavaMapTypeCode(MCStringRef p_type_code)
 {
-    return static_cast<int>(MCJavaMapTypeCodeSubstring(p_type_code,MCRangeMake(0,MCStringGetLength(p_type_code))));
+    return MCJavaMapTypeCodeSubstring(p_type_code,
+                                      MCRangeMake(0, MCStringGetLength(p_type_code)));
 }
 
 static bool __GetExpectedTypeCode(MCTypeInfoRef p_type, MCJavaType& r_code)
@@ -86,6 +86,11 @@ static bool __MCTypeInfoConformsToJavaType(MCTypeInfoRef p_type, MCJavaType p_co
     if (!__GetExpectedTypeCode(p_type, t_code))
         return false;
     
+    // At the moment we don't have a separate type for arrays.
+    if (p_code == kMCJavaTypeArray &&
+        t_code == kMCJavaTypeObject)
+        return true;
+    
     return t_code == p_code;
 }
 
@@ -109,6 +114,9 @@ static bool __NextArgument(MCStringRef p_arguments, MCRange& x_range)
         t_length++;
     }
     
+    if (t_next_type == kMCJavaTypeUnknown)
+        return false;
+    
     if (t_next_type == kMCJavaTypeObject)
     {
         if (!MCStringFirstIndexOfChar(p_arguments, ';', x_range . offset, kMCStringOptionCompareExact, t_length))
@@ -116,6 +124,9 @@ static bool __NextArgument(MCStringRef p_arguments, MCRange& x_range)
         
         // Consume the ;
         t_length++;
+        
+        // Correct the length for the starting point
+        t_length -= x_range.offset;
     }
     
     x_range . length = t_length;
@@ -198,7 +209,7 @@ bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, 
             return __MCTypeInfoConformsToJavaType(t_return_type, kMCJavaTypeVoid);
         default:
         {
-            auto t_return_code = static_cast<MCJavaType>(MCJavaMapTypeCode(p_return));
+            auto t_return_code = MCJavaMapTypeCode(p_return);
             return __MCTypeInfoConformsToJavaType(t_return_type, t_return_code);
         }
     }
@@ -518,12 +529,11 @@ static jstring MCJavaGetJObjectClassName(jobject p_obj)
     return className;
 }
 
-static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method_id, jvalue *p_params, int p_return_type, void *r_result)
+static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method_id, jvalue *p_params, MCJavaType p_return_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_return_type = static_cast<MCJavaType>(p_return_type);
     
-    switch (t_return_type)
+    switch (p_return_type)
     {
         case kMCJavaTypeBoolean:
         {
@@ -596,17 +606,20 @@ static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method
         case kMCJavaTypeVoid:
             s_env -> CallVoidMethodA(p_instance, p_method_id, p_params);
             return true;
+            
+        // Should be unreachable
+        case kMCJavaTypeUnknown:
+            break;
     }
     
     MCUnreachableReturn(false);
 }
 
-static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, jvalue *p_params, int p_return_type, void *r_result)
+static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, jvalue *p_params, MCJavaType p_return_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_return_type = static_cast<MCJavaType>(p_return_type);
     
-    switch (t_return_type) {
+    switch (p_return_type) {
         case kMCJavaTypeBoolean:
         {
             jboolean t_result =
@@ -678,17 +691,20 @@ static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, j
         case kMCJavaTypeVoid:
             s_env -> CallStaticVoidMethodA(p_class, p_method_id, p_params);
             return true;
+            
+        // Should be unreachable
+        case kMCJavaTypeUnknown:
+            break;
     }
     
     MCUnreachableReturn(false);
 }
 
-static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, jmethodID p_method_id, jvalue *p_params, int p_return_type, void *r_result)
+static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, jmethodID p_method_id, jvalue *p_params, MCJavaType p_return_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_return_type = static_cast<MCJavaType>(p_return_type);
     
-    switch (t_return_type) {
+    switch (p_return_type) {
         case kMCJavaTypeBoolean:
         {
             jboolean t_result =
@@ -760,17 +776,21 @@ static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, 
         case kMCJavaTypeVoid:
             s_env -> CallNonvirtualVoidMethodA(p_instance, p_class, p_method_id, p_params);
             return true;
+            
+        // Should be unreachable
+        case kMCJavaTypeUnknown:
+            break;
     }
     
     MCUnreachableReturn(false);
 }
 
-static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int p_return_type, void *r_result)
+static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, MCJavaType p_return_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_return_type = static_cast<MCJavaType>(p_return_type);
     
-    switch (t_return_type) {
+    switch (p_return_type)
+    {
         case kMCJavaTypeBoolean:
         {
             jboolean t_result =
@@ -840,18 +860,19 @@ static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int
             return true;
         }
         case kMCJavaTypeVoid:
+        case kMCJavaTypeUnknown:
             break;
     }
     
     MCUnreachableReturn(false);
 }
 
-static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, int p_field_type, void *r_result)
+static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, MCJavaType p_field_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_field_type = static_cast<MCJavaType>(p_field_type);
     
-    switch (t_field_type) {
+    switch (p_field_type)
+    {
         case kMCJavaTypeBoolean:
         {
             jboolean t_result =
@@ -921,18 +942,18 @@ static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, i
             return true;
         }
         case kMCJavaTypeVoid:
+        case kMCJavaTypeUnknown:
             break;
     }
     
     MCUnreachableReturn(false);
 }
 
-static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, const void *p_param, int p_field_type)
+static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, const void *p_param, MCJavaType p_field_type)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_field_type = static_cast<MCJavaType>(p_field_type);
     
-    switch (t_field_type)
+    switch (p_field_type)
     {
         case kMCJavaTypeBoolean:
         {
@@ -1006,18 +1027,18 @@ static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, con
                                     t_obj);
         }
         case kMCJavaTypeVoid:
+        case kMCJavaTypeUnknown:
             break;
     }
     
     MCUnreachable();
 }
 
-static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, const void *p_param, int p_field_type)
+static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, const void *p_param, MCJavaType p_field_type)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_field_type = static_cast<MCJavaType>(p_field_type);
     
-    switch (t_field_type)
+    switch (p_field_type)
     {
         case kMCJavaTypeBoolean:
         {
@@ -1092,6 +1113,7 @@ static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, c
             return;
         }
         case kMCJavaTypeVoid:
+        case kMCJavaTypeUnknown:
             break;
     }
     
@@ -1169,7 +1191,8 @@ static bool __JavaJNIGetParams(void **args, MCTypeInfoRef p_signature, jvalue *&
             case kMCJavaTypeDouble:
                 t_args[i].d = *(static_cast<jdouble *>(args[i]));
                 break;
-            default:
+            case kMCJavaTypeVoid:
+            case kMCJavaTypeUnknown:
                 MCUnreachableReturn(false);
         }
     }

@@ -345,4 +345,27 @@ public handler TestNativeTypeAfterObjectType()
 	end unsafe
 end handler
 
+__safe foreign handler RegionMatches(in pString as JString, in pCaseless as JBoolean, in pOffset as JInt, in pOther as JString, in pOtherOffset as JInt, in pLength as JInt) returns JBoolean binds to "java:java.lang.String>regionMatches(ZILjava/lang/String;II)Z"
+
+public handler TestBindingStringObjectTypeInMiddle()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "called foreign handler with signature Ljava/lang/CharSequence;I" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "called foreign handler with signature Ljava/lang/CharSequence;I" because "bug 19934"
+		return
+	end if
+	
+	variable tString as JString
+	put StringToJString("something") into tString
+	
+	variable tOther as JString
+	put StringToJString("NOTHING") into tOther
+	
+	test "called foreign handler with signature (ZILjava/lang/String;II)Z" when \
+		RegionMatches(tString, true, 4, tOther, 2, 5)
+end handler 
+
 end module

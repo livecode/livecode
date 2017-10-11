@@ -33,7 +33,7 @@ end handler
 ---------
 
 foreign handler CreateJavaObject() returns JObject binds to "java:java.lang.Object>new()"
-foreign handler CreateJavaObjectDoesntExist() returns JObject binds to "java:java.lang.Object>new_doesnt_exist()"
+foreign handler CreateJavaObjectDoesntExist() returns JObject binds to "java:java.lang.Object>new_doesnt_exist()Ljava/lang/Object;"
 
 private handler TestForeignBinding_NonExistentJava()
    unsafe

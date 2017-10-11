@@ -1966,9 +1966,6 @@ MC_DLLEXPORT bool MCJavaCallJNIMethod(MCNameRef p_class, void *p_method_id, int 
 // Get a Java method pointer for a given method in a class
 MC_DLLEXPORT void *MCJavaGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name, MCStringRef p_arguments, MCStringRef p_return, int p_call_type);
 
-// Get a Java type code corresponding to the param string
-MC_DLLEXPORT int MCJavaMapTypeCode(MCStringRef p_param_string);
-
 // Get the name of a Java class from an instance of that class
 MC_DLLEXPORT bool MCJavaGetJObjectClassName(MCJavaObjectRef p_object, MCStringRef &r_name);
 // Convert a Java object wrapping a jstring to a String Ref
