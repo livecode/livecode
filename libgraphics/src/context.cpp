@@ -2064,8 +2064,11 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 	
 	if (t_success)
 	{
-		r_paint . setColor(MCGColorToSkColor(p_color));
-		r_paint . setShader(t_shader);
+		// Don't set the paint color if using a shader, as the color's alpha value will be applied to the paint (which we don't want to happen!).
+		if (t_shader != nil)
+			r_paint . setShader(t_shader);
+		else
+			r_paint . setColor(MCGColorToSkColor(p_color));
 		r_paint . setMaskFilter(t_stipple);
 		
         // MM-2014-01-09: [[ LibSkiaUpdate ]] Updated filters to use Skia's new filter levels.
