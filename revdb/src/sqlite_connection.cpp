@@ -459,7 +459,7 @@ bool queryCallback(void *p_context, int p_placeholder, DBBuffer& p_output)
 			t_value[t_parameter_value . length] = '\0';
 
 			// Escape quotes by manually replacing then with the string "''"
-			t_escaped_string = replaceString(t_value, "\'\0", "\'\'\0");
+			t_escaped_string = replaceString(t_value, const_cast<char *>("\'\0"), const_cast<char *>("\'\'\0"));
 			t_escaped_string_length = strlen((const char *)t_escaped_string);
 
 			free(t_value);

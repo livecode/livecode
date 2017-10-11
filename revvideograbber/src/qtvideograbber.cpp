@@ -384,7 +384,7 @@ void CQTVideoGrabber::Init()
 	videograbber = OpenDefaultComponent(SeqGrabComponentType,0);
 	if (!videograbber)
 	{
-		AddError("Can't open sequence grabber component");
+		AddError(const_cast<char *>("Can't open sequence grabber component"));
 		return;
 	}
 
@@ -396,7 +396,7 @@ void CQTVideoGrabber::Init()
 	result = SGNewChannel (videograbber, VideoMediaType, &videochannel);
 	if (!videochannel)
 	{
-		AddError("Can't create video channel");
+		AddError(const_cast<char *>("Can't create video channel"));
 		return;
 	}
 #ifdef _MACOSX
@@ -417,7 +417,7 @@ void CQTVideoGrabber::Init()
 	result = SGSetUseScreenBuffer(videochannel, buffervideo == False);
 	if (result != noErr)
 	{
-		AddError("Can't buffer offscreen");
+		AddError(const_cast<char *>("Can't buffer offscreen"));
 		return;
 	}
 	result = SGGetSrcVideoBounds (videochannel, &srcvideorect);

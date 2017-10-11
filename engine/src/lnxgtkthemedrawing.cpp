@@ -1678,7 +1678,7 @@ moz_gtk_tab_paint(GdkDrawable * drawable, GdkRectangle * rect,
 	                      ((flags & MOZ_GTK_TAB_SELECTED)
 	                       ? GTK_STATE_NORMAL
 	                       : GTK_STATE_ACTIVE),
-	                      GTK_SHADOW_OUT, cliprect, gTabWidget, "tab",
+	                      GTK_SHADOW_OUT, cliprect, gTabWidget, const_cast<char *>("tab"),
 	                      rect->x, rect->y, rect->width, rect->height,
 	                      t);
 
@@ -1710,7 +1710,7 @@ moz_gtk_tabpanels_paint(GdkDrawable * drawable, GdkRectangle * rect,
 
 
 	gtk_paint_box_gap(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
-	                    cliprect, gTabWidget, "notebook",
+	                    cliprect, gTabWidget, const_cast<char *>("notebook"),
 	                    rect->x, rect->y,
 	                    rect->width, rect->height,
 	                    GTK_POS_TOP,

@@ -123,11 +123,12 @@
 
 							'-Wno-conversion',
 							'-Wno-shorten-64-to-32',
-
+							'-Wno-unused-parameter',
+							
+							'-Werror=writable-strings',
 							'-Werror=declaration-after-statement',
 							'-Werror=delete-non-virtual-dtor',
 							'-Werror=overloaded-virtual',
-							'-Wno-unused-parameter',
 							'-Werror=uninitialized',
 							'-Werror=return-type',
 							'-Werror=tautological-compare',

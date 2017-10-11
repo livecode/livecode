@@ -442,7 +442,7 @@ bool DBConnection_ODBC::handleDataAtExecutionParameters(SQLHSTMT p_statement)
 	SQLRETURN t_result;
 	t_result = SQL_NEED_DATA;
 
-	DBString t_default("", 0, False);
+	DBString t_default(const_cast<char *>(""), 0, False);
 
 	DBString *t_value;
 	t_value = NULL;
@@ -524,7 +524,7 @@ Bool DBConnection_ODBC::BindVariables(SQLHSTMT p_cursor, DBString *p_arguments, 
 	if (p_argument_count == 0)
 		return True;
 	
-	DBString t_default("", 0, False);
+	DBString t_default(const_cast<char *>(""), 0, False);
 	
 	for(int i = 0; i < p_placeholder_map -> length; ++i)
 	{
