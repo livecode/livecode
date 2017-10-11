@@ -31,12 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Ide, EditScriptOfObject, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Ide, HideMessageBox, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Ide, ShowMessageBox, 0)
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCIdeExecEditScriptOfObject(MCExecContext &ctxt, MCObject *p_object, MCStringRef p_at)
 {
 	// MW-2010-10-13: [[ Bug 7476 ]] Make sure we temporarily turn off lock messages

@@ -88,7 +88,6 @@ public:
 
 	Parse_stat parse(MCScriptPoint &sp, Boolean isprop);
     Exec_stat exec(MCExecContext &, MCParameter *);
-	void compile(MCSyntaxFactoryRef factory);
 	
     MCVariable *getvar(uint2 index, Boolean isparam);
     MCContainer *getcontainer(uint2 index, Boolean isparam);

@@ -51,10 +51,6 @@ public:
 
 	virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
 	
-	// Compile the syntax into the (new) tree for use by the new evaluator.
-	virtual void compile(MCSyntaxFactoryRef);
-	virtual void compile_out(MCSyntaxFactoryRef);
-	
 	// Evaluate the expression as a container, and place the reference to
 	// the container's value in r_ref.
     // EP-less version of evaluation functions

@@ -31,14 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Mail, SendEmail, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Mail, ComposeMail, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Mail, ComposeHtmlMail, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Mail, ComposeUnicodeMail, 6)
-MC_EXEC_DEFINE_GET_METHOD(Mail, CanSendMail, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCMailDoComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments, MCMailType p_type)
 {	
 	bool t_can_send;

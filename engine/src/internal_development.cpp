@@ -836,7 +836,6 @@ MCInternalVerbInfo MCinternalverbs[] =
 #endif
 	{ "syntax", "tokenize", class_factory<MCIdeSyntaxTokenize> },
 	{ "syntax", "recognize", class_factory<MCIdeSyntaxRecognize> },
-	{ "syntax", "compile", class_factory<MCIdeSyntaxCompile> },
 	{ "filter", "controls", class_factory<MCIdeFilterControls> },
     { "list", "browsers", class_factory<MCInternalListBrowsers> },
 

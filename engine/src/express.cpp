@@ -35,7 +35,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#include "syntax.h"
 #include "statemnt.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -417,20 +416,6 @@ void MCExpression::initpoint(MCScriptPoint &sp)
 {
 	line = sp.getline();
 	pos = sp.getpos();
-}
-
-void MCExpression::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-void MCExpression::compile_out(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
