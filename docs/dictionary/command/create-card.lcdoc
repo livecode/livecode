@@ -34,8 +34,8 @@ The <create card> <command> places the <ID> <property> of the newly
 created <card> in the <it> <variable>.
 
 Description:
-Use the <create card> <command> to add a new <card> to the <current
-stack>. 
+Use the <create card> <command> to add a new <card> to the 
+<current stack>. 
 
 The new card is placed after the current card in the defaultStack. When
 the <card> is created, you go to the new <card>.
@@ -45,7 +45,6 @@ will be placed on the newly-created <card> automatically.
 
 >*Tip:* To create a <card> in a specific <stack>, first set the
 > <defaultStack> to the <stack> where you want to create the new <card>
-> : 
 
 References: clone (command), create (command), place (command),
 create stack (command), property (glossary), current card (glossary),

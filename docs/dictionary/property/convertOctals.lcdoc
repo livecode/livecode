@@ -27,9 +27,9 @@ Use the <convertOctals> <property> to make it easier to work with
 
 If the <convertOctals> <property> is set to true, numbers that start
 with a zero are treated as <octal> (base 8) numbers, instead of
-<decimal> (base 10). If the <convertOctals> is false, all numbers
+decimal (base 10). If the <convertOctals> is false, all numbers
 (except <hexadecimal> numbers, which start with 0x) are treated as
-<decimal>. 
+decimal. 
 
 Since the <convertOctals> is a <local property>, its value is <reset> to
 false when the current <handler> finishes <execute|executing>. It
@@ -39,7 +39,7 @@ retains its value only for the current <handler>, and setting it in one
 
 References: reset (command), baseConvert (function), property (glossary),
 call (glossary), handler (glossary), execute (glossary), octal (glossary),
-local property (glossary), hexadecimal (glossary), decimal (glossary)
+local property (glossary), hexadecimal (glossary)
 
 Tags: math
 
