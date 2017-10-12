@@ -60,6 +60,7 @@ template<typename T, MCExecValueType ExecValueType>
 struct MCEval_PrimitiveType
 {
     typedef T ValueType;
+    typedef MCExpression *EvalType;
     
     static constexpr MCExecValueType exec_value_type = ExecValueType;
     
@@ -124,6 +125,7 @@ template<typename T, MCExecValueType ExecValueType>
 struct MCEval_BoxedType
 {
     typedef T ValueType;
+    typedef MCExpression *EvalType;
     
     static constexpr MCExecValueType exec_value_type = ExecValueType;
     
@@ -137,10 +139,50 @@ struct MCEval_BoxedType
         p_expr->eval_typed(ctxt, exec_value_type, &r_value);
         return !ctxt.HasError();
     }
+};
+
+struct MCEval_PartlessObjectPtrType
+{
+    typedef MCObject* ValueType;
+    typedef MCChunk* EvalType;
     
+    static void drop(MCObject* p_value)
+    {
+    }
+    
+    static bool eval(MCExecContext& ctxt, MCChunk* p_chunk, ValueType& r_value) __attribute__((noinline))
+    {
+        MCObject* t_object;
+        uint32_t t_part_id;
+        if (!p_chunk->getobj(ctxt, t_object, t_part_id, True))
+        {
+            return false;
+        }
+        r_value = t_object;
+        return true;
+    }
+};
+
+struct MCEval_PartlessControlPtrType: public MCEval_PartlessObjectPtrType
+{
+    typedef MCControl* ValueType;
+    
+    static bool eval(MCExecContext& ctxt, MCChunk *p_chunk, ValueType& r_value) __attribute__((noinline))
+    {
+        MCObject* t_object;
+        if (!MCEval_PartlessObjectPtrType::eval(ctxt, p_chunk, t_object) ||
+            !MCChunkTermIsControl(t_object->gettype()))
+        {
+            return false;
+        }
+        r_value = static_cast<MCControl*>(t_object);
+        return true;
+    }
 };
 
 struct MCEval_NameRefType: MCEval_BoxedType<MCNameRef, kMCExecValueTypeNameRef> {};
+
+////
 
 template<typename T>
 struct MCEval_Auto
@@ -151,6 +193,8 @@ struct MCEval_Auto
     typename T::ValueType& operator & (void) {return m_value;}
     typename T::ValueType operator * (void) {return m_value;}
 };
+
+////
 
 template<typename T>
 struct MCEval_ConstantArg
@@ -169,7 +213,7 @@ struct MCEval_RequiredArg
 {
     typedef T Type;
     typedef MCExpression* EvalType;
-    static Exec_errors eval(MCExecContext& ctxt, MCExpression* p_expr, typename T::ValueType& r_value)
+    static Exec_errors eval(MCExecContext& ctxt, typename T::EvalType p_expr, typename T::ValueType& r_value)
     {
         if (!T::eval(ctxt, p_expr, r_value))
         {
@@ -182,7 +226,7 @@ struct MCEval_RequiredArg
 template<typename T, typename T::ValueType Default, Exec_errors Error>
 struct MCEval_OptionalArg: public MCEval_RequiredArg<T, Error>
 {
-    static Exec_errors eval(MCExecContext& ctxt, MCExpression *p_expr, typename T::ValueType& r_value)
+    static Exec_errors eval(MCExecContext& ctxt, typename T::EvalType p_expr, typename T::ValueType& r_value)
     {
         if (p_expr == nullptr)
         {
@@ -197,7 +241,7 @@ template<typename T, Exec_errors Error>
 struct MCEval_DefaultArg: public MCEval_RequiredArg<T, Error>
 {
     typedef std::pair<MCExpression*, typename T::ValueType> EvalType;
-    static Exec_errors eval(MCExecContext& ctxt, std::pair<MCExpression *, typename T::ValueType> p_exp_def, typename T::ValueType& r_value)
+    static Exec_errors eval(MCExecContext& ctxt, std::pair<typename T::EvalType, typename T::ValueType> p_exp_def, typename T::ValueType& r_value)
     {
         if (p_exp_def.first == nullptr)
         {
@@ -264,16 +308,42 @@ struct MCInterfaceExecClickCmd_Desc
     static constexpr auto Func = MCInterfaceExecClickCmd;
 };
 
+struct MCInterfaceExecDrag_Desc
+{
+    typedef MCEval_DefaultArg<MCEval_UInt16Type, EE_DRAG_BADBUTTON> Arg1;
+    typedef MCEval_RequiredArg<MCEval_LegacyPointType, EE_DRAG_BADSTARTLOC> Arg2;
+    typedef MCEval_RequiredArg<MCEval_LegacyPointType, EE_DRAG_BADENDLOC> Arg3;
+    static constexpr auto Func = MCInterfaceExecDrag;
+};
+
+struct MCInterfaceExecFocusOnNothing_Desc
+{
+    static constexpr auto Func = MCInterfaceExecFocusOnNothing;
+};
+
+struct MCInterfaceExecFocus_Desc
+{
+    typedef MCEval_RequiredArg<MCEval_PartlessControlPtrType, EE_FOCUS_BADOBJECT> Arg1;
+    static constexpr auto Func = MCInterfaceExecFocusOn;
+};
+
+struct MCEngineExecInsertScriptOfObjectInto_Desc
+{
+    typedef MCEval_RequiredArg<MCEval_PartlessObjectPtrType, EE_INSERT_BADTARGET> Arg1;
+    typedef MCEval_ConstantArg<MCEval_BoolType> Arg2;
+    static constexpr auto Func = MCEngineExecInsertScriptOfObjectInto;
+};
+
 ////
 
 template<typename Desc>
-inline void MCDispatch(MCExecContext& ctxt)
+inline void MCEval_Exec(MCExecContext& ctxt)
 {
     Desc::Func(ctxt);
 }
 
 template<typename Desc>
-inline void MCDispatch(MCExecContext& ctxt, typename Desc::Arg1::EvalType p_arg_1)
+inline void MCEval_Exec(MCExecContext& ctxt, typename Desc::Arg1::EvalType p_arg_1)
 {
     MCEval_Auto<typename Desc::Arg1::Type> t_arg_1;
     Exec_errors t_error;
@@ -288,7 +358,7 @@ inline void MCDispatch(MCExecContext& ctxt, typename Desc::Arg1::EvalType p_arg_
 }
 
 template<typename Desc>
-inline void MCDispatch(MCExecContext& ctxt, typename Desc::Arg1::EvalType p_arg_1, typename Desc::Arg2::EvalType p_arg_2)
+inline void MCEval_Exec(MCExecContext& ctxt, typename Desc::Arg1::EvalType p_arg_1, typename Desc::Arg2::EvalType p_arg_2)
 {
     MCEval_Auto<typename Desc::Arg1::Type> t_arg_1;
     MCEval_Auto<typename Desc::Arg2::Type> t_arg_2;
@@ -306,7 +376,7 @@ inline void MCDispatch(MCExecContext& ctxt, typename Desc::Arg1::EvalType p_arg_
 }
 
 template<typename Desc>
-inline void MCDispatch(MCExecContext& ctxt, typename Desc::Arg1::EvalType p_arg_1, typename Desc::Arg2::EvalType p_arg_2, typename Desc::Arg3::EvalType p_arg_3)
+inline void MCEval_Exec(MCExecContext& ctxt, typename Desc::Arg1::EvalType p_arg_1, typename Desc::Arg2::EvalType p_arg_2, typename Desc::Arg3::EvalType p_arg_3)
 {
     MCEval_Auto<typename Desc::Arg1::Type> t_arg_1;
     MCEval_Auto<typename Desc::Arg2::Type> t_arg_2;
@@ -384,11 +454,11 @@ Parse_stat MCAccept::parse(MCScriptPoint &sp)
 void MCAccept::exec_ctxt(MCExecContext &ctxt)
 {
     if (datagram)
-        MCDispatch<MCNetworkExecAcceptDatagramConnectionsOnPort_Desc>(ctxt, port, message);
+        MCEval_Exec<MCNetworkExecAcceptDatagramConnectionsOnPort_Desc>(ctxt, port, message);
     else if (secure)
-        MCDispatch<MCNetworkExecAcceptSecureConnectionsOnPort_Desc>(ctxt, port, message, secureverify == True);
+        MCEval_Exec<MCNetworkExecAcceptSecureConnectionsOnPort_Desc>(ctxt, port, message, secureverify == True);
     else
-        MCDispatch<MCNetworkExecAcceptConnectionsOnPort_Desc>(ctxt, port, message);
+        MCEval_Exec<MCNetworkExecAcceptConnectionsOnPort_Desc>(ctxt, port, message);
 }
 
 void MCAccept::compile(MCSyntaxFactoryRef ctxt)
@@ -434,7 +504,7 @@ Parse_stat MCBeep::parse(MCScriptPoint &sp)
 
 void MCBeep::exec_ctxt(MCExecContext& ctxt)
 {
-    MCDispatch<MCInterfaceExecBeep_Desc>(ctxt, times);
+    MCEval_Exec<MCInterfaceExecBeep_Desc>(ctxt, times);
 }
 
 void MCBeep::compile(MCSyntaxFactoryRef ctxt)
@@ -453,7 +523,7 @@ void MCBeep::compile(MCSyntaxFactoryRef ctxt)
 
 void MCBreakPoint::exec_ctxt(MCExecContext& ctxt)
 {
-    MCDispatch<MCDebuggingExecBreakpoint_Desc>(ctxt, line, pos);
+    MCEval_Exec<MCDebuggingExecBreakpoint_Desc>(ctxt, line, pos);
 }
 
 void MCBreakPoint::compile(MCSyntaxFactoryRef ctxt)
@@ -491,9 +561,9 @@ Parse_stat MCCancel::parse(MCScriptPoint &sp)
 void MCCancel::exec_ctxt(MCExecContext& ctxt)
 {
     if (m_id == NULL)
-        MCDispatch<MCPrintingExecCancelPrinting_Desc>(ctxt);
+        MCEval_Exec<MCPrintingExecCancelPrinting_Desc>(ctxt);
 	else
-        MCDispatch<MCEngineExecCancelMessage_Desc>(ctxt, m_id);
+        MCEval_Exec<MCEngineExecCancelMessage_Desc>(ctxt, m_id);
 }
 
 void MCCancel::compile(MCSyntaxFactoryRef ctxt)
@@ -547,7 +617,7 @@ if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AT) != PS_NORMAL)
 
 void MCClickCmd::exec_ctxt(MCExecContext& ctxt)
 {
-    MCDispatch<MCInterfaceExecClickCmd_Desc>(ctxt, std::make_pair(button, which), location, mstate);
+    MCEval_Exec<MCInterfaceExecClickCmd_Desc>(ctxt, std::make_pair(button, which), location, mstate);
 }
 
 void MCClickCmd::compile(MCSyntaxFactoryRef ctxt)
