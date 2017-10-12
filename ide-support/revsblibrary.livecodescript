@@ -2302,8 +2302,40 @@ command revSBUpdateForDependencies pPlatform, @xSettings
          put revIDEExtensionProperty(tExtension, tRequiredMetadata) into tIsRequired
          put tIsRequired into xSettings["android,device capabilities"][tFeature]
       end repeat
+      
+      revSBUpdateExtensionCodeInclusions tExtension, pPlatform, xSettings
    end repeat
 end revSBUpdateForDependencies
+
+command revSBUpdateExtensionCodeInclusions pExtension, pPlatform, @xSettings
+   local tExtCodeFolder, tCodeFolders
+   put revIDEExtensionProperty(pExtension, "install_path") & \
+         slash & "code" into tExtCodeFolder
+   put folders(tExtCodeFolder) into tCodeFolders
+   repeat for each line tCodeFolder in tCodeFolders
+      __UpdateSettingsFromCodeFolder tExtCodeFolder, tCodeFolder, pPlatform, xSettings
+   end repeat
+end revSBUpdateExtensionCodeInclusions
+
+private command __UpdateSettingsFromCodeFolder pPath, pCodeFolderName, pPlatform, @xSettings
+   local tFiles, tFolderPath
+   put pPath & slash & pCodeFolderName into tFolderPath
+   put files(tFolderPath) into tFiles
+   switch pCodeFolderName
+      case "jvm-android"
+         if pPlatform is "android" then
+            repeat for each line tLine in tFiles
+               appendToStringList tFolderPath & slash & tLine, xSettings["jarFiles"]
+            end repeat
+         end if
+         break
+      case "jvm"
+         repeat for each line tLine in tFiles
+            appendToStringList tFolderPath & slash & tLine, xSettings["jarFiles"]
+         end repeat
+         break
+   end switch
+end __UpdateSettingsFromCodeFolder
 
 command revSBSanitiseExternalsList pTarget, @xExternals
    local tAvailableExternals, tFixedExternals, tValidExternals, tPlatform
