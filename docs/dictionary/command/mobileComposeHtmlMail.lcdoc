@@ -87,7 +87,7 @@ attachments may be done like this:
     put "Goodbye World!" into tAttachments[2]["data"]
     put "text/plain" into tAttachments[2]["type"]
     put "Farewell.txt" into tAttachments[2]["name"]
-    <mobileComposeHtmlMail> tSubject, tTo, tCCs, tBCCs, tBody, tAttachments
+    mobileComposeHtmlMail tSubject, tTo, tCCs, tBCCs, tBody, tAttachments
 
 Some devices are not configured with e-mail sending capability. To
 determine if the current device is, use the <mobileCanSendMail>
