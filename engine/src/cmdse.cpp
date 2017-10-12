@@ -55,6 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "syntax.h"
+#include "exec_templates.h"
 
 MCAccept::~MCAccept()
 {
@@ -157,13 +158,18 @@ Parse_stat MCBeep::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+
+struct ExecBeepDesc
+{
+    typedef DefaultedArg<uinteger_t, 1, EE_BEEP_BADEXP> Arg1;
+    static constexpr void (*Func)(MCExecContext &ctxt, integer_t arg_1) = &MCInterfaceExecBeep;
+    static constexpr void (*NullFunc)(MCExecContext &ctxt) = nullptr;
+};
+
+
 void MCBeep::exec_ctxt(MCExecContext& ctxt)
 {
-	uinteger_t t_count;
-	if (!ctxt . EvalOptionalExprAsUInt(times, 1, EE_BEEP_BADEXP, t_count))
-		return;
-	
-	MCInterfaceExecBeep(ctxt, t_count);
+    Dispatch<ExecBeepDesc>(ctxt, times);
 }
 
 void MCBeep::compile(MCSyntaxFactoryRef ctxt)
@@ -217,18 +223,16 @@ Parse_stat MCCancel::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+struct ExecCancelDesc
+{
+    typedef NullableArg<integer_t, EE_CANCEL_IDNAN> Arg1;
+    static constexpr void (*Func)(MCExecContext &ctxt, integer_t t_id) = &MCEngineExecCancelMessage;
+    static constexpr void (*NullFunc)(MCExecContext &ctxt) = &MCPrintingExecCancelPrinting;
+};
+
 void MCCancel::exec_ctxt(MCExecContext& ctxt)
 {
-    if (m_id == NULL)
-		MCPrintingExecCancelPrinting(ctxt);
-	
-	else
-	{
-        integer_t t_id;
-        if (!ctxt . EvalExprAsInt(m_id, EE_CANCEL_IDNAN, t_id))
-            return;
-        MCEngineExecCancelMessage(ctxt, t_id);
-    }
+    Dispatch<ExecCancelDesc>(ctxt, m_id);
 }
 
 void MCCancel::compile(MCSyntaxFactoryRef ctxt)
