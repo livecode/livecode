@@ -284,18 +284,22 @@ if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AT) != PS_NORMAL)
 	return PS_NORMAL;
 }
 
+struct ClickExecDesc
+{
+    typedef DefaultedArg<uinteger_t, 1, EE_CLICK_BADBUTTON> Arg1;
+    typedef StandardArg<MCPoint, EE_CLICK_BADLOCATION> Arg2;
+    typedef uint2 StateType;
+    static constexpr void (*Func)(MCExecContext &ctxt, uint2 p_which, MCPoint p_location, uint2 p_state) = &MCInterfaceExecClickCmd;
+    static constexpr void (*NullFunc)(MCExecContext &ctxt) = nullptr;
+};
+
 void MCClickCmd::exec_ctxt(MCExecContext& ctxt)
 {
-    uinteger_t t_which;
-    if (!ctxt . EvalOptionalExprAsUInt(button, which, EE_CLICK_BADBUTTON, t_which))
-        return;
-    which = t_which;
-    
-    MCPoint t_location;
-    if (!ctxt . EvalExprAsPoint(location, EE_CLICK_BADLOCATION, t_location))
-        return;
-    
-    MCInterfaceExecClickCmd(ctxt, which, t_location, mstate);
+    Dispatch<ClickExecDesc>(ctxt,
+                            button,
+                            location,
+                            [this](uinteger_t p_which){this->which = p_which;},
+                            mstate);
 }
 
 void MCClickCmd::compile(MCSyntaxFactoryRef ctxt)
