@@ -1258,7 +1258,9 @@ handler SetIsPassword(in pPassword as Boolean)
       variable tPasswordTransformationMethod as JObject
       put PasswordTransformationMethod_getInstance() into tPasswordTransformationMethod
       TextView_setTransformationMethod(mNativeObj, tPasswordTransformationMethod)
-		TextView_setInputType(mNativeObj, TYPE_TEXT_FLAG_NO_SUGGESTIONS)
+      variable tNewFlags as Integer
+      put BitwiseOrList([TYPE_CLASS_TEXT, TYPE_TEXT_VARIATION_PASSWORD]) into tNewFlags
+      TextView_setInputType(mNativeObj, tNewFlags)
 	else if not pPassword and mTransformationMethod is not nothing then
 		TextView_setTransformationMethod(mNativeObj, mTransformationMethod)
    end if
