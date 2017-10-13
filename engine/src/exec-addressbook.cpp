@@ -31,17 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(AddressBook, PickContact, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(AddressBook, ShowContact, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(AddressBook, CreateContact, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(AddressBook, UpdateContact, 4)
-MC_EXEC_DEFINE_GET_METHOD(AddressBook, ContactData, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(AddressBook, RemoveContact, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(AddressBook, AddContact, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(AddressBook, FindContact, 4)
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCAddressBookExecPickContact(MCExecContext& ctxt)
 {
     int32_t r_result = 0;

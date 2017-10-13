@@ -584,10 +584,6 @@
 			'src/mblandroid-theme.cpp',
 			'src/mbliphone-theme.mm',
 			'src/windows-theme.cpp',
-				
-			# Group "Syntax"
-			'src/syntax.h',
-			'src/syntax.cpp',
 			
 			# Other files
 			'src/socket_resolve.cpp',

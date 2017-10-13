@@ -30,34 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Milliseconds, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Seconds, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Ticks, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Date, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(DateTime, Time, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(DateTime, DateFormat, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(DateTime, MonthNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(DateTime, WeekDayNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(DateTime, IsADate, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(DateTime, IsNotADate, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(DateTime, Convert, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(DateTime, ConvertIntoIt, 6)
-MC_EXEC_DEFINE_GET_METHOD(DateTime, GetTwelveTime, 1)
-MC_EXEC_DEFINE_SET_METHOD(DateTime, SetTwelveTime, 1)
-MC_EXEC_DEFINE_GET_METHOD(DateTime, GetDate, 2)
-MC_EXEC_DEFINE_GET_METHOD(DateTime, GetTime, 2)
-MC_EXEC_DEFINE_GET_METHOD(DateTime, GetMilliseconds, 1)
-MC_EXEC_DEFINE_GET_METHOD(DateTime, GetLongMilliseconds, 1)
-MC_EXEC_DEFINE_GET_METHOD(DateTime, GetSeconds, 1)
-MC_EXEC_DEFINE_GET_METHOD(DateTime, GetLongSeconds, 1)
-MC_EXEC_DEFINE_GET_METHOD(DateTime, GetTicks, 1)
-MC_EXEC_DEFINE_GET_METHOD(DateTime, GetLongTicks, 1)
-MC_EXEC_DEFINE_GET_METHOD(DateTime, GetMonthNames, 2)
-MC_EXEC_DEFINE_GET_METHOD(DateTime, GetWeekDayNames, 2)
-MC_EXEC_DEFINE_GET_METHOD(DateTime, GetDateFormat, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCDateTimeEvalMilliseconds(MCExecContext& ctxt, real64_t& r_real)
 {
 	MCDateTimeGetMilliseconds(ctxt, r_real);

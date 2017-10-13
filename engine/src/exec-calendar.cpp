@@ -30,19 +30,6 @@
 
 #include "mblcalendar.h"
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-MC_EXEC_DEFINE_EXEC_METHOD(Calendar, ShowEvent, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Calendar, CreateEvent, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Calendar, UpdateEvent, 1)
-MC_EXEC_DEFINE_GET_METHOD(Calendar, EventData, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Calendar, RemoveEvent, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Calendar, AddEvent, 2)
-MC_EXEC_DEFINE_GET_METHOD(Calendar, CalendarEvent, 0)
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCSystemCreateEvent(MCStringRef& r_result);

@@ -36,7 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 #include "parentscript.h"
 #include "osspec.h"
-#include "syntax.h"
 #include "variable.h"
 
 #include <utility>
@@ -1231,34 +1230,6 @@ void MCVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 bool MCVarref::evalcontainer(MCExecContext& ctxt, MCContainer& r_container)
 {
     return resolve(ctxt, r_container);
-}
-
-void MCVarref::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-void MCVarref::compile_in(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-void MCVarref::compile_out(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-void MCVarref::compile_inout(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 MCVarref *MCVarref::getrootvarref(void)

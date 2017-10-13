@@ -36,36 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, Keys, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, Extents, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Combine, 4)
-// SN-2014-09-01: [[ Bug 13297 ]] Combining by column deserves its own function as it is too
-// different from combining by row
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineByRow, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineByColumn, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineAsSet, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Split, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitByRow, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitByColumn, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitAsSet, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Union, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, UnionRecursively, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Intersect, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, IntersectRecursively, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Difference, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SymmetricDifference, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, ArrayEncode, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, ArrayDecode, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, MatrixMultiply, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, TransposeMatrix, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, VectorDotProduct, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, IsAnArray, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, IsNotAnArray, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, IsAmongTheKeysOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, IsNotAmongTheKeysOf, 3)
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCArraysEvalKeys(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string)
 {
 	if (MCArrayListKeys(p_array, '\n', r_string))

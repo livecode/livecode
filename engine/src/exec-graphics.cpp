@@ -34,28 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Graphics, IsAColor, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Graphics, IsNotAColor, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Graphics, IsAPoint, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Graphics, IsNotAPoint, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Graphics, IsARectangle, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Graphics, IsNotARectangle, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Graphics, IsWithin, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Graphics, IsNotWithin, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Graphics, FlipSelection, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Graphics, FlipImage, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Graphics, ResetPaint, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Graphics, CropImage, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Graphics, RotateSelection, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Graphics, RotateImage, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Graphics, PrepareImage, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Graphics, PrepareImageFile, 1)
-MC_EXEC_DEFINE_GET_METHOD(Graphics, ImageCacheLimit, 1)
-MC_EXEC_DEFINE_SET_METHOD(Graphics, ImageCacheLimit, 1)
-MC_EXEC_DEFINE_GET_METHOD(Graphics, ImageCacheUsage, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCGraphicsEvalIsAColor(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
 {
 	MCColor t_color;

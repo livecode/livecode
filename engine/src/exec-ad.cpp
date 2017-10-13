@@ -36,17 +36,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Ad, Register, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Ad, Create, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Ad, Delete, 1)
-MC_EXEC_DEFINE_SET_METHOD(Ad, VisibleOfAd, 2)
-MC_EXEC_DEFINE_GET_METHOD(Ad, VisibleOfAd, 2)
-MC_EXEC_DEFINE_SET_METHOD(Ad, TopLeftOfAd, 3)
-MC_EXEC_DEFINE_GET_METHOD(Ad, TopLeftOfAd, 3)
-MC_EXEC_DEFINE_GET_METHOD(Ad, Ads, 1)
-
-//////////
-
 static void MCAdTopLeftParse(MCExecContext& ctxt, MCStringRef p_input, MCAdTopLeft& r_output)
 {
     MCAutoStringRefAsUTF8String t_input_utf8;

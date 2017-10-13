@@ -20,10 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-
 #include "constant.h"
-
-#include "syntax.h"
 
 void MCConstant::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
@@ -37,18 +34,4 @@ void MCConstant::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 		r_value . type = kMCExecValueTypeDouble;
 		r_value . double_value = nvalue;
 	}
-}
-
-void MCConstant::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	
-	if (nvalue == BAD_NUMERIC)
-		MCSyntaxFactoryEvalConstant(ctxt, svalue);
-	else
-		MCSyntaxFactoryEvalConstantDouble(ctxt, nvalue);
-	
-	MCSyntaxFactoryEvalResult(ctxt);
-	
-	MCSyntaxFactoryEndExpression(ctxt);
 }

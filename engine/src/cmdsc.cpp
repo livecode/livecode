@@ -57,7 +57,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objptr.h"
 #include "stacksecurity.h"
 
-#include "syntax.h"
 #include "graphics_util.h"
 
 MCClone::~MCClone()
@@ -116,22 +115,6 @@ void MCClone::exec_ctxt(MCExecContext& ctxt)
         return;
 
 	MCInterfaceExecClone(ctxt, optr, *t_new_name, visible == False);
-}
-
-void MCClone::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	source -> compile_object_ptr(ctxt);
-	if (newname != nil)
-		newname -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstantNil(ctxt);
-	MCSyntaxFactoryEvalConstantBool(ctxt, visible == False);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCloneMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -270,64 +253,6 @@ void MCClipboardCmd::exec_ctxt(MCExecContext& ctxt)
             }
         }
     }
-}
-
-void MCClipboardCmd::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (targets == NULL)
-	{
-		if (iscut())
-			MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCutMethodInfo);
-		else
-			MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCopyMethodInfo);
-	}
-	else
-	{
-		uindex_t t_count;
-		t_count = 0;
-
-		for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr = chunkptr -> next)
-		{
-			chunkptr -> compile_object_ptr(ctxt);
-			t_count++;
-		}
-		
-		if (dest != nil)
-		{
-			MCSyntaxFactoryEvalList(ctxt, t_count);
-			dest -> compile_object_ptr(ctxt);
-
-			if (iscut())
-				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCutObjectsToContainerMethodInfo);
-			else
-				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCopyObjectsToContainerMethodInfo);
-		}
-		else if (t_count > 1)
-		{
-			MCSyntaxFactoryEvalList(ctxt, t_count);
-
-			if (iscut())
-				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCutObjectsToClipboardMethodInfo);
-			else
-				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCopyObjectsToClipboardMethodInfo);
-		}
-		else
-		{
-			if (iscut())
-			{
-				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCutTextToClipboardMethodInfo);
-				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCutObjectsToClipboardMethodInfo);
-			}
-			else
-			{
-				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCopyTextToClipboardMethodInfo);
-				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCopyObjectsToClipboardMethodInfo);
-			}
-		}
-	}
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -675,80 +600,6 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
 	}
 }
 
-void MCCreate::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (directory)
-	{
-		newname -> compile(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecCreateFolderMethodInfo);
-	}
-	else if (alias)
-	{
-		file -> compile(ctxt);
-		newname -> compile(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecCreateAliasMethodInfo);
-	}
-	else 
-	{
-		switch (otype)
-		{
-		case CT_STACK:
-			if (container != nil)
-				container -> compile_object_ptr(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-			
-			if (newname != nil)
-				newname -> compile(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-
-			MCSyntaxFactoryEvalConstantBool(ctxt, visible == False);
-			
-			if (container != nil)
-				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCreateStackWithGroupMethodInfo); 
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCreateStackMethodInfo);
-			break;
-
-		case CT_CARD:
-			if (newname != nil)
-				newname -> compile(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-
-			MCSyntaxFactoryEvalConstantBool(ctxt, visible == False);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCreateCardMethodInfo);
-			break;
-
-		default:
-			if (newname != nil)
-				newname -> compile(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-
-			MCSyntaxFactoryEvalConstantInt(ctxt, otype);
-
-			if (container != nil)
-				container -> compile_object_ptr(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-
-			MCSyntaxFactoryEvalConstantBool(ctxt, visible == False);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCreateControlMethodInfo);
-			break;
-		}
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCCustomProp::~MCCustomProp()
 {
 	delete prop;
@@ -1034,54 +885,6 @@ void MCDelete::exec_ctxt(MCExecContext& ctxt)
 		MCInterfaceExecDelete(ctxt);
 }
 
-void MCDelete::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (var != nil)
-	{
-		var -> compile(ctxt);
-		
-		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecDeleteVariableMethodInfo);
-	}
-	else if (file != NULL)
-	{
-		file -> compile(ctxt);
-
-		if (url)
-			MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecDeleteUrlMethodInfo);
-		else
-			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecDeleteFileMethodInfo);
-	}
-	else if (targets != nil)
-	{
-		uindex_t t_count;
-		t_count = 0;
-
-		for (MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
-		{
-			t_chunk -> compile_object_ptr(ctxt);
-			t_count++;
-		}
-		
-		MCSyntaxFactoryEvalList(ctxt, t_count);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecDeleteVariableChunksMethodInfo);
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDeleteObjectChunksMethodInfo);
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDeleteObjectsMethodInfo); 
-	}
-	else if (session)
-	{
-#ifdef _SERVER
-		MCSyntaxFactoryExecMethod(ctxt, kMCServerExecDeleteSessionMethodInfo);
-#endif
-	}
-	else
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDeleteMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCChangeProp::~MCChangeProp()
 {
 	deletetargets(&targets);
@@ -1166,45 +969,6 @@ void MCChangeProp::exec_ctxt(MCExecContext &ctxt)
     }
 }
 
-void MCChangeProp::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	targets -> compile(ctxt);
-
-	switch(prop)
-	{
-	case P_DISABLED:
-		if (value)
-		{
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDisableChunkOfButtonMethodInfo);
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDisableObjectMethodInfo);
-		}
-		else
-		{
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecEnableChunkOfButtonMethodInfo);
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecEnableObjectMethodInfo);
-		}
-		break;
-	case P_HILITE:
-		if (value)
-		{
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHiliteChunkOfButtonMethodInfo);
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHiliteObjectMethodInfo);
-		}
-		else
-		{
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUnhiliteChunkOfButtonMethodInfo);
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUnhiliteObjectMethodInfo);
-		}
-		break;
-	default:
-		break;
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCFlip::~MCFlip()
 {
 	delete image;
@@ -1275,27 +1039,6 @@ void MCFlip::exec_ctxt(MCExecContext& ctxt)
         MCGraphicsExecFlipSelection(ctxt, direction == FL_HORIZONTAL);
 }
 
-void MCFlip::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (image != nil)
-	{
-		image -> compile(ctxt);
-		MCSyntaxFactoryEvalConstantBool(ctxt, direction == FL_HORIZONTAL);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecFlipImageMethodInfo);
-	}
-	else
-	{
-		MCSyntaxFactoryEvalConstantBool(ctxt, direction == FL_HORIZONTAL);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecFlipSelectionMethodInfo);
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCGrab::~MCGrab()
 {
 	delete control;
@@ -1325,17 +1068,6 @@ void MCGrab::exec_ctxt(MCExecContext& ctxt)
 		return;
 	}
 	MCInterfaceExecGrab(ctxt, static_cast<MCControl *>(optr));
-}
-
-void MCGrab::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	control -> compile(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGrabMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCLaunch::~MCLaunch()
@@ -1441,38 +1173,6 @@ void MCLaunch::exec_ctxt(MCExecContext& ctxt)
 		else
 			MCFilesExecLaunchDocument(ctxt, *t_document);
 	}
-}
-
-void MCLaunch::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-	
-	if (app != nil)
-	{
-		app -> compile(ctxt);
-		doc -> compile(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchAppMethodInfo);
-	}
-	else if (doc != nil)
-	{	
-		doc -> compile(ctxt);
-
-		if (as_url)
-		{
-			if (widget)
-			{
-				widget->compile(ctxt);
-				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecLaunchUrlInWidgetMethodInfo);
-			}
-			else
-				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchUrlMethodInfo);
-		}
-		else
-			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchDocumentMethodInfo);
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCLoad::~MCLoad()
@@ -1603,22 +1303,6 @@ void MCLoad::exec_ctxt(MCExecContext& ctxt)
     }
 }
 
-void MCLoad::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-	
-	url -> compile(ctxt);
-
-	if (message != nil)
-		message -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstant(ctxt, kMCEmptyName);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecLoadUrlMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCUnload::~MCUnload()
 {
 	delete url;
@@ -1652,17 +1336,6 @@ void MCUnload::exec_ctxt(MCExecContext &ctxt)
 		MCEngineExecUnloadExtension(ctxt, *t_url);
 	else
 		MCNetworkExecUnloadUrl(ctxt, *t_url);
-}
-
-void MCUnload::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-	
-	url -> compile(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecUnloadUrlMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCPost::~MCPost()
@@ -1708,18 +1381,6 @@ void MCPost::exec_ctxt(MCExecContext &ctxt)
         return;
 
     MCNetworkExecPostToUrl(ctxt, *t_data, *t_url);
-}
-
-void MCPost::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	source -> compile(ctxt);
-	dest -> compile(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecPostToUrlMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCMakeGroup::~MCMakeGroup()
@@ -1768,30 +1429,6 @@ void MCMakeGroup::exec_ctxt(MCExecContext& ctxt)
 		MCInterfaceExecGroupSelection(ctxt);
 }
 
-void MCMakeGroup::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (targets != nil)
-	{
-		uindex_t t_count;
-		t_count = 0;
-		for (MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
-		{
-			t_chunk -> compile_object_ptr(ctxt);
-			t_count++;
-		}
-
-		MCSyntaxFactoryEvalList(ctxt, t_count);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGroupControlsMethodInfo);
-	}
-	else
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGroupSelectionMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCPasteCmd::~MCPasteCmd()
 {
 }
@@ -1805,15 +1442,6 @@ Parse_stat MCPasteCmd::parse(MCScriptPoint &sp)
 void MCPasteCmd::exec_ctxt(MCExecContext& ctxt)
 {
     MCPasteboardExecPaste(ctxt);
-}
-
-void MCPasteCmd::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecPasteMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCPlace::~MCPlace()
@@ -1880,18 +1508,6 @@ void MCPlace::exec_ctxt(MCExecContext& ctxt)
 	MCInterfaceExecPlaceGroupOnCard(ctxt, gptr, cptr);
 }
 
-void MCPlace::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	group -> compile_object_ptr(ctxt);
-	card -> compile_object_ptr(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecPlaceGroupOnCardMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCRecord::~MCRecord()
 {
 	delete file;
@@ -1935,17 +1551,6 @@ void MCRecord::exec_ctxt(MCExecContext &ctxt)
         else
             MCMultimediaExecRecordResume(ctxt);
     }
-}
-
-void MCRecord::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	file -> compile(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecRecordMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 void MCRedo::exec_ctxt(MCExecContext &)
@@ -2069,37 +1674,6 @@ void MCRemove::exec_ctxt(MCExecContext& ctxt)
 	}
 }
 
-void MCRemove::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (all)
-	{
-		MCSyntaxFactoryEvalConstantBool(ctxt, where == IP_FRONT);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecRemoveAllScriptsFromMethodInfo);
-	}
-	else
-	{
-		target -> compile_object_ptr(ctxt);
-
-		if (script)
-		{
-			MCSyntaxFactoryEvalConstantBool(ctxt, where == IP_FRONT);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecRemoveScriptOfObjectFromMethodInfo);
-		}
-		else
-		{
-			card -> compile_object_ptr(ctxt);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecRemoveGroupFromCardMethodInfo);
-		}
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCRename::~MCRename()
 {
 	delete source;
@@ -2138,18 +1712,6 @@ void MCRename::exec_ctxt(MCExecContext &ctxt)
         return;
     
     MCFilesExecRename(ctxt, *t_from, *t_to);
-}
-
-void MCRename::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	source -> compile(ctxt);
-	dest -> compile(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecRenameMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2267,19 +1829,6 @@ void MCReplace::exec_ctxt(MCExecContext& ctxt)
 	}
 }
 
-void MCReplace::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	pattern -> compile(ctxt);
-	replacement -> compile(ctxt);
-	container -> compile_inout(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecReplaceMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCRevert::~MCRevert()
 {
     delete stack;
@@ -2322,22 +1871,6 @@ void MCRevert::exec_ctxt(MCExecContext& ctxt)
     }
     else
         MCInterfaceExecRevert(ctxt);
-}
-
-void MCRevert::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-    if (stack != nil)
-    {
-        stack -> compile_object_ptr(ctxt);
-        
-        MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecRevertStackMethodInfo);
-    }
-    else
-        MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecRevertMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCRotate::~MCRotate()
@@ -2402,27 +1935,6 @@ void MCRotate::exec_ctxt(MCExecContext& ctxt)
 #endif
 }
 
-void MCRotate::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (image != nil)
-	{
-		image -> compile_object_ptr(ctxt);
-		angle -> compile(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecRotateImageMethodInfo);
-	}
-	else
-	{
-		angle -> compile(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecRotateSelectionMethodInfo);
-	}
-	
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCCrop::~MCCrop()
 {
 	delete newrect;
@@ -2480,26 +1992,6 @@ void MCCrop::exec_ctxt(MCExecContext& ctxt)
     
 	MCGraphicsExecCropImage(ctxt, iptr, t_rect);
  }
-
-void MCCrop::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (image != nil)
-	{
-		image -> compile_object_ptr(ctxt);
-		newrect -> compile(ctxt);
-	}
-	else
-	{
-		MCSyntaxFactoryEvalConstantNil(ctxt);
-		MCSyntaxFactoryEvalConstantLegacyRectangle(ctxt, MCRectangleMake(0,0,0,0));
-	}
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecCropImageMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
 
 MCSelect::~MCSelect()
 {
@@ -2626,61 +2118,9 @@ void MCSelect::exec_ctxt(MCExecContext& ctxt)
 	}
 }
 
-void MCSelect::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (targets == NULL)
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectEmptyMethodInfo);
-	else if (text && where == PT_AT)
-	{
-		targets -> compile_object_ptr(ctxt);
-		
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectAllTextOfFieldMethodInfo);
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectAllTextOfButtonMethodInfo);
-	}
-	else 
-	{
-		MCSyntaxFactoryEvalConstantInt(ctxt, where);
-		
-		uindex_t t_count;
-		t_count = 0;
-
-        if (!text)
-        {
-            for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr = chunkptr -> next)
-            {
-                chunkptr -> compile_object_ptr(ctxt);
-                t_count++;
-            }
-		}
-        
-		if (t_count > 1)
-		{
-			MCSyntaxFactoryEvalList(ctxt, t_count);
-			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecSelectObjectsMethodInfo, 1);
-		}
-		else
-		{
-			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecSelectTextOfFieldMethodInfo, 0, 1);
-			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecSelectTextOfButtonMethodInfo, 0, 1);
-			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecSelectObjectsMethodInfo, 1);
-		}
-	}
-}
-
 void MCUndoCmd::exec_ctxt(MCExecContext& ctxt)
 {
     MCInterfaceExecUndo(ctxt);
-}
-
-void MCUndoCmd::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUndoMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCUngroup::~MCUngroup()
@@ -2725,21 +2165,6 @@ void MCUngroup::exec_ctxt(MCExecContext& ctxt)
 	}
 	else
 		MCInterfaceExecUngroupSelection(ctxt);
-}
-
-void MCUngroup::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (group != nil)
-	{
-		group -> compile_object_ptr(ctxt);	
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUngroupObjectMethodInfo);
-	}
-	else
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUngroupSelectionMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

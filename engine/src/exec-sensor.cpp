@@ -31,23 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Sensor, StartTrackingSensor, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Sensor, StopTrackingSensor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, SensorAvailable, 2)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedLocationOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, LocationOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedHeadingOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, HeadingOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedAccelerationOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, AccelerationOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedRotationRateOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, RotationRateOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, LocationCalibrationTimeout, 1)
-MC_EXEC_DEFINE_SET_METHOD(Sensor, LocationCalibrationTimeout, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, LocationAuthorizationStatus, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCSensorTypeElementInfo[] =
 {
 	{ "unknown", kMCSensorTypeUnknown, true },

@@ -22,13 +22,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_GET_METHOD(NFC, IsNFCAvailable, 0)
-MC_EXEC_DEFINE_GET_METHOD(NFC, IsNFCEnabled, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(NFC, EnableNFCDispatch, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(NFC, DisableNFCDispatch, 0)
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCNFCGetIsNFCAvailable(MCExecContext& ctxt)
 {
 	ctxt.SetTheResultToBool(MCSystemNFCIsAvailable());

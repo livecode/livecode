@@ -34,24 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, LinesOfTextByRange, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, LinesOfTextByExpression, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, LinesOfTextByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ItemsOfTextByRange, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ItemsOfTextByExpression, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ItemsOfTextByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, WordsOfTextByRange, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, WordsOfTextByExpression, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, WordsOfTextByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TokensOfTextByRange, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TokensOfTextByExpression, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TokensOfTextByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CharsOfTextByRange, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CharsOfTextByExpression, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CharsOfTextByOrdinal, 3)
-
-////////////////////////////////////////////////////////////////////////////////
-
 struct MCChunkCountState
 {
     MCStringRef string;
