@@ -7,7 +7,7 @@ Type: keyword
 Syntax: codeunits
 
 Summary:
-Used with the <number> <function to designate> codeunits as part of a
+Used with the <number> <function(glossary)> to designate codeunits as part of a
 Unicode string.
 
 Introduced: 7.0
@@ -32,7 +32,7 @@ Use the expression
 
 to find out how many codeunits make up a Unicode string.
 
-References: function to designate (control structure), number (function),
+References: function (glossary), number (function),
 characters (keyword), codepoint (keyword), codeunits (keyword),
 character (keyword), codeunit (keyword), bytes (keyword), byte (keyword)
 
