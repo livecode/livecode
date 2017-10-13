@@ -394,7 +394,13 @@ on TestLoadExternal pExternal
 end TestLoadExternal 
 
 private function __GetCaller
-   get item 1 to -3 of line -3 of the executionContexts
+   local tLineNum
+   put -1 into tLineNum
+   repeat while item 1 of line tLineNum of the executionContexts \
+      is the long id of this me
+      subtract 1 from tLineNum
+   end repeat
+   get item 1 to -3 of line tLineNum of the executionContexts
    if there is not an it then
       delete item -1 of it
    end if
@@ -409,23 +415,38 @@ end __StackOfObject
 
 -- This loads an extension whose lcb source sits in the same folder as the
 -- current test.
-on TestLoadAuxillaryExtension pName
-	local tBasePath, tExtraPath
-	set the itemDelimiter to slash
-	put item 1 to -2 of the effective filename of __StackOfObject(__GetCaller()) into tBasePath
-	repeat while the last item of tBasePath is not "tests"
-		put item -1 of tBasePath & slash before tExtraPath
-		delete the last item of tBasePath
-	end repeat
+on TestLoadAuxiliaryExtension pName, pResourceFolder
+   local tBytecodeFile
+   put TestGetBuiltBytecodeFile(pName) into tBytecodeFile
+   if pResourceFolder is empty then
+      load extension from data url ("binfile:" & tBytecodeFile)
+   else
+      load extension from data url ("binfile:" & tBytecodeFile) \
+            with resource path pResourceFolder
+   end if
+   
+   if the result is not empty then
+      throw "Failed to load auxiliary extension:" && \
+            the result && tBytecodeFile
+   end if
+end TestLoadAuxiliaryExtension
 
-	local tModuleFile
-	put tBasePath & "/../_tests/_build/" & tExtraPath & pName & ".lcm" into tModuleFile
-
-	load extension from data url ("binfile:" & tModuleFile)
-	if the result is not empty then
-		throw "Failed to load auxillary extension:" && the result && tModuleFile
-	end if
-end TestLoadAuxillaryExtension
+constant kBytecodePathPrefix = "_tests/_build/"
+function TestGetBuiltBytecodeFile pName
+   local tBasePath, tExtraPath
+   set the itemDelimiter to slash
+   put item 1 to -2 of the effective filename of \
+         __StackOfObject(__GetCaller()) into tBasePath
+   repeat while the last item of tBasePath is not "tests"
+      put item -1 of tBasePath & slash before tExtraPath
+      delete the last item of tBasePath
+   end repeat
+   
+   local tModuleFile
+   put tBasePath & "/../" & kBytecodePathPrefix & tExtraPath & pName \
+      & ".lcm" into tModuleFile
+   return tModuleFile
+end TestGetBuiltBytecodeFile
 
 on TestLoadAllExtensions
    local tExtFolder

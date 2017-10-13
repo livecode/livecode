@@ -16,8 +16,6 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-constant kBytecodePath = "../_tests/_build/lcs/core/engine"
-
 local sTestExtension
 
 on TestSetup
@@ -42,7 +40,7 @@ private command buildMultiModuleExtension pInputs, pOutput
     -- Build a multi-module extension
     local tBasename, tBytecode, tFile, tResult
     repeat for each item tBasename in pInputs
-       put merge("[[kBytecodePath]]/[[tBasename]].lcm") into tFile
+       put TestGetBuiltBytecodeFile(tBasename) into tFile
        put url("binfile:" & tFile) after tBytecode
        put the result into tResult
        if tResult is not empty then
