@@ -49,4 +49,7 @@ public handler TestExtensionLog_DeletedScriptObject()
 	log tScriptObject
 end handler
 
+public handler TestEngine_Caller(in pCallback as String)
+	send pCallback to the caller
+end handler
 end library

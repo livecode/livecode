@@ -136,3 +136,20 @@ on TestExtensionLogScriptObject
   TestDiagnostic sLastLog
   TestAssert "extension log deleted scriptobject", sLastLog is "<deleted script object>"
 end TestExtensionLogScriptObject
+
+local sCallbackTarget
+on CallerCallback
+	TestDiagnostic "called"
+	put the long id of the target into sCallbackTarget
+end CallerCallback
+
+on TestEngineCaller
+   local tButton
+   create button
+   put it into tButton
+   set the script of tButton to "on doTest;TestEngine_Caller" \
+      && quote & "CallerCallback" & quote & ";end doTest"
+    send "doTest" to tButton
+    TestAssert "library handler can get caller", \
+    	the long id of sCallbackTarget is the long id of tButton
+end TestEngineCaller

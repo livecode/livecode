@@ -58,6 +58,8 @@ public foreign handler MCEngineExecSendWithArguments(in pIsFunction as CBool, in
 public foreign handler MCEngineExecPost(in pMessage as String) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecPostWithArguments(in pMessage as String, in pArguments as optional List) returns nothing binds to "<builtin>"
 
+public foreign handler MCEngineEvalCaller(out rObject as ScriptObject) returns nothing binds to "<builtin>"
+
 public foreign handler MCEngineEvalMessageWasHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecExecuteScript(in pScript as String) returns any binds to "<builtin>"
@@ -395,6 +397,27 @@ syntax MessageWasNotHandled is expression
     "the" "message" "was" "not" "handled"
 begin
     MCEngineEvalMessageWasNotHandled(output)
+end syntax
+
+/**
+Summary: 	The caller's script object
+
+Example:
+	public handler NotifyMe() returns nothing
+		post "notify" to the caller
+	end handler
+
+Description:
+Returns the script object which called the handler at the beginning
+of the current chain of LiveCode Builder handler execution.
+
+Tags: Script Engine
+*/
+
+syntax Caller is expression
+    "the" "caller"
+begin
+    MCEngineEvalCaller(output)
 end syntax
 
 /**

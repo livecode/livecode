@@ -602,6 +602,12 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineEvalMessageWasNotHandled(bool& r_not_ha
     r_not_handled = !t_handled;
 }
 
+extern MCExecContext *MCECptr;
+extern "C" MC_DLLEXPORT_DEF void MCEngineEvalCaller(MCScriptObjectRef& r_script_object)
+{
+    if (!MCEngineScriptObjectCreate(MCECptr->GetObject(), 0, r_script_object))
+        return;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCValueRef
