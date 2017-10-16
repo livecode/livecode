@@ -437,14 +437,16 @@ function TestGetBuiltBytecodeFile pName
    set the itemDelimiter to slash
    put item 1 to -2 of the effective filename of \
          __StackOfObject(__GetCaller()) into tBasePath
-   repeat while the last item of tBasePath is not "tests"
-      put item -1 of tBasePath & slash before tExtraPath
-      delete the last item of tBasePath
-   end repeat
+         
+   local tTestsOffset
+   set the wholematches to true
+   put itemOffset("tests", tBasePath) into tTestsOffset
+   put item tTestsOffset + 1 to -1 of tBasePath into tExtraPath
+   put item 1 to tTestsOffset - 1 of tBasePath into tBasePath
    
    local tModuleFile
-   put tBasePath & "/../" & kBytecodePathPrefix & tExtraPath & pName \
-      & ".lcm" into tModuleFile
+   put tBasePath & "/" & kBytecodePathPrefix & tExtraPath & slash & \ 
+      pName & ".lcm" into tModuleFile
    return tModuleFile
 end TestGetBuiltBytecodeFile
 
