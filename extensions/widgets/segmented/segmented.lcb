@@ -227,6 +227,7 @@ public handler OnSave(out rProperties as Array)
 	put mSelectedIcons		into rProperties["selectedIcons"]
 	put mSegmentDisplay		into rProperties["segmentDisplay"]
 	put mSegmentMinExtent	into rProperties["segmentMinExtent"]
+	put mSegmentMinExtent	into rProperties["segmentMinWidth"]
 	put getSelected()		into rProperties["selectedSegment"]
 	put mShowFrameBorder	into rProperties["showFrameBorder"]
 	
@@ -250,10 +251,8 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["segmentDisplay"]	into mSegmentDisplay
 	if "segmentMinWidth" is among the keys of pProperties then
 		put pProperties["segmentMinWidth"]	into mSegmentMinExtent
-		put pProperties["segmentMinWidth"]	into mSegmentMinWidth
 	else if "segmentMinExtent" is among the keys of pProperties then
 		put pProperties["segmentMinExtent"]	into mSegmentMinExtent
-		put pProperties["segmentMinExtent"]	into mSegmentMinWidth
 	end if
 
 	put pProperties["showFrameBorder"]	into mShowFrameBorder
