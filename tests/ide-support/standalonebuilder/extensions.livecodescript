@@ -76,46 +76,9 @@ private command _TestBuildStandaloneWithWidget pDir, pWidget
    set the cWidgetKind of tStackID to pWidget
    set the cRevStandaloneSettings["extensions"] of tStackID to pWidget
    
-   revIDESaveStack tStackID
-   	 
-   _TestBuildStandalone tStackFilename
-   if the result is not empty then
-      TestAssert "building standalone", false
-      exit _TestBuildStandaloneWithWidget
-   end if
-   
-   TestAssert "building standalone", true
-   
-   local tExe
-   put StandaloneBuilderExecutable(tStackName) into tExe   
-   TestDiagnostic "location" && tExe
-   
-   TestAssert "standalone in expected location", there is a file tExe
-   
-   local tResult, tShellCmd
-   put quote & tExe & quote into tShellCmd
-   if the environment contains "command line" then
-      put " -ui" after tShellCmd
-   end if
-   
-   get shell(tShellCmd)
-   put the result into tResult
-   
-   if tResult is not empty then
-      TestDiagnostic "standalone quit with" && tResult & ":" && it
-   end if
-   
-   TestAssert "standalone with" && pWidget && "startup", \
-         tResult is empty
+   local tDesc
+   put "standalone with" && pWidget && "startup" into tDesc
+
+   StandaloneBuilderTestSaveStackAsStandalone tDesc, \
+      tStackFilename, tStackID
 end _TestBuildStandaloneWithWidget
-
-private command _TestBuildStandalone pStackPath
-	local tStackName, tResult
-	put the short name of stack pStackPath into tStackName
-	
-	TestDiagnostic "Building standalone -" && pStackPath
-	
-	StandaloneBuilderSaveAsStandalone tStackName
-	return the result
-end _TestBuildStandalone
-
