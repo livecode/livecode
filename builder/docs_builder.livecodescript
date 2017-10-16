@@ -1918,7 +1918,7 @@ command docsBuilderGenerateDocsNew pEdition, pVersion
    builderLog "report", "Building guide into" && builderGuideFolder(pEdition) & slash & "distributed_guide.js"
    pathEnsure (builderGuideFolder(pEdition))
    docsBuilderGenerateDistributedGuide pEdition
-   builderLog "report", "Building api into" && builderAPIFolder(pEdition) & slash & "distributed_api.js"
+   builderLog "report", "Building api into" && builderAPIFolder(pEdition)
    pathEnsure (builderAPIFolder(pEdition))
    docsBuilderGenerateDistributedAPI pEdition
    
@@ -2139,6 +2139,8 @@ command docsBuilderGenerateDistributedAPI pEdition
       exit docsBuilderGenerateDistributedAPI
    end if
    
+   put "script" into tLCSDictionaryA["filename"]
+   put "livecode_script" into tLCSDictionaryA["api"]
    addToList tLCSDictionaryA, tLibrariesA
    
    local tModuleList, tModularA, tModularCount, tBlocksA, tParsedA
@@ -2168,29 +2170,33 @@ command docsBuilderGenerateDistributedAPI pEdition
       end repeat
       put empty into tParsedA
    end repeat
-   put "LiveCode Builder" into tLCBDictionaryA["display name"]
-   put revDocsModifyForUrl("LiveCode Builder") into tLCBDictionaryA["name"]
-   put "LiveCode" into tLCBDictionaryA["author"]
-   put "dictionary" into tLCBDictionaryA["type"]
    
    if tLCBDictionaryA is empty then
       logError "Couldn't parse builder dictionary data for" && pEdition
       exit docsBuilderGenerateDistributedAPI
    end if
    
+   put "LiveCode Builder" into tLCBDictionaryA["display name"]
+   put revDocsModifyForUrl("LiveCode Builder") into tLCBDictionaryA["name"]
+   put "LiveCode" into tLCBDictionaryA["author"]
+   put "dictionary" into tLCBDictionaryA["type"]
+   put "builder" into tLCBDictionaryA["filename"]
+   put "livecode_builder" into tLCBDictionaryA["api"]
    addToList tLCBDictionaryA, tLibrariesA
    
    local tDatagridA, tDGDocs
    put builderIDEDocsFolder() & "/dictionary/datagrid.lcdoc" into tDGDocs
    put revDocsParseDocFileToLibraryArray(tDGDocs, "Data Grid", "LiveCode") \
-      into tDataGridA
-
+         into tDataGridA
+   
    if tDataGridA is empty then
       builderLog "error", "Couldn't parse datagrid dictionary data for" && pEdition
       exit docsBuilderGenerateDistributedAPI
    end if
    
    put "dictionary" into tDataGridA["type"]
+   put "dg" into tDataGridA["filename"]
+   put "livecode_script" into tDataGridA["api"]
    
    addToList tDataGridA, tLibrariesA
    
@@ -2211,16 +2217,21 @@ command docsBuilderGenerateDistributedAPI pEdition
          builderLog "error", "Couldn't parse" && item -2 of tFile && "dictionary data for" && pEdition
          exit docsBuilderGenerateDistributedAPI
       end if
+      put tLibA["name"] into tLibA["filename"]
+      put "livecode_script" into tLibA["api"]
       
       addToList tLibA, tLibrariesA
    end repeat
    
-   local tJSON
-   put revDocsFormatLibrariesArrayAsJSON(tLibrariesA) into tJSON
-   
    docsBuilderPopulateDatabase pEdition, tLibrariesA
-   
-   put textEncode(tJSON, "utf-8") into url ("binfile:" & builderAPIFolder(pEdition) & slash & "distributed_api.js")
+   repeat for each element tLibA in tLibrariesA
+      local tJSON, tFolder
+      put revDocsFormatLibraryDocArrayAsJSON(tLibA["name"], tLibA["doc"]) into tJSON
+      put builderAPIFolder(pEdition, tLibA["api"]) into tFolder
+      pathEnsure tFolder
+      put textEncode(tJSON, "utf-8") into url ("binfile:" & tFolder \
+            & slash & tLibA["filename"] & ".js")
+   end repeat
 end docsBuilderGenerateDistributedAPI
 
 on docsBuilderPopulateDatabase pEdition, pLibrariesA
@@ -2242,9 +2253,9 @@ on docsBuilderPopulateDatabase pEdition, pLibrariesA
    
    revExecuteSQL tConnection,"BEGIN TRANSACTION"
    
-   repeat for each key tKey in pLibrariesA   	  
-      builderLog "message", "adding library" && pLibrariesA[tKey]["display name"] && "to docs database"
-      revDocsUpdateDatabase tConnection, pLibrariesA[tKey]
+   repeat for each element tLib in pLibrariesA   	  
+      builderLog "message", "adding library" && tLib["display name"] && "to docs database"
+      revDocsUpdateDatabase tConnection, tLib["api"], tLib
       if the result is not empty then
          logError the result
          exit docsBuilderPopulateDatabase

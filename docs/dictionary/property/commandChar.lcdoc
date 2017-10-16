@@ -15,8 +15,8 @@ OS: ios, android
 Platforms: desktop, server, mobile
 
 Description:
-In HyperCard, the <commandChar> <property> determines the Command <key
-combination> for a <menu item>.
+In HyperCard, the <commandChar> <property> determines the Command 
+<key combination> for a <menu item>.
 
 A handler can set the <commandChar> to any <value> without causing a
 <error|script error>, but the actual Command <key combination> is not

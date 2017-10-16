@@ -59,7 +59,7 @@ one <handler> does not affect its <value> in other <handler|handlers> it
 <call|calls>. 
 
 >*Important:* <message|Messages>, <object(glossary)> names, and
-> <LiveCode> terms are never treated as case-sensitive, even if the
+> <LiveCode> terms are never treated as <case-sensitive>, even if the
 > <caseSensitive> is set to true.
 
 References: replace (command), find (command), filter (command),
@@ -68,11 +68,11 @@ value (function), lineOffset (function), replaceText (function),
 keys (function), itemOffset (function), object (glossary),
 element (glossary), call (glossary), property (glossary),
 evaluate (glossary), behavior (glossary), operator (glossary),
-caseSensitive (glossary), array (glossary), execute (glossary),
+case-sensitive (glossary), array (glossary), execute (glossary),
 expression (glossary), command (glossary), function (glossary),
 LiveCode (glossary), custom property (glossary), key (glossary),
-message (glossary), handler (glossary), string (keyword),
-control (object), = (operator), contains (operator), &gt; (operator),
+message (glossary), handler (glossary), 
+string (keyword), = (operator), contains (operator), &gt; (operator),
 is among (operator), is not among (operator), &lt;= (operator),
 is in (operator), wholeMatches (property)
 

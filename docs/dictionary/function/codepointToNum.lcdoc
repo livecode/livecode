@@ -28,14 +28,14 @@ A single Unicode codepoint
 
 Returns (integer):
 The <codepointToNum> function returns an integer in the range 0x000000
-to 0x10FF that identifies the given character.
+to 0x10FFFD that identifies the given character.
 
 Description:
 Use the <codepointToNum> function to translate a Unicode codepoint to
 its integer represntation.
 
 The <codepointToNum> function takes a Unicode codepoint and returns its
-integer vaalue.
+integer value.
 
 The <codepointToNum> function raises an exception if the argument
 contains multiple codepoints; it should generally be used in the form:
