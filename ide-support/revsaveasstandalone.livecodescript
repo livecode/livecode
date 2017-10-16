@@ -2462,6 +2462,18 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       revAddExternal tExternal
    end repeat
    
+   repeat for each line tJar in sStandaloneSettingsA["jarFiles"]
+      local tSourceFile, tSourceFolder, tTargetFolder, tJarDest
+      set the itemdelimiter to slash
+      put item -1 of tJar into tSourceFile
+      put item 1 to -2 of tJar into tSourceFolder
+      put tCurrentLocation & slash & "Externals/JVM" into tJarDest
+      
+      revSBEnsureFolder tJarDest
+      revCopyModule tPlatform, tSourceFile, tSourceFile, \
+            tSourceFolder, tCurrentLocation, "Externals/JVM", false
+   end repeat
+   
    // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by
    //  a saveStackRequest handler in the standalone stack
    lock messages

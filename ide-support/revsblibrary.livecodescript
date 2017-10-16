@@ -2051,6 +2051,10 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    
    appendToStringList "revInternal_SetJAVA_HOME", tStartupScript
    
+   if pStandaloneSettings["jarFiles"] is not empty then
+      appendToStringList "revInternal_SetCLASSPATH", tStartupScript
+   end if
+   
    # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
    # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
    repeat for each line tExtension in revIDEExtensionsOrderByDependency(pStandaloneSettings["extensions"])
