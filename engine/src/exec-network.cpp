@@ -613,7 +613,7 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
             t_data = MCS_read_socket(MCsockets[t_index], ctxt, p_count, *t_sentinel, p_message);
         }
 		else
-			t_data = MCS_read_socket(MCsockets[t_index], ctxt, 0, nil, p_message);
+			t_data = MCS_read_socket(MCsockets[t_index], ctxt, p_count, nil, p_message);
 
 		if (p_message == NULL)
 		{
