@@ -338,6 +338,7 @@ enum
 	
 	kMCPlatformKeyCodeGrave			= 0x0060,
 	
+	kMCPlatformKeyCodeISOSection	= 0x00A7,
 	
 	kMCPlatformKeyCodeBackspace		= 0xff08,
 	kMCPlatformKeyCodeTab			= 0xff09,
@@ -455,7 +456,6 @@ enum
 	kMCPlatformKeyCodeVolumeUp		= 0xfffe,
 	kMCPlatformKeyCodeVolumeDown	= 0xfffe,
 	kMCPlatformKeyCodeMute			= 0xfffe,
-	kMCPlatformKeyCodeISOSection	= 0xfffe,
 	kMCPlatformKeyCodeJISYen		= 0xfffe,
 	kMCPlatformKeyCodeJISUnderscore	= 0xfffe,
 	kMCPlatformKeyCodeJISKeypadComma= 0xfffe,

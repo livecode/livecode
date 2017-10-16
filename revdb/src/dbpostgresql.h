@@ -123,6 +123,7 @@ protected:
 class DBConnection_POSTGRESQL: public CDBConnection
 {
 public:
+    DBConnection_POSTGRESQL(): m_internal_buffer(nullptr) {}
 	~DBConnection_POSTGRESQL() {disconnect();}
 	Bool connect(char **args, int numargs);
 	void disconnect();
