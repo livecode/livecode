@@ -1359,9 +1359,16 @@ void MCControl::newmessage()
 
 void MCControl::enter()
 {
+    MCControlHandle t_this(this);
+    
     if (focused.IsValid() && !focused.IsBoundTo(this))
     {
-    	leave();
+        leave();
+    }
+    
+    if (!t_this.IsValid())
+    {
+        return;
     }
     
 	if (MCdispatcher -> isdragtarget())
@@ -1387,7 +1394,11 @@ void MCControl::enter()
 	else
 		message(MCM_mouse_enter);
     // AL-2013-01-14: [[ Bug 11343 ]] Add timer if the object handles mouseWithin in the behavior chain.
-	if (handlesmessage(MCM_mouse_within) && !(hashandlers & HH_IDLE))
+    if(!t_this.IsValid())
+    {
+        return;
+    }
+    if (handlesmessage(MCM_mouse_within) && !(hashandlers & HH_IDLE))
 		MCscreen->addtimer(this, MCM_idle, MCidleRate);
 	if (getstack()->gettool(this) == T_BROWSE)
 		MCtooltip->settip(tooltip);

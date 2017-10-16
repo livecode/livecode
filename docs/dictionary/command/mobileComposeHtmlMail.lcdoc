@@ -81,13 +81,13 @@ from disk when the file is needed. Therefore, using
 large amounts of data to an e-mail. For example, sending multiple
 attachments may be done like this:
 
-put "Hello World!" into tAttachments[1]["data"]
-put "text/plain" into tAttachments[1]["type"]
-put "Greetings.txt" into tAttachments[1]["name"]
-put "Goodbye World!" into tAttachments[2]["data"]
-put "text/plain" into tAttachments[2]["type"]
-put "Farewell.txt" into tAttachments[2]["name"]
-<mobileComposeHtmlMail> tSubject, tTo, tCCs, tBCCs, tBody, tAttachments
+    put "Hello World!" into tAttachments[1]["data"]
+    put "text/plain" into tAttachments[1]["type"]
+    put "Greetings.txt" into tAttachments[1]["name"]
+    put "Goodbye World!" into tAttachments[2]["data"]
+    put "text/plain" into tAttachments[2]["type"]
+    put "Farewell.txt" into tAttachments[2]["name"]
+    mobileComposeHtmlMail tSubject, tTo, tCCs, tBCCs, tBody, tAttachments
 
 Some devices are not configured with e-mail sending capability. To
 determine if the current device is, use the <mobileCanSendMail>
