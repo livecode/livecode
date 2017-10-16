@@ -93,7 +93,7 @@ clean:
 
 LCM_SOURCES ?= $(patsubst ./%,%,$(shell find . -name '*.lcb' | sort))
 LCM_LIB_SOURCES = $(shell for f in $(LCM_SOURCES); do echo $$f | grep '_[^/]*.lcb$$'; done)
-TEST_EXTENSION_SOURCES ?= $(patsubst "$(TESTS_DIR)/%",%,$(shell find "$(TESTS_DIR)/extensions" -name '*.lcb' | sort))
+TEST_EXTENSION_SOURCES ?= $(patsubst "$(TESTS_DIR)/%",%,$(shell find "$(TESTS_DIR)/lcs/extensions" -name '*.lcb' | sort))
 
 LCM_TEST_SOURCES ?= $(shell for f in $(LCM_SOURCES); do echo $$f | grep -v '_[^/]*.lcb$$'; done)
 
