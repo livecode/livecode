@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
-   -- load stack 
+   TestSkipIfNot "ide"
    get the long id of stack (TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev")
 end TestSetup
 
@@ -158,5 +158,7 @@ function GetPattern pPattern
 end GetPattern
 
 on TestTeardown
-   delete stack "revIcons"
+   if "StandaloneTestRunnerMainstack" is not among the lines of the mainstacks then
+      delete stack "revIcons"
+   end if
 end TestTeardown

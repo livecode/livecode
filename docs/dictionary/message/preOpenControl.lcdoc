@@ -41,8 +41,6 @@ group first, if it is passed or not handled by the parent group, then it
 passes through each child group in reverse layer order (i.e from highest
 to lowest).
 
-&nbsp;
-
 The actual navigation is not triggered by the <preOpenControl>
 <message>, so blocking the <message> and not allowing it to pass does
 not prevent the <card(keyword)> with the <group> from opening.

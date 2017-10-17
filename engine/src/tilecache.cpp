@@ -129,7 +129,7 @@ struct MCTileCacheFrontier
 
 struct MCTileCache
 {
-	// If false, an error has occured while processing an operation on the
+	// If false, an error has occurred while processing an operation on the
 	// tilecache. It must be flushed before it can be used again.
 	bool valid : 1;
 	

@@ -33,10 +33,26 @@ else
 end if
 
 end TestMultimedia1
+
+private function HasQT
+    if the platform is not "MacOS" and the platform is not "Win32" then
+       return false
+    end if
+    
+    if the qtversion is "0.0" then
+       return false
+    end if
+    
+    if the environment is "server" then
+       return false
+    end if
+    
+    return true
+end HasQT
+
 on TestMultimedia2
 
-if the platform is not among the items of "linux,HTML5" and \
-      the qtversion is not "0.0" then
+if HasQT() then
   TestAssert "test", the qteffects is not empty
 else
   TestAssert "test", the qteffects is empty

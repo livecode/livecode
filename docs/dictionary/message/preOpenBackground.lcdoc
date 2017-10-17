@@ -2,7 +2,7 @@ Name: preOpenBackground
 
 Type: message
 
-Syntax: preOpenBackground <backgroundID>
+Syntax: preOpenBackground <pBackgroundID>
 
 Summary:
 Sent to the <current card> when you go from a <card> that does not have
@@ -23,7 +23,7 @@ on preOpenBackground theGroup -- move the group's position
 end preOpenBackground
 
 Parameters:
-backgroundID:
+pBackgroundID:
 The short ID property of the background being opened.
 
 Description:

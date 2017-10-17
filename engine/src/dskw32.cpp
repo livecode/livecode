@@ -479,7 +479,7 @@ bool MCS_specialfolder_to_csidl(MCNameRef p_folder, MCNumberRef& r_csidl)
 {
 	for (uindex_t i = 0 ; i < ELEMENTS(sysfolderlist) ; i++)
 	{
-		if (MCNameIsEqualTo(p_folder, *(sysfolderlist[i].token)))
+		if (MCNameIsEqualToCaseless(p_folder, *(sysfolderlist[i].token)))
 		{
 			return MCNumberCreateWithUnsignedInteger(sysfolderlist[i].winfolder, r_csidl);
 		}
@@ -1923,7 +1923,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         bool t_wasfound = false;
         MCAutoNumberRef t_special_folder;
         MCAutoStringRef t_native_path;
-        if (MCNameIsEqualTo(p_type, MCN_temporary))
+        if (MCNameIsEqualToCaseless(p_type, MCN_temporary))
         {
             MCAutoArray<unichar_t> t_buffer;
             uindex_t t_length;
@@ -1942,15 +1942,15 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 }
             }
         }
-        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
-                 || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
+        else if (MCNameIsEqualToCaseless(p_type, MCN_engine)
+                 || MCNameIsEqualToCaseless(p_type, MCN_resources))
         {
-            uindex_t t_last_slash;
-            
-            if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
-                t_last_slash = MCStringGetLength(MCcmd);
-            
-            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+            MCSAutoLibraryRef t_self;
+            MCSLibraryCreateWithAddress(reinterpret_cast<void *>(legacy_path_to_nt_path),
+                                        &t_self);
+            MCSLibraryCopyNativePath(*t_self,
+                                     &t_native_path);
+            t_wasfound = True;
         }
         else
         {
@@ -3871,3 +3871,10 @@ uint2 MCS_charsettolangid(uint1 charset)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCS_get_browsers(MCStringRef &r_browsers)
+{
+    r_browsers = nullptr;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////

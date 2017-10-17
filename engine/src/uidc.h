@@ -426,7 +426,7 @@ public:
 	
 	uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
 	
-	// IM-2014-01-28: [[ HiDPI ]] Update the currently held display info, returning whether or not an changes have occured
+	// IM-2014-01-28: [[ HiDPI ]] Update the currently held display info, returning whether or not an changes have occurred
 	void updatedisplayinfo(bool &r_changed);
 
 	// IM-2014-01-24: [[ HiDPI ]] Clear the currently held display information. Should be called
@@ -561,7 +561,7 @@ public:
 	// as soon as something notable happens. If an abort/quit occurs while the
 	// wait is occuring, True will be returned.
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
-	// Notify any current wait loop that something has occured that it might
+	// Notify any current wait loop that something has occurred that it might
 	// not be aware of. This will cause any OS loop to be exited and events
 	// and such to be processed. If the wait was called with 'anyevent' True
 	// then it will cause termination of the wait.
@@ -623,7 +623,7 @@ public:
 	// with the data.
 	//
 	// The method returns the actual result of the drag-drop operation - DRAG_ACTION_NONE meaning
-	// that no drop occured.
+	// that no drop occurred.
 	//
 	virtual MCDragAction dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
 	

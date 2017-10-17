@@ -76,6 +76,9 @@ public foreign handler MCMathEvalMaxNumber(in Left as Number, in Right as Number
 
 public foreign handler MCMathEvalRandomReal(out Value as CDouble) returns nothing binds to "<builtin>"
 
+public foreign handler MCMathEvalSqrtReal(in Operand as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCMathEvalSqrtNumber(in Operand as Number, out Value as Number) returns nothing binds to "<builtin>"
+
 public foreign handler MCMathEvalConvertBase(in Operand as String, in Source as LCInt, in Target as LCInt, out Value as String) returns nothing binds to "<builtin>"
 public foreign handler MCMathEvalConvertToBase10(in Operand as String, in Source as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
 public foreign handler MCMathEvalConvertFromBase10(in Operand as LCInt, in Target as LCInt, out Value as String) returns nothing binds to "<builtin>"
@@ -562,6 +565,42 @@ syntax MaxListOperator is prefix operator with function chunk precedence
 begin
     MCMathEvalMaxList(ValueList, output)
 end syntax
+
+--
+
+/**
+Syntax:		sqrt(<Operand>)
+Summary:    Square root operator.
+Operand:    An expression that evaluates to a number.
+
+Example:
+variable tVar as Number
+put sqrt(9) into tVar -- tVar contains 3
+
+Example:
+variable tVar as Number
+put the square root of 4 into tVar -- tVar contains 2
+
+Description:
+The square root of a number is the number which must be
+squared to obtain number : sqrt(number)^2 is equal to number.
+
+Tags: Math
+*/
+
+syntax SquareRootOperator is prefix operator with function chunk precedence
+    "the" "square" "root" "of" <Operand: Expression>
+begin
+    MCMathEvalSqrtNumber(Operand, output)
+end syntax
+
+public handler Sqrt(in pOperand as Number) returns Number
+    variable tVar as Number
+    unsafe
+        MCMathEvalSqrtNumber(pOperand, tVar)
+    end unsafe
+    return tVar
+end handler
 
 --
 

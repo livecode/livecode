@@ -20,8 +20,10 @@ The name of the handler in which the pass control structure appears.
 
 Description:
 Use the <pass> <control structure> to end a <handler> while letting the
-<message> continue along the <message path>. Form:The <pass> <statement>
-appears on a line by itself, anywhere inside a <handler>.
+<message> continue along the <message path>. 
+
+**Form:** The <pass> <statement> appears on a line by itself, anywhere
+inside a <handler>.
 
 When the <pass> <control structure> is <execute|executed>, any remaining
 <statement|statements> in the <handler> are skipped. Hence, the <pass>
@@ -41,9 +43,8 @@ message and be <execute|executed>. The following example demonstrates
 the idea:
 
     on closeCard -- in card script
-    put empty into field "Search"
-    pass closeCard -- give stack script a crack at it
-
+        put empty into field "Search"
+        pass closeCard -- give stack script a crack at it
     end closeCard
 
 

@@ -409,17 +409,23 @@ Boolean MCScreenDC::open()
             vis = gdk_screen_get_rgba_visual(t_screen);
             cmap = gdk_screen_get_rgba_colormap(t_screen);
         }
-        else
+        
+        // If getting the RGBA visual fails, or we are not composited, then
+        // use the default visual.
+        if (vis == nullptr)
         {
             // Get the default visual and colormap
             vis = gdk_screen_get_system_visual(t_screen);
             cmap = gdk_screen_get_system_colormap(t_screen);
         }
         
-        // Create a 32-bit visual for internal use
-        //vis32 = gdk_visual_get_best_with_depth(32);
-        //cmap32 = gdk_colormap_new(vis32, FALSE);
-        
+        // If getting the system visual fails then use the rgb visual.
+        if (vis == nullptr)
+        {
+            vis = gdk_screen_get_rgb_visual(t_screen);
+            cmap = gdk_screen_get_rgb_colormap(t_screen);
+        }
+
 		if (gdk_visual_get_visual_type(vis) == GDK_VISUAL_TRUE_COLOR)
 		{
             gint t_redshift, t_greenshift, t_blueshift;
@@ -947,31 +953,6 @@ void MCScreenDC::flipimage(MCBitmap *image, int2 byte_order, int2 bit_order)
     // Not needed
 }
 
-#ifdef OLD_GRAPHICS
-MCBitmap *MCScreenDC::regiontomask(MCRegionRef r, int32_t w, int32_t h)
-{
-	Pixmap t_image;
-	t_image = createpixmap(w, h, 1, False);
-
-	XSetForeground(dpy, gc1, 0);
-	XFillRectangle(dpy, t_image, gc1, 0, 0, w, h);
-
-	XSetRegion(dpy, gc1, (Region)r);
-
-	XSetForeground(dpy, gc1, 1);
-	XFillRectangle(dpy, t_image, gc1, 0, 0, w, h);
-
-	XSetClipMask(dpy, gc1, None);
-
-	MCBitmap *t_bitmap;
-	t_bitmap = getimage(t_image, 0, 0, w, h, False);
-
-	freepixmap(t_image);
-
-	return t_bitmap;
-}
-#endif
-
 void MCScreenDC::setfunction(uint4 rop)
 {
 	if (rop < 0x10)
@@ -1411,8 +1392,9 @@ void MCScreenDC::enablebackdrop(bool p_hard)
         gdk_window_set_decorations(backdrop, GdkWMDecoration(0));
         gdk_window_set_skip_taskbar_hint(backdrop, TRUE);
         gdk_window_set_skip_pager_hint(backdrop, TRUE);
-        gdk_window_fullscreen(backdrop);
-        gdk_window_show_unraised(backdrop);
+	gdk_window_move_resize(backdrop, 0, 0, device_getwidth(), device_getheight());
+        gdk_window_lower(backdrop);
+	gdk_window_show_unraised(backdrop);
 	}
 	else
 	{

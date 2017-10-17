@@ -473,7 +473,7 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetExecUnplaceWidget(MCWidgetRef p_widget)
 
 //////////
 
-#if 0
+#if WIDGET_LCB_SNAPSHOT
 extern "C" bool MCProperListFetchAsArrayOfFloat(MCProperListRef p_list, uindex_t p_size, float32_t *x_floats);
 
 static MCCanvasImageRef MCWidgetExecSnapshotWidgetAtSize(MCWidgetRef p_widget, MCGSize p_size)

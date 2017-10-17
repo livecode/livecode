@@ -155,19 +155,19 @@ website, without having to download any software or use the command line.
 
 ### Making your dictionary change
 
-**Navigate to the file you want to modify in the [dictionary folder of the develop branch](https://github.com/livecode/livecode/blob/develop/docs/dictionary).**
+**Navigate to the file you want to modify in the [dictionary folder of the develop-8.2 branch](https://github.com/livecode/livecode/blob/develop-8.2/docs/dictionary).**
 
 For example, the accept command is at:
-https://github.com/livecode/livecode/blob/develop/docs/dictionary/command/accept.lcdoc
+https://github.com/livecode/livecode/blob/develop-8.2/docs/dictionary/command/accept.lcdoc
 
 Either go directly to the community docs branch URL
-(https://github.com/livecode/livecode/tree/develop) or if you are 
-on the main LiveCode repository page, select 'develop' from the 
+(https://github.com/livecode/livecode/tree/develop-8.2) or if you are 
+on the main LiveCode repository page, select 'develop-8.2' from the 
 branch dropdown menu:
 
 ![](images/branch-dropdown.png)
 
-You should see that the develop branch is selected both in the 
+You should see that the develop-8.2 branch is selected both in the 
 label of the dropdown and the url of your browser.
 
 ![](images/develop-branch.png)
@@ -240,7 +240,7 @@ and description
 
 >*Note:* Please ensure the pull request has the correct base branch and 
 comparison branch. The base fork should be `livecode/livecode`, with
-base branch `develop`, and the head fork should be 
+base branch `develop-8.2`, and the head fork should be 
 `<your user name>/livecode` with compare branch something like `patch-1`
 (unless you have renamed it).
 
@@ -408,7 +408,7 @@ Click commit to <branch>
 
 Then click "Submit pull request"
 
-Make sure the target branch is livecode/develop
+Make sure the target branch is livecode/develop-8.2
 
 Check the pull request has appeared in
 https://github.com/livecode/livecode/pulls
@@ -437,13 +437,13 @@ make sure your name and email address are set up
 
 `git config --global user.email "<your email address>"`
 
-checkout the `develop` branch
+checkout the `develop-8.2` branch
 
-`git checkout develop`
+`git checkout develop-8.2`
 
 ensure it is up to date
 
-`git pull upstream develop`
+`git pull upstream develop-8.2`
 
 create a new branch for your docs changes, for example
 
@@ -481,7 +481,7 @@ Navigate to your fork on the Git website, `https://github.com/<your user name>/l
 You should see a link to the recently pushed branch, and an invitation to submit a pull request.
 Click this. 
 
-Ensure the base fork is livecode/livecode, and the base is develop.
+Ensure the base fork is livecode/livecode, and the base is develop-8.2.
 
 Click create pull request.
 

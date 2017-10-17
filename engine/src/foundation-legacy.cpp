@@ -314,65 +314,6 @@ bool MCCStringFromUnicode(const unichar_t *p_unicode_string, char*& r_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCStringConvertLineEndingsFromLiveCode(MCStringRef p_input, MCStringRef& r_output)
-{
-	
-#ifdef __CRLF__
-	MCStringRef t_mutable_input;
-	/* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
-	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\n"), MCSTR("\r\n"), kMCStringOptionCompareExact);
-	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
-#elif defined(__CR__)
-	MCStringRef t_mutable_input;
-	/* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
-	/* UNCHECKED */ MCStringFindAndReplaceChar(t_mutable_input, '\n', '\r', kMCStringOptionCompareExact);
-	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
-#else
-	r_output = MCValueRetain(p_input);
-#endif
-
-	return true;
-}
-
-bool MCStringConvertLineEndingsFromLiveCodeAndRelease(MCStringRef p_input, MCStringRef& r_output)
-{
-	if (MCStringConvertLineEndingsFromLiveCode(p_input, r_output))
-	{
-		MCValueRelease(p_input);
-		return true;
-	}
-	return false;
-}
-
-bool MCStringConvertLineEndingsToLiveCode(MCStringRef p_input, MCStringRef& r_output)
-{
-	MCStringRef t_mutable_input;
-	/* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
-	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\r\n"), MCSTR("\n\r"), kMCStringOptionCompareExact);
-	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\n\r"), MCSTR("\n"), kMCStringOptionCompareExact);
-    /* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\r"), MCSTR("\n"), kMCStringOptionCompareExact);
-    
-    // AL-2014-07-21: [[ Bug 12162 ]] Convert PS to LF, and LS to VT on text import.
-    /* UNCHECKED */ MCStringFindAndReplaceChar (t_mutable_input, 0x2028, 0x0B, kMCStringOptionCompareExact);
-    /* UNCHECKED */ MCStringFindAndReplaceChar (t_mutable_input, 0x2029, 0x0A, kMCStringOptionCompareExact);
-    
-    
-	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
-	return true;
-}
-
-bool MCStringConvertLineEndingsToLiveCodeAndRelease(MCStringRef p_input, MCStringRef& r_output)
-{
-	if (MCStringConvertLineEndingsToLiveCode(p_input, r_output))
-	{
-		MCValueRelease(p_input);
-		return true;
-	}
-	return false;
-}
-	
-////////////////////////////////////////////////////////////////////////////////
-
 // Convert the given UTF-8 string to Unicode. Both counts are in bytes.
 // Returns the number of bytes used.
 int32_t UTF8ToUnicode(const char *p_src, int32_t p_src_count, uint16_t *p_dst, int32_t p_dst_count)
@@ -1116,29 +1057,13 @@ bool MCCStringIsInteger(const char *p_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCNameCreateWithCString(const char *p_cstring, MCNameRef& r_name)
+struct get_array_extent_context_t
 {
-	return MCNameCreateWithNativeChars((const char_t *)p_cstring, strlen(p_cstring), r_name);
-}
+	index_t minimum;
+	index_t maximum;
+};
 
-bool MCNameCreateWithOldString(const MCString& p_old_string, MCNameRef& r_name)
-{
-	return MCNameCreateWithNativeChars((const char_t *)p_old_string . getstring(), p_old_string . getlength(), r_name);
-}
-
-void MCNameDelete(MCNameRef p_name)
-{
-	MCValueRelease(p_name);
-}
-
-bool MCNameClone(MCNameRef p_name, MCNameRef& r_new_name)
-{
-	r_new_name = p_name;
-	MCValueRetain(p_name);
-	return true;
-}
-
-bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
+static bool get_name_as_index(MCNameRef p_name, index_t& r_index)
 {
     MCStringRef t_key;
     t_key = MCNameGetString(p_name);
@@ -1176,73 +1101,13 @@ bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 	return false;
 }
 
-char MCNameGetCharAtIndex(MCNameRef p_name, uindex_t p_at)
-{
-	return MCStringGetNativeCharAtIndex(MCNameGetString(p_name), p_at);
-}
-
-bool MCNameIsEqualTo(MCNameRef p_left, MCNameRef p_right, MCCompareOptions p_options)
-{
-	if (p_left == p_right)
-		return true;
-
-	if (p_options == kMCCompareCaseless)
-		return MCNameIsEqualTo(p_left, p_right);
-
-	return false;
-}
-
-bool MCNameIsEqualToCString(MCNameRef p_left, const char *p_cstring, MCCompareOptions p_options)
-{
-	return MCStringIsEqualToCString(MCNameGetString(p_left), p_cstring, p_options);
-}
-
-bool MCNameIsEqualToOldString(MCNameRef p_left, const MCString& p_oldstring, MCCompareOptions p_options)
-{
-	return MCStringIsEqualToOldString(MCNameGetString(p_left), p_oldstring, p_options);
-}
-
-MCNameRef MCNameLookupWithCString(const char *cstring, MCCompareOptions options)
-{
-	MCStringRef t_string;
-	if (!MCStringCreateWithNativeChars((const char_t *)cstring, strlen(cstring), t_string))
-		return nil;
-
-	MCNameRef t_name;
-	t_name = MCNameLookup(t_string);
-	MCValueRelease(t_string);
-
-	return t_name;
-}
-
-MCNameRef MCNameLookupWithOldString(const MCString& string, MCCompareOptions options)
-{	
-	MCStringRef t_string;
-	if (!MCStringCreateWithNativeChars((const char_t *)string . getstring(), string . getlength(), t_string))
-		return nil;
-
-	MCNameRef t_name;
-	t_name = MCNameLookup(t_string);
-	MCValueRelease(t_string);
-
-	return t_name;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-struct get_array_extent_context_t
-{
-	index_t minimum;
-	index_t maximum;
-};
-
 static bool get_array_extent(void *context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
 	get_array_extent_context_t *ctxt;
 	ctxt = (get_array_extent_context_t *)context;
 
 	index_t t_index;
-	if (!MCNameGetAsIndex(p_key, t_index))
+	if (!get_name_as_index(p_key, t_index))
 		return false;
 
 	ctxt -> minimum = MCMin(ctxt -> minimum, t_index);
@@ -1421,7 +1286,7 @@ IO_stat MCArrayLoadFromHandleLegacy(MCArrayRef self, IO_handle p_stream)
 			// so we pass p_translate = true.
 			t_stat = IO_read_string_legacy_full(t_key, t_length, p_stream, 1, true, true);
 			if (t_stat == IO_NORMAL)
-				if (!MCNameCreateWithOldString(MCString(t_key, t_length), &t_name))
+				if (!MCNameCreateWithNativeChars((const char_t*)t_key, t_length, &t_name))
 					t_stat = IO_ERROR;
 			
 			MCMemoryDeallocate(t_key);

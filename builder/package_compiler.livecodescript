@@ -489,15 +489,33 @@ private command compilerParse @self, pScript
             end if
             break
          case "emit"
-            if the number of words of tLine is not 4 or \
-                  word 2 of tLine is not among the items of "externals,dbdrivers" or \
-                  word 3 of tLine is not "to" then
-               compilerSyntaxError self, "Invalid command, syntax is 'emit <class> to <target>'", tLineNumber
+            local tClass
+            put wordToName(word 2 of tLine) into tClass
+            
+            local tMaxWords
+            switch tClass
+            case "externals"
+            case "dbdrivers"
+               delete the last char of tClass
+               put 4 into tMaxWords
+               break
+            case "string"
+            case "variable"
+               put 5 into tMaxWords
+               put wordToName(word 3 of tLine) into tCommand["name"]
+               break
+            default
+               put 0 into tMaxWords
+            end switch
+            
+            if the number of words of tLine is not tMaxWords or \
+                  word -2 of tLine is not "to" then
+               compilerSyntaxError self, "Invalid command, syntax is 'emit <class> [{<variable> | <string>}] to <target>'", tLineNumber
             end if
             
             put "emit" into tCommand["type"]
-            put wordToName(word 2 of tLine) into tCommand["class"]
-            put wordToName(word 4 of tLine) into tCommand["target"]
+            put tClass into tCommand["class"]
+            put wordToName(word -1 of tLine) into tCommand["target"]
             break
          case "declare"
             if the number of words of tLine is not 5 or \
@@ -829,8 +847,7 @@ private command compilerExecuteCopy @self, pCommand
       end if
    else
       if not abstractThereIsAFile(tSourcePath) then
-         compilerBuildWarning self, "Item '" & tSourcePath & "' could not be found", pCommand["line"]
-         exit compilerExecuteCopy
+         compilerExecutionError self, "Item '" & tSourcePath & "' could not be found", pCommand["line"]
       end if
       put pCommand["class"], empty into tItemManifest
    end if
@@ -856,7 +873,7 @@ private command compilerExecuteCopy @self, pCommand
       end if
       
       if tItemClass is not "folder" and not abstractThereIsAFile(tItemSourcePath) then
-         compilerBuildWarning self, "Bundle item '" & tItemSourcePath & "' could not be found", pCommand["line"]
+         compilerExecutionError self, "Bundle item '" & tItemSourcePath & "' could not be found", pCommand["line"]
       end if
       
       local tProcess, tSuffix, tManifestType
@@ -971,16 +988,28 @@ private command compilerExecuteEmit @self, pCommand
    
    local tClass
    put pCommand["class"] into tClass
-   delete the last char of tClass
    
    local tIndex
    put the number of elements in self["derived"] + 1 into tIndex
    put "derived/" & tClass & "-" & tIndex & ".txt" into self["derived"][tIndex]["name"]
    put "text" into self["derived"][tIndex]["type"]
-   put self["groups"][tClass] into self["derived"][tIndex]["data"]
+   
+   -- allow emitting a a variable to a file
+   switch tClass
+   case "dbdriver"
+   case "external"
+      put self["groups"][tClass] into self["derived"][tIndex]["data"]
+      put empty into self["groups"][tClass]
+      break
+   case "variable"
+      put self["context"][pCommand["name"]] into self["derived"][tIndex]["data"]
+      break
+   case "string"
+      put pCommand["name"] into self["derived"][tIndex]["data"]
+      break
+   end switch
    
    put "file" & tab & tTarget & tab & self["derived"][tIndex]["name"] & return after self["manifest"]
-   put empty into self["groups"][tClass]
 end compilerExecuteEmit
 
 private command compilerExecuteDeclare @self, pCommand
@@ -1130,8 +1159,7 @@ private command compilerExecuteDesktop @self, pCommand
    local tSourcePath
    put self["sources"][tSourceType] & slash & tSourceFile into tSourcePath
    if not abstractThereIsAFile(tSourcePath) then
-      compilerBuildWarning self, "Item '" & tSourcePath & "' could not be found", pCommand["line"]
-      exit compilerExecuteDesktop
+      compilerExecutionError self, "Item '" & tSourcePath & "' could not be found", pCommand["line"]
    end if
    
    -- If its an application, process the data into a derived file

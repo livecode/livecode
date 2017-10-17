@@ -2,11 +2,37 @@ Name: if
 
 Type: control structure
 
-Syntax: if <condition> then <statementList> [else <elseStatementList>]
+Syntax:
+if <condition> then
+   <statementList>
+[else
+   <elseStatementList>]
+end if
+
+Syntax:if <condition> then
+   <statementList>
+ [else if <condition> then
+   <elseifStatementList>]
+ [else 
+   <elseStatementList>]
+end if
+
 
 Summary:
-<execute|Executes> a list of <statement|statements> if a condition is
-true. 
+Evaluates a <condition|conditional expression> to determine if it is true
+and if so <execute|executes> a subsequent <statement> or <statementlist|statement list>.
+
+If the <conditional expression|condition> is false and the <if> <control structure> contains
+an <else> keyword the <statement> or <statementlist|statement list> following the <else>
+<keyword> is executed.
+
+The <if> <control structure> may contain one or more <else if> <keyword|keywords> which have a
+<condition|conditional expression>. If the <condition|conditional expression> for one of these evaluates to be
+true then the <statment|statement> or <statementlist|statement list> following that <else if>
+<keyword> is executed. 
+
+If the <if> <control structure> contains
+more than one line then the <if> <control structure> must end with an <end if> keyword.
 
 Introduced: 1.0
 
@@ -27,22 +53,33 @@ end if
 
 Parameters:
 condition (bool):
-
-
-elseStatementList:
-
+Any <expression>. (If the <condition> <evaluate|evaluates> to true, 
+the <statement|statements> execute for that <condition>.
+If the <condition> <evaluate|evaluates> to false, the <statement> or 
+<statementlist|statement list> following that <condition> is
+skipped.)
 
 statementList:
-The <statementList> or <elseStatementList> consists of one or more LiveCode
-statements, and can also include if, switch, try, or repeat control
-structures. The statement or elseStatement consists of a single LiveCode
-statement. 
+Of one or more <LiveCode> <statement|statements>, and can also include
+<if>, <switch>, <try>, or <repeat> <control structure|control
+structures>. 
+
+elseIfStatementList:
+Of one or more <LiveCode> <statement|statements>, and can also include
+<if>, <switch>, <try>, or <repeat> <control structure|control
+structures>. 
+
+elseStatementList:
+Of one or more <LiveCode> <statement|statements>, and can also include
+<if>, <switch>, <try>, or <repeat> <control structure|control
+structures>. 
 
 Description:
-Use the <if> <control structure> to <execute> a <statementList|statement> 
-(or list of <statementList|statements>) only under certain circumstances. 
+Use the <if> <control structure> to <execute> a <statement>
+(or <statementlist|list of statements>) only under certain circumstances. 
 
-The <if> <control structure> always begins with the <word> if. There are four forms of the <if> <control structure>:
+The <if> <control structure> always begins with the word if. There
+are four forms of the <if> <control structure>:
 
     if condition then statementList [else elseStatementList]
 
@@ -72,9 +109,16 @@ If the <condition> <evaluate|evaluates> to true, the statement or
 <evaluate|evaluates> to false, the statement or <statementList> is
 skipped. 
 
-If the <if> <control structure> contains an <else> clause, the
-elseStatement or <elseStatementList> is <execute|executed> if the
-<condition> is false.
+if the <condition> evaluates to false and the <if> <control structure>
+contains an <else> <keyword>, the <elseStatement> or <elseStatementList>
+which follows it is <execute|executed>.
+
+If the <if> <control structure> contains one or more <else if>
+<keyword|keywords> which have a <condition|conditional expression>,
+and one of those <condition|conditional expressions> evaluates to be
+true, then the respective <elseIfstatement|else if statement> or
+<elseIfstatementlist|else if statement list> following that
+<else if> <keyword> is executed.
 
 If one <if> <control structure> is nested inside another, use of the
 second form described above is recommended, since the other forms may
@@ -92,5 +136,5 @@ a <switch> <control structure> instead.
 References: switch (control structure), commandNames (function),
 statement (glossary), command (glossary), evaluate (glossary),
 execute (glossary), control structure (glossary), then (keyword),
-else (keyword), end if (keyword), word (keyword)
+else (keyword), else if (keyword), end if (keyword), word (keyword)
 

@@ -36,7 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 #include "parentscript.h"
 #include "osspec.h"
-#include "syntax.h"
 #include "variable.h"
 
 #include <utility>
@@ -236,7 +235,7 @@ void MCVariable::clearuql(void)
     
     // SN-2014-04-09 [[ Bug 12160 ]] Put after/before on an uninitialised, by-reference parameter inserts the variable's name in it
     // The content of a UQL value was not cleared when needed
-    if (value . type == kMCExecValueTypeNameRef && MCNameIsEqualTo(value . nameref_value, *name))
+    if (value . type == kMCExecValueTypeNameRef && MCNameIsEqualToCaseless(value . nameref_value, *name))
         clear();
     
 	is_uql = false;
@@ -750,10 +749,11 @@ bool MCVariable::remove(MCExecContext& ctxt, MCSpan<MCNameRef> p_path)
 		
 		if (is_env)
 		{
-			if (!isdigit(MCNameGetCharAtIndex(*name, 1)) && MCNameGetCharAtIndex(*name, 1) != '#')
+            MCStringRef t_name_string = MCNameGetString(*name);
+			if (!isdigit(MCStringGetNativeCharAtIndex(t_name_string, 1)) && MCStringGetNativeCharAtIndex(t_name_string, 1) != '#')
 			{
 				MCAutoStringRef t_env;
-				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(*name), MCRangeMake(1, MCStringGetLength(MCNameGetString(*name))), &t_env);
+				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(*name), MCRangeMake(1, MCStringGetLength(t_name_string)), &t_env);
 				MCS_unsetenv(*t_env);
 			}
 		}
@@ -897,10 +897,13 @@ bool MCVariable::converttomutabledata(MCExecContext& ctxt)
 
 MCVariable *MCVariable::lookupglobal_cstring(const char *p_name)
 {
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithCString(p_name, &t_string);
+
 	// If we can't find an existing name, then there can be no global with
 	// name 'p_name'.
 	MCNameRef t_name;
-	t_name = MCNameLookupWithCString(p_name, kMCCompareCaseless);
+	t_name = MCNameLookupCaseless(*t_string);
 	if (t_name == nil)
 		return nil;
 
@@ -934,21 +937,19 @@ bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 	if (!createwithname(p_name, t_new_global))
 		return false;
 
-	if (MCNameGetCharAtIndex(p_name, 0) == '$')
-  {
-    MCAutoStringRef t_env;
-    /* UNCHECKED */ MCStringCopySubstring(
-      MCNameGetString(p_name),
-      MCRangeMake(1, MCStringGetLength(MCNameGetString(p_name))), 
-      &t_env
-    );
-        
-    MCAutoStringRef t_value;
-    if (MCS_getenv(*t_env, &t_value))
-      t_new_global -> setvalueref(*t_value);
+	if (MCStringGetNativeCharAtIndex(MCNameGetString(p_name), 0) == '$')
+    {
+        MCAutoStringRef t_env;
+        /* UNCHECKED */ MCStringCopySubstring(MCNameGetString(p_name),
+                                              MCRangeMake(1, MCStringGetLength(MCNameGetString(p_name))),
+                                              &t_env);
+            
+        MCAutoStringRef t_value;
+        if (MCS_getenv(*t_env, &t_value))
+            t_new_global -> setvalueref(*t_value);
 
-    t_new_global -> is_env = true;
-  }
+        t_new_global -> is_env = true;
+    }
 
 	t_new_global -> is_global = true;
 
@@ -962,79 +963,14 @@ bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0
-void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
-{
-	MCExecContext ctxt(ep);
-	if (is_env)
-	{
-		if (!isdigit(MCNameGetCharAtIndex(*name, 1)) && MCNameGetCharAtIndex(*name, 1) != '#')
-		{
-			MCAutoStringRef t_string;
-			if (ep . copyasstringref(&t_string))
-			{
-				MCAutoStringRef t_env;
-				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(*name), MCRangeMake(1, MCStringGetLength(MCNameGetString(*name))), &t_env);
-				MCS_setenv(*t_env, *t_string);
-			}
-		}
-	}
-	else if (is_msg)
-	{
-		eval(ep);
-		MCAutoStringRef t_string;
-		/* UNCHECPED */ ep.copyasstringref(&t_string);
-		MCB_setmsg(ctxt, *t_string);
-	}
-
-	if (notify && MCnwatchedvars)
-	{
-		uint2 i;
-		for (i = 0 ; i < MCnwatchedvars ; i++)
-		{
-			if ((MCwatchedvars[i].object == NULL || MCwatchedvars[i].object == ep.getobj()) &&
-				(MCwatchedvars[i].handlername == NULL || ep.gethandler()->hasname(MCwatchedvars[i].handlername)) &&
-				hasname(MCwatchedvars[i].varname))
-			{
-				// If this is a global watch (object == handlername == nil) then
-				// check that this var is a global - if not carry on the search.
-				if (MCwatchedvars[i] . object == NULL &&
-					MCwatchedvars[i] . handlername == NULL &&
-					!is_global)
-					continue;
-
-				// Otherwise, trigger the setvar message.
-				eval(ep);
-				MCAutoStringRef t_string;
-				/* UNCHECKED */ ep.copyasstringref(&t_string);
-				if (MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
-				{
-					MCExecPoint ep2(ep);
-					MCExecContext ctxt(ep2);
-					MCAutoValueRef t_val;
-					ctxt.GetHandler()->eval(ctxt, MCwatchedvars[i].expression, &t_val);
-					
-					MCAutoBooleanRef t_bool;
-					if (!ctxt.HasError() && ctxt.ConvertToBoolean(*t_val, &t_bool) && *t_bool == kMCTrue)
-						MCB_setvar(ctxt, *t_string, name);
-				}
-				else
-					MCB_setvar(ctxt, *t_string, name);
-
-				break;
-			}
-		}
-	}
-}
-#endif
-
 void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
 {
     MCExecValue t_value;
     MCAutoStringRef t_stringref_value;
 	if (is_env)
 	{
-		if (!isdigit(MCNameGetCharAtIndex(*name, 1)) && MCNameGetCharAtIndex(*name, 1) != '#')
+        MCStringRef t_name_string = MCNameGetString(*name);
+		if (!isdigit(MCStringGetNativeCharAtIndex(t_name_string, 1)) && MCStringGetNativeCharAtIndex(t_name_string, 1) != '#')
 		{
             MCExecTypeCopy(value, t_value);
             MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &(&t_stringref_value));
@@ -1090,21 +1026,6 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
 		}
 	}
 }
-
-#if 0
-Exec_stat MCVariable::remove(MCExecPoint& ep, Boolean notify)
-{
-	value . clear();
-	
-	if (is_env)
-	{
-		if (!isdigit(MCNameGetCharAtIndex(*name, 1)) && MCNameGetCharAtIndex(*name, 1) != '#')
-			MCS_unsetenv(MCNameGetCString(*name) + 1);
-	}
-
-	return ES_NORMAL;
-}
-#endif
 
 MCVarref *MCVariable::newvarref(void)
 {
@@ -1309,34 +1230,6 @@ void MCVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 bool MCVarref::evalcontainer(MCExecContext& ctxt, MCContainer& r_container)
 {
     return resolve(ctxt, r_container);
-}
-
-void MCVarref::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-void MCVarref::compile_in(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-void MCVarref::compile_out(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-void MCVarref::compile_inout(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 MCVarref *MCVarref::getrootvarref(void)

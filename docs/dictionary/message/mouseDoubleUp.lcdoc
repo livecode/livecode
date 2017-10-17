@@ -2,10 +2,13 @@ Name: mouseDoubleUp
 
 Type: message
 
-Syntax: mouseDoubleUp <mouseButtonNumber>
+Syntax: mouseDoubleUp <pButtonNumber>
 
 Summary:
 Sent when the <mouse button> is released at the end of a <double-click>.
+
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
@@ -23,14 +26,10 @@ on mouseDoubleUp theMouseButton
 end mouseDoubleUp
 
 Parameters:
-mouseButtonNumber (enum):
-The mouseButtonNumber specifies which mouse button was pressed:
-
--  1 is the the left button on systems with a multi-button mouse
-   and the mouse button on Mac OS systems with a single-button mouse.
--  2 is the middle button on systems with a three-button mouse.
--  3 is the right button on systems with a multi-button mouse and 
-   Control-click on Mac OS systems with a single-button mouse.
+pButtonNumber (enum): Specifies which mouse button was pressed:
+- "1": the left button on systems with a multi-button mouse and the mouse button on Mac OS systems with a single-button mouse.
+- "2": the middle button on systems with a three-button mouse.
+- "3": the right button on systems with a multi-button mouse and Control-click on Mac OS systems with a single-button mouse.
 
 Description:
 Handle the <mouseDoubleUp> <message> to perform an action when the user

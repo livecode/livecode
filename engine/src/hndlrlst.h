@@ -69,7 +69,8 @@ private:
 };
 
 typedef bool (*MCHandlerlistListConstantsCallback)(void *p_context, MCHandlerConstantInfo *info);
-typedef bool (*MCHandlerlistListHandlersCallback)(void *p_context, Handler_type p_type, MCHandler*);
+typedef bool (*MCHandlerlistListVariablesCallback)(void *p_context, MCVariable *p_variable);
+typedef bool (*MCHandlerlistListHandlersCallback)(void *p_context, Handler_type p_type, MCHandler* p_handler, bool p_include_all);
 
 class MCHandlerlist
 {
@@ -122,11 +123,11 @@ public:
 	Parse_stat newconstant(MCNameRef name, MCValueRef value);
 	bool getlocalnames(MCListRef& r_list);
 	bool getglobalnames(MCListRef& r_list);
-	void appendglobalnames(MCStringRef& r_string, bool first);
+    bool getconstantnames(MCListRef& r_list);
+    void appendglobalnames(MCStringRef& r_string, bool first);
 	void newglobal(MCNameRef name);
 	
 	Parse_stat parse(MCObject *, MCStringRef);
-	void compile(MCSyntaxFactoryRef ctxt);
 	
 	Exec_stat findhandler(Handler_type, MCNameRef name, MCHandler *&);
 	bool hashandler(Handler_type type, MCNameRef name);
@@ -134,11 +135,13 @@ public:
 
 	uint2 getnglobals(void);
 	MCVariable *getglobal(uint2 p_index);
-    bool enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers);
+    bool enumerate(MCExecContext& ctxt, bool p_include_private, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers);
 	
 	bool listconstants(MCHandlerlistListConstantsCallback p_callback, void *p_context);
-	bool listhandlers(MCHandlerlistListHandlersCallback p_callback, void *p_context);
-	
+	bool listhandlers(MCHandlerlistListHandlersCallback p_callback, void *p_context, bool p_include_all);
+    bool listvariables(MCHandlerlistListVariablesCallback p_callback, void *p_context);
+    bool listglobals(MCHandlerlistListVariablesCallback p_callback, void *p_context);
+    
 	uint2 getnvars(void)
 	{
 		return nvars;

@@ -231,6 +231,9 @@ void MCModeSetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t p_
 // IM-2014-08-08: [[ Bug 12372 ]] Check if pixel scaling should be enabled.
 bool MCModeGetPixelScalingEnabled(void);
 
+// Check if this mode is allowed to change the pixel scaling settings.
+bool MCModeCanEnablePixelScaling(void);
+
 // Hook called in X_close for any mode-specific finalization.
 void MCModeFinalize(void);
 

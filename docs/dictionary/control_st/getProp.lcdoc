@@ -2,7 +2,10 @@ Name: getProp
 
 Type: control structure
 
-Syntax: getProp <propertyName> <statementList> end <propertyName>
+Syntax:
+getProp <propertyName>
+   <statementList>
+end <propertyName>
 
 Summary:
 <handle|Handles> the <message> sent to an <object(glossary)> when you
@@ -26,9 +29,10 @@ Description:
 Use the <getProp> <control structure> to perform a transformation on a
 <custom property> before its <value> is <return|returned> to the
 <handler> that requested it, or to implement a virtual <property> (one
-that is implemented only in a <handler>). Form:The first line of a
-<getProp> <handler> consists of the <word> "getProp" followed by the
-<property|property's> name.
+that is implemented only in a <handler>). 
+
+**Form:** The first line of a <getProp> <handler> consists of the <word>
+"getProp" followed by the <property|property's> name.
 
 The last line of a <getProp> <handler> consists of the <word> "end"
 followed by the <property|property's> name.
@@ -45,9 +49,9 @@ further in the <message path>. For example, a <getProp> <handler> for a
 <card> <property> may be located in the <script> of the <stack> that the
 <card> belongs to.
 
-If you use a custom property of an object within a <getProp> <control
-structure> for the <custom property> in the <object|object's> own
-<script>, no <getProp> <call(command)> is sent to the
+If you use a custom property of an object within a <getProp> 
+<control structure> for the <custom property> in the <object|object's>
+own <script>, no <getProp> <call(command)> is sent to the
 <object(glossary)>. (This is to avoid runaway <recursion>, where the
 <getProp> <handler> <call(glossary)|calls> itself.) This is only the
 case for the <custom property> that the current <getProp> <handler>
@@ -65,11 +69,10 @@ applies to. Setting a different <custom property> does send a <getProp>
 > <recursion> will result:
 
     getProp myCustomProperty
-    put the myCustomProperty of the target into myVariable
-    -- Because the target is the card, and this handler is in
-    -- the stack, the above statement sends another getProp call
-    -- to the card.
-
+        put the myCustomProperty of the target into myVariable
+        -- Because the target is the card, and this handler is in
+        -- the stack, the above statement sends another getProp call
+        -- to the card.
     end myCustomProperty
 
 

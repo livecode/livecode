@@ -45,10 +45,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "meta.h"
 #include "ask.h"
 
-#include "syntax.h"
-
-
-
 MCAsk::~MCAsk(void)
 {
 	delete title;
@@ -314,101 +310,4 @@ void MCAsk::exec_ctxt(class MCExecContext& ctxt)
         }
             break;
 	}
-}
-
-void MCAsk::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	switch(mode)
-	{
-	case AT_PASSWORD:
-	case AT_CLEAR:
-		MCSyntaxFactoryEvalConstantBool(ctxt, mode == AT_CLEAR);
-
-		if (password . prompt != nil)
-			password . prompt -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		if (password . answer != nil)
-			password . answer -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		MCSyntaxFactoryEvalConstantBool(ctxt, password . hint);
-
-		if (title != nil)
-			title -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		MCSyntaxFactoryEvalConstantBool(ctxt, sheet == True);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAskPasswordMethodInfo);
-		break;
-
-	case AT_FILE:
-		if (file . prompt != nil)
-			file . prompt -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		if (file . initial != nil)
-			file . initial -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		if (file . filter != nil)
-			file . filter -> compile(ctxt);
-		else if (file . type_count > 0)
-		{
-			for (uindex_t i = 0; i < file . type_count; i++)
-				file . types[i] -> compile(ctxt);
-
-			MCSyntaxFactoryEvalList(ctxt, file . type_count);
-		}
-
-		if (title != nil)
-			title -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		MCSyntaxFactoryEvalConstantBool(ctxt, sheet == True);
-
-		if (file . type_count > 0)
-			MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAskFileWithTypesMethodInfo);
-		else if (file . filter != nil)
-			MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAskFileWithFilterMethodInfo);
-		else
-			MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAskFileMethodInfo);
-		break;
-
-	default:
-		MCSyntaxFactoryEvalConstantBool(ctxt, mode == AT_CLEAR);
-
-		if (question . prompt != nil)
-			question . prompt -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		if (question . answer != nil)
-			question . answer -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		MCSyntaxFactoryEvalConstantBool(ctxt, question . hint);
-
-		if (title != nil)
-			title -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		MCSyntaxFactoryEvalConstantBool(ctxt, sheet == True);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAskQuestionMethodInfo);
-		break;
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }

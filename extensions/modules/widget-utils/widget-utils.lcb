@@ -282,4 +282,104 @@ public handler getNativeThemeName() returns String
 	end if
 end handler
 
+
+constant kMacPlaceholderSvgIcon is "M14.926,0.656H1.067C0.478,0.656,0,1.137,0,1.73v9.844c0,0.594,0.478,1.074,1.067,1.074h5.316 c0,0-0.934,2.149-3.493,2.149v0.537h1.88h4.568h3.493v-0.537c-2.631,0-3.226-2.149-3.226-2.149h5.32 c0.588,0,1.065-0.48,1.065-1.074V1.73C15.992,1.137,15.514,0.656,14.926,0.656z M7.996,12.427c-0.331,0-0.599-0.268-0.599-0.599 c0-0.33,0.268-0.598,0.599-0.598c0.33,0,0.599,0.268,0.599,0.598C8.594,12.159,8.326,12.427,7.996,12.427z M14.849,10.906H1.143 V1.798H14.85L14.849,10.906L14.849,10.906zM6.824,9.133c0.393-0.016,0.542-0.255,1.017-0.255c0.476,0,0.609,0.255,1.024,0.247 C9.288,9.117,9.556,8.74,9.814,8.363c0.3-0.438,0.423-0.862,0.431-0.883c-0.01-0.005-0.824-0.317-0.833-1.255 c-0.008-0.786,0.642-1.163,0.67-1.182C9.718,4.51,9.149,4.437,8.947,4.429C8.465,4.38,8.005,4.713,7.759,4.713 c-0.244,0-0.623-0.277-1.023-0.27C6.209,4.451,5.724,4.75,5.452,5.221c-0.547,0.95-0.14,2.356,0.393,3.127 C6.105,8.725,6.416,9.148,6.824,9.133z M8.953,2.928c-0.312,0.013-0.689,0.208-0.914,0.47c-0.2,0.233-0.376,0.604-0.329,0.96 c0.349,0.027,0.704-0.177,0.921-0.439C8.847,3.656,8.993,3.292,8.953,2.928z"
+constant kIosPlaceholderSvgIcon is "M4.621 6.965c0 1.368-.833 2.38-2.262 2.38-1.19 0-2.083-1.012-2.083-2.38 0-1.31.952-2.381 2.202-2.381 1.31 0 2.143 1.071 2.143 2.381zM1.327 78.5V23.78H3.57V78.5H1.327zM78.174 39.512c0 27.588-15.315 40.129-32.079 40.129-17.125 0-30.993-13.565-30.993-38.988C15.102 14.549 29.453.526 47.301.526 64.787.524 78.174 14.318 78.174 39.512zm-60.799.57C17.375 61 27.513 77.25 46.201 77.25c18.818 0 29.611-16.75 29.611-37.406 0-19.155-8.648-36.636-28.382-36.636S17.375 19.667 17.375 40.082zM86.406 72.571c3.763 2.508 10.258 4.93 15.844 4.93 10.602 0 20.031-7.417 20.031-18.334 0-10.131-6.281-15.417-16.945-19.958-9.544-4.064-18.125-8.475-18.125-19.305 0-11.285 8.891-19.267 20.975-19.267 6.498 0 11.4 1.824 13.68 3.42l-.906 1.968c-1.938-1.367-7.176-3.109-12.874-3.109-12.771 0-18.334 9.65-18.334 16.754 0 9.812 7.606 13.093 17.41 17.767 11.399 5.585 17.44 10.51 17.44 21.227 0 11.514-8.207 20.86-22.799 20.86-6.043 0-12.996-2.051-16.416-4.674l1.019-2.279z"
+constant kAndroidPlaceholderSvgIcon is "M493 615Q509 615 520.5 603.5 532 592 532 576 532 560 520.5 548.5 509 537 493 537 477 537 466 548.5 455 560 455 576 455 592 466 603.5 477 615 493 615ZM915 615Q931 615 942 603.5 953 592 953 576 953 560 942 548.5 931 537 915 537 899 537 887.5 548.5 876 560 876 576 876 592 887.5 603.5 899 615 915 615ZM103 799Q145 799 175 829 205 859 205 901L205 1331Q205 1374 175.5 1404 146 1434 103 1434 60 1434 30 1404 0 1374 0 1331L0 901Q0 859 30 829 60 799 103 799ZM1163 818L1163 1484Q1163 1530 1131 1562 1099 1594 1054 1594L979 1594 979 1821Q979 1864 949 1894 919 1924 876 1924 833 1924 803 1894 773 1864 773 1821L773 1594 635 1594 635 1821Q635 1864 605 1894 575 1924 532 1924 490 1924 460 1894 430 1864 430 1821L429 1594 355 1594Q309 1594 277 1562 245 1530 245 1484L245 818 1163 818ZM931 413Q1038 468 1102 566.5 1166 665 1166 782L241 782Q241 665 305 566.5 369 468 477 413L406 282Q399 269 411 262 424 256 431 268L503 400Q598 358 704 358 810 358 905 400L977 268Q984 256 997 262 1009 269 1002 282ZM1408 901L1408 1331Q1408 1374 1378 1404 1348 1434 1305 1434 1263 1434 1233 1404 1203 1374 1203 1331L1203 901Q1203 858 1233 828.5 1263 799 1305 799 1348 799 1378 828.5 1408 858 1408 901Z"
+/**
+Summary: Returns a placeholder icon for a given operating system
+
+Parameters:
+pOS (enum): The operating system.
+- "mac"
+- "ios"
+- "android"
+
+Description: Use <placeholderIcon> to fetch an SVG icon that can be
+used as the placeholder image for a widget that is native to, and 
+therefore only available on, a given operating system.
+*/
+
+public handler placeholderIcon(in pOS as String) returns String
+    if pOS is "mac" then
+        return kMacPlaceholderSvgIcon
+    else if pOS is "ios" then
+        return kIosPlaceholderSvgIcon
+    else if pOS is "android" then
+        return kAndroidPlaceholderSvgIcon
+    else
+        throw "no placeholder icon for" && pOS && "operating system"
+    end if
+end handler
+
+/**
+Summary: Paint a placeholder image using an SVG icon and name
+
+Parameters:
+pCanvas: The canvas on which to draw the placeholder
+pBounds: The rectangle in which to draw the placeholder on the canvas
+pSVGIcon: The placeholder icon to use
+pLabel: The label to use
+pFont: A font to draw the label with. If none specified, Arial 14pt is used.
+pColor: A color to draw the label with. If none specified, #404040 is used
+
+Description:
+Use the <paintPlaceHolder> image handler to draw a placeholder on the 
+given canvas when, for example, the widget shouldn't be displayed as 
+active in browse mode, or is not available on the current platform.
+*/
+constant kBorderWidth is 5
+public handler paintPlaceholderImage(in pCanvas as Canvas, in pBounds as Rectangle, \
+    in pSVGIcon as String, in pLabel as String, in pFont as optional Font, \
+    in pColor as optional Color)
+    save state of pCanvas
+
+	// Draw placeholder image - the browser icon
+	variable tFillPaint as Paint
+	variable tStrokePaint as Paint
+	put solid paint with color [0.875, 0.875, 0.875] into tFillPaint
+	put solid paint with color [0.75, 0.75, 0.75] into tStrokePaint
+
+	set the paint of pCanvas to tFillPaint
+	fill rectangle path of pBounds on this canvas
+	set the paint of this canvas to tStrokePaint
+	set the stroke width of this canvas to kBorderWidth
+	set the join style of this canvas to "bevel"
+	stroke rectangle path of expandRectangle(pBounds, -kBorderWidth / 2) on this canvas
+
+	variable tPath as Path
+	put path pSVGIcon into tPath
+	constrainPathToRect(expandRectangle(pBounds, -2 * kBorderWidth), tPath)
+	fill tPath on this canvas
+
+	// Draw the control name
+	put solid paint with color [1, 1, 1] into tFillPaint
+
+    if pFont is nothing then
+       put font "Arial" at size 14 into pFont
+    end if
+    
+    if pColor is nothing then
+       put color [0.25, 0.25, 0.25] into pColor
+    end if
+	put solid paint with pColor into tStrokePaint
+	
+	variable tTextBounds as Rectangle
+	put the image bounds of text pLabel on pCanvas into tTextBounds
+
+	translate pCanvas by [ the width of pBounds / 2, the height of pBounds / 2]
+	translate pCanvas by [ -(the width of tTextBounds / 2), the height of tTextBounds / 2]
+	set the paint of pCanvas to tFillPaint
+	fill rounded rectangle path of expandRectangle(tTextBounds, kBorderWidth) with radius 5 on pCanvas
+	set the paint of pCanvas to tStrokePaint
+	fill text pLabel at point [0, 0] on pCanvas
+	
+	restore state of pCanvas
+end handler
+
+private handler expandRectangle(in pRect as Rectangle, in pExp as Number) returns Rectangle
+	return rectangle [ the left of pRect - pExp, the top of pRect - pExp, the right of pRect + pExp, the bottom of pRect + pExp]
+end handler
+
+
 end module

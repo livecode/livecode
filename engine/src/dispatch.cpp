@@ -363,6 +363,12 @@ void MCDispatch::destroystack(MCStack *sptr, Boolean needremove)
 {
 	if (needremove)
     {
+        MCStack *t_substacks = sptr -> getsubstacks();
+        while (t_substacks)
+        {
+            t_substacks -> dodel();
+            t_substacks = sptr -> getsubstacks();
+        }
         sptr -> dodel();
     }
 	if (sptr == MCstaticdefaultstackptr)
@@ -666,18 +672,24 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
                                              uindex_t p_size,
                                              MCStringEncoding p_encoding)
 {
-    MCAutoStringRef t_raw_script_string, t_LC_script_string;
+    MCAutoStringRef t_raw_script_string, t_lc_script_string;
+    MCStringLineEndingStyle t_line_encoding_style;
+    
     if (!MCStringCreateWithBytes(p_bytes, p_size, p_encoding, false,
                                  &t_raw_script_string) ||
-        !MCStringConvertLineEndingsToLiveCode(*t_raw_script_string,
-                                              &t_LC_script_string))
+        !MCStringNormalizeLineEndings(*t_raw_script_string,
+                                      kMCStringLineEndingStyleLF, 
+                                      kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                      kMCStringLineEndingOptionNormalizeLSToVT,
+                                      &t_lc_script_string,
+                                      &t_line_encoding_style))
     {
         return nullptr;
     }
     
     // Now attempt to parse the header line:
     //   'script' <string>
-    MCScriptPoint sp(*t_LC_script_string);
+    MCScriptPoint sp(*t_lc_script_string);
     
     // Parse 'script' token.
     if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) != PS_NORMAL)
@@ -692,11 +704,7 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
         return nullptr;
     }
     
-    MCNewAutoNameRef t_script_name;
-    if (!MCNameClone(sp . gettoken_nameref(), &t_script_name))
-    {
-        return nullptr;
-    }
+    MCNewAutoNameRef t_script_name = sp.gettoken_nameref();
     
     // Parse end of line.
     Parse_stat t_stat;
@@ -712,7 +720,7 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
     uint32_t t_index = 0;
     
     // Jump over the possible lines before the string token
-    while (MCStringFirstIndexOfChar(*t_LC_script_string, '\n', t_index,
+    while (MCStringFirstIndexOfChar(*t_lc_script_string, '\n', t_index,
                                     kMCStringOptionCompareExact, t_index)
            && t_lines > 0)
     {
@@ -723,13 +731,13 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
     t_index += 1;
     
     // t_line now has the last LineFeed of the token
-    MCAutoStringRef t_LC_script_body;
+    MCAutoStringRef t_lc_script_body;
     
     // We copy the body of the stack script
-    if (!MCStringCopySubstring(*t_LC_script_string,
+    if (!MCStringCopySubstring(*t_lc_script_string,
                                MCRangeMake(t_index,
-                                           MCStringGetLength(*t_LC_script_string)
-                                           - t_index), &t_LC_script_body))
+                                           MCStringGetLength(*t_lc_script_string)
+                                           - t_index), &t_lc_script_body))
     {
         return nullptr;
     }
@@ -740,10 +748,13 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
         return nullptr;
     
     // Set it up as script only.
-    t_stack -> setasscriptonly(*t_LC_script_body);
+    t_stack -> setasscriptonly(*t_lc_script_body);
     
     // Set its name.
     t_stack -> setname(*t_script_name);
+    
+    // Save line endings from raw script string to restore when saving file.
+    t_stack -> setlineencodingstyle(t_line_encoding_style);
     
     return t_stack;
 }
@@ -840,8 +851,7 @@ void MCDispatch::processstack(MCStringRef p_openpath, MCStack* &x_stack)
         {
             if (x_stack->hasname(tstk->getname()))
             {
-                MCAutoNameRef t_stack_name;
-                /* UNCHECKED */ t_stack_name . Clone(x_stack -> getname());
+                MCNewAutoNameRef t_stack_name = x_stack->getname();
                 
                 delete x_stack;
                 x_stack = nullptr;
@@ -855,7 +865,7 @@ void MCDispatch::processstack(MCStringRef p_openpath, MCStack* &x_stack)
                     tstk = stacks;
                     do
                     {
-                        if (MCNameIsEqualTo(t_stack_name, tstk->getname(), kMCCompareCaseless))
+                        if (MCNameIsEqualToCaseless(*t_stack_name, tstk->getname()))
                         {
                             x_stack = tstk;
                             break;
@@ -1124,14 +1134,13 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
         sptr -> unsecurescript(sptr);
         
         // Write out the standard script stack header, and then the script itself
-		MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+        MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
 
-		// Convert line endings - but only if the native line ending isn't CR!
-#ifndef __CR__
-		MCStringConvertLineEndingsToLiveCode(*t_script_body, &t_converted);
-#else
-		t_converted = *t_script_body;
-#endif
+        MCStringNormalizeLineEndings(*t_script_body, 
+                                     sptr -> getlineencodingstyle(), 
+                                     false,
+                                     &t_converted, 
+                                     nullptr);
 	}
     
     // Open the output stream.
@@ -2118,7 +2127,7 @@ void MCDispatch::remove_transient_stack(MCStack *sptr)
 
 void MCDispatch::timer(MCNameRef p_message, MCParameter *p_parameters)
 {
-	if (MCNameIsEqualTo(p_message, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(p_message, MCM_internal))
 	{
 		MCStackSecurityExecutionTimeout();
 	}

@@ -299,7 +299,11 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		
 		if (!MCdispatcher -> loadexternal(*t_resolved_external_str))
 		{
-			MCresult -> sets("failed to load external");
+            MCAutoStringRef t_error;
+            if (!MCStringFormat(&t_error, "failed to load external: %@", *t_external_str))
+                MCresult -> sets("failed to load external");
+            else
+                MCresult -> setvalueref(*t_error);
 			return false;
 		}
 	}
@@ -430,26 +434,22 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     
     case kMCCapsuleSectionTypeLicense:
     {
-        char t_edition_byte;
-        if (IO_read(&t_edition_byte, 1, p_stream) != IO_NORMAL)
+        uint8_t t_class;
+        MCAutoValueRef t_addons;
+        if (IO_read(&t_class, 1, p_stream) != IO_NORMAL ||
+            (p_length > 1 && IO_read_valueref_new(&t_addons, p_stream) != IO_NORMAL))
         {
             MCresult -> sets("failed to read license");
             return false;
         }
-
-        bool t_success;
-        t_success = true;
         
-        // The edition encoding is engine version / IDE engine version
-        // specific - for now its just a byte with value 0-3.
-        if (t_edition_byte == 1)
-            MClicenseparameters . license_class = kMCLicenseClassCommunity;
-        else if (t_edition_byte == 2)
-            MClicenseparameters . license_class = kMCLicenseClassCommercial;
-        else if (t_edition_byte == 3)
-            MClicenseparameters . license_class = kMCLicenseClassProfessional;
-        else
-            MClicenseparameters . license_class = kMCLicenseClassNone;
+        MClicenseparameters.license_class = (MCLicenseClass)t_class;
+
+        if (t_addons.IsSet())
+        {
+            MCValueAssign(MClicenseparameters . addons, static_cast<MCArrayRef>(*t_addons));
+        }
+        
     }
     break;
 			
@@ -716,6 +716,10 @@ MCDispatch::startup()
 	}
 
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+    
+    // the first auxiliary stack loaded during startup will currently be the home stack
+    // we want it to be the initial stack
+    MCdispatcher->changehome(t_stack);
 
 	/* Complete startup tasks and send the startup message */
 
@@ -1309,6 +1313,12 @@ void MCModeSetupCrashReporting(void)
 bool MCModeHandleMessage(LPARAM lparam)
 {
 	return false;
+}
+
+// Pixel scaling can be enabled in standalone mode.
+bool MCModeCanEnablePixelScaling()
+{
+	return true;
 }
 
 // IM-2014-08-08: [[ Bug 12372 ]] Only use pixel scaling in the standalone

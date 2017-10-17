@@ -143,6 +143,9 @@
 							[
 								'-ldl',
 								'-lpthread',
+								'-Wl,-Bstatic',
+								'-lstdc++',
+								'-Wl,-Bdynamic',
 							],
 						},
 					],

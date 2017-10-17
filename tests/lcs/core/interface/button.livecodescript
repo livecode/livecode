@@ -51,10 +51,10 @@ on TestIconGravity
 end TestIconGravity
 
 on TestBug18293
-   if the environment is "command line" then
-      TestSkip "deleting popped up menu stack shouldn't crash", "not supported in no ui mode"
-      return empty
-   end if
+   TestSkipIfNot "ui"
+   TestSkipIf "environment", "server"
+   TestSkipIfNot "wait"
+   
    create stack "popup menu"
    create stack "test"
    go stack "test"
@@ -65,3 +65,28 @@ on TestBug18293
    delete stack "popup menu"
    TestAssert "deleting popped up menu stack shouldn't crash", true
 end TestBug18293
+
+on TestBug20405
+
+   local text1, text2, text3
+   put "Ln1" into text1
+   put "Line 1" into text2
+   put "Ln1\nLine 1" into text3
+
+   create stack "test"
+   create button "b1"
+   create button "b2"
+   create button "b3"
+
+   set the label of button "b1" to text1
+   set the label of button "b2" to text2
+   set the label of button "b3" to text3
+
+   local fW1, fW2, fW3
+   put the formattedWith of button "b1" into fW1
+   put the formattedWidth of button "b2" into fW2
+   put the formattedWidth of button "b3" into fW3
+
+   TestAssert "returns correct formattedWidth", fW3 is max(fW1, fW2)
+
+end TestBug20405

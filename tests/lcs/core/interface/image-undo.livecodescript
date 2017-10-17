@@ -42,11 +42,10 @@ private command RandomFillImage pImage
 end RandomFillImage
 
 on TestClickImageWorks
-    if the environment is "command line" then
-        TestSkip "crash on undoChanged when clicking image to fill image", "can't simulate click in -ui mode"
-        exit TestClickImageWorks        
-    end if 
-
+   TestSkipIfNot "ui"
+   TestSkipIf "environment", "server"
+   TestSkipIfNot "wait"
+  
     create stack
     set the defaultStack to the short name of it
 
@@ -83,6 +82,131 @@ on TestRotateImageWorks
 
     TestAssert "check if undo worked", the prop of this card is not empty
 end TestRotateImageWorks
+*/
+on TestFlipImageGetDataWorks
+    create stack
+    set the defaultStack to the short name of it
+
+    create image
+
+    local tScript
+    put "on undoChanged" into tScript
+    put return & "set the uLastImage of this card to the imageData of image 1" after tScript
+    put return & "end undoChanged" after tScript
+    set the script of this card to tScript
+
+    flip image 1 horizontal
+
+    TestAssert "check if undo worked", the uLastImage of this card is not empty
+end TestFlipImageGetDataWorks
+
+
+
+on TestClickImageGetDataWorks
+    TestSkipIfNot "ui"
+    TestSkipIf "environment", "server"
+
+    create stack
+    set the defaultStack to the short name of it
+
+    create image
+    RandomFillImage it
+
+    local tScript
+    put "on undoChanged" into tScript
+    put return & "set the uLastImage of this card to the imageData of image 1" after tScript
+    put return & "end undoChanged" after tScript
+    set the script of this card to tScript
+
+    choose bucket tool
+    click at the loc of image 1
+
+    TestAssert "check if undo worked", the uLastImage of this card is not empty
+end TestClickImageGetDataWorks
+
+
+on TestRotateImageGetDataWorks
+    create stack
+    set the defaultStack to the short name of it
+
+    create image
+    RandomFillImage it
+    
+    local tScript
+    put "on undoChanged" into tScript
+    put return & "set the uLastImage of this card to the imageData of image 1" after tScript
+    put return & "end undoChanged" after tScript
+    set the script of this card to tScript
+
+    rotate image 1 by 20
+
+    TestAssert "check if undo worked", the uLastImage of this card is not empty
+end TestRotateImageGetDataWorks
+
+on TestFlipImageGetTransparencyWorks
+    create stack
+    set the defaultStack to the short name of it
+
+    create image
+
+    local tScript
+    put "on undoChanged" into tScript
+    put return & "set the cAlphaData of this card to the alphaData of image 1" after tScript
+    put return & "end undoChanged" after tScript
+    set the script of this card to tScript
+
+    flip image 1 horizontal
+
+    TestAssert "check if undo worked", the cAlphaData of this card is not empty
+end TestFlipImageGetTransparencyWorks
+
+
+
+on TestClickImageGetTransparencyWorks
+    TestSkipIfNot "ui"
+    TestSkipIf "environment", "server"
+
+    create stack
+    set the defaultStack to the short name of it
+
+    create image
+    RandomFillImage it
+
+    local tScript
+    put "on undoChanged" into tScript
+    put return & "set the cAlphaData of this card to the alphaData of image 1" after tScript
+    put return & "end undoChanged" after tScript
+    set the script of this card to tScript
+
+    choose bucket tool
+    click at the loc of image 1
+
+    TestAssert "check if undo worked", the cAlphaData of this card is not empty
+end TestClickImageGetTransparencyWorks
+
+
+on TestRotateImageGetTransparencyWorks
+    
+    TestSkip "weird crash, unrelated to my code", ""
+    exit TestRotateImageGetTransparencyWorks
+    
+    create stack
+    set the defaultStack to the short name of it
+
+    create image
+    RandomFillImage it
+    
+    local tScript
+    put "on undoChanged" into tScript
+    put return & "set the cAlphaData of this card to the alphaData of image 1" after tScript
+    put return & "end undoChanged" after tScript
+    set the script of this card to tScript
+
+    rotate image 1 by 20
+
+    TestAssert "check if undo worked", the cAlphaData of this card is not empty
+end TestRotateImageGetTransparencyWorks
+
 
 on TestSetTextLockThrows
     create stack
@@ -129,6 +253,7 @@ on TestSetFilenameThrows
 end TestSetFilenameThrows
 
 on TestSetImageDataThrows
+   TestSkipIfNot "security"
     create stack
     set the defaultStack to the short name of it
 

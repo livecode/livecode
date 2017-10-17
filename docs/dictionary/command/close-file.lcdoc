@@ -35,7 +35,7 @@ defaultFolder.
 
 The result:
 If you try to close a file that is not already open, the result function
-is set to.
+is set to "file is not open".
 
 Description:
 Use the <close file> <command> to release a <file> after reading from it

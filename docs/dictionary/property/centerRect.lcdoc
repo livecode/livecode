@@ -2,7 +2,7 @@ Name: centerRect
 
 Type: property
 
-Syntax: set the centerRect[angle] of <image> to <left>, <top>, <right>, <bottom>
+Syntax: set the centerRect[angle] of <image> to <rectangle>
 
 Syntax: get the [effective] centerRect[angle] of <image>
 
@@ -25,7 +25,7 @@ Parameters:
 image:
 A reference or expression that evaluate to an image reference.
 
-rect:
+rectangle:
 Empty or a comma delimited list of 4 integers representing the
 left,top,right,bottom of the rectangle being specified. By default, the
 centerRect property is empty.

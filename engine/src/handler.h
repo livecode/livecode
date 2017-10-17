@@ -83,12 +83,11 @@ public:
 	
 	bool hasname(MCNameRef other_name)
 	{
-		return MCNameIsEqualTo(name, other_name, kMCCompareCaseless);
+		return MCNameIsEqualToCaseless(name, other_name);
 	}
 
 	Parse_stat parse(MCScriptPoint &sp, Boolean isprop);
     Exec_stat exec(MCExecContext &, MCParameter *);
-	void compile(MCSyntaxFactoryRef factory);
 	
     MCVariable *getvar(uint2 index, Boolean isparam);
     MCContainer *getcontainer(uint2 index, Boolean isparam);
@@ -103,9 +102,12 @@ public:
 	bool getparamnames(MCListRef& r_list);
 	bool getparamnames_as_properlist(MCProperListRef& r_list);
 	bool getvariablenames(MCListRef& r_list);
-	bool getglobalnames(MCListRef& r_list);
-	bool getvarnames(bool p_all, MCListRef& r_list);
-	//Exec_stat eval(MCExecPoint &);
+    bool getvariablenames_as_properlist(MCProperListRef& r_list);
+    bool getglobalnames(MCListRef& r_list);
+    bool getglobalnames_as_properlist(MCProperListRef& r_list);
+    bool getvarnames(bool p_all, MCListRef& r_list);
+    bool getconstantnames_as_properlist(MCProperListRef& r_list);
+    //Exec_stat eval(MCExecPoint &);
     uint4 linecount();
 
 	// Used by the externals API, this method returns the current incarnation of

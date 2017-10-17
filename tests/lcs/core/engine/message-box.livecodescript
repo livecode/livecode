@@ -18,13 +18,29 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 local sTarget, sHandler, sLine, sMsg
 
+on TestSetup
+	-- On server, the msg variable isn't used. All 
+	-- put <expr> [(before | after) msg] statements are directed to
+	-- stdout
+	TestSkipIf "environment", "server"
+end TestSetup
+
 on TestMessageBox
+	local tPutIntoLine, tPutBeforeLine, tPutAfterLine, tScript
+	put the script of me into tScript
+	put lineOffset("put" && quote & "bar" & quote, tScript) into \
+		tPutIntoLine
+	put lineOffset("put" && quote & "foo" & quote && "before msg", \ 
+		tScript) into tPutBeforeLine
+	put lineOffset("put" && quote & "baz" & quote && "after msg", \ 
+		tScript) into tPutAfterLine
+		
 	put "bar"
-	__CheckMessage "Put into", "bar", 21
+	__CheckMessage "Put into", "bar", tPutIntoLine
 	put "foo" before msg
-	__CheckMessage "Put before", "foobar", 23
+	__CheckMessage "Put before", "foobar", tPutBeforeLine
 	put "baz" after msg
-	__CheckMessage "Put after", "foobarbaz", 25
+	__CheckMessage "Put after", "foobarbaz", tPutAfterLine
 end TestMessageBox
 
 on msgChanged pHandler, pLine

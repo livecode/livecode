@@ -2,10 +2,10 @@ Name: playerPropertyAvailable
 
 Type: message
 
-Syntax: playerPropertyAvailable <propertyName>
+Syntax: playerPropertyAvailable <pPropertyName>
 
 Summary:
-Sent when sufficient information about a given <propertyName> has become
+Sent when sufficient information about a given property has become
 available. 
 
 Introduced: 4.6
@@ -15,14 +15,14 @@ OS: ios, android
 Platforms: mobile
 
 Example:
-on playerPropertyAvailable theProperty
+on playerPropertyAvailable pPropertyName
     if theProperty is "duration" then
         answer "You can now query the length of the movie"
     end if
 end playerPropertyAvailable
 
 Parameters:
-propertyName (enum):
+pPropertyName (enum):
 The name of the property that has become available. These 
 properties can be: 
 
@@ -32,7 +32,7 @@ properties can be:
 
 Description:
 Handle the <playerPropertyAvailable> message when sufficient information
-about a given player <propertyName> has become available so that
+about a given player property has become available so that
 information about that property can be accessed.
 
 References: playerFinished (message), playerError (message),

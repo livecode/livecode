@@ -256,7 +256,7 @@ void MCPlayer::applyrect(const MCRectangle &nrect)
 
 void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 {
-    if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
+    if (MCNameIsEqualToCaseless(mptr, MCM_play_stopped))
     {
         state |= CS_PAUSED;
         if (isbuffering()) //so the last frame gets to be drawn
@@ -270,7 +270,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
             return; //obj is already deleted, do not pass msg up.
         }
     }
-    else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
+    else if (MCNameIsEqualToCaseless(mptr, MCM_play_paused))
     {
         state |= CS_PAUSED;
         if (isbuffering()) //so the last frame gets to be drawn

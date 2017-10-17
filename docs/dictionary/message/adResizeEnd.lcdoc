@@ -2,12 +2,10 @@ Name: adResizeEnd
 
 Type: message
 
-Syntax: adResizeEnd <adName>
+Syntax: adResizeEnd <pAdName>
 
 Summary:
 Sent whan an ad finished resizing.
-
-Associations: stack
 
 Introduced: 6.0
 
@@ -21,8 +19,8 @@ on adResizeEnd pAdName
 end adResizeEnd
 
 Parameters:
-adName:
-The name of ad that has been expanded (as specified in mobileAdCreate)
+pAdName:
+The name of ad that has been expanded (as specified in <mobileAdCreate>)
 
 Description:
 Handle the <adResizeEnd> message if you want to perform an action when

@@ -2,12 +2,12 @@ Name: openBackground
 
 Type: message
 
-Syntax: openBackground <backgroundID>
+Syntax: openBackground <pBackgroundID>
 
 Summary:
 Sent to all background groups when a card they are placed on is opened.
 
-Associations: card, group
+Associations: group
 
 Introduced: 1.0
 
@@ -28,7 +28,7 @@ on openBackground theBackgroundID
 end openBackground
 
 Parameters:
-backgroundID:
+pBackgroundID:
 The ID number of the background being opened.
 
 Description:
@@ -48,7 +48,7 @@ The actual navigation is not triggered by the <openBackground>
 <pass> does not prevent the <card> with the <group> from opening.
 
 >*Note:*  A group is only considered a background group if its
-> backgroundBehavior property is set to true.
+> <backgroundBehavior> property is set to true.
 
 References: group (command), pass (control structure), message (glossary),
 trap (glossary), card (keyword), preOpenBackground (message),

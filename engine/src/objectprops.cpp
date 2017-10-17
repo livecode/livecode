@@ -249,6 +249,12 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_REV_AVAILABLE_HANDLERS, LinesOfString, MCObject, RevAvailableHandlers)
     DEFINE_RO_OBJ_ARRAY_PROPERTY(P_REV_AVAILABLE_VARIABLES, String, MCObject, RevAvailableVariables)
     DEFINE_RO_OBJ_PROPERTY(P_REV_AVAILABLE_VARIABLES, String, MCObject, RevAvailableVariablesNonArray)
+    
+    DEFINE_RO_OBJ_NON_EFFECTIVE_PROPERTY(P_REV_SCRIPT_DESCRIPTION, Any, MCObject, RevScriptDescription)
+    DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_REV_SCRIPT_DESCRIPTION, Any, MCObject, RevScriptDescription)
+
+    DEFINE_RO_OBJ_PROPERTY(P_REV_BEHAVIOR_USES, Array, MCObject, RevBehaviorUses)
+
 };
 
 MCObjectPropertyTable MCObject::kPropertyTable =
@@ -278,7 +284,7 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		MCParameter p1;
 		p1.setvalueref_argument(t_param_name);
         
-        MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+        MCStackHandle t_old_defaultstack = MCdefaultstackptr;
         MCdefaultstackptr = getstack();
         MCObjectPartHandle oldtargetptr(this);
         swap(MCtargetptr, oldtargetptr);
@@ -382,7 +388,7 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		p1.setvalueref_argument(t_param_name);
 		p2.setvalueref_argument(p_value);
 		
-		MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+		MCStackHandle t_old_defaultstack = MCdefaultstackptr;
 		MCdefaultstackptr = getstack();
         MCObjectPartHandle oldtargetptr(this);
         swap(MCtargetptr, oldtargetptr);

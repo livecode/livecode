@@ -44,7 +44,7 @@ MCExternalHandlerList::~MCExternalHandlerList(void)
 		MCExternal::Unload(m_externals[i]);
 
 	for(uint32_t i = 0; i < m_handlers . Count(); i++)
-		MCNameDelete(m_handlers[i] . name);
+		MCValueRelease(m_handlers[i] . name);
 }
 
 bool MCExternalHandlerList::IsEmpty(void)
@@ -173,19 +173,21 @@ bool MCExternalHandlerList::AddHandler(void *state, Handler_type type, const cha
 	self = (MCExternalHandlerList *)state;
 
 	// Inter the name of the handler.
-	MCAutoNameRef t_name;
-	if (!t_name . CreateWithCString(p_name_cstring))
-		return false;
-
+	MCNewAutoNameRef t_name;
+    if (!MCNameCreateWithNativeChars((const char_t*)p_name_cstring, strlen(p_name_cstring), &t_name))
+    {
+        return false;
+    }
+	
 	// If the handler is already in the table, then do nothing. Note that
 	// 't_index' will always be set to the index the handler would be at.
 	uindex_t t_index;
-	if (self -> Lookup(t_name, t_index))
+	if (self -> Lookup(*t_name, t_index))
 		return true;
 
 	// Make the entry.
 	MCExternalHandlerListEntry t_entry;
-	t_entry . name = t_name;
+	t_entry . name = *t_name;
 	t_entry . external = self -> m_externals . Count();
 	t_entry . handler = p_index;
 	if (!self -> m_handlers . Insert(t_index, t_entry))

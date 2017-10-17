@@ -342,7 +342,7 @@ Boolean MCScrollbar::mdown(uint2 which)
 			{
 				getwidgetthemeinfo(winfo);
 				Widget_Part wpart = MCcurtheme->hittest(winfo,mx,my,rect);
-				// scrollbar needs to check first if mouse-down occured in arrows
+				// scrollbar needs to check first if mouse-down occurred in arrows
 				switch (wpart)
 				{
 				case WTHEME_PART_ARROW_DEC:
@@ -602,8 +602,8 @@ void MCScrollbar::applyrect(const MCRectangle &nrect)
 
 void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless) ||
-		MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal) ||
+		MCNameIsEqualToCaseless(mptr, MCM_internal2))
 	{
 		// MW-2009-06-16: [[ Bug ]] Previously this was only waiting for one
 		//   one event (anyevent == True) this meant that it was possible for
@@ -625,7 +625,7 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 
 		if (mode != SM_CLEARED)
 		{
-			uint2 delay = MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless) ? MCrepeatdelay : MCrepeatrate;
+			uint2 delay = MCNameIsEqualToCaseless(mptr, MCM_internal) ? MCrepeatdelay : MCrepeatrate;
 			MCscreen->addtimer(this, MCM_internal2, delay);
 			MCRectangle thumb;
 			switch (mode)
@@ -680,7 +680,7 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 			}
 		}
 	}
-	else if (MCNameIsEqualTo(mptr, MCM_internal3, kMCCompareCaseless))
+	else if (MCNameIsEqualToCaseless(mptr, MCM_internal3))
 	{
 #ifdef _MAC_DESKTOP
 		// MW-2012-09-17: [[ Bug 9212 ]] Mac progress bars do not animate.
@@ -963,7 +963,7 @@ void MCScrollbar::update(real8 newpos, MCNameRef mess)
 		{
 		case ES_NOT_HANDLED:
 		case ES_PASS:
-			if (!MCNameIsEqualTo(mess, MCM_scrollbar_drag, kMCCompareCaseless))
+			if (!MCNameIsEqualToCaseless(mess, MCM_scrollbar_drag))
 				message_with_valueref_args(MCM_scrollbar_drag, *t_data);
 		default:
 			break;

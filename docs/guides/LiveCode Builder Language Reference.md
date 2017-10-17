@@ -79,7 +79,10 @@ A LiveCode builder statement or declaration can be continued onto
 multiple lines of code by placing the line continuation character `\`
 at the end each line.
 
-- **Line continuation**: \\(\n|\r\n|\r)
+- **Line continuation**: \\[\t ]*(\n|\r\n|\r)
+
+> **Note:** Tab and space characters are allowed after the `\` and before the
+> newline, but no other characters.
 
 > **Note:** A line continuation cannot occur within a comment.
 
@@ -433,10 +436,18 @@ statement blocks.
 A foreign handler definition binds an identifier to a handler defined in
 foreign code.
 
-There are a number of types defined in the foreign module which map to
-the appropriate foreign type when used in foreign handler signatures.
+The last parameter in a foreign handler declaration may be '...' to indicate
+that the handler is variadic. This allows binding to C functions such as
+sprintf.
 
-There are the standard machine types:
+Note: No bridging of types will occur when passing a parameter in the non-fixed
+section of a variadic argument list. You must ensure the arguments you pass there
+are of the appropriate foreign type (e.g. CInt, CDouble).
+
+There are a number of types defined in the foreign, java and objc modules which
+map to the appropriate foreign type when used in foreign handler signatures.
+
+There are the standard machine types (defined in the foreign module):
 
  - Bool maps to an 8-bit boolean
  - Int8/SInt8 and UInt8 map to 8-bit integers
@@ -445,8 +456,12 @@ There are the standard machine types:
  - Int64/SInt64 and UInt64 map to 64-bit integers
  - IntSize/SIntSize and UIntSize map to the integer size needed to hold a memory size
  - IntPtr/SIntPtr and UIntPtr map to the integer size needed to hold a pointer
+ - NaturalSInt and NaturalUInt map to 32-bit integers on 32-bit processors and
+   64-bit integers on 64-bit processors
+ - NaturalFloat maps to the 32-bit float type on 32-bit processors and the 64-bit
+   float (double) type on 64-bit processors
 
-There are the standard C primitive types:
+There are the standard C primitive types (defined in the foreign module)
 
  - CBool maps to 'bool'
  - CChar, CSChar and CUChar map to 'char', 'signed char' and 'unsigned char'
@@ -457,7 +472,21 @@ There are the standard C primitive types:
  - CFloat maps to 'float'
  - CDouble maps to 'double'
 
-There are aliases for the Java primitive types:
+There are types specific to Obj-C types (defined in the objc module):
+
+  - ObjcObject wraps an obj-c 'id', i.e. a pointer to an objective-c object
+  - ObjcId maps to 'id'
+  - ObjcRetainedId maps to 'id', and should be used where a foreign handler
+    argument expects a +1 reference count, or where a foreign handler returns
+    an id with a +1 reference count.
+
+Note: When an ObjcId is converted to ObjcObject, the id is retained;
+when an ObjcObject converted to an ObjcId, the id is not retained. Conversely,
+when an ObjcRetainedId is converted to an ObjcObject, the object takes the
++1 reference count (so does not retain); when an ObjcObject is put into an
+ObjcRetainedId, a +1 reference count is taken (so does retain).
+
+There are aliases for the Java primitive types (defined in the java module)
 
  - JBoolean maps to Bool
  - JByte maps to Int8
@@ -504,8 +533,8 @@ If an out parameter is of a Ref type, then it must be a copy (on exit)
 If an inout parameter is of a Ref type, then its existing value must be
 released, and replaced by a copy (on exit).
 
-The binding string for foreign handlers is prefixed by a language, 
-currently either C or Java.
+The binding string for foreign handlers is language-specific and currently
+supported forms are explained in the following sections.
 
 Foreign handlers' bound symbols are resolved on first use and an error
 is thrown if the symbol cannot be found.
@@ -514,18 +543,11 @@ Foreign handlers are always considered unsafe, and thus may only be called
 from unsafe context - i.e. from within an unsafe handler, or unsafe statement
 block.
 
-> **Note:** The current foreign handler definition is an initial
-> version, mainly existing to allow binding to implementation of the
-> syntax present in the standard language modules. It will be expanded
-> and improved in a subsequent version to make it very easy to import
-> and use functions (and types) from other languages including
-> Objective-C (on Mac and iOS) and Java (on Android).
-
 #### The C binding string
 
 The C binding string has the following form:
 
-    "c:[library>][class.]function[!calling]"
+    "c:[library>][class.]function[!calling][?thread]"
 
 Here *library* specifies the name of the library to bind to (if no
 library is specified a symbol from the engine executable is assumed).
@@ -550,12 +572,32 @@ All but `default` are Win32-only, and on Win32 `default` maps to
 `cdecl`. If a Win32-only calling convention is specified on a
 non-Windows platform then it is taken to be `default`.
 
+Here *thread* is either empty or `ui`. The `ui` form is used to determine
+whether the method should be run on the UI thread (currently only applicable
+on Android and iOS).
+
+#### The Obj-C binding string
+
+The Obj-C binding string has the following form:
+
+    "objc:class.(+|-)method[?thread]"
+
+Here *class* specifies the name of the class containing the method to bind to.
+
+Here *method* specifies the method name to bind to in standard Obj-C selector
+form, e.g. addTarget:action:forControlEvents:. If the method is a class method
+then prefix it with '+', if it is an instance method then prefix it with '-'.
+
+Here *thread* is either empty or `ui`. The `ui` form is used to determine
+whether the method should be run on the UI thread (currently only applicable
+on Android and iOS).
+
 #### The Java binding string
 
 The Java binding string has the following form:
 
-    "java:[className>][functionType.]function[!calling]"
-    
+    "java:[className>][functionType.]function[!calling][?thread]"
+
 Here *className* is the qualified name of the Java class to bind to.
 
 Here *functionType* is either empty, or `get` or `set`, which are 
@@ -584,19 +626,23 @@ The foreign handler binding to such a function takes a value that should
 either be a `Handler` or an `Array` - if it is a `Handler`, the specified 
 listener should only have one available callback. If the listener has 
 multiple callbacks, an array can be used to assign handlers to each. Each 
-key in the array must match the name of a callback in the listener.
+key in the array must match the name of a callback in the listener. The 
+specified handlers must match the callback's parameters and return type, 
+using JObject where primitive type parameters are used.
+
 Overloaded methods in the interface are not currently supported.
 
 For example:
 
-	handler type ClickCallback(in pView as JObject)
+	handler type ClickCallback(in pView as JObject) returns nothing
 
 	foreign handler _JNI_OnClickListener(in pHandler as ClickCallback) returns JObject binds to "java:android.view.View$OnClickListener>interface()"
 
 	foreign handler _JNI_SetOnClickListener(in pButton as JObject, in pListener as JObject) returns nothing binds to "java:android.view.View>setOnClickListener(Landroid/view/View$OnClickListener;)V"	
 	
-	public handler ButtonClicked(in pView as JObject)
-		-- do something on button click
+	public handler ButtonClicked(in pView as JObject) returns nothing
+		post "buttonClicked"
+		MCEngineRunloopBreakWait()
 	end handler
 	
 	public handler SetOnClickListenerCallback(in pButton as JObject)
@@ -609,14 +655,15 @@ For example:
 	
 or
 
-	handler type MouseEventCallback(in pMouseEvent as JObject)
+	handler type MouseEventCallback(in pMouseEvent as JObject) returns nothing
 
 	foreign handler _JNI_MouseListener(in pCallbacks as Array) returns JObject binds to "java:java.awt.event.MouseListener>interface()"
 
 	foreign handler _JNI_SetMouseListener(in pJButton as JObject, in pListener as JObject) returns nothing binds to "java:java.awt.Component>addMouseListener(Ljava/awt/event/MouseListener;)V"	
 	
-	public handler MouseEntered(in pEvent as JObject)
-		-- do something on mouse entter
+	public handler MouseEntered(in pEvent as JObject) returns nothing
+		post "mouseEnter"
+		MCEngineRunloopBreakWait()
 	end handler
 	
 	public handler MouseExited(in pEvent as JObject)
@@ -633,7 +680,12 @@ or
 			_JNI_SetMouseListener(pJButton, tListener)
 		end unsafe
 	end handler
-	
+
+>*Important:* On Android, interface callbacks are *always* run on the
+> engine thread. This means JNI local references from other threads
+> (in particular the UI thread) are unavailable. Therefore it is not 
+> advised to do anything using the JNI in interface callbacks. 
+
 Here *calling* specifies the calling convention which can be one of:
 
  - `instance`
@@ -643,6 +695,10 @@ Here *calling* specifies the calling convention which can be one of:
 Instance and nonvirtual calling conventions require instances of the given
 Java class, so the foreign handler declaration will always require a Java
 object parameter.
+
+Here, *thread* is either empty or `ui`. The `ui` form is used to determine
+whether the method should be run on the UI thread (currently only applicable
+on Android and iOS).
 
 > **Warning:** At the moment it is not advised to use callbacks that may be
 > executed on arbitrary threads, as this is likely to cause your application
@@ -1126,3 +1182,63 @@ conforms to the following rules:
 
 Examples of foreign handlers which can be considered safe are all the foreign
 handlers which bind to syntax in the LCB standard library.
+
+### Foreign Aggregate Types
+
+C-style aggregates (e.g. structs) can now be accessed from LCB via the new
+aggregate parameterized type. This allows calling foreign functions which has
+arguments taking aggregates by value, or has an aggregate return value.
+
+Aggregate types are foreign types and can be used in C and Obj-C foreign
+handler definitions. They bridge to and from the List type, allowing an
+aggregate's contents to be viewed as a sequence of discrete values.
+
+Aggregate types are defined using a `foreign type` clause and binding string.
+e.g.
+
+    public foreign type NSRect binds to "MCAggregateTypeInfo:qqqq"
+
+The structure of the aggregate is defined by using a sequence of type codes
+after the ':', each type code represents a specific foreign (C) type:
+
+| Char | Type         |
+| ---- | ------------ |
+|  a   | CBool        |
+|  b   | CChar        |
+|  c   | CUChar       |
+|  C   | CSChar       |
+|  d   | CUShort      |
+|  D   | CSShort      |
+|  e   | CUInt        |
+|  E   | CSInt        |
+|  f   | CULong       |
+|  F   | CSLong       |
+|  g   | CULongLong   |
+|  G   | CSLongLong   |
+|  h   | UInt8        |
+|  H   | SInt8        |
+|  i   | UInt16       |
+|  I   | SInt16       |
+|  j   | UInt32       |
+|  J   | SInt32       |
+|  k   | UInt64       |
+|  K   | SInt64       |
+|  l   | UIntPtr      |
+|  L   | SIntPtr      | 
+|  m   | UIntSize     |  
+|  M   | SIntSize     |  
+|  n   | Float        |
+|  N   | Double       |
+|  o   | LCUInt       |
+|  O   | LCSInt       |
+|  p   | NaturalUInt  |
+|  P   | NaturalSInt  |
+|  q   | NaturalFloat |
+|  r   | Pointer      |
+
+When importing an aggregate to a List, each field in the aggregate is also
+bridged, except for Pointer types which are left as Pointer. When exporting
+an aggregate from a List, each element is bridged to the target field type.
+
+*Note*: Any foreign type binding to an aggregate must be public otherwise the
+type will not work correctly.

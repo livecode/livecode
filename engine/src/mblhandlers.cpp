@@ -4283,7 +4283,7 @@ struct MCPlatformMessageSpec
 	void *context;
 };
 
-static MCPlatformMessageSpec s_platform_messages[] =
+static const MCPlatformMessageSpec s_platform_messages[] =
 {
     // MM-2012-02-22: Added support for ad management
     {false, "mobileAdRegister", MCHandleAdRegister, nil},
@@ -4605,7 +4605,7 @@ bool MCIsPlatformMessage(MCNameRef handler_name)
     
     for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
     {
-		if (MCNameIsEqualToCString(handler_name, s_platform_messages[i].message, kMCCompareCaseless))
+		if (MCStringIsEqualToCString(MCNameGetString(handler_name), s_platform_messages[i].message, kMCCompareCaseless))
 			found = true;
     }
     
@@ -4662,7 +4662,7 @@ bool MCDoHandlePlatformMessage(bool p_waitable, MCPlatformMessageHandler p_handl
 bool MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters, Exec_stat& r_result)
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
-		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
+		if (MCStringIsEqualToCString(MCNameGetString(p_message), s_platform_messages[i] . message, kMCCompareCaseless))
 		{
             return MCDoHandlePlatformMessage(s_platform_messages[i] . waitable, s_platform_messages[i] . handler, s_platform_messages[i] . context, p_parameters, r_result);
 		}

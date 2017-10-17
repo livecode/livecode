@@ -2,7 +2,7 @@ Name: cursorMovement
 
 Type: property
 
-Syntax: set the cursorMovement of field to {visual | logical | empty}
+Syntax: set the cursorMovement of field to <mechanism>
 
 Summary:
 Sets the mechanism for moving the cursor in fields containing both

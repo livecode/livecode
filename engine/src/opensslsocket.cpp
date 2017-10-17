@@ -593,7 +593,7 @@ bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, M
     MCAutoPointer<char> t_host_cstring;
     /* UNCHECKED */ MCStringConvertToCString(*t_host, &t_host_cstring);
 
-	if (MCNameIsEqualTo(p_message, kMCEmptyName))
+	if (MCNameIsEqualToCaseless(p_message, kMCEmptyName))
 	{
 		t_success = MCSocketHostNameResolve(*t_host_cstring, NULL, SOCK_STREAM, true, ntoa_callback, *t_list);
 	}
@@ -909,9 +909,7 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
     
 	if (s->datagram)
 	{
-		MCNameDelete(s->message);
-		/* UNCHECKED */ MCNameClone(mptr, s -> message);
-		
+        MCValueAssign(s->message, mptr);
 		s->object = ctxt . GetObject();
 	}
 	else
@@ -1198,6 +1196,23 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 		listen(sock, SOMAXCONN);
 #endif
     
+    if (0 == port)
+    {
+        socklen_t addrsize = sizeof(addr);
+        if (getsockname(sock, (sockaddr *)&addr, &addrsize) < 0)
+        {
+            MCresult->sets("can't get bound port");
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
+            closesocket(sock);
+#else
+            close(sock);
+#endif
+            return NULL;
+        }
+        
+        port =  MCSwapInt16NetworkToHost(((struct sockaddr_in *)&addr)->sin_port);
+    }
+    
     // AL-2015-01-05: [[ Bug 14287 ]] Create name using the number of chars written to the string.
     uindex_t t_length;
     /* UNCHECKED */ MCAutoPointer<char_t[]> t_port_chars = new (nothrow) char_t[U2L];
@@ -1368,14 +1383,14 @@ MCSocketread::MCSocketread(uint4 s, char *u, MCObject *o, MCNameRef m)
 	timeout = curtime + MCsockettimeout;
 	optr = o;
 	if (m != nil)
-		/* UNCHECKED */ MCNameClone(m, message);
-	else
+        message = MCValueRetain(m);
+    else
 		message = nil;
 }
 
 MCSocketread::~MCSocketread()
 {
-	MCNameDelete(message);
+	MCValueRelease(message);
 	delete until;
 }
 
@@ -1391,7 +1406,7 @@ MCSocketwrite::MCSocketwrite(MCStringRef d, MCObject *o, MCNameRef m, Boolean se
 	optr = o;
 	done = 0;
 	if (m != nil)
-		/* UNCHECKED */ MCNameClone(m, message);
+        message = MCValueRetain(m);
 	else
 		message = nil;
 }
@@ -1400,7 +1415,7 @@ MCSocketwrite::~MCSocketwrite()
 {
 	if (message != NULL)
 	{
-		MCNameDelete(message);
+		MCValueRelease(message);
 		delete buffer;
 	}
 }
@@ -1413,7 +1428,7 @@ MCSocket::MCSocket(MCNameRef n, MCNameRef f, MCObject *o, MCNameRef m, Boolean d
 	name = MCValueRetain(n);
 	object = o;
 	if (m != nil)
-		/* UNCHECKED */ MCNameClone(m, message);
+        message = MCValueRetain(m);
 	else
 		message = nil;
 	datagram = d;
@@ -1441,8 +1456,8 @@ MCSocket::MCSocket(MCNameRef n, MCNameRef f, MCObject *o, MCNameRef m, Boolean d
 
 MCSocket::~MCSocket()
 {
-	MCNameDelete(name);
-	MCNameDelete(message);
+	MCValueRelease(name);
+	MCValueRelease(message);
 	deletereads();
 	deletewrites();
 
@@ -1805,7 +1820,7 @@ void MCSocket::writesome()
 #endif
 		MCscreen->delaymessage(object, message, MCNameGetString(name));
 		added = True;
-		MCNameDelete(message);
+		MCValueRelease(message);
 		message = NULL;
 	}
 
@@ -2330,7 +2345,7 @@ static long post_connection_check(SSL *ssl, char *host)
 	int t_idx = -1;
 
 	if (!(cert = SSL_get_peer_certificate(ssl)) || !host)
-		goto err_occured;
+		goto err_occurred;
 
 	while (NULL != (t_alt_names = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, &t_idx)))
 	{
@@ -2351,13 +2366,13 @@ static long post_connection_check(SSL *ssl, char *host)
 	{
 		data[255] = 0;
 		if (!ssl_match_identity(data, host))
-			goto err_occured;
+			goto err_occurred;
 	}
 
 	X509_free(cert);
 	return SSL_get_verify_result(ssl);
 
-err_occured:
+err_occurred:
 	if (cert)
 		X509_free(cert);
 

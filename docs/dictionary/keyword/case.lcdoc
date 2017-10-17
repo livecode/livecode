@@ -42,8 +42,8 @@ expression in the <switch> <control structure>. For example, if the
     switch thisVariable
 
 
-then a <case> <statement> inside the <switch> <control
-structure|structure> might look like this:
+then a <case> <statement> inside the <switch> 
+<control structure|structure> might look like this:
 
     case 3
 
@@ -54,14 +54,14 @@ do different things depending on what that <value> is equal to.
 
 The second form is used when the <switch> <statement> does not include
 an <expression> : the case is <execute|executed> if the <condition>
-after the word case is true. For example, if the <switch> <control
-structure|structure> starts with this <statement> :
+after the word case is true. For example, if the <switch> 
+<control structure|structure> starts with this <statement> :
 
     switch
 
 
-then a <case> <statement> inside the <switch> <control
-structure|structure> might look like this:
+then a <case> <statement> inside the <switch> 
+<control structure|structure> might look like this:
 
     case the short name of this card contains "a"
 

@@ -1341,16 +1341,6 @@ bool custom_printer_clusters_to_cairo_clusters(const uint32_t *p_cp_clusters, ui
 	r_clusters = t_clusters;
 	r_cluster_count = t_cluster_count;
 	r_reverse_clusters = t_reverse;
-
-#if 0
-	fprintf(stderr, "\nInput:  ");
-	for(uint32_t i = 0; i < p_count; i++)
-		fprintf(stderr, "%04x ", p_cp_clusters[i]);
-	fprintf(stderr, "\nOutput: ");
-	for(uint32_t i = 0; i < t_cluster_count; i++)
-		fprintf(stderr, "%02x/%02x ", t_clusters[i] . num_bytes, t_clusters[i] . num_glyphs);
-	fprintf(stderr, "\n");
-#endif
 	
 	return true;
 }

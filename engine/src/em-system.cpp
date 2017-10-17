@@ -161,7 +161,7 @@ MCEmscriptenSystem::Debug(MCStringRef p_string)
 		return;
 	}
 
-	emscripten_log(EM_LOG_CONSOLE, "%s", *t_utf8_string);
+	emscripten_log(0, "%s", *t_utf8_string);
 }
 
 /* ----------------------------------------------------------------
@@ -612,23 +612,23 @@ MCEmscriptenSystem::GetStandardFolder(MCNameRef p_type,
 	MCAutoStringRef t_path;
 
 	/* Decode the requested standard folder name */
-	if (MCNameIsEqualTo(p_type, MCN_engine))
+	if (MCNameIsEqualToCaseless(p_type, MCN_engine))
 	{
 		t_path_chars = kMCEmscriptenStandardFolderEngine;
 	}
-	else if (MCNameIsEqualTo(p_type, MCN_resources))
+	else if (MCNameIsEqualToCaseless(p_type, MCN_resources))
 	{
 		t_path_chars = kMCEmscriptenStandardFolderResources;
 	}
-	else if (MCNameIsEqualTo(p_type, MCN_temporary))
+	else if (MCNameIsEqualToCaseless(p_type, MCN_temporary))
 	{
 		t_path_chars = kMCEmscriptenStandardFolderTemporary;
 	}
-	else if (MCNameIsEqualTo(p_type, MCN_fonts))
+	else if (MCNameIsEqualToCaseless(p_type, MCN_fonts))
 	{
 		t_path_chars = kMCEmscriptenStandardFolderFonts;
 	}
-	else if (MCNameIsEqualTo(p_type, MCN_home))
+	else if (MCNameIsEqualToCaseless(p_type, MCN_home))
 	{
 		t_path_chars = kMCEmscriptenStandardFolderHome;
 	}

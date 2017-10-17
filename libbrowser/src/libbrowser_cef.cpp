@@ -1064,7 +1064,7 @@ public:
 	// CefDownloadHandler interface
 	// Methods called on UI thread
 	
-#if 0
+#if CEF_ON_DOWNLOAD_CALLBACK
 	// TODO - Implement OnDownload callback
 	virtual void OnBeforeDownload(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefDownloadItem> p_item, const CefString & p_suggested_name, CefRefPtr<CefBeforeDownloadCallback> p_callback) OVERRIDE
 	{

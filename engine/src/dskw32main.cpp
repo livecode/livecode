@@ -284,7 +284,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		DisplayStartupErrorAndExit();
 
 	// Now we loop continually until quit. If 'X_main_loop' returns without quitting
-	// it means a stack size change request has occured.
+	// it means a stack size change request has occurred.
 	while(!MCquit)
 	{
 		// Create ourselves a new fiber with appropriate stack size

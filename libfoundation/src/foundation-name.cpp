@@ -206,7 +206,7 @@ bool MCNameCreateAndRelease(MCStringRef p_string, MCNameRef& r_name)
 }
 
 MC_DLLEXPORT_DEF
-MCNameRef MCNameLookup(MCStringRef p_string)
+MCNameRef MCNameLookupCaseless(MCStringRef p_string)
 {
 	// Compute the hash of the characters, up to case.
 	hash_t t_hash;
@@ -259,7 +259,8 @@ bool MCNameIsEmpty(MCNameRef self)
 	return self == kMCEmptyName;
 }
 
-bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name)
+MC_DLLEXPORT_DEF
+bool MCNameIsEqualToCaseless(MCNameRef self, MCNameRef p_other_name)
 {
 	__MCAssertIsName(self);
 	__MCAssertIsName(p_other_name);
@@ -268,7 +269,8 @@ bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name)
 			self -> key == p_other_name -> key;
 }
 
-bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensitive, bool p_form_sensitive)
+MC_DLLEXPORT_DEF
+bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, MCStringOptions p_options)
 {
 	__MCAssertIsName(self);
 	__MCAssertIsName(p_other_name);
@@ -276,14 +278,13 @@ bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensiti
     if (self == p_other_name)
         return true;
 
-    if (p_case_sensitive && p_form_sensitive)
+    if (p_options == kMCStringOptionCompareExact)
         return false;
-    else if (!p_case_sensitive && !p_form_sensitive)
+    
+    if (p_options == kMCStringOptionCompareCaseless)
         return self -> key == p_other_name -> key;
-    else if (p_case_sensitive)
-        return MCStringIsEqualTo(self -> string, p_other_name -> string, kMCStringOptionCompareNonliteral);
-    else
-        return MCStringIsEqualTo(self -> string, p_other_name -> string, kMCStringOptionCompareFolded);
+    
+    return MCStringIsEqualTo(self -> string, p_other_name -> string, p_options);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

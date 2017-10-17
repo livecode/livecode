@@ -30,29 +30,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_GET_METHOD(Store, CanMakePurchase, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, EnablePurchaseUpdates, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, DisablePurchaseUpdates, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, RestorePurchases, 0)
-MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseList, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, CreatePurchase, 1)
-MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseState, 2)
-MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseError, 2)
-MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseProperty, 2)
-MC_EXEC_DEFINE_SET_METHOD(Store, PurchaseProperty, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, SendPurchaseRequest, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, ConfirmPurchaseDelivery, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, RequestProductDetails, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, ReceiveProductDetails, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, ConsumePurchase, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, PurchaseVerify, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, MakePurchase, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, ConfirmPurchase, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, ProductSetType, 1)
-
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCStorePurchasePropertyElementInfo[] =
 {
     { "product identifier", P_PRODUCT_IDENTIFIER, false},

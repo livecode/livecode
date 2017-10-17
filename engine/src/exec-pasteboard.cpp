@@ -39,79 +39,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, Clipboard, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, ClipboardKeys, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, RawClipboardKeys, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, RawDragKeys, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, FullClipboardKeys, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, FullDragKeys, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DropChunk, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragDestination, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragSource, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragDropKeys, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheClipboardData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheClipboardData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheRawClipboardData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheRawClipboardData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheFullClipboardData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheFullClipboardData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheDragData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheDragData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheRawDragData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheRawDragData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheFullDragData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheFullDragData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragSourceAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragDestinationAsObject, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, Paste, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, Copy, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, CopyTextToClipboard, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, CopyObjectsToClipboard, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, Cut, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, CutTextToClipboard, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, CutObjectsToClipboard, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, LockClipboard, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, UnlockClipboard, 0)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, AcceptDrop, 1)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, AcceptDrop, 1)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragAction, 1)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragAction, 1)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragImage, 1)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragImage, 1)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragImageOffset, 1)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragImageOffset, 1)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, AllowableDragActions, 1)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, AllowableDragActions, 1)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawClipboardData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawClipboardData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, FullClipboardData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, FullClipboardData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawDragData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawDragData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, FullDragData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, FullDragData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardOrDragData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardOrDragData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardTextData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardTextData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawClipboardTextData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawClipboardTextData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, FullClipboardTextData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, FullCLipboardTextData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragTextData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragTextData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawDragTextData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawDragTextData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, FullDragTextData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, FullDragTextData, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Enumeration:
@@ -391,58 +318,58 @@ bool MCPasteboardCopyAsTypeForLegacyClipboard(const MCClipboard* p_clipboard, MC
 
 MCTransferType MCPasteboardTransferTypeFromName(MCNameRef p_key, bool p_legacy = false)
 {
-	if (MCNameIsEqualTo(p_key, MCN_text))
+	if (MCNameIsEqualToCaseless(p_key, MCN_text))
 		return TRANSFER_TYPE_TEXT;
 
-	if (MCNameIsEqualTo(p_key, MCN_unicode))
+	if (MCNameIsEqualToCaseless(p_key, MCN_unicode))
 		return TRANSFER_TYPE_UNICODE_TEXT;
 
-	if (MCNameIsEqualTo(p_key, MCN_styles))
+	if (MCNameIsEqualToCaseless(p_key, MCN_styles))
 		return TRANSFER_TYPE_STYLED_TEXT;
 
-    if (MCNameIsEqualTo(p_key, MCN_styledtext))
+    if (MCNameIsEqualToCaseless(p_key, MCN_styledtext))
         return TRANSFER_TYPE_STYLED_TEXT_ARRAY;
     
-	if (MCNameIsEqualTo(p_key, MCN_rtf))
+	if (MCNameIsEqualToCaseless(p_key, MCN_rtf))
         return p_legacy ? TRANSFER_TYPE_RTF_TEXT : TRANSFER_TYPE_RTF;
 
-	if (MCNameIsEqualTo(p_key, MCN_html))
+	if (MCNameIsEqualToCaseless(p_key, MCN_html))
         return p_legacy ? TRANSFER_TYPE_HTML_TEXT : TRANSFER_TYPE_HTML;
 
-	if (MCNameIsEqualTo(p_key, MCN_files))
+	if (MCNameIsEqualToCaseless(p_key, MCN_files))
 		return TRANSFER_TYPE_FILES;
 
-	if (MCNameIsEqualTo(p_key, MCN_private))
+	if (MCNameIsEqualToCaseless(p_key, MCN_private))
 		return TRANSFER_TYPE_PRIVATE;
 
-	if (MCNameIsEqualTo(p_key, MCN_image))
+	if (MCNameIsEqualToCaseless(p_key, MCN_image))
 		return TRANSFER_TYPE_IMAGE;
 
-	if (MCNameIsEqualTo(p_key, MCN_objects))
+	if (MCNameIsEqualToCaseless(p_key, MCN_objects))
 		return TRANSFER_TYPE_OBJECTS;
     
-    if (MCNameIsEqualTo(p_key, MCN_rtftext))
+    if (MCNameIsEqualToCaseless(p_key, MCN_rtftext))
         return TRANSFER_TYPE_RTF_TEXT;
     
-    if (MCNameIsEqualTo(p_key, MCN_htmltext))
+    if (MCNameIsEqualToCaseless(p_key, MCN_htmltext))
         return TRANSFER_TYPE_HTML_TEXT;
     
-    if (MCNameIsEqualTo(p_key, MCN_png))
+    if (MCNameIsEqualToCaseless(p_key, MCN_png))
         return TRANSFER_TYPE_PNG;
     
-    if (MCNameIsEqualTo(p_key, MCN_gif))
+    if (MCNameIsEqualToCaseless(p_key, MCN_gif))
         return TRANSFER_TYPE_GIF;
     
-    if (MCNameIsEqualTo(p_key, MCN_jpeg))
+    if (MCNameIsEqualToCaseless(p_key, MCN_jpeg))
         return TRANSFER_TYPE_JPEG;
 
-	if (MCNameIsEqualTo(p_key, MCN_win_bitmap))
+	if (MCNameIsEqualToCaseless(p_key, MCN_win_bitmap))
 		return TRANSFER_TYPE_BMP;
 
-	if (MCNameIsEqualTo(p_key, MCN_win_metafile))
+	if (MCNameIsEqualToCaseless(p_key, MCN_win_metafile))
 		return TRANSFER_TYPE_WIN_METAFILE;
 
-	if (MCNameIsEqualTo(p_key, MCN_win_enh_metafile))
+	if (MCNameIsEqualToCaseless(p_key, MCN_win_enh_metafile))
 		return TRANSFER_TYPE_WIN_ENH_METAFILE;
 
 	return TRANSFER_TYPE_NULL;

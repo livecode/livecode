@@ -347,6 +347,7 @@ enum MCScriptHandlerTypeParameterMode
     kMCScriptHandlerTypeParameterModeIn,
     kMCScriptHandlerTypeParameterModeOut,
     kMCScriptHandlerTypeParameterModeInOut,
+    kMCScriptHandlerTypeParameterModeVariadic,
     
     kMCScriptHandlerTypeParameterMode__Last
 };

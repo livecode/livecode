@@ -2,7 +2,7 @@ Name: productRequestError
 
 Type: message
 
-Syntax: productRequestError <productID>, <error>
+Syntax: productRequestError <pProductID>, <pError>
 
 Summary:
 Sent by the store when the request for specific product details is
@@ -20,11 +20,11 @@ on productRequestError pProduct, pError
 end productRequestError
 
 Parameters:
-productID:
+pProductID:
 The identidier of the product for which the request for details was
 made. 
 
-error (string):
+pError (string):
 A string that describes the error.
 
 Description:

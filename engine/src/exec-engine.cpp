@@ -50,123 +50,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "libscript/script.h"
 
-////////////////////////////////////////////////////////////////////////////////
-
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Version, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, BuildNumber, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Platform, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Environment, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Machine, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Processor, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, SystemVersion, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, CommandNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ConstantNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, FunctionNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, PropertyNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, GlobalNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, LocalNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, VariableNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Param, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ParamCount, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Params, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Result, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, BackScripts, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, FrontScripts, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, PendingMessages, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Interrupt, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Me, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Target, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, TargetContents, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Owner, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ScriptLimits, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, SysError, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Value, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ValueWithObject, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Get, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, PutIntoVariable, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, PutOutput, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Do, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, DoInCaller, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, InsertScriptOfObjectInto, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Quit, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, CancelMessage, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, DeleteVariable, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, DeleteVariableChunks, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, RemoveAllScriptsFrom, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, RemoveScriptOfObjectFrom, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, LoadExtension, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnloadExtension, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, WaitFor, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, WaitUntil, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, WaitWhile, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StartUsingStack, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StartUsingStackByName, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStack, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStackByName, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Dispatch, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Send, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, SendInTime, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Call, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, LockErrors, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, LockMessages, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnlockErrors, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnlockMessages, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Set, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Return, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, ReturnValue, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, ReturnError, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, CaseSensitive, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, CaseSensitive, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, CenturyCutOff, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, CenturyCutOff, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, ConvertOctals, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ConvertOctals, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, ItemDelimiter, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ItemDelimiter, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, LineDelimiter, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, LineDelimiter, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, ColumnDelimiter, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ColumnDelimiter, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, RowDelimiter, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, RowDelimiter, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, WholeMatches, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, WholeMatches, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, UseSystemDate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, UseSystemDate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, UseUnicode, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, UseUnicode, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, NumberFormat, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, NumberFormat, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ScriptExecutionErrors, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ScriptParsingErrors, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, AllowInterrupts, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, AllowInterrupts, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ExplicitVariables, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, ExplicitVariables, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, PreserveVariables, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, PreserveVariables, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, StackLimit, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, EffectiveStackLimit, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, StackLimit, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, SecureMode, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, SecureMode, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, SecurityCategories, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, SecurityPermissions, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, SecurityPermissions, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, RecursionLimit, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, RecursionLimit, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, Address, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, StacksInUse, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, EditionType, 1)
-
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ValueAsObject, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, OwnerAsObject, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, TemplateAsObject, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, MeAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, MenuObjectAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, TargetAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ErrorObjectAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, FontfilesInUse, 1)
+#include "license.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -227,7 +111,6 @@ static MCExecSetTypeInfo _kMCEngineSecurityCategoriesTypeInfo =
 	_kMCEngineSecurityCategoriesElementInfo
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCEngineNumberFormatTypeInfo = &_kMCEngineNumberFormatTypeInfo;
@@ -235,11 +118,11 @@ MCExecSetTypeInfo *kMCEngineSecurityCategoriesTypeInfo = &_kMCEngineSecurityCate
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern LT command_table[];
+extern const LT command_table[];
 extern const uint4 command_table_size;
-extern Cvalue constant_table[];
+extern const Cvalue constant_table[];
 extern const uint4 constant_table_size;
-extern LT factor_table[];
+extern const LT factor_table[];
 extern const uint4 factor_table_size;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1191,7 +1074,7 @@ Exec_stat _MCEngineExecDoDispatch(MCExecContext &ctxt, int p_handler_type, MCNam
 		t_object = ctxt . GetObjectPtr();
 		
 	// Fetch current default stack and target settings
-	MCStackHandle t_old_stack(MCdefaultstackptr->GetHandle());
+	MCStackHandle t_old_stack = MCdefaultstackptr;
 	
 	// Cache the current 'this stack' (used to see if we should switch back
 	// the default stack).
@@ -1474,6 +1357,32 @@ void MCEngineExecSend(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_
 void MCEngineExecCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target)
 {
 	MCEngineSendOrCall(ctxt, p_script, p_target, false);
+}
+
+void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target)
+{
+    MCObject *optr;
+    if (p_target == nil)
+        optr = ctxt . GetObject();
+    else
+        optr = p_target -> object;
+    
+    Boolean oldlock = MClockmessages;
+    MClockmessages = False;
+
+    Boolean added = False;
+    if (MCnexecutioncontexts < MAX_CONTEXTS)
+    {
+        MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+        added = True;
+    }
+    
+    if (optr->domess(p_script, nil, false) == ES_ERROR)
+        ctxt . Throw();
+    
+	if (added)
+		MCnexecutioncontexts--;
+	MClockmessages = oldlock;
 }
 
 void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr p_target, double p_delay, int p_units)
@@ -2042,32 +1951,12 @@ void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStr
 
 void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
 {
-    bool t_success;
-    switch (MClicenseparameters.license_class)
+    if (!MCStringFromLicenseClass(MClicenseparameters.license_class,
+                                     true,
+                                     r_edition))
     {
-        case kMCLicenseClassCommunity:
-            t_success = MCStringCreateWithCString("community", r_edition);
-            break;
-			
-		case kMCLicenseClassEvaluation:
-        case kMCLicenseClassCommercial:
-            t_success = MCStringCreateWithCString("commercial", r_edition);
-            break;
-			
-		case kMCLicenseClassProfessionalEvaluation:
-        case kMCLicenseClassProfessional:
-            t_success = MCStringCreateWithCString("professional", r_edition);
-            break;
-            
-        default:
-            t_success = false;
-            break;
+        ctxt . Throw();
     }
-    
-    if (t_success)
-        return;
-    
-    ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

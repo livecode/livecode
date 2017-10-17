@@ -27,7 +27,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "globals.h"
 #include "util.h"
-#include "syntax.h"
 #include "exec.h"
 #include "exec-interface.h"
 #include "variable.h"
@@ -261,45 +260,4 @@ void MCVisualEffect::exec_ctxt(MCExecContext &ctxt)
 	MCInterfaceExecVisualEffect(ctxt, t_effect);
 
     MCInterfaceVisualEffectFree(ctxt, t_effect);
-}
-
-void MCVisualEffect::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-	
-	compile_effect(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecVisualEffectMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
-void MCVisualEffect::compile_effect(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	nameexp -> compile(ctxt);
-	soundexp -> compile(ctxt);
-
-	uindex_t t_count = 0;
-	for(KeyValue *t_parameter = parameters; t_parameter != nil; t_parameter = t_parameter -> next)
-	{
-		MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-		t_parameter -> value -> compile(ctxt);
-		MCSyntaxFactoryEvalConstantOldString(ctxt, t_parameter -> key);
-		MCSyntaxFactoryEvalConstantBool(ctxt, t_parameter -> has_id);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeVisualEffectArgumentMethodInfo);
-		MCSyntaxFactoryEndExpression(ctxt);
-		t_count++;
-	}
-	MCSyntaxFactoryEvalList(ctxt, t_count);
-
-	MCSyntaxFactoryEvalConstantInt(ctxt, effect);
-	MCSyntaxFactoryEvalConstantInt(ctxt, direction);
-	MCSyntaxFactoryEvalConstantInt(ctxt, speed);
-	MCSyntaxFactoryEvalConstantInt(ctxt, image);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeVisualEffectMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
 }

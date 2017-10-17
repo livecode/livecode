@@ -2,9 +2,9 @@ Name: libURLMultipartFormData
 
 Type: function
 
-Syntax: libURLMultipartFormData(<formData>, key_1, value_1, ..., key_n, value_n)
+Syntax: libURLMultipartFormData(<formData>, <key1>, <value1> [, <key2>, <value2> ...])
 
-Syntax: libURLMultipartFormData(<formData>, array)
+Syntax: libURLMultipartFormData(<formData>, <array>)
 
 Syntax: libURLMultipartFormData(<formData>)
 
@@ -15,7 +15,7 @@ Associations: internet library
 
 Introduced: 2.5
 
-OS: mac, windows, linux
+OS: mac, windows, linux, html5
 
 Platforms: desktop, server
 
@@ -42,6 +42,11 @@ end if
 
 Parameters:
 formData: A variable, which will be filled with the form data.
+key1:
+value1:
+key2:
+value2:
+array:
 
 Returns:
 The function will return empty if successful, or an error message

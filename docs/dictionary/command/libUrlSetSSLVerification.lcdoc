@@ -44,6 +44,9 @@ connection is accepted.
 > <standalone application>. If included, the <Internet library> 
 > implementation will be used instead of the engine implementation.
 
+> *Cross-platform note:* The HTML5 engine will always verify server
+> credentials.
+
 References: main stack (glossary), handler (glossary),
 Standalone Application Settings (glossary), message (glossary),
 group (glossary), standalone application (glossary), keyword (glossary),

@@ -17,9 +17,8 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
-	if the environment contains "command line" then
-		return "SKIP UI-only test"
-	end if
+	TestSkipIf "environment", "command line"
+	TestSkipIfNot "clipboard"
 end TestSetup
 
 on TestCutVar

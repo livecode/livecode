@@ -57,25 +57,23 @@ that card or stack. For example, you might have queued a number of
 <message|messages> that create an animated display on the current
 <card>, and need to <cancel> them when the user goes to another <card>.
 The best solution in a case like this is to place each <messageQueueID>
-in a <script local variable>, a <global> <variable>, or a <custom
-property> at the time the <message> is sent. Then you can <cancel> all
-those <message|messages> in a <repeat> <loop> :
+in a <script local variable>, a <global> <variable>, or a 
+<custom property> at the time the <message> is sent. Then you can 
+<cancel> all those <message|messages> in a <repeat> <loop> :
 
-    global myPendingMessages # you've stored the message IDs here
+    global gMyPendingMessages # you've stored the message IDs here
     on closeCard
-
-    repeat for each line thisMessageID in myPendingMessages
-
-    cancel thisMessageID
-
-    end repeat
+      repeat for each line tThisMessageID in gMyPendingMessages
+        cancel tThisMessageID
+      end repeat
     end closeCard
 
 
 References: send (command), function (control structure),
-repeat (control structure), flushEvents (function),  (function),
-result (function), command (glossary), custom property (glossary),
-global (glossary), loop (glossary), message (glossary),  (glossary),
+repeat (control structure), flushEvents (function), 
+pendingMessages (function), result (function), command (glossary), 
+custom property (glossary), global (glossary), loop (glossary), 
+message (glossary), script local variable (glossary), 
 variable (glossary), item (keyword), card (object), stack (object)
 
 Tags: messages

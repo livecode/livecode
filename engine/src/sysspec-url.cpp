@@ -411,8 +411,9 @@ MCUrlLoadEvent *MCUrlLoadEvent::CreateUrlLoadEvent(MCObjectHandle p_object, MCNa
 	
 	t_event->m_url = MCValueRetain(p_url);
 	if (t_success)
-		t_success = MCNameClone(p_message, t_event->m_message);
-	if (p_status == kMCSystemUrlStatusError)
+        t_event->m_message = MCValueRetain(p_message);
+    
+    if (p_status == kMCSystemUrlStatusError)
         t_event -> m_error = MCValueRetain(p_error);
 	
 	if (t_success)
@@ -425,7 +426,7 @@ MCUrlLoadEvent *MCUrlLoadEvent::CreateUrlLoadEvent(MCObjectHandle p_object, MCNa
 	else
 	{
 		MCValueRelease(t_event->m_url);
-		MCNameDelete(t_event->m_message);
+		MCValueRelease(t_event->m_message);
 		MCValueRelease(t_event->m_error);
 		delete t_event;
 		return nil;
@@ -438,7 +439,7 @@ MCUrlLoadEvent *MCUrlLoadEvent::CreateUrlLoadEvent(MCObjectHandle p_object, MCNa
 void MCUrlLoadEvent::Destroy(void)
 {
 	MCValueRelease(m_url);
-	MCNameDelete(m_message);
+	MCValueRelease(m_message);
 	if (m_status == kMCSystemUrlStatusFinished)
 		MCValueRelease(m_data);
 	else if (m_status == kMCSystemUrlStatusError)
@@ -525,7 +526,7 @@ void MCS_loadurl(MCObject *p_object, MCStringRef p_url, MCNameRef p_message)
 	{
         MCValueRelease(t_state -> data);
         MCValueRelease(t_state -> url);
-        MCNameDelete(t_state -> message);
+        MCValueRelease(t_state -> message);
 		MCurlresult -> clear();
 		MCresult->sets("error: load URL failed");
         MCMemoryDestroy(t_state);

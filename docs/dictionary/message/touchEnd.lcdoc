@@ -2,7 +2,7 @@ Name: touchEnd
 
 Type: message
 
-Syntax: touchEnd <touchID>
+Syntax: touchEnd <pTouchID>
 
 Summary:
 Sent when the user ends a touch sequence
@@ -11,15 +11,15 @@ Introduced: 4.5.2
 
 OS: ios, android
 
-Platforms: desktop
+Platforms: mobile
 
 Example:
 on touchEnd
-  answer "You clicked"  the name of the target
+  answer "You clicked" && the name of the target
 end touchEnd
 
 Parameters:
-touchID:
+pTouchID:
 A number which uniquely identifies an individual physical touch action from  
 a sequence of touch messages 
 

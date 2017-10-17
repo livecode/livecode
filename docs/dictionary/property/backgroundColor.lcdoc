@@ -69,8 +69,8 @@ the color specified by <backgroundColor>. The setting of the
   <backgroundColor>. 
 
 
->*Cross-platform note:* On <Mac OS>, <OS X>, and <Windows|Windows
-> systems>, if the <backgroundColor> of all <object|objects> in the
+>*Cross-platform note:* On <Mac OS>, <OS X>, and <Windows|Windows systems>,
+> if the <backgroundColor> of all <object|objects> in the
 > <object hierarchy> is empty, the background color set by the system is
 > used. 
 

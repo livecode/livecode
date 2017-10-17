@@ -94,7 +94,7 @@ protected:
 	static int2 defaultmargin;
 	static int2 xoffset;
 	static int2 yoffset;
-	static MCControl *focused;
+	static MCControlHandle focused;
 	static double aspect;
 
 	static MCPropertyInfo kProperties[];
@@ -265,7 +265,11 @@ public:
 
 	static MCControl *getfocused()
 	{
-		return focused;
+        if (focused.IsValid())
+        {
+            return focused;
+        }
+        return nullptr;
 	}
 
 	uint32_t getstyle()

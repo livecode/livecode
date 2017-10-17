@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "osspec.h"
 #include "exec.h"
-#include "syntax.h"
 #include "variable.h"
 
 #include <float.h>
@@ -165,24 +164,6 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 	}
 }
 
-void MCAdd::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	source -> compile(ctxt);
-
-	if (destvar != nil)
-		destvar -> compile_inout(ctxt);
-	else
-		dest -> compile_inout(ctxt);
-
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecAddArrayToArrayMethodInfo, 0, 1, 1);
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecAddNumberToArrayMethodInfo, 0, 1, 1);
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecAddNumberToNumberMethodInfo, 0, 1, 1);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCDivide::~MCDivide()
 {
 	delete source;
@@ -310,24 +291,6 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 			ctxt . LegacyThrow(EE_DIVIDE_CANTSET);
 		}
     }
-}
-
-void MCDivide::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	source -> compile(ctxt);
-
-	if (destvar != nil)
-		destvar -> compile_inout(ctxt);
-	else
-		dest -> compile_inout(ctxt);
-
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecDivideArrayByArrayMethodInfo, 0, 1, 1);
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecDivideArrayByNumberMethodInfo, 0, 1, 1);
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecDivideNumberByNumberMethodInfo, 0, 1, 1);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCMultiply::~MCMultiply()
@@ -462,24 +425,6 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
     }
 }
 
-void MCMultiply::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	source -> compile(ctxt);
-
-	if (destvar != nil)
-		destvar -> compile_inout(ctxt);
-	else
-		dest -> compile_inout(ctxt);
-
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecMultiplyArrayByArrayMethodInfo, 0, 1, 1);
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecMultiplyArrayByNumberMethodInfo, 0, 1, 1);
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecMultiplyNumberByNumberMethodInfo, 0, 1, 1);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCSubtract::~MCSubtract()
 {
 	delete source;
@@ -610,24 +555,6 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 			ctxt . LegacyThrow(EE_SUBTRACT_CANTSET);
 		}
     }
-}
-
-void MCSubtract::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	source -> compile(ctxt);
-
-	if (destvar != nil)
-		destvar -> compile_inout(ctxt);
-	else
-		dest -> compile_inout(ctxt);
-
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecSubtractArrayFromArrayMethodInfo, 0, 1, 1);
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecSubtractNumberFromArrayMethodInfo, 0, 1, 1);
-	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecSubtractNumberFromNumberMethodInfo, 0, 1, 1);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCArrayOp::~MCArrayOp()
@@ -802,53 +729,6 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
     }
 }
 
-void MCArrayOp::compile(MCSyntaxFactoryRef ctxt)
-{	
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	destvar -> compile_inout(ctxt);
-
-	if (mode == TYPE_USER && element != nil)
-		element -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstantNil(ctxt);
-
-	if (mode == TYPE_USER && key != nil)
-		key -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstantNil(ctxt);
-
-	if (is_combine)
-	{
-		if (form == FORM_NONE)
-		{
-            // SN-2014-09-01: [[ Bug 13297 ]] Combining by column deserves its own function as it is too
-            // different from combining by row
-            if (mode == TYPE_ROW)
-                MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByRowMethodInfo, 0, 0);
-            else if (mode == TYPE_COLUMN)
-                MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByColumnMethodInfo, 0, 0);
-			else
-				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineMethodInfo, 0, 1, 2, 0);
-		}
-		else if (form == FORM_SET)
-			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineAsSetMethodInfo, 0, 1, 0);
-	}
-	else
-	{
-		if (form == FORM_NONE)
-		{
-			if (mode == TYPE_COLUMN)
-				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitByColumnMethodInfo, 0, 0);
-			else
-				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitMethodInfo, 0, 1, 2, 0);
-		}
-		else if (form == FORM_SET)
-			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitAsSetMethodInfo, 0, 1, 0);
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
 
 Parse_stat MCSetOp::parse(MCScriptPoint &sp)
 {
@@ -1000,40 +880,4 @@ void MCSetOp::exec_ctxt(MCExecContext &ctxt)
         else
             destvar->set(ctxt, *t_dst_value);
     }
-}
-
-void MCSetOp::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	// MUTABLE ARRAY 
-	destvar -> compile(ctxt);
-	source -> compile(ctxt);
-
-	switch(op)
-    {
-        case kOpIntersect:
-            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecIntersectMethodInfo, 0, 1, 0);
-            break;
-        case kOpIntersectRecursively:
-            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecIntersectRecursivelyMethodInfo, 0, 1, 0);
-            break;
-        case kOpUnion:
-            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecUnionMethodInfo, 0, 1, 0);
-            break;
-        case kOpUnionRecursively:
-            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecUnionRecursivelyMethodInfo, 0, 1, 0);
-            break;
-        case kOpDifference:
-            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecDifferenceMethodInfo, 0, 1, 0);
-            break;
-        case kOpSymmetricDifference:
-            MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSymmetricDifferenceMethodInfo, 0, 1, 0);
-            break;
-        case kOpNone:
-            MCUnreachable();
-            break;
-    }
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }

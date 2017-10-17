@@ -11,22 +11,26 @@ if [ ! -z "${OBJCOPY}" ] ; then
 else
 	# Attempt to set up the toolchain automatically
 	if [ -z "${ANDROID_TOOLCHAIN}" ] ; then
-		ANDROID_TOOLCHAIN="${HOME}/android/toolchain/standalone/bin/arm-linux-androideabi"
-
-        # OpenSSL requires this to be set when cross-compiling for Android
-        export CROSS_SYSROOT="${HOME}/android/toolchain/standalone/sysroot"
+		ANDROID_TOOLCHAIN="${HOME}/android/toolchain/standalone/bin/arm-linux-androideabi-"
+		# OpenSSL requires this to be set when cross-compiling for Android
+		export CROSS_SYSROOT="${HOME}/android/toolchain/standalone/sysroot"
+	else
+		# if not defined, derive CROSS_ROOT from ANDROID_TOOLCHAIN
+		if [ -z "${CROSS_SYSROOT}" ] ; then
+			export CROSS_SYSROOT="${ANDROID_TOOLCHAIN%/*/*}/sysroot"
+		fi
 	fi
 
-	ANDROID_CC_NAME=${ANDROID_CC_NAME:-clang}
-	ANDROID_CXX_NAME=${ANDROID_CXX_NAME:-clang++}
+	ANDROID_CC_NAME=${ANDROID_CC_NAME:-gcc}
+	ANDROID_CXX_NAME=${ANDROID_CXX_NAME:-g++}
 
-	ANDROID_CC="${ANDROID_TOOLCHAIN}-${ANDROID_CC_NAME}"
-	ANDROID_CXX="${ANDROID_TOOLCHAIN}-${ANDROID_CXX_NAME}"
-	ANDROID_LINK="${ANDROID_TOOLCHAIN}-${ANDROID_CXX_NAME}"
-	export AR="${ANDROID_TOOLCHAIN}-ar"
-	export OBJCOPY="${ANDROID_TOOLCHAIN}-objcopy"
-	export RANLIB="${ANDROID_TOOLCHAIN}-ranlib"
-	export STRIP="${ANDROID_TOOLCHAIN}-strip"
+	ANDROID_CC="${ANDROID_TOOLCHAIN}${ANDROID_CC_NAME}"
+	ANDROID_CXX="${ANDROID_TOOLCHAIN}${ANDROID_CXX_NAME}"
+	ANDROID_LINK="${ANDROID_TOOLCHAIN}${ANDROID_CXX_NAME}"
+	ANDROID_AR="${ANDROID_TOOLCHAIN}ar"
+	ANDROID_OBJCOPY="${ANDROID_TOOLCHAIN}objcopy"
+	ANDROID_RANLIB="${ANDROID_TOOLCHAIN}ranlib"
+	ANDROID_STRIP="${ANDROID_TOOLCHAIN}strip"
 fi
 
 # Android architectures

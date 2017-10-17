@@ -60,6 +60,8 @@
 	</array>
 	<key>NSAppleScriptEnabled</key>
 	<string>YES</string>
+	<key>OSAScriptingDefinition</key>
+	<string>terminology.sdef</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright 2000-2015, LiveCode Ltd., All Rights Reserved.</string>
 	<key>UTExportedTypeDeclarations</key>

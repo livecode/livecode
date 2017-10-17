@@ -268,9 +268,6 @@ static NSRect RectToNSRect(NSWindow *p_window, Rect p_rect)
 	}
 }
 
-@end
-@implementation NSObject (WebUIDelegate)
-
 - (void)webView:(WebView *)sender runJavaScriptAlertPanelWithMessage:(NSString *)message
 {
     // Create and display an alert panel
@@ -296,6 +293,8 @@ static NSRect RectToNSRect(NSWindow *p_window, Rect p_rect)
 
 - (void)webView:(WebView *)sender runOpenPanelForFileButtonWithResultListener:(id<WebOpenPanelResultListener>)resultListener
 {
+    NSAutoreleasePool* t_pool = [[NSAutoreleasePool alloc] init];
+    
     // Create an open-file panel that allows a single file to be chosen
     NSOpenPanel* t_dialog = [NSOpenPanel openPanel];
     [t_dialog setCanChooseDirectories:NO];
@@ -321,7 +320,7 @@ static NSRect RectToNSRect(NSWindow *p_window, Rect p_rect)
         [resultListener cancel];
     }
     
-    [t_dialog release];
+    [t_pool release];
 }
 
 @end

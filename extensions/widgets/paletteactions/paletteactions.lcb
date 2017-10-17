@@ -29,7 +29,7 @@ use com.livecode.library.widgetutils
 
 metadata title is "Palette Actions"
 metadata author is "LiveCode"
-metadata version is "1.0.0"
+metadata version is "1.0.1"
 metadata userVisible is "false"
 
 property navNames		get getNavNames			set setNavNames
@@ -50,7 +50,7 @@ property actionData		get getActionData		set setActionData
 
 property isHeader		get mIsHeader			set mIsHeader
 property navBarRight	get getNavBarRight
-property formattedWidth get mFormattedWidth
+property minWidth get mMinWidth
 
 private variable mNavData 			as List
 private variable mSelectedNavItem 	as Integer
@@ -69,22 +69,26 @@ private variable mRecalculate		as Boolean
 
 private variable mIsHeader 			as Boolean
 
-private variable mHoverTab          as Boolean
+private variable mHoverTab          as String
 private variable mHoverIndex        as Integer
 
-private variable mFormattedWidth as Real
+private variable mMinWidth as Real
+
+private variable mFirstTab          as Integer
+private variable mLastTab           as Integer
+private variable mBackForwardRects  as List
 
 constant kBlack is [0,0,0]
 constant kNavColor is [0,0,0,0.5]
 constant kWhite is [1,1,1]
 
-constant kDefaultNavName is "Nav"
+constant kDefaultNavName is "nav"
 constant kDefaultNavIcon is ""
-constant kDefaultNavLabel is "nav"
+constant kDefaultNavLabel is "Nav"
 
-constant kDefaultActionName is "Action"
+constant kDefaultActionName is "action"
 constant kDefaultActionIcon is "cog"
-constant kDefaultActionLabel is "action"
+constant kDefaultActionLabel is "Action"
 constant kDefaultActionMenu is ""
 
 constant kTabPaddingRatio is 0.1
@@ -130,8 +134,8 @@ public handler OnCreate()
 
 	put the empty list into mNavData
 	repeat with tCount from 1 up to 3
-		put kDefaultNavName into tNav["name"]
-		put kDefaultNavLabel into tNav["label"]
+		put kDefaultNavName && tCount formatted as string into tNav["name"]
+		put kDefaultNavLabel && tCount formatted as string into tNav["label"]
 		put kDefaultNavIcon into tNav["icon"]
 		push tNav onto mNavData
 	end repeat
@@ -151,8 +155,10 @@ public handler OnCreate()
 	put the empty list into mActionRects
 
     put 0 into mHoverIndex
-    put false into mHoverTab
-	 put 0 into mFormattedWidth
+    put "" into mHoverTab
+	put 0 into mMinWidth
+	put 1 into mFirstTab
+	put 0 into mLastTab
 end handler
 
 public handler OnSave(out rProperties as Array)
@@ -183,32 +189,24 @@ public handler OnPaint()
 
 	-- draw the line above / below
 	strokePathWithPaints(getPath("line"), "line")
+	
+	drawActions()
 
-	variable tCount as Integer
-	if the number of elements in mNavData > 0 then
-		repeat with tCount from 1 up to the number of elements in mNavData
-			drawTab(tCount)
-		end repeat
-	end if
-
-	if the number of elements in mActionData > 0 then
-		repeat with tCount from 1 up to the number of elements in mActionData
-			drawAction(tCount)
-		end repeat
-	end if
-
+	drawTabs()
+	
+	drawTabNav()
 end handler
 
 public handler OnClick()
 	variable tPoint as Point
 	put the click position into tPoint
 
-	variable tTab as Boolean
+	variable tTab as String
 	variable tIndex as Integer
 	if positionToRect(tPoint, tTab, tIndex) then
-		if tTab then
+		if tTab is "tab" then
 			setSelectedNavIndex(tIndex)
-		else
+		else if tTab is "action" then
 			if mActionData[tIndex]["menu"] is not empty then
 				variable tResult
 				variable tMenuString as String
@@ -223,6 +221,8 @@ public handler OnClick()
 			else
 				post "actionSelected" with [mActionData[tIndex]["name"]]
 			end if
+		else if tTab is "backforward" then
+		    GoBackForward(tIndex is 1)
 		end if
 	end if
 end handler
@@ -243,7 +243,7 @@ private handler updateHover()
 	variable tPoint as Point
 	put the mouse position into tPoint
 
-	variable tTab as Boolean
+	variable tTab as String
 	variable tIndex as Integer
 	if positionToRect(tPoint, tTab, tIndex) is false then
 		clearHover()
@@ -253,10 +253,16 @@ private handler updateHover()
     if tIndex is not mHoverIndex or tTab is not mHoverTab then
         if tIndex is not 0 then
             // AL-2015-04-24: [[ Bug 15286 ]] Set tooltip of palette actions
-            if tTab then
+            if tTab is "tab" then
                 set property "tooltip" of my script object to mNavData[tIndex]["label"]
-            else
+            else if tTab is "action" then
                 set property "tooltip" of my script object to mActionData[tIndex]["label"]
+            else if tTab is "backforward" then
+                if tIndex is 1 then
+                    set property "tooltip" of my script object to "previous"
+                else
+                    set property "tooltip" of my script object to "next"
+                end if
             end if
         end if
         put tIndex into mHoverIndex
@@ -267,12 +273,12 @@ end handler
 
 private handler clearHover()
 	put 0 into mHoverIndex
-	put false into mHoverTab
+	put "" into mHoverTab
 	set property "tooltip" of my script object to ""
 	redraw all
 end handler
 
-private handler positionToRect(in pPoint as Point, out rTab as Boolean, out rIndex as Integer) returns Boolean
+private handler positionToRect(in pPoint as Point, out rWhich as String, out rIndex as Integer) returns Boolean
 	variable tRect as Rectangle
 	variable tCount as Integer
     put rectangle [0,0,0,0] into tRect
@@ -280,8 +286,8 @@ private handler positionToRect(in pPoint as Point, out rTab as Boolean, out rInd
 	repeat for each element tRect in mTabRects
 		add 1 to tCount
 		if pPoint is within tRect then
-			put true into rTab
-			put tCount into rIndex
+			put "tab" into rWhich
+			put tCount + mFirstTab - 1 into rIndex
 			return true
 		end if
 	end repeat
@@ -290,15 +296,76 @@ private handler positionToRect(in pPoint as Point, out rTab as Boolean, out rInd
 	repeat for each element tRect in mActionRects
 		add 1 to tCount
 		if pPoint is within tRect then
-			put false into rTab
+			put "action" into rWhich
 			put tCount into rIndex
 			return true
 		end if
 	end repeat
 
-    put false into rTab
+    if mFirstTab > 1 and pPoint is within mBackForwardRects[1] then
+        put "backforward" into rWhich
+        put 1 into rIndex
+        return true
+    else if mLastTab < the number of elements in mNavData and \
+        pPoint is within mBackForwardRects[2] then
+        put "backforward" into rWhich
+        put 2 into rIndex
+        return true
+    end if
+
+    put "" into rWhich
     put 0 into rIndex
 	return false
+end handler
+
+private handler GoBackForward(in pBack as Boolean)
+    variable tFirstTab as Integer
+    variable tCounter as Integer
+    variable tNavData as List
+    variable tTabRects as List
+    variable tLastTab as Integer
+    variable tWidth as Real
+    if pBack then
+        -- Find the maximum number of newly displayable tabs
+        repeat with tCounter from 1 up to mFirstTab - 1
+        	-- Work around bug 20270
+            put tCounter into tFirstTab
+            variable tNavData as List
+            variable tTabRects as List
+            variable tLastTab as Integer
+            put element tFirstTab to -1 of mNavData into tNavData
+
+	        put calculateRects(true, true, mShowNavIcons, tNavData, tWidth) into tTabRects
+	        put calculateLastTab(tTabRects, tFirstTab) into tLastTab
+	        
+	        -- If we can see the first previously undisplayable tab with
+	        -- this starting point, then we are done.
+	        if tLastTab >= mFirstTab - 1 then
+	            exit repeat
+	        end if
+	    end repeat   
+	else
+	    -- Find the maximum number of newly displayable tabs
+        repeat with tCounter from mFirstTab + 1 up to mLastTab + 1
+            -- Work around bug 20270
+            put tCounter into tFirstTab
+            put element tFirstTab to -1 of mNavData into tNavData
+
+	        put calculateRects(true, true, mShowNavIcons, tNavData, tWidth) into tTabRects
+	        put calculateLastTab(tTabRects, tFirstTab) into tLastTab
+	        
+	        -- If we can see the rest of the tabs with this starting 
+	        -- point, then we are done.
+	        if tLastTab is the number of elements in mNavData then
+	            exit repeat
+	        end if
+	    end repeat
+    end if    
+    
+    post "navChanged"
+    put tFirstTab into mFirstTab
+    put true into mRecalculate
+    redraw all
 end handler
 --------------------------------------------------------------------------------
 --
@@ -353,69 +420,107 @@ private handler fillTextWithPaints(in pText as String, \
 	end repeat
 end handler
 
-private handler drawTab(in pIndex as Integer)
-	variable tTab as Array
-	put element pIndex of mNavData into tTab
+private handler drawTabNav()
+    variable tMode as String
+    if mFirstTab > 1 then
+        if (mHoverIndex is 1 and mHoverTab is "backforward") then
+            put "hover nav" into tMode
+        else
+            put "nav" into tMode
+        end if
 
-	variable tRect as Rectangle
-	put element pIndex of mTabRects into tRect
-
-	if pIndex is mSelectedNavItem then
-		// Get 3 sided path of tab (For drawing 3 sided stroke)
-		variable tPath as Path
-		put getPathOfTab(tRect) into tPath
-
-		// Get 3 sided path of tab (For drawing tab background)
-		variable tPathClosed as Path
-		put tPath into tPathClosed
-		close path on tPathClosed
-
-		// Draw background
-		fillPathWithPaints(tPathClosed, "selected tab")
-
-		// Draw 3 sided tab stroke
-		strokePathWithPaints(tPath, "line")
-	end if
-
-	variable tMode as String
-
-	if (mHoverIndex is pIndex and mHoverTab is true) then
-		put "hover nav" into tMode
-	else
-		put "nav" into tMode
-	end if
-
-	if mShowNavIcons then
-		fillSvgPathWithPaints(iconSVGPathFromName(tTab["icon"]), tRect, tMode)
-	else
-		set the font of this canvas to my font
-		fillTextWithPaints(tTab["label"], tRect, tMode)
-	end if
+        -- Draw left tab nav
+        fillSvgPathWithPaints(iconSVGPathFromName("double angle left"), \
+        mBackForwardRects[1], tMode)
+    end if
+    
+    if mLastTab < the number of elements in mNavData then
+    
+        if (mHoverIndex is 2 and mHoverTab is "backforward") then
+            put "hover nav" into tMode
+        else
+            put "nav" into tMode
+        end if
+        -- Draw right tab nav
+        fillSvgPathWithPaints(iconSVGPathFromName("double angle right"), \
+        mBackForwardRects[2], tMode)
+    end if
 end handler
 
-private handler drawAction(in pIndex as Integer)
+private handler drawTabs()
+    if mNavData is [] then
+        return
+    end if
+    
+	variable tTabIndex as Integer
+	put 0 into tTabIndex
+	repeat with tTabIndex from mFirstTab up to mLastTab
+		variable tTab as Array
+        put element tTabIndex of mNavData into tTab
+        variable tRect as Rectangle
+        put element tTabIndex - mFirstTab + 1 of mTabRects into tRect
+
+        if tTabIndex is mSelectedNavItem then
+            // Get 3 sided path of tab (For drawing 3 sided stroke)
+            variable tPath as Path
+            put getPathOfTab(tRect) into tPath
+
+            // Get 3 sided path of tab (For drawing tab background)
+            variable tPathClosed as Path
+            put tPath into tPathClosed
+            close path on tPathClosed
+
+            // Draw background
+            fillPathWithPaints(tPathClosed, "selected tab")
+
+            // Draw 3 sided tab stroke
+            strokePathWithPaints(tPath, "line")
+        end if
+
+        variable tMode as String
+
+        if (mHoverIndex is tTabIndex and mHoverTab is "tab") then
+            put "hover nav" into tMode
+        else
+            put "nav" into tMode
+        end if
+
+        if mShowNavIcons then
+            fillSvgPathWithPaints(iconSVGPathFromName(tTab["icon"]), tRect, tMode)
+        else
+            set the font of this canvas to my font
+            fillTextWithPaints(tTab["label"], tRect, tMode)
+        end if
+    end repeat
+end handler
+
+private handler drawActions()
 	variable tAction as Array
-	put element pIndex of mActionData into tAction
+	variable tActionIndex as Integer
+	put 0 into tActionIndex
+	repeat for each element tAction in mActionData
+	    add 1 to tActionIndex
 
-	variable tRect as Rectangle
-	put element pIndex of mActionRects into tRect
+        variable tRect as Rectangle
+        put element tActionIndex of mActionRects into tRect
 
-	variable tMode as String
+        variable tMode as String
 
-	if tAction["enabled"] parsed as boolean is false then
-		put "disabled" into tMode
-	else if mHoverIndex is pIndex and mHoverTab is false then
-		put "hover nav" into tMode
-	else
-		put "nav" into tMode
-	end if
+        if tAction["enabled"] parsed as boolean is false then
+            put "disabled" into tMode
+        else if mHoverIndex is tActionIndex and mHoverTab is "action" then
+            put "hover nav" into tMode
+        else
+            put "nav" into tMode
+        end if
 
-	if mShowActionIcons then
-		fillSvgPathWithPaints(iconSVGPathFromName(tAction["icon"]), tRect, tMode)
-	else
-		set the font of this canvas to my font
-		fillTextWithPaints(tAction["label"], tRect, tMode)
-	end if
+        if mShowActionIcons then
+            fillSvgPathWithPaints(iconSVGPathFromName(tAction["icon"]), tRect, tMode)
+        else
+            set the font of this canvas to my font
+            fillTextWithPaints(tAction["label"], tRect, tMode)
+        end if
+    end repeat
 end handler
 
 -- The padding to add if there are actions and tabs.
@@ -427,23 +532,63 @@ end handler
 private handler recalculateRects()
 	variable tTabWidth as Real
 	variable tActionWidth as Real
-	calculateTabRects(tTabWidth)
 	calculateActionRects(tActionWidth)
-
-	variable tFormattedWidth as Real
-	put tTabWidth + tActionWidth into tFormattedWidth
+	calculateTabRects(tTabWidth)
+	
+	variable tMinWidth as Real
+	put tTabWidth + tActionWidth into tMinWidth
 	-- Add extra padding if there are actions and tabs
 	if tTabWidth is not 0 and tActionWidth is not 0 then
-		add internalPadding() to tFormattedWidth
+		add internalPadding() to tMinWidth
 	end if 
 	
-	put tFormattedWidth into mFormattedWidth
+	put tMinWidth into mMinWidth
 	put false into mRecalculate
 end handler
 
-private handler calculateRects(in pTabs as Boolean, in pFromLeft as Boolean, in pIcons as Boolean, in pData as List, out rFormattedWidth as Real) returns List
-	variable tFormattedWidth as Real
-	put 0 into tFormattedWidth
+private handler fetchRectAndUpdate(in pIcons as Boolean, in pFromLeft as Boolean, \
+    in pElement as Array, in pPadding as Real, in pTabs as Boolean, \
+    inout xLeft as Real, inout xRight as Real) returns Rectangle
+    
+    variable tTop as Real
+	variable tBottom as Real
+	if pTabs then
+		put kTabPaddingRatio * my height + pPadding into tTop
+	else
+		put pPadding into tTop
+	end if
+	put my height - pPadding into tBottom
+    
+	variable tWidth as Real
+    if pIcons is false then
+        variable tTextRect as Rectangle
+        put the bounds of text pElement["label"] with my font into tTextRect
+        put the width of tTextRect into tWidth
+    else
+        put tBottom - pPadding into tWidth
+    end if
+
+    if pFromLeft then
+        put tWidth + 2 * pPadding + xLeft into xRight
+    else
+        put xRight - (tWidth + 2 * pPadding) into xLeft
+    end if
+    
+    variable tRect as Rectangle
+    put rectangle [xLeft, tTop, xRight, tBottom] into tRect
+
+    if pFromLeft then
+        put xRight into xLeft
+    else
+        put xLeft into xRight
+    end if
+    
+    return tRect
+end handler
+
+private handler calculateRects(in pTabs as Boolean, in pFromLeft as Boolean, in pIcons as Boolean, in pData as List, out rMinWidth as Real) returns List
+	variable tMinWidth as Real
+	put 0 into tMinWidth
 	
 	variable tPadding as Real
 	if pTabs then
@@ -459,68 +604,117 @@ private handler calculateRects(in pTabs as Boolean, in pFromLeft as Boolean, in 
 	variable tRight as Real
 	if pFromLeft then
 		put tPadding into tLeft
+		if pTabs and mFirstTab > 1 then
+		    add 2*tPadding + iconWidth() to tLeft
+		end if
 	else
 		put my width - tPadding into tRight
 	end if
 
-	variable tTop as Real
-	variable tBottom as Real
-	if pTabs then
-		put kTabPaddingRatio * my height + tPadding into tTop
-	else
-		put tPadding into tTop
-	end if
-	put my height - tPadding into tBottom
-
-	variable tRect as Rectangle
 	variable tElement as Array
-	variable tWidth as Real
 	repeat for each element tElement in pData
-		if pIcons is false then
-			variable tTextRect as Rectangle
-			put the bounds of text tElement["label"] with my font into tTextRect
-			put the width of tTextRect into tWidth
-		else
-			put tBottom - tPadding into tWidth
-		end if
-
-		if pFromLeft then
-			put tWidth + 2 * tPadding + tLeft into tRight
-		else
-			put tRight - (tWidth + 2 * tPadding) into tLeft
-		end if
-
-		put rectangle [tLeft, tTop, tRight, tBottom] into tRect
-
-		push tRect onto tRects
-
-		if pFromLeft then
-			put tRight into tLeft
-		else
-			put tLeft into tRight
-		end if
+	    push fetchRectAndUpdate(pIcons, pFromLeft, tElement, tPadding, \
+	        pTabs, tLeft, tRight) onto tRects
 	end repeat
 
 	if the number of elements in pData is not 0 then
 		if pFromLeft then
-			put tRight into tFormattedWidth
+			put tRight into tMinWidth
 		else
-			put my width - tLeft into tFormattedWidth
+			put my width - tLeft into tMinWidth
 		end if
 		-- Add the padding to the opposite side
-		add tPadding to tFormattedWidth
+		add tPadding to tMinWidth
 	end if 
 	
-	put tFormattedWidth into rFormattedWidth
+	put tMinWidth into rMinWidth
 	return tRects
 end handler
 
-private handler calculateTabRects(out rWidth as Real)
-	if mShowNavIcons then
-		put calculateRects(true, true, mShowNavIcons, mNavData, rWidth) into mTabRects
-	else
-		put calculateRects(true, true, mShowNavIcons, mNavData, rWidth) into mTabRects
+private handler iconWidth() returns Real
+    return my height * (1 + (2 * kPaddingRatio * (kTabPaddingRatio - 1)))
+end handler
+
+private handler calculateLastTab(in pTabRects as List, in pFirstTab as Integer) returns Integer
+	variable tActionsLeft as Real
+	if mActionRects is not [] then
+    	put the left of mActionRects[-1] into tActionsLeft
+    else
+        put the right of my bounds into tActionsLeft
+    end if
+    
+    // Some padding between actions and tabs
+    subtract internalPadding() from tActionsLeft
+    
+    variable tIconWidth as Real
+    put iconWidth() into tIconWidth
+    
+    variable tRect as Rectangle
+    variable tLastTab as Integer
+    put 0 into tLastTab
+    repeat for each element tRect in pTabRects
+        if the right of tRect + tIconWidth > tActionsLeft then
+            exit repeat
+        end if
+        add 1 to tLastTab
+    end repeat
+	
+	// Ensure there is space for the 'go right' icon
+	if tLastTab > 0 and tLastTab + pFirstTab is not the number of elements in mNavData then
+	    if the right of pTabRects[tLastTab] + tIconWidth > tActionsLeft then
+	        subtract 1 from tLastTab
+	    end if
 	end if
+	
+	-- Show at least 1 tab even if we are too small
+	put the maximum of tLastTab and 1 into tLastTab
+	return pFirstTab + tLastTab - 1
+end handler
+
+private handler calculateTabRects(out rWidth as Real)
+    if mNavData is [] then
+        put 0 into rWidth
+        put [] into mTabRects
+        return
+    end if
+
+    put the minimum of mFirstTab and the number of elements in mNavData \
+        into mFirstTab
+
+    variable tNavData as List
+    put element mFirstTab to -1 of mNavData into tNavData
+
+	put calculateRects(true, true, mShowNavIcons, tNavData, rWidth) into mTabRects
+	
+    put calculateLastTab(mTabRects, mFirstTab) into mLastTab
+	
+	// Ensure mTabRects only contains visible tab rects
+	put element 1 to mLastTab - mFirstTab + 1 of mTabRects into mTabRects
+		
+	variable tPadding as Real
+	put my height * kPaddingRatio * (1 - kTabPaddingRatio) into tPadding
+
+	variable tBackLeft as Real
+	variable tBackRight as Real
+	variable tForwardLeft as Real
+	variable tForwardRight as Real
+	put the right of mTabRects[-1] into tForwardLeft
+	put tPadding into tBackLeft
+	put 0 into tForwardRight
+	put 0 into tBackRight
+
+    variable tRects as List
+	push fetchRectAndUpdate(true, true, {}, tPadding, \
+	        true, tBackLeft, tBackRight) onto tRects
+	        
+	push fetchRectAndUpdate(true, true, {}, tPadding, \
+	        true, tForwardLeft, tForwardRight) onto tRects	
+	
+    -- return the minimum width
+	put the width of tRects[1] + the width of tRects[2] + \
+	    the width of mTabRects[1] + tPadding into rWidth
+	        
+    put tRects into mBackForwardRects
 end handler
 
 private handler calculateActionRects(out rWidth as Real)
@@ -581,35 +775,6 @@ end handler
 
 private handler getPathOfTab(in pRect as Rectangle) returns Path
     return rectangle path of rectangle [the rounded of (the left of pRect) - 0.5, the rounded of (my height * kTabPaddingRatio) + 0.5, the rounded of (the right of pRect) + 0.5, my height+0.5]
-end handler
-
-private handler stringToColor(in pString as String) returns Color
-	variable tRed as Real
-	variable tGreen as Real
-	variable tBlue as Real
-	variable tAlpha as Real
-
-	variable tComponentList as List
-	split pString by "," into tComponentList
-
-	variable tComponentCount
-	put the number of elements in tComponentList into tComponentCount
-	if tComponentCount is not 3 and tComponentCount is not 4 then
-		// Invalid number of components detected
-		throw "Invalid color"
-	end if
-
-	put (element 1 of tComponentList) parsed as number into tRed
-	put (element 2 of tComponentList) parsed as number into tGreen
-	put (element 3 of tComponentList) parsed as number into tBlue
-
-	if tComponentCount is 4 then
-		put (element 4 of tComponentList) parsed as number into tAlpha
-	else
-		put 255 into tAlpha
-	end if
-
-	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
 end handler
 
 private handler menuItemToString(in pMenuItem as Array, in pLevel as Integer) returns String
@@ -742,7 +907,7 @@ private handler setData(in pArray as Array, in pDefaultArray as Array, out rList
 	end if
 
 	put tList into rList
-	recalculateRects()
+	put true into mRecalculate
 	redraw all
 end handler
 

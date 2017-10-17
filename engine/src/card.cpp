@@ -1048,7 +1048,7 @@ Boolean MCCard::doubleup(uint2 which)
 
 void MCCard::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_idle, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 	{
 		if (opened)
 		{
@@ -1861,8 +1861,6 @@ void MCCard::geometrychanged(const MCRectangle &p_rect)
 
 MCCard *MCCard::findname(Chunk_term type, MCNameRef inname)
 {
-   // MCNewAutoNameRef t_name;
-   // /* UNCHECKED */ MCNameCreateWithOldString(inname, &t_name);
 	if (type == CT_CARD && MCU_matchname(inname, CT_CARD, getname()))
 		return this;
 	else

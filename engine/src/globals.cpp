@@ -472,7 +472,7 @@ Boolean MCcursorcanbecolor = False;
 Boolean MCcursorbwonly = True;
 int32_t MCcursormaxsize = 32;
 
-uint32_t MCstacklimit = 1024 * 1024;
+uint32_t MCstacklimit = 8 * 1024 * 1024;
 uint32_t MCpendingstacklimit = 1024 * 1024;
 
 Boolean MCappisactive = False;
@@ -1496,6 +1496,9 @@ int X_close(void)
 
 	// Cleanup the parentscript stuff
 	MCParentScript::Cleanup();
+	
+	// Finalize the event queue
+	MCEventQueueFinalize();
 	
 	// MW-2012-02-23: [[ LogFonts ]] Finalize the font table module.
 	MCLogicalFontTableFinalize();

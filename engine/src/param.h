@@ -82,11 +82,6 @@ public:
     bool evalcontainer(MCExecContext& ctxt, MCContainer& r_container);
 	Parse_stat parse(MCScriptPoint &);
 
-	void compile(MCSyntaxFactoryRef);
-	void compile_in(MCSyntaxFactoryRef);
-	void compile_out(MCSyntaxFactoryRef);
-	void compile_inout(MCSyntaxFactoryRef);
-
 private:
 	// Parameter as syntax (i.e. location of the expression
 	// being passed to a function/command).

@@ -121,7 +121,7 @@ struct MCScriptBytecodeOp_JumpIf
 		ctxt.CheckArity(2);
 		ctxt.CheckRegister(ctxt.GetArgument(0));
 		ctxt.CheckAddress(ctxt.GetAddress() +
-						  ctxt.GetSignedArgument(0));
+						  ctxt.GetSignedArgument(1));
 	}
 	
 	static void Execute(MCScriptExecuteContext& ctxt)
@@ -315,10 +315,12 @@ struct MCScriptBytecodeOp_Invoke
 		{
 			case kMCScriptDefinitionKindHandler:
 			{
+                MCScriptModuleRef t_previous = MCScriptSetCurrentModule(t_resolved_instance->module);
 				ctxt.PushFrame(t_resolved_instance,
 							   static_cast<MCScriptHandlerDefinition *>(t_resolved_definition),
 							   t_result_reg,
 				               t_arguments);
+                MCScriptSetCurrentModule(t_previous);
 			}
 			break;
 				
@@ -526,10 +528,12 @@ private:
 		{
 			case kMCScriptDefinitionKindHandler:
 			{
+                MCScriptModuleRef t_previous = MCScriptSetCurrentModule(t_handler_instance->module);
 				ctxt.PushFrame(t_handler_instance,
 							   static_cast<MCScriptHandlerDefinition *>(t_handler_def),
 							   p_result_reg,
 				               p_argument_regs);
+                MCScriptSetCurrentModule(t_previous);
 			}
 			break;
 				

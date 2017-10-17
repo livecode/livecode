@@ -300,6 +300,9 @@ protected:
     
     // MW-2014-09-30: [[ ScriptOnlyStack ]] If true, the stack is a script-only-stack.
     bool m_is_script_only : 1;
+    
+    // BWM-2017-08-16: [[ Bug 17810 ]] Line endings for imported script-only-stack.
+    MCStringLineEndingStyle m_line_encoding_style : 3;
 	
 	bool m_is_ide_stack : 1;
 	
@@ -947,6 +950,17 @@ public:
     bool isscriptonly(void) const { return m_is_script_only; }
     void setasscriptonly(MCStringRef p_script);
     
+    // BWM-2017-08-16: [[ Bug 17810 ]] Get/set line endings for imported script-only-stack.
+    MCStringLineEndingStyle getlineencodingstyle(void) const
+    {
+        return m_line_encoding_style;
+    }
+    
+    void setlineencodingstyle(MCStringLineEndingStyle p_line_encoding_style)
+    {
+        m_line_encoding_style = p_line_encoding_style;
+    }
+
 	inline bool getextendedstate(uint4 flag) const
 	{
 		return (f_extended_state & flag) != 0;
@@ -1232,8 +1246,10 @@ public:
 	void GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& p_size);
 	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t* p_size);
 
-	void GetPassword(MCExecContext& ctxt, MCDataRef& r_value);
-    void GetKey(MCExecContext& ctxt, bool& r_value);
+	void GetPassword(MCExecContext& ctxt, MCValueRef& r_value);
+    void SetPassword(MCExecContext &ctxt, MCValueRef p_password);
+    void GetKey(MCExecContext& ctxt, MCValueRef& r_value);
+    void SetKey(MCExecContext &ctxt, MCValueRef p_password);
     
     // SN-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter added
     void SetIgnoreMouseEvents(MCExecContext &ctxt, bool p_ignore);

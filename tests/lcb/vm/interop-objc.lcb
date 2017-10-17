@@ -1,0 +1,124 @@
+module __VMTEST.interop_objc
+
+use com.livecode.foreign
+use com.livecode.objc
+use com.livecode.__INTERNAL._testlib
+
+---------
+
+__safe foreign handler NSObjectAlloc() returns ObjcRetainedId binds to "objc:NSObject.+alloc"
+
+__safe foreign handler NSNumberCreateWithInt(in pInt as CInt) returns ObjcAutoreleasedId binds to "objc:NSNumber.+numberWithInt:"
+__safe foreign handler NSNumberGetIntValue(in pObj as ObjcId) returns CInt binds to "objc:NSNumber.intValue"
+__safe foreign handler NSNumberCreateWithLongLong(in pInt as CLongLong) returns ObjcAutoreleasedId binds to "objc:NSNumber.+numberWithLongLong:"
+__safe foreign handler NSNumberGetLongLongValue(in pObj as ObjcId) returns CLongLong binds to "objc:NSNumber.longLongValue"
+__safe foreign handler NSNumberCreateWithFloat(in pInt as CFloat) returns ObjcAutoreleasedId binds to "objc:NSNumber.+numberWithFloat:"
+__safe foreign handler NSNumberGetFloatValue(in pObj as ObjcId) returns CFloat binds to "objc:NSNumber.floatValue"
+__safe foreign handler NSNumberCreateWithDouble(in pInt as CDouble) returns ObjcAutoreleasedId binds to "objc:NSNumber.+numberWithDouble:"
+__safe foreign handler NSNumberGetDoubleValue(in pObj as ObjcId) returns CDouble binds to "objc:NSNumber.doubleValue"
+
+---------
+
+-- NEED TO CHECK class and instance methods, existant and non-existant
+-- also protocols and superclasses.
+
+__safe foreign handler CreateObjCObjectDoesntExist() returns ObjcId binds to "objc:NSObject.-foobar"
+
+private handler TestObjcInterop_NonExistantObjC()
+    CreateObjCObjectDoesntExist()
+end handler
+
+private handler TestObjcInterop_ExistantObjC()
+	variable tObj as ObjcObject
+	put NSObjectAlloc() into tObj
+end handler
+
+public handler TestObjcInterop_Binding()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc binding succeeds" because "not implemented on" && the operating system
+		return
+	end if
+
+  	MCUnitTestHandlerThrowsNamed(TestObjcInterop_NonExistantObjC, "livecode.lang.ForeignHandlerBindingError", "Failure to bind to non-existant objc function throws error")
+  	MCUnitTestHandlerDoesntThrow(TestObjcInterop_ExistantObjC, "Binding to existant objc function does not throw error")
+
+  	test "Non-existant objc function gives nothing as handler value" when CreateObjCObjectDoesntExist is nothing
+  	test "Existant objc function gives non-nothing as handler value" when NSObjectAlloc is not nothing
+end handler
+
+---------
+
+__safe foreign handler NSObjectGetRetainCount(in pObj as ObjcId) returns CULong binds to "objc:NSObject.-retainCount"
+__safe foreign handler NSObjectGetSelf(in pObj as ObjcId) returns ObjcId binds to "objc:NSObject.-self"
+
+public handler TestObjInterop_ObjcObjectLifetime()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc binding succeeds" because "not implemented on" && the operating system
+		return
+	end if
+
+	/* Test that ObjcRetainedId gives its reference to ObjcObject */
+	variable tObjcObjectFromRetainedId as ObjcObject
+	put NSObjectAlloc() into tObjcObjectFromRetainedId
+	test "retained id into objc object doesn't retain" when NSObjectGetRetainCount(tObjcObjectFromRetainedId) is 1
+
+	/* Test that ObjcId copies its reference to ObjcObject */
+	variable tObjcObjectFromId as ObjcObject
+	put NSObjectGetSelf(tObjcObjectFromRetainedId) into tObjcObjectFromId
+	test "id into objc object retains" when NSObjectGetRetainCount(tObjcObjectFromId) is 2
+
+	/* Test that ObjcAutoreleasedId copies its reference to ObjcObject */
+	variable tObjcObjectFromAutoreleasedId as ObjcObject
+	put NSNumberCreateWithDouble(3.14159) into tObjcObjectFromAutoreleasedId
+	test "autoreleased id into objc object retains" when NSObjectGetRetainCount(tObjcObjectFromAutoreleasedId) is 2
+end handler
+
+---------
+
+public handler TestObjInterop_RoundtripNumber()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc binding succeeds" because "not implemented on" && the operating system
+		return
+	end if
+
+	variable tIntObj as ObjcObject
+	put NSNumberCreateWithInt(314159) into tIntObj
+	test "NSNumber roundtrip CInt" when NSNumberGetIntValue(tIntObj) is 314159
+
+	variable tLongLongObj as ObjcObject
+	put NSNumberCreateWithLongLong(314159) into tLongLongObj
+	test "NSNumber roundtrip CLongLong" when NSNumberGetLongLongValue(tLongLongObj) is 314159
+
+	variable tFloatObj as ObjcObject
+	put NSNumberCreateWithFloat(314159) into tFloatObj
+	test "NSNumber roundtrip CFloat" when NSNumberGetFloatValue(tFloatObj) is 314159
+
+	variable tDoubleObj as ObjcObject
+	put NSNumberCreateWithDouble(314159) into tDoubleObj
+	test "NSNumber roundtrip CDouble" when NSNumberGetDoubleValue(tDoubleObj) is 314159
+end handler
+
+--------
+
+__safe foreign handler MCHandlerTryToInvokeWithList(in Handler as any, inout Arguments as optional List, out Result as optional any) returns optional any binds to "<builtin>"
+__safe foreign handler NSArrayFirstObject(in pObj as ObjcId) returns ObjcId binds to "objc:NSArray.firstObject"
+
+private handler __CallNSNumberMethodOnNSString(in pString as ObjcObject) returns optional any
+	return NSArrayFirstObject(pString)
+end handler
+
+public handler TestObjcInterop_CatchObjcException()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc exception handler succeeds" because "not implemented on" && the operating system
+		return
+	end if
+
+	variable tArguments as List
+	variable tResult as optional any
+	put [ StringToNSString("foo") ] into tArguments
+	test "objc exception is caught" when MCHandlerTryToInvokeWithList(__CallNSNumberMethodOnNSString, tArguments, tResult) is not nothing
+end handler
+
+---------
+
+end module

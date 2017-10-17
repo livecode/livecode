@@ -34,15 +34,14 @@ Description:
 Use the <ceiling> <function> to return the greatest integer less than or
 equal to a number.
 
-The <ceiling> function does not always <return(constant)> the
+The <ceiling> function does not always <return> the
 <integer> closest to the <number>. For example, `ceiling(5.1)`
 <return(glossary)|returns> 6, but `ceiling(4.99)`
 <return(glossary)|returns> 5.
 
 
-References: return (constant), function (control structure),
-trunc (function), abs (function), floor (function), return (glossary),
-integer (keyword)
+References: function (control structure), trunc (function), abs (function), 
+floor (function), return (glossary), integer (keyword)
 
 Tags: math
 

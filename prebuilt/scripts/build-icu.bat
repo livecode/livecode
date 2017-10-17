@@ -7,13 +7,20 @@ REM	INCLUDE and LIB point to the Windows SDK
 ECHO Build ICU for %BUILDTRIPLE%
 
 SET ICU_VERSION_ALT=%ICU_VERSION:.=_%
+SET ICU_VERSION_MINOR=%ICU_VERSION:*.=%
+CALL SET ICU_VERSION_MAJOR=%%ICU_VERSION:.%ICU_VERSION_MINOR%=%%
 
 SET ICU_TGZ=%_ROOT_DIR%\icu4c-%ICU_VERSION_ALT%-src.tgz
 SET ICU_SRC=%_ROOT_DIR%\icu-%ICU_VERSION%-%BUILDTRIPLE%-src
 SET ICU_TMP=%_ROOT_DIR%\icu-%ICU_VERSION%-%BUILDTRIPLE%-tmp
 SET ICU_BIN=%_ROOT_DIR%\icu-%ICU_VERSION%-%BUILDTRIPLE%-bin
-SET ICU_TAR=%_ROOT_DIR%\icu-%ICU_VERSION%-%BUILDTRIPLE%.tar
 SET ICU_BUILD_LOG=%_ROOT_DIR%\icu-%ICU_VERSION%-%BUILDTRIPLE%.log
+
+IF DEFINED ICU_BUILDREVISION (
+	SET ICU_TAR=%_PACKAGE_DIR%\ICU-%ICU_VERSION%-%BUILDTRIPLE%-%ICU_BUILDREVISION%.tar
+) ELSE (
+	SET ICU_TAR=%_PACKAGE_DIR%\ICU-%ICU_VERSION%-%BUILDTRIPLE%.tar
+)
 
 FOR /F "usebackq tokens=*" %%x IN (`cygpath.exe -u %ICU_SRC%`) DO SET ICU_SRC_CYG=%%x
 FOR /F "usebackq tokens=*" %%x IN (`cygpath.exe -u %ICU_BIN%`) DO SET ICU_BIN_CYG=%%x
@@ -45,7 +52,7 @@ ECHO ========== CONFIGURING ==========  >%ICU_BUILD_LOG%
 IF NOT EXIST "%ICU_TMP%" mkdir %ICU_TMP%
 
 cd %ICU_TMP%
-SET ICU_CONFIG=--prefix=%ICU_BIN_CYG% --with-data-packaging=static --enable-static --disable-shared --disable-samples --disable-tests --disable-extras
+SET ICU_CONFIG=--prefix=%ICU_BIN_CYG% --with-data-packaging=archive --enable-static --disable-shared --disable-samples --disable-tests --disable-extras
 SET ICU_CFLAGS=-DU_USING_ICU_NAMESPACE=0\ -DUNISTR_FROM_CHAR_EXPLICIT=explicit\ -DUNISTR_FROM_STRING_EXPLICIT=explicit
 
 IF %ARCH%==x86_64 (
@@ -88,10 +95,16 @@ ECHO ========== ARCHIVING ==========  >>%ICU_BUILD_LOG%
 cd "%ICU_BIN%"
 
 IF %MODE%==debug (
-	SET ICU_FILES=lib/sicudtd.lib lib/sicuind.lib lib/sicuiod.lib lib/sicutud.lib lib/sicuucd.lib include
+	SET MODE_SUFFIX=d
 ) ELSE (
-	SET ICU_FILES=lib/sicudt.lib lib/sicuin.lib lib/sicuio.lib lib/sicutu.lib lib/sicuuc.lib include
-) 
+	set MODE_SUFFIX=
+)
+
+ECHO copy "share\icu%MODE_SUFFIX%\%ICU_VERSION%\icudt%ICU_VERSION_MAJOR%l.dat" "share\icudt%ICU_VERSION_MAJOR%l.dat" >>%ICU_BUILD_LOG%
+copy "share\icu%MODE_SUFFIX%\%ICU_VERSION%\icudt%ICU_VERSION_MAJOR%l.dat" "share\icudt%ICU_VERSION_MAJOR%l.dat" >>%ICU_BUILD_LOG% 2>>&1
+
+SET ICU_FILES=lib/sicudt%MODE_SUFFIX%.lib lib/sicuin%MODE_SUFFIX%.lib lib/sicuio%MODE_SUFFIX%.lib lib/sicutu%MODE_SUFFIX%.lib lib/sicuuc%MODE_SUFFIX%.lib
+SET ICU_FILES=%ICU_FILES% include share/icudt%ICU_VERSION_MAJOR%l.dat bin/icupkg.exe bin/pkgdata.exe
 
 bash -c "tar --create --file=%ICU_TAR_CYG% --transform='flags=r;s|^|%BUILDTRIPLE%/|' --transform='flags=r;s|d.lib$|.lib|' %ICU_FILES%" >>%ICU_BUILD_LOG% 2>>&1
 IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%

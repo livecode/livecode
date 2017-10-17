@@ -531,7 +531,7 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 }
 
 
-#if 0
+#if HIGH_QUALITY_BLUR
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  High quality blurs - uses convolution

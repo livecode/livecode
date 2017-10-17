@@ -2,7 +2,7 @@ Name: menuPick
 
 Type: message
 
-Syntax: menuPick <chosenItem>, [<previousTab>]
+Syntax: menuPick <pChosenItem> [, <pPreviousTab>]
 
 Summary:
 Sent to a <button(object)> when a <menu item> is chosen from the <menu>
@@ -17,30 +17,28 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-on menuPick theItem -- in a pulldown menu
-  if theItem is "Close" then close the defaultStack
+on menuPick pChosenItem -- in a pulldown menu
+  if pChosenItem is "Close" then close the defaultStack
   else if theItem is "Quit" then quit
 end menuPick
 
 Parameters:
-chosenItem:
-The label of the menu item the user chose. If the menu item is part of a
-submenu, the menu item label is followed by a vertical bar (|) and the
-submenu's label.
+pChosenItem:
+The label of the menu item the user chose.
+If the menu item chosen is part of a submenu, the menu item label is 
+followed by a vertical bar (|) and the submenu's label.
 
-previousTab:
+pPreviousTab:
 The text of the menu item that was selected before the user chose a new
 menu item. This parameter is included only if the button's menuMode
-property is set to "tabbed" .>*Note:* If the specification of a menu or
-submenu includes a tag, that tag will replace the menu label in the
-chosenItem parameter
+property is set to "tabbed".
 
 Description:
 Handle the <menuPick> <message> to do something when the user chooses a
 <menu item> from a <button menu>, or chooses a tab in a <tabbed button>.
 
 >*Note:* If the specification of a menu or submenu includes a tag, that
-> tag will replace the menu label in the <chosenItem> parameter
+> tag will replace the menu label in the <pChosenItem> parameter
 
 The <menuPick> <message> is sent when the user clicks a tab in a <tabbed
 button>, when the user chooses a <menu item> from the <menu> associated
@@ -54,14 +52,14 @@ menu) and the chosen <menu item> has not changed. (However, no
 button> is clicked, since no menu is displayed.)
 
 To get the item number of the currently chosen menu item, use the
-menuHistory <property>.
+<menuHistory> <property>.
 
 >*Note:* The & and / characters can be used in a pulldown menu to create
 > special effects. To be shown (instead of creating these effects),
 > either <character> can be doubled. (For example, placing the line
 > "This && That" in a <menu item> results in the <menu item> being
 > displayed as "This & That", with one ampersand.) When the user chooses
-> a <menu item> with these special characters, the <chosenItem>
+> a <menu item> with these special characters, the <pChosenItem>
 > <parameter> is the text that appears in the menu as displayed, not the
 > text of that line of the <button menu|menu button>.
 

@@ -17,29 +17,6 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-static bool create_key_for_array(MCStringRef p_string, MCArrayRef p_target, MCNameRef& r_key)
-{
-    MCAutoStringRef t_key_string;
-    
-    bool t_success;
-    t_success = true;
-
-    /*
-    if (MCArrayIsFormSensitive(p_target) && !MCStringIsNative(p_string))
-    {
-        t_success = MCStringCreateWithBytes((const byte_t *)MCStringGetCharPtr(p_string), MCStringGetLength(p_string) * 2, kMCStringEncodingNative, false, &t_key_string);
-    }
-    else
-     */
-        t_key_string = p_string;
-    
-    
-    if (t_success)
-        t_success = MCNameCreate(*t_key_string, r_key);
-    
-    return t_success;
-}
-
 static bool is_not_among_the_elements_of(void *context, MCArrayRef p_target, MCNameRef p_key, MCValueRef p_value)
 {
     MCValueRef t_needle = (MCValueRef)context;
@@ -91,13 +68,13 @@ extern "C" MC_DLLEXPORT_DEF void MCArrayEvalIsAmongTheElementsOf(MCValueRef p_ne
 extern "C" MC_DLLEXPORT_DEF void MCArrayEvalIsAmongTheKeysOfCaseless(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
 {
     MCNewAutoNameRef t_key;
-    if (!create_key_for_array(p_needle, p_target, &t_key))
+    if (!MCNameCreate(p_needle, &t_key))
         return;
     
     MCValueRef t_value;
     t_value = nil;
     
-    r_output = MCArrayFetchValue(p_target, MCArrayIsCaseSensitive(p_target), *t_key, t_value);
+    r_output = MCArrayFetchValue(p_target, false, *t_key, t_value);
     
     if (p_is_not)
         r_output = !r_output;
@@ -106,13 +83,12 @@ extern "C" MC_DLLEXPORT_DEF void MCArrayEvalIsAmongTheKeysOfCaseless(MCStringRef
 extern "C" MC_DLLEXPORT_DEF void MCArrayFetchElementOfCaseless(MCArrayRef p_target, MCStringRef p_key, MCValueRef& r_output)
 {
     MCNewAutoNameRef t_key;
-    
-    if (!create_key_for_array(p_key, p_target, &t_key))
+    if (!MCNameCreate(p_key, &t_key))
         return;
     
     MCValueRef t_value;
     t_value = nil;
-    if (!MCArrayFetchValue(p_target, MCArrayIsCaseSensitive(p_target), *t_key, t_value))
+    if (!MCArrayFetchValue(p_target, false, *t_key, t_value))
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("array key does not exist"), nil);
         return;
@@ -123,15 +99,15 @@ extern "C" MC_DLLEXPORT_DEF void MCArrayFetchElementOfCaseless(MCArrayRef p_targ
 
 extern "C" MC_DLLEXPORT_DEF void MCArrayStoreElementOfCaseless(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)
 {
-    MCNewAutoNameRef t_key;
     MCAutoArrayRef t_array;
     MCArrayMutableCopy(x_target, &t_array);
     
     MCValueRef t_value;
     t_value = p_value != nil ? p_value : kMCNull;
     
-    if (!create_key_for_array(p_key, x_target, &t_key) ||
-        !MCArrayStoreValue(*t_array, MCArrayIsCaseSensitive(*t_array), *t_key, t_value))
+    MCNewAutoNameRef t_key;
+    if (!MCNameCreate(p_key, &t_key) ||
+        !MCArrayStoreValue(*t_array, false, *t_key, t_value))
         return;
     
     MCAutoArrayRef t_new_array;
@@ -143,12 +119,12 @@ extern "C" MC_DLLEXPORT_DEF void MCArrayStoreElementOfCaseless(MCValueRef p_valu
 
 extern "C" MC_DLLEXPORT_DEF void MCArrayDeleteElementOfCaseless(MCArrayRef& x_target, MCStringRef p_key)
 {
-    MCNewAutoNameRef t_key;
     MCAutoArrayRef t_array;
     MCArrayMutableCopy(x_target, &t_array);
     
-    if (!create_key_for_array(p_key, x_target, &t_key) ||
-        !MCArrayRemoveValue(*t_array, MCArrayIsCaseSensitive(*t_array), *t_key))
+    MCNewAutoNameRef t_key;
+    if (!MCNameCreate(p_key, &t_key) ||
+        !MCArrayRemoveValue(*t_array, false, *t_key))
         return;
     
     MCAutoArrayRef t_new_array;

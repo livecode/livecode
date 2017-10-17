@@ -2,7 +2,7 @@ Name: rawKeyUp
 
 Type: message
 
-Syntax: rawKeyUp <keyCode>
+Syntax: rawKeyUp <pKeyCode>
 
 Summary:
 Sent when the user releases any key that was pressed (other than a
@@ -24,7 +24,7 @@ on rawKeyUp theCode -- boldface all asterisks
 end rawKeyUp
 
 Parameters:
-keyCode:
+pKeyCode:
 The raw keycode of the released key.
 
 The result:

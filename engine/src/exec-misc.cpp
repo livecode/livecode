@@ -40,62 +40,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_GET_METHOD(Misc, DeviceToken, 0)
-MC_EXEC_DEFINE_GET_METHOD(Misc, LaunchUrl, 0)
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, LaunchData, 0);
-
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, Beep, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, Vibrate, 1)
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, DeviceResolution, 1)
-MC_EXEC_DEFINE_SET_METHOD(Misc, UseDeviceResolution, 1)
-MC_EXEC_DEFINE_GET_METHOD(Misc, DeviceScale, 1)
-MC_EXEC_DEFINE_GET_METHOD(Misc, PixelDensity, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, ShowStatusBar, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, HideStatusBar, 0)
-MC_EXEC_DEFINE_SET_METHOD(Misc, StatusBarStyle, 1)
-
-MC_EXEC_DEFINE_SET_METHOD(Misc, KeyboardType, 1)
-MC_EXEC_DEFINE_SET_METHOD(Misc, KeyboardReturnKey, 1);
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, PreferredLanguages, 1)
-MC_EXEC_DEFINE_GET_METHOD(Misc, CurrentLocale, 1)
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, SystemIdentifier, 1)
-MC_EXEC_DEFINE_GET_METHOD(Misc, ApplicationIdentifier, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, ClearTouches, 0)
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, ReachabilityTarget, 1)
-MC_EXEC_DEFINE_SET_METHOD(Misc, ReachabilityTarget, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, ExportImageToAlbum, 2)
-
-MC_EXEC_DEFINE_SET_METHOD(Misc, RedrawInterval, 1)
-MC_EXEC_DEFINE_SET_METHOD(Misc, AnimateAutorotation, 1)
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, DoNotBackupFile, 2)
-MC_EXEC_DEFINE_SET_METHOD(Misc, DoNotBackupFile, 2)
-MC_EXEC_DEFINE_GET_METHOD(Misc, FileDateProtection, 2)
-MC_EXEC_DEFINE_SET_METHOD(Misc, FileDateProtection, 2)
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, BuildInfo, 2)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, LibUrlDownloadToFile, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, LibUrlSetSSLVerification, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, EnableRemoteControl, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, DisableRemoteControl, 0)
-MC_EXEC_DEFINE_GET_METHOD(Misc, RemoteControlEnabled, 1)
-MC_EXEC_DEFINE_SET_METHOD(Misc, RemoteControlDisplayProperties, 1)
-
-// SN-2014-12-11: [[ Merge-6.7.2-rc-4 ]]
-MC_EXEC_DEFINE_GET_METHOD(Misc, IsVoiceOverRunning, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCMiscStatusBarStyleElementInfo[] =
 {
     { "default", kMCMiscStatusBarStyleDefault, false},

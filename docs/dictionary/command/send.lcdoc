@@ -2,7 +2,9 @@ Name: send
 
 Type: command
 
-Syntax: send <message> [ to <object> [in <time> [{seconds | ticks | milliseconds}] ] ]
+Syntax: send [script] <message> [ to <object> [in <time> [{seconds | ticks | milliseconds}] ] ]
+
+Syntax: send script <message> [ to <object> ]
 
 Summary:
 Sends a <message> to an <object(glossary)>.
@@ -34,6 +36,9 @@ on timerIncrement
    send "timerIncrement" to me in 1 seconds
 end timerIncrement
 
+Example:
+send script "answer the short name of me" to stack "Message Box"
+
 Parameters:
 message:
 An expression that evaluates to a message name, possibly including
@@ -64,12 +69,34 @@ one <word> (for example, if it includes <parameter|parameters>, or if it
 is a multi-word command), it must be enclosed in <double quote|double
 quotes>. 
 
-Any parameters are evaluated before they are passed to the <send>
-<command>. For example, the following statement sends the <mouseUp>
-<message> with 2 as the first parameter:
+If the `script` form is used, the <message> is simply sent unmodified to the 
+<object>. Otherwise, any parameters are evaluated before they are passed to the 
+<send> <command>. For example, suppose there is a stack named "Stack" with 
+script
+    
+    on doAnswer pParam
+       answer pParam
+    end doAnswer
 
-    send "mouseUp 1+1" to button "Example"
+    function myName
+       return the short name of me
+    end myName
+    
+and a button on the stack named "Button" with script
 
+    on mouseUp
+       send "doAnswer myName()" to this stack
+       send script "doAnswer myName()" to this stack
+    end mouseUp
+
+    function myName
+       return the short name of me
+    end myName
+
+clicking the button would result in an answer dialog first saying "Button" as the
+`myName` function would be evaluated in the button context, then "Stack" as 
+using the `script` form would result in the `myName` function being evaluated in the 
+stack context.
 
 When the send command is used the stack containing the target handler
 temporarily becomes the defaultStack. All object references in the
@@ -77,6 +104,8 @@ temporarily becomes the defaultStack. All object references in the
 defaultStack. Therefore references within the message that refer to
 "this card" or "this stack" will be referring to the card or stack where
 the target handler is located.
+
+It is a parse error to specify a time when using the `script` form.
 
 >*Important:*  Specifying a <time> can affect the order in which
 > <statement|statements> are <execute|executed>. If you don't specify a

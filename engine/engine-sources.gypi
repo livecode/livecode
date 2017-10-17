@@ -584,10 +584,6 @@
 			'src/mblandroid-theme.cpp',
 			'src/mbliphone-theme.mm',
 			'src/windows-theme.cpp',
-				
-			# Group "Syntax"
-			'src/syntax.h',
-			'src/syntax.cpp',
 			
 			# Other files
 			'src/socket_resolve.cpp',
@@ -676,7 +672,6 @@
 			'src/lnxdclnx.cpp',
 			'src/lnxdcs.cpp',
 			'src/lnxdnd.cpp',
-			'src/lnxflstold.cpp',
 			'src/lnxgtktheme.cpp',
 			'src/lnxgtkthemedrawing.cpp',
 			'src/lnximage.cpp',
@@ -794,6 +789,9 @@
 			'src/em-util.js',
 			'src/em-view.h',
 			'src/em-view.cpp',
+			'src/em-liburl.h',
+			'src/em-liburl.cpp',
+			'src/em-liburl.js',
 		],
 		
 		# Sources that need to be compiled separately for each mode

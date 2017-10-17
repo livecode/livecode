@@ -783,6 +783,28 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern bool MCS_get_browsers(MCStringRef &r_browsers);
+
+class MCInternalListBrowsers: public MCStatement
+{
+public:
+    Parse_stat parse(MCScriptPoint& sp)
+    {
+        return PS_NORMAL;
+    }
+
+    void exec_ctxt(MCExecContext &ctxt)
+    {
+        MCAutoStringRef t_browsers;
+        if (MCS_get_browsers(&t_browsers))
+            ctxt.SetTheResultToValue(*t_browsers);
+        else
+            ctxt.SetTheResultToEmpty();
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 template<class T> inline MCStatement *class_factory(void)
 {
 	return new T;
@@ -814,8 +836,9 @@ MCInternalVerbInfo MCinternalverbs[] =
 #endif
 	{ "syntax", "tokenize", class_factory<MCIdeSyntaxTokenize> },
 	{ "syntax", "recognize", class_factory<MCIdeSyntaxRecognize> },
-	{ "syntax", "compile", class_factory<MCIdeSyntaxCompile> },
 	{ "filter", "controls", class_factory<MCIdeFilterControls> },
+    { "list", "browsers", class_factory<MCInternalListBrowsers> },
+
 	{ nil, nil, nil }
 };
 
