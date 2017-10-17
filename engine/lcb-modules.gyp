@@ -11,6 +11,8 @@
 		{
 			'target_name': 'engine_lcb_modules',
 			'type': 'static_library',
+
+			'toolsets': ['host', 'target'],
 			
 			'dependencies':
 			[
@@ -30,10 +32,10 @@
 				},
 			},
 							
-			'conditions':
+			'target_conditions':
 			[
 				[
-					'OS == "win"',
+					'toolset_os == "win"',
 					{
 						'all_dependent_settings':
 						{
@@ -51,7 +53,7 @@
 					},
 				],
 				[
-					'OS == "mac" or OS == "ios"',
+					'toolset_os == "mac" or toolset_os == "ios"',
 					{
 						'all_dependent_settings':
 						{
@@ -65,24 +67,28 @@
 						},
 					},
 				],
-                [
-                    'OS == "android" or OS == "linux"',
-                    {
-                        'direct_dependent_settings':
-                        {
-                            'link_settings':
-                            {
-                                'ldflags':
-                                [
-                                    '-Wl,--whole-archive',
-                                    '-Wl,<(PRODUCT_DIR)/obj.target/engine/libengine_lcb_modules.a',
-                                    '-Wl,--no-whole-archive',
-                                ],
-                            },
-                        },
-                    },
-                ],
 			],
+
+			'direct_dependent_settings':
+			{
+				'link_settings':
+				{
+					'target_conditions':
+					[
+						[
+							'toolset_os in ("android", "linux")',
+							{
+								'ldflags':
+								[
+									'-Wl,--whole-archive',
+									'-Wl,<(PRODUCT_DIR)/obj.>(_toolset)/engine/libengine_lcb_modules.a',
+									'-Wl,--no-whole-archive',
+								],
+							},
+						],
+					],
+				},
+			},
 
 			'actions':
 			[

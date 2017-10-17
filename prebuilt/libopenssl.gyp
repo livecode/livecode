@@ -10,6 +10,8 @@
 			'target_name': 'libopenssl_headers',
 			'type': 'none',
 
+			'toolsets': ['host', 'target'],
+
 			'dependencies':
 			[
 				'fetch.gyp:fetch',
@@ -17,10 +19,10 @@
 
 			'direct_dependent_settings':
 			{
-				'conditions':
+				'target_conditions':
 				[
 					[
-						'OS == "win"',
+						'toolset_os == "win"',
 						{
 							'include_dirs':
 							[
@@ -29,7 +31,7 @@
 						},
 					],
 					[
-						'OS != "win"',
+						'toolset_os != "win"',
 						{
 							'include_dirs':
 							[
@@ -44,6 +46,8 @@
 			'target_name': 'libopenssl',
 			'type': 'none',
 
+			'toolsets': ['host', 'target'],
+
 			'dependencies':
 			[
 				'fetch.gyp:fetch',
@@ -51,10 +55,10 @@
 
 			'direct_dependent_settings':
 			{
-				'conditions':
+				'target_conditions':
 				[
 					[
-						'OS == "win"',
+						'toolset_os == "win"',
 						{
 							'include_dirs':
 							[
@@ -63,7 +67,7 @@
 						},
 					],
 					[
-						'OS != "win"',
+						'toolset_os != "win"',
 						{
 							'include_dirs':
 							[
@@ -76,10 +80,10 @@
 
 			'link_settings':
 			{
-				'conditions':
+				'target_conditions':
 				[
 					[
-						'OS == "mac"',
+						'toolset_os == "mac"',
 						{
 							'libraries':
 							[
@@ -89,7 +93,7 @@
 						},
 					],
 					[
-						'OS == "ios"',
+						'toolset_os == "ios"',
 						{
 							'libraries':
 							[
@@ -99,12 +103,12 @@
 						},
 					],
 					[
-						'OS == "linux"',
+						'toolset_os == "linux"',
 						{
 							# Gyp doesn't seem to handle non-absolute paths here properly...
 							'library_dirs':
 							[
-								'lib/linux/<(target_arch)',
+								'lib/linux/>(toolset_arch)',
 							],
 							
 							'libraries':
@@ -117,11 +121,11 @@
 						},
 					],
 					[
-						'OS == "android"',
+						'toolset_os == "android"',
 						{
 							'library_dirs':
 							[
-								'lib/android/<(target_arch)',
+								'lib/android/>(toolset_arch)',
 							],
 							
 							'libraries':
@@ -134,7 +138,7 @@
 						},
 					],
 					[
-						'OS == "win"',
+						'toolset_os == "win"',
 						{
 							'library_dirs':
 							[

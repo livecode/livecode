@@ -54,7 +54,7 @@
 										{
 											'dist_files':
 											[
-												'<(lc-compile-ffi-java_target)',
+												'>(lc-compile-ffi-java_target)',
 											],
 										},
 									},

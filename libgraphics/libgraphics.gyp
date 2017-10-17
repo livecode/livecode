@@ -9,6 +9,8 @@
 		{
 			'target_name': 'libGraphics',
 			'type': 'static_library',
+
+			'toolsets': ['host', 'target'],
 			
 			'dependencies':
 			[
@@ -45,10 +47,10 @@
 				'src/legacygradients.cpp',
 			],
 			
-			'conditions':
+			'target_conditions':
 			[
 				[
-					'OS != "mac" and OS != "ios"',
+					'toolset_os != "mac" and toolset_os != "ios"',
 					{
 						'sources!':
 						[
@@ -57,7 +59,7 @@
 					},
 				],
 				[
-					'OS != "win"',
+					'toolset_os != "win"',
 					{
 						'sources!':
 						[
@@ -66,7 +68,7 @@
 					},
 				],
 				[
-					'OS != "android" and OS != "emscripten"',
+					'toolset_os != "android" and toolset_os != "emscripten"',
 					{
 						'sources!':
 						[
@@ -76,7 +78,7 @@
 					},
 				],
 				[
-					'OS == "android" or OS == "emscripten"',
+					'toolset_os == "android" or toolset_os == "emscripten"',
 					{
 						'dependencies':
 						[

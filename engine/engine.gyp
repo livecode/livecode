@@ -22,6 +22,48 @@
 	'targets':
 	[
 		{
+			'target_name': 'host-server',
+			'type': 'none',
+
+			'toolsets': ['host', 'target'],
+
+			'conditions':
+			[
+				[
+					'cross_compile != 0',
+					{
+						'dependencies':
+						[
+							'server#host',
+						],
+
+						'direct_dependent_settings':
+						{
+							'variables':
+							{
+								'engine': '<(PRODUCT_DIR)/server-community-host>(exe_suffix)'
+							},
+						},
+					},
+					{
+						'dependencies':
+						[
+							'server#target',
+						],
+
+						'direct_dependent_settings':
+						{
+							'variables':
+							{
+								'engine': '<(PRODUCT_DIR)/server-community>(exe_suffix)',
+							},
+						},
+					},
+				],
+			],
+		},
+
+		{
 			'target_name': 'extract_docs',
 			'type': 'none',
 			
@@ -37,35 +79,10 @@
 				},
 			},
 			
-			'variables':
-			{
-				'conditions':
-				[
-					[
-						'host_os == "linux"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community',
-						},
-					],
-					[
-						'host_os == "mac"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community',
-						},
-					],
-					[
-						'host_os == "win"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community.exe',
-						},
-					],
-				],
-			},
-			
 			'dependencies':
 			[
 				# Requires a working LiveCode engine
-				'server',
+				'host-server',
 			],
 			
 			'sources':
@@ -94,7 +111,7 @@
 					
 					'action':
 					[
-						'<(engine)',
+						'>(engine)',
 						'../util/extract-docs.livecodescript',
 						'../ide-support/revdocsparser.livecodescript',
 						'<(PRODUCT_DIR)/extracted_docs',
@@ -107,31 +124,6 @@
 		{
 			'target_name': 'descriptify_environment_stack',
 			'type': 'none',
-			
-			'variables':
-			{
-				'conditions':
-				[
-					[
-						'host_os == "linux"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community',
-						},
-					],
-					[
-						'host_os == "mac"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community',
-						},
-					],
-					[
-						'host_os == "win"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community.exe',
-						},
-					],
-				],
-			},
 			
 			'sources':
 			[
@@ -155,7 +147,7 @@
 			'dependencies':
 			[
 				# Requires a working LiveCode engine
-				'server',
+				'host-server',
 			],
 			
 			'actions':
@@ -177,7 +169,7 @@
 					
 					'action':
 					[
-						'<(engine)',
+						'>(engine)',
 						'../util/descriptify_stack.livecodescript',
 						'<(SHARED_INTERMEDIATE_DIR)/src/environment_descriptified.livecode',
 						'<@(_sources)',
@@ -228,6 +220,8 @@
 			'type': 'executable',
 			'product_name': 'server-community',
 			
+			'toolsets': ['host', 'target'],
+
 			'dependencies':
 			[
 				'kernel-server.gyp:kernel-server',
@@ -254,6 +248,16 @@
 					{
 						'type': 'none',
 						'mac_bundle': 0,
+					},
+				],
+			],
+
+			'target_conditions':
+			[
+				[
+					'_toolset == "host"',
+					{
+						'product_name': 'server-community-host',
 					},
 				],
 			],
