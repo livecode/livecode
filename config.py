@@ -22,8 +22,11 @@ import os
 import subprocess
 
 KNOWN_PLATFORMS = (
-    'linux-x86', 'linux-x86_64', 'android-armv6',
-    'mac', 'ios', 'win-x86', 'win-x86_64', 'emscripten'
+    'linux-x86', 'linux-x86_64', 'linux-armv6hf', 'linux-armv7',
+    'android-armv6',
+    'mac', 'ios', 
+    'win-x86', 'win-x86_64', 
+    'emscripten'
 )
 
 def usage(exit_status):
