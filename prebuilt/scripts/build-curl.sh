@@ -49,8 +49,8 @@ function buildCurl {
 		CURL_ARCH_CONFIG="${CURL_ARCH_CONFIG} --host i386"
 	fi
 
-	if [ "${PLATFORM}" == "linux" -a "${ARCH}" == "armv6-hf" ] ; then
-		CURL_ARCH_CONFIG="${CURL_ARCH_CONFIG} --host i386"
+	if [ ! -z "${CROSS_HOST}" ] ; then
+		CURL_ARCH_CONFIG="${CURL_ARCH_CONFIG} --host ${CROSS_HOST}"
 	fi
 	
 	if [ ! -d "${CURL_ARCH_SRC}" ] ; then

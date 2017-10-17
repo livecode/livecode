@@ -35,6 +35,11 @@ case "${PLATFORM}" in
 	mac)
 		export UNIVERSAL_ARCHS="i386 x86_64"
 		;;
+	linux)
+		export ARCHS="i386 x86_64"
+		export CC_BASE="${CUSTOM_CC:-gcc}"
+		export CXX_BASE="${CUSTOM_CXX:-g++}"
+		;;
 	ios)
 		source "${BASEDIR}/scripts/ios.inc"
 		if [ "${ARCH}" == "universal" ] ; then
@@ -114,7 +119,7 @@ function setCCForTarget {
 			if [ "${ARCH}" == "x86_64" ] ; then
 				CC="${CC_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
 				CXX="${CXX_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
-			else
+			elif [ "$1" == "x86" ] ; then
 				CC="${CC_BASE} -m32 ${CC_FLAGS_X86_NORELAX}"
 				CXX="${CXX_BASE} -m32 ${CC_FLAGS_X86_NORELAX}"
 			fi
