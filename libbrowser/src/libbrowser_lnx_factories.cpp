@@ -24,7 +24,9 @@ extern bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 // Overcome the tautological error if s_factory_list is a static pointer
 MCBrowserFactoryMap kMCBrowserFactoryMap[] =
 {
+#if defined __i386__ || defined __amd64__
     { "CEF", nil, MCCefBrowserFactoryCreate },
+#endif
     { nil, nil, nil },
 };
 
