@@ -10,6 +10,9 @@ LCM_DIR ?= $(TEST_DIR)/_build
 TESTS_DIR ?= $(top_srcdir)/tests
 # When running on headless Linux, run tests in -ui mode.
 
+# Used for emulation in cross-compiles. Usually empty.
+INTERPRETER ?=
+
 LCS_ENGINE ?= $(guess_engine)
 LCS_ENGINE_FLAGS ?= $(guess_engine_flags)
 
@@ -18,9 +21,9 @@ LCS_TESTRUNNER ?= $(TESTS_DIR)/_testrunner.livecodescript
 LCS_TESTS_DIR ?= $(TESTS_DIR)/lcs
 
 ifeq ($(LCS_TESTENGINE),development)
-LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(guess_dev_engine) $(LCS_ENGINE_FLAGS)
+LCS_CMD = $(INTERPRETER) $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(guess_dev_engine) $(LCS_ENGINE_FLAGS)
 else
-LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(LCS_TESTS_DIR)
+LCS_CMD = $(INTERPRETER) $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(LCS_TESTS_DIR)
 endif
 
 LCS_SERVER_ENGINE ?= $(bin_dir)/server-community
@@ -45,7 +48,7 @@ LCB_TESTLIB = $(LCM_DIR)/_testlib.lcm
 
 LCC_COMPILERTESTRUNNER ?= $(TESTS_DIR)/_compilertestrunner.livecodescript
 
-LCC_CMD = $(LCS_ENGINE) -ui $(LCC_COMPILERTESTRUNNER) run
+LCC_CMD = $(INTERPRETER) $(LCS_ENGINE) -ui $(LCC_COMPILERTESTRUNNER) run
 
 LCC_LOG = _compiler_test_suite.log
 
@@ -53,14 +56,14 @@ LCC_LOG = _compiler_test_suite.log
 
 LCP_COMPILERTESTRUNNER ?= $(TESTS_DIR)/_parsertestrunner.livecodescript
 
-LCP_CMD = $(LCS_ENGINE) -ui $(LCP_COMPILERTESTRUNNER) run
+LCP_CMD = $(INTERPRETER) $(LCS_ENGINE) -ui $(LCP_COMPILERTESTRUNNER) run
 
 LCP_LOG = _parser_test_suite.log
 
 ########## lc-run test params
 
 LC_RUN_TESTS ?= $(TESTS_DIR)/_lcruntests.livecodescript
-LC_RUN_TEST_CMD = $(LCS_ENGINE) -ui $(LC_RUN_TESTS)
+LC_RUN_TEST_CMD = $(INTERPRETER) $(LCS_ENGINE) -ui $(LC_RUN_TESTS)
 
 LC_RUN_LOG = _lc_run_test_suite.log
 
@@ -70,7 +73,7 @@ LC_COMPILE_FFI_JAVA ?= $(bin_dir)/lc-compile-ffi-java
 
 LC_COMPILE_FFI_JAVA_TESTRUNNER ?= $(TESTS_DIR)/_lc_compile_ffi_java_testrunner.livecodescript
 
-LC_COMPILE_FFI_JAVA_CMD = $(LCS_ENGINE) -ui $(LC_COMPILE_FFI_JAVA_TESTRUNNER) run
+LC_COMPILE_FFI_JAVA_CMD = $(INTERPRETER) $(LCS_ENGINE) -ui $(LC_COMPILE_FFI_JAVA_TESTRUNNER) run
 
 LC_COMPILE_FFI_JAVA_LOG = _lc-compile-ffi-java_test_suite.log
 
@@ -116,10 +119,10 @@ $(LCM_DIR)/deps.mk: $(LCB_SOURCES) Makefile $(LC_COMPILE) | $(LCM_DIR)
 	@set -e; rm -f $@; \
 	for lcb in $(LCB_SOURCES); do \
 	  lcm=`echo $$lcb | sed 's/lcb$$/lcm/'` ; \
-	  $(LC_COMPILE) $(LC_COMPILE_FLAGS) --deps make \
+	  $(INTERPRETER) $(LC_COMPILE) $(LC_COMPILE_FLAGS) --deps make \
 	    --output $(LCM_DIR)/$$lcm -- $$lcb >> $@; \
 	done; \
-	$(LC_COMPILE) $(LC_COMPILE_FLAGS) --deps make -- $(LCB_SOURCES) >> $@ ; \
+	$(INTERPRETER) $(LC_COMPILE) $(LC_COMPILE_FLAGS) --deps make -- $(LCB_SOURCES) >> $@ ; \
 	sed -i -e 's,\(.* \([^ ]*\)\.lcb\)$$,$(LCM_DIR)/\2.lcm \1,g' $@
 
 ########## Build rules
@@ -138,7 +141,7 @@ $(LCM_DIR)/%.lcm: %.lcb | $(LCM_DIR)
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
 	@set -e; \
-	cmd="$(LC_COMPILE) $(LC_COMPILE_FLAGS) --output $@ -- $<" ; \
+	cmd="$(INTERPRETER) $(LC_COMPILE) $(LC_COMPILE_FLAGS) --output $@ -- $<" ; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
 
@@ -226,12 +229,12 @@ lcb-check: lcm_compile
 	    loadfile="$(LCM_DIR)/`echo $$lcbfile | sed -e 's:tests/.*\.lcb$$::'`$$parent.lcm"; \
 	    mkdir -p `dirname $$logfile`; \
 	    if [ -e $$loadfile ] ; then \
-	    	$(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- $(LCB_TESTRUNNER) --lc-run "$(LC_RUN) --load $$loadfile $(LC_RUN_FLAGS)" $$lcmfile > $$logfile; \
+	    	$(INTERPRETER) $(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- $(LCB_TESTRUNNER) --lc-run "$(LC_RUN) --load $$loadfile $(LC_RUN_FLAGS)" $$lcmfile > $$logfile; \
 	    else \
-	    	$(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- $(LCB_TESTRUNNER) --lc-run "$(LC_RUN) $(LC_RUN_FLAGS)" $$lcmfile > $$logfile; \
+	    	$(INTERPRETER) $(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- $(LCB_TESTRUNNER) --lc-run "$(LC_RUN) $(LC_RUN_FLAGS)" $$lcmfile > $$logfile; \
 	    fi; \
 	done; \
-	$(LC_RUN) $(LC_RUN_FLAGS) --handler SummarizeTests -- $(LCB_TESTRUNNER) --summary-log $(LCB_LOG) $(LCB_TEST_LOGS)
+	$(INTERPRETER) $(LC_RUN) $(LC_RUN_FLAGS) --handler SummarizeTests -- $(LCB_TESTRUNNER) --summary-log $(LCB_LOG) $(LCB_TEST_LOGS)
 
 ################################################################
 # lc-compile-ffi-java tests
