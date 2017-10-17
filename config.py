@@ -37,6 +37,26 @@ Options:
   -p, --platform PLATFORM
                     Choose which platform to build for
   -h, --help        Print this message
+  --sysroot SYSROOT
+                    Use the given folder for system headers and libraries (only
+                    useful when cross-compiling).
+  --aux-sysroot SYSROOT
+                    Like --sysroot but --sysroot's headers and libraries
+                    come first. Passed to the compiler as -I/-L options
+                    instead of a --sysroot option.
+  --triple TRIPLE
+                    Required if --aux-sysroot has a `multilib' setup where
+                    some headers and libraries are under a subdirectory named
+                    with the target triple. This is often the case for Debian/
+                    Ubuntu derived distributions.
+  --cc-prefix PREFIX
+                    Compiler prefix path e.g.
+                    ${HOME}/toolchain/bin/arm-linux-gnueabi-
+  --cross
+                    Indicates cross-compilation (you probably want to specify
+                    --sysroot/--aux-sysroot and --cc-prefix too).
+  --use-lto
+                    [EXPERIMENTAL] Use link-time optimisation when building.
 
 gyp options:
   --generator-output DIR
@@ -100,10 +120,10 @@ def process_env_options(opts):
     vars = ('OS', 'PLATFORM', 'GENERATOR_OUTPUT', 'FORMATS', 'DEPTH',
         'WIN_MSVS_VERSION', 'XCODE_TARGET_SDK', 'XCODE_HOST_SDK',
         'TARGET_ARCH', 'PERL', 'ANDROID_NDK_VERSION', 'ANDROID_PLATFORM',
-        'ANDROID_SDK', 'ANDROID_NDK', 'ANDROID_BUILD_TOOLS',
+        'ANDROID_SDK', 'ANDROID_NDK', 'ANDROID_BUILD_TOOLS', 'LTO',
         'ANDROID_TOOLCHAIN', 'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY', 'OBJDUMP',
-        'STRIP', 'JAVA_SDK', 'NODE_JS', 'BUILD_EDITION',
-        'MS_SPEECH_SDK5', 'QUICKTIME_SDK',
+        'STRIP', 'JAVA_SDK', 'NODE_JS', 'BUILD_EDITION', 'CC_PREFIX', 'CROSS',
+        'SYSROOT', 'AUX_SYSROOT', 'TRIPLE', 'MS_SPEECH_SDK5', 'QUICKTIME_SDK',
         )
     for v in vars:
         opts[v] = os.getenv(v)
@@ -127,6 +147,30 @@ def process_arg_options(opts, args):
             usage(0)
         if key in ('-p', '--platform'):
             opts['PLATFORM'] = value
+            offset += 2
+            continue
+        if key in ('--use-lto'):
+             opts['LTO'] = True
+             offset += 1
+             continue
+        if key in ('--cross'):
+             opts['CROSS'] = True
+             offset += 1
+             continue
+        if key in ('--sysroot'):
+            opts['SYSROOT'] = value
+            offset += 2
+            continue
+        if key in ('--aux-sysroot'):
+            opts['AUX_SYSROOT'] = value
+            offset += 2
+            continue
+        if key in ('--triple'):
+            opts['TRIPLE'] = value
+            offset += 2
+            continue
+        if key in ('--cc-prefix'):
+            opts['CC_PREFIX'] = value
             offset += 2
             continue
         if key in ('--generator-output'):
@@ -218,7 +262,7 @@ def validate_target_arch(opts):
             opts['UNIFORM_ARCH'] = opts['TARGET_ARCH']
             return
 
-        platform_arch = re.search('-(x86|x86_64|armv6)$', platform)
+        platform_arch = re.search('-(x86|x86_64|armv(6(hf)?|7))$', platform)
         if platform_arch is not None:
             opts['TARGET_ARCH'] = platform_arch.group(1)
             opts['UNIFORM_ARCH'] = opts['TARGET_ARCH']
@@ -297,6 +341,70 @@ def validate_java_tools(opts):
             error('Java SDK not found; set $JAVA_SDK')
         opts['JAVA_SDK'] = sdk
 
+def configure_toolchain(opts):
+    ccprefix = ''
+    if opts['CC_PREFIX'] is not None:
+        ccprefix = opts['CC_PREFIX']
+    if opts['CC'] is None:
+        opts['CC'] = ccprefix + 'cc'
+    if opts['CXX'] is None:
+        opts['CXX'] = ccprefix + 'c++'
+    if opts['AR'] is None:
+        opts['AR'] = ccprefix + 'ar'
+    if opts['LINK'] is None:
+        opts['LINK'] = opts['CXX']
+    if opts['STRIP'] is None:
+        opts['STRIP'] = ccprefix + 'strip'
+    if opts['OBJCOPY'] is None:
+        opts['OBJCOPY'] = ccprefix + 'objcopy'
+    if opts['OBJDUMP'] is None:
+        opts['OBJDUMP'] = ccprefix + 'objdump'
+
+    # Enable LTO if requested
+    if opts['LTO'] is True:
+        for key in ('CC', 'CXX', 'LINK'):
+            opts[key] += ' -flto -ffunction-sections -fdata-sections -fuse-linker-plugin -fuse-ld=gold'
+
+    # If cross-compiling, link libgcc and libstdc++ statically.
+    # This is done because the cross-compilers are likely to be different
+    # versions to those available on the target system.
+    if opts['CROSS'] is True:
+        for key in ('CC', 'CXX', 'LINK'):
+            opts[key] += ' -static-libgcc -static-libstdc++'
+
+    # Append a --sysroot option for the compilers and linker
+    if opts['SYSROOT'] is not None:
+        for key in ('CC', 'CXX', 'LINK'):
+            opts[key] += ' --sysroot="' + opts['SYSROOT'] + '"'
+            opts[key] += ' -Wl,--sysroot,"' + opts['SYSROOT'] + '"'
+
+    # Configure an auxiliary sysroot, if one is specified.
+    #
+    # The -L options beginning '-L=/' are required to ensure the original
+    # sysroot gets searched before the auxiliary one. Similarly with
+    # -idirafter; these come after the sysroot include directories.
+    if opts['AUX_SYSROOT'] is not None:
+        for key in ('CC', 'CXX', 'LINK'):
+            opts[key] += ' -idirafter "' + opts['AUX_SYSROOT'] + '/usr/include"'
+            opts[key] += ' -L=/lib'
+            opts[key] += ' -L=/usr/lib'
+            if opts['TRIPLE'] is not None:
+                opts[key] += ' -L"=/lib/' + opts['TRIPLE'] + '"'
+                opts[key] += ' -L"=/usr/lib/' + opts['TRIPLE'] + '"'
+            opts[key] += ' -L"' + opts['AUX_SYSROOT'] + '/lib"'
+            opts[key] += ' -L"' + opts['AUX_SYSROOT'] + '/usr/lib"'
+            opts[key] += ' -Wl,-rpath-link,"' + opts['AUX_SYSROOT'] + '/lib"'
+            opts[key] += ' -Wl,-rpath-link,"' + opts['AUX_SYSROOT'] + '/usr/lib"'
+            if opts['TRIPLE'] is not None:
+                opts[key] += ' -idirafter "' + opts['AUX_SYSROOT'] + '/usr/include/' + opts['TRIPLE'] + '"'
+                opts[key] += ' -L"' + opts['AUX_SYSROOT'] + '/lib/' + opts['TRIPLE'] + '"'
+                opts[key] += ' -L"' + opts['AUX_SYSROOT'] + '/usr/lib/' + opts['TRIPLE'] + '"'
+                opts[key] += ' -Wl,-rpath-link,"' + opts['AUX_SYSROOT'] + '/lib/' + opts['TRIPLE'] + '"'
+                opts[key] += ' -Wl,-rpath-link,"' + opts['AUX_SYSROOT'] + '/usr/lib/' + opts['TRIPLE'] + '"'
+
+    # Add LD as an alias for LINK
+    opts['LD'] = opts['LINK']
+
 ################################################################
 # Windows-specific options
 ################################################################
@@ -346,8 +454,8 @@ def validate_windows_tools(opts):
         opts['QUICKTIME_SDK'] = guess_quicktime_sdk()
 
     if opts['WIN_MSVS_VERSION'] is None:
-    	# TODO [2017-04-11]: This should be 2017, but it is not 
-    	# compatible with our gyp as is.
+        # TODO [2017-04-11]: This should be 2017, but it is not 
+        # compatible with our gyp as is.
         opts['WIN_MSVS_VERSION'] = '2015'
 
 ################################################################
@@ -474,6 +582,9 @@ def core_gyp_args(opts):
     if opts['BUILD_EDITION'] == 'commercial':
         args.append(os.path.join('..', 'livecode-commercial.gyp'))
         
+    if opts['CROSS'] is not None:
+        args.append('-Dcross_compile=1')
+        
     args.append('-Dbuild_edition=' + opts['BUILD_EDITION'])
 
     args.append('-Duniform_arch=' + opts['UNIFORM_ARCH'])
@@ -482,8 +593,9 @@ def core_gyp_args(opts):
 
 def export_opts(opts, names):
     for n in names:
-        print (n + '=' + opts[n])
-        os.environ[n] = opts[n]
+        if opts[n] is not None:
+            print (n + '=' + opts[n])
+            os.environ[n] = opts[n]
 
 def gyp_define_args(opts, names):
     return ['-D{}={}'.format(key, opts[value])
@@ -493,6 +605,10 @@ def gyp_define_args(opts, names):
 def configure_linux(opts):
     validate_target_arch(opts)
     validate_java_tools(opts)
+    
+    configure_toolchain(opts)
+    export_opts(opts, ('CC', 'CXX', 'AR', 'LINK', 'OBJCOPY', 'OBJDUMP', 'STRIP', 'LD'))
+    
     args = core_gyp_args(opts) + ['-Dtarget_arch=' + opts['TARGET_ARCH'],
                                   '-Djavahome=' + opts['JAVA_SDK']]
     exec_gyp(args + opts['GYP_OPTIONS'])
