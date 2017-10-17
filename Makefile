@@ -25,8 +25,8 @@ EMMAKE ?= emmake
 
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
-IPHONEOS_VERSIONS ?= 9.2 10.2 10.3
-IPHONESIMULATOR_VERSIONS ?= 8.2 9.2 10.2 10.3
+IPHONEOS_VERSIONS ?= 9.2 10.2 11.0
+IPHONESIMULATOR_VERSIONS ?= 8.2 9.2 10.2 11.0
 SKIP_IPHONESIMULATOR_VERSIONS ?= 6.1 7.1
 
 IOS_SDKS ?= \
@@ -67,10 +67,26 @@ clean-linux:
 	find . -name \*.lcb | xargs touch
 
 check-common-%:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:testengine"
+	@echo "TEST Engine"
+endif
 	$(MAKE) -C tests bin_dir=../$*-bin
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:testengine"
+	@echo "travis_fold:start:testide"
+	@echo "TEST IDE"
+endif
 	$(MAKE) -C ide/tests bin_dir=../../$*-bin
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:testide"
+	@echo "travis_fold:start:testextensions"
+	@echo "TEST Extensions"
+endif
 	$(MAKE) -C extensions bin_dir=../$*-bin
-
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:testextensions"
+endif
 ################################################################
 # Linux rules
 ################################################################
@@ -78,13 +94,34 @@ check-common-%:
 LINUX_ARCHS = x86_64 x86
 
 config-linux-%:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:config"
+	@echo "CONFIGURE"
+endif
 	./config.sh --platform linux-$*
-
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:config"
+endif
+	
 compile-linux-%:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:compile"
+	@echo "COMPILE"
+endif
 	$(MAKE) -C build-linux-$*/livecode default
-
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:compile"
+endif
+	
 check-linux-%:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:testcpp"
+	@echo "TEST C++"
+endif
 	$(MAKE) -C build-linux-$*/livecode check
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:testcpp"
+endif
 	$(MAKE) check-common-linux-$*
 
 all-linux-%:
@@ -119,15 +156,36 @@ $(addsuffix -android,all config compile check): %: %-armv6
 ################################################################
 
 config-mac:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:config"
+	@echo "CONFIGURE"
+endif
 	./config.sh --platform mac
-
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:config"
+endif
+	
 compile-mac:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:compile"
+	@echo "COMPILE"
+endif
 	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target default \
 	  $(XCODEBUILD_FILTER)
-
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:compile"
+endif
+	  
 check-mac:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:testcpp"
+	@echo "TEST C++"
+endif
 	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check \
 	  $(XCODEBUILD_FILTER)
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:testcpp"
+endif
 	$(MAKE) check-common-mac
 
 

@@ -8,6 +8,8 @@ Summary:
 Sent when the user presses the <key combination> equivalent to the Copy
 <menu item>.
 
+Associations: card, field
+
 Introduced: 1.0
 
 OS: mac, windows, linux

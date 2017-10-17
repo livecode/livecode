@@ -29,6 +29,11 @@ public handler TestCreateJObject()
 		return
 	end if
 	
+	if the operating system is "linux" then
+		skip test "java object creation succeeds" because "bug 19934"
+		return
+	end if
+	
 	variable tObj as JObject
 	unsafe
 		put CreateJavaObject() into tObj
@@ -45,6 +50,11 @@ foreign handler MCDataCreateWithBytes(in pBytes as ZStringNative, in pCount as L
 public handler TestCreateJString()
    	if not the operating system is in ["mac", "linux"] then
 		skip test "java string creation succeeds" because "not implemented on" && the operating system
+		return
+	end if
+
+	if the operating system is "linux" then
+		skip test "java string creation succeeds" because "bug 19934"
 		return
 	end if
 	
@@ -76,6 +86,11 @@ public handler TestRoundTripJString()
 		skip test "string round trips through java" because "not implemented on" && the operating system
 		return
 	end if
+		
+	if the operating system is "linux" then
+		skip test "string round trips through java" because "bug 19934"
+		return
+	end if
 	
 	variable tString as String
 	put "lcb string" into tString
@@ -96,6 +111,12 @@ public handler TestRoundTripJByteArray()
 		return
 	end if
 	
+	if the operating system is "linux" then
+		skip test "data round trips through java" because "bug 19934"
+		return
+	end if
+	
+	
 	variable tData as Data
 	put 20 random bytes into tData
 
@@ -112,6 +133,16 @@ end handler
 foreign handler GetJavaPi() returns CDouble binds to "java:java.lang.Math>get.PI()D!static"
 
 public handler TestGetConstant()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "get java class constant" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "get java class constant" because "bug 19934"
+		return
+	end if
+	
 	variable tPiTrunc as Number
 	unsafe
 		put the trunc of GetJavaPi() into tPiTrunc
@@ -123,6 +154,16 @@ end handler
 foreign handler CallJavaAdd(in pLeft as JLong, in pRight as JLong) returns JLong binds to "java:java.lang.Math>addExact(JJ)J!static"
 
 public handler TestCallStaticMethod()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "call java class static method" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "call java class static method" because "bug 19934"
+		return
+	end if
+	
 	variable tLeft as Number
 	variable tRight as Number
 	put 1 into tLeft
@@ -138,6 +179,16 @@ end handler
 foreign handler JavaStringIsEmpty(in pString as JString) returns JBoolean binds to "java:java.lang.String>isEmpty()Z"
 
 public handler TestCallInstanceMethod()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "call java class instance method" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "call java class instance method" because "bug 19934"
+		return
+	end if
+	
 	variable tJavaString as JString
 	put StringToJString("nonempty") into tJavaString
 
@@ -152,6 +203,16 @@ foreign handler JavaGetDefaultLocale() returns JObject binds to "java:java.util.
 foreign handler JavaLocaleDisplayName(in pLocale as JObject) returns JObject binds to "java:java.util.Locale>getDisplayName()Ljava/lang/String;"
 
 public handler TestDefaultLocaleDisplayName()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "get locale display name" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "get locale display name" because "bug 19934"
+		return
+	end if
+	
 	variable tDisplay as JString
 	unsafe 
 		variable tLocale as JObject
@@ -166,6 +227,16 @@ end handler
 foreign handler CreateJavaCurrencyWithCode(in pString as JString) returns JObject binds to "java:java.util.Currency>getInstance(Ljava/lang/String;)Ljava/util/Currency;!static"
 
 public handler TestCreateCurrencyWithCode()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "currency created" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "currency created" because "bug 19934"
+		return
+	end if
+	
 	-- Create a new Currency object
 	variable tCurrency as JObject
 	unsafe
@@ -206,6 +277,16 @@ public handler NullIntoJObject()
 end handler
 
 public handler TestNullJObjectReturn()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "NULL into optional JObject" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "NULL into optional JObject" because "bug 19934"
+		return
+	end if
+	
 	MCUnitTestHandlerDoesntThrow(NullIntoOptionalJObject, "no error when putting NULL into optional JObject")
 	MCUnitTestHandlerThrows(NullIntoJObject, "type mismatch when putting NULL into non-optional JObject")
 end handler
@@ -229,6 +310,16 @@ public handler NullParamJObject()
 end handler
 
 public handler TestNullJObjectParam()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "NULL passed as optional JObject" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "NULL passed as optional JObject" because "bug 19934"
+		return
+	end if
+	
 	MCUnitTestHandlerDoesntThrow(NullParamOptionalJObject, "no error when passing NULL as optional JObject")
 	MCUnitTestHandlerThrows(NullParamJObject, "type mismatch when passing NULL as non-optional JObject")
 end handler
@@ -236,6 +327,16 @@ end handler
 foreign handler StringCodepointAt(in pSequence as JObject, in pIndex as JInt) returns JInt binds to "java:java.lang.Character>codePointAt(Ljava/lang/CharSequence;I)I!static"
 
 public handler TestNativeTypeAfterObjectType()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "called foreign handler with signature Ljava/lang/CharSequence;I" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "called foreign handler with signature Ljava/lang/CharSequence;I" because "bug 19934"
+		return
+	end if
+	
 	unsafe
 		variable tCodepoint as Integer
 		put StringCodepointAt(StringToJString("a"), 0) into tCodepoint
@@ -243,5 +344,28 @@ public handler TestNativeTypeAfterObjectType()
 		test "called foreign handler with signature Ljava/lang/CharSequence;I" when tCodepoint is 97
 	end unsafe
 end handler
+
+__safe foreign handler RegionMatches(in pString as JString, in pCaseless as JBoolean, in pOffset as JInt, in pOther as JString, in pOtherOffset as JInt, in pLength as JInt) returns JBoolean binds to "java:java.lang.String>regionMatches(ZILjava/lang/String;II)Z"
+
+public handler TestBindingStringObjectTypeInMiddle()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "called foreign handler with signature Ljava/lang/CharSequence;I" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "called foreign handler with signature Ljava/lang/CharSequence;I" because "bug 19934"
+		return
+	end if
+	
+	variable tString as JString
+	put StringToJString("something") into tString
+	
+	variable tOther as JString
+	put StringToJString("NOTHING") into tOther
+	
+	test "called foreign handler with signature (ZILjava/lang/String;II)Z" when \
+		RegionMatches(tString, true, 4, tOther, 2, 5)
+end handler 
 
 end module

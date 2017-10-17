@@ -48,6 +48,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec-interface.h"
 #include "osspec.h"
 #include "stackfileformat.h"
+#include "mcerror.h"
 
 //////////
 
@@ -403,8 +404,7 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 	MCNewAutoNameRef t_old_name;
 	if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
 	{
-		if (t_success)
-			t_success = MCNameClone(getname(), &t_old_name);
+        t_old_name = getname();
 	}
 
 	// We don't allow ',' in stack names - so coerce to '_'.
@@ -1155,7 +1155,6 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 	while (t_success && t_old_offset <= t_length)
 	{
 		MCAutoStringRef t_name_string;
-		MCNewAutoNameRef t_name;
 		
 		if (!MCStringFirstIndexOfChar(p_substacks, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
@@ -1170,10 +1169,10 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 			{
 				// Lookup 't_name_string' as a name, if it doesn't exist it can't exist as a substack
 				// name.
-				&t_name = MCValueRetain(MCNameLookup(*t_name_string));
-				if (*t_name != nil)
-				{
-					while (tsub -> hasname(*t_name))
+                MCNameRef t_name = MCNameLookupCaseless(*t_name_string);
+                if (t_name != nullptr)
+                {
+					while (tsub -> hasname(t_name))
 					{
 						tsub = (MCStack *)tsub->nptr;
 						if (tsub == oldsubs)
@@ -1509,25 +1508,23 @@ void MCStack::SetMenuBar(MCExecContext& ctxt, MCStringRef p_menubar)
 	if (t_success)
 		t_success = MCNameCreate(p_menubar, &t_new_menubar);
 
-	if (t_success && !MCNameIsEqualTo(getmenubar(), *t_new_menubar, kMCCompareCaseless))
+	if (t_success && !MCNameIsEqualToCaseless(getmenubar(), *t_new_menubar))
 	{
-		MCNameDelete(_menubar);
-		t_success = MCNameClone(*t_new_menubar, _menubar);
-		if (t_success)
-		{
-			if (!hasmenubar())
-				flags &= ~F_MENU_BAR;
-			else
-				flags |= F_MENU_BAR;
-			if (opened)
-			{
-				setgeom();
-				updatemenubar();
+        MCValueAssign(_menubar, *t_new_menubar);
+        
+        if (!hasmenubar())
+            flags &= ~F_MENU_BAR;
+        else
+            flags |= F_MENU_BAR;
+        
+        if (opened)
+        {
+            setgeom();
+            updatemenubar();
 
-				// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
-				dirtyall();
-			}
-		}
+            // MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
+            dirtyall();
+        }
 	}
 
 	if (t_success)
@@ -2151,16 +2148,28 @@ void MCStack::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_st
     MCRedrawDirtyScreen();
 }
 
-void MCStack::GetPassword(MCExecContext& ctxt, MCDataRef& r_value)
+void MCStack::GetPassword(MCExecContext& ctxt, MCValueRef& r_value)
 {
 	r_value = MCValueRetain(kMCEmptyData);
 }
 
-void MCStack::GetKey(MCExecContext& ctxt, bool& r_value)
+void MCStack::SetPassword(MCExecContext &ctxt, MCValueRef p_password)
+{
+    MCeerror->add(EE_STACK_PASSWORD_NOT_SUPPORTED, 0, 0);
+    ctxt . Throw();
+}
+
+void MCStack::GetKey(MCExecContext& ctxt, MCValueRef& r_value)
 {
     // OK-2010-02-11: [[Bug 8610]] - Passkey property more useful if it returns
     //   whether or not the script is available.
-    r_value = iskeyed();
+    r_value = MCValueRetain(iskeyed() ? kMCTrue : kMCFalse);
+}
+
+void MCStack::SetKey(MCExecContext &ctxt, MCValueRef p_password)
+{
+    MCeerror->add(EE_STACK_PASSWORD_NOT_SUPPORTED, 0, 0);
+    ctxt . Throw();
 }
 
 // SN-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter for the P_IGNORE_MOUSE_EVENTS property

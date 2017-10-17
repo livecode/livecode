@@ -54,6 +54,9 @@
         -- Check that safe / unsafe boundaries are respected
         CheckSafety(Module)
 
+        -- Check that variadic parameters only appear in foreign handlers
+        CheckVariadic(Module)
+
 --------------------------------------------------------------------------------
 
 -- At this point all identifiers either have a defined meaning, or are defined
@@ -1458,6 +1461,14 @@
     'rule' CheckCallArguments(_, nil, nil):
         -- done!
 
+    -- variadic parameter 'sticks' and matches the rest of the argument list
+    'rule' CheckCallArguments(Position, ParamRest:parameterlist(parameter(_, variadic, _, _), _), expressionlist(Argument, ArgRest)):
+        CheckExpressionIsEvaluatable(Argument)
+        CheckCallArguments(Position, ParamRest, ArgRest)
+
+    'rule' CheckCallArguments(Position, parameterlist(parameter(_, variadic, _, _), _), nil):
+        -- done!
+
     'rule' CheckCallArguments(Position, parameterlist(parameter(_, Mode, _, _), ParamRest), expressionlist(Argument, ArgRest)):
         [|
             ne(Mode, out)
@@ -1647,13 +1658,17 @@
         
 'action' CheckForeignHandlerParameterTypes(PARAMETERLIST)
 
+    'rule' CheckForeignHandlerParameterTypes(parameterlist(parameter(_, variadic, _, _), Rest)):
+        CheckForeignHandlerParameterTypes(Rest)
+
     'rule' CheckForeignHandlerParameterTypes(parameterlist(parameter(Position, _, _, Type), Rest)):
         [|
             where(Type -> unspecified)
             Error_NoTypeSpecifiedForForeignHandlerParameter(Position)
         |]
         CheckForeignHandlerParameterTypes(Rest)
-        
+
+
     'rule' CheckForeignHandlerParameterTypes(nil):
         -- do nothing
 
@@ -2081,6 +2096,30 @@
 
 --------------------------------------------------------------------------------
 
+'sweep' CheckVariadic(ANY)
+
+    'rule' CheckVariadic(DEFINITION'handler(_, _, Name, signature(Parameters, _), _, _)):
+        [|
+            ParameterListContainsVariadic(Parameters -> Position)
+            Error_VariadicParametersOnlyAllowedInForeignHandlers(Position)
+        |]
+
+    'rule' CheckVariadic(PARAMETERLIST'parameterlist(parameter(Position, variadic, _, _), Tail)):
+        [|
+            ne(Tail, nil)
+            Error_VariadicParameterMustBeLast(Position)
+        |]
+
+'condition' ParameterListContainsVariadic(PARAMETERLIST -> POS)
+
+    'rule' ParameterListContainsVariadic(parameterlist(parameter(Position, variadic, _, _), _) -> Position):
+        --
+
+    'rule' ParameterListContainsVariadic(parameterlist(_, Tail) -> Position):
+        ParameterListContainsVariadic(Tail -> Position)
+
+--------------------------------------------------------------------------------
+
 'condition' QueryHandlerIdSignature(ID -> SIGNATURE)
 
     'rule' QueryHandlerIdSignature(Id -> Signature)
@@ -2146,15 +2185,5 @@
         
 'condition' QuerySymbolId(ID -> SYMBOLINFO)
 'action' GetQualifiedName(ID -> NAME)
-
---------------------------------------------------------------------------------
-
-'action' QueryExpressionListLength(EXPRESSIONLIST -> INT)
-
-    'rule' QueryExpressionListLength(expressionlist(_, Tail) -> TailCount + 1)
-        QueryExpressionListLength(Tail -> TailCount)
-
-    'rule' QueryExpressionListLength(nil -> 0)
-        -- nothing
 
 --------------------------------------------------------------------------------

@@ -71,7 +71,7 @@ private command runAllScripts pInfo
       runCompilerTestScript pInfo, tFile
       put TesterTapCombine(tAnalysis, the result) into tAnalysis
    end repeat
-   TestRunnerRunPrintSummary(tAnalysis)
+   TesterRunPrintSummary tAnalysis
    return tAnalysis
 end runAllScripts
 
@@ -108,10 +108,15 @@ private command runCompilerTest pInfo, pScriptFile, pTest
    local tCommandLine
    
    -- First we need to process the specified test in script file
-   
+
    local tTestInfo
-   processCompilerTest pInfo, pScriptFile, pTest, tTestInfo
-   
+   try
+      processCompilerTest pInfo, pScriptFile, pTest, tTestInfo
+   catch tError
+      write tError & return to stderr
+      quit 1
+   end try
+
    local tCompilerOutput, tCompilerExitStatus
    dispatch "CompilerTestRunner_DoRunTest" to me with tTestInfo, tCompilerOutput, tCompilerExitStatus
    reportCompilerTestDiag tCompilerOutput
@@ -426,7 +431,7 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
          end if
       end if
    end repeat
-   
+
    if tName is empty then
       reportCompilerTestError pScriptFile, tLineNumber, format("test '%s' not found in file", pTest)
    end if

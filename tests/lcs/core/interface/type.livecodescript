@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestType
+	TestSkipIfNot "wait"
+   
 	create stack "Test"
 	set the defaultStack to "Test"
 	set the script of stack "Test" to \

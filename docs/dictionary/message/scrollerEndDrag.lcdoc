@@ -2,7 +2,7 @@ Name: scrollerEndDrag
 
 Type: message
 
-Syntax: scrollerEndDrag <didDecelerate>
+Syntax: scrollerEndDrag <pDidDecelerate>
 
 Summary:
 Sent when a scroll initiating drag is finished.
@@ -19,9 +19,8 @@ on scrollerEndDrag
 end scrollerEndDrag
 
 Parameters:
-didDecelerate:
-didDecelerate (iOS Only): Either 'true' or 'false' specifying whether
-the scroll decelerated or not.
+pDidDecelerate: Either 'true' or 'false' depending on whether
+the scroll decelerated or not (iOS Only)
 
 Description:
 The <scrollerEndDrag> message is sent when a scroll that was initiated

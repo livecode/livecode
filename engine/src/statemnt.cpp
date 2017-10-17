@@ -37,7 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#include "syntax.h"
 #include "redraw.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -332,19 +331,11 @@ void MCStatement::initpoint(MCScriptPoint &sp)
 	pos = sp.getpos();
 }
 
-void MCStatement::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-	MCSyntaxFactoryExecUnimplemented(ctxt);
-	MCSyntaxFactoryEndStatement(ctxt);
-};
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCComref::MCComref(MCNameRef n)
 {
-	/* UNCHECKED */ MCNameClone(n, name);
+    name = MCValueRetain(n);
 	handler = nil;
 	params = NULL;
 	resolved = false;
@@ -359,7 +350,7 @@ MCComref::~MCComref()
 		params = params->getnext();
 		delete tmp;
 	}
-	MCNameDelete(name);
+	MCValueRelease(name);
 }
 
 Parse_stat MCComref::parse(MCScriptPoint &sp)

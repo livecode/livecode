@@ -2,10 +2,12 @@ Name: controlKeyDown
 
 Type: message
 
-Syntax: controlKeyDown <keyName>
+Syntax: controlKeyDown <pKeyName>
 
 Summary:
 Sent when a Control <key combination> is pressed.
+
+Associations: card, field
 
 Introduced: 1.0
 
@@ -23,7 +25,7 @@ on controlKeyDown pKey -- make Control-D delete the current card
 end controlKeyDown
 
 Parameters:
-keyName:
+pKeyName:
 The actual character of the pressed key.
 
 Description:

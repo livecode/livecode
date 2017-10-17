@@ -61,6 +61,12 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCSIntPtrTypeInfo;
  * provide an element of safety against nullptr vs non-nullptr. */
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCPointerTypeInfo;
 
+/* The natural int and float types are 32-bit wide on 32-bit processors and
+ * 64-bit wide on 64-bit processors. */
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCNaturalUIntTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCNaturalSIntTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCNaturalFloatTypeInfo;
+
 /* C Types
  *
  * These types represent the C types which are relative to the compiler,
@@ -109,6 +115,10 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSIntSizeTypeInfo() { return kMCSIntSizeT
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignUIntPtrTypeInfo() { return kMCUIntPtrTypeInfo; }
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSIntPtrTypeInfo() { return kMCSIntPtrTypeInfo; }
 
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignNaturalUIntTypeInfo() { return kMCNaturalUIntTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignNaturalSIntTypeInfo() { return kMCNaturalSIntTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignNaturalFloatTypeInfo() { return kMCNaturalFloatTypeInfo; }
+
 /**/
 
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCBoolTypeInfo() { return kMCCBoolTypeInfo; }
@@ -121,8 +131,8 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCUIntTypeInfo() { return kMCCUIntTypeInf
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSIntTypeInfo() { return kMCCSIntTypeInfo; }
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCULongTypeInfo() { return kMCCULongTypeInfo; }
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSLongTypeInfo() { return kMCCSLongTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCULongLongTypeInfo() { return kMCCULongTypeInfo; }
-MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSLongLongTypeInfo() { return kMCCSLongTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCULongLongTypeInfo() { return kMCCULongLongTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSLongLongTypeInfo() { return kMCCSLongLongTypeInfo; }
 
 /**/
 
@@ -130,6 +140,30 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignUIntTypeInfo() { return kMCUIntTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSIntTypeInfo() { return kMCSIntTypeInfo; }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#if defined(__32_BIT__)
+typedef uint32_t natural_uint_t;
+typedef int32_t natural_sint_t;
+typedef float natural_float_t;
+#elif defined(__64_BIT__)
+typedef uint64_t natural_uint_t;
+typedef int64_t natural_sint_t;
+typedef float natural_float_t;
+#else
+#error Bitness of target not defined
+#endif
+
+static_assert(sizeof(int) == 4,
+              "Assumption that int is 4 bytes in size not valid");
+
+static_assert(sizeof(bool) == 1,
+              "Assumption that bool is 1 byte in size not valid");
+
+static_assert(sizeof(uintptr_t) == sizeof(natural_uint_t),
+              "Assumption that natural_uint_t is the same width as uintptr_t not valid");
+
+static_assert(sizeof(intptr_t) == sizeof(natural_sint_t),
+              "Assumption that natural_uint_t is the same width as uintptr_t not valid");
 
 template <typename CType, typename Enable = void>
 struct compute_primitive_type
@@ -210,39 +244,54 @@ struct bool_type_desc_t {
     using bridge_type = MCBooleanRef;
     static constexpr MCTypeInfoRef& bridge_type_info() { return kMCBooleanTypeInfo; }
     static constexpr auto& hash_func = MCHashBool;
+    
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCUInt32TypeInfo; }
 };
 
 struct uint8_type_desc_t: public integral_type_desc_t<uint8_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCUInt8TypeInfo; }
     static constexpr auto describe_format = "<foreign 8-bit unsigned integer %u>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCUInt32TypeInfo; }
 };
 struct sint8_type_desc_t: public integral_type_desc_t<int8_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCSInt8TypeInfo; }
     static constexpr auto describe_format = "<foreign 8-bit signed integer %d>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCSInt32TypeInfo; }
 };
 struct uint16_type_desc_t: public integral_type_desc_t<uint16_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCUInt16TypeInfo; }
     static constexpr auto describe_format = "<foreign 16-bit unsigned integer %u>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCUInt32TypeInfo; }
 };
 struct sint16_type_desc_t: public integral_type_desc_t<int16_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCSInt16TypeInfo; }
     static constexpr auto describe_format = "<foreign 16-bit signed integer %d>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCSInt32TypeInfo; }
 };
 struct uint32_type_desc_t: public integral_type_desc_t<uint32_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCUInt32TypeInfo; }
     static constexpr auto describe_format = "<foreign 32-bit unsigned integer %u>";
+    static constexpr auto is_promotable = false;
 };
 struct sint32_type_desc_t: public integral_type_desc_t<int32_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCSInt32TypeInfo; }
     static constexpr auto describe_format = "<foreign 32-bit signed integer %d>";
+    static constexpr auto is_promotable = false;
 };
 struct uint64_type_desc_t: public integral_type_desc_t<uint64_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCUInt64TypeInfo; }
     static constexpr auto describe_format = "<foreign 64-bit unsigned integer %llu>";
+    static constexpr auto is_promotable = false;
 };
 struct sint64_type_desc_t: public integral_type_desc_t<int64_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCSInt64TypeInfo; }
     static constexpr auto describe_format = "<foreign 64-bit signed integer %lld>";
+    static constexpr auto is_promotable = false;
 };
 
 struct float_type_desc_t: public numeric_type_desc_t<float> {
@@ -251,6 +300,8 @@ struct float_type_desc_t: public numeric_type_desc_t<float> {
     static constexpr MCTypeInfoRef& type_info() { return kMCFloatTypeInfo; }
     static constexpr auto describe_format = "<foreign float %lg>";
     static constexpr auto& hash_func = MCHashDouble;
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCDoubleTypeInfo; }
 };
 struct double_type_desc_t: public numeric_type_desc_t<double> {
     using c_type = double;
@@ -258,6 +309,7 @@ struct double_type_desc_t: public numeric_type_desc_t<double> {
     static constexpr MCTypeInfoRef& type_info() { return kMCDoubleTypeInfo; }
     static constexpr auto describe_format = "<foreign double %lg>";
     static constexpr auto& hash_func = MCHashDouble;
+    static constexpr auto is_promotable = false;
 };
 
 struct pointer_type_desc_t {
@@ -269,25 +321,57 @@ struct pointer_type_desc_t {
     static constexpr auto describe_format = "<foreign pointer %p>";
     static constexpr MCTypeInfoRef& base_type_info() { return kMCNullTypeInfo; }
     static constexpr auto& hash_func = MCHashPointer;
+    static constexpr auto is_promotable = false;
 };
 
 struct uintsize_type_desc_t: public integral_type_desc_t<size_t>  {
     static constexpr MCTypeInfoRef& type_info() { return kMCUIntSizeTypeInfo; }
     static constexpr auto describe_format = "<foreign unsigned size %zu>";
+    static constexpr auto is_promotable = false;
 };
 struct sintsize_type_desc_t: public integral_type_desc_t<ssize_t>  {
     static constexpr MCTypeInfoRef& type_info() { return kMCSIntSizeTypeInfo; }
     static constexpr auto describe_format = "<foreign signed size %zd>";
+    static constexpr auto is_promotable = false;
 };
 
 struct uintptr_type_desc_t: public integral_type_desc_t<uintptr_t>  {
     static constexpr MCTypeInfoRef& type_info() { return kMCUIntPtrTypeInfo; }
     static constexpr auto describe_format = "<foreign unsigned intptr %zu>";
+    static constexpr auto is_promotable = false;
 };
 struct sintptr_type_desc_t: public integral_type_desc_t<intptr_t>  {
     static constexpr MCTypeInfoRef& type_info() { return kMCSIntPtrTypeInfo; }
     static constexpr auto describe_format = "<foreign signed intptr %zd>";
+    static constexpr auto is_promotable = false;
 };
+
+/**/
+
+struct naturaluint_type_desc_t: public integral_type_desc_t<natural_uint_t> {
+    static constexpr MCTypeInfoRef& type_info() { return kMCNaturalUIntTypeInfo; }
+    static constexpr auto describe_format = "<foreign natural unsigned integer %zu>";
+    static constexpr auto is_promotable = false;
+};
+
+struct naturalsint_type_desc_t: public integral_type_desc_t<natural_sint_t> {
+    static constexpr MCTypeInfoRef& type_info() { return kMCNaturalSIntTypeInfo; }
+    static constexpr auto describe_format = "<foreign natural signed integer %zd>";
+    static constexpr auto is_promotable = false;
+};
+
+#if defined(__32_BIT__)
+struct naturalfloat_type_desc_t: public float_type_desc_t {
+    static constexpr MCTypeInfoRef& type_info() { return kMCNaturalFloatTypeInfo; }
+    static constexpr auto describe_format = "<foreign natural float %lg>";
+};
+#elif defined(__64_BIT__)
+struct naturalfloat_type_desc_t: public double_type_desc_t {
+    static constexpr MCTypeInfoRef& type_info() { return kMCNaturalFloatTypeInfo; }
+    static constexpr auto describe_format = "<foreign natural float %lg>";
+};
+#endif
+
 
 /**/
 
@@ -298,46 +382,62 @@ struct cbool_type_desc_t: public bool_type_desc_t
 struct cchar_type_desc_t: public integral_type_desc_t<char> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCCharTypeInfo; }
     static constexpr auto describe_format = "<foreign c char '%c'>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCSInt32TypeInfo; }
 };
 struct cuchar_type_desc_t: public integral_type_desc_t<unsigned char> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCUCharTypeInfo; }
     static constexpr auto describe_format = "<foreign c unsigned char %u>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCUInt32TypeInfo; }
 };
 struct cschar_type_desc_t: public integral_type_desc_t<signed char> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCSCharTypeInfo; }
     static constexpr auto describe_format = "<foreign c signed char %d>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCSInt32TypeInfo; }
 };
 struct cushort_type_desc_t: public integral_type_desc_t<unsigned short> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCUShortTypeInfo; }
     static constexpr auto describe_format = "<foreign c unsigned short %u>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCUInt32TypeInfo; }
 };
 struct csshort_type_desc_t: public integral_type_desc_t<signed short> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCSShortTypeInfo; }
     static constexpr auto describe_format = "<foreign c signed short %d>";
+    static constexpr auto is_promotable = true;
+    static constexpr MCTypeInfoRef& promoted_type_info() { return kMCSInt32TypeInfo; }
 };
 struct cuint_type_desc_t: public integral_type_desc_t<unsigned int> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCUIntTypeInfo; }
     static constexpr auto describe_format = "<foreign c unsigned int %u>";
+    static constexpr auto is_promotable = false;
 };
 struct csint_type_desc_t: public integral_type_desc_t<signed int> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCSIntTypeInfo; }
     static constexpr auto describe_format = "<foreign c signed int %d>";
+    static constexpr auto is_promotable = false;
 };
 struct culong_type_desc_t: public integral_type_desc_t<unsigned long> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCULongTypeInfo; }
     static constexpr auto describe_format = "<foreign c unsigned long %lu>";
+    static constexpr auto is_promotable = false;
 };
 struct cslong_type_desc_t: public integral_type_desc_t<long> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCSLongTypeInfo; }
     static constexpr auto describe_format = "<foreign c signed long %ld>";
+    static constexpr auto is_promotable = false;
 };
 struct culonglong_type_desc_t: public integral_type_desc_t<unsigned long long> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCULongLongTypeInfo; }
     static constexpr auto describe_format = "<foreign c unsigned long long %llu>";
+    static constexpr auto is_promotable = false;
 };
 struct cslonglong_type_desc_t: public integral_type_desc_t<long long> {
     static constexpr MCTypeInfoRef& type_info() { return kMCCSLongLongTypeInfo; }
     static constexpr auto describe_format = "<foreign c signed long long %lld>";
+    static constexpr auto is_promotable = false;
 };
 
 struct uint_type_desc_t: public integral_type_desc_t<uinteger_t> {
@@ -346,6 +446,7 @@ struct uint_type_desc_t: public integral_type_desc_t<uinteger_t> {
     static constexpr auto primitive_type = kMCForeignPrimitiveTypeUInt32;
     static constexpr MCTypeInfoRef& type_info() { return kMCUIntTypeInfo; }
     static constexpr auto describe_format = "<foreign unsigned integer %u>";
+    static constexpr auto is_promotable = false;
 };
 struct sint_type_desc_t: public integral_type_desc_t<integer_t> {
     static_assert(INTEGER_MAX == INT32_MAX,
@@ -354,11 +455,13 @@ struct sint_type_desc_t: public integral_type_desc_t<integer_t> {
     static constexpr MCTypeInfoRef& type_info() { return kMCSIntTypeInfo; }
     static constexpr auto describe_format = "<foreign signed integer %d>";
     static constexpr auto& hash_func = MCHashInteger;
+    static constexpr auto is_promotable = false;
 };
 
 
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCForeignImportErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCForeignExportErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCForeignAggregateExportErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -376,7 +479,7 @@ bool MCForeignValueCreate(MCTypeInfoRef p_typeinfo, void *p_contents, MCForeignV
                                  t_value))
         return false;
     
-    if (!t_resolved_typeinfo -> foreign . descriptor . copy(p_contents, t_value + 1))
+    if (!t_resolved_typeinfo->foreign.descriptor.copy(&t_resolved_typeinfo->foreign.descriptor, p_contents, t_value + 1))
     {
         MCMemoryDelete(t_value);
         return false;
@@ -403,7 +506,7 @@ bool MCForeignValueCreateAndRelease(MCTypeInfoRef p_typeinfo, void *p_contents, 
                                  t_value))
         return false;
     
-    if (!t_resolved_typeinfo -> foreign . descriptor . move(p_contents, t_value + 1))
+    if (!t_resolved_typeinfo->foreign.descriptor.move(&t_resolved_typeinfo->foreign.descriptor, p_contents, t_value + 1))
     {
         MCMemoryDelete(t_value);
         return false;
@@ -431,7 +534,7 @@ bool MCForeignValueExport(MCTypeInfoRef p_typeinfo, MCValueRef p_value, MCForeig
         return false;
 
     if (t_resolved_typeinfo->foreign.descriptor.doexport == nil ||
-        !t_resolved_typeinfo->foreign.descriptor.doexport(p_value, false, t_value + 1))
+        !t_resolved_typeinfo->foreign.descriptor.doexport(&t_resolved_typeinfo->foreign.descriptor, p_value, false, t_value + 1))
     {
         MCMemoryDelete(t_value);
         return false;
@@ -457,7 +560,7 @@ void __MCForeignValueDestroy(__MCForeignValue *self)
     MCTypeInfoRef t_resolved_typeinfo;
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
-    t_resolved_typeinfo -> foreign . descriptor . finalize(self + 1);
+    t_resolved_typeinfo->foreign.descriptor.finalize(self + 1);
 	
 	MCValueRelease(self -> typeinfo);
 }
@@ -468,7 +571,7 @@ hash_t __MCForeignValueHash(__MCForeignValue *self)
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
     hash_t t_hash;
-    if (!t_resolved_typeinfo -> foreign . descriptor . hash(self + 1, t_hash))
+    if (!t_resolved_typeinfo->foreign.descriptor.hash(&t_resolved_typeinfo->foreign.descriptor, self + 1, t_hash))
         return 0;
     return t_hash;
 }
@@ -479,7 +582,7 @@ bool __MCForeignValueIsEqualTo(__MCForeignValue *self, __MCForeignValue *other_s
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
     bool t_result;
-    if (!t_resolved_typeinfo -> foreign . descriptor . equal(self + 1, other_self + 1, t_result))
+    if (!t_resolved_typeinfo->foreign.descriptor.equal(&t_resolved_typeinfo->foreign.descriptor, self + 1, other_self + 1, t_result))
         return false;
     
     return t_result;
@@ -490,11 +593,12 @@ bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_desc
 	MCTypeInfoRef t_resolved_typeinfo;
 	t_resolved_typeinfo = __MCTypeInfoResolve(self->typeinfo);
 
-	bool (*t_describe_func)(void *, MCStringRef &);
+	bool (*t_describe_func)(const MCForeignTypeDescriptor*, void *, MCStringRef &);
 	t_describe_func = t_resolved_typeinfo->foreign.descriptor.describe;
 
 	if (NULL != t_describe_func)
-		return t_describe_func (MCForeignValueGetContentsPtr (self),
+		return t_describe_func (&t_resolved_typeinfo->foreign.descriptor,
+                                MCForeignValueGetContentsPtr (self),
 		                        r_description);
 	else
 		return MCStringFormat(r_description, "<foreign: %p>", self);
@@ -558,6 +662,16 @@ struct DoImport
     }
 };
 
+template<typename TypeDesc, typename Enable = void>
+struct DoPromote
+{
+    static_assert(sizeof(typename TypeDesc::c_type) == 0, "Missing promote specialization");
+    static bool promote(void *contents)
+    {
+        return false;
+    }
+};
+
 template <typename TypeDesc>
 bool initialize(void *contents)
 {
@@ -579,40 +693,40 @@ bool defined(void *contents)
 }
 
 template <typename TypeDesc>
-bool equal(void *left, void *right, bool& r_equal)
+bool equal(const MCForeignTypeDescriptor* desc, void *left, void *right, bool& r_equal)
 {
     r_equal = *static_cast<typename TypeDesc::c_type *>(left) == *static_cast<typename TypeDesc::c_type *>(right);
     return true;
 }
 
 template <typename TypeDesc>
-bool copy(void *from, void *to)
+bool copy(const MCForeignTypeDescriptor* desc, void *from, void *to)
 {
     *static_cast<typename TypeDesc::c_type *>(to) = *static_cast<typename TypeDesc::c_type *>(from);
     return true;
 }
 
 template <typename TypeDesc>
-bool move(void *from, void *to)
+bool move(const MCForeignTypeDescriptor* desc, void *from, void *to)
 {
-    return copy<TypeDesc>(from, to);
+    return copy<TypeDesc>(desc, from, to);
 }
 
 template <typename TypeDesc>
-bool hash(void *value, hash_t& r_hash)
+bool hash(const MCForeignTypeDescriptor* desc, void *value, hash_t& r_hash)
 {
     r_hash = TypeDesc::hash_func(*static_cast<typename TypeDesc::c_type *>(value));
     return true;
 }
 
 template <typename TypeDesc>
-bool describe(void *contents, MCStringRef& r_string)
+bool describe(const MCForeignTypeDescriptor* desc, void *contents, MCStringRef& r_string)
 {
     return Describe<TypeDesc>::describe(*static_cast<typename TypeDesc::c_type *>(contents), r_string);
 }
 
 template <typename TypeDesc>
-bool doexport(MCValueRef p_value, bool p_release, void *contents)
+bool doexport(const MCForeignTypeDescriptor* desc, MCValueRef p_value, bool p_release, void *contents)
 {
     static_assert(TypeDesc::is_bridgable, "This type is not bridgable");
     
@@ -631,11 +745,18 @@ bool doexport(MCValueRef p_value, bool p_release, void *contents)
 }
 
 template <typename TypeDesc>
-bool doimport(void *contents, bool p_release, MCValueRef& r_value)
+bool doimport(const MCForeignTypeDescriptor* desc, void *contents, bool p_release, MCValueRef& r_value)
 {
     static_assert(TypeDesc::is_bridgable, "This type is not bridgable");
     return DoImport<TypeDesc>::doimport(*static_cast<typename TypeDesc::c_type *>(contents),
                                         reinterpret_cast<typename TypeDesc::bridge_type&>(r_value));
+}
+
+template <typename TypeDesc>
+void promote(void *contents)
+{
+    static_assert(TypeDesc::is_promotable, "This type is not promotable");
+    return DoPromote<TypeDesc>::promote(contents);
 }
 
 /* ---------- bool specializations */
@@ -728,6 +849,16 @@ struct DoImport<
     }
 };
 
+template <typename RealType>
+struct DoPromote<
+    RealType, typename std::enable_if<std::is_floating_point<typename RealType::c_type>::value>::type>
+{
+    static void promote(void *contents)
+    {
+        *(double *)contents = *(typename RealType::c_type *)contents;
+    }
+};
+
 /* ---------- integer numeric specializations */
 
 template <typename IntType>
@@ -801,6 +932,28 @@ struct DoImport<
     }
 };
 
+template <typename IntType>
+struct DoPromote<
+    IntType, typename std::enable_if<std::is_integral<typename IntType::c_type>::value &&
+                                     std::is_signed<typename IntType::c_type>::value>::type>
+{
+    static void promote(void *contents)
+    {
+        *(int *)contents = *(typename IntType::c_type *)contents;
+    }
+};
+
+template <typename UIntType>
+struct DoPromote<
+    UIntType, typename std::enable_if<std::is_integral<typename UIntType::c_type>::value &&
+                                      std::is_unsigned<typename UIntType::c_type>::value>::type>
+{
+    static void promote(void *contents)
+    {
+        *(unsigned int *)contents = *(typename UIntType::c_type *)contents;
+    }
+};
+
 template <typename TypeDesc>
 class DescriptorBuilder {
 public:
@@ -830,11 +983,14 @@ public:
             hash<TypeDesc>,
             nullptr, /* doimport */
             nullptr, /* doexport */
-            describe<TypeDesc>
+            describe<TypeDesc>,
+            nullptr, /* promotedtype */
+            nullptr, /* promote */
         };
 
         setup_optional<TypeDesc>(d);
         setup_bridge<TypeDesc>(d);
+        setup_promote<TypeDesc>(d);
 
         MCAutoStringRef t_name_string;
         if (!MCStringCreateWithCString(p_name, &t_name_string))
@@ -879,7 +1035,7 @@ private:
     }
 
     /* Setup the doimport() and doexport() methods depending on
-     * whether the ValueType is optional or not. */
+     * whether the ValueType is bridgeable or not. */
     template <typename BridgableType,
               typename std::enable_if<
                   BridgableType::is_bridgable, int>::type = 0>
@@ -899,23 +1055,421 @@ private:
         d.doimport = nullptr;
         d.doexport = nullptr;
     }
+    
+    /* Setup the promote() methods depending on whether the ValueType is
+     * promoteable or not. */
+    template <typename PromotableType,
+              typename std::enable_if<
+                  PromotableType::is_promotable, int>::type = 0>
+    static void setup_promote(MCForeignTypeDescriptor& d)
+    {
+        d.promotedtype = PromotableType::promoted_type_info();
+        d.promote = promote<PromotableType>;
+    }
+
+    template <typename UnpromotableType,
+              typename std::enable_if<
+                  !UnpromotableType::is_promotable, int>::type = 0>
+    static void setup_promote(MCForeignTypeDescriptor& d)
+    {
+        d.promotedtype = kMCNullTypeInfo;
+        d.promote = nullptr;
+    }
 };
 
 } /* anonymous namespace */
 
 /* ---------------------------------------------------------------- */
 
+static bool _aggregate_query_prim_type(MCForeignPrimitiveType p_type, MCTypeInfoRef& r_typeinfo, size_t& r_size, size_t& r_alignment)
+{
+    switch(p_type)
+    {
+        case kMCForeignPrimitiveTypeVoid:
+            MCUnreachableReturn(false);
+        case kMCForeignPrimitiveTypeBool:
+            r_typeinfo = kMCBoolTypeInfo;
+            r_size = sizeof(uint8_t);
+            r_alignment = alignof(uint8_t);
+            break;
+        case kMCForeignPrimitiveTypeUInt8:
+            r_typeinfo = kMCUInt8TypeInfo;
+            r_size = sizeof(uint8_t);
+            r_alignment = alignof(uint8_t);
+            break;
+        case kMCForeignPrimitiveTypeSInt8:
+            r_typeinfo = kMCSInt8TypeInfo;
+            r_size = sizeof(int8_t);
+            r_alignment = alignof(int8_t);
+            break;
+        case kMCForeignPrimitiveTypeUInt16:
+            r_typeinfo = kMCUInt16TypeInfo;
+            r_size = sizeof(uint16_t);
+            r_alignment = alignof(uint16_t);
+            break;
+        case kMCForeignPrimitiveTypeSInt16:
+            r_typeinfo = kMCSInt16TypeInfo;
+            r_size = sizeof(int16_t);
+            r_alignment = alignof(int16_t);
+            break;
+        case kMCForeignPrimitiveTypeUInt32:
+            r_typeinfo = kMCUInt32TypeInfo;
+            r_size = sizeof(uint32_t);
+            r_alignment = alignof(uint32_t);
+            break;
+        case kMCForeignPrimitiveTypeSInt32:
+            r_typeinfo = kMCSInt32TypeInfo;
+            r_size = sizeof(int32_t);
+            r_alignment = alignof(int32_t);
+            break;
+        case kMCForeignPrimitiveTypeUInt64:
+            r_typeinfo = kMCUInt64TypeInfo;
+            r_size = sizeof(uint64_t);
+            r_alignment = alignof(uint64_t);
+            break;
+        case kMCForeignPrimitiveTypeSInt64:
+            r_typeinfo = kMCSInt64TypeInfo;
+            r_size = sizeof(int64_t);
+            r_alignment = alignof(int64_t);
+            break;
+        case kMCForeignPrimitiveTypeFloat32:
+            r_typeinfo = kMCFloatTypeInfo;
+            r_size = sizeof(float);
+            r_alignment = alignof(float);
+            break;
+        case kMCForeignPrimitiveTypeFloat64:
+            r_typeinfo = kMCDoubleTypeInfo;
+            r_size = sizeof(double);
+            r_alignment = alignof(double);
+            break;
+        case kMCForeignPrimitiveTypePointer:
+            r_typeinfo = kMCPointerTypeInfo;
+            r_size = sizeof(void*);
+            r_alignment = alignof(void*);
+            break;
+    }
+    
+    return true;
+}
+
+static bool _aggregate_initialize(void *contents)
+{
+    return true;
+}
+
+static void _aggregate_finalize(void *contents)
+{
+}
+
+static bool _aggregate_move(const MCForeignTypeDescriptor* desc, void *source, void *target)
+{
+    memcpy(target, source, desc->size);
+    return true;
+}
+
+static bool _aggregate_copy(const MCForeignTypeDescriptor* desc, void *source, void *target)
+{
+    memmove(target, source, desc->size);
+    return true;
+}
+
+static bool _aggregate_equal(const MCForeignTypeDescriptor* desc, void *left, void *right, bool& r_equal)
+{
+    r_equal = (memcmp(left, right, desc->size) == 0);
+    return true;
+}
+
+static bool _aggregate_hash(const MCForeignTypeDescriptor* desc, void *contents, hash_t& r_hash)
+{
+    r_hash = MCHashBytes(contents, desc->size);
+    return true;
+}
+
+static bool _aggregate_describe(const MCForeignTypeDescriptor* desc, void *contents, MCStringRef& r_desc)
+{
+    return MCStringFormat(r_desc, "<foreign aggregate>");
+}
+
+static bool _aggregate_import(const MCForeignTypeDescriptor* desc, void *contents, bool p_release, MCValueRef& r_value)
+{
+    MCAssert(!p_release);
+    
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+    {
+        return false;
+    }
+    
+    void *t_ptr = contents;
+    
+    for(uindex_t i = 0; i < desc->layout_size; i++)
+    {
+        MCTypeInfoRef t_field_type = nullptr;
+        size_t t_size = 0, t_align = 0;
+        if (!_aggregate_query_prim_type(desc->layout[i], t_field_type, t_size, t_align))
+        {
+            MCUnreachableReturn(false);
+        }
+        
+        t_ptr = (void*)(((uintptr_t)t_ptr + (t_align - 1)) & ~(t_align - 1));
+        
+        const MCForeignTypeDescriptor *t_field_desc = MCForeignTypeInfoGetDescriptor(t_field_type);
+        
+        MCAutoValueRef t_field;
+        if (t_field_desc->bridgetype != kMCNullTypeInfo)
+        {
+            if (!t_field_desc->doimport(t_field_desc, t_ptr, false, &t_field))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (t_field_desc->defined != nullptr &&
+                !t_field_desc->defined(t_ptr))
+            {
+                t_field = kMCNull;
+            }
+            else
+            {
+                if (!MCForeignValueCreate(t_field_type, t_ptr, (MCForeignValueRef&)&t_field))
+                {
+                    return false;
+                }
+            }
+        }
+        
+        if (!MCProperListPushElementOntoBack(*t_list, *t_field))
+        {
+            return false;
+        }
+        
+        t_ptr = (void *)((uintptr_t)t_ptr + t_size);
+    }
+
+    if (!t_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_value = t_list.Take();
+    
+    return true;
+}
+
+static bool _aggregate_export(const MCForeignTypeDescriptor* desc, MCValueRef p_value, bool p_release, void *contents)
+{
+    MCAssert(!p_release);
+
+    MCProperListRef t_list = static_cast<MCProperListRef>(p_value);
+    
+    if (MCProperListGetLength(t_list) != desc->layout_size)
+    {
+        return false;
+    }
+    
+    void *t_ptr = contents;
+    for(uindex_t i = 0; i < desc->layout_size; i++)
+    {
+        MCValueRef t_element = MCProperListFetchElementAtIndex(t_list, i);
+        MCTypeInfoRef t_element_type = MCValueGetTypeInfo(t_element);
+        
+        MCTypeInfoRef t_field_type = nullptr;
+        size_t t_size = 0, t_align = 0;
+        if (!_aggregate_query_prim_type(desc->layout[i], t_field_type, t_size, t_align))
+        {
+            return false;
+        }
+        
+        t_ptr = (void*)(((uintptr_t)t_ptr + (t_align - 1)) & ~(t_align - 1));
+        
+        if (t_element_type == t_field_type)
+        {
+            memcpy(t_ptr, MCForeignValueGetContentsPtr(t_element), t_size);
+        }
+        else
+        {
+            bool t_success = true;
+            
+            const MCForeignTypeDescriptor *t_field_desc = MCForeignTypeInfoGetDescriptor(t_field_type);
+            if (t_element_type == t_field_desc->bridgetype)
+            {
+                if (!t_field_desc->doexport(t_field_desc, t_element, false, t_ptr))
+                {
+                    t_success = false;
+                }
+            }
+            else if (MCTypeInfoIsForeign(t_element_type))
+            {
+                const MCForeignTypeDescriptor *t_element_desc = MCForeignTypeInfoGetDescriptor(t_element_type);
+                if (t_element_desc->bridgetype == t_field_desc->bridgetype)
+                {
+                    MCAutoValueRef t_pivot;
+                    if (!t_element_desc->doimport(t_element_desc, MCForeignValueGetContentsPtr(t_element), false, &t_pivot))
+                    {
+                        t_success = false;
+                    }
+                    if (!t_field_desc->doexport(t_field_desc, *t_pivot, false, t_ptr))
+                    {
+                        t_success = false;
+                    }
+                }
+                else
+                {
+                    t_success = false;
+                }
+            }
+            else
+            {
+                t_success = false;
+            }
+            
+            if (!t_success)
+            {
+                MCAutoErrorRef t_error;
+                MCAutoStringRef t_reason;
+                if (!MCErrorCatch(&t_error))
+                {
+                    t_reason = MCSTR("type mismatch");
+                }
+                else
+                {
+                    t_reason = MCErrorGetMessage(*t_error);
+                }
+                
+                MCAutoNumberRef t_field_index;
+                if (!MCNumberCreateWithInteger(i + 1, &t_field_index))
+                {
+                    return false;
+                }
+                
+                return MCErrorCreateAndThrow(kMCForeignAggregateExportErrorTypeInfo,
+                                             "field", *t_field_index,
+                                             "reason", *t_reason,
+                                             nil);
+            }
+        }
+        
+        t_ptr = (void *)((uintptr_t)t_ptr + t_size);
+    }
+    
+    return true;
+}
+
+static bool _aggregate_compute(MCStringRef p_binding, MCForeignPrimitiveType* p_type, size_t& r_size)
+{
+    size_t t_offset = 0;
+    for(uindex_t i = 0; i < MCStringGetLength(p_binding); i++)
+    {
+        size_t t_size, t_align;
+        MCForeignPrimitiveType t_prim_type;
+#define FORMAT(Char, Type) \
+            case Char: \
+                t_align = alignof(Type##_type_desc_t::c_type); \
+                t_size = sizeof(Type##_type_desc_t::c_type); \
+                t_prim_type = Type##_type_desc_t::primitive_type; \
+                break;
+        switch(MCStringGetCharAtIndex(p_binding, i))
+        {
+                FORMAT('a', cbool)
+                FORMAT('b', cchar)
+                FORMAT('c', cuchar)
+                FORMAT('C', cschar)
+                FORMAT('d', cushort)
+                FORMAT('D', csshort)
+                FORMAT('e', cuint)
+                FORMAT('E', csint)
+                FORMAT('f', culong)
+                FORMAT('F', cslong)
+                FORMAT('g', culonglong)
+                FORMAT('G', cslonglong)
+                FORMAT('h', uint8)
+                FORMAT('H', sint8)
+                FORMAT('i', uint16)
+                FORMAT('I', sint16)
+                FORMAT('j', uint32)
+                FORMAT('J', sint32)
+                FORMAT('k', uint64)
+                FORMAT('K', sint64)
+                FORMAT('l', uintptr)
+                FORMAT('L', sintptr)
+                FORMAT('m', uintsize)
+                FORMAT('M', sintsize)
+                FORMAT('n', float)
+                FORMAT('N', double)
+                FORMAT('o', uint)
+                FORMAT('O', sint)
+                FORMAT('p', naturaluint)
+                FORMAT('P', naturalsint)
+                FORMAT('q', naturalfloat)
+                FORMAT('r', pointer)
+            default:
+                return false;
+        }
+#undef FORMAT
+        
+        p_type[i] = t_prim_type;
+        
+        t_offset = (t_offset + (t_align - 1)) & ~(t_align - 1);
+        t_offset += t_size;
+    }
+    
+    r_size = t_offset;
+    
+    return true;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+bool MCAggregateTypeInfo(MCStringRef p_binding, MCTypeInfoRef& r_typeinfo)
+{
+    MCForeignTypeDescriptor d;
+    
+    MCAutoArray<MCForeignPrimitiveType> t_layout;
+    if (!t_layout.Resize(MCStringGetLength(p_binding)))
+    {
+        return false;
+    }
+    
+    if (!_aggregate_compute(p_binding, t_layout.Ptr(), d.size))
+    {
+        return false;
+    }
+
+    d.layout = t_layout.Ptr();
+    d.layout_size = MCStringGetLength(p_binding);
+    d.basetype = kMCNullTypeInfo;
+    d.bridgetype = kMCProperListTypeInfo;
+    d.promotedtype = kMCNullTypeInfo;
+    d.initialize = nullptr;
+    d.finalize = _aggregate_finalize;
+    d.defined = nullptr;
+    d.move = _aggregate_move;
+    d.copy = _aggregate_copy;
+    d.equal = _aggregate_equal;
+    d.hash = _aggregate_hash;
+    d.doimport = _aggregate_import;
+    d.doexport = _aggregate_export;
+    d.describe = _aggregate_describe;
+    d.promote = nullptr;
+    
+    return MCForeignTypeInfoCreate(&d, r_typeinfo);
+}
+
+/* ---------------------------------------------------------------- */
+
 bool __MCForeignValueInitialize(void)
 {
-    if (!(DescriptorBuilder<bool_type_desc_t>::create("__builtin__.bool") &&
-          DescriptorBuilder<float_type_desc_t>::create("__builtin__.float") &&
+    /* We must initialized uint32, sint32 and double first as they are used as
+     * promotions. */
+    if (!(DescriptorBuilder<uint32_type_desc_t>::create("__builtin__.uint32") &&
+          DescriptorBuilder<sint32_type_desc_t>::create("__builtin__.sint32") &&
           DescriptorBuilder<double_type_desc_t>::create("__builtin__.double") &&
+          DescriptorBuilder<bool_type_desc_t>::create("__builtin__.bool") &&
+          DescriptorBuilder<float_type_desc_t>::create("__builtin__.float") &&
           DescriptorBuilder<uint8_type_desc_t>::create("__builtin__.uint8") &&
           DescriptorBuilder<sint8_type_desc_t>::create("__builtin__.sint8") &&
           DescriptorBuilder<uint16_type_desc_t>::create("__builtin__.uint16") &&
           DescriptorBuilder<sint16_type_desc_t>::create("__builtin__.sint16") &&
-          DescriptorBuilder<uint32_type_desc_t>::create("__builtin__.uint32") &&
-          DescriptorBuilder<sint32_type_desc_t>::create("__builtin__.sint32") &&
           DescriptorBuilder<uint64_type_desc_t>::create("__builtin__.uint64") &&
           DescriptorBuilder<sint64_type_desc_t>::create("__builtin__.sint64") &&
           DescriptorBuilder<uintsize_type_desc_t>::create("__builtin__.uintsize") &&
@@ -923,6 +1477,9 @@ bool __MCForeignValueInitialize(void)
           DescriptorBuilder<uintptr_type_desc_t>::create("__builtin__.uintptr") &&
           DescriptorBuilder<sintptr_type_desc_t>::create("__builtin__.sintptr") &&
           DescriptorBuilder<pointer_type_desc_t>::create("__builtin__.pointer") &&
+          DescriptorBuilder<naturaluint_type_desc_t>::create("__builtin__.naturaluint") &&
+          DescriptorBuilder<naturalsint_type_desc_t>::create("__builtin__.naturalsint") &&
+          DescriptorBuilder<naturalfloat_type_desc_t>::create("__builtin__.naturalfloat") &&
           DescriptorBuilder<cbool_type_desc_t>::create("__builtin__.cbool") &&
           DescriptorBuilder<cuchar_type_desc_t>::create("__builtin__.cuchar") &&
           DescriptorBuilder<cschar_type_desc_t>::create("__builtin__.cschar") &&
@@ -944,6 +1501,8 @@ bool __MCForeignValueInitialize(void)
     if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignTypeImportError"), MCNAME("runtime"), MCSTR("error importing foreign '%{type}' value: %{reason}"), kMCForeignImportErrorTypeInfo))
         return false;
     if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignTypeExportError"), MCNAME("runtime"), MCSTR("error exporting foreign '%{type}' value: %{reason}"), kMCForeignExportErrorTypeInfo))
+        return false;
+    if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignAggregateExportError"), MCNAME("runtime"), MCSTR("error exporting aggregate field %{field}: %{reason}"), kMCForeignAggregateExportErrorTypeInfo))
         return false;
 
     return true;
@@ -967,6 +1526,9 @@ void __MCForeignValueFinalize(void)
 	MCValueRelease(kMCUIntPtrTypeInfo);
 	MCValueRelease(kMCSIntPtrTypeInfo);
     MCValueRelease(kMCPointerTypeInfo);
+	MCValueRelease(kMCNaturalUIntTypeInfo);
+	MCValueRelease(kMCNaturalSIntTypeInfo);
+    MCValueRelease(kMCNaturalFloatTypeInfo);
     
 	MCValueRelease(kMCCCharTypeInfo);
 	MCValueRelease(kMCCUCharTypeInfo);

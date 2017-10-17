@@ -4,7 +4,10 @@ Synonyms: command
 
 Type: control structure
 
-Syntax: on <messageName> [<parametersList>] <statementList> end <messageName>
+Syntax:
+[private] on <messageName> [<parametersList>]
+   <statementList>
+end <messageName>
 
 Summary:
 Defines a <message handler>.
@@ -45,10 +48,11 @@ The result:
 
 Description:
 Use the <on> <control structure> to <handle> a <message>, or to
-implement a custom command. Form:The first line of a message handler
-consists of the word "on" followed by the message's name. If the handler
-has any parameters, their names come after the message name, separated
-by commas.
+implement a custom command. 
+
+**Form:** The first line of a message handler consists of the word "on"
+followed by the message's name. If the handler has any parameters, 
+their names come after the message name, separated by commas.
 
 The last line of a message handler consists of the word "end" followed
 by the handler's name.
@@ -75,15 +79,15 @@ reaches the <object(glossary)> whose <script> contains the <on>
 <execute|executed>. 
 
 >*Note:* If you want to declare a handler that is local to the script it
-> is contained in then you can use the <private keyword>, please see the
-> dictionary entry for the <private keyword> for more information
+> is contained in then you can use the <private> keyword, please see the
+> dictionary entry for the <private> keyword for more information
 
 References: dispatch (command), exit (control structure),
 return (control structure), result (function), commandNames (function),
 paramCount (function), the result (function), object (glossary),
 handle (glossary), handler (glossary), execute (glossary),
-message handler (glossary), private keyword (glossary), pass (glossary),
-message path (glossary), control structure (glossary), message (glossary),
+message handler (glossary), pass (glossary), message path (glossary),
+control structure (glossary), message (glossary),
 command (glossary), statement (glossary), end (keyword),
 private (keyword), mouseDown (message), openCard (message),
 script (property)

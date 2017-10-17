@@ -7,8 +7,9 @@ Syntax: import snapshot [from rect[angle] <rectDescription>] [of {<objectRef> | 
 Syntax: import snapshot from {<objectRef> [{with | without} effects] | <stackRef>} [at size <sizeDescription>]
 
 Summary:
-Creates an <image> of a portion of the screen, portion of a stack or a
-specific object and sets <it> to the long id of the created <image>.
+Creates an <image> of a portion of the screen, a portion of a stack 
+window, or a specific object and sets <it> to the long id of the 
+created <image>.
 
 Introduced: 1.0
 
@@ -61,7 +62,6 @@ Any valid card or control <object reference>.
 
 sizeDescription:
 The width and height of the snapshot in pixels, in the form *height,width*.
-
 
 Description:
 Use the <import snapshot> <command> to place a screenshot in the
@@ -152,7 +152,7 @@ import (command), current stack (glossary), current card (glossary),
 command (glossary), object reference (glossary), property (glossary), 
 image (glossary), cursor (property), blendlevel (property), ink (property), 
 paintCompression (property), rectangle (property), select (glossary), 
-token (glossary), windowID (property), it (property)
+token (glossary), windowID (property), it (keyword)
 
 Tags: multimedia
 

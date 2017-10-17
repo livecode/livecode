@@ -5,7 +5,7 @@ Type: constant
 Syntax: arrow
 
 Summary:
-Equivalent to the number 1.
+Equivalent to the number 29.
 
 Introduced: 1.0
 
@@ -23,19 +23,19 @@ shape.
 The following two statements are equivalent:
 
     set the cursor to arrow
-    set the cursor to 1
+    set the cursor to 29
 
 
 However, the first is easier to read and understand in LiveCode.
 
 >*Important:*  If you use the <arrow> <cursor(property)> or other
 > standard <cursor(glossary)|cursors> in your application, you must
-> include the cursors when you create your <standalone
-> application|standalone>. Make sure the "Cursors" option on the
-> Inclusions section on the General screen of the <Standalone
-> Application Settings> window is checked.
+> include the cursors when you create your
+> <standalone application|standalone>. Make sure the "Cursors"
+> option on the Inclusions section on the General screen of the
+> <Standalone Application Settings> window is checked.
 
-References: constant (command), one (constant),
+References: constant (command),
 Standalone Application Settings (glossary),
 standalone application (glossary), cursor (glossary), cursor (property)
 

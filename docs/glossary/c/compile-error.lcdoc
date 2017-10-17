@@ -10,9 +10,9 @@ A problem or mistake in a <handler> that prevents it from being
 <compile|compiled>. 
 
 Most often, compile errors are caused by incomplete or incorrect
-<control structure|control structures> (such as a <repeat> <control
-structure|structure> with no <end repeat>) or by punctuation errors
-(such as failing to <quote> a <literal string>).
+<control structure|control structures> (such as a <repeat> 
+<control structure|structure> with no <end repeat>) or by punctuation 
+errors (such as failing to <quote> a <literal string>).
 
 References: quote (constant), repeat (control structure),
 handler (glossary), literal string (glossary), compile (glossary),

@@ -675,9 +675,7 @@ private:
 			p2 . setn_argument(p_data_offset + p_data_length);
 			p3 . setn_argument(p_data_total);
 
-			MCAutoNameRef t_message_name;
-			/* UNCHECKED */ t_message_name . CreateWithCString("payloadProgress");
-			context->target->message(t_message_name, &p1);
+			context->target->message(MCNAME("payloadProgress"), &p1);
 		}
 
 		return true;
@@ -1271,9 +1269,11 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 			
 	case kMCCapsuleSectionTypeLicense:
 	{
-		// Just read the edition byte and ignore it in installer mode.
-		char t_edition_byte;
-		if (IO_read(&t_edition_byte, 1, p_stream) != IO_NORMAL)
+		// Just read the license info and ignore it in installer mode.
+		uint8_t t_class;
+        MCAutoValueRef t_addons;
+        if (IO_read(&t_class, 1, p_stream) != IO_NORMAL ||
+            (p_length > 1 && IO_read_valueref_new(&t_addons, p_stream) != IO_NORMAL))
 		{
 			MCresult -> sets("failed to read license");
 			return false;
@@ -1324,8 +1324,7 @@ IO_stat MCDispatch::startup(void)
 	t_project_info = (MCCapsuleInfo *)MCExecutableFindSection(PROJECT_SECTION_NAME);
 	if (t_project_info == nil || t_project_info -> size <= sizeof(MCCapsuleInfo))
 	{
-//#ifdef _DEBUG
-#if 0
+#if DEBUG_INSTALLER_STARTUP
         char *openpath = t_mccmd; //point to MCcmd string
         MCStack *t_stack;
 		IO_handle t_stream;
@@ -1690,6 +1689,12 @@ bool MCModeCollectEntropy(void)
 bool MCModeHasHomeStack(void)
 {
 	return false;
+}
+
+// Pixel scaling can be enabled in the installer
+bool MCModeCanEnablePixelScaling()
+{
+	return true;
 }
 
 // IM-2014-08-08: [[ Bug 12372 ]] Pixel scaling is enabled for the installer

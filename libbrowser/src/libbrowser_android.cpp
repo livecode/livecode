@@ -793,7 +793,7 @@ private:
 	
 	bool SetHTMLText(const char *p_utf8_string)
 	{
-		MCAndroidObjectRemoteCall(m_view, "loadHtml", "vss", nil, LIBBROWSER_DUMMY_URL, p_utf8_string);
+		MCAndroidObjectRemoteCall(m_view, "loadHtml", "vst", nil, LIBBROWSER_DUMMY_URL, p_utf8_string);
 		return true;
 	}
 	

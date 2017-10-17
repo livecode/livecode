@@ -52,7 +52,8 @@ MCScriptThrowPropertyUsedBeforeAssignedError(MCScriptInstanceRef p_instance,
 								 p_instance->module->name,
 								 "property",
 								 MCScriptGetNameOfDefinitionInModule(p_instance->module,
-																		   p_property_def));
+																		   p_property_def),
+                                 nil);
 }
 
 bool
@@ -316,6 +317,15 @@ MCScriptThrowUnableToResolveForeignHandlerError(MCScriptInstanceRef p_instance,
 }
 
 bool
+MCScriptThrowUnknownForeignLanguageError(void)
+{
+	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
+								 "reason",
+								 MCSTR("unknown language"),
+								 nil);
+}
+
+bool
 MCScriptThrowUnknownForeignCallingConventionError(void)
 {
 	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
@@ -334,15 +344,6 @@ MCScriptThrowMissingFunctionInForeignBindingError(void)
 }
 
 bool
-MCScriptThrowClassNotAllowedInCBindingError(void)
-{
-	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-								 "reason",
-								 MCSTR("class not allowed in c binding string"),
-								 nil);
-}
-
-bool
 MCScriptThrowUnableToLoadForiegnLibraryError(void)
 {
 	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
@@ -350,32 +351,14 @@ MCScriptThrowUnableToLoadForiegnLibraryError(void)
 								 MCSTR("unable to load foreign library"),
 								 nil);
 }
-	
-bool
-MCScriptThrowCXXBindingNotImplemented(void)
-{
-	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-								 "reason",
-								 MCSTR("c++ binding not implemented yet"),
-								 nil);
-}
 
 bool
-MCScriptThrowObjCBindingNotImplemented(void)
+MCScriptThrowUnknownThreadAffinityError(void)
 {
-	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-								 "reason",
-								 MCSTR("objc binding not implemented yet"),
-								 nil);
-}
-
-bool
-MCScriptThrowJavaBindingNotImplemented(void)
-{
-	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
-								 "reason",
-								 MCSTR("java binding not implemented yet"),
-								 nil);
+    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
+                                 "reason",
+                                 MCSTR("unknown thread affinity specified in binding string"),
+                                 nil);
 }
 
 bool
@@ -385,6 +368,15 @@ MCScriptThrowJavaBindingNotSupported(void)
 								 "reason",
 								 MCSTR("java binding not supported on this platform"),
 								 nil);
+}
+
+bool
+MCScriptThrowForeignExceptionError(MCStringRef p_reason)
+{
+    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
+                                 "reason",
+                                 p_reason,
+                                 nil);
 }
 
 bool

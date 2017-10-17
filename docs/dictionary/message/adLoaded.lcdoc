@@ -2,12 +2,10 @@ Name: adLoaded
 
 Type: message
 
-Syntax: adLoaded <adName>, <default>
+Syntax: adLoaded <pAdName>, <pDefault>
 
 Summary:
 Sent when an ad had loaded (or reloaded).
-
-Associations: stack
 
 Introduced: 5.5
 
@@ -21,17 +19,17 @@ on adLoaded pAd
 end adLoaded
 
 Parameters:
-adName:
-The name of ad that has loaded (as specified in mobileAdCreate)
+pAdName:
+The name of ad that has loaded (as specified in <mobileAdCreate>)
 
-default (bool):
+pDefault (bool):
 True or false, specifying if the loaded ad is a default ad.
 
 Description:
 Handle the <adLoaded> message if you want to perform an action when an
 ad finishes loading.
 
-The <adLoaded> messge is sent to the object that created the ad when the
+The <adLoaded> message is sent to the object that created the ad when the
 ad has loaded, or reloaded.
 
 References: mobileAdCreate (command), mobileAdDelete (command),

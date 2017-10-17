@@ -574,7 +574,7 @@ static Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2
 	fillTrackDrawInfo(winfo,ttdi,drect);
 	Boolean inScrollbarArrow = False;
 	ControlPartCode partCode;
-	// scrollbar needs to check first if mouse-down occured in arrows
+	// scrollbar needs to check first if mouse-down occurred in arrows
 	if (ttdi.kind == kThemeScrollBar || ttdi.kind == kThemeSmallScrollBar)
 	{
 		// MW-2008-11-02: [[ Bug ]] If this scrollbar is rendered as a little arrows control, then
@@ -1123,13 +1123,7 @@ bool MCNativeTheme::drawmetalbackground(MCContext *p_context, const MCRectangle&
 	
 	Window t_window;
 	t_window = p_object -> getstack() -> getwindow();
-	// COCOA-TODO: metalbackground drawing
-#ifdef OLD_MAC
-	if (t_window  != nil)
-		p_info . background . state = IsWindowHilited((WindowPtr)t_window -> handle . window) ? kThemeStateActive : kThemeStateInactive;
-	else
-#endif
-		p_info . background . state = kThemeStateActive;
+    p_info . background . state = kThemeStateActive;
 
 	MCRectangle t_clip;
 	t_clip = p_context -> getclip();

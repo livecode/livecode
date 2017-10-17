@@ -190,8 +190,8 @@ MCPropertyInfo MCStack::kProperties[] =
    	// IM-2013-09-23: [[ FullscreenMode ]] Add stack fullscreenMode property
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_FULLSCREENMODE, InterfaceStackFullscreenMode, MCStack, FullscreenMode)
     
-    DEFINE_RO_OBJ_PROPERTY(P_KEY, Bool, MCStack, Key)
-    DEFINE_RO_OBJ_PROPERTY(P_PASSWORD, BinaryString, MCStack, Password)
+    DEFINE_RW_OBJ_PROPERTY(P_KEY, Any, MCStack, Key)
+    DEFINE_RW_OBJ_PROPERTY(P_PASSWORD, Any, MCStack, Password)
     
     // IM-2014-01-07: [[ StackScale ]] Add stack scalefactor property
     DEFINE_RW_OBJ_PROPERTY(P_SCALE_FACTOR, Double, MCStack, ScaleFactor)
@@ -273,7 +273,7 @@ MCStack::MCStack()
 	stackfiles = NULL;
 	linkatts = NULL;
 	filename = MCValueRetain(kMCEmptyString);
-	/* UNCHECKED */ MCNameClone(kMCEmptyName, _menubar);
+    _menubar = MCValueRetain(kMCEmptyName);
 	menuy = menuheight = 0;
 	menuwindow = False;
 
@@ -303,6 +303,9 @@ MCStack::MCStack()
     // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks are not script-only by default.
     m_is_script_only = false;
     
+    // BWM-2017-08-16: [[ Bug 17810 ]] Script-only-stack line endings default to LF.
+    m_line_encoding_style = kMCStringLineEndingStyleLF;
+
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
     
@@ -491,7 +494,7 @@ MCStack::MCStack(const MCStack &sref)
 	else
 		linkatts = NULL;
 	filename = MCValueRetain(kMCEmptyString);
-	/* UNCHECKED */ MCNameClone(sref._menubar, _menubar);
+    _menubar = MCValueRetain(sref._menubar);
 	menuy = menuheight = 0;
 
 	f_extended_state = 0;
@@ -628,7 +631,7 @@ MCStack::~MCStack()
 	}
 	MCValueRelease(filename);
 
-	MCNameDelete(_menubar);
+	MCValueRelease(_menubar);
 
 	unloadexternals();
 
@@ -1197,7 +1200,7 @@ Boolean MCStack::doubleup(uint2 which)
 
 void MCStack::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
 		if (scrollmode == SM_PAGEDEC || scrollmode == SM_LINEDEC)
 		{
@@ -1225,7 +1228,7 @@ void MCStack::timer(MCNameRef mptr, MCParameter *params)
 			if (scrollmode == SM_LINEINC || scrollmode == SM_LINEDEC)
 				MCscreen->addtimer(this, MCM_internal, MCrepeatrate);
 	}
-	else if (MCNameIsEqualTo(mptr, MCM_idle, kMCCompareCaseless))
+	else if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 		{
 			if (opened && hashandlers & HH_IDLE && state & CS_KFOCUSED
 			        && getstack()->gettool(this) == T_BROWSE)
@@ -1523,6 +1526,11 @@ void MCStack::removereferences()
         else
             i++;
     
+    // COCOA-TODO: Remove dependence on ifdef
+#if !defined(_MAC_DESKTOP)
+    MCEventQueueFlush(this);
+#endif
+    
     MCObject::removereferences();
 }
 
@@ -1577,7 +1585,7 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 {
 	if (!opened)
 	{
-		if (window == NULL && !MCNameIsEqualTo(message, MCM_start_up, kMCCompareCaseless)
+		if (window == NULL && !MCNameIsEqualToCaseless(message, MCM_start_up)
 #ifdef _MACOSX
 		        && !(state & CS_DELETE_STACK))
 #else

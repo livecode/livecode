@@ -27,6 +27,7 @@ function build_widget {
 	local BUILD_DIR=$2
 	local MODULE_DIR=$3
 	local LC_COMPILE=$4
+   local REMOVE_SRC=$5
 	
 	echo "  LC_COMPILE ${WIDGET_DIR}/module.lcm"
 
@@ -56,6 +57,10 @@ function build_widget {
 		-d "${BUILD_DIR}/${TARGET_DIR}"
 		
 	rm "${WIDGET_DIR}/${TARGET_DIR}.lce"
+   
+   if [[ "${REMOVE_SRC}" = "true" ]]; then
+      rm "${BUILD_DIR}/${TARGET_DIR}/${WIDGET_NAME}.lcb"
+   fi
 	
 	return 0
 }
@@ -63,16 +68,17 @@ function build_widget {
 # Detect verbose mode
 V=${V:-}
 
-# Arguments 4 and above are the list of extensions to compile
+# Arguments 5 and above are the list of extensions to compile
 readonly destination_dir=$1
 readonly module_dir=$2
 readonly lc_compile=$3
-shift 3
+readonly remove_src=$4
+shift 4
 
 # Find the dependency/build ordering of the extensions
 readonly build_order=$(${lc_compile} --modulepath ${module_dir} --deps order -- $@)
 
 # Loop over the extensions that need to be (re-)built
 for ext in ${build_order} ; do
-	build_widget $(dirname "${ext}") "${destination_dir}" "${module_dir}" "${lc_compile}"
+	build_widget $(dirname "${ext}") "${destination_dir}" "${module_dir}" "${lc_compile}" "${remove_src}"
 done

@@ -1751,44 +1751,47 @@ enum Parse_errors
 	// {PE-0568} launch: error in widget expression
 	PE_LAUNCH_BADWIDGETEXP,
 
-	// {PE-0568} save: error in format expression
+	// {PE-0569} save: error in format expression
 	PE_SAVE_BADFORMATEXP,
 	
-	// {PE-0569} replace: missing 'styles'
+	// {PE-0570} replace: missing 'styles'
 	PE_REPLACE_NOSTYLES,
     
-    // {PE-0570} revert: bad stack expression
+    // {PE-0571} revert: bad stack expression
     PE_REVERT_BADSTACK,
 	
-    // {PE-0571} vectordot: bad parameter
+    // {PE-0572} vectordot: bad parameter
     PE_VECTORDOT_BADPARAM,
     
-    // {PE-0572} return: form not allowed in handler type
+    // {PE-0573} return: form not allowed in handler type
     PE_RETURN_BADFORMINCONTEXT,
     
-    // {PE-0573} return: form not allowed in handler type
+    // {PE-0574} return: form not allowed in handler type
     PE_RETURN_BADFOR,
 
-	// {PE-0574} files: bad folder expression
+	// {PE-0575} files: bad folder expression
 	PE_FILES_BADPARAM,
 
-	// {PE-0574} folders: bad folder expression
+	// {PE-0576} folders: bad folder expression
 	PE_FOLDERS_BADPARAM,
 
-    // {PE-0575} open: expected 'from' address
+    // {PE-0577} open: expected 'from' address
     PE_OPEN_NOFROM,
 
-    // {PE-0576} messageDigest: bad parameters
+    // {PE-0578} messageDigest: bad parameters
     PE_MESSAGEDIGEST_BADPARAM,
     
-    // {PE-0577} setop: missing 'difference'
+    // {PE-0579} setop: missing 'difference'
     PE_ARRAYOP_NODIFFERENCE,
     
-    // {PE-0578} setop: 'recursive' only makes sense for union or intersect
+    // {PE-0580} setop: 'recursive' only makes sense for union or intersect
     PE_ARRAYOP_BADRECURSIVE,
     
-    // {PE-0579} setop: destination is not a container (did you mean to use 'into'?)
+    // {PE-0581} setop: destination is not a container (did you mean to use 'into'?)
     PE_ARRAYOP_DSTNOTCONTAINER,
+	
+    // {PE-0582} send: can't send script in time
+    PE_SEND_SCRIPTINTIME,
 };
 
 extern const char *MCparsingerrors;

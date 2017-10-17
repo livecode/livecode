@@ -2,7 +2,7 @@ Name: revBrowserCallScript
 
 Type: function
 
-Syntax: revBrowserCallScript(<instanceId>, <functionName> [, <parameter1>, <parameter2>, ..., <parameterN>])
+Syntax: revBrowserCallScript(<instanceId>, <functionName> [, <functionParameter> ...])
 
 Summary:
 Calls a web script function in the current browser object
@@ -28,15 +28,9 @@ The integer identifier of a browser object
 functionName:
 The name of the web script function to call
 
-parameter1:
-The parameters parameter1  through to parameterN  contain the arguments
-to pass to the function (optional).
-
-parameter2:
-
-
-parameterN:
-
+functionParameter:
+One or more optional parameters may contain the arguments to pass to the
+function.
 
 Description:
 Use the <revBrowserCallScript> function to call a web script function in

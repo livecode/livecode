@@ -34,14 +34,15 @@ specifed file could not be loaded as a font.
 Description:
 The <start using font> command loads a font from a font file into
 memory. The <fontFile> is the path to the font file. Use the globally
-> adverb to indicate that the font should be available to all
-> applications on the system rather than private to the current
-> application. 
->*Note:* The <fontNames> <function> will return the name of all available
-> fonts and the <fontFilesInUse> <property> will return the fill paths of
-> the loaded font files. To determine the name of the newly loaded font,
-> compare the value of the <fontNames> before and after loading the
-> font.</no 
+adverb to indicate that the font should be available to all
+applications on the system rather than private to the current
+application.
+
+>*Note:* The <fontNames> <function> will return the name of all 
+> available fonts and the <fontFilesInUse> <property> will return the 
+> fill paths of the loaded font files. To determine the name of the 
+> newly loaded font, compare the value of the <fontNames> before and 
+> after loading the font.
 
 References: stop using font (command), function (glossary),
 result (function), fontNames (function),

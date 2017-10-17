@@ -57,24 +57,6 @@ static MCNameRef *s_dialog_types[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerColor, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFileWithTypes, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFileWithFilter, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFile, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFolder, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerNotify, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, CustomAnswerDialog, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskQuestion, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskPassword, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFile, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFileWithFilter, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFileWithTypes, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, CustomAskDialog, 7)
-MC_EXEC_DEFINE_GET_METHOD(Dialog, ColorDialogColors, 2)
-MC_EXEC_DEFINE_SET_METHOD(Dialog, ColorDialogColors, 2)
-    
-////////////////////////////////////////////////////////////////////////////////
-
 void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCStringRef p_title, bool p_as_sheet)
 {
     MCAutoStringRef t_value;
@@ -719,10 +701,25 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 	t_success = MCStringCreateMutable(0, &t_arg_string) &&
 	MCStringAppendFormat(*t_arg_string, "ask %@", p_type);
 	
+    /* Custom ask dialog parameters are '\0' separated. Prior to 7, any arguments
+     * containing '\0' would be truncated at the NUL. However, since 7 such strings
+     * have caused extra arguments to be passed. Therefore, we revert to the pre-7
+     * behavior and truncate. */
 	for (uindex_t i = 0; t_success && i < p_arg_count; i++)
-		t_success = MCStringAppendNativeChar(*t_arg_string, '\0') &&
-		(p_args[i] == nil || MCStringAppend(*t_arg_string, p_args[i]));
-	
+    {
+        t_success = MCStringAppendNativeChar(*t_arg_string, '\0');
+        if (t_success && p_args[i] != nullptr)
+        {
+            MCRange t_range;
+            t_range.offset = 0;
+            if (!MCStringFirstIndexOfChar(p_args[i], '\0', 0, kMCStringOptionCompareExact, t_range.length))
+            {
+                t_range.length = UINDEX_MAX;
+            }
+            t_success = MCStringAppendSubstring(*t_arg_string, p_args[i], t_range);
+        }
+    }
+    
 	if (t_success)
 		t_success = MCdialogdata->setvalueref(*t_arg_string);
 	

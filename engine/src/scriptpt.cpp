@@ -42,15 +42,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define LOWERED_PAD 64
 
-extern uint8_t type_table[];
-extern uint8_t unicode_type_table[];
-extern Cvalue constant_table[];
+extern const uint8_t type_table[];
+extern const uint8_t unicode_type_table[];
+extern const Cvalue constant_table[];
 extern const uint4 constant_table_size;
-extern LT *table_pointers[];
-extern uint2 table_sizes[];
-extern LT command_table[];
+extern const LT * const table_pointers[];
+extern const uint2 table_sizes[];
+extern const LT command_table[];
 extern const uint4 command_table_size;
-extern LT factor_table[];
+extern const LT factor_table[];
 extern const uint4 factor_table_size;
 
 static struct { codepoint_t codepoint; Symbol_type type; } remainder_table[] =
@@ -275,7 +275,7 @@ MCNameRef MCScriptPoint::gettoken_nameref(void)
     {
         MCAutoStringRef t_string_token;
         if (token_nameref != nil)
-            MCNameDelete(token_nameref);
+            MCValueRelease(token_nameref);
         /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)token . getstring(), (token . getlength() * 2), kMCStringEncodingUTF16, false, &t_string_token);
 		/* UNCHECKED */ MCNameCreate(*t_string_token, token_nameref);
     }
@@ -1801,8 +1801,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 						MCVarref *newvar;
 						newfact = NULL;
 
-						MCAutoNameRef t_name;
-						/* UNCHECKED */ t_name . Clone(gettoken_nameref());
+						MCNewAutoNameRef t_name = gettoken_nameref();
 
 						if (next(type) == PS_NORMAL)
 							backup();
@@ -1810,7 +1809,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							type = ST_ERR;
 						// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 						//   execution outwith a handler.
-						if (type != ST_LP && findvar(t_name, &newvar) == PS_NORMAL)
+						if (type != ST_LP && findvar(*t_name, &newvar) == PS_NORMAL)
 						{
 							newvar->parsearray(*this);
 							newfact = newvar;
@@ -1819,7 +1818,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							{
 								// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 								//   execution outwith a handler.
-							if (findnewvar(t_name, kMCEmptyName, &newvar) != PS_NORMAL)
+							if (findnewvar(*t_name, kMCEmptyName, &newvar) != PS_NORMAL)
 								{
 									MCperror->add(PE_EXPRESSION_NOTFACT, *this);
 									return PS_ERROR;
@@ -1828,7 +1827,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 								newfact = newvar;
 							}
 						else if (type == ST_LP)
-								newfact = new (nothrow) MCFuncref(t_name);
+								newfact = new (nothrow) MCFuncref(*t_name);
 						if (newfact == NULL)
 						{
 							if (MCexplicitvariables)
@@ -1840,7 +1839,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							{
 								// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 								//   execution outwith a handler.
-								if (finduqlvar(t_name, &newvar) != PS_NORMAL)
+								if (finduqlvar(*t_name, &newvar) != PS_NORMAL)
 								{
 									MCperror->add(PE_EXPRESSION_NOTFACT, *this);
 									return PS_ERROR;

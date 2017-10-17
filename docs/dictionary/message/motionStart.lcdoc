@@ -2,7 +2,7 @@ Name: motionStart
 
 Type: message
 
-Syntax: motionStart <motion>
+Syntax: motionStart <pMotion>
 
 Summary:
 Sent to the current card of the defaultStack when a motion starts
@@ -19,7 +19,7 @@ on motionStart theMotion
 end motionStart
 
 Parameters:
-motion:
+pMotion:
 The type of motion detected by the device.
 
 Description:

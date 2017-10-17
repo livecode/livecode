@@ -15,13 +15,13 @@ OS: ios, android
 Platforms: desktop, server, mobile
 
 Description:
-In HyperCard, the <checkmark> <property> determines whether a <menu
-item> has a checkmark next to it.
+In HyperCard, the <checkmark> <property> determines whether a 
+<menu item> has a checkmark next to it.
 
-A handler can set the <checkmark> to any <value> without causing a
+A handler can set the <checkmark> to any <value(glossary)> without causing a
 <error|script error>, but the actual checkmark is not changed.
 
-References: stacks (function), value (function), property (glossary),
+References: stacks (function), value (glossary), property (glossary),
 LiveCode (glossary), HyperCard (glossary), menu item (glossary),
 error (glossary), menuItem (keyword)
 

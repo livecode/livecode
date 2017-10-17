@@ -42,7 +42,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-const char *MCliststylestrings[] =
+const char * const MCliststylestrings[] =
 {
 	"",
 	"disc",
@@ -446,7 +446,7 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
 
         uint4 oldstate = state;
         bool t_refocus;
-        if (focused == this)
+        if (focused.IsBoundTo(this))
             t_refocus = true;
         else
             t_refocus = false;
@@ -477,8 +477,12 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
         else
             t_lastpgptr = newpgptr -> prev();
 
+        // Ensure the point at which the paragraph will be split is at p_start
         t_insert_paragraph->setselectionindex(p_start, p_start, False, False);
         t_insert_paragraph->split();
+        // Now ensure the selection for the initial paragraph is unset
+        t_insert_paragraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
+        
         t_insert_paragraph->append(newpgptr);
         // SN-2014-20-06: [[ Bug 12303 ]] Refactoring of the bugfix
         t_insert_paragraph->join(p_preserve_zero_length_styles);

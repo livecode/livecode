@@ -338,6 +338,7 @@ enum
 	
 	kMCPlatformKeyCodeGrave			= 0x0060,
 	
+	kMCPlatformKeyCodeISOSection	= 0x00A7,
 	
 	kMCPlatformKeyCodeBackspace		= 0xff08,
 	kMCPlatformKeyCodeTab			= 0xff09,
@@ -455,7 +456,6 @@ enum
 	kMCPlatformKeyCodeVolumeUp		= 0xfffe,
 	kMCPlatformKeyCodeVolumeDown	= 0xfffe,
 	kMCPlatformKeyCodeMute			= 0xfffe,
-	kMCPlatformKeyCodeISOSection	= 0xfffe,
 	kMCPlatformKeyCodeJISYen		= 0xfffe,
 	kMCPlatformKeyCodeJISUnderscore	= 0xfffe,
 	kMCPlatformKeyCodeJISKeypadComma= 0xfffe,
@@ -951,13 +951,13 @@ enum MCPlatformFileDialogKind
 	kMCPlatformFileDialogKindSave,
 	kMCPlatformFileDialogKindOpen,
 	kMCPlatformFileDialogKindOpenMultiple,
+    kMCPlatformFileDialogKindFolder,
 };
 
-void MCPlatformBeginFolderDialog(MCPlatformWindowRef owner, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial);
+void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef *p_types = nullptr, uint4 p_type_count = 0);
 MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef & r_selected_folder);
 
 
-void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt,  MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial);
 MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef& r_paths, MCStringRef& r_type);
 
 void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color);

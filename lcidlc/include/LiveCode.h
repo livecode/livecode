@@ -46,7 +46,7 @@ extern "C" {
 
 typedef enum LCError
 {
-	// No errors occured, the operation succeeded.
+	// No errors occurred, the operation succeeded.
 	kLCErrorNone = 0,
 	
 	// Memory ran out while performing the operation.
@@ -426,7 +426,9 @@ enum
 	
 enum
 {
+    kLCLicenseEditionNone = 0,
     kLCLicenseEditionCommunity = 1000,
+    kLCLicenseEditionCommunityPlus = 1500,
     kLCLicenseEditionIndy = 2000,
     kLCLicenseEditionBusiness = 3000,
 };
@@ -504,7 +506,7 @@ typedef struct __LCObject *LCObjectRef;
 // Errors:
 //   OutOfMemory - memory ran out while attempting to perform the operation
 //   NoObjectId - the 'chunk' parameter was nil
-//   MalformedObjectChunk - a parse error occured processing 'chunk'
+//   MalformedObjectChunk - a parse error occurred processing 'chunk'
 //   CouldNotResolveObject - the object referred to by 'chunk' could not be found
 // Context Safety:
 //   Must be called from dispatch context.

@@ -291,26 +291,30 @@ DATABASEREC *LoadDatabaseDriver(const char *p_type)
 {
     DATABASEREC *t_database_rec = nullptr;
     
+    char t_type[32];
+    strcpy(t_type, p_type);
+    strlwr(t_type);
+
     if (revdbdriverpaths != nullptr)
     {
         t_database_rec = LoadDatabaseDriverInFolder(revdbdriverpaths, p_type);
     }
     else
     {
-        t_database_rec = LoadDatabaseDriverInFolder(".", p_type);
+        t_database_rec = LoadDatabaseDriverInFolder(".", t_type);
         
         
         if (t_database_rec == nullptr)
             t_database_rec = LoadDatabaseDriverInFolder("./Database Drivers",
-                                                        p_type);
+                                                        t_type);
 
         if (t_database_rec == nullptr)
             t_database_rec = LoadDatabaseDriverInFolder("./database_drivers",
-                                                        p_type);
+                                                        t_type);
 
         if (t_database_rec == nullptr)
             t_database_rec = LoadDatabaseDriverInFolder("./drivers",
-                                                        p_type);
+                                                        t_type);
     }
     
     if (t_database_rec != nullptr)

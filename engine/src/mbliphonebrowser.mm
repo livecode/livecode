@@ -748,7 +748,7 @@ public:
 	
 	void Dispatch(void)
 	{
-		// MW-2011-11-03: [[ LoadRequested ]] If a load occured, then post a load requested
+		// MW-2011-11-03: [[ LoadRequested ]] If a load occurred, then post a load requested
 		//   event.
 		if (m_target -> HandleLoadRequest(m_request, m_type, m_notify))
 			MCEventQueuePostCustom(new MCNativeBrowserLoadRequestEvent(m_target, m_request, m_type, true));

@@ -29,8 +29,8 @@ The <colorOverlay> is an array style property, each key of the array
 controls a different <colorOverlay> parameter that will affect its final
 appearance. The easiest way to adjust these properties is by using the
 Graphic Effects card of the property inspector which has full control
-over each parameter. To control the effect by script use the following
-properties: 
+over each parameter. To control the effect by script use the 
+following properties: 
 
 colorOverlay["color"]
 

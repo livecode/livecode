@@ -3,8 +3,8 @@ Name: function
 Type: control structure
 
 Syntax: 
-function <functionName> [<parametersList>] 
-  <statementList> 
+[private] function <functionName> [<parametersList>] 
+   <statementList> 
 end <functionName>
 
 Summary:

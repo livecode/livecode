@@ -1,0 +1,1803 @@
+/*
+Copyright (C) 2017 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+Name: Android Native Field
+
+Description:
+This widget is a native field on Android.
+
+Name: enabled
+
+Syntax:
+set the enabled of <widget> to {true | false}
+get the enabled of <widget>
+
+Description:
+Use the <enabled> property to enable or disable the native field. When disabled,
+the field has a greyed out appearance.
+
+Name: openField
+
+Summary: Sent to an unlocked field when you click or select text in that field.
+
+Syntax: openField
+
+Example:
+on openField -- when clicking in the field, select all its text
+  local tText
+  put the text of the target into tText
+  set the selectedRange of the target to "1," & \
+     the number of chars in tText
+end openField
+
+Description:
+Handle the <openField> message if you want to do something when the user enters
+a field widget. The message is not sent if the field is locked.
+
+Name: closeField
+
+Summary:
+Sent to a field when the focus is being removed from that field and the field's
+content has changed.
+
+Syntax: closeField
+
+Example:
+on closeField -- make sure the user has entered a valid date
+  local tText
+  put the text of me into tText
+  if tText is not a date then
+    beep
+    answer "Please enter a date."
+    set the selectedRange of the target to "1," & \
+       the number of chars in tText
+  end if
+end closeField
+
+Description:
+Handle the <closeField> message if you want to make sure a field's content is
+correct after it has been changed.
+
+Name: exitField
+
+Summary:
+Sent to the field with the selection when the selection is being removed from
+the field, and its contents have not changed.
+
+Syntax: exitField
+
+Example:
+on exitField -- remove visual signs that the field is being edited
+   set the enabled of the target to false
+end exitField
+
+Description:
+Handle the <exitField> message if you want to do something when the user leaves
+a field that hasn't been changed.
+
+Name: textChanged
+
+Summary:
+Sent when the native field widget text is changed.
+
+Example:
+on textChanged
+   if the text of me is not a number then
+      beep
+   end if
+end textChanged
+
+Description:
+Handle the <textChanged> message if you want to do something when the text of
+the field is changed through typing.
+*/
+
+widget com.livecode.widget.native.android.field
+
+use com.livecode.foreign
+use com.livecode.java
+use com.livecode.widget
+use com.livecode.canvas
+use com.livecode.engine
+use com.livecode.library.widgetutils
+use com.livecode.library.scriptitems
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "Android Native Field"
+metadata svgicon is  "M28.06,4.95a.34.34,0,1,1,.34.34A.34.34,0,0,1,28.06,4.95Zm-3.45.34a.34.34,0,1,0-.34-.34A.34.34,0,0,0,24.6,5.29ZM36.25,2V17.24a2,2,0,0,1-2,2H2a2,2,0,0,1-2-2V2A2,2,0,0,1,2,0h32.3A2,2,0,0,1,36.25,2ZM22.39,6.8h8.23a3.76,3.76,0,0,0-2.1-3.31l.65-1.17a.13.13,0,0,0-.05-.18l-.06,0a.13.13,0,0,0-.11.07l-.66,1.19a4.43,4.43,0,0,0-3.56,0l-.66-1.19a.13.13,0,1,0-.23.13l.65,1.17A3.76,3.76,0,0,0,22.39,6.8ZM9.57,2.57H5v1.5H6.53v11H5v1.5H9.57v-1.5H8v-11H9.57ZM22,7.89a.92.92,0,0,0-1.84,0v3.84a.92.92,0,1,0,1.84,0Zm8.57-.76H22.39v6a1,1,0,0,0,1,1H24v2a.92.92,0,1,0,1.84,0v-2h1.23v2a.92.92,0,1,0,1.84,0v-2h.66a1,1,0,0,0,1-1Zm2.19.76a.92.92,0,0,0-1.84,0v3.84a.92.92,0,1,0,1.84,0Z"
+
+__safe foreign handler _JNI_GetAndroidEngine() returns JObject \
+   binds to "java:com.runrev.android.Engine>getEngine()Lcom/runrev/android/Engine;!static"
+__safe foreign handler _JNI_GetContext(in pView as JObject) returns JObject \
+   binds to "java:android.view.View>getContext()Landroid/content/Context;"
+
+// Handlers for creating and attaching view
+__safe foreign handler _JNI_CreateView(in pContext as JObject) returns JObject \
+   binds to "java:android.widget.EditText>new(Landroid/content/Context;)V?ui"
+__safe foreign handler _JNI_AddView(in pParentView as JObject, in pChildView as JObject) returns nothing \
+   binds to "java:android.view.ViewGroup>addView(Landroid/view/View;)V?ui"
+
+private variable mNativeObj as optional JObject
+
+// We need to store all properties as variables so they can be set in the IDE
+// and persist when saved
+private variable mText as String
+private variable mTextColor as String
+private variable mTextAlign as String
+private variable mVerticalTextAlign as String
+private variable mAutoCapitalizationType as String
+private variable mAutoCorrectionType as String
+private variable mKeyboardType as String
+private variable mReturnKeyType as String
+private variable mContentType as String
+private variable mDataDetectorTypes as String
+
+private variable mMultiline as Boolean
+private variable mEditable as Boolean
+private variable mScrollingEnabled as Boolean
+private variable mPassReturnKey as Boolean
+
+// Properties
+/**
+Syntax:
+set the text of <widget> to <pText>
+get the text of <widget>
+
+Summary: The text contained in the field widget.
+
+Value (string): A string.
+
+Example:
+set the text of widget "Android Field" to "Some text"
+
+Description:
+Use the <text> property to change the text of the field widget.
+*/
+property "text" get GetText set SetText
+metadata text.section is "Contents"
+metadata text.user_visible is "true"
+metadata text.default is ""
+
+/**
+Syntax:
+set the fieldTextColor of <widget> to <pColor>
+get the fieldTextColor of <widget>
+
+Summary: The color of the text of the field widget.
+
+Value (string):
+A comma delimited string representing a color in RGB / RGBA format
+
+Example:
+set the fieldTextColor of widget "Android Field" to "255,0,0,128"
+
+Description:
+Use the <fieldTextColor> property to change the color of the text of the field
+widget.
+*/
+property fieldTextColor get GetTextColor set SetTextColor
+metadata fieldTextColor.editor is "com.livecode.pi.colorwithalpha"
+metadata fieldTextColor.label is "Text color"
+metadata fieldTextColor.default is "0,0,0,255"
+metadata fieldTextColor.section is "Colors"
+
+/**
+Name: textSize
+
+Type: property
+
+Syntax:
+set the textSize of <widget> to <pSize>
+get the textSize of <widget>
+
+Summary: The size in points of the text of the field widget.
+
+Value (number): A non-negative number
+
+Example:
+set the textSize of widget "Android Field" to 18
+
+Description:
+Use the <textSize> property to change the size of the text of the field widget.
+*/
+metadata textSize.dummy is ""
+
+/**
+Syntax:
+set the textAlign of <widget> to <pAlign>
+get the textAlign of <widget>
+
+Summary: The horizontal text alignment of the field widget.
+
+Value (enum):
+- "left": Left-aligned text
+- "center": Center-aligned text
+- "right": Right-aligned text
+
+Example:
+set the textAlign of widget "Android Field" to "center"
+
+Description:
+Use the <textAlign> property to change the horizontal text alignment of the
+field widget.
+*/
+property textAlign get GetHorizontalTextAlign set SetHorizontalTextAlign
+metadata textAlign.default is "left"
+
+/**
+Syntax:
+set the verticalTextAlign of <widget> to <pAlign>
+get the verticalTextAlign of <widget>
+
+Summary: The vertical text alignment of the field widget.
+
+Value (enum):
+- "top": Top-aligned text
+- "middle": Middle-aligned text
+- "bottom": Bottom-aligned text
+
+Example:
+set the verticalTextAlign of widget "Android Field" to "middle"
+
+Description:
+Use the <textAlign> property to change the vertical text alignment of the
+field widget.
+*/
+property verticalTextAlign get GetVerticalTextAlign set SetVerticalTextAlign
+metadata verticalTextAlign.options is "top,middle,bottom"
+metadata verticalTextAlign.editor is "com.livecode.pi.enum"
+metadata verticalTextAlign.section is "Text"
+metadata verticalTextAlign.label is "Vertical text align"
+metadata verticalTextAlign.default is "top"
+
+/**
+Syntax:
+set the autoCapitalizationType of <widget> to <pType>
+get the autoCapitalizationType of <widget>
+
+Summary: The auto-capitalization behavior of the field widget.
+
+Value (enum):
+- "none": the shift-key is never automatically enabled
+- "words": the shift-key is enabled at the start of words
+- "sentences": the shift-key is enabled at the start of sentences
+- "all characters": the shift-key is enabled at the start of each character
+
+Example:
+set the autoCapitalizationType of widget "Android Field" to "sentences"
+
+Description:
+Use the <autoCapitalizationType> property to determine when the shift-key is
+automatically enabled when typing.
+*/
+property autoCapitalizationType get GetAutoCapitalizationType set SetAutoCapitalizationType
+metadata autoCapitalizationType.editor is "com.livecode.pi.enum"
+metadata autoCapitalizationType.options is "none,words,sentences,all characters"
+metadata autoCapitalizationType.default is "none"
+metadata autoCapitalizationType.label is "Auto capitalization type"
+
+/**
+Syntax:
+set the autoCorrectionType of <widget> to <pType>
+get the autoCorrectionType of <widget>
+
+Summary: The auto-correction behavior of the field widget.
+
+Value (enum):
+- "default": use the appropriate auto-correct behavior for the current script system
+- "no": disable auto-correct behavior
+- "yes": enable auto-correct behavior
+
+Example:
+set the autoCorrectionType of widget "Android Field" to "no"
+
+Description:
+Use the <autoCorrectionType> property to determine whether auto-correct behavior
+should be enabled.
+*/
+property autoCorrectionType get GetAutoCorrectionType set SetAutoCorrectionType
+metadata autoCorrectionType.editor is "com.livecode.pi.enum"
+metadata autoCorrectionType.options is "default,no,yes"
+metadata autoCorrectionType.default is "default"
+metadata autoCorrectionType.label is "Auto correction type"
+
+/**
+Syntax:
+set the keyboardType of <widget> to <pType>
+get the keyboardType of <widget>
+
+Summary: The type of keyboard associated to the field widget.
+
+Value (enum):
+- "default": the default keyboard
+- "alphabet": the alphabetic keyboard
+- "numeric": the numeric keyboard with punctuation
+- "URL": the URL entry keyboard
+- "number": the number pad keyboard
+- "phone": the phone number pad keyboard
+- "contact": the phone contact pad keyboard
+- "email": the email keyboard
+- "decimal": the decimal numeric pad keyboard
+
+Example:
+set the keyboardType of widget "Android Field" to "URL"
+
+Description:
+Use the <keyboardType> property to determine what kind of keyboard should be
+displayed when this field widget is focused.
+*/
+property keyboardType get GetKeyboardType set SetKeyboardType
+metadata keyboardType.editor is "com.livecode.pi.enum"
+metadata keyboardType.options is "default,alphabet,numeric,URL,number,phone,contact,email,decimal"
+metadata keyboardType.label is "Keyboard type"
+
+/**
+Syntax:
+set the returnKeyType of <widget> to <pType>
+get the returnKeyType of <widget>
+
+Summary: The type of action assigned to the return key on the keyboard
+associated with this field widget.
+
+Value (enum):
+- "default": the normal return key action
+- "none": no return key action
+- "go": take the user to the target of the text they typed
+- "next": move to the next field that will accept text
+- "previous": move to the previous field that will accept text
+- "search": take the user to the results of searching for the text they have typed
+- "send": deliver the text to its target
+- "done": close IME
+
+Example:
+set the returnKeyType of widget "Android Field" to "previous"
+
+Description:
+Use the <returnKeyType> property to determine what kind of action should be
+performed when the return key on the keyboard associated with this field widget
+is pressed.
+*/
+property returnKeyType get GetReturnKeyType set SetReturnKeyType
+metadata returnKeyType.editor is "com.livecode.pi.enum"
+metadata returnKeyType.options is "default,none,go,search,send,next,done,previous"
+metadata returnKeyType.default is "default"
+metadata returnKeyType.label is "Return key type"
+
+/**
+Syntax:
+set the contentType of <widget> to <pType>
+get the contentType of <widget>
+
+Summary: What kind of content the field contains.
+
+Value (enum):
+- "plain": plain, unstyled text
+- "password": plain text displayed in the standard password style
+
+Example:
+set the contentType of widget "Android Field" to "password"
+
+Description:
+Use the <contentType> property to determine what kind of content the control
+contains.
+*/
+property contentType get GetContentType set SetContentType
+metadata contentType.editor is "com.livecode.pi.enum"
+metadata contentType.options is "plain,password"
+metadata contentType.default is "plain"
+metadata contentType.label is "Content type"
+
+/**
+Syntax:
+set the multiline of <widget> to {true | false}
+get the multiline of <widget>
+
+Summary: Whether the field can contain multiple lines or not.
+
+Description:
+Use the <multiline> property to allow or disallow the user to enter multiple
+lines of text in the field.
+*/
+property multiline get GetMultiline set SetMultiline
+metadata multiline.label is "Multi-line"
+
+/**
+Syntax:
+set the editable of <widget> to {true | false}
+get the editable of <widget>
+
+Summary: Whether the field can be edited or not
+
+Description:
+Use the <editable> property to allow or disallow the user to enter text in the
+field.
+*/
+property editable get GetEditable set SetEditable
+metadata editable.label is "Editable"
+
+/**
+Syntax:
+set the dataDetectorTypes of <widget> to <pType>
+get the dataDetectorTypes of <widget>
+
+Summary: What types of data should be clickable in the field.
+
+Value (set):
+- "phone number": Phone numbers should be clickable
+- "link": Links should be clickable
+- "email": Email addresses should be clickable
+- "address": Addresses should be clickable
+
+Example:
+set the dataDetectorTypes of widget "Android Field" to "email,link"
+
+Example:
+set the dataDetectorTypes of widget "Android Field" to empty
+
+Description:
+Use the <dataDetectorTypes> property to determine what kind of data should be
+detected and automatically converted to clikckable URLs.
+*/
+property dataDetectorTypes get GetDataDetectorTypes set SetDataDetectorTypes
+metadata dataDetectorTypes.editor is "com.livecode.pi.set"
+metadata dataDetectorTypes.options is "phone number,link,email,address"
+metadata dataDetectorTypes.label is "Data detector types"
+
+/**
+Syntax:
+set the scrollingEnabled of <widget> to {true | false}
+get the scrollingEnabled of <widget>
+
+Summary: Whether the field can be scrolled or not.
+
+Description:
+Use the <scrollingEnabled> property to allow or disallow the user to scroll the
+field.
+*/
+property scrollingEnabled get GetScrollingEnabled set SetScrollingEnabled
+metadata scrollingEnabled.label is "Scrolling enabled"
+
+/**
+Syntax:
+set the passReturnKey of <widget> to {true|false}
+get the passReturnKey of <widget>
+
+Summary: Whether the return key adds a new line to the field
+
+Example:
+command createField
+   create widget as "com.livecode.widget.native.android.field"
+   set the passReturnKey of it to false
+end createField
+
+-- In the widget script
+on returnKey
+   answer "You entered" && the text of the target
+end returnKey
+
+Description:
+Use the <passReturnKey> property to control whether the
+native keyboard return key adds a new line to the field or
+not.
+*/
+property passReturnKey get mPassReturnKey set mPassReturnKey
+metadata passReturnKey.label is "Return key adds new line"
+metadata passReturnKey.default is "true"
+
+// Non-persistent
+/**
+Syntax:
+set the focused of <widget> to {true | false}
+get the focused of <widget>
+
+Summary: Whether the field is focused or not.
+
+Description:
+Use the <focused> property to request focus for the native field, or remove it.
+*/
+property focused get GetFocused set SetFocused
+metadata focused.user_visible is "false"
+
+/**
+Syntax:
+set the selectedRange of <widget> to <pRange>
+get the selectedRange of <widget>
+
+Summary: The range of text of the widget that is selected.
+
+Value(string):
+A comma-delimiter pair of the (1-based) start index and length.
+
+Example:
+-- Select the first 20 chars of the field widget
+set the selectedRange of widget "Android Text" to "1,20"
+
+Description:
+Use the <selectedRange> property to determine the start index and the length of
+the text that is to appear as selected.
+*/
+property selectedRange get GetSelectedRange set SetSelectedRange
+metadata selectedRange.user_visible is "false"
+
+private handler IsAndroid() returns Boolean
+    return the operating system is "android"
+end handler
+
+// Store all persistent properties in OnSave
+public handler OnSave(out rProperties as Array)
+   put mText into rProperties["Text"]
+   put mTextColor into rProperties["TextColor"]
+   put mTextAlign into rProperties["TextAlign"]
+   put mVerticalTextAlign into rProperties["VerticalTextAlign"]
+   put mAutoCapitalizationType into rProperties["AutoCapitalizationType"]
+   put mAutoCorrectionType into rProperties["AutoCorrectionType"]
+   put mKeyboardType into rProperties["KeyboardType"]
+   put mReturnKeyType into rProperties["ReturnKeyType"]
+   put mContentType into rProperties["ContentType"]
+   put mDataDetectorTypes into rProperties["DataDetectorTypes"]
+
+   put mMultiline into rProperties["Multiline"]
+   put mEditable into rProperties["Editable"]
+   put mScrollingEnabled into rProperties["ScrollingEnabled"]
+   put mPassReturnKey into rProperties["PassReturnKey"]
+end handler
+
+// Set all persistent properties in OnLoad
+public handler OnLoad(in pProperties as Array)
+   put pProperties["Text"] into mText
+   put pProperties["TextColor"] into mTextColor
+   put pProperties["TextAlign"] into mTextAlign
+   put pProperties["VerticalTextAlign"] into mVerticalTextAlign
+   put pProperties["AutoCapitalizationType"] into mAutoCapitalizationType
+   put pProperties["AutoCorrectionType"] into mAutoCorrectionType
+   put pProperties["KeyboardType"] into mKeyboardType
+   put pProperties["ReturnKeyType"] into mReturnKeyType
+   put pProperties["ContentType"] into mContentType
+   put pProperties["DataDetectorTypes"] into mDataDetectorTypes
+
+   put pProperties["Multiline"] into mMultiline
+   put pProperties["Editable"] into mEditable
+   put pProperties["ScrollingEnabled"] into mScrollingEnabled
+   put pProperties["PassReturnKey"] into mPassReturnKey
+end handler
+
+// Set up all the default values for properties in constants
+constant kDefaultHorizontalTextAlign is "left"
+constant kDefaultVerticalTextAlign is "top"
+constant kDefaultTextColor is  "0,0,0,255"
+constant kDefaultAutoCapitalizationType is "none"
+constant kDefaultAutoCorrectionType is "default"
+constant kDefaultKeyboardType is "default"
+constant kDefaultContentType is "plain"
+constant kDefaultDataDetectorTypes is ""
+constant kDefaultReturnKeyType is "default"
+
+// When creating the widget, set all instance variables to the pre-defined
+// default values.
+public handler OnCreate()
+   put kDefaultHorizontalTextAlign into mTextAlign
+   put kDefaultVerticalTextAlign into mVerticalTextAlign
+   put "" into mText
+   put kDefaultTextColor into mTextColor
+   put kDefaultAutoCapitalizationType into mAutoCapitalizationType
+   put kDefaultAutoCorrectionType into mAutoCorrectionType
+   put kDefaultKeyboardType into mKeyboardType
+   put kDefaultContentType into mContentType
+   put kDefaultDataDetectorTypes into mDataDetectorTypes
+   put kDefaultReturnKeyType into mReturnKeyType
+
+   put true into mMultiline
+   put true into mEditable
+   put true into mScrollingEnabled
+   put true into mPassReturnKey
+end handler
+
+private handler InitView()
+	// Create an android button using the Engine Context
+    variable tEngine as JObject
+    put _JNI_GetAndroidEngine() into tEngine
+
+    variable tContext as JObject
+    put _JNI_GetContext(tEngine) into tContext
+    put _JNI_CreateView(tContext) into mNativeObj
+
+	// put my native window into tParent
+    variable tParent as Pointer
+    MCWidgetGetMyStackNativeView(tParent)
+
+    // wrap the parent pointer
+    variable tParentObj as JObject
+    put PointerToJObject(tParent) into tParentObj
+
+    // add the view
+    _JNI_AddView(tParentObj, mNativeObj)
+
+    // get the pointer from the view and set the native layer
+    variable tPointer as Pointer
+    put PointerFromJObject(mNativeObj) into tPointer
+    set my native layer to tPointer
+
+    // Now we have created the native View, add the event listeners so we can
+    // send the appropriate messages, and apply all the properties.
+    SetListeners()
+    ApplyProperties()
+end handler
+
+// Destroy the native layer
+private handler FinalizeView()
+    set my native layer to nothing
+    put nothing into mNativeObj
+end handler
+
+// If we are on android, create the native view when the parent card opens
+public handler OnOpen()
+    if IsAndroid() then
+      InitView()
+    end if
+end handler
+
+// If we are on android, destroy the native view when the parent card closes
+public handler OnClose()
+    if IsAndroid() then
+      FinalizeView()
+    end if
+end handler
+
+handler ApplyProperties()
+   SetHorizontalTextAlign(mTextAlign)
+   SetVerticalTextAlign(mVerticalTextAlign)
+   SetText(mText)
+   SetTextColor(mTextColor)
+   SetAutoCapitalizationType(mAutoCapitalizationType)
+   SetAutoCorrectionType(mAutoCorrectionType)
+   SetKeyboardType(mKeyboardType)
+   SetContentType(mContentType)
+   SetDataDetectorTypes(mDataDetectorTypes)
+   SetMultiline(mMultiline)
+   SetEditable(mEditable)
+   SetScrollingEnabled(mScrollingEnabled)
+   SetParentProperties()
+end handler
+
+// If any of the general object properties is changed, we get this message. So
+// ensure that the native view is updated with these values, if we are on
+// android and the view is open
+public handler OnParentPropertyChanged()
+   if mNativeObj is not nothing then
+      SetParentProperties()
+   end if
+end handler
+
+handler SetParentProperties()
+   SetEnabled(my enabled)
+   SetTextSize(the size of my font)
+end handler
+
+// Constants pulled from the android.text.InputType class
+constant TYPE_CLASS_DATETIME is 4
+constant TYPE_CLASS_NUMBER is 2
+constant TYPE_CLASS_PHONE is 3
+constant TYPE_CLASS_TEXT is 1
+constant TYPE_DATETIME_VARIATION_DATE is 16
+constant TYPE_DATETIME_VARIATION_NORMAL is 0
+constant TYPE_DATETIME_VARIATION_TIME is 32
+constant TYPE_MASK_CLASS is 15
+constant TYPE_MASK_FLAGS is 16773120
+constant TYPE_MASK_VARIATION is 4080
+constant TYPE_NULL is 0
+constant TYPE_NUMBER_FLAG_DECIMAL is 8192
+constant TYPE_NUMBER_FLAG_SIGNED is 4096
+constant TYPE_NUMBER_VARIATION_NORMAL is 0
+constant TYPE_NUMBER_VARIATION_PASSWORD is 16
+constant TYPE_TEXT_FLAG_AUTO_COMPLETE is 65536
+constant TYPE_TEXT_FLAG_AUTO_CORRECT is 32768
+
+constant kAutoCapitalizationTypes is { \
+   "none":0, \
+   "words": 8192, \
+   "sentences": 16384, \
+   "all characters": 4096 \
+}
+constant TYPE_TEXT_FLAG_CAP_CHARACTERS is 4096
+constant TYPE_TEXT_FLAG_CAP_SENTENCES is 16384
+constant TYPE_TEXT_FLAG_CAP_WORDS is 8192
+
+constant TYPE_TEXT_FLAG_IME_MULTI_LINE is 262144
+constant TYPE_TEXT_FLAG_MULTI_LINE is 131072
+constant TYPE_TEXT_FLAG_NO_SUGGESTIONS is 524288
+constant TYPE_TEXT_VARIATION_EMAIL_ADDRESS is 32
+constant TYPE_TEXT_VARIATION_EMAIL_SUBJECT is 48
+constant TYPE_TEXT_VARIATION_FILTER is 176
+constant TYPE_TEXT_VARIATION_LONG_MESSAGE is 80
+constant TYPE_TEXT_VARIATION_NORMAL is 0
+constant TYPE_TEXT_VARIATION_PASSWORD is 128
+constant TYPE_TEXT_VARIATION_PERSON_NAME is 96
+constant TYPE_TEXT_VARIATION_PHONETIC is 192
+constant TYPE_TEXT_VARIATION_POSTAL_ADDRESS is 112
+constant TYPE_TEXT_VARIATION_SHORT_MESSAGE is 64
+constant TYPE_TEXT_VARIATION_URI is 16
+constant TYPE_TEXT_VARIATION_VISIBLE_PASSWORD is 144
+constant TYPE_TEXT_VARIATION_WEB_EDIT_TEXT is 160
+constant TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS is 208
+constant TYPE_TEXT_VARIATION_WEB_PASSWORD is 224
+
+constant kKeyboardTypes is [ \
+   "default","alphabet","numeric","URL","number","phone","contact","email","decimal" \
+]
+// Helper to convert a keyboard type to the appropriate InputType value
+handler KeyboardTypeToEnum(in pType as String) returns Integer
+   variable tBits as List
+   if pType is "alphabet" or pType is "default" then
+      put [TYPE_CLASS_TEXT] into tBits
+   else if pType is "numeric" or pType is "decimal" then
+      put [TYPE_CLASS_NUMBER, TYPE_NUMBER_FLAG_SIGNED, \
+            TYPE_NUMBER_FLAG_DECIMAL] into tBits
+   else if the lower of pType is "url" then
+      put [TYPE_CLASS_TEXT, TYPE_TEXT_VARIATION_URI] into tBits
+   else if pType is "number" then
+      put [TYPE_CLASS_NUMBER] into tBits
+   else if pType is "phone" then
+      put [TYPE_CLASS_PHONE] into tBits
+   else if pType is "contact" then
+      put [TYPE_CLASS_TEXT, TYPE_TEXT_VARIATION_PERSON_NAME] \
+         into tBits
+   else if pType is "email" then
+      put [TYPE_CLASS_TEXT, TYPE_TEXT_VARIATION_EMAIL_ADDRESS] \
+         into tBits
+   else
+      throw "invalid keyboard type" && pType
+   end if
+   return BitwiseOrList(tBits)
+end handler
+
+handler EnumToKeyboardType(in pEnum as Integer)
+   variable tType as String
+   repeat for each element tType in kKeyboardTypes
+      if KeyboardTypeToEnum(tType) is pEnum then
+         return tType
+      end if
+   end repeat
+   return "default"
+end handler
+
+__safe foreign handler _JNI_PasswordTransformationMethod_getInstance() returns JObject \
+	binds to "java:android.text.method.PasswordTransformationMethod>getInstance()Landroid/text/method/PasswordTransformationMethod;!static"
+
+handler PasswordTransformationMethod_getInstance() returns JObject
+	variable tJNIResult as JObject
+	put _JNI_PasswordTransformationMethod_getInstance() into tJNIResult
+	return tJNIResult
+end handler
+
+handler type FocusChangeCallback(in pView as JObject, in pHasFocus as JObject)
+__safe foreign handler _JNI_View_OnFocusChangeListener(in pHandler as FocusChangeCallback) returns JObject \
+	binds to "java:android.view.View$OnFocusChangeListener>interface()"
+__safe foreign handler _JNI_View_setOnFocusChangeListener(in pObj as JObject, in pParam_listener as JObject) returns nothing \
+	binds to "java:android.view.View>setOnFocusChangeListener(Landroid/view/View$OnFocusChangeListener;)V?ui"
+__safe foreign handler _JNI_View_isEnabled(in pObj as JObject) returns JBoolean \
+   binds to "java:android.view.View>isEnabled()Z?ui"
+__safe foreign handler _JNI_View_isFocusable(in pObj as JObject) returns JBoolean \
+   binds to "java:android.view.View>isFocusable()Z?ui"
+__safe foreign handler _JNI_View_setFocusable(in pObj as JObject, in pParam_focusable as JBoolean) returns nothing \
+   binds to "java:android.view.View>setFocusable(Z)V?ui"
+__safe foreign handler _JNI_View_clearFocus(in pObj as JObject) returns nothing \
+   binds to "java:android.view.View>clearFocus()V?ui"
+__safe foreign handler _JNI_View_requestFocus(in pObj as JObject) returns nothing \
+   binds to "java:android.view.View>requestFocus()V"
+__safe foreign handler _JNI_View_isFocused(in pObj as JObject) returns JBoolean \
+   binds to "java:android.view.View>isFocused()Z"
+
+handler View_setOnFocusChangeListener(in pObj as JObject, in pParam_listener as JObject) returns nothing
+	_JNI_View_setOnFocusChangeListener(pObj, pParam_listener)
+end handler
+
+handler View_isEnabled(in pObj as JObject) returns Boolean
+	variable tJNIResult as Boolean
+	put _JNI_View_isEnabled(pObj) into tJNIResult
+	return tJNIResult
+end handler
+
+handler View_isFocusable(in pObj as JObject) returns Boolean
+	variable tJNIResult as Boolean
+	put _JNI_View_isFocusable(pObj) into tJNIResult
+	return tJNIResult
+end handler
+
+handler View_setFocusable(in pObj as JObject, in pParam_focusable as Boolean) returns nothing
+	_JNI_View_setFocusable(pObj, pParam_focusable)
+end handler
+
+public handler View_clearFocus(in pObj as JObject) returns nothing
+	_JNI_View_clearFocus(pObj)
+end handler
+
+public handler View_requestFocus(in pObj as JObject) returns nothing
+	_JNI_View_requestFocus(pObj)
+end handler
+
+public handler View_isFocused(in pObj as JObject) returns Boolean
+	variable tJNIResult as Boolean
+	put _JNI_View_isFocused(pObj) into tJNIResult
+	return tJNIResult
+end handler
+
+__safe foreign handler _JNI_TextWatcher_TextChangedListener(in pCallbacks as Array) returns JObject \
+   binds to "java:android.text.TextWatcher>interface()"
+__safe foreign handler _JNI_TextView_addTextChangedListener(in pObj as JObject, in pParam_watcher as JObject) returns nothing \
+	binds to "java:android.widget.TextView>addTextChangedListener(Landroid/text/TextWatcher;)V?ui"
+
+handler type EditorActionCallback(in pView as JObject, in pActionId as JObject, in pKeyEvent as JObject) returns JObject
+__safe foreign handler _JNI_View_OnEditorActionListener(in pHandler as EditorActionCallback) returns JObject \
+   binds to "java:android.widget.TextView$OnEditorActionListener>interface()"
+__safe foreign handler _JNI_TextView_setOnEditorActionListener(in pObj as JObject, in pParam_listener as JObject) returns nothing \
+	binds to "java:android.widget.TextView>setOnEditorActionListener(Landroid/widget/TextView$OnEditorActionListener;)V?ui"
+
+__safe foreign handler _JNI_TextView_append(in pObj as JObject, in pParam_text as JString) returns nothing \
+	binds to "java:android.widget.TextView>append(Ljava/lang/CharSequence;)V?ui"
+__safe foreign handler _JNI_TextView_appendAt(in pObj as JObject, in pParam_text as JString, in pParam_startIndex as JInt, in pParam_endIndex as JInt) returns nothing \
+	binds to "java:android.widget.TextView>append(Ljava/lang/CharSequence;II)V?ui"
+__safe foreign handler _JNI_TextView_getAutoLinkMask(in pObj as JObject) returns JInt \
+	binds to "java:android.widget.TextView>getAutoLinkMask()I?ui"
+__safe foreign handler _JNI_TextView_getGravity(in pObj as JObject) returns JInt \
+	binds to "java:android.widget.TextView>getGravity()I?ui"
+__safe foreign handler _JNI_TextView_getImeOptions(in pObj as JObject) returns JInt \
+   binds to "java:android.widget.TextView>getImeOptions()I?ui"
+__safe foreign handler _JNI_TextView_getInputType(in pObj as JObject) returns JInt \
+	binds to "java:android.widget.TextView>getInputType()I?ui"
+__safe foreign handler _JNI_TextView_getMovementMethod(in pObj as JObject) returns optional JObject \
+   binds to "java:android.widget.TextView>getMovementMethod()Landroid/text/method/MovementMethod;?ui"
+__safe foreign handler _JNI_TextView_getSelectionStart(in pObj as JObject) returns JInt \
+	binds to "java:android.widget.TextView>getSelectionStart()I?ui"
+__safe foreign handler _JNI_TextView_getSelectionEnd(in pObj as JObject) returns JInt \
+	binds to "java:android.widget.TextView>getSelectionEnd()I?ui"
+__safe foreign handler _JNI_TextView_getText(in pObj as JObject) returns JString \
+	binds to "java:android.widget.TextView>getText()Ljava/lang/CharSequence;?ui"
+__safe foreign handler _JNI_TextView_getTextSize(in pObj as JObject) returns JFloat \
+	binds to "java:android.widget.TextView>getTextSize()F?ui"
+__safe foreign handler _JNI_TextView_getTransformationMethod(in pObj as JObject) returns optional JObject \
+   binds to "java:android.widget.TextView>getTransformationMethod()Landroid/text/method/TransformationMethod;?ui"
+__safe foreign handler _JNI_TextView_setAutoLinkMask(in pObj as JObject, in pParam_mask as JInt) returns nothing \
+	binds to "java:android.widget.TextView>setAutoLinkMask(I)V?ui"
+__safe foreign handler _JNI_TextView_setEnabled(in pObj as JObject, in pParam_enabled as JBoolean) returns nothing \
+   binds to "java:android.widget.TextView>setEnabled(Z)V?ui"
+__safe foreign handler _JNI_TextView_setGravity(in pObj as JObject, in pParam_gravity as JInt) returns nothing \
+	binds to "java:android.widget.TextView>setGravity(I)V?ui"
+__safe foreign handler _JNI_TextView_setImeOptions(in pObj as JObject, in pParam_options as JInt) returns nothing \
+   binds to "java:android.widget.TextView>setImeOptions(I)V?ui"
+__safe foreign handler _JNI_TextView_setInputType(in pObj as JObject, in pParam_type as JInt) returns nothing \
+	binds to "java:android.widget.TextView>setInputType(I)V?ui"
+__safe foreign handler _JNI_TextView_setMovementMethod(in pObj as JObject, in pParam_movement as optional JObject) returns nothing \
+   binds to "java:android.widget.TextView>setMovementMethod(Landroid/text/method/MovementMethod;)V?ui"
+__safe foreign handler _JNI_TextView_setText(in pObj as JObject, in pParam_text as JString) returns nothing \
+	binds to "java:android.widget.TextView>setText(Ljava/lang/CharSequence;)V?ui"
+__safe foreign handler _JNI_TextView_setTextColor(in pView as JObject, in pValue as JInt) returns nothing \
+   binds to "java:android.widget.TextView>setTextColor(I)V?ui"
+__safe foreign handler _JNI_TextView_setTextSize(in pObj as JObject, in pParam_unit as JInt, in pParam_size as JFloat) returns nothing \
+	binds to "java:android.widget.TextView>setTextSize(IF)V?ui"
+__safe foreign handler _JNI_TextView_setTransformationMethod(in pObj as JObject, in pParam_mthd as optional JObject) returns nothing \
+	binds to "java:android.widget.TextView>setTransformationMethod(Landroid/text/method/TransformationMethod;)V?ui"
+
+handler TextView_addTextChangedListener(in pObj as JObject, in pParam_watcher as JObject) returns nothing
+	_JNI_TextView_addTextChangedListener(pObj, pParam_watcher)
+end handler
+
+handler TextView_setOnEditorActionListener(in pObj as JObject, in pParam_listener as JObject) returns nothing
+	_JNI_TextView_setOnEditorActionListener(pObj, pParam_listener)
+end handler
+
+handler TextView_append(in pObj as JObject, in pParam_text as String) returns nothing
+	variable tParam_text as JString
+	put StringToJString(pParam_text) into tParam_text
+
+	_JNI_TextView_append(pObj, tParam_text)
+end handler
+
+handler TextView_appendAt(in pObj as JObject, in pParam_text as String, in pParam_startIndex as Number, in pParam_endIndex as Number) returns nothing
+	variable tParam_text as JString
+	put StringToJString(pParam_text) into tParam_text
+
+	_JNI_TextView_appendAt(pObj, tParam_text, pParam_startIndex, pParam_endIndex)
+end handler
+
+handler TextView_getAutoLinkMask(in pObj as JObject) returns Number
+	variable tJNIResult as Number
+	put _JNI_TextView_getAutoLinkMask(pObj) into tJNIResult
+	return tJNIResult
+end handler
+
+handler TextView_getGravity(in pObj as JObject) returns Number
+	variable tJNIResult as Number
+	put _JNI_TextView_getGravity(pObj) into tJNIResult
+	return tJNIResult
+end handler
+
+handler TextView_getImeOptions(in pObj as JObject) returns Number
+	variable tJNIResult as Number
+	put _JNI_TextView_getImeOptions(pObj) into tJNIResult
+	return tJNIResult
+end handler
+
+handler TextView_getInputType(in pObj as JObject) returns Number
+	variable tJNIResult as Number
+	put _JNI_TextView_getInputType(pObj) into tJNIResult
+	return tJNIResult
+end handler
+
+handler TextView_getMovementMethod(in pObj as JObject) returns optional JObject
+	variable tJNIResult as optional JObject
+	put _JNI_TextView_getMovementMethod(pObj) into tJNIResult
+	return tJNIResult
+end handler
+
+handler TextView_getSelectionStart(in pObj as JObject) returns Number
+	variable tJNIResult as Number
+	put _JNI_TextView_getSelectionStart(pObj) into tJNIResult
+	return tJNIResult
+end handler
+
+handler TextView_getSelectionEnd(in pObj as JObject) returns Number
+	variable tJNIResult as Number
+	put _JNI_TextView_getSelectionEnd(pObj) into tJNIResult
+	return tJNIResult
+end handler
+
+__safe foreign handler _JNI_CharSequence_toString(in pObj as JObject) returns JString \
+   binds to "java:java.lang.CharSequence>toString()Ljava/lang/String;"
+handler TextView_getText(in pObj as JObject) returns String
+	variable tJNIResult as JObject
+	put _JNI_TextView_getText(pObj) into tJNIResult
+
+   variable tString as JString
+   put _JNI_CharSequence_toString(tJNIResult) into tString
+
+	return StringFromJString(tString)
+end handler
+
+handler TextView_getTextSize(in pObj as JObject) returns Number
+	variable tJNIResult as Number
+	put _JNI_TextView_getTextSize(pObj) into tJNIResult
+	return tJNIResult
+end handler
+
+handler TextView_getTransformationMethod(in pObj as JObject) returns optional JObject
+	variable tJNIResult as optional JObject
+	put _JNI_TextView_getTransformationMethod(pObj) into tJNIResult
+	return tJNIResult
+end handler
+
+handler TextView_setAutoLinkMask(in pObj as JObject, in pParam_mask) returns nothing
+	_JNI_TextView_setAutoLinkMask(pObj, pParam_mask)
+end handler
+
+handler TextView_setEnabled(in pObj as JObject, in pParam_enabled as Boolean) returns nothing
+	_JNI_TextView_setEnabled(pObj, pParam_enabled)
+end handler
+
+handler TextView_setGravity(in pObj as JObject, in pParam_gravity as Number) returns nothing
+	_JNI_TextView_setGravity(pObj, pParam_gravity)
+end handler
+
+handler TextView_setImeOptions(in pObj as JObject, in pParam_options as Number) returns nothing
+	_JNI_TextView_setImeOptions(pObj, pParam_options)
+end handler
+
+handler TextView_setInputType(in pObj as JObject, in pParam_type as Number) returns nothing
+	_JNI_TextView_setInputType(pObj, pParam_type)
+end handler
+
+handler TextView_setMovementMethod(in pObj as JObject, in pParam_mthd as optional JObject) returns nothing
+	_JNI_TextView_setMovementMethod(pObj, pParam_mthd)
+end handler
+
+handler TextView_setText(in pObj as JObject, in pParam_text as String) returns nothing
+	variable tParam_text as JString
+	put StringToJString(pParam_text) into tParam_text
+
+	_JNI_TextView_setText(pObj, tParam_text)
+end handler
+
+handler TextView_setTextSize(in pObj as JObject, in pParam_unit as Number, in pParam_size as Number) returns nothing
+	_JNI_TextView_setTextSize(pObj, pParam_unit, pParam_size)
+end handler
+
+handler TextView_setTransformationMethod(in pObj as JObject, in pParam_mthd as optional JObject) returns nothing
+	_JNI_TextView_setTransformationMethod(pObj, pParam_mthd)
+end handler
+
+__safe foreign handler _JNI_EditText_setSelection(in pObj as JObject, in pParam_startIndex as JInt, in pParam_endIndex as JInt) returns nothing \
+	binds to "java:android.widget.EditText>setSelection(II)V?ui"
+
+handler EditText_setSelection(in pObj as JObject, in pParam_startIndex as Number, in pParam_endIndex as Number) returns nothing
+	_JNI_EditText_setSelection(pObj, pParam_startIndex, pParam_endIndex)
+end handler
+
+// Set listeners
+
+__safe foreign handler _JNI_BooleanValue(in pBoolean as JObject) returns JBoolean \
+   binds to "java:java.lang.Boolean>booleanValue()Z"
+private variable mOldText as optional String
+handler OnFocusChange(in pView as JObject, in pHasFocus as JObject) returns nothing
+   variable tHasFocus as Boolean
+   put _JNI_BooleanValue(pHasFocus) into tHasFocus
+
+   variable tText as String
+   put GetText() into tText
+
+   if tHasFocus then
+       // Store the current text value
+       put tText into mOldText
+       post "openField"
+   else
+      // If the text changed then post closeField
+      // Otherwise post exitField
+      if tText is mOldText then
+         post "exitField"
+      else
+         post "closeField"
+      end if
+   end if
+   MCEngineRunloopBreakWait()
+end handler
+
+__safe foreign handler _JNI_Boolean_False() returns JObject \
+   binds to "java:java.lang.Boolean>get.FALSE()Ljava/lang/Boolean;!static"
+__safe foreign handler _JNI_Boolean_True() returns JObject \
+   binds to "java:java.lang.Boolean>get.TRUE()Ljava/lang/Boolean;!static"
+handler OnEditorAction(in pView as JObject, in pActionId as JObject, in pKeyEvent as JObject) returns JObject
+   post "returnKey"
+   MCEngineRunloopBreakWait()
+   // Return value determines whether the return key event is eaten
+   if mPassReturnKey then
+      return _JNI_Boolean_False()
+   else
+      return _JNI_Boolean_True()
+   end if
+end handler
+
+handler OnTextChanged(in pText as JObject, in pStart as JObject, in pLengthBefore as JObject, in pLengthAfter as JObject) returns nothing
+   post "textChanged"
+   MCEngineRunloopBreakWait()
+end handler
+
+handler SetListeners()
+   // Add a listener for change of focus
+   variable tFocusChangeListener as JObject
+   put _JNI_View_OnFocusChangeListener(OnFocusChange) \
+      into tFocusChangeListener
+   _JNI_View_setOnFocusChangeListener(mNativeObj, tFocusChangeListener)
+
+   variable tTextChangedListener as JObject
+   put _JNI_TextWatcher_TextChangedListener({"onTextChanged": OnTextChanged}) \
+      into tTextChangedListener
+   _JNI_TextView_addTextChangedListener(mNativeObj, tTextChangedListener)
+
+   // Add a listener for the returnKey action
+   variable tEditorActionListener as JObject
+   put _JNI_View_OnEditorActionListener(OnEditorAction) \
+      into tEditorActionListener
+   _JNI_TextView_setOnEditorActionListener(mNativeObj, tEditorActionListener)
+end handler
+
+// Set / get props
+public handler SetMultiLine(in pMultiline as Boolean)
+   put pMultiline into mMultiline
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+
+   variable tCurInputType as Integer
+   put TextView_getInputType(mNativeObj) into tCurInputType
+
+   variable tNewInputType as Integer
+   if pMultiline then
+      put tCurInputType bitwise or TYPE_TEXT_FLAG_MULTI_LINE into tNewInputType
+   else
+      put UnsetBitwise(tCurInputType, TYPE_TEXT_FLAG_MULTI_LINE) into tNewInputType
+   end if
+
+   TextView_setInputType(mNativeObj, tNewInputType)
+end handler
+
+public handler GetMultiLine() returns Boolean
+   if mNativeObj is not nothing then
+      variable tCurInputType as Integer
+   	put TextView_getInputType(mNativeObj) into tCurInputType
+   	put (tCurInputType bitwise and TYPE_TEXT_FLAG_MULTI_LINE is not 0) \
+         into mMultiline
+   end if
+   return mMultiline
+end handler
+
+private handler UnsetBitwise(in pFlags as Integer, in pToUnset as Integer) returns Integer
+   return pFlags bitwise and (bitwise not pToUnset)
+end handler
+
+private handler HasFlag(in pFlags as Integer, in pToCheck as Integer) returns Boolean
+   return pFlags bitwise and pToCheck is not 0
+end handler
+
+private handler BitwiseOrList(in pList as List) returns Integer
+   variable tFlags as Integer
+   put 0 into tFlags
+
+   variable tFlag as Integer
+   repeat for each element tFlag in pList
+      put tFlags bitwise or tFlag into tFlags
+   end repeat
+   return tFlags
+end handler
+
+private handler CapTypes() returns Integer
+   return BitwiseOrList([TYPE_TEXT_FLAG_CAP_CHARACTERS, \
+                                    TYPE_TEXT_FLAG_CAP_WORDS, \
+                                    TYPE_TEXT_FLAG_CAP_SENTENCES])
+end handler
+
+handler SetCapitalization(in pCap as Integer)
+	variable tCurInputType as Integer
+	put TextView_getInputType(mNativeObj) into tCurInputType
+
+	variable tCapTypes as Integer
+	put CapTypes() into tCapTypes
+
+	variable tNewInputType as Integer
+   put UnsetBitwise(tCurInputType, tCapTypes) into tNewInputType
+	put tNewInputType bitwise or pCap into tNewInputType
+
+	TextView_setInputType(mNativeObj, tNewInputType)
+end handler
+
+handler GetCapitalization() returns Integer
+	variable tCurInputType as Integer
+	put TextView_getInputType(mNativeObj) into tCurInputType
+
+	variable tCapTypes as Integer
+	put CapTypes() into tCapTypes
+
+	return tCapTypes bitwise and tCurInputType
+end handler
+
+handler SetAutocorrect(in pValue as Boolean)
+	variable tCurInputType as Integer
+	put TextView_getInputType(mNativeObj) into tCurInputType
+
+	variable tNewInputType as Integer
+	if pValue then
+		put tCurInputType bitwise or TYPE_TEXT_FLAG_AUTO_CORRECT into tNewInputType
+	else
+	   put UnsetBitwise(tCurInputType, TYPE_TEXT_FLAG_AUTO_CORRECT) into tNewInputType
+   end if
+
+	TextView_setInputType(mNativeObj, tNewInputType)
+end handler
+
+handler GetAutocorrect() returns Boolean
+	variable tCurInputType as Integer
+	put TextView_getInputType(mNativeObj) into tCurInputType
+
+	return HasFlag(tCurInputType, TYPE_TEXT_FLAG_AUTO_CORRECT)
+end handler
+
+private variable mTextType as Integer
+private variable mTextTypeFlags as Integer
+public handler SetKeyboardType(in pType as String)
+   variable tKeyboardType as Integer
+   put KeyboardTypeToEnum(pType) into tKeyboardType
+
+   put pType into mKeyboardType
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+	variable tCurInputType as Integer
+	put TextView_getInputType(mNativeObj) into tCurInputType
+
+	variable tFlags as Integer
+	put tCurInputType bitwise and TYPE_MASK_FLAGS into tFlags
+
+	// unset flags from previous type setting
+	if mTextTypeFlags is not 0 then
+		put UnsetBitwise(tFlags, mTextTypeFlags) into tFlags
+   end if
+
+   variable tTextType as Integer
+   put BitwiseOrList([TYPE_MASK_CLASS, TYPE_MASK_VARIATION]) into tTextType
+   put tKeyboardType bitwise and tTextType into mTextType
+   put tKeyboardType bitwise and TYPE_MASK_FLAGS into mTextTypeFlags
+
+   variable tNewFlags as Integer
+   put BitwiseOrList([mTextType, mTextTypeFlags, tFlags]) into tNewFlags
+
+   TextView_setInputType(mNativeObj, tNewFlags)
+end handler
+
+public handler GetKeyboardType() returns String
+   if mNativeObj is not nothing then
+      variable tKeyboardType as Integer
+      if mTextType is 0 then
+         variable tCurInputType as Integer
+         put TextView_getInputType(mNativeObj) into tCurInputType
+
+         put tCurInputType bitwise and TYPE_MASK_CLASS into tKeyboardType
+      else
+         put mTextType bitwise or mTextTypeFlags into tKeyboardType
+      end if
+
+      put EnumToKeyboardType(tKeyboardType) into mKeyboardType
+   end if
+   return mKeyboardType
+end handler
+
+private variable mTransformationMethod as optional JObject
+handler SetIsPassword(in pPassword as Boolean)
+   variable tTransformationMethod as optional JObject
+   put TextView_getTransformationMethod(mNativeObj) into tTransformationMethod
+
+   variable tIsPassword as Boolean
+   put GetIsPassword() into tIsPassword
+
+   if pPassword and not tIsPassword then
+	   put tTransformationMethod into mTransformationMethod
+      variable tPasswordTransformationMethod as JObject
+      put PasswordTransformationMethod_getInstance() into tPasswordTransformationMethod
+      TextView_setTransformationMethod(mNativeObj, tPasswordTransformationMethod)
+      variable tNewFlags as Integer
+      put BitwiseOrList([TYPE_CLASS_TEXT, TYPE_TEXT_VARIATION_PASSWORD]) into tNewFlags
+      TextView_setInputType(mNativeObj, tNewFlags)
+	else if not pPassword and mTransformationMethod is not nothing then
+		TextView_setTransformationMethod(mNativeObj, mTransformationMethod)
+   end if
+end handler
+
+handler GetIsPassword() returns Boolean
+   variable tTransformationMethod as optional JObject
+   put TextView_getTransformationMethod(mNativeObj) into tTransformationMethod
+
+   if tTransformationMethod is nothing then
+      return false
+   end if
+
+   variable tRuntimeClass as String
+   put GetJavaClassName(tTransformationMethod) into tRuntimeClass
+
+   return tRuntimeClass ends with "PasswordTransformationMethod"
+end handler
+
+public handler SetEnabled(in pValue as Boolean)
+   if mNativeObj is nothing then
+      return
+   end if
+   TextView_setEnabled(mNativeObj, pValue)
+end handler
+
+public handler GetEnabled() returns Boolean
+   if mNativeObj is nothing then
+      return my enabled
+   end if
+   return View_isEnabled(mNativeObj)
+end handler
+
+public handler SetEditable(in pValue as Boolean) returns nothing
+   put pValue into mEditable
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+   View_setFocusable(mNativeObj, pValue)
+end handler
+
+public handler GetEditable() returns Boolean
+   if mNativeObj is not nothing then
+      put View_isFocusable(mNativeObj) into mEditable
+   end if
+   return mEditable
+end handler
+
+public handler SetText(in pText as String)
+   put pText into mText
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+   TextView_setText(mNativeObj, pText)
+end handler
+
+public handler GetText() returns String
+   if mNativeObj is not nothing then
+      put TextView_getText(mNativeObj) into mText
+   end if
+   return mText
+end handler
+
+__safe foreign handler _JNI_GetColorFromARGB(in pA as JInt, in pR as JInt, in pG as JInt, in pB as JInt) returns JInt \
+   binds to "java:android.graphics.Color>argb(IIII)I!static?ui"
+private handler SetStringAndroidColor(in pString as String)
+    variable tColor as Color
+    put stringToColor(pString) into tColor
+
+    variable tA as Integer
+    variable tR as Integer
+    variable tG as Integer
+    variable tB as Integer
+    put ColorComponentToInt(the alpha of tColor) into tA
+    put ColorComponentToInt(the red of tColor) into tR
+    put ColorComponentToInt(the green of tColor) into tG
+    put ColorComponentToInt(the blue of tColor) into tB
+
+    variable tColorInt as Integer
+    put _JNI_GetColorFromARGB(tA,tR,tG,tB) into tColorInt
+
+    _JNI_TextView_setTextColor(mNativeObj, tColorInt)
+end handler
+
+private handler ColorComponentToInt(in pComponent as Real) returns Integer
+    multiply pComponent by 255
+    round pComponent
+    return pComponent
+end handler
+
+public handler SetTextColor(in pColor as String)
+   put pColor into mTextColor
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+
+   SetStringAndroidColor(pColor)
+end handler
+
+public handler GetTextColor() returns String
+   return mTextColor
+end handler
+
+constant COMPLEX_UNIT_DIP is 1
+handler SetTextSize(in pSize as Integer)
+   TextView_setTextSize(mNativeObj, COMPLEX_UNIT_DIP, pSize)
+end handler
+
+__safe foreign handler _JNI_GetResources(in pContext as JObject) returns JObject \
+   binds to "java:android.content.Context>getResources()Landroid/content/res/Resources;"
+__safe foreign handler _JNI_GetDisplayMetrics(in pResources as JObject) returns JObject \
+   binds to "java:android.content.res.Resources>getDisplayMetrics()Landroid/util/DisplayMetrics;"
+__safe foreign handler _JNI_GetDensity(in pMetrics as JObject) returns JFloat \
+   binds to "java:android.util.DisplayMetrics>get.density()F"
+public handler GetTextSize() returns Integer
+   variable tTextSize as Number
+   put TextView_getTextSize(mNativeObj) into tTextSize
+
+   variable tContext as JObject
+   put _JNI_GetContext(mNativeObj) into tContext
+
+   variable tResources as JObject
+   put _JNI_GetResources(tContext) into tResources
+
+   variable tDisplayMetrics as JObject
+   put _JNI_GetDisplayMetrics(tResources) into tDisplayMetrics
+
+   variable tDensity as Number
+   put _JNI_GetDensity(tDisplayMetrics) into tDensity
+
+   return the rounded of (0.5 + tTextSize / tDensity)
+end handler
+
+constant kDataDetectorTypes is [ \
+   "link", "email", "phone number", "address" \
+]
+constant WEB_URLS is 1
+constant EMAIL_ADDRESSES is 2
+constant PHONE_NUMBERS is 4
+constant MAP_ADDRESSES is 8
+
+handler DetectorTypesFromValue(in pValue as Integer) returns String
+   variable tType as String
+   variable tIndex as Integer
+   variable tTypes as List
+   put 0 into tIndex
+   repeat for each element tType in kDataDetectorTypes
+      add 1 to tIndex
+      if HasFlag(pValue, 1 shifted left by (tIndex - 1) bitwise) then
+         push tType onto tTypes
+      end if
+   end repeat
+   return formatStringListAsItems(tTypes)
+end handler
+
+handler ValueFromDetectorTypes(in pTypes as String) returns Integer
+   variable tTypes as List
+   put parseItemsAsStringList(pTypes, nothing, nothing) into tTypes
+
+   variable tType as String
+   variable tBits as List
+   repeat for each element tType in tTypes
+      variable tIndex as Integer
+      put the index of tType in kDataDetectorTypes into tIndex
+      if tIndex is 0 then
+         throw "invalid data detector type" && tType
+      end if
+
+      push 1 shifted left by (tIndex - 1) bitwise onto tBits
+   end repeat
+
+   return BitwiseOrList(tBits)
+end handler
+
+public handler SetDataDetectorTypes(in pTypes as String)
+   variable tValue as Integer
+   put ValueFromDetectorTypes(pTypes) into tValue
+
+   put pTypes into mDataDetectorTypes
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+
+   TextView_setAutoLinkMask(mNativeObj, tValue)
+end handler
+
+public handler GetDataDetectorTypes() returns String
+   if mNativeObj is not nothing then
+      variable tValue as Integer
+      put TextView_getAutoLinkMask(mNativeObj) into tValue
+      put DetectorTypesFromValue(tValue) into mDataDetectorTypes
+   end if
+   return mDataDetectorTypes
+end handler
+
+constant HORIZONTAL_GRAVITY_MASK is 7
+constant VERTICAL_GRAVITY_MASK is 112
+handler SetTextAlign(in pMask as Integer, in pAlign as Integer)
+   variable tCurGravity as Integer
+   put TextView_getGravity(mNativeObj) into tCurGravity
+
+   variable tNewGravity as Integer
+   put UnsetBitwise(tCurGravity, pMask) into tNewGravity
+   put tNewGravity bitwise or pAlign into tNewGravity
+
+   TextView_setGravity(mNativeObj, tNewGravity)
+end handler
+
+handler GetTextAlign(in pMask as Integer) returns Integer
+   variable tCurGravity as Integer
+   put TextView_getGravity(mNativeObj) into tCurGravity
+
+   return tCurGravity bitwise and pMask
+end handler
+
+constant LEFT is 3
+constant CENTER_HORIZONTAL is 1
+constant RIGHT is 5
+constant TOP is 48
+constant CENTER_VERTICAL is 16
+constant BOTTOM is 80
+constant kHorizontalAlignments is { \
+   "left": 3, \
+   "center": 1, \
+   "right": 5 \
+}
+constant kVerticalAlignments is { \
+   "top": 48, \
+   "middle": 16, \
+   "bottom": 80 \
+}
+public handler SetHorizontalTextAlign(in pAlign as String)
+   if not pAlign is among the keys of kHorizontalAlignments then
+      throw "invalid alignment" && pAlign
+   end if
+
+   put pAlign into mTextAlign
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+
+   SetTextAlign(HORIZONTAL_GRAVITY_MASK, kHorizontalAlignments[pAlign])
+end handler
+
+public handler GetHorizontalTextAlign() returns String
+   if mNativeObj is not nothing then
+      variable tAlign as Integer
+      put GetTextAlign(HORIZONTAL_GRAVITY_MASK) into tAlign
+
+      variable tKey as String
+      repeat for each key tKey in kHorizontalAlignments
+         if kHorizontalAlignments[tKey] is tAlign then
+            put tKey into mTextAlign
+            return mTextAlign
+         end if
+      end repeat
+
+      put kDefaultHorizontalTextAlign into mTextAlign
+   end if
+
+   return mTextAlign
+end handler
+
+public handler SetVerticalTextAlign(in pAlign as String)
+   if not pAlign is among the keys of kVerticalAlignments then
+      throw "invalid alignment" && pAlign
+   end if
+
+   put pAlign into mVerticalTextAlign
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+
+   SetTextAlign(VERTICAL_GRAVITY_MASK, kVerticalAlignments[pAlign])
+end handler
+
+public handler GetVerticalTextAlign() returns String
+   if mNativeObj is not nothing then
+      variable tAlign as Integer
+      put GetTextAlign(VERTICAL_GRAVITY_MASK) into tAlign
+
+      variable tKey as String
+      repeat for each key tKey in kVerticalAlignments
+         if kVerticalAlignments[tKey] is tAlign then
+            put tKey into mVerticalTextAlign
+            return tKey
+         end if
+      end repeat
+
+      put kDefaultVerticalTextAlign into mVerticalTextAlign
+   end if
+
+   return mVerticalTextAlign
+end handler
+
+public handler SetSelectedRange(in pRange as String)
+   variable tRange as List
+   put parseItemsAsNumberList(pRange, nothing, nothing) into tRange
+   if the number of elements in tRange is not 2 then
+      throw "invalid range" && pRange
+   end if
+
+   if mNativeObj is nothing then
+      return
+   end if
+
+   EditText_setSelection(mNativeObj, tRange[1] - 1, tRange[1] - 1 + tRange[2])
+end handler
+
+public handler GetSelectedRange() returns String
+   if mNativeObj is nothing then
+      return "0,0"
+   end if
+
+   variable tRange as List
+   push GetSelectedRangeStart() onto tRange
+   push GetSelectedRangeLength() onto tRange
+
+   return formatNumberListAsItems(tRange)
+end handler
+
+handler GetSelectedRangeStart() returns Integer
+    return TextView_getSelectionStart(mNativeObj) + 1
+end handler
+
+handler GetSelectedRangeLength() returns Integer
+    return TextView_getSelectionEnd(mNativeObj) + 1 - \
+      TextView_getSelectionStart(mNativeObj)
+end handler
+
+public handler GetContentType() returns String
+   if mNativeObj is not nothing then
+      if GetIsPassword() then
+         put "password" into mContentType
+      else
+         put "plain" into mContentType
+      end if
+   end if
+
+   return mContentType
+end handler
+
+constant kContentTypes is ["password", "plain"]
+public handler SetContentType(in pType as String)
+   if not pType is in kContentTypes then
+      throw "invalid content type" && pType
+   end if
+
+   put pType into mContentType
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+
+   SetIsPassword(pType is "password")
+end handler
+
+public handler GetAutoCorrectionType() returns String
+   if mNativeObj is not nothing then
+      if GetAutocorrect() then
+         put "yes" into mAutoCorrectionType
+      else
+         put "no" into mAutoCorrectionType
+      end if
+   end if
+   return mAutoCorrectionType
+end handler
+
+constant kAutoCorrectTypes is ["default", "yes", "no"]
+public handler SetAutoCorrectionType(in pType as String)
+   if not pType is in kAutoCorrectTypes then
+      throw "invalid autocorrect type" && pType
+   end if
+
+   put pType into mAutoCorrectionType
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+
+   SetAutocorrect(pType is not "no")
+end handler
+
+public handler GetAutoCapitalizationType() returns String
+   if mNativeObj is not nothing then
+      variable tCapType as Integer
+      put GetCapitalization() into tCapType
+
+      variable tKey as String
+      repeat for each key tKey in kAutoCapitalizationTypes
+         if kAutoCapitalizationTypes[tKey] is tCapType then
+            put tKey into mAutoCapitalizationType
+            return tKey
+         end if
+      end repeat
+      put "none" into mAutoCapitalizationType
+   end if
+
+   return mAutoCapitalizationType
+end handler
+
+public handler SetAutoCapitalizationType(in pType as String)
+   if not pType is among the keys of kAutoCapitalizationTypes then
+      throw "invalid auto capitalization type" && pType
+   end if
+
+   put pType into mAutoCapitalizationType
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+
+   SetCapitalization(kAutoCapitalizationTypes[pType])
+end handler
+
+constant IME_ACTION_UNSPECIFIED is 0
+constant IME_ACTION_NONE is 1
+constant IME_ACTION_GO is 2
+constant IME_ACTION_SEARCH is 3
+constant IME_ACTION_SEND is 4
+constant IME_ACTION_NEXT is 5
+constant IME_ACTION_DONE is 6
+constant IME_ACTION_PREVIOUS is 7
+
+constant kReturnKeyTypes is { \
+   "default":0, \
+   "none": 1, \
+   "go": 2, \
+   "search": 3, \
+   "send":4, \
+   "next": 5, \
+   "done": 6, \
+   "previous": 7 \
+}
+
+constant IME_MASK_ACTION is 255
+
+public handler SetReturnKeyType(in pType as String)
+   if pType is not among the keys of kReturnKeyTypes then
+      throw "invalid return key type" && pType
+   end if
+
+   put pType into mReturnKeyType
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+
+   variable tOptions as Integer
+   put TextView_getImeOptions(mNativeObj) into tOptions
+
+   variable tNewOptions as Integer
+   put UnsetBitwise(tOptions, IME_MASK_ACTION) into tNewOptions
+
+   put tNewOptions bitwise or kReturnKeyTypes[pType] into tNewOptions
+   TextView_setImeOptions(mNativeObj, tNewOptions)
+end handler
+
+public handler GetReturnKeyType() returns String
+   if mNativeObj is not nothing then
+      variable tOptions as Integer
+      put TextView_getImeOptions(mNativeObj) into tOptions
+      put tOptions bitwise and IME_MASK_ACTION into tOptions
+
+      variable tKey as String
+      repeat for each key tKey in kReturnKeyTypes
+         if kReturnKeyTypes[tKey] is tOptions then
+            put tKey into mReturnKeyType
+            return tKey
+         end if
+      end repeat
+      put "default" into mReturnKeyType
+   end if
+
+   return mReturnKeyType
+end handler
+
+private variable mMovementMethod as optional JObject
+public handler SetScrollingEnabled(in pEnabled as Boolean)
+   put pEnabled into mScrollingEnabled
+	redraw all
+   if mNativeObj is nothing then
+      return
+   end if
+
+   if mMovementMethod is nothing then
+      put TextView_getMovementMethod(mNativeObj) into mMovementMethod
+   end if
+
+   if pEnabled then
+      TextView_setMovementMethod(mNativeObj, mMovementMethod)
+   else
+      TextView_setMovementMethod(mNativeObj, nothing)
+   end if
+end handler
+
+public handler GetScrollingEnabled() returns Boolean
+   if mNativeObj is not nothing then
+      put TextView_getMovementMethod(mNativeObj) into mScrollingEnabled
+   end if
+
+   return mScrollingEnabled
+end handler
+
+public handler SetFocused(in pValue as Boolean)
+   if mNativeObj is nothing then
+      return
+   end if
+
+   if pValue then
+      View_requestFocus(mNativeObj)
+   else
+      View_clearFocus(mNativeObj)
+   end if
+end handler
+
+public handler GetFocused() returns Boolean
+   if mNativeObj is nothing then
+      return false
+   end if
+
+   return View_isFocused(mNativeObj)
+end handler
+
+public handler OnPaint()
+    if IsAndroid() then
+        return
+    end if
+
+    paintPlaceholderImage(this canvas, my bounds, placeholderIcon("android"), \
+        my name, my font, stringToColor(mTextColor))
+end handler
+
+end widget

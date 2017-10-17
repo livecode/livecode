@@ -487,7 +487,7 @@ void MCScriptAddDependencyToModule(MCScriptModuleBuilderRef self, MCNameRef p_de
         return;
     
     for(uindex_t i = 0; i < self -> module . dependency_count; i++)
-        if (MCNameIsEqualTo(p_dependency, self -> module . dependencies[i] . name))
+        if (MCNameIsEqualToCaseless(p_dependency, self -> module . dependencies[i] . name))
         {
             r_index = i;
             return;
@@ -556,7 +556,7 @@ void MCScriptAddImportToModule(MCScriptModuleBuilderRef self, uindex_t p_index, 
     }
     
     for(uindex_t i = 0; i < self -> module . imported_definition_count; i++)
-        if (MCNameIsEqualTo(p_name, self -> module . imported_definitions[i] . name) &&
+        if (MCNameIsEqualToCaseless(p_name, self -> module . imported_definitions[i] . name) &&
             p_kind == self -> module . imported_definitions[i] . kind &&
             p_index == self -> module . imported_definitions[i] . module)
         {
@@ -1060,7 +1060,7 @@ void MCScriptEndRecordTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_ne
         bool t_equal;
         t_equal = true;
         for(uindex_t j = 0; j < t_type -> field_count; j++)
-            if (!MCNameIsEqualTo(t_type -> fields[j] . name, t_other_type -> fields[j] . name) ||
+            if (!MCNameIsEqualToCaseless(t_type -> fields[j] . name, t_other_type -> fields[j] . name) ||
                 t_type -> fields[j] . type != t_other_type -> fields[j] . type)
             {
                 t_equal = false;
@@ -1315,7 +1315,7 @@ static uindex_t __measure_instruction(MCScriptModuleBuilderRef self, MCScriptByt
     uindex_t t_size;
     t_size = 1;
     
-    if (p_instruction -> arity >= 15)
+    if (p_instruction -> arity >= kMCScriptBytecodeOpArityMax)
         t_size += 1;
     
     if (p_instruction -> operation == kMCScriptBytecodeOpJump)
@@ -1567,10 +1567,10 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         
         __emit_position(self, t_pos_address_offset + t_address, self -> instructions[i] . file, self -> instructions[i] . line);
         
-        __emit_bytecode_byte(self, (uint8_t)(t_op | (MCMin(t_arity, 15U) << 4)));
+        __emit_bytecode_byte(self, (uint8_t)(t_op | (MCMin(t_arity, kMCScriptBytecodeOpArityMax) << kMCScriptBytecodeOpArityShift)));
         
-        if (t_arity >= 15U)
-            __emit_bytecode_byte(self, uint8_t(t_arity - 15U));
+        if (t_arity >= kMCScriptBytecodeOpArityMax)
+            __emit_bytecode_byte(self, uint8_t(t_arity - kMCScriptBytecodeOpArityMax));
         
         for(uindex_t j = 0; j < t_arity; j++)
             __emit_bytecode_uint(self, t_operands[j]);
@@ -1846,7 +1846,7 @@ void MCScriptEmitPositionForBytecodeInModule(MCScriptModuleBuilderRef self, MCNa
     self -> current_line = p_line;
     
     for(uindex_t i = 0; i < self -> module . source_file_count; i++)
-        if (MCNameIsEqualTo(p_file, self -> module . source_files[i]))
+        if (MCNameIsEqualToCaseless(p_file, self -> module . source_files[i]))
         {
             self -> current_file = i;
             return;
@@ -1932,10 +1932,10 @@ MCScriptMapTypeToForeignPrimitiveTypeInModule(MCScriptModuleBuilderRef self, uin
             { "SInt64", kMCScriptForeignPrimitiveTypeSInt64 },
             { "UInt64", kMCScriptForeignPrimitiveTypeUInt64 },
             
-            { "CSIntSize", kMCScriptForeignPrimitiveTypeSIntSize },
-            { "CUIntSize", kMCScriptForeignPrimitiveTypeUIntSize },
-            { "CSIntPtr", kMCScriptForeignPrimitiveTypeSIntPtr },
-            { "CUIntPtr", kMCScriptForeignPrimitiveTypeUIntPtr },
+            { "SIntSize", kMCScriptForeignPrimitiveTypeSIntSize },
+            { "UIntSize", kMCScriptForeignPrimitiveTypeUIntSize },
+            { "SIntPtr", kMCScriptForeignPrimitiveTypeSIntPtr },
+            { "UIntPtr", kMCScriptForeignPrimitiveTypeUIntPtr },
             
             { "CBool", kMCScriptForeignPrimitiveTypeCBool },
             { "CChar", kMCScriptForeignPrimitiveTypeCChar },
@@ -1963,6 +1963,12 @@ MCScriptMapTypeToForeignPrimitiveTypeInModule(MCScriptModuleBuilderRef self, uin
             
             /* Java FFI Types */
             { "JObject", kMCScriptForeignPrimitiveTypePointer },
+            
+            /* ObjC FFI Types */
+            { "ObjcObject", kMCScriptForeignPrimitiveTypePointer },
+            { "ObjcId", kMCScriptForeignPrimitiveTypePointer },
+            { "ObjcRetainedId", kMCScriptForeignPrimitiveTypePointer },
+            { "ObjcAutoreleasedId", kMCScriptForeignPrimitiveTypePointer },
             
             /* Extra Foundation Types */
             { "Stream", kMCScriptForeignPrimitiveTypePointer },

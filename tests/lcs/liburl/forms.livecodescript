@@ -1,14 +1,14 @@
 ﻿script "TestlibUrlForms"
 
 on TestSetup
-   -- Only run these tests on desktop platforms
-   if the platform is not among the items of "MacOS,Windows,Linux" then
-      return "SKIP Tests are not runnable on" && the platform
+   TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIf "environment", "server"
+   
+   if not TestIsInStandalone() then
+      local tLibURl
+      put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
+      send "revLoadLibrary" to stack tLibUrl
    end if
-
-   local tLibURl
-   put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
-   send "revLoadLibrary" to stack tLibUrl
 end TestSetup
 
 
@@ -22,7 +22,7 @@ on TestForm
    set the httpHeaders to line 1 of tForm
    delete line 1 of tForm
    
-   put "<file>" & "lcs/liburl/last, first.txt" into tFile
+   put "<file>" &  testFilesFolder() & "/last, first.txt" into tFile
    put "text/plain" into tType
    put "binary" into tEnc
    put libURLMultipartFormAddPart(tForm,"file", tFile, tType, tEnc) into tError

@@ -68,7 +68,7 @@ uint2 MCButton::focusedtab = MAXUINT2;
 
 bool MCmenupoppedup = false;
 
-Keynames MCButton::button_keys[] =
+const Keynames MCButton::button_keys[] =
     {
         {XK_F1, "f1"},
         {XK_F2, "f2"},
@@ -437,7 +437,7 @@ void MCButton::open()
     MCControl::open();
 
 	// MW-2011-02-08: [[ Bug 9382 ]] Make sure we reset icons when opening and the state
-	//   has changed (i.e. background transition has occured).
+	//   has changed (i.e. background transition has occurred).
 	uint32_t t_old_state;
 	t_old_state = state;
 	switch(gethilite(0).value)
@@ -1643,7 +1643,7 @@ Boolean MCButton::doubleup(uint2 which)
 #ifdef _MAC_DESKTOP
 void MCButton::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
 		if (state & CS_SHOW_DEFAULT)
 		{
@@ -2447,7 +2447,7 @@ public:
 		newbutton->menubutton = parent->menubutton;
 		newbutton->menucontrol = MENUCONTROL_ITEM;
         newbutton->m_theme_type = kMCPlatformControlTypeMenu;
-		if (MCNameGetCharAtIndex(newbutton -> getname(), 0) == '-')
+		if (MCStringGetNativeCharAtIndex(MCNameGetString(newbutton->getname()), 0) == '-')
 		{
 			newbutton->rect.height = 2;
 			newbutton->flags = DIVIDER_FLAGS;

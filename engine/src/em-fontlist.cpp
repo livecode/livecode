@@ -101,7 +101,7 @@ MCFontnode::getfont(MCNameRef p_name,
                     uint16_t p_size,
                     uint16_t p_style)
 {
-	if (!MCNameIsEqualTo(p_name, *m_requested_name))
+	if (!MCNameIsEqualToCaseless(p_name, *m_requested_name))
 	{
 		return NULL;
 	}

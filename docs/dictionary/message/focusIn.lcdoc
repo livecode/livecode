@@ -5,9 +5,11 @@ Type: message
 Syntax: focusIn
 
 Summary:
-Sent to a <control> when it becomes <active (focused)(glossary)>.
+Sent to a <control> when it becomes <active(glossary)>(focused).
 
 Introduced: 1.0
+
+Associations: button, field
 
 OS: mac, windows, linux, ios, android
 

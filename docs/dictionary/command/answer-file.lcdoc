@@ -48,8 +48,7 @@ file dialog box.
 windowTitle:
 If specified, appears in the title bar of the dialog box.
 If no <windowTitle> is given, the title bar is blank. This parameter
-has no effect on Mac OS systems, because Mac OS file dialog boxes don't
-have a title bar.
+has no effect on macOS 10.11 (El Capitan) and above, so make sure that any important information is placed in the <prompt> parameter.
 
 It:
 The <answer file> command places the absolute file path(s) of the

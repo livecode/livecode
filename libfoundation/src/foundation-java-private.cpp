@@ -22,24 +22,24 @@
 
 static MCJavaType MCJavaMapTypeCodeSubstring(MCStringRef p_type_code, MCRange p_range)
 {
-    if (MCStringSubstringIsEqualToCString(p_type_code, p_range, "[",
-                                          kMCStringOptionCompareExact))
-        return kMCJavaTypeArray;
-    
     for (uindex_t i = 0; i < sizeof(type_map) / sizeof(type_map[0]); i++)
     {
-        if (MCStringSubstringIsEqualToCString(p_type_code, p_range, type_map[i] . name, kMCStringOptionCompareExact))
+        if (MCStringSubstringIsEqualToCString(p_type_code,
+                                              MCRangeMake(p_range.offset, 1),
+                                              type_map[i] . name,
+                                              kMCStringOptionCompareExact))
         {
             return type_map[i] . type;
         }
     }
     
-    return kMCJavaTypeObject;
+    return kMCJavaTypeUnknown;
 }
 
-int MCJavaMapTypeCode(MCStringRef p_type_code)
+MCJavaType MCJavaMapTypeCode(MCStringRef p_type_code)
 {
-    return static_cast<int>(MCJavaMapTypeCodeSubstring(p_type_code,MCRangeMake(0,MCStringGetLength(p_type_code))));
+    return MCJavaMapTypeCodeSubstring(p_type_code,
+                                      MCRangeMake(0, MCStringGetLength(p_type_code)));
 }
 
 static bool __GetExpectedTypeCode(MCTypeInfoRef p_type, MCJavaType& r_code)
@@ -86,6 +86,11 @@ static bool __MCTypeInfoConformsToJavaType(MCTypeInfoRef p_type, MCJavaType p_co
     if (!__GetExpectedTypeCode(p_type, t_code))
         return false;
     
+    // At the moment we don't have a separate type for arrays.
+    if (p_code == kMCJavaTypeArray &&
+        t_code == kMCJavaTypeObject)
+        return true;
+    
     return t_code == p_code;
 }
 
@@ -109,6 +114,9 @@ static bool __NextArgument(MCStringRef p_arguments, MCRange& x_range)
         t_length++;
     }
     
+    if (t_next_type == kMCJavaTypeUnknown)
+        return false;
+    
     if (t_next_type == kMCJavaTypeObject)
     {
         if (!MCStringFirstIndexOfChar(p_arguments, ';', x_range . offset, kMCStringOptionCompareExact, t_length))
@@ -116,6 +124,9 @@ static bool __NextArgument(MCStringRef p_arguments, MCRange& x_range)
         
         // Consume the ;
         t_length++;
+        
+        // Correct the length for the starting point
+        t_length -= x_range.offset;
     }
     
     x_range . length = t_length;
@@ -151,6 +162,9 @@ static bool __RemoveSurroundingParentheses(MCStringRef p_in, MCStringRef& r_out)
 
 bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, MCStringRef p_return, int p_call_type)
 {
+    if (MCHandlerTypeInfoIsVariadic(p_signature))
+        return false;
+
     MCJavaCallType t_call_type = static_cast<MCJavaCallType>(p_call_type);
     if (t_call_type == MCJavaCallTypeInterfaceProxy)
         return true;
@@ -195,7 +209,7 @@ bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, 
             return __MCTypeInfoConformsToJavaType(t_return_type, kMCJavaTypeVoid);
         default:
         {
-            auto t_return_code = static_cast<MCJavaType>(MCJavaMapTypeCode(p_return));
+            auto t_return_code = MCJavaMapTypeCode(p_return);
             return __MCTypeInfoConformsToJavaType(t_return_type, t_return_code);
         }
     }
@@ -216,7 +230,7 @@ bool MCJavaPrivateErrorsInitialize()
     if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.NativeMethodCallError"), MCNAME("java"), MCSTR("JNI exception thrown when calling native method"), kMCJavaNativeMethodCallErrorTypeInfo))
         return false;
     
-    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.BindingStringSignatureError"), MCNAME("java"), MCSTR("Java binding string does not match foreign handler signature"), kMCJavaBindingStringSignatureErrorTypeInfo))
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.BindingStringSignatureError"), MCNAME("java"), MCSTR("Java binding string does not match foreign handler signature or signature not supported"), kMCJavaBindingStringSignatureErrorTypeInfo))
         return false;
     
     if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.java.CouldNotInitialiseJREError"), MCNAME("java"), MCSTR("Could not initialise Java Runtime Environment"), kMCJavaCouldNotInitialiseJREErrorTypeInfo))
@@ -327,14 +341,25 @@ bool initialise_jvm()
     vm_args.version = JNI_VERSION_1_6;
     init_jvm_args(&vm_args);
     
+    const char *t_class_path = getenv("CLASSPATH");
+    if (t_class_path == nullptr)
+    {
+        t_class_path = "/usr/lib/java";
+    }
+    
+    char *t_option = strdup("-Djava.class.path=");
+    t_option = strcat(t_option, t_class_path);
+    
     JavaVMOption* options = new (nothrow) JavaVMOption[1];
-    options[0].optionString = const_cast<char*>("-Djava.class.path=/usr/lib/java");
+    options[0].optionString = t_option;
     
     vm_args.nOptions = 1;
     vm_args.options = options;
     vm_args.ignoreUnrecognized = false;
     
-    return create_jvm(&vm_args);
+    bool t_success = create_jvm(&vm_args);
+    free(t_option);
+    return t_success;
 #endif
     return true;
 }
@@ -504,12 +529,11 @@ static jstring MCJavaGetJObjectClassName(jobject p_obj)
     return className;
 }
 
-static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method_id, jvalue *p_params, int p_return_type, void *r_result)
+static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method_id, jvalue *p_params, MCJavaType p_return_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_return_type = static_cast<MCJavaType>(p_return_type);
     
-    switch (t_return_type)
+    switch (p_return_type)
     {
         case kMCJavaTypeBoolean:
         {
@@ -582,17 +606,20 @@ static bool __JavaJNIInstanceMethodResult(jobject p_instance, jmethodID p_method
         case kMCJavaTypeVoid:
             s_env -> CallVoidMethodA(p_instance, p_method_id, p_params);
             return true;
+            
+        // Should be unreachable
+        case kMCJavaTypeUnknown:
+            break;
     }
     
     MCUnreachableReturn(false);
 }
 
-static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, jvalue *p_params, int p_return_type, void *r_result)
+static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, jvalue *p_params, MCJavaType p_return_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_return_type = static_cast<MCJavaType>(p_return_type);
     
-    switch (t_return_type) {
+    switch (p_return_type) {
         case kMCJavaTypeBoolean:
         {
             jboolean t_result =
@@ -664,17 +691,20 @@ static bool __JavaJNIStaticMethodResult(jclass p_class, jmethodID p_method_id, j
         case kMCJavaTypeVoid:
             s_env -> CallStaticVoidMethodA(p_class, p_method_id, p_params);
             return true;
+            
+        // Should be unreachable
+        case kMCJavaTypeUnknown:
+            break;
     }
     
     MCUnreachableReturn(false);
 }
 
-static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, jmethodID p_method_id, jvalue *p_params, int p_return_type, void *r_result)
+static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, jmethodID p_method_id, jvalue *p_params, MCJavaType p_return_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_return_type = static_cast<MCJavaType>(p_return_type);
     
-    switch (t_return_type) {
+    switch (p_return_type) {
         case kMCJavaTypeBoolean:
         {
             jboolean t_result =
@@ -746,17 +776,21 @@ static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, 
         case kMCJavaTypeVoid:
             s_env -> CallNonvirtualVoidMethodA(p_instance, p_class, p_method_id, p_params);
             return true;
+            
+        // Should be unreachable
+        case kMCJavaTypeUnknown:
+            break;
     }
     
     MCUnreachableReturn(false);
 }
 
-static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int p_return_type, void *r_result)
+static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, MCJavaType p_return_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_return_type = static_cast<MCJavaType>(p_return_type);
     
-    switch (t_return_type) {
+    switch (p_return_type)
+    {
         case kMCJavaTypeBoolean:
         {
             jboolean t_result =
@@ -826,18 +860,19 @@ static bool __JavaJNIGetFieldResult(jobject p_instance, jfieldID p_field_id, int
             return true;
         }
         case kMCJavaTypeVoid:
+        case kMCJavaTypeUnknown:
             break;
     }
     
     MCUnreachableReturn(false);
 }
 
-static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, int p_field_type, void *r_result)
+static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, MCJavaType p_field_type, void *r_result)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_field_type = static_cast<MCJavaType>(p_field_type);
     
-    switch (t_field_type) {
+    switch (p_field_type)
+    {
         case kMCJavaTypeBoolean:
         {
             jboolean t_result =
@@ -907,18 +942,18 @@ static bool __JavaJNIGetStaticFieldResult(jclass p_class, jfieldID p_field_id, i
             return true;
         }
         case kMCJavaTypeVoid:
+        case kMCJavaTypeUnknown:
             break;
     }
     
     MCUnreachableReturn(false);
 }
 
-static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, const void *p_param, int p_field_type)
+static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, const void *p_param, MCJavaType p_field_type)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_field_type = static_cast<MCJavaType>(p_field_type);
     
-    switch (t_field_type)
+    switch (p_field_type)
     {
         case kMCJavaTypeBoolean:
         {
@@ -992,18 +1027,18 @@ static void __JavaJNISetFieldResult(jobject p_instance, jfieldID p_field_id, con
                                     t_obj);
         }
         case kMCJavaTypeVoid:
+        case kMCJavaTypeUnknown:
             break;
     }
     
     MCUnreachable();
 }
 
-static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, const void *p_param, int p_field_type)
+static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, const void *p_param, MCJavaType p_field_type)
 {
     MCJavaDoAttachCurrentThread();
-    auto t_field_type = static_cast<MCJavaType>(p_field_type);
     
-    switch (t_field_type)
+    switch (p_field_type)
     {
         case kMCJavaTypeBoolean:
         {
@@ -1078,6 +1113,7 @@ static void __JavaJNISetStaticFieldResult(jclass p_class, jfieldID p_field_id, c
             return;
         }
         case kMCJavaTypeVoid:
+        case kMCJavaTypeUnknown:
             break;
     }
     
@@ -1155,7 +1191,8 @@ static bool __JavaJNIGetParams(void **args, MCTypeInfoRef p_signature, jvalue *&
             case kMCJavaTypeDouble:
                 t_args[i].d = *(static_cast<jdouble *>(args[i]));
                 break;
-            default:
+            case kMCJavaTypeVoid:
+            case kMCJavaTypeUnknown:
                 MCUnreachableReturn(false);
         }
     }
@@ -1239,6 +1276,18 @@ static bool __MCJavaIsHandlerSuitableForListener(MCNameRef p_class_name, MCValue
                                                     "getParameterTypes",
                                                     "()[Ljava/lang/Class;");
     
+    jmethodID t_get_return =  s_env->GetMethodID(t_method_class,
+                                                 "getReturnType",
+                                                 "()Ljava/lang/Class;");
+    
+    jclass t_void_class = s_env->FindClass("java/lang/Void");
+    jfieldID t_void_type_field = s_env->GetStaticFieldID(t_void_class,
+                                               "TYPE",
+                                               "Ljava/lang/Class;");
+    jobject t_void_type = s_env-> GetStaticObjectField(t_void_class,
+                                                       t_void_type_field);
+    
+    
     // Lambda to check if a handler is suitable for the given method
     auto t_check_handler = [&](MCHandlerRef p_handler, jobject p_method)
     {
@@ -1278,8 +1327,28 @@ static bool __MCJavaIsHandlerSuitableForListener(MCNameRef p_class_name, MCValue
                                                     "number", *t_exp,
                                                     nullptr);
         }
+
+        jobject t_return_class = s_env->CallObjectMethod(p_method,
+                                                         t_get_return);
+        MCTypeInfoRef t_return_type = MCHandlerTypeInfoGetReturnType(t_type_info);
         
-        return true;
+        // Check the return types match
+        if (s_env->IsSameObject(t_return_class, t_void_type))
+        {
+            if (t_return_type == kMCNullTypeInfo)
+                return true;
+        }
+        else
+        {
+            if (__MCTypeInfoConformsToJavaType(t_return_type,
+                                               kMCJavaTypeObject))
+                return true;
+        }
+        
+        return MCErrorCreateAndThrowWithMessage(kMCJavaInterfaceCallbackSignatureErrorTypeInfo,
+                                                MCSTR("Mismatched return parameter for callback handler %{handler}"),
+                                                "handler", p_handler,
+                                                nullptr);
     };
 
     uindex_t t_num_methods = s_env->GetArrayLength(t_methods);
@@ -1756,11 +1825,13 @@ void MCJavaPrivateDestroyObject(MCJavaObjectRef p_object)
     s_env -> DeleteGlobalRef(t_obj);
 }
 
-void MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_name, jobjectArray p_args)
+jobject MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_name, jobjectArray p_args)
 {
+    MCJavaDoAttachCurrentThread();
+    
     MCAutoStringRef t_method_name;
     if (!__MCJavaStringFromJString(p_method_name, &t_method_name))
-        return;
+        return nullptr;
  
     MCValueRef t_handler = nullptr;
     MCValueRef t_handlers = reinterpret_cast<MCValueRef>(p_handler);
@@ -1787,28 +1858,41 @@ void MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_nam
     {
         MCErrorThrowGenericWithMessage(MCSTR("callback handler not found for listener method %{method}"),
                                        "method", *t_method_name, nullptr);
-        return;
+        return nullptr;
     }
 
     // We have an LCB handler, so just invoke with the args.
-    MCValueRef t_result;
+    MCAutoValueRef t_result;
     MCAutoProperListRef t_list;
     if (!__MCJavaProperListFromJObjectArray(p_args, &t_list))
-        return;
+        return nullptr;
     
     MCProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(*t_list, t_mutable_list))
-        return;
+        return nullptr;
     
     MCErrorRef t_error =
-        MCHandlerTryToInvokeWithList(static_cast<MCHandlerRef>(t_handler),
-                                     t_mutable_list, t_result);
-    
-    MCValueRelease(t_result);
+        MCHandlerTryToExternalInvokeWithList(static_cast<MCHandlerRef>(t_handler),
+                                             t_mutable_list, &t_result);
+    jobject t_return = nullptr;
+    if (*t_result != nil)
+    {
+        if (MCValueGetTypeCode(*t_result) != kMCValueTypeCodeNull)
+        {
+            MCTypeInfoRef t_return_type = MCValueGetTypeInfo(*t_result);
+            MCAssert(__MCTypeInfoConformsToJavaType(t_return_type,
+                                                    kMCJavaTypeObject));
+            t_return = static_cast<jobject>
+                (MCJavaObjectGetObject(static_cast<MCJavaObjectRef>
+                                       (*t_result)));
+        }
+    }
     MCValueRelease(t_mutable_list);
     
     if (t_error != nil)
         MCErrorThrow(t_error);
+    
+    return s_env->NewLocalRef(t_return);
 }
 #else
 

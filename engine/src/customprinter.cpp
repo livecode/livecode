@@ -215,7 +215,7 @@ private:
 	// can be used.
 	MCPrinterRectangle m_page_rect;
 
-	// If this is true, an error has occured during execute
+	// If this is true, an error has occurred during execute
 	bool m_execute_error;
 
 	// The untransformed rect and scale of current composite region
@@ -256,7 +256,7 @@ bool MCCustomMetaContext::render(MCCustomPrintingDevice *p_device, const MCPrint
 
 bool MCCustomMetaContext::candomark(MCMark *p_mark)
 {
-	// If an error has occured during this execution, just return true to minimize
+	// If an error has occurred during this execution, just return true to minimize
 	// unnecessary rasterization (this is to make up for a lack of error handling
 	// during the super-classes execution process).
 	if (m_execute_error)
@@ -359,7 +359,7 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 
 void MCCustomMetaContext::domark(MCMark *p_mark)
 {
-	// If an error has occured, we do nothing.
+	// If an error has occurred, we do nothing.
 	if (m_execute_error)
 		return;
 

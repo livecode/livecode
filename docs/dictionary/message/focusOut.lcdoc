@@ -7,6 +7,8 @@ Syntax: focusOut
 Summary:
 Sent to a <button> or <field> when it becomes inactive (loses <focus>).
 
+Associations: button, field
+
 Introduced: 1.0
 
 OS: mac, windows, linux, ios, android

@@ -50,8 +50,8 @@ control>, the clone is also <owner|owned> by the <group>.
 > visible 
 >property set to false.
 
-If the <object(glossary)> is a <card>, the copy becomes the <current
-card>. 
+If the <object(glossary)> is a <card>, the copy becomes the 
+<current card>. 
 
 If the <object(glossary)> is a <stack>, the newly created <stack> is
 opened. It is named "Copy of" and the stack's name.
@@ -65,7 +65,7 @@ References: create card (command), paste (command), group (command),
 copy (command), create stack (command), clipboard (function),
 object (glossary), grouped control (glossary), current card (glossary),
 owner (glossary), command (glossary), card (keyword), control (keyword),
-it Keyword (keyword), newAudioclip (message), newButton (message),
+it (keyword), newAudioclip (message), newButton (message),
 newCard (message), newGroup (message), newPlayer (message),
 newGraphic (message), newField (message), newScrollbar (message),
 newEPS (message), newImage (message), newVideoclip (message),

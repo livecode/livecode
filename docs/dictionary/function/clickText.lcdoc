@@ -28,9 +28,9 @@ clicked.
 
 Description:
 Use the <clickText> <function> within a <mouseDown>, <mouseUp>, or
-<selectionChanged> <handler> to determine which <word> or <grouped
-text|text group> the user clicked, in order to provide <hypertext>
-(clickable text) or take some action based on the click.
+<selectionChanged> <handler> to determine which <word> or
+<grouped text|text group> the user clicked, in order to provide 
+<hypertext> (clickable text) or take some action based on the click.
 
 The <clickText> <function> is cleared at the next mouse click, as well
 as after some editing actions such as deleting text. If the user has
@@ -42,12 +42,12 @@ of the clicked text is "link", the <return value|returned value>
 contains the entire <grouped text|text group>.
 
 >*Important:*  Words are defined a little differently by the <clickText>
-> <function> than the way they are used in <chunk expression|chunk
-> expressions>. A word, for purposes of the <clickText>, is any text
-> delimited by spaces, tabs, returns, or punctuation. If you click a
-> punctuation <character>, only that <character> is returned. This means
-> that, for example, clicking a hyphenated word only returns the part of
-> the word that was clicked.
+> <function> than the way they are used in 
+> <chunk expression|chunk expressions>. A word, for purposes of the
+> <clickText>, is any text delimited by spaces, tabs, returns, or
+> punctuation. If you click a punctuation <character>, only that
+> <character> is returned. This means that, for example, clicking a
+> hyphenated word only returns the part of the word that was clicked.
 
 The returned value indicates the text that the mouse pointer was over
 when the mouse was clicked. Moving the mouse before the mouse button is

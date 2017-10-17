@@ -225,7 +225,7 @@ public:
 
 	bool hasname(MCNameRef other_name)
 	{
-		return MCNameIsEqualTo(*name, other_name, kMCCompareCaseless);
+		return MCNameIsEqualToCaseless(*name, other_name);
 	}
 
 	//////////
@@ -367,11 +367,6 @@ public:
     
     void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
     virtual bool evalcontainer(MCExecContext &ctxt, MCContainer& r_container);
-	
-	virtual void compile(MCSyntaxFactoryRef);
-	virtual void compile_in(MCSyntaxFactoryRef);
-	virtual void compile_out(MCSyntaxFactoryRef);
-	virtual void compile_inout(MCSyntaxFactoryRef);
 
 	virtual MCVarref *getrootvarref(void);
 

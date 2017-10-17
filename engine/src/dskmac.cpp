@@ -1135,34 +1135,6 @@ Boolean MCS_mac_nodelay(int4 p_fd)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#if 0
-static bool MCS_mac_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
-{
-	uindex_t t_length = MCStringGetLength(p_path);
-	if (t_length == 0)
-		return MCStringCopy(p_path, r_stdpath);
-    
-	MCAutoNativeCharArray t_path;
-	if (!t_path.New(t_length))
-		return false;
-    
-	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
-	char_t *t_dst = t_path.Chars();
-    
-	for (uindex_t i = 0; i < t_length; i++)
-	{
-		if (t_src[i] == '/')
-			t_dst[i] = ':';
-		else if (t_src[i] == ':')
-			t_dst[i] = '/';
-		else
-			t_dst[i] = t_src[i];
-	}
-    
-	return t_path.CreateStringAndRelease(r_stdpath);
-}
-#endif
-
 static OSStatus MCS_mac_pathtoref(MCStringRef p_path, FSRef& r_ref)
 {
     MCAutoStringRef t_auto_path;
@@ -3505,10 +3477,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+        if (MCNameIsEqualToCaseless(p_type, MCN_engine)
                 // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
                 // so the resources folder is the redirected engine folder
-                || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
+                || MCNameIsEqualToCaseless(p_type, MCN_resources))
         {
             MCAutoStringRef t_engine_folder;
             uindex_t t_last_slash;
@@ -3519,7 +3491,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             if (!MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_engine_folder))
                 return False;
 
-            if (MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
+            if (MCNameIsEqualToCaseless(p_type, MCN_resources))
             {
                 if (!MCS_apply_redirect(*t_engine_folder, false, r_folder))
                     return False;
@@ -4552,7 +4524,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         sigaction(SIGCHLD, &action, NULL);
         while (MCnprocesses--)
         {
-            MCNameDelete(MCprocesses[MCnprocesses] . name);
+            MCValueRelease(MCprocesses[MCnprocesses] . name);
             MCprocesses[MCnprocesses] . name = nil;
             if (MCprocesses[MCnprocesses].pid != 0
 		        && (MCprocesses[MCnprocesses].ihandle != NULL
@@ -5522,7 +5494,7 @@ bool MCS_mac_elevation_bootstrap_main(int argc, char *argv[])
 	// And finally exec to the new process (this does not return if successful).
 	execvp(t_args[0], t_args);
 	
-	// If we get this far then an error has occured :o(
+	// If we get this far then an error has occurred :o(
 	return false;
 }
 
@@ -5580,7 +5552,7 @@ static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mo
 	if (MCStringGetLength(docname))
 	{
 		for (i = 0 ; i < MCnprocesses ; i++)
-			if (MCNameIsEqualTo(name, MCprocesses[i].name, kMCCompareExact))
+			if (MCNameIsEqualTo(name, MCprocesses[i].name, kMCStringOptionCompareExact))
 				break;
 		if (i == MCnprocesses)
 		{
@@ -5918,3 +5890,83 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
     delete t_doc;
 
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCS_get_browsers(MCStringRef &r_browsers)
+{
+    bool t_success = true;
+    
+    MCAutoListRef t_browser_list;
+    if (t_success)
+        t_success = MCListCreateMutable('\n', &t_browser_list);
+    
+    CFURLRef t_url = nullptr;
+    if (t_success)
+    {
+        t_url = CFURLCreateWithString(nullptr, CFSTR("http://localhost"), nullptr);
+        t_success = t_url != nullptr;
+    }
+    
+    CFArrayRef t_browsers = nullptr;
+    if (t_success)
+        t_browsers = LSCopyApplicationURLsForURL(t_url, kLSRolesAll);
+    
+    if (t_success && t_browsers != nullptr)
+    {
+        for (CFIndex i = 0; t_success && i < CFArrayGetCount(t_browsers); ++i)
+        {
+            CFURLRef t_browser_url = (CFURLRef)CFArrayGetValueAtIndex(t_browsers, i);
+            
+            CFStringRef t_browser_path = nullptr;
+            if (t_success)
+            {
+                t_browser_path = CFURLCopyFileSystemPath(t_browser_url, kCFURLPOSIXPathStyle);
+                t_success = t_browser_path != nullptr;
+            }
+            
+            CFBundleRef t_browser_bundle = CFBundleCreate(nullptr, t_browser_url);
+            if (t_success)
+            {
+                t_browser_bundle = CFBundleCreate(nullptr, t_browser_url);
+                t_success = t_browser_bundle != nullptr;
+            }
+            
+            CFStringRef t_browser_title = nullptr;
+            if (t_success)
+            {
+                
+                CFStringRef t_name = (CFStringRef)CFBundleGetValueForInfoDictionaryKey(t_browser_bundle, kCFBundleNameKey);
+                CFStringRef t_version = (CFStringRef)CFBundleGetValueForInfoDictionaryKey(t_browser_bundle, kCFBundleVersionKey);
+                t_browser_title = CFStringCreateWithFormat(nullptr, nullptr, CFSTR("%@ (%@),%@"), t_name, t_version, t_browser_path);
+                t_success = t_browser_title != nullptr;
+            }
+            
+            MCAutoStringRef t_browser_string;
+            if (t_success)
+                t_success = MCStringCreateWithCFString(t_browser_title, &t_browser_string);
+            
+            if (t_success)
+                t_success = MCListAppend(*t_browser_list, *t_browser_string);
+            
+            if (t_browser_path != nullptr)
+                CFRelease(t_browser_path);
+            if (t_browser_bundle != nullptr)
+                CFRelease(t_browser_bundle);
+            if (t_browser_title != nullptr)
+                CFRelease(t_browser_title);
+        }
+    }
+    
+    if (t_success)
+        t_success = MCListCopyAsString(*t_browser_list, r_browsers);
+    
+    if (t_browsers != nullptr)
+        CFRelease(t_browsers);
+    if (t_url != nullptr)
+        CFRelease(t_url);
+    
+    return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////

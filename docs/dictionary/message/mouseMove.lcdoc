@@ -2,10 +2,13 @@ Name: mouseMove
 
 Type: message
 
-Syntax: mouseMove <newMouseH>, <newMouseV>
+Syntax: mouseMove <pNewMouseH>, <pNewMouseV>
 
 Summary:
 Sent when the user moves the mouse.
+
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
@@ -21,11 +24,11 @@ on mouseMove -- highlight grouped text
 end mouseMove
 
 Parameters:
-newMouseH:
+pNewMouseH:
 The horizontal distance in pixels from the left edge of the stack to the
 mouse pointer's current location.
 
-newMouseV:
+pNewMouseV:
 The vertical distance in pixels from the top edge of the stack to the
 mouse pointer's current location.
 

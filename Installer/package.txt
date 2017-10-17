@@ -26,6 +26,8 @@
 //    LiveCode
 
 installer LiveCode
+	if BaseEdition is Commercial then
+		additional manifest "../Installer/commercial-package.txt"
 	include Misc
 	include Toolset
 	include Plugins
@@ -81,13 +83,15 @@ installer LiveCode
 		desktop application "repo:Installer/application.desktop" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 		if TargetEdition is Community then
 			desktop icon "repo:Installer/application.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
+		if TargetEdition is CommunityPlus then
+			desktop icon "private:engine/rsrc/CommunityPlus/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 		if TargetEdition is Indy then
 			desktop icon "private:engine/rsrc/Indy/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 		if TargetEdition is Business then
 			desktop icon "private:engine/rsrc/Business/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 	include Uninstaller
-	if BaseEdition is Commercial then
-		additional manifest "../Installer/commercial-package.txt"
+	if TargetEdition is CommunityPlus then
+		include Commercial.CommunityPlusComponents
 	if TargetEdition is Indy then
 		include Commercial.IndyComponents
 	if TargetEdition is Business then
@@ -98,7 +102,19 @@ component Runtime
 
 component Externals
 	include Externals.[[TargetPlatform]]
+	if TargetEdition is "Business" then
+		include Commercial.BusinessExternals
+	if TargetEdition is "Indy" then
+		include Commercial.IndyExternals
+	if TargetEdition is "CommunityPlus" then
+		include Commercial.CommunityPlusExternals
 	include Databases.[[TargetPlatform]]
+	if TargetEdition is "Business" then
+		include Commercial.BusinessDatabases
+	if TargetEdition is "Indy" then
+		include Commercial.IndyDatabases
+	if TargetEdition is "CommunityPlus" then
+		include Commercial.CommunityPlusDatabases
 	if TargetPlatform is Linux then
 		include Externals.CEF.Linux
 	if TargetPlatform is Windows then
@@ -138,6 +154,9 @@ component Misc
 		if TargetEdition is "Community" then
 			textfile "ide:License Agreement.txt"
 			textfile "ide:about.txt"
+		if TargetEdition is "CommunityPlus" then
+			textfile "private:CommunityPlus License Agreement.txt" as "License Agreement.txt"
+			textfile "private:about.txt"
 		if TargetEdition is "Indy" then
 			textfile "private:License Agreement.txt"
 			textfile "private:about.txt"
@@ -371,15 +390,25 @@ component Documentation
 		rfolder "ide:Documentation/html_viewer/resources/media"
 
 	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
-		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/api"
-		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/guide"
+		rfolder "ide:Documentation/html_viewer/resources/data/api"
+		rfolder "ide:Documentation/html_viewer/resources/data/api_livecode_script"
+		rfolder "ide:Documentation/html_viewer/resources/data/api_livecode_builder"				
+		rfolder "ide:Documentation/html_viewer/resources/data/guide"
 	
 	into [[ToolsFolder]]/Documentation/pdf place
-		file "repo:LiveCode[[TargetEdition]]UserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"
+		file "repo:LiveCodeUserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"
 
 component Extensions
 	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.mac.button
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.mac.textfield
+	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.native.android.button
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.android.field
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.ios.button
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.browser
 	into [[ToolsFolder]]/Extensions place
@@ -396,6 +425,8 @@ component Extensions
 		rfolder macosx:packaged_extensions/com.livecode.widget.iconpicker
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.androidbgaudio
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.androidaudiorecorder
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.iconsvg
 	into [[ToolsFolder]]/Extensions place
@@ -606,22 +637,22 @@ component Runtime.iOS
 		file ios:iphonesimulator10.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator10.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator10.2/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Simulator-10_3" place
-		executable ios:iphonesimulator10.3/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
-		executable ios:iphonesimulator10.3/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
-		executable ios:iphonesimulator10.3/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
-		executable ios:iphonesimulator10.3/revzip.ios-extension as RevZip base ios:iphonesimulator8.2/revzip.dylib
-		executable ios:iphonesimulator10.3/revxml.ios-extension as RevXml base ios:iphonesimulator8.2/revxml.dylib
-		executable ios:iphonesimulator10.3/revdb.ios-extension as RevDb base ios:iphonesimulator8.2/revdb.dylib
-		executable ios:iphonesimulator10.3/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator8.2/dbsqlite.dylib
-		executable ios:iphonesimulator10.3/dbmysql.ios-extension as DbMysql base ios:iphonesimulator8.2/dbmysql.dylib
-		file ios:iphonesimulator10.3/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator10.3/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator10.3/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator10.3/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator10.3/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphonesimulator10.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphonesimulator10.3/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-11_0" place
+		executable ios:iphonesimulator11.0/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
+		executable ios:iphonesimulator11.0/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
+		executable ios:iphonesimulator11.0/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
+		executable ios:iphonesimulator11.0/revzip.ios-extension as RevZip base ios:iphonesimulator8.2/revzip.dylib
+		executable ios:iphonesimulator11.0/revxml.ios-extension as RevXml base ios:iphonesimulator8.2/revxml.dylib
+		executable ios:iphonesimulator11.0/revdb.ios-extension as RevDb base ios:iphonesimulator8.2/revdb.dylib
+		executable ios:iphonesimulator11.0/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator8.2/dbsqlite.dylib
+		executable ios:iphonesimulator11.0/dbmysql.ios-extension as DbMysql base ios:iphonesimulator8.2/dbmysql.dylib
+		file ios:iphonesimulator11.0/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator11.0/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator11.0/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator11.0/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator11.0/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphonesimulator11.0/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator11.0/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-9_2" place
 		executable ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
 		executable ios:iphoneos9.2/revsecurity.ios-extension as RevSecurity
@@ -662,26 +693,26 @@ component Runtime.iOS
 		file ios:iphoneos10.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos10.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos10.2/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Device-10_3" place
-		executable ios:iphoneos10.3/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
-		executable ios:iphoneos10.3/revsecurity.ios-extension as RevSecurity base ios:iphoneos9.2/revsecurity.ios-extension
-		executable ios:iphoneos10.3/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos9.2/revpdfprinter.ios-extension
-		executable ios:iphoneos10.3/revzip.ios-extension as RevZip base ios:iphoneos9.2/revzip.ios-extension
-		executable ios:iphoneos10.3/revxml.ios-extension as RevXml base ios:iphoneos9.2/revxml.ios-extension
-		executable ios:iphoneos10.3/revdb.ios-extension as RevDb base ios:iphoneos9.2/revdb.ios-extension
-		executable ios:iphoneos10.3/dbsqlite.ios-extension as DbSqlite base ios:iphoneos9.2/dbsqlite.ios-extension
-		executable ios:iphoneos10.3/dbmysql.ios-extension as DbMysql base ios:iphoneos9.2/dbmysql.ios-extension
-		file ios:iphoneos10.3/mobile-device-template.plist as "Settings.plist"
-		file ios:iphoneos10.3/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphoneos10.3/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos10.3/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphoneos10.3/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphoneos10.3/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
-		file ios:iphoneos10.3/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphoneos10.3/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphoneos10.3/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphoneos10.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphoneos10.3/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Device-11_0" place
+		executable ios:iphoneos11.0/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
+		executable ios:iphoneos11.0/revsecurity.ios-extension as RevSecurity base ios:iphoneos9.2/revsecurity.ios-extension
+		executable ios:iphoneos11.0/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos9.2/revpdfprinter.ios-extension
+		executable ios:iphoneos11.0/revzip.ios-extension as RevZip base ios:iphoneos9.2/revzip.ios-extension
+		executable ios:iphoneos11.0/revxml.ios-extension as RevXml base ios:iphoneos9.2/revxml.ios-extension
+		executable ios:iphoneos11.0/revdb.ios-extension as RevDb base ios:iphoneos9.2/revdb.ios-extension
+		executable ios:iphoneos11.0/dbsqlite.ios-extension as DbSqlite base ios:iphoneos9.2/dbsqlite.ios-extension
+		executable ios:iphoneos11.0/dbmysql.ios-extension as DbMysql base ios:iphoneos9.2/dbmysql.ios-extension
+		file ios:iphoneos11.0/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos11.0/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos11.0/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos11.0/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos11.0/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos11.0/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
+		file ios:iphoneos11.0/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos11.0/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos11.0/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphoneos11.0/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos11.0/fontmap as "fontmap"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -699,12 +730,10 @@ component Externals.Linux
 component Externals.Windows
 	into [[TargetFolder]]/Externals place
 		executable windows:revspeech.dll
-		executable windows:revvideograbber.dll
 		executable windows:revxml.dll
 		executable windows:revbrowser.dll
 		executable windows:revzip.dll
 	declare external "Speech" using revspeech.dll
-	declare external "Video Grabber" using revvideograbber.dll
 	declare external "XML" using revxml.dll
 	declare external "Browser" using revbrowser.dll
 	declare external "Revolution Zip" using revzip.dll
@@ -727,13 +756,12 @@ component Externals.MacOSX
 component Externals.CEF.Linux
 	into [[TargetFolder]]/Externals/CEF place
 		executable linux-[[TargetArchitecture]]:Externals/CEF/libcef.so
-		executable linux-[[TargetArchitecture]]:Externals/CEF/libffmpegsumo.so
-		executable linux-[[TargetArchitecture]]:Externals/CEF/libpdf.so
 		rfolder linux-[[TargetArchitecture]]:Externals/CEF/locales
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef.pak
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef_100_percent.pak
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef_200_percent.pak
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef_extensions.pak
+
 	// Horrible workaround for a libCEF bug
 	into [[TargetFolder]] place
 		file linux-[[TargetArchitecture]]:icudtl.dat
@@ -748,12 +776,9 @@ component Externals.CEF.Windows
 		executable windows:revbrowser-cefprocess.exe
 		executable windows:CEF/libcef.dll
 		executable windows:CEF/d3dcompiler_43.dll
-		executable windows:CEF/d3dcompiler_46.dll
 		executable windows:CEF/d3dcompiler_47.dll
-		executable windows:CEF/ffmpegsumo.dll
 		executable windows:CEF/libEGL.dll
 		executable windows:CEF/libGLESv2.dll
-		executable windows:CEF/pdf.dll
 		rfolder windows:CEF/locales
 		file windows:CEF/cef.pak
 		file windows:CEF/cef_100_percent.pak
@@ -778,8 +803,6 @@ component Databases.Linux
 	declare dbdriver "ODBC" using dbodbc.so
 	declare dbdriver "PostgreSQL" using dbpostgresql.so
 	declare dbdriver "SqLite" using dbsqlite.so
-	ifnot TargetEdition is "Community" then
-		declare dbdriver "Oracle" using dboracle.so
 
 //////////
 
@@ -791,15 +814,11 @@ component Databases.Windows
 		executable windows:dbodbc.dll
 		executable windows:dbpostgresql.dll
 		executable windows:dbsqlite.dll
-		ifnot TargetEdition is "Community" then
-			executable private:oracle_libraries/dboracle.dll
 	declare external "Database" using revdb.dll
 	declare dbdriver "MySQL" using dbmysql.dll
 	declare dbdriver "ODBC" using dbodbc.dll
 	declare dbdriver "PostgreSQL" using dbpostgresql.dll
 	declare dbdriver "SqLite" using dbsqlite.dll
-	ifnot TargetEdition is "Community" then
-		declare dbdriver "Oracle" using dboracle.dll
 	
 //////////
 
@@ -811,30 +830,29 @@ component Databases.MacOSX
 		executable macosx:dbodbc.bundle
 		executable macosx:dbpostgresql.bundle
 		executable macosx:dbsqlite.bundle
-		ifnot TargetEdition is "Community" then
-			executable private:oracle_libraries/dboracle.bundle
 	declare external "Database" using revdb.bundle
 	declare dbdriver "MySQL" using dbmysql.bundle
 	declare dbdriver "ODBC" using dbodbc.bundle
 	declare dbdriver "PostgreSQL" using dbpostgresql.bundle
 	declare dbdriver "SqLite" using dbsqlite.bundle
-	ifnot TargetEdition is "Community" then
-		declare dbdriver "Oracle" using dboracle.bundle
 
 ////////////////////////////////////////////////////////////////////////////////
 
 component Toolset
 	into [[ToolsFolder]] place
 		rfolder ide:Toolset
+	emit variable TargetEdition to "[[ToolsFolder]]/edition.txt"
 	into [[ToolsFolder]]/Toolset/libraries place
 		stack ide-support:revdeploylibraryandroid.livecodescript
 		stack ide-support:revdeploylibraryios.livecodescript
+		stack ide-support:revdeploylibraryemscripten.livecodescript
 		stack ide-support:revliburl.livecodescript
 		stack ide-support:revsaveasandroidstandalone.livecodescript
 		stack ide-support:revsaveasemscriptenstandalone.livecodescript
 		stack ide-support:revsaveasiosstandalone.livecodescript
 		stack ide-support:revsaveasstandalone.livecodescript
 		stack ide-support:revsblibrary.livecodescript
+		stack ide-support:revhtml5urllibrary.livecodescript
 		file ide-support:revdocsparser.livecodescript
 		file ide-support:revliburl.livecodescript
 		file repo:extensions/script-libraries/dropbox/dropbox.livecodescript
@@ -843,5 +861,7 @@ component Toolset
 		file repo:extensions/script-libraries/mime/mime.livecodescript
 		file repo:extensions/script-libraries/diff/diff.livecodescript
 		file repo:extensions/script-libraries/messageauthentication/messageauthentication.livecodescript
+		file repo:extensions/script-libraries/httpd/httpd.livecodescript
+		file repo:extensions/script-libraries/qr/qr.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////

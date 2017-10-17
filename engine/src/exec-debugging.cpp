@@ -40,34 +40,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Debugging, Breakpoint, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Debugging, DebugDo, 3)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceAbort, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceAbort, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceDelay, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceDelay, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceReturn, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceReturn, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceStack, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceStack, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceUntil, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceUntil, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, MessageMessages, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, MessageMessages, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, Breakpoints, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, Breakpoints, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, DebugContext, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, DebugContext, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, ExecutionContexts, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, WatchedVariables, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, WatchedVariables, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Debugging, Assert, 3)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Debugging, PutIntoMessage, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
 {
 	Boolean added = False;

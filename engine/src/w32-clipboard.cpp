@@ -16,6 +16,13 @@
 
 
 #include "w32-clipboard.h"
+#include "osspec.h"
+
+#include "globdefs.h"
+#include "filedefs.h"
+#include "mcio.h"
+#include "imagebitmap.h"
+#include "image.h"
 
 #include <ObjIdl.h>
 #include <ShlObj.h>
@@ -294,25 +301,47 @@ MCStringRef MCWin32RawClipboardCommon::DecodeTransferredFileList(MCDataRef p_dat
 	}
 
 	// Decode the paths into a StringRef
-	MCStringRef t_decoded = NULL;
+	MCAutoStringRef t_decoded;
 	if (t_dropfiles->fWide)
-		MCStringCreateWithBytes(t_bytes, t_path_char_count*2, kMCStringEncodingUTF16, false, t_decoded);
+		MCStringCreateWithBytes(t_bytes, t_path_char_count*2, kMCStringEncodingUTF16, false, &t_decoded);
 	else 
-		MCStringCreateWithBytes(t_bytes, t_path_char_count*1, kMCStringEncodingNative, false, t_decoded);
-
-	// Replace the NULs with newlines and trim the trailing newline
-	if (t_decoded != NULL 
-		&& (!MCStringMutableCopyAndRelease(t_decoded, t_decoded)
-		|| !MCStringFindAndReplaceChar(t_decoded, '\0', '\n', kMCStringOptionCompareExact)
-		|| !MCStringRemove(t_decoded, MCRangeMake(MCStringGetLength(t_decoded)-1, 1))
-		|| !MCStringCopyAndRelease(t_decoded, t_decoded)))
-	{
-		MCValueRelease(t_decoded);
-		return NULL;
-	}
+		MCStringCreateWithBytes(t_bytes, t_path_char_count*1, kMCStringEncodingNative, false, &t_decoded);
+    
+    if (*t_decoded == nullptr)
+        return nullptr;
+    
+    // Create a mutable list ref.
+    MCAutoListRef t_output;
+    if (!MCListCreateMutable('\n', &t_output))
+        return nullptr;
+    
+    // Split the file name list into individual paths
+    MCAutoArrayRef t_native_paths;
+    if (!MCStringSplit(*t_decoded, kMCNulString, NULL, kMCStringOptionCompareExact, &t_native_paths))
+        return nullptr;
+    
+    uindex_t npaths = MCArrayGetCount(*t_native_paths);
+    
+    for (uindex_t i = 0; i < npaths; i++)
+    {
+        MCValueRef t_native_path_val = nil;
+        if (!MCArrayFetchValueAtIndex(*t_native_paths, i + 1, t_native_path_val))
+            return nullptr;
+        MCStringRef t_native_path = (MCStringRef)t_native_path_val;
+        if (!MCStringIsEmpty(t_native_path))
+        {
+            MCAutoStringRef t_path;
+            if(!MCS_pathfromnative(t_native_path, &t_path) || !MCListAppend(*t_output, *t_path))
+                return nullptr;
+        }
+    }
+    
+    MCAutoStringRef t_result;
+    if (!MCListCopyAsString(*t_output, &t_result))
+        return nullptr;
 
 	// Done
-	return t_decoded;
+    return t_result.Take();
 }
 
 MCDataRef MCWin32RawClipboardCommon::EncodeHTMLFragmentForTransfer(MCDataRef p_html) const
@@ -885,6 +914,87 @@ bool MCWin32RawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_
 				return false;
 		}
 	}
+
+    // If we are adding a PNG, JPG or GIF image, then make sure we add a DIB
+    // too. Windows automatically synthesizes DIB from DIBV5.
+    if (MCWin32RawClipboardCommon::CopyAtomForType(p_type) == MCWin32RawClipboardCommon::CopyAtomForType(MCSTR("PNG")) ||
+        MCWin32RawClipboardCommon::CopyAtomForType(p_type) == MCWin32RawClipboardCommon::CopyAtomForType(MCSTR("GIF")) ||
+        MCWin32RawClipboardCommon::CopyAtomForType(p_type) == MCWin32RawClipboardCommon::CopyAtomForType(MCSTR("JFIF")))
+    {
+        MCAutoDataRef t_data;
+
+	    IO_handle t_stream = 
+                MCS_fakeopen((const char *)MCDataGetBytePtr(p_bytes), MCDataGetLength(p_bytes));
+        if (t_stream == nullptr)
+        {
+            return false;
+        }
+
+        MCBitmapFrame *t_frames = nullptr;
+        uindex_t t_frame_count = 0;
+        if (!MCImageDecode(t_stream, t_frames, t_frame_count))
+        {
+            MCS_close(t_stream);
+            return false;
+        }
+
+        MCS_close(t_stream);
+
+        MCImageBitmap *t_bitmap = t_frames[0].image;
+        size_t t_stride = t_bitmap->width * 4;
+
+        size_t t_dib_size = sizeof(BITMAPV5HEADER) + t_bitmap->height * t_stride;
+        void *t_dib = malloc(t_dib_size);
+        if (t_dib == nullptr)
+        {
+            MCImageFreeFrames(t_frames, t_frame_count);
+            return false;
+        }
+            
+	    BITMAPV5HEADER *t_header = (BITMAPV5HEADER*)t_dib;
+	    MCMemoryClear(t_header, sizeof(BITMAPV5HEADER));
+	    t_header -> bV5Size = sizeof(BITMAPV5HEADER);
+	    t_header -> bV5Width = t_bitmap->width;
+	    t_header -> bV5Height = t_bitmap->height;
+	    t_header -> bV5Planes = 1;
+	    t_header -> bV5BitCount = 32;
+	    t_header -> bV5Compression = BI_RGB;
+	    t_header -> bV5SizeImage = 0;
+	    t_header -> bV5XPelsPerMeter = 0;
+	    t_header -> bV5YPelsPerMeter = 0;
+	    t_header -> bV5ClrUsed = 0;
+	    t_header -> bV5ClrImportant = 0;
+	    t_header -> bV5AlphaMask = 0xFF000000;
+	    t_header -> bV5RedMask =   0x00FF0000;
+	    t_header -> bV5GreenMask = 0x0000FF00;
+	    t_header -> bV5BlueMask =  0x000000FF;
+	    t_header -> bV5CSType = LCS_WINDOWS_COLOR_SPACE;
+            
+	    uint8_t *t_dst_ptr = (uint8_t*)t_dib + sizeof(BITMAPV5HEADER);
+	    uint8_t *t_src_ptr = (uint8_t*)t_bitmap->data + (t_bitmap->height - 1) * t_bitmap->stride;
+
+	    for (uindex_t y = 0; y < t_bitmap->height; y++)
+	    {
+		    MCMemoryCopy(t_dst_ptr, t_src_ptr, t_stride);
+		    t_dst_ptr += t_stride;
+		    t_src_ptr -= t_bitmap->stride;
+	    }
+            
+        MCImageFreeFrames(t_frames, t_frame_count);
+
+        if (!MCDataCreateWithBytesAndRelease(static_cast<byte_t *>(t_dib), t_dib_size, &t_data))
+        {
+            free(t_dib);
+            return false;
+        }
+
+        if (!AddRepresentation(MCSTR("CF_DIBV5"), *t_data))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool MCWin32RawClipboardItem::AddRepresentation(MCStringRef p_type, render_callback_t p_render, void* p_context)

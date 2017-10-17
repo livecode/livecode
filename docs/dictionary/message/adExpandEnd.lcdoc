@@ -2,12 +2,10 @@ Name: adExpandEnd
 
 Type: message
 
-Syntax: adExpandEnd <adName>
+Syntax: adExpandEnd <pAdName>
 
 Summary:
 Sent whan an ad has finished expanding.
-
-Associations: stack
 
 Introduced: 6.0
 
@@ -21,14 +19,14 @@ on adExpandEnd pAdName
 end adExpandEnd
 
 Parameters:
-adName:
-The name of ad that has been expanded (as specified in mobileAdCreate)
+pAdName:
+The name of ad that has been expanded (as specified in <mobileAdCreate>)
 
 Description:
 Handle the <adExpandEnd> message if you want to perform an action when
 an ad finishes expanding.
 
-The <adExpandEnd> messge is sent to the current card when an ad has
+The <adExpandEnd> message is sent to the current card when an ad has
 finished expanding.
 
 References: mobileAdCreate (command), mobileAdRegister (command),

@@ -43,7 +43,7 @@ nested group from a card throws an error.
 Removing a group from a card automatically sets the <sharedBehavior>
 property of the group to true.
 
-References: delete (command), start editing (command), onto (keyword),
+References: delete (command), place (command), start editing (command), onto (keyword),
 sharedBehavior (property)
 
 Tags: objects

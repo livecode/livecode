@@ -2,11 +2,13 @@ Name: commandKeyDown
 
 Type: message
 
-Syntax: commandKeyDown <keyName>
+Syntax: commandKeyDown <pKeyName>
 
 Summary:
 Sent when a Command <key combination> (Control-key on <Unix> or
 <Windows>) is pressed.
+
+Associations: card, field
 
 Introduced: 1.0
 
@@ -20,7 +22,7 @@ on commandKeyDown theKey -- make Command-5 go back
 end commandKeyDown
 
 Parameters:
-keyName:
+pKeyName:
 The actual character of the pressed key.
 
 Description:

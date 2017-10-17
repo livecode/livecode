@@ -54,15 +54,19 @@ function getCommandLineInfo
 end getCommandLineInfo
 
 command TestRunnerMain
+   __EnsureLibs
    local tInfo
    put getCommandLineInfo() into tInfo
+   TestRunnerMainWithInfo tInfo
+end TestRunnerMain
 
-   switch tInfo["args"][1]
+command TestRunnerMainWithInfo pInfo
+   switch pInfo["args"][1]
       case "invoke"
-         doInvoke tInfo
+         doInvoke pInfo
          break
       case "run"
-         doRun tInfo
+         doRun pInfo
          break
       case "--help"
       case "-h"
@@ -75,7 +79,24 @@ command TestRunnerMain
    end switch
    
    send "DoQuit" to me
-end TestRunnerMain
+end TestRunnerMainWithInfo
+
+private command __EnsureLibs
+   if the platform is "MacOS" then
+      local tEngineFolder
+      put specialFolderPath("engine") into tEngineFolder
+      local tBuildFolder
+      put tEngineFolder into tBuildFolder
+      set the itemDelimiter to slash
+      delete item -3 to -1 of tBuildFolder
+      if there is not a folder (tEngineFolder & "/revpdfprinter.bundle") then
+         get shell(merge("cp -rf [[ quote & tBuildFolder ]]/revpdfprinter.bundle[[ quote && quote & tEngineFolder & quote ]]"))
+      end if
+      if there is not a file (tEngineFolder & "/revsecurity.dylib") then
+         get shell(merge("cp -f [[ quote & tBuildFolder ]]/revsecurity.dylib[[ quote && quote & tEngineFolder & quote ]]"))
+      end if
+   end if
+end __EnsureLibs
 
 on DoQuit
    -- Allow errorDialog message to be sent
@@ -160,7 +181,27 @@ end TestRunnerInvokeLoadLibraries
 
 -- Execute a test
 command TestRunnerInvokeTestCommand pScriptFile, pCommand
-   local tStackName, tResult
+   local tStackName, tResult, tState
+   
+   put the mainstacks into tState["mainstacks"]
+   put the openSockets into tState["opensockets"]
+   put the openProcesses into tState["openprocesses"]
+   put the openFiles into tState["openfiles"]
+   put the httpProxy into tState["httpProxy"]
+   put the httpHeaders into tState["httpHeaders"]
+   put the stackFileVersion into tState["stackFileVersion"]
+   
+   reset the templateStack
+   reset the templateCard
+   reset the templateGroup
+   reset the templateButton
+   reset the templateField
+   reset the templateImage
+   reset the templateGraphic
+   reset the templatePlayer
+   
+   set the tool to "browse"
+   
    -- This should auto-load the test script
    put the name of stack pScriptFile into tStackName
    
@@ -183,9 +224,13 @@ command TestRunnerInvokeTestCommand pScriptFile, pCommand
       dispatch "TestSetup" to tStackName
       put the result into tResult
    catch tError
-      TestAssert "setup test", false
-      TestDiagnostic tError   
-   end try   
+      if word 1 of tError is "SKIP" then
+         put tError into tResult
+      else
+         TestAssert "setup test", false
+         TestDiagnostic tError   
+      end if
+   end try 
    
    if word 1 of tResult is "SKIP" then
       TestSkip pCommand, word 2 to -1 of tResult
@@ -193,26 +238,67 @@ command TestRunnerInvokeTestCommand pScriptFile, pCommand
       -- Run the actual test itself
       try
          dispatch pCommand to tStackName
-      catch tError      
-         TestAssert "execute test", false
-         TestDiagnostic tError   
-         -- don't exit here as test cleanup may still be useful
+      catch tError
+         if word 1 of tError is "SKIP" then
+            TestSkip pCommand, word 2 to -1 of tError
+         else
+            TestAssert "execute test:" && line 1 of tError, false
+            TestDiagnostic tError   
+            -- don't exit here as test cleanup may still be useful
+         end if
       end try
-   end if
-   
-   -- Do common cleanup tasks
-   try
-      dispatch "TestTearDown" to tStackName
-   catch tError
-      TestAssert "tear down test", false
-      TestDiagnostic tError  
-   end try
-   
+      
+      -- Do common cleanup tasks
+      try
+         dispatch "TestTearDown" to tStackName
+      catch tError
+         TestAssert "tear down test", false
+         TestDiagnostic tError  
+      finally
+         -- cleanup
+         delete tStackName
+         
+         local tNewState
+         put the opensockets into tNewState
+         repeat for each line tLine in tNewState
+            if tLine is not among the lines of tState["opensockets"] then
+               close socket tLine
+            end if
+         end repeat
+         
+         put the openprocesses into tNewState
+         repeat for each line tLine in tNewState
+            if tLine is not among the lines of tState["openprocesses"] then
+               close process tLine
+            end if
+         end repeat
+         
+         put the openfiles into tNewState
+         repeat for each line tLine in tNewState
+            if tLine is not among the lines of tState["openfiles"] then
+               close file tLine
+            end if
+         end repeat
+         
+         put the mainstacks into tNewState
+         repeat for each line tLine in tNewState
+            if tLine is not among the lines of tState["mainstacks"] then
+               delete stack tLine
+            end if
+         end repeat
+         
+         set the httpProxy to tState["httpProxy"]
+         set the httpHeaders to tState["httpHeaders"]
+         set the stackFileVersion to tState["stackFileVersion"]
+      end try
+      
       -- Check for uncaught errors
-   put TestGetUncaughtErrorDialog() into tError
-   if tError is not empty then
-      TestAssert "uncaught error dialog", line 1 of tError
-      TestDiagnostic tError
+      put TestGetUncaughtErrorDialog() into tError
+      if tError is not empty then
+         TestAssert "uncaught error dialog", line 1 of tError
+         TestDiagnostic tError
+      end if
+
    end if
 end TestRunnerInvokeTestCommand
 
@@ -241,40 +327,3 @@ command TestRunnerProcessOutput pScriptfile, pCommand, pOutput
 
    return tTapResults
 end TestRunnerProcessOutput
-
--- Print out a table of statistics
-command TestRunnerRunPrintSummary pAnalysis
-   local tSummaryString, tTotal, tDecoration
-
-   put TesterTapGetTestCount(pAnalysis) into tTotal
-
-   -- Format basic summary information
-   if pAnalysis["xfail"] is 0 and pAnalysis["fail"] is 0 then
-      put "All" && tTotal && "tests passed" into tSummaryString
-
-   else if pAnalysis["fail"] is 0 then
-      put "All" && tTotal && "tests behaved as expected" into tSummaryString
-
-   else
-      put pAnalysis["fail"] && "OF" && tTotal && "TESTS FAILED" into tSummaryString
-   end if
-
-   put return after tSummaryString
-   
-   -- Add extra summary info from expected failure & skip directives
-   if pAnalysis["xpass"] > 0 then
-      put tab & pAnalysis["xpass"] && "unexpected passes" & return after tSummaryString
-   end if
-   if pAnalysis["xfail"] > 0 then
-      put tab & pAnalysis["xfail"] && "expected failures" & return after tSummaryString
-   end if
-   if pAnalysis["skip"] > 0 then
-      put tab & pAnalysis["skip"] && "skipped" & return after tSummaryString
-   end if
-
-   put "================================================================" into tDecoration
-   put tDecoration & return before tSummaryString
-   put tDecoration & return after tSummaryString
-
-   write tSummaryString to stdout
-end TestRunnerRunPrintSummary

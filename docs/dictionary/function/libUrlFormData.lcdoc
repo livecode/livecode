@@ -2,7 +2,7 @@ Name: libURLFormData
 
 Type: function
 
-Syntax: libURLFormData(<key_1>, <value_1>, ..., <key_n>, <value_n>)
+Syntax: libURLFormData(<key1>, <value1> [, <key2>, <value2> ...])
 
 Summary:
 <libURLFormData> formats data in the standard format suitable for
@@ -12,7 +12,7 @@ Associations: internet library
 
 Introduced: 2.5
 
-OS: mac, windows, linux
+OS: mac, windows, linux, html5
 
 Platforms: desktop, server
 
@@ -26,16 +26,10 @@ post it to url "http://www.someserver.com/cgi-bin/form.pl"
 -- In this case, the data posted to the url will look like this: name=John&message=Hello
 
 Parameters:
-key_1:
-
-
-value_1:
-
-
-key_n:
-
-
-value_n:
+key1:
+value1:
+key2:
+value2:
 
 
 Description:

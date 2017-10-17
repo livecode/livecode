@@ -2,11 +2,22 @@ Name: switch
 
 Type: control structure
 
-Syntax: switch [<switchExpression>]
-  case {<caseValue> | <caseCondition>}
-    [<statementList>]
-  [default
-    <defaultStatementList>]
+Syntax:
+switch <switchExpression>
+   case <caseValue>
+       <statementList>
+       [break]
+   [default
+       <defaultStatementList>]
+end switch
+
+Syntax:
+switch
+   case <caseCondition>
+       <statementList>
+       [break]
+   [default
+       <defaultStatementList>]
 end switch
 
 Summary:
@@ -36,8 +47,8 @@ for that <case> section.)
 
 statementList:
 Of one or more <LiveCode> <statement|statements>, and can also include
-<if>, <switch>, <try>, or <repeat> <control structure|control
-structures>. 
+<if>, <switch>, <try>, or <repeat> 
+<control structure|control structures>. 
 
 defaultStatementList:
 Of one or more <LiveCode> <statement|statements>.
@@ -45,8 +56,9 @@ Of one or more <LiveCode> <statement|statements>.
 Description:
 Use the <switch> <control structure> to select among multiple possible
 conditions, performing a different set of actions for each possibility.
-Form:The <switch> <control structure> begins with the word switch on a
-single line, with an optional <switchExpression>.
+
+**Form:** The <switch> <control structure> begins with the word switch
+on a single line, with an optional <switchExpression>.
 
 The <switch> line is followed by one or more <case> sections. Each
 <case> section begins with the <case> <keyword>, followed by either a
@@ -57,9 +69,9 @@ or a <caseCondition> (if no <switchExpression> was included). If the
 following <statement|statements>.
 
 The <case> sections may be followed by an optional <default> section. If
-no <break> <statement> has been encountered yet in the <switch> <control
-structure>, the <statement|statements> in the <default> section are
-executed. 
+no <break> <statement> has been encountered yet in the <switch> 
+<control structure>, the <statement|statements> in the <default> section
+are executed. 
 
 The <switch> structure ends with an <end switch> <statement>.   
 
@@ -94,11 +106,8 @@ otherwise:
       -- statements:
       beep
       break
-
     default
-
-    go next card
-
+      go next card
     end switch
 
 

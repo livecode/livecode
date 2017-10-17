@@ -22,11 +22,16 @@
 				'modules/scriptitems/scriptitems.lcb',
 
 				'libraries/androidbgaudio/androidbgaudio.lcb',
+				'libraries/androidaudiorecorder/androidaudiorecorder.lcb',
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',
 
 				'widgets/androidbutton/androidbutton.lcb',
+				'widgets/androidfield/androidfield.lcb',
+				'widgets/macbutton/macbutton.lcb',
+				'widgets/mactextfield/mactextfield.lcb',
+				'widgets/iosbutton/iosbutton.lcb',
 				'widgets/browser/browser.lcb',
 				#’widgets/chart/chart.lcb',
 				#'widgets/checkbox/checkbox.lcb',
@@ -78,7 +83,8 @@
 
 					'outputs':
 					[
-						'<(PRODUCT_DIR)/packaged_extensions',
+						# hack because gyp wants an output
+                        'notarealfile.txt',
 					],
 
 					'message': 'Building extensions',
@@ -108,6 +114,7 @@
 						'<(PRODUCT_DIR)/packaged_extensions',
 						'<(PRODUCT_DIR)/modules/lci',
 						'>(lc-compile_host)',
+                        "false",
 						'<@(_sources)',
 					],
 				},

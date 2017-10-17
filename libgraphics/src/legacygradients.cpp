@@ -57,7 +57,7 @@ inline int32 fast_rint(double val) {
  */
 inline int32 fast_floor(double val) {
 	val = val + (68719476736.0*1.5);
-#if 0
+#if LARGER_FAST_FLOOR
 	return (int32)((*(long long *)&val)>>16);
 #else
 	return (((int32*)&val)[iman_]>>16);
@@ -117,7 +117,7 @@ struct MCCombiner
 	void (*begin)(MCCombiner *self, int4 y);
 	void (*advance)(MCCombiner *self, int4 y);
 	void (*blend)(MCCombiner *self, int4 fx, int4 tx, uint1 value);
-	void (*combine)(MCCombiner *self, int4 fx, int4 tx, uint1 *mask);
+	void (*combine)(MCCombiner *self, int4 fx, int4 tx);
 	void (*end)(MCCombiner *self);
 };
 
@@ -364,99 +364,7 @@ template<MCGradientFillKind x_type> static inline int4 compute_index(int4 p_x, i
 	return t_index;
 }
 
-template<MCGradientFillKind x_type> static void MCGradientFillBlend(MCCombiner *_self, int4 fx, int4 tx, uint1 alpha)
-{
-	MCGradientAffineCombiner *self = (MCGradientAffineCombiner*)_self;
-	uint4 *d;
-	uint4 s;
-	
-	d = self -> bits;
-	
-	int4 t_index;
-	int4 t_x = self->x_inc + self->x_coef_a * ((int4)fx);
-	int4 t_y = self->y_inc + self->y_coef_a * ((int4)fx);
-	
-	int4 t_min = (int4)self->ramp[0].offset;
-	int4 t_max = (int4)self->ramp[self->ramp_length - 1].offset;
-	
-	if (fx == tx) return;
-	
-	bool t_mirror = self->mirror;
-	uint4 t_repeat = self->repeat;
-	
-	if (alpha == 255)
-	{
-		uint4 t_stop_pos = 0;
-		
-		t_index = compute_index<x_type>(t_x, t_y, t_mirror, t_repeat);
-		while (fx < tx)
-		{
-			if (t_index <= t_min)
-			{
-				s = self->ramp[0].hw_color;
-				s = packed_scale_bounded(s | 0xFF000000, s >> 24);
-				while (t_index <= t_min)
-				{
-					d[fx] = packed_scale_bounded(d[fx], 255 - (s >> 24)) + s;
-					fx += 1;
-					if (fx == tx)
-						return;
-					t_x += self->x_coef_a;
-					t_y += self->y_coef_a;
-					t_index = compute_index<x_type>(t_x, t_y, t_mirror, t_repeat);
-				}
-			}
-			
-			if (t_index >= t_max)
-			{
-				s = self->ramp[self->ramp_length - 1].hw_color;
-				s = packed_scale_bounded(s | 0xFF000000, s >> 24);
-				while (t_index >= t_max)
-				{
-					d[fx] = packed_scale_bounded(d[fx], 255 - (s >> 24)) + s;
-					fx += 1;
-					if (fx == tx)
-						return;
-					t_x += self->x_coef_a;
-					t_y += self->y_coef_a;
-					t_index = compute_index<x_type>(t_x, t_y, t_mirror, t_repeat);
-				}
-			}
-			
-			while (t_index >= t_min && t_index <= t_max)
-			{
-				MCGradientFillStop *t_current_stop = &self->ramp[t_stop_pos];
-				int4 t_current_offset = t_current_stop->offset;
-				int4 t_current_difference = t_current_stop->difference;
-				uint4 t_current_color = t_current_stop->hw_color;
-				MCGradientFillStop *t_next_stop = &self->ramp[t_stop_pos+1];
-				int4 t_next_offset = t_next_stop->offset;
-				uint4 t_next_color = t_next_stop->hw_color;
-				
-				while (t_next_offset >= t_index && t_current_offset <= t_index)
-				{
-					uint1 b = ((t_index - t_current_offset) * t_current_difference) >> STOP_DIFF_PRECISION ;
-					uint1 a = 255 - b;
-					
-					s = packed_bilinear_bounded(t_current_color, a, t_next_color, b);
-					d[fx] = packed_bilinear_bounded(d[fx], 255 - (s >> 24), s | 0xFF000000, s >> 24);
-					fx += 1;
-					if (fx == tx)
-						return;
-					t_x += self->x_coef_a;
-					t_y += self->y_coef_a;
-					t_index = compute_index<x_type>(t_x, t_y, t_mirror, t_repeat);
-				}
-				if (t_current_offset > t_index && t_stop_pos > 0)
-					t_stop_pos -= 1;
-				else if (t_next_offset < t_index && t_stop_pos < (self->ramp_length - 1))
-					t_stop_pos += 1;
-			}
-		}
-	}
-}
-
-template<MCGradientFillKind x_type> static void MCGradientFillCombine(MCCombiner *_self, int4 fx, int4 tx, uint1 *mask)
+template<MCGradientFillKind x_type> static void MCGradientFillCombine(MCCombiner *_self, int4 fx, int4 tx)
 {
 	MCGradientAffineCombiner *self = (MCGradientAffineCombiner*)_self;
 	uint4 *d;
@@ -487,7 +395,7 @@ template<MCGradientFillKind x_type> static void MCGradientFillCombine(MCCombiner
 			s = self->ramp[0].hw_color;
 			while (t_index <= t_min)
 			{
-				uint4 sa = packed_scale_bounded(s | 0xFF000000, ((s >> 24) * *mask++) / 255);
+				uint4 sa = packed_scale_bounded(s | 0xFF000000, (s >> 24));
 				d[fx] = packed_scale_bounded(d[fx], 255 - (sa >> 24)) + sa;
 				fx += 1;
 				if (fx == tx)
@@ -503,7 +411,7 @@ template<MCGradientFillKind x_type> static void MCGradientFillCombine(MCCombiner
 			s = self->ramp[self->ramp_length - 1].hw_color;
 			while (t_index >= t_max)
 			{
-				uint4 sa = packed_scale_bounded(s | 0xFF000000, ((s >> 24) * *mask++) / 255);
+				uint4 sa = packed_scale_bounded(s | 0xFF000000, (s >> 24));
 				d[fx] = packed_scale_bounded(d[fx], 255 - (sa >> 24)) + sa;
 				fx += 1;
 				if (fx == tx)
@@ -530,7 +438,7 @@ template<MCGradientFillKind x_type> static void MCGradientFillCombine(MCCombiner
 				uint1 a = 255 - b;
 				
 				s = packed_bilinear_bounded(t_current_color, a, t_next_color, b);
-				uint4 sa = packed_scale_bounded(s | 0xFF000000, ((s >> 24) * *mask++) / 255);
+				uint4 sa = packed_scale_bounded(s | 0xFF000000, (s >> 24));
 				d[fx] = packed_scale_bounded(d[fx], 255 - (sa >> 24)) + sa;
 				fx += 1;
 				if (fx == tx)
@@ -633,71 +541,7 @@ template<MCGradientFillKind x_type> static void blend_row(MCCombiner *_self, uin
 	}
 }
 
-static void gradient_bilinear_affine_combiner_end(MCCombiner *_self)
-{
-	MCGradientAffineCombiner *self = (MCGradientAffineCombiner*)_self;
-	delete self->buffer;
-}
-
-template<MCGradientFillKind x_type> static void MCGradientFillBilinearBlend(MCCombiner *_self, uint4 fx, uint4 tx, uint1 alpha)
-{
-	MCGradientAffineCombiner *self = (MCGradientAffineCombiner*)_self;
-	uint4 *d;
-	uint4 s;
-	
-	d = self -> bits;
-	
-	if (fx == tx) return;
-	
-	uint4 *t_buffer = self->buffer;
-	uint4 t_bufflen = self->buffer_width;
-	
-	int4 x_a, x_b, x_inc;
-	int4 y_a, y_b, y_inc;
-	x_a = self->x_coef_a; x_b = self->x_coef_b; x_inc = self->x_inc;
-	y_a = self->y_coef_a; y_b = self->y_coef_b; y_inc = self->y_inc;
-	self->x_coef_a /= GRADIENT_AA_SCALE; self->x_coef_b /= GRADIENT_AA_SCALE;
-	self->y_coef_a /= GRADIENT_AA_SCALE; self->y_coef_b /= GRADIENT_AA_SCALE;
-	
-	uint4 dx = (tx - fx) * GRADIENT_AA_SCALE;
-	uint4 t_fx = fx * GRADIENT_AA_SCALE;
-	for (int i = 0; i < GRADIENT_AA_SCALE; i++)
-	{
-		blend_row<x_type>(self, t_fx, t_fx + dx, t_buffer);
-		t_buffer += t_bufflen;
-		self->x_inc += self->x_coef_b;
-		self->y_inc += self->y_coef_b;
-	}
-	
-	self->x_coef_a = x_a; self->x_coef_b = x_b; self->x_inc = x_inc;
-	self->y_coef_a = y_a; self->y_coef_b = y_b; self->y_inc = y_inc;
-	
-	uint4 i = 0;
-	if (alpha == 255)
-	{
-		for (; fx < tx; fx++)
-		{
-			uint4 u;
-			uint4 v;
-			
-#if GRADIENT_AA_SCALE == 2
-			// unroll for GRADIENT_AA_SCALE == 2
-			u = (self->buffer[i*2] & 0xFF00FF) + (self->buffer[i*2 + 1] & 0xFF00FF) + \
-			(self->buffer[t_bufflen + i*2] & 0xFF00FF) + (self->buffer[t_bufflen + i*2 + 1] & 0xFF00FF);
-			v = ((self->buffer[i*2] >> 8) & 0xFF00FF) + ((self->buffer[i*2 + 1] >> 8) & 0xFF00FF) + \
-			((self->buffer[t_bufflen + i*2] >> 8) & 0xFF00FF) + ((self->buffer[t_bufflen + i*2 + 1] >> 8) & 0xFF00FF);
-			u = (u >> 2) & 0xFF00FF;
-			v = (v << 6) & 0xFF00FF00;
-#endif
-			i++;
-			
-			s = u | v;
-			d[fx] = packed_bilinear_bounded(d[fx], 255 - (s >> 24), s | 0xFF000000, s >> 24);
-		}
-	}
-}
-
-template<MCGradientFillKind x_type> static void MCGradientFillBilinearCombine(MCCombiner *_self, int4 fx, int4 tx, uint1* mask)
+template<MCGradientFillKind x_type> static void MCGradientFillBilinearCombine(MCCombiner *_self, int4 fx, int4 tx)
 {
 	MCGradientAffineCombiner *self = (MCGradientAffineCombiner*)_self;
 	uint4 *d;
@@ -743,7 +587,7 @@ template<MCGradientFillKind x_type> static void MCGradientFillBilinearCombine(MC
 		i++;
 		
 		s = u | v;
-		uint1 alpha = (s >> 24) * (*mask++) / 255;
+		uint1 alpha = (s >> 24);
 		d[fx] = packed_bilinear_bounded(d[fx], 255 - alpha, s | 0xFF000000, alpha);
 	}
 }
@@ -760,7 +604,7 @@ void MCGradientFillDeleteCombiner(MCGradientAffineCombiner *p_combiner)
 	MCMemoryDelete(p_combiner);
 }
 
-MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, MCGRectangle &r_clip, const MCGAffineTransform &p_transform)
+MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, const MCGRectangle &p_clip, const MCGAffineTransform &p_transform)
 {
     // MM-2014-07-31: [[ ThreadedRendering ]] Removed use of single static combiner to make things thread safe.
 	MCAutoCustomPointer<MCGradientAffineCombiner, MCGradientFillDeleteCombiner> t_combiner;
@@ -849,11 +693,11 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 	{
 		(*t_combiner) -> x_coef_a = STOP_INT_MAX * -wy / d;
 		(*t_combiner) -> x_coef_b = STOP_INT_MAX * wx / d;
-		(*t_combiner) -> x_inc = (uint4) (STOP_INT_MAX * (int64_t)((*t_combiner) -> origin . x * wy + ((int64_t) r_clip . origin .y - (*t_combiner) -> origin . y) * wx) / d);
+		(*t_combiner) -> x_inc = (uint4) (STOP_INT_MAX * (int64_t)((*t_combiner) -> origin . x * wy + ((int64_t) p_clip . origin .y - (*t_combiner) -> origin . y) * wx) / d);
 		
 		(*t_combiner) -> y_coef_a = STOP_INT_MAX * vy / d;
 		(*t_combiner) -> y_coef_b = STOP_INT_MAX * -vx / d;
-		(*t_combiner) -> y_inc = (uint4) (STOP_INT_MAX * -(int64_t)((*t_combiner) -> origin . x * vy + ((int64_t) r_clip . origin .y - (*t_combiner) -> origin . y) * vx) / d);
+		(*t_combiner) -> y_inc = (uint4) (STOP_INT_MAX * -(int64_t)((*t_combiner) -> origin . x * vy + ((int64_t) p_clip . origin .y - (*t_combiner) -> origin . y) * vx) / d);
 	}
     
     // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
@@ -895,8 +739,7 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 		case kMCGImageFilterMedium:
         case kMCGImageFilterHigh:
 		{
-			(*t_combiner) -> end = gradient_bilinear_affine_combiner_end;
-			(*t_combiner) -> buffer_width = GRADIENT_AA_SCALE * (uint32_t) ceilf(r_clip . size . width);
+			(*t_combiner) -> buffer_width = GRADIENT_AA_SCALE * (uint32_t) ceilf(p_clip . size . width);
 			
 			if (!MCMemoryNewArray(GRADIENT_AA_SCALE * (*t_combiner) -> buffer_width, (*t_combiner) -> buffer))
 				return nil;
@@ -955,7 +798,7 @@ size_t MCGLegacyGradientShader::onContextSize(const ContextRec&) const
 
 SkShader::Context* MCGLegacyGradientShader::onCreateContext(const ContextRec& p_rec, void* p_storage) const
 {
-    return new (nothrow) MCGLegacyGradientShaderContext(*this, p_rec, m_gradient_ref, m_clip);
+    return new (p_storage) MCGLegacyGradientShaderContext(*this, p_rec, m_gradient_ref, m_clip);
 }
 
 #ifndef SK_IGNORE_TO_STRING
@@ -971,7 +814,7 @@ sk_sp<SkFlattenable> MCGLegacyGradientShader::CreateProc(SkReadBuffer& buffer)
 }
 
 MCGLegacyGradientShader::MCGLegacyGradientShaderContext::MCGLegacyGradientShaderContext(const MCGLegacyGradientShader& p_shader, const ContextRec& p_rec, MCGGradientRef p_gradient_ref, MCGRectangle p_clip)
-: INHERITED(p_shader, p_rec), m_y(0), m_mask(NULL), m_gradient_combiner(NULL)
+: INHERITED(p_shader, p_rec), m_y(0), m_gradient_combiner(NULL)
 {
     MCGRectangle t_clip;
     
@@ -986,11 +829,7 @@ MCGLegacyGradientShader::MCGLegacyGradientShaderContext::MCGLegacyGradientShader
 	t_success = true;
 	
 	if (t_success)
-		t_success = MCMemoryAllocate(t_width, m_mask);
-	
-	if (t_success)
 	{	
-		memset(m_mask, 0xFF, t_width);
 		m_gradient_combiner = MCGradientFillCreateCombiner(p_gradient_ref, t_clip, t_matrix);
 		t_success = m_gradient_combiner != NULL;		
 	}
@@ -1006,7 +845,6 @@ MCGLegacyGradientShader::MCGLegacyGradientShaderContext::MCGLegacyGradientShader
 
 MCGLegacyGradientShader::MCGLegacyGradientShaderContext::~MCGLegacyGradientShaderContext()
 {
-    MCMemoryDeallocate(m_mask);
     MCGradientFillDeleteCombiner(m_gradient_combiner);
 }
 
@@ -1020,7 +858,7 @@ void MCGLegacyGradientShader::MCGLegacyGradientShaderContext::shadeSpan(int x, i
 		m_y = y;
 		memset(dstC, 0x00, count * sizeof(SkPMColor));
 		m_gradient_combiner -> bits = dstC - x;
-		m_gradient_combiner -> combine(m_gradient_combiner, x, x + count, m_mask);
+		m_gradient_combiner -> combine(m_gradient_combiner, x, x + count);
 	}
 }
 

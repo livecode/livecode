@@ -5,7 +5,7 @@
 "appMenu.hide" = "Hide %@";
 
 /* Hide Others */
-"appMenu.hideOthers" = "Hide others";
+"appMenu.hideOthers" = "Hide Others";
 
 /* Preferences */
 "appMenu.preferences" = "Preferences...";

@@ -353,12 +353,12 @@ void MCWidget::recompute(void)
 
 static void lookup_name_for_prop(Properties p_which, MCNameRef& r_name)
 {
-    extern LT factor_table[];
+    extern const LT factor_table[];
     extern const uint4 factor_table_size;
     for(uindex_t i = 0; i < factor_table_size; i++)
         if (factor_table[i] . type == TT_PROPERTY && factor_table[i] . which == p_which)
         {
-            /* UNCHECKED */ MCNameCreateWithCString(factor_table[i] . token, r_name);
+            r_name = MCNAME(factor_table[i] . token);
             return;
         }
 	
@@ -811,6 +811,8 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint3
     MCAutoValueRef t_rep;
     if (m_widget != nil)
         MCWidgetOnSave(m_widget, &t_rep);
+    else
+        t_rep = m_rep;
     
     // If the rep is nil, then an error must have been thrown, so we still
     // save, but without any state for this widget.
@@ -970,6 +972,18 @@ Boolean MCWidget::maskrect(const MCRectangle& p_rect)
 	return drect.width != 0 && drect.height != 0;
 }
 
+void MCWidget::SetName(MCExecContext& ctxt, MCStringRef p_name)
+{
+    MCNewAutoNameRef t_old_name = getname();
+
+    MCControl::SetName(ctxt, p_name);
+    
+    if (!MCNameIsEqualTo(*t_old_name, getname(), kMCStringOptionCompareExact))
+    {
+        recompute();
+    }
+}
+
 void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
 {
     bool t_is_disabled;
@@ -1010,11 +1024,22 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 void MCWidget::GetState(MCExecContext& ctxt, MCArrayRef& r_state)
 {
     MCAutoValueRef t_value;
-    if (!MCWidgetOnSave(m_widget,
-                        &t_value))
+    if (!m_widget && m_rep)
     {
-        r_state = MCValueRetain(kMCEmptyArray);
-        return;
+        if (!MCValueCopy(m_rep, &t_value))
+        {
+            r_state = MCValueRetain(kMCEmptyArray);
+            return;
+        }
+    }
+    else
+    {
+        if (!MCWidgetOnSave(m_widget,
+                            &t_value))
+        {
+            r_state = MCValueRetain(kMCEmptyArray);
+            return;
+        }
     }
     
     if (!MCExtensionConvertToScriptType(ctxt, InOut(t_value)))
@@ -1040,8 +1065,8 @@ void MCWidget::SetFocused(bool p_setting)
 {
     if (p_setting)
         focused = this;
-    else if (focused == this)
-        focused = nil;
+    else if (focused.IsBoundTo(this))
+        focused = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

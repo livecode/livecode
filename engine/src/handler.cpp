@@ -41,8 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
-#include "syntax.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Boolean MCHandler::gotpass;
@@ -87,20 +85,20 @@ MCHandler::~MCHandler()
 
 	for(uint32_t i = 0; i < nvnames; i++)
 	{
-		MCNameDelete(vinfo[i] . name);
+		MCValueRelease(vinfo[i] . name);
 		MCValueRelease(vinfo[i] . init);
 	}
 	delete[] vinfo; /* Allocated with new[] */
 
 	for(uint32_t i = 0; i < npnames; i++)
-		MCNameDelete(pinfo[i] . name);
+		MCValueRelease(pinfo[i] . name);
 	delete[] pinfo; /* Allocated with new[] */
 
 	delete[] globals; /* Allocated with new[] */
 
 	for(uint32_t i = 0; i < nconstants; i++)
 	{
-		MCNameDelete(cinfo[i] . name);
+		MCValueRelease(cinfo[i] . name);
 		MCValueRelease(cinfo[i] . value);
 	}
 	delete[] cinfo; /* Allocated with new[] */
@@ -108,7 +106,7 @@ MCHandler::~MCHandler()
 	// MW-2013-11-08: [[ RefactorIt ]] Delete the it varref.
 	delete m_it;
 
-	MCNameDelete(name);
+	MCValueRelease(name);
 }
 
 Parse_stat MCHandler::newparam(MCScriptPoint& sp)
@@ -135,9 +133,9 @@ Parse_stat MCHandler::newparam(MCScriptPoint& sp)
 	// OK-2010-01-11: [[Bug 7744]] - Check existing parsed parameters for duplicates.
 	for (uint2 i = 0; i < npnames; i++)
 	{
-		if (MCNameIsEqualTo(pinfo[i] . name, t_name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(pinfo[i] . name, t_name))
 		{
-			MCNameDelete(t_name);
+			MCValueRelease(t_name);
 			MCperror -> add(PE_HANDLER_DUPPARAM, sp);
 			return PS_ERROR;
 		}
@@ -166,7 +164,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 		return PS_ERROR;
 	}
 
-	/* UNCHECKED */ MCNameClone(sp . gettoken_nameref(), name);
+    name = MCValueRetain(sp . gettoken_nameref());
 	
 	const LT *te;
 	// MW-2010-01-08: [[Bug 7792]] Check whether the handler name is a reserved function identifier
@@ -228,7 +226,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
             return PS_ERROR;
         
         // AL-2014-11-04: [[ Bug 13902 ]] Check if the param we just created was called 'it'.
-        if (MCNameIsEqualTo(pinfo[npnames - 1] . name, MCN_it))
+        if (MCNameIsEqualToCaseless(pinfo[npnames - 1] . name, MCN_it))
             t_needs_it = false;
     }
 		
@@ -288,7 +286,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 					MCperror->add(PE_HANDLER_NOEND, sp);
 					return PS_ERROR;
 				}
-				if (!MCNameIsEqualTo(name, sp.gettoken_nameref(), kMCCompareCaseless))
+				if (!MCNameIsEqualToCaseless(name, sp.gettoken_nameref()))
 				{
 					MCperror->add(PE_HANDLER_BADEND, sp);
 					return PS_ERROR;
@@ -367,7 +365,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
             
             // AL-2014-11-04: [[ Bug 13902 ]] If 'it' was this parameter's name then create the MCVarref as a
             //  param type, with this handler and param index, so that use of the get command syncs up correctly.
-            if (i < npnames && MCNameIsEqualTo(pinfo[i] . name, MCN_it))
+            if (i < npnames && MCNameIsEqualToCaseless(pinfo[i] . name, MCN_it))
                 m_it = new (nothrow) MCVarref(this, i, True);
             
 			plist = plist->getnext();
@@ -538,7 +536,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 		{
 			if (nvnames >= oldnvnames)
 			{
-				MCNameDelete(vinfo[nvnames] . name);
+				MCValueRelease(vinfo[nvnames] . name);
 				MCValueRelease(vinfo[nvnames] . init);
 			}
 			delete vars[nvnames];
@@ -593,14 +591,14 @@ Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)
 {
 	uint2 i;
 	for (i = 0 ; i < nvnames ; i++)
-		if (MCNameIsEqualTo(p_name, vinfo[i] . name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(p_name, vinfo[i] . name))
 		{
 			*dptr = new (nothrow) MCVarref(this, i, False);
 			return PS_NORMAL;
 		}
 
 	for (i = 0 ; i < npnames ; i++)
-		if (MCNameIsEqualTo(p_name, pinfo[i] . name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(p_name, pinfo[i] . name))
 	{
 			*dptr = new (nothrow) MCVarref(this, i, True);
 			return PS_NORMAL;
@@ -615,7 +613,7 @@ Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)
 		}
 	}
 
-	if (MCNameGetCharAtIndex(p_name, 0) == '$')
+	if (MCStringGetNativeCharAtIndex(MCNameGetString(p_name), 0) == '$')
 	{
 		MCVariable *t_global;
 		/* UNCHECKED */ MCVariable::ensureglobal(p_name, t_global);
@@ -631,7 +629,7 @@ Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)
 Parse_stat MCHandler::newvar(MCNameRef p_name, MCValueRef p_init, MCVarref **r_ref)
 {
 	MCU_realloc((char **)&vinfo, nvnames, nvnames + 1, sizeof(MCHandlerVarInfo));
-	/* UNCHECKED */ MCNameClone(p_name, vinfo[nvnames] . name);
+    vinfo[nvnames] . name = MCValueRetain(p_name);
 	if (p_init != nil)
 		/* UNCHECKED */ vinfo[nvnames] . init = MCValueRetain(p_init);
 	else
@@ -660,7 +658,7 @@ Parse_stat MCHandler::findconstant(MCNameRef p_name, MCExpression **dptr)
 {
 	uint2 i;
 	for (i = 0 ; i < nconstants ; i++)
-		if (MCNameIsEqualTo(p_name, cinfo[i].name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(p_name, cinfo[i].name))
 		{
 			*dptr = new (nothrow) MCLiteral(cinfo[i].value);
 			return PS_NORMAL;
@@ -671,10 +669,31 @@ Parse_stat MCHandler::findconstant(MCNameRef p_name, MCExpression **dptr)
 Parse_stat MCHandler::newconstant(MCNameRef p_name, MCValueRef p_value)
 {
 	MCU_realloc((char **)&cinfo, nconstants, nconstants + 1, sizeof(MCHandlerConstantInfo));
-	/* UNCHECKED */ MCNameClone(p_name, cinfo[nconstants].name);
-	/* UNCHECKED */ cinfo[nconstants++].value = MCValueRetain(p_value);
+    cinfo[nconstants].name = MCValueRetain(p_name);
+	cinfo[nconstants++].value = MCValueRetain(p_value);
 	return PS_NORMAL;
 }
+
+bool MCHandler::getconstantnames_as_properlist(MCProperListRef& r_list)
+{
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+        return false;
+    
+    for (uinteger_t i = 0; i < nconstants; i++)
+        if (!MCProperListPushElementOntoBack(*t_list, cinfo[i].name))
+            return false;
+    
+    if (!t_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_list = t_list.Take();
+    
+    return true;
+}
+
 
 void MCHandler::newglobal(MCNameRef p_name)
 {
@@ -736,6 +755,26 @@ bool MCHandler::getvariablenames(MCListRef& r_list)
 	return MCListCopy(*t_list, r_list);
 }
 
+bool MCHandler::getvariablenames_as_properlist(MCProperListRef& r_list)
+{
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+        return false;
+    
+    for (uinteger_t i = 0; i < nvnames; i++)
+        if (!MCProperListPushElementOntoBack(*t_list, vinfo[i].name))
+            return false;
+    
+    if (!t_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_list = t_list.Take();
+    
+    return true;
+}
+
 bool MCHandler::getglobalnames(MCListRef& r_list)
 {
 	MCAutoListRef t_list;
@@ -762,6 +801,27 @@ bool MCHandler::getglobalnames(MCListRef& r_list)
 
 	return MCListCopy(*t_list, r_list);
 }
+
+bool MCHandler::getglobalnames_as_properlist(MCProperListRef& r_list)
+{
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+        return false;
+    
+    for (uinteger_t i = 0; i < nglobals; i++)
+        if (!MCProperListPushElementOntoBack(*t_list, globals[i]->getname()))
+            return false;
+    
+    if (!t_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_list = t_list.Take();
+    
+    return true;
+}
+
 
 bool MCHandler::getvarnames(bool p_all, MCListRef& r_list)
 {
@@ -803,46 +863,6 @@ uint4 MCHandler::linecount()
 		stmp = stmp->getnext();
 	}
 	return count;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCHandler::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxHandlerType t_type;
-	switch(type)
-	{
-		case HT_MESSAGE:
-			t_type = is_private ? kMCSyntaxHandlerTypePrivateCommand : kMCSyntaxHandlerTypeMessage;
-			break;
-		case HT_FUNCTION:
-			t_type = is_private ? kMCSyntaxHandlerTypePrivateFunction : kMCSyntaxHandlerTypeFunction;
-			break;
-		case HT_GETPROP:
-			t_type = kMCSyntaxHandlerTypeGetProp;
-			break;
-		case HT_SETPROP:
-			t_type = kMCSyntaxHandlerTypeSetProp;
-			break;
-		case HT_BEFORE:
-			t_type = kMCSyntaxHandlerTypeBeforeMessage;
-			break;
-		case HT_AFTER:
-			t_type = kMCSyntaxHandlerTypeAfterMessage;
-			break;
-        default:
-            MCUnreachableReturn();
-	}
-	
-	MCSyntaxFactoryBeginHandler(ctxt, t_type, name);
-	
-	for(uindex_t i = 0; i < npnames; i++)
-		MCSyntaxFactoryDefineParameter(ctxt, pinfo[i] . name, pinfo[i] . is_reference);
-	
-	for(MCStatement *t_statement = statements; t_statement != nil; t_statement = t_statement -> getnext())
-		t_statement -> compile(ctxt);
-	
-	MCSyntaxFactoryEndHandler(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

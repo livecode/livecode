@@ -76,24 +76,20 @@
 				'../extensions/script-libraries/dropbox/dropbox.livecodescript',
 				'../extensions/script-libraries/diff/diff.livecodescript',
 				'../extensions/script-libraries/messageauthentication/messageauthentication.livecodescript',
+				'../extensions/script-libraries/httpd/httpd.livecodescript',
+				'../extensions/script-libraries/qr/qr.livecodescript',
 			],
-			
-			'actions':
+            
+            'rules':
 			[
 				{
-					'action_name': 'extract_docs_from_stacks',
-					'message': 'Extracting docs from stacks',
-					
-					'inputs':
-					[
-						'../util/extract-docs.livecodescript',
-						'../ide-support/revdocsparser.livecodescript',
-						'<@(_sources)',
-					],
+					'rule_name': 'extract-docs-from-stack',
+					'extension': 'livecodescript',
+					'message': 'Extracting docs from script-only stack <(RULE_INPUT_NAME)',
 					
 					'outputs':
 					[
-						'<(PRODUCT_DIR)/extracted_docs',
+						'<(PRODUCT_DIR)/extracted_docs/com.livecode.script-library.<(RULE_INPUT_ROOT).lcdoc',
 					],
 					
 					'action':
@@ -102,14 +98,14 @@
 						'../util/extract-docs.livecodescript',
 						'../ide-support/revdocsparser.livecodescript',
 						'<(PRODUCT_DIR)/extracted_docs',
-						'<@(_sources)',
+						'<(RULE_INPUT_PATH)',
 					],
 				},
 			],
 		},
 		
 		{
-			'target_name': 'update_liburl_script',
+			'target_name': 'descriptify_environment_stack',
 			'type': 'none',
 			
 			'variables':
@@ -137,6 +133,25 @@
 				],
 			},
 			
+			'sources':
+			[
+				'src/environment.livecode',
+				'../ide-support/revliburl.livecodescript',
+				'src/environment/accountsignupcardbehavior.livecodescript',
+				'src/environment/automaticactivationactivationgroupbehavior.livecodescript',
+				'src/environment/automaticactivationactivationinputpassfieldbehavior.livecodescript',
+				'src/environment/automaticactivationbackgroundgroupbehavior.livecodescript',
+				'src/environment/automaticactivationcardbehavior.livecodescript',
+				'src/environment/automaticactivationprocessinggroupbehavior.livecodescript',
+				'src/environment/getstartedgetstartedstatusgroupbehavior.livecodescript',
+				'src/environment/resourcesresourcesloadergroupbehavior.livecodescript',
+				'src/environment/resourcesresourcespushbuttonbehaviorbuttonbehavior.livecodescript',
+				'src/environment/stackbehavior.livecodescript',
+				'src/environment/unlicensedactivatefieldbehavior.livecodescript',
+				'src/environment/unlicensedbkgndbehavior.livecodescript',
+				'src/environment/unlicensedbuynowbuttonbehavior.livecodescript',
+			],
+			
 			'dependencies':
 			[
 				# Requires a working LiveCode engine
@@ -146,28 +161,27 @@
 			'actions':
 			[
 				{
-					'action_name': 'update_liburl',
-					'message': 'Updating environment stack liburl script',
+					'action_name': 'descriptify_environment_stack',
+					'message': 'De-scriptifying the environment stack',
 					
 					'inputs':
 					[
-						'src/Environment.rev',
-						'../ide-support/revliburl.livecodescript',
-						'../util/update-liburl.livecodescript',
+						'../util/descriptify_stack.livecodescript',
+						'<@(_sources)',
 					],
 					
 					'outputs':
 					[
-						'<(SHARED_INTERMEDIATE_DIR)/src/Environment_LibURL.rev',
+						'<(SHARED_INTERMEDIATE_DIR)/src/environment_descriptified.livecode',
 					],
 					
 					'action':
 					[
 						'<(engine)',
-						'../util/update-liburl.livecodescript',
-						'src/Environment.rev',
-						'../ide-support/revliburl.livecodescript',
-						'<(SHARED_INTERMEDIATE_DIR)/src/Environment_LibURL.rev',
+						'../util/descriptify_stack.livecodescript',
+						'<(SHARED_INTERMEDIATE_DIR)/src/environment_descriptified.livecode',
+						'<@(_sources)',
+						
 					],
 				},
 			],
@@ -179,7 +193,7 @@
 			
 			'dependencies':
 			[
-				'update_liburl_script',
+				'descriptify_environment_stack',
 			],
 			
 			'actions':
@@ -189,7 +203,7 @@
 					'inputs':
 					[
 						'../util/compress_data.pl',
-						'<(SHARED_INTERMEDIATE_DIR)/src/Environment_LibURL.rev',
+						'<(SHARED_INTERMEDIATE_DIR)/src/environment_descriptified.livecode',
 					],
 					'outputs':
 					[
@@ -200,7 +214,7 @@
 					[
 						'<@(perl)',
 						'../util/compress_data.pl',
-						'src/Environment.rev',
+						'<(SHARED_INTERMEDIATE_DIR)/src/environment_descriptified.livecode',
 						'<@(_outputs)',
 						# Really nasty hack to prevent this from being treated as a path
 						'$(this_is_an_undefined_variable)MCstartupstack',
@@ -981,6 +995,7 @@
 									'src/em-system.js',
 									'src/em-url.js',
 									'src/em-standalone.js',
+									'src/em-liburl.js',
 								],
 
 								'outputs':
@@ -1013,6 +1028,7 @@
 									'src/em-system.js',
 									'src/em-url.js',
 									'src/em-standalone.js',
+									'src/em-liburl.js',
 								],
 							},
 						],

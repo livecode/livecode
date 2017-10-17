@@ -1112,8 +1112,13 @@ bool MCClipboard::CopyAsBMP(MCDataRef& r_bmp) const
 	// Copy and decode the BMP file
 	MCAutoDataRef t_bmp;
 	if (!CopyAsData(kMCRawClipboardKnownTypeWinDIBv5, &t_bmp))
-		return false;
-	
+    {
+        if (!CopyAsData(kMCRawClipboardKnownTypeWinDIB, &t_bmp))
+        {
+		    return false;
+	    }
+    }
+
 	MCDataRef t_decoded = m_clipboard->DecodeTransferredBMP(*t_bmp);
 	if (t_decoded == nil)
 		return false;
@@ -1476,7 +1481,12 @@ bool MCClipboard::CopyAsEncodedText(const MCRawClipboardItem* p_item, MCRawClipb
     if (!MCStringDecode(*t_encoded, p_encoding, false, &t_string))
         return false;
     
-    return MCStringConvertLineEndingsToLiveCode(*t_string, r_text);
+    return MCStringNormalizeLineEndings(*t_string, 
+                                        kMCStringLineEndingStyleLF, 
+                                        kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                        kMCStringLineEndingOptionNormalizeLSToVT, 
+                                        r_text, 
+                                        nullptr);
 }
 
 bool MCClipboard::CopyAsData(MCRawClipboardKnownType p_type, MCDataRef& r_data) const

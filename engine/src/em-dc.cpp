@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "em-async.h"
 #include "em-event.h"
 #include "em-util.h"
+#include "em-liburl.h"
 
 #include "osspec.h"
 #include "eventqueue.h"
@@ -50,8 +51,20 @@ MCEmscriptenGetCurrentStack()
 	return t_dc->GetCurrentStack();
 }
 
+MC_DLLEXPORT_DEF
+bool MCEmscriptenHandleMousePress(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, MCMousePressState p_state, int32_t p_button)
+{
+	if (MCnoui) return false;
+	
+	MCScreenDC *t_dc = static_cast<MCScreenDC *>(MCscreen);
+	
+	t_dc->handle_mouse_press(p_stack, p_time, p_modifiers, p_state, p_button);
+	
+	return true;
+}
+
 MCScreenDC::MCScreenDC()
-	: m_main_window(nil)
+	: m_main_window(nil), m_mouse_button_state(0)
 {
 }
 
@@ -64,7 +77,8 @@ MCScreenDC::open()
 {
 	return
 		MCEmscriptenEventInitialize() &&
-		MCEmscriptenViewInitialize();
+		MCEmscriptenViewInitialize() &&
+        MCEmscriptenLibUrlInitialize();
 }
 
 
@@ -73,6 +87,7 @@ MCScreenDC::close(Boolean force)
 {
 	MCEmscriptenViewFinalize();
 	MCEmscriptenEventFinalize();
+    MCEmscriptenLibUrlFinalize();
 
 	return true;
 }
@@ -276,7 +291,7 @@ MCScreenDC::wait(real64_t p_duration,
 
 // These functions are implemented in javascript
 extern "C" int32_t MCEmscriptenDialogShowAlert(const unichar_t* p_message, size_t p_message_length);
-extern "C" int32_t MCEmscriptenDialogShowConfirm(const unichar_t* p_message, size_t p_message_length);
+extern "C" bool MCEmscriptenDialogShowConfirm(const unichar_t* p_message, size_t p_message_length);
 extern "C" int32_t MCEmscriptenDialogShowPrompt(const unichar_t* p_message, size_t p_message_length, const unichar_t* p_default, size_t p_default_length, unichar_t** r_result, size_t* r_result_length);
 
 int32_t
@@ -301,7 +316,21 @@ MCScreenDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, u
             
         case 2:
             // Two buttons - treat it as an "OK"/"Cancel" button pair
-            t_result = MCEmscriptenDialogShowConfirm(t_message_u16.Ptr(), t_message_u16.Size());
+            {
+                int32_t t_ok_button = 0, t_cancel_button = 1;
+                // check order of ok/cancel
+                if (MCStringIsEqualToCString(p_buttons[1], "ok", kMCStringOptionCompareCaseless) ||
+                    MCStringIsEqualToCString(p_buttons[0], "cancel", kMCStringOptionCompareCaseless))
+                {
+                    t_ok_button = 1;
+                    t_cancel_button = 0;
+                }
+                
+                if (MCEmscriptenDialogShowConfirm(t_message_u16.Ptr(), t_message_u16.Size()))
+                    t_result = t_ok_button;
+                else
+                    t_result = t_cancel_button;
+            }
             break;
             
         default:
@@ -331,6 +360,32 @@ MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_m
     return true;
 }
 
+
+void
+MCScreenDC::handle_mouse_press(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, MCMousePressState p_state, int32_t p_button)
+{
+	// track mouse button pressed state
+	/* NOTE - assumes there are no more than 32 mouse buttons */
+	if (p_button < 32)
+	{
+		if (p_state == kMCMousePressStateDown)
+			m_mouse_button_state |= 1UL << p_button;
+		else if (p_state == kMCMousePressStateUp)
+			m_mouse_button_state &= ~(1UL << p_button);
+	}
+	
+	MCEventQueuePostMousePress(p_stack, p_time, p_modifiers, p_state, p_button);
+}
+
+Boolean
+MCScreenDC::getmouse(uint2 p_button, Boolean& r_abort)
+{
+	// return recorded mouse button state
+	if (p_button < 32)
+		return (m_mouse_button_state & (1 << p_button)) != 0;
+		
+	return false;
+}
 
 void
 MCScreenDC::platform_querymouse(int16_t& r_x, int16_t& r_y)

@@ -15,7 +15,7 @@ LIBS_win32=( OpenSSL Curl ICU CEF )
 LIBS_linux=( OpenSSL Curl ICU CEF )
 LIBS_emscripten=( ICU )
 
-SUBPLATFORMS_ios=(iPhoneSimulator8.2 iPhoneSimulator9.2 iPhoneSimulator10.2 iPhoneSimulator10.3 iPhoneOS9.2 iPhoneOS10.2 iPhoneOS10.3)
+SUBPLATFORMS_ios=(iPhoneSimulator8.2 iPhoneSimulator9.2 iPhoneSimulator10.2 iPhoneSimulator11.0 iPhoneOS9.2 iPhoneOS10.2 iPhoneOS11.0)
 SUBPLATFORMS_win32=(v140_static_debug v140_static_release)
 
 # Fetch settings
@@ -53,6 +53,7 @@ function fetchLibrary {
 	local SUBPLATFORM=$4
 
 	eval "local VERSION=\${${LIB}_VERSION}"
+	eval "local BUILDREVISION=\${${LIB}_BUILDREVISION}"
 
 	# We now use standard GNU triple ordering for the naming of windows prebuilts
 	local NAME=""
@@ -71,6 +72,10 @@ function fetchLibrary {
 		if [ ! -z "${SUBPLATFORM}" ] ; then
 			NAME+="-${SUBPLATFORM}"
 		fi
+	fi
+	
+	if [ ! -z "${BUILDREVISION}" ] ; then
+		NAME+="-${BUILDREVISION}"
 	fi
 
 	if [ ! -f "${FETCH_DIR}/${NAME}.tar.bz2" ]; then
@@ -209,8 +214,9 @@ for PLATFORM in ${SELECTED_PLATFORMS} ; do
 	fi
 done
 
-# Don't forget the headers on non-Windows platforms
+# Don't forget the headers & data on non-Windows platforms
 if [ 0 -eq "$FETCH_HEADERS" ]; then
 	fetchLibrary OpenSSL All Universal Headers
 	fetchLibrary ICU All Universal Headers
+	fetchLibrary ICU All Universal Data
 fi

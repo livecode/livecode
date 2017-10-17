@@ -178,11 +178,12 @@ unsigned long SSLError(MCStringRef& errbuf)
 }
 
 #ifdef MCSSL
-bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, const char *p_passphrase, EVP_PKEY *&r_key)
+bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, const char *p_passphrase, RSA *&r_rsa)
 {
 	bool t_success = true;
 	BIO *t_data = NULL;
 	EVP_PKEY *t_key = NULL;
+    RSA *t_rsa = NULL;
 	t_data = BIO_new_mem_buf((void*)p_data, p_length);
 	t_success = t_data != NULL;
 	char t_empty_pass[] = "";
@@ -193,8 +194,19 @@ bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, con
 		switch (p_type)
 		{
 		case RSAKEY_PUBKEY:
-			t_key = PEM_read_bio_PUBKEY(t_data, NULL, NULL, t_passphrase);
-			t_success = (t_key != NULL);
+            {
+                if (!PEM_read_bio_PUBKEY(t_data, &t_key, NULL, t_passphrase))
+                {
+                    // There is no way to reset the BIO so create a new one to check
+                    // for a PKCS#1 format key
+                    BIO *t_rsa_data = BIO_new_mem_buf((void*)p_data, p_length);
+                    if (t_rsa_data != NULL)
+                    {
+                        t_success = PEM_read_bio_RSAPublicKey(t_rsa_data, &t_rsa, NULL, t_passphrase);
+                        BIO_free(t_rsa_data);
+                    }
+                }
+            }
 			break;
 		case RSAKEY_PRIVKEY:
 			t_key = PEM_read_bio_PrivateKey(t_data, NULL, NULL, t_passphrase);
@@ -221,8 +233,18 @@ bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, con
 
 	if (t_data != NULL)
 		BIO_free(t_data);
-	if (t_success)
-		r_key = t_key;
+	if (t_success && t_key != NULL)
+    {
+        if (t_rsa == NULL)
+            t_rsa = EVP_PKEY_get1_RSA(t_key);
+        
+        t_success = t_rsa != NULL;
+        
+        EVP_PKEY_free(t_key);
+    }
+    
+    if (t_success)
+        r_rsa = t_rsa;
 
 	return t_success;
 }
@@ -248,35 +270,24 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 			const char *p_key, uint32_t p_key_length, const char *p_passphrase,
 			char *&r_message_out, uint32_t &r_message_out_length, char *&r_result, uint32_t &r_error)
 {
-	bool t_success = true;
-	EVP_PKEY *t_key = NULL;
+    if (!InitSSLCrypt())
+    {
+        MCCStringClone("error: ssl library initialization failed", r_result);
+        return false;
+    }
+    
+    bool t_success = true;
 	RSA *t_rsa = NULL;
 	int32_t t_rsa_size;
 	uint8_t *t_output_buffer = NULL;
 	int32_t t_output_length;
 
-	if (!InitSSLCrypt())
-	{
-		t_success = false;
-		MCCStringClone("error: ssl library initialization failed", r_result);
-	}
-
 	if (t_success)
 	{
-		if (!load_pem_key(p_key, p_key_length, p_key_type, p_passphrase, t_key))
+		if (!load_pem_key(p_key, p_key_length, p_key_type, p_passphrase, t_rsa))
 		{
 			t_success = false;
 			MCCStringClone("error: invalid key", r_result);
-		}
-	}
-
-	if (t_success)
-	{
-		t_rsa = EVP_PKEY_get1_RSA(t_key);
-		if (t_rsa == NULL)
-		{
-			t_success = false;
-			MCCStringClone("error: not an RSA key", r_result);
 		}
 	}
 
@@ -329,9 +340,7 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 
 	if (t_rsa != NULL)
 		RSA_free(t_rsa);
-	if (t_key != NULL)
-		EVP_PKEY_free(t_key);
-
+	
 	if (t_success)
 	{
 		r_message_out = (char*)t_output_buffer;

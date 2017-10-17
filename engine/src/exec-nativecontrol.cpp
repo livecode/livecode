@@ -40,16 +40,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(NativeControl, CreateControl, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(NativeControl, DeleteControl, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(NativeControl, SetProperty, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(NativeControl, GetProperty, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(NativeControl, Do, 0)
-MC_EXEC_DEFINE_GET_METHOD(NativeControl, Target, 1)
-MC_EXEC_DEFINE_GET_METHOD(NativeControl, ControlList, 1)
-
-//////////
-
 static bool MCParseRGBA(MCStringRef p_data, bool p_require_alpha, uint1 &r_red, uint1 &r_green, uint1 &r_blue, uint1 &r_alpha)
 {
 	bool t_success = true;

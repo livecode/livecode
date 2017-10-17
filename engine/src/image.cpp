@@ -526,7 +526,7 @@ Boolean MCImage::doubleup(uint2 which)
 
 void MCImage::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
 		if (state & CS_OWN_SELECTION)
 		{
@@ -557,7 +557,7 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 				}
 			}
 	}
-	else if (MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
+	else if (MCNameIsEqualToCaseless(mptr, MCM_internal2))
 		{
 			if (state & CS_MAGNIFY)
 			{

@@ -862,7 +862,7 @@ on revSBDefaultStandaloneSettings pStack, @xSettingsA
    end if
    
    -- Auto-remove stack passwords from community stacks
-   if revLicenseType() is "community" then
+   if not revEnvironmentEditionProperty("password_protection") then
       if xSettingsA["password"] is not empty then
          delete variable xSettingsA["password"]
       end if
@@ -924,8 +924,12 @@ private command __RecursiveStackFileList pStack, @xStackFiles
    repeat for each key tStack in tStackFiles
       if there is not a stack tStackFiles[tStack] then put tFileName before tStackFiles[tStack]
       if there is a stack tStackFiles[tStack] then
-         appendToStringList the effective fileName of stack tStackFiles[tStack], xStackFiles
-         __RecursiveStackFileList tStack, xStackFiles
+         local tEffectiveFilename
+         put the effective fileName of stack  tStackFiles[tStack] into tEffectiveFilename
+         if tEffectiveFilename is not among the lines of xStackFiles then
+            appendToStringList tEffectiveFilename, xStackFiles
+            __RecursiveStackFileList tStack, xStackFiles
+         end if
       end if
    end repeat
    repeat for each line tStack in the substacks of stack pStack
@@ -1653,8 +1657,17 @@ command revSBAddAvailableLibrary pID, pTitle, pSettingsA
    put pTitle into tLibrary["title"]
    put pSettingsA into tLibrary["settings"]
    put "script library" into tLibrary["type"]
-   put revSBAllDesktopPlatforms() & comma & \ 
-         revSBAllMobilePlatforms() into tLibrary["platforms"]
+   
+   -- liburl and the datagrid are supported on all platforms
+   -- until we have meta data associated with each lib (that includes platforms supported)
+   -- just handle the special cases directly 
+   if pTitle is among the items of "Internet,DataGrid" then
+      put revSBAllPlatforms() into tLibrary["platforms"]
+   else
+      put revSBAllDesktopPlatforms() & comma & \
+            revSBAllMobilePlatforms() into tLibrary["platforms"]
+   end if
+   
    addToList tLibrary, sScriptLibraries
 end revSBAddAvailableLibrary
 
@@ -2110,6 +2123,12 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    
    -- If the datagrid is used, then include the library as an aux stack
    if tIncludeDataGrid or "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+      local tStackFiles
+      put the stackFiles of stack "revDataGridLibrary" into tStackFiles
+      split tStackFiles by return and comma
+      repeat for each key tStack in tStackFiles
+         appendToStringList the effective filename of  stack tStack, tAuxiliaryStackFiles
+      end repeat
       appendToStringList the effective filename of stack "revDataGridLibrary", tAuxiliaryStackFiles
    end if
    
@@ -2239,15 +2258,20 @@ private command __InitialiseInclusionDependencies
    revSBAddDependencyForInclusion "scriptLibraries", "XMLRPC", "scriptLibraries", "XML"
 end __InitialiseInclusionDependencies
 
-command revSBAddDependencyForInclusion pInclusionType, pInclusion, pDependenyType, pDependeny
-   put true into sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny]
+command revSBAddDependencyForInclusion pInclusionType, pInclusion, pDependenyType, pDependeny, pPlatforms
+   if pPlatforms is empty then
+      put revSBAllPlatforms() into pPlatforms
+   end if
+   repeat for each item tPlatform in pPlatforms
+      put true into sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny][tPlatform]
+   end repeat
 end revSBAddDependencyForInclusion
 
 command revSBRemoveDependencyForInclusion pInclusion, pInclusionType, pDependeny, pDependenyType
    delete variable sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny]
 end revSBRemoveDependencyForInclusion
 
-command revSBUpdateForDependencies @xSettings
+command revSBUpdateForDependencies pPlatform, @xSettings
    local tDependencies
    repeat for each key tDependentKey in sDependencies
       repeat for each key tDependent in sDependencies[tDependentKey]
@@ -2255,7 +2279,9 @@ command revSBUpdateForDependencies @xSettings
             put sDependencies[tDependentKey][tDependent] into tDependencies
             repeat for each key tRequiredKey in tDependencies
                repeat for each key tRequired in tDependencies[tRequiredKey]
-                  revSBAddInclusion tRequired, tRequiredKey, xSettings
+                  if tDependencies[tRequiredKey][tRequired][pPlatform] then
+                     revSBAddInclusion tRequired, tRequiredKey, xSettings
+                  end if
                end repeat
             end repeat
          end if
@@ -2593,7 +2619,7 @@ function revSBEnginePath pPlatform
    put the editionType into tEdition
    // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
    //  allow to create broken applications, so that the executable file in it bears the edition.
-   if tEdition is "professional" then
+   if tEdition is not "community" then
       put "Commercial" into tEdition
    end if
    
@@ -2710,6 +2736,10 @@ local sDeployInclusions
 command revSBAddDeployInclusion pInclusion, pKey
    put empty into sDeployInclusions[pKey][pInclusion]
 end revSBAddDeployInclusion
+
+command revSBRemoveDeployInclusion pInclusion, pKey
+   delete variable sDeployInclusions[pKey][pInclusion]
+end revSBRemoveDeployInclusion
 
 -- Standalone settings are always set on the mainstack
 function revSBGetSettings pStack, pDeploy

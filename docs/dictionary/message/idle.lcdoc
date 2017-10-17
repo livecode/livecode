@@ -31,26 +31,21 @@ The period between <idle> <message|messages> is specified by the
 > timer: 
 
     on idle -- avoid if possible
-    global startTime
-    if the seconds &gt; startTime + 60 -- 60 seconds have gone by
-
-    put the time into field "Clock Face"
-    put the seconds into startTime
-    end if
-    pass idle
-
+        global startTime
+        if the seconds &gt; startTime + 60 then -- 60 seconds have gone by
+            put the time into field "Clock Face"
+            put the seconds into startTime
+        end if
+        pass idle
     end idle
-
 
 The following example does the same thing more efficiently, since it
 only needs to handle a single message every sixty seconds:
 
     on updateClock -- a better way
-    put the time into field "Clock Face"
-    send "updateClock" to me in 60 seconds
-
+        put the time into field "Clock Face"
+        send "updateClock" to me in 60 seconds
     end updateClock
-
 
 Executing an <idle> <handler> slows down other LiveCode actions, so
 <handle> the <idle> <message> only in the rare cases where the <send>

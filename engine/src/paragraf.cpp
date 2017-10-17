@@ -42,44 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stackfileformat.h"
 
-const char *ER_reverse[256] =
-    {
-        "&#0;", "&#1;", "&#2;", "&#3;", "&#4;",
-        "&#5;", "&#6;", "&#7;", "&#8;", "&#9;", "&#10;", "&#11;", "&#12;",
-        "&#13;", "&#14;", "&#15;", "&#16;", "&#17;", "&#18;", "&#19;",
-        "&#20;", "&#21;", "&#22;", "&#23;", "&#24;", "&#25;", "&#26;",
-        "&#27;", "&#28;", "&#29;", "&#30;", "&#31;", NULL, NULL, "&quot;", NULL,
-        NULL, NULL, "&amp;", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, "&lt;", NULL, "&gt;", NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, "&#127;", "&#128;", "&#129;", "&#130;", "&#131;",
-        "&#132;", "&#133;", "&#134;", "&#135;", "&#136;", "&#137;", "&#138;",
-        "&#139;", "&#140;", "&#141;", "&#142;", "&#143;", "&#144;", "&#145;",
-        "&#146;", "&#147;", "&#148;", "&#149;", "&#150;", "&#151;", "&#152;",
-        "&#153;", "&#154;", "&#155;", "&#156;", "&#157;", "&#158;", "&#159;",
-        "&nbsp;", "&iexcl;", "&cent;", "&pound;", "&curren;", "&yen;",
-        "&brvbar;", "&sect;", "&uml;", "&copy;", "&ordf;", "&laquo;", "&not;",
-        "&shy;", "&reg;", "&macr;", "&deg;", "&plusmn;", "&sup2;", "&sup3;",
-        "&acute;", "&micro;", "&para;", "&middot;", "&cedil;", "&sup1;",
-        "&ordm;", "&raquo;", "&frac14;", "&frac12;", "&frac34;", "&iquest;",
-        "&Agrave;", "&Aacute;", "&Acirc;", "&Atilde;", "&Auml;", "&Aring;",
-        "&AElig;", "&Ccedil;", "&Egrave;", "&Eacute;", "&Ecirc;", "&Euml;",
-        "&Igrave;", "&Iacute;", "&Icirc;", "&Iuml;", "&ETH;", "&Ntilde;",
-        "&Ograve;", "&Oacute;", "&Ocirc;", "&Otilde;", "&Ouml;", "&times;",
-        "&Oslash;", "&Ugrave;", "&Uacute;", "&Ucirc;", "&Uuml;", "&Yacute;",
-        "&THORN;", "&szlig;", "&agrave;", "&aacute;", "&acirc;", "&atilde;",
-        "&auml;", "&aring;", "&aelig;", "&ccedil;", "&egrave;", "&eacute;",
-        "&ecirc;", "&euml;", "&igrave;", "&iacute;", "&icirc;", "&iuml;",
-        "&eth;", "&ntilde;", "&ograve;", "&oacute;", "&ocirc;", "&otilde;",
-        "&ouml;", "&divide;", "&oslash;", "&ugrave;", "&uacute;", "&ucirc;",
-        "&uuml;", "&yacute;", "&thorn;", "&yuml;"
-    };
-
 const char *CHARSET_HTML[] =
     {
         "en",
@@ -3173,7 +3135,7 @@ void MCParagraph::marklines(findex_t si, findex_t ei)
 
 // MW-2012-01-25: [[ ParaStyles ]] The 'include_space' parameter, if true, means that
 //   the returned rect will take into account space before and after.
-MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_include_space)
+MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_include_space, MCParagraphCursorType p_type)
 {
 	if (fi < 0)
 		fi = focusedindex;
@@ -3190,7 +3152,7 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 
 	// MW-2012-01-08: [[ ParaStyles ]] Top of text starts after spacing above.
 	MCRectangle drect;
-	drect.y = 1 + t_space_above;
+	drect.y = int2(1 + t_space_above);
 
 	MCLine *lptr;
 	findex_t i, l;
@@ -3209,80 +3171,19 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 		t_first_line = false;
 	};
 	if (fixedheight == 0)
-		drect.height = ceilf(lptr->GetHeight()) - 2;
+		drect.height = uint2(ceilf(lptr->GetHeight()) - 2);
 	else
 		drect.height = fixedheight - 2;
-	drect.x = lptr->GetCursorXPrimary(fi, moving_forward);
-	
-	// MW-2012-01-08: [[ ParaStyles ]] If we want the 'full height' of the
-	//   cursor (inc space), adjust appropriately depending on which line we are
-	//   on.
-	if (p_include_space)
-	{
-		if (t_first_line)
-		{
-			drect.y -= t_space_above;
-			drect.height += t_space_above;
-		}
-		if (lptr -> next() == lines)
-			drect.height += t_space_below;
+    if (p_type == kMCParagraphCursorTypeFull ||
+        p_type == kMCParagraphCursorTypePrimary)
+    {
+        drect.x = int2(lptr->GetCursorXPrimary(fi, moving_forward));
 	}
-    
-    // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
-    if (!getvgrid())
-        drect.x += computelineoffset(lptr);
-
-	drect.width = cursorwidth;
-
-	return drect;
-}
-
-// MW-2012-01-25: [[ ParaStyles ]] The 'include_space' parameter, if true, means that
-//   the returned rect will take into account space before and after.
-MCRectangle MCParagraph::getsplitcursorrect(findex_t fi, uint2 fixedheight, bool p_include_space, bool primary)
-{
-	if (fi < 0)
-		fi = focusedindex;
-    
-	// MW-2005-08-31: If we get here even though we have no lines,
-	//   noflow to make up for it.
-	if (lines == NULL)
-		noflow();
-    
-	// MW-2012-01-08: [[ ParaStyles ]] Compute spacing before and after.
-	int32_t t_space_above, t_space_below;
-	t_space_above = computetopmargin();
-	t_space_below = computebottommargin();
-    
-	// MW-2012-01-08: [[ ParaStyles ]] Top of text starts after spacing above.
-	MCRectangle drect;
-	drect.y = t_space_above;
-    
-	MCLine *lptr;
-	findex_t i, l;
-	bool t_first_line;
-	lptr = lines;
-	lptr->GetRange(i, l);
-	t_first_line = true;
-	while (fi >= i + l && lptr->next() != lines)
-	{
-		if (fixedheight == 0)
-			drect.y += floorf(lptr->GetHeight());
-		else
-			drect.y += fixedheight;
-		lptr = lptr->next();
-		lptr->GetRange(i, l);
-		t_first_line = false;
-	};
-	if (fixedheight == 0)
-		drect.height = floorf(lptr->GetHeight()) - 2;
-	else
-		drect.height = fixedheight - 2;
-    if (primary)
-        drect.x = lptr->GetCursorXPrimary(fi, moving_forward);
     else
-        drect.x = lptr->GetCursorXSecondary(fi, moving_forward);
-	
+    {
+        drect.x = int2(lptr->GetCursorXSecondary(fi, moving_forward));
+    }
+    
 	// MW-2012-01-08: [[ ParaStyles ]] If we want the 'full height' of the
 	//   cursor (inc space), adjust appropriately depending on which line we are
 	//   on.
@@ -3300,20 +3201,20 @@ MCRectangle MCParagraph::getsplitcursorrect(findex_t fi, uint2 fixedheight, bool
     // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
     if (!getvgrid())
         drect.x += computelineoffset(lptr);
-    
+
 	drect.width = cursorwidth;
-    
-    // Adjust the height
-    if (primary)
+
+    // Adjust the height - if primary or secondary cursor is requested.
+    if (p_type == kMCParagraphCursorTypePrimary)
     {
         drect.height /= 2;
     }
-    else
+    else if (p_type == kMCParagraphCursorTypeSecondary)
     {
         drect.y += drect.height/2;
         drect.height /= 2;
     }
-    
+
 	return drect;
 }
 

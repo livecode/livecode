@@ -17,9 +17,9 @@ Example:
 replace slash with colon in tPath
 
 Description:
-Use the <colon> <constant> as an easier-to-read replacement for ":"
+Use the <colon> <constant (glossary)> as an easier-to-read replacement for ":"
 
-References: constant (command), character (keyword),
+References: constant (glossary), character (keyword),
 itemDelimiter (property)
 
 Tags: text processing

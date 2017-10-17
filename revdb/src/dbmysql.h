@@ -52,6 +52,7 @@ protected:
 class DBConnection_MYSQL: public CDBConnection
 {
 public:
+    DBConnection_MYSQL(): m_internal_buffer(nullptr) {}
 	~DBConnection_MYSQL() {disconnect();}
 	Bool connect(char **args, int numargs);
 	void disconnect();
@@ -67,10 +68,11 @@ public:
 	void getTables(char *buffer, int *bufsize);
 	int getConnectionType(void) { return -1; }
 	int getVersion(void) { return 2; }
-    large_buffer_t *m_internal_buffer;
 protected:
 	bool BindVariables(MYSQL_STMT *p_statement, DBString *p_arguments, int p_argument_count, int *p_placeholders, int p_placeholder_count, MYSQL_BIND **p_bind);
 	bool ExecuteQuery(char *p_query, DBString *p_arguments, int p_argument_count);
 	MYSQL mysql;
+private:
+    large_buffer_t *m_internal_buffer;
 };
 #endif

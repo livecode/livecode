@@ -10,6 +10,8 @@ data is dropped.
 
 Introduced: 2.0
 
+Associations: field, button, graphic, scrollbar, player, image
+
 OS: mac, windows, linux
 
 Platforms: desktop, server
@@ -42,10 +44,8 @@ source field when it's dropped onto another unlocked field, trap the
 <control structure>:
 
     on dragEnd -- in script of field or one of its owners
--- do nothing, but trap the message
-
+        -- do nothing, but trap the message
     end dragEnd
-
 
 On the other hand, if you want to perform some action when text is
 dragged from an unlocked field and then dropped, you need to pass the
@@ -53,11 +53,9 @@ dragged from an unlocked field and then dropped, you need to pass the
 deletion to take place:
 
     on dragEnd
-    set the textColor of me to "gray"
-    pass dragEnd -- needed for text removal to occur
-
+        set the textColor of me to "gray"
+        pass dragEnd -- needed for text removal to occur
     end dragEnd
-
 
 To make changes to the original data in a locked field or a control
 other than a field when a drop is completed, handle the <dragEnd>

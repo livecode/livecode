@@ -2,7 +2,10 @@ Name: setProp
 
 Type: control structure
 
-Syntax: setProp <propertyName> <newValue> <statementList> end <propertyName>
+Syntax:
+setProp <propertyName> <newValue>
+   <statementList>
+end <propertyName>
 
 Summary:
 <handle|Handles> the <trigger> sent to an <object(glossary)> when you
@@ -26,11 +29,13 @@ propertyName (string):
 A string up to 65,535 characters in length.
 
 Description:
-Use the <setProp> <control structure> to check the range of a <custom
-property> that is being set, or to change other <property|properties> or
-do other tasks at the same time a <custom property> is set. Form:The
-first line of a <setProp> <handler> consists of the word "setProp"
-followed by the name of the <custom property>.
+Use the <setProp> <control structure> to check the range of a 
+<custom property> that is being set, or to change other 
+<property|properties> or do other tasks at the same time a
+<custom property> is set. 
+
+**Form:** The first line of a <setProp> <handler> consists of the word 
+"setProp" followed by the name of the <custom property>.
 
 The last line of a <setProp> <handler> consists of the word "end"
 followed by the <property|property's> name.
@@ -60,24 +65,23 @@ itself.)
 
 This is only the case for the custom property that the current <setProp>
 <handler> applies to. Setting a different <custom property> sends a
-<setProp> <trigger>. So does setting the <handler|handler's> <custom
-property> for an <object(glossary)> other than the one whose script
-contains the <setProp> <handler>.
+<setProp> <trigger>. So does setting the <handler|handler's> 
+<custom property> for an <object(glossary)> other than the one whose
+script contains the <setProp> <handler>.
 
 >*Warning:*  If a <setProp> <handler> in one <object|object's> <script>
 > sets the <custom property> for a different <object(glossary)>, and the
-> first <object(glossary)> is in the second <object|object's> <message
-> path>, a runaway <recursion> will result. For example, if the
+> first <object(glossary)> is in the second <object|object's>
+> <message path>, a runaway <recursion> will result. For example, if the
 > following <handler> is in a <card> <script>, and you set the
 > "myCustomProperty" of a <button(object)> on the <card>, runaway
 > <recursion> will result:
 
-    setProp myCustomProperty newValue
-    set the myCustomProperty of the target to newValue + 1
-    -- Because the target is the button, and this handler is in
-    -- the card, the above statement sends another setProp trigger
-    -- to the button.
-
+    setProp myCustomProperty pValue
+        set the myCustomProperty of the target to pValue + 1
+        -- Because the target is the button, and this handler is in
+        -- the card, the above statement sends another setProp trigger
+        -- to the button.
     end myCustomProperty
 
 
@@ -94,15 +98,14 @@ If the custom property you want to control is in a custom property set,
 use array notation in the first line of the <setProp> <handler>, as in
 the following example:
 
-    setProp mySet[thisProperty] newValue
-    if thisProperty is "that" then put newValue into me
-
+    setProp mySet[pProperty] pValue
+        if pProperty is "that" then put pValue into me
     end setProp
 
 
-The above <setProp> <handler> responds to changes in the <custom
-property> named "that", which is a member of the custom <custom property
-set|property set> named "mySet".
+The above <setProp> <handler> responds to changes in the
+<custom property> named "that", which is a member of the custom
+<custom property set|property set> named "mySet".
 
 >*Important:*  You must either include the <pass> <control structure> or
 > set the <property> explicitly in a <setProp> <handler>, if you want

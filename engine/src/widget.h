@@ -191,6 +191,7 @@ public:
 	virtual void OnOpen();
 	virtual void OnClose();
 	
+    virtual void SetName(MCExecContext& ctxt, MCStringRef p_name);
     virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);
     
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);

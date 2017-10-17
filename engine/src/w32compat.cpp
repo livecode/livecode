@@ -99,24 +99,24 @@ bool MCWin32IsProcessDPIAware(BOOL &r_result)
 //////////
 
 // IM-2014-01-28: [[ HiDPI ]] Weak-linked GetProcessDPIAwareness function
-typedef HRESULT (WINAPI *GetProcessDPIAwarenessPTR)(HANDLE hprocess,
-													MCWin32ProcessDPIAwareness *value);
-bool MCWin32GetProcessDPIAwareness(HRESULT &r_result, HANDLE p_hprocess,
-								   MCWin32ProcessDPIAwareness *r_awareness)
+typedef HRESULT (WINAPI *GetProcessDpiAwarenessPTR)(HANDLE hprocess,
+													MCWin32ProcessDpiAwareness *value);
+bool MCWin32GetProcessDpiAwareness(HRESULT &r_result, HANDLE p_hprocess,
+								   MCWin32ProcessDpiAwareness *r_awareness)
 {
-	static GetProcessDPIAwarenessPTR s_GetProcessDPIAwareness = NULL;
+	static GetProcessDpiAwarenessPTR s_GetProcessDpiAwareness = NULL;
 	static bool s_init = true;
 
 	if (s_init)
 	{
-		s_GetProcessDPIAwareness = (GetProcessDPIAwarenessPTR)GetProcAddress(GetModuleHandleA("shcore.dll"), "GetProcessDPIAwareness");
+		s_GetProcessDpiAwareness = (GetProcessDpiAwarenessPTR)GetProcAddress(GetModuleHandleA("shcore.dll"), "GetProcessDpiAwareness");
 		s_init = false;
 	}
 
-	if (s_GetProcessDPIAwareness == NULL)
+	if (s_GetProcessDpiAwareness == NULL)
 		return false;
 
-	r_result = s_GetProcessDPIAwareness(NULL, r_awareness);
+	r_result = s_GetProcessDpiAwareness(NULL, r_awareness);
 
 	return true;
 }
@@ -124,26 +124,26 @@ bool MCWin32GetProcessDPIAwareness(HRESULT &r_result, HANDLE p_hprocess,
 //////////
 
 // IM-2014-01-28: [[ HiDPI ]] Weak-linked GetDPIForMonitor function
-typedef HRESULT (WINAPI *GetDPIForMonitorPTR)(HMONITOR hmonitor,
-											  MCWin32MonitorDPIType dpiType,
+typedef HRESULT (WINAPI *GetDpiForMonitorPTR)(HMONITOR hmonitor,
+											  MCWin32MonitorDpiType dpiType,
 											  UINT *dpiX, UINT *dpiY);
-bool MCWin32GetDPIForMonitor(HRESULT &r_result, HMONITOR p_monitor,
-							 MCWin32MonitorDPIType p_dpi_type,
+bool MCWin32GetDpiForMonitor(HRESULT &r_result, HMONITOR p_monitor,
+							 MCWin32MonitorDpiType p_dpi_type,
 							 UINT *r_dpi_x, UINT *r_dpi_y)
 {
-	static GetDPIForMonitorPTR s_GetDPIForMonitor = NULL;
+	static GetDpiForMonitorPTR s_GetDpiForMonitor = NULL;
 	static bool s_init = true;
 
 	if (s_init)
 	{
-		s_GetDPIForMonitor = (GetDPIForMonitorPTR)GetProcAddress(GetModuleHandleA("shcore.dll"), "GetDPIForMonitor");
+		s_GetDpiForMonitor = (GetDpiForMonitorPTR)GetProcAddress(GetModuleHandleA("shcore.dll"), "GetDpiForMonitor");
 		s_init = false;
 	}
 
-	if (s_GetDPIForMonitor == NULL)
+	if (s_GetDpiForMonitor == NULL)
 		return false;
 
-	r_result = s_GetDPIForMonitor(p_monitor, p_dpi_type, r_dpi_x, r_dpi_y);
+	r_result = s_GetDpiForMonitor(p_monitor, p_dpi_type, r_dpi_x, r_dpi_y);
 
 	return true;
 }

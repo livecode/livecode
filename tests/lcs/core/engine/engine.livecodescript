@@ -91,6 +91,7 @@ end TestGlobals
 
 
 on TestMachine
+   TestSkipIf "platform", "HTML5"
 if the platform is "win32" then
 TestAssert "Machine is x86", the machine is "x86"
 else if the platform is "iphone" then
@@ -140,6 +141,7 @@ end TestPlatform
 
 
 on TestProcessor
+   TestSkipIf "platform", "HTML5"
 local tProcessors
 
 if the platform is "Win32" then
@@ -287,7 +289,7 @@ end TestVersion
 
 
 on TestCancelPendingMessage
-
+   TestSkipIfNot "wait"
 create button
 
 set the script of button 1 to "on mouseUp;set the ID of the templateStack to 2000;end mouseUp"
@@ -459,6 +461,7 @@ end TestReleaseStackMessage
 
 
 on TestMilliseconds
+   TestSkipIfNot "wait"
 
 local tTime
 
@@ -472,6 +475,7 @@ end TestMilliseconds
 
 
 on TestSeconds
+   TestSkipIfNot "wait"
 
 local tTime
 
@@ -485,6 +489,7 @@ end TestSeconds
 
 
 on TestTicks
+   TestSkipIfNot "wait"
 
 local tTime
 

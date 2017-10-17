@@ -30,13 +30,8 @@ mergeInto(LibraryManager.library, {
         showConfirm: function(message_buffer, message_length) {
             var message = LiveCodeUtil.stringFromUTF16(message_buffer, message_length);
           
-            // Confirm returns true/false but we need the button ID
             var result = confirm(message);
-            if (result) {
-                return 0;
-            } else {
-                return 1;
-            }
+            return result;
         },
           
           showPrompt: function(message_buffer, message_length, default_buffer, default_length, return_buffer, return_length) {

@@ -31,23 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Sensor, StartTrackingSensor, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Sensor, StopTrackingSensor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, SensorAvailable, 2)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedLocationOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, LocationOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedHeadingOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, HeadingOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedAccelerationOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, AccelerationOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedRotationRateOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, RotationRateOfDevice, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, LocationCalibrationTimeout, 1)
-MC_EXEC_DEFINE_SET_METHOD(Sensor, LocationCalibrationTimeout, 1)
-MC_EXEC_DEFINE_GET_METHOD(Sensor, LocationAuthorizationStatus, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCSensorTypeElementInfo[] =
 {
 	{ "unknown", kMCSensorTypeUnknown, true },
@@ -131,58 +114,42 @@ static bool __MCSensorGetDetailedLocationArray(const MCSensorLocationReading& p_
     /* UNCHECKED */ MCArrayCreateMutable(&t_location_array);
     
     MCAutoNumberRef t_latitude;
-    MCNewAutoNameRef t_latitude_name;
     /* UNCHECKED */ MCNumberCreateWithReal(p_reading.latitude, &t_latitude);
-    /* UNCHECKED */ MCNameCreateWithCString("latitude", &t_latitude_name);
-    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_latitude_name, *t_latitude);
+    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, MCNAME("latitude"), *t_latitude);
     
     MCAutoNumberRef t_longitude;
-    MCNewAutoNameRef t_longitude_name;
     /* UNCHECKED */ MCNumberCreateWithReal(p_reading.longitude, &t_longitude);
-    /* UNCHECKED */ MCNameCreateWithCString("longitude", &t_longitude_name);
-    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_longitude_name, *t_longitude);
+    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, MCNAME("longitude"), *t_longitude);
     
     MCAutoNumberRef t_altitude;
-    MCNewAutoNameRef t_altitude_name;
     /* UNCHECKED */ MCNumberCreateWithReal(p_reading.altitude, &t_altitude);
-    /* UNCHECKED */ MCNameCreateWithCString("altitude", &t_altitude_name);
-    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_altitude_name, *t_altitude);
+    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, MCNAME("altitude"), *t_altitude);
     
     // MM-2013-02-21: Add speed and course to detailed location readings.
     if (p_reading.speed >= 0.0f)
     {
         MCAutoNumberRef t_speed;
-        MCNewAutoNameRef t_speed_name;
         /* UNCHECKED */ MCNumberCreateWithReal(p_reading.speed, &t_speed);
-        /* UNCHECKED */ MCNameCreateWithCString("speed", &t_speed_name);
-        /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_speed_name, *t_speed);
+        /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, MCNAME("speed"), *t_speed);
     }
     if (p_reading.course >= 0.0f)
     {
         MCAutoNumberRef t_course;
-        MCNewAutoNameRef t_course_name;
         /* UNCHECKED */ MCNumberCreateWithReal(p_reading.course, &t_course);
-        /* UNCHECKED */ MCNameCreateWithCString("course", &t_course_name);
-        /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_course_name, *t_course);
+        /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, MCNAME("course"), *t_course);
     }
     
     MCAutoNumberRef t_timestamp;
-    MCNewAutoNameRef t_timestamp_name;
     /* UNCHECKED */ MCNumberCreateWithReal(p_reading.timestamp, &t_timestamp);
-    /* UNCHECKED */ MCNameCreateWithCString("timestamp", &t_timestamp_name);
-    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_timestamp_name, *t_timestamp);
+    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, MCNAME("timestamp"), *t_timestamp);
     
     MCAutoNumberRef t_horizontal_accuracy;
-    MCNewAutoNameRef t_horizontal_accuracy_name;
     /* UNCHECKED */ MCNumberCreateWithReal(p_reading.horizontal_accuracy, &t_horizontal_accuracy);
-    /* UNCHECKED */ MCNameCreateWithCString("horizontal accuracy", &t_horizontal_accuracy_name);
-    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_horizontal_accuracy_name, *t_horizontal_accuracy);
+    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, MCNAME("horizontal accuracy"), *t_horizontal_accuracy);
     
     MCAutoNumberRef t_vertical_accuracy;
-    MCNewAutoNameRef t_vertical_accuracy_name;
     /* UNCHECKED */ MCNumberCreateWithReal(p_reading.vertical_accuracy, &t_vertical_accuracy);
-    /* UNCHECKED */ MCNameCreateWithCString("vertical accuracy", &t_vertical_accuracy_name);
-    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_vertical_accuracy_name, *t_vertical_accuracy);
+    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, MCNAME("vertical accuracy"), *t_vertical_accuracy);
     
     r_detailed_location = t_location_array.Take();
     
@@ -279,52 +246,36 @@ void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCArrayRef &r_detai
 		/* UNCHECKED */ MCArrayCreateMutable(&t_heading_array);
 
 		MCAutoNumberRef t_heading;
-		MCNewAutoNameRef t_heading_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.heading, &t_heading);
-		/* UNCHECKED */ MCNameCreateWithCString("heading", &t_heading_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, *t_heading_name, *t_heading);
+		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, MCNAME("heading"), *t_heading);
               
 		MCAutoNumberRef t_magnetic_heading;
-		MCNewAutoNameRef t_magnetic_heading_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.magnetic_heading, &t_magnetic_heading);
-		/* UNCHECKED */ MCNameCreateWithCString("magnetic heading", &t_magnetic_heading_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, *t_magnetic_heading_name, *t_magnetic_heading);
+		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, MCNAME("magnetic heading"), *t_magnetic_heading);
 
 		MCAutoNumberRef t_true_heading;
-		MCNewAutoNameRef t_true_heading_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.true_heading, &t_true_heading);
-		/* UNCHECKED */ MCNameCreateWithCString("true heading", &t_true_heading_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, *t_true_heading_name, *t_true_heading);
+		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, MCNAME("true heading"), *t_true_heading);
         
 		MCAutoNumberRef t_x;
-		MCNewAutoNameRef t_x_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.x, &t_x);
-		/* UNCHECKED */ MCNameCreateWithCString("x", &t_x_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, *t_x_name, *t_x);
+		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, MCNAME("x"), *t_x);
    
 		MCAutoNumberRef t_y;
-		MCNewAutoNameRef t_y_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.y, &t_y);
-		/* UNCHECKED */ MCNameCreateWithCString("y", &t_y_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, *t_y_name, *t_y);
+		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, MCNAME("y"), *t_y);
 
 		MCAutoNumberRef t_z;
-		MCNewAutoNameRef t_z_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.z, &t_z);
-		/* UNCHECKED */ MCNameCreateWithCString("z", &t_z_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, *t_z_name, *t_z);
+		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, MCNAME("z"), *t_z);
 		
 		MCAutoNumberRef t_timestamp;
-		MCNewAutoNameRef t_timestamp_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.timestamp, &t_timestamp);
-		/* UNCHECKED */ MCNameCreateWithCString("timestamp", &t_timestamp_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, *t_timestamp_name, *t_timestamp);
+		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, MCNAME("timestamp"), *t_timestamp);
               
 		MCAutoNumberRef t_accuracy;
-		MCNewAutoNameRef t_accuracy_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.accuracy, &t_accuracy);
-		/* UNCHECKED */ MCNameCreateWithCString("accuracy", &t_accuracy_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, *t_accuracy_name, *t_accuracy);
+		/* UNCHECKED */ MCArrayStoreValue(*t_heading_array, false, MCNAME("accuracy"), *t_accuracy);
         
         r_detailed_heading = MCValueRetain(*t_heading_array);
     }
@@ -349,28 +300,20 @@ void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCArrayRef &r_
 		/* UNCHECKED */ MCArrayCreateMutable(&t_acceleration_array);
 
 		MCAutoNumberRef t_x;
-		MCNewAutoNameRef t_x_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.x, &t_x);
-		/* UNCHECKED */ MCNameCreateWithCString("x", &t_x_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_acceleration_array, false, *t_x_name, *t_x);
+		/* UNCHECKED */ MCArrayStoreValue(*t_acceleration_array, false, MCNAME("x"), *t_x);
    
 		MCAutoNumberRef t_y;
-		MCNewAutoNameRef t_y_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.y, &t_y);
-		/* UNCHECKED */ MCNameCreateWithCString("y", &t_y_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_acceleration_array, false, *t_y_name, *t_y);
+		/* UNCHECKED */ MCArrayStoreValue(*t_acceleration_array, false, MCNAME("y"), *t_y);
 
 		MCAutoNumberRef t_z;
-		MCNewAutoNameRef t_z_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.z, &t_z);
-		/* UNCHECKED */ MCNameCreateWithCString("z", &t_z_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_acceleration_array, false, *t_z_name, *t_z);
+		/* UNCHECKED */ MCArrayStoreValue(*t_acceleration_array, false, MCNAME("z"), *t_z);
 		
 		MCAutoNumberRef t_timestamp;
-		MCNewAutoNameRef t_timestamp_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.timestamp, &t_timestamp);
-		/* UNCHECKED */ MCNameCreateWithCString("timestamp", &t_timestamp_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_acceleration_array, false, *t_timestamp_name, *t_timestamp);
+		/* UNCHECKED */ MCArrayStoreValue(*t_acceleration_array, false, MCNAME("timestamp"), *t_timestamp);
         
         r_detailed_acceleration = MCValueRetain(*t_acceleration_array);
 	}
@@ -395,28 +338,20 @@ void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCArrayRef &r_
 		/* UNCHECKED */ MCArrayCreateMutable(&t_rotation_array);
 
 		MCAutoNumberRef t_x;
-		MCNewAutoNameRef t_x_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.x, &t_x);
-		/* UNCHECKED */ MCNameCreateWithCString("x", &t_x_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_rotation_array, false, *t_x_name, *t_x);
+		/* UNCHECKED */ MCArrayStoreValue(*t_rotation_array, false, MCNAME("x"), *t_x);
    
 		MCAutoNumberRef t_y;
-		MCNewAutoNameRef t_y_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.y, &t_y);
-		/* UNCHECKED */ MCNameCreateWithCString("y", &t_y_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_rotation_array, false, *t_y_name, *t_y);
+		/* UNCHECKED */ MCArrayStoreValue(*t_rotation_array, false, MCNAME("y"), *t_y);
 
 		MCAutoNumberRef t_z;
-		MCNewAutoNameRef t_z_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.z, &t_z);
-		/* UNCHECKED */ MCNameCreateWithCString("z", &t_z_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_rotation_array, false, *t_z_name, *t_z);
+		/* UNCHECKED */ MCArrayStoreValue(*t_rotation_array, false, MCNAME("z"), *t_z);
 		
 		MCAutoNumberRef t_timestamp;
-		MCNewAutoNameRef t_timestamp_name;
 		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.timestamp, &t_timestamp);
-		/* UNCHECKED */ MCNameCreateWithCString("timestamp", &t_timestamp_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_rotation_array, false, *t_timestamp_name, *t_timestamp);
+		/* UNCHECKED */ MCArrayStoreValue(*t_rotation_array, false, MCNAME("timestamp"), *t_timestamp);
         
         r_detailed_rotation_rate = MCValueRetain(*t_rotation_array);
 	}

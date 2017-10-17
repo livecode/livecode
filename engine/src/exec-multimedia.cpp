@@ -40,57 +40,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, AnswerEffect, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, AnswerRecord, 0)
-MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, QTVersion, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, QTEffects, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, RecordCompressionTypes, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, RecordFormats, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, RecordLoudness, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, Movie, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, MCISendString, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, Sound, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, Record, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, Pause, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, Resume, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, StartPlayer, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, StopPlaying, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, StopPlayingObject, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, StopRecording, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, PrepareVideoClip, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, PlayAudioClip, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, PlayVideoClip, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, PlayStopAudio, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, PlayPlayerOperation, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, PlayVideoOperation, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, PlayLastVideoOperation, 1)
-MC_EXEC_DEFINE_GET_METHOD(Multimedia, RecordFormat, 1)
-MC_EXEC_DEFINE_SET_METHOD(Multimedia, RecordFormat, 1)
-MC_EXEC_DEFINE_GET_METHOD(Multimedia, RecordCompression, 1)
-MC_EXEC_DEFINE_SET_METHOD(Multimedia, RecordCompression, 1)
-MC_EXEC_DEFINE_GET_METHOD(Multimedia, RecordInput, 1)
-MC_EXEC_DEFINE_SET_METHOD(Multimedia, RecordInput, 1)
-MC_EXEC_DEFINE_GET_METHOD(Multimedia, RecordSampleSize, 1)
-MC_EXEC_DEFINE_SET_METHOD(Multimedia, RecordSampleSize, 1)
-MC_EXEC_DEFINE_GET_METHOD(Multimedia, RecordChannels, 1)
-MC_EXEC_DEFINE_SET_METHOD(Multimedia, RecordChannels, 1)
-MC_EXEC_DEFINE_GET_METHOD(Multimedia, RecordRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Multimedia, RecordRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Multimedia, PlayDestination, 1)
-MC_EXEC_DEFINE_SET_METHOD(Multimedia, PlayDestination, 1)
-MC_EXEC_DEFINE_GET_METHOD(Multimedia, PlayLoudness, 1)
-MC_EXEC_DEFINE_SET_METHOD(Multimedia, PlayLoudness, 1)
-MC_EXEC_DEFINE_GET_METHOD(Multimedia, QtIdleRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Multimedia, QtIdleRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Multimedia, DontUseQt, 1)
-MC_EXEC_DEFINE_SET_METHOD(Multimedia, DontUseQt, 1)
-MC_EXEC_DEFINE_GET_METHOD(Multimedia, DontUseQtEffects, 1)
-MC_EXEC_DEFINE_SET_METHOD(Multimedia, DontUseQtEffects, 1)
-MC_EXEC_DEFINE_GET_METHOD(Multimedia, Recording, 1)
-MC_EXEC_DEFINE_SET_METHOD(Multimedia, Recording, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 struct MCMultimediaRecordFormat
 {
     intenum_t format;
@@ -575,7 +524,10 @@ static MCPlayer* MCMultimediaExecGetClip(MCExecContext& ctxt, MCStringRef p_clip
 	if (p_chunk_type == CT_EXPRESSION)
 	{
         // AL-2014-05-27: [[ Bug 12517 ]] MCNameLookup does not increase the ref count
-		return MCPlayer::FindPlayerByName(MCNameLookup(p_clip));
+        MCNameRef t_name = MCNameLookupCaseless(p_clip);
+        if (t_name == nullptr)
+            return nullptr;
+		return MCPlayer::FindPlayerByName(t_name);
 	}
 	
     if (p_chunk_type == CT_ID)

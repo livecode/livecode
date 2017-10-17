@@ -2,7 +2,7 @@ Name: scrollbarPageInc
 
 Type: message
 
-Syntax: scrollbarPageInc <newPosition>
+Syntax: scrollbarPageInc <pNewPosition>
 
 Summary:
 Sent to a <scrollbar> when the user clicks below or right of the
@@ -23,7 +23,7 @@ on scrollbarPageInc theMovieNumber
 end scrollbarPageInc
 
 Parameters:
-newPosition:
+pNewPosition:
 The new position of the scrollbar thumb.
 
 Description:
