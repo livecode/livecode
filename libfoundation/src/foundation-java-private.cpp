@@ -1211,7 +1211,7 @@ static jclass MCJavaPrivateFindClass(MCNameRef p_class_name)
                                                 "findClass",
                                                 "(Ljava/lang/String;)Ljava/lang/Class;");
     
-    jobejct t_class = s_env->CallObjectMethod(t_class_loader,
+    jobject t_class = s_env->CallObjectMethod(t_class_loader,
                                               t_find_class,
                                               t_class_string);
     if (t_class != nullptr)
