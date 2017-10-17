@@ -17,6 +17,12 @@
 			[
 				'../libcore/libcore.gyp:libCore',
 				'../libexternal/libexternal.gyp:libExternal',
+				
+				'../prebuilt/libcef.gyp:libcef',
+				'../thirdparty/libcef/libcef.gyp:libcef_library_wrapper',
+				'../thirdparty/libcef/libcef.gyp:libcef_stubs',
+
+				'revbrowser-cefprocess',
 			],
 			
 			'include_dirs':
@@ -45,29 +51,18 @@
 				'src/revbrowser.rc',
 			],
 			
-			'conditions':
+			'target_conditions':
 			[
 				# Only supported on OSX, Windows and Linux
 				[
-					'OS != "mac" and OS != "win" and OS != "linux"',
+					'not toolset_os in ("mac", "win", "linux")',
 					{
 						'type': 'none',
 					},
 				],
 				# CEF only supported on Windows & Linux
 				[
-					'OS == "win" or OS == "linux"',
-					{
-						'dependencies':
-						[
-							'../prebuilt/libcef.gyp:libcef',
-							'../thirdparty/libcef/libcef.gyp:libcef_library_wrapper',
-							'../thirdparty/libcef/libcef.gyp:libcef_stubs',
-
-							'revbrowser-cefprocess',
-						],
-					},
-					# else
+					'not toolset_os in ("win", "linux") or (toolset_os == "linux" and not toolset_arch in ("x86", "x86_64"))',
 					{
 						'sources!':
 						[
@@ -81,7 +76,7 @@
 					},
 				],
 				[
-					'OS == "mac"',
+					'toolset_os == "mac"',
 					{
 						'libraries':
 						[
@@ -89,18 +84,10 @@
 							'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
 							'$(SDKROOT)/System/Library/Frameworks/WebKit.framework',
 						],
-						
-						'all_dependent_settings':
-						{
-							'variables':
-							{
-								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name).bundle' ],
-							},
-						},
 					},
 				],
 				[
-					'OS == "win"',
+					'toolset_os == "win"',
 					{
 						'copies':
 						[
@@ -117,18 +104,10 @@
 						[
 							'__EXCEPTIONS',
 						],
-						
-						'all_dependent_settings':
-						{
-							'variables':
-							{
-								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name).dll' ],
-							},
-						},
 					},
 				],
 				[
-					'OS == "linux"',
+					'toolset_os == "linux" and toolset_arch in ("x86", "x86_64")',
 					{
                         'copies':
                         [
@@ -146,18 +125,44 @@
 							'-ldl',
 							'-lX11',
 						],
-						
-						'all_dependent_settings':
+					},
+				],
+			],
+			
+			'all_dependent_settings':
+			{
+				'conditions':
+				[
+					[
+						'OS == "win"',
+						{
+							'variables':
+							{
+								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name).dll' ],
+							},
+						},
+					],
+					[
+						'OS == "linux" and target_arch in ("x86", "x86_64")',
 						{
 							'variables':
 							{
 								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name).so' ],
 							},
 						},
-					},
+					],
+					[
+						'OS == "mac"',
+						{
+							'variables':
+							{
+								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name).bundle' ],
+							},
+						},
+					],
 				],
-			],
-			
+			},
+            
 			'cflags_cc!':
 			[
 				'-fno-rtti',
@@ -172,7 +177,6 @@
 				},	
 			},
 			
-			
 			'xcode_settings':
 			{
 				'INFOPLIST_FILE': 'rsrc/revbrowser-Info.plist',
@@ -186,17 +190,17 @@
 			'product_name': 'revbrowser-cefprocess',
 			
 			# Windows and Linux only
-			'conditions':
+			'target_conditions':
 			[
 				[
-					'OS != "win" and OS != "linux"',
+					'not toolset_os in ("win", "linux") or (toolset_os == "linux" and not toolset_arch in ("x86", "x86_64"))',
 					{
 						'type': 'none',
 					},
 				],
 				
 				[
-					'OS == "win"',
+					'toolset_os == "win"',
 					{	
 						'library_dirs':
 						[
@@ -211,7 +215,7 @@
 				],
                 
                 [
-                    'OS == "linux"',
+                    'toolset_os == "linux"',
                     {
                         'library_dirs':
                         [
@@ -231,20 +235,24 @@
                     },
                 ],
                 
+			],
+			
+			'all_dependent_settings':
+			{
+				'conditions':
 				[
-					'OS == "win" or OS == "linux"',
-					{
-						# Distributing the OSX version is done separately
-						'all_dependent_settings':
+					[
+						'OS == "win" or (OS == "linux" and target_arch in ("x86", "x86_64"))',
 						{
+							# Distributing the OSX version is done separately
 							'variables':
 							{
 								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(exe_suffix)' ],
 							},
-						},
-					},
+						}
+					],
 				],
-			],
+			},
 			
 			'dependencies':
 			[

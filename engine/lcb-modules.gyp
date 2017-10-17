@@ -12,6 +12,8 @@
 			'target_name': 'engine_lcb_modules',
 			'type': 'none',
 
+			'toolsets': ['host', 'target'],
+			
 			'dependencies':
 			[
 				'../toolchain/lc-compile/lc-compile.gyp:lc-compile#host',

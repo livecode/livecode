@@ -34,6 +34,8 @@
 			'target_name': 'kernel-server',
 			'type': 'static_library',
 			
+			'toolsets': ['host', 'target'],
+
 			'includes':
 			[
 				'kernel-mode-template.gypi',
