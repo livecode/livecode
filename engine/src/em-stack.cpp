@@ -43,8 +43,8 @@ MCStack::realize()
 
 	start_externals();
 
-	/* Use the MCStack pointer as the window handle */
-	window = reinterpret_cast<Window>(this);
+	uint32_t t_window = MCEmscriptenCreateWindow();
+	window = reinterpret_cast<Window>(t_window);
 
 	/* By default, don't draw anything */
 	setextendedstate(true, ECS_DONTDRAW);
@@ -118,22 +118,26 @@ MCStack::view_platform_updatewindow(MCRegionRef p_dirty_region)
 	 * for the first time will result in an update region being too
 	 * big. Restrict to a valid region. */
 
+	uint32_t t_window = reinterpret_cast<uint32_t>(window);
+	
 	MCGRegionRef t_region = MCGRegionRef(p_dirty_region);
-	MCRectangle t_valid = MCEmscriptenViewGetBounds();
+	MCRectangle t_valid = MCEmscriptenGetWindowRect(t_window);
 
 	MCGRegionIntersectRect(t_region, MCRectangleToMCGIntegerRectangle(t_valid));
 
     MCGIntegerRectangle t_rect = MCGRegionGetBounds(t_region);
 
-    MCHtmlCanvasStackSurface t_surface(t_rect);
+    MCHtmlCanvasStackSurface t_surface(t_window, t_rect);
 	view_surface_redrawwindow(&t_surface, t_region);
 }
 
 MCRectangle
 MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 {
-	MCRectangle t_old = MCEmscriptenViewGetBounds();
-	/* UNCHECKED */ MCEmscriptenViewSetBounds(p_rect);
+	uint32_t t_window = reinterpret_cast<uint32_t>(window);
+
+	MCRectangle t_old = MCEmscriptenGetWindowRect(t_window);
+	MCEmscriptenSetWindowRect(t_window, p_rect);
 	return t_old;
 }
 
