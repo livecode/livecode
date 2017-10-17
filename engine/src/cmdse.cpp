@@ -163,7 +163,6 @@ struct ExecBeepDesc
 {
     typedef DefaultedArg<uinteger_t, 1, EE_BEEP_BADEXP> Arg1;
     static constexpr void (*Func)(MCExecContext &ctxt, integer_t arg_1) = &MCInterfaceExecBeep;
-    static constexpr void (*NullFunc)(MCExecContext &ctxt) = nullptr;
 };
 
 
@@ -223,16 +222,25 @@ Parse_stat MCCancel::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-struct ExecCancelDesc
+struct ExecCancelPrintingDesc
 {
-    typedef NullableArg<integer_t, EE_CANCEL_IDNAN> Arg1;
+    typedef StandardArg<integer_t, EE_CANCEL_IDNAN> Arg1;
     static constexpr void (*Func)(MCExecContext &ctxt, integer_t t_id) = &MCEngineExecCancelMessage;
-    static constexpr void (*NullFunc)(MCExecContext &ctxt) = &MCPrintingExecCancelPrinting;
+    
+};
+
+struct ExecCancelMessageDesc
+{
+    static constexpr void (*Func)(MCExecContext &ctxt) = &MCPrintingExecCancelPrinting;
 };
 
 void MCCancel::exec_ctxt(MCExecContext& ctxt)
 {
-    Dispatch<ExecCancelDesc>(ctxt, m_id);
+    if (!m_id)
+    {
+        Dispatch<ExecCancelMessageDesc>(ctxt);
+    }
+    Dispatch<ExecCancelPrintingDesc>(ctxt, m_id);
 }
 
 void MCCancel::compile(MCSyntaxFactoryRef ctxt)
