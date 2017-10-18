@@ -359,7 +359,11 @@ void MCObject::setname(MCNameRef p_new_name)
 void MCObject::setname_cstring(const char *p_new_name)
 {
 	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, _name);
+	
+	if (p_new_name == NULL)
+		_name = MCValueRetain(kMCEmptyName);
+	else
+		/* UNCHECKED */ MCNameCreateWithCString(p_new_name, _name);
 }
 
 void MCObject::setscript(MCStringRef p_script)
