@@ -286,7 +286,15 @@ end __deployLaunchURLInBrowser
 --
 on deployEmscriptenNewHTTPRequest pSocketID, pRequest
    local tPath   
-   put sHTTPFileSpace & slash & pRequest["resource"] into tPath
+   set the itemDel to slash
+   repeat for each item tSubPath in pRequest["resource"]
+      if tPath is not empty then
+         put slash after tPath
+      end if
+      put urlDecode(tSubPath) after tPath
+   end repeat
+   set the itemDel to comma
+   put sHTTPFileSpace & slash before tPath
    
    if there is a file tPath then
       httpdResponse pSocketID, 200, URL ("binfile:" & tPath)
