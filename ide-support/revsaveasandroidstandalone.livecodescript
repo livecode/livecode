@@ -684,20 +684,14 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       put tBuildFolder & slash & "classes_app/" & tCompiledClassFilePath & "/AppProvider.class" & return after tBuiltClassFiles
       
-      local tFolder
-      put the folder into tFolder         
-      set the folder to tBuildFolder & slash & "classes_app"
+      set the itemdel to slash
       repeat for each line tJarFile in pSettings["jarFiles"]
-         executeShellCommand pathToJar(), "xf", tJarFile
-         if the result is not empty then
-            throw "could not extract jar file" && tJarFile & return & the result 
-         end if
+         put url ("binfile:" & tJarFile) into url ("binfile:" & tLibsBuildFolder & slash & item -1 of tJarFile)
       end repeat
-      set the folder to tFolder
       
       local tClassesFile
       put tBuildFolder & slash & "classes.dex" into tClassesFile
-      executeShellCommand pathToDex(), "--dex", "--output=" & quote & tClassesFile & quote, tClassesBuildFolder, tLiveCodeClassesFile
+      executeShellCommand pathToDex(), "--dex", "--output=" & quote & tClassesFile & quote, tClassesBuildFolder, tLiveCodeClassesFile, tLibsBuildFolder
       if the result is not empty then
          throw "could not encode class bundle"
       end if
@@ -935,13 +929,18 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    repeat for each line tEntry in tExternals
       if there is a file (tArmLibsBuildFolder & slash & "lib" & tEntry & ".so") then delete file (tArmLibsBuildFolder & slash & "lib" & tEntry & ".so")
    end repeat
+   set the itemDelimiter to slash
+   repeat for each line tJarFile in pSettings["jarFiles"]
+      if there is a file (tLibsBuildFolder & slash & item -1 of tJarFile) then 
+         delete file (tLibsBuildFolder & slash & item -1 of tJarFile)
+      end if
+   end repeat
    if there is a folder tArmLibsBuildFolder then delete folder tArmLibsBuildFolder
    if there is a folder tLibsBuildFolder then delete folder tLibsBuildFolder
    if there is a file tClassesFile then delete file tClassesFile
    repeat for each line tClassFile in tBuiltClassFiles
       if there is a file tClassFile then delete file tClassFile
    end repeat
-   set the itemDelimiter to slash
    repeat while there is a folder (tBuildFolder & slash & "classes_app" & slash & tCompiledClassFilePath)
       delete folder (tBuildFolder & slash & "classes_app" & slash & tCompiledClassFilePath)
       if the result is not empty then
