@@ -631,12 +631,14 @@ private function __MeetsRequirements pRequirement, pOptions
             return __MeetsRequirements("desktop")
          end if  
          return the platform is not "HTML5"
+      case "jvm"
+         return __MeetsRequirements("platform", "MacOS,Linux")
    end switch
    return true
 end __MeetsRequirements
 
 command TestEnsureJVM
-   TestSkipIfNot "platform", "MacOS,Linux"
+   TestSkipIfNot "jvm"
 
    if $JAVA_HOME is empty then
       local tPath

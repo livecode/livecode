@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 local sSupportStack, sExtensionName
 on TestSetup   
-   TestEnsureJVM
+   TestSkipIfNot "jvm"
    put "com.livecode.library.javatest" into sExtensionName
    __InstallExtension sExtensionName
    
