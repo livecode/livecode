@@ -36,21 +36,27 @@ end _TestPath
 -- Utility function that returns the smallest possible valid PNG image
 local sTinyPNG
 private function _TinyPNG
-   if sTinyPNG is empty then put url format("binfile:%s/tiny.png", _TestPath()) into sTinyPNG
+   if sTinyPNG is empty then 
+      put url ("binfile:" & TestGetInputFile("tiny.png")) into sTinyPNG
+   end if
    return sTinyPNG
 end _TinyPNG
 
 -- Utility function that returns the smallest possible valid GIF image
 local sTinyGIF
 private function _TinyGIF
-   if sTinyGIF is empty then put url format("binfile:%s/tiny.gif", _TestPath()) into sTinyGIF
+   if sTinyGIF is empty then 
+      put url ("binfile:" & TestGetInputFile("tiny.gif")) into sTinyGIF
+   end if
    return sTinyGIF
 end _TinyGIF
 
 -- Utility function that returns the smallest possible valid JPEG image
 local sTinyJPEG
 private function _TinyJPEG
-   if sTinyJPEG is empty then put url format("binfile:%s/tiny.jpg", _TestPath()) into sTinyJPEG
+   if sTinyJPEG is empty then 
+      put url ("binfile:" & TestGetInputFile("tiny.jpg")) into sTinyJPEG
+   end if
    return sTinyJPEG
 end _TinyJPEG
 

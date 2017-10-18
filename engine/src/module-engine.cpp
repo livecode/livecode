@@ -40,7 +40,7 @@
 #include "notify.h"
 
 #include "module-engine.h"
-
+#include "widget.h"
 #include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -516,6 +516,23 @@ extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendToScriptObject(bool p_is_
     return MCEngineExecSendToScriptObjectWithArguments(p_is_function, p_message, p_object, kMCEmptyProperList);
 }
 
+extern MCWidgetRef MCcurrentwidget;
+extern void MCWidgetExecPostToParentWithArguments(MCStringRef p_message, MCProperListRef p_arguments);
+
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
+{
+    MCObject *t_target = MCdefaultstackptr -> getcurcard();
+    if (MCcurrentwidget)
+        t_target = MCWidgetGetHost(MCcurrentwidget);
+    
+    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, t_target, p_arguments);
+}
+
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSend(bool p_is_function, MCStringRef p_message)
+{
+    return MCEngineExecSendWithArguments(p_is_function, p_message, kMCEmptyProperList);
+}
+
 void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments)
 {
     MCNewAutoNameRef t_message_as_name;
@@ -552,6 +569,27 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostToScriptObject(MCStringRef p_me
     MCEngineExecPostToScriptObjectWithArguments(p_message, p_object, kMCEmptyProperList);
 }
 
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
+{
+    MCObject *t_target = MCdefaultstackptr -> getcurcard();
+    if (MCcurrentwidget)
+    {
+        if (!MCWidgetIsRoot(MCcurrentwidget))
+        {
+            MCWidgetExecPostToParentWithArguments(p_message, p_arguments);
+            return;
+        }
+        t_target = MCWidgetGetHost(MCcurrentwidget);
+    }
+    
+    MCEngineDoPostToObjectWithArguments(p_message, t_target, p_arguments);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecPost(MCStringRef p_message)
+{
+    MCEngineExecPostWithArguments(p_message, kMCEmptyProperList);
+}
+
 extern "C" MC_DLLEXPORT_DEF void MCEngineEvalMessageWasHandled(bool& r_handled)
 {
     r_handled = s_last_message_was_handled;
@@ -564,6 +602,12 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineEvalMessageWasNotHandled(bool& r_not_ha
     r_not_handled = !t_handled;
 }
 
+extern MCExecContext *MCECptr;
+extern "C" MC_DLLEXPORT_DEF void MCEngineEvalCaller(MCScriptObjectRef& r_script_object)
+{
+    if (!MCEngineScriptObjectCreate(MCECptr->GetObject(), 0, r_script_object))
+        return;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCValueRef

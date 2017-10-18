@@ -23,15 +23,15 @@ end revLoadLibrary
 local sTestStrings, sTestNumbers, sTestConversionStrings, sTestFilePaths, sArrayData
 local sInitialised
 
-function testFilesFolder
+function TestGetInputFilesFolder
    set the itemDelimiter to slash
    return item 1 to -2 of the filename of me & slash & "lcs-input-files"
-end testFilesFolder
+end TestGetInputFilesFolder
 
 private function getTestFile pTestFile
    local tContent, tFilePath
    
-   put testFilesFolder() & slash & pTestFile into tFilePath
+   put TestGetInputFilesFolder() & slash & pTestFile into tFilePath
    
    // test files are written without BOM
    open file tFilePath for "utf8" text read
@@ -159,3 +159,7 @@ function testArrayData pKey
    setupValues
    return sArrayData[pKey]
 end testArrayData
+
+function TestGetInputFile pFilename
+    return TestGetInputFilesFolder() & slash & pFilename
+end TestGetInputFile

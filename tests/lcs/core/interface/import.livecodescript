@@ -23,15 +23,15 @@ private function _TestPath
 end _TestPath
 
 on TestImportPaintInGroup
+   local tTargetGroup
+   create group
+   put it into tTargetGroup
 
-local tTargetGroup
-create group
-put it into tTargetGroup
-
-local tImportedImage, tImageFilenameFullPath
-put _TestPath() & "/../engine/tiny.png" into tImageFilenameFullPath
-import paint from file tImageFilenameFullPath in tTargetGroup
-put it into tImportedImage
-TestAssert "Now-grouped image is owned by the group", the long id of the owner of tImportedImage is tTargetGroup
-
+   local tImportedImage, tImageFilenameFullPath
+   put TestGetInputFile("tiny.png") into tImageFilenameFullPath
+   import paint from file tImageFilenameFullPath in tTargetGroup
+   put it into tImportedImage
+   
+   TestAssert "Now-grouped image is owned by the group", \
+      the long id of the owner of tImportedImage is tTargetGroup
 end TestImportPaintInGroup

@@ -23,10 +23,10 @@ end TestSetup
 on TestRSA
    
    local tPublicPKCS8, tPublicPKCS1, tPrivatePKCS8, tPrivatePKCS1
-   put url ("binfile:" & testFilesFolder() & "/public_key.pkcs8") into tPublicPKCS8
-   put url ("binfile:" & testFilesFolder() & "/public_key.pkcs1") into tPublicPKCS1
-   put url ("binfile:" & testFilesFolder() & "/private_key.pkcs8") into tPrivatePKCS8
-   put url ("binfile:" & testFilesFolder() & "/private_key.pkcs1") into tPrivatePKCS1
+   put url ("binfile:" & TestGetInputFile("/public_key.pkcs8")) into tPublicPKCS8
+   put url ("binfile:" & TestGetInputFile("/public_key.pkcs1")) into tPublicPKCS1
+   put url ("binfile:" & TestGetInputFile("/private_key.pkcs8")) into tPrivatePKCS8
+   put url ("binfile:" & TestGetInputFile("/private_key.pkcs1")) into tPrivatePKCS1
    
    __TestRoundTripRSA "foo", tPublicPKCS1, "PKCS1", tPrivatePKCS1, "PKCS1"
    __TestRoundTripRSA "foo", tPublicPKCS8, "PKCS8", tPrivatePKCS8, "PKCS8"
@@ -36,8 +36,8 @@ end TestRSA
 
 on TestRSAPass
    local tPublicPKCS8, tPrivatePKCS1
-   put url ("binfile:" & testFilesFolder() & "/public_key_pass.pkcs8") into tPublicPKCS8
-   put url ("binfile:" & testFilesFolder() & "/private_key_pass.pkcs1") into tPrivatePKCS1
+   put url ("binfile:" & TestGetInputFile("/public_key_pass.pkcs8")) into tPublicPKCS8
+   put url ("binfile:" & TestGetInputFile("/private_key_pass.pkcs1")) into tPrivatePKCS1
    
    encrypt "foo" using rsa with private key tPrivatePKCS1 and passphrase "foobar"
    decrypt it using rsa with public key tPublicPKCS8

@@ -22,7 +22,7 @@ on TestForm
    set the httpHeaders to line 1 of tForm
    delete line 1 of tForm
    
-   put "<file>" &  testFilesFolder() & "/last, first.txt" into tFile
+   put "<file>" &  TestGetInputFile("last, first.txt") into tFile
    put "text/plain" into tType
    put "binary" into tEnc
    put libURLMultipartFormAddPart(tForm,"file", tFile, tType, tEnc) into tError

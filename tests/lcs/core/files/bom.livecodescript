@@ -25,7 +25,7 @@ on TestLoadBomScriptOnlyStackFile
    local tUrlBinfilePath
    local tScriptOnlyStack
    
-   put "binfile:" & testFilesFolder() & slash & kTestFile \
+   put "binfile:" & TestGetInputFilesFolder() & slash & kTestFile \
       into tUrlBinfilePath
    
    open stack url tUrlBinfilePath

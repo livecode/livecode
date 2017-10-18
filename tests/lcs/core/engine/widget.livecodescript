@@ -21,9 +21,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 on TestSetup
    TestSkipIfNot "lcb"
    
-   TestLoadAuxillaryExtension "_widget"
-   TestLoadAuxillaryExtension "_widget_support"
-   TestLoadAuxillaryExtension "_widgetthrow"
+   TestLoadAuxiliaryExtension "_widget"
+   TestLoadAuxiliaryExtension "_widget_support"
+   TestLoadAuxiliaryExtension "_widgetthrow"
 end TestSetup
 
 //////////
@@ -104,7 +104,7 @@ on TestWidgetRetainRep
    save stack "WidgetRetainRepTest" as tPath
    delete stack "WidgetRetainRepTest"
    
-   TestLoadAuxillaryExtension "_widget_save"
+   TestLoadAuxiliaryExtension "_widget_save"
    
    go stack tPath
    
