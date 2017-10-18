@@ -492,6 +492,13 @@ function pathToJarSigner pRoot
    return pRoot & slash & "bin" & slash & executableName("jarsigner")
 end pathToJarSigner
 
+function pathToJar pRoot
+   if pRoot is empty then
+      put sJavaRoot into pRoot
+   end if
+   return pRoot & slash & "bin" & slash & executableName("jar")
+end pathToJar
+
 ////////////////////////////////////////////////////////////////////////////////
 
 private command configureJavaRootWindows
