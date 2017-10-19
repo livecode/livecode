@@ -7,15 +7,15 @@ include $(top_srcdir)/Makefile.common
 
 TEST_DIR ?= $(top_srcdir)/_tests
 LCM_DIR ?= $(TEST_DIR)/_build
-
+TESTS_DIR ?= $(top_srcdir)/tests
 # When running on headless Linux, run tests in -ui mode.
 
 LCS_ENGINE ?= $(guess_engine)
 LCS_ENGINE_FLAGS ?= $(guess_engine_flags)
 
 LCS_LOG = _lcs_test_suite.log
-LCS_TESTRUNNER ?= $(top_srcdir)/tests/_testrunner.livecodescript
-LCS_TESTS_DIR ?= $(top_srcdir)/tests/lcs
+LCS_TESTRUNNER ?= $(TESTS_DIR)/_testrunner.livecodescript
+LCS_TESTS_DIR ?= $(TESTS_DIR)/lcs
 
 ifeq ($(LCS_TESTENGINE),development)
 LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(guess_dev_engine) $(LCS_ENGINE_FLAGS)
@@ -24,7 +24,7 @@ LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(LCS_TESTS_DI
 endif
 
 LCS_SERVER_ENGINE ?= $(bin_dir)/server-community
-LCS_SERVER_TESTRUNNER ?= $(top_srcdir)/tests/_testrunner.lc
+LCS_SERVER_TESTRUNNER ?= $(TESTS_DIR)/_testrunner.lc
 LCS_SERVER_CMD = $(LCS_SERVER_ENGINE) $(LCS_SERVER_TESTRUNNER) run $(LCS_TESTS_DIR)
 
 ########## LiveCode Builder test parameters
@@ -43,7 +43,7 @@ LCB_TESTLIB = $(LCM_DIR)/_testlib.lcm
 
 ########## LiveCode Builder Compiler test parameters
 
-LCC_COMPILERTESTRUNNER ?= $(top_srcdir)/tests/_compilertestrunner.livecodescript
+LCC_COMPILERTESTRUNNER ?= $(TESTS_DIR)/_compilertestrunner.livecodescript
 
 LCC_CMD = $(LCS_ENGINE) -ui $(LCC_COMPILERTESTRUNNER) run
 
@@ -51,7 +51,7 @@ LCC_LOG = _compiler_test_suite.log
 
 ########## LiveCode Script Parser test parameters
 
-LCP_COMPILERTESTRUNNER ?= $(top_srcdir)/tests/_parsertestrunner.livecodescript
+LCP_COMPILERTESTRUNNER ?= $(TESTS_DIR)/_parsertestrunner.livecodescript
 
 LCP_CMD = $(LCS_ENGINE) -ui $(LCP_COMPILERTESTRUNNER) run
 
@@ -59,7 +59,7 @@ LCP_LOG = _parser_test_suite.log
 
 ########## lc-run test params
 
-LC_RUN_TESTS ?= $(top_srcdir)/tests/_lcruntests.livecodescript
+LC_RUN_TESTS ?= $(TESTS_DIR)/_lcruntests.livecodescript
 LC_RUN_TEST_CMD = $(LCS_ENGINE) -ui $(LC_RUN_TESTS)
 
 LC_RUN_LOG = _lc_run_test_suite.log
@@ -68,7 +68,7 @@ LC_RUN_LOG = _lc_run_test_suite.log
 
 LC_COMPILE_FFI_JAVA ?= $(bin_dir)/lc-compile-ffi-java
 
-LC_COMPILE_FFI_JAVA_TESTRUNNER ?= $(top_srcdir)/tests/_lc_compile_ffi_java_testrunner.livecodescript
+LC_COMPILE_FFI_JAVA_TESTRUNNER ?= $(TESTS_DIR)/_lc_compile_ffi_java_testrunner.livecodescript
 
 LC_COMPILE_FFI_JAVA_CMD = $(LCS_ENGINE) -ui $(LC_COMPILE_FFI_JAVA_TESTRUNNER) run
 
@@ -93,6 +93,7 @@ clean:
 
 LCM_SOURCES ?= $(patsubst ./%,%,$(shell find . -name '*.lcb' | sort))
 LCM_LIB_SOURCES = $(shell for f in $(LCM_SOURCES); do echo $$f | grep '_[^/]*.lcb$$'; done)
+TEST_EXTENSION_SOURCES ?= $(patsubst "$(TESTS_DIR)/%",%,$(shell find "$(TESTS_DIR)/lcs/extensions" -name '*.lcb' | sort))
 
 LCM_TEST_SOURCES ?= $(shell for f in $(LCM_SOURCES); do echo $$f | grep -v '_[^/]*.lcb$$'; done)
 
@@ -124,7 +125,12 @@ $(LCM_DIR)/deps.mk: $(LCM_SOURCES) Makefile $(LC_COMPILE) | $(LCM_DIR)
 
 ########## Build rules
 
-lcm_compile: $(LCM_MODULES)
+extensions_compile: $(LCM_DIR) $(TEST_EXTENSION_SOURCES)
+	@set -e; \
+	cp -r "$(MODULE_DIR)/." "$(LCM_DIR)"; \
+	"${top_srcdir}/util/build-extensions.sh" "$(LCM_DIR)/packaged_extensions" "$(LCM_DIR)" "$(LC_COMPILE)"  "false" "$(TEST_EXTENSION_SOURCES)"
+
+lcm_compile: $(LCM_MODULES) extensions_compile
 
 $(LCM_DIR)/%.lcm: %.lcb | $(LCM_DIR)
 	@set -e; \

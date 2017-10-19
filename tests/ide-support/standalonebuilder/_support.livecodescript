@@ -88,3 +88,64 @@ function StandaloneBuilderResources pStack, pExecutablePath
     end switch
     return tResources
 end StandaloneBuilderResources
+
+command StandaloneBuilderTestCreateAndSaveStackAsStandalone pDescription, pStackFilename, pScript, pSettingsA
+   local tStackID
+   create stack
+   put it into tStackID
+   set the script of tStackId to pScript
+   repeat for each key tKey in pSettingsA
+      set the cRevStandaloneSettings[tKey] of tStackId to \
+         pSettingsA[tKey]
+   end repeat
+	
+   StandaloneBuilderTestSaveStackAsStandalone pDescription, \
+      pStackFileName, tStackId
+end StandaloneBuilderTestCreateAndSaveStackAsStandalone
+
+command StandaloneBuilderTestSaveStackAsStandalone pDescription, pStackFilename, pStackID
+   local tStackName
+   put the short name of pStackID into tStackName   
+   
+   set the filename of pStackID to pStackFilename
+   save stack tStackName as pStackFilename
+   
+   revIDESaveStack pStackID	
+
+   local tExePath
+   _TestBuildStandalone pStackFilename, tExePath
+   if the result is not empty then
+      TestAssert "building standalone", false
+      exit StandaloneBuilderTestSaveStackAsStandalone
+   end if
+   
+   TestAssert "building standalone", true
+    
+   TestDiagnostic "location" && tExePath
+   
+   TestAssert "standalone in expected location", there is a file tExePath
+   
+   local tResult, tShellCmd
+   put quote & tExePath & quote into tShellCmd
+   if the environment contains "command line" then
+      put " -ui" after tShellCmd
+   end if
+   get shell(tShellCmd)
+   put the result into tResult
+   
+   if tResult is not empty then
+      TestDiagnostic "standalone quit with" && tResult & ":" && it
+   end if
+      
+   TestAssert pDescription, tResult is empty
+end StandaloneBuilderTestSaveStackAsStandalone
+
+private command _TestBuildStandalone pStackPath, @rStandalonePath
+	local tStackName, tResult
+	put the short name of stack pStackPath into tStackName
+	
+	TestDiagnostic "Building standalone -" && pStackPath
+	
+	StandaloneBuilderSaveAsStandalone tStackName, rStandalonePath
+	return the result
+end _TestBuildStandalone

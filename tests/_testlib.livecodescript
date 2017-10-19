@@ -437,14 +437,16 @@ function TestGetBuiltBytecodeFile pName
    set the itemDelimiter to slash
    put item 1 to -2 of the effective filename of \
          __StackOfObject(__GetCaller()) into tBasePath
-   repeat while the last item of tBasePath is not "tests"
-      put item -1 of tBasePath & slash before tExtraPath
-      delete the last item of tBasePath
-   end repeat
+         
+   local tTestsOffset
+   set the wholematches to true
+   put itemOffset("tests", tBasePath) into tTestsOffset
+   put item tTestsOffset + 1 to -1 of tBasePath into tExtraPath
+   put item 1 to tTestsOffset - 1 of tBasePath into tBasePath
    
    local tModuleFile
-   put tBasePath & "/../" & kBytecodePathPrefix & tExtraPath & pName \
-      & ".lcm" into tModuleFile
+   put tBasePath & "/" & kBytecodePathPrefix & tExtraPath & slash & \ 
+      pName & ".lcm" into tModuleFile
    return tModuleFile
 end TestGetBuiltBytecodeFile
 
@@ -629,6 +631,33 @@ private function __MeetsRequirements pRequirement, pOptions
             return __MeetsRequirements("desktop")
          end if  
          return the platform is not "HTML5"
+      case "jvm"
+         return __MeetsRequirements("platform", "MacOS,Linux")
    end switch
    return true
 end __MeetsRequirements
+
+command TestEnsureJVM
+   TestSkipIfNot "jvm"
+
+   if $JAVA_HOME is empty then
+      local tPath
+      switch the platform
+         case "MacOS"
+            put word 1 to -1 of shell("/usr/libexec/java_home") into tPath
+            break
+         case "Linux"
+            local tJAVAC
+            put "/bin/javac" into tJAVAC
+            put word 1 to -1 of shell("/usr/bin/env readlink -f /usr" & tJAVAC) into tPath
+            if there is a file tPath and tPath ends with tJAVAC then
+               set the itemDelimiter to slash
+               delete item -2 to -1 of tPath
+            end if
+            break
+      end switch
+      if there is a folder tPath then
+         put tPath into $JAVA_HOME
+      end if
+   end if
+end TestEnsureJVM

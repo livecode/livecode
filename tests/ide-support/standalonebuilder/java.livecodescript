@@ -1,6 +1,6 @@
-﻿script "StandaloneInclusions"
+﻿script "StandaloneExtensionsJava"
 /*
-Copyright (C) 2016 LiveCode Ltd.
+Copyright (C) 2017 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -16,8 +16,12 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-local sSupportStack
+local sSupportStack, sExtensionName
 on TestSetup   
+   TestSkipIfNot "jvm"
+   put "com.livecode.library.javatest" into sExtensionName
+   __InstallExtension sExtensionName
+   
    start using stack "revSBLibrary"
 		
    set the itemdelimiter to slash
@@ -28,16 +32,27 @@ on TestSetup
    start using stack sSupportStack
 end TestSetup
 
+private function __GetExtFolder
+	return TestGetEngineRepositoryPath() & slash & \
+	   "_tests/_build/packaged_extensions/" & sExtensionName
+end __GetExtFolder
+
+private command __InstallExtension
+   revIDEExtensionLoad sExtensionName, \
+         __GetExtFolder(), \
+         "0.0.0", "installed", "", "true"
+end __InstallExtension
+
 on TestTeardown
-   StandaloneBuilderCleanUpStandalones
+  -- StandaloneBuilderCleanUpStandalones
    stop using stack sSupportStack
 end TestTeardown
 
-private function _TestScriptForInclusion pWhich
+private function _TestScriptForInclusion
    set the itemdelimiter to slash
    local tExternalTest
    put the filename of me into tExternalTest
-   put "/externals/" & pWhich & ".livecodescript" into item -1 of tExternalTest
+   put "/_java.livecodescript" into item -1 of tExternalTest
    return textDecode(url("binfile:" & tExternalTest), "utf-8")
 end _TestScriptForInclusion
 
@@ -46,28 +61,24 @@ on TestStandaloneInclusions
    set the itemdelimiter to slash
    set the defaultfolder to item 1 to -2 of the filename of me
    
-   put "_TestSavingStandalone" into tDir
+   put "_TestSavingStandaloneExtensions" into tDir
    
    create folder tDir
-   
-   local tStackFilename
-   put the folder & "/" & tDir & "/stack.livecode" into tStackFilename
-   
-   set the itemdelimiter to comma
-   repeat for each item tItem in "xml,security,zip,sqlite"
-      _TestStandaloneWithInclusion tStackFilename, tItem
-   end repeat
+   _TestBuildStandaloneWithExtension tDir, sExtensionName
    
    revDeleteFolder tDir
 end TestStandaloneInclusions
 
-private command _TestStandaloneWithInclusion pStackFilename, pItem
-   local tScript
-   put _TestScriptForInclusion(pItem) into tScript
+private command _TestBuildStandaloneWithExtension pDir, pExtension   
+   local tStackFilename, tScript, tSettingsA
+   put the folder & "/" & pDir & "/" & pExtension & "-standalone.livecode" into tStackFilename
+   put _TestScriptForInclusion() into tScript
+   put pExtension into tSettingsA["extensions"]
+   put __GetExtFolder() & slash & "code/jvm/TestJar.jar" into \
+      tSettingsA["jarFiles"]
 
    local tDesc
-   put "standalone with" && pItem && "inclusion startup" into tDesc
-
+   put "standalone with" && pExtension && "startup" into tDesc
    StandaloneBuilderTestCreateAndSaveStackAsStandalone tDesc, \
-      pStackFilename, tScript
-end _TestStandaloneWithInclusion
+      tStackFilename, tScript, tSettingsA
+end _TestBuildStandaloneWithExtension
