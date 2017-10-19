@@ -76,13 +76,13 @@ MCCreateScreenDC()
 }
 
 MC_DLLEXPORT_DEF MCStack *
-MCEmscriptenGetCurrentStack()
+MCEmscriptenGetStackForWindow(Window p_window)
 {
 	if (MCnoui) return nil;
-
-	MCScreenDC *t_dc = static_cast<MCScreenDC *>(MCscreen);
-
-	return t_dc->GetCurrentStack();
+	
+	MCStack *t_stack = MCdispatcher->findstackd(p_window);
+	
+	return t_stack;
 }
 
 MC_DLLEXPORT_DEF
@@ -150,14 +150,13 @@ MCScreenDC::openwindow(Window p_window,
 	t_stack->setextendedstate(false, ECS_DONTDRAW);
 
 	/* Set mouse & keyboard focus */
-//	MCLog("update focus");
-//	UpdateFocus();
+	MCEventQueuePostMouseFocus(t_stack, 0, true);
+	MCEventQueuePostKeyFocus(t_stack, true);
 
 	/* Set up view to match window, as far as possible */
 	/* FIXME Implement HiDPI support */
 
-	MCRectangle t_rect = t_stack->view_getrect();
-	MCEmscriptenSetWindowRect(t_window, t_rect.x, t_rect.y, t_rect.x + t_rect.width, t_rect.y + t_rect.height);
+	MCEmscriptenSetWindowRect(t_window, t_stack->view_getrect());
 
 	t_stack->view_configure(true);
 	t_stack->view_dirty_all();
@@ -203,23 +202,6 @@ MCScreenDC::platform_getwindowgeometry(Window p_window,
 	uint32_t t_window = reinterpret_cast<uint32_t>(p_window);
 	r_rect = MCEmscriptenGetWindowRect(t_window);
 	return true;
-}
-
-void
-MCScreenDC::UpdateFocus()
-{
-	MCAssert(nil != m_main_window);
-
-	MCStack *t_stack = GetCurrentStack();
-
-	MCEventQueuePostMouseFocus(t_stack, 0, true);
-	MCEventQueuePostKeyFocus(t_stack, true);
-}
-
-MCStack *
-MCScreenDC::GetCurrentStack()
-{
-	return MCdispatcher->findstackd(m_main_window);
 }
 
 /* ================================================================

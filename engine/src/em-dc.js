@@ -17,7 +17,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 mergeInto(LibraryManager.library, {
-	// $LiveCodeDC__deps: ['$LiveCodeAsync'],
+	$LiveCodeDC__deps: ['$LiveCodeEvents'],
 	$LiveCodeDC: {
 		// true if ensureInit() has ever been run
 		_initialised: false,
@@ -45,6 +45,7 @@ mergeInto(LibraryManager.library, {
 
 		// Windows are backed by an html canvas within a floating div
 		createWindow: function() {
+			var div;
 			var canvas;
 			var rect;
 			if (!LiveCodeDC._assignedMainWindow)
@@ -55,15 +56,21 @@ mergeInto(LibraryManager.library, {
 			}
 			else
 			{
+				div = document.createElement('div');
+				div.style.display = 'none';
+				div.style.position = 'fixed';
+				div.style.zIndex = 1;
 				canvas = document.createElement('canvas');
-				canvas.style.position = 'absolute';
-				document.appendChild(canvas);
+				div.appendChild(canvas);
+				document.body.appendChild(div);
 		  
 				rect = {'left':0, 'top':0, 'right':0, 'bottom':0};
 			}
 			
+			LiveCodeEvents.addEventListeners(canvas);
 			LiveCodeDC._maxWindowID += 1;
 			LiveCodeDC._windowList[LiveCodeDC._maxWindowID] = {
+				'div': div,
 				'canvas': canvas,
 				'rect': rect,
 				'visible':false,
@@ -83,9 +90,9 @@ mergeInto(LibraryManager.library, {
 				}
 				else
 				{
-					document.removeChild(window.canvas);
+					document.body.removeChild(window.div);
 				}
-				LiveCodeDC._windowList[pID] = null;
+				delete LiveCodeDC._windowList[pID];
 			}
 		},
 		
@@ -93,11 +100,18 @@ mergeInto(LibraryManager.library, {
 			var window = LiveCodeDC._windowList[pID];
 			if (window)
 			{
+				var width = pRight - pLeft;
+				var height = pBottom - pTop;
 				window.rect = {'left':pLeft, 'top':pTop, 'right':pRight, 'bottom':pBottom};
-				window.canvas.style.left = pLeft + 'px';
-				window.canvas.style.top = pLeft + 'px';
-				window.canvas.style.right = pRight + 'px';
-				window.canvas.style.bottom = pBottom + 'px';
+				window.canvas.width = width;
+				window.canvas.height = height;
+				if (window.div)
+				{
+					window.div.style.setProperty('left', pLeft + 'px', 'important');
+					window.div.style.setProperty('top', pTop + 'px', 'important');
+					window.div.style.setProperty('width', width + 'px', 'important');
+					window.div.style.setProperty('height', height + 'px', 'important');
+				}
 			}
 		},
 		
@@ -114,10 +128,20 @@ mergeInto(LibraryManager.library, {
 			if (window)
 			{
 				window.visible = pVisible;
-				if (pVisible)
-					window.canvas.style.visibility = 'visible';
+				if (window.div)
+				{
+					if (pVisible)
+						window.div.style.display = 'block';
+					else
+						window.div.style.display = 'none';
+				}
 				else
-					window.canvas.style.visibility = 'hidden';
+				{
+					if (pVisible)
+						window.canvas.style.visibility = 'visible';
+					else
+						window.canvas.style.visibility = 'hidden';
+				}
 			}
 		},
 		
@@ -140,6 +164,19 @@ mergeInto(LibraryManager.library, {
 			
 			return null;
 		},
+		
+		getWindowIDForCanvas: function(pCanvas) {
+			for (var tID in LiveCodeDC._windowList) {
+				if (LiveCodeDC._windowList.hasOwnProperty(tID)) {
+					if (pCanvas == LiveCodeDC._windowList[tID].canvas) {
+						console.debug("canvas found: " + tID);
+						return tID;
+					}
+				}
+			}
+			console.debug("canvas not found: " + pCanvas);
+			return 0;
+		}
 	},
 	
 	MCEmscriptenDCInitializeJS__deps: ['$LiveCodeDC'],

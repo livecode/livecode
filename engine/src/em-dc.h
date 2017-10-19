@@ -34,7 +34,7 @@ MCUIDC *MCCreateScreenDC(void);
 extern bool MCEmscriptenDCInitialize();
 extern void MCEmscriptenDCFinalize();
 
-extern "C" MCStack *MCEmscriptenGetCurrentStack(void);
+extern "C" MCStack *MCEmscriptenGetStackForWindow(Window p_window);
 extern "C" bool MCEmscriptenHandleMousePress(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, MCMousePressState p_state, int32_t p_button);
 
 extern "C" uint32_t MCEmscriptenCreateWindow();
@@ -78,9 +78,6 @@ public:
 
 	/* ---------- Extra stuff */
 
-	/* Get the stack being shown in the default canvas. */
-	MCStack *GetCurrentStack();
-    
     /* Pops up simple ask/answer dialogues */
     virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking);
     virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
@@ -91,7 +88,6 @@ public:
     virtual void platform_querymouse(int16_t& r_x, int16_t& r_y);
     
 protected:
-	void UpdateFocus();
 	void FitWindow();
 
 private:

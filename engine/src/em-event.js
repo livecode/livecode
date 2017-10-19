@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 mergeInto(LibraryManager.library, {
 
-	$LiveCodeEvents__deps: ['$LiveCodeAsync'],
+	$LiveCodeEvents__deps: ['$LiveCodeAsync', '$LiveCodeDC'],
 	$LiveCodeEvents: {
 
 		// true if ensureInit() has ever been run
@@ -64,30 +64,38 @@ mergeInto(LibraryManager.library, {
 			}
 		},
 
+		addEventListeners: function(pElement)
+		{
+			LiveCodeEvents._eventForEach(function(type, handler) {
+				pElement.addEventListener(type, handler, true);
+			});
+
+			// Make sure the canvas is treated as focusable...
+			pElement.tabIndex = 0;
+
+			// Make it a target for text input events
+			pElement.setAttribute('contentEditable', 'true');
+
+			// Force the canvas to use a normal mouse cursor by
+			// default
+			pElement.style.cursor = 'default';
+		},
+		
+		removeEventListeners: function(pElement)
+		{
+			// Remove all of the event handlers
+			LiveCodeEvents._eventForEach(function (type, handler) {
+				pElement.removeEventListener(type, handler, true);
+			});
+		},
+		
 		initialize: function() {
 			// Make sure this only ever gets run once
 			if (LiveCodeEvents._initialised) {
 				return;
 			}
 
-			var target = LiveCodeEvents._getTarget();
-
-			// Add all of the event handlers
-			LiveCodeEvents._eventForEach(function (type, handler) {
-				target.addEventListener(type, handler, true);
-			});
-
-			// Make sure the canvas is treated as focusable...
-			target.tabIndex = 0;
-
-			// Make it a target for text input events
-			target.setAttribute('contentEditable', 'true');
-
-			// Force the canvas to use a normal mouse cursor by
-			// default
-			target.style.cursor = 'default';
-
-			LiveCodeEvents._initialised = false;
+			LiveCodeEvents._initialised = true;
 		},
 
 		finalize: function() {
@@ -95,23 +103,14 @@ mergeInto(LibraryManager.library, {
 				return;
 			}
 
-			var target = LiveCodeEvents._getTarget();
-
-			// Remove all of the event handlers
-			LiveCodeEvents._eventForEach(function (type, handler) {
-				target.removeEventListener(type, handler, true);
-			});
-
 			LiveCodeEvents._initialised = false;;
 		},
 
-		_getTarget: function() {
-			// Handlers are attached to the default canvas
-			return Module['canvas'];
-		},
-
-		_getStack: function() {
-			return Module.ccall('MCEmscriptenGetCurrentStack', 'number', [], []);
+		_getStackForCanvas: function(pCanvas) {
+			var window = LiveCodeDC.getWindowIDForCanvas(pCanvas);
+			return Module.ccall('MCEmscriptenGetStackForWindow', 'number',
+								['number'],
+								[window]);
 		},
 
 		_encodeModifiers: function(uiEvent) {
@@ -136,7 +135,7 @@ mergeInto(LibraryManager.library, {
 
 		_handleFocusEvent: function(e) {
 			LiveCodeAsync.delay(function() {
-				var stack = LiveCodeEvents._getStack();
+				var stack = LiveCodeEvents._getStackForCanvas(e.target);
 
 				switch (e.type) {
 				case 'focus':
@@ -494,7 +493,7 @@ mergeInto(LibraryManager.library, {
 		_handleKeyboardEvent: function(e) {
 			LiveCodeAsync.delay(function() {
 
-				var stack = LiveCodeEvents._getStack();
+				var stack = LiveCodeEvents._getStackForCanvas(e.target);
 				var mods = LiveCodeEvents._encodeModifiers(e);
 
 				switch (e.type) {
@@ -557,7 +556,7 @@ mergeInto(LibraryManager.library, {
 		_handleComposition: function(compositionEvent) {
 			LiveCodeAsync.delay(function() {
 				// Stack that we're targeting
-				var stack = LiveCodeEvents._getStack();
+				var stack = LiveCodeEvents._getStackForCanvas(compositionEvent.target);
 
 				var encodedString;
 				var chars, length;
@@ -658,7 +657,7 @@ mergeInto(LibraryManager.library, {
 		_handleMouseEvent: function(e) {
 			LiveCodeAsync.delay(function () {
 
-				var stack = LiveCodeEvents._getStack();
+				var stack = LiveCodeEvents._getStackForCanvas(e.target);
 				var mods = LiveCodeEvents._encodeModifiers(e);
 				var pos = LiveCodeEvents._encodeMouseCoordinates(e);
 
@@ -673,7 +672,7 @@ mergeInto(LibraryManager.library, {
 				case 'mousedown':
 					// In the case of mouse down, specifically request
 					// keyboard focus
-					LiveCodeEvents._getTarget().focus();
+					e.target.focus();
 
 					// Intentionally fall through to 'mouseup' case.
 				case 'mouseup':

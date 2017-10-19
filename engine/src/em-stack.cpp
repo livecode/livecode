@@ -122,6 +122,7 @@ MCStack::view_platform_updatewindow(MCRegionRef p_dirty_region)
 	
 	MCGRegionRef t_region = MCGRegionRef(p_dirty_region);
 	MCRectangle t_valid = MCEmscriptenGetWindowRect(t_window);
+	t_valid.x = t_valid.y = 0;
 
 	MCGRegionIntersectRect(t_region, MCRectangleToMCGIntegerRectangle(t_valid));
 
