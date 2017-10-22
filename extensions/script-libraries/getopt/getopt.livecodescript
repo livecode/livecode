@@ -17,9 +17,9 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>. 
 */
 
-on revLoadLibrary
+on extensionInitialize
    if the target is not me then
-      pass revLoadLibrary
+      pass extensionInitialize
    end if
 
    insert the script of me into back
@@ -27,7 +27,7 @@ on revLoadLibrary
    if the environment contains "development" then
       set the _ideoverride of me to true
    end if
-end revLoadLibrary
+end extensionInitialize
 
 /**
 Title: Command-line Option Parser

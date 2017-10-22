@@ -4,7 +4,7 @@
 #?author
 # Marcus van Houdt
 
-on revLoadLibrary
+on extensionInitialize
    if the target is me then
       insert the script of me into back
       
@@ -12,13 +12,13 @@ on revLoadLibrary
       __InitialiseInclusionDependencies
       __InitialiseBuiltInInclusions
    end if
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is me then
       remove the script of me from back
    end if
-end revUnloadLibrary
+end extensionFinalize
 
 local sScriptLibraries
 
@@ -2020,7 +2020,7 @@ private command __LoadStackOnStartup pStackName, @xAuxStackFiles, @xStartupScrip
    appendToStringList "revInternal__LoadLibrary" && quote & pStackName & quote, xStartupScript
    
    -- allow libraries to generate some additional startup script
-   dispatch "revLibraryStartupScript" to stack pStackName
+   dispatch "extensionStartupScript" to stack pStackName
    if it is "handled" then
       appendToStringList the result, xGeneratedStartupScript
    end if
@@ -2053,7 +2053,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    local tLibraryStack, tIncludeDataGrid
    repeat for each line tLibrary in pStandaloneSettings["scriptLibraries"]
       -- Special-case data grid at the moment, as it is not initialised 
-      -- using revLoadLibrary
+      -- using extensionInitialize
       if tLibrary is "DataGrid" then
          put true into tIncludeDataGrid
          next repeat

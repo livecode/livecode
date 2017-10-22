@@ -1,23 +1,23 @@
 script "revLibURL"
 ##libUrl v1.2.0 2010-09-16
 #
-on revLoadLibrary
+on extensionInitialize
    if the target is me then
       # MW-2015-01-28: [[ ScriptifyLibURL ]] Use the scriptified stack.
       insert the script of stack "revLibUrl" into back
       // AL-2015-01-29: [[ Scriptify revLibUrl ]] Initialise custom properties when library is loaded
       initialiseCustomProps
    end if
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is me then
       remove the script of stack "revLibUrl" from back
       -- CW-2016-06-11: [[ External driver support ]] Ensure external driver is unloaded properly.
       # remove external library if in use
       unloadExternalDriver
    end if
-end revUnloadLibrary
+end extensionFinalize
 ---------------------------------------------------------------------
 ##shared locals
 local lvCount,lvBlockingUrl,lvBlockBypass,lvAuthBlockBypass,lvLogField, lvTickle
