@@ -1948,19 +1948,14 @@ private function __tabs pNum
 end __tabs
 
 function revDocsFormatLibraryDocArrayAsJSON pLibraryName, pDocA
-   local tCount
-   put the number of elements in pDocA into tCount
-   
-   local tJSON
-   if tCount is not 0 then
-      repeat with tIndex = 1 to tCount
-         local tDoc, tId
-         put pDocA[tIndex] into tDoc
-         put pLibraryName & "-" & tIndex into tId
-         put revDocsFormatLibraryDataAsJSON(tId, tDoc, pLibraryName) & comma after tJSON
-      end repeat
-      delete the last char of tJSON
-   end if
+   local tJSON, tCount
+   repeat for each element tDoc in pDocA
+      local tId
+      add 1 to tCount
+      put pLibraryName & "-" & tCount into tId
+      put revDocsFormatLibraryDataAsJSON(tId, tDoc, pLibraryName) & comma after tJSON
+   end repeat
+   delete the last char of tJSON
    return tJSON
 end revDocsFormatLibraryDocArrayAsJSON
 
@@ -2281,8 +2276,11 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA, pAPIName
       put pLibraryDataA["name"] into pLibraryDataA["display name"]
    else if pLibraryDataA["name"] is empty then
       put pLibraryDataA["display name"] into pLibraryDataA["name"]
-   else
-      throw "No name parsed"
+   end if
+   
+   if pLibraryDataA["display name"] is empty and \
+         pLibraryDataA["name"] is empty then
+      logError "No doc name found for" && pID
    end if
    # The 'name' should be urlencoded
    put revDocsModifyForURL(pLibraryDataA["name"]) into pLibraryDataA["name"]
