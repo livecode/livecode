@@ -12,7 +12,6 @@ function do_cmd {
 	if [[ ! -z "${V}" ]]; then
 		echo "$@"
 	fi
-	echo "$@"
 	"$@"
 }
 
