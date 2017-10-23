@@ -7,7 +7,7 @@ on TestSetup
          
    local tLibURl
    put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
-   send "revLoadLibrary" to stack tLibUrl
+   send "extensionInitialize" to stack tLibUrl
 end TestSetup
 
 
