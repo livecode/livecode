@@ -28,18 +28,6 @@
             ],
         ],
     },
-
-    'all_dependent_settings':
-    {
-        'variables':
-        {
-            'dist_aux_files':
-            [
-                # Gyp will only use a recursive xcopy on Windows if the path ends with '/'
-                '<(PRODUCT_DIR)/packaged_extensions/',
-            ],
-        },
-    },
     
 	'targets':
 	[
@@ -56,7 +44,19 @@
                         [
                             'lcs-extensions',
                             'lcb-extensions',
-                        ],			    
+                        ],	
+                        
+                        'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files':
+								[
+									# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
+									'<(PRODUCT_DIR)/packaged_extensions/',
+								],
+							},
+						},		    
                     },
                 ],
 			],
