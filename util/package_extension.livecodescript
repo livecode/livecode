@@ -52,35 +52,42 @@ command extractDocs pEnginePath, pExtractScript, pDocsParser, pSourceFolder, pSo
    end if
 end extractDocs
  
-command packageScriptExtension pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource   
-   local tExtShortName
-   set the itemdelimiter to "."
-   put item -2 of pSourceFileName into tExtShortName
-
+private command packageExtension pExtensionName, pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource
    local tTargetDir, tBuildTarget, tZip
-   put "com.livecode.library." & tExtShortName into tTargetDir
+   put pExtensionName into tTargetDir
    put pTargetFolder & slash & tTargetDir into tBuildTarget
    put pSourceFolder & slash & tTargetDir & ".lce" into tZip
    
-   local tShell
-   put "pushd" && q(pSourceFolder) && "1>/dev/null" into tShell
-   put return & "zip -q -r " & tTargetDir & ".lce *" after tShell
-   put return & "popd 1>/dev/null" after tShell
-   put return & "mkdir -p " & q(tBuildTarget) after tShell
-   put return & "unzip -q -o " & q(tZip) && \
-         "-d " & q(tBuildTarget) after tShell
+   local tShell, tCurFolder
+   put the folder into tCurFolder
+   put "cd" && q(pSourceFolder) into tShell
+   put return & "zip -q -r" && tTargetDir & ".lce *" after tShell
+   put return & "cd" && q(tCurFolder) after tShell
+   put return & "mkdir -p" && q(tBuildTarget) after tShell
+   put return & "unzip -q -o " & q(tZip) && "-d " & q(tBuildTarget) \
+      after tShell
    put return & "rm" && q(tZip) after tShell
    
    if pRemoveSource is "true" then
-      put return & "rm" && quote & tBuildTarget & slash & \ 
-         pSourceFileName & quote after tShell
+      put return & "rm" && q(tBuildTarget & slash & pSourceFileName) \ 	
+         after tShell
    end if
    
+   write "packaging extension" && pSourceFileName & return to stdout    
    get shell(tShell)
    if the result is not 0 then
        write "subprocess error when packaging extension" && pSourceFileName & ":" && it to stderr
        quit 3
    end if
+end packageExtension
+
+command packageScriptExtension pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource   
+   local tExtShortName
+   set the itemdelimiter to "."
+   put item -2 of pSourceFileName into tExtShortName
+   
+   packageExtension "com.livecode.library." & tExtShortName, \
+      pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource
 end packageScriptExtension
 
 command packageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource, pLCCompile, pInterfaceFolder
@@ -110,32 +117,8 @@ command packageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, p
         quit 3
     end if   	
     
-   local tTargetDir, tBuildTarget, tZip
-   put tExtensionName into tTargetDir
-   put pTargetFolder & slash & tTargetDir into tBuildTarget
-   put pSourceFolder & slash & tTargetDir & ".lce" into tZip
-   
-   local tShell
-   put "pushd" && quote & pSourceFolder & quote && "1>/dev/null" into tShell
-   put return & "zip -q -r " & tTargetDir & ".lce *" after tShell
-   put return & "popd 1>/dev/null" after tShell
-   put return & "mkdir -p " & quote & tBuildTarget & quote after tShell
-   put return & "unzip -q -o " & quote & tZip & quote && \
-         "-d " & quote & tBuildTarget & quote after tShell
-   put return & "rm" && quote & tZip & quote after tShell
-   
-   if pRemoveSource is "true" then
-      put return & "rm" && quote & tBuildTarget & slash & \ 
-         pSourceFileName & quote after tShell
-   end if
-
-   write "packaging extension" && pSourceFileName & return to stdout      
-   get shell(tShell)
-   if the result is not 0 then
-       write "subprocess error when packaging extension" && pSourceFileName & ":" && it to stderr
-       quit 3
-   end if
-
+   packageExtension tExtensionName, pSourceFolder, pSourceFileName, \
+      pTargetFolder, pRemoveSource
 end packageBuilderExtension
 
 on errorDialog tError
