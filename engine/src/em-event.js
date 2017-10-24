@@ -109,7 +109,7 @@ mergeInto(LibraryManager.library, {
 		_getStackForWindow: function(pWindow) {
 			return Module.ccall('MCEmscriptenGetStackForWindow', 'number',
 								['number'],
-								[window]);
+								[pWindow]);
 		},
 		
 		_getStackForCanvas: function(pCanvas) {
