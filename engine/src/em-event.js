@@ -661,12 +661,9 @@ mergeInto(LibraryManager.library, {
 				var mods = LiveCodeEvents._encodeModifiers(e);
 				var pos = LiveCodeEvents._encodeMouseCoordinates(e);
 
-				// Always post the mouse position
-				LiveCodeEvents._postMousePosition(stack, e.timestamp, mods,
-												  pos[0], pos[1]);
-
 				switch (e.type) {
 				case 'mousemove':
+					LiveCodeEvents._postMousePosition(stack, e.timeStamp, mods, pos[0], pos[1]);
 					return;
 
 				case 'mousedown':
@@ -676,17 +673,20 @@ mergeInto(LibraryManager.library, {
 
 					// Intentionally fall through to 'mouseup' case.
 				case 'mouseup':
+					LiveCodeEvents._postMousePosition(stack, e.timeStamp, mods, pos[0], pos[1]);
 					var state = LiveCodeEvents._encodeMouseState(e.type);
-					LiveCodeEvents._postMousePress(stack, e.timestamp, mods,
+					LiveCodeEvents._postMousePress(stack, e.timeStamp, mods,
 												   state, e.button);
 					break;
 
 				case 'mouseenter':
-					LiveCodeEvents._postMouseFocus(stack, e.timestamp, true);
+					LiveCodeEvents._postMouseFocus(stack, e.timeStamp, true);
+					LiveCodeEvents._postMousePosition(stack, e.timeStamp, mods, pos[0], pos[1]);
 					break;
 
 				case 'mouseleave':
-					LiveCodeEvents._postMouseFocus(stack, e.timestamp, false);
+					LiveCodeEvents._postMousePosition(stack, e.timeStamp, mods, pos[0], pos[1]);
+					LiveCodeEvents._postMouseFocus(stack, e.timeStamp, false);
 					break;
 
 				default:
