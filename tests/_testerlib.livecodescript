@@ -22,7 +22,10 @@ test runner implementations.
 */
 
 on revLoadLibrary
-	insert the script of me into back
+   if the target is not me then
+      pass revLoadLibrary
+   end if
+   insert the script of me into back
 end revLoadLibrary
 
 local sLogCallbackURL
