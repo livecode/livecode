@@ -24,6 +24,7 @@ extensions/*/*/*.xml
 extensions/*/*/*.lci
 extensions/*/*/*.lcm
 extensions/*/*/*.lce
+extensions/*/*/api.lcdoc
 
 # Compiled source and intermediates #
 ###################

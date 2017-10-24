@@ -17,9 +17,9 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-on revLoadLibrary
+on extensionInitialize
    if the target is not me then
-      exit revLoadLibrary
+      exit extensionInitialize
    end if
 
    if the environment is "development" then
@@ -29,11 +29,11 @@ on revLoadLibrary
    if the platform is "HTML5" then
       libURLSetDriver the long id of me
    end if
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is not me then
-      exit revUnloadLibrary
+      exit extensionFinalize
    end if
 
    if the environment is "development" then
@@ -43,7 +43,7 @@ on revUnloadLibrary
    if the platform is "HTML5" then
       libURLSetDriver empty
    end if
-end revUnloadLibrary
+end extensionFinalize
 
 --------------------------------------------------------------------------------
 -- LibURL driver config

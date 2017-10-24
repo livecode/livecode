@@ -110,7 +110,7 @@ metadata graphColors.section is "Colors"
 Summary: Whether horizontal grid lines are displayed
 
 Syntax:
-set the graphXLines of <widget> to ( true | false )
+set the graphXLines of <widget> to { true | false }
 get the graphXLines of <widget>
 
 Value (boolean): True if grid lines should be shown; false otherwise

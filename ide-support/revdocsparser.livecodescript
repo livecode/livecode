@@ -463,9 +463,9 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
          put true into tInEntry
          
          switch tFirstWord
-            case "module"
+            case "module"      
             case "library"
-               put "library" into tEntryData["type"]
+               put tFirstWord into tEntryData["type"]
                put word 2 to -1 of tLine into tEntryData["name"]
                put true into tEntryEnded
                put true into tEntryData["need_docs"]
@@ -550,7 +550,8 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                # This is not a new entry
                put false into tInEntry
                # Check if this is a new comment block
-               if tFirstWord begins with "/**" then
+               if tFirstWord begins with "/**" and \
+                  not (tFirstWord begins with "/**/") then
                   
                   # If this is script, and this is an initial block of comments,
                   # then treat as the library description
@@ -624,6 +625,7 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
             switch tEntryData["type"]
                case "library"
                case "widget"
+               case "module"
                   put tComment into tEntryData["comments"]
                   put tEntryData into tLibraryData
                   break
@@ -726,11 +728,7 @@ end __revDocsParseDirectoryToLibraryArray
 
 function revDocsFormatInlineComments pDataA, pIsLibrary
    local tComment
-   if pIsLibrary then
-      put "Description:" & return & pDataA["comments"] after tComment
-   else
-      put pDataA["comments"] into tComment
-   end if
+   put pDataA["comments"] into tComment
    
    local tElementsA
    put revDocsExtractElements(tComment) into tElementsA
@@ -1074,6 +1072,9 @@ private command __nameToKeyAndType pName, @rKey, @rType
       case "Introduced"
       case "Deprecated"
       case "Edition"
+      case "Version"
+      case "Author"
+      case "SVGIcon"
          put "standard" into rType
          break
       case "Example"
@@ -1086,6 +1087,7 @@ private command __nameToKeyAndType pName, @rKey, @rType
       case "Security"
       case "Synonyms"
       case "Associations"
+      case "Requires"
          put "items" into rType
          break
       case "The result"
@@ -1102,6 +1104,7 @@ private command __nameToKeyAndType pName, @rKey, @rType
          put "references" into rType
          break
       case "References"
+      case "Uses"
          put "references" into rType
          break
       case "Tag"
@@ -1109,7 +1112,12 @@ private command __nameToKeyAndType pName, @rKey, @rType
          put "items" into rType
          break
       case "Name"
+      case "Title"
          put "display name" into rKey
+         put "standard" into rType
+         break
+      case "Library"
+         put "name" into rKey
          put "standard" into rType
          break
       case "Parameters"
@@ -1234,6 +1242,13 @@ function revDocsParseElements pExtractedA, pBlocksA, pFilename
       end if
    end repeat
    
+   if tParsedA["display name"] is empty then
+      put tParsedA["name"] into tParsedA["display name"]
+   end if
+   if tParsedA["description"] is empty then
+      put tParsedA["summary"] into tParsedA["description"]
+   end if
+   
    return tParsedA
 end revDocsParseElements
 
@@ -1275,7 +1290,9 @@ function revDocsParseDocTextToLibraryArray pFile, pText, pLibraryName, pAuthor
       put pLibraryName into tLibraryA["display name"]
       put revDocsModifyForUrl(pLibraryName) into tLIbraryA["name"]
    end if
-   put pAuthor into tLibraryA["author"]
+   if pAuthor is not empty then
+      put pAuthor into tLibraryA["author"]
+   end if
    return tLibraryA
 end revDocsParseDocTextToLibraryArray
 
@@ -1332,6 +1349,11 @@ function revDocsGroupElements pElementsA
    
 end revDocsGroupElements
 
+-- Elements that when defined at the library level
+-- apply to all docs in the api
+constant kInheritedElements = "author,version,associations,tags,requires,uses"
+-- Elements that should be in the library's actual docs entry
+constant kLibraryEntryElements = "name,display name,summary,description,type,example,references,edition"
 function revDocsParseDocText pText, pFilename, pDefaults
    local tElementsA
    put revDocsExtractElements(pText) into tElementsA
@@ -1352,13 +1374,16 @@ function revDocsParseDocText pText, pFilename, pDefaults
          case "Name"
          case empty
             exit repeat
+         case "Title"       
          case "Library"
-            put tElementsA[tStartNum]["content"] into tParsedA["name"]
-            add 1 to tStartNum
-            break
          case "Description"
          case "Author"
          case "Type"
+         case "Version"
+         case "Requires" 
+         case "Uses"    
+         case "SVGIcon"   
+         case "Summary"
             // Add top-level tags to all library entries
          case "Tags"
             // Library entries can have examples
@@ -1379,7 +1404,7 @@ function revDocsParseDocText pText, pFilename, pDefaults
    
    local tSeen
    
-   put tParsedA["name"] into tParsedA["Associations"]
+   put tParsedA["library"] into tParsedA["Associations"]
    repeat with tElementNum = tStartNum to the number of elements in tElementsA
       add 1 to tEntryElementCount
       local tElementA
@@ -1389,6 +1414,7 @@ function revDocsParseDocText pText, pFilename, pDefaults
          repeat for each key tKey in tParsedA
             if not tSeen[tKey] and \
                   tParsedA[tKey] is not empty and \
+                  tKey is among the items of kInheritedElements and \
                   tEntryCount is not 0 then
                put tKey into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["name"]
                put tParsedA[tKey] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
@@ -1408,8 +1434,8 @@ function revDocsParseDocText pText, pFilename, pDefaults
       end if
       
       if tElementA["name"] is "Associations" then
-         if tParsedA["name"] is not empty and tParsedA["name"] is not among the items of tElementA["content"] then
-            put tParsedA["name"] & comma before tElementA["content"]
+         if tParsedA["library"] is not empty and tParsedA["library"] is not among the items of tElementA["content"] then
+            put tParsedA["library"] & comma before tElementA["content"]
          end if
       end if
       
@@ -1424,6 +1450,7 @@ function revDocsParseDocText pText, pFilename, pDefaults
    repeat for each key tKey in tParsedA
       if not tSeen[tKey] and \
             tParsedA[tKey] is not empty and \
+            tKey is among the items of kInheritedElements and \
             tEntryCount is not 0 then
          add 1 to tEntryElementCount
          put tKey into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["name"]
@@ -1432,24 +1459,36 @@ function revDocsParseDocText pText, pFilename, pDefaults
    end repeat
    
    // Add a library entry
-   local tLibraryElements
-   local tCount
-   put 1 into tCount
+   local tLibraryElementsA
+   local tLibCount
+   put 1 into tLibCount
    add 1 to tEntryCount
    
-   repeat for each item tItem in "name,description,author,type,example,references,edition"
-      if tParsedA[tItem] is not empty then
-         put tItem into tEntriesA[tEntryCount]["elements"][tCount]["name"]
-         put tParsedA[tItem] into tEntriesA[tEntryCount]["elements"][tCount]["content"]
-         add 1 to tCount
+   -- Use kLibraryEntryElements to determine what library-level docs actually
+   -- appear in the library entry in the dictionary. Everything else is 
+   -- essentially metadata
+   repeat for each key tKey in tParsedA
+      if tParsedA[tKey] is not empty then
+         put tKey into tLibraryElementsA[tLibCount]["name"]            
+         put tParsedA[tKey] into tLibraryElementsA[tLibCount]["content"]
+         add 1 to tLibCount
       end if
    end repeat
    
+   local tLibraryA
+   put revDocsParseElements(tLibraryElementsA, empty, pFilename) into tLibraryA
+   
+   repeat for each key tLibElementKey in tLibraryA
+      if tLibElementKey is among the items of kLibraryEntryElements then
+         put tLibraryA[tLibElementKey] into tLibraryA["doc"][0][tLibElementKey]
+      end if
+   end repeat 
+   
    repeat for each key tKey in tEntriesA
-      put revDocsParseElements(tEntriesA[tKey]["elements"], tEntriesA[tKey], pFilename) into tParsedA["doc"][tKey]
+      put revDocsParseElements(tEntriesA[tKey]["elements"], tEntriesA[tKey], pFilename) into tLibraryA["doc"][tKey]
    end repeat
    
-   return tParsedA
+   return tLibraryA
 end revDocsParseDocText
 
 /*
@@ -1909,19 +1948,14 @@ private function __tabs pNum
 end __tabs
 
 function revDocsFormatLibraryDocArrayAsJSON pLibraryName, pDocA
-   local tCount
-   put the number of elements in pDocA into tCount
-   
-   local tJSON
-   if tCount is not 0 then
-      repeat with tIndex = 1 to tCount
-         local tDoc, tId
-         put pDocA[tIndex] into tDoc
-         put pLibraryName & "-" & tIndex into tId
-         put revDocsFormatLibraryDataAsJSON(tId, tDoc, pLibraryName) & comma after tJSON
-      end repeat
-      delete the last char of tJSON
-   end if
+   local tJSON, tCount
+   repeat for each element tDoc in pDocA
+      local tId
+      add 1 to tCount
+      put pLibraryName & "-" & tCount into tId
+      put revDocsFormatLibraryDataAsJSON(tId, tDoc, pLibraryName) & comma after tJSON
+   end repeat
+   delete the last char of tJSON
    return tJSON
 end revDocsFormatLibraryDocArrayAsJSON
 
@@ -2242,8 +2276,11 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA, pAPIName
       put pLibraryDataA["name"] into pLibraryDataA["display name"]
    else if pLibraryDataA["name"] is empty then
       put pLibraryDataA["display name"] into pLibraryDataA["name"]
-   else
-      throw "No name parsed"
+   end if
+   
+   if pLibraryDataA["display name"] is empty and \
+         pLibraryDataA["name"] is empty then
+      logError "No doc name found for" && pID
    end if
    # The 'name' should be urlencoded
    put revDocsModifyForURL(pLibraryDataA["name"]) into pLibraryDataA["name"]

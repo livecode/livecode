@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.getopt"
+﻿script "com.livecode.library.getopt"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 
@@ -17,20 +17,26 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>. 
 */
 
-on revLoadLibrary
+on extensionInitialize
    if the target is not me then
-      pass revLoadLibrary
+      pass extensionInitialize
    end if
 
    insert the script of me into back
 
    if the environment contains "development" then
       set the _ideoverride of me to true
-      revSBAddAvailableLibrary the short name of me, "GetOpt"
    end if
-end revLoadLibrary
+end extensionInitialize
 
 /**
+Title: Command-line Option Parser
+
+Author: LiveCode
+
+Version: 1.0.0
+
+Description:
 Command-line argument parser library.
 */
 

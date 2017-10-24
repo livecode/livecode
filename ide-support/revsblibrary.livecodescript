@@ -4,7 +4,7 @@
 #?author
 # Marcus van Houdt
 
-on revLoadLibrary
+on extensionInitialize
    if the target is me then
       insert the script of me into back
       
@@ -12,13 +12,13 @@ on revLoadLibrary
       __InitialiseInclusionDependencies
       __InitialiseBuiltInInclusions
    end if
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is me then
       remove the script of me from back
    end if
-end revUnloadLibrary
+end extensionFinalize
 
 local sScriptLibraries
 
@@ -1840,34 +1840,6 @@ command revSBUpdateInclusions pInclusions, pExclusions, pStackName
    end repeat
 end revSBUpdateInclusions
 
-command revSBInclusionIconFromType pType, pID, @rIconName, @rIconPath
-   switch pType
-      case "widget"
-         put revIDEExtensionProperty(pID, "svgIcon") into rIconPath
-         put "wrench" into rIconName
-         break
-      case "library"
-         put "book" into rIconName
-         break
-      case "external"
-         put "external link" into rIconName
-         break
-      case "inclusion"
-      case "resource"
-         put "puzzle piece" into rIconName
-         break
-      case "database driver"
-         put "database" into rIconName
-         break
-      case "script library"
-         put "file text alt" into rIconName
-         break
-      default
-         put "circle" into rIconName
-         break
-   end switch
-end revSBInclusionIconFromType
-
 function revSBInclusionToMobileKey pName, pType, pPlatform
    local tToInclude
    switch pName
@@ -2043,6 +2015,17 @@ private command prependToStringList pValue, @xList
    addToStringList false, pValue, xList
 end prependToStringList
 
+private command __LoadStackOnStartup pStackName, @xAuxStackFiles, @xStartupScript, @xGeneratedStartupScript
+   appendToStringList the effective filename of stack pStackName, xAuxStackFiles
+   appendToStringList "revInternal__LoadLibrary" && quote & pStackName & quote, xStartupScript
+   
+   -- allow libraries to generate some additional startup script
+   dispatch "extensionStartupScript" to stack pStackName
+   if it is "handled" then
+      appendToStringList the result, xGeneratedStartupScript
+   end if
+end __LoadStackOnStartup
+
 command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployParams
    local tModules, tAuxiliaryStackfiles, tStartupScript, tGeneratedStartupScript
    
@@ -2058,15 +2041,19 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
    # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
    repeat for each line tExtension in revIDEExtensionsOrderByDependency(pStandaloneSettings["extensions"])
-      local tExtensionFile
-      put revIDEExtensionModuleFile(tExtension) into tExtensionFile
-      appendToStringList tExtensionFile, tModules
+      local tExtensionFileDataA
+      put revIDEExtensionFileData(tExtension) into tExtensionFileDataA
+      if tExtensionFileDataA["type"] is "lcb" then
+         appendToStringList tExtensionFileDataA["file"], tModules
+      else
+         __LoadStackOnStartup tExtension, tAuxiliaryStackFiles, tStartupScript, tGeneratedStartupScript
+      end if
    end repeat
    
    local tLibraryStack, tIncludeDataGrid
    repeat for each line tLibrary in pStandaloneSettings["scriptLibraries"]
       -- Special-case data grid at the moment, as it is not initialised 
-      -- using revLoadLibrary
+      -- using extensionInitialize
       if tLibrary is "DataGrid" then
          put true into tIncludeDataGrid
          next repeat
@@ -2074,14 +2061,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
       # AL-2015-03-05: [[ Bug 14813 ]] Transform script library display name to stack name at deploy time
       put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
       if there is a stack tLibraryStack then
-         appendToStringList the effective filename of stack tLibraryStack, tAuxiliaryStackfiles
-         appendToStringList "revInternal__LoadLibrary" && quote & tLibraryStack & quote, tStartupScript
-         
-         -- allow libraries to generate some additional startup script
-         dispatch "revLibraryStartupScript" to stack tLibraryStack
-         if it is "handled" then
-            appendToStringList the result, tGeneratedStartupScript
-         end if
+         __LoadStackOnStartup tLibraryStack, tAuxiliaryStackFiles, tStartupScript, tGeneratedStartupScript
       end if
    end repeat
    
@@ -2100,14 +2080,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
          -- only include currently loaded libraries
          repeat for each key tLibrary in tLoadedLibraries
             if there is a stack tLibrary and the filename of stack tLibrary begins with tExtPath then
-               appendToStringList the effective filename of stack tLibrary, tAuxiliaryStackfiles
-               appendToStringList "revInternal__LoadLibrary" && quote & tLibrary & quote, tStartupScript
-               
-               -- allow libraries to generate some additional startup script
-               dispatch "revLibraryStartupScript" to stack tLibrary
-               if it is "handled" then
-                  appendToStringList the result, tGeneratedStartupScript
-               end if
+               __LoadStackOnStartup tLibrary, tAuxiliaryStackFiles, tStartupScript, tGeneratedStartupScript
             end if
          end repeat
       end if
@@ -2488,9 +2461,9 @@ private command revSmartChecking pStackFilesList, @xSettings
       
    end if
    
-   local tWidgetKinds
-   put xSettings["extensions"] into tWidgetKinds
-   split tWidgetKinds by return as set
+   local tExtensionIDs
+   put xSettings["extensions"] into tExtensionIDs
+   split tExtensionIDs by return as set
    
    repeat for each line tStackFile in pStackFilesList
       put the short name of stack tStackFile & return & the substacks of stack tStackFile into tStacksList
@@ -2503,22 +2476,22 @@ private command revSmartChecking pStackFilesList, @xSettings
             end if
          end if
          
-         revCheckObject the long name of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
+         revCheckObject the long name of stack tStack, tUserLibs, tNewSettings, tExtensionIDs
          put the number of cards of stack tStack into tCardNum
          repeat with tCard=1 to tCardNum
-            revCheckObject the long id of cd tCard of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
+            revCheckObject the long id of cd tCard of stack tStack, tUserLibs, tNewSettings, tExtensionIDs
             put the number of controls of cd tCard of stack tStack into tControlNum
             repeat with tControl = 1 to tControlNum
-               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
+               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs, tNewSettings, tExtensionIDs
             end repeat
          end repeat
          repeat for each line tBg in the backgroundIDs of stack tStack
-            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
+            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs, tNewSettings, tExtensionIDs
          end repeat
       end repeat
    end repeat
    
-   put the keys of tWidgetKinds into tNewSettings["extensions"]
+   put the keys of tExtensionIDs into tNewSettings["extensions"]
    -- Update the output settings
    put tNewSettings into xSettings
    unlock messages
