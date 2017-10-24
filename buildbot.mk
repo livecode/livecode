@@ -135,7 +135,7 @@ dist-server-commercial:
 	    --stage server --edition commercial --warn-as-error
 
 ifeq ($(BUILD_EDITION),commercial)
-dist-tools: dist-tools-commercial
+dist-tools: dist-tools-commercial dist-embedded
 distmac-disk: distmac-disk-communityplus distmac-disk-indy distmac-disk-business
 endif
 
@@ -152,6 +152,10 @@ dist-tools-commercial:
 	  --built-docs-dir $(docs_build_dir)
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition business \
   	  --built-docs-dir $(docs_build_dir)
+	  
+dist-embedded:
+	$(buildtool_command) --stage embedded
+
 # Ensure that the version for which we're trying to build installers
 # hasn't already been tagged.
 dist-tools-version-check:
@@ -191,6 +195,7 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name 'LiveCode*Docs-*.zip' \
 	                -o -name '*-bin.tar.xz' \
 	                -o -name '*-bin.tar.bz2' \
+	                -o -name 'LiveCodeEmbeddedBuilder.zip' \
 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
 		find . -maxdepth 1 -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \

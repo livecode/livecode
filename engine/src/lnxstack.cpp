@@ -289,22 +289,32 @@ void MCStack::sethints()
 	// Use the name of the home stack as the application name for standalones
 	// and the LiveCode name and version for the IDE
     MCAutoStringRef t_app_name;
-    MCAutoStringRefAsCString t_app_name_cstr;
-	int t_env = MCModeGetEnvironmentType();
-	if (t_env == kMCModeEnvironmentTypeEditor
-		|| t_env == kMCModeEnvironmentTypeInstaller
-		|| t_env == kMCModeEnvironmentTypeServer)
-	{
-        
+    MCEnvironmentType t_env = MCdispatcher->getenvironmenttype();
+    switch (t_env)
+    {
+    case kMCEnvironmentTypeEditor:
+    case kMCEnvironmentTypeEditorCommandLine:
+    case kMCEnvironmentTypeInstaller:
+    case kMCEnvironmentTypeServer:
+    { 
         MCAutoStringRef t_edition_name;
         if (MCStringCreateMutable(0, &t_app_name) &&
             MCStringFromLicenseClass(MClicenseparameters.license_class, true, &t_edition_name))
 		{
 			bool t_success = true;
-			if (t_env == kMCModeEnvironmentTypeEditor)
+            if (t_env == kMCEnvironmentTypeEditor ||
+                t_env == kMCEnvironmentTypeEditorCommandLine)
+            {
 				t_success = MCStringAppendFormat(*t_app_name, "%s%@_%s", MCapplicationstring, *t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
+			}
 			else
-				t_success = MCStringAppendFormat(*t_app_name, "%s%@_%@_%s", MCapplicationstring, *t_edition_name, MCModeGetEnvironment(), MC_BUILD_ENGINE_SHORT_VERSION);
+			{
+                extern void MCEngineEvalEnvironment(MCExecContext& ctxt, MCNameRef& r_name);
+                MCExecContext ctxt;
+                MCNewAutoNameRef t_environment_name;
+                MCEngineEvalEnvironment(ctxt, &t_environment_name);			
+				t_success = MCStringAppendFormat(*t_app_name, "%s%@_%@_%s", MCapplicationstring, *t_edition_name, *t_environment_name, MC_BUILD_ENGINE_SHORT_VERSION);
+			}
 				
 			if (t_success)
 			{
@@ -316,11 +326,13 @@ void MCStack::sethints()
 				t_app_name.Reset();
 		}
 	}
-	else
-	{
+        break;
+    default:
 		t_app_name = MCNameGetString(MCdispatcher->gethome()->getname());
-	}
-
+        break;
+    }
+    
+    MCAutoStringRefAsCString t_app_name_cstr;
     if (t_app_name_cstr.Lock(*t_app_name))
 	{
 		chints.res_name = (char*)*t_app_name_cstr;

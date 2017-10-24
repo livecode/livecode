@@ -68,31 +68,112 @@
 						'dependencies':
 						[
 							'kernel.gyp:kernel-java',
+							'community-classes',
 						],
 						
 						'sources':
 						[
 							'src/mblandroidad.cpp',
 						],
+					},
+				],
+				[
+					'OS == "ios"',
+					{
+						'sources':
+						[
+							'<@(engine_mobile_standalone_source_files)',
+						],
+					}
+				],
+			],
+		},
+		{
+			'target_name': 'kernel-embedded',
+			'type': 'static_library',
+			
+			'dependencies':
+			[
+				'kernel.gyp:kernel',
+			],
+			
+			'includes':
+			[
+				'kernel-mode-template.gypi',
+			],
+			
+			'variables':
+			{
+				'mode_macro': 'MODE_STANDALONE',
+			},
+			
+			'sources':
+			[
+				'<@(engine_standalone_mode_source_files)',
+			],
+			
+			# Standalones do *not* contain error message strings
+			'sources!':
+			[
+				'<(INTERMEDIATE_DIR)/src/encodederrors.cpp',
+                'src/engine-dispatch.cpp',
+			],
+			
+			'conditions':
+			[
+				[
+					'OS == "android"',
+					{
+						'dependencies':
+						[
+							'kernel.gyp:kernel-java',
+							'community-classes',
+						],
 						
+						'sources':
+						[
+							'src/mblandroidad.cpp',
+						],
+					},
+				],
+			],
+		},
+	],
+	
+	'conditions':
+	[
+		[
+			'OS == "android"',
+			{
+				'includes':
+				[
+					'../config/android.gypi',					
+				],
+				
+				'targets':
+				[
+					{
+						'target_name': 'community-classes',
+						'type':'none',
+					
 						'actions':
 						[
 							{
 								'action_name': 'jar',
 								'message': 'JAR',
-						
+					
 								'inputs':
 								[
 									# Depend on the Java source files directly to ensure correct updates
 									'<@(engine_aidl_source_files)',
 									'<@(engine_java_source_files)',
 								],
-					
+				
 								'outputs':
 								[
 									'<(PRODUCT_DIR)/Classes-Community',
 								],
-					
+				
 								'action':
 								[
 									'<(jar_path)',
@@ -103,7 +184,7 @@
 								],
 							},
 						],
-						
+					
 						'all_dependent_settings':
 						{
 							'variables':
@@ -113,7 +194,7 @@
 						},
 					},
 				],
-			],
-		},
+			},
+		],
 	],
 }

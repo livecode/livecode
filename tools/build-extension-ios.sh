@@ -39,17 +39,30 @@ fi
 # SN-2015-02019: [[ Bug 14625 ]] We build and link each arch separately, and lipo them
 #  togother once it's done.
 
-# We still want to produce dylibs for the simulator
 if [ "$EFFECTIVE_PLATFORM_NAME" = "-iphonesimulator" ]; then
-	BUILD_DYLIB=1
+	BUILD_SIMULATOR=1
 else
-	BUILD_DYLIB=0
+	BUILD_SIMULATOR=0
+fi
+
+# We still want to produce dylibs for the simulator
+if [ $BUILD_SIMULATOR -eq 1 ]; then
+    BUILD_DYLIB=1
+else
+    BUILD_DYLIB=0
+fi
+
+if [ "$PRODUCT_NAME" != "ios-embedded-commercial" ]; then
+    EXPORT_SYMBOL_OPTION+=" -Wl,-exported_symbol,___libinfoptr_$PRODUCT_NAME"
+else
+    EXPORT_SYMBOL_OPTION=$SYMBOLS
+    BUILD_DYLIB=0
 fi
 
 # SN-2015-02-19: [[ Bug 14625 ]] Xcode only create FAT headers from iOS SDK 7.0
 FAT_INFO=$(otool -fv "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" | grep "Fat headers" || true)
 
-if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
+if [ -z "$FAT_INFO" -o $BUILD_SIMULATOR -eq 1 ]; then
 	# We set the minimum iOS or simulator version
     if [ $BUILD_DYLIB -eq 1 ]; then
         MIN_OS_VERSION="-mios-simulator-version-min=6.0.0"
@@ -67,7 +80,7 @@ if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
 		exit $?
 	fi
 
-	$BIN_DIR/g++ -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS ${ARCHS} $MIN_OS_VERSION -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS
+	$BIN_DIR/g++ -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS ${ARCHS} $MIN_OS_VERSION -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" $EXPORT_SYMBOL_OPTION $STATIC_DEPS
 
 	if [ $? -ne 0 ]; then
 		exit $?
@@ -87,13 +100,19 @@ else
 
 	    # arm64 is only from iOS 7.0.0
 	    if [ ${ARCH} = "arm64" -o ${ARCH} = "x86_64" ]; then
-			MIN_VERSION="7.0.0"
+			MIN_VERSION="7.1.0"
 	    else
 			MIN_VERSION="6.0.0"
 	    fi
 
+		if [ ${ARCH} = "i386" -o ${ARCH} = "x86_64" ]; then
+			IPHONE_VERSION_MIN=-mios-simulator-version-min=${MIN_VERSION}
+		else
+			IPHONE_VERSION_MIN=-miphoneos-version-min=${MIN_VERSION}
+		fi
+
 		if [ $BUILD_DYLIB -eq 1 ]; then
-			OUTPUT=$($BIN_DIR/g++ -stdlib=libc++ -dynamiclib -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${DYLIB_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -dead_strip -Wl,-x $SYMBOLS $DEPS)
+			OUTPUT=$($BIN_DIR/g++ -stdlib=libc++ -dynamiclib -arch ${ARCH} $IPHONE_VERSION_MIN -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${DYLIB_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -dead_strip -Wl,-x $SYMBOLS $DEPS)
 			if [ $? -ne 0 ]; then
 				echo "Linking ""${DYLIB_FILE}""failed:"
 				echo $OUTPUT
@@ -101,7 +120,7 @@ else
 			fi
 		fi
 
-	    OUTPUT=$($BIN_DIR/g++ -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${LCEXT_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS)
+	    OUTPUT=$($BIN_DIR/g++ -v -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS -arch ${ARCH} $IPHONE_VERSION_MIN -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${LCEXT_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" $EXPORT_SYMBOL_OPTION $STATIC_DEPS)
 
 		if [ $? -ne 0 ]; then
 			echo "Linking ""${LCEXT_FILE}""failed:"

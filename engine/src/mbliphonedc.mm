@@ -740,9 +740,18 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		t_sleep = 0.0;
 		if (curtime >= exittime)
 			done = True;
-		else if (!done && eventtime > curtime)
-			t_sleep = MCMin(eventtime - curtime, exittime - curtime);
-
+		else if (!done)
+		{
+			if (!MCEventQueueIsEmpty())
+			{
+				t_sleep = 0.0;
+			}
+			else if (eventtime > curtime)
+			{
+				t_sleep = MCMin(eventtime - curtime, exittime - curtime);
+			}
+		}
+		
 		// Switch to the main fiber and wait for at most t_sleep seconds. This
 		// returns 'true' if the wait was broken rather than timed out.
 		if (MCIPhoneWait(t_sleep) && anyevent)
@@ -1264,27 +1273,30 @@ static void MCIPhoneDoDidBecomeActive(void *)
         // Ensure t_envp array is NULL-terminated
         t_envp[envc] = NULL;
     }
-	
+    
 	// Initialize the engine.
 	Bool t_init_success;
     t_init_success = X_init(1, args, envc, *t_envp);
 	
     [t_pool release];
 	
-	if (!t_init_success)
-	{
-		
-		if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
-		{
-			NSLog(@"Startup error: %s\n", MCStringGetCString((MCStringRef)MCresult -> getvalueref()));
-			abort();
-			return;
-		}
-	}
+    if (!MCIPhoneIsEmbedded())
+    {
+        if (!t_init_success)
+        {
+            
+            if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+            {
+                NSLog(@"Startup error: %s\n", MCStringGetCString((MCStringRef)MCresult -> getvalueref()));
+                abort();
+                return;
+            }
+        }
 
-	// MW-2012-08-31: [[ Bug 10340 ]] Now we've finished initializing, get the app to
-	//   start preparing.
-	[MCIPhoneGetApplication() performSelectorOnMainThread:@selector(startPreparing) withObject:nil waitUntilDone:NO];
+        // MW-2012-08-31: [[ Bug 10340 ]] Now we've finished initializing, get the app to
+        //   start preparing.
+        [MCIPhoneGetApplication() performSelectorOnMainThread:@selector(startPreparing) withObject:nil waitUntilDone:NO];
+    }
 }
 
 // MW-2012-08-06: [[ Fibers ]] Updated entry point that triggers before the main
@@ -1300,7 +1312,8 @@ static void MCIPhoneDoDidStartPreparing(void *)
 	
 	// MW-2012-08-31: [[ Bug 10340 ]] Now we've finished preparing, get the app to
 	//   start executing.
-	[MCIPhoneGetApplication() performSelectorOnMainThread:@selector(startExecuting) withObject:nil waitUntilDone:NO];
+    if (!MCIPhoneIsEmbedded())
+        [MCIPhoneGetApplication() performSelectorOnMainThread:@selector(startExecuting) withObject:nil waitUntilDone:NO];
 }
 
 // MW-2012-08-06: [[ Fibers ]] Updated entry point for execution of the main
@@ -1653,7 +1666,9 @@ static void MCIPhoneDoBreakWaitOnCorrectThread(void *context)
 void MCIPhoneBreakWait(void)
 {
 	if (s_break_wait_pending)
+	{
 		return;
+	}
 	
 	if (s_break_wait_helper == nil)
 		s_break_wait_helper = [[com_runrev_livecode_MCIPhoneBreakWaitHelper alloc] init];
@@ -1669,18 +1684,18 @@ static void MCIPhoneDoScheduleWait(void *p_ctxt)
 }
 	
 static void MCIPhoneDoCancelWait(void *p_ctxt)
-	{
+{
 	[NSObject cancelPreviousPerformRequestsWithTarget: s_break_wait_helper selector: @selector(breakWait) object: nil];
-	}
+}
 
 static bool MCIPhoneWait(double p_sleep)
-	{
+{
 	if (s_break_wait_pending)
-		{
+	{
 		MCFiberCall(s_main_fiber, MCIPhoneDoCancelWait, nil);
 		s_break_wait_pending = false;
 		return true;
-		}
+	}
     
 	if (s_break_wait_helper == nil)
 		s_break_wait_helper = [[com_runrev_livecode_MCIPhoneBreakWaitHelper alloc] init];
@@ -1696,13 +1711,13 @@ static bool MCIPhoneWait(double p_sleep)
 
 	// Unmark ourselves as waiting.
 	s_wait_depth -= 1;
-
+	
 	bool t_broken;
 	t_broken = s_break_wait_pending;
 	s_break_wait_pending = false;
 
 	return t_broken;
-	}
+}
 	
 ////////////////////////////////////////////////////////////////////////////////
 

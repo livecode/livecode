@@ -68,6 +68,18 @@
 						'product_extension': '',
 					},
 				],
+				[
+					'OS == "ios"',
+					{
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files': [ '<(PRODUCT_DIR)/<(_product_name).lcext' ],
+							},
+						},
+					},	
+				],
 			],
 		},
 		{

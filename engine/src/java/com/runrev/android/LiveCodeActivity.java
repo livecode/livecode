@@ -52,7 +52,7 @@ public class LiveCodeActivity extends Activity
 
 		// Create the view and notify the engine of its attachment (just in case
 		// any following methods cause resize and such to be sent!).
-		s_main_view = new Engine(this);
+		s_main_view = new Engine(this, s_main_layout, 1);
 		s_main_view.doCreate(this, s_main_layout, s_main_view);
         
         // PM-2015-06-05: [[ Bug 15110 ]] Prevent black flash when setting the acceleratedRendering to true for the very first time

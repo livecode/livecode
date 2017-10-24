@@ -894,7 +894,9 @@
 						'dependencies':
 						[
 							'kernel-standalone.gyp:kernel-standalone',
-							'engine-common.gyp:security-community',
+                            'engine-common.gyp:security-community',
+                            '../libfoundation/libfoundation.gyp:libFoundation',
+                            '../libgraphics/libgraphics.gyp:libGraphics',
 						],
 			
 						'sources':

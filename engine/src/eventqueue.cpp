@@ -253,6 +253,11 @@ void MCEventQueueFinalize(void)
 	s_last_event = nil;
 }
 
+bool MCEventQueueIsEmpty(void)
+{
+	return s_first_event == nil;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static void MCEventQueueDispatchEvent(MCEvent *p_event)
