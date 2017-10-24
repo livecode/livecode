@@ -118,7 +118,7 @@ mergeInto(LibraryManager.library, {
 		getWindowRect: function(pID) {
 			var window = LiveCodeDC._windowList[pID];
 			if (window)
-				return window.rect;
+				return window.canvas.getBoundingClientRect();
 		  
 			return null;
 		},

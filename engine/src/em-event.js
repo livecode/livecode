@@ -105,12 +105,21 @@ mergeInto(LibraryManager.library, {
 
 			LiveCodeEvents._initialised = false;;
 		},
-
-		_getStackForCanvas: function(pCanvas) {
-			var window = LiveCodeDC.getWindowIDForCanvas(pCanvas);
+		
+		_getStackForWindow: function(pWindow) {
 			return Module.ccall('MCEmscriptenGetStackForWindow', 'number',
 								['number'],
 								[window]);
+		},
+		
+		_getStackForCanvas: function(pCanvas) {
+			var window = LiveCodeDC.getWindowIDForCanvas(pCanvas);
+			if (window == 0)
+			{
+				console.log('failed to find window for canvas');
+				return null;
+			}
+			return LiveCodeEvents._getStackForWindow(window);
 		},
 
 		_encodeModifiers: function(uiEvent) {
@@ -700,6 +709,31 @@ mergeInto(LibraryManager.library, {
 			// Prevent event from propagating
 			e.preventDefault();
 			return false;
+		},
+
+		// ----------------------------------------------------------------
+		// Mouse events
+		// ----------------------------------------------------------------
+		
+		_postWindowReshape: function(stack, backingScale)
+		{
+			console.log('posting windowreshape event to stack ' + stack);
+			Module.ccall('MCEventQueuePostWindowReshape',
+							'number', /* bool */
+							['number', /* MCStack *stack */
+							 'number'], /* MCGFloat backing_scale */
+							[stack, backingScale]);
+		},
+		
+		postWindowReshape: function(window)
+		{
+			var stack = LiveCodeEvents._getStackForWindow(window);
+			if (stack == 0)
+			{
+				console.log('could not find stack for window ' + window);
+				return
+			}
+			_postWindowReshape(stack, 1.0);
 		},
 	},
 
