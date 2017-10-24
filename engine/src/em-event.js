@@ -733,7 +733,7 @@ mergeInto(LibraryManager.library, {
 				console.log('could not find stack for window ' + window);
 				return
 			}
-			_postWindowReshape(stack, 1.0);
+			LiveCodeEvents._postWindowReshape(stack, 1.0);
 		},
 	},
 

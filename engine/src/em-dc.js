@@ -112,6 +112,8 @@ mergeInto(LibraryManager.library, {
 					window.div.style.setProperty('width', width + 'px', 'important');
 					window.div.style.setProperty('height', height + 'px', 'important');
 				}
+		  
+				LiveCodeEvents.postWindowReshape(pID);
 			}
 		},
 		

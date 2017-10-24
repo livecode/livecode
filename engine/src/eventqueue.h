@@ -41,7 +41,7 @@ typedef void (*MCEventQueueNotifyCallback)(void *state, bool dispatch);
 bool MCEventQueuePostNotify(MCEventQueueNotifyCallback callback, void *state);
 
 // IM-2014-02-14: [[ HiDPI ]] Post backing scale changes with window reshape message
-bool MCEventQueuePostWindowReshape(MCStack *stack, MCGFloat backing_scale);
+MC_DLLEXPORT bool MCEventQueuePostWindowReshape(MCStack *stack, MCGFloat backing_scale);
 
 MC_DLLEXPORT bool MCEventQueuePostMouseFocus(MCStack *stack, uint32_t time, bool inside);
 MC_DLLEXPORT bool MCEventQueuePostMousePress(MCStack *stack, uint32_t time, uint32_t modifiers, MCMousePressState state, int32_t button);
