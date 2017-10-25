@@ -1470,6 +1470,7 @@ end revCopyIcons
 
 private command revCopyFiles pTarget, pDirectory, pStackPath
    local tFileData
+   revSBUpdateSettingsForExtensions pTarget, sStandaloneSettingsA
    revSBResolveCopyFilesList pStackPath, pTarget, sStandaloneSettingsA, tFileData
    
    local tName,tDir

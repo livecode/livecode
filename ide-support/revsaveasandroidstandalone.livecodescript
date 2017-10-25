@@ -285,6 +285,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       set the itemDelimiter to "."
       
       local tResolvedFileData
+      revSBUpdateSettingsForExtensions "android", pSettings
       revSBResolveCopyFilesList tBaseFolder, "android", pSettings, tResolvedFileData
       
       repeat for each element tFile in tResolvedFileData

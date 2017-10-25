@@ -254,7 +254,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    end if
    
    local tPlist, tCustomEntitlements
-   
+   revSBUpdateSettingsForExtensions "ios", pSettings
    revCopyMobileFiles pSettings, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts, tPlist, tCustomEntitlements
    revCopyMobileStackFiles tStackFiles, tBaseFolder, pAppBundle
    
