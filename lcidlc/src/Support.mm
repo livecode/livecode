@@ -2744,7 +2744,7 @@ void LCExceptionRaise(const char *p_format, ...)
 	va_end(args);
 	
 	free(s_error);
-	s_error = (char *)malloc(length);
+	s_error = (char *)malloc(length+1);
 	if (s_error == nil)
 		return;
 	
