@@ -2018,6 +2018,10 @@ end revSBUpdateSettingsForWidgets
 
 command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployParams
    local tModules, tAuxiliaryStackfiles, tStartupScript
+   local tExternals, tLibraryMapping
+   
+   # AL-2015-02-04: [[ Standalone Resources ]] Add (universal) external names to the deploy parameters
+   put pStandaloneSettings["externals"] into tExternals
    
    -- auxiliary_stackfiles key might not be empty
    put pStandaloneSettings["auxiliary_stackfiles"] into tAuxiliaryStackfiles
@@ -2086,6 +2090,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    put tAuxiliaryStackFiles into xDeployParams["auxiliary_stackfiles"]
    put tStartupScript into xDeployParams["startup_script"]
    put tModules into xDeployParams["modules"]
+   put tExternals into xDeployParams["externals"]
 end revSBUpdateDeployParams
 
 local sBuiltInInclusions

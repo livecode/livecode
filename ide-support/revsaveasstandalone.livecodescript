@@ -570,11 +570,6 @@ private function revStandaloneInitialDeployParams pTarget, pStackSourceFile, pSt
       put return & "if there is a stack" && quote & tLine & quote && "then library" && quote & tLine & quote after tDeployInfo["startup_script"]
    end repeat
    
-   # AL-2015-02-04: [[ Standalone Resources ]] Add (universal) external names and resource mappings to the deploy parameters
-   if sStandaloneSettingsA["externals"] is not empty then
-      put sStandaloneSettingsA["externals"] into tDeployInfo["externals"]
-   end if
-   
    local tPlatformDetailsA, tPlatform
    put revStandalonePlatformDetails(pTarget) into tPlatformDetailsA
    put tPlatformDetailsA["platform"] into tPlatform

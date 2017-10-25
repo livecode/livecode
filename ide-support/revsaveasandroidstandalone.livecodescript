@@ -661,6 +661,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       ------- Compile the Standalone
       revStandaloneProgress "Building executable..."
       
+      put tExternals into pSettings["externals"]
+      
       local tDeploy
       -- Update the deploy params with script library and extension inclusions
       revSBUpdateDeployParams pStack, "android", pSettings, tDeploy
@@ -673,12 +675,6 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       -- Stackfile to use
       put the effective filename of stack pStack into tDeploy["stackfile"]
-      
-      -- Externals to reference (on Android we include drivers in this list)
-      repeat for each line tEntry in tExternals
-         put tEntry & return after tDeploy["externals"]
-      end repeat
-      delete the last char of tDeploy["externals"]
       
       -- Output file to create
       put tArmLibsBuildFolder & slash & "librevandroid.so" into tDeploy["output"]

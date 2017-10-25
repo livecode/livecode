@@ -280,6 +280,18 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       end if
    end if
    
+   -- Externals to reference
+   -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
+   --
+   local tDeployExternals
+   repeat for each element tExternal in tCopiedExternals
+      if tExternal["type"] is among the words of "external external-tmp" then
+         put tExternal["location"] & return after tDeployExternals
+      end if
+   end repeat
+   delete the last char of tDeployExternals
+   put tDeployExternals into pSettings["externals"]
+   
    local tDeploy
    -- Update the deploy params with script library and extension inclusions
    revSBUpdateDeployParams pStack, "ios", pSettings, tDeploy
@@ -468,16 +480,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    
    -- Stackfile to use
    put the effective filename of stack pStack into tDeploy["stackfile"]
-   
-   -- Externals to reference
-   -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
-   --
-   repeat for each element tExternal in tCopiedExternals
-      if tExternal["type"] is among the words of "external external-tmp" then
-         put tExternal["location"] & return after tDeploy["externals"]
-      end if
-   end repeat
-   delete the last char of tDeploy["externals"]
    
    -- Put the redirects if any
    -- MM-2014-10-06: [[ Bug 13583 ]] Due to issues with the redirects, we use symlinks with the iOS 8 sim.
