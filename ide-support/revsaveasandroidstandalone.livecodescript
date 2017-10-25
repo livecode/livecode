@@ -122,9 +122,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    set the itemDelimiter to comma
    
    -- Fetch the various options we need to initially build the app-bundle
-   local tName, tFiles, tVersionName, tVersionCode, tExternals, tIcon, tSplash, tKey, tUnsigned, tStatusBarIcon
+   local tName, tVersionName, tVersionCode, tExternals, tIcon, tSplash, tKey, tUnsigned, tStatusBarIcon
    put pSettings["name"] into tName
-   put pSettings["files"] into tFiles
    put pSettings["android,icon"] into tIcon
    put pSettings["android,key"] into tKey
    
@@ -286,7 +285,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       set the itemDelimiter to "."
       
       local tResolvedFileData
-      revSBResolveCopyFilesList tBaseFolder, "android", tFiles, tResolvedFileData
+      revSBResolveCopyFilesList tBaseFolder, "android", pSettings, tResolvedFileData
       
       repeat for each element tFile in tResolvedFileData
          -- Look for manifest template

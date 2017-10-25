@@ -1942,9 +1942,9 @@ private command __ResolveIncludedExternal pTarget, @xFiles, @rHasResources
    put tHasResources into rHasResources
 end __ResolveIncludedExternal
 
-command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFileData
+command revSBResolveCopyFilesList pBaseFolder, pTarget, pSettings, @rFileData
    set the itemDelimiter to slash
-   repeat for each line tFile in pFiles
+   repeat for each line tFile in pSettings["files"]
       local tResolvedFile, tHasResources
       __ResolveIncludedExternal pTarget, tFile, tHasResources
       

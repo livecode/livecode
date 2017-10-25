@@ -160,9 +160,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    set the itemDelimiter to comma
    
    -- Fetch the various options we need to initially build the app-bundle
-   local tName, tFiles, tExternals, tDrivers
+   local tName, tExternals, tDrivers
    put pSettings["name"] into tName
-   put pSettings["files"] into tFiles
    
    if pSettings["ios,display name"] is empty then
       put tName into pSettings["ios,display name"]
@@ -255,7 +254,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    end if
    
    local tPlist, tCustomEntitlements
-   revCopyMobileFiles tFiles, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts, tPlist, tCustomEntitlements
+   
+   revCopyMobileFiles pSettings, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts, tPlist, tCustomEntitlements
    revCopyMobileStackFiles tStackFiles, tBaseFolder, pAppBundle
    
    -- Copy in the appropriate externals and drivers
@@ -934,7 +934,7 @@ end addToManifest
 --   foobar/baz -> <base>/foobar/baz
 --   C:/foobar/baz -> <base>/baz
 --
-private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, pSDKs, @rRedirects, @rExternals, @rFonts, @rPlist, @rCustomEntitlements
+private command revCopyMobileFiles pSettings, pBaseFolder, pAppBundle, pAppTarget, pSDKs, @rRedirects, @rExternals, @rFonts, @rPlist, @rCustomEntitlements
    revStandaloneProgress "Copying files..."
    
    -- Only use redirects in simulator 4.x
@@ -942,6 +942,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    -- sure that we don't try and use redirects for device builds.
    -- MM-2012-09-18: Since we now no longer support sims before 4.3, we always use redirects for sim builds.
    --
+   
    local tUseRedirects
    if pAppTarget is not "Device" then
       put true into tUseRedirects
@@ -951,7 +952,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    put empty into rRedirects
    
    local tFileData
-   revSBResolveCopyFilesList pBaseFolder, "ios", pFiles, tFileData
+   revSBResolveCopyFilesList pBaseFolder, "ios", pSettings, tFileData
    
    -- Compute a list of the files we need to copy. This is in the form
    --   <target> [tab] <source>
