@@ -2016,6 +2016,13 @@ command revSBUpdateSettingsForWidgets pStack, @xSettings
    put tExtensions after xSettings["extensions"] 
 end revSBUpdateSettingsForWidgets
 
+constant kMappingSeparator = ":"
+command revSBAddLibraryMapping pPlatform, pName, pLocation, @xSettingsA
+   local tMapping
+   put pName & kMappingSeparator & "./" & pLocation into tMapping
+   appendToStringList tMapping, xSettingsA[pPlatform & ",library"]
+end revSBAddLibraryMapping
+
 command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployParams
    local tModules, tAuxiliaryStackfiles, tStartupScript
    local tExternals, tLibraryMapping
@@ -2033,6 +2040,11 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
       put revIDEExtensionModuleFile(tExtension) into tExtensionFile
       appendToStringList tExtensionFile, tModules
    end repeat
+   
+   # Add resource mappings to the deploy params
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   put pStandaloneSettings[tPlatform & ",library"] into tLibraryMapping
    
    local tLibraryStack, tIncludeDataGrid
    repeat for each line tLibrary in pStandaloneSettings["scriptLibraries"]
@@ -2091,6 +2103,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    put tStartupScript into xDeployParams["startup_script"]
    put tModules into xDeployParams["modules"]
    put tExternals into xDeployParams["externals"]
+   put tLibraryMapping into xDeployParams["library"]
 end revSBUpdateDeployParams
 
 local sBuiltInInclusions

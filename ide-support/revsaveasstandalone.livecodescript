@@ -570,13 +570,6 @@ private function revStandaloneInitialDeployParams pTarget, pStackSourceFile, pSt
       put return & "if there is a stack" && quote & tLine & quote && "then library" && quote & tLine & quote after tDeployInfo["startup_script"]
    end repeat
    
-   local tPlatformDetailsA, tPlatform
-   put revStandalonePlatformDetails(pTarget) into tPlatformDetailsA
-   put tPlatformDetailsA["platform"] into tPlatform
-   if sStandaloneSettingsA[tPlatform & ",library"] is not empty then
-      put sStandaloneSettingsA[tPlatform & ",library"] into tDeployInfo["library"]
-   end if
-   
    return tDeployInfo
 end revStandaloneInitialDeployParams
 
@@ -2117,10 +2110,8 @@ private command revAddExternal pExternalName
    put pExternalName after sStandaloneSettingsA["externals"]
 end revAddExternal
 
-constant kSeparator = ":"
 private command revAddMapping pPlatform, pName, pLocation
-   if sStandaloneSettingsA[pPlatform & ",library"] is not empty then put return after sStandaloneSettingsA[pPlatform & ",library"]
-   put pName & kSeparator & "./" & pLocation after sStandaloneSettingsA[pPlatform & ",library"]
+   revSBAddLibraryMapping pPlatform, pName, pLocation, sStandaloneSettingsA
 end revAddMapping
 
 # AL-2015-01-29: [[ Scriptify IDE ]] Factor out external copy function to ensure external is included in deploy params
