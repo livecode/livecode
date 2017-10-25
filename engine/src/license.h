@@ -126,4 +126,38 @@ inline bool MCStringFromLicenseClass(MCLicenseClass p_class, bool p_simplified, 
     return false;
 }
 
+static const struct { const char *tag; MCLicenseClass value; } s_edition_map[] =
+{
+    { "community", kMCLicenseClassCommunity },
+    { "communityplus", kMCLicenseClassCommunityPlus },
+    { "indy", kMCLicenseClassCommercial },
+    { "business", kMCLicenseClassProfessional },
+};
+
+inline bool MCEditionStringFromLicenseClass(MCLicenseClass p_class, MCStringRef &r_edition)
+{
+    if (p_class == kMCLicenseClassEvaluation)
+    {
+        p_class = kMCLicenseClassCommercial;
+    }
+    else if (p_class == kMCLicenseClassProfessionalEvaluation)
+    {
+        p_class = kMCLicenseClassProfessional;
+    }
+    else if (p_class == kMCLicenseClassNone)
+    {
+		p_class = kMCLicenseClassCommunity;
+	}
+    
+    for(uindex_t t_index = 0; t_index < sizeof(s_edition_map) / sizeof(s_edition_map[0]); ++t_index)
+    {
+        if (s_edition_map[t_index].value == p_class)
+        {
+            return MCStringCreateWithCString(s_edition_map[t_index].tag, r_edition);
+        }
+    }
+    
+    return false;
+}
+
 #endif
