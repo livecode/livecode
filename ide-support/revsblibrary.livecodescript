@@ -2016,6 +2016,41 @@ command revSBUpdateSettingsForWidgets pStack, @xSettings
    put tExtensions after xSettings["extensions"] 
 end revSBUpdateSettingsForWidgets
 
+command revSBUpdateSettingsForExtensions pTarget, @xSettingsA
+   local tLoadIndex
+   repeat for each line tExtension in revIDEExtensionsOrderByDependency(xSettingsA["extensions"])
+      add 1 to tLoadIndex
+      
+      local tExtensionData
+      put tExtension into tExtensionData["id"]
+      
+      local tResourcesFolder
+      put revIDEExtensionProperty(tExtension, "install_path") & \
+            slash & "resources" into tResourcesFolder
+      if there is a folder tResourcesFolder then
+         local tTargetResourceFolder
+         put "extension" & tLoadIndex into tTargetResourceFolder
+         
+         local tContents
+         put __EnumerateFolder(tResourcesFolder, "", true) into tContents
+         repeat for each line tLine in tContents
+            local tFileData
+            put tResourcesFolder & slash & tLine into tFileData["resolved"]
+            put tTargetResourceFolder & slash & tLine into tFileData["name"]
+            addToList tFileData, xSettingsA["files_computed"]
+         end repeat
+         
+         # Add resource mappings to the deploy params
+         local tPlatform
+         put revSBTargetToPlatform(pTarget) into tPlatform
+         
+         revSBAddLibraryMapping tPlatform, tExtension & slash & "resources", \
+               tTargetResourceFolder, xSettingsA
+      end if
+      put tExtensionData into xSettingsA["extensions_computed"][tLoadIndex]
+   end repeat
+end revSBUpdateSettingsForExtensions
+
 constant kMappingSeparator = ":"
 command revSBAddLibraryMapping pPlatform, pName, pLocation, @xSettingsA
    local tMapping
@@ -2035,9 +2070,10 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    
    # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
    # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
-   repeat for each line tExtension in revIDEExtensionsOrderByDependency(pStandaloneSettings["extensions"])
+   local tModuleIndex
+   repeat for each element tExtensionDataA in pStandaloneSettings["extensions_computed"]
       local tExtensionFile
-      put revIDEExtensionModuleFile(tExtension) into tExtensionFile
+      put revIDEExtensionModuleFile(tExtensionDataA["id"]) into tExtensionFile
       appendToStringList tExtensionFile, tModules
    end repeat
    
