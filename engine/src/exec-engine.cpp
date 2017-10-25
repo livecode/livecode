@@ -2190,8 +2190,14 @@ void MCEngineEvalCommandArguments(MCExecContext& ctxt, MCArrayRef& r_result)
 
 void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index, MCStringRef& r_result)
 {
+    if (t_index == 0)
+    {
+        ctxt . LegacyThrow(EE_COMMANDARGUMENTS_BADPARAM);
+        return;
+    }
+    
     MCStringRef t_result = nullptr;
-    // If the index is wrong (< 0 or > argument count) then we return empty
+    // If the index > argument count then we return empty
     if (!MCArrayFetchValueAtIndex(MCcommandarguments, t_index, (MCValueRef&)t_result))
         t_result = kMCEmptyString;
 

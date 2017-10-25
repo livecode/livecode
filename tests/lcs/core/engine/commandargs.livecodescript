@@ -33,3 +33,21 @@ on TestCommandName
    TestRunStack tOptions, tStackToRun
    TestAssert "command name does not crash on quit", the result is empty
 end TestCommandName
+
+command _TestCommandArgumentsZeroIndexError
+	return commandArguments(0)
+end _TestCommandArgumentsZeroIndexError
+
+command _TestCommandArgumentsNegativeIndexError
+	return commandArguments(-1)
+end _TestCommandArgumentsNegativeIndexError
+
+on TestCommandArguments
+	TestAssertThrow "command arguments invalid index (0) throws", \
+		_TestCommandArgumentsZeroIndexError, the long id of me, \
+		EE_COMMANDARGUMENTS_BADPARAM
+		
+	TestAssertThrow "command arguments invalid index (-1) throws", \
+		_TestCommandArgumentsNegativeIndexError, the long id of me, \
+		EE_COMMANDARGUMENTS_BADPARAM		
+end TestCommandArguments
