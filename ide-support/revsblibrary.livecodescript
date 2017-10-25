@@ -1943,6 +1943,9 @@ private command __ResolveIncludedExternal pTarget, @xFiles, @rHasResources
 end __ResolveIncludedExternal
 
 command revSBResolveCopyFilesList pBaseFolder, pTarget, pSettings, @rFileData
+   local tComputedFileData
+   put pSettings["files_computed"] into tComputedFileData
+   
    set the itemDelimiter to slash
    repeat for each line tFile in pSettings["files"]
       local tResolvedFile, tHasResources
@@ -1975,9 +1978,10 @@ command revSBResolveCopyFilesList pBaseFolder, pTarget, pSettings, @rFileData
          end if
          put tResolvedFile into tDataA["resolved"]
          
-         addToList tDataA, rFileData
+         addToList tDataA, tComputedFileData
       end repeat
    end repeat
+   put tComputedFileData into rFileData
 end revSBResolveCopyFilesList
 
 private command addToStringList pAppend, pValue, @xList
