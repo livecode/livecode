@@ -530,7 +530,7 @@ private command revStandaloneCopyInclusions pStack, pStackFileList, pStackSource
    
    revCopyScriptLibraries pStack, pTarget
    
-   revCopyFiles pDirectory, pStackPath
+   revCopyFiles pTarget, pDirectory, pStackPath
    
    -- copy database drivers
    revCopyDatabaseDrivers pTarget, pStackSourceFile, pStandalonePath, pEngineSourceFile
@@ -563,18 +563,6 @@ private function revStandaloneInitialDeployParams pTarget, pStackSourceFile, pSt
    repeat for each line tLine in sUserScriptLibraries
       put return & "if there is a stack" && quote & tLine & quote && "then library" && quote & tLine & quote after tDeployInfo["startup_script"]
    end repeat
-   
-   # AL-2015-02-04: [[ Standalone Resources ]] Add (universal) external names and resource mappings to the deploy parameters
-   if sStandaloneSettingsA["externals"] is not empty then
-      put sStandaloneSettingsA["externals"] into tDeployInfo["externals"]
-   end if
-   
-   local tPlatformDetailsA, tPlatform
-   put revStandalonePlatformDetails(pTarget) into tPlatformDetailsA
-   put tPlatformDetailsA["platform"] into tPlatform
-   if sStandaloneSettingsA[tPlatform & ",library"] is not empty then
-      put sStandaloneSettingsA[tPlatform & ",library"] into tDeployInfo["library"]
-   end if
    
    return tDeployInfo
 end revStandaloneInitialDeployParams
@@ -1482,44 +1470,19 @@ end revCopyIcons
 #####################################################################
 
 
-private command revCopyFiles pDirectory, pStackPath
+private command revCopyFiles pTarget, pDirectory, pStackPath
+   local tFileData
+   revSBUpdateSettingsForExtensions pTarget, sStandaloneSettingsA
+   revSBResolveCopyFilesList pStackPath, pTarget, sStandaloneSettingsA, tFileData
+   
    local tName,tDir
    revStandaloneProgress "Copying files..."
-   set the itemDel to "/"
-   repeat for each line tFile in sStandaloneSettingsA["files"]
-      if the last item of tFile is not "*" then
-         if there is not a file tFile then
-            put tFile into tName
-            put pStackPath & "/" before tFile
-         else
-            put item -1 of tFile into tName
-         end if
-      else
-         delete the last item of tFile
-         --if there is not a folder tFile then
-         if there is a folder (pStackpath & slash & tFile) then
-            put tFile into tName
-            put pStackpath & slash before tFile
-         else
-            put item -1 of tFile into tName
-         end if
-      end if
-      
-      put empty into tDir
-      repeat for each item tFolder in item 1 to -2 of tName
-         put tFolder & "/" after tDir
-         if there is not a folder (pDirectory & tDir) then
-            create folder pDirectory & tDir
-         end if
-      end repeat
-      if revResourceExists(tFile) then
-         ## EJB 2014-07-30: [[ Bug 12864 ]] Ensure a relative folder in Copy Files is converted to an absolute path
-         --revCopyFile tFile, pDirectory & item 1 to -2 of tName
-         if there is a file tFile then
-            revSBCopyFileToFolder tFile, pDirectory & item 1 to -2 of tName, "revStandaloneProgressCallback", the long id of me
-         else -- it's a folder
-            revSBCopyFolderToDestination tFile, pDirectory & item 1 to -2 of tName, "revStandaloneProgressCallback", the long id of me
-         end if
+   set the itemDelimiter to slash
+   repeat for each element tFile in tFileData
+      revSBEnsureFolder pDirectory & slash & item 1 to -2 of tFile["name"]
+      if revResourceExists(tFile["resolved"]) then
+         revSBCopyFileToFile tFile["resolved"], pDirectory & slash & tFile["name"], \
+               "revStandaloneProgressCallback", the long id of me
       else
          revStandaloneAddWarning "File to include in standalone not found:" && quote & tFile & quote
       end if
@@ -2150,15 +2113,13 @@ private command revAddExternal pExternalName
    put pExternalName after sStandaloneSettingsA["externals"]
 end revAddExternal
 
-constant kSeparator = ":"
 private command revAddMapping pPlatform, pName, pLocation
    -- The name comes in without 'db' in front of it for the existing database
    -- drivers, but it needs to be 'db*'.
    if pName is among the items of "sqlite,postgres,odbc,mysql,oracle" then
       put "db" before pName
    end if
-   if sStandaloneSettingsA[pPlatform & ",library"] is not empty then put return after sStandaloneSettingsA[pPlatform & ",library"]
-   put pName & kSeparator & "./" & pLocation after sStandaloneSettingsA[pPlatform & ",library"]
+   revSBAddLibraryMapping pPlatform, pName, pLocation, sStandaloneSettingsA
 end revAddMapping
 
 # AL-2015-01-29: [[ Scriptify IDE ]] Factor out external copy function to ensure external is included in deploy params
