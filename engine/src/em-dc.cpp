@@ -49,6 +49,14 @@ void MCEmscriptenSetWindowRect(uint32_t p_window_id, const MCRectangle &p_rect)
 	MCEmscriptenSetWindowRect(p_window_id, p_rect.x, p_rect.y, p_rect.x + p_rect.width, p_rect.y + p_rect.height);
 }
 
+MCRectangle MCEmscriptenGetDisplayRect()
+{
+	uint32_t t_left, t_top, t_right, t_bottom;
+	MCEmscriptenGetDisplayRect(&t_left, &t_top, &t_right, &t_bottom);
+	
+	return MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
+}
+
 /* ================================================================
  * Initialization / Finalization
  * ================================================================ */
@@ -201,6 +209,23 @@ MCScreenDC::platform_getwindowgeometry(Window p_window,
 
 	uint32_t t_window = reinterpret_cast<uint32_t>(p_window);
 	r_rect = MCEmscriptenGetWindowRect(t_window);
+	return true;
+}
+
+/* ================================================================
+ * Display management
+ * ================================================================ */
+
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
+{
+	MCDisplay *t_display = nil;
+	if (!MCMemoryNew(t_display))
+		return false;
+	
+	t_display->viewport = t_display->workarea = MCEmscriptenGetDisplayRect();
+	
+	r_displays = t_display;
+	r_count = 1;
 	return true;
 }
 

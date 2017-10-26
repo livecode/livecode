@@ -34,6 +34,8 @@ MCUIDC *MCCreateScreenDC(void);
 extern bool MCEmscriptenDCInitialize();
 extern void MCEmscriptenDCFinalize();
 
+extern "C" void MCEmscriptenGetDisplayRect(uint32_t *r_left, uint32_t *r_top, uint32_t *r_right, uint32_t *r_bottom);
+
 extern "C" MCStack *MCEmscriptenGetStackForWindow(Window p_window);
 extern "C" bool MCEmscriptenHandleMousePress(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, MCMousePressState p_state, int32_t p_button);
 
@@ -70,6 +72,9 @@ public:
 	uintptr_t dtouint(Drawable d);
 	Boolean uinttowindow(uintptr_t, Window &w);
 
+	/* ---------- Display management */
+
+	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 
 	/* ---------- Event loop */
 	virtual Boolean wait(real64_t p_duration,

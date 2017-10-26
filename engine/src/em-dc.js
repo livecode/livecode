@@ -178,6 +178,10 @@ mergeInto(LibraryManager.library, {
 			}
 			console.debug("canvas not found: " + pCanvas);
 			return 0;
+		},
+		
+		getDisplayRect: function() {
+			return {'left':0, 'top':0, 'right':document.body.clientWidth, 'bottom':document.body.clientHeight};
 		}
 	},
 	
@@ -226,5 +230,14 @@ mergeInto(LibraryManager.library, {
 	MCEmscriptenGetWindowVisible__deps: ['$LiveCodeDC'],
 	MCEmscriptenGetWindowVisible: function(pWindowID) {
 		return LiveCodeDC.getWindowVisible(pWindowID);
+	},
+	
+	MCEmscriptenGetDisplayRect__deps: ['$LiveCodeDC'],
+	MCEmscriptenGetDisplayRect: function(rLeft, rTop, rRight, rBottom) {
+		var rect = LiveCodeDC.getDisplayRect();
+		{{{ makeSetValue('rLeft', '0', 'rect.left', 'i32') }}};
+		{{{ makeSetValue('rTop', '0', 'rect.top', 'i32') }}};
+		{{{ makeSetValue('rRight', '0', 'rect.right', 'i32') }}};
+		{{{ makeSetValue('rBottom', '0', 'rect.bottom', 'i32') }}};
 	},
 });
