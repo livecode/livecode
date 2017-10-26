@@ -316,6 +316,9 @@ const char *MCDeployErrorToString(MCDeployError p_error)
 		
 		case kMCDeployErrorTrialBannerError:
 			return "could not create trial banner";
+            
+        case kMCDeployErrorInvalidUuid:
+            return "invalid uuid";
 
 		case kMCDeployErrorNoCertificate:
 			return "could not load certificate";

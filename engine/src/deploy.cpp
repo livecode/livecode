@@ -367,6 +367,12 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 									  kMCStringOptionCompareCaseless))
 		banner_class = kMCLicenseClassProfessionalEvaluation;
 	
+    
+    if (!ctxt.CopyOptElementAsString(p_array, MCNAME("uuid"), false, t_temp_string))
+        return false;
+    MCValueAssign(uuid, t_temp_string);
+    MCValueRelease(t_temp_string);
+    
     return true;
 }
 
