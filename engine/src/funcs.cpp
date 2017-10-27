@@ -583,7 +583,7 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 
 Parse_stat MCCommandArguments::parse(MCScriptPoint &sp, Boolean the)
 {
-    if (!get0or1param(sp, &argument_index, the))
+    if (!get0or1param(sp, &(&argument_index), the))
     {
         MCperror -> add(PE_FACTOR_BADPARAM, line, pos);
         return PS_ERROR;
@@ -596,32 +596,26 @@ void MCCommandArguments::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
     // If no parameter has been provided, then we return the list of parameters
     //  as an array.
-    if (argument_index == NULL)
+    if (*argument_index == nullptr)
     {
-        MCExecValueTraits<MCArrayRef>::set(r_value, MCValueRetain(MCcommandarguments));
-        return;
+        MCEngineEvalCommandArguments(ctxt, r_value.arrayref_value);
+        r_value.type = kMCExecValueTypeArrayRef;
     }
     else
     {
-        integer_t t_index;
-        if (!ctxt . EvalExprAsInt(argument_index, EE_COMMANDARGUMENTS_BADPARAM, t_index))
+        uinteger_t t_index;
+        if (!ctxt . EvalExprAsUInt(*argument_index, EE_COMMANDARGUMENTS_BADPARAM, t_index))
             return;
 
-        MCStringRef t_value;
-        // If the index is wrong (< 0 or > argument count) then we return empty
-        if (!MCArrayFetchValueAtIndex(MCcommandarguments, t_index, (MCValueRef&)t_value))
-            t_value = kMCEmptyString;
-
-        MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(t_value));
+        MCEngineEvalCommandArgumentAtIndex(ctxt, t_index, r_value . stringref_value);
+        r_value.type = kMCExecValueTypeStringRef;
     }
 }
 
 void MCCommandName::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-    if (MCcommandname != NULL)
-        MCExecValueTraits<MCStringRef>::set(r_value, MCcommandname);
-    else
-        MCExecValueTraits<MCStringRef>::set(r_value, kMCEmptyString);
+    MCEngineEvalCommandName(ctxt, r_value.stringref_value);
+    r_value.type = kMCExecValueTypeStringRef;
 }
 
 MCDirectories::~MCDirectories()
