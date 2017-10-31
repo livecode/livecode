@@ -571,6 +571,10 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostToScriptObject(MCStringRef p_me
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
 {
+	// PM-2017-10-31: [[ Bugfix 20625 ]] May have no default stack on startup
+	if (!MCdefaultstackptr)
+		return;
+		
     MCObject *t_target = MCdefaultstackptr -> getcurcard();
     if (MCcurrentwidget)
     {
