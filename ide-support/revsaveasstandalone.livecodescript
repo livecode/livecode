@@ -1479,10 +1479,15 @@ private command revCopyFiles pTarget, pDirectory, pStackPath
    revStandaloneProgress "Copying files..."
    set the itemDelimiter to slash
    repeat for each element tFile in tFileData
-      revSBEnsureFolder pDirectory & slash & item 1 to -2 of tFile["name"]
       if revResourceExists(tFile["resolved"]) then
-         revSBCopyFileToFile tFile["resolved"], pDirectory & slash & tFile["name"], \
-               "revStandaloneProgressCallback", the long id of me
+         revSBEnsureFolder pDirectory & slash & item 1 to -2 of tFile["name"]
+         if there is a file tFile["resolved"] then      
+            revSBCopyFileToFile tFile["resolved"], pDirectory & slash & tFile["name"], \
+                  "revStandaloneProgressCallback", the long id of me
+         else
+            revSBCopyFolderToDestination tFile["resolved"], pDirectory, \
+                  "revStandaloneProgressCallback", the long id of me
+         end if
       else
          revStandaloneAddWarning "File to include in standalone not found:" && quote & tFile & quote
       end if
