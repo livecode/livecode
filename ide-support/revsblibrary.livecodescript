@@ -1942,9 +1942,12 @@ private command __ResolveIncludedExternal pTarget, @xFiles, @rHasResources
    put tHasResources into rHasResources
 end __ResolveIncludedExternal
 
-command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFileData
+command revSBResolveCopyFilesList pBaseFolder, pTarget, pSettings, @rFileData
+   local tComputedFileData
+   put pSettings["files_computed"] into tComputedFileData
+   
    set the itemDelimiter to slash
-   repeat for each line tFile in pFiles
+   repeat for each line tFile in pSettings["files"]
       local tResolvedFile, tHasResources
       __ResolveIncludedExternal pTarget, tFile, tHasResources
       
@@ -1975,9 +1978,10 @@ command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFileData
          end if
          put tResolvedFile into tDataA["resolved"]
          
-         addToList tDataA, rFileData
+         addToList tDataA, tComputedFileData
       end repeat
    end repeat
+   put tComputedFileData into rFileData
 end revSBResolveCopyFilesList
 
 private command addToStringList pAppend, pValue, @xList
@@ -2016,19 +2020,71 @@ command revSBUpdateSettingsForWidgets pStack, @xSettings
    put tExtensions after xSettings["extensions"] 
 end revSBUpdateSettingsForWidgets
 
+command revSBUpdateSettingsForExtensions pTarget, @xSettingsA
+   local tLoadIndex
+   repeat for each line tExtension in revIDEExtensionsOrderByDependency(xSettingsA["extensions"])
+      add 1 to tLoadIndex
+      
+      local tExtensionData
+      put tExtension into tExtensionData["id"]
+      
+      local tResourcesFolder
+      put revIDEExtensionProperty(tExtension, "install_path") & \
+            slash & "resources" into tResourcesFolder
+      if there is a folder tResourcesFolder then
+         local tTargetResourceFolder
+         put "extension" & tLoadIndex into tTargetResourceFolder
+         
+         local tContents
+         put __EnumerateFolder(tResourcesFolder, "", true) into tContents
+         repeat for each line tLine in tContents
+            local tFileData
+            put tResourcesFolder & slash & tLine into tFileData["resolved"]
+            put tTargetResourceFolder & slash & tLine into tFileData["name"]
+            addToList tFileData, xSettingsA["files_computed"]
+         end repeat
+         
+         # Add resource mappings to the deploy params
+         local tPlatform
+         put revSBTargetToPlatform(pTarget) into tPlatform
+         
+         revSBAddLibraryMapping tPlatform, tExtension & slash & "resources", \
+               tTargetResourceFolder, xSettingsA
+      end if
+      put tExtensionData into xSettingsA["extensions_computed"][tLoadIndex]
+   end repeat
+end revSBUpdateSettingsForExtensions
+
+constant kMappingSeparator = ":"
+command revSBAddLibraryMapping pPlatform, pName, pLocation, @xSettingsA
+   local tMapping
+   put pName & kMappingSeparator & "./" & pLocation into tMapping
+   appendToStringList tMapping, xSettingsA[pPlatform & ",library"]
+end revSBAddLibraryMapping
+
 command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployParams
    local tModules, tAuxiliaryStackfiles, tStartupScript
+   local tExternals, tLibraryMapping
+   
+   # AL-2015-02-04: [[ Standalone Resources ]] Add (universal) external names to the deploy parameters
+   put pStandaloneSettings["externals"] into tExternals
    
    -- auxiliary_stackfiles key might not be empty
    put pStandaloneSettings["auxiliary_stackfiles"] into tAuxiliaryStackfiles
    
    # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
    # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
-   repeat for each line tExtension in revIDEExtensionsOrderByDependency(pStandaloneSettings["extensions"])
+   local tModuleIndex
+   repeat for each element tExtensionDataA in pStandaloneSettings["extensions_computed"]
       local tExtensionFile
-      put revIDEExtensionModuleFile(tExtension) into tExtensionFile
+      put revIDEExtensionModuleFile(tExtensionDataA["id"]) into tExtensionFile
       appendToStringList tExtensionFile, tModules
    end repeat
+   
+   # Add resource mappings to the deploy params
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   put pStandaloneSettings[tPlatform & ",library"] into tLibraryMapping
    
    local tLibraryStack, tIncludeDataGrid
    repeat for each line tLibrary in pStandaloneSettings["scriptLibraries"]
@@ -2086,6 +2142,8 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    put tAuxiliaryStackFiles into xDeployParams["auxiliary_stackfiles"]
    put tStartupScript into xDeployParams["startup_script"]
    put tModules into xDeployParams["modules"]
+   put tExternals into xDeployParams["externals"]
+   put tLibraryMapping into xDeployParams["library"]
 end revSBUpdateDeployParams
 
 local sBuiltInInclusions
