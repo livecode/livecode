@@ -6088,9 +6088,6 @@ static void __MCStringSetFlags(MCStringRef self, uindex_t basic, uindex_t trivia
     if (native == kMCStringFlagSetTrue)
     {
         self -> flags |= kMCStringFlagCanBeNative;
-        self -> flags |= kMCStringFlagIsTrivial;
-        self -> flags |= kMCStringFlagIsBasic;
-        return;
     }
     else if (native == kMCStringFlagSetFalse)
     {
@@ -6106,7 +6103,6 @@ static void __MCStringSetFlags(MCStringRef self, uindex_t basic, uindex_t trivia
     else if (trivial == kMCStringFlagSetFalse)
     {
         self -> flags &= ~kMCStringFlagIsTrivial;
-        self -> flags &= ~kMCStringFlagCanBeNative;
     }
 
     if (basic == kMCStringFlagSetTrue)
@@ -6827,8 +6823,10 @@ static void __MCStringCheck(MCStringRef self)
     if (__MCStringCanBeNative(self))
         return;
     
-    bool t_can_be_native;
+    bool t_can_be_native, t_is_trivial, t_is_basic;
     t_can_be_native = true;
+    t_is_trivial = true;
+    t_is_basic = true;
     
     for (uindex_t i = 0; i < self -> char_count; i++)
     {
@@ -6836,6 +6834,8 @@ static void __MCStringCheck(MCStringRef self)
         {
             __MCStringSetFlags(self, false, false, false);
             t_can_be_native = false;
+            t_is_trivial = false;
+            t_is_basic = false;
             break;
         }
         
@@ -6851,10 +6851,10 @@ static void __MCStringCheck(MCStringRef self)
                 (i+1 < self->char_count &&
                  !MCUnicodeIsGraphemeClusterBoundary(self->chars[i+1], self->chars[i+2])))
             {
-                __MCStringSetFlags(self, kMCStringFlagNoChange, false, false);
                 t_can_be_native = false;
-                break;
             }
+            
+            t_is_trivial = false;
             
             /* At this point i is the first codeunit of a 2-codeunit combining
              * sequence which maps to a native, so we can skip the combiner. */
@@ -6867,14 +6867,10 @@ static void __MCStringCheck(MCStringRef self)
         if (!MCUnicodeCharMapToNative(self -> chars[i], t_native))
         {
             t_can_be_native = false;
-            break;
         }
     }
     
-    if (t_can_be_native)
-    {
-        __MCStringSetFlags(self, true, true, true);
-    }
+    __MCStringSetFlags(self, t_is_basic, t_is_trivial, t_can_be_native);
     
     self -> flags |= kMCStringFlagIsChecked;
 }
