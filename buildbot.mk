@@ -121,7 +121,7 @@ dist-docs-guide:
 		--stage guide --warn-as-error
 
 ifeq ($(BUILD_EDITION),commercial)
-dist-server: dist-server-commercial
+dist-server: dist-server-indy dist-server-business
 endif
 
 dist-server: dist-server-community
@@ -130,10 +130,14 @@ dist-server-community:
 	$(buildtool_command) --platform mac --platform win --platform linux \
 	    --stage server --edition community --warn-as-error
 
-dist-server-commercial:
+dist-server-indy:
 	$(buildtool_command) --platform mac --platform win --platform linux \
-	    --stage server --edition commercial --warn-as-error
+	    --stage server --edition indy --warn-as-error
 
+dist-server-business:
+	$(buildtool_command) --platform mac --platform win --platform linux \
+		--stage server --edition business --warn-as-error
+		
 ifeq ($(BUILD_EDITION),commercial)
 dist-tools: dist-tools-commercial
 distmac-disk: distmac-disk-communityplus distmac-disk-indy distmac-disk-business
