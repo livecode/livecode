@@ -379,7 +379,7 @@ end handler
 -- vertical pixel span to a whole number of pixels, in such a way that
 -- the input span is always fully contained within the output span.
 handler hintLower(in pBound as Number) returns Number
-	return the floor of (pBound)
+	return the ceiling of (pBound - 0.5)
 end handler
 handler hintUpper(in pBound as Number) returns Number
 	return the floor of (pBound + 0.5)
