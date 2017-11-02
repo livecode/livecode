@@ -521,6 +521,9 @@ extern void MCWidgetExecPostToParentWithArguments(MCStringRef p_message, MCPrope
 
 extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
 {
+    // PM-2017-10-31: [[ Bugfix 20625 ]] May have no default stack on startup
+    if (!MCdefaultstackptr)
+        return nil;
     MCObject *t_target = MCdefaultstackptr -> getcurcard();
     if (MCcurrentwidget)
         t_target = MCWidgetGetHost(MCcurrentwidget);
