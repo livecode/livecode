@@ -31,7 +31,7 @@ install: (cd prebuilt && ./fetch-libraries.sh linux)
 script: >
   if [ "${COVERITY_SCAN_BRANCH}" != "1" ]; then
       make all-linux;
-      make check-linux V=1 || travis_terminate 1;
+      xvfb-run make check-linux V=1 || travis_terminate 1;
   fi
 
 addons:
