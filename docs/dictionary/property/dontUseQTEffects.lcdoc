@@ -56,9 +56,9 @@ not include 64 bit support and therefore can not be supported on OS X 64
 bit builds of LiveCode.
 
 References: answer effect (command), show (command),
-unlock screen (command), hide (command), QTVersion (function),
+unlock screen (command), hide (command), qtVersion (function),
 property (glossary), command (glossary), QuickTime (glossary),
-stack window (glossary), dontUseQTEffects (property)
+stack window (glossary), dontUseQT (property)
 
 Tags: multimedia
 

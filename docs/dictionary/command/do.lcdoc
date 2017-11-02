@@ -21,7 +21,7 @@ Example:
 do "go next card"
 
 Example:
-do "put"  x  "into tNumberOfRecords" 
+do "put" && x && "into tNumberOfRecords" 
 -- might become "put 3 into tNumberOfRecords"
 
 Example:
@@ -54,8 +54,12 @@ any result returned by the script language is placed in the <result>. On
 Windows systems, the <result> function will return the value of the
 global variable called "result" in the script that was executed (or
 empty if no such variable was defined). For example the following code
-will produce a dialog box containing "2" :. answer the result. If you
-attempt to specify an <alternateLanguageName> on a <Unix> <system>, the
+will produce a dialog box containing "2": 
+
+    do "result = 1 + 1" as "vbscript"
+    answer the result
+
+If you attempt to specify an <alternateLanguageName> on a <Unix> <system>, the
 <do> <command> is not executed, and the <result> is set to
 "alternate language not found". Any scripts on Windows which contain
 references to WScript will fail to run as WScript objects do not exist
@@ -70,8 +74,6 @@ container or the return value from a function.
 Using the <do> <command> is slower than directly <execute|executing> the
 <command|commands>, because each <statement> must be <compile|compiled>
 every time the <do> <command> is executed.
-
-do "result = 1 + 1" as "vbscript"
 
 >*Important:* If using the do as <alternateLanguageName> form, any paths
 > used in the <statementList> must be in the native format of the
@@ -88,14 +90,14 @@ added in LiveCode 2.9.
 Changes:
 The <alternateLanguageName> option was introduced in version 1.1. In
 previous versions, it was not possible to include AppleScript or other
-<Open Scripting Architecture (OSA)|OSA> languages in a <LiveCode>
+<Open Scripting Architecture|OSA> languages in a <LiveCode>
 <handler>. 
 
 References: debugDo (command), breakpoint (command), local (command),
 call (command), result (function),
-alternateLanguages (function), system (glossary), LiveCode (glossary),
+alternateLanguages (function), LiveCode (glossary),
 handler (glossary), execute (glossary), statement (glossary),
 Unix (glossary), compile (glossary), command (glossary),
-Open Scripting Architecture (OSA) (glossary), message box (keyword),
-as (keyword)
+Open Scripting Architecture (glossary), message box (keyword),
+as (keyword), system (keyword)
 

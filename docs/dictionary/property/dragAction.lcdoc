@@ -24,12 +24,11 @@ end if
 
 Description:
 The <dragAction> property is used to indicate which action should be (or
-has been) performed on the data. It can be one of : none - the target
-application does not want the data move - the target application wants
-to move the data copy - the target application wants to copy the data
-
-    link - the target application wants to link the data
-
+has been) performed on the data. It can be one of: 
+* none - the target application does not want the data 
+* move - the target application wants to move the data 
+* copy - the target application wants to copy the data
+* link - the target application wants to link the data
 
 When acting as the source application, query the <dragAction> property
 in the <dragEnd (message)> handler to determine what action the target
