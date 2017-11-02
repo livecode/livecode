@@ -54,7 +54,7 @@ by 1024^3:
             default
                 return the diskSpace
                 break
-         end switch
+        end switch
     end humanReadableDiskSpace
 
 
