@@ -122,9 +122,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    set the itemDelimiter to comma
    
    -- Fetch the various options we need to initially build the app-bundle
-   local tName, tFiles, tVersionName, tVersionCode, tExternals, tIcon, tSplash, tKey, tUnsigned, tStatusBarIcon
+   local tName, tVersionName, tVersionCode, tExternals, tIcon, tSplash, tKey, tUnsigned, tStatusBarIcon
    put pSettings["name"] into tName
-   put pSettings["files"] into tFiles
    put pSettings["android,icon"] into tIcon
    put pSettings["android,key"] into tKey
    
@@ -288,7 +287,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       set the itemDelimiter to "."
       
       local tResolvedFileData
-      revSBResolveCopyFilesList tBaseFolder, "android", tFiles, tResolvedFileData
+      revSBUpdateSettingsForExtensions "android", pSettings
+      revSBResolveCopyFilesList tBaseFolder, "android", pSettings, tResolvedFileData
       
       repeat for each element tFile in tResolvedFileData
          -- Look for manifest template
@@ -699,6 +699,13 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       ------- Compile the Standalone
       revStandaloneProgress "Building executable..."
       
+      put tExternals into pSettings["externals"]
+
+      put "revsecurity:./librevsecurity" into pSettings["android,library"]
+      repeat for each line tEntry in tExternals
+         put return & tEntry & ":" & "./lib" & tEntry after pSettings["android,library"]
+      end repeat
+
       local tDeploy
       -- Update the deploy params with script library and extension inclusions
       revSBUpdateDeployParams pStack, "android", pSettings, tDeploy
@@ -711,16 +718,6 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       -- Stackfile to use
       put the effective filename of stack pStack into tDeploy["stackfile"]
-      
-      -- Externals to reference (on Android we include drivers in this list)
-      put "revsecurity:./librevsecurity" into tDeploy["library"]
-      repeat for each line tEntry in tExternals
-         if not (tEntry begins with "db") then
-            put tEntry & return after tDeploy["externals"]
-         end if
-         put return & tEntry & ":" & "./lib" & tEntry after tDeploy["library"]
-      end repeat
-      delete the last char of tDeploy["externals"]
       
       -- Output file to create
       put tArmLibsBuildFolder & slash & "librevandroid.so" into tDeploy["output"]

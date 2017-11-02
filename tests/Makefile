@@ -91,18 +91,17 @@ clean:
 # LCB test compilation rules
 ################################################################
 
-LCM_SOURCES ?= $(patsubst ./%,%,$(shell find . -name '*.lcb' | sort))
-LCM_LIB_SOURCES = $(shell for f in $(LCM_SOURCES); do echo $$f | grep '_[^/]*.lcb$$'; done)
-TEST_EXTENSION_SOURCES ?= $(patsubst "$(TESTS_DIR)/%",%,$(shell find "$(TESTS_DIR)/lcs/extensions" -name '*.lcb' | sort))
+LCB_SOURCES ?= $(patsubst ./%,%,$(shell find . -name '*.lcb' | sort))
+LCB_LIB_SOURCES = $(shell for f in $(LCB_SOURCES); do echo $$f | grep '_[^/]*\.lcb$$'; done)
+LCB_TEST_SOURCES ?= $(shell for f in $(LCB_SOURCES); do echo $$f | grep '^lcb/.*\.lcb$$'; done)
+LCS_EXTENSION_SOURCES ?= $(patsubst "$(TESTS_DIR)/%",%,$(shell find "$(TESTS_DIR)/lcs/extensions" -name '*.lcb' | sort))
 
-LCM_TEST_SOURCES ?= $(shell for f in $(LCM_SOURCES); do echo $$f | grep -v '_[^/]*.lcb$$'; done)
-
-LCM_MODULES = $(patsubst %.lcb,$(LCM_DIR)/%.lcm,$(LCM_SOURCES))
-LCM_TEST_MODULES = $(patsubst %.lcb,$(LCM_DIR)/%.lcm,$(LCM_TEST_SOURCES))
+LCM_MODULES = $(patsubst %.lcb,$(LCM_DIR)/%.lcm,$(LCB_SOURCES))
+LCM_TEST_MODULES = $(patsubst %.lcb,$(LCM_DIR)/%.lcm,$(LCB_TEST_SOURCES))
 
 ########## Build dependencies rules
 
-ifneq ($(LCM_SOURCES),)
+ifneq ($(LCB_SOURCES),)
 	include $(LCM_DIR)/deps.mk
 endif
 
@@ -113,22 +112,23 @@ $(LCM_DIR):
 # inherit the correct dependencies.  Specifically, we need to make
 # sure that .lcm files depend on all the same things that their
 # corresponding .lci files depend on.
-$(LCM_DIR)/deps.mk: $(LCM_SOURCES) Makefile $(LC_COMPILE) | $(LCM_DIR)
+$(LCM_DIR)/deps.mk: $(LCB_SOURCES) Makefile $(LC_COMPILE) | $(LCM_DIR)
 	@set -e; rm -f $@; \
-	for lcb in $(LCM_SOURCES); do \
+	for lcb in $(LCB_SOURCES); do \
 	  lcm=`echo $$lcb | sed 's/lcb$$/lcm/'` ; \
 	  $(LC_COMPILE) $(LC_COMPILE_FLAGS) --deps make \
 	    --output $(LCM_DIR)/$$lcm -- $$lcb >> $@; \
 	done; \
-	$(LC_COMPILE) $(LC_COMPILE_FLAGS) --deps make -- $(LCM_SOURCES) >> $@ ; \
+	$(LC_COMPILE) $(LC_COMPILE_FLAGS) --deps make -- $(LCB_SOURCES) >> $@ ; \
 	sed -i -e 's,\(.* \([^ ]*\)\.lcb\)$$,$(LCM_DIR)/\2.lcm \1,g' $@
 
 ########## Build rules
 
-extensions_compile: $(LCM_DIR) $(TEST_EXTENSION_SOURCES)
+extensions_compile: $(LCM_DIR) $(LCS_EXTENSION_SOURCES)
 	@set -e; \
+	echo "$(LCS_EXTENSION_SOURCES)" $(_PRINT_RULE); \
 	cp -r "$(MODULE_DIR)/." "$(LCM_DIR)"; \
-	"${top_srcdir}/util/build-extensions.sh" "$(LCM_DIR)/packaged_extensions" "$(LCM_DIR)" "$(LC_COMPILE)"  "false" "$(TEST_EXTENSION_SOURCES)"
+	"${top_srcdir}/util/build-extensions.sh" "$(LCM_DIR)/packaged_extensions" "$(LCM_DIR)" "$(LC_COMPILE)"  "false" "$(LCS_EXTENSION_SOURCES)"
 
 lcm_compile: $(LCM_MODULES) extensions_compile
 
@@ -212,14 +212,14 @@ lc-run-check: $(LC_RUN) lcm_compile
 # LCB-only tests
 ################################################################
 
-LCB_TEST_LOGS = $(patsubst %.lcb,$(TEST_DIR)/%.log,$(LCM_TEST_SOURCES))
+LCB_TEST_LOGS = $(patsubst %.lcb,$(TEST_DIR)/%.log,$(LCB_TEST_SOURCES))
 
 LC_RUN_FLAGS += -l $(LCB_TESTLIB)
 
 lcb-check: lcm_compile
 	@set -e; \
 	export TEST_SUITE_LOG_FILE="$(LCB_LOG)"; \
-	for lcbfile in $(LCM_TEST_SOURCES); do \
+	for lcbfile in $(LCB_TEST_SOURCES); do \
 	    lcmfile="$(LCM_DIR)/`echo $$lcbfile | sed -e 's:lcb$$:lcm:'`" ; \
 	    logfile="$(TEST_DIR)/`echo $$lcbfile | sed -e's:lcb$$:log:'`" ; \
 	    parent="`echo $$lcbfile | sed -e 's:.*/\([^/]*\)/tests.*$$:\1:'`"; \

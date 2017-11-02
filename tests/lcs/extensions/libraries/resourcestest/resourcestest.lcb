@@ -1,0 +1,33 @@
+/*
+Copyright (C) 2017 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+library com.livecode.library.resourcestest
+
+use com.livecode.engine
+
+metadata version is "0.0.0"
+metadata author is "LiveCode"
+metadata title is "Resources Test"
+
+public handler GetResourcesFolder() returns String
+   // TODO: once we have 'the contents of resource file' or similar, 
+   // the contents of the file should be fetched from LCB to ensure that
+   // redirects are working properly in this context.
+   return my resources folder
+end handler
+
+end library
