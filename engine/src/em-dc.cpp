@@ -157,10 +157,6 @@ MCScreenDC::openwindow(Window p_window,
 
 	t_stack->setextendedstate(false, ECS_DONTDRAW);
 
-	/* Set mouse & keyboard focus */
-	MCEventQueuePostMouseFocus(t_stack, 0, true);
-	MCEventQueuePostKeyFocus(t_stack, true);
-
 	/* Set up view to match window, as far as possible */
 	/* FIXME Implement HiDPI support */
 
