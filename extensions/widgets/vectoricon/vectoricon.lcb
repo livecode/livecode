@@ -1,0 +1,382 @@
+/*
+Copyright (C) 2017 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+widget com.livecode.widget.vectoricon
+
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.foreign
+
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata title is "Vector Icon"
+metadata author is "LiveCode"
+metadata version is "0.0.0"
+metadata svgicon is "M640 576Q640 656 584 712 528 768 448 768 368 768 312 712 256 656 256 576 256 496 312 440 368 384 448 384 528 384 584 440 640 496 640 576ZM1664 960L1664 1408 256 1408 256 1216 576 896 736 1056 1248 544ZM1760 256L160 256Q147 256 137.5 265.5 128 275 128 288L128 1504Q128 1517 137.5 1526.5 147 1536 160 1536L1760 1536Q1773 1536 1782.5 1526.5 1792 1517 1792 1504L1792 288Q1792 275 1782.5 265.5 1773 256 1760 256ZM1920 288L1920 1504Q1920 1570 1873 1617 1826 1664 1760 1664L160 1664Q94 1664 47 1617 0 1570 0 1504L0 288Q0 222 47 175 94 128 160 128L1760 128Q1826 128 1873 175 1920 222 1920 288Z"
+
+--
+
+metadata svgText.editor is "com.livecode.pi.text"
+property svgText get GetSvgText set SetSvgText
+
+--
+
+variable mSvgText as String
+
+variable mIsOpen as Boolean
+variable mSvgCompiler as optional ScriptObject
+variable mSvgViewBox as optional List
+variable mSvgProgram as optional List
+
+--
+
+public handler OnCreate() returns nothing
+	put nothing into mSvgCompiler
+	put false into mIsOpen
+	put the empty string into mSvgText
+	put nothing into mSvgProgram
+end handler
+
+public handler OnOpen() returns nothing
+	put true into mIsOpen
+	if mSvgText is not empty then
+		SvgCompile(mSvgText, mSvgViewBox, mSvgProgram)
+	end if
+end handler
+
+public handler OnClose() returns nothing
+	put false into mIsOpen
+	put nothing into mSvgProgram
+	put nothing into mSvgViewBox
+end handler
+
+public handler OnSave(out rState as Array) returns nothing
+	put mSvgText into rState["svgText"]
+end handler
+
+public handler OnLoad(in pState as Array) returns nothing
+	put pState["svgText"] into mSvgText
+end handler
+
+public handler OnPaint() returns nothing
+	if mSvgProgram is nothing then
+		return
+	end if
+
+	if mSvgViewBox is not nothing then
+		translate this canvas by [ -mSvgViewBox[1], -mSvgViewBox[2] ]
+		scale this canvas by [ my width / mSvgViewBox[3], my height / mSvgViewBox[4] ]
+	end if
+
+	SvgRender(this canvas, mSvgProgram)
+end handler
+
+--
+
+handler GetSvgText() returns String
+	return mSvgText
+end handler
+
+handler SetSvgText(in pSvgText as String)
+	put pSvgText into mSvgText
+	if not mIsOpen then
+		return
+	end if
+
+	SvgCompile(mSvgText, mSvgViewBox, mSvgProgram)
+
+	redraw all
+end handler
+
+--
+
+private handler type SvgOpHandler(inout pContext as Array, in pArgument as optional any) returns nothing
+private variable mSvgOperations as optional Array
+
+private handler SvgCompile(in pSvgText as String, out rViewBox as optional List, out rProgram as optional List)
+	if mSvgCompiler is nothing or \
+		mSvgCompiler does not exist then
+		resolve script object \
+			("stack \q" & my resources folder & "/vectoricon-compiler.livecodescript\q") \
+			into mSvgCompiler
+		if mSvgCompiler does not exist then
+			throw "unable to load svg compiler"
+		end if
+	end if
+
+	variable tDescription as optional any
+	send function "svgImportFromText" to mSvgCompiler with [ pSvgText ] into tDescription
+	if tDescription is a string then
+		throw "error - " & tDescription
+	end if
+
+	if tDescription is an array then
+		if tDescription["view-box"] is an array then
+			put [ tDescription["view-box"]["1"], tDescription["view-box"]["2"], tDescription["view-box"]["3"], tDescription["view-box"]["4"] ] into rViewBox
+		else
+			put nothing into rViewBox
+		end if
+		if tDescription["operations"] is an array then
+			put SvgAssemble(tDescription["operations"]) into rProgram
+		else
+			put [] into rProgram
+		end if
+	end if
+end handler
+
+private handler SvgAssemble(in pProgram as Array) returns List
+	if mSvgOperations is nothing then
+		put { \
+			"transform": SvgOp_Transform, \
+			"fill": SvgOp_Fill, \
+			"fill-opacity": SvgOp_FillOpacity, \
+			"fill-rule": SvgOp_FillRule, \
+			"stroke": SvgOp_Stroke, \
+			"stroke-opacity": SvgOp_StrokeOpacity, \
+			"stroke-width": SvgOp_StrokeWidth, \
+			"stroke-linejoin": SvgOp_StrokeLineJoin, \
+			"stroke-linecap": SvgOp_StrokeLineCap, \
+			"stroke-dasharray": SvgOp_StrokeDashArray, \
+			"stroke-dashoffset": SvgOp_StrokeDashOffset, \
+			"stroke-miterlimit": SvgOp_StrokeMiterLimit, \
+			"rect": SvgOp_Shape, \
+			"roundrect": SvgOp_Shape, \
+			"circle": SvgOp_Shape, \
+			"ellipse": SvgOp_Shape, \
+			"line": SvgOp_Shape, \
+			"polyline": SvgOp_Shape, \
+			"polygon": SvgOp_Shape, \
+			"path": SvgOp_Shape \
+		} into mSvgOperations
+	end if
+
+	variable tOperations as List
+
+	variable tIndex as Integer
+	repeat with tIndex from 1 up to the number of elements in pProgram
+		variable tOperation as Array
+		put pProgram[tIndex formatted as string] into tOperation
+		
+		variable tOpName as String
+		put tOperation["1"] into tOpName
+
+		variable tOpArgument as optional any
+		put tOperation["2"] into tOpArgument
+
+		if tOpName is "transform" then
+			put transform with matrix [tOpArgument["1"], tOpArgument["2"], tOpArgument["3"], tOpArgument["4"], tOpArgument["5"], tOpArgument["6"]] into tOpArgument
+		else if tOpName is "fill" or \
+				tOpName is "stroke" then
+			if tOpArgument["1"] is "none" then
+				put nothing into tOpArgument
+			else if tOpArgument["1"] is "color" then
+				put solid paint with color [tOpArgument["2"], tOpArgument["3"], tOpArgument["4"]] into tOpArgument
+			end if
+		else if tOpname is "stroke-dasharray" then
+			variable tDashList as List
+			variable tIndex as Integer
+			if tOpArgument is an array then
+				repeat with tIndex from 1 up to the number of elements in tOpArgument
+					push tOpArgument[tIndex formatted as string] onto back of tDashList
+				end repeat
+			else
+				put [] into tDashList
+			end if
+			put tDashList into tOpArgument
+		else if tOpName is "path" then
+			put path tOpArgument["1"] into tOpArgument
+		else if tOpName is "rect" then
+			put rectangle path of \
+				rectangle [tOpArgument["1"], tOpArgument["2"], tOpArgument["3"], tOpArgument["4"]] into tOpArgument
+		else if tOpName is "roundrect" then
+			put rounded rectangle path of \
+				rectangle [tOpArgument["1"], tOpArgument["2"], tOpArgument["3"], tOpArgument["4"]] with \
+				radii [tOpArgument["5"], tOpArgument["6"]] into tOpArgument
+		else if tOpName is "circle" then
+			put circle path centered at \
+				point [tOpArgument["1"], tOpArgument["2"]] with \
+				radius tOpArgument["3"] into tOpArgument
+		else if tOpName is "ellipse" then
+			put ellipse path centered at \
+				point [tOpArgument["1"], tOpArgument["2"]] with \
+				radii [tOpArgument["3"], tOpArgument["4"]] into tOpArgument
+		else if tOpName is "line" then
+			put line path from \
+				point [tOpArgument["1"], tOpArgument["2"]] to \
+				point [tOpArgument["3"], tOpArgument["4"]] into tOpArgument
+		else if tOpName is "polyline" then
+			variable tPoints as List
+			variable tIndex as Integer
+			put 1 into tIndex
+			repeat until tIndex >= the number of elements in tOpArgument
+				push point [tOpArgument[tIndex formatted as string], tOpArgument[(tIndex + 1) formatted as string]] onto back of tPoints
+				add 2 to tIndex
+			end repeat
+			put polyline path with points tPoints into tOpArgument
+		else if tOpName is "polygon" then
+			variable tPoints as List
+			variable tIndex as Integer
+			put 1 into tIndex
+			repeat until tIndex >= the number of elements in tOpArgument
+				push point [tOpArgument[tIndex formatted as string], tOpArgument[(tIndex + 1) formatted as string]] onto back of tPoints
+				add 2 to tIndex
+			end repeat
+			put polygon path with points tPoints into tOpArgument
+		end if
+
+		push mSvgOperations[tOpName] onto back of tOperations
+		push tOpArgument onto back of tOperations
+	end repeat
+
+	return tOperations
+end handler
+
+private handler SvgRender(in pCanvas as Canvas, in pProgram as List) returns nothing
+	variable tContext as Array
+	put pCanvas into tContext["canvas"]
+	put the identity transform into tContext["transform"]
+	put nothing into tContext["fill"]
+	put nothing into tContext["stroke"]
+	put false into tContext["transformed"]
+
+	save state of pCanvas
+
+	variable tIndex as Integer
+	repeat with tIndex from 1 up to the number of elements in pProgram by 2
+		variable tHandler as SvgOpHandler
+		put pProgram[tIndex] into tHandler
+		tHandler(tContext, pProgram[tIndex + 1])
+	end repeat
+
+	restore state of pCanvas
+end handler
+
+private handler SvgOp_Transform(inout pContext as Array, in pArgument) returns nothing
+	if pContext["transformed"] then
+		restore state of pContext["canvas"]
+		put false into pContext["transformed"]
+	end if
+
+	put pArgument into pContext["transform"]
+end handler
+
+private handler SvgOp_Fill(inout pContext as Array, in pArgument) returns nothing
+	put pArgument into pContext["fill"]
+end handler
+
+private handler SvgOp_FillOpacity(inout pContext as Array, in pArgument) returns nothing
+	put pArgument into pContext["fill-opacity"]
+end handler
+
+private handler SvgOp_FillRule(inout pContext as Array, in pArgument) returns nothing
+	if pContext["transformed"] then
+		restore state of pContext["canvas"]
+		put false into pContext["transformed"]
+	end if
+
+	set the fill rule of pContext["canvas"] to pArgument
+end handler
+
+private handler SvgOp_Stroke(inout pContext as Array, in pArgument) returns nothing
+	put pArgument into pContext["stroke"]
+end handler
+
+private handler SvgOp_StrokeOpacity(inout pContext as Array, in pArgument) returns nothing
+	put pArgument into pContext["stroke-opacity"]
+end handler
+
+private handler SvgOp_StrokeWidth(inout pContext as Array, in pArgument) returns nothing
+	if pContext["transformed"] then
+		restore state of pContext["canvas"]
+		put false into pContext["transformed"]
+	end if
+
+	set the stroke width of pContext["canvas"] to pArgument
+end handler
+
+private handler SvgOp_StrokeLineJoin(inout pContext as Array, in pArgument) returns nothing
+	if pContext["transformed"] then
+		restore state of pContext["canvas"]
+		put false into pContext["transformed"]
+	end if
+
+	set the join style of pContext["canvas"] to pArgument
+end handler
+
+private handler SvgOp_StrokeLineCap(inout pContext as Array, in pArgument) returns nothing
+	if pContext["transformed"] then
+		restore state of pContext["canvas"]
+		put false into pContext["transformed"]
+	end if
+
+	set the cap style of pContext["canvas"] to pArgument
+end handler
+
+private handler SvgOp_StrokeDashArray(inout pContext as Array, in pArgument) returns nothing
+	if pContext["transformed"] then
+		restore state of pContext["canvas"]
+		put false into pContext["transformed"]
+	end if
+
+	set the dashes of pContext["canvas"] to pArgument
+end handler
+
+private handler SvgOp_StrokeDashOffset(inout pContext as Array, in pArgument) returns nothing
+	if pContext["transformed"] then
+		restore state of pContext["canvas"]
+		put false into pContext["transformed"]
+	end if
+
+	set the dash phase of pContext["canvas"] to pArgument
+end handler
+
+private handler SvgOp_StrokeMiterLimit(inout pContext as Array, in pArgument) returns nothing
+	if pContext["transformed"] then
+		restore state of pContext["canvas"]
+		put false into pContext["transformed"]
+	end if
+
+	set the miter limit of pContext["canvas"] to pArgument
+end handler
+
+private handler SvgOp_Shape(inout pContext as Array, in pArgument) returns nothing
+	variable tCanvas as Canvas
+	put pContext["canvas"] into tCanvas
+
+	if not pContext["transformed"] then
+		save state of tCanvas
+		transform tCanvas by pContext["transform"]
+		put true into pContext["transformed"]
+	end if
+
+	if pContext["fill"] is not nothing then
+		set the paint of tCanvas to pContext["fill"]
+		set the opacity of tCanvas to pContext["fill-opacity"]
+		fill pArgument on tCanvas
+	end if
+
+	if pContext["stroke"] is not nothing then
+		set the paint of tCanvas to pContext["stroke"]
+		set the opacity of tCanvas to pContext["stroke-opacity"]
+		stroke pArgument on tCanvas
+	end if
+end handler
+
+end widget
