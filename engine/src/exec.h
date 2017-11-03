@@ -3847,6 +3847,10 @@ extern MCExecMethodInfo *kMCEngineGetAddressMethodInfo;
 extern MCExecMethodInfo *kMCEngineGetStacksInUseMethodInfo;
 extern MCExecMethodInfo *kMCEngineGetEditionTypeMethodInfo;
 
+extern MCExecMethodInfo *kMCEngineEvalCommandNameMethodInfo;
+extern MCExecMethodInfo *kMCEngineEvalCommandArgumentsMethodInfo;
+extern MCExecMethodInfo *kMCEngineEvalCommandArgumentAtIndexMethodInfo;
+
 void MCEngineEvalVersion(MCExecContext& ctxt, MCNameRef& r_name);
 void MCEngineEvalBuildNumber(MCExecContext& ctxt, integer_t& r_build_number);
 void MCEngineEvalPlatform(MCExecContext& ctxt, MCNameRef& r_name);
@@ -4019,6 +4023,10 @@ void MCEngineEvalIsStrictlyABinaryString(MCExecContext& ctxt, MCValueRef value, 
 void MCEngineEvalIsNotStrictlyABinaryString(MCExecContext& ctxt, MCValueRef value, bool& r_result);
 void MCEngineEvalIsStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result);
 void MCEngineEvalIsNotStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+
+void MCEngineEvalCommandName(MCExecContext& ctxt, MCStringRef& r_result);
+void MCEngineEvalCommandArguments(MCExecContext& ctxt, MCArrayRef& r_result);
+void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index, MCStringRef& r_result);
 
 ///////////
 

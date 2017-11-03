@@ -56,6 +56,7 @@ The Mac engine supports:
 * 10.10.x (Yosemite) on Intel
 * 10.11.x (El Capitan) on Intel
 * 10.12.x (Sierra) on Intel
+* 10.13.x (High Sierra) on Intel
 
 ## iOS
 iOS deployment is possible when running LiveCode IDE on a Mac, and provided Xcode is installed and has been set in LiveCode *Preferences* (in the *Mobile Support* pane).
@@ -66,7 +67,8 @@ Currently, the supported versions of Xcode are:
 * Xcode 6.2 on MacOS X 10.9
 * Xcode 6.2 and 7.2 on Mac OS X 10.10
 * Xcode 8.2 on MacOS X 10.11
-* Xcode 9.0 on MacOS 10.12 (Note: You need to upgrade to 10.12.6)
+* Xcode 9.1 on MacOS 10.12 (Note: You need to upgrade to 10.12.6)
+* Xcode 9.1 on MacOS 10.13
 
 It is also possible to set other versions of Xcode, to allow testing on a wider range of iOS simulators. For instance, on OS X 10.10 (Yosemite), you can add *Xcode 5.1* in the *Mobile Support* preferences, to let you test your stack on the *iOS Simulator 7.1*.
 
@@ -77,7 +79,7 @@ We currently support deployment for the following versions of iOS:
 * 8.2 [simulator]
 * 9.2
 * 10.2
-* 11.0
+* 11.1
 
 ## Android
 
@@ -97,6 +99,7 @@ processors.  It will run on the following versions of Android:
 * 5.0-5.1 (Lollipop)
 * 6.0 (Marshmallow)
 * 7.0 (Nougat)
+* 8.0 (Oreo)
 
 To enable deployment to Android devices, you need to download the
 [Android SDK](https://developer.android.com/sdk/index.html#Other), and
