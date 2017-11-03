@@ -701,6 +701,9 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder
          put return & "revInternal__SetSmallAppIcon" && sStandaloneSettingsA["OSX,smallappicon"] after tDeployInfo["startup_script"]
       end if
       
+      -- Add a random uuid to use in the executable's uuid load command.
+      put uuid() into tDeployInfo["uuid"]
+
       revStandaloneDeployWithParams tTarget, tStackSourceFile, tDeployInfo
       
       -- Make sure we finish off the bundle contents
@@ -2489,7 +2492,7 @@ command revStandaloneDeployWithParams pTarget, pStackFilePath, pDeployInfo
    delete stack pStackFilePath
    unlock screen
    unlock messages
-   
+
    -- Actually do the standalone engine build - we probably need some sort of
    -- error handling here :oD
    revStandaloneProgress "Attaching engine..."
