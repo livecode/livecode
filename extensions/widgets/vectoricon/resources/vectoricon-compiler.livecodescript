@@ -92,20 +92,20 @@ function svgImportFromArray pXmlArray
 	 * so they can update the array in place. */
 
 	/* Remove all elements from the tree which are not understood. */
-	_svgProcessElements tContext, tArray
+	_svgTrim tContext, tArray
 
 	/* Parse the values of all features, including those specified in any inline
 	 * style attributes. Any features which are not applicable to the specifying
 	 * element are removed, and any required attributes are set with their
 	 * default values (required, unset properties are set during cascade). */
-	_svgProcessFeatures tContext, tArray
+	_svgParse tContext, tArray
 
 	/* Create a map from element id attribute to label. */
-	_svgProcessDefinitions tContext, tArray
+	_svgMap tContext, tArray
 
 	/* Flatten all 'use' elements, replacing them with their referenced
 	 * elements. */
-	_svgProcessFlatten tContext, tArray
+	_svgFlatten tContext, tArray
 
 	/* Perform the property cascade, assigning appropriate inherited values
 	 * to all properties which apply to a given element. */
@@ -114,7 +114,7 @@ function svgImportFromArray pXmlArray
 	repeat for each key tPropertyName in tPropertyDefaults
 		get _svgParseFeatureValue(tContext, "", tPropertyName, tPropertyDefaults[tPropertyName])
 	end repeat
-	_svgProcessCascade tContext, tPropertyDefaults, tArray
+	_svgCascade tContext, tPropertyDefaults, tArray
 
 	/* Now all processing has been done we can perform the final phase of
 	 * compiling the svg document. */
@@ -147,9 +147,9 @@ end svgImportFromArray
  *
  ******************************************************************************/
 
-/* _svgProcessElements iterates over the document array, removing any elements
- * which are not understood. */
-private command _svgProcessElements @xContext, @xElement
+/* _svgTrim iterates over the document array, removing any elements which are
+ * are not understood. */
+private command _svgTrim @xContext, @xElement
 	local tElementType
 	put xElement["type"] into tElementType
 
@@ -165,7 +165,7 @@ private command _svgProcessElements @xContext, @xElement
 			repeat for each element tChildElement in xElement["content"]
 				/* If a node type is unknown, then _svgProcessNodes will set
 				 * tChildNode to empty. */
-				_svgProcessElements xContext, tChildElement
+				_svgTrim xContext, tChildElement
 
 				/* If the node survived the cut, then repush it onto a new
 				 * sequence - this removes any holes. */
@@ -183,15 +183,15 @@ private command _svgProcessElements @xContext, @xElement
 
 	/* Pop the node's path segment from the current context. */
 	_svgContextLeave xContext, xElement
-end _svgProcessElements
+end _svgTrim
 
-/* _svgProcessFeatures iterates over the document tree, parsing features
- * values on each element. Any inline style features are expanded and the
- * resulting feature values are parsed. Any attributes which are not applicable
- * to the current element are removed, but properties remain as they will
- * cascade to child elements in a later processing phase. Finally, any missing
- * non-nullable attributes are set with their default value. */
-private command _svgProcessFeatures @xContext, @xElement
+/* _svgParse iterates over the document tree, parsing feature values on each
+ * element. Any inline style features are expanded and the resulting feature
+ * values are parsed. Any attributes which are not applicable to the current
+ * element are removed, but properties remain as they will cascade to child
+ * elements in a later processing phase. Finally, any missing non-nullable
+ * attributes are set with their default value. */
+private command _svgParse @xContext, @xElement
  	local tElementType
 	put xElement["type"] into tElementType
 
@@ -287,20 +287,20 @@ private command _svgProcessFeatures @xContext, @xElement
 	 * child element (if any). */
 	if xElement["content"] is an array then
 		repeat with tIndex = 1 to the number of elements in xElement["content"]
-			_svgProcessFeatures xContext, xElement["content"][tIndex]
+			_svgParse xContext, xElement["content"][tIndex]
 		end repeat
 	end if
 
 	/* Pop the element's path segment from the context. */
 	_svgContextLeave xContext, xElement
-end _svgProcessFeatures
+end _svgParse
 
-/* _svgProcessDefinitions creates a mapping from id to element with that id
- * so that hrefs within the document can be resolved. */
-private command _svgProcessDefinitions @xContext, @xElement
+/* _svgMap creates a mapping from id to element with that id so that hrefs
+ * within the document can be resolved. */
+private command _svgMap @xContext, @xElement
 	/* Ignore any elements which don't have an 'id' feature */
 	if "id" is not among the keys of xElement["features"] then
-		exit _svgProcessDefinitions
+		exit _svgMap
 	end if
 
 	/* Push the node's path segment onto the current context so errors can be
@@ -315,17 +315,18 @@ private command _svgProcessDefinitions @xContext, @xElement
 	 * child, in order. */
 	if xElement["content"] is an array then
 		repeat with tIndex = 1 to the number of elements in xElement["content"]
-			_svgProcessDefinitions xContext, xElement["content"][tIndex]
+			_svgMap xContext, xElement["content"][tIndex]
 		end repeat
 	end if
 
 	/* Pop the node's path segment from the current context. */
 	_svgContextLeave xContext, xElement
-end _svgProcessDefinitions
+end _svgMap
 
-/* _svgProcessFlatten deep copies all used elements into their place in the
- * document. */
-private command _svgProcessFlatten @xContext, @xElement
+/* _svgFlatten deep copies all used elements into their place in the document.
+ * Note: Due to LiveCode's copy-on-write semantics, this deep-copying doesn't
+ * actually cost anything. */
+private command _svgFlatten @xContext, @xElement
 	/* Push the node's path segment onto the current context so errors can be
 	 * adequately placed. */
 	_svgContextEnter xContext, xElement
@@ -372,17 +373,17 @@ private command _svgProcessFlatten @xContext, @xElement
 	 * child, in order. */
 	if xElement["content"] is an array then
 		repeat with tIndex = 1 to the number of elements in xElement["content"]
-			_svgProcessFlatten xContext, xElement["content"][tIndex]
+			_svgFlatten xContext, xElement["content"][tIndex]
 		end repeat
 	end if
 
 	/* Pop the node's path segment from the current context. */
 	_svgContextLeave xContext, xElement
-end _svgProcessFlatten
+end _svgFlatten
 
 /* _svgProcessCascade performs the CSS-style cascade of property values down
  * through the elements. */
-private command _svgProcessCascade @xContext, pProperties, @xElement
+private command _svgCascade @xContext, pProperties, @xElement
 	local tElementType
 	put xElement["type"] into tElementType
 
@@ -429,13 +430,13 @@ private command _svgProcessCascade @xContext, pProperties, @xElement
 	 * child, in order. */
 	if xElement["content"] is an array then
 		repeat with tIndex = 1 to the number of elements in xElement["content"]
-			_svgProcessCascade xContext, pProperties, xElement["content"][tIndex]
+			_svgCascade xContext, pProperties, xElement["content"][tIndex]
 		end repeat
 	end if
 
 	/* Pop the node's path segment from the current context. */
 	_svgContextLeave xContext, xElement
-end _svgProcessCascade
+end _svgCascade
 
 /*******************************************************************************
  *
