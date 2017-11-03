@@ -119,6 +119,8 @@ struct MCDeployParameters
 	// The data for the banner stackfile.
 	MCDataRef banner_stackfile;
 	
+    // When building for Mac/iOS, there is a UUID field which can be set.
+    MCStringRef uuid;
 	
 	MCDeployParameters()
 	{
@@ -151,6 +153,8 @@ struct MCDeployParameters
 		banner_timeout = 0;
 		banner_stackfile = MCValueRetain(kMCEmptyData);
         banner_class = kMCLicenseClassNone;
+        
+        uuid = MCValueRetain(kMCEmptyString);
 	}
 	
 	~MCDeployParameters()
@@ -174,6 +178,7 @@ struct MCDeployParameters
         MCValueRelease(library);
         MCMemoryDeleteArray(min_os_versions);
 		MCValueRelease(banner_stackfile);
+        MCValueRelease(uuid);
 	}
 	
 	// Creates using an array of parameters
@@ -455,6 +460,9 @@ enum MCDeployError
 	
 	/* An error occurred with the pre-deploy step */
 	kMCDeployErrorTrialBannerError,
+    
+    /* The uuid field was invalid */
+    kMCDeployErrorInvalidUuid,
 
 	// SIGN ERRORS
 

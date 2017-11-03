@@ -33,8 +33,8 @@ means that the <cutKey> <message> is not received by a <stack> if it's
 running in the <development environment>, To test a <cutKey> <handler>,
 choose Development → Suspend Development Tools from the menubar.
 
-<cutKey> <message> is sent when the user presses Command-X (on <Mac
-OS|Mac OS systems>), Control-X (on <Windows|Windows systems>),
+<cutKey> <message> is sent when the user presses Command-X (on 
+<Mac OS|Mac OS systems>), Control-X (on <Windows|Windows systems>),
 Shift-Delete (on <Unix|Unix systems>), or the keyboard Cut key.
 
 The message is sent to the active (focused) control, or to the current

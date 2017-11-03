@@ -55,8 +55,9 @@ If the <crop> rectangle is larger than the <image(object)|image's>
 original <rectangle>, blank <pixels> are added to one or more edges of
 the <image(keyword)>.
 
->*Important:* The <crop> <command> cannot be used on a <referenced
-> control|referenced image>. Doing so will cause an <execution error>.
+>*Important:* The <crop> <command> cannot be used on a
+> <referenced control|referenced image>. Doing so will cause an 
+> <execution error>.
 
 References: flip (command), rotate (command), property (glossary),
 referenced control (glossary), command (glossary),

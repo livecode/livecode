@@ -34,14 +34,14 @@ it receives <dragEnd>.
 
 LiveCode looks for the specified image in the following order:
 
-1) The stack of the current object's <behavior> (if applicable)
-2) The stack of the owner of the current object's <behavior> (if
+1. The stack of the current object's <behavior> (if applicable)
+2. The stack of the owner of the current object's <behavior> (if
 applicable) ...
-n) The stack of the current object's stack's <behavior> (if applicable)
-A) The current object's stack
-B) The current object's stack's mainstack (if a substack)
-C) The current object's stack's mainstacks substacks
-D) The list of open stacks, in order they were loaded
+3. The stack of the current object's stack's <behavior> (if applicable)
+4. The current object's stack
+5. The current object's stack's mainstack (if a substack)
+6. The current object's stack's mainstacks substacks
+7. The list of open stacks, in order they were loaded
 
 Changes:
 The order in which LiveCode searches for drag images was changed in

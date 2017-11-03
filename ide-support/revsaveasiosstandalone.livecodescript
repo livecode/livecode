@@ -577,6 +577,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    
    -- delete the last LF
    delete last char of tDeploy["fontmappings"]
+
+   -- Make sure the standalone is generated with a unique uuid
+   put uuid() into tDeploy["uuid"]
    
    try
       _internal deploy ios tDeploy

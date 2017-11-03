@@ -3142,6 +3142,10 @@ void MCEngineEvalIsNotStrictlyABinaryString(MCExecContext& ctxt, MCValueRef valu
 void MCEngineEvalIsStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result);
 void MCEngineEvalIsNotStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result);
 
+void MCEngineEvalCommandName(MCExecContext& ctxt, MCStringRef& r_result);
+void MCEngineEvalCommandArguments(MCExecContext& ctxt, MCArrayRef& r_result);
+void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index, MCStringRef& r_result);
+
 ///////////
 
 void MCFilesEvalDirectories(MCExecContext& ctxt, MCStringRef& r_string);

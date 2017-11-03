@@ -17,17 +17,17 @@ Platforms: desktop, server
 
 Example:
 on dragMove -- in a field script
-  -- set the cursor so it shows you can only drop onto a link:
-  if the textStyle of the mouseChunk contains "link"
-  then set the cursor to the ID of image "Drop Here"
-  else set the cursor to the ID of image "Dont Drop"
+    -- set the cursor so it shows you can only drop onto a link
+    if the textStyle of the mouseChunk contains "link"
+    then set the cursor to the ID of image "Drop Here"
+    else set the cursor to the ID of image "Dont Drop"
 end dragMove
 
 Description:
 Handle the <dragMove> <message> if you want to perform some action (such
 as updating a status display) when the user moves the mouse while
-dragging, or if you want to keep continuous track of the <mouse
-pointer|mouse pointer's> position during a <drag and drop>.
+dragging, or if you want to keep continuous track of the 
+<mouse pointer|mouse pointer's> position during a <drag and drop>.
 
 The <dragMove> <message> is sent to the <control> the <mouse pointer> is
 over, or to the <card> if no <control> is under the <mouse pointer>.

@@ -36,9 +36,9 @@ If two controls overlap, a <dragEnter> <message> is sent whenever the
 <control> that is completely hidden by another <control> on top of it
 will never receive a <dragEnter> <message>.
 
->*Tip:*  Use the <mouseLoc> function to determine where the <mouse
-> pointer> is. Use the <target> <function> to determine which <control>
-> the <mouse pointer> has entered.
+>*Tip:*  Use the <mouseLoc> function to determine where the 
+> <mouse pointer> is. Use the <target> <function> to determine which 
+> <control> the <mouse pointer> has entered.
 
 References: function (control structure), mouseLoc (function),
 target (function), property (glossary), control (glossary),

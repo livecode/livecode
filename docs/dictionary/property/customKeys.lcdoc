@@ -31,15 +31,15 @@ The <customKeys> of an <object(glossary)> is a list of that
 
 Description:
 Use the <customKeys> <property> to find out what <custom property|custom
-properties> an <object(glossary)> has, and to create or delete <custom
-property|custom properties>.
+properties> an <object(glossary)> has, and to create or delete 
+<custom property|custom properties>.
 
 The <customKeys> lists the names of <property|properties> in the
 <object|object's> current <customPropertySet>. If the <object(glossary)>
 has more than one <custom property set>, you must switch to the desired
 property set before checking the <customKeys>. The following example
-displays the <custom property|custom properties> in a <custom property
-set> called "Francois" :
+displays the <custom property|custom properties> in a 
+<custom property set> called "Francois" :
 
     set the customPropertySet of button "My Button" to "Francois"
     answer the customKeys of button "My Button" -- in "Francois" set
@@ -59,8 +59,8 @@ value of a newly-created custom property is empty.
 
 If you set the <customKeys> of an <object(glossary)> and do not include
 the name of an existing <custom property>, that <custom property> is
-deleted. Setting the <customKeys> to empty deletes all <custom
-property|custom properties> in the current custom property set.
+deleted. Setting the <customKeys> to empty deletes all 
+<custom property|custom properties> in the current custom property set.
 
 References: undefine (command), object (glossary), property (glossary),
 custom property (glossary), customPropertySet (glossary),
