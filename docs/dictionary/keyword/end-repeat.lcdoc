@@ -17,8 +17,8 @@ Example:
 end repeat
 
 Description:
-Use the <end repeat> <keyword> to mark the end of a <repeat> <control
-structure>. 
+Use the <end repeat> <keyword> to mark the end of a <repeat> 
+<control structure>. 
 
 The <end repeat> <keyword> occurs on a line by itself.
 
