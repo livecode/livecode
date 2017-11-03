@@ -52,6 +52,9 @@ public foreign type GradientStop binds to "MCCanvasGradientStopTypeInfo"
 // Image
 public foreign type Image binds to "MCCanvasImageTypeInfo"
 
+// Svg
+public foreign type Svg binds to "MCCanvasSvgTypeInfo"
+
 // Path
 public foreign type Path binds to "MCCanvasPathTypeInfo"
 
@@ -2316,6 +2319,115 @@ end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Svg
+
+// Constructors
+
+public foreign handler MCCanvasSvgMakeWithFile(in pPath as String, out rSvg as Svg) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasSvgMakeWithResourceFile(in pResourcePath as String, out rSvg as Svg) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasSvgMakeWithString(in pString as String, out rSvg as Svg) returns nothing binds to "<builtin>"
+
+public foreign handler MCCanvasSvgGetBoundingBox(in pSvg as Svg, out rBox as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasSvgGetViewingBox(in pSvg as Svg, out rBox as Rectangle) returns nothing binds to "<builtin>"
+
+//////////
+
+/*
+Summary:	Creates a new svg object.
+
+mPath:		An expression which evaluates to a string.
+
+Returns:	A new svg object loaded from the file path provided.
+
+Example:
+	// Load svg from a file path
+	variable tSvg
+	put svg from file "media/logo.svg" into tSvg
+
+Tags: Canvas
+*/
+
+syntax SvgMakeFromFile is prefix operator with constructor precedence
+	"svg" "from" "file" <mPath: Expression>
+begin
+	MCCanvasSvgMakeWithFile(mPath, output)
+end syntax
+
+//////////
+
+/*
+Summary:	Creates a new svg object.
+
+mResource:		An expression which evaluates to a string.
+
+Returns:	A new svg object loaded from the named module resource file.
+
+Example:
+	// Load svg from a bundled resource file
+	variable tSvg
+	put svg from resource file "media/logo.svg" into tImage
+
+Tags: Canvas
+*/
+syntax SvgMakeFromResourceFile is prefix operator with constructor precedence
+	"svg" "from" "resource" "file" <mResource: Expression>
+begin
+	MCCanvasSvgMakeWithResourceFile(mResource, output)
+end syntax
+
+//////////
+
+/*
+Summary:	Creates a new svg object.
+
+mString:	An expression which evaluates to a string
+
+Returns:	A new svg object parsed the XML string representation provided.
+
+Example:
+	// Load image from a block of data
+	variable tSvgXml
+	put "<svg height=\q210\q width=\q400\q><path d=\qM150 0 L75 200 L225 200 Z\q /></svg>" into tSvgXml
+
+	variable tSvg
+	put svg from string tSvg into tSvg
+
+Tags: Canvas
+*/
+syntax SvgMakeFromString is prefix operator with constructor precedence
+	"svg" "from" "string" <mString: Expression>
+begin
+	MCCanvasSvgMakeWithString(mString, output)
+end syntax
+
+/*
+Summary:	The tight bounding box of an svg object.
+
+mSvg:		An expression which evaluates to an svg object.
+
+Tags:	Canvas
+*/
+syntax SvgPropertyBoundingBox is prefix operator with property precedence
+	"the" "bounding" "box" "of" <mSvg: Expression>
+begin
+	MCCanvasSvgGetBoundingBox(mSvg, output)
+end syntax
+
+/*
+Summary:	The specified viewing box of an svg object.
+
+mSvg:		An expression which evaluates to an svg object.
+
+Tags:	Canvas
+*/
+syntax SvgPropertyViewingBox is prefix operator with property precedence
+	"the" "viewing" "box" "of" <mSvg: Expression>
+begin
+	MCCanvasSvgGetViewingBox(mSvg, output)
+end syntax
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Path
 
 // Constructors
@@ -4290,6 +4402,8 @@ public foreign handler MCCanvasClipToRect(in pClip as Rectangle, in pCanvas as C
 public foreign handler MCCanvasAddPath(in pPath as Path, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasDrawImage(in pImage as Image, in pDest as Rectangle, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasDrawRectOfImage(in pSrc as Rectangle, in pImage as Image, in pDst as Rectangle, in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasDrawSvg(in pSvg as Svg, in pDest as Rectangle, in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasDrawRectOfSvg(in pSrc as Rectangle, in pSvg as Svg, in pDst as Rectangle, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasMoveTo(in pPoint as Point, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasLineTo(in pPoint as Point, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasCurveThroughPoint(in pThrough as Point, in pTo as Point, in pCanvas as Canvas) returns nothing binds to "<builtin>"
@@ -4668,6 +4782,43 @@ syntax CanvasOperationDrawImage is statement
 begin
 	MCCanvasDrawImage(mImage, mDestRect, mCanvas)
 	MCCanvasDrawRectOfImage(mSrcRect, mImage, mDestRect, mCanvas)
+end syntax
+
+//////////
+
+/**
+Summary:	Draw an svg object on a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+mImage:	An expression which evaluates to an svg object.
+mSrcRect:	An expression which evaluates to a rectangle.
+mDestRect:	An expression which evaluates to a rectangle.
+
+Description:	Renders from <mSrcRect> (or the bounds, if not specified) of <mSvg> into <mDestRect> of <mCanvas>.
+
+Example:
+	// Load an svg object from a file
+	variable tSvg as Svg
+	put svg from file "media/logo.svg" into tSvg
+
+	// Draw the image on the canvas
+	draw tSvg into rectangle [0, 0, 200, 200] of this canvas
+
+Example:
+	// Load an image from a file
+	variable tSvg as Svg
+	put svg from file "media/logo.svg" into tSvg
+
+	// Draw a section of the image
+	draw from the viewing box of tSvg into rectangle [0, 0, 200, 200] of this canvas
+
+Tags:	Canvas
+*/
+syntax CanvasOperationDrawSvg is statement
+	"draw" [ "from" <mSrcRect: Expression> "of" ] <mSvg: Expression> "into" <mDestRect: Expression> "of" <mCanvas: Expression>
+begin
+	MCCanvasDrawSvg(mSvg, mDestRect, mCanvas)
+	MCCanvasDrawRectOfSvg(mSrcRect, mSvg, mDestRect, mCanvas)
 end syntax
 
 //////////

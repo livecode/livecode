@@ -100,6 +100,7 @@ typedef struct __MCCanvasPoint *MCCanvasPointRef;
 typedef struct __MCCanvasColor *MCCanvasColorRef;
 typedef struct __MCCanvasTransform *MCCanvasTransformRef;
 typedef struct __MCCanvasImage *MCCanvasImageRef;
+typedef struct __MCCanvasSvg *MCCanvasSvgRef;
 typedef struct __MCCanvasPaint *MCCanvasPaintRef;
 typedef struct __MCCanvasSolidPaint *MCCanvasSolidPaintRef;
 typedef struct __MCCanvasPattern *MCCanvasPatternRef;
@@ -115,6 +116,7 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPointTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasColorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTransformTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasSvgTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPaintTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasSolidPaintTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPatternTypeInfo;
@@ -314,6 +316,19 @@ extern "C" MC_DLLEXPORT void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MC
 //void MCCanvasImageScale(MCCanvasImage &x_image, MCCanvasFloat p_x_scale, MCCanvasFloat p_y_scale);
 //void MCCanvasImageRotate(MCCanvasImage &x_image, MCCanvasFloat p_angle);
 //void MCCanvasImageCrop(MCCanvasImage &x_image, const MCCanvasRectangle &p_rect);
+
+//////////
+
+// Image
+
+// Constructors
+extern "C" MC_DLLEXPORT void MCCanvasSvgMakeWithFile(MCStringRef p_path, MCCanvasSvgRef &x_image);
+extern "C" MC_DLLEXPORT void MCCanvasSvgMakeWithResourceFile(MCStringRef p_resource, MCCanvasSvgRef &r_image);
+extern "C" MC_DLLEXPORT void MCCanvasSvgMakeWithString(MCStringRef p_data, MCCanvasSvgRef &x_image);
+
+// Properties
+extern "C" MC_DLLEXPORT void MCCanvasSvgGetBoundingBox(MCCanvasSvgRef p_path, MCCanvasRectangleRef &r_bounds);
+extern "C" MC_DLLEXPORT void MCCanvasSvgGetViewingBox(MCCanvasSvgRef p_path, MCCanvasRectangleRef &r_bounds);
 
 //////////
 
@@ -569,6 +584,8 @@ extern "C" MC_DLLEXPORT void MCCanvasClipToRect(MCCanvasRectangleRef p_rect, MCC
 extern "C" MC_DLLEXPORT void MCCanvasAddPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasDrawImage(MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasDrawRectOfImage(MCCanvasRectangleRef p_src_rect, MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasDrawSvg(MCCanvasSvgRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasDrawRectOfSvg(MCCanvasRectangleRef p_src_rect, MCCanvasSvgRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasMoveTo(MCCanvasPointRef p_point, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasLineTo(MCCanvasPointRef p_point, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef p_to, MCCanvasRef p_canvas);

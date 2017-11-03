@@ -6,6 +6,23 @@
 	
 	'targets':
 	[
+        {
+            'target_name': 'rendersvg',
+            'type': 'executable',
+            
+            'dependencies':
+            [
+                'libGraphics',
+                '../libfoundation/libfoundation.gyp:libFoundation',
+                '../thirdparty/libskia/libskia.gyp:libskia',
+            ],
+            
+            'sources':
+            [
+                'src/rendersvg.cpp',
+            ],
+        },
+    
 		{
 			'target_name': 'libGraphics',
 			'type': 'static_library',
@@ -24,9 +41,10 @@
 			
 			'sources':
 			[
-				'include/graphics.h',
-
+                'include/graphics.h',
+                
 				'src/graphics-internal.h',
+                'src/nanosvg.h',
 				
 				'src/blur.cpp',
 				'src/cachetable.cpp',
@@ -40,6 +58,7 @@
 				'src/path.cpp',
 				'src/region.cpp',
 				'src/spread.cpp',
+                'src/svg.cpp',
 				'src/utils.cpp',
 				'src/SkStippleMaskFilter.cpp',
 				'src/legacygradients.cpp',
