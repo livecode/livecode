@@ -175,19 +175,16 @@ TEST(string, surrogate_unicode_props)
     check_bidi_of_surrogate_range(kSPUA_B_Lower, kSPUA_B_Upper);
 }
 
-#ifdef WIN32
-#define WIDE_PREFIX L
-#else
-#define WIDE_PREFIX u
-#endif
-
 TEST(string, normalize_compare)
 {
+    static unichar_t s_decomposed_string[7] = { 0x65, 0x301, 0x65, 0x301, 0x65, 0x301, 0x0 };
+    static unichar_t s_composed_string[4] = { 0xE9, 0xE9, 0xE9, 0x0 };
+
     MCAutoStringRef t_decomposed;
-    MCStringCreateWithWString((const unichar_t*) WIDE_PREFIX "\u0065\u0301\u0065\u0301\u0065\u0301", &t_decomposed);
+    MCStringCreateWithWString(s_decomposed_string, &t_decomposed);
     
     MCAutoStringRef t_composed;
-    MCStringCreateWithWString((const unichar_t*) WIDE_PREFIX "\u00e9\u00e9\u00e9", &t_composed);
+    MCStringCreateWithWString(s_composed_string, &t_composed);
     
     ASSERT_TRUE(MCStringIsEqualTo(*t_decomposed, *t_composed, kMCStringOptionCompareCaseless));
     
