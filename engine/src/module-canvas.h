@@ -101,6 +101,7 @@ typedef struct __MCCanvasColor *MCCanvasColorRef;
 typedef struct __MCCanvasTransform *MCCanvasTransformRef;
 typedef struct __MCCanvasImage *MCCanvasImageRef;
 typedef struct __MCCanvasPaint *MCCanvasPaintRef;
+typedef struct __MCCanvasNoPaint *MCCanvasNoPaintRef;
 typedef struct __MCCanvasSolidPaint *MCCanvasSolidPaintRef;
 typedef struct __MCCanvasPattern *MCCanvasPatternRef;
 typedef struct __MCCanvasGradient *MCCanvasGradientRef;
@@ -116,6 +117,7 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasColorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTransformTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPaintTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasNoPaintTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasSolidPaintTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPatternTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientTypeInfo;
@@ -130,6 +132,7 @@ extern MCCanvasTransformRef kMCCanvasIdentityTransform;
 extern MCCanvasColorRef kMCCanvasColorBlack;
 //extern MCCanvasFontRef kMCCanvasFont12PtHelvetica;
 extern MCCanvasPathRef kMCCanvasEmptyPath;
+extern MCCanvasNoPaintRef kMCCanvasNoPaint;
 	
 ////////////////////////////////////////////////////////////////////////////////
 // Canvas Errors
@@ -180,6 +183,7 @@ bool MCCanvasTransformCreateWithMCGAffineTransform(const MCGAffineTransform &p_t
 bool MCCanvasImageCreateWithImageRep(MCImageRep *p_rep, MCCanvasImageRef &r_image);
 MCImageRep *MCCanvasImageGetImageRep(MCCanvasImageRef p_image);
 
+bool MCCanvasNoPaintCreate(MCCanvasNoPaintRef& r_paint);
 bool MCCanvasSolidPaintCreateWithColor(MCCanvasColorRef p_color, MCCanvasSolidPaintRef &r_paint);
 bool MCCanvasPatternCreateWithImage(MCCanvasImageRef p_image, MCCanvasTransformRef p_transform, MCCanvasPatternRef &r_pattern);
 bool MCCanvasGradientStopCreate(MCCanvasFloat p_offset, MCCanvasColorRef p_color, MCCanvasGradientStopRef &r_stop);
@@ -316,6 +320,11 @@ extern "C" MC_DLLEXPORT void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MC
 //void MCCanvasImageCrop(MCCanvasImage &x_image, const MCCanvasRectangle &p_rect);
 
 //////////
+
+// No Paint
+
+// Constructors
+extern "C" MC_DLLEXPORT void MCCanvasNoPaintMake(MCCanvasNoPaintRef& r_paint);
 
 // Solid Paint
 
@@ -517,12 +526,20 @@ extern "C" MC_DLLEXPORT void MCCanvasAlignmentEvaluate(integer_t p_h_align, inte
 // Properties
 extern "C" MC_DLLEXPORT void MCCanvasGetPaint(MCCanvasRef p_canvas, MCCanvasPaintRef &r_paint);
 extern "C" MC_DLLEXPORT void MCCanvasSetPaint(MCCanvasPaintRef p_paint, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetFillPaint(MCCanvasRef p_canvas, MCCanvasPaintRef &r_paint);
+extern "C" MC_DLLEXPORT void MCCanvasSetFillPaint(MCCanvasPaintRef p_paint, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetStrokePaint(MCCanvasRef p_canvas, MCCanvasPaintRef &r_paint);
+extern "C" MC_DLLEXPORT void MCCanvasSetStrokePaint(MCCanvasPaintRef p_paint, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasGetFillRuleAsString(MCCanvasRef p_canvas, MCStringRef &r_string);
 extern "C" MC_DLLEXPORT void MCCanvasSetFillRuleAsString(MCStringRef p_string, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasGetAntialias(MCCanvasRef p_canvas, bool &r_antialias);
 extern "C" MC_DLLEXPORT void MCCanvasSetAntialias(bool p_antialias, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasGetOpacity(MCCanvasRef p_canvas, MCCanvasFloat &r_opacity);
 extern "C" MC_DLLEXPORT void MCCanvasSetOpacity(MCCanvasFloat p_opacity, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetFillOpacity(MCCanvasRef p_canvas, MCCanvasFloat &r_opacity);
+extern "C" MC_DLLEXPORT void MCCanvasSetFillOpacity(MCCanvasFloat p_opacity, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetStrokeOpacity(MCCanvasRef p_canvas, MCCanvasFloat &r_opacity);
+extern "C" MC_DLLEXPORT void MCCanvasSetStrokeOpacity(MCCanvasFloat p_opacity, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasGetBlendModeAsString(MCCanvasRef p_canvas, MCStringRef &r_blend_mode);
 extern "C" MC_DLLEXPORT void MCCanvasSetBlendModeAsString(MCStringRef p_blend_mode, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasGetStippled(MCCanvasRef p_canvas, bool &r_stippled);
@@ -561,6 +578,8 @@ extern "C" MC_DLLEXPORT void MCCanvasRestoreState(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasBeginLayer(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasEndLayer(MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasDraw(MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasDrawPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasFill(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasFillPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasStroke(MCCanvasRef p_canvas);
