@@ -450,6 +450,8 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
    local tIsScript
    put there is a pSource into tIsScript
    
+   local tIsLCIDL = false
+   
    repeat for each line tLine in pText
       # Check to see if this is the start of a handler / syntax or a block of comments 
       put word 1 of tLine into tFirstWord
@@ -463,6 +465,13 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
          put true into tInEntry
          
          switch tFirstWord
+            case "external"
+               put true into tIsLCIDL
+               put "library" into tEntryData["type"]
+               put word 2 to -1 of tLine into tEntryData["name"]
+               put false into tInEntry
+               put true into tEntryData["need_docs"]
+               break
             case "module"
             case "library"
                put "library" into tEntryData["type"]
@@ -532,10 +541,22 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                put true into tEntryData["need_docs"]
                break
             case "on"
+               if tIsLCIDL then
+                  put false into tInEntry
+                  break
+               end if
                put "command" into tEntryData["type"]
                put word 2 of tLine into tEntryData["name"]
                put false into tEntryData["need_docs"]
                break
+            case "tail"
+               if not tIsLCIDL then
+                  put false into tInEntry
+                  break
+               end if
+               -- eat tail in lcidl
+               put word 2 of tLine into tFirstWord
+               put word 2 to -1 of tLine into tLine
             case "command"
             case "function"
                if tFirstWord is "function" then
@@ -545,6 +566,9 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                end if
                put word 2 of tLine into tEntryData["name"]
                put true into tEntryData["need_docs"]
+               if tIsLCIDL then
+                  put true into tEntryEnded
+               end if
                break
             default
                # This is not a new entry
@@ -558,6 +582,11 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                      put "library" into tLibraryData["type"]
                      put tComment into tLibraryData["comments"]
                      put the short name of pSource into tLibraryData["name"]
+                  end if
+                  
+                  if tIsLCIDL and tAPIData is empty and tComment is not empty then
+                     put tEntryData into tLibraryData
+                     put tComment into tLibraryData["comments"]
                   end if
                   
                   # Discard any previous comments
@@ -584,6 +613,10 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
             # Remove another star if this is a double-star comment closer
             if char -1 of tLine is "*" then
                delete char -1 of tLine
+            end if
+            
+            if tIsLCIDL then
+               put false into tInEntry
             end if
             
             # If there's nothing else on this line, don't add it.
