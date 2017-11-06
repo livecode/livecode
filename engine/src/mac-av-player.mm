@@ -40,6 +40,8 @@ class MCAVFoundationPlayer;
 
 - (id)initWithPlayer: (MCAVFoundationPlayer *)player;
 
+- (void)detachPlayer;
+
 - (void)movieFinished: (id)object;
 
 // PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
@@ -177,19 +179,39 @@ private:
     return self;
 }
 
+- (void)detachPlayer
+{
+    m_av_player = nullptr;
+}
+
 // PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
 - (void)timeJumped: (id)object
 {
+    if (m_av_player == nullptr)
+    {
+        return;
+    }
+    
     m_av_player -> TimeJumped();
 }
 
 - (void)movieFinished: (id)object
 {
+    if (m_av_player == nullptr)
+    {
+        return;
+    }
+    
     m_av_player -> MovieFinished();
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
+    if (m_av_player == nullptr)
+    {
+        return;
+    }
+    
     if ([keyPath isEqualToString: @"status"])
         MCPlatformBreakWait();
     else if([keyPath isEqualToString: @"currentItem.loadedTimeRanges"])
@@ -210,6 +232,11 @@ private:
 
 - (void)updateCurrentFrame
 {
+    if (m_av_player == nullptr)
+    {
+        return;
+    }
+    
     m_av_player -> DoUpdateCurrentFrame(m_av_player);
 }
 
@@ -297,6 +324,9 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
 {
+    // Detach the player from the observer
+    [m_observer detachPlayer];
+
 	if (m_current_frame != nil)
 		CFRelease(m_current_frame);
     
@@ -315,6 +345,9 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     @catch (id anException) {
         //do nothing, obviously it wasn't attached because an exception was thrown
     }
+    
+    // Cancel any pending 'perform' requests on the observer.
+    [NSObject cancelPreviousPerformRequestsWithTarget: m_observer];
     
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     // Now we can release it.
