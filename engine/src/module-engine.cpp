@@ -224,10 +224,28 @@ static Properties parse_property_name(MCStringRef p_name)
 	const LT *t_literal;
 	if (t_sp . next(t_type) &&
 		t_sp . lookup(SP_FACTOR, t_literal) == PS_NORMAL &&
-		t_literal -> type == TT_PROPERTY &&
-		t_sp . next(t_type) == PS_EOF)
-		return (Properties)t_literal -> which;
-	
+		t_literal -> type == TT_PROPERTY)
+    {
+        Properties t_which = (Properties)t_literal -> which;
+        
+        // check for object property modifiers
+        if (t_which == P_SHORT || t_which == P_LONG || t_which == P_ABBREVIATE)
+        {
+            if (t_sp . next(t_type) &&
+                t_sp . lookup(SP_FACTOR, t_literal) == PS_NORMAL &&
+                t_literal -> type == TT_PROPERTY)
+            {
+                if (t_literal->which == P_ID || t_literal->which == P_NAME || t_literal->which == P_OWNER)
+                {
+                    t_which = (Properties)(t_literal->which + t_which - P_SHORT + 1);
+                }
+            }
+        }
+        
+        if (t_sp . next(t_type) == PS_EOF)
+            return t_which;
+    }
+    
 	return P_CUSTOM;
 }
 

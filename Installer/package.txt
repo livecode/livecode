@@ -435,6 +435,8 @@ component Extensions
 		rfolder macosx:packaged_extensions/com.livecode.library.widgetutils
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.tile
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.objectrepository
 
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place
