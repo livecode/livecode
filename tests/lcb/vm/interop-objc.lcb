@@ -121,4 +121,31 @@ end handler
 
 ---------
 
+// NSRange is a pair of (natural sized) unsigned integers
+public foreign type NSRange binds to "MCAggregateTypeInfo:pp"
+
+// NSRange is 8 bytes on 64-bit arch, 4 bytes on 32-bit
+// so will use objc_msgSend_stret on 32-bit arch, but objc_msgSend on
+// 64 bit.
+foreign handler RangeOfString(in pHaystack as ObjcId, in pNeedle as ObjcId) returns NSRange binds to "objc:NSString.-rangeOfString:"
+
+public handler TestReturnNSRange()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "return NSRange struct succeeds" because "not implemented on" && the operating system
+		return
+	end if
+	
+	variable tRange as NSRange
+	unsafe
+		put RangeOfString(StringToNSString("cartoon"), \
+						  StringToNSString("art")) into tRange
+	end unsafe
+	
+	variable tRangeList as List
+	put tRange into tRangeList
+	
+	test "return NSRange struct succeeds" when \
+		tRangeList is [1,3]
+end handler
+
 end module
