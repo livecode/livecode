@@ -3970,7 +3970,7 @@ mCanvas:		An expression which evaluates to a transform.
 Description:	The transform which has been applied since the last save.
 
 Example:
-	// Set canvas fill rule to non-zero.
+	// Set canvas transform (since the last save) to the identity transform
 	set the transform of this canvas to the identity trasnsform
 
 Tags:	Canvas
@@ -4044,6 +4044,48 @@ syntax CanvasPropertyStrokePaint is prefix operator with property precedence
 begin
 	MCCanvasGetStrokePaint(mCanvas, output)
 	MCCanvasSetStrokePaint(input, mCanvas)
+end syntax
+
+//////////
+
+/**
+Summary:	The current fill opacity of a canvas.
+
+mCanvas:		An expression which evaluates to a number in the range [0,1].
+
+Description:	The opacity to be applied to fill operations on <mCanvas>.
+
+Example:
+	// Set canvas to fill with 50% opacity
+	set the fill opacity of this canvas to 0.5
+
+Tags:	Canvas
+*/
+syntax CanvasPropertyFillOpacity is prefix operator with property precedence
+	"the" "fill" "opacity" "of" <mCanvas: Expression>
+begin
+	MCCanvasGetFillOpacity(mCanvas, output)
+	MCCanvasSetFillOpacity(input, mCanvas)
+end syntax
+
+/**
+Summary:	The current stroke opacity of a canvas.
+
+mCanvas:		An expression which evaluates to a number in the range [0,1].
+
+Description:	The opacity to be applied to stroke operations on <mCanvas>.
+
+Example:
+	// Set canvas to stroke with 50% opacity
+	set the stroke opacity of this canvas to 0.5
+
+Tags:	Canvas
+*/
+syntax CanvasPropertyStrokeOpacity is prefix operator with property precedence
+	"the" "stroke" "opacity" "of" <mCanvas: Expression>
+begin
+	MCCanvasGetStrokeOpacity(mCanvas, output)
+	MCCanvasSetStrokeOpacity(input, mCanvas)
 end syntax
 
 //////////

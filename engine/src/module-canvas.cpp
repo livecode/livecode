@@ -2047,7 +2047,7 @@ static bool __MCCanvasNoPaintDescribe(MCValueRef p_value, MCStringRef &r_string)
 	return false;
 }
 
-bool MCCanvasNoPaintCreate(MCCanvasRef p_canvas, MCCanvasNoPaintRef& r_no_paint)
+bool MCCanvasNoPaintCreate(MCCanvasNoPaintRef& r_no_paint)
 {
     if (kMCCanvasNoPaint == nullptr)
     {
@@ -2059,6 +2059,16 @@ bool MCCanvasNoPaintCreate(MCCanvasRef p_canvas, MCCanvasNoPaintRef& r_no_paint)
     
     r_no_paint = MCValueRetain(kMCCanvasNoPaint);
     return true;
+}
+
+__MCCanvasNoPaintImpl *MCCanvasNoPaintGet(MCCanvasNoPaintRef p_paint)
+{
+	return (__MCCanvasNoPaintImpl*)MCValueGetExtraBytesPtr(p_paint);
+}
+
+bool MCCanvasPaintIsNoPaint(MCCanvasPaintRef p_paint)
+{
+	return MCValueGetTypeInfo(p_paint) == kMCCanvasNoPaintTypeInfo;
 }
 
 // Constructor
@@ -4935,6 +4945,7 @@ void MCCanvasFontMeasureTextImageBoundsOnCanvas(MCStringRef p_text, MCCanvasRef 
 
 void MCCanvasDirtyProperties(__MCCanvasImpl &p_canvas)
 {
+    p_canvas.transform_changed = true;
 	p_canvas.antialias_changed = true;
     p_canvas.blend_mode_changed = true;
     p_canvas.fill_rule_changed = true;
@@ -4969,6 +4980,9 @@ bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 	
 	if (t_success)
 	{
+        p_properties.base_transform = MCGAffineTransformMakeIdentity();
+        p_properties.transform = MCValueRetain(kMCCanvasIdentityTransform);
+        
 		p_properties.antialias = true;
 		p_properties.blend_mode = kMCGBlendModeSourceOver;
 		p_properties.fill_rule = kMCGFillRuleNonZero;
@@ -5005,6 +5019,9 @@ bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 bool MCCanvasPropertiesCopy(MCCanvasProperties &p_src, MCCanvasProperties &p_dst)
 {
 	MCCanvasProperties t_properties;
+    
+    t_properties.transform = MCValueRetain(p_src.transform);
+    
 	t_properties.antialias = p_src.antialias;
 	t_properties.blend_mode = p_src.blend_mode;
     t_properties.opacity = p_src.opacity;
@@ -5031,6 +5048,7 @@ bool MCCanvasPropertiesCopy(MCCanvasProperties &p_src, MCCanvasProperties &p_dst
 
 void MCCanvasPropertiesClear(MCCanvasProperties &p_properties)
 {
+    MCValueRelease(p_properties.transform);
 	MCValueRelease(p_properties.fill_paint);
 	MCValueRelease(p_properties.stroke_paint);
 	MCValueRelease(p_properties.font);
@@ -5049,8 +5067,13 @@ bool MCCanvasPropertiesPush(__MCCanvasImpl &x_canvas)
 	if (!MCCanvasPropertiesCopy(x_canvas.prop_stack[x_canvas.prop_index], x_canvas.prop_stack[x_canvas.prop_index + 1]))
 		return false;
 	
+    MCGAffineTransform t_base_transform =
+            MCGAffineTransformConcat(x_canvas.props().base_transform,
+                                     *MCCanvasTransformGet(x_canvas.props().transform));
 	x_canvas.prop_index++;
 	
+    x_canvas.props().base_transform = t_base_transform;
+    
 	return true;
 }
 
@@ -5102,6 +5125,7 @@ bool MCCanvasCreate(MCGContextRef p_context, MCCanvasRef &r_canvas)
 	{
 		t_canvas_impl->prop_index = 0;
 		t_canvas_impl->context = MCGContextRetain(p_context);
+        t_canvas_impl->props().base_transform = MCGContextGetDeviceTransform(p_context);
 		MCCanvasDirtyProperties(*t_canvas_impl);
 		
 		r_canvas = t_canvas;
@@ -5165,6 +5189,28 @@ static bool __MCCanvasDescribe(MCValueRef p_canvas, MCStringRef &r_description)
 static inline MCCanvasProperties &MCCanvasGetProps(MCCanvasRef p_canvas)
 {
 	return MCCanvasGet(p_canvas)->props();
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasGetTransform(MCCanvasRef p_canvas, MCCanvasTransformRef& r_transform)
+{
+    r_transform = MCValueRetain(MCCanvasGetProps(p_canvas).transform);
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasSetTransform(MCCanvasTransformRef p_transform, MCCanvasRef p_canvas)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+    
+    MCValueAssign(t_canvas->props().transform, p_transform);
+    t_canvas->transform_changed = true;
+    
+	// Need to re-apply pattern paint when transform changes
+	if (MCCanvasPaintIsPattern(t_canvas->props().fill_paint))
+		t_canvas->fill_paint_changed = true;
+	if (MCCanvasPaintIsPattern(t_canvas->props().stroke_paint))
+		t_canvas->stroke_paint_changed = true;
 }
 
 MC_DLLEXPORT_DEF
@@ -5617,17 +5663,37 @@ bool MCCanvasApplyGradientPaint(__MCCanvasImpl &x_canvas, MCCanvasGradientRef p_
 void MCCanvasApplyPaint(__MCCanvasImpl &x_canvas, MCCanvasPaintRef &p_paint, bool p_fill, bool p_stroke)
 {
 	if (MCCanvasPaintIsSolidPaint(p_paint))
-		MCCanvasApplySolidPaint(x_canvas, (MCCanvasSolidPaintRef)p_paint, p_fill, p_stroke);
-	else if (MCCanvasPaintIsPattern(p_paint))
-		MCCanvasApplyPatternPaint(x_canvas, (MCCanvasPatternRef)p_paint, p_fill, p_stroke);
-	else if (MCCanvasPaintIsGradient(p_paint))
-		MCCanvasApplyGradientPaint(x_canvas, (MCCanvasGradientRef)p_paint, p_fill, p_stroke);
-	else
+	{
+        MCCanvasApplySolidPaint(x_canvas, (MCCanvasSolidPaintRef)p_paint, p_fill, p_stroke);
+	}
+    else if (MCCanvasPaintIsPattern(p_paint))
+	{
+        MCCanvasApplyPatternPaint(x_canvas, (MCCanvasPatternRef)p_paint, p_fill, p_stroke);
+	}
+    else if (MCCanvasPaintIsGradient(p_paint))
+    {
+        MCCanvasApplyGradientPaint(x_canvas, (MCCanvasGradientRef)p_paint, p_fill, p_stroke);
+	}
+    else if (MCCanvasPaintIsNoPaint(p_paint))
+    {
+        // There is nothing to do here.
+    }
+    else
+    {
 		MCAssert(false);
+    }
 }
 
 void MCCanvasApplyChanges(__MCCanvasImpl &x_canvas)
 {
+    if (x_canvas.transform_changed)
+    {
+        MCGContextResetCTM(x_canvas.context);
+        MCGContextConcatCTM(x_canvas.context, x_canvas.props().base_transform);
+        MCGContextConcatCTM(x_canvas.context, *MCCanvasTransformGet(x_canvas.props().transform));
+        x_canvas.transform_changed = false;
+    }
+    
     if (x_canvas.fill_paint_changed &&
         x_canvas.stroke_paint_changed &&
         x_canvas.props().fill_paint == x_canvas.props().stroke_paint)
@@ -5731,7 +5797,9 @@ void MCCanvasTransform(MCCanvasRef p_canvas, const MCGAffineTransform &p_transfo
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
 	
-	MCGContextConcatCTM(t_canvas->context, p_transform);
+    MCCanvasTransformConcat(t_canvas->props().transform, p_transform);
+    t_canvas->transform_changed = true;
+    
 	// Need to re-apply pattern paint when transform changes
 	if (MCCanvasPaintIsPattern(t_canvas->props().fill_paint))
 		t_canvas->fill_paint_changed = true;
@@ -5793,6 +5861,8 @@ void MCCanvasSaveState(MCCanvasRef p_canvas)
 	
 	if (!MCCanvasPropertiesPush(*t_canvas))
 		return;
+
+    MCValueAssign(t_canvas->props().transform, kMCCanvasIdentityTransform);
 
 	MCGContextSave(t_canvas->context);
 }
@@ -5928,9 +5998,21 @@ void MCCanvasDraw(MCCanvasRef p_canvas)
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
 	
+    if (t_canvas->props().fill_paint == (MCCanvasPaintRef)kMCCanvasNoPaint &&
+        t_canvas->props().stroke_paint == (MCCanvasPaintRef)kMCCanvasNoPaint)
+    {
+        return;
+    }
+    
 	MCCanvasApplyChanges(*t_canvas);
 	MCGContextBegin(t_canvas->context, false);
-	MCGContextFillAndStroke(t_canvas->context);
+    if (t_canvas->props().fill_paint != (MCCanvasPaintRef)kMCCanvasNoPaint &&
+        t_canvas->props().stroke_paint != (MCCanvasPaintRef)kMCCanvasNoPaint)
+        MCGContextFillAndStroke(t_canvas->context);
+    else if (t_canvas->props().fill_paint != (MCCanvasPaintRef)kMCCanvasNoPaint)
+        MCGContextFill(t_canvas->context);
+    else if (t_canvas->props().stroke_paint != (MCCanvasPaintRef)kMCCanvasNoPaint)
+        MCGContextStroke(t_canvas->context);
 	MCGContextEnd(t_canvas->context);
 }
 
@@ -5940,6 +6022,11 @@ void MCCanvasFill(MCCanvasRef p_canvas)
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
 	
+    if (t_canvas->props().fill_paint == (MCCanvasPaintRef)kMCCanvasNoPaint)
+    {
+        return;
+    }
+    
 	MCCanvasApplyChanges(*t_canvas);
 	MCGContextBegin(t_canvas->context, false);
 	MCGContextFill(t_canvas->context);
@@ -5952,6 +6039,11 @@ void MCCanvasStroke(MCCanvasRef p_canvas)
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
 	
+    if (t_canvas->props().stroke_paint == (MCCanvasPaintRef)kMCCanvasNoPaint)
+    {
+        return;
+    }
+    
 	MCCanvasApplyChanges(*t_canvas);
 	MCGContextBegin(t_canvas->context, false);
 	MCGContextStroke(t_canvas->context);
@@ -6190,12 +6282,19 @@ MCCanvasRectangleRef MCCanvasMeasureText(MCStringRef p_text, MCCanvasRef p_canva
 
 static MCCanvasRef s_current_canvas = nil;
 
+MCCanvasRef MCCanvasTop(void)
+{
+    return s_current_canvas;
+}
+
 void MCCanvasPush(MCGContextRef p_gcontext, uintptr_t& r_cookie)
 {
     MCCanvasRef t_new_canvas;
     MCCanvasCreate(p_gcontext, t_new_canvas);
     r_cookie = (uintptr_t)s_current_canvas;
     s_current_canvas = t_new_canvas;
+    
+    MCGContextSave(p_gcontext);
 }
 
 void MCCanvasPop(uintptr_t p_cookie)
@@ -6203,6 +6302,9 @@ void MCCanvasPop(uintptr_t p_cookie)
     MCCanvasRef t_canvas;
     t_canvas = s_current_canvas;
     s_current_canvas = (MCCanvasRef)p_cookie;
+    
+    MCGContextRestore(MCCanvasGet(t_canvas)->context);
+    
     MCValueRelease(t_canvas);
 }
 

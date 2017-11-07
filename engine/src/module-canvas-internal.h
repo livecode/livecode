@@ -163,6 +163,9 @@ __MCCanvasFontImpl *MCCanvasFontGet(MCCanvasFontRef p_font);
 // Canvas
 struct MCCanvasProperties
 {
+    MCGAffineTransform base_transform;
+    MCCanvasTransformRef transform;
+
 	MCCanvasPaintRef fill_paint;
 	MCCanvasPaintRef stroke_paint;
 	MCGFillRule fill_rule;
@@ -185,6 +188,7 @@ struct MCCanvasProperties
 
 struct __MCCanvasImpl
 {
+    bool transform_changed : 1;
 	bool fill_paint_changed : 1;
 	bool stroke_paint_changed : 1;
 	bool fill_rule_changed : 1;

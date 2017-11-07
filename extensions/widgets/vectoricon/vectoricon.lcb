@@ -107,7 +107,7 @@ end handler
 
 --
 
-private handler type SvgOpHandler(inout pContext as Array, in pArgument as optional any) returns nothing
+private handler type SvgOpHandler(in pCanvas as Canvas, in pArgument as optional any) returns nothing
 private variable mSvgOperations as optional Array
 
 private handler SvgCompile(in pSvgText as String, out rViewBox as optional List, out rProgram as optional List)
@@ -185,7 +185,7 @@ private handler SvgAssemble(in pProgram as Array) returns List
 		else if tOpName is "fill" or \
 				tOpName is "stroke" then
 			if tOpArgument["1"] is "none" then
-				put nothing into tOpArgument
+				put no paint into tOpArgument
 			else if tOpArgument["1"] is "color" then
 				put solid paint with color [tOpArgument["2"], tOpArgument["3"], tOpArgument["4"]] into tOpArgument
 			end if
@@ -249,134 +249,68 @@ private handler SvgAssemble(in pProgram as Array) returns List
 end handler
 
 private handler SvgRender(in pCanvas as Canvas, in pProgram as List) returns nothing
-	variable tContext as Array
-	put pCanvas into tContext["canvas"]
-	put the identity transform into tContext["transform"]
-	put nothing into tContext["fill"]
-	put nothing into tContext["stroke"]
-	put false into tContext["transformed"]
-
 	save state of pCanvas
 
 	variable tIndex as Integer
 	repeat with tIndex from 1 up to the number of elements in pProgram by 2
 		variable tHandler as SvgOpHandler
 		put pProgram[tIndex] into tHandler
-		tHandler(tContext, pProgram[tIndex + 1])
+		tHandler(pCanvas, pProgram[tIndex + 1])
 	end repeat
 
 	restore state of pCanvas
 end handler
 
-private handler SvgOp_Transform(inout pContext as Array, in pArgument) returns nothing
-	if pContext["transformed"] then
-		restore state of pContext["canvas"]
-		put false into pContext["transformed"]
-	end if
-
-	put pArgument into pContext["transform"]
+private handler SvgOp_Transform(in pCanvas as Canvas, in pArgument) returns nothing
+	set the transform of pCanvas to pArgument
 end handler
 
-private handler SvgOp_Fill(inout pContext as Array, in pArgument) returns nothing
-	put pArgument into pContext["fill"]
+private handler SvgOp_Fill(in pCanvas as Canvas, in pArgument) returns nothing
+	set the fill paint of pCanvas to pArgument
 end handler
 
-private handler SvgOp_FillOpacity(inout pContext as Array, in pArgument) returns nothing
-	put pArgument into pContext["fill-opacity"]
+private handler SvgOp_FillOpacity(in pCanvas as Canvas, in pArgument) returns nothing
+	set the fill opacity of pCanvas to pArgument
 end handler
 
-private handler SvgOp_FillRule(inout pContext as Array, in pArgument) returns nothing
-	if pContext["transformed"] then
-		restore state of pContext["canvas"]
-		put false into pContext["transformed"]
-	end if
-
-	set the fill rule of pContext["canvas"] to pArgument
+private handler SvgOp_FillRule(in pCanvas as Canvas, in pArgument) returns nothing
+	set the fill rule of pCanvas to pArgument
 end handler
 
-private handler SvgOp_Stroke(inout pContext as Array, in pArgument) returns nothing
-	put pArgument into pContext["stroke"]
+private handler SvgOp_Stroke(in pCanvas as Canvas, in pArgument) returns nothing
+	set the stroke paint of pCanvas to pArgument
 end handler
 
-private handler SvgOp_StrokeOpacity(inout pContext as Array, in pArgument) returns nothing
-	put pArgument into pContext["stroke-opacity"]
+private handler SvgOp_StrokeOpacity(in pCanvas as Canvas, in pArgument) returns nothing
+	set the stroke opacity of pCanvas to pArgument
 end handler
 
-private handler SvgOp_StrokeWidth(inout pContext as Array, in pArgument) returns nothing
-	if pContext["transformed"] then
-		restore state of pContext["canvas"]
-		put false into pContext["transformed"]
-	end if
-
-	set the stroke width of pContext["canvas"] to pArgument
+private handler SvgOp_StrokeWidth(in pCanvas as Canvas, in pArgument) returns nothing
+	set the stroke width of pCanvas to pArgument
 end handler
 
-private handler SvgOp_StrokeLineJoin(inout pContext as Array, in pArgument) returns nothing
-	if pContext["transformed"] then
-		restore state of pContext["canvas"]
-		put false into pContext["transformed"]
-	end if
-
-	set the join style of pContext["canvas"] to pArgument
+private handler SvgOp_StrokeLineJoin(in pCanvas as Canvas, in pArgument) returns nothing
+	set the join style of pCanvas to pArgument
 end handler
 
-private handler SvgOp_StrokeLineCap(inout pContext as Array, in pArgument) returns nothing
-	if pContext["transformed"] then
-		restore state of pContext["canvas"]
-		put false into pContext["transformed"]
-	end if
-
-	set the cap style of pContext["canvas"] to pArgument
+private handler SvgOp_StrokeLineCap(in pCanvas as Canvas, in pArgument) returns nothing
+	set the cap style of pCanvas to pArgument
 end handler
 
-private handler SvgOp_StrokeDashArray(inout pContext as Array, in pArgument) returns nothing
-	if pContext["transformed"] then
-		restore state of pContext["canvas"]
-		put false into pContext["transformed"]
-	end if
-
-	set the dashes of pContext["canvas"] to pArgument
+private handler SvgOp_StrokeDashArray(in pCanvas as Canvas, in pArgument) returns nothing
+	set the dashes of pCanvas to pArgument
 end handler
 
-private handler SvgOp_StrokeDashOffset(inout pContext as Array, in pArgument) returns nothing
-	if pContext["transformed"] then
-		restore state of pContext["canvas"]
-		put false into pContext["transformed"]
-	end if
-
-	set the dash phase of pContext["canvas"] to pArgument
+private handler SvgOp_StrokeDashOffset(in pCanvas as Canvas, in pArgument) returns nothing
+	set the dash phase of pCanvas to pArgument
 end handler
 
-private handler SvgOp_StrokeMiterLimit(inout pContext as Array, in pArgument) returns nothing
-	if pContext["transformed"] then
-		restore state of pContext["canvas"]
-		put false into pContext["transformed"]
-	end if
-
-	set the miter limit of pContext["canvas"] to pArgument
+private handler SvgOp_StrokeMiterLimit(in pCanvas as Canvas, in pArgument) returns nothing
+	set the miter limit of pCanvas to pArgument
 end handler
 
-private handler SvgOp_Shape(inout pContext as Array, in pArgument) returns nothing
-	variable tCanvas as Canvas
-	put pContext["canvas"] into tCanvas
-
-	if not pContext["transformed"] then
-		save state of tCanvas
-		transform tCanvas by pContext["transform"]
-		put true into pContext["transformed"]
-	end if
-
-	if pContext["fill"] is not nothing then
-		set the paint of tCanvas to pContext["fill"]
-		set the opacity of tCanvas to pContext["fill-opacity"]
-		fill pArgument on tCanvas
-	end if
-
-	if pContext["stroke"] is not nothing then
-		set the paint of tCanvas to pContext["stroke"]
-		set the opacity of tCanvas to pContext["stroke-opacity"]
-		stroke pArgument on tCanvas
-	end if
+private handler SvgOp_Shape(in pCanvas as Canvas, in pArgument) returns nothing
+	draw pArgument on pCanvas
 end handler
 
 end widget

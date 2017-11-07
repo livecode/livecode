@@ -84,6 +84,9 @@ struct MCCArray
 bool MCCanvasModuleInitialize();
 void MCCanvasModuleFinalize();
 
+typedef struct __MCCanvas *MCCanvasRef;
+
+MCCanvasRef MCCanvasTop(void);
 void MCCanvasPush(MCGContextRef gcontext, uintptr_t& r_cookie);
 void MCCanvasPop(uintptr_t p_cookie);
 
@@ -524,6 +527,8 @@ extern "C" MC_DLLEXPORT void MCCanvasFontMeasureTextImageBoundsOnCanvas(MCString
 extern "C" MC_DLLEXPORT void MCCanvasAlignmentEvaluate(integer_t p_h_align, integer_t p_v_align, integer_t &r_align);
 
 // Properties
+extern "C" MC_DLLEXPORT void MCCanvasGetTransform(MCCanvasRef p_canvas, MCCanvasTransformRef &r_transform);
+extern "C" MC_DLLEXPORT void MCCanvasSetTransform(MCCanvasTransformRef p_transform, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasGetPaint(MCCanvasRef p_canvas, MCCanvasPaintRef &r_paint);
 extern "C" MC_DLLEXPORT void MCCanvasSetPaint(MCCanvasPaintRef p_paint, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasGetFillPaint(MCCanvasRef p_canvas, MCCanvasPaintRef &r_paint);
