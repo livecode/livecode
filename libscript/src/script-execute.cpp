@@ -307,6 +307,8 @@ public:
         else
             t_objc_msgSend = (void(*)())objc_msgSend;
 #elif defined(__X86_64__)
+        /* TODO: Investigate structs containing long doubles
+         * as they will not work at the moment */
         if (t_cif->rtype->type == FFI_TYPE_STRUCT &&
             t_rsize > 16)
             t_objc_msgSend = (void(*)())objc_msgSend_stret;

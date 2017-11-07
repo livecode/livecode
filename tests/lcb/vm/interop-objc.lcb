@@ -148,4 +148,36 @@ public handler TestReturnNSRange()
 		tRangeList is [1,3]
 end handler
 
+// NSRect is a quadruple of (natural sized) floats
+public foreign type NSRect binds to "MCAggregateTypeInfo:qqqq"
+
+foreign handler NSValueWithRect(in pRect as NSRect) returns ObjcId \
+	binds to "objc:NSValue.+valueWithRect:"
+	
+// NSRect is 32 bytes on 64-bit arch, 16 bytes on 32-bit
+// so will use objc_msgSend_stret on both archs
+foreign handler NSRectFromValue(in pValue as ObjcId) returns NSRect \
+	binds to "objc:NSValue.-rectValue"
+
+public handler TestReturnNSRect()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "return NSRange struct succeeds" because "not implemented on" && the operating system
+		return
+	end if
+	
+	variable tRect as NSRect
+	put [0,0,0,0] into tRect
+	unsafe
+		variable tValue as ObjcId
+		put NSValueWithRect(tRect) into tValue
+		put NSRectFromValue(tValue) into tRect
+	end unsafe
+	
+	variable tRectList as List
+	put tRect into tRectList
+	
+	test "return NSRect struct succeeds" when \
+		tRectList is [0,0,0,0]
+end handler
+
 end module
