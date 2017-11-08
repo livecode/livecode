@@ -16,14 +16,16 @@ OS: mac, windows
 Platforms: desktop, server
 
 Example:
-set the dragImageOffset  to 12,10
+set the dragImageOffset to 12,10
 
 Example:
-set the dragImageOffset to (0.5 * the width of image "Drag Image"), (0.5 * the height of image "Drag Image")
+set the dragImageOffset to \
+    (0.5 * the width of image "Drag Image"), \
+    (0.5 * the height of image "Drag Image")
 
 Value:
 The <dragImageOffset> is two comma-separated integers in the format
-<horizontalDistance>, <verticalDistance>. These may be negative. The
+horizontalDistance, verticalDistance. These may be negative. The
 default value is empty, which is equivalent to 0,0. If the dragImage
 property is not set, or set to a non-existant image, this property has
 no effect.

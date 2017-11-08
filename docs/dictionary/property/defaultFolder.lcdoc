@@ -55,14 +55,14 @@ the same <folder> without having to include the <absolute file path|full
 path>. 
 
 The <defaultFolder> <property> specifies the <folder> LiveCode uses as
-the <current folder|current directory> when resolving <relative file
-path|relative paths> (except for <relative file path|relative paths>
-specified in the <stackFiles> <property>).
+the <current folder|current directory> when resolving 
+<relative file path|relative paths> (except for <relative file path|
+relative paths> specified in the <stackFiles> <property>).
 
 If you specify a <file> without giving its 
 <absolute file path|full path>, LiveCode looks for
-the file in the <defaultFolder>. If you specify a <relative file
-path|relative path>, the <defaultFolder> is <prepend|prepended> to it to
+the file in the <defaultFolder>. If you specify a <relative file path|
+relative path>, the <defaultFolder> is <prepend|prepended> to it to
 create the <absolute file path|full path>.
 
 You cannot delete the current <defaultFolder>.

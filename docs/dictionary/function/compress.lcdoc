@@ -26,8 +26,8 @@ data (string):
 A string of binary data of any length.
 
 Returns:
-The <compress> <function> <return|returns> a <string> of <binary
-file|binary data>.
+The <compress> <function> <return|returns> a <string> of 
+<binary file|binary data>.
 
 Description:
 Use the <compress> <function> to <compress> data to a smaller size for

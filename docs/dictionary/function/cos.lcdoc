@@ -35,18 +35,16 @@ The <cos> <function> <return|returns> a number between -1 and 1.
 Description:
 Use the <cos> <function> to find the cosine of an angle.
 
-The <cos> <function> repeats every 2*pi <radian|radians>: cos(x) = cos(x
-
-+ 2 * pi), for any value of x.
+The <cos> <function> repeats every `2 * pi`  <radian|radians>: 
+`cos(x) = cos(x + 2 * pi)`, for any value of `x`.
 
 
 The <cos> <function> requires its input to be in <radian|radians>. To
-provide an angle in <degree|degrees>, use the following <custom
-function>: 
+provide an angle in <degree|degrees>, use the following 
+<custom function>: 
 
     function cosInDegrees angleInDegrees
-    return cos(angleInDegrees * pi / 180)
-
+    	return cos(angleInDegrees * pi / 180)
     end cosInDegrees
 
 

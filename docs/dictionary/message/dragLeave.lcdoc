@@ -22,8 +22,8 @@ on dragLeave -- remove any outline around the drop no-longer-target
 end dragLeave
 
 Description:
-Handle the <dragLeave> <message> to update a <control> when the <mouse
-pointer> moves outside it during drag and drop.
+Handle the <dragLeave> <message> to update a <control> when the 
+<mouse pointer> moves outside it during drag and drop.
 
 The <dragLeave> <message> is sent only when a <drag and drop> operation
 is in progress.

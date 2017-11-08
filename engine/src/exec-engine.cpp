@@ -2038,3 +2038,32 @@ void MCEngineEvalIsNotStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, boo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCEngineEvalCommandName(MCExecContext& ctxt, MCStringRef& r_result)
+{
+    if (MCcommandname != nullptr)
+        r_result = MCValueRetain(MCcommandname);
+    else
+        r_result = MCValueRetain(kMCEmptyString);
+}
+
+void MCEngineEvalCommandArguments(MCExecContext& ctxt, MCArrayRef& r_result)
+{
+    r_result = MCValueRetain(MCcommandarguments);
+}
+
+void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index, MCStringRef& r_result)
+{
+    if (t_index == 0)
+    {
+        ctxt . LegacyThrow(EE_COMMANDARGUMENTS_BADPARAM);
+        return;
+    }
+    
+    MCStringRef t_result = nullptr;
+    // If the index > argument count then we return empty
+    if (!MCArrayFetchValueAtIndex(MCcommandarguments, t_index, (MCValueRef&)t_result))
+        t_result = kMCEmptyString;
+
+    r_result = MCValueRetain(t_result);
+}

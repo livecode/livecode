@@ -35,9 +35,8 @@ stack <script>, effectively prevents an <image> from being deleted by
 the user:
 
     on deleteImage
-    beep
-    send "undo" to this card in 5 milliseconds
-
+        beep
+        send "undo" to this card in 5 milliseconds
     end deleteImage
 
 
