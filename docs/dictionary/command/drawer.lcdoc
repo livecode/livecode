@@ -59,9 +59,9 @@ different locations on that side:
     drawer "Colors" at left of this stack aligned to bottom
 
 
->*Cross-platform note:*  On <Mac OS>, <Unix>, and <Windows|Windows
-> systems>, <drawer(glossary)|drawers> are not supported, so the
-> <drawer> <command> opens the <stack> as a <palette> instead. The
+>*Cross-platform note:*  On <Mac OS>, <Unix>, and 
+> <Windows|Windows systems>, <drawer(glossary)|drawers> are not supported, 
+> so the <drawer> <command> opens the <stack> as a <palette> instead. The
 > <palette> uses the current <rectangle> of the <stack> and does not
 > resize or move it.
 

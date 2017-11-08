@@ -28,8 +28,8 @@ set to false.
 
 Description:
 Use the <editBackground> <property> to edit the first <group> on the
-<current card>, or to find out whether the <stack> is in <group-editing
-mode>. 
+<current card>, or to find out whether the <stack> is in 
+<group-editing mode>. 
 
 If the <editBackground> <property> is set to true, any newly created
 <object|objects> become part of the <group> being edited. If the

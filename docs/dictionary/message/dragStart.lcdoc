@@ -29,8 +29,8 @@ it and then drags the mouse pointer at least <dragDelta> pixels from its
 original position.
 
 Use this handler to initiate a drag-drop operation if required.  An
-operation can be initiated by setting a data-type of the <dragData
-property>. 
+operation can be initiated by setting a data-type of the 
+<dragData> property. 
 
 LiveCode automatically handles the mechanics of dragging and dropping
 text between and within unlocked fields. To support this type of drag
@@ -49,8 +49,8 @@ a <pass> <control structure>:
 
 References: click (command), pass (control structure),
 control structure (glossary), handler (glossary), message (glossary),
-dragEnter (message), dragData (property), dragData property (property),
-dragImageOffset (property), dragAction (property), dragDelta (property)
+dragEnter (message), dragData (property), dragImageOffset (property), 
+dragAction (property), dragDelta (property)
 
 Tags: ui
 
