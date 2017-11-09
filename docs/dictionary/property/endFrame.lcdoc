@@ -5,8 +5,8 @@ Type: property
 Syntax: endFrame
 
 Summary:
-The <endFrame> <property> is not implemented and is <reserved
-word|reserved>.
+The <endFrame> <property> is not implemented and is 
+<reserved word|reserved>.
 
 Introduced: 1.0
 
