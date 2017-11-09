@@ -25,7 +25,7 @@ Value:
 The <executionContexts> is similar to a call stack, it consists of a
 list of contexts, one per line, with the most recent context at the end.
 Each context is a string of the form:
-&lt;object-long-id&gt;,&lt;handler-name&gt;,&lt;line-number&gt; 
+&lt;object-long-id&gt;,&lt;handler-name&gt;,&lt;line-number&gt;,&lt;behavior-object-long-id&gt;
 
 Description:
 Use the <executionContexts> property to obtain information about the
@@ -38,7 +38,8 @@ A common use of the <executionContexts> is to obtain the name of the
 object and handler that called the current handler, this information is
 available as: line -2 of the executionContexts.
 
+Note that if the function call occurred in a behavior script, then the line number refers to the behavior script, not the target script.
+
 The <executionContexts> property is read-only and cannot be set.
 
 References: errorDialog (message)
-
