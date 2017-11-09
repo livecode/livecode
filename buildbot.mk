@@ -121,7 +121,7 @@ dist-docs-guide:
 		--stage guide --warn-as-error
 
 ifeq ($(BUILD_EDITION),commercial)
-dist-server: dist-server-indy dist-server-business
+dist-server: dist-server-communityplus dist-server-indy dist-server-business
 endif
 
 dist-server: dist-server-community
@@ -129,6 +129,10 @@ dist-server: dist-server-community
 dist-server-community:
 	$(buildtool_command) --platform mac --platform win --platform linux \
 	    --stage server --edition community --warn-as-error
+
+dist-server-communityplus:
+	$(buildtool_command) --platform mac --platform win --platform linux \
+	    --stage server --edition communityplus --warn-as-error
 
 dist-server-indy:
 	$(buildtool_command) --platform mac --platform win --platform linux \
