@@ -249,10 +249,14 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
          add 1 to tNumberCopied
          if char -1 of tResource is "/" then
             -- create the folder, stat the source
-            create folder (pTarget & "/" & char 1 to -2 of tResource)
-            if the result is not empty then
-               put "cannot create subfolder ", the result , tResource into tResult
-               exit repeat
+            local tSubFolder
+            put pTarget & "/" & char 1 to -2 of tResource into tSubFolder
+            if there is not a folder tSubFolder then
+               create folder tSubFolder
+               if the result is not empty then
+                  put "cannot create subfolder ", the result , tResource into tResult
+                  exit repeat
+               end if
             end if
             if the platform is "macos" then -- stat it and set some flags
                local tUser, tGroup
@@ -679,6 +683,32 @@ function revSBTargetToPlatform pTarget
       return pTarget
    end if
 end revSBTargetToPlatform
+
+function revSBTargetToPlatformID pTarget
+   switch pTarget
+      case "Windows"
+         return "x86-win32"
+      case "MacOSX x86-32"
+         return "x86-mac"
+      case "MacOSX x86-64"
+         return "x86_64-mac"
+      case "MacOSX Universal"
+         return "universal-mac"
+      case "Linux"
+         return "x86-linux"
+      case "Linux x64"
+         return "x86_64-linux"
+         -- Raspberry pi - fix when supported
+      case "Linux armv6-hf"
+         return "armv6hf-linux"
+      case "iOS"
+         return "universal-ios"
+      case "Android"
+         return "armv7-android"
+      case "Emscripten"
+         return "js-emscripten"
+   end switch
+end revSBTargetToPlatformID
 
 -- item 1 of the architectures should be the default architecture
 constant kWindowsArchitectures = "x86-32"
@@ -2338,8 +2368,20 @@ command revSBUpdateForDependencies pPlatform, @xSettings
       end repeat
       
       revSBUpdateExtensionCodeInclusions tExtension, pPlatform, xSettings
+      revSBUpdatePerExtensionSettings tExtension, pPlatform, xSettings
    end repeat
 end revSBUpdateForDependencies
+
+-- Merge any settings under cRevStandaloneSettings[<ext id>]
+command revSBUpdatePerExtensionSettings pExtension, pPlatform, @xSettings
+   repeat for each key tKey in xSettings[pExtension]
+      if xSettings[tKey] is not empty then
+         put return & xSettings[pExtension][tKey] after xSettings[tKey]
+      else
+         put xSettings[pExtension][tKey] into xSettings[tKey]
+      end if
+   end repeat
+end revSBUpdatePerExtensionSettings
 
 command revSBUpdateExtensionCodeInclusions pExtension, pPlatform, @xSettings
    local tExtCodeFolder, tCodeFolders
@@ -2357,10 +2399,21 @@ private command __UpdateSettingsFromCodeFolder pPath, pCodeFolderName, pPlatform
    put files(tFolderPath) into tFiles
    switch pCodeFolderName
       case "jvm-android"
+         local tAndroidJarFiles, tAndroidAarFiles
+         put tFiles into tAndroidJarFiles
+         filter tAndroidJarFiles with "*.jar"
+         put tFiles into tAndroidAarFiles
+         filter tAndroidAarFiles with "*.aar"
          if pPlatform is "android" then
-            repeat for each line tLine in tFiles
+            repeat for each line tLine in tAndroidJarFiles
                appendToStringList tFolderPath & slash & tLine, xSettings["jarFiles"]
             end repeat
+            repeat for each line tLine in tAndroidAarFiles
+               appendToStringList tFolderPath & slash & tLine, xSettings["aarFiles"]
+            end repeat
+            if there is a file (tFolderPath & slash & "AndroidManifest.xml") then
+               appendToStringList tFolderPath & slash & "AndroidManifest.xml", xSettings["androidManifests"]
+            end if
          end if
          break
       case "jvm"
