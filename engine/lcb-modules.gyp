@@ -43,7 +43,7 @@
 								{
 									'AdditionalOptions':
 									[
-										'/WHOLEARCHIVE:<(PRODUCT_DIR)/lib/engine_lcb_modules.lib',
+										'/WHOLEARCHIVE:<(PRODUCT_DIR)\lib\engine_lcb_modules.lib',
 									],
 								},
 							},

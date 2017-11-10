@@ -40,16 +40,10 @@ path. It gets to an object with a behavior script:
 
 1. The engine looks at the behavior script of the target object - If a
    <before> mouseDown handler is present, it executes it.
-
-
 2. The engine next looks at the object script - If an on mouseDown
    handler is present, it executes it.
-
-
 3. The engine now looks at the behavior script - If an after mouseDown
    handler is present, it executes it.
-
-
 4. The engine finally looks at the object script - If a pass mouseDown
    or no mouseDown handler is present, it moves on to the parent object.
 

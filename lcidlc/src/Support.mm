@@ -2744,7 +2744,7 @@ void LCExceptionRaise(const char *p_format, ...)
 	va_end(args);
 	
 	free(s_error);
-	s_error = (char *)malloc(length);
+	s_error = (char *)malloc(length+1);
 	if (s_error == nil)
 		return;
 	
@@ -2864,7 +2864,7 @@ static bool default__cstring(const char *arg, char*& r_value)
 {
 	char *t_arg_copy;
 	t_arg_copy = strdup(arg);
-	if (r_value != nil)
+	if (t_arg_copy != nil)
 	{
 		r_value = t_arg_copy;
 		return true;

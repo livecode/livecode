@@ -1240,6 +1240,9 @@ function revDocsParseElements pExtractedA, pBlocksA, pFilename
       if tParsedA[tItem] is empty then
          put pBlocksA[tItem] into tParsedA[tItem]
       end if
+      if tParsedA["display name"] is empty then
+         put tParsedA["name"] into tParsedA["display name"]
+      end if
    end repeat
    
    if tParsedA["display name"] is empty then
@@ -1284,16 +1287,10 @@ function revDocsParseDocFileToLibraryArray pFile, pLibraryName, pAuthor
 end revDocsParseDocFileToLibraryArray
 
 function revDocsParseDocTextToLibraryArray pFile, pText, pLibraryName, pAuthor
-   local tLibraryA
-   put revDocsParseDocText(pText, pFile) into tLibraryA
-   if pLibraryName is not empty then
-      put pLibraryName into tLibraryA["display name"]
-      put revDocsModifyForUrl(pLibraryName) into tLIbraryA["name"]
-   end if
-   if pAuthor is not empty then
-      put pAuthor into tLibraryA["author"]
-   end if
-   return tLibraryA
+  local tOverridesA
+   put pLibraryName into tOverridesA["display name"]
+   put pAuthor into tOverridesA["author"]
+   return revDocsParseDocText(pText, pFile, "", tOverridesA)
 end revDocsParseDocTextToLibraryArray
 
 function revDocsParseDocFile pFile
@@ -1354,7 +1351,7 @@ end revDocsGroupElements
 constant kInheritedElements = "author,version,associations,tags,requires,uses"
 -- Elements that should be in the library's actual docs entry
 constant kLibraryEntryElements = "name,display name,summary,description,type,example,references,edition"
-function revDocsParseDocText pText, pFilename, pDefaults
+function revDocsParseDocText pText, pFilename, pDefaults, pOverrides
    local tElementsA
    put revDocsExtractElements(pText) into tElementsA
    
@@ -1376,6 +1373,10 @@ function revDocsParseDocText pText, pFilename, pDefaults
             exit repeat
          case "Title"       
          case "Library"
+            put tElementsA[tStartNum]["content"] into tParsedA["library"]
+            add 1 to tStartNum
+            break
+         case "Summary"
          case "Description"
          case "Author"
          case "Type"
@@ -1458,36 +1459,46 @@ function revDocsParseDocText pText, pFilename, pDefaults
       end if
    end repeat
    
-   // Add a library entry
-   local tLibraryElementsA
-   local tLibCount
-   put 1 into tLibCount
-   add 1 to tEntryCount
-   
-   -- Use kLibraryEntryElements to determine what library-level docs actually
-   -- appear in the library entry in the dictionary. Everything else is 
-   -- essentially metadata
-   repeat for each key tKey in tParsedA
-      if tParsedA[tKey] is not empty then
-         put tKey into tLibraryElementsA[tLibCount]["name"]            
-         put tParsedA[tKey] into tLibraryElementsA[tLibCount]["content"]
-         add 1 to tLibCount
-      end if
-   end repeat
-   
-   local tLibraryA
-   put revDocsParseElements(tLibraryElementsA, empty, pFilename) into tLibraryA
-   
-   repeat for each key tLibElementKey in tLibraryA
-      if tLibElementKey is among the items of kLibraryEntryElements then
-         put tLibraryA[tLibElementKey] into tLibraryA["doc"][0][tLibElementKey]
-      end if
-   end repeat 
+   // Add a library entry, if there was one
+   local tHasLibraryEntry, tLibraryA
+   put tParsedA["library"] is not empty into tHasLibraryEntry
+   if tHasLibraryEntry then
+      local tLibraryElementsA
+      local tLibCount
+      put 1 into tLibCount
+      add 1 to tEntryCount
+      
+      -- Use kLibraryEntryElements to determine what library-level docs actually
+      -- appear in the library entry in the dictionary. Everything else is 
+      -- essentially metadata
+      repeat for each key tKey in tParsedA
+         if tParsedA[tKey] is not empty then
+            put tKey into tLibraryElementsA[tLibCount]["name"]            
+            put tParsedA[tKey] into tLibraryElementsA[tLibCount]["content"]
+            add 1 to tLibCount
+         end if
+      end repeat
+      
+      put revDocsParseElements(tLibraryElementsA, empty, pFilename) into tLibraryA
+   end if
    
    repeat for each key tKey in tEntriesA
       put revDocsParseElements(tEntriesA[tKey]["elements"], tEntriesA[tKey], pFilename) into tLibraryA["doc"][tKey]
    end repeat
    
+   if tHasLibraryEntry then  
+      repeat for each key tLibElementKey in tLibraryA
+         if tLibElementKey is among the items of kLibraryEntryElements then
+            put tLibraryA[tLibElementKey] into tLibraryA["doc"][0][tLibElementKey]
+         end if
+      end repeat 
+      
+      // Use overrides if specified
+      repeat for each key tKey in pOverrides
+         put pOverrides[tKey] into tLibraryA["doc"][0][tKey]
+         put pOverrides[tKey] into tLibraryA[tKey]
+      end repeat
+   end if
    return tLibraryA
 end revDocsParseDocText
 
@@ -1947,13 +1958,14 @@ private function __tabs pNum
    return tOutput
 end __tabs
 
-function revDocsFormatLibraryDocArrayAsJSON pLibraryName, pDocA
-   local tJSON, tCount
-   repeat for each element tDoc in pDocA
+function revDocsFormatLibraryDocArrayAsJSON pLibraryA
+   local tJSON, tCount, tDocA
+   put pLibraryA["doc"] into tDocA
+   repeat for each element tDoc in tDocA
       local tId
       add 1 to tCount
-      put pLibraryName & "-" & tCount into tId
-      put revDocsFormatLibraryDataAsJSON(tId, tDoc, pLibraryName) & comma after tJSON
+      put pLibraryA["name"] & "-" & tCount into tId
+      put revDocsFormatLibraryDataAsJSON(tId, tDoc, pLibraryA) & comma after tJSON
    end repeat
    delete the last char of tJSON
    return tJSON
@@ -2268,95 +2280,97 @@ end __revDocsFormatCustomArrayAsJSON
 Format the library array data as a JSON array as needed by the docs viewer
 */
 
-function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA, pAPIName
+function revDocsFormatLibraryDataAsJSON pID, pDocDataA, pLibraryDataA
    local tJSON
    put "{" & return into tJSON
    
-   if pLibraryDataA["display name"] is empty then
-      put pLibraryDataA["name"] into pLibraryDataA["display name"]
-   else if pLibraryDataA["name"] is empty then
-      put pLibraryDataA["display name"] into pLibraryDataA["name"]
+   if pDocDataA["display name"] is empty then
+      put pDocDataA["name"] into pDocDataA["display name"]
+   else if pDocDataA["name"] is empty then
+      put pDocDataA["display name"] into pDocDataA["name"]
    end if
    
-   if pLibraryDataA["display name"] is empty and \
-         pLibraryDataA["name"] is empty then
+   if pDocDataA["display name"] is empty and \
+         pDocDataA["name"] is empty then
       logError "No doc name found for" && pID
    end if
+   
    # The 'name' should be urlencoded
-   put revDocsModifyForURL(pLibraryDataA["name"]) into pLibraryDataA["name"]
+   put revDocsModifyForURL(pDocDataA["name"]) into pDocDataA["name"]
    
    # ID
    put outputElement("id", pID, 3) after tJSON
    
    # Name
-   put outputArrayElement("name", pLibraryDataA, 3) after tJSON
+   put outputArrayElement("name", pDocDataA, 3) after tJSON
    
    # Display Name
-   put outputArrayElement("display name", pLibraryDataA, 3) after tJSON
+   put outputArrayElement("display name", pDocDataA, 3) after tJSON
    
-   put outputElement("library", pAPIName, 3) after tJSON
+   # Library Name
+   put outputElement("library", pLibraryDataA["name"], 3) after tJSON
    
    # Type
-   put outputArrayElement("type", pLibraryDataA, 3, true) after tJSON
+   put outputArrayElement("type", pDocDataA, 3, true) after tJSON
    
    # Syntax
-   put __revDocsFormatCustomArrayAsJSON("syntax", pLibraryDataA) after tJSON
+   put __revDocsFormatCustomArrayAsJSON("syntax", pDocDataA) after tJSON
    
    # Display syntax
-   if pLibraryDataA["syntax"] is not empty then
-      put line 1 of pLibraryDataA["syntax"][1] into pLibraryDataA["display syntax"][1]
+   if pDocDataA["syntax"] is not empty then
+      put line 1 of pDocDataA["syntax"][1] into pDocDataA["display syntax"][1]
    else
-      put pLibraryDataA["display name"] into pLibraryDataA["display syntax"][1]
+      put pDocDataA["display name"] into pDocDataA["display syntax"][1]
    end if
-   put __revDocsFormatCustomArrayAsJSON("display syntax", pLibraryDataA) after tJSON
+   put __revDocsFormatCustomArrayAsJSON("display syntax", pDocDataA) after tJSON
    
    # Synonyms
-   put revDocsItemListToJSONArray(pLibraryDataA, "synonyms") after tJSON
+   put revDocsItemListToJSONArray(pDocDataA, "synonyms") after tJSON
    
    # Associations
-   put revDocsItemListToJSONArray(pLibraryDataA, "associations") after tJSON
+   put revDocsItemListToJSONArray(pDocDataA, "associations") after tJSON
    
    # Summary
-   put outputElementIfExists("summary", pLibraryDataA, 3) after tJSON
+   put outputElementIfExists("summary", pDocDataA, 3) after tJSON
    
    # Edition
-   put outputElementIfExists("edition", pLibraryDataA, 3) after tJSON
+   put outputElementIfExists("edition", pDocDataA, 3) after tJSON
    
    # Introduced
-   put outputElementIfExists("introduced", pLibraryDataA, 3) after tJSON
+   put outputElementIfExists("introduced", pDocDataA, 3) after tJSON
    
    # Deprecated
-   put outputElementIfExists("deprecated", pLibraryDataA, 3) after tJSON
+   put outputElementIfExists("deprecated", pDocDataA, 3) after tJSON
    
    # OS
-   put revDocsItemListToJSONArray(pLibraryDataA, "OS") after tJSON
+   put revDocsItemListToJSONArray(pDocDataA, "OS") after tJSON
    
    # Platforms
-   put revDocsItemListToJSONArray(pLibraryDataA, "platforms") after tJSON
+   put revDocsItemListToJSONArray(pDocDataA, "platforms") after tJSON
    
    # Security
-   put revDocsItemListToJSONArray(pLibraryDataA, "security") after tJSON
+   put revDocsItemListToJSONArray(pDocDataA, "security") after tJSON
    
    # Parameters
-   put __revDocsFormatCustomArrayAsJSON("params", pLibraryDataA) after tJSON
+   put __revDocsFormatCustomArrayAsJSON("params", pDocDataA) after tJSON
    
    # Example
-   put __revDocsFormatCustomArrayAsJSON("example", pLibraryDataA) after tJSON
+   put __revDocsFormatCustomArrayAsJSON("example", pDocDataA) after tJSON
    
    # Value
-   put __revDocsFormatCustomArrayAsJSON("value", pLibraryDataA) after tJSON
+   put __revDocsFormatCustomArrayAsJSON("value", pDocDataA) after tJSON
    
    # Description
-   put outputElementIfExists("description", pLibraryDataA, 3) after tJSON
+   put outputElementIfExists("description", pDocDataA, 3) after tJSON
    
    # References
-   put __revDocsFormatReferencesArrayAsJSON(pLibraryDataA["references"]) after tJSON
+   put __revDocsFormatReferencesArrayAsJSON(pDocDataA["references"]) after tJSON
    
    # Tags
-   put revDocsItemListToJSONArray(pLibraryDataA, "tags") after tJSON
+   put revDocsItemListToJSONArray(pDocDataA, "tags") after tJSON
    
    # Changes
-   put outputElementIfExists("changes", pLibraryDataA, 3) after tJSON
+   put outputElementIfExists("changes", pDocDataA, 3) after tJSON
    
    delete char -2 to -1 of tJSON
    put return & tab & tab & "}" after tJSON
@@ -2721,3 +2735,8 @@ function revDocsFormatGuideDataAsJSON pGuideDataA
    put tab & escape("data") & ":" & escape(pGuideDataA["data"], true)  after tGuideData
    return tGuideData
 end revDocsFormatGuideDataAsJSON
+
+
+on pushNotificationRegistrationError pErrorMessage
+   
+end pushNotificationRegistrationError

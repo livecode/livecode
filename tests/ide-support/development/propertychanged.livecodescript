@@ -60,12 +60,18 @@ private command _TestPropertyChanged pObjType, pWhere
          break
    end switch
    
-   wait for 0 with messages
-   TestAssert "put" && pWhere && pObjType && \ 
-         "triggers propertyChanged", tObj is sTarget
+   local tParams
+   put tObj into tParams[1]
+   TestRepeat "put" && pWhere && pObjType && \ 
+         "triggers propertyChanged", IsTargetCorrect, \
+         the long id of me, 10, tParams
    
-   revIDEUnsubscribe "idePropertyChanged", tObj
+   revIDEUnsubscribe "idePropertyChanged", "", tObj
 end _TestPropertyChanged
+
+command IsTargetCorrect pObj
+   return pObj is sTarget
+end IsTargetCorrect
 
 on TestPutPropertyChanged
 	repeat for each item tWhere in "into,after"
