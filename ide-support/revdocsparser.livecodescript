@@ -1965,7 +1965,11 @@ function revDocsFormatLibraryDocArrayAsJSON pLibraryA
       local tId
       add 1 to tCount
       put pLibraryA["name"] & "-" & tCount into tId
-      put revDocsFormatLibraryDataAsJSON(tId, tDoc, pLibraryA) & comma after tJSON
+      local tDocJson
+      put revDocsFormatLibraryDataAsJSON(tId, tDoc, pLibraryA) into tDocJson 
+      if tDocJson is not empty then
+         put tDocJson & comma after tJSON
+      end if
    end repeat
    delete the last char of tJSON
    return tJSON
@@ -2293,6 +2297,7 @@ function revDocsFormatLibraryDataAsJSON pID, pDocDataA, pLibraryDataA
    if pDocDataA["display name"] is empty and \
          pDocDataA["name"] is empty then
       logError "No doc name found for" && pID
+      return empty
    end if
    
    # The 'name' should be urlencoded
