@@ -10,7 +10,7 @@ on TestSetup
    if not TestIsInStandalone() then
       local tLibURl
       put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
-      send "revLoadLibrary" to stack tLibUrl
+      send "extensionInitialize" to stack tLibUrl
    end if
    
    create field

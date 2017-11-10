@@ -17,6 +17,9 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on revLoadLibrary
+   if the target is not me then
+      pass revLoadLibrary
+   end if
    insert the script of me into back
 end revLoadLibrary
 

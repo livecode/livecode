@@ -128,7 +128,7 @@ extensions_compile: $(LCM_DIR) $(LCS_EXTENSION_SOURCES)
 	@set -e; \
 	echo "$(LCS_EXTENSION_SOURCES)" $(_PRINT_RULE); \
 	cp -r "$(MODULE_DIR)/." "$(LCM_DIR)"; \
-	"${top_srcdir}/util/build-extensions.sh" "$(LCM_DIR)/packaged_extensions" "$(LCM_DIR)" "$(LC_COMPILE)"  "false" "$(LCS_EXTENSION_SOURCES)"
+	"${top_srcdir}/util/build-extensions.sh" "$(LCS_SERVER_ENGINE)" "${top_srcdir}/util/package_extension.livecodescript" "${top_srcdir}/util/extract-docs.livecodescript" "${top_srcdir}/ide-support/revdocsparser.livecodescript" "$(LCM_DIR)/packaged_extensions" "false" "$(LC_COMPILE)" "$(LCM_DIR)" "$(LCS_EXTENSION_SOURCES)"
 
 lcm_compile: $(LCM_MODULES) extensions_compile
 

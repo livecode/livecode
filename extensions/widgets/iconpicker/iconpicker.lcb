@@ -15,10 +15,6 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
-A widget to display icons for picking
-*/
-
 widget com.livecode.widget.iconpicker
 
 use com.livecode.canvas

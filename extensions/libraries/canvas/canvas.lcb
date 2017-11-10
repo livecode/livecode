@@ -18,19 +18,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 -- Library modules add public handlers to the bottom of the message path.
 --
 /**
-This simple library gives access to the LiveCode Builder canvas syntax from LiveCode Script by wrapping in a few simple handlers.
+Gives access to the LiveCode Builder canvas syntax from LiveCode Script 
 
-	Example usage:
+Description:
+This library wraps a few simple handlers of the LiveCode Builder Canvas
+module to provide access to the syntax for creating and manipulating
+canvas objects.
 
-	  canvasCreate 100, 100
-	  canvasSetColor 1, 0, 0, 1
-	  canvasFillCircle 50, 50, 25
-	  canvasApplyToImage "image 1"
-      canvasDestroy
+For example:
+
+    canvasCreate 100, 100
+	canvasSetColor 1, 0, 0, 1
+	canvasFillCircle 50, 50, 25
+	canvasApplyToImage "image 1"
+    canvasDestroy
   
-   This creates a canvas of size 100x100, fills a circle of radius 25 at
-   the centre, then copies the contents of the canvas to 'image 1' (which
-   must already exist).
+This creates a canvas of size 100x100, fills a circle of radius 25 at
+the centre, then copies the contents of the canvas to 'image 1' (which
+must already exist).
    
 Tags: Canvas Library
 */
