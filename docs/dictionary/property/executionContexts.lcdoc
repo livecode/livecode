@@ -31,8 +31,9 @@ on errorDialog
   answer "An error occurred at line" && tLineNumber && "in handler" && tHandler && "of" && tObject
 end errorDialog
 
-local tKey = "object", tContextA
 function parsedContext pContextLine
+  local tKey = "object", tContextA
+  
   repeat for each item tItem in pContextLine
     if tContextA[tKey] is not empty then
         put comma after tContextA[tKey]
