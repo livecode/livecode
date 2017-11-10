@@ -33,7 +33,7 @@ end errorDialog
 
 function parsedContext pContextLine
   local tKey = "object", tContextA
-  
+
   repeat for each item tItem in pContextLine
     if tContextA[tKey] is not empty then
         put comma after tContextA[tKey]
@@ -64,7 +64,7 @@ Each context is a string of the following 3 or 4 comma-delimited items:
 1. object long id
 2. handler name
 3. line number
-4. behavior object long id [if the context is from a behavior script]
+4. behavior object long id if the context is from a behavior script
 
 Description:
 Use the <executionContexts> property to obtain information about the
