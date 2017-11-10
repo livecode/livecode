@@ -2,17 +2,21 @@ Name: export with palette
 
 Type: command
 
-Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} as {gif | png} with standard palette
+Syntax: export <image> [with metadata <metadata>] to {file <filePath> | 
+<container>} as {gif | png} with standard palette
 
-Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} as {gif | png} with optimized palette
+Syntax: export <image> [with metadata <metadata>] to {file <filePath> | 
+<container>} as {gif | png} with optimized palette
 
-Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} as {gif | png} with <colorCount> color [optimized] palette
+Syntax: export <image> [with metadata <metadata>] to {file <filePath> | 
+<container>} as {gif | png} with <colorCount> color [optimized] palette
 
-Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} as {gif | png} with palette <colorList>
+Syntax: export <image> [with metadata <metadata>] to {file <filePath> | 
+<container>} as {gif | png} with palette <colorList>
 
 Summary:
-<export|Exports> the <selected> <image> as a <PBM>, <JPEG>, <GIF>, BMP
-or <PNG (glossary)> <file>.
+<export|Exports> the <selected> <image> as a <PBM>, <JPEG>, <GIF>, <BMP>
+or <PNG> <file>.
 
 Introduced: 4.5
 
@@ -87,8 +91,7 @@ dontDither property.
 > palette makes no sense.
 
 References: export (command), export snapshot (command), import (command),
-JPEG (glossary), GIF (glossary), export (glossary), PBM (glossary),
-container (glossary), PNG (glossary), command (glossary), file (keyword),
-image (keyword), paint (keyword), as (keyword), JPEGQuality (property),
-selected (property)
-
+BMP (glossary), command (glossary), container (glossary), export (glossary), 
+GIF (glossary), JPEG (glossary), PBM (glossary), PNG (glossary), 
+as (keyword), file (keyword), image (keyword), paint (keyword), URL (keyword),
+defaultFolder (property), JPEGQuality (property), selected (property)
