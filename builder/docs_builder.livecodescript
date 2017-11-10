@@ -2001,7 +2001,7 @@ private command docsBuilderGetDictionaryFolders pEdition, @xFolders
    
    repeat for each item tEdition in "indy,business"
       if editionCompare(pEdition, tEdition) >= 0 then
-         addFolderToListIfExists RepoEditionDocsFolder(), true, xFolders
+         addFolderToListIfExists RepoEditionDocsFolder(tEdition), true, xFolders
       end if
    end repeat
 end docsBuilderGetDictionaryFolders
