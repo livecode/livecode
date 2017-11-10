@@ -16,16 +16,44 @@ Platforms: desktop, server, mobile
 
 Example:
 on errorDialog
+  local tContextArray
   local tHandler, tLineNumber, tObject
-  if item 4 of line -2 of the executionContexts is empty then
-    put item 1 of line -2 of the executionContexts into tObject
+
+  put parsedContext(line -2 of the executionContexts) into tContextArray
+
+  if tContextArray["behavior"] is empty then
+    put tContextArray["object"] into tObject
   else
-    put item 4 of line -2 of the executionContexts into tObject
+    put tContextArray["behavior"] into tObject
   end if
-  put item 2 of line -2 of the executionContexts into tHandler
-  put item 3 of line -2 of the executionContexts into tLineNumber
+  put tContextArray["handler"] into tHandler
+  put tContextArray["line"] into tLineNumber
   answer "An error occurred at line" && tLineNumber && "in handler" && tHandler && "of" && tObject
 end errorDialog
+
+local tKey = "object", tContextA
+function parsedContext pContextLine
+  repeat for each item tItem in pContextLine
+    if tContextA[tKey] is not empty then
+        put comma after tContextA[tKey]
+    end if
+    put tItem after tContextA[tKey]
+
+    switch tKey
+       case "object"
+           if exists(tContextA[tKey]) then
+                put "handler" into tKey
+           end if
+           break
+       case "handler"
+           put "line" into tKey
+           break
+        case "line"
+           put "behavior" into tKey
+           break
+    end switch
+  end repeat
+end parsedContext
 
 Value:
 The <executionContexts> is similar to a call stack, it consists of a
