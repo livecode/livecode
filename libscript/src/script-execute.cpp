@@ -268,7 +268,7 @@ public:
         /* There are different variants of objc_msgSend we need to use
          * depending on architecture and return type:
          *   struct return
-         *     arm64: _stret if struct size > 64 bytes
+         *     arm64: only has objc_msgSend
          *     arm: _stret if struct size > 4 bytes
          *     x86-64: _stret if struct size > 16 bytes
          *     i386: _stret if struct size >= 8 bytes or
@@ -295,11 +295,7 @@ public:
         void (*t_objc_msgSend)() = nullptr;
         size_t t_rsize = t_cif->rtype->size;
 #if defined(__ARM64__)
-        if (t_cif->rtype->type == FFI_TYPE_STRUCT &&
-            t_rsize > 64)
-            t_objc_msgSend = (void(*)())objc_msgSend_stret;
-        else
-            t_objc_msgSend = (void(*)())objc_msgSend;
+        t_objc_msgSend = (void(*)())objc_msgSend;
 #elif defined(__ARM__)
         if (t_cif->rtype->type == FFI_TYPE_STRUCT &&
             t_rsize > 4)
