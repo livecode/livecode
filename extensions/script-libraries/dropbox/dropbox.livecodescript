@@ -4976,7 +4976,7 @@ private function __get_current_account_POST
    /*
    No parameters.
    */
-   return ""
+   return "null"
 end __get_current_account_POST
 
 private function __get_space_usage_POST
