@@ -199,6 +199,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSource tPackager, "prebuilt", builderRepoFolder() & slash & "prebuilt"
    packageCompilerConfigureSource tPackager, "repo", builderRepoFolder()
    packageCompilerConfigureSource tPackager, "ext", builderUnpackFolder(pEdition)
+
    if editionIsInPrivateRepo(tEditionType) then
       packageCompilerConfigureSource tPackager, "private", builderPrivateRepoFolder()
    end if
