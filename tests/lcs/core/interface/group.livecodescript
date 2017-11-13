@@ -49,3 +49,17 @@ on TestGroupByScript
 
    delete stack "Test"
 end TestGroupByScript
+
+on TestGroupUndo_Bug20642
+   create stack "Test"
+   set the defaultStack to "Test"
+
+   create button "A"
+   select button "A"
+   group
+   select the last group
+   delete
+   undo
+
+   TestAssert "Undo grouped button deletion does not crash", the short name of button "A" is "A"
+end TestGroupUndo_Bug20642
