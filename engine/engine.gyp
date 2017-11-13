@@ -20,90 +20,7 @@
 	},
 	
 	'targets':
-	[
-		{
-			'target_name': 'extract_docs',
-			'type': 'none',
-			
-			'all_dependent_settings':
-			{
-				'variables':
-				{
-					'dist_aux_files':
-					[
-						# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
-						'<(PRODUCT_DIR)/extracted_docs/',
-					],
-				},
-			},
-			
-			'variables':
-			{
-				'conditions':
-				[
-					[
-						'host_os == "linux"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community',
-						},
-					],
-					[
-						'host_os == "mac"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community',
-						},
-					],
-					[
-						'host_os == "win"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community.exe',
-						},
-					],
-				],
-			},
-			
-			'dependencies':
-			[
-				# Requires a working LiveCode engine
-				'server',
-			],
-			
-			'sources':
-			[
-				'../extensions/script-libraries/oauth2/oauth2.livecodescript',
-				'../extensions/script-libraries/getopt/getopt.livecodescript',
-				'../extensions/script-libraries/mime/mime.livecodescript',
-				'../extensions/script-libraries/dropbox/dropbox.livecodescript',
-				'../extensions/script-libraries/diff/diff.livecodescript',
-				'../extensions/script-libraries/messageauthentication/messageauthentication.livecodescript',
-				'../extensions/script-libraries/httpd/httpd.livecodescript',
-				'../extensions/script-libraries/qr/qr.livecodescript',
-			],
-            
-            'rules':
-			[
-				{
-					'rule_name': 'extract-docs-from-stack',
-					'extension': 'livecodescript',
-					'message': 'Extracting docs from script-only stack <(RULE_INPUT_NAME)',
-					
-					'outputs':
-					[
-						'<(PRODUCT_DIR)/extracted_docs/com.livecode.script-library.<(RULE_INPUT_ROOT).lcdoc',
-					],
-					
-					'action':
-					[
-						'<(engine)',
-						'../util/extract-docs.livecodescript',
-						'../ide-support/revdocsparser.livecodescript',
-						'<(PRODUCT_DIR)/extracted_docs',
-						'<(RULE_INPUT_PATH)',
-					],
-				},
-			],
-		},
-		
+	[	
 		{
 			'target_name': 'descriptify_environment_stack',
 			'type': 'none',
@@ -705,7 +622,6 @@
 				'kernel-development.gyp:kernel-development',
 				'encode_environment_stack',
 				'engine-common.gyp:security-community',
-				'extract_docs',
 			],
 			
 			'sources':

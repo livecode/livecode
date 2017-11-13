@@ -28,134 +28,164 @@ is copyright © Ivan Boyko, and is licensed under the terms of the
 
 Name: browserDocumentLoadBegin
 Type: message
-Syntax: browserDocumentLoadBegin pUrl
+Syntax: browserDocumentLoadBegin <pUrl>
 
 Summary: Sent when a document begins loading in the browser.
 
 Parameters:
-pUrl(string): The URL of the loading document.
+pUrl (string): The URL of the loading document.
 
 Description:
-The <browserDocumentLoadBegin> message is sent to the widget's script object when a new document begins to load in the browser. This will happen whenever the browser navigates to a new page. The <pUrl> parameter contains the URL of the loading document.
+The <browserDocumentLoadBegin> message is sent to the widget's script 
+object when a new document begins to load in the browser. This will 
+happen whenever the browser navigates to a new page. The <pUrl> 
+parameter contains the URL of the loading document.
 
 Name: browserDocumentLoadComplete
 Type: message
-Syntax: browserDocumentLoadComplete pUrl
+Syntax: browserDocumentLoadComplete <pUrl>
 
 Summary: Sent when a document has completed loading in the browser.
 
 Parameters:
-pUrl(string): The URL of the loaded document.
+pUrl (string): The URL of the loaded document.
 
 Description:
-The <browserDocumentLoadComplete> message is sent to the widget's script object when a new document has completed loading in the browser. The <pUrl> parameter contains the URL of the loaded document.
+The <browserDocumentLoadComplete> message is sent to the widget's script 
+object when a new document has completed loading in the browser. The 
+<pUrl> parameter contains the URL of the loaded document.
 
 
 Name: browserDocumentLoadFailed
 Type: message
-Syntax: browserDocumentLoadFailed pUrl, pError
+Syntax: browserDocumentLoadFailed <pUrl>, <pError>
 
 Summary: Sent when a document has failed to load in the browser.
 
 Parameters:
-pUrl(string): The URL of the document.
-pError(string): An error message describing the reason for the failure.
+pUrl (string): The URL of the document.
+pError (string): An error message describing the reason for the failure.
 
 Description:
-The <browserDocumentLoadFailed> message is sent to the widget's script object when a new document has failed to load in the browser. The <pUrl> parameter contains the URL of the document, and the <pError> parameter gives the reason for the failure.
+The <browserDocumentLoadFailed> message is sent to the widget's script 
+object when a new document has failed to load in the browser. The <pUrl> 
+parameter contains the URL of the document, and the <pError> parameter 
+gives the reason for the failure.
 
 
 Name: browserFrameDocumentLoadBegin
 Type: message
-Syntax: browserFrameDocumentLoadBegin pUrl
+Syntax: browserFrameDocumentLoadBegin <pUrl>
 
 Summary: Sent when a document begins loading in a frame of the browser.
 
 Parameters:
-pUrl(string): The URL of the loading document.
+pUrl (string): The URL of the loading document.
 
 Description:
-The <browserFrameDocumentLoadBegin> message is sent to the widget's script object when a new document begins to load in a frame of the browser. This will happen whenever the browser navigates to a new page with multiple frames. The <pUrl> parameter contains the URL of the loading document.
+The <browserFrameDocumentLoadBegin> message is sent to the widget's 
+script object when a new document begins to load in a frame of the 
+browser. This will happen whenever the browser navigates to a new page 
+with multiple frames. The <pUrl> parameter contains the URL of the 
+loading document.
 
 
 Name: browserFrameDocumentLoadComplete
 Type: message
-Syntax: browserFrameDocumentLoadComplete pUrl
+Syntax: browserFrameDocumentLoadComplete <pUrl>
 
 Summary: Sent when a document has completed loading in a frame of the browser.
 
 Parameters:
-pUrl(string): The URL of the loaded document.
+pUrl (string): The URL of the loaded document.
 
 Description:
-The <browserFrameDocumentLoadComplete> message is sent to the widget's script object when a new document has completed loading in a frame of the browser. The <pUrl> parameter contains the URL of the loaded document.
+The <browserFrameDocumentLoadComplete> message is sent to the widget's 
+script object when a new document has completed loading in a frame of 
+the browser. The <pUrl> parameter contains the URL of the loaded 
+document.
 
 
 Name: browserFrameDocumentLoadFailed
 Type: message
-Syntax: browserFrameDocumentLoadFailed pUrl, pError
+Syntax: browserFrameDocumentLoadFailed <pUrl>, <pError>
 
-Summary: Sent when a document has failed to load in a frame of the browser.
+Summary: Sent when a document has failed to load in a frame of the 
+browser.
 
 Parameters:
-pUrl(string): The URL of the document.
-pError(string): An error message describing the reason for the failure.
+pUrl (string): The URL of the document.
+pError (string): An error message describing the reason for the failure.
 
 Description:
-The <browserFrameDocumentLoadFailed> message is sent to the widget's script object when a new document has failed to load in a frame of the browser. The <pUrl> parameter contains the URL of the document, and the <pError> parameter gives the reason for the failure.
+The <browserFrameDocumentLoadFailed> message is sent to the widget's 
+script object when a new document has failed to load in a frame of the 
+browser. The <pUrl> parameter contains the URL of the document, and the 
+<pError> parameter gives the reason for the failure.
 
 
 Name: browserNavigateBegin
 Type: message
-Syntax: browserNavigateBegin pUrl
+Syntax: browserNavigateBegin <pUrl>
 
 Summary: Sent when the browser begins navigation to a new page.
 
 Parameters:
-pUrl(string): The URL of the new page.
+pUrl (string): The URL of the new page.
 
 Description:
-The <browserNavigateBegin> message is sent to the widget's script object when the browser begins navigation to a new page. This can be triggered by launching a URL in the browser, or clicking a link within the browser. The <pUrl> parameter contains the URL of the new page.
+The <browserNavigateBegin> message is sent to the widget's script object 
+when the browser begins navigation to a new page. This can be triggered 
+by launching a URL in the browser, or clicking a link within the 
+browser. The <pUrl> parameter contains the URL of the new page.
 
 
 Name: browserNavigateComplete
 Type: message
-Syntax: browserNavigateComplete pUrl
+Syntax: browserNavigateComplete <pUrl>
 
 Summary: Sent when the browser successfully navigates to a new page.
 
 Parameters:
-pUrl(string): The URL of the new page.
+pUrl (string): The URL of the new page.
 
 Description:
-The <browserNavigateComplete> message is sent to the widget's script object when the browser successfully navigates to a new page. The <pUrl> parameter contains the URL of the new page.
+The <browserNavigateComplete> message is sent to the widget's script 
+object when the browser successfully navigates to a new page. The <pUrl> 
+parameter contains the URL of the new page.
 
 
 Name: browserNavigateFailed
 Type: message
-Syntax: browserNavigateFailed pUrl, pError
+Syntax: browserNavigateFailed <pUrl>, <pError>
 
 Summary: Sent when the browser has failed to navigate to a new page.
 
 Parameters:
-pUrl(string): The URL of the document.
-pError(string): An error message describing the reason for the failure.
+pUrl (string): The URL of the document.
+pError (string): An error message describing the reason for the failure.
 
 Description:
-The <browserNavigateFailed> message is sent to the widget's script object when the browser has failed to navigate to a new page. The <pUrl> parameter contains the URL of the new page, and the <pError> parameter gives the reason for the failure.
+The <browserNavigateFailed> message is sent to the widget's script 
+object when the browser has failed to navigate to a new page. The <pUrl> 
+parameter contains the URL of the new page, and the <pError> parameter 
+gives the reason for the failure.
 
 
 Name: browserUnhandledLoadRequest
 Type: message
-Syntax: browserUnhandledLoadRequest pUrl
+Syntax: browserUnhandledLoadRequest <pUrl>
 
 Summary: Sent when the browser is unable to handle a load request.
 
 Parameters:
-pUrl(string): The URL of the request.
+pUrl (string): The URL of the request.
 
 Description:
-The <browserUnhandledLoadRequest> message is sent to the widget's script object when the browser is unable to load a URL, typically due to an unrecognised URL scheme. The <pUrl> parameter contains the URL of the unhandled request.
+The <browserUnhandledLoadRequest> message is sent to the widget's script 
+object when the browser is unable to load a URL, typically due to an 
+unrecognised URL scheme. The <pUrl> parameter contains the URL of the 
+unhandled request.
 */
 
 -- declaring extension as widget, followed by identifier
@@ -190,7 +220,7 @@ get the URL of <widget>
 Summary: The URL displayed by the browser.
 
 Parameters:
-pUrl(string): A string specifying a URL.
+pUrl (string): A string specifying a URL.
 
 Example:
 	-- Navigate to livecode.com by setting the url property,
@@ -202,11 +232,18 @@ Example:
 Description:
 The <URL> is the URL of the content be displayed in the browser.
 
->*Note:* The <URL> must be a standards-compliant URL.  In particular, `file:` URLs must be of the form `file://<absolute path>`, and the path should be URL-encoded.  See [RFC 1738, section 2.2](https://tools.ietf.org/html/rfc1738#section-2.2).
+>*Note:* The <URL> must be a standards-compliant URL.  In particular, 
+> `file:` URLs must be of the form `file://<absolute path>`, and the 
+> path should be URL-encoded.  
+> See [RFC 1738, section 2.2](https://tools.ietf.org/html/rfc1738#section-2.2).
 
->*Note:* The <URL> reflects the currently displaying page in the browser, and will change when navigating to another page. Setting the htmlText will result in the <URL> being empty.
+>*Note:* The <URL> reflects the currently displaying page in the 
+> browser, and will change when navigating to another page. Setting the 
+> htmlText will result in the <URL> being empty.
 
->*Note:* Setting the <URL> to empty will clear the currently loaded page, resulting in a blank page being displayed and the <URL> and <htmlText> of the widget being empty.
+>*Note:* Setting the <URL> to empty will clear the currently loaded 
+> page, resulting in a blank page being displayed and the <URL> and 
+> <htmlText> of the widget being empty.
 
 References: htmlText (property)
 */
@@ -224,7 +261,8 @@ get the htmlText of <widget>
 Summary: The HTML text of the content displayed by the browser.
 
 Parameters:
-pHtmlText(string): A string containing HTML data to be displayed by the browser.
+pHtmlText (string): A string containing HTML data to be displayed by the 
+browser.
 
 Example:
 
@@ -236,7 +274,8 @@ Example:
 	set the htmlText of widget "myBrowser" to tHTML
 
 Description:
-The <htmlText> is the HTML representation of the content displayed in the browser.
+The <htmlText> is the HTML representation of the content displayed in 
+the browser.
 
 *Note:* When the <htmlText> has been set, the <URL> property will be
 empty. When the <URL> property is not empty, the <htmlText> will
@@ -259,7 +298,13 @@ get the vScrollbar of <widget>
 
 Summary: Controls the visibility of the browser's vertical scrollbar.
 
-Value (boolean): `true` if the vertical scrollbar should be enabled and displayed; `false` otherwise.
+Value (boolean): 
+`true` if the vertical scrollbar should be enabled and displayed; 
+`false` otherwise.
+
+Description:
+Use the <vScrollbar> property to control the visibility of the browser's
+vertical scrollbar
 
 References: hScrollbar (property)
 */
@@ -278,7 +323,13 @@ get the hScrollbar of <widget>
 
 Summary: Controls the visibility of the browser's horizontal scrollbar.
 
-Value (boolean): `true` if the horizontal scrollbar should be enabled and displayed; `false` otherwise.
+Value (boolean): 
+`true` if the horizontal scrollbar should be enabled and displayed; 
+`false` otherwise.
+
+Description:
+Use the <hScrollbar> property to control the visibility of the browser's
+horizontal scrollbar
 
 References: vScrollbar (property)
 */
