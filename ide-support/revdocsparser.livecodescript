@@ -1287,9 +1287,13 @@ function revDocsParseDocFileToLibraryArray pFile, pLibraryName, pAuthor
 end revDocsParseDocFileToLibraryArray
 
 function revDocsParseDocTextToLibraryArray pFile, pText, pLibraryName, pAuthor
-  local tOverridesA
-   put pLibraryName into tOverridesA["display name"]
-   put pAuthor into tOverridesA["author"]
+   local tOverridesA
+   if pLibraryName is not empty then
+      put pLibraryName into tOverridesA["display name"]
+   end if
+   if pAuthor is not empty then
+      put pAuthor into tOverridesA["author"]
+   end if 
    return revDocsParseDocText(pText, pFile, "", tOverridesA)
 end revDocsParseDocTextToLibraryArray
 
@@ -1370,12 +1374,12 @@ function revDocsParseDocText pText, pFilename, pDefaults, pOverrides
       switch it
          case "Name"
          case empty
-            exit repeat
-         case "Title"       
+            exit repeat     
          case "Library"
             put tElementsA[tStartNum]["content"] into tParsedA["library"]
             add 1 to tStartNum
             break
+         case "Title"  
          case "Summary"
          case "Description"
          case "Author"
