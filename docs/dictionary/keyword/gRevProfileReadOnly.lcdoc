@@ -11,14 +11,12 @@ changes to the current <property profile|profile> when you switch
 
 Introduced: 2.0
 
-OS: mac, windows, linux
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop, server
+Platforms: desktop, server, mobile
 
 Example:
 global gRevProfileReadOnly
-
-Example:
 if gRevProfileReadOnly is false then switchToLargeFonts
 
 Description:
@@ -43,7 +41,7 @@ in the Preferences dialog box:
 
 1. Choose LiveCode → Preferences from the menubar.
 2. Choose "Property Profiles" from the menu at the top.
-3. Click "Don't save changes in profile".
+3. Click "Don't save settings when switching profiles".
 
 
 References: answer (command), ask (command), object (glossary),
@@ -51,4 +49,3 @@ property (glossary), variable (glossary), property profile (glossary),
 global (glossary), properties (property)
 
 Tags: windowing
-
