@@ -21,9 +21,9 @@ Example:
 put firstItems(the driverNames) into menu "Choose a driver:"
 
 Returns:
-The <driverNames> <function> <return|returns> a list of <device
-driver|drivers>, one per <line>. Each <line> consists of three <items>,
-separated by commas:
+The <driverNames> <function> <return|returns> a list of 
+<device driver|drivers>, one per <line>. Each <line> consists of 
+three <items>, separated by commas:
 
 1. The name of the driver.
 2. The name and location of the TTY device file for the driver.
@@ -41,8 +41,8 @@ driver|drivers> can be used with the <open driver>, <read from driver>,
 <write to driver>, and <close driver> <command|commands>.
 
 Usually, you use the callout file name--the third item in the line for
-the driver you want--with the open driver, <read from driver>, <write to
-driver>, and <close driver> <command|commands>.
+the driver you want--with the open driver, <read from driver>, 
+<write to driver>, and <close driver> <command|commands>.
 
 References: open driver (command), write to driver (command),
 read from driver (command), close driver (command),

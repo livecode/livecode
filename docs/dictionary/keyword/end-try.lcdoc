@@ -17,8 +17,8 @@ Example:
 end try
 
 Description:
-Use the <end try> <keyword> to mark the end of a <try> <control
-structure>. 
+Use the <end try> <keyword> to mark the end of a <try> 
+<control structure>. 
 
 The <end try> <keyword> occurs on a line by itself.
 
