@@ -6,7 +6,7 @@ on doPackage
    local tArgs
    put the commandArguments into tArgs
 
-   if tArgs[11] is true and not (tArgs[8] ends with ".lcb") then
+   if tArgs[10] is true and not (tArgs[8] ends with ".lcb") then
        protectStack the commandName, tArgs[2], tArgs[7], tArgs[8], tArgs[3], tArgs[4]
    end if
    
