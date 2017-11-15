@@ -16,11 +16,11 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-constant kAPITypes = "command,function,property,message,constant,keyword,control structure,operator,statement,expression"
-constant kGlossaryTypes = "library,glossary,object,widget"
+constant kAPITypes = "command,function,property,message,constant,keyword,control structure,operator,statement,expression,handler"
+constant kGlossaryTypes = "library,glossary,object,widget,module"
 constant kOS = "iOS,Android,Mac,Windows,Linux,RPi,html5"
 constant kPlatform = "desktop,mobile,server,filemaker"
-      
+
 on TestSetup
    -- Only run these tests on desktop platforms
    if the platform is not among the items of "MacOS,Windows,Linux" then
@@ -40,12 +40,19 @@ on TestDocsValidateDictionary
    put TestGetEngineRepositoryPath() & "/docs" into tDocsPath
    put revDocsParseDictionaryToLibraryArray(tDocsPath) into tDocsArray
    
-   __TestDocsLibraryArray tDocsArray
+   __TestDocsLibraryArray tDocsPath, tDocsArray
 end TestDocsValidateDictionary
 
 on TestDocsValidateExtractedLibraries
    local tExtractedDocsFolder
    put TestGetExtractedDocsFolder() into tExtractedDocsFolder
+   
+    -- There are not necessarily any docs in the extracted docs folder now.
+    -- Re-uncomment if and when there are.
+   //TestAssert "extracted docs folder exists", there is a folder tExtractedDocsFolder
+   if there is not a folder tExtractedDocsFolder then
+      exit TestDocsValidateExtractedLibraries
+   end if
    
    local tFiles
    put files(tExtractedDocsFolder) into tFiles
@@ -61,17 +68,75 @@ on TestDocsValidateExtractedLibraries
       
       put revDocsParseDocFileToLibraryArray(tDocsPath, item -2 of tFile, "LiveCode") into tDocsArray
       
-      TestAssert "type of" && tFile && "is library", tDocsArray["type"] is "library"
-      TestAssert "name of" && tFile && "is not empty", tDocsArray["name"] is not empty
-      TestAssert "display name of" && tFile && "is not empty", tDocsArray["display name"] is not empty
-      TestAssert "author name of" && tFile && "is not empty", tDocsArray["author"] is not empty
-      TestAssert "description of" && tFile && "is not empty", tDocsArray["description"] is not empty
+      TestAssert tDocsPath & ":" && "type of" && tFile && "is library", tDocsArray["type"] is "library"
+      TestAssert tDocsPath & ":" && "name of" && tFile && "is not empty", tDocsArray["name"] is not empty
+      TestAssert tDocsPath & ":" && "display name of" && tFile && "is not empty", tDocsArray["display name"] is not empty
+      TestAssert tDocsPath & ":" && "author name of" && tFile && "is not empty", tDocsArray["author"] is not empty
+      TestAssert tDocsPath & ":" && "description of" && tFile && "is not empty", tDocsArray["description"] is not empty
       
-      __TestDocsLibraryArray tDocsArray["doc"]
+      __TestDocsLibraryArray tDocsPath, tDocsArray["doc"]
    end repeat
 end TestDocsValidateExtractedLibraries
 
-command __TestDocsLibraryArray pLibrary
+on TestDocsValidateExtensionDocs
+   local tExtensionsFolder
+   put TestGetPackagedExtensionsFolder() into tExtensionsFolder
+   
+   TestAssert "packaged extensions folder exists", there is a folder tExtensionsFolder
+   
+   local tExtensions
+   put folders(tExtensionsFolder) into tExtensions
+   filter tExtensions without ".*"
+   
+   repeat for each line tExtension in tExtensions
+      local tFiles
+      put files(tExtensionsFolder & slash & tExtension) into tFiles
+      
+      filter tFiles with "*.lcdoc"
+      
+      TestAssert tExtension && "has docs file", tFiles is not empty
+      
+      set the itemDelimiter to "."
+      
+      local tFile
+      repeat for each line tFile in tFiles
+         local tDocsPath, tDocsArray
+         put tExtensionsFolder & slash & tExtension & slash & tFile into tDocsPath
+         
+         if url("file:" & tDocsPath) is empty then
+            TestAssertBroken tDocsPath & ": non-empty docs", false
+            next repeat
+         end if
+         
+         put revDocsParseDocFileToLibraryArray(tDocsPath, tExtension, "LiveCode") into tDocsArray
+         
+         TestAssert tDocsPath & ":" && "type of" && tFile && "is not empty", tDocsArray["type"] is not empty
+         TestAssert tDocsPath & ":" && "display name of" && tFile && "is not empty", tDocsArray["display name"] is not empty
+         TestAssert tDocsPath & ":" && "author name of" && tFile && "is not empty", tDocsArray["author"] is not empty
+         
+         -- At the moment, allow docs to have either summary or description
+         local tExtensionNoSummary, tExtensionNoDescription
+         put tDocsArray["summary"] is empty into tExtensionNoSummary
+         put tDocsArray["description"] is empty into tExtensionNoDescription
+         
+         if tExtensionNoSummary and tExtensionNoDescription then
+            TestAssert tDocsPath & ":" && "summary of" && tFile && "is not empty", false
+            TestAssert tDocsPath & ":" && "description of" && tFile && "is not empty", false
+         else if tExtensionNoSummary then
+            TestAssertBroken tDocsPath & ":" && "summary of" && tFile && "is not empty", false
+         else if tExtensionNoDescription then
+            TestAssertBroken tDocsPath & ":" && "description of" && tFile && "is not empty", false
+         else
+            TestAssert tDocsPath & ":" && "summary of" && tFile && "is not empty", true
+            TestAssert tDocsPath & ":" && "description of" && tFile && "is not empty", true
+         end if
+         
+         __TestDocsLibraryArray tDocsPath, tDocsArray["doc"], tDocsArray["type"] is not "module"
+      end repeat
+   end repeat
+end TestDocsValidateExtensionDocs
+
+command __TestDocsLibraryArray pDocsPath, pLibrary, pTestSyntax
    local tElement
    
    local tReferences
@@ -84,15 +149,15 @@ command __TestDocsLibraryArray pLibrary
       local tIndex
       
       -- test name required
-      TestAssert "name of" && tElement["display name"] && tElement["type"] && "not empty", tElement["display name"] is not empty
+      TestAssert pDocsPath & ":" && "name of" && tElement["display name"] && tElement["type"] && "not empty", tElement["display name"] is not empty
       
       -- test type is valid
-      TestAssert "type of" && tElement["display name"] &&  tElement["type"] && "is valid", tElement["type"] is among the items of (kAPITypes,kGlossaryTypes)
+      TestAssert pDocsPath & ":" && "type of" && tElement["display name"] &&  tElement["type"] && "is valid", tElement["type"] is among the items of (kAPITypes,kGlossaryTypes)
       
       -- test syntaxes exist for API entries
       local tSyntaxParams
       if tElement["type"] is among the items of kAPITypes then
-         TestAssert "API entry for" && tElement["display name"] && tElement["type"] && "has syntax", tElement["syntax"] is an array
+         TestAssert pDocsPath & ":" && "API entry for" && tElement["display name"] && tElement["type"] && "has syntax", tElement["syntax"] is an array
          
          -- parse out params to validate against documented params
          put 1 into tIndex
@@ -111,7 +176,7 @@ command __TestDocsLibraryArray pLibrary
          end repeat
          
          -- test summary required
-         TestAssert "summary of" && tElement["display name"] && tElement["type"] && "not empty", tElement["summary"] is not empty
+         TestAssert pDocsPath & ":" && "summary of" && tElement["display name"] && tElement["type"] && "not empty", tElement["summary"] is not empty
          
       end if
       
@@ -119,17 +184,18 @@ command __TestDocsLibraryArray pLibrary
       
       -- test OS
       repeat for each element tValue in tElement["OS"]
-         TestAssert "OS entry" && tValue && "for" && tElement["display name"] && tElement["type"] && "is valid", tValue is among the items of kOS
+         TestAssert pDocsPath & ":" && "OS entry" && tValue && "for" && tElement["display name"] && tElement["type"] && "is valid", tValue is among the items of kOS
       end repeat
       
       -- test platform
       repeat for each element tValue in tElement["Platform"]
-         TestAssert "Platform entry" && tValue && "for" && tElement["display name"] && tElement["type"] && "is valid", tValue is among the items of kPlatform
+         TestAssert pDocsPath & ":" && "Platform entry" && tValue && "for" && tElement["display name"] && tElement["type"] && "is valid", tValue is among the items of kPlatform
       end repeat
       
       -- test examples
       put 1 into tIndex
-      if tElement["display name"] is not among the words of "sessionName errorObject" then
+      if pTestSyntax is not false and \
+         tElement["display name"] is not among the words of "sessionName errorObject" then
          repeat for each element tValue in tElement["Example"]
             
             if word 1 of tValue is among the words of "end case" then
@@ -208,7 +274,7 @@ command __TestDocsLibraryArray pLibrary
                end if
             end if
             
-            TestAssert "example" && tIndex && "of" && tElement["display name"] && tElement["Type"] && "compiles", tResult is empty
+            TestAssert pDocsPath & ":" && "example" && tIndex && "of" && tElement["display name"] && tElement["Type"] && "compiles", tResult is empty
             
             if tResult is not empty then
                TestDiagnostic "Example:" & return & tTempValue  & return & "Script Parsing Error:" & return & \
@@ -241,10 +307,10 @@ command __TestDocsLibraryArray pLibrary
             SplitParam tParam
             
             -- params in syntax section may be documented in glossary
-            TestAssert "param" && tParam[1] && "in param section" && tElement["display name"] && tElement["Type"], tDocumentedParams[tParam[1]] -- or tParamInGlossary
+            TestAssert pDocsPath & ":" && "param" && tParam[1] && "in param section" && tElement["display name"] && tElement["Type"], tDocumentedParams[tParam[1]] -- or tParamInGlossary
             
             -- params in param section should be in the syntax section otherwise what are they documenting
-            TestAssert "param" && tParam[1] && "in syntax section" && tElement["display name"] && tElement["Type"], tSyntaxParams[tParam[1]]
+            TestAssert pDocsPath & ":" && "param" && tParam[1] && "in syntax section" && tElement["display name"] && tElement["Type"], tSyntaxParams[tParam[1]]
          end repeat
          
       end if
@@ -253,7 +319,7 @@ command __TestDocsLibraryArray pLibrary
       delete variable tSyntaxParams
       
       -- test description required
-      TestAssert "description of" && tElement["display name"] && tElement["type"] && "not empty", tElement["Description"] is not empty
+      TestAssert pDocsPath & ":" && "description of" && tElement["display name"] && tElement["type"] && "not empty", tElement["Description"] is not empty
       
       -- !TODO parse all summaries and descriptions etc
       -- * test all links are listed in references
