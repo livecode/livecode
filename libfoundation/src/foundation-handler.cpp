@@ -64,7 +64,7 @@ struct MCHandlerInvokeTrampolineContext
     MCHandlerRef self;
     MCValueRef *p_arguments;
     uindex_t p_argument_count;
-    MCValueRef r_value;
+    MCValueRef& r_value;
     bool return_value;
 };
 
@@ -98,10 +98,7 @@ bool MCHandlerExternalInvoke(MCHandlerRef self, MCValueRef *p_arguments, uindex_
         return t_context.return_value;
     }
 #endif
-    
-    __MCAssertIsHandler(self);
-    MCAssert(p_arguments != nil || p_argument_count == 0);
-    return self -> callbacks -> invoke(MCHandlerGetContext(self), p_arguments, p_argument_count, r_value);
+    return MCHandlerInvoke(self, p_arguments, p_argument_count, r_value);
 }
 
 MC_DLLEXPORT_DEF
