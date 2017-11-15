@@ -240,7 +240,7 @@ void MCGroup::GetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringR
 {
     MCButton *bptr = gethilitedbutton(part);
     if (bptr != NULL)
-        bptr -> GetName(ctxt, r_name);
+        bptr -> GetShortName(ctxt, r_name);
     else
         r_name = MCValueRetain(kMCEmptyString);
 }

@@ -109,18 +109,25 @@ command serverBuilderRun pPlatform, pEdition
          end if
       end repeat
       
-      if pEdition is "Community" then
-         get tEngineFolder & slash & "server-community" & tExeExtension
-      else
-         get tEngineFolder & slash & "server-commercial" & tExeExtension
-      end if
-      if there is a file it then
+      local tServerPath, tServerZipPath
+      switch pEdition
+      case "Community"
+         put tEngineFolder & slash & "server-community" & tExeExtension into tServerPath
+         put "livecode-community-server" & tOutExeExtension into tServerZipPath
+         break
+      case "Indy"
+         put tEngineFolder & slash & "server-commercial" & tExeExtension into tServerPath
+         put "livecode-server" & tOutExeExtension into tServerZipPath
+         break
+      case "Business"
+         put tEngineFolder & slash & "server-professional" & tExeExtension into tServerPath
+         put "livecode-server" & tOutExeExtension into tServerZipPath
+         break
+      end switch
+      
+      if there is a file tServerPath then
          builderLog "message", "Adding livecode-server engine"
-         if pEdition is "Community" then
-            revZipAddItemWithFile tOutputFile, "livecode-community-server" & tOutExeExtension, it
-         else
-            revZipAddItemWithFile tOutputFile, "livecode-server" & tOutExeExtension, it
-         end if
+         revZipAddItemWithFile tOutputFile, tServerZipPath, tServerPath
          if the result is not empty then
             throw the result
          end if
@@ -183,9 +190,5 @@ function getZipFilenameStub pVersion, pPlatform, pEdition
    else if pPlatform is "linux-armv6hf" then
       put "Linux-armv6hf" into pPlatform
    end if
-   if pEdition is "Community" then
-      return "LiveCodeCommunityServer-" & pVersion & "-" & pPlatform & ".zip"
-   else
-      return "LiveCodeServer-" & pVersion & "-" & pPlatform & ".zip"
-   end if
+   return "LiveCode" & editionTitleCase(pEdition) & "Server-" & pVersion & "-" & pPlatform & ".zip"
 end getZipFilenameStub

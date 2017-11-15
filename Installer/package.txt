@@ -468,6 +468,8 @@ component Extensions
 		rfolder macosx:packaged_extensions/com.livecode.library.oauth2
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.qr
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.objectrepository
 
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place

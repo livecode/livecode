@@ -5,8 +5,8 @@ Type: command
 Syntax: edit [the] script of <object> [at line,column]
 
 Summary:
-Opens the <script> of an <object(glossary)> in the <development
-environment>. 
+Opens the <script> of an <object(glossary)> in the 
+<development environment>. 
 
 Introduced: 1.0
 
