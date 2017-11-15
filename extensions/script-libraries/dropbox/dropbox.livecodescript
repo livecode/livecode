@@ -28,7 +28,11 @@ on extensionInitialize
    
    if the environment contains "development" then
       set the _ideoverride of me to true
+      local tName
+      put the short name of me into tName
+      revSBAddDependencyForInclusion "extensions", tName, "scriptLibraries", "Internet"
    end if
+   
 end extensionInitialize
 
 on extensionFinalize
