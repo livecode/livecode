@@ -502,17 +502,22 @@ end pathToJar
 ////////////////////////////////////////////////////////////////////////////////
 
 private command configureJavaRootWindows
-   local tVersion, tIs64Bit
-   put true into tIs64Bit
-   put getRegistryValue("HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\Java Development Kit", "CurrentVersion", tIs64Bit) into tVersion
-   if tVersion is empty then
-      put false into tIs64Bit
-      put getRegistryValue("HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\Java Development Kit", "CurrentVersion", tIs64Bit) into tVersion
-   end if
-   
-   local tJavaHome
-   put getRegistryValue("HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\Java Development Kit\" & tVersion, "JavaHome", tIs64Bit) into tJavaHome
-   
+   local tKey, tJavaHome
+   repeat for each item tKey in "Java Development Kit,JDK"
+      local tVersion, tIs64Bit
+      put true into tIs64Bit
+      put getRegistryValue("HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\" & tKey, "CurrentVersion", tIs64Bit) into tVersion
+      if tVersion is empty then
+         put false into tIs64Bit
+         put getRegistryValue("HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\" & tKey, "CurrentVersion", tIs64Bit) into tVersion
+      end if
+      
+      if tVersion is empty then
+         next repeat
+      end if
+      
+      put getRegistryValue("HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\" & tKey & "\" & tVersion, "JavaHome", tIs64Bit) into tJavaHome
+   end repeat
    return tJavaHome
 end configureJavaRootWindows
 
