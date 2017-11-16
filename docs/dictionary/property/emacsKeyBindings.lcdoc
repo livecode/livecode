@@ -28,13 +28,12 @@ and prefer to use its standard keystrokes for text editing.
 Emacs is a text editor which is popular among Unix users. It uses
 keystrokes and key combinations different from the standard LiveCode
 keys. For example:
-
-        * Control-V moves the insertion point down a page
-        * Control-Y pastes the contents of the clipboard
-        * Control-A moves the insertion point to the beginning of the
-          line 
-        * Control-F moves the insertion point forward one character
-        * Delete backspaces over the previous character
+* Control-V moves the insertion point down a page
+* Control-Y pastes the contents of the clipboard
+* Control-A moves the insertion point to the beginning of the
+line 
+* Control-F moves the insertion point forward one character
+* Delete backspaces over the previous character
 
 
 (For a complete list of supported key bindings, see the Emacs Key

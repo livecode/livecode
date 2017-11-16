@@ -2210,7 +2210,7 @@ command docsBuilderGenerateDistributedAPI pEdition
    docsBuilderPopulateDatabase pEdition, tLibrariesA
    repeat for each element tLibA in tLibrariesA
       local tJSON, tFolder
-      put revDocsFormatLibraryDocArrayAsJSON(tLibA["name"], tLibA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON(tLibA) into tJSON
       put builderAPIFolder(pEdition, tLibA["api"]) into tFolder
       pathEnsure tFolder
       put textEncode(tJSON, "utf-8") into url ("binfile:" & tFolder \

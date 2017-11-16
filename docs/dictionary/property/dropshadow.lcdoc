@@ -33,71 +33,32 @@ The <dropShadow> is an array style property, each key of the array
 controls a different <dropShadow> parameter that will affect its final
 appearance. The easiest way to adjust these properties is by using the
 Graphic Effects card of the property inspector which has full control
-over each parameter. To control the effect by script use the following
-properties: 
-
-dropShadow["color"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The color of the shadow, in the format
-red,green,blue where each value is between 0 and 255.
-
-dropShadow["blendMode"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;How the shadow is blended with objects
-behind it. This is one of the following values:
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "normal" :
-the shadow is laid over the background.
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "multiply"
-: this results in a darkening effect
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-
-"colorDodge" : this results in a lightening effect
-
-dropShadow["opacity"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;How opaque the shadow is. The value is
+over each parameter. To control the effect by script use the 
+following properties: 
+* dropShadow["color"] - The color of the shadow, in the format 
+red, green, blue where each value is between 0 and 255.
+* dropShadow["blendMode"] - How the shadow is blended with objects behind it. 
+This is one of the following values:
+  * "normal": the shadow is laid over the background.
+  * "multiply": this results in a darkening effect
+  * "colorDodge" : this results in a lightening effect
+* dropShadow["opacity"] - How opaque the shadow is. The value is
 between 0 (fully transparent) and 255 (fully opaque).
-
-dropShadow["filter"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Which algorithm is used to render the
+* dropShadow["filter"] - Which algorithm is used to render the
 shadow. This is one of the following options:
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"gaussian" :
-highest quality (and slowest)
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"box3pass" :
-high quality.
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"box2pass" :
-medium quality
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"box1pass" :
-low quality (and fastest)
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;When using the "colorDodge" blend mode, it
-is recommended that you set the filter mode to "gaussian".
-
-dropShadow["size"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The size of the shadow, i.e. how large the
-shadow is. This is between 0 and 255.
-
-dropShadow["spread"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This controls where the effect begins to
+  * "gaussian": highest quality (and slowest)
+  * "box3pass": high quality.
+  * "box2pass": medium quality
+  * "box1pass": low quality (and fastest)
+<p style="margin-left: -2.75em">When using the "colorDodge" blend mode, 
+it is recommended that you set the filter mode to "gaussian".</p>
+* dropShadow["size"] - The size of the shadow, i.e. how large the shadow is. 
+This is between 0 and 255.
+* dropShadow["spread"] - This controls where the effect begins to
 blend. This is between 0 and 255.
-
-dropShadow["distance"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This controls how far the shadow is offset
+* dropShadow["distance"] - This controls how far the shadow is offset
 from the object. This is between 0 and 359.
-
-dropShadow["angle"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The controls the direction the shadow is
+* dropShadow["angle"] - The controls the direction the shadow is
 cast in. This is between 0 and 360.
 
 References: innerShadow (property), innerGlow (property),
