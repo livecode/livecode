@@ -26,7 +26,11 @@ on extensionInitialize
    
    if the environment contains "development" then
       set the _ideoverride of me to true
-      revSBAddDependencyForInclusion "scriptLibraries", "OAuth2", "externals", "mergJSON"
+      local tName
+      put the short name of me into tName
+      revSBAddDependencyForInclusion "extensions", tName, "scriptLibraries", "Internet"
+      revSBAddDependencyForInclusion "extensions", tName, "externals", "mergJSON"
+      revSBAddDependencyForInclusion "extensions", tName, "extensions", "com.livecode.widget.browser"
    end if
 end extensionInitialize
 
