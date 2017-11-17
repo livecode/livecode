@@ -111,8 +111,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    -- Manually remove built-in implementations from detected script library inclusions
    revSBRemoveInclusions pStack, "android", tConfirm, pSettings
    
-   -- Manually include the mobile version of the common library
-   revSBAddInclusion "Mobile", "scriptLibraries", pSettings
+   -- Manually include the common library
+   revSBAddInclusion "Common", "scriptLibraries", pSettings
    
    -- Include profile library if needed
    if pSettings["includeProfiles"] is not empty then 
