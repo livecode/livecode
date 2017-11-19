@@ -1743,27 +1743,15 @@ bool MCUnicodeMapToNativePair_MacRoman(uinteger_t x, uinteger_t y, char_t& r_cha
 
 bool MCUnicodeMapToNativePair_ISO8859_1(uinteger_t x, uinteger_t y, char_t& r_char)
 {
-    static const uinteger_t s_pairs[] =
-    {
-        /* A */ 0xC0410300, 0xC1410301, 0xC2410302, 0xC3410303, 0xC4410308, 0xC541030A,
-        /* C */ 0xC7430327,
-        /* E */ 0xC8450300, 0xC9450301, 0xCA450302, 0xCB450308,
-        /* I */ 0xCC490300, 0xCD490301, 0xCE490302, 0xCF490308,
-        /* N */ 0xD14E0303,
-        /* O */ 0xD24F0300, 0xD34F0301, 0xD44F0302, 0xD54F0303, 0xD64F0308,
-        /* U */ 0xD9550300, 0xDA550301, 0xDB550302, 0xDC550308,
-        /* Y */ 0xDD590301,
-
-        /* a */ 0xE0610300, 0xE1610301, 0xE2610302, 0xE3610303, 0xE4610308, 0xE561030A,
-        /* c */ 0xE7630327,
-        /* e */ 0xE8650300, 0xE9650301, 0xEA650302, 0xEB650308,
-        /* i */ 0xEC690300, 0xED690301, 0xEE690302, 0xEF690308,
-        /* n */ 0xF16E0303,
-        /* i */ 0xF26F0300, 0xF36F0301, 0xF46F0302, 0xF56F0303, 0xF66F0308,
-        /* u */ 0xF9750300, 0xFA750301, 0xFB750302, 0xFC750308,
-        /* y */ 0xFD790301, 0xFF790308,
-    };
-
+	static const uinteger_t s_pairs[] =
+	{
+		/* S */ 0xA653030C,
+		/* Y */ 0xBE590308,
+		/* Z */ 0x8E5A030C,
+		/* s */ 0xA873030C,
+		/* z */ 0xB87A030C
+	};
+	
 	uinteger_t z;
 	z = (x << 16) | y;
 	
