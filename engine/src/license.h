@@ -79,24 +79,24 @@ struct MCLicenseParameters
 extern MCLicenseParameters MClicenseparameters;
 extern Boolean MCenvironmentactive;
 
-static const struct { const char *tag; MCLicenseClass value; } s_class_map[] =
+static const struct { MCLicenseClass license_class; const char *class_string; const char *edition_string; } s_class_map[] =
 {
-    { "community", kMCLicenseClassCommunity },
-    { "communityplus", kMCLicenseClassCommunityPlus },
-    { "evaluation", kMCLicenseClassEvaluation },
-    { "commercial", kMCLicenseClassCommercial },
-    { "professional evaluation", kMCLicenseClassProfessionalEvaluation },
-    { "professional", kMCLicenseClassProfessional },
-    { "", kMCLicenseClassNone }
+    { kMCLicenseClassCommunity, "community", "community" },
+    { kMCLicenseClassCommunityPlus, "communityplus", "communityplus" },
+    { kMCLicenseClassEvaluation, "evaluation", "indy evaluation" },
+    { kMCLicenseClassCommercial, "commercial", "indy" },
+    { kMCLicenseClassProfessionalEvaluation, "professional evaluation", "business evaluation" },
+    { kMCLicenseClassProfessional, "professional", "business" },
+    { kMCLicenseClassNone, "", "" }
 };
 
 inline bool MCStringToLicenseClass(MCStringRef p_class, MCLicenseClass &r_class)
 {
     for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
     {
-        if (MCStringIsEqualToCString(p_class, s_class_map[t_index].tag, kMCCompareCaseless))
+        if (MCStringIsEqualToCString(p_class, s_class_map[t_index].class_string, kMCCompareCaseless))
         {
-            r_class = s_class_map[t_index].value;
+            r_class = s_class_map[t_index].license_class;
             return true;
         }
     }
@@ -117,9 +117,35 @@ inline bool MCStringFromLicenseClass(MCLicenseClass p_class, bool p_simplified, 
     
     for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
     {
-        if (s_class_map[t_index].value == p_class)
+        if (s_class_map[t_index].license_class == p_class)
         {
-            return MCStringCreateWithCString(s_class_map[t_index].tag, r_class);
+            return MCStringCreateWithCString(s_class_map[t_index].class_string, r_class);
+        }
+    }
+    
+    return false;
+}
+
+inline bool MCEditionStringFromLicenseClass(MCLicenseClass p_class, MCStringRef &r_edition)
+{
+    if (p_class == kMCLicenseClassEvaluation)
+    {
+        p_class = kMCLicenseClassCommercial;
+    }
+    else if (p_class == kMCLicenseClassProfessionalEvaluation)
+    {
+        p_class = kMCLicenseClassProfessional;
+    }
+    else if (p_class == kMCLicenseClassNone)
+    {
+		p_class = kMCLicenseClassCommunity;
+	}
+    
+    for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
+    {
+        if (s_class_map[t_index].license_class == p_class)
+        {
+            return MCStringCreateWithCString(s_class_map[t_index].edition_string, r_edition);
         }
     }
     
