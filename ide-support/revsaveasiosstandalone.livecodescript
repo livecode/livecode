@@ -1334,7 +1334,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end repeat
    
    ----------
-
+   
    if pPlist is empty then
       put url ("binfile:" & tTemplateFile) into pPlist
    end if
@@ -1343,7 +1343,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in pPlist
    replace "${BUNDLE_VERSION}" with tBundleVersion in pPlist
    replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & \ 	
-   		textEncode(tDisplayName, "utf-8") & "</string>" in pPlist
+         textEncode(tDisplayName, "utf-8") & "</string>" in pPlist
    		
    -- SN-2015-02-02: [[ Bug 14422 ]] We now have minimum version depending on the arch.
    replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in pPlist
@@ -1491,10 +1491,23 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       if tLocationAuthType is empty then
          put "always" into tLocationAuthType
       end if
-      if tLocationAuthType is "always" then
-         get "<key>NSLocationAlwaysUsageDescription</key><string>This application requires access to Location Services always</string>"
+      
+      // On iOS 11+ we need a new key NSLocationAlwaysAndWhenInUseUsageDescription AND the old NSLocationWhenInUseUsageDescription key, in case 
+      // we want the app to access Location Services when it is used. If we want to access Location Services always, we need the old NSLocationAlwaysUsageDescription 
+      // key too (i.e. 3 keys in total). Moreover, NSLocationAlwaysUsageDescription is required for backwards compatibility
+      if revIDEDeployIOSGetSDKVersions() contains "11" then
+         get "<key>NSLocationAlwaysAndWhenInUseUsageDescription</key><string>This application requires access to Location Services</string>" & CR \
+               & "<key>NSLocationWhenInUseUsageDescription</key><string>This application requires access to Location Services when in use</string>" 
+         
+         if tLocationAuthType is "always" then
+            put CR & "<key>NSLocationAlwaysUsageDescription</key><string>This application requires access to Location Services always</string>" after it
+         end if
       else
-         get "<key>NSLocationWhenInUseUsageDescription</key><string>This application requires access to Location Services when in use</string>"
+         if tLocationAuthType is "always" then
+            get "<key>NSLocationAlwaysUsageDescription</key><string>This application requires access to Location Services always</string>"
+         else
+            get "<key>NSLocationWhenInUseUsageDescription</key><string>This application requires access to Location Services when in use</string>"
+         end if
       end if
    else
       get empty
