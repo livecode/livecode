@@ -87,9 +87,9 @@ on startup
             -- This should autoload the file
             put the name of stack tFile into tStackName
             
-            -- The revLoadLibrary handler should insert the stack into
+            -- The extensionInitialize handler should insert the stack into
             -- the backscripts or frontscripts as necessary.
-            dispatch "revLoadLibrary" to stack tStackName
+            dispatch "extensionInitialize" to stack tStackName
             
          end repeat
          
