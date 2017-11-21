@@ -406,6 +406,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    put pVersion into tParams["version"]["ProductVersion"]
    put pVersion into tParams["version"]["FileVersion"]
    
+   # TODO: Add the initialisation library and init libs in same way as normal standalone building
    # AL-2015-03-14: Use deploy parameters to include libURL scriptified stack in installer standalone
    local tAuxStackfiles
    if there is a stack "revLibUrl" then
@@ -416,8 +417,8 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    put return & builderSystemFolder() & slash & "installer_utilities.livecodescript" after tAuxStackfiles
    put tAuxStackfiles into tParams["auxiliary_stackfiles"]
    
-   // revLibURL needs to initialise its custom props, and revLoadLibrary must therefore be called.
-   put merge("send [[quote]]revLoadLibrary[[quote]] to stack [[quote]]revLibUrl[[quote]]") into tParams["startup_script"]
+   // revLibURL needs to initialise its custom props, and extensionInitialize must therefore be called.
+   put merge("send [[quote]]extensionInitialize[[quote]] to stack [[quote]]revLibUrl[[quote]]") into tParams["startup_script"]
    put return & "insert script of stack" && quote & "InstallerUtilities" & quote && "into back" after tParams["startup_script"]
    
    switch pPlatform
