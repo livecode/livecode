@@ -54,3 +54,18 @@ on TestSurrogateRoundtrip
 
    delete stack "Test"
 end TestSurrogateRoundtrip
+
+// Regression test for bug 20633 - note the bug here was that a NUL block is
+// created which causes the 'char' reference to be wrong.
+on TestAnnotationsAndVTab
+   create stack "Test"
+   set the defaultStack to "Test"
+
+   create field "TestField"
+
+   set the htmlText of field "TestField" to format("<p><a href=\"#Anchor1\">Anchor1&#11;</a><a href=\"#Anchor2\">Anchor2&#11;</a></p>")
+   TestAssert "linkText on VTab does not elide with next linkText", the linkText of char 9 of field "TestField" is "#Anchor2"
+
+   set the htmlText of field "TestField" to format("<p><span metadata=\"#Anchor1\">Anchor1&#11;</span><span metadata=\"#Anchor2\">Anchor2&#11;</span></p>")
+   TestAssert "metadata on VTab does not elide with next metadata", the metadata of char 9 of field "TestField" is "#Anchor2"
+end TestAnnotationsAndVTab
