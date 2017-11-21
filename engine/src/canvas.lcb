@@ -36,8 +36,11 @@ public foreign type Transform binds to "MCCanvasTransformTypeInfo"
 // Color
 public foreign type Color binds to "MCCanvasColorTypeInfo"
 
-// Paint (supertype of pattern, gradient, solidpaint)
+// Paint (supertype of pattern, gradient, solidpaint, nopaint)
 public foreign type Paint binds to "MCCanvasPaintTypeInfo"
+
+// No Paint
+public foreign type NoPaint binds to "MCCanvasNoPaintTypeInfo"
 
 // Solid Paint
 public foreign type SolidPaint binds to "MCCanvasSolidPaintTypeInfo"
@@ -1100,6 +1103,30 @@ syntax TransformOperationMultiply is left binary operator with multiplication pr
 	<Left: Expression> "*" <Right: Expression>
 begin
 	MCCanvasTransformMultiply(Left, Right, output)
+end syntax
+
+////////////////////////////////////////////////////////////////////////////////
+// No Paint
+
+public foreign handler MCCanvasNoPaintMake(out rNone as NoPaint) returns nothing binds to "<builtin>"
+
+/**
+Summary:	Creates the non-existant paint.
+
+Returns:	The non-existant paint
+
+Example:
+	// Create a new green paint
+	variable tPaint
+	put no paint into tPaint
+
+Tags: Canvas
+*/
+
+syntax NoPaintMake is expression
+    "no" "paint"
+begin
+    MCCanvasNoPaintMake(output)
 end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3892,14 +3919,24 @@ end syntax
 
 // Properties
 
+public foreign handler MCCanvasGetTransform(in pCanvas as Canvas, out tTransform as Transform) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasSetTransform(in pTransform as Transform, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetPaint(in pCanvas as Canvas, out rPaint as Paint) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasSetPaint(in pPaint as Paint, in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasGetFillPaint(in pCanvas as Canvas, out rPaint as Paint) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasSetFillPaint(in pPaint as Paint, in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasGetStrokePaint(in pCanvas as Canvas, out rPaint as Paint) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasSetStrokePaint(in pPaint as Paint, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetFillRuleAsString(in pCanvas as Canvas, out rFillRule as String) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasSetFillRuleAsString(in pFillRule as String, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetAntialias(in pCanvas as Canvas, out rAntialias as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasSetAntialias(in pAntialias as CBool, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetOpacity(in pCanvas as Canvas, out rOpacity as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasSetOpacity(in pOpacity as CanvasFloat, in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasGetFillOpacity(in pCanvas as Canvas, out rOpacity as CanvasFloat) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasSetFillOpacity(in pOpacity as CanvasFloat, in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasGetStrokeOpacity(in pCanvas as Canvas, out rOpacity as CanvasFloat) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasSetStrokeOpacity(in pOpacity as CanvasFloat, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetBlendModeAsString(in pCanvas as Canvas, out rBlendMode as String) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasSetBlendModeAsString(in pBlendMode as String, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetStippled(in pCanvas as Canvas, out rStippled as CBool) returns nothing binds to "<builtin>"
@@ -3926,11 +3963,35 @@ public foreign handler MCCanvasGetClipBounds(in pCanvas as Canvas, out rBounds a
 //////////
 
 /**
+Summary:	The current transform of a canvas.
+
+mCanvas:		An expression which evaluates to a transform.
+
+Description:	The transform which has been applied since the last save.
+
+Example:
+	// Set canvas transform (since the last save) to the identity transform
+	set the transform of this canvas to the identity trasnsform
+
+Tags:	Canvas
+*/
+syntax CanvasPropertyTransform is prefix operator with property precedence
+	"the" "transform" "of" <mCanvas: Expression>
+begin
+	MCCanvasGetTransform(mCanvas, output)
+	MCCanvasSetTransform(input, mCanvas)
+end syntax
+
+//////////
+
+/**
 Summary:	The current paint of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
 
-Description:	The paint used for fill / stroke operations on <mCanvas>.
+Description:	The paint used for both fill and stroke operations on <mCanvas>.
+                Trying to get the paint when the fill and stroke paints are
+                different will result in a runtime error.
 
 Example:
 	// Set canvas to paint with solid blue
@@ -3943,6 +4004,88 @@ syntax CanvasPropertyPaint is prefix operator with property precedence
 begin
 	MCCanvasGetPaint(mCanvas, output)
 	MCCanvasSetPaint(input, mCanvas)
+end syntax
+
+/**
+Summary:	The current fill paint of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The paint used for fill operations on <mCanvas>.
+
+Example:
+	// Set canvas to paint with solid blue
+	set the fill paint of this canvas to solid paint with color [0,0,1]
+
+Tags:	Canvas
+*/
+syntax CanvasPropertyFillPaint is prefix operator with property precedence
+	"the" "fill" "paint" "of" <mCanvas: Expression>
+begin
+	MCCanvasGetFillPaint(mCanvas, output)
+	MCCanvasSetFillPaint(input, mCanvas)
+end syntax
+
+/**
+Summary:	The current stroke paint of a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+
+Description:	The paint used for stroke operations on <mCanvas>.
+
+Example:
+	// Set canvas to paint with solid blue
+	set the stroke paint of this canvas to solid paint with color [0,0,1]
+
+Tags:	Canvas
+*/
+syntax CanvasPropertyStrokePaint is prefix operator with property precedence
+	"the" "stroke" "paint" "of" <mCanvas: Expression>
+begin
+	MCCanvasGetStrokePaint(mCanvas, output)
+	MCCanvasSetStrokePaint(input, mCanvas)
+end syntax
+
+//////////
+
+/**
+Summary:	The current fill opacity of a canvas.
+
+mCanvas:		An expression which evaluates to a number in the range [0,1].
+
+Description:	The opacity to be applied to fill operations on <mCanvas>.
+
+Example:
+	// Set canvas to fill with 50% opacity
+	set the fill opacity of this canvas to 0.5
+
+Tags:	Canvas
+*/
+syntax CanvasPropertyFillOpacity is prefix operator with property precedence
+	"the" "fill" "opacity" "of" <mCanvas: Expression>
+begin
+	MCCanvasGetFillOpacity(mCanvas, output)
+	MCCanvasSetFillOpacity(input, mCanvas)
+end syntax
+
+/**
+Summary:	The current stroke opacity of a canvas.
+
+mCanvas:		An expression which evaluates to a number in the range [0,1].
+
+Description:	The opacity to be applied to stroke operations on <mCanvas>.
+
+Example:
+	// Set canvas to stroke with 50% opacity
+	set the stroke opacity of this canvas to 0.5
+
+Tags:	Canvas
+*/
+syntax CanvasPropertyStrokeOpacity is prefix operator with property precedence
+	"the" "stroke" "opacity" "of" <mCanvas: Expression>
+begin
+	MCCanvasGetStrokeOpacity(mCanvas, output)
+	MCCanvasSetStrokeOpacity(input, mCanvas)
 end syntax
 
 //////////
@@ -4286,6 +4429,8 @@ public foreign handler MCCanvasFill(in pCanvas as Canvas) returns nothing binds 
 public foreign handler MCCanvasFillPath(in pPath as Path, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasStroke(in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasStrokePath(in pPath as Path, in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasDraw(in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasDrawPath(in pPath as Path, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasClipToRect(in pClip as Rectangle, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasAddPath(in pPath as Path, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasDrawImage(in pImage as Image, in pDest as Rectangle, in pCanvas as Canvas) returns nothing binds to "<builtin>"
@@ -4528,7 +4673,7 @@ Summary:	Fill a path on a canvas.
 mCanvas:		An expression which evaluates to a canvas.
 mPath:	An expression which evaluates to a path.
 
-Description:	Fills the region bound by <mPath> with the current canvas paint. If mPath is not specified then the current canvas path will be closed and filled, then emptied from the canvas.
+Description:	Fills the region bound by <mPath> with the current canvas fill paint. If mPath is not specified then the current canvas path will be closed and filled, then emptied from the canvas.
 
 Example:
 	// Fill a circle path on the canvas
@@ -4560,7 +4705,7 @@ Summary:	Stroke a path on a canvas.
 mCanvas:		An expression which evaluates to a canvas.
 mPath:	An expression which evaluates to a path.
 
-Description:	Strokes <mPath> with the current canvas paint and stroke settings. If mPath is not specified then the current canvas path will be stroked, then emptied from the canvas.
+Description:	Strokes <mPath> with the current canvas stroke paint and stroke settings. If mPath is not specified then the current canvas path will be stroked, then emptied from the canvas.
 
 Example:
 	// Draw a circle path on the canvas
@@ -4582,6 +4727,38 @@ syntax CanvasOperationStroke is statement
 begin
 	MCCanvasStroke(mCanvas)
 	MCCanvasStrokePath(mPath, mCanvas)
+end syntax
+
+//////////
+
+/**
+Summary:	Fill and then stroke a path on a canvas.
+
+mCanvas:		An expression which evaluates to a canvas.
+mPath:	An expression which evaluates to a path.
+
+Description:	Fills the region bound by <mPath> with the current canvas fill paint, and then strokes <mPath> with the current canvas paint and stroke settings. If mPath is not specified then the current canvas path will be used, then emptied from the canvas.
+
+Example:
+	// Draw a circle path on the canvas
+	draw circle path centered at point [100,100] with radius 50 on this canvas
+
+Example:
+	// Add a path to the canvas
+	move to point [50,50] on this canvas
+	line to point [50,100] on this canvas
+	line to point [100,100] on this canvas
+
+	// Stroke the current canvas path
+	stroke this canvas
+
+Tags:	Canvas
+*/
+syntax CanvasOperationDraw is statement
+	"draw" [ <mPath: Expression> "on" ] <mCanvas: Expression>
+begin
+	MCCanvasDraw(mCanvas)
+	MCCanvasDrawPath(mPath, mCanvas)
 end syntax
 
 //////////

@@ -346,15 +346,15 @@ bool MCWidgetBase::OnPaint(MCGContextRef p_gcontext)
     bool t_success;
     t_success = true;
     
-    uintptr_t t_cookie;
-    MCCanvasPush(p_gcontext, t_cookie);
-    
     MCGRectangle t_frame;
     t_frame = GetFrame();
     
     MCGContextSave(p_gcontext);
     MCGContextClipToRect(p_gcontext, t_frame);
     MCGContextTranslateCTM(p_gcontext, t_frame . origin . x, t_frame . origin . y);
+    
+    uintptr_t t_cookie;
+    MCCanvasPush(p_gcontext, t_cookie);
     
     MCWidget *t_widget;
     t_widget = GetHost();
@@ -384,9 +384,11 @@ bool MCWidgetBase::OnPaint(MCGContextRef p_gcontext)
                 t_success = false;
         }
     }
-    MCGContextRestore(p_gcontext);
     
     MCCanvasPop(t_cookie);
+    
+    MCGContextRestore(p_gcontext);
+    
     
     return t_success;
 }

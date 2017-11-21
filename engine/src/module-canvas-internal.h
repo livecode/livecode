@@ -44,6 +44,13 @@ __MCCanvasTransformImpl *MCCanvasTransformGet(MCCanvasTransformRef p_transform);
 typedef MCImageRep *__MCCanvasImageImpl;
 __MCCanvasImageImpl *MCCanvasImageGet(MCCanvasImageRef p_image);
 
+// No Paint type
+struct __MCCanvasNoPaintImpl
+{
+};
+
+__MCCanvasNoPaintImpl *MCCanvasNoPaintGet(MCCanvasNoPaintRef p_paint);
+
 // Solid Paint type
 struct __MCCanvasSolidPaintImpl
 {
@@ -156,10 +163,16 @@ __MCCanvasFontImpl *MCCanvasFontGet(MCCanvasFontRef p_font);
 // Canvas
 struct MCCanvasProperties
 {
-	MCCanvasPaintRef paint;
+    MCGAffineTransform base_transform;
+    MCCanvasTransformRef transform;
+
+	MCCanvasPaintRef fill_paint;
+	MCCanvasPaintRef stroke_paint;
 	MCGFillRule fill_rule;
 	bool antialias;
-	MCCanvasFloat opacity;
+    MCCanvasFloat opacity;
+	MCCanvasFloat fill_opacity;
+	MCCanvasFloat stroke_opacity;
 	MCGBlendMode blend_mode;
 	bool stippled;
 	MCGImageFilter image_filter;
@@ -175,10 +188,14 @@ struct MCCanvasProperties
 
 struct __MCCanvasImpl
 {
-	bool paint_changed : 1;
+    bool transform_changed : 1;
+	bool fill_paint_changed : 1;
+	bool stroke_paint_changed : 1;
 	bool fill_rule_changed : 1;
 	bool antialias_changed : 1;
-	bool opacity_changed : 1;
+    bool opacity_changed : 1;
+	bool fill_opacity_changed : 1;
+	bool stroke_opacity_changed : 1;
 	bool blend_mode_changed : 1;
 	// line stroke properties
     bool stroke_width_changed : 1;
