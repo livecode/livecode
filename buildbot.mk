@@ -276,21 +276,21 @@ distmac-extract:
 	find . -maxdepth 1 -name 'LiveCodeForFM-Mac-*.fmp12' -print0 \
 	    | xargs -0 zip -r LiveCodeForFM-Mac-Solution.zip; \
 	find . -maxdepth 1 -name 'LiveCodeForFM-Win-x86-*.fmp12' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM-Win-x86-Solution.zip; \
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86-Solution.zip -x '\__MACOSX'; \
 	find . -maxdepth 1 -name 'LiveCodeForFM-Win-x86_64-*.fmp12' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM-Win-x86_64-Solution.zip; \
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86_64-Solution.zip -x '\__MACOSX'; \
 	find . -maxdepth 1 -name 'LiveCodeForFM-[1-9]*.fmp12' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM.zip; \
+	    | xargs -0 zip -r LiveCodeForFM.zip -x '\__MACOSX'; \
 	find . -maxdepth 1 -name 'livecodeforfm-*.*' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM-All-Plugins.zip; \
+	    | xargs -0 zip -r LiveCodeForFM-All-Plugins.zip -x '\__MACOSX'; \
 	find . -maxdepth 1 -name 'livecodeforfm-*.fmplugin' -print0 \
 	    | xargs -0 zip -r LiveCodeForFM-Mac-Plugin.zip; \
 	find . -maxdepth 1 -name 'livecodeforfm-*.fmx' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM-Win-x86-Plugin.zip; \
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86-Plugin.zip -x '\__MACOSX'; \
 	find . -maxdepth 1 -name 'livecodeforfm-*.fmx64' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM-Win-x86_64-Plugin.zip; \
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86_64-Plugin.zip -x '\__MACOSX'; \
 	find . -maxdepth 1 -name 'LiveCodeForFM.fmp12' -print0 \
-	    | xargs -0 zip -r LiveCodeForFM-Solution.zip
+	    | xargs -0 zip -r LiveCodeForFM-Solution.zip -x '\__MACOSX'
 
 
 # Final installer creation for Mac
