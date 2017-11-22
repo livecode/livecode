@@ -56,6 +56,34 @@ begin
 	MCSystemExecGetOperatingSystem(output)
 end syntax
 
+public foreign handler MCSystemExecGetArchitecture(out Architecture as String) returns nothing binds to "<builtin>"
+/**
+Summary:    The architecture
+
+Example:
+    if the architecture is "x86_64" then
+        -- Do something x86_64 specific
+    end if
+
+Description:
+Returns a string describing the instruction set architecture
+that is being used by the machine LiveCode is running on.
+The possible values are:
+
+* "x86" - 32-bit x86 builds
+* "x86_64" - 64-bit x86 builds
+* "arm" - 32-bit arm builds
+* "arm64" - 64-bit arm builds
+* "js" - Emscripten
+
+Tags: System
+*/
+syntax Architecture is expression
+    "the" "architecture"
+begin
+    MCSystemExecGetArchitecture(output)
+end syntax
+
 ----------------------------------------------------------------
 -- Exit / Quit
 ----------------------------------------------------------------
