@@ -1880,6 +1880,9 @@ function revDocsParseDescriptionOfEnum pDescription
          put word 1 to -1 of tValue into tArray["enum"][tCount]["value"]
          put word 1 to -1 of tDescription into tArray["enum"][tCount]["description"]
          add 1 to tCount
+         put true into tInEnum
+      else if tInEnum then
+         put space & word 1 to -1 of tLine after tArray["enum"][tCount-1]["description"]
       else
          put tLine & return after tOutput
       end if
