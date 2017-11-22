@@ -46,8 +46,13 @@ mergeInto(LibraryManager.library, {
 
             // if possible, get the raw data without any char set converions etc
             // as per the xhr spec, this is only possible for asynchronous requests
+            // for synchronous requests, we can override the mime type forceing
+            // the browser to return the URL in the x-user-defined charset which
+            // can be parsed as a stream of binary data
             if (async) {
                 xhr.responseType = 'blob';
+            } else {
+                xhr.overrideMimeType('text\/plain; charset=x-user-defined');
             }
 
             xhr.addEventListener('loadstart', this.requestCallbackLoadStart);
@@ -242,18 +247,18 @@ mergeInto(LibraryManager.library, {
                 };
                 reader.readAsDataURL(this.response);
             } else {
-                // if we haven't got a blob response (i.e. async requests)
-                // we need to decode the DOMString and then base64encode
-                // encodeURIComponent converts any multibyte chars to
-                // percent escape sequences representing the UTF-8 encoding
-                // replace any percent encoding with the raw bytes before
-                // base64 encoding using btoa
-                xhr.responseBase64 = btoa(encodeURIComponent(xhr.responseText).replace(
-                    /%([0-9A-F]{2})/g,
-                    function(match, p1) {
-                        return String.fromCharCode('0x' + p1);
-                    })
-                );
+                // if we've not got a binary blob back, then assume the data's
+                // charset is "x-user-defined" (as specified in the call to overrideMimeType)
+                // this apparently uses the unicode private area 0xF700-0xF7ff
+                // discarding the high-order byte from each codepoint allows us
+                // to access the data as if it were a binary stream
+                // more info here -> http://web.archive.org/web/20071103070418/http://mgran.blogspot.com/2006/08/downloading-binary-streams-with.html
+                var byteCount = xhr.responseText.length;
+                var bytes = new Uint8Array(byteCount);
+                for (var i = 0; i < byteCount; i++) {
+                    bytes[i] = xhr.responseText.charCodeAt(i) & 0xff;
+                }
+                xhr.responseBase64 = btoa(String.fromCharCode.apply(null, bytes));
                 LiveCodeLibURL.__sendCallback(xhr, event, type);
             }
         },
