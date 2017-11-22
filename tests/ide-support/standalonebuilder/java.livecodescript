@@ -38,7 +38,7 @@ private function __GetExtFolder
 end __GetExtFolder
 
 private command __InstallExtension
-   revIDEExtensionLoad sExtensionName, \
+   revIDEExtensionLoad "lcb", sExtensionName, \
          __GetExtFolder(), "0.0.0", "installed", \
          "", "true", "javatest.lcb"
 end __InstallExtension
