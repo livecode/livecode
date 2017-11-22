@@ -979,9 +979,11 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 	if (MCmessagemessages)
 		sendmessage(hptr -> gettype(), hptr -> getname(), True);
 
-	MCObject *t_parentscript_object = parentscript->GetParent()->GetObject();
-	t_parentscript_object->lockforexecution();
-
+    MCObjectHandle t_parentscript_object;
+    t_parentscript_object = parentscript->GetParent()->GetObject();
+    
+    MCObjectExecutionLock t_lock(t_parentscript_object);
+	
     MCExecContext ctxt(this, t_parentscript_object -> hlist, hptr);
 	ctxt.SetParentScript(parentscript);
 	if (MCtracestackptr && MCtracereturn)
@@ -1000,13 +1002,21 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
     {
-        MCExecContext ctxt(this, nil, nil);
+        MCExecContext ctxt2(this, nil, nil);
         MCAutoStringRef t_id;
-        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+        
+        if(t_parentscript_object.IsValid())
+        {
+            t_parentscript_object -> getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
+        }
+        else
+        {
+            getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
+        }
+        
         MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
-	t_parentscript_object->unlockforexecution();
-
+	
 	return stat;
 }
 
