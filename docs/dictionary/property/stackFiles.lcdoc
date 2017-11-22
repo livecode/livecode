@@ -82,8 +82,10 @@ call the <stack|stack's> <handler|handlers>, use the <start using> or
 
 References: call (glossary), command (glossary), 
 defaultFolder (property), file path (glossary), 
-filename of stack (property), folder (glossary), handler (glossary), insert script (command), library (library), line (keyword), 
-LiveCode (glossary), load (glossary), loaded into memory (glossary), long (keyword), main stack (glossary), mainStack (property), 
+filename of stack (property), folder (glossary), handler (glossary), 
+insert script (command), library (library), line (keyword), 
+LiveCode (glossary), load (glossary), loaded into memory (glossary), 
+long (keyword), main stack (glossary), mainStack (property), 
 mainStacks (function), name (property), object (glossary), 
 properties (property), property (glossary), 
 relative file path (glossary), script (glossary), stack (object), 
