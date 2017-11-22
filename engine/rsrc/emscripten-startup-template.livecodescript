@@ -83,15 +83,9 @@ on startup
          
          set the defaultfolder to kAuxStackFolder
          repeat for each line tFile in tAuxStacks
-            
             -- This should autoload the file
             put the name of stack tFile into tStackName
-            
-            -- The extensionInitialize handler should insert the stack into
-            -- the backscripts or frontscripts as necessary.
-            dispatch "extensionInitialize" to stack tStackName
-            
-         end repeat
+         end repeat  
          
       end if
       
@@ -116,6 +110,8 @@ on startup
             end if
          end repeat
       end if
+      
+      @STARTUP_SCRIPT@
       
    catch tError
    end try
