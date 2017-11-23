@@ -2,17 +2,13 @@ Name: export with palette
 
 Type: command
 
-Syntax: export <image> [with metadata <metadata>] to {file <filePath> | 
-<container>} as {gif | png} with standard palette
+Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} as {gif | png} with standard palette
 
-Syntax: export <image> [with metadata <metadata>] to {file <filePath> | 
-<container>} as {gif | png} with optimized palette
+Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} as {gif | png} with optimized palette
 
-Syntax: export <image> [with metadata <metadata>] to {file <filePath> | 
-<container>} as {gif | png} with <colorCount> color [optimized] palette
+Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} as {gif | png} with <colorCount> color [optimized] palette
 
-Syntax: export <image> [with metadata <metadata>] to {file <filePath> | 
-<container>} as {gif | png} with palette <colorList>
+Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} as {gif | png} with palette <colorList>
 
 Summary:
 <export|Exports> the <selected> <image> as a <PBM>, <JPEG>, <GIF>, <BMP>
