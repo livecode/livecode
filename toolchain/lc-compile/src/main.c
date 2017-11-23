@@ -96,7 +96,7 @@ static void
 usage(int status)
 {
     fprintf(stderr,
-"Usage: lc-compile [OPTION ...] --output OUTFILE [--] LCBFILE\n"
+"Usage: lc-compile [OPTION ...] --output OUTFILE [--] LCBFILE ... LCBFILE\n"
 "       lc-compile [OPTION ...] --outputc OUTFILE [--] LCBFILE ... LCBFILE\n"
 "       lc-compile [OPTION ...] --deps DEPTYPE [--] LCBFILE ... LCBFILE\n"
 "\n"
@@ -262,12 +262,6 @@ static void full_main(int argc, char *argv[])
 		}
 		else
 		{
-			if (have_input_file == 1)
-			{
-				fprintf(stderr, "WARNING: Ignoring multiple input filenames.\n");
-				continue;
-			}
-			
 			AddFile(opt);
 			have_input_file = 1;
 		}
