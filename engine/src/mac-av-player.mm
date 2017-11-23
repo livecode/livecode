@@ -1364,7 +1364,7 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 		{
             NSString *t_mediaType;
             t_mediaType = [t_asset_track mediaType];
-            MCStringCreateWithCFString((CFStringRef)t_mediaType, *(MCStringRef*)r_value);
+            MCStringCreateWithCFStringRef((CFStringRef)t_mediaType, *(MCStringRef*)r_value);
 		}
             break;
 		case kMCPlatformPlayerTrackPropertyOffset:

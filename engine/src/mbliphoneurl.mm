@@ -219,7 +219,7 @@ bool UrlRequestSetHTTPHeader(MCStringRef p_key, MCStringRef p_value, void *p_con
 
     // AL-2014-07-15: [[ Bug 12478 ]] Pass a StringRef to url callbacks for error.
     MCAutoStringRef t_error;
-    MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+    MCStringCreateWithCFStringRef((CFStringRef)[error localizedDescription], &t_error);
 	m_callback(m_context, kMCSystemUrlStatusError, *t_error);
 	[connection release];
 }
@@ -233,7 +233,7 @@ bool UrlRequestSetHTTPHeader(MCStringRef p_key, MCStringRef p_value, void *p_con
         
         // AL-2014-07-15: [[ Bug 12478 ]] Pass a StringRef to url callbacks for error.
         MCAutoStringRef t_error;
-        MCStringCreateWithCFString((CFStringRef)t_err_string, &t_error);
+        MCStringCreateWithCFStringRef((CFStringRef)t_err_string, &t_error);
         m_callback(m_context, kMCSystemUrlStatusError, *t_error);
     }
     else
@@ -592,7 +592,7 @@ void PutFTPUrlClientCallback(CFWriteStreamRef p_stream, CFStreamEventType p_even
 		{
 			CFStringRef t_description = CFErrorCopyDescription(t_err);
             MCAutoStringRef t_error;
-            MCStringCreateWithCFString(t_description, &t_error);
+            MCStringCreateWithCFStringRef(t_description, &t_error);
             t_context->callback(t_context->context, kMCSystemUrlStatusError, *t_error);
             CFRelease(t_description);
 		}

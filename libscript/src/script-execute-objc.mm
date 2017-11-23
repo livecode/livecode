@@ -35,7 +35,7 @@ bool MCScriptCallObjCCatchingErrors(ffi_cif *p_cif, void (*p_function)(), void *
     @catch (NSException *exception)
     {
         MCAutoStringRef t_reason;
-        if (!MCStringCreateWithCFString((CFStringRef)[exception reason], &t_reason))
+        if (!MCStringCreateWithCFStringRef((CFStringRef)[exception reason], &t_reason))
         {
             return false;
         }

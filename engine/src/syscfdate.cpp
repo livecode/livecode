@@ -92,7 +92,7 @@ MCLocaleRef MCS_getsystemlocale()
     
     // And turn this into a StringRef
     MCAutoStringRef t_locale_id;
-    if (!MCStringCreateWithCFString(t_cf_locale_id, &t_locale_id))
+    if (!MCStringCreateWithCFStringRef(t_cf_locale_id, &t_locale_id))
         return nil;
     
     // Finally, construct a Locale object using this name
@@ -195,7 +195,7 @@ static bool osx_cf_format_time(CFLocaleRef p_locale, CFStringRef p_format, CFAbs
 	{
 		CFDateFormatterSetFormat(t_formatter, p_format);
 		CFStringRef cfstr = CFDateFormatterCreateStringWithAbsoluteTime(NULL, t_formatter, p_time);
-		if (!MCStringCreateWithCFString(cfstr, t_formatted_time))
+		if (!MCStringCreateWithCFStringRef(cfstr, t_formatted_time))
 			t_success = false;
 		CFRelease(cfstr);
 	}
@@ -236,7 +236,7 @@ static bool osx_cf_fetch_format(CFLocaleRef p_locale, CFDateFormatterStyle p_dat
 	
 	MCAutoStringRef t_icu_format;
 	if (t_success)
-        t_success = MCStringCreateWithCFString(CFDateFormatterGetFormat(t_formatter), &t_icu_format);
+        t_success = MCStringCreateWithCFStringRef(CFDateFormatterGetFormat(t_formatter), &t_icu_format);
 
 	MCStringRef t_format;
     t_format = nil;

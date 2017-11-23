@@ -1993,7 +1993,7 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
     {
         MCAutoStringRef t_string;
         
-        if (!MCStringCreateWithCFString(*(CFStringRef*)p_value, &t_string))
+        if (!MCStringCreateWithCFStringRef(*(CFStringRef*)p_value, &t_string))
             return kMCExternalErrorNotAString;
         
         return var -> AppendString(p_options, *t_string);

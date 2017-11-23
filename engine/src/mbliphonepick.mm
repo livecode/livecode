@@ -904,7 +904,7 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 		t_success = MCSystemPickN(t_option_list_array, p_use_checkmark, false, false, false, t_initial_index_array, t_return_index, p_button_rect);
 	
 	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_return_index, &t_result);
+	/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_return_index, &t_result);
 	if (t_success)
 		MCresult -> setvalueref (*t_result);
 	r_chosen_index = atoi ([t_return_index cStringUsingEncoding:NSMacOSRomanStringEncoding]);

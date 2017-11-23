@@ -2863,27 +2863,6 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
     return false;
 }
 
-#if defined(__MAC__) || defined (__IOS__)
-MC_DLLEXPORT_DEF
-bool MCStringConvertToCFStringRef(MCStringRef p_string, CFStringRef& r_cfstring)
-{
-	__MCAssertIsString(p_string);
-
-    uindex_t t_length;
-    unichar_t* t_chars;
-    
-    t_length = MCStringGetLength(p_string);
-    if (!MCMemoryNewArray(t_length + 1, t_chars))
-        return false;
-    
-    MCStringGetChars(p_string, MCRangeMake(0, t_length), t_chars);
-	r_cfstring = CFStringCreateWithCharacters(nil, t_chars, t_length);
-    
-    MCMemoryDeleteArray(t_chars);
-    return r_cfstring != nil;
-}
-#endif
-
 #ifdef __WINDOWS__
 MC_DLLEXPORT_DEF
 bool MCStringConvertToBSTR(MCStringRef p_string, BSTR& r_bstr)

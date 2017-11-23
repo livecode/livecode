@@ -680,7 +680,7 @@ bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages)
 		for (NSString *t_lang in t_preferred_langs)
 		{
             MCAutoStringRef t_language;
-            if (t_success && MCStringCreateWithCFString((CFStringRef)t_lang, &t_language))
+            if (t_success && MCStringCreateWithCFStringRef((CFStringRef)t_lang, &t_language))
                 t_success = MCListAppend(*t_languages, *t_language);
         }
 	}
@@ -696,7 +696,7 @@ bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale)
 	NSString *t_current_locale_id = nil;
 	t_current_locale_id = [[NSLocale currentLocale] objectForKey: NSLocaleIdentifier];
 
-	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_current_locale_id, r_current_locale);
+	/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_current_locale_id, r_current_locale);
 
 	return true;
 }
@@ -711,7 +711,7 @@ bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
     NSString *t_identifier;
     t_identifier = objc_msgSend([UIDevice currentDevice], sel_getUid("uniqueIdentifier"));
 	
-    return MCStringCreateWithCFString((CFStringRef)t_identifier, r_identifier);
+    return MCStringCreateWithCFStringRef((CFStringRef)t_identifier, r_identifier);
 }
 
 bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier)
@@ -723,7 +723,7 @@ bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier)
     {
         NSString *t_identifier;
         t_identifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-        return MCStringCreateWithCFString((CFStringRef)t_identifier, r_identifier);
+        return MCStringCreateWithCFStringRef((CFStringRef)t_identifier, r_identifier);
     }
 
     r_identifier = MCValueRetain(kMCEmptyString);
@@ -740,7 +740,7 @@ bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier)
 	NSString *t_identifier;
 	t_identifier = [t_plist objectForKey: @"CFBundleIdentifier"];
 	
-	return MCStringCreateWithCFString((CFStringRef)t_identifier, r_identifier);
+	return MCStringCreateWithCFStringRef((CFStringRef)t_identifier, r_identifier);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
