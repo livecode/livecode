@@ -88,7 +88,6 @@ command deployDo pTargetStack, pBrowser
       
       local tSettings
       put revSBGetSettings(pTargetStack, true) into tSettings
-      revSearchForInclusions pTargetStack, tSettings
       
       put sHTTPFileSpace & slash & tSettings["name"] into tBuildFolder
       if there is a folder tBuildFolder then
