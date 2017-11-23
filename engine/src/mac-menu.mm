@@ -913,10 +913,10 @@ void MCPlatformGetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 	switch(p_property)
 	{
 		case kMCPlatformMenuItemPropertyTitle:
-			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_item title], *(MCStringRef*)r_value);
+			/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[t_item title], *(MCStringRef*)r_value);
 			break;
 		case kMCPlatformMenuItemPropertyTag:
-			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_item representedObject], *(MCStringRef*)r_value);
+			/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[t_item representedObject], *(MCStringRef*)r_value);
 			break;
         case kMCPlatformMenuItemPropertySubmenu:
         {

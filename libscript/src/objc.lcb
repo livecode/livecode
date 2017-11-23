@@ -31,7 +31,7 @@ public foreign type ObjcAutoreleasedId binds to "MCObjcAutoreleasedIdTypeInfo"
 
 /****/
 
-private foreign handler MCStringCreateWithCFString(in pNSString as ObjcId, out rString as String) returns CBool binds to "MCStringCreateWithCFString"
+private foreign handler MCStringCreateWithCFStringRef(in pNSString as ObjcId, out rString as String) returns CBool binds to "MCStringCreateWithCFStringRef"
 private foreign handler MCStringConvertToCFStringRef(in pString as String, out rNSString as ObjcRetainedId) returns CBool binds to "MCStringConvertToCFStringRef"
 
 /**/
@@ -75,15 +75,15 @@ a variable of type String.
 public handler StringFromNSString(in pObjcString as ObjcObject) returns String
 	variable tString as String
 	unsafe
-		MCStringCreateWithCFString(pObjcString, tString)
+		MCStringCreateWithCFStringRef(pObjcString, tString)
 	end unsafe
 	return tString
 end handler
 
 /****/
 
-private foreign handler MCDataCreateWithCFData(in pNSData as ObjcId, out rString as Data) returns CBool binds to "MCDataCreateWithCFData"
-private foreign handler MCDataConvertToCFDataRef(in pNSData as Data, out rNSData as ObjcRetainedId) returns CBool binds to "MCDataConvertToCFDataRef"
+private foreign handler MCDataCreateWithCFDataRef(in pNSData as ObjcId, out rData as Data) returns CBool binds to "MCDataCreateWithCFDataRef"
+private foreign handler MCDataConvertToCFDataRef(in pData as Data, out rNSData as ObjcRetainedId) returns CBool binds to "MCDataConvertToCFDataRef"
 
 /**/
 
@@ -98,7 +98,7 @@ A Objective-C object of type NSData
 
 Description
 Use <DataToNSData> to convert a variable of type Data to an Objective-C
-string object (NSData).
+data object (NSData).
 
 */
 public handler DataToNSData(in pData as Data) returns ObjcObject
@@ -116,19 +116,170 @@ Parameters:
 pObjcData: The NSData to convert
 
 Returns:
-A String value
+A Data value
 
 Description
 Use <DataFromNSData> to convert an Objective-C data object (NSData) to
 a variable of type Data.
 
 */
-public handler DataFromNSData(in pObjcData as ObjcObject) returns String
+public handler DataFromNSData(in pObjcData as ObjcObject) returns Data
 	variable tData as Data
 	unsafe
-		MCDataCreateWithCFData(pObjcData, tData)
+		MCDataCreateWithCFDataRef(pObjcData, tData)
 	end unsafe
 	return tData
+end handler
+
+/****/
+
+private foreign handler MCNumberCreateWithCFNumberRef(in pNSNumber as ObjcId, out rNumber as Number) returns CBool binds to "MCNumberCreateWithCFNumberRef"
+private foreign handler MCNumberConvertToCFNumberRef(in pNumber as Number, out rNSNumber as ObjcRetainedId) returns CBool binds to "MCNumberConvertToCFNumberRef"
+
+/**/
+
+/**
+Summary:    Convert a Number into an Objective-C number
+
+Parameters:
+pNumber: The Number to convert
+
+Returns:
+A Objective-C object of type NSNumber
+
+Description
+Use <NumberToNSNumber> to convert a variable of type Number to an Objective-C
+number object (NSNumber).
+
+*/
+public handler NumberToNSNumber(in pNumber as Number) returns ObjcObject
+	variable tNSNumber as ObjcRetainedId
+	unsafe
+		MCNumberConvertToCFNumberRef(pNumber, tNSNumber)
+	end unsafe
+	return tNSNumber
+end handler
+
+/**
+Summary:    Convert a Objective-C number into a Number
+
+Parameters:
+pObjcNumber: The NSNumber to convert
+
+Returns:
+A Number value
+
+Description
+Use <NumberFromNSNumber> to convert an Objective-C number object (NSNumber) to
+a variable of type Number.
+
+*/
+public handler NumberFromNSNumber(in pObjcNumber as ObjcObject) returns Number
+	variable tNumber as Number
+	unsafe
+		MCNumberCreateWithCFNumberRef(pObjcNumber, tNumber)
+	end unsafe
+	return tNumber
+end handler
+
+/****/
+
+private foreign handler MCProperListCreateWithCFArrayRef(in pNSArray as ObjcId, in pUseLists as CBool, out rList as List) returns CBool binds to "MCProperListCreateWithCFArrayRef"
+private foreign handler MCProperListConvertToCFArrayRef(in pList as List, in pUseLists as CBool, out rNSArray as ObjcRetainedId) returns CBool binds to "MCProperListConvertToCFArrayRef"
+
+/**/
+
+/**
+Summary:    Convert a List into an Objective-C array
+
+Parameters:
+pNumber: The List to convert
+
+Returns:
+A Objective-C object of type NSArray
+
+Description
+Use <ListToNSArray> to convert a variable of type List to an Objective-C
+array object (NSArray).
+
+*/
+public handler ListToNSArray(in pList as List) returns ObjcObject
+	variable tNSArray as ObjcRetainedId
+	unsafe
+		MCProperListConvertToCFArrayRef(pList, true, tNSArray)
+	end unsafe
+	return tNSArray
+end handler
+
+/**
+Summary:    Convert a Objective-C array into a List
+
+Parameters:
+pObjcNumber: The NSArray to convert
+
+Returns:
+A Number value
+
+Description
+Use <ListFromNSArray> to convert an Objective-C array object (NSArray) to
+a variable of type List.
+
+*/
+public handler ListFromNSArray(in pObjcArray as ObjcObject) returns List
+	variable tList as List
+	unsafe
+		MCProperListCreateWithCFArrayRef(pObjcArray, true, tList)
+	end unsafe
+	return tList
+end handler
+
+/****/
+
+private foreign handler MCArrayCreateWithCFDictionaryRef(in pNSDictionary as ObjcId, in pUseLists as CBool, out rArray as Array) returns CBool binds to "MCArrayCreateWithCFDictionaryRef"
+private foreign handler MCArrayConvertToCFDictionaryRef(in pArray as Array, in pUseLists as CBool, out rNSDictionary as ObjcRetainedId) returns CBool binds to "MCArrayConvertToCFDictionaryRef"
+
+/**
+Summary:    Convert an Array into an Objective-C dictionary
+
+Parameters:
+pNumber: The Array to convert
+
+Returns:
+A Objective-C object of type NSDictionary
+
+Description
+Use <ArrayToNSDictionary> to convert a variable of type Array to an Objective-C
+dictionary object (NSDictionary).
+
+*/
+public handler ArrayToNSDictionary(in pArray as Array) returns ObjcObject
+	variable tNSArray as ObjcRetainedId
+	unsafe
+		MCArrayConvertToCFDictionaryRef(pArray, true, tNSArray)
+	end unsafe
+	return tNSArray
+end handler
+
+/**
+Summary:    Convert a Objective-C dictionary into a Array
+
+Parameters:
+pObjcNumber: The NSDictionary to convert
+
+Returns:
+An Array value
+
+Description
+Use <ArrayFromNSDictionary> to convert an Objective-C dictionary object (NSDictionary) to
+a variable of type Array.
+
+*/
+public handler ArrayFromNSDictionary(in pObjcArray as ObjcObject) returns List
+	variable tArray as Array
+	unsafe
+		MCArrayCreateWithCFDictionaryRef(pObjcArray, true, tArray)
+	end unsafe
+	return tArray
 end handler
 
 /****/

@@ -213,7 +213,7 @@ MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef& r_selected_folder)
 	{
 		NSString *t_alias;
 		resolve_alias([s_dialog_nesting -> panel filename], t_alias);
-        /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_alias, r_selected_folder);
+        /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_alias, r_selected_folder);
 		[t_alias release];
 	}
 	else
@@ -509,7 +509,7 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 	if (!t_should_show && m_filter->extension_count > 0)
 	{
         MCAutoStringRef t_filename;
-		if (MCStringCreateWithCFString((CFStringRef)t_filename_resolved, &t_filename) && *t_filename != nil)
+		if (MCStringCreateWithCFStringRef((CFStringRef)t_filename_resolved, &t_filename) && *t_filename != nil)
 		{
 			uindex_t t_dot;
             // AL-2014-04-01: [[ Bug 12081 ]] Find last occurrence of '.' rather than first, for file extension detection.
@@ -649,7 +649,7 @@ MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, 
 		
 		if (p_kind == kMCPlatformFileDialogKindSave)
 		{
-            /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[s_dialog_nesting -> panel filename], r_paths);
+            /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[s_dialog_nesting -> panel filename], r_paths);
 			if (t_accessory != nil && [t_accessory currentType] != nil)
 				r_type = MCValueRetain([t_accessory currentType]);
 			else
@@ -666,7 +666,7 @@ MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, 
 				resolve_alias([[(NSOpenPanel *)s_dialog_nesting -> panel filenames] objectAtIndex: i], t_alias);
                 
 				MCAutoStringRef t_conv_filename;			
-				if (MCStringCreateWithCFString((CFStringRef)t_alias, &t_conv_filename))
+				if (MCStringCreateWithCFStringRef((CFStringRef)t_alias, &t_conv_filename))
 					/* UNCHECKED */ MCStringAppendFormat(r_paths, "%s%@", i > 0 ? "\n" : "", *t_conv_filename);
 
 				[t_alias release];

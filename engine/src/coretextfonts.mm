@@ -462,7 +462,7 @@ void coretext_get_font_name(void *p_font, MCNameRef& r_name)
     t_font_name = CTFontCopyDisplayName((CTFontRef)p_font);
     
     MCAutoStringRef t_font_name_string;
-    MCStringCreateWithCFString(t_font_name, &t_font_name_string);
+    MCStringCreateWithCFStringRef(t_font_name, &t_font_name_string);
     MCNameCreate(*t_font_name_string, r_name);
 }
 
