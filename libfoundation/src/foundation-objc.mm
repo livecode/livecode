@@ -99,6 +99,19 @@ static MCValueCustomCallbacks kMCObjcObjectCustomValueCallbacks =
 /* The Id foreign value is a unmanaged wrapper around 'id' - basically like
  * Pointer but with a bridge to ObjcObject which explicitly retains its value. */
 
+static bool
+objc_id_initialize(void *contents)
+{
+    *(void **)contents = nullptr;
+    return true;
+}
+
+static bool
+objc_id_defined(void *contents)
+{
+    return *(void **)contents != nullptr;
+}
+
 static void
 objc_id_finalize(void *contents)
 {
@@ -389,9 +402,9 @@ bool __MCObjcInitialize(void)
         kMCObjcObjectTypeInfo,
         &p,
         1,
-        nullptr, /* initialize */
+        objc_id_initialize, /* initialize */
         objc_id_finalize, /* finalize */
-        nullptr, /* defined */
+        objc_id_defined, /* defined */
         objc_id_move,
         objc_id_copy,
         objc_id_equal,
