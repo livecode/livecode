@@ -29,7 +29,9 @@ The name of the handler in which the exit control structure appears.
 Description:
 Use the <exit> <control structure> to skip the rest of a
 <handler|handler's> <statement|statements> without <return|returning> a
-result. Form:The <exit> <statement> appears on a line by itself,
+result. 
+
+**Form:** The <exit> <statement> appears on a line by itself,
 anywhere inside a <handler>.
 
 You can use an <exit> <control structure> in a <message handler>,
