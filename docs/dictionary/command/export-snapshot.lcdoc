@@ -2,9 +2,7 @@ Name: export snapshot
 
 Type: command
 
-Syntax: export snapshot {[from rect[angle] <rectangle>] [of <object>] | from <object> 
-[{with | without} effects]} [at size <size>] [{with|and} metadata <metadata>] 
-to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
+Syntax: export snapshot {[from rect[angle] <rectangle>] [of <object>] | from <object> [{with | without} effects]} [at size <size>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
 
 Summary:
 Creates a picture file from a portion of the screen.
