@@ -36,13 +36,14 @@ innerGlow["color"]
 The color of the glow, in the format red,green,blue where each value is
 between 0 and 255.
 
+
 innerGlow["blendMode"]
 How the glow is blended with object. This is one of the following
 values: 
 
-	*"normal": the glow is laid over the background.
-	*"multiply": this results in a darkening effect
-	*"colorDodge": this results in a lightening effect
+* "normal": the glow is laid over the background.
+* "multiply": this results in a darkening effect
+* "colorDodge": this results in a lightening effect
 
 
 innerGlow["opacity"]
@@ -53,22 +54,20 @@ innerGlow["filter"]
 Which algorithm is used to render the glow. This is one of the following
 options: 
 
-	*"gaussian": highest quality (and slowest)
-	*"box3pass": high quality.
-	*"box2pass": medium quality
-	*"box1pass": low quality (and fastest)
+* "gaussian": highest quality (and slowest)
+* "box3pass": high quality.
+* "box2pass": medium quality
+* "box1pass": low quality (and fastest)
 
 
 innerGlow["size"]
-The size of the glow, i.e. how large the glow is. This is between 0 and
-
-255. 
+The size of the glow, i.e. how large the glow is. This is between 0 
+and 255. 
 
 
 innerGlow["spread"]
-This controls where the effect begins to blend. This is between 0 and
-
-255. 
+This controls where the effect begins to blend. This is between 0 
+and 255. 
 
 
 >*Note:* When using the "colorDodge" blend mode, it is recommended that
