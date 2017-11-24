@@ -262,6 +262,9 @@ typedef struct __MCGContextState *MCGContextStateRef;
 
 struct __MCGContextState
 {
+    MCGAffineTransform  base_transform;
+    MCGAffineTransform  transform;
+
 	MCGFloat			opacity;
 	MCGBlendMode		blend_mode;
 	MCGFloat			flatness;

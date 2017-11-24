@@ -905,6 +905,9 @@ void MCGContextRestore(MCGContextRef context);
 void MCGContextSetFlatness(MCGContextRef context, MCGFloat flatness);
 void MCGContextSetShouldAntialias(MCGContextRef context, bool should_antialias);
 
+// Transform attribute
+void MCGContextSetTransform(MCGContextRef context, MCGAffineTransform p_transform);
+
 // Layer attributes and manipulation - bitmap effect options would be added here also.
 void MCGContextSetOpacity(MCGContextRef context, MCGFloat opacity);
 void MCGContextSetBlendMode(MCGContextRef context, MCGBlendMode mode);

@@ -108,6 +108,9 @@ static bool MCGContextStateCreate(MCGContextStateRef& r_state)
 	
 	if (t_success)
 	{
+        t_state -> base_transform = MCGAffineTransformMakeIdentity();
+        t_state -> transform = MCGAffineTransformMakeIdentity();
+        
 		t_state -> opacity = 1.0f;
 		t_state -> blend_mode = kMCGBlendModeSourceOver;		
 		t_state -> flatness = 0.0f;
@@ -127,7 +130,6 @@ static bool MCGContextStateCreate(MCGContextStateRef& r_state)
 		t_state -> stroke_attr . dashes = NULL;
 		t_state -> stroke_style = kMCGPaintStyleOpaque;
 		
-		
 		t_state -> is_layer_begin_pt = false;
 		t_state -> parent = NULL;		
 	}
@@ -139,7 +141,6 @@ static bool MCGContextStateCreate(MCGContextStateRef& r_state)
 	
 	return t_success;
 }
-
 
 static bool MCGContextStateCopy(MCGContextStateRef p_state, MCGContextStateRef& r_new_state)
 {
@@ -153,6 +154,9 @@ static bool MCGContextStateCopy(MCGContextStateRef p_state, MCGContextStateRef& 
 	
 	if (t_success)
 	{
+        t_state->base_transform = MCGAffineTransformMakeIdentity();
+        t_state->transform = MCGAffineTransformMakeIdentity();
+    
 		t_state -> opacity = p_state -> opacity;
 		t_state -> blend_mode = p_state -> blend_mode;		
 		t_state -> flatness = p_state -> flatness;
@@ -300,6 +304,7 @@ static bool MCGContextPushState(MCGContextRef self)
 	if (t_success)
 	{		
 		t_state -> parent = self -> state;
+        t_state->base_transform = MCGContextGetDeviceTransform(self);
 		self -> state = t_state;
 	}
 	
@@ -366,8 +371,6 @@ static bool MCGContextCreateUnbound(MCGContextRef& r_context)
 
 	if (t_success)
 	{
-		//t_context -> width = p_bitmap . width();
-		//t_context -> height = p_bitmap . height();
 		t_context->references = 1;
 		t_context->path = NULL;
 		t_context->is_valid = true;
@@ -575,7 +578,7 @@ void MCGContextSave(MCGContextRef self)
 	if (t_success)
 	{
 		// we use skia to manage the clip and matrix between states, everything else is held in the state directly 		
-		self -> layer -> canvas -> save();		
+		self -> layer -> canvas -> save();
 		t_success = MCGContextPushState(self);
 	}
 	
@@ -1722,12 +1725,22 @@ void MCGContextSetStrokePaintStyle(MCGContextRef self, MCGPaintStyle p_paint_sty
 
 inline static bool MCGContextSetCTM(MCGContextRef self, MCGAffineTransform p_transform)
 {
-	SkMatrix t_matrix;
-	MCGAffineTransformToSkMatrix(p_transform, t_matrix);
-	self -> layer -> canvas -> setMatrix(t_matrix);
+    self->state->transform = p_transform;
 	
+	SkMatrix t_matrix;
+	MCGAffineTransformToSkMatrix(MCGAffineTransformConcat(self->state->base_transform, p_transform), t_matrix);
+	self -> layer -> canvas -> setMatrix(t_matrix);
+    
 	// no need to transform the clip at this point as this is handled internally by skia
 	return true;
+}
+
+void MCGContextSetTransform(MCGContextRef self, MCGAffineTransform p_transform)
+{
+	if (!MCGContextIsValid(self))
+		return;
+    
+    MCGContextSetCTM(self, p_transform);
 }
 
 void MCGContextConcatCTM(MCGContextRef self, MCGAffineTransform p_transform)
@@ -1735,9 +1748,7 @@ void MCGContextConcatCTM(MCGContextRef self, MCGAffineTransform p_transform)
 	if (!MCGContextIsValid(self))
 		return;
 	
-	SkMatrix t_matrix;
-	MCGAffineTransformToSkMatrix(p_transform, t_matrix);
-	self -> layer -> canvas -> concat(t_matrix);
+    MCGContextSetCTM(self, MCGAffineTransformConcat(self->state->transform, p_transform));
 }
 
 void MCGContextRotateCTM(MCGContextRef self, MCGFloat p_angle)
