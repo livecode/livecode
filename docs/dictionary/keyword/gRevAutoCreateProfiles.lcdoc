@@ -9,6 +9,8 @@ A special <global|global variable> that specifies whether to
 automatically create a <property profile|profile> when you
 switch to a new profile.
 
+Associations: profile library
+
 Introduced: 2.0
 
 OS: mac, windows, linux, ios, android
@@ -42,6 +44,6 @@ changed in the Preferences dialog box:
 
 References: answer (command), ask (command), object (glossary),
 property (glossary), variable (glossary), property profile (glossary),
-global (glossary), properties (property)
+global (glossary), properties (property), Profile library (library)
 
 Tags: windowing

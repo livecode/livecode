@@ -4,6 +4,8 @@ Synonyms: geometry libraries, geometry library
 
 Type: library
 
+Associations: geometry library
+
 Description:
 The <LiveCode custom library|LiveCode custom library> that supports the
 Geometry pane in the <property inspector>. The <revCacheGeometry> and
@@ -11,7 +13,7 @@ Geometry pane in the <property inspector>. The <revCacheGeometry> and
 
 References: revCacheGeometry (command), revUpdateGeometry (command),
 command (glossary), property inspector (glossary),
-LiveCode custom library (glossary)
+LiveCode custom library (glossary), geometry management (glossary)
 
 Tags: ui
 

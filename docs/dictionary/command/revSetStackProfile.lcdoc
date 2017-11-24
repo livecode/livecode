@@ -8,6 +8,8 @@ Summary:
 Changes the current <property profile|profile> used for a <stack> and
 all its <object|objects>.
 
+Associations: profile library
+
 Introduced: 2.0
 
 OS: mac, windows, linux, ios, android

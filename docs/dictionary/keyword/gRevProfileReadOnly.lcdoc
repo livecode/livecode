@@ -9,6 +9,8 @@ A special <global|global variable> that specifies whether to save
 changes to the current <property profile|profile> when you switch
 <property profile|profiles>.
 
+Associations: profile library
+
 Introduced: 2.0
 
 OS: mac, windows, linux, ios, android
@@ -46,6 +48,6 @@ in the Preferences dialog box:
 
 References: answer (command), ask (command), object (glossary),
 property (glossary), variable (glossary), property profile (glossary),
-global (glossary), properties (property)
+global (glossary), properties (property), Profile library (library)
 
 Tags: windowing

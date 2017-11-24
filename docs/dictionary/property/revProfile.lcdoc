@@ -8,6 +8,8 @@ Summary:
 Specifies the current <property profile|profile> for an
 <object(glossary)>. 
 
+Associations: profile library
+
 Introduced: 1.0
 
 OS: mac, windows, linux, ios, android
@@ -64,7 +66,7 @@ References: revSetStackFileProfile (command), object (glossary),
 property (glossary), custom property (glossary),
 backgroundColor (glossary), property profile (glossary), button (object),
 customPropertySets (property), gRevAutoCreateProfiles (keyword),
-gRevProfileReadOnly (keyword)
+gRevProfileReadOnly (keyword), Profile library (library)
 
 Tags: properties
 
