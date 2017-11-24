@@ -120,14 +120,14 @@ static bool MCGContextStateCreate(MCGContextStateRef& r_state)
 		t_state -> should_antialias = false;
 		
 		t_state -> fill_color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 1.0f);
-		t_state -> fill_opacity = 0.0f;
+		t_state -> fill_opacity = 1.0f;
 		t_state -> fill_rule = kMCGFillRuleNonZero;
 		t_state -> fill_pattern = NULL;
 		t_state -> fill_gradient= NULL;
 		t_state -> fill_style = kMCGPaintStyleOpaque;
 		
 		t_state -> stroke_color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 1.0f);
-		t_state -> stroke_opacity = 0.0f;
+		t_state -> stroke_opacity = 1.0f;
 		t_state -> stroke_pattern = NULL;
 		t_state -> stroke_gradient= NULL;
 		t_state -> stroke_attr . width = 0.0f;
@@ -2029,7 +2029,7 @@ void MCGContextAddPath(MCGContextRef self, MCGPathRef p_path)
 ////////////////////////////////////////////////////////////////////////////////
 // Paint setup
 
-static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p_color, MCGPatternRef p_pattern, MCGGradientRef p_gradient, MCGPaintStyle p_paint_style, SkPaint &r_paint)
+static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGFloat p_opacity, MCGColor p_color, MCGPatternRef p_pattern, MCGGradientRef p_gradient, MCGPaintStyle p_paint_style, SkPaint &r_paint)
 {
 	// TODO: Refactor color, pattern and gradients into ref counted (copy on write?) paint type.
 	bool t_success;
@@ -2076,11 +2076,20 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 	
 	if (t_success)
 	{
-		// Don't set the paint color if using a shader, as the color's alpha value will be applied to the paint (which we don't want to happen!).
+		// Set the shader or solid color here - the opacity for a shader is taken
+        // from the Alpha channel of the solid color; but for solid colors we
+        // must multiply the solid color's alpha by the provided alpha.
 		if (t_shader != nil)
+        {
 			r_paint . setShader(t_shader);
+			r_paint . setAlpha((U8CPU)(p_opacity * 255));
+        }
 		else
+        {
 			r_paint . setColor(MCGColorToSkColor(p_color));
+            r_paint . setAlpha((U8CPU)(r_paint.getAlpha() * p_opacity));
+        }
+        
 		r_paint . setMaskFilter(t_stipple);
 		
         // MM-2014-01-09: [[ LibSkiaUpdate ]] Updated filters to use Skia's new filter levels.
@@ -2110,7 +2119,7 @@ static bool MCGContextSetupFillPaint(MCGContextRef self, SkPaint &r_paint)
 	t_success = true;
 	
 	if (t_success)
-		t_success = MCGContextApplyPaintSettingsToSkPaint(self, self -> state -> fill_color, self -> state -> fill_pattern, self -> state -> fill_gradient, self -> state -> fill_style, r_paint);
+		t_success = MCGContextApplyPaintSettingsToSkPaint(self, self -> state -> fill_opacity, self -> state -> fill_color, self -> state -> fill_pattern, self -> state -> fill_gradient, self -> state -> fill_style, r_paint);
 	
 	if (t_success)
 	{		
@@ -2128,7 +2137,7 @@ static bool MCGContextSetupStrokePaint(MCGContextRef self, SkPaint &r_paint)
 	t_success = true;
 	
 	if (t_success)
-		t_success = MCGContextApplyPaintSettingsToSkPaint(self, self -> state -> stroke_color, self -> state -> stroke_pattern, self -> state -> stroke_gradient, self -> state -> stroke_style, r_paint);
+		t_success = MCGContextApplyPaintSettingsToSkPaint(self, self -> state -> stroke_opacity, self -> state -> stroke_color, self -> state -> stroke_pattern, self -> state -> stroke_gradient, self -> state -> stroke_style, r_paint);
 	
 	sk_sp<SkPathEffect> t_dash_effect;
 	if (t_success)
