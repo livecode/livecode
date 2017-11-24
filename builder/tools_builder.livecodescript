@@ -112,6 +112,9 @@ private command toolsBuilderFilterExternals pFolder, pPlatform
       end repeat
    end if
 
+   -- remove windows 64 bit builds only required for filemaker
+   get shell("rm -fv *x86_64.dll")
+   
    -- If the directory contains no code any more, remove it
    put the files & return & the folders into tFiles
    filter lines of tFiles with regex pattern "^.*\.(so|dylib|bundle|dll|lcext)$"
