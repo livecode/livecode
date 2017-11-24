@@ -215,27 +215,28 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		
 		pango_ft2_render_layout_line(&t_ftbitmap, t_line, -(t_clipped_bounds . x - t_text_bounds . x), -(t_clipped_bounds . y - t_text_bounds . y) - t_text_bounds . y);
 		
-		SkPaint t_paint;
-		t_paint . setStyle(SkPaint::kFill_Style);	
-		t_paint . setAntiAlias(self -> state -> should_antialias);
-		t_paint . setColor(MCGColorToSkColor(self -> state -> fill_color));
-		
-		SkBlendMode t_blend_mode = MCGBlendModeToSkBlendMode(self->state->blend_mode);
-		t_paint.setBlendMode(t_blend_mode);
+        // The paint containing the fill settings
+        SkPaint t_paint;
+        if (MCGContextSetupFill(self, t_paint))
+        {
+            SkImageInfo t_info = SkImageInfo::MakeA8(t_clipped_bounds.width, t_clipped_bounds.height);
+            
+            SkBitmap t_bitmap;
+            t_bitmap.setInfo(t_info);
+            t_bitmap.setPixels(t_data);
 
-		SkImageInfo t_info = SkImageInfo::MakeA8(t_clipped_bounds.width, t_clipped_bounds.height);
-		
-		SkBitmap t_bitmap;
-		t_bitmap.setInfo(t_info);
-		t_bitmap.setPixels(t_data);
-
-		self->layer->canvas->save();
-		self->layer->canvas->resetMatrix();
-		self->layer->canvas->drawBitmap(t_bitmap,
-						t_clipped_bounds.x + t_device_location.x,
-						t_clipped_bounds.y + t_device_location.y,
-						&t_paint);
-		self->layer->canvas->restore();
+            self->layer->canvas->save();
+            self->layer->canvas->resetMatrix();
+            self->layer->canvas->drawBitmap(t_bitmap,
+                            t_clipped_bounds.x + t_device_location.x,
+                            t_clipped_bounds.y + t_device_location.y,
+                            &t_paint);
+            self->layer->canvas->restore();
+        }
+        else
+        {
+            self->is_valid = false;
+        }
 	}
     
 	MCMemoryDelete(t_data);
