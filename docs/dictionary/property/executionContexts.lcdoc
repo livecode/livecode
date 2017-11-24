@@ -8,7 +8,6 @@ Summary:
 Reports information on the current state of the running application.
 
 Introduced: 1.1
-Important:The value of the <executionContexts> may be changed in future versions of LiveCode, it is not recommended to write code that depends on its contents.
 
 OS: mac, windows, linux, ios, android
 
@@ -39,6 +38,10 @@ object and handler that called the current handler, this information is
 available as: line -2 of the executionContexts.
 
 The <executionContexts> property is read-only and cannot be set.
+
+> *Important:* The value of the <executionContexts> may be changed in future 
+> versions of LiveCode, it is not recommended to write code that depends on 
+> its contents.
 
 References: errorDialog (message)
 
