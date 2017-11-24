@@ -505,9 +505,16 @@ private command fetchSymbolsForRevision pOutputDir, pServerPath, pFullVersion, p
    replace space with "%20" in pFullVersion
    
    -- Generate the URL for the file containing the symbols
-   local tURL
-   put pServerPath & "/" & pFullVersion & "/g" & char 1 to 7 of pCommitHash & "/mac-bin.tar.xz" into tURL
+   local tURL, tMacSymbolsZip
    
+   if pFullVersion begins with "8" then
+      put "universal-mac-macosx10.6-bin.tar.bz2" into tMacSymbolsZip
+   else
+      put "universal-mac-macosx10.9-bin.tar.bz2" into tMacSymbolsZip
+   end if
+   
+   put pServerPath & "/" & pFullVersion & "/g" & char 1 to 10 of pCommitHash & slash & tMacSymbolsZip into tURL
+      
    -- Create the output folder, if required
    if there is not a folder pOutputDir then
       create folder pOutputDir
@@ -515,7 +522,7 @@ private command fetchSymbolsForRevision pOutputDir, pServerPath, pFullVersion, p
    
    -- Download the file
    local tOutputFile
-   put pOutputDir & "/mac-bin.tar.xz" into tOutputFile
+   put pOutputDir & slash & tMacSymbolsZip into tOutputFile
    if there is not a file tOutputFile then
       verbosePrint "Downloading" && tURL && "to" && tOutputFile
       
@@ -542,7 +549,7 @@ private command fetchSymbolsForRevision pOutputDir, pServerPath, pFullVersion, p
       verbosePrint "Unpacking symbols"
       put the defaultFolder into tDefaultFolder
       set the defaultFolder to pOutputDir
-      get shell ("tar --strip-components 1 -xf mac-bin.tar.xz")
+      get shell ("tar --strip-components 1 -xf " && tMacSymbolsZip)
       if the result is not zero then 
          throw "unpacking staged symbols failed:" && it
       end if
