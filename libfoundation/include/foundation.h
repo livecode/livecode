@@ -3362,6 +3362,8 @@ MC_DLLEXPORT bool MCProperListCreate(const MCValueRef *values, uindex_t length, 
 // foreign value is created (MCForeignValueRef).
 MC_DLLEXPORT bool MCProperListCreateWithForeignValues(MCTypeInfoRef type, const void *values, uindex_t value_count, MCProperListRef& r_list);
 
+MC_DLLEXPORT bool MCProperListConvertToForeignValues(MCProperListRef list, MCTypeInfoRef p_typeinfo, void*& r_values_ptr, uindex_t& r_values_count);
+    
 // Create an empty mutable list.
 MC_DLLEXPORT bool MCProperListCreateMutable(MCProperListRef& r_list);
 
