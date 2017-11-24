@@ -1584,6 +1584,19 @@ void MCGContextSetStrokeCapStyle(MCGContextRef self, MCGCapStyle p_style)
 	self -> state -> stroke_attr . cap_style = p_style;
 }
 
+void MCGContextSetStrokeDashOffset(MCGContextRef self, MCGFloat p_offset)
+{
+    MCGContextSetStrokeDashes(self,
+                              p_offset,
+                              self->state->stroke_attr.dashes != nullptr ? self->state->stroke_attr.dashes->lengths : nullptr,
+                              self->state->stroke_attr.dashes != nullptr ? self->state->stroke_attr.dashes->count : 0);
+}
+
+void MCGContextSetStrokeDashArray(MCGContextRef self, const MCGFloat *p_lengths, uindex_t p_arity)
+{
+    MCGContextSetStrokeDashes(self, self->state->stroke_attr.dashes != nullptr ? self->state->stroke_attr.dashes->phase : 0, p_lengths, p_arity);
+}
+
 void MCGContextSetStrokeDashes(MCGContextRef self, MCGFloat p_phase, const MCGFloat *p_lengths, uindex_t p_arity)
 {	
 	if (!MCGContextIsValid(self))
@@ -1597,8 +1610,7 @@ void MCGContextSetStrokeDashes(MCGContextRef self, MCGFloat p_phase, const MCGFl
 		MCGDashesRelease(self -> state -> stroke_attr . dashes);
 		self -> state -> stroke_attr . dashes = NULL;
 		
-		if (p_arity > 0)
-			t_success = MCGDashesCreate(p_phase, p_lengths, p_arity, self -> state -> stroke_attr . dashes);
+        t_success = MCGDashesCreate(p_phase, p_lengths, p_arity, self -> state -> stroke_attr . dashes);
 	}	
 		
 	self -> is_valid = t_success;	

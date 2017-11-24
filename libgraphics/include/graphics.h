@@ -940,6 +940,8 @@ void MCGContextSetStrokeWidth(MCGContextRef context, MCGFloat width);
 void MCGContextSetStrokeMiterLimit(MCGContextRef context, MCGFloat limit);
 void MCGContextSetStrokeJoinStyle(MCGContextRef context, MCGJoinStyle style);
 void MCGContextSetStrokeCapStyle(MCGContextRef context, MCGCapStyle style);
+void MCGContextSetStrokeDashOffset(MCGContextRef context, MCGFloat offset);
+void MCGContextSetStrokeDashArray(MCGContextRef context, const MCGFloat* lengths, uindex_t length_count);
 void MCGContextSetStrokeDashes(MCGContextRef context, MCGFloat phase, const MCGFloat *lengths, uindex_t arity);
 void MCGContextSetStrokePaintStyle(MCGContextRef context, MCGPaintStyle style);
 
