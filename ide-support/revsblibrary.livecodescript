@@ -2082,7 +2082,9 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    -- auxiliary_stackfiles key might not be empty
    put pStandaloneSettings["auxiliary_stackfiles"] into tAuxiliaryStackfiles
    
-   appendToStringList "revInternal_SetJAVA_HOME", tStartupScript
+   if pTarget is not "emscripten" then
+      appendToStringList "revInternal_SetJAVA_HOME", tStartupScript
+   end if
    
    if pStandaloneSettings["jarFiles"] is not empty then
       appendToStringList "revInternal_SetCLASSPATH", tStartupScript
