@@ -1703,6 +1703,12 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	//   error.
 	if (new_parent_script == nil || MCStringGetLength(new_parent_script) == 0)
 	{
+        if (parent_script != NULL && scriptdepth != 0)
+        {
+            // can't clear a behavior while script is executing
+            ctxt . LegacyThrow(EE_OBJECT_SCRIPTEXECUTING);
+            return;
+        }
 		if (parent_script != NULL)
 			parent_script -> Release();
 		parent_script = NULL;
@@ -1773,6 +1779,13 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 		//
 		if (parent_script == NULL || parent_script -> GetParent() -> GetObject() != t_object)
 		{
+            if (parent_script != NULL && scriptdepth != 0)
+            {
+                // can't change a behavior while script is executing unless
+                // there was previously no behavior set
+                ctxt . LegacyThrow(EE_OBJECT_SCRIPTEXECUTING);
+                return;
+            }
 			// We have the target object, so extract its rugged id. That is the
 			// (id, stack, mainstack) triple. Note that mainstack is NULL if the
 			// object lies on a mainstack.
