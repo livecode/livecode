@@ -185,22 +185,3 @@ TEST(string, surrogate_unicode_props)
     const int kSPUA_B_Upper = 0x10FFFD + 1; // non-inclusive
     check_bidi_of_surrogate_range(kSPUA_B_Lower, kSPUA_B_Upper);
 }
-
-TEST(string, normalize_compare)
-{
-    static unichar_t s_decomposed_string[7] = { 0x65, 0x301, 0x65, 0x301, 0x65, 0x301, 0x0 };
-    static unichar_t s_composed_string[4] = { 0xE9, 0xE9, 0xE9, 0x0 };
-
-    MCAutoStringRef t_decomposed;
-    MCStringCreateWithWString(s_decomposed_string, &t_decomposed);
-    
-    MCAutoStringRef t_composed;
-    MCStringCreateWithWString(s_composed_string, &t_composed);
-    
-    ASSERT_TRUE(MCStringIsEqualTo(*t_decomposed, *t_composed, kMCStringOptionCompareCaseless));
-    
-    MCRange t_range;
-    MCStringMapGraphemeIndices(*t_decomposed, MCRangeMake(0, 1), t_range);
-    
-    ASSERT_TRUE(MCStringIsEqualTo(*t_decomposed, *t_composed, kMCStringOptionCompareCaseless));
-}

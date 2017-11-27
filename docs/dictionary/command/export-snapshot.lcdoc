@@ -2,7 +2,7 @@ Name: export snapshot
 
 Type: command
 
-Syntax: export snapshot {[from rect[angle] <rectangle>] [of <object(glossary)>] | from <object> [{with | without} effects]} [at size <size>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
+Syntax: export snapshot {[from rect[angle] <rectangle>] [of <object>] | from <object> [{with | without} effects]} [at size <size>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
 
 Summary:
 Creates a picture file from a portion of the screen.
@@ -126,7 +126,7 @@ expression evaluating to a control reference.
 
 To export a snapshot of an object in iOS use the form:
 
-    <export snapshot> from [rectangle rect of] <object(glossary)> 
+    <export snapshot> from [rectangle rect of] object 
 
 To export a snapshot of the screen in iOS use the form:
 

@@ -602,16 +602,20 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 				{					
 					NSDictionary *t_dev_plist;
 					t_dev_plist = [NSDictionary dictionaryWithContentsOfFile: t_dev_plist_path];
-					if (t_dev_plist != nil)
-					{
-						NSNumber *t_state;
-						t_state = [t_dev_plist objectForKey: @"state"];		
-						if (t_state != nil && [t_state intValue] == 3 && [t_device runtime] == s_simulator_runtime)
-						{
-							t_found_device = true;
-							break;
-						}
-					}
+                    if (t_dev_plist != nil)
+                    {
+                        NSNumber *t_state;
+                        t_state = [t_dev_plist objectForKey: @"state"];
+                        // In Xcode 9+ you can run multiple simulator instances. This seems to have broken the check [t_device runtime] == s_simulator_runtime.
+                        // So check for matching identifiers to detect if a simulator device is already up and running
+                        bool t_maching_runtimes = [t_device runtime] == s_simulator_runtime;
+                        bool t_maching_runtime_identifiers = [t_device.runtime.identifier compare: s_simulator_runtime.identifier] == NSOrderedSame;
+                        if (t_state != nil && [t_state intValue] == 3 && (t_maching_runtimes || t_maching_runtime_identifiers))
+                        {
+                            t_found_device = true;
+                            break;
+                        }
+                    }
 				}				
 			}
 			

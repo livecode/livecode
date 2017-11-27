@@ -8,7 +8,6 @@ Summary:
 Reports information on the current state of the running application.
 
 Introduced: 1.1
-Important:The value of the <executionContexts> may be changed in future versions of LiveCode, it is not recommended to write code that depends on its contents.
 
 OS: mac, windows, linux, ios, android
 
@@ -80,5 +79,9 @@ available as: line -2 of the executionContexts.
 >**Note:** if the function call occurred in a behavior script, then the line number refers to the behavior script, not the target script.
 
 The <executionContexts> property is read-only and cannot be set.
+
+> *Important:* The value of the <executionContexts> may be changed in future 
+> versions of LiveCode, it is not recommended to write code that depends on 
+> its contents.
 
 References: errorDialog (message)

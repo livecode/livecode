@@ -110,20 +110,12 @@ command serverBuilderRun pPlatform, pEdition
       end repeat
       
       local tServerPath, tServerZipPath
-      switch pEdition
-      case "Community"
-         put tEngineFolder & slash & "server-community" & tExeExtension into tServerPath
+      put tEngineFolder & slash & "server-" & toLower(pEdition) & tExeExtension into tServerPath
+      if pEdition is "Community" then
          put "livecode-community-server" & tOutExeExtension into tServerZipPath
-         break
-      case "Indy"
-         put tEngineFolder & slash & "server-commercial" & tExeExtension into tServerPath
+      else
          put "livecode-server" & tOutExeExtension into tServerZipPath
-         break
-      case "Business"
-         put tEngineFolder & slash & "server-professional" & tExeExtension into tServerPath
-         put "livecode-server" & tOutExeExtension into tServerZipPath
-         break
-      end switch
+      end if
       
       if there is a file tServerPath then
          builderLog "message", "Adding livecode-server engine"

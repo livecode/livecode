@@ -6159,6 +6159,9 @@ static void __MCStringSetFlags(MCStringRef self, uindex_t basic, uindex_t trivia
     if (native == kMCStringFlagSetTrue)
     {
         self -> flags |= kMCStringFlagCanBeNative;
+        self -> flags |= kMCStringFlagIsTrivial;
+        self -> flags |= kMCStringFlagIsBasic;
+        return;
     }
     else if (native == kMCStringFlagSetFalse)
     {
@@ -6174,6 +6177,7 @@ static void __MCStringSetFlags(MCStringRef self, uindex_t basic, uindex_t trivia
     else if (trivial == kMCStringFlagSetFalse)
     {
         self -> flags &= ~kMCStringFlagIsTrivial;
+        self -> flags &= ~kMCStringFlagCanBeNative;
     }
 
     if (basic == kMCStringFlagSetTrue)
@@ -7059,10 +7063,8 @@ static void __MCStringCheck(MCStringRef self)
     if (__MCStringCanBeNative(self))
         return;
     
-    bool t_can_be_native, t_is_trivial, t_is_basic;
+    bool t_can_be_native;
     t_can_be_native = true;
-    t_is_trivial = true;
-    t_is_basic = true;
     
     for (uindex_t i = 0; i < self -> char_count; i++)
     {
@@ -7070,43 +7072,28 @@ static void __MCStringCheck(MCStringRef self)
         {
             __MCStringSetFlags(self, false, false, false);
             t_can_be_native = false;
-            t_is_trivial = false;
-            t_is_basic = false;
             break;
         }
         
         if (!MCUnicodeIsGraphemeClusterBoundary(self -> chars[i], self -> chars[i + 1]))
         {
-            /* There is no boundary between i and i+1, so check that the pair of
-             * codeunits won't map to native (e.g. e,acute).
-             * If they do map to native, check that there is a boundary after
-             * the second codeunit - otherwise it is more than 2 cu sequence which
-             * cannot be native. */
-            char_t t_native_char;
-            if (!MCUnicodeMapToNative(self->chars+i, 2, t_native_char) ||
-                (i+1 < self->char_count &&
-                 !MCUnicodeIsGraphemeClusterBoundary(self->chars[i+1], self->chars[i+2])))
-            {
-                t_can_be_native = false;
-            }
-            
-            t_is_trivial = false;
-            
-            /* At this point i is the first codeunit of a 2-codeunit combining
-             * sequence which maps to a native, so we can skip the combiner. */
-            i++;
-            
-            continue;
+            __MCStringSetFlags(self, kMCStringFlagNoChange, false, false);
+            t_can_be_native = false;
+            break;
         }
         
         char_t t_native;
         if (!MCUnicodeCharMapToNative(self -> chars[i], t_native))
         {
             t_can_be_native = false;
+            break;
         }
     }
     
-    __MCStringSetFlags(self, t_is_basic, t_is_trivial, t_can_be_native);
+    if (t_can_be_native)
+    {
+        __MCStringSetFlags(self, true, true, true);
+    }
     
     self -> flags |= kMCStringFlagIsChecked;
 }
