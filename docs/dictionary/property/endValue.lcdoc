@@ -33,14 +33,14 @@ If the style of the <scrollbar(keyword)> is scale, the <endValue> is the
 to the bottom (for a vertical <scrollbar(keyword)>) or right (for a
 horizontal <scrollbar(keyword)>).
 
-If the style of the <scrollbar(keyword)> is scrollbar or progress, then
-when the scrollbar thumb is all the way to the end of the
+If the style of the <scrollbar(keyword)> is "scrollbar" or "progress", 
+then when the <scrollbar thumb> is all the way to the end of the
 <scrollbar(keyword)>, the <thumbPosition> is the
 <scrollbar(object)|scrollbar's> <endValue> minus the <thumbSize>.
 
 Setting the <endValue> to a <value> less than the
-<scrollbar(object)|scrollbar's> <thumbSize> <lock|locks> the <scrollbar
-thumb> to the top (or left) of the <scrollbar(keyword)>, preventing
+<scrollbar(object)|scrollbar's> <thumbSize> <lock|locks> the 
+<scrollbar thumb> to the top (or left) of the <scrollbar(keyword)>, preventing
 scrolling. 
 
 References: scrollbarFactor (constant), value (function),

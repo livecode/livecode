@@ -39,9 +39,9 @@ On Unix and Windows systems, the eventCommandKey function
 <function(control structure)>: the two <function(glossary)|functions>
 are synonyms.
 
-  **warning**: the value of this function is undefined after performing
-  a wait operation; it may no longer be the same as the value when the
-  event was dispatched.
+> **Warning**: the value of this function is undefined after performing
+> a wait operation; it may no longer be the same as the value when the
+> event was dispatched.
 
 
 References: down (constant), left (constant), up (constant),

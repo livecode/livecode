@@ -5,12 +5,12 @@ Synonyms: engine
 Type: glossary
 
 Description:
-The back-end software that powers the LiveCode <development
-environment>, as well as <standalone application|standalone
-applications> created with LiveCode.
+The back-end software that powers the LiveCode 
+<development environment>, as well as 
+<standalone application|standalone applications> created with LiveCode.
 
-The engine includes the <LiveCode> <compile|compiler>, the <object
-hierarchy>, and <object(glossary)> display routines.
+The engine includes the <LiveCode> <compile|compiler>, the 
+<object hierarchy>, and <object(glossary)> display routines.
 
 References: object hierarchy (glossary), LiveCode (glossary),
 standalone application (glossary), compile (glossary),

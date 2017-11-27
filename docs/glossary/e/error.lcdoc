@@ -6,8 +6,8 @@ Type: glossary
 
 Description:
 A problem or mistake in a program or <handler>, which prevents it from
-being <compile|compiled> (<compile error>) or from running (<execution
-error>). 
+being <compile|compiled> (<compile error>) or from running 
+(<execution error>). 
 
 References: handler (glossary), compile error (glossary),
 compile (glossary), execution error (glossary)

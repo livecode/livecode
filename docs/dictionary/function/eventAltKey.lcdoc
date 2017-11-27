@@ -42,9 +42,9 @@ The terminology varies depending on platform. Users of different
 operating systems may know this key as the Option key (Mac OS systems),
 Meta key (Unix systems), or Alt key (Windows systems).
 
-  **warning**: the value of this function is undefined after performing
-  a wait operation; it may no longer be the same as the value when the
-  event was dispatched.
+> **Warning**: the value of this function is undefined after performing
+> a wait operation; it may no longer be the same as the value when the
+> event was dispatched.
 
 
 References: return (constant), function (control structure),
