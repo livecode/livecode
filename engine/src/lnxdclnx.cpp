@@ -621,11 +621,11 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                                         break;
                                         
                                     case GDK_SCROLL_LEFT:
-                                        mfocused->kdown(kMCEmptyString, XK_WheelLeft);
+                                        mfocused->kdown(kMCEmptyString, XK_WheelRight);
                                         break;
                                         
                                     case GDK_SCROLL_RIGHT:
-                                        mfocused->kdown(kMCEmptyString, XK_WheelRight);
+                                        mfocused->kdown(kMCEmptyString, XK_WheelLeft);
                                         break;
                                 }
                             }
