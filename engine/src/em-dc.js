@@ -69,16 +69,18 @@ mergeInto(LibraryManager.library, {
 				rect = {'left':0, 'top':0, 'right':0, 'bottom':0};
 			}
 			
+			var tWindowID = ++LiveCodeDC._maxWindowID;
+			
 			LiveCodeEvents.addEventListeners(canvas);
-			LiveCodeDC._maxWindowID += 1;
-			LiveCodeDC._windowList[LiveCodeDC._maxWindowID] = {
+			LiveCodeDC._monitorResize(canvas, function() { LiveCodeEvents.postWindowReshape(tWindowID); });
+			LiveCodeDC._windowList[tWindowID] = {
 				'div': div,
 				'canvas': canvas,
 				'rect': rect,
 				'visible':false,
 			};
 			
-			return LiveCodeDC._maxWindowID;
+			return tWindowID;
 		},
 		
 		destroyWindow: function(pID) {
@@ -133,8 +135,6 @@ mergeInto(LibraryManager.library, {
 					window.div.style.setProperty('width', width + 'px', 'important');
 					window.div.style.setProperty('height', height + 'px', 'important');
 				}
-		  
-				LiveCodeEvents.postWindowReshape(pID);
 			}
 		},
 		
@@ -192,17 +192,47 @@ mergeInto(LibraryManager.library, {
 			for (var tID in LiveCodeDC._windowList) {
 				if (LiveCodeDC._windowList.hasOwnProperty(tID)) {
 					if (pCanvas == LiveCodeDC._windowList[tID].canvas) {
-						console.debug("canvas found: " + tID);
 						return tID;
 					}
 				}
 			}
-			console.debug("canvas not found: " + pCanvas);
+			console.debug("canvas not found");
 			return 0;
 		},
 		
 		getDisplayRect: function() {
 			return {'left':0, 'top':0, 'right':document.body.clientWidth, 'bottom':document.body.clientHeight};
+		},
+		
+		_monitorResize: function(element, callback) {
+			// initial setup on first call
+			if (!LiveCodeDC._monitorResize.watched) {
+				LiveCodeDC._monitorResize.watched = [];
+		  
+				var resizeCheck = function() {
+					LiveCodeDC._monitorResize.watched.forEach(function(data) {
+						var rect = data.element.getBoundingClientRect();
+						if (rect.left != data.rect.left || rect.top != data.rect.top || rect.right != data.rect.right || rect.bottom != data.rect.bottom) {
+							data.rect = rect;
+							data.callback();
+						}
+					});
+				};
+
+				// Listen to the window's size changes
+				window.addEventListener('resize', resizeCheck);
+		  
+				// Listen to changes on the elements in the page that affect layout
+				var observer = new MutationObserver(resizeCheck);
+				observer.observe(document.body, {
+					attributes: true,
+					childList: true,
+					characterData: true,
+					subtree: true
+				});
+			}
+			
+			LiveCodeDC._monitorResize.watched.push({'element':element, 'callback':callback, 'rect':element.getBoundingClientRect()});
 		}
 	},
 	

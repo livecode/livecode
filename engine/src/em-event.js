@@ -727,13 +727,16 @@ mergeInto(LibraryManager.library, {
 		
 		postWindowReshape: function(window)
 		{
-			var stack = LiveCodeEvents._getStackForWindow(window);
-			if (stack == 0)
-			{
-				console.log('could not find stack for window ' + window);
-				return
-			}
-			LiveCodeEvents._postWindowReshape(stack, 1.0);
+			LiveCodeAsync.delay(function () {
+				var stack = LiveCodeEvents._getStackForWindow(window);
+				if (stack == 0)
+				{
+					console.log('could not find stack for window ' + window);
+					return
+				}
+				LiveCodeEvents._postWindowReshape(stack, 1.0);
+			});
+			LiveCodeAsync.resume();
 		},
 	},
 
