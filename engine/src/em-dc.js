@@ -31,6 +31,7 @@ mergeInto(LibraryManager.library, {
 			LiveCodeDC._windowList = {};
 			LiveCodeDC._assignedMainWindow = false;
 			LiveCodeDC._maxWindowID = 0;
+			LiveCodeDC._maxZIndex = 1;
 
 			LiveCodeDC._initialised = true;
 		},
@@ -59,7 +60,8 @@ mergeInto(LibraryManager.library, {
 				div = document.createElement('div');
 				div.style.display = 'none';
 				div.style.position = 'fixed';
-				div.style.zIndex = 1;
+				div.style.zIndex = LiveCodeDC._maxZIndex;
+				LiveCodeDC._maxZIndex++;
 				canvas = document.createElement('canvas');
 				div.appendChild(canvas);
 				document.body.appendChild(div);
@@ -80,6 +82,8 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		destroyWindow: function(pID) {
+			LiveCodeDC.setWindowVisible(pID, false);
+			LiveCodeDC.raiseWindow(pID);
 			var window = LiveCodeDC._windowList[pID];
 			if (window)
 			{
@@ -91,8 +95,25 @@ mergeInto(LibraryManager.library, {
 				else
 				{
 					document.body.removeChild(window.div);
+					LiveCodeDC._maxZIndex--;
 				}
 				delete LiveCodeDC._windowList[pID];
+			}
+		},
+		
+		raiseWindow: function(pID) {
+			var window = LiveCodeDC._windowList[pID];
+			if (window && window.div)
+			{
+				var zIndex = window.div.style.zIndex;
+				for (var tID in LiveCodeDC._windowList)
+				{
+					if (LiveCodeDC._windowList[tID].div && LiveCodeDC._windowList[tID].div.style.zIndex > zIndex)
+					{
+						LiveCodeDC._windowList[tID].div.style.zIndex--;
+					}
+				}
+				window.div.style.zIndex = LiveCodeDC._maxZIndex - 1;
 			}
 		},
 		
@@ -206,6 +227,11 @@ mergeInto(LibraryManager.library, {
 	MCEmscriptenDestroyWindow__deps: ['$LiveCodeDC'],
 	MCEmscriptenDestroyWindow: function(pWindowID) {
 		LiveCodeDC.destroyWindow(pWindowID);
+	},
+	
+	MCEmscriptenRaiseWindow__deps: ['$LiveCodeDC'],
+	MCEmscriptenRaiseWindow: function(pWindowID) {
+		LiveCodeDC.raiseWindow(pWindowID);
 	},
 	
 	MCEmscriptenSetWindowRect__deps: ['$LiveCodeDC'],
