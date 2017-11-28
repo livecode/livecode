@@ -295,7 +295,11 @@ public handler OnPaint()
 	if mGeometryIsChanged then
 		calculateExtents()
 		-- update mPerimeter and mLines variables if the geometry has changed
-		put (the trunc of my height)/5 into mRadius
+		if mIsHorizontal then
+			put (the trunc of my height)/5 into mRadius
+		else
+			put (the trunc of my width)/5 into mRadius
+		end if
 		updatePerimeter()
 		updateLines()
 	end if
