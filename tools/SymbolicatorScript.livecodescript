@@ -532,10 +532,10 @@ private command fetchSymbolsForRevision pOutputDir, pServerPath, pFullVersion, p
          put "mac-bin.tar.bz2" into tMacSymbolsZip
       else if tBuildNumber is "15009" or tBuildNumber is "15010" then -- DP-7 and DP-8
          put 7 into tCommitHashLength
-         put "universal-mac-macosx10.6-bin.tar.bz2" into tMacSymbolsZip
+         put "universal-mac-macosx10.9-bin.tar.bz2" into tMacSymbolsZip
       else if tBuildNumber >= 15012 then -- DP-9+
          put 10 into tCommitHashLength
-         put "universal-mac-macosx10.6-bin.tar.bz2" into tMacSymbolsZip
+         put "universal-mac-macosx10.9-bin.tar.bz2" into tMacSymbolsZip
       end if
       
    end if
