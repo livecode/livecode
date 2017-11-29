@@ -1,5 +1,5 @@
 /* Copyright (C) 2003-2015 LiveCode Ltd.
-
+ 
 This file is part of LiveCode.
 
 LiveCode is free software; you can redistribute it and/or modify it under
