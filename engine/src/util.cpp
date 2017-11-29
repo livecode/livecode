@@ -3196,16 +3196,31 @@ __MCU_library_map_path(MCStringRef p_path,
         t_mapped_path = *t_base_path;
     }
     
-    // Concatenate the mapped path onto the app code path, and then resolve
-    // it to ensure that all '.' and '..' type components are removed.
-    // (otherwise things might go awry if we have a //?/ type path on
-    // Windows).
+    // If the mapped path does not begin with './', then we just resolve.
     MCAutoStringRef t_unresolved_library_path;
-    if (!MCStringFormat(&t_unresolved_library_path,
-                        "%@/%@",
-                        MCappcodepath,
-                        *t_mapped_path) ||
-        !MCS_resolvepath(*t_unresolved_library_path,
+    if (MCStringBeginsWithCString(*t_mapped_path,
+                                  reinterpret_cast<const char_t *>("./"),
+                                  kMCStringOptionCompareExact))
+    {
+        
+        // Concatenate the mapped path onto the app code path
+        if (!MCStringFormat(&t_unresolved_library_path,
+                            "%@/%@",
+                            MCappcodepath,
+                            *t_mapped_path))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        t_unresolved_library_path = *t_mapped_path;
+    }
+    
+    // resolve the oath to ensure that all '.' and '..' type components are
+    // removed. (otherwise things might go awry if we have a //?/ type path on
+    // Windows).
+    if (!MCS_resolvepath(*t_unresolved_library_path,
                          r_mapped_library_path))
     {
         return false;
