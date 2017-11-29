@@ -371,6 +371,5 @@ private:
 	MCExpression *m_language;
 };
 
-//////////
 
 #endif

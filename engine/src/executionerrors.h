@@ -2761,6 +2761,10 @@ enum Exec_errors
 
     // {EE-0904} stack: password protecting stacks not supported in this edition
     EE_STACK_PASSWORD_NOT_SUPPORTED,
+    
+    // {EE-0905} library mapping: bad mapping
+    EE_BAD_LIBRARY_MAPPING,
+
 };
 
 extern const char *MCexecutionerrors;
