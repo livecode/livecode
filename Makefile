@@ -20,6 +20,7 @@
 
 # Tools that Make calls
 XCODEBUILD ?= xcodebuild
+XCODE_TARGET_SDK ?= macosx10.9
 WINE ?= wine
 EMMAKE ?= emmake
 
@@ -170,7 +171,7 @@ ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:start:compile"
 	@echo "COMPILE"
 endif
-	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target default \
+	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -sdk $(XCODE_TARGET_SDK) -configuration $(BUILDTYPE) -target default \
 	  $(XCODEBUILD_FILTER)
 ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:end:compile"
@@ -181,8 +182,8 @@ ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:start:testcpp"
 	@echo "TEST C++"
 endif
-	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check \
-	  $(XCODEBUILD_FILTER)
+	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" \
+	  -configuration $(BUILDTYPE) -target check $(XCODEBUILD_FILTER)
 ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:end:testcpp"
 endif
