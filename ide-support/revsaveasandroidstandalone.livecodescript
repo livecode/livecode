@@ -289,6 +289,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       revSBUpdateSettingsForExtensions "android", pSettings
       revSBResolveCopyFilesList tBaseFolder, "android", pSettings, tResolvedFileData
       
+      expandAARsAndComputeSettings tBuildFolder, pSettings
+      
       repeat for each element tFile in tResolvedFileData
          -- Add to list of manifests to merge
          if tFile["name"] is "AndroidManifest.xml" then
@@ -967,6 +969,109 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
 end revSaveAsMobileStandaloneMain
 
 ################################################################################
+
+private command generateResourceClasses pBuildFolder, pManifest, @xSettings, @rGenerated
+   if xSettings["aarFiles"] is empty then
+      return empty
+   end if
+   
+   local tOutputFolder, tAaptResult, tManifest
+   put pBuildFolder & slash & "gen" into tOutputFolder
+   revSBEnsureFolder tOutputFolder
+   -- at the moment we just generate resource classes for each included aar
+   repeat with x = 1 to the number of lines in xSettings["aarFiles"]
+      put pBuildFolder & "/" & x & "/AndroidManifest.xml" into tManifest
+      executeShellCommand pathToAapt(), "package", "-f", "-M", tManifest, \
+            "-I", pathToRootClasses(), "-S", pBuildFolder & "/res-build/res/", "-J", \
+            tOutputFolder & "/", "-m"
+      put the result into tAaptResult
+      processAaptResult tAaptResult
+      if tAaptResult is not empty then
+         return tAaptResult
+      end if
+   end repeat
+   local tGenerated
+   put revSBEnumerateFolder(tOutputFolder) into tGenerated
+   filter tGenerated with "*/R.java"
+   if tGenerated is not empty then
+      repeat for each line tLine in tGenerated
+         if rGenerated is empty then
+            put tOutputFolder & slash &tLine into rGenerated
+         else
+            put return & tOutputFolder & slash & tLine after rGenerated
+         end if
+      end repeat
+   end if
+   return empty
+end generateResourceClasses
+
+private command appendToStringList pValue, @xList
+   if xList is empty then
+      put pValue into xList
+   else
+      put return & pValue after xList
+   end if
+end appendToStringList
+
+private command expandAARsAndComputeSettings tBuildFolder, @xSettingsA
+   local tCount, tDefaultFolder
+   put the folder into tDefaultFolder
+   repeat for each line tAAR in xSettingsA["aarFiles"]
+      local tExtractFolder, tExtractCmd, tExtractedFiles
+      add 1 to tCount
+      put tBuildFolder & slash & tCount \
+            into tExtractFolder
+      revSBEnsureFolder tExtractFolder
+      set the folder to tExtractFolder
+      executeShellCommand pathToJar(), "xf", tAAR
+      updateSettingsForExtractedAAR tExtractFolder, xSettingsA
+      -- also extract to general res folder
+      put tBuildFolder & slash & "res-build" \
+            into tExtractFolder
+      revSBEnsureFolder tExtractFolder
+      set the folder to tExtractFolder
+      executeShellCommand pathToJar(), "xf", tAAR
+      if the result is not empty then
+         answer the result
+      end if
+   end repeat
+   set the folder to tDefaultFolder
+end expandAARsAndComputeSettings
+   
+constant kSupportedAARFiles = "AndroidManifest.xml,classes.jar,R.txt"   
+constant kSupportedAARFolders = "res"
+private command updateSettingsForExtractedAAR pFolder, @xSettingsA
+   local tExtractedItem
+   repeat for each item tItem in kSupportedAARFiles
+      put pFolder & slash & tItem into tExtractedItem
+      if there is not a file tExtractedItem then
+         next repeat
+      end if
+      switch tItem
+         case "AndroidManifest.xml"
+            appendToStringList tExtractedItem, xSettingsA["androidManifests"]
+            break
+         case "classes.jar"
+            appendToStringList tExtractedItem, xSettingsA["jarFiles"]
+            break
+         case "R.txt"
+            -- Don't need to do anything with this
+            break
+      end switch
+   end repeat
+   repeat for each item tItem in kSupportedAARFolders
+      put pFolder & slash & tItem into tExtractedItem
+      if there is not a folder tExtractedItem then
+         next repeat
+      end if     
+      switch tItem
+         case "res"
+            -- don't need to do anything with this- our call to aapt
+            -- deals with including the res files in the APK
+            break
+      end switch
+   end repeat
+end updateSettingsForExtractedAAR
 
 private command addAssetsToArchive pFileData, pBaseFolder, pArchive
    local tDeviceConfig, tConfigFile, tCustomConfigFile, tFonts
