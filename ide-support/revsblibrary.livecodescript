@@ -2371,10 +2371,21 @@ private command __UpdateSettingsFromCodeFolder pPath, pCodeFolderName, pPlatform
    put files(tFolderPath) into tFiles
    switch pCodeFolderName
       case "jvm-android"
+         local tAndroidJarFiles, tAndroidAarFiles
+         put tFiles into tAndroidJarFiles
+         filter tAndroidJarFiles with "*.jar"
+         put tFiles into tAndroidAarFiles
+         filter tAndroidAarFiles with "*.aar"
          if pPlatform is "android" then
-            repeat for each line tLine in tFiles
+            repeat for each line tLine in tAndroidJarFiles
                appendToStringList tFolderPath & slash & tLine, xSettings["jarFiles"]
             end repeat
+            repeat for each line tLine in tAndroidAarFiles
+               appendToStringList tFolderPath & slash & tLine, xSettings["aarFiles"]
+            end repeat
+            if there is a file (tFolderPath & slash & "AndroidManifest.xml") then
+               appendToStringList tFolderPath & slash & "AndroidManifest.xml", xSettings["androidManifests"]
+            end if
          end if
          break
       case "jvm"
