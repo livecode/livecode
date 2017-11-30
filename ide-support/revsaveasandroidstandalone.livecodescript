@@ -692,8 +692,14 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put tBuildFolder & slash & "classes_app/" & tCompiledClassFilePath & "/AppProvider.class" & return after tBuiltClassFiles
       
       set the itemdel to slash
+      local tJarCount
       repeat for each line tJarFile in pSettings["jarFiles"]
-         put url ("binfile:" & tJarFile) into url ("binfile:" & tLibsBuildFolder & slash & item -1 of tJarFile)
+         -- use numeric jar file names as they might have the same
+         -- source name
+         add 1 to tJarCount
+         local tTargetFile
+         put tLibsBuildFolder & slash & tJarCount & ".jar" into tTargetFile
+         put url ("binfile:" & tJarFile) into url ("binfile:" & tTargetFile)
       end repeat
       
       local tClassesFile
