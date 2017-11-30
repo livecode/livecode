@@ -1173,20 +1173,54 @@ private command executeAdbCommand pCommand
    return it
 end executeAdbCommand
 
-private command executeShellCommand
-   local tShell
-   repeat with i = 2 to the paramCount
-      if param(i) contains space and not (param(i) begins with "-") then
-         put quote & param(i) & quote & space after tShell
+private command appendToList pValue, @xList
+   get the number of elements in xList
+   put pValue into xList[it + 1]
+end appendToList
+
+private command prependToList pValue, @xList
+   insertIntoList pValue, xList, 1
+end prependToList
+
+private command insertIntoList pValue, @xList, pAt
+   local tNewList
+   repeat with x = the number of elements in xList down to 1
+      if x >= pAt then
+         put xList[x] into tNewList[x+1]
       else
-         put param(i) & space after tShell
+         put xList[x] into tNewList[x]
       end if
    end repeat
+   put pValue into tNewList[pAt]
+   put tNewList into xList
+end insertIntoList
    
-   get doShellCommand(param(1), tShell)
+private command executeShellCommand
+   local tArray
+   repeat with i = 2 to the paramCount
+      local tParam
+      if param(i) contains space and not (param(i) begins with "-") then
+         put quote & param(i) & quote into tParam
+      else
+         put param(i) into tParam
+      end if
+      appendToList tParam, tArray
+   end repeat
+   
+   executeShellCommandWithParams param(1), tArray
+   return the result
+end executeShellCommand
+
+private command executeShellCommandWithParams pCommand, pParamArray
+   local tShell
+   repeat for each element tParam in pParamArray
+      put tParam & space after tShell
+   end repeat
+   
+   get doShellCommand(pCommand, tShell)
    
    return it
-end executeShellCommand
+end executeShellCommandWithParams
 
 private function doShellCommand pCommand, pArguments
    --makeBuildLogEntry "Executing command:" && pCommand && pArguments
