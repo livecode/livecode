@@ -253,17 +253,23 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       
       // MERG: TODO when support for other Archs is added this needs work
       put tLibsBuildFolder & slash & kArchs into tArmLibsBuildFolder
-      put tBuildFolder & slash & "res" into tResBuildFolder
+      put tBuildFolder & slash & "res-build/res" into tResBuildFolder
       put tResBuildFolder & slash & "drawable" into tDrawableResBuildFolder
       put tResBuildFolder & slash & "layout" into tLayoutResBuildFolder
       put tResBuildFolder & slash & "xml" into tXMLResBuildFolder
       create folder tClassesBuildFolder
       create folder tLibsBuildFolder
       create folder tArmLibsBuildFolder
-      create folder tResBuildFolder
-      create folder tDrawableResBuildFolder
-      create folder tLayoutResBuildFolder
-      create folder tXMLResBuildFolder
+      revSBEnsureFolder tResBuildFolder
+      if there is no folder tDrawableResBuildFolder then
+         create folder tDrawableResBuildFolder
+      end if
+      if there is no folder tLayoutResBuildFolder then
+         create folder tLayoutResBuildFolder
+      end if
+      if there is no folder tXMLResBuildFolder then
+         create folder tXMLResBuildFolder
+      end if
       if there is no folder tBuildFolder or there is no folder tClassesBuildFolder or \
             there is no folder tLibsBuildFolder or there is no folder tArmLibsBuildFolder or \
             there is no folder tResBuildFolder or there is no folder tDrawableResBuildFolder  or \
@@ -702,6 +708,48 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          put url ("binfile:" & tJarFile) into url ("binfile:" & tTargetFile)
       end repeat
       
+      -- MW-2012-07-05: Record all asset files that are copied into /tmp
+      local tAssetFiles
+      put empty into tAssetFiles
+      
+      local tAssetArchive
+      put tBuildFolder & slash & "lcandroid.ap_" into tAssetArchive
+      if there is a file tAssetArchive then
+         delete file tAssetArchive
+      end if
+      
+      local tLayoutXML
+      put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "livecode_inputcontrol.xml") into tLayoutXML
+      put url ("binfile:" & tLayoutXML) into url ("binfile:" & tLayoutResBuildFolder & slash & "livecode_inputcontrol.xml")
+      if the result is not empty then
+         throw "could not copy layout file '" & tLayoutXML & "'"
+      end if
+      put tLayoutResBuildFolder & slash & "livecode_inputcontrol.xml" & return after tAssetFiles
+      
+      local tNFCTechFilter
+      put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "nfc_tech_filter.xml") into tNFCTechFilter
+      put url ("binfile:" & tNFCTechFilter) into url ("binfile:" & tXMLResBuildFolder & slash & "nfc_tech_filter.xml")
+      if the result is not empty then
+         throw "could not copy NFC tech filter file '" & tNFCTechFilter & "'"
+      end if
+      put tXMLResBuildFolder & slash & "nfc_tech_filter.xml" & return after tAssetFiles
+      
+      if there is a file tIcon then
+         put url ("binfile:" & tIcon) into url ("binfile:" & tDrawableResBuildFolder & slash & "icon.png")
+         if the result is not empty then
+            throw "could not copy icon '" & tIcon & "'"
+         end if
+         put tDrawableResBuildFolder & slash & "icon.png" & return after tAssetFiles
+      end if
+      
+      if there is a file tStatusBarIcon then
+         put url ("binfile:" & tStatusBarIcon) into url ("binfile:" & tDrawableResBuildFolder & slash & "notify_icon.png")
+         if the result is not empty then
+            throw "could not copy icon '" & tStatusBarIcon & "'"
+         end if
+         put tDrawableResBuildFolder & slash & "notify_icon.png" & return after tAssetFiles
+      end if
+      
       local tResourceClasses
       generateResourceClasses tBuildFolder, tManifestFile, pSettings, tResourceClasses
       if the result is not empty then
@@ -775,64 +823,17 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       -------- Assembling Assets
       revStandaloneProgress "Assembling assets..."
       
-      -- MW-2012-07-05: Record all asset files that are copied into /tmp
-      local tAssetFiles
-      put empty into tAssetFiles
-      
-      local tAssetArchive
-      put tBuildFolder & slash & "lcandroid.ap_" into tAssetArchive
-      if there is a file tAssetArchive then
-         delete file tAssetArchive
-      end if
-      
-      local tLayoutXML
-      put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "livecode_inputcontrol.xml") into tLayoutXML
-      put url ("binfile:" & tLayoutXML) into url ("binfile:" & tLayoutResBuildFolder & slash & "livecode_inputcontrol.xml")
-      if the result is not empty then
-         throw "could not copy layout file '" & tLayoutXML & "'"
-      end if
-      put tLayoutResBuildFolder & slash & "livecode_inputcontrol.xml" & return after tAssetFiles
-      
-      local tNFCTechFilter
-      put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "nfc_tech_filter.xml") into tNFCTechFilter
-      put url ("binfile:" & tNFCTechFilter) into url ("binfile:" & tXMLResBuildFolder & slash & "nfc_tech_filter.xml")
-      if the result is not empty then
-         throw "could not copy NFC tech filter file '" & tNFCTechFilter & "'"
-      end if
-      put tXMLResBuildFolder & slash & "nfc_tech_filter.xml" & return after tAssetFiles
-      
-      if there is a file tIcon then
-         put url ("binfile:" & tIcon) into url ("binfile:" & tDrawableResBuildFolder & slash & "icon.png")
-         if the result is not empty then
-            throw "could not copy icon '" & tIcon & "'"
-         end if
-         put tDrawableResBuildFolder & slash & "icon.png" & return after tAssetFiles
-      end if
-      
-      if there is a file tStatusBarIcon then
-         put url ("binfile:" & tStatusBarIcon) into url ("binfile:" & tDrawableResBuildFolder & slash & "notify_icon.png")
-         if the result is not empty then
-            throw "could not copy icon '" & tStatusBarIcon & "'"
-         end if
-         put tDrawableResBuildFolder & slash & "notify_icon.png" & return after tAssetFiles
-      end if
-      
-      -- MW-2012-07-04: On Linux, 'aapt' can complain about libz version info
-      --   so we delete that line from the result before checking for an error.
-      if there is a folder (tBuildFolder & slash & "res") then
-         executeShellCommand pathToAapt(), "package", "-f", "-M", tManifestFile, "-I", pathToRootClasses(),"-F", tAssetArchive, "-S", (tBuildFolder & slash & "res")
+      local tAaptResult
+      if there is a folder tResBuildFolder then
+         executeShellCommand pathToAapt(), "package", "-f", "-M", tManifestFile, \
+               "-I", pathToRootClasses(),"-F", tAssetArchive, "-S", tResBuildFolder
       else
-         executeShellCommand pathToAapt(), "package", "-f", "-M", tManifestFile, "-I", pathToRootClasses(),"-F", tAssetArchive
+         executeShellCommand pathToAapt(), "package", "-f", "-M", tManifestFile, \
+               "-I", pathToRootClasses(),"-F", tAssetArchive
       end if
-      get the result
-      if line 1 of it contains "no version information available" then
-         delete line 1 of it
-      end if
-      // SN-2014-10-27: [[ Bug 13800 ]] libpng 1.6+ raises a warning for the PNG files having embedded sRGB profile
-      if line 1 of it contains "iCCP: Not recognizing known sRGB profile that has been edited" then
-         delete line 1 of it
-      end if
-      if it is not empty then
+      put the result into tAaptResult
+      processAaptResult tAaptResult
+      if tAaptResult is not empty then
          throw "could not generate package manifest"
       end if
       
@@ -997,6 +998,18 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
 end revSaveAsMobileStandaloneMain
 
 ################################################################################
+
+private command processAaptResult @xResult   
+   -- MW-2012-07-04: On Linux, 'aapt' can complain about libz version info
+   --   so we delete that line from the result before checking for an error.
+   if line 1 of xResult contains "no version information available" then
+      delete line 1 of xResult
+   end if
+   // SN-2014-10-27: [[ Bug 13800 ]] libpng 1.6+ raises a warning for the PNG files having embedded sRGB profile
+   if line 1 of xResult contains "iCCP: Not recognizing known sRGB profile that has been edited" then
+      delete line 1 of xResult
+   end if
+end processAaptResult
 
 private command generateResourceClasses pBuildFolder, pManifest, @xSettings, @rGenerated
    if xSettings["aarFiles"] is empty then
