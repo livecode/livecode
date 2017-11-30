@@ -249,10 +249,14 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
          add 1 to tNumberCopied
          if char -1 of tResource is "/" then
             -- create the folder, stat the source
-            create folder (pTarget & "/" & char 1 to -2 of tResource)
-            if the result is not empty then
-               put "cannot create subfolder ", the result , tResource into tResult
-               exit repeat
+            local tSubFolder
+            put pTarget & "/" & char 1 to -2 of tResource into tSubFolder
+            if there is not a folder tSubFolder then
+               create folder tSubFolder
+               if the result is not empty then
+                  put "cannot create subfolder ", the result , tResource into tResult
+                  exit repeat
+               end if
             end if
             if the platform is "macos" then -- stat it and set some flags
                local tUser, tGroup
