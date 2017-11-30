@@ -1420,3 +1420,327 @@ function mapFilePath pPath
 end mapFilePath
 
 ################################################################################
+
+function androidCreateAppManifest pMainManifest, pAdditionalManifestsA
+   local tMainArrayA, tAdditionalArraysA
+   put androidManifestToArray(pMainManifest) into tMainArrayA
+   repeat for each element tManifest in pAdditionalManifestsA
+      appendToList androidManifestToArray(tManifest), tAdditionalArraysA
+   end repeat
+   
+   MergeManifestArrays tMainArrayA, tAdditionalArraysA
+   return ConvertArrayToXML(tMainArrayA)
+end androidCreateAppManifest
+
+command MergeManifestArrays @xManifestArrayA, pAdditionalsA
+   -- Warning: at the moment we only support merging of
+   -- features, permissions, and application metadata
+   repeat for each element tAdditionalA in pAdditionalsA
+      -- everything we're interested in comes under the 
+      -- manifest root node.
+      MergeManifestArray xManifestArrayA[1]["@children"], tAdditionalA[1]["@children"]
+   end repeat
+end MergeManifestArrays
+
+private function FindIndex pArray, pName
+   repeat for each key tIndex in pArray
+      if pArray[tIndex]["@name"] is pName then
+         return tIndex
+      end if
+   end repeat
+   throw "no index found for" && pName
+end FindIndex
+
+private function FindEndOfBlockIndex pArray
+   local tIndex
+   repeat for each key tIndex in pArray
+      if pArray[tIndex]["@children"] is not empty then
+         exit repeat
+      end if
+   end repeat
+   return tIndex
+end FindEndOfBlockIndex
+
+command MergeManifestArray @xManifestArrayA, pAdditionalsA
+   -- Find the index of the end of this block and insert new items
+   -- before it
+   local tEndOfBlock
+   put FindEndOfBlockIndex(xManifestArrayA) into tEndOfBlock
+   repeat for each key tIndex in pAdditionalsA
+      local tData
+      put pAdditionalsA[tIndex] into tData
+      switch tData["@name"] 
+         case "application"
+            -- Find the index of the application sub-array
+            local tAppIndex
+            put FindIndex(xManifestArrayA, "application") into tAppIndex
+            MergeManifestArray xManifestArrayA[tAppIndex]["@children"], \
+                  tData["@children"]
+            break
+         case "uses-sdk"
+            -- ensure the maximum min sdk is used
+            -- Find the index of the uses-sdk element
+            local tUsesSDKIndex
+            put FindIndex(xManifestArrayA, "uses-sdk") into tUsesSDKIndex
+            local tExisting, tNew
+            put xManifestArrayA[tUsesSDKIndex]["@attributes"]["android:minSDKVersion"] \
+                  into tExisting
+            put tData["@attributes"]["android:minSDKVersion"] into tNew
+            put max(tExisting, tNew) into \
+                  xManifestArrayA[tUsesSDKIndex]["@attributes"]["android:minSDKVersion"]
+            break
+         default
+            insertIntoList tData, xManifestArrayA, tEndOfBlock
+            add 1 to tEndOfBlock
+            break
+      end switch
+   end repeat
+end MergeManifestArray
+
+function androidManifestToArray pManifestFile
+   local tXML
+   put url("binfile:" & pManifestFile) into tXML
+   return ConvertXMLToArray(tXML, "utf-8", true, "")
+end androidManifestToArray
+
+/*
+Handlers for converting XML text to LiveCode arrays and vice versa. 
+Based on an implementation by Trevor DeVore of Blue Mango Learning Systems.
+*/
+
+/**
+Converts an XML tree into a LiveCode multi-dimensional array.
+
+Parameters:
+pXML: The xml to convert.
+pStoreEncodedAs: 
+Encoding to use. Must be a value that can be passed to textEncode. Default is "utf-8".
+*/
+function ConvertXMLToArray pXML, pStoreEncodedAs
+   local theArray,theResult,theRootNode,theTreeID
+   local theXMLEncoding, tVersion
+   
+   ## Create an XML tree from XML text
+   put revCreateXMLTreeWithNamespaces(pXML, true, true, false) into theTreeID
+   
+   if theTreeID is an integer then
+      ## Determine the encoding of the XML, default to UTF-8
+      put matchText(pXML, "<?xml (.)encoding=" & quote & "([^" & quote & "])", tVersion, theXMLEncoding) into theResult
+      if theXMLEncoding is empty then put "utf-8" into theXMLEncoding
+      
+      ## Now convert to array. 
+      ## The 1st dimension has one key which is the name of the root node.
+      put revXMLRootNode(theTreeID) into theRootNode
+      if theRootNode is not empty and not(theRootNode begins with "xmlerr,") then
+         put ConvertXMLNodeToArray(theTreeID, theRootNode, theXMLEncoding, pStoreEncodedAs) \
+               into theArray[1]
+         put theRootNode into theArray[1]["@name"]
+      end if
+      
+      revDeleteXMLTree theTreeID
+   end if
+   
+   return theArray
+end ConvertXMLToArray
+
+
+/**
+Converts a revXML created XML Tree to an array.
+Parameters:
+pXMLTree: The xml tree id.
+pStoreEncodedAs: See docs for ConvertXMLToArray.
+
+Description:
+See docs for ConvertXMLToArray.
+*/
+function ConvertXMLTreeToArray pXMLTree, pStoreEncodedAs
+   return ConvertXMLToArray(revXMLText(pXMLTree), pStoreEncodedAs)
+end ConvertXMLTreeToArray
+
+
+/**
+Converts a multi-dimensional array to an XML tree.
+Parameters:
+pArray: The array to convert.
+pArrayEncoding: Encoding used in the array. Must be a value that can be passed to textDecode.
+pStoreEncodedAs: Encoding to use. Must be a value that can be passed to textEncode. Default is "utf-8".
+
+Description:
+The array should be keyed numerically, in order of appearance of nodes.
+pArray[1] is assumend to be the root node in the XML tree.
+each node is an array with three possible keys, 
+- @name (required): The name of the node
+- @attributes: The attributes of the node, stored as an array of 
+  name/value pairs
+- @children: A numerically keyed array of child nodes
+- @value: The text value of the node
+Returns: Text of the XML represented by the array, or error message.
+*/
+function ConvertArrayToXML pArray, pArrayEncoding, pStoreEncodedAs
+   local theError,theRootNode,theXML,theXMLTree
+   
+   ## if pArrayEncoding is empty then current platform encoding is assumed
+   if pStoreEncodedAs is empty then put "UTF-8" into pStoreEncodedAs
+   
+   ## Create XML for root node. Note that we take extra steps in order to support
+   ## converting an array that only represents part of a tree rather than the entire tree.
+   ## In this case there may be multiple nodes at the root level.
+   put pArray[1]["@name"] into theRootNode 
+   put "<" & theRootNode & "/>" into theXML
+   
+   local tEncoding
+   ## Create XML needed to create tree
+   put format("<?xml version=\"1.0\" encoding=\"%s\"?>", \
+         pStoreEncodedAs) into tEncoding
+   put tEncoding before theXML
+   put revCreateXMLTreeWithNamespaces(theXML, true, true, false) into theXMLTree
+   
+   if theXMLTree is an integer then
+      ## Loop over all nodes at root level
+      ## Create tree using helper function
+      local tName
+      repeat for each element tNode in pArray
+         put tNode["@name"] into tName
+         replace space with "-" in tName
+         ConvertArrayDimensionToXML tNode, theXMLTree, slash & tName, \
+               tName, pArrayEncoding, pStoreEncodedAs
+         put the result into theError
+         
+         if theError is not empty then exit repeat
+      end repeat
+      
+      if theError is not empty then
+         ## something went wrong, clean bad tree
+         revDeleteXMLTree theXMLTree
+      end if
+   else
+      put theXMLTree into theError
+   end if
+   
+   if theError is not empty then
+      return theError for error
+   else
+      return tEncoding & return & \
+            revXMLText(theXMLTree, theRootNode, true) \
+            for value
+   end if
+end ConvertArrayToXML
+ 
+private command ConvertArrayDimensionToXML pArray, pTreeID, pNode, pName, pArrayEncoding, pStoreEncodedAs
+   local theError,theKey,theKeys,tName
+   put pName into tName
+   repeat for each key tKey in pArray
+      if tKey is "@name" then next repeat
+      ## Look for attributes. These will be added as attributes to pNode.
+      if tKey is "@attributes" or tKey is "@attr" then
+         repeat for each key theKey in pArray[tKey]
+            local theAttr
+            put theKey into theAttr
+            replace space with "-" in theAttr
+            
+            revSetXMLAttribute pTreeID, pNode, theAttr, \
+                  EncodeString(pArray[tKey][theKey], \
+                  pArrayEncoding, pStoreEncodedAs)
+            if the result begins with "xmlerr," then 
+               put the result && "(setting attribute" && theKey && "for node" && pNode & ")" into theError
+            end if
+            
+            if theError is not empty then exit repeat
+         end repeat
+         
+      else if tKey is "@value" then
+         ## This XML tree is using complex structure. Node is the value of the parent node
+         revPutIntoXMLNode pTreeID, pNode, EncodeString(pArray[tKey], pArrayEncoding, pStoreEncodedAs)
+         if the result begins with "xmlerr," then
+            put the result && "(adding child node" && tName && "to node" && pNode & ")" into theError
+         end if
+         
+      else if tKey is "@children" then
+         local tCounts
+         repeat for each element tChildNode in pArray[tKey]
+            add 1 to tCounts[tChildNode["@name"]]
+            ## Node has children. Add node to XML tree then call self recursivly to create children nodes. 
+            revAddXMLNode pTreeID, pNode, tChildNode["@name"], empty
+            if the result begins with "xmlerr," then
+               put the result && "(adding node" && tName & ")" into theError
+            end if
+            
+            if theError is empty then
+               ConvertArrayDimensionToXML tChildNode, pTreeID, \
+                     pNode & slash & tChildNode["@name"] & "[" & tCounts[tChildNode["@name"]] & "]", \
+                     tChildNode["@name"], pArrayEncoding, pStoreEncodedAs
+               put the result into theError
+            end if
+         end repeat
+      else
+         ## Node has no children but possibly a value. Create node and add value (which may be empty).
+         revAddXMLNode pTreeID, pNode, tKey, \
+               EncodeString(pArray[tKey], pArrayEncoding, pStoreEncodedAs)
+         if the result begins with "xmlerr," then
+            put the result && "(adding child node" && tKey && "to node" && pNode & ")" into theError
+         end if
+      end if
+      if theError is not empty then exit repeat
+   end repeat
+   
+   return theError
+end ConvertArrayDimensionToXML
+ 
+private function ConvertXMLNodeToArray pTreeID, pNode, pXMLTreeEncoding, pStoreEncodedAs
+   local theArrayA,theAttributes,theChildNode,theKey
+   
+   ## Look for attributes of the node. Store as array in "@attributes" key
+   put revXMLAttributes(pTreeID, pNode, tab, cr) into theAttributes
+   if theAttributes is not empty then
+      put EncodeString(theAttributes, pXMLTreeEncoding, pStoreEncodedAs) into theAttributes
+      split theAttributes by cr and tab -- create array
+      put theAttributes into theArrayA["@attributes"]
+   end if
+   
+   ## Look for children nodes. 
+   set the itemDelimiter to slash
+   put revXMLFirstChild(pTreeID, pNode) into theChildNode
+   if theChildNode is empty or theChildNode begins with "xmlerr," then
+      local theValue
+      put EncodeString(revXMLNodeContents(pTreeID, pNode), pXMLTreeEncoding, pStoreEncodedAs) into theValue
+      if word 1 to -1 of theValue is empty and the keys of theArrayA is not empty then
+         ## Empty node that has attributes
+         return theArrayA
+         ## Force value into @value
+         put theValue into theArrayA["@value"]
+         return theArrayA
+      end if
+   else
+      ## Child nodes were found. Recursively call self and store result in array.
+      set the wholeMatches to true
+      local tIndex
+      repeat while theChildNode is not empty and not (theChildNode begins with "xmlerr,")
+         add 1 to tIndex
+         put the last item of theChildNode into theKey
+         set the itemdelimiter to "["
+         if the number of items in theKey > 1 then
+            put item 1 to -2 of theKey into theKey
+         end if    
+         set the itemdelimiter to slash
+         put ConvertXMLNodeToArray(pTreeID, theChildNode, pXMLTreeEncoding, pStoreEncodedAs) into theArrayA["@children"][tIndex]
+         put theKey into theArrayA["@children"][tIndex]["@name"]
+         put revXMLNextSibling(pTreeID, theChildNode) into theChildNode
+      end repeat
+      
+      return theArrayA
+   end if
+end ConvertXMLNodeToArray
+ 
+private function EncodeString pString, pInEncoding, pOutEncoding
+   if pInEncoding is not empty then
+      -- if pOutEncoding is empty then pString will be converted to the current platform encoding
+      put textDecode(pString, pInEncoding) into pString
+   end if
+   
+   if pOutEncoding is not empty then
+      -- if pInEncoding is empty then pString is assumed to be in the current platform encoding
+      put textEncode(pString, pOutEncoding) into pString
+   end if
+   
+   return pString
+end EncodeString
