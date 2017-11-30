@@ -702,6 +702,28 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          put url ("binfile:" & tJarFile) into url ("binfile:" & tTargetFile)
       end repeat
       
+      local tResourceClasses
+      generateResourceClasses tBuildFolder, tManifestFile, pSettings, tResourceClasses
+      if the result is not empty then
+         throw "could not build R.java" & return & the result
+      end if
+      if tResourceClasses is not empty then
+         local tParams
+         put "-target 1.5 -source 1.5 -Xlint:none -d" into tParams
+         split tParams by space
+         appendToList tClassesBuildFolder, tParams
+         appendToList "-cp", tParams
+         appendToList tClassPath, tParams
+         repeat for each line tRClass in tResourceClasses
+            appendToList tRClass, tParams
+         end repeat
+         executeShellCommandWithParams pathToJavac(), tParams
+         if the result is not empty then
+            throw "could not compile resource class" & return & the result
+         end if
+         -- Add to list of files to delete
+      end if
+      
       local tClassesFile
       put tBuildFolder & slash & "classes.dex" into tClassesFile
       executeShellCommand pathToDex(), "--dex", "--output=" & quote & tClassesFile & quote, tClassesBuildFolder, tLiveCodeClassesFile, tLibsBuildFolder
