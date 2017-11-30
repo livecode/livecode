@@ -53,6 +53,8 @@ bool MCScriptForEachBuiltinModule(MCScriptForEachBuiltinModuleCallback p_callbac
 
 void MCScriptSetLoadLibraryCallback(MCScriptLoadLibraryCallback callback);
 
+MCSLibraryRef MCScriptGetLibrary(void);
+
 void MCScriptSetWidgetBarrierCallbacks(MCScriptWidgetEnterCallback entry_callback, MCScriptWidgetLeaveCallback leave_callback);
 
 ////////////////////////////////////////////////////////////////////////////////
