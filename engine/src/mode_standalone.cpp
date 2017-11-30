@@ -387,32 +387,59 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             MCresult -> sets("failed to read module");
             return false;
         }
-    
-        bool t_success;
-        t_success = true;
         
-        MCStreamRef t_stream;
-        t_stream = nil;
+        MCAutoValueRefBase<MCStreamRef> t_stream;
+        bool t_success = MCMemoryInputStreamCreate(t_module_data.Bytes(),
+                                                   p_length, &t_stream);
+        
+        MCScriptModuleRef t_module = nullptr;
         if (t_success)
-            t_success = MCMemoryInputStreamCreate(t_module_data.Bytes(), p_length, t_stream);
+            t_success = MCScriptCreateModuleFromStream(*t_stream, t_module);
         
-        MCScriptModuleRef t_module;
         if (t_success)
-            t_success = MCScriptCreateModuleFromStream(t_stream, t_module);
+        {
+            extern bool MCEngineAddExtensionFromModule(MCScriptModuleRef module);
+            t_success = MCEngineAddExtensionFromModule(t_module);
+        }
         
-        if (t_stream != nil)
-            MCValueRelease(t_stream);
+        MCAutoStringRef t_module_resources;
+        if (t_success)
+            t_success = MCStringFormat(&t_module_resources, "%@/resources",
+                                       MCScriptGetNameOfModule(t_module));
+
+        MCAutoStringRef t_resources_path;
+        if (t_success && MCdispatcher -> fetchlibrarymapping(*t_module_resources,
+                                                             &t_resources_path))
+        {
+            // Resolve the relative path
+            MCAutoStringRef t_path;
+            if (MCStringBeginsWith(*t_resources_path, MCSTR("./"),
+                                   kMCStringOptionCompareExact) && MCcmd)
+            {
+                uindex_t t_last_slash_index;
+                // On Android, we need to substitute in the whole of MCcmd so
+                // that the apk path resolution works
+#ifndef TARGET_SUBPLATFORM_ANDROID
+                if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash_index))
+#endif
+                    t_last_slash_index = MCStringGetLength(MCcmd);
+                
+                MCRange t_range;
+                t_range = MCRangeMake(0, t_last_slash_index);
+                t_success = MCStringFormat(&t_path, "%*@/%@", &t_range, MCcmd, *t_resources_path);
+            }
+            else
+                t_path = *t_resources_path;
+            
+            extern bool MCEngineAddResourcePathForModule(MCScriptModuleRef module, MCStringRef path);
+            if (t_success)
+                t_success = MCEngineAddResourcePathForModule(t_module, *t_path);
+        }
         
         if (!t_success)
         {
-            MCresult -> sets("failed to load module");
-            return false;
-        }
-        
-        extern bool MCEngineAddExtensionFromModule(MCScriptModuleRef module);
-        if (!MCEngineAddExtensionFromModule(t_module))
-        {
             MCScriptReleaseModule(t_module);
+            MCresult -> sets("failed to load module");
             return false;
         }
     }

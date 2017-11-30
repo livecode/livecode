@@ -32,8 +32,8 @@ unless "Suspend LiveCode UI" is turned on in the Development menu. This
 means that the <copyKey> <message> is not received by a <stack> if it's
 running in the <development environment>.
 
-The <copyKey> <message> is sent when the user presses Command-C (on <Mac
-OS|Mac OS systems>), Control-C (on <Windows|Windows systems>),
+The <copyKey> <message> is sent when the user presses Command-C (on 
+<Mac OS|Mac OS systems>), Control-C (on <Windows|Windows systems>),
 Control-Insert (on <Unix|Unix systems>), or the keyboard Copy key.
 
 The message is sent to the active (focused) control, or to the current

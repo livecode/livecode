@@ -5,8 +5,8 @@ Type: message
 Syntax: dragDrop
 
 Summary:
-Sent to the <object(glossary)> where data was dropped when a <drag and
-drop> finishes.
+Sent to the <object(glossary)> where data was dropped when a 
+<drag and drop> finishes.
 
 Introduced: 2.0
 
@@ -44,20 +44,18 @@ To prevent an unlocked field from accepting a drag and drop, trap the
 the field that does not contain a <pass> <control structure>:
 
     on dragDrop -- in script of field or one of its owners
-    -- do nothing, but trap the message
-
+        -- do nothing, but trap the message
     end dragDrop
 
 
 On the other hand, if you want to perform some action when text is
 dropped into an unlocked field, you need to pass the <dragDrop>
-<message> once you're done with it in order to allow the drop to take
-place: 
+<message> once you're done with it in order to allow the drop to 
+take place: 
 
     on dragDrop
-    set the cursor to 9023
-    pass dragDrop -- needed for drop to occur
-
+        set the cursor to 9023
+        pass dragDrop -- needed for drop to occur
     end dragDrop
 
 

@@ -235,6 +235,7 @@ UIViewController *MCIPhoneGetViewController(void);
         t_toolbar_landscape_height = 32;
 		
 		// create the pick wheel
+        // If you create an instance with a width and height of 0, they will be overridden with the appropriate default width and height, which you can get by frame.size.width/height.
 		datePicker = [[UIDatePicker alloc] initWithFrame: CGRectMake(0, (t_is_landscape ? t_toolbar_landscape_height : t_toolbar_portrait_height), 0, 0)];
 
 		// set the locale
@@ -244,6 +245,8 @@ UIViewController *MCIPhoneGetViewController(void);
 		[datePicker setLocale:t_locale];
 		[datePicker setCalendar:[t_locale objectForKey:NSLocaleCalendar]];
 		[datePicker setTimeZone:[NSTimeZone localTimeZone]];
+        
+       
         
         // PM-2014-10-22: [[ Bug 13750 ]] Make sure the view under the pickerView is not visible (iphone 4 only)
         NSString *t_device_model_name = MCIPhoneGetDeviceModelName();
@@ -332,9 +335,15 @@ UIViewController *MCIPhoneGetViewController(void);
             uint2 t_pick_wheel_height = datePicker.frame.size.height;
             
             if (!t_is_landscape)
+            {
+                [datePicker setFrame:CGRectMake(0, t_toolbar_portrait_height, [[UIScreen mainScreen] bounds] . size . width, t_pick_wheel_height)];
                 t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_portrait_height - t_pick_wheel_height, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_portrait_height +t_pick_wheel_height);
+            }
             else
+            {
+                [datePicker setFrame:CGRectMake(0, t_toolbar_landscape_height, [[UIScreen mainScreen] bounds] . size . height, t_pick_wheel_height)];
                 t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_landscape_height - t_pick_wheel_height, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_landscape_height + t_pick_wheel_height);
+            }
             
             m_action_sheet_view = [[UIView alloc] initWithFrame:t_rect];
             

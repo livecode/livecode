@@ -43,6 +43,8 @@ Name: mouseUp
 Type: message
 Syntax: on mouseUp
 
+Summary: Sent when the header bar is clicked
+
 Example:
 	on mouseUp
 	   local tActionName
@@ -51,6 +53,7 @@ Example:
 	      answer merge("The [[tActionName]] action was clicked")
 	   else
 	      answer "Try clicking on an action"
+	   end if
 	end mouseUp
 
 Description:

@@ -32,8 +32,8 @@ Description:
 Use the <dragSource> <function> to find out which <object(glossary)>,
 and which <object type>, is being dragged from.
 
-The <dragSource> <function> only <return|returns> a value while a <drag
-and drop> is in progress. Otherwise, the <dragSource> <function>
+The <dragSource> <function> only <return|returns> a value while a 
+<drag and drop> is in progress. Otherwise, the <dragSource> <function>
 <return|returns> empty.
 
 References: function (control structure), target (function),

@@ -2,7 +2,7 @@ Name: mobileUpdateContact
 
 Type: command
 
-Syntax: mobileUpdateContact <contactArray>, [<title>], [<message>], [<alternateName>]
+Syntax: mobileUpdateContact <contactArray>, [<contactTitle>], [<message>], [<alternateName>]
 
 Summary:
 Allows the user to create a contact, based on some existing contact
@@ -25,21 +25,14 @@ Parameters:
 contactArray (array):
 
 
-title:
-
+contactTitle:
+The title that is to appear at the top of the user interface (iOS only)
 
 message:
-
+Any message that is to be added to the user interface.
 
 alternateName:
-
-    (enum): <name/> Optional Parameters
-- "title": The title that is to appear at the top of the user interface
-  (iOS only).
-- "message": Any message that is to be added to the user interface.
-- "alternateName": An alternate name that is to be displayed in the
-  contact user interface.
-
+An alternate name that is to be displayed in the contact user interface.
 
 The result:
 The ID of the created contact is returned as the result.

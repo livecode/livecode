@@ -17,12 +17,12 @@ Platforms: desktop, server, mobile
 
 Example:
 on deleteStack -- warn the user
-  if the mainStack of the owner of the target \
-     is not the owner of the target then -- it's a substack
-    answer "This stack will be permanently deleted the" && \
-       "next time you save the file."
-  end if
-  pass deleteStack
+    if the mainStack of the owner of the target \
+      is not the owner of the target then -- it's a substack
+        answer "This stack will be permanently deleted the" && \
+          "next time you save the file."
+    end if
+    pass deleteStack
 end deleteStack
 
 Description:

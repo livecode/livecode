@@ -17,6 +17,9 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on revLoadLibrary
+    if the target is not me then
+       pass revLoadLibrary
+    end if
 	insert the script of me into back
 	set the lockErrorDialogs to true
 end revLoadLibrary
@@ -310,6 +313,10 @@ function TestGetExtractedDocsFolder
    return _TestGetBuildFolder() & slash & "extracted_docs"
 end TestGetExtractedDocsFolder
 
+function TestGetPackagedExtensionsFolder
+   return _TestGetBuildFolder() & slash & "packaged_extensions"
+end TestGetPackagedExtensionsFolder
+
 on TestLoadExtension pName
    if pName is among the lines of the loadedExtensions then
       return empty
@@ -394,7 +401,13 @@ on TestLoadExternal pExternal
 end TestLoadExternal 
 
 private function __GetCaller
-   get item 1 to -3 of line -3 of the executionContexts
+   local tLineNum
+   put -1 into tLineNum
+   repeat while item 1 of line tLineNum of the executionContexts \
+      is the long id of this me
+      subtract 1 from tLineNum
+   end repeat
+   get item 1 to -3 of line tLineNum of the executionContexts
    if there is not an it then
       delete item -1 of it
    end if
@@ -409,23 +422,40 @@ end __StackOfObject
 
 -- This loads an extension whose lcb source sits in the same folder as the
 -- current test.
-on TestLoadAuxillaryExtension pName
-	local tBasePath, tExtraPath
-	set the itemDelimiter to slash
-	put item 1 to -2 of the effective filename of __StackOfObject(__GetCaller()) into tBasePath
-	repeat while the last item of tBasePath is not "tests"
-		put item -1 of tBasePath & slash before tExtraPath
-		delete the last item of tBasePath
-	end repeat
+on TestLoadAuxiliaryExtension pName, pResourceFolder
+   local tBytecodeFile
+   put TestGetBuiltBytecodeFile(pName) into tBytecodeFile
+   if pResourceFolder is empty then
+      load extension from data url ("binfile:" & tBytecodeFile)
+   else
+      load extension from data url ("binfile:" & tBytecodeFile) \
+            with resource path pResourceFolder
+   end if
+   
+   if the result is not empty then
+      throw "Failed to load auxiliary extension:" && \
+            the result && tBytecodeFile
+   end if
+end TestLoadAuxiliaryExtension
 
-	local tModuleFile
-	put tBasePath & "/../_tests/_build/" & tExtraPath & pName & ".lcm" into tModuleFile
-
-	load extension from data url ("binfile:" & tModuleFile)
-	if the result is not empty then
-		throw "Failed to load auxillary extension:" && the result && tModuleFile
-	end if
-end TestLoadAuxillaryExtension
+constant kBytecodePathPrefix = "_tests/_build/"
+function TestGetBuiltBytecodeFile pName
+   local tBasePath, tExtraPath
+   set the itemDelimiter to slash
+   put item 1 to -2 of the effective filename of \
+         __StackOfObject(__GetCaller()) into tBasePath
+         
+   local tTestsOffset
+   set the wholematches to true
+   put itemOffset("tests", tBasePath) into tTestsOffset
+   put item tTestsOffset + 1 to -1 of tBasePath into tExtraPath
+   put item 1 to tTestsOffset - 1 of tBasePath into tBasePath
+   
+   local tModuleFile
+   put tBasePath & "/" & kBytecodePathPrefix & tExtraPath & slash & \ 
+      pName & ".lcm" into tModuleFile
+   return tModuleFile
+end TestGetBuiltBytecodeFile
 
 on TestLoadAllExtensions
    local tExtFolder
@@ -608,6 +638,33 @@ private function __MeetsRequirements pRequirement, pOptions
             return __MeetsRequirements("desktop")
          end if  
          return the platform is not "HTML5"
+      case "jvm"
+         return __MeetsRequirements("platform", "MacOS,Linux")
    end switch
    return true
 end __MeetsRequirements
+
+command TestEnsureJVM
+   TestSkipIfNot "jvm"
+
+   if $JAVA_HOME is empty then
+      local tPath
+      switch the platform
+         case "MacOS"
+            put word 1 to -1 of shell("/usr/libexec/java_home") into tPath
+            break
+         case "Linux"
+            local tJAVAC
+            put "/bin/javac" into tJAVAC
+            put word 1 to -1 of shell("/usr/bin/env readlink -f /usr" & tJAVAC) into tPath
+            if there is a file tPath and tPath ends with tJAVAC then
+               set the itemDelimiter to slash
+               delete item -2 to -1 of tPath
+            end if
+            break
+      end switch
+      if there is a folder tPath then
+         put tPath into $JAVA_HOME
+      end if
+   end if
+end TestEnsureJVM

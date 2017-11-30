@@ -160,9 +160,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    set the itemDelimiter to comma
    
    -- Fetch the various options we need to initially build the app-bundle
-   local tName, tFiles, tExternals, tDrivers
+   local tName, tExternals, tDrivers
    put pSettings["name"] into tName
-   put pSettings["files"] into tFiles
    
    if pSettings["ios,display name"] is empty then
       put tName into pSettings["ios,display name"]
@@ -255,7 +254,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    end if
    
    local tPlist, tCustomEntitlements
-   revCopyMobileFiles tFiles, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts, tPlist, tCustomEntitlements
+   revSBUpdateSettingsForExtensions "ios", pSettings
+   revCopyMobileFiles pSettings, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts, tPlist, tCustomEntitlements
    revCopyMobileStackFiles tStackFiles, tBaseFolder, pAppBundle
    
    -- Copy in the appropriate externals and drivers
@@ -279,6 +279,23 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          throw "unable to copy provisioning profile"
       end if
    end if
+   
+   -- Externals to reference
+   -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
+   --
+   local tDeployExternals, tLibraryMappings
+   repeat for each key tExternalName in tCopiedExternals
+      local tExternalRec
+      put tCopiedExternals[tExternalName] into tExternalRec
+      if tExternalRec["type"] is among the words of "external external-tmp" then
+         put tExternalName & return after tDeployExternals
+      end if
+      put tExternalName & ":" & "./" & tExternalRec["location"] & return after tLibraryMappings
+   end repeat
+   delete the last char of tDeployExternals
+   put tDeployExternals into pSettings["externals"]
+   delete the last char of tLibraryMappings
+   put tLibraryMappings into pSettings["ios,library"]
    
    local tDeploy
    -- Update the deploy params with script library and extension inclusions
@@ -469,20 +486,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    -- Stackfile to use
    put the effective filename of stack pStack into tDeploy["stackfile"]
    
-   -- Externals to reference
-   -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
-   --
-   repeat for each key tExternalName in tCopiedExternals
-      local tExternalRec
-      put tCopiedExternals[tExternalName] into tExternalRec
-      if tExternalRec["type"] is among the words of "external external-tmp" then
-         put tExternalName & return after tDeploy["externals"]
-      end if
-      put tExternalName & ":" & "./" & tExternalRec["location"] & return after tDeploy["library"]
-   end repeat
-   delete the last char of tDeploy["externals"]
-   delete the last char of tDeploy["library"]
-   
    -- Put the redirects if any
    -- MM-2014-10-06: [[ Bug 13583 ]] Due to issues with the redirects, we use symlinks with the iOS 8 sim.
    -- PM-2016-09-16: [[ Bug 18414 ]] iOS 10 - tSDKs["sim"]["suffix"] is x_y on iOS x.y
@@ -574,6 +577,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    
    -- delete the last LF
    delete last char of tDeploy["fontmappings"]
+
+   -- Make sure the standalone is generated with a unique uuid
+   put uuid() into tDeploy["uuid"]
    
    try
       _internal deploy ios tDeploy
@@ -938,7 +944,7 @@ end addToManifest
 --   foobar/baz -> <base>/foobar/baz
 --   C:/foobar/baz -> <base>/baz
 --
-private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, pSDKs, @rRedirects, @rExternals, @rFonts, @rPlist, @rCustomEntitlements
+private command revCopyMobileFiles pSettings, pBaseFolder, pAppBundle, pAppTarget, pSDKs, @rRedirects, @rExternals, @rFonts, @rPlist, @rCustomEntitlements
    revStandaloneProgress "Copying files..."
    
    -- Only use redirects in simulator 4.x
@@ -946,6 +952,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    -- sure that we don't try and use redirects for device builds.
    -- MM-2012-09-18: Since we now no longer support sims before 4.3, we always use redirects for sim builds.
    --
+   
    local tUseRedirects
    if pAppTarget is not "Device" then
       put true into tUseRedirects
@@ -955,7 +962,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    put empty into rRedirects
    
    local tFileData
-   revSBResolveCopyFilesList pBaseFolder, "ios", pFiles, tFileData
+   revSBResolveCopyFilesList pBaseFolder, "ios", pSettings, tFileData
    
    -- Compute a list of the files we need to copy. This is in the form
    --   <target> [tab] <source>
@@ -1531,10 +1538,23 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       if tLocationAuthType is empty then
          put "always" into tLocationAuthType
       end if
-      if tLocationAuthType is "always" then
-         get "<key>NSLocationAlwaysUsageDescription</key><string>This application requires access to Location Services always</string>"
+      
+      // On iOS 11+ we need a new key NSLocationAlwaysAndWhenInUseUsageDescription AND the old NSLocationWhenInUseUsageDescription key, in case 
+      // we want the app to access Location Services when it is used. If we want to access Location Services always, we need the old NSLocationAlwaysUsageDescription 
+      // key too (i.e. 3 keys in total). Moreover, NSLocationAlwaysUsageDescription is required for backwards compatibility
+      if revIDEDeployIOSGetSDKVersions() contains "11" then
+         get "<key>NSLocationAlwaysAndWhenInUseUsageDescription</key><string>This application requires access to Location Services</string>" & CR \
+               & "<key>NSLocationWhenInUseUsageDescription</key><string>This application requires access to Location Services when in use</string>" 
+         
+         if tLocationAuthType is "always" then
+            put CR & "<key>NSLocationAlwaysUsageDescription</key><string>This application requires access to Location Services always</string>" after it
+         end if
       else
-         get "<key>NSLocationWhenInUseUsageDescription</key><string>This application requires access to Location Services when in use</string>"
+         if tLocationAuthType is "always" then
+            get "<key>NSLocationAlwaysUsageDescription</key><string>This application requires access to Location Services always</string>"
+         else
+            get "<key>NSLocationWhenInUseUsageDescription</key><string>This application requires access to Location Services when in use</string>"
+         end if
       end if
    else
       get empty

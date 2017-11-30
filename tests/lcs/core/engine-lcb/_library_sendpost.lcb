@@ -1,0 +1,65 @@
+library com.livecode.lcs_tests.core.engine_lcb.widget.library_sendpost
+
+use com.livecode.engine
+
+public handler Test_SendPost(in pData as Array) returns Array
+	variable tResult as Array
+	if pData["mode"] is "send" then
+		send pData["message"]
+		put the result into tResult["result"]
+	else if pData["mode"] is "send function" then
+		send function pData["message"]	
+		put the result into tResult["result"]
+	else if pData["mode"] is "send command" then
+		send command pData["message"]	
+		put the result into tResult["result"]	
+	else if pData["mode"] is "send args" then
+		send pData["message"] with [pData["arg"]]
+		put the result into tResult["result"]
+	else if pData["mode"] is "send function args" then
+		send function pData["message"] with [pData["arg"]]
+		put the result into tResult["result"]	
+	else if pData["mode"] is "send command args" then
+		send command pData["message"] with [pData["arg"]]
+		put the result into tResult["result"]	
+	else if pData["mode"] is "post" then
+		post pData["message"]
+	else if pData["mode"] is "post args" then
+		post pData["message"] with [pData["arg"]]
+	end if
+	return tResult
+end handler
+
+public handler Test_SendPostToObj(in pData as Array, in pTarget as String) returns Array
+	variable tResult as Array
+	variable tObj as ScriptObject
+	resolve script object pTarget
+	put the result into tObj
+	
+	if pData["mode"] is "send" then
+		send pData["message"] to tObj
+		put the result into tResult["result"]
+	else if pData["mode"] is "send function" then
+		send function pData["message"] to tObj
+		put the result into tResult["result"]
+	else if pData["mode"] is "send command" then
+		send command pData["message"] to tObj
+		put the result into tResult["result"]	
+	else if pData["mode"] is "send args" then
+		send pData["message"] to tObj with [pData["arg"]]
+		put the result into tResult["result"]
+	else if pData["mode"] is "send function args" then
+		send function pData["message"] to tObj with [pData["arg"]]
+		put the result into tResult["result"]	
+	else if pData["mode"] is "send command args" then
+		send command pData["message"] to tObj with [pData["arg"]]
+		put the result into tResult["result"]	
+	else if pData["mode"] is "post" then
+		post pData["message"] to tObj
+	else if pData["mode"] is "post args" then
+		post pData["message"] to tObj with [pData["arg"]]
+	end if
+	return tResult
+end handler
+
+end library

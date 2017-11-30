@@ -120,7 +120,6 @@
 				},
 			],
 		},
-		
 		{
 			'target_name': 'descriptify_environment_stack',
 			'type': 'none',
@@ -709,7 +708,6 @@
 				'kernel-development.gyp:kernel-development',
 				'encode_environment_stack',
 				'engine-common.gyp:security-community',
-				'extract_docs',
 			],
 			
 			'sources':

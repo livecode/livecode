@@ -43,8 +43,8 @@ is sent instead of <exitField>. This means that if you want to take an
 action when the selection is removed from a field--whether the field has
 changed or not--you must handle both <closeField> and <exitField>.
 
->*Note:* If the field's contents were changed by script using the <put
-> command>, then exitField will still be sent. <closeField> is only sent
+>*Note:* If the field's contents were changed by script using the <put>
+> command, then exitField will still be sent. <closeField> is only sent
 > when the contents are changed by the user.
 
 References: put (command), select (command),

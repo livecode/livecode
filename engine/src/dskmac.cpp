@@ -2871,7 +2871,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             
             // Change the current folder
             MCAutoStringRef t_path;
-            if (MCStringCreateWithCFString(t_fs_path, &t_path))
+            if (MCStringCreateWithCFStringRef(t_fs_path, &t_path))
                 /* UNCHECKED */ SetCurrentFolder(*t_path);
             
             CFRelease(t_bundle_url);
@@ -5944,7 +5944,7 @@ bool MCS_get_browsers(MCStringRef &r_browsers)
             
             MCAutoStringRef t_browser_string;
             if (t_success)
-                t_success = MCStringCreateWithCFString(t_browser_title, &t_browser_string);
+                t_success = MCStringCreateWithCFStringRef(t_browser_title, &t_browser_string);
             
             if (t_success)
                 t_success = MCListAppend(*t_browser_list, *t_browser_string);

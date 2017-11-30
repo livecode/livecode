@@ -52,6 +52,14 @@ public foreign handler MCEngineExecSendToScriptObject(in pIsFunction as CBool, i
 public foreign handler MCEngineExecSendToScriptObjectWithArguments(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) returns optional any binds to "<builtin>"
 public foreign handler MCEngineExecPostToScriptObject(in pMessage as String, in pTarget as ScriptObject) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecPostToScriptObjectWithArguments(in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) returns nothing binds to "<builtin>"
+
+public foreign handler MCEngineExecSend(in pIsFunction as CBool, in pMessage as String) returns optional any binds to "<builtin>"
+public foreign handler MCEngineExecSendWithArguments(in pIsFunction as CBool, in pMessage as String, in pArguments as optional List) returns optional any binds to "<builtin>"
+public foreign handler MCEngineExecPost(in pMessage as String) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecPostWithArguments(in pMessage as String, in pArguments as optional List) returns nothing binds to "<builtin>"
+
+public foreign handler MCEngineEvalCaller(out rObject as ScriptObject) returns nothing binds to "<builtin>"
+
 public foreign handler MCEngineEvalMessageWasHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecExecuteScript(in pScript as String) returns any binds to "<builtin>"
@@ -212,7 +220,7 @@ Example:
 
 	public handler OnMouseUp() returns nothing
 		// Send a message to the widget's parent so it can handle the click
-		dispatch "widgetClicked" to the owner of my script object with [ MyName() ]
+		send "widgetClicked" to the owner of my script object with [ MyName() ]
 	end handler
 
 Description:
@@ -290,6 +298,10 @@ Description:
 Sends a message to the given script object and waits for it to finish so that it
 can return a value.
 
+If no target object is specified, the message is sent to the widget's
+script object (if used in a root widget module), or to the default stack
+otherwise.
+
 After a send, 'the message was handled' predicate can be used to determine if the
 message passed through the message path untouched.
 
@@ -299,8 +311,10 @@ to script objects is not allowed.
 Tags: Script Engine
 */
 syntax SendToScriptObject is statement
-    "send" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> "to" <Object: Expression> [ "with" <Arguments: Expression> ]
+    "send" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> [ "to" <Object: Expression> ] [ "with" <Arguments: Expression> ]
 begin
+    MCEngineExecSend(IsFunction, Message)
+    MCEngineExecSendWithArguments(IsFunction, Message, Arguments)
     MCEngineExecSendToScriptObject(IsFunction, Message, Object)
     MCEngineExecSendToScriptObjectWithArguments(IsFunction, Message, Object, Arguments)
 end syntax
@@ -322,11 +336,18 @@ Post a message to the given script object and returns immediately. Posting a mes
 will cause the message to be sent at the next wait point (usually when the current
 event has finished being handled).
 
+If no target object is specified, the message is posted to the widget's
+script object (if used in a root widget module), or to the widget's
+parent (if used in a non-root widget module), or to the default stack
+otherwise.
+
 Tags: Script Engine
 */
 syntax PostToScriptObject is statement
-    "post" <Message: Expression> "to" <Object: Expression> [ "with" <Arguments: Expression> ]
+    "post" <Message: Expression> [ "to" <Object: Expression> ] [ "with" <Arguments: Expression> ]
 begin
+    MCEngineExecPost(Message)
+    MCEngineExecPostWithArguments(Message, Arguments)
     MCEngineExecPostToScriptObject(Message, Object)
     MCEngineExecPostToScriptObjectWithArguments(Message, Object, Arguments)
 end syntax
@@ -336,7 +357,7 @@ Summary: 	Determines whether a message was handled
 
 Example:
 	public handler OnMouseUp() returns nothing
-		dispatch "buttonClicked" to my script object
+		send "buttonClicked" to my script object
 		if the message was handled then
 			return
 		end if
@@ -360,7 +381,7 @@ Summary: 	Determines whether a message was handled
 
 Example:
 	public handler OnMouseUp() returns nothing
-		dispatch "buttonClicked" to my script object
+		send "buttonClicked" to my script object
 		if the message was not handled then
 			log "The message was not handled"
 		end if
@@ -376,6 +397,27 @@ syntax MessageWasNotHandled is expression
     "the" "message" "was" "not" "handled"
 begin
     MCEngineEvalMessageWasNotHandled(output)
+end syntax
+
+/**
+Summary: 	The caller's script object
+
+Example:
+	public handler NotifyMe() returns nothing
+		post "notify" to the caller
+	end handler
+
+Description:
+Returns the script object which called the handler at the beginning
+of the current chain of LiveCode Builder handler execution.
+
+Tags: Script Engine
+*/
+
+syntax Caller is expression
+    "the" "caller"
+begin
+    MCEngineEvalCaller(output)
 end syntax
 
 /**

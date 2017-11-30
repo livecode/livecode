@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.semver"
+﻿script "com.livecode.library.semver"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 
@@ -21,13 +21,35 @@ Copyright (c) Isaac Z. Schlueter and Contributors
 
 */
 
+on extensionInitialize
+   if the target is not me then
+      pass extensionInitialize
+   end if
+   
+   insert the script of me into back
+
+   if the environment contains "development" then
+      set the _ideoverride of me to true
+   end if
+end extensionInitialize
+
+on extensionFinalize
+   if the target is not me then
+      pass extensionFinalize
+   end if
+   
+   remove the script of me from back
+end extensionFinalize
+
 /**
 
-Name: semver
+Title: Semantic Versioning Library
+
+Author: LiveCode 
 
 Type: library
 
-Version: 0.0.0
+Version: 1.0.0
 
 Description:
 

@@ -62,70 +62,24 @@ private command _TestScriptOnlyDeployStack pWhich
    
    create folder tDir
    
-   local tStackName, tStackID
-
-   local tStackFilename
+   local tStackFilename, tScript, tSettings
    if pWhich is "mainstack" then
-      create script only stack
-   	  put it into tStackID
-      put the short name of tStackID into tStackName
 	  put the folder & "/" & tDir & "/stack.livecodescript" into tStackFilename   
-	  set the script of tStackID to _TestScriptOnlyStandaloneStackScript()
+	  put _TestScriptOnlyStandaloneStackScript() into tScript
    else if pWhich is "auxiliary" then
-      create stack
-   	  put it into tStackID
-      put the short name of tStackID into tStackName
    	  put the folder & "/" & tDir & "/stack.livecode" into tStackFilename   
-	  set the script of tStackID to _TestScriptOnlyAuxiliaryStackStackScript()
-	  set the cRevStandaloneSettings["scriptLibraries"] of tStackID to "Internet"
-	  set the cRevStandaloneSettings["inclusions"] of tStackID to "select"
+	  put _TestScriptOnlyAuxiliaryStackStackScript() into tScript
+	  put "Internet" into tSettings["scriptLibraries"]
+	  put "select" into tSettings["inclusions"]
    end if
    
-   set the filename of tStackID to tStackFilename
-   save stack tStackName as tStackFilename
-   
-   revIDESaveStack tStackID	
-
-   local tExePath
-   _TestBuildStandalone tStackFilename, tExePath
-   if the result is not empty then
-      TestAssert "building standalone", false
-      exit _TestScriptOnlyDeployStack
-   end if
-   
-   TestAssert "building standalone", true
-    
-   TestDiagnostic "location" && tExePath
-   
-   TestAssert "standalone in expected location", there is a file tExePath
-   
-   local tResult, tShellCmd
-   put quote & tExePath & quote into tShellCmd
-   if the environment contains "command line" then
-      put " -ui" after tShellCmd
-   end if
-   get shell(tShellCmd)
-   put the result into tResult
-   
-   if tResult is not empty then
-      TestDiagnostic "standalone quit with" && tResult & ":" && it
-   end if
-      
-   TestAssert "standalone with script-only" && pWhich && "startup", \
-         tResult is empty
+   local tDesc
+   put "standalone with script-only" && pWhich && "startup" into tDesc
+   StandaloneBuilderTestCreateAndSaveStackAsStandalone tDesc, \
+      tStackFilename, tScript, tSettings
 
    revDeleteFolder tDir
 end _TestScriptOnlyDeployStack
-
-private command _TestBuildStandalone pStackPath, @rStandalonePath
-	local tStackName, tResult
-	put the short name of stack pStackPath into tStackName
-	
-	TestDiagnostic "Building standalone -" && pStackPath
-	
-	StandaloneBuilderSaveAsStandalone tStackName, rStandalonePath
-	return the result
-end _TestBuildStandalone
 
 on TestScriptOnlyDeployStacks
    repeat for each item tItem in "mainstack,auxiliary"

@@ -61,7 +61,7 @@ on installerPhaseChanged pNewPhase
       case "Uninstall"
          set the uEnabled of control "Cancel" to false
          put "up" into sProgressDirection
-         put "Uninstallling existing version..." into field "Phase"
+         put "Uninstalling existing version..." into field "Phase"
          break
       case "Cleanup"
          set the uEnabled of control "Cancel" to false

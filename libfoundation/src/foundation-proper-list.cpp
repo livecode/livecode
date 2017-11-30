@@ -972,6 +972,35 @@ bool MCProperListReverse(MCProperListRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
+bool MCProperListConvertToArray(MCProperListRef p_list, MCArrayRef& r_array)
+{
+    MCAutoArrayRef t_array;
+    if (!MCArrayCreateMutable(&t_array))
+    {
+        return false;
+    }
+    
+    for(uindex_t t_index = 0; t_index < MCProperListGetLength(p_list); t_index++)
+    {
+        if (!MCArrayStoreValueAtIndex(*t_array, t_index + 1, MCProperListFetchElementAtIndex(p_list, t_index)))
+        {
+            return false;
+        }
+    }
+    
+    if (!t_array.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_array = t_array.Take();
+    
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void __MCProperListDestroy(__MCProperList *self)
 {
 	if (__MCProperListIsIndirect(self))

@@ -379,10 +379,6 @@ public foreign handler MCWidgetExecRedrawAll() returns nothing binds to "<builti
 public foreign handler MCWidgetExecScheduleTimerIn(in pTime as CDouble) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecCancelTimer() returns nothing binds to "<builtin>"
 public foreign handler MCWidgetEvalInEditMode(out rInEditMode as CBool) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetExecSend(in pIsFunction as CBool, in pMessage as String) returns any binds to "<builtin>"
-public foreign handler MCWidgetExecSendWithArguments(in pIsFunction as CBool, in pMessage as String, in pArguments as optional List) returns any binds to "<builtin>"
-public foreign handler MCWidgetExecPost(in pMessage as String) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetExecPostWithArguments(in pMessage as String, in pArguments as optional List) returns nothing binds to "<builtin>"
 
 /**
 Summary:	Redraws the widget.
@@ -468,27 +464,6 @@ begin
   MCWidgetEvalInEditMode(output)
 end syntax
 
-/**
-Summary:	Sends a message to the widget script object.
-*/	
-
-syntax Send is statement
-    "send" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> [ "with" <Arguments: Expression> ]
-begin
-    MCWidgetExecSend(IsFunction, Message)
-    MCWidgetExecSendWithArguments(IsFunction, Message, Arguments)
-end syntax
-
-/**
-Summary:	Posts a message to the widget script object.
-*/	
-
-syntax Post is statement
-    "post" <Message: Expression> [ "with" <Arguments: Expression> ]
-begin
-    MCWidgetExecPost(Message)
-    MCWidgetExecPostWithArguments(Message, Arguments)
-end syntax
 
 // ---------- External properties of widgets ---------- //
 

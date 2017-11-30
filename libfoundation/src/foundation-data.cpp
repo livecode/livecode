@@ -867,20 +867,6 @@ MCDataLastIndexOf (MCDataRef self,
 	return false;
 }
 
-#if defined(__MAC__) || defined (__IOS__)
-MC_DLLEXPORT_DEF
-bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata)
-{
-	__MCAssertIsData(p_data);
-
-    if (__MCDataIsIndirect(p_data))
-        p_data = p_data -> contents;
-    
-    r_cfdata = CFDataCreate(nil, MCDataGetBytePtr(p_data), MCDataGetLength(p_data));
-    return r_cfdata != nil;
-}
-#endif
-
 static void __MCDataClampRange(MCDataRef p_data, MCRange& x_range)
 {
 	uindex_t t_left, t_right;

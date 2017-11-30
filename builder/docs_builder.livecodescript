@@ -2026,31 +2026,14 @@ private command addToDictionaryFromFolder pFolder, pDefaults, @xLibraryA
    get files(pFolder)
    filter it with "*.lcdoc"
    repeat for each line tFile in it
-      local tText, tParsedA, tDisplayName, tSynonymA
+      local tText, tParsedA
       wait 0 with messages
       put docsFileGetUTF8Contents(pFolder & slash & tFile, true) into tText
       put revDocsParseDocText(tText, pFolder & slash & tFile, pDefaults) into tParsedA
       repeat for each element tDoc in tParsedA["doc"]
-         put tDoc["display name"] into tDisplayName
          -- TODO: Work out why something empty is returned
-         if tDisplayName is empty then next repeat
+         if tDoc["display name"] is empty then next repeat
          addToList tDoc, xLibraryA
-		 -- BWM fix for Bug 18305
-		 -- add an additional entry to dictionary for each synonym to allow keyword search
-		 if tDoc["Synonyms"] is not empty then
-		    put tDoc["Synonyms"] into tSynonymA
-		    repeat for each element tSynonymName in tSynonymA
-		   	   local tSynonymDoc
-			   if tSynonymName is tDisplayName then next repeat -- glossary entries include themselves
-			   put tDoc into tSynonymDoc
-			   put tSynonymName into tSynonymDoc["display name"]
-			   if tDoc["Type"] is not "glossary" then
-			      put " (Synonym of " & tDisplayName & ")" after tSynonymDoc["display name"]
-			   end if
-			   addToList tSynonymDoc, xLibraryA
-		    end repeat
-		 end if
-		 -- end fix for Bug 18305
       end repeat
    end repeat
 end addToDictionaryFromFolder
@@ -2226,7 +2209,7 @@ command docsBuilderGenerateDistributedAPI pEdition
    docsBuilderPopulateDatabase pEdition, tLibrariesA
    repeat for each element tLibA in tLibrariesA
       local tJSON, tFolder
-      put revDocsFormatLibraryDocArrayAsJSON(tLibA["name"], tLibA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON(tLibA) into tJSON
       put builderAPIFolder(pEdition, tLibA["api"]) into tFolder
       pathEnsure tFolder
       put textEncode(tJSON, "utf-8") into url ("binfile:" & tFolder \

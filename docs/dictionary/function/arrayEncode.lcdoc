@@ -2,7 +2,7 @@ Name: arrayEncode
 
 Type: function
 
-Syntax: arrayEncode(<array>,[<version>])
+Syntax: arrayEncode(<array>,[<encodeVersion>])
 
 Summary:
 Serializes a LiveCode array.
@@ -23,8 +23,7 @@ Parameters:
 array (array):
 The array is a LiveCode array.
 
-
-version:
+encodeVersion:
 If present, and >= "7.0" then the array is encoded in such a way as to
 preserve unicode in keys and values, as well as NUL chars in keys and
 values 
