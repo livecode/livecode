@@ -2340,8 +2340,20 @@ command revSBUpdateForDependencies pPlatform, @xSettings
       end repeat
       
       revSBUpdateExtensionCodeInclusions tExtension, pPlatform, xSettings
+      revSBUpdatePerExtensionSettings tExtension, pPlatform, xSettings
    end repeat
 end revSBUpdateForDependencies
+
+-- Merge any settings under cRevStandaloneSettings[<ext id>]
+command revSBUpdatePerExtensionSettings pExtension, pPlatform, @xSettings
+   repeat for each key tKey in xSettings[pExtension]
+      if xSettings[tKey] is not empty then
+         put return & xSettings[pExtension][tKey] after xSettings[tKey]
+      else
+         put xSettings[pExtension][tKey] into xSettings[tKey]
+      end if
+   end repeat
+end revSBUpdatePerExtensionSettings
 
 command revSBUpdateExtensionCodeInclusions pExtension, pPlatform, @xSettings
    local tExtCodeFolder, tCodeFolders
