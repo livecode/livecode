@@ -276,8 +276,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       
       -------- Unpack all the files used by the externals
-      // MERG-2014-11-18: [[ TemplateManifest ]] Look for a template manifest provided by the developer in copy files
-      local tManifestFile
+      local tManifestFile, tManifest
       
       revStandaloneProgress "Integrating externals..."
       
@@ -291,10 +290,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       revSBResolveCopyFilesList tBaseFolder, "android", pSettings, tResolvedFileData
       
       repeat for each element tFile in tResolvedFileData
-         -- Look for manifest template
-         local tManifest
-         if tFile["name"] ends with "AndroidManifest.xml" then
-            put url ("binfile:" & tFile["resolved"]) into tManifest
+         -- Add to list of manifests to merge
+         if tFile["name"] is "AndroidManifest.xml" then
+            appendToStringList tFile["resolved"], pSettings["androidManifests"]
+            next repeat
          end if
          
          -- Only look for lcext files.
@@ -525,8 +524,14 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       replace "${HARDWARE_ACCELERATED}" with tHardwareAccelerated in tManifest
       
-      #put tManifest into url ("binfile:c:/scratch/manifestdump.xml")
       put tManifest into url ("binfile:" & tManifestFile)
+      
+      local tAdditional
+      repeat for each line tManifest in pSettings["androidManifests"]
+         appendToList tManifest, tAdditional
+      end repeat
+      put androidCreateAppManifest(tManifestFile, tAdditional) \
+            into url ("binfile:" & tManifestFile)
       if the result is not empty then
          throw "could not create manifest"
       end if
