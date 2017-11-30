@@ -229,64 +229,45 @@ void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_da
 }
 
 // This is the callback given to libscript so that it can resolve the absolute
-// path of native code libraries used by foreign handlers in the module. At
-// the moment we use the resources path of the module, however it will need to be
-// changed to a separate location at some point with explicit declaration so that
-// iOS linkage and Android placement issues can be resolved.
-//
-// Currently it expects:
-//   <resources>
-//     code/
-//       mac/<name>.dylib
-//       linux-x86/<name>.so
-//       linux-x86_64/<name>.so
-//       win-x86/<name>.dll
-//
+// path of native code libraries used by foreign handlers in the module.
+
 static bool MCEngineLoadLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCSLibraryRef& r_library)
 {
-    // If the module has no resource path, then it has no code.
-    MCAutoStringRef t_resource_path;
-    if (!MCEngineLookupResourcePathForModule(p_module, Out(t_resource_path)))
-        return false;
-    
     MCSLibraryRef t_library = nullptr;
-    if (t_resource_path.IsSet() &&
-        !MCStringIsEmpty(*t_resource_path))
+    
+    // extension libraries should be mapped by the IDE or deploy params
+    MCAutoStringRef t_mapped_path;
+    if (MCdispatcher->fetchlibrarymapping(p_name, &t_mapped_path))
     {
-#if defined(__MAC__)
-        static const char *kLibraryFormat = "%@/code/mac/%@";
-#elif defined(__LINUX__) && defined(__32_BIT__)
-        static const char *kLibraryFormat = "%@/code/linux-x86/%@";
-#elif defined(__LINUX__) && defined(__64_BIT__)
-        static const char *kLibraryFormat = "%@/code/linux-x86_64/%@";
-#elif defined(__WINDOWS__)
-        static const char *kLibraryFormat = "%@/code/win-x86/%@";
-#elif defined(__ANDROID__)
-        static const char *kLibraryFormat = "%@/code/android-armv6/%@";
-#elif defined(__IOS__)
-        static const char *kLibraryFormat = "%@/code/ios/%@";
-#elif defined(__EMSCRIPTEN__)
-        static const char *kLibraryFormat = "%@/code/emscripten/%@";
-#else
-#error No default code path set for this platform
-#endif
-        MCAutoStringRef t_ext_path;
-        if (!MCStringFormat(&t_ext_path,
-                            kLibraryFormat,
-                            *t_resource_path,
-                            p_name))
+        MCAutoStringRef t_map_name;
+        if (!MCStringFormat(&t_map_name, "./%@", p_name))
+            return false;
+    
+        t_library = MCU_library_load(*t_map_name);
+        
+        // there was a mapping and it failed to load
+        if (t_library == nullptr)
         {
             return false;
         }
-        
-        t_library = MCU_library_load(*t_ext_path);
     }
     
+    // if not mapped then fallback to assuming a full path or a location
+    // supported by dlopen
     if (t_library == nullptr)
     {
         t_library = MCU_library_load(p_name);
     }
     
+#if defined(__IOS__)
+    // On iOS we fallback to the engine because with the exception of
+    // dynamic frameworks libraries will be static linked
+    if (t_library == nullptr)
+    {
+        t_library = MCValueRetain(MCScriptGetLibrary());
+    }
+#endif
+
     if (t_library == nullptr)
     {
         return false;
