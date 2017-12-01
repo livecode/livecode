@@ -474,6 +474,11 @@ void MCStack::sethints()
 		SetWindowLongA((HWND)window->handle.window, 0, (LONG)sptr->getw()->handle.window);
 }
 
+bool MCStack::view_platform_dirtyviewonresize()
+{
+	return false;
+}
+
 MCRectangle MCStack::view_platform_getwindowrect() const
 {
 	if (window == DNULL)

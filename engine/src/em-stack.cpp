@@ -109,6 +109,11 @@ MCStack::release_window_buffer()
  * View management
  * ================================================================ */
 
+bool MCStack::view_platform_dirtyviewonresize() const
+{
+	return true;
+}
+
 void
 MCStack::view_platform_updatewindow(MCRegionRef p_dirty_region)
 {

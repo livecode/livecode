@@ -417,6 +417,11 @@ public:
 	// IM-2014-01-24: [[ HiDPI ]] The request region is specified in logical coordinates.
 	void view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
 	
+	// Some platforms require the entire window to be redrawn when resized.
+	// This method indicates whether or not to mark the entire view as dirty
+	//   when resized.
+	bool view_platform_dirtyviewonresize() const;
+	
 	//////////
 	
 	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given surface.
