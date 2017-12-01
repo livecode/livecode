@@ -63,6 +63,8 @@ mergeInto(LibraryManager.library, {
 				div.style.zIndex = LiveCodeDC._maxZIndex;
 				LiveCodeDC._maxZIndex++;
 				canvas = document.createElement('canvas');
+				canvas.style.setProperty('width', '100%');
+				canvas.style.setProperty('height', '100%');
 				div.appendChild(canvas);
 				document.body.appendChild(div);
 		  
