@@ -126,14 +126,17 @@ mergeInto(LibraryManager.library, {
 				var width = pRight - pLeft;
 				var height = pBottom - pTop;
 				window.rect = {'left':pLeft, 'top':pTop, 'right':pRight, 'bottom':pBottom};
-				window.canvas.width = width;
-				window.canvas.height = height;
 				if (window.div)
 				{
 					window.div.style.setProperty('left', pLeft + 'px', 'important');
 					window.div.style.setProperty('top', pTop + 'px', 'important');
 					window.div.style.setProperty('width', width + 'px', 'important');
 					window.div.style.setProperty('height', height + 'px', 'important');
+				}
+				else
+				{
+					window.canvas.style.setProperty('width', width + 'px', 'important');
+					window.canvas.style.setProperty('height', height + 'px', 'important');
 				}
 			}
 		},
@@ -295,5 +298,19 @@ mergeInto(LibraryManager.library, {
 		{{{ makeSetValue('rTop', '0', 'rect.top', 'i32') }}};
 		{{{ makeSetValue('rRight', '0', 'rect.right', 'i32') }}};
 		{{{ makeSetValue('rBottom', '0', 'rect.bottom', 'i32') }}};
+	},
+	
+	MCEmscriptenSyncCanvasSize__deps: ['$LiveCodeDC'],
+	MCEmscriptenSyncCanvasSize: function(p_window_id, p_width, p_height)
+	{
+		var canvas = LiveCodeDC.getWindowCanvas(p_window_id);
+		if (!canvas)
+			return;
+		
+		if (canvas.width != p_width || canvas.height != p_height)
+		{
+			canvas.width = p_width;
+			canvas.height = p_height;
+		}
 	},
 });

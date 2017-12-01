@@ -46,6 +46,8 @@ extern "C" void MCEmscriptenGetWindowRect(uint32_t p_window_id, uint32_t *r_left
 extern "C" void MCEmscriptenSetWindowVisible(uint32_t p_window_id, bool p_visible);
 extern "C" bool MCEmscriptenGetWindowVisible(uint32_t p_window_id);
 
+extern "C" void MCEmscriptenSyncCanvasSize(uint32_t p_window_id, uint32_t p_width, uint32_t p_height);
+
 /* ---------------------------------------------------------------- */
 
 MCRectangle MCEmscriptenGetWindowRect(uint32_t p_window_id);

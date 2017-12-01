@@ -128,6 +128,8 @@ MCStack::view_platform_updatewindow(MCRegionRef p_dirty_region)
 
     MCGIntegerRectangle t_rect = MCGRegionGetBounds(t_region);
 
+	MCEmscriptenSyncCanvasSize(t_window, t_valid.width, t_valid.height);
+	
     MCHtmlCanvasStackSurface t_surface(t_window, t_rect);
 	view_surface_redrawwindow(&t_surface, t_region);
 }
