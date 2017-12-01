@@ -1,4 +1,5 @@
 ﻿script "revSaveAsIOSStandalone"
+
 -- Each stackfile has:
 --   moveSubstacks
 --   renameGeneric
@@ -1423,8 +1424,10 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       put "Default-667h@2x|Default-667h|{375, 667}|Portrait" & return after tSplashScreens
       if tIPhoneOrientation contains "Portrait" then
          put "Default-736h@3x|Default-736h|{414, 736}|Portrait" & return after tSplashScreens
+         put "Default-812h@3x|Default-812h|{375, 812}|Portrait" & return after tSplashScreens
       else
          put "Default-414h@3x|Default-414h|{414, 736}|Landscape" & return after tSplashScreens
+         put "Default-375h@3x|Default-375h|{375, 812}|Landscape" & return after tSplashScreens
       end if      
    end if   
    if 2 is among the items of tDeviceFamily then      
