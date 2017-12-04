@@ -290,10 +290,6 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
     if (!MCS_loadbinaryfile(*t_resolved_filename, &t_data))
         return;
     
-    // Make sure we set the shared library callback - this should be done in
-    // module init for 'extension' when we have such a mechanism.
-    MCScriptSetLoadLibraryCallback(MCEngineLoadLibrary);
-    
     MCEngineLoadExtensionFromData(ctxt, *t_data, p_resource_path);
  }
 
@@ -1430,6 +1426,8 @@ static bool __script_try_to_convert_to_foreign(MCExecContext& ctxt, MCTypeInfoRe
 bool
 MCExtensionInitialize(void)
 {
+    MCScriptSetLoadLibraryCallback(MCEngineLoadLibrary);
+    
     return MCScriptForEachBuiltinModule([](void *p_context, MCScriptModuleRef p_module) {
         if (MCScriptIsModuleALibrary(p_module) ||
             MCScriptIsModuleAWidget(p_module))
