@@ -1007,23 +1007,49 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
     }
     
     /* Get the Method - either class or instance - from the class */
-    Method t_objc_method = nullptr;
     if (t_valid)
     {
         if (!t_is_class)
         {
-            t_objc_method = class_getInstanceMethod(t_objc_class,
-                                               t_objc_sel);
+            t_valid = class_respondsToSelector(t_objc_class, t_objc_sel);
+            
+            /* If a lookup fails, then check to see if it could be a property
+             * binding. Classes such as NSUserNotification declare dynamic props
+             * which means that the methods aren't present until runtime, but
+             * the prop definitions are. */
+            if (!t_valid &&
+                MCStringBeginsWithCString(*t_selector_name, (const char_t *)"set", kMCStringOptionCompareExact) &&
+                MCStringEndsWithCString(*t_selector_name, (const char_t *)":", kMCStringOptionCompareExact))
+            {
+                if (MCStringGetLength(*t_selector_name) < 255)
+                {
+                    char t_prop_name[256];
+                    strncpy(t_prop_name, *t_selector_name_cstring + 3, strlen(*t_selector_name_cstring) - 4);
+                    t_prop_name[0] = tolower(t_prop_name[0]);
+                    t_prop_name[strlen(*t_selector_name_cstring) - 4] = '\0';
+                    objc_property_t t_property = class_getProperty(t_objc_class, t_prop_name);
+                    if (t_property != nullptr)
+                    {
+                        t_valid = strstr(property_getAttributes(t_property), ",R,") == nullptr;
+                    }
+                }
+            }
+            else if (!t_valid &&
+                     MCStringCountChar(*t_selector_name, MCRangeMake(0, MCStringGetLength(*t_selector_name)), ':', kMCStringOptionCompareExact) == 0)
+            {
+                objc_property_t t_property = class_getProperty(t_objc_class, *t_selector_name_cstring);
+                if (t_property != nullptr)
+                {
+                    t_valid = true;
+                }
+            }
         }
         else
         {
-            t_objc_method = class_getClassMethod(t_objc_class,
-                                            t_objc_sel);
-        }
-        if (t_objc_method == nullptr)
-        {
-            /* ERROR: objc method not found */
-            t_valid = false;
+            if (class_getClassMethod(t_objc_class, t_objc_sel) == nullptr)
+            {
+                t_valid = false;
+            }
         }
     }
     
