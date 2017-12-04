@@ -611,7 +611,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                             {
                                 switch (t_event->scroll.direction)
                                 {
-                                    // GDK events are named for the 'natural scrolling' version
+                                    // GDK events are named for the 'natural scrolling' version and interpreted according to system settings
                                     case GDK_SCROLL_UP:
                                         mfocused->kdown(kMCEmptyString, XK_WheelDown);
                                         break;
