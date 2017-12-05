@@ -479,11 +479,11 @@ command revSearchForInclusions pStack, @xSettings
    end if
 end revSearchForInclusions
 
-private on revStandalonePreBuild pStack, pFolder, pPlatform, @rStackName, @rStackFileList
+private on revStandalonePreBuild pStack, pFolder, pPlatform, pArchs, @rStackName, @rStackFileList
    revStandaloneProgress "Loading settings..."
    
    -- Make sure all dependencies are included
-   revSBUpdateForDependencies pPlatform, sStandaloneSettingsA
+   revSBUpdateForDependencies pPlatform, pArchs, , sStandaloneSettingsA
    
    local tCount
    if there is a file (pFolder & "/" & sStandaloneSettingsA["name"]) then
@@ -603,8 +603,6 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
    local tDirectory, tStackSourceFile, tName, tOriginalFileName, tStackPath
    local tTargetDir
    
-   revStandalonePreBuild pStack, pFolder, "macosx", tStackName, tStackFileList
-   
    set the itemDelimiter to slash
    put the effective filename of stack pStack into tOriginalFileName
    put item 1 to -2 of tOriginalFileName into tStackPath
@@ -647,6 +645,8 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
       
       -- Ensure standalone settings script local is reset when building for subsequent targets
       put tStandaloneSettingsA into sStandaloneSettingsA
+      
+      revStandalonePreBuild pStack, pFolder, "macosx", tArchitectures, tStackName, tStackFileList
       
       -- copy files to each directory
       -- put the path to the engine into tEngineSourceFile
@@ -713,8 +713,6 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalo
    put the effective filename of stack pStack into tOriginalFileName
    put item 1 to -2 of tOriginalFileName into tStackPath
    
-   revStandalonePreBuild pStack, pFolder, "windows", tStackName, tStackFileList
-   
    put revEnvironmentRuntimePath() & "/Windows/x86-32/Support/Sample Icons" into tName
    if sStandaloneSettingsA["Windows,iconFile"] = "" then 
       put tName & "/genericapp.ico" into sStandaloneSettingsA["Windows,iconFile"]
@@ -752,6 +750,16 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalo
       
       -- Ensure standalone settings script local is reset when building for subsequent targets
       put tStandaloneSettingsA into sStandaloneSettingsA
+      
+      local tArch
+      if word 2 of tTarget is among the items of "x64,x86-64,x86_64" then
+         put "x86_64" into tArch
+      else if word 2 of tTarget is not empty then
+         put word 2 of tTarget into tArch
+      else
+         put "x86" into tArch
+      end if
+      revStandalonePreBuild pStack, pFolder, "windows", tArch, tStackName, tStackFileList
       
       -- copy files to each directory
       -- put the path to the engine into tEngineSourceFile
@@ -884,8 +892,6 @@ command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder, @xStandalone
    put the effective filename of stack pStack into tOriginalFileName
    put item 1 to -2 of tOriginalFileName into tStackPath
    
-   revStandalonePreBuild pStack, pFolder, "linux", tStackName, tStackFileList
-   
    -- keep a copy of the standalone settings to restore after each build
    local tStandaloneSettingsA
    put sStandaloneSettingsA into tStandaloneSettingsA
@@ -894,6 +900,16 @@ command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder, @xStandalone
       
       -- Ensure standalone settings script local is reset when building for subsequent targets
       put tStandaloneSettingsA into sStandaloneSettingsA
+      
+      local tArch
+      if word 2 of tTarget is among the items of "x64,x86-64,x86_64" then
+         put "x86_64" into tArch
+      else if word 2 of tTarget is not empty then
+         put word 2 of tTarget into tArch
+      else
+         put "x86" into tArch
+      end if
+      revStandalonePreBuild pStack, pFolder, "linux", tArch, tStackName, tStackFileList
       
       -- Always add print dialogs to linux standalones when searching for inclusions
       if sStandaloneSettingsA["inclusions"] = "search" then 
@@ -2431,16 +2447,28 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       revAddExternal tExternal
    end repeat
    
-   repeat for each line tJar in sStandaloneSettingsA["jarFiles"]
-      local tSourceFile, tSourceFolder, tTargetFolder, tJarDest
+   local tSourceFile, tSourceFolder, tTargetFolder, tDestFolder
+   repeat for each line tLib in sStandaloneSettingsA["jarFiles"]
       set the itemdelimiter to slash
-      put item -1 of tJar into tSourceFile
-      put item 1 to -2 of tJar into tSourceFolder
-      put tCurrentLocation & slash & "Externals/JVM" into tJarDest
+      put item -1 of tLib into tSourceFile
+      put item 1 to -2 of tLib into tSourceFolder
+      put tCurrentLocation & slash & "Externals/JVM" into tDestFolder
       
-      revSBEnsureFolder tJarDest
+      revSBEnsureFolder tDestFolder
       revCopyModule tPlatform, tSourceFile, tSourceFile, \
             tSourceFolder, tCurrentLocation, "Externals/JVM", false
+   end repeat
+   
+   repeat for each line tLib in sStandaloneSettingsA["extension_code_resources"]
+      set the itemdelimiter to slash
+      put item -1 of tLib into tSourceFile
+      put item 1 to -2 of tLib into tSourceFolder
+      put tCurrentLocation & slash & "Externals" into tDestFolder
+      
+      revSBEnsureFolder tDestFolder
+      set the itemDelimiter to "."
+      revCopyModule tPlatform, item 1 to -2 of tSourceFile, tSourceFile, \
+            tSourceFolder, tCurrentLocation, "Externals", there is a folder tLib
    end repeat
    
    // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by

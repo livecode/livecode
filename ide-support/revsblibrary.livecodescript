@@ -2311,7 +2311,7 @@ command revSBRemoveDependencyForInclusion pInclusion, pInclusionType, pDependeny
    delete variable sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny]
 end revSBRemoveDependencyForInclusion
 
-command revSBUpdateForDependencies pPlatform, @xSettings
+command revSBUpdateForDependencies pPlatform, pArchs, pSDK, @xSettings
    local tDependencies
    repeat for each key tDependentKey in sDependencies
       repeat for each key tDependent in sDependencies[tDependentKey]
@@ -2343,7 +2343,7 @@ command revSBUpdateForDependencies pPlatform, @xSettings
          put tIsRequired into xSettings["android,device capabilities"][tFeature]
       end repeat
       
-      revSBUpdateExtensionCodeInclusions tExtension, pPlatform, xSettings
+      revSBUpdateExtensionCodeInclusions tExtension, pPlatform, pArchs, pSDK, xSettings
       revSBUpdatePerExtensionSettings tExtension, pPlatform, xSettings
    end repeat
 end revSBUpdateForDependencies
@@ -2359,20 +2359,41 @@ command revSBUpdatePerExtensionSettings pExtension, pPlatform, @xSettings
    end repeat
 end revSBUpdatePerExtensionSettings
 
-command revSBUpdateExtensionCodeInclusions pExtension, pPlatform, @xSettings
+command revSBUpdateExtensionCodeInclusions pExtension, pPlatform, pArchs, pSDK, @xSettings
    local tExtCodeFolder, tCodeFolders
    put revIDEExtensionProperty(pExtension, "install_path") & \
          slash & "code" into tExtCodeFolder
+   
    put folders(tExtCodeFolder) into tCodeFolders
+   filter tCodeFolders without ".*"
+   
    repeat for each line tCodeFolder in tCodeFolders
-      __UpdateSettingsFromCodeFolder tExtCodeFolder, tCodeFolder, pPlatform, xSettings
+      __UpdateSettingsFromCodeFolder tExtCodeFolder, tCodeFolder, pPlatform, pArchs, pSDK, xSettings
    end repeat
+   
+   if not revEnvironmentIsInstalled() and \
+         tExtCodeFolder begins with revEnvironmentExtensionsPath() then
+      -- include builds for other platforms
+      local tNonNativeExtCodeFolder
+      put revEnvironmentNonNativeBinariesPath(pPlatform, pSDK) & \
+            "/packaged_extensions/" & pExtension & "/code" into tNonNativeExtCodeFolder
+      if tNonNativeExtCodeFolder is not tExtCodeFolder and \
+            there is a folder tNonNativeExtCodeFolder then
+         put folders(tNonNativeExtCodeFolder) into tCodeFolders
+         filter tCodeFolders without ".*"
+         
+         repeat for each line tCodeFolder in tCodeFolders
+            __UpdateSettingsFromCodeFolder tNonNativeExtCodeFolder, tCodeFolder, pPlatform, pArchs, pSDK, xSettings
+         end repeat
+      end if
+   end if
 end revSBUpdateExtensionCodeInclusions
 
-private command __UpdateSettingsFromCodeFolder pPath, pCodeFolderName, pPlatform, @xSettings
+private command __UpdateSettingsFromCodeFolder pPath, pCodeFolderName, pPlatform, pArchs, pSDK, @xSettings
    local tFiles, tFolderPath
    put pPath & slash & pCodeFolderName into tFolderPath
    put files(tFolderPath) into tFiles
+   filter tFiles without ".*"
    switch pCodeFolderName
       case "jvm-android"
          local tAndroidJarFiles, tAndroidAarFiles
@@ -2396,6 +2417,61 @@ private command __UpdateSettingsFromCodeFolder pPath, pCodeFolderName, pPlatform
          repeat for each line tLine in tFiles
             appendToStringList tFolderPath & slash & tLine, xSettings["jarFiles"]
          end repeat
+         break
+      default
+         replace comma with return in pArchs
+         replace "-" with "_" in pArchs
+         
+         if pPlatform is "MacOSX" then
+            put "mac" into pPlatform
+         else if pPlatform is "Windows" then
+            put "win" into pPlatform
+         end if
+         
+         if pPlatform is among the items of "mac,ios" then
+            if the last char of pArchs is not return then
+               put return after pArchs
+            end if
+            put "universal" after pArchs
+         end if
+         
+         -- on iOS we first look for an exact SDK match for device and simulator
+         -- then fallback to a universal binary covering both device and simulator
+         -- then fallback to a universal binary compiled against an unknown SDK
+         set the itemDelimiter to "-"
+         if pPlatform is "ios" and item 3 of pCodeFolderName is not pSDK then
+            repeat for each word  tOS in "iphoneos iphonesimulator"
+               if pSDK begins with tOS then
+                  delete char 1 to length(tOS) of pSDK
+               end if
+            end repeat
+            if item 3 of pCodeFolderName is not empty and  \
+                  item 3 of pCodeFolderName is not "sdk" & pSDK then
+               break
+            end if
+         end if
+         
+         if item 2 of pCodeFolderName is pPlatform and \
+               item 1 of pCodeFolderName is among the lines of pArchs then
+            repeat for each line tLine in tFiles
+               if tLine is empty then
+                  next repeat
+               end if
+               appendToStringList tFolderPath & slash & tLine, xSettings["extension_code_resources"]
+            end repeat
+            
+            if pPlatform is "mac" then
+               local tFolders
+               put folders(tFolderPath) into tFolders
+               filter tFolders without ".*"
+               repeat for each line tLine in tFolders
+                  if tLine is empty then
+                     next repeat
+                  end if
+                  appendToStringList tFolderPath & slash & tLine, xSettings["extension_code_resources"]
+               end repeat
+            end if
+         end if
          break
    end switch
 end __UpdateSettingsFromCodeFolder
