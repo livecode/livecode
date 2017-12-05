@@ -31,6 +31,7 @@ metadata title is "Palette Actions"
 metadata author is "LiveCode"
 metadata version is "1.0.1"
 metadata userVisible is "false"
+metadata _ide is "true"
 
 property navNames		get getNavNames			set setNavNames
 property navIcons		get getNavIcons			set setNavIcons

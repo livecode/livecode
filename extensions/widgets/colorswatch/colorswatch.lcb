@@ -36,6 +36,7 @@ metadata title is "Color Swatch"
 metadata preferredSize is "24,24"
 metadata svgicon is "M86.6,0H7.9C3.5,0,0,3.5,0,7.9v78.8c0,4.3,3.5,7.9,7.9,7.9h78.8c4.3,0,7.9-3.5,7.9-7.9V7.9C94.5,3.5,91,0,86.6,0z M23.3,81l-11-16.4h21.9L23.3,81z M81.5,81.5H47.2l0.1-34.1H13.1L13,13h68.5V81.5z"
 metadata userVisible is "false"
+metadata _ide is "true"
 --
 
 -- property declarations

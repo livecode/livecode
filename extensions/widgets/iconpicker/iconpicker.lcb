@@ -27,6 +27,7 @@ metadata author is "LiveCode"
 metadata version is "1.0.0"
 metadata title is "Icon Picker"
 metadata userVisible is "false"
+metadata _ide is "true"
 
 private variable mDataCount as Integer
 private variable mDataList as List
