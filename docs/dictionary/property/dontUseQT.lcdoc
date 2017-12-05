@@ -77,10 +77,10 @@ AVFoundation player on Windows.
 References: answer record (command), answer effect (command),
 show (command), hide (command), function (control structure),
 recordCompressionTypes (function), qtEffects (function),
-QTVersion (function), property (glossary), Windows (glossary),
+qtVersion (function), property (glossary), Windows (glossary),
 command (glossary), QuickTime (glossary), loaded into memory (glossary),
 Mac OS (glossary), stack (object), dontUseQTEffects (property),
-alwaysBuffer property (property)
+alwaysBuffer (property)
 
 Tags: multimedia
 

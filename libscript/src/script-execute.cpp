@@ -268,7 +268,11 @@ public:
         /* There are different variants of objc_msgSend we need to use
          * depending on architecture and return type:
          *   struct return
-         *     all but arm64: _stret
+         *     arm64: only has objc_msgSend
+         *     arm: _stret if struct size > 4 bytes
+         *     x86-64: _stret if struct size > 16 bytes
+         *     i386: _stret if struct size >= 8 bytes or
+         *           exactly 1, 2, or 4 bytes
          *   float return
          *     arm: no difference
          *     i386: _fpret
@@ -289,22 +293,29 @@ public:
          
         ffi_cif *t_cif = (ffi_cif *)p_handler->objc.function_cif;
         void (*t_objc_msgSend)() = nullptr;
+        size_t t_rsize = t_cif->rtype->size;
 #if defined(__ARM64__)
         t_objc_msgSend = (void(*)())objc_msgSend;
 #elif defined(__ARM__)
-        if (t_cif->rtype->type == FFI_TYPE_STRUCT)
+        if (t_cif->rtype->type == FFI_TYPE_STRUCT &&
+            t_rsize > 4)
             t_objc_msgSend = (void(*)())objc_msgSend_stret;
         else
             t_objc_msgSend = (void(*)())objc_msgSend;
 #elif defined(__X86_64__)
-        if (t_cif->rtype->type == FFI_TYPE_STRUCT)
+        /* TODO: Investigate structs containing long doubles
+         * as they will not work at the moment */
+        if (t_cif->rtype->type == FFI_TYPE_STRUCT &&
+            t_rsize > 16)
             t_objc_msgSend = (void(*)())objc_msgSend_stret;
         else if (t_cif->rtype->type == FFI_TYPE_LONGDOUBLE)
             t_objc_msgSend = (void(*)())objc_msgSend_fpret;
         else
             t_objc_msgSend = (void(*)())objc_msgSend;
 #elif defined(__I386__)
-        if (t_cif->rtype->type == FFI_TYPE_STRUCT)
+        if (t_cif->rtype->type == FFI_TYPE_STRUCT &&
+            (t_rsize >= 8 ||
+             (t_rsize & (t_rsize - 1)) == 0))
             t_objc_msgSend = (void(*)())objc_msgSend_stret;
         else if (t_cif->rtype->type == FFI_TYPE_FLOAT ||
                  t_cif->rtype->type == FFI_TYPE_DOUBLE ||

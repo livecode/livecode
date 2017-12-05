@@ -612,6 +612,11 @@ template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
         t_firstblock = sptr -> getblocks();
         t_block = sptr -> indextoblock(si, False);
         
+        while(t_block->next() != t_firstblock && t_block->GetLength() == 0)
+        {
+            t_block = t_block->next();
+        }
+        
         for(;;)
         {
             if (t_first)

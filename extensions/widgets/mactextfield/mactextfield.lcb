@@ -16,9 +16,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /**
-Name: Mac Native Single-line Field
-
-Description:
 This widget wraps the native NSTextField on Mac. Since this is
 a single-line field, the return key does not enter a new line,
 instead it triggers the returnKey action and the contents of
@@ -78,7 +75,13 @@ private variable mTextFieldView as optional ObjcObject
 private variable mTextFieldProxy as optional ObjcObject
 
 /**
+Syntax: 
+set the text of <widget> to <pText>
+get the text of <widget>
+
 Summary: The text displayed by the widget
+
+Value (string): The text of the widget
 
 Example:
 local sEntered
@@ -98,6 +101,10 @@ metadata text.default is ""
 private variable mText as String
 
 /**
+Syntax: 
+set the showBorder of <widget> to { true | false }
+get the showBorder of <widget>
+
 Summary: Whether the text field has a border or not
 
 Description:
@@ -110,6 +117,10 @@ metadata showBorder.default is "true"
 private variable mShowBorder as Boolean
 
 /**
+Syntax: 
+set the showFocusBorder of <widget> to { true | false }
+get the showFocusBorder of <widget>
+
 Summary: Whether the text field has a focus border or not
 
 Description:

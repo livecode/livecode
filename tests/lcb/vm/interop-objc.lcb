@@ -121,4 +121,68 @@ end handler
 
 ---------
 
+// NSRange is a pair of (natural sized) unsigned integers
+public foreign type NSRange binds to "MCAggregateTypeInfo:pp"
+
+// NSRange is 8 bytes on 64-bit arch, 4 bytes on 32-bit
+// so will use objc_msgSend_stret on 32-bit arch, but objc_msgSend on
+// 64 bit.
+foreign handler RangeOfString(in pHaystack as ObjcId, in pNeedle as ObjcId) returns NSRange binds to "objc:NSString.-rangeOfString:"
+
+public handler TestReturnNSRange()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "return NSRange struct succeeds" because "not implemented on" && the operating system
+		return
+	end if
+	
+	variable tRange as NSRange
+	unsafe
+		put RangeOfString(StringToNSString("cartoon"), \
+						  StringToNSString("art")) into tRange
+	end unsafe
+	
+	variable tRangeList as List
+	put tRange into tRangeList
+	
+	test "return NSRange struct succeeds" when \
+		tRangeList is [1,3]
+end handler
+
+// NSRect is a quadruple of (natural sized) floats
+public foreign type NSRect binds to "MCAggregateTypeInfo:qqqq"
+
+foreign handler NSValueWithRect(in pRect as NSRect) returns ObjcId \
+	binds to "objc:NSValue.+valueWithRect:"
+	
+// NSRect is 32 bytes on 64-bit arch, 16 bytes on 32-bit
+// so will use objc_msgSend_stret on both archs
+foreign handler NSRectFromValue(in pValue as ObjcId) returns NSRect \
+	binds to "objc:NSValue.-rectValue"
+
+public handler TestReturnNSRect()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "return NSRange struct succeeds" because "not implemented on" && the operating system
+		return
+	end if
+	
+	variable tRect as List
+	variable tExponent as Integer
+	repeat with tExponent from 1 up to 4
+		push the exponential of tExponent onto tRect
+	end repeat
+	
+	variable tRoundTripped as NSRect
+	unsafe
+		variable tValue as ObjcId
+		put NSValueWithRect(tRect) into tValue
+		put NSRectFromValue(tValue) into tRoundTripped
+	end unsafe
+	
+	variable tRectList as List
+	put tRoundTripped into tRectList
+	
+	test "return NSRect struct succeeds" when \
+		tRectList is tRect
+end handler
+
 end module

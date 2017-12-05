@@ -16,9 +16,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /**
-Name: Android Native Field
-
-Description:
 This widget is a native field on Android.
 
 Name: enabled
@@ -798,10 +795,10 @@ __safe foreign handler _JNI_View_setFocusable(in pObj as JObject, in pParam_focu
    binds to "java:android.view.View>setFocusable(Z)V?ui"
 __safe foreign handler _JNI_View_clearFocus(in pObj as JObject) returns nothing \
    binds to "java:android.view.View>clearFocus()V?ui"
-__safe foreign handler _JNI_View_requestFocus(in pObj as JObject) returns nothing \
-   binds to "java:android.view.View>requestFocus()V"
+__safe foreign handler _JNI_View_requestFocus(in pObj as JObject) returns JBoolean \
+   binds to "java:android.view.View>requestFocus()Z?ui"
 __safe foreign handler _JNI_View_isFocused(in pObj as JObject) returns JBoolean \
-   binds to "java:android.view.View>isFocused()Z"
+   binds to "java:android.view.View>isFocused()Z?ui"
 
 handler View_setOnFocusChangeListener(in pObj as JObject, in pParam_listener as JObject) returns nothing
 	_JNI_View_setOnFocusChangeListener(pObj, pParam_listener)
@@ -827,8 +824,10 @@ public handler View_clearFocus(in pObj as JObject) returns nothing
 	_JNI_View_clearFocus(pObj)
 end handler
 
-public handler View_requestFocus(in pObj as JObject) returns nothing
-	_JNI_View_requestFocus(pObj)
+public handler View_requestFocus(in pObj as JObject) returns Boolean
+	variable tJNIResult as Boolean
+	put _JNI_View_requestFocus(pObj) into tJNIResult
+	return tJNIResult
 end handler
 
 public handler View_isFocused(in pObj as JObject) returns Boolean

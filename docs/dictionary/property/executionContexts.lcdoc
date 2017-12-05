@@ -8,7 +8,6 @@ Summary:
 Reports information on the current state of the running application.
 
 Introduced: 1.1
-Important:The value of the <executionContexts> may be changed in future versions of LiveCode, it is not recommended to write code that depends on its contents.
 
 OS: mac, windows, linux, ios, android
 
@@ -16,16 +15,55 @@ Platforms: desktop, server, mobile
 
 Example:
 on errorDialog
-  local tHandler
-  put item -2 of line -2 of the executionContexts into tHandler
-  answer "An error occurred in the handler: " & tHandler
+  local tContextArray
+  local tHandler, tLineNumber, tObject
+
+  put parsedContext(line -2 of the executionContexts) into tContextArray
+
+  if tContextArray["behavior"] is empty then
+    put tContextArray["object"] into tObject
+  else
+    put tContextArray["behavior"] into tObject
+  end if
+  put tContextArray["handler"] into tHandler
+  put tContextArray["line"] into tLineNumber
+  answer "An error occurred at line" && tLineNumber && "in handler" && tHandler && "of" && tObject
 end errorDialog
+
+function parsedContext pContextLine
+  local tKey = "object", tContextA
+
+  repeat for each item tItem in pContextLine
+    if tContextA[tKey] is not empty then
+        put comma after tContextA[tKey]
+    end if
+    put tItem after tContextA[tKey]
+
+    switch tKey
+       case "object"
+           if exists(tContextA[tKey]) then
+                put "handler" into tKey
+           end if
+           break
+       case "handler"
+           put "line" into tKey
+           break
+        case "line"
+           put "behavior" into tKey
+           break
+    end switch
+  end repeat
+end parsedContext
 
 Value:
 The <executionContexts> is similar to a call stack, it consists of a
 list of contexts, one per line, with the most recent context at the end.
-Each context is a string of the form:
-&lt;object-long-id&gt;,&lt;handler-name&gt;,&lt;line-number&gt; 
+Each context is a string of the following 3 or 4 comma-delimited items:
+
+1. object long id
+2. handler name
+3. line number
+4. behavior object long id if the context is from a behavior script
 
 Description:
 Use the <executionContexts> property to obtain information about the
@@ -38,7 +76,12 @@ A common use of the <executionContexts> is to obtain the name of the
 object and handler that called the current handler, this information is
 available as: line -2 of the executionContexts.
 
+>**Note:** if the function call occurred in a behavior script, then the line number refers to the behavior script, not the target script.
+
 The <executionContexts> property is read-only and cannot be set.
 
-References: errorDialog (message)
+> *Important:* The value of the <executionContexts> may be changed in future 
+> versions of LiveCode, it is not recommended to write code that depends on 
+> its contents.
 
+References: errorDialog (message)

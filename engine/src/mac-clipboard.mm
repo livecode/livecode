@@ -315,7 +315,7 @@ MCStringRef MCMacRawClipboard::CopyAsUTI(MCStringRef p_key)
     
     // Convert the UTI to a StringRef
     MCStringRef t_return = NULL;
-    MCStringCreateWithCFString(t_uti, t_return);
+    MCStringCreateWithCFStringRef(t_uti, t_return);
     CFRelease(t_uti);
     return t_return;
 }
@@ -574,7 +574,7 @@ MCStringRef MCMacRawClipboardItemRep::CopyTypeString() const
     
     // Convert the NSString into a StringRef
     MCStringRef t_type_string;
-    if (!MCStringCreateWithCFString((CFStringRef)t_type, t_type_string))
+    if (!MCStringCreateWithCFStringRef((CFStringRef)t_type, t_type_string))
         return NULL;
     
     m_type = t_type_string;
@@ -612,7 +612,7 @@ MCDataRef MCMacRawClipboardItemRep::CopyData() const
         
         // Turn this path into a LiveCode string
         MCAutoStringRef t_path_string;
-        if (!MCStringCreateWithCFString((CFStringRef)t_path, &t_path_string))
+        if (!MCStringCreateWithCFStringRef((CFStringRef)t_path, &t_path_string))
             return NULL;
         
         // Because this needs to return data, UTF-8 encode the result

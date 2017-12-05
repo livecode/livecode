@@ -33,9 +33,9 @@ If you want to check the state of the <Shift key> at the current time,
 rather than when the event was dispatched, use the <shiftKey>
 <function>. 
 
-  **warning**: the value of this function is undefined after performing
-  a wait operation; it may no longer be the same as the value when the
-  event was dispatched.
+> **Warning**: the value of this function is undefined after performing
+> a wait operation; it may no longer be the same as the value when the
+> event was dispatched.
 
 
 References: left (constant), function (control structure),

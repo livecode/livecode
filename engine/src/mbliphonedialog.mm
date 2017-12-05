@@ -532,7 +532,7 @@ static void dopopupaskdialog_prewait(void *p_context)
                            UITextField *t_text_field;
                            t_text_field = [[t_alert_controller textFields] firstObject];
                            
-                           /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_text_field text], ctxt -> result);
+                           /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[t_text_field text], ctxt -> result);
                        }];
         [t_alert_controller addAction: t_ok_action];
         
@@ -554,7 +554,7 @@ static void dopopupaskdialog_postwait(void *p_context)
         t_result = [ctxt -> alert getText];
         
         if (t_result != nil)
-            MCStringCreateWithCFString(t_result, &t_message_text);
+            MCStringCreateWithCFStringRef(t_result, &t_message_text);
         
 		// MW-2012-10-24: [[ Bug 10491 ]] The delegate now holds the button index, not the alert view.
         if ([ctxt -> delegate index] == 0 || *t_message_text == nil)
@@ -571,7 +571,7 @@ static void dopopupaskdialog_postwait(void *p_context)
             t_result = (CFStringRef)[ctxt -> text_field text];
 
         if (t_result != nil)
-            MCStringCreateWithCFString(t_result, &t_message_text);
+            MCStringCreateWithCFStringRef(t_result, &t_message_text);
         
         if ([ctxt -> delegate index] == 0 || *t_message_text == nil)
             ctxt -> result = nil;

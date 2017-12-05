@@ -36,18 +36,19 @@ The user can change the current time by:
 - clicking the play button in the controller bar,
 - clicking in the controller bar, 
 - dragging the controller bar scroller thumb,
-- using the arrow keys when the player is the active (focused)control,
+- using the arrow keys when the player is the active (focused) control,
 - using the scrubber control in the controller bar. 
  (which is revealed by clicking the arrow buttons in the controller bar
  while holding the shift key down.)
 
-Changing the player's <currenttime><property> property by script does not trigger the sending of the <currentTimeChanged><message>.
+Changing the player's <currenttime> <property> property by script does not trigger 
+the sending of the <currentTimeChanged> <message>.
 
-Changing the player's <currenttime><property> property by script does 
-not trigger the sending of the <currentTimeChanged><message>.
+Changing the player's <currenttime> <property> property by script does 
+not trigger the sending of the <currentTimeChanged> <message>.
 
 Starting the player by script does trigger the sending of the 
-<currentTimeChanged><message> once it is playing.
+<currentTimeChanged> <message> once it is playing.
 
 The number of intervals per second is specified by the player's
 timeScale <property>. The total number of intervals is given in the

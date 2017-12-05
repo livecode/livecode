@@ -39,7 +39,8 @@ to delete, in the form of a URL.
 The result:
 If the file or directory is successfully deleted, the result <function>
 is set to empty. Otherwise, the <result> <function> returns an error
-message. >*Important:* If a <blocking> operation involving a <URL>
+message. 
+>*Important:* If a <blocking> operation involving a <URL>
 (using the <put> <command> to <upload> a <URL>, the <post> <command>,
 the <delete URL> <command>, or a <statement> that gets an <ftp> or
 <http> <URL>) is going on, no other <blocking> <URL> operation can start
@@ -66,7 +67,7 @@ name and password is valid, you will almost always need a user name and
 password to use the <delete URL> <command>.
 
 >*Note:*  When used with an <ftp> or <http> <URL>, the <delete URL>
-> <command> is <blocking> : that is, the <handler> pauses until LiveCode
+> <command> is <blocking>: that is, the <handler> pauses until LiveCode
 > is finished deleting the <URL>. Since deleting a file from a server
 > may take some time due to network lag, the <delete URL> <command> may
 > take long enough to be noticeable to the user.
@@ -98,10 +99,10 @@ delete file (command), delete folder (command),
 function (control structure), result (function),
 LiveCode custom library (glossary), application (glossary),
 standalone application (glossary), statement (glossary),
-delete folder (glossary), blocking (glossary),
+blocking (glossary),
 Standalone Application Settings (glossary), command (glossary),
 expression (glossary), main stack (glossary), group (glossary),
-delete file (glossary), local file (glossary), server (glossary),
+local file (glossary), server (glossary),
 upload (glossary), folder (glossary), message (glossary),
 handler (glossary), binfile (keyword), ftp (keyword), file (keyword),
 URL (keyword), http (keyword), put (library), library (library),

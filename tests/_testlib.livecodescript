@@ -17,6 +17,9 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on revLoadLibrary
+    if the target is not me then
+       pass revLoadLibrary
+    end if
 	insert the script of me into back
 	set the lockErrorDialogs to true
 end revLoadLibrary
@@ -309,6 +312,10 @@ end TestGetIDERepositoryPath
 function TestGetExtractedDocsFolder
    return _TestGetBuildFolder() & slash & "extracted_docs"
 end TestGetExtractedDocsFolder
+
+function TestGetPackagedExtensionsFolder
+   return _TestGetBuildFolder() & slash & "packaged_extensions"
+end TestGetPackagedExtensionsFolder
 
 on TestLoadExtension pName
    if pName is among the lines of the loadedExtensions then

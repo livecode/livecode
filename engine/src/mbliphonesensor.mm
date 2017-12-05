@@ -148,13 +148,13 @@ static int32_t s_location_calibration_timeout = 0;
 	if (s_location_enabled)
 	{
 		MCAutoStringRef t_error;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[error localizedDescription], &t_error);
 		MCSensorPostErrorMessage(kMCSensorTypeLocation, *t_error);
 	}
 	else if (s_heading_enabled)
 	{
         MCAutoStringRef t_error;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[error localizedDescription], &t_error);
 		MCSensorPostErrorMessage(kMCSensorTypeHeading, *t_error);
 	}
 }
@@ -538,7 +538,7 @@ static void (^acceleration_update)(CMAccelerometerData *, NSError *) = ^(CMAccel
 		else
 		{
 			MCAutoStringRef t_error;
-			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+			/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[error localizedDescription], &t_error);
 			MCSensorPostErrorMessage(kMCSensorTypeAcceleration, *t_error);
 		}
 	}
@@ -604,7 +604,7 @@ static void (^rotation_rate_update)(CMGyroData *, NSError *) = ^(CMGyroData *gyr
 		else
 		{
 			MCAutoStringRef t_error;
-			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+			/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[error localizedDescription], &t_error);
 			MCSensorPostErrorMessage(kMCSensorTypeRotationRate, *t_error);
 		}
 	}

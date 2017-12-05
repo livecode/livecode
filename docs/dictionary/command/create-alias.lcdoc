@@ -4,7 +4,7 @@ Synonyms: new alias
 
 Type: command
 
-Syntax: create alias <aliasPath> to {file <originalFilePath> | folder <orginalFolderPath>}
+Syntax: create alias <aliasPath> to {file | folder} <originalPath>
 
 Summary:
 Makes a new <alias>, <symbolic link>, or <shortcut> to the specified
@@ -33,11 +33,8 @@ The aliasPath specifies the name and location of the alias to be
 created. If you specify a name but not a location, the alias is created
 in the defaultFolder.
 
-originalFilePath:
-
-
-orginalFolderPath:
-originalFilePath/originalFolderPath: The name and location of the
+originalPath:
+The name and location of the
 file/folder you want to make an alias to. If you specify a name but not
 a location, LiveCode assumes the file is in the defaultFolder.
 

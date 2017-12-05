@@ -226,10 +226,28 @@ static Properties parse_property_name(MCStringRef p_name)
 	const LT *t_literal;
 	if (t_sp . next(t_type) &&
 		t_sp . lookup(SP_FACTOR, t_literal) == PS_NORMAL &&
-		t_literal -> type == TT_PROPERTY &&
-		t_sp . next(t_type) == PS_EOF)
-		return (Properties)t_literal -> which;
-	
+		t_literal -> type == TT_PROPERTY)
+    {
+        Properties t_which = (Properties)t_literal -> which;
+        
+        // check for object property modifiers
+        if (t_which == P_SHORT || t_which == P_LONG || t_which == P_ABBREVIATE)
+        {
+            if (t_sp . next(t_type) &&
+                t_sp . lookup(SP_FACTOR, t_literal) == PS_NORMAL &&
+                t_literal -> type == TT_PROPERTY)
+            {
+                if (t_literal->which == P_ID || t_literal->which == P_NAME || t_literal->which == P_OWNER)
+                {
+                    t_which = (Properties)(t_literal->which + t_which - P_SHORT + 1);
+                }
+            }
+        }
+        
+        if (t_sp . next(t_type) == PS_EOF)
+            return t_which;
+    }
+    
 	return P_CUSTOM;
 }
 
@@ -521,6 +539,9 @@ extern void MCWidgetExecPostToParentWithArguments(MCStringRef p_message, MCPrope
 
 extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
 {
+    // PM-2017-10-31: [[ Bugfix 20625 ]] May have no default stack on startup
+    if (!MCdefaultstackptr)
+        return nil;
     MCObject *t_target = MCdefaultstackptr -> getcurcard();
     if (MCcurrentwidget)
         t_target = MCWidgetGetHost(MCcurrentwidget);
@@ -571,6 +592,10 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostToScriptObject(MCStringRef p_me
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
 {
+	// PM-2017-10-31: [[ Bugfix 20625 ]] May have no default stack on startup
+	if (!MCdefaultstackptr)
+		return;
+		
     MCObject *t_target = MCdefaultstackptr -> getcurcard();
     if (MCcurrentwidget)
     {

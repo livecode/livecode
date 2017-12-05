@@ -1222,7 +1222,7 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	
 	// Convert the arguments into stringrefs
 	MCStringRef args[1];
-	MCStringCreateWithCFString((CFStringRef)[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0], args[0]);
+	MCStringCreateWithCFStringRef((CFStringRef)[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0], args[0]);
 
     // SN-2015-09-22: [[ Bug 15987 ]] Use NSProcessInfo to get the env variables
 	// Convert the environment variables into stringrefs
@@ -1255,8 +1255,8 @@ static void MCIPhoneDoDidBecomeActive(void *)
 
             // We convert the CFStringRef that we got from the dictionary into
             //  StringRefs, and create a Bash-like environment variable
-            if (MCStringCreateWithCFString((CFStringRef)t_value, &t_value_str)
-                    && MCStringCreateWithCFString((CFStringRef)t_key, &t_variable_str)
+            if (MCStringCreateWithCFStringRef((CFStringRef)t_value, &t_value_str)
+                    && MCStringCreateWithCFStringRef((CFStringRef)t_key, &t_variable_str)
                     && MCStringFormat(t_env_var, "%@=%@", *t_variable_str, *t_value_str))
                 t_envp[t_index] = t_env_var;
 

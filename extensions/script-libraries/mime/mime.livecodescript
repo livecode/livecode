@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.mime"
+﻿script "com.livecode.library.mime"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 
@@ -17,35 +17,40 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>. 
 */
 
-on revLoadLibrary
+on extensionInitialize
    if the target is not me then
-      pass revLoadLibrary
+      pass extensionInitialize
    end if
    
    insert the script of me into back
    
    if the environment contains "development" then
       set the _ideoverride of me to true
-      revSBAddAvailableLibrary the short name of me, "MIME"
    end if
    
    __Initialize
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is not me then
-      pass revUnloadLibrary
+      pass extensionFinalize
    end if
    
    remove the script of me from back
-end revUnloadLibrary
+end extensionFinalize
 
 /**
+Title: MIME Library
 
-This script library implements portions of Multipurpose Internet Mail Extensions (MIME)
-as described in RFCs 2045 - 2049. Use this library to implement common data formats such
-as email message bodies and form encoding in HTTP.
+Version: 1.0.0
 
+Author: LiveCode
+
+Description:
+This script library implements portions of Multipurpose Internet Mail 
+Extensions (MIME) as described in RFCs 2045 - 2049. Use this library to 
+implement common data formats such as email message bodies and form 
+encoding in HTTP.
 */
 
 local sMIMETypes

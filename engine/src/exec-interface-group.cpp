@@ -238,11 +238,11 @@ void MCGroup::SetHilitedButtonId(MCExecContext& ctxt, uint32_t part, integer_t p
 
 void MCGroup::GetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringRef& r_name)
 {
-	MCButton *bptr = gethilitedbutton(part);
-	if (bptr != NULL)
-		r_name = MCValueRetain(MCNameGetString(bptr->getname()));
-	else
-		r_name = MCValueRetain(kMCEmptyString);
+    MCButton *bptr = gethilitedbutton(part);
+    if (bptr != NULL)
+        bptr -> GetShortName(ctxt, r_name);
+    else
+        r_name = MCValueRetain(kMCEmptyString);
 }
 
 void MCGroup::SetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringRef p_name)

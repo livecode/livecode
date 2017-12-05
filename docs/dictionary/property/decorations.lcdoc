@@ -31,7 +31,7 @@ The result:
 > won't include a title bar, even if it had one initially. To set a
 > stack to metal appearance while showing a title bar with close,
 > minimize, and maximize box, you need to set all the decorations at
-> once:. 
+> once. 
 
 Value:
 The <decorations> of a <stack> is one of the following:
@@ -50,17 +50,16 @@ Description:
 Use the <decorations> <property> to change the appearance of windows.
 
 You can specify one or more of the following decorations:
-
-        * title: Shows the window's title bar
-        * minimize: Shows the minimize (iconify) box in the title bar
-        * maximize: Shows the maximize (zoom) box in the title bar
-        * close: Shows the close box in the title bar
-        * menu: Shows the menu bar in the window (<Unix> and <Windows>
-          only) 
-        * system: Shows the window as a system window (OS X, Unix, and
-          Windows only)
-        * noShadow: Remove the window's drop shadow (OS X only)
-        * metal: Shows the window with a textured appearance (OS X only)
+* title: Shows the window's title bar
+* minimize: Shows the minimize (iconify) box in the title bar
+* maximize: Shows the maximize (zoom) box in the title bar
+* close: Shows the close box in the title bar
+* menu: Shows the menu bar in the window (<Unix> and <Windows>
+  only) 
+* system: Shows the window as a system window (OS X, Unix, and
+  Windows only)
+* noShadow: Remove the window's drop shadow (OS X only)
+* metal: Shows the window with a textured appearance (OS X only)
 
 
 >*Note:* The "metal" and "system" options are not compatible. If you set
@@ -88,8 +87,7 @@ and "maximize" options in a <stack|stack's> <decorations> sets the
 corresponding <property> to true.
 
     set the decorations of stack "Test" to \
-
-    "metal,title,close,minimize,maximize"
+        "metal,title,close,minimize,maximize"
 
 
 This applies only to the <decorations> property. If you use the

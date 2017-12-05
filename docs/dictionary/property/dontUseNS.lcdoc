@@ -36,21 +36,22 @@ this feature and use the old-style modal dialog boxes for file actions,
 set the <dontUseNS> <property> to true.
 
 The setting of this property affects all file dialog boxes used in
-LiveCode, including the dialogs displayed by the ask file, <answer
-file>, and <answer folder> <command|commands>, as well as <dialog
-box|dialog boxes> displayed by <menu item|menu items> such as "Save" and
-"Open Stack". 
+LiveCode, including the dialogs displayed by the <ask file>, 
+<answer file>, and <answer folder> <command|commands>, as well as 
+<dialog box|dialog boxes> displayed by <menu item|menu items> such as 
+"Save" and "Open Stack". 
 
 >*Warning:*  Navigation Services version 1.1.2 is part of <Mac OS>
 > version 8.6 and later. Earlier versions may optionally be installed on
 > systems with <Mac OS> versions 8.1 and 8.5. Versions of Navigation
-> Services earlier than 1.1.2 may not display <file dialog box|file
-> dialogs> correctly in LiveCode.
+> Services earlier than 1.1.2 may not display 
+> <file dialog box|file dialogs> correctly in LiveCode.
 
-References: ask file with type (command), answer file (command),
-answer folder (command), property (glossary), menu item (glossary),
-command (glossary), file dialog box (glossary), appearance (glossary),
-Mac OS (glossary), dialog box (glossary), behavior (glossary)
+References: ask file (command), ask file with type (command), 
+answer file (command), answer folder (command), property (glossary), 
+menu item (glossary), command (glossary), file dialog box (glossary), 
+appearance (glossary), Mac OS (glossary), dialog box (glossary), 
+behavior (glossary)
 
 Tags: windowing
 

@@ -79,7 +79,8 @@
 				
 				'src/foundation-array.cpp',
 				'src/foundation-bidi.cpp',
-				'src/foundation-chunk.cpp',
+                'src/foundation-chunk.cpp',
+                'src/foundation-cf.cpp',
 				'src/foundation-core.cpp',
 				'src/foundation-custom.cpp',
 				'src/foundation-data.cpp',
@@ -102,7 +103,6 @@
 				'src/foundation-set.cpp',
 				'src/foundation-stream.cpp',
 				'src/foundation-string.cpp',
-				'src/foundation-string-cf.cpp',
                 'src/foundation-string-native.cpp.h',
 				'src/foundation-text.cpp',
 				'src/foundation-typeconvert.cpp',
@@ -169,7 +169,7 @@
                     
 						'sources!':
 						[
-							'src/foundation-string-cf.cpp',
+							'src/foundation-cf.cpp',
                             'src/foundation-objc.mm',
 						],
 					},

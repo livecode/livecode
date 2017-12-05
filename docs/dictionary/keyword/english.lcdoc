@@ -30,10 +30,13 @@ You can use the <english> <keyword> in combination with the <long>,
 must come before the <long>, <abbreviated>, or <short> <keyword>.
 
 A long English <date> looks like this: Thursday, June 22, 2000
+
 An abbreviated English <date> looks like this: Thu, Jan 22, 2000
+
 A short English <date> looks like this: 1/22/00
 
 A long English <time> looks like this: 11:22:47 AM
+
 An abbreviated English <time> or <short> English <time> looks like this:
 11:22 AM
 
