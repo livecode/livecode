@@ -3312,7 +3312,24 @@ void *MCSupportLibraryLoad(const char *p_name_cstr)
         return nullptr;
     }
 
-    return MCU_library_load(*t_name);
+    MCSAutoLibraryRef t_module;
+    &t_module = MCU_library_load(*t_name);
+    if (!t_module.IsSet())
+    {
+        // try a relative path
+        MCAutoStringRef t_relative_filename;
+        if (MCStringFormat(&t_relative_filename, "./%@", *t_name))
+        {
+            &t_module = MCU_library_load(*t_relative_filename);
+        }
+    }
+    
+    if (!t_module.IsSet())
+    {
+        return nullptr;
+    }
+    
+    return t_module.Take();
 }
 
 void MCSupportLibraryUnload(void *p_handle)
