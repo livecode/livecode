@@ -102,7 +102,7 @@ constant kPaints is { \
 	"selected tab": ["background"], \
 	"nav": ["foreground"], \
 	"hover nav": ["highlight"], \
-	"disabled": ["foreground", ["background", 0.25]] \
+	"disabled": ["foreground", ["background", 0.7]] \
 }
 
 public handler OnCreate()
