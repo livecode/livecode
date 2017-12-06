@@ -185,4 +185,19 @@ public handler TestReturnNSRect()
 		tRectList is tRect
 end handler
 
+----------
+
+private foreign handler NSUserNotificationSetTitle(in Obj as ObjcId, in Title as ObjcId) returns nothing binds to "objc:NSUserNotification.-setTitle:"
+private foreign handler NSUserNotificationGetTitle(in Obj as ObjcId) returns ObjcId binds to "objc:NSUserNotification.title"
+
+public handler TestObjcDynamicPropertyBinding()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc property binding succeeds" because "not implemented on" && the operating system
+		return
+	end if
+
+	test "dynamic objc setter binds" when NSUserNotificationSetTitle is not nothing
+	test "dynamic objc getter binds" when NSUserNotificationGetTitle is not nothing
+end handler
+
 end module
