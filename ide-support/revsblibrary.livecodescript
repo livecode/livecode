@@ -2854,7 +2854,7 @@ function revSBEnginePath pPlatform
             return tBinariesPath & slash & "standalone-" & tEdition & ".exe"
             break
          case "Linux"
-            return tBinariesPath & slash & "standalone-" & tEdition
+            return tBinariesPath & slash & "standalone-" & toLower(tEdition)
             break
          default
             return empty
