@@ -2421,6 +2421,8 @@ private command __UpdateSettingsFromCodeFolder pPath, pCodeFolderName, pPlatform
       default
          replace comma with return in pArchs
          replace "-" with "_" in pArchs
+         replace "i386" with "x86" in pArchs
+         replace "x64" with "x86_64" in pArchs
          
          if pPlatform is "MacOSX" then
             put "mac" into pPlatform
