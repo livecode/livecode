@@ -236,8 +236,7 @@ static bool MCEngineLoadLibrary(MCScriptModuleRef p_module, MCStringRef p_name, 
     MCSLibraryRef t_library = nullptr;
     
     // extension libraries should be mapped by the IDE or deploy params
-    MCAutoStringRef t_mapped_path;
-    if (MCdispatcher->fetchlibrarymapping(p_name, &t_mapped_path))
+    if (MCdispatcher->haslibrarymapping(p_name))
     {
         MCAutoStringRef t_map_name;
         if (!MCStringFormat(&t_map_name, "./%@", p_name))

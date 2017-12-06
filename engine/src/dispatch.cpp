@@ -2722,6 +2722,12 @@ bool MCDispatch::fetchlibrarymapping(MCStringRef p_name, MCStringRef& r_path)
     return true;
 }
 
+bool MCDispatch::haslibrarymapping(MCStringRef p_name)
+{
+    MCAutoStringRef t_mapping;
+    return fetchlibrarymapping(p_name, &t_mapping);
+}
+
 bool MCDispatch::recomputefonts(MCFontRef, bool p_force)
 {
     // Call the general recompute function first

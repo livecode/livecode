@@ -262,6 +262,7 @@ public:
     {
         return m_library_mapping;
     }
+    bool haslibrarymapping(MCStringRef p_name);
     
     virtual bool recomputefonts(MCFontRef parent_font, bool force);
     
