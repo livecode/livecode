@@ -23,6 +23,7 @@
 			'debug_info_suffix': '',
 
 			'silence_warnings': 0,
+			'msvs_compiler_version': "141",
 		},
 		
 		# Don't assume a Cygwin environment when invoking actions
@@ -31,7 +32,7 @@
 		# TODO [2017-04-11]: Remove these overrides when we can use 	
 		# -Gmsvs_version=2017
 		"msvs_target_platform_version" : "10.0.14393.0",
-		"msbuild_toolset" : "v141",
+		"msbuild_toolset" : "v<(msvs_compiler_version)",
 		
 		# WIN64-CHECK
 		'conditions':
@@ -42,13 +43,19 @@
 					'msvs_target_platform': 'x64',
 					'msvs_configuration_platform': 'x64',
 				},
+				
 			],
 		],
 
 		'configurations':
 		{
 			'Debug':
-			{
+			{	
+				'variables':
+				{
+					'msvs_crt_mode': 'mtd',
+				},
+				
 				'msvs_settings':
 				{
 					'VCCLCompilerTool':
@@ -86,6 +93,11 @@
 			
 			'Release':
 			{
+				'variables':
+				{
+					'msvs_crt_mode': 'mt',
+				},
+				
 				'msvs_settings':
 				{
 					'VCCLCompilerTool':
@@ -109,6 +121,12 @@
 			
 			'Fast':
 			{
+			
+				'variables':
+				{
+					'msvs_crt_mode': 'mt',
+				},
+			
 				'msvs_settings':
 				{
 					'VCCLCompilerTool':

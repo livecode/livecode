@@ -2067,3 +2067,32 @@ void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index,
 
     r_result = MCValueRetain(t_result);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCEngineGetRevLibraryMappingByKey(MCExecContext& ctxt, MCNameRef p_library, MCStringRef& r_mapping)
+{
+    MCArrayRef t_mappings = MCdispatcher->getlibrarymappings();
+    
+    MCStringRef t_value = nullptr;
+    // m_library_mapping only stores strings (function above)
+    if (!MCArrayFetchValue(t_mappings, false, p_library, (MCValueRef&)t_value) ||
+        MCStringIsEmpty(t_value))
+    {
+        ctxt . LegacyThrow(EE_BAD_LIBRARY_MAPPING);
+        return;
+    }
+    
+    r_mapping = MCValueRetain(t_value);
+}
+
+void MCEngineSetRevLibraryMappingByKey(MCExecContext& ctxt, MCNameRef p_library, MCStringRef p_mapping)
+{
+    MCArrayRef t_mappings = MCdispatcher->getlibrarymappings();
+    if (!MCArrayStoreValue(t_mappings, false, p_library, p_mapping))
+    {
+        ctxt . LegacyThrow(EE_BAD_LIBRARY_MAPPING);
+        return;
+    }
+}
+

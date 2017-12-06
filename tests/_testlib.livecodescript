@@ -138,6 +138,55 @@ private function _TestGetBuiltExtensionsFolder
 end _TestGetBuiltExtensionsFolder
 
 private command _TestLoadExtension pFolder, pPath
+   local tCodeFolder
+   put pFolder & "/code" into tCodeFolder
+   
+   if there is a folder tCodeFolder then
+      local tCodeFolders
+      put folders(tCodeFolder) into tCodeFolders
+      switch the platform
+         case "MacOS"
+            filter tCodeFolders with "*-mac*"
+            break
+         case "Win32"
+            filter tCodeFolders with "*-win*"
+            break
+         default
+            filter tCodeFolders with "*-"& toLower(the platform) & "*"
+            break
+      end switch
+      
+      local tFilteredCodeFolders
+      filter tCodeFolders with the processor & "-*" into tFilteredCodeFolders
+      split tFilteredCodeFolders by return as set
+      if the platform is "MacOS" then
+         -- explicit processor should take precedence over universal builds but
+         -- in the event multiple libraries are included and some are universal
+         -- we must merge
+         local tUniveralFilteredCodeFolders
+         filter tCodeFolders with "universal-*" into tUniveralFilteredCodeFolders
+         split tUniveralFilteredCodeFolders by return as set
+         union tFilteredCodeFolders with tUniveralFilteredCodeFolders
+      end if
+      
+      repeat for each key tFolder in tFilteredCodeFolders
+         local tLibraries
+         put files(tCodeFolder & "/" & tFolder) & return & \
+               folders(tCodeFolder & "/" & tFolder) into tLibraries
+         filter tLibraries without ".*"
+         
+         if tLibraries is not empty then
+            set the itemDelimiter to "."
+            repeat for each line tLibrary in tLibraries
+               -- remove extension
+               delete the last item of tLibrary
+               if tLibrary is not empty then
+                  set the revLibraryMapping[tLibrary] to tCodeFolder & "/" & tFolder & "/" & tLibrary
+               end if
+            end repeat
+         end if
+      end repeat
+   end if
    if there is a folder (pFolder & slash & "resources") then
       do "load extension from file pPath with resource path (pFolder & slash & " & quote & "resources" & quote & ")"
    else

@@ -51,6 +51,7 @@
 		'variables':
 		{
 			'ios_external_symbol_list': '',
+			'ios_external_copy_to': '',
 			
 			'app_bundle_suffix': '.ios-engine',
 			'ext_bundle_suffix': '.ios-extension',
@@ -132,6 +133,7 @@
 								'<@(_inputs)',
 								'>(ios_external_symbols)',
 								'>(ios_external_symbol_list)',
+								'>(ios_external_copy_to)',
 							],
 						},
 					],
