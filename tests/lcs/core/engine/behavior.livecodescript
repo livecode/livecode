@@ -29,7 +29,7 @@ on TestCyclicBehavior
    create stack
    set the behavior of it to the long id of stack "Behavior"
    TestAssertThrow "cycle in behavior script hierarchy throws", \
-      "_TestCyclicBehavior", the long id of me, 678, it
+      "_TestCyclicBehavior", the long id of me, "EE_PARENTSCRIPT_CYCLICOBJECT", it
 end TestCyclicBehavior
 
 on TestInvalidBehaviorChange
@@ -46,7 +46,7 @@ on TestInvalidBehaviorChange
    create stack
    set the behavior of it to the long id of stack "Behavior"
    TestAssertThrow "behavior change while parent script is executing throws", \
-      "changeBehavior", it, 895
+      "changeBehavior", it, "EE_PARENTSCRIPT_EXECUTING"
 end TestInvalidBehaviorChange
 
 on _TestInvalidObjectBehavior pStack
@@ -60,7 +60,7 @@ on TestInvalidObjectTypeBehavior
    put it into tStack 
 
    TestAssertThrow "set behavior to non-button control throws", \
-      "_TestInvalidObjectBehavior", the long id of me, 673, tStack
+      "_TestInvalidObjectBehavior", the long id of me, "EE_PARENTSCRIPT_BADOBJECT", tStack
 end TestInvalidObjectTypeBehavior
 
 ----------------------------------------------------------------
@@ -149,3 +149,25 @@ on TestBehaviorHandlerResolveOrder
    TestAssert "behavior handles passed dispatched function", \ 
       the result is false
 end TestBehaviorHandlerResolveOrder
+
+on TestChangeBehaviorWhileExecuting
+   create stack "test"
+   set the defaultStack to "test"
+   create button "child"
+   set the script of button "child" to "on Foo;Bar;end Foo"
+   create button "parent"
+   set the script of button "parent" to "on Bar;Baz;end Bar"
+   set the script of stack "test" to "on Bar;set the behavior of button " & quote & "child" & quote & " to the long id of button " & quote & "parent"& quote &";end Bar"
+   TestAssertDoesNotThrow "can set behavior while executing if it is empty", "Foo", \
+      the long id of button "child"
+ 
+   set the script of stack "test" to "on Baz;set the behavior of button " & quote & "child" & quote & " to the long id of button " & quote & "parent"& quote &";end Baz"
+   TestAssertDoesNotThrow "can set behavior while executing if it is the same", "Foo", \
+      the long id of button "child"
+   
+   -- wait 0 milliseconds;throw 0 added to test the crash if the error is not thrown
+   set the script of stack "test" to "on Baz;set the behavior of button " & quote & "child" & quote & " to empty;wait 0 milliseconds;throw 0;end Baz"  
+   TestAssertThrow "set behavior to empty while it is executing throws", "Foo", \
+       the long id of button "child", "EE_PARENTSCRIPT_EXECUTING"
+   delete stack "test"
+ end TestChangeBehaviorWhileExecuting

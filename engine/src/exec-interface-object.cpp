@@ -1690,7 +1690,13 @@ void MCObject::GetParentScript(MCExecContext& ctxt, MCStringRef& r_parent_script
 
 void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_script)
 {
-	// MW-2008-10-25: Add the setting logic for parent scripts. This code is a
+    MCObject *t_current_parent = nil;
+    if (parent_script != nil)
+    {
+        t_current_parent = parent_script -> GetParent() -> GetObject();
+    }
+    
+    // MW-2008-10-25: Add the setting logic for parent scripts. This code is a
 	//   modified version of what goes on in MCChunk::getobj when the final
 	//   target for a chunk is an expression. We first parse the string as a
 	//   chunk expression, then attempt to get the object of it. If the object
@@ -1701,6 +1707,13 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	//   error.
 	if (MCStringIsEmpty(new_parent_script))
 	{
+        if (t_current_parent != nil &&
+            t_current_parent -> getscriptdepth() > 0)
+        {
+            ctxt . LegacyThrow(EE_PARENTSCRIPT_EXECUTING);
+            return;
+        }
+        
 		if (parent_script != NULL)
 			parent_script -> Release();
 		parent_script = NULL;
@@ -1730,12 +1743,6 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	uint32_t t_part_id;
 	if (t_success)
 		t_success = t_chunk -> getobj(ctxt, t_object, t_part_id, False);
-	
-	MCObject *t_current_parent = nil;
-	if (parent_script != nil)
-	{
-		t_current_parent = parent_script -> GetParent() -> GetObject();
-	}
 	
 	// Check to see if we are already parent-linked to t_object and if so
 	// do nothing.
