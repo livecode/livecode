@@ -928,6 +928,8 @@ private function __arrayElementRegex
    return "^ *([\w" & quote & "]+) *(?:\(( *(?:optional |in |out |inout )?<?\w*>?) *\))? *: *(.*)"
 end __arrayElementRegex
 
+constant kAlwaysRecognizeAsElement = "Description"
+
 function revDocsExtractElementsWithRegex pText, pRegex
    local tElementRegex
    put pRegex into tElementRegex
@@ -993,10 +995,9 @@ function revDocsExtractElementsWithRegex pText, pRegex
          --BWM-2017-11-22: [[ Bug 19543 ]] A word (optionaly with something that looks like 
          --a ParamType) immediately following content should be treated as part of that
          --content instead of a new element.
-         --Always recognize certain elements: Description,
          if word 1 of tAfterElement is empty and tAccumulatedContent is not empty and \
                tInternalBlankLines is 0 and tInMultipleLineElement and \
-               tNextElementName is not among the items of ",Description" then
+               tNextElementName is not among the items of kAlwaysRecognizeAsElement then
             put tLine & return after tAccumulatedContent
             next repeat
          end if
