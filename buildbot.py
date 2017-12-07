@@ -41,10 +41,10 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'x86_64-linux-debian7',
     'armv6-android-api8',
     'universal-mac-macosx10.6', # Minimum deployment target
-    'universal-ios-iphoneos11.1',
+    'universal-ios-iphoneos11.2',
     'universal-ios-iphoneos10.2',
     'universal-ios-iphoneos9.2',
-    'universal-ios-iphonesimulator11.1',
+    'universal-ios-iphonesimulator11.2',
     'universal-ios-iphonesimulator10.2',
     'universal-ios-iphonesimulator9.2',
     'universal-ios-iphonesimulator8.2',
