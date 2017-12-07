@@ -11,6 +11,21 @@ command logError pError
    builderLog "error", pError, tContext
 end logError
 
+private command pathEnsure pPath
+   if pPath is empty then
+      exit pathEnsure
+   end if
+   
+   set the itemDelimiter to "/"
+   local tPath
+   repeat for each item tPart in pPath
+      put tPart & "/" after tPath
+      if there is no folder tPath then
+         create folder tPath
+      end if
+   end repeat
+end pathEnsure
+
 command docsBuilderRun pEdition, pVersion
    start using stack (builderRepoFolder() & slash & "ide-support/revdocsparser.livecodescript")
    
