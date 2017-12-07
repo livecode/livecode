@@ -91,6 +91,8 @@ mergeInto(LibraryManager.library, {
 			var window = LiveCodeDC._windowList[pID];
 			if (window)
 			{
+				LiveCodeDC._removeResizeMonitor(window.canvas);
+		  
 				if (window.canvas == Module['canvas'])
 				{
 					// TODO - handle cleanup of embedded canvas
@@ -238,7 +240,16 @@ mergeInto(LibraryManager.library, {
 			}
 			
 			LiveCodeDC._monitorResize.watched.push({'element':element, 'callback':callback, 'rect':element.getBoundingClientRect()});
-		}
+		},
+		
+		_removeResizeMonitor: function(element) {
+			if (LiveCodeDC._monitorResize.watched) {
+				var index = LiveCodeDC._monitorResize.watched.indexOf(element);
+				if (index !== -1) {
+					LiveCodeDC._monitorResize.watched.splice(index, 1);
+				}
+			}
+		},
 	},
 	
 	MCEmscriptenDCInitializeJS__deps: ['$LiveCodeDC'],
