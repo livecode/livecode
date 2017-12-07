@@ -1517,6 +1517,26 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
             }
             t_image_names[1] = nil;
         }
+        
+        // the iPhone X allows for portrait and landscape splash screens
+        else if ([[UIScreen mainScreen] bounds] . size . height == 812 || [[UIScreen mainScreen] bounds] . size . width == 812)
+        {
+            switch(p_new_orientation)
+            {
+                case UIInterfaceOrientationPortrait:
+                case UIInterfaceOrientationPortraitUpsideDown:
+                    t_image_names[0] = @"Default-812h@3x.png";
+                    t_image_angles[0] = 0.0f;
+                    break;
+                case UIInterfaceOrientationLandscapeLeft:
+                case UIInterfaceOrientationLandscapeRight:
+                    t_image_names[0] = @"Default-375h@3x.png";
+                    t_image_angles[0] = 0.0f;
+                    break;
+            }
+            t_image_names[1] = nil;
+        }
+
         else
         {
             // On iPhone there is only ever a 'Default' image, which we must
