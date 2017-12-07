@@ -292,9 +292,6 @@ MCObject::~MCObject()
 	if (parent_script != NULL)
 		parent_script -> Release();
 
-	// MW-2009-11-03: Clear all current breakpoints for this object
-	MCB_clearbreaks(this);
-
 	if (!MCerrorptr.IsValid() || MCerrorptr == this)
 		MCerrorptr = nil;
 	if (state & CS_SELECTED)
@@ -861,6 +858,9 @@ void MCObject::removereferences()
     MCscreen->cancelmessageobject(this, NULL);
     removefrom(MCfrontscripts);
     removefrom(MCbackscripts);
+    
+    // MW-2009-11-03: Clear all current breakpoints for this object
+    MCB_clearbreaks(this);
     
     // If the object is marked as being used as a parentScript, flush the parentScript
     // table so we don't get any dangling pointers.
