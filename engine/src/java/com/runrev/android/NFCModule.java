@@ -83,7 +83,10 @@ public class NFCModule
 	
 	public void onNewIntent(Intent p_intent)
 	{
-		handleIntent(p_intent);
+        if (isAvailable())
+        {
+            handleIntent(p_intent);
+        }
 	}
 	
 	public boolean isAvailable()
