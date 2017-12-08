@@ -450,6 +450,8 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
    local tIsScript
    put there is a pSource into tIsScript
    
+   local tIsLCIDL = false
+   
    repeat for each line tLine in pText
       # Check to see if this is the start of a handler / syntax or a block of comments 
       put word 1 of tLine into tFirstWord
@@ -463,7 +465,14 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
          put true into tInEntry
          
          switch tFirstWord
-            case "module"      
+            case "external"
+               put true into tIsLCIDL
+               put "library" into tEntryData["type"]
+               put word 2 to -1 of tLine into tEntryData["name"]
+               put false into tInEntry
+               put true into tEntryData["need_docs"]
+               break
+            case "module"
             case "library"
                put tFirstWord into tEntryData["type"]
                put word 2 to -1 of tLine into tEntryData["name"]
@@ -532,10 +541,22 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                put true into tEntryData["need_docs"]
                break
             case "on"
+               if tIsLCIDL then
+                  put false into tInEntry
+                  break
+               end if
                put "command" into tEntryData["type"]
                put word 2 of tLine into tEntryData["name"]
                put false into tEntryData["need_docs"]
                break
+            case "tail"
+               if not tIsLCIDL then
+                  put false into tInEntry
+                  break
+               end if
+               -- eat tail in lcidl
+               put word 2 of tLine into tFirstWord
+               put word 2 to -1 of tLine into tLine
             case "command"
             case "function"
                if tFirstWord is "function" then
@@ -559,6 +580,11 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                      put "library" into tLibraryData["type"]
                      put tComment into tLibraryData["comments"]
                      put the short name of pSource into tLibraryData["name"]
+                  end if
+                  
+                  if tIsLCIDL and tAPIData is empty and tComment is not empty then
+                     put tEntryData into tLibraryData
+                     put tComment into tLibraryData["comments"]
                   end if
                   
                   # Discard any previous comments
@@ -587,6 +613,10 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                delete char -1 of tLine
             end if
             
+            if tIsLCIDL then
+               put false into tInEntry
+            end if
+            
             # If there's nothing else on this line, don't add it.
             if word 1 of tLine is empty then
                next repeat
@@ -605,7 +635,11 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
             delete char -2 to -1 of tData
          # ignore empty lines
          else if tFirstWord is empty then
-            next repeat
+            if tIsLCIDL then
+               put true into tEntryEnded
+            else
+               next repeat
+            end if
          else if tFirstWord is "end" then
             put true into tEntryEnded
          end if
@@ -635,7 +669,11 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                   break
                case "function"
                case "command"
-                  revDocsUpdateDocBlocks false, tEntryData["type"], line 1 of tData, tComment, tAPIData
+                  if tIsLCIDL then
+                     revDocsUpdateDocBlocksForLCIDL  tEntryData["name"], tEntryData["type"], tData, tComment, tAPIData
+                  else
+                     revDocsUpdateDocBlocks false, tEntryData["type"], line 1 of tData, tComment, tAPIData
+                  end if
                   break
                case "type"
                   break
@@ -873,6 +911,27 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
       else
          put "Name:" && tName & return & return before tEntryDoc
       end if
+      
+      if tHasA["Parameters"] is not true and pDataA["params"] is an array then
+         put "Parameters:" & return after tEntryDoc
+         repeat with tParam = 1 to the number of elements of pDataA["params"]
+            put pDataA["params"][tParam]["name"] after tEntryDoc
+            if pDataA["params"][tParam]["type"] is not empty then
+               put " (" & pDataA["params"][tParam]["type"] & ")" after tEntryDoc
+            end if
+            put ":" & return &  pDataA["params"][tParam]["description"] & return & return after tEntryDoc
+         end repeat
+      end if
+      
+      repeat for each item tKey in "The result,Returns,it"
+         if tHasA[tKey] is not true and pDataA[tKey] is an array then
+            put tKey after tEntryDoc
+            if pDataA[tKey]["type"] is not empty then
+               put " (" & pDataA[tKey]["type"] & ")" after tEntryDoc
+            end if
+            put ":" & return &  pDataA[tKey]["description"] & return & return after tEntryDoc
+         end if
+      end repeat
       
       if tHasA["References"] is not true then
          if pDataA["phrases"] is not empty then
@@ -1730,6 +1789,89 @@ command revDocsUpdateDocBlocks pModular, pType, pLine, pComment, @xDataA
    # Distinguish from syntax
    put "handler" into xDataA[tEntryName]["kind"]
 end revDocsUpdateDocBlocks
+
+command revDocsUpdateDocBlocksForLCIDL pEntryName, pType, pData, pComment, @xDataA
+   if pComment is empty then
+      exit revDocsUpdateDocBlocksForLCIDL
+   end if
+   
+   local tSyntax
+   local tParamArray
+   local tParamsSyntax
+   local tValue
+   
+   local tParam
+   repeat for each line tLine in line 2 to -1 of pData
+      if the number of words of tLine is 0 then
+         next repeat
+      end if
+      
+      split tLine by "//"
+      
+      if word 1 of tLine[1] is not "return" then
+         local tOptional
+         put word 1 of tLine[1] is "optional" into tOptional
+         
+         if tOptional then
+            delete word 1 of tLine[1]
+         end if
+         put word 2 of tLine[1] into tParam
+         
+         if tOptional then
+            put "[<" & tParam & ">], " after tParamsSyntax
+         else
+            put "<" & tParam & ">, " after tParamsSyntax
+         end if
+         
+         get the number of elements of tParamArray + 1
+         
+         put "out" is in word 1 of tLine[1] into tParamArray[it]["refparam"]
+         put tParam into tParamArray[it]["name"]
+         
+         if word 4 of tLine[1] contains "string" then
+            put "string" into tParamArray[it]["type"]
+         else if word 4 of tLine[1] contains "data" then
+            put "data" into tParamArray[it]["type"]
+         else
+            put word 4 of tLine[1] into tParamArray[it]["type"]
+         end if
+         
+         if tOptional then
+            put "optional " before tParamArray[it]["type"]
+         end if
+         put word 1 to -1 of tLine[2] into tParamArray[it]["description"]
+      else
+         put word 2 of tLine[1] into tValue["type"]
+         put word 1 to -1 of tLine[2] into tValue["description"] 
+      end if
+   end repeat
+   delete char -2 to -1 of tParamsSyntax
+   
+   if pType is "function" then
+      put "(" before tParamsSyntax
+      put ")" after tParamsSyntax
+      put pEntryName & tParamsSyntax into tSyntax
+   else
+      put pEntryName && tParamsSyntax into tSyntax
+   end if
+   
+   put tSyntax into xDataA[pEntryName]["syntax"][1]
+   put tParamArray into xDataA[pEntryName]["params"]
+   put pType into xDataA[pEntryName]["type"]
+   put pEntryName into xDataA[pEntryName]["name"]
+   if pType is "function" then
+      put tValue into xDataA[pEntryName]["return value"]
+   else
+      put tValue into xDataA[pEntryName]["the result"]
+   end if
+   put empty into tValue
+   
+   # Output the comments that preceded this function definition
+   put pComment into xDataA[pEntryName]["comments"]
+   
+   # Distinguish from syntax
+   put "handler" into xDataA[pEntryName]["kind"]
+end revDocsUpdateDocBlocksForLCIDL
 
 function revDocsParseReferences pDescription
    local tReferences
