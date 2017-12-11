@@ -249,9 +249,7 @@ static const char *s_auth_scheme_strings[] =
 
 bool MCCefAuthSchemeFromCefString(const CefString &p_string, MCCefAuthScheme &r_scheme)
 {
-	const char **t_strings;
-	t_strings = s_auth_scheme_strings;
-	
+
 	for (uint32_t i = 0; s_auth_scheme_strings[i] != nil; i++)
 	{
 		if (p_string == s_auth_scheme_strings[i])
@@ -676,6 +674,16 @@ public:
 					MCCStringFree(t_tmp);
 			}
 				break;
+				case VTYPE_NULL:
+				case VTYPE_BOOL:
+				case VTYPE_DOUBLE:
+				case VTYPE_STRING:
+				case VTYPE_BINARY:
+				case VTYPE_DICTIONARY:
+				case VTYPE_LIST:
+				case VTYPE_INVALID:
+				/* UNIMPLEMENTED */
+				break;
 		}
 		
 		return t_converted;
@@ -875,10 +883,7 @@ public:
 			
 			if (t_success)
 				t_success = MCCefStringToUtf8String(t_args->GetString(0), t_handler);
-			
-			uint32_t t_arg_count;
-			t_arg_count = 0;
-			
+
 			MCBrowserListRef t_param_list;
 			t_param_list = nil;
 			
@@ -1671,10 +1676,7 @@ bool MCCefBrowserBase::EvaluateJavaScript(const char *p_script, char *&r_result)
 {
 	bool t_success;
 	t_success = true;
-	
-	const MCCefMessageResult *t_result;
-	t_result = nil;
-	
+
 	CefString t_script;
 	t_success = MCCefStringFromUtf8String(p_script, t_script);
 	

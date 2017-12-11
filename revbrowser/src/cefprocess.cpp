@@ -129,6 +129,9 @@ bool MCCefListToV8List(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefListValue
 		case VTYPE_LIST:
 			/* TODO - IMPLEMENT */
 			t_success = false;
+			break;
+		case VTYPE_INVALID:
+			t_success = false;
 		}
 
 		t_success = t_v8 != NULL;

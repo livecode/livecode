@@ -129,6 +129,9 @@ bool MCCefListToV8List(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefListValue
 			case VTYPE_LIST:
 				/* TODO - IMPLEMENT */
 				t_success = false;
+				break;
+			case VTYPE_INVALID:
+				t_success = false;
 		}
 		
 		t_success = t_v8 != NULL;
@@ -226,10 +229,7 @@ bool MCCefV8ObjectToDictionary(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefV
 	{
 		CefRefPtr<CefV8Value> t_val;
 		t_val = p_obj->GetValue(*i);
-		
-		uint32_t t_index;
-		t_index = i - t_keys.begin();
-		
+
 		if (t_val->IsBool())
 			t_success = t_dict->SetBool(*i, t_val->GetBoolValue());
 		else if (t_val->IsInt())
