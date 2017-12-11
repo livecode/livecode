@@ -53,15 +53,12 @@ MCExecEnumTypeInfo *kMCFilesEofEnumTypeInfo = &_kMCFilesEofEnumTypeInfo;
 
 //////////
 
-void MCFilesEvalDirectories(MCExecContext & ctxt,
-                            MCStringRef & r_string)
-{
-	MCFilesEvalDirectoriesOfDirectory(ctxt, nil, r_string);
-}
-
-void MCFilesEvalDirectoriesOfDirectory(MCExecContext& ctxt,
-                                       MCStringRef p_directory,
-                                       MCStringRef& r_string)
+void
+MCFilesEvalFileItemsOfDirectory(MCExecContext& ctxt,
+                                MCStringRef p_directory,
+                                bool p_files,
+                                bool p_detailed,
+                                MCStringRef& r_string)
 {
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
@@ -69,33 +66,7 @@ void MCFilesEvalDirectoriesOfDirectory(MCExecContext& ctxt,
 		return;
 	}
 	MCAutoListRef t_list;
-	if (MCS_getentries(p_directory, false, false, &t_list))
-	{
-		MCListCopyAsString(*t_list, r_string);
-	}
-	else
-	{
-		MCStringCopy(kMCEmptyString, r_string);
-	}
-}
-
-void MCFilesEvalFiles(MCExecContext & ctxt,
-                      MCStringRef & r_string)
-{
-	MCFilesEvalFilesOfDirectory(ctxt, nil, r_string);
-}
-
-void MCFilesEvalFilesOfDirectory(MCExecContext& ctxt,
-                                 MCStringRef p_directory,
-                                 MCStringRef& r_string)
-{
-	if (MCsecuremode & MC_SECUREMODE_DISK)
-	{
-		ctxt . LegacyThrow(EE_DISK_NOPERM);
-		return;
-	}
-	MCAutoListRef t_list;
-	if (MCS_getentries(p_directory, true, false, &t_list))
+	if (MCS_getentries(p_directory, p_files, p_detailed, &t_list))
 	{
 		MCListCopyAsString(*t_list, r_string);
 	}
