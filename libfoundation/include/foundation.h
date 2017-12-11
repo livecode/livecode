@@ -3391,6 +3391,12 @@ MC_DLLEXPORT bool MCProperListCreate(const MCValueRef *values, uindex_t length, 
 // foreign value is created (MCForeignValueRef).
 MC_DLLEXPORT bool MCProperListCreateWithForeignValues(MCTypeInfoRef type, const void *values, uindex_t value_count, MCProperListRef& r_list);
 
+// Create a c-array of foreign values from the given list. The original list is
+// not released. Ownership of the foreign value array is passed to the caller.
+// p_typeinfo must be a foreign typeinfo. If any value in the list is not of the
+// given type, or cannot be exported as that type, this returns false.
+MC_DLLEXPORT bool MCProperListConvertToForeignValues(MCProperListRef list, MCTypeInfoRef p_typeinfo, void*& r_values_ptr, uindex_t& r_values_count);
+    
 // Create an empty mutable list.
 MC_DLLEXPORT bool MCProperListCreateMutable(MCProperListRef& r_list);
 
