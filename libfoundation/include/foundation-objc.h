@@ -30,4 +30,6 @@ NSString *MCNameConvertToAutoreleasedNSString(MCNameRef name);
 NSData *MCDataConvertToAutoreleasedNSData(MCDataRef data);
 #endif
 
+extern MCTypeInfoRef kMCObjcDelegateCallbackSignatureErrorTypeInfo;
+
 #endif
