@@ -200,4 +200,38 @@ public handler TestObjcDynamicPropertyBinding()
 	test "dynamic objc getter binds" when NSUserNotificationGetTitle is not nothing
 end handler
 
+--------
+
+foreign handler DynamicGetInt(in pObject as ObjcId) returns CInt \ 
+	binds to "objc:.-intValue"
+
+public handler TestDynamicInstanceMethodBinding()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "obj-c dynamic instance method binding" \
+			because "not implemented on" && the operating system
+		return
+	end if
+
+	unsafe 
+		variable tNumber as ObjcObject
+		put NSNumberCreateWithInt(10) into tNumber
+	
+		test "dynamic method binds" when DynamicGetInt is not nothing
+		test "dynamic method call succeeds" when DynamicGetInt(tNumber) is 10
+	end unsafe
+end handler
+
+foreign handler DynamicAlloc() returns ObjcRetainedId \ 
+	binds to "objc:.+alloc"
+	
+public handler TestDynamicClassMethodBindingFails()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "obj-c dynamic class method binding fails" \
+			because "not implemented on" && the operating system
+		return
+	end if
+
+	test "dynamic class method binding fails" when DynamicAlloc is nothing
+end handler
+
 end module

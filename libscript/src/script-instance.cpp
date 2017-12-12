@@ -983,16 +983,28 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
     }
 
     bool t_valid = true;
+    bool t_is_dynamic = MCStringIsEmpty(*t_class);
     
     /* Lookup the class, to make sure it exists. */
     Class t_objc_class = nullptr;
     if (t_valid)
     {
-        t_objc_class = objc_getClass(*t_class_cstring);
-        if (t_objc_class == nullptr)
+        if (t_is_dynamic)
         {
-            /* ERROR: should be class not found */
-            t_valid = false;
+            if (t_is_class)
+            {
+                /* ERROR: should be can't dynamically bind to class methods */
+                t_valid = false;
+            }
+        }
+        else
+        {
+            t_objc_class = objc_getClass(*t_class_cstring);
+            if (t_objc_class == nullptr)
+            {
+                /* ERROR: should be class not found */
+                t_valid = false;
+            }
         }
     }
     
@@ -1007,7 +1019,7 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
     }
     
     /* Get the Method - either class or instance - from the class */
-    if (t_valid)
+    if (t_valid && !t_is_dynamic)
     {
         if (!t_is_class)
         {
