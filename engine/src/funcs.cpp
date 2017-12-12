@@ -457,46 +457,6 @@ void MCCommandName::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     r_value.type = kMCExecValueTypeStringRef;
 }
 
-MCDirectories::~MCDirectories()
-{
-	delete m_folder;
-}
-
-Parse_stat
-MCDirectories::parse(MCScriptPoint & sp, Boolean p_is_the)
-{
-	if (p_is_the)
-	{
-		initpoint(sp);
-	}
-	else
-	{
-		if (PS_NORMAL != get0or1param(sp, &m_folder, p_is_the))
-		{
-			MCperror->add(PE_FILES_BADPARAM, sp);
-			return PS_ERROR;
-		}
-	}
-	return PS_NORMAL;
-}
-
-void
-MCDirectories::eval_ctxt(MCExecContext & ctxt, MCExecValue & r_value)
-{
-	if (m_folder) {
-		MCAutoStringRef t_folder;
-		if (!ctxt.EvalExprAsStringRef(m_folder, EE_FILES_BADFOLDER, &t_folder))
-			return;
-
-		r_value.type = kMCExecValueTypeStringRef;
-		MCFilesEvalDirectoriesOfDirectory(ctxt, *t_folder, r_value.stringref_value);
-	}
-	else
-	{
-		r_value.type = kMCExecValueTypeStringRef;
-		MCFilesEvalDirectories(ctxt, r_value.stringref_value);
-	}
-}
 
 MCDriverNames::~MCDriverNames()
 {
@@ -556,13 +516,15 @@ void MCExists::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value . type = kMCExecValueTypeBool;
 }
 
-MCTheFiles::~MCTheFiles()
+
+MCFileItems::~MCFileItems()
 {
 	delete m_folder;
+    delete m_kind;
 }
 
 Parse_stat
-MCTheFiles::parse(MCScriptPoint & sp, Boolean p_is_the)
+MCFileItems::parse(MCScriptPoint & sp, Boolean p_is_the)
 {
 	if (p_is_the)
 	{
@@ -570,9 +532,9 @@ MCTheFiles::parse(MCScriptPoint & sp, Boolean p_is_the)
 	}
 	else
 	{
-		if (PS_NORMAL != get0or1param(sp, &m_folder, p_is_the))
+		if (PS_NORMAL != get0or1or2params(sp, &m_folder, &m_kind, p_is_the))
 		{
-			MCperror->add(PE_FOLDERS_BADPARAM, sp);
+			MCperror->add(m_files ? PE_FILES_BADPARAM : PE_FOLDERS_BADPARAM, sp);
 			return PS_ERROR;
 		}
 	}
@@ -580,22 +542,38 @@ MCTheFiles::parse(MCScriptPoint & sp, Boolean p_is_the)
 }
 
 void
-MCTheFiles::eval_ctxt(MCExecContext & ctxt, MCExecValue & r_value)
+MCFileItems::eval_ctxt(MCExecContext & ctxt, MCExecValue & r_value)
 {
-	if (m_folder) {
-		MCAutoStringRef t_folder;
-		if (!ctxt.EvalExprAsStringRef(m_folder, EE_FOLDERS_BADFOLDER, &t_folder))
+    MCAutoStringRef t_folder;
+    bool t_is_detailed = false;
+	if (m_folder)
+    {
+		if (!ctxt.EvalExprAsStringRef(m_folder, m_files ? EE_FILES_BADFOLDER : EE_FOLDERS_BADFOLDER, &t_folder))
 			return;
 
-		r_value.type = kMCExecValueTypeStringRef;
-		MCFilesEvalFilesOfDirectory(ctxt, *t_folder, r_value.stringref_value);
-	}
-	else
-	{
-		r_value.type = kMCExecValueTypeStringRef;
-		MCFilesEvalFiles(ctxt, r_value.stringref_value);
-	}
+        if (m_kind != nullptr)
+        {
+            MCAutoStringRef t_kind;
+            if (!ctxt.EvalExprAsStringRef(m_kind, m_files ? EE_FILES_BADKIND : EE_FOLDERS_BADKIND, &t_kind))
+            {
+                return;
+            }
+            if (!MCStringIsEmpty(*t_kind))
+            {
+                if (!MCStringIsEqualToCString(*t_kind, "detailed", kMCStringOptionCompareCaseless))
+                {
+                    ctxt.LegacyThrow(m_files ? EE_FILES_BADKIND : EE_FOLDERS_BADKIND);
+                    return;
+                }
+                t_is_detailed = true;
+            }
+        }
+    }
+    
+    r_value.type = kMCExecValueTypeStringRef;
+    MCFilesEvalFileItemsOfDirectory(ctxt, *t_folder, m_files, t_is_detailed, r_value.stringref_value);
 }
+
 
 MCFontNames::~MCFontNames()
 {
