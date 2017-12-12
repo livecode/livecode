@@ -390,13 +390,32 @@ MC_DLLEXPORT_DEF uintptr_t MCObjcObjectGetActionProxySelector(void)
 {
     MCArrayRef m_handlers;
     MCValueRef m_context;
+}
+
+- (id)initWithHandlerMapping:(MCArrayRef)aHandlerMapping withContext:(MCValueRef)aContext;
+- (void)dealloc;
+
+- (BOOL)respondsToSelector:(SEL)aSelector;
+
+@end
+
+@interface com_livecode_MCObjcFormalDelegate: com_livecode_MCObjcDelegate
+{
     Protocol *m_protocol;
 }
 
 - (id)initForProtocol:(Protocol *)aProtocol withHandlerMapping:(MCArrayRef)aHandlerMapping withContext:(MCValueRef)aContext;
 - (void)dealloc;
 
-- (BOOL)respondsToSelector:(SEL)aSelector;
+@end
+
+@interface com_livecode_MCObjcInformalDelegate: com_livecode_MCObjcDelegate
+{
+    MCArrayRef m_protocol;
+}
+
+- (id)initForProtocol:(MCArrayRef)aProtocol withHandlerMapping:(MCArrayRef)aHandlerMapping withContext:(MCValueRef)aContext;
+- (void)dealloc;
 
 @end
 
@@ -467,10 +486,7 @@ static bool _convert_type(char p_type, void *p_buffer, MCValueRef& r_value)
 #define CASE(ctype, lctype) \
 if (p_type == @encode(ctype)[0]) \
 { \
-if (!MCForeignValueCreate(kMC##lctype##TypeInfo, p_buffer, (MCForeignValueRef&)r_value)) \
-{ \
-return false; \
-} \
+    return MCForeignValueCreate(kMC##lctype##TypeInfo, p_buffer, (MCForeignValueRef&)r_value); \
 } \
 else
     CASE(char, CSChar);
@@ -529,15 +545,198 @@ static bool _get_method_description(Protocol *p_protocol, SEL p_selector, objc_m
     return true;
 }
 
+static const char *_get_code_from_type(MCTypeInfoRef p_typeinfo)
+{
+#define CASE(ctype, lctype) \
+if (p_typeinfo == kMC##lctype##TypeInfo) \
+{ \
+    return @encode(ctype); \
+} \
+else
+    CASE(char, CSChar);
+    CASE(unsigned char, CUChar);
+    CASE(short, CSShort);
+    CASE(unsigned short, CUShort);
+    CASE(int, CSInt);
+    CASE(unsigned int, CUInt);
+    CASE(long, CSLong);
+    CASE(unsigned long, CULong);
+    CASE(long long, CSLongLong);
+    CASE(unsigned long long, CULongLong);
+    CASE(float, Float);
+    CASE(double, Double);
+    CASE(bool, CBool);
+#undef CASE
+    if (p_typeinfo == kMCObjcIdTypeInfo ||
+        p_typeinfo == kMCObjcRetainedIdTypeInfo)
+    {
+        return @encode(id);
+    }
+    else if (p_typeinfo == kMCPointerTypeInfo)
+    {
+        return "^?";
+    }
+    else
+    {
+        MCLog("unknown encoding for type %@", p_typeinfo);
+        return nullptr;
+    }
+}
+
+static bool _get_code_string(const char *p_code, size_t p_size, MCStringRef& r_code)
+{
+    return MCStringFormat(r_code, "%s%d", p_code, p_size);
+}
+
+static bool _get_code_string_from_type(MCTypeInfoRef p_typeinfo, MCStringRef& r_code)
+{
+    if (p_typeinfo == kMCNullTypeInfo)
+    {
+        r_code = MCSTR("v");
+        return true;
+    }
+    
+    MCResolvedTypeInfo t_resolved;
+    if (!MCTypeInfoResolve(p_typeinfo, t_resolved))
+        return false;
+    
+    if (!MCTypeInfoIsForeign(t_resolved.type))
+        return false;
+    
+    const MCForeignTypeDescriptor *t_descriptor =
+        MCForeignTypeInfoGetDescriptor(t_resolved.type);
+    
+    const char *t_code = _get_code_from_type(p_typeinfo);
+    if (t_code == nullptr)
+        return false;
+    
+    return _get_code_string(t_code, t_descriptor->size, r_code);
+}
+
+static bool _append_code_string(MCStringRef x_target, const char *p_code, size_t p_size)
+{
+    return MCStringAppendFormat(x_target,"%s%d", p_code, p_size);
+}
+
+@implementation com_livecode_MCObjcFormalDelegate
+- (id)initForProtocol:(Protocol *)aProtocol withHandlerMapping:(MCArrayRef)aHandlerMapping withContext:(MCValueRef)aContext
+{
+    self = [super initWithHandlerMapping:aHandlerMapping withContext:aContext];
+    if (self == nil)
+        return nil;
+    
+    m_protocol = aProtocol;
+    
+    return self;
+}
+
+- (void)dealloc
+{
+    [super dealloc];
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    // Return the method signature of the protocol method we have an LCB
+    // implementation for. This causes forwardInvocation to be called.
+    objc_method_description t_desc;
+    if (!_get_method_description(m_protocol, aSelector, t_desc))
+        return nullptr;
+    
+    return [NSMethodSignature signatureWithObjCTypes:t_desc.types];
+}
+
+@end
+
+@implementation com_livecode_MCObjcInformalDelegate
+
+- (id)initForProtocol:(MCArrayRef)aProtocol withHandlerMapping:(MCArrayRef)aHandlerMapping withContext:(MCValueRef)aContext
+{
+    self = [super initWithHandlerMapping:aHandlerMapping withContext:aContext];
+    if (self == nil)
+        return nil;
+    
+    m_protocol = MCValueRetain(aProtocol);
+    
+    return self;
+}
+
+- (void)dealloc
+{
+    MCValueRelease(m_protocol);
+    [super dealloc];
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    // Construct the type signature
+    MCAutoStringRef t_selector;
+    if (!MCStringCreateWithCString(sel_getName(aSelector), &t_selector))
+        return nullptr;
+    
+    MCNewAutoNameRef t_key;
+    if (!MCNameCreate(*t_selector, &t_key))
+        return nullptr;
+    
+    MCValueRef t_handler;
+    if (!MCArrayFetchValue(m_protocol, false, *t_key, t_handler))
+        return nullptr;
+    
+    MCTypeInfoRef t_typeinfo = MCValueGetTypeInfo(t_handler);
+    if (!MCHandlerTypeInfoIsForeign(t_typeinfo))
+        return nullptr;
+    
+    MCAutoStringRef t_types;
+    if (!MCStringCreateMutable(0, &t_types))
+        return nullptr;
+    
+    MCTypeInfoRef t_param_typeinfo = MCHandlerTypeInfoGetReturnType(t_typeinfo);
+    
+    MCAutoStringRef t_return_type;
+    if (!_get_code_string_from_type(t_param_typeinfo, &t_return_type))
+        return nullptr;
+    
+    if (!MCStringAppend(*t_types, *t_return_type))
+        return nullptr;
+    
+    if (!_append_code_string(*t_types, @encode(id), sizeof(id)))
+        return nullptr;
+    
+    if (!_append_code_string(*t_types, @encode(SEL), sizeof(SEL)))
+        return nullptr;
+    
+    // IMPORTANT: We only allow instance methods in the mapping, so the first
+    // parameter of the foreign handler typeinfo should be the target instance.
+    // So we must skip this parameter when figuring out the obj-c method signature,
+    // i.e. start at index 1
+    for (uindex_t i = 1; i< MCHandlerTypeInfoGetParameterCount(t_typeinfo); ++i)
+    {
+        MCAutoStringRef t_param_type;
+        if (!_get_code_string_from_type(MCHandlerTypeInfoGetParameterType(t_typeinfo, i),
+                                        &t_param_type))
+            return nullptr;
+        
+        if (!MCStringAppend(*t_types, *t_param_type))
+            return nullptr;
+    }
+    
+    MCAutoStringRefAsCString t_types_cstring;
+    if (!t_types_cstring.Lock(*t_types))
+        return nullptr;
+    
+    return [NSMethodSignature signatureWithObjCTypes:*t_types_cstring];
+}
+
+@end
+
 @implementation com_livecode_MCObjcDelegate
 
-- (id)initForProtocol:(Protocol *)aProtocol withHandlerMapping:(MCArrayRef)aHandlerMapping withContext:(MCValueRef)aContext
+- (id)initWithHandlerMapping:(MCArrayRef)aHandlerMapping withContext:(MCValueRef)aContext
 {
     self = [super init];
     if (self == nil)
         return nil;
     
-    m_protocol = aProtocol;
     m_handlers = MCValueRetain(aHandlerMapping);
     m_context = aContext != nullptr ? MCValueRetain(aContext) : aContext;
     
@@ -577,13 +776,8 @@ static bool _get_method_description(Protocol *p_protocol, SEL p_selector, objc_m
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    // Return the method signature of the protocol method we have an LCB
-    // implementation for. This causes forwardInvocation to be called.
-    objc_method_description t_desc;
-    if (!_get_method_description(m_protocol, aSelector, t_desc))
-        return nullptr;
-    
-    return [NSMethodSignature signatureWithObjCTypes:t_desc.types];
+    // Never forward the message to an instance of the base class
+    return nil;
 }
 
 - (void)forwardInvocation:(NSInvocation *)anInvocation
@@ -816,8 +1010,8 @@ bool MCObjcCreateDelegateWithContext(MCStringRef p_protocol_name, MCArrayRef p_h
             return false;
     }
     
-    com_livecode_MCObjcDelegate *t_proxy =
-    [[com_livecode_MCObjcDelegate alloc] initForProtocol: t_protocol withHandlerMapping:p_handler_mapping withContext:p_context];
+    com_livecode_MCObjcFormalDelegate *t_proxy =
+    [[com_livecode_MCObjcFormalDelegate alloc] initForProtocol: t_protocol withHandlerMapping:p_handler_mapping withContext:p_context];
     
     MCObjcObjectRef t_proxy_object = nullptr;
     if (!MCObjcObjectCreateWithRetainedId(t_proxy, t_proxy_object))
@@ -837,6 +1031,92 @@ bool MCObjcCreateDelegate(MCStringRef p_protocol_name, MCArrayRef p_handler_mapp
                                            p_handler_mapping,
                                            nullptr,
                                            r_object);
+}
+
+extern "C" MC_DLLEXPORT_DEF
+bool MCObjcCreateInformalDelegateWithContext(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object)
+{
+    MCAutoArrayRef t_selector_mapping;
+    if (!MCArrayCreateMutable(&t_selector_mapping))
+        return false;
+    
+    for (uindex_t i = 0; i < MCProperListGetLength(p_foreign_handlers); ++i)
+    {
+        MCValueRef t_element =
+            MCProperListFetchElementAtIndex(p_foreign_handlers, i);
+        
+        if (MCValueGetTypeCode(t_element) != kMCValueTypeCodeHandler)
+            return false;
+        
+        MCHandlerRef t_handler = static_cast<MCHandlerRef>(t_element);
+        
+        const MCHandlerCallbacks *t_callbacks = MCHandlerGetCallbacks(t_handler);
+        if (t_callbacks->query == nullptr)
+            return false;
+        
+        SEL t_selector = nullptr;
+        t_callbacks->query(MCHandlerGetContext(t_handler),
+                           kMCHandlerQueryTypeObjcSelector,
+                           &t_selector);
+        
+        if (t_selector == nullptr)
+            return false;
+        
+        NSString *t_sel_string = NSStringFromSelector(t_selector);
+        MCAutoStringRef t_sel_stringref;
+        if (!MCStringCreateWithCFStringRef((CFStringRef)t_sel_string, &t_sel_stringref))
+            return false;
+        
+        MCNewAutoNameRef t_key;
+        if (!MCNameCreate(*t_sel_stringref, &t_key))
+            return false;
+        
+        if (!MCArrayStoreValue(*t_selector_mapping, false, *t_key, t_element))
+            return false;
+    }
+
+    /*
+    MCNameRef t_key;
+    MCValueRef t_value;
+    uintptr_t t_iterator = 0;
+    while (MCArrayIterate(p_handler_mapping, t_iterator, t_key, t_value))
+    {
+        if (!__HandlerConformsToProtocolMethod(static_cast<MCHandlerRef>(t_value),
+                                               MCNameGetString(t_key),
+                                               p_context,
+                                               t_protocol))
+            return false;
+    }
+    */
+    
+    MCAutoArrayRef t_selector_mapping_final;
+    if (!MCArrayCopy(*t_selector_mapping, &t_selector_mapping_final))
+        return false;
+    
+    com_livecode_MCObjcInformalDelegate *t_proxy =
+    [[com_livecode_MCObjcInformalDelegate alloc]
+        initForProtocol: *t_selector_mapping_final
+        withHandlerMapping:p_handler_mapping
+        withContext:p_context];
+    
+    MCObjcObjectRef t_proxy_object = nullptr;
+    if (!MCObjcObjectCreateWithRetainedId(t_proxy, t_proxy_object))
+    {
+        [t_proxy release];
+        return false;
+    }
+    
+    r_object = t_proxy_object;
+    return true;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+bool MCObjcCreateInformalDelegate(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object)
+{
+    return MCObjcCreateInformalDelegateWithContext(p_foreign_handlers,
+                                                   p_handler_mapping,
+                                                   nullptr,
+                                                   r_object);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
