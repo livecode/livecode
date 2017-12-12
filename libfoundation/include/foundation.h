@@ -3060,12 +3060,19 @@ MC_DLLEXPORT bool MCRecordIterate(MCRecordRef record, uintptr_t& x_iterator, MCN
 //  HANDLER DEFINITIONS
 //
 
+enum MCHandlerQueryType
+{
+    kMCHandlerQueryTypeNone,
+    kMCHandlerQueryTypeObjcSelector,
+};
+    
 struct MCHandlerCallbacks
 {
     size_t size;
     void (*release)(void *context);
     bool (*invoke)(void *context, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 	bool (*describe)(void *context, MCStringRef& r_desc);
+    bool (*query)(void *context, MCHandlerQueryType type, void *r_info);
 };
 
 MC_DLLEXPORT bool MCHandlerCreate(MCTypeInfoRef typeinfo, const MCHandlerCallbacks *callbacks, void *context, MCHandlerRef& r_handler);

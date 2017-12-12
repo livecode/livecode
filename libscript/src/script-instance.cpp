@@ -1558,12 +1558,44 @@ __MCScriptInternalHandlerDescribe(void *p_context,
 	return MCStringFormat(r_description, "%@.%@()", t_module_name, t_handler_name);
 }
 
+static bool
+__MCScriptInternalHandlerQuery(void *p_context,
+                               MCHandlerQueryType p_query,
+                               void *r_info)
+{
+    if (p_query != kMCHandlerQueryTypeObjcSelector)
+    {
+        return false;
+    }
+ 
+    __MCScriptInternalHandlerContext *context =
+        (__MCScriptInternalHandlerContext *)p_context;
+    
+    if (context->definition->kind != kMCScriptDefinitionKindForeignHandler)
+    {
+        return false;
+    }
+    
+    auto t_definition =
+        static_cast<MCScriptForeignHandlerDefinition *>(context->definition);
+    
+    if (t_definition->language != kMCScriptForeignHandlerLanguageObjC)
+    {
+        return false;
+    }
+    
+    *(void **)r_info = t_definition->objc.objc_selector;
+    
+    return true;
+}
+
 static MCHandlerCallbacks __kMCScriptInternalHandlerCallbacks =
 {
 	sizeof(__MCScriptInternalHandlerContext),
 	__MCScriptInternalHandlerRelease,
 	__MCScriptInternalHandlerInvoke,
-	__MCScriptInternalHandlerDescribe
+	__MCScriptInternalHandlerDescribe,
+    __MCScriptInternalHandlerQuery,
 };
 
 static bool
