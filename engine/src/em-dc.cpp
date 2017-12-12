@@ -184,6 +184,13 @@ MCScreenDC::destroywindow(Window & x_window)
 	x_window = nil;
 }
 
+void
+MCScreenDC::raisewindow(Window p_window)
+{
+	uint32_t t_window = reinterpret_cast<uint32_t>(p_window);
+	MCEmscriptenRaiseWindow(t_window);
+}
+
 uintptr_t
 MCScreenDC::dtouint(Drawable p_window)
 {

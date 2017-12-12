@@ -41,6 +41,7 @@ extern "C" bool MCEmscriptenHandleMousePress(MCStack *p_stack, uint32_t p_time, 
 
 extern "C" uint32_t MCEmscriptenCreateWindow();
 extern "C" void MCEmscriptenDestroyWindow(uint32_t p_window_id);
+extern "C" void MCEmscriptenRaiseWindow(uint32_t p_window_id);
 extern "C" void MCEmscriptenSetWindowRect(uint32_t p_window_id, uint32_t p_left, uint32_t p_top, uint32_t p_right, uint32_t p_bottom);
 extern "C" void MCEmscriptenGetWindowRect(uint32_t p_window_id, uint32_t *r_left, uint32_t *r_top, uint32_t *r_right, uint32_t *r_bottom);
 extern "C" void MCEmscriptenSetWindowVisible(uint32_t p_window_id, bool p_visible);
@@ -68,6 +69,7 @@ public:
 	virtual void openwindow(Window p_window, Boolean override);
 	virtual void closewindow(Window p_window);
 	virtual void destroywindow(Window & x_window);
+	virtual void raisewindow(Window p_window);
 	virtual bool platform_getwindowgeometry(Window p_window,
 	                                        MCRectangle & r_rect);
 
