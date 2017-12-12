@@ -1,0 +1,176 @@
+element
+	property fill <paint>|inherit default black
+	property fill-rule nonzero|evenodd|inherit default nonzero
+	property fill-opacity <opacity>|inherit default 1
+	property stroke <paint>|inherit default none
+	property stroke-width <length>|inherit default 1
+	property stroke-linecap butt|round|square|inherit default butt
+	property stroke-linejoin miter|round|bevel|inherit default miter
+	property stroke-miterlimit <miterlimit>|inherit default 4
+	property stroke-dasharray <dasharray>|inherit default none
+	property stroke-dashoffset <length>|inherit default 0
+	property stroke-opacity <opacity>|inherit default 1
+
+element svg
+	attribute id <identifier> nullable
+	attribute style <text> nullable
+	attribute version 1.0|1.1|1.2 nullable 
+	attribute baseProfile none|full|basic|tiny default none
+	attribute x <coordinate> default 0
+	attribute y <coordinate> default 0
+	attribute width <size> default 100%
+	attribute height <size> default 100%
+	attribute viewBox <normalized-rectangle>|none default none
+	attribute preserveAspectRatio <preserve-aspect-ratio> default "xMidYMid meet"
+
+element defs
+	attribute id <identifier> nullable
+	attribute style <text> nullable
+
+element use
+	attribute id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> nullable
+	attribute x <coordinate> default 0
+	attribute y <coordinate> default 0
+	attribute href <reference> nullable
+	attribute xlink:href <reference> nullable
+
+element g
+	attribute id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> nullable
+
+element rect
+	attribute id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> nullable
+	attribute x <coordinate> default 0
+	attribute y <coordinate> default 0
+	attribute width <nonnegative-length> default 0
+	attribute height <nonnegative-length> default 0
+	attribute rx <nonnegative-length> nullable
+	attribute ry <nonnegative-length> nullable
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element circle
+	attribute id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> nullable
+	attribute cx <coordinate> default 0
+	attribute cy <coordinate> default 0
+	attribute r <nonnegative-length> default 0
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element ellipse
+	attribute id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> nullable
+	attribute cx <coordinate> default 0
+	attribute cy <coordinate> default 0
+	attribute rx <nonnegative-length> default 0
+	attribute ry <nonnegative-length> default 0
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element line
+	attribute id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> nullable
+	attribute x1 <coordinate> default 0
+	attribute y1 <coordinate> default 0
+	attribute x2 <coordinate> default 0
+	attribute y2 <coordinate> default 0
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element polyline
+	attribute id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> nullable
+	attribute points <points> default ""
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element polygon
+	attribute id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> nullable
+	attribute points <points> default ""
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element path
+	attribute id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> nullable
+	attribute d <path> default ""
+	attribute pathLength <nonnegative-length> nullable
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
