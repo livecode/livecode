@@ -232,6 +232,240 @@ public handler TestDynamicClassMethodBindingFails()
 	end if
 
 	test "dynamic class method binding fails" when DynamicAlloc is nothing
+end handler 
+
+--------
+
+handler _TestNativeReturnTypeConvert(in pParam as ObjcObject, in pParam2 as ObjcObject) returns Integer
+    return 1
 end handler
 
+foreign handler Objc_NSControlIsValidObject(in pTarget as ObjcId, in pControl as ObjcId, in pObject as ObjcId) returns CSChar binds to "objc:.-control:isValidObject:"
+
+foreign handler Objc_NSControlAlloc() returns ObjcRetainedId \
+    binds to "objc:AppKit.framework>NSControl.+alloc"
+
+public handler TestDelegateNativeReturnType()
+    if not the operating system is in ["mac", "ios"] then
+        skip test "objc delegate returns valid bridge type" \
+            because "not implemented on" && the operating system
+        return
+    end if
+    
+    plan 2 tests
+    
+    variable tDelegate as optional ObjcObject
+    unsafe
+        variable tControl as ObjcObject
+        put Objc_NSControlAlloc() into tControl
+        
+        put CreateObjcDelegate("NSControlTextEditingDelegate", \
+                               { "control:isValidObject:": \
+                                 _TestNativeReturnTypeConvert }) \
+            into tDelegate
+
+        test "create delegate succeeds" when tDelegate is not nothing
+        test "delegate converts to native return type" when \     
+            Objc_NSControlIsValidObject(tDelegate, tControl, tControl) is 1
+    end unsafe
+end handler
+
+foreign handler Objc_NSMenuAlloc() returns ObjcRetainedId \
+    binds to "objc:AppKit.framework>NSMenu.+alloc"
+    
+foreign handler Objc_NSMenuNumberOfItems(in pTarget as ObjcId, in pMenu as ObjcId) returns CLong binds to "objc:.-numberOfItemsInMenu:"
+
+handler _TestForeignReturnType(in pParam as ObjcObject) returns CLong
+    return 1
+end handler
+
+public handler TestDelegateForeignReturnType()
+    if not the operating system is in ["mac", "ios"] then
+        skip test "objc delegate returns correct foreign type" \
+            because "not implemented on" && the operating system
+        return
+    end if
+    
+    plan 2 tests
+    
+    variable tDelegate as optional ObjcObject
+    unsafe
+        variable tMenu as ObjcObject
+        put Objc_NSMenuAlloc() into tMenu
+        
+        put CreateObjcDelegate("NSMenuDelegate", \
+                               { "numberOfItemsInMenu:": \
+                                 _TestForeignReturnType }) \
+            into tDelegate
+
+        test "create delegate succeeds" when tDelegate is not nothing
+        test "delegate returns foreign type" when \     
+            Objc_NSMenuNumberOfItems(tDelegate, tMenu) is 1
+    end unsafe
+end handler
+
+handler _TestDelegateBadSignatureCallback(in pParam as ObjcObject) returns String
+    return ""
+end handler
+
+private handler _TestDelegateBadSignature()
+    CreateObjcDelegate("NSMenuDelegate", \
+                       { "numberOfItemsInMenu:": \
+                         _TestDelegateBadSignatureCallback })
+end handler
+
+private handler _TestDelegateContextBadSignature()
+    // Correct signature for no-context delegate
+    CreateObjcDelegateWithContext("NSMenuDelegate", \
+                                  { "numberOfItemsInMenu:": \
+                                      _TestForeignReturnType }, \
+                                  "")
+end handler
+
+public handler TestDelegateBadSignature()
+    if not the operating system is in ["mac", "ios"] then
+        skip test "objc delegate error returning invalid bridge type" \
+            because "not implemented on" && the operating system
+        return
+    end if
+
+    MCUnitTestHandlerThrowsNamed(_TestDelegateBadSignature, \
+                                "livecode.objc.DelegateCallbackSignatureError", \
+                                "Creating delegate throws error when callback has incorrect signature")
+end handler
+
+public handler TestDelegateContextBadSignature()
+    if not the operating system is in ["mac", "ios"] then
+        skip test "objc delegate error no context parameter" \
+            because "not implemented on" && the operating system
+        return
+    end if
+
+    MCUnitTestHandlerThrowsNamed(_TestDelegateContextBadSignature, \
+                                "livecode.objc.DelegateCallbackSignatureError", \
+                                "Creating delegate throws error when callback omits context parameter")
+end handler
+
+foreign handler Objc_NSPortDelegateHandlePortMessage(in pTarget as ObjcId, in pPortMessage as ObjcId) returns nothing \
+    binds to "objc:.-handlePortMessage:"
+
+foreign handler Objc_NSPortMessageAlloc() returns ObjcRetainedId \
+    binds to "objc:Foundation.framework>NSPortMessage.+alloc"
+    
+private variable mCalled as Boolean
+handler _SetTestDelegateMethodCalled(in pValue as Boolean)
+    put pValue into mCalled
+end handler
+
+handler _GetTestDelegateMethodCalled()
+    return mCalled
+end handler
+
+handler _TestDelegateMethodCalled(in pParam as ObjcObject) returns nothing
+    _SetTestDelegateMethodCalled(true) 
+end handler
+    
+public handler TestInformalDelegateVoidReturn()
+    if not the operating system is in ["mac", "ios"] then
+        skip test "objc informal delegatevoid return type" \
+            because "not implemented on" && the operating system
+        return
+    end if
+    
+    _SetTestDelegateMethodCalled(false)
+    
+    plan 2 tests
+    
+    variable tDelegate as optional ObjcObject
+    unsafe
+        variable tPortMessage as ObjcObject
+        put Objc_NSPortMessageAlloc() into tPortMessage
+        
+        put CreateObjcInformalDelegate([Objc_NSPortDelegateHandlePortMessage], \
+                                       { "handlePortMessage:": \
+                                         _TestDelegateMethodCalled }) \
+            into tDelegate
+
+        test "create delegate succeeds" when tDelegate is not nothing
+        
+        Objc_NSPortDelegateHandlePortMessage(tDelegate, tPortMessage)
+        test "delegate method void return" when \     
+            _GetTestDelegateMethodCalled()
+    end unsafe
+end handler
+
+handler _TestDelegateMethodCalledWithContext(in pContext as Boolean, in pParam as ObjcObject) returns nothing
+    _SetTestDelegateMethodCalled(pContext) 
+end handler
+
+public handler TestInformalDelegateWithContext()
+    if not the operating system is in ["mac", "ios"] then
+        skip test "objc informal delegate with context" \
+            because "not implemented on" && the operating system
+        return
+    end if
+    
+    _SetTestDelegateMethodCalled(false)
+    
+    plan 2 tests
+    
+    variable tDelegate as optional ObjcObject
+    unsafe
+        variable tPortMessage as ObjcObject
+        put Objc_NSPortMessageAlloc() into tPortMessage
+        
+        put CreateObjcInformalDelegateWithContext([Objc_NSPortDelegateHandlePortMessage], \
+                                                  { "handlePortMessage:": \
+                                                    _TestDelegateMethodCalledWithContext }, \
+                                                  true) \
+			into tDelegate
+
+        test "create delegate succeeds" when tDelegate is not nothing
+
+        Objc_NSPortDelegateHandlePortMessage(tDelegate, tPortMessage)
+        test "delegate method called with context" when \     
+            _GetTestDelegateMethodCalled()
+    end unsafe
+end handler
+
+handler _TestInformalDelegateBadSignatureCallback(in pParam as ObjcObject) returns String
+    return ""
+end handler
+
+private handler _TestInformalDelegateBadSignature()
+    CreateObjcInformalDelegate([Objc_NSPortDelegateHandlePortMessage], \
+                               { "handlePortMessage:": \
+                                 _TestInformalDelegateBadSignatureCallback })
+end handler
+
+private handler _TestInformalDelegateContextBadSignature()
+    // Correct signature for no-context delegate
+    CreateObjcInformalDelegateWithContext([Objc_NSPortDelegateHandlePortMessage], \
+                                          { "numberOfItemsInMenu:": \
+                                            _TestDelegateMethodCalled }, \
+                                           "")
+end handler
+
+public handler TestInformalDelegateBadSignature()
+    if not the operating system is in ["mac", "ios"] then
+        skip test "objc informal delegate error returning invalid type" \
+            because "not implemented on" && the operating system
+        return
+    end if
+
+    MCUnitTestHandlerThrowsNamed(_TestInformalDelegateBadSignature, \
+                                "livecode.objc.DelegateCallbackSignatureError", \
+                                "Creating informal delegate throws error when callback has incorrect signature")
+end handler
+
+public handler TestInformalDelegateContextBadSignature()
+    if not the operating system is in ["mac", "ios"] then
+        skip test "return NSRange struct succeeds" because "not implemented on" && the operating system
+        return
+    end if
+
+    MCUnitTestHandlerThrowsNamed(_TestInformalDelegateContextBadSignature, \
+                                "livecode.objc.DelegateCallbackSignatureError", \
+                                "Creating informal delegate throws error when callback omits context parameter")
+end handler
 end module
