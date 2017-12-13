@@ -194,7 +194,7 @@ private variable mNumSegments		as Integer
 
 private variable mPerimeter			as Path
 private variable mLines				as List			-- list of line paths
-private variable mRadius			as integer
+private variable mRadius			as Real
 
 private variable mCalculatedExtents as List
 
