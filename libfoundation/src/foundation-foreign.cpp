@@ -139,6 +139,17 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignCSLongLongTypeInfo() { return kMCCSLongL
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignUIntTypeInfo() { return kMCUIntTypeInfo; }
 MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSIntTypeInfo() { return kMCSIntTypeInfo; }
 
+/**/
+
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignObjCBoolTypeInfo()
+{
+#if defined(__MAC__)
+    return kMCCSCharTypeInfo;
+#else
+    return kMCCBoolTypeInfo;
+#endif
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #if defined(__32_BIT__)

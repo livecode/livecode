@@ -31,6 +31,10 @@ public foreign type ObjcAutoreleasedId binds to "MCObjcAutoreleasedIdTypeInfo"
 
 /****/
 
+public foreign type ObjcBool binds to "MCForeignObjCBoolTypeInfo"
+
+/****/
+
 private foreign handler MCStringCreateWithCFStringRef(in pNSString as ObjcId, out rString as String) returns CBool binds to "MCStringCreateWithCFStringRef"
 private foreign handler MCStringConvertToCFStringRef(in pString as String, out rNSString as ObjcRetainedId) returns CBool binds to "MCStringConvertToCFStringRef"
 
