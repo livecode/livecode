@@ -618,6 +618,57 @@ static bool _append_code_string(MCStringRef x_target, const char *p_code, size_t
     return MCStringAppendFormat(x_target,"%s%d", p_code, p_size);
 }
 
+static bool _get_informal_protocol_method_types(MCStringRef p_selector, MCArrayRef p_protocol, MCStringRef& r_types)
+{
+    MCNewAutoNameRef t_key;
+    if (!MCNameCreate(p_selector, &t_key))
+        return false;
+    
+    MCValueRef t_handler;
+    if (!MCArrayFetchValue(p_protocol, false, *t_key, t_handler))
+        return false;
+    
+    MCTypeInfoRef t_typeinfo = MCValueGetTypeInfo(t_handler);
+    if (!MCHandlerTypeInfoIsForeign(t_typeinfo))
+        return false;
+    
+    MCAutoStringRef t_types;
+    if (!MCStringCreateMutable(0, &t_types))
+        return false;
+    
+    MCTypeInfoRef t_param_typeinfo = MCHandlerTypeInfoGetReturnType(t_typeinfo);
+    
+    MCAutoStringRef t_return_type;
+    if (!_get_code_string_from_type(t_param_typeinfo, &t_return_type))
+        return false;
+    
+    if (!MCStringAppend(*t_types, *t_return_type))
+        return false;
+    
+    if (!_append_code_string(*t_types, @encode(id), sizeof(id)))
+        return false;
+    
+    if (!_append_code_string(*t_types, @encode(SEL), sizeof(SEL)))
+        return false;
+    
+    // IMPORTANT: We only allow instance methods in the mapping, so the first
+    // parameter of the foreign handler typeinfo should be the target instance.
+    // So we must skip this parameter when figuring out the obj-c method signature,
+    // i.e. start at index 1
+    for (uindex_t i = 1; i< MCHandlerTypeInfoGetParameterCount(t_typeinfo); ++i)
+    {
+        MCAutoStringRef t_param_type;
+        if (!_get_code_string_from_type(MCHandlerTypeInfoGetParameterType(t_typeinfo, i),
+                                        &t_param_type))
+            return false;
+        
+        if (!MCStringAppend(*t_types, *t_param_type))
+            return false;
+    }
+    
+    return MCStringCopy(*t_types, r_types);
+}
+
 @implementation com_livecode_MCObjcFormalDelegate
 - (id)initForProtocol:(Protocol *)aProtocol withHandlerMapping:(MCArrayRef)aHandlerMapping withContext:(MCValueRef)aContext
 {
@@ -674,51 +725,9 @@ static bool _append_code_string(MCStringRef x_target, const char *p_code, size_t
     if (!MCStringCreateWithCString(sel_getName(aSelector), &t_selector))
         return nullptr;
     
-    MCNewAutoNameRef t_key;
-    if (!MCNameCreate(*t_selector, &t_key))
-        return nullptr;
-    
-    MCValueRef t_handler;
-    if (!MCArrayFetchValue(m_protocol, false, *t_key, t_handler))
-        return nullptr;
-    
-    MCTypeInfoRef t_typeinfo = MCValueGetTypeInfo(t_handler);
-    if (!MCHandlerTypeInfoIsForeign(t_typeinfo))
-        return nullptr;
-    
     MCAutoStringRef t_types;
-    if (!MCStringCreateMutable(0, &t_types))
+    if (!_get_informal_protocol_method_types(*t_selector, m_protocol, &t_types))
         return nullptr;
-    
-    MCTypeInfoRef t_param_typeinfo = MCHandlerTypeInfoGetReturnType(t_typeinfo);
-    
-    MCAutoStringRef t_return_type;
-    if (!_get_code_string_from_type(t_param_typeinfo, &t_return_type))
-        return nullptr;
-    
-    if (!MCStringAppend(*t_types, *t_return_type))
-        return nullptr;
-    
-    if (!_append_code_string(*t_types, @encode(id), sizeof(id)))
-        return nullptr;
-    
-    if (!_append_code_string(*t_types, @encode(SEL), sizeof(SEL)))
-        return nullptr;
-    
-    // IMPORTANT: We only allow instance methods in the mapping, so the first
-    // parameter of the foreign handler typeinfo should be the target instance.
-    // So we must skip this parameter when figuring out the obj-c method signature,
-    // i.e. start at index 1
-    for (uindex_t i = 1; i< MCHandlerTypeInfoGetParameterCount(t_typeinfo); ++i)
-    {
-        MCAutoStringRef t_param_type;
-        if (!_get_code_string_from_type(MCHandlerTypeInfoGetParameterType(t_typeinfo, i),
-                                        &t_param_type))
-            return nullptr;
-        
-        if (!MCStringAppend(*t_types, *t_param_type))
-            return nullptr;
-    }
     
     MCAutoStringRefAsCString t_types_cstring;
     if (!t_types_cstring.Lock(*t_types))
@@ -909,6 +918,79 @@ static bool __MCTypeInfoConformsToObjcTypeCode(MCTypeInfoRef p_typeinfo, const c
     return true;
 }
 
+static bool __HandlerConformsToMethodSignature(MCHandlerRef p_handler, const char* p_typecodes, MCValueRef p_context)
+{
+    MCTypeInfoRef t_handler_typeinfo = MCValueGetTypeInfo(p_handler);
+    
+    // Check return type, the first code in the signature
+    bool t_handler_conforms = true;
+    
+    MCTypeInfoRef t_return_type = MCHandlerTypeInfoGetReturnType(t_handler_typeinfo);
+    if (t_handler_conforms)
+    {
+        t_handler_conforms =
+        __MCTypeInfoConformsToObjcTypeCode(t_return_type, p_typecodes);
+    }
+    
+    // The next two types are always id (self) and SEL (the selector)
+    if (t_handler_conforms)
+    {
+        t_handler_conforms =
+        __MCTypeInfoConformsToObjcTypeCode(kMCObjcObjectTypeInfo, p_typecodes);
+    }
+    if (t_handler_conforms)
+    {
+        t_handler_conforms =
+        __MCTypeInfoConformsToObjcTypeCode(kMCStringTypeInfo, p_typecodes);
+    }
+    
+    // Now check all the parameter types.
+    uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(t_handler_typeinfo);
+    
+    // Skip the first param if we have a context
+    for (uindex_t i = p_context != nullptr ? 1 : 0;
+         t_handler_conforms && i < t_param_count;
+         ++i)
+    {
+        MCTypeInfoRef t_param_typeinfo =
+        MCHandlerTypeInfoGetParameterType(t_handler_typeinfo, i);
+        
+        if (t_handler_conforms)
+        {
+            t_handler_conforms =
+            __MCTypeInfoConformsToObjcTypeCode(t_param_typeinfo, p_typecodes);
+        }
+    }
+    
+    if (!t_handler_conforms)
+    {
+        return MCErrorCreateAndThrowWithMessage(kMCObjcDelegateCallbackSignatureErrorTypeInfo,
+                                                MCSTR("Callback handler %{handler} parameters must conform to protocol method types"),
+                                                "handler", p_handler,
+                                                nullptr);
+    }
+    
+    return true;
+}
+
+static bool __HandlerConformsToInformalProtocolMethod(MCHandlerRef p_handler, MCNameRef p_selector, MCValueRef p_context, MCArrayRef p_protocol)
+{
+    MCAutoStringRef t_types;
+    if (!_get_informal_protocol_method_types(MCNameGetString(p_selector), p_protocol, &t_types))
+    {
+        return MCErrorCreateAndThrowWithMessage(kMCObjcDelegateCallbackSignatureErrorTypeInfo,
+                                                MCSTR("Invalid protocol definition for selector %{sel}"),
+                                                "sel", p_selector,
+                                                nullptr);
+    }
+    
+    MCAutoStringRefAsCString t_typecodes;
+    if (!t_typecodes.Lock(*t_types))
+        return false;
+    
+    return __HandlerConformsToMethodSignature(p_handler, *t_typecodes, p_context);
+}
+
 static bool __HandlerConformsToProtocolMethod(MCHandlerRef p_handler, MCStringRef t_method, MCValueRef p_context, Protocol *p_protocol)
 {
     MCAutoStringRefAsCFString t_selector_cfstring;
@@ -926,59 +1008,7 @@ static bool __HandlerConformsToProtocolMethod(MCHandlerRef p_handler, MCStringRe
                                                 nullptr);
     }
     
-    MCTypeInfoRef t_handler_typeinfo = MCValueGetTypeInfo(p_handler);
-    
-    const char* t_typecodes = t_desc.types;
-
-    // Check return type, the first code in the signature
-    bool t_handler_conforms = true;
-    
-    MCTypeInfoRef t_return_type = MCHandlerTypeInfoGetReturnType(t_handler_typeinfo);
-    if (t_handler_conforms)
-    {
-        t_handler_conforms =
-            __MCTypeInfoConformsToObjcTypeCode(t_return_type, t_typecodes);
-    }
-    
-    // The next two types are always id (self) and SEL (the selector)
-    if (t_handler_conforms)
-    {
-        t_handler_conforms =
-            __MCTypeInfoConformsToObjcTypeCode(kMCObjcObjectTypeInfo, t_typecodes);
-    }
-    if (t_handler_conforms)
-    {
-        t_handler_conforms =
-        __MCTypeInfoConformsToObjcTypeCode(kMCStringTypeInfo, t_typecodes);
-    }
-    
-    // Now check all the parameter types.
-    uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(t_handler_typeinfo);
-    
-    // Skip the first param if we have a context
-    for (uindex_t i = p_context != nullptr ? 1 : 0;
-         t_handler_conforms && i < t_param_count;
-         ++i)
-    {
-        MCTypeInfoRef t_param_typeinfo =
-            MCHandlerTypeInfoGetParameterType(t_handler_typeinfo, i);
-        
-        if (t_handler_conforms)
-        {
-            t_handler_conforms =
-            __MCTypeInfoConformsToObjcTypeCode(t_param_typeinfo, t_typecodes);
-        }
-    }
-    
-    if (!t_handler_conforms)
-    {
-        return MCErrorCreateAndThrowWithMessage(kMCObjcDelegateCallbackSignatureErrorTypeInfo,
-                                                MCSTR("Callback handler %{handler} parameters must conform to protocol method types"),
-                                                "handler", p_handler,
-                                                nullptr);
-    }
-    
-    return true;
+    return __HandlerConformsToMethodSignature(p_handler, t_desc.types, p_context);
 }
 
 extern "C" MC_DLLEXPORT_DEF
@@ -1075,23 +1105,21 @@ bool MCObjcCreateInformalDelegateWithContext(MCProperListRef p_foreign_handlers,
             return false;
     }
 
-    /*
+    MCAutoArrayRef t_selector_mapping_final;
+    if (!MCArrayCopy(*t_selector_mapping, &t_selector_mapping_final))
+        return false;
+    
     MCNameRef t_key;
     MCValueRef t_value;
     uintptr_t t_iterator = 0;
     while (MCArrayIterate(p_handler_mapping, t_iterator, t_key, t_value))
     {
-        if (!__HandlerConformsToProtocolMethod(static_cast<MCHandlerRef>(t_value),
-                                               MCNameGetString(t_key),
-                                               p_context,
-                                               t_protocol))
+        if (!__HandlerConformsToInformalProtocolMethod(static_cast<MCHandlerRef>(t_value),
+                                                       t_key,
+                                                       p_context,
+                                                       *t_selector_mapping_final))
             return false;
     }
-    */
-    
-    MCAutoArrayRef t_selector_mapping_final;
-    if (!MCArrayCopy(*t_selector_mapping, &t_selector_mapping_final))
-        return false;
     
     com_livecode_MCObjcInformalDelegate *t_proxy =
     [[com_livecode_MCObjcInformalDelegate alloc]
