@@ -123,6 +123,8 @@ __safe foreign handler _JNI_GetAndroidEngine() returns JObject \
    binds to "java:com.runrev.android.Engine>getEngine()Lcom/runrev/android/Engine;!static"
 __safe foreign handler _JNI_GetContext(in pView as JObject) returns JObject \
    binds to "java:android.view.View>getContext()Landroid/content/Context;"
+__safe foreign handler _JNI_GetSystemService(in pContext as JObject, in pService as JString) returns JObject \
+   binds to "java:android.content.Context>getSystemService(Ljava/lang/String;)Ljava/lang/Object;"
 
 // Handlers for creating and attaching view
 __safe foreign handler _JNI_CreateView(in pContext as JObject) returns JObject \
@@ -131,6 +133,7 @@ __safe foreign handler _JNI_AddView(in pParentView as JObject, in pChildView as 
    binds to "java:android.view.ViewGroup>addView(Landroid/view/View;)V?ui"
 
 private variable mNativeObj as optional JObject
+private variable mIMMObj as optional JObject
 
 // We need to store all properties as variables so they can be set in the IDE
 // and persist when saved
@@ -605,6 +608,9 @@ public handler OnCreate()
    put true into mPassReturnKey
 end handler
 
+// Constants pulled from the android.content.Context class
+constant INPUT_METHOD_SERVICE is "input_method"
+
 private handler InitView()
 	// Create an android button using the Engine Context
     variable tEngine as JObject
@@ -634,6 +640,12 @@ private handler InitView()
     // send the appropriate messages, and apply all the properties.
     SetListeners()
     ApplyProperties()
+
+    // Retrieve a reference to the Input Method Manager
+    variable tServiceName as JString
+    put StringToJString(INPUT_METHOD_SERVICE) into tServiceName
+
+    put _JNI_GetSystemService(tContext, tServiceName) into mIMMObj
 end handler
 
 // Destroy the native layer
@@ -685,6 +697,10 @@ handler SetParentProperties()
    SetEnabled(my enabled)
    SetTextSize(the size of my font)
 end handler
+
+// Constants pulled from the android.view.inputmethod.InputMethodManager class
+constant INPUT_SHOW_IMPLICIT is 1
+constant INPUT_SHOW_FORCED is 2
 
 // Constants pulled from the android.text.InputType class
 constant TYPE_CLASS_DATETIME is 4
@@ -799,6 +815,8 @@ __safe foreign handler _JNI_View_requestFocus(in pObj as JObject) returns JBoole
    binds to "java:android.view.View>requestFocus()Z?ui"
 __safe foreign handler _JNI_View_isFocused(in pObj as JObject) returns JBoolean \
    binds to "java:android.view.View>isFocused()Z?ui"
+__safe foreign handler _JNI_InputMethod_showSoftInput(in pIMMObj as JObject, in pViewObj as JObject, in pFlags as JInt) returns JBoolean \
+   binds to "java:android.view.inputmethod.InputMethodManager>showSoftInput(Landroid/view/View;I)Z"
 
 handler View_setOnFocusChangeListener(in pObj as JObject, in pParam_listener as JObject) returns nothing
 	_JNI_View_setOnFocusChangeListener(pObj, pParam_listener)
@@ -1039,6 +1057,10 @@ handler OnFocusChange(in pView as JObject, in pHasFocus as JObject) returns noth
    put GetText() into tText
 
    if tHasFocus then
+       // Show the soft keyboard if it isn't showing already
+       variable tJNIResult as Boolean
+       put _JNI_InputMethod_showSoftInput(mIMMObj, pView, INPUT_SHOW_IMPLICIT) into tJNIResult
+
        // Store the current text value
        put tText into mOldText
        post "openField"
