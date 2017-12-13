@@ -1007,7 +1007,7 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
                     MCAutoStringRef t_string;
                     if (!ctxt . ConvertToString(t_prop_value, &t_string))
                         continue;
-					t_value = [NSString stringWithMCStringRef: *t_string];
+					t_value = [[NSString stringWithMCStringRef: *t_string] retain];
                 }
 					break;
 				case kRCDPropTypeImage:
@@ -1057,6 +1057,8 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
 	if (t_success)
 		[[s_info_center defaultCenter] setNowPlayingInfo: t_info_dict];
 	
+    [t_info_dict release];
+    
 	return ES_NORMAL;
 }
 
