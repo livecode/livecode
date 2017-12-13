@@ -3552,6 +3552,24 @@ MC_DLLEXPORT void *MCObjcObjectGetRetainedId(MCObjcObjectRef obj);
  * an ObjcObject. The id is autoreleased before being returned. */
 MC_DLLEXPORT void *MCObjcObjectGetAutoreleasedId(MCObjcObjectRef obj);
 
+/* Create an ObjcObject containing an instance of the com_livecode_MCObjcFormalDelegate class,
+ * mapping protocol methods to MCHandlerRefs, with
+ * a context parameter. */
+MC_DLLEXPORT bool MCObjcCreateDelegateWithContext(MCStringRef p_protocol_name, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object);
+
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcFormalDelegate class,
+ * mapping protocol methods to MCHandlerRefs. */
+MC_DLLEXPORT bool MCObjcCreateDelegate(MCStringRef p_protocol_name, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object);
+
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcInformalDelegate class,
+ * mapping informal protocol methods specified as a list of foreign handler to MCHandlerRefs, with
+ * a context parameter. */
+MC_DLLEXPORT bool MCObjcCreateInformalDelegateWithContext(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object);
+    
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcInformalDelegate class,
+ * mapping informal protocol methods specified as a list of foreign handler to MCHandlerRefs. */
+MC_DLLEXPORT bool MCObjcCreateInformalDelegate(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object);
+    
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPickleFieldType
