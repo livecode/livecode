@@ -1085,9 +1085,10 @@ bool MCObjcCreateInformalDelegateWithContext(MCProperListRef p_foreign_handlers,
             return false;
         
         SEL t_selector = nullptr;
-        t_callbacks->query(MCHandlerGetContext(t_handler),
-                           kMCHandlerQueryTypeObjcSelector,
-                           &t_selector);
+        if (!t_callbacks->query(MCHandlerGetContext(t_handler),
+                                kMCHandlerQueryTypeObjcSelector,
+                                &t_selector))
+            return false;
         
         if (t_selector == nullptr)
             return false;
