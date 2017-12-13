@@ -139,6 +139,11 @@ const char *MCScrollbar::gettypestring()
 	return MCscrollbarstring;
 }
 
+bool MCScrollbar::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnScrollbar(this);
+}
+
 void MCScrollbar::open()
 {
 	MCControl::open();
