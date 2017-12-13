@@ -116,6 +116,11 @@ const char *MCEPS::gettypestring()
 	return MCepsstring;
 }
 
+bool MCEPS::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnEps(this);
+}
+
 Boolean MCEPS::mdown(uint2 which)
 {
 	if (state & CS_MFOCUSED)

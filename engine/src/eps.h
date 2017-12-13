@@ -58,6 +58,9 @@ public:
 	virtual ~MCEPS();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
+    
 	virtual Boolean mdown(uint2 which);
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual void applyrect(const MCRectangle &nrect);
