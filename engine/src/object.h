@@ -1239,6 +1239,10 @@ public:
     //  in the parent chain.
     bool isancestorof(MCObject *p_object);
     
+    // Reinstate the weak proxy object (used after an object is deleted, but is
+    // in the undo queue).
+    void ensure_weak_proxy(void) { if (m_weak_proxy == nullptr) m_weak_proxy = new MCObjectProxyBase(this); }
+    
     ////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(void);
