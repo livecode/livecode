@@ -383,7 +383,12 @@ MC_DLLEXPORT_DEF uintptr_t MCObjcObjectGetActionProxySelector(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if defined(__MAC__)
 #include <AppKit/AppKit.h>
+#else
+#import <Foundation/NSInvocation.h>
+#import <Foundation/NSMethodSignature.h>
+#endif
 #include <objc/runtime.h>
 
 @interface com_livecode_MCObjcDelegate: NSObject
