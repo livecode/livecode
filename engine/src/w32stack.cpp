@@ -474,7 +474,7 @@ void MCStack::sethints()
 		SetWindowLongA((HWND)window->handle.window, 0, (LONG)sptr->getw()->handle.window);
 }
 
-bool MCStack::view_platform_dirtyviewonresize()
+bool MCStack::view_platform_dirtyviewonresize() const
 {
 	return false;
 }
