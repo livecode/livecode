@@ -1691,6 +1691,8 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCSIntTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef MCForeignUIntTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCForeignSIntTypeInfo(void) ATTRIBUTE_PURE;
 
+MC_DLLEXPORT MCTypeInfoRef MCForeignObjCBoolTypeInfo(void) ATTRIBUTE_PURE;
+
 //////////
 
 // Returns true if the typeinfo is an alias.
