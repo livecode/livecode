@@ -654,6 +654,22 @@ void MCWidgetBase::RedrawRect(MCGRectangle *p_area)
     MCWidgetAsBase(t_owner) -> RedrawRect(p_area);
 }
 
+void MCWidgetBase::TriggerAll()
+{
+    if (IsRoot())
+    {
+        GetHost() -> signallisteners(P_CUSTOM);
+        return;
+    }
+    
+    MCWidgetRef t_owner;
+    t_owner = GetOwner();
+    if (t_owner == nil)
+        return;
+    
+    MCWidgetAsBase(t_owner) -> TriggerAll();
+}
+
 bool MCWidgetBase::CopyChildren(MCProperListRef& r_children)
 {
     if (m_children == nil)
@@ -1362,6 +1378,11 @@ bool MCWidgetSetAnnotation(MCWidgetRef self, MCNameRef p_annotation, MCValueRef 
 void MCWidgetRedrawAll(MCWidgetRef self)
 {
     return MCWidgetAsBase(self) -> RedrawRect(nil);
+}
+
+void MCWidgetTriggerAll(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> TriggerAll();
 }
 
 bool MCWidgetPost(MCWidgetRef self, MCNameRef p_event, MCProperListRef p_args)

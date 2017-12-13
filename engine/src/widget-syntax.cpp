@@ -135,6 +135,14 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
     r_in_edit_mode = MCcurtool != T_BROWSE;
 }
 
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecTriggerAll(void)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    MCWidgetTriggerAll(MCcurrentwidget);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyScriptObject(MCScriptObjectRef& r_script_object)
