@@ -8,11 +8,13 @@ Summary:
 Specifies the current <property profile|profile> for an
 <object(glossary)>. 
 
+Associations: profile library
+
 Introduced: 1.0
 
-OS: mac, windows, linux
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop, server
+Platforms: desktop, server, mobile
 
 Example:
 set the revProfile of button "OK" to "French"
@@ -40,15 +42,14 @@ stored in the object's current profile. If you later switch back to that
 profile, the stored values are restored. For example, if you create a
 profile named "Fluffy" for a button, then set the button's
 backgroundColor <property> to "pink", that setting of the
-<backgroundColor> <property> is stored with the Fluffy <property
-profile|profile>. If you later set the <button|button's> <property
-profile|profile> to "Fluffy", the pink color is restored.
+<backgroundColor> <property> is stored with the Fluffy
+<property profile|profile>. If you later set the <button|button's>
+<property profile|profile> to "Fluffy", the pink color is restored.
 
 If the <profileName> does not exist for the <object(glossary)>, setting
-the <property profile|profile> either causes an error or creates a new
+the <property profile|profile> either fails silently or creates a new
 <property profile|profile> with that name for the <object(glossary)>.
-You change this setting in the "Property Profiles" pane of the
-Preferences window.
+You change this setting using the <gRevAutoCreateProfiles> <variable>.
 
 (The <revProfile> <property> is implemented as a <custom property>, part
 of the "cRevGeneral" <custom property> set. For this reason, you can
@@ -61,20 +62,11 @@ cRevGeneral["profile"].)
 > Settings window, make sure you choose to include profiles in your
 > application. 
 
->*Note:* When included in a standalone application, the Profile library
-> is implemented as a hidden group and made available when the group
-> receives its first openBackground message. During the first part of
-> the application startup process, before this message is sent, the
-> <revProfile> property is not yet available. This may affect attempts
-> to use this property in startup, preOpenStack, openStack, or
-> preOpenCard hand in the main stack. Once the application has finished
-> starting up, the library is available and the <revProfile> property
-> can be used in any handler.
-
 References: revSetStackFileProfile (command), object (glossary),
 property (glossary), custom property (glossary),
 backgroundColor (glossary), property profile (glossary), button (object),
-customPropertySets (property)
+customPropertySets (property), gRevAutoCreateProfiles (keyword),
+gRevProfileReadOnly (keyword), Profile library (library)
 
 Tags: properties
 
