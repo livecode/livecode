@@ -67,8 +67,8 @@ included in the list only if they refer to a <folder>.
 
 ### Short form
 
-When the <folders> is called as a <function>, or without the `<long>` or
-`<long|detailed>` modifiers, it <return(glossary)|returns> only the <folder>
+When the <folders> is called as a <function>, or without the `long` or
+`detailed` modifiers, it <return(glossary)|returns> only the <folder>
 names as a string with one file name per line.
 
 > *Note:* On some <platform|platforms>, folder names are permitted to
@@ -78,7 +78,7 @@ names as a string with one file name per line.
 
 ### Long form
 
-`the <long> folders` and `the <long|detailed> folders` are synonyms.  When 
+`the long folders` and `the detailed folders` are synonyms.  When 
 the <folders> <function> is called in this form, the <return(glossary)>
 value is a list of folders with detailed file attributes.  Several of
 the attributes are provided only for compatibility with the <files>

@@ -20,8 +20,8 @@ Example:
 put "a" into first character of theLetters
 
 Description:
-Use the <first> <keyword> in an <object reference> or <chunk
-expression>. 
+Use the <first> <keyword> in an <object reference> or 
+<chunk expression>. 
 
 The <first> <keyword> can be used to specify any <object(glossary)>
 whose <number> <property> is 1. It can also be used to designate the

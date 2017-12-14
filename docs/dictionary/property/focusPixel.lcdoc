@@ -9,7 +9,7 @@ Syntax: set the focusPixel of <object> to <colorNumber>
 Summary:
 Specifies which entry in the <color table> is used for the color of an
 <object|object's> outline when it has the <insertion point> or is
-<active (focused)(glossary)>.
+<explicit focus|active focused>.
 
 Associations: stack, card, field, button, graphic, scrollbar, player,
 image
@@ -43,7 +43,8 @@ The color table can be set by changing the colorMap <property>.
 References: object (glossary), property (glossary),
 color reference (glossary), insertion point (glossary), bit (glossary),
 color table (glossary), active control (glossary), bit depth (glossary),
-integer (keyword), borderPixel (property), focusColor (property)
+explicit focus (glossary), integer (keyword), borderPixel (property), 
+focusColor (property)
 
 Tags: ui
 

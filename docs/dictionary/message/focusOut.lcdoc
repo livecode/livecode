@@ -26,8 +26,6 @@ Description:
 Handle the <focusOut> <message> if you want to perform preparation or do
 other tasks when a <control> loses the <focus|keyboard focus>.
 
-&nbsp;
-
 If the control is an unlocked field or a button whose menuMode is
 "comboBox", the <closeField> or <exitField> <message> is sent to it
 instead of the <focusOut> <message>.
