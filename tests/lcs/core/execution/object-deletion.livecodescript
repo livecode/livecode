@@ -118,6 +118,21 @@ on __TestDeleteStack
       delete stack "test"
 end __TestDeleteStack
 
+on TestDeleteObjectWithBreakpoint
+   create stack "crash test"
+   set the script of stack "crash test" to \
+         "on Foo" & return & return & "get it" & return & "end Foo"
+   create stack "delete"
+   set the script of stack "delete" to \
+         "on Foo" & return & "delete stack " & quote & "crash test" & quote & return & "get it" & return & "end Foo"
+   set the breakpoints to \
+         the long id of stack "crash test",3 & return & \
+         the long id of stack "delete",3 
+   send "Foo" to stack "delete" in 0
+   wait 0 with messages
+   TestAssert "Delete object with breakpoint", true
+end TestDeleteObjectWithBreakpoint
+
 on TestTeardown
    if there is a stack "test" then
       delete stack "test"

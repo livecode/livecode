@@ -52,7 +52,9 @@ public:
 	virtual void paste(void);
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
+    
 	MCVideoClip *clone();
 	bool getfile(MCStringRef& r_file);
 	real8 getscale()

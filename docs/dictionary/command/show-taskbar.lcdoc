@@ -24,34 +24,9 @@ Use the <show taskbar> <command> to display the <task bar> if it has
 been hidden. For example, if the <task bar> is hidden, you might want to
 show it only if the user holds down the Control key.
 
-    The <show taskbar> <command> can produce unexpected result when used
-    in conjunction with <backdrop> operations. The following syntax is
-    supported: 
-
-
-    hide taskbar
-
-
-    set the backdrop to "red" -- or whatever you want
-
-
-    This is the case where the <backdrop> is visible but the taskbar is hidden when the application is active.
-    After these two commands, the taskbar is hidden for the LiveCode
-    application, the backdrop fills the screen and the taskbar reappears
-    when switching \ to other applications.
-
-
-    Functionality that is partially functional, due to the lack of
-    operating system support and works sufficiently well for restricted
-    applications is as follows:
-
-
-    If the taskbar is visible before showing the backdrop, the backdrop
-    occupies the 'working rect' of the screen, or almost the working
-    rect of the screen if the taskbar is set to auto-hide. In the latter
-    case, a small gap is left at the bottom of the backdrop to ensure
-    the taskbar can still pop up when the mouse is moved to the edge of
-    the screen.
+The <hide taskbar> command can produce unexpected result when used
+in conjunction with <backdrop> operations. See the 
+<hide taskbar|dictionary entry> for more information.
 
 
 The task bar can be hidden only on Windows systems. This command has no

@@ -412,7 +412,9 @@ public:
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
+    
 	virtual void open();
 	virtual void close();
 	virtual Boolean mfocus(int2 x, int2 y);

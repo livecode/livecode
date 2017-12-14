@@ -250,9 +250,6 @@ definitions can only be used within the module.
 A constant definition defines a named constant. The value can be any
 expression which depends on only on constant values to evaluate.
 
-> **Note:** Constants are not currently implemented, although the syntax
-> is recognised.
-
 ### Types
 
     TypeDefinition
