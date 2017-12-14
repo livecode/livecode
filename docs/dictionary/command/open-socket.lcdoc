@@ -41,7 +41,8 @@ Example:
 on mouseUp
    open socket "www.google.com:80"
    write "test" \
-         to socket "www.google.com:80" with message "socketFinishedWriting"
+         to socket "www.google.com:80" \
+         with message "socketFinishedWriting"
 end mouseUp
 
 on socketFinishedWriting pSocketID
@@ -149,12 +150,12 @@ authenticated, and any connection is accepted.
 
 For technical information about the numbers used to designate standard
 ports, see the list of port numbers at
-&lt;http://www.iana.org/assignments/port-numbers&gt;, in particular the
-section titled "Well Known Port Numbers".
+http://www.iana.org/assignments/port-numbers, in particular the section 
+titled "Well Known Port Numbers".
 
 >*Important:*  The <open socket> <command> is part of the 
 > <SSL & Encryption library>. To ensure that the <command> works in a 
-> <standalone application>, you must include this 
+> standalone application, you must include this 
 > <LiveCode custom library|custom library> when you create your 
 > <standalone application|standalone>. In the Inclusions pane of the 
 > <Standalone Application Settings> window, make sure the
@@ -175,7 +176,7 @@ fails.
 For applications using hostNameToAddress directly, its syntax has been
 augmented: 
 
-hostnameToAddress(hostname, [ callback ])
+    hostnameToAddress(hostname, [ callback ])
 
 If the callback parameter is specified then the call will return
 immediately and upon completion of the lookup, the callback will be

@@ -45,6 +45,11 @@ Chunk_term MCMagnify::gettype() const
 	return CT_MAGNIFY;
 }
 
+bool MCMagnify::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnControl(this);
+}
+
 void MCMagnify::open()
 {
 	MCObject::open();

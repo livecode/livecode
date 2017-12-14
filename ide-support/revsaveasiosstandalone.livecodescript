@@ -1,4 +1,5 @@
 ﻿script "revSaveAsIOSStandalone"
+
 -- Each stackfile has:
 --   moveSubstacks
 --   renameGeneric
@@ -755,7 +756,7 @@ end revSaveAsMobileDeployer
 
 private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle   
    revStandaloneProgress "Copying icons..."    
-   repeat for each line tType in ("iphone icon" & return & "retina icon,-114" & return & "iOS 7 retina icon,-120" & return & "iphone 6 plus icon,-180" & return & \
+   repeat for each line tType in ("iphone icon" & return & "retina icon,-114" & return & "iOS 7 retina icon,-120" & return & "iphone 6 plus icon,-180" & return & "iphone X icon,-180" & return & \
          "ipad icon,-72" & return & "ipad retina icon,-144" & return & "iOS 7 ipad icon,-76" & return & "iOS 7 ipad retina icon,-152" & return & "iPad Pro 12.9 icon,-167")
       get pSettings["ios," & item 1 of tType]
       if not (it begins with "/") then
@@ -783,7 +784,8 @@ private command revCopyMobileNewSplash pSettings, pBaseFolder, pAppBundle
          return & "ipad landscape splash,-Landscape" & return & "ipad retina portrait splash,-Portrait@2x" & return & "ipad retina landscape splash,-Landscape@2x" & \
          return & "ipad pro 12.9 portrait splash,-iPadProPortrait@2x" & return & "ipad pro 12.9 landscape splash,-iPadProLandscape@2x" & \
          return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-667h@2x" & \
-         return & "iphone 6 plus portrait splash,-736h@3x" & return & "iphone 6 plus landscape splash,-414h@3x")
+         return & "iphone 6 plus portrait splash,-736h@3x" & return & "iphone 6 plus landscape splash,-414h@3x" & \
+         return & "iphone X portrait splash,-812h@3x" & return & "iphone X landscape splash,-375h@3x")
       get pSettings["ios," & item 1 of tType]
       if not (it begins with "/") then
          put pBaseFolder & slash before it
@@ -1469,8 +1471,10 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       put "Default-667h@2x|Default-667h|{375, 667}|Portrait" & return after tSplashScreens
       if tIPhoneOrientation contains "Portrait" then
          put "Default-736h@3x|Default-736h|{414, 736}|Portrait" & return after tSplashScreens
+         put "Default-812h@3x|Default-812h|{375, 812}|Portrait" & return after tSplashScreens
       else
          put "Default-414h@3x|Default-414h|{414, 736}|Landscape" & return after tSplashScreens
+         put "Default-375h@3x|Default-375h|{375, 812}|Landscape" & return after tSplashScreens
       end if      
    end if   
    if 2 is among the items of tDeviceFamily then      

@@ -998,6 +998,8 @@ private function __arrayElementRegex
    return "^ *([\w" & quote & "]+) *(?:\(( *(?:optional |in |out |inout )?<?\w*>?) *\))? *: *(.*)"
 end __arrayElementRegex
 
+constant kAlwaysRecognizeAsElement = "Description"
+
 function revDocsExtractElementsWithRegex pText, pRegex
    local tElementRegex
    put pRegex into tElementRegex
@@ -1024,6 +1026,8 @@ function revDocsExtractElementsWithRegex pText, pRegex
    repeat for each line tLine in pText
       # Variables to store regex matches
       local tNextElementName, tParamType, tAfterElement
+      # Variable to keep track of whether element contains multiple lines
+      local tInMultipleLineElement
       
       get word 1 of tLine
       if tInArrayDescription then
@@ -1057,7 +1061,16 @@ function revDocsExtractElementsWithRegex pText, pRegex
             add 1 to tInternalBlankLines
          end if
          next repeat
-      else if matchText(tLine, tElementRegex, tNextElementName, tParamType, tAfterElement) then   
+      else if matchText(tLine, tElementRegex, tNextElementName, tParamType, tAfterElement) then
+         --BWM-2017-11-22: [[ Bug 19543 ]] A word (optionaly with something that looks like 
+         --a ParamType) immediately following content should be treated as part of that
+         --content instead of a new element.
+         if word 1 of tAfterElement is empty and tAccumulatedContent is not empty and \
+               tInternalBlankLines is 0 and tInMultipleLineElement and \
+               tNextElementName is not among the items of kAlwaysRecognizeAsElement then
+            put tLine & return after tAccumulatedContent
+            next repeat
+         end if
          if tAccumulatedContent is not empty and tElementCount is 0 then
             add 1 to tElementCount
          end if
@@ -1088,6 +1101,7 @@ function revDocsExtractElementsWithRegex pText, pRegex
          if word 1 of tAfterElement is not empty then
             put word 1 to -1 of tAfterElement & return into tAccumulatedContent
          end if
+         put false into tInMultipleLineElement
       else
          # AL-2015-09-03: [[ Bug 15866 ]] Include internal blank lines in content
          repeat tInternalBlankLines
@@ -1095,6 +1109,7 @@ function revDocsExtractElementsWithRegex pText, pRegex
          end repeat
          put 0 into tInternalBlankLines
          put tLine & return after tAccumulatedContent
+         put true into tInMultipleLineElement
       end if
    end repeat
    

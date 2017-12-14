@@ -7,8 +7,8 @@ iphonesimulator_versions = ["11.0", "10.2","9.2", "8.2"]
 macosx_versions = ["10.9"]
 =======
 
-iphoneos_versions = ["11.1", "10.2", "9.2"]
-iphonesimulator_versions = ["11.1", "10.2", "9.2", "8.2", "7.1", "6.1"]
+iphoneos_versions = ["11.2", "10.2", "9.2"]
+iphonesimulator_versions = ["11.2", "10.2", "9.2", "8.2", "7.1", "6.1"]
 macosx_versions = ["10.8", "10.6"]
 >>>>>>> origin/develop-8.2
 

@@ -70,6 +70,7 @@ public:
     
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
 	
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	
