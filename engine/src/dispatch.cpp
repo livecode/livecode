@@ -174,6 +174,11 @@ MCDispatch::~MCDispatch()
     MCValueRelease(m_library_mapping);
 }
 
+bool MCDispatch::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnObject(this);
+}
+
 bool MCDispatch::isdragsource(void)
 {
 	return m_drag_source;

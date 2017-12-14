@@ -196,6 +196,8 @@ struct MCObjectVisitor
 	virtual bool OnImage(MCImage *p_image);
 	virtual bool OnScrollbar(MCScrollbar *p_scrollbar);
 	virtual bool OnPlayer(MCPlayer *p_player);
+    virtual bool OnGraphic(MCGraphic *p_graphic);
+    virtual bool OnEps(MCEPS *p_eps);
 	virtual bool OnParagraph(MCParagraph *p_paragraph);
 	virtual bool OnBlock(MCBlock *p_block);
 	virtual bool OnStyledText(MCStyledText *p_styled_text);
@@ -668,7 +670,7 @@ public:
     virtual const MCObjectPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 	
 	virtual bool visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor);
-	virtual bool visit_self(MCObjectVisitor *p_visitor);
+    virtual bool visit_self(MCObjectVisitor *p_visitor) = 0;
 	virtual bool visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor);
 
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
