@@ -827,8 +827,17 @@ static bool _get_informal_protocol_method_types(MCStringRef p_selector, MCArrayR
         char t_raw_value[t_arg_size];
         [anInvocation getArgument:t_raw_value atIndex:t_arg_index];
         
+        char t_typecode = t_arg_type[0];
+        // Special-case signed char / bool conversion to handle BOOL type
+        // which is signed char on mac and bool on ios
+        if (MCHandlerTypeInfoGetParameterType(MCValueGetTypeInfo(t_handler), t_arg_index - 2)
+            == kMCCBoolTypeInfo && t_arg_type[0] == 'c')
+        {
+            t_typecode = 'B';
+        }
+        
         MCAutoValueRef t_arg_value;
-        if (!_convert_type(t_arg_type[0], t_raw_value, &t_arg_value))
+        if (!_convert_type(t_typecode, t_raw_value, &t_arg_value))
         {
             return;
         }
@@ -904,19 +913,31 @@ static bool _get_informal_protocol_method_types(MCStringRef p_selector, MCArrayR
 
 static bool __MCTypeInfoConformsToObjcTypeCode(MCTypeInfoRef p_typeinfo, const char*& x_desc)
 {
-    MCAutoTypeInfoRef t_expected;
+    MCTypeInfoRef t_expected;
     uindex_t t_length;
-    if (!__MCObjcMapTypeCode(x_desc, t_length, &t_expected))
+    if (!__MCObjcMapTypeCode(x_desc, t_length, t_expected))
         return false;
     
-    MCResolvedTypeInfo t_src, t_target;
-    if (!MCTypeInfoResolve(*t_expected, t_src))
-        return false;
+    bool t_conforms = false;
+    // Special-case signed char / bool conformance to handle BOOL type
+    // which is signed char on mac and bool on ios
+    if (t_expected == kMCCSCharTypeInfo && p_typeinfo == kMCCBoolTypeInfo)
+    {
+        t_conforms = true;
+    }
+    else
+    {
+        MCResolvedTypeInfo t_src, t_target;
+        if (!MCTypeInfoResolve(t_expected, t_src))
+            return false;
+        
+        if (!MCTypeInfoResolve(p_typeinfo, t_target))
+            return false;
+        
+        t_conforms = MCResolvedTypeInfoConforms(t_src, t_target);
+    }
     
-    if (!MCTypeInfoResolve(p_typeinfo, t_target))
-        return false;
-    
-    if (!MCResolvedTypeInfoConforms(t_src, t_target))
+    if (!t_conforms)
         return false;
     
     x_desc += t_length;
