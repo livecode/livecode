@@ -462,9 +462,8 @@ enum MCGDrawingPathOpcode : uint8_t
     kMCGDrawingPathOpcodeReverseReflexArcTo = 23,
     kMCGDrawingPathOpcodeRelativeReverseReflexArcTo = 24,
     kMCGDrawingPathOpcodeCloseSubpath = 25,
-    kMCGDrawingPathOpcodeBearing = 26,
     
-    kMCGDrawingPathOpcode_Last = kMCGDrawingPathOpcodeBearing,
+    kMCGDrawingPathOpcode_Last = kMCGDrawingPathOpcodeCloseSubpath,
 };
 
 inline bool MCGDrawingPathOpcodeIsRelativeArc(MCGDrawingPathOpcode p_opcode)
@@ -537,7 +536,6 @@ struct MCGDrawingVisitor
     void PathSmoothQuadraticTo(bool is_relative, MCGFloat x, MCGFloat y);
     void PathArcTo(bool is_relative, bool is_reflex, bool is_reverse, MCGFloat cx, MCGFloat cy, MCGFloat rotation, MCGFloat x, MCGFloat y);
     void PathCloseSubpath(void);
-    void PathBearing(MCGFloat angle);
     void PathEnd(void);
     
     void FillOpacity(MCGFloat opacity);
@@ -1784,17 +1782,6 @@ void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
                 p_visitor.PathArcTo(t_is_relative, t_is_reflex, t_is_reverse, t_rx, t_ry, t_rotation, t_x, t_y);
             }
             break;
-                
-            case kMCGDrawingPathOpcodeBearing:
-            {
-                MCGFloat t_angle;
-                if (!AngleScalar(t_angle))
-                {
-                    break;
-                }
-                p_visitor.PathBearing(t_angle);
-            }
-            break;
             
             case kMCGDrawingPathOpcodeCloseSubpath:
             {
@@ -2050,10 +2037,6 @@ struct MCGDrawingRenderVisitor
     {
         MCGContextCloseSubpath(gcontext);
         last_point = first_point;
-    }
-    
-    void PathBearing(MCGFloat p_angle)
-    {
     }
     
     void PathEnd(void)

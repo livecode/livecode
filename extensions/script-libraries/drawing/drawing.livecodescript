@@ -1011,7 +1011,6 @@ constant kMCGDrawingOpcodePath = 19
 
 constant kMCGDrawingTransformOpcodeEnd = 0
 constant kMCGDrawingTransformOpcodeAffine = 1
-//constant kMCGDrawingTransformOpcodeViewport = 2
 
 constant kMCGDrawingPaintOpcodeEnd = 0
 constant kMCGDrawingPaintOpcodeSolidColor = 1
@@ -1053,7 +1052,6 @@ constant kMCGDrawingPathOpcodeRelativeReverseArcTo = 22
 constant kMCGDrawingPathOpcodeReverseReflexArcTo = 23
 constant kMCGDrawingPathOpcodeRelativeReverseReflexArcTo = 24
 constant kMCGDrawingPathOpcodeCloseSubpath = 25
-constant kMCGDrawingPathOpcodeBearing = 26
 
 constant kMCGDrawingPreserveAspectRatioOpcodeNone = 0
 constant kMCGDrawingPreserveAspectRatioOpcodeXMinYMinMeet = 1
@@ -1292,8 +1290,8 @@ private function _svgEncodePreserveAspectRatio pPar
 		break
 	end switch
 	if word 2 of pPar is "slice" then
-		put tParOp - kMCGDrawingPreserveAspectRatioXMinYMinMeet + \
-						kMCGDrawingPreserveAspectRatioXMinYMinSlice into tParOp
+		put tParOp - kMCGDrawingPreserveAspectRatioOpcodeXMinYMinMeet + \
+						kMCGDrawingPreserveAspectRatioOpcodeXMinYMinSlice into tParOp
 	end if
 	return tParOp
 end _svgEncodePreserveAspectRatio
@@ -1306,9 +1304,6 @@ private command _svgEncodeTransform @xContext, pTransform
 			break
 		case "viewport"
 			_InternalError format("dynamic viewport transform not supported")
-
-			_svgEncodeOp xContext, kMCGDrawingTransformOpcodeViewport, tTransform[2], tTransform[3], tTransform[4], tTransform[5], tTransform[6], tTransform[7], tTransform[8], tTransform[9]
-			_svgEncodeOp xContext, _svgEncodePreserveAspectRatio(tTransform[10])
 			break
 		default
 			_InternalError format("unknown transform '%s'", tTransform[1])
