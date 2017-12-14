@@ -260,7 +260,9 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["showFrameBorder"]	into mShowFrameBorder
 	setSelected(pProperties["selectedSegment"], kDontPostMessage)
 
-	put pProperties["cornerRadius"] into mRadius
+	if "cornerRadius" is among the keys of pProperties then
+	    put pProperties["cornerRadius"] into mRadius
+	end if
 
 	if "selectedLabelColor" is among the keys of pProperties then
 		put stringToColor(pProperties["selectedLabelColor"]) into mSelectedLabelColor
