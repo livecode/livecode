@@ -474,6 +474,7 @@ public handler TestInformalDelegateContextBadSignature()
     if not the operating system is in ["mac", "ios"] then
         skip test "objc informal delegate error omitting context param" \
             because "not implemented on" && the operating system
+        return
     end if
 
     MCUnitTestHandlerThrowsNamed(_TestInformalDelegateContextBadSignature, \

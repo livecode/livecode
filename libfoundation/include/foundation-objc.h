@@ -31,5 +31,5 @@ NSData *MCDataConvertToAutoreleasedNSData(MCDataRef data);
 #endif
 
 extern MCTypeInfoRef kMCObjcDelegateCallbackSignatureErrorTypeInfo;
-
+extern MCTypeInfoRef kMCObjcDelegateMappingErrorTypeInfo;
 #endif
