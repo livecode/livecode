@@ -4297,7 +4297,7 @@ private command __API pHeader, pPost, pURL, pCallback
    set socketTimeoutInterval to 30000  --30 seconds
    
    local tError
-   if pCallback is not empty then
+   if pCallback is not empty then #asynchronous call
       local tRequestID
       put uuid() into tRequestID
       put __GetCaller() into sAsyncRequestA[tRequestID]["caller"]
@@ -4306,8 +4306,8 @@ private command __API pHeader, pPost, pURL, pCallback
       
       if tError is empty then
          return tRequestID for value
-      end if
-   else
+      end if #tError is empty
+   else #pCallback is empty
       local tOldHeaders, tPostReturn
       put the httpHeaders into tOldHeaders
       set the httpHeaders to pHeader
@@ -4315,12 +4315,18 @@ private command __API pHeader, pPost, pURL, pCallback
       put it into tPostReturn
       put the result into tError
       set the httpHeaders to tOldHeaders
-      
+
       if tError is empty then
          return tPostReturn for value
-      end if
-   end if
-   
+      end if #tError is empty
+   end if #pCallback is not empty
+
+
+   #if we get to here, then tError is not empty
+   if tPostReturn is not empty then 
+      put CR&tPostReturn after tError
+   end if #tPostReturn is not empty
+
    return tError for error
 end __API
 
@@ -4328,13 +4334,13 @@ on __dropboxAPIAsyncCallback pRequestID, pStatusCode, pBytes, pCurlResultCode
    if exists(sAsyncRequestA[pRequestID]["caller"]) then
       local tData, tError
       put tsNetRetrData(pRequestID, tError) into tData
-      
+
       dispatch sAsyncRequestA[pRequestID]["callback"] to sAsyncRequestA[pRequestID]["caller"] with pRequestID, pStatusCode, tData, tError
    end if
-   
+
    tsNetCloseConn pRequestID
 end __dropboxAPIAsyncCallback
-   
+
 private function __GetCaller
    get item 1 to -3 of line -4 of the executionContexts
    if there is not an it then
@@ -5145,9 +5151,9 @@ private function __copy_POST pPathFrom, pPathTo, pAllowSharedFolder, pAutoRename
    {"from_path":"/apps/MyApp/seasons.txt","to_path":"/apps/MyApp/New1/seasons.txt"}
    */
    return __CB(__Q("from_path") & ":" &  __Q(pPathFrom) \
-         & "," &__Q("to_path") & ":" & __Q(pPathTo) \
-         & "," &__Q("allow_shared_folder") & ":" & pAllowSharedFolder \
-         & "," &__Q("autorename") & ":" & pAutoRename)
+      & "," &__Q("to_path") & ":" & __Q(pPathTo) \
+      & "," &__Q("allow_shared_folder") & ":" & pAllowSharedFolder \
+      & "," &__Q("autorename") & ":" & pAutoRename)
 end __copy_POST
 
 private function __move_POST pPathFrom,pPathTo
