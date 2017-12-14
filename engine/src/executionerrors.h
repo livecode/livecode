@@ -2740,6 +2740,9 @@ enum Exec_errors
 
     // {EE-0897} stack: password protecting stacks not supported in this edition
     EE_STACK_PASSWORD_NOT_SUPPORTED,
+
+	// {EE-0898} parentScript: can't change parent while parent script is executing
+	EE_PARENTSCRIPT_EXECUTING,
 };
 
 extern const char *MCexecutionerrors;

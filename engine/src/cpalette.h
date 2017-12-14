@@ -43,6 +43,9 @@ public:
 	virtual ~MCColors();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
+    
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual Boolean mdown(uint2 which);
 	virtual Boolean mup(uint2 which, bool p_release);

@@ -80,6 +80,11 @@ MCObjectPropertyTable MCPlayer::kPropertyTable =
 	&kProperties[0],
 };
 
+bool MCPlayer::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnPlayer(this);
+}
+
 void MCPlayer::removereferences()
 {
     // OK-2009-04-30: [[Bug 7517]] - Ensure the player is actually closed before deletion, otherwise dangling references may still exist.

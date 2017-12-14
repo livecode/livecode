@@ -1692,19 +1692,30 @@ void MCObject::GetParentScript(MCExecContext& ctxt, MCStringRef& r_parent_script
 
 void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_script)
 {
-	// MW-2008-10-25: Add the setting logic for parent scripts. This code is a
+    MCObject *t_current_parent = nil;
+    if (parent_script != nil)
+    {
+        t_current_parent = parent_script -> GetParent() -> GetObject();
+    }
+    
+    // MW-2008-10-25: Add the setting logic for parent scripts. This code is a
 	//   modified version of what goes on in MCChunk::getobj when the final
 	//   target for a chunk is an expression. We first parse the string as a
 	//   chunk expression, then attempt to get the object of it. If the object
 	//   doesn't exist, the set fails.
-	bool t_success;
-	t_success = true;
-
+	
 	// MW-2008-11-02: [[ Bug ]] Setting the parentScript of an object to
 	//   empty should unset the parent script property and not throw an
 	//   error.
-	if (new_parent_script == nil || MCStringGetLength(new_parent_script) == 0)
+	if (MCStringIsEmpty(new_parent_script))
 	{
+        if (t_current_parent != nil &&
+            t_current_parent -> getscriptdepth() > 0)
+        {
+            ctxt . LegacyThrow(EE_PARENTSCRIPT_EXECUTING);
+            return;
+        }
+        
 		if (parent_script != NULL)
 			parent_script -> Release();
 		parent_script = NULL;
@@ -1716,7 +1727,7 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	MCScriptPoint sp(new_parent_script);
 
 	// Create a new chunk object to parse the reference into
-	MCChunk *t_chunk;
+	MCAutoPointer<MCChunk> t_chunk;
 	t_chunk = new MCChunk(False);
 
 	// Attempt to parse a chunk. We also check that there is no 'junk' at
@@ -1724,26 +1735,37 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	// here - it stops parse errors being pushed onto MCperror.
 	Symbol_type t_next_type;
 	MCerrorlock++;
-	t_success = (t_chunk -> parse(sp, False) == PS_NORMAL && sp.next(t_next_type) == PS_EOF);
+	bool t_success = (t_chunk -> parse(sp, False) == PS_NORMAL &&
+	                  sp.next(t_next_type) == PS_EOF);
 	MCerrorlock--;
 
 	// Now attempt to evaluate the object reference - this will only succeed
     // if the object exists.
-	MCObject *t_object;
+	MCObject *t_object = nil;
 	uint32_t t_part_id;
 	if (t_success)
-        t_success = t_chunk -> getobj(ctxt, t_object, t_part_id, False);
-    
-    // Check that the object is a button or a stack.
-    if (t_success &&
-        t_object -> gettype() != CT_BUTTON &&
-        t_object -> gettype() != CT_STACK)
-        t_success = false;
-    
+		t_success = t_chunk -> getobj(ctxt, t_object, t_part_id, False);
+	
+	// Check to see if we are already parent-linked to t_object and if so
+	// do nothing.
+	if (t_current_parent == t_object)
+		return;
+	
+	if (t_current_parent != nil &&
+	    t_current_parent -> getscriptdepth() > 0)
+	{
+		ctxt . LegacyThrow(EE_PARENTSCRIPT_EXECUTING);
+		return;
+	}
+	
+	// Check that the object is a button or a stack.
+	if (t_success &&
+		t_object -> gettype() != CT_BUTTON &&
+		t_object -> gettype() != CT_STACK)
+		t_success = false;
+	
 	// MW-2013-07-18: [[ Bug 11037 ]] Make sure the object isn't in the hierarchy
 	//   of the parentScript.
-	bool t_is_cyclic;
-	t_is_cyclic = false;
 	if (t_success)
 	{
 		MCObject *t_parent_object;
@@ -1752,8 +1774,8 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 		{
 			if (t_parent_object == this)
 			{
-				t_is_cyclic = true;
-				break;
+				ctxt . LegacyThrow(EE_PARENTSCRIPT_CYCLICOBJECT);
+				return;
 			}
 			
 			MCParentScript *t_super_parent_script;
@@ -1763,83 +1785,65 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 			else
 				t_parent_object = nil;
 		}
+	}
+
+	if (!t_success)
+	{
+		ctxt . LegacyThrow(EE_PARENTSCRIPT_BADOBJECT);
+		return;
+	}
 		
-		if (t_is_cyclic)
-			t_success = false;
-	}
+	// We have the target object, so extract its rugged id. That is the
+	// (id, stack, mainstack) triple. Note that mainstack is NULL if the
+	// object lies on a mainstack.
+	//
+	uint32_t t_id;
+	t_id = t_object -> getid();
 
+	// If the object is a stack, then it has an id of zero.
+	if (t_object -> gettype() == CT_STACK)
+		t_id = 0;
+	
+	MCNameRef t_stack;
+	t_stack = t_object -> getstack() -> getname();
+
+	// Now attempt to acquire a parent script use object. This can only
+	// fail if memory is exhausted, so in this case just return an error
+	// stat.
+	MCParentScriptUse *t_use;
+	t_use = MCParentScript::Acquire(this, t_id, t_stack);
+	t_success = t_use != nil;
+
+	// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we resolve the the
+	//   parent script as pointing to the object (so Inherit works correctly).
 	if (t_success)
+		t_use -> GetParent() -> Resolve(t_object);
+	
+	// MW-2013-05-30: [[ InheritedPscripts ]] Next we have to ensure the
+	//   inheritence hierarchy is in place (The inherit call will create
+	//   super-uses, and will return false if there is not enough memory).
+	if (t_success)
+		t_success = t_use -> Inherit();
+
+	// We have succeeded in creating a new use of an object as a parent
+	// script, so now release the old parent script this object points
+	// to (if any) and install the new one.
+	if (parent_script != NULL)
+		parent_script -> Release();
+
+	parent_script = t_use;
+
+	// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we update all the
+	//   uses of this object if it is being used as a parentScript. This
+	//   is because the inheritence hierarchy has been updated and so the
+	//   super_use chains need to be remade.
+	MCParentScript *t_this_parent;
+	if (getisparentscript())
 	{
-		// Check to see if we are already parent-linked to t_object and if so
-		// do nothing.
-		//
-		if (parent_script == NULL || parent_script -> GetParent() -> GetObject() != t_object)
-		{
-			// We have the target object, so extract its rugged id. That is the
-			// (id, stack, mainstack) triple. Note that mainstack is NULL if the
-			// object lies on a mainstack.
-			//
-			uint32_t t_id;
-			t_id = t_object -> getid();
-
-            // If the object is a stack, then it has an id of zero.
-            if (t_object -> gettype() == CT_STACK)
-                t_id = 0;
-            
-			MCNameRef t_stack;
-			t_stack = t_object -> getstack() -> getname();
-
-			// Now attempt to acquire a parent script use object. This can only
-			// fail if memory is exhausted, so in this case just return an error
-			// stat.
-			MCParentScriptUse *t_use;
-			t_use = MCParentScript::Acquire(this, t_id, t_stack);
-			t_success = t_use != nil;
-
-            // MW-2013-05-30: [[ InheritedPscripts ]] Make sure we resolve the the
-			//   parent script as pointing to the object (so Inherit works correctly).
-            if (t_success)
-                t_use -> GetParent() -> Resolve(t_object);
-            
-            // MW-2013-05-30: [[ InheritedPscripts ]] Next we have to ensure the
-			//   inheritence hierarchy is in place (The inherit call will create
-			//   super-uses, and will return false if there is not enough memory).
-			if (t_success)
-				t_success = t_use -> Inherit();
-
-			// We have succeeded in creating a new use of an object as a parent
-			// script, so now release the old parent script this object points
-			// to (if any) and install the new one.
-			if (parent_script != NULL)
-				parent_script -> Release();
-
-			parent_script = t_use;
-
-			// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we update all the
-			//   uses of this object if it is being used as a parentScript. This
-			//   is because the inheritence hierarchy has been updated and so the
-			//   super_use chains need to be remade.
-			MCParentScript *t_this_parent;
-			if (getisparentscript())
-			{
-				t_this_parent = MCParentScript::Lookup(this);
-				if (t_success && t_this_parent != nil)
-					t_success = t_this_parent -> Reinherit();
-			}
-		}
+		t_this_parent = MCParentScript::Lookup(this);
+		if (t_success && t_this_parent != nil)
+			t_success = t_this_parent -> Reinherit();
 	}
-	else
-	{
-		// MW-2013-07-18: [[ Bug 11037 ]] Report an appropriate error if the hierarchy
-		//   is cyclic.
-		if (!t_is_cyclic)
-			ctxt . LegacyThrow(EE_PARENTSCRIPT_BADOBJECT);
-		else
-			ctxt . LegacyThrow(EE_PARENTSCRIPT_CYCLICOBJECT);
-	}
-
-	// Delete our temporary chunk object.
-	delete t_chunk;
 
 	if (t_success)
 		return;
