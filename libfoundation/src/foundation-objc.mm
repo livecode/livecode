@@ -536,12 +536,12 @@ else
     return true;
 }
 
-static bool _get_method_description(Protocol *p_protocol, SEL p_selector, objc_method_description& r_desc)
+static bool _get_method_description(Protocol *p_protocol, SEL p_selector, BOOL p_instance, objc_method_description& r_desc)
 {
     objc_method_description t_desc =
-    protocol_getMethodDescription(p_protocol, p_selector, NO, YES);
+    protocol_getMethodDescription(p_protocol, p_selector, NO, p_instance);
     if (t_desc.types == nullptr)
-        t_desc = protocol_getMethodDescription(p_protocol, p_selector, YES, YES);
+        t_desc = protocol_getMethodDescription(p_protocol, p_selector, YES, p_instance);
     
     if (t_desc.types == nullptr)
         return false;
@@ -674,6 +674,23 @@ static bool _get_informal_protocol_method_types(MCStringRef p_selector, MCArrayR
     return MCStringCopy(*t_types, r_types);
 }
 
+static MCHandlerRef _fetch_handler_for_selector(SEL p_selector, MCArrayRef p_mapping)
+{
+    MCAutoStringRef t_selector;
+    if (!MCStringCreateWithCString(sel_getName(p_selector), &t_selector))
+        return nullptr;
+    
+    MCNewAutoNameRef t_key;
+    if (!MCNameCreate(*t_selector, &t_key))
+        return nullptr;
+    
+    MCValueRef t_handler;
+    if (!MCArrayFetchValue(p_mapping, false, *t_key, t_handler))
+        return nullptr;
+    
+    return static_cast<MCHandlerRef>(t_handler);
+}
+
 @implementation com_livecode_MCObjcFormalDelegate
 - (id)initForProtocol:(Protocol *)aProtocol withHandlerMapping:(MCArrayRef)aHandlerMapping withContext:(MCValueRef)aContext
 {
@@ -696,7 +713,8 @@ static bool _get_informal_protocol_method_types(MCStringRef p_selector, MCArrayR
     // Return the method signature of the protocol method we have an LCB
     // implementation for. This causes forwardInvocation to be called.
     objc_method_description t_desc;
-    if (!_get_method_description(m_protocol, aSelector, t_desc))
+    if (!_get_method_description(m_protocol, aSelector, YES, t_desc) &&
+        !_get_method_description(m_protocol, aSelector, NO, t_desc))
         return nullptr;
     
     return [NSMethodSignature signatureWithObjCTypes:t_desc.types];
@@ -766,19 +784,7 @@ static bool _get_informal_protocol_method_types(MCStringRef p_selector, MCArrayR
 
 -(MCHandlerRef)handlerFromSelector:(SEL)aSelector
 {
-    MCAutoStringRef t_selector;
-    if (!MCStringCreateWithCString(sel_getName(aSelector), &t_selector))
-        return nullptr;
-    
-    MCNewAutoNameRef t_key;
-    if (!MCNameCreate(*t_selector, &t_key))
-        return nullptr;
-    
-    MCValueRef t_handler;
-    if (!MCArrayFetchValue(m_handlers, false, *t_key, t_handler))
-        return nullptr;
-    
-    return static_cast<MCHandlerRef>(t_handler);
+    return _fetch_handler_for_selector(aSelector, m_handlers);
 }
 
 -(BOOL)respondsToSelector:(SEL)aSelector
@@ -944,8 +950,10 @@ static bool __MCTypeInfoConformsToObjcTypeCode(MCTypeInfoRef p_typeinfo, const c
     return true;
 }
 
-static bool __HandlerConformsToMethodSignature(MCHandlerRef p_handler, const char* p_typecodes, MCValueRef p_context)
+static bool __HandlerConformsToMethodSignature(MCHandlerRef p_handler, const char* p_typecodes, bool p_is_instance, MCValueRef p_context)
 {
+    /* TODO: Check how things work with protocol class methods */
+    
     MCTypeInfoRef t_handler_typeinfo = MCValueGetTypeInfo(p_handler);
     
     // Check return type, the first code in the signature
@@ -988,6 +996,10 @@ static bool __HandlerConformsToMethodSignature(MCHandlerRef p_handler, const cha
         }
     }
     
+    // Ensure all the parameters required by the typecode are present
+    if (t_handler_conforms)
+        t_handler_conforms = strlen(p_typecodes) == 0;
+    
     if (!t_handler_conforms)
     {
         return MCErrorCreateAndThrowWithMessage(kMCObjcDelegateCallbackSignatureErrorTypeInfo,
@@ -1004,7 +1016,7 @@ static bool __HandlerConformsToInformalProtocolMethod(MCHandlerRef p_handler, MC
     MCAutoStringRef t_types;
     if (!_get_informal_protocol_method_types(MCNameGetString(p_selector), p_protocol, &t_types))
     {
-        return MCErrorCreateAndThrowWithMessage(kMCObjcDelegateCallbackSignatureErrorTypeInfo,
+        return MCErrorCreateAndThrowWithMessage(kMCObjcDelegateMappingErrorTypeInfo,
                                                 MCSTR("Invalid protocol definition for selector %{sel}"),
                                                 "sel", p_selector,
                                                 nullptr);
@@ -1014,7 +1026,7 @@ static bool __HandlerConformsToInformalProtocolMethod(MCHandlerRef p_handler, MC
     if (!t_typecodes.Lock(*t_types))
         return false;
     
-    return __HandlerConformsToMethodSignature(p_handler, *t_typecodes, p_context);
+    return __HandlerConformsToMethodSignature(p_handler, *t_typecodes, false, p_context);
 }
 
 static bool __HandlerConformsToProtocolMethod(MCHandlerRef p_handler, MCStringRef t_method, MCValueRef p_context, Protocol *p_protocol)
@@ -1025,16 +1037,44 @@ static bool __HandlerConformsToProtocolMethod(MCHandlerRef p_handler, MCStringRe
     
     SEL t_proxy_selector = NSSelectorFromString((NSString *)*t_selector_cfstring);
     
+    bool t_is_instance = false;
     objc_method_description t_desc;
-    if (!_get_method_description(p_protocol, t_proxy_selector, t_desc))
+    if (!_get_method_description(p_protocol, t_proxy_selector, YES, t_desc))
+        t_is_instance = true;
+    
+    if (t_is_instance && !_get_method_description(p_protocol, t_proxy_selector, NO, t_desc))
     {
-        return MCErrorCreateAndThrowWithMessage(kMCObjcDelegateCallbackSignatureErrorTypeInfo,
+        return MCErrorCreateAndThrowWithMessage(kMCObjcDelegateMappingErrorTypeInfo,
                                                 MCSTR("Protocol method %{method} not found"),
                                                 "method", t_method,
                                                 nullptr);
     }
     
-    return __HandlerConformsToMethodSignature(p_handler, t_desc.types, p_context);
+    return __HandlerConformsToMethodSignature(p_handler, t_desc.types, t_is_instance, p_context);
+}
+
+static bool __AllRequiredProtocolMethodsImplemented(MCArrayRef p_handler_mapping, BOOL p_instance, Protocol *p_protocol)
+{
+    uindex_t t_out_count = 0;
+    objc_method_description *t_required_methods =
+    protocol_copyMethodDescriptionList(p_protocol, YES, p_instance, &t_out_count);
+    for (uindex_t i = 0; i < t_out_count; ++i)
+    {
+        if (_fetch_handler_for_selector(t_required_methods->name,
+                                        p_handler_mapping) == nullptr)
+        {
+            MCAutoStringRef t_selector;
+            if (!MCStringCreateWithCString(sel_getName(t_required_methods->name), &t_selector))
+                return false;
+            
+            return MCErrorCreateAndThrowWithMessage(kMCObjcDelegateMappingErrorTypeInfo,
+                                                    MCSTR("No mapping found for required protocol method %{method}"),
+                                                    "method", *t_selector,
+                                                    nullptr);
+        }
+        t_required_methods++;
+    }
+    return true;
 }
 
 extern "C" MC_DLLEXPORT_DEF
@@ -1065,6 +1105,12 @@ bool MCObjcCreateDelegateWithContext(MCStringRef p_protocol_name, MCArrayRef p_h
                                                t_protocol))
             return false;
     }
+    
+    // Check all the required protocol methods have callbacks implemented
+    if (!__AllRequiredProtocolMethodsImplemented(p_handler_mapping, YES, t_protocol))
+        return false;
+    if (!__AllRequiredProtocolMethodsImplemented(p_handler_mapping, NO, t_protocol))
+        return false;
     
     com_livecode_MCObjcFormalDelegate *t_proxy =
     [[com_livecode_MCObjcFormalDelegate alloc] initForProtocol: t_protocol withHandlerMapping:p_handler_mapping withContext:p_context];
@@ -1177,10 +1223,14 @@ bool MCObjcCreateInformalDelegate(MCProperListRef p_foreign_handlers, MCArrayRef
 ////////////////////////////////////////////////////////////////////////////////
 
 MCTypeInfoRef kMCObjcDelegateCallbackSignatureErrorTypeInfo;
+MCTypeInfoRef kMCObjcDelegateMappingErrorTypeInfo;
 
 bool MCObjcErrorsInitialize()
 {
     if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.objc.DelegateCallbackSignatureError"), MCNAME("objc"), MCSTR("Could not create delegate"), kMCObjcDelegateCallbackSignatureErrorTypeInfo))
+        return false;
+    
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.objc.DelegateMappingError"), MCNAME("objc"), MCSTR("Could not create delegate"), kMCObjcDelegateMappingErrorTypeInfo))
         return false;
     
     return true;
