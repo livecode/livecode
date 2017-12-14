@@ -791,7 +791,10 @@ static MCHandlerRef _fetch_handler_for_selector(SEL p_selector, MCArrayRef p_map
 {
     // Check the handler mapping to see if this delegate wants to handle
     // the incoming selector
-    return [self handlerFromSelector:aSelector] != nullptr;
+    if ([self handlerFromSelector:aSelector] != nullptr)
+        return YES;
+    
+    return [super respondsToSelector:aSelector];
 }
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
