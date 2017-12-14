@@ -70,6 +70,7 @@
 				'script-libraries/oauth2/oauth2.livecodescript',
 				'script-libraries/getopt/getopt.livecodescript',
 				'script-libraries/mime/mime.livecodescript',
+				'script-libraries/drawing/drawing.livecodescript',
 				'script-libraries/dropbox/dropbox.livecodescript',
 				'script-libraries/diff/diff.livecodescript',
 				'script-libraries/messageauthentication/messageauthentication.livecodescript',
