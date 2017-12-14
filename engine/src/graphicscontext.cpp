@@ -1234,7 +1234,7 @@ void MCGraphicsContext::drawpict(uint1 *data, uint4 length, bool embed, const MC
 {
     MCGContextSave(m_gcontext);
     MCGContextClipToRect(m_gcontext, MCRectangleToMCGRectangle(crect));
-    MCGContextPlayback(m_gcontext, MCRectangleToMCGRectangle(drect), data, length);
+    MCGContextPlayback(m_gcontext, MCRectangleToMCGRectangle(drect), MCMakeSpan(static_cast<const byte_t*>(data), length));
     MCGContextRestore(m_gcontext);
 }
 

@@ -466,7 +466,7 @@ enum MCGDrawingPathOpcode : uint8_t
     kMCGDrawingPathOpcode_Last = kMCGDrawingPathOpcodeCloseSubpath,
 };
 
-inline bool MCGDrawingPathOpcodeIsRelativeArc(MCGDrawingPathOpcode p_opcode)
+inline bool MCGDrawingPathOpcodeIsRelativeArcTo(MCGDrawingPathOpcode p_opcode)
 {
     switch(p_opcode)
     {
@@ -481,7 +481,7 @@ inline bool MCGDrawingPathOpcodeIsRelativeArc(MCGDrawingPathOpcode p_opcode)
     return false;
 }
 
-inline bool MCGDrawingPathOpcodeIsReflexArc(MCGDrawingPathOpcode p_opcode)
+inline bool MCGDrawingPathOpcodeIsReflexArcTo(MCGDrawingPathOpcode p_opcode)
 {
     switch(p_opcode)
     {
@@ -496,7 +496,7 @@ inline bool MCGDrawingPathOpcodeIsReflexArc(MCGDrawingPathOpcode p_opcode)
     return false;
 }
 
-inline bool MCGDrawingPathOpcodeIsReverseArc(MCGDrawingPathOpcode p_opcode)
+inline bool MCGDrawingPathOpcodeIsReverseArcTo(MCGDrawingPathOpcode p_opcode)
 {
     switch(p_opcode)
     {
@@ -513,48 +513,66 @@ inline bool MCGDrawingPathOpcodeIsReverseArc(MCGDrawingPathOpcode p_opcode)
 
 /**/
 
+/* MCGDrawingVisitor is the interface expected from the Visitor type used by
+ * the Execute methods in MCGDrawingContext. */
 struct MCGDrawingVisitor
 {
+    /* Transform Operations */
+
     void TransformBegin(void);
     void TransformAffine(MCGFloat a, MCGFloat b, MCGFloat c, MCGFloat d, MCGFloat tx, MCGFloat ty);
-    void TransformViewport(MCGFloat min_x, MCGFloat min_y, MCGFloat width, MCGFloat height, MCGDrawingPreserveAspectRatioOpcode par);
     void TransformEnd(void);
+    
+    /* Paint Operations */
     
     void PaintBegin(bool is_stroke);
     void PaintNone(void);
     void PaintSolidColor(MCGFloat red, MCGFloat green, MCGFloat blue);
     void PaintEnd(void);
     
+    /* Path Operations */
+    
     void PathBegin(void);
-    void PathMoveTo(bool is_relative, MCGFloat x, MCGFloat y);
-    void PathLineTo(bool is_relative, MCGFloat x, MCGFloat y);
+    void PathMoveTo(bool is_relative, MCGPoint p_point);
+    void PathLineTo(bool is_relative, MCGPoint p_point);
     void PathHorizontalTo(bool is_relative, MCGFloat x);
     void PathVerticalTo(bool is_relative, MCGFloat y);
-    void PathCubicTo(bool is_relative, MCGFloat ax, MCGFloat ay, MCGFloat bx, MCGFloat by, MCGFloat x, MCGFloat y);
-    void PathSmoothCubicTo(bool is_relative, MCGFloat bx, MCGFloat by, MCGFloat x, MCGFloat y);
-    void PathQuadraticTo(bool is_relative, MCGFloat ax, MCGFloat ay, MCGFloat x, MCGFloat y);
-    void PathSmoothQuadraticTo(bool is_relative, MCGFloat x, MCGFloat y);
-    void PathArcTo(bool is_relative, bool is_reflex, bool is_reverse, MCGFloat cx, MCGFloat cy, MCGFloat rotation, MCGFloat x, MCGFloat y);
+    void PathCubicTo(bool is_relative, MCGPoint p_a, MCGPoint p_b, MCGPoint p_point);
+    void PathSmoothCubicTo(bool is_relative, MCGPoint p_b, MCGPoint p_point);
+    void PathQuadraticTo(bool is_relative, MCGPoint p_a, MCGPoint p_point);
+    void PathSmoothQuadraticTo(bool is_relative, MCGPoint p_point);
+    void PathArcTo(bool is_relative, bool is_reflex, bool is_reverse, MCGPoint p_center, MCGFloat rotation, MCGPoint p_point);
     void PathCloseSubpath(void);
     void PathEnd(void);
     
+    /* Fill Attribute Operations */
+    
     void FillOpacity(MCGFloat opacity);
     void FillRule(MCGFillRule fill_rule);
+   
+    /* Stroke Attribute Operations */
     
     void StrokeOpacity(MCGFloat opacity);
     void StrokeWidth(MCGFloat width);
     void StrokeLineJoin(MCGJoinStyle join_style);
     void StrokeLineCap(MCGCapStyle cap_style);
-    void StrokeDashArray(size_t count, const MCGFloat* lengths);
+    void StrokeDashArray(MCSpan<const MCGFloat> lengths);
     void StrokeDashOffset(MCGFloat offset);
     void StrokeMiterLimit(MCGFloat miter_limit);
     
-    void Rectangle(MCGFloat x, MCGFloat y, MCGFloat width, MCGFloat height, MCGFloat rx, MCGFloat ry);
-    void Circle(MCGFloat cx, MCGFloat cy, MCGFloat r);
-    void Ellipse(MCGFloat cx, MCGFloat cy, MCGFloat rx, MCGFloat ry);
-    void Line(MCGFloat x1, MCGFloat y1, MCGFloat x2, MCGFloat y2);
-    void Polyline(size_t count, const MCGFloat* coordinates);
-    void Polygon(size_t count, const MCGFloat* coordinates);
+    /* Shape Operations */
+    
+    void Rectangle(MCGRectangle p_bounds, MCGPoint p_radii);
+    void Circle(MCGPoint p_center, MCGFloat r);
+    void Ellipse(MCGPoint p_center, MCGSize p_radii);
+    void Line(MCGPoint p_from, MCGPoint p_to);
+    void Polyline(MCSpan<const MCGPoint> p_points);
+    void Polygon(MCSpan<const MCGPoint> p_points);
+    
+    /* Lifecycle Operations */
+
+    void Start(MCGRectangle p_viewport, const MCGRectangle* p_viewbox, MCGDrawingPreserveAspectRatioOpcode p_par);
+    void Finish(bool p_error);
 };
 
 /* DRAWING CONTEXT */
@@ -640,16 +658,15 @@ enum MCGDrawingStatus
 class MCGDrawingByteStream
 {
 public:
-    MCGDrawingByteStream(const void *p_bytes, size_t p_byte_count)
-        : m_bytes(p_bytes),
-          m_byte_count(p_byte_count)
+    MCGDrawingByteStream(MCSpan<const byte_t> p_bytes)
+        : m_bytes(p_bytes)
     {
     }
 
     /* Returns true if there are no more bytes to process. */
     bool IsFinished(void) const
     {
-        return m_byte_count == 0;
+        return m_bytes.empty();
     }
 
     /* Singleton attempts to unpack a single field of type T. It returns true
@@ -657,18 +674,17 @@ public:
     template<typename T>
     bool Singleton(T& r_singleton)
     {
-        size_t t_singleton_size = sizeof(T);
+        ssize_t t_singleton_size = sizeof(T);
         
-        if (m_byte_count < t_singleton_size)
+        if (m_bytes.size() < t_singleton_size)
         {
             return false;
         }
         
-        auto t_singleton_ptr = static_cast<const T *>(m_bytes);
+        auto t_singleton_ptr = reinterpret_cast<const T *>(m_bytes.data());
         r_singleton = *t_singleton_ptr;
         
-        m_bytes = t_singleton_ptr + 1;
-        m_byte_count -= t_singleton_size;
+        m_bytes = m_bytes.subspan(t_singleton_size);
         
         return true;
     }
@@ -677,27 +693,32 @@ public:
      * successful, or false if there are not enough bytes (sizeof(T) * p_count).
      */
     template<typename T>
-    bool Sequence(size_t p_count, T*& r_seq)
+    bool Sequence(MCSpan<const T>& r_sequence)
     {
-        size_t t_seq_size = p_count * sizeof(T);
-        
-        if (m_byte_count < t_seq_size)
+        uint32_t t_size;
+        if (!Singleton(t_size))
         {
             return false;
         }
         
-        auto t_seq_ptr = static_cast<const T *>(m_bytes);
-        r_seq = t_seq_ptr;
+        ssize_t t_byte_size = t_size * sizeof(T);
         
-        m_bytes = t_seq_ptr + p_count;
-        m_byte_count -= t_seq_size;
+        if (m_bytes.size() < t_byte_size)
+        {
+            return false;
+        }
+        
+        auto t_seq_ptr = reinterpret_cast<const T *>(m_bytes.data());
+        
+        r_sequence = MCMakeSpan(t_seq_ptr, t_size);
+        
+        m_bytes = m_bytes.subspan(t_byte_size);
         
         return true;
     }
 
 private:
-    const void *m_bytes;
-    size_t m_byte_count;
+    MCSpan<const byte_t> m_bytes;
 };
 
 /* MCGDrawingContext is a class which implements a visitor pattern over a
@@ -710,9 +731,9 @@ public:
     /* MCGDrawingContext is the main constructor. It attempts to unpack the
      * drawing header, and sets up for main execution. If an error occurs
      * with setting up, the status field is set appropriately. */
-    MCGDrawingContext(const void *p_drawing_bytes, size_t p_drawing_byte_count)
+    MCGDrawingContext(MCSpan<const byte_t> p_bytes)
     {
-        MCGDrawingByteStream t_stream(p_drawing_bytes, p_drawing_byte_count);
+        MCGDrawingByteStream t_stream(p_bytes);
         
         /* Unpack the header. If the size of the provided data does not match
          * what is expected by unpacking the data, then it is an
@@ -724,10 +745,8 @@ public:
             !t_stream.Singleton(t_ident_2) ||
             !t_stream.Singleton(t_ident_version) ||
             !t_stream.Singleton(t_flags) ||
-            !t_stream.Singleton(m_scalar_count) ||
-            !t_stream.Sequence(m_scalar_count, m_scalars) ||
-            !t_stream.Singleton(m_opcode_count) ||
-            !t_stream.Sequence(m_opcode_count, m_opcodes) ||
+            !t_stream.Sequence(m_scalars) ||
+            !t_stream.Sequence(m_opcodes) ||
             !t_stream.IsFinished())
         {
             m_status = kMCGDrawingStatusInvalidDrawing;
@@ -869,18 +888,18 @@ public:
      * Non-negative integers are encoded as a sequence of bytes, most
      * significant byte first. The top bit of each byte is used to indicate
      * whether there is another following. */
-    bool Count(size_t& r_count)
+    bool Count(uint32_t& r_count)
     {
         /* Start the read count at zero, each byte will be accumulated into it
          */
-        size_t t_count = 0;
+        uint32_t t_count = 0;
     
         /* Opcode bytes are processed until we reach a termination condition. */
         for(;;)
         {
             /* If the end of the opcode stream is reached, then indicate 
              * overflow. */
-            if (m_pc == m_opcode_count)
+            if (m_pc == m_opcodes.size())
             {
                 m_status = kMCGDrawingStatusOpcodeOverflow;
                 return false;
@@ -915,7 +934,7 @@ public:
     {
         /* If the scalar counter is at the end of the scalar stream, then
          * indicate ScalarOverflow and return false. */
-        if (m_sc == m_scalar_count)
+        if (m_sc == m_scalars.size())
         {
             m_status = kMCGDrawingStatusScalarOverflow;
             return false;
@@ -931,18 +950,18 @@ public:
      * are not enough scalars left then ScalarOverflow is indicated and false is
      * returned. Otherwise, the pointer to the base of the scalars is returned
      * in r_scalars and true is returned. */
-    bool Scalars(size_t p_count, const MCGFloat*& r_scalars)
+    bool Scalars(ssize_t p_count, MCSpan<const MCGFloat>& r_scalars)
     {
         /* If there are not enough scalars left to satisfy the request then
          * indicate ScalarOverflow and return false. */
-        if (m_sc + p_count > m_scalar_count)
+        if (m_sc + p_count > m_scalars.size())
         {
             m_status = kMCGDrawingStatusScalarOverflow;
             return false;
         }
         
         /* Place the base of the scalar array in r_scalars. */
-        r_scalars = m_scalars + m_sc;
+        r_scalars = m_scalars.subspan(m_sc, p_count);
         
         /* Increment the scalar counter */
         m_sc += p_count;
@@ -952,13 +971,13 @@ public:
     
     /* LengthScalars attempts to read p_count length scalars - a length scalar
      * is non-negative scalar. */
-    bool LengthScalars(size_t p_count, const MCGFloat*& r_scalars)
+    bool LengthScalars(ssize_t p_count, MCSpan<const MCGFloat>& r_scalars)
     {
         return Scalars(p_count, r_scalars);
     }
     
     /* CoordinateScalars attempts to read p_count coordinate scalars. */
-    bool CoordinateScalars(size_t p_count, const MCGFloat*& r_scalars)
+    bool CoordinateScalars(ssize_t p_count, MCSpan<const MCGFloat>& r_scalars)
     {
         return Scalars(p_count, r_scalars);
     }
@@ -995,6 +1014,28 @@ public:
         return Scalar(r_angle_scalar);
     }
     
+    /* Point attempts to read a point defined as two coordinate scalars - x y. */
+    bool Point(MCGPoint& r_point)
+    {
+        if (!CoordinateScalar(r_point.x) ||
+            !CoordinateScalar(r_point.y))
+        {
+            return false;
+        }
+        return true;
+    }
+    
+    /* Size attempts to read a size defined as two length scalars - rx ry. */
+    bool Size(MCGSize& r_size)
+    {
+        if (!LengthScalar(r_size.width) ||
+            !LengthScalar(r_size.height))
+        {
+            return false;
+        }
+        return true;
+    }
+    
     /* Rectangle attempts to read a rectangle defined as four scalars - x, y
      * width, height. */
     bool Rectangle(MCGRectangle& r_rect)
@@ -1011,14 +1052,15 @@ public:
     
     /* LengthArray attempts to read an array of scalars, using a count fetched
      * from the opcode stream. */
-    bool LengthArray(size_t& r_count, const MCGFloat*& r_lengths)
+    bool LengthArray(MCSpan<const MCGFloat>& r_lengths)
     {
-        if (!Count(r_count))
+        uint32_t t_count;
+        if (!Count(t_count))
         {
             return false;
         }
         
-        if (!Scalars(r_count, r_lengths))
+        if (!Scalars(t_count, r_lengths))
         {
             return false;
         }
@@ -1031,10 +1073,10 @@ public:
      * the opcode stream indicates the number of scalars, not points. If the
      * fetched count is odd, then InvalidPointArray is indicated and false is
      * returned. */
-    bool PointArray(size_t& r_point_count, const MCGPoint*& r_points)
+    bool PointArray(MCSpan<const MCGPoint>& r_points)
     {
         /* Read the number of scalars to expect from the opcode stream. */
-        size_t t_scalar_count;
+        uint32_t t_scalar_count;
         if (!Count(t_scalar_count))
         {
             return false;
@@ -1048,18 +1090,14 @@ public:
         }
         
         /* Fetch t_scalar_count scalars from the scalar stream. */
-        const MCGFloat* t_scalars;
+        MCSpan<const MCGFloat> t_scalars;
         if (!CoordinateScalars(t_scalar_count, t_scalars))
         {
             return false;
         }
         
-        /* The number of points is half the number of scalars. */
-        r_point_count = t_scalar_count / 2;
-        
-        /* MCGPoint is a pair of scalars, so use a reinterpret cast to change
-         * the view of the scalars to MCGPoints. */
-        r_points = reinterpret_cast<const MCGPoint*>(t_scalars);
+        r_points = MCMakeSpan(reinterpret_cast<const MCGPoint*>(t_scalars.data()),
+                              t_scalars.size() / 2);
         
         return true;
     }
@@ -1081,7 +1119,7 @@ private:
     {
         /* If the program counter is at the end of the opcode stream, then there
          * is no opcode to fetch, so flag Overflow. */
-        if (m_pc == m_opcode_count)
+        if (m_pc == m_opcodes.size())
         {
             m_status = kMCGDrawingStatusOpcodeOverflow;
             return false;
@@ -1125,20 +1163,18 @@ private:
     MCGDrawingStatus m_status = kMCGDrawingStatusNone;
     
     /* m_pc indicates the current position in the opcode stream. */
-    uindex_t m_pc = 0;
+    ssize_t m_pc = 0;
     
     /* m_sc indicates the current position in the scalar stream. */
-    uindex_t m_sc = 0;
+    ssize_t m_sc = 0;
     
     /* m_opcodes / m_opcode_count define the (const) array of opcodes which are
      * defined by the drawing. */
-    const byte_t *m_opcodes = nullptr;
-    uindex_t m_opcode_count = 0;
+    MCSpan<const byte_t> m_opcodes;
     
     /* m_scalars / m_scalar_count define the (const) array of scalars which are
      * defined by the drawing. */
-    const MCGFloat *m_scalars = nullptr;
-    uindex_t m_scalar_count = 0;
+    MCSpan<const MCGFloat> m_scalars;
     
     /* m_width is the unpacked width field from the drawing. This is initialized
      * on construction of the context. */
@@ -1370,15 +1406,14 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
             {
                 /* Fetch the requested dash array as a length array (the count
                  * is encoded in the opcode stream). */
-                size_t t_length_count;
-                const MCGFloat* t_lengths;
-                if (!LengthArray(t_length_count, t_lengths))
+                MCSpan<const MCGFloat> t_lengths;
+                if (!LengthArray(t_lengths))
                 {
                     break;
                 }
                 
                 /* Visit the visitor method. */
-                p_visitor.StrokeDashArray(t_length_count, t_lengths);
+                p_visitor.StrokeDashArray(t_lengths);
             }
             break;
             
@@ -1423,16 +1458,16 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
                  *   width, height : length scalars
                  *   rx, ry : length scalars
                  */
-                MCGFloat t_x, t_y, t_width, t_height, t_rx, t_ry;
-                if (!CoordinateScalar(t_x) || !CoordinateScalar(t_y) ||
-                    !LengthScalar(t_width) || !LengthScalar(t_height) ||
-                    !LengthScalar(t_rx) || !LengthScalar(t_ry))
+                MCGRectangle t_bounds;
+                MCGSize t_radii;
+                if (!Rectangle(t_bounds) ||
+                    !Size(t_radii))
                 {
                     break;
                 }
                 
                 /* Visit the visitor method. */
-                p_visitor.Rectangle(t_x, t_y, t_width, t_height, t_rx, t_ry);
+                p_visitor.Rectangle(t_bounds, t_radii);
             }
             break;
                 
@@ -1444,15 +1479,16 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
                  *   cx, cy : coordinate scalars
                  *   r : length scalar
                  */
-                MCGFloat t_cx, t_cy, t_r;
-                if (!CoordinateScalar(t_cx) || !CoordinateScalar(t_cy) ||
-                    !LengthScalar(t_r))
+                MCGPoint t_center;
+                MCGFloat t_radius;
+                if (!Point(t_center) ||
+                    !LengthScalar(t_radius))
                 {
                     break;
                 }
                 
                 /* Visit the visitor method. */
-                p_visitor.Circle(t_cx, t_cy, t_r);
+                p_visitor.Circle(t_center, t_radius);
             }
             break;
             
@@ -1464,15 +1500,16 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
                  *   cx, cy : coordinate scalars
                  *   rx, ry : length scalars
                  */
-                MCGFloat t_cx, t_cy, t_rx, t_ry;
-                if (!CoordinateScalar(t_cx) || !CoordinateScalar(t_cy) ||
-                    !LengthScalar(t_rx) || !LengthScalar(t_ry))
+                MCGPoint t_center;
+                MCGSize t_radii;
+                if (!Point(t_center) ||
+                    !Size(t_radii))
                 {
                     break;
                 }
                 
                 /* Visit the visitor method. */
-                p_visitor.Ellipse(t_cx, t_cy, t_rx, t_ry);
+                p_visitor.Ellipse(t_center, t_radii);
             }
             break;
                 
@@ -1484,15 +1521,15 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
                  *   x1, y1 : coordinate scalars
                  *   x2, y2 : coordinate scalars
                  */
-                MCGFloat t_x1, t_y1, t_x2, t_y2;
-                if (!CoordinateScalar(t_x1) || !CoordinateScalar(t_y1) ||
-                    !CoordinateScalar(t_x2) || !CoordinateScalar(t_y2))
+                MCGPoint t_from, t_to;
+                if (!Point(t_from) ||
+                    !Point(t_to))
                 {
                     break;
                 }
                 
                 /* Visit the visitor method. */
-                p_visitor.Line(t_x1, t_y1, t_x2, t_y2);
+                p_visitor.Line(t_from, t_to);
             }
             break;
                 
@@ -1504,9 +1541,8 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
                 /* Fetch the requested shape's geometry. The geometry is 
                  * encoded as a point array - the number of points (reflected
                  * as scalar count) in the opcode stream. */
-                size_t t_point_count;
-                const MCGPoint* t_points;
-                if (!PointArray(t_point_count, t_points))
+                MCSpan<const MCGPoint> t_points;
+                if (!PointArray(t_points))
                 {
                     break;
                 }
@@ -1515,11 +1551,11 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
                  */
                 if (t_opcode == kMCGDrawingOpcodePolygon)
                 {
-                    p_visitor.Polygon(t_point_count, t_points);
+                    p_visitor.Polygon(t_points);
                 }
                 else
                 {
-                    p_visitor.Polyline(t_point_count, t_points);
+                    p_visitor.Polyline(t_points);
                 }
             }
             break;
@@ -1657,26 +1693,26 @@ void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
             case kMCGDrawingPathOpcodeMoveTo:
             case kMCGDrawingPathOpcodeRelativeMoveTo:
             {
-                MCGFloat t_x, t_y;
-                if (!CoordinateScalar(t_x) ||
-                    !CoordinateScalar(t_y))
+                MCGPoint t_point;
+                if (!Point(t_point))
                 {
                     break;
                 }
-                p_visitor.PathMoveTo(t_opcode == kMCGDrawingPathOpcodeRelativeMoveTo, t_x, t_y);
+                p_visitor.PathMoveTo(t_opcode == kMCGDrawingPathOpcodeRelativeMoveTo,
+                                     t_point);
             }
             break;
                 
             case kMCGDrawingPathOpcodeLineTo:
             case kMCGDrawingPathOpcodeRelativeLineTo:
             {
-                MCGFloat t_x, t_y;
-                if (!CoordinateScalar(t_x) ||
-                    !CoordinateScalar(t_y))
+                MCGPoint t_point;
+                if (!Point(t_point))
                 {
                     break;
                 }
-                p_visitor.PathLineTo(t_opcode == kMCGDrawingPathOpcodeRelativeLineTo, t_x, t_y);
+                p_visitor.PathLineTo(t_opcode == kMCGDrawingPathOpcodeRelativeLineTo,
+                                     t_point);
             }
             break; 
             
@@ -1688,7 +1724,8 @@ void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
                 {
                     break;
                 }
-                p_visitor.PathHorizontalTo(t_opcode == kMCGDrawingPathOpcodeRelativeHorizontalTo, t_x);
+                p_visitor.PathHorizontalTo(t_opcode == kMCGDrawingPathOpcodeRelativeHorizontalTo,
+                                           t_x);
             }
             break;
                 
@@ -1700,59 +1737,68 @@ void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
                 {
                     break;
                 }
-                p_visitor.PathVerticalTo(t_opcode == kMCGDrawingPathOpcodeRelativeVerticalTo, t_y);
+                p_visitor.PathVerticalTo(t_opcode == kMCGDrawingPathOpcodeRelativeVerticalTo,
+                                         t_y);
             }
             break;
                 
             case kMCGDrawingPathOpcodeCubicTo:
             case kMCGDrawingPathOpcodeRelativeCubicTo:
             {
-                MCGFloat t_ax, t_ay, t_bx, t_by, t_x, t_y;
-                if (!CoordinateScalar(t_ax) || !CoordinateScalar(t_ay) ||
-                    !CoordinateScalar(t_bx) || !CoordinateScalar(t_by) ||
-                    !CoordinateScalar(t_x) || !CoordinateScalar(t_y))
+                MCGPoint t_a, t_b, t_point;
+                if (!Point(t_a) ||
+                    !Point(t_b) ||
+                    !Point(t_point))
                 {
                     break;
                 }
-                p_visitor.PathCubicTo(t_opcode == kMCGDrawingPathOpcodeRelativeCubicTo, t_ax, t_ay, t_bx, t_by, t_x, t_y);
+                p_visitor.PathCubicTo(t_opcode == kMCGDrawingPathOpcodeRelativeCubicTo,
+                                      t_a,
+                                      t_b,
+                                      t_point);
             }
             break;
                 
             case kMCGDrawingPathOpcodeSmoothCubicTo:
             case kMCGDrawingPathOpcodeRelativeSmoothCubicTo:
             {
-                MCGFloat t_bx, t_by, t_x, t_y;
-                if (!CoordinateScalar(t_bx) || !CoordinateScalar(t_by) ||
-                    !CoordinateScalar(t_x) || !CoordinateScalar(t_y))
+                MCGPoint t_a, t_b, t_point;
+                if (!Point(t_b) ||
+                    !Point(t_point))
                 {
                     break;
                 }
-                p_visitor.PathSmoothCubicTo(t_opcode == kMCGDrawingPathOpcodeRelativeSmoothCubicTo, t_bx, t_by, t_x, t_y);
+                p_visitor.PathSmoothCubicTo(t_opcode == kMCGDrawingPathOpcodeRelativeSmoothCubicTo,
+                                            t_b,
+                                            t_point);
             }
             break;
                 
             case kMCGDrawingPathOpcodeQuadraticTo:
             case kMCGDrawingPathOpcodeRelativeQuadraticTo:
             {
-                MCGFloat t_ax, t_ay, t_x, t_y;
-                if (!CoordinateScalar(t_ax) || !CoordinateScalar(t_ay) ||
-                    !CoordinateScalar(t_x) || !CoordinateScalar(t_y))
+                MCGPoint t_a, t_point;
+                if (!Point(t_a) ||
+                    !Point(t_point))
                 {
                     break;
                 }
-                p_visitor.PathQuadraticTo(t_opcode == kMCGDrawingPathOpcodeRelativeQuadraticTo, t_ax, t_ay, t_x, t_y);
+                p_visitor.PathQuadraticTo(t_opcode == kMCGDrawingPathOpcodeRelativeQuadraticTo,
+                                          t_a,
+                                          t_point);
             }
             break;
                 
             case kMCGDrawingPathOpcodeSmoothQuadraticTo:
             case kMCGDrawingPathOpcodeRelativeSmoothQuadraticTo:
             {
-                MCGFloat t_x, t_y;
-                if (!CoordinateScalar(t_x) || !CoordinateScalar(t_y))
+                MCGPoint t_point;
+                if (!Point(t_point))
                 {
                     break;
                 }
-                p_visitor.PathSmoothQuadraticTo(t_opcode == kMCGDrawingPathOpcodeRelativeSmoothQuadraticTo, t_x, t_y);
+                p_visitor.PathSmoothQuadraticTo(t_opcode == kMCGDrawingPathOpcodeRelativeSmoothQuadraticTo,
+                                                t_point);
             }
             break;
                 
@@ -1765,21 +1811,22 @@ void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
             case kMCGDrawingPathOpcodeReverseReflexArcTo:
             case kMCGDrawingPathOpcodeRelativeReverseReflexArcTo:
             {
-                MCGFloat t_rx, t_ry, t_rotation, t_x, t_y;
-                if (!LengthScalar(t_rx) || !LengthScalar(t_ry) ||
+                MCGSize t_radii;
+                MCGFloat t_rotation;
+                MCGPoint t_point;
+                if (!Size(t_radii) ||
                     !AngleScalar(t_rotation) ||
-                    !CoordinateScalar(t_x) || !CoordinateScalar(t_y))
+                    !Point(t_point))
                 {
                     break;
                 }
                 
-                bool t_is_relative =
-                        MCGDrawingPathOpcodeIsRelativeArc(t_opcode);
-                bool t_is_reflex =
-                        MCGDrawingPathOpcodeIsReflexArc(t_opcode);
-                bool t_is_reverse =
-                        MCGDrawingPathOpcodeIsReverseArc(t_opcode);
-                p_visitor.PathArcTo(t_is_relative, t_is_reflex, t_is_reverse, t_rx, t_ry, t_rotation, t_x, t_y);
+                p_visitor.PathArcTo(MCGDrawingPathOpcodeIsRelativeArcTo(t_opcode),
+                                    MCGDrawingPathOpcodeIsReflexArcTo(t_opcode),
+                                    MCGDrawingPathOpcodeIsReverseArcTo(t_opcode),
+                                    t_radii,
+                                    t_rotation,
+                                    t_point);
             }
             break;
             
@@ -1814,13 +1861,13 @@ struct MCGDrawingRenderVisitor
     
     /**/
     
-    MCGPoint Point(bool p_is_relative, MCGFloat p_x, MCGFloat p_y)
+    MCGPoint Point(bool p_is_relative, MCGPoint p_point)
     {
         if (p_is_relative)
         {
-            return MCGPointMake(last_point.x + p_x, last_point.y + p_y);
+            return MCGPointMake(last_point.x + p_point.x, last_point.y + p_point.y);
         }
-        return MCGPointMake(p_x, p_y);
+        return p_point;
     }
     
     MCGPoint HorizontalPoint(bool p_is_relative, MCGFloat p_x)
@@ -1923,18 +1970,18 @@ struct MCGDrawingRenderVisitor
         first_point = last_point = MCGPointMake(0.0, 0.0);
     }
     
-    void PathMoveTo(bool p_is_relative, MCGFloat p_x, MCGFloat p_y)
+    void PathMoveTo(bool p_is_relative, MCGPoint p_point)
     {
-        MCGPoint t_point = Point(p_is_relative, p_x, p_y);
+        MCGPoint t_point = Point(p_is_relative, p_point);
         MCGContextMoveTo(gcontext, t_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeEnd;
         first_point = last_point = t_point;
     }
     
-    void PathLineTo(bool p_is_relative, MCGFloat p_x, MCGFloat p_y)
+    void PathLineTo(bool p_is_relative, MCGPoint p_point)
     {
-        MCGPoint t_point = Point(p_is_relative, p_x, p_y);
+        MCGPoint t_point = Point(p_is_relative, p_point);
         MCGContextLineTo(gcontext, t_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeEnd;
@@ -1959,11 +2006,11 @@ struct MCGDrawingRenderVisitor
         last_point = t_point;
     }
     
-    void PathCubicTo(bool p_is_relative, MCGFloat p_ax, MCGFloat p_ay, MCGFloat p_bx, MCGFloat p_by, MCGFloat p_x, MCGFloat p_y)
+    void PathCubicTo(bool p_is_relative, MCGPoint p_a, MCGPoint p_b, MCGPoint p_point)
     {
-        MCGPoint t_a = Point(p_is_relative, p_ax, p_ay);
-        MCGPoint t_b = Point(p_is_relative, p_bx, p_by);
-        MCGPoint t_point = Point(p_is_relative, p_x, p_y);
+        MCGPoint t_a = Point(p_is_relative, p_a);
+        MCGPoint t_b = Point(p_is_relative, p_b);
+        MCGPoint t_point = Point(p_is_relative, p_point);
         MCGContextCubicTo(gcontext, t_a, t_b, t_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeCubicTo;
@@ -1971,7 +2018,7 @@ struct MCGDrawingRenderVisitor
         last_point = t_point;
     }
     
-    void PathSmoothCubicTo(bool p_is_relative, MCGFloat p_bx, MCGFloat p_by, MCGFloat p_x, MCGFloat p_y)
+    void PathSmoothCubicTo(bool p_is_relative,  MCGPoint p_b, MCGPoint p_point)
     {
         MCGPoint t_a;
         if (last_curve_opcode == kMCGDrawingPathOpcodeCubicTo)
@@ -1983,8 +2030,8 @@ struct MCGDrawingRenderVisitor
             t_a = last_point;
         }
         
-        MCGPoint t_b = Point(p_is_relative, p_bx, p_by);
-        MCGPoint t_point = Point(p_is_relative, p_x, p_y);
+        MCGPoint t_b = Point(p_is_relative, p_b);
+        MCGPoint t_point = Point(p_is_relative, p_point);
         MCGContextCubicTo(gcontext, t_a, t_b, t_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeCubicTo;
@@ -1992,10 +2039,10 @@ struct MCGDrawingRenderVisitor
         last_point = t_point;
     }
     
-    void PathQuadraticTo(bool p_is_relative, MCGFloat p_ax, MCGFloat p_ay, MCGFloat p_x, MCGFloat p_y)
+    void PathQuadraticTo(bool p_is_relative, MCGPoint p_a, MCGPoint p_point)
     {
-        MCGPoint t_a = Point(p_is_relative, p_ax, p_ay);
-        MCGPoint t_point = Point(p_is_relative, p_x, p_y);
+        MCGPoint t_a = Point(p_is_relative, p_a);
+        MCGPoint t_point = Point(p_is_relative, p_point);
         MCGContextQuadraticTo(gcontext, t_a, t_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeQuadraticTo;
@@ -2003,7 +2050,7 @@ struct MCGDrawingRenderVisitor
         last_point = t_point;
     }
     
-    void PathSmoothQuadraticTo(bool p_is_relative, MCGFloat p_x, MCGFloat p_y)
+    void PathSmoothQuadraticTo(bool p_is_relative, MCGPoint p_point)
     {
         MCGPoint t_a;
         if (last_curve_opcode == kMCGDrawingPathOpcodeQuadraticTo)
@@ -2015,7 +2062,7 @@ struct MCGDrawingRenderVisitor
             t_a = last_point;
         }
         
-        MCGPoint t_point = Point(p_is_relative, p_x, p_y);
+        MCGPoint t_point = Point(p_is_relative, p_point);
         MCGContextQuadraticTo(gcontext, t_a, t_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeCubicTo;
@@ -2023,11 +2070,10 @@ struct MCGDrawingRenderVisitor
         last_point = t_point;
     }
     
-    void PathArcTo(bool p_is_relative, bool p_is_reflex, bool p_is_reverse, MCGFloat p_rx, MCGFloat p_ry, MCGFloat p_rotation, MCGFloat p_x, MCGFloat p_y)
+    void PathArcTo(bool p_is_relative, bool p_is_reflex, bool p_is_reverse, MCGSize p_radii, MCGFloat p_rotation, MCGPoint p_point)
     {
-        MCGSize t_radii = MCGSizeMake(p_rx, p_ry);
-        MCGPoint t_point = Point(p_is_relative, p_x, p_y);
-        MCGContextArcTo(gcontext, t_radii, p_rotation, p_is_reflex, p_is_reverse, t_point);
+        MCGPoint t_point = Point(p_is_relative, p_point);
+        MCGContextArcTo(gcontext, p_radii, p_rotation, p_is_reflex, p_is_reverse, t_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeEnd;
         last_point = t_point;
@@ -2151,9 +2197,9 @@ struct MCGDrawingRenderVisitor
         MCGContextSetStrokeCapStyle(gcontext, p_cap_style);
     }
     
-    void StrokeDashArray(size_t p_count, const MCGFloat* p_lengths)
+    void StrokeDashArray(MCSpan<const MCGFloat> p_lengths)
     {
-        MCGContextSetStrokeDashArray(gcontext, p_lengths, p_count);
+        MCGContextSetStrokeDashArray(gcontext, p_lengths.data(), p_lengths.size());
     }
     
     void StrokeDashOffset(MCGFloat p_offset)
@@ -2166,57 +2212,57 @@ struct MCGDrawingRenderVisitor
         MCGContextSetStrokeMiterLimit(gcontext, p_miter_limit);
     }
     
-    void Rectangle(MCGFloat p_x, MCGFloat p_y, MCGFloat p_width, MCGFloat p_height, MCGFloat p_rx, MCGFloat p_ry)
+    void Rectangle(MCGRectangle p_rect, MCGSize p_radii)
     {
-        if (p_rx == 0.0 && p_ry == 0.0)
+        if (p_radii.width == 0 && p_radii.height == 0)
         {
-            MCGContextAddRectangle(gcontext, MCGRectangleMake(p_x, p_y, p_width, p_height));
+            MCGContextAddRectangle(gcontext, p_rect);
         }
         else
         {
-            MCGContextAddRoundedRectangle(gcontext, MCGRectangleMake(p_x, p_y, p_width, p_height), MCGSizeMake(p_rx, p_ry));
+            MCGContextAddRoundedRectangle(gcontext, p_rect, p_radii);
         }
         MCGContextFillAndStroke(gcontext);
     }
     
-    void Circle(MCGFloat p_cx, MCGFloat p_cy, MCGFloat p_r)
+    void Circle(MCGPoint p_center, MCGFloat p_r)
     {
-        MCGContextAddEllipse(gcontext, MCGPointMake(p_cx, p_cy), MCGSizeMake(p_r, p_r), 0.0);
+        MCGContextAddEllipse(gcontext, p_center, MCGSizeMake(p_r, p_r), 0.0);
         MCGContextFillAndStroke(gcontext);
     }
     
-    void Ellipse(MCGFloat p_cx, MCGFloat p_cy, MCGFloat p_rx, MCGFloat p_ry)
+    void Ellipse(MCGPoint p_center, MCGSize p_radii)
     {
-        MCGContextAddEllipse(gcontext, MCGPointMake(p_cx, p_cy), MCGSizeMake(p_rx, p_ry), 0.0);
+        MCGContextAddEllipse(gcontext, p_center, p_radii, 0.0);
         MCGContextFillAndStroke(gcontext);
     }
     
-    void Line(MCGFloat p_x1, MCGFloat p_y1, MCGFloat p_x2, MCGFloat p_y2)
+    void Line(MCGPoint p_from, MCGPoint p_to)
     {
-        MCGContextAddLine(gcontext, MCGPointMake(p_x1, p_y1), MCGPointMake(p_x2, p_y2));
+        MCGContextAddLine(gcontext, p_from, p_to);
         MCGContextFillAndStroke(gcontext);
     }
     
-    void Polyline(size_t p_count, const MCGPoint* p_points)
+    void Polyline(MCSpan<const MCGPoint> p_points)
     {
-        MCGContextAddPolyline(gcontext, p_points, uindex_t(p_count));
+        MCGContextAddPolyline(gcontext, p_points.data(), uindex_t(p_points.size()));
         MCGContextFillAndStroke(gcontext);
     }
     
-    void Polygon(size_t p_count, const MCGPoint* p_points)
+    void Polygon(MCSpan<const MCGPoint> p_points)
     {
-        MCGContextAddPolygon(gcontext, p_points, uindex_t(p_count));
+        MCGContextAddPolygon(gcontext, p_points.data(), uindex_t(p_points.size()));
         MCGContextFillAndStroke(gcontext);
     }
 };
 
 /* MCGContextPlayback renders the specified drawing into p_dst_rect of p_gcontext. */
-void MCGContextPlayback(MCGContextRef p_gcontext, MCGRectangle p_dst_rect, const void *p_drawing, size_t p_drawing_byte_size)
+void MCGContextPlayback(MCGContextRef p_gcontext, MCGRectangle p_dst_rect, MCSpan<const byte_t> p_drawing)
 {
     MCGDrawingRenderVisitor t_render_visitor;
     t_render_visitor.gcontext = p_gcontext;
     
-    MCGDrawingContext t_context(p_drawing, p_drawing_byte_size);
+    MCGDrawingContext t_context(p_drawing);
     t_context.Execute(t_render_visitor, p_dst_rect);
 }
 
