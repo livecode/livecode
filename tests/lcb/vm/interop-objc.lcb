@@ -309,13 +309,25 @@ handler _TestDelegateBadSignatureCallback(in pParam as ObjcObject) returns Strin
 end handler
 
 private handler _TestDelegateBadSignature()
+	// Ensure NSMenuDelegate is available
+	unsafe
+	    variable tMenu as ObjcObject
+        put Objc_NSMenuAlloc() into tMenu
+	end unsafe
+	
     CreateObjcDelegate("NSMenuDelegate", \
                        { "numberOfItemsInMenu:": \
                          _TestDelegateBadSignatureCallback })
 end handler
 
 private handler _TestDelegateContextBadSignature()
-    // Correct signature for no-context delegate
+	// Ensure NSMenuDelegate is available
+	unsafe
+	    variable tMenu as ObjcObject
+        put Objc_NSMenuAlloc() into tMenu
+	end unsafe
+	
+    // Use correct signature for no-context delegate
     CreateObjcDelegateWithContext("NSMenuDelegate", \
                                   { "numberOfItemsInMenu:": \
                                       _TestForeignReturnType }, \
@@ -440,7 +452,7 @@ end handler
 
 private handler _TestInformalDelegateContextBadSignature()
     // Correct signature for no-context delegate
-    CreateObjcInformalDelegateWithContext([Objc_NSPortDelegateHandlePortMessage], \
+    CreateObjcInformalDelegateWithContext([Objc_NSMenuNumberOfItems], \
                                           { "numberOfItemsInMenu:": \
                                             _TestDelegateMethodCalled }, \
                                            "")
@@ -460,12 +472,74 @@ end handler
 
 public handler TestInformalDelegateContextBadSignature()
     if not the operating system is in ["mac", "ios"] then
-        skip test "return NSRange struct succeeds" because "not implemented on" && the operating system
-        return
+        skip test "objc informal delegate error omitting context param" \
+            because "not implemented on" && the operating system
     end if
 
     MCUnitTestHandlerThrowsNamed(_TestInformalDelegateContextBadSignature, \
                                 "livecode.objc.DelegateCallbackSignatureError", \
                                 "Creating informal delegate throws error when callback omits context parameter")
 end handler
+
+handler _TestFindBarViewCallback() returns ObjcId
+end handler
+
+handler _TestSetFindBarViewCallback(in pView as ObjcId) returns nothing
+end handler
+
+handler _TestIsFindBarVisibleCallback() returns CBool
+end handler
+
+handler _TestSetFindBarVisibleCallback(in pVisible as CBool) returns nothing
+end handler
+
+handler _TestFindBarViewDidChangeHeightCallback() returns nothing
+end handler
+
+private handler _TestDelegateMappedRequiredMethod()
+    CreateObjcDelegate("NSTextFinderBarContainer", \
+                       { "findBarView": \
+                         _TestFindBarViewCallback, \
+                         "setFindBarView:": \                       
+                         _TestSetFindBarViewCallback, \
+                         "isFindBarVisible": \
+                         _TestIsFindBarVisibleCallback, \
+                         "setFindBarVisible:": \
+                         _TestSetFindBarVisibleCallback, \
+                         "findBarViewDidChangeHeight": \
+                         _TestFindBarViewDidChangeHeightCallback })
+end handler
+
+private handler _TestDelegateUnmappedRequiredMethod()
+    CreateObjcDelegate("NSTextFinderBarContainer", \
+                       { "isFindBarVisible": \
+                         _TestIsFindBarVisibleCallback })
+end handler
+
+foreign handler NSTextFinderAlloc() returns ObjcRetainedId \
+	binds to "objc:AppKit.framework>NSTextFinder.+alloc"
+	
+foreign handler NSTextFinderInit(in pObj as ObjcId) returns ObjcId \
+	binds to "objc:NSTextFinder.-init"	
+
+public handler TestDelegateRequiredMethod()
+    if not the operating system is in ["mac", "ios"] then
+        skip test "objc delegate required method tests" \
+            because "not implemented on" && the operating system
+        return
+    end if
+    unsafe
+    	// Ensure NSTextFinder is loaded
+		variable tFinder as ObjcObject
+		put NSTextFinderAlloc() into tFinder
+		put NSTextFinderInit(tFinder) into tFinder
+    end unsafe
+    MCUnitTestHandlerDoesntThrow(_TestDelegateMappedRequiredMethod, \
+    							 "Creating delegate doesn't throw error when required protocol method is mapped")
+    
+    MCUnitTestHandlerThrowsNamed(_TestDelegateUnmappedRequiredMethod, \
+                                "livecode.objc.DelegateMappingError", \
+                                "Creating delegate throws error when required protocol method is not mapped")
+end handler
+
 end module
