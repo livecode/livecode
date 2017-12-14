@@ -292,7 +292,7 @@ public handler OnCreate()
 	put (the number of elements in mSegmentNames) into mNumSegments
 	put the empty path into mPerimeter
 	put the empty list into mLines
-
+        put 15 into mRadius
 	put [] into mCalculatedExtents
 end handler
 
