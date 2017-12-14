@@ -32,6 +32,7 @@ filter tDiskContents["the defaultFolder"] without ".."
 Parameters:
 targetFolder (String):
 The folder path to search.
+
 outputKind (enum):
 - empty: Use the short form
 - "detailed": Use the long/detailed form
