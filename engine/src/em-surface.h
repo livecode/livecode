@@ -83,7 +83,7 @@ protected:
 class MCHtmlCanvasStackSurface : public MCAbstractRasterStackSurface
 {
 public:
-    MCHtmlCanvasStackSurface(const MCGIntegerRectangle& p_rect);
+    MCHtmlCanvasStackSurface(uint32_t p_window_id, const MCGIntegerRectangle& p_rect);
     virtual ~MCHtmlCanvasStackSurface();
 
 	/* Lock and unlock the surface. */
@@ -96,6 +96,7 @@ protected:
 	virtual MCGRasterFormat GetFormat();
 	virtual void *GetPixelBuffer(MCGIntegerRectangle p_area);
 
+	uint32_t m_window_id;
     uint8_t *m_surface;
 	MCGRegionRef m_region;
     MCGIntegerRectangle m_rect;

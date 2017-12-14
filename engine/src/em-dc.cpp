@@ -30,6 +30,48 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "dispatch.h"
 #include "globals.h"
+#include "graphics_util.h"
+
+/* ================================================================
+ * Helper Functions
+ * ================================================================ */
+
+MCRectangle MCEmscriptenGetWindowRect(uint32_t p_window_id)
+{
+	uint32_t t_left, t_top, t_right, t_bottom;
+	MCEmscriptenGetWindowRect(p_window_id, &t_left, &t_top, &t_right, &t_bottom);
+	
+	return MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
+}
+
+void MCEmscriptenSetWindowRect(uint32_t p_window_id, const MCRectangle &p_rect)
+{
+	MCEmscriptenSetWindowRect(p_window_id, p_rect.x, p_rect.y, p_rect.x + p_rect.width, p_rect.y + p_rect.height);
+}
+
+MCRectangle MCEmscriptenGetDisplayRect()
+{
+	uint32_t t_left, t_top, t_right, t_bottom;
+	MCEmscriptenGetDisplayRect(&t_left, &t_top, &t_right, &t_bottom);
+	
+	return MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
+}
+
+/* ================================================================
+ * Initialization / Finalization
+ * ================================================================ */
+
+extern "C" bool MCEmscriptenDCInitializeJS();
+bool MCEmscriptenDCInitialize()
+{
+	return MCEmscriptenDCInitializeJS();
+}
+
+extern "C" void MCEmscriptenDCFinalizeJS();
+void MCEmscriptenDCFinalize()
+{
+	MCEmscriptenDCFinalizeJS();
+}
 
 /* ================================================================
  * Construction/Destruction
@@ -42,13 +84,13 @@ MCCreateScreenDC()
 }
 
 MC_DLLEXPORT_DEF MCStack *
-MCEmscriptenGetCurrentStack()
+MCEmscriptenGetStackForWindow(Window p_window)
 {
 	if (MCnoui) return nil;
-
-	MCScreenDC *t_dc = static_cast<MCScreenDC *>(MCscreen);
-
-	return t_dc->GetCurrentStack();
+	
+	MCStack *t_stack = MCdispatcher->findstackd(p_window);
+	
+	return t_stack;
 }
 
 MC_DLLEXPORT_DEF
@@ -78,13 +120,15 @@ MCScreenDC::open()
 	return
 		MCEmscriptenEventInitialize() &&
 		MCEmscriptenViewInitialize() &&
-        MCEmscriptenLibUrlInitialize();
+        MCEmscriptenLibUrlInitialize() &&
+        MCEmscriptenDCInitialize();
 }
 
 
 Boolean
 MCScreenDC::close(Boolean force)
 {
+	MCEmscriptenDCFinalize();
 	MCEmscriptenViewFinalize();
 	MCEmscriptenEventFinalize();
     MCEmscriptenLibUrlFinalize();
@@ -100,35 +144,23 @@ void
 MCScreenDC::openwindow(Window p_window,
                        Boolean override)
 {
-	/* FIXME Implement multiple windows */
+	uint32_t t_window = reinterpret_cast<uint32_t>(p_window);
+	MCLog("set window visible");
+	MCEmscriptenSetWindowVisible(t_window, true);
 
-	if (nil != m_main_window)
-	{
-		if (m_main_window == p_window) {
-			return;
-		}
-		else
-		{
-			MCEmscriptenNotImplemented();
-		}
-	}
-
-	m_main_window = p_window;
-
+	MCLog("find stack");
 	MCStack *t_stack = MCdispatcher->findstackd(p_window);
 
 	/* Enable drawing */
+	MCLog("activate tilecache");
 	t_stack->view_activatetilecache();
 
 	t_stack->setextendedstate(false, ECS_DONTDRAW);
 
-	/* Set mouse & keyboard focus */
-	UpdateFocus();
-
 	/* Set up view to match window, as far as possible */
 	/* FIXME Implement HiDPI support */
 
-	MCEmscriptenViewSetBounds(t_stack->view_getrect());
+	MCEmscriptenSetWindowRect(t_window, t_stack->view_getrect());
 
 	t_stack->view_configure(true);
 	t_stack->view_dirty_all();
@@ -137,22 +169,32 @@ MCScreenDC::openwindow(Window p_window,
 void
 MCScreenDC::closewindow(Window p_window)
 {
-	/* FIXME Implement multiple windows */
-
 	MCAssert(p_window);
 
-	if (p_window != m_main_window)
-	{
-		return;
-	}
-
-	m_main_window = nil;
+	uint32_t t_window = reinterpret_cast<uint32_t>(p_window);
+	MCEmscriptenSetWindowVisible(t_window, false);
 }
 
 void
 MCScreenDC::destroywindow(Window & x_window)
 {
+	uint32_t t_window = reinterpret_cast<uint32_t>(x_window);
+	MCEmscriptenDestroyWindow(t_window);
+	
 	x_window = nil;
+}
+
+uintptr_t
+MCScreenDC::dtouint(Drawable p_window)
+{
+	return reinterpret_cast<uint32_t>(p_window);
+}
+
+Boolean
+MCScreenDC::uinttowindow(uintptr_t p_uint, Window &r_window)
+{
+	r_window = reinterpret_cast<Window>(p_uint);
+	return True;
 }
 
 bool
@@ -161,25 +203,26 @@ MCScreenDC::platform_getwindowgeometry(Window p_window,
 {
 	/* FIXME Implement HiDPI support */
 
-	r_rect = MCEmscriptenViewGetBounds();
+	uint32_t t_window = reinterpret_cast<uint32_t>(p_window);
+	r_rect = MCEmscriptenGetWindowRect(t_window);
 	return true;
 }
 
-void
-MCScreenDC::UpdateFocus()
+/* ================================================================
+ * Display management
+ * ================================================================ */
+
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
 {
-	MCAssert(nil != m_main_window);
-
-	MCStack *t_stack = GetCurrentStack();
-
-	MCEventQueuePostMouseFocus(t_stack, 0, true);
-	MCEventQueuePostKeyFocus(t_stack, true);
-}
-
-MCStack *
-MCScreenDC::GetCurrentStack()
-{
-	return MCdispatcher->findstackd(m_main_window);
+	MCDisplay *t_display = nil;
+	if (!MCMemoryNew(t_display))
+		return false;
+	
+	t_display->viewport = t_display->workarea = MCEmscriptenGetDisplayRect();
+	
+	r_displays = t_display;
+	r_count = 1;
+	return true;
 }
 
 /* ================================================================

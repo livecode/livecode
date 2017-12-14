@@ -940,6 +940,7 @@ bool MCEventQueuePostNotify(MCEventQueueNotifyCallback p_callback, void *p_state
 //////////
 
 // IM-2014-02-14: [[ HiDPI ]] Post backing scale changes with window reshape message
+MC_DLLEXPORT_DEF
 bool MCEventQueuePostWindowReshape(MCStack *p_stack, MCGFloat p_backing_scale)
 {
 	// We look through the current event queue, looking for the last window
