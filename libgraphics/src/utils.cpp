@@ -174,6 +174,35 @@ bool MCGRamp::Create(const MCGFloat *p_stops, const MCGColor *p_colors, size_t p
     return true;
 }
 
+bool MCGRamp::Create4f(const MCGFloat *p_stops, const MCGColor4f *p_colors, size_t p_ramp_length, MCGRampRef& r_ramp)
+{
+    MCGRampRef t_ramp = new (nothrow) MCGRamp;
+    if (t_ramp == nullptr)
+    {
+        return false;
+    }
+    
+    if (MCMemoryNewArray(p_ramp_length, t_ramp->m_stops) &&
+        MCMemoryNewArray(p_ramp_length, t_ramp->m_colors))
+    {
+        for(size_t i = 0; i < p_ramp_length; i++)
+        {
+            t_ramp->m_stops[i] = p_stops[i];
+            t_ramp->m_colors[i] = MCGColorMakeRGBA(p_colors[i].red, p_colors[i].green, p_colors[i].blue, p_colors[i].alpha);
+        }
+        t_ramp->m_ramp_length = p_ramp_length;
+    }
+    else
+    {
+        MCGRelease(t_ramp);
+        return false;
+    }
+    
+    r_ramp = t_ramp;
+    
+    return true;
+}
+
 /**/
 
 static SkShader::TileMode MCGGradientSpreadMethodToSkTileMode(MCGGradientSpreadMethod p_method)

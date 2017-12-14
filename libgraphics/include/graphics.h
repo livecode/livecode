@@ -246,6 +246,14 @@ static inline uint32_t MCGPixelPreMultiplyNative(uint32_t p_pixel)
 typedef float MCGFloat;
 typedef uint32_t MCGColor;
 
+struct MCGColor4f
+{
+    MCGFloat red;
+    MCGFloat green;
+    MCGFloat blue;
+    MCGFloat alpha;
+};
+
 struct MCGPoint
 {
     /* TODO[C++14] In C++11, aggregate initialisation of object types

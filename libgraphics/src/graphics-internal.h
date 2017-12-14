@@ -171,6 +171,8 @@ public:
 
     static bool Create(const MCGFloat *p_stops, const MCGColor *p_colors, size_t p_ramp_length, MCGRampRef& r_ramp);
 
+    static bool Create4f(const MCGFloat *p_stops, const MCGColor4f *p_colors, size_t p_ramp_length, MCGRampRef& r_ramp);
+
     const SkScalar* GetStops(void) const { return m_stops; }
     const SkColor* GetColors(void) const { return m_colors; }
     size_t GetLength(void) const { return m_ramp_length; }
@@ -622,6 +624,9 @@ void MCGCacheTableSet(MCGCacheTableRef cache_table, void *key, uint32_t key_leng
 void *MCGCacheTableGet(MCGCacheTableRef cache_table, void *key, uint32_t key_length);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCGContextSetFillPaint(MCGContextRef p_context, MCGPaintRef p_paint);
+void MCGContextSetStrokePaint(MCGContextRef p_context, MCGPaintRef p_paint);
 
 bool MCGContextSetupFill(MCGContextRef p_context, SkPaint& r_paint);
 

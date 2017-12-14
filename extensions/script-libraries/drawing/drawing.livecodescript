@@ -80,6 +80,9 @@ The following SVG features are currently supported:
   - 'stroke', 'stroke-opacity', stroke-width', 'stroke-dash-array',
     'stroke-dash-offset', 'stroke-line-cap', 'stroke-line-join' and
     'stroke-miter-limit' properties
+  - 'solidColor', 'linearGradient', 'radialGradient' paint servers
+  - 'solid-color' and 'solid-opacity' solid color server properties
+  - 'stop-color' and 'stop-opacity' gradient ramp properties
   - absolute unit specifiers in, cm, mm, pt, pc, px
 
 Currently, only solid colors of with following forms are supported:
@@ -112,6 +115,9 @@ Note: The drawing binary format is not currently considered stable and is
 subject to change until the end of the RC cycle for 9. At present it is advised
 that SVG files be compiled as needed when developing in the IDE, and then
 compiled ahead-of-time when building a standalone.
+
+Note: To use this function in a standalone, you must include XML and Canvas
+extensions.
 
 Parameters:
 
@@ -169,6 +175,9 @@ The following SVG features are currently supported:
   - 'stroke', 'stroke-opacity', stroke-width', 'stroke-dash-array',
     'stroke-dash-offset', 'stroke-line-cap', 'stroke-line-join' and
     'stroke-miter-limit' properties
+  - 'solidColor', 'linearGradient', 'radialGradient' paint servers
+  - 'solid-color' and 'solid-opacity' solid color server properties
+  - 'stop-color' and 'stop-opacity' gradient ramp properties
   - absolute unit specifiers in, cm, mm, pt, pc, px
 
 Currently, only solid colors of with following forms are supported:
@@ -201,6 +210,9 @@ Note: The drawing binary format is not currently considered stable and is
 subject to change until the end of the RC cycle for 9. At present it is advised
 that SVG files be compiled as needed when developing in the IDE, and then
 compiled ahead-of-time when building a standalone.
+
+Note: To use this function in a standalone, you must include XML and Canvas
+extensions.
 
 Parameters:
 
@@ -270,6 +282,10 @@ private function svgImportFromArray pXmlArray
 		get _svgParseFeatureValue(tContext, "", tPropertyName, tPropertyDefaults[tPropertyName])
 	end repeat
 	_svgCascade tContext, tPropertyDefaults, tArray
+
+	/* Remap as the previous two phases will have mutated the tree */
+	put empty into tContext["ids"]
+	_svgMap tContext, tArray
 
 	/* Now all processing has been done we can perform the final phase of
 	 * compiling the svg document. */
@@ -449,8 +465,15 @@ private command _svgMap @xContext, @xElement
 	 * adequately placed. */
 	_svgContextEnter xContext, xElement
 
+	local tId
 	if "id" is among the keys of xElement["features"] then
-		if not _svgContextDefine(xContext, xElement["features"]["id"], xElement) then
+		put xElement["features"]["id"] into tId
+	else if "xml:id" is among the keys of xElement["features"] then
+		put xElement["features"]["xml:id"] into tId
+	end if
+
+	if tId is not empty then
+		if not _svgContextDefine(xContext, tId, xElement) then
 			_svgContextElementAlreadyDefinedError xContext, xElement["features"]["id"]
 		end if
 	end if
@@ -608,6 +631,9 @@ private command _svgCompileElement @xContext, pElement
 	switch pElement["type"]
 	case "defs"
 	case "use"
+	case "solidColor"
+	case "linearGradient"
+	case "radialGradient"
 		exit _svgCompileElement
 	end switch
 
@@ -671,7 +697,7 @@ private command _svgCompileFeatures @xContext, pElement
 			local tTransform
 			put _svgContextGetState(xContext, "transform") into tTransform
 			seqAppend tTransform, pElement["features"]["transform"]
-			_svgCompileTransform xContext, tTransform, tFeatureValue
+			_svgCompileTransform xContext, tTransform, empty, tFeatureValue
 			break
 		case "fill"
 		case "stroke"
@@ -696,7 +722,7 @@ private command _svgCompileFeatures @xContext, pElement
 	end repeat
 end _svgCompileFeatures
 
-private command _svgCompileTransform @xContext, pTransform, @rCompiledTransform
+private command _svgCompileTransform @xContext, pTransform, pBBox, @rCompiledTransform
 	local tWidth, tHeight, tMatrix
 	put xContext["root-width"] into tWidth
 	put xContext["root-height"] into tHeight
@@ -792,12 +818,19 @@ private command _svgCompileTransform @xContext, pTransform, @rCompiledTransform
 		case "skewY"
 			put _svgTransformSkew(0, tTransform[2]) into tNextMatrix
 			break
+		case "bbox"
+			if pBBox is not an array then
+				_InternalError "compile transform called for bbox transform with no bbox"
+			end if
+			put _svgTransformMatrix(pBBox["right"] - pBBox["left"], 0, 0, pBBox["bottom"] - pBBox["top"], pBBox["left"], pBBox["top"]) into tNextMatrix
+			break
 		default
-			_InternalError format("unknown transform '%s'", pTransform[1])
+			_InternalError format("unknown transform '%s'", tTransform[1])
 			break
 		end switch
 		put _svgTransformConcat(tMatrix, tNextMatrix) into tMatrix 
 	end repeat
+	put empty into rCompiledTransform
 	if not _svgTransformIsIdentity(tMatrix) then
 		seqPushOntoBack rCompiledTransform, _svgTransformFlatten(tMatrix)
 	end if
@@ -814,14 +847,125 @@ private command _svgCompilePaint @xContext, pPaint, @rCompiledPaint
 		put pPaint["red"] into rCompiledPaint[2]
 		put pPaint["green"] into rCompiledPaint[3]
 		put pPaint["blue"] into rCompiledPaint[4]
+		put pPaint["alpha"] into rCompiledPaint[5]
 		break
 	case "reference"
-		_svgCompilePaint xContext, pPaint["fallback"], rCompiledPaint
+		_svgCompilePaintServer xContext, pPaint["id"], pPaint["fallback"], rCompiledPaint
 		break
 	default
 		put "none" into rCompiledPaint[1]
 	end switch
 end _svgCompilePaint
+
+private command _svgCompilePartialPaint @xContext, @xPaint, pBBox
+	switch xPaint[1]
+	case "linear"
+	case "radial"
+		_svgCompileTransform xContext, xPaint[3], pBBox, xPaint[3]
+		break
+	default
+		break
+	end switch
+end _svgCompilePartialPaint
+
+private command _svgCompilePaintServer @xContext, pId, pFallback, @rCompiledPaint
+	local tServerElement
+	if _svgContextLookup(xContext, pId, tServerElement) then
+		switch tServerElement["type"]
+		case "solidColor"
+			local tSolidColor, tSolidOpacity
+			_svgCompilePaint xContext, tServerElement["features"]["solid-color"], rCompiledPaint
+			multiply rCompiledPaint[5] by tServerElement["features"]["solid-opacity"]
+			return empty
+		case "linearGradient"
+		case "radialGradient"
+			local tGradient
+			_svgCompileResolveGradient xContext, tServerElement, tGradient
+			if tServerElement["type"] is "linearGradient" then
+				put "linear" into rCompiledPaint[1]
+			else
+				put "radial" into rCompiledPaint[1]
+			end if
+			put tGradient["spreadMethod"] into rCompiledPaint[2]
+			if tGradient["gradientUnits"] is "objectBoundingBox" then
+				put "bbox" into rCompiledPaint[3][1][1]
+			end if
+			seqAppend rCompiledPaint[3], tGradient["gradientTransform"]
+			local tVectorMatrix
+			put "matrix" into tVectorMatrix[1]
+			if tServerElement["type"] is "linearGradient" then
+				put tGradient["x2"] - tGradient["x1"] into tVectorMatrix[2]
+				put tGradient["y2"] - tGradient["y1"] into tVectorMatrix[3]
+				put tGradient["y2"] - tGradient["y1"] into tVectorMatrix[4]
+				put tGradient["x1"] - tGradient["x2"] into tVectorMatrix[5]
+				put tGradient["x1"] into tVectorMatrix[6]
+				put tGradient["y1"] into tVectorMatrix[7]
+			else
+				put tGradient["r"] into tVectorMatrix[2]
+				put 0 into tVectorMatrix[3]
+				put 0 into tVectorMatrix[4]
+				put tGradient["r"] into tVectorMatrix[5]
+				put tGradient["cx"] into tVectorMatrix[6]
+				put tGradient["cy"] into tVectorMatrix[7]
+			end if
+			seqPushOntoBack rCompiledPaint[3], tVectorMatrix
+			put tGradient["colors"] into rCompiledPaint[4]
+			put tGradient["offsets"] into rCompiledPaint[5]
+			return empty
+		default
+			break
+		end switch
+	end if
+	_svgCompilePaint xContext, pFallback, rCompiledPaint
+end _svgCompilePaintServer
+
+private command _svgCompileResolveGradient @xContext, pElement, @rGradient
+	local tBaseElement
+	get pElement["features"]["xlink:href"]
+	if it is empty then
+		get pElement["features"]["href"]
+	end if
+	if it is not empty and \
+		_svgContextLookup(xContext, it, tBaseElement) then
+		_svgCompileResolveGradient xContext, tBaseElement, rGradient
+	else
+		put 0 into rGradient["x1"]
+		put 0 into rGradient["y1"]
+		put 1 into rGradient["x2"]
+		put 0 into rGradient["y2"]
+		put 0.5 into rGradient["cx"]
+		put 0.5 into rGradient["cy"]
+		put 0.5 into rGradient["r"]
+		put "objectBoundingBox" into rGradient["gradientUnits"]
+		put empty into rGradient["gradientTransform"]
+		put "pad" into rGradient["spreadMethod"]
+		put empty into rGradient["colors"]
+		put empty into rGradient["offsets"]
+	end if
+
+	repeat for each item tProp in "x1,y1,x2,y2,cx,cy,r,gradientUnits,gradientTransform,spreadMethod"
+		if tProp is among the keys of pElement["features"] then
+			put pElement["features"][tProp] into rGradient[tProp]
+		end if
+	end repeat
+
+	if pElement["content"] is an array then
+		local tColors, tOffsets
+		repeat for each element tStop in pElement["content"]
+			if tStop["type"] is "stop" then
+				seqPushOntoBack tColors, tStop["features"]["stop-color"]["red"]
+				seqPushOntoBack tColors, tStop["features"]["stop-color"]["green"]
+				seqPushOntoBack tColors, tStop["features"]["stop-color"]["blue"]
+				seqPushOntoBack tColors, tStop["features"]["stop-color"]["alpha"] * tStop["features"]["stop-opacity"]
+				seqPushOntoBack tOffsets, tStop["features"]["offset"]
+			end if
+		end repeat
+		if the number of elements in tColors > 0 then
+			put tColors into rGradient["colors"]
+			put tOffsets into rGradient["offsets"]
+		end if	
+	end if
+end _svgCompileResolveGradient
 
 private command _svgCompileSvg @xContext, pElement
 	local tX, tY, tWidth, tHeight, tViewBox, tPreserveAspectRatio
@@ -853,7 +997,7 @@ private command _svgCompileSvg @xContext, pElement
 		local tTransform, tCompiledTransform
 		put _svgContextGetState(xContext, "transform") into tTransform
 		seqPushOntoBack tTransform, tViewportTransform
-		_svgCompileTransform xContext, tTransform, tCompiledTransform
+		_svgCompileTransform xContext, tTransform, empty, tCompiledTransform
 		_svgContextSetState xContext, "transform", tCompiledTransform
 	else
 		put tWidth into xContext["root-width"]
@@ -889,7 +1033,7 @@ private command _svgCompileRectangle @xContext, pElement
 		put 0 into tRy
 	end if
 
-	_svgCompileShape xContext, "rect", tX, tY, tWidth, tHeight, tRx, tRy
+	_svgCompileShape xContext, "rect", _svgBoxRectangle(tX, tY, tWidth, tHeight), tX, tY, tWidth, tHeight, tRx, tRy
 end _svgCompileRectangle
 
 private command _svgCompileCircle @xContext, pElement
@@ -897,7 +1041,7 @@ private command _svgCompileCircle @xContext, pElement
 	put pElement["features"]["cx"] into tCx
 	put pElement["features"]["cy"] into tCy
 	put pElement["features"]["r"] into tR
-	_svgCompileShape xContext, "circle", tCx, tCy, tR
+	_svgCompileShape xContext, "circle", _svgBoxEllipse(tCx, tCy, tR, tR), tCx, tCy, tR
 end _svgCompileCircle
 
 private command _svgCompileEllipse @xContext, pElement
@@ -906,7 +1050,7 @@ private command _svgCompileEllipse @xContext, pElement
 	put pElement["features"]["cy"] into tCy
 	put pElement["features"]["rx"] into tRx
 	put pElement["features"]["rx"] into tRy
-	_svgCompileShape xContext, "ellipse", tCx, tCy, tRx, tRy
+	_svgCompileShape xContext, "ellipse", _svgBoxEllipse(tCx, tCy, tRx, tRy), tCx, tCy, tRx, tRy
 end _svgCompileEllipse
 
 private command _svgCompileLine @xContext, pElement
@@ -915,44 +1059,44 @@ private command _svgCompileLine @xContext, pElement
 	put pElement["features"]["y1"] into tY1
 	put pElement["features"]["x2"] into tX2
 	put pElement["features"]["y2"] into tY2
-	_svgCompileShape xContext, "line", tX1, tY1, tX2, tY2
+	_svgCompileShape xContext, "line", __svgBoxLine(tX1, tY1, tX2, tY2), tX1, tY1, tX2, tY2
 end _svgCompileLine
 
 private command _svgCompilePolyline @xContext, pElement
 	local tPoints
 	put pElement["features"]["points"] into tPoints
-	_svgCompileShape xContext, "polyline", tPoints
+	_svgCompileShape xContext, "polyline", _svgBoxPoints(tPoints), tPoints
 end _svgCompilePolyline
 
 private command _svgCompilePolygon @xContext, pElement
 	local tPoints
 	put pElement["features"]["points"] into tPoints
-	_svgCompileShape xContext, "polygon", tPoints
+	_svgCompileShape xContext, "polygon", _svgBoxPoints(tPoints), tPoints
 end _svgCompilePolygon
 
 private command _svgCompilePath @xContext, pElement
 	local tD
 	put pElement["features"]["d"] into tD
-	_svgCompileShape xContext, "path", tD
+	_svgCompileShape xContext, "path", _svgBoxPath(tD), tD["array"]
 end _svgCompilePath
 
-private command _svgCompileShape @xContext, pType
+private command _svgCompileShape @xContext, pType, pBBox
 	local tOperation
 	put pType into tOperation[1]
-	if param(3) is an array then
-		put param(3) into tOperation[2]
+	if param(4) is an array then
+		put param(4) into tOperation[2]
 	else
-		repeat with tIndex = 3 to paramCount()
-			put param(tIndex) into tOperation[2][tIndex - 2]
+		repeat with tIndex = 4 to paramCount()
+			put param(tIndex) into tOperation[2][tIndex - 3]
 		end repeat
 	end if
 
-	_svgCompileState xContext
+	_svgCompileState xContext, pBBox
 
 	_svgContextEmit xContext, tOperation
 end _svgCompileShape
 
-private command _svgCompileState @xContext
+private command _svgCompileState @xContext, pBBox
 	local tCurrentState, tLastState
 	put _svgContextGetCurrentState(xContext) into tCurrentState
 	put _svgContextGetLastState(xContext) into tLastState
@@ -961,6 +1105,12 @@ private command _svgCompileState @xContext
 	 * or stroke is none, or the opacity is 0. */
 
 	repeat for each key tStateName in tCurrentState
+		/* If the state is fill or stroke, we must finish compiling it as it
+		 * might contain transforms relative to the element. */
+		if tStateName is "fill" or tStateName is "stroke" then
+			_svgCompilePartialPaint xContext, tCurrentState[tStateName], pBBox
+		end if
+
 		if tCurrentState[tStateName] is tLastState[tStateName] then
 			next repeat
 		end if
@@ -975,6 +1125,58 @@ private command _svgCompileState @xContext
 	end repeat
 	_svgContextSetLastState xContext, tCurrentState
 end _svgCompileState
+
+/*******************************************************************************
+ *
+ *  SVG BBOX OPERATIONS
+ *
+ ******************************************************************************/
+
+private function _svgBoxMake pLeft, pTop, pRight, pBottom
+	local tBox
+	put pLeft into tBox["left"]
+	put pTop into tBox["top"]
+	put pRight into tBox["right"]
+	put pBottom into tBox["bottom"]
+	return tBox
+end _svgBoxMake
+
+private function _svgBoxRectangle pX, pY, pWidth, pHeight
+	return _svgBoxMake(pX, pY, pX + pWidth, pY + pHeight)
+end _svgBoxRectangle
+
+private function _svgBoxEllipse pCx, pCy, pRx, pRy
+	return _svgBoxMake(pCx - pRx, pCy - pRy, pCx + pRx, pCy + pRy)
+end _svgBoxEllipse
+
+private function _svgBoxLine pX1, pY1, pX2, pY2
+	return _svgBoxMake(min(pX1, pX2), min(pY1, pY2), max(pX1, pX2), max(pY1, pY2))
+end _svgBoxLine
+
+private function _svgBoxPoints pPoints
+	local tLeft, tTop, tRight, tBottom
+	put pPoints[1] into tLeft
+	put pPoints[1] into tRight
+	put pPoints[2] into tTop
+	put pPoints[2] into tBottom
+	repeat with i = 1 to the number of elements in pPoints by 2
+		if pPoints[i] < tLeft then
+			put pPoints[i] into tLeft
+		else if pPoints[i] > tRight then
+			put pPoints[i] into tRight
+		end if
+		if pPoints[i + 1] < tTop then
+			put pPoints[i + 1] into tTop
+		else if pPoints[i + 1] > tBottom then
+			put pPoints[i + 1] into tBottom
+		end if
+	end repeat
+	return _svgBoxMake(tLeft, tTop, tRight, tBottom)
+end _svgBoxPoints
+
+private function _svgBoxPath pPath
+	return canvasComputeBoundingBoxOfPath(pPath["string"])
+end _svgBoxPath
 
 /*******************************************************************************
  *
@@ -1014,6 +1216,12 @@ constant kMCGDrawingTransformOpcodeAffine = 1
 
 constant kMCGDrawingPaintOpcodeEnd = 0
 constant kMCGDrawingPaintOpcodeSolidColor = 1
+constant kMCGDrawingPaintOpcodeLinearGradient = 2
+constant kMCGDrawingPaintOpcodeRadialGradient = 3
+
+constant kMCGDrawingSpreadMethodOpcodePad = 0
+constant kMCGDrawingSpreadMethodOpcodeReflect = 1
+constant kMCGDrawingSpreadMethodOpcodeRepeat = 2
 
 constant kMCGDrawingFillRuleOpcodeNonZero = 0
 constant kMCGDrawingFillRuleOpcodeEvenOdd = 1
@@ -1245,10 +1453,41 @@ private command _svgEncodeOpV @xContext, pOpcode, pArguments
 	end repeat
 end _svgEncodeOpV
 
+private command _svgEncodeIndex @xContext, pIndex
+	put _svgEncodeIndex(pIndex) after xContext["opcodes"]
+end _svgEncodeIndex
+
+private command _svgEncodeScalars @xContext, pScalars
+	repeat for each element tScalar in pScalars
+		put binaryEncode("f", tScalar) after xContext["scalars"]
+	end repeat
+end _svgEncodeScalars
+
 private command _svgEncodePaint @xContext, pPaint
 	if pPaint[1] is "none" then
 	else if pPaint[1] is "color" then
-		_svgEncodeOp xContext, kMCGDrawingPaintOpcodeSolidColor, pPaint[2], pPaint[3], pPaint[4]
+		_svgEncodeOp xContext, kMCGDrawingPaintOpcodeSolidColor, pPaint[2], pPaint[3], pPaint[4], pPaint[5]
+	else if pPaint[1] is "linear" or pPaint[1] is "radial" then
+		if pPaint[1] is "linear" then
+		_svgEncodeOp xContext, kMCGDrawingPaintOpcodeLinearGradient
+		else
+		_svgEncodeOp xContext, kMCGDrawingPaintOpcodeRadialGradient
+		end if
+		switch pPaint[2]
+		case "pad"
+			_svgEncodeOp xContext, kMCGDrawingSpreadMethodOpcodePad
+			break
+		case "reflect"
+			_svgEncodeOp xContext, kMCGDrawingSpreadMethodOpcodeReflect
+			break
+		case "repeat"
+			_svgEncodeOp xContext, kMCGDrawingSpreadMethodOpcodeRepeat
+			break
+		end switch
+		_svgEncodeTransform xContext, pPaint[3]
+		_svgEncodeIndex xContext, the number of elements in pPaint[5]
+		_svgEncodeScalars xContext, pPaint[4]
+		_svgEncodeScalars xContext, pPaint[5]
 	else
 		_InternalError format("unknown paint '%s'", pPaint[1])
 	end if
@@ -1600,6 +1839,11 @@ private function _svgParseFeatureValue @xContext, pElementType, pFeatureName, @x
 					return true
 				end if
 				break
+			case "<reference>"
+				if _svgParseReferenceValue(xValue) then
+					return true
+				end if
+				break
 			default
 				_log format("unimplemented value pattern '%s'", tVariant)
 				break
@@ -1636,6 +1880,14 @@ private function _svgParsePreserveAspectRatio @xValue
 	return false
 end _svgParsePreserveAspectRatio
 
+private function _svgParseReferenceValue @xValue
+	if xValue begins with "#" then
+		put char 2 to -1 of xValue into xValue
+		return true
+	end if
+	return false
+end _svgParseReferenceValue
+
 /* The <color> type represents a color:
  *
  *   color
@@ -1657,50 +1909,52 @@ private function _svgParseColorValue @xValue
 		put baseConvert(char 2 to 3 of xValue, 16, 10) / 255 into tRed
 		put baseConvert(char 4 to 5 of xValue, 16, 10) / 255 into tGreen
 		put baseConvert(char 6 to 7 of xValue, 16, 10) / 255 into tBlue
-	else if xValue is "black" then
-		put 0 into tRed; put 0 into tGreen; put 0 into tBlue
-	else if xValue is "silver" then
-		put 192 into tRed; put 192 into tGreen; put 192 into tBlue
-	else if xValue is "gray" then
-		put 128 into tRed; put 128 into tGreen; put 128 into tBlue
-	else if xValue is "white" then
-		put 255 into tRed; put 255 into tGreen; put 255 into tBlue
-	else if xValue is "maroon" then
-		put 128 into tRed; put 0 into tGreen; put 0 into tBlue
-	else if xValue is "red" then
-		put 255 into tRed; put 0 into tGreen; put 0 into tBlue
-	else if xValue is "purple" then
-		put 128 into tRed; put 0 into tGreen; put 128 into tBlue
-	else if xValue is "fuchsia" then
-		put 255 into tRed; put 0 into tGreen; put 255 into tBlue
-	else if xValue is "green" then
-		put 0 into tRed; put 128 into tGreen; put 0 into tBlue
-	else if xValue is "lime" then
-		put 0 into tRed; put 255 into tGreen; put 0 into tBlue
-	else if xValue is "olive" then
-		put 128 into tRed; put 128 into tGreen; put 0 into tBlue
-	else if xValue is "yellow" then
-		put 255 into tRed; put 255 into tGreen; put 0 into tBlue
-	else if xValue is "navy" then
-		put 0 into tRed; put 0 into tGreen; put 128 into tBlue
-	else if xValue is "blue" then
-		put 0 into tRed; put 0 into tGreen; put 255 into tBlue
-	else if xValue is "teal" then
-		put 0 into tRed; put 128 into tGreen; put 128 into tBlue
-	else if xValue is "aqua" then
-		put 0 into tRed; put 255 into tGreen; put 255 into tBlue
-	else if matchText(xValue, "^rgb\s*\(\s*([0-9]+)\s*\,\s*([0-9]+)\s*,\s*([0-9]+)\s*\)$", tRed, tGreen, tBlue) then
+	else
+		if xValue is "black" then
+			put 0 into tRed; put 0 into tGreen; put 0 into tBlue
+		else if xValue is "silver" then
+			put 192 into tRed; put 192 into tGreen; put 192 into tBlue
+		else if xValue is "gray" then
+			put 128 into tRed; put 128 into tGreen; put 128 into tBlue
+		else if xValue is "white" then
+			put 255 into tRed; put 255 into tGreen; put 255 into tBlue
+		else if xValue is "maroon" then
+			put 128 into tRed; put 0 into tGreen; put 0 into tBlue
+		else if xValue is "red" then
+			put 255 into tRed; put 0 into tGreen; put 0 into tBlue
+		else if xValue is "purple" then
+			put 128 into tRed; put 0 into tGreen; put 128 into tBlue
+		else if xValue is "fuchsia" then
+			put 255 into tRed; put 0 into tGreen; put 255 into tBlue
+		else if xValue is "green" then
+			put 0 into tRed; put 128 into tGreen; put 0 into tBlue
+		else if xValue is "lime" then
+			put 0 into tRed; put 255 into tGreen; put 0 into tBlue
+		else if xValue is "olive" then
+			put 128 into tRed; put 128 into tGreen; put 0 into tBlue
+		else if xValue is "yellow" then
+			put 255 into tRed; put 255 into tGreen; put 0 into tBlue
+		else if xValue is "navy" then
+			put 0 into tRed; put 0 into tGreen; put 128 into tBlue
+		else if xValue is "blue" then
+			put 0 into tRed; put 0 into tGreen; put 255 into tBlue
+		else if xValue is "teal" then
+			put 0 into tRed; put 128 into tGreen; put 128 into tBlue
+		else if xValue is "aqua" then
+			put 0 into tRed; put 255 into tGreen; put 255 into tBlue
+		else if not matchText(xValue, "^rgb\s*\(\s*([0-9]+)\s*\,\s*([0-9]+)\s*,\s*([0-9]+)\s*\)$", tRed, tGreen, tBlue) then
+			return false
+		end if
 		divide tRed by 255
 		divide tGreen by 255
 		divide tBlue by 255
-	else
-		return false
 	end if
 
 	put "color" into xValue["type"]
 	put tRed + 0 into xValue["red"]
 	put tGreen + 0 into xValue["green"]
 	put tBlue + 0 into xValue["blue"]
+	put 1 into xValue["alpha"]
 	return true
 end _svgParseColorValue
 
@@ -1812,7 +2066,8 @@ private function _svgParsePathValue @xValue
 		return false
 	end if
 
-	put tPath into xValue
+	put xValue into xValue["string"]
+	put tPath into xValue["array"]
 
 	return true
 end _svgParsePathValue
@@ -2118,6 +2373,7 @@ private function _svgParseTransformValue @xValue
 		end switch
 
 		local tTransform
+		put empty into tTransform
 		put tType into tTransform[1]
 		seqAppend tTransform, tValues
 		seqPushOntoBack tTransforms, tTransform
@@ -2154,7 +2410,7 @@ private function _svgParsePaintValue @xValue
 	end if
 
 	local tId, tBackup
-	if matchText(xValue, "^url\s*\(\s*#([a-zA-Z][a-zA-Z0-9]*)\s*\)(.*)$", tId, tBackup) then
+	if matchText(xValue, "^url\s*\(\s*#([a-zA-Z][a-zA-Z0-9]*)*\)(.*)$", tId, tBackup) then
 		put word 1 to -1 of tBackup into tBackup
 		if tBackup is not empty and \
 			tBackup is not "none" and \
@@ -2249,7 +2505,18 @@ end _svgParsePointsValue
 /* The <opacity> type is a number between 0.0 and 1.0, any values outside of
  * this range are clamped. */
 private function _svgParseOpacityValue @xValue
+	put word 1 to -1 of xValue into xValue
+
+	local tIsPercentage
+	if the last char of the last word of xValue is "%" then
+		put true into tIsPercentage
+		delete the last char of the last word of xValue
+	end if
+
 	if _svgParseNumberValue(xValue) then
+		if tIsPercentage then
+			put xValue / 100 into xValue
+		end if
 		put max(min(xValue, 1.0), 0.0) into xValue
 		return true
 	end if
@@ -2436,7 +2703,7 @@ end svgSpecIsProperty
  * set when unset. */
 private function svgSpecIsPropertyInheritable pProperty
 	/* All properties are inheritable at the moment */
-	return true --sSvgSpec["elements"][""]["property"][pProperty]["inheritable"]
+	return sSvgSpec["elements"][""]["property"][pProperty]["inheritable"]
 end svgSpecIsPropertyInheritable
 
 /* svgSpecGetApplicableAttributesOfElement returns an array whose keys are the
@@ -2596,11 +2863,21 @@ private command svgSpecLoad
 			end if
 
 			/* The syntax of a feature is:
-			 *   (property | attribute ) <name> <type> (nullable | default <value>)
+			 *   (property | attribute ) <name> <type> (nullable | default <value>) [inheritable]
 			 * So a feature line must have at least 4 words */
 			if the number of words in tLine < 4 then
 				_svgSpecError tCurrentRow, "invalid feature clause (too few words)"
 				next repeat
+			end if
+
+			/* If this is a property, it can have 'inheritable' at the end */
+			local tIsInheritable
+			put false into tIsInheritable
+			if tLineType is "property" then
+				if the last word of tLine is "inheritable" then
+					put true into tIsInheritable
+					delete the last word of tLine
+				end if
 			end if
 
 			/* Extract the name of the feature from the second word, and the
@@ -2641,6 +2918,10 @@ private command svgSpecLoad
 			else if word 4 of tLine is "nullable" then
 				/* The feature has been marked as nullable, so mark it as such. */
 				put true into tFeature["nullable"]
+			end if
+
+			if tLineType is "property" then
+				put tIsInheritable into tFeature["inheritable"]
 			end if
 
 			/* The name of a feature must be unique in the current element. */

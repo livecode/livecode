@@ -82,6 +82,57 @@ inline MCGPoint MCGPointReflect(const MCGPoint &origin, const MCGPoint &point)
  *
  */
 
+/* MCGSolidColor represents a rgba color value. */
+typedef MCGColor4f MCGDrawingSolidColor;
+
+struct MCGDrawingRamp
+{
+    ssize_t count;
+    const MCGDrawingSolidColor *colors;
+    const MCGFloat *offsets;
+};
+
+struct MCGDrawingGradient
+{
+    MCGGradientSpreadMethod spread;
+    MCGAffineTransform transform;
+    MCGDrawingRamp ramp;
+};
+
+struct MCGDrawingLinearGradient: public MCGDrawingGradient
+{
+};
+
+struct MCGDrawingRadialGradient: public MCGDrawingGradient
+{
+};
+
+enum MCGDrawingPaintType
+{
+    kMCGDrawingPaintTypeNone,
+    kMCGDrawingPaintTypeSolidColor,
+    kMCGDrawingPaintTypeLinearGradient,
+    kMCGDrawingPaintTypeRadialGradient,
+};
+
+struct MCGDrawingPaint
+{
+    MCGDrawingPaintType type;
+    union
+    {
+        MCGDrawingSolidColor solid_color;
+        MCGDrawingGradient gradient;
+        MCGDrawingLinearGradient linear_gradient;
+        MCGDrawingRadialGradient radial_gradient;
+    };
+    
+    MCGDrawingPaint(void)
+        : type(kMCGDrawingPaintTypeNone)
+    {
+    }
+};
+
+/* Constants describing the first four bytes of a drawing */
 enum : uint8_t
 {
     kMCGDrawingIdent0 = 'L',
@@ -357,12 +408,36 @@ enum MCGDrawingPaintOpcode : uint8_t
     /* End terminates a sequence of overlaid paints. */
     kMCGDrawingPaintOpcodeEnd = 0,
     
-    /* SolidColor defines a solid color paint. It is defined by 3 scalars -
-     * red green blue. */
+    /* SolidColor defines a solid color paint. It is defined by 4 unit scalars -
+     * red green blue alpha. */
     kMCGDrawingPaintOpcodeSolidColor = 1,
     
+    /* SolidLinearGradient defines a linear gradient paint. It is defined by:
+     *   spread method : spread method opcode
+     *   transform : transform opcode stream
+     *   count : ramp length
+     *   colors : count sets of 4 unit scalars - red green blue alpha
+     *   stops : count array of unit scalars
+     */
+    kMCGDrawingPaintOpcodeLinearGradient = 2,
+    
+    kMCGDrawingPaintOpcodeRadialGradient = 3,
+    
     /* _Last is used for range checking on the paint opcodes. */
-    kMCGDrawingPaintOpcode_Last = kMCGDrawingPaintOpcodeSolidColor,
+    kMCGDrawingPaintOpcode_Last = kMCGDrawingPaintOpcodeRadialGradient,
+};
+
+/* SPREAD METHOD OPCODES */
+
+/* MCGDrawingSpreadMethodOpcode defines the opcodes used to specify the spread
+ * method of a gradient. */
+enum MCGDrawingSpreadMethodOpcode : uint8_t
+{
+    kMCGDrawingSpreadMethodOpcodePad = 0,
+    kMCGDrawingSpreadMethodOpcodeReflect = 1,
+    kMCGDrawingSpreadMethodOpcodeRepeat = 2,
+    
+    kMCGDrawingSpreadMethodOpcode_Last = kMCGDrawingSpreadMethodOpcodeRepeat,
 };
 
 /* FILL RULE OPCODES */
@@ -517,19 +592,6 @@ inline bool MCGDrawingPathOpcodeIsReverseArcTo(MCGDrawingPathOpcode p_opcode)
  * the Execute methods in MCGDrawingContext. */
 struct MCGDrawingVisitor
 {
-    /* Transform Operations */
-
-    void TransformBegin(void);
-    void TransformAffine(MCGFloat a, MCGFloat b, MCGFloat c, MCGFloat d, MCGFloat tx, MCGFloat ty);
-    void TransformEnd(void);
-    
-    /* Paint Operations */
-    
-    void PaintBegin(bool is_stroke);
-    void PaintNone(void);
-    void PaintSolidColor(MCGFloat red, MCGFloat green, MCGFloat blue);
-    void PaintEnd(void);
-    
     /* Path Operations */
     
     void PathBegin(void);
@@ -545,13 +607,19 @@ struct MCGDrawingVisitor
     void PathCloseSubpath(void);
     void PathEnd(void);
     
+    /* General Attribute Operations */
+    
+    void Transform(MCGAffineTransform transform);
+    
     /* Fill Attribute Operations */
     
+    void FillPaint(const MCGDrawingPaint& paint);
     void FillOpacity(MCGFloat opacity);
     void FillRule(MCGFillRule fill_rule);
    
     /* Stroke Attribute Operations */
     
+    void StrokePaint(const MCGDrawingPaint& paint);
     void StrokeOpacity(MCGFloat opacity);
     void StrokeWidth(MCGFloat width);
     void StrokeLineJoin(MCGJoinStyle join_style);
@@ -571,7 +639,7 @@ struct MCGDrawingVisitor
     
     /* Lifecycle Operations */
 
-    void Start(MCGRectangle p_viewport, const MCGRectangle* p_viewbox, MCGDrawingPreserveAspectRatioOpcode p_par);
+    void Start(void);
     void Finish(bool p_error);
 };
 
@@ -646,6 +714,10 @@ enum MCGDrawingStatus
     /* InvalidPreserveAspectRatioOpcode indicates that an undefined preserve
      * aspect ratio opcode has been encountered. */
     kMCGDrawingStatusInvalidPreserveAspectRatioOpcode,
+    
+    /* InvalidSpreadMethodOpcode indicates that an undefined spread method
+     * opcode has been encountered. */
+    kMCGDrawingStatusInvalidSpreadMethodOpcode,
     
     /* InvalidPointArray indicates that a point array with an odd number of
      * scalars has been encountered. */
@@ -884,15 +956,24 @@ public:
                              kMCGDrawingStatusInvalidPreserveAspectRatioOpcode>(r_opcode);
     }
     
+    /* SpreadMethodOpcode attempts to read the next opcode as a spread method
+     * opcode. */
+    bool SpreadMethodOpcode(MCGDrawingSpreadMethodOpcode& r_opcode)
+    {
+        return GeneralOpcode<MCGDrawingSpreadMethodOpcode,
+                             kMCGDrawingSpreadMethodOpcode_Last,
+                             kMCGDrawingStatusInvalidSpreadMethodOpcode>(r_opcode);
+    }
+    
     /* Count attempts to read an non-negative integer from the opcode stream.
      * Non-negative integers are encoded as a sequence of bytes, most
      * significant byte first. The top bit of each byte is used to indicate
      * whether there is another following. */
-    bool Count(uint32_t& r_count)
+    bool Count(ssize_t& r_count)
     {
         /* Start the read count at zero, each byte will be accumulated into it
          */
-        uint32_t t_count = 0;
+        ssize_t t_count = 0;
     
         /* Opcode bytes are processed until we reach a termination condition. */
         for(;;)
@@ -969,6 +1050,11 @@ public:
         return true;
     }
     
+    bool UnitScalars(ssize_t p_count, MCSpan<const MCGFloat>& r_scalars)
+    {
+        return Scalars(p_count, r_scalars);
+    }
+    
     /* LengthScalars attempts to read p_count length scalars - a length scalar
      * is non-negative scalar. */
     bool LengthScalars(ssize_t p_count, MCSpan<const MCGFloat>& r_scalars)
@@ -1036,6 +1122,21 @@ public:
         return true;
     }
     
+    /* AffineTransform attempts to read an transform defined as size scalars. */
+    bool AffineTransform(MCGAffineTransform& r_transform)
+    {
+        if (!Scalar(r_transform.a) ||
+            !Scalar(r_transform.b) ||
+            !Scalar(r_transform.c) ||
+            !Scalar(r_transform.d) ||
+            !Scalar(r_transform.tx) ||
+            !Scalar(r_transform.ty))
+        {
+            return false;
+        }
+        return true;
+    }
+    
     /* Rectangle attempts to read a rectangle defined as four scalars - x, y
      * width, height. */
     bool Rectangle(MCGRectangle& r_rect)
@@ -1050,11 +1151,25 @@ public:
         return true;
     }
     
+    /* SolidColor attempts to read a solid color defined as three unit scalars -
+     * red, green, blue. */
+    bool SolidColor(MCGDrawingSolidColor& r_color)
+    {
+        if (!UnitScalar(r_color.red) ||
+            !UnitScalar(r_color.green) ||
+            !UnitScalar(r_color.blue) ||
+            !UnitScalar(r_color.alpha))
+        {
+            return false;
+        }
+        return true;
+    }
+    
     /* LengthArray attempts to read an array of scalars, using a count fetched
      * from the opcode stream. */
     bool LengthArray(MCSpan<const MCGFloat>& r_lengths)
     {
-        uint32_t t_count;
+        ssize_t t_count;
         if (!Count(t_count))
         {
             return false;
@@ -1076,7 +1191,7 @@ public:
     bool PointArray(MCSpan<const MCGPoint>& r_points)
     {
         /* Read the number of scalars to expect from the opcode stream. */
-        uint32_t t_scalar_count;
+        ssize_t t_scalar_count;
         if (!Count(t_scalar_count))
         {
             return false;
@@ -1098,6 +1213,30 @@ public:
         
         r_points = MCMakeSpan(reinterpret_cast<const MCGPoint*>(t_scalars.data()),
                               t_scalars.size() / 2);
+        
+        return true;
+    }
+    
+    bool Ramp(MCGDrawingRamp& r_ramp)
+    {
+        if (!Count(r_ramp.count))
+        {
+            return false;
+        }
+        
+        MCSpan<const MCGFloat> t_color_scalars;
+        if (!UnitScalars(r_ramp.count * 4, t_color_scalars))
+        {
+            return false;
+        }
+        r_ramp.colors = reinterpret_cast<const MCGDrawingSolidColor*>(t_color_scalars.data());
+        
+        MCSpan<const MCGFloat> t_offset_scalars;
+        if (!UnitScalars(r_ramp.count, t_offset_scalars))
+        {
+            return false;
+        }
+        r_ramp.offsets = t_offset_scalars.data();
         
         return true;
     }
@@ -1141,15 +1280,12 @@ private:
         return true;
     }
 
-    /* ExecuteTransform runs a transform opcode stream into the provided
-     * visitor. */
-    template<typename VisitorT>
-    void ExecuteTransform(VisitorT& visitor);
+    /* ExecuteTransform runs a transform opcode stream to generate an affine
+     * transform. */
+    bool ExecuteTransform(MCGAffineTransform p_base_transform, MCGAffineTransform& r_transform);
     
-    /* ExecutePaint runs a paint opcode stream into the provided
-     * visitor. */
-    template<typename VisitorT>
-    void ExecutePaint(VisitorT& visitor, bool is_stroke);
+    /* ExecutePaint runs a paint opcode stream to generate a paint struct. */
+    bool ExecutePaint(MCGDrawingPaint& r_paint);
     
     /* ExecutePath runs a path opcode stream into the provided
      * visitor. */
@@ -1199,37 +1335,91 @@ private:
 
 /* The (template based) implementation of the Execute method. */
 template<typename VisitorT>
-void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
+void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_viewport)
 {
     /* If the drawing's width is negative, then it means the width of the
      * drawing was specified as a percentage (represented as a scalar in the
      * range [-1, 0)) of the requested destination rectangle width. Otherwise
      * the width is absolute. */
-    if (m_width < 0)
-    {
-        p_dst_rect.size.width *= -m_width;
-    }
-    else
-    {
-        p_dst_rect.size.width = m_width;
-    }
+    p_viewport.size.width = m_width >= 0 ? m_width : p_viewport.size.width * -m_width;
     
     /* If the drawing's height is negative, then it means the height of the
      * drawing was specified as a percentage (represented as a scalar in the
      * range [-1, 0)) of the requested destination rectangle height. Otherwise
      * the height is absolute. */
-    if (m_height < 0)
+    p_viewport.size.height = m_height >= 0 ? m_height : p_viewport.size.height * -m_height;
+    
+    /* Compute the viewport transform. If there is no viewbox then it is just
+     * a translation by the origin of the dst rect. Otherwise it is a translation
+     * followed by a scale defined by the viewbox and preserve-aspect-ratio
+     * attribute. */
+    MCGAffineTransform t_viewport_transform;
+    if (!m_has_viewport)
     {
-        p_dst_rect.size.height *= -m_height;
+        t_viewport_transform = MCGAffineTransformMakeTranslation(p_viewport.origin.x, p_viewport.origin.y);
     }
     else
     {
-        p_dst_rect.size.height = m_height;
+        float t_scale_x, t_scale_y;
+        if (m_viewbox.size.width != 0)
+        {
+            t_scale_x = p_viewport.size.width / m_viewbox.size.width;
+        }
+        else
+        {
+            t_scale_x = 0;
+        }
+        
+        if (m_viewbox.size.height != 0)
+        {
+            t_scale_y = p_viewport.size.height / m_viewbox.size.height;
+        }
+        else
+        {
+            t_scale_y = 0;
+        }
+        
+        if (MCGDrawingPreserveAspectRatioIsMeet(m_preserve_aspect_ratio))
+        {
+            t_scale_x = t_scale_y = MCMin(t_scale_x, t_scale_y);
+        }
+        else if (MCGDrawingPreserveAspectRatioIsSlice(m_preserve_aspect_ratio))
+        {
+            t_scale_x = t_scale_y = MCMax(t_scale_x, t_scale_y);
+        }
+        
+        float t_translate_x, t_translate_y;
+        t_translate_x = p_viewport.origin.x - (m_viewbox.origin.x * t_scale_x);
+        t_translate_y = p_viewport.origin.y - (m_viewbox.origin.y * t_scale_y);
+        
+        if (MCGDrawingPreserveAspectRatioIsXMid(m_preserve_aspect_ratio))
+        {
+            t_translate_x += (p_viewport.size.width - m_viewbox.size.width * t_scale_x) / 2;
+        }
+        else if (MCGDrawingPreserveAspectRatioIsXMax(m_preserve_aspect_ratio))
+        {
+            t_translate_x += (p_viewport.size.width - m_viewbox.size.width * t_scale_x);
+        }
+        
+        if (MCGDrawingPreserveAspectRatioIsYMid(m_preserve_aspect_ratio))
+        {
+            t_translate_y += (p_viewport.size.height - m_viewbox.size.height * t_scale_y) / 2;
+        }
+        else if (MCGDrawingPreserveAspectRatioIsYMax(m_preserve_aspect_ratio))
+        {
+            t_translate_y += (p_viewport.size.height - m_viewbox.size.height * t_scale_y);
+        }
+        
+        t_viewport_transform = MCGAffineTransformMakeTranslation(t_translate_x, t_translate_y);
+        t_viewport_transform = MCGAffineTransformConcat(t_viewport_transform,
+                                                        MCGAffineTransformMakeScale(t_scale_x, t_scale_y));
     }
     
     /* Start the visitor, passing in the destination rectangle and viewport
      * details so it can configure an initial transform. */
-    p_visitor.Start(p_dst_rect, m_has_viewport ? &m_viewbox : nullptr, m_preserve_aspect_ratio);
+    p_visitor.Start();
+    
+    p_visitor.Transform(t_viewport_transform);
     
     /* Loop until the status ceases to be None. */
     while(m_status == kMCGDrawingStatusNone)
@@ -1260,7 +1450,12 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
             /* Transform opcodes require executing a transform opcode stream. */
             case kMCGDrawingOpcodeTransform:
             {
-                ExecuteTransform(p_visitor);
+                MCGAffineTransform t_transform;
+                if (!ExecuteTransform(t_viewport_transform, t_transform))
+                {
+                    break;
+                }
+                p_visitor.Transform(t_transform);
             }
             break;
             
@@ -1270,7 +1465,19 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
             case kMCGDrawingOpcodeFillPaint:
             case kMCGDrawingOpcodeStrokePaint:
             {
-                ExecutePaint(p_visitor, t_opcode == kMCGDrawingOpcodeStrokePaint);
+                MCGDrawingPaint t_paint;
+                if (!ExecutePaint(t_paint))
+                {
+                    break;
+                }
+                if (t_opcode == kMCGDrawingOpcodeFillPaint)
+                {
+                    p_visitor.FillPaint(t_paint);
+                }
+                else
+                {
+                    p_visitor.StrokePaint(t_paint);
+                }
             }
             break;
                 
@@ -1574,26 +1781,25 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
     /* Tell the visitor that visiting has terminated - whether an error occurred
      * or not is flagged by the bool parameter. (None means no error, everything
      * else means error). */
-    p_visitor.Finish(m_status == kMCGDrawingStatusNone);
+    p_visitor.Finish(m_status != kMCGDrawingStatusNone);
 }
 
-/* The (template based) implementation of the ExecuteTransform method. */
-template<typename VisitorT>
-void MCGDrawingContext::ExecuteTransform(VisitorT& p_visitor)
+/* The implementation of the ExecuteTransform method. */
+bool MCGDrawingContext::ExecuteTransform(MCGAffineTransform p_base_transform,
+                                         MCGAffineTransform& r_transform)
 {
-    p_visitor.TransformBegin();
-    
+    MCGAffineTransform t_transform = p_base_transform;
+
     while(IsRunning())
     {
         MCGDrawingTransformOpcode t_opcode;
         if (!TransformOpcode(t_opcode))
         {
-            break;
+            return false;
         }
         
         if (t_opcode == kMCGDrawingTransformOpcodeEnd)
         {
-            p_visitor.TransformEnd();
             break;
         }
         
@@ -1605,29 +1811,26 @@ void MCGDrawingContext::ExecuteTransform(VisitorT& p_visitor)
                 
             case kMCGDrawingTransformOpcodeAffine:
             {
-                MCGFloat t_a, t_b, t_c, t_d, t_tx, t_ty;
-                if (!Scalar(t_a) ||
-                    !Scalar(t_b) ||
-                    !Scalar(t_c) ||
-                    !Scalar(t_d) ||
-                    !Scalar(t_tx) ||
-                    !Scalar(t_ty))
+                MCGAffineTransform t_affine_transform;
+                if (!AffineTransform(t_affine_transform))
                 {
-                    break;
+                    return false;
                 }
-                p_visitor.TransformAffine(t_a, t_b, t_c, t_d, t_tx, t_ty);
+                t_transform = MCGAffineTransformConcat(t_transform, t_affine_transform);
             }
             break;
         }
     }
+    
+    r_transform = t_transform;
+    
+    return true;
 }
 
-/* The (template based) implementation of the ExecutePaint method. */
-template<typename VisitorT>
-void MCGDrawingContext::ExecutePaint(VisitorT& p_visitor, bool p_is_stroke)
+/* The implementation of the ExecutePaint method. */
+bool MCGDrawingContext::ExecutePaint(MCGDrawingPaint& r_paint)
 {
-    p_visitor.PaintBegin(p_is_stroke);
-    
+    MCGDrawingPaint t_paint;
     while(IsRunning())
     {
         MCGDrawingPaintOpcode t_opcode;
@@ -1638,7 +1841,6 @@ void MCGDrawingContext::ExecutePaint(VisitorT& p_visitor, bool p_is_stroke)
         
         if (t_opcode == kMCGDrawingPaintOpcodeEnd)
         {
-            p_visitor.PaintEnd();
             break;
         }
         
@@ -1649,17 +1851,54 @@ void MCGDrawingContext::ExecutePaint(VisitorT& p_visitor, bool p_is_stroke)
                 break;
                 
             case kMCGDrawingPaintOpcodeSolidColor:
-                MCGFloat t_red, t_green, t_blue;
-                if (!UnitScalar(t_red) ||
-                    !UnitScalar(t_green) ||
-                    !UnitScalar(t_blue))
+            {
+                t_paint.type = kMCGDrawingPaintTypeSolidColor;
+                if (!SolidColor(t_paint.solid_color))
                 {
-                    break;
+                    return false;
                 }
-                p_visitor.PaintSolidColor(t_red, t_green, t_blue);
-                break;
+            }
+            break;
+            
+            case kMCGDrawingPaintOpcodeLinearGradient:
+            case kMCGDrawingPaintOpcodeRadialGradient:
+                t_paint.type =
+                    t_opcode == kMCGDrawingPaintOpcodeLinearGradient ? kMCGDrawingPaintTypeLinearGradient
+                                                                     : kMCGDrawingPaintTypeRadialGradient;
+                
+                MCGDrawingSpreadMethodOpcode t_spread_opcode;
+                if (!SpreadMethodOpcode(t_spread_opcode))
+                {
+                    return false;
+                }
+                switch(t_spread_opcode)
+                {
+                    case kMCGDrawingSpreadMethodOpcodePad:
+                        t_paint.gradient.spread = kMCGGradientSpreadMethodPad;
+                        break;
+                    case kMCGDrawingSpreadMethodOpcodeReflect:
+                        t_paint.gradient.spread = kMCGGradientSpreadMethodReflect;
+                        break;
+                    case kMCGDrawingSpreadMethodOpcodeRepeat:
+                        t_paint.gradient.spread = kMCGGradientSpreadMethodRepeat;
+                        break;
+                }
+                if (!ExecuteTransform(MCGAffineTransformMakeIdentity(),
+                                      t_paint.gradient.transform))
+                {
+                    return false;
+                }
+                if (!Ramp(t_paint.gradient.ramp))
+                {
+                    return false;
+                }
+            break;
         }
     }
+    
+    r_paint = t_paint;
+    
+    return true;
 }
 
 /* The (template based) implementation of the ExecutePath method. */
@@ -1850,10 +2089,6 @@ struct MCGDrawingRenderVisitor
 
     /**/
     
-    bool paint_is_for_stroke = false;
-    bool paint_set = false;
-    MCGAffineTransform current_transform;
-    
     MCGPoint first_point = {0, 0};
     MCGPoint last_point = {0, 0};
     MCGPoint last_control_point = {0, 0};
@@ -1886,78 +2121,6 @@ struct MCGDrawingRenderVisitor
             return MCGPointMake(last_point.x, last_point.y + p_y);
         }
         return MCGPointMake(last_point.x, p_y);
-    }
-    
-    /**/
-    
-    void TransformBegin(void)
-    {
-        current_transform = MCGAffineTransformMakeIdentity();
-    }
-    
-    void TransformAffine(MCGFloat a, MCGFloat b, MCGFloat c, MCGFloat d, MCGFloat tx, MCGFloat ty)
-    {
-        current_transform = MCGAffineTransformConcat(current_transform,
-                                                     MCGAffineTransformMake(a, b, c, d, tx, ty));
-    }
-
-    void TransformEnd(void)
-    {
-        MCGContextSetTransform(gcontext, current_transform);
-    }    
-    
-    /**/
-    
-    void PaintBegin(bool p_is_stroke)
-    {
-        paint_is_for_stroke = p_is_stroke;
-        paint_set = false;
-    }
-    
-    void PaintNone(void)
-    {
-        if (paint_set)
-        {
-            return;
-        }
-        
-        if (!paint_is_for_stroke)
-        {
-            MCGContextSetFillNone(gcontext);
-        }
-        else
-        {
-            MCGContextSetStrokeNone(gcontext);
-        }
-        
-        paint_set = true;
-    }
-    
-    void PaintSolidColor(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue)
-    {
-        if (paint_set)
-        {
-            return;
-        }
-        
-        if (!paint_is_for_stroke)
-        {
-            MCGContextSetFillRGBAColor(gcontext, p_red, p_green, p_blue, 1.0);
-        }
-        else
-        {
-            MCGContextSetStrokeRGBAColor(gcontext, p_red, p_green, p_blue, 1.0);
-        }
-        
-        paint_set = true;
-    }
-    
-    void PaintEnd(void)
-    {
-        if (!paint_set)
-        {
-            PaintNone();
-        }
     }
     
     /**/
@@ -2092,79 +2255,25 @@ struct MCGDrawingRenderVisitor
     
     /**/
     
-    void Start(MCGRectangle p_viewport, const MCGRectangle* p_viewbox, MCGDrawingPreserveAspectRatioOpcode p_par)
+    void Start(void)
     {
         MCGContextSave(gcontext);
         MCGContextSetShouldAntialias(gcontext, true);
-        
-        if (p_viewbox != nullptr)
-        {
-            float t_scale_x, t_scale_y;
-            if (p_viewbox->size.width != 0)
-            {
-                t_scale_x = p_viewport.size.width / p_viewbox->size.width;
-            }
-            else
-            {
-                t_scale_x = 0;
-            }
-            
-            if (p_viewbox->size.height != 0)
-            {
-                t_scale_y = p_viewport.size.height / p_viewbox->size.height;
-            }
-            else
-            {
-                t_scale_y = 0;
-            }
-            
-            if (MCGDrawingPreserveAspectRatioIsMeet(p_par))
-            {
-                t_scale_x = t_scale_y = MCMin(t_scale_x, t_scale_y);
-            }
-            else if (MCGDrawingPreserveAspectRatioIsSlice(p_par))
-            {
-                t_scale_x = t_scale_y = MCMax(t_scale_x, t_scale_y);
-            }
-            
-            float t_translate_x, t_translate_y;
-            t_translate_x = p_viewport.origin.x - (p_viewbox->origin.x * t_scale_x);
-            t_translate_y = p_viewport.origin.y - (p_viewbox->origin.y * t_scale_y);
-            
-            if (MCGDrawingPreserveAspectRatioIsXMid(p_par))
-            {
-                t_translate_x += (p_viewport.size.width - p_viewbox->size.width * t_scale_x) / 2;
-            }
-            else if (MCGDrawingPreserveAspectRatioIsXMax(p_par))
-            {
-                t_translate_x += (p_viewport.size.width - p_viewbox->size.width * t_scale_x);
-            }
-            
-            if (MCGDrawingPreserveAspectRatioIsYMid(p_par))
-            {
-                t_translate_y += (p_viewport.size.height - p_viewbox->size.height * t_scale_y) / 2;
-            }
-            else if (MCGDrawingPreserveAspectRatioIsYMax(p_par))
-            {
-                t_translate_y += (p_viewport.size.height - p_viewbox->size.height * t_scale_y);
-            }
-            
-            MCGContextConcatCTM(gcontext,
-                                MCGAffineTransformPostScale(MCGAffineTransformMakeTranslation(t_translate_x, t_translate_y),
-                                                            t_scale_x, t_scale_y));
-        }
-        else
-        {
-            MCGContextTranslateCTM(gcontext, p_viewport.origin.x, p_viewport.origin.y);
-        }
-        
-        MCGContextSave(gcontext);
     }
     
     void Finish(bool p_error)
     {
         MCGContextRestore(gcontext);
-        MCGContextRestore(gcontext);
+    }
+    
+    void Transform(MCGAffineTransform p_transform)
+    {
+        MCGContextSetTransform(gcontext, p_transform);
+    }
+    
+    void FillPaint(const MCGDrawingPaint& p_paint)
+    {
+        ApplyPaint(false, p_paint);
     }
     
     void FillOpacity(MCGFloat p_opacity)
@@ -2175,6 +2284,11 @@ struct MCGDrawingRenderVisitor
     void FillRule(MCGFillRule p_fill_rule)
     {
         MCGContextSetFillRule(gcontext, p_fill_rule);
+    }
+    
+    void StrokePaint(const MCGDrawingPaint& p_paint)
+    {
+        ApplyPaint(true, p_paint);
     }
     
     void StrokeOpacity(MCGFloat p_opacity)
@@ -2253,6 +2367,63 @@ struct MCGDrawingRenderVisitor
     {
         MCGContextAddPolygon(gcontext, p_points.data(), uindex_t(p_points.size()));
         MCGContextFillAndStroke(gcontext);
+    }
+    
+private:
+    void ApplyPaint(bool p_is_stroke, const MCGDrawingPaint& p_paint)
+    {
+        switch(p_paint.type)
+        {
+            case kMCGDrawingPaintTypeNone:
+                (!p_is_stroke ? MCGContextSetFillNone
+                              : MCGContextSetStrokeNone)(gcontext);
+            break;
+            
+            case kMCGDrawingPaintTypeSolidColor:
+                (!p_is_stroke ? MCGContextSetFillRGBAColor
+                              : MCGContextSetStrokeRGBAColor)(gcontext,
+                                                              p_paint.solid_color.red,
+                                                              p_paint.solid_color.green,
+                                                              p_paint.solid_color.blue,
+                                                              p_paint.solid_color.alpha);
+            break;
+            
+            case kMCGDrawingPaintTypeLinearGradient:
+            case kMCGDrawingPaintTypeRadialGradient:
+            {
+                MCGRampRef t_ramp = nullptr;
+                if (!MCGRamp::Create4f(p_paint.gradient.ramp.offsets, p_paint.gradient.ramp.colors, p_paint.gradient.ramp.count, t_ramp))
+                {
+                    break;
+                }
+                
+                MCGGradientRef t_gradient = nullptr;
+                if (p_paint.type == kMCGDrawingPaintTypeLinearGradient)
+                {
+                    if (!MCGLinearGradient::Create({0, 0}, {1, 0}, t_ramp, p_paint.gradient.spread, p_paint.gradient.transform, t_gradient))
+                    {
+                        MCGRelease(t_ramp);
+                        break;
+                    }
+                }
+                else
+                {
+                    if (!MCGRadialGradient::Create({0, 0}, 1, t_ramp, p_paint.gradient.spread, p_paint.gradient.transform, t_gradient))
+                    {
+                        MCGRelease(t_ramp);
+                        break;
+                    }
+                }
+                
+                MCGRelease(t_ramp);
+                
+                (!p_is_stroke ? MCGContextSetFillPaint
+                              : MCGContextSetStrokePaint)(gcontext, t_gradient);
+                
+                MCGRelease(t_gradient);
+            }
+            break;
+        }
     }
 };
 

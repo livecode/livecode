@@ -1,18 +1,23 @@
 element
-	property fill <paint>|inherit default black
-	property fill-rule nonzero|evenodd|inherit default nonzero
-	property fill-opacity <opacity>|inherit default 1
-	property stroke <paint>|inherit default none
-	property stroke-width <length>|inherit default 1
-	property stroke-linecap butt|round|square|inherit default butt
-	property stroke-linejoin miter|round|bevel|inherit default miter
-	property stroke-miterlimit <miterlimit>|inherit default 4
-	property stroke-dasharray <dasharray>|inherit default none
-	property stroke-dashoffset <length>|inherit default 0
-	property stroke-opacity <opacity>|inherit default 1
+	property fill <paint>|inherit default black inheritable
+	property fill-rule nonzero|evenodd|inherit default nonzero inheritable
+	property fill-opacity <opacity>|inherit default 1 inheritable
+	property stroke <paint>|inherit default none inheritable
+	property stroke-width <length>|inherit default 1 inheritable
+	property stroke-linecap butt|round|square|inherit default butt inheritable
+	property stroke-linejoin miter|round|bevel|inherit default miter inheritable
+	property stroke-miterlimit <miterlimit>|inherit default 4 inheritable
+	property stroke-dasharray <dasharray>|inherit default none inheritable
+	property stroke-dashoffset <length>|inherit default 0 inheritable
+	property stroke-opacity <opacity>|inherit default 1 inheritable
+	property solid-color <color>|inherit default black
+	property solid-opacity <opacity>|inherit default 1
+	property stop-color <color>|inherit default black
+	property stop-opacity <opacity>|inherit default 1
 
 element svg
 	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
 	attribute style <text> nullable
 	attribute version 1.0|1.1|1.2 nullable 
 	attribute baseProfile none|full|basic|tiny default none
@@ -25,12 +30,14 @@ element svg
 
 element defs
 	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
 	attribute style <text> nullable
 
 element use
 	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
 	attribute style <text> nullable
-	attribute transform <transform> nullable
+	attribute transform <transform> default ""
 	attribute x <coordinate> default 0
 	attribute y <coordinate> default 0
 	attribute href <reference> nullable
@@ -38,13 +45,15 @@ element use
 
 element g
 	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
 	attribute style <text> nullable
-	attribute transform <transform> nullable
+	attribute transform <transform> default ""
 
 element rect
 	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
 	attribute style <text> nullable
-	attribute transform <transform> nullable
+	attribute transform <transform> default ""
 	attribute x <coordinate> default 0
 	attribute y <coordinate> default 0
 	attribute width <nonnegative-length> default 0
@@ -65,8 +74,9 @@ element rect
 
 element circle
 	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
 	attribute style <text> nullable
-	attribute transform <transform> nullable
+	attribute transform <transform> default ""
 	attribute cx <coordinate> default 0
 	attribute cy <coordinate> default 0
 	attribute r <nonnegative-length> default 0
@@ -84,8 +94,9 @@ element circle
 
 element ellipse
 	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
 	attribute style <text> nullable
-	attribute transform <transform> nullable
+	attribute transform <transform> default ""
 	attribute cx <coordinate> default 0
 	attribute cy <coordinate> default 0
 	attribute rx <nonnegative-length> default 0
@@ -104,8 +115,9 @@ element ellipse
 
 element line
 	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
 	attribute style <text> nullable
-	attribute transform <transform> nullable
+	attribute transform <transform> default ""
 	attribute x1 <coordinate> default 0
 	attribute y1 <coordinate> default 0
 	attribute x2 <coordinate> default 0
@@ -124,8 +136,9 @@ element line
 
 element polyline
 	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
 	attribute style <text> nullable
-	attribute transform <transform> nullable
+	attribute transform <transform> default ""
 	attribute points <points> default ""
 	apply fill
 	apply fill-rule
@@ -141,8 +154,9 @@ element polyline
 
 element polygon
 	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
 	attribute style <text> nullable
-	attribute transform <transform> nullable
+	attribute transform <transform> default ""
 	attribute points <points> default ""
 	apply fill
 	apply fill-rule
@@ -158,8 +172,9 @@ element polygon
 
 element path
 	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
 	attribute style <text> nullable
-	attribute transform <transform> nullable
+	attribute transform <transform> default ""
 	attribute d <path> default ""
 	attribute pathLength <nonnegative-length> nullable
 	apply fill
@@ -173,4 +188,47 @@ element path
 	apply stroke-dasharray
 	apply stroke-dashoffset
 	apply stroke-opacity
+
+element solidColor
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	apply solid-opacity
+	apply solid-color
+
+element linearGradient
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute x1 <coordinate> nullable
+	attribute y1 <coordinate> nullable
+	attribute x2 <coordinate> nullable
+	attribute y2 <coordinate> nullable
+	attribute gradientTransform <transform> nullable
+	attribute gradientUnits userSpaceOnUse|objectBoundingBox nullable
+	attribute spreadMethod pad|reflect|repeat nullable
+	attribute href <reference> nullable
+	attribute xlink:href <reference> nullable
+
+element radialGradient
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute cx <coordinate> nullable
+	attribute cy <coordinate> nullable
+	attribute r <length> nullable
+	attribute gradientTransform <transform> nullable
+	attribute gradientUnits userSpaceOnUse|objectBoundingBox nullable
+	attribute spreadMethod pad|reflect|repeat nullable
+	attribute href <reference> nullable
+	attribute xlink:href <reference> nullable
+
+element stop
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute offset <opacity> nullable
+	apply stop-color
+	apply stop-opacity
+
 
