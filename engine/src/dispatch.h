@@ -70,6 +70,7 @@ public:
     
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
 	
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	
@@ -258,6 +259,11 @@ public:
     //  in the resource mapping array of MCdispatcher.
     void addlibrarymapping(MCStringRef p_mapping);
     bool fetchlibrarymapping(MCStringRef p_name, MCStringRef &r_path);
+    MCArrayRef getlibrarymappings(void)
+    {
+        return m_library_mapping;
+    }
+    bool haslibrarymapping(MCStringRef p_name);
     
     virtual bool recomputefonts(MCFontRef parent_font, bool force);
     

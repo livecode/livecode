@@ -31,7 +31,7 @@ public foreign type ObjcAutoreleasedId binds to "MCObjcAutoreleasedIdTypeInfo"
 
 /****/
 
-private foreign handler MCStringCreateWithCFString(in pNSString as ObjcId, out rString as String) returns CBool binds to "MCStringCreateWithCFString"
+private foreign handler MCStringCreateWithCFStringRef(in pNSString as ObjcId, out rString as String) returns CBool binds to "MCStringCreateWithCFStringRef"
 private foreign handler MCStringConvertToCFStringRef(in pString as String, out rNSString as ObjcRetainedId) returns CBool binds to "MCStringConvertToCFStringRef"
 
 /**/
@@ -75,15 +75,15 @@ a variable of type String.
 public handler StringFromNSString(in pObjcString as ObjcObject) returns String
 	variable tString as String
 	unsafe
-		MCStringCreateWithCFString(pObjcString, tString)
+		MCStringCreateWithCFStringRef(pObjcString, tString)
 	end unsafe
 	return tString
 end handler
 
 /****/
 
-private foreign handler MCDataCreateWithCFData(in pNSData as ObjcId, out rString as Data) returns CBool binds to "MCDataCreateWithCFData"
-private foreign handler MCDataConvertToCFDataRef(in pNSData as Data, out rNSData as ObjcRetainedId) returns CBool binds to "MCDataConvertToCFDataRef"
+private foreign handler MCDataCreateWithCFDataRef(in pNSData as ObjcId, out rData as Data) returns CBool binds to "MCDataCreateWithCFDataRef"
+private foreign handler MCDataConvertToCFDataRef(in pData as Data, out rNSData as ObjcRetainedId) returns CBool binds to "MCDataConvertToCFDataRef"
 
 /**/
 
@@ -98,7 +98,7 @@ A Objective-C object of type NSData
 
 Description
 Use <DataToNSData> to convert a variable of type Data to an Objective-C
-string object (NSData).
+data object (NSData).
 
 */
 public handler DataToNSData(in pData as Data) returns ObjcObject
@@ -116,19 +116,170 @@ Parameters:
 pObjcData: The NSData to convert
 
 Returns:
-A String value
+A Data value
 
 Description
 Use <DataFromNSData> to convert an Objective-C data object (NSData) to
 a variable of type Data.
 
 */
-public handler DataFromNSData(in pObjcData as ObjcObject) returns String
+public handler DataFromNSData(in pObjcData as ObjcObject) returns Data
 	variable tData as Data
 	unsafe
-		MCDataCreateWithCFData(pObjcData, tData)
+		MCDataCreateWithCFDataRef(pObjcData, tData)
 	end unsafe
 	return tData
+end handler
+
+/****/
+
+private foreign handler MCNumberCreateWithCFNumberRef(in pNSNumber as ObjcId, out rNumber as Number) returns CBool binds to "MCNumberCreateWithCFNumberRef"
+private foreign handler MCNumberConvertToCFNumberRef(in pNumber as Number, out rNSNumber as ObjcRetainedId) returns CBool binds to "MCNumberConvertToCFNumberRef"
+
+/**/
+
+/**
+Summary:    Convert a Number into an Objective-C number
+
+Parameters:
+pNumber: The Number to convert
+
+Returns:
+A Objective-C object of type NSNumber
+
+Description
+Use <NumberToNSNumber> to convert a variable of type Number to an Objective-C
+number object (NSNumber).
+
+*/
+public handler NumberToNSNumber(in pNumber as Number) returns ObjcObject
+	variable tNSNumber as ObjcRetainedId
+	unsafe
+		MCNumberConvertToCFNumberRef(pNumber, tNSNumber)
+	end unsafe
+	return tNSNumber
+end handler
+
+/**
+Summary:    Convert a Objective-C number into a Number
+
+Parameters:
+pObjcNumber: The NSNumber to convert
+
+Returns:
+A Number value
+
+Description
+Use <NumberFromNSNumber> to convert an Objective-C number object (NSNumber) to
+a variable of type Number.
+
+*/
+public handler NumberFromNSNumber(in pObjcNumber as ObjcObject) returns Number
+	variable tNumber as Number
+	unsafe
+		MCNumberCreateWithCFNumberRef(pObjcNumber, tNumber)
+	end unsafe
+	return tNumber
+end handler
+
+/****/
+
+private foreign handler MCProperListCreateWithCFArrayRef(in pNSArray as ObjcId, in pUseLists as CBool, out rList as List) returns CBool binds to "MCProperListCreateWithCFArrayRef"
+private foreign handler MCProperListConvertToCFArrayRef(in pList as List, in pUseLists as CBool, out rNSArray as ObjcRetainedId) returns CBool binds to "MCProperListConvertToCFArrayRef"
+
+/**/
+
+/**
+Summary:    Convert a List into an Objective-C array
+
+Parameters:
+pNumber: The List to convert
+
+Returns:
+A Objective-C object of type NSArray
+
+Description
+Use <ListToNSArray> to convert a variable of type List to an Objective-C
+array object (NSArray).
+
+*/
+public handler ListToNSArray(in pList as List) returns ObjcObject
+	variable tNSArray as ObjcRetainedId
+	unsafe
+		MCProperListConvertToCFArrayRef(pList, true, tNSArray)
+	end unsafe
+	return tNSArray
+end handler
+
+/**
+Summary:    Convert a Objective-C array into a List
+
+Parameters:
+pObjcNumber: The NSArray to convert
+
+Returns:
+A Number value
+
+Description
+Use <ListFromNSArray> to convert an Objective-C array object (NSArray) to
+a variable of type List.
+
+*/
+public handler ListFromNSArray(in pObjcArray as ObjcObject) returns List
+	variable tList as List
+	unsafe
+		MCProperListCreateWithCFArrayRef(pObjcArray, true, tList)
+	end unsafe
+	return tList
+end handler
+
+/****/
+
+private foreign handler MCArrayCreateWithCFDictionaryRef(in pNSDictionary as ObjcId, in pUseLists as CBool, out rArray as Array) returns CBool binds to "MCArrayCreateWithCFDictionaryRef"
+private foreign handler MCArrayConvertToCFDictionaryRef(in pArray as Array, in pUseLists as CBool, out rNSDictionary as ObjcRetainedId) returns CBool binds to "MCArrayConvertToCFDictionaryRef"
+
+/**
+Summary:    Convert an Array into an Objective-C dictionary
+
+Parameters:
+pNumber: The Array to convert
+
+Returns:
+A Objective-C object of type NSDictionary
+
+Description
+Use <ArrayToNSDictionary> to convert a variable of type Array to an Objective-C
+dictionary object (NSDictionary).
+
+*/
+public handler ArrayToNSDictionary(in pArray as Array) returns ObjcObject
+	variable tNSArray as ObjcRetainedId
+	unsafe
+		MCArrayConvertToCFDictionaryRef(pArray, true, tNSArray)
+	end unsafe
+	return tNSArray
+end handler
+
+/**
+Summary:    Convert a Objective-C dictionary into a Array
+
+Parameters:
+pObjcNumber: The NSDictionary to convert
+
+Returns:
+An Array value
+
+Description
+Use <ArrayFromNSDictionary> to convert an Objective-C dictionary object (NSDictionary) to
+a variable of type Array.
+
+*/
+public handler ArrayFromNSDictionary(in pObjcArray as ObjcObject) returns List
+	variable tArray as Array
+	unsafe
+		MCArrayCreateWithCFDictionaryRef(pObjcArray, true, tArray)
+	end unsafe
+	return tArray
 end handler
 
 /****/
@@ -203,5 +354,260 @@ end handler
 
 /****/
 
-end module
+private foreign handler _MCObjcCreateDelegate(in pProtocol as String, in pHandlerMapping as Array, out rDelegate as ObjcObject) returns CBool \
+    binds to "MCObjcCreateDelegate"
 
+/**
+Create an Objective-C object with LCB implementations of methods of a protocol.
+
+Example:
+handler ControlIsValidObjectCallback(in pControl as ObjcId, in pObject as ObjcId) returns CSChar
+    return 1
+end handler
+
+public handler GetNSControlTextEditingDelegate() returns ObjcObject
+    return CreateObjcDelegate("NSControlTextEditingDelegate", \
+                              { "control:isValidObject:": \
+                                ControlIsValidObjectCallback })
+end handler
+
+Parameters:
+pProtocol: The name of the protocol
+pHandlerMapping: A mapping from the protocol's selector names to LCB handlers
+
+Returns: An Objective-C object which calls the appropriate LCB handler
+on receiving any of the specified selectors. 
+
+Description:
+Use the <CreateObjcDelegate> handler to create instances of Objective-C 
+delegate classes with LCB implementations of protocol methods. Once 
+created these can be set in the usual way on an instance of the 
+appropriate class (by binding to `-setDelegate:`), typically so that 
+callbacks triggered by user interaction with a widget can be handled in
+LCB.
+
+If any context is required to be passed as a parameter to the callback,
+use <CreateObjcDelegateWithContext>.
+
+Some protocols consist of purely optional methods. In this case the 
+information about the protocol's methods are not available from the     
+objective-c runtime API. In this situation <CreateObjcInformalDelegate> 
+should be used instead.
+
+References:
+CreateObjcDelegateWithContext (handler), 
+CreateObjcInformalDelegate (handler), 
+CreateObjcInformalDelegateWithContext (handler)
+
+*/
+public handler CreateObjcDelegate(in pProtocol as String, in pHandlerMapping as Array) returns optional ObjcObject
+    unsafe
+        variable tObj as ObjcObject
+        if _MCObjcCreateDelegate(pProtocol, pHandlerMapping, tObj) then
+            return tObj
+        end if
+        return nothing
+    end unsafe
+end handler
+
+private foreign handler _MCObjcCreateDelegateWithContext(in pProtocol as String, in pHandlerMapping as Array, in pContext as optional any, out rDelegate as ObjcObject) returns CBool \
+    binds to "MCObjcCreateDelegateWithContext"    
+
+/**
+Create an Objective-C object with LCB implementations of methods of a protocol.
+
+Example:
+handler NumberOfItemsInMenuCallback(in pContext as String, in pMenu as ObjcId) returns CLong
+    -- pContext is the tag for this menu
+    return the number of elements in mMenuArray[pContext]
+end handler
+
+public handler GetNSMenuDelegate(in pMenuTag as String) returns ObjcObject
+    return CreateObjcDelegateWithContext("NSMenuDelegate", \
+                                           { "numberOfItemsInMenu:": \
+                                           NumberOfItemsInMenuCallback }, \
+                                           pMenuTag)
+end handler
+        
+Parameters:
+pProtocol: The name of the protocol
+pHandlerMapping: A mapping from the protocol's selector names to LCB handlers
+pContext: Any context required in the callback.
+
+Returns: An Objective-C object which calls the appropriate LCB handler
+on receiving any of the specified selectors. 
+
+Description:
+Use the <CreateObjcDelegateWithContext> handler to create instances of 
+Objective-C delegate classes with LCB implementations of protocol 
+methods. Once created these can be set in the usual way on an instance 
+of the appropriate class (by binding to `-setDelegate:`), typically so 
+that callbacks triggered by user interaction with a widget can be
+handled in LCB.
+
+If no context is required to be passed as a parameter to the callback,
+use <CreateObjcDelegate>.
+
+Some protocols consist of purely optional methods. In this case the 
+information about the protocol's methods are not available from the     
+objective-c runtime API. In this situation 
+<CreateObjcInformalDelegateWithContext> should be used instead.
+
+References:
+CreateObjcDelegate (handler), CreateObjcInformalDelegate (handler), 
+CreateObjcInformalDelegateWithContext (handler)
+
+*/
+public handler CreateObjcDelegateWithContext(in pProtocol as String, in pHandlerMapping as Array, in pContext as any) returns optional ObjcObject
+    unsafe
+        variable tObj as ObjcObject
+        if _MCObjcCreateDelegateWithContext(pProtocol, pHandlerMapping, \
+                                           pContext, tObj) then
+            return tObj
+        end if
+        return nothing
+    end unsafe
+end handler        
+        
+private foreign handler _MCObjcCreateInformalDelegate(in pProtocol as List, in pHandlerMapping as Array, out rDelegate as ObjcObject) returns CBool \
+    binds to "MCObjcCreateInformalDelegate"
+
+/**
+Create an Objective-C object with LCB implementations of methods of an informal protocol.
+
+Example:
+foreign handler Objc_NSPortMessageGetMsgId(in pMessage as ObjcId) returns UInt32 \
+    binds to "objc:NSPort.-msgid"
+    
+handler HandlePortMessageCallback(in pMessage as ObjcId) returns nothing
+    post "portMessage" with [Objc_NSPortMessageGetMsgId(pMessage)]
+end handler
+    
+foreign handler Objc_NSPortDelegateHandlePortMessage(in pTarget as ObjcId, in pPortMessage as ObjcId) returns nothing \
+    binds to "objc:.-handlePortMessage:"
+        
+public handler GetNSPortDelegate()
+    return CreateObjcInformalDelegate([Objc_NSPortDelegateHandlePortMessage], \
+                                      { "handlePortMessage:": \
+                                        HandlePortMessageCalback })
+end handler
+
+Parameters:
+pProtocol: A list of foreign handlers which bind to protocol methods
+pHandlerMapping: A mapping from the protocol's selector names to LCB handlers
+
+Returns: An Objective-C object which calls the appropriate LCB handler
+on receiving any of the specified selectors. 
+
+Description:
+Use the <CreateObjcInformalDelegate> handler to create instances of 
+Objective-C delegate classes with LCB implementations of protocol 
+methods, when the Protocol object cannot be found at runtime. This 
+occurs for example when all of the protocol methods are optional. 
+
+Instead of a protocol name (as with <CreateObjcDelegate>), the 
+<pProtocol> argument of <CreateObjcInformalDelegate> must be a proper 
+list of foreign handlers for each of the methods of the protocol for 
+which LCB callbacks are provided in the <pHandlerMapping> array.
+
+Once created an informal delegate can be set in the usual way on an 
+instance of the appropriate class (by binding to `-setDelegate:`), 
+typically so that callbacks triggered by user interaction with a widget 
+can be handled in LCB.
+
+If any context is required to be passed as a parameter to the callback,
+use <CreateObjcInformalDelegateWithContext>.
+
+If the protocol can be resolved at runtime, it is generally easier to 
+use the <CreateObjcDelegate> handler.
+
+References:
+CreateObjcDelegate (handler), CreateObjcDelegateWithContext (handler), 
+CreateObjcInformalDelegateWithContext (handler)
+
+*/    
+public handler CreateObjcInformalDelegate(in pProtocol as List, in pHandlerMapping as Array) returns optional ObjcObject
+    unsafe
+        variable tObj as ObjcObject
+        if _MCObjcCreateInformalDelegate(pProtocol, pHandlerMapping, \
+                                        tObj) then
+            return tObj
+        end if
+        return nothing
+    end unsafe
+end handler    
+    
+private foreign handler _MCObjcCreateInformalDelegateWithContext(in pProtocol as List, in pHandlerMapping as Array, in pContext as optional any, out rDelegate as ObjcObject) returns CBool \
+    binds to "MCObjcCreateInformalDelegateWithContext"    
+
+/**
+Create an Objective-C object with LCB implementations of methods of an informal protocol.
+
+Example:
+foreign handler Objc_NSPortMessageGetMsgId(in pMessage as ObjcId) returns UInt32 \
+    binds to "objc:NSPort.-msgid"
+    
+handler HandlePortMessageCallback(in pPortIndex as Integer, in pMessage as ObjcId) returns nothing
+    post "portMessage" with [mPortList[pPortIndex]["name"], \
+                             Objc_NSPortMessageGetMsgId(pMessage)]
+end handler
+    
+foreign handler Objc_NSPortDelegateHandlePortMessage(in pTarget as ObjcId, in pPortMessage as ObjcId) returns nothing \
+    binds to "objc:.-handlePortMessage:"
+        
+public handler GetNSPortDelegate(in pPortIndex as Integer)
+    return CreateObjcInformalDelegateWithContext([Objc_NSPortDelegateHandlePortMessage], \
+                                                 { "handlePortMessage:": \
+                                                   HandlePortMessageCalback }, \
+                                                 pPortIndex)
+end handler
+
+Parameters:
+pProtocol: A list of foreign handlers which bind to protocol methods
+pHandlerMapping: A mapping from the protocol's selector names to LCB handlers
+
+Returns: An Objective-C object which calls the appropriate LCB handler
+on receiving any of the specified selectors. 
+
+Description:
+Use the <CreateObjcInformalDelegateWithContext> handler to create instances of 
+Objective-C delegate classes with LCB implementations of protocol 
+methods, when the Protocol object cannot be found at runtime. This 
+occurs for example when all of the protocol methods are optional. 
+
+Instead of a protocol name (as with <CreateObjcDelegateWithContext>), 
+the <pProtocol> argument of <CreateObjcInformalDelegateWithContext> must 
+be a proper list of foreign handlers for each of the methods of the 
+protocol for which LCB callbacks are provided in the <pHandlerMapping> 
+array.
+
+Once created an informal delegate can be set in the usual way on an 
+instance of the appropriate class (by binding to `-setDelegate:`), 
+typically so that callbacks triggered by user interaction with a widget 
+can be handled in LCB.
+
+If no context is required to be passed as a parameter to the callback,
+use <CreateObjcInformalDelegate>.
+
+If the protocol can be resolved at runtime, it is generally easier to 
+use the <CreateObjcDelegateWithContext> handler.
+
+References:
+CreateObjcDelegate (handler), CreateObjcDelegateWithContext (handler), 
+CreateObjcInformalDelegate (handler)
+
+*/    
+public handler CreateObjcInformalDelegateWithContext(in pProtocol as List, in pHandlerMapping as Array, in pContext as any) returns optional ObjcObject
+    unsafe
+        variable tObj as ObjcObject
+        if _MCObjcCreateInformalDelegateWithContext(pProtocol, \
+                                                   pHandlerMapping, \
+                                                   pContext, \
+                                                   tObj) then
+            return tObj
+        end if
+        return nothing
+    end unsafe
+end handler    
+
+end module

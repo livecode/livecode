@@ -35,18 +35,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickDate, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickTime, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickDateAndTime, 6)
-MC_EXEC_DEFINE_GET_METHOD(Pick, SpecificCameraFeatures, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pick, CameraFeatures, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickMedia, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickPhoto, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickPhotoAndResize, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickOptionByIndex, 10)
-
-////////////////////////////////////////////////////////////////////////////////
-
 enum 
 {
     kMCPickDate,

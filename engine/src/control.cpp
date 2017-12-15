@@ -561,6 +561,44 @@ void MCControl::paste(void)
 	}
 }
 
+/* The MCRereferenceChildrenVisitor visits each of a control's descendents
+ * recursively and makes sure they have a weak-proxy and that the parent is
+ * updated. */
+class MCRereferenceChildrenVisitor: public MCObjectVisitor
+{
+public:
+    static void Visit(MCControl *p_control)
+    {
+        MCRereferenceChildrenVisitor t_visitor(p_control);
+        
+        /* Make sure the control has a weak proxy (needed to set the parent of
+         * its children!). */
+        p_control->ensure_weak_proxy();
+        
+        /* Now visit the controls children. */
+        p_control->visit_children(0, 0, &t_visitor);
+    }
+
+private:
+    MCRereferenceChildrenVisitor(MCObject *p_new_parent)
+        : m_new_parent(p_new_parent)
+    {
+    }
+
+    bool OnControl(MCControl* p_control)
+    {
+        /* Update the control's parent */
+        p_control->setparent(m_new_parent);
+        
+        /* Update its children */
+        MCRereferenceChildrenVisitor::Visit(p_control);
+        
+        return true;
+    }
+    
+    MCObject *m_new_parent;
+};
+
 void MCControl::undo(Ustruct *us)
 {
 	MCRectangle newrect = rect;
@@ -583,7 +621,11 @@ void MCControl::undo(Ustruct *us)
 		{
 			MCCard *card = (MCCard *)parent->getcard();
 			getstack()->appendcontrol(this);
-			this->MCObject::m_weak_proxy = new MCObjectProxyBase(this);
+            
+            /* Visit the control and its children, creating weak_proxys and
+             * reparenting as we go. */
+            MCRereferenceChildrenVisitor::Visit(this);
+            
 			card->newcontrol(this, False);
 			Boolean oldrlg = MCrelayergrouped;
 			MCrelayergrouped = True;
@@ -1359,9 +1401,16 @@ void MCControl::newmessage()
 
 void MCControl::enter()
 {
+    MCControlHandle t_this(this);
+    
     if (focused.IsValid() && !focused.IsBoundTo(this))
     {
-    	leave();
+        leave();
+    }
+    
+    if (!t_this.IsValid())
+    {
+        return;
     }
     
 	if (MCdispatcher -> isdragtarget())
@@ -1387,7 +1436,11 @@ void MCControl::enter()
 	else
 		message(MCM_mouse_enter);
     // AL-2013-01-14: [[ Bug 11343 ]] Add timer if the object handles mouseWithin in the behavior chain.
-	if (handlesmessage(MCM_mouse_within) && !(hashandlers & HH_IDLE))
+    if(!t_this.IsValid())
+    {
+        return;
+    }
+    if (handlesmessage(MCM_mouse_within) && !(hashandlers & HH_IDLE))
 		MCscreen->addtimer(this, MCM_idle, MCidleRate);
 	if (getstack()->gettool(this) == T_BROWSE)
 		MCtooltip->settip(tooltip);

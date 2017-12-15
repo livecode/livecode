@@ -76,7 +76,7 @@ on TestSavingStandalone
    
    revIDESaveStack tStackID
 	 
-	 local tStandalonePath
+   local tStandalonePath
    _TestBuildStandalone tStackFilename, tStandalonePath
    if the result is not empty then
       TestAssert "building standalone", false

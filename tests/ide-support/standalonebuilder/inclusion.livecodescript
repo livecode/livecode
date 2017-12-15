@@ -50,68 +50,24 @@ on TestStandaloneInclusions
    
    create folder tDir
    
-   local tStackName, tStackID
-   create stack
-   put it into tStackID
-   put the short name of tStackID into tStackName
-   
    local tStackFilename
    put the folder & "/" & tDir & "/stack.livecode" into tStackFilename
-   set the filename of tStackID to tStackFilename
    
    set the itemdelimiter to comma
    repeat for each item tItem in "xml,security,zip,sqlite"
-      _TestStandaloneWithInclusion tStackId, tStackFilename, tItem
+      _TestStandaloneWithInclusion tStackFilename, tItem
    end repeat
    
    revDeleteFolder tDir
 end TestStandaloneInclusions
 
-private command _TestStandaloneWithInclusion pStackId, pStackFilename, pItem
+private command _TestStandaloneWithInclusion pStackFilename, pItem
    local tScript
    put _TestScriptForInclusion(pItem) into tScript
-   
-   set the script of pStackId to tScript
-   revIDESaveStack pStackId
-   	 
-   local tExecutablePath
-   _TestBuildStandalone pStackFilename, tExecutablePath
-   if the result is not empty then
-      TestAssert "building standalone", false
-      exit _TestStandaloneWithInclusion
-   end if
-   
-   TestAssert "building standalone", true
-   
-   local tStackName
-   put the short name of pStackId into tStackName
-    
-   TestDiagnostic "location" && tExecutablePath
-   
-   TestAssert "standalone in expected location", there is a file tExecutablePath
-   
-   local tResult, tShellCmd
-   put quote & tExecutablePath & quote into tShellCmd
-   if the environment contains "command line" then
-      put " -ui" after tShellCmd
-   end if
-   get shell(tShellCmd)
-   put the result into tResult
-   
-   if tResult is not empty then
-      TestDiagnostic "standalone quit with" && tResult & ":" && it
-   end if
-      
-   TestAssert "standalone with" && pItem && "inclusion startup", \
-         tResult is empty
-end _TestStandaloneWithInclusion
 
-private command _TestBuildStandalone pStackPath, @xStandalonePath
-	local tStackName, tResult
-	put the short name of stack pStackPath into tStackName
-	
-	TestDiagnostic "Building standalone -" && pStackPath
-	
-	StandaloneBuilderSaveAsStandalone tStackName, xStandalonePath
-	return the result
-end _TestBuildStandalone
+   local tDesc
+   put "standalone with" && pItem && "inclusion startup" into tDesc
+
+   StandaloneBuilderTestCreateAndSaveStackAsStandalone tDesc, \
+      pStackFilename, tScript
+end _TestStandaloneWithInclusion

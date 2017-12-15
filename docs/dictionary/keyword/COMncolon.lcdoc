@@ -5,9 +5,9 @@ Type: keyword
 Syntax: COMn:
 
 Summary:
-Used with the <open file>, <read from file>, <write to file>, and <close
-file> <command|commands>, to specify a COM <port> on <Windows|Windows
-systems>. 
+Used with the <open file>, <read from file>, <write to file>, and 
+<close file> <command|commands>, to specify a COM <port> on 
+<Windows|Windows systems>. 
 
 Introduced: 1.0
 

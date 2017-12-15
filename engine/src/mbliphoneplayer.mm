@@ -366,7 +366,7 @@ void MCiOSPlayerControl::GetContent(MCExecContext& ctxt, MCStringRef& r_content)
     }
     if (t_string != nil)
     {
-        if (MCStringCreateWithCFString((CFStringRef)t_string, r_content))
+        if (MCStringCreateWithCFStringRef((CFStringRef)t_string, r_content))
             return;
     }
     else

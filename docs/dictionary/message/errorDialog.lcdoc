@@ -46,10 +46,10 @@ You can look up the description of an error using this line of code:
 > release to release.
 
 If the <lockErrorDialogs> <property> is true, the <errorDialog> <message>
-is sent to the <object(glossary)> that set the <lockErrorDialogs>.,
+is sent to the <object(glossary)> that set the <lockErrorDialogs>,
 rather than to the <object(glossary)> whose <script> contained the
-error. (The <lockErrorDialogs> can be set to true either by setting the
-<property> directly, or with the <lock error dialogs> <command>.)
+error. The <lockErrorDialogs> can be set to true either by setting the
+<property> directly, or with the <lock error dialogs> <command>.
 
 >*Note:* The <errorDialog> message is only sent while Script Debug mode
 > is turned off. To toggle Script Debug mode, click on the Development

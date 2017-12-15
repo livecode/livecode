@@ -41,7 +41,7 @@ private:
 	MCControl *kfocused;
 	MCControl *oldkfocused;
 	MCControl *newkfocused;
-	MCControl *mfocused;
+	MCControlHandle mfocused;
 	MCScrollbar *vscrollbar;
 	MCScrollbar *hscrollbar;
 	int4 scrollx;

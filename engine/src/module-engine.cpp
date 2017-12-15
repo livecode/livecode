@@ -40,7 +40,7 @@
 #include "notify.h"
 
 #include "module-engine.h"
-
+#include "widget.h"
 #include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -226,10 +226,28 @@ static Properties parse_property_name(MCStringRef p_name)
 	const LT *t_literal;
 	if (t_sp . next(t_type) &&
 		t_sp . lookup(SP_FACTOR, t_literal) == PS_NORMAL &&
-		t_literal -> type == TT_PROPERTY &&
-		t_sp . next(t_type) == PS_EOF)
-		return (Properties)t_literal -> which;
-	
+		t_literal -> type == TT_PROPERTY)
+    {
+        Properties t_which = (Properties)t_literal -> which;
+        
+        // check for object property modifiers
+        if (t_which == P_SHORT || t_which == P_LONG || t_which == P_ABBREVIATE)
+        {
+            if (t_sp . next(t_type) &&
+                t_sp . lookup(SP_FACTOR, t_literal) == PS_NORMAL &&
+                t_literal -> type == TT_PROPERTY)
+            {
+                if (t_literal->which == P_ID || t_literal->which == P_NAME || t_literal->which == P_OWNER)
+                {
+                    t_which = (Properties)(t_literal->which + t_which - P_SHORT + 1);
+                }
+            }
+        }
+        
+        if (t_sp . next(t_type) == PS_EOF)
+            return t_which;
+    }
+    
 	return P_CUSTOM;
 }
 
@@ -516,6 +534,26 @@ extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendToScriptObject(bool p_is_
     return MCEngineExecSendToScriptObjectWithArguments(p_is_function, p_message, p_object, kMCEmptyProperList);
 }
 
+extern MCWidgetRef MCcurrentwidget;
+extern void MCWidgetExecPostToParentWithArguments(MCStringRef p_message, MCProperListRef p_arguments);
+
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
+{
+    // PM-2017-10-31: [[ Bugfix 20625 ]] May have no default stack on startup
+    if (!MCdefaultstackptr)
+        return nil;
+    MCObject *t_target = MCdefaultstackptr -> getcurcard();
+    if (MCcurrentwidget)
+        t_target = MCWidgetGetHost(MCcurrentwidget);
+    
+    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, t_target, p_arguments);
+}
+
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSend(bool p_is_function, MCStringRef p_message)
+{
+    return MCEngineExecSendWithArguments(p_is_function, p_message, kMCEmptyProperList);
+}
+
 void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments)
 {
     MCNewAutoNameRef t_message_as_name;
@@ -552,6 +590,31 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostToScriptObject(MCStringRef p_me
     MCEngineExecPostToScriptObjectWithArguments(p_message, p_object, kMCEmptyProperList);
 }
 
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
+{
+	// PM-2017-10-31: [[ Bugfix 20625 ]] May have no default stack on startup
+	if (!MCdefaultstackptr)
+		return;
+		
+    MCObject *t_target = MCdefaultstackptr -> getcurcard();
+    if (MCcurrentwidget)
+    {
+        if (!MCWidgetIsRoot(MCcurrentwidget))
+        {
+            MCWidgetExecPostToParentWithArguments(p_message, p_arguments);
+            return;
+        }
+        t_target = MCWidgetGetHost(MCcurrentwidget);
+    }
+    
+    MCEngineDoPostToObjectWithArguments(p_message, t_target, p_arguments);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecPost(MCStringRef p_message)
+{
+    MCEngineExecPostWithArguments(p_message, kMCEmptyProperList);
+}
+
 extern "C" MC_DLLEXPORT_DEF void MCEngineEvalMessageWasHandled(bool& r_handled)
 {
     r_handled = s_last_message_was_handled;
@@ -564,6 +627,12 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineEvalMessageWasNotHandled(bool& r_not_ha
     r_not_handled = !t_handled;
 }
 
+extern MCExecContext *MCECptr;
+extern "C" MC_DLLEXPORT_DEF void MCEngineEvalCaller(MCScriptObjectRef& r_script_object)
+{
+    if (!MCEngineScriptObjectCreate(MCECptr->GetObject(), 0, r_script_object))
+        return;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCValueRef

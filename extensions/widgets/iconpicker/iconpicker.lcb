@@ -15,10 +15,6 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
-A widget to display icons for picking
-*/
-
 widget com.livecode.widget.iconpicker
 
 use com.livecode.canvas
@@ -31,6 +27,7 @@ metadata author is "LiveCode"
 metadata version is "1.0.0"
 metadata title is "Icon Picker"
 metadata userVisible is "false"
+metadata _ide is "true"
 
 private variable mDataCount as Integer
 private variable mDataList as List

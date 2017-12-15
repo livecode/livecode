@@ -135,10 +135,15 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
     r_in_edit_mode = MCcurtool != T_BROWSE;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecTriggerAll(void)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    MCWidgetTriggerAll(MCcurrentwidget);
+}
 
-extern MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
-extern void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
+////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyScriptObject(MCScriptObjectRef& r_script_object)
 {
@@ -149,51 +154,29 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyScriptObject(MCScriptObjectRef& r_
         return;
 }
 
-extern "C" MC_DLLEXPORT_DEF MCValueRef MCWidgetExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
-{
-    if (!MCWidgetEnsureCurrentWidgetIsRoot())
-        return nil;
-    
-    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, MCWidgetGetHost(MCcurrentwidget), p_arguments);
-}
-
-extern "C" MC_DLLEXPORT_DEF MCValueRef MCWidgetExecSend(bool p_is_function, MCStringRef p_message)
-{
-    return MCWidgetExecSendWithArguments(p_is_function, p_message, kMCEmptyProperList);
-}
-
-extern "C" MC_DLLEXPORT_DEF void MCWidgetExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
+// This should only be called internally when MCcurrentwidget is known
+// to be a non-root widget.
+void MCWidgetExecPostToParentWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
 {
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    if (MCWidgetIsRoot(MCcurrentwidget))
-        MCEngineDoPostToObjectWithArguments(p_message, MCWidgetGetHost(MCcurrentwidget), p_arguments);
-    else
-    {
-        MCAutoStringRef t_modified_name;
-        if (!MCStringFormat(&t_modified_name, "On%@", p_message))
-            return;
-        
-        MCNewAutoNameRef t_message;
-        if (!MCNameCreate(*t_modified_name, &t_message))
-            return;
-        
-        // Note: At the moment 'post' isn't really a post in this case - it calls
-        //   the handler immediately.
-        MCWidgetRef t_old_target;
-        t_old_target = MCwidgeteventmanager -> SetTargetWidget(MCcurrentwidget);
-        MCWidgetPost(MCWidgetGetOwner(MCcurrentwidget), *t_message, p_arguments);
-        MCwidgeteventmanager -> SetTargetWidget(t_old_target);
-    }
-}
-
-extern "C" MC_DLLEXPORT_DEF void MCWidgetExecPost(MCStringRef p_message)
-{
-    if (!MCWidgetEnsureCurrentWidget())
+    MCAssert(!MCWidgetIsRoot(MCcurrentwidget));
+    
+    MCAutoStringRef t_modified_name;
+    if (!MCStringFormat(&t_modified_name, "On%@", p_message))
         return;
     
-    MCWidgetExecPostWithArguments(p_message, kMCEmptyProperList);
+    MCNewAutoNameRef t_message;
+    if (!MCNameCreate(*t_modified_name, &t_message))
+        return;
+    
+    // Note: At the moment 'post' isn't really a post in this case - it calls
+    //   the handler immediately.
+    MCWidgetRef t_old_target;
+    t_old_target = MCwidgeteventmanager -> SetTargetWidget(MCcurrentwidget);
+    MCWidgetPost(MCWidgetGetOwner(MCcurrentwidget), *t_message, p_arguments);
+    MCwidgeteventmanager -> SetTargetWidget(t_old_target);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

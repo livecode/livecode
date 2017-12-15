@@ -620,10 +620,14 @@ typedef uint16_t unichar_t;
 typedef wchar_t *BSTR;
 #endif
 
-#if defined(__MAC__) || defined(__IOS__)
+#if defined(__HAS_CORE_FOUNDATION__)
+typedef const void *CFTypeRef;
+typedef const struct __CFBoolean *CFBooleanRef;
 typedef const struct __CFNumber *CFNumberRef;
 typedef const struct __CFString *CFStringRef;
 typedef const struct __CFData *CFDataRef;
+typedef const struct __CFArray *CFArrayRef;
+typedef const struct __CFDictionary *CFDictionaryRef;
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1512,7 +1516,12 @@ inline void *MCValueGetExtraBytesPtr(MCValueRef value) { return ((uint8_t *)valu
 // Emit a debug log message containing the description of the value
 MC_DLLEXPORT void MCValueLog(MCValueRef);
 #endif
-
+    
+#if defined(__HAS_CORE_FOUNDATION__)
+MC_DLLEXPORT bool MCValueCreateWithCFTypeRef(CFTypeRef p_cf_value, bool p_use_lists, MCValueRef& r_cf_value);
+MC_DLLEXPORT bool MCValueConvertToCFTypeRef(MCValueRef p_value, bool p_use_lists, CFTypeRef& r_cf_value);
+#endif
+    
 //////////
 
 }
@@ -1993,7 +2002,12 @@ MC_DLLEXPORT extern MCBooleanRef kMCFalse;
 MC_DLLEXPORT extern MCBooleanRef kMCTrue;
 
 MC_DLLEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
-
+    
+#if defined(__HAS_CORE_FOUNDATION__)
+MC_DLLEXPORT bool MCBooleanCreateWithCFBooleanRef(CFBooleanRef p_cf_number, MCBooleanRef& r_number);
+MC_DLLEXPORT bool MCBooleanConvertToCFBooleanRef(MCBooleanRef p_number, CFBooleanRef& r_cf_number);
+#endif
+    
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  NUMBER DEFINITIONS
@@ -2016,9 +2030,9 @@ MC_DLLEXPORT bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uin
 MC_DLLEXPORT bool MCNumberParse(MCStringRef string, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberParseUnicodeChars(const unichar_t *chars, uindex_t char_count, MCNumberRef& r_number);
     
-#if defined(__MAC__) || defined (__IOS__)
-// Convert the given array to a CFArrayRef if it is a sequence.
-MC_DLLEXPORT bool MCNumberConvertToCFNumberRef(MCArrayRef self, CFNumberRef& r_array);
+#if defined(__HAS_CORE_FOUNDATION__)
+MC_DLLEXPORT bool MCNumberCreateWithCFNumberRef(CFNumberRef p_cf_number, MCNumberRef& r_number);
+MC_DLLEXPORT bool MCNumberConvertToCFNumberRef(MCNumberRef p_number, CFNumberRef& r_cf_number);
 #endif
     
 MC_DLLEXPORT extern MCNumberRef kMCZero;
@@ -2152,8 +2166,7 @@ MC_DLLEXPORT bool MCStringCreateWithCStringAndRelease(char *cstring /*delete[]*/
 
 #ifdef __HAS_CORE_FOUNDATION__
 // Create a string from a CoreFoundation string object.
-MC_DLLEXPORT bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string);
-MC_DLLEXPORT bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithCFStringRef(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
 // Create a string from a Pascal-style (counted) string. This always uses the MacRoman encoding.
@@ -2410,7 +2423,7 @@ MC_DLLEXPORT bool MCStringConvertToWString(MCStringRef string, unichar_t*& r_wst
 // Converts the content to unicode_t*
 MC_DLLEXPORT bool MCStringConvertToUTF8String(MCStringRef string, char*& r_utf8string);
 
-#if defined(__MAC__) || defined (__IOS__)
+#ifdef __HAS_CORE_FOUNDATION__
 // Converts the content to CFStringRef
 MC_DLLEXPORT bool MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring);
 #endif
@@ -2837,9 +2850,9 @@ MC_DLLEXPORT bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle);
 MC_DLLEXPORT bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index);
 MC_DLLEXPORT bool MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index);
 
-// convert the given data to CFDataRef
-#if defined(__MAC__) || defined (__IOS__)
-MC_DLLEXPORT bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata);
+#if defined(__HAS_CORE_FOUNDATION__)
+MC_DLLEXPORT bool MCDataCreateWithCFDataRef(CFDataRef p_cf_data, MCDataRef& r_data);
+MC_DLLEXPORT bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cf_data);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2916,6 +2929,22 @@ MC_DLLEXPORT bool MCArrayIterate(MCArrayRef array, uintptr_t& iterator, MCNameRe
 
 // Returns true if the given array is the empty array.
 MC_DLLEXPORT bool MCArrayIsEmpty(MCArrayRef self);
+    
+#if defined(__HAS_CORE_FOUNDATION__)
+// If p_use_lists is true, then any arrays which look like sequences will be
+// converted to MCProperListRef / CFArrayRef (depending on direction).
+    
+MC_DLLEXPORT bool MCArrayCreateWithCFDictionaryRef(CFDictionaryRef p_cf_dictionary, bool p_use_lists, MCArrayRef& r_array);
+MC_DLLEXPORT bool MCArrayConvertToCFDictionaryRef(MCArrayRef p_value, bool p_use_lists, CFDictionaryRef& r_cf_value); 
+MC_DLLEXPORT bool MCArrayCreateWithCFArrayRef(CFArrayRef p_cf_array, bool p_use_lists, MCArrayRef& r_array);
+// Attempt to convert the array to a CFArrayRef. If the array cannot be
+// converted, r_cf_value is set to nullptr and true is returned.
+MC_DLLEXPORT bool MCArrayConvertToCFArrayRef(MCArrayRef p_value, bool p_use_lists, CFArrayRef& r_cf_value);
+#endif
+
+// Attempt to convert the array to a properlist. If the array cannot be
+// converted to a list, r_list is set to nullptr and true is returned.
+MC_DLLEXPORT bool MCArrayConvertToProperList(MCArrayRef p_array, MCProperListRef& r_list);
     
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -3031,12 +3060,19 @@ MC_DLLEXPORT bool MCRecordIterate(MCRecordRef record, uintptr_t& x_iterator, MCN
 //  HANDLER DEFINITIONS
 //
 
+enum MCHandlerQueryType
+{
+    kMCHandlerQueryTypeNone,
+    kMCHandlerQueryTypeObjcSelector,
+};
+    
 struct MCHandlerCallbacks
 {
     size_t size;
     void (*release)(void *context);
     bool (*invoke)(void *context, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 	bool (*describe)(void *context, MCStringRef& r_desc);
+    bool (*query)(void *context, MCHandlerQueryType type, void *r_info);
 };
 
 MC_DLLEXPORT bool MCHandlerCreate(MCTypeInfoRef typeinfo, const MCHandlerCallbacks *callbacks, void *context, MCHandlerRef& r_handler);
@@ -3362,6 +3398,12 @@ MC_DLLEXPORT bool MCProperListCreate(const MCValueRef *values, uindex_t length, 
 // foreign value is created (MCForeignValueRef).
 MC_DLLEXPORT bool MCProperListCreateWithForeignValues(MCTypeInfoRef type, const void *values, uindex_t value_count, MCProperListRef& r_list);
 
+// Create a c-array of foreign values from the given list. The original list is
+// not released. Ownership of the foreign value array is passed to the caller.
+// p_typeinfo must be a foreign typeinfo. If any value in the list is not of the
+// given type, or cannot be exported as that type, this returns false.
+MC_DLLEXPORT bool MCProperListConvertToForeignValues(MCProperListRef list, MCTypeInfoRef p_typeinfo, void*& r_values_ptr, uindex_t& r_values_count);
+    
 // Create an empty mutable list.
 MC_DLLEXPORT bool MCProperListCreateMutable(MCProperListRef& r_list);
 
@@ -3457,6 +3499,13 @@ MC_DLLEXPORT bool MCProperListEndsWithList(MCProperListRef list, MCProperListRef
 MC_DLLEXPORT bool MCProperListIsListOfType(MCProperListRef list, MCValueTypeCode p_type);
 MC_DLLEXPORT bool MCProperListIsHomogeneous(MCProperListRef list, MCValueTypeCode& r_type);
     
+#if defined(__HAS_CORE_FOUNDATION__)
+MC_DLLEXPORT bool MCProperListCreateWithCFArrayRef(CFArrayRef p_cf_dictionary, bool p_use_lists, MCProperListRef& r_list);
+MC_DLLEXPORT bool MCProperListConvertToCFArrayRef(MCProperListRef p_list, bool p_use_lists, CFArrayRef& r_list);
+#endif
+    
+MC_DLLEXPORT bool MCProperListConvertToArray(MCProperListRef p_list, MCArrayRef& r_array);
+    
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  OBJC DEFINITIONS
@@ -3509,6 +3558,24 @@ MC_DLLEXPORT void *MCObjcObjectGetRetainedId(MCObjcObjectRef obj);
  * an ObjcObject. The id is autoreleased before being returned. */
 MC_DLLEXPORT void *MCObjcObjectGetAutoreleasedId(MCObjcObjectRef obj);
 
+/* Create an ObjcObject containing an instance of the com_livecode_MCObjcFormalDelegate class,
+ * mapping protocol methods to MCHandlerRefs, with
+ * a context parameter. */
+MC_DLLEXPORT bool MCObjcCreateDelegateWithContext(MCStringRef p_protocol_name, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object);
+
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcFormalDelegate class,
+ * mapping protocol methods to MCHandlerRefs. */
+MC_DLLEXPORT bool MCObjcCreateDelegate(MCStringRef p_protocol_name, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object);
+
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcInformalDelegate class,
+ * mapping informal protocol methods specified as a list of foreign handler to MCHandlerRefs, with
+ * a context parameter. */
+MC_DLLEXPORT bool MCObjcCreateInformalDelegateWithContext(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object);
+    
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcInformalDelegate class,
+ * mapping informal protocol methods specified as a list of foreign handler to MCHandlerRefs. */
+MC_DLLEXPORT bool MCObjcCreateInformalDelegate(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object);
+    
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPickleFieldType

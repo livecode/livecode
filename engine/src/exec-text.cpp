@@ -34,16 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Text, FontNames, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Text, FontLanguage, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Text, FontSizes, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Text, FontStyles, 3)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Text, StartUsingFont, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Text, StopUsingFont, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCTextBaseFontName(MCStringRef p_font, MCStringRef& r_base_name)
 {
 	uindex_t t_index;

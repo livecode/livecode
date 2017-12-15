@@ -203,16 +203,20 @@ static void ScannerSkipMultilineComment(ScannerRef self)
 	while(!ScannerIsEndPrefix(self))
 	{
 		if (ScannerIsNewlinePrefix(self))
+		{
 			ScannerSkipNewline(self);
+		}
 		else if (ScannerIsMultilineCommentSuffix(self))
 		{
 			self -> input_frontier += 2;
 			self -> input_column += 2;
 			break;
 		}
-		
-		self -> input_frontier += 1;
-		self -> input_column += 1;
+		else
+		{
+			self->input_frontier += 1;
+			self->input_column += 1;
+		}
 	}
 }
 

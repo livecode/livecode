@@ -107,7 +107,7 @@ bool MCSystemGetRegisteredNotifications (MCStringRef& r_registered_alerts)
     if (t_result == nil)
         r_registered_alerts = MCValueRetain(kMCEmptyString);
     else
-        return MCStringCreateWithCFString((CFStringRef)t_result, r_registered_alerts);
+        return MCStringCreateWithCFStringRef((CFStringRef)t_result, r_registered_alerts);
     return true;
 }
 
@@ -122,17 +122,17 @@ bool MCSystemGetNotificationDetails(int32_t p_id, MCNotification &r_notification
 			if ([t_local_notification alertBody] == nil)
 				r_notification.body = MCValueRetain(kMCEmptyString);
 			else
-				MCStringCreateWithCFString ((CFStringRef)[t_local_notification alertBody], r_notification.body); // or ""
+				MCStringCreateWithCFStringRef ((CFStringRef)[t_local_notification alertBody], r_notification.body); // or ""
 			
 			if ([t_local_notification alertAction] == nil)
 				r_notification.action = MCValueRetain(kMCEmptyString);
 			else
-				MCStringCreateWithCFString ((CFStringRef)[t_local_notification alertAction], r_notification.action); // or ""
+				MCStringCreateWithCFStringRef ((CFStringRef)[t_local_notification alertAction], r_notification.action); // or ""
 			
 			if ([t_local_notification.userInfo objectForKey:@"payload"] == nil)
 				r_notification.user_info = MCValueRetain(kMCEmptyString);
 			else
-				MCStringCreateWithCFString ((CFStringRef)[t_local_notification.userInfo objectForKey:@"payload"], r_notification.user_info);
+				MCStringCreateWithCFStringRef ((CFStringRef)[t_local_notification.userInfo objectForKey:@"payload"], r_notification.user_info);
             r_notification.time = [[t_local_notification fireDate] timeIntervalSince1970];
             r_notification.badge_value = t_local_notification.applicationIconBadgeNumber;
             r_notification.play_sound = t_local_notification.soundName != nil ? true : false;

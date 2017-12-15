@@ -57,24 +57,6 @@ static MCNameRef *s_dialog_types[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerColor, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFileWithTypes, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFileWithFilter, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFile, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFolder, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerNotify, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, CustomAnswerDialog, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskQuestion, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskPassword, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFile, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFileWithFilter, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFileWithTypes, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, CustomAskDialog, 7)
-MC_EXEC_DEFINE_GET_METHOD(Dialog, ColorDialogColors, 2)
-MC_EXEC_DEFINE_SET_METHOD(Dialog, ColorDialogColors, 2)
-    
-////////////////////////////////////////////////////////////////////////////////
-
 void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCStringRef p_title, bool p_as_sheet)
 {
     MCAutoStringRef t_value;

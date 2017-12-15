@@ -37,7 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#include "syntax.h"
 #include "redraw.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -331,14 +330,6 @@ void MCStatement::initpoint(MCScriptPoint &sp)
 	line = sp.getline();
 	pos = sp.getpos();
 }
-
-void MCStatement::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-	MCSyntaxFactoryExecUnimplemented(ctxt);
-	MCSyntaxFactoryEndStatement(ctxt);
-};
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

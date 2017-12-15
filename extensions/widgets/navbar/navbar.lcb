@@ -385,7 +385,7 @@ property hilitedItemName	get getNavSelectedItemName	set setNavSelectedItemName
 metadata hilitedItemName.label is "Selected item name"
 
 /**
-Syntax: set the editMode of <widget> to (true | false)
+Syntax: set the editMode of <widget> to {true | false}
 Syntax: get the editMode of <widget>
 
 Summary: Whether the widget is in edit mode

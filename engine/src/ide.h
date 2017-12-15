@@ -371,19 +371,5 @@ private:
 	MCExpression *m_language;
 };
 
-class MCIdeSyntaxCompile: public MCStatement
-{
-public:
-	MCIdeSyntaxCompile(void);
-	virtual ~MCIdeSyntaxCompile(void);
-	
-	virtual Parse_stat parse(MCScriptPoint& p_script);
-    virtual void exec_ctxt(MCExecContext &ctxt);
-	
-private:
-	MCChunk *m_target;
-};
-
-//////////
 
 #endif

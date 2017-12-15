@@ -17,8 +17,8 @@ Example:
 send the eighth item of messagesList to the eighth card
 
 Description:
-Use the <eighth> <keyword> in an <object reference> or <chunk
-expression>. 
+Use the <eighth> <keyword> in an <object reference> or 
+<chunk expression>. 
 
 The <eighth> <keyword> can be used to specify any <object(glossary)>
 whose <number> <property> is 8. It can also be used to designate the

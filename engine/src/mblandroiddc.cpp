@@ -538,12 +538,17 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 
 	do
 	{
+		s_java_env->PushLocalFrame(0);
+
 		// IM-2014-03-06: [[ revBrowserCEF ]] Call additional runloop callbacks
 		DoRunloopActions();
 
         // MM-2015-06-05: [[ MobileSockets ]] Dispatch any waiting notifications.
         if (MCNotifyDispatch(dispatch == True) && anyevent)
+        {
+			s_java_env->PopLocalFrame(nullptr);
             break;
+        }
 
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch))
@@ -553,6 +558,7 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 
 			if (MCquit)
 			{
+			s_java_env->PopLocalFrame(nullptr);
 				abort = True;
 				break;
 			}
@@ -562,12 +568,14 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		{
 			if (anyevent)
 			{
+				s_java_env->PopLocalFrame(nullptr);
 				done = True;
 				break;
 			}
 
 			if (MCquit)
 			{
+				s_java_env->PopLocalFrame(nullptr);
 				abort = True;
 				break;
 			}
@@ -576,6 +584,8 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case
 		//   any engine event handling methods need us to.
 		MCRedrawUpdateScreen();
+
+		s_java_env->PopLocalFrame(nullptr);
 
 		// Get the time now
 		curtime = MCS_time();
@@ -894,7 +904,8 @@ public:
 		{
             MCGContextRef t_context;
             if (MCGContextCreateWithRaster(t_raster, t_context))
-			{
+            {
+                r_context = t_context;
                 r_raster = t_raster;
 				return true;
 			}

@@ -1,7 +1,7 @@
 ﻿script "BuilderUtilities"
 
-constant kMergExtVersion = "2017-9-25"
-constant kTSNetVersion = "1.3.2"
+constant kMergExtVersion = "2017-11-3"
+constant kTSNetVersion = "1.3.3"
 
 local sEngineDir
 local sWorkDir
@@ -309,9 +309,16 @@ function builderIDEDocsFolder
    return builderIDEFolder() & slash & "Documentation"
 end builderIDEDocsFolder
 
-# Location for api js file in > LC8
-function builderAPIFolder pEdition
-   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/api"
+# Location for api js files in > LC8
+function builderAPIFolder pEdition, pWhich
+   local tFolder
+   put builderIDEDocsFolder() & "/html_viewer/resources/data/api" \
+         into tFolder
+   if pWhich is not empty then
+      put "_" & pWhich after tFolder
+   end if
+
+   return tFolder
 end builderAPIFolder
 
 # Location for guide js file in > LC8

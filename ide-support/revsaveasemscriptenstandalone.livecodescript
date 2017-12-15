@@ -46,42 +46,27 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
    set the itemDelimiter to comma
    
    -- Other parameters
-   local tName, tFiles
+   local tName
    put pSettings["name"] into tName
-   put pSettings["files"] into tFiles
+   
+   revStandaloneResetWarnings
+   
+   -- If we're searching for inclusions, do it here 
+   if pSettings["inclusions"] is "search" then 
+      revSBSearchForInclusions pStack, pSettings
+   end if
    
    -- Make sure all dependencies are included
    revSBUpdateForDependencies "emscripten", pSettings
    
-   -- Set up the list of auxiliary stacks based on the script libraries
-   local tAuxStackFiles
-   put pSettings["auxiliary_stackfiles"] into tAuxStackFiles
+   revSBUpdateSettingsForExtensions "emscripten", pSettings
    
-   local tIncludeDataGrid
-   repeat for each line tLibrary in pSettings["scriptLibraries"]
-      if tLibrary is "DataGrid" then
-         put true into tIncludeDataGrid
-         next repeat
-      end if
-      local tLibraryStack
-      put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
-      if there is a stack tLibraryStack then
-         if the  effective filename of stack tLibraryStack is not among the lines of tAuxStackFiles then
-            put the effective filename of stack tLibraryStack & return after tAuxStackFiles
-         end if
-      end if
-   end repeat
+   local tResolvedFileData
+   revSBResolveCopyFilesList tBaseFolder, "emscripten", pSettings, tResolvedFileData
    
-   -- Handle the datagrid as a special case
-   if tIncludeDataGrid or "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      if the  effective filename of stack "revDataGridLibrary" is not among the lines of tAuxStackFiles then
-         put the effective filename of stack "revDataGridLibrary" & return after tAuxStackFiles
-      end if
-   end if
-   
-   -- Set up the list of extensions
-   local tExtensions
-   put pSettings["extensions"] into tExtensions
+   local tDeploy
+   -- Update the deploy params with script library and extension inclusions
+   revSBUpdateDeployParams pStack, "emscripten", pSettings, tDeploy
    
    local tError
    try
@@ -141,16 +126,19 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
       storeBootStack tBuildZip, tBootStackPath, tBuildFolder, tStackFile, tBootHash
       
       -- Store auxiliary stacks
-      storeAuxStacks tBuildZip, tAuxStackFiles, tAuxStackPath
+      storeAuxStacks tBuildZip, tDeploy["auxiliary_stackfiles"], tAuxStackPath
       
       -- Store extensions
-      storeExtensions tBuildZip, tExtensions, tExtensionsPath
+      -- As Emscripten is slightly different and we don't compile extensions
+      -- into an executable, use the computed extensions list and manually
+      -- copy extension modules and resources.
+      storeExtensions tBuildZip, pSettings["extensions_computed"], tExtensionsPath
       
       -- Deploy and store the startup script
-      storeStartupStack tBuildZip, tStartupStackPath, tBuildFolder, tBootHash
+      storeStartupStack tBuildZip, tStartupStackPath, tBuildFolder, tBootHash, tDeploy["startup_script"]
       
       -- Store extra, copied files
-      storeAssets tBuildZip, tFiles, tStandalonePath, tBaseFolder
+      storeAssets tBuildZip, tResolvedFileData, tStandalonePath, tBaseFolder
       
       -- Close zip file
       revZipCloseArchive tBuildZip
@@ -245,23 +233,29 @@ end storeAuxStacks
 -- LiveCode Builder extensions
 ----------------------------------------------------------------
 
-private command storeExtensions pZip, pExtensions, pExtensionsPath
-   if pExtensions is empty then
-      exit storeExtensions
+private command appendToStringList pValue, @xList
+   if xList is empty then
+      put pValue into xList
+   else
+      put return & pValue after xList
    end if
-   
-   -- Put extensions in the correct order for loading
-   local tExtensions
-   put revIDEExtensionsOrderByDependency(pExtensions) into tExtensions
+end appendToStringList
+
+private command storeExtensions pZip, pExtensionsListA, pExtensionsPath
+   -- Store each extension's data
+   local tModulesList, tKind
+   repeat for each element tExtension in pExtensionsListA
+      put tExtension["id"] into tKind
+      if revIDEExtensionProperty(tKind, "source_type") is "lcb" then
+         storeExtensionByKind pZip, tKind, pExtensionsPath
+         appendToStringList tKind, tModulesList
+      end if
+   end repeat
    
    -- Store the list of extensions
-   storeExtensionsList pZip, tExtensions, pExtensionsPath
-   
-   -- Store each extension's data
-   local tKind
-   repeat for each line tKind in tExtensions
-      storeExtensionByKind pZip, tKind, pExtensionsPath
-   end repeat
+   if tModulesList is not empty then
+      storeExtensionsList pZip, tModulesList, pExtensionsPath
+   end if
 end storeExtensions
 
 private command storeExtensionsList pZip, pExtensions, pExtensionsPath
@@ -336,16 +330,16 @@ end getExtensionFilesByKind
 -- Startup stack
 ----------------------------------------------------------------
 
-private command storeStartupStack pZip, pStartupPath, pBuildFolder, pBootHash
+private command storeStartupStack pZip, pStartupPath, pBuildFolder, pBootHash, pGeneratedStartupScript
    local tTempStack, tTempStackPath, tStartupScript, tDeployInfo
 
    ---------- Generate the startup stack
    logDebug "startup", "Generating startup stack"
 
    put pBuildFolder & slash & "revEmscriptenStandaloneStartup.livecode" into tTempStackPath
-
-   put getStartupScript(pBootHash) into tStartupScript
-
+   
+   put getStartupScript(pBootHash, pGeneratedStartupScript) into tStartupScript
+   
    create invisible stack "revEmscriptenStandaloneStartup"
    put it into tTempStack
    set the script of tTempStack to tStartupScript
@@ -396,7 +390,7 @@ end storeStartupStack
 -- Create the startup script by processing the startup stack template.
 -- Engine-specific and standalone-specific data is substituted into the
 -- template in order 
-private function getStartupScript pStackHash
+private function getStartupScript pStackHash, pGeneratedStartupScript
    local tTemplateFile, tScript
    local tStackHashString
    
@@ -432,7 +426,7 @@ private function getStartupScript pStackHash
    -- Make substitutions in the startup script
    replace "@ENGINE_VERSION@" with the version in tScript
    replace "@BOOT_HASH@" with tStackHashString in tScript
-   
+   replace "@STARTUP_SCRIPT@" with pGeneratedStartupScript in tScript
    return tScript
 end getStartupScript
 
@@ -460,50 +454,23 @@ end storeBootStack
 -- Extra files from "copy files"
 ----------------------------------------------------------------
 
-private command storeAssets pZip, pFiles, pStandalonePath, pBaseFolder
+private command storeAssets pZip, pFileData, pStandalonePath, pBaseFolder
    -- Get a list of all the files to copy
    local tPath, tFiles, tCount
    
-   put empty into tFiles
-   put 0 into tCount
-   
-   repeat for each line tPath in pFiles
-      getAssetFilesFromPath tPath, pBaseFolder, tFiles, tCount
-   end repeat
-   
    -- Store all the files in the zip archive
-   local tCopyInfo, tZipPath
+   local tZipPath
    
-   repeat for each element tCopyInfo in tFiles
-      logDebug "asset", "Storing" && tCopyInfo["source"]
+   repeat for each element tFileInfo in pFileData
+      logDebug "asset", "Storing" && tFileInfo["resolved"]
       
-      put pStandalonePath & slash & tCopyInfo["dest"] into tZipPath
-      revZipAddUncompressedItemWithFile pZip, tZipPath, tCopyInfo["source"]
+      put pStandalonePath & slash & tFileInfo["name"] into tZipPath
+      revZipAddUncompressedItemWithFile pZip, tZipPath, tFileInfo["resolved"]
       if the result is not empty then
          throw "could not store asset file in standalone archive"
       end if
    end repeat
 end storeAssets
-
-private command getAssetFilesFromPath pPath, pBaseFolder, @xFiles, @xCount
-   local tSourcePath, tAssetPath, tFile
-   
-   mapAssetPath pPath, pBaseFolder, tSourcePath, tAssetPath
-   
-   if there is a file tSourcePath then
-      add 1 to xCount
-      put tSourcePath into xFiles[xCount]["source"]
-      put tAssetPath into xFiles[xCount]["dest"]
-   else if there is a folder tSourcePath then
-      repeat for each element tFile in scanFolder(tSourcePath)
-         add 1 to xCount
-         put tSourcePath & slash & tFile into xFiles[xCount]["source"]
-         put tAssetPath & slash & tFile into xFiles[xCount]["dest"]
-      end repeat
-   else
-      throw "could not store asset from '" & pPath & "': not a file or directory"
-   end if
-end getAssetFilesFromPath
 
 ----------------------------------------------------------------
 -- Stack manipulation functions
@@ -625,36 +592,6 @@ private function mapResPath pPath
       return getRepoResourceFolder() & slash & pPath
    end if
 end mapResPath
-
--- Map a path pPath for asset inclusion.
---
--- Interprets pPath as a user-provided asset source path, defined
--- relative to pBaseFolder.  Computes the absolute path of the file to
--- read from into rSourcePath, and the relative asset path to store the
--- data in into rDestPath.
---
--- This is designed to be compatible with computeAssetLocation in the
--- revSaveAsAndroidStandalone stack.
---
--- FIXME This may have problems if pPath is a root directory or if
--- pPath is not normalized.
-private command mapAssetPath pPath pBaseFolder @rSourcePath @rDestPath
-   local tIsAbsolute
-   put pPath begins with "/" or char 2 to 3 of pPath is ":/" into tIsAbsolute
-   
-   set the itemDelimiter to slash
-   if the last item of pPath is "*" then
-      delete the last item of pPath
-   end if
-   
-   if tIsAbsolute then
-      put item -1 of pPath into rDestPath
-      put pPath into rSourcePath
-   else
-      put pPath into rDestPath
-      put pBaseFolder & slash & pPath into rSourcePath
-   end if
-end mapAssetPath
 
 -- Scan a directory, returning a number-indexed array of files found.
 -- The returned paths are relative to the specified directory.

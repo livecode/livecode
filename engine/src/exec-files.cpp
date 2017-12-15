@@ -34,104 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Files, Directories, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, DirectoriesOfDirectory, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, Files, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, FilesOfDirectory, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, DiskSpace, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, DriverNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, Drives, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, OpenFiles, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, TempName, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, SpecialFolderPath, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, LongFilePath, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ShortFilePath, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, OpenProcesses, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, OpenProcessesIds, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ProcessId, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, DeleteRegistry, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ListRegistry, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, QueryRegistry, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, QueryRegistryWithType, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, SetRegistry, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, SetRegistryWithType, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, CopyResourceWithNewId, 6)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, CopyResource, 5)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, DeleteResource, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, GetResource, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, GetResourcesWithType, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, GetResources, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, SetResource, 7)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, AliasReference, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ThereIsAFile, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ThereIsNotAFile, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ThereIsAFolder, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ThereIsNotAFolder, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ThereIsAProcess, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ThereIsNotAProcess, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, Shell, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, DeleteFile, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, CloseFile, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, CloseDriver, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, CloseProcess, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, LaunchUrl, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, LaunchDocument, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, LaunchApp, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, OpenFile, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, OpenDriver, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, OpenProcess, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, OpenElevatedProcess, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, Rename, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromStdinFor, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromStdinUntil, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverFor, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverUntil, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverAtFor, 7)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverAtUntil, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverAtEndFor, 7)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverAtEndUntil, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverAtEndForLegacy, 7)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverAtEndUntilLegacy, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromProcessFor, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromProcessUntil, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToStdout, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToStderr, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToFileOrDriver, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToFileOrDriverAt, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToFileOrDriverAtEnd, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToFileOrDriverAtEndLegacy, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToProcess, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, SeekToEofInFile, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, SeekToEofInFileLegacy, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, SeekAbsoluteInFile, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, SeekRelativeInFile, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, CreateFolder, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, CreateAlias, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, KillProcess, 2)
-MC_EXEC_DEFINE_GET_METHOD(Files, UMask, 1)
-MC_EXEC_DEFINE_SET_METHOD(Files, UMask, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, FileType, 1)
-MC_EXEC_DEFINE_SET_METHOD(Files, FileType, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, SerialControlString, 1)
-MC_EXEC_DEFINE_SET_METHOD(Files, SerialControlString, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, HideConsoleWindows, 1)
-MC_EXEC_DEFINE_SET_METHOD(Files, HideConsoleWindows, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, ShellCommand, 1)
-MC_EXEC_DEFINE_SET_METHOD(Files, ShellCommand, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, CurrentFolder, 1)
-MC_EXEC_DEFINE_SET_METHOD(Files, CurrentFolder, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, EngineFolder, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, HomeFolder, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, DocumentsFolder, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, DesktopFolder, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, TemporaryFolder, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, Files, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, DetailedFiles, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, Folders, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, DetailedFolders, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCFilesEofEnumElementInfo[] =
 {
 	{ "\004", 0, false },
@@ -151,15 +53,12 @@ MCExecEnumTypeInfo *kMCFilesEofEnumTypeInfo = &_kMCFilesEofEnumTypeInfo;
 
 //////////
 
-void MCFilesEvalDirectories(MCExecContext & ctxt,
-                            MCStringRef & r_string)
-{
-	MCFilesEvalDirectoriesOfDirectory(ctxt, nil, r_string);
-}
-
-void MCFilesEvalDirectoriesOfDirectory(MCExecContext& ctxt,
-                                       MCStringRef p_directory,
-                                       MCStringRef& r_string)
+void
+MCFilesEvalFileItemsOfDirectory(MCExecContext& ctxt,
+                                MCStringRef p_directory,
+                                bool p_files,
+                                bool p_detailed,
+                                MCStringRef& r_string)
 {
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
@@ -167,33 +66,7 @@ void MCFilesEvalDirectoriesOfDirectory(MCExecContext& ctxt,
 		return;
 	}
 	MCAutoListRef t_list;
-	if (MCS_getentries(p_directory, false, false, &t_list))
-	{
-		MCListCopyAsString(*t_list, r_string);
-	}
-	else
-	{
-		MCStringCopy(kMCEmptyString, r_string);
-	}
-}
-
-void MCFilesEvalFiles(MCExecContext & ctxt,
-                      MCStringRef & r_string)
-{
-	MCFilesEvalFilesOfDirectory(ctxt, nil, r_string);
-}
-
-void MCFilesEvalFilesOfDirectory(MCExecContext& ctxt,
-                                 MCStringRef p_directory,
-                                 MCStringRef& r_string)
-{
-	if (MCsecuremode & MC_SECUREMODE_DISK)
-	{
-		ctxt . LegacyThrow(EE_DISK_NOPERM);
-		return;
-	}
-	MCAutoListRef t_list;
-	if (MCS_getentries(p_directory, true, false, &t_list))
+	if (MCS_getentries(p_directory, p_files, p_detailed, &t_list))
 	{
 		MCListCopyAsString(*t_list, r_string);
 	}

@@ -60,12 +60,18 @@ private command _TestPropertyChanged pObjType, pWhere
          break
    end switch
    
-   wait for 0 with messages
-   TestAssert "put" && pWhere && pObjType && \ 
-         "triggers propertyChanged", tObj is sTarget
+   local tParams
+   put tObj into tParams[1]
+   TestRepeat "put" && pWhere && pObjType && \ 
+         "triggers propertyChanged", IsTargetCorrect, \
+         the long id of me, 10, tParams
    
-   revIDEUnsubscribe "idePropertyChanged", tObj
+   revIDEUnsubscribe "idePropertyChanged", "", tObj
 end _TestPropertyChanged
+
+command IsTargetCorrect pObj
+   return pObj is sTarget
+end IsTargetCorrect
 
 on TestPutPropertyChanged
 	repeat for each item tWhere in "into,after"
@@ -74,3 +80,29 @@ on TestPutPropertyChanged
 		end repeat
 	end repeat
 end TestPutPropertyChanged
+
+on TestWidgetPropertyChanged
+   TestSkipIfNot "lcb"
+   TestLoadAuxiliaryExtension "_widget_propertychanged"
+   
+   create stack
+   set the defaultStack to the short name of it
+   local tObj
+   create widget as "com.livecode.idesupport_tests.development.widget_propertychanged"
+   put it into tObj
+
+   revIDESubscribe "idePropertyChanged", tObj
+   put empty into sTarget
+   
+   local tOut
+   -- export causes OnSave handler to be run
+   -- our widget OnSave handler calls `trigger all`
+   export widget 1 to array tOut
+   
+   local tParams
+   put tObj into tParams[1]
+   TestRepeat "trigger all triggers propertyChanged", IsTargetCorrect, \
+         the long id of me, 10, tParams
+   
+   revIDEUnsubscribe "idePropertyChanged", "", tObj
+end TestWidgetPropertyChanged

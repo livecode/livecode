@@ -600,7 +600,7 @@ static IDWriteTextFormat* MCGDWTextFormatFromHFONT(HFONT p_hfont, MCGFloat p_siz
 }
 
 // Creates an SkPaint from a DirectWrite font face
-static inline SkPaint MCGSkPaintFromDWFontFace(IDWriteFontFace* p_face, FLOAT p_emsize, const MCGAffineTransform& p_transform)
+static inline void MCGSkPaintFromDWFontFace(IDWriteFontFace* p_face, FLOAT p_emsize, const MCGAffineTransform& p_transform, SkPaint& x_paint)
 {
 	// Map from font face to font (requires the font collection containing the font)
 	// Search the custom collection for the font
@@ -629,20 +629,17 @@ static inline SkPaint MCGSkPaintFromDWFontFace(IDWriteFontFace* p_face, FLOAT p_
 
 	// Configurethe paint for text rendering.
 	// Both LCD font smoothing and embedded bitmap rendering are enable
-	SkPaint t_paint;
-	t_paint.setTypeface(t_typeface);
-	t_paint.setLCDRenderText(true);
-	t_paint.setEmbeddedBitmapText(true);
+	x_paint.setTypeface(t_typeface);
+	x_paint.setLCDRenderText(true);
+	x_paint.setEmbeddedBitmapText(true);
 
 	// Set the size, converting device independent pixels (DIPs) to points
-	t_paint.setTextSize(p_emsize);
+	x_paint.setTextSize(p_emsize);
 
 	// Set the transform we're using
 	SkMatrix t_matrix;
 	MCGAffineTransformToSkMatrix(p_transform, t_matrix);
-	t_paint.setTextMatrix(&t_matrix);
-
-	return t_paint;
+	x_paint.setTextMatrix(&t_matrix);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -739,65 +736,65 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 			t_advance_direction = -1.0f;
 		}
 		
-		// Drawing callback
-		auto t_callback = [=, &t_advance](FLOAT p_x, FLOAT p_y, DWRITE_MEASURING_MODE p_mode, const DWRITE_GLYPH_RUN* p_run, const DWRITE_GLYPH_RUN_DESCRIPTION* p_description)
-		{
-			// Create a Skia paint object wrapping the font
-			SkPaint t_paint = MCGSkPaintFromDWFontFace(p_run->fontFace, p_run->fontEmSize, t_transform);
+        // Setup the paint
+        SkPaint t_paint;
+        if (MCGContextSetupFill(self, t_paint))
+        {
+            // Drawing callback
+            auto t_callback = [=, &t_advance, &t_paint](FLOAT p_x, FLOAT p_y, DWRITE_MEASURING_MODE p_mode, const DWRITE_GLYPH_RUN* p_run, const DWRITE_GLYPH_RUN_DESCRIPTION* p_description)
+            {
+                // Apply the font face to the Skia paint object
+                MCGSkPaintFromDWFontFace(p_run->fontFace, p_run->fontEmSize, t_transform, t_paint);
 
-			// Customise the paint based on the current settings
-			t_paint.setStyle(SkPaint::kFill_Style);
-			t_paint.setColor(MCGColorToSkColor(self->state->fill_color));
-			t_paint.setBlendMode(MCGBlendModeToSkBlendMode(self->state->blend_mode));
+                // disable LCD rendering when backing layer may be transparent
+                if (!MCGContextIsLayerOpaque(self))
+                    t_paint.setLCDRenderText(false);
 
-			// disable LCD rendering when backing layer may be transparent
-			if (!MCGContextIsLayerOpaque(self))
-				t_paint.setLCDRenderText(false);
+                // Force anti-aliasing on so that we get nicely-rendered text
+                t_paint.setAntiAlias(true);
 
-			// Force anti-aliasing on so that we get nicely-rendered text
-			t_paint.setAntiAlias(true);
+                // Text will be specified by glyph index, not codepoint/codeunit
+                t_paint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
 
-			// Text will be specified by glyph index, not codepoint/codeunit
-			t_paint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
+                // Loop over the glyphs in the run
+                for (UINT32 i = 0; i < p_run->glyphCount; i++)
+                {
+                    if (p_rtl)
+                    {
+                        // Advance the position for the next glyph
+                        t_advance += t_advance_direction * p_run->glyphAdvances[i];
+                    }
+                    
+                    // Position for this glyph
+                    MCGFloat t_x = p_location.x + t_advance;
+                    MCGFloat t_y = p_location.y;
+                    if (p_run->glyphOffsets)
+                    {
+                        t_x += t_advance_direction * p_run->glyphOffsets[i].advanceOffset;
+                        t_y += p_run->glyphOffsets[i].ascenderOffset;
+                    }
 
-			// Loop over the glyphs in the run
-			for (UINT32 i = 0; i < p_run->glyphCount; i++)
-			{
-				if (p_rtl)
-				{
-					// Advance the position for the next glyph
-					t_advance += t_advance_direction * p_run->glyphAdvances[i];
-				}
-				
-				// Position for this glyph
-				MCGFloat t_x = p_location.x + t_advance;
-				MCGFloat t_y = p_location.y;
-				if (p_run->glyphOffsets)
-				{
-					t_x += t_advance_direction * p_run->glyphOffsets[i].advanceOffset;
-					t_y += p_run->glyphOffsets[i].ascenderOffset;
-				}
+                    if (!p_rtl)
+                    {
+                        // Advance the position for the next glyph
+                        t_advance += t_advance_direction * p_run->glyphAdvances[i];
+                    }
 
-				if (!p_rtl)
-				{
-					// Advance the position for the next glyph
-					t_advance += t_advance_direction * p_run->glyphAdvances[i];
-				}
+                    // Render this glyph to the canvas
+                    // Relies on DirectWrite and Skia both using 16-bit integers for glyph indices
+                    self->layer->canvas->drawText(&p_run->glyphIndices[i], sizeof(SkGlyphID), t_x, t_y, t_paint);
+                }
+            };
+            
+            // Create an object to receive the "Draw" callbacks
+            auto* t_renderer = new MCGDWRenderer<decltype(t_callback)>(t_callback);
 
-				// Render this glyph to the canvas
-				// Relies on DirectWrite and Skia both using 16-bit integers for glyph indices
-				self->layer->canvas->drawText(&p_run->glyphIndices[i], sizeof(SkGlyphID), t_x, t_y, t_paint);
-			}
-		};
-		
-		// Create an object to receive the "Draw" callbacks
-		auto* t_renderer = new MCGDWRenderer<decltype(t_callback)>(t_callback);
+            // Perform the drawing
+            t_layout->Draw(self, t_renderer, 0.0f, 0.0f);
 
-		// Perform the drawing
-		t_layout->Draw(self, t_renderer, 0.0f, 0.0f);
-
-		// Free the renderer object
-		t_renderer->Release();
+            // Free the renderer object
+            t_renderer->Release();
+        }
 	}
 
 	// Free the DirectWrite objects

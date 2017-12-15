@@ -41,8 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
-#include "syntax.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Boolean MCHandler::gotpass;
@@ -865,46 +863,6 @@ uint4 MCHandler::linecount()
 		stmp = stmp->getnext();
 	}
 	return count;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCHandler::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxHandlerType t_type;
-	switch(type)
-	{
-		case HT_MESSAGE:
-			t_type = is_private ? kMCSyntaxHandlerTypePrivateCommand : kMCSyntaxHandlerTypeMessage;
-			break;
-		case HT_FUNCTION:
-			t_type = is_private ? kMCSyntaxHandlerTypePrivateFunction : kMCSyntaxHandlerTypeFunction;
-			break;
-		case HT_GETPROP:
-			t_type = kMCSyntaxHandlerTypeGetProp;
-			break;
-		case HT_SETPROP:
-			t_type = kMCSyntaxHandlerTypeSetProp;
-			break;
-		case HT_BEFORE:
-			t_type = kMCSyntaxHandlerTypeBeforeMessage;
-			break;
-		case HT_AFTER:
-			t_type = kMCSyntaxHandlerTypeAfterMessage;
-			break;
-        default:
-            MCUnreachableReturn();
-	}
-	
-	MCSyntaxFactoryBeginHandler(ctxt, t_type, name);
-	
-	for(uindex_t i = 0; i < npnames; i++)
-		MCSyntaxFactoryDefineParameter(ctxt, pinfo[i] . name, pinfo[i] . is_reference);
-	
-	for(MCStatement *t_statement = statements; t_statement != nil; t_statement = t_statement -> getnext())
-		t_statement -> compile(ctxt);
-	
-	MCSyntaxFactoryEndHandler(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-﻿script "com.livecode.script-library.httpd"
+﻿script "com.livecode.library.httpd"
 /*
 Copyright (C) 2017 LiveCode Ltd.
 
@@ -16,31 +16,34 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-on revLoadLibrary
+on extensionInitialize
    if the target is not me then
-      pass revLoadLibrary
+      pass extensionInitialize
    end if
    
    insert the script of me into back
    
    if the environment contains "development" then
       set the _ideoverride of me to true
-      revSBAddAvailableLibrary the short name of me, "HTTP Server"
    end if
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is not me then
-      pass revUnloadLibrary
+      pass extensionFinalize
    end if
    
    remove the script of me from back
-end revUnloadLibrary
+end extensionFinalize
 
 /**
+Title: HTTPD Library
 
-Handle HTTP requests in your application
+Version: 1.0.0
 
+Author: LiveCode
+
+Description: Handle HTTP requests in your application
 */
 
 local sServers -- an array of server info keyed on server port

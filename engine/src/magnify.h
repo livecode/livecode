@@ -40,6 +40,9 @@ public:
 	// virtual functions from MCObject
 	virtual ~MCMagnify();
 	virtual Chunk_term gettype() const;
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
+    
 	virtual void open();
 	virtual void close();
 	virtual Boolean kfocusnext(Boolean top);

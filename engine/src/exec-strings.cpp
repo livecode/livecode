@@ -42,73 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ToLower, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ToUpper, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, NumToChar, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CharToNum, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, NumToByte, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ByteToNum, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TextDecode, 2);
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TextEncode, 2);
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, NormalizeText, 2);
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CodepointProperty, 2);
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, Length, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, MatchText, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, MatchChunk, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ReplaceText, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, Format, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, Merge, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, Concatenate, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ConcatenateWithSpace, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ConcatenateWithComma, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, Contains, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, DoesNotContain, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, BeginsWith, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, EndsWith, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheLinesOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheLinesOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheParagraphsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheParagraphsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheSentencesOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheSentencesOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheItemsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheItemsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheWordsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheWordsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheTrueWordsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheTrueWordsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheTokensOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheTokensOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheCharsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheCharsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheCodepointsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheCodepointsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheCodeunitsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheCodeunitsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheBytesOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheBytesOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, LineOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ParagraphOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, SentenceOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ItemOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, WordOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TrueWordOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TokenOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CodepointOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CodeunitOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ByteOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, Offset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAscii, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAscii, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Strings, Replace, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterWildcard, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterRegex, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterWildcardIntoIt, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterRegexIntoIt, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, BidiDirection, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count)
 {
 	uindex_t t_current = 0;
@@ -907,6 +840,16 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
         ctxt.LegacyThrow(EE_REPLACETEXT_BADPATTERN);
         return;
     }
+    
+    /* MCR_exec needs to use a unicode string as we use PCRE compiled with 16-bit
+     * unit support. We copy the string here so that we aren't re-copying each
+     * call to MCR_exec. */
+    MCAutoStringRef t_unicode_string;
+    if (!MCStringUnicodeCopy(p_string, &t_unicode_string))
+    {
+        ctxt.Throw();
+        return;
+    }
 
     bool t_success = true;
     
@@ -916,7 +859,7 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
     uindex_t t_source_length = MCStringGetLength(p_string);
     uindex_t t_source_offset = 0;
     
-    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, p_string, MCRangeMakeMinMax(t_source_offset, MCStringGetLength(p_string))))
+    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, *t_unicode_string, MCRangeMakeMinMax(t_source_offset, MCStringGetLength(p_string))))
     {
         uindex_t t_start = t_compiled->matchinfo[0].rm_so;
         uindex_t t_end = t_compiled->matchinfo[0].rm_eo;

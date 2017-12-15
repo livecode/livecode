@@ -298,7 +298,7 @@ void MCStack::sethints()
         
         MCAutoStringRef t_edition_name;
         if (MCStringCreateMutable(0, &t_app_name) &&
-            MCStringFromLicenseClass(MClicenseparameters.license_class, true, &t_edition_name))
+            MCEditionStringFromLicenseClass(MClicenseparameters.license_class, &t_edition_name))
 		{
 			bool t_success = true;
 			if (t_env == kMCModeEnvironmentTypeEditor)

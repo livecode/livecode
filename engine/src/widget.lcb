@@ -62,7 +62,7 @@ Summary: Sent when the widget is to be drawn.
 Example:
 	public handler OnPaint()
 		variable tCirclePath as Path
-   		put circle path centered at point [the width of my bounds/2,the height of my bounds/2] with radius (the width of my bounds/2) into tFacePath
+		put circle path centered at point [the width of my bounds/2,the height of my bounds/2] with radius (the width of my bounds/2) into tFacePath
 		set the paint of this canvas to solid paint with color [1, 0, 1]
 		fill tFacePath on this canvas
 	end handler
@@ -379,10 +379,7 @@ public foreign handler MCWidgetExecRedrawAll() returns nothing binds to "<builti
 public foreign handler MCWidgetExecScheduleTimerIn(in pTime as CDouble) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecCancelTimer() returns nothing binds to "<builtin>"
 public foreign handler MCWidgetEvalInEditMode(out rInEditMode as CBool) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetExecSend(in pIsFunction as CBool, in pMessage as String) returns any binds to "<builtin>"
-public foreign handler MCWidgetExecSendWithArguments(in pIsFunction as CBool, in pMessage as String, in pArguments as optional List) returns any binds to "<builtin>"
-public foreign handler MCWidgetExecPost(in pMessage as String) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetExecPostWithArguments(in pMessage as String, in pArguments as optional List) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecTriggerAll() returns nothing binds to "<builtin>"
 
 /**
 Summary:	Redraws the widget.
@@ -469,26 +466,26 @@ begin
 end syntax
 
 /**
-Summary:	Sends a message to the widget script object.
-*/	
+Summary:	Causes all of a widget's property triggers to be fired.
 
-syntax Send is statement
-    "send" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> [ "with" <Arguments: Expression> ]
+Example:
+	handler TextChangedCallback()
+        UpdateTextProperty()
+        trigger all
+	end handler
+
+Description:
+Use trigger all to cause all triggers for all a widget's properties to 
+be fired, for example when user action causes a native widget's 
+properties to change, to signal the property change to the IDE.
+*/
+
+syntax TriggerAll is statement
+  "trigger" "all"
 begin
-    MCWidgetExecSend(IsFunction, Message)
-    MCWidgetExecSendWithArguments(IsFunction, Message, Arguments)
+  MCWidgetExecTriggerAll()
 end syntax
 
-/**
-Summary:	Posts a message to the widget script object.
-*/	
-
-syntax Post is statement
-    "post" <Message: Expression> [ "with" <Arguments: Expression> ]
-begin
-    MCWidgetExecPost(Message)
-    MCWidgetExecPostWithArguments(Message, Arguments)
-end syntax
 
 // ---------- External properties of widgets ---------- //
 

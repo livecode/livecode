@@ -98,6 +98,7 @@ bool MCWidgetPost(MCWidgetRef widget, MCNameRef event, MCProperListRef args);
 void MCWidgetRedrawAll(MCWidgetRef widget);
 void MCWidgetScheduleTimerIn(MCWidgetRef widget, double timeout);
 void MCWidgetCancelTimer(MCWidgetRef widget);
+void MCWidgetTriggerAll(MCWidgetRef widget);
 
 void MCWidgetCopyChildren(MCWidgetRef widget, MCProperListRef& r_children);
 void MCWidgetPlaceWidget(MCWidgetRef widget, MCWidgetRef child, MCWidgetRef relative_to, bool put_below);

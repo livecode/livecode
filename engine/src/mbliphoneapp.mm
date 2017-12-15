@@ -90,7 +90,7 @@ static void dispatch_notification_events(void)
         MCAutoStringRef t_text;
 		// PM-2015-10-27: [[ Bug 16279 ]] Prevent crash when the payload is empty
 		if (t_event -> text != nil)
-			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_event -> text, &t_text);
+			/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_event -> text, &t_text);
 		else
 			t_text = MCValueRetain(kMCEmptyString);
 
@@ -388,7 +388,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     if (t_launch_url)
     {    
         MCAutoStringRef t_url_text;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_launch_url absoluteString], &t_url_text);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[t_launch_url absoluteString], &t_url_text);
         MCValueAssign(m_launch_url, *t_url_text);
 		
         // HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
@@ -529,7 +529,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     if (t_registration_text != nil)
     {
         MCAutoStringRef t_device_token;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_registration_text, &t_device_token);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_registration_text, &t_device_token);
         MCValueAssign(m_device_token, *t_device_token);
     
         // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
@@ -579,7 +579,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     if (p_url != nil)
     {
         MCAutoStringRef t_url_text;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[p_url absoluteString], &t_url_text);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[p_url absoluteString], &t_url_text);
 		MCValueAssign(m_launch_url, *t_url_text);
         if (m_did_become_active)
             MCNotificationPostUrlWakeUp(m_launch_url);
@@ -662,7 +662,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
     if (m_pending_local_notification != nil)
     {
         MCAutoStringRef t_mc_reminder_text;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)m_pending_local_notification, &t_mc_reminder_text);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)m_pending_local_notification, &t_mc_reminder_text);
 		MCNotificationPostLocalNotificationEvent(*t_mc_reminder_text);
 		
 		// HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
@@ -672,7 +672,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
     if (m_pending_push_notification != nil)
     {
         MCAutoStringRef t_mc_reminder_text;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)m_pending_push_notification, &t_mc_reminder_text);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)m_pending_push_notification, &t_mc_reminder_text);
         MCNotificationPostPushNotificationEvent(*t_mc_reminder_text);
        
 		// HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
@@ -1517,6 +1517,26 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
             }
             t_image_names[1] = nil;
         }
+        
+        // the iPhone X allows for portrait and landscape splash screens
+        else if ([[UIScreen mainScreen] bounds] . size . height == 812 || [[UIScreen mainScreen] bounds] . size . width == 812)
+        {
+            switch(p_new_orientation)
+            {
+                case UIInterfaceOrientationPortrait:
+                case UIInterfaceOrientationPortraitUpsideDown:
+                    t_image_names[0] = @"Default-812h@3x.png";
+                    t_image_angles[0] = 0.0f;
+                    break;
+                case UIInterfaceOrientationLandscapeLeft:
+                case UIInterfaceOrientationLandscapeRight:
+                    t_image_names[0] = @"Default-375h@3x.png";
+                    t_image_angles[0] = 0.0f;
+                    break;
+            }
+            t_image_names[1] = nil;
+        }
+
         else
         {
             // On iPhone there is only ever a 'Default' image, which we must

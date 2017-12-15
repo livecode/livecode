@@ -1083,32 +1083,6 @@ void MCGPathCloseSubpath(MCGPathRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGPathThicken(MCGPathRef self, const MCGStrokeAttr& p_attr, MCGPathRef& r_thick_path)
-{
-	if (!MCGPathIsValid(self))
-		return;
-	
-	// TODO: Implement
-}
-
-void MCGPathFlatten(MCGPathRef self, MCGFloat p_flatness, MCGPathRef& r_flat_path)
-{
-	if (!MCGPathIsValid(self))
-		return;
-	
-	// TODO: Implement
-}
-
-void MCGPathSimplify(MCGPathRef self, MCGPathRef& r_simple_path)
-{
-	if (!MCGPathIsValid(self))
-		return;
-	
-	// TODO: Implement
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCGPathGetBoundingBox(MCGPathRef self, MCGRectangle &r_bounds)
 {
 	if (!MCGPathIsValid(self))

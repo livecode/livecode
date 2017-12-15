@@ -23,30 +23,27 @@ get URL the dragData["text"]
 
 Value:
 The <dragData> is an <array> with one or more of the following
-<element|elements>:. 
+<element|elements>:
+- text: The text being dragged (from 7.0, it includes as well 
+  the Unicode characters)
+- html: The styled text being dragged, in the same format as 
+  the htmlText
+- rtf: The styled text being dragged, in the same format as the
+  RTFText
+- Unicode: The text being dragged, in the same format as the 
+  unicodeText 
+- image: The data of an image in PNG, JPEG or GIF format
+- files: The name and location of the file or files being dragged, 
+  one per line
+- styles: Styled text in LiveCode internal styled text format 
+- private: An arbitrary application-defined string. This format will
+  only be visible within the same LiveCode process (i.e. when the
+  current application is acting as source and target for the current 
+  drag-drop operation)
 
 Description:
 Use the <dragData> <property> to find out what is being dragged or to
 change the data being dragged during the drag.
-
-        - text          The text being dragged (from 7.0, it includes as
-          well the Unicode characters)
-        - html         The styled text being dragged, in the same format
-          as the htmlText
-        - rtf              The styled text being dragged, in the same
-          format as the RTFText
-        - Unicode    The text being dragged, in the same format as the
-          unicodeText 
-        - image        The data of an image in PNG, JPEG or GIF format
-        - files           The name and location of the file or files
-          being dragged, one per line
-        - styles         Styled text in LiveCode internal styled text
-          format 
-        - private       An arbitrary application-defined string. This
-          format will only be visible within the same LiveCode process
-          (i.e. when the current application is acting as source and
-          target for the current drag-drop operation)
-
 
 If LiveCode is acting as the target of a drag-drop operation (i.e.
 during the context of a <dragEnter>, <dragMove>, <dragDrop> or

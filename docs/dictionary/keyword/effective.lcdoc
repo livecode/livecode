@@ -73,7 +73,7 @@ The <effective> <keyword> can be used with the following inherited
 * rectangle property
 
 
-* <layerMode> < property(property)>
+* <layerMode> property
 
 
 >*Note:* The <effective> keyword is implemented internally as a property
@@ -81,7 +81,7 @@ The <effective> <keyword> can be used with the following inherited
 > in an expression, nor with the set com.
 
 References: object (glossary), property (glossary), keyword (glossary),
-substack (glossary), layerMode (glossary), font (glossary),
+substack (glossary), font (glossary),
 inheritance (glossary), card (keyword), rectangle (keyword),
 button (keyword), button (object), borderPattern (property),
 foregroundColor (property), threeDHilite (property),

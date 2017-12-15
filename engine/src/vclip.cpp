@@ -92,6 +92,11 @@ const char *MCVideoClip::gettypestring()
 	return MCvideostring;
 }
 
+bool MCVideoClip::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnVideoClip(this);
+}
+
 Boolean MCVideoClip::del(bool p_check_flag)
 {
     if (!isdeletable(p_check_flag))

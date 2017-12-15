@@ -450,11 +450,11 @@ enum MCGGradientFunction
 static const intenum_t kMCGGradientFunctionCount = 7;
 
 
-enum MCGGradientTileMode
+enum MCGGradientSpreadMethod
 {
-	kMCGGradientTileModeClamp,
-	kMCGGradientTileModeRepeat,
-	kMCGGradientTileModeMirror,	
+	kMCGGradientSpreadMethodPad,
+	kMCGGradientSpreadMethodReflect,
+	kMCGGradientSpreadMethodRepeat,
 };
 
 enum MCGMaskFormat
@@ -905,6 +905,9 @@ void MCGContextRestore(MCGContextRef context);
 void MCGContextSetFlatness(MCGContextRef context, MCGFloat flatness);
 void MCGContextSetShouldAntialias(MCGContextRef context, bool should_antialias);
 
+// Transform attribute
+void MCGContextSetTransform(MCGContextRef context, MCGAffineTransform p_transform);
+
 // Layer attributes and manipulation - bitmap effect options would be added here also.
 void MCGContextSetOpacity(MCGContextRef context, MCGFloat opacity);
 void MCGContextSetBlendMode(MCGContextRef context, MCGBlendMode mode);
@@ -926,6 +929,7 @@ void MCGContextClipToRegion(MCGContextRef self, MCGRegionRef p_region);
 // Fill attributes
 void MCGContextSetFillRule(MCGContextRef context, MCGFillRule rule);
 void MCGContextSetFillOpacity(MCGContextRef context, MCGFloat opacity);
+void MCGContextSetFillNone(MCGContextRef context);
 void MCGContextSetFillRGBAColor(MCGContextRef context, MCGFloat red, MCGFloat green, MCGFloat blue, MCGFloat alpha);
 void MCGContextSetFillPattern(MCGContextRef context, MCGImageRef image, MCGAffineTransform transform, MCGImageFilter filter);
 void MCGContextSetFillGradient(MCGContextRef context, MCGGradientFunction function, const MCGFloat* stops, const MCGColor* colors, uindex_t ramp_length, bool mirror, bool wrap, uint32_t repeats, MCGAffineTransform transform, MCGImageFilter filter);
@@ -933,6 +937,7 @@ void MCGContextSetFillPaintStyle(MCGContextRef context, MCGPaintStyle style);
 
 // Stroke attributes
 void MCGContextSetStrokeOpacity(MCGContextRef context, MCGFloat opacity);
+void MCGContextSetStrokeNone(MCGContextRef context);
 void MCGContextSetStrokeRGBAColor(MCGContextRef context, MCGFloat red, MCGFloat green, MCGFloat blue, MCGFloat alpha);
 void MCGContextSetStrokePattern(MCGContextRef context, MCGImageRef image, MCGAffineTransform transform, MCGImageFilter filter);
 void MCGContextSetStrokeGradient(MCGContextRef context, MCGGradientFunction function, const MCGFloat* stops, const MCGColor* colors, uindex_t ramp_length, bool mirror, bool wrap, uint32_t repeats, MCGAffineTransform transform, MCGImageFilter filter);
@@ -940,6 +945,8 @@ void MCGContextSetStrokeWidth(MCGContextRef context, MCGFloat width);
 void MCGContextSetStrokeMiterLimit(MCGContextRef context, MCGFloat limit);
 void MCGContextSetStrokeJoinStyle(MCGContextRef context, MCGJoinStyle style);
 void MCGContextSetStrokeCapStyle(MCGContextRef context, MCGCapStyle style);
+void MCGContextSetStrokeDashOffset(MCGContextRef context, MCGFloat offset);
+void MCGContextSetStrokeDashArray(MCGContextRef context, const MCGFloat* lengths, uindex_t length_count);
 void MCGContextSetStrokeDashes(MCGContextRef context, MCGFloat phase, const MCGFloat *lengths, uindex_t arity);
 void MCGContextSetStrokePaintStyle(MCGContextRef context, MCGPaintStyle style);
 
@@ -995,28 +1002,20 @@ void MCGContextFillAndStroke(MCGContextRef context);
 // Intersects the current clipping path with the current path; the inside of the current
 // path is determined with the current fill rule. This discards the path.
 void MCGContextClip(MCGContextRef context);
-// Replace the current path by one thickened using the current stroke attributes.
-void MCGContextThicken(MCGContextRef context);
-// Replace the current path by one entirely consisting of moveto, lineto and close commands.
-void MCGContextFlatten(MCGContextRef context);
-// Replace the current path by one consisting of no overlapping subpaths or self
-// intersections. Interior is determined by current fill rule.
-void MCGContextSimplify(MCGContextRef context);
 
 void MCGContextDrawPixels(MCGContextRef context, const MCGRaster& raster, MCGRectangle dst_rect, MCGImageFilter filter);
 void MCGContextDrawImage(MCGContextRef context, MCGImageRef image, MCGRectangle dst_rect, MCGImageFilter filter);
 void MCGContextDrawImageWithCenter(MCGContextRef context, MCGImageRef image, MCGRectangle image_center, MCGRectangle dst_rect, MCGImageFilter filter);
 void MCGContextDrawRectOfImage(MCGContextRef self, MCGImageRef p_image, MCGRectangle p_src, MCGRectangle p_dst, MCGImageFilter p_filter);
-void MCGContextDrawDeviceMask(MCGContextRef context, MCGMaskRef mask, int32_t tx, int32_t ty);
 
 bool MCGContextCopyImage(MCGContextRef context, MCGImageRef &r_image);
 
-void MCGContextDrawText(MCGContextRef context, const char* text, uindex_t length, MCGPoint location, uint32_t font_size, void *typeface);
-MCGFloat MCGContextMeasureText(MCGContextRef context, const char *text, uindex_t length, uint32_t font_size, void *typeface);
 void MCGContextDrawPlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, MCGPoint location, const MCGFont &font, bool p_rtl);
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
 bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds);
+
+void MCGContextPlayback(MCGContextRef context, MCGRectangle p_dst_rect, const void *p_drawing, size_t p_drawing_byte_size);
 
 ////////////////////////////////////////////////////////////////////////////////
 

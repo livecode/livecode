@@ -54,125 +54,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Version, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, BuildNumber, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Platform, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Environment, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Machine, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Processor, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, SystemVersion, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, CommandNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ConstantNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, FunctionNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, PropertyNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, GlobalNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, LocalNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, VariableNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Param, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ParamCount, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Params, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Result, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, BackScripts, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, FrontScripts, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, PendingMessages, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Interrupt, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Me, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Target, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, TargetContents, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Owner, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ScriptLimits, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, SysError, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Value, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ValueWithObject, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Get, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, PutIntoVariable, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, PutOutput, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Do, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, DoInCaller, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, InsertScriptOfObjectInto, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Quit, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, CancelMessage, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, DeleteVariable, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, DeleteVariableChunks, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, RemoveAllScriptsFrom, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, RemoveScriptOfObjectFrom, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, LoadExtension, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnloadExtension, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, WaitFor, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, WaitUntil, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, WaitWhile, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StartUsingStack, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StartUsingStackByName, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStack, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStackByName, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Dispatch, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Send, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, SendScript, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, SendInTime, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Call, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, LockErrors, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, LockMessages, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnlockErrors, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnlockMessages, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Set, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Return, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, ReturnValue, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, ReturnError, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, CaseSensitive, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, CaseSensitive, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, CenturyCutOff, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, CenturyCutOff, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, ConvertOctals, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ConvertOctals, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, ItemDelimiter, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ItemDelimiter, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, LineDelimiter, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, LineDelimiter, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, ColumnDelimiter, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ColumnDelimiter, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, RowDelimiter, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, RowDelimiter, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, WholeMatches, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, WholeMatches, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, UseSystemDate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, UseSystemDate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, UseUnicode, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, UseUnicode, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, NumberFormat, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, NumberFormat, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ScriptExecutionErrors, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ScriptParsingErrors, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, AllowInterrupts, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, AllowInterrupts, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ExplicitVariables, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, ExplicitVariables, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, PreserveVariables, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, PreserveVariables, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, StackLimit, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, EffectiveStackLimit, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, StackLimit, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, SecureMode, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, SecureMode, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, SecurityCategories, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, SecurityPermissions, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, SecurityPermissions, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, RecursionLimit, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, RecursionLimit, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, Address, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, StacksInUse, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, EditionType, 1)
-
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ValueAsObject, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, OwnerAsObject, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, TemplateAsObject, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, MeAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, MenuObjectAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, TargetAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ErrorObjectAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, FontfilesInUse, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 struct MCEngineNumberFormat
 {
 	uint2 fw;
@@ -229,7 +110,6 @@ static MCExecSetTypeInfo _kMCEngineSecurityCategoriesTypeInfo =
 	sizeof(_kMCEngineSecurityCategoriesElementInfo) / sizeof(MCExecSetTypeElementInfo),
 	_kMCEngineSecurityCategoriesElementInfo
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2158,3 +2038,61 @@ void MCEngineEvalIsNotStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, boo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCEngineEvalCommandName(MCExecContext& ctxt, MCStringRef& r_result)
+{
+    if (MCcommandname != nullptr)
+        r_result = MCValueRetain(MCcommandname);
+    else
+        r_result = MCValueRetain(kMCEmptyString);
+}
+
+void MCEngineEvalCommandArguments(MCExecContext& ctxt, MCArrayRef& r_result)
+{
+    r_result = MCValueRetain(MCcommandarguments);
+}
+
+void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index, MCStringRef& r_result)
+{
+    if (t_index == 0)
+    {
+        ctxt . LegacyThrow(EE_COMMANDARGUMENTS_BADPARAM);
+        return;
+    }
+    
+    MCStringRef t_result = nullptr;
+    // If the index > argument count then we return empty
+    if (!MCArrayFetchValueAtIndex(MCcommandarguments, t_index, (MCValueRef&)t_result))
+        t_result = kMCEmptyString;
+
+    r_result = MCValueRetain(t_result);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCEngineGetRevLibraryMappingByKey(MCExecContext& ctxt, MCNameRef p_library, MCStringRef& r_mapping)
+{
+    MCArrayRef t_mappings = MCdispatcher->getlibrarymappings();
+    
+    MCStringRef t_value = nullptr;
+    // m_library_mapping only stores strings (function above)
+    if (!MCArrayFetchValue(t_mappings, false, p_library, (MCValueRef&)t_value) ||
+        MCStringIsEmpty(t_value))
+    {
+        ctxt . LegacyThrow(EE_BAD_LIBRARY_MAPPING);
+        return;
+    }
+    
+    r_mapping = MCValueRetain(t_value);
+}
+
+void MCEngineSetRevLibraryMappingByKey(MCExecContext& ctxt, MCNameRef p_library, MCStringRef p_mapping)
+{
+    MCArrayRef t_mappings = MCdispatcher->getlibrarymappings();
+    if (!MCArrayStoreValue(t_mappings, false, p_library, p_mapping))
+    {
+        ctxt . LegacyThrow(EE_BAD_LIBRARY_MAPPING);
+        return;
+    }
+}
+

@@ -31,19 +31,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Sound, PlaySoundOnChannel, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Sound, StopSoundOnChannel, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Sound, PauseSoundOnChannel, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Sound, ResumeSoundOnChannel, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Sound, DeleteSoundOnChannel, 1)
-MC_EXEC_DEFINE_SET_METHOD(Sound, VolumeOfChannel, 2)
-MC_EXEC_DEFINE_GET_METHOD(Sound, VolumeOfChannel, 2)
-MC_EXEC_DEFINE_GET_METHOD(Sound, StatusOfChannel, 2)
-MC_EXEC_DEFINE_GET_METHOD(Sound, SoundOnChannel, 2)
-MC_EXEC_DEFINE_SET_METHOD(Sound, AudioCategory, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCSoundAudioCategoryElementInfo[] =
 {
     { "ambient", kMCSoundAudioCategoryAmbient, false},

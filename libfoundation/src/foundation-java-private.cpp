@@ -341,14 +341,18 @@ bool initialise_jvm()
     vm_args.version = JNI_VERSION_1_6;
     init_jvm_args(&vm_args);
     
+    char t_option[PATH_MAX];
+    const char *t_option_prefix = "-Djava.class.path=";
+    strcpy(t_option, t_option_prefix);
+    
     const char *t_class_path = getenv("CLASSPATH");
-    if (t_class_path == nullptr)
+    if (t_class_path == nullptr ||
+        strlen(t_option_prefix) + strlen(t_class_path) >= PATH_MAX)
     {
         t_class_path = "/usr/lib/java";
     }
-    
-    char *t_option = strdup("-Djava.class.path=");
-    t_option = strcat(t_option, t_class_path);
+    strcat(t_option, t_class_path);
+    t_option[strlen(t_option_prefix)+strlen(t_class_path)] = '\0';
     
     JavaVMOption* options = new (nothrow) JavaVMOption[1];
     options[0].optionString = t_option;
@@ -357,9 +361,7 @@ bool initialise_jvm()
     vm_args.options = options;
     vm_args.ignoreUnrecognized = false;
     
-    bool t_success = create_jvm(&vm_args);
-    free(t_option);
-    return t_success;
+    return create_jvm(&vm_args);
 #endif
     return true;
 }
@@ -1217,35 +1219,32 @@ static jclass MCJavaPrivateFindClass(MCNameRef p_class_name)
 {
     // The system class loader does not know about LC's android engine
     // classes. We cache the android engine class loader on startup and
-    // call its findClass method to find any classes named
-    // com.runrev.android.<Class>. For all other classes we just use
-    // the JNIEnv FindClass method & system class loader.
-    if (MCStringBeginsWith(MCNameGetString(p_class_name),
-                           MCSTR("com.runrev.android"),
-                           kMCStringOptionCompareExact))
-    {
+    // call its findClass method to find any classes in the com.runrev.android
+    // package, or any custom classes that have been included.
+    // For all other classes we just use the JNIEnv FindClass method &
+    // system class loader.
 #if defined(TARGET_SUBPLATFORM_ANDROID)
-        jstring t_class_string;
-        if (!__MCJavaStringToJString(MCNameGetString(p_class_name), t_class_string))
-            return nullptr;
-        
-        extern void* MCAndroidGetClassLoader(void);
-        jobject t_class_loader = static_cast<jobject>(MCAndroidGetClassLoader());
-        
-        jclass t_class_loader_class = s_env->FindClass("java/lang/ClassLoader");
-        jmethodID t_find_class = s_env->GetMethodID(t_class_loader_class,
-                                                    "findClass",
-                                                    "(Ljava/lang/String;)Ljava/lang/Class;");
-        
-        jobject t_class = s_env->CallObjectMethod(t_class_loader,
-                                                  t_find_class,
-                                                  t_class_string);
-        
-        return static_cast<jclass>(t_class);
-#else
+    jstring t_class_string;
+    if (!__MCJavaStringToJString(MCNameGetString(p_class_name), t_class_string))
         return nullptr;
+    
+    extern void* MCAndroidGetClassLoader(void);
+    jobject t_class_loader = static_cast<jobject>(MCAndroidGetClassLoader());
+    
+    jclass t_class_loader_class = s_env->FindClass("java/lang/ClassLoader");
+    jmethodID t_find_class = s_env->GetMethodID(t_class_loader_class,
+                                                "findClass",
+                                                "(Ljava/lang/String;)Ljava/lang/Class;");
+    
+    jobject t_class = s_env->CallObjectMethod(t_class_loader,
+                                              t_find_class,
+                                              t_class_string);
+    if (t_class != nullptr)
+        return static_cast<jclass>(t_class);
+    
+    // Clear the ClassNotFoundException
+    s_env -> ExceptionClear();
 #endif
-    }
     
     MCAutoStringRef t_class_path;
     if (!MCJavaClassNameToPathString(p_class_name, &t_class_path))

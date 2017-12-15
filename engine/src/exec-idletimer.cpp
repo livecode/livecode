@@ -31,12 +31,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(IdleTimer, LockIdleTimer, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(IdleTimer, UnlockIdleTimer, 0)
-MC_EXEC_DEFINE_GET_METHOD(IdleTimer, IdleTimerLocked, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCIdleTimerExecLockIdleTimer(MCExecContext& ctxt)
 {
     MCSystemLockIdleTimer();

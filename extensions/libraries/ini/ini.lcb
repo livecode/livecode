@@ -1,0 +1,95 @@
+/*
+Copyright (C) 2017 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+
+This library provides support for parsing INI files.
+
+Tags: INI, Library
+*/
+
+library com.livecode.library.ini
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "INI Library"
+
+use com.livecode.engine
+use com.livecode.foreign
+
+foreign handler type ini_handler(in pContext as optional Pointer, in pSection as ZStringNative, \
+                              in pName as ZStringNative, in pValue as ZStringNative) returns CInt
+                              
+foreign handler ini_parse_string(in pString as ZStringNative, in pHandler as ini_handler, in pContext as optional Pointer) returns CInt \
+   binds to "c:inih>ini_parse_string"
+   
+private variable sIni as Array
+   
+handler ini_callback_handler(in pContext as optional Pointer, in pSection as ZStringNative, \
+                              in pName as ZStringNative, in pValue as ZStringNative) returns CInt
+   if pSection is not empty then
+      if pSection is not among the keys of sIni then
+         put {} into sIni[pSection]
+      end if
+      put pValue into sIni[pSection][pName]
+   else
+      put pValue into sIni[pName]
+   end if
+   return 1                       
+end handler
+
+/**
+Summary: Parse INI text into a LiveCode value.
+
+pIniString:   String containing the content of an INI file
+
+Returns: An array
+
+Description:
+<iniToArray> is used to convert data encoded in INI format into a LiveCode
+array. The resulting array will be multi-dimensional with each INI file
+section a parent key containing an array of key, value pairs. Key, value
+pairs that are not in a section are root array elements. 
+
+For example the file:
+
+    foo = bar
+    [section]
+    baz = 1
+    
+Will create an array where the following statements are true:
+
+    array["foo"] is "bar"
+    array["section"]["baz"] is 1
+
+Tags: INI
+*/
+public handler iniToArray(in pIniString) returns optional Array
+   put {} into sIni
+   
+   variable t_context as optional Pointer
+   
+   unsafe
+      if ini_parse_string(pIniString, ini_callback_handler, t_context) < 0 then
+         return nothing
+      end if
+   end unsafe
+   
+   return sIni
+end handler
+
+end library

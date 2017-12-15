@@ -65,8 +65,8 @@ following:
 References: set (command), command (glossary), setProp (control structure),
 propertyNames (function), object (glossary), property (glossary),
 key (glossary), value (glossary), custom property (glossary),
-statement (glossary), customPropertySet (glossary),
-custom property set (glossary), array (glossary), properties (property)
+statement (glossary), custom property set (glossary), array (glossary), 
+customPropertySet (property), properties (property)
 
 Tags: properties
 
