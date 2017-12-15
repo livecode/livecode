@@ -1750,6 +1750,8 @@ enum Properties {
     P_REV_SCRIPT_DESCRIPTION,
     P_REV_BEHAVIOR_USES,
     
+    P_REV_LIBRARY_MAPPING,
+    
     __P_LAST,
 };
 

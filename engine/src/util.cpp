@@ -3196,16 +3196,31 @@ __MCU_library_map_path(MCStringRef p_path,
         t_mapped_path = *t_base_path;
     }
     
-    // Concatenate the mapped path onto the app code path, and then resolve
-    // it to ensure that all '.' and '..' type components are removed.
-    // (otherwise things might go awry if we have a //?/ type path on
-    // Windows).
+    // If the mapped path does not begin with './', then we just resolve.
     MCAutoStringRef t_unresolved_library_path;
-    if (!MCStringFormat(&t_unresolved_library_path,
-                        "%@/%@",
-                        MCappcodepath,
-                        *t_mapped_path) ||
-        !MCS_resolvepath(*t_unresolved_library_path,
+    if (MCStringBeginsWithCString(*t_mapped_path,
+                                  reinterpret_cast<const char_t *>("./"),
+                                  kMCStringOptionCompareExact))
+    {
+        
+        // Concatenate the mapped path onto the app code path
+        if (!MCStringFormat(&t_unresolved_library_path,
+                            "%@/%@",
+                            MCappcodepath,
+                            *t_mapped_path))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        t_unresolved_library_path = *t_mapped_path;
+    }
+    
+    // resolve the oath to ensure that all '.' and '..' type components are
+    // removed. (otherwise things might go awry if we have a //?/ type path on
+    // Windows).
+    if (!MCS_resolvepath(*t_unresolved_library_path,
                          r_mapped_library_path))
     {
         return false;
@@ -3297,7 +3312,24 @@ void *MCSupportLibraryLoad(const char *p_name_cstr)
         return nullptr;
     }
 
-    return MCU_library_load(*t_name);
+    MCSAutoLibraryRef t_module;
+    &t_module = MCU_library_load(*t_name);
+    if (!t_module.IsSet())
+    {
+        // try a relative path
+        MCAutoStringRef t_relative_filename;
+        if (MCStringFormat(&t_relative_filename, "./%@", *t_name))
+        {
+            &t_module = MCU_library_load(*t_relative_filename);
+        }
+    }
+    
+    if (!t_module.IsSet())
+    {
+        return nullptr;
+    }
+    
+    return t_module.Take();
 }
 
 void MCSupportLibraryUnload(void *p_handle)

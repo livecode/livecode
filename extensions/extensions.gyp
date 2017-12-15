@@ -35,6 +35,23 @@
 	        'target_name': 'extensions',
 			'type': 'none',
 			
+			'dependencies':
+			[
+				'cross-platform-extension-dependencies',
+			],
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_aux_files':
+					[
+						# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
+						'<(PRODUCT_DIR)/packaged_extensions/',
+					],
+				},
+			},
+			
 			'conditions':
 			[
 			    [
@@ -42,21 +59,9 @@
                     {
                         'dependencies':
                         [
-                            'lcs-extensions',
+							'lcs-extensions',
                             'lcb-extensions',
-                        ],	
-                        
-                        'all_dependent_settings':
-						{
-							'variables':
-							{
-								'dist_aux_files':
-								[
-									# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
-									'<(PRODUCT_DIR)/packaged_extensions/',
-								],
-							},
-						},		    
+                        ],	 
                     },
                 ],
 			],
@@ -136,6 +141,7 @@
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',
 				'libraries/objectrepository/objectrepository.lcb',
+				'libraries/ini/ini.lcb',
 
 				'widgets/androidbutton/androidbutton.lcb',
 				'widgets/androidfield/androidfield.lcb',
@@ -220,6 +226,16 @@
 						'<@(_sources)',
 					],
 				},
+			],
+		},
+		
+		{
+			'target_name': 'cross-platform-extension-dependencies',
+			'type': 'none',
+
+			'dependencies':
+			[
+				'libraries/ini/inih/inih.gyp:inih',
 			],
 		},
 	],

@@ -106,7 +106,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    end if
    
    -- Make sure all dependencies are included
-   revSBUpdateForDependencies "android", pSettings
+   revSBUpdateForDependencies "android", "armv6", , pSettings
    
    -- Manually remove built-in implementations from detected script library inclusions
    revSBRemoveInclusions pStack, "android", tConfirm, pSettings
@@ -783,12 +783,25 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       revStandaloneProgress "Building executable..."
       
       put tExternals into pSettings["externals"]
-
+      
       put "revsecurity:./librevsecurity" into pSettings["android,library"]
       repeat for each line tEntry in tExternals
          put return & tEntry & ":" & "./lib" & tEntry after pSettings["android,library"]
       end repeat
-
+      
+      repeat for each line tLib in pSettings["extension_code_resources"]
+         local tSourceFile, tSourceName
+         set the itemdelimiter to slash
+         put item -1 of tLib into tSourceFile
+         set the itemDelimiter to "."
+         put item 1 to -2 of tSourceFile into tSourceName
+         
+         put url ("binfile:" & tLib) into url ("binfile:" & tArmLibsBuildFolder & slash & tSourceFile)
+         
+         put return & tSourceName & ":./" & tSourceFile after pSettings["android,library"]
+      end repeat
+      
+      
       local tDeploy
       -- Update the deploy params with script library and extension inclusions
       revSBUpdateDeployParams pStack, "android", pSettings, tDeploy

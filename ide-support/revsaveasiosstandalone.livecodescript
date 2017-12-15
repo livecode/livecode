@@ -99,16 +99,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       end if
    end if
    
-   -- Make sure all dependencies are included
-   revSBUpdateForDependencies "ios", pSettings
-   
-   -- Manually remove built-in implementations from detected script library inclusions
-   revSBRemoveInclusions pStack, "ios", tConfirm, pSettings
-   
-   -- Make sure old-style keys are retained, and updated with new information
-   -- from inclusions pane of standalone settings GUI
-   revSBConvertSettingsForPlatform pSettings, "ios"
-   
    -- Get the development root for device builds
    -- MM-2012-09-18: Rejiged the SDKs we use.  Things are now split up into sim, armv7, armv7, 
    -- since we now potentially need to use different SDKs for each.
@@ -138,6 +128,26 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          throw revIDEDeployIOSGetInvalidityMessage(tIosXcodePairs)
       end if
       put tSDKInfo into tSDKs["arm"]
+      
+      -- Compute the list of archs in the fat binary
+      local tRawArchs
+      put shell("otool -fv" && quote & mapFilePath(tSDKs["arm"]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
+      if tRawArchs is empty then
+         put shell("otool -hv" && quote & mapFilePath(tSDKs["arm"]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
+      end if
+      
+      local tArchs
+      -- SN-2015-03-30: [[ Bug 14794 ]] If the user specifies a 32-bit only build,
+      --  then we do not do the 64-bit build.
+      if tRawArchs contains "ARM64" and not pSettings["ios,32-bit only"] then
+         put "arm64 " after tArchs
+      end if
+      if tRawArchs contains "V7" and pSettings["ios,minimum version"] < 11.0 then
+         put "armv7 " after tArchs
+      end if
+      
+      -- Make sure all dependencies are included
+      revSBUpdateForDependencies "ios", replaceText(tArchs, space, comma), "iphoneos" & item 1 of tIosXcodePair, pSettings
    else
       
       -- MM-2012-09-18: We now only support the 4.3 simulators or later.
@@ -147,12 +157,22 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       local tSuffix
       // SN-2015-05-08: We only want the simulator version, not the whole string 'Simulator X.Y'
       put last word of pTarget into tSuffix
+      
+      -- Make sure all dependencies are included
+      revSBUpdateForDependencies "ios", "x86_64", "iphonesimulator" & tSuffix, pSettings
+      
       replace "." with "_" in tSuffix
       put tSuffix into tSDKS["sim"]["suffix"]
       put revMobileRuntimeFolder(pTarget, tSDKs["sim"]["suffix"]) into tSDKs["sim"]["runtime path"]
       
    end if
    
+   -- Manually remove built-in implementations from detected script library inclusions
+   revSBRemoveInclusions pStack, "ios", tConfirm, pSettings
+   
+   -- Make sure old-style keys are retained, and updated with new information
+   -- from inclusions pane of standalone settings GUI
+   revSBConvertSettingsForPlatform pSettings, "ios"
    
    -- Compute the base folder
    local tBaseFolder
@@ -281,6 +301,32 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       end if
    end if
    
+   repeat for each line tLib in pSettings["extension_code_resources"]
+      local tSourceFile, tSourcePath, tSourceName
+      set the itemdelimiter to slash
+      put item -1 of tLib into tSourceFile
+      put item 1 to -2 of tLib into tSourcePath
+      set the itemDelimiter to "."
+      put item 1 to -2 of tSourceFile into tSourceName
+      
+      if pTarget is "Device" then
+         put "extension-code-resource" into tCopiedExternals[tSourceName]["type"]
+         put tLib into tCopiedExternals[tSourceName]["arm"]
+         put tSourceFile into tCopiedExternals[tSourceName]["location"]
+      else
+         --!TODO Add support for static libraries and frameworks by linking the engine for a simulator build
+         if there is a file tLib then
+            revSBCopyFileToFile tLib, pAppBundle & slash & tSourceFile, "revStandaloneProgressCallback", the long id of me
+         else
+            -- framework
+            revSBCopyFolderToDestination tLib, pAppBundle, "revStandaloneProgressCallback", the long id of me
+         end if
+         put "extension-code-resource" into tCopiedExternals[tSourceName]["type"]
+         put tLib into tCopiedExternals[tSourceName]["sim"]
+         put tSourceFile into tCopiedExternals[tSourceName]["location"]
+      end if
+   end repeat
+   
    -- Externals to reference
    -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
    --
@@ -326,29 +372,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
             put tSDKs[tInstSet]["tools path"] & ":" before $PATH
          end if
          
-         -- Loop through the copied files list, extracting anything that needs to be
-         -- linked with the engine
-         local tLinkExts, tLinkDeps
-         put empty into tLinkExts
-         put empty into tLinkDeps
-         
-         -- Extract the dependency info from the extension
-         -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
-         --
-         repeat for each line tLinkExt in keys of tCopiedExternals
-            put tCopiedExternals[tLinkExt][tInstSet] into tLinkExts[tLinkExt] 
-            _internal extract "__MISC" "__deps" from tLinkExts[tLinkExt]
-            repeat for each line tLine in it
-               put true into tLinkDeps[tLine]
-            end repeat 
-         end repeat
-         
-         -- Fetch the deps for the standalone itself
-         _internal extract "__MISC" "__deps" from mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone")
-         repeat for each line tLine in it
-            put true into tLinkDeps[tLine]
-         end repeat
-         
          -- Compute the SDK path
          local tSdkPath
          put tSDKs[tInstSet]["sdk path"] into tSdkPath
@@ -388,12 +411,82 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          -- Add reference to the partially linked standalone engine
          put quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote & space after tLinkCommand
          
-         -- Add references to each partially linked extension file, also make sure we force the
-         -- presence of the ___libinfoptr_* symbol for each one - this stops dead-stripping
-         -- from occuring.
-         repeat for each key tLinkExt in tLinkExts
-            put quote & tLinkExts[tLinkExt] & quote & return after tLinkCommand
-            put "-u" && "___libinfoptr_" & tLinkExt & return after tLinkCommand
+         -- Loop through the copied files list, extracting anything that needs to be
+         -- linked with the engine
+         local tLinkExts, tLinkDeps
+         put empty into tLinkExts
+         put empty into tLinkDeps
+         
+         -- Extract the dependency info from the extension
+         -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
+         --
+         set the itemDelimiter to "."
+         repeat for each line tLinkExt in keys of tCopiedExternals
+            switch the last item of tCopiedExternals[tLinkExt][tInstSet]
+               case "txt"
+                  -- deps file
+                  get url ("file:" & tCopiedExternals[tLinkExt][tInstSet])
+                  repeat for each line tLine in it
+                     put true into tLinkDeps[tLine]
+                  end repeat 
+                  break
+               case "a"
+                  put quote & tCopiedExternals[tLinkExt][tInstSet] & quote & return after tLinkCommand
+                  put "-force_load" && quote & tCopiedExternals[tLinkExt][tInstSet] & quote & return after tLinkCommand
+                  break
+               case "bundle"
+               case "framework"
+                  -- check if the library is static or dynamic
+                  local tFileName
+                  set the itemDelimiter to slash
+                  put the last item of tCopiedExternals[tLinkExt][tInstSet] into tFileName
+                  set the itemDelimiter to "."
+                  delete the last item of tFileName
+                  get shell("file" && quote & tCopiedExternals[tLinkExt][tInstSet] & "/" & tFileName & quote)
+                  if it contains "ar archive" then
+                     -- static frameworks are just a package for a static library
+                     put quote & tCopiedExternals[tLinkExt][tInstSet] & "/" & tFileName & quote & return after tLinkCommand
+                     put "-force_load" && quote & tCopiedExternals[tLinkExt][tInstSet] & "/" & tFileName & quote & return after tLinkCommand
+                  else
+                     -- dynamic framework iOS 8+
+                     revSBCopyFolderToDestination tCopiedExternals[tLinkExt][tInstSet], pAppBundle, "revStandaloneProgressCallback", the long id of me
+                     if tCopiedExternals[tLinkExt][tInstSet] ends with ".framework" then
+                        -- remove simulator slices
+                        -- if we are copying a bundle these can only be used for resources
+                        local tCopiedFrameworkBinary
+                        put quote & pAppBundle & "/" & tFileName & ".framework/" & tFileName  & quote into tCopiedFrameworkBinary
+                        repeat for each word tArch in "i386 x86_64"
+                           get shell("lipo -remove" && quote & tArch & quote && "-output" && tCopiedFrameworkBinary && tCopiedFrameworkBinary)
+                        end repeat
+                     end if
+                  end if
+                  break
+               case "embeddedframework"
+                  -- .embeddedframework is a hack that some SDKs use for single drag and drop of
+                  -- multiple resource bundles and frameworks
+                  throw "The contents of the embeddedframework folder should be added to the module code resource folder not the embeddedframework folder itself:" & return & tCopiedExternals[tLinkExt][tInstSet]
+                  break
+               case "lcext"
+               default
+                  put tCopiedExternals[tLinkExt][tInstSet] into tLinkExts[tLinkExt] 
+                  _internal extract "__MISC" "__deps" from tLinkExts[tLinkExt]
+                  repeat for each line tLine in it
+                     put true into tLinkDeps[tLine]
+                  end repeat 
+                  
+                  -- Add references to each partially linked extension file, also make sure we force the
+                  -- presence of the ___libinfoptr_* symbol for each one - this stops dead-stripping
+                  -- from occuring.
+                  put quote & tLinkExts[tLinkExt] & quote & return after tLinkCommand
+                  put "-u" && "___libinfoptr_" & tLinkExt & return after tLinkCommand
+                  break
+            end switch
+         end repeat
+         
+         -- Fetch the deps for the standalone itself
+         _internal extract "__MISC" "__deps" from mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone")
+         repeat for each line tLine in it
+            put true into tLinkDeps[tLine]
          end repeat
          
          -- Add references to each dependency
@@ -406,24 +499,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
                put "-weak_framework" && word 2 of tLinkDep & return after tLinkCommand
             end if
          end repeat
-         
-         -- Compute the list of archs in the fat binary
-         local tRawArchs
-         put shell("otool -fv" && quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
-         if tRawArchs is empty then
-            put shell("otool -hv" && quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
-         end if
-         
-         local tArchs
-         -- SN-2015-03-30: [[ Bug 14794 ]] If the user specifies a 32-bit only build,
-         --  then we do not do the 64-bit build.
-         if tRawArchs contains "ARM64" and not pSettings["ios,32-bit only"] then
-            put "arm64 " after tArchs
-         end if
-         if tRawArchs contains "V7" and pSettings["ios,minimum version"] < 11.0 then
-            put "armv7 " after tArchs
-         end if
-         
          
          -- SN-2015-02-19: [[ Bug 14625 ]] Build each binary separately according
          -- to their architecture.

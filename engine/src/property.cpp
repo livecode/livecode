@@ -121,7 +121,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RO_PROPERTY(P_SCRIPT_EXECUTION_ERRORS, String, Engine, ScriptExecutionErrors)
 	DEFINE_RO_PROPERTY(P_SCRIPT_PARSING_ERRORS, String, Engine, ScriptParsingErrors)
 	
-	DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, Array, License, RevLicenseInfoByKey)
+    DEFINE_RW_ARRAY_PROPERTY(P_REV_LIBRARY_MAPPING, String, Engine, RevLibraryMappingByKey)
+    DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, Array, License, RevLicenseInfoByKey)
 	DEFINE_RO_PROPERTY(P_REV_LICENSE_INFO, String, License, RevLicenseInfo)
 	DEFINE_RW_PROPERTY(P_REV_LICENSE_LIMITS, Array, License, RevLicenseLimits)
 	DEFINE_RW_PROPERTY(P_REV_RUNTIME_BEHAVIOUR, UInt16, Legacy, RevRuntimeBehaviour)
@@ -938,7 +939,8 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
     // MW-2014-12-10: [[ Extensions ]] Add support for global loadedExtensions property.
     case P_LOADED_EXTENSIONS:
         break;
-	        
+    
+    case P_REV_LIBRARY_MAPPING:
 	case P_REV_CRASH_REPORT_SETTINGS: // DEVELOPMENT only
 	case P_REV_LICENSE_INFO:
 	case P_DRAG_DATA:

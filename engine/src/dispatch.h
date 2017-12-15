@@ -259,6 +259,11 @@ public:
     //  in the resource mapping array of MCdispatcher.
     void addlibrarymapping(MCStringRef p_mapping);
     bool fetchlibrarymapping(MCStringRef p_name, MCStringRef &r_path);
+    MCArrayRef getlibrarymappings(void)
+    {
+        return m_library_mapping;
+    }
+    bool haslibrarymapping(MCStringRef p_name);
     
     virtual bool recomputefonts(MCFontRef parent_font, bool force);
     
