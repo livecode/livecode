@@ -1018,7 +1018,6 @@ private command revCloseOpenStacks pStackFileList, pStack
          set the itemDel to comma
       end if
    end repeat
-   lock messages
    -- remove the stacks from memory and keep a note of them for later
    repeat for each line tStack in pStackFileList["full"]
       if the short name of stack tStack is among the lines of the mainStacks then
@@ -1614,7 +1613,6 @@ command revReset
       
       # TH-2008-07-08 :: Bug 6444, locking messages around this handler to prevent calling of preopencard handlers
       # in the stacks being built
-      lock messages
       local tLineNumber
       put 0 into tLineNumber
       repeat for each line tLine in sResetA["Reopen"]
@@ -1624,7 +1622,6 @@ command revReset
          # OK-2008-11-10 : Bug 7382 - Restores the stack's position in the message path if there was one
          restoreStackToMessagePath tLine, line tLineNumber of sResetA["Restore Message Path"]
       end repeat
-      unlock messages
    end try
    delete variable sResetA               -- stored info for resetting to the pre-build state
    unlock screen
