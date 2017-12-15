@@ -121,7 +121,7 @@ use com.livecode.library.scriptitems
 -- metadata
 metadata title is "Segmented Control"
 metadata author is "LiveCode"
-metadata version is "1.1.0"
+metadata version is "1.2.0"
 metadata svgicon is "M72.6,0H7.7C3.4,0,0,3.4,0,7.7v14c0,4.2,3.4,7.7,7.7,7.7h64.9c4.2,0,7.7-3.4,7.7-7.7v-14C80.2,3.4,76.8,0,72.6,0z M7.8,13.5h8v2.3h-8V13.5z M19.7,20.6h-12v-2.3h12V20.6z M19.7,11h-12V8.8h12V11z M27.8,25.5h-1V3.8h1V25.5z M46.1,20.6h-12v-2.3h12V20.6zM36.1,15.7v-2.3h8v2.3H36.1z M46.1,11h-12V8.8h12V11z M54.4,25.5h-1V3.8h1V25.5z M72.7,20.6h-12v-2.3h12V20.6z M72.7,15.7h-8v-2.3h8V15.7z M72.7,11h-12V8.8h12V11z"
 metadata preferredSize is "200,32"
 metadata _ide is "true"
@@ -231,6 +231,7 @@ public handler OnSave(out rProperties as Array)
 	put mSegmentMinExtent	into rProperties["segmentMinWidth"]
 	put getSelected()		into rProperties["selectedSegment"]
 	put mShowFrameBorder	into rProperties["showFrameBorder"]
+	put mRadius into rProperties["cornerRadius"]
 	
 	if mSelectedLabelColor is not nothing then
 		put colorToString(mSelectedLabelColor, false) into rProperties["selectedLabelColor"]
@@ -258,6 +259,10 @@ public handler OnLoad(in pProperties as Array)
 
 	put pProperties["showFrameBorder"]	into mShowFrameBorder
 	setSelected(pProperties["selectedSegment"], kDontPostMessage)
+
+	if "cornerRadius" is among the keys of pProperties then
+	    put pProperties["cornerRadius"] into mRadius
+	end if
 
 	if "selectedLabelColor" is among the keys of pProperties then
 		put stringToColor(pProperties["selectedLabelColor"]) into mSelectedLabelColor
@@ -287,8 +292,7 @@ public handler OnCreate()
 	put (the number of elements in mSegmentNames) into mNumSegments
 	put the empty path into mPerimeter
 	put the empty list into mLines
-	put 0 into mRadius
-
+        put 15 into mRadius
 	put [] into mCalculatedExtents
 end handler
 
@@ -296,7 +300,6 @@ public handler OnPaint()
 	if mGeometryIsChanged then
 		calculateExtents()
 		-- update mPerimeter and mLines variables if the geometry has changed
-		put (the trunc of my height)/5 into mRadius
 		updatePerimeter()
 		updateLines()
 	end if
@@ -1296,6 +1299,31 @@ end handler
 
 public handler SetHorizontal(in pHorizontal as Boolean) returns nothing
 	put pHorizontal into mIsHorizontal
+	put true into mGeometryIsChanged
+	redraw all
+end handler
+
+/**
+Name: cornerRadius
+Type: property
+
+Syntax: set the cornerRadius of <widget> to <value>
+Syntax: get the cornerRadius of <widget>
+
+Summary: The corner radius of the widget
+
+Description:
+The cornerRadius is the radius (in pixels) of the corner curve of the <widget>. The default value is usually suitable for horizantal orientations, however with a vertical orientation, depending on the size of the labels, you may wish to adjust.
+**/
+property cornerRadius get mRadius set setCornerRadius
+metadata cornerRadius.editor is "com.livecode.pi.number"
+metadata cornerRadius.default is "15"
+metadata cornerRadius.section is "Basic"
+metadata cornerRadius.section is "1"
+metadata cornerRadius.label is "Corner Radius"
+
+public handler setCornerRadius(in pCornerRadius as Number) returns nothing
+	put pCornerRadius into mRadius
 	put true into mGeometryIsChanged
 	redraw all
 end handler
