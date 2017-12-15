@@ -42,55 +42,6 @@ Returns:
 The <format> function returns a <string>.
 
 The result:
-The corresponding value is rounded to the nearest integer: if the
-fractional part is . 5 or more, the value is rounded up, and otherwise
-it is rounded down. (If the value is negative, if the fractional part is
-.5, the value is rounded down.) If a charLength is specified, if the
-length of the resulting number is less than the charLength, enough
-leading spaces are added to make it charLength <characters> long. If the
-length of the resulting number is equal to or greater than the
-charLength, it is unchanged. For example, the incantation %2d transforms
-"2.3" to " 2" .The corresponding value is assumed to be a decimal
-number, rounded to the nearest integer, then converted to an octal
-number. If a charLength is specified, if the length of the resulting
-number is less than the charLength, enough leading spaces are added to
-make it charLength <characters> long. If the length of the resulting
-number is equal to or greater than the charLength, it is unchanged. For
-example, the incantation %3o transforms "10. 7" to " 13". The
-corresponding value is assumed to be a decimal number, rounded to the
-nearest integer, then converted to a hexadecimal number. If a charLength
-is specified, if the length of the resulting number is less than the
-charLength, enough leading spaces are added to make it charLength
-<characters> long. If the length of the resulting number is equal to or
-greater than the charLength, it is unchanged. For example, the
-incantation %4x transforms "30.3" to "  1e" .The corresponding value is
-a real number. If a precision is specified, if the number of digits
-after the <decimal point> is greater than the precision, the number is
-rounded to the specified number of digits after the <decimal point>. If
-the number of digits is less than the precision, enough trailing zeroes
-are added to make precision digits. If no precision is specified, the
-number is formatted to six decimal places. If a charLength is specified,
-if the total length of the resulting number is less than the charLength,
-enough leading spaces are added to make it charLength <characters> long;
-if the length of the resulting number is equal to or greater than the
-charLength, it is unchanged. The corresponding value is a real number.
-First the number is transformed to scientific notation: expressed as a
-number between 1 and 10 (or -10 and 1), multiplied by the appropropriate
-power of 10. If a precision is specified, if the number of digits after
-the <decimal point> is greater than the precision, the number is rounded
-to the specified number of digits after the <decimal point>. If the
-number of digits is less than the precision, enough trailing zeroes are
-added to make precision digits. If no precision is specified, the number
-is given to six digits after the <decimal point>. If a charLength is
-specified, if the total length of the resulting number is less than the
-charLength, enough leading spaces are added to make it charLength
-<characters> long; if the length of the resulting number is equal to or
-greater than the charLength, it is unchanged. For example, the
-incantation %3. 2e transforms "232. 4" to "2. 32e+02" .If a zero is
-included immediately before the charLength parameter in any formatting
-incantation that allows padding, the resulting value is padded (if
-necessary) with zeroes instead of spaces. For example, the incantation
-%03s transforms H to 00H</code.
 
 Description:
 Use the <format> <function> to create <string(glossary)|strings> in
@@ -104,68 +55,120 @@ the <baseString>. It also transforms C escape sequences in the
 <baseString> into their single- <character> equivalents.
 
 The valid incantations are as follows:
-String:%[charLength]s
-The corresponding value is unchanged, except that if a charLength is
-specified, if the <string(keyword)> is shorter than the charLength,
-enough leading spaces are added to make it charLength <characters> long.
-If the length of the <string(keyword)> is equal to or greater than the
-charLength, it is unchanged. For example, the incantation %3s transforms
-"H" to "  H". Character:%[charLength]c The corresponding value is
-treated as an ASCII value and translated to the corresponding character.
-If a charLength is specified, one fewer leading spaces are added to make
-it charLength characters long. For example, the incantation %2c
-transforms 65 to " A" (65 is the ASCII value of the <character> "A" ).
+
+String:
+- %[charLength]s - The corresponding value is unchanged, except that 
+if a charLength is specified, if the <string(keyword)> is shorter than 
+the charLength, enough leading spaces are added to make it charLength 
+<characters> long. If the length of the <string(keyword)> is equal to or 
+greater than the charLength, it is unchanged. For example, the 
+incantation %3s transforms "H" to "  H". 
+
+Character: 
+- %[charLength]c - The corresponding value is treated as an ASCII value 
+and translated to the corresponding character. If a charLength is specified, 
+one fewer leading spaces are added to make it charLength characters long. 
+For example, the incantation %2c transforms 65 to " A" (65 is the ASCII 
+value of the <character> "A").
 
 Decimal number:
-%[charLength]d
+- %[charLength]d - The corresponding value is rounded to the nearest integer: 
+if the fractional part is .5 or more, the value is rounded up, and otherwise
+it is rounded down. (If the value is negative, if the fractional part is
+.5, the value is rounded down.) If a charLength is specified, if the
+length of the resulting number is less than the charLength, enough
+leading spaces are added to make it charLength <characters> long. If the
+length of the resulting number is equal to or greater than the
+charLength, it is unchanged. For example, the incantation %2d transforms
+"2.3" to " 2".
 
 Unsigned integer:
-%[charLength]u
-Like %[charLength]d, except that if the value is negative, it is
-subtracted from the largest long integer allowed by the current
-operating system. (On most operating systems, this is 2^32, or
-4,294,967,296.) Octal:%[charLength]o Hexadecimal:%[charLength]x
+- %[charLength]u - Like %[charLength]d, except that if the value is 
+negative, it is subtracted from the largest long integer allowed by the 
+current operating system. (On most operating systems, this is 2^32, or
+4,294,967,296.) 
 
-%[charLength]X
-Like %[charLength]x, except that the hex digits A-F are given in
-uppercase. For example, the incantation %4x transforms "30. 3" to
-"  1E". 
+Octal:
+- %[charLength]o - The corresponding value is assumed to be a decimal
+number, rounded to the nearest integer, then converted to an octal
+number. If a charLength is specified, if the length of the resulting
+number is less than the charLength, enough leading spaces are added to
+make it charLength <characters> long. If the length of the resulting
+number is equal to or greater than the charLength, it is unchanged. For
+example, the incantation %3o transforms "10.7" to " 13". 
+
+Hexadecimal:
+- %[charLength]x - The corresponding value is assumed to be a decimal 
+number, rounded to the nearest integer, then converted to a hexadecimal 
+number. If a charLength is specified, if the length of the resulting 
+number is less than the charLength, enough leading spaces are added to 
+make it charLength <characters> long. If the length of the resulting 
+number is equal to or greater than the charLength, it is unchanged. 
+For example, the incantation %4x transforms "30.3" to "  1e".
+- %[charLength]X - Like %[charLength]x, except that the hex digits A-F 
+are given in uppercase. For example, the incantation %4x transforms 
+"30.3" to "  1E". 
 
 Floating-point:
-%[charLength].[precision]f
-
-%[charLength. precision]g
-Like %[charLength]. [precision]f, except that trailing zeroes are not
-added if the number of digits is less than the precision.
+- %[charLength].[precision]f - The corresponding value is a real number. 
+If a precision is specified, if the number of digits after the 
+<decimal point> is greater than the precision, the number is rounded to 
+the specified number of digits after the <decimal point>. If the number 
+of digits is less than the precision, enough trailing zeroes are added 
+to make precision digits. If no precision is specified, the
+number is formatted to six decimal places. If a charLength is specified,
+if the total length of the resulting number is less than the charLength,
+enough leading spaces are added to make it charLength <characters> long;
+if the length of the resulting number is equal to or greater than the
+charLength, it is unchanged. 
+- %[charLength. precision]g - Like %[charLength].[precision]f, except 
+that trailing zeroes are not added if the number of digits is less than 
+the precision.
 
 Scientific notation:
-%[charLength. precision]e
+- %[charLength].[precision]e - The corresponding value is a real number.
+First the number is transformed to scientific notation: expressed as a
+number between 1 and 10 (or -10 and 1), multiplied by the appropropriate
+power of 10. If a precision is specified, if the number of digits after
+the <decimal point> is greater than the precision, the number is rounded
+to the specified number of digits after the <decimal point>. If the
+number of digits is less than the precision, enough trailing zeroes are
+added to make precision digits. If no precision is specified, the number
+is given to six digits after the <decimal point>. If a charLength is
+specified, if the total length of the resulting number is less than the
+charLength, enough leading spaces are added to make it charLength
+<characters> long; if the length of the resulting number is equal to or
+greater than the charLength, it is unchanged. For example, the
+incantation %3.2e transforms "232.4" to "2. 32e+02".
+- %[charLength.precision]E - Like %[charLength. precision]e, except that 
+the "E" separating the number from the power of ten is uppercase. For 
+example, the incantation %3.2e transforms "232.4" to "2.32E+02".
 
-%[charLength. precision]E
-Like %[charLength. precision]e, except that the "E" separating the
-number from the power of ten is uppercase. For example, the incantation
-%3. 2e transforms "232. 4" to "2. 32E+02".
+If a zero is included immediately before the charLength parameter in any formatting
+incantation that allows padding, the resulting value is padded (if
+necessary) with zeroes instead of spaces. For example, the incantation
+%03s transforms H to 00H.
 
 If any of the following C escape sequences are present in the
 <baseString>, the <format> function transforms them to the equivalent
 character: 
+- \a Control-G (bell) 
+- \b Control-H (backspace) 
+- \f Control-L (formfeed) 
+- \n Control-J (linefeed) 
+- \r Control-M (return) 
+- \t Control-I (tab) 
+- \v Control-K (vertical tab) 
+- \\\ \\ 
+- \?? ? 
+- \' ' 
+- \" " (enclose a quote within a <string(keyword)>) 
+- \nnn character whose ASCII value is the octal number represented by nnn 
+- \xnn character whose ASCII value is the hex number represented by nn
 
-\aControl-G (bell) 
-\bControl-H (backspace) 
-\fControl-L (formfeed) 
-\nControl-J (linefeed) 
-\rControl-M (return) 
-\tControl-I (tab) 
-\vControl-K (vertical tab) 
-\\\ 
-\?? 
-\'' 
-\(enclose a quote within a <string(keyword)>) 
-\nnncharacter whose ASCII value is the octal number represented bynnn 
-\xnncharacter whose ASCII value is the hex number represented by*Note:*
-Transformation of values in <valuesList> uses the standard LiveCode
-conversion rules. For example, if empty is passed for a numeric
-incantation it will be taken as the value 0.
+> *Note:* Transformation of values in <valuesList> uses the standard 
+> LiveCode conversion rules. For example, if empty is passed for a numeric
+> incantation it will be taken as the value 0.
 
 References: function (control structure), binaryEncode (function),
 charToNum (function), baseConvert (function), numToChar (function),
