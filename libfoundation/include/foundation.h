@@ -3060,12 +3060,19 @@ MC_DLLEXPORT bool MCRecordIterate(MCRecordRef record, uintptr_t& x_iterator, MCN
 //  HANDLER DEFINITIONS
 //
 
+enum MCHandlerQueryType
+{
+    kMCHandlerQueryTypeNone,
+    kMCHandlerQueryTypeObjcSelector,
+};
+    
 struct MCHandlerCallbacks
 {
     size_t size;
     void (*release)(void *context);
     bool (*invoke)(void *context, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 	bool (*describe)(void *context, MCStringRef& r_desc);
+    bool (*query)(void *context, MCHandlerQueryType type, void *r_info);
 };
 
 MC_DLLEXPORT bool MCHandlerCreate(MCTypeInfoRef typeinfo, const MCHandlerCallbacks *callbacks, void *context, MCHandlerRef& r_handler);
@@ -3551,6 +3558,24 @@ MC_DLLEXPORT void *MCObjcObjectGetRetainedId(MCObjcObjectRef obj);
  * an ObjcObject. The id is autoreleased before being returned. */
 MC_DLLEXPORT void *MCObjcObjectGetAutoreleasedId(MCObjcObjectRef obj);
 
+/* Create an ObjcObject containing an instance of the com_livecode_MCObjcFormalDelegate class,
+ * mapping protocol methods to MCHandlerRefs, with
+ * a context parameter. */
+MC_DLLEXPORT bool MCObjcCreateDelegateWithContext(MCStringRef p_protocol_name, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object);
+
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcFormalDelegate class,
+ * mapping protocol methods to MCHandlerRefs. */
+MC_DLLEXPORT bool MCObjcCreateDelegate(MCStringRef p_protocol_name, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object);
+
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcInformalDelegate class,
+ * mapping informal protocol methods specified as a list of foreign handler to MCHandlerRefs, with
+ * a context parameter. */
+MC_DLLEXPORT bool MCObjcCreateInformalDelegateWithContext(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object);
+    
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcInformalDelegate class,
+ * mapping informal protocol methods specified as a list of foreign handler to MCHandlerRefs. */
+MC_DLLEXPORT bool MCObjcCreateInformalDelegate(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object);
+    
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPickleFieldType
