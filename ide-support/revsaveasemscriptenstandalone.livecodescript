@@ -51,12 +51,12 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
    put pSettings["files"] into tFiles
    put pSettings["auxiliary_stackfiles"] into tAuxStackFiles
    put pSettings["extensions"] into tExtensions
-
+   
    -- If the datagrid is used, then include the library as an aux stack
    if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      put the effective filename of stack "revDataGridLibrary" & return after tAuxStackFiles
+      revSBAddDataGridToAuxiliaryStackFiles tAuxStackFiles
    end if
-
+   
    local tError
    try
       ---------- Check deployment entitlement

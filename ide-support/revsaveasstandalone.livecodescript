@@ -534,8 +534,6 @@ private command revStandaloneCopyInclusions pStack, pStackFileList, pStackSource
    -- copy resources (inclusions) to files
    revCopyResources pStack, pStackFileList, pDirectory
    
-   revCopyScriptLibraries pStack, pTarget
-   
    revCopyFiles pDirectory, pStackPath
    
    -- copy database drivers
@@ -1147,25 +1145,6 @@ private function revPlatformCount
    return sPlatformCount
 end revPlatformCount
 
-# Adds the appropriate script libraries to the standalone settings
-private command revCopyScriptLibraries pStack, pPlatform
-   # AL-2015-02-03: [[ Scriptify IDE ]] Ensure revCommonLibrary is always included in a standalone
-   revSBAddInclusion "Common", "scriptLibraries", sStandaloneSettingsA
-   
-   -- data grid
-   // SN-2015-10-19: [[ Bug 16238 ]] DataGrid can be included on the wish of the user - in case the standalone stack
-   //  will load stacks using DataGrid, for instance.
-   if ("data grid templates" is in the subStacks of stack pStack or "DataGrid" is among the lines of sStandaloneSettingsA["scriptLibraries"]) \
-         and there is a stack "revDataGridLibrary" then
-      set the mainStack of stack "revDataGridLibrary" to pStack
-   end if
-   
-   // AL-2015-04-28: [[ Bug 15244 ]] Include profiles library if needed
-   if sStandaloneSettingsA["includeProfiles"] is not empty then 
-      revSBAddInclusion "Profiles", "scriptLibraries", sStandaloneSettingsA
-   end if
-end revCopyScriptLibraries
-
 #####################################################################
 # Copies general resources to the standalone stack and then does
 # what it needs to to substacks etc.
@@ -1620,12 +1599,6 @@ command revReset
    set the fileType to sResetA["fileType"]
    unlock messages
    try
-      # MW-2009-07-18: Media does not have a datagrid library and so this breaks if we don't
-      #   double check it exists there first.
-      if there is a stack "revDataGridLibrary" then
-         set the mainStack of stack "revDataGridLibrary" to "revDataGridLibrary"
-      end if
-      
       # TH-2008-07-08 :: Bug 6444, locking messages around this handler to prevent calling of preopencard handlers
       # in the stacks being built
       lock messages
