@@ -33,24 +33,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, Base64Encode, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, Base64Decode, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, BinaryEncode, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, BinaryDecode, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, Compress, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, Decompress, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, IsoToMac, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, MacToIso, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, UrlEncode, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, UrlDecode, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, UniEncode, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, UniDecode, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, MD5Digest, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, SHA1Digest, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, MessageDigest, 3)
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCFiltersIsoToMac(MCDataRef p_source, MCDataRef &r_result)
 {
 	MCAutoByteArray t_buffer;

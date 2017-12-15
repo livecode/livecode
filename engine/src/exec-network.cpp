@@ -39,48 +39,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Network, DNSServers, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Network, CachedUrls, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Network, UrlStatus, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Network, HostAddress, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Network, PeerAddress, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Network, HostAddressToName, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Network, HostNameToAddress, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Network, HostName, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Network, OpenSockets, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Network, HTTPProxyForURL, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Network, HTTPProxyForURLWithPAC, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, CloseSocket, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, DeleteUrl, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, LoadUrl, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, UnloadUrl, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenSocket, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenSecureSocket, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, OpenDatagramSocket, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, PostToUrl, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptConnectionsOnPort, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptDatagramConnectionsOnPort, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, AcceptSecureConnectionsOnPort, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, ReadFromSocketFor, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, ReadFromSocketUntil, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, WriteToSocket, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, PutIntoUrl, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, ReturnValueAndUrlResult, 2)
-MC_EXEC_DEFINE_GET_METHOD(Network, UrlResponse, 1)
-MC_EXEC_DEFINE_GET_METHOD(Network, FtpProxy, 1)
-MC_EXEC_DEFINE_SET_METHOD(Network, FtpProxy, 1)
-MC_EXEC_DEFINE_GET_METHOD(Network, HttpProxy, 1)
-MC_EXEC_DEFINE_SET_METHOD(Network, HttpProxy, 1)
-MC_EXEC_DEFINE_GET_METHOD(Network, HttpHeaders, 1)
-MC_EXEC_DEFINE_SET_METHOD(Network, HttpHeaders, 1)
-MC_EXEC_DEFINE_GET_METHOD(Network, SocketTimeout, 1)
-MC_EXEC_DEFINE_SET_METHOD(Network, SocketTimeout, 1)
-MC_EXEC_DEFINE_GET_METHOD(Network, DefaultNetworkInterface, 1)
-MC_EXEC_DEFINE_SET_METHOD(Network, DefaultNetworkInterface, 1)
-MC_EXEC_DEFINE_GET_METHOD(Network, NetworkInterfaces, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCScriptEnvironment *s_pac_engine = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -655,7 +613,7 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
             t_data = MCS_read_socket(MCsockets[t_index], ctxt, p_count, *t_sentinel, p_message);
         }
 		else
-			t_data = MCS_read_socket(MCsockets[t_index], ctxt, 0, nil, p_message);
+			t_data = MCS_read_socket(MCsockets[t_index], ctxt, p_count, nil, p_message);
 
 		if (p_message == NULL)
 		{

@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #ifdef __OBJC__
 #import <Foundation/Foundation.h>
@@ -49,10 +50,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifdef __WINDOWS__
 #include <windows.h>
-typedef unsigned int uint32_t;
+#define strcasecmp _stricmp
 #else
 #include <pthread.h>
-#include <stdint.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1147,7 +1147,7 @@ static LCError LCArrayResolvePath(LCArrayRef p_array, unsigned int p_options, co
 	t_key = (MCVariableRef)p_array;
     
     // SN-2015-01-15: [[ Bug 14057 ]] Use the UTF8 string if possible.
-    int32_t t_option;
+    uint32_t t_option;
     if (s_interface -> version < 6)
         t_option = kMCOptionAsCString;
     else
@@ -1443,7 +1443,7 @@ LCError LCArrayStoreKeyOnPath(LCArrayRef p_array, unsigned int p_options, const 
     t_key = (MCVariableRef)p_array;
     
     // SN-2015-01-15: [[ Bug 14057 ]] Use the UTF8 string if possible.
-    int32_t t_option;
+    uint32_t t_option;
     if (s_interface -> version < 6)
         t_option = kMCOptionAsCString;
     else
@@ -2744,7 +2744,7 @@ void LCExceptionRaise(const char *p_format, ...)
 	va_end(args);
 	
 	free(s_error);
-	s_error = (char *)malloc(length);
+	s_error = (char *)malloc(length+1);
 	if (s_error == nil)
 		return;
 	
@@ -2864,7 +2864,7 @@ static bool default__cstring(const char *arg, char*& r_value)
 {
 	char *t_arg_copy;
 	t_arg_copy = strdup(arg);
-	if (r_value != nil)
+	if (t_arg_copy != nil)
 	{
 		r_value = t_arg_copy;
 		return true;

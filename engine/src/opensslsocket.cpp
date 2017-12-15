@@ -821,6 +821,11 @@ MCSocket *MCS_open_socket(MCNameRef name, MCNameRef from, Boolean datagram, MCOb
 		MCresult->sets("can't create socket");
 		return NULL;
 	}
+    
+#ifdef SO_NOSIGPIPE
+    int set = 1;
+    setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+#endif
 
 	// HH-2017-01-26: [[ Bug 18454 ]] Set the broadcast flagged base on property 'allowDatagramBroadcasts'
 	if(datagram)
@@ -1134,6 +1139,11 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 		MCresult->sets("can't create socket");
 		return NULL;
 	}
+    
+#ifdef SO_NOSIGPIPE
+    int set = 1;
+    setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+#endif
 
 	unsigned long val = 1;
 

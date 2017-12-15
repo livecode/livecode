@@ -86,12 +86,6 @@ public:
     void eval_ctxt(MCExecContext &ctxt, MCExecValue& r_value);
 
 	MCVarref *getrootvarref(void);
-	
-	void compile(MCSyntaxFactoryRef factory);
-	void compile_in(MCSyntaxFactoryRef factory);
-	void compile_out(MCSyntaxFactoryRef factory);
-	void compile_inout(MCSyntaxFactoryRef factory);	
-	void compile_object_ptr(MCSyntaxFactoryRef factory);
 
 	Chunk_term getlastchunktype(void);
 

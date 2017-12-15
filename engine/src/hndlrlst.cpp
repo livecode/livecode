@@ -36,8 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#include "syntax.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCVariable **MCHandlerlist::s_old_variables = NULL;
@@ -791,30 +789,6 @@ bool MCHandlerlist::listhandlers(MCHandlerlistListHandlersCallback p_callback, v
 	}
 	
 	return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCHandlerlist::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginHandlerList(ctxt);
-	
-	for(uindex_t i = 0; i < nglobals; i++)
-		MCSyntaxFactoryDefineGlobal(ctxt, globals[i] -> getname());
-
-	for(uindex_t i = 0; i < nconstants; i++)
-		MCSyntaxFactoryDefineConstant(ctxt, cinfo[i] . name, cinfo[i] . value);
-	
-	MCVariable *t_var;
-	t_var = vars;
-	for(uindex_t i = 0; t_var != nil; t_var = t_var -> getnext(), i++)
-		MCSyntaxFactoryDefineLocal(ctxt, t_var -> getname(), vinits[i]);
-
-	for(uindex_t i = 0; i < 6; i++)
-		for(uindex_t j = 0; j < handlers[i] . count(); j++)
-			handlers[i] . get()[j] -> compile(ctxt);
-			
-	MCSyntaxFactoryEndHandlerList(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

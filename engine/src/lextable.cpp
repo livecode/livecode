@@ -1478,7 +1478,8 @@ const LT factor_table[] =
 #ifdef MODE_DEVELOPMENT
 		{"revcrashreportsettings", TT_PROPERTY, P_REV_CRASH_REPORT_SETTINGS},
 #endif
-		{"revlicenseinfo", TT_PROPERTY, P_REV_LICENSE_INFO},
+        {"revlibrarymapping", TT_PROPERTY, P_REV_LIBRARY_MAPPING},
+        {"revlicenseinfo", TT_PROPERTY, P_REV_LICENSE_INFO},
         {"revlicenselimits",TT_PROPERTY,P_REV_LICENSE_LIMITS},
 #if defined(MODE_DEVELOPMENT)
 #ifdef FEATURE_PROPERTY_LISTENER

@@ -231,6 +231,11 @@ const char *MCGraphic::gettypestring()
 	return MCgraphicstring;
 }
 
+bool MCGraphic::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnGraphic(this);
+}
+
 Boolean MCGraphic::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || showinvisible())

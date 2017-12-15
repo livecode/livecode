@@ -254,10 +254,10 @@
                                     'copies':
                                     [
                                         {
-                                            'destination':'<(PRODUCT_DIR)/CEF/',
+                                            'destination':'<(PRODUCT_DIR)\CEF',
                                             'files':
                                             [
-                                                '<(PRODUCT_DIR)/libbrowser-cefprocess.exe',
+                                                '<(PRODUCT_DIR)\libbrowser-cefprocess.exe',
                                             ],
                                         },
                                     ],

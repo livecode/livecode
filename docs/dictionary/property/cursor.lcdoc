@@ -34,31 +34,31 @@ the text under the <mouse pointer> is editable.
 
 LiveCode looks for the specified image in the following order:
 
-1) The stack of the current object's behavior (if applicable)
-2) The stack of the owner of the current object's behavior (if
-applicable) ...
-n) The stack of the current object's stack's behavior (if applicable)
-A) The current object's stack
-B) The current object's stack's mainstack (if a substack)
-C) The current object's stack's mainstacks substacks
-D) The list of open stacks, in order they were loaded
+1. The stack of the current object's behavior (if applicable)
+2. The stack of the owner of the current object's behavior (if
+applicable)
+3. The stack of the current object's stack's behavior (if applicable)
+4. The current object's stack
+5. The current object's stack's mainstack (if a substack)
+6. The current object's stack's mainstacks substacks
+7. The list of open stacks, in order they were loaded
 
 LiveCode includes several built-in cursors whose names you can use in
 place of their image IDs.
 
 The built-in cursors and their recommended uses are:
 
-        * none: Hides the cursor
-        * busy: Use repeatedly during a long handler
-        * watch: Use during a moderately long handler
-        * arrow: Use for <select|selecting> objects
-        * cross: Use for painting, drawing, or <select|selecting> a
-          <point> or small area
-        * hand: Use for clicking <hypertext> links
-        * iBeam: Use for <select|selecting> text in a field
-        * plus: Use for <select|selecting> <items> such as spreadsheet
-          cells 
-        * help: Use for getting online help
+* none: Hides the cursor
+* busy: Use repeatedly during a long handler
+* watch: Use during a moderately long handler
+* arrow: Use for <select|selecting> objects
+* cross: Use for painting, drawing, or <select|selecting> a
+  <point> or small area
+* hand: Use for clicking <hypertext> links
+* iBeam: Use for <select|selecting> text in a field
+* plus: Use for <select|selecting> <items> such as spreadsheet
+  cells 
+* help: Use for getting online help
 
 
 The busy cursor is a rotating beach ball. Each time you use the
@@ -68,9 +68,8 @@ rotation. For example, the following statements cause the
 running: 
 
     repeat until someCondition is true
-    set the cursor to busy -- spins a bit further
-    doSomething -- insert whatever you want the loop to do here
-
+        set the cursor to busy -- spins a bit further
+        doSomething -- insert whatever you want the loop to do here
     end repeat
 
 
@@ -119,7 +118,7 @@ download (glossary), cursor (glossary), hypertext (glossary),
 mouse pointer (glossary), command (glossary), image (keyword),
 field (keyword), items (keyword), point (keyword), stack (object),
 image (object), cursor (property), yHot (property), lockCursor (property),
- (property), ID (property)
+ID (property)
 
 Tags: ui
 

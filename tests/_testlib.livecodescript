@@ -17,6 +17,9 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on revLoadLibrary
+    if the target is not me then
+       pass revLoadLibrary
+    end if
 	insert the script of me into back
 	set the lockErrorDialogs to true
 end revLoadLibrary
@@ -135,6 +138,55 @@ private function _TestGetBuiltExtensionsFolder
 end _TestGetBuiltExtensionsFolder
 
 private command _TestLoadExtension pFolder, pPath
+   local tCodeFolder
+   put pFolder & "/code" into tCodeFolder
+   
+   if there is a folder tCodeFolder then
+      local tCodeFolders
+      put folders(tCodeFolder) into tCodeFolders
+      switch the platform
+         case "MacOS"
+            filter tCodeFolders with "*-mac*"
+            break
+         case "Win32"
+            filter tCodeFolders with "*-win*"
+            break
+         default
+            filter tCodeFolders with "*-"& toLower(the platform) & "*"
+            break
+      end switch
+      
+      local tFilteredCodeFolders
+      filter tCodeFolders with the processor & "-*" into tFilteredCodeFolders
+      split tFilteredCodeFolders by return as set
+      if the platform is "MacOS" then
+         -- explicit processor should take precedence over universal builds but
+         -- in the event multiple libraries are included and some are universal
+         -- we must merge
+         local tUniveralFilteredCodeFolders
+         filter tCodeFolders with "universal-*" into tUniveralFilteredCodeFolders
+         split tUniveralFilteredCodeFolders by return as set
+         union tFilteredCodeFolders with tUniveralFilteredCodeFolders
+      end if
+      
+      repeat for each key tFolder in tFilteredCodeFolders
+         local tLibraries
+         put files(tCodeFolder & "/" & tFolder) & return & \
+               folders(tCodeFolder & "/" & tFolder) into tLibraries
+         filter tLibraries without ".*"
+         
+         if tLibraries is not empty then
+            set the itemDelimiter to "."
+            repeat for each line tLibrary in tLibraries
+               -- remove extension
+               delete the last item of tLibrary
+               if tLibrary is not empty then
+                  set the revLibraryMapping[tLibrary] to tCodeFolder & "/" & tFolder & "/" & tLibrary
+               end if
+            end repeat
+         end if
+      end repeat
+   end if
    if there is a folder (pFolder & slash & "resources") then
       do "load extension from file pPath with resource path (pFolder & slash & " & quote & "resources" & quote & ")"
    else
@@ -310,6 +362,10 @@ function TestGetExtractedDocsFolder
    return _TestGetBuildFolder() & slash & "extracted_docs"
 end TestGetExtractedDocsFolder
 
+function TestGetPackagedExtensionsFolder
+   return _TestGetBuildFolder() & slash & "packaged_extensions"
+end TestGetPackagedExtensionsFolder
+
 on TestLoadExtension pName
    if pName is among the lines of the loadedExtensions then
       return empty
@@ -394,7 +450,13 @@ on TestLoadExternal pExternal
 end TestLoadExternal 
 
 private function __GetCaller
-   get item 1 to -3 of line -3 of the executionContexts
+   local tLineNum
+   put -1 into tLineNum
+   repeat while item 1 of line tLineNum of the executionContexts \
+      is the long id of this me
+      subtract 1 from tLineNum
+   end repeat
+   get item 1 to -3 of line tLineNum of the executionContexts
    if there is not an it then
       delete item -1 of it
    end if
@@ -409,23 +471,40 @@ end __StackOfObject
 
 -- This loads an extension whose lcb source sits in the same folder as the
 -- current test.
-on TestLoadAuxillaryExtension pName
-	local tBasePath, tExtraPath
-	set the itemDelimiter to slash
-	put item 1 to -2 of the effective filename of __StackOfObject(__GetCaller()) into tBasePath
-	repeat while the last item of tBasePath is not "tests"
-		put item -1 of tBasePath & slash before tExtraPath
-		delete the last item of tBasePath
-	end repeat
+on TestLoadAuxiliaryExtension pName, pResourceFolder
+   local tBytecodeFile
+   put TestGetBuiltBytecodeFile(pName) into tBytecodeFile
+   if pResourceFolder is empty then
+      load extension from data url ("binfile:" & tBytecodeFile)
+   else
+      load extension from data url ("binfile:" & tBytecodeFile) \
+            with resource path pResourceFolder
+   end if
+   
+   if the result is not empty then
+      throw "Failed to load auxiliary extension:" && \
+            the result && tBytecodeFile
+   end if
+end TestLoadAuxiliaryExtension
 
-	local tModuleFile
-	put tBasePath & "/../_tests/_build/" & tExtraPath & pName & ".lcm" into tModuleFile
-
-	load extension from data url ("binfile:" & tModuleFile)
-	if the result is not empty then
-		throw "Failed to load auxillary extension:" && the result && tModuleFile
-	end if
-end TestLoadAuxillaryExtension
+constant kBytecodePathPrefix = "_tests/_build/"
+function TestGetBuiltBytecodeFile pName
+   local tBasePath, tExtraPath
+   set the itemDelimiter to slash
+   put item 1 to -2 of the effective filename of \
+         __StackOfObject(__GetCaller()) into tBasePath
+         
+   local tTestsOffset
+   set the wholematches to true
+   put itemOffset("tests", tBasePath) into tTestsOffset
+   put item tTestsOffset + 1 to -1 of tBasePath into tExtraPath
+   put item 1 to tTestsOffset - 1 of tBasePath into tBasePath
+   
+   local tModuleFile
+   put tBasePath & "/" & kBytecodePathPrefix & tExtraPath & slash & \ 
+      pName & ".lcm" into tModuleFile
+   return tModuleFile
+end TestGetBuiltBytecodeFile
 
 on TestLoadAllExtensions
    local tExtFolder
@@ -608,6 +687,33 @@ private function __MeetsRequirements pRequirement, pOptions
             return __MeetsRequirements("desktop")
          end if  
          return the platform is not "HTML5"
+      case "jvm"
+         return __MeetsRequirements("platform", "MacOS,Linux")
    end switch
    return true
 end __MeetsRequirements
+
+command TestEnsureJVM
+   TestSkipIfNot "jvm"
+
+   if $JAVA_HOME is empty then
+      local tPath
+      switch the platform
+         case "MacOS"
+            put word 1 to -1 of shell("/usr/libexec/java_home") into tPath
+            break
+         case "Linux"
+            local tJAVAC
+            put "/bin/javac" into tJAVAC
+            put word 1 to -1 of shell("/usr/bin/env readlink -f /usr" & tJAVAC) into tPath
+            if there is a file tPath and tPath ends with tJAVAC then
+               set the itemDelimiter to slash
+               delete item -2 to -1 of tPath
+            end if
+            break
+      end switch
+      if there is a folder tPath then
+         put tPath into $JAVA_HOME
+      end if
+   end if
+end TestEnsureJVM

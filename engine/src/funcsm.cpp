@@ -171,11 +171,6 @@ void MCAnnuity::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value .type = kMCExecValueTypeDouble;
 }
 
-void MCAnnuity::compile(MCSyntaxFactoryRef ctxt)
-{
-	compile_with_args(ctxt, kMCMathEvalAnnuityMethodInfo, rate, periods);
-}
-
 MCAtan2::~MCAtan2()
 {
 	delete s1;
@@ -207,11 +202,6 @@ void MCAtan2::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	
 	MCMathEvalAtan2(ctxt, t_y, t_x, r_value . double_value);
     r_value . type = kMCExecValueTypeDouble;
-}
-
-void MCAtan2::compile(MCSyntaxFactoryRef ctxt)
-{
-	compile_with_args(ctxt, kMCMathEvalAtan2MethodInfo, s1, s2);
 }
 
 MCCompound::~MCCompound()
@@ -247,12 +237,6 @@ void MCCompound::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value . type = kMCExecValueTypeDouble;
 }
 
-void MCCompound::compile(MCSyntaxFactoryRef ctxt)
-{
-	compile_with_args(ctxt, kMCMathEvalCompoundMethodInfo, rate, periods);
-}
-
-
 MCMatrixMultiply::~MCMatrixMultiply()
 {
 	delete source;
@@ -283,11 +267,6 @@ void MCMatrixMultiply::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
     MCArraysEvalMatrixMultiply(ctxt, *t_src_array, *t_dst_array, r_value . arrayref_value);
     r_value . type = kMCExecValueTypeArrayRef;
-}
-
-void MCMatrixMultiply::compile(MCSyntaxFactoryRef ctxt)
-{
-	compile_with_args(ctxt, kMCArraysEvalMatrixMultiplyMethodInfo, dest, source);
 }
 
 // MW-2007-07-03: [[ Bug 4506 ]] - Large integers result in negative numbers
@@ -328,15 +307,6 @@ void MCRound::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value . type = kMCExecValueTypeDouble;
 }
 
-void MCRound::compile(MCSyntaxFactoryRef ctxt)
-{
-	if (digit != nil)
-		compile_with_args(ctxt, kMCMathEvalRoundToPrecisionMethodInfo, source, digit);
-	else
-		compile_with_args(ctxt, kMCMathEvalRoundMethodInfo, source);
-}
-
-
 MCStatRound::~MCStatRound()
 {
 	delete source;
@@ -373,14 +343,6 @@ void MCStatRound::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value . type = kMCExecValueTypeDouble;
 }
 
-void MCStatRound::compile(MCSyntaxFactoryRef ctxt)
-{
-	if (digit != nil)
-		compile_with_args(ctxt, kMCMathEvalStatRoundToPrecisionMethodInfo, source, digit);
-	else
-		compile_with_args(ctxt, kMCMathEvalStatRoundMethodInfo, source);
-}
-
 MCVectorDotProduct::~MCVectorDotProduct()
 {
     delete first;
@@ -411,9 +373,3 @@ void MCVectorDotProduct::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     MCArraysEvalVectorDotProduct(ctxt, *t_src_array, *t_dst_array, r_value . double_value);
     r_value . type = kMCExecValueTypeDouble;
 }
-
-void MCVectorDotProduct::compile(MCSyntaxFactoryRef ctxt)
-{
-    compile_with_args(ctxt, kMCArraysEvalVectorDotProductMethodInfo, first, second);
-}
-

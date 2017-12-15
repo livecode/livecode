@@ -1709,7 +1709,7 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 			NameGetCString(t_handler -> name),
 			NameGetCString(t_handler -> name));
 	}
-	CoderWriteLine(p_coder, "\t{ 0 }\n};");
+	CoderWriteLine(p_coder, "\t{ 0, nullptr, nullptr }\n};");
 	
 	CoderWriteLine(p_coder, "");
 	

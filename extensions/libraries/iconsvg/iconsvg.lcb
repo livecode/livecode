@@ -26,6 +26,7 @@ use com.livecode.engine
 metadata version is "1.1.0"
 metadata author is "LiveCode"
 metadata title is "Icon SVG Library"
+metadata _ide is "true"
 
 private variable sFontArray as Array
 private variable sNamesArray as Array

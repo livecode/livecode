@@ -348,7 +348,7 @@ private command __ConfigureMainstackForPlatform pBuildPlatform, pOptions
    
    set the itemDelimiter to comma
    repeat for each element tElement in tAllInclusions
-      if tElement["id"] is "com.livecode.script-library.remotedebugger" then
+      if tElement["id"] is "com.livecode.library.remotedebugger" then
          next repeat
       end if
       
@@ -502,7 +502,7 @@ private command __SetupBuilder
    start using stack tTestLib
    
    -- load httpd if necessary
-   if there is not a stack "com.livecode.script-library.httpd" then
+   if there is not a stack "com.livecode.library.httpd" then
       local tFileName
       put the filename of me into tFilename
       set the itemDelimiter to slash
@@ -510,8 +510,8 @@ private command __SetupBuilder
       get the name of stack tFilename
    end if
    
-   if the long id of stack "com.livecode.script-library.httpd" is not among the lines of the backScripts then
-      insert the script of stack "com.livecode.script-library.httpd" into back
+   if the long id of stack "com.livecode.library.httpd" is not among the lines of the backScripts then
+      insert the script of stack "com.livecode.library.httpd" into back
    end if
    
    httpdStart "__StdioCallback"

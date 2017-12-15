@@ -91,4 +91,47 @@ end handler
 
 --------
 
+foreign handler MCProperListConvertToForeignValues(in pList as List, in pTypeInfo as Pointer, \
+   out rCArray as Pointer, out rCount as LCUIndex) returns CBool binds to "<builtin>"
+foreign handler MCAggregateTypeInfo(in pBinding as String, out rTypeInfo as Pointer) returns CBool binds to "<builtin>"
+foreign handler MCValueRelease(in pValue as Pointer) returns nothing binds to "<builtin>"
+foreign handler MCMemoryDelete(in pBlock as Pointer) returns nothing binds to "<builtin>"
+
+unsafe handler CreateCArray(in pList as List, in pAggregateBinding as String, out rPointer as Pointer, out rCount as Integer) returns Boolean
+   variable tCArray as Pointer
+   variable tCount as Integer
+   variable tTypeInfo as Pointer
+   if not MCAggregateTypeInfo(pAggregateBinding, tTypeInfo) then
+      return false
+   end if
+
+   variable tSuccess as Boolean
+   put MCProperListConvertToForeignValues(pList, tTypeInfo, tCArray, tCount) into tSuccess
+
+   MCValueRelease(tTypeInfo)
+   if not tSuccess then
+      return false
+   end if
+
+   put tCArray into rPointer
+   put tCount into rCount
+   return true
+end handler
+
+-- Create a c-array of structs and delete it
+public handler TestProperListToCArray()
+	variable tList as List
+	put [[true, true, true], [false, false, false]] into tList
+    variable tArray as Pointer
+    variable tCount as Integer
+    unsafe
+		test "create c-array of structs" when \
+			CreateCArray(tList, "aaa", tArray, tCount)
+		
+		test "c-array has correct length" when tCount is 2
+	
+		-- Hopefully this would crash if there was a memory issue
+		MCMemoryDelete(tArray)
+	end unsafe
+end handler
 end module

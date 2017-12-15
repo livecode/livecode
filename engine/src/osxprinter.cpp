@@ -2410,7 +2410,7 @@ bool MCListSystemPrinters(MCStringRef &r_names)
     for(CFIndex i = 0; i < CFArrayGetCount(t_printers) && t_success; ++i)
 	{
         MCAutoStringRef t_name;
-        t_success = MCStringCreateWithCFString(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), &t_name)
+        t_success = MCStringCreateWithCFStringRef(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), &t_name)
                         && MCListAppend(*t_names, *t_name);
 	}
 

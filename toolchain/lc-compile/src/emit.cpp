@@ -271,6 +271,18 @@ static const char *s_output_code_filename = NULL;
 
 //////////
 
+struct CompiledModule
+{
+    CompiledModule *next;
+    NameRef name;
+    byte_t *bytecode;
+    size_t bytecode_len;
+};
+
+static CompiledModule *s_compiled_modules = NULL;
+
+//////////
+
 struct EmittedModule
 {
     EmittedModule *next;
@@ -633,8 +645,46 @@ static void __EmitModuleOrder(NameRef p_name)
     s_ordered_modules[s_ordered_module_count++] = p_name;
 }
 
+static bool
+EmitCompiledModules (void)
+{
+    const char *t_filename = nil;
+    FILE *t_file = OpenOutputBytecodeFile (&t_filename);
+    
+    if (nil == t_file)
+        goto error_cleanup;
+    
+    while(s_compiled_modules != nullptr)
+    {
+        size_t t_written;
+        t_written = fwrite (s_compiled_modules->bytecode, sizeof(byte_t), s_compiled_modules->bytecode_len, t_file);
+    
+        if (t_written != s_compiled_modules->bytecode_len)
+            goto error_cleanup;
+        
+        s_compiled_modules = s_compiled_modules->next;
+    }
+    
+    fflush (t_file);
+    fclose (t_file);
+    
+    return true;
+    
+error_cleanup:
+    if (nil != t_file)
+        fclose (t_file);
+    Error_CouldNotWriteOutputFile (t_filename);
+    return false;
+}
+
 void EmitFinish(void)
 {
+    if (s_compiled_modules != NULL &&
+        !EmitCompiledModules())
+    {
+        goto error_cleanup;
+    }
+    
     if (!EmitEmittedBuiltins())
     {
         goto error_cleanup;
@@ -699,7 +749,7 @@ void EmitBeginLibraryModule(NameRef p_name, intptr_t& r_index)
 }
 
 static bool
-EmitEndModuleGetByteCodeBuffer (MCAutoByteArray & r_bytecode)
+EmitEndModuleGetByteCodeBuffer (byte_t*& r_bytecode, size_t& r_bytecode_len)
 {
 	MCAutoValueRefBase<MCStreamRef> t_stream;
 	MCMemoryOutputStreamCreate (&t_stream);
@@ -714,40 +764,13 @@ EmitEndModuleGetByteCodeBuffer (MCAutoByteArray & r_bytecode)
 	                            t_bytecode_len);
 
 	MCAssert (t_bytecode_len <= UINDEX_MAX);
-	r_bytecode.Give ((byte_t *) t_bytecode, (uindex_t)t_bytecode_len);
+    r_bytecode = (byte_t*)t_bytecode;
+    r_bytecode_len = t_bytecode_len;
 
 	return true;
 
  error_cleanup:
 	Error_CouldNotGenerateBytecode();
-	return false;
-}
-
-static bool
-EmitEndModuleOutputBytecode (const byte_t *p_bytecode,
-                             size_t p_bytecode_len)
-{
-	const char *t_filename = nil;
-	FILE *t_file = OpenOutputBytecodeFile (&t_filename);
-
-	if (nil == t_file)
-		goto error_cleanup;
-
-	size_t t_written;
-	t_written = fwrite (p_bytecode, sizeof(byte_t), p_bytecode_len, t_file);
-
-	if (t_written != p_bytecode_len)
-		goto error_cleanup;
-
-	fflush (t_file);
-	fclose (t_file);
-
-	return true;
-
- error_cleanup:
-	if (nil != t_file)
-		fclose (t_file);
-	Error_CouldNotWriteOutputFile (t_filename);
 	return false;
 }
 
@@ -888,8 +911,7 @@ EmitEndModule (void)
 {
 	const char *t_module_string = nil;
 
-	MCAutoByteArray t_bytecode;
-	const byte_t *t_bytecode_buf = nil;
+    byte_t *t_bytecode_buf = nil;
 	size_t t_bytecode_len = 0;
 
 	MCAutoByteArray t_interface;
@@ -905,11 +927,8 @@ EmitEndModule (void)
 
 	/* ---------- 1. Get bytecode */
 
-	if (!EmitEndModuleGetByteCodeBuffer (t_bytecode))
+	if (!EmitEndModuleGetByteCodeBuffer (t_bytecode_buf, t_bytecode_len))
 		goto cleanup;
-
-	t_bytecode_buf = t_bytecode.Bytes();
-	t_bytecode_len = t_bytecode.ByteCount();
 
 	/* ---------- 2. Output module contents */
 	if (OutputFileAsC)
@@ -920,9 +939,13 @@ EmitEndModule (void)
 	}
 	else if (OutputFileAsBytecode)
 	{
-		if (!EmitEndModuleOutputBytecode (t_bytecode_buf, t_bytecode_len))
-			goto cleanup;
-	}
+        CompiledModule *t_cmodule = (CompiledModule*)Allocate(sizeof(CompiledModule));
+        t_cmodule->next = s_compiled_modules;
+        t_cmodule->name = s_module_name;
+        t_cmodule->bytecode = t_bytecode_buf;
+        t_cmodule->bytecode_len = t_bytecode_len;
+        s_compiled_modules = t_cmodule;
+    }
 
 	/* ---------- 3. Output module interface */
 	if (!EmitEndModuleGetInterfaceBuffer (t_bytecode_buf, t_bytecode_len,

@@ -619,6 +619,42 @@ bool MCArrayIsEmpty(MCArrayRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
+bool MCArrayConvertToProperList(MCArrayRef p_array, MCProperListRef& r_list)
+{
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+    {
+        return false;
+    }
+    
+    for(uindex_t t_index = 1; t_index <= MCArrayGetCount(p_array); t_index++)
+    {
+        MCValueRef t_value;
+        if (!MCArrayFetchValueAtIndex(p_array, t_index, t_value))
+        {
+            r_list = nullptr;
+            return true;
+        }
+        
+        if (!MCProperListPushElementOntoBack(*t_list, t_value))
+        {
+            return false;
+        }
+    }
+    
+    if (!t_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_list = t_list.Take();
+    
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void __MCArrayDestroy(__MCArray *self)
 {
 	if (__MCArrayIsIndirect(self))

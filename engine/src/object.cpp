@@ -54,6 +54,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "styledtext.h"
 #include "flst.h"
 #include "widget.h"
+#include "eps.h"
+#include "graphic.h"
 
 #include "globals.h"
 #include "mctheme.h"
@@ -291,9 +293,6 @@ MCObject::~MCObject()
 	// MW-2008-10-25: Release the parent script use
 	if (parent_script != NULL)
 		parent_script -> Release();
-
-	// MW-2009-11-03: Clear all current breakpoints for this object
-	MCB_clearbreaks(this);
 
 	if (!MCerrorptr.IsValid() || MCerrorptr == this)
 		MCerrorptr = nil;
@@ -860,6 +859,9 @@ void MCObject::removereferences()
     MCscreen->cancelmessageobject(this, NULL);
     removefrom(MCfrontscripts);
     removefrom(MCbackscripts);
+    
+    // MW-2009-11-03: Clear all current breakpoints for this object
+    MCB_clearbreaks(this);
     
     // If the object is marked as being used as a parentScript, flush the parentScript
     // table so we don't get any dangling pointers.
@@ -5373,6 +5375,16 @@ bool MCObjectVisitor::OnScrollbar(MCScrollbar *p_scrollbar)
 bool MCObjectVisitor::OnPlayer(MCPlayer *p_player)
 {
 	return OnControl(p_player);
+}
+
+bool MCObjectVisitor::OnEps(MCEPS *p_eps)
+{
+    return OnControl(p_eps);
+}
+
+bool MCObjectVisitor::OnGraphic(MCGraphic *p_graphic)
+{
+    return OnControl(p_graphic);
 }
 
 bool MCObjectVisitor::OnStyledText(MCStyledText *p_styled_text)

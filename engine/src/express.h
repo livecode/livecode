@@ -51,10 +51,6 @@ public:
 
 	virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
 	
-	// Compile the syntax into the (new) tree for use by the new evaluator.
-	virtual void compile(MCSyntaxFactoryRef);
-	virtual void compile_out(MCSyntaxFactoryRef);
-	
 	// Evaluate the expression as a container, and place the reference to
 	// the container's value in r_ref.
     // EP-less version of evaluation functions
@@ -119,6 +115,8 @@ public:
 	Parse_stat get0params(MCScriptPoint &);
 	Parse_stat get0or1param(MCScriptPoint &sp, MCExpression **exp, Boolean the);
 	Parse_stat get1param(MCScriptPoint &, MCExpression **exp, Boolean the);
+    Parse_stat get0or1or2params(MCScriptPoint &, MCExpression **e1,
+                                MCExpression **e2, Boolean the);
 	Parse_stat get1or2params(MCScriptPoint &, MCExpression **e1,
 	                         MCExpression **e2, Boolean the);
 	Parse_stat get2params(MCScriptPoint &, MCExpression **e1, MCExpression **e2);
@@ -137,6 +135,11 @@ public:
 	Parse_stat getparams(MCScriptPoint &spt, MCParameter **params);
 	void initpoint(MCScriptPoint &);
 	static bool compare_array_element(void *context, MCArrayRef array, MCNameRef key, MCValueRef value);
+    
+private:
+    /* The single parameter is parsed to the 'single' argument of parseexp -
+     * for 0 param fetches this is False, for others this is True. */
+    Parse_stat gettheparam(MCScriptPoint& sp, Boolean single, MCExpression** exp);
 };
 
 class MCFuncref : public MCExpression

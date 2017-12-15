@@ -177,32 +177,6 @@ struct MCExecCustomTypeInfo
 	void *free;
 };
 
-struct MCExecMethodInfo
-{
-	const char *name;
-	uindex_t arity;
-};
-
-#define MC_EXEC_DEFINE_EXEC_METHOD(module, tag, arity) \
-	static MCExecMethodInfo _kMC##module##Exec##tag##MethodInfo = { #module "." #tag, arity }; \
-	MCExecMethodInfo *kMC##module##Exec##tag##MethodInfo = &_kMC##module##Exec##tag##MethodInfo;
-
-#define MC_EXEC_DEFINE_EVAL_METHOD(module, tag, arity) \
-	static MCExecMethodInfo _kMC##module##Eval##tag##MethodInfo = { #module "." #tag, arity }; \
-	MCExecMethodInfo *kMC##module##Eval##tag##MethodInfo = &_kMC##module##Eval##tag##MethodInfo;
-
-#define MC_EXEC_DEFINE_GET_METHOD(module, tag, arity) \
-	static MCExecMethodInfo _kMC##module##Get##tag##MethodInfo = { #module "." #tag, arity }; \
-	MCExecMethodInfo *kMC##module##Get##tag##MethodInfo = &_kMC##module##Get##tag##MethodInfo;
-
-#define MC_EXEC_DEFINE_SET_METHOD(module, tag, arity) \
-	static MCExecMethodInfo _kMC##module##Set##tag##MethodInfo = { #module "." #tag, arity }; \
-	MCExecMethodInfo *kMC##module##Set##tag##MethodInfo = &_kMC##module##Set##tag##MethodInfo;
-
-#define MC_EXEC_DEFINE_MAKE_METHOD(module, tag, arity) \
-	static MCExecMethodInfo _kMC##module##Make##tag##MethodInfo = { #module "." #tag, arity }; \
-	MCExecMethodInfo *kMC##module##Make##tag##MethodInfo = &_kMC##module##Make##tag##MethodInfo;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPropertyType
@@ -462,6 +436,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkArrayGetBinaryString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCDataRef&)
 #define MCPropertyThunkArraySetBinaryString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCDataRef)
 #define MCPropertyThunkArrayGetString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCStringRef&)
+#define MCPropertyThunkArraySetString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCStringRef)
 #define MCPropertyThunkArrayGetArray(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCArrayRef&)
 #define MCPropertyThunkArrayGetAny(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCValueRef&)
 #define MCPropertyThunkArraySetAny(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCValueRef)
@@ -1830,18 +1805,6 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern MCExecMethodInfo *kMCLogicEvalIsEqualToMethodInfo;
-extern MCExecMethodInfo *kMCLogicEvalIsNotEqualToMethodInfo;
-extern MCExecMethodInfo *kMCLogicEvalIsGreaterThanMethodInfo;
-extern MCExecMethodInfo *kMCLogicEvalIsGreaterThanOrEqualToMethodInfo;
-extern MCExecMethodInfo *kMCLogicEvalIsLessThanMethodInfo;
-extern MCExecMethodInfo *kMCLogicEvalIsLessThanOrEqualToMethodInfo;
-extern MCExecMethodInfo *kMCLogicEvalAndMethodInfo;
-extern MCExecMethodInfo *kMCLogicEvalOrMethodInfo;
-extern MCExecMethodInfo *kMCLogicEvalNotMethodInfo;
-extern MCExecMethodInfo *kMCLogicEvalIsABooleanMethodInfo;
-extern MCExecMethodInfo *kMCLogicEvalIsNotABooleanMethodInfo;
-
 void MCLogicEvalIsEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef p_right, bool& r_result);
 void MCLogicEvalIsNotEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef p_right, bool& r_result);
 void MCLogicEvalIsGreaterThan(MCExecContext& ctxt, MCValueRef p_left, MCValueRef p_right, bool& r_result);
@@ -1857,38 +1820,6 @@ void MCLogicEvalIsABoolean(MCExecContext& ctxt, MCValueRef p_value, bool& r_resu
 void MCLogicEvalIsNotABoolean(MCExecContext& ctxt, MCValueRef p_value, bool& r_result);
 
 ///////////
-
-extern MCExecMethodInfo *kMCArraysEvalKeysMethodInfo;
-extern MCExecMethodInfo *kMCArraysEvalExtentsMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecCombineMethodInfo;
-// SN-2014-09-01: [[ Bug 13297 ]] Combining by column deserves its own function as it is too
-// different from combining by row
-extern MCExecMethodInfo *kMCArraysExecCombineByRowMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecCombineByColumnMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecCombineAsSetMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecSplitMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecSplitByColumnMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecSplitAsSetMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecUnionMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecUnionRecursivelyMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecIntersectMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecIntersectRecursivelyMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecDifferenceMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecSymmetricDifferenceMethodInfo;
-extern MCExecMethodInfo *kMCArraysEvalArrayEncodeMethodInfo;
-extern MCExecMethodInfo *kMCArraysEvalArrayDecodeMethodInfo;
-extern MCExecMethodInfo *kMCArraysEvalMatrixMultiplyMethodInfo;
-extern MCExecMethodInfo *kMCArraysEvalTransposeMatrixMethodInfo;
-extern MCExecMethodInfo *kMCArraysEvalVectorDotProductMethodInfo;
-extern MCExecMethodInfo *kMCArraysEvalIsAnArrayMethodInfo;
-extern MCExecMethodInfo *kMCArraysEvalIsNotAnArrayMethodInfo;
-extern MCExecMethodInfo *kMCArraysEvalIsAmongTheKeysOfMethodInfo;
-extern MCExecMethodInfo *kMCArraysEvalIsNotAmongTheKeysOfMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecFilterWildcardMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecFilterRegexMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecFilterWildcardIntoItMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecFilterRegexIntoItMethodInfo;
-
 
 void MCArraysEvalKeys(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysEvalExtents(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
@@ -1925,94 +1856,6 @@ void MCArraysExecFilterRegexIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCS
 
 
 ///////////
-
-extern MCExecMethodInfo *kMCMathEvalBaseConvertMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalAbsMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalRoundToPrecisionMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalRoundMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalStatRoundToPrecisionMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalStatRoundMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalTruncMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalFloorMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalCeilMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalAcosMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalAsinMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalAtanMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalAtan2MethodInfo;
-extern MCExecMethodInfo *kMCMathEvalCosMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalSinMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalTanMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalExpMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalExp1MethodInfo;
-extern MCExecMethodInfo *kMCMathEvalExp2MethodInfo;
-extern MCExecMethodInfo *kMCMathEvalExp10MethodInfo;
-extern MCExecMethodInfo *kMCMathEvalLnMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalLn1MethodInfo;
-extern MCExecMethodInfo *kMCMathEvalLog2MethodInfo;
-extern MCExecMethodInfo *kMCMathEvalLog10MethodInfo;
-extern MCExecMethodInfo *kMCMathEvalSqrtMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalAnnuityMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalCompoundMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalAverageMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalMedianMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalMinMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalMaxMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalStdDevMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalSumMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalRandomMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalPopulationStdDevMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalPopulationVarianceMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalSampleVarianceMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalAverageDeviationMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalGeometricMeanMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalHarmonicMeanMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalArithmeticMeanMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalSampleStdDevMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalBitwiseAndMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalBitwiseNotMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalBitwiseOrMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalBitwiseXorMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalDivMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalDivArrayByNumberMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalDivArrayByArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalSubtractMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalSubtractNumberFromArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalSubtractArrayFromArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalModMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalModArrayByNumberMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalModArrayByArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalWrapMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalWrapArrayByNumberMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalWrapArrayByArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalOverMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalOverArrayByNumberMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalOverArrayByArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalAddMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalAddNumberToArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalAddArrayToArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalMultiplyMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalMultiplyArrayByNumberMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalMultiplyArrayByArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalPowerMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalIsAnIntegerMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalIsNotAnIntegerMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalIsANumberMethodInfo;
-extern MCExecMethodInfo *kMCMathEvalIsNotANumberMethodInfo;
-extern MCExecMethodInfo *kMCMathGetRandomSeedMethodInfo;
-extern MCExecMethodInfo *kMCMathSetRandomSeedMethodInfo;
-
-extern MCExecMethodInfo *kMCMathExecDivideNumberByNumberMethodInfo;
-extern MCExecMethodInfo *kMCMathExecDivideArrayByNumberMethodInfo;
-extern MCExecMethodInfo *kMCMathExecDivideArrayByArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathExecSubtractNumberFromNumberMethodInfo;
-extern MCExecMethodInfo *kMCMathExecSubtractNumberFromArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathExecSubtractArrayFromArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathExecAddNumberToNumberMethodInfo;
-extern MCExecMethodInfo *kMCMathExecAddNumberToArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathExecAddArrayToArrayMethodInfo;
-extern MCExecMethodInfo *kMCMathExecMultiplyNumberByNumberMethodInfo;
-extern MCExecMethodInfo *kMCMathExecMultiplyArrayByNumberMethodInfo;
-extern MCExecMethodInfo *kMCMathExecMultiplyArrayByArrayMethodInfo;
 
 void MCMathEvalBaseConvert(MCExecContext& ctxt, MCStringRef p_source, integer_t p_source_base, integer_t p_dest_base, MCStringRef& r_result);
 
@@ -2115,22 +1958,6 @@ void MCMathEvaluateStatsFunction(MCExecContext& ctxt, Functions p_func, real64_t
 
 ///////////
 
-extern MCExecMethodInfo *kMCFiltersEvalBase64EncodeMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalBase64DecodeMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalBinaryEncodeMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalBinaryDecodeMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalCompressMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalDecompressMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalIsoToMacMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalMacToIsoMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalUrlEncodeMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalUrlDecodeMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalUniEncodeMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalUniDecodeMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalMD5DigestMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalSHA1DigestMethodInfo;
-extern MCExecMethodInfo *kMCFiltersEvalMessageDigestMethodInfo;
-
 void MCFiltersEvalBase64Encode(MCExecContext& ctxt, MCDataRef p_source, MCStringRef& r_result);
 void MCFiltersEvalBase64Decode(MCExecContext& ctxt, MCStringRef p_source, MCDataRef& r_result);
 void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValueRef *p_params, uindex_t p_param_count, MCDataRef& r_string);
@@ -2150,71 +1977,6 @@ void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_d
 void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest);
 
 ///////////
-
-extern MCExecMethodInfo *kMCStringsEvalToLowerMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalToUpperMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalNumToCharMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalCharToNumMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalNumToByteMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalByteToNumMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalTextDecodeMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalTextEncodeMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalNormalizeTextMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalCodepointPropertyMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalLengthMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalMatchTextMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalMatchChunkMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalReplaceTextMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalFormatMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalMergeMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalConcatenateMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalConcatenateWithSpaceMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalConcatenateWithCommaMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalContainsMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalDoesNotContainMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalBeginsWithMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalEndsWithMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalIsAmongTheTokensOfMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalIsNotAmongTheTokensOfMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalIsAmongTheWordsOfMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalIsNotAmongTheWordsOfMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalIsAmongTheLinesOfMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalIsNotAmongTheLinesOfMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalIsAmongTheItemsOfMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalIsNotAmongTheItemsOfMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalItemOffsetMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalLineOffsetMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalWordOffsetMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalOffsetMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalTokenOffsetMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalSentenceOffsetMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalParagraphOffsetMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalTrueWordOffsetMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalCodepointOffsetMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalCodeunitOffsetMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalByteOffsetMethodInfo;
-extern MCExecMethodInfo *kMCStringsExecReplaceMethodInfo;
-extern MCExecMethodInfo *kMCStringsExecFilterWildcardMethodInfo;
-extern MCExecMethodInfo *kMCStringsExecFilterRegexMethodInfo;
-extern MCExecMethodInfo *kMCStringsExecFilterWildcardIntoItMethodInfo;
-extern MCExecMethodInfo *kMCStringsExecFilterRegexIntoItMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalBidiDirectionMethodInfo;
-
-extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByRangeMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByExpressionMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalItemsOfTextByRangeMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalItemsOfTextByExpressionMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalItemsOfTextByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalWordsOfTextByRangeMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalWordsOfTextByExpressionMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalWordsOfTextByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalTokensOfTextByRangeMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalTokensOfTextByExpressionMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalTokensOfTextByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalCharsOfTextByRangeMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalCharsOfTextByExpressionMethodInfo;
-extern MCExecMethodInfo *kMCStringsEvalCharsOfTextByOrdinalMethodInfo;
 
 void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower);
 void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower);
@@ -2421,494 +2183,6 @@ extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectArgumentTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceStackFileVersionTypeInfo;
-
-extern MCExecMethodInfo *kMCInterfaceMakeCustomImagePaletteSettingsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceMakeOptimalImagePaletteSettingsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceMakeWebSafeImagePaletteSettingsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceMakeVisualEffectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceMakeVisualEffectArgumentMethodInfo;
-
-extern MCExecMethodInfo *kMCInterfaceEvalScreenColorsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalScreenDepthMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalScreenNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalScreenRectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalScreenLocMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalClickHMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalClickVMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalClickLocMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalClickCharMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalClickTextMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalClickCharChunkMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalClickChunkMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalClickLineMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalClickFieldMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalClickStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseClickMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseHMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseVMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseLocMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseCharMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseTextMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseCharChunkMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseChunkMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseLineMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseControlMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalFoundTextMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalFoundFieldMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalFoundChunkMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalFoundLineMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalFoundLocMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalFoundFieldMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedTextMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedTextOfMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedChunkMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedChunkOfMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedLineMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedLineOfMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedLocMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedLocOfMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedFieldMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedImageMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalCapsLockKeyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalCommandKeyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalControlKeyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalOptionKeyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalShiftKeyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalEventCapsLockKeyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalEventCommandKeyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalEventControlKeyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalEventOptionKeyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalEventShiftKeyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalKeysDownMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMainStacksMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalOpenStacksMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalStacksMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalTopStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalTopStackOfMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalFocusedObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalColorNamesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalFlushEventsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalGlobalLocMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalLocalLocMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMovingControlsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalWaitDepthMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalIntersectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalIntersectWithThresholdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalWithinMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalThereIsAnObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalThereIsNotAnObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalControlAtLocMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalControlAtScreenLocMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecBeepMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecClickCmdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecCloseStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecCloseDefaultStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecDragMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecFocusOnNothingMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecFocusOnMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecGrabMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecGroupControlsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecGroupSelectionMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecPopToLastMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecPopMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecPushRecentCardMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecPushCurrentCardMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecPushCardMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecPlaceGroupOnCardMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecRemoveGroupFromCardMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecResetCursorsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecResetTemplateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecRevertMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecRevertStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSelectEmptyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSelectAllTextOfFieldMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSelectAllTextOfButtonMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSelectTextOfFieldMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSelectTextOfButtonMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSelectObjectsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecStartEditingGroupMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecStopEditingDefaultStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecStopEditingGroupMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecStopMovingObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecTypeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecUndoMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecUngroupObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecUngroupSelectionMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecCopyObjectsToContainerMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecCutObjectsToContainerMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecDeleteMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecDeleteObjectsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecDeleteObjectChunksMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecDisableChunkOfButtonMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecEnableChunkOfButtonMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecUnhiliteChunkOfButtonMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecHiliteChunkOfButtonMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecDisableObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecEnableObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecUnhiliteObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecHiliteObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSaveStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSaveStackAsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecMoveObjectBetweenMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecMoveObjectAlongMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecHideGroupsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecHideObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecHideObjectWithEffectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecHideMenuBarMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecHideTaskBarMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecShowGroupsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecShowAllCardsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecShowMarkedCardsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecShowCardsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecShowObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecShowObjectWithEffectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecShowMenuBarMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecShowTaskBarMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecPopupWidgetMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecPopupButtonMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecDrawerStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecDrawerStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecDrawerStackLegacyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecDrawerStackByNameLegacyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSheetStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSheetStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecOpenStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecOpenStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecPopupStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecPopupStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecCreateStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecCreateStackWithGroupMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecCreateCardMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecCreateControlMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecCloneMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecFindMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecPutIntoObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecPutIntoFieldMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecLockCursorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecLockMenusMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecLockMovesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecLockRecentMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecLockScreenMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecLockScreenForEffectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecUnlockCursorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecUnlockMenusMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecUnlockMovesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecUnlockRecentMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecUnlockScreenMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecUnlockScreenWithEffectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecImportSnapshotOfScreenMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecImportSnapshotOfStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecImportSnapshotOfObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecImportAudioClipMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecImportVideoClipMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecImportImageMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecExportSnapshotOfScreenMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecExportSnapshotOfScreenToFileMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecExportSnapshotOfStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecExportSnapshotOfStackToFileMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecExportSnapshotOfObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecExportSnapshotOfObjectToFileMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecExportImageMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecExportImageToFileMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSortCardsOfStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSortFieldMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecSortContainerMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecChooseToolMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecGoCardAsModeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecGoCardInWindowMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecGoRecentCardMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecGoCardRelativeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecGoCardEndMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecGoHomeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecVisualEffectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetDialogDataMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetDialogDataMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetLookAndFeelMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetLookAndFeelMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetScreenMouseLocMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetScreenMouseLocMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetBackdropMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetBackdropMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetBufferImagesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetBufferImagesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetSystemFileSelectorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetSystemFileSelectorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetSystemColorSelectorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetSystemColorSelectorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetSystemPrintSelectorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetSystemPrintSelectorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetPaintCompressionMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetPaintCompressionMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetBrushBackColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetBrushBackColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetPenBackColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetPenBackColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetBrushColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetBrushColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetPenColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetPenColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetBrushPatternMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetBrushPatternMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetPenPatternMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetPenPatternMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetFilledMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetFilledMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetPolySidesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetPolySidesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetLineSizeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetLineSizeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetRoundRadiusMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetRoundRadiusMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetStartAngleMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetStartAngleMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetArcAngleMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetArcAngleMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetRoundEndsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetRoundEndsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetDashesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetDashesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetRecentCardsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetRecentNamesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetEditBackgroundMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetEditBackgroundMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetLockScreenMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetLockScreenMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetAccentColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetAccentColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetHiliteColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetHiliteColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetLinkColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetLinkColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetLinkHiliteColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetLinkHiliteColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetLinkVisitedColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetLinkVisitedColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetUnderlineLinksMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetUnderlineLinksMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetSelectGroupedControlsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetSelectGroupedControlsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetIconMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetIconMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetAllowInlineInputMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetAllowInlineInputMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetDragDeltaMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetDragDeltaMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetStackFileTypeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetStackFileTypeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetStackFileVersionMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetStackFileVersionMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetIconMenuMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetIconMenuMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetStatusIconMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetStatusIconMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetStatusIconToolTipMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetStatusIconToolTipMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetStatusIconMenuMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetStatusIconMenuMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetProcessTypeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetProcessTypeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetShowInvisiblesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetShowInvisiblesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetCursorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetCursorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetDefaultCursorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetDefaultCursorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetDefaultStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetDefaultStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetDefaultMenubarMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetDefaultMenubarMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetDragSpeedMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetDragSpeedMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetMoveSpeedMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetMoveSpeedMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetLockCursorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetLockCursorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetLockErrorsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetLockErrorsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetLockMenusMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetLockMenusMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetLockMessagesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetLockMessagesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetLockMovesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetLockMovesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetLockRecentMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetLockRecentMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetIdleRateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetIdleRateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetIdleTicksMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetIdleTicksMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetBlinkRateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetBlinkRateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetRepeatRateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetRepeatRateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetRepeatDelayMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetRepeatDelayMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetTypeRateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetTypeRateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetSyncRateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetSyncRateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetEffectRateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetEffectRateMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetDoubleDeltaMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetDoubleDeltaMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetDoubleTimeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetDoubleTimeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetTooltipDelayMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetTooltipDelayMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetNavigationArrowsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetNavigationArrowsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetExtendKeyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetExtendKeyMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetPointerFocusMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetPointerFocusMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetEmacsKeyBindingsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetEmacsKeyBindingsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetRaiseMenusMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetRaiseMenusMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetActivatePalettesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetActivatePalettesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetHidePalettesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetHidePalettesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetRaisePalettesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetRaisePalettesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetRaiseWindowsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetRaiseWindowsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetHideBackdropMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetHideBackdropMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetDontUseNavigationServicesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetDontUseNavigationServicesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetProportionalThumbsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetProportionalThumbsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetSharedMemoryMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetSharedMemoryMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetScreenGammaMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetScreenGammaMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetSelectionModeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetSelectionModeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetSelectionHandleColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetSelectionHandleColorMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetWindowBoundingRectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetWindowBoundingRectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetJpegQualityMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetJpegQualityMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetRelayerGroupedControlsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetRelayerGroupedControlsMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetBrushMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetBrushMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetEraserMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetEraserMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetSprayMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetSprayMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetCenteredMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetCenteredMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetGridMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetGridMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetGridSizeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetGridSizeMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetSlicesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetSlicesMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetBeepLoudnessMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetBeepLoudnessMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetBeepPitchMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetBeepPitchMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetBeepDurationMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetBeepDurationMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetBeepSoundMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetBeepSoundMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetToolMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetToolMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetScreenRectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetScreenRectsMethodInfo;
-
-extern MCExecMethodInfo *kMCInterfaceEvalHelpStackAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalHomeStackAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalStackByValueMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedObjectAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalTopStackAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalClickStackAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseStackAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalClickFieldAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedFieldAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSelectedImageAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalFoundFieldAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMouseControlAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalFocusedObjectAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalBinaryStackAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalDefaultStackAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalStackOfStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalStackOfStackByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSubstackOfStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSubstackOfStackByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalAudioClipOfStackByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalAudioClipOfStackByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalAudioClipOfStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalVideoClipOfStackByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalVideoClipOfStackByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalVideoClipOfStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalBackgroundOfStackByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalBackgroundOfStackByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalBackgroundOfStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalCardOfStackByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalCardOfStackByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalCardOfStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalThisCardOfStackMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalCardOfBackgroundByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalCardOfBackgroundByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalCardOfBackgroundByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalGroupOfCardByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalGroupOfCardByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalGroupOfCardByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalGroupOfCardOrStackByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalGroupOfGroupByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalGroupOfGroupByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalGroupOfGroupByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalMenubarAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalObjectOfGroupByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalObjectOfGroupByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalObjectOfGroupByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalObjectOfCardByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalObjectOfCardByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalObjectOfCardByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalObjectOfCardOrStackByIdMethodInfo;
-
-extern MCExecMethodInfo *kMCInterfaceEvalHomeStackAsOptionalObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalHelpStackAsOptionalObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalDefaultStackAsOptionalObjectMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalStackOfOptionalStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalStackOfOptionalStackByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSubstackOfOptionalStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalSubstackOfOptionalStackByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalOptionalStackWithBackgroundByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalOptionalStackWithBackgroundByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalOptionalStackWithBackgroundByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalCardOfOptionalStackByOrdinalMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalCardOfOptionalStackByIdMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalCardOfOptionalStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceEvalThisCardOfOptionalStackMethodInfo;
-
-extern MCExecMethodInfo *kMCInterfaceEvalTextOfContainerMethodInfo;
-
-extern MCExecMethodInfo *kMCInterfaceExecRelayerMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecRelayerRelativeToControlMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecResolveImageByNameMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecResolveImageByIdMethodInfo;
-
-extern MCExecMethodInfo *kMCInterfaceGetPixelScaleMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetPixelScaleMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetSystemPixelScaleMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceSetUsePixelScalingMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetUsePixelScalingMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetScreenPixelScaleMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceGetScreenPixelScalesMethodInfo;
-
-extern MCExecMethodInfo *kMCInterfaceExecGoBackInWidgetMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecGoForwardInWidgetMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecLaunchUrlInWidgetMethodInfo;
-extern MCExecMethodInfo *kMCInterfaceExecDoInWidgetMethodInfo;
 
 void MCInterfaceInitialize(MCExecContext& ctxt);
 void MCInterfaceFinalize(MCExecContext& ctxt);
@@ -3588,20 +2862,6 @@ extern MCExecEnumTypeInfo *kMCInterfaceScrollbarOrientationTypeInfo;
 
 ///////////
 
-extern MCExecMethodInfo *kMCDialogExecAnswerColorMethodInfo;
-extern MCExecMethodInfo *kMCDialogExecAnswerFileWithTypesMethodInfo;
-extern MCExecMethodInfo *kMCDialogExecAnswerFileWithFilterMethodInfo;
-extern MCExecMethodInfo *kMCDialogExecAnswerFileMethodInfo;
-extern MCExecMethodInfo *kMCDialogExecAnswerFolderMethodInfo;
-extern MCExecMethodInfo *kMCDialogExecAnswerNotifyMethodInfo;
-extern MCExecMethodInfo *kMCDialogExecCustomAnswerDialogMethodInfo;
-extern MCExecMethodInfo *kMCDialogExecAskQuestionMethodInfo;
-extern MCExecMethodInfo *kMCDialogExecAskPasswordMethodInfo;
-extern MCExecMethodInfo *kMCDialogExecAskFileMethodInfo;
-extern MCExecMethodInfo *kMCDialogExecAskFileWithFilterMethodInfo;
-extern MCExecMethodInfo *kMCDialogExecAskFileWithTypesMethodInfo;
-extern MCExecMethodInfo *kMCDialogExecCustomAskDialogMethodInfo;
-
 void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *initial_color, MCStringRef p_title, bool p_sheet);
 void MCDialogExecAnswerFile(MCExecContext &ctxt, bool p_plural, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_title, bool p_sheet);
 void MCDialogExecAnswerFileWithFilter(MCExecContext &ctxt, bool p_plural, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_filter, MCStringRef p_title, bool p_sheet);
@@ -3624,51 +2884,6 @@ void MCDialogSetColorDialogColors(MCExecContext& ctxt, uindex_t p_count, MCStrin
 
 extern MCExecEnumTypeInfo *kMCPasteboardDragActionTypeInfo;
 extern MCExecSetTypeInfo *kMCPasteboardAllowableDragActionsTypeInfo;
-
-extern MCExecMethodInfo *kMCPasteboardEvalClipboardMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalClipboardKeysMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalRawClipboardKeysMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalRawDragKeysMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalFullClipboardKeysMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalFullDragKeysMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalDropChunkMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalDragDestinationMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalDragSourceMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalDragDropKeysMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalIsAmongTheKeysOfTheClipboardDataMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalIsNotAmongTheKeysOfTheClipboardDataMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalIsAmongTheKeysOfTheDragDataMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalIsNotAmongTheKeysOfTheDragDataMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalDragSourceAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalDragDestinationAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardEvalDropChunkAsObjectMethodInfo;
-
-extern MCExecMethodInfo *kMCPasteboardExecPasteMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardExecCopyMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardExecCopyTextToClipboardMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardExecCopyObjectsToClipboardMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardExecCutMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardExecCutTextToClipboardMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardExecCutObjectsToClipboardMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardGetAcceptDropMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardSetAcceptDropMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardGetDragActionMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardSetDragActionMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardGetDragImageMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardSetDragImageMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardGetDragImageOffsetMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardSetDragImageOffsetMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardGetAllowableDragActionsMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardSetAllowableDragActionsMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardGetClipboardDataMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardSetClipboardDataMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardGetRawClipboardDataMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardSetRawClipboardDataMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardGetDragDataMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardSetDragDataMethodInfo;
-
-extern MCExecMethodInfo *kMCPasteboardExecLockClipboardMethodInfo;
-extern MCExecMethodInfo *kMCPasteboardExecUnlockClipboardMethodInfo;
 
 void MCPasteboardEvalClipboard(MCExecContext& ctxt, MCNameRef& r_string);
 void MCPasteboardEvalClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string);
@@ -3754,121 +2969,6 @@ struct MCEngineNumberFormat;
 
 extern MCExecCustomTypeInfo *kMCEngineNumberFormatTypeInfo;
 extern MCExecSetTypeInfo *kMCEngineSecurityCategoriesTypeInfo;
-
-extern MCExecMethodInfo *kMCEngineEvalVersionMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalBuildNumberMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalPlatformMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalEnvironmentMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalMachineMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalProcessorMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalSystemVersionMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalCommandNamesMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalConstantNamesMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalFunctionNamesMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalPropertyNamesMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalGlobalNamesMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalLocalNamesMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalVariableNamesMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalParamMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalParamCountMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalParamsMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalResultMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalBackScriptsMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalFrontScriptsMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalPendingMessagesMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalInterruptMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalMeMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalTargetMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalTargetContentsMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalOwnerMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalScriptLimitsMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalSysErrorMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalValueMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalValueWithObjectMethodInfo;
-
-extern MCExecMethodInfo *kMCEngineEvalValueAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalOwnerAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalTemplateAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalMeAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalMenuObjectAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalTargetAsObjectMethodInfo;
-extern MCExecMethodInfo *kMCEngineEvalErrorObjectAsObjectMethodInfo;
-
-extern MCExecMethodInfo *kMCEngineExecGetMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecPutIntoVariableMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecPutOutputMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecDoMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecDoInCallerMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecInsertScriptOfObjectIntoMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecQuitMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecCancelMessageMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecDeleteVariableMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecDeleteVariableChunksMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecRemoveAllScriptsFromMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecRemoveScriptOfObjectFromMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecWaitForMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecWaitUntilMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecWaitWhileMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecStartUsingStackMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecStartUsingStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecStopUsingStackMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecStopUsingStackByNameMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecDispatchMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecSendMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecSendScriptMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecSendInTimeMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecCallMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecLockErrorsMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecLockMessagesMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecUnlockErrorsMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecUnlockMessagesMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecSetMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecReturnMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecReturnValueMethodInfo;
-extern MCExecMethodInfo *kMCEngineExecReturnErrorMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetCaseSensitiveMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetCaseSensitiveMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetCenturyCutOffMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetCenturyCutOffMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetConvertOctalsMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetConvertOctalsMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetItemDelimiterMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetItemDelimiterMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetLineDelimiterMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetLineDelimiterMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetColumnDelimiterMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetColumnDelimiterMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetRowDelimiterMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetRowDelimiterMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetWholeMatchesMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetWholeMatchesMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetUseSystemDateMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetUseSystemDateMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetUseUnicodeMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetUseUnicodeMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetNumberFormatMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetNumberFormatMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetScriptExecutionErrorsMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetScriptParsingErrorsMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetAllowInterruptsMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetAllowInterruptsMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetExplicitVariablesMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetExplicitVariablesMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetPreserveVariablesMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetPreserveVariablesMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetStackLimitMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetEffectiveStackLimitMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetStackLimitMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetSecureModeMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetSecureModeMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetSecurityCategoriesMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetSecurityPermissionsMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetSecurityPermissionsMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetRecursionLimitMethodInfo;
-extern MCExecMethodInfo *kMCEngineSetRecursionLimitMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetAddressMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetStacksInUseMethodInfo;
-extern MCExecMethodInfo *kMCEngineGetEditionTypeMethodInfo;
 
 void MCEngineEvalVersion(MCExecContext& ctxt, MCNameRef& r_name);
 void MCEngineEvalBuildNumber(MCExecContext& ctxt, integer_t& r_build_number);
@@ -4043,108 +3143,15 @@ void MCEngineEvalIsNotStrictlyABinaryString(MCExecContext& ctxt, MCValueRef valu
 void MCEngineEvalIsStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result);
 void MCEngineEvalIsNotStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result);
 
+void MCEngineEvalCommandName(MCExecContext& ctxt, MCStringRef& r_result);
+void MCEngineEvalCommandArguments(MCExecContext& ctxt, MCArrayRef& r_result);
+void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index, MCStringRef& r_result);
+void MCEngineGetRevLibraryMappingByKey(MCExecContext& ctxt, MCNameRef p_library, MCStringRef& r_mapping);
+void MCEngineSetRevLibraryMappingByKey(MCExecContext& ctxt, MCNameRef p_library, MCStringRef p_mapping);
+
 ///////////
 
-extern MCExecMethodInfo *kMCFilesEvalDirectoriesMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalDirectoriesOfDirectoryMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalFilesMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalFilesOfDirectoryMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalDiskSpaceMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalDriverNamesMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalDrivesMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalOpenFilesMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalTempNameMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalSpecialFolderPathMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalLongFilePathMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalShortFilePathMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalOpenProcessesMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalOpenProcessesIdsMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalProcessIdMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalDeleteRegistryMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalListRegistryMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalQueryRegistryMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalQueryRegistryWithTypeMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalSetRegistryMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalSetRegistryWithTypeMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalCopyResourceWithNewIdMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalCopyResourceMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalDeleteResourceMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalGetResourceMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalGetResourcesWithTypeMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalGetResourcesMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalSetResourceMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalAliasReferenceMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalThereIsAFileMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalThereIsNotAFileMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalThereIsAFolderMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalThereIsNotAFolderMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalThereIsAProcessMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalThereIsNotAProcessMethodInfo;
-extern MCExecMethodInfo *kMCFilesEvalShellMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecDeleteFileMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecCloseFileMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecCloseDriverMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecCloseProcessMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecLaunchUrlMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecLaunchDocumentMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecLaunchAppMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecOpenFileMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecOpenDriverMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecOpenProcessMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecOpenElevatedProcessMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecRenameMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecReadFromStdinForMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecReadFromStdinUntilMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecReadFromFileOrDriverForMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecReadFromFileOrDriverUntilMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecReadFromFileOrDriverAtForMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecReadFromFileOrDriverAtUntilMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecReadFromFileOrDriverAtEndForMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecReadFromFileOrDriverAtEndUntilMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecReadFromFileOrDriverAtEndForLegacyMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecReadFromFileOrDriverAtEndUntilLegacyMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecReadFromProcessForMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecReadFromProcessUntilMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecWriteToStdoutMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecWriteToStderrMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecWriteToFileOrDriverMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecWriteToFileOrDriverAtMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecWriteToFileOrDriverAtEndMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecWriteToFileOrDriverAtEndLegacyMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecWriteToProcessMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecSeekToEofInFileMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecSeekToEofInFileLegacyMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecSeekAbsoluteInFileMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecSeekRelativeInFileMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecCreateFolderMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecCreateAliasMethodInfo;
-extern MCExecMethodInfo *kMCFilesExecKillProcessMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetUMaskMethodInfo;
-extern MCExecMethodInfo *kMCFilesSetUMaskMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetFileTypeMethodInfo;
-extern MCExecMethodInfo *kMCFilesSetFileTypeMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetSerialControlStringMethodInfo;
-extern MCExecMethodInfo *kMCFilesSetSerialControlStringMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetHideConsoleWindowsMethodInfo;
-extern MCExecMethodInfo *kMCFilesSetHideConsoleWindowsMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetShellCommandMethodInfo;
-extern MCExecMethodInfo *kMCFilesSetShellCommandMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetCurrentFolderMethodInfo;
-extern MCExecMethodInfo *kMCFilesSetCurrentFolderMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetEngineFolderMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetHomeFolderMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetDocumentsFolderMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetDesktopFolderMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetTemporaryFolderMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetFilesMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetDetailedFilesMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetFoldersMethodInfo;
-extern MCExecMethodInfo *kMCFilesGetDetailedFoldersMethodInfo;
-
-void MCFilesEvalDirectories(MCExecContext& ctxt, MCStringRef& r_string);
-void MCFilesEvalDirectoriesOfDirectory(MCExecContext& ctxt, MCStringRef p_directory, MCStringRef& r_string);
-void MCFilesEvalFiles(MCExecContext& ctxt, MCStringRef& r_string);
-void MCFilesEvalFilesOfDirectory(MCExecContext& ctxt, MCStringRef p_directory, MCStringRef& r_string);
+void MCFilesEvalFileItemsOfDirectory(MCExecContext& ctxt, MCStringRef p_directory, bool p_files, bool p_detailed, MCStringRef& r_string);
 void MCFilesEvalDiskSpace(MCExecContext& ctxt, real64_t& r_result);
 void MCFilesEvalDriverNames(MCExecContext& ctxt, MCStringRef& r_string);
 void MCFilesEvalDrives(MCExecContext& ctxt, MCStringRef& r_string);
@@ -4263,55 +3270,6 @@ void MCFilesGetDetailedFolders(MCExecContext& ctxt, MCStringRef& r_value);
 struct MCMultimediaRecordFormat;
 extern MCExecCustomTypeInfo *kMCMultimediaRecordFormatTypeInfo;
 
-extern MCExecMethodInfo *kMCMultimediaExecAnswerEffectMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecAnswerRecordMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaEvalQTVersionMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaEvalQTEffectsMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaEvalRecordCompressionTypesMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaEvalRecordFormatsMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaEvalRecordLoudnessMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaEvalMovieMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaEvalMCISendStringMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaEvalSoundMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecRecordMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecRecordResumeMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecRecordPauseMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecStartPlayerMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecStopPlayingMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecStopPlayingObjectMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecStopRecordingMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecPrepareVideoClipMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecPlayAudioClipMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecPlayVideoClipMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecPlayStopAudioMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecPlayPlayerOperationMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecPlayVideoOperationMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaExecPlayLastVideoOperationMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaGetRecordFormatMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaSetRecordFormatMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaGetRecordCompressionMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaSetRecordCompressionMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaGetRecordInputMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaSetRecordInputMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaGetRecordSampleSizeMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaSetRecordSampleSizeMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaGetRecordChannelsMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaSetRecordChannelsMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaGetRecordRateMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaSetRecordRateMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaGetPlayDestinationMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaSetPlayDestinationMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaGetPlayLoudnessMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaSetPlayLoudnessMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaGetQtIdleRateMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaSetQtIdleRateMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaGetDontUseQtMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaSetDontUseQtMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaGetDontUseQtEffectsMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaSetDontUseQtEffectsMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaGetRecordingMethodInfo;
-extern MCExecMethodInfo *kMCMultimediaSetRecordingMethodInfo;
-
 void MCMultimediaExecAnswerEffect(MCExecContext &ctxt);
 void MCMultimediaExecAnswerRecord(MCExecContext &ctxt);
 
@@ -4372,14 +3330,6 @@ void MCMultimediaSetRecording(MCExecContext& ctxt, bool p_value);
 
 ///////////
 
-extern MCExecMethodInfo *kMCTextEvalFontNamesMethodInfo;
-extern MCExecMethodInfo *kMCTextEvalFontLanguageMethodInfo;
-extern MCExecMethodInfo *kMCTextEvalFontSizesMethodInfo;
-extern MCExecMethodInfo *kMCTextEvalFontStylesMethodInfo;
-extern MCExecMethodInfo *kMCTextEvalMeasureTextMethodInfo;
-extern MCExecMethodInfo *kMCTextExecStartUsingFontMethodInfo;
-extern MCExecMethodInfo *kMCTextExecStopUsingFontMethodInfo;
-
 void MCTextEvalFontNames(MCExecContext& ctxt, MCStringRef p_type, MCStringRef& r_names);
 void MCTextEvalFontLanguage(MCExecContext& ctxt, MCStringRef p_font, MCNameRef& r_lang);
 void MCTextEvalFontSizes(MCExecContext& ctxt, MCStringRef p_font, MCStringRef& r_sizes);
@@ -4390,49 +3340,6 @@ void MCTextExecStartUsingFont(MCExecContext& ctxt, MCStringRef p_path, bool p_is
 void MCTextExecStopUsingFont(MCExecContext& ctxt, MCStringRef p_path);
 
 ///////////
-
-extern MCExecMethodInfo *kMCNetworkEvalDNSServersMethodInfo;
-extern MCExecMethodInfo *kMCNetworkEvalCachedUrlsMethodInfo;
-extern MCExecMethodInfo *kMCNetworkEvalUrlStatusMethodInfo;
-extern MCExecMethodInfo *kMCNetworkEvalHostAddressMethodInfo;
-extern MCExecMethodInfo *kMCNetworkEvalPeerAddressMethodInfo;
-extern MCExecMethodInfo *kMCNetworkEvalHostAddressToNameMethodInfo;
-extern MCExecMethodInfo *kMCNetworkEvalHostNameToAddressMethodInfo;
-extern MCExecMethodInfo *kMCNetworkEvalHostNameMethodInfo;
-extern MCExecMethodInfo *kMCNetworkEvalOpenSocketsMethodInfo;
-extern MCExecMethodInfo *kMCNetworkEvalHTTPProxyForURLMethodInfo;
-extern MCExecMethodInfo *kMCNetworkEvalHTTPProxyForURLWithPACMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecCloseSocketMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecDeleteUrlMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecLoadUrlMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecUnloadUrlMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecOpenSocketMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecOpenSecureSocketMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecOpenDatagramSocketMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecPostToUrlMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecAcceptConnectionsOnPortMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecAcceptDatagramConnectionsOnPortMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecAcceptSecureConnectionsOnPortMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecReadFromSocketForMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecReadFromSocketUntilMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecWriteToSocketMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecPutIntoUrlMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecReturnValueAndUrlResultMethodInfo;
-extern MCExecMethodInfo *kMCNetworkExecReturnValueAndUrlResultFromVarMethodInfo;
-extern MCExecMethodInfo *kMCNetworkGetUrlResponseMethodInfo;
-extern MCExecMethodInfo *kMCNetworkGetFtpProxyMethodInfo;
-extern MCExecMethodInfo *kMCNetworkSetFtpProxyMethodInfo;
-extern MCExecMethodInfo *kMCNetworkGetHttpProxyMethodInfo;
-extern MCExecMethodInfo *kMCNetworkSetHttpProxyMethodInfo;
-extern MCExecMethodInfo *kMCNetworkGetHttpHeadersMethodInfo;
-extern MCExecMethodInfo *kMCNetworkSetHttpHeadersMethodInfo;
-extern MCExecMethodInfo *kMCNetworkGetSocketTimeoutMethodInfo;
-extern MCExecMethodInfo *kMCNetworkSetSocketTimeoutMethodInfo;
-extern MCExecMethodInfo *kMCNetworkGetDefaultNetworkInterfaceMethodInfo;
-extern MCExecMethodInfo *kMCNetworkSetDefaultNetworkInterfaceMethodInfo;
-extern MCExecMethodInfo *kMCNetworkGetNetworkInterfacesMethodInfo;
-extern MCExecMethodInfo *kMCNetworkGetAllowDatagramBroadcastsMethodInfo;
-extern MCExecMethodInfo *kMCNetworkSetAllowDatagramBroadcastsMethodInfo;
 
 void MCNetworkEvalDNSServers(MCExecContext& ctxt, MCStringRef& r_servers);
 void MCNetworkEvalCachedUrls(MCExecContext& ctxt, MCStringRef& r_string);
@@ -4498,32 +3405,6 @@ void MCNetworkMarkUrl(MCExecContext& ctxt, MCStringRef p_url, MCMarkedText& r_ma
 
 ///////////
 
-extern MCExecMethodInfo *kMCDateTimeEvalMillisecondsMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeEvalSecondsMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeEvalTicksMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeEvalDateMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeEvalTimeMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeEvalDateFormatMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeEvalMonthNamesMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeEvalWeekDayNamesMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeEvalIsADateMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeEvalIsNotADateMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeExecConvertMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeExecConvertIntoItMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeGetTwelveTimeMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeSetTwelveTimeMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeGetDateMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeGetTimeMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeGetMillisecondsMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeGetLongMillisecondsMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeGetSecondsMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeGetLongSecondsMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeGetTicksMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeGetLongTicksMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeGetMonthNamesMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeGetWeekDayNamesMethodInfo;
-extern MCExecMethodInfo *kMCDateTimeGetDateFormatMethodInfo;
-
 void MCDateTimeEvalMilliseconds(MCExecContext& ctxt, real64_t& r_real);
 void MCDateTimeEvalSeconds(MCExecContext& ctxt, real64_t& r_seconds);
 void MCDateTimeEvalTicks(MCExecContext& ctxt, real64_t& r_ticks);
@@ -4559,14 +3440,6 @@ void MCDateTimeGetDateFormat(MCExecContext &ctxt, Properties p_type, MCStringRef
 
 ///////////
 
-extern MCExecMethodInfo *kMCScriptingEvalAlternateLanguagesMethodInfo;
-extern MCExecMethodInfo *kMCScriptingExecDoAsAlternateLanguageMethodInfo;
-extern MCExecMethodInfo *kMCScriptingExecSendToProgramMethodInfo;
-extern MCExecMethodInfo *kMCScriptingExecReplyErrorMethodInfo;
-extern MCExecMethodInfo *kMCScriptingExecReplyMethodInfo;
-extern MCExecMethodInfo *kMCScriptingExecRequestAppleEventMethodInfo;
-extern MCExecMethodInfo *kMCScriptingExecRequestFromProgramMethodInfo;
-
 void MCScriptingEvalAlternateLanguages(MCExecContext& ctxt, MCStringRef& r_list);
 void MCScriptingExecDoAsAlternateLanguage(MCExecContext& ctxt, MCStringRef p_script, MCStringRef p_language);
 
@@ -4577,19 +3450,6 @@ void MCScriptingExecRequestAppleEvent(MCExecContext& ctxt, int type, MCStringRef
 void MCScriptingExecRequestFromProgram(MCExecContext& ctxt, MCStringRef message, MCStringRef program);
 
 ///////////
-
-extern MCExecMethodInfo *kMCSecurityEvalEncryptMethodInfo;
-extern MCExecMethodInfo *kMCSecurityEvalCipherNamesMethodInfo;
-extern MCExecMethodInfo *kMCSecurityEvalRandomBytesMethodInfo;
-extern MCExecMethodInfo *kMCSecurityExecRsaEncryptMethodInfo;
-extern MCExecMethodInfo *kMCSecurityExecRsaDecryptMethodInfo;
-extern MCExecMethodInfo *kMCSecurityExecBlockEncryptWithPasswordMethodInfo;
-extern MCExecMethodInfo *kMCSecurityExecBlockEncryptWithKeyMethodInfo;
-extern MCExecMethodInfo *kMCSecurityExecBlockDecryptWithPasswordMethodInfo;
-extern MCExecMethodInfo *kMCSecurityExecBlockDecryptWithKeyMethodInfo;
-extern MCExecMethodInfo *kMCSecurityGetSslCertificatesMethodInfo;
-extern MCExecMethodInfo *kMCSecuritySetSslCertificatesMethodInfo;
-extern MCExecMethodInfo *kMCSecurityExecSecureSocketMethodInfo;
 
 void MCSecurityEvalEncrypt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_dest);
 void MCSecurityEvalCipherNames(MCExecContext& ctxt, MCStringRef& r_names);
@@ -4608,26 +3468,6 @@ void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value);
 void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify, MCNameRef p_end_hostname);
 
 ///////////
-
-extern MCExecMethodInfo *kMCGraphicsEvalIsAColorMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsEvalIsNotAColorMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsEvalIsAPointMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsEvalIsNotAPointMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsEvalIsARectangleMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsEvalIsNotARectangleMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsEvalIsWithinMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsEvalIsNotWithinMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsExecFlipSelectionMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsExecFlipImageMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsExecResetPaintMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsExecCropImageMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsExecRotateSelectionMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsExecRotateImageMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsExecPrepareImageMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsExecPrepareImageFileMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsGetImageCacheLimitMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsSetImageCacheLimitMethodInfo;
-extern MCExecMethodInfo *kMCGraphicsGetImageCacheUsageMethodInfo;
 
 void MCGraphicsEvalIsAColor(MCExecContext& ctxt, MCValueRef p_value, bool& r_result);
 void MCGraphicsEvalIsNotAColor(MCExecContext& ctxt, MCValueRef p_value, bool& r_result);
@@ -4657,107 +3497,6 @@ void MCGraphicsSetImageCacheLimit(MCExecContext &ctxt, uinteger_t p_value);
 void MCGraphicsGetImageCacheUsage(MCExecContext &ctxt, uinteger_t &r_value);
 
 ///////////
-
-extern MCExecMethodInfo *kMCLegacyEvalHasMemoryMethodInfo;
-extern MCExecMethodInfo *kMCLegacyEvalHeapSpaceMethodInfo;
-extern MCExecMethodInfo *kMCLegacyEvalStackSpaceMethodInfo;
-extern MCExecMethodInfo *kMCLegacyEvalIsNumberMethodInfo;
-extern MCExecMethodInfo *kMCLegacyEvalLicensedMethodInfo;
-extern MCExecMethodInfo *kMCLegacyEvalMenusMethodInfo;
-extern MCExecMethodInfo *kMCLegacyEvalScreenTypeMethodInfo;
-extern MCExecMethodInfo *kMCLegacyEvalScreenVendorMethodInfo;
-extern MCExecMethodInfo *kMCLegacyEvalSelectedButtonMethodInfo;
-extern MCExecMethodInfo *kMCLegacyEvalSelectedButtonOfMethodInfo;
-extern MCExecMethodInfo *kMCLegacyEvalTextHeightSumMethodInfo;
-extern MCExecMethodInfo *kMCLegacyEvalMenuObjectMethodInfo;
-extern MCExecMethodInfo *kMCLegacyExecDoInBrowserMethodInfo;
-extern MCExecMethodInfo *kMCLegacyExecCompactStackMethodInfo;
-extern MCExecMethodInfo *kMCLegacyExecDoMenuMethodInfo;
-extern MCExecMethodInfo *kMCLegacyExecLockColormapMethodInfo;
-extern MCExecMethodInfo *kMCLegacyExecUnlockColormapMethodInfo;
-extern MCExecMethodInfo *kMCLegacyExecImportEpsMethodInfo;
-extern MCExecMethodInfo *kMCLegacyExecImportHypercardStackMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetRevRuntimeBehaviourMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetRevRuntimeBehaviourMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetHcImportStatMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetHcImportStatMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetScriptTextFontMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetScriptTextFontMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetScriptTextSizeMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetScriptTextSizeMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetStackFilesMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetStackFilesMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetMenuBarMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetEditMenusMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetEditMenusMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetTextAlignMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetTextAlignMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetTextFontMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetTextFontMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetTextHeightMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetTextHeightMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetTextSizeMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetTextSizeMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetTextStyleMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetTextStyleMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetBufferModeMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetBufferModeMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetMultiEffectMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetMultiEffectMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetPrintTextAlignMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetPrintTextAlignMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetPrintTextFontMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetPrintTextFontMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetPrintTextHeightMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetPrintTextHeightMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetPrintTextSizeMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetPrintTextSizeMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetPrintTextStyleMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetPrintTextStyleMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetEditScriptsMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetEditScriptsMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetColorWorldMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetColorWorldMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetAllowKeyInFieldMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetAllowKeyInFieldMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetAllowFieldRedrawMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetAllowFieldRedrawMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetRemapColorMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetRemapColorMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetUserLevelMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetUserLevelMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetUserModifyMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetUserModifyMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetLockColormapMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetLockColormapMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetPrivateColorsMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetPrivateColorsMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetLongWindowTitlesMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetLongWindowTitlesMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetBlindTypingMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetBlindTypingMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetPowerKeysMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetPowerKeysMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetTextArrowsMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetTextArrowsMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetColormapMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetColormapMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetNoPixmapsMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetNoPixmapsMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetLowResolutionTimersMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetLowResolutionTimersMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetVcSharedMemoryMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetVcSharedMemoryMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetVcPlayerMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetVcPlayerMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetSoundChannelMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetSoundChannelMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetLzwKeyMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetLzwKeyMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetMultipleMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetMultipleMethodInfo;
-extern MCExecMethodInfo *kMCLegacyGetMultiSpaceMethodInfo;
-extern MCExecMethodInfo *kMCLegacySetMultiSpaceMethodInfo;
 
 void MCLegacyEvalHasMemory(MCExecContext& ctxt, uinteger_t p_bytes, bool& r_bool);
 void MCLegacyEvalHeapSpace(MCExecContext& ctxt, integer_t& r_bytes);
@@ -4881,11 +3620,6 @@ void MCLegacySetMultiSpace(MCExecContext& ctxt, uinteger_t p_value);
 
 ///////////
 
-extern MCExecMethodInfo *kMCIdeExecEditScriptOfObjectMethodInfo;
-extern MCExecMethodInfo *kMCIdeExecHideMessageBoxMethodInfo;
-extern MCExecMethodInfo *kMCIdeExecShowMessageBoxMethodInfo;
-
-
 void MCIdeExecEditScriptOfObject(MCExecContext& ctxt, MCObject *p_object, MCStringRef p_at);
 void MCIdeExecHideMessageBox(MCExecContext& ctxt);
 void MCIdeExecShowMessageBox(MCExecContext& ctxt);
@@ -4902,74 +3636,6 @@ extern MCExecCustomTypeInfo *kMCPrintingPrinterPageRangeTypeInfo;
 extern MCExecEnumTypeInfo *kMCPrintingPrinterLinkTypeInfo;
 extern MCExecEnumTypeInfo *kMCPrintingPrinterBookmarkInitialStateTypeInfo;
 extern MCExecEnumTypeInfo *kMCPrintingPrintJobDuplexTypeInfo;
-
-extern MCExecMethodInfo *kMCPrintingExecAnswerPageSetupMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecAnswerPrinterMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecCancelPrintingMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecResetPrintingMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintAnchorMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintLinkMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintNativeBookmarkMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintUnicodeBookmarkMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintBreakMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintAllCardsMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintRectOfAllCardsMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintCardMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintRectOfCardMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintSomeCardsMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintRectOfSomeCardsMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintCardIntoRectMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecPrintRectOfCardIntoRectMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecClosePrintingMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecOpenPrintingToDestinationMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecOpenPrintingMethodInfo;
-extern MCExecMethodInfo *kMCPrintingExecOpenPrintingWithDialogMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrinterNamesMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintDeviceFeaturesMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintDeviceOutputMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintDeviceOutputMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintDeviceRectangleMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintDeviceRectangleMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintDeviceSettingsMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintDeviceSettingsMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintDeviceNameMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintDeviceNameMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintPageOrientationMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintPageOrientationMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintJobRangesMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintJobRangesMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintPageSizeMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintPageSizeMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintPageScaleMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintPageScaleMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintPageRectangleMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintJobNameMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintJobNameMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintJobCopiesMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintJobCopiesMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintJobDuplexMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintJobDuplexMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintJobCollateMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintJobCollateMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintJobColorMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintJobColorMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintJobPageMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintCardBordersMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintCardBordersMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintGuttersMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintGuttersMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintMarginsMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintMarginsMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintRowsFirstMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintRowsFirstMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintScaleMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintScaleMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintRotatedMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintRotatedMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintCommandMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintCommandMethodInfo;
-extern MCExecMethodInfo *kMCPrintingGetPrintFontTableMethodInfo;
-extern MCExecMethodInfo *kMCPrintingSetPrintFontTableMethodInfo;
 
 void MCPrintingExecAnswerPageSetup(MCExecContext &ctxt, bool p_is_sheet);
 void MCPrintingExecAnswerPrinter(MCExecContext &ctxt, bool p_is_sheet);
@@ -5056,31 +3722,6 @@ extern MCExecEnumTypeInfo *kMCServerErrorModeTypeInfo;
 extern MCExecEnumTypeInfo *kMCServerOutputLineEndingsTypeInfo;
 extern MCExecEnumTypeInfo *kMCServerOutputTextEncodingTypeInfo;
 
-extern MCExecMethodInfo *kMCServerExecPutHeaderMethodInfo;
-extern MCExecMethodInfo *kMCServerExecPutBinaryOutputMethodInfo;
-extern MCExecMethodInfo *kMCServerExecPutContentMethodInfo;
-extern MCExecMethodInfo *kMCServerExecPutMarkupMethodInfo;
-extern MCExecMethodInfo *kMCServerExecPutCookieMethodInfo;
-extern MCExecMethodInfo *kMCServerExecDeleteSessionMethodInfo;
-extern MCExecMethodInfo *kMCServerExecStartSessionMethodInfo;
-extern MCExecMethodInfo *kMCServerExecStopSessionMethodInfo;
-extern MCExecMethodInfo *kMCServerExecIncludeMethodInfo;
-extern MCExecMethodInfo *kMCServerExecEchoMethodInfo;
-extern MCExecMethodInfo *kMCServerGetErrorModeMethodInfo;
-extern MCExecMethodInfo *kMCServerSetErrorModeMethodInfo;
-extern MCExecMethodInfo *kMCServerGetOutputLineEndingMethodInfo;
-extern MCExecMethodInfo *kMCServerSetOutputLineEndingMethodInfo;
-extern MCExecMethodInfo *kMCServerGetOutputTextEncodingMethodInfo;
-extern MCExecMethodInfo *kMCServerSetOutputTextEncodingMethodInfo;
-extern MCExecMethodInfo *kMCServerGetSessionSavePathMethodInfo;
-extern MCExecMethodInfo *kMCServerSetSessionSavePathMethodInfo;
-extern MCExecMethodInfo *kMCServerGetSessionLifetimeMethodInfo;
-extern MCExecMethodInfo *kMCServerSetSessionLifetimeMethodInfo;
-extern MCExecMethodInfo *kMCServerGetSessionCookieNameMethodInfo;
-extern MCExecMethodInfo *kMCServerSetSessionCookieNameMethodInfo;
-extern MCExecMethodInfo *kMCServerGetSessionIdMethodInfo;
-extern MCExecMethodInfo *kMCServerSetSessionIdMethodInfo;
-
 void MCServerExecPutHeader(MCExecContext& ctxt, MCStringRef value, bool as_new);
 void MCServerExecPutBinaryOutput(MCExecContext& ctxt, MCDataRef value);
 void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef value);
@@ -5113,30 +3754,6 @@ void MCServerSetSessionId(MCExecContext& ctxt, MCStringRef p_value);
 
 ///////////
 
-extern MCExecMethodInfo *kMCDebuggingExecBreakpointMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingExecDebugDoMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingExecAssertMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingGetTraceAbortMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingSetTraceAbortMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingGetTraceDelayMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingSetTraceDelayMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingGetTraceReturnMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingSetTraceReturnMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingGetTraceStackMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingSetTraceStackMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingGetTraceUntilMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingSetTraceUntilMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingGetMessageMessagesMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingSetMessageMessagesMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingGetBreakpointsMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingSetBreakpointsMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingGetDebugContextMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingSetDebugContextMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingGetExecutionContextsMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingGetWatchedVariablesMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingSetWatchedVariablesMethodInfo;
-extern MCExecMethodInfo *kMCDebuggingExecPutIntoMessageMethodInfo;
-
 void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uinteger_t p_line, uinteger_t p_pos);
 void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos);
 void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, bool p_result);
@@ -5165,39 +3782,16 @@ void MCDebuggingExecPutIntoMessage(MCExecContext& ctxt, MCStringRef value, int w
 
 ///////////
 
-extern MCExecMethodInfo *kMCTextMessagingExecComposeTextMessageMethodInfo;
-extern MCExecMethodInfo *kMCTextMessagingGetCanComposeTextMessageMethodInfo;
-
 void MCTextMessagingGetCanComposeTextMessage(MCExecContext& ctxt, bool& r_result);
 void MCTextMessagingExecComposeTextMessage(MCExecContext& ctxt, MCStringRef p_recipients, MCStringRef p_body);
 
 ///////////
-
-extern MCExecMethodInfo *kMCIdleTimerExecLockIdleTimerMethodInfo;
-extern MCExecMethodInfo *kMCIdleTimerExecUnlockIdleTimerMethodIndo;
-extern MCExecMethodInfo *kMCIdleTimerGetidleTimerLockedMethodInfo;
 
 void MCIdleTimerExecLockIdleTimer(MCExecContext& ctxt);
 void MCIdleTimerExecUnlockIdleTimer(MCExecContext& ctxt);
 void MCIdleTimerGetIdleTimerLocked(MCExecContext& ctxt, bool& r_result);
 
 //////////
-
-extern MCExecMethodInfo* kMCStoreGetCanMakePurchaseMethodInfo;
-extern MCExecMethodInfo* kMCStoreExecEnablePurchaseUpdatesMethodInfo;
-extern MCExecMethodInfo* kMCStoreExecDisablePurchaseUpdatesMethodInfo;
-extern MCExecMethodInfo* kMCStoreExecRestorePurchaseMethodInfo;
-extern MCExecMethodInfo* kMCStoreGetPurchaseListMethodInfo;
-extern MCExecMethodInfo* kMCStoreExecCreatePurchaseMethodInfo;
-extern MCExecMethodInfo* kMCStoreGetPurchaseStateMethodInfo;
-extern MCExecMethodInfo* kMCStoreGetPurchaseErrorMethodInfo;
-extern MCExecMethodInfo* kMCStoreGetPurchasePropertyMethodInfo;
-extern MCExecMethodInfo* kMCStoreSetPurchasePropertyMethodInfo;
-extern MCExecMethodInfo* kMCStoreExecSendPurchaseRequestMethodInfo;
-extern MCExecMethodInfo* kMCStoreExecConfirmPurchaseDeliveryMethodInfo;
-extern MCExecMethodInfo* kMCStoreExecRequestProductDetailsMethodInfo;
-extern MCExecMethodInfo* kMCStoreExecPurchaseVerifyMethodInfo;
-
 
 void MCStoreGetCanMakePurchase(MCExecContext& ctxt, bool& r_result);
 void MCStoreExecEnablePurchaseUpdates(MCExecContext& ctxt);
@@ -5219,19 +3813,10 @@ void MCStoreExecReceiveProductDetails(MCExecContext &ctxt, MCStringRef p_product
 void MCStoreExecConsumePurchase(MCExecContext &ctxt, MCStringRef p_product_id);
 void MCStoreExecProductSetType(MCExecContext &ctxt, MCStringRef p_product_id, MCStringRef p_product_type);
 
-
 ///////////
 
 extern MCExecSetTypeInfo *kMCOrientationOrientationsTypeInfo;
 extern MCExecEnumTypeInfo *kMCOrientationOrientationTypeInfo;
-
-extern MCExecMethodInfo *kMCOrientationGetDeviceOrientationMethodInfo;
-extern MCExecMethodInfo *kMCOrientationGetOrientationMethodInfo;
-extern MCExecMethodInfo *kMCOrientationGetAllowedOrientationsMethodInfo;
-extern MCExecMethodInfo *kMCOrientationSetAllowedOrientationsMethodInfo;
-extern MCExecMethodInfo *kMCOrientationGetOrientationLockedMethodInfo;
-extern MCExecMethodInfo *kMCOrientationExecLockOrientationMethodInfo;
-extern MCExecMethodInfo *kMCOrientationExecUnlockOrientationMethodInfo;
 
 void MCOrientationGetDeviceOrientation(MCExecContext& ctxt, intenum_t& r_orientation);
 void MCOrientationGetOrientation(MCExecContext& ctxt, intenum_t& r_orientation);
@@ -5243,12 +3828,6 @@ void MCOrientationExecUnlockOrientation(MCExecContext& ctxt);
 
 ///////////
 
-extern MCExecMethodInfo *kMCMailExecSendEmailMethodInfo;
-extern MCExecMethodInfo *kMCMailExecComposeMailMethodInfo;
-extern MCExecMethodInfo *kMCMailExecComposeUnicodeMailMethodInfo;
-extern MCExecMethodInfo *kMCMailExecComposeHtmlMailMethodInfo;
-extern MCExecMethodInfo *kMCMailGetCanSendMailMethodInfo;
-
 void MCMailExecSendEmail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body);
 void MCMailExecComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments);
 void MCMailExecComposeUnicodeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments);
@@ -5256,15 +3835,6 @@ void MCMailExecComposeHtmlMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRe
 void MCMailGetCanSendMail(MCExecContext& ctxt, bool& r_result);
 
 ///////////
-
-extern MCExecMethodInfo *kMCAddressBookExecPickContactMethodInfo;
-extern MCExecMethodInfo *kMCAddressBookExecShowContactMethodInfo;
-extern MCExecMethodInfo *kMCAddressBookExecCreateContactMethodInfo;
-extern MCExecMethodInfo *kMCAddressBookExecUpdateContactMethodInfo;
-extern MCExecMethodInfo *kMCAddressBookGetContactDataMethodInfo;
-extern MCExecMethodInfo *kMCAddressBookExecRemoveContactMethodInfo;
-extern MCExecMethodInfo *kMCAddressBookExecAddContactMethodInfo;
-extern MCExecMethodInfo *kMCAddressBookExecFindContactMethodInfo;
 
 void MCAddressBookExecPickContact(MCExecContext& ctxt);
 void MCAddressBookExecShowContact(MCExecContext& ctxt, int32_t p_contact_id);
@@ -5280,15 +3850,6 @@ void MCAddressBookExecFindContact(MCExecContext& ctxt, MCStringRef p_contact_nam
 struct MCAdTopLeft;
 
 extern MCExecCustomTypeInfo* kMCAdTopLeftTypeInfo;
-
-extern MCExecMethodInfo* kMCAdExecRegisterWithInteractiveMethodInfo;
-extern MCExecMethodInfo* kMCAdExecCreateAdMethodInfo;
-extern MCExecMethodInfo* kMCAdExecDeleteAdMethodInfo;
-extern MCExecMethodInfo* kMCAdSetVisibleOfAdMethodInfo;
-extern MCExecMethodInfo* kMCAdGetVisibleOfAdMethodInfo;
-extern MCExecMethodInfo* kMCAdGetTopLeftOfAdMethodInfo;
-extern MCExecMethodInfo* kMCAdSetTopLeftOfAdMethodInfo;
-extern MCExecMethodInfo* kMCAdGetAdsMethodInfo;
 
 void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, MCStringRef p_key);
 void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_type, MCAdTopLeft p_topleft, MCArrayRef p_metadata);
@@ -5325,14 +3886,6 @@ extern MCExecEnumTypeInfo *kMCNativeControlInputVerticalAlignTypeInfo;
 extern MCExecEnumTypeInfo *kMCNativeControlClearButtonModeTypeInfo;
 extern MCExecEnumTypeInfo *kMCNativeControlBorderStyleTypeInfo;
 
-extern MCExecMethodInfo* kMCNativeControlExecCreateControlMethodInfo;
-extern MCExecMethodInfo* kMCNativeControlExecDeleteControlMethodInfo;
-extern MCExecMethodInfo* kMCNativeControlExecSetPropertyMethodInfo;
-extern MCExecMethodInfo* kMCNativeControlExecGetPropertyMethodInfo;
-extern MCExecMethodInfo* kMCNativeControlExecDoMethodInfo;
-extern MCExecMethodInfo* kMCNativeControlGetTargetMethodInfo;
-extern MCExecMethodInfo* kMCNativeControlGetControlListMethodInfo;
-
 void MCNativeControlExecCreateControl(MCExecContext& ctxt, MCStringRef p_type_name, MCStringRef p_control_name);
 void MCNativeControlExecDeleteControl(MCExecContext& ctxt, MCStringRef p_control_name);
 void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_property_name, MCValueRef& r_result);
@@ -5344,22 +3897,6 @@ void MCNativeControlGetControlList(MCExecContext& ctxt, MCStringRef& r_list);
 //////////
 
 extern MCExecEnumTypeInfo *kMCSensorTypeTypeInfo;
-
-extern MCExecMethodInfo *kMCSensorExecStartTrackingSensorMethodInfo;
-extern MCExecMethodInfo *kMCSensorExecStopTrackingSensorMethodInfo;
-extern MCExecMethodInfo *kMCSensorGetSensorAvailableMethodInfo;
-extern MCExecMethodInfo *kMCSensorGetDetailedLocationOfDeviceMethodInfo;
-extern MCExecMethodInfo *kMCSensorGetLocationOfDeviceMethodInfo;
-extern MCExecMethodInfo *kMCSensorGetDetailedHeadingOfDeviceMethodInfo;
-extern MCExecMethodInfo *kMCSensorGetHeadingOfDeviceMethodInfo;
-extern MCExecMethodInfo *kMCSensorGetDetailedAccelerationOfDeviceMethodInfo;
-extern MCExecMethodInfo *kMCSensorGetAccelerationOfDeviceMethodInfo;
-extern MCExecMethodInfo *kMCSensorGetDetailedRotationRateOfDeviceMethodInfo;
-extern MCExecMethodInfo *kMCSensorGetRotationRateOfDeviceMethodInfo;
-extern MCExecMethodInfo *kMCSensorGetLocationCalibrationMethodInfo;
-extern MCExecMethodInfo *kMCSensorSetLocationCalibrationMethodInfo;
-// SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
-extern MCExecMethodInfo *kMCSensorSetLocationAuthorizationStatusMethodInfo;
 
 void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor, bool p_loosely);
 void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor);
@@ -5392,16 +3929,6 @@ extern MCExecSetTypeInfo *kMCPickCamerasFeaturesTypeInfo;
 extern MCExecSetTypeInfo *kMCPickMediaTypesTypeInfo;
 extern MCExecEnumTypeInfo *kMCPickPhotoSourceTypeTypeInfo;
 
-extern MCExecMethodInfo *kMCPickExecPickDateMethodInfo;
-extern MCExecMethodInfo *kMCPickExecPickTimeMethodInfo;
-extern MCExecMethodInfo *kMCPickExecPickDateAndTimeMethodInfo;
-extern MCExecMethodInfo *kMCPickExecPickOptionByIndexMethodInfo;
-extern MCExecMethodInfo *kMCPickGetSpecificCameraFeaturesMethodInfo;
-extern MCExecMethodInfo *kMCPickGetCameraFeaturesMethodInfo;
-extern MCExecMethodInfo *kMCPickExecPickMediaMethodInfo;
-extern MCExecMethodInfo *kMCPickExecPickPhotoAndResizeMethodInfo;
-extern MCExecMethodInfo *kMCPickExecPickPhotoMethodInfo;
-
 void MCPickExecPickDate(MCExecContext& ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, intenum_t p_buttons, MCRectangle p_button_rect);
 void MCPickExecPickTime(MCExecContext &ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, int32_t *p_step, intenum_t p_buttons, MCRectangle p_button_rect);
 void MCPickExecPickDateAndTime(MCExecContext &ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, int32_t *p_step, intenum_t p_buttons, MCRectangle p_button_rect);
@@ -5414,16 +3941,6 @@ void MCPickExecPickPhoto(MCExecContext& ctxt, intenum_t p_source);
 
 ///////////
 
-extern MCExecMethodInfo* kMCCalendarExecShowEventMethodInfo;
-extern MCExecMethodInfo* kMCCalendarGetEventDataMethodInfo;
-extern MCExecMethodInfo* kMCCalendarExecCreateEventMethodInfo;
-extern MCExecMethodInfo* kMCCalendarExecUpdateEventMethodInfo;
-extern MCExecMethodInfo* kMCCalendarExecRemoveEventMethodInfo;
-extern MCExecMethodInfo* kMCCalendarExecAddEventMethodInfo;
-extern MCExecMethodInfo* kMCCalendarGetCalendarsMethodInfo;
-extern MCExecMethodInfo* kMCCalendarExecFindEventMethodInfo;
-
-
 void MCCalendarExecShowEvent(MCExecContext& ctxt, MCStringRef p_id);
 void MCCalendarGetEventData(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r_data);
 void MCCalendarExecCreateEvent(MCExecContext& ctxt);
@@ -5433,18 +3950,9 @@ void MCCalendarExecAddEvent(MCExecContext& ctxt, MCArrayRef p_data);
 void MCCalendarGetCalendars(MCExecContext& ctxt);
 void MCCalendarExecFindEvent(MCExecContext& ctxt, MCStringRef p_id, bool& r_found);
 
-
 ///////////
 
 extern MCExecEnumTypeInfo* kMCStorePurchasePropertyTypeInfo;
-
-extern MCExecMethodInfo* kMCNotificationExecCreateLocalNotificationMethodInfo;
-extern MCExecMethodInfo* kMCNotificationGetRegisteredNotificationsMethodInfo;
-extern MCExecMethodInfo* kMCNotificationGetDetailsMethodInfo;
-extern MCExecMethodInfo* kMCNotificationExecCancelLocalNotificationMethodInfo;
-extern MCExecMethodInfo* kMCNotificationExecCancelAllLocalNotificationsMethodInfo;
-extern MCExecMethodInfo* kMCNotificationGetNotificationBadgeValueMethodInfo;
-extern MCExecMethodInfo* kMCNotificationSetNotificationBadgeValueMethodInfo;
 
 void MCNotificationExecCreateLocalNotification(MCExecContext& ctxt, MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value);
 void MCNotificationGetRegisteredNotifications(MCExecContext& ctxt);
@@ -5459,12 +3967,6 @@ void MCNotificationSetNotificationBadgeValue(MCExecContext& ctxt, uint32_t p_bad
 extern MCExecEnumTypeInfo* kMCBusyIndicatorTypeInfo;
 extern MCExecEnumTypeInfo* kMCActivityIndicatorTypeInfo;
 
-extern MCExecMethodInfo* kMCBusyIndicatorExecStartActivityIndicatorMethodInfo;
-extern MCExecMethodInfo* kMCBusyIndicatorExecStopActivityIndicatorMethodInfo;
-extern MCExecMethodInfo* kMCBusyIndicatorExecStartBusyIndicatorMethodInfo;
-extern MCExecMethodInfo* kMCBusyIndicatorExecStopBusyIndicatorMethodInfo;
-
-
 void MCBusyIndicatorExecStartActivityIndicator(MCExecContext& ctxt, intenum_t p_indicator, integer_t* p_location_x, integer_t* p_location_y);
 void MCBusyIndicatorExecStopActivityIndicator(MCExecContext& ctxt);
 void MCBusyIndicatorExecStartBusyIndicator(MCExecContext& ctxt, intenum_t p_indicator, MCStringRef p_label, int32_t p_opacity);
@@ -5473,19 +3975,6 @@ void MCBusyIndicatorExecStopBusyIndicator(MCExecContext& ctxt);
 ////////////
 
 extern MCExecEnumTypeInfo* kMCSoundAudioCategoryTypeInfo;
-
-extern MCExecMethodInfo* kMCSoundExecPlaySoundOnChannelMethodInfo;
-extern MCExecMethodInfo* kMCSoundExecStopPlayingOnChannelMethodInfo;
-extern MCExecMethodInfo* kMCSoundExecPausePlayingOnChannelMethodInfo;
-extern MCExecMethodInfo* kMCSoundExecResumePlayingOnChannelMethodInfo;
-extern MCExecMethodInfo* kMCSoundExecDeleteSoundChannelMethodInfo;
-extern MCExecMethodInfo* kMCSoundSetVolumeOfChannelMethodInfo;
-extern MCExecMethodInfo* kMCSoundGetVolumeOfChannelMethodInfo;
-extern MCExecMethodInfo* kMCSoundGetStatusOfChannelMethodInfo;
-extern MCExecMethodInfo* kMCSoundGetSoundOfChannelMethodInfo;
-extern MCExecMethodInfo* kMCSoundGetNextSoundOfChannelMethodInfo;
-extern MCExecMethodInfo* kMCSoundGetSoundChannelsMethodInfo;
-extern MCExecMethodInfo* kMCSoundSetAudioCategoryMethodInfo;
 
 void MCSoundExecPlaySoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel, MCStringRef p_file, intenum_t p_type);
 void MCSoundExecStopPlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channel);
@@ -5505,38 +3994,6 @@ void MCSoundSetAudioCategory(MCExecContext &ctxt, intenum_t p_category);
 extern MCExecEnumTypeInfo* kMCMiscKeyboardTypeTypeInfo;
 extern MCExecEnumTypeInfo* kMCMiscKeyboardReturnTypeTypeInfo;
 extern MCExecEnumTypeInfo* kMCMiscStatusBarStyleTypeInfo;
-
-extern MCExecMethodInfo* kMCMiscGetDeviceTokenMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetLaunchUrlMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetLaunchDataMethodInfo;
-extern MCExecMethodInfo* kMCMiscExecBeepMethodInfo;
-extern MCExecMethodInfo* kMCMiscExecVibrateMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetDeviceResolutionMethodInfo;
-extern MCExecMethodInfo* kMCMiscSetUseDeviceResolutionMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetDeviceScaleMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetPixelDensityMethodInfo;
-extern MCExecMethodInfo* kMCMiscSetStatusBarStyleMethodInfo;
-extern MCExecMethodInfo* kMCMiscExecShowStatusBarMethodInfo;
-extern MCExecMethodInfo* kMCMiscExecHideStatusBarMethodInfo;
-extern MCExecMethodInfo* kMCMiscSetKeyboardTypeMethodInfo;
-extern MCExecMethodInfo* kMCMiscSetKeyboardReturnKeyMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetPreferredLanguagesMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetPreferredLocaleMethodInfo;
-extern MCExecMethodInfo* kMCMiscExecClearTouchesMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetSystemIdentifierMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetApplicationIdentifierMethodInfo;
-extern MCExecMethodInfo* kMCMiscSetReachabilityTargetMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetReachabilityTargetMethodInfo;
-extern MCExecMethodInfo* kMCMiscExecExportImageToAlbumMethodInfo;
-extern MCExecMethodInfo* kMCMiscSetRedrawIntervalMethodInfo;
-extern MCExecMethodInfo* kMCMiscSetAnimatedAutorotationMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetDoNotBackupFileMethodInfo;
-extern MCExecMethodInfo* kMCMiscSetDoNotBackupFileMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetFileDataProtectionMethodInfo;
-extern MCExecMethodInfo* kMCMiscSetFileDataProtectionMethodInfo;
-extern MCExecMethodInfo* kMCMiscExecLibDownloadUrlToFileMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetBuildInfoMethodInfo;
-
 
 void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token);
 void MCMiscGetLaunchUrl(MCExecContext& ctxt, MCStringRef& r_url);
@@ -5593,11 +4050,6 @@ void MCMiscSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p_p
 void MCMiscGetIsVoiceOverRunning(MCExecContext& ctxt, bool& r_is_vo_running);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-extern MCExecMethodInfo* kMCNFCGetIsNFCAvailable;
-extern MCExecMethodInfo* kMCNFCGetIsNFCEnabled;
-extern MCExecMethodInfo* kMCNFCExecEnableNFCDispatch;
-extern MCExecMethodInfo* kMCNFCExecDisableNFCDispatch;
 
 void MCNFCGetIsNFCAvailable(MCExecContext& ctxt);
 void MCNFCGetIsNFCEnabled(MCExecContext& ctxt);

@@ -40,26 +40,21 @@ to megabytes (M), divide by 1024^2. To convert to gigabytes (G), divide
 by 1024^3:
 
     function humanReadableDiskSpace theUnits
-    set the caseSensitive to false
-    switch char 1 of theUnits
-    case "k"
-
-    return the diskSpace div 1024
-    break
-    case "m"
-
-    return the diskSpace div (1024^2)
-    break
-    case "g"
-
-    return the diskSpace div (1024^3)
-    break
-    default
-
-    return the diskSpace
-    break
-    end switch
-
+        set the caseSensitive to false
+        switch char 1 of theUnits
+            case "k"
+    	        return the diskSpace div 1024
+    	        break
+            case "m"
+                return the diskSpace div (1024^2)
+                break
+            case "g"
+                return the diskSpace div (1024^3)
+                break
+            default
+                return the diskSpace
+                break
+        end switch
     end humanReadableDiskSpace
 
 

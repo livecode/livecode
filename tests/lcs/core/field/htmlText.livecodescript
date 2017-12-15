@@ -60,11 +60,11 @@ on TestParagraphTabAlignRoundtrip
    set the defaultStack to "Test"
 
    create field "TestField"
-
+   
    set the htmlText of field "TestField" to q("<p tabalign='left,center,right'>left&#9;center&#9;right</p>")
    TestAssert "htmlText supports tabAlign", the tabAlign of line 1 of field "TestField" is "left,center,right"
    TestAssert "htmlText roundtrips tabAlign", the htmlText of field "TestField" is q("<p tabalign='left,center,right'>left&#9;center&#9;right</p>")
-   
+
    set the text of field "TestField" to "left" & tab & "center" & tab & "right"
    set the tabAlign of field "TestField" to "right,center,left"
    TestAssert "htmlText doesn't include inherited tabAlign", the htmltext of field "TestField" is q("<p>left&#9;center&#9;right</p>")
@@ -72,3 +72,19 @@ on TestParagraphTabAlignRoundtrip
 
    delete stack "Test"
 end TestParagraphTabAlignRoundtrip
+
+
+// Regression test for bug 20633 - note the bug here was that a NUL block is
+// created which causes the 'char' reference to be wrong.
+on TestAnnotationsAndVTab
+   create stack "Test"
+   set the defaultStack to "Test"
+
+   create field "TestField"
+
+   set the htmlText of field "TestField" to format("<p><a href=\"#Anchor1\">Anchor1&#11;</a><a href=\"#Anchor2\">Anchor2&#11;</a></p>")
+   TestAssert "linkText on VTab does not elide with next linkText", the linkText of char 9 of field "TestField" is "#Anchor2"
+
+   set the htmlText of field "TestField" to format("<p><span metadata=\"#Anchor1\">Anchor1&#11;</span><span metadata=\"#Anchor2\">Anchor2&#11;</span></p>")
+   TestAssert "metadata on VTab does not elide with next metadata", the metadata of char 9 of field "TestField" is "#Anchor2"
+end TestAnnotationsAndVTab

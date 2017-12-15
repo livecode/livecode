@@ -51,11 +51,15 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	uindex_t t_comma;
 	MCAutoStringRef reqname_str;
 	reqname_str = MCNameGetString(*reqname);
-	Boolean t_success;
-	t_success = MCStringFirstIndexOfChar(*reqname_str, ',', 0, kMCCompareExact, t_comma);
-
     MCAutoStringRef t_before_comma;
-    /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
+	if (MCStringFirstIndexOfChar(*reqname_str, ',', 0, kMCCompareExact, t_comma))
+    {
+        /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
+    }
+    else
+    {
+        t_before_comma = *reqname_str;
+    }
 
     font -> fid = (MCSysFontHandle)iphone_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	
@@ -68,11 +72,16 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	uindex_t t_comma;
 	MCAutoStringRef reqname_str;
 	reqname_str = MCNameGetString(*reqname);
-	Boolean t_success;
-	t_success = MCStringFirstIndexOfChar(*reqname_str, ',', 0, kMCCompareExact, t_comma);
-
     MCAutoStringRef t_before_comma;
-    /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
+    if (MCStringFirstIndexOfChar(*reqname_str, ',', 0, kMCCompareExact, t_comma))
+    {
+        /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
+    }
+    else
+    {
+        t_before_comma = *reqname_str;
+    }
+    
     font -> fid = (MCSysFontHandle)android_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	
 	android_font_get_metrics(font -> fid,  font->m_ascent, font->m_descent, font->m_leading, font->m_xheight);

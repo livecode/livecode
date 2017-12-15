@@ -32,26 +32,17 @@ class MCChunk;
 class MCUnaryOperator: public MCExpression
 {
 public:
-	virtual MCExecMethodInfo *getmethodinfo(void) const = 0;
-	
-	virtual void compile(MCSyntaxFactoryRef factory);
 };
 
 class MCBinaryOperator: public MCExpression
 {
 public:
-	virtual MCExecMethodInfo *getmethodinfo(void) const = 0;
-	
-	virtual void compile(MCSyntaxFactoryRef factory);
 };
 
 class MCMultiBinaryOperator: public MCExpression
 {
 public:
-	virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const = 0;
 	virtual bool canbeunary(void) const {return false;}
-	
-	virtual void compile(MCSyntaxFactoryRef factory);
 };
 
 //////////
@@ -59,8 +50,7 @@ public:
 template <typename ParamType,
           void (*EvalMethod)(MCExecContext&, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ParamType>::out_type),
           Exec_errors EvalError,
-          Factor_rank Rank,
-          MCExecMethodInfo *&MethodInfo>
+          Factor_rank Rank>
 class MCUnaryOperatorCtxt: public MCUnaryOperator
 {
 public:
@@ -84,8 +74,6 @@ public:
         if (!ctxt . HasError())
             MCExecValueTraits<ParamType>::set(r_value, t_result);
     }
-
-   virtual MCExecMethodInfo *getmethodinfo(void) const { return MethodInfo; }
 };
 
 template<typename ParamType,
@@ -93,8 +81,7 @@ template<typename ParamType,
          void (*EvalMethod)(MCExecContext&, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ReturnType>::out_type),
          Exec_errors EvalLeftError,
          Exec_errors EvalRightError,
-         Factor_rank Rank,
-         MCExecMethodInfo *&MethodInfo>
+         Factor_rank Rank>
 class MCBinaryOperatorCtxt: public MCBinaryOperator
 {
 public:
@@ -126,8 +113,6 @@ public:
         if (!ctxt . HasError())
             MCExecValueTraits<ReturnType>::set(r_value, t_result);
     }
-
-    virtual MCExecMethodInfo *getmethodinfo() const { return MethodInfo; }
 };
 
 template<void (*Eval)(MCExecContext&, real64_t, real64_t, real64_t&),
@@ -137,10 +122,7 @@ template<void (*Eval)(MCExecContext&, real64_t, real64_t, real64_t&),
          Exec_errors EvalRightError,
          Exec_errors MismatchError,
          bool CanBeUnary,
-         Factor_rank Rank,
-         MCExecMethodInfo *&EvalNumberMethodInfo,
-         MCExecMethodInfo *&EvalArrayByNumberMethodInfo,
-         MCExecMethodInfo *&EvalArrayByArrayMethodInfo>
+         Factor_rank Rank>
 class MCMultiBinaryOperatorCtxt: public MCMultiBinaryOperator
 {
 public:
@@ -201,13 +183,6 @@ public:
     }
 
     virtual bool canbeunary() const { return CanBeUnary; }
-
-    virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-    {
-        static MCExecMethodInfo *s_methods[] = { EvalNumberMethodInfo, EvalArrayByNumberMethodInfo, EvalArrayByArrayMethodInfo };
-        r_methods = s_methods;
-        r_count = 3;
-    }
 };
 
 template<void (*Eval)(MCExecContext&, real64_t, real64_t, real64_t&),
@@ -216,10 +191,7 @@ template<void (*Eval)(MCExecContext&, real64_t, real64_t, real64_t&),
          Exec_errors EvalLeftError,
          Exec_errors EvalRightError,
          bool CanBeUnary,
-         Factor_rank Rank,
-         MCExecMethodInfo *&EvalNumberMethodInfo,
-         MCExecMethodInfo *&EvalArrayByNumberMethodInfo,
-         MCExecMethodInfo *&EvalArrayByArrayMethodInfo>
+         Factor_rank Rank>
 class MCMultiBinaryCommutativeOperatorCtxt: public MCMultiBinaryOperator
 {
 public:
@@ -286,13 +258,6 @@ public:
     }
 
     virtual bool canbeunary() const { return CanBeUnary; }
-
-    virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-    {
-        static MCExecMethodInfo *s_methods[] = { EvalNumberMethodInfo, EvalArrayByNumberMethodInfo, EvalArrayByArrayMethodInfo };
-        r_methods = s_methods;
-        r_count = 3;
-    }
 };
 
 
@@ -309,7 +274,7 @@ public:
     virtual void eval_ctxt(MCExecContext &, MCExecValue &r_value);
 };
 
-class MCAndBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEvalBitwiseAnd, EE_ANDBITS_BADLEFT, EE_ANDBITS_BADRIGHT, FR_AND_BITS, kMCMathEvalBitwiseAndMethodInfo>
+class MCAndBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEvalBitwiseAnd, EE_ANDBITS_BADLEFT, EE_ANDBITS_BADRIGHT, FR_AND_BITS>
 {};
 
 class MCConcat : public MCExpression
@@ -320,13 +285,12 @@ public:
 		rank = FR_CONCAT;
     }
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
-class MCConcatSpace : public MCBinaryOperatorCtxt<MCStringRef, MCStringRef, MCStringsEvalConcatenateWithSpace, EE_CONCATSPACE_BADLEFT, EE_CONCATSPACE_BADRIGHT, FR_CONCAT, kMCStringsEvalConcatenateWithSpaceMethodInfo>
+class MCConcatSpace : public MCBinaryOperatorCtxt<MCStringRef, MCStringRef, MCStringsEvalConcatenateWithSpace, EE_CONCATSPACE_BADLEFT, EE_CONCATSPACE_BADRIGHT, FR_CONCAT>
 {};
 
-class MCContains : public MCBinaryOperatorCtxt<MCStringRef, bool, MCStringsEvalContains, EE_CONTAINS_BADLEFT, EE_CONTAINS_BADRIGHT, FR_COMPARISON, kMCStringsEvalContainsMethodInfo>
+class MCContains : public MCBinaryOperatorCtxt<MCStringRef, bool, MCStringsEvalContains, EE_CONTAINS_BADLEFT, EE_CONTAINS_BADRIGHT, FR_COMPARISON>
 {};
 
 class MCDiv : public MCMultiBinaryOperatorCtxt<
@@ -337,19 +301,16 @@ class MCDiv : public MCMultiBinaryOperatorCtxt<
         EE_DIV_BADRIGHT,
         EE_DIV_MISMATCH,
         false,
-        FR_MULDIV,
-        kMCMathEvalDivMethodInfo,
-        kMCMathEvalDivArrayByNumberMethodInfo,
-        kMCMathEvalDivArrayByArrayMethodInfo>
+        FR_MULDIV>
 {};
 
-class MCEqual : public MCBinaryOperatorCtxt<MCValueRef, bool, MCLogicEvalIsEqualTo, EE_FACTOR_BADLEFT, EE_FACTOR_BADRIGHT, FR_EQUAL, kMCLogicEvalIsEqualToMethodInfo>
+class MCEqual : public MCBinaryOperatorCtxt<MCValueRef, bool, MCLogicEvalIsEqualTo, EE_FACTOR_BADLEFT, EE_FACTOR_BADRIGHT, FR_EQUAL>
 {};
 
-class MCGreaterThan : public MCBinaryOperatorCtxt<MCValueRef, bool, MCLogicEvalIsGreaterThan, EE_FACTOR_BADLEFT, EE_FACTOR_BADRIGHT, FR_COMPARISON, kMCLogicEvalIsGreaterThanMethodInfo>
+class MCGreaterThan : public MCBinaryOperatorCtxt<MCValueRef, bool, MCLogicEvalIsGreaterThan, EE_FACTOR_BADLEFT, EE_FACTOR_BADRIGHT, FR_COMPARISON>
 {};
 
-class MCGreaterThanEqual : public MCBinaryOperatorCtxt<MCValueRef, bool, MCLogicEvalIsGreaterThanOrEqualTo, EE_FACTOR_BADLEFT, EE_FACTOR_BADRIGHT, FR_COMPARISON, kMCLogicEvalIsGreaterThanOrEqualToMethodInfo>
+class MCGreaterThanEqual : public MCBinaryOperatorCtxt<MCValueRef, bool, MCLogicEvalIsGreaterThanOrEqualTo, EE_FACTOR_BADLEFT, EE_FACTOR_BADRIGHT, FR_COMPARISON>
 {};
 
 class MCGrouping : public MCExpression
@@ -360,7 +321,6 @@ public:
 		rank = FR_GROUPING;
     }
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
 class MCIs : public MCExpression
@@ -378,16 +338,15 @@ public:
 	}
     Parse_stat parse(MCScriptPoint &, Boolean the);
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
-class MCItem : public MCBinaryOperatorCtxt<MCStringRef, MCStringRef, MCStringsEvalConcatenateWithComma, EE_CONCAT_BADLEFT, EE_CONCAT_BADRIGHT, FR_CONCAT, kMCStringsEvalConcatenateWithCommaMethodInfo>
+class MCItem : public MCBinaryOperatorCtxt<MCStringRef, MCStringRef, MCStringsEvalConcatenateWithComma, EE_CONCAT_BADLEFT, EE_CONCAT_BADRIGHT, FR_CONCAT>
 {};
 
-class MCLessThan : public MCBinaryOperatorCtxt<MCValueRef, bool, MCLogicEvalIsLessThan, EE_FACTOR_BADLEFT, EE_FACTOR_BADRIGHT, FR_COMPARISON, kMCLogicEvalIsLessThanMethodInfo>
+class MCLessThan : public MCBinaryOperatorCtxt<MCValueRef, bool, MCLogicEvalIsLessThan, EE_FACTOR_BADLEFT, EE_FACTOR_BADRIGHT, FR_COMPARISON>
 {};
 
-class MCLessThanEqual : public MCBinaryOperatorCtxt<MCValueRef, bool, MCLogicEvalIsLessThanOrEqualTo, EE_FACTOR_BADLEFT, EE_FACTOR_BADRIGHT, FR_COMPARISON, kMCLogicEvalIsLessThanOrEqualToMethodInfo>
+class MCLessThanEqual : public MCBinaryOperatorCtxt<MCValueRef, bool, MCLogicEvalIsLessThanOrEqualTo, EE_FACTOR_BADLEFT, EE_FACTOR_BADRIGHT, FR_COMPARISON>
 {};
 
 class MCMinus : public MCMultiBinaryOperator
@@ -400,7 +359,6 @@ public:
 
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 
-    virtual void getmethodinfo(MCExecMethodInfo **&r_methods, uindex_t &r_count) const;
     virtual bool canbeunary(void) const {return true;}
 };
 
@@ -412,10 +370,7 @@ class MCMod : public MCMultiBinaryOperatorCtxt<
         EE_MOD_BADRIGHT,
         EE_MOD_MISMATCH,
         false,
-        FR_MULDIV,
-        kMCMathEvalModMethodInfo,
-        kMCMathEvalModArrayByNumberMethodInfo,
-        kMCMathEvalModArrayByArrayMethodInfo>
+        FR_MULDIV>
 {};
 
 class MCWrap : public MCMultiBinaryOperatorCtxt<
@@ -426,10 +381,7 @@ class MCWrap : public MCMultiBinaryOperatorCtxt<
         EE_WRAP_BADRIGHT,
         EE_WRAP_MISMATCH,
         false,
-        FR_MULDIV,
-        kMCMathEvalWrapMethodInfo,
-        kMCMathEvalWrapArrayByNumberMethodInfo,
-        kMCMathEvalWrapArrayByArrayMethodInfo>
+        FR_MULDIV>
 {};
 
 class MCNot : public MCUnaryOperator
@@ -441,14 +393,12 @@ public:
     }
 
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-
-    virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLogicEvalNotMethodInfo; }
 };
 
-class MCNotBits : public MCUnaryOperatorCtxt<uinteger_t, MCMathEvalBitwiseNot, EE_NOTBITS_BADRIGHT, FR_UNARY, kMCMathEvalBitwiseNotMethodInfo>
+class MCNotBits : public MCUnaryOperatorCtxt<uinteger_t, MCMathEvalBitwiseNot, EE_NOTBITS_BADRIGHT, FR_UNARY>
 {};
 
-class MCNotEqual : public MCBinaryOperatorCtxt<MCValueRef, bool, MCLogicEvalIsNotEqualTo, EE_FACTOR_BADLEFT, EE_FACTOR_BADRIGHT, FR_EQUAL, kMCLogicEvalIsNotEqualToMethodInfo>
+class MCNotEqual : public MCBinaryOperatorCtxt<MCValueRef, bool, MCLogicEvalIsNotEqualTo, EE_FACTOR_BADLEFT, EE_FACTOR_BADRIGHT, FR_EQUAL>
 {};
 
 class MCOr : public MCExpression
@@ -461,7 +411,7 @@ public:
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 };
 
-class MCOrBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEvalBitwiseOr, EE_ORBITS_BADLEFT, EE_ORBITS_BADRIGHT, FR_OR_BITS, kMCMathEvalBitwiseOrMethodInfo>
+class MCOrBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEvalBitwiseOr, EE_ORBITS_BADLEFT, EE_ORBITS_BADRIGHT, FR_OR_BITS>
 {};
 
 class MCOver : public MCMultiBinaryOperatorCtxt<
@@ -472,10 +422,7 @@ class MCOver : public MCMultiBinaryOperatorCtxt<
         EE_OVER_BADRIGHT,
         EE_OVER_MISMATCH,
         false,
-        FR_MULDIV,
-        kMCMathEvalOverMethodInfo,
-        kMCMathEvalOverArrayByNumberMethodInfo,
-        kMCMathEvalOverArrayByArrayMethodInfo>
+        FR_MULDIV>
 {};
 
 class MCPlus : public MCMultiBinaryCommutativeOperatorCtxt<
@@ -485,13 +432,10 @@ class MCPlus : public MCMultiBinaryCommutativeOperatorCtxt<
         EE_PLUS_BADLEFT,
         EE_PLUS_BADRIGHT,
         true,
-        FR_ADDSUB,
-        kMCMathEvalAddMethodInfo,
-        kMCMathEvalAddNumberToArrayMethodInfo,
-        kMCMathEvalAddArrayToArrayMethodInfo>
+        FR_ADDSUB>
 {};
 
-class MCPow : public MCBinaryOperatorCtxt<double, double, MCMathEvalPower, EE_POW_BADLEFT, EE_POW_BADRIGHT, FR_POW, kMCMathEvalPowerMethodInfo>
+class MCPow : public MCBinaryOperatorCtxt<double, double, MCMathEvalPower, EE_POW_BADLEFT, EE_POW_BADRIGHT, FR_POW>
 {};
 
 class MCThere : public MCExpression
@@ -509,8 +453,6 @@ public:
 	virtual ~MCThere();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-	
-	virtual void compile(MCSyntaxFactoryRef factory);
 };
 
 class MCTimes : public MCMultiBinaryCommutativeOperatorCtxt<
@@ -520,14 +462,11 @@ class MCTimes : public MCMultiBinaryCommutativeOperatorCtxt<
         EE_TIMES_BADLEFT,
         EE_TIMES_BADRIGHT,
         false,
-        FR_MULDIV,
-        kMCMathEvalAddMethodInfo,
-        kMCMathEvalAddNumberToArrayMethodInfo,
-        kMCMathEvalAddArrayToArrayMethodInfo>
+        FR_MULDIV>
 {
 };
 
-class MCXorBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEvalBitwiseXor, EE_XORBITS_BADLEFT, EE_XORBITS_BADRIGHT, FR_XOR_BITS, kMCMathEvalBitwiseXorMethodInfo>
+class MCXorBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEvalBitwiseXor, EE_XORBITS_BADLEFT, EE_XORBITS_BADRIGHT, FR_XOR_BITS>
 {};
 
 class MCBeginsEndsWith : public MCBinaryOperator
@@ -544,16 +483,12 @@ class MCBeginsWith : public MCBeginsEndsWith
 {
 public:
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-
-    virtual MCExecMethodInfo *getmethodinfo() const {return kMCStringsEvalBeginsWithMethodInfo; }
 };
 
 class MCEndsWith : public MCBeginsEndsWith
 {
 public:
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-
-    virtual MCExecMethodInfo *getmethodinfo() const {return kMCStringsEvalEndsWithMethodInfo; }
 };
 
 #endif

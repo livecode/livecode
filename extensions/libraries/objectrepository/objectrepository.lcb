@@ -1,0 +1,147 @@
+/*
+Copyright (C) 2017 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This library provides support persistent object references within a session
+*/
+
+library com.livecode.library.objectrepository
+
+use com.livecode.engine
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "Object Repository Library"
+metadata userVisible is "false"
+
+variable mSequence as Integer
+
+variable mObjects as Array
+
+/**
+
+Store an object in the object repository and get its ID
+
+Description:
+As long ID of an object may mutate during a session the IDE needs an
+object reference that can handle that mutation.
+
+Parameters:
+pObject (String): An object long ID
+
+Returns:
+An object repository ID which can be used to get the current long id of
+the object
+
+*/
+public handler objectRepositoryStore(in pObject as String) returns String
+   variable tID as String
+   repeat for each key tID in mObjects
+      if mObjects[tID] exists then
+         get property "long id" of mObjects[tID]
+   		if the result is pObject then
+            return tID
+         end if
+      end if
+   end repeat
+   
+   variable tObject as ScriptObject
+	resolve script object pObject
+	put the result into tObject
+   
+   if tObject exists then
+      add 1 to mSequence
+      put mSequence formatted as string into tID
+		put tObject into mObjects[tID]
+	else
+		throw "object does not exist"
+	end if
+   
+   return tID
+end handler
+
+/**
+
+Retrieve an object long id from the object repository
+
+Description:
+As long ID of an object may mutate during a session the IDE needs an
+object reference that can handle that mutation.
+
+Parameters:
+pID (String): An object repository ID
+
+Returns:
+An object long ID or empty if the object is not in the repository or
+no longer exists
+
+*/
+public handler objectRepositoryRetrieve(in pID as String) returns String
+   variable tObject as String
+   
+   if pID is among the keys of mObjects then
+      if not (mObjects[pID] exists) then
+         delete mObjects[pID]
+      else
+         get property "long id" of mObjects[pID]
+   		put the result into tObject
+      end if
+   end if
+   
+   return tObject
+end handler
+
+/**
+
+Remove and object from the object repository
+
+Description:
+As long ID of an object may mutate during a session the IDE needs an
+object reference that can handle that mutation.
+
+Parameters:
+pID (String): An object repository ID
+
+*/
+public handler objectRepositoryRemove(in pID as String) returns nothing
+   if pID is among the keys of mObjects then
+      delete mObjects[pID]
+   end if
+end handler
+
+/**
+
+Flush deleted objects from the repository
+
+Description:
+As long ID of an object may mutate during a session the IDE needs an
+object reference that can handle that mutation.
+
+*/
+public handler objectRepositoryFlush() returns nothing
+   variable tIDs as List
+   put the keys of mObjects into tIDs
+   
+   variable tID as String
+   repeat for each element tID in tIDs
+      if not (mObjects[tID] exists) then
+         delete mObjects[tID]
+      end if
+   end repeat
+end handler
+
+end library

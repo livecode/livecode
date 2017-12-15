@@ -6,7 +6,7 @@ Syntax: export <widget> to array <arrayVar>
 
 Summary:
 Exports the state of the given widget in a form which can be imported
-using <import widget | import widget from array>.
+using <import widget|import widget from array>.
 
 Introduced: 8.0
 

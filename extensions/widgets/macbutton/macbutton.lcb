@@ -16,9 +16,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /**
-Name: Mac Native Button
-
-Description: 
 This widget is a native push button on Mac.
 
 Name: enabled
@@ -152,6 +149,9 @@ end handler
 
 private handler ButtonActionCallback(in pSender as ObjcObject, in pContext as optional any) returns nothing
 	post "mouseUp"
+    
+    // Wake the engine to deal with the posted signal
+    MCEngineRunloopBreakWait()
 end handler
 
 /****/

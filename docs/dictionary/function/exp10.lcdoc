@@ -7,7 +7,7 @@ Syntax: the exp10 of <number>
 Syntax: exp10(<number>)
 
 Summary:
-<return|Returns> the <decimal> exponential of a number.
+<return|Returns> the decimal exponential of a number.
 
 Introduced: 1.0
 
@@ -35,10 +35,10 @@ The expression exp10(number) is equal to 10^number.
 
 If <number> is a positive <integer>, exp10(number) is a 1 followed by
 <number> zeros. If <number> is a <negative> <integer>, exp10(number) is
-a decimal point followed by <number> -1 zeros and a one.
+a decimal point followed by <number>-1 zeros and a one.
 
 References: exp (function), negative (glossary), return (glossary),
-decimal (glossary), integer (keyword)
+integer (keyword)
 
 Tags: math
 

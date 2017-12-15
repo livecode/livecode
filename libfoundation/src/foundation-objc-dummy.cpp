@@ -276,6 +276,32 @@ MC_DLLEXPORT_DEF uintptr_t MCObjcObjectGetActionProxySelector(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" MC_DLLEXPORT_DEF
+bool MCObjcCreateDelegateWithContext(MCStringRef p_protocol_name, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object)
+{
+    return false;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+bool MCObjcCreateDelegate(MCStringRef p_protocol_name, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object)
+{
+    return false;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+bool MCObjcCreateInformalDelegateWithContext(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object)
+{
+	return false;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+bool MCObjcCreateInformalDelegate(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object)
+{
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool __MCObjcInitialize(void)
 {
     if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.objc.ObjcObject"),

@@ -35,61 +35,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "exec.h"
 
-#include "syntax.h"
-
-///////////////////////////////////////////////////////////////////////////////
-
-void MCBinaryOperator::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	
-	left -> compile(ctxt);
-	if (right != nil)
-		right -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstant(ctxt, kMCEmptyString);
-	
-	MCSyntaxFactoryEvalMethod(ctxt, getmethodinfo());
-	
-	MCSyntaxFactoryEndExpression(ctxt);
-
-}
-
-void MCUnaryOperator::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	
-	right -> compile(ctxt);
-	
-	MCSyntaxFactoryEvalMethod(ctxt, getmethodinfo());
-	
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-void MCMultiBinaryOperator::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	
-	if (left != nil)
-		left -> compile(ctxt);
-	else if (canbeunary())
-		MCSyntaxFactoryEvalConstantUInt(ctxt, 0);
-	else
-		MCAssert(false);
-		
-	right -> compile(ctxt);
-	
-	MCExecMethodInfo **t_methods;
-	uindex_t t_method_count;
-	
-	getmethodinfo(t_methods, t_method_count);
-	
-	for(uindex_t i = 0; i < t_method_count; i++)
-		MCSyntaxFactoryEvalMethod(ctxt, t_methods[i]);
-	
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Logical operators
@@ -199,19 +144,6 @@ void MCConcat::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(*t_result));
 }
 
-void MCConcat::compile(MCSyntaxFactoryRef ctxt)
-{
-    MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-    
-    left -> compile(ctxt);
-    
-    right -> compile(ctxt);
-    
-    MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalConcatenateMethodInfo);
-    
-    MCSyntaxFactoryEndExpression(ctxt);
-}
-
 Parse_stat MCBeginsEndsWith::parse(MCScriptPoint& sp, Boolean the)
 {
     initpoint(sp);
@@ -307,22 +239,6 @@ void MCMinus::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     MCExecTypeRelease(t_right);
 }
 
-void MCMinus::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-    static MCExecMethodInfo *s_methods[] = { kMCMathEvalSubtractMethodInfo, kMCMathEvalSubtractNumberFromArrayMethodInfo, kMCMathEvalSubtractArrayFromArrayMethodInfo };
-    r_methods = s_methods;
-    r_count = 3;
-}
-
-
-// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-///////////////////////////////////////////////////////////////////////////////
-//
-//  Comparison operators
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Miscellaneous operators
@@ -337,14 +253,6 @@ void MCGrouping::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     }
     else
         ctxt . LegacyThrow(EE_GROUPING_BADRIGHT);
-}
-
-void MCGrouping::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	right -> compile(ctxt);
-	MCSyntaxFactoryEvalResult(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
@@ -934,122 +842,6 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         MCExecValueTraits<bool>::set(r_value, t_result);
 }
 
-void MCIs::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	
-	if (valid != IV_UNDEFINED)
-	{
-		MCExecMethodInfo *t_method;
-		switch (valid)
-		{
-			case IV_ARRAY:
-				t_method = form == IT_NORMAL ? kMCArraysEvalIsAnArrayMethodInfo : kMCArraysEvalIsNotAnArrayMethodInfo;
-				break;
-			case IV_COLOR:
-				t_method = form == IT_NORMAL ? kMCGraphicsEvalIsAColorMethodInfo : kMCGraphicsEvalIsNotAColorMethodInfo;
-				break;
-			case IV_DATE:
-				t_method = form == IT_NORMAL ? kMCDateTimeEvalIsADateMethodInfo : kMCDateTimeEvalIsNotADateMethodInfo;
-				break;
-			case IV_INTEGER:
-				t_method = form == IT_NORMAL ? kMCMathEvalIsAnIntegerMethodInfo : kMCMathEvalIsNotAnIntegerMethodInfo;
-				break;
-			case IV_NUMBER:
-				t_method = form == IT_NORMAL ? kMCMathEvalIsANumberMethodInfo : kMCMathEvalIsNotANumberMethodInfo;
-				break;
-			case IV_LOGICAL:
-				t_method = form == IT_NORMAL ? kMCLogicEvalIsABooleanMethodInfo : kMCLogicEvalIsNotABooleanMethodInfo;
-				break;
-			case IV_POINT:
-				t_method = form == IT_NORMAL ? kMCGraphicsEvalIsAPointMethodInfo : kMCGraphicsEvalIsNotAPointMethodInfo;
-				break;
-			case IV_RECT:
-				t_method = form == IT_NORMAL ? kMCGraphicsEvalIsARectangleMethodInfo : kMCGraphicsEvalIsNotARectangleMethodInfo;
-				break;
-            default:
-                MCUnreachableReturn();
-		}
-		
-		right -> compile(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, t_method);
-	}
-	else
-	{
-		MCExecMethodInfo *t_method;
-		bool t_is_unary;
-		t_is_unary = false;
-		switch (form)
-		{
-			case IT_NORMAL:
-				t_method = kMCLogicEvalIsEqualToMethodInfo;
-				break;
-			case IT_NOT:
-				t_method = kMCLogicEvalIsNotEqualToMethodInfo;
-				break;
-			case IT_AMONG:
-			case IT_NOT_AMONG:
-				switch(delimiter)
-				{
-					case CT_KEY:
-						t_method = form == IT_AMONG ? kMCArraysEvalIsAmongTheKeysOfMethodInfo : kMCArraysEvalIsNotAmongTheKeysOfMethodInfo;
-						break;
-					case CT_TOKEN:
-						t_method = form == IT_AMONG ? kMCStringsEvalIsAmongTheTokensOfMethodInfo : kMCStringsEvalIsNotAmongTheTokensOfMethodInfo;
-						break;
-					case CT_WORD:
-						t_method = form == IT_AMONG ? kMCStringsEvalIsAmongTheWordsOfMethodInfo : kMCStringsEvalIsNotAmongTheWordsOfMethodInfo;
-						break;
-					case CT_LINE:
-						t_method = form == IT_AMONG ? kMCStringsEvalIsAmongTheLinesOfMethodInfo : kMCStringsEvalIsNotAmongTheLinesOfMethodInfo;
-						break;
-					case CT_ITEM:
-						t_method = form == IT_AMONG ? kMCStringsEvalIsAmongTheItemsOfMethodInfo : kMCStringsEvalIsNotAmongTheItemsOfMethodInfo;
-						break;
-                    default:
-                        MCUnreachableReturn();
-				}
-				break;
-			case IT_IN:
-				t_method = kMCStringsEvalContainsMethodInfo;
-				break;
-			case IT_NOT_IN:
-				t_method = kMCStringsEvalDoesNotContainMethodInfo;
-				break;
-			case IT_WITHIN:
-				t_method = kMCGraphicsEvalIsWithinMethodInfo;
-				break;
-			case IT_NOT_WITHIN:
-				t_method = kMCGraphicsEvalIsNotWithinMethodInfo;
-				break;
-			case IT_AMONG_THE_CLIPBOARD_DATA:
-				t_method = kMCPasteboardEvalIsAmongTheKeysOfTheClipboardDataMethodInfo;
-				t_is_unary = true;
-				break;
-			case IT_NOT_AMONG_THE_CLIPBOARD_DATA:
-				t_method = kMCPasteboardEvalIsNotAmongTheKeysOfTheClipboardDataMethodInfo;
-				t_is_unary = true;
-				break;
-			case IT_AMONG_THE_DRAG_DATA:
-				t_method = kMCPasteboardEvalIsAmongTheKeysOfTheDragDataMethodInfo;
-				t_is_unary = true;
-				break;
-			case IT_NOT_AMONG_THE_DRAG_DATA:
-				t_method = kMCPasteboardEvalIsNotAmongTheKeysOfTheDragDataMethodInfo;
-				t_is_unary = true;
-				break;
-            default:
-                MCUnreachableReturn();
-		}				
-		if (!t_is_unary)
-			left -> compile(ctxt);
-		right -> compile(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, t_method);
-	}
-	
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 MCThere::~MCThere()
 {
 	delete object;
@@ -1143,35 +935,4 @@ void MCThere::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
     if (!ctxt.HasError())
         MCExecValueTraits<bool>::set(r_value, t_result);
-}
-
-void MCThere::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	
-	MCExecMethodInfo *t_method;
-	if (object == nil)
-	{
-		switch(mode)
-		{
-			case TM_PROCESS:
-				t_method = form == IT_NORMAL ? kMCFilesEvalThereIsAProcessMethodInfo : kMCFilesEvalThereIsNotAProcessMethodInfo;
-				break;
-			case TM_FILE:
-				t_method = form == IT_NORMAL ? kMCFilesEvalThereIsAFileMethodInfo : kMCFilesEvalThereIsNotAFileMethodInfo;
-				break;
-			case TM_DIRECTORY:
-				t_method = form == IT_NORMAL ? kMCFilesEvalThereIsAFolderMethodInfo : kMCFilesEvalThereIsNotAFolderMethodInfo;
-				break;
-            default:
-                MCUnreachableReturn();
-		}
-	}
-	else
-		t_method = form == IT_NORMAL ? kMCInterfaceEvalThereIsAnObjectMethodInfo : kMCInterfaceEvalThereIsNotAnObjectMethodInfo;
-	
-	right -> compile(ctxt);
-	MCSyntaxFactoryEvalMethod(ctxt, t_method);
-		
-	MCSyntaxFactoryEndExpression(ctxt);
 }

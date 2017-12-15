@@ -36,7 +36,5 @@ public:
 	}
 
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-	
-	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 #endif

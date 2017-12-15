@@ -17,8 +17,8 @@ Example:
 end switch
 
 Description:
-Use the <end switch> <keyword> to mark the end of a <switch> <control
-structure>. 
+Use the <end switch> <keyword> to mark the end of a <switch> 
+<control structure>. 
 
 The <end switch> <keyword> occurs on a line by itself.
 

@@ -22,7 +22,7 @@ set the effectRate to 5000 -- quite s-s-s-l-l-l-o-o-o-w-w-w...
 Value:
 You can specify five speeds with the visual effect <command> : very
 fast, fast, normal, slow, or very slow. The <effectRate> <property>
-specifies how long a very slow <a/>visual effect takes.
+specifies how long a very slow visual effect takes.
 
 Description:
 Use the <effectRate> <property> to fine-tune the speed of visual

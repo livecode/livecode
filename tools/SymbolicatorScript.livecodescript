@@ -505,8 +505,42 @@ private command fetchSymbolsForRevision pOutputDir, pServerPath, pFullVersion, p
    replace space with "%20" in pFullVersion
    
    -- Generate the URL for the file containing the symbols
-   local tURL
-   put pServerPath & "/" & pFullVersion & "/g" & char 1 to 7 of pCommitHash & "/mac-bin.tar.xz" into tURL
+   local tURL, tMacSymbolsZip, tCommitHashLength, tBuildNumber
+   
+   put char 7 to 11 of pFullVersion into tBuildNumber
+   
+   if pFullVersion begins with "8" then
+      
+      if tBuildNumber < 14023 then -- 8.0.0 until 8.1.3
+         put 7 into tCommitHashLength
+         put "mac-bin.tar.xz" into tMacSymbolsZip
+      else if tBuildNumber >= 14023 and tBuildNumber < 14035 then -- 8.1.4 RC-1 until 8.1.6
+         put 7 into tCommitHashLength
+         put "universal-mac-macosx10.6-bin.tar.bz2" into tMacSymbolsZip
+      else if tBuildNumber >= 14035 then -- 8.1.7 RC-1 +
+         put 10 into tCommitHashLength
+         put "universal-mac-macosx10.6-bin.tar.bz2" into tMacSymbolsZip
+      end if
+      
+   else -- pFullVersion begins with "9"
+      
+      if tBuildNumber < 15004 then -- DP-1 until DP-4
+         put 7 into tCommitHashLength
+         put "mac-bin.tar.xz" into tMacSymbolsZip
+      else if tBuildNumber is "15004" or tBuildNumber is "15005" then -- DP-5 and DP-6
+         put 7 into tCommitHashLength
+         put "mac-bin.tar.bz2" into tMacSymbolsZip
+      else if tBuildNumber is "15009" or tBuildNumber is "15010" then -- DP-7 and DP-8
+         put 7 into tCommitHashLength
+         put "universal-mac-macosx10.9-bin.tar.bz2" into tMacSymbolsZip
+      else if tBuildNumber >= 15012 then -- DP-9+
+         put 10 into tCommitHashLength
+         put "universal-mac-macosx10.9-bin.tar.bz2" into tMacSymbolsZip
+      end if
+      
+   end if
+   
+   put pServerPath & "/" & pFullVersion & "/g" & char 1 to tCommitHashLength of pCommitHash & slash & tMacSymbolsZip into tURL
    
    -- Create the output folder, if required
    if there is not a folder pOutputDir then
@@ -515,7 +549,7 @@ private command fetchSymbolsForRevision pOutputDir, pServerPath, pFullVersion, p
    
    -- Download the file
    local tOutputFile
-   put pOutputDir & "/mac-bin.tar.xz" into tOutputFile
+   put pOutputDir & slash & tMacSymbolsZip into tOutputFile
    if there is not a file tOutputFile then
       verbosePrint "Downloading" && tURL && "to" && tOutputFile
       
@@ -542,7 +576,7 @@ private command fetchSymbolsForRevision pOutputDir, pServerPath, pFullVersion, p
       verbosePrint "Unpacking symbols"
       put the defaultFolder into tDefaultFolder
       set the defaultFolder to pOutputDir
-      get shell ("tar --strip-components 1 -xf mac-bin.tar.xz")
+      get shell ("tar --strip-components 1 -xf " && tMacSymbolsZip)
       if the result is not zero then 
          throw "unpacking staged symbols failed:" && it
       end if

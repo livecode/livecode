@@ -391,6 +391,8 @@ component Documentation
 
 	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
 		rfolder "ide:Documentation/html_viewer/resources/data/api"
+		rfolder "ide:Documentation/html_viewer/resources/data/api_livecode_script"
+		rfolder "ide:Documentation/html_viewer/resources/data/api_livecode_builder"				
 		rfolder "ide:Documentation/html_viewer/resources/data/guide"
 	
 	into [[ToolsFolder]]/Documentation/pdf place
@@ -449,6 +451,25 @@ component Extensions
 		rfolder macosx:packaged_extensions/com.livecode.widget.tile
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.scriptitems
+
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.diff
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.dropbox
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.getopt
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.httpd
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.messageauthentication
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.mime
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.oauth2
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.qr
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.objectrepository
 
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place
@@ -635,22 +656,22 @@ component Runtime.iOS
 		file ios:iphonesimulator10.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator10.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator10.2/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Simulator-11_0" place
-		executable ios:iphonesimulator11.0/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
-		executable ios:iphonesimulator11.0/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
-		executable ios:iphonesimulator11.0/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
-		executable ios:iphonesimulator11.0/revzip.ios-extension as RevZip base ios:iphonesimulator8.2/revzip.dylib
-		executable ios:iphonesimulator11.0/revxml.ios-extension as RevXml base ios:iphonesimulator8.2/revxml.dylib
-		executable ios:iphonesimulator11.0/revdb.ios-extension as RevDb base ios:iphonesimulator8.2/revdb.dylib
-		executable ios:iphonesimulator11.0/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator8.2/dbsqlite.dylib
-		executable ios:iphonesimulator11.0/dbmysql.ios-extension as DbMysql base ios:iphonesimulator8.2/dbmysql.dylib
-		file ios:iphonesimulator11.0/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator11.0/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator11.0/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator11.0/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator11.0/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphonesimulator11.0/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphonesimulator11.0/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-11_2" place
+		executable ios:iphonesimulator11.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
+		executable ios:iphonesimulator11.2/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
+		executable ios:iphonesimulator11.2/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
+		executable ios:iphonesimulator11.2/revzip.ios-extension as RevZip base ios:iphonesimulator8.2/revzip.dylib
+		executable ios:iphonesimulator11.2/revxml.ios-extension as RevXml base ios:iphonesimulator8.2/revxml.dylib
+		executable ios:iphonesimulator11.2/revdb.ios-extension as RevDb base ios:iphonesimulator8.2/revdb.dylib
+		executable ios:iphonesimulator11.2/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator8.2/dbsqlite.dylib
+		executable ios:iphonesimulator11.2/dbmysql.ios-extension as DbMysql base ios:iphonesimulator8.2/dbmysql.dylib
+		file ios:iphonesimulator11.2/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator11.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator11.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator11.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator11.2/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphonesimulator11.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator11.2/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-9_2" place
 		executable ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
 		executable ios:iphoneos9.2/revsecurity.ios-extension as RevSecurity
@@ -691,26 +712,26 @@ component Runtime.iOS
 		file ios:iphoneos10.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos10.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos10.2/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Device-11_0" place
-		executable ios:iphoneos11.0/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
-		executable ios:iphoneos11.0/revsecurity.ios-extension as RevSecurity base ios:iphoneos9.2/revsecurity.ios-extension
-		executable ios:iphoneos11.0/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos9.2/revpdfprinter.ios-extension
-		executable ios:iphoneos11.0/revzip.ios-extension as RevZip base ios:iphoneos9.2/revzip.ios-extension
-		executable ios:iphoneos11.0/revxml.ios-extension as RevXml base ios:iphoneos9.2/revxml.ios-extension
-		executable ios:iphoneos11.0/revdb.ios-extension as RevDb base ios:iphoneos9.2/revdb.ios-extension
-		executable ios:iphoneos11.0/dbsqlite.ios-extension as DbSqlite base ios:iphoneos9.2/dbsqlite.ios-extension
-		executable ios:iphoneos11.0/dbmysql.ios-extension as DbMysql base ios:iphoneos9.2/dbmysql.ios-extension
-		file ios:iphoneos11.0/mobile-device-template.plist as "Settings.plist"
-		file ios:iphoneos11.0/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphoneos11.0/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos11.0/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphoneos11.0/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphoneos11.0/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
-		file ios:iphoneos11.0/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphoneos11.0/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphoneos11.0/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphoneos11.0/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphoneos11.0/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Device-11_2" place
+		executable ios:iphoneos11.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
+		executable ios:iphoneos11.2/revsecurity.ios-extension as RevSecurity base ios:iphoneos9.2/revsecurity.ios-extension
+		executable ios:iphoneos11.2/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos9.2/revpdfprinter.ios-extension
+		executable ios:iphoneos11.2/revzip.ios-extension as RevZip base ios:iphoneos9.2/revzip.ios-extension
+		executable ios:iphoneos11.2/revxml.ios-extension as RevXml base ios:iphoneos9.2/revxml.ios-extension
+		executable ios:iphoneos11.2/revdb.ios-extension as RevDb base ios:iphoneos9.2/revdb.ios-extension
+		executable ios:iphoneos11.2/dbsqlite.ios-extension as DbSqlite base ios:iphoneos9.2/dbsqlite.ios-extension
+		executable ios:iphoneos11.2/dbmysql.ios-extension as DbMysql base ios:iphoneos9.2/dbmysql.ios-extension
+		file ios:iphoneos11.2/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos11.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos11.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos11.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos11.2/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos11.2/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
+		file ios:iphoneos11.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos11.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos11.2/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphoneos11.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos11.2/fontmap as "fontmap"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -853,13 +874,5 @@ component Toolset
 		stack ide-support:revhtml5urllibrary.livecodescript
 		file ide-support:revdocsparser.livecodescript
 		file ide-support:revliburl.livecodescript
-		file repo:extensions/script-libraries/dropbox/dropbox.livecodescript
-		file repo:extensions/script-libraries/oauth2/oauth2.livecodescript
-		file repo:extensions/script-libraries/getopt/getopt.livecodescript
-		file repo:extensions/script-libraries/mime/mime.livecodescript
-		file repo:extensions/script-libraries/diff/diff.livecodescript
-		file repo:extensions/script-libraries/messageauthentication/messageauthentication.livecodescript
-		file repo:extensions/script-libraries/httpd/httpd.livecodescript
-		file repo:extensions/script-libraries/qr/qr.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////

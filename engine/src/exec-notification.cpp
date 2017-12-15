@@ -31,19 +31,7 @@
 #include "mblnotification.h"
 #include "mblsyntax.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
-
-MC_EXEC_DEFINE_EXEC_METHOD(Notification, CreateLocalNotification, 6)
-MC_EXEC_DEFINE_GET_METHOD(Notification, RegisteredNotification, 0)
-MC_EXEC_DEFINE_GET_METHOD(Notification, Details, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Notification, CancelLocalNotification, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Notification, CancelAllNotifications, 0)
-MC_EXEC_DEFINE_GET_METHOD(Notification, NotificationBadgeValue, 0)
-MC_EXEC_DEFINE_SET_METHOD(Notification, NotificationBadgeValue, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 
 void MCNotificationExecCreateLocalNotification(MCExecContext& ctxt, MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value)
 {

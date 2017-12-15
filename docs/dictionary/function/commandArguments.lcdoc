@@ -40,7 +40,7 @@ Parameters:
 index (integer):
 An integer greater than 0.
 If the index is greater than the number of arguments, then
-commandArguments returns empty. .
+commandArguments returns empty.
 
 Returns:
 Returns either a numeric array with all the commandline arguments if no

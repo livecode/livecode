@@ -378,7 +378,7 @@ uint32_t MCIPhoneSystem::GetProcessId(void)
 
 bool MCIPhoneSystem::GetVersion(MCStringRef& r_string)
 {
-	return MCStringCreateWithCFString((CFStringRef)[[UIDevice currentDevice] systemVersion], r_string);
+	return MCStringCreateWithCFStringRef((CFStringRef)[[UIDevice currentDevice] systemVersion], r_string);
 }
 
 bool MCIPhoneSystem::GetMachine(MCStringRef& r_string)
@@ -388,7 +388,7 @@ bool MCIPhoneSystem::GetMachine(MCStringRef& r_string)
     t_machine = [t_machine stringByAppendingString:@" Simulator"];
 #endif
     
-    return MCStringCreateWithCFString((CFStringRef)t_machine, r_string);
+    return MCStringCreateWithCFStringRef((CFStringRef)t_machine, r_string);
 }
 
 MCNameRef MCIPhoneSystem::GetProcessor(void)
@@ -679,7 +679,7 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 	if (MCNameIsEqualToCaseless(p_type, MCN_temporary))
 	{
         MCAutoStringRef t_temp;
-        MCStringCreateWithCFString((CFStringRef)NSTemporaryDirectory() , &t_temp);
+        MCStringCreateWithCFStringRef((CFStringRef)NSTemporaryDirectory() , &t_temp);
 		
 		// MW-2012-09-18: [[ Bug 10279 ]] Remove trailing slash, if any.
 		// MW-2012-10-04: [[ Bug 10435 ]] Actually use a NUL character, rather than a '0'!
@@ -692,17 +692,17 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
+        MCStringCreateWithCFStringRef((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
 	else if (MCNameIsEqualToCaseless(p_type, MCN_home))
 	{
-        MCStringCreateWithCFString((CFStringRef)NSHomeDirectory() , &t_path);
+        MCStringCreateWithCFStringRef((CFStringRef)NSHomeDirectory() , &t_path);
 	}
 	else if (MCStringIsEqualToCString(MCNameGetString(p_type), "cache", kMCCompareCaseless))
 	{
 		NSArray *t_paths;
         t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-		MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
+		MCStringCreateWithCFStringRef((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
     // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
     //   as the engine folder.
@@ -720,7 +720,7 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
-		MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
+		MCStringCreateWithCFStringRef((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 
 	}
     

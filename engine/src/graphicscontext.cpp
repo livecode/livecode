@@ -1232,6 +1232,10 @@ void MCGraphicsContext::fillpath(MCPath *path, bool p_evenodd)
 
 void MCGraphicsContext::drawpict(uint1 *data, uint4 length, bool embed, const MCRectangle& drect, const MCRectangle& crect)
 {
+    MCGContextSave(m_gcontext);
+    MCGContextClipToRect(m_gcontext, MCRectangleToMCGRectangle(crect));
+    MCGContextPlayback(m_gcontext, MCRectangleToMCGRectangle(drect), data, length);
+    MCGContextRestore(m_gcontext);
 }
 
 void MCGraphicsContext::draweps(real8 sx, real8 sy, int2 angle, real8 xscale, real8 yscale, int2 tx, int2 ty,

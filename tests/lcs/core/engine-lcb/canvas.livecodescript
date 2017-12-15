@@ -1,4 +1,4 @@
-script "CoreEngineCanvas"
+script "CoreEngineExtensionsCanvasModule"
 /*
 Copyright (C) 2017 LiveCode Ltd.
 
@@ -19,15 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 on TestSetup
    TestSkipIfNot "lcb"
    
-    set the itemdelimiter to slash
-    local tFolder
-    put item 1 to -2 of the effective filename of me into tFolder
-
-    load extension from file "../_tests/_build/lcs/core/engine/_canvas.lcm" \
-       with resource path tFolder
-    if the result is not empty then
-       throw "Failed to load test support extension:" && the result
-    end if
+   TestLoadAuxiliaryExtension "_canvas", TestGetInputFilesFolder()
 end TestSetup
 
 on TestCanvasGetPixelHeight
