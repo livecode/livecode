@@ -312,7 +312,7 @@ public:
             t_objc_msgSend = (void(*)())objc_msgSend_fpret;
         else
             t_objc_msgSend = (void(*)())objc_msgSend;
-#elif defined(__I386__)
+#elif defined(__i386__)
         if (t_cif->rtype->type == FFI_TYPE_STRUCT &&
             (t_rsize >= 8 ||
              (t_rsize & (t_rsize - 1)) == 0))
