@@ -66,8 +66,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // __LITTLE_ENDIAN__ will be defined if the target processor uses BE byte-order.
 #undef __BIG_ENDIAN__
 
-// __I386__ will be defined if the target processor is i386.
-#undef __I386__
+// __i386__ will be defined if the target processor is i386.
+#undef __i386__
 // __X86_64__ will be defined if the target processor is x86-64.
 #undef __X86_64__
 // __PPC__ will be defined if the target processor is PowerPC.
@@ -124,7 +124,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(_M_IX86)
 #define __32_BIT__ 1 
 #define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
+#define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(_M_X64)
@@ -162,7 +162,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__i386)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
+#define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__ppc__)
@@ -207,7 +207,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__i386)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
+#define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__
 #elif defined(__x86_64__)
@@ -249,7 +249,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__i386)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
+#define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__ppc__)
@@ -306,7 +306,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__i386)
 #define __32_BIT__ (1)
 #define __LITTLE_ENDIAN__ (1)
-#define __I386__ (1)
+#define __i386__ (1)
 #define __LP32__ (1)
 #define __SMALL__ (1)
 #elif defined(__x86_64__)
