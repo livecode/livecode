@@ -4,6 +4,8 @@ Synonyms: master profile, master property profile
 
 Type: glossary
 
+Associations: profile library
+
 Description:
 The default <property profile> of an <object(glossary)>. The master
 profile holds the <default> settings for the <object|object's>

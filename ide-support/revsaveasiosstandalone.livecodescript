@@ -99,6 +99,24 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       end if
    end if
    
+   -- Make sure all dependencies are included
+   revSBUpdateForDependencies pSettings
+   
+   -- Manually remove built-in implementations from detected script library inclusions
+   revSBRemoveInclusions pStack, "ios", tConfirm, pSettings
+   
+   -- Manually include the common library
+   revSBAddInclusion "Common", "scriptLibraries", pSettings
+   
+   -- Include profile library if needed
+   if pSettings["includeProfiles"] is not empty then 
+      revSBAddInclusion "Profiles", "scriptLibraries", pSettings
+   end if
+   
+   -- Make sure old-style keys are retained, and updated with new information
+   -- from inclusions pane of standalone settings GUI
+   revSBConvertSettingsForPlatform pSettings, "ios"
+   
    -- Get the development root for device builds
    -- MM-2012-09-18: Rejiged the SDKs we use.  Things are now split up into sim, armv7, armv7, 
    -- since we now potentially need to use different SDKs for each.
