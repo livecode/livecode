@@ -17,7 +17,7 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-set the stackFiles of this stack to "My Dialog,Custom Dialogs.rev"
+set the stackFiles of this stack to "My Dialog,Custom Dialogs.livecode"
 
 Value:
 The <stackFiles> of a <stack> is a list of stack references, one per
@@ -47,31 +47,30 @@ For example, if your stack contains a statement like this, the stack
 "Customers" must either be loaded into memory, or be listed in the
 <stackFiles>, in order for LiveCode to know where it is:
 
-```get the width of field "Text" of card "Data" of stack "Customers"```
+    get the width of field "Text" of card "Data" of stack "Customers" 
 
 
 In this example, if the "Customers" stack is not open and isn't in the
 <stackFiles>, the <statement> must refer to it by its full <long>
 <name>, including its <file path>:
 
-``` get the width of field "Text" of card "Data" of stack "Customers" \
-
-    of stack "/Volumes/Data/Business.rev" ```
+    get the width of field "Text" of card "Data" of stack "Customers" \
+       of stack "/Volumes/Data/Business.livecode" 
 
 
 Using the <stackFiles> lets you simply specify the <stack|stack's> name,
 instead of including its <file path> everywhere you refer to an
 <object(glossary)> in the <stack>.
 
-The <stackFiles> of a <main stack> is inherited by its <substacks> : if
+The <stackFiles> of a <main stack> is inherited by its <substacks>: if
 a <handler> in a <substack> refers to a <stack> that's not
 <load|loaded>, LiveCode checks the <stackFiles> of both the <substack>
 and its <main stack>.
 
 >*Important:*  <relative file path|Relative file paths> in the
 > <stackFiles> start from the <folder> that the <stack> is in, rather
-> than starting from the <defaultFolder> as with other <relative file
-> path|relative paths> in <LiveCode>.
+> than starting from the <defaultFolder> as with other 
+> <relative file path|relative paths> in <LiveCode>.
 
 Placing a stack in the <stackFiles> lets <handler|handlers> in your
 <stack> refer to <object|objects> in the referenced <stack>, but does
@@ -81,16 +80,17 @@ To use a <stack> as a <library>, allowing your <handler|handlers> to
 call the <stack|stack's> <handler|handlers>, use the <start using> or
 <insert script> <command>.
 
-References: stacks (function), mainStacks (function), object (glossary),
-substack (glossary), start using (glossary), call (glossary),
-property (glossary), loaded into memory (glossary), load (glossary),
-file path (glossary), command (glossary), statement (glossary),
-LiveCode (glossary), main stack (glossary), relative file path (glossary),
-folder (glossary), script (glossary), handler (glossary), long (keyword),
-line (keyword), insert script (library), library (library),
-stack (object), substacks (property), properties (property),
-mainStack (property), defaultFolder (property), name (property),
-filename of stack (property)
+References: call (glossary), command (glossary), 
+defaultFolder (property), file path (glossary), 
+filename of stack (property), folder (glossary), handler (glossary), 
+insert script (command), library (library), line (keyword), 
+LiveCode (glossary), load (glossary), loaded into memory (glossary), 
+long (keyword), main stack (glossary), mainStack (property), 
+mainStacks (function), name (property), object (glossary), 
+properties (property), property (glossary), 
+relative file path (glossary), script (glossary), stack (object), 
+stacks (function), start using (command), statement (glossary), 
+substack (glossary), substacks (property)
 
 Tags: file system
 

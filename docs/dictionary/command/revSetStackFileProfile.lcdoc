@@ -8,11 +8,13 @@ Summary:
 Changes the current <property profile|profile> used for all <stacks> in
 a <stack file> and all their <object|objects>.
 
+Associations: profile library
+
 Introduced: 2.0
 
-OS: mac, windows, linux
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop, server
+Platforms: desktop, server, mobile
 
 Example:
 revSetStackFileProfile "Brights"
@@ -53,10 +55,10 @@ specified <profileName>, the <object|object's> <properties> are not
 changed. 
 
 >*Important:*  The <revSetStackFileProfile> <command> is part of the
-> <Profile library>. To ensure that the <command> works in a <standalone
-> application>, in the Profiles section on the General screen of the
-> <Standalone Application Settings> window, make sure you choose to
-> include profiles in your application.
+> <Profile library>. To ensure that the <command> works in a 
+> <standalone application>, in the Profiles section on the General 
+> screen of the <Standalone Application Settings> window, make sure you
+> choose to include profiles in your application.
 
 References: revSetCardProfile (command), revSetStackProfile (command),
 stacks (function), object (glossary), property (glossary),
