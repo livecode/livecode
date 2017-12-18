@@ -11,6 +11,8 @@ constant kStartupFolder = "/boot/standalone"
 constant kStartupStackFile = "/boot/standalone/__boot.livecode"
 -- Directory containing auxiliary stack files
 constant kAuxStackFolder = "/boot/auxiliary_stackfiles"
+-- Auxiliary stack file list
+constant kAuxStackFileList = "/boot/auxiliary_stackfiles/auxiliary_stackfiles.txt"
 -- Directory containing extensions
 constant kExtensionFolder = "/boot/extensions"
 -- Extension list file
@@ -19,7 +21,7 @@ constant kExtensionListFile = "/boot/extensions/extensions.txt"
 on startup
    local tError, tFolder, tFile, tByteString, tByte
    local tStackName, tStackData, tStackHashString
-   local tModuleList, tModuleName
+   local tModuleList, tModuleName, tAuxiliaryList
    try
       ----------------------------------------------------------------
       -- Create standard filesystem layout
@@ -68,15 +70,17 @@ on startup
         throw  "Boot stack hash mismatch - standalone is corrupted"
       end if
       
-      -------------------------------------------------------------
-      -- Load auxiliary stack files and run their load handlers
-      if there is a directory kAuxStackFolder then
-         set the defaultfolder to kAuxStackFolder
+      if there is a file kAuxStackFileList then
          
-         repeat for each line tFile in the files
+         -- Read list of extensions
+         open file kAuxStackFileList for "UTF-8" text read
+         read from file kAuxStackFileList until end
+         put it into tAuxiliaryList
+         close file kAuxStackFileList
+         repeat for each line tFile in tAuxiliaryList
             
             -- This should autoload the file
-            put the name of stack tFile into tStackName
+            put the name of stack (kAuxStackFolder & "/" & tFile) into tStackName
             
             -- The revLoadLibrary handler should insert the stack into
             -- the backscripts or frontscripts as necessary.

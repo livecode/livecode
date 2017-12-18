@@ -51,12 +51,12 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
    put pSettings["files"] into tFiles
    put pSettings["auxiliary_stackfiles"] into tAuxStackFiles
    put pSettings["extensions"] into tExtensions
-
+   
    -- If the datagrid is used, then include the library as an aux stack
    if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      put the effective filename of stack "revDataGridLibrary" & return after tAuxStackFiles
+      revSBAddDataGridToAuxiliaryStackFiles tAuxStackFiles
    end if
-
+   
    local tError
    try
       ---------- Check deployment entitlement
@@ -472,7 +472,8 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
    local tStackData
    
    put the long id of stack pStackFile into tStack
-   
+   local tName
+   put the short name of stack pStackFile into tName
    try
       if revIDEStackNameIsIDEStack(the name of tStack) then
          -- Don't manipulate IDE stacks if for some reason someone
@@ -500,7 +501,6 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
          end if
          
          -- Save the modified stack to the temporary file
-         lock messages
          lock screen
          
          save tStack as tTempFile with newest format
@@ -508,14 +508,15 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
          if tResult is not empty then
             throw tTempFile & ":" && tResult
          end if
-         set the filename of tStack to pStackFile
+         
+         set the filename of stack tName to pStackFile
          
          -- Revert to unmodified state
-         revert tStack
-         set the defaultStack to the short name of tStack
+         
+         revert stack tName
+         set the defaultStack to tName
          
          unlock screen
-         unlock messages
          
       end if
       

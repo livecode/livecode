@@ -111,14 +111,6 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    -- Manually remove built-in implementations from detected script library inclusions
    revSBRemoveInclusions pStack, "android", tConfirm, pSettings
    
-   -- Manually include the common library
-   revSBAddInclusion "Common", "scriptLibraries", pSettings
-   
-   -- Include profile library if needed
-   if pSettings["includeProfiles"] is not empty then 
-      revSBAddInclusion "Profiles", "scriptLibraries", pSettings
-   end if
-   
    -- Make sure old-style keys are retained, and updated with new information
    -- from inclusions pane of standalone settings GUI
    revSBConvertSettingsForPlatform pSettings, "android"
