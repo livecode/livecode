@@ -2802,9 +2802,9 @@ MCExternalError MCExternalLicenseCheckEdition(unsigned int p_options, unsigned i
         return kMCExternalErrorFailed;
     }
     
-    MCAutoValueRef t_value;
+    MCValueRef t_value;
     if (MClicenseparameters . addons != nil &&
-        MCArrayFetchValue(MClicenseparameters . addons, false, *t_key_as_nameref, &t_value))
+        MCArrayFetchValue(MClicenseparameters . addons, false, *t_key_as_nameref, t_value))
     {
         return kMCExternalErrorNone;
     }

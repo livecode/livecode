@@ -976,7 +976,7 @@ MCEngineEvalMyResourcesFolder(MCStringRef& r_folder)
         return;
     }
 }
-    
+
 ////////////////////////////////////////////////////////////////////////////////
     
 static bool

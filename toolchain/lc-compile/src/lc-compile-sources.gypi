@@ -10,6 +10,7 @@
 		'all_syntax_files':
 		[
 			'<@(engine_syntax_lcb_files)',
+            '<@(engine_syntax_only_lcb_files)',
 			'<@(stdscript_syntax_lcb_files)',
 		],
 		
