@@ -67,7 +67,7 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
    local tDeploy
    -- Update the deploy params with script library and extension inclusions
    revSBUpdateDeployParams pStack, "emscripten", pSettings, tDeploy
-   
+
    local tError
    try
       ---------- Check deployment entitlement
@@ -486,7 +486,8 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
    local tStackData
    
    put the long id of stack pStackFile into tStack
-   
+   local tName
+   put the short name of stack pStackFile into tName
    try
       if revIDEStackNameIsIDEStack(the name of tStack) then
          -- Don't manipulate IDE stacks if for some reason someone
@@ -514,7 +515,6 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
          end if
          
          -- Save the modified stack to the temporary file
-         lock messages
          lock screen
          
          save tStack as tTempFile with newest format
@@ -522,14 +522,15 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
          if tResult is not empty then
             throw tTempFile & ":" && tResult
          end if
-         set the filename of tStack to pStackFile
+         
+         set the filename of stack tName to pStackFile
          
          -- Revert to unmodified state
-         revert tStack
-         set the defaultStack to the short name of tStack
+         
+         revert stack tName
+         set the defaultStack to tName
          
          unlock screen
-         unlock messages
          
       end if
       
