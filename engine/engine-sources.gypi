@@ -993,6 +993,13 @@
 			'src/engine.lcb',
 			'src/widget.lcb',
 		],
+        
+        # Engine LCB files containing syntax which don't require compiling into
+        # the engine.
+        'engine_syntax_only_lcb_files':
+        [
+            'src/license.lcb',
+        ],
 		
 		# Other engine LCB files
 		'engine_other_lcb_files':

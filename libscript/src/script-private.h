@@ -493,7 +493,9 @@ struct MCScriptModule: public MCScriptObject
     bool is_usable : 1;
     // During the check for usability, this var is true - not pickled
     bool is_in_usable_check : 1;
-    
+    // The module is licensed for use - not pickled
+    bool licensed : 1;
+
     // (computed) The number of slots needed by an instance - not pickled
     uindex_t slot_count;
     

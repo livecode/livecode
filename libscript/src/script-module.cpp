@@ -427,6 +427,9 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
     if (!MCScriptCreateObject(kMCScriptObjectKindModule, t_module))
         return false;
     
+    // initialize licensed state
+    t_module->licensed = true;
+    
     // If the unpickling fails, there's nothing we can do.
     if (!MCPickleRead(stream, kMCScriptModulePickleInfo, t_module))
     {
@@ -550,6 +553,18 @@ bool MCScriptIsModuleALibrary(MCScriptModuleRef self)
 bool MCScriptIsModuleAWidget(MCScriptModuleRef self)
 {
     return self -> module_kind == kMCScriptModuleKindWidget;
+}
+
+void
+MCScriptSetModuleLicensed(MCScriptModuleRef self, bool p_licensed)
+{
+    self->licensed = p_licensed;
+}
+
+bool
+MCScriptIsModuleLicensed(MCScriptModuleRef self)
+{
+    return self->licensed;
 }
 
 bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)

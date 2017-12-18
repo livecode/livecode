@@ -225,6 +225,9 @@ __MCScriptCallHandlerDefinitionInInstance(MCScriptInstanceRef self,
 										  uindex_t p_argument_count,
 										  MCValueRef* r_value)
 {
+    if (!self->module->licensed)
+        return MCErrorThrowGeneric(MCSTR("extension not licensed"));
+    
     void *t_cookie = nullptr;
     
     if (self->module->module_kind == kMCScriptModuleKindWidget)
