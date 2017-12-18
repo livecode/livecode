@@ -972,6 +972,11 @@ IO_stat MCDispatch::startup(void)
 	
 	// Now open the main stack.
 	t_mainstack-> extraopen(false);
+    
+    // Resolve parent scripts *after* we've loaded aux stacks.
+    if (t_mainstack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
+        t_mainstack -> resolveparentscripts();
+    
 	send_startup_message();
 	if (!MCquit)
 		t_mainstack -> open();

@@ -11,7 +11,7 @@ constant kStartupFolder = "/boot/standalone"
 constant kStartupStackFile = "/boot/standalone/__boot.livecode"
 -- Directory containing auxiliary stack files
 constant kAuxStackFolder = "/boot/auxiliary_stackfiles"
--- Extension list file
+-- Auxiliary stack file list
 constant kAuxStackListFile = "/boot/auxiliary_stackfiles/auxiliary_stackfiles.txt"
 -- Directory containing extensions
 constant kExtensionFolder = "/boot/extensions"
@@ -21,7 +21,7 @@ constant kExtensionListFile = "/boot/extensions/extensions.txt"
 on startup
    local tError, tFolder, tFile, tByteString, tByte
    local tStackName, tStackData, tStackHashString
-   local tModuleList, tModuleName
+   local tModuleList, tModuleName, tAuxiliaryList
    try
       ----------------------------------------------------------------
       -- Create standard filesystem layout

@@ -2083,6 +2083,12 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    # AL-2015-02-04: [[ Standalone Resources ]] Add (universal) external names to the deploy parameters
    put pStandaloneSettings["externals"] into tExternals
    
+   revSBAddInclusion "Common", "scriptLibraries", pStandaloneSettings
+   
+   if pStandaloneSettings["includeProfiles"] is not empty then 
+      revSBAddInclusion "Profiles", "scriptLibraries", pStandaloneSettings
+   end if
+   
    -- auxiliary_stackfiles key might not be empty
    put pStandaloneSettings["auxiliary_stackfiles"] into tAuxiliaryStackfiles
    
@@ -2161,13 +2167,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    
    -- If the datagrid is used, then include the library as an aux stack
    if tIncludeDataGrid or "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      local tStackFiles
-      put the stackFiles of stack "revDataGridLibrary" into tStackFiles
-      split tStackFiles by return and comma
-      repeat for each key tStack in tStackFiles
-         appendToStringList the effective filename of  stack tStack, tAuxiliaryStackFiles
-      end repeat
-      appendToStringList the effective filename of stack "revDataGridLibrary", tAuxiliaryStackFiles
+      revSBAddDataGridToAuxiliaryStackFiles tAuxiliaryStackFiles
    end if
    
    put tAuxiliaryStackFiles into xDeployParams["auxiliary_stackfiles"]
@@ -2176,6 +2176,16 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    put tExternals into xDeployParams["externals"]
    put tLibraryMapping into xDeployParams["library"]
 end revSBUpdateDeployParams
+
+command revSBAddDataGridToAuxiliaryStackFiles @xAuxiliaryStackFiles
+   local tStackFiles
+   put the stackFiles of stack "revDataGridLibrary" into tStackFiles
+   split tStackFiles by return and comma
+   repeat for each key tStack in tStackFiles
+      appendToStringList the effective filename of stack tStack, xAuxiliaryStackFiles
+   end repeat
+   appendToStringList the effective filename of stack "revDataGridLibrary", xAuxiliaryStackFiles
+end revSBAddDataGridToAuxiliaryStackFiles
 
 local sBuiltInInclusions
 

@@ -522,16 +522,10 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
     // crash when searching substacks.
     stacks = t_stack;
     
-#ifndef _MOBILE
-	// Make sure parent script references are up to date.
-	if (s_loaded_parent_script_reference)
-		t_stack -> resolveparentscripts();
-#else
 	// Mark the stack as needed parentscript resolution. This is done after
 	// aux stacks have been loaded.
 	if (s_loaded_parent_script_reference)
 		t_stack -> setextendedstate(True, ECS_USES_PARENTSCRIPTS);
-#endif
     
     r_stack = t_stack;
 	return IO_NORMAL;
