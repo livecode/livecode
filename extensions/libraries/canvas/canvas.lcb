@@ -129,4 +129,19 @@ public handler canvasApplyToImage(in pObjectId as String) returns nothing
   set property "imageData" of tObject to the pixel data of sCanvas
 end handler
 
+/*
+Summary: Returns the bounding box of an SVG path.
+pPath: The SVG Path string to process
+Description:
+Parses the SVG path string and computes the tight bounding box.
+*/
+public handler canvasComputeBoundingBoxOfPath(in pPathString as String) returns Array
+  variable tPath as Path
+  put path pPathString into tPath
+
+  variable tBBox as Rectangle
+  put the bounding box of tPath into tBBox
+  return { "left": the left of tBBox, "top": the top of tBBox, "right": the right of tBBox, "bottom": the bottom of tBBox }
+end handler
+
 end library

@@ -1589,6 +1589,12 @@ void MCGContextSetFillOpacity(MCGContextRef self, MCGFloat p_opacity)
 	self -> state -> fill_opacity = MCClamp(p_opacity, 0.0f, 1.0f);
 }
 
+void MCGContextSetFillPaint(MCGContextRef self, MCGPaintRef p_paint)
+{
+    MCGRetain(p_paint);
+    MCGContextSetPaintAndRelease(self, p_paint, self->state->fill_paint);
+}
+
 void MCGContextSetFillNone(MCGContextRef self)
 {
     MCGContextSetNonePaint(self, self->state->fill_paint);
@@ -1626,6 +1632,12 @@ void MCGContextSetStrokeOpacity(MCGContextRef self, MCGFloat p_opacity)
 		return;
 	
 	self -> state -> stroke_opacity = MCClamp(p_opacity, 0.0f, 1.0f);
+}
+
+void MCGContextSetStrokePaint(MCGContextRef self, MCGPaintRef p_paint)
+{
+    MCGRetain(p_paint);
+    MCGContextSetPaintAndRelease(self, p_paint, self->state->stroke_paint);
 }
 
 void MCGContextSetStrokeNone(MCGContextRef self)
