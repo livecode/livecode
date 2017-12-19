@@ -1,8 +1,4 @@
-extern "C"
+unsigned char MCstartupstack[] = 
 {
-
-char *MCstartupstack;
-unsigned int MCstartupstack_length;
-
-}
-
+};
+unsigned int MCstartupstack_length = 0;
