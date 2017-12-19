@@ -58,12 +58,14 @@ all: all-$(guess_platform)
 check: check-$(guess_platform)
 
 # [[ MDW-2017-05-09 ]] feature_clean_target
+# [[ MDW-2017-12-18 ]] feature_clean_doc_data
 clean-linux:
 	rm -rf linux-*-bin
 	rm -rf build-linux-*
 	rm -rf prebuilt/fetched
 	rm -rf prebuilt/include
 	rm -rf prebuilt/lib
+	rm -rf ide/Documentation/html_viewer/resources/data
 	find . -name \*.lcb | xargs touch
 
 check-common-%:
@@ -102,7 +104,7 @@ endif
 ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:end:config"
 endif
-	
+
 compile-linux-%:
 ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:start:compile"
@@ -112,7 +114,7 @@ endif
 ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:end:compile"
 endif
-	
+
 check-linux-%:
 ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:start:testcpp"
@@ -164,7 +166,7 @@ endif
 ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:end:config"
 endif
-	
+
 compile-mac:
 ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:start:compile"
@@ -175,7 +177,7 @@ endif
 ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:end:compile"
 endif
-	  
+
 check-mac:
 ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:start:testcpp"
