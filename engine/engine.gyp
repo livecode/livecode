@@ -803,48 +803,6 @@
 			}
 		],
 		[
-			'OS == "ios"',
-			{
-				'targets':
-				[
-					{
-						'target_name': 'standalone-app-bundle',
-						'product_name': 'Standalone-Community-App',
-			
-						'includes':
-						[
-							'app-bundle-template.gypi',
-						],
-			
-						'variables':
-						{
-							'app_plist': 'rsrc/standalone-mobile-Info.plist',
-						},
-			
-						'dependencies':
-						[
-							'kernel-standalone.gyp:kernel-standalone',
-							'engine-common.gyp:security-community',
-							'lcb-modules.gyp:engine-lcb-modules',
-						],
-			
-						'sources':
-						[
-							'src/dummy.cpp',
-							'src/main.cpp',
-							'>@(builtin_lcb_modules)',
-						],
-
-						'include_dirs':
-						[
-							'../libfoundation/include',
-						],
-
-					},
-				],
-			},
-		],
-		[
 			'OS == "emscripten"',
 			{
 				'targets':

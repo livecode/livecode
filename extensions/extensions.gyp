@@ -100,7 +100,7 @@
 					'conditions':
 					[
 						[
-							'OS != "mac"',
+							'OS != "mac" and OS != "ios"',
 							{
 								'outputs':
 								[

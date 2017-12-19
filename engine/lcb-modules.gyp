@@ -11,7 +11,7 @@
 		{
 			'target_name': 'engine_lcb_modules',
 			'type': 'none',
-			
+
 			'dependencies':
 			[
 				'../toolchain/lc-compile/lc-compile.gyp:lc-compile#host',
@@ -52,7 +52,7 @@
 					'conditions':
 					[
 						[
-							'OS != "mac"',
+							'OS != "mac" and OS != "ios"',
 							{
 								'outputs':
 								[
