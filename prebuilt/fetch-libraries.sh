@@ -58,15 +58,7 @@ function fetchLibrary {
 	# We now use standard GNU triple ordering for the naming of windows prebuilts
 	local NAME=""
 	if [ "${PLATFORM}" = "win32" ]; then
-		if [ "${LIB}" = "CEF" ]; then
-			if [ "${ARCH}" = "x86" ]; then
-				NAME="CEF-${VERSION}-win32-i386"
-			elif [ "${ARCH}" = "x86_64" ]; then
-				NAME="CEF-${VERSION}-win32-x86_64"
-			fi
-		else
-			NAME="${LIB}-${VERSION}-${ARCH}-${PLATFORM}-${SUBPLATFORM}"
-		fi
+		NAME="${LIB}-${VERSION}-${ARCH}-${PLATFORM}-${SUBPLATFORM}"
 	else
 		NAME="${LIB}-${VERSION}-${PLATFORM}-${ARCH}"
 		if [ ! -z "${SUBPLATFORM}" ] ; then
@@ -104,12 +96,8 @@ function fetchLibrary {
 		echo "Extracting library: ${NAME}"
 		DIR="`pwd`"
 		if [ "${PLATFORM}" = "win32" ]; then
-			if [ "${LIB}" = "CEF" ]; then
-				cd "${EXTRACT_DIR}"
-			else
-				mkdir -p "${WIN32_EXTRACT_DIR}/${LIB}"
-				cd "${WIN32_EXTRACT_DIR}/${LIB}"
-			fi
+			mkdir -p "${WIN32_EXTRACT_DIR}/${LIB}"
+			cd "${WIN32_EXTRACT_DIR}/${LIB}"
 		else
 			cd "${EXTRACT_DIR}"
 		fi

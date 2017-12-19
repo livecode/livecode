@@ -88,8 +88,6 @@ static const char *s_auth_scheme_strings[] =
 
 bool MCCefAuthSchemeFromCefString(const CefString &p_string, MCCefAuthScheme &r_scheme)
 {
-	const char **t_strings;
-	t_strings = s_auth_scheme_strings;
 	
 	for (uint32_t i = 0; s_auth_scheme_strings[i] != nil; i++)
 	{
@@ -418,6 +416,15 @@ public:
 					MCCStringFree(t_tmp);
 			}
 			break;
+			case VTYPE_NULL:
+			case VTYPE_BOOL:
+			case VTYPE_DOUBLE:
+			case VTYPE_BINARY:
+			case VTYPE_STRING:
+			case VTYPE_DICTIONARY:
+			case VTYPE_LIST:
+			case VTYPE_INVALID:
+				break;
 		}
 
 		return t_converted;
@@ -814,7 +821,7 @@ public:
 	// CefLoadHandler interface
 	// Methods called on UI thread or render process main thread
 
-	virtual void OnLoadStart(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame) OVERRIDE
+	virtual void OnLoadStart(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, cef_transition_type_t p_transition_type) OVERRIDE
 	{
 		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
 		if (nil == m_owner)
@@ -1580,9 +1587,6 @@ char *MCCefBrowserBase::ExecuteScript(const char *p_javascript_string)
 {
 	bool t_success;
 	t_success = true;
-
-	const MCCefMessageResult *t_result;
-	t_result = nil;
 
 	CefString t_script;
 	t_success = MCCefStringFromUtf8String(p_javascript_string, t_script);
