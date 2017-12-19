@@ -97,7 +97,10 @@ bool MCCefLinuxBrowser::PlatformGetNativeLayer(void *&r_layer)
 
 void MCCefLinuxBrowser::PlatformConfigureWindow(CefWindowInfo &r_info)
 {
-	r_info.SetAsChild(m_parent_window, CefRect(0,0,1,1));
+	// Let CEF use DefaultRootWindow as the parent window so
+	// it is created with a visual it supports otherwise the content
+	// views will not be create causing a crash
+	//r_info.SetAsChild(m_parent_window, CefRect(0,0,1,1));
 }
 
 bool MCCefLinuxBrowser::PlatformGetRect(MCBrowserRect &r_rect)
