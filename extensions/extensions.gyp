@@ -40,23 +40,24 @@
 				'cross-platform-extension-dependencies',
 			],
 			
-			'all_dependent_settings':
-			{
-				'variables':
-				{
-					'dist_aux_files':
-					[
-						# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
-						'<(PRODUCT_DIR)/packaged_extensions/',
-					],
-				},
-			},
 			
 			'conditions':
 			[
 			    [
                     'mobile == 0',
                     {
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files':
+								[
+									# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
+									'<(PRODUCT_DIR)/packaged_extensions/',
+								],
+							},
+						},
+
                         'dependencies':
                         [
 							'lcs-extensions',
@@ -96,9 +97,22 @@
 					'extension': 'livecodescript',
 					'message': 'Building script extension <(RULE_INPUT_NAME)',
 										
+					'conditions':
+					[
+						[
+							'OS != "mac"',
+							{
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/packaged_extensions/',
+								],
+							},
+						],
+					],
+
 					'outputs':
 					[
-						'<(PRODUCT_DIR)/packaged_extensions/com.livecode.library.<(RULE_INPUT_ROOT)/<(RULE_INPUT_ROOT).livecodescript',
+						'<(PRODUCT_DIR)/packaged_extensions/com.livecode.library.<(RULE_INPUT_ROOT)/<(RULE_INPUT_ROOT).livecodescript',	
 					],
 					          
 					'action':

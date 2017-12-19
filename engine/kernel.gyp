@@ -14,9 +14,9 @@
 			'dependencies':
 			[
 				'../libfoundation/libfoundation.gyp:libFoundation',
-				#'../libexternal/libexternal.gyp:libExternal',
 				'../libgraphics/libgraphics.gyp:libGraphics',
 				'../libscript/libscript.gyp:libScript',
+				'../libscript/libscript.gyp:stdscript',
 				
 				'../libbrowser/libbrowser.gyp:libbrowser',
 
@@ -31,8 +31,6 @@
 
 				'engine-common.gyp:encode_version',
 				'engine-common.gyp:quicktime_stubs',
-				
-				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'include_dirs':
