@@ -53,9 +53,8 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
       
       put the number of elements of tComponents + 1 into tIndex
       put builderRepoFolder() & "/docs/lcb" into tComponents[tIndex]["folder"]
-      put "engine" into tComponents[tIndex]["metadata"]["category"]
-      put "community" into tComponents[tIndex]["metadata"]["edition"]
-      put "LiveCode Builder changes" into tComponents[tIndex]["metadata"]["section"]
+      put "builder" into tComponents[tIndex]["metadata"]["category"]
+      put "" into tComponents[tIndex]["metadata"]["edition"]
       
       local tPath, tTypePath
       local tReposA, tEdition
@@ -123,6 +122,27 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
    end try
 end releaseNotesBuilderRun
 
+private command ComponentsCreateForEdition pEdition, pCollated, pBugInfo
+   local tDisplayName
+   if pEdition is not empty then
+      put editionDisplayName(pEdition) into tDisplayName
+   end if
+   repeat for each item tCategory in builderComponentCategories()
+      local tTitle
+      if tDisplayName is not empty then
+         put merge("# LiveCode [[ tDisplayName ]] [[ tCategory ]] changes") into tTitle
+      else
+         put merge("# LiveCode [[ tCategory ]] changes") into tTitle
+      end if
+      if NotesHaveContent(pCollated[pEdition][tCategory], pBugInfo[pEdition][tCategory]) then
+         MarkdownAppend "notes", tTitle
+         MarkdownAppend "updates", tTitle
+         		
+         NotesGenerate tCategory, pCollated[pEdition][tCategory], 1
+         BugGenerate pBugInfo[pEdition][tCategory], tCategory
+      end if
+   end repeat
+end ComponentsCreateForEdition
 
 private command ComponentsCreate pComponents
    BuilderLog "report", "Creating component release notes"
@@ -133,19 +153,9 @@ private command ComponentsCreate pComponents
    end repeat
    
    repeat for each item tEdition in editionNames()
-      local tDisplayName
-      put editionDisplayName(tEdition) into tDisplayName
-      repeat for each item tCategory in builderComponentCategories()
-         if NotesHaveContent(tCollated[tEdition][tCategory], tBugInfo[tEdition][tCategory]) then
-            MarkdownAppend "notes", merge("# LiveCode [[ tDisplayName ]] [[ tCategory ]] changes")
-            MarkdownAppend "updates", merge("# LiveCode [[ tDisplayName ]] [[ tCategory ]] changes")
-            
-            NotesGenerate tCategory, tCollated[tEdition][tCategory], 1
-            BugGenerate tBugInfo[tEdition][tCategory], tCategory
-         end if
-      end repeat
+      ComponentsCreateForEdition tEdition, tCollated, tBugInfo
    end repeat
-   
+   ComponentsCreateForEdition "", tCollated, tBugInfo
 end ComponentsCreate
 
 private command ComponentsCreatePath pComponent, @xCollated, @xBugInfo
