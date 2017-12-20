@@ -12,8 +12,7 @@ private command Initialize pVersion, pOutputPath
       throw "Release notes output path must be specified"
       exit Initialize
    end if
-   
-   start using stack (builderSystemFolder() & slash & "markdown_compiler.livecodescript")
+
    start using stack (builderSystemFolder() & slash & "edition_utilities.livecodescript")
    set the defaultfolder to builderRepoFolder()
    set the hideconsolewindows to true
@@ -24,7 +23,7 @@ private command Initialize pVersion, pOutputPath
 end Initialize
 
 private command Finalize
-   stop using stack (builderSystemFolder() & slash & "markdown_compiler.livecodescript")
+
 end Finalize
 
 command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
@@ -340,9 +339,49 @@ private command OutputUpdatesMarkdown
    builderFileSetUTF8Contents tPath, sMarkdownText["updates"] 
 end OutputUpdatesMarkdown
 
-private command OutputUpdatesHtml
-   local tHtml, tToc
-   put markdownToHtml(sMarkdownText["updates"], 3, 0, tToc, true) into tHtml
+private command EnsureMergMarkdown
+   builderExtUnpack "Community"
+   local tMergMarkdown
+   put builderUnpackFolder("Community") & slash & "Ext" into tMergMarkdown
+   local tFolders
+   put folders(tMergMarkdown) into tFolders
+   filter tFolders with "mergMarkdown*"
+   if tFolders is empty then
+      builderLog "error", "couldn't download mergMarkdown"
+   end if
+   put slash & line 1 of tFolders & slash & "mergMarkdown" after tMergMarkdown
+   
+   switch the platform
+      case "macos"
+         put ".bundle" after tMergMarkdown
+         break
+      case "linux"
+         if the processor is "x86_64" then
+            put "-x64.so" after tMergMarkdown
+         else
+            put ".so" after tMergMarkdown
+         end if
+         break
+      case "win32"
+         if the processor is "x86_64" then
+            put "-x86_64.dll" after tMergMarkdown
+         else
+            put "-x86.dll" after tMergMarkdown
+         end if
+         break
+   end switch
+   set the externals of the templatestack to tMergMarkdown
+   lock messages
+   create stack
+   unlock messages
+   start using it
+end EnsureMergMarkdown
+
+command OutputUpdatesHtml
+   local tHtml
+   EnsureMergMarkdown
+   put mergMarkdownToXHTML(sMarkdownText["updates"] \
+         ,true,true,true,true,false,true,true,true) into tHtml
    
    local tPath
    put OutputGetUpdatesFilename("html") into tPath
