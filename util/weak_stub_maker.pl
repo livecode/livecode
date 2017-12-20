@@ -87,6 +87,14 @@ output "typedef void *module_t;";
 output "typedef void *handler_t;";
 output ;
 
+output "#ifdef _DEBUG";
+output "#include <stdint.h>";
+output "extern void __MCLog(const char *file, uint32_t line, const char *format, ...);";
+output "#define MCLog(...) __MCLog(__FILE__, __LINE__, __VA_ARGS__)";
+output "#else";
+output "#define MCLog(...) (void) (__VA_ARGS__)";
+output "#endif";
+
 
 # MCSupportLibraryLoad and friends have engine dependency - for example 
 # when weak linking to the crypto library we rely on revsecurity living 
@@ -201,7 +209,7 @@ output "  char* command = new char[65536];";
 output ;
 output "  snprintf(error, 65536, \"Failed to load library \\\'%s\\\' (tried %s)\", libname, liblist);";
 output "  snprintf(command, 65536, \"TITLE=\\\"LiveCode startup error\\\" TEXT=\\\"%s\\\" /bin/sh -c \\\'%s\\\' &\", error, dialog);";
-output "  fprintf(stderr, \"Fatal: failed to load library \\\'%s\\\' (tried %s)\\n\", libname, liblist);";
+output "  MCLog( \"Fatal: failed to load library \\\'%s\\\' (tried %s)\\n\", libname, liblist);";
 output "  int ignored = system(command); (void)ignored;";
 output "  exit(-1);";
 output "}";
@@ -286,7 +294,7 @@ sub generateModule
     output "  if (!module_load(p_path, &module_$module))";
     output "  {";
     output "  #ifdef _DEBUG";
-    output "    fprintf(stderr, \"Unable to load library: %s\\n\", p_path);";
+    output "    MCLog( \"Unable to load library: %s\\n\", p_path);";
     output "  #endif";
     output "    goto err;";
     output "  }";
@@ -302,7 +310,7 @@ sub generateModule
 	       	output "  if (!module_resolve(module_$module, SYMBOL_PREFIX \"" . symbolName($symbol) . "\", (handler_t *)&" . symbolName($symbol) . "_ptr))";
 		   	output "{";
 	        output "#ifdef _DEBUG";
-	        output "fprintf(stderr, \"Unable to load: " . symbolName($symbol) . "\\n\");";
+	        output "MCLog( \"Unable to load: " . symbolName($symbol) . "\\n\");";
 	        output "#endif";
 	        output "goto err; ";
 	        output "}";
@@ -337,7 +345,7 @@ sub generateModule
 	
     output "{";
     output "#ifdef _DEBUG";
-    output "    fprintf(stderr, \"Warning: could not load library: $unixLibrary\\n\");";
+    output "    MCLog( \"Warning: could not load library: $unixLibrary\\n\");";
     output "#endif";
     output "return 0;";
     output "}";
