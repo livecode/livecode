@@ -1,3 +1,6 @@
+---
+version: 9.0.0-dp-6
+---
 # LiveCode Builder Language
 
 ## Foreign bindings to Java
