@@ -1,8 +1,5 @@
-extern "C"
-{
 
-char *MCstartupstack;
-unsigned int MCstartupstack_length;
+unsigned char MCstartupstack[] = { '\0' };
+unsigned int MCstartupstack_length = 0;
 
-}
 

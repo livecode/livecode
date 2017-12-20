@@ -37,8 +37,8 @@ bool MCCefV8ValueConvertToString(CefRefPtr<CefV8Context> p_context, CefRefPtr<Ce
 	
 	CefRefPtr<CefV8Value> t_string_func;
 	if (t_success)
-		t_success = p_context->Eval("String", t_string_func, t_exception);
-	
+		t_success = p_context->Eval("String", "", 1, t_string_func, t_exception);
+
 	CefRefPtr<CefV8Value> t_string_value;
 	if (t_success)
 	{
@@ -73,8 +73,8 @@ bool MCCefHandleExecuteScript(CefRefPtr<CefBrowser> p_browser, const CefString &
 	t_success = t_context != NULL;
 	
 	if (t_success)
-		t_success = t_context->Eval(p_script, t_return_value, t_exception);
-	
+		t_success = t_context->Eval(p_script, "", 1, t_return_value, t_exception);
+
 	if (t_success)
 		r_return_value = t_return_value;
 	
@@ -128,6 +128,9 @@ bool MCCefListToV8List(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefListValue
 			case VTYPE_DICTIONARY:
 			case VTYPE_LIST:
 				/* TODO - IMPLEMENT */
+				t_success = false;
+				break;
+			case VTYPE_INVALID:
 				t_success = false;
 		}
 		
@@ -226,10 +229,7 @@ bool MCCefV8ObjectToDictionary(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefV
 	{
 		CefRefPtr<CefV8Value> t_val;
 		t_val = p_obj->GetValue(*i);
-		
-		uint32_t t_index;
-		t_index = i - t_keys.begin();
-		
+
 		if (t_val->IsBool())
 			t_success = t_dict->SetBool(*i, t_val->GetBoolValue());
 		else if (t_val->IsInt())
@@ -352,8 +352,8 @@ bool MCCefHandleCallScript(CefRefPtr<CefBrowser> p_browser, const CefString &p_f
 	t_success = t_context != NULL;
 	
 	if (t_success)
-		t_success = t_context->Eval(p_function_name, t_function, t_exception);
-	
+		t_success = t_context->Eval(p_function_name, "", 1, t_function, t_exception);
+
 	if (t_success)
 		t_success = MCCefListToV8List(t_context, p_args, t_args);
 	
@@ -697,7 +697,7 @@ private:
 			}
 			else
 			{
-				t_obj = CefV8Value::CreateObject(nil);
+				t_obj = CefV8Value::CreateObject(nullptr, nullptr);
 				t_success = t_obj != nil;
 				
 				if (t_success)

@@ -114,8 +114,8 @@ function doPackage {
 	fi
 
 	# Package up CEF
-	if [ "$PLATFORM" = "win32" -o "$PLATFORM" = "linux" ] ; then
-		if [ -f "${LIBPATH}/CEF" ] ; then
+	if [ "${PLATFORM}" == "linux" ] ; then
+		if [ -d "${LIBPATH}/CEF" ] ; then
 			tar -cf "${CEF_TAR}" "${LIBPATH}/CEF"
 		fi
 	fi

@@ -317,6 +317,55 @@ bool MCGRadialGradient::Apply(SkPaint& r_paint)
 
 /**/
 
+bool MCGConicalGradient::Create(MCGPoint p_center_point, MCGFloat p_radius, MCGPoint p_focal_point, MCGFloat p_focal_radius, MCGRampRef p_ramp, MCGGradientSpreadMethod p_spread_method, MCGAffineTransform p_transform, MCGGradientRef& r_gradient)
+{
+    MCGConicalGradientRef t_gradient = new (nothrow) MCGConicalGradient;
+    if (t_gradient == nullptr)
+    {
+        return false;
+    }
+    
+    t_gradient->m_center_point = p_center_point;
+    t_gradient->m_radius = p_radius;
+    t_gradient->m_focal_point = p_focal_point;
+    t_gradient->m_focal_radius = p_focal_radius;
+    t_gradient->m_ramp = MCGRetain(p_ramp);
+    t_gradient->m_spread_method = p_spread_method;
+    t_gradient->m_transform = p_transform;
+    
+    r_gradient = t_gradient;
+    
+    return true;
+}
+
+bool MCGConicalGradient::Apply(SkPaint& r_paint)
+{
+	SkMatrix t_transform;
+    MCGAffineTransformToSkMatrix(m_transform, t_transform);
+
+    sk_sp<SkShader> t_shader =
+            SkGradientShader::MakeTwoPointConical(MCGPointToSkPoint(m_center_point),
+                                                  m_radius,
+                                                  MCGPointToSkPoint(m_focal_point),
+                                                  m_focal_radius,
+                                                  m_ramp->GetColors(),
+                                                  m_ramp->GetStops(),
+                                                  m_ramp->GetLength(),
+                                                  MCGGradientSpreadMethodToSkTileMode(m_spread_method),
+                                                  0,
+                                                  &t_transform);
+    if (t_shader == nullptr)
+    {
+        return false;
+    }
+
+    r_paint.setShader(t_shader);
+    
+    return true;
+}
+
+/**/
+
 bool MCGSweepGradient::Create(MCGPoint p_center, MCGRampRef p_ramp, MCGGradientSpreadMethod p_spread_method, MCGAffineTransform p_transform, MCGGradientRef& r_gradient)
 {
     MCGSweepGradientRef t_gradient = new (nothrow) MCGSweepGradient;

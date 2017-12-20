@@ -457,6 +457,8 @@ component Extensions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.diff
 	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.drawing
+	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.dropbox
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.getopt
@@ -788,6 +790,7 @@ component Externals.CEF.Linux
 		file linux-[[TargetArchitecture]]:icudtl.dat
 		file linux-[[TargetArchitecture]]:natives_blob.bin
 		file linux-[[TargetArchitecture]]:snapshot_blob.bin
+		file linux-[[TargetArchitecture]]:v8_context_snapshot.bin
 		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
 		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
 
@@ -795,19 +798,24 @@ component Externals.CEF.Windows
 	into [[TargetFolder]]/Externals/CEF place
 		executable windows:libbrowser-cefprocess.exe
 		executable windows:revbrowser-cefprocess.exe
-		executable windows:CEF/libcef.dll
-		executable windows:CEF/d3dcompiler_43.dll
-		executable windows:CEF/d3dcompiler_47.dll
-		executable windows:CEF/libEGL.dll
-		executable windows:CEF/libGLESv2.dll
-		rfolder windows:CEF/locales
-		file windows:CEF/cef.pak
-		file windows:CEF/cef_100_percent.pak
-		file windows:CEF/cef_200_percent.pak
-		file windows:CEF/cef_extensions.pak
-		file windows:CEF/icudtl.dat
-		file windows:CEF/natives_blob.bin
-		file windows:CEF/snapshot_blob.bin
+		executable windows:Externals/CEF/libcef.dll
+		executable windows:Externals/CEF/d3dcompiler_43.dll
+		executable windows:Externals/CEF/d3dcompiler_47.dll
+		executable windows:Externals/CEF/libEGL.dll
+		executable windows:Externals/CEF/libGLESv2.dll
+		executable windows:Externals/CEF/chrome_elf.dll
+		rfolder windows:Externals/CEF/locales
+		file windows:Externals/CEF/cef.pak
+		file windows:Externals/CEF/cef_100_percent.pak
+		file windows:Externals/CEF/cef_200_percent.pak
+		file windows:Externals/CEF/cef_extensions.pak
+		file windows:Externals/CEF/icudtl.dat
+		file windows:Externals/CEF/natives_blob.bin
+		file windows:Externals/CEF/snapshot_blob.bin
+		file windows:Externals/CEF/v8_context_snapshot.bin
+	into [[TargetFolder]]/Externals/CEF/swiftshader place
+		executable windows:Externals/CEF/swiftshader/libEGL.dll
+		executable windows:Externals/CEF/swiftshader/libGLESv2.dll
 
 ////////////////////////////////////////////////////////////////////////////////
 

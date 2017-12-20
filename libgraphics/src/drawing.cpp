@@ -107,12 +107,19 @@ struct MCGDrawingRadialGradient: public MCGDrawingGradient
 {
 };
 
+struct MCGDrawingConicalGradient: public MCGDrawingGradient
+{
+    MCGPoint focal_point;
+    MCGFloat focal_radius;
+};
+
 enum MCGDrawingPaintType
 {
     kMCGDrawingPaintTypeNone,
     kMCGDrawingPaintTypeSolidColor,
     kMCGDrawingPaintTypeLinearGradient,
     kMCGDrawingPaintTypeRadialGradient,
+    kMCGDrawingPaintTypeConicalGradient,
 };
 
 struct MCGDrawingPaint
@@ -124,6 +131,7 @@ struct MCGDrawingPaint
         MCGDrawingGradient gradient;
         MCGDrawingLinearGradient linear_gradient;
         MCGDrawingRadialGradient radial_gradient;
+        MCGDrawingConicalGradient conical_gradient;
     };
     
     MCGDrawingPaint(void)
@@ -423,8 +431,10 @@ enum MCGDrawingPaintOpcode : uint8_t
     
     kMCGDrawingPaintOpcodeRadialGradient = 3,
     
+    kMCGDrawingPaintOpcodeConicalGradient = 4,
+    
     /* _Last is used for range checking on the paint opcodes. */
-    kMCGDrawingPaintOpcode_Last = kMCGDrawingPaintOpcodeRadialGradient,
+    kMCGDrawingPaintOpcode_Last = kMCGDrawingPaintOpcodeConicalGradient,
 };
 
 /* SPREAD METHOD OPCODES */
@@ -1241,6 +1251,39 @@ public:
         return true;
     }
     
+    bool Gradient(MCGDrawingGradient& r_gradient)
+    {
+        MCGDrawingSpreadMethodOpcode t_spread_opcode;
+        if (!SpreadMethodOpcode(t_spread_opcode))
+        {
+            return false;
+        }
+        switch(t_spread_opcode)
+        {
+            case kMCGDrawingSpreadMethodOpcodePad:
+                r_gradient.spread = kMCGGradientSpreadMethodPad;
+                break;
+            case kMCGDrawingSpreadMethodOpcodeReflect:
+                r_gradient.spread = kMCGGradientSpreadMethodReflect;
+                break;
+            case kMCGDrawingSpreadMethodOpcodeRepeat:
+                r_gradient.spread = kMCGGradientSpreadMethodRepeat;
+                break;
+        }
+
+        if (!ExecuteTransform(MCGAffineTransformMakeIdentity(),
+                              r_gradient.transform))
+        {
+            return false;
+        }
+        if (!Ramp(r_gradient.ramp))
+        {
+            return false;
+        }
+        
+        return true;
+    }
+    
     /* Execute runs the drawing program using VisitorT to perform the
      * operations. The rect into which the drawing should be 'rendered' is
      * indicated in p_dst_rect. */
@@ -1851,48 +1894,44 @@ bool MCGDrawingContext::ExecutePaint(MCGDrawingPaint& r_paint)
                 break;
                 
             case kMCGDrawingPaintOpcodeSolidColor:
-            {
                 t_paint.type = kMCGDrawingPaintTypeSolidColor;
                 if (!SolidColor(t_paint.solid_color))
                 {
                     return false;
                 }
-            }
-            break;
+                break;
             
             case kMCGDrawingPaintOpcodeLinearGradient:
-            case kMCGDrawingPaintOpcodeRadialGradient:
-                t_paint.type =
-                    t_opcode == kMCGDrawingPaintOpcodeLinearGradient ? kMCGDrawingPaintTypeLinearGradient
-                                                                     : kMCGDrawingPaintTypeRadialGradient;
+                t_paint.type = kMCGDrawingPaintTypeLinearGradient;
+                if (!Gradient(t_paint.gradient))
+                {
+                    return false;
+                }
+                break;
                 
-                MCGDrawingSpreadMethodOpcode t_spread_opcode;
-                if (!SpreadMethodOpcode(t_spread_opcode))
+            case kMCGDrawingPaintOpcodeRadialGradient:
+                t_paint.type = kMCGDrawingPaintTypeRadialGradient;
+                if (!Gradient(t_paint.gradient))
                 {
                     return false;
                 }
-                switch(t_spread_opcode)
-                {
-                    case kMCGDrawingSpreadMethodOpcodePad:
-                        t_paint.gradient.spread = kMCGGradientSpreadMethodPad;
-                        break;
-                    case kMCGDrawingSpreadMethodOpcodeReflect:
-                        t_paint.gradient.spread = kMCGGradientSpreadMethodReflect;
-                        break;
-                    case kMCGDrawingSpreadMethodOpcodeRepeat:
-                        t_paint.gradient.spread = kMCGGradientSpreadMethodRepeat;
-                        break;
-                }
-                if (!ExecuteTransform(MCGAffineTransformMakeIdentity(),
-                                      t_paint.gradient.transform))
+                break;
+                
+            case kMCGDrawingPaintOpcodeConicalGradient:
+                t_paint.type = kMCGDrawingPaintTypeConicalGradient;
+                if (!Gradient(t_paint.gradient))
                 {
                     return false;
                 }
-                if (!Ramp(t_paint.gradient.ramp))
+                if (!Point(t_paint.conical_gradient.focal_point))
                 {
                     return false;
                 }
-            break;
+                if (!LengthScalar(t_paint.conical_gradient.focal_radius))
+                {
+                    return false;
+                }
+                break;
         }
     }
     
@@ -2390,6 +2429,7 @@ private:
             
             case kMCGDrawingPaintTypeLinearGradient:
             case kMCGDrawingPaintTypeRadialGradient:
+            case kMCGDrawingPaintTypeConicalGradient:
             {
                 MCGRampRef t_ramp = nullptr;
                 if (!MCGRamp::Create4f(p_paint.gradient.ramp.offsets, p_paint.gradient.ramp.colors, p_paint.gradient.ramp.count, t_ramp))
@@ -2406,9 +2446,23 @@ private:
                         break;
                     }
                 }
-                else
+                else if (p_paint.type == kMCGDrawingPaintTypeRadialGradient)
                 {
                     if (!MCGRadialGradient::Create({0, 0}, 1, t_ramp, p_paint.gradient.spread, p_paint.gradient.transform, t_gradient))
+                    {
+                        MCGRelease(t_ramp);
+                        break;
+                    }
+                }
+                else if (p_paint.type == kMCGDrawingPaintTypeConicalGradient)
+                {
+                    if (!MCGConicalGradient::Create({0, 0}, 1,
+                                                            p_paint.conical_gradient.focal_point,
+                                                            p_paint.conical_gradient.focal_radius,
+                                                            t_ramp,
+                                                            p_paint.gradient.spread,
+                                                            p_paint.gradient.transform,
+                                                            t_gradient))
                     {
                         MCGRelease(t_ramp);
                         break;
