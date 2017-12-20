@@ -241,8 +241,24 @@ public:
     static bool Create(MCGPoint p_focal_point, MCGFloat p_radius, MCGRampRef p_ramp, MCGGradientSpreadMethod p_tile_mode, MCGAffineTransform p_transform, MCGGradientRef& r_gradient);
     
 private:
+    MCGPoint m_focal_point;
+    MCGFloat m_radius;
+};
+
+typedef class MCGConicalGradient *MCGConicalGradientRef;
+
+class MCGConicalGradient: public MCGGradient
+{
+public:
+    virtual bool Apply(SkPaint& r_paint);
+    
+    static bool Create(MCGPoint p_center_point, MCGFloat p_radius, MCGPoint p_focal_point, MCGFloat p_focal_radius, MCGRampRef p_ramp, MCGGradientSpreadMethod p_tile_mode, MCGAffineTransform p_transform, MCGGradientRef& r_gradient);
+    
+private:
+    MCGPoint m_center_point;
     MCGFloat m_radius;
     MCGPoint m_focal_point;
+    MCGFloat m_focal_radius;
 };
 
 typedef class MCGSweepGradient *MCGSweepGradientRef;

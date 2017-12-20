@@ -85,13 +85,14 @@ The following SVG features are currently supported:
   - 'stop-color' and 'stop-opacity' gradient ramp properties
   - absolute unit specifiers in, cm, mm, pt, pc, px
 
-Currently, only solid colors of with following forms are supported:
+Color values of the following forms are supported:
 
   - &#35;rgb
   - &#35;rrggbb
   - rgb(rrr, ggg, bbb)
-  - black/silver/gray/white/maroon/red/purple/fuchsia
-  - green/lime/olive/yellow/navy/blue/teal/aqua
+  - standard SVG 1.1 named colors (https://www.w3.org/TR/SVG/types.html#ColorKeywords)
+
+Radial gradients support focal point (fx, fy) and SVG2's focal radius (fr).
 
 The rendering of an SVG file inside an image object respects the width, height,
 viewBox and preserveAspectRatio attributes on the root SVG node in the document.
@@ -180,13 +181,14 @@ The following SVG features are currently supported:
   - 'stop-color' and 'stop-opacity' gradient ramp properties
   - absolute unit specifiers in, cm, mm, pt, pc, px
 
-Currently, only solid colors of with following forms are supported:
+Color values of the following forms are supported:
 
   - &#35;rgb
   - &#35;rrggbb
   - rgb(rrr, ggg, bbb)
-  - black/silver/gray/white/maroon/red/purple/fuchsia
-  - green/lime/olive/yellow/navy/blue/teal/aqua
+  - standard SVG 1.1 named colors (https://www.w3.org/TR/SVG/types.html#ColorKeywords)
+
+Radial gradients support focal point (fx, fy) and SVG2's focal radius (fr).
 
 The rendering of an SVG file inside an image object respects the width, height,
 viewBox and preserveAspectRatio attributes on the root SVG node in the document.
@@ -861,6 +863,7 @@ private command _svgCompilePartialPaint @xContext, @xPaint, pBBox
 	switch xPaint[1]
 	case "linear"
 	case "radial"
+	case "conical"
 		_svgCompileTransform xContext, xPaint[3], pBBox, xPaint[3]
 		break
 	default
@@ -889,6 +892,50 @@ private command _svgCompilePaintServer @xContext, pId, pFallback, @rCompiledPain
 			put tGradient["spreadMethod"] into rCompiledPaint[2]
 			if tGradient["gradientUnits"] is "objectBoundingBox" then
 				put "bbox" into rCompiledPaint[3][1][1]
+
+				/* Percentage values in the coordinates of the gradient are
+				 * relative to the bbox */
+				repeat for each item tCoordKey in "x1,x2,y1,y2,r,cx,cy,fr,fx,fy"
+					if tGradient[tCoordKey] ends with "%" then
+						put (char 1 to -2 of tGradient[tCoordKey]) / 100 into tGradient[tCoordKey]
+					end if
+				end repeat
+			else
+				/* Percentage values in the x coords are relative to the viewport
+				 * width. */
+				repeat for each item tCoordKey in "x1,x2,cx,fx"
+					if tGradient[tCoordKey] ends with "%" then
+						if xContext["root-width"] < 0 then
+							throw "viewport relative grad coords not supported"
+						end if
+						put xContext["root-width"] * (char 1 to -2 of tGradient[tCoordKey]) / 100 into tGradient[tCoordKey]
+					end if
+				end repeat
+
+				/* Percentage values in the y coords are relative to the viewport
+				 * height. */
+				repeat for each item tCoordKey in "y1,y2,cy,fy"
+					if tGradient[tCoordKey] ends with "%" then
+						if xContext["root-height"] < 0 then
+							throw "viewport relative grad coords not supported"
+						end if
+						put xContext["root-height"] * (char 1 to -2 of tGradient[tCoordKey]) / 100 into tGradient[tCoordKey]
+					end if
+				end repeat
+
+				/* Percentage values in the r coords are relative to the viewport
+				 * normalize diagonal (sqrt(w^2+h^2)/sqrt(2)). */
+				repeat for each item tCoordKey in "r,fr"
+					if tGradient[tCoordKey] ends with "%" then
+						if xContext["root-height"] < 0 or \
+							xContext["root-width"] < 0 then
+							throw "viewport relative grad coords not supported"
+						end if
+						local tRootDiagonal
+						put sqrt(xContext["root-width"]^2 + xContext["root-height"]^2) / sqrt(2) into tRootDiagonal
+						put tRootDiagonal * (char 1 to -2 of tGradient[tCoordKey]) / 100 into tGradient[tCoordKey]
+					end if
+				end repeat
 			end if
 			seqAppend rCompiledPaint[3], tGradient["gradientTransform"]
 			local tVectorMatrix
@@ -911,6 +958,20 @@ private command _svgCompilePaintServer @xContext, pId, pFallback, @rCompiledPain
 			seqPushOntoBack rCompiledPaint[3], tVectorMatrix
 			put tGradient["colors"] into rCompiledPaint[4]
 			put tGradient["offsets"] into rCompiledPaint[5]
+
+			/* If the focal point matches the center point and the focal
+			 * radius is 0 then this is a 'radial' gradient. Otherwise it is a
+			 * two-point-conical gradient and the focal point/center must
+			 * be mapped into the coordinate system created by the center
+			 * point and radius. */
+			if tGradient["fr"] is not 0 or \
+				tGradient["fx"] is not tGradient["cx"] or \
+				tGradient["fy"] is not tGradient["cy"] then
+				put "conical" into rCompiledPaint[1]
+				put (tGradient["fx"] - tGradient["cx"]) / tGradient["r"] into rCompiledPaint[6]
+				put (tGradient["fy"] - tGradient["cy"]) / tGradient["r"] into rCompiledPaint[7]
+				put tGradient["fr"] / tGradient["r"] into rCompiledPaint[8]
+			end if
 			return empty
 		default
 			break
@@ -931,11 +992,14 @@ private command _svgCompileResolveGradient @xContext, pElement, @rGradient
 	else
 		put 0 into rGradient["x1"]
 		put 0 into rGradient["y1"]
-		put 1 into rGradient["x2"]
+		put "100%" into rGradient["x2"]
 		put 0 into rGradient["y2"]
-		put 0.5 into rGradient["cx"]
-		put 0.5 into rGradient["cy"]
-		put 0.5 into rGradient["r"]
+		put "50%" into rGradient["cx"]
+		put "50%" into rGradient["cy"]
+		put "50%" into rGradient["r"]
+		put "50%" into rGradient["fx"]
+		put "50%" into rGradient["fy"]
+		put 0 into rGradient["fr"]
 		put "objectBoundingBox" into rGradient["gradientUnits"]
 		put empty into rGradient["gradientTransform"]
 		put "pad" into rGradient["spreadMethod"]
@@ -943,7 +1007,7 @@ private command _svgCompileResolveGradient @xContext, pElement, @rGradient
 		put empty into rGradient["offsets"]
 	end if
 
-	repeat for each item tProp in "x1,y1,x2,y2,cx,cy,r,gradientUnits,gradientTransform,spreadMethod"
+	repeat for each item tProp in "x1,y1,x2,y2,cx,cy,r,fx,fy,fr,gradientUnits,gradientTransform,spreadMethod"
 		if tProp is among the keys of pElement["features"] then
 			put pElement["features"][tProp] into rGradient[tProp]
 		end if
@@ -1218,6 +1282,7 @@ constant kMCGDrawingPaintOpcodeEnd = 0
 constant kMCGDrawingPaintOpcodeSolidColor = 1
 constant kMCGDrawingPaintOpcodeLinearGradient = 2
 constant kMCGDrawingPaintOpcodeRadialGradient = 3
+constant kMCGDrawingPaintOpcodeConicalGradient = 4
 
 constant kMCGDrawingSpreadMethodOpcodePad = 0
 constant kMCGDrawingSpreadMethodOpcodeReflect = 1
@@ -1458,20 +1523,28 @@ private command _svgEncodeIndex @xContext, pIndex
 end _svgEncodeIndex
 
 private command _svgEncodeScalars @xContext, pScalars
-	repeat for each element tScalar in pScalars
-		put binaryEncode("f", tScalar) after xContext["scalars"]
-	end repeat
+	if pScalars is an array then
+		repeat for each element tScalar in pScalars
+			put binaryEncode("f", tScalar) after xContext["scalars"]
+		end repeat
+	else
+		repeat with i = 2 to the paramCount
+			put binaryEncode("f", param(i)) after xContext["scalars"]
+		end repeat
+	end if
 end _svgEncodeScalars
 
 private command _svgEncodePaint @xContext, pPaint
 	if pPaint[1] is "none" then
 	else if pPaint[1] is "color" then
 		_svgEncodeOp xContext, kMCGDrawingPaintOpcodeSolidColor, pPaint[2], pPaint[3], pPaint[4], pPaint[5]
-	else if pPaint[1] is "linear" or pPaint[1] is "radial" then
+	else if pPaint[1] is "linear" or pPaint[1] is "radial" or pPaint[1] is "conical" then
 		if pPaint[1] is "linear" then
-		_svgEncodeOp xContext, kMCGDrawingPaintOpcodeLinearGradient
-		else
-		_svgEncodeOp xContext, kMCGDrawingPaintOpcodeRadialGradient
+			_svgEncodeOp xContext, kMCGDrawingPaintOpcodeLinearGradient
+		else if pPaint[1] is "radial" then
+			_svgEncodeOp xContext, kMCGDrawingPaintOpcodeRadialGradient
+		else if pPaint[1] is "conical" then
+			_svgEncodeOp xContext, kMCGDrawingPaintOpcodeConicalGradient
 		end if
 		switch pPaint[2]
 		case "pad"
@@ -1488,6 +1561,9 @@ private command _svgEncodePaint @xContext, pPaint
 		_svgEncodeIndex xContext, the number of elements in pPaint[5]
 		_svgEncodeScalars xContext, pPaint[4]
 		_svgEncodeScalars xContext, pPaint[5]
+		if pPaint[1] is "conical" then
+			_svgEncodeScalars xContext, pPaint[6], pPaint[7], pPaint[8]
+		end if
 	else
 		_InternalError format("unknown paint '%s'", pPaint[1])
 	end if
@@ -1844,6 +1920,15 @@ private function _svgParseFeatureValue @xContext, pElementType, pFeatureName, @x
 					return true
 				end if
 				break
+			case "<percent-coordinate>"
+				if _svgParsePercentCoordinateValue(xValue) then
+					return true
+				end if
+				break
+			case "<percent-length>"
+				if _svgParsePercentLengthValue(xValue) then
+					return true
+				end if
 			default
 				_log format("unimplemented value pattern '%s'", tVariant)
 				break
@@ -1910,39 +1995,8 @@ private function _svgParseColorValue @xValue
 		put baseConvert(char 4 to 5 of xValue, 16, 10) / 255 into tGreen
 		put baseConvert(char 6 to 7 of xValue, 16, 10) / 255 into tBlue
 	else
-		if xValue is "black" then
-			put 0 into tRed; put 0 into tGreen; put 0 into tBlue
-		else if xValue is "silver" then
-			put 192 into tRed; put 192 into tGreen; put 192 into tBlue
-		else if xValue is "gray" then
-			put 128 into tRed; put 128 into tGreen; put 128 into tBlue
-		else if xValue is "white" then
-			put 255 into tRed; put 255 into tGreen; put 255 into tBlue
-		else if xValue is "maroon" then
-			put 128 into tRed; put 0 into tGreen; put 0 into tBlue
-		else if xValue is "red" then
-			put 255 into tRed; put 0 into tGreen; put 0 into tBlue
-		else if xValue is "purple" then
-			put 128 into tRed; put 0 into tGreen; put 128 into tBlue
-		else if xValue is "fuchsia" then
-			put 255 into tRed; put 0 into tGreen; put 255 into tBlue
-		else if xValue is "green" then
-			put 0 into tRed; put 128 into tGreen; put 0 into tBlue
-		else if xValue is "lime" then
-			put 0 into tRed; put 255 into tGreen; put 0 into tBlue
-		else if xValue is "olive" then
-			put 128 into tRed; put 128 into tGreen; put 0 into tBlue
-		else if xValue is "yellow" then
-			put 255 into tRed; put 255 into tGreen; put 0 into tBlue
-		else if xValue is "navy" then
-			put 0 into tRed; put 0 into tGreen; put 128 into tBlue
-		else if xValue is "blue" then
-			put 0 into tRed; put 0 into tGreen; put 255 into tBlue
-		else if xValue is "teal" then
-			put 0 into tRed; put 128 into tGreen; put 128 into tBlue
-		else if xValue is "aqua" then
-			put 0 into tRed; put 255 into tGreen; put 255 into tBlue
-		else if not matchText(xValue, "^rgb\s*\(\s*([0-9]+)\s*\,\s*([0-9]+)\s*,\s*([0-9]+)\s*\)$", tRed, tGreen, tBlue) then
+		if not svgSpecGetColor(xValue, tRed, tGreen, tBlue) and \
+			not matchText(xValue, "^rgb\s*\(\s*([0-9]+)\s*\,\s*([0-9]+)\s*,\s*([0-9]+)\s*\)$", tRed, tGreen, tBlue) then
 			return false
 		end if
 		divide tRed by 255
@@ -1955,6 +2009,7 @@ private function _svgParseColorValue @xValue
 	put tGreen + 0 into xValue["green"]
 	put tBlue + 0 into xValue["blue"]
 	put 1 into xValue["alpha"]
+
 	return true
 end _svgParseColorValue
 
@@ -1999,6 +2054,26 @@ private function _svgParseLengthValue @xValue
 	end  if
 	return false
 end _svgParseLengthValue
+
+private function _svgParsePercentLengthValue @xValue
+	if _svgParseLengthValue(xValue) then
+		return true
+	end if
+
+	put word 1 to -1 of xValue into xValue
+	if char -1 of xValue is "%" then
+		delete the last char of xValue
+		if _svgParseLengthValue(xValue) then
+			put "%" after xValue
+			return true
+		end if
+	end if
+	return false
+end _svgParsePercentLengthValue
+
+private function _svgParsePercentCoordinateValue @xValue
+	return _svgParsePercentLengthValue(xValue)
+end _svgParsePercentCoordinateValue
 
 private function _svgParseSizeValue @xValue
 	local tValue, tValueUnit
@@ -2698,6 +2773,18 @@ private function svgSpecIsProperty pProperty
 	return pProperty is among the keys of sSvgSpec["elements"][""]["property"]
 end svgSpecIsProperty
 
+/* svgSpecGetColor returns the color values for the given named color and
+ * returns true if found, false otherwise. */
+private function svgSpecGetColor pColor, @rRed, @rGreen, @rBlue
+	if pColor is not among the keys of sSvgSpec["colors"] then
+		return false
+	end if
+	put sSvgSpec["colors"][pColor]["red"] into rRed
+	put sSvgSpec["colors"][pColor]["green"] into rGreen
+	put sSvgSpec["colors"][pColor]["blue"] into rBlue
+	return true
+end svgSpecGetColor
+
 /* svgSpecIsPropertyInheritable returns true if the value of a property cascades
  * to children when the property is unset, or whether it has the default
  * set when unset. */
@@ -2955,6 +3042,38 @@ private command svgSpecLoad
 			 * properties. */
 			put true into tCurrentElement["property"][word 2 of tLine]
 			
+			next repeat
+		end if
+
+		/* The 'color' line defines a named color */
+		if tLineType is "color" then
+			/* Color lines are: 'color' <name> <red> <green> <blue> */
+			local tColorName, tColorRed, tColorGreen, tColorBlue
+			put word 2 of tLine into tColorName
+			put word 3 of tLine into tColorRed
+			put word 4 of tLine into tColorGreen
+			put word 5 of tLine into tColorBlue
+
+			/* The color must not be previously defined */
+			if tColorName is among the keys of sSvgSpec["colors"] then
+				_svgSpecError tCurrentRow, format("color '%s' previously defined", tColorName)
+				next repeat
+			end if
+
+			/* The three color values must all be numbers */
+			if tColorRed is not a number or \
+				tColorGreen is not a number or \
+				tColorBlue is not a number then
+				_svgSpecError tCurrentRow, "invalid color values specified"
+				next repeat
+			end if
+
+			/* Clamp the color values (out of range values should probably be
+			 * an error) and put them into the colors key of the spec array. */
+			put min(max(tColorRed, 0), 255) into sSvgSpec["colors"][tColorName]["red"]
+			put min(max(tColorGreen, 0), 255) into sSvgSpec["colors"][tColorName]["green"]
+			put min(max(tColorBlue, 0), 255) into sSvgSpec["colors"][tColorName]["blue"]
+
 			next repeat
 		end if
 
