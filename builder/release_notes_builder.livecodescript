@@ -58,9 +58,15 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
       put "LiveCode Builder changes" into tComponents[tIndex]["metadata"]["section"]
       
       local tPath, tTypePath
-      repeat for each line tPath in builderPrivateRepoFolder() & return & builderRepoFolder()
+      local tReposA, tEdition
+      put builderPrivateRepoFolder() into tReposA["indy"]
+      put builderRepoFolder() into tReposA["community"]
+      
+      repeat for each key tEdition in tReposA
+         put tReposA[tEdition] into tPath
+         
          repeat for each item tType in kExtensionLcbTypes
-            put tPath & slash & tType into tTypePath
+            put tPath & slash & "extensions" & slash & tType into tTypePath
             if there is not a folder tTypePath then
                next repeat
             end if
@@ -70,20 +76,13 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
                put tFolder into tComponents[tIndex]["folder"]
                put "extension" into tComponents[tIndex]["metadata"]["category"]
                
-               --!TODO move these extensions to components
-               switch tFolder
-                  case "drawing"
-                     put "indy" into tComponents[tIndex]["metadata"]["edition"]
-                     break
-                  default
-                     put "community" into tComponents[tIndex]["metadata"]["edition"]
-               end switch
+               put tEdition into tComponents[tIndex]["metadata"]["edition"]
+               put ExtensionsGetSectionName(tFolder) into tComponents[tIndex]["metadata"]["section"]
             end repeat
-            put ExtensionsGetLcbSectionName(tFolder) into tComponents[tIndex]["metadata"]["section"]
          end repeat
          
          repeat for each item tType in kExtensionScriptTypes
-            put tPath & slash & tType into tTypePath
+            put tPath & slash & "extensions" & slash & tType into tTypePath
             if there is not a folder tTypePath then
                next repeat
             end if
@@ -100,13 +99,10 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
                   case "scriptprofiler"
                      put "business" into tComponents[tIndex]["metadata"]["edition"]
                      break
-                  case "aws"
-                     put "indy" into tComponents[tIndex]["metadata"]["edition"]
-                     break
                   default
-                     put "community" into tComponents[tIndex]["metadata"]["edition"]
+                     put tEdition into tComponents[tIndex]["metadata"]["edition"]
                end switch
-               put tFolder && "script library" into tComponents[tIndex]["metadata"]["section"]
+               put ExtensionsGetSectionName(tFolder) into tComponents[tIndex]["metadata"]["section"]
             end repeat
          end repeat
       end repeat
@@ -166,17 +162,17 @@ private command ComponentsCreatePath pComponent, @xCollated, @xBugInfo
    
    builderLog "report", "Creating release notes for" && the last item of pComponent["folder"]
    
-   -- just because something is a LCB module or a script library does not mean
-   -- we necessarily want to give it a separate section in the release notes
-   -- for example a widget or library for use purely within the IDE should
-   -- just merge into the IDE notes. 
    if pComponent["metadata"]["section"] is empty then
+      -- just because something is a LCB module or a script library does not mean
+      -- we necessarily want to give it a separate section in the release notes
+      -- for example a widget or library for use purely within the IDE should
+      -- just merge into the IDE notes. 
       ScanAndCollatePath \
             pComponent["folder"], \
             xCollated[pComponent["metadata"]["edition"]][pComponent["metadata"]["category"]], \
             xBugInfo[pComponent["metadata"]["edition"]][pComponent["metadata"]["category"]]
    else
-      local tCollatedSection
+      local tCollatedSection, tToMerge
       ScanAndCollatePath \
             pComponent["folder"], \
             tCollatedSection, \
@@ -185,13 +181,14 @@ private command ComponentsCreatePath pComponent, @xCollated, @xBugInfo
       -- Note the use of AppendToSection here means multiple components can be merged
       -- into the same sub-section of the notes. For example, engine -> Mobile or 
       -- ide -> Script Editor
+      put 1 into tToMerge["__count"]
+      put tCollatedSection into tToMerge[1]
+      put pComponent["metadata"]["section"] into tToMerge[1]["__name"]
+      
       if NotesHaveContent(tCollatedSection) then
-         NotesEnsureRootSection \
-               pComponent["metadata"]["section"], \
-               xCollated[pComponent["metadata"]["edition"]][pComponent["metadata"]["category"]]
          NotesMerge \
-               tCollatedSection, \
-               xCollated[pComponent["metadata"]["edition"]][pComponent["metadata"]["category"]][1]
+               tToMerge, \
+               xCollated[pComponent["metadata"]["edition"]][pComponent["metadata"]["category"]]
       end if
    end if
 end ComponentsCreatePath
@@ -679,16 +676,6 @@ private command NotesExtractSectionInfo pLine, @rLevel, @rName
    end if
 end NotesExtractSectionInfo
 
-private command NotesEnsureRootSection pSection, @xCollated
-   if xCollated[1]["__name"] is not pSection then
-      local tCollated
-      put 1 into tCollated["__count"]
-      put xCollated into tCollated[1]
-      put pSection into tCollated[1]["__name"]
-      put tCollated into xCollated
-   end if
-end NotesEnsureRootSection
-
 private command NotesMerge pLeftCollated, @xRightCollated
    if pLeftCollated is not an array then
       exit NotesMerge
@@ -783,7 +770,7 @@ private function NotesGenerateContent pType, pCollated, pLevel
    return tContent
 end NotesGenerateContent
 
-private function ExtensionsGetLcbSectionName pExtPath
+private function ExtensionsGetSectionName pExtPath
    local tName, tType, tTypeOffset, tPrettyType
    
    set the itemdelimiter to slash
@@ -793,15 +780,37 @@ private function ExtensionsGetLcbSectionName pExtPath
    put itemoffset(tType, kExtensionLcbTypes) into tTypeOffset
    put item tTypeOffset of kExtensionLcbStrings into tPrettyType
    
-   put ExtensionsGetLcbName(pExtPath) into tName
+   put ExtensionsGetName(pExtPath) into tName
    if word -1 of tName is not tPrettyType then
       put space & tPrettyType after tName
    end if
    
    return tName
-end ExtensionsGetLcbSectionName
+end ExtensionsGetSectionName
 
-private function ExtensionsGetLcbName pExtPath
+private function ExtensionsGetName pExtPath
+   if there is a file ExtensionsGetManifestPath(pExtPath) then
+      return ExtensionsGetLCBName(pExtPath)
+   else if there is a file ExtensionsGetDocPath(pExtPath) then
+      -- Script library
+      return ExtensionsGetLCSName(pExtPath)
+   end if   
+   return empty
+end ExtensionsGetName
+
+private function ExtensionsGetLCSName pExtPath
+   local tDoc, tTitle
+   put builderFileGetContents(ExtensionsGetDocPath(pExtPath)) into tDoc
+   repeat for each line tLine in tDoc
+      get matchText(tLine, "(?i)^\s*(?:Title\:)\s+([\w.]*)", tTitle)
+      if tTitle is not empty then
+         exit repeat
+      end if
+   end repeat
+   return tTitle
+end ExtensionsGetLCSName
+   
+private function ExtensionsGetLCBName pExtPath
    local tManifest, tXmlId
    put builderFileGetContents(ExtensionsGetManifestPath(pExtPath)) into tManifest
    put revXMLCreateTree(tManifest, true, true, false) into tXmlId
@@ -818,7 +827,7 @@ private function ExtensionsGetLcbName pExtPath
       return empty
    end if
    return tTargetName
-end ExtensionsGetLcbName
+end ExtensionsGetLCBName
 
 private function ExtensionsGetKind pExtPath
    -- Horrible-ish hack for extracting the "real" name of the LiveCode
@@ -827,8 +836,32 @@ private function ExtensionsGetKind pExtPath
    set the itemdelimiter to slash
    put item -1 of pExtPath into tShortName
    
+   if there is no file merge("[[pExtPath]]/[[tShortName]].lcb") then
+      return ExtensionsGetLCSKind(pExtPath, tShortName)
+   else
+      return ExtensionsGetLCBKind(pExtPath, tShortName)
+   end if
+end ExtensionsGetKind
+
+private function ExtensionsGetLCSKind pExtPath, pShortName
+   local tSource, tLine, tName
+   if there is no file merge("[[pExtPath]]/[[pShortName]].livecodescript") then
+      return empty
+   end if
+   put builderFileGetUTF8Contents(merge("[[pExtPath]]/[[pShortName]].livecodescript")) into tSource
+   repeat for each line tLine in tSource
+      get matchText(tLine, "(?i)^\s*(?:" & quote & "script" & quote & ")\s+([\w.]*)", tName)
+      if tName is not empty then
+         exit repeat
+      end if
+   end repeat
+   
+   return tName
+end ExtensionsGetLCSKind
+
+private function ExtensionsGetLCBKind pExtPath, pShortName
    local tLcbSource, tLine, tModuleName
-   put builderFileGetUTF8Contents(merge("[[pExtPath]]/[[tShortName]].lcb")) into tLcbSource
+   put builderFileGetUTF8Contents(merge("[[pExtPath]]/[[pShortName]].lcb")) into tLcbSource
    repeat for each line tLine in tLcbSource
       get matchText(tLine, "(?i)^\s*(?:module|widget|library)\s+([\w.]*)", tModuleName)
       if tModuleName is not empty then
@@ -837,7 +870,7 @@ private function ExtensionsGetKind pExtPath
    end repeat
    
    return tModuleName
-end ExtensionsGetKind
+end ExtensionsGetLCBKind
 
 private function ExtensionsGetManifestPath pExtPath
    local tManifestFile
@@ -847,6 +880,13 @@ private function ExtensionsGetManifestPath pExtPath
    return tManifestFile
 end ExtensionsGetManifestPath
 
+private function ExtensionsGetDocPath pExtPath
+   local tDocFile
+   put FileGetPath("built-extensions") into tDocFile
+   put slash & ExtensionsGetKind(pExtPath) after tDocFile
+   put slash & "api.lcdoc" after tDocFile
+   return tDocFile
+end ExtensionsGetDocPath
 
 private command ScanAndCollatePath pExtPath, @xCollated, @xBugInfo
    local tNotesPath
