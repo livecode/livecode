@@ -443,7 +443,7 @@ end BaseCreateIssues
 
 private function BaseReadFile pBasename
    local tPath
-   put FileGetPath() & slash & pBasename & ".md" into tPath
+   put FileGetPath("base") & slash & pBasename & ".md" into tPath
    if there is a file tPath then
       return builderFileGetUTF8Contents(tPath)
    else
@@ -1382,6 +1382,8 @@ private function FileGetPath pType
          return the result & "/packaged_extensions"
       case "dictionary"
          return builderRepoFolder() & "/docs/dictionary"
+      case "base"
+         return builderRepoFolder() & "/docs/notes-base"
       default
          return pType
    end switch
