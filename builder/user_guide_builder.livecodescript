@@ -10,7 +10,6 @@ private command Initialize pEdition, pVersion, pOutputPath
       exit Initialize
    end if
    
-   start using stack (builderSystemFolder() & slash & "markdown_compiler.livecodescript")
    set the defaultfolder to builderRepoFolder()
    set the hideconsolewindows to true
    
@@ -21,7 +20,7 @@ private command Initialize pEdition, pVersion, pOutputPath
 end Initialize
 
 private command Finalize
-   stop using stack (builderSystemFolder() & slash & "markdown_compiler.livecodescript")
+
 end Finalize
 
 command guideBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
