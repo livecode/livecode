@@ -706,7 +706,7 @@ An commma delimited list
 
 **/
 function builderComponentCategories
-   return "engine,IDE,extension"
+   return "engine,IDE,builder,extension"
 end builderComponentCategories
 
 /**
