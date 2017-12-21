@@ -44,6 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "bitmapeffect.h"
 #include "graphicscontext.h"
 #include "graphics_util.h"
+#include "redraw.h"
 
 #include "exec.h"
 
@@ -428,10 +429,6 @@ void MCControl::select()
 	state |= CS_SELECTED;
 	kunfocus();
 
-	// MW-2011-09-23: [[ Layers ]] Mark the layer attrs as having changed - the selection
-	//   setting can influence the layer type.
-	m_layer_attr_changed = true;
-
 	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 	layer_redrawall();
 	
@@ -442,10 +439,6 @@ void MCControl::deselect()
 {
 	if (state & CS_SELECTED)
 	{
-		// MW-2011-09-23: [[ Layers ]] Mark the layer attrs as having changed - the selection
-		//   setting can influence the layer type.
-		m_layer_attr_changed = true;
-
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
         
@@ -660,6 +653,177 @@ void MCControl::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p
 	fprintf(stderr, "Control: ERROR tried to draw control id %d\n", obj_id);
 }
 
+void MCControl::render(MCTileCacheRef p_tilecache, bool p_reset, const MCGAffineTransform& p_transform, const MCRectangle& p_visible_rect)
+{
+    /* If we are resetting, then we reset the old layer id and mode to the
+     * defaults. */
+    if (p_reset)
+    {
+        m_layer_id = 0;
+        m_layer_mode = kMCLayerModeHintStatic;
+    }
+
+    /* If the layer is static but has a non copy/srcOver blend mode then we must
+     * make it dynamic as the blend has to applied singularly to that layer. */
+    MCLayerModeHint t_new_layer_mode = kMCLayerModeHintDynamic;
+    if (m_layer_mode_hint == kMCLayerModeHintStatic &&
+        (ink == GXcopy || ink == GXblendSrcOver))
+    {
+        t_new_layer_mode = kMCLayerModeHintStatic;
+    }
+    else if (gettype() == CT_GROUP && m_layer_mode_hint == kMCLayerModeHintScrolling)
+    {
+        /* Groups can only be scrolling if they are unadorned */
+        bool t_is_unadorned = !getflag(F_HSCROLLBAR | F_VSCROLLBAR | F_SHOW_NAME | F_SHOW_BORDER);
+        
+        /* TODO: Work out why this is needed... */
+        if (t_is_unadorned)
+        {
+            uint16_t t_index;
+            // IM-2014-05-02: [[ Bugfix 12044 ]] An opaque group is unadorned if its background is a color and it disallows overscroll
+            t_is_unadorned = !getflag(F_OPAQUE) || (getcindex(DI_BACK, t_index) && !getflag(F_UNBOUNDED_HSCROLL | F_UNBOUNDED_VSCROLL));
+        }
+        
+        /* If we are unadorned, then we can scroll! */
+        if (t_is_unadorned)
+        {
+            t_new_layer_mode = kMCLayerModeHintScrolling;
+        }
+    }
+    
+    /* The region of the layer is the effective rect, or contentrect if scrolling */
+    /* The clip of the layer is either the empty rect if the control is not
+     * visible, or the region. */
+    MCRectangle t_layer_region;
+    MCRectangle t_layer_clip;
+    if (!getflag(F_VISIBLE) && !showinvisible())
+    {
+        t_layer_region = MCU_make_rect(0, 0, 0, 0);
+        t_layer_clip = t_layer_region;
+    }
+    else if (t_new_layer_mode != kMCLayerModeHintScrolling)
+    {
+        t_layer_region = geteffectiverect();
+        t_layer_clip = t_layer_region;
+    }
+    else
+    {
+        t_layer_region = layer_getcontentrect();
+        t_layer_clip = geteffectiverect();
+    }
+    
+    /* The clip must be further restricted by the current visible rect */
+    t_layer_clip = MCU_intersect_rect(t_layer_clip, p_visible_rect);
+    
+    /***/
+    
+    /* Compute the opacity of the layer */
+    bool t_is_opaque = false;
+    if (MCBitmapEffectsIsInteriorOnly(getbitmapeffects()))
+    {
+        switch(gettype())
+        {
+        case CT_GROUP:
+			t_is_opaque = getflag(F_OPAQUE) &&
+				!getflag(F_HSCROLLBAR | F_VSCROLLBAR | F_SHOW_NAME | F_SHOW_BORDER);
+            break;
+        case CT_FIELD:
+            t_is_opaque = getflag(F_OPAQUE) &&
+                !getflag(F_HSCROLLBAR | F_VSCROLLBAR | F_SHOW_BORDER | F_SHADOW) && (extraflags & EF_NO_FOCUS_BORDER) != 0;
+            break;
+        default:
+            break;
+        }
+    }
+
+    /* Set up the layer to pass to tilecache */
+    MCTileCacheLayer t_layer;
+    t_layer.id = m_layer_id;
+    t_layer.region = MCRectangle32GetTransformedBounds(t_layer_region, p_transform);
+    t_layer.clip = MCRectangle32GetTransformedBounds(t_layer_clip, p_transform);
+    t_layer.is_opaque = t_is_opaque;
+    t_layer.opacity = getopacity();
+    t_layer.ink = getink();
+    t_layer.context = this;
+    
+    /* If the layer mode is dynamic, then we render as a sprite; otherwise we
+     * render as scenery. */
+    if (t_new_layer_mode != kMCLayerModeHintStatic)
+    {
+        /* If this was previously a scenery layer, then remove it */
+        if (m_layer_id != 0 && m_layer_mode == kMCLayerModeHintStatic)
+        {
+            MCTileCacheRemoveScenery(p_tilecache, t_layer.id, t_layer.region);
+            t_layer.id = 0;
+        }
+        
+        /* Use the sprite variant of the callback */
+        t_layer.callback = MCRedrawRenderDeviceSpriteLayer<MCControl, &MCControl::render_sprite_layer>;
+        
+        /* Render as a sprite layer */
+        MCTileCacheRenderSprite(p_tilecache, t_layer);
+    }
+    else
+    {
+        /* If this was previously a scenery layer, then remove it */
+        if (m_layer_id != 0 && m_layer_mode != kMCLayerModeHintStatic)
+        {
+            MCTileCacheRemoveSprite(p_tilecache, t_layer.id);
+            t_layer.id = 0;
+        }
+        
+        /* Scenery layer regions must be clipped to the clip (else bug 11349) */
+        t_layer.region = MCRectangle32Intersect(t_layer.region, t_layer.clip);
+        
+        /* Use the scenery variant of the callback */
+        t_layer.callback = MCRedrawRenderDeviceSceneryLayer<MCControl, &MCControl::render_scenery_layer>;
+        
+        /* Render as a scenery layer */
+        MCTileCacheRenderScenery(p_tilecache, t_layer);
+    }
+    
+    /* Update the id and mode */
+    m_layer_id = t_layer.id;
+    m_layer_mode = t_new_layer_mode;
+}
+
+bool MCControl::render_sprite_layer(MCContext *p_target, const MCRectangle& p_rectangle)
+{
+    MCRectangle t_control_rect;
+    if (layer_isscrolling())
+    {
+        t_control_rect = layer_getcontentrect();
+    }
+    else
+    {
+        t_control_rect = geteffectiverect();
+    }
+    
+    MCRectangle t_dirty_rect = MCU_intersect_rect(t_control_rect,
+                                                  MCU_offset_rect(p_rectangle,
+                                                                  t_control_rect.x, t_control_rect.y));
+    
+    if (MCU_empty_rect(t_dirty_rect))
+    {
+        return true;
+    }
+    
+	p_target -> setorigin(-t_control_rect . x, -t_control_rect . y);
+	p_target -> cliprect(t_dirty_rect);
+	p_target -> setfunction(GXcopy);
+	p_target -> setopacity(255);
+
+	draw(p_target, t_dirty_rect, false, true);
+    
+    return true;
+}
+
+bool MCControl::render_scenery_layer(MCContext *p_target, const MCRectangle& p_rectangle)
+{
+    redraw(p_target, p_rectangle);
+    return true;
+}
+
 IO_stat MCControl::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	return MCObject::save(stream, p_part, p_force_ext, p_version);
@@ -869,10 +1033,14 @@ void MCControl::sizerects(const MCRectangle &p_object_rect, MCRectangle r_rects[
 			}
 }
 
-void MCControl::drawselected(MCDC *dc)
+void MCControl::drawselection(MCDC *dc, const MCRectangle& p_dirty)
 {
-    if (!opened || !(getflag(F_VISIBLE) || showinvisible()))
+    MCAssert(getopened() != 0 && (getflag(F_VISIBLE) || showinvisible()));
+    
+    if (!getselected())
+    {
         return;
+    }
     
 	if (MCdragging)
 		return;
@@ -1668,10 +1836,6 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 				if (opened)
 					setsbrects();
 			}
-
-			// MW-2011-09-21: [[ Layers ]] Changing the property affects the
-			//   object's adorned status.
-			m_layer_attr_changed = true;
 		}
 		break;
 	case P_VSCROLLBAR:
@@ -1711,10 +1875,6 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 				if (opened)
 					setsbrects();
 			}
-
-			// MW-2011-09-21: [[ Layers ]] Changing the property affects the
-			//   object's adorned status.
-			m_layer_attr_changed = true;
 		}
 		break;
 			

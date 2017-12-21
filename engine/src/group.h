@@ -153,8 +153,7 @@ public:
     
     virtual bool isdeletable(bool p_check_flag);
     
-    void drawselectedchildren(MCDC *dc);
-    bool updatechildselectedrect(MCRectangle& x_rect);
+    virtual void drawselection(MCDC *dc, const MCRectangle& p_dirty);
     
 	MCControl *findchildwithid(Chunk_term type, uint4 p_id);
 

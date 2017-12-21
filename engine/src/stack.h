@@ -281,7 +281,7 @@ protected:
 	MCTileCacheRef m_view_tilecache;
 
 	// IM-2013-10-14: [[ FullscreenMode ]] The tilecache layer ID of the view background
-	uint32_t m_view_bg_layer_id;
+	MCTileCacheLayerId m_view_bg_layer_id;
 	
 	// MW-2011-08-19: [[ Redraw ]] The region of the view that needs to be
 	//   drawn to the screen on the next update.

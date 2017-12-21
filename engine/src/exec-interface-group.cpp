@@ -280,10 +280,6 @@ void MCGroup::SetShowName(MCExecContext& ctxt, bool setting)
 {
 	if (changeflag(setting, F_SHOW_NAME))
 	{
-		// MW-2011-09-21: [[ Layers ]] Changing the showName property
-		//   affects the layer attrs.
-		m_layer_attr_changed = true;
-
 		if (computeminrect(False))
 			Redraw();
 	}

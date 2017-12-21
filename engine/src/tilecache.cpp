@@ -1068,7 +1068,7 @@ static void MCTileCacheFlushCellsContainingLayers(MCTileCacheRef self, uint32_t 
 		}
 }
 
-void MCTileCacheInsertScenery(MCTileCacheRef self, uint32_t p_before_layer, const MCRectangle32& p_region)
+void MCTileCacheInsertScenery(MCTileCacheRef self, MCTileCacheLayerId p_before_layer, const MCRectangle32& p_region)
 {
 	// If we are inserting at the start, there is nothing to do.
 	if (p_before_layer == 1)
@@ -1078,13 +1078,13 @@ void MCTileCacheInsertScenery(MCTileCacheRef self, uint32_t p_before_layer, cons
 	MCTileCacheFlushCellsContainingLayers(self, p_before_layer - 1, p_before_layer, p_region);
 }
 
-void MCTileCacheRemoveScenery(MCTileCacheRef self, uint32_t p_layer, const MCRectangle32& p_region)
+void MCTileCacheRemoveScenery(MCTileCacheRef self, MCTileCacheLayerId p_layer, const MCRectangle32& p_region)
 {
 	// When removing a scenery layer, we need only flush any tiles containing it.
 	MCTileCacheFlushCellsContainingLayers(self, p_layer, p_layer, p_region);
 }
 
-void MCTileCacheReshapeScenery(MCTileCacheRef self, uint32_t p_layer, const MCRectangle32& p_old_region, const MCRectangle32& p_new_region)
+void MCTileCacheReshapeScenery(MCTileCacheRef self, MCTileCacheLayerId p_layer, const MCRectangle32& p_old_region, const MCRectangle32& p_new_region)
 {
 	// Remove the layer for the old region.
 	MCTileCacheRemoveScenery(self, p_layer, p_old_region);
@@ -1092,7 +1092,7 @@ void MCTileCacheReshapeScenery(MCTileCacheRef self, uint32_t p_layer, const MCRe
 	MCTileCacheInsertScenery(self, p_layer + 1, p_new_region);
 }
 
-void MCTileCacheUpdateScenery(MCTileCacheRef self, uint32_t p_layer, const MCRectangle32& p_region)
+void MCTileCacheUpdateScenery(MCTileCacheRef self, MCTileCacheLayerId p_layer, const MCRectangle32& p_region)
 {
 	// When updating a scenery layer, we need only flush any tiles touching it and the update region.
 	MCTileCacheFlushCellsContainingLayers(self, p_layer, p_layer, p_region);
@@ -1311,7 +1311,7 @@ static bool MCTileCacheInsertSprite(MCTileCacheRef self, MCTileCacheRenderCallba
 	return true;
 }
 
-void MCTileCacheRemoveSprite(MCTileCacheRef self, uint32_t p_id)
+void MCTileCacheRemoveSprite(MCTileCacheRef self, MCTileCacheLayerId p_id)
 {
 	// Do nothing if the tilecache is invalid.
 	if (!self -> valid)
@@ -1336,7 +1336,7 @@ void MCTileCacheRemoveSprite(MCTileCacheRef self, uint32_t p_id)
 			MCTileCacheDirtyTile(self, *MCTileCacheGetSpriteCell(self, p_id, x, y));
 }
 
-void MCTileCacheScrollSprite(MCTileCacheRef self, uint32_t p_id, int32_t p_dx, int32_t p_dy)
+void MCTileCacheScrollSprite(MCTileCacheRef self, MCTileCacheLayerId p_id, int32_t p_dx, int32_t p_dy)
 {
 	// Do nothing if the tilecache is invalid.
 	if (!self -> valid)
@@ -1359,7 +1359,7 @@ void MCTileCacheScrollSprite(MCTileCacheRef self, uint32_t p_id, int32_t p_dx, i
 	t_sprite -> yorg -= p_dy;
 }
 
-void MCTileCacheUpdateSprite(MCTileCacheRef self, uint32_t p_id, const MCRectangle32& p_region)
+void MCTileCacheUpdateSprite(MCTileCacheRef self, MCTileCacheLayerId p_id, const MCRectangle32& p_region)
 {
 	// Do nothing if the tilecache is invalid.
 	if (!self -> valid)
@@ -1487,8 +1487,8 @@ void MCTileCacheEndFrame(MCTileCacheRef self)
 
 	// Some statistics
 #ifdef _DEBUG
-    //MCLog("Frame - %d sprite tiles, %d scenery tiles, %d active tiles, %d instructions, %d bytes",
-    //			self -> sprite_render_list . length, self -> scenery_render_list . length, self -> active_tile_count, self -> display_list_frontier, self -> cache_size);
+    MCLog("Frame - %d sprite tiles, %d scenery tiles, %d active tiles, %d instructions, %d bytes",
+    			self -> sprite_render_list . length, self -> scenery_render_list . length, self -> active_tile_count, self -> display_list_frontier, self -> cache_size);
 #endif
 }
 

@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	CARD_H
 
 #include "object.h"
+#include "tilecache.h"
 
 typedef MCObjectProxy<MCCard>::Handle MCCardHandle;
 
@@ -41,9 +42,9 @@ protected:
 	MCCdata *savedata;
 
 	// MW-2011-08-26: [[ TileCache ]] The layer id of the background.
-	uint32_t m_bg_layer_id;
+	MCTileCacheLayerId m_bg_layer_id;
 	// MW-2011-09-23: [[ TileCache ]] The layer id of the foreground (selection rect).
-	uint32_t m_fg_layer_id;
+	MCTileCacheLayerId m_fg_layer_id;
 	
 	// MM-2012-11-05: [[ Object selection started/ended message ]]
 	bool m_selecting_objects : 1;
@@ -212,19 +213,14 @@ public:
 	void updateselection(MCControl *cptr, const MCRectangle &oldrect, const MCRectangle &selrect, MCRectangle &drect);
 
 	int2 getborderwidth(void);
+    
 	void drawcardborder(MCDC *dc, const MCRectangle &dirty);
-	
-	// IM-2013-09-13: [[ RefactorGraphics ]] render the card background
 	void drawbackground(MCContext *p_context, const MCRectangle &p_dirty);
-	// IM-2013-09-13: [[ RefactorGraphics ]] render the card selection rect
-	void drawselectionrect(MCContext *);
-    void drawselectedchildren(MCDC *dc);
+	void drawselection(MCContext *, const MCRectangle& dirty);
 	
 	// IM-2016-09-26: [[ Bug 17247 ]] request redraw of the area occupied by
 	//      selection marquee + handles
 	void dirtyselection(const MCRectangle &p_rect);
-	
-    bool updatechildselectedrect(MCRectangle& x_rect);
     
 	Exec_stat openbackgrounds(bool p_is_preopen, MCCard *p_other);
 	Exec_stat closebackgrounds(MCCard *p_other);
@@ -240,17 +236,11 @@ public:
 	void layer_removed(MCControl *control, MCObjptr *previous, MCObjptr *next);
 	// MW-2011-08-19: [[ Layers ]] The viewport displayed in the stack has changed.
 	void layer_setviewport(int32_t x, int32_t y, int32_t width, int32_t height);
-	// MW-2011-09-23: [[ Layers ]] The selected rectangle has changed.
-	void layer_selectedrectchanged(const MCRectangle& old_rect, const MCRectangle& new_rect);
 
 	// MW-2011-08-26: [[ TileCache ]] Render all layers into the stack's tilecache.
 	void render(void);
-
-	// IM-2013-09-13: [[ RefactorGraphics ]] add tilecache_ prefix to render methods to make their purpose clearer
-	// MW-2011-09-23: [[ TileCache ]] Render the card's bg layer.
-	static bool tilecache_render_background(void *context, MCContext *target, const MCRectangle& dirty);
-	// MW-2011-09-23: [[ TileCache ]] Render the card's fg layer.
-	static bool tilecache_render_foreground(void *context, MCContext *target, const MCRectangle& dirty);
+    bool render_background(MCContext* p_dc, const MCRectangle& p_dirty);
+    bool render_foreground(MCContext* p_dc, const MCRectangle& p_dirty);
 
 	// MW-2012-06-08: [[ Relayer ]] This method returns the control on the card with
 	//   the given layer. If nil is returned the control doesn't exist.

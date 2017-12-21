@@ -2156,54 +2156,31 @@ void MCGroup::boundcontrols()
 	}
 }
 
-void MCGroup::drawselectedchildren(MCDC *dc)
+void MCGroup::drawselection(MCDC *p_context, const MCRectangle& p_dirty)
 {
-    if (!opened || !(getflag(F_VISIBLE) || showinvisible()))
-        return;
+    MCAssert(getopened() != 0 && (getflag(F_VISIBLE) || showinvisible()));
     
     MCControl *t_control = controls;
     if (t_control == nil)
         return;
-    do
-    {
-        if (t_control -> getstate(CS_SELECTED))
-            t_control -> drawselected(dc);
-        
-        if (t_control -> gettype() == CT_GROUP)
-            static_cast<MCGroup *>(t_control) -> drawselectedchildren(dc);
-        
-        t_control = t_control -> next();
-    }
-    while (t_control != controls);
-}
-
-bool MCGroup::updatechildselectedrect(MCRectangle& x_rect)
-{
-    bool t_updated;
-    t_updated = false;
     
-    MCControl *t_control = controls;
-    if (t_control == nil)
-        return t_updated;
     do
     {
-        if (t_control -> getstate(CS_SELECTED))
+        if (t_control != nullptr &&
+             t_control->getopened() != 0 &&
+             (t_control->getflag(F_VISIBLE) || showinvisible()))
         {
-            x_rect = MCU_union_rect(t_control -> geteffectiverect(), x_rect);
-            t_updated = true;
-        }
-        
-        if (t_control -> gettype() == CT_GROUP)
-        {
-            MCGroup *t_group = static_cast<MCGroup *>(t_control);
-            t_updated = t_updated | t_group -> updatechildselectedrect(x_rect);
+            t_control->drawselection(p_context, p_dirty);
         }
         
         t_control = t_control -> next();
     }
     while (t_control != controls);
     
-    return t_updated;
+    if (getselected())
+    {
+        MCControl::drawselection(p_context, p_dirty);
+    }
 }
 
 //-----------------------------------------------------------------------------
