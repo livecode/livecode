@@ -457,6 +457,8 @@ component Extensions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.diff
 	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.drawing
+	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.dropbox
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.getopt
