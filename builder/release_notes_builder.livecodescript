@@ -95,6 +95,7 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
                   case "revdeploylibrarydesktop"
                   case "remotedebugger"
                   case "scriptprofiler"
+                  case "securekey"
                      put "business" into tComponents[tIndex]["metadata"]["edition"]
                      break
                   default
