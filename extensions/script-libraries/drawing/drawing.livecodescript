@@ -117,8 +117,7 @@ subject to change until the end of the RC cycle for 9. At present it is advised
 that SVG files be compiled as needed when developing in the IDE, and then
 compiled ahead-of-time when building a standalone.
 
-Note: To use this function in a standalone, you must include XML and Canvas
-extensions.
+Note: To use this function in a standalone, you must include the XML extension.
 
 Parameters:
 
@@ -213,9 +212,7 @@ subject to change until the end of the RC cycle for 9. At present it is advised
 that SVG files be compiled as needed when developing in the IDE, and then
 compiled ahead-of-time when building a standalone.
 
-Note: To use this function in a standalone, you must include XML and Canvas
-extensions.
-
+Note: To use this function in a standalone, you must include the XML extension.
 Parameters:
 
 pXmlText (string):
@@ -1239,7 +1236,14 @@ private function _svgBoxPoints pPoints
 end _svgBoxPoints
 
 private function _svgBoxPath pPath
-	return canvasComputeBoundingBoxOfPath(pPath["string"])
+	_internal vectorpath getbbox pPath["string"]
+
+	local tBBox
+	put item 1 of the result + 0 into tBBox["left"]
+	put item 2 of the result + 0 into tBBox["top"]
+	put item 3 of the result + 0 into tBBox["right"]
+	put item 4 of the result + 0 into tBBox["bottom"]
+	return tBBox
 end _svgBoxPath
 
 /*******************************************************************************
