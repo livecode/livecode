@@ -1040,7 +1040,7 @@ void MCInterfaceEvalKeysDown(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCInterfaceEvalMouse(MCExecContext& ctxt, integer_t p_which, MCNameRef& r_result)
 {
-	Boolean t_abort;
+	Boolean t_abort = false;
 	r_result = MCInterfaceKeyConditionToName(MCscreen->getmouse(p_which, t_abort) != 0);
 	MCValueRetain(r_result);
 	if (t_abort)

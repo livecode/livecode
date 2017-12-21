@@ -840,6 +840,16 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
         ctxt.LegacyThrow(EE_REPLACETEXT_BADPATTERN);
         return;
     }
+    
+    /* MCR_exec needs to use a unicode string as we use PCRE compiled with 16-bit
+     * unit support. We copy the string here so that we aren't re-copying each
+     * call to MCR_exec. */
+    MCAutoStringRef t_unicode_string;
+    if (!MCStringUnicodeCopy(p_string, &t_unicode_string))
+    {
+        ctxt.Throw();
+        return;
+    }
 
     bool t_success = true;
     
@@ -849,7 +859,7 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
     uindex_t t_source_length = MCStringGetLength(p_string);
     uindex_t t_source_offset = 0;
     
-    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, p_string, MCRangeMakeMinMax(t_source_offset, MCStringGetLength(p_string))))
+    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, *t_unicode_string, MCRangeMakeMinMax(t_source_offset, MCStringGetLength(p_string))))
     {
         uindex_t t_start = t_compiled->matchinfo[0].rm_so;
         uindex_t t_end = t_compiled->matchinfo[0].rm_eo;

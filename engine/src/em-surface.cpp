@@ -26,11 +26,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * ================================================================ */
 
 
-extern "C" void MCEmscriptenBlitToMainCanvas(const uint8_t* p_rgba_buffer,
-                                             uint32_t p_dest_x,
-                                             uint32_t p_dest_y,
-                                             uint32_t p_width,
-                                             uint32_t p_height);
+extern "C" void MCEmscriptenBlitToWindowCanvas(uint32_t p_window_id,
+                                               const uint8_t* p_rgba_buffer,
+                                               uint32_t p_dest_x,
+                                               uint32_t p_dest_y,
+                                               uint32_t p_width,
+                                               uint32_t p_height);
 
 
 /* ================================================================
@@ -184,8 +185,9 @@ MCAbstractRasterStackSurface::Composite(MCGRectangle p_dest_rect,
  * HTML canvas surface
  * ================================================================ */
 
-MCHtmlCanvasStackSurface::MCHtmlCanvasStackSurface(const MCGIntegerRectangle& p_rect)
-    : m_surface(nil),
+MCHtmlCanvasStackSurface::MCHtmlCanvasStackSurface(uint32_t p_window_id, const MCGIntegerRectangle& p_rect)
+    : m_window_id(p_window_id),
+      m_surface(nil),
       m_region(nil),
       m_rect(p_rect)
 {
@@ -218,7 +220,7 @@ void
 MCHtmlCanvasStackSurface::Unlock()
 {
     // This is implemented in JavaScript
-    MCEmscriptenBlitToMainCanvas(m_surface, m_rect.origin.x, m_rect.origin.y, m_rect.size.width, m_rect.size.height);
+    MCEmscriptenBlitToWindowCanvas(m_window_id, m_surface, m_rect.origin.x, m_rect.origin.y, m_rect.size.width, m_rect.size.height);
 }
 
 MCGRegionRef

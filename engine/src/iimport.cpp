@@ -72,8 +72,81 @@ bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t 
 
 	if (t_success)
 	{
+        if (memcmp(t_head, "LCD\0", 4) == 0)
+        {
+            /* A drawing's header is of the form:
+             *   0: LCD\0
+             *   4: flags
+             *     bit 0: has width
+             *     bit 1: has height
+             *     bit 2: has viewport
+             *   8: scalar_count
+             *   12: width if 'has width'
+             *   16: height if 'has height'
+             *   20: viewbox if 'has viewport'.
+             *
+             * If a drawing has a width >= 0 then that is its intrinsic width
+             * Else if it has a viewport then the viewbox width is its intrinsic width
+             * Else the intrinsic width is unknown
+             *
+             * If a drawing has a height >= 0, then that is its intrinsic height
+             * Else if it has a viewport, then the viewbox height is its intrisic width
+             * Else the intrisic height is unknown
+             *
+             * Currently unknown intrinsic width/height is reported as 256.
+             */
+            uint32_t t_flags = *(uint32_t *)(t_head + 4);
+            const float *t_scalars = (const float *)(t_head + 12);
+            float t_width = -1, t_height = -1;
+            
+            /* Get the width, if the width flag (bit 0) is set. */
+            if ((t_flags & (1 << 0)) != 0)
+            {
+                t_width = *t_scalars++;
+            }
+            
+            /* Get the height, if the height flag (bit 1) is set. */
+            if ((t_flags & (1 << 1)) != 0)
+            {
+                t_height = *t_scalars++;
+            }
+            
+            /* Get the viewbox width/height, if the viewport flag (bit 2) is set. */
+            if ((t_flags & (1 << 2)) != 0)
+            {
+                auto t_viewbox = reinterpret_cast<const MCGRectangle*>(t_scalars);
+                
+                if (t_width < 0)
+                {
+                    t_width = t_viewbox->size.width;
+                }
+                if (t_height < 0)
+                {
+                    t_height = t_viewbox->size.height;
+                }
+            }
+                
+            /* If the width is not absolute still, take a default of 256. */
+            if (t_width < 0)
+            {
+                t_width = 256;
+            }
+                
+            /* If the height is not absolute still, take a default of 256. */
+            if (t_height < 0)
+            {
+                t_height = 256;
+            }
+                
+            /* The engine deals with integer bounds on sub-pixel co-ords, so
+             * take the ceiling of the computer (float) width/height. */
+            r_width = (uindex_t)ceilf(t_width);
+            r_height = (uindex_t)ceilf(t_height);
+            
+            t_is_meta = true;
+        }
 		// graphics metafile (wmf)
-		if (memcmp(t_head, "\xD7\xCD\xC6\x9A", 4) == 0)
+		else if (memcmp(t_head, "\xD7\xCD\xC6\x9A", 4) == 0)
 		{
 			int16_t *t_bounds = (int16_t *)&t_head[6];
 			r_width = ((t_bounds[2] - t_bounds[0]) * 72 + t_bounds[4] - 1) / t_bounds[4];
@@ -234,15 +307,15 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 			t_success = MCImageCreateCompressedBitmap(t_compression, r_compressed);
 			if (t_success)
 			{
-				if (t_success)
-					t_success = read_all(p_stream, r_compressed->data, r_compressed->size);
-
 				uint32_t t_width, t_height;
 				t_width = t_height = 0;
 				
 				if (t_success && t_compression == F_PICT)
 					t_success = MCImageGetMetafileGeometry(p_stream, t_width, t_height);
 				
+				if (t_success)
+					t_success = read_all(p_stream, r_compressed->data, r_compressed->size);
+
 				r_compressed->width = t_width;
 				r_compressed->height = t_height;
 			}

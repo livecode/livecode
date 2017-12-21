@@ -232,6 +232,11 @@ const char *MCImage::gettypestring()
 	return MCimagestring;
 }
 
+bool MCImage::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnImage(this);
+}
+
 void MCImage::open()
 {
 	MCControl::open();

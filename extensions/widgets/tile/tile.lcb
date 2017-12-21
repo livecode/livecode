@@ -11,6 +11,7 @@ metadata author is "LiveCode"
 metadata version is "1.0.0"
 metadata preferredSize is "200,200"
 metadata userVisible is "false"
+metadata _ide is "true"
 
 metadata sourceColor.editor is "com.livecode.pi.color"
 metadata sourceColor.default is "blue"

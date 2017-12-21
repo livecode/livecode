@@ -771,10 +771,10 @@ public:
         return MCN_x86_64;
 #elif defined(__ARM__)
         return MCN_arm;
-#elif defined(__I386__)
+#elif defined(__i386__)
         return MCN_x86;
 #else
-#  error "One of __X86_64__, __ARM__ or __I386__ must be defined"
+#  error "One of __X86_64__, __ARM__ or __i386__ must be defined"
 #endif
     }
 

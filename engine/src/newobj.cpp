@@ -433,7 +433,7 @@ MCExpression *MCN_new_function(int2 which)
 	case F_DELETE_RESOURCE:
 		return new MCDeleteResource;
 	case F_DIRECTORIES:
-		return new MCDirectories;
+		return new MCFileItems(false);
 	case F_DISK_SPACE:
 		return new MCDiskSpace;
 	case F_DNS_SERVERS:
@@ -475,7 +475,7 @@ MCExpression *MCN_new_function(int2 which)
 	case F_EXTENTS:
 		return new MCExtents;
 	case F_FILES:
-		return new MCTheFiles;
+		return new MCFileItems(true);
 	case F_FLUSH_EVENTS:
 		return new MCFlushEvents;
 	case F_FOCUSED_OBJECT:

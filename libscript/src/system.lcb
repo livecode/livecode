@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -54,6 +54,34 @@ syntax OperatingSystem is expression
 	"the" "operating" "system"
 begin
 	MCSystemExecGetOperatingSystem(output)
+end syntax
+
+public foreign handler MCSystemExecGetArchitecture(out Architecture as String) returns nothing binds to "<builtin>"
+/**
+Summary:    The architecture
+
+Example:
+    if the architecture is "x86_64" then
+        -- Do something x86_64 specific
+    end if
+
+Description:
+Returns a string describing the instruction set architecture
+that is being used by the machine LiveCode is running on.
+The possible values are:
+
+* "x86" - 32-bit x86 builds
+* "x86_64" - 64-bit x86 builds
+* "arm" - 32-bit arm builds
+* "arm64" - 64-bit arm builds
+* "js" - Emscripten
+
+Tags: System
+*/
+syntax Architecture is expression
+    "the" "architecture"
+begin
+    MCSystemExecGetArchitecture(output)
 end syntax
 
 ----------------------------------------------------------------
@@ -159,6 +187,80 @@ syntax CommandArguments is expression
 	"the" "command" "arguments"
 begin
 	MCSystemExecGetCommandArguments(output)
+end syntax
+
+----------------------------------------------------------------
+-- System error information
+----------------------------------------------------------------
+
+public foreign handler MCSErrorReset() returns nothing binds to "<builtin>"
+public foreign handler MCSystemEvalErrorCode(out Code as UInt32) returns nothing binds to "<builtin>"
+public foreign handler MCSystemEvalErrorDescription(out Description as String) returns nothing binds to "<builtin>"
+
+
+/**
+Summary:	Clear the system error code.
+
+Description:
+
+Reset the system error code to its platform-dependent default ("no
+error") value.
+
+Tags: System
+*/
+syntax ResetSystemError is statement
+	"reset" "system" "error"
+begin
+	MCSErrorReset()
+end syntax
+
+/**
+Summary:	The system error code.
+
+Description:
+
+Evaluates to the current platform-dependent system error code.
+
+- On Windows, returns the result of `GetLastError()`.
+
+- On other platforms, returns the current value of `errno`.
+
+> **Note:** The system error code may be modified or cleared by any
+> syntax that interacts with the operating system (e.g. by performing
+> input or output).  You should check the system error code as soon as
+> possible after any platform operation that might fail.
+
+Related: SystemErrorDescription
+
+Tags: System
+*/
+syntax SystemErrorCode is expression
+	"the" "system" "error" "code"
+begin
+	MCSystemEvalErrorCode(output)
+end syntax
+
+/**
+Summary:	The system error description.
+
+Description:
+
+Evaluates to a string describing the current platform-dependent system
+error code.
+
+> **Note:** The system error code may be modified or cleared by any
+> syntax that interacts with the operating system (e.g. by performing
+> input or output).  You should check the system error code as soon as
+> possible after any platform operation that might fail.
+
+Related: SystemErrorCode
+
+Tags: System
+*/
+syntax SystemErrorDescription is expression
+	"the" "system" "error" "message"
+begin
+	MCSystemEvalErrorDescription(output)
 end syntax
 
 --

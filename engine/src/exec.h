@@ -436,6 +436,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkArrayGetBinaryString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCDataRef&)
 #define MCPropertyThunkArraySetBinaryString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCDataRef)
 #define MCPropertyThunkArrayGetString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCStringRef&)
+#define MCPropertyThunkArraySetString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCStringRef)
 #define MCPropertyThunkArrayGetArray(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCArrayRef&)
 #define MCPropertyThunkArrayGetAny(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCValueRef&)
 #define MCPropertyThunkArraySetAny(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCValueRef)
@@ -3145,13 +3146,12 @@ void MCEngineEvalIsNotStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, boo
 void MCEngineEvalCommandName(MCExecContext& ctxt, MCStringRef& r_result);
 void MCEngineEvalCommandArguments(MCExecContext& ctxt, MCArrayRef& r_result);
 void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index, MCStringRef& r_result);
+void MCEngineGetRevLibraryMappingByKey(MCExecContext& ctxt, MCNameRef p_library, MCStringRef& r_mapping);
+void MCEngineSetRevLibraryMappingByKey(MCExecContext& ctxt, MCNameRef p_library, MCStringRef p_mapping);
 
 ///////////
 
-void MCFilesEvalDirectories(MCExecContext& ctxt, MCStringRef& r_string);
-void MCFilesEvalDirectoriesOfDirectory(MCExecContext& ctxt, MCStringRef p_directory, MCStringRef& r_string);
-void MCFilesEvalFiles(MCExecContext& ctxt, MCStringRef& r_string);
-void MCFilesEvalFilesOfDirectory(MCExecContext& ctxt, MCStringRef p_directory, MCStringRef& r_string);
+void MCFilesEvalFileItemsOfDirectory(MCExecContext& ctxt, MCStringRef p_directory, bool p_files, bool p_detailed, MCStringRef& r_string);
 void MCFilesEvalDiskSpace(MCExecContext& ctxt, real64_t& r_result);
 void MCFilesEvalDriverNames(MCExecContext& ctxt, MCStringRef& r_string);
 void MCFilesEvalDrives(MCExecContext& ctxt, MCStringRef& r_string);

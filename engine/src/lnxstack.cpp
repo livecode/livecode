@@ -463,6 +463,11 @@ void MCStack::destroywindowshape()
 	m_window_shape = nil;
 }
 
+bool MCStack::view_platform_dirtyviewonresize() const
+{
+	return false;
+}
+
 // IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
 MCRectangle MCStack::view_platform_getwindowrect(void) const
 {

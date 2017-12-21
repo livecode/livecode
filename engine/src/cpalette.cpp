@@ -56,6 +56,11 @@ const char *MCColors::gettypestring()
 	return MCcolorstring;
 }
 
+bool MCColors::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnControl(this);
+}
+
 static void getcells(uint2 &xcells, uint2 &ycells)
 {
 	switch (MCscreen->getdepth())

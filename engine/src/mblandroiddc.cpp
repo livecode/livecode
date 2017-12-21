@@ -904,7 +904,8 @@ public:
 		{
             MCGContextRef t_context;
             if (MCGContextCreateWithRaster(t_raster, t_context))
-			{
+            {
+                r_context = t_context;
                 r_raster = t_raster;
 				return true;
 			}

@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "uidc.h"
 #include "variable.h"
+#include "chunk.h"
 
 // general commands in cmds.cc
 

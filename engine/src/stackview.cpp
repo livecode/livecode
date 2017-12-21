@@ -323,7 +323,7 @@ void MCStack::view_on_rect_changed(void)
 	// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the tilecache geometry
 	view_updatetilecacheviewport();
 	
-	if (view_getfullscreen())
+	if (view_getfullscreen() || view_platform_dirtyviewonresize())
 		view_dirty_all();
 }
 

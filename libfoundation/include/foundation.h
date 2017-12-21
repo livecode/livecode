@@ -66,8 +66,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // __LITTLE_ENDIAN__ will be defined if the target processor uses BE byte-order.
 #undef __BIG_ENDIAN__
 
-// __I386__ will be defined if the target processor is i386.
-#undef __I386__
+// __i386__ will be defined if the target processor is i386.
+#undef __i386__
 // __X86_64__ will be defined if the target processor is x86-64.
 #undef __X86_64__
 // __PPC__ will be defined if the target processor is PowerPC.
@@ -124,7 +124,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(_M_IX86)
 #define __32_BIT__ 1 
 #define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
+#define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(_M_X64)
@@ -162,7 +162,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__i386)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
+#define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__ppc__)
@@ -207,7 +207,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__i386)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
+#define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__
 #elif defined(__x86_64__)
@@ -249,7 +249,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__i386)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
+#define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__ppc__)
@@ -306,7 +306,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__i386)
 #define __32_BIT__ (1)
 #define __LITTLE_ENDIAN__ (1)
-#define __I386__ (1)
+#define __i386__ (1)
 #define __LP32__ (1)
 #define __SMALL__ (1)
 #elif defined(__x86_64__)
@@ -3060,12 +3060,19 @@ MC_DLLEXPORT bool MCRecordIterate(MCRecordRef record, uintptr_t& x_iterator, MCN
 //  HANDLER DEFINITIONS
 //
 
+enum MCHandlerQueryType
+{
+    kMCHandlerQueryTypeNone,
+    kMCHandlerQueryTypeObjcSelector,
+};
+    
 struct MCHandlerCallbacks
 {
     size_t size;
     void (*release)(void *context);
     bool (*invoke)(void *context, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 	bool (*describe)(void *context, MCStringRef& r_desc);
+    bool (*query)(void *context, MCHandlerQueryType type, void *r_info);
 };
 
 MC_DLLEXPORT bool MCHandlerCreate(MCTypeInfoRef typeinfo, const MCHandlerCallbacks *callbacks, void *context, MCHandlerRef& r_handler);
@@ -3391,6 +3398,12 @@ MC_DLLEXPORT bool MCProperListCreate(const MCValueRef *values, uindex_t length, 
 // foreign value is created (MCForeignValueRef).
 MC_DLLEXPORT bool MCProperListCreateWithForeignValues(MCTypeInfoRef type, const void *values, uindex_t value_count, MCProperListRef& r_list);
 
+// Create a c-array of foreign values from the given list. The original list is
+// not released. Ownership of the foreign value array is passed to the caller.
+// p_typeinfo must be a foreign typeinfo. If any value in the list is not of the
+// given type, or cannot be exported as that type, this returns false.
+MC_DLLEXPORT bool MCProperListConvertToForeignValues(MCProperListRef list, MCTypeInfoRef p_typeinfo, void*& r_values_ptr, uindex_t& r_values_count);
+    
 // Create an empty mutable list.
 MC_DLLEXPORT bool MCProperListCreateMutable(MCProperListRef& r_list);
 
@@ -3545,6 +3558,24 @@ MC_DLLEXPORT void *MCObjcObjectGetRetainedId(MCObjcObjectRef obj);
  * an ObjcObject. The id is autoreleased before being returned. */
 MC_DLLEXPORT void *MCObjcObjectGetAutoreleasedId(MCObjcObjectRef obj);
 
+/* Create an ObjcObject containing an instance of the com_livecode_MCObjcFormalDelegate class,
+ * mapping protocol methods to MCHandlerRefs, with
+ * a context parameter. */
+MC_DLLEXPORT bool MCObjcCreateDelegateWithContext(MCStringRef p_protocol_name, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object);
+
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcFormalDelegate class,
+ * mapping protocol methods to MCHandlerRefs. */
+MC_DLLEXPORT bool MCObjcCreateDelegate(MCStringRef p_protocol_name, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object);
+
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcInformalDelegate class,
+ * mapping informal protocol methods specified as a list of foreign handler to MCHandlerRefs, with
+ * a context parameter. */
+MC_DLLEXPORT bool MCObjcCreateInformalDelegateWithContext(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object);
+    
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcInformalDelegate class,
+ * mapping informal protocol methods specified as a list of foreign handler to MCHandlerRefs. */
+MC_DLLEXPORT bool MCObjcCreateInformalDelegate(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object);
+    
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPickleFieldType

@@ -92,7 +92,7 @@
 						'copies':
 						[
 							{
-								'destination':'<(PRODUCT_DIR)/CEF/',
+								'destination':'<(PRODUCT_DIR)/Externals/CEF/',
 								'files':
 								[
 									'<(PRODUCT_DIR)/revbrowser-cefprocess.exe',
@@ -204,7 +204,7 @@
 					{	
 						'library_dirs':
 						[
-							'../prebuilt/lib/win32/<(target_arch)/CEF/',
+							'../prebuilt/unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/',
 						],
 
 						'libraries':

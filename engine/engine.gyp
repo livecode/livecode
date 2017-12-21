@@ -227,11 +227,14 @@
 				
 				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../libgraphics/libgraphics.gyp:libGraphics',
+
+				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'sources':
 			[
 				'<@(engine_security_source_files)',
+				'>@(builtin_lcb_modules)',
 				'src/main.cpp',
 			],
 
@@ -281,7 +284,7 @@
 		{
 			'target_name': 'standalone',
 			'product_name': 'standalone-community',
-			
+
 			'includes':
 			[
 				'app-bundle-template.gypi',
@@ -296,10 +299,12 @@
 			[
 				'kernel-standalone.gyp:kernel-standalone',
 				'engine-common.gyp:security-community',
+				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'sources':
 			[
+				'>@(builtin_lcb_modules)',
 				'src/dummy.cpp',
 				'rsrc/standalone.rc',
 			],
@@ -552,11 +557,6 @@
 							},
 						},
 
-						'sources':
-						[
-							'<(PRODUCT_DIR)/obj.target/engine_lcb_modules/geni/engine_lcb_modules.o',
-						],
-
 						'sources!':
 						[
 							'src/dummy.cpp',
@@ -618,12 +618,14 @@
 			[
 				'kernel-installer.gyp:kernel-installer',
 				'engine-common.gyp:security-community',
+				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'sources':
 			[
 				'src/dummy.cpp',
 				'rsrc/installer.rc',
+				'>@(builtin_lcb_modules)',
 			],
 
 			'conditions':
@@ -708,12 +710,14 @@
 				'kernel-development.gyp:kernel-development',
 				'encode_environment_stack',
 				'engine-common.gyp:security-community',
+				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'sources':
 			[
 				'<(SHARED_INTERMEDIATE_DIR)/src/startupstack.cpp',
 				'rsrc/development.rc',
+				'>@(builtin_lcb_modules)',
 			],
 
 			'conditions':
@@ -885,46 +889,6 @@
 			}
 		],
 		[
-			'OS == "ios"',
-			{
-				'targets':
-				[
-					{
-						'target_name': 'standalone-app-bundle',
-						'product_name': 'Standalone-Community-App',
-			
-						'includes':
-						[
-							'app-bundle-template.gypi',
-						],
-			
-						'variables':
-						{
-							'app_plist': 'rsrc/standalone-mobile-Info.plist',
-						},
-			
-						'dependencies':
-						[
-							'kernel-standalone.gyp:kernel-standalone',
-							'engine-common.gyp:security-community',
-						],
-			
-						'sources':
-						[
-							'src/dummy.cpp',
-							'src/main.cpp',
-						],
-
-						'include_dirs':
-						[
-							'../libfoundation/include',
-						],
-
-					},
-				],
-			},
-		],
-		[
 			'OS == "emscripten"',
 			{
 				'targets':
@@ -998,6 +962,7 @@
 									'src/em-url.js',
 									'src/em-standalone.js',
 									'src/em-liburl.js',
+									'src/em-dc.js',
 								],
 
 								'outputs':
@@ -1031,6 +996,7 @@
 									'src/em-url.js',
 									'src/em-standalone.js',
 									'src/em-liburl.js',
+									'src/em-dc.js',
 								],
 							},
 						],

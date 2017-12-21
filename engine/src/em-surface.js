@@ -21,9 +21,10 @@ mergeInto(LibraryManager.library, {
 
     // Blits the contents of the given RGBA buffer to the specified
     // location on the main HTML5 canvas
-    MCEmscriptenBlitToMainCanvas: function(p_rgba_buffer, p_x, p_y, p_w, p_h) {
-        // Get the main canvas
-        var canvas = Module['canvas'];
+    MCEmscriptenBlitToWindowCanvas__deps: ['$LiveCodeDC'],
+    MCEmscriptenBlitToWindowCanvas: function(p_window_id, p_rgba_buffer, p_x, p_y, p_w, p_h) {
+        // Get the window canvas
+        var canvas = LiveCodeDC.getWindowCanvas(p_window_id);
 
         // Create and get a 2D rendering context for the canvas
         var context = canvas.getContext('2d');

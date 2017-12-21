@@ -31,8 +31,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 MCUIDC *MCCreateScreenDC(void);
 
-extern "C" MCStack *MCEmscriptenGetCurrentStack(void);
+extern bool MCEmscriptenDCInitialize();
+extern void MCEmscriptenDCFinalize();
+
+extern "C" void MCEmscriptenGetDisplayRect(uint32_t *r_left, uint32_t *r_top, uint32_t *r_right, uint32_t *r_bottom);
+
+extern "C" MCStack *MCEmscriptenGetStackForWindow(Window p_window);
 extern "C" bool MCEmscriptenHandleMousePress(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, MCMousePressState p_state, int32_t p_button);
+
+extern "C" uint32_t MCEmscriptenCreateWindow();
+extern "C" void MCEmscriptenDestroyWindow(uint32_t p_window_id);
+extern "C" void MCEmscriptenRaiseWindow(uint32_t p_window_id);
+extern "C" void MCEmscriptenSetWindowRect(uint32_t p_window_id, uint32_t p_left, uint32_t p_top, uint32_t p_right, uint32_t p_bottom);
+extern "C" void MCEmscriptenGetWindowRect(uint32_t p_window_id, uint32_t *r_left, uint32_t *r_top, uint32_t *r_right, uint32_t *r_bottom);
+extern "C" void MCEmscriptenSetWindowVisible(uint32_t p_window_id, bool p_visible);
+extern "C" bool MCEmscriptenGetWindowVisible(uint32_t p_window_id);
+
+extern "C" void MCEmscriptenSyncCanvasSize(uint32_t p_window_id, uint32_t p_width, uint32_t p_height);
+
+/* ---------------------------------------------------------------- */
+
+MCRectangle MCEmscriptenGetWindowRect(uint32_t p_window_id);
+void MCEmscriptenSetWindowRect(uint32_t p_window_id, const MCRectangle &p_rect);
 
 /* ---------------------------------------------------------------- */
 
@@ -49,8 +69,16 @@ public:
 	virtual void openwindow(Window p_window, Boolean override);
 	virtual void closewindow(Window p_window);
 	virtual void destroywindow(Window & x_window);
+	virtual void raisewindow(Window p_window);
 	virtual bool platform_getwindowgeometry(Window p_window,
 	                                        MCRectangle & r_rect);
+
+	uintptr_t dtouint(Drawable d);
+	Boolean uinttowindow(uintptr_t, Window &w);
+
+	/* ---------- Display management */
+
+	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 
 	/* ---------- Event loop */
 	virtual Boolean wait(real64_t p_duration,
@@ -59,9 +87,6 @@ public:
 
 	/* ---------- Extra stuff */
 
-	/* Get the stack being shown in the default canvas. */
-	MCStack *GetCurrentStack();
-    
     /* Pops up simple ask/answer dialogues */
     virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking);
     virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
@@ -72,7 +97,6 @@ public:
     virtual void platform_querymouse(int16_t& r_x, int16_t& r_y);
     
 protected:
-	void UpdateFocus();
 	void FitWindow();
 
 private:

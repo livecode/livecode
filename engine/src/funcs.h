@@ -533,17 +533,6 @@ public:
     virtual ~MCDecompress(){}
 };
 
-class MCDirectories : public MCFunction
-{
-public:
-	MCDirectories() : m_folder(nil) {}
-	virtual ~MCDirectories();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean p_is_the);
-	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
-private:
-	MCExpression *m_folder;
-};
-
 class MCDiskSpace : public MCConstantFunctionCtxt<double, MCFilesEvalDiskSpace>
 {
 public:
@@ -670,15 +659,17 @@ public:
     virtual ~MCExtents(){}
 };
 
-class MCTheFiles : public MCFunction
+class MCFileItems : public MCFunction
 {
 public:
-	MCTheFiles() : m_folder(nil) {}
-	virtual ~MCTheFiles();
+	MCFileItems(bool p_files) : m_folder(nil), m_kind(nullptr), m_files(p_files)  {}
+	virtual ~MCFileItems();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean p_is_the);
 	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 private:
 	MCExpression *m_folder;
+    MCExpression *m_kind;
+    bool m_files;
 };
 
 class MCFlushEvents : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, MCInterfaceEvalFlushEvents, EE_FLUSHEVENTS_BADTYPE, PE_FLUSHEVENTS_BADPARAM>

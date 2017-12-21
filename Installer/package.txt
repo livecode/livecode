@@ -444,6 +444,8 @@ component Extensions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.switchbutton
 	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.toast		
+	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.treeview
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.widgetutils
@@ -656,22 +658,22 @@ component Runtime.iOS
 		file ios:iphonesimulator10.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator10.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator10.2/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Simulator-11_1" place
-		executable ios:iphonesimulator11.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
-		executable ios:iphonesimulator11.1/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
-		executable ios:iphonesimulator11.1/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
-		executable ios:iphonesimulator11.1/revzip.ios-extension as RevZip base ios:iphonesimulator8.2/revzip.dylib
-		executable ios:iphonesimulator11.1/revxml.ios-extension as RevXml base ios:iphonesimulator8.2/revxml.dylib
-		executable ios:iphonesimulator11.1/revdb.ios-extension as RevDb base ios:iphonesimulator8.2/revdb.dylib
-		executable ios:iphonesimulator11.1/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator8.2/dbsqlite.dylib
-		executable ios:iphonesimulator11.1/dbmysql.ios-extension as DbMysql base ios:iphonesimulator8.2/dbmysql.dylib
-		file ios:iphonesimulator11.1/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator11.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator11.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator11.1/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator11.1/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphonesimulator11.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphonesimulator11.1/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-11_2" place
+		executable ios:iphonesimulator11.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
+		executable ios:iphonesimulator11.2/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
+		executable ios:iphonesimulator11.2/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
+		executable ios:iphonesimulator11.2/revzip.ios-extension as RevZip base ios:iphonesimulator8.2/revzip.dylib
+		executable ios:iphonesimulator11.2/revxml.ios-extension as RevXml base ios:iphonesimulator8.2/revxml.dylib
+		executable ios:iphonesimulator11.2/revdb.ios-extension as RevDb base ios:iphonesimulator8.2/revdb.dylib
+		executable ios:iphonesimulator11.2/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator8.2/dbsqlite.dylib
+		executable ios:iphonesimulator11.2/dbmysql.ios-extension as DbMysql base ios:iphonesimulator8.2/dbmysql.dylib
+		file ios:iphonesimulator11.2/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator11.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator11.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator11.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator11.2/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphonesimulator11.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator11.2/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-9_2" place
 		executable ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
 		executable ios:iphoneos9.2/revsecurity.ios-extension as RevSecurity
@@ -712,26 +714,26 @@ component Runtime.iOS
 		file ios:iphoneos10.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos10.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos10.2/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Device-11_1" place
-		executable ios:iphoneos11.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
-		executable ios:iphoneos11.1/revsecurity.ios-extension as RevSecurity base ios:iphoneos9.2/revsecurity.ios-extension
-		executable ios:iphoneos11.1/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos9.2/revpdfprinter.ios-extension
-		executable ios:iphoneos11.1/revzip.ios-extension as RevZip base ios:iphoneos9.2/revzip.ios-extension
-		executable ios:iphoneos11.1/revxml.ios-extension as RevXml base ios:iphoneos9.2/revxml.ios-extension
-		executable ios:iphoneos11.1/revdb.ios-extension as RevDb base ios:iphoneos9.2/revdb.ios-extension
-		executable ios:iphoneos11.1/dbsqlite.ios-extension as DbSqlite base ios:iphoneos9.2/dbsqlite.ios-extension
-		executable ios:iphoneos11.1/dbmysql.ios-extension as DbMysql base ios:iphoneos9.2/dbmysql.ios-extension
-		file ios:iphoneos11.1/mobile-device-template.plist as "Settings.plist"
-		file ios:iphoneos11.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphoneos11.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos11.1/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphoneos11.1/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphoneos11.1/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
-		file ios:iphoneos11.1/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphoneos11.1/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphoneos11.1/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphoneos11.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphoneos11.1/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Device-11_2" place
+		executable ios:iphoneos11.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
+		executable ios:iphoneos11.2/revsecurity.ios-extension as RevSecurity base ios:iphoneos9.2/revsecurity.ios-extension
+		executable ios:iphoneos11.2/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos9.2/revpdfprinter.ios-extension
+		executable ios:iphoneos11.2/revzip.ios-extension as RevZip base ios:iphoneos9.2/revzip.ios-extension
+		executable ios:iphoneos11.2/revxml.ios-extension as RevXml base ios:iphoneos9.2/revxml.ios-extension
+		executable ios:iphoneos11.2/revdb.ios-extension as RevDb base ios:iphoneos9.2/revdb.ios-extension
+		executable ios:iphoneos11.2/dbsqlite.ios-extension as DbSqlite base ios:iphoneos9.2/dbsqlite.ios-extension
+		executable ios:iphoneos11.2/dbmysql.ios-extension as DbMysql base ios:iphoneos9.2/dbmysql.ios-extension
+		file ios:iphoneos11.2/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos11.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos11.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos11.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos11.2/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos11.2/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
+		file ios:iphoneos11.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos11.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos11.2/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphoneos11.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos11.2/fontmap as "fontmap"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -786,6 +788,7 @@ component Externals.CEF.Linux
 		file linux-[[TargetArchitecture]]:icudtl.dat
 		file linux-[[TargetArchitecture]]:natives_blob.bin
 		file linux-[[TargetArchitecture]]:snapshot_blob.bin
+		file linux-[[TargetArchitecture]]:v8_context_snapshot.bin
 		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
 		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
 
@@ -793,19 +796,24 @@ component Externals.CEF.Windows
 	into [[TargetFolder]]/Externals/CEF place
 		executable windows:libbrowser-cefprocess.exe
 		executable windows:revbrowser-cefprocess.exe
-		executable windows:CEF/libcef.dll
-		executable windows:CEF/d3dcompiler_43.dll
-		executable windows:CEF/d3dcompiler_47.dll
-		executable windows:CEF/libEGL.dll
-		executable windows:CEF/libGLESv2.dll
-		rfolder windows:CEF/locales
-		file windows:CEF/cef.pak
-		file windows:CEF/cef_100_percent.pak
-		file windows:CEF/cef_200_percent.pak
-		file windows:CEF/cef_extensions.pak
-		file windows:CEF/icudtl.dat
-		file windows:CEF/natives_blob.bin
-		file windows:CEF/snapshot_blob.bin
+		executable windows:Externals/CEF/libcef.dll
+		executable windows:Externals/CEF/d3dcompiler_43.dll
+		executable windows:Externals/CEF/d3dcompiler_47.dll
+		executable windows:Externals/CEF/libEGL.dll
+		executable windows:Externals/CEF/libGLESv2.dll
+		executable windows:Externals/CEF/chrome_elf.dll
+		rfolder windows:Externals/CEF/locales
+		file windows:Externals/CEF/cef.pak
+		file windows:Externals/CEF/cef_100_percent.pak
+		file windows:Externals/CEF/cef_200_percent.pak
+		file windows:Externals/CEF/cef_extensions.pak
+		file windows:Externals/CEF/icudtl.dat
+		file windows:Externals/CEF/natives_blob.bin
+		file windows:Externals/CEF/snapshot_blob.bin
+		file windows:Externals/CEF/v8_context_snapshot.bin
+	into [[TargetFolder]]/Externals/CEF/swiftshader place
+		executable windows:Externals/CEF/swiftshader/libEGL.dll
+		executable windows:Externals/CEF/swiftshader/libGLESv2.dll
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -249,10 +249,14 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
          add 1 to tNumberCopied
          if char -1 of tResource is "/" then
             -- create the folder, stat the source
-            create folder (pTarget & "/" & char 1 to -2 of tResource)
-            if the result is not empty then
-               put "cannot create subfolder ", the result , tResource into tResult
-               exit repeat
+            local tSubFolder
+            put pTarget & "/" & char 1 to -2 of tResource into tSubFolder
+            if there is not a folder tSubFolder then
+               create folder tSubFolder
+               if the result is not empty then
+                  put "cannot create subfolder ", the result , tResource into tResult
+                  exit repeat
+               end if
             end if
             if the platform is "macos" then -- stat it and set some flags
                local tUser, tGroup
@@ -2079,6 +2083,12 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    # AL-2015-02-04: [[ Standalone Resources ]] Add (universal) external names to the deploy parameters
    put pStandaloneSettings["externals"] into tExternals
    
+   revSBAddInclusion "Common", "scriptLibraries", pStandaloneSettings
+   
+   if pStandaloneSettings["includeProfiles"] is not empty then 
+      revSBAddInclusion "Profiles", "scriptLibraries", pStandaloneSettings
+   end if
+   
    -- auxiliary_stackfiles key might not be empty
    put pStandaloneSettings["auxiliary_stackfiles"] into tAuxiliaryStackfiles
    
@@ -2157,13 +2167,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    
    -- If the datagrid is used, then include the library as an aux stack
    if tIncludeDataGrid or "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      local tStackFiles
-      put the stackFiles of stack "revDataGridLibrary" into tStackFiles
-      split tStackFiles by return and comma
-      repeat for each key tStack in tStackFiles
-         appendToStringList the effective filename of  stack tStack, tAuxiliaryStackFiles
-      end repeat
-      appendToStringList the effective filename of stack "revDataGridLibrary", tAuxiliaryStackFiles
+      revSBAddDataGridToAuxiliaryStackFiles tAuxiliaryStackFiles
    end if
    
    put tAuxiliaryStackFiles into xDeployParams["auxiliary_stackfiles"]
@@ -2172,6 +2176,16 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    put tExternals into xDeployParams["externals"]
    put tLibraryMapping into xDeployParams["library"]
 end revSBUpdateDeployParams
+
+command revSBAddDataGridToAuxiliaryStackFiles @xAuxiliaryStackFiles
+   local tStackFiles
+   put the stackFiles of stack "revDataGridLibrary" into tStackFiles
+   split tStackFiles by return and comma
+   repeat for each key tStack in tStackFiles
+      appendToStringList the effective filename of stack tStack, xAuxiliaryStackFiles
+   end repeat
+   appendToStringList the effective filename of stack "revDataGridLibrary", xAuxiliaryStackFiles
+end revSBAddDataGridToAuxiliaryStackFiles
 
 local sBuiltInInclusions
 
@@ -2307,7 +2321,7 @@ command revSBRemoveDependencyForInclusion pInclusion, pInclusionType, pDependeny
    delete variable sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny]
 end revSBRemoveDependencyForInclusion
 
-command revSBUpdateForDependencies pPlatform, @xSettings
+command revSBUpdateForDependencies pPlatform, pArchs, pSDK, @xSettings
    local tDependencies
    repeat for each key tDependentKey in sDependencies
       repeat for each key tDependent in sDependencies[tDependentKey]
@@ -2339,36 +2353,137 @@ command revSBUpdateForDependencies pPlatform, @xSettings
          put tIsRequired into xSettings["android,device capabilities"][tFeature]
       end repeat
       
-      revSBUpdateExtensionCodeInclusions tExtension, pPlatform, xSettings
+      revSBUpdateExtensionCodeInclusions tExtension, pPlatform, pArchs, pSDK, xSettings
+      revSBUpdatePerExtensionSettings tExtension, pPlatform, xSettings
    end repeat
 end revSBUpdateForDependencies
 
-command revSBUpdateExtensionCodeInclusions pExtension, pPlatform, @xSettings
+-- Merge any settings under cRevStandaloneSettings[<ext id>]
+command revSBUpdatePerExtensionSettings pExtension, pPlatform, @xSettings
+   repeat for each key tKey in xSettings[pExtension]
+      if xSettings[tKey] is not empty then
+         put return & xSettings[pExtension][tKey] after xSettings[tKey]
+      else
+         put xSettings[pExtension][tKey] into xSettings[tKey]
+      end if
+   end repeat
+end revSBUpdatePerExtensionSettings
+
+command revSBUpdateExtensionCodeInclusions pExtension, pPlatform, pArchs, pSDK, @xSettings
    local tExtCodeFolder, tCodeFolders
    put revIDEExtensionProperty(pExtension, "install_path") & \
          slash & "code" into tExtCodeFolder
+   
    put folders(tExtCodeFolder) into tCodeFolders
+   filter tCodeFolders without ".*"
+   
    repeat for each line tCodeFolder in tCodeFolders
-      __UpdateSettingsFromCodeFolder tExtCodeFolder, tCodeFolder, pPlatform, xSettings
+      __UpdateSettingsFromCodeFolder tExtCodeFolder, tCodeFolder, pPlatform, pArchs, pSDK, xSettings
    end repeat
+   
+   if not revEnvironmentIsInstalled() and \
+         tExtCodeFolder begins with revEnvironmentExtensionsPath() then
+      -- include builds for other platforms
+      local tNonNativeExtCodeFolder
+      put revEnvironmentNonNativeBinariesPath(pPlatform, pSDK) & \
+            "/packaged_extensions/" & pExtension & "/code" into tNonNativeExtCodeFolder
+      if tNonNativeExtCodeFolder is not tExtCodeFolder and \
+            there is a folder tNonNativeExtCodeFolder then
+         put folders(tNonNativeExtCodeFolder) into tCodeFolders
+         filter tCodeFolders without ".*"
+         
+         repeat for each line tCodeFolder in tCodeFolders
+            __UpdateSettingsFromCodeFolder tNonNativeExtCodeFolder, tCodeFolder, pPlatform, pArchs, pSDK, xSettings
+         end repeat
+      end if
+   end if
 end revSBUpdateExtensionCodeInclusions
 
-private command __UpdateSettingsFromCodeFolder pPath, pCodeFolderName, pPlatform, @xSettings
+private command __UpdateSettingsFromCodeFolder pPath, pCodeFolderName, pPlatform, pArchs, pSDK, @xSettings
    local tFiles, tFolderPath
    put pPath & slash & pCodeFolderName into tFolderPath
    put files(tFolderPath) into tFiles
+   filter tFiles without ".*"
    switch pCodeFolderName
       case "jvm-android"
+         local tAndroidJarFiles, tAndroidAarFiles
+         put tFiles into tAndroidJarFiles
+         filter tAndroidJarFiles with "*.jar"
+         put tFiles into tAndroidAarFiles
+         filter tAndroidAarFiles with "*.aar"
          if pPlatform is "android" then
-            repeat for each line tLine in tFiles
+            repeat for each line tLine in tAndroidJarFiles
                appendToStringList tFolderPath & slash & tLine, xSettings["jarFiles"]
             end repeat
+            repeat for each line tLine in tAndroidAarFiles
+               appendToStringList tFolderPath & slash & tLine, xSettings["aarFiles"]
+            end repeat
+            if there is a file (tFolderPath & slash & "AndroidManifest.xml") then
+               appendToStringList tFolderPath & slash & "AndroidManifest.xml", xSettings["androidManifests"]
+            end if
          end if
          break
       case "jvm"
          repeat for each line tLine in tFiles
             appendToStringList tFolderPath & slash & tLine, xSettings["jarFiles"]
          end repeat
+         break
+      default
+         replace comma with return in pArchs
+         replace "-" with "_" in pArchs
+         replace "i386" with "x86" in pArchs
+         replace "x64" with "x86_64" in pArchs
+         
+         if pPlatform is "MacOSX" then
+            put "mac" into pPlatform
+         else if pPlatform is "Windows" then
+            put "win" into pPlatform
+         end if
+         
+         if pPlatform is among the items of "mac,ios" then
+            if the last char of pArchs is not return then
+               put return after pArchs
+            end if
+            put "universal" after pArchs
+         end if
+         
+         -- on iOS we first look for an exact SDK match for device and simulator
+         -- then fallback to a universal binary covering both device and simulator
+         -- then fallback to a universal binary compiled against an unknown SDK
+         set the itemDelimiter to "-"
+         if pPlatform is "ios" and item 3 of pCodeFolderName is not pSDK then
+            repeat for each word  tOS in "iphoneos iphonesimulator"
+               if pSDK begins with tOS then
+                  delete char 1 to length(tOS) of pSDK
+               end if
+            end repeat
+            if item 3 of pCodeFolderName is not empty and  \
+                  item 3 of pCodeFolderName is not "sdk" & pSDK then
+               break
+            end if
+         end if
+         
+         if item 2 of pCodeFolderName is pPlatform and \
+               item 1 of pCodeFolderName is among the lines of pArchs then
+            repeat for each line tLine in tFiles
+               if tLine is empty then
+                  next repeat
+               end if
+               appendToStringList tFolderPath & slash & tLine, xSettings["extension_code_resources"]
+            end repeat
+            
+            if pPlatform is "mac" then
+               local tFolders
+               put folders(tFolderPath) into tFolders
+               filter tFolders without ".*"
+               repeat for each line tLine in tFolders
+                  if tLine is empty then
+                     next repeat
+                  end if
+                  appendToStringList tFolderPath & slash & tLine, xSettings["extension_code_resources"]
+               end repeat
+            end if
+         end if
          break
    end switch
 end __UpdateSettingsFromCodeFolder
@@ -2749,7 +2864,7 @@ function revSBEnginePath pPlatform
             return tBinariesPath & slash & "standalone-" & tEdition & ".exe"
             break
          case "Linux"
-            return tBinariesPath & slash & "standalone-" & tEdition
+            return tBinariesPath & slash & "standalone-" & toLower(tEdition)
             break
          default
             return empty

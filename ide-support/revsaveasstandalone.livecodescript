@@ -479,11 +479,11 @@ command revSearchForInclusions pStack, @xSettings
    end if
 end revSearchForInclusions
 
-private on revStandalonePreBuild pStack, pFolder, pPlatform, @rStackName, @rStackFileList
+private on revStandalonePreBuild pStack, pFolder, pPlatform, pArchs, @rStackName, @rStackFileList
    revStandaloneProgress "Loading settings..."
    
    -- Make sure all dependencies are included
-   revSBUpdateForDependencies pPlatform, sStandaloneSettingsA
+   revSBUpdateForDependencies pPlatform, pArchs, , sStandaloneSettingsA
    
    local tCount
    if there is a file (pFolder & "/" & sStandaloneSettingsA["name"]) then
@@ -527,8 +527,6 @@ private command revStandaloneCopyInclusions pStack, pStackFileList, pStackSource
       pTarget, pDirectory, pStackPath, pStandalonePath, pEngineSourceFile
    -- copy resources (inclusions) to files
    revCopyResources pStack, pStackFileList, pDirectory
-   
-   revCopyScriptLibraries pStack, pTarget
    
    revCopyFiles pTarget, pDirectory, pStackPath
    
@@ -603,8 +601,6 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
    local tDirectory, tStackSourceFile, tName, tOriginalFileName, tStackPath
    local tTargetDir
    
-   revStandalonePreBuild pStack, pFolder, "macosx", tStackName, tStackFileList
-   
    set the itemDelimiter to slash
    put the effective filename of stack pStack into tOriginalFileName
    put item 1 to -2 of tOriginalFileName into tStackPath
@@ -647,6 +643,8 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
       
       -- Ensure standalone settings script local is reset when building for subsequent targets
       put tStandaloneSettingsA into sStandaloneSettingsA
+      
+      revStandalonePreBuild pStack, pFolder, "macosx", tArchitectures, tStackName, tStackFileList
       
       -- copy files to each directory
       -- put the path to the engine into tEngineSourceFile
@@ -713,8 +711,6 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalo
    put the effective filename of stack pStack into tOriginalFileName
    put item 1 to -2 of tOriginalFileName into tStackPath
    
-   revStandalonePreBuild pStack, pFolder, "windows", tStackName, tStackFileList
-   
    put revEnvironmentRuntimePath() & "/Windows/x86-32/Support/Sample Icons" into tName
    if sStandaloneSettingsA["Windows,iconFile"] = "" then 
       put tName & "/genericapp.ico" into sStandaloneSettingsA["Windows,iconFile"]
@@ -752,6 +748,16 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalo
       
       -- Ensure standalone settings script local is reset when building for subsequent targets
       put tStandaloneSettingsA into sStandaloneSettingsA
+      
+      local tArch
+      if word 2 of tTarget is among the items of "x64,x86-64,x86_64" then
+         put "x86_64" into tArch
+      else if word 2 of tTarget is not empty then
+         put word 2 of tTarget into tArch
+      else
+         put "x86" into tArch
+      end if
+      revStandalonePreBuild pStack, pFolder, "windows", tArch, tStackName, tStackFileList
       
       -- copy files to each directory
       -- put the path to the engine into tEngineSourceFile
@@ -884,8 +890,6 @@ command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder, @xStandalone
    put the effective filename of stack pStack into tOriginalFileName
    put item 1 to -2 of tOriginalFileName into tStackPath
    
-   revStandalonePreBuild pStack, pFolder, "linux", tStackName, tStackFileList
-   
    -- keep a copy of the standalone settings to restore after each build
    local tStandaloneSettingsA
    put sStandaloneSettingsA into tStandaloneSettingsA
@@ -894,6 +898,16 @@ command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder, @xStandalone
       
       -- Ensure standalone settings script local is reset when building for subsequent targets
       put tStandaloneSettingsA into sStandaloneSettingsA
+      
+      local tArch
+      if word 2 of tTarget is among the items of "x64,x86-64,x86_64" then
+         put "x86_64" into tArch
+      else if word 2 of tTarget is not empty then
+         put word 2 of tTarget into tArch
+      else
+         put "x86" into tArch
+      end if
+      revStandalonePreBuild pStack, pFolder, "linux", tArch, tStackName, tStackFileList
       
       -- Always add print dialogs to linux standalones when searching for inclusions
       if sStandaloneSettingsA["inclusions"] = "search" then 
@@ -1002,7 +1016,6 @@ private command revCloseOpenStacks pStackFileList, pStack
          set the itemDel to comma
       end if
    end repeat
-   lock messages
    -- remove the stacks from memory and keep a note of them for later
    repeat for each line tStack in pStackFileList["full"]
       if the short name of stack tStack is among the lines of the mainStacks then
@@ -1136,25 +1149,6 @@ end revOutputDirectories
 private function revPlatformCount
    return sPlatformCount
 end revPlatformCount
-
-# Adds the appropriate script libraries to the standalone settings
-private command revCopyScriptLibraries pStack, pPlatform
-   # AL-2015-02-03: [[ Scriptify IDE ]] Ensure revCommonLibrary is always included in a standalone
-   revSBAddInclusion "Common", "scriptLibraries", sStandaloneSettingsA
-   
-   -- data grid
-   // SN-2015-10-19: [[ Bug 16238 ]] DataGrid can be included on the wish of the user - in case the standalone stack
-   //  will load stacks using DataGrid, for instance.
-   if ("data grid templates" is in the subStacks of stack pStack or "DataGrid" is among the lines of sStandaloneSettingsA["scriptLibraries"]) \
-         and there is a stack "revDataGridLibrary" then
-      set the mainStack of stack "revDataGridLibrary" to pStack
-   end if
-   
-   // AL-2015-04-28: [[ Bug 15244 ]] Include profiles library if needed
-   if sStandaloneSettingsA["includeProfiles"] is not empty then 
-      revSBAddInclusion "Profiles", "scriptLibraries", sStandaloneSettingsA
-   end if
-end revCopyScriptLibraries
 
 #####################################################################
 # Copies general resources to the standalone stack and then does
@@ -1590,15 +1584,8 @@ command revReset
    set the fileType to sResetA["fileType"]
    unlock messages
    try
-      # MW-2009-07-18: Media does not have a datagrid library and so this breaks if we don't
-      #   double check it exists there first.
-      if there is a stack "revDataGridLibrary" then
-         set the mainStack of stack "revDataGridLibrary" to "revDataGridLibrary"
-      end if
-      
       # TH-2008-07-08 :: Bug 6444, locking messages around this handler to prevent calling of preopencard handlers
       # in the stacks being built
-      lock messages
       local tLineNumber
       put 0 into tLineNumber
       repeat for each line tLine in sResetA["Reopen"]
@@ -1608,7 +1595,6 @@ command revReset
          # OK-2008-11-10 : Bug 7382 - Restores the stack's position in the message path if there was one
          restoreStackToMessagePath tLine, line tLineNumber of sResetA["Restore Message Path"]
       end repeat
-      unlock messages
    end try
    delete variable sResetA               -- stored info for resetting to the pre-build state
    unlock screen
@@ -2431,16 +2417,28 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       revAddExternal tExternal
    end repeat
    
-   repeat for each line tJar in sStandaloneSettingsA["jarFiles"]
-      local tSourceFile, tSourceFolder, tTargetFolder, tJarDest
+   local tSourceFile, tSourceFolder, tTargetFolder, tDestFolder
+   repeat for each line tLib in sStandaloneSettingsA["jarFiles"]
       set the itemdelimiter to slash
-      put item -1 of tJar into tSourceFile
-      put item 1 to -2 of tJar into tSourceFolder
-      put tCurrentLocation & slash & "Externals/JVM" into tJarDest
+      put item -1 of tLib into tSourceFile
+      put item 1 to -2 of tLib into tSourceFolder
+      put tCurrentLocation & slash & "Externals/JVM" into tDestFolder
       
-      revSBEnsureFolder tJarDest
+      revSBEnsureFolder tDestFolder
       revCopyModule tPlatform, tSourceFile, tSourceFile, \
             tSourceFolder, tCurrentLocation, "Externals/JVM", false
+   end repeat
+   
+   repeat for each line tLib in sStandaloneSettingsA["extension_code_resources"]
+      set the itemdelimiter to slash
+      put item -1 of tLib into tSourceFile
+      put item 1 to -2 of tLib into tSourceFolder
+      put tCurrentLocation & slash & "Externals" into tDestFolder
+      
+      revSBEnsureFolder tDestFolder
+      set the itemDelimiter to "."
+      revCopyModule tPlatform, item 1 to -2 of tSourceFile, tSourceFile, \
+            tSourceFolder, tCurrentLocation, "Externals", there is a folder tLib
    end repeat
    
    // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by

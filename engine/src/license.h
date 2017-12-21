@@ -158,4 +158,18 @@ inline bool MCEditionStringFromLicenseClass(MCLicenseClass p_class, MCStringRef 
     return false;
 }
 
+inline bool MCEditionStringToLicenseClass(MCStringRef p_edition, MCLicenseClass &r_class)
+{
+    for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
+    {
+        if (MCStringIsEqualToCString(p_edition, s_class_map[t_index].edition_string, kMCCompareCaseless))
+        {
+            r_class = s_class_map[t_index].license_class;
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 #endif

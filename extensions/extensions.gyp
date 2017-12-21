@@ -35,18 +35,18 @@
 	        'target_name': 'extensions',
 			'type': 'none',
 			
+			'dependencies':
+			[
+				'cross-platform-extension-dependencies',
+			],
+			
+			
 			'conditions':
 			[
 			    [
                     'mobile == 0',
                     {
-                        'dependencies':
-                        [
-                            'lcs-extensions',
-                            'lcb-extensions',
-                        ],	
-                        
-                        'all_dependent_settings':
+						'all_dependent_settings':
 						{
 							'variables':
 							{
@@ -56,7 +56,13 @@
 									'<(PRODUCT_DIR)/packaged_extensions/',
 								],
 							},
-						},		    
+						},
+
+                        'dependencies':
+                        [
+							'lcs-extensions',
+                            'lcb-extensions',
+                        ],	 
                     },
                 ],
 			],
@@ -70,6 +76,7 @@
 				'script-libraries/oauth2/oauth2.livecodescript',
 				'script-libraries/getopt/getopt.livecodescript',
 				'script-libraries/mime/mime.livecodescript',
+				'script-libraries/drawing/drawing.livecodescript',
 				'script-libraries/dropbox/dropbox.livecodescript',
 				'script-libraries/diff/diff.livecodescript',
 				'script-libraries/messageauthentication/messageauthentication.livecodescript',
@@ -90,9 +97,22 @@
 					'extension': 'livecodescript',
 					'message': 'Building script extension <(RULE_INPUT_NAME)',
 										
+					'conditions':
+					[
+						[
+							'OS != "mac" and OS != "ios"',
+							{
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/packaged_extensions/',
+								],
+							},
+						],
+					],
+
 					'outputs':
 					[
-						'<(PRODUCT_DIR)/packaged_extensions/com.livecode.library.<(RULE_INPUT_ROOT)/<(RULE_INPUT_ROOT).livecodescript',
+						'<(PRODUCT_DIR)/packaged_extensions/com.livecode.library.<(RULE_INPUT_ROOT)/<(RULE_INPUT_ROOT).livecodescript',	
 					],
 					          
 					'action':
@@ -131,10 +151,12 @@
 
 				'libraries/androidbgaudio/androidbgaudio.lcb',
 				'libraries/androidaudiorecorder/androidaudiorecorder.lcb',
+				'libraries/toast/toast.lcb',
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',
 				'libraries/objectrepository/objectrepository.lcb',
+				'libraries/ini/ini.lcb',
 
 				'widgets/androidbutton/androidbutton.lcb',
 				'widgets/androidfield/androidfield.lcb',
@@ -219,6 +241,16 @@
 						'<@(_sources)',
 					],
 				},
+			],
+		},
+		
+		{
+			'target_name': 'cross-platform-extension-dependencies',
+			'type': 'none',
+
+			'dependencies':
+			[
+				'libraries/ini/inih/inih.gyp:inih',
 			],
 		},
 	],

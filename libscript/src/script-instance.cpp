@@ -225,6 +225,9 @@ __MCScriptCallHandlerDefinitionInInstance(MCScriptInstanceRef self,
 										  uindex_t p_argument_count,
 										  MCValueRef* r_value)
 {
+    if (!self->module->licensed)
+        return MCErrorThrowGeneric(MCSTR("extension not licensed"));
+    
     void *t_cookie = nullptr;
     
     if (self->module->module_kind == kMCScriptModuleKindWidget)
@@ -983,16 +986,28 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
     }
 
     bool t_valid = true;
+    bool t_is_dynamic = MCStringIsEmpty(*t_class);
     
     /* Lookup the class, to make sure it exists. */
     Class t_objc_class = nullptr;
     if (t_valid)
     {
-        t_objc_class = objc_getClass(*t_class_cstring);
-        if (t_objc_class == nullptr)
+        if (t_is_dynamic)
         {
-            /* ERROR: should be class not found */
-            t_valid = false;
+            if (t_is_class)
+            {
+                /* ERROR: should be can't dynamically bind to class methods */
+                t_valid = false;
+            }
+        }
+        else
+        {
+            t_objc_class = objc_getClass(*t_class_cstring);
+            if (t_objc_class == nullptr)
+            {
+                /* ERROR: should be class not found */
+                t_valid = false;
+            }
         }
     }
     
@@ -1007,28 +1022,54 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
     }
     
     /* Get the Method - either class or instance - from the class */
-    Method t_objc_method = nullptr;
-    if (t_valid)
+    if (t_valid && !t_is_dynamic)
     {
         if (!t_is_class)
         {
-            t_objc_method = class_getInstanceMethod(t_objc_class,
-                                               t_objc_sel);
+            t_valid = class_respondsToSelector(t_objc_class, t_objc_sel);
+            
+            /* If a lookup fails, then check to see if it could be a property
+             * binding. Classes such as NSUserNotification declare dynamic props
+             * which means that the methods aren't present until runtime, but
+             * the prop definitions are. */
+            if (!t_valid &&
+                MCStringBeginsWithCString(*t_selector_name, (const char_t *)"set", kMCStringOptionCompareExact) &&
+                MCStringEndsWithCString(*t_selector_name, (const char_t *)":", kMCStringOptionCompareExact))
+            {
+                if (MCStringGetLength(*t_selector_name) < 255)
+                {
+                    char t_prop_name[256];
+                    strncpy(t_prop_name, *t_selector_name_cstring + 3, strlen(*t_selector_name_cstring) - 4);
+                    t_prop_name[0] = tolower(t_prop_name[0]);
+                    t_prop_name[strlen(*t_selector_name_cstring) - 4] = '\0';
+                    objc_property_t t_property = class_getProperty(t_objc_class, t_prop_name);
+                    if (t_property != nullptr)
+                    {
+                        t_valid = strstr(property_getAttributes(t_property), ",R,") == nullptr;
+                    }
+                }
+            }
+            else if (!t_valid &&
+                     MCStringCountChar(*t_selector_name, MCRangeMake(0, MCStringGetLength(*t_selector_name)), ':', kMCStringOptionCompareExact) == 0)
+            {
+                objc_property_t t_property = class_getProperty(t_objc_class, *t_selector_name_cstring);
+                if (t_property != nullptr)
+                {
+                    t_valid = true;
+                }
+            }
         }
         else
         {
-            t_objc_method = class_getClassMethod(t_objc_class,
-                                            t_objc_sel);
-        }
-        if (t_objc_method == nullptr)
-        {
-            /* ERROR: objc method not found */
-            t_valid = false;
+            if (class_getClassMethod(t_objc_class, t_objc_sel) == nullptr)
+            {
+                t_valid = false;
+            }
         }
     }
     
     /* Next we must compute the cif. */
-    MCAutoPointer<void> t_layout_cif;
+    MCAutoCustomPointer<void, MCMemoryDeallocate> t_layout_cif;
     ffi_cif *t_cif = nullptr;
     ffi_type *t_cif_return_type = nullptr;
     ffi_type **t_cif_arg_types = nullptr;
@@ -1520,12 +1561,44 @@ __MCScriptInternalHandlerDescribe(void *p_context,
 	return MCStringFormat(r_description, "%@.%@()", t_module_name, t_handler_name);
 }
 
+static bool
+__MCScriptInternalHandlerQuery(void *p_context,
+                               MCHandlerQueryType p_query,
+                               void *r_info)
+{
+    if (p_query != kMCHandlerQueryTypeObjcSelector)
+    {
+        return false;
+    }
+ 
+    __MCScriptInternalHandlerContext *context =
+        (__MCScriptInternalHandlerContext *)p_context;
+    
+    if (context->definition->kind != kMCScriptDefinitionKindForeignHandler)
+    {
+        return false;
+    }
+    
+    auto t_definition =
+        static_cast<MCScriptForeignHandlerDefinition *>(context->definition);
+    
+    if (t_definition->language != kMCScriptForeignHandlerLanguageObjC)
+    {
+        return false;
+    }
+    
+    *(void **)r_info = t_definition->objc.objc_selector;
+    
+    return true;
+}
+
 static MCHandlerCallbacks __kMCScriptInternalHandlerCallbacks =
 {
 	sizeof(__MCScriptInternalHandlerContext),
 	__MCScriptInternalHandlerRelease,
 	__MCScriptInternalHandlerInvoke,
-	__MCScriptInternalHandlerDescribe
+	__MCScriptInternalHandlerDescribe,
+    __MCScriptInternalHandlerQuery,
 };
 
 static bool

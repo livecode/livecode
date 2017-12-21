@@ -45,6 +45,7 @@
 				'src/utils.cpp',
 				'src/SkStippleMaskFilter.cpp',
 				'src/legacygradients.cpp',
+				'src/drawing.cpp',
 			],
 			
 			'target_conditions':

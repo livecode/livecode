@@ -6,7 +6,7 @@ REM #
 REM #   CONFIGURE VERSIONS AND FOLDERS
 REM #
 
-REM If called with no arguments ICU, OpenSSL and Curl will be built.
+REM If called with no arguments ICU, OpenSSL, CEF and Curl will be built.
 REM Otherwise it can be called with one or two arguments. The first argument is
 REM the library to build, the second is either not present or 'prepare'. If
 REM 'prepare', then the source will be downloaded and unpacked into a unique
@@ -191,6 +191,10 @@ IF %1=="" (
 
 	REM Build ICU
 	CALL "scripts\build-icu.bat"
+	IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
+
+  REM Build CEF
+	CALL "scripts\build-cef.bat"
 	IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 ) ELSE (
 	CALL "scripts\build-%1.bat" %2

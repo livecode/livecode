@@ -79,32 +79,6 @@ static inline sk_sp<SkTypeface> MCGSkTypefaceFromCTFontRef(CTFontRef p_ref)
     return sk_sp<SkTypeface>(SkCreateTypefaceFromCTFont(p_ref, nil));
 }
 
-// Creates an SkPaint from a CTFontRef
-static inline SkPaint MCGSkPaintFromCTFontRef(MCGContextRef p_ctxt, CTFontRef p_ref, const MCGAffineTransform& p_transform)
-{
-    // Convert the CTFontRef into a Skia Typeface object
-    auto t_typeface = MCGSkTypefaceFromCTFontRef(p_ref);
-    
-    // Configure the paint for text rendering.
-    // Both LCD font smoothing and embedded bitmap rendering are enabled
-    SkPaint t_paint;
-    t_paint.setTypeface(t_typeface);
-    t_paint.setTextSize(CTFontGetSize(p_ref));
-    // Only use LCD-style anti-aliasing if the layer is opaque.
-    t_paint.setLCDRenderText(p_ctxt != nullptr ? MCGContextIsLayerOpaque(p_ctxt) : true);
-    t_paint.setEmbeddedBitmapText(true);
-    
-    // Set the transform we're using
-    SkMatrix t_matrix;
-    MCGAffineTransformToSkMatrix(p_transform, t_matrix);
-    t_paint.setTextMatrix(&t_matrix);
-    
-    // All our font rendering uses UTF-16 codeunits
-    t_paint.setTextEncoding(SkPaint::kUTF16_TextEncoding);
-    
-    return t_paint;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static CTLineRef MCGCreateCTLineFromText(const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
@@ -277,15 +251,37 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	if (!MCGContextIsValid(self))
 		return;	
 	
-    // The transform that drawing will be using
-    MCGAffineTransform t_transform = MCGContextGetDeviceTransform(self);
+    // The paint containing the fill settings
+    SkPaint t_paint;
+    if (!MCGContextSetupFill(self, t_paint))
+    {
+        self->is_valid = false;
+        return;
+    }
+    
+    // Only use LCD-style anti-aliasing if the layer is opaque.
+    t_paint.setLCDRenderText(self != nullptr ? MCGContextIsLayerOpaque(self) : true);
+    
+    // Enable emoji style fonts
+    t_paint.setEmbeddedBitmapText(true);
+    
+    // Ensure we use anti-aliasing
+    t_paint.setAntiAlias(true);
+    
+    // We are going to draw text by glyph ID rather than by codeunit
+    t_paint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
+    
+    // Set the transform we're using
+    SkMatrix t_matrix;
+    MCGAffineTransformToSkMatrix(MCGContextGetDeviceTransform(self), t_matrix);
+    t_paint.setTextMatrix(&t_matrix);
     
     // Create a fully laid-out line of text
     CTLineRef t_line = MCGCreateCTLineFromText(p_text, p_length, p_font);
     
     // Iterate over the runs of text within the line
     MCGForEachRunInLine(t_line,
-    [=](CTRunRef p_run)
+    [=, &t_paint](CTRunRef p_run)
     {
         // Get the attribute dictionary for this run
         CFDictionaryRef t_attributes = CTRunGetAttributes(p_run);
@@ -298,19 +294,9 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
         MCGFloat t_x = p_location.x + t_text_transform.tx;
         MCGFloat t_y = p_location.y + t_text_transform.ty;
         
-        // Create a Skia paint object wrapping the font
-        SkPaint t_paint = MCGSkPaintFromCTFontRef(self, t_font, t_transform);
-        
-        // Customise the paint based on the current settings
-        t_paint.setStyle(SkPaint::kFill_Style);
-        t_paint.setColor(MCGColorToSkColor(self->state->fill_color));
-        t_paint.setBlendMode(MCGBlendModeToSkBlendMode(self->state->blend_mode));
-        
-        // Force anti-aliasing on so that we get nicely-rendered text
-        t_paint.setAntiAlias(true);
-        
-        // We are going to draw text by glyph ID rather than by codeunit
-        t_paint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
+        // Convert the CTFontRef into a Skia Typeface object
+        t_paint.setTypeface(MCGSkTypefaceFromCTFontRef(t_font));
+        t_paint.setTextSize(CTFontGetSize(t_font));
         
         // Iterate through the glyphs of the run
         MCGForEachGlyphInRun(p_run,

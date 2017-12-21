@@ -1,0 +1,49 @@
+Name: gRevAutoCreateProfiles
+
+Type: keyword
+
+Syntax: gRevAutoCreateProfiles
+
+Summary:
+A special <global|global variable> that specifies whether to 
+automatically create a <property profile|profile> when you
+switch to a new profile.
+
+Associations: profile library
+
+Introduced: 2.0
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Example:
+global gRevAutoCreateProfiles
+put true into gRevAutoCreateProfiles
+set the revProfile of me to "NewProfile"
+
+Description:
+Set the <gRevAutoCreateProfiles> <variable> to true when adding a
+new <property profile|profile>.  When false, attempts to change to a
+profile that does not exist are ignored.
+
+Each object can have one or more profiles, which include settings for
+each property in the object's <property|properties>. The
+<gRevAutoCreateProfiles> <variable> controls what happens when you set
+an <object|object's> <property profile|profile> to one that does not
+currently exist.  If true, then the new <property profile|profile> will
+be created.
+
+The <gRevAutoCreateProfiles> <global|global variable> can also be
+changed in the Preferences dialog box:
+
+1. Choose LiveCode → Preferences from the menubar.
+2. Choose "Property Profiles" from the menu at the top.
+3. Click "Create profiles automatically".
+
+
+References: answer (command), ask (command), object (glossary),
+property (glossary), variable (glossary), property profile (glossary),
+global (glossary), properties (property), Profile library (library)
+
+Tags: windowing

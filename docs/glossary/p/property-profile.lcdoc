@@ -4,6 +4,8 @@ Synonyms: profile, property profile
 
 Type: glossary
 
+Associations: profile library
+
 Description:
 A set of <property> settings for an <object(glossary)>. You create and
 change an <object|object's> profiles using the Property Profiles pane in

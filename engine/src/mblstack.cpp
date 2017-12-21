@@ -165,6 +165,11 @@ void MCStack::updatedocumentfilename(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCStack::view_platform_dirtyviewonresize() const
+{
+	return false;
+}
+
 MCRectangle MCStack::view_platform_getwindowrect() const
 {
 	return view_getrect();

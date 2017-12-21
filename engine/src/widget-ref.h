@@ -89,6 +89,7 @@ public:
     void ScheduleTimerIn(double timeout);
     void CancelTimer(void);
     void RedrawRect(MCGRectangle *area);
+    void TriggerAll();
     
     bool CopyChildren(MCProperListRef& r_children);
     void PlaceWidget(MCWidgetRef child, MCWidgetRef relative_to, bool put_below);

@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 mergeInto(LibraryManager.library, {
 
-	$LiveCodeEvents__deps: ['$LiveCodeAsync'],
+	$LiveCodeEvents__deps: ['$LiveCodeAsync', '$LiveCodeDC'],
 	$LiveCodeEvents: {
 
 		// true if ensureInit() has ever been run
@@ -64,30 +64,42 @@ mergeInto(LibraryManager.library, {
 			}
 		},
 
+		addEventListeners: function(pElement)
+		{
+			LiveCodeEvents._eventForEach(function(type, handler) {
+				pElement.addEventListener(type, handler, true);
+			});
+
+			// Make sure the canvas is treated as focusable...
+			pElement.tabIndex = 0;
+
+			// Make it a target for text input events
+			pElement.setAttribute('contentEditable', 'true');
+
+			// Force the canvas to use a normal mouse cursor by
+			// default
+			pElement.style.cursor = 'default';
+		},
+		
+		removeEventListeners: function(pElement)
+		{
+			// Remove all of the event handlers
+			LiveCodeEvents._eventForEach(function (type, handler) {
+				pElement.removeEventListener(type, handler, true);
+			});
+		},
+		
 		initialize: function() {
 			// Make sure this only ever gets run once
 			if (LiveCodeEvents._initialised) {
 				return;
 			}
 
-			var target = LiveCodeEvents._getTarget();
-
-			// Add all of the event handlers
-			LiveCodeEvents._eventForEach(function (type, handler) {
-				target.addEventListener(type, handler, true);
-			});
-
-			// Make sure the canvas is treated as focusable...
-			target.tabIndex = 0;
-
-			// Make it a target for text input events
-			target.setAttribute('contentEditable', 'true');
-
-			// Force the canvas to use a normal mouse cursor by
-			// default
-			target.style.cursor = 'default';
-
-			LiveCodeEvents._initialised = false;
+			// Add document event listeners to track mouse events outside canvas
+			document.addEventListener("mouseup", LiveCodeEvents._handleDocumentMouseEvent);
+			document.addEventListener("mousemove", LiveCodeEvents._handleDocumentMouseEvent);
+			
+			LiveCodeEvents._initialised = true;
 		},
 
 		finalize: function() {
@@ -95,23 +107,23 @@ mergeInto(LibraryManager.library, {
 				return;
 			}
 
-			var target = LiveCodeEvents._getTarget();
-
-			// Remove all of the event handlers
-			LiveCodeEvents._eventForEach(function (type, handler) {
-				target.removeEventListener(type, handler, true);
-			});
-
 			LiveCodeEvents._initialised = false;;
 		},
-
-		_getTarget: function() {
-			// Handlers are attached to the default canvas
-			return Module['canvas'];
+		
+		_getStackForWindow: function(pWindow) {
+			return Module.ccall('MCEmscriptenGetStackForWindow', 'number',
+								['number'],
+								[pWindow]);
 		},
-
-		_getStack: function() {
-			return Module.ccall('MCEmscriptenGetCurrentStack', 'number', [], []);
+		
+		_getStackForCanvas: function(pCanvas) {
+			var window = LiveCodeDC.getWindowIDForCanvas(pCanvas);
+			if (window == 0)
+			{
+				console.log('failed to find window for canvas');
+				return null;
+			}
+			return LiveCodeEvents._getStackForWindow(window);
 		},
 
 		_encodeModifiers: function(uiEvent) {
@@ -136,7 +148,7 @@ mergeInto(LibraryManager.library, {
 
 		_handleFocusEvent: function(e) {
 			LiveCodeAsync.delay(function() {
-				var stack = LiveCodeEvents._getStack();
+				var stack = LiveCodeEvents._getStackForCanvas(e.target);
 
 				switch (e.type) {
 				case 'focus':
@@ -494,7 +506,7 @@ mergeInto(LibraryManager.library, {
 		_handleKeyboardEvent: function(e) {
 			LiveCodeAsync.delay(function() {
 
-				var stack = LiveCodeEvents._getStack();
+				var stack = LiveCodeEvents._getStackForCanvas(e.target);
 				var mods = LiveCodeEvents._encodeModifiers(e);
 
 				switch (e.type) {
@@ -557,7 +569,7 @@ mergeInto(LibraryManager.library, {
 		_handleComposition: function(compositionEvent) {
 			LiveCodeAsync.delay(function() {
 				// Stack that we're targeting
-				var stack = LiveCodeEvents._getStack();
+				var stack = LiveCodeEvents._getStackForCanvas(compositionEvent.target);
 
 				var encodedString;
 				var chars, length;
@@ -611,7 +623,7 @@ mergeInto(LibraryManager.library, {
 		// are in units of CSS pixels relative to the top left of the
 		// target
 		_encodeMouseCoordinates: function(mouseEvent) {
-			var target = mouseEvent.target;
+			var target = LiveCodeEvents._eventTarget(mouseEvent);
 			var x = mouseEvent.clientX - target.getBoundingClientRect().left -
 				target.clientLeft + target.scrollLeft;
 			var y = mouseEvent.clientY - target.getBoundingClientRect().top -
@@ -655,39 +667,96 @@ mergeInto(LibraryManager.library, {
 						 [stack, time, inside]);
 		},
 
+		// target for redirected mouse events
+		_captureTarget: null,
+		
+		// Redirect mouse events to the specified target element
+		_captureFocus: function(element) {
+			LiveCodeEvents._captureTarget = element;
+		},
+		
+		// End mouse event redirection
+		_releaseFocus: function() {
+			LiveCodeEvents._captureTarget = null;
+		},
+		
+		// Return the target to which mouse events are dispatched
+		_eventTarget: function(event) {
+			if (event.type == "mousedown" || LiveCodeEvents._captureTarget == null)
+				return event.target;
+			else
+				return LiveCodeEvents._captureTarget;
+		},
+		
 		_handleMouseEvent: function(e) {
 			LiveCodeAsync.delay(function () {
 
-				var stack = LiveCodeEvents._getStack();
+				var target = LiveCodeEvents._eventTarget(e);
+				var stack = LiveCodeEvents._getStackForCanvas(target);
 				var mods = LiveCodeEvents._encodeModifiers(e);
 				var pos = LiveCodeEvents._encodeMouseCoordinates(e);
 
-				// Always post the mouse position
-				LiveCodeEvents._postMousePosition(stack, e.timestamp, mods,
-												  pos[0], pos[1]);
-
 				switch (e.type) {
 				case 'mousemove':
+					LiveCodeEvents._postMousePosition(stack, e.timeStamp, mods, pos[0], pos[1]);
 					return;
 
 				case 'mousedown':
 					// In the case of mouse down, specifically request
 					// keyboard focus
-					LiveCodeEvents._getTarget().focus();
-
-					// Intentionally fall through to 'mouseup' case.
-				case 'mouseup':
+					e.target.focus();
+					LiveCodeEvents._postMousePosition(stack, e.timeStamp, mods, pos[0], pos[1]);
 					var state = LiveCodeEvents._encodeMouseState(e.type);
-					LiveCodeEvents._postMousePress(stack, e.timestamp, mods,
+					LiveCodeEvents._postMousePress(stack, e.timeStamp, mods,
 												   state, e.button);
+					
+					// Redirect mouse events to this canvas while the mouse is down
+					LiveCodeEvents._captureFocus(e.target);
+					
+					break;
+
+				case 'mouseup':
+					LiveCodeEvents._postMousePosition(stack, e.timeStamp, mods, pos[0], pos[1]);
+					var state = LiveCodeEvents._encodeMouseState(e.type);
+					LiveCodeEvents._postMousePress(stack, e.timeStamp, mods,
+												   state, e.button);
+					
+					// change mouse focus if event target is different from captured target
+					var refocus = target != e.target;
+					if (refocus)
+						LiveCodeEvents._postMouseFocus(stack, e.timeStamp, false);
+					
+					LiveCodeEvents._releaseFocus();
+					
+					if (refocus)
+					{
+						var stack = LiveCodeEvents._getStackForCanvas(e.target);
+						var pos = LiveCodeEvents._encodeMouseCoordinates(e);
+						if (stack)
+						{
+							LiveCodeEvents._postMouseFocus(stack, e.timeStamp, true);
+							LiveCodeEvents._postMousePosition(stack, e.timeStamp, mods, pos[0], pos[1]);
+						}
+					}
+					
 					break;
 
 				case 'mouseenter':
-					LiveCodeEvents._postMouseFocus(stack, e.timestamp, true);
+					// Don't send window focus events while capturing mouse events
+					if (LiveCodeEvents._captureTarget == null)
+					{
+						LiveCodeEvents._postMouseFocus(stack, e.timeStamp, true);
+						LiveCodeEvents._postMousePosition(stack, e.timeStamp, mods, pos[0], pos[1]);
+					}
 					break;
 
 				case 'mouseleave':
-					LiveCodeEvents._postMouseFocus(stack, e.timestamp, false);
+					// Don't send window focus events while capturing mouse events
+					if (LiveCodeEvents._captureTarget == null)
+					{
+						LiveCodeEvents._postMousePosition(stack, e.timeStamp, mods, pos[0], pos[1]);
+						LiveCodeEvents._postMouseFocus(stack, e.timeStamp, false);
+					}
 					break;
 
 				default:
@@ -701,6 +770,40 @@ mergeInto(LibraryManager.library, {
 			// Prevent event from propagating
 			e.preventDefault();
 			return false;
+		},
+		
+		// Document mouse event handler - redirects to target element when capturing mouse events
+		_handleDocumentMouseEvent: function(e) {
+			if (LiveCodeEvents._captureTarget) {
+				LiveCodeEvents._handleMouseEvent(e);
+			}
+		},
+
+		// ----------------------------------------------------------------
+		// Mouse events
+		// ----------------------------------------------------------------
+		
+		_postWindowReshape: function(stack, backingScale)
+		{
+			Module.ccall('MCEventQueuePostWindowReshape',
+							'number', /* bool */
+							['number', /* MCStack *stack */
+							 'number'], /* MCGFloat backing_scale */
+							[stack, backingScale]);
+		},
+		
+		postWindowReshape: function(window)
+		{
+			LiveCodeAsync.delay(function () {
+				var stack = LiveCodeEvents._getStackForWindow(window);
+				if (stack == 0)
+				{
+					console.log('could not find stack for window ' + window);
+					return
+				}
+				LiveCodeEvents._postWindowReshape(stack, 1.0);
+			});
+			LiveCodeAsync.resume();
 		},
 	},
 

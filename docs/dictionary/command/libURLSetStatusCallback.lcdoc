@@ -73,29 +73,35 @@ Then suppose you begin an upload with the following command:
 Periodically while the text of the field is being uploaded to the file,
 a "myProgress" message is sent to button "Monitor". The first parameter
 sent with "myProgress" is the URL (in this case, the URL is
-"ftp://me:mypass@ftp.example.org/myfile" ), and the second parameter is
+"ftp://me:mypass@ftp.example.org/myfile"), and the second parameter is
 the current status of that URL. The "myProgress" handler might look like
 this: 
 
-    on myProgress theURL,theStatus
-    put theStatus into field theURL of stack "Status Monitor"
-
+    on myProgress pURL, pStatus
+        put pStatus into field pURL of stack "Status Monitor"
     end myProgress
 
 
 The URL status parameter is similar to the status returned by the
 URLStatus <function>, and is one of the following:
 
-"queued": on hold until a previous request to the same site is completed
-"contacted": the site has been contacted but no data has been sent or
-received yet "requested": the URL has been requested
-"loading,bytesReceived,bytesTotal": the <URL(keyword)> data is being
-received "uploading,bytesReceived,bytesTotal": the file is being
-<upload|uploaded> to the URL "downloaded": the application has finished
-downloading the URL "uploaded": the application has finished uploading
-the file to the URL "error": an error occurred and the <URL(keyword)>
-was not transferred "timeout": the application timed out when attempting
-to transfer the URL empty:the URL was not loaded, or has been unloaded
+* "queued": on hold until a previous request to the same site is completed
+* "contacted": the site has been contacted but no data has been sent or
+received yet
+* "requested": the URL has been requested
+* "loading,bytesReceived,bytesTotal": the <URL(keyword)> data is being
+received
+* "uploading,bytesReceived,bytesTotal": the file is being
+<upload|uploaded> to the URL 
+* "downloaded": the application has finished
+downloading the URL
+* "uploaded": the application has finished uploading
+the file to the URL
+* "error": an error occurred and the <URL(keyword)>
+was not transferred
+* "timeout": the application timed out when attempting
+to transfer the URL
+* empty: the URL was not loaded, or has been unloaded
 
 >*Note:* The third <item> (bytesTotal) in the "loading" or "uploading"
 > status report is empty if it is not possible to determine the total

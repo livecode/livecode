@@ -5,6 +5,8 @@ profile libraries
 
 Type: library
 
+Associations: profile library
+
 Description:
 The <LiveCode custom library|LiveCode custom library> that supports
 <property profile|property profiles>. The <property profile|profile>
