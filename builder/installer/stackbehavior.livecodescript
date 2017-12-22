@@ -79,28 +79,7 @@ function getInstallerType
 end getInstallerType
 
 command configureFonts pStack
-   switch the platform
-      case "win32"
-         if word 2 of the systemVersion >= 6  and "Segoe UI" is among the lines of the fontNames then
-            set the textFont of stack pStack to "Segoe UI"
-            set the textSize of stack pStack to 12
-         else if word 2 of the systemVersion >= 5 and "Tahoma" is among the lines of the fontNames then
-            set the textFont of stack pStack to "Tahoma"
-            set the textSize of stack pStack to 11
-         else
-            set the textFont of stack pStack to "MS Sans Serif"
-            set the textSize of stack pStack to 10
-         end if
-         break
-      case "linux"
-         set the textFont of stack pStack to "Helvetica"
-         set the textSize of stack pStack to 12
-         break
-      case "macos"
-         set the textFont of stack pStack to "Lucida Grande"
-         set the textSize of stack pStack to 11
-         break
-   end switch
+    set the textFont of stack pStack to empty
 end configureFonts
 
 command setTitleField pField, pTitle, pSubTitle
