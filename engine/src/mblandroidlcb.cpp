@@ -14,6 +14,9 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+// Work around an SDK bug in 64-bit builds
+#define HAVE_INTTYPES_H 1
+
 #include "prefix.h"
 
 #include "globdefs.h"
