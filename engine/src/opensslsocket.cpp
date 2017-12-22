@@ -114,7 +114,7 @@ volatile sig_atomic_t s_socket_poll_thread_enabled;
 static int s_socket_poll_signal_pipe[2];
 #endif
 
-#if !defined(X11) && (!defined(_MACOSX)) && (!defined(TARGET_SUBPLATFORM_IPHONE)) && !defined(_LINUX_SERVER) && !defined(_MAC_SERVER)
+#if !defined(X11) && !defined(_MACOSX) && !defined(TARGET_SUBPLATFORM_IPHONE) && !defined(_LINUX_SERVER) && !defined(_MAC_SERVER) && !defined(TARGET_SUBPLATFORM_ANDROID)
 #define socklen_t int
 #endif
 
