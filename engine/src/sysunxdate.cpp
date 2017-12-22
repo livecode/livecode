@@ -24,20 +24,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "date.h"
 
-#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(_DARWIN_SERVER) || defined(__EMSCRIPTEN__)
-#include <time.h>
-#define sys_time_t time_t
-#define sys_localtime localtime
-#define sys_mktime mktime
-#define sys_gmtime gmtime
-#define sys_timegm timegm
-#elif defined(_ANDROID_MOBILE)
+#if defined(_ANDROID_MOBILE) && !defined(__LP64__)
 #include <time64.h>
 #define sys_time_t time64_t
 #define sys_localtime localtime64
 #define sys_mktime mktime64
 #define sys_gmtime gmtime64
 #define sys_timegm timegm64
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(_DARWIN_SERVER) || defined(__EMSCRIPTEN__) || defined(_ANDROID_MOBILE)
+#include <time.h>
+#define sys_time_t time_t
+#define sys_localtime localtime
+#define sys_mktime mktime
+#define sys_gmtime gmtime
+#define sys_timegm timegm
 #else
 #error 'sysunxdate.cpp' not supported on this platform
 #endif
