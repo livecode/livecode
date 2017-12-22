@@ -3314,8 +3314,17 @@ end seqLast
  ******************************************************************************/
 
 private function _GetResourcesPath
-   set the itemDelimiter to slash
-   return item 1 to -2 of the filename of me
+   if the environment begins with "development" then
+      set the itemDelimiter to slash
+      return item 1 to -2 of the filename of me & slash & "resources"
+   else
+      local tResourcesFolder
+      -- in the mapping, tResourcesFolder begins with ./
+      put char 3 to -1 of revLibraryMapping[the short name of me  & slash & "resources"] \
+            into tResourcesFolder
+      put specialFolderPath("resources") & slash before tResourcesFolder
+      return tResourcesFolder
+   end if
 end _GetResourcesPath
 
 private function _ArrayToString pArray, pPrefix
