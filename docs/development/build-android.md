@@ -28,7 +28,7 @@ wget https://dl.google.com/android/repository/tools_r25.2.3-linux.zip
 unzip android-ndk-r14-linux-x86_64.zip
 
 pushd android-sdk-linux
-unzip tools_r25.2.3-linux.zip
+unzip ../tools_r25.2.3-linux.zip
 popd
 ````
 
@@ -36,19 +36,29 @@ Update the SDK:
 
     android-sdk-linux/tools/android update sdk --no-ui
 
-### Setting up the ARM toolchain
+(This command will download and install every Android SDK and will take some time).
 
-Create a standalone toolchain (this simplifies setting up the build environment):
+### Creating the toolchains
+
+Create standalone toolchains for each platform of interest (this simplifies setting up the build environment):
 
 ````bash
-android-ndk-r14/build/tools/make_standalone_toolchain.py \
-    --arch arm --api 9 \
-    --install-dir ${HOME}/android/toolchain/standalone
+for arch in arm arm64 x86 x86_64 ; do
+    android-ndk-r14/build/tools/make_standalone_toolchain.py \
+        --arch ${arch} --api 9 \
+        --install-dir ${HOME}/android/toolchain/standalone-${arch}
+done
 ````
+
+**Note:** If you are only interested in building one particular flavour of Android
+engines, leave out the architectures you're not interested in from the above
+command.
 
 **Note:** We currently use NDK API 9 for building the LiveCode Android engine and
 do not specify the '--stl' option as we currently require the C++ library (if used)
 to be statically linked into the executable.
+
+### Final toolchain setup
 
 Add a couple of symlinks to allow the engine configuration script to find the Android toolchain:
 
