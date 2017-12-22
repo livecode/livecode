@@ -2,11 +2,11 @@
 
 # Libraries to fetch
 PLATFORMS=( mac linux win32 android ios emscripten )
-ARCHS_android=( armv6 )
+ARCHS_android=( armv6 armv7 arm64 x86 x86_64 )
 ARCHS_mac=( Universal )
 ARCHS_ios=( Universal )
 ARCHS_win32=( x86 x86_64 )
-ARCHS_linux=( i386 x86_64 )
+ARCHS_linux=( i386 x86_64 armv6hf armv7 )
 ARCHS_emscripten=( js )
 LIBS_android=( OpenSSL ICU )
 LIBS_mac=( OpenSSL ICU )
@@ -51,6 +51,11 @@ function fetchLibrary {
 	local PLATFORM=$2
 	local ARCH=$3
 	local SUBPLATFORM=$4
+
+	# Skip CEF on non-supported Linux platforms
+	if [ "${PLATFORM}" == "linux" -a "${LIB}" == "CEF" ] ; then
+		return
+	fi
 
 	eval "local VERSION=\${${LIB}_VERSION}"
 	eval "local BUILDREVISION=\${${LIB}_BUILDREVISION}"
