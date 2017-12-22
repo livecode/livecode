@@ -23,7 +23,7 @@ import subprocess
 
 KNOWN_PLATFORMS = (
     'linux-x86', 'linux-x86_64', 'linux-armv6hf', 'linux-armv7',
-    'android-armv6',
+    'android-armv6', 'android-armv7', 'android-arm64', 'android-x86', 'android-x86_64',
     'mac', 'ios', 
     'win-x86', 'win-x86_64', 
     'emscripten'
@@ -243,6 +243,9 @@ def validate_os(opts):
     if opts['OS'] is None:
         opts['OS'] = opts['PLATFORM'].split('-')[0]
 
+def host_platform(opts):
+    opts['HOST_PLATFORM'] = guess_platform()
+
 def guess_xcode_arch(target_sdk):
     sdk, ver = re.match('^([^\d]*)(\d*)', target_sdk).groups()
     if sdk == 'macosx':
@@ -265,7 +268,7 @@ def validate_target_arch(opts):
             opts['UNIFORM_ARCH'] = opts['TARGET_ARCH']
             return
 
-        platform_arch = re.search('-(x86|x86_64|armv(6(hf)?|7))$', platform)
+        platform_arch = re.search('-(x86|x86_64|arm(64|v(6(hf)?|7)))$', platform)
         if platform_arch is not None:
             opts['TARGET_ARCH'] = platform_arch.group(1)
             opts['UNIFORM_ARCH'] = opts['TARGET_ARCH']
@@ -339,7 +342,7 @@ def guess_java_home(platform):
 def validate_java_tools(opts):
     if opts['JAVA_SDK'] is None:
         validate_platform(opts)
-        sdk = guess_java_home(opts['PLATFORM'])
+        sdk = guess_java_home(opts['HOST_PLATFORM'])
         if sdk is None:
             error('Java SDK not found; set $JAVA_SDK')
         opts['JAVA_SDK'] = sdk
@@ -501,6 +504,72 @@ def guess_android_build_tools(sdkdir):
         return dirs[0]
     return None
 
+# Guess the standalone toolchain directory name.
+def guess_standalone_toolchain_dir_name(target_arch):
+    if target_arch == 'armv6' or target_arch == 'armv7':
+        return 'standalone-arm'
+    else:
+        return 'standalone-' + target_arch
+
+# Guess the triple to use for a given Android target architecture.
+def guess_android_triple(target_arch):
+    if target_arch == 'armv6':
+        return 'arm-linux-androideabi'
+    elif target_arch == 'armv7':
+        return 'armv7-linux-androideabi'
+    elif target_arch == 'arm64':
+        return 'aarch64-linux-android'
+    elif target_arch == 'x86':
+        return 'i686-linux-android'
+    elif target_arch == 'x86_64':
+        return 'x86_64-linux-android'
+    else:
+        return target_arch
+
+# Guess the value to pass with the -march flag for Android builds.
+def guess_android_march(target_arch):
+    if target_arch == 'armv7':
+        return 'armv7-a'
+    elif target_arch == 'arm64':
+        # The -march flag is not used for baseline arm64.
+        return ''
+    elif target_arch == 'x86':
+        return 'i686'
+    elif target_arch == 'x86_64':
+        # The -march flag is not used for baseline x86_64
+        return ''
+    return target_arch
+
+# Guess the prefix used on the compiler's name.
+def guess_compiler_prefix(target_arch):
+    if target_arch == 'armv7':
+        # The ARMv7 triple is different from its compiler's prefix.
+        triple = guess_android_triple('armv6')
+    else:
+        triple = guess_android_triple(target_arch)
+    if triple == target_arch:
+        return ''
+    return triple + '-'
+
+# Returns any extra C/C++ compiler flags required when targeting Android on the
+# given architecture.
+def android_extra_cflags(target_arch):
+    if target_arch == 'armv7':
+        # The first three flags are required in order to guarantee ABI compatibility.
+        # Additionally, Google recommends generating thumb instructions on Android.
+        return '-mfloat-abi=softfp -mfpu=vfpv3-d16 -Wl,--fix-cortex-a8 -mthumb'
+    elif target_arch == 'armv6':
+        # Google recommends generating thumb instructions on Android.
+        return '-mthumb'
+    return ''
+
+# Returns any extra linker flags required when targeting Android on the given
+# architecture.
+def android_extra_ldflags(target_arch):
+    if target_arch == 'armv7':
+        return '-Wl,--fix-cortex-a8'
+    return ''
+
 def validate_android_tools(opts):
     if opts['ANDROID_NDK_VERSION'] is None:
         opts['ANDROID_NDK_VERSION'] = 'r14'
@@ -528,10 +597,11 @@ def validate_android_tools(opts):
         opts['ANDROID_BUILD_TOOLS'] = tools
 
     if opts['ANDROID_TOOLCHAIN'] is None:
-        dir = guess_android_tooldir('standalone')
+        dir = guess_android_tooldir(guess_standalone_toolchain_dir_name(opts['TARGET_ARCH']))
         if dir is None:
-            error('Android toolchain not found; set $ANDROID_TOOLCHAIN')
-        opts['ANDROID_TOOLCHAIN'] = os.path.join(dir,'bin','arm-linux-androideabi-')
+            error('Android toolchain not found for architecture {}; set $ANDROID_TOOLCHAIN'.format(opts['TARGET_ARCH']))
+        prefix = guess_compiler_prefix(opts['TARGET_ARCH'])
+        opts['ANDROID_TOOLCHAIN'] = os.path.join(dir,'bin',prefix)
 
     def android_tool(name, env, extra=""):
         if opts[env] is None:
@@ -540,13 +610,25 @@ def validate_android_tools(opts):
                 tool += ' ' + extra
             opts[env] = tool
 
+    target_arch = opts['TARGET_ARCH']
+    march = guess_android_march(target_arch)
+    triple = guess_android_triple(target_arch)
+    cflags = android_extra_cflags(target_arch)
+    ldflags = android_extra_ldflags(target_arch)
+
+    # All Android builds use Clang and make a lot of noise about unused
+    # arguments (e.g. linker-specific arguments). Suppress them.
+    cflags += ' -Qunused-arguments'
+
+    if march != '':
+        march = '-march=' + march
     android_tool('ar', 'AR')
     android_tool('clang', 'CC',
-                 '-target arm-linux-androideabi -march=armv6 -integrated-as')
+                 '-target {} {} -integrated-as {}'.format(triple,march,cflags))
     android_tool('clang++', 'CXX',
-                 '-target arm-linux-androideabi -march=armv6 -integrated-as')
+                 '-target {} {} -integrated-as {}'.format(triple,march,cflags))
     android_tool('clang++', 'LINK',
-                 '-target arm-linux-androideabi -march=armv6 -integrated-as -fuse-ld=bfd')
+                 '-target {} {} -integrated-as -fuse-ld=bfd {}'.format(triple,march,ldflags))
     android_tool('objcopy', 'OBJCOPY')
     android_tool('objdump', 'OBJDUMP')
     android_tool('strip', 'STRIP')
@@ -606,6 +688,7 @@ def gyp_define_args(opts, names):
             if opts[value] is not None]
 
 def configure_linux(opts):
+    host_platform(opts)
     validate_target_arch(opts)
     validate_java_tools(opts)
     
@@ -617,6 +700,7 @@ def configure_linux(opts):
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_emscripten(opts):
+    host_platform(opts)
     validate_target_arch(opts)
     validate_emscripten_tools(opts)
 
@@ -625,6 +709,7 @@ def configure_emscripten(opts):
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_android(opts):
+    host_platform(opts)
     validate_target_arch(opts)
     validate_android_tools(opts)
     validate_java_tools(opts)
@@ -640,6 +725,7 @@ def configure_android(opts):
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_win(opts):
+    host_platform(opts)
     validate_target_arch(opts)
     validate_windows_tools(opts)
 
@@ -662,6 +748,7 @@ def configure_win(opts):
     exec_gyp(args + opts['GYP_OPTIONS'])
 
 def configure_mac(opts):
+    host_platform(opts)
     validate_target_arch(opts)
     validate_xcode_sdks(opts)
     validate_java_tools(opts)
