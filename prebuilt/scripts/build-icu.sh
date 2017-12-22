@@ -79,9 +79,9 @@ function buildICU {
 			;;
 
 		android)
-			CONFIG_TYPE="Linux --host=arm-linux-androideabi --with-cross-build=${HOST_ICU_DIR} --disable-tools"
-			export ANDROID_CFLAGS="-D__STDC_INT64__ -DU_HAVE_NL_LANGINFO_CODESET=0"
-			export ANDROID_CXXFLAGS="${ANDROID_CFLAGS}"
+			CONFIG_TYPE="Linux --with-cross-build=${HOST_ICU_DIR} --disable-tools"
+			export EXTRA_CFLAGS="-D__STDC_INT64__ -DU_HAVE_NL_LANGINFO_CODESET=0"
+			export EXTRA_CXXFLAGS="${EXTRA_CFLAGS}"
 			;;
 		emscripten)
 			CONFIG_TYPE=
@@ -130,6 +130,11 @@ function buildICU {
 		echo "*DEBUG* calling setCCForArch"
 		setCCForTarget "${PLATFORM}" "${ARCH}" "${SUBPLATFORM}"
 		
+		# We need to pass the target triple for Android builds
+		if [ "${PLATFORM}" == "android" ] ; then
+			CONFIG_TYPE+=" --host=${ANDROID_TRIPLE}"
+		fi
+
 		echo "*DEBUG* calling ICU configure script"
 		# Method for configuration depends on the platform
 		if [ -z "${CONFIG_TYPE}" ] ; then

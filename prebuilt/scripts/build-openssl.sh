@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 source "${BASEDIR}/scripts/platform.inc"
 source "${BASEDIR}/scripts/lib_versions.inc"
 source "${BASEDIR}/scripts/util.inc"
@@ -43,17 +45,41 @@ function buildOpenSSL {
 			fi
 			;;
 		linux)
-	if [ "${ARCH}" == "x86_64" ] ; then
-	  SPEC="linux-x86_64"
+			if [ "${ARCH}" == "x86_64" ] ; then
+				SPEC="linux-x86_64"
+			elif [[ "${ARCH}" =~ (x|i[3-6])86 ]] ; then
+				SPEC="linux-x86"
+			elif [ "${ARCH}" == "arm64" ] ; then
+				SPEC="linux-aarch64"
+			elif [[ "${ARCH}" =~ .*64 ]] ; then
+				SPEC="linux-generic64"
 			else
-		  SPEC="linux-generic32"
+				SPEC="linux-generic32"
 			fi
 			;;
 		android)
-			if [ "${ARCH}" == "armv6" ] ; then
-				SPEC="android"
+			if [ "${ARCH}" == "x86_64" ] ; then
+				SPEC="android64"
+			elif [[ "${ARCH}" =~ (x|i[3-6])86 ]] ; then
+				# Work around a linker crash using the i686 gold linker in Android NDK r14
+				EXTRA_CFLAGS="-fuse-ld=bfd"
+				SPEC="android-x86"
+			elif [ "${ARCH}" == "arm64" ] ; then
+				# Clang's integrated assembler is a bit broken so we need to force the use of GAS instead
+				EXTRA_CFLAGS="-fno-integrated-as"
+				SPEC="android64-aarch64"
+			elif [[ "${ARCH}" =~ armv(6|7) ]] ; then
+				# Clang's integrated assembler is a bit broken so we need to force the use of GAS instead
+				EXTRA_CFLAGS="-fno-integrated-as -U__clang__"
+
+				# When compiling with -mthumb, we need to link to libatomic
+				EXTRA_OPTIONS="-latomic"
+
+				SPEC="android-armeabi"
+			elif [[ "${ARCH}" =~ .*64 ]] ; then
+				SPEC="android64"
 			else
-				SPEC="android-armv7"
+				SPEC="android"
 			fi
 			;;
 		ios)
@@ -77,13 +103,16 @@ function buildOpenSSL {
 	CUSTOM_SPEC="${SPEC}-livecode"
 
 	OPENSSL_ARCH_SRC="${OPENSSL_SRC}-${PLATFORM_NAME}-${ARCH}"
-	OPENSSL_ARCH_CONFIG="no-rc5 no-hw shared -DOPENSSL_NO_ASYNC=1 --prefix=${INSTALL_DIR}/${NAME} ${CUSTOM_SPEC}"
+	OPENSSL_ARCH_CONFIG="no-rc5 no-hw shared -DOPENSSL_NO_ASYNC=1 --prefix=${INSTALL_DIR}/${NAME} ${CUSTOM_SPEC} ${EXTRA_OPTIONS}"
 
 	# Copy the source to a target-specific directory
 	if [ ! -d "${OPENSSL_ARCH_SRC}" ] ; then
 		echo "Duplicating OpenSSL source directory for ${NAME}"
 		cp -r "${OPENSSL_SRC}" "${OPENSSL_ARCH_SRC}"
 	fi
+
+	# Patch the main OpenSSL configuration script to remove a '-mandroid' flag that is incompatible with clang.
+	sed -i.bak -e "s/-mandroid//g" "${OPENSSL_ARCH_SRC}/Configurations/10-main.conf"
 
 	# Get the command used to build a previous copy, if any
 	if [ -e "${OPENSSL_ARCH_SRC}/config.cmd" ] ; then

@@ -125,16 +125,11 @@ function setCCForTarget {
 			fi
 			;;
 		android)
-			if [ "${ARCH}" == "armv6" ] ; then
-				CC="${ANDROID_CC} ${ANDROID_CFLAGS}"
-				CXX="${ANDROID_CXX} ${ANDROID_CXXFLAGS}"
-				EXTRA_LDFLAGS=
-			else
-				CC="${ANDROID_CC} -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 ${ANDROID_CFLAGS}"
-				CXX="${ANDROID_CXX} -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 ${ANDROID_CXXFLAGS}"
-				EXTRA_LDFLAGS="-march=armv7-a -Wl,--fix-cortex-a8"
-			fi
-			LINK="${ANDROID_LINK} ${EXTRA_LDFLAGS} ${ANDROID_LDFLAGS}"
+			configureAndroidToolchain ${ARCH}
+
+			CC="${ANDROID_CC} ${EXTRA_CFLAGS}"
+			CXX="${ANDROID_CXX} ${EXTRA_CXXFLAGS}"
+			LINK="${ANDROID_LINK}"
 			LD="${LINK}"
 			AR="${ANDROID_AR}"
 			OBJCOPY="${ANDROID_OBJCOPY}"
