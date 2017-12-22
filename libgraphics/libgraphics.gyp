@@ -48,6 +48,21 @@
 				'src/drawing.cpp',
 			],
 			
+			'conditions':
+			[
+				[
+					'OS in ("emscripten", "android")',
+					{
+						'dependencies':
+						[
+							'../prebuilt/libicu.gyp:libicu',
+							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
+							'../thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
+						],
+					},
+				],
+			],
+
 			'target_conditions':
 			[
 				[
@@ -75,17 +90,6 @@
 						[
 							'src/harfbuzztext.cpp',
 							'src/hb-sk.cpp',
-						],
-					},
-				],
-				[
-					'toolset_os == "android" or toolset_os == "emscripten"',
-					{
-						'dependencies':
-						[
-							'../prebuilt/libicu.gyp:libicu',
-							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
-							'../thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
 						],
 					},
 				],
