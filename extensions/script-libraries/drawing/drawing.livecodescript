@@ -44,17 +44,15 @@ end extensionFinalize
 /**
 Title: Drawing Library
 
-Version: 0.0.0
-
 Author: LiveCode
+
+Version: 0.0.0
 
 Description:
 This script library implements an SVG compiler for turning SVG files into
 'drawing metafiles'. A simple and efficient binary format for representing
 complex vector graphics, supported directly by the LiveCode image object.
 */
-
-/******************************************************************************/
 
 /**
 Compile an SVG XML file to a drawing metafile.
