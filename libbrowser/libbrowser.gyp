@@ -245,7 +245,13 @@
                         
                         'target_conditions':
                         [
-                            ## Exclusions
+                            [
+								'toolset_os not in ("win", "linux")',
+								{
+									'type': 'none',
+								},
+							],
+							## Exclusions
                             [
                                 'toolset_os != "win"',
                                 {
