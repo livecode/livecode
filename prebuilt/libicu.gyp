@@ -190,6 +190,7 @@
 								'-licudata',
 								'-lstdc++',
 								'-lm',
+								'-latomic',
 							],
 						},
 					],
