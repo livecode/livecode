@@ -104,6 +104,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // __LF__ will be defined if the native line ending is LF.
 #undef __LF__
 
+// __LP64__ will be defined if longs and pointers are 64 bits.
+#undef __LP64__
+
 // __HAS_CORE_FOUNDATION__ will be defined if the platform has the CF libraries.
 #undef __HAS_CORE_FOUNDATION__
 
@@ -222,6 +225,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __ARM__ 1
 #define __LP32__ 1
 #define __SMALL__ 1
+#elif defined(__aarch64__)
+#define __64_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __ARM64__ 1
+#define __LP64__ 1
+#define __MEDIUM__ 1
 #endif
 
 // Native char set
@@ -321,6 +330,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __ARM__ (1)
 #define __LP32__ (1)
 #define __SMALL__ (1)
+#elif defined(__aarch64__)
+#define __64_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __ARM64__ 1
+#define __LP64__ 1
+#define __MEDIUM__ 1
 #endif
 
 // Native char set
@@ -460,10 +475,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <stddef.h>
 #include <limits.h>
 
+#ifndef UINT8_MIN
 #define UINT8_MIN (0U)
+#endif
+#ifndef UINT16_MIN
 #define UINT16_MIN (0U)
+#endif
+#ifndef UINT32_MIN
 #define UINT32_MIN (0U)
+#endif
+#ifndef UINT64_MIN
 #define UINT64_MIN (0ULL)
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
