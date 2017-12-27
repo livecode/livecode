@@ -23,7 +23,7 @@ library com.livecode.library.iconsvg
 
 use com.livecode.engine
 
-metadata version is "1.1.0"
+metadata version is "1.2.0"
 metadata author is "LiveCode"
 metadata title is "Icon SVG Library"
 metadata _ide is "true"
@@ -33,6 +33,7 @@ private variable sNamesArray as Array
 private variable sInitialised as optional Boolean
 
 private constant kDefaultFamily is "fontawesome"
+private constant kDefaultUserFamily is "custom"
 
 private handler ensureInitialised()
 	if sInitialised is nothing then
@@ -551,10 +552,10 @@ private handler initialiseIconsFontAwesome1() returns Array
 end handler
 
 private handler initialiseIconsFontAwesome2() returns Array
-    variable tArray as Array
-    put {} into tArray
+	variable tArray as Array
+	put {} into tArray
 
-    put the empty array into tArray["hand left"]
+	put the empty array into tArray["hand left"]
 	put "M1376 1408L1408 1408 1408 768 1376 768Q1341 768 1308.5 756 1276 744 1246 719 1216 694 1196 673 1176 652 1147 619 1145 616 1143.5 614.5 1142 613 1139.5 610 1137 607 1135 605 1063 524 1023 460 1009 438 985 392 984 389 974.5 369.5 965 350 956 333.5 947 317 936 298 925 279 914.5 267.5 904 256 896 256 825 256 780.5 286.5 736 317 736 384 736 427 751 468.5 766 510 784 536.5 802 563 817 591.5 832 620 832 640L256 640Q206 640 167 678.5 128 717 128 768 128 820 166 858 204 896 256 896L587 896Q572 913 562 943.5 552 974 552 999 552 1068 605 1118 587 1150 587 1187 587 1224 604.5 1260.5 622 1297 652 1313 648 1337 648 1369 648 1454 696.5 1495 745 1536 832 1536 916 1536 1015 1504 1114 1472 1209 1440 1304 1408 1376 1408ZM1664 1344Q1664 1318 1645 1299 1626 1280 1600 1280 1574 1280 1555 1299 1536 1318 1536 1344 1536 1370 1555 1389 1574 1408 1600 1408 1626 1408 1645 1389 1664 1370 1664 1344ZM1792 768L1792 1408Q1792 1461 1754.5 1498.5 1717 1536 1664 1536L1376 1536Q1317 1536 1153 1595 963 1664 836 1664 694 1664 606 1586.5 518 1509 519 1369L520 1364Q459 1288 459 1186 459 1164 462 1143 429 1086 425 1024L256 1024Q151 1024 75.5 948 0 872 0 767 0 664 76 588 152 512 256 512L630 512Q608 452 608 384 608 262 689.5 195 771 128 896 128 934 128 965.5 145.5 997 163 1020.5 195 1044 227 1061 258 1078 289 1098 330 1118 371 1131 392 1166 447 1231 521 1233 524 1245 538 1257 552 1264 559.5 1271 567 1284.5 581 1298 595 1308.5 603.5 1319 612 1331 621.5 1343 631 1354.5 635.5 1366 640 1376 640L1664 640Q1717 640 1754.5 677.5 1792 715 1792 768Z" into tArray["hand left"]["svg"]
 	put "f0a5" into tArray["hand left"]["codepoint"]
 	put the empty array into tArray["hand right"]
@@ -1391,15 +1392,15 @@ end handler
 private handler initialiseIcons() returns nothing
 	variable tFamily
 	variable tName
-    variable tTempArray as Array
+	variable tTempArray as Array
 
 	put {} into sFontArray
 	put initialiseIconsIDE() into sFontArray["ide"]
-    put initialiseIconsFontAwesome1() into sFontArray["fontawesome"]
-    put initialiseIconsFontAwesome2() into tTempArray
-    repeat for each key tName in tTempArray
-        put tTempArray[tName] into sFontArray["fontawesome"][tName]
-    end repeat
+	put initialiseIconsFontAwesome1() into sFontArray["fontawesome"]
+	put initialiseIconsFontAwesome2() into tTempArray
+	repeat for each key tName in tTempArray
+		put tTempArray[tName] into sFontArray["fontawesome"][tName]
+	end repeat
 
 	put {} into sNamesArray
 	repeat for each key tFamily in sFontArray
@@ -1428,7 +1429,8 @@ Call <iconSVGPathFromName> or <iconCodepointFromName> to retrieve either the
 SVG path string or codepoint corresponding to the icon with this name.
 
 References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
-	iconList(handler)
+	iconFamilies(handler), iconList(handler), iconListForFamily(handler),
+	iconNamesForFamily(handler)
 */
 public handler iconNames() returns String
 	ensureInitialised()
@@ -1453,11 +1455,86 @@ For each icon name, the SVG path string can be obtained with
 <iconCodepointFromName>.
 
 References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
-	iconNames(handler)
+	iconFamilies(handler), iconListForFamily(handler), iconNames(handler),
+	iconNamesForFamily(handler)
 */
 public handler iconList() returns List
 	ensureInitialised()
 	return sNamesArray[kDefaultFamily]
+end handler
+
+/**
+Summary: Returns the available icons families.
+
+Returns(String): The icon family names for which SVG paths are available, one per line.
+
+Description:
+The <iconFamilies> handler returns the names of the families in the icon library.
+
+References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
+	iconList(handler), iconListForFamily(handler),
+	iconNames(handler), iconNamesForFamily(handler)
+*/
+public handler iconFamilies() returns String
+	ensureInitialised()
+
+	variable tFamilies as String
+	combine the keys of sFontArray with newline into tFamilies
+
+	return tFamilies
+end handler
+
+/**
+Summary: Returns the available icons in the specified icon family.
+
+pFamily: The name of the icon family
+Returns(String): The icon names for which SVG paths are available, one per line.
+
+Description:
+The <iconNamesForFamily> handler returns the names of the icons in the 
+library of the specified icon family.
+
+Call <iconSVGPathFromName> or <iconCodepointFromName> to retrieve either the
+SVG path string or codepoint corresponding to the icon with this name.
+
+References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
+	iconFamilies(handler), iconList(handler), iconListForFamily(handler)
+*/
+public handler iconNamesForFamily(in pFamily as String) returns String
+	ensureInitialised()
+	if pFamily is not among the keys of sFontArray then
+		return ""
+	else
+		variable tNames as String
+		combine sNamesArray[pFamily] with newline into tNames
+		return tNames
+	end if
+end handler
+
+/**
+Summary: Return the available icons in the specified icon family.
+
+pFamily: The name of the icon family
+Returns(List): The icon names for which SVG paths are available.
+
+Description:
+Return an LCB list of the icon names of the specified family in the 
+iconsvg library.
+
+For each icon name, the SVG path string can be obtained with
+<iconSVGPathFromName> or its corresponding codepoint with
+<iconCodepointFromName>.
+
+References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
+	iconFamilies(handler), iconNames(handler), iconNamesForFamily(handler)
+*/
+public handler iconListForFamily(in pFamily as String) returns List
+	ensureInitialised()
+	if pFamily is not among the keys of sFontArray then
+		return the empty list
+	else
+		return sNamesArray[pFamily]
+	end if
 end handler
 
 private handler resolveIconName(in pName as String) returns optional List
@@ -1561,30 +1638,178 @@ public handler iconCodepointFromName(in pName as String) returns String
 	return sFontArray[tResolved[1]][tResolved[2]]["codepoint"]
 end handler
 
-/*
--- FIXME must be updated to cope with multi-family implementation
+/**
+Summary: Return the available icons in any icon family that match the 
+search string.
+
+Returns(List): The icon names for which SVG paths are available matching 
+the search string.
+
+Description:
+Return an LCB list of the icon names in any iconsvg library that match 
+the search string.
+
+For each icon name, the SVG path string can be obtained with
+<iconSVGPathFromName> or its corresponding codepoint with
+<iconCodepointFromName>.
+
+References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
+	iconList(handler), iconListForFamily(handler)
+*/
 public handler iconListMatching(in pSearch as String) returns List
 	ensureInitialised()
 
 	variable tMatches as List
 	put the empty list into tMatches
 
+	variable tFamily as String
 	variable tName as String
-	repeat for each element tName in sNamesList
-		if tName contains pSearch then
-			push tName onto tMatches
+	variable tNamePrefix as String
+	repeat for each key tFamily in sFontArray
+		if tFamily is kDefaultFamily then
+			put "" into tNamePrefix
+		else
+			put tFamily & "/" into tNamePrefix
 		end if
+		repeat for each element tName in sNamesArray[tFamily]
+			if tName contains pSearch then
+				push (tNamePrefix & tName) onto tMatches
+			end if
+		end repeat
 	end repeat
 
 	return tMatches
 end handler
 
--- FIXME must be updated to cope with multi-family implementation
-public handler iconData() returns Array
-    ensureInitialised()
+/**
+Summary: Return the available icon data in the default icon family.
 
-	return sFontArray
-end handler
+pSearch: String used to search icon names
+Returns(Array): The default icon family's data (name, SVG path, codepoint).
+
+Description:
+Return an LCB array of the icon data in the iconsvg library's default
+icon family.
+
+References: iconList(handler), iconNames(handler)
 */
+public handler iconData() returns Array
+	ensureInitialised()
+	return sFontArray[kDefaultFamily]
+end handler
+
+/**
+Summary: Return the available icon data in the specified icon family.
+
+pFamily: The name of the icon family
+Returns(Array): The specified icon family's data (name, SVG path, codepoint).
+
+Description:
+Return an LCB array of the icon data in the iconsvg library's specified
+icon family.
+
+References: iconFamilies(handler), iconListForFamily(handler), 
+iconNamesForFamily(handler)
+*/
+public handler iconDataForFamily(in pFamily as String) returns Array
+	ensureInitialised()
+	if pFamily is not among the keys of sFontArray then
+		return {}
+	else
+		return sFontArray[pFamily]
+	end if
+end handler
+
+/**
+Summary: Add an icon to the iconsvg library.
+
+pName: The name of the icon.  By default, new icons are added to the 
+"custom" family.  The family may be specified by including the family 
+name and a "/" before the icon name (`bootstrap/adjust`).
+pSVG: The SVG path for the icon.
+pCodepoint: The codepoint for the icon.
+
+Description:
+Add an icon to the iconsvg library.  By default, new icons are added to
+the "custom" family.  The family may be specified by including the 
+family name and a "/" before the icon name (`bootstrap/adjust`).
+
+References: addIconsForFamily(handler), iconFamilies(handler), 
+iconList(handler), iconListForFamily(handler), 
+iconNames(handler), iconNamesForFamily(handler)
+*/
+public handler addIcon(in pName as String, in pSVG as String, \
+							  in pCodepoint as String) returns nothing
+	ensureInitialised()
+
+	variable tSlashOffset as Number
+	variable tFamily as optional String
+	variable tName as String
+
+	put the last index of "/" in pName into tSlashOffset
+
+	-- If there's a family part, extract it
+	if tSlashOffset is not 0 then
+		if tSlashOffset < the number of chars in pName then
+			put char tSlashOffset + 1 to -1 of pName into tName
+		else
+			put "" into tName
+		end if
+		if tSlashOffset - 1 is not 0 then
+			put char 1 to tSlashOffset - 1 of pName into tFamily
+		else
+			put "" into tFamily
+		end if
+		if tName is "" or tFamily is "" then
+			throw "Icon name invalid (slash separates family and name): '" & pName & "'"
+		end if
+	end if
+
+	if tFamily is nothing then
+		put kDefaultUserFamily into tFamily
+		put pName into tName
+	end if
+
+	if tFamily is not among the keys of sFontArray then
+		put the empty array into sFontArray[tFamily]
+	end if
+
+	put the empty array into sFontArray[tFamily][tName]
+	put pSVG into sFontArray[tFamily][tName]["svg"]
+	put pCodepoint into sFontArray[tFamily][tName]["codepoint"]
+
+	put the keys of sFontArray[tFamily] into sNamesArray[tFamily]
+	sort sNamesArray[tFamily] in ascending order
+end handler
+
+/**
+Summary: Add icons to the iconsvg library.
+
+pFamily: The family for the icons.
+pIconData: The icon data.  Each key is an icon name with
+a key for the SVG data and a key for the codepoint.
+
+Description:
+Add icons to the iconsvg library.
+
+References: addIcon(handler), iconFamilies(handler), 
+iconList(handler), iconListForFamily(handler), 
+iconNames(handler), iconNamesForFamily(handler)
+*/
+public handler addIconsForFamily(in pFamily as String, in pIconData as Array) returns nothing
+	ensureInitialised()
+
+	if pFamily is not among the keys of sFontArray then
+		put the empty array into sFontArray[pFamily]
+	end if
+
+	variable tName
+	repeat for each key tName in pIconData
+		put pIconData[tName] into sFontArray[pFamily][tName]
+	end repeat
+	
+	put the keys of sFontArray[pFamily] into sNamesArray[pFamily]
+	sort sNamesArray[pFamily] in ascending order
+end handler
 
 end library
