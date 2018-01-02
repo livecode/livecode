@@ -21,6 +21,8 @@ This widget is a native field on Android.
 Name: enabled
 Type: property
 
+Summary: Whether as field is active and responds to user action
+
 Syntax:
 set the enabled of <widget> to {true | false}
 get the enabled of <widget>
@@ -96,6 +98,8 @@ Type: message
 
 Summary:
 Sent when the native field widget text is changed.
+
+Syntax: textChanged
 
 Example:
 on textChanged
