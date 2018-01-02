@@ -20,6 +20,8 @@ This widget is a native push button on Mac.
 
 Name: enabled
 
+Type: property
+
 Syntax: 
 set the enabled of <widget> to {true | false}
 get the enabled of <widget>
