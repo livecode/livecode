@@ -1319,7 +1319,6 @@ property cornerRadius get mRadius set setCornerRadius
 metadata cornerRadius.editor is "com.livecode.pi.number"
 metadata cornerRadius.default is "15"
 metadata cornerRadius.section is "Basic"
-metadata cornerRadius.section is "1"
 metadata cornerRadius.label is "Corner Radius"
 
 public handler setCornerRadius(in pCornerRadius as Number) returns nothing
