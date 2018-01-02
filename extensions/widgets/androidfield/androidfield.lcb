@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 This widget is a native field on Android.
 
 Name: enabled
+Type: property
 
 Syntax:
 set the enabled of <widget> to {true | false}
@@ -29,6 +30,7 @@ Use the <enabled> property to enable or disable the native field. When disabled,
 the field has a greyed out appearance.
 
 Name: openField
+Type: message
 
 Summary: Sent to an unlocked field when you click or select text in that field.
 
@@ -47,6 +49,7 @@ Handle the <openField> message if you want to do something when the user enters
 a field widget. The message is not sent if the field is locked.
 
 Name: closeField
+Type: message
 
 Summary:
 Sent to a field when the focus is being removed from that field and the field's
@@ -71,6 +74,7 @@ Handle the <closeField> message if you want to make sure a field's content is
 correct after it has been changed.
 
 Name: exitField
+Type: message
 
 Summary:
 Sent to the field with the selection when the selection is being removed from
@@ -88,6 +92,7 @@ Handle the <exitField> message if you want to do something when the user leaves
 a field that hasn't been changed.
 
 Name: textChanged
+Type: message
 
 Summary:
 Sent when the native field widget text is changed.
