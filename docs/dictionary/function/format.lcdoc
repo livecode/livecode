@@ -41,8 +41,6 @@ incantations in the <baseString>.
 Returns:
 The <format> function returns a <string>.
 
-The result:
-
 Description:
 Use the <format> <function> to create <string(glossary)|strings> in
 special <format|formats>.
