@@ -2,7 +2,7 @@ Name: flip
 
 Type: command
 
-Syntax: flip [image] {horizontal | vertical}
+Syntax: flip [<imageRef>] {horizontal | vertical}
 
 Summary:
 Invert an <image> horizontally or vertically.
@@ -23,14 +23,14 @@ Example:
 flip image "Logo" horizontal
 
 Parameters:
-image:
+imageRef:
 Any image reference.
 
 Description:
 Use the <flip> <command> to turn an <image> over.
 
-vertical flips the image vertically, swapping its top and bottom. 
-horizontal flips the image side to side, swapping its right and left.
+The vertical form flips the image vertically, swapping its top and bottom. 
+The horizontal form flips the image side to side, swapping its right and left.
 
 If you don't specify an <image>, the portion currently selected with the
 Select <paint tool> is flipped.
