@@ -1139,7 +1139,7 @@ private command _svgCompileLine @xContext, pElement
 	put pElement["features"]["y1"] into tY1
 	put pElement["features"]["x2"] into tX2
 	put pElement["features"]["y2"] into tY2
-	_svgCompileShape xContext, "line", __svgBoxLine(tX1, tY1, tX2, tY2), tX1, tY1, tX2, tY2
+	_svgCompileShape xContext, "line", _svgBoxLine(tX1, tY1, tX2, tY2), tX1, tY1, tX2, tY2
 end _svgCompileLine
 
 private command _svgCompilePolyline @xContext, pElement
@@ -1157,6 +1157,7 @@ end _svgCompilePolygon
 private command _svgCompilePath @xContext, pElement
 	local tD
 	put pElement["features"]["d"] into tD
+
 	_svgCompileShape xContext, "path", _svgBoxPath(tD), tD["array"]
 end _svgCompilePath
 
@@ -1291,17 +1292,18 @@ constant kMCGDrawingOpcodeStrokeDashArray = 10
 constant kMCGDrawingOpcodeStrokeDashOffset = 11
 constant kMCGDrawingOpcodeStrokeMiterLimit = 12
 constant kMCGDrawingOpcodeRectangle = 13
-constant kMCGDrawingOpcodeCircle = 14
-constant kMCGDrawingOpcodeEllipse = 15
-constant kMCGDrawingOpcodeLine = 16
-constant kMCGDrawingOpcodePolyline = 17
-constant kMCGDrawingOpcodePolygon = 18
-constant kMCGDrawingOpcodePath = 19
+constant kMCGDrawingOpcodeRoundedRectangle = 14
+constant kMCGDrawingOpcodeCircle = 15
+constant kMCGDrawingOpcodeEllipse = 16
+constant kMCGDrawingOpcodeLine = 17
+constant kMCGDrawingOpcodePolyline = 18
+constant kMCGDrawingOpcodePolygon = 19
+constant kMCGDrawingOpcodePath = 20
 
-constant kMCGDrawingTransformOpcodeEnd = 0
+constant kMCGDrawingTransformOpcodeIdentity = 0
 constant kMCGDrawingTransformOpcodeAffine = 1
 
-constant kMCGDrawingPaintOpcodeEnd = 0
+constant kMCGDrawingPaintOpcodeNone = 0
 constant kMCGDrawingPaintOpcodeSolidColor = 1
 constant kMCGDrawingPaintOpcodeLinearGradient = 2
 constant kMCGDrawingPaintOpcodeRadialGradient = 3
@@ -1324,30 +1326,18 @@ constant kMCGDrawingStrokeLineCapOpcodeSquare = 2
 
 constant kMCGDrawingPathOpcodeEnd = 0
 constant kMCGDrawingPathOpcodeMoveTo = 1
-constant kMCGDrawingPathOpcodeRelativeMoveTo = 2
-constant kMCGDrawingPathOpcodeLineTo = 3
-constant kMCGDrawingPathOpcodeRelativeLineTo = 4
-constant kMCGDrawingPathOpcodeHorizontalTo = 5
-constant kMCGDrawingPathOpcodeRelativeHorizontalTo = 6
-constant kMCGDrawingPathOpcodeVerticalTo = 7
-constant kMCGDrawingPathOpcodeRelativeVerticalTo = 8
-constant kMCGDrawingPathOpcodeCubicTo = 9
-constant kMCGDrawingPathOpcodeRelativeCubicTo = 10
-constant kMCGDrawingPathOpcodeSmoothCubicTo = 11
-constant kMCGDrawingPathOpcodeRelativeSmoothCubicTo = 12
-constant kMCGDrawingPathOpcodeQuadraticTo= 13
-constant kMCGDrawingPathOpcodeRelativeQuadraticTo = 14
-constant kMCGDrawingPathOpcodeSmoothQuadraticTo = 15
-constant kMCGDrawingPathOpcodeRelativeSmoothQuadraticTo = 16
-constant kMCGDrawingPathOpcodeArcTo = 17
-constant kMCGDrawingPathOpcodeRelativeArcTo = 18
-constant kMCGDrawingPathOpcodeReflexArcTo = 19
-constant kMCGDrawingPathOpcodeRelativeReflexArcTo = 20
-constant kMCGDrawingPathOpcodeReverseArcTo = 21
-constant kMCGDrawingPathOpcodeRelativeReverseArcTo = 22
-constant kMCGDrawingPathOpcodeReverseReflexArcTo = 23
-constant kMCGDrawingPathOpcodeRelativeReverseReflexArcTo = 24
-constant kMCGDrawingPathOpcodeCloseSubpath = 25
+constant kMCGDrawingPathOpcodeLineTo = 2
+constant kMCGDrawingPathOpcodeHorizontalTo = 3
+constant kMCGDrawingPathOpcodeVerticalTo = 4
+constant kMCGDrawingPathOpcodeCubicTo = 5
+constant kMCGDrawingPathOpcodeSmoothCubicTo = 6
+constant kMCGDrawingPathOpcodeQuadraticTo= 7
+constant kMCGDrawingPathOpcodeSmoothQuadraticTo = 8
+constant kMCGDrawingPathOpcodeArcTo = 9
+constant kMCGDrawingPathOpcodeReflexArcTo = 10
+constant kMCGDrawingPathOpcodeReverseArcTo = 11
+constant kMCGDrawingPathOpcodeReverseReflexArcTo = 12
+constant kMCGDrawingPathOpcodeCloseSubpath = 13
 
 private command _svgEncode @xContext, @rDrawing
 	put empty into xContext["opcodes"]
@@ -1426,7 +1416,11 @@ private command _svgEncode @xContext, @rDrawing
 			_svgEncodeOp xContext, kMCGDrawingOpcodeStrokeMiterLimit, tArgument
 			break
 		case "rect"
-			_svgEncodeOp xContext, kMCGDrawingOpcodeRectangle, tArgument[1], tArgument[2], tArgument[3], tArgument[4], tArgument[5], tArgument[6]
+			if tArgument[5] is 0 and tArgument[6] is 0 then
+				_svgEncodeOp xContext, kMCGDrawingOpcodeRectangle, tArgument[1], tArgument[2], tArgument[3], tArgument[4]
+			else
+				_svgEncodeOp xContext, kMCGDrawingOpcodeRoundedRectangle, tArgument[1], tArgument[2], tArgument[3], tArgument[4], tArgument[5], tArgument[6]
+			end if
 			break
 		case "circle"
 			_svgEncodeOp xContext, kMCGDrawingOpcodeCircle, tArgument[1], tArgument[2], tArgument[3]
@@ -1521,6 +1515,7 @@ end _svgEncodeScalars
 
 private command _svgEncodePaint @xContext, pPaint
 	if pPaint[1] is "none" then
+		_svgEncodeOp xContext, kMCGDrawingPaintOpcodeNone
 	else if pPaint[1] is "color" then
 		_svgEncodeOp xContext, kMCGDrawingPaintOpcodeSolidColor, pPaint[2], pPaint[3], pPaint[4], pPaint[5]
 	else if pPaint[1] is "linear" or pPaint[1] is "radial" or pPaint[1] is "conical" then
@@ -1552,11 +1547,18 @@ private command _svgEncodePaint @xContext, pPaint
 	else
 		_InternalError format("unknown paint '%s'", pPaint[1])
 	end if
-	_svgEncodeOp xContext, kMCGDrawingPaintOpcodeEnd
 end _svgEncodePaint
 
 private command _svgEncodeTransform @xContext, pTransform
-	repeat for each element tTransform in pTransform
+	if the number of elements in pTransform > 1 then
+		throw "internal error - transform list length is not 1"
+	end if
+
+	if the number of elements in pTransform is 0 then
+		_svgEncodeOp xContext, kMCGDrawingTransformOpcodeIdentity
+	else
+		local tTransform
+		put pTransform[1] into tTransform
 		switch tTransform[1]
 		case "matrix"
 			_svgEncodeOp xContext, kMCGDrawingTransformOpcodeAffine, tTransform[2], tTransform[3], tTransform[4], tTransform[5], tTransform[6], tTransform[7]
@@ -1564,11 +1566,14 @@ private command _svgEncodeTransform @xContext, pTransform
 		default
 			_InternalError format("unknown transform '%s'", tTransform[1])
 		end switch
-	end repeat
-	_svgEncodeOp xContext, kMCGDrawingTransformOpcodeEnd
+	end if
 end _svgEncodeTransform
 
 private command _svgEncodePath @xContext, pPath
+	local tLastX, tLastY
+	put 0 into tLastX
+	put 0 into tLastY
+
 	local tScalarIndex
 	set the caseSensitive to true
 	put 1 into tScalarIndex
@@ -1579,58 +1584,90 @@ private command _svgEncodePath @xContext, pPath
 
 		local tOpcode
 		switch tCommand
+		case "m"
+			add tLastX to tScalars[1]
+			add tLastY to tScalars[2]
 		case "M"
 			put kMCGDrawingPathOpcodeMoveTo into tOpcode
+			put tScalars[1] into tLastX
+			put tScalars[2] into tLastY
 			break
-		case "m"
-			put kMCGDrawingPathOpcodeRelativeMoveTo into tOpcode
-			break
+
 		case "Z"
 		case "z"
 			put kMCGDrawingPathOpcodeCloseSubpath into tOpcode
 			break
+
+		case "l"
+			add tLastX to tScalars[1]
+			add tLastY to tScalars[2]
 		case "L"
 			put kMCGDrawingPathOpcodeLineTo into tOpcode
+			put tScalars[1] into tLastX
+			put tScalars[2] into tLastY
 			break
-		case "l"
-			put kMCGDrawingPathOpcodeRelativeLineTo into tOpcode
-			break
+
+		case "h"
+			add tLastX to tScalars[1]
 		case "H"
 			put kMCGDrawingPathOpcodeHorizontalTo into tOpcode
+			put tScalars[1] into tLastX
 			break
-		case "h"
-			put kMCGDrawingPathOpcodeRelativeHorizontalTo into tOpcode
-			break
+
+		case "v"
+			add tLastY to tScalars[1]
 		case "V"
 			put kMCGDrawingPathOpcodeVerticalTo into tOpcode
+			put tScalars[1] into tLastY
 			break
-		case "v"
-			put kMCGDrawingPathOpcodeRelativeVerticalTo into tOpcode
-			break
+
+		case "c"
+			add tLastX to tScalars[1]
+			add tLastY to tScalars[2]
+			add tLastX to tScalars[3]
+			add tLastY to tScalars[4]
+			add tLastX to tScalars[5]
+			add tLastY to tScalars[6]
 		case "C"
 			put kMCGDrawingPathOpcodeCubicTo into tOpcode
+			put tScalars[5] into tLastX
+			put tScalars[6] into tLastY
 			break
-		case "c"
-			put kMCGDrawingPathOpcodeRelativeCubicTo into tOpcode
-			break
+
+		case "s"
+			add tLastX to tScalars[1]
+			add tLastY to tScalars[2]
+			add tLastX to tScalars[3]
+			add tLastY to tScalars[4]
 		case "S"
 			put kMCGDrawingPathOpcodeSmoothCubicTo into tOpcode
+			put tScalars[3] into tLastX
+			put tScalars[4] into tLastY
 			break
-		case "s"
-			put kMCGDrawingPathOpcodeRelativeSmoothCubicTo into tOpcode
-			break
+
+		case "q"
+			add tLastX to tScalars[1]
+			add tLastY to tScalars[2]
+			add tLastX to tScalars[3]
+			add tLastY to tScalars[4]
 		case "Q"
 			put kMCGDrawingPathOpcodeQuadraticTo into tOpcode
+			put tScalars[3] into tLastX
+			put tScalars[4] into tLastY
 			break
-		case "q"
-			put kMCGDrawingPathOpcodeRelativeQuadraticTo into tOpcode
-			break
+
+		case "t"
+			add tLastX to tScalars[1]
+			add tLastY to tScalars[2]
 		case "T"
 			put kMCGDrawingPathOpcodeSmoothQuadraticTo into tOpcode
+			put tScalars[1] into tLastX
+			put tScalars[2] into tLastY
 			break
-		case "t"
-			put kMCGDrawingPathOpcodeRelativeSmoothQuadraticTo into tOpcode
-			break
+
+		case "a"
+			add tLastX to tScalars[6]
+			add tLastY to tScalars[7]
 		case "A"
 			if tScalars[4] is "0" then
 				if tScalars[5] is "0" then
@@ -1649,25 +1686,8 @@ private command _svgEncodePath @xContext, pPath
 			put tScalars[7] into tScalars[5]
 			delete variable tScalars[6]
 			delete variable tScalars[7]
-			break
-		case "a"
-			if tScalars[4] is "0" then
-				if tScalars[5] is "0" then
-					put kMCGDrawingPathOpcodeRelativeArcTo into tOpcode
-				else
-					put kMCGDrawingPathOpcodeRelativeReverseArcTo into tOpcode
-				end if
-			else
-				if tScalars[5] is "0" then
-					put kMCGDrawingPathOpcodeRelativeReflexArcTo into tOpcode
-				else
-					put kMCGDrawingPathOpcodeRelativeReverseReflexArcTo into tOpcode
-				end if
-			end if
-			put tScalars[6] into tScalars[4]
-			put tScalars[7] into tScalars[5]
-			delete variable tScalars[6]
-			delete variable tScalars[7]
+			put tScalars[4] into tLastX
+			put tScalars[5] into tLastY
 			break
 		end switch
 		_svgEncodeOpV xContext, tOpcode, tScalars
