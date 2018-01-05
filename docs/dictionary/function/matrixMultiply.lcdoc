@@ -45,11 +45,9 @@ second part is the column number. For example, the expression
 myArray[3,2] describes the element of myArray which is in the third row,
 second column.
 
-The number of rows in the <firstArray> must be the same as the number of
-columns in the <secondArray>, and the number of rows in the
-<secondArray> must match the number of columns in the <firstArray>.
-However, the number of rows in the <firstArray> and <secondArray> need
-not be the same.
+The number of columns in the <firstArray> must be the same as the number
+of rows in the <secondArray>. There are no other constraints in order for
+the multiplication to succeed.
 
 References: multiply (command), function (control structure),
 extents (function), transpose (function), array (glossary),
