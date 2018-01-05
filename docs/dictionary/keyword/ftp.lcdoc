@@ -35,25 +35,26 @@ If an error occurs during transfer of the data, the error is placed in
 the result <function>. The first <word> returned by the <result>
 <function> is "error", followed (where appropriate) by the text of the
 error message returned by the FTP <server>, including the server
-response code. >*Important:* If a <blocking> operation involving a <URL>
-(using the <put> <command> to <upload> a <URL>, the <post> <command>,
-the <delete URL> <command>, or a <statement> that gets an <ftp> or
-<http> <URL>) is going on, no other <blocking> <URL> operation can start
-until the previous one is finished. If you attempt to use a <URL> in an
-<expression>, or put data into a <URL>, while another <blocking> <URL>
-operation is in progress, the <result> is set to
-"Error Previous request not completed". Downloading a URL does not
-prevent other messages from being sent during the download: the current
-handler is blocked during the download, but other handlers are not. This
-means that if, for example, your application has a button that downloads
-a URL, the user might click the button again (or click another <button>
-that <download|downloads> another <URL>) while the first <URL> is still
-being <download|downloaded>. In this case, the second <download> is not
-performed and the <result> is set to
-"Error Previous request not completed." To avoid this problem, you can
-set a <flag> while a URL is being <download|downloaded>, and check that
-<flag> when trying to <download> <URL|URLs> to make sure that there is
-not already a current <download> in progress.
+response code. 
+> *Important:* If a <blocking> operation involving a <URL>
+> (using the <put> <command> to <upload> a <URL>, the <post> <command>,
+> the <delete URL> <command>, or a <statement> that gets an <ftp> or
+> <http> <URL>) is going on, no other <blocking> <URL> operation can start
+> until the previous one is finished. If you attempt to use a <URL> in an
+> <expression>, or put data into a <URL>, while another <blocking> <URL>
+> operation is in progress, the <result> is set to
+> "Error Previous request not completed". Downloading a URL does not
+> prevent other messages from being sent during the download: the current
+> handler is blocked during the download, but other handlers are not. This
+> means that if, for example, your application has a button that downloads
+> a URL, the user might click the button again (or click another <button>
+> that <download|downloads> another <URL>) while the first <URL> is still
+> being <download|downloaded>. In this case, the second <download> is not
+> performed and the <result> is set to
+> "Error Previous request not completed." To avoid this problem, you can
+> set a <flag> while a URL is being <download|downloaded>, and check that
+> <flag> when trying to <download> <URL|URLs> to make sure that there is
+> not already a current <download> in progress.
 
 Description:
 Use the <ftp> <keyword> to upload or download <files> to or from an
@@ -62,13 +63,13 @@ Internet site.
 The URL scheme "ftp" indicates information located on an FTP server. An
 <ftp> <URL> consists of the following parts:
 
-        1. The string "ftp://"
-        2. An optional user name and password, separated by a colon (:)
-           and followed by "@"
-        3. The name of the server
-        4. An optional port number preceded by a colon (:)
-        5. The name and location of a file or directory, starting with a
-           slash (/)
+1. The string "ftp://"
+2. An optional user name and password, separated by a colon (:)
+   and followed by "@"
+3. The name of the server
+4. An optional port number preceded by a colon (:)
+5. The name and location of a file or directory, starting with a
+   slash (/)
 
 
 If you don't specify a port number, port 21 is used. (This is the
@@ -90,24 +91,25 @@ standard port for FTP.)
     put "jim" into userName
     put "jsmith@example.org" into userPassword
     put "ftp://" & userName & ":" & URLEncode(userPassword) \
-
-    & "@ftp.example.com/title.txt" into fileURLToGet
-
+      & "@ftp.example.com/title.txt" into fileURLToGet
     get URL fileURLToGet
 
 
 Here are some examples of valid <ftp> <URL|URLs>:
-ftp://ftp.example.org/directory/ -- list of files and folders in a
-directory ftp://ftp.example.org/directory/file.exe -- a file on the
-server ftp://user:password@ftp.example.org/myfile -- a file accessed by
-a password ftp://ftp.example.com:3992/somefile -- using a nonstandard
+- ftp://ftp.example.org/directory/ -- list of files and folders in a
+directory 
+- ftp://ftp.example.org/directory/file.exe -- a file on the
+server 
+- ftp://user:password@ftp.example.org/myfile -- a file accessed by
+a password 
+- ftp://ftp.example.com:3992/somefile -- using a nonstandard
 FTP port
 
-An <ftp> <URL> is a <container>, and you can use the <expression> URL
-ftpURL in any statement where any other <container> type is used. When
-you get the <value> of an <ftp> <URL>, LiveCode <download|downloads> the
-<URL> from the <server>. (If you have previously <cache|cached> the URL
-with the <load> <command>, it fetches the <URL> from the <cache>.)
+An <ftp> <URL> is a <container>, and you can use the <expression> 
+`URL ftpURL` in any statement where any other <container> type is used. 
+When you get the <value> of an <ftp> <URL>, LiveCode <download|downloads> 
+the <URL> from the <server>. (If you have previously <cache|cached> the 
+URL with the <load> <command>, it fetches the <URL> from the <cache>.)
 
 A URL that ends with a slash (/) designates a directory (rather than a
 file). An <ftp> <URL> to a <folder|directory> evaluates to a listing of
@@ -135,17 +137,14 @@ concludes. If the user clicks the button again while the download is
 still going on, the handler simply beeps:
 
     on mouseUp
-
-    global downloadInProgress
-    if downloadInProgress then
-
-    beep
-    exit mouseUp
-
-    end if
-    put true into downloadInProgress -- about to start
-    put URL (field "FTP URL to get") into field "Command Result"
-    put false into downloadInProgress -- finished
+        global downloadInProgress
+        if downloadInProgress then
+           beep
+           exit mouseUp
+        end if
+        put true into downloadInProgress -- about to start
+        put URL (field "FTP URL to get") into field "Command Result"
+        put false into downloadInProgress -- finished
     end mouseUp
 
 
@@ -189,8 +188,7 @@ container (glossary), URL (glossary), server (glossary),
 keyword (glossary), application (glossary), handler (glossary),
 word (glossary), expression (glossary), download (glossary),
 URL (keyword), file (keyword), ftp (keyword), button (keyword),
-http (keyword), library (library), delete URL (library),
-libURLSetFTPListCommand (library), Internet library (library),
+http (keyword), library (library), Internet library (library),
 startup (message), openBackground (message), preOpenStack (message),
 openStack (message), preOpenCard (message)
 

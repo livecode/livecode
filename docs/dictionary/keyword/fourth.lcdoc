@@ -20,8 +20,8 @@ Example:
 put empty into the fourth char of thisName
 
 Description:
-Use the <fourth> <keyword> in an <object reference> or <chunk
-expression>. 
+Use the <fourth> <keyword> in an <object reference> or 
+<chunk expression>. 
 
 The <fourth> <keyword> can be used to specify any <object(glossary)>
 whose <number> <property> is 4. It can also be used to designate the

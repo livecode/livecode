@@ -101,12 +101,10 @@ For example, the following <getProp> <handler> implements a virtual
 <property> of a <field> that contains a list of numbers:
 
     getProp columnAverage
-    repeat for each line thisNumber of me
-
-    add thisNumber to fieldTotal
-    end repeat
-    return fieldTotal/the number of lines of me
-
+        repeat for each line thisNumber of me
+            add thisNumber to fieldTotal
+        end repeat
+        return fieldTotal/the number of lines of me
     end columnAverage
 
 
