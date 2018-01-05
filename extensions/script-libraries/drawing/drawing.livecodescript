@@ -616,12 +616,62 @@ end _svgCascade
  ******************************************************************************/
 
 private command _svgCompile @xContext, pRootElement
-	put pRootElement["features"]["width"] into xContext["drawing-width"]
-	put pRootElement["features"]["height"] into xContext["drawing-height"]
-	put pRootElement["features"]["viewBox"] into xContext["drawing-viewbox"]
-	put pRootElement["features"]["preserveAspectRatio"] into xContext["drawing-par"]
-	delete variable pRootElement["features"]["viewBox"]
-	delete variable pRootElement["features"]["preserveAspectRatio"]
+	/* If the root element is an 'svg' then there's not much we can do! */
+	if pRootElement["type"] is not "svg" then
+		throw "root element is not svg"
+	end if
+
+	/* Unpack the root element's attributes. */
+	local tWidth, tHeight, tViewBox, tPar
+	put pRootElement["features"]["width"] into tWidth
+	put pRootElement["features"]["height"] into tHeight
+	put pRootElement["features"]["viewBox"] into tViewBox
+	put pRootElement["features"]["preserveAspectRatio"] into tPar
+
+	/* At this point we might find:
+	 *   1) Absolute width/height
+	 *   2) Percent width/height
+	 *   3) A viewBox
+	 *
+	 * We need an absolute width/height to present as size of the drawing. This
+	 * is used to determine how things can scale, and the 'natural' mapping to
+	 * pixels.
+	 *
+	 * If the width/height are relative (they default to 100% if not specified)
+	 * then they are taken as percentage sizes of the viewBox width/height.
+	 *
+	 * If there is no viewBox in that case, then the viewBox is taken to be
+	 * the point bbox of all non-relatively specified elements, or a fixed size
+	 * of 256 if that bbox is empty.
+	 */
+
+	/* If we have a viewBox, then all is straight-forward. We use that to
+	 * generate absolute width/height. Otherwise, if the width/height are relative
+	 * we must do bbox computations. */
+	if tViewBox is an array then
+		if tWidth < 0 then
+			put -tWidth * tViewBox[3] into tWidth
+		end if
+
+		if tHeight < 0 then
+			put -tHeight * tViewBox[4] into tHeight
+		end if
+	else if tWidth < 0 or tHeight < 0 then
+		throw "relative width/height with no viewBox not supported yet"
+	end if
+
+	/* At this point we have an absolute width/height, so update the features
+	 * of the root element. */
+	put tWidth into pRootElement["features"]["width"]
+	put tHeight into pRootElement["features"]["height"]
+
+	/* Set the initial root-width/height. */
+	put tWidth into xContext["root-width"]
+	put tHeight into xContext["root-height"]
+
+	/* Set the drawing size */
+	put tWidth into xContext["drawing-width"]
+	put tHeight into xContext["drawing-height"]
 
 	_svgCompileElement xContext, pRootElement
 end _svgCompile
@@ -723,81 +773,12 @@ private command _svgCompileFeatures @xContext, pElement
 end _svgCompileFeatures
 
 private command _svgCompileTransform @xContext, pTransform, pBBox, @rCompiledTransform
-	local tWidth, tHeight, tMatrix
-	put xContext["root-width"] into tWidth
-	put xContext["root-height"] into tHeight
+	local tMatrix
 	put _svgTransformIdentity() into tMatrix
 
 	repeat for each element tTransform in pTransform
 		local tNextMatrix
 		switch tTransform[1]
-		case "viewport"
-			local tVpWidth, tVpHeight, tVpX, tVpY, tVbWidth, tVbHeight, tVbX, tVbY, tPar
-			put tTransform[2] into tVpX
-			put tTransform[3] into tVpY
-			put tTransform[4] into tVpWidth
-			put tTransform[5] into tVpHeight
-			put tTransform[6] into tVbX
-			put tTransform[7] into tVbY
-			put tTransform[8] into tVbWidth
-			put tTransform[9] into tVbHeight
-			put tTransform[10] into tPar
-
-			/* Resolve percentage sizes */
-			if tVpWidth < 0 then
-				put -tVpWidth * tWidth into tVpWidth
-			end if
-			if tVpHeight < 0 then
-				put -tVpHeight * tHeight into tVpHeight
-			end if
-
-			/* If the new vp sizes are not percentages then we can build a matrix
-			 * else we must emit a separate transform */
-			if tVpWidth >= 0 and tVpHeight >= 0 then
-				local tVScaleX, tVScaleY, tVTranslateX, tVTranslateY
-
-				put tVpWidth / tVbWidth into tVScaleX
-				put tVpHeight / tVbHeight into tVScaleY
-
-				if word 2 of tPar is "meet" then
-					put min(tVScaleX, tVScaleY) into tVScaleX
-					put tVScaleX into tVScaleY
-				else if word 2 of tPar is "slice" then
-					put max(tVScaleX, tVScaleY) into tVScaleX
-					put tVScaleX into tVScaleY
-				end if
-
-				put tVpX - (tVbX * tVScaleX) into tVTranslateX
-				put tVpY - (tVbY * tVScaleY) into tVTranslateY
-
-				if tPar contains "xMid" then
-					add (tVpWidth - tVbWidth * tVScaleX) / 2 to tVTranslateX
-				else if tPar contains "xMax" then
-					add (tVpWidth - tVbWidth * tVScaleX) to tVTranslateX
-				end if
-
-				if tPar contains "yMid" then
-					add (tVpHeight - tVbHeight * tVScaleY) / 2 to tVTranslateY
-				else if tPar contains "yMax" then
-					add (tVpHeight - tVbHeight * tVScaleY) to tVTranslateY
-				end if
-				
-				put _svgTransformTranslate(tVTranslateX, tVTranslateY) into tNextMatrix
-				put _svgTransformConcat(tNextMatrix, _svgTransformScale(tVScaleX, tVScaleY)) into tNextMatrix
-			else
-				if not _svgTransformIsIdentity(tMatrix) then
-					seqPushOntoBack rCompiledTransform, _svgTransformFlatten(tMatrix)
-				end if
-				put tVpWidth into tTransform[4]
-				put tVpHeight into tTransform[5]
-				seqPushOntoBack rCompiledTransform, tTransform
-				put _svgTransformIdentity() into tMatrix
-				put _svgTransformIdentity() into tNextMatrix
-			end if
-
-			put tVpWidth into tWidth
-			put tVpHeight into tHeight
-			break
 		case "matrix"
 			put _svgTransformMatrix(tTransform[2], tTransform[3], tTransform[4], tTransform[5], tTransform[6], tTransform[7]) into tNextMatrix
 			break
@@ -1040,35 +1021,72 @@ private command _svgCompileSvg @xContext, pElement
 
 	_svgContextSave xContext
 
-	if tViewBox is an array then
-		local tViewportTransform
-		put "viewport" into tViewportTransform[1]
-		put tX into tViewportTransform[2]
-		put tY into tViewportTransform[3]
-		put tWidth into tViewportTransform[4]
-		put tHeight into tViewportTransform[5]
-		put tViewBox[1] into tViewportTransform[6]
-		put tViewBox[2] into tViewportTransform[7]
-		put tViewBox[3] into tViewportTransform[8]
-		put tViewBox[4] into tViewportTransform[9]
-		put tPreserveAspectRatio into tViewportTransform[10]
+	/* The SVG element establishes a new viewport so we must compute that
+	 * transform here. */
+	local tOldWidth, tOldHeight
+	put xContext["root-width"] into tOldWidth
+	put xContext["root-height"] into tOldHeight
 
-		put tWidth into xContext["root-width"]
-		put tHeight into xContext["root-height"]
-
-		local tTransform, tCompiledTransform
-		put _svgContextGetState(xContext, "transform") into tTransform
-		seqPushOntoBack tTransform, tViewportTransform
-		_svgCompileTransform xContext, tTransform, empty, tCompiledTransform
-		_svgContextSetState xContext, "transform", tCompiledTransform
-	else
-		put tWidth into xContext["root-width"]
-		put tHeight into xContext["root-height"]
+	/* If the new width/height are relative, resolve them. */
+	if tWidth < 0 then
+		put tWidth * tOldWidth into tWidth
 	end if
+	if tHeight < 0 then
+		put tHeight * tOldHeight into tHeight
+	end if
+
+	/* If there is a viewBox, then we must compute the viewBox transform. */
+	if tViewBox is an array then
+		local tVScaleX, tVScaleY, tVTranslateX, tVTranslateY
+
+		put tWidth / tViewBox[3] into tVScaleX
+		put tHeight / tViewBox[4] into tVScaleY
+
+		if word 2 of tPreserveAspectRatio is "meet" then
+			put min(tVScaleX, tVScaleY) into tVScaleX
+			put tVScaleX into tVScaleY
+		else if word 2 of tPreserveAspectRatio is "slice" then
+			put max(tVScaleX, tVScaleY) into tVScaleX
+			put tVScaleX into tVScaleY
+		end if
+
+		put tX - (tViewBox[1] * tVScaleX) into tVTranslateX
+		put tY - (tViewBox[2] * tVScaleY) into tVTranslateY
+
+		if tPreserveAspectRatio contains "xMid" then
+			add (tWidth - tViewBox[3] * tVScaleX) / 2 to tVTranslateX
+		else if tPreserveAspectRatio contains "xMax" then
+			add (tWidth - tViewBox[3] * tVScaleX) to tVTranslateX
+		end if
+
+		if tPreserveAspectRatio contains "yMid" then
+			add (tHeight - tViewBox[4] * tVScaleY) / 2 to tVTranslateY
+		else if tPreserveAspectRatio contains "yMax" then
+			add (tHeight - tViewBox[4] * tVScaleY) to tVTranslateY
+		end if
+		
+		local tViewportMatrix
+		put _svgTransformTranslate(tVTranslateX, tVTranslateY) into tViewportMatrix
+		put _svgTransformConcat(tViewportMatrix, _svgTransformScale(tVScaleX, tVScaleY)) into tViewportMatrix
+
+		local tTransform
+		put _svgContextGetState(xContext, "transform") into tTransform
+		seqPushOntoBack tTransform, _svgTransformFlatten(tViewportMatrix)
+		_svgCompileTransform xContext, tTransform, empty, tTransform
+		_svgContextSetState xContext, "transform", tTransform
+	end if
+
+	/* Update the root width/height */
+	put tWidth into xContext["root-width"]
+	put tHeight into xContext["root-height"]
 
 	repeat for each element tChildElement in pElement["content"]
 		_svgCompileElement xContext, tChildElement
 	end repeat
+
+	/* Restore the old root width/height */
+	put tOldWidth into xContext["root-width"]
+	put tOldHeight into xContext["root-height"]
 
 	_svgContextRestore xContext
 end _svgCompileSvg
@@ -1331,26 +1349,6 @@ constant kMCGDrawingPathOpcodeReverseReflexArcTo = 23
 constant kMCGDrawingPathOpcodeRelativeReverseReflexArcTo = 24
 constant kMCGDrawingPathOpcodeCloseSubpath = 25
 
-constant kMCGDrawingPreserveAspectRatioOpcodeNone = 0
-constant kMCGDrawingPreserveAspectRatioOpcodeXMinYMinMeet = 1
-constant kMCGDrawingPreserveAspectRatioOpcodeXMidYMinMeet = 2
-constant kMCGDrawingPreserveAspectRatioOpcodeXMaxYMinMeet = 3
-constant kMCGDrawingPreserveAspectRatioOpcodeXMinYMidMeet = 4
-constant kMCGDrawingPreserveAspectRatioOpcodeXMidYMidMeet = 5
-constant kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidMeet = 6
-constant kMCGDrawingPreserveAspectRatioOpcodeXMinYMaxMeet = 7
-constant kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxMeet = 8
-constant kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxMeet = 9
-constant kMCGDrawingPreserveAspectRatioOpcodeXMinYMinSlice = 10
-constant kMCGDrawingPreserveAspectRatioOpcodeXMidYMinSlice = 11
-constant kMCGDrawingPreserveAspectRatioOpcodeXMaxYMinSlice = 12
-constant kMCGDrawingPreserveAspectRatioOpcodeXMinYMidSlice = 13
-constant kMCGDrawingPreserveAspectRatioOpcodeXMidYMidSlice = 14
-constant kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidSlice = 15
-constant kMCGDrawingPreserveAspectRatioOpcodeXMinYMaxSlice = 16
-constant kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxSlice = 17
-constant kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxSlice = 18
-
 private command _svgEncode @xContext, @rDrawing
 	put empty into xContext["opcodes"]
 	put empty into xContext["scalars"]
@@ -1459,28 +1457,10 @@ private command _svgEncode @xContext, @rDrawing
 
 	local tDrawing
 	put binaryEncode("A3C", kMCGDrawingIdent, kMCGDrawingVersion) into tDrawing
-
-	local tFlags, tExtraScalars, tExtraOpcodes
-	put 0 into tFlags
-	if xContext["drawing-width"] <> -1 then
-		put tFlags bitOr 1 into tFlags
-		put binaryEncode("f", xContext["drawing-width"]) after tExtraScalars
-	end if
-	if xContext["drawing-height"] <> -1 then
-		put tFlags bitOr 2 into tFlags
-		put binaryEncode("f", xContext["drawing-height"]) after tExtraScalars
-	end if
-	if xContext["drawing-viewbox"] is an array then
-		put tFlags bitOr 4 into tFlags
-		put binaryEncode("ffff", xContext["drawing-viewbox"][1], xContext["drawing-viewbox"][2], xContext["drawing-viewbox"][3], xContext["drawing-viewbox"][4]) after tExtraScalars
-		put numToByte(_svgEncodePreserveAspectRatio(xContext["drawing-par"])) after tExtraOpcodes
-	end if
-	put binaryEncode("I", tFlags) after tDrawing
-	put binaryEncode("I", (the number of bytes in tExtraScalars + the number of bytes in xContext["scalars"]) div 4) after tDrawing
-	put tExtraScalars after tDrawing
+	put binaryEncode("ff", xContext["drawing-width"], xContext["drawing-height"]) after tDrawing
+	put binaryEncode("I", (the number of bytes in xContext["scalars"]) div 4) after tDrawing
 	put xContext["scalars"] after tDrawing
-	put binaryEncode("I", the number of bytes in xContext["opcodes"] + the number of bytes in tExtraOpcodes) after tDrawing
-	put tExtraOpcodes after tDrawing
+	put binaryEncode("I", the number of bytes in xContext["opcodes"]) after tDrawing
 	put xContext["opcodes"] after tDrawing
 	put tDrawing into rDrawing
 end _svgEncode
@@ -1575,55 +1555,11 @@ private command _svgEncodePaint @xContext, pPaint
 	_svgEncodeOp xContext, kMCGDrawingPaintOpcodeEnd
 end _svgEncodePaint
 
-private function _svgEncodePreserveAspectRatio pPar
-	local tParOp
-	switch word 1 of pPar
-	case "none"
-		put kMCGDrawingPreserveAspectRatioOpcodeNone into tParOp
-		break
-	case "xMinYMin"
-		put kMCGDrawingPreserveAspectRatioOpcodeXMinYMinMeet into tParOp
-		break
-	case "xMidYMin"
-		put kMCGDrawingPreserveAspectRatioOpcodeXMidYMinMeet into tParOp
-		break
-	case "xMaxYMin"
-		put kMCGDrawingPreserveAspectRatioOpcodeXMaxYMinMeet into tParOp
-		break
-	case "xMinYMid"
-		put kMCGDrawingPreserveAspectRatioOpcodeXMinYMidMeet into tParOp
-		break
-	case "xMidYMid"
-		put kMCGDrawingPreserveAspectRatioOpcodeXMidYMidMeet into tParOp
-		break
-	case "xMaxYMid"
-		put kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidMeet into tParOp
-		break
-	case "xMinYMax"
-		put kMCGDrawingPreserveAspectRatioOpcodeXMinYMaxMeet into tParOp
-		break
-	case "xMidYMax"
-		put kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxMeet into tParOp
-		break
-	case "xMaxYMax"
-		put kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxMeet into tParOp
-		break
-	end switch
-	if word 2 of pPar is "slice" then
-		put tParOp - kMCGDrawingPreserveAspectRatioOpcodeXMinYMinMeet + \
-						kMCGDrawingPreserveAspectRatioOpcodeXMinYMinSlice into tParOp
-	end if
-	return tParOp
-end _svgEncodePreserveAspectRatio
-
 private command _svgEncodeTransform @xContext, pTransform
 	repeat for each element tTransform in pTransform
 		switch tTransform[1]
 		case "matrix"
 			_svgEncodeOp xContext, kMCGDrawingTransformOpcodeAffine, tTransform[2], tTransform[3], tTransform[4], tTransform[5], tTransform[6], tTransform[7]
-			break
-		case "viewport"
-			_InternalError format("dynamic viewport transform not supported")
 			break
 		default
 			_InternalError format("unknown transform '%s'", tTransform[1])

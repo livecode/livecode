@@ -37,10 +37,8 @@ inline MCGPoint MCGPointReflect(const MCGPoint &origin, const MCGPoint &point)
  *
  * The header has the following format:
  *   uint8_t[4] ident = 'L', 'C', 'D', 0
- *   uint32_t flags
- *     has_width : bit 0
- *     has_height : bit 1
- *     has_viewport : bit 2
+ *   float width
+ *   float height
  *   uint32_t scalar_count
  *   float[scalar_count] scalars
  *   uint32_t opcode_count
@@ -53,18 +51,10 @@ inline MCGPoint MCGPointReflect(const MCGPoint &origin, const MCGPoint &point)
  * This will be incremented each time the format changes in a backwards
  * incompatible way.
  *
- * The has_width flag determines whether the drawing has specified an intrinsic
- * width != 100% (i.e. width of container). If set to true, then the width
- * will be available as a size scalar.
- *
- * The has_height flag determines whether the drawing has specified an intrinsic
- * height != 100% (i.e. height of container). If set to true, then the height
- * will be available as a size scalar.
- *
- * The has_viewport flag determines whether the drawing has specified a viewbox
- * and preserve aspect ratio setting. If set to true, then the viewbox will be
- * available as two coordinate scalars, followed by two length scalars, and the
- * aspect ratio setting will be available as a PreserveAspectRatio opcode.
+ * The width and height fields are the 'natural' size of the drawing. This is
+ * used (in the engine) to present as the formattedWidth/Height and to provide
+ * the 'natural' size used for generating pixels (in which case the ceiling is
+ * used).
  *
  * There are several kinds of scalar which may be present:
  *
@@ -173,7 +163,8 @@ enum MCGDrawingHeaderFlags : uint32_t
 struct MCGDrawingHeader
 {
     uint8_t ident[4];
-    uint32_t flags;
+    float width;
+    float height;
     uint32_t scalar_count;
 //  float[scalar_count] scalars;
 //  uint32_t opcode_count;
@@ -273,119 +264,6 @@ enum MCGDrawingOpcode : uint8_t
     /* _Last is used for range checking on the main opcodes. */
     kMCGDrawingOpcode_Last = kMCGDrawingOpcodePath,
 };
-
-/* PRESERVE ASPECT RATIO OPCODES */
-
-/* MCGDrawingPreserveAspectRatioOpcode defines the settings of the preserve-
- * aspect-ratio attribute. */
-enum MCGDrawingPreserveAspectRatioOpcode : uint8_t
-{
-    kMCGDrawingPreserveAspectRatioOpcodeNone = 0,
-    kMCGDrawingPreserveAspectRatioOpcodeXMinYMinMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMidYMinMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMaxYMinMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMinYMidMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMidYMidMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMinYMaxMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMinYMinSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMidYMinSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMaxYMinSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMinYMidSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMidYMidSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMinYMaxSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxSlice,
-    
-    kMCGDrawingPreserveAspectRatioOpcode_Last = kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxSlice,
-};
-
-inline bool MCGDrawingPreserveAspectRatioIsMeet(MCGDrawingPreserveAspectRatioOpcode o)
-{
-    return o >= kMCGDrawingPreserveAspectRatioOpcodeXMinYMinMeet &&
-           o <= kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxMeet;
-}
-
-inline bool MCGDrawingPreserveAspectRatioIsSlice(MCGDrawingPreserveAspectRatioOpcode o)
-{
-    return o >= kMCGDrawingPreserveAspectRatioOpcodeXMinYMinSlice &&
-           o <= kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxSlice;
-}
-
-inline bool MCGDrawingPreserveAspectRatioIsXMid(MCGDrawingPreserveAspectRatioOpcode o)
-{
-    switch(o)
-    {
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMinMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMidMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMinSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMidSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxSlice:
-        return true;
-    default:
-        break;
-    }
-    
-    return false;
-}
-
-inline bool MCGDrawingPreserveAspectRatioIsXMax(MCGDrawingPreserveAspectRatioOpcode o)
-{
-    switch(o)
-    {
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMinMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMinSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxSlice:
-        return true;
-    default:
-        break;
-    }
-    
-    return false;
-}
-
-inline bool MCGDrawingPreserveAspectRatioIsYMid(MCGDrawingPreserveAspectRatioOpcode o)
-{
-    switch(o)
-    {
-    case kMCGDrawingPreserveAspectRatioOpcodeXMinYMidMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMidMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMinYMidSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMidSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidSlice:
-        return true;
-    default:
-        break;
-    }
-    
-    return false;
-}
-
-inline bool MCGDrawingPreserveAspectRatioIsYMax(MCGDrawingPreserveAspectRatioOpcode o)
-{
-    switch(o)
-    {
-    case kMCGDrawingPreserveAspectRatioOpcodeXMinYMaxMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMinYMaxSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxSlice:
-        return true;
-    default:
-        break;
-    }
-    
-    return false;
-}
 
 /* TRANSFORM OPCODES */
 
@@ -649,7 +527,7 @@ struct MCGDrawingVisitor
     
     /* Lifecycle Operations */
 
-    void Start(void);
+    void Start(MCGRectangle p_src_rect, MCGRectangle p_dst_rect);
     void Finish(bool p_error);
 };
 
@@ -672,18 +550,11 @@ enum MCGDrawingStatus
     /* InvalidVersion indicates that the version is not recognised. */
     kMCGDrawingStatusInvalidVersion,
     
-    /* InvalidFlags indicates that flags which are not defined have been set. */
-    kMCGDrawingStatusInvalidFlags,
-    
-    /* InvalidWidth indicates that the width scalar could not be unpacked. */
+    /* InvalidWidth indicates that the width field is not a valid value. */
     kMCGDrawingStatusInvalidWidth,
     
-    /* InvalidHeight indicates that the height scalar could not be unpacked. */
+    /* InvalidHeight indicates that the height field is not a valid value. */
     kMCGDrawingStatusInvalidHeight,
-    
-    /* InvalidViewport indicates that the viewport (viewBox and preserveAspectRatio)
-     * could not be unpacked. */
-    kMCGDrawingStatusInvalidViewport,
     
     /* ScalarOverflow indicates that more scalars are required than are present.
      */
@@ -720,10 +591,6 @@ enum MCGDrawingStatus
     /* InvalidStrokeLineCapOpcode indicates that an undefined line cap opcode
      * has been encountered. */
     kMCGDrawingStatusInvalidStrokeLineCapOpcode,
-    
-    /* InvalidPreserveAspectRatioOpcode indicates that an undefined preserve
-     * aspect ratio opcode has been encountered. */
-    kMCGDrawingStatusInvalidPreserveAspectRatioOpcode,
     
     /* InvalidSpreadMethodOpcode indicates that an undefined spread method
      * opcode has been encountered. */
@@ -821,12 +688,12 @@ public:
          * what is expected by unpacking the data, then it is an
          * 'InvalidDrawing' */
         uint8_t t_ident_0, t_ident_1, t_ident_2, t_ident_version;
-        uint32_t t_flags;
         if (!t_stream.Singleton(t_ident_0) ||
             !t_stream.Singleton(t_ident_1) ||
             !t_stream.Singleton(t_ident_2) ||
             !t_stream.Singleton(t_ident_version) ||
-            !t_stream.Singleton(t_flags) ||
+            !t_stream.Singleton(m_width) ||
+            !t_stream.Singleton(m_height) ||
             !t_stream.Sequence(m_scalars) ||
             !t_stream.Sequence(m_opcodes) ||
             !t_stream.IsFinished())
@@ -851,46 +718,18 @@ public:
             return;
         }
         
-        /* Check the flags field is correct. */
-        if ((t_flags & ~kMCGDrawingHeaderFlagValidMask) != 0)
+        /* Check the width is valid. */
+        if (m_width < 0)
         {
-            m_status = kMCGDrawingStatusInvalidFlags;
+            m_status = kMCGDrawingStatusInvalidWidth;
             return;
         }
         
-        /* Process the width, if present. If the width is not present, then
-         * it is taken to be '100%' (-1). */
-        if ((t_flags & kMCGDrawingHeaderFlagHasWidthBit) != 0)
+        /* Check the height is valid. */
+        if (m_height < 0)
         {
-            if (!Scalar(m_width))
-            {
-                m_status = kMCGDrawingStatusInvalidWidth;
-                return;
-            }
-        }
-        
-        /* Process the height, if present. If the height is not present, then
-         * it is taken to be '100%' (-1). */
-        if ((t_flags & kMCGDrawingHeaderFlagHasHeightBit) != 0)
-        {
-            if (!Scalar(m_height))
-            {
-                m_status = kMCGDrawingStatusInvalidHeight;
-                return;
-            }
-        }
-        
-        /* Process the viewport, if present. */
-        if ((t_flags & kMCGDrawingHeaderFlagHasViewportBit) != 0)
-        {
-            if (!Rectangle(m_viewbox) ||
-                !PreserveAspectRatioOpcode(m_preserve_aspect_ratio))
-            {
-                m_status = kMCGDrawingStatusInvalidViewport;
-                return;
-            }
-            
-            m_has_viewport = true;
+            m_status = kMCGDrawingStatusInvalidHeight;
+            return;
         }
     }
     
@@ -955,15 +794,6 @@ public:
         return GeneralOpcode<MCGDrawingStrokeLineCapOpcode,
                              kMCGDrawingStrokeLineCapOpcode_Last,
                              kMCGDrawingStatusInvalidStrokeLineCapOpcode>(r_opcode);
-    }
-    
-    /* PreserveAspectRatioOpcode attempts to read the next opcode as a 
-     * preserve aspect ratio opcode. */
-    bool PreserveAspectRatioOpcode(MCGDrawingPreserveAspectRatioOpcode& r_opcode)
-    {
-        return GeneralOpcode<MCGDrawingPreserveAspectRatioOpcode,
-                             kMCGDrawingPreserveAspectRatioOpcode_Last,
-                             kMCGDrawingStatusInvalidPreserveAspectRatioOpcode>(r_opcode);
     }
     
     /* SpreadMethodOpcode attempts to read the next opcode as a spread method
@@ -1271,8 +1101,7 @@ public:
                 break;
         }
 
-        if (!ExecuteTransform(MCGAffineTransformMakeIdentity(),
-                              r_gradient.transform))
+        if (!ExecuteTransform(r_gradient.transform))
         {
             return false;
         }
@@ -1325,7 +1154,7 @@ private:
 
     /* ExecuteTransform runs a transform opcode stream to generate an affine
      * transform. */
-    bool ExecuteTransform(MCGAffineTransform p_base_transform, MCGAffineTransform& r_transform);
+    bool ExecuteTransform(MCGAffineTransform& r_transform);
     
     /* ExecutePaint runs a paint opcode stream to generate a paint struct. */
     bool ExecutePaint(MCGDrawingPaint& r_paint);
@@ -1357,112 +1186,26 @@ private:
     
     /* m_width is the unpacked width field from the drawing. This is initialized
      * on construction of the context. */
-    MCGFloat m_width = -1.0f;
+    MCGFloat m_width = 0.0f;
     
     /* m_height is the unpacked height field from the drawing. This is initialized
      * on construction of the context. */
-    MCGFloat m_height = -1.0f;
-    
-    /* m_has_viewport is true if the drawing defined a viewport in the header.
-     * This is initialized on construction of the context. */
-    bool m_has_viewport = false;
-    
-    /* m_viewbox is the unpacked viewbox field from the drawing. This is
-     * initialized on construction of the context. */
-    MCGRectangle m_viewbox = {};
-    
-    /* m_preserve_aspect_ratio is the unpacked preserve aspect ratio field from
-     * the drawing. This is initialized on construction of the context. */
-    MCGDrawingPreserveAspectRatioOpcode m_preserve_aspect_ratio = kMCGDrawingPreserveAspectRatioOpcodeNone;
+    MCGFloat m_height = 0.0f;
 };
 
 /* The (template based) implementation of the Execute method. */
 template<typename VisitorT>
-void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_viewport)
+void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
 {
-    /* If the drawing's width is negative, then it means the width of the
-     * drawing was specified as a percentage (represented as a scalar in the
-     * range [-1, 0)) of the requested destination rectangle width. Otherwise
-     * the width is absolute. */
-    p_viewport.size.width = m_width >= 0 ? m_width : p_viewport.size.width * -m_width;
-    
-    /* If the drawing's height is negative, then it means the height of the
-     * drawing was specified as a percentage (represented as a scalar in the
-     * range [-1, 0)) of the requested destination rectangle height. Otherwise
-     * the height is absolute. */
-    p_viewport.size.height = m_height >= 0 ? m_height : p_viewport.size.height * -m_height;
-    
-    /* Compute the viewport transform. If there is no viewbox then it is just
-     * a translation by the origin of the dst rect. Otherwise it is a translation
-     * followed by a scale defined by the viewbox and preserve-aspect-ratio
-     * attribute. */
-    MCGAffineTransform t_viewport_transform;
-    if (!m_has_viewport)
+    /* If the width / height are zero. Then do nothing. */
+    if (m_width == 0.0 ||
+        m_height == 0.0)
     {
-        t_viewport_transform = MCGAffineTransformMakeTranslation(p_viewport.origin.x, p_viewport.origin.y);
+        return;
     }
-    else
-    {
-        float t_scale_x, t_scale_y;
-        if (m_viewbox.size.width != 0)
-        {
-            t_scale_x = p_viewport.size.width / m_viewbox.size.width;
-        }
-        else
-        {
-            t_scale_x = 0;
-        }
-        
-        if (m_viewbox.size.height != 0)
-        {
-            t_scale_y = p_viewport.size.height / m_viewbox.size.height;
-        }
-        else
-        {
-            t_scale_y = 0;
-        }
-        
-        if (MCGDrawingPreserveAspectRatioIsMeet(m_preserve_aspect_ratio))
-        {
-            t_scale_x = t_scale_y = MCMin(t_scale_x, t_scale_y);
-        }
-        else if (MCGDrawingPreserveAspectRatioIsSlice(m_preserve_aspect_ratio))
-        {
-            t_scale_x = t_scale_y = MCMax(t_scale_x, t_scale_y);
-        }
-        
-        float t_translate_x, t_translate_y;
-        t_translate_x = p_viewport.origin.x - (m_viewbox.origin.x * t_scale_x);
-        t_translate_y = p_viewport.origin.y - (m_viewbox.origin.y * t_scale_y);
-        
-        if (MCGDrawingPreserveAspectRatioIsXMid(m_preserve_aspect_ratio))
-        {
-            t_translate_x += (p_viewport.size.width - m_viewbox.size.width * t_scale_x) / 2;
-        }
-        else if (MCGDrawingPreserveAspectRatioIsXMax(m_preserve_aspect_ratio))
-        {
-            t_translate_x += (p_viewport.size.width - m_viewbox.size.width * t_scale_x);
-        }
-        
-        if (MCGDrawingPreserveAspectRatioIsYMid(m_preserve_aspect_ratio))
-        {
-            t_translate_y += (p_viewport.size.height - m_viewbox.size.height * t_scale_y) / 2;
-        }
-        else if (MCGDrawingPreserveAspectRatioIsYMax(m_preserve_aspect_ratio))
-        {
-            t_translate_y += (p_viewport.size.height - m_viewbox.size.height * t_scale_y);
-        }
-        
-        t_viewport_transform = MCGAffineTransformMakeTranslation(t_translate_x, t_translate_y);
-        t_viewport_transform = MCGAffineTransformConcat(t_viewport_transform,
-                                                        MCGAffineTransformMakeScale(t_scale_x, t_scale_y));
-    }
-    
-    /* Start the visitor, passing in the destination rectangle and viewport
-     * details so it can configure an initial transform. */
-    p_visitor.Start();
-    
-    p_visitor.Transform(t_viewport_transform);
+
+    /* Start the visitor. */
+    p_visitor.Start(MCGRectangleMake(0, 0, m_width, m_height), p_dst_rect);
     
     /* Loop until the status ceases to be None. */
     while(m_status == kMCGDrawingStatusNone)
@@ -1494,7 +1237,7 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_viewport)
             case kMCGDrawingOpcodeTransform:
             {
                 MCGAffineTransform t_transform;
-                if (!ExecuteTransform(t_viewport_transform, t_transform))
+                if (!ExecuteTransform(t_transform))
                 {
                     break;
                 }
@@ -1828,10 +1571,9 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_viewport)
 }
 
 /* The implementation of the ExecuteTransform method. */
-bool MCGDrawingContext::ExecuteTransform(MCGAffineTransform p_base_transform,
-                                         MCGAffineTransform& r_transform)
+bool MCGDrawingContext::ExecuteTransform(MCGAffineTransform& r_transform)
 {
-    MCGAffineTransform t_transform = p_base_transform;
+    MCGAffineTransform t_transform = MCGAffineTransformMakeIdentity();
 
     while(IsRunning())
     {
@@ -2294,14 +2036,19 @@ struct MCGDrawingRenderVisitor
     
     /**/
     
-    void Start(void)
+    void Start(MCGRectangle p_src_rect, MCGRectangle p_dst_rect)
     {
         MCGContextSave(gcontext);
+        MCGContextTranslateCTM(gcontext, p_dst_rect.origin.x, p_dst_rect.origin.y);
+        MCGContextScaleCTM(gcontext, p_dst_rect.size.width / p_src_rect.size.width, p_dst_rect.size.height / p_src_rect.size.height);
+        MCGContextTranslateCTM(gcontext, -p_src_rect.origin.x, -p_src_rect.origin.y);
         MCGContextSetShouldAntialias(gcontext, true);
+        MCGContextSave(gcontext);
     }
     
     void Finish(bool p_error)
     {
+        MCGContextRestore(gcontext);
         MCGContextRestore(gcontext);
     }
     

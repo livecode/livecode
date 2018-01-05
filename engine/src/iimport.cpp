@@ -56,145 +56,41 @@ bool read_all(IO_handle p_stream, uint8_t *&r_data, uindex_t &r_data_size)
 	return t_success;
 }
 
-#define META_HEAD_SIZE 44
-#define EMF_HEAD_SIZE 80
+#define DRAWING_HEAD_SIZE 12
 bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t &r_height)
 {
 	bool t_success = true;
 	bool t_is_meta = false;
 
 	uindex_t t_stream_pos = MCS_tell(p_stream);
-	uint8_t t_head[EMF_HEAD_SIZE];
-	uindex_t t_size = META_HEAD_SIZE;
+	uint8_t t_head[DRAWING_HEAD_SIZE];
+	uindex_t t_size = DRAWING_HEAD_SIZE;
 
 	t_success = IO_NORMAL == MCS_readfixed(t_head, t_size, p_stream) &&
-		t_size == META_HEAD_SIZE;
-
-	if (t_success)
+		t_size == DRAWING_HEAD_SIZE;
+    
+   /* A drawing's header is of the form:
+     *   0: LCD\0
+     *   4: width
+     *   8: height
+     */
+	if (t_success &&
+        memcmp(t_head, "LCD\0", 4) == 0)
 	{
-        if (memcmp(t_head, "LCD\0", 4) == 0)
-        {
-            /* A drawing's header is of the form:
-             *   0: LCD\0
-             *   4: flags
-             *     bit 0: has width
-             *     bit 1: has height
-             *     bit 2: has viewport
-             *   8: scalar_count
-             *   12: width if 'has width'
-             *   16: height if 'has height'
-             *   20: viewbox if 'has viewport'.
-             *
-             * If a drawing has a width >= 0 then that is its intrinsic width
-             * Else if it has a viewport then the viewbox width is its intrinsic width
-             * Else the intrinsic width is unknown
-             *
-             * If a drawing has a height >= 0, then that is its intrinsic height
-             * Else if it has a viewport, then the viewbox height is its intrisic width
-             * Else the intrisic height is unknown
-             *
-             * Currently unknown intrinsic width/height is reported as 256.
-             */
-            uint32_t t_flags = *(uint32_t *)(t_head + 4);
-            const float *t_scalars = (const float *)(t_head + 12);
-            float t_width = -1, t_height = -1;
-            
-            /* Get the width, if the width flag (bit 0) is set. */
-            if ((t_flags & (1 << 0)) != 0)
-            {
-                t_width = *t_scalars++;
-            }
-            
-            /* Get the height, if the height flag (bit 1) is set. */
-            if ((t_flags & (1 << 1)) != 0)
-            {
-                t_height = *t_scalars++;
-            }
-            
-            /* Get the viewbox width/height, if the viewport flag (bit 2) is set. */
-            if ((t_flags & (1 << 2)) != 0)
-            {
-                auto t_viewbox = reinterpret_cast<const MCGRectangle*>(t_scalars);
-                
-                if (t_width < 0)
-                {
-                    t_width = t_viewbox->size.width;
-                }
-                if (t_height < 0)
-                {
-                    t_height = t_viewbox->size.height;
-                }
-            }
-                
-            /* If the width is not absolute still, take a default of 256. */
-            if (t_width < 0)
-            {
-                t_width = 256;
-            }
-                
-            /* If the height is not absolute still, take a default of 256. */
-            if (t_height < 0)
-            {
-                t_height = 256;
-            }
-                
-            /* The engine deals with integer bounds on sub-pixel co-ords, so
-             * take the ceiling of the computer (float) width/height. */
-            r_width = (uindex_t)ceilf(t_width);
-            r_height = (uindex_t)ceilf(t_height);
-            
-            t_is_meta = true;
-        }
-		// graphics metafile (wmf)
-		else if (memcmp(t_head, "\xD7\xCD\xC6\x9A", 4) == 0)
-		{
-			int16_t *t_bounds = (int16_t *)&t_head[6];
-			r_width = ((t_bounds[2] - t_bounds[0]) * 72 + t_bounds[4] - 1) / t_bounds[4];
-			r_height = ((t_bounds[3] - t_bounds[1]) * 72 + t_bounds[4] - 1) / t_bounds[4];
-			t_is_meta = true;
-		}
-		// win32 metafile (emf)
-		else if (memcmp(&t_head[40], "\x20\x45\x4D\x46", 4) == 0)
-		{
-			t_success =
-                IO_NORMAL == MCS_seek_set(p_stream, t_stream_pos) &&
-                IO_NORMAL == MCS_readfixed(t_head, EMF_HEAD_SIZE, p_stream);
-
-			if (t_success)
-			{
-				int32_t *t_bounds;
-				t_bounds = (int32_t*)&t_head[72];
-				r_width = t_bounds[0];
-				r_height = t_bounds[1];
-				t_is_meta = true;
-			}
-		}
-		else
-		{
-			uindex_t t_offset = 0;
-			if (memcmp(t_head, "\0\0\0\0\0\0\0\0", 8) == 0)
-			{
-				t_offset = 512;
-				t_success =
-                    IO_NORMAL == MCS_seek_set(p_stream, t_stream_pos + t_offset) &&
-                    IO_NORMAL == MCS_readfixed(t_head, META_HEAD_SIZE, p_stream);
-			}
-
-			// PICT file
-			if (t_success && memcmp(&t_head[10], "\0\021\002\377", 4) == 0)
-			{
-				uint16_t *t_bounds = (uint16_t *)t_head;
-				r_width = swap_uint2(&t_bounds[4]) - swap_uint2(&t_bounds[2]);
-				r_height = swap_uint2(&t_bounds[3]) - swap_uint2(&t_bounds[1]);
-				t_is_meta = true;
-				t_stream_pos += t_offset;
-			}
-		}
-	}
-
+        float t_width = *(const float *)(t_head + 4);
+        float t_height = *(const float *)(t_head + 8);
+        
+        /* The engine deals with integer bounds on sub-pixel co-ords, so
+         * take the ceiling of the computer (float) width/height. */
+        r_width = (uindex_t)ceilf(t_width);
+        r_height = (uindex_t)ceilf(t_height);
+        
+        t_is_meta = true;
+    }
+    
 	MCS_seek_set(p_stream, t_stream_pos);
-
-	return t_success && t_is_meta;
+    
+    return t_success && t_is_meta;
 }
 
 bool MCImageBitmapApplyMask(MCImageBitmap *p_bitmap, MCImageBitmap *p_mask)
