@@ -1117,7 +1117,7 @@ public:
      * operations. The rect into which the drawing should be 'rendered' is
      * indicated in p_dst_rect. */
     template<typename VisitorT>
-    void Execute(VisitorT& visitor, MCGRectangle p_dst_rect);
+    void Execute(VisitorT& visitor, MCGRectangle p_src_rect, MCGRectangle p_dst_rect);
     
 private:
      /* GeneralOpcode reads the next opcode from the opcode stream. If there is
@@ -1195,7 +1195,7 @@ private:
 
 /* The (template based) implementation of the Execute method. */
 template<typename VisitorT>
-void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
+void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_src_rect, MCGRectangle p_dst_rect)
 {
     /* If the width / height are zero. Then do nothing. */
     if (m_width == 0.0 ||
@@ -1205,7 +1205,7 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_dst_rect)
     }
 
     /* Start the visitor. */
-    p_visitor.Start(MCGRectangleMake(0, 0, m_width, m_height), p_dst_rect);
+    p_visitor.Start(p_src_rect, p_dst_rect);
     
     /* Loop until the status ceases to be None. */
     while(m_status == kMCGDrawingStatusNone)
@@ -2228,14 +2228,13 @@ private:
     }
 };
 
-/* MCGContextPlayback renders the specified drawing into p_dst_rect of p_gcontext. */
-void MCGContextPlayback(MCGContextRef p_gcontext, MCGRectangle p_dst_rect, MCSpan<const byte_t> p_drawing)
+void MCGContextPlaybackRectOfDrawing(MCGContextRef p_gcontext, MCSpan<const byte_t> p_drawing, MCGRectangle p_src_rect, MCGRectangle p_dst_rect)
 {
     MCGDrawingRenderVisitor t_render_visitor;
     t_render_visitor.gcontext = p_gcontext;
     
     MCGDrawingContext t_context(p_drawing);
-    t_context.Execute(t_render_visitor, p_dst_rect);
+    t_context.Execute(t_render_visitor, p_src_rect, p_dst_rect);
 }
 
 /******************************************************************************/
