@@ -2173,6 +2173,7 @@ private function escape pString, pConvertLineEndings
       replace numToCodepoint(13) with "\n" in pString
    end if
    replace LF with "\n" in pString
+   replace numToCodepoint(13) with "\r" in pString
    //replace "<" with "&lt;" in pString
    //replace ">" with "&gt;" in pString
    replace tab with "\t" in pString
