@@ -274,7 +274,7 @@ Use <ArrayFromNSDictionary> to convert an Objective-C dictionary object (NSDicti
 a variable of type Array.
 
 */
-public handler ArrayFromNSDictionary(in pObjcArray as ObjcObject) returns List
+public handler ArrayFromNSDictionary(in pObjcArray as ObjcObject) returns Array
 	variable tArray as Array
 	unsafe
 		MCArrayCreateWithCFDictionaryRef(pObjcArray, true, tArray)

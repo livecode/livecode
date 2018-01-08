@@ -1,0 +1,152 @@
+/*
+Copyright (C) 2018 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.objc.tests
+
+use com.livecode.objc
+use com.livecode.foreign
+use com.livecode.__INTERNAL._testlib
+
+handler RoundTripString(in pString as String) returns String
+	variable tNSString as ObjcObject
+	put StringToNSString(pString) into tNSString
+	
+	return StringFromNSString(tNSString)
+end handler
+
+public handler TestRoundTripNSString()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "string round trips through objc" because "not implemented on" && the operating system
+		return
+	end if
+	
+	variable tString as String
+	put "lcb string" into tString
+	
+	test "string round trips through objc" when \
+		RoundTripString(tString) is tString
+
+	test "empty string round trips through objc" when \
+		RoundTripString("") is ""		
+end handler
+
+handler RoundTripData(in pData as Data) returns Data
+	variable tNSData as ObjcObject
+	put DataToNSData(pData) into tNSData
+	
+	return DataFromNSData(tNSData)
+end handler
+
+public handler TestRoundTripNSData()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "data round trips through objc" because "not implemented on" && the operating system
+		return
+	end if
+	
+	variable tData as Data
+	put 20 random bytes into tData
+
+	test "data round trips through objc" when \
+		RoundTripData(tData) is tData
+		
+	test "empty data round trips through objc" when \
+		RoundTripData(the empty data) is the empty data	
+end handler
+
+public handler TestRoundTripNSNumber()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "number round trips through objc" because "not implemented on" && the operating system
+		return
+	end if
+	
+	variable tNumber as Number
+	put any number into tNumber
+
+	variable tNSNumber as ObjcObject
+	put NumberToNSNumber(tNumber) into tNSNumber
+	
+	variable tNewNumber as Number
+	put NumberFromNSNumber(tNSNumber) into tNewNumber
+	
+	test "number round trips through objc" when tNewNumber is tNumber
+end handler
+
+handler RoundTripList(in pList as List) returns List
+	variable tNSArray as ObjcObject
+	put ListToNSArray(pList) into tNSArray
+	
+	return ListFromNSArray(tNSArray)
+end handler
+
+public handler TestRoundTripNSArray()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "list round trips through objc" because "not implemented on" && the operating system
+		return
+	end if
+	
+	variable tList as List
+	put [1,2,3,4,5] into tList
+	
+	test "list round trips through objc" when \
+		RoundTripList(tList) is tList
+		
+	test "empty list round trips through objc" when \
+		RoundTripList([]) is []
+end handler
+
+handler RoundTripArray(in pArray as Array) returns Array
+	variable tNSDictionary as ObjcObject
+	put ArrayToNSDictionary(pArray) into tNSDictionary
+	
+	return ArrayFromNSDictionary(tNSDictionary)
+end handler
+
+handler ArrayIsEqual(in pLeft as Array, in pRight as Array) returns Boolean
+	variable tKey as String
+	repeat for each key tKey in pLeft
+		if tKey is not among the keys of pRight or \
+			pLeft[tKey] is not pRight[tKey] then
+			return false
+		end if
+	end repeat
+	
+	repeat for each key tKey in pRight
+		if tKey is not among the keys of pLeft then
+			return false
+		end if
+	end repeat
+	
+	return true
+end handler
+
+public handler TestRoundTripNSDictionary()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "array round trips through objc" because "not implemented on" && the operating system
+		return
+	end if
+	
+	variable tArray as Array
+	put {"key":"value"} into tArray
+
+	test "array round trips through objc" when \
+		ArrayIsEqual(RoundTripArray(tArray), tArray)
+		
+	test "empty array round trips through objc" when \
+		ArrayIsEqual(RoundTripArray({}), {})
+end handler
+
+end module
