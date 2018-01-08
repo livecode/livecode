@@ -17,7 +17,7 @@ Example:
 get the colors of button 1
 
 Example:
-get 2 * 25 * pi -- gets area of circle with radius 25
+get 2 * 25 * pi -- gets circumference of circle with radius 25
 
 Example:
 get message -- evaluates expression in message box

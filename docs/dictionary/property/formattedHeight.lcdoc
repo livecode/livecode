@@ -44,8 +44,8 @@ If you specify an image or player, the <formattedHeight> <property>
 reports the original un-scaled height of the <image> or movie.
 
 If you specify an object in a group, the value reported is the
-<formattedHeight> that <object(glossary)> requires for the <current
-card>, so if you want to get the <formattedHeight> of a
+<formattedHeight> that <object(glossary)> requires for the 
+<current card>, so if you want to get the <formattedHeight> of a
 <field(object)|field's> text on a certain <card>, you must go to that
 <card> first.
 

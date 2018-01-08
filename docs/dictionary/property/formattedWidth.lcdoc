@@ -45,8 +45,8 @@ false, the <formattedWidth> reports the minimum width required to keep
 the current line breaks.
 
 If you specify an object in a group, the value reported is the
-<formattedWidth> that <object(glossary)> requires for the <current
-card>, so if you want to get the <formattedWidth> of a
+<formattedWidth> that <object(glossary)> requires for the 
+<current card>, so if you want to get the <formattedWidth> of a
 <field(object)|field's> text on a certain <card>, you must go to that
 <card> first.
 
