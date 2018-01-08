@@ -25,12 +25,11 @@ the universe, whichever comes first.
 All forms of the <repeat> <control structure> that test for a condition,
 test at the top of the <loop> (before each <iteration>). If you want to
 test at the bottom of the <loop>, use the <forever> <keyword>, and use a
-<conditional> <exit repeat> at the bottom of the <loop> :
+<conditional> <exit repeat> at the bottom of the <loop>:
 
     repeat forever
-    -- statements here
-    if myCondition is true then exit repeat
-
+        -- statements here
+        if myCondition is true then exit repeat
     end repeat
 
 
