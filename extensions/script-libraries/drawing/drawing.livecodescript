@@ -1121,7 +1121,7 @@ private command _svgCompileLine @xContext, pElement
 	put pElement["features"]["y1"] into tY1
 	put pElement["features"]["x2"] into tX2
 	put pElement["features"]["y2"] into tY2
-	_svgCompileShape xContext, "line", __svgBoxLine(tX1, tY1, tX2, tY2), tX1, tY1, tX2, tY2
+	_svgCompileShape xContext, "line", _svgBoxLine(tX1, tY1, tX2, tY2), tX1, tY1, tX2, tY2
 end _svgCompileLine
 
 private command _svgCompilePolyline @xContext, pElement
