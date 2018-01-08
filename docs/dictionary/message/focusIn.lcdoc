@@ -5,7 +5,7 @@ Type: message
 Syntax: focusIn
 
 Summary:
-Sent to a <control> when it becomes <active(glossary)>(focused).
+Sent to a <control> when it becomes <active control|active> <focus|focused>.
 
 Introduced: 1.0
 
@@ -29,11 +29,10 @@ If the control is an unlocked field or a button whose menuMode is
 <focusIn> <message>.
 
 A locked field receives the <focusIn> <message> when the user tabs to it
-or otherwise makes it <active (focused)(glossary)>, or when text in it
-is <selected> by a <handler>.
+or otherwise makes it <active control(glossary)|active> <focus|focused>, 
+or when text in it is <selected> by a <handler>.
 
-References: focus (command), handler (glossary), focus (glossary),
-message (glossary), active control (glossary), control (keyword),
+References: handler (glossary), focus (glossary), message (glossary), active control (glossary), control (keyword), 
 openField (message), resume (message), selected (property)
 
 Tags: ui

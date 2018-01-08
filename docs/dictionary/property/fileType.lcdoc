@@ -6,8 +6,8 @@ Syntax: set the fileType to <creator> & <type>
 
 Summary:
 Specifies the <creator signature|creator> and <type signature|file type>
-for any non- <stack> <files> a <handler> creates on a <Mac OS> or <OS
-X|OS X system>.
+for any non- <stack> <files> a <handler> creates on a <Mac OS> or 
+<OS X|OS X system>.
 
 Introduced: 1.0
 
@@ -24,9 +24,9 @@ The <fileType> is an eight- <character> <string>. The first four
 <type signature|file type>.
 
 Description:
-Use the <fileType> <property> to ensure that <files> that a <standalone
-application> creates are recognized by the operating system as belonging
-to the <standalone application|standalone>.
+Use the <fileType> <property> to ensure that <files> that a 
+<standalone application> creates are recognized by the operating system 
+as belonging to the <standalone application|standalone>.
 
 >*Important:*  The <type signature|file type> and <creator signature>
 > are <case-sensitive>.
