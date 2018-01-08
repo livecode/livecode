@@ -1176,6 +1176,21 @@ bool MCGPathIterate(MCGPathRef self, MCGPathIterateCallback p_callback, void *p_
 				t_point_count = 2;
 				break;
 				
+            case SkPath::kConic_Verb:
+                SkPoint t_conic_quads[5];
+                SkPath::ConvertConicToQuads(t_sk_points[0], t_sk_points[1], t_sk_points[2], t_iter.conicWeight(), t_conic_quads, 1);
+                t_points[0] = MCGPointFromSkPoint(t_conic_quads[1]);
+                t_points[1] = MCGPointFromSkPoint(t_conic_quads[2]);
+                if (!p_callback(p_context, kMCGPathCommandQuadCurveTo, t_points, 2))
+                {
+                    return false;
+                }
+                t_command = kMCGPathCommandQuadCurveTo;
+                t_points[0] = MCGPointFromSkPoint(t_conic_quads[3]);
+                t_points[1] = MCGPointFromSkPoint(t_conic_quads[4]);
+                t_point_count = 2;
+                break;
+                
 			case SkPath::kCubic_Verb:
 				t_command = kMCGPathCommandCubicCurveTo;
 				t_points[0] = MCGPointFromSkPoint(t_sk_points[1]);

@@ -26,6 +26,7 @@ typedef struct __MCGContext *MCGContextRef;
 typedef struct __MCGPath *MCGPathRef;
 typedef struct __MCGImage *MCGImageRef;
 typedef struct __MCGMask *MCGMaskRef;
+typedef class MCGShape *MCGShapeRef;
 
 typedef struct __MCGDashes *MCGDashesRef;
 typedef struct __MCGRegion *MCGRegionRef;
@@ -880,6 +881,42 @@ bool MCGPathGetBoundingBox(MCGPathRef path, MCGRectangle &r_bounds);
 
 typedef bool (*MCGPathIterateCallback)(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count);
 bool MCGPathIterate(MCGPathRef p_path, MCGPathIterateCallback p_callback, void *p_context);
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCGShapeCreateRectangle(MCGRectangle p_rect, MCGShapeRef& r_shape);
+bool MCGShapeCreateRoundedRectangle(MCGRectangle p_rect, MCGSize p_radii, MCGShapeRef& r_shape);
+bool MCGShapeCreateEllipse(MCGPoint p_center, MCGSize p_radii, MCGShapeRef& r_shape);
+bool MCGShapeCreateLine(MCGPoint p_from, MCGPoint p_to, MCGShapeRef& r_shape);
+bool MCGShapeCreatePolyline(const MCGPoint* p_points, uindex_t p_arity, MCGShapeRef& r_shape);
+bool MCGShapeCreatePolygon(const MCGPoint* p_points, uindex_t p_arity, MCGShapeRef& r_shape);
+bool MCGShapeCreatePath(MCGPathRef p_path, MCGShapeRef& r_shape);
+
+MCGShapeRef MCGShapeRetain(MCGShapeRef p_shape);
+void MCGShapeRelease(MCGShapeRef p_shape);
+
+bool MCGShapeTransform(MCGShapeRef p_shape, MCGAffineTransform p_transform, MCGShapeRef& r_new_shape);
+bool MCGShapeFill(MCGShapeRef p_shape, MCGFillRule p_fill_rule, MCGShapeRef& r_new_shape);
+bool MCGShapeDash(MCGShapeRef p_shape, const MCGFloat *p_lengths, uindex_t p_arity, MCGFloat p_offset, MCGShapeRef& r_shape);
+bool MCGShapeThicken(MCGShapeRef p_shape, MCGFloat p_width, MCGCapStyle p_cap, MCGJoinStyle p_join, MCGFloat p_miter_limit, MCGShapeRef& r_shape);
+
+enum MCGShapeOperation
+{
+    kMCGShapeOperationAppend,
+    kMCGShapeOperationExtend,
+    kMCGShapeOperationUnion,
+    kMCGShapeOperationIntersect,
+    kMCGShapeOperationDifference,
+    kMCGShapeOperationXor,
+};
+
+bool MCGShapeCombine(MCGShapeRef p_shape, MCGShapeOperation p_operation, MCGShapeRef p_other_shape, MCGShapeRef& r_shape);
+
+bool MCGShapeMeasure(MCGShapeRef p_shape, MCGFloat& r_length);
+bool MCGShapeHull(MCGShapeRef p_shape, MCGRectangle& r_hull);
+bool MCGShapeBounds(MCGShapeRef p_shape, MCGRectangle& r_bounds);
+
+bool MCGShapeFlatten(MCGShapeRef p_shape, MCGPathRef& r_path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
