@@ -91,7 +91,7 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
                put "extension" into tComponents[tIndex]["metadata"]["category"]
                
                --!TODO move these extensions to components
-               switch tFolder
+               switch PathGetLastComponent(tFolder)
                   case "revdeploylibrarydesktop"
                   case "remotedebugger"
                   case "scriptprofiler"
@@ -121,6 +121,11 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
       builderLog "error", tError
    end try
 end releaseNotesBuilderRun
+
+private function PathGetLastComponent pPath
+   set the itemdelimiter to slash
+   return item -1 of pPath
+end PathGetLastComponent
 
 private command ComponentsCreateForEdition pEdition, pCollated, pBugInfo
    local tDisplayName
