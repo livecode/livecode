@@ -22,7 +22,7 @@ Name: enabled
 
 Type: property
 
-Summary: Whether as field is active and responds to user action
+Summary: Whether the field is active and responds to user action
  
 Syntax: 
 set the enabled of <widget> to {true | false}
