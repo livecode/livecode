@@ -22,7 +22,7 @@ Name: enabled
 
 Type: property
 
-Summary: Whether as button is active and responds to user action
+Summary: Whether the button is active and responds to user action
 
 Syntax: 
 set the enabled of <widget> to {true | false}
