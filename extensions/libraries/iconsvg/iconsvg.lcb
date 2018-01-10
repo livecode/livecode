@@ -31,6 +31,7 @@ metadata _ide is "true"
 private variable sFontArray as Array
 private variable sNamesArray as Array
 private variable sInitialised as optional Boolean
+private variable sCurrentFamily as String
 
 private constant kDefaultFamily is "fontawesome"
 private constant kDefaultUserFamily is "custom"
@@ -39,6 +40,7 @@ private handler ensureInitialised()
 	if sInitialised is nothing then
 		initialiseIcons()
 		put true into sInitialised
+		put kDefaultFamily into sCurrentFamily
 	end if
 end handler
 
@@ -1417,13 +1419,13 @@ private handler initialiseIcons() returns nothing
 end handler
 
 /**
-Summary: Returns the available icons in the default icon family.
+Summary: Returns the available icons in the current icon family.
 
 Returns(String): The icon names for which SVG paths are available, one per line.
 
 Description:
 The <iconNames> handler returns the names of the icons in the library's
-default icon family.
+current icon family.
 
 Call <iconSVGPathFromName> or <iconCodepointFromName> to retrieve either the
 SVG path string or codepoint corresponding to the icon with this name.
@@ -1436,18 +1438,18 @@ public handler iconNames() returns String
 	ensureInitialised()
 
 	variable tNames as String
-	combine sNamesArray[kDefaultFamily] with newline into tNames
+	combine sNamesArray[sCurrentFamily] with newline into tNames
 
 	return tNames
 end handler
 
 /**
-Summary: Return the available icons in the default icon family.
+Summary: Return the available icons in the current icon family.
 
 Returns(List): The icon names for which SVG paths are available.
 
 Description:
-Return an LCB list of the icon names in the iconsvg library's default
+Return an LCB list of the icon names in the iconsvg library's current
 icon family.
 
 For each icon name, the SVG path string can be obtained with
@@ -1460,7 +1462,7 @@ References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
 */
 public handler iconList() returns List
 	ensureInitialised()
-	return sNamesArray[kDefaultFamily]
+	return sNamesArray[sCurrentFamily]
 end handler
 
 /**
@@ -1559,12 +1561,12 @@ private handler resolveIconName(in pName as String) returns optional List
 		end if
 	end if
 
-	-- If there's no family part, search for the name in the default family,
+	-- If there's no family part, search for the name in the current family,
 	-- followed by all other available families
 	if tFamily is nothing then
 		put pName into tName
-		if pName is among the keys of sFontArray[kDefaultFamily] then
-			put kDefaultFamily into tFamily
+		if pName is among the keys of sFontArray[sCurrentFamily] then
+			put sCurrentFamily into tFamily
 		else
 			repeat for each key tKey in sFontArray
 				if pName is among the keys of sFontArray[tKey] then
@@ -1666,7 +1668,7 @@ public handler iconListMatching(in pSearch as String) returns List
 	variable tName as String
 	variable tNamePrefix as String
 	repeat for each key tFamily in sFontArray
-		if tFamily is kDefaultFamily then
+		if tFamily is sCurrentFamily then
 			put "" into tNamePrefix
 		else
 			put tFamily & "/" into tNamePrefix
@@ -1682,20 +1684,20 @@ public handler iconListMatching(in pSearch as String) returns List
 end handler
 
 /**
-Summary: Return the available icon data in the default icon family.
+Summary: Return the available icon data in the current icon family.
 
 pSearch: String used to search icon names
-Returns(Array): The default icon family's data (name, SVG path, codepoint).
+Returns(Array): The current icon family's data (name, SVG path, codepoint).
 
 Description:
-Return an LCB array of the icon data in the iconsvg library's default
+Return an LCB array of the icon data in the iconsvg library's current
 icon family.
 
 References: iconList(handler), iconNames(handler)
 */
 public handler iconData() returns Array
 	ensureInitialised()
-	return sFontArray[kDefaultFamily]
+	return sFontArray[sCurrentFamily]
 end handler
 
 /**
@@ -1810,6 +1812,41 @@ public handler addIconsForFamily(in pFamily as String, in pIconData as Array) re
 	
 	put the keys of sFontArray[pFamily] into sNamesArray[pFamily]
 	sort sNamesArray[pFamily] in ascending order
+end handler
+
+/**
+Summary: Return the current icon family.
+
+Returns(String): The current icon family.
+
+Description:
+Returns the iconsvg library's current icon family.  Handlers that do not specify
+an icon family will use the current icon family.  "fontawesome" is the
+current family when the library is first initialized.
+
+References: iconData(handler), iconList(handler), iconNames(handler)
+*/
+public handler getCurrentIconFamily() returns String
+	return sCurrentFamily
+end handler
+
+/**
+Summary: Set the current icon family.
+
+pFamily: The icon family.
+
+Description:
+Sets the iconsvg library's current icon family.  Handlers that do not specify
+an icon family will use the current icon family.
+
+References: iconData(handler), iconList(handler), iconNames(handler)
+*/
+public handler setCurrentIconFamily(in pFamily as String) returns nothing
+	if pFamily is not among the keys of sFontArray then
+		throw "Icon family '" & pFamily & "' does not exist."
+	end if
+	
+	put pFamily into sCurrentFamily
 end handler
 
 end library
