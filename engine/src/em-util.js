@@ -19,7 +19,36 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 mergeInto(LibraryManager.library, {
 
 	$LiveCodeUtil: {
+		
+		/*** Object References ***/
+		
+		// Object reference map
+		_objMap: undefined,
+		_objMapIndex: 1,
+		
+		// create an integer reference for a JavaScript object, suitable
+		// for passing to C++ code
+		storeObject: function(jsObj) {
+			if (!this._objMap)
+				this._objMap = new Map();
+			
+			var index = this._objMapIndex++;
+			this._objMap.set(index, jsObj);
+			return index;
+		},
+		
+		// return the object referenced by the index
+		fetchObject: function(ref) {
+			return this._objMap.get(ref);
+		},
 
+		// remove the object reference
+		removeObject: function(ref) {
+			this._objMap.delete(ref);
+		},
+		
+		/*** String Conversion ***/
+		
 		// Convert a C++ array with UTF-16 encoding to a JavaScript
 		// string.
 		stringFromUTF16: function(ptr, length) {
@@ -71,11 +100,15 @@ mergeInto(LibraryManager.library, {
 			return Module.ccall('MCEmscriptenUtilCreateStringWithCharsAndRelease', 'number', ['number', 'number'], [charPtr, str.length]);
 		},
 		
+		/*** ValueRef Support ***/
+		
 		// Release MCValueRef
 		valueRelease: function(valueref)
 		{
 			Module.ccall('MCValueRelease', null, ['number'], [valueref]);
 		},
+		
+		/*** ProperList Support ***/
 		
 		// Create mutable (proper) list
 		properListCreateMutable: function()

@@ -17,14 +17,11 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 mergeInto(LibraryManager.library, {
-
+	$LiveCodeLibURL__deps: ['$LiveCodeUtil'],
     $LiveCodeLibURL: {
-        requestMap: null,
-        requestCount: 1,
         libURLStack: null,
 
         init: function() {
-            this.requestMap = new Map();
             this.libURLStack = document.liveCode.findStackWithName('revliburl');
             if (typeof this.libURLStack.ulExtXMLHTTPCallback != 'function') {
                 return 'Unable to find callback handler.'
@@ -32,7 +29,7 @@ mergeInto(LibraryManager.library, {
         },
 
         isValidRequest: function(request) {
-            return this.requestMap.has(request);
+			return undefined != LiveCodeUtil.fetchObject(request);
         },
 
         requestCreate: function(url, method, async) {
@@ -70,19 +67,16 @@ mergeInto(LibraryManager.library, {
             }
 
             // assign each request an id that will be used as a handle by liburl
-            xhr.key = this.requestCount++;
-            this.requestMap.set(xhr.key, xhr);
+            xhr.key = LiveCodeUtil.storeObject(xhr);
             return xhr.key;
         },
         requestDestroy: function(request) {
-            if (this.requestMap.has(request)) {
-                this.requestMap.delete(request);
-            }
+			LiveCodeUtil.removeObject(request);
         },
 
         requestSend: function(request, body) {
-            if (this.requestMap.has(request)) {
-                var xhr = this.requestMap.get(request);
+			var xhr = LiveCodeUtil.fetchObject(request);
+            if (xhr) {
                 try {
                     xhr.send(body);
 
@@ -102,17 +96,16 @@ mergeInto(LibraryManager.library, {
             }
         },
         requestCancel: function(request) {
-            if (this.requestMap.has(request)) {
-                var xhr = this.requestMap.get(request);
+			var xhr = LiveCodeUtil.fetchObject(request);
+            if (xhr) {
                 xhr.abort();
                 this.requestDestroy(request);
             }
         },
 
         requestGetRequestHeaders: function(request) {
-            if (this.requestMap.has(request)) {
-                var xhr = this.requestMap.get(request);
-
+			var xhr = LiveCodeUtil.fetchObject(request);
+            if (xhr) {
                 // each browser sends a different set of request headers
                 // the xhr API provides no way to access them
                 // the user agent is set consitently accross all browsers,
@@ -128,14 +121,14 @@ mergeInto(LibraryManager.library, {
             }
         },
         requestGetResponseHeaders: function(request) {
-            if (this.requestMap.has(request)) {
-                var xhr = this.requestMap.get(request);
+			var xhr = LiveCodeUtil.fetchObject(request);
+            if (xhr) {
                 return xhr.getAllResponseHeaders();
             }
         },
         requestGetResponse: function(request) {
-            if (this.requestMap.has(request)) {
-                var xhr = this.requestMap.get(request);
+			var xhr = LiveCodeUtil.fetchObject(request);
+            if (xhr) {
                 if (xhr.responseBase64 != null) {
                     return xhr.responseBase64;
                 } else if (xhr.responseText != null) {
@@ -144,27 +137,27 @@ mergeInto(LibraryManager.library, {
             }
         },
         requestGetURL: function(request) {
-            if (this.requestMap.has(request)) {
-                var xhr = this.requestMap.get(request);
+			var xhr = LiveCodeUtil.fetchObject(request);
+            if (xhr) {
                 return xhr.url;
             }
         },
         requestGetStatus: function(request) {
-            if (this.requestMap.has(request)) {
-                var xhr = this.requestMap.get(request);
+			var xhr = LiveCodeUtil.fetchObject(request);
+            if (xhr) {
                 return xhr.statusText;
             }
         },
         requestGetStatusCode: function(request) {
-            if (this.requestMap.has(request)) {
-                var xhr = this.requestMap.get(request);
+			var xhr = LiveCodeUtil.fetchObject(request);
+            if (xhr) {
                 return xhr.status;
             }
         },
 
         requestSetTimeout: function(request, timeout) {
-            if (this.requestMap.has(request)) {
-                var xhr = this.requestMap.get(request);
+			var xhr = LiveCodeUtil.fetchObject(request);
+            if (xhr) {
                 try {
                     // as part of the xhr spec, the timeout can't be set for
                     // synchronous requests when the current global object is "window"
@@ -179,8 +172,8 @@ mergeInto(LibraryManager.library, {
             }
         },
         requestSetHeader: function(request, name, value) {
-            if (this.requestMap.has(request)) {
-                var xhr = this.requestMap.get(request);
+			var xhr = LiveCodeUtil.fetchObject(request);
+            if (xhr) {
                 try {
                     xhr.setRequestHeader(name, value);
                     // the xhr API doesn't give access to the headers sent with

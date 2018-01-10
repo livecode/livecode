@@ -17,7 +17,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 mergeInto(LibraryManager.library, {
-	$LiveCodeDC__deps: ['$LiveCodeEvents'],
+	$LiveCodeDC__deps: ['$LiveCodeEvents', '$LiveCodeUtil'],
 	$LiveCodeDC: {
 		// true if ensureInit() has ever been run
 		_initialised: false,
@@ -28,9 +28,8 @@ mergeInto(LibraryManager.library, {
 				return;
 			}
 			
-			LiveCodeDC._windowList = {};
+			LiveCodeDC._windowList = [];
 			LiveCodeDC._assignedMainWindow = false;
-			LiveCodeDC._maxWindowID = 0;
 			LiveCodeDC._maxZIndex = 1;
 
 			LiveCodeDC._initialised = true;
@@ -71,24 +70,26 @@ mergeInto(LibraryManager.library, {
 				rect = {'left':0, 'top':0, 'right':0, 'bottom':0};
 			}
 			
-			var tWindowID = ++LiveCodeDC._maxWindowID;
-			
-			LiveCodeEvents.addEventListeners(canvas);
-			LiveCodeDC._monitorResize(canvas, function() { LiveCodeEvents.postWindowReshape(tWindowID); });
-			LiveCodeDC._windowList[tWindowID] = {
+			var tWindowID = LiveCodeUtil.storeObject({
 				'div': div,
 				'canvas': canvas,
 				'rect': rect,
 				'visible':false,
-			};
+			});
 			
+			LiveCodeEvents.addEventListeners(canvas);
+			LiveCodeDC._monitorResize(canvas, function() {
+				LiveCodeEvents.postWindowReshape(tWindowID);
+			});
+			
+			LiveCodeDC._windowList.push(tWindowID);
 			return tWindowID;
 		},
 		
 		destroyWindow: function(pID) {
 			LiveCodeDC.setWindowVisible(pID, false);
 			LiveCodeDC.raiseWindow(pID);
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 			{
 				LiveCodeDC._removeResizeMonitor(window.canvas);
@@ -103,20 +104,25 @@ mergeInto(LibraryManager.library, {
 					document.body.removeChild(window.div);
 					LiveCodeDC._maxZIndex--;
 				}
-				delete LiveCodeDC._windowList[pID];
+				LiveCodeUtil.removeObject(pID);
+			}
+			var index = LiveCodeDC._windowList.indexOf(pID);
+			if (index !== -1) {
+				LiveCodeDC._windowList.splice(index, 1);
 			}
 		},
 		
 		raiseWindow: function(pID) {
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window && window.div)
 			{
 				var zIndex = window.div.style.zIndex;
 				for (var tID in LiveCodeDC._windowList)
 				{
-					if (LiveCodeDC._windowList[tID].div && LiveCodeDC._windowList[tID].div.style.zIndex > zIndex)
+					var tWindow = LiveCodeUtil.fetchObject(tID);
+					if (tWindow.div && tWindow.div.style.zIndex > zIndex)
 					{
-						LiveCodeDC._windowList[tID].div.style.zIndex--;
+						tWindow.div.style.zIndex--;
 					}
 				}
 				window.div.style.zIndex = LiveCodeDC._maxZIndex - 1;
@@ -124,7 +130,7 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		setWindowRect: function(pID, pLeft, pTop, pRight, pBottom) {
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 			{
 				var width = pRight - pLeft;
@@ -146,7 +152,7 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		getWindowRect: function(pID) {
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 				return window.canvas.getBoundingClientRect();
 		  
@@ -154,7 +160,7 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		setWindowVisible: function(pID, pVisible) {
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 			{
 				window.visible = pVisible;
@@ -176,7 +182,7 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		getWindowVisible: function(pID) {
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 			{
 				return window.visible;
@@ -186,7 +192,7 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		getWindowCanvas: function(pID) {
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 			{
 				return window.canvas;
@@ -196,9 +202,11 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		getWindowIDForCanvas: function(pCanvas) {
-			for (var tID in LiveCodeDC._windowList) {
-				if (LiveCodeDC._windowList.hasOwnProperty(tID)) {
-					if (pCanvas == LiveCodeDC._windowList[tID].canvas) {
+			for (var i = 0, l = LiveCodeDC._windowList.length; i < l; i++) {
+				var tID = LiveCodeDC._windowList[i]
+				var window = LiveCodeUtil.fetchObject(tID);
+				if (window) {
+					if (pCanvas == window.canvas) {
 						return tID;
 					}
 				}
