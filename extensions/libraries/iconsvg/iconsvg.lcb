@@ -1644,6 +1644,7 @@ end handler
 Summary: Return the available icons in any icon family that match the 
 search string.
 
+pSearch: The string used to search icon names.
 Returns(List): The icon names for which SVG paths are available matching 
 the search string.
 
