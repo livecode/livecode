@@ -227,7 +227,7 @@ bool MCProperListConvertToCFArrayRef(MCProperListRef p_list, bool p_use_lists, C
         {
             return false;
         }
-        CFArraySetValueAtIndex((CFMutableArrayRef)*t_cf_value, t_index, *t_cf_value);
+        CFArraySetValueAtIndex((CFMutableArrayRef)*t_cf_array, t_index, *t_cf_value);
     }
     
     r_cf_array = (CFArrayRef)t_cf_array.Release();
