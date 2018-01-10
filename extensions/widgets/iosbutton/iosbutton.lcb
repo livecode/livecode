@@ -20,6 +20,10 @@ This widget is a native push button on iOS.
 
 Name: enabled
 
+Type: property
+
+Summary: Whether the field is active and responds to user action
+ 
 Syntax: 
 set the enabled of <widget> to {true | false}
 get the enabled of <widget>
