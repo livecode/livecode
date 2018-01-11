@@ -2034,21 +2034,57 @@ private command __LoadStackOnStartup pStackName, @xAuxStackFiles, @xStartupScrip
    end if
 end __LoadStackOnStartup
 
+private command __AddModuleSources pExtension, pInstallFolder, pTargetFolder, @xSettingsA
+   if not revEnvironmentEditionProperty("open_source_required") then
+      exit __AddModuleSources
+   end if
+   -- Include main source file, if present
+   local tSourceFileData, tSourceFile
+   put revIDEExtensionProperty(pExtension, "source_file") \
+         into tSourceFile
+   if there is a file tSourceFile then
+      put pInstallFolder & slash & tSourceFile into tSourceFileData["resolved"]
+      put pTargetFolder & slash & tSourceFile into tSourceFileData["name"]
+      addToList tSourceFileData, xSettingsA["files_computed"]
+   end if
+   
+   -- Include support source files in standalone, if present
+   local tSupportFiles
+   put revIDEExtensionProperty(pExtension, "support_files") \
+         into tSupportFiles
+   repeat for each line tLine in tSupportFiles
+      local tSupportFileData
+      put pInstallFolder & slash & tLine into tSupportFileData["resolved"]
+      put pTargetFolder & slash & tLine into tSupportFileData["name"]
+      addToList tSupportFileData, xSettingsA["files_computed"]
+   end repeat
+end __AddModuleSources
+
 command revSBUpdateSettingsForExtensions pTarget, @xSettingsA
-   local tLoadIndex
-   repeat for each line tExtension in revIDEExtensionsOrderByDependency(xSettingsA["extensions"])
+   local tLoadIndex, tDependencyOrder
+   put revIDEExtensionsOrderByDependency(xSettingsA["extensions"]) \
+         into tDependencyOrder
+   
+   repeat for each line tExtension in tDependencyOrder
       add 1 to tLoadIndex
+      
+      local tTargetResourceFolder
+      put "extension" & tLoadIndex into tTargetResourceFolder
       
       local tExtensionData
       put tExtension into tExtensionData["id"]
+      
+      local tInstallFolder
+      put revIDEExtensionProperty(tExtension, "install_path") \
+            into tInstallFolder
+      
+      __AddModuleSources tExtension, tInstallFolder, tTargetResourceFolder, \
+            xSettingsA
       
       local tResourcesFolder
       put revIDEExtensionProperty(tExtension, "install_path") & \
             slash & "resources" into tResourcesFolder
       if there is a folder tResourcesFolder then
-         local tTargetResourceFolder
-         put "extension" & tLoadIndex into tTargetResourceFolder
-         
          local tContents
          put __EnumerateFolder(tResourcesFolder, "", true) into tContents
          repeat for each line tLine in tContents
