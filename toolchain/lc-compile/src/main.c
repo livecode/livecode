@@ -250,21 +250,9 @@ static void full_main(int argc, char *argv[])
             }
         }
 
-        /* Accept any number of input files for dependency or output-c
-		   modes; only a single file in all other cases */
-		if (DependencyMode != kDependencyModeNone ||
-			(OutputFileAsC == 1 &&
-				have_interface_file == 0 &&
-				have_manifest_file == 0))
-		{
-			AddFile(opt);
-			have_input_file = 1;
-		}
-		else
-		{
-			AddFile(opt);
-			have_input_file = 1;
-		}
+        /* Accept any number of input files */
+        AddFile(opt);
+        have_input_file = 1;
     }
 
 	// If there is no filename, error.
