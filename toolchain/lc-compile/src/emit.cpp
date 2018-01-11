@@ -171,6 +171,7 @@ extern "C" void EmitPosition(PositionRef position);
 extern "C" void OutputBeginManifest(void);
 
 extern "C" int IsBootstrapCompile(void);
+extern "C" int IsNotBytecodeOutput(void);
 
 extern "C" void DependStart(void);
 extern "C" void DependFinish(void);

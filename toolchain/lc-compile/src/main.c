@@ -39,6 +39,11 @@ int IsBootstrapCompile(void)
     return s_is_bootstrap;
 }
 
+int IsNotBytecodeOutput(void)
+{
+    return OutputFileAsBytecode == 0;
+}
+
 int IsDependencyCompile(void)
 {
     return DependencyMode != kDependencyModeNone;

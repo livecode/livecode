@@ -21,6 +21,7 @@
 
 'export'
     IsBootstrapCompile
+    IsNotBytecodeOutput
 
     NegateReal
 
@@ -366,6 +367,7 @@
 --------------------------------------------------------------------------------
 
 'condition' IsBootstrapCompile()
+'condition' IsNotBytecodeOutput()
 
 --------------------------------------------------------------------------------
 

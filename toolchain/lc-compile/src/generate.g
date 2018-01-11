@@ -28,6 +28,9 @@
 
 'var' ModuleDependencyList : NAMELIST
 
+-- Keep a list of all modules for which bytecode is being generated
+'var' CompiledModuleList : NAMELIST
+
 'var' IgnoredModuleList : NAMELIST
 
 'var' GeneratingModuleIndex : INT
@@ -35,6 +38,7 @@
 'action' GenerateModules(MODULELIST)
 
     'rule' GenerateModules(List):
+        CompiledModuleList <- nil
         GeneratingModuleIndex <- 1
         EmitStart()
         GenerateForEachModule(List)
@@ -54,6 +58,7 @@
 'action' Generate(MODULE)
 
     'rule' Generate(Module):
+        CompiledModuleList <- nil
         GeneratingModuleIndex <- 1
         EmitStart()
         GenerateSingleModule(Module)
@@ -80,6 +85,9 @@
             where(Kind -> library)
             EmitBeginLibraryModule(ModuleName -> ModuleIndex)
         |)
+
+        AddModuleToCompiledList(ModuleName)
+
         Info'Index <- ModuleIndex
         GeneratingModuleIndex -> Generator
         Info'Generator <- Generator
@@ -186,12 +194,33 @@
 'action' AddModuleToDependencyList(NAME)
 
     'rule' AddModuleToDependencyList(Name):
+        -- If this is in the list of compiled modules, then don't
+        -- include in list of required modules in manifest - in
+        -- particular if we are creating a multi-module assembly,
+        -- then this is not an external dependency.
+        CompiledModuleList -> NoDependencyList
+        IsNameInList(Name, NoDependencyList)
+
+    'rule' AddModuleToDependencyList(Name):
         ModuleDependencyList -> List
         IsNameInList(Name, List)
         
     'rule' AddModuleToDependencyList(Name):
         ModuleDependencyList -> List
         ModuleDependencyList <- namelist(Name, List)
+
+'action' AddModuleToCompiledList(NAME)
+
+    'rule' AddModuleToCompiledList(Name):
+        IsNotBytecodeOutput()
+
+    'rule' AddModuleToCompiledList(Name):
+        CompiledModuleList -> List
+        IsNameInList(Name, List)
+
+    'rule' AddModuleToCompiledList(Name):
+        CompiledModuleList -> List
+        CompiledModuleList <- namelist(Name, List)
         
 'action' GenerateManifestRequires(NAMELIST)
 
