@@ -1,0 +1,126 @@
+/*
+Copyright (C) 2018 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.widget.native.button.ios
+
+use com.livecode.widget.native.button.shared
+use com.livecode.canvas
+use com.livecode.foreign
+use com.livecode.objc
+
+public handler Implementation_Ios() returns Array
+	return \
+		{ \
+			"HasImplementation": HasImplementation_Ios, \
+			"HasView": HasView_Ios, \
+			"SetLabel": SetLabel_Ios, \
+			"NativeView": NativeView_Ios, \
+			"UpdateView": UpdateView_Ios, \
+			"DestroyView": DestroyView_Ios \			
+		}
+end handler
+
+private variable mButtonView_Ios as optional ObjcObject
+private variable mButtonProxy_Ios as optional ObjcObject
+
+public handler HasImplementation_Ios() returns Boolean
+	return true
+end handler
+
+public handler HasView_Ios() returns Boolean
+	return mButtonView_Ios is not nothing
+end handler
+
+private foreign handler ObjC_UIButtonSetTitleForState(in pObj as ObjcId, in pTitle as ObjcId, in pState as NSUInteger) returns nothing binds to "objc:UIButton.-setTitle:forState:?ui"
+public handler SetLabel_Ios(in pLabel as String) returns nothing
+	unsafe
+		_SetLabel_Ios(pLabel)
+	end unsafe
+end handler
+
+private unsafe handler _SetLabel_Ios(in pLabel as String) returns nothing
+    /* We use UIControlStateNormal = 0 */
+	ObjC_UIButtonSetTitleForState(mButtonView_Ios, StringToNSString(pLabel), 0)
+end handler
+
+public handler NativeView_Ios() returns Pointer
+	unsafe
+		return _NativeView_Ios()
+	end unsafe
+end handler
+
+private handler ButtonActionCallback_Ios(in pSender as ObjcObject, in pContext as optional any) returns nothing
+	PostAction()
+end handler
+
+private foreign handler ObjC_UIButtonButtonWithType(in pType as NSUInteger) returns ObjcId binds to "objc:UIButton.+buttonWithType:?ui"
+private foreign handler ObjC_UIButtonSetEnabled(in pObj as ObjcId, in pEnabled as CBool) returns nothing binds to "objc:UIButton.-setEnabled:?ui"
+private foreign handler ObjC_UIButtonGetTitleLabel(in pObj as ObjcId) returns ObjcId binds to "objc:UIButton.-titleLabel?ui"
+private foreign handler ObjC_UILabelSetFont(in pObj as ObjcId, in pFont as ObjcId) returns nothing binds to "objc:UILabel.-setFont:?ui"
+private foreign handler ObjC_UIButtonAddTargetActionForControlEvents(in pObj as ObjcId, in pTarget as ObjcId, in pAction as UIntPtr, in pControlEvents as NSUInteger) returns nothing binds to "objc:UIButton.-addTarget:action:forControlEvents:?ui"
+
+private unsafe handler _NativeView_Ios() returns Pointer
+	variable tButtonView as ObjcObject
+
+    /* For a standard push button we need:
+     *   type to be UIButtonTypeSystem = 1 */
+	put ObjC_UIButtonButtonWithType(1) into tButtonView
+	put tButtonView into mButtonView_Ios
+
+	put ObjcProxyGetTarget(ButtonActionCallback_Ios, nothing) into mButtonProxy_Ios
+
+    /* For a push button action we need:
+     *   controlEvents to be UIControlEventTouchUpInside = 1 << 6 */
+    ObjC_UIButtonAddTargetActionForControlEvents(mButtonView_Ios, mButtonProxy_Ios, ObjcProxyGetAction(), 1 shifted left by 6 bitwise)
+    
+    return PointerFromObjcObject(tButtonView)
+end handler
+
+public handler DestroyView_Ios() returns nothing
+	unsafe
+		_DestroyView_Ios()
+	end unsafe
+end handler
+
+private unsafe handler _DestroyView_Ios()
+	put nothing into mButtonView_Ios
+	put nothing into mButtonProxy_Ios
+end handler
+
+public handler UpdateView_Ios(in pIntrinsicProps as Array) returns nothing
+	unsafe
+		_UpdateView_Ios(pIntrinsicProps)
+	end unsafe
+end handler
+
+private foreign handler GetFontHandle_Ios(in pFont as Font, out rHandle as ObjcId) returns nothing binds to "MCCanvasFontGetHandle"
+private unsafe handler _UpdateView_Ios(in pIntrinsicProps as Array)
+	if mButtonView_Ios is nothing then
+		return
+	end if
+	
+    /* Set the enabled state of the button to the host property. */
+    ObjC_UIButtonSetEnabled(mButtonView_Ios, pIntrinsicProps["enabled"])
+
+    /* Set the font of the button to the host property. */
+    variable tFontToUse as ObjcObject
+    GetFontHandle_Ios(pIntrinsicProps["font"], tFontToUse)
+    ObjC_UILabelSetFont(ObjC_UIButtonGetTitleLabel(mButtonView_Ios), \
+    	tFontToUse)
+end handler
+
+end module

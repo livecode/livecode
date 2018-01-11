@@ -1,0 +1,120 @@
+/*
+Copyright (C) 2018 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.widget.native.button.android
+
+use com.livecode.widget.native.button.shared
+use com.livecode.canvas
+use com.livecode.foreign
+use com.livecode.java
+use com.livecode.library.androidutils
+
+public handler Implementation_Android() returns Array
+	return \
+		{ \
+			"HasImplementation": HasImplementation_Android, \
+			"HasView": HasView_Android, \
+			"SetLabel": SetLabel_Android, \
+			"NativeView": NativeView_Android, \
+			"UpdateView": UpdateView_Android, \
+			"DestroyView": DestroyView_Android \			
+		}
+end handler
+
+private variable mButtonView_Android as optional JObject
+
+public handler HasImplementation_Android() returns Boolean
+	return true
+end handler
+
+public handler HasView_Android() returns Boolean
+	return mButtonView_Android is not nothing
+end handler
+
+__safe foreign handler _JNI_SetTextViewText(in pView as JObject, in pValue as JString) returns nothing \
+	binds to "java:android.widget.TextView>setText(Ljava/lang/CharSequence;)V?ui"
+
+public handler SetLabel_Android(in pLabel as String) returns nothing
+    _JNI_SetTextViewText(mButtonView_Android, StringToJString(pLabel))
+end handler
+
+__safe foreign handler _JNI_GetAndroidEngine() returns JObject \
+	binds to "java:com.runrev.android.Engine>getEngine()Lcom/runrev/android/Engine;!static"
+__safe foreign handler _JNI_GetEngineContext(in pEngine as JObject) returns JObject \
+	binds to "java:android.view.View>getContext()Landroid/content/Context;"
+
+// Handlers for creating and attaching view
+__safe foreign handler _JNI_CreateButton(in pContext as JObject) returns JObject \
+	binds to "java:android.widget.Button>new(Landroid/content/Context;)?ui"
+__safe foreign handler _JNI_AddButtonView(in pParentView as JObject, in pChildView as JObject) returns nothing \
+	binds to "java:android.view.ViewGroup>addView(Landroid/view/View;)V?ui"
+
+public handler ButtonActionCallback(in pView as JObject) returns nothing
+	PostAction()
+end handler
+
+// Handlers for adding click listener
+handler type ClickCallback(in pView as JObject) returns nothing
+__safe foreign handler _JNI_OnClickListener(in pHandler as ClickCallback) returns JObject \
+	binds to "java:android.view.View$OnClickListener>interface()"
+__safe foreign handler _JNI_SetOnClickListener(in pButton as JObject, in pListener as JObject) returns nothing \
+	binds to "java:android.view.View>setOnClickListener(Landroid/view/View$OnClickListener;)V?ui"
+public handler NativeView_Android() returns Pointer
+	// Create an android button using the Engine Context
+    variable tEngine as JObject
+    put _JNI_GetAndroidEngine() into tEngine
+    
+    variable tContext as JObject
+    put _JNI_GetEngineContext(tEngine) into tContext
+    put _JNI_CreateButton(tContext) into mButtonView_Android
+    
+    // add an OnClick listener
+    variable tListener as JObject
+    put _JNI_OnClickListener(ButtonActionCallback) into tListener
+    _JNI_SetOnClickListener(mButtonView_Android, tListener)
+    
+    return PointerFromJObject(mButtonView_Android)
+end handler
+
+public handler DestroyView_Android() returns nothing
+	put nothing into mButtonView_Android
+end handler
+
+__safe foreign handler _JNI_SetTextViewEnabled(in pView as JObject, in pValue as JBoolean) returns nothing \
+	binds to "java:android.view.View>setEnabled(Z)V?ui"
+__safe foreign handler _JNI_SetTextViewTypeface(in pView as JObject, in pValue as JBoolean) returns nothing \
+	binds to "java:android.widget.TextView>setTypeface(Landroid/graphics/Typeface;)V?ui"
+
+__safe foreign handler _JNI_TextViewSetTextSize(in pObj as JObject, in pUnit as JInt, in pSize as JFloat) returns nothing \
+	binds to "java:android.widget.TextView>setTextSize(IF)V?ui"
+
+constant COMPLEX_UNIT_DIP is 1
+public handler UpdateView_Android(in pIntrinsicProps as Array) returns nothing
+	if mButtonView_Android is nothing then
+		return
+	end if
+    
+    _JNI_SetTextViewEnabled(mButtonView_Android, pIntrinsicProps["enabled"])
+
+    variable tTypeface as JObject
+    variable tSize as Number
+    put CanvasFontToTypeFace(pIntrinsicProps["font"]) into tTypeface
+    put the size of pIntrinsicProps["font"] into tSize
+    _JNI_TextViewSetTextSize(mButtonView_Android, COMPLEX_UNIT_DIP, tSize)
+end handler
+
+end module

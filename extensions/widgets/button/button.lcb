@@ -1,0 +1,249 @@
+/*
+Copyright (C) 2018 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This widget is a native push button on Mac.
+
+Name: enabled
+
+Syntax: 
+set the enabled of <widget> to {true | false}
+get the enabled of <widget>
+
+Description:
+Use the <enabled> property to enable or disable the native button. When
+disabled, the button has a greyed out appearance and does not accept 
+clicks or touches.
+*/
+widget com.livecode.widget.native.button
+
+use com.livecode.foreign
+use com.livecode.objc
+use com.livecode.widget
+use com.livecode.canvas
+use com.livecode.engine
+use com.livecode.library.widgetutils
+
+use com.livecode.widget.native.button.android
+use com.livecode.widget.native.button.ios
+use com.livecode.widget.native.button.mac
+use com.livecode.widget.native.button.linux
+use com.livecode.widget.native.button.windows
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "Native Button"
+metadata svgicon is "M25.34,0H2.1A2.1,2.1,0,0,0,0,2.1V13.19a2.1,2.1,0,0,0,2.1,2.1H25.34a2.1,2.1,0,0,0,2.1-2.1V2.1A2.1,2.1,0,0,0,25.34,0Z"
+
+/**
+Syntax:
+set the label of <widget> to <pLabel>
+get the label of <widget>
+
+Summary: The label displayed by the button.
+
+Value (string): The string to use as the button label
+
+Example:
+    set the label of widget "Mac Button" to "Click me!"
+
+Description:
+The <label> property is the label displayed by the button.
+*/
+
+property label get mLabel set SetLabel
+metadata label.editor is "com.livecode.pi.string"
+metadata label.default is ""
+
+private variable mLabel as String
+
+handler type HasImplementation_Type() returns Boolean
+private handler HasImplementation() returns Boolean
+	if mPlatformImplementation is nothing then
+		return false
+	end if
+	
+	variable tHandler as HasImplementation_Type
+	put mPlatformImplementation["HasImplementation"] into tHandler
+	return tHandler()
+end handler
+
+handler type HasView_Type() returns Boolean
+private handler HasView() returns Boolean
+	if mPlatformImplementation is nothing then
+		return false
+	end if
+	
+	variable tHandler as HasView_Type
+	put mPlatformImplementation["HasView"] into tHandler
+	return tHandler()
+end handler
+
+public handler OnOpen()
+    if HasImplementation() then
+        set my native layer to NativeView()
+        UpdateView()
+    end if
+end handler
+
+public handler OnClose()
+    if HasView() then
+    	set my native layer to nothing
+        DestroyView()
+    end if
+end handler
+
+/**/
+
+variable mPlatformImplementation as optional Array
+private handler GetPlatformImplementation() returns optional Array
+	variable tPlatform as String
+	put the operating system into tPlatform
+	if tPlatform is "mac" then
+		return Implementation_Mac()
+	else if tPlatform is "ios" then
+		return Implementation_Ios()
+	else if tPlatform is "android" then
+		return Implementation_Android()
+	else if tPlatform is "linux" then
+		return Implementation_Linux()
+	else if tPlatform is "windows" then
+		return Implementation_Windows()
+	end if
+	
+	return nothing
+end handler
+
+public handler OnCreate()
+	put GetPlatformImplementation() into mPlatformImplementation
+	put "" into mLabel
+end handler
+
+public handler OnDestroy()
+end handler
+
+/**/
+
+constant kPlaceholderIcon is \
+"M25.34,0H2.1A2.1,2.1,0,0,0,0,2.1V13.19a2.1,2.1,0,0,0,2.1,2.1H25.34a2.1,2.1,0,0,0,2.1-2.1V2.1A2.1,2.1,0,0,0,25.34,0Z"
+public handler OnPaint()
+	if HasImplementation() then
+		return
+	end if
+
+    variable tLabel as String
+    if mLabel is empty then
+        put my name into tLabel
+    else
+        put mLabel into tLabel
+    end if
+    
+    paintPlaceholderImage(this canvas, my bounds, kPlaceholderIcon, \
+        				  tLabel, my font, nothing)
+end handler
+
+/**/
+
+public handler OnSave(out rProperties as Array)
+	put mLabel into rProperties["label"]
+end handler
+
+public handler OnLoad(in pProperties as Array)
+	put pProperties["label"] into mLabel
+end handler
+
+/**/
+
+public handler OnParentPropertyChanged()
+    UpdateView()
+end handler
+
+/**/
+
+handler type SetLabel_Type(in pLabel as String) returns nothing
+private handler SetLabel(in pLabel as String) returns nothing
+	put pLabel into mLabel	
+	if HasView() then
+	    /* Set the label of the button to mLabel, if not empty; 
+	     * otherwise to the name of the host. */
+		variable tLabelToUse as String
+		if mLabel is the empty string then
+			put my name into tLabelToUse
+		else
+			put mLabel into tLabelToUse
+		end if
+
+		variable tHandler as SetLabel_Type
+		put mPlatformImplementation["SetLabel"] into tHandler
+		tHandler(tLabelToUse)
+	end if
+    redraw all
+end handler
+
+/****/
+
+handler type NativeView_Type() returns Pointer
+private handler NativeView() returns Pointer
+	if mPlatformImplementation is nothing then
+		return nothing
+	end if
+
+	variable tHandler as NativeView_Type
+	put mPlatformImplementation["NativeView"] into tHandler
+	return tHandler()
+end handler
+
+handler type DestroyView_Type() returns nothing
+private handler DestroyView()
+	if not HasView() then
+		return
+	end if
+	
+	set my native layer to nothing
+	
+	if mPlatformImplementation is nothing then
+		return
+	end if
+	
+	variable tHandler as DestroyView_Type
+	put mPlatformImplementation["DestroyView"] into tHandler
+	tHandler()
+end handler
+
+handler type UpdateView_Type(in pProps as Array) returns nothing
+private handler UpdateView()
+	if not HasView() then
+		return
+	end if
+	
+	if mPlatformImplementation is nothing then
+		return
+	end if
+
+	variable tIntrinsicProps as Array
+	put my enabled into tIntrinsicProps["enabled"]
+	put my font into tIntrinsicProps["font"]
+
+	variable tHandler as UpdateView_Type
+	put mPlatformImplementation["UpdateView"] into tHandler
+	tHandler(tIntrinsicProps)
+	
+	-- Set all the props
+	SetLabel(mLabel)
+end handler
+
+end widget

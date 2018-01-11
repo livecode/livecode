@@ -1,0 +1,61 @@
+/*
+Copyright (C) 2018 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.widget.native.button.linux
+
+use com.livecode.widget.native.button.shared
+use com.livecode.foreign
+
+public handler Implementation_Linux() returns Array
+	return \
+		{ \
+			"HasImplementation": HasImplementation_Linux, \
+			"HasView": HasView_Linux, \
+			"SetLabel": SetLabel_Linux, \
+			"NativeView": NativeView_Linux, \
+			"UpdateView": UpdateView_Linux, \
+			"DestroyView": DestroyView_Linux \			
+		}
+end handler
+
+private variable mButtonView_Linux as optional Pointer
+
+public handler HasImplementation_Linux() returns Boolean
+	return false
+end handler
+
+public handler HasView_Linux() returns Boolean
+	return mButtonView_Linux is not nothing
+end handler
+
+public handler SetLabel_Linux(in pLabel as String) returns nothing
+	-- not implemented
+end handler
+
+public handler NativeView_Linux() returns Pointer
+	-- not implemented
+end handler
+
+public handler DestroyView_Linux() returns nothing
+	-- not implemented
+end handler
+
+public handler UpdateView_Linux(in pIntrinsicProps as Array) returns nothing
+	-- not implemented
+end handler
+
+end module
