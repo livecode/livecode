@@ -1,0 +1,136 @@
+/*
+Copyright (C) 2018 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.widget.native.button.mac
+
+use com.livecode.widget.native.button.shared
+use com.livecode.canvas
+use com.livecode.foreign
+use com.livecode.objc
+
+public handler Implementation_Mac() returns Array
+	return \
+		{ \
+			"HasImplementation": HasImplementation_Mac, \
+			"HasView": HasView_Mac, \
+			"SetLabel": SetLabel_Mac, \
+			"NativeView": NativeView_Mac, \
+			"UpdateView": UpdateView_Mac, \
+			"DestroyView": DestroyView_Mac \			
+		}
+end handler
+
+private variable mButtonView_Mac as optional ObjcObject
+private variable mButtonProxy_Mac as optional ObjcObject
+
+public handler HasImplementation_Mac() returns Boolean
+	return true
+end handler
+
+public handler HasView_Mac() returns Boolean
+	return mButtonView_Mac is not nothing
+end handler
+
+private foreign handler ObjC_NSButtonSetTitle(in pObj as ObjcId, in pTitle as ObjcId) returns nothing binds to "objc:NSButton.-setTitle:"
+public handler SetLabel_Mac(in pLabel as String) returns nothing
+	unsafe
+		_SetLabel_Mac(pLabel)
+	end unsafe
+end handler
+
+private unsafe handler _SetLabel_Mac(in pLabel as String) returns nothing
+	ObjC_NSButtonSetTitle(mButtonView_Mac, StringToNSString(pLabel))
+end handler
+
+/****/
+
+private type NSUInteger is CULong
+private foreign handler ObjC_NSButtonAlloc() returns ObjcRetainedId binds to "objc:NSButton.+alloc"
+private foreign handler ObjC_NSButtonInit(in pObj as ObjcId) returns ObjcId binds to "objc:NSButton.-init"
+private foreign handler ObjC_NSButtonSetEnabled(in pObj as ObjcId, in pEnabled as CBool) returns nothing binds to "objc:NSButton.-setEnabled:"
+private foreign handler ObjC_NSButtonSetFont(in pObj as ObjcId, in pFont as ObjcId) returns nothing binds to "objc:NSButton.-setFont:"
+private foreign handler ObjC_NSButtonSetButtonType(in pObj as ObjcId, in pStyle as NSUInteger) returns nothing binds to "objc:NSButton.-setButtonType:"
+private foreign handler ObjC_NSButtonSetBezelStyle(in pObj as ObjcId, in pStyle as NSUInteger) returns nothing binds to "objc:NSButton.-setBezelStyle:"
+private foreign handler ObjC_NSButtonSetBordered(in pObj as ObjcId, in pBordered as CBool) returns nothing binds to "objc:NSButton.-setBordered:"
+private foreign handler ObjC_NSButtonSetTarget(in pObj as ObjcId, in pTarget as ObjcId) returns nothing binds to "objc:NSButton.-setTarget:"
+private foreign handler ObjC_NSButtonSetAction(in pObj as ObjcId, in pAction as UIntPtr) returns nothing binds to "objc:NSButton.-setAction:"
+
+public handler NativeView_Mac() returns Pointer
+	unsafe
+		return _NativeView_Mac()
+	end unsafe
+end handler
+
+private handler ButtonActionCallback_Mac(in pSender as ObjcObject, in pContext as optional any) returns nothing
+	PostAction()
+end handler
+
+private unsafe handler _NativeView_Mac() returns Pointer
+	variable tButtonView as ObjcObject
+	put ObjC_NSButtonAlloc() into tButtonView
+	put ObjC_NSButtonInit(tButtonView) into tButtonView
+
+    /* For a standard push button we need:
+     *   buttonType to be NSMomentaryPushInButton = 7
+     *   bezelStyle to be NSRoundedBezelStyle = 1
+     *   bordered to be true */
+    ObjC_NSButtonSetButtonType(tButtonView, 7)
+    ObjC_NSButtonSetBezelStyle(tButtonView, 1)
+    ObjC_NSButtonSetBordered(tButtonView, true)
+
+	put tButtonView into mButtonView_Mac
+
+	put ObjcProxyGetTarget(ButtonActionCallback_Mac, nothing) into mButtonProxy_Mac
+	ObjC_NSButtonSetTarget(mButtonView_Mac, mButtonProxy_Mac)
+	ObjC_NSButtonSetAction(mButtonView_Mac, ObjcProxyGetAction())
+	
+	return PointerFromObjcObject(tButtonView)
+end handler
+
+public handler DestroyView_Mac() returns nothing
+	unsafe
+		_DestroyView_Mac()
+	end unsafe
+end handler
+
+private unsafe handler _DestroyView_Mac()
+	put nothing into mButtonView_Mac
+	put nothing into mButtonProxy_Mac
+end handler
+
+public handler UpdateView_Mac(in pIntrinsicProps as Array) returns nothing
+	unsafe
+		_UpdateView_Mac(pIntrinsicProps)
+	end unsafe
+end handler
+
+private foreign handler GetFontHandle_Mac(in pFont as Font, out rHandle as ObjcId) returns nothing binds to "MCCanvasFontGetHandle"
+private unsafe handler _UpdateView_Mac(in pIntrinsicProps as Array)
+	if mButtonView_Mac is nothing then
+		return
+	end if
+	
+    /* Set the enabled state of the button to the host property. */
+    ObjC_NSButtonSetEnabled(mButtonView_Mac, pIntrinsicProps["enabled"])
+
+    /* Set the font of the button to the host property. */
+    variable tFontToUse as ObjcObject
+    GetFontHandle_Mac(pIntrinsicProps["font"], tFontToUse)
+    ObjC_NSButtonSetFont(mButtonView_Mac, tFontToUse)
+end handler
+
+end module
