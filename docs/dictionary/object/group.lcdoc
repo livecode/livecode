@@ -7,8 +7,7 @@ Type: object
 Syntax: group
 
 Summary:
-A <control(keyword)> that contains other <control(object)|controls>.
-
+A <control(keyword)> that contains other <control(glossary)|controls>.
 Introduced: 1.0
 
 OS: mac, windows, linux, ios, android
@@ -42,7 +41,7 @@ lowest-layered group on the current card.
 
 References: property (glossary), radio button (glossary),
 menu bar (glossary), object type (glossary), card (keyword),
-control (keyword), templateGroup (keyword), scrollbar (object),
+control (glossary), templateGroup (keyword), scrollbar (object),
 control (object), showName (property)
 
 Tags: objects

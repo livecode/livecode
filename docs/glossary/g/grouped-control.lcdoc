@@ -6,7 +6,7 @@ grouped object
 Type: glossary
 
 Description:
-A <control>, such as a <button> or <field,> that is part of a <group>.
+A <control>, such as a <button> or <field>, that is part of a <group>.
 
 References: control (glossary), button (glossary), field (glossary),
 group (glossary)

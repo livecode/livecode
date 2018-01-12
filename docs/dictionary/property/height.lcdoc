@@ -46,16 +46,16 @@ window tall enough.
 The <height> of an object cannot be set to zero. Attempting to do so
 will set the <height> to 1 instead.
 
->*Cross-platform note:*  On <Mac OS> and <OS X|OS X systems>, the <menu
-> bar> normally appears at the top of the screen, rather than inside the
-> <stack window>. If a <stack> contains a <menu bar> and the
-> <stack|stack's> <editMenus> <property> is set to false, the <stack
-> window> is automatically resized so that the <menu bar> <group> is not
-> visible in the window. In this case, the <height> of the <stack> is
-> the current height of the <stack window>., but the height of the card
-> is the height of the total content area of the <stack> (including the
-> hidden <menu bar> <group>). This is equal to the <height> of the
-> <stack> plus its <vScroll>.
+>*Cross-platform note:*  On <Mac OS> and <OS X|OS X systems>, the 
+> <menu bar> normally appears at the top of the screen, rather than 
+> inside the <stack window>. If a <stack> contains a <menu bar> and the
+> <stack|stack's> <editMenus> <property> is set to false, the 
+> <stack window> is automatically resized so that the <menu bar> 
+> <group> is not visible in the window. In this case, the <height> of 
+> the <stack> is the current height of the <stack window>, but the height 
+> of the card is the height of the total content area of the <stack> 
+> (including the hidden <menu bar> <group>). This is equal to the 
+> <height> of the <stack> plus its <vScroll>.
 
 You can set the <height> of a <card(keyword)>, but doing so has no
 effect and doesn't change the <card(object)|card's> <height> <property>.

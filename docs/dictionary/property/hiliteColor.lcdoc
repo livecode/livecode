@@ -75,9 +75,9 @@ depending on the <object type>:
 > <backgroundPattern> of the <button(keyword)> and all of its
 > <owner|owners> is empty. In this case, the <button(object)|button's>
 > <hiliteColor> has no effect. Otherwise, the <button(keyword)> is drawn
-> by LiveCode. If the <lookAndFeel> is "Appearance Manager", <button
-> menu|button menus> whose <menuMode> is set to "option" are always
-> drawn by the operating system, and the setting of the
+> by LiveCode. If the <lookAndFeel> is "Appearance Manager", 
+> <button menu|button menus> whose <menuMode> is set to "option" are 
+> always drawn by the operating system, and the setting of the
 > <button(object)|button's> <hiliteColor> does not affect them.
 
 * The <hiliteColor> of a <field(keyword)> determines the background

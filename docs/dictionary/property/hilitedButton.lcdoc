@@ -42,12 +42,13 @@ currently <highlight|highlighted>. If the <hilitedButton> is 1, the
 Setting the <hilitedButton> of a <group> sets the <hilite> <property> of
 the rest of the <button(object)|buttons> to false.
 
-The <hilitedButton> <property> is most useful in <radio
-button|radio-button clusters>. In a <radio button|radio-button cluster>,
-only one <button(keyword)> can be <highlight|highlighted> at once:
-clicking another <button(keyword)> unhighlights the first one. The
-<radioBehavior> <property> of a <group> of <button(object)|buttons>
-specifies whether they act as a <radio button|radio-button cluster>.
+The <hilitedButton> <property> is most useful in 
+<radio button|radio-button clusters>. In a 
+<radio button|radio-button cluster>, only one <button(keyword)> can be 
+<highlight|highlighted> at once: clicking another <button(keyword)> 
+unhighlights the first one. The <radioBehavior> <property> of a <group> 
+of <button(object)|buttons> specifies whether they act as a 
+<radio button|radio-button cluster>.
 
 The <hilitedButton>, <hilitedButtonName(property)>, and
 <hilitedButtonID(property)> <property|properties> all refer in different
@@ -55,8 +56,8 @@ ways to the same <button(object)>. When any of them changes, all of them
 change. 
 
 References: hilite (command), group (command), selectedButton (function),
-property (glossary), highlight (glossary), hilitedButtonName (glossary),
-radioBehavior (glossary), radio button (glossary), layer (glossary),
+property (glossary), highlight (glossary), hilitedButtonName (property),
+radioBehavior (property), radio button (glossary), layer (glossary),
 integer (keyword), button (keyword), button (object),
 hilitedButtonName (property), hilitedButtonID (property)
 

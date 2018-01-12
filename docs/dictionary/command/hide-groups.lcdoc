@@ -31,8 +31,8 @@ single <word>. This makes <grouped text> handy to use for <hypertext> or
 
 The <hide groups> <command> sets the <global> <underlineLinks>
 <property> to false. It does not affect the <stack> <underlineLinks>
-<property>, so if a <stack|stack's> <underlineLinks> is true, <hide
-groups> does not remove the underlining in that <stack>.
+<property>, so if a <stack|stack's> <underlineLinks> is true, 
+<hide groups> does not remove the underlining in that <stack>.
 
 References: show groups (command), hide menubar (command),
 global (command), clickChunk (function), mouseChunk (function),
