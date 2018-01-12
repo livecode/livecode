@@ -3,7 +3,7 @@ lc-compile(1) -- compile LiveCode Builder source code
 
 ## SYNOPSIS
 
-**lc-compile** [_OPTION_ ...] --output _OUTFILE_ [--] _LCBFILE_
+**lc-compile** [_OPTION_ ...] --output _OUTFILE_ [--] _LCBFILE_...
 
 **lc-compile** [_OPTION_ ...] --outputc _OUTFILE_ [--] _LCBFILE_...
 

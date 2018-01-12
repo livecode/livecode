@@ -66,6 +66,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 #include "libscript/script.h"
+#include <libscript/script-auto.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -389,30 +390,41 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         }
         
         MCAutoValueRefBase<MCStreamRef> t_stream;
-        bool t_success = MCMemoryInputStreamCreate(t_module_data.Bytes(),
-                                                   p_length, &t_stream);
-        
-        MCScriptModuleRef t_module = nullptr;
-        if (t_success)
-            t_success = MCScriptCreateModuleFromStream(*t_stream, t_module);
-        
-        if (t_success)
+        if (!MCMemoryInputStreamCreate(t_module_data.Bytes(),
+                                       p_length, &t_stream))
         {
-            extern bool MCEngineAddExtensionFromModule(MCScriptModuleRef module);
-            t_success = MCEngineAddExtensionFromModule(t_module);
+            MCresult -> sets("out of memory");
+            return false;
         }
         
+        MCAutoScriptModuleRefArray t_modules;
+        if (!MCScriptCreateModulesFromStream(*t_stream, t_modules))
+        {
+            MCAutoErrorRef t_error;
+            if (MCErrorCatch(&t_error))
+                MCresult->setvalueref(MCErrorGetMessage(*t_error));
+            else
+                MCresult->sets("out of memory");
+            
+            return false;
+        }
+        
+        MCScriptModuleRef t_main = t_modules[0];
+
         MCAutoStringRef t_module_resources;
-        if (t_success)
-            t_success = MCStringFormat(&t_module_resources, "%@/resources",
-                                       MCScriptGetNameOfModule(t_module));
+        if (!MCStringFormat(&t_module_resources, "%@/resources",
+                            MCScriptGetNameOfModule(t_main)))
+        {
+            MCresult->sets("out of memory");
+            return false;
+        }
 
         MCAutoStringRef t_resources_path;
-        if (t_success && MCdispatcher -> fetchlibrarymapping(*t_module_resources,
-                                                             &t_resources_path))
+        MCAutoStringRef t_resolved_path;
+        if (MCdispatcher -> fetchlibrarymapping(*t_module_resources,
+                                                &t_resources_path))
         {
             // Resolve the relative path
-            MCAutoStringRef t_path;
             if (MCStringBeginsWith(*t_resources_path, MCSTR("./"),
                                    kMCStringOptionCompareExact) && MCcmd)
             {
@@ -426,20 +438,23 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
                 
                 MCRange t_range;
                 t_range = MCRangeMake(0, t_last_slash_index);
-                t_success = MCStringFormat(&t_path, "%*@/%@", &t_range, MCcmd, *t_resources_path);
+                if (!MCStringFormat(&t_resolved_path, "%*@/%@", &t_range, MCcmd, *t_resources_path))
+                {
+                    MCresult->sets("out of memory");
+                    return false;
+                }
             }
             else
-                t_path = *t_resources_path;
-            
-            extern bool MCEngineAddResourcePathForModule(MCScriptModuleRef module, MCStringRef path);
-            if (t_success)
-                t_success = MCEngineAddResourcePathForModule(t_module, *t_path);
+                t_resolved_path = *t_resources_path;
         }
         
-        if (!t_success)
+        extern void MCEngineAddExtensionsFromModulesArray(MCAutoScriptModuleRefArray&, MCStringRef, MCStringRef&);
+        
+        MCAutoStringRef t_error;
+        MCEngineAddExtensionsFromModulesArray(t_modules, *t_resolved_path, &t_error);
+        if (*t_error != nullptr)
         {
-            MCScriptReleaseModule(t_module);
-            MCresult -> sets("failed to load module");
+            MCresult->setvalueref(*t_error);
             return false;
         }
     }
