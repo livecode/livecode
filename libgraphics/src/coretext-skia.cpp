@@ -268,6 +268,9 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
     // Ensure we use anti-aliasing
     t_paint.setAntiAlias(true);
     
+    // Ensure we use subpixel positioning
+    t_paint.setSubpixelText(true);
+    
     // We are going to draw text by glyph ID rather than by codeunit
     t_paint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
     
