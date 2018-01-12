@@ -434,6 +434,13 @@ Boolean MCGraphic::doubleup(uint2 which)
 
 void MCGraphic::applyrect(const MCRectangle &nrect)
 {
+    /* If we are editing, then we must update the edit tool's selection
+     * layer. */
+    if (opened && m_edit_tool != nullptr)
+    {
+        getcard()->dirtyselection(m_edit_tool->drawrect());
+    }
+
 	if (realpoints != NULL)
 	{
 		if (nrect.width != rect.width || nrect.height != rect.height)
@@ -485,6 +492,13 @@ void MCGraphic::applyrect(const MCRectangle &nrect)
 
 	rect = nrect;
 	delpoints();
+    
+    /* If we are editing, then we must update the edit tool's selection
+     * layer. */
+    if (opened && m_edit_tool != nullptr)
+    {
+        getcard()->dirtyselection(m_edit_tool->drawrect());
+    }
 }
 
 void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &nrect)
@@ -995,21 +1009,6 @@ void MCGraphic::compute_minrect()
 	}
 }
 
-MCRectangle MCGraphic::geteffectiverect(void) const
-{
-	MCRectangle t_effectiverect;
-	t_effectiverect = MCControl::geteffectiverect();
-
-	if (m_edit_tool != NULL)
-	{
-		MCRectangle t_tool_rect = m_edit_tool->drawrect();
-		if (t_tool_rect.width != 0 && t_tool_rect.height != 0)
-			t_effectiverect = MCU_union_rect(t_effectiverect, t_tool_rect);
-	}
-
-	return t_effectiverect;
-}
-
 void MCGraphic::delpoints()
 {
 	if (points != NULL)
@@ -1425,12 +1424,19 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 	if (!p_isolated)
 	{
 		dc -> end();
-        
-        if (m_edit_tool != NULL)
-            m_edit_tool->drawhandles(dc);
 	}
 
 	dc -> setquality(QUALITY_DEFAULT);
+}
+
+void MCGraphic::drawselection(MCDC *p_dc, const MCRectangle& p_dirty)
+{
+    MCControl::drawselection(p_dc, p_dirty);
+    
+    if (m_edit_tool != nullptr)
+    {
+        m_edit_tool->drawhandles(p_dc);
+    }
 }
 
 MCGradientFill *MCGraphic::getgradient()
@@ -1455,9 +1461,6 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
 	{
 		MCRectangle drect = rect;
 
-		MCRectangle t_old_effective_rect;
-		t_old_effective_rect = geteffectiverect();
-
 		realpoints[i].x = x;
 		realpoints[i].y = y;
 
@@ -1478,6 +1481,9 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
                 }
             }
 			compute_minrect();
+            
+            /* If the minrect has changed, then invalidate the old coords in the
+             * gradients. */
 			if (rect.x != drect.x || rect.y != drect.y
 					|| rect.width != drect.width || rect.height != drect.height)
 			{
@@ -1486,15 +1492,14 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
 					m_fill_gradient->old_origin.x = MININT2;
 					m_fill_gradient->old_origin.y = MININT2;
 				}
-				if (resizeparent())
-					return;
+				if (m_stroke_gradient != NULL)
+				{
+					m_stroke_gradient->old_origin.x = MININT2;
+					m_stroke_gradient->old_origin.y = MININT2;
+				}
 			}
+            
 			Redraw(drect);
-			if (opened)
-			{
-				// MW-2011-08-18: [[ Layers ]] Notify of the change in effective rect and invalidate.
-				layer_effectiverectchangedandredrawall(t_old_effective_rect);
-			}
 		}
 	}
 }

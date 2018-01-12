@@ -153,8 +153,9 @@ public:
     
     virtual bool isdeletable(bool p_check_flag);
     
-    void drawselectedchildren(MCDC *dc);
-    bool updatechildselectedrect(MCRectangle& x_rect);
+    /* The drawselection method of the group recurses to draw all child control
+     * selection decorations. */
+    virtual void drawselection(MCDC *dc, const MCRectangle& p_dirty);
     
 	MCControl *findchildwithid(Chunk_term type, uint4 p_id);
 
