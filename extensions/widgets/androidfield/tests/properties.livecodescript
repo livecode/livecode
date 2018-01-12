@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 on TestSetup
 	TestLoadExtension "com.livecode.library.widgetutils"
 	TestLoadExtension "com.livecode.library.scriptitems"
+	TestLoadExtension "com.livecode.library.androidutils"	
 	TestLoadExtension "com.livecode.widget.native.android.field"
 end TestSetup
 
