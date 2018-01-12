@@ -1,4 +1,4 @@
-﻿script "StandaloneExtensionsJava"
+﻿script "StandaloneExtensionsResources"
 /*
 Copyright (C) 2017 LiveCode Ltd.
 
