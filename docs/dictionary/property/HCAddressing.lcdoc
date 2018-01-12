@@ -5,9 +5,9 @@ Type: property
 Syntax: set the HCAddressing of <stack> to {true | false}
 
 Summary:
-Determines whether <grouped control|grouped fields> and <card
-control|card buttons> are assumed if the <field> or <button|button's>
-<domain> is not specified.
+Determines whether <grouped control|grouped fields> and 
+<card control|card buttons> are assumed if the <field> or 
+<button|button's> <domain> is not specified.
 
 Associations: stack
 

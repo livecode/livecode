@@ -11,8 +11,6 @@ Associations: group
 
 Introduced: 1.0
 
-Changed: 8.1
-
 OS: mac, windows, linux, ios, android
 
 Platforms: desktop, server, mobile

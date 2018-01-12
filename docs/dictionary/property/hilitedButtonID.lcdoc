@@ -50,10 +50,9 @@ The <hilitedButton(property)>, <hilitedButtonName(property)>, and
 the same <button(object)>. When any of them changes, all of them change.
 
 References: hilite (command), group (command), property (glossary),
-highlight (glossary), hilitedButtonName (glossary),
-radio button (glossary), radioBehavior (glossary), button (keyword),
-button (object), hilitedButton(property) hilitedButtonName (property),
-ID (property)
+highlight (glossary), radio button (glossary), radioBehavior (property), 
+button (keyword), button (object), hilitedButton (property), 
+hilitedButtonName (property), ID (property)
 
 Tags: ui
 

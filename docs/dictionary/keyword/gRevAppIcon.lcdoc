@@ -53,10 +53,10 @@ the <image> <ID> is 3445, you can place the following
 Thereafter, the <ask>, <ask password>, and <answer> <command|commands>
 will use the <image> you specified.
 
->*Note:* If you specify an iconType in the <answer>, <ask>, or <ask
-> password> <command>, the image specified by the <gRevSmallAppIcon>
-> <variable> appears instead, along with the standard icon specified by
-> the iconType.
+>*Note:* If you specify an iconType in the <answer>, <ask>, or 
+> <ask password> <command>, the image specified by the 
+> <gRevSmallAppIcon> <variable> appears instead, along with the 
+> standard icon specified by the iconType.
 
 References: answer (command), ask (command), ask password (command),
 dialog box (glossary), OS X (glossary), variable (glossary),
