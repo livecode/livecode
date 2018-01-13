@@ -1606,7 +1606,7 @@ library is able to access SVG paths.
 
 >Note:  The icon name is accepted in the form "name" or "family/name".  
 If no family is specified, then the current family is searched first.  
-If not found, other families are serched for the provided name.
+If not found, other families are searched for the provided name.
 
 Related: iconNames(handler), iconNamesForFamily(handler)
 */
@@ -1636,7 +1636,7 @@ icons for which this library is able to access SVG paths.
 
 >Note:  The icon name is accepted in the form "name" or "family/name".  
 If no family is specified, then the current family is searched first.  
-If not found, other families are serched for the provided name.
+If not found, other families are searched for the provided name.
 
 Related: iconNames(handler), iconNamesForFamily(handler)
 */
