@@ -1167,6 +1167,17 @@ private command revCopyMobileDrivers pDrivers, pAppBundle, pTarget, pSDKs, @rExt
    end repeat
 end revCopyMobileDrivers
 
+-- Helper function to convert the Xcode version to the format the plist expects. Examples:
+-- 7.2 --> 0720
+-- 8.3.3 --> 0833
+-- 10.2 --> 1020
+-- 10.2.1 --> 1021
+-- relies on the fact that + 0 to empty gives 0
+private function convertXcodeVersion pInput
+   set the itemdel to "."
+   return format("%02d%d%d", item 1 of pInput + 0, item 2 of pInput + 0, item 3 of pInput + 0)
+end convertXcodeVersion
+
 ################################################################################
 
 private command revCopyMobileStackFiles pStackFiles, pBaseFolder, pAppBundle
@@ -1351,6 +1362,36 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in pPlist
    replace "${CUSTOM_FONTS}" with tCustomFonts in pPlist
    replace "${DISABLE_ATS}" with tDisableATS in pPlist
+   
+   -- PM-2018-01-15: [[Bug 20852]] Get info about Xcode/SDK versions
+   if pTarget is "Device" then
+      local tDtPlatformBuild, tDtPlatformVersion, tDtSdkBuild, tDtSdkName, tDtXcode, tDtXcodeBuild
+      
+      get shell("xcodebuild -version -sdk iphoneos ProductBuildVersion")
+      -- Those 2 values are the same, e.g. "15C107"
+      put it into tDtPlatformBuild
+      put it into tDtSdkBuild 
+      
+      get shell("xcodebuild -version -sdk iphoneos PlatformVersion") -- e.g. "11.2"
+      put it into tDtPlatformVersion
+      
+      put "iphoneos" & tDtPlatformVersion into tDtSdkName
+      
+      get shell("xcodebuild -version | awk '/Xcode/ {print $NF}' ") -- e.g. "9.2"
+      put it into tDtXcode
+      put convertXcodeVersion(tDtXcode) into tDtXcode 
+      
+      get shell("xcodebuild -version | awk 'END {print $NF}' ") -- e.g. "9C40b"
+      put it into tDtXcodeBuild
+      
+      replace "${DT_PLATFORM_BUILD}" with tDtPlatformBuild in pPlist
+      replace "${DT_PLATFORM_VERSION}" with tDtPlatformVersion in pPlist
+      replace "${DT_SDK_BUILD}" with tDtSdkBuild in pPlist
+      replace "${DT_SDK_NAME}" with tDtSdkName in pPlist
+      replace "${DT_XCODE}" with tDtXcode in pPlist
+      replace "${DT_XCODE_BUILD}" with tDtXcodeBuild in pPlist
+      
+   end if
    
    get empty
    repeat for each item tItem in tDeviceFamily
