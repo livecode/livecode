@@ -68,7 +68,7 @@ content:
       repeat with x = 1 to 10
       end repeat
 
-      repeat while x < 10
+      repeat while x > 1
            subtract 1 from x
       end repeat
 
@@ -89,10 +89,10 @@ content:
       for x in tVar:
           # do things
 
-      for x in range(5):
+      for x in range(10):
           # do things
 
-      while x < 10:
+      while x > 1:
           x -= 1
 
       if tVar:
@@ -106,7 +106,7 @@ content:
       for (var i=0; i < 10; i++) {
       }
 
-      while (x < 10) {
+      while (x > 1) {
           x--;
       }
 
@@ -133,11 +133,11 @@ content:
       // String
       "foo" & "bar" is "foobar"
       "foo" && "bar" is "foo bar"
-      "str" begins with "st"
-      "str" ends with "g"
+      "string" begins with "st"
+      "string" ends with "g"
 
       // Chunks
-      char 5 of "str" is "n"
+      char 5 of "string" is "n"
       item 3 of "a,b,c" is "c"
       word 1 of "hi there" is "hi"
       line 2 of "a" & return & "b" is "b"
@@ -154,11 +154,11 @@ content:
       "foo" + "bar" == "foobar"
       strs = ['foo','bar']
       ' '.join(strs) == "foo bar"
-      "str".startswith("st")
-      "str".endswith("g")
+      "string".startswith("st")
+      "string".endswith("g")
 
       # Chunks
-      "str"[4:5] == "n"
+      "string"[4:5] == "n"
 
       items = "a,b,c".split(",")
       items[2] == "c"
@@ -183,11 +183,11 @@ content:
       var strs = ['foo','bar'];
       strs.join(" ") == "foo bar"
 
-      "str".startsWith("st");
-      "str".endsWith("g");
+      "string".startsWith("st");
+      "string".endsWith("g");
 
       // Chunks
-      "str".charAt(4) == "n"
+      "string".charAt(4) == "n"
 
       var items = "a,b,c".split(",");
       items[2] == "c"
