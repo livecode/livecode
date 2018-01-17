@@ -1907,13 +1907,20 @@ void MCCanvasImageMakeWithData(MCDataRef p_data, MCCanvasImageRef &r_image)
 }
 
 // Input should be unpremultiplied ARGB pixels
+
 MC_DLLEXPORT_DEF
 void MCCanvasImageMakeWithPixels(integer_t p_width, integer_t p_height, MCDataRef p_pixels, MCCanvasImageRef &r_image)
+{
+    MCCanvasImageMakeWithPixelsInFormat(p_width, p_height, p_pixels, kMCGPixelFormatARGB, r_image);
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasImageMakeWithPixelsInFormat(integer_t p_width, integer_t p_height, MCDataRef p_pixels, MCGPixelFormat p_format, MCCanvasImageRef &r_image)
 {
 	MCImageRep *t_image_rep;
 	t_image_rep = nil;
 	
-	if (!MCImageRepCreateWithPixels(p_pixels, p_width, p_height, kMCGPixelFormatARGB, false, t_image_rep))
+	if (!MCImageRepCreateWithPixels(p_pixels, p_width, p_height, p_format, false, t_image_rep))
 	{
 		MCCanvasThrowError(kMCCanvasImageRepPixelsErrorTypeInfo);
 		return;

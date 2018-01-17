@@ -2079,6 +2079,7 @@ public foreign handler MCCanvasImageMakeWithPath(in pPath as String, out rImage 
 public foreign handler MCCanvasImageMakeWithResourceFile(in pResourcePath as String, out rImage as Image) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithData(in pData as Data, out rImage as Image) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixels(in pWidth as LCInt, in pHeight as LCInt, in pPixels as Data, out rImage as Image) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithPixelsInFormat(in pWidth as LCInt, in pHeight as LCInt, in pPixels as Data, in pFormat as LCInt, out rImage as Image) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as List, in pPixels as Data, out rImage as Image) returns nothing binds to "<builtin>"
 
 //////////
