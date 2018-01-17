@@ -136,29 +136,29 @@
     'rule' DeclareImportedDefinitions(Module, unsafe(_, Definition)):
         DeclareImportedDefinitions(Module, Definition)
 
-    'rule' DeclareImportedDefinitions(Module, type(Position, _, Name, _)):
-        DeclareImportedId(Module, Name)
+    'rule' DeclareImportedDefinitions(Module, type(Position, Access, Name, _)):
+        DeclareImportedId(Module, Access, Name)
 
-    'rule' DeclareImportedDefinitions(Module, constant(Position, _, Name, _)):
-        DeclareImportedId(Module, Name)
+    'rule' DeclareImportedDefinitions(Module, constant(Position, Access, Name, _)):
+        DeclareImportedId(Module, Access, Name)
     
-    'rule' DeclareImportedDefinitions(Module, variable(Position, _, Name, _)):
-        DeclareImportedId(Module, Name)
+    'rule' DeclareImportedDefinitions(Module, variable(Position, Access, Name, _)):
+        DeclareImportedId(Module, Access, Name)
 
-    'rule' DeclareImportedDefinitions(Module, handler(Position, _, Name, _, _, _)):
-        DeclareImportedId(Module, Name)
+    'rule' DeclareImportedDefinitions(Module, handler(Position, Access, Name, _, _, _)):
+        DeclareImportedId(Module, Access, Name)
     
-    'rule' DeclareImportedDefinitions(Module, foreignhandler(Position, _, Name, _, _)):
-        DeclareImportedId(Module, Name)
+    'rule' DeclareImportedDefinitions(Module, foreignhandler(Position, Access, Name, _, _)):
+        DeclareImportedId(Module, Access, Name)
     
-    'rule' DeclareImportedDefinitions(Module, property(Position, _, Name, _, _)):
-        DeclareImportedId(Module, Name)
+    'rule' DeclareImportedDefinitions(Module, property(Position, Access, Name, _, _)):
+        DeclareImportedId(Module, Access, Name)
     
-    'rule' DeclareImportedDefinitions(Module, event(Position, _, Name, _)):
-        DeclareImportedId(Module, Name)
+    'rule' DeclareImportedDefinitions(Module, event(Position, Access, Name, _)):
+        DeclareImportedId(Module, Access, Name)
 
-    'rule' DeclareImportedDefinitions(Module, syntax(Position, _, Name, _, _, _, _)):
-        DeclareImportedId(Module, Name)
+    'rule' DeclareImportedDefinitions(Module, syntax(Position, Access, Name, _, _, _, _)):
+        DeclareImportedId(Module, Access, Name)
 
     'rule' DeclareImportedDefinitions(Module, metadata(_, _, _)):
         -- do nothing
@@ -631,11 +631,14 @@
 
 'condition' ResolveNamespace(OPTIONALID -> NAME)
 
-'action' DeclareImportedId(ID, ID)
+'action' DeclareImportedId(ID, ACCESS, ID)
 
-	'rule' DeclareImportedId(Namespace, Id):
+	'rule' DeclareImportedId(Namespace, public, Id):
 		Id'Namespace <- id(Namespace)
 		DeclareNamespacedId(Id)
+
+	'rule' DeclareImportedId(Namespace, Access, Id):
+        -- don't import non-public ids
 
 -- Ensure all module-level declarations have module namespace
 'action' DeclareId(ID)
