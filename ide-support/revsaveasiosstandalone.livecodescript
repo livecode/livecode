@@ -1414,6 +1414,11 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       put "<key>armv7</key><true/>" after it
    end if
    
+   -- Building for iOS 11.0 or more only builds the 64bit slice, so update the plist
+   if pSettings["ios,minimum version"] >= 11.0 then
+      put "<key>arm64</key><true/>" after it
+   end if
+   
    replace "${DEVICE_CAPABILITY}" with it in pPlist
    
    replace "${PERSISTENT_WIFI}" with "<" & tPersistentWifi & "/>" in pPlist
