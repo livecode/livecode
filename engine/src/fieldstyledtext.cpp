@@ -177,10 +177,9 @@ static void export_styled_text_character_style(MCArrayRef p_style_array, const M
 	if (p_style . has_text_color || p_effective)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . text_color >> 16) & 0xFF;
-        uint32_t g = (p_style . text_color >> 8) & 0xFF;
-        uint32_t b = (p_style . text_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . text_color);
+        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", t_color.red, t_color.green, t_color.blue);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("textColor"), *t_string);
 	}
 	if (p_style . has_background_color)
