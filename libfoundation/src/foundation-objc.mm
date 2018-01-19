@@ -573,7 +573,8 @@ else
     CASE(bool, CBool);
 #undef CASE
     if (p_typeinfo == kMCObjcIdTypeInfo ||
-        p_typeinfo == kMCObjcRetainedIdTypeInfo)
+        p_typeinfo == kMCObjcRetainedIdTypeInfo ||
+        p_typeinfo == kMCObjcAutoreleasedIdTypeInfo)
     {
         return @encode(id);
     }
