@@ -775,6 +775,8 @@
 			'src/em-liburl.cpp',
 			'src/em-liburl.js',
 			'src/em-main.cpp',
+			'src/em-native-layer.h',
+			'src/em-native-layer.cpp',
 			'src/em-osspec-misc.cpp',
 			'src/em-osspec-network.cpp',
 			'src/em-preamble-overlay.js',
