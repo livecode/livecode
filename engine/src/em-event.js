@@ -56,6 +56,8 @@ mergeInto(LibraryManager.library, {
 				['compositionstart', LiveCodeEvents._handleComposition],
 				['compositionupdate', LiveCodeEvents._handleComposition],
 				['compositionend', LiveCodeEvents._handleComposition],
+				
+				['contextmenu', LiveCodeEvents._handleContextMenu],
 			];
 
 			var mapLength = mapping.length;
@@ -149,6 +151,9 @@ mergeInto(LibraryManager.library, {
 		_handleFocusEvent: function(e) {
 			LiveCodeAsync.delay(function() {
 				var stack = LiveCodeEvents._getStackForCanvas(e.target);
+				// ignore events for non-lc elements
+				if (!stack)
+					return;
 
 				switch (e.type) {
 				case 'focus':
@@ -509,6 +514,10 @@ mergeInto(LibraryManager.library, {
 				var stack = LiveCodeEvents._getStackForCanvas(e.target);
 				var mods = LiveCodeEvents._encodeModifiers(e);
 
+				// ignore events for non-lc elements
+				if (!stack)
+					return;
+
 				switch (e.type) {
 				case 'keypress':
 					var char_code = LiveCodeEvents._encodeKeyboardCharCode(e);
@@ -570,6 +579,10 @@ mergeInto(LibraryManager.library, {
 			LiveCodeAsync.delay(function() {
 				// Stack that we're targeting
 				var stack = LiveCodeEvents._getStackForCanvas(compositionEvent.target);
+
+				// ignore events for non-lc elements
+				if (!stack)
+					return;
 
 				var encodedString;
 				var chars, length;
@@ -696,6 +709,10 @@ mergeInto(LibraryManager.library, {
 				var mods = LiveCodeEvents._encodeModifiers(e);
 				var pos = LiveCodeEvents._encodeMouseCoordinates(e);
 
+				// ignore events for non-lc elements
+				if (!stack)
+					return;
+
 				switch (e.type) {
 				case 'mousemove':
 					LiveCodeEvents._postMousePosition(stack, e.timeStamp, mods, pos[0], pos[1]);
@@ -780,7 +797,16 @@ mergeInto(LibraryManager.library, {
 		},
 
 		// ----------------------------------------------------------------
-		// Mouse events
+		// UI events
+		// ----------------------------------------------------------------
+		
+		// prevent context menu popup on right-click
+		_handleContextMenu: function(e) {
+			e.preventDefault()
+		},
+
+		// ----------------------------------------------------------------
+		// Window events
 		// ----------------------------------------------------------------
 		
 		_postWindowReshape: function(stack, backingScale)

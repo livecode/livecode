@@ -134,9 +134,9 @@ mergeInto(LibraryManager.library, {
 				'visible':false,
 			});
 			
-			LiveCodeEvents.addEventListeners(canvas);
 			canvas.dataset.lcWindowId = tWindowID;
 			container.dataset.lcWindowId = tWindowID;
+			LiveCodeEvents.addEventListeners(container);
 			LiveCodeDC._monitorResize(canvas, function() {
 				LiveCodeEvents.postWindowReshape(tWindowID);
 			});
