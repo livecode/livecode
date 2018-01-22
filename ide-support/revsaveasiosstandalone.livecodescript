@@ -628,6 +628,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    put tStandardFontmapRoot & slash & "fontmap" into tFontMapFiles
    local tUserFontMappings
    put pSettings["ios,fontmappings"] into tUserFontMappings
+   set the itemdelimiter to comma
    if tUserFontMappings is not empty then
       // Make sure to use the right absolute filepath
       if not (tUserFontMappings begins with slash) then
