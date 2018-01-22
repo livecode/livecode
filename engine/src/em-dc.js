@@ -91,6 +91,13 @@ mergeInto(LibraryManager.library, {
 				LiveCodeDC._assignedMainWindow = true;
 				windowElement = canvas.parentElement;
 				windowElement.style.setProperty('position', 'relative');
+				windowElement.style.setProperty('width', rect['right'] - rect['left']);
+				windowElement.style.setProperty('height', rect['bottom'] - rect['top']);
+				canvas.style.setProperty('position', 'absolute');
+				canvas.style.setProperty('left', '0px');
+				canvas.style.setProperty('right', '0px');
+				canvas.style.setProperty('width', '100%');
+				canvas.style.setProperty('height', '100%');
 			}
 			else
 			{
@@ -98,6 +105,9 @@ mergeInto(LibraryManager.library, {
 				windowElement.style.display = 'none';
 				windowElement.style.position = 'fixed';
 				canvas = document.createElement('canvas');
+				canvas.style.setProperty('position', 'absolute');
+				canvas.style.setProperty('left', '0px');
+				canvas.style.setProperty('right', '0px');
 				canvas.style.setProperty('width', '100%');
 				canvas.style.setProperty('height', '100%');
 				windowElement.appendChild(canvas);
@@ -108,6 +118,11 @@ mergeInto(LibraryManager.library, {
 			
 			// Set up native layer container
 			var container = document.createElement('div');
+			container.style.setProperty('position', 'relative');
+			container.style.setProperty('left', '0px');
+			container.style.setProperty('right', '0px');
+			container.style.setProperty('width', '100%');
+			container.style.setProperty('height', '100%');
 			windowElement.appendChild(container);
 			
 			var tWindowID = LiveCodeUtil.storeObject({
