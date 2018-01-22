@@ -28,9 +28,8 @@ mergeInto(LibraryManager.library, {
 				return;
 			}
 			
-			LiveCodeDC._windowList = [];
+			LiveCodeDC._windowList = this.containerCreate(document.body, 1);
 			LiveCodeDC._assignedMainWindow = false;
-			LiveCodeDC._maxZIndex = 1;
 
 			LiveCodeDC._initialised = true;
 		},
@@ -43,46 +42,90 @@ mergeInto(LibraryManager.library, {
 			LiveCodeDC._initialised = false;
 		},
 
+		containerCreate: function(containerElement, maxZIndex) {
+			return {'element':containerElement, 'maxZIndex':maxZIndex, 'contents':[]};
+		},
+		
+		containerAddElement: function(container, element) {
+			element.style.position = 'absolute';
+			element.style.zIndex = container['maxZIndex'];
+			container['maxZIndex']++;
+			container['element'].appendChild(element);
+			container['contents'].push(element);
+		},
+		
+		containerRemoveElement: function(container, element) {
+			this.containerRaiseElement(container, element);
+			container['element'].removeChild(element);
+			container['maxZIndex']--;
+			var index = container['contents'].indexOf(element);
+			if (index !== -1) {
+				container['contents'].splice(index, 1);
+			}
+		},
+		
+		containerRaiseElement: function(container, element) {
+			var zIndex = element.style.zIndex;
+			for (var i = 0, l = container['contents'].length; i < l; i++)
+			{
+				var otherElement = container['contents'][i];
+				if (otherElement.style.zIndex > zIndex)
+				{
+					otherElement.style.zIndex--;
+				}
+			}
+			element.style.zIndex = container['maxZIndex'] - 1;
+		},
+		
 		// Windows are backed by an html canvas within a floating div
 		createWindow: function() {
-			var div;
+			var windowElement;
 			var canvas;
 			var rect;
+			var mainWindow = false;
 			if (!LiveCodeDC._assignedMainWindow)
 			{
+				mainWindow = true;
 				canvas = Module['canvas'];
 				rect = canvas.getBoundingClientRect();
 				LiveCodeDC._assignedMainWindow = true;
+				windowElement = canvas.parentElement;
+				windowElement.style.setProperty('position', 'relative');
 			}
 			else
 			{
-				div = document.createElement('div');
-				div.style.display = 'none';
-				div.style.position = 'fixed';
-				div.style.zIndex = LiveCodeDC._maxZIndex;
-				LiveCodeDC._maxZIndex++;
+				windowElement = document.createElement('div');
+				windowElement.style.display = 'none';
+				windowElement.style.position = 'fixed';
 				canvas = document.createElement('canvas');
 				canvas.style.setProperty('width', '100%');
 				canvas.style.setProperty('height', '100%');
-				div.appendChild(canvas);
-				document.body.appendChild(div);
+				windowElement.appendChild(canvas);
+				this.containerAddElement(this._windowList, windowElement);
 		  
 				rect = {'left':0, 'top':0, 'right':0, 'bottom':0};
 			}
 			
+			// Set up native layer container
+			var container = document.createElement('div');
+			windowElement.appendChild(container);
+			
 			var tWindowID = LiveCodeUtil.storeObject({
-				'div': div,
+				'mainWindow': mainWindow,
+				'element': windowElement,
 				'canvas': canvas,
+				'container': this.containerCreate(container, 1),
 				'rect': rect,
 				'visible':false,
 			});
 			
 			LiveCodeEvents.addEventListeners(canvas);
+			canvas.dataset.lcWindowId = tWindowID;
+			container.dataset.lcWindowId = tWindowID;
 			LiveCodeDC._monitorResize(canvas, function() {
 				LiveCodeEvents.postWindowReshape(tWindowID);
 			});
 			
-			LiveCodeDC._windowList.push(tWindowID);
 			return tWindowID;
 		},
 		
@@ -92,40 +135,27 @@ mergeInto(LibraryManager.library, {
 			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 			{
+				window.element.removeChild(window.container.element);
 				LiveCodeDC._removeResizeMonitor(window.canvas);
 		  
-				if (window.canvas == Module['canvas'])
+				if (window.mainWindow)
 				{
 					// TODO - handle cleanup of embedded canvas
 					LiveCodeDC._assignedMainWindow = false;
 				}
 				else
 				{
-					document.body.removeChild(window.div);
-					LiveCodeDC._maxZIndex--;
+					this.containerRemoveElement(this._windowList, window.element);
 				}
 				LiveCodeUtil.removeObject(pID);
-			}
-			var index = LiveCodeDC._windowList.indexOf(pID);
-			if (index !== -1) {
-				LiveCodeDC._windowList.splice(index, 1);
 			}
 		},
 		
 		raiseWindow: function(pID) {
 			var window = LiveCodeUtil.fetchObject(pID);
-			if (window && window.div)
+			if (window && !window.mainWindow)
 			{
-				var zIndex = window.div.style.zIndex;
-				for (var tID in LiveCodeDC._windowList)
-				{
-					var tWindow = LiveCodeUtil.fetchObject(tID);
-					if (tWindow.div && tWindow.div.style.zIndex > zIndex)
-					{
-						tWindow.div.style.zIndex--;
-					}
-				}
-				window.div.style.zIndex = LiveCodeDC._maxZIndex - 1;
+				this.containerRaiseElement(this._windowList, window.element);
 			}
 		},
 		
@@ -136,18 +166,13 @@ mergeInto(LibraryManager.library, {
 				var width = pRight - pLeft;
 				var height = pBottom - pTop;
 				window.rect = {'left':pLeft, 'top':pTop, 'right':pRight, 'bottom':pBottom};
-				if (window.div)
+				if (!window.mainWindow)
 				{
-					window.div.style.setProperty('left', pLeft + 'px', 'important');
-					window.div.style.setProperty('top', pTop + 'px', 'important');
-					window.div.style.setProperty('width', width + 'px', 'important');
-					window.div.style.setProperty('height', height + 'px', 'important');
+					window.element.style.setProperty('left', pLeft + 'px', 'important');
+					window.element.style.setProperty('top', pTop + 'px', 'important');
 				}
-				else
-				{
-					window.canvas.style.setProperty('width', width + 'px', 'important');
-					window.canvas.style.setProperty('height', height + 'px', 'important');
-				}
+				window.element.style.setProperty('width', width + 'px', 'important');
+				window.element.style.setProperty('height', height + 'px', 'important');
 			}
 		},
 		
@@ -164,19 +189,19 @@ mergeInto(LibraryManager.library, {
 			if (window)
 			{
 				window.visible = pVisible;
-				if (window.div)
+				if (!window.mainWindow)
 				{
 					if (pVisible)
-						window.div.style.display = 'block';
+						window.element.style.display = 'block';
 					else
-						window.div.style.display = 'none';
+						window.element.style.display = 'none';
 				}
 				else
 				{
 					if (pVisible)
-						window.canvas.style.visibility = 'visible';
+						window.element.style.visibility = 'visible';
 					else
-						window.canvas.style.visibility = 'hidden';
+						window.element.style.visibility = 'hidden';
 				}
 			}
 		},
@@ -202,15 +227,8 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		getWindowIDForCanvas: function(pCanvas) {
-			for (var i = 0, l = LiveCodeDC._windowList.length; i < l; i++) {
-				var tID = LiveCodeDC._windowList[i]
-				var window = LiveCodeUtil.fetchObject(tID);
-				if (window) {
-					if (pCanvas == window.canvas) {
-						return tID;
-					}
-				}
-			}
+			if (pCanvas.dataset.lcWindowId)
+				return Number(pCanvas.dataset.lcWindowId);
 			console.debug("canvas not found");
 			return 0;
 		},
