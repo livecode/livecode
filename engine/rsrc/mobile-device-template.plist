@@ -28,10 +28,7 @@
 	<string>${BUNDLE_VERSION}</string>
 	<key>CFBundleShortVersionString</key>
 	<string>${BUNDLE_VERSION}</string>
-	<key>CFBundleIconFiles</key>
-	<array>
-		${BUNDLE_ICONS}
-	</array>
+	${BUNDLE_ICONS}
 	<key>UILaunchImages</key>
 	<array>
 		${SPLASHSCREENS}
