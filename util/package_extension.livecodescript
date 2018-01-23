@@ -32,7 +32,7 @@ command protectStack pEnginePath, pProtectifyScript, pSourceFolder, pSourceFileN
         
     get shell(tShell)
    if the result is not 0 then
-       write "subprocess error when protecting stack" && pSource & ":" && it to stderr
+       write "subprocess error when protecting stack" && pSourceFileName & ":" && it to stderr
        quit 1
    end if
 end protectStack
@@ -71,7 +71,7 @@ private command packageExtension pExtensionName, pSourceFolder, pSourceFileName,
    if pRemoveSource is "true" then
       put return & "rm" && q(tBuildTarget & slash & pSourceFileName) \ 	
          after tShell
-      repeat for each line tSupport in tSupportFiles
+      repeat for each line tSupport in pSupportFiles
          put return & "rm" && q(tBuildTarget & slash & tSupport) \ 	
          	after tShell
       end repeat
