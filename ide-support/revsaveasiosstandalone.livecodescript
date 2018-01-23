@@ -750,9 +750,18 @@ end revSaveAsMobileDeployer
 local sCFBundleIcons
 private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle   
    revStandaloneProgress "Copying icons..."    
-   
+   /*
+   The entry for the AppStore icon in the JSON file should have the form:
+   {
+      "idiom" : "ios-marketing",
+      "size" : "1024x1024",
+      "scale" : "1x",
+      "filename" : "iTunesArtwork@2x.png"
+    }
+   */
    local sIconsList 
    put  \
+         "appstore icon,ios-marketing,1024x1024,1x,ItunesArtwork@2x.png" & return & \
          "iphone icon,iphone,57x57,1x,Icon-App-57x57@1x.png" & return & \
          "retina icon,iphone,57x57,2x,Icon-App-57x57@2x.png" & return & \
          "iOS 7 retina icon,iphone,60x60,2x,Icon-App-60x60@2x.png" & return & \
@@ -764,7 +773,6 @@ private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle
          "iOS 7 ipad retina icon,ipad,76x76,2x,Icon-App-76x76@2x.png" & return & \
          "iPad Pro 12.9 icon,ipad,83.5x83.5,2x,Icon-App-83.5x83.5@2x.png" \
          into sIconsList
-   
    
    local tAssetsFolder, tAppIconFolder
    put tempname() into tAssetsFolder
