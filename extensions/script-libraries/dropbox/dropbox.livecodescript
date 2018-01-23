@@ -4629,8 +4629,8 @@ private function __upload_HEADER pAccessToken,pPath,pMode,pAutorename,pMute
    #--mute Boolean Normally, users are made aware of any file modifications in their Dropbox account via notifications in the client software. If True, this tells the clients that this modification shouldn't result in a user notification. The default for this field is False.
    */
    if pMode is empty then put "add" into pMode
-   if pAutorename is empty then put "False" into pAutorename
-   if pMute is empty then put "False" into pMute
+   if pAutorename is empty then put "false" into pAutorename
+   if pMute is empty then put "false" into pMute
    return __Header_AuthOctet(pAccessToken) & cr & __Header_APIUpload(pPath,pMode,pAutorename,pMute)
 end __upload_HEADER
 
