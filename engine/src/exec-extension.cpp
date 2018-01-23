@@ -185,6 +185,41 @@ MCEngineCheckModulesHaveNamePrefix(MCNameRef p_prefix,
     return true;
 }
 
+void MCEngineAddExtensionsFromModulesArray(MCAutoScriptModuleRefArray& p_modules, MCStringRef p_resource_path, MCStringRef& r_error)
+{
+    MCScriptModuleRef t_main = p_modules[0];
+    
+    /* Check that the 2nd to Nth modules have names that have the
+     * appropriate prefix */
+    if (!MCEngineCheckModulesHaveNamePrefix(MCScriptGetNameOfModule(t_main),
+                                            p_modules.Span().subspan(1)))
+    {
+        MCAutoStringRef t_message;
+        /* It's probably okay not to check this; failures will be
+         * dealt with by the following MCErrorCatch(). */
+        /*UNCHECKED*/ MCStringFormat(&t_message,
+                                     "failed to load modules: support modules' names did not begin with '%@'",
+                                     MCScriptGetNameOfModule(t_main));
+        
+        MCAutoErrorRef t_error;
+        if (MCErrorCatch(&t_error))
+        {
+            r_error = MCValueRetain(MCErrorGetMessage(*t_error));
+        }
+        else
+        {
+            r_error = MCValueRetain(*t_message);
+        }
+        return;
+    }
+    
+    /* Only the head module is registered as an extension */
+    MCEngineAddExtensionFromModule(t_main);
+    
+    if (p_resource_path != nullptr)
+        MCEngineAddResourcePathForModule(t_main, p_resource_path);
+}
+
 void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_data, MCStringRef p_resource_path)
 {
     MCAutoScriptModuleRefArray t_modules;
@@ -198,34 +233,12 @@ void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_da
         return;
     }
 
-    MCScriptModuleRef t_main = t_modules[0];
-
-    /* Check that the 2nd to Nth modules have names that have the
-     * appropriate prefix */
-    if (!MCEngineCheckModulesHaveNamePrefix(MCScriptGetNameOfModule(t_main),
-                                            t_modules.Span().subspan(1)))
+    MCAutoStringRef t_error;
+    MCEngineAddExtensionsFromModulesArray(t_modules, p_resource_path, &t_error);
+    if (*t_error != nullptr)
     {
-        MCAutoStringRef t_message;
-        /* It's probably okay not to check this; failures will be
-         * dealt with by the following MCErrorCatch(). */
-        /*UNCHECKED*/ MCStringFormat(&t_message,
-                                     "failed to load modules: support modules' names did not begin with '%@'",
-                                     MCScriptGetNameOfModule(t_main));
-
-        MCAutoErrorRef t_error;
-        if (MCErrorCatch(&t_error))
-            ctxt.SetTheResultToValue(MCErrorGetMessage(*t_error));
-        else
-            ctxt.SetTheResultToValue(*t_message);
+        ctxt.SetTheResultToValue(*t_error);
     }
-
-    /* Only the head module is registered as an extension */
-    MCEngineAddExtensionFromModule(t_main);
-
-    if (p_resource_path != nil)
-        MCEngineAddResourcePathForModule(t_main, p_resource_path);
-
-    return;
 }
 
 // This is the callback given to libscript so that it can resolve the absolute

@@ -52,7 +52,7 @@ command extractDocs pEnginePath, pExtractScript, pDocsParser, pSourceFolder, pSo
    end if
 end extractDocs
  
-private command packageExtension pExtensionName, pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource
+private command packageExtension pExtensionName, pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource, pSupportFiles
    local tTargetDir, tBuildTarget, tZip
    put pExtensionName into tTargetDir
    put pTargetFolder & slash & tTargetDir into tBuildTarget
@@ -71,6 +71,10 @@ private command packageExtension pExtensionName, pSourceFolder, pSourceFileName,
    if pRemoveSource is "true" then
       put return & "rm" && q(tBuildTarget & slash & pSourceFileName) \ 	
          after tShell
+      repeat for each line tSupport in tSupportFiles
+         put return & "rm" && q(tBuildTarget & slash & tSupport) \ 	
+         	after tShell
+      end repeat
    end if
    
    write "packaging extension" && pSourceFileName & return to stdout    
@@ -90,6 +94,15 @@ command packageScriptExtension pSourceFolder, pSourceFileName, pTargetFolder, pR
       pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource
 end packageScriptExtension
 
+private function getSupportFiles pSourceFolder, pSourceFileName, pExtension
+    local tSupportFiles, tBase
+    set the itemdelimiter to "."
+    put item 1 to -2 of pSourceFileName into tBase
+    put files(pSourceFolder) into tSupportFiles
+    filter tSupportFiles with tBase & "-*." & pExtension
+    return tSupportFiles
+end getSupportFiles
+
 command packageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource, pLCCompile, pInterfaceFolder
     local tCompileShell
     put q(pLCCompile) into tCompileShell
@@ -97,6 +110,27 @@ command packageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, p
     put " --modulepath" && q(pInterfaceFolder) after tCompileShell
     put " --manifest" && q(pSourceFolder & slash & "manifest.xml") after tCompileShell
     put " --output" && q(pSourceFolder & slash & "module.lcm") after tCompileShell
+
+	-- Multi-module assemblies must be in reverse dependency order
+	local tSupportFiles, tSupportDepsOrder, tDepsShell
+	put getSupportFiles(pSourceFolder, pSourceFileName, "lcb") into tSupportFiles
+	
+	if tSupportFiles is not empty then
+		put q(pLCCompile) into tDepsShell
+		put " --deps order" after tDepsShell
+		repeat for each line tSupportModule in tSupportFiles
+			put " " & q(pSourceFolder & slash & tSupportModule) after tDepsShell
+		end repeat
+	
+		put shell(tDepsShell) into tSupportDepsOrder
+		if the result is not 0 then
+			write "subprocess error when finding support deps order for" && pSourceFileName & ":" && tSupportDepsOrder to stderr
+			quit 3
+		end if  
+		replace return with space in tSupportDepsOrder
+		put " " & tSupportDepsOrder after tCompileShell
+	end if
+	
     put " " & q(pSourceFolder & slash & pSourceFileName) after tCompileShell
 
     get shell(tCompileShell)
@@ -118,7 +152,7 @@ command packageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, p
     end if   	
     
    packageExtension tExtensionName, pSourceFolder, pSourceFileName, \
-      pTargetFolder, pRemoveSource
+      pTargetFolder, pRemoveSource, tSupportFiles
 end packageBuilderExtension
 
 on errorDialog tError
