@@ -1102,49 +1102,6 @@ MCEmscriptenSystem::LaunchUrl(MCStringRef p_document)
 	MCresult -> sets("no association");
 }
 
-void
-MCEmscriptenSystem::DoAlternateLanguage(MCStringRef p_script,
-                    MCStringRef p_language)
-{
-	if (!MCStringIsEqualToCString(p_language, "javascript", kMCStringOptionCompareCaseless))
-	{
-		MCresult -> sets("alternate language not found");
-		return;
-	}
-
-	MCAutoStringRefAsUTF16String t_script_u16;
-	t_script_u16.Lock(p_script);
-
-	unichar_t* t_result_u16;
-	size_t t_result_length;
-
-	bool t_success;
-	t_success = MCEmscriptenSystemEvaluateJavaScript(t_script_u16.Ptr(), t_script_u16.Size(), &t_result_u16, &t_result_length);
-
-	if (!t_success)
-	{
-		MCresult->sets("execution error");
-		return;
-	}
-
-	MCAutoStringRef t_result;
-	MCStringCreateWithBytesAndRelease((byte_t*)t_result_u16, t_result_length, kMCStringEncodingUTF16, false, &t_result);
-
-	MCresult->setvalueref(*t_result);
-}
-
-bool
-MCEmscriptenSystem::AlternateLanguages(MCListRef & r_list)
-{
-	MCAutoListRef t_list;
-	MCAutoStringRef t_js_string;
-
-	return MCStringCreateWithCString("javascript", &t_js_string) && \
-		MCListCreateMutable('\n', &t_list) && \
-		MCListAppend(*t_list, *t_js_string) && \
-		MCListCopy(*t_list, r_list);
-}
-
 bool
 MCEmscriptenSystem::GetDNSservers(MCListRef & r_list)
 {
@@ -1164,7 +1121,64 @@ MCEmscriptenSystem::ShowMessageDialog(MCStringRef p_title,
 	MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());
 }
 
-///////////
+/* ----------------------------------------------------------------
+ * Interface with browser JavaScript
+ * ---------------------------------------------------------------- */
+
+bool MCEmscriptenSystemEvaluateJavaScriptAsString(MCStringRef p_script, MCStringRef &r_result)
+{
+	MCAutoStringRefAsUTF16String t_script_u16;
+	t_script_u16.Lock(p_script);
+
+	unichar_t* t_result_u16;
+	size_t t_result_length;
+
+	bool t_success;
+	t_success = MCEmscriptenSystemEvaluateJavaScript(t_script_u16.Ptr(), t_script_u16.Size(), &t_result_u16, &t_result_length);
+
+	if (t_success)
+		t_success = MCStringCreateWithBytesAndRelease((byte_t*)t_result_u16, t_result_length, kMCStringEncodingUTF16, false, r_result);
+		
+	return t_success;
+}
+
+void
+MCEmscriptenSystem::DoAlternateLanguage(MCStringRef p_script,
+                    MCStringRef p_language)
+{
+	if (!MCStringIsEqualToCString(p_language, "javascript", kMCStringOptionCompareCaseless))
+	{
+		MCresult -> sets("alternate language not found");
+		return;
+	}
+
+	bool t_success = true;
+
+	MCAutoStringRef t_result;
+	t_success = MCEmscriptenSystemEvaluateJavaScriptAsString(p_script, &t_result);
+
+	if (!t_success)
+	{
+		MCresult->sets("execution error");
+		return;
+	}
+
+	MCresult->setvalueref(*t_result);
+}
+
+bool
+MCEmscriptenSystem::AlternateLanguages(MCListRef & r_list)
+{
+	MCAutoListRef t_list;
+	MCAutoStringRef t_js_string;
+
+	return MCStringCreateWithCString("javascript", &t_js_string) && \
+		MCListCreateMutable('\n', &t_list) && \
+		MCListAppend(*t_list, *t_js_string) && \
+		MCListCopy(*t_list, r_list);
+}
+
+//////////
 
 #include "dispatch.h"
 

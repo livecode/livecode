@@ -165,4 +165,6 @@ public:
 
 MCSystemInterface * MCDesktopCreateEmscriptenSystem(void);
 
+extern bool MCEmscriptenSystemEvaluateJavaScriptAsString(MCStringRef p_script, MCStringRef &r_result);
+
 #endif /* ! __MC_EMSCRIPTEN_SYSTEM_H__ */

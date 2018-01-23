@@ -986,6 +986,7 @@
 			'src/module-resources.cpp',
 			
 			'src/module-browser.cpp',
+			'src/module-emscripten.cpp',
 		],
 		
 		# Engine LCB files containing syntax
@@ -1007,6 +1008,7 @@
 		'engine_other_lcb_files':
 		[
 			'src/browser.lcb',
+			'src/emscripten.lcb',
 		],
 
 		# Engine cpptest source files
