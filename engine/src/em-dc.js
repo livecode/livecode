@@ -116,27 +116,17 @@ mergeInto(LibraryManager.library, {
 				rect = {'left':0, 'top':0, 'right':0, 'bottom':0};
 			}
 			
-			// Set up native layer container
-			var container = document.createElement('div');
-			container.style.setProperty('position', 'relative');
-			container.style.setProperty('left', '0px');
-			container.style.setProperty('right', '0px');
-			container.style.setProperty('width', '100%');
-			container.style.setProperty('height', '100%');
-			windowElement.appendChild(container);
-			
 			var tWindowID = LiveCodeUtil.storeObject({
 				'mainWindow': mainWindow,
 				'element': windowElement,
 				'canvas': canvas,
-				'container': this.containerCreate(container, 1),
+				'container': this.containerCreate(windowElement, 1),
 				'rect': rect,
 				'visible':false,
 			});
 			
 			canvas.dataset.lcWindowId = tWindowID;
-			container.dataset.lcWindowId = tWindowID;
-			LiveCodeEvents.addEventListeners(container);
+			LiveCodeEvents.addEventListeners(canvas);
 			LiveCodeDC._monitorResize(canvas, function() {
 				LiveCodeEvents.postWindowReshape(tWindowID);
 			});
