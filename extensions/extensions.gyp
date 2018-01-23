@@ -160,6 +160,7 @@
 
 				'widgets/androidbutton/androidbutton.lcb',
 				'widgets/androidfield/androidfield.lcb',
+				'widgets/html5button/html5button.lcb',
 				'widgets/macbutton/macbutton.lcb',
 				'widgets/mactextfield/mactextfield.lcb',
 				'widgets/iosbutton/iosbutton.lcb',

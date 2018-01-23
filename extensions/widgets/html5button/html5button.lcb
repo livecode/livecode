@@ -1,0 +1,200 @@
+/*
+Copyright (C) 2018 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This widget is a native button in HTML5.
+*/
+
+widget com.livecode.widget.native.emscripten.button
+
+use com.livecode.foreign
+use com.livecode.emscripten
+use com.livecode.widget
+use com.livecode.canvas
+use com.livecode.engine
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "HTML5 Native Button"
+
+/**
+Syntax:
+set the label of <widget> to <pLabel>
+get the label of <widget>
+
+Summary: The label displayed by the button.
+
+Value (string): The string to use as the button label
+
+Example:
+    set the label of widget "HTML5 Button" to "Click me!"
+
+Description:
+The <label> property is the label displayed by the button.
+*/
+
+property label get mLabel set SetLabel
+metadata label.editor is "com.livecode.pi.string"
+metadata label.default is ""
+
+private variable mLabel as String
+private variable mButton as Integer
+private variable mOpen as Boolean
+
+private handler IsHTML5() returns Boolean
+    return the operating system is "emscripten"
+end handler
+
+public handler OnCreate()
+    put "" into mLabel
+end handler
+
+public handler OnSave(out rProperties as Array)
+    put mLabel into rProperties["label"]
+end handler
+
+public handler OnLoad(in pProperties as Array)
+    put pProperties["label"] into mLabel
+end handler
+
+//private handler EvalJavaScript(in pScript as String) returns String
+//	log "running js script: " & pScript
+//	variable tLCScript as String
+//	put "do param(1) as javascript" into tLCScript
+//	variable tResult as String
+//	//execute script tLCScript in my script object with [ pScript ]
+//	execute script tLCScript with [ pScript ]
+//	put the result into tResult
+//	log "js result: " & tResult
+//	return tResult
+//end handler
+
+private handler InitButtonView()
+	// Create an HTML5 button using JavaScript
+	variable tButton as any
+	put EvalJavaScript("LiveCodeUtil.storeObject(document.createElement('button'))") into tButton
+	put tButton parsed as number into mButton
+
+	variable tButtonPtr as optional Pointer
+	put PointerFromJSObjectRef(mButton) into tButtonPtr
+	set my native layer to tButtonPtr
+	
+	log "set native layer"
+    updateProperties()
+    log "updated properties"
+end handler
+
+private handler FinalizeButtonView()
+    set my native layer to nothing
+    EvalJavaScript("LiveCodeUtil.removeObject(" & mButton & ");")
+    put nothing into mButton
+end handler
+
+private handler updateProperties()
+    SetLabel(mLabel)
+end handler
+
+public handler OnOpen()
+    if IsHTML5() then
+        InitButtonView()
+    end if
+end handler
+
+public handler OnClose()
+    if IsHTML5() then
+        FinalizeButtonView()
+    end if
+end handler
+
+private handler expandRectangle(in pRect as Rectangle, in pExp as Number) returns Rectangle
+	return rectangle [ the left of pRect - pExp, the top of pRect - pExp, the right of pRect + pExp, the bottom of pRect + pExp]
+end handler
+
+constant kBorderWidth is 5
+private handler paintPlaceholderLabel(in pCanvas as Canvas, in pBounds as Rectangle, \
+    in pLabel as String, in pFont as optional Font, in pColor as optional Color)
+    save state of pCanvas
+
+	// Draw the border
+	variable tFillPaint as Paint
+	variable tStrokePaint as Paint
+	put solid paint with color [0.875, 0.875, 0.875] into tFillPaint
+	put solid paint with color [0.75, 0.75, 0.75] into tStrokePaint
+
+	set the paint of pCanvas to tFillPaint
+	fill rectangle path of pBounds on this canvas
+	set the paint of this canvas to tStrokePaint
+	set the stroke width of this canvas to kBorderWidth
+	set the join style of this canvas to "bevel"
+	stroke rectangle path of expandRectangle(pBounds, -kBorderWidth / 2) on this canvas
+
+	// Draw the control name
+	put solid paint with color [1, 1, 1] into tFillPaint
+
+    if pFont is nothing then
+       put font "Arial" at size 14 into pFont
+    end if
+    
+    if pColor is nothing then
+       put color [0.25, 0.25, 0.25] into pColor
+    end if
+	put solid paint with pColor into tStrokePaint
+	
+	variable tTextBounds as Rectangle
+	put the image bounds of text pLabel on pCanvas into tTextBounds
+
+	translate pCanvas by [ the width of pBounds / 2, the height of pBounds / 2]
+	translate pCanvas by [ -(the width of tTextBounds / 2), the height of tTextBounds / 2]
+	set the paint of pCanvas to tFillPaint
+	fill rounded rectangle path of expandRectangle(tTextBounds, kBorderWidth) with radius 5 on pCanvas
+	set the paint of pCanvas to tStrokePaint
+	fill text pLabel at point [0, 0] on pCanvas
+	
+	restore state of pCanvas
+end handler
+
+public handler OnPaint()
+    if IsHTML5() then
+        return
+    end if
+    
+    variable tLabel as String
+    if mLabel is empty then
+        put my name into tLabel
+    else
+        put mLabel into tLabel
+    end if
+    
+    paintPlaceholderLabel(this canvas, my bounds, tLabel, my font, color [0,0,0])
+end handler
+
+private handler ObjectScript() returns String
+	return "LiveCodeUtil.fetchObject(" & mButton formatted as string & ")"
+end handler
+
+public handler SetLabel(in pLabel as String)
+    put pLabel into mLabel
+    if mButton is not nothing then
+		// Set button label using JavaScript
+		variable tScript as String
+		put ObjectScript() & ".innerHTML='" & pLabel & "';" into tScript
+		EvalJavaScript(tScript)
+    end if
+    redraw all
+end handler
+
+end widget
