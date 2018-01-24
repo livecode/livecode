@@ -23,8 +23,8 @@ The <frameCount> of an <image> is a <non-negative> <integer>.
 This property is read-only and cannot be set.
 
 Description:
-Use the <frameCount> <property> to determine the length of a <animated
-GIF|GIF animation>.
+Use the <frameCount> <property> to determine the length of a 
+<animated GIF|GIF animation>.
 
 If the image is not an animated GIF, its <frameCount> is zero.
 

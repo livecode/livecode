@@ -32,12 +32,15 @@ Use the <formattedRect> <property> to find the boundary of a <group> or
 If you specify a card or group, the <formattedRect> reports the smallest
 rectangle that encloses all the <object(glossary)> in that <group> or
 <card>. (<object|Objects> whose <visible> <property> is false are
-ignored.) The four <items> in the rectangle are: 1:horizontal distance
-from the left edge of the stack to the left edge of the rectangle
-2:vertical distance from the top edge of the stack to the top edge of
-the rectangle 3:horizontal distance from the left edge of the stack to
-the right edge of the rectangle 4:vertical distance from the top edge of
-the stack to the bottom edge of the rectangle
+ignored.) The four <items> in the rectangle are: 
+1. horizontal distance from the left edge of the stack to the left 
+edge of the rectangle
+2. vertical distance from the top edge of the stack to the top edge of
+the rectangle 
+3. horizontal distance from the left edge of the stack to the right edge 
+of the rectangle 
+4. vertical distance from the top edge of the stack to the bottom edge 
+of the rectangle
 
 The <formattedRect> of a <chunk> in a <field> is the smallest rectangle
 that encloses the entire <chunk>.

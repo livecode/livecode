@@ -7,8 +7,8 @@ Type: property
 Syntax: set the filled [of <graphic>] to {true | false}
 
 Summary:
-Specifies whether <graphic|graphics> and shapes drawn with the <paint
-tool|paint tools> are filled or hollow.
+Specifies whether <graphic|graphics> and shapes drawn with the 
+<paint tool|paint tools> are filled or hollow.
 
 Associations: graphic
 
@@ -47,7 +47,7 @@ drawn, its <appearance> cannot be changed by changing the <global>
 > <graphic(keyword)> unless the <graphic(keyword)> is already
 > <selected>. To create a <graphic(keyword)> whose interior is
 > transparent, but clickable, set the <graphic(object)|graphic's>
-> <filled> <property> to true and its <ink> <property> to noOp<a/>.
+> <filled> <property> to true and its <ink> <property> to noOp.
 
 >*Note:* When applied to graphics, the <filled> property behaves as a
 > synonym for the <opaque> property.

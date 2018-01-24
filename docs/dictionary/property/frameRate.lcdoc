@@ -18,8 +18,8 @@ set the frameRate of videoClip 1 to 100
 
 Value:
 The <frameRate> of a <video clip> is a <non-negative> <integer>.
-By default, the <frameRate> <property> of newly created <video
-clip|video clips> is set to zero.
+By default, the <frameRate> <property> of newly created 
+<video clip|video clips> is set to zero.
 
 Description:
 Use the <frameRate> <property> to speed up or slow down a movie.

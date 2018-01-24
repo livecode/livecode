@@ -45,7 +45,7 @@ If the <filePath> does not exist, the <result> is set to
 <resource fork>, the <result> is set to "can't open resource fork". If
 the filePath contains a <resource fork> but does not contain the
 specified resource, the result is set to
-"can't find specified resource<a/>". 
+"can't find specified resource". 
 
 Description:
 Use the <getResource> <function> to get the contents of a resource.

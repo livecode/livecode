@@ -5,8 +5,8 @@ Type: property
 Syntax: get the fontFilesInUse
 
 Summary:
-Reports the files that have been loaded into memory by the <start using
-font> <command>.
+Reports the files that have been loaded into memory by the 
+<start using font> <command>.
 
 Introduced: 6.5
 

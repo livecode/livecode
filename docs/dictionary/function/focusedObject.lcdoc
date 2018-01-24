@@ -31,8 +31,8 @@ receives any keystrokes that are typed by the user or created by the
 <type> <command>.
 
 The <focusedObject> can be any <control> on the <current card>. If no
-<object(glossary)> has the <focus>, the <focusedObject> is the <current
-card>. 
+<object(glossary)> has the <focus>, the <focusedObject> is the 
+<current card>. 
 
 References: focus (command), type (command), function (control structure),
 object (glossary), property (glossary), current card (glossary),

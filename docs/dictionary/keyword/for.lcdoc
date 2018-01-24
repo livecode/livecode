@@ -26,10 +26,10 @@ Use the <for> <keyword> to specify a fixed number of
 
 The number may be a literal number, or an expression that evaluates to a
 number. (If the number is not an integer, it is rounded to the nearest
-integer.) Either way, the number is evaluated when the <repeat> <control
-structure> is entered, and is not re-<evaluate|evaluated> as a result of
-<statement|statements> in the <loop>. For example, if the <repeat>
-<control structure> begins with the line
+integer.) Either way, the number is evaluated when the <repeat> 
+<control structure> is entered, and is not re-<evaluate|evaluated> as a 
+result of <statement|statements> in the <loop>. For example, if the 
+<repeat> <control structure> begins with the line
 
     repeat for the number of cards
 
@@ -45,4 +45,3 @@ References: repeat (control structure), value (function), loop (glossary),
 iteration (glossary), execute (glossary), statement (glossary),
 keyword (glossary), control structure (glossary), evaluate (glossary),
 expression (glossary), until (keyword), while (keyword)
-
