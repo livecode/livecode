@@ -110,19 +110,26 @@ function StandaloneBuilderResources pStack
     return tResources
 end StandaloneBuilderResources
 
-command StandaloneBuilderTestCreateAndSaveStackAsStandalone pDescription, pStackFilename, pScript, pSettingsA
-   local tStackID
-   create stack
-   put it into tStackID
-   set the script of tStackId to pScript
+private command _TestCreateAndSaveStackAsStandalone pDescription, pStackId, pStackFilename, pScript, pSettingsA
+   set the script of pStackId to pScript
    repeat for each key tKey in pSettingsA
-      set the cRevStandaloneSettings[tKey] of tStackId to \
+      set the cRevStandaloneSettings[tKey] of pStackId to \
          pSettingsA[tKey]
    end repeat
 	
    StandaloneBuilderTestSaveStackAsStandalone pDescription, \
-      pStackFileName, tStackId
+      pStackFileName, pStackId
+end _TestCreateAndSaveStackAsStandalone
+
+command StandaloneBuilderTestCreateAndSaveStackAsStandalone pDescription, pStackFilename, pScript, pSettingsA
+   create stack
+   _TestCreateAndSaveStackAsStandalone pDescription, it, pStackFilename, pScript, pSettingsA
 end StandaloneBuilderTestCreateAndSaveStackAsStandalone
+
+command StandaloneBuilderTestCreateAndSaveScriptOnlyStackAsStandalone pDescription, pStackFilename, pScript, pSettingsA
+   create script only stack
+   _TestCreateAndSaveStackAsStandalone pDescription, it, pStackFilename, pScript, pSettingsA
+end StandaloneBuilderTestCreateAndSaveScriptOnlyStackAsStandalone
 
 command StandaloneBuilderTestSaveStackAsStandalone pDescription, pStackFilename, pStackID
    local tStackName

@@ -41,17 +41,15 @@ private function _TestScriptOnlyStandaloneStackScript
 	return tScript
 end _TestScriptOnlyStandaloneStackScript
 
-private function _TestScriptOnlyAuxiliaryStackStackScript
+private function _TestScriptOnlyAuxiliaryMainstackScript
 	local tScript
-	put "on openStack" & return after tScript
-	put "if (there is a stack" && quote & "revLibUrl" & quote \
-		& ") then quit 0" & return after tScript
-	put "write" && quote & "included aux stack not present" & quote \ 
-	   && "to stdout" & return after tScript
+	put "on startup" & return after tScript
+	put "if there is a stack" && quote & "aux" & quote && \
+		"then quit 0" & return after tScript
 	put "quit 1" & return after tScript
-	put "end openStack" & return after tScript
+	put "end startup" & return after tScript
 	return tScript
-end _TestScriptOnlyAuxiliaryStackStackScript
+end _TestScriptOnlyAuxiliaryMainstackScript
 
 private command _TestScriptOnlyDeployStack pWhich
    local tDir
@@ -62,21 +60,29 @@ private command _TestScriptOnlyDeployStack pWhich
    
    create folder tDir
    
-   local tStackFilename, tScript, tSettings
+   local tSOSFilename, tScript, tSettings, tFilename
+   put the folder & "/" & tDir & "/stack.livecodescript" into tSOSFilename   
    if pWhich is "mainstack" then
-	  put the folder & "/" & tDir & "/stack.livecodescript" into tStackFilename   
 	  put _TestScriptOnlyStandaloneStackScript() into tScript
+	  put tSOSFilename into tFilename
    else if pWhich is "auxiliary" then
-   	  put the folder & "/" & tDir & "/stack.livecode" into tStackFilename   
-	  put _TestScriptOnlyAuxiliaryStackStackScript() into tScript
-	  put "Internet" into tSettings["scriptLibraries"]
-	  put "select" into tSettings["inclusions"]
+      create script only stack "aux"
+      save stack "aux" as tSOSFilename
+      
+   	  put the folder & "/" & tDir & "/stack.livecode" into tFilename   
+	  put _TestScriptOnlyAuxiliaryMainstackScript() into tScript
+	  put tSOSFilename into tSettings["auxiliary_stackfiles"]
    end if
    
    local tDesc
    put "standalone with script-only" && pWhich && "startup" into tDesc
-   StandaloneBuilderTestCreateAndSaveStackAsStandalone tDesc, \
-      tStackFilename, tScript, tSettings
+   if pWhich is "mainstack" then
+      StandaloneBuilderTestCreateAndSaveScriptOnlyStackAsStandalone tDesc, \
+         tFilename, tScript, tSettings
+   else
+      StandaloneBuilderTestCreateAndSaveStackAsStandalone tDesc, \
+         tFilename, tScript, tSettings   
+   end if
 
    revDeleteFolder tDir
 end _TestScriptOnlyDeployStack
