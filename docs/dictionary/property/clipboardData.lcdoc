@@ -88,12 +88,18 @@ places the text "Hello World" on the <clipboard(glossary)>:
 
     set the clipboardData["text"] to "Hello World"
 
+The above statement will only place plain text on the clipboard, similar
+to using the copy command from a text only editor.
+
+    set the clipboardData["html"] to "&lt;p&gt;Hello World&lt;/p&gt;"
 
 The above statement is equivalent to selecting the text "Hello World"
-in a field and choosing Edit menu, or to using the <copy> command. The
-data you place on the <clipboard(glossary)> is accessible to your
-application using the <paste> command, and to other applications (that
-support pasting text) using the application's Paste menu item.
+in a field and choosing Copy Text from the Edit menu, or to using the 
+<copy> command (chunk of field syntax) since styled text is placed on 
+the clipboard by default. The data you place on the 
+<clipboard(glossary)> is accessible to your application using the 
+<paste> command, and to other applications (that support pasting text) 
+using the application's Paste menu item.
 
 >*Tip:*  To quickly find out what kind of data is on the clipboard, use 
 the <clipboard> function.

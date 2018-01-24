@@ -59,9 +59,9 @@ another app, the <clipboard(glossary)> will be automatically cleared
 when written to. If you want to do this explicitly, use 
 `set the fullClipboardData to empty`.
 
-The `text`, `rtftext`, `htmltext`, `styles` and `styledtext` 
-properties are handled specially by LiveCode: adding any one of them 
-will cause the rest to be automatically generated and added. You can 
+The `rtftext`, `htmltext`, `styles` and `styledtext` properties are 
+handled specially by LiveCode: adding any one of them will cause the 
+rest (plus `text`) to be automatically generated and added. You can 
 query the keys of the <fullClipboardData> to determine what types of 
 data are on the <clipboard(glossary)>.
 
