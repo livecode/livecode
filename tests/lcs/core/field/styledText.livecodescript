@@ -38,3 +38,17 @@ on TestStyledTextSplitRunRoundTrip
    TestAssert "split styled text run doesn't lose data", \
       tBeforeText is the text of tFieldAfter
 end TestStyledTextSplitRunRoundTrip
+
+on TestStyledTextColorRoundTrip
+   local tField, tColor
+   create field
+   put it into tField
+   put "255,128,64" into tColor
+   set the text of tField to "red"
+   set the textColor of char 1 to -1 of tField to tColor
+   
+   set the styledText of tField to the styledText of tField
+   
+   TestAssert "styledText colour round-trips correctly", \
+      the textColor of char 1 to -1 of tField is tColor
+end TestStyledTextColorRoundTrip
