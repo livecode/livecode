@@ -473,8 +473,8 @@ begin
 end syntax
 
 /**
-Summary: 	Logs a string.
-String:		The string to log.
+Summary: 	Logs a value.
+Value:		The value to log.
 Arguments:	A list of arguments.
 
 Example:
@@ -487,23 +487,33 @@ Example:
 
 	log "Widget %@ has id %@" with tList
 
-Description:
-The log command triggers a logChanged message with the accumulated log messages since the logChanged message was last handled.
-This can be handled in LiveCode Script, for example:
-```
-on logChanged pLog
-	write pLog to stdout
-end logChanged
-```
+Example:
+	variable tList as List
+	put [1,2,3,4] into tList
+	log tList
 
+Description:
+The log command triggers a logChanged message with the 
+accumulated log messages since the logChanged message 
+was last handled.
+This can be handled in LiveCode Script, for example:
+
+    on logChanged pLog
+        write pLog to stdout
+    end logChanged
+
+If using the 'with arguments' form, the <Value> must be a String.
+Each occurrence of %@ in the String is replaced by a string
+representation of subsequent values in the <Arguments> List.
+ 
 Tags: Script Engine
 */
 
 syntax Log is statement
-    "log" <Message: Expression> [ "with" <Arguments: Expression> ]
+    "log" <Value: Expression> [ "with" <Arguments: Expression> ]
 begin
-    MCEngineExecLog(Message)
-    MCEngineExecLogWithValues(Message, Arguments)
+    MCEngineExecLog(Value)
+    MCEngineExecLogWithValues(Value, Arguments)
 end syntax
 
 /**
