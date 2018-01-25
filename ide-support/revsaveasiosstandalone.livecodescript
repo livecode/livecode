@@ -753,11 +753,11 @@ private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle
    /*
    The entry for the AppStore icon in the JSON file should have the form:
    {
-      "idiom" : "ios-marketing",
-      "size" : "1024x1024",
-      "scale" : "1x",
-      "filename" : "iTunesArtwork@2x.png"
-    }
+   "idiom" : "ios-marketing",
+   "size" : "1024x1024",
+   "scale" : "1x",
+   "filename" : "iTunesArtwork@2x.png"
+   }
    */
    local sIconsList 
    put  \
@@ -777,10 +777,8 @@ private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle
    local tAssetsFolder, tAppIconFolder
    put tempname() into tAssetsFolder
    create folder  tAssetsFolder
-   put there is a folder tAssetsFolder
    put tAssetsFolder & slash & "AppIcon.appiconset" into tAppIconFolder
    create folder tAppIconFolder
-   put there is a folder tAppIconFolder
    
    local tContentsJSON
    put "{" & CR & quote & "images" & quote & ":[" & CR after tContentsJSON
@@ -797,7 +795,7 @@ private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle
          end if
          -- add an entry in the Contents.json file
          local tEntry
-         put "{" & CR after tEntry
+         put "{" & CR into tEntry
          put quote & "idiom" & quote & ":" & quote & item 2 of tType & quote & comma & CR after tEntry
          put quote & "size" & quote & ":" & quote & item 3 of tType & quote & comma & CR after tEntry
          put quote & "scale" & quote & ":" & quote & item 4 of tType & quote & comma & CR after tEntry
@@ -817,8 +815,16 @@ private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle
    put tempname() into tCompiledAssetsFolder
    create folder  tCompiledAssetsFolder
    
+   local tMinVersion
+   put pSettings["ios,minimum version"] into tMinVersion
+   if tMinVersion is empty then put "6.0" into tMinVersion
+   
    -- create the Assets.car file
-   get shell("xcrun actool " &  tAssetsFolder & " --compile " & tCompiledAssetsFolder & " --platform iphoneos --minimum-deployment-target 9.0 --app-icon AppIcon --output-partial-info-plist " & tCompiledAssetsFolder &"/partial.plist")
+   get shell("xcrun actool " &  tAssetsFolder & \ 
+         " --compile " & tCompiledAssetsFolder & \
+         " --platform iphoneos  --minimum-deployment-target " & tMinVersion & \
+         " --app-icon AppIcon --output-partial-info-plist " & \
+         tCompiledAssetsFolder &"/partial.plist")
    
    local tCompiledAssetsFolderContents,tPartialPlist
    put url("file:"& tCompiledAssetsFolder & slash & "partial.plist") into tPartialPlist
@@ -1444,13 +1450,17 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    if pTarget is "Device" then
       local tDtPlatformBuild, tDtPlatformVersion, tDtSdkBuild, tDtSdkName, tDtXcode, tDtXcodeBuild
       
+      -- Note: The values returned by the shell commands contain a trailing LF, so we have to remove it
       get shell("xcodebuild -version -sdk iphoneos ProductBuildVersion")
       -- Those 2 values are the same, e.g. "15C107"
       put it into tDtPlatformBuild
+      delete last char of tDtPlatformBuild
       put it into tDtSdkBuild 
+      delete last char of tDtSdkBuild
       
       get shell("xcodebuild -version -sdk iphoneos PlatformVersion") -- e.g. "11.2"
       put it into tDtPlatformVersion
+      delete last char of tDtPlatformVersion
       
       put "iphoneos" & tDtPlatformVersion into tDtSdkName
       
@@ -1460,13 +1470,14 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       
       get shell("xcodebuild -version | awk 'END {print $NF}' ") -- e.g. "9C40b"
       put it into tDtXcodeBuild
+      delete last char of tDtXcodeBuild
       
-      replace "${DT_PLATFORM_BUILD}" with tDtPlatformBuild in pPlist
-      replace "${DT_PLATFORM_VERSION}" with tDtPlatformVersion in pPlist
-      replace "${DT_SDK_BUILD}" with tDtSdkBuild in pPlist
-      replace "${DT_SDK_NAME}" with tDtSdkName in pPlist
-      replace "${DT_XCODE}" with tDtXcode in pPlist
-      replace "${DT_XCODE_BUILD}" with tDtXcodeBuild in pPlist
+      replace "${DT_PLATFORM_BUILD}" with "<string>" & tDtPlatformBuild & "</string>" in pPlist
+      replace "${DT_PLATFORM_VERSION}" with "<string>" & tDtPlatformVersion & "</string>" in pPlist
+      replace "${DT_SDK_BUILD}" with "<string>" & tDtSdkBuild & "</string>" in pPlist
+      replace "${DT_SDK_NAME}" with "<string>" & tDtSdkName & "</string>" in pPlist
+      replace "${DT_XCODE}" with "<string>" & tDtXcode & "</string>" in pPlist
+      replace "${DT_XCODE_BUILD}" with "<string>" & tDtXcodeBuild & "</string>" in pPlist
       
    end if
    
