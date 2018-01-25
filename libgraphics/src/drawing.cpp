@@ -37,10 +37,8 @@ inline MCGPoint MCGPointReflect(const MCGPoint &origin, const MCGPoint &point)
  *
  * The header has the following format:
  *   uint8_t[4] ident = 'L', 'C', 'D', 0
- *   uint32_t flags
- *     has_width : bit 0
- *     has_height : bit 1
- *     has_viewport : bit 2
+ *   float width
+ *   float height
  *   uint32_t scalar_count
  *   float[scalar_count] scalars
  *   uint32_t opcode_count
@@ -53,18 +51,10 @@ inline MCGPoint MCGPointReflect(const MCGPoint &origin, const MCGPoint &point)
  * This will be incremented each time the format changes in a backwards
  * incompatible way.
  *
- * The has_width flag determines whether the drawing has specified an intrinsic
- * width != 100% (i.e. width of container). If set to true, then the width
- * will be available as a size scalar.
- *
- * The has_height flag determines whether the drawing has specified an intrinsic
- * height != 100% (i.e. height of container). If set to true, then the height
- * will be available as a size scalar.
- *
- * The has_viewport flag determines whether the drawing has specified a viewbox
- * and preserve aspect ratio setting. If set to true, then the viewbox will be
- * available as two coordinate scalars, followed by two length scalars, and the
- * aspect ratio setting will be available as a PreserveAspectRatio opcode.
+ * The width and height fields are the 'natural' size of the drawing. This is
+ * used (in the engine) to present as the formattedWidth/Height and to provide
+ * the 'natural' size used for generating pixels (in which case the ceiling is
+ * used).
  *
  * There are several kinds of scalar which may be present:
  *
@@ -173,7 +163,8 @@ enum MCGDrawingHeaderFlags : uint32_t
 struct MCGDrawingHeader
 {
     uint8_t ident[4];
-    uint32_t flags;
+    float width;
+    float height;
     uint32_t scalar_count;
 //  float[scalar_count] scalars;
 //  uint32_t opcode_count;
@@ -239,163 +230,54 @@ enum MCGDrawingOpcode : uint8_t
     
     /* Rectangle defines a rectangle shape. The rectangle is defined as:
      *   x, y: coordinate scalars
+     *   width, height: length scalars */
+    kMCGDrawingOpcodeRectangle = 13,
+    
+    /* RoundedRectangle defines a rounded rectangle shape. The rounded rectangle
+     * is defined as:
+     *   x, y: coordinate scalars
      *   width, height: length scalars
      *   rx, ry: length scalars */
-    kMCGDrawingOpcodeRectangle = 13,
+    kMCGDrawingOpcodeRoundedRectangle = 14,
     
     /* Circle defines a circle shape. The circle is defined as:
      *   x, y: coordinate scalars
      *   r: length scalar */
-    kMCGDrawingOpcodeCircle = 14,
+    kMCGDrawingOpcodeCircle = 15,
     
     /* Ellipse defines an ellipse shape. The ellipse is defined as:
      *   x, y: coordinate scalars
      *   rx, ry: length scalars */
-    kMCGDrawingOpcodeEllipse = 15,
+    kMCGDrawingOpcodeEllipse = 16,
     
     /* Line defines a line shape. The line is defined as:
      *   x1, y1: coordinate scalars
      *   x2, y2: coordinate scalars */
-    kMCGDrawingOpcodeLine = 16,
+    kMCGDrawingOpcodeLine = 17,
     
     /* Polyline defines a polyline shape. The polyline is defined as an array
      * of coordinate scalar pairs. */
-    kMCGDrawingOpcodePolyline = 17,
+    kMCGDrawingOpcodePolyline = 18,
     
     /* Polyline defines a polygon shape. The polygon is defined as an array
      * of coordinate scalar pairs. */
-    kMCGDrawingOpcodePolygon = 18,
+    kMCGDrawingOpcodePolygon = 19,
     
     /* Path defines a path shape. The path is defined by a path opcode stream.
      */
-    kMCGDrawingOpcodePath = 19,
+    kMCGDrawingOpcodePath = 20,
     
     /* _Last is used for range checking on the main opcodes. */
     kMCGDrawingOpcode_Last = kMCGDrawingOpcodePath,
 };
 
-/* PRESERVE ASPECT RATIO OPCODES */
-
-/* MCGDrawingPreserveAspectRatioOpcode defines the settings of the preserve-
- * aspect-ratio attribute. */
-enum MCGDrawingPreserveAspectRatioOpcode : uint8_t
-{
-    kMCGDrawingPreserveAspectRatioOpcodeNone = 0,
-    kMCGDrawingPreserveAspectRatioOpcodeXMinYMinMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMidYMinMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMaxYMinMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMinYMidMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMidYMidMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMinYMaxMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxMeet,
-    kMCGDrawingPreserveAspectRatioOpcodeXMinYMinSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMidYMinSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMaxYMinSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMinYMidSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMidYMidSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMinYMaxSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxSlice,
-    kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxSlice,
-    
-    kMCGDrawingPreserveAspectRatioOpcode_Last = kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxSlice,
-};
-
-inline bool MCGDrawingPreserveAspectRatioIsMeet(MCGDrawingPreserveAspectRatioOpcode o)
-{
-    return o >= kMCGDrawingPreserveAspectRatioOpcodeXMinYMinMeet &&
-           o <= kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxMeet;
-}
-
-inline bool MCGDrawingPreserveAspectRatioIsSlice(MCGDrawingPreserveAspectRatioOpcode o)
-{
-    return o >= kMCGDrawingPreserveAspectRatioOpcodeXMinYMinSlice &&
-           o <= kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxSlice;
-}
-
-inline bool MCGDrawingPreserveAspectRatioIsXMid(MCGDrawingPreserveAspectRatioOpcode o)
-{
-    switch(o)
-    {
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMinMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMidMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMinSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMidSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxSlice:
-        return true;
-    default:
-        break;
-    }
-    
-    return false;
-}
-
-inline bool MCGDrawingPreserveAspectRatioIsXMax(MCGDrawingPreserveAspectRatioOpcode o)
-{
-    switch(o)
-    {
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMinMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMinSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxSlice:
-        return true;
-    default:
-        break;
-    }
-    
-    return false;
-}
-
-inline bool MCGDrawingPreserveAspectRatioIsYMid(MCGDrawingPreserveAspectRatioOpcode o)
-{
-    switch(o)
-    {
-    case kMCGDrawingPreserveAspectRatioOpcodeXMinYMidMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMidMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMinYMidSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMidSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMidSlice:
-        return true;
-    default:
-        break;
-    }
-    
-    return false;
-}
-
-inline bool MCGDrawingPreserveAspectRatioIsYMax(MCGDrawingPreserveAspectRatioOpcode o)
-{
-    switch(o)
-    {
-    case kMCGDrawingPreserveAspectRatioOpcodeXMinYMaxMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxMeet:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMinYMaxSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMidYMaxSlice:
-    case kMCGDrawingPreserveAspectRatioOpcodeXMaxYMaxSlice:
-        return true;
-    default:
-        break;
-    }
-    
-    return false;
-}
-
 /* TRANSFORM OPCODES */
 
-/* MCGDrawingTransformOpcode defines the opcodes used to build a transform. The
- * sequence of specified transforms is concatenated with the identity transform
- * to build a transformation matrix. */
+/* MCGDrawingTransformOpcode defines the opcodes used to build a transform. */
 enum MCGDrawingTransformOpcode : uint8_t
 {
-    /* End terminates a sequence of concatenated transforms */
-    kMCGDrawingTransformOpcodeEnd = 0,
+    /* Identity defines the identity transform */
+    kMCGDrawingTransformOpcodeIdentity = 0,
     
     /* Affine defines a general affine transformation. It is defined by 6
      * scalars - a b c d tx ty. */
@@ -407,14 +289,11 @@ enum MCGDrawingTransformOpcode : uint8_t
 
 /* PAINT OPCODES */
 
-/* MCGDrawingPaintOpcode defines the opcodes used to build a paint. Currently
- * only a single paint is allowed, but in the future multiple paints will be
- * allowed (resulting in the shape being drawn with each paint in turn) to
- * align with that feature in the SVG2 spec. */
+/* MCGDrawingPaintOpcode defines the opcodes used to build a paint. */
 enum MCGDrawingPaintOpcode : uint8_t
 {
-    /* End terminates a sequence of overlaid paints. */
-    kMCGDrawingPaintOpcodeEnd = 0,
+    /* None defines no paint. */
+    kMCGDrawingPaintOpcodeNone = 0,
     
     /* SolidColor defines a solid color paint. It is defined by 4 unit scalars -
      * red green blue alpha. */
@@ -523,57 +402,28 @@ enum MCGDrawingPathOpcode : uint8_t
     kMCGDrawingPathOpcodeEnd = 0,
     
     kMCGDrawingPathOpcodeMoveTo = 1,
-    kMCGDrawingPathOpcodeRelativeMoveTo = 2,
-    kMCGDrawingPathOpcodeLineTo = 3,
-    kMCGDrawingPathOpcodeRelativeLineTo = 4,
-    kMCGDrawingPathOpcodeHorizontalTo = 5,
-    kMCGDrawingPathOpcodeRelativeHorizontalTo = 6,
-    kMCGDrawingPathOpcodeVerticalTo = 7,
-    kMCGDrawingPathOpcodeRelativeVerticalTo = 8,
-    kMCGDrawingPathOpcodeCubicTo = 9,
-    kMCGDrawingPathOpcodeRelativeCubicTo = 10,
-    kMCGDrawingPathOpcodeSmoothCubicTo = 11,
-    kMCGDrawingPathOpcodeRelativeSmoothCubicTo = 12,
-    kMCGDrawingPathOpcodeQuadraticTo= 13,
-    kMCGDrawingPathOpcodeRelativeQuadraticTo = 14,
-    kMCGDrawingPathOpcodeSmoothQuadraticTo = 15,
-    kMCGDrawingPathOpcodeRelativeSmoothQuadraticTo = 16,
-    kMCGDrawingPathOpcodeArcTo = 17,
-    kMCGDrawingPathOpcodeRelativeArcTo = 18,
-    kMCGDrawingPathOpcodeReflexArcTo = 19,
-    kMCGDrawingPathOpcodeRelativeReflexArcTo = 20,
-    kMCGDrawingPathOpcodeReverseArcTo = 21,
-    kMCGDrawingPathOpcodeRelativeReverseArcTo = 22,
-    kMCGDrawingPathOpcodeReverseReflexArcTo = 23,
-    kMCGDrawingPathOpcodeRelativeReverseReflexArcTo = 24,
-    kMCGDrawingPathOpcodeCloseSubpath = 25,
+    kMCGDrawingPathOpcodeLineTo = 2,
+    kMCGDrawingPathOpcodeHorizontalTo = 3,
+    kMCGDrawingPathOpcodeVerticalTo = 4,
+    kMCGDrawingPathOpcodeCubicTo = 5,
+    kMCGDrawingPathOpcodeSmoothCubicTo = 6,
+    kMCGDrawingPathOpcodeQuadraticTo= 7,
+    kMCGDrawingPathOpcodeSmoothQuadraticTo = 8,
+    kMCGDrawingPathOpcodeArcTo = 9,
+    kMCGDrawingPathOpcodeReflexArcTo = 10,
+    kMCGDrawingPathOpcodeReverseArcTo = 11,
+    kMCGDrawingPathOpcodeReverseReflexArcTo = 12,
+    kMCGDrawingPathOpcodeCloseSubpath = 13,
     
     kMCGDrawingPathOpcode_Last = kMCGDrawingPathOpcodeCloseSubpath,
 };
-
-inline bool MCGDrawingPathOpcodeIsRelativeArcTo(MCGDrawingPathOpcode p_opcode)
-{
-    switch(p_opcode)
-    {
-    case kMCGDrawingPathOpcodeRelativeArcTo:
-    case kMCGDrawingPathOpcodeRelativeReflexArcTo:
-    case kMCGDrawingPathOpcodeRelativeReverseArcTo:
-    case kMCGDrawingPathOpcodeRelativeReverseReflexArcTo:
-        return true;
-    default:
-        break;
-    }
-    return false;
-}
 
 inline bool MCGDrawingPathOpcodeIsReflexArcTo(MCGDrawingPathOpcode p_opcode)
 {
     switch(p_opcode)
     {
     case kMCGDrawingPathOpcodeReflexArcTo:
-    case kMCGDrawingPathOpcodeRelativeReflexArcTo:
     case kMCGDrawingPathOpcodeReverseReflexArcTo:
-    case kMCGDrawingPathOpcodeRelativeReverseReflexArcTo:
         return true;
     default:
         break;
@@ -586,9 +436,7 @@ inline bool MCGDrawingPathOpcodeIsReverseArcTo(MCGDrawingPathOpcode p_opcode)
     switch(p_opcode)
     {
     case kMCGDrawingPathOpcodeReverseArcTo:
-    case kMCGDrawingPathOpcodeRelativeReverseArcTo:
     case kMCGDrawingPathOpcodeReverseReflexArcTo:
-    case kMCGDrawingPathOpcodeRelativeReverseReflexArcTo:
         return true;
     default:
         break;
@@ -649,7 +497,7 @@ struct MCGDrawingVisitor
     
     /* Lifecycle Operations */
 
-    void Start(void);
+    void Start(MCGRectangle p_src_rect, MCGRectangle p_dst_rect);
     void Finish(bool p_error);
 };
 
@@ -672,18 +520,11 @@ enum MCGDrawingStatus
     /* InvalidVersion indicates that the version is not recognised. */
     kMCGDrawingStatusInvalidVersion,
     
-    /* InvalidFlags indicates that flags which are not defined have been set. */
-    kMCGDrawingStatusInvalidFlags,
-    
-    /* InvalidWidth indicates that the width scalar could not be unpacked. */
+    /* InvalidWidth indicates that the width field is not a valid value. */
     kMCGDrawingStatusInvalidWidth,
     
-    /* InvalidHeight indicates that the height scalar could not be unpacked. */
+    /* InvalidHeight indicates that the height field is not a valid value. */
     kMCGDrawingStatusInvalidHeight,
-    
-    /* InvalidViewport indicates that the viewport (viewBox and preserveAspectRatio)
-     * could not be unpacked. */
-    kMCGDrawingStatusInvalidViewport,
     
     /* ScalarOverflow indicates that more scalars are required than are present.
      */
@@ -720,10 +561,6 @@ enum MCGDrawingStatus
     /* InvalidStrokeLineCapOpcode indicates that an undefined line cap opcode
      * has been encountered. */
     kMCGDrawingStatusInvalidStrokeLineCapOpcode,
-    
-    /* InvalidPreserveAspectRatioOpcode indicates that an undefined preserve
-     * aspect ratio opcode has been encountered. */
-    kMCGDrawingStatusInvalidPreserveAspectRatioOpcode,
     
     /* InvalidSpreadMethodOpcode indicates that an undefined spread method
      * opcode has been encountered. */
@@ -821,12 +658,12 @@ public:
          * what is expected by unpacking the data, then it is an
          * 'InvalidDrawing' */
         uint8_t t_ident_0, t_ident_1, t_ident_2, t_ident_version;
-        uint32_t t_flags;
         if (!t_stream.Singleton(t_ident_0) ||
             !t_stream.Singleton(t_ident_1) ||
             !t_stream.Singleton(t_ident_2) ||
             !t_stream.Singleton(t_ident_version) ||
-            !t_stream.Singleton(t_flags) ||
+            !t_stream.Singleton(m_width) ||
+            !t_stream.Singleton(m_height) ||
             !t_stream.Sequence(m_scalars) ||
             !t_stream.Sequence(m_opcodes) ||
             !t_stream.IsFinished())
@@ -851,46 +688,18 @@ public:
             return;
         }
         
-        /* Check the flags field is correct. */
-        if ((t_flags & ~kMCGDrawingHeaderFlagValidMask) != 0)
+        /* Check the width is valid. */
+        if (m_width < 0)
         {
-            m_status = kMCGDrawingStatusInvalidFlags;
+            m_status = kMCGDrawingStatusInvalidWidth;
             return;
         }
         
-        /* Process the width, if present. If the width is not present, then
-         * it is taken to be '100%' (-1). */
-        if ((t_flags & kMCGDrawingHeaderFlagHasWidthBit) != 0)
+        /* Check the height is valid. */
+        if (m_height < 0)
         {
-            if (!Scalar(m_width))
-            {
-                m_status = kMCGDrawingStatusInvalidWidth;
-                return;
-            }
-        }
-        
-        /* Process the height, if present. If the height is not present, then
-         * it is taken to be '100%' (-1). */
-        if ((t_flags & kMCGDrawingHeaderFlagHasHeightBit) != 0)
-        {
-            if (!Scalar(m_height))
-            {
-                m_status = kMCGDrawingStatusInvalidHeight;
-                return;
-            }
-        }
-        
-        /* Process the viewport, if present. */
-        if ((t_flags & kMCGDrawingHeaderFlagHasViewportBit) != 0)
-        {
-            if (!Rectangle(m_viewbox) ||
-                !PreserveAspectRatioOpcode(m_preserve_aspect_ratio))
-            {
-                m_status = kMCGDrawingStatusInvalidViewport;
-                return;
-            }
-            
-            m_has_viewport = true;
+            m_status = kMCGDrawingStatusInvalidHeight;
+            return;
         }
     }
     
@@ -955,15 +764,6 @@ public:
         return GeneralOpcode<MCGDrawingStrokeLineCapOpcode,
                              kMCGDrawingStrokeLineCapOpcode_Last,
                              kMCGDrawingStatusInvalidStrokeLineCapOpcode>(r_opcode);
-    }
-    
-    /* PreserveAspectRatioOpcode attempts to read the next opcode as a 
-     * preserve aspect ratio opcode. */
-    bool PreserveAspectRatioOpcode(MCGDrawingPreserveAspectRatioOpcode& r_opcode)
-    {
-        return GeneralOpcode<MCGDrawingPreserveAspectRatioOpcode,
-                             kMCGDrawingPreserveAspectRatioOpcode_Last,
-                             kMCGDrawingStatusInvalidPreserveAspectRatioOpcode>(r_opcode);
     }
     
     /* SpreadMethodOpcode attempts to read the next opcode as a spread method
@@ -1271,8 +1071,7 @@ public:
                 break;
         }
 
-        if (!ExecuteTransform(MCGAffineTransformMakeIdentity(),
-                              r_gradient.transform))
+        if (!Transform(r_gradient.transform))
         {
             return false;
         }
@@ -1284,11 +1083,94 @@ public:
         return true;
     }
     
+    bool Transform(MCGAffineTransform& r_transform)
+    {
+        MCGDrawingTransformOpcode t_opcode;
+        if (!TransformOpcode(t_opcode))
+        {
+            return false;
+        }
+        
+        switch(t_opcode)
+        {
+            case kMCGDrawingTransformOpcodeIdentity:
+                r_transform = MCGAffineTransformMakeIdentity();
+                break;
+                
+            case kMCGDrawingTransformOpcodeAffine:
+                if (!AffineTransform(r_transform))
+                {
+                    return false;
+                }
+                break;
+        }
+        
+        return true;
+    }
+    
+    bool Paint(MCGDrawingPaint& r_paint)
+    {
+        MCGDrawingPaintOpcode t_opcode;
+        if (!PaintOpcode(t_opcode))
+        {
+            return false;
+        }
+        
+        switch(t_opcode)
+        {
+            case kMCGDrawingPaintOpcodeNone:
+                r_paint.type = kMCGDrawingPaintTypeNone;
+                break;
+                
+            case kMCGDrawingPaintOpcodeSolidColor:
+                r_paint.type = kMCGDrawingPaintTypeSolidColor;
+                if (!SolidColor(r_paint.solid_color))
+                {
+                    return false;
+                }
+                break;
+            
+            case kMCGDrawingPaintOpcodeLinearGradient:
+                r_paint.type = kMCGDrawingPaintTypeLinearGradient;
+                if (!Gradient(r_paint.gradient))
+                {
+                    return false;
+                }
+                break;
+                
+            case kMCGDrawingPaintOpcodeRadialGradient:
+                r_paint.type = kMCGDrawingPaintTypeRadialGradient;
+                if (!Gradient(r_paint.gradient))
+                {
+                    return false;
+                }
+                break;
+                
+            case kMCGDrawingPaintOpcodeConicalGradient:
+                r_paint.type = kMCGDrawingPaintTypeConicalGradient;
+                if (!Gradient(r_paint.gradient))
+                {
+                    return false;
+                }
+                if (!Point(r_paint.conical_gradient.focal_point))
+                {
+                    return false;
+                }
+                if (!LengthScalar(r_paint.conical_gradient.focal_radius))
+                {
+                    return false;
+                }
+                break;
+        }
+        
+        return true;
+    }
+    
     /* Execute runs the drawing program using VisitorT to perform the
      * operations. The rect into which the drawing should be 'rendered' is
      * indicated in p_dst_rect. */
     template<typename VisitorT>
-    void Execute(VisitorT& visitor, MCGRectangle p_dst_rect);
+    void Execute(VisitorT& visitor, MCGRectangle p_src_rect, MCGRectangle p_dst_rect);
     
 private:
      /* GeneralOpcode reads the next opcode from the opcode stream. If there is
@@ -1322,13 +1204,6 @@ private:
         
         return true;
     }
-
-    /* ExecuteTransform runs a transform opcode stream to generate an affine
-     * transform. */
-    bool ExecuteTransform(MCGAffineTransform p_base_transform, MCGAffineTransform& r_transform);
-    
-    /* ExecutePaint runs a paint opcode stream to generate a paint struct. */
-    bool ExecutePaint(MCGDrawingPaint& r_paint);
     
     /* ExecutePath runs a path opcode stream into the provided
      * visitor. */
@@ -1357,112 +1232,26 @@ private:
     
     /* m_width is the unpacked width field from the drawing. This is initialized
      * on construction of the context. */
-    MCGFloat m_width = -1.0f;
+    MCGFloat m_width = 0.0f;
     
     /* m_height is the unpacked height field from the drawing. This is initialized
      * on construction of the context. */
-    MCGFloat m_height = -1.0f;
-    
-    /* m_has_viewport is true if the drawing defined a viewport in the header.
-     * This is initialized on construction of the context. */
-    bool m_has_viewport = false;
-    
-    /* m_viewbox is the unpacked viewbox field from the drawing. This is
-     * initialized on construction of the context. */
-    MCGRectangle m_viewbox = {};
-    
-    /* m_preserve_aspect_ratio is the unpacked preserve aspect ratio field from
-     * the drawing. This is initialized on construction of the context. */
-    MCGDrawingPreserveAspectRatioOpcode m_preserve_aspect_ratio = kMCGDrawingPreserveAspectRatioOpcodeNone;
+    MCGFloat m_height = 0.0f;
 };
 
 /* The (template based) implementation of the Execute method. */
 template<typename VisitorT>
-void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_viewport)
+void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_src_rect, MCGRectangle p_dst_rect)
 {
-    /* If the drawing's width is negative, then it means the width of the
-     * drawing was specified as a percentage (represented as a scalar in the
-     * range [-1, 0)) of the requested destination rectangle width. Otherwise
-     * the width is absolute. */
-    p_viewport.size.width = m_width >= 0 ? m_width : p_viewport.size.width * -m_width;
-    
-    /* If the drawing's height is negative, then it means the height of the
-     * drawing was specified as a percentage (represented as a scalar in the
-     * range [-1, 0)) of the requested destination rectangle height. Otherwise
-     * the height is absolute. */
-    p_viewport.size.height = m_height >= 0 ? m_height : p_viewport.size.height * -m_height;
-    
-    /* Compute the viewport transform. If there is no viewbox then it is just
-     * a translation by the origin of the dst rect. Otherwise it is a translation
-     * followed by a scale defined by the viewbox and preserve-aspect-ratio
-     * attribute. */
-    MCGAffineTransform t_viewport_transform;
-    if (!m_has_viewport)
+    /* If the width / height are zero. Then do nothing. */
+    if (m_width == 0.0 ||
+        m_height == 0.0)
     {
-        t_viewport_transform = MCGAffineTransformMakeTranslation(p_viewport.origin.x, p_viewport.origin.y);
+        return;
     }
-    else
-    {
-        float t_scale_x, t_scale_y;
-        if (m_viewbox.size.width != 0)
-        {
-            t_scale_x = p_viewport.size.width / m_viewbox.size.width;
-        }
-        else
-        {
-            t_scale_x = 0;
-        }
-        
-        if (m_viewbox.size.height != 0)
-        {
-            t_scale_y = p_viewport.size.height / m_viewbox.size.height;
-        }
-        else
-        {
-            t_scale_y = 0;
-        }
-        
-        if (MCGDrawingPreserveAspectRatioIsMeet(m_preserve_aspect_ratio))
-        {
-            t_scale_x = t_scale_y = MCMin(t_scale_x, t_scale_y);
-        }
-        else if (MCGDrawingPreserveAspectRatioIsSlice(m_preserve_aspect_ratio))
-        {
-            t_scale_x = t_scale_y = MCMax(t_scale_x, t_scale_y);
-        }
-        
-        float t_translate_x, t_translate_y;
-        t_translate_x = p_viewport.origin.x - (m_viewbox.origin.x * t_scale_x);
-        t_translate_y = p_viewport.origin.y - (m_viewbox.origin.y * t_scale_y);
-        
-        if (MCGDrawingPreserveAspectRatioIsXMid(m_preserve_aspect_ratio))
-        {
-            t_translate_x += (p_viewport.size.width - m_viewbox.size.width * t_scale_x) / 2;
-        }
-        else if (MCGDrawingPreserveAspectRatioIsXMax(m_preserve_aspect_ratio))
-        {
-            t_translate_x += (p_viewport.size.width - m_viewbox.size.width * t_scale_x);
-        }
-        
-        if (MCGDrawingPreserveAspectRatioIsYMid(m_preserve_aspect_ratio))
-        {
-            t_translate_y += (p_viewport.size.height - m_viewbox.size.height * t_scale_y) / 2;
-        }
-        else if (MCGDrawingPreserveAspectRatioIsYMax(m_preserve_aspect_ratio))
-        {
-            t_translate_y += (p_viewport.size.height - m_viewbox.size.height * t_scale_y);
-        }
-        
-        t_viewport_transform = MCGAffineTransformMakeTranslation(t_translate_x, t_translate_y);
-        t_viewport_transform = MCGAffineTransformConcat(t_viewport_transform,
-                                                        MCGAffineTransformMakeScale(t_scale_x, t_scale_y));
-    }
-    
-    /* Start the visitor, passing in the destination rectangle and viewport
-     * details so it can configure an initial transform. */
-    p_visitor.Start();
-    
-    p_visitor.Transform(t_viewport_transform);
+
+    /* Start the visitor. */
+    p_visitor.Start(p_src_rect, p_dst_rect);
     
     /* Loop until the status ceases to be None. */
     while(m_status == kMCGDrawingStatusNone)
@@ -1494,7 +1283,7 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_viewport)
             case kMCGDrawingOpcodeTransform:
             {
                 MCGAffineTransform t_transform;
-                if (!ExecuteTransform(t_viewport_transform, t_transform))
+                if (!Transform(t_transform))
                 {
                     break;
                 }
@@ -1509,7 +1298,7 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_viewport)
             case kMCGDrawingOpcodeStrokePaint:
             {
                 MCGDrawingPaint t_paint;
-                if (!ExecutePaint(t_paint))
+                if (!Paint(t_paint))
                 {
                     break;
                 }
@@ -1706,6 +1495,25 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_viewport)
                  * geometry is encoded as scalars:
                  *   x, y : coordinate scalars
                  *   width, height : length scalars
+                 */
+                MCGRectangle t_bounds;
+                if (!Rectangle(t_bounds))
+                {
+                    break;
+                }
+                
+                /* Visit the visitor method. */
+                p_visitor.Rectangle(t_bounds);
+            }
+            break;
+            
+            /* RoundedRectangle visits the RoundedRectangle method of the visitor. */
+            case kMCGDrawingOpcodeRoundedRectangle:
+            {
+                /* Fetch the requested (rounded) rectangle's geometry. The
+                 * geometry is encoded as scalars:
+                 *   x, y : coordinate scalars
+                 *   width, height : length scalars
                  *   rx, ry : length scalars
                  */
                 MCGRectangle t_bounds;
@@ -1717,7 +1525,7 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_viewport)
                 }
                 
                 /* Visit the visitor method. */
-                p_visitor.Rectangle(t_bounds, t_radii);
+                p_visitor.RoundedRectangle(t_bounds, t_radii);
             }
             break;
                 
@@ -1827,119 +1635,6 @@ void MCGDrawingContext::Execute(VisitorT& p_visitor, MCGRectangle p_viewport)
     p_visitor.Finish(m_status != kMCGDrawingStatusNone);
 }
 
-/* The implementation of the ExecuteTransform method. */
-bool MCGDrawingContext::ExecuteTransform(MCGAffineTransform p_base_transform,
-                                         MCGAffineTransform& r_transform)
-{
-    MCGAffineTransform t_transform = p_base_transform;
-
-    while(IsRunning())
-    {
-        MCGDrawingTransformOpcode t_opcode;
-        if (!TransformOpcode(t_opcode))
-        {
-            return false;
-        }
-        
-        if (t_opcode == kMCGDrawingTransformOpcodeEnd)
-        {
-            break;
-        }
-        
-        switch(t_opcode)
-        {
-            case kMCGDrawingTransformOpcodeEnd:
-                MCUnreachable();
-                break;
-                
-            case kMCGDrawingTransformOpcodeAffine:
-            {
-                MCGAffineTransform t_affine_transform;
-                if (!AffineTransform(t_affine_transform))
-                {
-                    return false;
-                }
-                t_transform = MCGAffineTransformConcat(t_transform, t_affine_transform);
-            }
-            break;
-        }
-    }
-    
-    r_transform = t_transform;
-    
-    return true;
-}
-
-/* The implementation of the ExecutePaint method. */
-bool MCGDrawingContext::ExecutePaint(MCGDrawingPaint& r_paint)
-{
-    MCGDrawingPaint t_paint;
-    while(IsRunning())
-    {
-        MCGDrawingPaintOpcode t_opcode;
-        if (!PaintOpcode(t_opcode))
-        {
-            break;
-        }
-        
-        if (t_opcode == kMCGDrawingPaintOpcodeEnd)
-        {
-            break;
-        }
-        
-        switch(t_opcode)
-        {
-            case kMCGDrawingPaintOpcodeEnd:
-                MCUnreachable();
-                break;
-                
-            case kMCGDrawingPaintOpcodeSolidColor:
-                t_paint.type = kMCGDrawingPaintTypeSolidColor;
-                if (!SolidColor(t_paint.solid_color))
-                {
-                    return false;
-                }
-                break;
-            
-            case kMCGDrawingPaintOpcodeLinearGradient:
-                t_paint.type = kMCGDrawingPaintTypeLinearGradient;
-                if (!Gradient(t_paint.gradient))
-                {
-                    return false;
-                }
-                break;
-                
-            case kMCGDrawingPaintOpcodeRadialGradient:
-                t_paint.type = kMCGDrawingPaintTypeRadialGradient;
-                if (!Gradient(t_paint.gradient))
-                {
-                    return false;
-                }
-                break;
-                
-            case kMCGDrawingPaintOpcodeConicalGradient:
-                t_paint.type = kMCGDrawingPaintTypeConicalGradient;
-                if (!Gradient(t_paint.gradient))
-                {
-                    return false;
-                }
-                if (!Point(t_paint.conical_gradient.focal_point))
-                {
-                    return false;
-                }
-                if (!LengthScalar(t_paint.conical_gradient.focal_radius))
-                {
-                    return false;
-                }
-                break;
-        }
-    }
-    
-    r_paint = t_paint;
-    
-    return true;
-}
-
 /* The (template based) implementation of the ExecutePath method. */
 template<typename VisitorT>
 void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
@@ -1969,59 +1664,50 @@ void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
             break;
                 
             case kMCGDrawingPathOpcodeMoveTo:
-            case kMCGDrawingPathOpcodeRelativeMoveTo:
             {
                 MCGPoint t_point;
                 if (!Point(t_point))
                 {
                     break;
                 }
-                p_visitor.PathMoveTo(t_opcode == kMCGDrawingPathOpcodeRelativeMoveTo,
-                                     t_point);
+                p_visitor.PathMoveTo(t_point);
             }
             break;
                 
             case kMCGDrawingPathOpcodeLineTo:
-            case kMCGDrawingPathOpcodeRelativeLineTo:
             {
                 MCGPoint t_point;
                 if (!Point(t_point))
                 {
                     break;
                 }
-                p_visitor.PathLineTo(t_opcode == kMCGDrawingPathOpcodeRelativeLineTo,
-                                     t_point);
+                p_visitor.PathLineTo(t_point);
             }
             break; 
             
             case kMCGDrawingPathOpcodeHorizontalTo:
-            case kMCGDrawingPathOpcodeRelativeHorizontalTo:
             {
                 MCGFloat t_x;
                 if (!CoordinateScalar(t_x))
                 {
                     break;
                 }
-                p_visitor.PathHorizontalTo(t_opcode == kMCGDrawingPathOpcodeRelativeHorizontalTo,
-                                           t_x);
+                p_visitor.PathHorizontalTo(t_x);
             }
             break;
                 
             case kMCGDrawingPathOpcodeVerticalTo:
-            case kMCGDrawingPathOpcodeRelativeVerticalTo:
             {
                 MCGFloat t_y;
                 if (!CoordinateScalar(t_y))
                 {
                     break;
                 }
-                p_visitor.PathVerticalTo(t_opcode == kMCGDrawingPathOpcodeRelativeVerticalTo,
-                                         t_y);
+                p_visitor.PathVerticalTo(t_y);
             }
             break;
                 
             case kMCGDrawingPathOpcodeCubicTo:
-            case kMCGDrawingPathOpcodeRelativeCubicTo:
             {
                 MCGPoint t_a, t_b, t_point;
                 if (!Point(t_a) ||
@@ -2030,15 +1716,13 @@ void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
                 {
                     break;
                 }
-                p_visitor.PathCubicTo(t_opcode == kMCGDrawingPathOpcodeRelativeCubicTo,
-                                      t_a,
+                p_visitor.PathCubicTo(t_a,
                                       t_b,
                                       t_point);
             }
             break;
                 
             case kMCGDrawingPathOpcodeSmoothCubicTo:
-            case kMCGDrawingPathOpcodeRelativeSmoothCubicTo:
             {
                 MCGPoint t_a, t_b, t_point;
                 if (!Point(t_b) ||
@@ -2046,14 +1730,12 @@ void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
                 {
                     break;
                 }
-                p_visitor.PathSmoothCubicTo(t_opcode == kMCGDrawingPathOpcodeRelativeSmoothCubicTo,
-                                            t_b,
+                p_visitor.PathSmoothCubicTo(t_b,
                                             t_point);
             }
             break;
                 
             case kMCGDrawingPathOpcodeQuadraticTo:
-            case kMCGDrawingPathOpcodeRelativeQuadraticTo:
             {
                 MCGPoint t_a, t_point;
                 if (!Point(t_a) ||
@@ -2061,33 +1743,26 @@ void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
                 {
                     break;
                 }
-                p_visitor.PathQuadraticTo(t_opcode == kMCGDrawingPathOpcodeRelativeQuadraticTo,
-                                          t_a,
+                p_visitor.PathQuadraticTo(t_a,
                                           t_point);
             }
             break;
                 
             case kMCGDrawingPathOpcodeSmoothQuadraticTo:
-            case kMCGDrawingPathOpcodeRelativeSmoothQuadraticTo:
             {
                 MCGPoint t_point;
                 if (!Point(t_point))
                 {
                     break;
                 }
-                p_visitor.PathSmoothQuadraticTo(t_opcode == kMCGDrawingPathOpcodeRelativeSmoothQuadraticTo,
-                                                t_point);
+                p_visitor.PathSmoothQuadraticTo(t_point);
             }
             break;
                 
             case kMCGDrawingPathOpcodeArcTo:
-            case kMCGDrawingPathOpcodeRelativeArcTo:
             case kMCGDrawingPathOpcodeReflexArcTo:
-            case kMCGDrawingPathOpcodeRelativeReflexArcTo:
             case kMCGDrawingPathOpcodeReverseArcTo:
-            case kMCGDrawingPathOpcodeRelativeReverseArcTo:
             case kMCGDrawingPathOpcodeReverseReflexArcTo:
-            case kMCGDrawingPathOpcodeRelativeReverseReflexArcTo:
             {
                 MCGSize t_radii;
                 MCGFloat t_rotation;
@@ -2099,8 +1774,7 @@ void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
                     break;
                 }
                 
-                p_visitor.PathArcTo(MCGDrawingPathOpcodeIsRelativeArcTo(t_opcode),
-                                    MCGDrawingPathOpcodeIsReflexArcTo(t_opcode),
+                p_visitor.PathArcTo(MCGDrawingPathOpcodeIsReflexArcTo(t_opcode),
                                     MCGDrawingPathOpcodeIsReverseArcTo(t_opcode),
                                     t_radii,
                                     t_rotation,
@@ -2134,31 +1808,14 @@ struct MCGDrawingRenderVisitor
     MCGDrawingPathOpcode last_curve_opcode = kMCGDrawingPathOpcodeEnd;
     
     /**/
-    
-    MCGPoint Point(bool p_is_relative, MCGPoint p_point)
+
+    MCGPoint HorizontalPoint(MCGFloat p_x)
     {
-        if (p_is_relative)
-        {
-            return MCGPointMake(last_point.x + p_point.x, last_point.y + p_point.y);
-        }
-        return p_point;
-    }
-    
-    MCGPoint HorizontalPoint(bool p_is_relative, MCGFloat p_x)
-    {
-        if (p_is_relative)
-        {
-            return MCGPointMake(last_point.x + p_x, last_point.y);
-        }
         return MCGPointMake(p_x, last_point.y);
     }
     
-    MCGPoint VerticalPoint(bool p_is_relative, MCGFloat p_y)
+    MCGPoint VerticalPoint(MCGFloat p_y)
     {
-        if (p_is_relative)
-        {
-            return MCGPointMake(last_point.x, last_point.y + p_y);
-        }
         return MCGPointMake(last_point.x, p_y);
     }
     
@@ -2172,55 +1829,50 @@ struct MCGDrawingRenderVisitor
         first_point = last_point = MCGPointMake(0.0, 0.0);
     }
     
-    void PathMoveTo(bool p_is_relative, MCGPoint p_point)
+    void PathMoveTo(MCGPoint p_point)
     {
-        MCGPoint t_point = Point(p_is_relative, p_point);
-        MCGContextMoveTo(gcontext, t_point);
+        MCGContextMoveTo(gcontext, p_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeEnd;
-        first_point = last_point = t_point;
+        first_point = last_point = p_point;
     }
     
-    void PathLineTo(bool p_is_relative, MCGPoint p_point)
+    void PathLineTo(MCGPoint p_point)
     {
-        MCGPoint t_point = Point(p_is_relative, p_point);
+        MCGContextLineTo(gcontext, p_point);
+        
+        last_curve_opcode = kMCGDrawingPathOpcodeEnd;
+        last_point = p_point;
+    }
+    
+    void PathHorizontalTo(MCGFloat p_x)
+    {
+        MCGPoint t_point = HorizontalPoint(p_x);
         MCGContextLineTo(gcontext, t_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeEnd;
         last_point = t_point;
     }
     
-    void PathHorizontalTo(bool p_is_relative, MCGFloat p_x)
+    void PathVerticalTo(MCGFloat p_y)
     {
-        MCGPoint t_point = HorizontalPoint(p_is_relative, p_x);
+        MCGPoint t_point = VerticalPoint(p_y);
         MCGContextLineTo(gcontext, t_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeEnd;
         last_point = t_point;
     }
     
-    void PathVerticalTo(bool p_is_relative, MCGFloat p_y)
+    void PathCubicTo(MCGPoint p_a, MCGPoint p_b, MCGPoint p_point)
     {
-        MCGPoint t_point = VerticalPoint(p_is_relative, p_y);
-        MCGContextLineTo(gcontext, t_point);
-        
-        last_curve_opcode = kMCGDrawingPathOpcodeEnd;
-        last_point = t_point;
-    }
-    
-    void PathCubicTo(bool p_is_relative, MCGPoint p_a, MCGPoint p_b, MCGPoint p_point)
-    {
-        MCGPoint t_a = Point(p_is_relative, p_a);
-        MCGPoint t_b = Point(p_is_relative, p_b);
-        MCGPoint t_point = Point(p_is_relative, p_point);
-        MCGContextCubicTo(gcontext, t_a, t_b, t_point);
+        MCGContextCubicTo(gcontext, p_a, p_b, p_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeCubicTo;
-        last_control_point = t_b;
-        last_point = t_point;
+        last_control_point = p_b;
+        last_point = p_point;
     }
     
-    void PathSmoothCubicTo(bool p_is_relative,  MCGPoint p_b, MCGPoint p_point)
+    void PathSmoothCubicTo(MCGPoint p_b, MCGPoint p_point)
     {
         MCGPoint t_a;
         if (last_curve_opcode == kMCGDrawingPathOpcodeCubicTo)
@@ -2232,27 +1884,23 @@ struct MCGDrawingRenderVisitor
             t_a = last_point;
         }
         
-        MCGPoint t_b = Point(p_is_relative, p_b);
-        MCGPoint t_point = Point(p_is_relative, p_point);
-        MCGContextCubicTo(gcontext, t_a, t_b, t_point);
+        MCGContextCubicTo(gcontext, t_a, p_b, p_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeCubicTo;
-        last_control_point = t_b;
-        last_point = t_point;
+        last_control_point = p_b;
+        last_point = p_point;
     }
     
-    void PathQuadraticTo(bool p_is_relative, MCGPoint p_a, MCGPoint p_point)
+    void PathQuadraticTo(MCGPoint p_a, MCGPoint p_point)
     {
-        MCGPoint t_a = Point(p_is_relative, p_a);
-        MCGPoint t_point = Point(p_is_relative, p_point);
-        MCGContextQuadraticTo(gcontext, t_a, t_point);
+        MCGContextQuadraticTo(gcontext, p_a, p_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeQuadraticTo;
-        last_control_point = t_a;
-        last_point = t_point;
+        last_control_point = p_a;
+        last_point = p_point;
     }
     
-    void PathSmoothQuadraticTo(bool p_is_relative, MCGPoint p_point)
+    void PathSmoothQuadraticTo(MCGPoint p_point)
     {
         MCGPoint t_a;
         if (last_curve_opcode == kMCGDrawingPathOpcodeQuadraticTo)
@@ -2264,21 +1912,19 @@ struct MCGDrawingRenderVisitor
             t_a = last_point;
         }
         
-        MCGPoint t_point = Point(p_is_relative, p_point);
-        MCGContextQuadraticTo(gcontext, t_a, t_point);
+        MCGContextQuadraticTo(gcontext, t_a, p_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeCubicTo;
         last_control_point = t_a;
-        last_point = t_point;
+        last_point = p_point;
     }
     
-    void PathArcTo(bool p_is_relative, bool p_is_reflex, bool p_is_reverse, MCGSize p_radii, MCGFloat p_rotation, MCGPoint p_point)
+    void PathArcTo(bool p_is_reflex, bool p_is_reverse, MCGSize p_radii, MCGFloat p_rotation, MCGPoint p_point)
     {
-        MCGPoint t_point = Point(p_is_relative, p_point);
-        MCGContextArcTo(gcontext, p_radii, p_rotation, p_is_reflex, p_is_reverse, t_point);
+        MCGContextArcTo(gcontext, p_radii, p_rotation, p_is_reflex, p_is_reverse, p_point);
         
         last_curve_opcode = kMCGDrawingPathOpcodeEnd;
-        last_point = t_point;
+        last_point = p_point;
     }
     
     void PathCloseSubpath(void)
@@ -2294,14 +1940,19 @@ struct MCGDrawingRenderVisitor
     
     /**/
     
-    void Start(void)
+    void Start(MCGRectangle p_src_rect, MCGRectangle p_dst_rect)
     {
         MCGContextSave(gcontext);
+        MCGContextTranslateCTM(gcontext, p_dst_rect.origin.x, p_dst_rect.origin.y);
+        MCGContextScaleCTM(gcontext, p_dst_rect.size.width / p_src_rect.size.width, p_dst_rect.size.height / p_src_rect.size.height);
+        MCGContextTranslateCTM(gcontext, -p_src_rect.origin.x, -p_src_rect.origin.y);
         MCGContextSetShouldAntialias(gcontext, true);
+        MCGContextSave(gcontext);
     }
     
     void Finish(bool p_error)
     {
+        MCGContextRestore(gcontext);
         MCGContextRestore(gcontext);
     }
     
@@ -2365,19 +2016,18 @@ struct MCGDrawingRenderVisitor
         MCGContextSetStrokeMiterLimit(gcontext, p_miter_limit);
     }
     
-    void Rectangle(MCGRectangle p_rect, MCGSize p_radii)
+    void Rectangle(MCGRectangle p_rect)
     {
-        if (p_radii.width == 0 && p_radii.height == 0)
-        {
-            MCGContextAddRectangle(gcontext, p_rect);
-        }
-        else
-        {
-            MCGContextAddRoundedRectangle(gcontext, p_rect, p_radii);
-        }
+        MCGContextAddRectangle(gcontext, p_rect);
         MCGContextFillAndStroke(gcontext);
     }
     
+    void RoundedRectangle(MCGRectangle p_rect, MCGSize p_radii)
+    {
+        MCGContextAddRoundedRectangle(gcontext, p_rect, p_radii);
+        MCGContextFillAndStroke(gcontext);
+    }
+
     void Circle(MCGPoint p_center, MCGFloat p_r)
     {
         MCGContextAddEllipse(gcontext, p_center, MCGSizeMake(p_r, p_r), 0.0);
@@ -2481,14 +2131,13 @@ private:
     }
 };
 
-/* MCGContextPlayback renders the specified drawing into p_dst_rect of p_gcontext. */
-void MCGContextPlayback(MCGContextRef p_gcontext, MCGRectangle p_dst_rect, MCSpan<const byte_t> p_drawing)
+void MCGContextPlaybackRectOfDrawing(MCGContextRef p_gcontext, MCSpan<const byte_t> p_drawing, MCGRectangle p_src_rect, MCGRectangle p_dst_rect)
 {
     MCGDrawingRenderVisitor t_render_visitor;
     t_render_visitor.gcontext = p_gcontext;
     
     MCGDrawingContext t_context(p_drawing);
-    t_context.Execute(t_render_visitor, p_dst_rect);
+    t_context.Execute(t_render_visitor, p_src_rect, p_dst_rect);
 }
 
 /******************************************************************************/

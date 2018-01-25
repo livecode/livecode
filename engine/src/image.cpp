@@ -1977,6 +1977,63 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, const MC
 	else
 		t_size = *p_size;
 
+    /* Special case vector image reps - as they don't have pixels! */
+    if (t_success &&
+        t_rep->GetType() == kMCImageRepVector)
+    {
+        /* Start with the identity transform, if none */
+		if (!t_has_transform)
+			t_transform = MCGAffineTransformMakeIdentity();
+        
+        /* Scale from the rect size to the requested size. */
+		MCGFloat t_x_scale, t_y_scale;
+		t_x_scale = (MCGFloat)t_size.width / (MCGFloat)rect.width;
+		t_y_scale = (MCGFloat)t_size.height / (MCGFloat)rect.height;
+		t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeScale(t_x_scale, t_y_scale), t_transform);
+        
+        MCImageBitmap *t_bitmap = nullptr;
+        t_success = MCImageBitmapCreate(t_size.width, t_size.height, t_bitmap);
+        
+        MCGContextRef t_context = nullptr;
+        if (t_success)
+        {
+            MCImageBitmapClear(t_bitmap);
+            t_success = MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_context);
+        }
+        
+        if (t_success)
+        {
+            MCGContextConcatCTM(t_context, t_transform);
+            
+            auto t_vector_rep = static_cast<MCVectorImageRep *>(t_rep);
+            
+            void* t_data;
+            uindex_t t_data_size;
+            t_vector_rep->GetData(t_data, t_data_size);
+            
+            MCGContextPlaybackRectOfDrawing(t_context, MCMakeSpan((const byte_t*)t_data, t_data_size), MCGRectangleMake(0, 0, t_width, t_height), MCGRectangleMake(0, 0, t_size.width, t_size.height));
+        }
+        
+        MCGContextRelease(t_context);
+        
+        if (t_success)
+        {
+            MCImageBitmapCheckTransparency(t_bitmap);
+            if (!p_premultiplied)
+            {
+                MCImageBitmapUnpremultiply(t_bitmap);
+            }
+            
+            r_bitmap = t_bitmap;
+        }
+        else
+        {
+            MCImageFreeBitmap(t_bitmap);
+        }
+        
+        return t_success;
+    }
+
 	if (t_success)
 	{
 		if (!t_has_transform)
@@ -1986,7 +2043,6 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, const MC
 		MCGFloat t_x_scale, t_y_scale;
 		t_x_scale = (MCGFloat)t_size.width / (MCGFloat)rect.width;
 		t_y_scale = (MCGFloat)t_size.height / (MCGFloat)rect.height;
-
 		t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeScale(t_x_scale, t_y_scale), t_transform);
 		
 		t_transform_scale = MCGAffineTransformGetEffectiveScale(t_transform);

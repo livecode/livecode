@@ -80,15 +80,71 @@ bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, M
 
 void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh)
 {
-	MCRectangle drect, crect;
-
 	if (m_rep != nil)
 	{
+        /* Printer output generally requires special-casing */
+        bool t_printer = dc->gettype() == CONTEXT_TYPE_PRINTER;
+        
+        /* Update the transform - as necessary */
+        bool t_update = !((state & CS_SIZE) && (state & CS_EDITED));
+
+        if (t_update)
+            apply_transform();
+    
 		if (m_rep->GetType() == kMCImageRepVector)
 		{
-			MCU_set_rect(drect, dx - sx, dy - sy, rect.width, rect.height);
-			MCU_set_rect(crect, dx, dy, dw, dh);
-			static_cast<MCVectorImageRep*>(m_rep)->Render(dc, false, drect, crect);
+            MCGAffineTransform t_transform;
+            if (m_has_transform)
+            {
+                t_transform = m_transform;
+            }
+            else
+            {
+                t_transform = MCGAffineTransformMakeIdentity();
+            }
+            
+            uindex_t t_rep_width, t_rep_height;
+            m_rep->GetGeometry(t_rep_width, t_rep_height);
+            
+            // MW-2014-06-19: [[ IconGravity ]] Scale the image appropriately.
+            if (dw != sw || dh != sh)
+            {
+                t_transform = MCGAffineTransformPreScale(t_transform, dw / (float)sw, dh / (float)sh);
+            }
+
+            // MW-2014-06-19: [[ IconGravity ]] Only clip if we are drawing a partial image (we need to double-check, but I don't think sx/sy are ever non-zero).
+            MCRectangle t_old_clip;
+            t_old_clip = dc->getclip();
+            if (sx != 0 && sy != 0)
+            {
+                dc->setclip(MCRectangleMake(dx, dy, sw, sh));
+            }
+            
+            t_transform = MCGAffineTransformConcat(t_transform,
+                                                   MCGAffineTransformMakeTranslation(-(dx - sx), -(dy - sy)));
+            t_transform = MCGAffineTransformPreTranslate(t_transform, (dx - sx), (dy - sy));
+            
+            MCGContextRef t_gcontext;
+            if (dc->lockgcontext(t_gcontext))
+            {
+                MCGContextSave(t_gcontext);
+                
+                MCGContextConcatCTM(t_gcontext, t_transform);
+                
+                auto t_vector_rep = static_cast<MCVectorImageRep *>(m_rep);
+                
+                void* t_data;
+                uindex_t t_data_size;
+                t_vector_rep->GetData(t_data, t_data_size);
+                
+                MCGContextPlaybackRectOfDrawing(t_gcontext, MCMakeSpan((const byte_t*)t_data, t_data_size), MCGRectangleMake(0, 0, t_rep_width, t_rep_height), MCGRectangleMake(dx - sx, dy - sy, t_rep_width, t_rep_height));
+                
+                MCGContextRestore(t_gcontext);
+                
+                dc->unlockgcontext(t_gcontext);
+            }
+            
+            dc->setclip(t_old_clip);
 		}
 		else
 		{
@@ -99,12 +155,6 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			bool t_success = true;
 
 			MCGImageFrame t_frame;
-
-			bool t_printer = dc->gettype() == CONTEXT_TYPE_PRINTER;
-			bool t_update = !((state & CS_SIZE) && (state & CS_EDITED));
-
-			if (t_update)
-				apply_transform();
 			
 			// IM-2013-11-06: [[ RefactorGraphics ]] Use common method to get image rep & transform
 			// so imagedata & rendered image have the same appearance
@@ -201,7 +251,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			else
 			{
 				// can't get image data from rep
-                drawnodata(dc, drect, sw, sh, dx, dy, dw, dh);
+                drawnodata(dc, sw, sh, dx, dy, dw, dh);
 			}
 
             if (t_success)
@@ -233,12 +283,13 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
     else if (!MCStringIsEmpty(filename))
     {
         // AL-2014-01-15: [[ Bug 11570 ]] Draw stippled background when referenced image file not found
-        drawnodata(dc, rect, sw, sh, dx, dy, dw, dh);
+        drawnodata(dc, sw, sh, dx, dy, dw, dh);
     }
 }
 
-void MCImage::drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh)
+void MCImage::drawnodata(MCDC *dc, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh)
 {
+    MCRectangle drect;
     MCU_set_rect(drect, dx, dy, dw, dh);
     setforeground(dc, DI_BACK, False);
     dc->setbackground(MCscreen->getwhite());

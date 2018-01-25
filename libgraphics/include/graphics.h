@@ -1023,7 +1023,7 @@ void MCGContextDrawPlatformText(MCGContextRef context, const unichar_t *text, ui
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
 bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds);
 
-void MCGContextPlayback(MCGContextRef context, MCGRectangle p_dst_rect, MCSpan<const byte_t> p_drawing);
+void MCGContextPlaybackRectOfDrawing(MCGContextRef context, MCSpan<const byte_t> p_drawing, MCGRectangle p_src, MCGRectangle p_dst);
 
 ////////////////////////////////////////////////////////////////////////////////
 

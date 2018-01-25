@@ -24,6 +24,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "image_rep.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCImageRep::MCImageRep()
@@ -767,7 +769,7 @@ bool MCImageRepGetResident(const void *p_data, uindex_t p_size, MCImageRep *&r_r
 	return t_success;
 }
 
-bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep)
+bool MCImageRepGetVector(const void *p_data, uindex_t p_size, MCImageRep *&r_rep)
 {
 	bool t_success = true;
 	
@@ -864,6 +866,12 @@ bool MCImageRepCreateWithPath(MCStringRef p_path, MCImageRep *&r_image_rep)
 
 bool MCImageRepCreateWithData(MCDataRef p_data, MCImageRep *&r_image_rep)
 {
+    if (MCDataGetLength(p_data) >= 3 &&
+        memcmp(MCDataGetBytePtr(p_data), "LCD", 3) == 0)
+    {
+        return MCImageRepGetVector(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), r_image_rep);
+    }
+    
 	return MCImageRepGetResident(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), r_image_rep);
 }
 
@@ -905,6 +913,37 @@ void MCImageRepUnlockRaster(MCImageRep *p_image_rep, uint32_t p_index, MCImageBi
 	p_image_rep->UnlockBitmap(p_index, p_raster);
 }
 
+void MCImageRepRender(MCImageRep *p_image_rep, MCGContextRef p_gcontext, uint32_t p_index, MCGRectangle p_src_rect, MCGRectangle p_dst_rect, MCGImageFilter p_filter)
+{
+    if (p_image_rep->GetType() == kMCImageRepVector)
+    {
+        auto t_vector_rep = static_cast<MCVectorImageRep *>(p_image_rep);
+        
+        void* t_data;
+        uindex_t t_data_size;
+        t_vector_rep->GetData(t_data, t_data_size);
+        
+        MCGContextPlaybackRectOfDrawing(p_gcontext, MCMakeSpan((const byte_t*)t_data, t_data_size), p_src_rect, p_dst_rect);
+    }
+    else
+    {
+        MCGFloat t_scale;
+        t_scale = MCGAffineTransformGetEffectiveScale(MCGContextGetDeviceTransform(p_gcontext));
+        
+        MCGImageFrame t_frame;
+        if (MCImageRepLock(p_image_rep, p_index, t_scale, t_frame))
+        {
+            MCGAffineTransform t_transform;
+            t_transform = MCGAffineTransformMakeScale(1.0 / t_frame.x_scale, 1.0 / t_frame.y_scale);
+            
+            MCGRectangle t_src_rect;
+            t_src_rect = MCGRectangleScale(p_src_rect, t_frame.x_scale, t_frame.y_scale);
+            
+            MCGContextDrawRectOfImage(p_gcontext, t_frame.image, t_src_rect, p_dst_rect, p_filter);
+            
+            MCImageRepUnlock(p_image_rep, 0, t_frame);
+        }
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-

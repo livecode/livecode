@@ -5802,23 +5802,7 @@ void MCCanvasDrawRectOfImage(MCCanvasRef p_canvas, MCCanvasImageRef p_image, con
 	
 	MCCanvasApplyChanges(*t_canvas);
 
-	MCGImageFrame t_frame;
-	
-	MCGFloat t_scale;
-	t_scale = MCGAffineTransformGetEffectiveScale(MCGContextGetDeviceTransform(t_canvas->context));
-	
-	if (MCImageRepLock(t_image, 0, t_scale, t_frame))
-	{
-		MCGAffineTransform t_transform;
-		t_transform = MCGAffineTransformMakeScale(1.0 / t_frame.x_scale, 1.0 / t_frame.y_scale);
-		
-		MCGRectangle t_src_rect;
-		t_src_rect = MCGRectangleScale(p_src_rect, t_frame.x_scale, t_frame.y_scale);
-		
-		MCGContextDrawRectOfImage(t_canvas->context, t_frame.image, t_src_rect, p_dst_rect, t_canvas->props().image_filter);
-		
-		MCImageRepUnlock(t_image, 0, t_frame);
-	}
+    MCImageRepRender(t_image, t_canvas->context, 0, p_src_rect, p_dst_rect, t_canvas->props().image_filter);
 }
 
 MC_DLLEXPORT_DEF
