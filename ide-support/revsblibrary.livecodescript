@@ -2369,6 +2369,44 @@ command revSBUpdatePerExtensionSettings pExtension, pPlatform, @xSettings
    end repeat
 end revSBUpdatePerExtensionSettings
 
+command revSBEnsurePerExtensionSettings pPlatform, pSettings
+   local tMissingA
+   repeat for each line tExtension in pSettings["extensions"]
+      local tInfoA, tRequiredForPlatform
+      put revIDEExtensionStandaloneSettingsInfo(tExtension) into tInfoA
+      repeat for each key tKey in tInfoA
+         set the itemdelimiter to ","
+         put (pPlatform is among the items of tInfoA[tKey]["required"]) \
+               into tRequiredForPlatform
+         
+         if not tRequiredForPlatform then
+            next repeat
+         end if
+         
+         set the itemdelimiter to ";"
+         repeat for each item tItem in tKey
+            if pSettings[tExtension][tItem] is empty then
+               addToList tInfoA[tKey]["label"], tMissingA[tExtension]
+               exit repeat
+            end if
+         end repeat
+      end repeat
+   end repeat
+   
+   local tMissing
+   repeat for each key tKey in tMissingA
+      appendToStringList "Missing standalone settings for" && tKey & ":", tMissing
+      repeat for each element tElement in tMissingA[tKey]
+         appendToStringList tab & tElement, tMissing
+      end repeat
+   end repeat
+   
+   if tMissing is not empty then
+      appendToStringList "Please set on standalone inclusions pane", tMissing
+   end if
+   return tMissing
+end revSBEnsurePerExtensionSettings
+
 command revSBUpdateExtensionCodeInclusions pExtension, pPlatform, pArchs, pSDK, @xSettings
    local tExtCodeFolder, tCodeFolders
    put revIDEExtensionProperty(pExtension, "install_path") & \
