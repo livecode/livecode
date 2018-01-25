@@ -616,7 +616,7 @@ end _svgCascade
  ******************************************************************************/
 
 private command _svgCompile @xContext, pRootElement
-	/* If the root element is an 'svg' then there's not much we can do! */
+	/* If the root element isn't an 'svg' then there's not much we can do! */
 	if pRootElement["type"] is not "svg" then
 		throw "root element is not svg"
 	end if
