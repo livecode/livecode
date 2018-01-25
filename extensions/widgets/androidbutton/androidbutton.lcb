@@ -118,7 +118,9 @@ __safe foreign handler _JNI_GetColorFromARGB(in pA as JInt, in pR as JInt, in pG
 	binds to "java:android.graphics.Color>argb(IIII)I!static"
 __safe foreign handler _JNI_SetTextViewEnabled(in pView as JObject, in pValue as JBoolean) returns nothing \
 	binds to "java:android.view.View>setEnabled(Z)V?ui"
-
+__safe foreign handler _JNI_SetTextViewTypeface(in pView as JObject, in pValue as JObject) returns nothing \
+	binds to "java:android.widget.TextView>setTypeface(Landroid/graphics/Typeface;)V?ui"
+	
 private variable mLabel as String
 private variable mColor as String
 private variable mButton as optional JObject
@@ -186,6 +188,7 @@ private handler updateProperties()
     SetEnabled(my enabled)
     SetLabel(mLabel)
     SetTextColor(mColor)
+    SetTypeface(my font)
 end handler
 
 public handler OnOpen()
@@ -245,6 +248,16 @@ public handler SetLabel(in pLabel as String)
         _JNI_SetTextViewText(mButton, StringToJString(mLabel))
     end if
     redraw all
+end handler
+
+private foreign handler MCCanvasFontGetHandle(in pFont as Font, out rHandle as Pointer) returns nothing binds to "<builtin>"
+
+handler SetTypeface(in pFont as Font)
+    variable tTypefacePtr as Pointer
+    unsafe
+	    MCCanvasFontGetHandle(pFont, tTypefacePtr)
+	end unsafe
+    _JNI_SetTextViewTypeface(mButton, PointerToJObject(tTypefacePtr))
 end handler
 
 public handler SetTextColor(in pColor as String)

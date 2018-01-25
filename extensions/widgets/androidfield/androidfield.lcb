@@ -705,6 +705,7 @@ end handler
 handler SetParentProperties()
    SetEnabled(my enabled)
    SetTextSize(the size of my font)
+   SetTypeface(my font)
 end handler
 
 // Constants pulled from the android.view.inputmethod.InputMethodManager class
@@ -916,6 +917,8 @@ __safe foreign handler _JNI_TextView_setTextColor(in pView as JObject, in pValue
    binds to "java:android.widget.TextView>setTextColor(I)V?ui"
 __safe foreign handler _JNI_TextView_setTextSize(in pObj as JObject, in pParam_unit as JInt, in pParam_size as JFloat) returns nothing \
 	binds to "java:android.widget.TextView>setTextSize(IF)V?ui"
+__safe foreign handler _JNI_TextView_setTypeface(in pView as JObject, in pValue as JObject) returns nothing \
+	binds to "java:android.widget.TextView>setTypeface(Landroid/graphics/Typeface;)V?ui"	
 __safe foreign handler _JNI_TextView_setTransformationMethod(in pObj as JObject, in pParam_mthd as optional JObject) returns nothing \
 	binds to "java:android.widget.TextView>setTransformationMethod(Landroid/text/method/TransformationMethod;)V?ui"
 
@@ -1400,6 +1403,17 @@ end handler
 constant COMPLEX_UNIT_DIP is 1
 handler SetTextSize(in pSize as Integer)
    TextView_setTextSize(mNativeObj, COMPLEX_UNIT_DIP, pSize)
+end handler
+
+private foreign handler MCCanvasFontGetHandle(in pFont as Font, out rHandle as Pointer) returns nothing binds to "<builtin>"
+
+handler SetTypeface(in pFont as Font)
+    variable tTypefacePtr as Pointer
+    unsafe
+	    MCCanvasFontGetHandle(pFont, tTypefacePtr)
+	end unsafe
+    _JNI_TextView_setTypeface(mNativeObj, \
+        PointerToJObject(tTypefacePtr))
 end handler
 
 __safe foreign handler _JNI_GetResources(in pContext as JObject) returns JObject \
