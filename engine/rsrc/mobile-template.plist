@@ -17,10 +17,7 @@
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
 	${URL_TYPES}
-	<key>CFBundleIconFiles</key>
-	<array>
-		${BUNDLE_ICONS}
-	</array>
+	${BUNDLE_ICONS}
 	${DISABLE_ATS}
 	<key>CFBundleDisplayName</key>
 		${BUNDLE_DISPLAY_NAME_SUPPORT}
