@@ -5,9 +5,9 @@ Synonyms: stack format, stack file format, stack file version
 Type: glossary
 
 Description:
-When saving a <stack> using the <save> <command>, it is possible to save
-with a specific version of LiveCode's stack <file> format. This is
-useful when saving a stack so that it can be saved in an older
+When saving a binary <stack> using the <save> <command>, it is possible 
+to save with a specific version of LiveCode's stack <file> format. This 
+is useful when saving a binary stack so that it can be saved in an older
 <version|version of LiveCode>, but it should be used with caution.
 
 **Warning:** Using a non-default <stack version> could result in data
