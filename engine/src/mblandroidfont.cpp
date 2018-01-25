@@ -518,6 +518,23 @@ static bool create_font_face_from_custom_font_name_and_style(MCStringRef p_name,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void* MCAndroidCustomFontCreateTypeface(MCStringRef p_name, bool p_bold, bool p_italic)
+{
+    jobject t_typeface = nil;
+    
+    MCAndroidCustomFont *t_font = look_up_custom_font(p_name, p_bold, p_italic);
+    if (t_font != nil)
+    {
+        MCAutoStringRef t_font_path;
+        if (!MCStringFormat(&t_font_path, "%@%@", s_font_folder, t_font->path))
+            return nullptr;
+        MCAndroidEngineCall("createTypefaceFromAsset", "ox", &t_typeface, *t_font_path);
+    }
+
+    return t_typeface;
+}
+////////////////////////////////////////////////////////////////////////////////
+
 void *android_font_create(MCStringRef name, uint32_t size, bool bold, bool italic)
 {
 	MCAndroidFont *t_font = nil;
