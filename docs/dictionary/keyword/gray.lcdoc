@@ -23,12 +23,12 @@ Description:
 Use the <gray> <keyword> to transition to a blank gray background in a
 sequence of visual effects.
 
-Visual effects can be stacked in a sequence by using several <visual
-effect> <command|commands> in succession. If the last transition ends
-with showing the destination card, and all except the last one shows an
-intermediate image (such as a solid gray color), the effect is enhanced.
-You show a solid gray color at the end of a transition by using the
-<gray> <keyword>.
+Visual effects can be stacked in a sequence by using several 
+<visual effect> <command|commands> in succession. If the last transition 
+ends with showing the destination card, and all except the last one shows 
+an intermediate image (such as a solid gray color), the effect is 
+enhanced. You show a solid gray color at the end of a transition by 
+using the <gray> <keyword>.
 
 The gray background is actually a checkerboard pattern of alternating
 black and white pixels.

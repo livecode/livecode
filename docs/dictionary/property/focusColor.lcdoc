@@ -26,8 +26,8 @@ Example:
 set the focusColor of button "Help" to 128,128,255
 
 Value:
-The <focusColor> of an <object(glossary)> is any valid <color
-reference>. The <colorName> is any standard color name.
+The <focusColor> of an <object(glossary)> is any valid 
+<color reference>. The <colorName> is any standard color name.
 
 The <RGBColor> consists of three comma-separated <integer|integers>
 between zero and 255, specifying the level of each of red, green, and
@@ -45,8 +45,8 @@ Setting the <focusColor> of an <object(glossary)> to empty allows the
 <effective> <keyword> to find out what color is used for the
 <object(glossary)>, even if its own <focusColor> is empty.
 
-If the <focusColor> is not set for any <object(glossary)> in the <object
-hierarchy>, the system setting is used.
+If the <focusColor> is not set for any <object(glossary)> in the 
+<object hierarchy>, the system setting is used.
 
 The setting of the <focusColor> <property> has different effects,
 depending on the <object type>:

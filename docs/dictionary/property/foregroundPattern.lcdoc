@@ -97,8 +97,8 @@ depending on the <object type>:
   border, which is outside the outline.)
 
 
-* The <foregroundPattern> of a <player>, <image>, <audio clip>, <video
-  clip>, or <EPS|EPS object> has no effect. If an object's
+* The <foregroundPattern> of a <player>, <image>, <audio clip>, 
+  <video clip>, or <EPS|EPS object> has no effect. If an object's
   <foregroundPattern> is set, the pattern is shown instead of the color
   specified by <foregroundColor>.
 

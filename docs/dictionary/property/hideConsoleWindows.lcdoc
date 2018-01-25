@@ -28,9 +28,9 @@ applications without the user seeing them.
 On Windows systems, when you run a command line program with the
 <launch> or <open process> <command>, a <console|console window>
 appears. If the <hideConsoleWindows> <property> is true, the window is
-not shown. (You can still use the <write to process> and <read from
-process> <command|commands> to send data to the program and get data
-from it.)
+not shown. (You can still use the <write to process> and 
+<read from process> <command|commands> to send data to the program and 
+get data from it.)
 
 The setting of this property affects Windows applications with a GUI as
 well as command line programs.

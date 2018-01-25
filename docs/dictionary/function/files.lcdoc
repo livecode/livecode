@@ -66,8 +66,8 @@ included in the list only if they refer to a <file>.
 
 ### Short form
 
-When the <files> is called as a <function>, or without the `<long>` or
-`<long|detailed>` modifiers, it <return(glossary)|returns> only the <file>
+When the <files> is called as a <function>, or without the `long` or
+`detailed` modifiers, it <return(glossary)|returns> only the <file>
 names as a string with one file name per line.
 
 > *Note:* On some <platform|platforms>, file names are permitted to
@@ -77,7 +77,7 @@ names as a string with one file name per line.
 
 ### Long form
 
-`the <long> files` and `the <long|detailed> files` are synonyms.  When 
+`the long files` and `the detailed files` are synonyms.  When 
 the <files> <function> is called in this form, the <return(glossary)>
 value is a list of files with detailed file attributes.
 
@@ -86,8 +86,8 @@ attributes, as follows:
 
 1. **Name**.  The file name is URL-encoded.  To obtain the name as
    plain text, use the <URLDecode> function.
-2. **Size**, in bytes.  On OS X systems, this is the size of the <data
-   fork>.
+2. **Size**, in bytes.  On OS X systems, this is the size of the 
+   <data fork>.
 3. **Resource fork size**, in bytes.  (OS X only).
 4. **Creation date**, in seconds.  (OS X and Windows only).
 5. **Last modification date**, in seconds.
