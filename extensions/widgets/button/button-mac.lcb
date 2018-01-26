@@ -69,7 +69,7 @@ private foreign handler ObjC_NSButtonSetBordered(in pObj as ObjcId, in pBordered
 private foreign handler ObjC_NSButtonSetTarget(in pObj as ObjcId, in pTarget as ObjcId) returns nothing binds to "objc:NSButton.-setTarget:"
 private foreign handler ObjC_NSButtonSetAction(in pObj as ObjcId, in pAction as UIntPtr) returns nothing binds to "objc:NSButton.-setAction:"
 
-public handler NativeView_Mac() returns Pointer
+public handler NativeView_Mac(in pParent as Pointer) returns Pointer
 	unsafe
 		return _NativeView_Mac()
 	end unsafe

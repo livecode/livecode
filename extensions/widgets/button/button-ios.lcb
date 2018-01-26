@@ -57,7 +57,7 @@ private unsafe handler _SetLabel_Ios(in pLabel as String) returns nothing
 	ObjC_UIButtonSetTitleForState(mButtonView_Ios, StringToNSString(pLabel), 0)
 end handler
 
-public handler NativeView_Ios() returns Pointer
+public handler NativeView_Ios(in pParent as Pointer) returns Pointer
 	unsafe
 		return _NativeView_Ios()
 	end unsafe

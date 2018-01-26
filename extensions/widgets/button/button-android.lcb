@@ -73,7 +73,7 @@ __safe foreign handler _JNI_OnClickListener(in pHandler as ClickCallback) return
 	binds to "java:android.view.View$OnClickListener>interface()"
 __safe foreign handler _JNI_SetOnClickListener(in pButton as JObject, in pListener as JObject) returns nothing \
 	binds to "java:android.view.View>setOnClickListener(Landroid/view/View$OnClickListener;)V?ui"
-public handler NativeView_Android() returns Pointer
+public handler NativeView_Android(in pParent as Pointer) returns Pointer
 	// Create an android button using the Engine Context
     variable tEngine as JObject
     put _JNI_GetAndroidEngine() into tEngine

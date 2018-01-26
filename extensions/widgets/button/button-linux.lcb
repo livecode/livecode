@@ -46,7 +46,7 @@ public handler SetLabel_Linux(in pLabel as String) returns nothing
 	-- not implemented
 end handler
 
-public handler NativeView_Linux() returns Pointer
+public handler NativeView_Linux(in pParent as Pointer) returns Pointer
 	-- not implemented
 end handler
 

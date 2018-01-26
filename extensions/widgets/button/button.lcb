@@ -196,15 +196,18 @@ end handler
 
 /****/
 
-handler type NativeView_Type() returns Pointer
+handler type NativeView_Type(in pParent as Pointer) returns Pointer
 private handler NativeView() returns Pointer
 	if mPlatformImplementation is nothing then
 		return nothing
 	end if
 
+	variable tParentView as Pointer
+	MCWidgetGetMyStackNativeView(tParentView)
+	
 	variable tHandler as NativeView_Type
 	put mPlatformImplementation["NativeView"] into tHandler
-	return tHandler()
+	return tHandler(tParentView)
 end handler
 
 handler type DestroyView_Type() returns nothing
