@@ -978,12 +978,6 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
     {
         return false;
     }
-    
-    MCAutoStringRefAsUTF8String t_class_cstring;
-    if (!t_class_cstring.Lock(*t_class))
-    {
-        return false;
-    }
 
     bool t_valid = true;
     bool t_is_dynamic = MCStringIsEmpty(*t_class);
@@ -1002,6 +996,12 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
         }
         else
         {
+            MCAutoStringRefAsUTF8String t_class_cstring;
+            if (!t_class_cstring.Lock(*t_class))
+            {
+                return false;
+            }
+            
             t_objc_class = objc_getClass(*t_class_cstring);
             if (t_objc_class == nullptr)
             {
