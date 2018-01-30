@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 module com.livecode.widget.native.button.linux
 
 use com.livecode.widget.native.button.shared
+use com.livecode.canvas
 use com.livecode.foreign
 
 public handler Implementation_Linux() returns Array
@@ -33,6 +34,7 @@ public handler Implementation_Linux() returns Array
 end handler
 
 private variable mButtonView_Linux as optional Pointer
+private variable mButtonPlug_Linux as optional Pointer
 
 public handler HasImplementation_Linux() returns Boolean
 	return false
@@ -43,19 +45,124 @@ public handler HasView_Linux() returns Boolean
 end handler
 
 public handler SetLabel_Linux(in pLabel as String) returns nothing
-	-- not implemented
+    unsafe
+        _SetLabel_Linux(pLabel)
+    end unsafe
 end handler
 
 public handler NativeView_Linux() returns Pointer
-	-- not implemented
+    unsafe
+        return _NativeView_Linux()
+    end unsafe
 end handler
 
 public handler DestroyView_Linux() returns nothing
-	-- not implemented
+	put nothing into mButtonView_Linux
+	put nothing into mButtonPlug_Linux
 end handler
 
 public handler UpdateView_Linux(in pIntrinsicProps as Array) returns nothing
-	-- not implemented
+    unsafe
+        _UpdateView_Linux(pIntrinsicProps)
+    end unsafe
 end handler
 
+/****/
+
+foreign handler GTK_ButtonNewWithLabel(in pLabel as ZStringNative) returns Pointer binds to \
+	"c:libgtk-x11-2.0.so>gtk_button_new_with_label"
+foreign handler GTK_WidgetShow(in pWidget as Pointer) returns nothing binds to \
+	"c:libgtk-x11-2.0.so>gtk_widget_show"
+foreign handler GTK_WidgetRealize(in pWidget as Pointer) returns nothing binds to \
+	"c:libgtk-x11-2.0.so>gtk_widget_realize"
+foreign handler GTK_ContainerAdd(in pContainer as Pointer, in pWidget as Pointer) returns nothing \
+	binds to "c:libgtk-x11-2.0.so>gtk_container_add"
+foreign handler GTK_PlugNew(in pType as CUInt) returns Pointer \
+	binds to "c:libgtk-x11-2.0.so>gtk_plug_new"
+foreign handler GTK_PlugGetId(in pPlug as Pointer) returns Pointer \
+	binds to "c:libgtk-x11-2.0.so>gtk_plug_get_id"
+
+
+foreign handler GTK_BinGetChild(in pWidget as Pointer) returns Pointer \
+    binds to "c:libgtk-x11-2.0.so>gtk_bin_get_child"
+foreign handler GTK_LabelSetMarkup(in pLabel as Pointer, in pString as ZStringUTF8) \
+    returns nothing binds to "c:libgtk-x11-2.0.so>gtk_label_set_markup"
+
+foreign handler GTK_WidgetSetSensitive(in pWidget as Pointer, in pValue as CBool) returns nothing \
+    binds to "c:libgtk-x11-2.0.so>gtk_widget_set_sensitive"
+
+foreign handler Pango_FontDescriptionToString(in pDesc as Pointer) returns ZStringUTF8 \
+    binds to "c:libpangoft2-1.0.so.0>pango_font_description_to_string"
+
+private foreign handler MCCanvasFontGetHandle(in pFont as Font, out rHandle as Pointer) returns nothing binds to "<builtin>"
+
+public foreign handler type ClickCallback(in pWidget as Pointer, in pContext as optional Pointer) returns nothing
+
+foreign handler GTK_SignalConnect(in pObj as Pointer, in pEvent as ZStringNative, \
+	in pHandler as ClickCallback, in pData as optional Pointer, \
+	in pNotify as optional Pointer, in pFlags as CUInt) returns CULong \
+	binds to "c:libgtk-x11-2.0.so>g_signal_connect_data"
+
+private handler ButtonActionCallback_Linux(in pWidget as Pointer, in pContext as optional Pointer) returns nothing
+    PostAction()
+end handler
+
+private unsafe handler _NativeView_Linux() returns Pointer
+	variable tPlug as Pointer
+	put GTK_PlugNew(0) into tPlug
+
+	variable tButtonView as Pointer
+	put GTK_ButtonNewWithLabel("") into tButtonView
+
+	GTK_ContainerAdd(tPlug, tButtonView)
+
+	GTK_WidgetShow(tButtonView)
+	GTK_WidgetShow(tPlug)
+
+	GTK_SignalConnect(tButtonView, "clicked", ButtonActionCallback_Linux, nothing, nothing, 0)
+
+	put GTK_PlugGetId(tPlug) into mButtonPlug_Linux
+	put tButtonView into mButtonView_Linux
+    return mButtonPlug_Linux
+end handler
+
+private variable mLabel as String
+private unsafe handler _SetLabel_Linux(pLabel) returns nothing
+    put pLabel into mLabel
+    ApplyLabelWithFont()
+end handler
+
+private variable mFontDesc as String
+private unsafe handler _UpdateView_Linux(in pIntrinsicProps as Array) returns nothing
+    variable tFontDesc as Pointer
+    MCCanvasFontGetHandle(pIntrinsicProps["font"], tFontDesc)
+    put Pango_FontDescriptionToString(tFontDesc) into \
+        mFontDesc
+    ApplyLabelWithFont()
+
+    GTK_WidgetSetSensitive(mButtonView_Linux, pIntrinsicProps["enabled"])
+end handler
+
+private handler ApplyMarkup(in pString as String, in pFontDesc as String) returns String
+    variable tResult as String
+
+    -- Escape existing < and >
+    replace "<" with "&lt;" in pString
+    replace ">" with "&gt;" in pString
+
+    put "<span" into tResult
+    put " font_desc=\q" & pFontDesc & "\q" after tResult
+    put ">" after tResult
+    put pString after tResult
+    put "</span>" after tResult
+
+    return tResult
+end handler
+
+private unsafe handler ApplyLabelWithFont() returns nothing
+    variable tLabel as Pointer
+    put GTK_BinGetChild(mButtonView_Linux) into tLabel
+
+    GTK_LabelSetMarkup(tLabel, ApplyMarkup(mLabel, mFontDesc))
+end handler
 end module
