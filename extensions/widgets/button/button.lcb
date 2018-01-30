@@ -141,10 +141,6 @@ end handler
 constant kPlaceholderIcon is \
 "M25.34,0H2.1A2.1,2.1,0,0,0,0,2.1V13.19a2.1,2.1,0,0,0,2.1,2.1H25.34a2.1,2.1,0,0,0,2.1-2.1V2.1A2.1,2.1,0,0,0,25.34,0Z"
 public handler OnPaint()
-	if HasImplementation() then
-		return
-	end if
-
     variable tLabel as String
     if mLabel is empty then
         put my name into tLabel
