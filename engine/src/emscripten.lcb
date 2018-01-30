@@ -32,6 +32,9 @@ foreign handler MCEmscriptenPointerToJSObject(in pPtr as Pointer, out rObj as JS
 
 __safe foreign handler MCEmscriptenEvaluateJavaScriptWithArguments(in pScript as String, in pArgs as List, out rResult as any) returns bool binds to "<builtin>"
 
+public handler type JSEventHandler(in pEvent as JSObject) returns nothing
+__safe foreign handler MCEmscriptenWrapJSEventHandler(in pHandler as JSEventHandler, out rRef as JSObject) returns bool binds to "<builtin>"
+
 /**
 Summary:    Convert a JavaScript object value to a pointer
 
@@ -154,4 +157,40 @@ public handler EvalJavaScriptWithArguments(in pScript as String, in pArgs as Lis
 	return nothing
 end handler
 
+/**
+Summary:    Wrap a LiveCode Builder handler within a JavaScript function, suitable for passing as an event handler.
+
+Parameters:
+pHandler: The handler to wrap
+
+Returns:
+A JavaScript function object, wrapping the handler
+
+Example:
+variable mButton as JSObject
+variable mOnClickHandler as JSObject
+
+private handler OnJSClick(pEvent as JSObject)
+	SetLabel("Clicked!")
+end handler
+
+private handler SetJSEventHandler(in pElement as JSObject, in pEvent as String, in pHandler as JSObject)
+	EvalJavaScriptWithArguments("arguments[0].addEventListener(arguments[1], arguments[2]);", [pElement, pEvent, pHandler])
+end handler
+
+private handler SetupEventHandler()
+	put HandlerAsJSFunction(OnJSClick) into mOnClickHandler
+	SetJSEventHandler(mButton, "click", mOnClickHandler)
+end handler
+	 
+Description:
+Use <HandlerAsJSFunction> to convert a handler reference to a JavaScript function object reference.
+*/
+public handler HandlerAsJSFunction(in pHandler as JSEventHandler) returns JSObject
+	variable tJSHandler as JSObject
+	MCEmscriptenWrapJSEventHandler(pHandler, tJSHandler)
+	return tJSHandler
+end handler
+
 end module
+

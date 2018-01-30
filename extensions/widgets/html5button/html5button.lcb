@@ -55,6 +55,8 @@ private variable mLabel as String
 private variable mButton as JSObject
 private variable mOpen as Boolean
 
+private variable mOnClickHandler as JSObject
+
 private handler IsHTML5() returns Boolean
     return the operating system is "emscripten"
 end handler
@@ -71,10 +73,21 @@ public handler OnLoad(in pProperties as Array)
     put pProperties["label"] into mLabel
 end handler
 
+private handler AddJSEventHandler(in pElement as JSObject, in pEvent as String, in pHandler as JSObject)
+	EvalJavaScriptWithArguments("arguments[0].addEventListener(arguments[1], arguments[2]);", [pElement, pEvent, pHandler])
+end handler
+
+private handler RemoveJSEventHandler(in pElement as JSObject, in pEvent as String, in pHandler as JSObject)
+	EvalJavaScriptWithArguments("arguments[0].removeEventListener(arguments[1], arguments[2]);", [pElement, pEvent, pHandler])
+end handler
 
 private handler InitButtonView()
 	// Create an HTML5 button using JavaScript
 	put EvalJavaScript("document.createElement('button')") into mButton
+
+	// Attach event handler
+	put HandlerAsJSFunction(OnJSClick) into mOnClickHandler
+	AddJSEventHandler(mButton, "click", mOnClickHandler)
 
 	variable tButtonPtr as optional Pointer
 	put PointerFromJSObject(mButton) into tButtonPtr
@@ -86,6 +99,7 @@ private handler InitButtonView()
 end handler
 
 private handler FinalizeButtonView()
+	RemoveJSEventHandler(mButton, "click", mOnClickHandler)
     set my native layer to nothing
     put nothing into mButton
 end handler
@@ -104,6 +118,10 @@ public handler OnClose()
     if IsHTML5() then
         FinalizeButtonView()
     end if
+end handler
+
+private handler OnJSClick(pEvent as JSObject) returns nothing
+	SetLabel("Clicked!")
 end handler
 
 private handler expandRectangle(in pRect as Rectangle, in pExp as Number) returns Rectangle

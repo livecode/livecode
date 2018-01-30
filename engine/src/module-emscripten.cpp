@@ -36,10 +36,22 @@ bool MCEmscriptenEvaluateJavaScriptWithArguments(MCStringRef p_script, MCProperL
 	return MCEmscriptenJSEvaluateScriptWithArguments(p_script, p_args, r_result);
 }
 
+extern "C" MC_DLLEXPORT_DEF
+bool MCEmscriptenWrapJSEventHandler(MCHandlerRef p_handler, MCJSObjectRef &r_wrapper)
+{
+	return MCEmscriptenJSWrapHandler(p_handler, r_wrapper);
+}
+
 #else // !defined(__EMSCRIPTEN__)
 
 extern "C" MC_DLLEXPORT_DEF
 bool MCEmscriptenEvaluateJavaScriptWithArguments(MCStringRef p_script, MCProperListRef p_args, MCStringRef &r_result)
+{
+	return false;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+bool MCEmscriptenWrapJSEventHandler(MCHandlerRef p_handler, MCJSObjectRef &r_wrapper)
 {
 	return false;
 }
