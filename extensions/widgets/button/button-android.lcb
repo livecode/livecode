@@ -102,6 +102,16 @@ __safe foreign handler _JNI_SetTextViewTypeface(in pView as JObject, in pValue a
 __safe foreign handler _JNI_TextViewSetTextSize(in pObj as JObject, in pUnit as JInt, in pSize as JFloat) returns nothing \
 	binds to "java:android.widget.TextView>setTextSize(IF)V?ui"
 
+private foreign handler MCCanvasFontGetHandle(in pFont as Font, out rHandle as Pointer) returns nothing binds to "<builtin>"
+
+handler SetTypeface(in pFont as Font)
+    variable tTypefacePtr as Pointer
+    unsafe
+	    MCCanvasFontGetHandle(pFont, tTypefacePtr)
+	end unsafe
+    _JNI_SetTextViewTypeface(mButtonView_Android, PointerToJObject(tTypefacePtr))
+end handler
+
 constant COMPLEX_UNIT_DIP is 1
 public handler UpdateView_Android(in pIntrinsicProps as Array) returns nothing
 	if mButtonView_Android is nothing then
@@ -110,9 +120,9 @@ public handler UpdateView_Android(in pIntrinsicProps as Array) returns nothing
     
     _JNI_SetTextViewEnabled(mButtonView_Android, pIntrinsicProps["enabled"])
 
-    variable tTypeface as JObject
-    variable tSize as Number
-    put CanvasFontToTypeFace(pIntrinsicProps["font"]) into tTypeface
+    SetTypeface(pIntrinsicProps["font"])
+    
+    variable tSize as Number 
     put the size of pIntrinsicProps["font"] into tSize
     _JNI_TextViewSetTextSize(mButtonView_Android, COMPLEX_UNIT_DIP, tSize)
 end handler
