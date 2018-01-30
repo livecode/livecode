@@ -238,7 +238,13 @@ int32_t MCFontGetSize(MCFontRef self)
 
 void *MCFontGetHandle(MCFontRef self)
 {
+#if defined(_LINUX)
+    MCNewFontStruct *t_struct = 
+        static_cast<MCNewFontStruct *>(self->fontstruct);
+    return t_struct->description;
+#else
     return self->fontstruct->fid;
+#endif
 }
 
 bool MCFontHasPrinterMetrics(MCFontRef self)
