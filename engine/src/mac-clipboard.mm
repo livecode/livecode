@@ -236,6 +236,9 @@ MCDataRef MCMacRawClipboard::EncodeFileListForTransfer(MCStringRef p_file_path) 
         return NULL;
     if (!MCStringFindAndReplace(*t_modified, MCSTR("%2F"), MCSTR("/"), kMCStringOptionCompareExact))
         return NULL;
+    // Undo the transformation of spaces to '+'
+    if (!MCStringFindAndReplace(*t_modified, MCSTR("+"), MCSTR(" "), kMCStringOptionCompareExact))
+        return NULL;
     
     // Add the required "file://" prefix to the path
     if (!MCStringPrepend(*t_modified, MCSTR("file://")))

@@ -830,21 +830,104 @@ end revSaveAsMobileDeployer
 
 ################################################################################
 
+local sCFBundleIcons
 private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle   
    revStandaloneProgress "Copying icons..."    
-   repeat for each line tType in ("iphone icon" & return & "retina icon,-114" & return & "iOS 7 retina icon,-120" & return & "iphone 6 plus icon,-180" & return & "iphone X icon,-180" & return & \
-         "ipad icon,-72" & return & "ipad retina icon,-144" & return & "iOS 7 ipad icon,-76" & return & "iOS 7 ipad retina icon,-152" & return & "iPad Pro 12.9 icon,-167")
+   /*
+   The entry for the AppStore icon in the JSON file should have the form:
+   {
+   "idiom" : "ios-marketing",
+   "size" : "1024x1024",
+   "scale" : "1x",
+   "filename" : "iTunesArtwork@2x.png"
+   }
+   */
+   local sIconsList 
+   put  \
+         "appstore icon,ios-marketing,1024x1024,1x,ItunesArtwork@2x.png" & return & \
+         "iphone icon,iphone,57x57,1x,Icon-App-57x57@1x.png" & return & \
+         "retina icon,iphone,57x57,2x,Icon-App-57x57@2x.png" & return & \
+         "iOS 7 retina icon,iphone,60x60,2x,Icon-App-60x60@2x.png" & return & \
+         "iphone 6 plus icon,iphone,60x60,3x,Icon-App-60x60@3x.png" & return & \
+         "iphone X icon,iphone,60x60,3x,Icon-App-60x60@3x.png" & return & \
+         "ipad icon,ipad,72x72,1x,Icon-App-72x72@1x.png" & return & \
+         "ipad retina icon,ipad,72x72,2x,Icon-App-72x72@2x.png" & return & \
+         "iOS 7 ipad icon,ipad,76x76,1x,Icon-App-76x76@1x.png" & return & \
+         "iOS 7 ipad retina icon,ipad,76x76,2x,Icon-App-76x76@2x.png" & return & \
+         "iPad Pro 12.9 icon,ipad,83.5x83.5,2x,Icon-App-83.5x83.5@2x.png" \
+         into sIconsList
+   
+   local tAssetsFolder, tAppIconFolder
+   put tempname() into tAssetsFolder
+   create folder  tAssetsFolder
+   put tAssetsFolder & slash & "AppIcon.appiconset" into tAppIconFolder
+   create folder tAppIconFolder
+   
+   local tContentsJSON
+   put "{" & CR & quote & "images" & quote & ":[" & CR after tContentsJSON
+   
+   repeat for each line tType in sIconsList
       get pSettings["ios," & item 1 of tType]
       if not (it begins with "/") then
          put pBaseFolder & slash before it
       end if
       if there is a file it then         
-         put url ("binfile:" & it) into url ("binfile:" & pAppBundle & slash & "Icon" & item 2 of tType & ".png")
+         put url ("binfile:" & it) into url ("binfile:" & tAppIconFolder & slash &  item 5 of tType)
          if the result is not empty then
             throw "could not copy icon '" & it & "'"
          end if
+         -- add an entry in the Contents.json file
+         local tEntry
+         put "{" & CR into tEntry
+         put quote & "idiom" & quote & ":" & quote & item 2 of tType & quote & comma & CR after tEntry
+         put quote & "size" & quote & ":" & quote & item 3 of tType & quote & comma & CR after tEntry
+         put quote & "scale" & quote & ":" & quote & item 4 of tType & quote & comma & CR after tEntry
+         put quote & "filename" & quote & ":" & quote & item 5 of tType & quote  & CR after tEntry
+         put "}" & comma & CR after tEntry
+         put tEntry after tContentsJSON
       end if
    end repeat
+   
+   put "]" & CR & "}" after tContentsJSON
+   put tContentsJSON into url ("file:" & tAppIconFolder & slash &  "Contents.json")
+   if the result is not empty then
+      throw "could not create json file '" & it & "'"
+   end if
+   
+   local tCompiledAssetsFolder
+   put tempname() into tCompiledAssetsFolder
+   create folder  tCompiledAssetsFolder
+   
+   local tMinVersion
+   put pSettings["ios,minimum version"] into tMinVersion
+   if tMinVersion is empty then put "6.0" into tMinVersion
+   
+   -- create the Assets.car file
+   get shell("xcrun actool " &  tAssetsFolder & \ 
+         " --compile " & tCompiledAssetsFolder & \
+         " --platform iphoneos  --minimum-deployment-target " & tMinVersion & \
+         " --app-icon AppIcon --output-partial-info-plist " & \
+         tCompiledAssetsFolder &"/partial.plist")
+   
+   local tCompiledAssetsFolderContents,tPartialPlist
+   put url("file:"& tCompiledAssetsFolder & slash & "partial.plist") into tPartialPlist
+   
+   -- store the icon-related part of the partial plist in a script local, to use it later in revCreateMobilePlist
+   put line 5 to -3 of tPartialPlist into sCFBundleIcons
+   
+   put files(tCompiledAssetsFolder) into tCompiledAssetsFolderContents
+   filter tCompiledAssetsFolderContents without "partial.plist"
+   
+   -- copy the Assets.car file and the icon files in the app bundle
+   repeat for each line tFile in tCompiledAssetsFolderContents
+      put url ("binfile:" & tCompiledAssetsFolder & slash & tFile) into url ("binfile:" & pAppBundle & slash &  tFile)
+   end repeat
+   
+   -- cleanup
+   delete folder tCompiledAssetsFolder
+   delete folder tAppIconFolder
+   delete folder tAssetsFolder
+   
 end revCopyMobileNewIcons
 
 private command revCopyMobileNewSplash pSettings, pBaseFolder, pAppBundle   
@@ -1251,6 +1334,17 @@ private command revCopyMobileDrivers pDrivers, pAppBundle, pTarget, pSDKs, @rExt
    end repeat
 end revCopyMobileDrivers
 
+-- Helper function to convert the Xcode version to the format the plist expects. Examples:
+-- 7.2 --> 0720
+-- 8.3.3 --> 0833
+-- 10.2 --> 1020
+-- 10.2.1 --> 1021
+-- relies on the fact that + 0 to empty gives 0
+private function convertXcodeVersion pInput
+   set the itemdel to "."
+   return format("%02d%d%d", item 1 of pInput + 0, item 2 of pInput + 0, item 3 of pInput + 0)
+end convertXcodeVersion
+
 ################################################################################
 
 private command revCopyMobileStackFiles pStackFiles, pBaseFolder, pAppBundle
@@ -1475,6 +1569,41 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${CUSTOM_FONTS}" with tCustomFonts in pPlist
    replace "${DISABLE_ATS}" with tDisableATS in pPlist
    
+   -- PM-2018-01-15: [[Bug 20852]] Get info about Xcode/SDK versions
+   if pTarget is "Device" then
+      local tDtPlatformBuild, tDtPlatformVersion, tDtSdkBuild, tDtSdkName, tDtXcode, tDtXcodeBuild
+      
+      -- Note: The values returned by the shell commands contain a trailing LF, so we have to remove it
+      get shell("xcodebuild -version -sdk iphoneos ProductBuildVersion")
+      -- Those 2 values are the same, e.g. "15C107"
+      put it into tDtPlatformBuild
+      delete last char of tDtPlatformBuild
+      put it into tDtSdkBuild 
+      delete last char of tDtSdkBuild
+      
+      get shell("xcodebuild -version -sdk iphoneos PlatformVersion") -- e.g. "11.2"
+      put it into tDtPlatformVersion
+      delete last char of tDtPlatformVersion
+      
+      put "iphoneos" & tDtPlatformVersion into tDtSdkName
+      
+      get shell("xcodebuild -version | awk '/Xcode/ {print $NF}' ") -- e.g. "9.2"
+      put it into tDtXcode
+      put convertXcodeVersion(tDtXcode) into tDtXcode 
+      
+      get shell("xcodebuild -version | awk 'END {print $NF}' ") -- e.g. "9C40b"
+      put it into tDtXcodeBuild
+      delete last char of tDtXcodeBuild
+      
+      replace "${DT_PLATFORM_BUILD}" with "<string>" & tDtPlatformBuild & "</string>" in pPlist
+      replace "${DT_PLATFORM_VERSION}" with "<string>" & tDtPlatformVersion & "</string>" in pPlist
+      replace "${DT_SDK_BUILD}" with "<string>" & tDtSdkBuild & "</string>" in pPlist
+      replace "${DT_SDK_NAME}" with "<string>" & tDtSdkName & "</string>" in pPlist
+      replace "${DT_XCODE}" with "<string>" & tDtXcode & "</string>" in pPlist
+      replace "${DT_XCODE_BUILD}" with "<string>" & tDtXcodeBuild & "</string>" in pPlist
+      
+   end if
+   
    get empty
    repeat for each item tItem in tDeviceFamily
       put "<integer>" & tItem & "</integer>" after it
@@ -1494,6 +1623,11 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    --
    if pSettings["ios,build type"] is "Arm v7" then
       put "<key>armv7</key><true/>" after it
+   end if
+   
+   -- Building for iOS 11.0 or more only builds the 64bit slice, so update the plist
+   if pSettings["ios,minimum version"] >= 11.0 then
+      put "<key>arm64</key><true/>" after it
    end if
    
    replace "${DEVICE_CAPABILITY}" with it in pPlist
@@ -1527,15 +1661,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end if
    replace "${STATUS_BAR_SOLID}" with "<" & tStatusBarSolid & "/>" in pPlist
    
-   
-   -- MM-2013-10-08: [[ Bug 11257 ]] Make sure we include the new iOS 7 icons in the plist.
-   get empty
-   repeat for each item tItem in ",-72,-114,-144,-120,-180,-76,-152,-167"
-      if there is a file (pAppBundle & slash & "Icon" & tItem & ".png") then
-         put "<string>" & "Icon" & tItem & ".png</string>" after it
-      end if
-   end repeat
-   replace "${BUNDLE_ICONS}" with it in pPlist
+  -- the icons-related part of the plist is stored in sCFBundleIcons
+   replace "${BUNDLE_ICONS}" with sCFBundleIcons in pPlist
    
    -- MM-2014-09-30: [[ iOS8 Support ]] Added new iOS 7 style entries for the splash screens
    -- MM-2014-10-06: [[ Bug 13512 ]] Splash screen sizes are in points and should omit the @2x @3x suffix, iOS is smart enough to figure that out.
