@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "prefix.h"
 
 #include "em-dc.h"
+#include "em-javascript.h"
 #include "em-view.h"
 #include "em-async.h"
 #include "em-event.h"
@@ -118,6 +119,7 @@ Boolean
 MCScreenDC::open()
 {
 	return
+		MCEmscriptenJSInitialize() &&
 		MCEmscriptenEventInitialize() &&
 		MCEmscriptenViewInitialize() &&
         MCEmscriptenLibUrlInitialize() &&
@@ -132,6 +134,7 @@ MCScreenDC::close(Boolean force)
 	MCEmscriptenViewFinalize();
 	MCEmscriptenEventFinalize();
     MCEmscriptenLibUrlFinalize();
+    MCEmscriptenJSFinalize();
 
 	return true;
 }

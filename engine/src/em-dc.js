@@ -152,7 +152,7 @@ mergeInto(LibraryManager.library, {
 				{
 					this.containerRemoveElement(this._windowList, window.element);
 				}
-				LiveCodeUtil.removeObject(pID);
+				LiveCodeUtil.releaseObject(pID);
 			}
 		},
 		

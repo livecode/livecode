@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "em-system.h"
+#include "em-javascript.h"
 #include "em-filehandle.h"
 #include "em-util.h"
 
@@ -43,7 +44,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 extern "C" bool MCEmscriptenSystemInitializeJS(void);
 extern "C" void MCEmscriptenSystemFinalizeJS(void);
-extern "C" int32_t MCEmscriptenSystemEvaluateJavaScript(const unichar_t* p_script, size_t p_script_length, unichar_t** r_result, size_t* r_result_length);
 
 /* ================================================================
  * System abstraction layer
@@ -1125,23 +1125,6 @@ MCEmscriptenSystem::ShowMessageDialog(MCStringRef p_title,
  * Interface with browser JavaScript
  * ---------------------------------------------------------------- */
 
-bool MCEmscriptenSystemEvaluateJavaScriptAsString(MCStringRef p_script, MCStringRef &r_result)
-{
-	MCAutoStringRefAsUTF16String t_script_u16;
-	t_script_u16.Lock(p_script);
-
-	unichar_t* t_result_u16;
-	size_t t_result_length;
-
-	bool t_success;
-	t_success = MCEmscriptenSystemEvaluateJavaScript(t_script_u16.Ptr(), t_script_u16.Size(), &t_result_u16, &t_result_length);
-
-	if (t_success)
-		t_success = MCStringCreateWithBytesAndRelease((byte_t*)t_result_u16, t_result_length, kMCStringEncodingUTF16, false, r_result);
-		
-	return t_success;
-}
-
 void
 MCEmscriptenSystem::DoAlternateLanguage(MCStringRef p_script,
                     MCStringRef p_language)
@@ -1154,8 +1137,8 @@ MCEmscriptenSystem::DoAlternateLanguage(MCStringRef p_script,
 
 	bool t_success = true;
 
-	MCAutoStringRef t_result;
-	t_success = MCEmscriptenSystemEvaluateJavaScriptAsString(p_script, &t_result);
+	MCAutoValueRef t_result;
+	t_success = MCEmscriptenJSEvaluateScript(p_script, &t_result);
 
 	if (!t_success)
 	{
@@ -1241,7 +1224,7 @@ extern bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListR
 extern Exec_stat _MCEngineExecDoDispatch(MCExecContext &ctxt, int p_handler_type, MCNameRef p_message, MCObjectPtr *p_target, MCParameter *p_parameters);
 
 extern "C" MC_DLLEXPORT_DEF
-MCStringRef MCEmscriptenSystemCallStackHandler(void *p_stack, MCStringRef p_handler, MCProperListRef p_params)
+MCValueRef MCEmscriptenSystemCallStackHandler(void *p_stack, MCStringRef p_handler, MCProperListRef p_params)
 {
 	bool t_success = true;
 	
@@ -1301,14 +1284,10 @@ MCStringRef MCEmscriptenSystemCallStackHandler(void *p_stack, MCStringRef p_hand
 	if (t_success)
 		t_success = MCresult->eval(ctxt, &t_result);
 	
-	MCAutoStringRef t_result_string;
-	if (t_success)
-		t_success = ctxt.ConvertToString(*t_result, &t_result_string);
-	
 	if (!t_success)
 		return nil;
 	
-	return t_result_string.Take();
+	return t_result.Take();
 }
 
 // Return the named stack, or NULL if not found
@@ -1325,12 +1304,53 @@ MCStack *MCEmscriptenResolveStack(MCStringRef p_name)
 //////////
 
 extern "C" MC_DLLEXPORT_DEF
+MCNullRef MCEmscriptenUtilCreateNull()
+{
+	return MCValueRetain(kMCNull);
+}
+
+extern "C" MC_DLLEXPORT_DEF
+MCBooleanRef MCEmscriptenUtilCreateBoolean(bool p_value)
+{
+	MCBooleanRef t_boolean;
+	if (!MCBooleanCreateWithBool(p_value, t_boolean))
+		return nil;
+	
+	return t_boolean;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+bool MCEmscriptenUtilGetBooleanValue(MCBooleanRef p_boolean)
+{
+	return p_boolean == kMCTrue;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+MCNumberRef MCEmscriptenUtilCreateNumberWithReal(real64_t p_value)
+{
+	MCNumberRef t_number = nil;
+	if (!MCNumberCreateWithReal(p_value, t_number))
+		return nil;
+		
+	return t_number;
+}
+
+extern "C" MC_DLLEXPORT_DEF
 MCStringRef MCEmscriptenUtilCreateStringWithCharsAndRelease(unichar_t *p_utf16_string, uint32_t p_length)
 {
 	MCStringRef t_string = nil;
 	if (!MCStringCreateWithCharsAndRelease(p_utf16_string, p_length, t_string))
 		return nil;
 	
+	return t_string;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+MCStringRef MCEmscriptenUtilFormatAsString(MCValueRef p_value)
+{
+	MCStringRef t_string = nil;
+	if (!MCStringFormat(t_string, "%@", p_value))
+		return nil;
 	return t_string;
 }
 

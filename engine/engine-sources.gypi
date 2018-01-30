@@ -560,6 +560,10 @@
 			#'src/text-segment.cpp',
 			#'src/text-simplebreakingengine.cpp',
 			
+			# Group "Emscripten"
+			'src/jsobject.h',
+			'src/jsobject.cpp',
+			
 			# Group "Desktop"
 			'src/quicktime.cpp',
 			'src/quicktime.stubs',
@@ -771,6 +775,8 @@
 			'src/em-filehandle.cpp',
 			'src/em-fontlist.h',
 			'src/em-fontlist.cpp',
+			'src/em-javascript.h',
+			'src/em-javascript.cpp',
 			'src/em-liburl.h',
 			'src/em-liburl.cpp',
 			'src/em-liburl.js',

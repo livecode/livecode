@@ -25,26 +25,58 @@ mergeInto(LibraryManager.library, {
 		// Object reference map
 		_objMap: undefined,
 		_objMapIndex: 1,
-		
+
+		// Search the object map for the given object, returning the index if found
+		_findObjectIndex: function(jsObj) {
+			for (var keyvalue of this._objMap.entries())
+			{
+				if (keyvalue[1]['object'] === jsObj)
+					return key;
+			}
+		},
+
 		// create an integer reference for a JavaScript object, suitable
 		// for passing to C++ code
 		storeObject: function(jsObj) {
 			if (!this._objMap)
 				this._objMap = new Map();
 			
+			var index = this._findObjectIndex(jsObj);
+			if (index !== undefined)
+			{
+				this._objMap.get(index)['refCount']++;
+				return index;
+			}
+			
 			var index = this._objMapIndex++;
-			this._objMap.set(index, jsObj);
+			this._objMap.set(index, {'object':jsObj, 'refCount':1});
 			return index;
 		},
 		
 		// return the object referenced by the index
 		fetchObject: function(ref) {
-			return this._objMap.get(ref);
+			var value = this._objMap.get(ref);
+			if (!value)
+				return;
+			return value['object'];
 		},
 
 		// remove the object reference
-		removeObject: function(ref) {
-			this._objMap.delete(ref);
+		releaseObject: function(ref) {
+			var value = this._objMap.get(ref);
+			if (!value)
+				return;
+				
+			if (--value['refCount'] == 0)
+				this._objMap.delete(ref);
+		},
+		
+		/*** ValueRef Support ***/
+		
+		// Release MCValueRef
+		valueRelease: function(valueref)
+		{
+			Module.ccall('MCValueRelease', null, ['number'], [valueref]);
 		},
 		
 		/*** String Conversion ***/
@@ -100,14 +132,29 @@ mergeInto(LibraryManager.library, {
 			return Module.ccall('MCEmscriptenUtilCreateStringWithCharsAndRelease', 'number', ['number', 'number'], [charPtr, str.length]);
 		},
 		
-		/*** ValueRef Support ***/
+		/*** Number conversion ***/
 		
-		// Release MCValueRef
-		valueRelease: function(valueref)
+		numberToJSValue: function(numberref)
 		{
-			Module.ccall('MCValueRelease', null, ['number'], [valueref]);
+			return Module.ccall('MCNumberFetchAsReal', 'number', ['number'], [numberref]);
 		},
 		
+		numberFromJSValue: function(number)
+		{
+			return Module.ccall('MCEmscriptenUtilCreateNumberWithReal', 'number', ['number'], [number]);
+		},
+
+		/*** Boolean conversion ***/
+		booleanToJSValue: function(booleanref)
+		{
+			return Module.ccall('MCEmscriptenGetBooleanValue', 'number', ['number'], [booleanref]) ? true : false;
+		},
+		
+		booleanFromJSValue: function(boolean)
+		{
+			return Module.ccall('MCEmscriptenCreateBoolean', 'number', ['number'], [boolean]);
+		},
+
 		/*** ProperList Support ***/
 		
 		// Create mutable (proper) list
@@ -130,6 +177,161 @@ mergeInto(LibraryManager.library, {
 		{
 			return Module.ccall('MCProperListFetchElementAtIndex', 'number', ['number', 'number'], [listref, index]);
 		},
+
+		properListToJSArray: function(listref)
+		{
+			var array = [];
+			var len = this.properListGetLength(listref);
+			
+			for (var i = 0; i < len; i++)
+			{
+				var value = this.properListFetchElementAtIndex(listref, i);
+				var jsValue = this.valueToJSValue(value);
+				array.push(jsValue);
+			}
+			
+			return array;
+		},
+		
+		properListFromJSArray: function(array)
+		{
+			var listref = this.properListCreateMutable();
+			var len = array.length;
+			for (var i = 0; i < len; i++)
+			{
+				var value = this.valueFromJSValue(array[i]);
+				this.properListPushElementOntoBack(listref, value);
+				this.valueRelease(value);
+			}
+			
+			return listref;
+		},
+		
+		/*** JavaScript object conversion ***/
+		
+		objectRefGetID: function(objRef)
+		{
+			return Module.ccall('MCEmscriptenJSObjectGetID', 'number', ['number'], [objRef]);
+		},
+		
+		objectRefToJSObject: function(objRef)
+		{
+			var id = this.objectRefGetID(objRef);
+			return this.fetchObject(id);
+		},
+		
+		objectRefFromJSObjectID: function(jsObjID)
+		{
+			return Module.ccall('MCEmscriptenJSObjectFromID', 'number', ['number'], [jsObjID]);
+		},
+		
+		objectRefFromJSObject: function(jsObj)
+		{
+			var id = this.storeObject(jsObj);
+			return this.objectRefFromJSObjectID(id);
+		},
+		
+		valueIsObjectRef: function(valueRef)
+		{
+			return Module.ccall('MCEmscriptenIsJSObject', 'number', ['number'], [valueRef]);
+		},
+		
+		/*** Type conversion ***/
+		
+		kMCValueTypeCodeNull:0,
+		kMCValueTypeCodeBoolean:1,
+		kMCValueTypeCodeNumber:2,
+		kMCValueTypeCodeName:3,
+		kMCValueTypeCodeString:4,
+		kMCValueTypeCodeData:5,
+		kMCValueTypeCodeArray:6,
+		kMCValueTypeCodeList:7,
+		kMCValueTypeCodeSet:8,
+		kMCValueTypeCodeProperList:9,
+		kMCValueTypeCodeCustom:10,
+		kMCValueTypeCodeRecord:11,
+		kMCValueTypeCodeHandler:12,
+		kMCValueTypeCodeTypeInfo:13,
+		kMCValueTypeCodeError:14,
+		kMCValueTypeCodeForeignValue:15,
+		
+		valueGetTypeCode: function(valueref)
+		{
+			return Module.ccall('MCValueGetTypeCode', 'number', ['number'], [valueref]);
+		},
+		
+		valueToJSValue: function(valueref)
+		{
+			if (this.valueIsObjectRef(valueref))
+				return this.objectRefToJSObject(valueref);
+				
+			var typecode = this.valueGetTypeCode(valueref);
+			switch (typecode)
+			{
+				case this.kMCValueTypeCodeNull:
+					return null;
+				case this.kMCValueTypeCodeProperList:
+					return this.properListToJSArray(valueref);
+				case this.kMCValueTypeCodeString:
+					return this.stringFromMCStringRef(valueref);
+				case this.kMCValueTypeCodeNumber:
+					return this.numberToJSValue(valueref);
+				case this.kMCValueTypeCodeBoolean:
+					return this.booleanToJSValue(valueref);
+				/* TODO - support more value types */
+				default:
+					return this.valueToString(valueref);
+			}
+		},
+		
+		valueFromJSValue: function(jsValue)
+		{
+			if (Array.isArray(jsValue))
+				return this.properListFromJSArray(jsValue);
+			else if (jsValue === null)
+				return Module.ccall('MCEmscriptenUtilCreateNull', 'number', [], []);
+			else
+			{
+				switch (typeof jsValue)
+				{
+					case "number":
+						return this.numberFromJSValue(jsValue);
+					case "string":
+						return this.stringToMCStringRef(jsValue);
+					case "boolean":
+						return this.booleanFromJSValue(jsValue);
+					case "function":
+					case "object":
+						/* TODO - for now, treat functions as objects but we may wish to differentiate them later */
+						return this.objectRefFromJSObject(jsValue);
+					default:
+						return this.stringToMCStringRef(String(jsValue));
+				}
+			}
+		},
+		
+		valueToMCStringRef: function(valueref)
+		{
+			return Module.ccall('MCEmscriptenUtilFormatAsString', 'number', ['number'], [valueref]);
+		},
+		
+		valueToString: function(valueref)
+		{
+			var value = null;
+			var string = this.valueToMCStringRef(valueref);
+			if (string)
+			{
+				value = this.stringFromMCStringRef(string);
+				this.valueRelease(string);
+			}
+			return value;
+		},
+	},
+	
+	MCEmscriptenUtilReleaseObject__deps: ['$LiveCodeUtil'],
+	MCEmscriptenUtilReleaseObject: function(pObjectID)
+	{
+		LiveCodeUtil.releaseObject(pObjectID);
 	},
 });
 

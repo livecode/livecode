@@ -19,11 +19,12 @@
 #define __MC_NATIVE_LAYER_EMSCRIPTEN__
 
 #include "native-layer.h"
+#include "jsobject.h"
 
 class MCNativeLayerEmscripten : public MCNativeLayer
 {
 public:
-    MCNativeLayerEmscripten(MCObject *p_object, int p_element);
+    MCNativeLayerEmscripten(MCObject *p_object, MCJSObjectID p_element);
     ~MCNativeLayerEmscripten();
     
 	virtual bool GetCanRenderToContext();
@@ -42,9 +43,9 @@ private:
     // Performs a relayering operation
     virtual void doRelayer();
     
-    int getStackWindow();
+    MCJSObjectID getStackWindow();
 
-    int m_element;
+    MCJSObjectID m_element;
 };
 
 #endif // ifndef __MC_NATIVE_LAYER_EMSCRIPTEN__

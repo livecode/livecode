@@ -1970,6 +1970,9 @@ MCScriptMapTypeToForeignPrimitiveTypeInModule(MCScriptModuleBuilderRef self, uin
             { "ObjcRetainedId", kMCScriptForeignPrimitiveTypePointer },
             { "ObjcAutoreleasedId", kMCScriptForeignPrimitiveTypePointer },
             
+            /* JavaScript FFI Types */
+            { "JSObject", kMCScriptForeignPrimitiveTypePointer },
+            
             /* Extra Foundation Types */
             { "Stream", kMCScriptForeignPrimitiveTypePointer },
             

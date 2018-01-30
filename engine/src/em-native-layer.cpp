@@ -47,31 +47,32 @@
 #include "group.h"
 
 #include "em-native-layer.h"
+#include "jsobject.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" void MCEmscriptenElementSetRect(int p_element, int p_left, int p_top, int p_right, int p_bottom);
-extern "C" void MCEmscriptenElementSetClip(int p_element, int p_left, int p_top, int p_right, int p_bottom);
-extern "C" void MCEmscriptenElementSetVisible(int p_element, bool p_visible);
-extern "C" void MCEmscriptenElementAddToWindow(int p_element, int p_container);
-extern "C" void MCEmscriptenElementRemoveFromWindow(int p_element, int p_container);
-extern "C" void MCEmscriptenElementPlaceAbove(int p_element, int p_above, int p_container);
+extern "C" void MCEmscriptenElementSetRect(MCJSObjectID p_element, int p_left, int p_top, int p_right, int p_bottom);
+extern "C" void MCEmscriptenElementSetClip(MCJSObjectID p_element, int p_left, int p_top, int p_right, int p_bottom);
+extern "C" void MCEmscriptenElementSetVisible(MCJSObjectID p_element, bool p_visible);
+extern "C" void MCEmscriptenElementAddToWindow(MCJSObjectID p_element, MCJSObjectID p_container);
+extern "C" void MCEmscriptenElementRemoveFromWindow(MCJSObjectID p_element, MCJSObjectID p_container);
+extern "C" void MCEmscriptenElementPlaceAbove(MCJSObjectID p_element, MCJSObjectID p_above, MCJSObjectID p_container);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline void MCEmscriptenElementSetRect(int p_element, const MCRectangle &p_rect)
+inline void MCEmscriptenElementSetRect(MCJSObjectID p_element, const MCRectangle &p_rect)
 {
 	MCEmscriptenElementSetRect(p_element, p_rect.x, p_rect.y, p_rect.x + p_rect.width, p_rect.y + p_rect.height);
 }
 
-inline void MCEmscriptenElementSetClip(int p_element, const MCRectangle &p_rect)
+inline void MCEmscriptenElementSetClip(MCJSObjectID p_element, const MCRectangle &p_rect)
 {
 	MCEmscriptenElementSetClip(p_element, p_rect.x, p_rect.y, p_rect.x + p_rect.width, p_rect.y + p_rect.height);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayerEmscripten::MCNativeLayerEmscripten(MCObject *p_object, int p_element)
+MCNativeLayerEmscripten::MCNativeLayerEmscripten(MCObject *p_object, MCJSObjectID p_element)
 {
 	MCLog("new native layer for %p, %d", p_object, p_element);
 	m_object = p_object;
@@ -153,7 +154,7 @@ void MCNativeLayerEmscripten::doRelayer()
     if (isAttached() && m_object->getstack()->getcard() == m_object->getstack()->getcurcard())
     {
         // If t_previous_element == 0, this will put the element on the bottom layer
-        int t_previous_element = 0;
+        MCJSObjectID t_previous_element = 0;
 
         if (t_previous != nil)
         {
@@ -176,16 +177,16 @@ bool MCNativeLayerEmscripten::GetNativeView(void *&r_view)
 	return true;
 }
 
-int MCNativeLayerEmscripten::getStackWindow()
+MCJSObjectID MCNativeLayerEmscripten::getStackWindow()
 {
-    return (int)m_object->getstack()->getwindow();
+    return (MCJSObjectID)m_object->getstack()->getwindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view)
 {
-    return new MCNativeLayerEmscripten(p_object, (int)p_view);
+    return new MCNativeLayerEmscripten(p_object, MCJSObjectGetID(static_cast<MCJSObjectRef>(p_view)));
 }
 
 bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_view)
