@@ -25,72 +25,72 @@ module com.livecode.emscripten
 
 use com.livecode.foreign
 
-public type JSObjectRef is UIntPtr
+public foreign type JSObject binds to "MCJSObjectTypeInfo"
 
-foreign handler MCEmscriptenPointerFromObjectRef(in pRef as JSObjectRef, out rPtr as optional Pointer) returns nothing binds to "<builtin>"
-foreign handler MCEmscriptenPointerToObjectRef(in pPtr as optional Pointer, out rRef as JSObjectRef) returns nothing binds to "<builtin>"
-__safe foreign handler MCEmscriptenEvaluateJavaScriptAsString(in pScript as String, out rResult as String) returns bool binds to "<builtin>"
+foreign handler MCEmscriptenPointerFromJSObject(in pObj as JSObject, out rPtr as Pointer) returns nothing binds to "<builtin>"
+foreign handler MCEmscriptenPointerToJSObject(in pPtr as Pointer, out rObj as JSObject) returns nothing binds to "<builtin>"
+
+__safe foreign handler MCEmscriptenEvaluateJavaScriptWithArguments(in pScript as String, in pArgs as List, out rResult as any) returns bool binds to "<builtin>"
 
 /**
-Summary:    Convert a JavaScript object reference to a pointer
+Summary:    Convert a JavaScript object value to a pointer
 
 Parameters:
-pObj: The object reference to convert
+pObj: The object to convert
 
 Example:
 
 public handler InitNativeButton()
-	variable tButton as JSObjectRef
-	put EvalJavaScript("LiveCodeUtil.storeObject(document.createElement('button'))") into tButton
+	variable tButton as JSObject
+	put EvalJavaScript("document.createElement('button')") into tButton
 
 	variable tPointer as Pointer
-	put PointerFromJSObjectRef(tButton) into tPointer
+	put PointerFromJSObject(tButton) into tPointer
 
 	set my native layer to tPointer
 end handler
 
 
 Description:
-Use <PointerFromJSObjectRef> to convert a reference to a JavaScript object
-to a variable of type Pointer.
+Use <PointerFromJSObject> to convert a JavaScript object to a variable of type Pointer.
 
 */
-public handler PointerFromJSObjectRef(in pObj as JSObjectRef) returns Pointer
+public handler PointerFromJSObject(in pObj as JSObject) returns Pointer
 	variable tPointer as Pointer
     unsafe
-		MCEmscriptenPointerFromObjectRef(pObj, tPointer)
+		MCEmscriptenPointerFromJSObject(pObj, tPointer)
     end unsafe
 	return tPointer
 end handler
 
 /**
-Summary:    Convert a Pointer into a JavaScript object reference
+Summary:    Convert a Pointer into a JavaScript object
 
 Parameters:
 pPointer: The Pointer to convert
 
 Returns:
-An value of type JSObjectRef
+An value of type JSObject
 
 Example:
 variable mButtonPointer
 
 public handler SetButtonText(in pText as String)
-	variable tButtonRef as JSObjectRef
-	put PointerToJSObjectRef(mButtonPointer) into tButtonRef
+	variable tJSButton as JSObject
+	put PointerToJSObject(mButtonPointer) into tJSButton
 	
 	EvalJavaScript("LiveCodeUtil.fetchObject(" & tButtonRef & ").innerHTML = '" + EscapeJSString(pText) + "'")
 end handler
 	 
 Description:
-Use <PointerToJSObjectRef> to convert a variable of type Pointer to a JavaScript object reference.
+Use <PointerToJSObject> to convert a variable of type Pointer to a JavaScript object.
 */
-public handler PointerToJSObjectRef(in pPointer as Pointer) returns JSObjectRef
-	variable tObjectRef as JSObjectRef
+public handler PointerToJSObject(in pPointer as Pointer) returns JSObject
+	variable tObject as JSObject
     unsafe
-		MCEmscriptenPointerToObjectRef(pPointer, tObjectRef)
+		MCEmscriptenPointerToJSObject(pPointer, tObject)
     end unsafe
-	return tObjectRef
+	return tObject
 end handler
 
 /**
@@ -100,24 +100,54 @@ Parameters:
 pScript: The script to evaluate
 
 Returns:
-An value of type String
+A value of any type
 
 Example:
-variable mButtonPointer
+public handler InitNativeButton()
+	variable tButton as JSObject
+	put EvalJavaScript("document.createElement('button')") into tButton
 
-public handler SetButtonText(in pText as String)
-	variable tButtonRef as JSObjectRef
-	put PointerToJSObjectRef(mButtonPointer) into tButtonRef
-	
-	EvalJavaScript("LiveCodeUtil.fetchObject(" & tButtonRef & ").innerHTML = '" + EscapeJSString(pText) + "'")
+	variable tPointer as Pointer
+	put PointerFromJSObject(tButton) into tPointer
+
+	set my native layer to tPointer
 end handler
 	 
 Description:
-Use <PointerToJSObjectRef> to convert a variable of type Pointer to a JavaScript object reference.
+Use <EvalJavaScript> to get the result of running a block of JavaScript code
 */
-public handler EvalJavaScript(in pScript as String) returns optional String
-	variable tResult as String
-	if MCEmscriptenEvaluateJavaScriptAsString(pScript, tResult) then
+public handler EvalJavaScript(in pScript as String) returns optional any
+	variable tResult as any
+	if MCEmscriptenEvaluateJavaScriptWithArguments(pScript, [], tResult) then
+		return tResult
+	end if
+	
+	return nothing
+end handler
+
+/**
+Summary:    Evaluate JavaScript code within the browser with arguments
+
+Parameters:
+pScript: The script to evaluate
+pArgs: The list of arguments to pass to the script
+
+Returns:
+A value of any type
+
+Example:
+variable mButton as JSObject
+
+public handler SetButtonText(in pText as String)
+	EvalJavaScriptWithArguments("arguments[0].innerHTML = arguments[1]", [mButton, pText])
+end handler
+	 
+Description:
+Use <EvalJavaScriptWithArguments> to get the result of running a block of JavaScript code, where you need to pass values to the script.
+*/
+public handler EvalJavaScriptWithArguments(in pScript as String, in pArgs as List) returns optional String
+	variable tResult as any
+	if MCEmscriptenEvaluateJavaScriptWithArguments(pScript, pArgs, tResult) then
 		return tResult
 	end if
 	

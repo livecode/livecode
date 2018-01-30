@@ -14,23 +14,32 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <jsobject.h>
+#include <em-javascript.h>
 #include <foundation.h>
-#include <foundation-auto.h>
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCEmscriptenSystemEvaluateJavaScriptAsString(MCStringRef p_script, MCStringRef &r_result);
+extern "C" MC_DLLEXPORT_DEF
+MCTypeInfoRef MCJSObjectTypeInfo()
+{
+	return kMCJSObjectTypeInfo;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 #if defined(__EMSCRIPTEN__)
 
-extern "C" MC_DLLEXPORT_DEF bool MCEmscriptenEvaluateJavaScriptAsString(MCStringRef p_script, MCStringRef &r_result)
+extern "C" MC_DLLEXPORT_DEF
+bool MCEmscriptenEvaluateJavaScriptWithArguments(MCStringRef p_script, MCProperListRef p_args, MCValueRef &r_result)
 {
-	return MCEmscriptenSystemEvaluateJavaScriptAsString(p_script, r_result);
+	return MCEmscriptenJSEvaluateScriptWithArguments(p_script, p_args, r_result);
 }
 
 #else // !defined(__EMSCRIPTEN__)
 
-extern "C" MC_DLLEXPORT_DEF bool MCEmscriptenEvaluateJavaScriptAsString(MCStringRef p_script, MCStringRef &r_result)
+extern "C" MC_DLLEXPORT_DEF
+bool MCEmscriptenEvaluateJavaScriptWithArguments(MCStringRef p_script, MCProperListRef p_args, MCStringRef &r_result)
 {
 	return false;
 }
@@ -39,24 +48,32 @@ extern "C" MC_DLLEXPORT_DEF bool MCEmscriptenEvaluateJavaScriptAsString(MCString
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT_DEF void MCEmscriptenPointerFromObjectRef(uintptr_t p_ref, void *&r_ptr)
+extern "C" MC_DLLEXPORT_DEF
+void MCEmscriptenPointerFromJSObject(MCJSObjectRef p_object, void *&r_ptr)
 {
-	r_ptr = reinterpret_cast<void*>(p_ref);
+	r_ptr = reinterpret_cast<void*>(p_object);
 }
 
-extern "C" MC_DLLEXPORT_DEF void MCEmscriptenPointerToObjectRef(void *p_ptr, uintptr_t &r_ref)
+extern "C" MC_DLLEXPORT_DEF
+void MCEmscriptenPointerToJSObject(void *p_ptr, MCJSObjectRef &r_obj)
 {
-	r_ref = reinterpret_cast<uintptr_t>(p_ptr);
+	r_obj = reinterpret_cast<MCJSObjectRef>(p_ptr);
 }
 
-////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool com_livecode_emscripten_Initialize (void)
+
+extern "C"
+bool com_livecode_emscripten_Initialize (void)
 {
+	if (!MCJSCreateJSObjectTypeInfo())
+		return false;
+		
 	return true;
 }
 
-extern "C" void com_livecode_emscripten_Finalize (void)
+extern "C"
+void com_livecode_emscripten_Finalize (void)
 {
 }
 

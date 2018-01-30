@@ -52,7 +52,7 @@ metadata label.editor is "com.livecode.pi.string"
 metadata label.default is ""
 
 private variable mLabel as String
-private variable mButton as Integer
+private variable mButton as JSObject
 private variable mOpen as Boolean
 
 private handler IsHTML5() returns Boolean
@@ -71,26 +71,13 @@ public handler OnLoad(in pProperties as Array)
     put pProperties["label"] into mLabel
 end handler
 
-//private handler EvalJavaScript(in pScript as String) returns String
-//	log "running js script: " & pScript
-//	variable tLCScript as String
-//	put "do param(1) as javascript" into tLCScript
-//	variable tResult as String
-//	//execute script tLCScript in my script object with [ pScript ]
-//	execute script tLCScript with [ pScript ]
-//	put the result into tResult
-//	log "js result: " & tResult
-//	return tResult
-//end handler
 
 private handler InitButtonView()
 	// Create an HTML5 button using JavaScript
-	variable tButton as any
-	put EvalJavaScript("LiveCodeUtil.storeObject(document.createElement('button'))") into tButton
-	put tButton parsed as number into mButton
+	put EvalJavaScript("document.createElement('button')") into mButton
 
 	variable tButtonPtr as optional Pointer
-	put PointerFromJSObjectRef(mButton) into tButtonPtr
+	put PointerFromJSObject(mButton) into tButtonPtr
 	set my native layer to tButtonPtr
 	
 	log "set native layer"
@@ -100,7 +87,6 @@ end handler
 
 private handler FinalizeButtonView()
     set my native layer to nothing
-    EvalJavaScript("LiveCodeUtil.removeObject(" & mButton & ");")
     put nothing into mButton
 end handler
 
@@ -182,17 +168,11 @@ public handler OnPaint()
     paintPlaceholderLabel(this canvas, my bounds, tLabel, my font, color [0,0,0])
 end handler
 
-private handler ObjectScript() returns String
-	return "LiveCodeUtil.fetchObject(" & mButton formatted as string & ")"
-end handler
-
 public handler SetLabel(in pLabel as String)
     put pLabel into mLabel
     if mButton is not nothing then
 		// Set button label using JavaScript
-		variable tScript as String
-		put ObjectScript() & ".innerHTML='" & pLabel & "';" into tScript
-		EvalJavaScript(tScript)
+		EvalJavaScriptWithArguments("arguments[0].innerHTML=arguments[1];", [mButton, pLabel])
     end if
     redraw all
 end handler
