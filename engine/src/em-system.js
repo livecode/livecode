@@ -137,6 +137,36 @@ mergeInto(LibraryManager.library, {
 			});
 			return stackHandle;
 		},
+		
+		//////////
+		
+		callHandlerWithParamList: function(handler, paramList) {
+			return Module.ccall('MCEmscriptenSystemCallHandler', 'number', ['number', 'number'], [handler, paramList]);
+		},
+		
+		wrapHandlerRef: function(handlerref) {
+			var jsFunction = function() {
+				var tParams = Array.prototype.slice.call(arguments);
+				var jsResult;
+				LiveCodeAsync.resume(function() {
+					var paramList = LiveCodeUtil.properListFromJSArray(tParams);
+					var result = LiveCodeSystem.callHandlerWithParamList(handlerref, paramList);
+
+					if (paramList)
+						LiveCodeUtil.valueRelease(paramList);
+
+					if (result)
+					{
+						jsResult = LiveCodeUtil.valueToJSValue(result);
+						LiveCodeUtil.valueRelease(result);
+					}
+				});
+
+				return jsResult;
+			};
+			
+			return LiveCodeUtil.objectRefFromJSObject(jsFunction);
+		},
     },
     
     MCEmscriptenSystemEvaluateJavaScriptWithArguments__deps: ['$LiveCodeSystem'],
@@ -144,6 +174,11 @@ mergeInto(LibraryManager.library, {
 		return LiveCodeSystem.evaluateJavaScriptWithArguments(pScriptRef, pArgsRef, rResultRef);
     },
     
+    MCEmscriptenSystemWrapHandler__deps: ['$LiveCodeSystem'],
+    MCEmscriptenSystemWrapHandler: function(pHandlerRef) {
+		return LiveCodeSystem.wrapHandlerRef(pHandlerRef);
+	},
+	
 	MCEmscriptenSystemInitializeJS__deps: ['$LiveCodeSystem'],
 	MCEmscriptenSystemInitializeJS: function() {
 		LiveCodeSystem.initialize();

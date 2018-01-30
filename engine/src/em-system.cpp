@@ -1304,6 +1304,28 @@ MCStack *MCEmscriptenResolveStack(MCStringRef p_name)
 //////////
 
 extern "C" MC_DLLEXPORT_DEF
+MCValueRef MCEmscriptenSystemCallHandler(MCHandlerRef p_handler, MCProperListRef p_params)
+{
+	MCProperListRef t_in_out_params = MCValueRetain(p_params);
+	
+	MCErrorRef t_error = nil;
+	MCValueRef t_result = nil;
+	t_error = MCHandlerTryToInvokeWithList(p_handler, t_in_out_params, t_result);
+	
+	MCValueRelease(t_in_out_params);
+	
+	if (t_error)
+	{
+		MCValueRelease(t_error);
+		return nil;
+	}
+	
+	return t_result;
+}
+
+//////////
+
+extern "C" MC_DLLEXPORT_DEF
 MCNullRef MCEmscriptenUtilCreateNull()
 {
 	return MCValueRetain(kMCNull);
