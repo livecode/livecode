@@ -6,6 +6,9 @@ on doPackage
    local tArgs
    put the commandArguments into tArgs
    
+   local tEngine
+   put the commandName into tEngine
+   
    local tProtectifyScript, tProtectifyOutput, tGitHash
    put tArgs[2] into tProtectifyScript   
    put tArgs[3] into tProtectifyOutput
@@ -27,31 +30,42 @@ on doPackage
    put tArgs[11] into tLCCompile
    put tArgs[12] into tInterfaceFolder
    
-   if tCommercialExtension is true and \
-      not (tSourceFileName ends with ".lcb") then
-      protectStack the commandName, tProtectifyScript, tSourceFolder, \ 
-         tSourceFileName, tProtectifyOutput, tGitHash
+   buildPackageAndExtractExtension tEngine, tProtectifyScript, \
+      tProtectifyOutput, tGitHash, tExtractDocsScript, tDocsParser, \
+      tSourceFolder, tSourceFileName, tTargetFolder, \
+      tCommercialExtension, tLCCompile, tInterfaceFolder
+end doPackage
+
+command buildPackageAndExtractExtension pEngine, pProtectifyScript, \
+   pProtectifyOutput, pGitHash, pExtractDocsScript, pDocsParser, \
+   pSourceFolder, pSourceFileName, pTargetFolder, \
+   pCommercialExtension, pLCCompile, pInterfaceFolder
+
+   if pCommercialExtension is true and \
+      not (pSourceFileName ends with ".lcb") then
+      protectStack pEngine, pProtectifyScript, pSourceFolder, \ 
+         pSourceFileName, pProtectifyOutput, pGitHash
    end if
    
-   extractDocs the commandName, tExtractDocsScript, tDocsParser, \
-      tSourceFolder, tSourceFileName
+   extractDocs pEngine, pExtractDocsScript, pDocsParser, \
+      pSourceFolder, pSourceFileName
    
    local tPackage
-   if not (tSourceFileName ends with ".lcb") then   
-      packageScriptExtension tSourceFolder, tSourceFileName, \
-         tTargetFolder, tCommercialExtension
+   if not (pSourceFileName ends with ".lcb") then   
+      packageScriptExtension pSourceFolder, pSourceFileName, \
+         pTargetFolder, pCommercialExtension
    else
-      packageBuilderExtension tSourceFolder, tSourceFileName, \
-         tTargetFolder, tCommercialExtension, tLCCompile, \
-         tInterfaceFolder
+      packageBuilderExtension pSourceFolder, pSourceFileName, \
+         pTargetFolder, pCommercialExtension, pLCCompile, \
+         pInterfaceFolder
    end if
    put the result into tPackage
    
-   extractExtension tPackage, tSourceFolder, tTargetFolder, \
-      tCommercialExtension
+   extractExtension tPackage, pSourceFolder, pTargetFolder, \
+      pCommercialExtension
       
    quit 0
-end doPackage
+end buildPackageAndExtractExtension
  
 function q pParam
    return quote & pParam & quote
