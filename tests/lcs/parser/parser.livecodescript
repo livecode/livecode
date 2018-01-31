@@ -43,3 +43,8 @@ on TestBug19688
 	__CompileCheck "get the width"
    TestAssert "'get the <objprop>' parse error", the result is not empty
 end TestBug19688
+
+on TestBug20293
+  __CompileCheck format("get the last char to -4 of \"string\"")
+  TestAssert "'badrange parse error'", the result is not empty
+end TestBug20293
