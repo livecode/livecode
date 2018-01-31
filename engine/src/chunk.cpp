@@ -314,7 +314,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 			case TT_TO:
 				if (curref != NULL && MCChunkTermHasRange(lterm))
 				{
-					if (curref->etype == CT_RANGE)
+					if (curref->etype != CT_EXPRESSION)
 					{
 						MCperror->add
 						(PE_CHUNK_BADRANGE, sp);
