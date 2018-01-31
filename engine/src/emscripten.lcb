@@ -76,13 +76,13 @@ Returns:
 An value of type JSObject
 
 Example:
-variable mButtonPointer
+variable mButtonPointer as Pointer
 
 public handler SetButtonText(in pText as String)
 	variable tJSButton as JSObject
 	put PointerToJSObject(mButtonPointer) into tJSButton
 	
-	EvalJavaScript("LiveCodeUtil.fetchObject(" & tButtonRef & ").innerHTML = '" + EscapeJSString(pText) + "'")
+	EvalJavaScriptWithArguments("arguments[0].innerHTML = arguments[1]", [tJSButton, pText])
 end handler
 	 
 Description:
@@ -106,16 +106,10 @@ Returns:
 A value of any type
 
 Example:
-public handler InitNativeButton()
-	variable tButton as JSObject
-	put EvalJavaScript("document.createElement('button')") into tButton
-
-	variable tPointer as Pointer
-	put PointerFromJSObject(tButton) into tPointer
-
-	set my native layer to tPointer
+public handler GetInputText() returns String
+	return EvalJavaScript("document.getElementById('myText').value")
 end handler
-	 
+
 Description:
 Use <EvalJavaScript> to get the result of running a block of JavaScript code
 */
@@ -170,7 +164,7 @@ Example:
 variable mButton as JSObject
 variable mOnClickHandler as JSObject
 
-private handler OnJSClick(pEvent as JSObject)
+private handler OnJSClick(pEvent as JSObject) returns nothing
 	SetLabel("Clicked!")
 end handler
 
