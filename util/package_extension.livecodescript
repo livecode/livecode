@@ -6,21 +6,50 @@ on doPackage
    local tArgs
    put the commandArguments into tArgs
    
-   if tArgs[10] is true and not (tArgs[8] ends with ".lcb") then
-      protectStack the commandName, tArgs[2], tArgs[7], tArgs[8], tArgs[3], tArgs[4]
+   local tProtectifyScript, tProtectifyOutput, tGitHash
+   put tArgs[2] into tProtectifyScript   
+   put tArgs[3] into tProtectifyOutput
+   put tArgs[4] into tGitHash
+
+   local tExtractDocsScript, tDocsParser
+   put tArgs[5] into tExtractDocsScript
+   put tArgs[6] into tDocsParser
+   
+   local tSourceFolder, tSourceFileName, tTargetFolder
+   put tArgs[7] into tSourceFolder
+   put tArgs[8] into tSourceFileName
+   put tArgs[9] into tTargetFolder
+   
+   local tCommercialExtension
+   put tArgs[10] into tCommercialExtension
+   
+   local tLCCompile, tInterfaceFolder
+   put tArgs[11] into tLCCompile
+   put tArgs[12] into tInterfaceFolder
+   
+   if tCommercialExtension is true and \
+      not (tSourceFileName ends with ".lcb") then
+      protectStack the commandName, tProtectifyScript, tSourceFolder, \ 
+         tSourceFileName, tProtectifyOutput, tGitHash
    end if
    
-   extractDocs the commandName, tArgs[5], tArgs[6], tArgs[7], tArgs[8]
+   extractDocs the commandName, tExtractDocsScript, tDocsParser, \
+      tSourceFolder, tSourceFileName
    
    local tPackage
-   if not (tArgs[8] ends with ".lcb") then   
-      packageScriptExtension tArgs[7], tArgs[8], tArgs[9], tArgs[10]
+   if not (tSourceFileName ends with ".lcb") then   
+      packageScriptExtension tSourceFolder, tSourceFileName, \
+         tTargetFolder, tCommercialExtension
    else
-      packageBuilderExtension tArgs[7], tArgs[8], tArgs[9], tArgs[10], tArgs[11], tArgs[12]
+      packageBuilderExtension tSourceFolder, tSourceFileName, \
+         tTargetFolder, tCommercialExtension, tLCCompile, \
+         tInterfaceFolder
    end if
    put the result into tPackage
    
-   extractExtension tPackage, tArgs[7], tArgs[9], tArgs[10]
+   extractExtension tPackage, tSourceFolder, tTargetFolder, \
+      tCommercialExtension
+      
    quit 0
 end doPackage
  
