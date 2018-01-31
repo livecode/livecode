@@ -36,6 +36,32 @@ on doPackage
       tCommercialExtension, tLCCompile, tInterfaceFolder
 end doPackage
 
+local sExternalsA
+private command __EnsureExternal pExternal
+   if sExternalsA[pExternal] then
+      exit __EnsureExternal
+   end if
+
+   set the itemdelimiter to slash
+   
+   if the platform is "MacOS" then
+      set the externals of the templateStack to specialFolderPath("engine") & slash & pExternal & ".bundle"
+   else if the platform is "linux" then
+      set the externals of the templateStack to specialFolderPath("engine") & slash & pExternal & ".so"
+   else if the platform is "win32" then
+      set the externals of the templateStack to specialFolderPath("engine") & slash & pExternal & ".dll"
+   end if
+   
+   create stack pExternal && "External"
+   start using it
+   if the externalCommands of it is empty then
+      write "cannot load external" && pExternal to stderr
+      quit 1   
+   else
+      put true into sExternalsA[pExternal]
+   end if
+end __EnsureExternal 
+
 command buildPackageAndExtractExtension pEngine, pProtectifyScript, \
    pProtectifyOutput, pGitHash, pExtractDocsScript, pDocsParser, \
    pSourceFolder, pSourceFileName, pTargetFolder, \
@@ -61,8 +87,7 @@ command buildPackageAndExtractExtension pEngine, pProtectifyScript, \
    end if
    put the result into tPackage
    
-   extractExtension tPackage, pSourceFolder, pTargetFolder, \
-      pCommercialExtension
+   extractExtension tPackage, pSourceFolder, pTargetFolder
       
    quit 0
 end buildPackageAndExtractExtension
@@ -166,25 +191,42 @@ private command addFolderToArchiveRecursive pBaseFolder, pFolder, pArchive
 end addFolderToArchiveRecursive
 
 private command packageExtension pExtensionName, pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource, pSupportFiles
-   write "packaging extension" && pSourceFileName & return to stdout
+   __EnsureExternal revzip
+   
    local tTargetDir, tBuildTarget, tZip
    put pExtensionName into tTargetDir
    put pTargetFolder & slash & tTargetDir into tBuildTarget
-   put pSourceFolder & slash & tTargetDir & ".lce" into tZip
+   put the folder & slash & pSourceFolder & slash & tTargetDir & ".lce" into tZip
+
+   write "packaging extension" && pSourceFileName && \
+      "to" && tZip & return to stdout
+   
+   if there is a file tZip then
+      delete file tZip
+   end if
    
    local tArchive, tError
    revZipOpenArchive tZip, "write"
    if the result begins with "ziperr" then
       put the result into tError
    end if
-   addFolderToArchive pSourceFolder, tZip, pRemoveSource, pSourceFileName, pSupportFiles
-   if the result begins with "ziperr" then
-      put the result into tError
+   
+   if tError is empty then
+      addFolderToArchive pSourceFolder, tZip, pRemoveSource, \
+         pSourceFileName, pSupportFiles
+    
+      if the result begins with "ziperr" then
+         put the result into tError
+      end if
    end if
-   revZipCloseArchive tZip
-   if the result begins with "ziperr" then
-      put the result into tError
+   
+   if tError is empty then
+      revZipCloseArchive tZip
+      if the result begins with "ziperr" then
+         put the result into tError
+      end if
    end if
+   
    if tError is not empty then
       write "zip error when packaging extension" && pSourceFileName & ":" && tError to stderr
       quit 3
@@ -212,12 +254,24 @@ private command __EnsurePath pPath
    end repeat
 end __EnsurePath
 
-private command extractExtension pZip, pExtensionName, pSourceFolder, pTargetFolder
-   local tTargetDir, tBuildTarget, tError
-   put pExtensionName into tTargetDir
-   put pTargetFolder & slash & tTargetDir into tBuildTarget
+private command extractExtension pZip, pSourceFolder, pTargetFolder
+   __EnsureExternal revzip
+      
+   local tTargetDir, tBuildTarget, tError, tName
+   set the itemdelimiter to slash
+   put item -1 of pZip into tName
+   set the itemdelimiter to "."
+   put item 1 to -2 of tName into tName
    
-   create folder tBuildTarget
+   put pTargetFolder & slash & tName into tBuildTarget
+  
+    write "extracting extension" && pZip && \
+      "to" && tBuildTarget & return to stdout
+   
+   if there is not a folder tBuildTarget then
+      create folder tBuildTarget
+   end if
+   
    # Extract the icon,docs and executable module into the folder
    revZipOpenArchive pZip, "read"
    if the result begins with "ziperr" then
@@ -226,14 +280,16 @@ private command extractExtension pZip, pExtensionName, pSourceFolder, pTargetFol
    
    # Work out the root of the zip
    local tZipItems, tZipRoot
-   put revZipEnumerateItems(pZip) into tZipItems
-   if the result begins with "ziperr" then
-      put the result into tError
-   end if
-   if the last char of line 1 of tZipItems is "/" then
-      put line 1 of tZipItems into tZipRoot
-   else
-      put empty into tZipRoot
+   if tError is empty then
+      put revZipEnumerateItems(pZip) into tZipItems
+      if the result begins with "ziperr" then
+         put the result into tError
+      end if
+      if the last char of line 1 of tZipItems is "/" then
+         put line 1 of tZipItems into tZipRoot
+      else
+         put empty into tZipRoot
+      end if
    end if
    
    # Extract all the files
@@ -248,12 +304,15 @@ private command extractExtension pZip, pExtensionName, pSourceFolder, pTargetFol
       end if
    end repeat 
    
-   revZipCloseArchive pZip
-   if the result begins with "ziperr" then
-      put the result into tError
+   if tError is empty then
+      revZipCloseArchive pZip
+      if the result begins with "ziperr" then
+         put the result into tError
+      end if
    end if
+   
    if tError is not empty then
-      write "zip error when extracting extension" && pExtensionName & ":" && tError to stderr
+      write "zip error when extracting extension" && tName & ":" && tError to stderr
       quit 3
    end if
 end extractExtension
@@ -314,18 +373,19 @@ command packageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, p
     end if    
     
     # Extract an e.g. "module foo.bar.baz" line from an LCB source file
-    local tExtractNameShell, tExtensionName
-    put "sed -nEe 's,^([[:space:]]*<name>(.*)</name>[[:space:]]*)$,\2,p' <" \
-       && q(pSourceFolder & slash & "manifest.xml") into tExtractNameShell
-
-    write "extracting extension name from manifest" & return to stdout    
-    put word 1 to -1 of shell(tExtractNameShell) into tExtensionName
-    if the result is not 0 then
-        write "subprocess error when extracting name from" && pSourceFileName & ":" && it to stderr
-        quit 3
-    end if   	
+	write "extracting extension name from manifest" & return to stdout      
+    local tManifest, tName
+    put url("binfile:" & pSourceFolder & slash & "manifest.xml") \
+       into tManifest
     
-   packageExtension tExtensionName, pSourceFolder, pSourceFileName, \
+    put textDecode(tManifest, "utf-8") into tManifest
+    if not matchText(tManifest, " *<name>(.*)</name> *", tName) then
+        write "could not find name in manifest" && \
+        	pSourceFolder & slash & "manifest.xml" to stderr
+        quit 3
+    end if
+    
+   packageExtension tName, pSourceFolder, pSourceFileName, \
          pTargetFolder, pRemoveSource, tSupportFiles
    return the result
 end packageBuilderExtension
