@@ -24,7 +24,7 @@
 class MCNativeLayerEmscripten : public MCNativeLayer
 {
 public:
-    MCNativeLayerEmscripten(MCObject *p_object, MCJSObjectID p_element);
+    MCNativeLayerEmscripten(MCObject *p_object, MCJSObjectRef p_element);
     ~MCNativeLayerEmscripten();
     
 	virtual bool GetCanRenderToContext();
@@ -45,7 +45,7 @@ private:
     
     MCJSObjectID getStackWindow();
 
-    MCJSObjectID m_element;
+    MCJSObjectRef  m_element;
 };
 
 #endif // ifndef __MC_NATIVE_LAYER_EMSCRIPTEN__

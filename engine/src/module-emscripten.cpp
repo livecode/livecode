@@ -69,7 +69,8 @@ void MCEmscriptenPointerFromJSObject(MCJSObjectRef p_object, void *&r_ptr)
 extern "C" MC_DLLEXPORT_DEF
 void MCEmscriptenPointerToJSObject(void *p_ptr, MCJSObjectRef &r_obj)
 {
-	r_obj = reinterpret_cast<MCJSObjectRef>(p_ptr);
+	// Out-params of type MCValueRef should be retained
+	r_obj = MCValueRetain(reinterpret_cast<MCJSObjectRef>(p_ptr));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

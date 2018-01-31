@@ -72,15 +72,17 @@ inline void MCEmscriptenElementSetClip(MCJSObjectID p_element, const MCRectangle
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayerEmscripten::MCNativeLayerEmscripten(MCObject *p_object, MCJSObjectID p_element)
+MCNativeLayerEmscripten::MCNativeLayerEmscripten(MCObject *p_object, MCJSObjectRef p_element)
 {
 	MCLog("new native layer for %p, %d", p_object, p_element);
 	m_object = p_object;
-	m_element = p_element;
+	m_element = MCValueRetain(p_element);
 }
 
 MCNativeLayerEmscripten::~MCNativeLayerEmscripten()
 {
+	if (m_element)
+		MCValueRelease(m_element);
 }
 
 void MCNativeLayerEmscripten::doAttach()
@@ -88,8 +90,8 @@ void MCNativeLayerEmscripten::doAttach()
     if (!m_element)
         return;
 	
-	MCLog("attach element %d", m_element);
-	MCEmscriptenElementAddToWindow(m_element, getStackWindow());
+	MCLog("attach element %d", MCJSObjectGetID(m_element));
+	MCEmscriptenElementAddToWindow(MCJSObjectGetID(m_element), getStackWindow());
 
     // Act as if there were a re-layer to put the widget in the right place
     doRelayer();
@@ -105,7 +107,7 @@ void MCNativeLayerEmscripten::doDetach()
     
     // Remove the element from the stack's content view
     MCLog("detach element %d");
-	MCEmscriptenElementRemoveFromWindow(m_element, getStackWindow());
+	MCEmscriptenElementRemoveFromWindow(MCJSObjectGetID(m_element), getStackWindow());
 }
 
 // Rendering view to context not supported in HTML5.
@@ -125,7 +127,7 @@ void MCNativeLayerEmscripten::doSetViewportGeometry(const MCRectangle& p_rect)
 		return;
 		
 	MCLog("set element rect");
-	MCEmscriptenElementSetClip(m_element, p_rect);
+	MCEmscriptenElementSetClip(MCJSObjectGetID(m_element), p_rect);
 }
 
 void MCNativeLayerEmscripten::doSetGeometry(const MCRectangle &p_rect)
@@ -133,7 +135,7 @@ void MCNativeLayerEmscripten::doSetGeometry(const MCRectangle &p_rect)
     if (!m_element)
         return;
 	
-	MCEmscriptenElementSetRect(m_element, p_rect);
+	MCEmscriptenElementSetRect(MCJSObjectGetID(m_element), p_rect);
 }
 
 void MCNativeLayerEmscripten::doSetVisible(bool p_visible)
@@ -141,7 +143,7 @@ void MCNativeLayerEmscripten::doSetVisible(bool p_visible)
     if (!m_element)
         return;
     
-    MCEmscriptenElementSetVisible(m_element, p_visible);
+    MCEmscriptenElementSetVisible(MCJSObjectGetID(m_element), p_visible);
 }
 
 void MCNativeLayerEmscripten::doRelayer()
@@ -160,10 +162,10 @@ void MCNativeLayerEmscripten::doRelayer()
         {
 			MCNativeLayerEmscripten *t_previous_layer = nil;
             t_previous_layer = reinterpret_cast<MCNativeLayerEmscripten*>(t_previous->getNativeLayer());
-            t_previous_element = t_previous_layer->m_element;
+            t_previous_element = MCJSObjectGetID(t_previous_layer->m_element);
 		}
 
-		MCEmscriptenElementPlaceAbove(m_element, t_previous_element, getStackWindow());
+		MCEmscriptenElementPlaceAbove(MCJSObjectGetID(m_element), t_previous_element, getStackWindow());
     }
 }
 
@@ -186,7 +188,7 @@ MCJSObjectID MCNativeLayerEmscripten::getStackWindow()
 
 MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view)
 {
-    return new MCNativeLayerEmscripten(p_object, MCJSObjectGetID(static_cast<MCJSObjectRef>(p_view)));
+    return new MCNativeLayerEmscripten(p_object, static_cast<MCJSObjectRef>(p_view));
 }
 
 bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_view)
