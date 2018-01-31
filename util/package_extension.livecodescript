@@ -394,3 +394,53 @@ on errorDialog tError
    write "Error:" && tError to stderr
    quit 10
 end errorDialog
+
+/*
+private command packageExtensionShell pExtensionName, pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource, pSupportFiles
+   write "packaging extension" && pSourceFileName & return to stdout    
+   
+   local tTargetDir, tBuildTarget, tZip
+   put pExtensionName into tTargetDir
+   put pTargetFolder & slash & tTargetDir into tBuildTarget
+   put pSourceFolder & slash & tTargetDir & ".lce" into tZip
+   
+   local tShell
+   put "cd" && q(pSourceFolder) into tShell   
+   put return & "zip -q -r" && tTargetDir & ".lce *" after tShell
+   get shell(tShell)
+   if the result is not 0 then
+       write "subprocess error when packaging extension" && pSourceFileName & ":" && it to stderr
+       quit 3
+   end if
+   return tZip
+end packageExtensionShell
+
+private command extractExtensionShell pZip, pExtensionName, pSourceFolder, pTargetFolder
+   local tTargetDir, tBuildTarget
+   put pExtensionName into tTargetDir
+   put pTargetFolder & slash & tTargetDir into tBuildTarget
+   
+   local tShell, tCurFolder
+   put the folder into tCurFolder
+   put return & "cd" && q(tCurFolder) after tShell
+   put return & "mkdir -p" && q(tBuildTarget) after tShell
+   put return & "unzip -q -o " & q(pZip) && "-d " & q(tBuildTarget) \
+      after tShell
+   put return & "rm" && q(pZip) after tShell
+   
+   if pRemoveSource is "true" then
+      put return & "rm" && q(tBuildTarget & slash & pSourceFileName) \ 	
+         after tShell
+      repeat for each line tSupport in pSupportFiles
+         put return & "rm" && q(tBuildTarget & slash & tSupport) \ 	
+         	after tShell
+      end repeat
+   end if
+   
+   get shell(tShell)
+   if the result is not 0 then
+       write "subprocess error when packaging extension" && pSourceFileName & ":" && it to stderr
+       quit 3
+   end if
+end extractExtensionShell
+*/
