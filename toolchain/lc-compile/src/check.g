@@ -1463,7 +1463,7 @@
 
     -- variadic parameter 'sticks' and matches the rest of the argument list
     'rule' CheckCallArguments(Position, ParamRest:parameterlist(parameter(_, variadic, _, _), _), expressionlist(Argument, ArgRest)):
-        CheckExpressionIsEvaluatable(Argument)
+        CheckExpressionIsExplicitlyTypedVariable(Argument)
         CheckCallArguments(Position, ParamRest, ArgRest)
 
     'rule' CheckCallArguments(Position, parameterlist(parameter(_, variadic, _, _), _), nil):
@@ -1506,6 +1506,20 @@
             CheckExpressionIsAssignable(Argument)
         |]
         CheckInvokeArguments(Position, SigTail, Arguments)
+
+'action' CheckExpressionIsExplicitlyTypedVariable(EXPRESSION)
+
+    'rule' CheckExpressionIsExplicitlyTypedVariable(slot(Position, Id)):
+        -- Only expressions binding to a slot which has a specified type are
+        -- 'explicitly typed'
+        QueryKindOfSymbolId(Id -> variable)
+        QuerySymbolId(Id -> Info)
+        Info'Type -> Type
+        ne(Type, unspecified)
+
+    'rule' CheckExpressionIsExplicitlyTypedVariable(Expr):
+        GetExpressionPosition(Expr -> Position)
+        Error_VariadicArgumentNotExplicitlyTyped(Position)
 
 'action' CheckExpressionIsEvaluatable(EXPRESSION)
 

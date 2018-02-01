@@ -403,6 +403,7 @@ DEFINE_ERROR_I(UnsafeHandlerCallNotAllowedInSafeContext, "Unsafe handler '%s' ca
 
 DEFINE_ERROR(VariadicParameterMustBeLast, "Variadic parameter must be the last")
 DEFINE_ERROR(VariadicParametersOnlyAllowedInForeignHandlers, "Variadic parameters only allowed in foreign handlers")
+DEFINE_ERROR(VariadicArgumentNotExplicitlyTyped, "Variadic arguments must be an explicitly-typed variable")
 
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(intptr_t p_position) { _Warning(p_position, Message); }

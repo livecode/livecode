@@ -889,6 +889,47 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 }
 
 bool
+MCScriptExecuteContext::Bridge(MCValueRef p_value,
+                               MCValueRef& r_output_value)
+{
+    // Get resolved typeinfo for the value.
+    MCResolvedTypeInfo t_resolved_type;
+    if (!ResolveTypeInfo(MCValueGetTypeInfo(p_value),
+                         t_resolved_type))
+    {
+        return false;
+    }
+ 
+    // Get the foreign type descriptor for the value's type, if any.
+    const MCForeignTypeDescriptor *t_desc = nullptr;
+    if (MCTypeInfoIsForeign(t_resolved_type.type))
+    {
+        t_desc = MCForeignTypeInfoGetDescriptor(t_resolved_type.type);
+    }
+    
+    // If the type is not foreign or is not bridgeable foreign, just retain;
+    // otherwise use doimport.
+    if (t_desc == nullptr ||
+        t_desc->doimport == nullptr)
+    {
+        r_output_value = MCValueRetain(p_value);
+    }
+    else
+    {
+        if (!t_desc->doimport(t_desc,
+                              MCForeignValueGetContentsPtr(p_value),
+                              false,
+                              r_output_value))
+        {
+            Rethrow();
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool
 MCScriptExecuteContext::Convert(MCValueRef p_value,
 								MCTypeInfoRef p_to_type,
 								MCValueRef& r_new_value)
