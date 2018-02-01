@@ -3174,7 +3174,7 @@ Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters)
 	t_no_backup = true;
     
 	if (t_success)
-        t_success = MCParseParameters(p_parameters, "xu", &(&t_path), &t_no_backup);
+        t_success = MCParseParameters(p_parameters, "xb", &(&t_path), &t_no_backup);
     
     if (t_success)
         MCMiscSetDoNotBackupFile(ctxt, *t_path, t_no_backup);
