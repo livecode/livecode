@@ -1181,9 +1181,6 @@ void MCScriptEndDefinitionGroupInModule(MCScriptModuleBuilderRef self, uindex_t&
 
 static uindex_t __measure_uint(uindex_t p_value)
 {
-    if ((p_value & (1 << 31)) != 0)
-        return 2;
-    
     if (p_value < (1 << 7))
         return 1;
     if (p_value < (1 << 14))
@@ -1192,10 +1189,12 @@ static uindex_t __measure_uint(uindex_t p_value)
         return 3;
     if (p_value < (1 << 28))
         return 4;
+    
     return 5;
 }
 
-static uindex_t __measure_instruction(MCScriptModuleBuilderRef self, MCScriptBytecodeInstruction *p_instruction)
+/* Measure the instruction, fixing the size of jump delta to p_jump_size bytes */
+static uindex_t __measure_instruction(MCScriptModuleBuilderRef self, MCScriptBytecodeInstruction *p_instruction, uindex_t p_jump_size)
 {
     uindex_t t_size;
     t_size = 1;
@@ -1204,11 +1203,11 @@ static uindex_t __measure_instruction(MCScriptModuleBuilderRef self, MCScriptByt
         t_size += 1;
     
     if (p_instruction -> operation == kMCScriptBytecodeOpJump)
-        t_size += 2;
+        t_size += p_jump_size;
     else if (p_instruction -> operation >= kMCScriptBytecodeOpJumpIfFalse && p_instruction -> operation <= kMCScriptBytecodeOpJumpIfTrue)
     {
         t_size += __measure_uint(self -> operands[p_instruction -> operands]);
-        t_size += 2;
+        t_size += p_jump_size;
     }
     else
     {
@@ -1231,44 +1230,39 @@ static void __emit_bytecode_byte(MCScriptModuleBuilderRef self, uint8_t p_byte)
     self -> module . bytecode[t_index] = p_byte;
 }
 
-static void __emit_bytecode_uint(MCScriptModuleBuilderRef self, uindex_t p_value)
+/* Encode a uint. If the top bit of p_value is set then it is taken to be a
+ * a jump delta and is encoded at fixed size p_jump_size. */
+static void __emit_bytecode_uint(MCScriptModuleBuilderRef self, uindex_t p_value, uindex_t p_jump_size)
 {
     if (self == nil || !self -> valid)
         return;
     
-    uint8_t t_bytes[5];
-    uindex_t t_index;
+    bool t_is_jump = false;
     if ((p_value & (1 << 31)) != 0)
     {
+        t_is_jump = true;
         p_value &= ~(1 << 31);
-        
-        t_bytes[0] = (p_value & 0x7f) | 0x80;
-        t_bytes[1] = ((p_value >> 7) & 0x7f);
-        t_index = 2;
-        
-        if ((p_value >> 14) != 0)
-            MCAssert(false);
     }
-    else
+    
+    uint8_t t_bytes[5];
+    uindex_t t_index;
+    t_index = 0;
+    do
     {
-        t_index = 0;
-        do
-        {
-            // Fetch the next 7 bits.
-            uint8_t t_byte;
-            t_byte = p_value & 0x7f;
-            
-            // Remove from the value.
-            p_value = p_value >> 7;
-            
-            // If there is anything left in the value, mark the top-bit.
-            if (p_value != 0)
-                t_byte |= 1 << 7;
-            
-            t_bytes[t_index++] = t_byte;
-        }
-        while(p_value != 0);
+        // Fetch the next 7 bits.
+        uint8_t t_byte;
+        t_byte = p_value & 0x7f;
+        
+        // Remove from the value.
+        p_value = p_value >> 7;
+        
+        // If there is anything left in the value, mark the top-bit.
+        if (p_value != 0 || (t_is_jump && t_index < p_jump_size - 1))
+            t_byte |= 1 << 7;
+        
+        t_bytes[t_index++] = t_byte;
     }
+    while(p_value != 0 || (t_is_jump && t_index < p_jump_size));
     
     if (!MCMemoryResizeArray(self -> module . bytecode_count + t_index, self -> module . bytecode, self -> module . bytecode_count))
     {
@@ -1277,6 +1271,8 @@ static void __emit_bytecode_uint(MCScriptModuleBuilderRef self, uindex_t p_value
     }
     
     MCMemoryCopy(self -> module . bytecode + self -> module . bytecode_count - t_index, t_bytes, t_index);
+    
+    return;
 }
 
 static void __emit_constant(MCScriptModuleBuilderRef self, MCValueRef p_constant, uindex_t& r_index)
@@ -1357,6 +1353,55 @@ static void __emit_position(MCScriptModuleBuilderRef self, uindex_t p_address, u
     self -> module . positions[t_pindex] . line = p_line;
 }
 
+/* Compute the deltas for all jump instructions assuming that all jumps can
+ * fit in p_jump_size bytes. If p_just_check is true, false will be returned
+ * if there is a jump which will not fit and nothing else is done. If p_just_check
+ * is false then the deltas will be written into the operands array. */
+static bool __compute_jump_deltas(MCScriptModuleBuilderRef self, uindex_t p_jump_size, bool p_just_check)
+{
+    for(uindex_t i = 0; i < self -> instruction_count; i++)
+    {
+        MCScriptBytecodeOp t_op;
+        uindex_t *t_operands;
+        
+        uindex_t t_address;
+        t_address = self -> instructions[i] . address;
+        t_op = self -> instructions[i] . operation;
+        t_operands = &self -> operands[self -> instructions[i] . operands];
+        
+        uindex_t t_address_index;
+        if (t_op == kMCScriptBytecodeOpJump)
+            t_address_index = 0;
+        else if (t_op == kMCScriptBytecodeOpJumpIfFalse || t_op == kMCScriptBytecodeOpJumpIfTrue)
+            t_address_index = 1;
+        else
+            continue;
+        
+        index_t t_target_address;
+        t_target_address = self -> instructions[self -> labels[t_operands[t_address_index] - 1] . instruction] . address - t_address;
+        
+        uindex_t t_encoded_target_address;
+        if (t_target_address >= 0)
+            t_encoded_target_address = t_target_address * 2;
+        else
+            t_encoded_target_address = (-t_target_address) * 2 + 1;
+        
+        if (p_just_check)
+        {
+            if (__measure_uint(t_encoded_target_address) > p_jump_size)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            t_operands[t_address_index] = t_encoded_target_address | (1 << 31);
+        }
+    }
+ 
+    return true;
+}
+
 void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, MCScriptHandlerAttributes p_attributes, uindex_t p_index)
 {
     if (self == nil || !self -> valid)
@@ -1398,57 +1443,39 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
     MCScriptHandlerDefinition *t_handler;
     t_handler = static_cast<MCScriptHandlerDefinition *>(self -> module . definitions[self -> current_handler]);
 
-    // Compute addresses for each instruction.
-    uindex_t t_address;
-    t_address = 0;
-    for(uindex_t i = 0; i < self -> instruction_count; i++)
+    /* Determine the size of jump deltas needed. Each size (1 to 5) is tried in
+     * turn until one succeeds. This is a reasonable approximation to
+     * decomposing the instructions into (nested) basic-blocks and generating
+     * code from inside to outside. */
+    uindex_t t_jump_size = 1;
+    for(; t_jump_size <= 5; t_jump_size += 1)
     {
-        self -> instructions[i] . address = t_address;
-        t_address += __measure_instruction(self, &self -> instructions[i]);
-    }
+        // Compute addresses for each instruction.
+        uindex_t t_address = 0;
+        for(uindex_t i = 0; i < self -> instruction_count; i++)
+        {
+            self -> instructions[i] . address = t_address;
+            t_address += __measure_instruction(self, &self -> instructions[i], t_jump_size);
+        }
 
-    // Compute real addresses for jumps.
-    for(uindex_t i = 0; i < self -> instruction_count; i++)
-    {
-        MCScriptBytecodeOp t_op;
-        uindex_t *t_operands;
-        
-        t_address = self -> instructions[i] . address;
-        t_op = self -> instructions[i] . operation;
-        t_operands = &self -> operands[self -> instructions[i] . operands];
-        
-        uindex_t t_address_index;
-        if (t_op == kMCScriptBytecodeOpJump)
-            t_address_index = 0;
-        else if (t_op == kMCScriptBytecodeOpJumpIfFalse || t_op == kMCScriptBytecodeOpJumpIfTrue)
-            t_address_index = 1;
-        else
-            continue;
-        
-        index_t t_target_address;
-        t_target_address = self -> instructions[self -> labels[t_operands[t_address_index] - 1] . instruction] . address - t_address;
-        
-        uindex_t t_encoded_target_address;
-        if (t_target_address >= 0)
-            t_encoded_target_address = t_target_address * 2;
-        else
-            t_encoded_target_address = (-t_target_address) * 2 + 1;
-        
-        t_operands[t_address_index] = (1 << 31) | t_encoded_target_address;
+        // Compute real addresses for jumps.
+        if (__compute_jump_deltas(self, t_jump_size, true))
+        {
+            break;
+        }
     }
     
-    uindex_t t_pos_address_offset;
-    t_pos_address_offset = self -> module . bytecode_count;
+    /* Now a jump size has been found which works, use it to place the actual
+     * deltas into the operands array. */
+    __compute_jump_deltas(self, t_jump_size, false);
+    
+    uindex_t t_pos_address_offset = self -> module . bytecode_count;
     for(uindex_t i = 0; i < self -> instruction_count; i++)
     {
-        MCScriptBytecodeOp t_op;
-        uindex_t t_arity;
-        uindex_t *t_operands;
-        
-        t_op = self -> instructions[i] . operation;
-        t_address = self -> instructions[i] . address;
-        t_arity = self -> instructions[i] . arity;
-        t_operands = &self -> operands[self -> instructions[i] . operands];
+        MCScriptBytecodeOp t_op = self -> instructions[i] . operation;
+        uindex_t t_address = self -> instructions[i] . address;
+        uindex_t t_arity = self -> instructions[i] . arity;
+        uindex_t *t_operands = &self -> operands[self -> instructions[i] . operands];
         
         __emit_position(self, t_pos_address_offset + t_address, self -> instructions[i] . file, self -> instructions[i] . line);
         
@@ -1458,7 +1485,7 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
             __emit_bytecode_byte(self, uint8_t(t_arity - 15U));
         
         for(uindex_t j = 0; j < t_arity; j++)
-            __emit_bytecode_uint(self, t_operands[j]);
+            __emit_bytecode_uint(self, t_operands[j], t_jump_size);
     }
     
     t_handler -> finish_address = self -> module . bytecode_count;
