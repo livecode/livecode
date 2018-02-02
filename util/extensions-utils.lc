@@ -1,0 +1,53 @@
+#!
+ 
+send "doPackage" to me
+ 
+on doPackage
+   local tArgs
+   put the commandArguments into tArgs
+   
+   local tEngine
+   put the commandName into tEngine
+   
+   set the itemdelimiter to slash
+   local tPackagerFilename
+   put item 1 to -3 of the filename of me & slash & \
+      "extensions/script-libraries/extensionpackage/" & \
+      "extensionpackage.livecodescript" \
+      into tPackagerFilename
+   
+   write tPackagerFilename & return to stdout
+   
+   start using stack tPackagerFilename
+
+   local tSendCmd   
+   switch tArgs[2]
+   case "buildlcbextensions"
+      -- Resolve dependency order of list of extensions
+      -- and build each one.
+      put "buildPackageAndExtractLCBExtensions" into tSendCmd
+      break
+   case "extractdocs"
+      put "extractDocs" into tSendCmd
+      break
+   case "buildextension"
+      put "buildPackageAndExtractExtension" into tSendCmd
+      break 
+   default
+      write "invalid mode" && tArgs[2] to stderr
+      quit 1
+      break
+   end switch
+
+   repeat with x = 3 to the number of elements in tArgs
+      put " tArgs[" & x & "]," after tSendCmd
+   end repeat
+   delete the last char of tSendCmd
+   
+   try
+      send tSendCmd to stack tPackagerFilename
+   catch tError
+      write tError to stderr
+      quit 1
+   end try
+end doPackage
