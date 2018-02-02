@@ -87,6 +87,7 @@
 		    [
         		# Requires a working LiveCode engine
 		        '../engine/engine.gyp:server',
+				'../revzip/revzip.gyp:external-revzip-server',		        
     		],
             
             'rules':
@@ -104,11 +105,11 @@
 					'action':
 					[
 						'<(engine)',
-						'../util/package_extension.livecodescript',
+						'../util/extensions-utils.lc',
+						'buildextension',
 						'dummy1',
 						'dummy2',
 						'dummy3',
-						'../util/extract-docs.livecodescript',
 						'../ide-support/revdocsparser.livecodescript',			
 						'<(RULE_INPUT_DIRNAME)',
 						'<(RULE_INPUT_ROOT).livecodescript',
@@ -128,6 +129,7 @@
 				'../toolchain/lc-compile/lc-compile.gyp:lc-compile',
 				'../engine/lcb-modules.gyp:engine_lcb_modules',
 				'../engine/engine.gyp:server',
+				'../revzip/revzip.gyp:external-revzip-server',				
 			],
 
 			'sources':
@@ -183,7 +185,7 @@
 
 					'inputs':
 					[
-						'../util/build-extensions.sh',
+						'../util/extensions-utils.lc',
 						'<@(_sources)',
 					],
 
@@ -195,34 +197,14 @@
 
 					'message': 'Building extensions',
 
-					'conditions':
-					[
-						[
-							'OS == "win"',
-							{
-								'variables':
-								{
-									'build_command': [ '$(ProjectDir)../../../util/invoke-unix.bat', '$(ProjectDir)../../../util/build-extensions.sh' ],
-								},
-							},
-							{
-								'variables':
-								{
-									'build_command': [ '../util/build-extensions.sh' ],
-								},
-							},
-						],
-					],
-
 					'action':
 					[
-						'<@(build_command)',
 						'<(engine)',
-						'../util/package_extension.livecodescript',
-						'../util/extract-docs.livecodescript',
-						'../ide-support/revdocsparser.livecodescript',
+						'../util/extensions-utils.lc',
+						'buildlcbextensions',
+												'../ide-support/revdocsparser.livecodescript',
 						'<(PRODUCT_DIR)/packaged_extensions',
-						'false',
+						'true',
 						'>(lc-compile_host)',
 						'<(PRODUCT_DIR)/modules/lci',
 						'<@(_sources)',
