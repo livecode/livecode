@@ -32,7 +32,8 @@ If an error occurs during transfer of the data, the error is placed in
 the result <function>. The first <word> returned by the <result>
 <function> is "error", followed (where appropriate) by the text of the
 error message returned by the HTTP <server>, including the server
-response code. >*Important:* If there is an error downloading an <https>
+response code. 
+>*Important:* If there is an error downloading an <https>
 <URL(keyword)>, the <URL(keyword)> <container> does not necessarily
 <evaluate> to empty. Most <HTTP> <server|servers> send an error page
 when the file is not found or another error occurs, and the URL

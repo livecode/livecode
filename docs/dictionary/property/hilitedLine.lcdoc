@@ -28,8 +28,8 @@ The <hilitedLine> of a <field> is a list of one or more
 <integer|integers>, separated by commas.
 
 Description:
-Use the <hilitedLine> <property> to check which <lines> in a <list
-field> are selected, or to <select> a <line>.
+Use the <hilitedLine> <property> to check which <lines> in a 
+<list field> are selected, or to <select> a <line>.
 
 Each item of the <hilitedLine> <property> is a line number. For example,
 if the first and fourth <lines> of the <field> are selected, the

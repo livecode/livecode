@@ -288,6 +288,7 @@ Support for the <tabAlign> property was added in version 8.1.2
 
 References: get (command), set (command), charToNum (function),
 colorNames (function), format (function), numToChar (function),
+fontLanguage (function)
 ASCII (glossary), character set (glossary), chunk (glossary),
 default (glossary), encode (glossary), format (glossary),
 hexadecimal (glossary), HTML (glossary), integer (glossary),
@@ -295,7 +296,7 @@ negative (glossary), property (glossary), string (glossary),
 Windows (glossary), effective (keyword), field (keyword), URL (keyword),
 field (object), backgroundColor (property), borderColor (property),
 borderWidth (property), dontWrap (property), dragData (property),
-firstIndent (property), fontLanguage (property),
+firstIndent (property),
 foregroundColor (property), hGrid (property), hidden (property),
 HTMLText (property), imageSource (property), leftIndent (property),
 linkText (property), listStyle (property), metadata (property),
