@@ -642,6 +642,11 @@ public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocat
 public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton as CUInt) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetClickCount(in pCurrent as CBool, out rCount as CUInt) returns nothing binds to "<builtin>"
 
+public foreign handler MCWidgetGetTouchIndex(out rId as optional Integer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetTouchPosition(out rLocation as optional Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetNumberOfTouches(out rCount as CUInt) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetPositionOfTouch(in pId as Integer, out rLocation as optional Point) returns nothing binds to "<builtin>"
+
 --public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) returns nothing binds to "<builtin>"
 --public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
 
@@ -749,6 +754,30 @@ syntax TheMouseButtonState is expression
 begin
     MCWidgetGetMouseButtonState(Index, output)
 end syntax*/
+
+syntax TheTouchIndex is expression
+    "the" "touch" "index"
+begin
+    MCWidgetGetTouchIndex(output)
+end syntax
+
+syntax TheTouchLocation is expression
+    "the" "touch" "position"
+begin
+    MCWidgetGetTouchPosition(output)
+end syntax
+
+syntax TheNumberOfTouches is expression
+    "the" "number" "of" "touches"
+begin
+    MCWidgetGetNumberOfTouches(output)
+end syntax
+
+syntax TheLocationOfTouch is prefix operator with property precedence
+    "the" "position" "of" "touch" <Id: Expression>
+begin
+    MCWidgetGetPositionOfTouch(Id, output)
+end syntax
 
 -- FIXME not actually implemented
 /*

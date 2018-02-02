@@ -1207,6 +1207,7 @@ struct MCTouch
 	uint32_t id;
 	int32_t x, y;
 	MCObjectHandle target;
+    bool is_widget;
 };
 
 static MCTouch *s_touches = nil;
@@ -1226,67 +1227,91 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 	MCPoint t_touch_loc;
 	t_touch_loc = p_stack->view_viewtostackloc(MCPointMake(x, y));
 	
-	if (p_phase != kMCEventTouchPhaseBegan)
-	{
-		for(t_touch = s_touches; t_touch != nil; t_previous_touch = t_touch, t_touch = t_touch -> next)
-			if (t_touch -> id == p_id)
-				break;
-		
-		if (t_touch != nil)
-		{
-			t_target = t_touch -> target;
-				
-			// MW-2011-09-05: [[ Bug 9683 ]] Make sure we remove (and delete the touch) here if
-			//   it is 'end' or 'cancelled' so that a cleartouches inside an invoked handler
-			//   doesn't cause a crash.			
-			if (p_phase == kMCEventTouchPhaseEnded || p_phase == kMCEventTouchPhaseCancelled)
-			{
-				if (t_previous_touch == nil)
-					s_touches = t_touch -> next;
-				else
-					t_previous_touch -> next = t_touch -> next;
-				
-				delete t_touch;
-			}
-		}
-	}
-	else
-	{
-		t_touch = new (nothrow) MCTouch;
-		t_touch -> next = s_touches;
-		t_touch -> id = p_id;
-		
-		t_target = p_stack -> getcurcard() -> hittest(t_touch_loc.x, t_touch_loc.y);
-		t_touch -> target = t_target -> GetHandle();
-		
-		s_touches = t_touch;
-	}
 
-	if (t_target != nil)
-	{
-        // Touches on widgets are handled differently
-        if (t_target->gettype() == CT_WIDGET)
+    if (p_phase != kMCEventTouchPhaseBegan)
+    {
+        for(t_touch = s_touches; t_touch != nil; t_previous_touch = t_touch, t_touch = t_touch -> next)
+            if (t_touch -> id == p_id)
+                break;
+        
+        /* If there is a touch, fetch the target and delete the touch record if it
+         * is ending or cancelling a touch. */
+        if (t_touch != nil)
         {
-            MCwidgeteventmanager->event_touch(MCObjectCast<MCWidget>(t_target),
-                                              p_id, p_phase, t_touch_loc.x, t_touch_loc.y);
+            t_target = t_touch -> target;
+            
+            // MW-2011-09-05: [[ Bug 9683 ]] Make sure we remove (and delete the touch) here if
+            //   it is 'end' or 'cancelled' so that a cleartouches inside an invoked handler
+            //   doesn't cause a crash.			
+            if (p_phase == kMCEventTouchPhaseEnded || p_phase == kMCEventTouchPhaseCancelled)
+            {
+                if (t_previous_touch == nil)
+                    s_touches = t_touch -> next;
+                else
+                    t_previous_touch -> next = t_touch -> next;
+                
+                delete t_touch;
+            }
+        }
+    }
+    else
+    {
+        t_touch = new (nothrow) MCTouch;
+        t_touch -> next = s_touches;
+        t_touch -> id = p_id;
+        
+        /* If there is a touch, and it was grabbed by a widget and the widget
+         * still exists, then that widget takes any new touches. */
+        if (s_touches != nullptr &&
+            s_touches->is_widget &&
+            s_touches->target.IsValid())
+        {
+            t_target = s_touches->target.Get();
+            t_touch->is_widget = true;
         }
         else
         {
-            switch(p_phase)
+            t_target = p_stack -> getcurcard() -> hittest(t_touch_loc.x, t_touch_loc.y);
+            t_touch->is_widget = false;
+        }
+
+        t_touch -> target = t_target -> GetHandle();
+        
+        s_touches = t_touch;
+    }
+    
+	if (t_target != nil)
+	{
+        // Touches on widgets are handled differently - they grab all touches in
+        // a sequence.
+        if (t_target->gettype() == CT_WIDGET)
+        {
+            if (MCwidgeteventmanager->event_touch(MCObjectCast<MCWidget>(t_target),
+                                                  p_id, p_phase, t_touch_loc.x, t_touch_loc.y))
             {
-                case kMCEventTouchPhaseBegan:
-                    t_target -> message_with_args(MCM_touch_start, p_id);
-                    break;
-                case kMCEventTouchPhaseMoved:
-                    t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
-                    break;
-                case kMCEventTouchPhaseEnded:
-                    t_target -> message_with_args(MCM_touch_end, p_id);
-                    break;
-                case kMCEventTouchPhaseCancelled:
-                    t_target -> message_with_args(MCM_touch_release, p_id);
-                    break;
+                if (s_touches != nullptr)
+                {
+                    s_touches->is_widget = true;
+                }
+                
+                return;
             }
+        }
+        
+        switch(p_phase)
+        {
+            case kMCEventTouchPhaseBegan:
+                t_target -> message_with_args(MCM_touch_start, p_id);
+                break;
+            case kMCEventTouchPhaseMoved:
+                t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
+                break;
+            case kMCEventTouchPhaseEnded:
+                t_target -> message_with_args(MCM_touch_end, p_id);
+                break;
+            case kMCEventTouchPhaseCancelled:
+                t_target -> message_with_args(MCM_touch_release, p_id);
+                break;
         }
 	}
 }

@@ -84,6 +84,11 @@ bool MCWidgetOnClick(MCWidgetRef widget, bool& r_bubble);
 
 bool MCWidgetOnMouseScroll(MCWidgetRef widget, real32_t delta_x, real32_t delta_y, bool& r_bubble);
 
+bool MCWidgetOnTouchStart(MCWidgetRef p_widget, bool& r_bubble);
+bool MCWidgetOnTouchMove(MCWidgetRef p_widget, bool& r_bubble);
+bool MCWidgetOnTouchFinish(MCWidgetRef p_widget, bool& r_bubble);
+bool MCWidgetOnTouchCancel(MCWidgetRef p_widget, bool& r_bubble);
+
 bool MCWidgetOnGeometryChanged(MCWidgetRef widget);
 bool MCWidgetOnLayerChanged(MCWidgetRef widget);
 bool MCWidgetOnParentPropertyChanged(MCWidgetRef widget);
