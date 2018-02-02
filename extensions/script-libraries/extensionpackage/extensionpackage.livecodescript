@@ -238,7 +238,8 @@ command buildPackageAndExtractExtension pProtectifyScript, \
          pSourceFolder & slash & pSourceFileName
    
    local tPackage
-   if not (pSourceFileName ends with ".lcb") then   
+   if not (pSourceFileName ends with ".lcb") then
+      extensionGenerateManifestForLCSExtension pDocsParser, pSourceFolder
       packageScriptExtension pSourceFolder, pSourceFileName, \
             pTargetFolder, pCommercialExtension
    else
@@ -572,3 +573,67 @@ command packageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, p
          pTargetFolder, pRemoveSource, tSupportFiles
    return the result
 end packageBuilderExtension
+
+private command addXML @xXML, pDepth, pTag, pContent, pAttributesA
+   repeat 2*pDepth
+      put space after xXML
+   end repeat
+   put "<" & pTag after xXML
+   repeat for each key tKey in pAttributesA
+      put " " & tKey & "=" & quote & pAttributesA[tKey] & quote \
+            after xXML
+   end repeat
+   if pContent is empty then
+      put " />" after xXML
+   else
+      put ">" & pContent & "</" & pTag & ">" after xXML
+   end if
+   put return after xXML
+end addXML
+
+command extensionGenerateManifestForLCSExtension pDocsParser, pSourceFolder
+   # Get library metadata from the docs, in lieu of a manifest
+   local tDocA, tDataA
+   dispatch function "revDocsParseDocFileToLibraryArray" to stack pDocsParser \
+         with (pSourceFolder & slash & "api.lcdoc")
+   put the result into tDocA 
+   
+   set the itemdelimiter to comma
+   repeat for each item tKey in "title,author,version,name,type,display name,requires,uses,svgicon"
+      put tDocA[tKey] into tDataA[tKey]
+   end repeat
+   if tDataA["title"] is empty then
+      put tDataA["display name"] into tDataA["title"]
+   end if
+   
+   local tPackageXML, tAttrA
+   repeat for each item tTag in "name,title,author,version,type"
+      addXML tPackageXML, 1, tTag, tDataA[tTag]
+   end repeat
+   
+   addXML tPackageXML, 1, "license", "community"
+   
+   repeat for each element tRequirement in tDataA["requires"]
+      put tRequirement into tAttrA["name"]
+      addXML tPackageXML, 1, "requires", "", tAttrA
+      put empty into tAttrA
+   end repeat
+   
+   repeat for each item tMetadata in "svgicon"
+      local tValue
+      put tDataA[tMetadata] into tValue
+      if tValue is empty then
+         next repeat
+      end if
+      put tMetadata into tAttrA["key"]
+      addXML tPackageXML, 1, "metadata", tValue, tAttrA
+      put empty into tAttrA
+   end repeat
+   
+   local tXML
+   put "0.0" into tAttrA["version"]
+   addXML tXML, 0, "package", return & tPackageXML, tAttrA
+   
+   log "writing manifest to" && pSourceFolder & slash & "manifest.xml"
+   put textEncode(tXML, "utf-8") into url("binfile:" & pSourceFolder & slash & "manifest.xml")
+end extensionGenerateManifestForLCSExtension
