@@ -72,6 +72,8 @@
 			
 			'sources':
 			[
+				'script-libraries/extension-utils/extension-utils.livecodescript',
+							
 				'script-libraries/oauth2/oauth2.livecodescript',
 				'script-libraries/getopt/getopt.livecodescript',
 				'script-libraries/mime/mime.livecodescript',

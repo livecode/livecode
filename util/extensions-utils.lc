@@ -12,8 +12,8 @@ on doPackage
    set the itemdelimiter to slash
    local tPackagerFilename
    put item 1 to -3 of the filename of me & slash & \
-      "extensions/script-libraries/extensionpackage/" & \
-      "extensionpackage.livecodescript" \
+      "extensions/script-libraries/extension-utils/" & \
+      "extension-utils.livecodescript" \
       into tPackagerFilename
    
    write tPackagerFilename & return to stdout
