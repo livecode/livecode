@@ -1,7 +1,31 @@
-﻿script "com.livecode.library.extension-package"
+﻿script "com.livecode.library.extension-utils"
 /*
-This library provides handlers for managing livecode extension packages
+Title: Extension Package Handling Utilities
+
+Summary: This library provides handlers for managing livecode extension packages
+
+Version: 1.0.0
 */
+
+on extensionInitialize
+   if the target is not me then
+      pass extensionInitialize
+   end if
+   
+   insert the script of me into back
+   
+   if the environment contains "development" then
+      set the _ideoverride of me to true
+   end if
+end extensionInitialize
+
+on extensionFinalize
+   if the target is not me then
+      pass extensionFinalize
+   end if
+   
+   remove the script of me from back
+end extensionFinalize
 
 private command log pMsg
    write pMsg & return to stdout
@@ -69,6 +93,115 @@ private command __EnsureExternal pExternal
       put true into sExternalsA[pExternal]
    end if
 end __EnsureExternal 
+
+private on __addToDependencies pDependee, pDependent, @xDependencies
+   # AL-2015-04-13: [[ Bug 15216 ]] Use keys of array to remove duplicates
+   put true into xDependencies[pDependee][pDependent]
+end __addToDependencies
+
+private on __addToList pNode, @xList
+   if xList is empty then
+      put pNode into xList
+   else
+      put return & pNode after xList
+   end if
+end __addToList
+
+private on __removeFromList pNode, @xList
+   get lineOffset(pNode, xList)
+   if it is not 0 then
+      delete line it of xList
+   end if
+end __removeFromList
+
+private on __visitNode pDependencies, pNode, @xUnmarked, @xMarked, @xTemporaryMarked, @xOrder
+   if pNode is among the lines of xTemporaryMarked then
+      return "Error"
+   end if
+   if pNode is among the lines of xMarked then
+      # AL-2015-04-13: [[ Bug 15216 ]] Remove from unmarked if this was already marked
+      __removeFromList pNode, xUnmarked
+      return ""
+   end if
+   __addToList pNode, xTemporaryMarked
+   repeat for each key tNode in pDependencies[pNode]
+      __visitNode pDependencies, tNode, xUnmarked, xMarked, xTemporaryMarked, xOrder
+      if the result is not empty then
+         return "Error"
+      end if
+   end repeat
+   __addToList pNode, xMarked
+   __removeFromList pNode, xUnmarked
+   __removeFromList pNode, xTemporaryMarked
+   __addToList pNode, xOrder
+end __visitNode
+
+private function __dependencyOrder pDependencies, pList
+   local tUnmarked, tTemporaryMarked, tMarked, tOrder, tToVisit
+   put pList into tUnmarked
+   repeat while tUnmarked is not empty
+      put any line of tUnmarked into tToVisit
+      __visitNode pDependencies, tToVisit, tUnmarked, tMarked, tTemporaryMarked, tOrder
+      if the result is not empty then
+         throw "Circularity in dependencies starting from" && tToVisit
+         return empty
+      end if
+   end repeat
+   return tOrder
+end __dependencyOrder
+
+private function __extensionIsBuiltin pID
+   switch pID
+      case "com.livecode.widget"
+      case "com.livecode.engine"
+      case "com.livecode.canvas"
+      case "com.livecode.foreign"
+      case "com.livecode.arithmetic"
+      case "com.livecode.array"
+      case "com.livecode.binary"
+      case "com.livecode.bitwise"
+      case "com.livecode.byte"
+      case "com.livecode.char"
+      case "com.livecode.codeunit"
+      case "com.livecode.date"
+      case "com.livecode.file"
+      case "com.livecode.list"
+      case "com.livecode.logic"
+      case "com.livecode.mathfoundation"
+      case "com.livecode.math"
+      case "com.livecode.sort"
+      case "com.livecode.stream"
+      case "com.livecode.string"
+      case "com.livecode.system"
+      case "com.livecode.type"
+      case "com.livecode.typeconvert"
+      case "com.livecode.extensions.libbrowser"
+      case "com.livecode.java"
+      case "com.livecode.objc"
+      case "com.livecode.commercial.license"
+         return true
+      default
+         return false
+   end switch
+end __extensionIsBuiltin
+
+function extensionsOrderByDependency pExtensions, pRequiresA, \
+   pIncludeBuiltin
+   # Accumulate an array of dependencies
+   local tDependencies, tRequirements
+   repeat for each line tExtension in pExtensions
+      put pRequiresA[tExtension] into tRequirements
+      repeat for each element tDependent in tRequirements
+      	 if not pIncludeBuiltin and __extensionIsBuiltin(tDependent) then
+      	    next repeat  	 
+      	 end if
+         __addToDependencies tExtension, tDependent, tDependencies
+      end repeat
+   end repeat
+   
+   # Order them
+   return __dependencyOrder(tDependencies, pExtensions)
+end extensionsOrderByDependency
 
 private function __extensionResourcePath
    if the environment begins with "development" then
@@ -228,6 +361,8 @@ command buildPackageAndExtractExtension pProtectifyScript, \
       pSourceFolder, pSourceFileName, pTargetFolder, \
       pCommercialExtension, pLCCompile, pInterfaceFolder
    
+   log "HERE ALSO"
+   
    if pCommercialExtension is true and \
          not (pSourceFileName ends with ".lcb") then
       protectStack pProtectifyScript, pSourceFolder, \ 
@@ -252,11 +387,11 @@ command buildPackageAndExtractExtension pProtectifyScript, \
    extractExtension tPackage, pSourceFolder, pTargetFolder
    delete file tPackage
 end buildPackageAndExtractExtension
- 
+
 private function q pParam
    return quote & pParam & quote
 end q
- 
+
 command protectStack pProtectifyScript, pSourceFolder, pSourceFileName, pOutput, pGitHash
    if there is not a stack pProtectifyScript then
       throw "Error: could not load script protector:" && pProtectifyScript
@@ -324,7 +459,7 @@ command extractDocs pDocsParser, pOutputDir
       put tDocs into url ("binfile:" & pOutputDir & "/" & tName & ".lcdoc")
    end repeat
 end extractDocs
- 
+
 private command addFolderToArchive pBaseFolder, pArchive, pRemoveSource, pSourceFileName, pSupportFiles 
    # First add the files, then recusively add any sub folders
    local tFiles
@@ -398,9 +533,9 @@ private command packageExtension pExtensionName, pSourceFolder, pSourceFileName,
    put pExtensionName into tTargetDir
    put pTargetFolder & slash & tTargetDir into tBuildTarget
    put pSourceFolder & slash & tTargetDir & ".lce" into tZip
-
+   
    write "packaging extension" && pSourceFileName && \
-      "to" && tZip & return to stdout
+         "to" && tZip & return to stdout
    
    if there is a file tZip then
       delete file tZip
@@ -414,8 +549,8 @@ private command packageExtension pExtensionName, pSourceFolder, pSourceFileName,
    
    if tError is empty then
       addFolderToArchive pSourceFolder, tZip, pRemoveSource, \
-         pSourceFileName, pSupportFiles
-    
+            pSourceFileName, pSupportFiles
+      
       if the result begins with "ziperr" then
          put the result into tError
       end if
@@ -637,3 +772,111 @@ command extensionGenerateManifestForLCSExtension pDocsParser, pSourceFolder
    log "writing manifest to" && pSourceFolder & slash & "manifest.xml"
    put textEncode(tXML, "utf-8") into url("binfile:" & pSourceFolder & slash & "manifest.xml")
 end extensionGenerateManifestForLCSExtension
+
+
+private command __SetMetadata pKey, pValue, @xArray
+   split pKey by "."
+   put pValue into xArray[pKey]
+end __SetMetadata
+
+function extensionFetchMetadata pManifestPath
+   local tDataA
+   
+   local tManifestContents, tTreeID
+   put url ("file:" & pManifestPath) into tManifestContents
+   put revXMLCreateTree(tManifestContents,true,true,false) into tTreeID
+   
+   if tTreeID begins with "xmlerr" then
+      return "Error: invalid xml in manifest" for error
+   end if
+   
+   local tTargetType
+   put textDecode(revXMLNodeContents(tTreeID, "/package/type"), "utf-8") into tTargetType
+   
+   if tTargetType begins with "xmlerr" then
+      return "Error: no type found in manifest" for error
+   end if
+   put tTargetType into tDataA["type"]
+   
+   local tTargetName
+   put textDecode(revXMLNodeContents(tTreeID, "/package/name"), "utf-8") into tTargetName
+   if tTargetName begins with "xmlerr" then
+      return "Error: couldn't retrieve extension name from manifest" for error
+   end if
+   put tTargetName into tDataA["name"]
+   
+   local tTargetTitle
+   put textDecode(revXMLNodeContents(tTreeID, "/package/title"), "utf-8") into tTargetTitle
+   
+   if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
+      put empty into tTargetTitle
+   end if
+   put tTargetTitle into tDataA["title"]
+   
+   local tTargetVersion
+   put textDecode(revXMLNodeContents(tTreeID, "/package/version"), "utf-8") into tTargetVersion
+   
+   if tTargetVersion is empty or tTargetVersion begins with "xmlerr" then
+      put empty into tTargetVersion
+   end if
+   put tTargetVersion into tDataA["version"]
+   
+   local tTargetAuthor
+   put textDecode(revXMLNodeContents(tTreeID, "/package/author"), "utf-8") into tTargetAuthor
+   if tTargetAuthor is empty or tTargetAuthor begins with "xmlerr" then
+      put empty into tTargetAuthor
+   end if
+   put tTargetAuthor into tDataA["author"]
+   
+   # Fetch property metadata
+   local tMetadataValue, tMetadataKey
+   local tMetadataNodes, tMetadataA, tKeys, tValue
+   put revXMLChildNames(tTreeID, "package",return,"metadata",true) into tMetadataNodes
+   repeat for each line tMetadata in tMetadataNodes
+      put revXMLAttribute(tTreeID,"package" & "/" & tMetadata,"key") into tMetadataKey
+      put revXMLNodeContents(tTreeID,"package" & "/" & tMetadata) into tMetadataValue
+      if tMetadataValue is empty or tMetadataValue begins with "xmlerr" then
+         put empty into tMetadataValue
+      end if
+      __SetMetadata tMetadataKey, tMetadataValue, tDataA
+   end repeat
+   
+   # Fetch extension dependencies
+   local tRequires, tCount
+   put 0 into tCount
+   put revXMLChildNames(tTreeID,"package",return,"requires",true) into tRequires
+   repeat for each line tDependency in tRequires
+      add 1 to tCount
+      local tName
+      put revXMLAttribute(tTreeID,"package" & "/" & tDependency,"name") into tName
+      put tName into tDataA["requires"][tCount]
+   end repeat
+   
+   # Fetch library handlers
+   if tTargetType is "library" then
+      local tHandlerList, tHandlerNodes
+      put revXMLChildNames(tTreeID, "package",return,"handler",true) into tHandlerNodes
+      repeat for each line tHandler in tHandlerNodes
+         local tHandlerName
+         put revXMLAttribute(tTreeID,"package" & "/" & tHandler,"name") into tHandlerName
+         
+         if tHandlerName is empty or tHandlerName begins with "xmlerr" then
+            next repeat
+         end if
+         
+         if tHandlerList is empty then
+            put tHandlerName into tHandlerList
+         else
+            put return & tHandlerName after tHandlerList
+         end if
+      end repeat
+      put tHandlerList into tDataA["handlers"]
+   end if
+   
+   # User visible should default to true
+   if tDataA["uservisible"] is empty then
+      put true into tDataA["uservisible"]
+   end if
+   
+   return tDataA for value
+end extensionFetchMetadata
