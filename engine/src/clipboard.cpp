@@ -255,11 +255,24 @@ bool MCClipboard::AddFileList(MCStringRef p_file_names)
 
 bool MCClipboard::AddText(MCStringRef p_string)
 {
-    // Convert the text to styled text and add via the styled text method
-    MCAutoDataRef t_styled(ConvertTextToStyledText(p_string));
-    if (*t_styled == NULL)
+    // [Bug 19206] Converting text to styled text was causing 
+    // presentation issues when attempting to paste into other
+    // applications due to the HTML format being included.
+    // Only add the plain text representations to the clipboard.
+
+    AutoLock t_lock(this);
+    
+    // Clear contents to ensure that the clipboard does not end up
+    // containing data from different copy events.
+    // i.e. the HTML/RTF representation would be left untouched
+    Clear();
+    
+    // Get the first item on the clipboard
+    MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
+    if (t_item == NULL)
         return false;
-    return AddLiveCodeStyledText(*t_styled);
+
+    return AddTextToItem(t_item, p_string);
 }
 
 bool MCClipboard::AddTextToItem(MCRawClipboardItem* p_item, MCStringRef p_string)
