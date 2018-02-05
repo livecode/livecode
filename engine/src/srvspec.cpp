@@ -139,7 +139,9 @@ static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void
 	t_headers = NULL;
 	if (t_error == NULL && !MCStringIsEmpty(MChttpheaders) && t_is_http)
 	{
-		if (!url_build_header_list(MCStringGetCString(MChttpheaders), t_headers))
+        MCAutoStringRefAsCString t_httpheaders;
+        t_httpheaders.Lock(MChttpheaders);
+		if (!url_build_header_list(*t_httpheaders, t_headers))
 			t_error = "couldn't build header list";
 	}
 	
@@ -154,7 +156,9 @@ static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void
 	
 	if (t_error == NULL)
 	{
-		if (curl_easy_setopt(t_url_handle, CURLOPT_URL, MCStringGetCString(p_url)) != CURLE_OK)
+        MCAutoStringRefAsCString t_url;
+        t_url.Lock(p_url);
+		if (curl_easy_setopt(t_url_handle, CURLOPT_URL, *t_url) != CURLE_OK)
 			t_error = "couldn't set url";
 	}
 	
@@ -430,7 +434,12 @@ void MCS_deleteurl(MCObject *p_target, MCStringRef p_url)
 	if (MCStringBeginsWithCString(p_url, (const char_t*)"http://", kMCCompareExact) || MCStringBeginsWithCString(p_url, (const char_t*)"https://", kMCCompareExact))
 		url_execute(p_url, url_execute_http_delete, NULL, &t_error);
 	else if (MCStringBeginsWithCString(p_url, (const char_t*)"ftp://", kMCCompareExact))
-		url_execute(p_url, url_execute_ftp_delete, (void *) MCStringGetCString(p_url), &t_error);
+    {
+        MCAutoStringRefAsCString t_url;
+        t_url.Lock(p_url);
+        url_execute(p_url, url_execute_ftp_delete, (void *) *t_url, &t_error);
+    }
+		
 	else
 		/* UNCHECKED */ MCStringCreateWithCString("unsupported protocol", &t_error);
 
