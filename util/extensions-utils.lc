@@ -8,16 +8,22 @@ on doPackage
    
    local tEngine
    put the commandName into tEngine
+  
+   if the platform is "win32" then
+      set the itemdelimiter to backslash
+   else
+      set the itemdelimiter to slash
+   end if
    
-   set the itemdelimiter to slash
    local tPackagerFilename
-   put item 1 to -3 of the filename of me & slash & \
-      "extensions/script-libraries/extension-utils/" & \
-      "extension-utils.livecodescript" \
-      into tPackagerFilename
-   
-   write tPackagerFilename & return to stdout
-   
+   put commandArguments(1) into tPackagerFilename
+
+   put "extensions" & the itemDel & \
+      "script-libraries" & the itemDel & \
+	  "extensionpackage" & the itemDel & \
+      "extensionpackage.livecodescript" \
+      into item -2 to -1 of tPackagerFilename
+
    start using stack tPackagerFilename
 
    local tSendCmd   
