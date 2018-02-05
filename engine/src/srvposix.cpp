@@ -85,7 +85,10 @@ class MCStdioFileHandle;
 bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_handle &r_file, MCStringRef &r_name)
 {
     MCAutoCustomPointer<char,MCCStringFree> t_temp_file;
-    if (!MCCStringFormat(&t_temp_file, "%s/%sXXXXXXXX", MCStringGetCString(p_path), MCStringGetCString(p_prefix)))
+    MCAutoStringRefAsCString t_path, t_prefix;
+    t_path.Lock(p_path);
+    t_prefix.Lock(p_prefix);
+    if (!MCCStringFormat(&t_temp_file, "%s/%sXXXXXXXX", *t_path, *t_prefix))
 		return false;
 	
 	int t_fd;
