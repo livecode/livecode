@@ -153,6 +153,13 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
    
    put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & pPort & "/") after tURL
    
+   local tCancelScript
+   put "on mouseUp;send" && \
+         quote & "__OAuth2Cancel" & quote && "&&" && quote & \
+         tUniqueRef & quote && "to me in 0;end mouseUp" into tCancelScript
+   
+   lock screen
+   
    local tBrowserRect
    if the environment is not "mobile" then
       reset the templateStack
@@ -165,15 +172,40 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
       
       set the resizable of stack tUniqueRef to false
       set the width of stack tUniqueRef to 640
-      set the height of stack tUniqueRef to 600
+      set the height of stack tUniqueRef to 640
       put 0,0,640,600 into tBrowserRect
+      
+      reset the templateButton
+      create button "Cancel"
+      set the script of it to tCancelScript
+      set the rect of it to 8,608,78,631
+      reset the templateButton
    else
-      put the effective working screenrect into tBrowserRect
+      put the rect of this card of the topStack into tBrowserRect
+      
+      local tGraphicRect
+      put tBrowserRect into tGraphicRect
+      put item 4 of tGraphicRect - 40 into item 2 of tGraphicRect
+      put item 2 of tGraphicRect into item 4 of tBrowserRect
+      
+      reset the templateGraphic
+      set the showName of the templateGraphic to true
+      set the opaque of the templateGraphic to true
+      set the lineSize of the templateGraphic to 0
+      set the backColor of the templateGraphic to "white"
+      set the style of the templateGraphic to "rectangle"
+      set the label of the templateGraphic to "Cancel"
+      create graphic tUniqueRef
+      set the rect of it to tGraphicRect
+      set the script of it to tCancelScript
+      reset the templateGraphic
    end if
    
    create widget tUniqueRef as "com.livecode.widget.browser"
    set the rect of widget tUniqueRef to tBrowserRect
    set the url of widget tUniqueRef to tURL
+   
+   unlock screen
    
    local tOldInterface
    put the defaultNetworkInterface into tOldInterface
@@ -226,6 +258,26 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
       return tResult["error"] for error
    end if
 end OAuth2
+
+on __OAuth2Cancel pUniqueRef
+   if the environment is "mobile" then
+      set the defaultStack to the topStack
+      if there is a widget pUniqueRef then
+         delete widget pUniqueRef
+      end if
+      if there is a graphic pUniqueRef then
+         delete graphic pUniqueRef
+      end if
+   else
+      if there is a stack pUniqueRef then
+         close stack pUniqueRef
+      end if
+   end if
+   
+   local tResult
+   put "cancel" into tResult["error"]
+   set the dialogData to tResult
+end __OAuth2Cancel
 
 
 /**
@@ -315,7 +367,7 @@ end OAuth2Refresh
 on __NewConnection pSocketID
    read from socket pSocketID until crlf & crlf with message "__HandleRequest"
 end __NewConnection
- 
+
 on __HandleRequest pSocketID, pData
    close socket pSocketID
    
@@ -352,9 +404,17 @@ on __HandleRequest pSocketID, pData
       end if
       
       if the environment is "mobile" then
-         delete widget tUniqueRef
+         set the defaultStack to the topStack
+         if there is a widget tUniqueRef then
+            delete widget tUniqueRef
+         end if
+         if there is a graphic tUniqueRef then
+            delete graphic tUniqueRef
+         end if
       else
-         close stack tUniqueRef
+         if there is a stack tUniqueRef then
+            close stack tUniqueRef
+         end if
       end if
    else
       
@@ -366,9 +426,17 @@ on __HandleRequest pSocketID, pData
       repeat for each key tUniqueRef in sUniqueRefs
          close socket sUniqueRefs[tUniqueRef]
          if the environment is "mobile" then
-            delete widget tUniqueRef
+            set the defaultStack to the topStack
+            if there is a widget tUniqueRef then
+               delete widget tUniqueRef
+            end if
+            if there is a graphic tUniqueRef then
+               delete graphic tUniqueRef
+            end if
          else
-            close stack tUniqueRef
+            if there is a stack tUniqueRef then
+               close stack tUniqueRef
+            end if
          end if
       end repeat
    end if
