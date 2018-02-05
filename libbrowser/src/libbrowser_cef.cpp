@@ -929,9 +929,6 @@ public:
 			// Close the browser window
 			if (m_owner != nil)
 				m_owner->PlatformCloseBrowserWindow(p_browser);
-			
-			// return true to prevent default handling
-			return true;
 		}
 		
 		return CefLifeSpanHandler::DoClose(p_browser);
