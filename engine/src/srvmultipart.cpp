@@ -127,7 +127,10 @@ public:
 					{
 						uint32_t t_out = MCMin(t_diff - m_match_frontier, p_buffer_size - r_bytes_read);
                         
-						MCMemoryCopy(r_buffer + r_bytes_read, MCStringGetCString(m_boundary) + m_match_frontier, t_out);
+                        MCAutoStringRefAsCString t_boundary;
+                        t_boundary.Lock(m_boundary);
+                        
+						MCMemoryCopy(r_buffer + r_bytes_read, *t_boundary + m_match_frontier, t_out);
 						m_match_frontier += t_out;
 						r_bytes_read += t_out;
 					}
@@ -811,7 +814,12 @@ bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_hand
 	if (t_success)
 	{
 		while (t_blocked)
-			t_success = create_temp_file_with_lock(MCStringGetCString(p_temp_folder), t_list_item->file, t_list_item->lock, t_list_item->file_name, t_list_item->lock_name, t_blocked);
+        {
+            MCAutoStringRefAsCString t_temp_folder;
+            t_temp_foler.Lock(p_temp_folder);
+            t_success = create_temp_file_with_lock(*t_temp_folder, t_list_item->file, t_list_item->lock, t_list_item->file_name, t_list_item->lock_name, t_blocked);
+        }
+			
 	}
 	if (t_success)
 	{
@@ -938,7 +946,9 @@ bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_hand
 
 	if (t_success)
 	{
-		t_list_item->file_name = strdup(MCStringGetCString(*t_temp_name_string));
+        MCAutoStringRefAsCString t_cstr_temp_name_string;
+        t_cstr_temp_name_string.Lock(*t_temp_name_string);
+		t_list_item->file_name = strdup(*t_cstr_temp_name_string);
 		t_list_item->next = s_temp_files;
 		s_temp_files = t_list_item;
 		
