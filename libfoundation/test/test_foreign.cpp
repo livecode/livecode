@@ -59,7 +59,13 @@ void check_describe(MCTypeInfoRef p_type_info, T p_value, const char *p_format_s
     MCAutoStringRef t_description;
     EXPECT_TRUE(MCValueCopyDescription(*t_boxed_value, &t_description));
     if (t_description.IsSet())
-        EXPECT_STREQ(MCStringGetCString(*t_description), t_format);
+    {
+        MCAutoStringRefAsCString t_cstr_description;
+        t_cstr_description.Lock(*t_description)
+    
+        EXPECT_STREQ(*t_cstr_description, t_format);
+    }
+    
 }
     
 template<typename T, typename U, typename W = T>
