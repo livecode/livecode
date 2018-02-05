@@ -434,7 +434,9 @@ void MCServerPutHeader(MCStringRef s, bool p_new)
 {
 	// Find where the ':' is
 	const char *t_loc;
-	t_loc = MCStringGetCString(s);
+    MCAutoStringRefAsCString t_s;
+    t_s.Lock(s);
+	t_loc = *t_s;
 	uint4 t_loc_len;
 	t_loc_len = MCStringGetLength(s);
 	if (!MCU_strchr(t_loc, t_loc_len, ':', False))
@@ -447,7 +449,9 @@ void MCServerPutHeader(MCStringRef s, bool p_new)
 	else
 		for(i = MCservercgiheadercount; i > 0; i--)
 		{
-			if (MCU_strncasecmp(MCStringGetCString(s), MCservercgiheaders[i - 1], t_loc - MCStringGetCString(s)) == 0)
+            MCAutoStringRefAsCString t_cstr_s;
+            t_cstr_s.Lock(s);
+			if (MCU_strncasecmp(*t_cstr_s, MCservercgiheaders[i - 1], t_loc - *t_cstr_s) == 0)
 				break;
 		}
 	
@@ -460,7 +464,10 @@ void MCServerPutHeader(MCStringRef s, bool p_new)
 	else
 		free(MCservercgiheaders[i - 1]);
 	
-	MCservercgiheaders[i - 1] = strdup(MCStringGetCString(s));
+    MCAutoStringRefAsCString t_cstr_s;
+    t_cstr_s.Lock(s);
+    
+	MCservercgiheaders[i - 1] = strdup(*t_cstr_s);
 }
 
 void MCServerPutContent(MCStringRef s)
@@ -509,10 +516,16 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	
 	if (t_success)
 	{
-        MCservercgicookies[t_index].name = MCStringIsEmpty(p_name) ? strdup("") : strdup(MCStringGetCString(p_name));
-		MCservercgicookies[t_index].value = MCStringIsEmpty(p_value) ? strdup("") :strdup(MCStringGetCString(*t_encoded));
-        MCservercgicookies[t_index].path = MCStringIsEmpty(p_path) ? strdup("") : strdup(MCStringGetCString(p_path));
-        MCservercgicookies[t_index].domain = MCStringIsEmpty(p_domain) ? strdup("") : strdup(MCStringGetCString(p_domain));
+        MCAutoStringRefAsCString t_name, t_cstr_encoded, t_path, t_domain;
+        t_name.Lock(p_name);
+        t_cstr_encoded.Lock(*t_encoded);
+        t_path.Lock(p_path);
+        t_domain.Lock(p_domain);
+        
+        MCservercgicookies[t_index].name = MCStringIsEmpty(p_name) ? strdup("") : strdup(*t_name);
+		MCservercgicookies[t_index].value = MCStringIsEmpty(p_value) ? strdup("") :strdup(*t_cstr_encoded);
+        MCservercgicookies[t_index].path = MCStringIsEmpty(p_path) ? strdup("") : strdup(*t_path);
+        MCservercgicookies[t_index].domain = MCStringIsEmpty(p_domain) ? strdup("") : strdup(*t_domain);
 
 		MCservercgicookies[t_index].expires = p_expires;
 		MCservercgicookies[t_index].secure = p_secure;
