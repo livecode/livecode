@@ -1554,7 +1554,12 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
     if (t_success)
     {
         if (MCParseParameters(p_parameters, "x", &(&t_topleft_string)))
-            /* UNCHECKED */ sscanf(MCStringGetCString(*t_topleft_string), "%u,%u", &t_topleft.x, &t_topleft.y);
+        {
+            MCAutoStringRefAsCString t_topleft_c_string;
+            t_topleft_c_string.Lock(*t_topleft_string);
+            /* UNCHECKED */ sscanf(*t_topleft_c_string, "%u,%u", &t_topleft.x, &t_topleft.y);
+        }
+        
     }
     
     MCAutoArrayRef t_metadata;
