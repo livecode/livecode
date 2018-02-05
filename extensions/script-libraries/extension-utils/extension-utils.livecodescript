@@ -31,6 +31,14 @@ private command log pMsg
    write pMsg & return to stdout
 end log
 
+private function pathDelimiter
+   if the platform is "win32" then
+      return backslash
+   else
+      return slash
+   end if
+end pathDelimiter
+
 local sExternalsA
 private command __EnsureExternal pExternal
    if sExternalsA[pExternal] then
@@ -53,10 +61,6 @@ private command __EnsureExternal pExternal
       if tHomeFolder is empty then
          put specialfolderpath("engine") into tHomeFolder
       end if
-      if there is a folder (tHomeFolder & slash & "externals") then
-         put true into sExternalsA[pExternal]
-         exit __EnsureExternal
-      end if
    end if
    
    local tFileExtension
@@ -77,12 +81,19 @@ private command __EnsureExternal pExternal
    end switch
    
    local tExternalFilename
-   put specialFolderPath("engine") & slash into tExternalFilename
    if the environment is "server" then
       put "server-" after tExternalFilename
    end if
    put pExternal after tExternalFilename
    put "." & tFileExtension after tExternalFilename
+
+   if there is a file (tHomeFolder & slash & "externals" & slash & \
+      tExternalFilename) then
+      put true into sExternalsA[pExternal]
+	  exit __EnsureExternal
+   end if
+   
+   put specialFolderPath("engine") & pathDelimiter() before tExternalFilename
    set the externals of the templateStack to tExternalFilename
    
    create stack pExternal && "External"
@@ -344,7 +355,7 @@ command buildPackageAndExtractLCBExtensions pDocsParser, pTargetFolder, \
    
    put word 1 to -1 of it into tExtList
    
-   set the itemdelimiter to slash
+   set the itemdelimiter to pathDelimiter()
    repeat for each line tExtPath in tExtList
       local tSourceFileName, tSourceFolder
       put item 1 to -2 of tExtPath into tSourceFolder
