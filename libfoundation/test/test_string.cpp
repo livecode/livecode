@@ -39,7 +39,9 @@ TEST(string, creation)
 		)
 	);
 
-	ASSERT_STREQ(t_c_string, MCStringGetCString(*t_string));
+    MCAutoStringRefAsCString t_cstr_string;
+    t_cstr_string.Lock(*t_string);
+	ASSERT_STREQ(t_c_string, *t_cstr_string);
 }
 
 TEST(string, format_int)
@@ -50,7 +52,10 @@ TEST(string, format_int)
 	MCAutoStringRef t_string;
 
 	ASSERT_TRUE(MCStringFormat(&t_string, "%i %i", 1, 2));
-	ASSERT_STREQ(MCStringGetCString(*t_string), "1 2");
+    
+    MCAutoStringRefAsCString t_cstr_string;
+    t_cstr_string.Lock(*t_string);
+	ASSERT_STREQ(*t_cstr_string, "1 2");
 }
 
 TEST(string, format_double_f)
@@ -61,7 +66,10 @@ TEST(string, format_double_f)
 	MCAutoStringRef t_string;
 
 	ASSERT_TRUE(MCStringFormat(&t_string, "%.2f %.2f", 1.0, 2.0));
-	ASSERT_STREQ(MCStringGetCString(*t_string), "1.00 2.00");
+    
+    MCAutoStringRefAsCString t_cstr_string;
+    t_cstr_string.Lock(*t_string);
+	ASSERT_STREQ(*t_cstr_string, "1.00 2.00");
 }
 
 TEST(string, format_double_g)
@@ -72,7 +80,9 @@ TEST(string, format_double_g)
 	MCAutoStringRef t_string;
 
 	ASSERT_TRUE(MCStringFormat(&t_string, "%g %g", 1.0, 2.0));
-	ASSERT_STREQ(MCStringGetCString(*t_string), "1 2");
+    MCAutoStringRefAsCString t_cstr_string;
+    t_cstr_string.Lock(*t_string);
+	ASSERT_STREQ(*t_cstr_string, "1 2");
 }
 
 TEST(string, format_int_and_float)
@@ -83,7 +93,9 @@ TEST(string, format_int_and_float)
 	MCAutoStringRef t_string;
 
 	ASSERT_TRUE(MCStringFormat(&t_string, "%i %.2f %u %g", 1, 2.0, 3, 4.0));
-	ASSERT_STREQ(MCStringGetCString(*t_string), "1 2.00 3 4");
+    MCAutoStringRefAsCString t_cstr_string;
+    t_cstr_string.Lock(*t_string);
+	ASSERT_STREQ(*t_cstr_string, "1 2.00 3 4");
 }
 
 TEST(string, format_string)
@@ -95,7 +107,9 @@ TEST(string, format_string)
 
 	const char* t_cstring = "abcdef";
 	ASSERT_TRUE(MCStringFormat(&t_string, "%.3s %s", t_cstring, t_cstring));
-	ASSERT_STREQ(MCStringGetCString(*t_string), "abc abcdef");
+    MCAutoStringRefAsCString t_cstr_string;
+    t_cstr_string.Lock(*t_string);
+	ASSERT_STREQ(*t_cstr_string, "abc abcdef");
 }
 
 TEST(string, format_stringref)
@@ -107,7 +121,12 @@ TEST(string, format_stringref)
 	MCStringRef kTestString = MCSTR("hello, world");
 
 	ASSERT_TRUE(MCStringFormat(&t_string, "%@", kTestString));
-	ASSERT_STREQ(MCStringGetCString(*t_string), MCStringGetCString(kTestString));
+    
+    MCAutoStringRefAsCString t_cstr_string, t_test_string;
+    t_cstr_string.Lock(*t_string);
+    t_test_string.Lock(kTestString);
+    
+	ASSERT_STREQ(*t_cstr_string, *t_test_string);
 }
 
 TEST(string, format_stringref_with_range)
@@ -120,7 +139,11 @@ TEST(string, format_stringref_with_range)
 
 	MCRange t_range = MCRangeMake(0, 5);
 	ASSERT_TRUE(MCStringFormat(&t_string, "%*@", &t_range, kTestString));
-	ASSERT_STREQ(MCStringGetCString(*t_string), "hello");
+    
+    MCAutoStringRefAsCString t_cstr_string;
+    t_cstr_string.Lock(*t_string);
+    
+	ASSERT_STREQ(*t_cstr_string, "hello");
 }
 
 TEST(string, format_null_valueref)
@@ -130,7 +153,9 @@ TEST(string, format_null_valueref)
 {	MCAutoStringRef t_string;
 
 	ASSERT_TRUE(MCStringFormat(&t_string, "%@", nullptr));
-	ASSERT_STREQ(MCStringGetCString(*t_string), "(null)");
+    MCAutoStringRefAsCString t_cstr_string;
+    t_cstr_string.Lock(*t_string);
+	ASSERT_STREQ(*t_cstr_string, "(null)");
 }
 
 TEST(string, format_everything)
@@ -146,7 +171,11 @@ TEST(string, format_everything)
 
 	ASSERT_TRUE(MCStringFormat(&t_string, "Test: %*@%s%*@ %u%g %i%i%i %.3f", &t_range1, kTestString,
 		"?", &t_range2, kTestString, 4, 2.0, 0, 1, 2, 0.007));
-	ASSERT_STREQ(MCStringGetCString(*t_string), "Test: hello?! 42 012 0.007");
+    
+    MCAutoStringRefAsCString t_cstr_string;
+    t_cstr_string.Lock(*t_string);
+	
+    ASSERT_STREQ(*t_cstr_string, "Test: hello?! 42 012 0.007");
 }
 
 static void check_bidi_of_surrogate_range(int p_lower, int p_upper)
