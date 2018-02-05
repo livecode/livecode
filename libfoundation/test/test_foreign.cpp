@@ -61,7 +61,7 @@ void check_describe(MCTypeInfoRef p_type_info, T p_value, const char *p_format_s
     if (t_description.IsSet())
     {
         MCAutoStringRefAsCString t_cstr_description;
-        t_cstr_description.Lock(*t_description)
+        t_cstr_description.Lock(*t_description);
     
         EXPECT_STREQ(*t_cstr_description, t_format);
     }

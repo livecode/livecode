@@ -2138,7 +2138,6 @@ MC_DLLEXPORT extern MCStringRef kMCNulString;
 // the c-string must be a C static string.
 MC_DLLEXPORT MCStringRef MCSTR(const char *string);
 
-MC_DLLEXPORT const char *MCStringGetCString(MCStringRef p_string);
 MC_DLLEXPORT bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
 MC_DLLEXPORT bool MCStringSubstringIsEqualToCString(MCStringRef string, MCRange p_range, const char *cstring, MCStringOptions options);
     
