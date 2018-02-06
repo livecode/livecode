@@ -281,7 +281,28 @@ Summary: Sent when the mouse pointer continues to hover outside of the widget's 
 Name: OnTouchStart
 Type: message
 Syntax: OnTouchStart
-Summary: Sent when a touch event begins within the widget's rect.
+Summary: Sent when the widget is the target for touch events and a touch is started.
+
+Description:
+The widget becomes the target for touch events when the first touch is
+within its rect. The widget remains the target for touch events until
+all touches end or are cancelled.
+
+Name: OnTouchMove
+Type: message
+Syntax: OnTouchMove
+Summary: Sent to the target for touch events when a touch moves.
+
+Name: OnTouchFinish
+Type: message
+Syntax: OnTouchFinish
+Summary: Sent to the target for touch events when a touch event ends.
+
+Name: OnTouchCancel
+Type: message
+Syntax: OnTouchCancel
+Summary: Sent to the target for touch events when a touch event is cancelled.
+
 
 Name: OnFocusEnter
 Type: message
@@ -755,24 +776,78 @@ begin
     MCWidgetGetMouseButtonState(Index, output)
 end syntax*/
 
+/**
+Summary:        The index of the current touch
+
+Returns:        An integer index for the current touch
+
+Example:
+   variable tIndex as Number
+   put the touch index into tIndex
+
+   variable tPosition as Point
+   put the position of touch tIndex into tPosition
+*/
+
 syntax TheTouchIndex is expression
     "the" "touch" "index"
 begin
     MCWidgetGetTouchIndex(output)
 end syntax
 
+/**
+Summary:        The location of the current touch
+
+Returns:        The position of the current touch relative to the widget
+
+Example:
+   variable tPosition as Point
+   put the touch position into tPosition
+
+   variable tRect as Rectangle
+   put my bounds into tRect
+
+   if tPosition is within tRect then
+      // touch position is within the widget bounds
+   end if
+
+*/
 syntax TheTouchLocation is expression
     "the" "touch" "position"
 begin
     MCWidgetGetTouchPosition(output)
 end syntax
 
+/**
+Summary:        The number of touches
+
+Returns:       The number of currently active touches
+
+Example:
+   if the number of touches is 2 then
+      // pinch gesture
+   end if
+
+*/
 syntax TheNumberOfTouches is expression
     "the" "number" "of" "touches"
 begin
     MCWidgetGetNumberOfTouches(output)
 end syntax
 
+/**
+Summary:        The location of a specific touch
+
+Returns:       The positon of a specific touch index relative to the widget
+
+Example:
+   variable tIndex as Number
+   put the touch index into tIndex
+
+   variable tPosition as Point
+   put the position of touch tIndex into tPosition
+
+*/
 syntax TheLocationOfTouch is prefix operator with property precedence
     "the" "position" "of" "touch" <Id: Expression>
 begin
