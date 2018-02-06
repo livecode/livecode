@@ -52,14 +52,14 @@ on revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
 end revSBCopyFolder
 
 # Slightly unfortunate naming, perhaps, but what do I call it folderToFolder?!
-on revSBCopyFolderToDestination pSourceFolder, pDestinationFolder, pCallback, pCallbackTarget
+on revSBCopyFolderToDestination pSourceFolder, pDestinationFolder, pCallback, pCallbackTarget, pSettings
    if there is no folder pDestinationFolder then
       return "destination folder not found"
    end if
    set the itemDelimiter to "/"
    local tTargetFolder
    put pDestinationFolder & "/" & item -1 of pSourceFolder into tTargetFolder
-   __revSBCopyFolder pSourceFolder, tTargetFolder, pCallback, pCallbackTarget
+   __revSBCopyFolder pSourceFolder, tTargetFolder, pCallback, pCallbackTarget, pSettings
    return the result
 end revSBCopyFolderToDestination
 
@@ -209,7 +209,7 @@ end revSBWriteFile
 # - bsd symlinks (TO DO)
 #?author
 # Marcus van Houdt
-private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
+private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget, pSettings
    local tResourceList
    local tResult
    
@@ -268,7 +268,7 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
          else if tResource is not empty then
             local tFileCallback
             put pCallback && tNumberCopied, tTotalNumber & comma into tFileCallback
-            __revSBCopyFile pSource & "/" & tResource, pTarget & "/" & tResource, tFileCallback, pCallbackTarget
+            __revSBCopyFile pSource & "/" & tResource, pTarget & "/" & tResource, tFileCallback, pCallbackTarget, pSettings
             if the result is not empty then
                put the result into tResult
                exit repeat
@@ -298,7 +298,7 @@ end __revSBCopyFolder
 # Sends a callback with the number of bytes currently copied and the number left to copy..
 #?author
 # Marcus van Houdt
-private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTarget
+private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTarget, pSettings
    -- Stat the source file
    local tOldFolder, tSize, tPermissions, tUser, tGroup, tFileType
    local tResult
@@ -395,6 +395,17 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
       end if
       if tUser is not empty or tGroup is not empty then
          get shell("chown" && tUser & ":" & tGroup && quote & pTargetFile & quote)
+      end if
+   end if
+   
+   -- if we build only for 64 bit, remove the 32 bit slice from the externals
+   if pSettings is not empty and pSettings["MacOSX x86-64"] is true and pSettings["MacOSX x86-32"] is false then
+      set the itemDel to slash
+      if pSettings["externals"] contains item -1 of pTargetFile then
+         replace " " with "\ " in pTargetFile
+         local tShell
+         put "lipo " & pTargetFile & " -remove i386 -output " & pTargetFile into tShell
+         get shell(tShell)
       end if
    end if
    
