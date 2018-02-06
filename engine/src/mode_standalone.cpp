@@ -840,6 +840,10 @@ IO_stat MCDispatch::startup(void)
 		
 		MCCapsuleClose(t_capsule);
 		
+        // Resolve parent scripts *after* we've loaded aux stacks.
+        if (t_info . stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
+            t_info . stack -> resolveparentscripts();
+        
 		t_mainstack = t_info . stack;
 	}
 	else if (MCnstacks > 1 && MClicenseparameters . license_class == kMCLicenseClassCommunity)

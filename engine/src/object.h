@@ -971,6 +971,10 @@ public:
 	// is no parentScript, it returns NULL - note that this is an MCParentScript,
 	// not an MCParentScriptUse.
 	MCParentScript *getparentscript(void) const;
+    
+    // Set the parentScript of the object at load time of it (used by the script
+    // only stack loader).
+    bool setparentscript_onload(uint32_t p_id, MCNameRef p_stack);
 
 	// MW-2009-01-28: [[ Inherited parentScripts ]]
 	// This method returns false if there was not enough memory to complete the

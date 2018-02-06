@@ -49,17 +49,19 @@ The name or ID of the stack.
 
 Description:
 A <scriptOnly> stack will save just the script with a single header line
-declaring the stack name. Any other objects or properties of the stack
-will not be written to disk.
+declaring the stack name. If the stack has a <stack> <behavior>, the 
+name of the behavior stack is also saved to the header line. Any other 
+objects or properties of the stack will not be written to disk.
 
 The <scriptOnly> property has been added to enable scripts to detect and
 set the file format of the stack. Without this property it is not
 possible to detect the file format the stack is being saved in without
 examining the file itself.
 
->*Warning:* <scriptOnly> stacks only save the stack name and script. Any
-> property changes and objects created while the stack is open will not
-> exist the next time the stack is opened.
+>*Warning:* <scriptOnly> stacks only save the stack name, script and 
+> stack behavior. Any other type of behavior, or property changes and 
+> objects created while the stack is open will not exist the next time
+> the stack is opened.
 
 >*Note:* Script only stacks are unable to be password protected. In
 > order to password protect a script only stack use the following
@@ -68,7 +70,7 @@ examining the file itself.
     set the scriptOnly of stack "Secrets" to false
     set the password of stack "Secrets" to field "Password"
 
-References:create stack (command), stack (object)
+References:create stack (command), stack (object), behavior (property)
 
 Tags: objects
 

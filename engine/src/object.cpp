@@ -4051,12 +4051,11 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
 
 		if (t_stat == IO_NORMAL)
 		{
-			parent_script = MCParentScript::Acquire(this, t_id, t_stack);
-			if (parent_script == NULL)
-				t_stat = IO_ERROR;
-
-			s_loaded_parent_script_reference = true;
-		}
+            if (!setparentscript_onload(t_id, t_stack))
+            {
+                t_stat = IO_ERROR;
+            }
+        }
 
 		MCNameDelete(t_stack);
 	}
@@ -4134,6 +4133,18 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
 	return t_stat;
 }
 
+bool MCObject::setparentscript_onload(uint32_t p_id, MCNameRef p_stack)
+{
+    parent_script = MCParentScript::Acquire(this, p_id, p_stack);
+    if (parent_script == NULL)
+    {
+        return false;
+    }
+    
+    s_loaded_parent_script_reference = true;
+    
+    return true;
+}
 
 // MW-2008-10-28: [[ ParentScripts ]] This method attempts to resolve the
 //   parentscript reference for this object (if any).
