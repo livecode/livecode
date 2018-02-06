@@ -2357,6 +2357,10 @@ command revSBRemoveDependencyForInclusion pInclusion, pInclusionType, pDependeny
    delete variable sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny]
 end revSBRemoveDependencyForInclusion
 
+function revSBGetExtensionDependenciesForExtension pId
+   return the keys of sDependencies["extensions"][pId]["extensions"]
+end revSBGetExtensionDependenciesForExtension
+
 command revSBUpdateForDependencies pPlatform, pArchs, pSDK, @xSettings
    local tDependencies
    repeat for each key tDependentKey in sDependencies
