@@ -533,6 +533,13 @@ Bool MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEven
         return False;
     }
     
+    /* If we have a touched widget, but it doesn't want touch, let default
+     * processing occur. */
+    if (!MCWidgetHandlesTouchEvents(t_touched_widget))
+    {
+        return False;
+    }
+    
     /* See if there is already a slot for the given touch. If none is found
      * and this is not a begin, we ignore it - otherwise we create one. */
     uinteger_t t_slot;

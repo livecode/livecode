@@ -1207,13 +1207,23 @@ struct MCTouch
 	uint32_t id;
 	int32_t x, y;
 	MCObjectHandle target;
-    bool is_widget;
 };
 
 static MCTouch *s_touches = nil;
+static bool s_touches_for_widget = false;
 
 static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p_id, uint32_t p_taps, int32_t x, int32_t y)
 {
+    /* Touch messages might flow to a widget, or to a control.
+     *
+     * If a widget handles the first touch in a sequence, then the sequence is
+     * considered grabbed by the widget event manager and should receive all
+     * subsequent touch events in the sequence.
+     *
+     * If a widget does not handle the first touch in a sequence, then the
+     * sequence is considered not grabbed by the widget event manager and no
+     * touch events should flow into the widget event manager. */
+
 	MCTouch *t_previous_touch;
 	t_previous_touch = nil;
 	
@@ -1226,7 +1236,11 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 	// IM-2013-09-30: [[ FullscreenMode ]] Translate touch location to stack coords
 	MCPoint t_touch_loc;
 	t_touch_loc = p_stack->view_viewtostackloc(MCPointMake(x, y));
-	
+
+    /* If true, then the event should be passed to the widget event manager
+     * first. If the touches are already grabbed by a widget then the event
+     * must be passed to the widget event manager. */
+    bool t_widget_first = s_touches_for_widget;
 
     if (p_phase != kMCEventTouchPhaseBegan)
     {
@@ -1259,22 +1273,21 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
         t_touch = new (nothrow) MCTouch;
         t_touch -> next = s_touches;
         t_touch -> id = p_id;
-        
-        /* If there is a touch, and it was grabbed by a widget and the widget
-         * still exists, then that widget takes any new touches. */
-        if (s_touches != nullptr &&
-            s_touches->is_widget &&
-            s_touches->target.IsValid())
-        {
-            t_target = s_touches->target.Get();
-            t_touch->is_widget = true;
-        }
-        else
+        
+        /* If the touch sequence isn't for widgets, then we must find a control
+         * to send the event to. In this case, if this is the first touch in 
+         * a sequence *and* the target is a widget, we must allow the widget
+         * event manager to have a look at it. */
+        if (!s_touches_for_widget)
         {
             t_target = p_stack -> getcurcard() -> hittest(t_touch_loc.x, t_touch_loc.y);
-            t_touch->is_widget = false;
+            if (t_touch->next == nullptr &&
+                t_target->gettype() == CT_WIDGET)
+            {
+                t_widget_first = true;
+            }
         }
-
+        
         t_touch -> target = t_target -> GetHandle();
         
         s_touches = t_touch;
@@ -1282,18 +1295,21 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
     
 	if (t_target != nil)
 	{
-        // Touches on widgets are handled differently - they grab all touches in
-        // a sequence.
-        if (t_target->gettype() == CT_WIDGET)
+        /* If the touch must be passed to the widget event manager then do that
+         * first. */
+        if (t_widget_first)
         {
+            /* If the widget handled the touch, or a widget has grabbed all
+             * touches in a sequence (s_touches_for_widget == true), then
+             * make sure all future touches are handled by the widget em and
+             * don't fall through to the engine. */
             if (MCwidgeteventmanager->event_touch(MCObjectCast<MCWidget>(t_target),
-                                                  p_id, p_phase, t_touch_loc.x, t_touch_loc.y))
+                                                  p_id, p_phase, t_touch_loc.x, t_touch_loc.y) ||
+                s_touches_for_widget)
             {
-                if (s_touches != nullptr)
-                {
-                    s_touches->is_widget = true;
-                }
-                
+                /* If this was touch event caused the sequence to end, then
+                 * make sure future touch events reconsider the target. */
+                s_touches_for_widget = s_touches != nullptr;
                 return;
             }
         }
