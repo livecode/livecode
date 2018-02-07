@@ -129,10 +129,9 @@ static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const M
 	if (p_style . has_background_color)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . background_color >> 16) & 0xFF;
-        uint32_t g = (p_style . background_color >> 8) & 0xFF;
-        uint32_t b = (p_style . background_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . background_color);
+        /* UNCHECKED */ MCU_format_color(t_color, &t_string);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("backgroundColor"), *t_string);
 	}
 	if (p_style . has_border_width || p_effective)
@@ -152,10 +151,9 @@ static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const M
 	if (p_style . has_border_color || p_effective)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . border_color >> 16) & 0xFF;
-        uint32_t g = (p_style . border_color >> 8) & 0xFF;
-        uint32_t b = (p_style . border_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . border_color);
+        /* UNCHECKED */ MCU_format_color(t_color, &t_string);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("borderColor"), *t_string);
 	}
 	if (p_style . has_dont_wrap || p_effective)
@@ -177,19 +175,17 @@ static void export_styled_text_character_style(MCArrayRef p_style_array, const M
 	if (p_style . has_text_color || p_effective)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . text_color >> 16) & 0xFF;
-        uint32_t g = (p_style . text_color >> 8) & 0xFF;
-        uint32_t b = (p_style . text_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . text_color);
+        /* UNCHECKED */ MCU_format_color(t_color, &t_string);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("textColor"), *t_string);
 	}
 	if (p_style . has_background_color)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . background_color >> 16) & 0xFF;
-        uint32_t g = (p_style . background_color >> 8) & 0xFF;
-        uint32_t b = (p_style . background_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . background_color);
+        /* UNCHECKED */ MCU_format_color(t_color, &t_string);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("backgroundColor"), *t_string);
 	}
 	if (p_style . has_link_text)
