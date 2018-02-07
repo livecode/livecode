@@ -100,8 +100,31 @@ bool MCEmscriptenHandleMousePress(MCStack *p_stack, uint32_t p_time, uint32_t p_
 	if (MCnoui) return false;
 	
 	MCScreenDC *t_dc = static_cast<MCScreenDC *>(MCscreen);
+	t_dc->update_mouse_press_state(p_state, p_button);
 	
-	t_dc->handle_mouse_press(p_stack, p_time, p_modifiers, p_state, p_button);
+	MCEventQueuePostMousePress(p_stack, p_time, p_modifiers, p_state, p_button);
+	
+	return true;
+}
+
+static inline MCPoint MCEmscriptenWindowToGlobalLoc(MCStack *p_stack, const MCPoint &p_loc)
+{
+	MCRectangle t_window_rect = p_stack->view_getrect();
+	return MCPointOffset(p_loc, t_window_rect.x, t_window_rect.y);
+}
+
+MC_DLLEXPORT_DEF
+bool MCEmscriptenHandleMousePosition(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, int32_t p_x, int32_t p_y)
+{
+	if (MCnoui) return false;
+	
+	MCScreenDC *t_dc = static_cast<MCScreenDC *>(MCscreen);
+	
+	MCPoint t_position = MCPointMake(p_x, p_y);
+	if (p_stack)
+		t_position = MCEmscriptenWindowToGlobalLoc(p_stack, t_position);
+	if (t_dc->update_mouse_position(t_position))
+		MCEventQueuePostMousePosition(p_stack, p_time, p_modifiers, p_x, p_y);
 	
 	return true;
 }
@@ -109,6 +132,7 @@ bool MCEmscriptenHandleMousePress(MCStack *p_stack, uint32_t p_time, uint32_t p_
 MCScreenDC::MCScreenDC()
 	: m_main_window(nil), m_mouse_button_state(0)
 {
+	m_mouse_position = MCPointMake(-1,-1);
 }
 
 MCScreenDC::~MCScreenDC()
@@ -415,7 +439,7 @@ MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_m
 
 
 void
-MCScreenDC::handle_mouse_press(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, MCMousePressState p_state, int32_t p_button)
+MCScreenDC::update_mouse_press_state(MCMousePressState p_state, int32_t p_button)
 {
 	// track mouse button pressed state
 	/* NOTE - assumes there are no more than 32 mouse buttons */
@@ -426,8 +450,17 @@ MCScreenDC::handle_mouse_press(MCStack *p_stack, uint32_t p_time, uint32_t p_mod
 		else if (p_state == kMCMousePressStateUp)
 			m_mouse_button_state &= ~(1UL << p_button);
 	}
+}
+
+bool
+MCScreenDC::update_mouse_position(const MCPoint &p_position)
+{
+	if (MCPointIsEqual(m_mouse_position, p_position))
+		return false;
 	
-	MCEventQueuePostMousePress(p_stack, p_time, p_modifiers, p_state, p_button);
+	m_mouse_position = p_position;
+	
+	return true;
 }
 
 Boolean
@@ -445,6 +478,6 @@ MCScreenDC::platform_querymouse(int16_t& r_x, int16_t& r_y)
 {
     // There is no asynchronous mouse position in Emscripten; just whatever the
     // browser has told us about.
-    r_x = MCmousex;
-    r_y = MCmousey;
+    r_x = m_mouse_position.x;
+    r_y = m_mouse_position.y;
 }

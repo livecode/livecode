@@ -645,9 +645,9 @@ mergeInto(LibraryManager.library, {
 			return [x, y];
 		},
 
-		// Wrapper for MCEventQueuePostMousePosition
+		// Wrapper for MCEmscriptenHandleMousePosition
 		_postMousePosition: function(stack, time, modifiers, x, y) {
-			Module.ccall('MCEventQueuePostMousePosition',
+			Module.ccall('MCEmscriptenHandleMousePosition',
 						 'number', /* bool */
 						 ['number', /* MCStack *stack */
 						  'number', /* uint32_t time */
@@ -656,7 +656,7 @@ mergeInto(LibraryManager.library, {
 						 [stack, time, modifiers, x, y]);
 		},
 
-		// Wrapper for MCEventQueuePostMousePress
+		// Wrapper for MCEmscriptenHandleMousePress
 		_postMousePress: function(stack, time, modifiers, state, button)
 		{
 			Module.ccall('MCEmscriptenHandleMousePress',
