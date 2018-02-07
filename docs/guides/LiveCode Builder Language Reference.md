@@ -577,9 +577,11 @@ on Android and iOS).
 
 The Obj-C binding string has the following form:
 
-    "objc:class.(+|-)method[?thread]"
+    "objc:[class.](+|-)method[?thread]"
 
-Here *class* specifies the name of the class containing the method to bind to.
+Here *class* specifies the name of the class containing the method to
+bind to. If the method is an instance method, the class can be omitted,
+creating a 'dynamic binding', i.e. just resolving the selector.
 
 Here *method* specifies the method name to bind to in standard Obj-C selector
 form, e.g. addTarget:action:forControlEvents:. If the method is a class method
