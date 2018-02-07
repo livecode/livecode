@@ -663,10 +663,11 @@ public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocat
 public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton as CUInt) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetClickCount(in pCurrent as CBool, out rCount as CUInt) returns nothing binds to "<builtin>"
 
-public foreign handler MCWidgetGetTouchIndex(out rId as optional Integer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetTouchIndex(out rIndex as optional Integer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetTouchPosition(out rLocation as optional Point) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetNumberOfTouches(out rCount as CUInt) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetPositionOfTouch(in pId as Integer, out rLocation as optional Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetPositionOfTouch(in pIndex as Integer, out rLocation as optional Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetTouchIDs(out tIDs as optional List) returns nothing binds to "<builtin>"
 
 --public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) returns nothing binds to "<builtin>"
 --public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
@@ -777,28 +778,28 @@ begin
 end syntax*/
 
 /**
-Summary:        The index of the current touch
+Summary: The id of the current touch
 
-Returns:        An integer index for the current touch
+Returns: An integer id for the current touch
 
 Example:
-   variable tIndex as Number
-   put the touch index into tIndex
+   variable tID as Number
+   put the touch id into tID
 
    variable tPosition as Point
-   put the position of touch tIndex into tPosition
+   put the position of touch tID into tPosition
 */
 
 syntax TheTouchIndex is expression
-    "the" "touch" "index"
+    "the" "touch" "id"
 begin
     MCWidgetGetTouchIndex(output)
 end syntax
 
 /**
-Summary:        The location of the current touch
+Summary: The location of the current touch
 
-Returns:        The position of the current touch relative to the widget
+Returns: The position of the current touch relative to the widget
 
 Example:
    variable tPosition as Point
@@ -819,9 +820,9 @@ begin
 end syntax
 
 /**
-Summary:        The number of touches
+Summary: The number of touches
 
-Returns:       The number of currently active touches
+Returns: The number of currently active touches
 
 Example:
    if the number of touches is 2 then
@@ -836,22 +837,42 @@ begin
 end syntax
 
 /**
-Summary:        The location of a specific touch
+Summary: The location of a specific touch
 
-Returns:       The positon of a specific touch index relative to the widget
+Returns: The positon of a specific touch id relative to the widget
 
 Example:
-   variable tIndex as Number
-   put the touch index into tIndex
+   variable tID as Number
+   put the touch id into tID
 
    variable tPosition as Point
-   put the position of touch tIndex into tPosition
+   put the position of touch tID into tPosition
 
 */
 syntax TheLocationOfTouch is prefix operator with property precedence
     "the" "position" "of" "touch" <Id: Expression>
 begin
     MCWidgetGetPositionOfTouch(Id, output)
+end syntax
+
+/**
+Summary: The touch IDs
+
+Returns: The a list of currently active touch IDs
+
+Example:
+variable tIDs as optional List
+put the touch ids into tIDs
+if tIDs is not nothing then
+    variable tPosition as Point
+    put the position of touch tIDs[1] into tPosition
+end if
+
+*/
+syntax TheTouchIDs is expression
+    "the" "touch" "ids"
+begin
+    MCWidgetGetTouchIDs(output)
 end syntax
 
 -- FIXME not actually implemented

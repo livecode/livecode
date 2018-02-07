@@ -420,19 +420,35 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetNumberOfTouches(uinteger_t& r_count)
     r_count = MCwidgeteventmanager->GetTouchCount();
 }
 
-extern "C" MC_DLLEXPORT_DEF void MCWidgetGetPositionOfTouch(integer_t p_id, MCValueRef& r_point)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetPositionOfTouch(integer_t p_index, MCValueRef& r_point)
 {
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
     MCPoint t_position;
-    if (!MCwidgeteventmanager->GetTouchPosition(p_id, t_position))
+    if (!MCwidgeteventmanager->GetTouchPosition(p_index, t_position))
     {
         r_point = MCValueRetain(kMCNull);
         return;
     }
     
     /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(MCWidgetMapPointFromGlobal(MCcurrentwidget, MCPointToMCGPoint(t_position)), (MCCanvasPointRef&)r_point);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetTouchIDs(MCValueRef& r_touch_ids)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    MCAutoProperListRef t_touch_ids;
+    if (!MCwidgeteventmanager->GetTouchIDs(&t_touch_ids) ||
+        MCProperListIsEmpty(*t_touch_ids))
+    {
+        r_touch_ids = MCValueRetain(kMCNull);
+        return;
+    }
+    
+    r_touch_ids = t_touch_ids.Take();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

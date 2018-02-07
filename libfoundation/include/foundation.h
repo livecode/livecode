@@ -2017,6 +2017,8 @@ MC_DLLEXPORT bool MCNumberCreateWithInteger(integer_t value, MCNumberRef& r_numb
 MC_DLLEXPORT bool MCNumberCreateWithUnsignedInteger(uinteger_t value, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberCreateWithReal(real64_t value, MCNumberRef& r_number);
 
+MC_DLLEXPORT compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self);
+
 MC_DLLEXPORT bool MCNumberIsInteger(MCNumberRef number);
 MC_DLLEXPORT bool MCNumberIsReal(MCNumberRef number);
 

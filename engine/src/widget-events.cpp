@@ -141,6 +141,7 @@ MCWidgetEventManager::MCWidgetEventManager() :
   m_check_mouse_focus(false),
   m_touches(),
   m_touch_count(0),
+  m_touch_sequence(0),
   m_touched_widget(nullptr),
   m_touch_id(0)
 {
@@ -599,6 +600,7 @@ Bool MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEven
         if (m_touch_count == 0)
         {
             MCValueAssignOptional(m_touched_widget, nullptr);
+            m_touch_sequence = 0;
         }
     }
     
@@ -779,6 +781,53 @@ bool MCWidgetEventManager::GetTouchPosition(integer_t p_index, MCPoint& r_point)
     r_point.y = m_touches[t_slot].m_y;
     
     return false;
+}
+
+static compare_t _MCSortWidgetTouchIndexes(const MCValueRef *p_left, const MCValueRef *p_right)
+{
+    MCAssert(MCValueGetTypeCode(*p_left) == kMCValueTypeCodeNumber);
+    MCAssert(MCValueGetTypeCode(*p_right) == kMCValueTypeCodeNumber);
+    
+    return MCNumberCompareTo(MCNumberRef(*p_left), MCNumberRef(*p_right));
+}
+
+bool MCWidgetEventManager::GetTouchIDs(MCProperListRef &r_touch_ids)
+{
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+    {
+        return false;
+    }
+    
+    for (uinteger_t i = 0; i < m_touches.Size(); i++)
+    {
+        if (m_touches[i].m_active)
+        {
+            MCAutoNumberRef t_index;
+            if (!MCNumberCreateWithInteger(m_touches[i].m_index, &t_index))
+            {
+                return false;
+            }
+            
+            if (!MCProperListPushElementOntoBack(*t_list, &t_index))
+            {
+                return false;
+            }
+        }
+    }
+    
+    // indexes may be out of order if filling inactive slots so sort
+    if (!MCProperListSort(*t_list, false, _MCSortWidgetTouchIndexes))
+        return false;
+        
+    if (!t_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_touch_ids = t_list.Take();
+    
+    return true;
 }
 
 
@@ -1091,7 +1140,7 @@ uinteger_t MCWidgetEventManager::allocateTouchSlot()
     }
     
     m_touches[i].m_active = true;
-    m_touches[i].m_index = ++m_touch_count;
+    m_touches[i].m_index = ++m_touch_sequence;
     
     return i;
 }

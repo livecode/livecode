@@ -101,6 +101,7 @@ public:
     uindex_t GetTouchCount(void);
     bool GetActiveTouch(integer_t& r_index);
     bool GetTouchPosition(integer_t p_index, MCPoint& r_point);
+    bool GetTouchIDs(MCProperListRef& r_touch_ids);
     
 private:
     void TriggerEvent(MCWidgetRef widget, MCWidgetEventTriggerType type, MCNameRef event);
@@ -136,6 +137,7 @@ private:
     struct MCWidgetTouchEvent;
     MCAutoArray<MCWidgetTouchEvent> m_touches;
     uindex_t m_touch_count;
+    uindex_t m_touch_sequence;
     MCWidgetRef m_touched_widget;
     uindex_t m_touch_id;
     
