@@ -1168,7 +1168,6 @@ MCExecEnumTypeElementInfo _kMCInterfaceEncodingElementInfo[] =
 {
 	{ MCnativestring, 0, true },
 	{ MCunicodestring, 1, true },
-	{ MCmixedstring, 2, true },
 };
 
 MCExecEnumTypeInfo _kMCInterfaceEncodingTypeInfo =

@@ -1786,16 +1786,23 @@ void MCField::SetVisitedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int
     SetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, false, p_part_id, si, ei, &MCBlock::SetVisited,p_value);
 }
 
-void MCField::GetEncodingOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t &r_encoding)
+void MCField::GetEncodingOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, intenum_t& r_encoding)
 {
-    intenum_t t_encoding;
-    bool t_mixed;
-    GetParagraphPropOfCharChunk< PodFieldPropType<intenum_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEncoding, t_mixed, t_encoding);
-
-    if (!t_mixed)
-        r_encoding = t_encoding;
+    MCAutoStringRef t_value;
+    if (!exportastext(p_part_id, p_start, p_finish, &t_value))
+    {
+        ctxt.Throw();
+        return;
+    }
+     
+    if (MCStringCanBeNative(*t_value))
+    {
+        r_encoding = 0;
+    }
     else
-        r_encoding = 2;
+    {
+        r_encoding = 1;
+    }
 }
 
 void MCField::GetFlaggedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value)
