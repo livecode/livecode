@@ -15,6 +15,9 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+/**
+This widget is an icon picker, using icons from the iconSVG library.
+*/
 widget com.livecode.widget.iconpicker
 
 use com.livecode.canvas
@@ -56,13 +59,74 @@ private variable mShowNames as Boolean
 private variable mIconSize as Number
 private variable mFilterString as String
 
+/**
+The preferred size of the widget.
+
+Syntax: 
+get the preferredSize of <widget>
+
+Value:
+A two-item list with the width and height needed to display the widget
+with the current display preferences.
+
+Description:
+The <preferredSize> property is used when the icon widget is popped up
+using the 'popup widget' syntax
+*/
 property preferredSize		get getPreferredSize
 metadata preferredSize.user_visible is "false"
 
+/**
+The selected icon name
+
+Syntax: 
+set the selectedIcon of <widget> to pIcon
+get the selectedIcon of <widget>
+
+Value:
+An icon name, from the IconSVG library
+
+*/
 property selectedIcon get mSelectedElement set setSelectedElement
+
+/**
+Whether the icon picker has a border or not
+
+Syntax: 
+set the showFrameBorder of <widget> to {true | false}
+get the showFrameBorder of <widget>
+
+*/
 property showFrameBorder	get mFrameBorder	set setFrameBorder
+
+/**
+Whether to display the names of the icons or not
+
+Syntax: 
+set the showNames of <widget> to {true | false}
+get the showNames of <widget>
+*/
 property showNames get mShowNames set SetShowNames
+
+/**
+The width and height of the rectangles in which the icons are rendered
+
+Syntax: 
+set the iconSize of <widget> to pSize
+get the iconSize of <widget>
+
+Value:
+A two-item list with the width and height of the rect in which the icons are rendered
+*/
 property iconSize get mIconSize set SetIconSize
+
+/**
+Filters the list of icons to display according to a string
+
+Syntax: 
+set the filterString of <widget> to pString
+get the filterString of <widget>
+*/
 property filterString get mFilterString set SetFilterString
 
 constant kIconColor is [0,0,0]

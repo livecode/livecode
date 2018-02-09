@@ -41,7 +41,7 @@ References: firstItemLeft (property), itemIcons (property),
 
 Name: mouseUp
 Type: message
-Syntax: on mouseUp
+Syntax: mouseUp
 
 Summary: Sent when the header bar is clicked
 
