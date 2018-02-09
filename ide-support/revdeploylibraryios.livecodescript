@@ -18,7 +18,7 @@ local sDeviceSDKs
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
 function deployUsableIosSdk
-   return "6.1,7.1,8.2,9.2,10.2,11.2"
+   return "6.1,7.1,8.2,9.2,10.2,11.2,11.3"
 end deployUsableIosSdk
 
 // SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
@@ -42,16 +42,19 @@ function deployGetIphoneOSes
    else if tMacVersion < 101206 then
       put empty into tList[1]
       answer error "To use Xcode 9.2, you need to upgrade your Mac to MacOS Sierra 10.12.6"
+    else if tMacVersion < 101302 then
+      put empty into tList[1]
+      answer error "To use Xcode 9.3, you need to upgrade your Mac to MacOS High Sierra 10.13.2"
    else
-      // Xcode 9.2 requires a Mac running Mac OS 10.12.6 or later
-      put "11.2,9.2" into tList[1]
+      // Xcode 9.3 requires a Mac running Mac OS 10.13.2 or later
+      put "11.3,9.3" into tList[1]
    end if
    
    return tList
 end deployGetIphoneOSes
 
 function deployGetIosMinimumVersions
-   return "6.0,6.1,7.0,7.1,8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0,10.1,10.2,10.3,11.0,11.1,11.2"
+   return "6.0,6.1,7.0,7.1,8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0,10.1,10.2,10.3,11.0,11.1,11.2,11.3"
 end deployGetIosMinimumVersions
 
 ////////////////////////////////////////////////////////////////////////////////
