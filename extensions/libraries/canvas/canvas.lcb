@@ -54,6 +54,8 @@ variable sCanvas as optional Canvas
 
 /**
 Summary: Creates a canvas of the given size for the other handlers to use.
+
+Parameters:
 pWidth:  The width of the created canvas.
 pHeight:  The height of the created canvas.
 
@@ -82,6 +84,8 @@ end handler
 
 /**
 Summary: Sets the current color of the canvas to the given RGBA value.
+
+Parameters:
 pRed: The red component of the color to set.
 pGreen: The green component of the color to set.
 pBlue: The blue component of the color to set.
@@ -96,9 +100,12 @@ end handler
 
 /**
 Summary: Draws a filled circle.
+
+Parameters:
 pX: The x-coordinate of the centre of the circle.
 pY: The y-coordinate of the centre of the circle.
 pRadius: The radius of the circle.
+
 Description:
 Fills a circle of the given radius at the given position in the canvas.
 */
@@ -108,6 +115,8 @@ end handler
 
 /**
 Summary: Copies the current contents of the canvas to the specified image object.
+
+Parameters:
 pObjectId: A string which is an object chunk referring to an image.
 
 Description:
@@ -129,9 +138,12 @@ public handler canvasApplyToImage(in pObjectId as String) returns nothing
   set property "imageData" of tObject to the pixel data of sCanvas
 end handler
 
-/*
+/**
 Summary: Returns the bounding box of an SVG path.
-pPath: The SVG Path string to process
+
+Parameters:
+pPathString: The SVG Path string to process
+
 Description:
 Parses the SVG path string and computes the tight bounding box.
 */

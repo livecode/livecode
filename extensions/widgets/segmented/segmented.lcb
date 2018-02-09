@@ -41,7 +41,7 @@ References: itemLabels (property), itemIcons (property),
 
 Name: hiliteChanged
 Type: message
-Syntax: on hiliteChanged
+Syntax: hiliteChanged
 
 Summary: Sent when the hilite of the segmented control widget changes
 
@@ -169,6 +169,16 @@ metadata hilitedTextColor.label is "Hilited segment label color"
 metadata themeClass.default is "list"
 metadata themeClass.user_visible is "false"
 
+/**
+Syntax: set the horizontal of <widget> to {true | false}
+Syntax: get the horizontal of <widget>
+
+Summary: Whether the segmented widget is horizontal or not
+
+Description:
+Use the <horizontal> property to control whether the segmented widget
+is laid out horizontally or vertically.
+**/
 property horizontal get mIsHorizontal set SetHorizontal
 metadata horizontal.editor is "com.livecode.pi.boolean"
 metadata horizontal.default is "true"
