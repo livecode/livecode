@@ -2175,7 +2175,7 @@ private command revCopyModule pPlatform, pModuleName, pSourceFile, pSourceFolder
       if there is a folder pStandaloneRoot & slash & pTargetFolder then
          return empty
       end if 
-      revSBCopyFolderToDestination tSourcePath, pStandaloneRoot & slash & pTargetFolder, "revStandaloneProgressCallback", the long id of me
+      revSBCopyFolderToDestination tSourcePath, pStandaloneRoot & slash & pTargetFolder, "revStandaloneProgressCallback", the long id of me, sStandaloneSettingsA
    else
       if there is no file tSourcePath then
          return "not found"
