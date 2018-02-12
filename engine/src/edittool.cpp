@@ -128,8 +128,8 @@ bool MCGradientEditTool::mfocus(int2 x, int2 y)
 		return false;
 	}
 
-	MCRectangle t_old_effectiverect;
-	t_old_effectiverect = graphic -> geteffectiverect();
+    /* Dirty the current edit tool draw rect in the selection layer. */
+    graphic->getcard()->dirtyselection(drawrect());
 
 	switch (m_gradient_edit_point)
 	{
@@ -191,8 +191,11 @@ bool MCGradientEditTool::mfocus(int2 x, int2 y)
 	gradient->old_origin.x = MININT2;
 	gradient->old_origin.y = MININT2;
 
-	// MW-2011-08-18: [[ Layers ]] Notify the graphic its effective rect has changed and invalidate all.
-	graphic -> layer_effectiverectchangedandredrawall(t_old_effectiverect);
+    /* Dirty the new edit tool draw rect in the selection layer. */
+    graphic->getcard()->dirtyselection(drawrect());
+    
+    /* Mark the graphic's content as needing redrawn. */
+    graphic->layer_redrawall();
 
 	graphic->message_with_args(MCM_mouse_move, x, y);
 
@@ -269,39 +272,6 @@ MCRectangle MCGradientEditTool::drawrect()
 	gradient_rects(rects);
 	drect = MCU_union_rect(rects[0], rects[1]);
 	return MCU_union_rect(drect, rects[2]);
-}
-
-MCRectangle MCGradientEditTool::minrect()
-{
-	int4 minx, miny, maxx, maxy;
-	minx = MAXINT4;  miny = MAXINT4;
-	maxx = MININT4;  maxy = MININT4;
-
-	MCRectangle rect = {MININT2,MININT2,0,0};
-
-	if (gradient != NULL)
-	{
-		minx = MCU_min(gradient->origin.x, gradient->primary.x);
-		maxx = MCU_max(gradient->origin.x, gradient->primary.x);
-
-		minx = MCU_min(minx, gradient->secondary.x);
-		maxx = MCU_max(maxx, gradient->secondary.x);
-
-		miny = MCU_min(gradient->origin.y, gradient->primary.y);
-		maxy = MCU_max(gradient->origin.y, gradient->primary.y);
-
-		miny = MCU_min(miny, gradient->secondary.y);
-		maxy = MCU_max(maxy, gradient->secondary.y);
-
-		if (minx <= maxx && miny <= maxy)
-		{
-			rect.x = minx;
-			rect.y = miny;
-			rect.width = maxx - minx ;
-			rect.height = maxy - miny;
-		}
-	}
-	return rect;
 }
 
 MCPolygonEditTool::MCPolygonEditTool(MCGraphic *p_graphic) :
@@ -491,10 +461,4 @@ MCRectangle MCPolygonEditTool::drawrect()
 		drect = MCU_union_rect(drect, t_rects[i]);
 	}
 	return drect;
-}
-
-MCRectangle MCPolygonEditTool::minrect()
-{
-	MCRectangle rect = {MININT2,MININT2,0,0};
-	return rect;
 }

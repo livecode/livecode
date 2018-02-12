@@ -216,15 +216,14 @@ public:
 	
 	// IM-2013-09-13: [[ RefactorGraphics ]] render the card background
 	void drawbackground(MCContext *p_context, const MCRectangle &p_dirty);
-	// IM-2013-09-13: [[ RefactorGraphics ]] render the card selection rect
-	void drawselectionrect(MCContext *);
-    void drawselectedchildren(MCDC *dc);
-	
+    
+    /* The drawselection method renders the 'selection layer' - i.e. all the
+     * selection decorations for all controls on the card. */
+    void drawselection(MCContext *p_context, const MCRectangle& p_dirty);
+    
 	// IM-2016-09-26: [[ Bug 17247 ]] request redraw of the area occupied by
 	//      selection marquee + handles
 	void dirtyselection(const MCRectangle &p_rect);
-	
-    bool updatechildselectedrect(MCRectangle& x_rect);
     
 	Exec_stat openbackgrounds(bool p_is_preopen, MCCard *p_other);
 	Exec_stat closebackgrounds(MCCard *p_other);
@@ -240,8 +239,6 @@ public:
 	void layer_removed(MCControl *control, MCObjptr *previous, MCObjptr *next);
 	// MW-2011-08-19: [[ Layers ]] The viewport displayed in the stack has changed.
 	void layer_setviewport(int32_t x, int32_t y, int32_t width, int32_t height);
-	// MW-2011-09-23: [[ Layers ]] The selected rectangle has changed.
-	void layer_selectedrectchanged(const MCRectangle& old_rect, const MCRectangle& new_rect);
 
 	// MW-2011-08-26: [[ TileCache ]] Render all layers into the stack's tilecache.
 	void render(void);

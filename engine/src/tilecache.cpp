@@ -1487,8 +1487,8 @@ void MCTileCacheEndFrame(MCTileCacheRef self)
 
 	// Some statistics
 #ifdef _DEBUG
-    //MCLog("Frame - %d sprite tiles, %d scenery tiles, %d active tiles, %d instructions, %d bytes",
-    //			self -> sprite_render_list . length, self -> scenery_render_list . length, self -> active_tile_count, self -> display_list_frontier, self -> cache_size);
+    MCLog("Frame - %d sprite tiles, %d scenery tiles, %d active tiles, %d instructions, %d bytes",
+    			self -> sprite_render_list . length, self -> scenery_render_list . length, self -> active_tile_count, self -> display_list_frontier, self -> cache_size);
 #endif
 }
 
