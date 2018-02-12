@@ -20,16 +20,16 @@ on extensionInitialize
    if the target is not me then
       pass extensionInitialize
    end if
-   
+
    insert the script of me into back
-   
+
    if the environment contains "development" then
       set the _ideoverride of me to true
       local tName
       put the short name of me into tName
-      revSBAddDependencyForInclusion "extensions", tName, "externals", "XML"    
+      revSBAddDependencyForInclusion "extensions", tName, "externals", "XML"
    end if
-   
+
    svgSpecLoad
 end extensionInitialize
 
@@ -37,7 +37,7 @@ on extensionFinalize
    if the target is not me then
       pass extensionFinalize
    end if
-   
+
    remove the script of me from back
 end extensionFinalize
 
@@ -539,7 +539,7 @@ private command _svgFlatten @xContext, @xElement
 			end if
 		end if
 	end if
-	
+
 	/* Now all the processing for this element has been done, we process each
 	 * child, in order. */
 	if xElement["content"] is an array then
@@ -809,7 +809,7 @@ private command _svgCompileTransform @xContext, pTransform, pBBox, @rCompiledTra
 			_InternalError format("unknown transform '%s'", tTransform[1])
 			break
 		end switch
-		put _svgTransformConcat(tMatrix, tNextMatrix) into tMatrix 
+		put _svgTransformConcat(tMatrix, tNextMatrix) into tMatrix
 	end repeat
 	put empty into rCompiledTransform
 	if not _svgTransformIsIdentity(tMatrix) then
@@ -1006,7 +1006,7 @@ private command _svgCompileResolveGradient @xContext, pElement, @rGradient
 		if the number of elements in tColors > 0 then
 			put tColors into rGradient["colors"]
 			put tOffsets into rGradient["offsets"]
-		end if	
+		end if
 	end if
 end _svgCompileResolveGradient
 
@@ -1064,7 +1064,7 @@ private command _svgCompileSvg @xContext, pElement
 		else if tPreserveAspectRatio contains "yMax" then
 			add (tHeight - tViewBox[4] * tVScaleY) to tVTranslateY
 		end if
-		
+
 		local tViewportMatrix
 		put _svgTransformTranslate(tVTranslateX, tVTranslateY) into tViewportMatrix
 		put _svgTransformConcat(tViewportMatrix, _svgTransformScale(tVScaleX, tVScaleY)) into tViewportMatrix
@@ -1167,7 +1167,7 @@ private command _svgCompileShape @xContext, pType, pBBox
 	if param(4) is an array then
 		put param(4) into tOperation[2]
 	else
-		repeat with tIndex = 4 to paramCount()
+		repeat with tIndex = 4 to the paramCount
 			put param(tIndex) into tOperation[2][tIndex - 3]
 		end repeat
 	end if
@@ -1240,8 +1240,10 @@ private function _svgBoxPoints pPoints
 	put pPoints[1] into tRight
 	put pPoints[2] into tTop
 	put pPoints[2] into tBottom
-	repeat with i = 1 to the number of elements in pPoints by 2
-		if pPoints[i] < tLeft then
+   local tNumberPoints
+   put the number of elements in pPoints into tNumberPoints
+	repeat with i = 1 to tNumberPoints step 2
+      if pPoints[i] < tLeft then
 			put pPoints[i] into tLeft
 		else if pPoints[i] > tRight then
 			put pPoints[i] into tRight
@@ -2369,7 +2371,7 @@ private function _svgParseTransformValue @xValue
 
 		local tArity
 		put the number of elements in tValues into tArity
-		
+
 		switch tType
 		case "matrix"
 			if tArity is not 6 then
@@ -2888,10 +2890,10 @@ private command svgSpecLoad
 
 			/* Record the name of the new element. */
 			put word 2 of tLine into tCurrentElement["name"]
-			
+
 			next repeat
 		end if
-		
+
 		/* The 'property' and 'attribute' lines have the same format and define
 		 * a feature. */
 		if tLineType is "property" or tLineType is "attribute" then
@@ -2901,7 +2903,7 @@ private command svgSpecLoad
 				_svgSpecError tCurrentRow, "no current element"
 				next repeat
 			end if
-			
+
 			/* Properties must only be defined against the element with no
 			 * name. */
 			if tLineType is "property" and \
@@ -2980,7 +2982,7 @@ private command svgSpecLoad
 
 			/* Add the feature to the current element's feature map. */
 			put tFeature into tCurrentElement[tLineType][tFeature["name"]]
-			
+
 			next repeat
 		end if
 
@@ -3002,7 +3004,7 @@ private command svgSpecLoad
 			/* For named elements, the property array is a set of applicable
 			 * properties. */
 			put true into tCurrentElement["property"][word 2 of tLine]
-			
+
 			next repeat
 		end if
 
@@ -3128,53 +3130,53 @@ end _svgSpecError
  */
 private function xmlImportFromFile pXMLFile
    local tArray
-   
+
    local tTreeId
    put revCreateXMLTreeFromFileWithNamespaces(pXMLFile, true, true, false) into tTreeId
-   
+
    if tTreeId begins with "xmlerr," then
       throw tTreeId
    end if
-   
+
    try
       local tRootNode
       put revXMLRootNode(tTreeId) into tRootNode
       if tRootNode begins with "xmlerr," then
          throw tRootNode
       end if
-      
+
       put _xmlImportNode(tTreeId, revXMLRootNode(tTreeId)) into tArray
-      
+
    finally
       revDeleteXMLTree tTreeId
    end try
-   
+
    return tArray
 end xmlImportFromFile
 
 private function xmlImportFromText pXMLText
    local tArray
-   
+
    local tTreeId
    put revCreateXMLTreeWithNamespaces(pXMLText, true, true, false) into tTreeId
-   
+
    if tTreeId begins with "xmlerr," then
       throw tTreeId
    end if
-   
+
    try
       local tRootNode
       put revXMLRootNode(tTreeId) into tRootNode
       if tRootNode begins with "xmlerr," then
          throw tRootNode
       end if
-      
+
       put _xmlImportNode(tTreeId, revXMLRootNode(tTreeId)) into tArray
-      
+
    finally
       revDeleteXMLTree tTreeId
    end try
-   
+
    return tArray
 end xmlImportFromText
 
@@ -3197,7 +3199,7 @@ private function _xmlImportNode pTreeId, pNode
    /* Extract the node type and index from the pNode path */
    local tArray
    _xmlImportNodeTypeAndIndex pNode, tArray["type"], tArray["index"]
-   
+
    -- First extract the attributes, these go into an 'attribute' field
    -- as an array mapping attribute name to value
    local tAttributes
@@ -3207,14 +3209,14 @@ private function _xmlImportNode pTreeId, pNode
    end if
    split tAttributes by return and "="
    put tAttributes into tArray["features"]
-   
+
    -- Get the list of child nodes
    local tChildNodes
    put revXMLChildNames(pTreeId, pNode, return, empty, true, true) into tChildNodes
    if tChildNodes begins with "xmlerr," then
       throw tChildNodes
    end if
-   
+
    /* If the list of child nodes of the element is not empty, then we
     * recursively import each child node into a sequence; otherwise the node
     * only contains text (or has no content) which we import as a string. */
@@ -3236,7 +3238,7 @@ private function _xmlImportNode pTreeId, pNode
    /* The content of the node, whether it be just a string or a sequence of
     * other nodes is placed in the 'content' key of the resulting node array. */
    put tContent into tArray["content"]
-   
+
    return tArray
 end _xmlImportNode
 
