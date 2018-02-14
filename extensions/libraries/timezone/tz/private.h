@@ -104,6 +104,12 @@
 # define NETBSD_INSPIRED 1
 #endif
 
+#ifdef WIN32
+#undef HAVE_UNISTD_H
+#undef HAVE_SYS_WAIT_H
+#undef HAVE_POSIX_DECLS
+#endif
+
 #if HAVE_INCOMPATIBLE_CTIME_R
 #define asctime_r _incompatible_asctime_r
 #define ctime_r _incompatible_ctime_r
