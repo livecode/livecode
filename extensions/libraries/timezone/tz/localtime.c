@@ -12,6 +12,7 @@
 
 #define LOCALTIME_IMPLEMENTATION
 #include "private.h"
+#include "tz.h"
 
 #include "tzfile.h"
 #include <fcntl.h>
@@ -357,7 +358,34 @@ union input_buffer {
 };
 
 /* TZDIR with a trailing '/' rather than a trailing '\0'.  */
-static char const tzdirslash[sizeof TZDIR] = TZDIR "/";
+static char *s_tzdirslash = NULL;
+
+bool tzsetdir(const char* dir)
+{
+    if (s_tzdirslash != NULL)
+        free(s_tzdirslash);
+    
+    size_t t_length = strlen(dir);
+    s_tzdirslash = malloc(t_length + 2);
+    if (s_tzdirslash == NULL)
+        return false;
+    
+    strcpy(s_tzdirslash, dir);
+    s_tzdirslash[t_length] = '/';
+    // Nul terminate
+    s_tzdirslash[t_length + 1] = '\0';
+    return true;
+}
+
+static const char* tzgetdirslash()
+{
+    if (s_tzdirslash == NULL)
+        tzsetdir(TZDIR);
+    
+    return s_tzdirslash;
+}
+
+#define tzdirslash tzgetdirslash()
 
 /* Local storage needed for 'tzloadbody'.  */
 union local_storage {
@@ -372,7 +400,7 @@ union local_storage {
 
   /* The file name to be opened.  */
   char fullname[BIGGEST(sizeof (struct file_analysis),
-			sizeof tzdirslash + 1024)];
+			PATH_MAX)];
 };
 
 /* Load tz data from the file named NAME into *SP.  Read extended
@@ -409,14 +437,14 @@ tzloadbody(char const *name, struct state *sp, bool doextend,
 #endif
 	if (!doaccess) {
 		size_t namelen = strlen(name);
-		if (sizeof lsp->fullname - sizeof tzdirslash <= namelen)
+		if (sizeof lsp->fullname - strlen(tzdirslash) <= namelen)
 		  return ENAMETOOLONG;
 
 		/* Create a string "TZDIR/NAME".  Using sprintf here
 		   would pull in stdio (and would fail if the
 		   resulting string length exceeded INT_MAX!).  */
-		memcpy(lsp->fullname, tzdirslash, sizeof tzdirslash);
-		strcpy(lsp->fullname + sizeof tzdirslash, name);
+		memcpy(lsp->fullname, tzdirslash, strlen(tzdirslash));
+		strcpy(lsp->fullname + strlen(tzdirslash), name);
 
 		/* Set doaccess if '.' (as in "../") shows up in name.  */
 		if (strchr(name, '.'))
@@ -1316,7 +1344,7 @@ zoneinit(struct state *sp, char const *name)
   }
 }
 
-static void
+void
 tzsetlcl(char const *name)
 {
   struct state *sp = lclptr;
@@ -1353,7 +1381,8 @@ tzsetwall(void)
 static void
 tzset_unlocked(void)
 {
-  tzsetlcl(getenv("TZ"));
+  // Control locale externally using tzsetlcl
+  //tzsetlcl(getenv("TZ"));
 }
 
 void
