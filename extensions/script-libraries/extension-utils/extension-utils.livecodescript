@@ -1,12 +1,34 @@
 ﻿script "com.livecode.library.extension-utils"
 /*
+Copyright (C) 2018 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>. 
+*/
+
+/**
 Title: Extension Package Handling Utilities
+
+Type: library
 
 Summary: This library provides handlers for managing livecode extension packages
 
 Version: 1.0.0
 */
 
+/**
+*/
 on extensionInitialize
    if the target is not me then
       pass extensionInitialize
@@ -196,6 +218,14 @@ private function __extensionIsBuiltin pID
    end switch
 end __extensionIsBuiltin
 
+/**
+Order extensions by dependency using requires info
+
+Parameters:
+pExtensions:
+pRequiresA:
+pIncludeBuiltin:
+*/
 function extensionsOrderByDependency pExtensions, pRequiresA, \
    pIncludeBuiltin
    # Accumulate an array of dependencies
@@ -248,6 +278,16 @@ private function shellFormat pArg, pSwitch
    return tOutput & q(pArg) & " "
 end shellFormat
 
+/**
+Compile extension
+
+Parameters:
+pFile:
+pSupportFiles:
+pExtraModulePaths:
+pTargetFolder:
+pOutputFilename:
+*/
 command extensionCompile pFile, pSupportFiles, pExtraModulePaths, pTargetFolder, pOutputFilename
    # The manifest is currently always generated from the source
    if there is a file (pTargetFolder & slash & "manifest.xml") then
@@ -298,6 +338,12 @@ command extensionCompile pFile, pSupportFiles, pExtraModulePaths, pTargetFolder,
    return tShellOutput for error
 end extensionCompile
 
+/**
+Use lc-compile to order lcb extensions by dependency
+
+Parameters:
+pExtensionList:
+*/
 command extensionsDepsOrder pExtensionList
    # Build the shell command
    local tShellCommand
@@ -338,6 +384,16 @@ private command appendToStringList @xList, pValue
    end if
 end appendToStringList
 
+/**
+Build, package and extract lcb extensions
+
+Parameters:
+pDocsParser:
+pTargetFolder:
+pCommercialExtension:
+pLCCompile:
+pInterfaceFolder:
+*/
 command buildPackageAndExtractLCBExtensions pDocsParser, pTargetFolder, \
       pCommercialExtension, pLCCompile, pInterfaceFolder
    # Items 6 onwards in 'the params' are quoted full paths to ext files
@@ -367,6 +423,21 @@ command buildPackageAndExtractLCBExtensions pDocsParser, pTargetFolder, \
    end repeat
 end buildPackageAndExtractLCBExtensions
 
+/**
+Build, package and extract extension
+
+Parameters:
+pProtectifyScript:
+pProtectifyOutput:
+pGitHash:
+pDocsParser:
+pSourceFolder:
+pSourceFileName:
+pTargetFolder:
+pCommercialExtension:
+pLCCompile:
+pInterfaceFolder:
+*/
 command buildPackageAndExtractExtension pProtectifyScript, \
       pProtectifyOutput, pGitHash, pDocsParser, \
       pSourceFolder, pSourceFileName, pTargetFolder, \
@@ -403,6 +474,16 @@ private function q pParam
    return quote & pParam & quote
 end q
 
+/**
+Protect stack
+
+Parameters:
+pProtectifyScript:
+pSourceFolder:
+pSourceFileName:
+pOutput:
+pGitHash:
+*/
 command protectStack pProtectifyScript, pSourceFolder, pSourceFileName, pOutput, pGitHash
    if there is not a stack pProtectifyScript then
       throw "Error: could not load script protector:" && pProtectifyScript
@@ -417,6 +498,13 @@ command protectStack pProtectifyScript, pSourceFolder, pSourceFileName, pOutput,
    end try
 end protectStack
 
+/**
+Extract docs
+
+Parameters:
+pDocsParser:
+pOutputDir:
+*/
 command extractDocs pDocsParser, pOutputDir
    try
       start using stack pDocsParser
@@ -649,6 +737,15 @@ private command extractExtension pZip, pSourceFolder, pTargetFolder
    end if
 end extractExtension
 
+/**
+Package script extension
+
+Parameters:
+pSourceFolder:
+pSourceFileName:
+pTargetFolder:
+pRemoveSource:
+*/
 command packageScriptExtension pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource   
    local tExtShortName
    set the itemdelimiter to "."
@@ -668,6 +765,17 @@ private function getSupportFiles pSourceFolder, pSourceFileName, pExtension
    return tSupportFiles
 end getSupportFiles
 
+/**
+Package builder extension
+
+Parameters:
+pSourceFolder:
+pSourceFileName:
+pTargetFolder:
+pRemoveSource:
+pLCCompile:
+pInterfaceFolder:
+*/
 command packageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource, pLCCompile, pInterfaceFolder
    write "compiling" && pSourceFolder & return to stdout
    local tCompileShell
@@ -737,6 +845,13 @@ private command addXML @xXML, pDepth, pTag, pContent, pAttributesA
    put return after xXML
 end addXML
 
+/**
+Generate manifest for LCS extension
+
+Parameters:
+pDocsParser:
+pSourceFolder:
+*/
 command extensionGenerateManifestForLCSExtension pDocsParser, pSourceFolder
    # Get library metadata from the docs, in lieu of a manifest
    local tDocA, tDataA
@@ -784,12 +899,17 @@ command extensionGenerateManifestForLCSExtension pDocsParser, pSourceFolder
    put textEncode(tXML, "utf-8") into url("binfile:" & pSourceFolder & slash & "manifest.xml")
 end extensionGenerateManifestForLCSExtension
 
-
 private command __SetMetadata pKey, pValue, @xArray
    split pKey by "."
    put pValue into xArray[pKey]
 end __SetMetadata
 
+/**
+Fetch metadata for extension
+
+Parameters:
+pManifestPath:
+*/
 function extensionFetchMetadata pManifestPath
    local tDataA
    
