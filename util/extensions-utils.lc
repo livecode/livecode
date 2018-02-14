@@ -1,27 +1,29 @@
 #!
  
 send "doPackage" to me
- 
+
+private function pathFromNative pPath
+   if the platform is "win32" then
+      replace backslash with slash in pPath
+   end if
+   return pPath
+end pathFromNative
+
 on doPackage
    local tArgs
    put the commandArguments into tArgs
    
    local tEngine
    put the commandName into tEngine
-  
-   if the platform is "win32" then
-      set the itemdelimiter to backslash
-   else
-      set the itemdelimiter to slash
-   end if
    
    local tPackagerFilename
-   put commandArguments(1) into tPackagerFilename
-
-   put "extensions" & the itemDel & \
-      "script-libraries" & the itemDel & \
-	  "extensionpackage" & the itemDel & \
-      "extensionpackage.livecodescript" \
+   put pathFromNative(the filename of me) into tPackagerFilename
+   
+   set the itemdelimiter to slash
+   put "extensions" & slash & \
+      "script-libraries" & slash & \
+	  "extension-utils" & slash & \
+      "extension-utils.livecodescript" \
       into item -2 to -1 of tPackagerFilename
 
    start using stack tPackagerFilename
@@ -46,6 +48,7 @@ on doPackage
    end switch
 
    repeat with x = 3 to the number of elements in tArgs
+      put pathFromNative(tArgs[x]) into tArgs[x]
       put " tArgs[" & x & "]," after tSendCmd
    end repeat
    delete the last char of tSendCmd

@@ -53,14 +53,6 @@ private command log pMsg
    write pMsg & return to stdout
 end log
 
-private function pathDelimiter
-   if the platform is "win32" then
-      return backslash
-   else
-      return slash
-   end if
-end pathDelimiter
-
 local sExternalsA
 private command __EnsureExternal pExternal
    if sExternalsA[pExternal] then
@@ -101,7 +93,7 @@ private command __EnsureExternal pExternal
          put "so" into tFileExtension
          break
    end switch
-   
+ 
    local tExternalFilename
    if the environment is "server" then
       put "server-" after tExternalFilename
@@ -115,7 +107,7 @@ private command __EnsureExternal pExternal
 	  exit __EnsureExternal
    end if
    
-   put specialFolderPath("engine") & pathDelimiter() before tExternalFilename
+   put specialFolderPath("engine") & slash before tExternalFilename
    set the externals of the templateStack to tExternalFilename
    
    create stack pExternal && "External"
@@ -278,6 +270,36 @@ private function shellFormat pArg, pSwitch
    return tOutput & q(pArg) & " "
 end shellFormat
 
+private command pushList @xList, pValue
+   put pValue into xList[the number of elements in xList + 1]
+end pushList
+
+private function popList @xList
+   local tValue
+   put xList[the number of elements in xList] into tValue
+   delete variable xList[the number of elements in xList]
+   return tValue
+end popList
+
+local sHideListA
+private command __PushHideConsoleWindows pValue
+   pushList sHideListA, the hideConsoleWindows
+   set the hideConsoleWindows to pValue
+end __PushHideConsoleWindows
+
+private command __PopHideConsoleWindows
+   set the hideConsoleWindows to popList(sHideListA)
+end __PopHideConsoleWindows
+
+private command doShell pShellCmd, @rResult, @rOutput
+   __PushHideConsoleWindows true
+
+   put shell(pShellCmd) into rOutput
+   put the result into rResult
+   
+   __PopHideConsoleWindows
+end doShell
+
 /**
 Compile extension
 
@@ -289,6 +311,7 @@ pTargetFolder:
 pOutputFilename:
 */
 command extensionCompile pFile, pSupportFiles, pExtraModulePaths, pTargetFolder, pOutputFilename
+   __EnsurePath pTargetFolder
    # The manifest is currently always generated from the source
    if there is a file (pTargetFolder & slash & "manifest.xml") then
       delete file (pTargetFolder & slash & "manifest.xml")
@@ -316,22 +339,23 @@ command extensionCompile pFile, pSupportFiles, pExtraModulePaths, pTargetFolder,
    put shellFormat(pTargetFolder & slash & pOutputFilename, "output") after tShellCommand
    
    # Support files must be dependency-ordered
-   repeat for each line tSupport in revIDEExtensionsOrderByDependency(pSupportFiles)
-      put shellFormat(pTargetFolder & slash &tSupport) after tShellCommand
+   if pSupportFiles is not empty then
+      extensionDepsOrder pSupportFiles
+      if the result is not empty then
+         return the result for error
+      end if
+      put it into pSupportFiles
+   end if
+   repeat for each line tSupport in pSupportFiles
+      put shellFormat(pTargetFolder & slash & tSupport) after tShellCommand
    end repeat
    
    # The target .lcb file
    put shellFormat(pFile) after tShellCommand
    
-   # AL-2015-06-15: [[ Bug 15001 ]] Don't show console window when executing shell command
-   local tHideConsoleWindows
-   put the hideConsoleWindows into tHideConsoleWindows
-   set the hideConsoleWindows to true
+   local tShellResult, tShellOutput
+   doShell tShellCommand, tShellResult, tShellOutput
    
-   local tShellOutput, tShellResult
-   put shell(tShellCommand) into tShellOutput
-   put the result into tShellResult
-   set the hideConsoleWindows to tHideConsoleWindows
    if tShellResult is 0 then
       return tShellOutput for value
    end if
@@ -361,15 +385,9 @@ command extensionsDepsOrder pExtensionList
       put shellFormat(tExtension) after tShellCommand
    end repeat
    
-   # AL-2015-06-15: [[ Bug 15001 ]] Don't show console window when executing shell command
-   local tHideConsoleWindows
-   put the hideConsoleWindows into tHideConsoleWindows
-   set the hideConsoleWindows to true
+   local tShellResult, tShellOutput
+   doShell tShellCommand, tShellResult, tShellOutput
    
-   local tShellOutput, tShellResult
-   put shell(tShellCommand) into tShellOutput
-   put the result into tShellResult
-   set the hideConsoleWindows to tHideConsoleWindows
    if tShellResult is 0 then
       return tShellOutput for value
    end if
@@ -411,7 +429,7 @@ command buildPackageAndExtractLCBExtensions pDocsParser, pTargetFolder, \
    
    put word 1 to -1 of it into tExtList
    
-   set the itemdelimiter to pathDelimiter()
+   set the itemdelimiter to slash
    repeat for each line tExtPath in tExtList
       local tSourceFileName, tSourceFolder
       put item 1 to -2 of tExtPath into tSourceFolder
@@ -442,8 +460,6 @@ command buildPackageAndExtractExtension pProtectifyScript, \
       pProtectifyOutput, pGitHash, pDocsParser, \
       pSourceFolder, pSourceFileName, pTargetFolder, \
       pCommercialExtension, pLCCompile, pInterfaceFolder
-   
-   log "HERE ALSO"
    
    if pCommercialExtension is true and \
          not (pSourceFileName ends with ".lcb") then
@@ -506,12 +522,12 @@ pDocsParser:
 pOutputDir:
 */
 command extractDocs pDocsParser, pOutputDir
-   try
-      start using stack pDocsParser
-   catch tError
-      throw "Error: could not load docs parser:" && pDocsParser & return & tError
-   end try
-   
+   if there is not a stack pDocsParser then
+      exit extractDocs
+   end if
+     
+   start using stack pDocsParser
+
    __EnsurePath pOutputDir
    
    if there is not a folder pOutputDir then
@@ -537,9 +553,9 @@ command extractDocs pDocsParser, pOutputDir
             put the long id of stack tSourceFile into tSource
          else if tSourceFile ends with ".lcidl" then
             if the platform is "Win32" then
-               set the itemDelimiter to backslash
+               set the itemdelimiter to backslash
             else
-               set the itemDelimiter to slash
+               set the itemdelimiter to slash
             end if
             put "com.livecode.external." & tolower(\
                   char 1 to -7 of the last item of tSourceFile) into tName
@@ -670,8 +686,8 @@ end packageExtension
 
 private command __EnsurePath pPath
    if there is a folder pPath then exit __EnsurePath
-   
-   set the itemdel to slash
+
+   set the itemdelimiter to slash
    
    local tPathPart
    repeat for each item tPart in pPath
@@ -691,7 +707,7 @@ private command extractExtension pZip, pSourceFolder, pTargetFolder
    put item -1 of pZip into tName
    set the itemdelimiter to "."
    put item 1 to -2 of tName into tName
-   
+   set the itemdelimiter to slash
    put pTargetFolder & slash & tName into tBuildTarget
    
    write "extracting extension" && pZip && \
@@ -715,10 +731,10 @@ private command extractExtension pZip, pSourceFolder, pTargetFolder
    
    # Extract all the files
    local tDirectory
-   set the itemdel to slash
+   set the itemdelimiter to slash
    repeat for each line tFile in tZipItems
       put tBuildTarget & slash & item 1 to -2 of tFile into tDirectory
-      __EnsurePath tDirectory
+      __EnsurePath tDirectory, slash
       revZipExtractItemToFile pZip, tFile, tBuildTarget & slash & tFile
       if the result begins with "ziperr" then
          put the result into tError
@@ -796,8 +812,10 @@ command packageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, p
          put " " & q(pSourceFolder & slash & tSupportModule) after tDepsShell
       end repeat
       	
-      put shell(tDepsShell) into tSupportDepsOrder
-      if the result is not 0 then
+      local tDepsResult, tDepsOutput
+      doShell tDepsShell, tDepsResult, tDepsOutput
+	  
+      if tDepsResult is not 0 then
          throw "subprocess error when finding support deps order for" && pSourceFileName & ":" && tSupportDepsOrder
       end if  
       replace return with space in tSupportDepsOrder
@@ -806,9 +824,10 @@ command packageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, p
    	
    put " " & q(pSourceFolder & slash & pSourceFileName) after tCompileShell
    
-   get shell(tCompileShell)
-   if the result is not 0 then
-      throw "subprocess error when compiling extension" && pSourceFileName & ":" && it
+   local tShellResult, tShellOutput
+   doShell tCompileShell, tShellResult, tShellOutput
+   if tShellResult is not 0 then
+      throw "subprocess error when compiling extension" && pSourceFileName & ":" && tShellOutput
    end if    
    
    # Extract an e.g. "module foo.bar.baz" line from an LCB source file
