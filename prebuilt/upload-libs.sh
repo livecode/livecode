@@ -10,11 +10,8 @@ echo "Uploading packages"
 
 # Upload settings
 UPLOAD_SERVER="meg.on-rev.com"
-# TESTING - using test_upload folder while testing
-UPLOAD_FOLDER="prebuilts/test_uploads/"
-# TESTING - reduced retry count while testing
-UPLOAD_MAX_RETRIES=3
-#UPLOAD_MAX_RETRIES=50
+UPLOAD_FOLDER="prebuilts/"
+UPLOAD_MAX_RETRIES=10
 
 cd "${PACKAGE_DIR}"
 find . -type f -name "*.tar.*" > prebuilts-upload-files.txt
@@ -24,7 +21,7 @@ i=0
 false
 while [ $? -ne 0 -a $i -lt $UPLOAD_MAX_RETRIES ] ; do
 	i=$(($i+1))
-	rsync -v --progress --chmod=ug=rw,o=r --partial --files-from=prebuilts-upload-files.txt . "${UPLOAD_SERVER}:${UPLOAD_FOLDER}"
+	rsync -v --ignore-existing --progress --chmod=ug=rw,o=r --partial --files-from=prebuilts-upload-files.txt . "${UPLOAD_SERVER}:${UPLOAD_FOLDER}"
 done
 rc=$?
 if [ $rc -ne 0 ]; then
