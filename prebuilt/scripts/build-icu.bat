@@ -30,9 +30,9 @@ cd "%_ROOT_DIR%
 
 IF NOT EXIST %ICU_TGZ% (
 	echo Fetching icu-%ICU_VERSION% for %BUILDTRIPLE%
-	perl -MLWP::Simple -e "getstore('http://download.icu-project.org/files/icu4c/%ICU_VERSION%/icu4c-%ICU_VERSION_ALT%-src.tgz', '%ICU_TGZ%')"
+	perl -MLWP::Simple -e "getstore('https://downloads.sourceforge.net/project/icu/ICU4C/%ICU_VERSION%/icu4c-%ICU_VERSION_ALT%-src.tgz', '%ICU_TGZ%')"
 	IF NOT EXIST %ICU_TGZ% (
-		ECHO "Failed to download http://download.icu-project.org/files/icu4c/%ICU_VERSION%/icu4c-%ICU_VERSION_ALT%-src.tgz
+		ECHO "Failed to download https://downloads.sourceforge.net/project/icu/ICU4C/%ICU_VERSION%/icu4c-%ICU_VERSION_ALT%-src.tgz
 		EXIT /B 1
 	)
 )
