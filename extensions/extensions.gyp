@@ -40,25 +40,24 @@
 				'cross-platform-extension-dependencies',
 			],
 			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_aux_files':
+					[
+						# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
+						'<(PRODUCT_DIR)/packaged_extensions/',
+					],
+				},
+			},
 			
 			'conditions':
 			[
 			    [
                     'mobile == 0',
                     {
-						'all_dependent_settings':
-						{
-							'variables':
-							{
-								'dist_aux_files':
-								[
-									# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
-									'<(PRODUCT_DIR)/packaged_extensions/',
-								],
-							},
-						},
-
-                        'dependencies':
+						'dependencies':
                         [
 							'lcs-extensions',
                             'lcb-extensions',
