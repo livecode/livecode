@@ -380,19 +380,19 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetClickCount(bool p_current, unsigned 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT_DEF void MCWidgetGetTouchIndex(MCValueRef& r_index)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetTouchId(MCValueRef& r_id)
 {
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    integer_t t_index;
-    if (!MCwidgeteventmanager->GetActiveTouch(t_index))
+    integer_t t_id;
+    if (!MCwidgeteventmanager->GetActiveTouch(t_id))
     {
-        r_index = MCValueRetain(kMCNull);
+        r_id = MCValueRetain(kMCNull);
         return;
     }
     
-    MCNumberCreateWithInteger(t_index, (MCNumberRef&)r_index);
+    MCNumberCreateWithInteger(t_id, (MCNumberRef&)r_id);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCWidgetGetTouchPosition(MCValueRef& r_point)
@@ -400,10 +400,10 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetTouchPosition(MCValueRef& r_point)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    integer_t t_index;
+    integer_t t_id;
     MCPoint t_position;
-    if (!MCwidgeteventmanager->GetActiveTouch(t_index) ||
-        !MCwidgeteventmanager->GetTouchPosition(t_index, t_position))
+    if (!MCwidgeteventmanager->GetActiveTouch(t_id) ||
+        !MCwidgeteventmanager->GetTouchPosition(t_id, t_position))
     {
         r_point = MCValueRetain(kMCNull);
         return;
@@ -420,13 +420,13 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetNumberOfTouches(uinteger_t& r_count)
     r_count = MCwidgeteventmanager->GetTouchCount();
 }
 
-extern "C" MC_DLLEXPORT_DEF void MCWidgetGetPositionOfTouch(integer_t p_index, MCValueRef& r_point)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetPositionOfTouch(integer_t p_id, MCValueRef& r_point)
 {
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
     MCPoint t_position;
-    if (!MCwidgeteventmanager->GetTouchPosition(p_index, t_position))
+    if (!MCwidgeteventmanager->GetTouchPosition(p_id, t_position))
     {
         r_point = MCValueRetain(kMCNull);
         return;

@@ -663,10 +663,10 @@ public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocat
 public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton as CUInt) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetClickCount(in pCurrent as CBool, out rCount as CUInt) returns nothing binds to "<builtin>"
 
-public foreign handler MCWidgetGetTouchIndex(out rIndex as optional Integer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetTouchId(out rId as optional Integer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetTouchPosition(out rLocation as optional Point) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetNumberOfTouches(out rCount as CUInt) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetPositionOfTouch(in pIndex as Integer, out rLocation as optional Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetPositionOfTouch(in pId as Integer, out rLocation as optional Point) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetTouchIDs(out tIDs as optional List) returns nothing binds to "<builtin>"
 
 --public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) returns nothing binds to "<builtin>"
@@ -790,10 +790,10 @@ Example:
    put the position of touch tID into tPosition
 */
 
-syntax TheTouchIndex is expression
+syntax TheTouchId is expression
     "the" "touch" "id"
 begin
-    MCWidgetGetTouchIndex(output)
+    MCWidgetGetTouchId(output)
 end syntax
 
 /**
