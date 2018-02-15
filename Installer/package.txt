@@ -475,6 +475,8 @@ component Extensions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.objectrepository
 
+	include TimeZone
+
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place
 		executable macosx:lc-compile as lc-compile
@@ -886,3 +888,29 @@ component Toolset
 		file ide-support:revliburl.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////
+
+component TimeZone
+    into [[ToolsFolder]]/Extensions place
+        rfolder macosx:packaged_extensions/com.livecode.library.timezone
+    into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+        rfolder android:packaged_extensions/com.livecode.library.timezone/code
+    into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+        rfolder ios:iphonesimulator8.2/packaged_extensions/com.livecode.library.timezone/code
+    into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+        rfolder ios:iphonesimulator9.2/packaged_extensions/com.livecode.library.timezone/code
+    into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+        rfolder ios:iphonesimulator10.2/packaged_extensions/com.livecode.library.timezone/code
+    into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+        rfolder ios:iphonesimulator11.2/packaged_extensions/com.livecode.library.timezone/code
+    into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+        rfolder ios:iphoneos9.2/packaged_extensions/com.livecode.library.timezone/code
+    into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+        rfolder ios:iphoneos10.2/packaged_extensions/com.livecode.library.timezone/code
+    into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+        rfolder ios:iphoneos11.2/packaged_extensions/com.livecode.library.timezone/code
+    into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+        rfolder windows:packaged_extensions/com.livecode.library.timezone/code
+    into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+        rfolder linux-x86_64:packaged_extensions/com.livecode.library.timezone/code
+    into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+        rfolder linux-x86:packaged_extensions/com.livecode.library.timezone/code
