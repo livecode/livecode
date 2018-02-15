@@ -1273,7 +1273,7 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
         t_touch = new (nothrow) MCTouch;
         t_touch -> next = s_touches;
         t_touch -> id = p_id;
-        
+
         /* If the touch sequence isn't for widgets, then we must find a control
          * to send the event to. In this case, if this is the first touch in 
          * a sequence *and* the target is a widget, we must allow the widget
