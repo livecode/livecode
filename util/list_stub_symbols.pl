@@ -15,6 +15,7 @@ my $exportDefOpt = $ARGV[3];
 
 my ($exportDefArg, $exportDefModule) = split(/=/, $exportDefOpt);
 my $isWindows = $exportDefArg eq "--exportdef";
+my $isLinux = $exportDefArg eq "--version-script";
 
 # Read all of the input data
 open INPUT, "<$inputFile"
@@ -38,6 +39,11 @@ if ($isWindows)
 {
 	print OUTPUT "LIBRARY $exportDefModule\n";
 	print OUTPUT "EXPORTS\n";
+}
+elsif ($isLinux)
+{
+	print OUTPUT "$exportDefModule {\n";
+	print OUTPUT "  global:\n";
 }
 
 # Symbol index counter
@@ -87,10 +93,20 @@ foreach my $line (@spec)
 	{
 		print OUTPUT "    $prefix$symbol    \@$symbolIndex\n";
 	}
+	elsif ($isLinux)
+	{
+		print OUTPUT "    $prefix$symbol;\n";
+	}
 	else
 	{
 		print OUTPUT "$prefix$symbol\n";
 	}
 
 	$symbolIndex += 1;
+}
+
+if ($isLinux)
+{
+	print OUTPUT "  local: *;\n";
+	print OUTPUT "};\n";
 }
