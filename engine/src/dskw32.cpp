@@ -1917,7 +1917,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         return True;
     }
 	
-	// NOTE: 'GetStandardFolder' returns a standard (not native) path.
+	// NOTE: 'GetStandardFolder' returns a native path.
 	virtual Boolean GetStandardFolder(MCNameRef p_type, MCStringRef& r_folder)
     {
         bool t_wasfound = false;
@@ -1945,12 +1945,21 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         else if (MCNameIsEqualToCaseless(p_type, MCN_engine)
                  || MCNameIsEqualToCaseless(p_type, MCN_resources))
         {
-            MCSAutoLibraryRef t_self;
-            MCSLibraryCreateWithAddress(reinterpret_cast<void *>(legacy_path_to_nt_path),
-                                        &t_self);
-            MCSLibraryCopyNativePath(*t_self,
-                                     &t_native_path);
-            t_wasfound = True;
+            MCAutoStringRef t_engine_folder;
+            uindex_t t_last_slash;
+            
+            if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
+                t_last_slash = MCStringGetLength(MCcmd);
+            
+            MCAutoStringRef t_livecode_path;
+            if (!MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_livecode_path))
+                return False;
+
+            if (!PathToNative(*t_livecode_path, &t_native_path))
+                return False;
+            
+            t_wasfound = true;
+            
         }
         else
         {
