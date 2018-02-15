@@ -787,7 +787,7 @@ bool MCWidgetEventManager::GetTouchPosition(integer_t p_index, MCPoint& r_point)
     r_point.x = m_touches[t_slot].m_x;
     r_point.y = m_touches[t_slot].m_y;
     
-    return false;
+    return true;
 }
 
 static compare_t _MCSortWidgetTouchIndexes(const MCValueRef *p_left, const MCValueRef *p_right)
