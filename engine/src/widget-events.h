@@ -61,7 +61,7 @@ public:
     void event_visibilitychanged(MCWidget*, bool);
     
     // Non-MCControl event for handling touches
-    Bool event_touch(MCWidget*, uint32_t p_id, MCEventTouchPhase, int2 p_x, int2 p_y);
+    bool event_touch(MCWidget*, uint32_t p_id, MCEventTouchPhase, int2 p_x, int2 p_y);
     void event_cancel_touches(MCWidgetRef widget);
     
     // Non-MCControl events called by platform-specific gesture recognition

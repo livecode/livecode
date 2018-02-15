@@ -509,11 +509,11 @@ void MCWidgetEventManager::event_paint(MCWidget *p_widget, MCGContextRef p_gcont
     MCWidgetOnPaint(p_widget -> getwidget(), p_gcontext);
 }
 
-Bool MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEventTouchPhase p_phase, int2 p_x, int2 p_y)
+bool MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEventTouchPhase p_phase, int2 p_x, int2 p_y)
 {
     if (!widgetIsInRunMode(p_widget))
     {
-        return False;
+        return false;
     }
     
     /* If a touch is just starting, and this is the first touch then we need
@@ -530,14 +530,14 @@ Bool MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEven
     /* If we don't have a touched widget, then ignore the touch. */
     if (t_touched_widget == nullptr)
     {
-        return False;
+        return false;
     }
     
     /* If we have a touched widget, but it doesn't want touch, let default
      * processing occur. */
     if (!MCWidgetHandlesTouchEvents(t_touched_widget))
     {
-        return False;
+        return false;
     }
     
     /* See if there is already a slot for the given touch. If none is found
@@ -552,14 +552,14 @@ Bool MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEven
         }
         else
         {
-            return False;
+            return false;
         }
     }
     else if (p_phase == kMCEventTouchPhaseBegan)
     {
         /* This shouldn't happen - it would mean we are getting two began
          * phases for the same touch, so we ignore it. */
-        return False;
+        return false;
     }
     
     /* Assign the touched widget (which will be the same as the widget which
@@ -611,7 +611,7 @@ Bool MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEven
         }
     }
     
-    return True;
+    return true;
 }
 
 void MCWidgetEventManager::event_cancel_touches(MCWidgetRef p_widget)
