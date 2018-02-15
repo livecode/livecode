@@ -148,15 +148,33 @@ void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
     abort();
 }
 
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+extern "C"
+{
+#include    <CoreFoundation/CoreFoundation.h>
+    void NSLog(CFStringRef format, ...);
+    void NSLogv(CFStringRef format, va_list args);
+}
+#endif
+
 static void MCLogV(const char *p_file, uint32_t p_line,
                    const char *p_format, va_list p_args)
 {
 	MCAutoStringRef t_string;
     /* UNCHECKED */ MCStringFormatV(&t_string, p_format, p_args);
 
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+    CFStringRef t_cf_string;
+    if (MCStringConvertToCFStringRef(*t_string, t_cf_string))
+    {
+        NSLog(CFSTR("%@"), t_cf_string);
+        CFRelease(t_cf_string);
+    }
+#else
     MCAutoStringRefAsSysString t_string_sys;
     /* UNCHECKED */ t_string_sys.Lock(*t_string);
     fprintf(stderr, "[%d] %s\n", getpid(), *t_string_sys);
+#endif
 }
 
 void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
