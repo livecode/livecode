@@ -133,6 +133,7 @@ static const char *s_export_html_list_types[] =
 	"A",
 	"i",
 	"I",
+	"skip",
 	nil
 };
 
@@ -513,10 +514,12 @@ static void export_html_end_lists(export_html_t& ctxt, uint32_t p_new_style, uin
 	if (ctxt . list_depth > 0 && !(p_new_depth == ctxt . list_depth && p_new_style == kMCParagraphListStyleSkip))
 		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "</li>\n");
 	
+	
 	while(p_new_depth < ctxt . list_depth)
 	{
 		ctxt . list_depth -= 1;
-		MCStringAppendFormat(ctxt.m_text, ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric ? "</ul>" : "</ol>");
+		// listStyle = "skip" is unordered, thus needs </ul> tag
+		MCStringAppendFormat(ctxt.m_text, (ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric || ctxt.list_styles[ctxt.list_depth] == kMCParagraphListStyleSkip) ? "</ul>" : "</ol>");
 	}
 }
 
@@ -525,16 +528,19 @@ static void export_html_begin_lists(export_html_t& ctxt, uint32_t p_new_style, u
 	if (p_new_depth == 0)
 		return;
 		
-	if (ctxt . list_depth == p_new_depth && p_new_style != kMCParagraphListStyleSkip && ctxt . list_styles[ctxt . list_depth - 1] != p_new_style)
+	if (ctxt . list_depth == p_new_depth && ctxt . list_styles[ctxt . list_depth - 1] != p_new_style)
 	{
 		ctxt . list_depth -= 1;
-		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric ? "</ul>" : "</ol>");
+		// listStyle = "skip" is unordered, thus needs </ul> tag
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, (ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric || ctxt.list_styles[ctxt.list_depth] == kMCParagraphListStyleSkip) ? "</ul>" : "</ol>");
 	}
 	
 	while(p_new_depth > ctxt . list_depth)
 	{
 		ctxt . list_styles[ctxt . list_depth] = p_new_style;
-		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric ? "<ul type=\"%s\">\n" : "<ol type=\"%s\">\n", s_export_html_list_types[p_new_style]);
+		// listStyle = "skip" is unordered, thus needs <ul> tag
+		// if style is NULL use "none" which is valid html
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, (ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric || ctxt.list_styles[ctxt.list_depth] == kMCParagraphListStyleSkip) ? "<ul type=\"%s\">\n" : "<ol type=\"%s\">\n", s_export_html_list_types[p_new_style] != NULL ? s_export_html_list_types[p_new_style]:"none");
 		ctxt . list_depth += 1;
 	}
 	
@@ -545,6 +551,10 @@ static void export_html_begin_lists(export_html_t& ctxt, uint32_t p_new_style, u
 		else
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<li value=\"%d\">", p_index);
 	}
+	
+	// listStyle = "skip" does need a <li> tag as well
+	if (p_new_style == kMCParagraphListStyleSkip)
+		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<li>\n");
 }
 
 static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType p_event_type, const MCFieldExportEventData& p_event_data)

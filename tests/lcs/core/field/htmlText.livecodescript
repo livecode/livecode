@@ -55,6 +55,31 @@ on TestSurrogateRoundtrip
    delete stack "Test"
 end TestSurrogateRoundtrip
 
+on TestListStyleRoundtrip
+   create stack "Test"
+   set the defaultStack to "Test"
+   
+   create field "TestField"
+   
+   set the text of field "TestField" to "one" & CR & "two" & CR & "three"
+   set the listStyle of line 1 of field "TestField" to "skip"
+   set the listStyle of line 2 of field "TestField" to "disc"
+   TestAssert "htmlText roundtrips listStyle beginning with skip", the htmlText of field "TestField" is the htmlText of field  "TestField"
+   
+   set the text of field "TestField" to "one" & CR & "two" & CR & "three"
+   set the listStyle of line 1 of field "TestField" to "disc"
+   set the listStyle of line 2 of field "TestField" to "skip"
+   TestAssert "htmlText roundtrips listStyle containing  skip", the htmlText of field "TestField" is the htmlText of field  "TestField"
+   
+   set the text of field "TestField" to "one" & CR & "two" & CR & "three"
+   set the listStyle of line 1 of field "TestField" to "disc"
+   set the listStyle of line 3 of field "TestField" to "skip"
+   TestAssert "htmlText roundtrips listStyle ending with  skip", the htmlText of field "TestField" is the htmlText of field  "TestField"
+   
+   delete field "TestField"
+   delete stack "Test"
+end TestListStyleRoundtrip
+
 // Regression test for bug 20633 - note the bug here was that a NUL block is
 // created which causes the 'char' reference to be wrong.
 on TestAnnotationsAndVTab
