@@ -128,6 +128,13 @@ fi
 
 if [ $BUILD_DYLIB -eq 1 ]; then
 	ln -sf "$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.ios-extension"
+	OUTPUT=$(/usr/bin/codesign -f -s "$CODE_SIGN_IDENTITY" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib")
+	RESULT=$?
+	if [ $RESULT -ne 0 ]; then
+		echo "Signing $BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib failed:"
+		echo $OUTPUT
+		exit $RESULT
+	fi
 else
 	ln -sf "$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.ios-extension"
 fi
