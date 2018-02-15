@@ -1142,7 +1142,6 @@ uinteger_t MCWidgetEventManager::allocateTouchSlot()
     if (i == m_touches.Size())
     {
         // No empty slots found. Extend the array.
-        i = m_touches.Size();
         /* UNCHECKED */ m_touches.Extend(i + 1);
     }
     
