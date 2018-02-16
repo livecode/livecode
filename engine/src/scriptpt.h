@@ -135,6 +135,14 @@ public:
         
         return uindex_t(index);
     }
+    
+    bool is_eol()
+    {
+        Symbol_type t_dummy;
+        Parse_stat t_stat = next(t_dummy);
+        backup();
+        return t_stat == PS_EOL;
+    }
 
 	Parse_stat skip_space();
 	Parse_stat skip_eol();

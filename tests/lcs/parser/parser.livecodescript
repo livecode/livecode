@@ -24,7 +24,7 @@ private command __CompileCheck pMessage
    --checks to see if the message compiles
    lock messages
    create script only stack "compilationTest"
-   put "on compileTest" & return & pMessage & return \ 
+   put "on compileTest" & return & pMessage & return \
       & "end compileTest" into tCompileTest
    set the script of stack "compilationTest" to tCompileTest
    put the result into tCompileResult
@@ -48,3 +48,9 @@ on TestBug20293
   __CompileCheck format("get the last char to -4 of \"string\"")
   TestAssert "'badrange parse error'", the result is not empty
 end TestBug20293
+
+on TestBug20269
+	__CompileCheck "dispatch" && quote & "something" & quote && "with"
+   TestAssert "dispatch command with 'with' and no params throws", \
+      the result is not empty
+end TestBug20269

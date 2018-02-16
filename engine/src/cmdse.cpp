@@ -563,7 +563,7 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
 	
 	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 	{
-		if (getparams(sp, &params) != PS_NORMAL)
+		if (sp.is_eol() || getparams(sp, &params) != PS_NORMAL)
 		{
 			MCperror -> add(PE_DISPATCH_BADPARAMS, sp);
 			return PS_ERROR;
