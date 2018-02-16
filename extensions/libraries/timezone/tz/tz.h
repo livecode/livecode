@@ -39,14 +39,10 @@ localtime_r(const time_t *timep, struct tm *tmp);
 LIBRARY_DLLEXPORT_DEF
 struct tm *
 gmtime_r(const time_t *timep, struct tm *tmp);
-    
-LIBRARY_DLLEXPORT_DEF
-time_t
-time(time_t *timep);
  
 LIBRARY_DLLEXPORT_DEF
 time_t
-mktime(struct tm *tmp);
+mktime_tz(struct tm *tmp);
 
 LIBRARY_DLLEXPORT_DEF
 bool tzsetdir(const char* dir);

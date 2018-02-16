@@ -33,14 +33,11 @@ use com.livecode.foreign
 public foreign type TimeStruct binds to "MCAggregateTypeInfo:EEEEEEEEE"
 public type Time is UInt64
 
-foreign handler CurrentTime(in pTime as optional Pointer) returns Time \
-	binds to "tz>time"
-
 foreign handler TimeZoneSetLocale(in pName as ZStringNative) returns nothing \
 	binds to "tz>tzsetlcl"
 
 foreign handler TimeFromLocalTimeStruct(inout pStruct as TimeStruct) returns Time \
-	binds to "tz>mktime"
+	binds to "tz>mktime_tz"
 
 foreign handler GMTimeStruct(inout pTime as Time, out pStruct as TimeStruct) returns Pointer \
 	binds to "tz>gmtime_r"

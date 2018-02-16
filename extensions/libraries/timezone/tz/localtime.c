@@ -386,6 +386,18 @@ static const char* tzgetdirslash()
 }
 
 #define tzdirslash tzgetdirslash()
+#ifdef _WINDOWS
+#include <windows.h>
+#ifndef PATH_MAX
+#define PATH_MAX MAX_PATH
+#endif
+#endif
+
+#if !defined(__HAVE_SSIZE_T__)
+typedef intptr_t ssize_t;
+
+#	define SSIZE_MAX INTPTR_MAX
+#endif
 
 /* Local storage needed for 'tzloadbody'.  */
 union local_storage {
@@ -1565,11 +1577,13 @@ localtime_tzset(time_t const *timep, struct tm *tmp, bool setname)
   return tmp;
 }
 
+#if 0
 struct tm *
 localtime(const time_t *timep)
 {
   return localtime_tzset(timep, &tm, true);
 }
+#endif
 
 struct tm *
 localtime_r(const time_t *timep, struct tm *tmp)
@@ -1611,11 +1625,13 @@ gmtime_r(const time_t *timep, struct tm *tmp)
   return gmtsub(gmtptr, timep, 0, tmp);
 }
 
+#if 0
 struct tm *
 gmtime(const time_t *timep)
 {
   return gmtime_r(timep, &tm);
 }
+#endif 
 
 #ifdef STD_INSPIRED
 
@@ -1760,6 +1776,7 @@ timesub(const time_t *timep, int_fast32_t offset,
 	return NULL;
 }
 
+#if 0
 char *
 ctime(const time_t *timep)
 {
@@ -1772,6 +1789,7 @@ ctime(const time_t *timep)
   struct tm *tmp = localtime(timep);
   return tmp ? asctime(tmp) : NULL;
 }
+#endif
 
 char *
 ctime_r(const time_t *timep, char *buf)
@@ -2192,7 +2210,7 @@ mktime_z(struct state *sp, struct tm *tmp)
 #endif
 
 time_t
-mktime(struct tm *tmp)
+mktime_tz(struct tm *tmp)
 {
   time_t t;
   int err = lock();

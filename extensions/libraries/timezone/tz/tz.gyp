@@ -156,6 +156,9 @@
 					[
 						'<@(build_command)',
 						'<(INTERMEDIATE_DIR)',
+						'ziguard.awk',
+						'zishrink.awk',
+						'version',
 						'<@(_sources)',
 					],
 				},
@@ -190,9 +193,8 @@
 			[
 				'tz.h',
 				'asctime.c',
-				'difftime.c',
+				'private.h',
 				'localtime.c',	
-				'strftime.c',
 			],
             
             'conditions':
