@@ -1148,6 +1148,8 @@ uinteger_t MCWidgetEventManager::allocateTouchSlot()
     m_touches[i].m_active = true;
     m_touches[i].m_index = ++m_touch_sequence;
     
+    m_touch_count += 1;
+    
     return i;
 }
 
