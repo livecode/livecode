@@ -1286,9 +1286,12 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
             {
                 t_widget_first = true;
             }
+            t_touch -> target = t_target -> GetHandle();
         }
-        
-        t_touch -> target = t_target -> GetHandle();
+        else
+        {
+            t_target = s_touches -> target;
+        }
         
         s_touches = t_touch;
     }
