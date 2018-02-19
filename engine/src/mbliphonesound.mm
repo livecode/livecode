@@ -680,22 +680,22 @@ bool MCSystemSoundChannelStatus(MCStringRef p_channel, intenum_t& r_status)
 
 bool MCSystemSoundOnChannel(MCStringRef p_channel, MCStringRef& r_sound)
 {
-/*	MCSystemSoundChannel *t_channel;
+	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
 		return false;
 	
-	return MCCStringClone(t_channel -> current_player . sound, r_sound);*/
-    return false;
+	/* UNCHECKED */ MCValueAssign(r_sound, t_channel -> current_player . sound);
+	return true;
 }
 
 bool MCSystemNextSoundOnChannel(MCStringRef p_channel, MCStringRef& r_sound)
 {
-/*	MCSystemSoundChannel *t_channel;
+	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
 		return false;
 	
-    return MCCStringClone(t_channel -> next_player . sound, r_sound);*/
-    return false;
+	/* UNCHECKED */ MCValueAssign(r_sound, t_channel -> next_player . sound);
+	return true;
 }
 
 // MM-2012-02-11: Refactored to return a formatted sting of channels
