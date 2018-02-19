@@ -85,7 +85,7 @@
 					'inputs':
 					[
 						'<(zic)',
-						'<(INTERMEDIATE_DIR)/tzdata.zi',
+						'<(SHARED_INTERMEDIATE_DIR)/tzdata.zi',
 					],
 
 					'outputs':
@@ -100,7 +100,7 @@
 						'<(zic)',
 						'-d',
 						'<(install_folder)',
-						'<(INTERMEDIATE_DIR)/tzdata.zi',
+						'<(SHARED_INTERMEDIATE_DIR)/tzdata.zi',
 					],
 				},
 			],
@@ -136,7 +136,7 @@
 
 					'outputs':
 					[
-                        '<(INTERMEDIATE_DIR)/tzdata.zi',
+                        '<(SHARED_INTERMEDIATE_DIR)/tzdata.zi',
 					],
 
 					'message': 'Building zoneinfo',
@@ -178,7 +178,7 @@
 					'action':
 					[
 						'<@(build_command)',
-						'<(INTERMEDIATE_DIR)',
+						'<(SHARED_INTERMEDIATE_DIR)',
 						'<(awk)',
 						'ziguard.awk',
 						'zishrink.awk',
