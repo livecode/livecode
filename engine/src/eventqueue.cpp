@@ -1281,16 +1281,21 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
         if (!s_touches_for_widget)
         {
             t_target = p_stack -> getcurcard() -> hittest(t_touch_loc.x, t_touch_loc.y);
-            if (t_touch->next == nullptr &&
-                t_target->gettype() == CT_WIDGET)
+            if (t_target != nullptr)
             {
-                t_widget_first = true;
+                if (t_touch->next == nullptr &&
+                    t_target->gettype() == CT_WIDGET)
+                {
+                    t_widget_first = true;
+                }
+            
+                t_touch -> target = t_target -> GetHandle();
             }
-            t_touch -> target = t_target -> GetHandle();
         }
         else
         {
             t_target = s_touches -> target;
+            t_touch -> target = t_target -> GetHandle();
         }
         
         s_touches = t_touch;
