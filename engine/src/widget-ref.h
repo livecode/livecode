@@ -75,6 +75,12 @@ public:
     
     bool OnClick(bool& r_bubble);
     
+    bool HandlesTouchEvents(void);
+    bool OnTouchStart(bool& r_bubble);
+    bool OnTouchMove(bool& r_bubble);
+    bool OnTouchFinish(bool& r_bubble);
+    bool OnTouchCancel(bool& r_bubble);
+    
     bool OnGeometryChanged(void);
     bool OnLayerChanged();
     bool OnParentPropertyChanged(void);

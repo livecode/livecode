@@ -281,7 +281,28 @@ Summary: Sent when the mouse pointer continues to hover outside of the widget's 
 Name: OnTouchStart
 Type: message
 Syntax: OnTouchStart
-Summary: Sent when a touch event begins within the widget's rect.
+Summary: Sent when the widget is the target for touch events and a touch is started.
+
+Description:
+The widget becomes the target for touch events when the first touch is
+within its rect. The widget remains the target for touch events until
+all touches end or are cancelled.
+
+Name: OnTouchMove
+Type: message
+Syntax: OnTouchMove
+Summary: Sent to the target for touch events when a touch moves.
+
+Name: OnTouchFinish
+Type: message
+Syntax: OnTouchFinish
+Summary: Sent to the target for touch events when a touch event ends.
+
+Name: OnTouchCancel
+Type: message
+Syntax: OnTouchCancel
+Summary: Sent to the target for touch events when a touch event is cancelled.
+
 
 Name: OnFocusEnter
 Type: message
@@ -642,6 +663,12 @@ public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocat
 public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton as CUInt) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetClickCount(in pCurrent as CBool, out rCount as CUInt) returns nothing binds to "<builtin>"
 
+public foreign handler MCWidgetGetTouchId(out rId as optional Integer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetTouchPosition(out rLocation as optional Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetNumberOfTouches(out rCount as CUInt) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetPositionOfTouch(in pId as Integer, out rLocation as optional Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetTouchIDs(out tIDs as optional List) returns nothing binds to "<builtin>"
+
 --public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) returns nothing binds to "<builtin>"
 --public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
 
@@ -749,6 +776,104 @@ syntax TheMouseButtonState is expression
 begin
     MCWidgetGetMouseButtonState(Index, output)
 end syntax*/
+
+/**
+Summary: The id of the current touch
+
+Returns: An integer id for the current touch
+
+Example:
+   variable tID as Number
+   put the touch id into tID
+
+   variable tPosition as Point
+   put the position of touch tID into tPosition
+*/
+
+syntax TheTouchId is expression
+    "the" "touch" "id"
+begin
+    MCWidgetGetTouchId(output)
+end syntax
+
+/**
+Summary: The location of the current touch
+
+Returns: The position of the current touch relative to the widget
+
+Example:
+   variable tPosition as Point
+   put the touch position into tPosition
+
+   variable tRect as Rectangle
+   put my bounds into tRect
+
+   if tPosition is within tRect then
+      // touch position is within the widget bounds
+   end if
+
+*/
+syntax TheTouchLocation is expression
+    "the" "touch" "position"
+begin
+    MCWidgetGetTouchPosition(output)
+end syntax
+
+/**
+Summary: The number of touches
+
+Returns: The number of currently active touches
+
+Example:
+   if the number of touches is 2 then
+      // pinch gesture
+   end if
+
+*/
+syntax TheNumberOfTouches is expression
+    "the" "number" "of" "touches"
+begin
+    MCWidgetGetNumberOfTouches(output)
+end syntax
+
+/**
+Summary: The location of a specific touch
+
+Returns: The positon of a specific touch id relative to the widget
+
+Example:
+   variable tID as Number
+   put the touch id into tID
+
+   variable tPosition as Point
+   put the position of touch tID into tPosition
+
+*/
+syntax TheLocationOfTouch is prefix operator with property precedence
+    "the" "position" "of" "touch" <Id: Expression>
+begin
+    MCWidgetGetPositionOfTouch(Id, output)
+end syntax
+
+/**
+Summary: The touch IDs
+
+Returns: The a list of currently active touch IDs
+
+Example:
+variable tIDs as optional List
+put the touch ids into tIDs
+if tIDs is not nothing then
+    variable tPosition as Point
+    put the position of touch tIDs[1] into tPosition
+end if
+
+*/
+syntax TheTouchIDs is expression
+    "the" "touch" "ids"
+begin
+    MCWidgetGetTouchIDs(output)
+end syntax
 
 -- FIXME not actually implemented
 /*

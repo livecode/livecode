@@ -1210,9 +1210,20 @@ struct MCTouch
 };
 
 static MCTouch *s_touches = nil;
+static bool s_touches_for_widget = false;
 
 static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p_id, uint32_t p_taps, int32_t x, int32_t y)
 {
+    /* Touch messages might flow to a widget, or to a control.
+     *
+     * If a widget handles the first touch in a sequence, then the sequence is
+     * considered grabbed by the widget event manager and should receive all
+     * subsequent touch events in the sequence.
+     *
+     * If a widget does not handle the first touch in a sequence, then the
+     * sequence is considered not grabbed by the widget event manager and no
+     * touch events should flow into the widget event manager. */
+
 	MCTouch *t_previous_touch;
 	t_previous_touch = nil;
 	
@@ -1225,68 +1236,106 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 	// IM-2013-09-30: [[ FullscreenMode ]] Translate touch location to stack coords
 	MCPoint t_touch_loc;
 	t_touch_loc = p_stack->view_viewtostackloc(MCPointMake(x, y));
-	
-	if (p_phase != kMCEventTouchPhaseBegan)
-	{
-		for(t_touch = s_touches; t_touch != nil; t_previous_touch = t_touch, t_touch = t_touch -> next)
-			if (t_touch -> id == p_id)
-				break;
-		
-		if (t_touch != nil)
-		{
-			t_target = t_touch -> target;
-				
-			// MW-2011-09-05: [[ Bug 9683 ]] Make sure we remove (and delete the touch) here if
-			//   it is 'end' or 'cancelled' so that a cleartouches inside an invoked handler
-			//   doesn't cause a crash.			
-			if (p_phase == kMCEventTouchPhaseEnded || p_phase == kMCEventTouchPhaseCancelled)
-			{
-				if (t_previous_touch == nil)
-					s_touches = t_touch -> next;
-				else
-					t_previous_touch -> next = t_touch -> next;
-				
-				delete t_touch;
-			}
-		}
-	}
-	else
-	{
-		t_touch = new (nothrow) MCTouch;
-		t_touch -> next = s_touches;
-		t_touch -> id = p_id;
-		
-		t_target = p_stack -> getcurcard() -> hittest(t_touch_loc.x, t_touch_loc.y);
-		t_touch -> target = t_target -> GetHandle();
-		
-		s_touches = t_touch;
-	}
 
-	if (t_target != nil)
-	{
-        // Touches on widgets are handled differently
-        if (t_target->gettype() == CT_WIDGET)
+    /* If true, then the event should be passed to the widget event manager
+     * first. If the touches are already grabbed by a widget then the event
+     * must be passed to the widget event manager. */
+    bool t_widget_first = s_touches_for_widget;
+
+    if (p_phase != kMCEventTouchPhaseBegan)
+    {
+        for(t_touch = s_touches; t_touch != nil; t_previous_touch = t_touch, t_touch = t_touch -> next)
+            if (t_touch -> id == p_id)
+                break;
+        
+        /* If there is a touch, fetch the target and delete the touch record if it
+         * is ending or cancelling a touch. */
+        if (t_touch != nil)
         {
-            MCwidgeteventmanager->event_touch(MCObjectCast<MCWidget>(t_target),
-                                              p_id, p_phase, t_touch_loc.x, t_touch_loc.y);
+            t_target = t_touch -> target;
+            
+            // MW-2011-09-05: [[ Bug 9683 ]] Make sure we remove (and delete the touch) here if
+            //   it is 'end' or 'cancelled' so that a cleartouches inside an invoked handler
+            //   doesn't cause a crash.			
+            if (p_phase == kMCEventTouchPhaseEnded || p_phase == kMCEventTouchPhaseCancelled)
+            {
+                if (t_previous_touch == nil)
+                    s_touches = t_touch -> next;
+                else
+                    t_previous_touch -> next = t_touch -> next;
+                
+                delete t_touch;
+            }
+        }
+    }
+    else
+    {
+        t_touch = new (nothrow) MCTouch;
+        t_touch -> next = s_touches;
+        t_touch -> id = p_id;
+
+        /* If the touch sequence isn't for widgets, then we must find a control
+         * to send the event to. In this case, if this is the first touch in 
+         * a sequence *and* the target is a widget, we must allow the widget
+         * event manager to have a look at it. */
+        if (!s_touches_for_widget)
+        {
+            t_target = p_stack -> getcurcard() -> hittest(t_touch_loc.x, t_touch_loc.y);
+            if (t_target != nullptr)
+            {
+                if (t_touch->next == nullptr &&
+                    t_target->gettype() == CT_WIDGET)
+                {
+                    t_widget_first = true;
+                }
+            
+                t_touch -> target = t_target -> GetHandle();
+            }
         }
         else
         {
-            switch(p_phase)
+            t_target = s_touches -> target;
+            t_touch -> target = t_target -> GetHandle();
+        }
+        
+        s_touches = t_touch;
+    }
+    
+	if (t_target != nil)
+	{
+        /* If the touch must be passed to the widget event manager then do that
+         * first. */
+        if (t_widget_first)
+        {
+            /* If the widget handled the touch, or a widget has grabbed all
+             * touches in a sequence (s_touches_for_widget == true), then
+             * make sure all future touches are handled by the widget em and
+             * don't fall through to the engine. */
+            if (MCwidgeteventmanager->event_touch(MCObjectCast<MCWidget>(t_target),
+                                                  p_id, p_phase, t_touch_loc.x, t_touch_loc.y) ||
+                s_touches_for_widget)
             {
-                case kMCEventTouchPhaseBegan:
-                    t_target -> message_with_args(MCM_touch_start, p_id);
-                    break;
-                case kMCEventTouchPhaseMoved:
-                    t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
-                    break;
-                case kMCEventTouchPhaseEnded:
-                    t_target -> message_with_args(MCM_touch_end, p_id);
-                    break;
-                case kMCEventTouchPhaseCancelled:
-                    t_target -> message_with_args(MCM_touch_release, p_id);
-                    break;
+                /* If this was touch event caused the sequence to end, then
+                 * make sure future touch events reconsider the target. */
+                s_touches_for_widget = s_touches != nullptr;
+                return;
             }
+        }
+        
+        switch(p_phase)
+        {
+            case kMCEventTouchPhaseBegan:
+                t_target -> message_with_args(MCM_touch_start, p_id);
+                break;
+            case kMCEventTouchPhaseMoved:
+                t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
+                break;
+            case kMCEventTouchPhaseEnded:
+                t_target -> message_with_args(MCM_touch_end, p_id);
+                break;
+            case kMCEventTouchPhaseCancelled:
+                t_target -> message_with_args(MCM_touch_release, p_id);
+                break;
         }
 	}
 }

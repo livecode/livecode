@@ -380,6 +380,79 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetClickCount(bool p_current, unsigned 
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetTouchId(MCValueRef& r_id)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    integer_t t_id;
+    if (!MCwidgeteventmanager->GetActiveTouch(t_id))
+    {
+        r_id = MCValueRetain(kMCNull);
+        return;
+    }
+    
+    MCNumberCreateWithInteger(t_id, (MCNumberRef&)r_id);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetTouchPosition(MCValueRef& r_point)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    integer_t t_id;
+    MCPoint t_position;
+    if (!MCwidgeteventmanager->GetActiveTouch(t_id) ||
+        !MCwidgeteventmanager->GetTouchPosition(t_id, t_position))
+    {
+        r_point = MCValueRetain(kMCNull);
+        return;
+    }
+
+    /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(MCWidgetMapPointFromGlobal(MCcurrentwidget, MCPointToMCGPoint(t_position)), (MCCanvasPointRef&)r_point);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetNumberOfTouches(uinteger_t& r_count)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    r_count = MCwidgeteventmanager->GetTouchCount();
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetPositionOfTouch(integer_t p_id, MCValueRef& r_point)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    MCPoint t_position;
+    if (!MCwidgeteventmanager->GetTouchPosition(p_id, t_position))
+    {
+        r_point = MCValueRetain(kMCNull);
+        return;
+    }
+    
+    /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(MCWidgetMapPointFromGlobal(MCcurrentwidget, MCPointToMCGPoint(t_position)), (MCCanvasPointRef&)r_point);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetTouchIDs(MCValueRef& r_touch_ids)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    MCAutoProperListRef t_touch_ids;
+    if (!MCwidgeteventmanager->GetTouchIDs(&t_touch_ids) ||
+        MCProperListIsEmpty(*t_touch_ids))
+    {
+        r_touch_ids = MCValueRetain(kMCNull);
+        return;
+    }
+    
+    r_touch_ids = t_touch_ids.Take();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef struct __MCPressedState* MCPressedStateRef;
 MCTypeInfoRef kMCPressedState;
 
