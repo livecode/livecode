@@ -96,19 +96,6 @@
 					'extension': 'livecodescript',
 					'message': 'Building script extension <(RULE_INPUT_NAME)',
 										
-					'conditions':
-					[
-						[
-							'OS != "mac" and OS != "ios"',
-							{
-								'outputs':
-								[
-									'<(PRODUCT_DIR)/packaged_extensions/',
-								],
-							},
-						],
-					],
-
 					'outputs':
 					[
 						'<(PRODUCT_DIR)/packaged_extensions/com.livecode.library.<(RULE_INPUT_ROOT)/<(RULE_INPUT_ROOT).livecodescript',	
