@@ -570,6 +570,8 @@ void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_obje
         return;
     
     MCscreen -> addmessage(p_object, *t_message_as_name, 0.0f, t_params);
+    
+    MCEngineRunloopBreakWait();
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostToScriptObjectWithArguments(MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)

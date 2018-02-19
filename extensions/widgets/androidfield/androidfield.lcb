@@ -1082,7 +1082,6 @@ handler OnFocusChange(in pView as JObject, in pHasFocus as JObject) returns noth
          post "closeField"
       end if
    end if
-   MCEngineRunloopBreakWait()
 end handler
 
 __safe foreign handler _JNI_Boolean_False() returns JObject \
@@ -1091,7 +1090,7 @@ __safe foreign handler _JNI_Boolean_True() returns JObject \
    binds to "java:java.lang.Boolean>get.TRUE()Ljava/lang/Boolean;!static"
 handler OnEditorAction(in pView as JObject, in pActionId as JObject, in pKeyEvent as JObject) returns JObject
    post "returnKey"
-   MCEngineRunloopBreakWait()
+
    // Return value determines whether the return key event is eaten
    if mPassReturnKey then
       return _JNI_Boolean_False()
@@ -1102,7 +1101,6 @@ end handler
 
 handler OnTextChanged(in pText as JObject, in pStart as JObject, in pLengthBefore as JObject, in pLengthAfter as JObject) returns nothing
    post "textChanged"
-   MCEngineRunloopBreakWait()
 end handler
 
 handler SetListeners()
