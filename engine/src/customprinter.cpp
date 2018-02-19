@@ -2096,7 +2096,7 @@ private:
 
 typedef MCCustomPrintingDevice *(*MCCustomPrinterCreateProc)(void);
 
-Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options, MCCustomPrinter*& r_printer)
+bool MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options, MCCustomPrinter*& r_printer)
 {
 	MCCustomPrintingDevice *t_device;
 	t_device = nil;
@@ -2134,10 +2134,9 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 #endif
 	
 	if (t_device == nil)
-	{
-		MCeerror -> add(EE_PRINT_UNKNOWNDST, 0, 0);
-		return ES_ERROR;
-	}
+    {
+        return false;
+    }
 
 	MCAutoStringRef t_native_path;
 	if (p_filename != nil)
@@ -2163,5 +2162,5 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 
 	r_printer = t_printer;
 
-	return ES_NORMAL;
+	return true;
 }

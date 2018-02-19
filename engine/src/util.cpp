@@ -3193,7 +3193,9 @@ __MCU_library_map_path(MCStringRef p_path,
         !MCdispatcher->fetchlibrarymapping(*t_base_path,
                                            &t_mapped_path))
     {
-        t_mapped_path = *t_base_path;
+        // If there is no mapping, restore the original path including ./
+        // if it was there.
+        t_mapped_path = p_path;
     }
     
     // If the mapped path does not begin with './', then we just resolve.
