@@ -19,11 +19,19 @@
             'dependencies':
             [
                 'libtz-build',
-                'tzdata',
             ],
             
             'conditions':
             [
+            	[
+            		'host_os != "win"',
+            		{
+            			'dependencies':
+            			[
+            		    	'tzdata',
+            		    ],
+            		}
+            	],
         		[
                     'OS == "ios" and "iphoneos" in target_sdk',
                     {
