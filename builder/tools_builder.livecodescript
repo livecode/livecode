@@ -696,6 +696,44 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
             end if
          end repeat
       end repeat
+      
+      -- Sign any extension code resources
+      local tExtensions
+      put folders(tAppBundle & "/Contents/Tools/Extensions") into tExtensions
+      repeat for each line tExtension in tExtensions
+         local tCodeFolders
+         put folders(tAppBundle & "/Contents/Tools/Extensions/" & tExtension & "/code") into tCodeFolders
+         filter tCodeFolders with "*iphonesimulator*"
+         if tCodeFolders is empty then next repeat
+         
+         
+         repeat for each line tCodeFolder in tCodeFolders
+            local tDylibs
+            filter files(tAppBundle & "/Contents/Tools/Extensions/" & tExtension & "/code/" & tCodeFolder) \
+               with "*.dylib" into tDylibs
+            if tDylibs is empty then next repeat
+            
+            repeat for each line tFile in tDylibs
+               -- Ignore files that aren't dylibs
+               local tFullPath
+               put tAppBundle & "/Contents/Tools/Extensions/" & tExtension & "/code/" & tCodeFolder & "/" & tFile into tFullPath
+               get shell("file" && escapeArg(tFullPath))
+               if "Mach-O" is not among the words of it then next repeat
+
+               clearExtendedAttributes escapeArg(tFullPath)
+   			
+               -- Sign the extension
+               -- The "--force" parameter strips the existing signature (which was
+               -- made using a not-valid-for-distribution profile)
+               builderLog "message", "Signing iOS extension" && "'" & tFullPath & "'"
+               get shell("/usr/bin/codesign --sign" && word 2 of tSigningId && "--force --verbose=2" && escapeArg(tFullPath))
+               if the result is not zero then
+                   builderLog "error", "Could not sign iOS extension:" && it
+                   throw "failure"
+               end if
+            end repeat
+         end repeat
+      end repeat
 
       clearExtendedAttributes escapeArg(tAppBundle)
     		
