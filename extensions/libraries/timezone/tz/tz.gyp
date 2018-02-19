@@ -150,12 +150,28 @@
 								},
 							},
 						],
+						[
+						    'OS == "linux"',
+						    {
+						        'variables':
+						        {
+						            'awk': 'gawk',
+						        },
+						    },
+						    {
+						        'variables':
+						        {
+						            'awk': 'awk',
+						        },						    
+						    },
+						]
 					],
 					
 					'action':
 					[
 						'<@(build_command)',
 						'<(INTERMEDIATE_DIR)',
+						'<(awk)',
 						'ziguard.awk',
 						'zishrink.awk',
 						'version',
