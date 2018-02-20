@@ -56,6 +56,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 #include "scriptpt.h"
 #include "widget-events.h"
+#include "parentscript.h"
 
 #include "exec.h"
 #include "exec-interface.h"
@@ -556,6 +557,11 @@ IO_stat MCDispatch::readscriptonlystartupstack(IO_handle stream, uindex_t p_leng
     // stack list.
     stacks = t_stack;
     
+    // Mark the stack as needed parentscript resolution. This is done after
+    // aux stacks have been loaded.
+    if (s_loaded_parent_script_reference)
+        t_stack -> setextendedstate(True, ECS_USES_PARENTSCRIPTS);
+    
     r_stack = t_stack;
     return IO_NORMAL;
 }
@@ -705,6 +711,25 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
     
     MCNewAutoNameRef t_script_name = sp.gettoken_nameref();
     
+    // If 'with' is next then parse the behavior reference.
+    MCNewAutoNameRef t_behavior_name;
+    if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+    {
+        // Ensure 'behavior' is next 
+        if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_PARENT_SCRIPT) != PS_NORMAL)
+        {
+            return nullptr;
+        }
+        
+        // Read the behavior name
+        if (sp.next(t_type) != PS_NORMAL || t_type != ST_LIT)
+        {
+            return nullptr;
+        }
+        
+        t_behavior_name = sp.gettoken_nameref();
+    }
+
     // Parse end of line.
     Parse_stat t_stat;
     t_stat = sp . next(t_type);
@@ -754,6 +779,12 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
     
     // Save line endings from raw script string to restore when saving file.
     t_stack -> setlineencodingstyle(t_line_encoding_style);
+
+    // If we parsed a behavior reference, then set it.
+    if (*t_behavior_name != nullptr)
+    {
+        t_stack->setparentscript_onload(0, *t_behavior_name);
+    }
     
     return t_stack;
 }
@@ -1132,8 +1163,22 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
         // Ensure script isn't encrypted if a password was removed in session
         sptr -> unsecurescript(sptr);
         
-        // Write out the standard script stack header, and then the script itself
-        MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+        // Write out the standard script stack header with behavior reference 
+        // (if applicable) and then the script itself
+        MCParentScript *t_parent_script = sptr->getparentscript();
+        if (t_parent_script != nullptr &&
+            t_parent_script->GetObjectId() == 0)
+        {
+            MCStringFormat(&t_script_body,
+                           "script \"%@\" with behavior \"%@\"\n%@",
+                           sptr->getname(),
+                           t_parent_script->GetObjectStack(),
+                           sptr->_getscript());
+        }
+        else
+        {
+            MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+        }
 
         MCStringNormalizeLineEndings(*t_script_body, 
                                      sptr -> getlineencodingstyle(), 

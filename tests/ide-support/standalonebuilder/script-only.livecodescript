@@ -41,17 +41,15 @@ private function _TestScriptOnlyStandaloneStackScript
 	return tScript
 end _TestScriptOnlyStandaloneStackScript
 
-private function _TestScriptOnlyAuxiliaryStackStackScript
+private function _TestScriptOnlyAuxiliaryMainstackScript
 	local tScript
-	put "on openStack" & return after tScript
-	put "if (there is a stack" && quote & "revLibUrl" & quote \
-		& ") then quit 0" & return after tScript
-	put "write" && quote & "included aux stack not present" & quote \ 
-	   && "to stdout" & return after tScript
+	put "on startup" & return after tScript
+	put "if there is a stack" && quote & "aux" & quote && \
+		"then quit 0" & return after tScript
 	put "quit 1" & return after tScript
-	put "end openStack" & return after tScript
+	put "end startup" & return after tScript
 	return tScript
-end _TestScriptOnlyAuxiliaryStackStackScript
+end _TestScriptOnlyAuxiliaryMainstackScript
 
 private command _TestScriptOnlyDeployStack pWhich
    local tDir
@@ -62,21 +60,29 @@ private command _TestScriptOnlyDeployStack pWhich
    
    create folder tDir
    
-   local tStackFilename, tScript, tSettings
+   local tSOSFilename, tScript, tSettings, tFilename
+   put the folder & "/" & tDir & "/stack.livecodescript" into tSOSFilename   
    if pWhich is "mainstack" then
-	  put the folder & "/" & tDir & "/stack.livecodescript" into tStackFilename   
 	  put _TestScriptOnlyStandaloneStackScript() into tScript
+	  put tSOSFilename into tFilename
    else if pWhich is "auxiliary" then
-   	  put the folder & "/" & tDir & "/stack.livecode" into tStackFilename   
-	  put _TestScriptOnlyAuxiliaryStackStackScript() into tScript
-	  put "Internet" into tSettings["scriptLibraries"]
-	  put "select" into tSettings["inclusions"]
+      create script only stack "aux"
+      save stack "aux" as tSOSFilename
+      
+   	  put the folder & "/" & tDir & "/stack.livecode" into tFilename   
+	  put _TestScriptOnlyAuxiliaryMainstackScript() into tScript
+	  put tSOSFilename into tSettings["auxiliary_stackfiles"]
    end if
    
    local tDesc
    put "standalone with script-only" && pWhich && "startup" into tDesc
-   StandaloneBuilderTestCreateAndSaveStackAsStandalone tDesc, \
-      tStackFilename, tScript, tSettings
+   if pWhich is "mainstack" then
+      StandaloneBuilderTestCreateAndSaveScriptOnlyStackAsStandalone tDesc, \
+         tFilename, tScript, tSettings
+   else
+      StandaloneBuilderTestCreateAndSaveStackAsStandalone tDesc, \
+         tFilename, tScript, tSettings   
+   end if
 
    revDeleteFolder tDir
 end _TestScriptOnlyDeployStack
@@ -86,3 +92,72 @@ on TestScriptOnlyDeployStacks
       _TestScriptOnlyDeployStack tItem
    end repeat
 end TestScriptOnlyDeployStacks
+
+private command _TestScriptOnlyBehaviorDeployStack pWhich
+   local tDir
+   set the itemdelimiter to slash
+   set the defaultfolder to item 1 to -2 of the filename of me
+
+   put "_TestSavingStandalone" into tDir
+   
+   create folder tDir
+   
+   local tStackFilename
+   -- in both cases we need an empty script-only stack with behavior
+   put the folder & "/" & tDir & "/stack.livecodescript" into tStackFilename
+   
+   local tBehaviorStack, tBehaviorStackFilename
+   put the folder & "/" & tDir & "/behaviorstack.livecodescript" into tBehaviorStackFilename
+   create script only stack "BehaviorStack" & pWhich
+   put it into tBehaviorStack
+   set the filename of it to tBehaviorStackFilename
+	     
+   local tScript, tSettings, tStackId
+   put _TestScriptOnlyStandaloneStackScript() into tScript
+   create script only stack "SOSWithBehavior" & pWhich
+   put it into tStackId
+   set the behavior of tStackId to tBehaviorStack
+   set the filename of stack tStackId to tStackFileName	     
+   if pWhich is "mainstack" then
+	  put tBehaviorStackFilename into tSettings["auxiliary_stackfiles"]
+	  
+   else if pWhich is "auxiliary" then
+   	  local tIntermediateBehavior
+   	  put tStackFileName into tIntermediateBehavior
+   	  save stack tIntermediateBehavior
+   	  
+   	  put the folder & "/" & tDir & "/stack.livecode" into tStackFilename   
+   	  create stack
+   	  set the filename of it to tStackFilename
+   	  set the behavior of it to the long id of stack \
+   	     tIntermediateBehavior
+
+	  put tBehaviorStackFilename & return & \
+         tIntermediateBehavior into tSettings["auxiliary_stackfiles"]
+   end if
+   
+   repeat for each key tKey in tSettings
+   	  set the cRevStandaloneSettings[tKey] of tStackId to \
+   	     tSettings[tKey]
+   end repeat
+   
+   set the script of tBehaviorStack to tScript
+   save stack tBehaviorStack
+   save stack tStackId
+   
+   local tDesc
+   put "standalone with script-only" && pWhich && " with behavior startup" into tDesc
+   	
+   StandaloneBuilderTestSaveStackAsStandalone tDesc, \
+      tStackFilename, tStackId
+
+   revDeleteFolder tDir
+end _TestScriptOnlyBehaviorDeployStack
+
+on TestScriptOnlyBehaviorMainstackDeploy
+   _TestScriptOnlyBehaviorDeployStack "Mainstack"
+end TestScriptOnlyBehaviorMainstackDeploy
+
+on TestScriptOnlyBehaviorAuxiliaryStackDeploy
+   _TestScriptOnlyBehaviorDeployStack "Auxiliary"
+end TestScriptOnlyBehaviorAuxiliaryStackDeploy

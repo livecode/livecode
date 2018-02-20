@@ -321,4 +321,7 @@ MCU_path_split_win32(MCStringRef p_path,
                      MCStringRef* r_dir,
                      MCStringRef* r_base);
 
+// Format color as string
+extern bool MCU_format_color(const MCColor p_color, MCStringRef& r_string);
+
 #endif

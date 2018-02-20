@@ -6,9 +6,11 @@ Type: glossary
 
 Description:
 A LiveCode <file>, containing a <main stack> and (optionally) one or
-more <substack|substacks>.
+more <substack|substacks>. A stack file is either binary, or a text 
+file (a <script only stack>).
 
-References: file (glossary), substack (glossary), main stack (glossary)
+References: file (glossary), substack (glossary), main stack (glossary),
+script only stack (glossary)	
 
 Tags: file system
 

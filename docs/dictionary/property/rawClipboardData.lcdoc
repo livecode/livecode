@@ -56,18 +56,15 @@ This property should only be used if you require low-level access; the
 
 As a low-level feature, platform differences are not hidden. In 
 particular, the form of the keys of the <rawClipboardData> are 
-platform-specific, but can be summarised as:
+platform-specific, but can be summarized as:
 
  - Windows: arbitrary strings but keys of the form CF_xxx correspond to 
-
-    the <clipboard(glossary)> formats defined by Windows itself
- - OSX: Uniform Type Identifiers (UTIs) with an extension: 
-
-    OSTypes/MIME-types can be used by prefixing the key with
-    com.apple.ostype:/public.mime-type: 
+   the <clipboard(glossary)> formats defined by Windows itself
+ - OSX: Uniform Type Identifiers (UTIs) with an extension. 
+   OSTypes/MIME-types can be used by prefixing the key with
+   com.apple.ostype:/public.mime-type: 
  - Linux: arbitrary strings (X11 atoms) but, by convention, MIME types 
-
-    are used
+   are used
 
 
 >*Tip:* All contents of the <rawClipboardData> are binary - use the 

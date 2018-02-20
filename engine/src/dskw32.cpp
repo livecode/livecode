@@ -1497,8 +1497,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		WORD request = MAKEWORD(1, 1);
 		WSADATA t_data;
 		WSAStartup(request, &t_data);
-
-		return true;
 #endif // _WINDOWS_SERVER
 
 		// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
