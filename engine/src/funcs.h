@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "param.h"
+#include "scriptpt.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -93,7 +94,7 @@ public:
 
     virtual Parse_stat parse(MCScriptPoint &sp, Boolean the)
     {
-        if (get1param(sp, &m_expression, the) != PS_NORMAL)
+        if (sp.is_eol() || get1param(sp, &m_expression, the) != PS_NORMAL)
         {
             MCperror -> add(ParseError, sp);
             return PS_ERROR;
