@@ -104,7 +104,7 @@
 # define NETBSD_INSPIRED 1
 #endif
 
-#ifdef _WINDOWS_DESKTOP
+#ifdef WIN32
 #undef HAVE_UNISTD_H
 #undef HAVE_SYS_WAIT_H
 #undef HAVE_POSIX_DECLS
