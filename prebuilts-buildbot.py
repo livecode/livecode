@@ -42,12 +42,10 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'x86_64-linux-debian8',
     'armv6-android-api9',
     'universal-mac-macosx10.9', # Minimum deployment target
-    'universal-ios-iphoneos11.1',
-    'universal-ios-iphoneos10.3',
+    'universal-ios-iphoneos11.2',
     'universal-ios-iphoneos10.2',
     'universal-ios-iphoneos9.2',
-    'universal-ios-iphonesimulator11.1',
-    'universal-ios-iphonesimulator10.3',
+    'universal-ios-iphonesimulator11.2',
     'universal-ios-iphonesimulator10.2',
     'universal-ios-iphonesimulator9.2',
     'universal-ios-iphonesimulator8.2',
@@ -146,19 +144,33 @@ def format_target_params(platform, arch, subplatform):
 def build(target):
 	args = ["python", "prebuilt/build.py"] + format_target_params(*target)
 	print(' '.join(args))
-	return subprocess.call(args)
+
+	exit_status = subprocess.call(args)
+	if exit_status == 0 and get_build_edition() == "commercial":
+		args = ["python", "../prebuilt/build.py"] + format_target_params(*target)
+		print(' '.join(args))
+		exit_status = subprocess.call(args)
+
+	return exit_status
 	
 def package(target):
 	args = ["python", "prebuilt/package.py"] + format_target_params(*target)
 	print(' '.join(args))
-	return subprocess.call(args)
+
+	exit_status = subprocess.call(args)
+	if exit_status == 0 and get_build_edition() == "commercial":
+		args = ["python", "../prebuilt/package.py"] + format_target_params(*target)
+		print(' '.join(args))
+		exit_status = subprocess.call(args)
+
+	return exit_status
 	
 def do_configure():
 	target = split_target_triple()
 	# perform build + package + upload in configure step
 
 	exit_status = build(target)
-	if exit_status is 0:
+	if exit_status == 0:
 		exit_status = package(target)
 
 	return exit_status
@@ -177,14 +189,26 @@ def do_compile():
 def bin_archive(target):
 	args = ["python", "prebuilt/archive.py"] + format_target_params(*target)
 	print(' '.join(args))
-	return subprocess.call(args)
+
+	exit_status = subprocess.call(args)
+	if exit_status == 0 and get_build_edition() == "commercial":
+		args = ["python", "../prebuilt/archive.py"] + format_target_params(*target)
+		print(' '.join(args))
+		exit_status = subprocess.call(args)
+
+	return exit_status
 
 def do_bin_archive():
 	target = split_target_triple()
 	return bin_archive(target)
 
 def do_bin_extract():
-    return subprocess.call(['python', 'prebuilt/extract.py'])
+	exit_status = subprocess.call(['python', 'prebuilt/extract.py'])
+	if exit_status == 0 and get_build_edition() == "commercial":
+		args = ["python", "../prebuilt/extract.py"]
+		exit_status = subprocess.call(args)
+
+	return exit_status
 
 ################################################################
 # Upload packaged binaries
@@ -193,7 +217,14 @@ def do_bin_extract():
 def prebuilts_upload(target):
 	args = ["python", "prebuilt/upload.py"] + format_target_params(*target)
 	print(' '.join(args))
-	return subprocess.call(args)
+
+	exit_status = subprocess.call(args)
+	if exit_status == 0 and get_build_edition() == "commercial":
+		args = ["python", "../prebuilt/upload.py"] + format_target_params(*target)
+		print(' '.join(args))
+		exit_status = subprocess.call(args)
+
+	return exit_status
 
 def do_prebuilts_upload():
 	target = split_target_triple()
