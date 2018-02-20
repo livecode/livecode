@@ -684,7 +684,7 @@ bool MCSystemSoundOnChannel(MCStringRef p_channel, MCStringRef& r_sound)
 	if (!find_sound_channel(p_channel, false, t_channel))
 		return false;
 	
-	/* UNCHECKED */ MCValueAssign(r_sound, t_channel -> current_player . sound);
+	MCValueAssign(r_sound, t_channel -> current_player . sound);
 	return true;
 }
 
@@ -694,7 +694,7 @@ bool MCSystemNextSoundOnChannel(MCStringRef p_channel, MCStringRef& r_sound)
 	if (!find_sound_channel(p_channel, false, t_channel))
 		return false;
 	
-	/* UNCHECKED */ MCValueAssign(r_sound, t_channel -> next_player . sound);
+	MCValueAssign(r_sound, t_channel -> next_player . sound);
 	return true;
 }
 
