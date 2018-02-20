@@ -2473,7 +2473,7 @@ private command __UpdateSettingsFromCodeFolder pPath, pCodeFolderName, pPlatform
          if pPlatform is "MacOSX" then
             put "mac" into pPlatform
          else if pPlatform is "Windows" then
-            put "win" into pPlatform
+            put "win32" into pPlatform
          end if
          
          if pPlatform is among the items of "mac,ios" then
