@@ -316,6 +316,14 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyPaint(uinteger_t p_type, MCCanvasP
     MCCanvasSolidPaintMakeWithColor(kMCCanvasColorBlack, (MCCanvasSolidPaintRef&)r_paint);
 }
 
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyPixelScale(MCCanvasFloat& r_pixel_scale)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    r_pixel_scale = MCWidgetGetHost(MCcurrentwidget)->getstack()->view_getbackingscale();
+}
+
 extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMousePosition(bool p_current, MCCanvasPointRef& r_point)
 {
     if (!MCWidgetEnsureCurrentWidget())
