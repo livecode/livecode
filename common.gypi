@@ -24,6 +24,10 @@
 				{
 					'platform_id': 'universal-<(OS)-<(target_sdk)',
 				},
+				'(OS == "win")',
+				{
+				'platform_id': '<(uniform_arch)-win32',
+				},
 				{
 					'platform_id': '<(uniform_arch)-<(OS)',
 				},
