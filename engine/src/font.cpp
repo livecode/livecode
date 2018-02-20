@@ -238,7 +238,14 @@ int32_t MCFontGetSize(MCFontRef self)
 
 void *MCFontGetHandle(MCFontRef self)
 {
+#ifdef TARGET_SUBPLATFORM_ANDROID
+    extern void* MCAndroidCustomFontCreateTypeface(MCStringRef, bool, bool);
+    return MCAndroidCustomFontCreateTypeface(MCNameGetString(self->name),
+                                             self->style & kMCFontStyleBold,
+                                             self->style & kMCFontStyleItalic);
+#else
     return self->fontstruct->fid;
+#endif
 }
 
 bool MCFontHasPrinterMetrics(MCFontRef self)

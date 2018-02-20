@@ -3244,6 +3244,14 @@ public class Engine extends View implements EngineApi
     
     ////////////////////////////////////////////////////////////////////////////////
     
+    public Object createTypefaceFromAsset(String path)
+    {
+        Log.i("revandroid", "createTypefaceFromAsset");
+        return Typeface.createFromAsset(getContext().getAssets(),path);
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////////
+    
     private X509TrustManager getTrustManager()
     {
         if (m_trust_manager != null)
