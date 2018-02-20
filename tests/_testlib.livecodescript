@@ -681,6 +681,11 @@ private function __MeetsRequirements pRequirement, pOptions
          if TestIsInStandalone() then
             return false
          end if
+         
+         if "revpdfprinter" is among the items of pOptions \
+         	and the environment is "server" then
+         	return false
+         end if
          return the platform is not "HTML5"
       case "database"
          if not __MeetsRequirements("external", "revdb") then
