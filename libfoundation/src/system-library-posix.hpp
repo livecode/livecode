@@ -72,6 +72,7 @@ public:
                           RTLD_LAZY);
         if (m_handle == nullptr)
         {
+            MCLog("dlopen failed %s",dlerror());
             /* TODO: dlerror message */
             return __MCSLibraryThrowCreateWithNativePathFailed(p_native_path);
         }
