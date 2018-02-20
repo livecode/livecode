@@ -520,6 +520,7 @@ public foreign handler MCWidgetGetMyFont(out rFont as Font) returns nothing bind
 public foreign handler MCWidgetGetMyEnabled(out rEnabled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyDisabled(out rDisabled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyPaint(in pPaintType as CUInt, out rPaint as Paint) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyPixelScale(out rPixelScale as CanvasFloat) returns nothing binds to "<builtin>"
 
 /**
 Summary:	Returns the widget script object.
@@ -652,6 +653,24 @@ syntax MyPaint is expression
             "focus" <mPaintType=7> ) "paint"
 begin
     MCWidgetGetMyPaint(mPaintType, output)
+end syntax
+
+/**
+Summary:    Returns the scaling factor of pixels for the widget
+
+Description:
+Use the widget's pixel scale to calculate the size of an image to draw. For example,
+when drawing an image to `my bounds` create an image sized using
+`my width * my pixel scale, my height * my pixel scale` otherwise the image will be
+stretched to match the pixel scale. The pixel scale is a per-window/screen property
+so may change if the user moves a window to a new screen.
+
+Returns:    The current scaling factor of pixels for the widget
+*/
+syntax MyPixelScale is expression
+    "my" "pixel" "scale"
+begin
+    MCWidgetGetMyPixelScale(output)
 end syntax
 
 // ---------- Synchronous and asynchronous ("current") event information ---------- //
