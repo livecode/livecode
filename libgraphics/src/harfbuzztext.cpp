@@ -236,6 +236,26 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
 	return nil;
 }
 
+// Check if the font supports all glyphs in a given cluster from shape info
+static bool cluster_is_supported(hb_glyph_info_t* p_info, uindex_t p_index, uindex_t p_count, uindex_t& r_cluster_end)
+{
+    bool t_supported = true;
+    uindex_t t_cluster = p_info[p_index] . cluster;
+    while (++p_index < p_count &&
+           p_info[p_index] . cluster == t_cluster)
+    {
+        if (p_info[p_index] . codepoint == 0)
+        {
+            // If any of these glyphs' codepoints are 0 then the
+            // whole cluster is unsupported
+            t_supported = false;
+        }
+    }
+    
+    r_cluster_end = p_index;
+    return t_supported;
+}
+
 static uindex_t shape_text_and_add_to_glyph_array(const unichar_t* p_text, uindex_t p_char_count, bool p_rtl, const MCGFont &p_font, bool p_use_fallback, MCGPoint* x_location, MCAutoArray<MCGlyphRun>& x_runs)
 {
     if (p_font . fid == nil)
@@ -284,19 +304,21 @@ static uindex_t shape_text_and_add_to_glyph_array(const unichar_t* p_text, uinde
     hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buffer, 0);
     
     uindex_t t_cur_glyph = 0, t_start = 0, t_run_count = 0;
-
+    uindex_t t_cluster_end = 0;
+    
     // deal with runs of supported and unsupported glyphs
     while (t_cur_glyph < glyph_count)
     {
         MCGlyphRun t_run;
         t_start = t_cur_glyph;
         
-        // Run of successfully shaped glyphs
-        while (t_cur_glyph < glyph_count && glyph_info[t_cur_glyph] . codepoint != 0)
+        // Run of glyphs in successfully shaped clusters
+        while (t_cur_glyph < glyph_count &&
+               cluster_is_supported(glyph_info, t_cur_glyph, glyph_count, &t_cluster_end))
         {
-            t_cur_glyph++;
+            t_cur_glyph = t_cluster_end;
         }
-        
+
         if (t_start != t_cur_glyph)
         {
             MCGlyphRunMake(glyph_info, glyph_pos, x_location, t_start, t_cur_glyph, t_typeface, p_font . size, t_run);
@@ -305,37 +327,50 @@ static uindex_t shape_text_and_add_to_glyph_array(const unichar_t* p_text, uinde
             t_run_count++;
         }
         
-        // If the first char is unsupported and we're already using the fallback
-        // font for that char, assume there is no glyph and use a replacement.
-        if (t_cur_glyph == 0 && glyph_info[t_cur_glyph] . codepoint == 0 && p_use_fallback)
+        // If the first cluster is unsupported and we're already using the fallback
+        // font for that cluster, assume there is no support and use a replacement.
+        if (t_cur_glyph == 0 &&
+            !cluster_is_supported(glyph_info, t_cur_glyph, glyph_count, &t_cluster_end)
+            && p_use_fallback)
         {
-            t_cur_glyph++;
-
-            MCGlyphRunMake(glyph_info, glyph_pos, x_location, t_start, t_cur_glyph, (SkTypeface *)p_font . fid, p_font . size, t_run);
+            // Enforce a replacement glyph for the whole cluster by passing a 0
+            // codepoint and only adding a single glyph to the run
+            glyph_info[t_cur_glyph].codepoint = 0;
+            MCGlyphRunMake(glyph_info, glyph_pos, x_location, t_start, t_start + 1, (SkTypeface *)p_font . fid, p_font . size, t_run);
             x_runs . Push(t_run);
+            t_cur_glyph = t_cluster_end
             t_start = t_cur_glyph;
             t_run_count++;
         }
         
-        // Deal with run of unsupported characters for this font.
-        while (t_cur_glyph < glyph_count && glyph_info[t_cur_glyph] . codepoint == 0)
+        // Deal with run of unsupported clusters for this font.
+        while (t_cur_glyph < glyph_count &&
+               !cluster_is_supported(glyph_info, t_cur_glyph, glyph_count, &t_cluster_end))
         {
-            t_cur_glyph++;
+            t_cur_glyph = t_cluster_end;
         }
         
-        // For the run of unsupported chars, shape using a fallback font.
+        // For the run of unsupported clusters, shape using a fallback font.
         if (t_start != t_cur_glyph)
         {
+            // Reshape from the beginning of the unsupported cluster run
+            // to the beginning of the cluster containing t_cur_glyph.
+            // At this point, t_cur_glyph might be equal to glyph_count,
+            // in which case compute the reshape char count using the old char
+            // count.
+            uindex_t t_end_index = p_char_count;
+            if (t_cur_glyph != glyph_count)
+                t_end_index = glyph_info[t_cur_glyph] . cluster;
+
             t_run_count += shape_text_and_add_to_glyph_array(
                 p_text + glyph_info[t_start] . cluster,
-                glyph_info[t_cur_glyph - 1] . cluster - glyph_info[t_start] . cluster + 1,
+                t_end_index - glyph_info[t_start] . cluster,
                 p_rtl,
                 p_font,
                 true,
                 x_location,
                 x_runs
             );
-            t_start = t_cur_glyph;
         }
     }
     
