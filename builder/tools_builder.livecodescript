@@ -715,18 +715,18 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
             
             repeat for each line tFile in tDylibs
                -- Ignore files that aren't dylibs
-               local tFullPath
-               put tAppBundle & "/Contents/Tools/Extensions/" & tExtension & "/code/" & tCodeFolder & "/" & tFile into tFullPath
-               get shell("file" && escapeArg(tFullPath))
+               local tFullCodePath
+               put tAppBundle & "/Contents/Tools/Extensions/" & tExtension & "/code/" & tCodeFolder & "/" & tFile into tFullCodePath
+               get shell("file" && escapeArg(tFullCodePath))
                if "Mach-O" is not among the words of it then next repeat
 
-               clearExtendedAttributes escapeArg(tFullPath)
+               clearExtendedAttributes escapeArg(tFullCodePath)
    			
                -- Sign the extension
                -- The "--force" parameter strips the existing signature (which was
                -- made using a not-valid-for-distribution profile)
-               builderLog "message", "Signing iOS extension" && "'" & tFullPath & "'"
-               get shell("/usr/bin/codesign --sign" && word 2 of tSigningId && "--force --verbose=2" && escapeArg(tFullPath))
+               builderLog "message", "Signing iOS extension" && "'" & tFullCodePath & "'"
+               get shell("/usr/bin/codesign --sign" && word 2 of tSigningId && "--force --verbose=2" && escapeArg(tFullCodePath))
                if the result is not zero then
                    builderLog "error", "Could not sign iOS extension:" && it
                    throw "failure"
