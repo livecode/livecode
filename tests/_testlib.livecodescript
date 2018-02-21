@@ -638,6 +638,9 @@ private function __MeetsRequirements pRequirement, pOptions
       case "lcb"
          return not TestIsInStandalone()
          break
+      case "standalone"
+         return TestIsInStandalone()
+         break
       case "securitypermissions"
          if "set" is among the items of pOptions then
             return not TestIsInStandalone()
