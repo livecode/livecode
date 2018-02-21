@@ -484,6 +484,10 @@ private on revStandalonePreBuild pStack, pFolder, pPlatform, pArchs, @rStackName
    
    -- Make sure all dependencies are included
    revSBUpdateForDependencies pPlatform, pArchs, , sStandaloneSettingsA
+   revSBEnsurePerExtensionSettings pPlatform, sStandaloneSettingsA
+   if the result is not empty then
+      return the result
+   end if
    
    local tCount
    if there is a file (pFolder & "/" & sStandaloneSettingsA["name"]) then
@@ -645,6 +649,9 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
       put tStandaloneSettingsA into sStandaloneSettingsA
       
       revStandalonePreBuild pStack, pFolder, "macosx", tArchitectures, tStackName, tStackFileList
+      if the result is not empty then 
+         return the result
+      end if
       
       -- copy files to each directory
       -- put the path to the engine into tEngineSourceFile
@@ -758,6 +765,9 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalo
          put "x86" into tArch
       end if
       revStandalonePreBuild pStack, pFolder, "windows", tArch, tStackName, tStackFileList
+      if the result is not empty then 
+         return the result
+      end if
       
       -- copy files to each directory
       -- put the path to the engine into tEngineSourceFile
@@ -907,7 +917,10 @@ command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder, @xStandalone
       else
          put "x86" into tArch
       end if
-      revStandalonePreBuild pStack, pFolder, "linux", tArch, tStackName, tStackFileList
+      revStandalonePreBuild pStack, pFolder, "linux", tArch, tStackName, tStackFileList     
+      if the result is not empty then 
+         return the result
+      end if
       
       -- Always add print dialogs to linux standalones when searching for inclusions
       if sStandaloneSettingsA["inclusions"] = "search" then 

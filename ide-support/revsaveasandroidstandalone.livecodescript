@@ -107,6 +107,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    
    -- Make sure all dependencies are included
    revSBUpdateForDependencies "android", "armv6", , pSettings
+   revSBEnsurePerExtensionSettings "android", pSettings
+   if the result is not empty then
+      return the result
+   end if
    
    -- Manually remove built-in implementations from detected script library inclusions
    revSBRemoveInclusions pStack, "android", tConfirm, pSettings

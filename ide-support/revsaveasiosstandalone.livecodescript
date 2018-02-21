@@ -167,6 +167,11 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       
    end if
    
+   revSBEnsurePerExtensionSettings "ios", pSettings
+   if the result is not empty then
+      return the result
+   end if
+   
    -- Manually remove built-in implementations from detected script library inclusions
    revSBRemoveInclusions pStack, "ios", tConfirm, pSettings
    
