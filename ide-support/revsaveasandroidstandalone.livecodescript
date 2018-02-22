@@ -800,6 +800,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          set the itemDelimiter to "."
          put item 1 to -2 of tSourceFile into tSourceName
          
+         if not(tSourceFile begins with "lib") then
+            put "lib" before tSourceFile
+         end if
          put url ("binfile:" & tLib) into url ("binfile:" & tArmLibsBuildFolder & slash & tSourceFile)
          
          put return & tSourceName & ":./" & tSourceFile after pSettings["android,library"]
