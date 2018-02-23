@@ -1415,6 +1415,10 @@ IO_stat MCDispatch::startup(void)
 
 	t_info . stack -> extraopen(false);
 
+    // Resolve parent scripts
+    if (t_info . stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
+        t_info . stack -> resolveparentscripts();
+    
 	MCscreen->resetcursors();
 	MCtemplateimage->init();
 	send_startup_message();
