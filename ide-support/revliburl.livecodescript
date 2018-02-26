@@ -4744,9 +4744,15 @@ private command _proxyConfig_SetHTTPProxyUsingWPADAndPAC
       ulLogIt "pac file that wpad found: " & tPacURL
       _proxyConfig_ProcessPACURL tPacURL
       put the result into tError
-      ulLogIt "wpad pac error:" && tError      
    end if
-   
+
+   if tError is empty then
+      ulLogIt "using wpad PAC file"
+      put true into lvUsePACFileForProxy
+   else
+      ulLogIt "wpad pac error:" && tError
+   end if
+
    return tError
 end _proxyConfig_SetHTTPProxyUsingWPADAndPAC
 
