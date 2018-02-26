@@ -252,6 +252,25 @@ metadata sortType.options is "text,numeric"
 metadata sortType.label is "Sort type"
 
 /**
+Name: pathDelimiter
+
+Type: property
+
+Syntax: set the pathDelimiter of <widget> to <pType>
+Syntax: get the pathDelimiter of <widget>
+
+Summary: Manipulates the separator between the elements of the array viewer
+
+Description:
+Use the <pathDelimiter> property as the separator between the elements describing
+a path in the tree view widget.
+**/
+
+property pathDelimiter		get mPathDelimiter		set mPathDelimiter
+metadata pathDelimiter.label is "Path delimiter"
+metadata pathDelimiter.default is ","
+
+/**
 Syntax: set the alternateRowBackgrounds of <widget> to {true|false}
 Syntax: get the alternateRowBackgrounds of <widget>
 
@@ -401,6 +420,8 @@ private variable mArrayStyle as Boolean
 private variable mSortAscending as Boolean
 private variable mSortNumeric as Boolean
 
+private variable mPathDelimiter as String
+
 private variable mShowSeparator as Boolean
 private variable mSeparatorRatio as Number
 private variable mSeparatorDragging as Boolean
@@ -455,6 +476,8 @@ public handler OnCreate() returns nothing
 
     put true into mSortNumeric
     put true into mSortAscending
+
+    put "," into mPathDelimiter
 
 	put true into mRecalculate
 	put true into mUpdateDataList
@@ -859,8 +882,8 @@ public handler OnClick() returns nothing
         variable tPrompt as String
         variable tPath
         put tData["path"] into tPath
-        combine tPath with ","
-        put "Really delete array key" && the result & "?" into tPrompt
+        combine tPath with "]["
+        put "Really delete array element at path [" & the result & "]?" into tPrompt
         execute script "answer \q" & tPrompt & "\q with OK and Cancel; return it"
         if the result is "OK" then
             removePath(tData["path"])
@@ -876,7 +899,7 @@ public handler OnClick() returns nothing
 
     variable tPathString as String
     if mHoverIcon is "inspect" then
-        combine tData["path"] with "," into tPathString
+        combine tData["path"] with mPathDelimiter into tPathString
         post "actionInspect" with [tPathString]
         return
     end if
@@ -913,7 +936,7 @@ public handler OnClick() returns nothing
 
 	if the click count > 1 then
 		if tData["leaf"] then
-            combine tData["path"] with "," into tPathString
+            combine tData["path"] with mPathDelimiter into tPathString
 			post "actionDoubleClick" with [tPathString]
 		else
 		   if tData["folded"] is true then
@@ -1724,16 +1747,16 @@ end handler
 
 private handler setSelectedElement(in pElement as String)
 	variable tPath as List
-	split pElement by "," into tPath
+	split pElement by mPathDelimiter into tPath
 	selectPath(tPath)
 end handler
 
 private handler getSelectedElement() returns String
 	variable tElement as String
 	if mSelectedElement is not nothing then
-		combine mSelectedElement with "," into tElement
+		combine mSelectedElement with mPathDelimiter into tElement
 		// Make sure empty path is recognised as a valid path
-		put "," after tElement
+		put mPathDelimiter after tElement
 	else
 		put the empty string into tElement
 	end if
