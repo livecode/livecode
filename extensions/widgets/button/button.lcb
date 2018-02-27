@@ -43,6 +43,7 @@ use com.livecode.widget.native.button.ios
 use com.livecode.widget.native.button.mac
 use com.livecode.widget.native.button.linux
 use com.livecode.widget.native.button.windows
+use com.livecode.widget.native.button.shared
 
 metadata version is "1.0.0"
 metadata author is "LiveCode"
@@ -129,6 +130,7 @@ private handler GetPlatformImplementation() returns optional Array
 end handler
 
 public handler OnCreate()
+	SetScriptObject(my script object)
 	put GetPlatformImplementation() into mPlatformImplementation
 	put "" into mLabel
 end handler
