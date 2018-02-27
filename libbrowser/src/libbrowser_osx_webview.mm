@@ -373,7 +373,11 @@ bool MCJSObjectToBrowserValue(JSContextRef p_context, JSObjectRef p_object, MCBr
 
 @interface MCWebUIDelegate : NSObject
 {
+    MCWebViewBrowser *m_instance;
 }
+- (id)initWithInstance:(MCWebViewBrowser *)instance;
+- (void)dealloc;
+- (void)webView:(WebView *)sender makeFirstResponder:(NSResponder *)responder;
 
 - (NSUInteger)webView:(WebView *)webView dragDestinationActionMaskForDraggingInfo:(id<NSDraggingInfo>)draggingInfo;
 - (NSUInteger)webView:(WebView *)webView dragSourceActionMaskForPoint:(NSPoint)point;
@@ -975,7 +979,7 @@ bool MCWebViewBrowser::Init(void)
 		
 		if (t_success)
 		{
-			m_ui_delegate = [[MCWebUIDelegate alloc] init];
+			m_ui_delegate = [[MCWebUIDelegate alloc] initWithInstance: this];
 			t_success = m_ui_delegate != nil;
 		}
 		
@@ -1183,8 +1187,29 @@ bool MCWebViewBrowser::Init(void)
 
 @implementation MCWebUIDelegate
 
-- (WebView *)webView:(WebView *)webView
-            createWebViewWithRequest:(NSURLRequest *)request
+- (id)initWithInstance:(MCWebViewBrowser*)instance
+{
+    self = [super init];
+    if (self == nil)
+        return nil;
+    
+    m_instance = instance;
+    
+    return self;
+}
+
+- (void)dealloc
+{
+    [super dealloc];
+}
+
+- (void)webView:(WebView *)sender makeFirstResponder:(NSResponder *)responder
+{
+    [[sender window] makeFirstResponder:responder];
+    m_instance->OnFocus();
+}
+
+- (WebView *)webView:(WebView *)webView createWebViewWithRequest:(NSURLRequest *)request
 {
     [[webView frameLoadDelegate] setPendingRequest: false];
     [[webView mainFrame] loadRequest:request];

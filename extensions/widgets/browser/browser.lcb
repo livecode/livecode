@@ -491,6 +491,7 @@ private unsafe handler InitBrowserView()
 
 	MCBrowserSetRequestHandler(mBrowser, OnBrowserRequestCallback, nothing)
 	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
+	MCBrowserSetFocusHandler(mBrowser, OnFocusCallback, nothing)
 
 	applyProperties(mProperties)
 end handler
@@ -538,6 +539,19 @@ public handler OnClose()
 	put false into mOpened
 end handler
 
+constant kHasFocusJS is "function f(){if (document.hasFocus() && document.activeElement !== null && document.activeElement !== document.body && document.activeElement !== document.documentElement) return 'true'; } f();"
+constant kRemoveFocusJS is "document.activeElement.blur();"
+
+public handler OnFocusLeave()
+	if browserEvaluateJavascript(kHasFocusJS) is "true" then
+		browserEvaluateJavascript(kRemoveFocusJS)
+	end if
+end handler
+
+private handler OnFocusCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef) returns nothing
+	focus in
+end handler
+
 ----------
 
 private handler Capitalize(in pString as String) returns String
@@ -583,6 +597,10 @@ private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBr
 
 	if pType is kMCBrowserRequestTypeNavigate and pState is kMCBrowserRequestStateBegin and not pFrame then
 		updateUrlProperty(pUrl)
+	end if
+
+	if browserEvaluateJavascript(kHasFocusJS) is "true" then
+		focus in
 	end if
 
 	post tMessage to mScriptObject with tArgs

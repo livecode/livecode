@@ -176,12 +176,38 @@ bool MCNSArrayToBrowserValue(NSArray *p_array, MCBrowserValue &r_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#import <UIKit/UIGestureRecognizerSubclass.h>
+
+@interface com_runrev_livecode_MCTouchDownGestureRecognizer : UIGestureRecognizer
+
+@end
+
+@implementation com_runrev_livecode_MCTouchDownGestureRecognizer
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
+    if (self.state == UIGestureRecognizerStatePossible) {
+        self.state = UIGestureRecognizerStateRecognized;
+    }
+}
+
+-(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event{
+    self.state = UIGestureRecognizerStateFailed;
+}
+
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event{
+    self.state = UIGestureRecognizerStateFailed;
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
 @interface com_runrev_livecode_MCUIWebViewBrowserDelegate : NSObject <UIWebViewDelegate>
 {
 	MCUIWebViewBrowser *m_instance;
 	bool m_pending_request;
 	char *m_request_url;
 	char *m_frame_request_url;
+    com_runrev_livecode_MCTouchDownGestureRecognizer *m_touch_down_recogniser;
 }
 
 - (id)initWithInstance:(MCUIWebViewBrowser*)instance;
@@ -193,6 +219,9 @@ bool MCNSArrayToBrowserValue(NSArray *p_array, MCBrowserValue &r_value)
 - (void)webViewDidStartLoad:(UIWebView *)webView;
 
 - (void)setPendingRequest: (bool)newValue;
+
+- (void)addTouchDownRecogniser;
+- (void)handleTouchDown: (com_runrev_livecode_MCTouchDownGestureRecognizer *)touchDown;
 
 @end
 
@@ -775,6 +804,7 @@ bool MCUIWebViewBrowser::Init(void)
 		{
 			[t_view setDelegate: m_delegate];
 			m_view = t_view;
+            [m_delegate addTouchDownRecogniser];
 		}
 		else if (t_view != nil)
 			[t_view release];
@@ -797,8 +827,9 @@ bool MCUIWebViewBrowser::Init(void)
 	m_pending_request = false;
 	m_request_url = nil;
 	m_frame_request_url = nil;
-	
-	return self;
+    m_touch_down_recogniser = nil;
+    
+    return self;
 }
 
 - (void)dealloc
@@ -808,7 +839,32 @@ bool MCUIWebViewBrowser::Init(void)
 	if (m_frame_request_url != nil)
 		MCCStringFree(m_frame_request_url);
 	
+    if (m_touch_down_recogniser != nil)
+    {
+        UIWebView * t_view;
+        if (m_instance->GetView(t_view))
+        {
+            [t_view removeGestureRecognizer:m_touch_down_recogniser];
+        }
+        [m_touch_down_recogniser release];
+    }
+    
 	[super dealloc];
+}
+
+- (void)addTouchDownRecogniser
+{
+    UIWebView * t_view;
+    if (m_instance->GetView(t_view))
+    {
+        m_touch_down_recogniser = [[com_runrev_livecode_MCTouchDownGestureRecognizer alloc] initWithTarget:self action:@selector(handleTouchDown:)];
+        [t_view addGestureRecognizer:m_touch_down_recogniser];
+    }
+}
+
+- (void)handleTouchDown: (com_runrev_livecode_MCTouchDownGestureRecognizer *)touchDown
+{
+    m_instance->OnFocus();
 }
 
 - (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType

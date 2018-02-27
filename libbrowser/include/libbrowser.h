@@ -59,6 +59,12 @@ public:
 	virtual void OnJavaScriptCall(MCBrowser *p_browser, const char *p_handler, MCBrowserListRef p_params) = 0;
 };
 
+class MCBrowserFocusHandler : public MCBrowserRefCounted
+{
+public:
+    virtual void OnFocus(MCBrowser *p_browser) = 0;
+};
+
 // Properties
 enum MCBrowserProperty
 {
@@ -88,7 +94,8 @@ class MCBrowser : public MCBrowserRefCounted
 public:
 	virtual void SetEventHandler(MCBrowserEventHandler *p_handler) = 0;
 	virtual void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler) = 0;
-	
+    virtual void SetFocusHandler(MCBrowserFocusHandler *p_handler) = 0;
+    
 	virtual void *GetNativeLayer() = 0;
 	
 	virtual bool GetRect(MCBrowserRect &r_rect) = 0;
@@ -277,9 +284,11 @@ enum MCBrowserRequestState
 
 typedef void (*MCBrowserRequestCallback)(void *p_context, MCBrowserRef p_browser, MCBrowserRequestType p_type, MCBrowserRequestState p_state, bool p_in_frame, const char *p_url, const char *p_error);
 typedef void (*MCBrowserJavaScriptCallback)(void *p_context, MCBrowserRef p_browser, const char *p_handler, MCBrowserListRef p_params);
+typedef void (*MCBrowserFocusCallback)(void *p_context, MCBrowserRef p_browser);
 
 MC_BROWSER_DLLEXPORT bool MCBrowserSetRequestHandler(MCBrowserRef p_browser, MCBrowserRequestCallback p_callback, void *p_context);
 MC_BROWSER_DLLEXPORT bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCallback p_callback, void *p_context);
+MC_BROWSER_DLLEXPORT bool MCBrowserSetFocusHandler(MCBrowserRef p_browser, MCBrowserFocusCallback p_callback, void *p_context);
 
 }
 

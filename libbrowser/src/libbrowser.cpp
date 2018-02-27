@@ -108,6 +108,28 @@ void MCBrowserBase::OnNavigationRequestUnhandled(bool p_in_frame, const char *p_
 		m_event_handler->OnNavigationRequestUnhandled(this, p_in_frame, p_url);
 }
 
+void MCBrowserBase::SetFocusHandler(MCBrowserFocusHandler *p_handler)
+{
+    if (p_handler)
+        p_handler->Retain();
+    
+    if (m_focus_handler)
+        m_focus_handler->Release();
+    
+    m_focus_handler = p_handler;
+}
+
+MCBrowserFocusHandler *MCBrowserBase::GetFocusHandler(void)
+{
+    return m_focus_handler;
+}
+
+void MCBrowserBase::OnFocus()
+{
+    if (m_focus_handler)
+        m_focus_handler->OnFocus(this);
+}
+
 void MCBrowserBase::SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler)
 {
 	if (p_handler)
@@ -516,6 +538,51 @@ bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCa
 	
 	p_browser->SetJavaScriptHandler(t_wrapper);
 	return true;
+}
+
+//////////
+
+// JavaScript handler c++ wrapper
+class MCBrowserFocusHandlerWrapper : public MCBrowserFocusHandler
+{
+public:
+    MCBrowserFocusHandlerWrapper(MCBrowserFocusCallback p_callback, void *p_context)
+    {
+        m_callback = p_callback;
+        m_context = p_context;
+    }
+    
+    virtual void OnFocus(MCBrowser *p_browser)
+    {
+        if (m_callback)
+            m_callback(m_context, p_browser);
+    }
+    
+private:
+    MCBrowserFocusCallback m_callback;
+    void *m_context;
+};
+
+MC_BROWSER_DLLEXPORT_DEF
+bool MCBrowserSetFocusHandler(MCBrowserRef p_browser, MCBrowserFocusCallback p_callback, void *p_context)
+{
+    if (p_browser == nil)
+        return false;
+    
+    if (p_callback == nil)
+    {
+        p_browser->SetFocusHandler(nil);
+        return true;
+    }
+    
+    MCBrowserFocusHandlerWrapper *t_wrapper;
+    t_wrapper = new (nothrow) MCBrowserFocusHandlerWrapper(p_callback, p_context);
+    
+    if (t_wrapper == nil)
+        return false;
+    
+    p_browser->SetFocusHandler(t_wrapper);
+    return true;
 }
 
 //////////

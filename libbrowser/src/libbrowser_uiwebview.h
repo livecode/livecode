@@ -47,6 +47,7 @@ public:
 	
 	bool AttachJSHandlers();
 
+    bool GetView(UIWebView *&r_view);
 protected:
 	bool GetUrl(char *& r_url);
 	
@@ -70,7 +71,6 @@ protected:
 	UIScrollView *GetScrollView(void);
 	
 private:
-	bool GetView(UIWebView *&r_view);
 	
 	bool SyncJavaScriptHandlers(NSArray *p_handlers);
 	

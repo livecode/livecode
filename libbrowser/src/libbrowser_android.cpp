@@ -1035,6 +1035,16 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doUns
 		MCCStringFree(t_url);
 }
 
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doFocus(JNIEnv *env, jobject object) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doFocus(JNIEnv *env, jobject object)
+{
+    MCBrowser *t_browser;
+    if (MCBrowserFindWithJavaView(env, object, t_browser))
+    {
+        ((MCAndroidWebViewBrowser*)t_browser)->OnFocus();
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCAndroidWebViewBrowserFactory : public MCBrowserFactory

@@ -228,6 +228,8 @@ class LibBrowserWebView extends WebView
 						if (!v.hasFocus())
 						{
 							v.requestFocus();
+                            doFocus();
+                            wakeEngineThread();
 						}
 						break;
 				}
@@ -649,4 +651,5 @@ class LibBrowserWebView extends WebView
 	public native void doFinishedLoading(String url);
 	public native void doLoadingError(String url, String error);
 	public native void doUnsupportedScheme(String url);
+    public native void doFocus();
 }
