@@ -187,27 +187,19 @@ void MCWidgetEventManager::event_close(MCWidget* p_widget)
 
 void MCWidgetEventManager::event_kfocus(MCWidget* p_widget)
 {
-    // WIDGET-TODO: Reinstate FocusEnter
-    
-#if WIDGET_KEYBOARD_FOCUS
     // Keyboard focus has changed
     m_keyboard_focus = p_widget;
     
-    p_widget->OnFocusEnter();
-#endif
+    bubbleEvent(p_widget, MCWidgetOnFocusEnter);
 }
 
 void MCWidgetEventManager::event_kunfocus(MCWidget* p_widget)
 {
-    // WIDGET-TODO: Reinstate FocusLeave
-    
-#if WIDGET_KEYBOARD_FOCUS
     // Keyboard focus has changed
     // TODO: does the unfocus *always* happen before the next focus?
     m_keyboard_focus = nil;
     
-    p_widget->OnFocusLeave();
-#endif
+    bubbleEvent(p_widget, MCWidgetOnFocusLeave);
 }
 
 Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text, KeySym p_key)
