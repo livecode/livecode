@@ -158,7 +158,7 @@ on initialiseCustomProps
 end initialiseCustomProps
 
 ## for debugging ##
-function md5 pString
+private function md5 pString
    local tHex
    get binaryDecode("h*", md5digest(pString), tHex)
    return tHex

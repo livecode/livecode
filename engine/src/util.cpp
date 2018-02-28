@@ -3412,3 +3412,12 @@ MCU_is_token(MCStringRef p_string)
 
 	return true;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Color conversion utilities
+
+bool MCU_format_color(const MCColor p_color, MCStringRef& r_string)
+{
+    return MCStringFormat(r_string, "%d,%d,%d", p_color.red >> 8, p_color.green >> 8, p_color.blue >> 8);
+}

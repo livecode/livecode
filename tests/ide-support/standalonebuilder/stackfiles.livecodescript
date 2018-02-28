@@ -139,6 +139,7 @@ private command _TestStandaloneStackPath pWhich
    
    local tStandalonePath
    StandaloneBuilderSaveAsStandalone "main", tStandalonePath
+
    if the result is not empty then
       TestAssert "building standalone", false
       exit _TestStandaloneStackPath
