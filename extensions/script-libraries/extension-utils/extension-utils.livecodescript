@@ -93,18 +93,18 @@ private command __EnsureExternal pExternal
          put "so" into tFileExtension
          break
    end switch
- 
+   
    local tExternalFilename
    if the environment is "server" then
       put "server-" after tExternalFilename
    end if
    put pExternal after tExternalFilename
    put "." & tFileExtension after tExternalFilename
-
+   
    if there is a file (tHomeFolder & slash & "externals" & slash & \
-      tExternalFilename) then
+         tExternalFilename) then
       put true into sExternalsA[pExternal]
-	  exit __EnsureExternal
+      exit __EnsureExternal
    end if
    
    put specialFolderPath("engine") & slash before tExternalFilename
@@ -214,27 +214,36 @@ end __extensionIsBuiltin
 Order extensions by dependency using requires info
 
 Parameters:
-pExtensions:
-pRequiresA:
-pIncludeBuiltin:
+pExtensions: A list of extensions to order, one per line
+pRequiresA: 
+An array of dependencies. For each key `tExtension`, 
+`pRequiresA[tExtension]` should be a list of extensions on which 
+`tExtension` depends
+pIncludeBuiltin: 
+Include built-in modules in dependency analysis. Defaults to false. 
+For most purposes, it is not necessary to include built-in modules.
+
+Returns:
+The list of extensions ordered by dependency according to the 
+dependency information in <pRequiresA>
 */
-function extensionsOrderByDependency pExtensions, pRequiresA, \
-   pIncludeBuiltin
+function extensionOrderByDependency pExtensions, pRequiresA, \
+      pIncludeBuiltin
    # Accumulate an array of dependencies
    local tDependencies, tRequirements
    repeat for each line tExtension in pExtensions
       put pRequiresA[tExtension] into tRequirements
       repeat for each element tDependent in tRequirements
-      	 if not pIncludeBuiltin and __extensionIsBuiltin(tDependent) then
-      	    next repeat  	 
-      	 end if
+         if not pIncludeBuiltin and __extensionIsBuiltin(tDependent) then
+            next repeat  	 
+         end if
          __addToDependencies tExtension, tDependent, tDependencies
       end repeat
    end repeat
    
    # Order them
    return __dependencyOrder(tDependencies, pExtensions)
-end extensionsOrderByDependency
+end extensionOrderByDependency
 
 private function __extensionResourcePath
    if the environment begins with "development" then
@@ -293,7 +302,7 @@ end __PopHideConsoleWindows
 
 private command doShell pShellCmd, @rResult, @rOutput
    __PushHideConsoleWindows true
-
+   
    put shell(pShellCmd) into rOutput
    put the result into rResult
    
@@ -301,16 +310,28 @@ private command doShell pShellCmd, @rResult, @rOutput
 end doShell
 
 /**
-Compile extension
+Compile a LiveCode Builder extension file
 
 Parameters:
-pFile:
-pSupportFiles:
-pExtraModulePaths:
-pTargetFolder:
-pOutputFilename:
+pLCCompile: 
+The path to the lc-compile program. If empty, this will be computed.
+
+pFile: 
+The main source file of the LCB extension
+pSupportFiles: 
+A list of support files required by the main source file. These must all be named `<main_source_name>-<suffix>.lcb`
+pLCIPath: 
+The location of the standard library module interface files. If empty, 
+this will be computed.
+pExtraLCIPaths:
+A list of paths to look for extra module interface files.
+pTargetFolder: The target output folder
+pOutputFilename: The target bytecode output filename
+
+The result: Any error that occurred.
+It: The dependency-ordered list.
 */
-command extensionCompile pFile, pSupportFiles, pExtraModulePaths, pTargetFolder, pOutputFilename
+command extensionCompile pLCCompile, pFile, pSupportFiles, pLCIPath, pExtraLCIPaths, pTargetFolder, pOutputFilename
    __EnsurePath pTargetFolder
    # The manifest is currently always generated from the source
    if there is a file (pTargetFolder & slash & "manifest.xml") then
@@ -319,16 +340,23 @@ command extensionCompile pFile, pSupportFiles, pExtraModulePaths, pTargetFolder,
    
    # Build the shell command
    local tShellCommand
-   put shellFormat(__extensionCompilerPath()) into tShellCommand
+   if pLCCompile is empty then
+      put __extensionCompilerPath() into pLCCompile
+   end if
+   put shellFormat(pLCCompile) into tShellCommand
    
    # The folder to put the .lci file
-   put shellFormat(pTargetFolder, "modulepath") after tShellCommand
+   put shellFormat(pTargetFolder, "interface") after tShellCommand
    
    # The built-in module path
-   put shellFormat(__extensionResourcePath() & slash & "modules/lci", "modulepath") after tShellCommand
+   if pLCIPath is empty then
+      put __extensionResourcePath() & slash & "modules/lci" \
+            into pLCIPath
+   end if
+   put shellFormat(pLCIPath, "modulepath") after tShellCommand
    
    # Installed module path
-   repeat for each line tInterface in pExtraModulePaths
+   repeat for each line tInterface in pExtraLCIPaths
       put shellFormat(tInterface, "modulepath") after tShellCommand
    end repeat
    
@@ -340,7 +368,7 @@ command extensionCompile pFile, pSupportFiles, pExtraModulePaths, pTargetFolder,
    
    # Support files must be dependency-ordered
    if pSupportFiles is not empty then
-      extensionDepsOrder pSupportFiles
+      extensionDepsOrder pLCCompile, pSupportFiles
       if the result is not empty then
          return the result for error
       end if
@@ -363,18 +391,24 @@ command extensionCompile pFile, pSupportFiles, pExtraModulePaths, pTargetFolder,
 end extensionCompile
 
 /**
-Use lc-compile to order lcb extensions by dependency
+Use lc-compile to order LiveCode Builder extensions by dependency.
 
 Parameters:
-pExtensionList:
+pLCCompile: 
+The path to the lc-compile program. If empty, this will be computed.
+pExtensionList: 
+A list of LiveCode Builder extensions to put in dependency order
+
+The result: Any error that occurred.
+It: The dependency-ordered list.
 */
-command extensionsDepsOrder pExtensionList
+command extensionDepsOrder pLCCompile, pExtensionList
    # Build the shell command
    local tShellCommand
-   put shellFormat(__extensionCompilerPath()) into tShellCommand
-   
-   # The built-in module path
-   put shellFormat(__extensionResourcePath() & slash & "modules/lci", "modulepath") after tShellCommand
+   if pLCCompile is empty then
+      put __extensionCompilerPath() into pLCCompile
+   end if
+   put shellFormat(pLCCompile) into tShellCommand
    
    # The deps mode
    put shellFormat("order", "deps") after tShellCommand
@@ -392,7 +426,7 @@ command extensionsDepsOrder pExtensionList
       return tShellOutput for value
    end if
    return tShellOutput for error
-end extensionsDepsOrder
+end extensionDepsOrder
 
 private command appendToStringList @xList, pValue
    if xList is empty then
@@ -403,28 +437,42 @@ private command appendToStringList @xList, pValue
 end appendToStringList
 
 /**
-Build, package and extract lcb extensions
+Build, package and extract LiveCode Builder extensions
 
 Parameters:
-pDocsParser:
-pTargetFolder:
-pCommercialExtension:
-pLCCompile:
-pInterfaceFolder:
+pDocsParser: 
+The path to the docs parser script.
+pTargetFolder: The target folder to extract the extension to
+pCommercialExtension: Whether the extension source should be removed
+pLCCompile: 
+The path to the lc-compile program. If empty, this will be computed.
+pLCIPath: 
+The location of the standard library module interface files. If empty, 
+this will be computed.
+pExtraLCIPaths:
+A list of paths to look for extra module interface files.
+
+Description:
+Any parameters after <pExtraLCIPaths> are the extension sources to
+build, package and extract.
 */
-command buildPackageAndExtractLCBExtensions pDocsParser, pTargetFolder, \
-      pCommercialExtension, pLCCompile, pInterfaceFolder
-   # Items 6 onwards in 'the params' are quoted full paths to ext files
+command extensionBuildPackageAndExtractLCB pDocsParser, pTargetFolder, \
+      pCommercialExtension, pLCCompile, pLCIPath, pExtraLCIPaths
+   if pLCCompile is empty then
+      put __extensionCompilerPath() into pLCCompile
+   end if
+   
+   # Items 7 onwards in 'the params' are quoted full paths to ext files
    # Construct the list of extensions to build
    local tExtList
-   repeat for each item tItem in item 6 to -1 of the params
+   repeat for each item tItem in item 7 to -1 of the params
       appendToStringList tExtList, char 2 to -2 of tItem
    end repeat
    
-   extensionsDepsOrder tExtList
+   extensionDepsOrder pLCCompile, tExtList
    if the result is not empty then
       throw the result
-      exit buildPackageAndExtractLCBExtensions
+      exit extensionBuildPackageAndExtractLCB
    end if
    
    put word 1 to -1 of it into tExtList
@@ -434,73 +482,85 @@ command buildPackageAndExtractLCBExtensions pDocsParser, pTargetFolder, \
       local tSourceFileName, tSourceFolder
       put item 1 to -2 of tExtPath into tSourceFolder
       put item -1 of tExtPath into tSourceFileName
-      buildPackageAndExtractExtension "", "", "", \
+      extensionBuildPackageAndExtract "", "", "", \
             pDocsParser, \
             tSourceFolder, tSourceFileName, pTargetFolder, \
-            pCommercialExtension, pLCCompile, pInterfaceFolder
+            pCommercialExtension, pLCCompile, pLCIPath, pExtraLCIPaths
    end repeat
-end buildPackageAndExtractLCBExtensions
+end extensionBuildPackageAndExtractLCB
 
 /**
 Build, package and extract extension
 
 Parameters:
-pProtectifyScript:
-pProtectifyOutput:
-pGitHash:
-pDocsParser:
+pProtectifyScript: The path to the script that protects a livecode stack.
+pProtectifyOutput: The target filename for the protected livecode stack
+pGitHash: 
+The hash to use when protecting the stack
+pDocsParser: 
+The path to the docs parser script.
 pSourceFolder:
+The folder containing the extension
 pSourceFileName:
-pTargetFolder:
-pCommercialExtension:
-pLCCompile:
-pInterfaceFolder:
+The extension file name
+pTargetFolder: The target folder to extract the extension to
+pCommercialExtension: Whether the extension source should be removed
+pLCCompile: 
+The path to the lc-compile program. If empty, this will be computed.
+pLCIPath: 
+The location of the standard library module interface files. If empty, 
+this will be computed.
+pExtraLCIPaths:
+A list of paths to look for extra module interface files.
 */
-command buildPackageAndExtractExtension pProtectifyScript, \
+command extensionBuildPackageAndExtract pProtectifyScript, \
       pProtectifyOutput, pGitHash, pDocsParser, \
       pSourceFolder, pSourceFileName, pTargetFolder, \
-      pCommercialExtension, pLCCompile, pInterfaceFolder
+      pCommercialExtension, pLCCompile, pLCIPath, pExtraLCIPaths
    
    if pCommercialExtension is true and \
          not (pSourceFileName ends with ".lcb") then
-      protectStack pProtectifyScript, pSourceFolder, \ 
+      extensionProtectStack pProtectifyScript, pSourceFolder, \ 
             pSourceFileName, pProtectifyOutput, pGitHash
    end if
    
-   extractDocs pDocsParser, pSourceFolder, \
+   extensionExtractDocs pDocsParser, pSourceFolder, \
          pSourceFolder & slash & pSourceFileName
    
    local tPackage
    if not (pSourceFileName ends with ".lcb") then
       extensionGenerateManifestForLCSExtension pDocsParser, pSourceFolder
-      packageScriptExtension pSourceFolder, pSourceFileName, \
+      extensionPackageScriptExtension pSourceFolder, pSourceFileName, \
             pTargetFolder, pCommercialExtension
    else
-      packageBuilderExtension pSourceFolder, pSourceFileName, \
+      extensionPackageBuilderExtension pSourceFolder, pSourceFileName, \
             pTargetFolder, pCommercialExtension, pLCCompile, \
-            pInterfaceFolder
+            pLCIPath, pExtraLCIPaths
    end if
    put the result into tPackage
    
    extractExtension tPackage, pSourceFolder, pTargetFolder
    delete file tPackage
-end buildPackageAndExtractExtension
+end extensionBuildPackageAndExtract
 
 private function q pParam
    return quote & pParam & quote
 end q
 
 /**
-Protect stack
+Protect a livecode stack using the provided script
 
 Parameters:
-pProtectifyScript:
+pProtectifyScript: The path to the script that protects a livecode stack.
 pSourceFolder:
+The folder containing the extension
 pSourceFileName:
-pOutput:
-pGitHash:
+The extension file name
+pOutput: The target filename for the protected livecode stack
+pGitHash: 
+The hash to use when protecting the stack
 */
-command protectStack pProtectifyScript, pSourceFolder, pSourceFileName, pOutput, pGitHash
+command extensionProtectStack pProtectifyScript, pSourceFolder, pSourceFileName, pOutput, pGitHash
    if there is not a stack pProtectifyScript then
       throw "Error: could not load script protector:" && pProtectifyScript
    end if
@@ -512,22 +572,28 @@ command protectStack pProtectifyScript, pSourceFolder, pSourceFileName, pOutput,
       throw "Error: could not protect stack:" && pSourceFolder & slash & pSourceFileName & \
             return & tError
    end try
-end protectStack
+end extensionProtectStack
 
 /**
-Extract docs
+Extract docs from extension files
 
 Parameters:
-pDocsParser:
+pDocsParser: 
+The path to the docs parser script. If empty, this command will do nothing
 pOutputDir:
-*/
-command extractDocs pDocsParser, pOutputDir
-   if there is not a stack pDocsParser then
-      exit extractDocs
-   end if
-     
-   start using stack pDocsParser
+The folder to output the extracted docs file
 
+Description:
+Use <extensionExtractDocs> to run the docs parser script on all the files which
+are parameters subsequent to <pOutputDir>
+*/
+command extensionExtractDocs pDocsParser, pOutputDir
+   if there is not a stack pDocsParser then
+      exit extensionExtractDocs
+   end if
+   
+   start using stack pDocsParser
+   
    __EnsurePath pOutputDir
    
    if there is not a folder pOutputDir then
@@ -573,7 +639,7 @@ command extractDocs pDocsParser, pOutputDir
       
       put tDocs into url ("binfile:" & pOutputDir & "/" & tName & ".lcdoc")
    end repeat
-end extractDocs
+end extensionExtractDocs
 
 private command addFolderToArchive pBaseFolder, pArchive, pRemoveSource, pSourceFileName, pSupportFiles 
    # First add the files, then recusively add any sub folders
@@ -649,9 +715,6 @@ private command packageExtension pExtensionName, pSourceFolder, pSourceFileName,
    put pTargetFolder & slash & tTargetDir into tBuildTarget
    put pSourceFolder & slash & tTargetDir & ".lce" into tZip
    
-   write "packaging extension" && pSourceFileName && \
-         "to" && tZip & return to stdout
-   
    if there is a file tZip then
       delete file tZip
    end if
@@ -686,7 +749,7 @@ end packageExtension
 
 private command __EnsurePath pPath
    if there is a folder pPath then exit __EnsurePath
-
+   
    set the itemdelimiter to slash
    
    local tPathPart
@@ -709,9 +772,6 @@ private command extractExtension pZip, pSourceFolder, pTargetFolder
    put item 1 to -2 of tName into tName
    set the itemdelimiter to slash
    put pTargetFolder & slash & tName into tBuildTarget
-   
-   write "extracting extension" && pZip && \
-         "to" && tBuildTarget & return to stdout
    
    __EnsurePath tBuildTarget
    
@@ -754,23 +814,27 @@ private command extractExtension pZip, pSourceFolder, pTargetFolder
 end extractExtension
 
 /**
-Package script extension
+Package a LiveCode Script extension
 
 Parameters:
 pSourceFolder:
+The folder containing the extension
 pSourceFileName:
+The extension file name
 pTargetFolder:
+The folder to output the extension package
 pRemoveSource:
+Whether to remove the source files or not
 */
-command packageScriptExtension pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource   
+command extensionPackageScriptExtension pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource   
    local tExtShortName
    set the itemdelimiter to "."
    put item -2 of pSourceFileName into tExtShortName
-   log "PACKAGE SCRIPT EXTENSION" && the params
+
    packageExtension "com.livecode.library." & tExtShortName, \
          pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource
    return the result
-end packageScriptExtension
+end extensionPackageScriptExtension
 
 private function getSupportFiles pSourceFolder, pSourceFileName, pExtension
    local tSupportFiles, tBase
@@ -782,47 +846,76 @@ private function getSupportFiles pSourceFolder, pSourceFileName, pExtension
 end getSupportFiles
 
 /**
-Package builder extension
+Package a LiveCode Builder extension
 
 Parameters:
 pSourceFolder:
+The folder containing the extension
 pSourceFileName:
+The extension file name
 pTargetFolder:
+The folder to output the extension package
 pRemoveSource:
-pLCCompile:
-pInterfaceFolder:
+Whether to remove the source files or not
+pLCCompile: 
+The path to the lc-compile program. If empty, this will be computed.
+pLCIPath: 
+The location of the standard library module interface files. If empty, 
+this will be computed.
+pExtraLCIPaths:
+A list of paths to look for extra module interface files.
 */
-command packageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource, pLCCompile, pInterfaceFolder
-   write "compiling" && pSourceFolder & return to stdout
+command extensionPackageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, pRemoveSource, pLCCompile, pLCIPath, pExtraLCIPaths
+   if pLCCompile is empty then
+      put __extensionCompilerPath() into pLCCompile
+   end if
+
+   # The built-in module path
+   if pLCIPath is empty then
+      put __extensionResourcePath() & slash & "modules/lci" \
+            into pLCIPath
+   end if
+      
    local tCompileShell
-   put q(pLCCompile) into tCompileShell
-   put " -Werror" after tCompileShell
-   put " --modulepath" && q(pInterfaceFolder) after tCompileShell
-   put " --manifest" && q(pSourceFolder & slash & "manifest.xml") after tCompileShell
-   put " --output" && q(pSourceFolder & slash & "module.lcm") after tCompileShell
+   put shellFormat(pLCCompile) into tCompileShell
+   put shellFormat("-Werror") after tCompileShell
+   put shellFormat(pLCIPath, "modulepath") after tCompileShell
    
+   # Installed module path
+   repeat for each line tInterface in pExtraLCIPaths
+      put shellFormat(tInterface, "modulepath") after tCompileShell
+   end repeat
+   
+   put shellFormat(pSourceFolder & slash & "manifest.xml", "manifest") \
+      after tCompileShell
+   put shellFormat(pSourceFolder & slash & "module.lcm", "output") \
+      after tCompileShell
+
    -- Multi-module assemblies must be in reverse dependency order
    local tSupportFiles, tSupportDepsOrder, tDepsShell
    put getSupportFiles(pSourceFolder, pSourceFileName, "lcb") into tSupportFiles
    	
    if tSupportFiles is not empty then
-      put q(pLCCompile) into tDepsShell
-      put " --deps order" after tDepsShell
+      put shellFormat(pLCCompile) into tDepsShell
+      put shellFormat("order", "deps") after tDepsShell
       repeat for each line tSupportModule in tSupportFiles
-         put " " & q(pSourceFolder & slash & tSupportModule) after tDepsShell
+         put shellFormat(pSourceFolder & slash & tSupportModule, "") \ 
+            after tDepsShell
       end repeat
       	
       local tDepsResult, tDepsOutput
       doShell tDepsShell, tDepsResult, tDepsOutput
-	  
+      	  
       if tDepsResult is not 0 then
          throw "subprocess error when finding support deps order for" && pSourceFileName & ":" && tSupportDepsOrder
       end if  
-      replace return with space in tSupportDepsOrder
-      put " " & tSupportDepsOrder after tCompileShell
+      repeat for each line tSupportModule in tSupportDepsOrder
+         put shellFormat(tSupportModule, "") after tCompileShell
+      end repeat
    end if
    	
-   put " " & q(pSourceFolder & slash & pSourceFileName) after tCompileShell
+   put shellFormat(pSourceFolder & slash & pSourceFileName, "") \
+      after tCompileShell
    
    local tShellResult, tShellOutput
    doShell tCompileShell, tShellResult, tShellOutput
@@ -845,7 +938,7 @@ command packageBuilderExtension pSourceFolder, pSourceFileName, pTargetFolder, p
    packageExtension tName, pSourceFolder, pSourceFileName, \
          pTargetFolder, pRemoveSource, tSupportFiles
    return the result
-end packageBuilderExtension
+end extensionPackageBuilderExtension
 
 private command addXML @xXML, pDepth, pTag, pContent, pAttributesA
    repeat 2*pDepth
@@ -924,10 +1017,10 @@ private command __SetMetadata pKey, pValue, @xArray
 end __SetMetadata
 
 /**
-Fetch metadata for extension
+Fetch metadata from an extension manifest
 
 Parameters:
-pManifestPath:
+pManifestPath: The path to the manifest XML file
 */
 function extensionFetchMetadata pManifestPath
    local tDataA

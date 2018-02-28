@@ -33,13 +33,13 @@ on doPackage
    case "buildlcbextensions"
       -- Resolve dependency order of list of extensions
       -- and build each one.
-      put "buildPackageAndExtractLCBExtensions" into tSendCmd
+      put "extensionBuildPackageAndExtractLCB" into tSendCmd
       break
    case "extractdocs"
-      put "extractDocs" into tSendCmd
+      put "extensionExtractDocs" into tSendCmd
       break
    case "buildextension"
-      put "buildPackageAndExtractExtension" into tSendCmd
+      put "extensionBuildPackageAndExtract" into tSendCmd
       break 
    default
       write "invalid mode" && tArgs[2] to stderr

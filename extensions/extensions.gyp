@@ -209,6 +209,7 @@
 						'$(not_a_real_variable)false',
 						'>(lc-compile_host)',
 						'<(PRODUCT_DIR)/modules/lci',
+						'$(not_a_real_variable)',
 						'<@(_sources)',
 					],
 				},
