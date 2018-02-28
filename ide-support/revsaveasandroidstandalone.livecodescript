@@ -755,7 +755,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       
       local tResourceClasses
-      generateResourceClasses tBuildFolder, tManifestFile, pSettings, tResourceClasses
+      generateResourceClasses tBuildFolder, tResBuildFolder, \
+         tManifestFile, pSettings, tResourceClasses
       if the result is not empty then
          throw "could not build R.java" & return & the result
       end if
@@ -1031,7 +1032,8 @@ private command processAaptResult @xResult
    end if
 end processAaptResult
 
-private command generateResourceClasses pBuildFolder, pManifest, @xSettings, @rGenerated
+private command generateResourceClasses pBuildFolder, pResBuildFolder, \
+   pManifest, @xSettings, @rGenerated
    if xSettings["aarFiles"] is empty then
       return empty
    end if
@@ -1043,7 +1045,7 @@ private command generateResourceClasses pBuildFolder, pManifest, @xSettings, @rG
    repeat with x = 1 to the number of lines in xSettings["aarFiles"]
       put pBuildFolder & "/" & x & "/AndroidManifest.xml" into tManifest
       executeShellCommand pathToAapt(), "package", "-f", "-M", tManifest, \
-            "-I", pathToRootClasses(), "-S", pBuildFolder & "/res-build/res/", "-J", \
+            "-I", pathToRootClasses(), "-S", pResBuildFolder, "-J", \
             tOutputFolder & "/", "-m"
       put the result into tAaptResult
       processAaptResult tAaptResult
