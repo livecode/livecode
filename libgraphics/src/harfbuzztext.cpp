@@ -374,6 +374,9 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
         return;
     }
     
+    // Force skia to render text with antialiasing enabled.
+    t_paint . setAntiAlias(true);
+
     t_paint . setTextSize(p_font . size);
     t_paint . setTextEncoding(SkPaint::kGlyphID_TextEncoding);
     
