@@ -34,6 +34,11 @@ to determine if contact information was returned.
     "if the result is empty"  
 will always be empty, even if data is returned in an array.
 
+Description:
+Allows the user to extract contact data information from the contact
+list, based on a contact ID. The information returned is stored in a
+nested array as described below.
+
 Person Information - The personal information of the contact is stored at the top level 
 of the array and has the following keys:
 - "firstname" - The first name.       
@@ -88,12 +93,6 @@ particular category:
 - "zip" - The address ZIP code.
 - "country" - The address country.
 - "countrycode" - The address country code (iOS only).
-
-
-Description:
-Allows the user to extract contact data information from the contact
-list, based on a contact ID. The information returned is stored in a
-nested array.
 
 Use the <mobileGetContactData> function to read contact data from the
 contact list.
