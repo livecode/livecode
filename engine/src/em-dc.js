@@ -17,7 +17,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 mergeInto(LibraryManager.library, {
-	$LiveCodeDC__deps: ['$LiveCodeEvents'],
+	$LiveCodeDC__deps: ['$LiveCodeEvents', '$LiveCodeUtil'],
 	$LiveCodeDC: {
 		// true if ensureInit() has ever been run
 		_initialised: false,
@@ -28,10 +28,8 @@ mergeInto(LibraryManager.library, {
 				return;
 			}
 			
-			LiveCodeDC._windowList = {};
+			LiveCodeDC._windowList = this.containerCreate(document.body, 1);
 			LiveCodeDC._assignedMainWindow = false;
-			LiveCodeDC._maxWindowID = 0;
-			LiveCodeDC._maxZIndex = 1;
 
 			LiveCodeDC._initialised = true;
 		},
@@ -44,43 +42,94 @@ mergeInto(LibraryManager.library, {
 			LiveCodeDC._initialised = false;
 		},
 
+		containerCreate: function(containerElement, maxZIndex) {
+			return {'element':containerElement, 'maxZIndex':maxZIndex, 'contents':[]};
+		},
+		
+		containerAddElement: function(container, element) {
+			element.style.position = 'absolute';
+			element.style.zIndex = container['maxZIndex'];
+			container['maxZIndex']++;
+			container['element'].appendChild(element);
+			container['contents'].push(element);
+		},
+		
+		containerRemoveElement: function(container, element) {
+			this.containerRaiseElement(container, element);
+			container['element'].removeChild(element);
+			container['maxZIndex']--;
+			var index = container['contents'].indexOf(element);
+			if (index !== -1) {
+				container['contents'].splice(index, 1);
+			}
+		},
+		
+		containerRaiseElement: function(container, element) {
+			var zIndex = element.style.zIndex;
+			for (var i = 0, l = container['contents'].length; i < l; i++)
+			{
+				var otherElement = container['contents'][i];
+				if (otherElement.style.zIndex > zIndex)
+				{
+					otherElement.style.zIndex--;
+				}
+			}
+			element.style.zIndex = container['maxZIndex'] - 1;
+		},
+		
 		// Windows are backed by an html canvas within a floating div
 		createWindow: function() {
-			var div;
+			var windowElement;
 			var canvas;
 			var rect;
+			var mainWindow = false;
 			if (!LiveCodeDC._assignedMainWindow)
 			{
+				mainWindow = true;
 				canvas = Module['canvas'];
 				rect = canvas.getBoundingClientRect();
 				LiveCodeDC._assignedMainWindow = true;
+				windowElement = canvas.parentElement;
+				windowElement.style.setProperty('position', 'relative');
+				windowElement.style.setProperty('width', rect['right'] - rect['left']);
+				windowElement.style.setProperty('height', rect['bottom'] - rect['top']);
+				canvas.style.setProperty('position', 'absolute');
+				canvas.style.setProperty('left', '0px');
+				canvas.style.setProperty('right', '0px');
+				canvas.style.setProperty('width', '100%');
+				canvas.style.setProperty('height', '100%');
 			}
 			else
 			{
-				div = document.createElement('div');
-				div.style.display = 'none';
-				div.style.position = 'fixed';
-				div.style.zIndex = LiveCodeDC._maxZIndex;
-				LiveCodeDC._maxZIndex++;
+				windowElement = document.createElement('div');
+				windowElement.style.display = 'none';
+				windowElement.style.position = 'fixed';
 				canvas = document.createElement('canvas');
+				canvas.style.setProperty('position', 'absolute');
+				canvas.style.setProperty('left', '0px');
+				canvas.style.setProperty('right', '0px');
 				canvas.style.setProperty('width', '100%');
 				canvas.style.setProperty('height', '100%');
-				div.appendChild(canvas);
-				document.body.appendChild(div);
+				windowElement.appendChild(canvas);
+				this.containerAddElement(this._windowList, windowElement);
 		  
 				rect = {'left':0, 'top':0, 'right':0, 'bottom':0};
 			}
 			
-			var tWindowID = ++LiveCodeDC._maxWindowID;
-			
-			LiveCodeEvents.addEventListeners(canvas);
-			LiveCodeDC._monitorResize(canvas, function() { LiveCodeEvents.postWindowReshape(tWindowID); });
-			LiveCodeDC._windowList[tWindowID] = {
-				'div': div,
+			var tWindowID = LiveCodeUtil.storeObject({
+				'mainWindow': mainWindow,
+				'element': windowElement,
 				'canvas': canvas,
+				'container': this.containerCreate(windowElement, 1),
 				'rect': rect,
 				'visible':false,
-			};
+			});
+			
+			canvas.dataset.lcWindowId = tWindowID;
+			LiveCodeEvents.addEventListeners(canvas);
+			LiveCodeDC._monitorResize(canvas, function() {
+				LiveCodeEvents.postWindowReshape(tWindowID);
+			});
 			
 			return tWindowID;
 		},
@@ -88,65 +137,52 @@ mergeInto(LibraryManager.library, {
 		destroyWindow: function(pID) {
 			LiveCodeDC.setWindowVisible(pID, false);
 			LiveCodeDC.raiseWindow(pID);
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 			{
+				window.element.removeChild(window.container.element);
 				LiveCodeDC._removeResizeMonitor(window.canvas);
 		  
-				if (window.canvas == Module['canvas'])
+				if (window.mainWindow)
 				{
 					// TODO - handle cleanup of embedded canvas
 					LiveCodeDC._assignedMainWindow = false;
 				}
 				else
 				{
-					document.body.removeChild(window.div);
-					LiveCodeDC._maxZIndex--;
+					this.containerRemoveElement(this._windowList, window.element);
 				}
-				delete LiveCodeDC._windowList[pID];
+				LiveCodeUtil.releaseObject(pID);
 			}
 		},
 		
 		raiseWindow: function(pID) {
-			var window = LiveCodeDC._windowList[pID];
-			if (window && window.div)
+			var window = LiveCodeUtil.fetchObject(pID);
+			if (window && !window.mainWindow)
 			{
-				var zIndex = window.div.style.zIndex;
-				for (var tID in LiveCodeDC._windowList)
-				{
-					if (LiveCodeDC._windowList[tID].div && LiveCodeDC._windowList[tID].div.style.zIndex > zIndex)
-					{
-						LiveCodeDC._windowList[tID].div.style.zIndex--;
-					}
-				}
-				window.div.style.zIndex = LiveCodeDC._maxZIndex - 1;
+				this.containerRaiseElement(this._windowList, window.element);
 			}
 		},
 		
 		setWindowRect: function(pID, pLeft, pTop, pRight, pBottom) {
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 			{
 				var width = pRight - pLeft;
 				var height = pBottom - pTop;
 				window.rect = {'left':pLeft, 'top':pTop, 'right':pRight, 'bottom':pBottom};
-				if (window.div)
+				if (!window.mainWindow)
 				{
-					window.div.style.setProperty('left', pLeft + 'px', 'important');
-					window.div.style.setProperty('top', pTop + 'px', 'important');
-					window.div.style.setProperty('width', width + 'px', 'important');
-					window.div.style.setProperty('height', height + 'px', 'important');
+					window.element.style.setProperty('left', pLeft + 'px', 'important');
+					window.element.style.setProperty('top', pTop + 'px', 'important');
 				}
-				else
-				{
-					window.canvas.style.setProperty('width', width + 'px', 'important');
-					window.canvas.style.setProperty('height', height + 'px', 'important');
-				}
+				window.element.style.setProperty('width', width + 'px', 'important');
+				window.element.style.setProperty('height', height + 'px', 'important');
 			}
 		},
 		
 		getWindowRect: function(pID) {
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 				return window.canvas.getBoundingClientRect();
 		  
@@ -154,29 +190,29 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		setWindowVisible: function(pID, pVisible) {
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 			{
 				window.visible = pVisible;
-				if (window.div)
+				if (!window.mainWindow)
 				{
 					if (pVisible)
-						window.div.style.display = 'block';
+						window.element.style.display = 'block';
 					else
-						window.div.style.display = 'none';
+						window.element.style.display = 'none';
 				}
 				else
 				{
 					if (pVisible)
-						window.canvas.style.visibility = 'visible';
+						window.element.style.visibility = 'visible';
 					else
-						window.canvas.style.visibility = 'hidden';
+						window.element.style.visibility = 'hidden';
 				}
 			}
 		},
 		
 		getWindowVisible: function(pID) {
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 			{
 				return window.visible;
@@ -186,7 +222,7 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		getWindowCanvas: function(pID) {
-			var window = LiveCodeDC._windowList[pID];
+			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 			{
 				return window.canvas;
@@ -196,19 +232,71 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		getWindowIDForCanvas: function(pCanvas) {
-			for (var tID in LiveCodeDC._windowList) {
-				if (LiveCodeDC._windowList.hasOwnProperty(tID)) {
-					if (pCanvas == LiveCodeDC._windowList[tID].canvas) {
-						return tID;
-					}
-				}
-			}
+			if (pCanvas.dataset.lcWindowId)
+				return Number(pCanvas.dataset.lcWindowId);
 			console.debug("canvas not found");
 			return 0;
 		},
 		
 		getDisplayRect: function() {
 			return {'left':0, 'top':0, 'right':document.body.clientWidth, 'bottom':document.body.clientHeight};
+		},
+		
+		/*** Native Layer API ***/
+		nativeElementSetRect: function(pElementID, pLeft, pTop, pRight, pBottom) {
+			var tElement = LiveCodeUtil.fetchObject(pElementID);
+			if (tElement)
+			{
+				console.log('set rect of element ' + pElementID + ' to {' + pLeft + ',' + pTop + ',' + pRight + ',' + pBottom + ')');
+				tElement.style.setProperty('left', pLeft + 'px', 'important');
+				tElement.style.setProperty('top', pTop + 'px', 'important');
+				tElement.style.setProperty('width', pRight - pLeft + 'px', 'important');
+				tElement.style.setProperty('height', pBottom - pTop + 'px', 'important');
+			}
+		},
+		
+		nativeElementSetClip: function(pElementID, pLeft, pTop, pRight, pBottom) {
+			var tElement = LiveCodeUtil.fetchObject(pElementID);
+			if (tElement)
+			{
+				tElement.style.setProperty('clip', 'rect(' + pTop + 'px,' + pRight + 'px,' + pBottom + 'px,' + pLeft + 'px)', 'important');
+			}
+		},
+		
+		nativeElementSetVisible: function(pElementID, pVisible) {
+			var tElement = LiveCodeUtil.fetchObject(pElementID);
+			if (tElement)
+			{
+				if (pVisible)
+					tElement.style.display = 'block';
+				else
+					tElement.style.display = 'none';
+			}
+		},
+		
+		nativeElementAddToWindow: function(pElementID, pWindowID) {
+			var tWindow = LiveCodeUtil.fetchObject(pWindowID);
+			var tElement = LiveCodeUtil.fetchObject(pElementID);
+			if (tWindow && tElement)
+			{
+				this.containerAddElement(tWindow.container, tElement);
+			}
+		},
+		
+		nativeElementRemoveFromWindow: function(pElementID, pWindowID) {
+			var tWindow = LiveCodeUtil.fetchObject(pWindowID);
+			var tElement = LiveCodeUtil.fetchObject(pElementID);
+			if (tWindow && tElement)
+			{
+				this.containerRemoveElement(tWindow.container, tElement);
+			}
+		},
+		
+		nativeElementPlaceAbove: function(pElementID, pAboveElementID, pWindowID) {
+			var tWindow = LiveCodeUtil.fetchObject(pWindowID);
+			var tElement = LiveCodeUtil.fetchObject(pElementID);
+			var tAboveElement = LiveCodeUtil.fetchObject(pAboveElementID);
+			/* TODO - implement */
 		},
 		
 		_monitorResize: function(element, callback) {
@@ -325,5 +413,29 @@ mergeInto(LibraryManager.library, {
 			canvas.width = p_width;
 			canvas.height = p_height;
 		}
+	},
+	MCEmscriptenElementSetRect__deps: ['$LiveCodeDC'],
+	MCEmscriptenElementSetRect: function(p_element, p_left, p_top, p_right, p_bottom) {
+		LiveCodeDC.nativeElementSetRect(p_element, p_left, p_top, p_right, p_bottom);
+	},
+	MCEmscriptenElementSetClip__deps: ['$LiveCodeDC'],
+	MCEmscriptenElementSetClip: function(p_element, p_left, p_top, p_right, p_bottom) {
+		LiveCodeDC.nativeElementSetClip(p_element, p_left, p_top, p_right, p_bottom);
+	},
+	MCEmscriptenElementSetVisible__deps: ['$LiveCodeDC'],
+	MCEmscriptenElementSetVisible: function(p_element, p_visible) {
+		LiveCodeDC.nativeElementSetVisible(p_element, p_visible);
+	},
+	MCEmscriptenElementAddToWindow__deps: ['$LiveCodeDC'],
+	MCEmscriptenElementAddToWindow: function(p_element, p_container) {
+		LiveCodeDC.nativeElementAddToWindow(p_element, p_container);
+	},
+	MCEmscriptenElementRemoveFromWindow__deps: ['$LiveCodeDC'],
+	MCEmscriptenElementRemoveFromWindow: function(p_element, p_container) {
+		LiveCodeDC.nativeElementRemoveFromWindow(p_element, p_container);
+	},
+	MCEmscriptenElementPlaceAbove__deps: ['$LiveCodeDC'],
+	MCEmscriptenElementPlaceAbove: function(p_element, p_above, p_container) {
+		LiveCodeDC.nativeElementPlaceAbove(p_element, p_above, p_container);
 	},
 });

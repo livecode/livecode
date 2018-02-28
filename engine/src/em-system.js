@@ -34,43 +34,36 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		//////////
-          
-          evaluateJavaScript: function(script_buffer, script_length, return_buffer, return_length) {
-			  var script = LiveCodeUtil.stringFromUTF16(script_buffer, script_length);
-
-			  // Evaluate javascript and convert result to a string.
-			  var success = true;
-			  var result;
-			  try
-			  {
-				  result = eval(script);
-				
-				  // Return empty string for Undefined
-				  if (typeof result === "undefined")
-					  result = "";
-				  // Fail if return value isn't supported
-				  if (["boolean", "number", "string"] . indexOf(typeof result) < 0)
-				      success = false;
-				      
-				  // Convert to string for return
-				  result = String(result);
-			  }
-			  catch (e)
-			  {
-				  // Return the exception message on failure
-				  result = e.message;
-				  success = false;
-			  }
-			  
-              // Allocate a buffer and store encode the string into it
-              var buffer = LiveCodeUtil.stringToUTF16(result);
-              var buffer_length = result.length*2;
-              {{{ makeSetValue('return_buffer', '0', 'buffer', 'i32') }}};
-              {{{ makeSetValue('return_length', '0', 'buffer_length', 'i32') }}};
-          
-              return success;
-          },
 		
+		evaluateJavaScriptWithArguments: function(pScriptRef, pArgsRef, rResultRef) {
+			var script = LiveCodeUtil.stringFromMCStringRef(pScriptRef);
+			var args = [];
+			if (pArgsRef)
+				args = LiveCodeUtil.properListToJSArray(pArgsRef);
+				
+			// Evaluate javascript and convert result to a valueref.
+			var result;
+			var success;
+			try
+			{
+				var jsResult = function() {
+					return eval(script);
+				}.apply(null, args);
+				
+				result = LiveCodeUtil.valueFromJSValue(jsResult);
+				success = true;
+			}
+			catch (e)
+			{
+				// return the exception message on failure
+				result = LiveCodeUtil.stringToMCStringRef(e.message);
+				success = false;
+			}
+			
+			{{{ makeSetValue('rResultRef', '0', 'result', '*') }}};
+			return success;
+		},
+
 		//////////
 		
 		_callStackHandler: function(stack, handler, paramList)
@@ -83,47 +76,27 @@ mergeInto(LibraryManager.library, {
 			return Module.ccall('MCEmscriptenSystemGetJavascriptHandlersOfStack', 'number', ['number'], [stack]);
 		},
 		
-		// Convert from javascript list to MCProperListRef
-		_convertParams: function(paramList)
-		{
-			var listRef = LiveCodeUtil.properListCreateMutable();
-			var count = paramList.length;
-			
-			for (var i = 0; i < count; i++)
-			{
-				// For now, convert parameters to strings
-				// TODO - support other types
-				stringRef = LiveCodeUtil.stringToMCStringRef(String(paramList[i]));
-				LiveCodeUtil.properListPushElementOntoBack(listRef, stringRef);
-				LiveCodeUtil.valueRelease(stringRef)
-			}
-			
-			return listRef
-		},
-		  
 		_makeHandlerProxy: function(stack, handler)
 		{
 			return function()
 			{
 				var tParams = Array.prototype.slice.call(arguments);
-				var tResultString = null;
+				var tJSResult;
 				LiveCodeAsync.resume(function() {
 					var tHandlerName = LiveCodeUtil.stringToMCStringRef(handler);
-					var tConvertedParams = LiveCodeSystem._convertParams(tParams);
+					var tConvertedParams = LiveCodeUtil.properListFromJSArray(tParams);
 					var tResult = LiveCodeSystem._callStackHandler(stack, tHandlerName, tConvertedParams);
 					LiveCodeUtil.valueRelease(tHandlerName);
 					LiveCodeUtil.valueRelease(tConvertedParams);
 
-					if (tResult == 0)
-						tResultString = null;
-					else
+					if (tResult)
 					{
-						tResultString = LiveCodeUtil.stringFromMCStringRef(tResult);
+						tJSResult = LiveCodeUtil.valueToJSValue(tResult);
 						LiveCodeUtil.valueRelease(tResult);
 					}
 				});
 				
-				return tResultString;
+				return tJSResult;
 			}
 		},
 		
@@ -164,13 +137,48 @@ mergeInto(LibraryManager.library, {
 			});
 			return stackHandle;
 		},
+		
+		//////////
+		
+		callHandlerWithParamList: function(handler, paramList) {
+			return Module.ccall('MCEmscriptenSystemCallHandler', 'number', ['number', 'number'], [handler, paramList]);
+		},
+		
+		wrapHandlerRef: function(handlerref) {
+			var jsFunction = function() {
+				var tParams = Array.prototype.slice.call(arguments);
+				var jsResult;
+				LiveCodeAsync.resume(function() {
+					var paramList = LiveCodeUtil.properListFromJSArray(tParams);
+					var result = LiveCodeSystem.callHandlerWithParamList(handlerref, paramList);
+
+					if (paramList)
+						LiveCodeUtil.valueRelease(paramList);
+
+					if (result)
+					{
+						jsResult = LiveCodeUtil.valueToJSValue(result);
+						LiveCodeUtil.valueRelease(result);
+					}
+				});
+
+				return jsResult;
+			};
+			
+			return LiveCodeUtil.objectRefFromJSObject(jsFunction);
+		},
     },
     
-    MCEmscriptenSystemEvaluateJavaScript__deps: ['$LiveCodeSystem'],
-    MCEmscriptenSystemEvaluateJavaScript: function(script_buffer, script_length, return_buffer, return_length) {
-		return LiveCodeSystem.evaluateJavaScript(script_buffer, script_length, return_buffer, return_length);
+    MCEmscriptenSystemEvaluateJavaScriptWithArguments__deps: ['$LiveCodeSystem'],
+    MCEmscriptenSystemEvaluateJavaScriptWithArguments: function(pScriptRef, pArgsRef, rResultRef) {
+		return LiveCodeSystem.evaluateJavaScriptWithArguments(pScriptRef, pArgsRef, rResultRef);
     },
     
+    MCEmscriptenSystemWrapHandler__deps: ['$LiveCodeSystem'],
+    MCEmscriptenSystemWrapHandler: function(pHandlerRef) {
+		return LiveCodeSystem.wrapHandlerRef(pHandlerRef);
+	},
+	
 	MCEmscriptenSystemInitializeJS__deps: ['$LiveCodeSystem'],
 	MCEmscriptenSystemInitializeJS: function() {
 		LiveCodeSystem.initialize();

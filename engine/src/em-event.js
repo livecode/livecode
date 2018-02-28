@@ -56,6 +56,8 @@ mergeInto(LibraryManager.library, {
 				['compositionstart', LiveCodeEvents._handleComposition],
 				['compositionupdate', LiveCodeEvents._handleComposition],
 				['compositionend', LiveCodeEvents._handleComposition],
+				
+				['contextmenu', LiveCodeEvents._handleContextMenu],
 			];
 
 			var mapLength = mapping.length;
@@ -149,6 +151,9 @@ mergeInto(LibraryManager.library, {
 		_handleFocusEvent: function(e) {
 			LiveCodeAsync.delay(function() {
 				var stack = LiveCodeEvents._getStackForCanvas(e.target);
+				// ignore events for non-lc elements
+				if (!stack)
+					return;
 
 				switch (e.type) {
 				case 'focus':
@@ -509,6 +514,10 @@ mergeInto(LibraryManager.library, {
 				var stack = LiveCodeEvents._getStackForCanvas(e.target);
 				var mods = LiveCodeEvents._encodeModifiers(e);
 
+				// ignore events for non-lc elements
+				if (!stack)
+					return;
+
 				switch (e.type) {
 				case 'keypress':
 					var char_code = LiveCodeEvents._encodeKeyboardCharCode(e);
@@ -571,6 +580,10 @@ mergeInto(LibraryManager.library, {
 				// Stack that we're targeting
 				var stack = LiveCodeEvents._getStackForCanvas(compositionEvent.target);
 
+				// ignore events for non-lc elements
+				if (!stack)
+					return;
+
 				var encodedString;
 				var chars, length;
 				switch (compositionEvent.type) {
@@ -632,9 +645,9 @@ mergeInto(LibraryManager.library, {
 			return [x, y];
 		},
 
-		// Wrapper for MCEventQueuePostMousePosition
+		// Wrapper for MCEmscriptenHandleMousePosition
 		_postMousePosition: function(stack, time, modifiers, x, y) {
-			Module.ccall('MCEventQueuePostMousePosition',
+			Module.ccall('MCEmscriptenHandleMousePosition',
 						 'number', /* bool */
 						 ['number', /* MCStack *stack */
 						  'number', /* uint32_t time */
@@ -643,7 +656,7 @@ mergeInto(LibraryManager.library, {
 						 [stack, time, modifiers, x, y]);
 		},
 
-		// Wrapper for MCEventQueuePostMousePress
+		// Wrapper for MCEmscriptenHandleMousePress
 		_postMousePress: function(stack, time, modifiers, state, button)
 		{
 			Module.ccall('MCEmscriptenHandleMousePress',
@@ -695,6 +708,10 @@ mergeInto(LibraryManager.library, {
 				var stack = LiveCodeEvents._getStackForCanvas(target);
 				var mods = LiveCodeEvents._encodeModifiers(e);
 				var pos = LiveCodeEvents._encodeMouseCoordinates(e);
+
+				// ignore events for non-lc elements
+				if (!stack)
+					return;
 
 				switch (e.type) {
 				case 'mousemove':
@@ -780,7 +797,16 @@ mergeInto(LibraryManager.library, {
 		},
 
 		// ----------------------------------------------------------------
-		// Mouse events
+		// UI events
+		// ----------------------------------------------------------------
+		
+		// prevent context menu popup on right-click
+		_handleContextMenu: function(e) {
+			e.preventDefault()
+		},
+
+		// ----------------------------------------------------------------
+		// Window events
 		// ----------------------------------------------------------------
 		
 		_postWindowReshape: function(stack, backingScale)

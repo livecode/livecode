@@ -560,6 +560,10 @@
 			#'src/text-segment.cpp',
 			#'src/text-simplebreakingengine.cpp',
 			
+			# Group "Emscripten"
+			'src/jsobject.h',
+			'src/jsobject.cpp',
+			
 			# Group "Desktop"
 			'src/quicktime.cpp',
 			'src/quicktime.stubs',
@@ -771,10 +775,14 @@
 			'src/em-filehandle.cpp',
 			'src/em-fontlist.h',
 			'src/em-fontlist.cpp',
+			'src/em-javascript.h',
+			'src/em-javascript.cpp',
 			'src/em-liburl.h',
 			'src/em-liburl.cpp',
 			'src/em-liburl.js',
 			'src/em-main.cpp',
+			'src/em-native-layer.h',
+			'src/em-native-layer.cpp',
 			'src/em-osspec-misc.cpp',
 			'src/em-osspec-network.cpp',
 			'src/em-preamble-overlay.js',
@@ -984,6 +992,7 @@
 			'src/module-resources.cpp',
 			
 			'src/module-browser.cpp',
+			'src/module-emscripten.cpp',
 		],
 		
 		# Engine LCB files containing syntax
@@ -1005,6 +1014,7 @@
 		'engine_other_lcb_files':
 		[
 			'src/browser.lcb',
+			'src/emscripten.lcb',
 		],
 
 		# Engine cpptest source files
