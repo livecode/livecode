@@ -37,21 +37,25 @@ Notes:
 Make sure you run and verify each of the versions of Xcode. Download and install any extra SDKs you need using the "Xcode → Preferences → Downloads" window.
 
 Make `/Applications/Xcode-Dev/Xcode.app` a symlink to the latest version of Xcode available.  For example, run:
-
+```
     cd /Applications/Xcode-Dev
-    ln -s Xcode_8_0_0.app Xcode.app
+    ln -s Xcode_V_V_V.app Xcode.app
+```
+Where `Xcode_V_V_V.app` is the latest version of Xcode that you have installed on your machine.
+
+Before proceeding to the next step, make sure to run Xcode at least once and get to the starting screen. Not doing this might break your Xcode installation and result in an error complaining that it ***could not find the default platform*** 
 
 After checking out the LiveCode git repository, you need to run a tool to finalize the Xcode setup and to make sure all of the necessary SDKs are installed.  If LiveCode is checked out to `~/git/livecode`, run:
-
+```
     cd /Applications/Xcode-Dev/
     sh ~/git/livecode/tools/setup_xcode_sdks.sh
-
+```
 If you want the setup tool to copy the required SDKs out of the Xcode
 app bundles (so that you can safely delete all but the latest Xcode to
 save disk space), you can run:
-
+```
     sh ~/git/livecode/tools/setup_xcode_sdks.sh --cache
-
+```
 ## Configuring LiveCode
 
 ### Build environment
