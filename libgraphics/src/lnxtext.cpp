@@ -44,13 +44,25 @@ static inline MCGRectangle MCGRectangleFromPangoRectangle(const PangoRectangle &
 	return MCGRectangleMake(p_rect.x / (MCGFloat)PANGO_SCALE, p_rect.y / (MCGFloat)PANGO_SCALE, p_rect.width / (MCGFloat)PANGO_SCALE, p_rect.height / (MCGFloat)PANGO_SCALE);
 }
 
+static inline PangoMatrix MCGAffineTransformToPangoMatrix(const MCGAffineTransform &p_transform)
+{
+	PangoMatrix t_matrix;
+	t_matrix . xx = p_transform . a;
+	t_matrix . yx = p_transform . b;
+	t_matrix . xy = p_transform . c;
+	t_matrix . yy = p_transform . d;
+	t_matrix . x0 = p_transform . tx;
+	t_matrix . y0 = p_transform . ty;
+	return t_matrix;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static PangoFontMap *s_font_map = NULL;
 static PangoContext *s_pango = NULL;
 static PangoLayout *s_layout = NULL;
 
-static bool lnx_pango_objects_intialize()
+static bool lnx_pango_objects_initialize()
 {
     bool t_success;
 	t_success = true;
@@ -91,7 +103,7 @@ static bool lnx_pango_initialize(void)
 			
     
     if (t_success)
-        t_success = lnx_pango_objects_intialize();
+        t_success = lnx_pango_objects_initialize();
 	
 	return t_success;
 }
@@ -141,25 +153,19 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_success = MCCStringFromUnicodeSubstring(p_text, p_length / 2, t_text);
 	
 	MCGAffineTransform t_transform;
-	MCGPoint t_device_location;	
+	t_transform = MCGContextGetDeviceTransform(self);
+
 	PangoLayoutLine *t_line;
 	t_line = nil;
 	if (t_success)
 	{
-		t_transform = MCGContextGetDeviceTransform(self);
-		t_device_location = MCGPointApplyAffineTransform(p_location, t_transform);		
-		t_transform . tx = modff(t_device_location . x, &t_device_location . x);
-		t_transform . ty = modff(t_device_location . y, &t_device_location . y);		
-		
-		PangoMatrix t_ptransform;		
-		t_ptransform . xx = t_transform . a;
-		t_ptransform . xy = t_transform . b;
-		t_ptransform . yx = t_transform . c;
-		t_ptransform . yy = t_transform . d;
-		t_ptransform . x0 = t_transform . tx;
-		t_ptransform . y0 = t_transform . ty;
+		// The transform needs to be applied before setting the text + font,
+		// otherwise the glyph orientation will be incorrectly set from the
+		// previous transform.
+		PangoMatrix t_ptransform;
+		t_ptransform = MCGAffineTransformToPangoMatrix(t_transform);
 		pango_context_set_matrix(s_pango, &t_ptransform);
-		
+
 		pango_layout_set_font_description(s_layout, (PangoFontDescription *) p_font . fid);
 		pango_layout_set_text(s_layout, t_text, -1);
 		MCCStringFree(t_text);
@@ -172,7 +178,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_success = t_line != nil;
 	}
 	
-	MCGIntRectangle t_text_bounds, t_clipped_bounds;
+	MCGIntegerRectangle t_bitmap_bounds;
 	if (t_success)
 	{
 		PangoRectangle t_pbounds;
@@ -181,45 +187,52 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		MCGRectangle t_float_text_bounds;
 		t_float_text_bounds = MCGRectangleFromPangoRectangle(t_pbounds);
 		
+		// Apply translation to put target location at the origin
+		t_transform = MCGAffineTransformPostTranslate(t_transform, p_location.x, p_location.y);
+
+		MCGRectangle t_device_text_bounds;
+		t_device_text_bounds = MCGRectangleApplyAffineTransform(t_float_text_bounds, t_transform);
+		
 		MCGRectangle t_device_clip;
 		t_device_clip = MCGContextGetDeviceClipBounds(self);
-		t_device_clip . origin . x -= t_device_location . x;
-		t_device_clip . origin . y -= t_device_location . y;
+
+		t_bitmap_bounds = MCGRectangleGetBounds(MCGRectangleIntersection(t_device_text_bounds, t_device_clip));
 		
-		MCGRectangle t_float_clipped_bounds;
-		t_float_clipped_bounds = MCGRectangleIntersection(t_float_text_bounds, t_device_clip);
-		
-		t_text_bounds = MCGRectangleIntegerBounds(t_float_text_bounds);
-		t_clipped_bounds = MCGRectangleIntegerBounds(t_float_clipped_bounds);
-		
-		if (t_clipped_bounds . width == 0 || t_clipped_bounds . height == 0)
+		if (t_bitmap_bounds.size.width == 0 || t_bitmap_bounds.size.height == 0)
 			return;
 	}
 	
 	void *t_data;
 	t_data = nil;
 	if (t_success)
-		t_success = MCMemoryNew(t_clipped_bounds . width * t_clipped_bounds . height, t_data);
+		t_success = MCMemoryNew(t_bitmap_bounds.size.width * t_bitmap_bounds.size.height, t_data);
 	
 	if (t_success)
 	{
 		FT_Bitmap t_ftbitmap;
-		t_ftbitmap . rows = t_clipped_bounds . height;
-		t_ftbitmap . width = t_clipped_bounds . width;
-		t_ftbitmap . pitch = t_clipped_bounds . width;
+		t_ftbitmap . rows = t_bitmap_bounds.size.height;
+		t_ftbitmap . width = t_bitmap_bounds.size.width;
+		t_ftbitmap . pitch = t_bitmap_bounds.size.width;
 		t_ftbitmap . buffer = (unsigned char*) t_data;
 		t_ftbitmap . num_grays = 256;
 		t_ftbitmap . pixel_mode = FT_PIXEL_MODE_GRAY;
 		t_ftbitmap . palette_mode = 0;
 		t_ftbitmap . palette = nil;
+
+		// Apply translation to offset drawing into the bitmap
+		t_transform = MCGAffineTransformPreTranslate(t_transform, -t_bitmap_bounds.origin.x, -t_bitmap_bounds.origin.y);
 		
-		pango_ft2_render_layout_line(&t_ftbitmap, t_line, -(t_clipped_bounds . x - t_text_bounds . x), -(t_clipped_bounds . y - t_text_bounds . y) - t_text_bounds . y);
+		PangoMatrix t_ptransform;
+		t_ptransform = MCGAffineTransformToPangoMatrix(t_transform);
+		pango_context_set_matrix(s_pango, &t_ptransform);
+		
+		pango_ft2_render_layout_line(&t_ftbitmap, t_line, 0, 0);
 		
         // The paint containing the fill settings
         SkPaint t_paint;
         if (MCGContextSetupFill(self, t_paint))
         {
-            SkImageInfo t_info = SkImageInfo::MakeA8(t_clipped_bounds.width, t_clipped_bounds.height);
+            SkImageInfo t_info = SkImageInfo::MakeA8(t_bitmap_bounds.size.width, t_bitmap_bounds.size.height);
             
             SkBitmap t_bitmap;
             t_bitmap.setInfo(t_info);
@@ -228,8 +241,8 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
             self->layer->canvas->save();
             self->layer->canvas->resetMatrix();
             self->layer->canvas->drawBitmap(t_bitmap,
-                            t_clipped_bounds.x + t_device_location.x,
-                            t_clipped_bounds.y + t_device_location.y,
+                            t_bitmap_bounds.origin.x,
+                            t_bitmap_bounds.origin.y,
                             &t_paint);
             self->layer->canvas->restore();
         }
@@ -284,7 +297,7 @@ bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_
 	t_success = true;
 	
 	if (t_success)
-		t_success = lnx_pango_objects_intialize();
+		t_success = lnx_pango_objects_initialize();
 	
 	char *t_text;
 	t_text = nil;
