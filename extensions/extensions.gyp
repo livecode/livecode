@@ -89,7 +89,8 @@
 		    [
         		# Requires a working LiveCode engine
 		        '../engine/engine.gyp:server',
-				'../revzip/revzip.gyp:external-revzip-server',		        
+				'../revzip/revzip.gyp:external-revzip-server',
+				'../revxml/revxml.gyp:external-revxml-server',		        
     		],
             
             'rules':
@@ -132,6 +133,7 @@
 				'../engine/lcb-modules.gyp:engine_lcb_modules',
 				'../engine/engine.gyp:server',
 				'../revzip/revzip.gyp:external-revzip-server',				
+				'../revxml/revxml.gyp:external-revxml-server',				
 			],
 
 			'sources':
