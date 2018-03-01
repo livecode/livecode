@@ -28,10 +28,15 @@ mergeInto(LibraryManager.library, {
 
 		// Search the object map for the given object, returning the index if found
 		_findObjectIndex: function(jsObj) {
-			for (var keyvalue of this._objMap.entries())
+			var iter = this._objMap.entries();
+			var n = iter.next();
+			while (!n.done)
 			{
+				var keyvalue = n.value;
+				n = iter.next();
+				
 				if (keyvalue[1]['object'] === jsObj)
-					return key;
+					return keyvalue[0]
 			}
 		},
 
