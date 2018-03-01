@@ -287,9 +287,13 @@ class BrowserControl extends NativeControl
 					m_custom_view_callback = null;
 				}
 			}
+			public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
+				callback.invoke(origin, true, false);
+			}
 		};
 		t_view.setWebChromeClient(m_chrome_client);
         t_view.getSettings().setJavaScriptEnabled(true);
+		t_view.getSettings().setGeolocationEnabled(true);
 		t_view.getSettings().setDomStorageEnabled(true);
         t_view.getSettings().setPluginState(WebSettings.PluginState.ON);
         t_view.getSettings().setBuiltInZoomControls(true);
