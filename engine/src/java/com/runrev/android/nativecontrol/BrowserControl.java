@@ -290,6 +290,7 @@ class BrowserControl extends NativeControl
 		};
 		t_view.setWebChromeClient(m_chrome_client);
         t_view.getSettings().setJavaScriptEnabled(true);
+		t_view.getSettings().setDomStorageEnabled(true);
         t_view.getSettings().setPluginState(WebSettings.PluginState.ON);
         t_view.getSettings().setBuiltInZoomControls(true);
         t_view.addJavascriptInterface(new JSInterface(), "revjs");
