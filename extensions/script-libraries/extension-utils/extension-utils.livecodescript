@@ -764,6 +764,8 @@ private command __extensionBuildPackage pDetailsA, pFolder, pTargetFolder, pRemo
       put pTargetFolder into tTargetFolder
    end if
    
+   __EnsurePath tTargetFolder
+   
    local tTargetName
    if pDetailsA["name"] is empty then
       return "no id found in " && tFullpath
