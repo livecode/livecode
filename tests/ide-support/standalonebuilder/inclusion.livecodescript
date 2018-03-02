@@ -71,3 +71,37 @@ private command _TestStandaloneWithInclusion pStackFilename, pItem
    StandaloneBuilderTestCreateAndSaveStackAsStandalone tDesc, \
       pStackFilename, tScript
 end _TestStandaloneWithInclusion
+
+private function _TestScriptOnlyMainstackPass
+	local tScript
+	put "on startup" & return after tScript
+	put "quit 0" & return after tScript
+	put "end startup" & return after tScript
+	return tScript
+end _TestScriptOnlyMainstackPass
+
+on TestMissingInclusionWarning
+   local tDir
+   set the itemdelimiter to slash
+   set the defaultfolder to item 1 to -2 of the filename of me
+
+   put "_TestSavingStandalone" into tDir
+   
+   create folder tDir
+   
+   local tFilename, tScript, tSettings, tExtension
+   put the folder & "/" & tDir & "/stack.livecodescript" into tFilename   
+   put _TestScriptOnlyMainstackPass() into tScript
+   put "com.livecode.widget.non-existent" into tExtension
+   put tExtension into tSettings["extensions"]
+   
+   local tDesc
+   put "standalone with missing extension builds" into tDesc
+   StandaloneBuilderTestCreateAndSaveScriptOnlyStackAsStandalone tDesc, \
+      tFilename, tScript, tSettings
+      
+   TestAssert "standalone with missing extension warning", \
+      revStandaloneGetWarnings() contains tExtension
+
+   revDeleteFolder tDir
+end TestMissingInclusionWarning

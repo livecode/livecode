@@ -147,6 +147,8 @@ command StandaloneBuilderTestSaveStackAsStandalone pDescription, pStackFilename,
    end if
       
    TestAssert pDescription, tResult is empty
+   
+   TestDiagnostic revStandaloneGetWarnings()
 end StandaloneBuilderTestSaveStackAsStandalone
 
 private command _TestBuildStandalone pStackPath, @rStandalonePath

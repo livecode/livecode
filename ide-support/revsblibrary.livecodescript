@@ -2158,13 +2158,16 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    
    # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
    # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
+   local tValidExtensionsA
    repeat for each element tExtensionDataA in pStandaloneSettings["extensions_computed"]
       local tExtensionFileDataA
       put revIDEExtensionFileData(tExtensionDataA["id"]) into tExtensionFileDataA
       if tExtensionFileDataA["type"] is "lcb" then
          appendToStringList tExtensionFileDataA["file"], tModules
-      else
+      else if tExtensionFileDataA["type"] is "lcs" then
          __LoadStackOnStartup tExtensionDataA["id"], tAuxiliaryStackFiles, tStartupScript, tGeneratedStartupScript
+      else
+         revStandaloneAddWarning "Extension" && tExtensionDataA["id"] && "not found"
       end if
    end repeat
    

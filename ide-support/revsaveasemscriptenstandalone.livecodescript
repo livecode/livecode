@@ -243,12 +243,15 @@ end appendToStringList
 
 private command storeExtensions pZip, pExtensionsListA, pExtensionsPath
    -- Store each extension's data
-   local tModulesList, tKind
+   local tModulesList, tKind, tSourceType
    repeat for each element tExtension in pExtensionsListA
       put tExtension["id"] into tKind
-      if revIDEExtensionProperty(tKind, "source_type") is "lcb" then
+      put revIDEExtensionProperty(tKind, "source_type") into tSourceType
+      if tSourceType is "lcb" then
          storeExtensionByKind pZip, tKind, pExtensionsPath
          appendToStringList tKind, tModulesList
+      else if tSourceType is not "lcs" then
+         revStandaloneAddWarning "Extension" && tKind && "not found"
       end if
    end repeat
    
