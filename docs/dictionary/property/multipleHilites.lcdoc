@@ -40,7 +40,7 @@ If the field's <listBehavior> <property> is false, the <multipleHilites>
 <property> has no effect.
 
 >*Important:*  Setting the <toggleHilites> to true automatically sets
-> the <field(object)|field's>  multipleHilites> <property> to true.
+> the <field(object)|field's> <multipleHilites> <property> to true.
 > (However, setting the <toggleHilites> to false does not set the
 > <property> back to false.) To set the <toggleHilites> to true and the
 > <multipleHilites> to false, be sure to set the <toggleHilites> first,
