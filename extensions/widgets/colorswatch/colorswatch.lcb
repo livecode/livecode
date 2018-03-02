@@ -15,8 +15,16 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This widget displays a color with optional alpha channel.
+
+Name: mouseUp
+
+Summary: Sent when the color swatch is clicked
+
+Syntax: mouseUp
+
+Type: message
 */
 widget com.livecode.widget.colorswatch
 --
@@ -41,7 +49,7 @@ metadata _ide is "true"
 
 -- property declarations
 
-/*
+/**
 Syntax:
 set the swatchColor of <widget> to <pColor>
 get the swatchColor of <widget>

@@ -22,7 +22,7 @@ Name: gradientStopsChanged
 
 Type: message
 
-Syntax: on gradientStopsChanged
+Syntax: gradientStopsChanged
 
 Summary: Sent when the gradientStops property of the widget changes
 
