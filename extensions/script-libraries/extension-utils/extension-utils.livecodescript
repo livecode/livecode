@@ -1274,7 +1274,7 @@ command extensionPackageBuilderExtension pSourceFolder, \
    extensionFetchSourceFromFolder pSourceFolder, tSource, tSupportFiles, tType
    
    -- Multi-module assemblies must be in reverse dependency order
-   local tSupportDepsOrder, tDepsShell
+   local tDepsShell
    	
    if tSupportFiles is not empty then
       put shellFormat(pLCCompile) into tDepsShell
@@ -1283,21 +1283,22 @@ command extensionPackageBuilderExtension pSourceFolder, \
          put shellFormat(pSourceFolder & slash & tSupportModule, "") \ 
                after tDepsShell
       end repeat
-      	
+
       local tDepsResult, tDepsOutput
       doShell tDepsShell, tDepsResult, tDepsOutput
-      	  
+      
       if tDepsResult is not 0 then
-         throw "subprocess error when finding support deps order for" && tSource & ":" && tSupportDepsOrder
+         throw "subprocess error when finding support deps order for" && tSource & ":" && tDepsOutput
       end if  
-      repeat for each line tSupportModule in tSupportDepsOrder
+
+      repeat for each line tSupportModule in tDepsOutput
          put shellFormat(tSupportModule, "") after tCompileShell
       end repeat
    end if
    	
    put shellFormat(pSourceFolder & slash & tSource, "") \
          after tCompileShell
-   
+
    local tShellResult, tShellOutput
    doShell tCompileShell, tShellResult, tShellOutput
    if tShellResult is not 0 then
