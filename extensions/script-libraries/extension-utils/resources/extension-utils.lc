@@ -20,10 +20,7 @@ on doPackage
    put pathFromNative(the filename of me) into tPackagerFilename
    
    set the itemdelimiter to slash
-   put "extensions" & slash & \
-      "script-libraries" & slash & \
-	  "extension-utils" & slash & \
-      "extension-utils.livecodescript" \
+   put "extension-utils.livecodescript" \
       into item -2 to -1 of tPackagerFilename
 
    start using stack tPackagerFilename
