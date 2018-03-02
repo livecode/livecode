@@ -1441,10 +1441,15 @@ bool MCJavaCreateInterfaceProxy(MCNameRef p_class_name, MCTypeInfoRef p_signatur
     if (MCHandlerTypeInfoGetParameterCount(p_signature) != 1)
         return false;
     
+    s_env->PushLocalFrame(0);
+    
     MCValueRef t_handlers = *(static_cast<MCValueRef *>(p_args[0]));
-
+    
     if (!__MCJavaIsHandlerSuitableForListener(p_class_name, t_handlers))
+    {
+        s_env->PopLocalFrame(nullptr);
         return false;
+    }
     
     jclass t_inv_handler_class =
         MCJavaPrivateFindClass(MCNAME("com.runrev.android.LCBInvocationHandler"));
@@ -1460,12 +1465,17 @@ bool MCJavaCreateInterfaceProxy(MCNameRef p_class_name, MCTypeInfoRef p_signatur
                                                     t_interface,
                                                     t_handler);
     
-    MCJavaObjectRef t_result_value;
-    if (!MCJavaObjectCreateNullable(t_proxy, t_result_value))
-        return false;
     
-    *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
-    return true;
+    MCJavaObjectRef t_result_value;
+    bool t_success = MCJavaObjectCreateNullable(t_proxy, t_result_value);
+    if (t_success)
+    {
+        *(static_cast<MCJavaObjectRef *>(r_result)) = t_result_value;
+    }
+    
+    s_env->PopLocalFrame(nullptr);
+    
+    return t_success;
 }
 
 bool MCJavaPrivateCallJNIMethodOnEnv(void *p_env, MCNameRef p_class_name, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count)
