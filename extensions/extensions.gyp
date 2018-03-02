@@ -108,7 +108,7 @@
 					'action':
 					[
 						'<(engine)',
-						'../util/extensions-utils.lc',
+						'script-libraries/extension-utils/resources/extension-utils.lc',
 						'$(not_a_real_variable)buildextension',
 						'dummy1',
 						'dummy2',
@@ -189,7 +189,7 @@
 
 					'inputs':
 					[
-						'../util/extensions-utils.lc',
+						'script-libraries/extension-utils/resources/extension-utils.lc',
 						'<@(_sources)',
 					],
 
@@ -204,7 +204,7 @@
 					'action':
 					[
 						'<(engine)',
-						'../util/extensions-utils.lc',
+						'script-libraries/extension-utils/resources/extension-utils.lc',
 						'$(not_a_real_variable)buildlcbextensions',
 												'../ide-support/revdocsparser.livecodescript',
 						'<(PRODUCT_DIR)/packaged_extensions',
