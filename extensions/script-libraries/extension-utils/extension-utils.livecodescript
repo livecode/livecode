@@ -719,11 +719,7 @@ command extensionExtractDocs pDocsParser, pOutputDir
             put the script of stack tSourceFile into tContent
             put the long id of stack tSourceFile into tSource
          else if tSourceFile ends with ".lcidl" then
-            if the platform is "Win32" then
-               set the itemdelimiter to backslash
-            else
-               set the itemdelimiter to slash
-            end if
+            set the itemdelimiter to slash
             put "com.livecode.external." & tolower(\
                   char 1 to -7 of the last item of tSourceFile) into tName
             put textDecode(url ("binfile:" & tSourceFile), "UTF8") into tContent
