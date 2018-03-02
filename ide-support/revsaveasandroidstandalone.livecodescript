@@ -1366,13 +1366,7 @@ end insertIntoList
 private command executeShellCommand
    local tArray
    repeat with i = 2 to the paramCount
-      local tParam
-      if param(i) contains space and not (param(i) begins with "-") then
-         put quote & param(i) & quote into tParam
-      else
-         put param(i) into tParam
-      end if
-      appendToList tParam, tArray
+      appendToList param(i), tArray
    end repeat
    
    executeShellCommandWithParams param(1), tArray
@@ -1382,6 +1376,9 @@ end executeShellCommand
 private command executeShellCommandWithParams pCommand, pParamArray
    local tShell
    repeat for each element tParam in pParamArray
+      if tParam contains space and not (tParam begins with "-") then
+         put quote & tParam & quote into tParam
+      end if   
       put tParam & space after tShell
    end repeat
    
