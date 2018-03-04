@@ -74,12 +74,12 @@ __safe foreign handler _JNI_GetEngineContext(in pEngine as JObject) returns JObj
 Summary: Get the application Context
 
 Example:
-__safe foreign handler _JNI_CreateButton(in pContext as JObject) returns JObject \
-	binds to "java:android.widget.Button>new(Landroid/content/Context;)?ui"
+	__safe foreign handler _JNI_CreateButton(in pContext as JObject) returns JObject \
+		binds to "java:android.widget.Button>new(Landroid/content/Context;)?ui"
 
-handler NativeButtonView() returns JObject
-	return _JNI_CreateButton(ApplicationContext())
-end handler
+	handler NativeButtonView() returns JObject
+		return _JNI_CreateButton(ApplicationContext())
+	end handler
 
 Description:
 Use the <ApplicationContext> handler to fetch the current application's
