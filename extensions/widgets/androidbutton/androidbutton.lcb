@@ -92,11 +92,6 @@ metadata labelColor.default is "0,0,0"
 metadata labelColor.editor is "com.livecode.pi.colorwithalpha"
 metadata labelColor.section is "Colors"
 
-__safe foreign handler _JNI_GetAndroidEngine() returns JObject \
-	binds to "java:com.runrev.android.Engine>getEngine()Lcom/runrev/android/Engine;!static"
-__safe foreign handler _JNI_GetEngineContext(in pEngine as JObject) returns JObject \
-	binds to "java:android.view.View>getContext()Landroid/content/Context;"
-
 // Handlers for creating and attaching view
 __safe foreign handler _JNI_CreateButton(in pContext as JObject) returns JObject \
 	binds to "java:android.widget.Button>new(Landroid/content/Context;)?ui"
@@ -147,12 +142,7 @@ end handler
 
 private handler InitButtonView()
 	// Create an android button using the Engine Context
-    variable tEngine as JObject
-    put _JNI_GetAndroidEngine() into tEngine
-    
-    variable tContext as JObject
-    put _JNI_GetEngineContext(tEngine) into tContext
-    put _JNI_CreateButton(tContext) into mButton
+    put _JNI_CreateButton(ApplicationContext()) into mButton
     
 	// put my native window into tParent
     variable tParent as Pointer

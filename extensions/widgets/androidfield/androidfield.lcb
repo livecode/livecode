@@ -129,10 +129,6 @@ metadata author is "LiveCode"
 metadata title is "Android Native Field"
 metadata svgicon is  "M28.06,4.95a.34.34,0,1,1,.34.34A.34.34,0,0,1,28.06,4.95Zm-3.45.34a.34.34,0,1,0-.34-.34A.34.34,0,0,0,24.6,5.29ZM36.25,2V17.24a2,2,0,0,1-2,2H2a2,2,0,0,1-2-2V2A2,2,0,0,1,2,0h32.3A2,2,0,0,1,36.25,2ZM22.39,6.8h8.23a3.76,3.76,0,0,0-2.1-3.31l.65-1.17a.13.13,0,0,0-.05-.18l-.06,0a.13.13,0,0,0-.11.07l-.66,1.19a4.43,4.43,0,0,0-3.56,0l-.66-1.19a.13.13,0,1,0-.23.13l.65,1.17A3.76,3.76,0,0,0,22.39,6.8ZM9.57,2.57H5v1.5H6.53v11H5v1.5H9.57v-1.5H8v-11H9.57ZM22,7.89a.92.92,0,0,0-1.84,0v3.84a.92.92,0,1,0,1.84,0Zm8.57-.76H22.39v6a1,1,0,0,0,1,1H24v2a.92.92,0,1,0,1.84,0v-2h1.23v2a.92.92,0,1,0,1.84,0v-2h.66a1,1,0,0,0,1-1Zm2.19.76a.92.92,0,0,0-1.84,0v3.84a.92.92,0,1,0,1.84,0Z"
 
-__safe foreign handler _JNI_GetAndroidEngine() returns JObject \
-   binds to "java:com.runrev.android.Engine>getEngine()Lcom/runrev/android/Engine;!static"
-__safe foreign handler _JNI_GetContext(in pView as JObject) returns JObject \
-   binds to "java:android.view.View>getContext()Landroid/content/Context;"
 __safe foreign handler _JNI_GetSystemService(in pContext as JObject, in pService as JString) returns JObject \
    binds to "java:android.content.Context>getSystemService(Ljava/lang/String;)Ljava/lang/Object;"
 
@@ -623,11 +619,8 @@ constant INPUT_METHOD_SERVICE is "input_method"
 
 private handler InitView()
 	// Create an android button using the Engine Context
-    variable tEngine as JObject
-    put _JNI_GetAndroidEngine() into tEngine
-
     variable tContext as JObject
-    put _JNI_GetContext(tEngine) into tContext
+    put ApplicationContext() into tContext
     put _JNI_CreateView(tContext) into mNativeObj
 
 	// put my native window into tParent
@@ -1394,6 +1387,8 @@ handler SetTypeface(in pFont as Font)
         PointerToJObject(tTypefacePtr))
 end handler
 
+__safe foreign handler _JNI_ViewGetContext(in pView as JObject) returns JObject \
+   binds to "java:android.view.View>getContext()Landroid/content/Context;"
 __safe foreign handler _JNI_GetResources(in pContext as JObject) returns JObject \
    binds to "java:android.content.Context>getResources()Landroid/content/res/Resources;"
 __safe foreign handler _JNI_GetDisplayMetrics(in pResources as JObject) returns JObject \
@@ -1405,7 +1400,7 @@ public handler GetTextSize() returns Integer
    put TextView_getTextSize(mNativeObj) into tTextSize
 
    variable tContext as JObject
-   put _JNI_GetContext(mNativeObj) into tContext
+   put _JNI_ViewGetContext(mNativeObj) into tContext
 
    variable tResources as JObject
    put _JNI_GetResources(tContext) into tResources

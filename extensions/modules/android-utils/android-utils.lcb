@@ -64,4 +64,28 @@ public handler StringToAndroidColor(in pString as String) returns Integer
     
     return _JNI_GetColorFromARGB(tA,tR,tG,tB)
 end handler
+
+__safe foreign handler _JNI_GetAndroidEngine() returns JObject \
+	binds to "java:com.runrev.android.Engine>getEngine()Lcom/runrev/android/Engine;!static"
+__safe foreign handler _JNI_GetEngineContext(in pEngine as JObject) returns JObject \
+	binds to "java:android.view.View>getContext()Landroid/content/Context;"
+
+/**
+Summary: Get the application Context
+
+Example:
+__safe foreign handler _JNI_CreateButton(in pContext as JObject) returns JObject \
+	binds to "java:android.widget.Button>new(Landroid/content/Context;)?ui"
+
+handler NativeButtonView() returns JObject
+	return _JNI_CreateButton(ApplicationContext())
+end handler
+
+Description:
+Use the <ApplicationContext> handler to fetch the current application's
+Context object. 
+*/
+public handler ApplicationContext() returns JObject
+	return _JNI_GetEngineContext(_JNI_GetAndroidEngine())
+end handler
 end module
