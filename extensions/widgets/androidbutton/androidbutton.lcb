@@ -95,8 +95,6 @@ metadata labelColor.section is "Colors"
 // Handlers for creating and attaching view
 __safe foreign handler _JNI_CreateButton(in pContext as JObject) returns JObject \
 	binds to "java:android.widget.Button>new(Landroid/content/Context;)?ui"
-__safe foreign handler _JNI_AddButtonView(in pParentView as JObject, in pChildView as JObject) returns nothing \
-	binds to "java:android.view.ViewGroup>addView(Landroid/view/View;)V?ui"
 
 // Handlers for adding click listener
 handler type ClickCallback(in pView as JObject) returns nothing
@@ -143,18 +141,7 @@ end handler
 private handler InitButtonView()
 	// Create an android button using the Engine Context
     put _JNI_CreateButton(ApplicationContext()) into mButton
-    
-	// put my native window into tParent
-    variable tParent as Pointer
-    MCWidgetGetMyStackNativeView(tParent)
-    
-    // wrap the parent pointer
-    variable tParentObj as JObject
-    put PointerToJObject(tParent) into tParentObj
-    
-    // add the view
-    _JNI_AddButtonView(tParentObj, mButton)
-    
+        
     // get the pointer from the view and set the native layer
     variable tButtonPointer as Pointer
     put PointerFromJObject(mButton) into tButtonPointer

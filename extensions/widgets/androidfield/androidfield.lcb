@@ -135,8 +135,6 @@ __safe foreign handler _JNI_GetSystemService(in pContext as JObject, in pService
 // Handlers for creating and attaching view
 __safe foreign handler _JNI_CreateView(in pContext as JObject) returns JObject \
    binds to "java:android.widget.EditText>new(Landroid/content/Context;)V?ui"
-__safe foreign handler _JNI_AddView(in pParentView as JObject, in pChildView as JObject) returns nothing \
-   binds to "java:android.view.ViewGroup>addView(Landroid/view/View;)V?ui"
 
 private variable mNativeObj as optional JObject
 private variable mIMMObj as optional JObject
@@ -622,17 +620,6 @@ private handler InitView()
     variable tContext as JObject
     put ApplicationContext() into tContext
     put _JNI_CreateView(tContext) into mNativeObj
-
-	// put my native window into tParent
-    variable tParent as Pointer
-    MCWidgetGetMyStackNativeView(tParent)
-
-    // wrap the parent pointer
-    variable tParentObj as JObject
-    put PointerToJObject(tParent) into tParentObj
-
-    // add the view
-    _JNI_AddView(tParentObj, mNativeObj)
 
     // get the pointer from the view and set the native layer
     variable tPointer as Pointer
