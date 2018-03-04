@@ -260,6 +260,14 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
 end OAuth2
 
 on __OAuth2Cancel pUniqueRef
+   __RemoveDialog pUniqueRef
+   
+   local tResult
+   put "cancel" into tResult["error"]
+   set the dialogData to tResult
+end __OAuth2Cancel
+
+private command __RemoveDialog pUniqueRef
    if the environment is "mobile" then
       set the defaultStack to the topStack
       if there is a widget pUniqueRef then
@@ -273,11 +281,7 @@ on __OAuth2Cancel pUniqueRef
          close stack pUniqueRef
       end if
    end if
-   
-   local tResult
-   put "cancel" into tResult["error"]
-   set the dialogData to tResult
-end __OAuth2Cancel
+end __RemoveDialog
 
 
 /**
@@ -403,19 +407,7 @@ on __HandleRequest pSocketID, pData
          close socket tPort
       end if
       
-      if the environment is "mobile" then
-         set the defaultStack to the topStack
-         if there is a widget tUniqueRef then
-            delete widget tUniqueRef
-         end if
-         if there is a graphic tUniqueRef then
-            delete graphic tUniqueRef
-         end if
-      else
-         if there is a stack tUniqueRef then
-            close stack tUniqueRef
-         end if
-      end if
+      __RemoveDialog tUniqueRef
    else
       
       -- The OAuth2 spec requires the state parameter
@@ -425,19 +417,7 @@ on __HandleRequest pSocketID, pData
       
       repeat for each key tUniqueRef in sUniqueRefs
          close socket sUniqueRefs[tUniqueRef]
-         if the environment is "mobile" then
-            set the defaultStack to the topStack
-            if there is a widget tUniqueRef then
-               delete widget tUniqueRef
-            end if
-            if there is a graphic tUniqueRef then
-               delete graphic tUniqueRef
-            end if
-         else
-            if there is a stack tUniqueRef then
-               close stack tUniqueRef
-            end if
-         end if
+         __RemoveDialog tUniqueRef
       end repeat
    end if
 end __HandleRequest
