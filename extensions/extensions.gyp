@@ -139,6 +139,7 @@
 			'sources':
 			[
 				'modules/widget-utils/widget-utils.lcb',
+				'modules/android-utils/android-utils.lcb',				
 				'modules/scriptitems/scriptitems.lcb',
 
 				'libraries/androidbgaudio/androidbgaudio.lcb',
@@ -180,6 +181,8 @@
 				'widgets/gradientrampeditor/gradientrampeditor.lcb',
 				'widgets/tile/tile.lcb',
 				'widgets/spinner/spinner.lcb',
+				
+				'widgets/button/button.lcb',
 			],
 
 			'actions':

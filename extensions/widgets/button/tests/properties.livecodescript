@@ -1,6 +1,6 @@
-script "AndroidNativeFieldWidgetProperties"
+script "ButtonWidgetProperties"
 /*
-Copyright (C) 2017 LiveCode Ltd.
+Copyright (C) 2018 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -16,19 +16,28 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+local sID
+
 on TestSetup
 	TestLoadExtension "com.livecode.library.widgetutils"
 	TestLoadExtension "com.livecode.library.scriptitems"
 	TestLoadExtension "com.livecode.library.androidutils"	
-	TestLoadExtension "com.livecode.widget.native.android.field"
+	TestLoadExtension "com.livecode.widget.native.button"
+	
+	create stack
+	create widget as "com.livecode.widget.native.button"
+	
+	put it into sID
 end TestSetup
 
-constant kProps = "text,fieldTextColor,textAlign,verticalTextAlign,autoCapitalizationType,autoCorrectionType,keyboardType,returnKeyType,contentType,dataDetectorTypes,multiline,editable,scrollingEnabled"
+on TestLabel
+	set the label of sID to "test"
+	TestAssert "set label of native button", \
+		the label of sID is "test"
+end TestLabel
 
-on TestProperties
-	create widget "TestWidget" as "com.livecode.widget.native.android.field"
-	repeat for each item tProp in kProps
-		get the tProp of widget "TestWidget"
-		set the tProp of widget "TestWidget" to it
-	end repeat
-end TestProperties
+on TestEnabled
+	set the enabled of sID to false
+	TestAssert "set enabled of native button", \
+		the enabled of sID is false
+end TestEnabled
