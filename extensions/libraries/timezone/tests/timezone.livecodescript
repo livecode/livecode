@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
+    TestSkipIf "platform", "win32"
 	TestLoadExtension "com.livecode.library.timezone"
 end TestSetup
 
