@@ -994,7 +994,7 @@ bool MCLocaleBreakIteratorCreate(MCLocaleRef p_locale, MCBreakIteratorType p_typ
     MCAssert(p_locale != nil);
     
     // Create the iterator with the requested type
-    icu::BreakIterator *t_iter;
+    icu::BreakIterator *t_iter = nullptr;
     UErrorCode t_error = U_ZERO_ERROR;
     switch (p_type)
     {

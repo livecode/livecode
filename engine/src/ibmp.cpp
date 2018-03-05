@@ -633,7 +633,8 @@ bool bmp_read_rle4_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitm
 			else
 			{
 				// absolute mode
-				uint8_t t_byte, t_upper, t_lower;
+				uint8_t t_byte, t_upper;
+				uint8_t t_lower = 0;
 				
 				uint8_t t_run_buffer[128];
 				uint32_t t_run_bytes;
@@ -1556,7 +1557,7 @@ bool MCNetPBMImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count
 	uindex_t t_token_size;
 	
 	bool t_binary;
-	uindex_t t_depth;
+	uindex_t t_depth = 1;
 	uindex_t t_channel_count = 1;
 	uindex_t t_stride;
 
