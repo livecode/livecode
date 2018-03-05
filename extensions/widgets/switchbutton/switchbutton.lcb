@@ -20,7 +20,7 @@ This widget is a switch button, consisting of two mutually exclusive choices or 
 
 Name: hiliteChanged
 Type: message
-Syntax: on hiliteChanged
+Syntax: hiliteChanged
 Summary: Sent when the switch is changed to either the on or off position
 
 Example:

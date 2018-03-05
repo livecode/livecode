@@ -36,7 +36,7 @@ itemNames(property), itemStyle(property)
 
 Name: hiliteChanged
 Type: message
-Syntax: on hiliteChanged
+Syntax: hiliteChanged
 Summary: Sent when a navigation item is selected
 
 Example:

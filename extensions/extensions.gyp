@@ -72,6 +72,8 @@
 			
 			'sources':
 			[
+				'script-libraries/extension-utils/extension-utils.livecodescript',
+							
 				'script-libraries/oauth2/oauth2.livecodescript',
 				'script-libraries/getopt/getopt.livecodescript',
 				'script-libraries/mime/mime.livecodescript',
@@ -87,6 +89,8 @@
 		    [
         		# Requires a working LiveCode engine
 		        '../engine/engine.gyp:server',
+				'../revzip/revzip.gyp:external-revzip-server',
+				'../revxml/revxml.gyp:external-revxml-server',		        
     		],
             
             'rules':
@@ -104,16 +108,16 @@
 					'action':
 					[
 						'<(engine)',
-						'../util/package_extension.livecodescript',
+						'script-libraries/extension-utils/resources/extension-utils.lc',
+						'$(not_a_real_variable)buildextension',
 						'dummy1',
 						'dummy2',
 						'dummy3',
-						'../util/extract-docs.livecodescript',
 						'../ide-support/revdocsparser.livecodescript',			
 						'<(RULE_INPUT_DIRNAME)',
 						'<(RULE_INPUT_ROOT).livecodescript',
 						'<(PRODUCT_DIR)/packaged_extensions',
-						'false',
+						'$(not_a_real_variable)false',
 					],
 				},
 			],
@@ -128,6 +132,8 @@
 				'../toolchain/lc-compile/lc-compile.gyp:lc-compile',
 				'../engine/lcb-modules.gyp:engine_lcb_modules',
 				'../engine/engine.gyp:server',
+				'../revzip/revzip.gyp:external-revzip-server',				
+				'../revxml/revxml.gyp:external-revxml-server',				
 			],
 
 			'sources':
@@ -183,7 +189,7 @@
 
 					'inputs':
 					[
-						'../util/build-extensions.sh',
+						'script-libraries/extension-utils/resources/extension-utils.lc',
 						'<@(_sources)',
 					],
 
@@ -195,36 +201,17 @@
 
 					'message': 'Building extensions',
 
-					'conditions':
-					[
-						[
-							'OS == "win"',
-							{
-								'variables':
-								{
-									'build_command': [ '$(ProjectDir)../../../util/invoke-unix.bat', '$(ProjectDir)../../../util/build-extensions.sh' ],
-								},
-							},
-							{
-								'variables':
-								{
-									'build_command': [ '../util/build-extensions.sh' ],
-								},
-							},
-						],
-					],
-
 					'action':
 					[
-						'<@(build_command)',
 						'<(engine)',
-						'../util/package_extension.livecodescript',
-						'../util/extract-docs.livecodescript',
-						'../ide-support/revdocsparser.livecodescript',
+						'script-libraries/extension-utils/resources/extension-utils.lc',
+						'$(not_a_real_variable)buildlcbextensions',
+												'../ide-support/revdocsparser.livecodescript',
 						'<(PRODUCT_DIR)/packaged_extensions',
-						'false',
+						'$(not_a_real_variable)false',
 						'>(lc-compile_host)',
 						'<(PRODUCT_DIR)/modules/lci',
+						'$(not_a_real_variable)',
 						'<@(_sources)',
 					],
 				},
