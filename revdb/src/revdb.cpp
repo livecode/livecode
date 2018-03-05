@@ -31,6 +31,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "iossupport.h"
 #endif
 
+#if defined(_WINDOWS)
+#pragma optimize("", off)
+#endif
+
 #include <revolution/external.h>
 #include <revolution/support.h>
 
