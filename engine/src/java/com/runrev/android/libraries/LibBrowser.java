@@ -321,10 +321,14 @@ class LibBrowserWebView extends WebView
 					m_custom_view_callback = null;
 				}
 			}
+			public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
+				callback.invoke(origin, true, false);
+			}
 		};
 		
 		setWebChromeClient(m_chrome_client);
 		getSettings().setJavaScriptEnabled(true);
+		getSettings().setGeolocationEnabled(true);
 		getSettings().setDomStorageEnabled(true);
 		getSettings().setPluginState(WebSettings.PluginState.ON);
 		getSettings().setBuiltInZoomControls(true);
