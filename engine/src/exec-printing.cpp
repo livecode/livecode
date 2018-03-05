@@ -633,8 +633,13 @@ void MCPrintingExecPrintCardIntoRect(MCExecContext& ctxt, MCCard *p_card, MCRect
 
 void MCPrintingExecOpenPrintingToDestination(MCExecContext& ctxt, MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options)
 {
-	if (MCCustomPrinterCreate(p_destination, p_filename, p_options, (MCCustomPrinter*&)MCprinter) == ES_NORMAL)
+	if (MCCustomPrinterCreate(p_destination, p_filename, p_options, (MCCustomPrinter*&)MCprinter))
+    {
 		MCPrintingExecOpenPrinting(ctxt);
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_PRINT_UNKNOWNDST);
 }
 
 void MCPrintingExecOpenPrinting(MCExecContext& ctxt)

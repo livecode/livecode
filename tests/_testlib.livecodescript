@@ -487,7 +487,7 @@ on TestLoadAuxiliaryExtension pName, pResourceFolder
    end if
 end TestLoadAuxiliaryExtension
 
-constant kBytecodePathPrefix = "_tests/_build/"
+constant kTestsBuildPath = "_tests/_build/"
 function TestGetBuiltBytecodeFile pName
    local tBasePath, tExtraPath
    set the itemDelimiter to slash
@@ -501,10 +501,14 @@ function TestGetBuiltBytecodeFile pName
    put item 1 to tTestsOffset - 1 of tBasePath into tBasePath
    
    local tModuleFile
-   put tBasePath & "/" & kBytecodePathPrefix & tExtraPath & slash & \ 
+   put tBasePath & "/" & kTestsBuildPath & tExtraPath & slash & \ 
       pName & ".lcm" into tModuleFile
    return tModuleFile
 end TestGetBuiltBytecodeFile
+
+function TestGetTestBuildFolder
+	return TestGetEngineRepositoryPath() & slash & kTestsBuildPath
+end TestGetTestBuildFolder
 
 on TestLoadAllExtensions
    local tExtFolder
@@ -679,6 +683,11 @@ private function __MeetsRequirements pRequirement, pOptions
          -- TODO: make externals tests work in standalone test builder
          if TestIsInStandalone() then
             return false
+         end if
+         
+         if "revpdfprinter" is among the items of pOptions \
+         	and the environment is "server" then
+         	return false
          end if
          return the platform is not "HTML5"
       case "database"

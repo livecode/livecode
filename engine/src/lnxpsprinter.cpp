@@ -254,7 +254,7 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevic
     // Now attempt to create a PDF printer - creation of the custom printer
     // copies all the existing printer state into itself, so we basically get
     // a custom printer configured just like we are.
-    if (MCCustomPrinterCreate(MCSTR("pdf"), *t_path, kMCEmptyArray, m_pdf_printer) != ES_NORMAL)
+    if (!MCCustomPrinterCreate(MCSTR("pdf"), *t_path, kMCEmptyArray, m_pdf_printer))
         return PRINTER_RESULT_ERROR;
 	
     // Now all we need to do is get the PDF printer to begin!
