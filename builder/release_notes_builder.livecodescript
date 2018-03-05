@@ -407,6 +407,7 @@ private command BaseCreate
    BaseCreateOverview
    BaseCreateIssues
    
+   MarkdownAppend "notes", BaseReadFile("breaking_changes")
    MarkdownAppend "notes", BaseReadFile("platforms")
    MarkdownAppend "notes", BaseReadFile("setup")
    MarkdownAppend "notes", BaseReadFile("proposed_changes")
