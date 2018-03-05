@@ -314,7 +314,7 @@ static uindex_t shape_text_and_add_to_glyph_array(const unichar_t* p_text, uinde
         
         // Run of glyphs in successfully shaped clusters
         while (t_cur_glyph < glyph_count &&
-               cluster_is_supported(glyph_info, t_cur_glyph, glyph_count, &t_cluster_end))
+               cluster_is_supported(glyph_info, t_cur_glyph, glyph_count, t_cluster_end))
         {
             t_cur_glyph = t_cluster_end;
         }
@@ -330,7 +330,7 @@ static uindex_t shape_text_and_add_to_glyph_array(const unichar_t* p_text, uinde
         // If the first cluster is unsupported and we're already using the fallback
         // font for that cluster, assume there is no support and use a replacement.
         if (t_cur_glyph == 0 &&
-            !cluster_is_supported(glyph_info, t_cur_glyph, glyph_count, &t_cluster_end)
+            !cluster_is_supported(glyph_info, t_cur_glyph, glyph_count, t_cluster_end)
             && p_use_fallback)
         {
             // Enforce a replacement glyph for the whole cluster by passing a 0
@@ -338,14 +338,14 @@ static uindex_t shape_text_and_add_to_glyph_array(const unichar_t* p_text, uinde
             glyph_info[t_cur_glyph].codepoint = 0;
             MCGlyphRunMake(glyph_info, glyph_pos, x_location, t_start, t_start + 1, (SkTypeface *)p_font . fid, p_font . size, t_run);
             x_runs . Push(t_run);
-            t_cur_glyph = t_cluster_end
+            t_cur_glyph = t_cluster_end;
             t_start = t_cur_glyph;
             t_run_count++;
         }
         
         // Deal with run of unsupported clusters for this font.
         while (t_cur_glyph < glyph_count &&
-               !cluster_is_supported(glyph_info, t_cur_glyph, glyph_count, &t_cluster_end))
+               !cluster_is_supported(glyph_info, t_cur_glyph, glyph_count, t_cluster_end))
         {
             t_cur_glyph = t_cluster_end;
         }
