@@ -31,6 +31,8 @@ extern "C"
 	extern MC_DLLEXPORT MCTypeInfoRef kMCEngineScriptObjectNoContextErrorTypeInfo;
 
     extern MC_DLLEXPORT MCArrayRef MCEngineExecDescribeScriptOfScriptObject(MCScriptObjectRef p_object, bool p_include_all = true);
+    
+    extern MC_DLLEXPORT void MCEngineRunloopBreakWait(void);
 }
 
 bool MCEngineScriptObjectCreate(MCObject *p_object, uint32_t p_part_id, MCScriptObjectRef& r_object);
