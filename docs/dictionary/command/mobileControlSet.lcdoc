@@ -178,7 +178,7 @@ scrollIndicatorInsets property). This is a comma-separated list of four
 integers, describing the left, top, right and bottom inset distances.
 For example "0,0,100,100".
 
-- "scrollingEnabled" (iOS Only): Determines whether touches on the
+- "scrollingEnabled": Determines whether touches on the
 scroller cause scrolling (maps to the UIScrollView scrollEnabled
 property). This is a boolean value.
 
