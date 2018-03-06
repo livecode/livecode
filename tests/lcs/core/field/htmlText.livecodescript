@@ -60,21 +60,34 @@ on TestListStyleRoundtrip
    set the defaultStack to "Test"
    
    create field "TestField"
+   local tHtmlText
    
    set the text of field "TestField" to "one" & CR & "two" & CR & "three"
    set the listStyle of line 1 of field "TestField" to "skip"
    set the listStyle of line 2 of field "TestField" to "disc"
-   TestAssert "htmlText roundtrips listStyle beginning with skip", the htmlText of field "TestField" is the htmlText of field  "TestField"
+   
+   put the htmlText of field "TestField" into tHtmlText 
+   set the htmlText of field "TestField" to tHtmlText 
+   
+   TestAssert "htmlText roundtrips listStyle beginning with skip", the htmlText of field "TestField" is tHtmlText
    
    set the text of field "TestField" to "one" & CR & "two" & CR & "three"
    set the listStyle of line 1 of field "TestField" to "disc"
    set the listStyle of line 2 of field "TestField" to "skip"
-   TestAssert "htmlText roundtrips listStyle containing  skip", the htmlText of field "TestField" is the htmlText of field  "TestField"
+   
+   put the htmlText of field "TestField" into tHtmlText 
+   set the htmlText of field "TestField" to tHtmlText 
+   
+   TestAssert "htmlText roundtrips listStyle containing  skip", the htmlText of field "TestField" is tHtmlText
    
    set the text of field "TestField" to "one" & CR & "two" & CR & "three"
    set the listStyle of line 1 of field "TestField" to "disc"
    set the listStyle of line 3 of field "TestField" to "skip"
-   TestAssert "htmlText roundtrips listStyle ending with  skip", the htmlText of field "TestField" is the htmlText of field  "TestField"
+   
+   put the htmlText of field "TestField" into tHtmlText 
+   set the htmlText of field "TestField" to tHtmlText 
+   
+   TestAssert "htmlText roundtrips listStyle ending with  skip", the htmlText of field "TestField" is tHtmlText
    
    delete field "TestField"
    delete stack "Test"
