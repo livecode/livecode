@@ -5144,7 +5144,7 @@ bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p
         
         for(;;)
         {
-            const char_t *t_element_end;
+            const char_t *t_element_end = NULL;
             split_find_end_of_element_native(t_sptr, t_eptr, p_elem_del -> native_chars, p_elem_del -> char_count, t_element_end, p_options);
             
             MCAutoStringRef t_string;
@@ -5169,8 +5169,8 @@ bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p
         
 		for(;;)
 		{
-			const char_t *t_element_end;
-			const char_t *t_key_end;
+			const char_t *t_element_end = NULL;
+			const char_t *t_key_end = NULL;
 
             split_find_end_of_element_and_key_native(t_sptr, t_eptr, p_elem_del -> native_chars, p_elem_del -> char_count, p_key_del -> native_chars, p_key_del -> char_count, t_key_end, t_element_end, p_options);
             
@@ -5619,7 +5619,7 @@ MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStrin
     
     for(;;)
     {
-        const char_t *t_element_end;
+        const char_t *t_element_end = NULL;
         split_find_end_of_element_native(t_sptr, t_eptr, p_elem_del -> native_chars, p_elem_del -> char_count, t_element_end, p_options);
         
         MCStringRef t_string;
