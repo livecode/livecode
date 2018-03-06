@@ -24,7 +24,7 @@
             'conditions':
             [
             	[
-            		'host_os != "win"',
+            		'OS == "mac" or OS == "linux"',
             		{
             			'dependencies':
             			[
