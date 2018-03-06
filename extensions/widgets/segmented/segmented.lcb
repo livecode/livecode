@@ -451,7 +451,8 @@ private handler drawSegments() returns nothing
 
 		if tSegmentIndex is 1 then
 			put tBorderOffset into element tStartIndex of tSegmentRect
-		else if tSegmentIndex is mNumSegments then
+        end if
+		if tSegmentIndex is mNumSegments then
 			subtract tBorderOffset from element tEndIndex of tSegmentRect
 		end if
 
@@ -459,7 +460,9 @@ private handler drawSegments() returns nothing
 		clip to rectangle tSegmentRect on this canvas
 		-- For the rounded rectangle segments at the ends, we fill the round rect beyond the
 		-- curvature and use the clip rect to display as we would like.
-		if tSegmentIndex = 1 then
+        if tSegmentIndex = 1 and tSegmentIndex = mNumSegments then
+           fill rounded rectangle path of rectangle tSegmentRect with radius mRadius on this canvas
+		else if tSegmentIndex = 1 then
 			put tStart + tExtent + mRadius into element tEndIndex of tSegmentRect
 			fill rounded rectangle path of rectangle tSegmentRect with radius mRadius on this canvas
 		else if tSegmentIndex = mNumSegments then
