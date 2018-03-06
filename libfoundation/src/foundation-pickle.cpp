@@ -187,7 +187,7 @@ static bool MCPickleReadTypeInfoRefContents(MCStreamRef stream, uint8_t p_kind, 
         bool t_success;
         t_success = true;
         
-        uindex_t t_param_count;
+        uindex_t t_param_count = 0;
         if (t_success)
             t_success = MCPickleReadCompactUInt(stream, t_param_count);
         
