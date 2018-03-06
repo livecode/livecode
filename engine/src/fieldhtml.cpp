@@ -518,8 +518,12 @@ static void export_html_end_lists(export_html_t& ctxt, uint32_t p_new_style, uin
 	while(p_new_depth < ctxt . list_depth)
 	{
 		ctxt . list_depth -= 1;
+		
 		// listStyle = "skip" is unordered, thus needs </ul> tag
-		MCStringAppendFormat(ctxt.m_text, (ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric || ctxt.list_styles[ctxt.list_depth] == kMCParagraphListStyleSkip) ? "</ul>" : "</ol>");
+		if (ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric || ctxt.list_styles[ctxt.list_depth] == kMCParagraphListStyleSkip)
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "</ul>");
+		else
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "</ol>");
 	}
 }
 
@@ -531,8 +535,12 @@ static void export_html_begin_lists(export_html_t& ctxt, uint32_t p_new_style, u
 	if (ctxt . list_depth == p_new_depth && ctxt . list_styles[ctxt . list_depth - 1] != p_new_style)
 	{
 		ctxt . list_depth -= 1;
+		
 		// listStyle = "skip" is unordered, thus needs </ul> tag
-		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, (ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric || ctxt.list_styles[ctxt.list_depth] == kMCParagraphListStyleSkip) ? "</ul>" : "</ol>");
+		if (ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric || ctxt.list_styles[ctxt.list_depth] == kMCParagraphListStyleSkip)
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "</ul>");
+		else
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "</ol>");
 	}
 	
 	while(p_new_depth > ctxt . list_depth)
@@ -540,7 +548,23 @@ static void export_html_begin_lists(export_html_t& ctxt, uint32_t p_new_style, u
 		ctxt . list_styles[ctxt . list_depth] = p_new_style;
 		// listStyle = "skip" is unordered, thus needs <ul> tag
 		// if style is NULL use "none" which is valid html
-		/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, (ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric || ctxt.list_styles[ctxt.list_depth] == kMCParagraphListStyleSkip) ? "<ul type=\"%s\">\n" : "<ol type=\"%s\">\n", s_export_html_list_types[p_new_style] != NULL ? s_export_html_list_types[p_new_style]:"none");
+		if (ctxt.list_styles[ctxt.list_depth] < kMCParagraphListStyleNumeric || ctxt.list_styles[ctxt.list_depth] == kMCParagraphListStyleSkip)
+		{
+			if (s_export_html_list_types[p_new_style] != NULL)
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<ul type=\"%s\">\n", s_export_html_list_types[p_new_style]);
+			else
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<ul type=\"%s\">\n", "none");
+			
+		}
+		else
+		{
+			if (s_export_html_list_types[p_new_style] != NULL)
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<ol type=\"%s\">\n", s_export_html_list_types[p_new_style]);
+			else
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<ol type=\"%s\">\n", "none");
+			
+		}
+		
 		ctxt . list_depth += 1;
 	}
 	
