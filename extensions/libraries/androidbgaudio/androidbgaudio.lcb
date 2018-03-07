@@ -28,6 +28,7 @@ library com.livecode.library.androidbgaudio
 use com.livecode.foreign
 use com.livecode.java
 use com.livecode.engine
+use com.livecode.library.androidutils
 
 metadata version is "0.0.0"
 metadata author is "LiveCode"
@@ -36,7 +37,6 @@ metadata title is "Android Background Audio"
 ----
 
 __safe foreign handler _JNI_EngineGet() returns JObject binds to "java:com.runrev.android.Engine>getEngine()Lcom/runrev/android/Engine;!static"
-__safe foreign handler _JNI_EngineGetContext(in pEngine as JObject) returns JObject binds to "java:android.view.View>getContext()Landroid/content/Context;"
 
 __safe foreign handler _JNI_ContextGetAssets(in pContext as JObject) returns JObject \
 			binds to "java:android.content.Context>getAssets()Landroid/content/res/AssetManager;"
@@ -89,13 +89,15 @@ private handler mediaplayerSetDataSource(in pString as String)
 		return
 	end if
 
+   variable tContext as JObject
+   put ApplicationContext() into tContext
 	if pString begins with "asset://" then
 		variable tAssetFd as JObject
-		put _JNI_AssetManagerOpenFd(_JNI_ContextGetAssets(_JNI_EngineGetContext(_JNI_EngineGet())), StringToJString(char 9 to -1 of pString)) into tAssetFd
+		put _JNI_AssetManagerOpenFd(_JNI_ContextGetAssets(tContext), StringToJString(char 9 to -1 of pString)) into tAssetFd
 		_JNI_MediaPlayerSetDataSourceFd(mMediaPlayer, _JNI_AssetFileDescriptorGetFileDescriptor(tAssetFd))
 		_JNI_AssetFileDescriptorClose(tAssetFd)
 	else
-		_JNI_MediaPlayerSetDataSourceUri(mMediaPlayer, _JNI_EngineGetContext(_JNI_EngineGet()), _JNI_UriParse(StringToJString(pString)))
+		_JNI_MediaPlayerSetDataSourceUri(mMediaPlayer, tContext, _JNI_UriParse(StringToJString(pString)))
 	end if
 end handler
 
