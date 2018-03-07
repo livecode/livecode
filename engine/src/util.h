@@ -262,4 +262,7 @@ inline MCRectangle MCU_make_rect(int2 x, int2 y, uint2 w, uint2 h)
 // Test whether p_string is a valid LiveCode script token
 extern bool MCU_is_token(MCStringRef p_string);
 
+// Format color as string
+extern bool MCU_format_color(const MCColor p_color, MCStringRef& r_string);
+
 #endif

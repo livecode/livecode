@@ -325,6 +325,7 @@ class LibBrowserWebView extends WebView
 		
 		setWebChromeClient(m_chrome_client);
 		getSettings().setJavaScriptEnabled(true);
+		getSettings().setDomStorageEnabled(true);
 		getSettings().setPluginState(WebSettings.PluginState.ON);
 		getSettings().setBuiltInZoomControls(true);
 		addJavascriptInterface(new JSInterface(), "liveCode");

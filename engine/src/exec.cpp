@@ -455,7 +455,7 @@ bool MCExecContext::FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_v
 
 bool MCExecContext::FormatLegacyColor(MCColor p_color, MCStringRef& r_value)
 {
-	return MCStringFormat(r_value, "%d,%d,%d", p_color . red >> 8, p_color . green >> 8, p_color . blue >> 8);
+    return MCU_format_color(p_color, r_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3269,7 +3269,7 @@ void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCExecValu
 			break;
             
         case kMCExecValueTypeColor:
-            if(!MCStringFormat((MCStringRef&)r_value, "%u,%u,%u", (((MCColor *)p_from_value) -> red >> 8) & 0xff, (((MCColor *)p_from_value) -> green >> 8) & 0xff, (((MCColor *)p_from_value) -> blue >> 8) & 0xff))
+            if (!MCU_format_color(*(MCColor *)p_from_value, (MCStringRef &)r_value))
                 ctxt . Throw();
 			break;
 			

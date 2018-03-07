@@ -136,7 +136,8 @@ private command _TestStandaloneStackPath pWhich
    end if
    save stack "main"
    
-   StandaloneBuilderSaveAsStandalone "main"
+   local tExePath
+   StandaloneBuilderSaveAsStandalone "main", tExePath
    if the result is not empty then
       TestAssert "building standalone", false
       exit _TestStandaloneStackPath

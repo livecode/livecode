@@ -72,8 +72,10 @@ on TestSavingStandalone
    set the cModified of tStackID to false
    
    revIDESaveStack tStackID
-	 
-   _TestBuildStandalone tStackFilename
+
+   local tExe
+   _TestBuildStandalone tStackFilename, tExe
+
    if the result is not empty then
       TestAssert "building standalone", false
       exit TestSavingStandalone
@@ -81,17 +83,7 @@ on TestSavingStandalone
 
    TestAssert "building standalone", true
    TestAssert "standalone state reloaded", the cModified of stack tStackName is not true
-   
-   local tFolder
-   put the cFolder of stack tStackName into tFolder
-   
-   local tExe
-   if the platform is "MacOS" then 
-      put tFolder & tStackName & ".app/Contents/MacOS/" \ 
-      		& tStackName into tExe
-   else
-      put tFolder & tStackName into tExe
-   end if
+
    
    TestDiagnostic "location" && tExe
    TestAssert "standalone in expected location", there is a file tExe
@@ -107,12 +99,12 @@ on TestSavingStandalone
    revDeleteFolder tDir
 end TestSavingStandalone
 
-private command _TestBuildStandalone pStackPath
+private command _TestBuildStandalone pStackPath, @rPath
 	local tStackName, tResult
 	put the short name of stack pStackPath into tStackName
 	
 	TestDiagnostic "Building standalone -" && pStackPath
 	
-	StandaloneBuilderSaveAsStandalone tStackName
+	StandaloneBuilderSaveAsStandalone tStackName, rPath
 	return the result
 end _TestBuildStandalone
