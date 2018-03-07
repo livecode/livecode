@@ -406,7 +406,7 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 		if (t_run == nil)
 			break;
 
-		MCTextLayoutGlyph *t_glyphs;
+		MCTextLayoutGlyph *t_glyphs = nullptr;
 		if (!MCMemoryNewArray(t_run -> glyphs -> num_glyphs, t_glyphs))
 			t_success = false;
         

@@ -881,7 +881,7 @@ RTFStatus RTFReader::ParseDocument(RTFToken p_token, int4 p_value)
 		bool t_turn_off;
 		t_turn_off = t_has_parameter && p_value == 0;
 
-		RTFFontStyle t_mask;
+		RTFFontStyle t_mask = 0;
 		if (t_token == kRTFTokenBold)
 			t_mask = kRTFFontStyleBold;
 		else if (t_token == kRTFTokenItalic)

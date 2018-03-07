@@ -138,7 +138,8 @@ public:
 		if (!createwidget(p_kind, p_properties))
 			return false;
 		
-		uint32_t t_width, t_height;
+		uint32_t t_width = 0;
+		uint32_t t_height = 0;
 		getwidgetgeometry(t_width, t_height);
 		
 		if (MCErrorIsPending())
@@ -456,7 +457,7 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopupWithResult(MCValueRef p_r
     if (!MCWidgetEnsureCurrentWidget())
         return;
 	
-	bool t_is_popup;
+	bool t_is_popup = false;
 	MCWidgetEvalIsPopup(t_is_popup);
 	
 	if (!t_is_popup)

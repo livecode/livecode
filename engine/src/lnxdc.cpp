@@ -325,7 +325,10 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay * &r_displays, u
     
     // Allocate the list of monitors
     MCDisplay *t_displays;
-    MCMemoryNewArray(t_monitor_count, t_displays);
+    if (!MCMemoryNewArray(t_monitor_count, t_displays))
+		{
+			  return false;
+		}
     
     // Get the geometry of each monitor
     for (gint i = 0; i < t_monitor_count; i++)

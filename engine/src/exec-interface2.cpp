@@ -1227,7 +1227,7 @@ void MCInterfaceGetCursor(MCExecContext& ctxt, uinteger_t*& r_value)
 
 void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t* p_value)
 {
-	MCCursorRef t_cursor;
+	MCCursorRef t_cursor = nullptr;
 
     uinteger_t t_cursor_id;
     if (p_value == NULL)
@@ -1255,7 +1255,7 @@ void MCInterfaceGetDefaultCursor(MCExecContext& ctxt, uinteger_t& r_value)
 
 void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value)
 {
-	MCCursorRef t_cursor;
+	MCCursorRef t_cursor = nullptr;
 	MCInterfaceSetCursor(ctxt, p_value, true, t_cursor);
 	
     // PM-2015-06-17: [[ Bug 15200 ]] Default cursor should reset when set to empty, thus t_cursor *can* be nil

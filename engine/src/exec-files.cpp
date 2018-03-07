@@ -1546,7 +1546,7 @@ void MCFilesExecPerformReadUnicodeFor(MCExecContext& ctxt, IO_handle p_stream, i
 
     while (t_progress < p_count)
     {
-        uint4 t_new_boundary;
+        uint4 t_new_boundary = 0;
         // SN-2014-06-18 [[ Bug 12538 ]] Read from process until empty
         // We need to allow a reading to return nothing, without being stuck in a waiting loop for data
         if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, false, p_unit_type, t_last_char_boundary, t_duration, p_stream, *t_output, t_new_boundary,t_stat))
@@ -1606,7 +1606,7 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
 
     while (p_count)
     {
-        uint4 t_new_char_boundary;
+        uint4 t_new_char_boundary = 0;
         if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, t_empty_allowed, FU_CODEPOINT, t_last_char_boundary, t_duration, p_stream, *t_output, t_new_char_boundary, t_stat))
             // error occurred while reading a codepoint
             break;
