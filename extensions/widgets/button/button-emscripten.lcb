@@ -1,0 +1,86 @@
+/*
+Copyright (C) 2018 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.widget.native.button.emscripten
+
+use com.livecode.widget.native.button.shared
+use com.livecode.foreign
+use com.livecode.emscripten
+
+public handler Implementation_Emscripten() returns Array
+	return \
+		{ \
+			"HasImplementation": HasImplementation_Emscripten, \
+			"HasView": HasView_Emscripten, \
+			"SetLabel": SetLabel_Emscripten, \
+			"NativeView": NativeView_Emscripten, \
+			"UpdateView": UpdateView_Emscripten, \
+			"DestroyView": DestroyView_Emscripten \			
+		}
+end handler
+
+private variable mButtonView_Emscripten as optional JSObject
+private variable mOnClickHandler as optional JSObject
+
+private handler AddJSEventHandler(in pElement as JSObject, in pEvent as String, in pHandler as JSObject)
+	EvalJavaScriptWithArguments("arguments[0].addEventListener(arguments[1], arguments[2]);", [pElement, pEvent, pHandler])
+end handler
+
+private handler RemoveJSEventHandler(in pElement as JSObject, in pEvent as String, in pHandler as JSObject)
+	EvalJavaScriptWithArguments("arguments[0].removeEventListener(arguments[1], arguments[2]);", [pElement, pEvent, pHandler])
+end handler
+
+private handler OnJSClick(pEvent as JSObject) returns nothing
+	PostAction()
+end handler
+
+public handler HasImplementation_Emscripten() returns Boolean
+	return true
+end handler
+
+public handler HasView_Emscripten() returns Boolean
+	return mButtonView_Emscripten is not nothing
+end handler
+
+public handler SetLabel_Emscripten(in pLabel as String) returns nothing
+	// Set button label using JavaScript
+	EvalJavaScriptWithArguments("arguments[0].innerHTML=arguments[1];", [mButtonView_Emscripten, pLabel])
+end handler
+
+public handler NativeView_Emscripten() returns Pointer
+	// Create an HTML5 button using JavaScript
+	put EvalJavaScript("document.createElement('button')") into mButtonView_Emscripten
+
+	// Attach event handler
+	put HandlerAsJSFunction(OnJSClick) into mOnClickHandler
+	AddJSEventHandler(mButtonView_Emscripten, "click", mOnClickHandler)
+
+	return PointerFromJSObject(mButtonView_Emscripten)
+end handler
+
+public handler DestroyView_Emscripten() returns nothing
+	RemoveJSEventHandler(mButtonView_Emscripten, "click", mOnClickHandler)
+	put nothing into mButtonView_Emscripten
+	put nothing into mOnClickHandler
+end handler
+
+public handler UpdateView_Emscripten(in pIntrinsicProps as Array) returns nothing
+	// Set button enabled using JavaScript
+	EvalJavaScriptWithArguments("arguments[0].disabled=arguments[1];", [mButtonView_Emscripten, not pIntrinsicProps["enabled"]])
+end handler
+
+end module

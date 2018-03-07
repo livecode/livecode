@@ -43,6 +43,7 @@ use com.livecode.widget.native.button.ios
 use com.livecode.widget.native.button.mac
 use com.livecode.widget.native.button.linux
 use com.livecode.widget.native.button.windows
+use com.livecode.widget.native.button.emscripten
 use com.livecode.widget.native.button.shared
 
 metadata version is "1.0.0"
@@ -124,6 +125,8 @@ private handler GetPlatformImplementation() returns optional Array
 		return Implementation_Linux()
 	else if tPlatform is "windows" then
 		return Implementation_Windows()
+	else if tPlatform is "emscripten" then
+		return Implementation_Emscripten()
 	end if
 	
 	return nothing
