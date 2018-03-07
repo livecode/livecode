@@ -52,7 +52,7 @@ metadata label.editor is "com.livecode.pi.string"
 metadata label.default is ""
 
 private variable mLabel as String
-private variable mButton as JSObject
+private variable mButton as optional JSObject
 private variable mOpen as Boolean
 
 private variable mOnClickHandler as JSObject
@@ -121,7 +121,7 @@ public handler OnClose()
 end handler
 
 private handler OnJSClick(pEvent as JSObject) returns nothing
-	SetLabel("Clicked!")
+	post "mouseUp"
 end handler
 
 private handler expandRectangle(in pRect as Rectangle, in pExp as Number) returns Rectangle
