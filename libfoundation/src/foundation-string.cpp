@@ -222,10 +222,10 @@ MCStringRef MCSTR(const char *p_cstring)
 {
 	MCAssert(nil != p_cstring);
 
-	MCStringRef t_string;
+	MCStringRef t_string = nullptr;
 	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_cstring, strlen(p_cstring), t_string);
 	
-	MCValueRef t_unique_string;
+	MCValueRef t_unique_string = nullptr;
 	/* UNCHECKED */ MCValueInter(t_string, t_unique_string);
 	
 	MCValueRelease(t_string);

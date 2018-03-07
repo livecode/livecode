@@ -373,7 +373,11 @@ Boolean MCScreenDC::open()
                     cmap = gdk_colormap_new(vis, TRUE);
                     setupcolors();
                     GdkColor *t_colors;
-                    /* UNCHECKED */ MCMemoryNewArray(ncolors, t_colors);
+                    if (!MCMemoryNewArray(ncolors, t_colors))
+                    {
+                      return False;
+                    }
+                    
                     for (int i = 0 ; i < ncolors ; i++)
                     {
                         colors[i].red = colors[i].green = colors[i].blue = i * MAXUINT2 / ncolors;

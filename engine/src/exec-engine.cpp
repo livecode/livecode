@@ -1193,7 +1193,7 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
     t_offset++;
     
 	MCerrorlock++;
-    unichar_t t_char;
+    unichar_t t_char = '\0';
     uindex_t t_start_offset;
     t_start_offset = t_offset;
     

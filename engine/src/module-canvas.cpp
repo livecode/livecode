@@ -4174,7 +4174,10 @@ void MCCanvasEffectMake(integer_t p_type, MCCanvasEffectRef &r_effect)
 bool MCCanvasEffectThrowPropertyInvalidValueError(MCCanvasEffectProperty p_property, MCValueRef p_value)
 {
 	MCStringRef t_prop_name;
-	MCCanvasEffectPropertyToString(p_property, t_prop_name);
+	if (!MCCanvasEffectPropertyToString(p_property, t_prop_name))
+	{
+		return false;
+	}
 	
 	return MCErrorCreateAndThrow(kMCCanvasEffectPropertyInvalidValueErrorTypeInfo,
 								 "property", t_prop_name,
@@ -4185,9 +4188,16 @@ bool MCCanvasEffectThrowPropertyInvalidValueError(MCCanvasEffectProperty p_prope
 bool MCCanvasEffectThrowPropertyNotAvailableError(MCCanvasEffectProperty p_property, MCCanvasEffectType p_type)
 {
 	MCStringRef t_prop_name;
+	if (!MCCanvasEffectPropertyToString(p_property, t_prop_name))
+	{
+		return false;
+	}
+	
 	MCStringRef t_type_name;
-	MCCanvasEffectPropertyToString(p_property, t_prop_name);
-	MCCanvasEffectTypeToString(p_type, t_type_name);
+	if (!MCCanvasEffectTypeToString(p_type, t_type_name))
+	{
+		return false;
+	}
 	
 	return MCErrorCreateAndThrow(kMCCanvasEffectPropertyNotAvailableErrorTypeInfo,
 								 "property", t_prop_name,
@@ -5442,9 +5452,11 @@ bool MCCanvasApplyGradientPaint(__MCCanvasImpl &x_canvas, MCCanvasGradientRef p_
 		for (uint32_t i = 0; i < t_ramp_length; i++)
 		{
 			MCCanvasGradientStopRef t_stop;
-			/* UNCHECKED */ MCProperListFetchGradientStopAt(t_gradient->ramp, i, t_stop);
-			t_offsets[i] = MCCanvasGradientStopGet(t_stop)->offset;
-			t_colors[i] = MCCanvasColorToMCGColor(MCCanvasGradientStopGet(t_stop)->color);
+			if (MCProperListFetchGradientStopAt(t_gradient->ramp, i, t_stop))
+			{
+					t_offsets[i] = MCCanvasGradientStopGet(t_stop)->offset;
+					t_colors[i] = MCCanvasColorToMCGColor(MCCanvasGradientStopGet(t_stop)->color);
+			}
 		}
 		
 		MCGContextSetFillGradient(x_canvas.context, t_gradient->function, t_offsets, t_colors, t_ramp_length, t_gradient->mirror, t_gradient->wrap, t_gradient->repeats, t_gradient_transform, t_gradient->filter);
@@ -5815,7 +5827,8 @@ MC_DLLEXPORT_DEF
 void MCCanvasDrawImage(MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas)
 {
 	MCGRectangle t_src_rect;
-	uint32_t t_width, t_height;
+	uint32_t t_width = 0;
+	uint32_t t_height = 0;
 	MCCanvasImageGetWidth(p_image, t_width);
 	MCCanvasImageGetHeight(p_image, t_height);
 	t_src_rect = MCGRectangleMake(0, 0, t_width, t_height);
@@ -6949,10 +6962,9 @@ bool MCSVGParse(MCStringRef p_string, MCSVGParseCallback p_callback, void *p_con
 	
 	bool t_first_command;
 	t_first_command = true;
+	MCSVGPathCommand t_command;
 	while (!MCRangeIsEmpty(t_range))
 	{
-		MCSVGPathCommand t_command;
-		
 		// First skip any whitespace in the string. After this we know that we should
 		// be expecting a path command, anything else is an error.
 		MCSVGSkipWhitespace(*t_native_string, t_range);
