@@ -310,7 +310,9 @@ public handler placeholderIcon(in pOS as String) returns String
     else if pOS is "windows" then
         return iconSVGPathFromName("windows")
     else if pOS is "linux" then
-        return iconSVGPathFromName("linux")                
+        return iconSVGPathFromName("linux")
+    else if pOS is "emscripten" then
+        return iconSVGPathFromName("html5")
     else
         throw "no placeholder icon for" && pOS && "operating system"
     end if
