@@ -1141,6 +1141,16 @@ bool MCWebViewBrowser::Init(void)
 	[super dealloc];
 }
 
+- (void)webView:(WebView *)webView
+        decidePolicyForNewWindowAction:(NSDictionary *)actionInformation
+        request:(NSURLRequest *)request
+        newFrameName:(NSString *)frameName
+        decisionListener:(id<WebPolicyDecisionListener>)listener
+{
+    [listener ignore];
+    [[webView mainFrame] loadRequest:request];
+}
+
 - (void)webView:(WebView *)webView decidePolicyForMIMEType:(NSString *)type request:(NSURLRequest *)request frame:(WebFrame *)frame decisionListener:(id<WebPolicyDecisionListener>)listener
 {
 	if ([WebView canShowMIMEType:type])
