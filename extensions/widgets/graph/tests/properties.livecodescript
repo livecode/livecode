@@ -26,8 +26,8 @@ private function getGraphData
 end getGraphData
 
 on TestSetup
-	TestLoadExtension "com.livecode.library.widgetutils"
 	TestLoadExtension "com.livecode.library.iconsvg"
+	TestLoadExtension "com.livecode.library.widgetutils"
 	TestLoadExtension "com.livecode.widget.linegraph"	
 	
 	create stack

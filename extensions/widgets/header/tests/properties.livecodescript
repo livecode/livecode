@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
-   TestLoadExtension "com.livecode.library.widgetutils"
    TestLoadExtension "com.livecode.library.iconsvg"
+   TestLoadExtension "com.livecode.library.widgetutils"
    TestLoadExtension "com.livecode.widget.headerbar"
    create widget "testHeader" as "com.livecode.widget.headerbar"
 end TestSetup
