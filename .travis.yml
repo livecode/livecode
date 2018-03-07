@@ -113,6 +113,7 @@ addons:
   # Packages needed for building LiveCode
   apt:
     packages:
+      - gawk
       - libx11-dev
       - libxext-dev
       - libxrender-dev

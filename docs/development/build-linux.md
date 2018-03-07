@@ -55,6 +55,7 @@ The following additional packages should be installed before building:
 * build-essential
 * automake
 * libtool
+* gawk
 * git
 * curl
 * flex
@@ -77,7 +78,7 @@ The following additional packages should be installed before building:
 
 Use 
 
-    sudo apt-get install build-essential automake libtool git curl flex &&
+    sudo apt-get install build-essential automake libtool gawk git curl flex &&
     sudo apt-get install bison libx11-dev libxext-dev libxrender-dev libxft-dev &&
     sudo apt-get install libxinerama-dev libxv-dev libxcursor-dev libfreetype6-dev && 
     sudo apt-get install libpopt-dev libesd0-dev liblcms2-dev pkg-config libgtk2.0-dev zip
