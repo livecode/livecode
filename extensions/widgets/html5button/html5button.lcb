@@ -52,7 +52,7 @@ metadata label.editor is "com.livecode.pi.string"
 metadata label.default is ""
 
 private variable mLabel as String
-private variable mButton as JSObject
+private variable mButton as optional JSObject
 private variable mOpen as Boolean
 
 private variable mOnClickHandler as JSObject
