@@ -345,6 +345,31 @@ private command OutputUpdatesMarkdown
    builderFileSetUTF8Contents tPath, sMarkdownText["updates"] 
 end OutputUpdatesMarkdown
 
+// Find <h(n)> elements and make them <h(n+pAmount)>
+private command MakeHeadersSmaller @xHTML, pAmount
+   local tStart, tEnd, tOldEnd, tNumber
+   put 1 into tOldEnd
+   repeat while matchChunk(char tOldEnd to -1 of xHTML, \
+         "<(?:\/)?h([0-9]+)>", tStart, tEnd)
+      add tOldEnd - 1 to tEnd
+      add tOldEnd - 1 to tStart
+      put char tStart to tEnd of xHTML into tNumber
+      add pAmount to tNumber
+      put tNumber into char tStart to tEnd of xHTML
+      put tEnd into tOldEnd
+      add the number of chars in tNumber - (tEnd - tStart) + 1 \
+            to tOldEnd
+   end repeat
+end MakeHeadersSmaller
+
+// Find (at least) double blank lines between specified tags
+// and add empty paragraph
+private command RespectBlankLinesBetween @xHTML, pFromTagSuffix, pToTagPrefix
+   put replaceText(xHtml, pFromTagSuffix & ">\n{2,}<" & pToTagPrefix, \
+         pFromTagSuffix & ">" & return & "<p> </p>" & \
+         return & "<" & pToTagPrefix) into xHtml
+end RespectBlankLinesBetween
+   
 private command EnsureMergMarkdown
    builderExtUnpack "Community"
    local tMergMarkdown
@@ -388,6 +413,16 @@ command OutputUpdatesHtml
    EnsureMergMarkdown
    put mergMarkdownToXHTML(sMarkdownText["updates"] \
          ,true,true,true,true,false,true,true,true) into tHtml
+   
+   // Shrink all headers by 2
+   MakeHeadersSmaller tHTML, 2
+   
+   // Add extra blank paragraphs between any tag & 
+   // subsequent header
+   RespectBlankLinesBetween tHTML, "", "h"
+      
+   // Add extra blank paragraphs between paragraphs
+   RespectBlankLinesBetween tHTML, "p", "p"
    
    local tPath
    put OutputGetUpdatesFilename("html") into tPath
