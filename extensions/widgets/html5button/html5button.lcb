@@ -121,7 +121,7 @@ public handler OnClose()
 end handler
 
 private handler OnJSClick(pEvent as JSObject) returns nothing
-	SetLabel("Clicked!")
+	post "mouseUp"
 end handler
 
 private handler expandRectangle(in pRect as Rectangle, in pExp as Number) returns Rectangle
