@@ -267,7 +267,7 @@ void MCStack::sethints()
     
     gdk_window_set_type_hint(window, t_type_hint);
     
-    if ((mode >= WM_PULLDOWN && mode <= WM_LICENSE) || getextendedstate(ECS_FULLSCREEN))
+    if ((mode >= WM_PULLDOWN && mode <= WM_LICENSE))
     {
         gdk_window_set_override_redirect(window, TRUE);
     }
@@ -454,6 +454,8 @@ void MCStack::sethints()
 	{
 		gdk_window_set_keep_above(window, TRUE);
 	}
+	
+	MCstacks->restack(this);
 }
 
 void MCStack::destroywindowshape()
