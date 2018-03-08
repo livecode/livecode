@@ -812,12 +812,9 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint3
     if (m_widget != nil)
         MCWidgetOnSave(m_widget, &t_rep);
     else
-        t_rep = m_rep;
-    
-    // If the rep is nil, then an error must have been thrown, so we still
-    // save, but without any state for this widget.
-    if (*t_rep == nil)
-        t_rep = MCValueRetain(kMCNull);
+		// If the rep is nil, then an error must have been thrown, so we still
+		// save, but without any state for this widget.
+		&t_rep = (m_rep != nil ? m_rep : MCValueRetain(kMCNull));
     
     // The state of the IO.
     IO_stat t_stat;
