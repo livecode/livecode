@@ -162,9 +162,18 @@ void MCStack::setmodalhints()
 {
 	if (mode == WM_MODAL || mode == WM_SHEET)
 	{
+		Window t_window = nullptr;
 		if (mode == WM_SHEET)
-            gdk_window_set_transient_for(window, (mode == WM_SHEET) ? getparentwindow() : NULL);
-        gdk_window_set_modal_hint(window, TRUE);
+		{
+			t_window = getparentwindow();
+		}
+		
+		if (nullptr == t_window && MCtopstackptr.IsValid()) 
+		{
+			t_window = MCtopstackptr->getwindow();
+		}
+		gdk_window_set_transient_for(window, t_window);
+		gdk_window_set_modal_hint(window, TRUE);
 	}
 }
 
