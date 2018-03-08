@@ -94,7 +94,13 @@ public:
 
     virtual Parse_stat parse(MCScriptPoint &sp, Boolean the)
     {
-        if (sp.is_eol() || get1param(sp, &m_expression, the) != PS_NORMAL)
+        if (sp.is_eol())
+        {
+            MCperror -> add(PE_FACTOR_NOOF, sp);
+            return PS_ERROR;
+        }
+
+        if (get1param(sp, &m_expression, the) != PS_NORMAL)
         {
             MCperror -> add(ParseError, sp);
             return PS_ERROR;
