@@ -1512,7 +1512,20 @@
     'rule' CheckExpressionIsExplicitlyTypedVariable(slot(Position, Id)):
         -- Only expressions binding to a slot which has a specified type are
         -- 'explicitly typed'
-        QueryKindOfSymbolId(Id -> variable)
+        QueryKindOfSymbolId(Id -> Kind)
+
+        -- Expression must be a variable of some kind, i.e. one of:
+        (|
+            -- A local variable
+            eq(Kind, local)
+        ||
+            -- A parameter variable
+            eq(Kind, parameter)
+        ||
+            -- A module local variable
+            eq(Kind, variable)
+        |)
+
         QuerySymbolId(Id -> Info)
         Info'Type -> Type
         ne(Type, unspecified)
