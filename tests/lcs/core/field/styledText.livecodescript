@@ -75,7 +75,6 @@ on TestStyledTextSplitRunRoundTrip
       tBeforeText is the text of tFieldAfter
 end TestStyledTextSplitRunRoundTrip
 
-<<<<<<< HEAD
 on TestParagraphHidden
    create stack "Test"
    set the defaultStack to "Test"
