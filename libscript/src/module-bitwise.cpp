@@ -16,22 +16,22 @@
 
 #include <foundation.h>
 
-extern "C" MC_DLLEXPORT_DEF void MCBitwiseEvalBitwiseAnd(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCBitwiseEvalBitwiseAnd(int64_t p_left, int64_t p_right, int64_t& r_output)
 {
     r_output = p_left & p_right;
 }
 
-extern "C" MC_DLLEXPORT_DEF void MCBitwiseEvalBitwiseOr(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCBitwiseEvalBitwiseOr(int64_t p_left, int64_t p_right, int64_t& r_output)
 {
     r_output = p_left | p_right;
 }
 
-extern "C" MC_DLLEXPORT_DEF void MCBitwiseEvalBitwiseXor(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCBitwiseEvalBitwiseXor(int64_t p_left, int64_t p_right, int64_t& r_output)
 {
     r_output = p_left ^ p_right;
 }
 
-extern "C" MC_DLLEXPORT_DEF void MCBitwiseEvalBitwiseNot(integer_t p_operand, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCBitwiseEvalBitwiseNot(int64_t p_operand, int64_t& r_output)
 {
     r_output = ~p_operand;
 }
@@ -47,21 +47,21 @@ MCBitwiseEvalBitwiseShiftCount (T p_operand, uinteger_t & p_shift)
 }
 
 extern "C" MC_DLLEXPORT_DEF void
-MCBitwiseEvalBitwiseShiftRight (integer_t p_operand,
+MCBitwiseEvalBitwiseShiftRight (int64_t p_operand,
                                 uinteger_t p_shift,
-                                integer_t & r_output)
+                                int64_t & r_output)
 {
 	MCBitwiseEvalBitwiseShiftCount (p_operand, p_shift);
 	r_output = p_operand >> p_shift;
 }
 
 extern "C" MC_DLLEXPORT_DEF void
-MCBitwiseEvalBitwiseShiftLeft (integer_t p_operand,
+MCBitwiseEvalBitwiseShiftLeft (int64_t p_operand,
                                uinteger_t p_shift,
-                               integer_t& r_output)
+                               int64_t& r_output)
 {
 	MCBitwiseEvalBitwiseShiftCount (p_operand, p_shift);
-	integer_t t_shifted = p_operand << p_shift;
+	int64_t t_shifted = p_operand << p_shift;
 
 	/* Overflow check */
 	if (p_operand != t_shifted >> p_shift)
