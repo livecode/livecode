@@ -129,8 +129,8 @@ mergeInto(LibraryManager.library, {
         requestGetResponse: function(request) {
 			var xhr = LiveCodeUtil.fetchObject(request);
             if (xhr) {
-                if (xhr.responseBase64 != null) {
-                    return xhr.responseBase64;
+                if (xhr.responseBytes != null) {
+                    return xhr.responseBytes;
                 } else if (xhr.responseText != null) {
                     return xhr.responseText;
                 }
@@ -222,23 +222,17 @@ mergeInto(LibraryManager.library, {
                 type = 'error';
             }
 
-            // we want to return the raw data back to libURL
-            // however do as javascript assumes a DOMString and performs the
-            // appropriate char set conversions when returning the result
-            // thus we base64 encode on this side (and decode in libURL)
+			// To return the raw data back to libURL we use a FileReader
+			// to read the data to an ArrayBuffer then construct a
+			// Uint8Array (which will be converted to MCDataRef) from that.
             var xhr = this;
             if (this.responseType == 'blob') {
-                // the FileReader API allows us to convert blobs to base64
-                // the API prefixes base64 data with "data:text/plain;base64,"
-                // make sure we chop this off
                 var reader = new FileReader();
                 reader.onloadend = function() {
-                    xhr.responseBase64 = reader.result.substring(
-                        'data:text/plain;base64,'.length - 1
-                    );
+                    xhr.responseBytes = new Uint8Array(reader.result);
                     LiveCodeLibURL.__sendCallback(xhr, event, type);
                 };
-                reader.readAsDataURL(this.response);
+                reader.readAsArrayBuffer(this.response);
             } else {
                 // if we've not got a binary blob back, then assume the data's
                 // charset is "x-user-defined" (as specified in the call to overrideMimeType)
@@ -251,7 +245,7 @@ mergeInto(LibraryManager.library, {
                 for (var i = 0; i < byteCount; i++) {
                     bytes[i] = xhr.responseText.charCodeAt(i) & 0xff;
                 }
-                xhr.responseBase64 = btoa(String.fromCharCode.apply(null, bytes));
+                xhr.responseBytes = bytes;
                 LiveCodeLibURL.__sendCallback(xhr, event, type);
             }
         },

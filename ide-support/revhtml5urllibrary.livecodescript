@@ -295,10 +295,7 @@ private function __ulExtXMLHTTPGetResponseHeaders self
 end __ulExtXMLHTTPGetResponseHeaders
 
 private function __ulExtXMLHTTPGetResponse self
-   -- all response data will be returned from the javascript library base64 encoded
-   -- this is ensure we get the raw response from the server
-   -- liburl takes care of text encoding
-   return base64Decode(__ulExtCallJS("requestGetResponse", self))
+   return __ulExtCallJS("requestGetResponse", self)
 end __ulExtXMLHTTPGetResponse
 
 private function __ulExtXMLHTTPGetStatus self
