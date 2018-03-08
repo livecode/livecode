@@ -42,14 +42,69 @@ end module
 %ERROR "Variadic parameters only allowed in foreign handlers" AT BEFORE_VARIADIC
 %ENDTEST
 
+%% Variadic arguments must be an explicitly-typed variable
+%TEST VariadicNotAllowedImplicitlyTypedArgument
+module compiler_test
+__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
+handler CallVariadic()
+	TestVariadic("pA", %{BEFORE_IMPLICIT_ARG}1)
+end handler
+end module
+%EXPECT PASS
+%ERROR "Variadic arguments must be an explicitly-typed variable" AT BEFORE_IMPLICIT_ARG
+%ENDTEST
+
+%% Variadic arguments can be local variables
+%TEST VariadicArgumentModuleLocal
+module compiler_test
+__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
+handler CallVariadic()
+	variable tVar as Integer
+	TestVariadic("pA", tVar)
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%% Variadic arguments can be module locals
+%TEST VariadicArgumentModuleLocal
+module compiler_test
+private variable mVar as Integer
+__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
+handler CallVariadic()
+	TestVariadic("pA", mVar)
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%% Variadic arguments can be parameter variables
+%TEST VariadicArgumentParameterVariable
+module compiler_test
+__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
+handler CallVariadic(in pVar as Integer)
+	TestVariadic("pA", pVar)
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
 %% You can have 0 to any number of variadic arguments
 %TEST VariadicParametersAnyCount
 module compiler_test
 __safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
 handler CallVariadic()
-	TestVariadic(1)
-	TestVariadic(1, 2)
-	TestVariadic(1, 2, 3)
+	TestVariadic("pA")
+
+	variable tX as Integer
+	variable tY as Integer
+	variable tZ as Integer
+	TestVariadic("pA", tX)
+	TestVariadic("pA", tX, tY)
+	TestVariadic("pA", tX, tY, tZ)
 end handler
 end module
 %EXPECT PASS
