@@ -474,7 +474,7 @@ command extensionCompile pLCCompile, pFile, pSupportFiles, pLCIPath, pExtraLCIPa
       put it into pSupportFiles
    end if
    repeat for each line tSupport in pSupportFiles
-      put shellFormat(pTargetFolder & slash & tSupport) after tShellCommand
+      put shellFormat(tSupport) after tShellCommand
    end repeat
    
    # The target .lcb file
