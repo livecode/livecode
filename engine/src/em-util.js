@@ -36,7 +36,7 @@ mergeInto(LibraryManager.library, {
 				n = iter.next();
 				
 				if (keyvalue[1]['object'] === jsObj)
-					return keyvalue[0]
+					return keyvalue[0];
 			}
 		},
 
@@ -152,12 +152,12 @@ mergeInto(LibraryManager.library, {
 		/*** Boolean conversion ***/
 		booleanToJSValue: function(booleanref)
 		{
-			return Module.ccall('MCEmscriptenGetBooleanValue', 'number', ['number'], [booleanref]) ? true : false;
+			return Module.ccall('MCEmscriptenUtilGetBooleanValue', 'number', ['number'], [booleanref]) ? true : false;
 		},
 		
 		booleanFromJSValue: function(boolean)
 		{
-			return Module.ccall('MCEmscriptenCreateBoolean', 'number', ['number'], [boolean]);
+			return Module.ccall('MCEmscriptenUtilCreateBoolean', 'number', ['number'], [boolean]);
 		},
 
 		/*** ProperList Support ***/
@@ -291,10 +291,12 @@ mergeInto(LibraryManager.library, {
 		
 		valueFromJSValue: function(jsValue)
 		{
-			if (Array.isArray(jsValue))
-				return this.properListFromJSArray(jsValue);
+			if (jsValue === undefined) // Return null value if undefined
+				return Module.ccall('MCEmscriptenUtilCreateNull', 'number', [], []);
 			else if (jsValue === null)
 				return Module.ccall('MCEmscriptenUtilCreateNull', 'number', [], []);
+			else if (Array.isArray(jsValue))
+				return this.properListFromJSArray(jsValue);
 			else
 			{
 				switch (typeof jsValue)

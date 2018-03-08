@@ -71,7 +71,7 @@ mergeInto(LibraryManager.library, {
             return xhr.key;
         },
         requestDestroy: function(request) {
-			LiveCodeUtil.removeObject(request);
+			LiveCodeUtil.releaseObject(request);
         },
 
         requestSend: function(request, body) {
@@ -111,7 +111,7 @@ mergeInto(LibraryManager.library, {
                 // the user agent is set consitently accross all browsers,
                 // so return that along with any headers we set
                 var headers = 'User-Agent:' + navigator.userAgent;
-                xhr.requestHeaders.foreach(function(headerName, headerValue, map) {
+                xhr.requestHeaders.forEach(function(headerName, headerValue, map) {
                     if (headers != '') {
                         headers += '\n';
                     }
