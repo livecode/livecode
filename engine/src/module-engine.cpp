@@ -912,9 +912,11 @@ static void break_no_op(void*)
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineRunloopBreakWait()
 {
+#if defined(FEATURE_NOTIFY)
 	// IM-2016-07-21: [[ Bug 17633 ]] Need to give notify dispatch something
 	//    to do as just pinging the queue doesn't break out of the wait loop.
 	MCNotifyPush(break_no_op, nil, false, true);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
