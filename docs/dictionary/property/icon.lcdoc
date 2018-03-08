@@ -46,13 +46,14 @@ the <OS X> dock.
 
 LiveCode looks for the specified image in the following order:
 
-1. The stack of the object's <behavior> (if applicable)
-2. The stack of the owner of the object's <behavior> (if applicable)
-3. The stack of the object's stack's <behavior> (if applicable)
-4. The object's stack
-5. The object's stack's mainstack (if a substack)
-6. The object's stack's mainstack's substacks
-7. The list of open stacks, in order they were loaded
+* 1. The stack of the object's <behavior> (if applicable)
+* 2. The stack of the owner of the object's <behavior> (if applicable)
+*    ...
+* n. The stack of the object's stack's <behavior> (if applicable)
+* a. The object's stack
+* b. The object's stack's mainstack (if a substack)
+* c. The object's stack's mainstack's substacks
+* d. The list of open stacks, in order they were loaded
 
 If a button has been clicked during the current session and its
 visitedIcon <property> is set, its <visitedIcon> is displayed instead of
