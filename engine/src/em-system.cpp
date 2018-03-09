@@ -1385,3 +1385,13 @@ MCProperListRef MCEmscriptenUtilCreateMutableProperList()
 	
 	return t_list;
 }
+
+extern "C" MC_DLLEXPORT_DEF
+MCDataRef MCEmscriptenUtilCreateDataWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count)
+{
+	MCDataRef t_data = nil;
+	if (!MCDataCreateWithBytesAndRelease(p_bytes, p_byte_count, t_data))
+		return nil;
+	
+	return t_data;
+}

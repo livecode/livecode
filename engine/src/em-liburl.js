@@ -38,7 +38,7 @@ mergeInto(LibraryManager.library, {
             // store any additional meta against the request that we need
             xhr.url = url;
             xhr.async = async;
-            xhr.responseBase64 = null;
+            xhr.responseBytes = null;
             xhr.requestHeaders = new Map();
 
             // if possible, get the raw data without any char set converions etc
@@ -47,7 +47,7 @@ mergeInto(LibraryManager.library, {
             // the browser to return the URL in the x-user-defined charset which
             // can be parsed as a stream of binary data
             if (async) {
-                xhr.responseType = 'blob';
+                xhr.responseType = 'arraybuffer';
             } else {
                 xhr.overrideMimeType('text\/plain; charset=x-user-defined');
             }
@@ -71,7 +71,7 @@ mergeInto(LibraryManager.library, {
             return xhr.key;
         },
         requestDestroy: function(request) {
-			LiveCodeUtil.removeObject(request);
+			LiveCodeUtil.releaseObject(request);
         },
 
         requestSend: function(request, body) {
@@ -111,7 +111,7 @@ mergeInto(LibraryManager.library, {
                 // the user agent is set consitently accross all browsers,
                 // so return that along with any headers we set
                 var headers = 'User-Agent:' + navigator.userAgent;
-                xhr.requestHeaders.foreach(function(headerName, headerValue, map) {
+                xhr.requestHeaders.forEach(function(headerName, headerValue, map) {
                     if (headers != '') {
                         headers += '\n';
                     }
@@ -129,8 +129,8 @@ mergeInto(LibraryManager.library, {
         requestGetResponse: function(request) {
 			var xhr = LiveCodeUtil.fetchObject(request);
             if (xhr) {
-                if (xhr.responseBase64 != null) {
-                    return xhr.responseBase64;
+                if (xhr.responseBytes != null) {
+                    return xhr.responseBytes;
                 } else if (xhr.responseText != null) {
                     return xhr.responseText;
                 }
@@ -222,23 +222,12 @@ mergeInto(LibraryManager.library, {
                 type = 'error';
             }
 
-            // we want to return the raw data back to libURL
-            // however do as javascript assumes a DOMString and performs the
-            // appropriate char set conversions when returning the result
-            // thus we base64 encode on this side (and decode in libURL)
+			// To return the raw data back to libURL we use the
+			// ArrayBuffer response to construct a Uint8Array
+			// (which will be converted to MCDataRef).
             var xhr = this;
-            if (this.responseType == 'blob') {
-                // the FileReader API allows us to convert blobs to base64
-                // the API prefixes base64 data with "data:text/plain;base64,"
-                // make sure we chop this off
-                var reader = new FileReader();
-                reader.onloadend = function() {
-                    xhr.responseBase64 = reader.result.substring(
-                        'data:text/plain;base64,'.length - 1
-                    );
-                    LiveCodeLibURL.__sendCallback(xhr, event, type);
-                };
-                reader.readAsDataURL(this.response);
+            if (this.responseType == 'arraybuffer') {
+				xhr.responseBytes = new Uint8Array(xhr.response);
             } else {
                 // if we've not got a binary blob back, then assume the data's
                 // charset is "x-user-defined" (as specified in the call to overrideMimeType)
@@ -251,9 +240,9 @@ mergeInto(LibraryManager.library, {
                 for (var i = 0; i < byteCount; i++) {
                     bytes[i] = xhr.responseText.charCodeAt(i) & 0xff;
                 }
-                xhr.responseBase64 = btoa(String.fromCharCode.apply(null, bytes));
-                LiveCodeLibURL.__sendCallback(xhr, event, type);
+                xhr.responseBytes = bytes;
             }
+            LiveCodeLibURL.__sendCallback(xhr, event, type);
         },
         requestCallbackTimeout: function(event) {
             LiveCodeLibURL.__requestClearLoadEndCallback(this);

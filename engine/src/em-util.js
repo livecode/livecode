@@ -36,7 +36,7 @@ mergeInto(LibraryManager.library, {
 				n = iter.next();
 				
 				if (keyvalue[1]['object'] === jsObj)
-					return keyvalue[0]
+					return keyvalue[0];
 			}
 		},
 
@@ -152,12 +152,12 @@ mergeInto(LibraryManager.library, {
 		/*** Boolean conversion ***/
 		booleanToJSValue: function(booleanref)
 		{
-			return Module.ccall('MCEmscriptenGetBooleanValue', 'number', ['number'], [booleanref]) ? true : false;
+			return Module.ccall('MCEmscriptenUtilGetBooleanValue', 'number', ['number'], [booleanref]) ? true : false;
 		},
 		
 		booleanFromJSValue: function(boolean)
 		{
-			return Module.ccall('MCEmscriptenCreateBoolean', 'number', ['number'], [boolean]);
+			return Module.ccall('MCEmscriptenUtilCreateBoolean', 'number', ['number'], [boolean]);
 		},
 
 		/*** ProperList Support ***/
@@ -210,6 +210,22 @@ mergeInto(LibraryManager.library, {
 			}
 			
 			return listref;
+		},
+		
+		/*** Byte array conversion ***/
+		
+		dataFromJSUint8Array: function(array)
+		{
+			var memPtr = Module._malloc(array.length);
+			Module.writeArrayToMemory(array, memPtr);
+			return Module.ccall('MCEmscriptenUtilCreateDataWithBytesAndRelease', 'number', ['number', 'number'], [memPtr, array.length]);
+		},
+		
+		dataToJSUint8Array: function(dataRef)
+		{
+			var bytePtr = Module.ccall('MCDataGetBytePtr', 'number', ['number'], [dataRef]);
+			var byteCount = Module.ccall('MCDataGetLength', 'number', ['number'], [dataRef]);
+			return Module.HEAPU8.slice(bytePtr, bytePtr + byteCount);
 		},
 		
 		/*** JavaScript object conversion ***/
@@ -275,14 +291,16 @@ mergeInto(LibraryManager.library, {
 			{
 				case this.kMCValueTypeCodeNull:
 					return null;
-				case this.kMCValueTypeCodeProperList:
-					return this.properListToJSArray(valueref);
-				case this.kMCValueTypeCodeString:
-					return this.stringFromMCStringRef(valueref);
-				case this.kMCValueTypeCodeNumber:
-					return this.numberToJSValue(valueref);
 				case this.kMCValueTypeCodeBoolean:
 					return this.booleanToJSValue(valueref);
+				case this.kMCValueTypeCodeNumber:
+					return this.numberToJSValue(valueref);
+				case this.kMCValueTypeCodeString:
+					return this.stringFromMCStringRef(valueref);
+				case this.kMCValueTypeCodeData:
+					return this.dataToJSUint8Array(valueref);
+				case this.kMCValueTypeCodeProperList:
+					return this.properListToJSArray(valueref);
 				/* TODO - support more value types */
 				default:
 					return this.valueToString(valueref);
@@ -291,20 +309,24 @@ mergeInto(LibraryManager.library, {
 		
 		valueFromJSValue: function(jsValue)
 		{
-			if (Array.isArray(jsValue))
-				return this.properListFromJSArray(jsValue);
+			if (jsValue === undefined) // Return null value if undefined
+				return Module.ccall('MCEmscriptenUtilCreateNull', 'number', [], []);
 			else if (jsValue === null)
 				return Module.ccall('MCEmscriptenUtilCreateNull', 'number', [], []);
+			else if (Array.isArray(jsValue))
+				return this.properListFromJSArray(jsValue);
+			else if (jsValue instanceof Uint8Array)
+				return this.dataFromJSUint8Array(jsValue);
 			else
 			{
 				switch (typeof jsValue)
 				{
+					case "boolean":
+						return this.booleanFromJSValue(jsValue);
 					case "number":
 						return this.numberFromJSValue(jsValue);
 					case "string":
 						return this.stringToMCStringRef(jsValue);
-					case "boolean":
-						return this.booleanFromJSValue(jsValue);
 					case "function":
 					case "object":
 						/* TODO - for now, treat functions as objects but we may wish to differentiate them later */
