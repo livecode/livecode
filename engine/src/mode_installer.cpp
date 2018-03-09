@@ -1341,10 +1341,8 @@ IO_stat MCDispatch::startup(void)
 		
 		t_stack -> extraopen(false);
 		
-        // Resolve parent scripts *after* we've loaded aux stacks.
-        if (t_stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
-            t_stack -> resolveparentscripts();
-
+        MCdispatcher->resolveparentscripts();
+        
 		MCscreen->resetcursors();
 		MCImage::init();
 		send_startup_message();
@@ -1406,13 +1404,7 @@ IO_stat MCDispatch::startup(void)
 
 	t_info . stack -> extraopen(false);
     
-    // Resolve parent scripts *after* we've loaded aux stacks.
-    if (t_info . stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
-        t_info . stack -> resolveparentscripts();
-
-    // Resolve parent scripts
-    if (t_info . stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
-        t_info . stack -> resolveparentscripts();
+    MCdispatcher->resolveparentscripts();
     
 	MCscreen->resetcursors();
 	MCtemplateimage->init();

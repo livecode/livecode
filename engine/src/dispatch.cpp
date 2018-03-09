@@ -926,7 +926,10 @@ void MCDispatch::processstack(MCStringRef p_openpath, MCStack* &x_stack)
     // this - so we just ignore the result for now (note that all the 'load'
     // methods *fail* to check for no-memory errors!).
     if (s_loaded_parent_script_reference)
+    {
         x_stack -> resolveparentscripts();
+        x_stack -> setextendedstate(True, ECS_USES_PARENTSCRIPTS);
+    }
 }
 
 // MW-2012-02-17: [[ LogFonts ]] Actually load the stack file (wrapped by readfile
@@ -2788,3 +2791,22 @@ bool MCDispatch::recomputefonts(MCFontRef, bool p_force)
     
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCDispatch::resolveparentscripts()
+{
+    if (stacks != NULL)
+    {
+        MCStack* t_stack = stacks;
+        do
+        {
+            if (t_stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
+                t_stack -> resolveparentscripts();
+            
+            t_stack = t_stack->next();
+        }
+        while(t_stack != stacks);
+    }
+}
+

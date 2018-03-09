@@ -305,6 +305,7 @@ public:
     // if required.
     void processstack(MCStringRef p_openpath, MCStack* &x_stack);
     
+    void resolveparentscripts(void);
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.
