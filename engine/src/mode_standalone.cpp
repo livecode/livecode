@@ -586,10 +586,8 @@ IO_stat MCDispatch::startup(void)
 		
 		t_stack -> extraopen(false);
 		
-		// Resolve parent scripts *after* we've loaded aux stacks.
-		if (t_stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
-			t_stack -> resolveparentscripts();
-		
+        MCdispatcher->resolveparentscripts();
+        
 		MCscreen->resetcursors();
 		MCImage::init();
 		
@@ -685,10 +683,8 @@ IO_stat MCDispatch::startup(void)
 	{
 		t_info . stack -> extraopen(false);
 	
-		// Resolve parent scripts *after* we've loaded aux stacks.
-		if (t_info . stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
-			t_info . stack -> resolveparentscripts();
-		
+        MCdispatcher->resolveparentscripts();
+        
 		MCscreen->resetcursors();
 		MCImage::init();
 	}
@@ -893,11 +889,7 @@ IO_stat MCDispatch::startup(void)
 		
 		MCCapsuleClose(t_capsule);
 		
-        // Resolve parent scripts *after* we've loaded aux stacks.
-        if (t_info . stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
-            t_info . stack -> resolveparentscripts();
-        
-		t_mainstack = t_info . stack;
+        t_mainstack = t_info . stack;
 	}
 	else if (MCnstacks > 1 && MClicenseparameters . license_class == kMCLicenseClassCommunity)
 	{
@@ -992,9 +984,7 @@ IO_stat MCDispatch::startup(void)
 	// Now open the main stack.
 	t_mainstack-> extraopen(false);
     
-    // Resolve parent scripts *after* we've loaded aux stacks.
-    if (t_mainstack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
-        t_mainstack -> resolveparentscripts();
+    MCdispatcher->resolveparentscripts();
     
 	send_startup_message();
 	if (!MCquit)
