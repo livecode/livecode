@@ -356,6 +356,8 @@ Description:
 The <hilitedItem> is the item number of the currently-highlighted navigation
 item, starting from 1.  It can be used as a key into the <itemArray>.
 
+Setting 0 will cause nothing to be highlighted.
+
 Related: hilitedItemName (property)
 
 References: itemArray(property)
@@ -365,7 +367,7 @@ metadata hilitedItem.editor is "com.livecode.pi.integer"
 metadata hilitedItem.default is "1"
 metadata hilitedItem.label is "Selected item index"
 metadata hilitedItem.step is "1"
-metadata hilitedItem.min is "1"
+metadata hilitedItem.min is "0"
 
 /**
 Syntax: set the hilitedItemName of <widget> to <pName>
@@ -1249,7 +1251,7 @@ end handler
 
 public handler setNavSelectedItem(in pSelectedItem as Integer) returns nothing
 	if pSelectedItem is not mSelectedItem and \
-			pSelectedItem > 0 and \
+			pSelectedItem >= 0 and \
 			pSelectedItem <= the number of elements in mNavData then
 		put pSelectedItem into mSelectedItem
 		post "hiliteChanged"
@@ -1260,10 +1262,10 @@ end handler
 public handler setNavSelectedItemName(in pName as String) returns nothing
 	variable tCount as Integer
 	variable tItem as Array
-	
+
 	-- Find the item index corresponding to pName and set it as the
 	-- currently-highlighted item.
-	
+
 	repeat with tCount from 1 up to the number of elements in mNavData
 		put mNavData[tCount] into tItem
 		if tItem["name"] is pName then
@@ -1275,7 +1277,11 @@ public handler setNavSelectedItemName(in pName as String) returns nothing
 end handler
 
 public handler getNavSelectedItemName() returns String
-	return mNavData[mSelectedItem]["name"]
+	if mSelectedItem = 0 then
+		return ""
+	else
+		return mNavData[mSelectedItem]["name"]
+	end if
 end handler
 
 public handler setItemStyle(in pItemStyle as String) returns nothing
