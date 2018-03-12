@@ -169,9 +169,7 @@ private command launchDownloadedInstaller
       if the result is not empty then
          return "Could not launch downloaded installer:"  && the result
       end if      
-      if tOldPath is not empty then
-         put tOldPath into $PATH
-      end if      
+        
       return empty
       
    end if
