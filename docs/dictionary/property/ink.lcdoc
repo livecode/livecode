@@ -97,10 +97,6 @@ applied.
 > something other than 0.
 
 References: object (glossary), property (glossary), pixel (glossary),
-background (glossary), transfer mode (glossary), string (keyword),
-notSrcCopy (keyword), colorOverlay (property), innerGlow (property),
-innerShadow (property), blendLevel (property), dropShadow (property),
-outerGlow (property)
+background (glossary), string (keyword)
 
 Tags: ui
-
