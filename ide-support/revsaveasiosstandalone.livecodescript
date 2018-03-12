@@ -342,7 +342,11 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       if tExternalRec["type"] is among the words of "external external-tmp" then
          put tExternalName & return after tDeployExternals
       end if
-      put tExternalName & ":" & "./" & tExternalRec["location"] & return after tLibraryMappings
+      if not (tExternalRec["location"] ends with ".a" or \
+            (tExternalRec["location"] ends with ".lcext" \
+            and pTarget is "Device")) then
+         put tExternalName & ":" & "./" & tExternalRec["location"] & return after tLibraryMappings
+      end if
    end repeat
    delete the last char of tDeployExternals
    put tDeployExternals into pSettings["externals"]
