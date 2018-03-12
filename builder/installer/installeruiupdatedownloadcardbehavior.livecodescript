@@ -152,12 +152,11 @@ private command launchDownloadedInstaller
                put quote & sFileName & quote && "install" &&  the loc of this stack into tCommand
                break
             case "linux"
-               local tOldPath
-               --put $PATH into tOldPath
-               --set the itemDel to slash
-               --put item 1 to -2 of sFileName into $PATH
-               --put item -1 of sFileName && "install" && the loc of this stack into tCommand
-               --set the itemDel to comma
+               local tChmodResult
+               get shell("chmod +x " & quote & sFileName & quote)
+               if it is not empty then
+                  return "Launching downloaded installer - Setting executable permission failed - " & it
+               end if
                put sFileName && "install" &&  the loc of this stack into tCommand
                break
          end switch
