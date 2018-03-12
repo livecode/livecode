@@ -1373,7 +1373,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
                 // We also need to close the menu if the button release happened
                 // outside of the menu tree.
                 bool t_outside = true;
-                MCObject* t_menu = this;
+                MCObject* t_menu = menu;
                 while (t_outside && t_menu != NULL)
                 {
                     // Check whether the click was inside the menu (the rect
