@@ -959,6 +959,15 @@ public:
 		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
 		if (nil == m_owner)
 			return true;
+
+		if (!m_owner->GetAllowNewWindow())
+		{
+			char *t_url_str = nullptr;
+			if (MCCefStringToUtf8String(p_target_url, t_url_str))
+			{
+				m_owner->GoToURL(t_url_str);
+			}
+		}
 		
 		return !m_owner->GetAllowNewWindow();
 	}
