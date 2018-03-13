@@ -283,7 +283,7 @@ private command storeExtensionByKind pZip, pKind, pExtensionsPath
    put revIDEExtensionProperty(pKind, "install_path") into tInstallFolder
    
    local tFiles
-   put getExtensionFilesByKind(tInstallFolder) into tFiles
+   put getExtensionFilesByKind(tInstallFolder, pKind) into tFiles
    
    local tZipPath, tFilePath
    repeat for each element tFilePath in tFiles
@@ -301,7 +301,7 @@ end storeExtensionByKind
 -- For community (GPL) standalones, we need to include the extension in
 -- "the preferred form for modification".  I.e. with all of its source code
 -- and documentation.  Otherwise, just include compiled extension + resources
-private function getExtensionFilesByKind pInstallFolder
+private function getExtensionFilesByKind pInstallFolder, pKind
    local tExtensionModule, tFiles, tFileCount, tResourceFiles, tFilePath
    
    if not revEnvironmentEditionProperty("open_source_required") then
@@ -318,8 +318,10 @@ private function getExtensionFilesByKind pInstallFolder
       
       -- Compiled module file
       add 1 to tFileCount
-      put "module.lcm" into tFiles[tFileCount]
-      
+      local tFileDataA
+      set the itemdelimiter to slash
+      put revIDEExtensionFileData(pKind) into tFileDataA
+      put item -1 of tFileDataA["file"] into tFiles[tFileCount]
    else
       -- Include *every* file in the extension
       put scanFolder(pInstallFolder) into tFiles
