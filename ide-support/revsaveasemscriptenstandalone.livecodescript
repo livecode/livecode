@@ -430,6 +430,7 @@ private function getStartupScript pStackHash, pGeneratedStartupScript
    
    -- Make substitutions in the startup script
    replace "@ENGINE_VERSION@" with the version in tScript
+   replace "@MODULE_VERSION@" with extensionLCCompileVersion() in tScript
    replace "@BOOT_HASH@" with tStackHashString in tScript
    replace "@STARTUP_SCRIPT@" with pGeneratedStartupScript in tScript
    return tScript

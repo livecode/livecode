@@ -1,6 +1,7 @@
 ﻿script "__startup"
 constant kBootHash = "@BOOT_HASH@"
 constant kEngineVersion = "@ENGINE_VERSION@"
+constant kModuleVersion = "@MODULE_VERSION@"
 
 -- Directories that engine expects to normally be present
 constant kStandardFolders = "/tmp:/livecode:/boot:/boot/standalone:/boot/fonts"
@@ -102,8 +103,20 @@ on startup
          repeat for each line tModuleName in tModuleList
             put kExtensionFolder & slash & tModuleName into tFolder
             
-            load extension from file (tFolder & slash & "module.lcm") \
-                  with resource path (tFolder & slash & "resources")
+            local tModule
+            put tFolder & slash & "module." & kModuleVersion & ".lcm" \
+            	into tModule
+            	
+            if there is not a file tModule then
+            	put tFolder & slash & "module.lcm" into tModule
+            end if
+            
+            if there is not a file tModule then
+               throw tModuleName & ": missing module file"
+            end if
+            
+            load extension from file tModule \
+               with resource path (tFolder & slash & "resources")
             
             if the result is not empty then
                throw tModuleName & ":" && the result
