@@ -142,8 +142,8 @@ end handler
 Description:
 Use <EvalJavaScriptWithArguments> to get the result of running a block of JavaScript code, where you need to pass values to the script.
 */
-public handler EvalJavaScriptWithArguments(in pScript as String, in pArgs as List) returns optional String
-	variable tResult as any
+public handler EvalJavaScriptWithArguments(in pScript as String, in pArgs as List) returns optional any
+	variable tResult as optional any
 	if MCEmscriptenEvaluateJavaScriptWithArguments(pScript, pArgs, tResult) then
 		return tResult
 	end if
