@@ -76,6 +76,7 @@ public:
 
 	uintptr_t dtouint(Drawable d);
 	Boolean uinttowindow(uintptr_t, Window &w);
+    void* GetNativeWindowHandle(Window p_window);
 
 	/* ---------- Display management */
 
