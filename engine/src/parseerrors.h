@@ -1792,6 +1792,10 @@ enum Parse_errors
 	
     // {PE-0582} send: can't send script in time
     PE_SEND_SCRIPTINTIME,
+    
+    // {PE-0583} fontLanguage: bad type expression
+    PE_FONTLANGUAGE_BADPARAM,
+    
 };
 
 extern const char *MCparsingerrors;

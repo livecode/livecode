@@ -2771,6 +2771,9 @@ enum Exec_errors
     // {EE-0907} library mapping: bad mapping
     EE_BAD_LIBRARY_MAPPING,
 
+    // {EE-0908} fontLanguage: bad font name
+    EE_FONTLANGUAGE_BADFONTNAME,
+    
 };
 
 extern const char *MCexecutionerrors;
