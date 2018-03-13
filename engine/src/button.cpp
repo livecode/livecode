@@ -1384,7 +1384,9 @@ Boolean MCButton::mup(uint2 which, bool p_release)
                     
                     // Move to the parent menu, if it exists
                     if (t_menu->getstack()->getparent()    // Stack's parent
-                        && t_menu->getstack()->getparent()->gettype() == CT_BUTTON)
+                        && t_menu->getstack()->getparent()->gettype() == CT_BUTTON
+						&& t_menu->getstack()->getparent()->getstack()->getparent()
+						&& t_menu->getstack()->getparent()->getstack()->getparent()->gettype() == CT_BUTTON)
                     {
                         // This is a submenu
                         t_menu = t_menu->getstack()->getparent();
