@@ -954,7 +954,7 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
         ei -= sptr->gettextlengthcr();
         sptr = sptr->next();
     }
-    while(ei > 0);
+    while(ei >= 0);
 
     // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
     FinishLayout(t_layout_settings);
