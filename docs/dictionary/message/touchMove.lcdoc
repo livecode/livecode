@@ -18,7 +18,7 @@ local sLastX
 on touchMove pTouchID, pTouchX, pTouchY
    -- sLastX[pTouchID] will be empty when the first move
    -- message for pTouchID is sent
-   if sLastX[pTouchID] is not empty and
+   if sLastX[pTouchID] is not empty and \
          pTouchX > sLastX[pTouchID] then
       -- user has moved to the right
    end if
