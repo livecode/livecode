@@ -764,6 +764,8 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 		else
 			r_cancelled = false;
 	}
+    else
+        ctxt.Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
