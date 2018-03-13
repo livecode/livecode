@@ -1723,7 +1723,7 @@ end syntax
 
 public foreign handler MCWidgetGetNativeLayerOfWidget(in pWidget as Widget, out rNativeLayer as Pointer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetNativeLayerOfWidget(in pNativeLayer as optional Pointer, in pWidget as Widget) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetStackNativeViewOfWidget(in pWidget as Widget, out rNativeView as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetStackNativeViewOfWidget(in pWidget as Widget, out rNativeView as optional Pointer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetStackNativeDisplayOfWidget(in pWidget as Widget, out rDisplay as Pointer) returns nothing binds to "<builtin>"
 
 /**
