@@ -46,7 +46,7 @@ public handler HasView_Android() returns Boolean
 end handler
 
 public handler NativeView_Android(in pParent as optional Pointer) returns Pointer
-	return _NativeView_Android(pParent)
+	return _NativeView_Android()
 end handler
 
 public handler DestroyView_Android() returns nothing
@@ -90,7 +90,7 @@ handler ButtonActionCallback(in pView as JObject) returns nothing
 	PostAction()
 end handler
 
-handler _NativeView_Android(in pParent as optional Pointer) returns Pointer
+handler _NativeView_Android() returns Pointer
 	// Create an android button using the application Context
     put _JNI_CreateButton(ApplicationContext()) into mButtonView_Android
 

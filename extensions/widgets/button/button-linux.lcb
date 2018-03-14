@@ -73,8 +73,6 @@ foreign handler GTK_ButtonNewWithLabel(in pLabel as ZStringNative) returns Point
 	"c:libgtk-x11-2.0.so>gtk_button_new_with_label"
 foreign handler GTK_WidgetShow(in pWidget as Pointer) returns nothing binds to \
 	"c:libgtk-x11-2.0.so>gtk_widget_show"
-foreign handler GTK_WidgetRealize(in pWidget as Pointer) returns nothing binds to \
-	"c:libgtk-x11-2.0.so>gtk_widget_realize"
 foreign handler GTK_ContainerAdd(in pContainer as Pointer, in pWidget as Pointer) returns nothing \
 	binds to "c:libgtk-x11-2.0.so>gtk_container_add"
 foreign handler GTK_PlugNew(in pType as CUInt) returns Pointer \

@@ -26,9 +26,6 @@ end handler
 
 public handler PostAction() returns nothing
 	post "mouseUp" to mScriptObject
-    
-    // Wake the engine to deal with the posted signal
-    MCEngineRunloopBreakWait()
 end handler
 
 end module

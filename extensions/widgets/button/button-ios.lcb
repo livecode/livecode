@@ -35,7 +35,6 @@ public handler Implementation_Ios() returns Array
 end handler
 
 private variable mButtonView_Ios as optional ObjcObject
-private variable mButtonProxy_Ios as optional ObjcObject
 
 public handler HasImplementation_Ios() returns Boolean
 	return true
@@ -45,18 +44,10 @@ public handler HasView_Ios() returns Boolean
 	return mButtonView_Ios is not nothing
 end handler
 
-public type NSUInteger is CULong
-
-private foreign handler ObjC_UIButtonSetTitleForState(in pObj as ObjcId, in pTitle as ObjcId, in pState as NSUInteger) returns nothing binds to "objc:UIButton.-setTitle:forState:?ui"
 public handler SetLabel_Ios(in pLabel as String) returns nothing
 	unsafe
 		_SetLabel_Ios(pLabel)
 	end unsafe
-end handler
-
-private unsafe handler _SetLabel_Ios(in pLabel as String) returns nothing
-    /* We use UIControlStateNormal = 0 */
-	ObjC_UIButtonSetTitleForState(mButtonView_Ios, StringToNSString(pLabel), 0)
 end handler
 
 public handler NativeView_Ios(in pParent as optional Pointer) returns Pointer
@@ -65,15 +56,35 @@ public handler NativeView_Ios(in pParent as optional Pointer) returns Pointer
 	end unsafe
 end handler
 
-private handler ButtonActionCallback_Ios(in pSender as ObjcObject, in pContext as optional any) returns nothing
-	PostAction()
+public handler DestroyView_Ios() returns nothing
+	unsafe
+		_DestroyView_Ios()
+	end unsafe
 end handler
 
-private foreign handler ObjC_UIButtonButtonWithType(in pType as NSUInteger) returns ObjcId binds to "objc:UIButton.+buttonWithType:?ui"
-private foreign handler ObjC_UIButtonSetEnabled(in pObj as ObjcId, in pEnabled as CBool) returns nothing binds to "objc:UIButton.-setEnabled:?ui"
-private foreign handler ObjC_UIButtonGetTitleLabel(in pObj as ObjcId) returns ObjcId binds to "objc:UIButton.-titleLabel?ui"
-private foreign handler ObjC_UILabelSetFont(in pObj as ObjcId, in pFont as ObjcId) returns nothing binds to "objc:UILabel.-setFont:?ui"
-private foreign handler ObjC_UIButtonAddTargetActionForControlEvents(in pObj as ObjcId, in pTarget as ObjcId, in pAction as UIntPtr, in pControlEvents as NSUInteger) returns nothing binds to "objc:UIButton.-addTarget:action:forControlEvents:?ui"
+public handler UpdateView_Ios(in pIntrinsicProps as Array) returns nothing
+	if mButtonView_Ios is nothing then
+		return
+	end if
+	unsafe
+		_UpdateView_Ios(pIntrinsicProps)
+	end unsafe
+end handler
+
+/**/
+
+public type NSUInteger is CULong
+
+private foreign handler ObjC_UIButtonButtonWithType(in pType as NSUInteger) returns ObjcId \
+	binds to "objc:UIButton.+buttonWithType:?ui"
+private foreign handler ObjC_UIButtonAddTargetActionForControlEvents(in pObj as ObjcId, in pTarget as ObjcId, in pAction as UIntPtr, in pControlEvents as NSUInteger) returns nothing \
+	binds to "objc:UIButton.-addTarget:action:forControlEvents:?ui"
+
+private variable mButtonProxy_Ios as optional ObjcObject
+
+handler ButtonActionCallback_Ios(in pSender as ObjcObject, in pContext as optional any) returns nothing
+	PostAction()
+end handler
 
 private unsafe handler _NativeView_Ios() returns Pointer
 	variable tButtonView as ObjcObject
@@ -92,37 +103,36 @@ private unsafe handler _NativeView_Ios() returns Pointer
     return PointerFromObjcObject(tButtonView)
 end handler
 
-public handler DestroyView_Ios() returns nothing
-	unsafe
-		_DestroyView_Ios()
-	end unsafe
-end handler
-
 private unsafe handler _DestroyView_Ios()
 	put nothing into mButtonView_Ios
 	put nothing into mButtonProxy_Ios
 end handler
 
-public handler UpdateView_Ios(in pIntrinsicProps as Array) returns nothing
-	unsafe
-		_UpdateView_Ios(pIntrinsicProps)
-	end unsafe
-end handler
+private foreign handler ObjC_UIButtonSetEnabled(in pObj as ObjcId, in pEnabled as CBool) returns nothing \
+	binds to "objc:UIButton.-setEnabled:?ui"
+private foreign handler ObjC_UIButtonGetTitleLabel(in pObj as ObjcId) returns ObjcId \
+	binds to "objc:UIButton.-titleLabel?ui"
+private foreign handler ObjC_UILabelSetFont(in pObj as ObjcId, in pFont as ObjcId) returns nothing \
+	binds to "objc:UILabel.-setFont:?ui"
 
-private foreign handler GetFontHandle_Ios(in pFont as Font, out rHandle as ObjcId) returns nothing binds to "MCCanvasFontGetHandle"
-private unsafe handler _UpdateView_Ios(in pIntrinsicProps as Array)
-	if mButtonView_Ios is nothing then
-		return
-	end if
+private foreign handler MCCanvasFontGetHandle(in pFont as Font, out rHandle as ObjcId) returns nothing \
+	binds to "<builtin>"
 	
+private unsafe handler _UpdateView_Ios(in pIntrinsicProps as Array)	
     /* Set the enabled state of the button to the host property. */
     ObjC_UIButtonSetEnabled(mButtonView_Ios, pIntrinsicProps["enabled"])
 
     /* Set the font of the button to the host property. */
     variable tFontToUse as ObjcObject
-    GetFontHandle_Ios(pIntrinsicProps["font"], tFontToUse)
+    MCCanvasFontGetHandle(pIntrinsicProps["font"], tFontToUse)
     ObjC_UILabelSetFont(ObjC_UIButtonGetTitleLabel(mButtonView_Ios), \
     	tFontToUse)
+end handler
+
+private foreign handler ObjC_UIButtonSetTitleForState(in pObj as ObjcId, in pTitle as ObjcId, in pState as NSUInteger) returns nothing binds to "objc:UIButton.-setTitle:forState:?ui"
+private unsafe handler _SetLabel_Ios(in pLabel as String) returns nothing
+    /* We use UIControlStateNormal = 0 */
+	ObjC_UIButtonSetTitleForState(mButtonView_Ios, StringToNSString(pLabel), 0)
 end handler
 
 end module
