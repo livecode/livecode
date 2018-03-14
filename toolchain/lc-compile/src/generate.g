@@ -38,6 +38,7 @@
 'action' GenerateModules(MODULELIST)
 
     'rule' GenerateModules(List):
+        ModuleDependencyList <- nil
         CompiledModuleList <- nil
         GeneratingModuleIndex <- 1
         EmitStart()
@@ -70,7 +71,13 @@
 		-- do nothing for import modules
 
     'rule' GenerateSingleModule(Module:module(_, Kind, Id, Definitions)):
-        ModuleDependencyList <- nil
+
+        (|
+            -- If this is not a bootstrap compile, don't reinit the dependency list
+            IsBootstrapCompile()
+            ModuleDependencyList <- nil
+        ||
+        |)
         
         QueryModuleId(Id -> Info)
         GetQualifiedName(Id -> ModuleName)
