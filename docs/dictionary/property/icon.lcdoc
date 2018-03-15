@@ -50,10 +50,10 @@ LiveCode looks for the specified image in the following order:
 * 2. The stack of the owner of the object's <behavior> (if applicable)
 *    ...
 * n. The stack of the object's stack's <behavior> (if applicable)
-* a. The object's stack
-* b. The object's stack's mainstack (if a substack)
-* c. The object's stack's mainstack's substacks
-* d. The list of open stacks, in order they were loaded
+* A. The object's stack
+* B. The object's stack's mainstack (if a substack)
+* C. The object's stack's mainstack's substacks
+* D. The list of open stacks, in order they were loaded
 
 If a button has been clicked during the current session and its
 visitedIcon <property> is set, its <visitedIcon> is displayed instead of
