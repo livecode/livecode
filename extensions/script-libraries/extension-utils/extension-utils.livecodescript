@@ -1529,12 +1529,12 @@ command extensionFindInFolder pFolder, pIsUserFolder, pRecursive, @xDataA
    extensionFetchSourceFromFolder pFolder, tMainSource, tSupportFiles, tType
    
    -- If we found no extensions, recurse
-   if tType is "none" then
+   if the result is not empty or tType is "none" then
       if pRecursive then
          repeat for each line tSubFolder in folders(pFolder)
             if tSubFolder begins with "." then next repeat
             extensionFindInFolder pFolder & slash & tSubFolder, \
-               pIsUserFolder, xDataA
+               pIsUserFolder, true, xDataA
          end repeat
       end if
       exit extensionFindInFolder
