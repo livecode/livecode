@@ -100,7 +100,7 @@ Bitwise - These inks have been deprecated from version 5.0
         * srcOrReverse
         * srcXor
 
-Arithmetc:- These inks have been deprecated from version 5.0
+Arithmetic:- These inks have been deprecated from version 5.0
 
         * blend
         * addPin

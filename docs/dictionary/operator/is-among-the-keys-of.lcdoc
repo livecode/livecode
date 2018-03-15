@@ -32,7 +32,7 @@ arrayToSearch (array):
 
 
 Description:
-<Is among the keys of> should be used to check whether an array contains
+<is among the keys of> should be used to check whether an array contains
 an element of a specified name.
 
 References: keys (function), is not among (operator),
