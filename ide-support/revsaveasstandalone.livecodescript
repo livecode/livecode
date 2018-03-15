@@ -2123,7 +2123,7 @@ end revAddExternal
 private command revAddMapping pPlatform, pName, pLocation
    -- The name comes in without 'db' in front of it for the existing database
    -- drivers, but it needs to be 'db*'.
-   if pName is among the items of "sqlite,postgres,odbc,mysql,oracle" then
+   if pName is among the items of "sqlite,postgresql,odbc,mysql,oracle" then
       put "db" before pName
    end if
    revSBAddLibraryMapping pPlatform, pName, pLocation, sStandaloneSettingsA
