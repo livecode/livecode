@@ -37,13 +37,14 @@ the <character>.
 LiveCode looks for the specified image (if an ID or name is given) in
 the following order:
 
-1. The stack of the object's <behavior> (if applicable)
-2. The stack of the owner of the object's <behavior> (if applicable)
-3. The stack of the object's stack's <behavior> (if applicable)
-4. The object's stack
-5. The object's stack's mainstack (if a substack)
-6. The object's stack's mainstacks substacks
-7. The list of open stacks, in order they were loaded
+* 1. The stack of the object's <behavior> (if applicable)
+* 2. The stack of the owner of the object's <behavior> (if applicable)
+*  ...
+* n. The stack of the object's stack's <behavior> (if applicable)
+* A. The object's stack
+* B. The object's stack's mainstack (if a substack)
+* C. The object's stack's mainstacks substacks
+* D. The list of open stacks, in order they were loaded
 
 An imageURL is any valid <URL> that specifies an <image> in a <format>
 LiveCode can display.
