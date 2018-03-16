@@ -1337,7 +1337,7 @@ pDocsParser: The path to the docs parser script.
 pSourceFolder: The folder in which to find the lcs extension
 */
 command extensionGenerateManifestForLCSExtension pDocsParser, pSourceFolder
-   __EnsureExternal revxml
+   __EnsureExternal "revxml"
 
    # Get library metadata from the docs, in lieu of a manifest
    local tDocA, tDataA
@@ -1397,7 +1397,7 @@ Parameters:
 pManifestPath: The path to the manifest XML file
 */
 function extensionFetchMetadata pManifestPath
-   __EnsureExternal revxml
+   __EnsureExternal "revxml"
 
    local tDataA
    
