@@ -1641,6 +1641,25 @@ end extensionFetchSourceFromFolder
 
 /**
 Validate an extension package
+
+Parameters:
+pPackage: The .lce package to validate
+rManifestDataA: The basic manifest data extracted from the package
+
+The result: 
+If the package was deemed invalid, the result contains the reason why 
+the package failed validation.
+
+Description:
+Use the <extensionValidateLCEPackage> command to naively validate the 
+contents of an .lce package. <extensionValidateLCEPackage> checks if 
+there is a file that looks like the main extension (either a compiled 
+LiveCode Builder module file or a LiveCode stack), that it contains a
+manifest XML file and that the manifest contains the minimum required
+information, namely the name, version, author, type, and title.
+
+The manifest information is returned in the <rManifestDataA> out 
+parameter.
 */
 command extensionValidateLCEPackage pPackage, @rManifestDataA
    # Open the zip archive
