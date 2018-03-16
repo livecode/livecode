@@ -160,3 +160,39 @@ private command _TestBuildStandalone pStackPath, @rStandalonePath
 	StandaloneBuilderSaveAsStandalone tStackName, rStandalonePath
 	return the result
 end _TestBuildStandalone
+
+-- Build a standalone purely to test whether the stack had the 
+-- appropriate settings prior to deploy
+command StandaloneBuilderTestSettings pDescription, pStackFileName, pInitialSettingsA, pExpectedSettingsA
+   local tStackName, tStackID
+   create stack
+   put it into tStackID
+   put the short name of tStackID into tStackName   
+   
+   repeat for each key tKey in pInitialSettingsA
+      set the cRevStandaloneSettings[tKey] of tStackId to \
+         pInitialSettingsA[tKey]
+   end repeat   
+   
+   set the filename of tStackID to pStackFilename
+   save stack tStackName
+   
+   revIDESaveStack tStackID	
+
+   local tExePath
+   _TestBuildStandalone pStackFilename, tExePath
+   if the result is not empty then
+      TestAssert "building standalone", false
+      exit StandaloneBuilderTestSettings
+   end if
+   
+   TestAssert "building standalone", true
+   
+   local tLastSettingsA
+   put revStandaloneLastUsedSettings() into tLastSettingsA
+   
+   repeat for each key tKey in pExpectedSettingsA
+      TestAssert pDescription && "-" && tKey, \
+         pExpectedSettingsA[tKey] is tLastSettingsA[tKey]
+   end repeat
+end StandaloneBuilderTestSettings
