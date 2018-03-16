@@ -5222,6 +5222,8 @@ void MCOrientationSetAllowedOrientations(MCExecContext& ctxt, intset_t p_orienta
 void MCOrientationGetOrientationLocked(MCExecContext& ctxt, bool& r_locked);
 void MCOrientationExecLockOrientation(MCExecContext& ctxt);
 void MCOrientationExecUnlockOrientation(MCExecContext& ctxt);
+void MCOrientationSetRectForOrientations(MCExecContext& ctxt, intset_t p_orientations, MCRectangle *p_rect);
+bool MCOrientationGetRectForOrientation(intenum_t p_orientation, MCRectangle& r_rect);
 
 ///////////
 

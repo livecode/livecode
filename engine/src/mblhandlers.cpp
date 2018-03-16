@@ -655,6 +655,86 @@ Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters)
 	return ES_ERROR;
 }
 
+Exec_stat MCHandleSetFullScreenRectForOrientations(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_orientations;
+    
+    bool t_success = p_parameters != nil;
+    
+    if (t_success)
+    {
+        MCAutoValueRef t_value;
+        if (p_parameters -> eval_argument(ctxt, &t_value))
+        {
+            ctxt . ConvertToString(*t_value, &t_orientations);
+        }
+        t_success = t_orientations.IsSet();
+        p_parameters = p_parameters -> getnext();
+    }
+    
+    MCRectangle *t_rect = nullptr;
+    
+    if (t_success && p_parameters != nil)
+    {
+        MCAutoValueRef t_value;
+        if (p_parameters -> eval_argument(ctxt, &t_value))
+        {
+            bool t_have_rect = false;
+            ctxt.TryToConvertToLegacyRectangle(*t_value, t_have_rect, *t_rect);
+        }
+    }
+    
+    MCAutoArrayRef t_orientations_array;
+    if (t_success)
+    {
+        t_success = MCStringSplit(*t_orientations, MCSTR(","), nil, kMCCompareExact, &t_orientations_array);
+    }
+    
+    uint32_t t_orientations_count;
+    if (t_success)
+    {
+        t_orientations_count = MCArrayGetCount(*t_orientations_array);
+    }
+    
+    intset_t t_orientations_set;
+    t_orientations_set = 0;
+    if (t_success)
+    {
+        for(uint32_t i = 0; i < t_orientations_count; i++)
+        {
+            // Note: 't_orientations_array' is an array of strings
+            MCValueRef t_orien_value = nil;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_orientations_array, i + 1, t_orien_value);
+            MCStringRef t_orientation = (MCStringRef)(t_orien_value);
+            if (MCStringIsEqualToCString(t_orientation, "portrait", kMCCompareCaseless))
+                t_orientations_set |= ORIENTATION_PORTRAIT;
+            else if (MCStringIsEqualToCString(t_orientation, "portrait upside down", kMCCompareCaseless))
+                t_orientations_set |= ORIENTATION_PORTRAIT_UPSIDE_DOWN;
+            else if (MCStringIsEqualToCString(t_orientation, "landscape right", kMCCompareCaseless))
+                t_orientations_set |= ORIENTATION_LANDSCAPE_RIGHT;
+            else if (MCStringIsEqualToCString(t_orientation, "landscape left", kMCCompareCaseless))
+                t_orientations_set |= ORIENTATION_LANDSCAPE_LEFT;
+            else if (MCStringIsEqualToCString(t_orientation, "face up", kMCCompareCaseless))
+                t_orientations_set |= ORIENTATION_FACE_UP;
+            else if (MCStringIsEqualToCString(t_orientation, "face down", kMCCompareCaseless))
+                t_orientations_set |= ORIENTATION_FACE_DOWN;
+            
+        }
+    }
+    
+    if (t_success)
+    {
+        MCOrientationSetRectForOrientations(ctxt, t_orientations_set, t_rect);
+    }
+    
+    if (t_success && !ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
 Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters)
 {
 	MCExecContext ctxt(nil, nil, nil);
@@ -4350,7 +4430,8 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "mobileOrientation", MCHandleOrientation, nil},
 	{false, "mobileAllowedOrientations", MCHandleAllowedOrientations, nil},
 	{false, "mobileSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
-	{false, "mobileLockOrientation", MCHandleLockOrientation, nil},
+    {false, "mobileSetFullScreenRectForOrientations", MCHandleSetFullScreenRectForOrientations, nil},
+    {false, "mobileLockOrientation", MCHandleLockOrientation, nil},
 	{false, "mobileUnlockOrientation", MCHandleUnlockOrientation, nil},
 	{false, "mobileOrientationLocked", MCHandleOrientationLocked, nil},
     
