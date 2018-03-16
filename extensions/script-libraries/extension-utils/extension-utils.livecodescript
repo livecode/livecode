@@ -1727,10 +1727,7 @@ command extensionValidateLCEPackage pPackage, @rManifestDataA
       return tError
    end if
    
-   TestDiagnostic "data" && tManifestData
    put revXMLCreateTree(tManifestText,true,true,false) into tManifestXMLTree
-   
-   TestDiagnostic tManifestXMLTree
    if tManifestXMLTree is not a number then
       return "invalid manifest"
    end if
