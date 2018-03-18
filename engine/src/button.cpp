@@ -911,6 +911,10 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 						bptr->message_with_args(MCM_mouse_down, menubutton);
                         MCRedrawUnlockScreen();
 						bptr->findmenu();
+                        if (menudepth == 0)
+                        {
+                            MCmenuobjectptr = nullptr;
+                        }
 						bptr->openmenu(False);
 						return True;
 					}
