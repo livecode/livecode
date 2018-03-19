@@ -1337,7 +1337,7 @@ pDocsParser: The path to the docs parser script.
 pSourceFolder: The folder in which to find the lcs extension
 */
 command extensionGenerateManifestForLCSExtension pDocsParser, pSourceFolder
-   __EnsureExternal revxml
+   __EnsureExternal "revxml"
 
    # Get library metadata from the docs, in lieu of a manifest
    local tDocA, tDataA
@@ -1397,7 +1397,7 @@ Parameters:
 pManifestPath: The path to the manifest XML file
 */
 function extensionFetchMetadata pManifestPath
-   __EnsureExternal revxml
+   __EnsureExternal "revxml"
 
    local tDataA
    
@@ -1567,6 +1567,28 @@ private function __RegexPatternForSource pType
    end switch
 end __RegexPatternForSource
 
+private command __FilterFilesForExtension pFiles, @rResult, @rType
+   local tExtFiles, tType
+   filter pFiles with regex pattern \
+         __RegexPatternForSource("lcb") into tExtFiles
+   if tExtFiles is not empty \
+         or extensionBytecodeFilename("", true) is among the lines of pFiles \
+         or extensionBytecodeFilename("", false) is among the lines of pFiles \
+         then
+      put "lcb" into tType
+   end if
+   
+   if tType is empty then
+      filter pFiles with regex pattern \
+            __RegexPatternForSource("lcs") into tExtFiles
+      if tExtFiles is not empty then
+         put "lcs" into tType
+      end if
+   end if
+   put tExtFiles into rResult
+   put tType into rType
+end __FilterFilesForExtension
+
 /**
 Fetch basic information about extension source from a folder
 
@@ -1583,23 +1605,7 @@ command extensionFetchSourceFromFolder pFolder, @rSource, @rSupportFiles, @rType
    put files(pFolder) into tFiles
    
    local tExtFiles, tType
-   filter tFiles with regex pattern \
-         __RegexPatternForSource("lcb") into tExtFiles
-   if tExtFiles is not empty \
-         or there is a file \
-         (pFolder & slash & extensionBytecodeFilename("", true)) \
-         or there is a file \
-         (pFolder & slash & extensionBytecodeFilename("", false)) then
-      put "lcb" into tType
-   end if
-   
-   if tType is empty then
-      filter tFiles with regex pattern \
-            __RegexPatternForSource("lcs") into tExtFiles
-      if tExtFiles is not empty then
-         put "lcs" into tType
-      end if
-   end if
+   __FilterFilesForExtension tFiles, tExtFiles, tType
    
    -- Try and separate main source from support
    local tFoundCount, tSupport, tMainFile
@@ -1632,3 +1638,132 @@ command extensionFetchSourceFromFolder pFolder, @rSource, @rSupportFiles, @rType
    put tType into rType
    return empty
 end extensionFetchSourceFromFolder
+
+/**
+Validate an extension package
+
+Parameters:
+pPackage: The .lce package to validate
+rManifestDataA: The basic manifest data extracted from the package
+
+The result: 
+If the package was deemed invalid, the result contains the reason why 
+the package failed validation.
+
+Description:
+Use the <extensionValidateLCEPackage> command to naively validate the 
+contents of an .lce package. <extensionValidateLCEPackage> checks if 
+there is a file that looks like the main extension (either a compiled 
+LiveCode Builder module file or a LiveCode stack), that it contains a
+manifest XML file and that the manifest contains the minimum required
+information, namely the name, version, author, type, and title.
+
+The manifest information is returned in the <rManifestDataA> out 
+parameter.
+*/
+command extensionValidateLCEPackage pPackage, @rManifestDataA
+   # Open the zip archive
+   revZipOpenArchive pPackage, "read"
+   if the result is not empty then
+      return pPackage && "is not a valid archive"
+   end if
+   
+   # If we have a root folder in the archive, reject it 
+   local tZipItems, tError
+   put revZipEnumerateItems(pPackage) into tZipItems
+   
+   if the last char of line 1 of tZipItems is "/" then
+      put "invalid archive structure - files must be at root" into tError
+   end if
+   
+   # Ensure the zip contains all the required files
+   if tError is empty then
+      local tExtFiles, tType
+      __FilterFilesForExtension tZipItems, tExtFiles, tType
+      if tType is empty then
+         put "invalid package - no stack or module found" into tError
+      end if
+   end if
+   
+   if tError is empty then
+      if "manifest.xml" is not among the lines of tZipItems then
+         put "invalid package - manifest not found" into tError
+      end if
+   end if
+   
+   # Get initial manifest data needed for loading
+   local tManifestData, tManifestXMLTree
+   
+   # Extract the package manfiest to a variable to read key data
+   if tError is empty then
+      revZipExtractItemToVariable pPackage, "manifest.xml", \
+      	"tManifestData"
+      if the result is not empty then
+         put "unable to extract manifest data" into tError
+      end if
+   end if
+   
+   revZipCloseArchive pPackage
+   
+   if tError is not empty then
+      return tError
+   end if
+   
+   put revXMLCreateTree(tManifestData,true,true,false) into tManifestXMLTree
+   if tManifestXMLTree is not a number then
+      return "invalid manifest"
+   end if
+   
+   # Check the manifest contains the required xml elements
+   repeat for each item tItem in "name,version,author,type,title"
+      put __extensionManifestValueFromTree(tManifestXMLTree, tItem) \
+            into tManifestData[tItem]
+      if the result is not empty then
+         put "no" && tItem && "element found in package manifest" into tError
+         exit repeat
+      end if
+   end repeat
+   
+   revXMLDeleteTree tManifestXMLTree
+   
+   if tError is not empty then
+      return tError
+   end if
+   
+   put tManifestData into rManifestDataA
+   return empty
+end extensionValidateLCEPackage
+
+private function __extensionManifestValueFromTree pTreeID, pProperty
+   local tValue
+   switch pProperty
+      case "requires"
+         # Fetch extension dependencies
+         local tRequires, tCount
+         put 0 into tCount
+         put revXMLChildNames(pTreeID,"package",return,"requires",true) into tRequires
+         if tRequires begins with "xmlerr" then
+            put tRequires into tValue
+            break
+         end if
+         repeat for each line tDependency in tRequires
+            add 1 to tCount
+            local tName
+            put revXMLAttribute(pTreeID,"package" & "/" & tDependency,"name") into tName
+            if tName begins with "xmlerr" then
+               put tName into tValue
+               break
+            end if
+            put tName into tValue[tCount]
+         end repeat
+      default
+         put revXMLNodeContents(pTreeID,"/package/" & pProperty) \
+            into tValue
+         break
+   end switch
+   
+   if tValue begins with "xmlerr" then
+      return tValue for error
+   end if
+   return tValue for value
+end __extensionManifestValueFromTree
