@@ -806,8 +806,9 @@ private command __extensionBuildPackage pDetailsA, pFolder, pTargetFolder, pRemo
          tSourceFile, tSupportFiles, pFolder, tArchive, \
          pDetailsA["module_files"], pDetailsA["icon"], \
          pDetailsA["retina_icon"], pDetailsA["guide_file"], \
-         pDetailsA["api_file"], pDetailsA["resources"], \
-         pDetailsA["code"], pDetailsA["samples"], pDetailsA["interface"], \
+         pDetailsA["guide_contents"], pDetailsA["api_file"], \
+         pDetailsA["resources"], pDetailsA["code"], \
+         pDetailsA["samples"], pDetailsA["interface"], \
          pDetailsA["defaultscript_file"], pDetailsA["editors"]) \
          into tError
    
@@ -841,14 +842,14 @@ end __extensionAddFolder
 
 private function __extensionAddFilesToPackage \
       pSource, pSupportFiles, pFolder, pArchive, pModuleFiles, pIcon,  \
-      pRetinaIcon, pGuide, pDocs, pResources, pCode, \
+      pRetinaIcon, pGuide, pGuideContents, pDocs, pResources, pCode, \
       pSamples, pInterfaceFile, pDefaultScript, pEditors
    
    set the itemdelimiter to slash
    # Add source into package, if present
    if pSource is not empty then
       revZipAddItemWithFile pArchive, item -1 of pSource, pSource
-   
+      
       if the result begins with "ziperr" then
          return "couldn't add source"
       end if
@@ -881,7 +882,9 @@ private function __extensionAddFilesToPackage \
    end if
    
    # Add user guide
-   if pGuide is not empty then
+   if pGuideContents is not empty then
+      __extensionAddFolder pArchive, pFolder, "docs/guide", pGuideContents
+   else if pGuide is not empty then
       revZipAddItemWithFile pArchive, "docs/guide/guide.md", pGuide
    end if
    if the result begins with "ziperr" then
@@ -1041,16 +1044,15 @@ function extensionFetchFolderDetails pFolder, pParseManifest
       put empty into tDetailsA["retina_icon"]
    end if
    
-   local tGuide, tGuideFile
-   if there is a file (pFolder & slash & "docs" & slash & "guide" & slash & "guide.md") then
-      put pFolder & slash & "docs" & slash & "guide" & slash & "guide.md" into tGuideFile
+   local tGuide, tGuideFile, tGuideFolder
+   put pFolder & slash & "docs" & slash & "guide" into tGuideFolder
+   if there is a file (tGuideFolder & slash & "guide.md") then
+      put __extensionListResourcesRecursive(tGuideFolder, "") \
+            into tDetailsA["guide_contents"]
+      put tGuideFolder & slash & "guide.md" into tDetailsA["guide_file"]
    else if there is a file (pFolder & slash & "guide.md") then
-      put pFolder & slash & "guide.md" into tGuideFile
+      put pFolder & slash & "guide.md" into tDetailsA["guide_file"]
    end if
-   
-   if tGuideFile is not empty then
-      put tGuideFile into tDetailsA["guide_file"]
-   end if 
    
    // AL-2015-02-23: [[ Bug 14552 ]] Find resource folder and return details
    local tResourceFolder, tResources
