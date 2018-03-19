@@ -2399,17 +2399,17 @@ command revSBUpdateForDependencies pPlatform, pArchs, pSDK, @xSettings
    
    -- Update the settings with any additional extension dependencies
    repeat for each line tExtension in xSettings["extensions"]
-      local tPermissions, tFeatures
-      put revIDEExtensionProperty(tExtension, "android.permissions") into tPermissions
-      put revIDEExtensionProperty(tExtension, "android.features") into tFeatures
-      repeat for each item tPermission in tPermissions
+      local tAndroidMetadataA
+      put revIDEExtensionProperty(tExtension, "android") into tAndroidMetadataA
+      repeat for each item tPermission in tAndroidMetadataA["permissions"]
          put true into xSettings["android,application permissions"][tPermission]
       end repeat
-      repeat for each item tFeature in tFeatures
-         local tIsRequired, tRequiredMetadata
-         put "android." & tFeature & ".required" into tRequiredMetadata
-         put revIDEExtensionProperty(tExtension, tRequiredMetadata) into tIsRequired
-         put tIsRequired into xSettings["android,device capabilities"][tFeature]
+      repeat for each item tFeature in tAndroidMetadataA["features"]
+         local tRequiredMetadata
+         put tFeature & ".required" into tRequiredMetadata
+         split tRequiredMetadata by "."
+         put tAndroidMetadataA[tRequiredMetadata] into \
+               xSettings["android,device capabilities"][tFeature]
       end repeat
       
       revSBUpdateExtensionCodeInclusions tExtension, pPlatform, pArchs, pSDK, xSettings
