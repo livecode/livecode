@@ -15,7 +15,7 @@ on extensionFinalize
       remove the script of stack "revLibUrl" from back
       -- CW-2016-06-11: [[ External driver support ]] Ensure external driver is unloaded properly.
       # remove external library if in use
-      unloadExternalDriver
+      unloadExternalDriver true
    end if
 end extensionFinalize
 ---------------------------------------------------------------------
@@ -89,31 +89,35 @@ on libUrlSetDriver pDriver
    libUrlResetAll
 
    if lvExtDriver is not pDriver then
-      unloadExternalDriver
+      unloadExternalDriver false
+      put pDriver into lvExtDriver
 
       if pDriver is not empty then
-         return loadExternalDriver(pDriver)
+         send loadExternalDriver to me in 0
       else
-         return empty
+         send libUrlSetBehavior to me in 0
       end if
    else
       return empty
    end if
 end libUrlSetDriver
 
+command libUrlSetBehavior
+   set the behavior of me to lvExtDriver
+end libUrlSetBehavior
+
 -- CW-2016-06-11: [[ External driver support ]] Call driver specific init/remove commands if external driver is in use.
 ## Send initialise command to external library
-private function loadExternalDriver pDriver
+command loadExternalDriver
    local tResult
 
    # Add the external driver as a behavior for libURL, the script must already be loaded
-   set the behavior of me to pDriver
+   set the behavior of me to lvExtDriver
 
    put ulExtInitDriver() into tResult
-   if tResult is empty then
-      put pDriver into lvExtDriver
-   else
+   if tResult is not empty then
       # External driver initialisation failed, so don't use it as a behavior for libURL
+      put empty into lvExtDriver
       set the behavior of me to empty
    end if
 
@@ -121,14 +125,16 @@ private function loadExternalDriver pDriver
 end loadExternalDriver
 
 ## Send shutdown command to external library
-private command unloadExternalDriver
+private command unloadExternalDriver pSetBehavior
    if lvExtDriver is not empty then
       ulExtRemoveDriver
       put empty into lvExtDriver
    end if
 
-   # Stop using the external driver as a behavior for libURL
-   set the behavior of me to empty
+   if pSetBehavior then
+      # Stop using the external driver as a behavior for libURL
+      set the behavior of me to empty
+   end if
 end unloadExternalDriver
 ------------------------------------------------
 on initialiseCustomProps
