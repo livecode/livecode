@@ -2156,7 +2156,7 @@ end revDocsCreateAPIJSON
 
 function revDocsFormatLibraryArrayAsJSON pLibraryA
    local tDocContent
-   put revDocsFormatLibraryDocArrayAsJSON(pLibraryA["name"], pLibraryA["doc"]) \
+   put revDocsFormatLibraryDocArrayAsJSON(pLibraryA) \
          into tDocContent
    return revDocsCreateAPIJSON(pLibraryA["display name"], pLibraryA["name"], \
          pLibraryA["author"], tDocContent)
