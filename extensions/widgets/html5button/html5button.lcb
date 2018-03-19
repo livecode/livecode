@@ -190,8 +190,17 @@ end handler
 public handler SetLabel(in pLabel as String)
     put pLabel into mLabel
     if mButton is not nothing then
-		// Set button label using JavaScript
-		EvalJavaScriptWithArguments("arguments[0].innerHTML=arguments[1];", [mButton, pLabel])
+        // Set the label of the button to mLabel, if not empty; 
+        // otherwise to the name of the host.
+        variable tLabelToUse as String
+        if mLabel is the empty string then
+            put my name into tLabelToUse
+        else
+            put mLabel into tLabelToUse
+        end if
+		
+        // Set button label using JavaScript
+        EvalJavaScriptWithArguments("arguments[0].innerHTML=arguments[1];", [mButton, tLabelToUse])
     end if
     redraw all
 end handler
