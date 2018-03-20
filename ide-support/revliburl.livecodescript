@@ -86,16 +86,17 @@ end libraryStack
 -- CW-2016-06-11: [[ External driver support ]] Add function to select external driver for use with libUrl.
 ## Set driver to use for libUrl
 on libUrlSetDriver pDriver
-   libUrlResetAll
-
+   # Do nothing if we are setting the driver to the currently used one.
    if lvExtDriver is not pDriver then
+      libUrlResetAll
+
       unloadExternalDriver false
       put pDriver into lvExtDriver
 
       if pDriver is not empty then
-         send loadExternalDriver to me in 0
+         loadExternalDriver
       else
-         send libUrlSetBehavior to me in 0
+         send "libUrlSetBehavior" to me in 0
       end if
    else
       return empty
@@ -118,7 +119,7 @@ command loadExternalDriver
    if tResult is not empty then
       # External driver initialisation failed, so don't use it as a behavior for libURL
       put empty into lvExtDriver
-      set the behavior of me to empty
+      send "libUrlSetBehavior" to me in 0
    end if
 
    return tResult
