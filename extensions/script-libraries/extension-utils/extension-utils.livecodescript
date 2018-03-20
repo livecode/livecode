@@ -1114,18 +1114,19 @@ function extensionFetchFolderDetails pFolder, pParseManifest
       put tModuleFiles into tDetailsA[kModuleFilesKey]
    end if
    
-   local tInterfaceFile
-   put pFolder & slash & tDetailsA[kNameKey] & ".lci" into tInterfaceFile
-   if there is a file tInterfaceFile then
-      put tInterfaceFile into tDetailsA[kInterfaceKey]
-   end if
-   
    # Fetch data from manifest
    local tManifest
    put pFolder & slash & "manifest.xml" into tManifest
    if pParseManifest is not false and \
          there is a file tManifest then
       union tDetailsA with extensionFetchMetadata(tManifest)
+   end if
+   
+   # Now we have the name, add the interface file
+   local tInterfaceFile
+   put pFolder & slash & tDetailsA[kNameKey] & ".lci" into tInterfaceFile
+   if there is a file tInterfaceFile then
+      put tInterfaceFile into tDetailsA[kInterfaceKey]
    end if
    
    return tDetailsA 
