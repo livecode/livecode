@@ -104,7 +104,9 @@ on libUrlSetDriver pDriver
 end libUrlSetDriver
 
 command libUrlSetBehavior
-   set the behavior of me to lvExtDriver
+   if the behavior of me is not lvExtDriver then
+      set the behavior of me to lvExtDriver
+   end if
 end libUrlSetBehavior
 
 -- CW-2016-06-11: [[ External driver support ]] Call driver specific init/remove commands if external driver is in use.
