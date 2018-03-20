@@ -1021,13 +1021,22 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
         t_valid = false;
     }
     
+    uindex_t t_required_args = 0;
+    
     /* Get the Method - either class or instance - from the class */
     if (t_valid && !t_is_dynamic)
     {
         if (!t_is_class)
         {
-            t_valid = class_respondsToSelector(t_objc_class, t_objc_sel);
-            
+            Method t_method_info = class_getInstanceMethod(t_objc_class, t_objc_sel);
+            if (t_method_info != nullptr)
+            {
+                t_required_args = method_getNumberOfArguments(t_method_info);
+            }
+            else
+            {
+                t_valid = false;
+            }
             /* If a lookup fails, then check to see if it could be a property
              * binding. Classes such as NSUserNotification declare dynamic props
              * which means that the methods aren't present until runtime, but
@@ -1048,6 +1057,7 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
                         t_valid = strstr(property_getAttributes(t_property), ",R,") == nullptr;
                     }
                 }
+                t_required_args = 3;
             }
             else if (!t_valid &&
                      MCStringCountChar(*t_selector_name, MCRangeMake(0, MCStringGetLength(*t_selector_name)), ':', kMCStringOptionCompareExact) == 0)
@@ -1057,11 +1067,17 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
                 {
                     t_valid = true;
                 }
+                t_required_args = 2;
             }
         }
         else
         {
-            if (class_getClassMethod(t_objc_class, t_objc_sel) == nullptr)
+            Method t_method_info = class_getClassMethod(t_objc_class, t_objc_sel);
+            if (t_method_info != nullptr)
+            {
+                t_required_args = method_getNumberOfArguments(t_method_info);
+            }
+            else
             {
                 t_valid = false;
             }
@@ -1090,13 +1106,15 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
         MCTypeInfoRef t_return_type =
                 MCHandlerTypeInfoGetReturnType(t_signature);
         
+        t_valid = t_arg_count == t_required_args || t_is_dynamic;
+        
         MCResolvedTypeInfo t_resolved_return_type;
         if (!MCTypeInfoResolve(t_return_type,
                                t_resolved_return_type))
         {
             t_valid = false;
         }
-        else
+        else if (t_valid)
         {
             if (t_resolved_return_type.named_type == kMCNullTypeInfo)
             {
@@ -1112,6 +1130,9 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
             }
         }
         
+        unsigned int t_user_arg_index = 0;
+        unsigned int t_arg_index = 0;
+        
         /* Allocate memory for the handler layout (array of ffi_type*) and
          * ffi_cif. This is a single block which will contain the cif followed
          * by the type array. */
@@ -1123,26 +1144,26 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
                 /* ERROR: OOM */
                 t_valid = false;
             }
-            t_cif = static_cast<ffi_cif *>(*t_layout_cif);
-            t_cif_arg_types = reinterpret_cast<ffi_type **>(t_cif + 1);
+            else
+            {
+                t_cif = static_cast<ffi_cif *>(*t_layout_cif);
+                t_cif_arg_types = reinterpret_cast<ffi_type **>(t_cif + 1);
+                
+                /* The first argument is always of pointer type - the object ptr. This
+                 * is only present in the user signature if it is an instance method.*/
+                t_cif_arg_types[t_arg_index] = &ffi_type_pointer;
+                t_arg_index += 1;
+                if (!t_is_class)
+                {
+                    t_user_arg_index += 1;
+                }
+                
+                /* The second argument is always of pointer type - the SEL ptr. This is
+                 * never present in the user signature. */
+                t_cif_arg_types[t_arg_index] = &ffi_type_pointer;
+                t_arg_index += 1;
+            }
         }
-        
-        unsigned int t_user_arg_index = 0;
-        unsigned int t_arg_index = 0;
-        
-        /* The first argument is always of pointer type - the object ptr. This
-         * is only present in the user signature if it is an instance method.*/
-        t_cif_arg_types[t_arg_index] = &ffi_type_pointer;
-        t_arg_index += 1;
-        if (!t_is_class)
-        {
-            t_user_arg_index += 1;
-        }
-        
-        /* The second argument is always of pointer type - the SEL ptr. This is
-         * never present in the user signature. */
-        t_cif_arg_types[t_arg_index] = &ffi_type_pointer;
-        t_arg_index += 1;
         
         while(t_user_arg_index < t_user_arg_count && t_valid)
         {
