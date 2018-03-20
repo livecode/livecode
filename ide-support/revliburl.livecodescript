@@ -94,9 +94,10 @@ on libUrlSetDriver pDriver
       put pDriver into lvExtDriver
 
       if pDriver is not empty then
-         loadExternalDriver
+         return loadExternalDriver()
       else
          send "libUrlSetBehavior" to me in 0
+         return empty
       end if
    else
       return empty
@@ -111,7 +112,7 @@ end libUrlSetBehavior
 
 -- CW-2016-06-11: [[ External driver support ]] Call driver specific init/remove commands if external driver is in use.
 ## Send initialise command to external library
-command loadExternalDriver
+private function loadExternalDriver
    local tResult
 
    # Add the external driver as a behavior for libURL, the script must already be loaded
