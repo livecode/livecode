@@ -124,7 +124,10 @@ bool MCEngineAddExtensionFromModule(MCScriptModuleRef p_module)
     }
     
     MCLoadedExtension *t_ext;
-    /* UNCHECKED */ MCMemoryNew(t_ext);
+    if (!MCMemoryNew(t_ext))
+    {
+      return false;
+    }
     
     t_ext -> module_name = MCValueRetain(MCScriptGetNameOfModule(p_module));
     t_ext -> module = MCScriptRetainModule(p_module);

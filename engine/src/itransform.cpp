@@ -116,9 +116,11 @@ static void resize_seq_32_32(	const uint1* const src_data, const int src_n, cons
 	const real8 k = (real8)(src_n-1) / dst_n;
 	const real8 _1_k = 1.0 / k;
 
-	real8 v1, v2;     // current value, next value
+	real8 v1 = 0.0;          // current value,
+  real8 v2 = 0.0;          // next value
 	real8 a, b, c, d; // polynom coefs
-	real8 t;          // polynom argument
+  a = b = c = d = 0.0;
+	real8 t = 0.0;          // polynom argument
 
 	curs = src_data, curd = dst_data;
 

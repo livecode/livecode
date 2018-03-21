@@ -974,7 +974,7 @@ bool MCParagraph::layout(bool p_force, bool p_check_redraw)
 	if (!needs_layout && !p_force)
 		return false;
 
-    uindex_t t_count;
+    uindex_t t_count = 0;
     if (p_check_redraw)
         t_count = countlines();
     

@@ -390,7 +390,7 @@ static bool MCGContextCreateWithBitmap(SkBitmap& p_bitmap, MCGContextRef& r_cont
 {
 	bool t_success = true;
 
-	MCGContextRef t_context;
+	MCGContextRef t_context = nullptr;
 	t_success = MCGContextCreateUnbound(t_context);
 
 	SkCanvas *t_canvas = nil;

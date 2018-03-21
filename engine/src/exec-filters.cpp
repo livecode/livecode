@@ -842,8 +842,10 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
                 MCAutoStringRefAsNativeChars t_auto_native;
                 const char_t* t_native;
                 uindex_t t_length;
-                /* UNCHECKED */ t_auto_native . Lock(*t_string, t_native, t_length);
-
+                t_success = t_auto_native . Lock(*t_string, t_native, t_length);
+								if (!t_success)
+									break;
+									
 				switch (cmd)
 				{
 				case 'a':

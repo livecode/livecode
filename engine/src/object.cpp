@@ -1583,7 +1583,8 @@ Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
         case DI_SHADOW:
             which = P_SHADOW_COLOR;
             break;
-            
+        default:
+            MCUnreachableReturn(False);
     }
     if (o->getthemeselectorsforprop(which, t_control_type, t_control_part, t_control_state, t_theme_prop, t_theme_prop_type))
     {
@@ -4648,8 +4649,11 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 		
 		// We accumulate the normalized mask a scanline at a time.
 		uint8_t *t_this_scanline, *t_other_scanline;
-		MCMemoryNewArray(t_scanline_width, t_this_scanline);
-		MCMemoryNewArray(t_scanline_width, t_other_scanline);
+		if (!MCMemoryNewArray(t_scanline_width, t_this_scanline) ||
+		    !MCMemoryNewArray(t_scanline_width, t_other_scanline))
+    {
+      return False;
+    }
 				
 		// IM-2013-10-17: [[ FullscreenMode ]] Precompute initial pixel coords & row/column increments
 		MCGFloat t_this_x, t_this_y, t_this_x_inc, t_this_y_inc;

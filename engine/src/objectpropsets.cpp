@@ -279,7 +279,7 @@ bool MCObject::clonepropsets(MCObjectPropertySet*& r_new_props) const
 	t_new_props_tail = nil;
 	while(t_set != nil)
 	{
-		MCObjectPropertySet *t_new_set;
+		MCObjectPropertySet *t_new_set = nullptr;
 
 		/* UNCHECKED */ t_set -> clone(t_new_set);
 		if (t_new_props_tail != nil)
@@ -352,7 +352,7 @@ IO_stat MCObject::loadpropsets(IO_handle stream, uint32_t version)
 			if ((stat = IO_read_nameref_new(pname, stream, true)) != IO_NORMAL)
 				return checkloadstat(stat);
 			
-			MCObjectPropertySet *v;
+			MCObjectPropertySet *v = nullptr;
 			/* UNCHECKED */ MCObjectPropertySet::createwithname_nocopy(pname, v);
 			if (p != nil)
 			{
@@ -444,7 +444,7 @@ IO_stat MCObject::loadpropsets_legacy(IO_handle stream)
 			}
 			else
 			{
-				MCObjectPropertySet *v;
+				MCObjectPropertySet *v = nullptr;
 				/* UNCHECKED */ MCObjectPropertySet::createwithname_nocopy(pname, v);
 				p->setnext(v);
 				p = p->getnext();
@@ -496,7 +496,7 @@ IO_stat MCObject::loadarraypropsets_legacy(MCObjectInputStream& p_stream)
 					continue;
 				}
 
-				MCObjectPropertySet *t_new_prop;
+				MCObjectPropertySet *t_new_prop = nullptr;
 				/* UNCHEKED */ MCObjectPropertySet::createwithname(kMCEmptyName, t_new_prop);
 				t_prop -> setnext(t_new_prop);
 
