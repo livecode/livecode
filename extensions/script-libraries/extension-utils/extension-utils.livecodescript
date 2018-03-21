@@ -742,9 +742,32 @@ command extensionExtractDocs pDocsParser, pOutputDir
    end repeat
 end extensionExtractDocs
 
+constant kFileKey = "file"
+constant kSourceFileKey = "source_file"
+constant kSupportFilesKey = "support_files"
+constant kSourceTypeKey = "source_type"
+constant kNameKey = "name"
+constant kVersionKey = "version"
+constant kAuthorKey = "author"
+constant kTitleKey = "title"
+constant kTypeKey = "type"
+constant kIdeKey = "ide"
+constant kModuleFilesKey = "module_files"
+constant kIconKey = "icon"
+constant kRetinaIconKey = "retina_icon"
+constant kGuideFileKey = "guide_file"
+constant kGuideContentsKey = "guide_contents"
+constant kApiFileKey = "api_file"
+constant kResourcesKey = "resources"
+constant kCodeKey = "code"
+constant kSamplesKey = "samples"
+constant kInterfaceKey = "interface"
+constant kDefaultScriptFileKey = "defaultscript_file"
+constant kEditorsKey = "editors"
+
 private command __extensionBuildPackage pDetailsA, pFolder, pTargetFolder, pRemoveSource, @rBuiltLocation
    local tFullPath
-   put pFolder & slash & pDetailsA["file"] into tFullPath
+   put pFolder & slash & pDetailsA[kFileKey] into tFullPath
    
    if there is not a file tFullPath then
       return "Error: missing file" && tFullPath
@@ -767,16 +790,16 @@ private command __extensionBuildPackage pDetailsA, pFolder, pTargetFolder, pRemo
    __EnsurePath tTargetFolder
    
    local tTargetName
-   if pDetailsA["name"] is empty then
+   if pDetailsA[kNameKey] is empty then
       return "no id found in " && tFullpath
    end if
-   put pDetailsA["name"] into tTargetName
+   put pDetailsA[kNameKey] into tTargetName
    
    local tTargetVersion
-   if pDetailsA["version"] is empty then
+   if pDetailsA[kVersionKey] is empty then
       return "no version found in " && tFullpath
    end if
-   put pDetailsA["version"] into tTargetVersion
+   put pDetailsA[kVersionKey] into tTargetVersion
    
    local tArchive
    put tTargetFolder & slash & tTargetName & "." & \
@@ -798,18 +821,13 @@ private command __extensionBuildPackage pDetailsA, pFolder, pTargetFolder, pRemo
    local tSourceFile, tSupportFiles
    if not pRemoveSource then
       put tFullPath into tSourceFile
-      put pDetailsA["support"] into tSupportFiles
+      put pDetailsA[kSupportFilesKey] into tSupportFiles
    end if
    
    local tError
    put __extensionAddFilesToPackage(\
          tSourceFile, tSupportFiles, pFolder, tArchive, \
-         pDetailsA["module_files"], pDetailsA["icon"], \
-         pDetailsA["retina_icon"], pDetailsA["guide_file"], \
-         pDetailsA["api_file"], pDetailsA["resources"], \
-         pDetailsA["code"], pDetailsA["samples"], pDetailsA["interface"], \
-         pDetailsA["defaultscript_file"], pDetailsA["editors"]) \
-         into tError
+         pDetailsA) into tError
    
    revZipCloseArchive tArchive
    
@@ -840,15 +858,13 @@ private command __extensionAddFolder pArchive, pBaseFolder, pFolderName, pResour
 end __extensionAddFolder
 
 private function __extensionAddFilesToPackage \
-      pSource, pSupportFiles, pFolder, pArchive, pModuleFiles, pIcon,  \
-      pRetinaIcon, pGuide, pDocs, pResources, pCode, \
-      pSamples, pInterfaceFile, pDefaultScript, pEditors
+      pSource, pSupportFiles, pFolder, pArchive, pDetailsA
    
    set the itemdelimiter to slash
    # Add source into package, if present
    if pSource is not empty then
       revZipAddItemWithFile pArchive, item -1 of pSource, pSource
-   
+      
       if the result begins with "ziperr" then
          return "couldn't add source"
       end if
@@ -865,7 +881,7 @@ private function __extensionAddFilesToPackage \
    end repeat
    
    # Add modules into package
-   repeat for each line tModuleFile in pModuleFiles
+   repeat for each line tModuleFile in pDetailsA[kModuleFilesKey]
       put pFolder & slash & tModuleFile into tModuleFile
       revZipAddItemWithFile pArchive, item -1 of tModuleFile, tModuleFile
       if the result begins with "ziperr" then
@@ -881,24 +897,26 @@ private function __extensionAddFilesToPackage \
    end if
    
    # Add user guide
-   if pGuide is not empty then
-      revZipAddItemWithFile pArchive, "docs/guide/guide.md", pGuide
+   if pDetailsA[kGuideContentsKey] is not empty then
+      __extensionAddFolder pArchive, pFolder, "docs/guide", pDetailsA[kGuideContentsKey]
+   else if pDetailsA[kGuideFileKey] is not empty then
+      revZipAddItemWithFile pArchive, "docs/guide/guide.md", pDetailsA[kGuideFileKey]
    end if
    if the result begins with "ziperr" then
       return "couldn't add guide"
    end if
    
    # Add icons
-   if pIcon is not empty then
-      revZipAddItemWithFile pArchive, "support/icon.png", pIcon
+   if pDetailsA[kIconKey] is not empty then
+      revZipAddItemWithFile pArchive, "support/icon.png", pDetailsA[kIconKey]
       
       if the result begins with "ziperr" then
          return "couldn't add icon.png"
       end if
    end if
    
-   if pRetinaIcon is not empty then
-      revZipAddItemWithFile pArchive, "support/icon@extra-high.png", pRetinaIcon
+   if pDetailsA[kRetinaIconKey] is not empty then
+      revZipAddItemWithFile pArchive, "support/icon@extra-high.png", pDetailsA[kRetinaIconKey]
       
       if the result begins with "ziperr" then
          return "couldn't add icon@extra-high.png"
@@ -906,51 +924,51 @@ private function __extensionAddFilesToPackage \
    end if
    
    # Add docs
-   if pDocs is not empty then
-      revZipAddItemWithFile pArchive, "api.lcdoc", pDocs
+   if pDetailsA[kApiFileKey] is not empty then
+      revZipAddItemWithFile pArchive, "api.lcdoc", pDetailsA[kApiFileKey]
    end if
    if the result begins with "ziperr" then
-      return "couldn't add doc" && pDocs
+      return "couldn't add doc" && pDetailsA[kApiFileKey]
    end if
    
    # Add resources
-   __extensionAddFolder pArchive, pFolder, "resources", pResources
+   __extensionAddFolder pArchive, pFolder, "resources", pDetailsA[kResourcesKey]
    if the result is not empty then
       return the result
    end if
    
    # Add code
-   __extensionAddFolder pArchive, pFolder, "code", pCode
+   __extensionAddFolder pArchive, pFolder, "code", pDetailsA[kCodeKey]
    if the result is not empty then
       return the result
    end if
    
    # Add sample stacks
-   __extensionAddFolder pArchive, pFolder, "samples", pSamples
+   __extensionAddFolder pArchive, pFolder, "samples", pDetailsA[kSamplesKey]
    if the result is not empty then
       return the result
    end if
    
    # AL-2015-03-18: [[ Bug 15007 ]] Include interface file if present
-   if pInterfaceFile is not empty then
-      revZipAddItemWithFile pArchive, item -1 of pInterfaceFile, pInterfaceFile
+   if pDetailsA[kInterfaceKey] is not empty then
+      revZipAddItemWithFile pArchive, item -1 of pDetailsA[kInterfaceKey], pDetailsA[kInterfaceKey]
       
       if the result begins with "ziperr" then
-         return "couldn't add interface file" && pInterfaceFile
+         return "couldn't add interface file" && pDetailsA[kInterfaceKey]
       end if
    end if
    
    # Add default script
-   if pDefaultScript is not empty then
-      revZipAddItemWithFile pArchive, "support/defaultscript.livecodescript", pDefaultScript
+   if pDetailsA[kDefaultScriptFileKey] is not empty then
+      revZipAddItemWithFile pArchive, "support/defaultscript.livecodescript", pDetailsA[kDefaultScriptFileKey]
       
       if the result begins with "ziperr" then
-         return "couldn't add default script" && pDefaultScript
+         return "couldn't add default script" && pDetailsA[kDefaultScriptFileKey]
       end if
    end if
    
    # Add editors
-   __extensionAddFolder pArchive, pFolder, "editors", pEditors
+   __extensionAddFolder pArchive, pFolder, "editors", pDetailsA[kEditorsKey]
    if the result is not empty then
       return the result
    end if
@@ -1012,9 +1030,9 @@ function extensionFetchFolderDetails pFolder, pParseManifest
    end if
    
    local tDetailsA
-   put tMainFile into tDetailsA["file"]
-   put tSupportFiles into tDetailsA["support_files"]
-   put tType into tDetailsA["source_type"]
+   put tMainFile into tDetailsA[kFileKey]
+   put tSupportFiles into tDetailsA[kSupportFilesKey]
+   put tType into tDetailsA[kSourceTypeKey]
    
    local tAPIFolder
    if there is a folder (pFolder & slash & "docs" & slash & "api") then
@@ -1023,62 +1041,61 @@ function extensionFetchFolderDetails pFolder, pParseManifest
       put pFolder into tAPIFolder
    end if
    
-   put tAPIFolder & slash & "api.lcdoc" into tDetailsA["api_file"]
+   put tAPIFolder & slash & "api.lcdoc" into tDetailsA[kApiFileKey]
    
    if there is a file (pFolder & slash & "support" & slash & "icon.png") then
-      put (pFolder & slash & "support" & slash & "icon.png") into tDetailsA["icon"]
+      put (pFolder & slash & "support" & slash & "icon.png") into tDetailsA[kIconKey]
    else if there is a file  (pFolder & slash & "icon.png") then
-      put (pFolder & slash & "icon.png") into tDetailsA["icon"]
+      put (pFolder & slash & "icon.png") into tDetailsA[kIconKey]
    else
-      put empty into tDetailsA["icon"]
+      put empty into tDetailsA[kIconKey]
    end if
    
    if there is a file (pFolder & slash & "support" & slash & "icon@extra-high.png") then
-      put (pFolder & slash & "support" & slash & "icon@extra-high.png") into tDetailsA["retina_icon"]
+      put (pFolder & slash & "support" & slash & "icon@extra-high.png") into tDetailsA[kRetinaIconKey]
    else if there is a file (pFolder & slash & "icon@extra-high.png") then
-      put (pFolder & slash & "icon@extra-high.png") into tDetailsA["retina_icon"]
+      put (pFolder & slash & "icon@extra-high.png") into tDetailsA[kRetinaIconKey]
    else
-      put empty into tDetailsA["retina_icon"]
+      put empty into tDetailsA[kRetinaIconKey]
    end if
    
-   local tGuide, tGuideFile
-   if there is a file (pFolder & slash & "docs" & slash & "guide" & slash & "guide.md") then
-      put pFolder & slash & "docs" & slash & "guide" & slash & "guide.md" into tGuideFile
+   local tGuide, tGuideFile, tGuideFolder
+   put pFolder & slash & "docs" & slash & "guide" into tGuideFolder
+   if there is a file (tGuideFolder & slash & "guide.md") then
+      put __extensionListResourcesRecursive(tGuideFolder, "") \
+            into tDetailsA[kGuideContentsKey]
+      put tGuideFolder & slash & "guide.md" into tDetailsA[kGuideFileKey]
    else if there is a file (pFolder & slash & "guide.md") then
-      put pFolder & slash & "guide.md" into tGuideFile
+      put pFolder & slash & "guide.md" into tDetailsA[kGuideFileKey]
    end if
-   
-   if tGuideFile is not empty then
-      put tGuideFile into tDetailsA["guide_file"]
-   end if 
    
    // AL-2015-02-23: [[ Bug 14552 ]] Find resource folder and return details
    local tResourceFolder, tResources
    put pFolder & slash & "resources" into tResourceFolder
    if there is a folder tResourceFolder then
       put __extensionListResourcesRecursive(tResourceFolder, "") into tResources
-      put tResources into tDetailsA["resources"]
+      put tResources into tDetailsA[kResourcesKey]
    end if
    
    local tCodeFolder, tCode
    put pFolder & slash & "code" into tCodeFolder
    if there is a folder tCodeFolder then
       put __extensionListResourcesRecursive(tCodeFolder, "") into tCode
-      put tCode into tDetailsA["code"]
+      put tCode into tDetailsA[kCodeKey]
    end if
    
    local tSamplesFolder, tSamples
    put pFolder & slash & "samples" into tSamplesFolder
    if there is a folder tSamplesFolder then
       put __extensionListResourcesRecursive(tSamplesFolder, "") into tSamples
-      put tSamples into tDetailsA["samples"]
+      put tSamples into tDetailsA[kSamplesKey]
    end if
    
    # Default script
    local tDefaultScriptPath
    put pFolder & "/support/defaultscript.livecodescript" into tDefaultScriptPath
    if there is a stack tDefaultScriptPath then
-      put pFolder & "/support/defaultscript.livecodescript" into tDetailsA["defaultscript_file"]
+      put pFolder & "/support/defaultscript.livecodescript" into tDetailsA[kDefaultScriptFileKey]
    end if
    
    # Custom PI editors
@@ -1086,21 +1103,21 @@ function extensionFetchFolderDetails pFolder, pParseManifest
    put pFolder & slash & "editors" into tEditorsFolder
    if there is a folder tEditorsFolder then
       put __extensionListResourcesRecursive(tEditorsFolder, "") into tEditors
-      put tEditors into tDetailsA["editors"]
+      put tEditors into tDetailsA[kEditorsKey]
    end if
    
    # Compiled module files
    local tModuleFiles
-   if tDetailsA["source_type"] is "lcb" then
+   if tDetailsA[kSourceTypeKey] is "lcb" then
       put files(pFolder) into tModuleFiles
       filter tModuleFiles with regex pattern "^module(\.[0-9]+)?\.lcm$"
-      put tModuleFiles into tDetailsA["module_files"]
+      put tModuleFiles into tDetailsA[kModuleFilesKey]
    end if
    
    local tInterfaceFile
-   put pFolder & slash & tDetailsA["name"] & ".lci" into tInterfaceFile
+   put pFolder & slash & tDetailsA[kNameKey] & ".lci" into tInterfaceFile
    if there is a file tInterfaceFile then
-      put tInterfaceFile into tDetailsA["interface"]
+      put tInterfaceFile into tDetailsA[kInterfaceKey]
    end if
    
    # Fetch data from manifest
@@ -1131,7 +1148,7 @@ command extensionPackage pSourceFolder, pTargetFolder, pRemoveSource
    put extensionFetchFolderDetails(pSourceFolder) into tDetailsA
    
    local tTargetDir, tBuildTarget, tZip
-   put tDetailsA["name"] into tTargetDir
+   put tDetailsA[kNameKey] into tTargetDir
    put pTargetFolder & slash & tTargetDir into tBuildTarget
    
    __extensionBuildPackage tDetailsA, pSourceFolder, pTargetFolder, \
@@ -1165,7 +1182,7 @@ private command extractExtension pZip, pSourceFolder, pTargetFolder
    put extensionFetchFolderDetails(pSourceFolder) into tDetailsA
    
    local tTargetDir, tBuildTarget, tError, tName
-   put tDetailsA["name"] into tName
+   put tDetailsA[kNameKey] into tName
    put pTargetFolder & slash & tName into tBuildTarget
    
    __EnsurePath tBuildTarget
@@ -1349,7 +1366,7 @@ command extensionGenerateManifestForLCSExtension pDocsParser, pSourceFolder
    repeat for each item tKey in "title,author,version,name,type,display name,requires,uses,svgicon"
       put tDocA[tKey] into tDataA[tKey]
    end repeat
-   if tDataA["title"] is empty then
+   if tDataA[kTitleKey] is empty then
       put tDataA["display name"] into tDataA["title"]
    end if
    
@@ -1415,14 +1432,14 @@ function extensionFetchMetadata pManifestPath
    if tTargetType begins with "xmlerr" then
       return "Error: no type found in manifest" for error
    end if
-   put tTargetType into tDataA["type"]
+   put tTargetType into tDataA[kTypeKey]
    
    local tTargetName
    put textDecode(revXMLNodeContents(tTreeID, "/package/name"), "utf-8") into tTargetName
    if tTargetName begins with "xmlerr" then
       return "Error: couldn't retrieve extension name from manifest" for error
    end if
-   put tTargetName into tDataA["name"]
+   put tTargetName into tDataA[kNameKey]
    
    local tTargetTitle
    put textDecode(revXMLNodeContents(tTreeID, "/package/title"), "utf-8") into tTargetTitle
@@ -1430,7 +1447,7 @@ function extensionFetchMetadata pManifestPath
    if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
       put empty into tTargetTitle
    end if
-   put tTargetTitle into tDataA["title"]
+   put tTargetTitle into tDataA[kTitleKey]
    
    local tTargetVersion
    put textDecode(revXMLNodeContents(tTreeID, "/package/version"), "utf-8") into tTargetVersion
@@ -1438,14 +1455,14 @@ function extensionFetchMetadata pManifestPath
    if tTargetVersion is empty or tTargetVersion begins with "xmlerr" then
       put empty into tTargetVersion
    end if
-   put tTargetVersion into tDataA["version"]
+   put tTargetVersion into tDataA[kVersionKey]
    
    local tTargetAuthor
    put textDecode(revXMLNodeContents(tTreeID, "/package/author"), "utf-8") into tTargetAuthor
    if tTargetAuthor is empty or tTargetAuthor begins with "xmlerr" then
       put empty into tTargetAuthor
    end if
-   put tTargetAuthor into tDataA["author"]
+   put tTargetAuthor into tDataA[kAuthorKey]
    
    # Fetch property metadata
    local tMetadataValue, tMetadataKey
@@ -1542,16 +1559,16 @@ command extensionFindInFolder pFolder, pIsUserFolder, pRecursive, @xDataA
    
    put __fetchExtensionManifestData(pFolder, tMainSource) into tArray
    
-   put tMainSource into tArray["source_file"]
-   put tSupportFiles into tArray["support_files"]
-   put tType into tArray["source_type"]
-   put not pIsUserFolder into tArray["ide"]
+   put tMainSource into tArray[kSourceFileKey]
+   put tSupportFiles into tArray[kSupportFilesKey]
+   put tType into tArray[kSourceTypeKey]
+   put not pIsUserFolder into tArray[kIdeKey]
    
    local tTypeID
-   if tArray["name"] is empty then
+   if tArray[kNameKey] is empty then
       put pFolder into tTypeID
    else
-      put tArray["name"] into tTypeID
+      put tArray[kNameKey] into tTypeID
    end if
    put tArray into xDataA[tTypeID][pFolder]
 end extensionFindInFolder
