@@ -1709,12 +1709,12 @@ command extensionValidateLCEPackage pPackage, @rManifestDataA
    end if
    
    # Get initial manifest data needed for loading
-   local tManifestData, tManifestXMLTree
+   local tManifestText, tManifestData, tManifestXMLTree
    
    # Extract the package manfiest to a variable to read key data
    if tError is empty then
       revZipExtractItemToVariable pPackage, "manifest.xml", \
-      	"tManifestData"
+            "tManifestText"
       if the result is not empty then
          put "unable to extract manifest data" into tError
       end if
@@ -1726,7 +1726,7 @@ command extensionValidateLCEPackage pPackage, @rManifestDataA
       return tError
    end if
    
-   put revXMLCreateTree(tManifestData,true,true,false) into tManifestXMLTree
+   put revXMLCreateTree(tManifestText,true,true,false) into tManifestXMLTree
    if tManifestXMLTree is not a number then
       return "invalid manifest"
    end if
@@ -1740,6 +1740,14 @@ command extensionValidateLCEPackage pPackage, @rManifestDataA
          exit repeat
       end if
    end repeat
+   
+   # Fetch the manifest requirements
+   local tRequires
+   put __extensionManifestValueFromTree(tManifestXMLTree, "requires") \
+         into tRequires
+   if tRequires is an array then
+      put tRequires into tManifestData["requires"]
+   end if
    
    revXMLDeleteTree tManifestXMLTree
    
@@ -1773,6 +1781,7 @@ private function __extensionManifestValueFromTree pTreeID, pProperty
             end if
             put tName into tValue[tCount]
          end repeat
+         break
       default
          put revXMLNodeContents(pTreeID,"/package/" & pProperty) \
             into tValue
