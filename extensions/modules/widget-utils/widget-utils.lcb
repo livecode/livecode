@@ -254,6 +254,84 @@ public handler stringToColor(in pString as String) returns Color
 end handler
 
 /**
+Summary: Converts a string to a list of numbers
+
+Parameters:
+pString: A comma delimited string representing a list of numbers
+
+Example:
+property coordinates 	get getCoordinates 	set setCoordinates
+private variable mCoordinates as List
+
+public handler OnLoad(in pProperties as Array)
+	setCoordinates(pProperties["coordinates"])
+end handler
+
+public handler setCoordinates(in pCoordinates as String)
+	variable tCoordinates as List
+	put stringToListofNumber(pCoordinates) into tCoordinates
+	if the number of elements in tCoordinates != 2 then
+		throw "invalid coordinates: expected list of two numbers - <latitude>,<longitude>"
+	end if
+	put tCoordinates into mCoordinates
+	redraw all
+end handler
+
+Description:
+Use the <stringToListOfNumber> handler when receiving a list of numbers from LiveCode script 
+via a property setter, or from the widget's stored properties array when loading.
+*/
+public handler stringToListOfNumber(in pString as String) returns List
+	variable tStringList as List
+	split pString by "," into tStringList
+	
+	variable tNumberList as List
+	put [] into tNumberList
+	variable tString as String
+	repeat for each element tString in tStringList
+		push tString parsed as number onto tNumberList
+	end repeat
+
+	return tNumberList
+end handler
+
+/**
+Summary: Converts a list of numbers to a string
+
+Parameters:
+pNumbers: A list of numbers
+
+Example:
+property coordinates 	get getCoordinates 	set setCoordinates
+private variable mCoordinates as List
+
+public handler OnSave(out rProperties as Array)
+	put getCoordinates() into rProperties["coordinates"]
+end handler
+
+public handler getCoordinates() returns String
+	return numberListToString(mCoordinates)
+end handler
+
+Description:
+Use the <numberListToString> handler when returning a list of numbers to LiveCode script 
+via a property getter, or serializing to the widget's stored properties array when saving.
+*/
+public handler numberListToString(in pNumbers as List) returns String
+	variable tStringList as List
+	put [] into tStringList
+	
+	variable tNumber as Number
+	repeat for each element tNumber in pNumbers
+		push tNumber formatted as string onto tStringList
+	end repeat
+	
+	variable tCombined as String
+	combine tStringList with "," into tCombined
+	return tCombined
+end handler
+
+/**
 Summary: Get the canonical name of the current "native" mobile theme
 
 Example:
