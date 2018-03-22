@@ -260,3 +260,23 @@ on TestClipboardTextOnlyOnRawClipboard
    set the fullClipboardData to empty
    unlock the clipboard
 end TestClipboardTextOnlyOnRawClipboard
+
+on TestClipboardSettingTextDoesntClearPrivateData
+  lock clipboard
+  set the fullclipboarddata to empty
+  set the fullclipboarddata["private"] to "foo"
+  set the fullclipboardData["htmltext"] to "<p>foo</p>"
+  set the fullclipboarddata["text"] to "bar"
+  unlock clipboard
+  TestAssert "Setting fullclipboard text does not clear private data", the fullclipboarddata["private"] is "foo"
+end TestClipboardSettingTextDoesntClearPrivateData
+   
+on TestClipboardSettingTextOnlyClearsWhenCurrentlyHasStyled
+  lock clipboard
+  set the fullclipboarddata to empty
+  set the fullClipboardData["png"] to _TinyPNG()
+  set the fullclipboarddata["text"] to "bar"
+  unlock clipboard
+  TestAssert "Setting fullclipboard text does not clear unless it is currently styled", \
+         "png" is among the lines of the keys of the fullClipboardData and fullClipboardData["png"] is _TinyPNG()
+end TestClipboardSettingTextOnlyClearsWhenCurrentlyHasStyled
