@@ -704,7 +704,7 @@ public:
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 };
 
-class MCFontLanguage : public MCUnaryFunctionCtxt<MCStringRef, MCNameRef, MCTextEvalFontLanguage, EE_FONTSIZES_BADFONTNAME, PE_FONTNAMES_BADPARAM>
+class MCFontLanguage : public MCUnaryFunctionCtxt<MCStringRef, MCNameRef, MCTextEvalFontLanguage, EE_FONTLANGUAGE_BADFONTNAME, PE_FONTLANGUAGE_BADPARAM>
 {
 public:
     MCFontLanguage(){}
