@@ -1177,6 +1177,14 @@ bool MCWebViewBrowser::Init(void)
 
 @implementation MCWebUIDelegate
 
+- (WebView *)webView:(WebView *)webView
+            createWebViewWithRequest:(NSURLRequest *)request
+{
+    [[webView frameLoadDelegate] setPendingRequest: false];
+    [[webView mainFrame] loadRequest:request];
+    return webView;
+}
+
 - (NSUInteger)webView:(WebView *)webView dragDestinationActionMaskForDraggingInfo:(id<NSDraggingInfo>)draggingInfo
 {
 	return WebDragDestinationActionNone;
