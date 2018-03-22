@@ -265,7 +265,10 @@ bool MCClipboard::AddText(MCStringRef p_string)
     // Clear contents to ensure that the clipboard does not end up
     // containing data from different copy events.
     // i.e. the HTML/RTF representation would be left untouched
-    Clear();
+    if (HasLiveCodeStyledTextOrCompatible())
+    {
+        m_clipboard->Clear();
+    }
     
     // Get the first item on the clipboard
     MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
