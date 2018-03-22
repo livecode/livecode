@@ -3915,6 +3915,11 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 		p_parameters -> eval_argument(ctxt, &t_value);
         /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_source);
 	}
+    
+    if (!t_source.IsSet())
+    {
+        return ES_ERROR;
+    }
 	
 	MCPhotoSourceType t_photo_source;
 	bool t_is_take;
