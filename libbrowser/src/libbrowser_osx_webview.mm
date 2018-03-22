@@ -1158,7 +1158,10 @@ bool MCWebViewBrowser::Init(void)
 	else
 	{
 		[listener ignore];
-		m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        if (request.URL.absoluteString != nil)
+        {
+            m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        }
 	}
 }
 
@@ -1169,7 +1172,10 @@ bool MCWebViewBrowser::Init(void)
 	else
 	{
 		[listener ignore];
-		m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        if (request.URL.absoluteString != nil)
+        {
+            m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        }
 	}
 }
 
