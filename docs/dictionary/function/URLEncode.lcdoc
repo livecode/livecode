@@ -25,7 +25,7 @@ Example:
 URLEncode("Test string $$") -- returns "Test+string+%24%24"
 
 Example:
-put URLEncode("http://www.example.net/document.html") into newURL
+put "http://www.example.net/" & URLEncode("A File Name with spaces.html") into tGoodURL
 
 Parameters:
 formString (string):
@@ -45,7 +45,7 @@ Letters and numbers (alphanumeric characters) are not transformed by the
 characters is a percent sign followed by two <hexadecimal> digits. For
 example, the <ASCII|ASCII value> of the <character> ~ is 126; the
 hexadecimal equivalent of 126 is 7E. So wherever the <character> ~
-<a/>appears in the formString, it is converted to "%7E".
+appears in the formString, it is converted to "%7E".
 
 References: post (command), function (control structure),
 hexadecimal (glossary), encode (glossary), Escape key (glossary),
