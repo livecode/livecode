@@ -23,7 +23,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 FETCH_DIR="${SCRIPT_DIR}/fetched"
 EXTRACT_DIR="${SCRIPT_DIR}"
 WIN32_EXTRACT_DIR="${SCRIPT_DIR}/unpacked"
-URL="http://downloads.livecode.com/prebuilts"
+URL="https://downloads.livecode.com/prebuilts"
 
 # Platform specific settings
 if [ "${OS}" = "Windows_NT" ]; then
@@ -79,7 +79,7 @@ function fetchLibrary {
 		
 			# Download using an HTTP client of some variety
 			if $(which curl 1>/dev/null 2>/dev/null) ; then
-				curl --silent "${URL}/${NAME}.tar.bz2" -o "${FETCH_DIR}/${NAME}.tar.bz2" --fail
+				curl -k "${URL}/${NAME}.tar.bz2" -o "${FETCH_DIR}/${NAME}.tar.bz2" --fail
 			elif $(which wget 1>/dev/null 2>/dev/null) ; then
 				wget "${URL}/${NAME}.tar.bz2" -O "${FETCH_DIR}/${NAME}.tar.bz2"
 			else

@@ -603,7 +603,7 @@ command builderEnsureZip pZipfile, pURL
       builderEnsureFolderForFile pZipfile
       
       builderLog "message", "Downloading zip file:" && pZipfile
-      get shell(merge("curl -o '[[pZipfile]]' '[[pUrl]]'"))
+      get shell(merge("curl -k -o '[[pZipfile]]' '[[pUrl]]'"))
       if the result is not zero then
          builderLog "error", "Failed to download zip file:" && it
          throw "failure"
