@@ -133,7 +133,6 @@ public:
 	// Platform-specific methods
 	
 	virtual void PlatformConfigureWindow(CefWindowInfo &r_info) = 0;
-	virtual void PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser) = 0;
 	
 	virtual bool PlatformGetRect(MCBrowserRect &r_rect) = 0;
 	virtual bool PlatformSetRect(const MCBrowserRect &p_rect) = 0;

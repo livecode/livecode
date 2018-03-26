@@ -921,19 +921,6 @@ public:
 		MCCefIncrementInstanceCount();
 	}
 	
-	virtual bool DoClose(CefRefPtr<CefBrowser> p_browser) OVERRIDE
-	{
-		// We handle browser closing here to stop CEF sending WM_CLOSE to the stack window
-		if (p_browser->GetIdentifier() == m_browser_id)
-		{
-			// Close the browser window
-			if (m_owner != nil)
-				m_owner->PlatformCloseBrowserWindow(p_browser);
-		}
-		
-		return CefLifeSpanHandler::DoClose(p_browser);
-	}
-	
 	virtual void OnBeforeClose(CefRefPtr<CefBrowser> p_browser) OVERRIDE
 	{
 		if (m_owner != nil)
