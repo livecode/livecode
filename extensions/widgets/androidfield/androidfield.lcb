@@ -1050,13 +1050,14 @@ handler OnFocusChange(in pView as JObject, in pHasFocus as JObject) returns noth
    put GetText() into tText
 
    if tHasFocus then
-       // Show the soft keyboard if it isn't showing already
-       variable tJNIResult as Boolean
-       put _JNI_InputMethod_showSoftInput(mIMMObj, pView, INPUT_SHOW_IMPLICIT) into tJNIResult
-
+       if mIMMObj is not nothing then
+           // Show the soft keyboard if it isn't showing already
+           variable tJNIResult as Boolean
+           put _JNI_InputMethod_showSoftInput(mIMMObj, pView, INPUT_SHOW_IMPLICIT) into tJNIResult
+       end if
        // Store the current text value
        put tText into mOldText
-       post "openField"
+       post "openField" 
    else
       // If the text changed then post closeField
       // Otherwise post exitField
@@ -1364,12 +1365,14 @@ end handler
 private foreign handler MCCanvasFontGetHandle(in pFont as Font, out rHandle as Pointer) returns nothing binds to "<builtin>"
 
 handler SetTypeface(in pFont as Font)
-    variable tTypefacePtr as Pointer
+    variable tTypefacePtr as optional Pointer
     unsafe
 	    MCCanvasFontGetHandle(pFont, tTypefacePtr)
 	end unsafe
-    _JNI_TextView_setTypeface(mNativeObj, \
-        PointerToJObject(tTypefacePtr))
+    if tTypefacePtr is not nothing then
+        _JNI_TextView_setTypeface(mNativeObj, \
+            PointerToJObject(tTypefacePtr))
+    end if
 end handler
 
 __safe foreign handler _JNI_ViewGetContext(in pView as JObject) returns JObject \
