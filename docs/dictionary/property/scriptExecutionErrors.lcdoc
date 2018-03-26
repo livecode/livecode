@@ -16,9 +16,9 @@ Platforms: desktop, server
 Example:
 -- Use of scriptExecutionErrors in a try statement
 on mouseUp
-  local tVar, tErr
+  local tErr
   try
-    put "foo" in tErr -- syntax error in this line
+    CommandThatDoesNotExist -- execution error in this line
   catch tErr
     put line (item 1 of tErr) of the scriptExecutionErrors
     -- reports details about the error
