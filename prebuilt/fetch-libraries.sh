@@ -20,7 +20,7 @@ SUBPLATFORMS_ios=(iPhoneSimulator6.1 iPhoneSimulator7.1 iPhoneSimulator8.2 iPhon
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 FETCH_DIR="${SCRIPT_DIR}/fetched"
 EXTRACT_DIR="${SCRIPT_DIR}"
-URL="http://downloads.livecode.com/prebuilts"
+URL="https://downloads.livecode.com/prebuilts"
 
 # Versions
 source "${SCRIPT_DIR}/scripts/lib_versions.inc"
@@ -52,7 +52,7 @@ function fetchLibrary {
 		
 		# Download using an HTTP client of some variety
 		if $(which curl 1>/dev/null 2>/dev/null) ; then
-			curl --silent "${URL}/${NAME}.tar.bz2" -o "${FETCH_DIR}/${NAME}.tar.bz2"
+			curl -k "${URL}/${NAME}.tar.bz2" -o "${FETCH_DIR}/${NAME}.tar.bz2"
 		elif $(which wget 1>/dev/null 2>/dev/null) ; then
 			wget "${URL}/${NAME}.tar.bz2" -O "${FETCH_DIR}/${NAME}.tar.bz2"
 		else
