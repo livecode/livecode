@@ -109,6 +109,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	bool t_isvista = MCmajorosversion >= 0x0600 && MCcurtheme != NULL;
 
 	bool t_themed_menu = false;
+	bool t_use_alpha_layer = false;
 
 	if (entry != NULL)
 	{
@@ -352,7 +353,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			if (MClook == LF_MOTIF)
 			{
 				setforeground(dc, DI_FORE, False);
-				dc->setfillstyle(FillStippled, nil, 0, 0);
+				dc->setopacity(127);
+				dc->begin(false);
+				t_use_alpha_layer = true;
 			}
 			else if (IsMacLF())
 			{
@@ -576,6 +579,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				MCStringRef t_name = MCNameGetString(getname());
                 drawdirectionaltext(dc, rect.x + leftmargin, starty, t_name, m_font);
 			}
+			
+			if (t_use_alpha_layer)
+				dc->end();
 
 			// MW-2012-01-27: [[ Bug 9432 ]] Native GTK handles focus borders itself
 			//   so don't render the win95-style one.
@@ -1608,7 +1614,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 			{
 			case LF_MOTIF:
 				setforeground(dc, DI_FORE, False);
-				dc->setfillstyle(FillStippled, nil, 0, 0);
+				dc->setopacity(127);
 				break;
 			case LF_MAC:
 				dc->setforeground(dc->getgray());
