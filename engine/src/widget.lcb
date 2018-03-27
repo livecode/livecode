@@ -394,6 +394,10 @@ use com.livecode.foreign
 use com.livecode.canvas
 use com.livecode.engine
 
+// ---------- Widget type definition ---------- //
+
+public foreign type Widget binds to "MCWidgetTypeInfo"
+
 // ---------- Widget commands ---------- //
 
 public foreign handler MCWidgetExecRedrawAll() returns nothing binds to "<builtin>"
@@ -401,6 +405,7 @@ public foreign handler MCWidgetExecScheduleTimerIn(in pTime as CDouble) returns 
 public foreign handler MCWidgetExecCancelTimer() returns nothing binds to "<builtin>"
 public foreign handler MCWidgetEvalInEditMode(out rInEditMode as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecTriggerAll() returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecTriggerAllInWidget(in pWidget as Widget) returns nothing binds to "<builtin>"
 
 /**
 Summary:	Redraws the widget.
@@ -488,11 +493,19 @@ end syntax
 
 /**
 Summary:	Causes all of a widget's property triggers to be fired.
+mWidget:	An expression that evaluates to a widget.
 
 Example:
 	handler TextChangedCallback()
         UpdateTextProperty()
         trigger all
+	end handler
+
+Example:
+	private variable mSelf as Widget
+	handler TextChangedCallback()
+		UpdateTextProperty()
+		trigger all in mSelf
 	end handler
 
 Description:
@@ -502,9 +515,10 @@ properties to change, to signal the property change to the IDE.
 */
 
 syntax TriggerAll is statement
-  "trigger" "all"
+  "trigger" "all" [ "in" <mWidget: Expression> ]
 begin
   MCWidgetExecTriggerAll()
+  MCWidgetExecTriggerAllInWidget(mWidget)
 end syntax
 
 
@@ -1164,8 +1178,7 @@ end syntax
 
 // annotation <name> of <widget>
 
-public foreign type Widget binds to "MCWidgetTypeInfo"
-
+public foreign handler MCWidgetEvalThisWidget(out rMe as optional Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetEvalTheTarget(out rTarget as optional Widget) returns nothing binds to "<builtin>"
 
 public foreign handler MCWidgetEvalMyChildren(out rChildWidgets as List) returns nothing binds to "<builtin>"
@@ -1256,6 +1269,42 @@ syntax TheTarget is expression
     "the" "target"
 begin
     MCWidgetEvalTheTarget(output)
+end syntax
+
+//
+
+/**
+Summary: Returns the current widget.
+Returns: A widget object.
+
+Example:
+
+-- In a widget
+private variable mSelf as Widget
+public handler OnCreate() returns nothing
+	-- Keep a reference to this widget
+	put this widget into mSelf
+
+	-- defined in separate module library
+	SetEventCallback(EventCallback)
+end handler
+
+-- may be called from another module library
+private handler EventCallback() returns nothing
+	-- update internal variables
+
+	-- notify ide of changes
+	trigger all in mSelf
+end handler
+
+Description:
+This widget evaluates to the current widget. This can be used to retain a reference for occasions where widget handlers may be called from another module, where the current widget may not be valid.
+*/
+
+syntax ThisWidget is expression
+	"this" "widget"
+begin
+	MCWidgetEvalThisWidget(output)
 end syntax
 
 //
