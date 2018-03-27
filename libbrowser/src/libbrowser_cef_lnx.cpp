@@ -32,7 +32,6 @@ public:
 	bool GetXWindow(Window &r_window);
 
 	virtual void PlatformConfigureWindow(CefWindowInfo &r_info);
-	virtual void PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser);
 	virtual bool PlatformGetNativeLayer(void *&r_layer);
 
 	virtual bool PlatformSetVisible(bool p_visible);
@@ -189,20 +188,6 @@ bool MCCefLinuxBrowser::PlatformGetAuthCredentials(bool p_is_proxy, const CefStr
 {
 	/* TODO - implement */
 	return false;
-}
-
-//////////
-
-void MCCefLinuxBrowser::PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser)
-{
-	Window t_window;
-	t_window = p_browser->GetHost()->GetWindowHandle();
-	
-	Display *t_display;
-	if (!GetXDisplay(t_display))
-		return;
-	
-	XDestroyWindow(t_display, t_window);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

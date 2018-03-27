@@ -51,7 +51,6 @@ public:
 	bool GetHWND(HWND &r_hwnd);
 
 	virtual void PlatformConfigureWindow(CefWindowInfo &r_info);
-	virtual void PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser);
 
 	virtual bool PlatformGetNativeLayer(void *&r_layer);	
 
@@ -98,16 +97,6 @@ void MCCefWin32Browser::PlatformConfigureWindow(CefWindowInfo &r_info)
 	::SetRect(&t_rect, 0, 0, 1, 1);
 
 	r_info.SetAsChild(m_parent_window, t_rect);
-}
-
-void MCCefWin32Browser::PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser)
-{
-	HWND t_win;
-	t_win = p_browser->GetHost()->GetWindowHandle();
-
-	//SetParent(t_win, HWND_MESSAGE);
-	//CloseWindow(t_win);
-	DestroyWindow(t_win);
 }
 
 bool MCCefWin32Browser::PlatformGetNativeLayer(void *&r_layer)
