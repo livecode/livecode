@@ -5,7 +5,7 @@ number of properties which control how the path is displayed.
 ![SVG Path widget](images/svgpath.png)
 
 ## Creating an SVG Path
-A SVG Path widget can be created by dragging it out from the Tools
+An SVG path widget can be created by dragging it out from the Tools
 Palette, where it appears with the following icon:
 
 <svg viewBox="0 0 65 40" style="display:block;margin:auto" width="auto" height="50">
@@ -97,7 +97,7 @@ The SVG path widget has read-only `scaledWidth` and `scaledHeight`
 properties which return the width and height of the path as it is 
 currently being rendered.
 
-## How to get SVG paths
+## How to Get SVG Paths
 Many image manipulation programs allow images to be exported as SVG, and 
 there are many SVG files available online, for example at Open Clipart, 
 however these cannot always be converted into simple SVG paths.

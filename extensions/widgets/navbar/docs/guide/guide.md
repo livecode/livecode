@@ -7,7 +7,7 @@ native navigation bars on iOS and Android.
 ![Navigation Bar widget](images/navbar.png)
 
 ## Creating a Navigation Bar
-A Navigation Bar widget can be created by dragging it out from the Tools
+A navigation bar widget can be created by dragging it out from the Tools
 Palette, where it appears with the following icon:
 
 <svg viewBox="0 0 80 30" style="display:block;margin:auto" width="auto" height="50">
@@ -51,7 +51,7 @@ conjunction with the header bar widget) in the interactive tutorial app.
 
 ![Navigation Bar used in BMI app](images/bmi-app.png)
 
-## Customising a navigation bar
+## Customising a Navigation Bar
 Individual properties of each navigation item, and the order they are displayed, can be changed using the property inspector.
 
 ![Navigation Bar property inspector editor](images/pi-editor.png)

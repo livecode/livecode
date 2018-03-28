@@ -6,7 +6,7 @@ key/value pairs, and folding and unfolding of nested arrays.
 ![Tree View widget](images/treeview.png)
 
 ## Creating a Tree View
-A Tree View widget can be created by dragging it out from the Tools
+A tree view widget can be created by dragging it out from the Tools
 Palette, where it appears with the following icon:
 
 <svg viewBox="0 170 220 110" style="display:block;margin:auto" width="auto" height="50">
@@ -52,8 +52,9 @@ specific `pathDelimiter`-delimited path rather than the whole array:
 	   end if
 	end fetchArrayDataOnPath
 
-## Display properties
-The tree view widget has a number of display options. 
+## Display Properties
+The tree view widget has a number of display options:
+
 * `alternateRowBackgrounds` - Whether the alternate rows of the widget have different backgrounds or not.
 * `hilitedElement` - The selected row, given by a `pathDelimiter`-delimited path.
 * `readOnly` - Whether the options to modify elements of the underlying array are present or not. See the [Edit Mode](#edit-mode) section for more information on what is not visible in read-only mode.

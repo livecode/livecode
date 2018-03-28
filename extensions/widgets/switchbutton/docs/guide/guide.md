@@ -10,7 +10,7 @@ Mac / iOS
 ![Switch Button widget](images/switchbutton-ios.png)
 
 ## Creating a Switch Button
-A Switch Button widget can be created by dragging it out from the Tools
+A switch button widget can be created by dragging it out from the Tools
 Palette, where it appears with the following icon:
 
 <svg viewBox="0 0 120 38" style="display:block;margin:auto" width="auto" height="50">
@@ -28,7 +28,7 @@ the switch is clicked, or the property is set through script, the value
 of the `hilite` changes accordingly and the widget's appearance changes
 to reflect the value.
 
-## Switching theme
+## Switching Theme
 Setting the `theme` of the header bar to "Android" or "iOS" will 
 temporarily display it using the metrics of the chosen platform. This
 property is transient - it is not saved with the stack as it uses the 

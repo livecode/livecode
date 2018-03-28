@@ -1,10 +1,10 @@
 # Header Bar Widget
 The header bar widget can be used to allow the user to navigate around 
 your app and take actions, providing a visual structure to your app.
-The widget emulates the iOS Navigation Bar and the Android App Bar. If 
+The widget emulates the iOS navigation bar and the Android app bar. If 
 you are working on Mac a header bar widget will be themed like an iOS 
-Navigation Bar, if you are working on Windows or Linux it will be themed 
-like an Android App Bar.
+navigation bar, if you are working on Windows or Linux it will be themed 
+like an Android app bar.
 
 Windows / Linux / Android
 
@@ -15,7 +15,7 @@ Mac / iOS
 ![Mac header](images/mac-header.png)
 
 For example in the iOS Clock app the header bar allows the user to 
-choose to Edit or Add an alarm by navigating to another screen within 
+choose to edit or add an alarm by navigating to another screen within 
 the Alarm section of the app.
 
 ![Clock app header](images/clock.png)
@@ -23,7 +23,7 @@ the Alarm section of the app.
 As well as navigating around the app the header bar can also be used to provide access to options such as search, save and delete.
 
 ## Creating a Header Bar
-A Header Bar widget can be created by dragging it out from the Tools
+A header bar widget can be created by dragging it out from the Tools
 Palette, where it appears with the following icon:
 
 <svg viewBox="0 0 80 30" style="display:block;margin:auto" width="auto" height="50">
@@ -126,7 +126,7 @@ Notes Header
 Beyond handling the `mouseUp` message and using the `mouseAction` 
 property to act on the selected action the other thing you might want to 
 do with your header is to update it depending on the state of the app. 
-For example if you choose to Edit an item in a list the header options 
+For example if you choose to edit an item in a list the header options 
 might change to “cancel” and “save”, or similar. You can change the 
 header actions in script by setting the `itemLabels`, `itemNames`, 
 `itemIcons` or `hilitedItemIcons` properties of the header bar widget. 
@@ -158,7 +158,7 @@ This example shows how to switch a header bar action between “edit” and
 		end if 
 	end mouseUp
 	
-## Switching theme
+## Switching Theme
 Setting the `theme` of the header bar to "Android" or "iOS" will 
 temporarily display it using the metrics of the chosen platform. This
 property is transient - it is not saved with the stack as it uses the 

@@ -6,7 +6,7 @@ browser objects on Mac, iOS and Android, and using the Chromium Embedded Framewo
 ![Browser widget](images/browser.png)
 
 ## Creating a Browser
-A Browser widget can be created by dragging it out from the Tools
+A browser widget can be created by dragging it out from the Tools
 Palette, where it appears with the following icon:
 
 <svg viewBox="0 0 25 25" style="display:block;margin:auto" width="auto" height="50">
@@ -18,17 +18,18 @@ Alternatively it can be created in script using:
 
 	create widget as "com.livecode.widget.browser"
 
-## Displaying content in a browser
+## Displaying Content in a Browser
 
 The most straightforward way to use the browser widget is to set its 
 `url` property to display a web page. It can also be set to a local file 
-url, for example to display a PDF.
+url.
 
 Alternatively the `htmlText` property can be used to render specific 
 chunks of html within the browser object. 
 
-## Controlling navigation
+## Controlling Navigation
 The browser sends the following messages which can be used to control navigation within the browser. See the API documentation for more details:
+
 * browserDocumentLoadBegin
 * browserDocumentLoadComplete
 * browserDocumentLoadFailed
@@ -40,7 +41,7 @@ The browser sends the following messages which can be used to control navigation
 * browserNavigateFailed
 * browserUnhandledLoadRequest
 
-## Interacting with JavaScript
+## Interacting With JavaScript
 The browser allows two-way interaction with the javascript running in 
 the displayed page. To allow LiveCode handlers to be called from 
 JavaScript, there is a `javascriptHandlers` property. This can be set to

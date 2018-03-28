@@ -6,7 +6,7 @@ identified either by a label, or an icon.
 ![Segmented Control widget](images/segmented.png)
 
 ## Creating a Segmented Control
-A Segmented Control widget can be created by dragging it out from the 
+A segmented control widget can be created by dragging it out from the 
 Tools Palette, where it appears with the following icon:
 
 <svg viewBox="0 0 150 30" style="display:block;margin:auto" width="auto" height="50">
@@ -19,7 +19,7 @@ Alternatively it can be created in script using:
 	create widget as "com.livecode.widget.segmented"
 
 ## Examples
-### Controlling text alignment
+### Controlling Text Alignment
 One of the ways the segmented control is used in the LiveCode IDE is to 
 control the alignment of text.  You can find it used in that way on the 
 Property Inspector’s “Text” page for the Field control, for example.
@@ -53,7 +53,7 @@ handle this message to change the field’s `textAlign` property.
 
 ![Segmented control to set text align](images/text-align.png)
 
-### A 5-star rating control
+### A 5-star Rating Control
 By adding some script support, you can use the segmented control to 
 create some controls that would be quite difficult to do using “classic” 
 LiveCode controls.  For example, you can build a “5 star rating” control 

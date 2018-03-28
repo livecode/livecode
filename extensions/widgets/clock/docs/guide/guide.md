@@ -5,7 +5,7 @@ an analog clock face.
 ![Clock widget](images/clock.png)
 
 ## Creating a Clock
-A Clock widget can be created by dragging it out from the Tools
+A clock widget can be created by dragging it out from the Tools
 Palette, where it appears with the following icon:
 
 <svg viewBox="0 0 70 70" style="display:block;margin:auto" width="auto" height="50">
@@ -17,7 +17,7 @@ Alternatively it can be created in script using:
 
 	create widget as "com.livecode.widget.clock"
 
-## Clock display
+## Clock Display
 
 When the clock is displaying an AM time, the hands are dark on a light 
 background, and when displaying a PM time, the hands are light on a dark 

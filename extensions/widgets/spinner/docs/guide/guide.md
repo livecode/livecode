@@ -11,7 +11,7 @@ content displayed on the screen.
 ![A group of spinners](images/spinner.gif)
 
 ## Creating a Spinner
-A Spinner widget can be created by dragging it out from the Tools
+A spinner widget can be created by dragging it out from the Tools
 Palette, where it appears with the following icon:
 
 <svg viewBox="0 0 1800 1800" style="display:block;margin:auto" width="auto" height="50">
@@ -23,10 +23,10 @@ Alternatively it can be created in script using:
 
 	create widget as "com.livecode.widget.spinner"
 
-## Using the spinner
+## Using the Spinner
 Here are some tips that may help you use the spinner effectively.
 
-### Ensuring the spinner actually spins
+### Ensuring the Spinner Actually Spins
 The spinner widget will only update (rotate to its next notch) when the 
 engine gets to do event processing, such as during a wait with messages 
 statement.  There are several commands and functions which implicitly 
@@ -37,14 +37,14 @@ file or loading data from a database, you may wish to add `wait 0 with
 messages` statement each time you make progress, so that the spinner 
 continues to spin, and your users don’t think your app has frozen.
 
-### Making it clear that the app is “busy”
+### Making it Clear that the App is “Busy”
 You may wish to hide or “dim” your app’s user interface while the app is 
 busy.  For example, your app could use a “splash screen” card that 
 displays a logo and a spinner widget while loading its resources and 
 preparing to run.  This helps by providing additional visual cues to the 
 user that the app’s user interface is not ready to respond yet.
 
-### Cancelling a long-running activity
+### Cancelling a Long-Running Activity
 Sometimes, you may have a very slow process that you can safely abandon. 
 It can be useful to provide a “Cancel” button. Suppose you have a stack 
 with a cancelButton and a spinnerWidget.  You can create a cancellable 
@@ -82,7 +82,7 @@ should continue:
 	   set the visible of control "cancelButton" to false
 	end doOperation
 	
-### Indicating background processing
+### Indicating Background Processing
 Sometimes your app may need to do some background processing, such as 
 synchronising its state with a server, without needing to block the user 
 interface.  You may wish to use a spinner widget in a peripheral part of 

@@ -7,7 +7,7 @@ data so you already have something that looks like a chart.
 ![Default line graph](images/graph.png)
 
 ## Creating a Line Graph
-A Line Graph widget can be created by dragging it out from the Tools
+A line graph widget can be created by dragging it out from the Tools
 Palette, where it appears with the following icon:
 
 <svg viewBox="0 0 50 40" style="display:block;margin:auto" width="auto" height="50">
@@ -21,10 +21,10 @@ Alternatively it can be created in script using:
 
 ## Properties
 Unarguably the most important property you will need to know about as 
-you start using the Line Graph is the `graphData`. The `graphData` is 
+you start using the line graph is the `graphData`. The `graphData` is 
 comma and line delimited with the first item of each line being a point 
-on the X axis and each subsequent item on a line being a point on the Y 
-axis of a data series.
+on the x-axis and each subsequent item on a line being a point on the 
+y-axis of a data series.
 
 For example:
 
@@ -70,8 +70,6 @@ just show markers:
 	set the showLines of widget "Line Graph" to false
 
 ![Line graph with no grid or markers](images/data-no-lines.png)
-	
-This is helpful for creating a scatter plot.
 
 We can set the line/marker colors with the `graphColors` property. This 
 is a return-delimited list of colors in RGB(A) format. For example:
