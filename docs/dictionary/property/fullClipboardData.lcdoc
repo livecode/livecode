@@ -63,7 +63,10 @@ The `rtftext`, `htmltext`, `styles` and `styledtext` properties are
 handled specially by LiveCode: adding any one of them will cause the 
 rest (plus `text`) to be automatically generated and added. You can 
 query the keys of the <fullClipboardData> to determine what types of 
-data are on the <clipboard(glossary)>.
+data are on the <clipboard(glossary)>. When setting the `text` property
+the clipboard (with the exception of private data) is cleared if it
+includes any of these properties. This is to allow setting plain text
+only.
 
 If you require lower-level access to the <clipboard(glossary)>, see the 
 <rawClipboardData> <property>.
