@@ -43,7 +43,7 @@ on TestMergExtURL
       local tURL
       put builderMergExtUrl(tVersion,tEdition) into tURL
       
-      get shell("curl  -s -o /dev/null -IL -w" && quote & "%{http_code}" & quote && tURL)
+      get shell("curl -k -s -o /dev/null -IL -w" && quote & "%{http_code}" & quote && tURL)
       TestAssert "mergExt" && tEdition && "url is valid", it is 200
    end repeat
 end TestMergExtURL
@@ -57,7 +57,7 @@ on TestTSNetURL
       local tURL
       put builderTSNetUrl(tVersion, tEdition) into tURL
       
-      get shell("curl  -s -o /dev/null -IL -w" && quote & "%{http_code}" & quote && tURL)
+      get shell("curl -k -s -o /dev/null -IL -w" && quote & "%{http_code}" & quote && tURL)
       TestAssert "tsNet" && tEdition && "url is valid", it is 200
    end repeat
 end TestTSNetURL
