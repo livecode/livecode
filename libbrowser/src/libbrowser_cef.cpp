@@ -921,19 +921,6 @@ public:
 		MCCefIncrementInstanceCount();
 	}
 	
-	virtual bool DoClose(CefRefPtr<CefBrowser> p_browser) OVERRIDE
-	{
-		// We handle browser closing here to stop CEF sending WM_CLOSE to the stack window
-		if (p_browser->GetIdentifier() == m_browser_id)
-		{
-			// Close the browser window
-			if (m_owner != nil)
-				m_owner->PlatformCloseBrowserWindow(p_browser);
-		}
-		
-		return CefLifeSpanHandler::DoClose(p_browser);
-	}
-	
 	virtual void OnBeforeClose(CefRefPtr<CefBrowser> p_browser) OVERRIDE
 	{
 		if (m_owner != nil)
@@ -1136,12 +1123,7 @@ public:
 		bool t_frame;
 		t_frame = !p_frame->IsMain();
 		
-		if (t_is_error)
-		{
-			if (t_error_code == ERR_UNKNOWN_URL_SCHEME)
-				m_owner->OnNavigationRequestUnhandled(t_frame, t_url_str);
-		}
-		else
+		if (!t_is_error)
 		{
 			if (!t_frame)
 				m_owner->OnNavigationBegin(t_frame, t_url_str);
@@ -1209,10 +1191,23 @@ public:
 	
 	virtual void OnLoadError(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefLoadHandler::ErrorCode p_error_code, const CefString &p_error_text, const CefString &p_failed_url) OVERRIDE
 	{
-		// IM-2015-11-16: [[ Bug 16360 ]] Contrary to the CEF API docs, OnLoadEnd is NOT called after OnLoadError when the error code is ERR_ABORTED.
-		//    This occurs when requesting a new url be loaded when in the middle of loading the previous url, or when the url load is otherwise cancelled.
-		if (p_error_code != ERR_ABORTED)
+		if (p_error_code == ERR_UNKNOWN_URL_SCHEME)
+		{
+			bool t_frame;
+			t_frame = !p_frame->IsMain();
+
+			char *t_url_str = nullptr;
+			if (MCCefStringToUtf8String(p_failed_url, t_url_str))
+			{
+				m_owner->OnNavigationRequestUnhandled(t_frame, t_url_str);
+			}
+		}
+		else if (p_error_code != ERR_ABORTED)
+		{
+			// IM-2015-11-16: [[ Bug 16360 ]] Contrary to the CEF API docs, OnLoadEnd is NOT called after OnLoadError when the error code is ERR_ABORTED.
+			//    This occurs when requesting a new url be loaded when in the middle of loading the previous url, or when the url load is otherwise cancelled.
 			AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url, p_error_text, p_error_code);
+		}
 	}
 	
 	// ContextMenuHandler interface
