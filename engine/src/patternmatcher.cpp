@@ -88,6 +88,12 @@ MCRegexMatcher::MCRegexMatcher(MCStringRef p_pattern, MCArrayRef p_array, MCStri
     m_compiled = NULL;
 }
 
+MCRegexMatcher::~MCRegexMatcher()
+{
+    if (m_compiled != NULL)
+        delete m_compiled;
+}
+
 // JS-2013-07-01: [[ EnhancedFilter ]] Implementation of pattern matching classes.
 bool MCRegexMatcher::compile(MCStringRef& r_error)
 {

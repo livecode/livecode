@@ -767,6 +767,8 @@ void MCStringsEvalMatchText(MCExecContext& ctxt, MCStringRef p_string, MCStringR
             t_match_index = 0;
     }
     
+	delete t_compiled;
+	
     if (t_success)
         return;
     
@@ -816,6 +818,8 @@ void MCStringsEvalMatchChunk(MCExecContext& ctxt, MCStringRef p_string, MCString
             t_match_index = 0;
     }
     
+	delete t_compiled;
+	
     if (t_success)
     {
         if ((p_result_count & 1) == 1)
@@ -847,6 +851,7 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
     MCAutoStringRef t_unicode_string;
     if (!MCStringUnicodeCopy(p_string, &t_unicode_string))
     {
+		delete t_compiled;
         ctxt.Throw();
         return;
     }
@@ -884,6 +889,8 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
             break;
     }
     
+	delete t_compiled;
+	
     MCAutoStringRef t_post_match;
     if (t_success)
         t_success = MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_source_offset, t_source_length), &t_post_match) &&

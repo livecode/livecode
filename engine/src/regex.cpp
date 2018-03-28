@@ -114,10 +114,10 @@ static int eint[] =
 	REG_BADPAT,  /* "support for \\P, \\p, and \\X has not been compiled" */
 	REG_BADPAT,  /* "malformed \\P or \\p sequence" */
 	REG_BADPAT,  /* "unknown property name after \\P or \\p" */
-  REG_BADPAT,  /* subpattern name is too long (maximum 32 characters) */
-  REG_BADPAT,  /* too many named subpatterns (maximum 10,000) */
-  REG_BADPAT,  /* repeated subpattern is too long */
-  REG_BADPAT   /* octal value is greater than \377 (not in UTF-8 mode) */
+	REG_BADPAT,  /* subpattern name is too long (maximum 32 characters) */
+	REG_BADPAT,  /* too many named subpatterns (maximum 10,000) */
+	REG_BADPAT,  /* repeated subpattern is too long */
+	REG_BADPAT   /* octal value is greater than \377 (not in UTF-8 mode) */
 };
 
 /* Table of texts corresponding to POSIX error codes */
@@ -189,7 +189,7 @@ regerror(int errcode, const regex_t *preg, MCStringRef &errbuf)
 
 void regfree(regex_t *preg)
 {
-    (pcre16_free)(preg->re_pcre);
+	(pcre16_free)(preg->re_pcre);
 }
 
 /*************************************************
@@ -214,22 +214,34 @@ int regcomp(regex_t *preg, MCStringRef pattern, int cflags)
 
 	if ((cflags & REG_ICASE) != 0)
 		options |= PCRE_CASELESS;
-    if ((cflags & REG_NEWLINE) != 0)
+	if ((cflags & REG_NEWLINE) != 0)
 		options |= PCRE_MULTILINE;
 
-    // AL-2014-08-20: [[ Bug 13186 ]] Ensure pattern string doesn't get permanently converted to UTF-16
-    MCAutoStringRef t_temp;
-    /* UNCHECKED */ MCStringMutableCopy(pattern, &t_temp);
-    
-    // SN-2014-01-14: [[ libpcre update ]]
-    preg->re_pcre = pcre16_compile((PCRE_SPTR16)MCStringGetCharPtr(*t_temp), options, &errorptr, &erroffset, NULL);
+	// AL-2014-08-20: [[ Bug 13186 ]] Ensure pattern string doesn't get
+	// permanently converted to UTF-16
+	MCAutoStringRef t_temp;
+	/* UNCHECKED */ MCStringMutableCopy(pattern, &t_temp);
+
+	// SN-2014-01-14: [[ libpcre update ]]
+	preg->re_pcre = pcre16_compile((PCRE_SPTR16)MCStringGetCharPtr(*t_temp),
+									options,
+									&errorptr,
+									&erroffset,
+									NULL);
 	preg->re_erroffset = erroffset;
 
 	if (preg->re_pcre == NULL)
 		return eint[erroffset];
 
-//    [[ libpcre udpate ]] SN-2014-01-10: pcre_info() is deprecated, must be replaced with pcre_fullinfo()
-    return pcre16_fullinfo((const pcre16 *)preg->re_pcre, NULL, PCRE_INFO_CAPTURECOUNT, &preg->re_nsub);
+	/* UNCHECKED */ preg->re_pattern = MCValueRetain(pattern);
+	preg->re_flags = cflags;
+
+	// SN-2014-01-10: [[ libpcre udpate ]] pcre_info() is deprecated,
+	// must be replaced with pcre_fullinfo()
+	return pcre16_fullinfo((const pcre16 *)preg->re_pcre,
+							NULL,
+							PCRE_INFO_CAPTURECOUNT,
+							&preg->re_nsub);
 }
 
 /*************************************************
@@ -251,7 +263,7 @@ int regexec(regex_t *preg, const unichar_t *string, int len, size_t nmatch,
 	if ((eflags & REG_NOTBOL) != 0)
 		options |= PCRE_NOTBOL;
 	if ((eflags & REG_NOTEOL) != 0)
-        options |= PCRE_NOTEOL;
+		options |= PCRE_NOTEOL;
 
 	preg->re_erroffset = (size_t)(-1);   /* Only has meaning after compile */
 	if (nmatch > 0)
@@ -261,9 +273,15 @@ int regexec(regex_t *preg, const unichar_t *string, int len, size_t nmatch,
 			return REG_ESPACE;
 	}
 
-    // [[ libprce update ]] SN-2014-01-14: now handles unicode-encoded input
-    rc = pcre16_exec((const pcre16 *)preg->re_pcre, NULL, (PCRE_SPTR16)string, len, 0, options,
-	               ovector, nmatch * 3);
+	// [[ libprce update ]] SN-2014-01-14: now handles unicode-encoded input
+	rc = pcre16_exec((const pcre16 *)preg->re_pcre,
+					  NULL,
+					  (PCRE_SPTR16)string,
+					  len,
+					  0,
+					  options,
+					  ovector,
+					  nmatch * 3);
 
 	if (rc == 0)
 		rc = nmatch;    /* All captured slots were filled in */
@@ -316,7 +334,7 @@ void MCR_copyerror(MCStringRef &r_error)
         r_error = MCValueRetain(regexperror);
 }
 
-regexp *MCregexcache[PATTERN_CACHE_SIZE];
+regex_t *MCregexcache[PATTERN_CACHE_SIZE];
 
 // JS-2013-07-01: [[ EnhancedFilter ]] Updated to support case-sensitivity and caching.
 // MW-2013-07-01: [[ EnhancedFilter ]] Tweak to take 'const char *' and copy pattern as required.
@@ -325,10 +343,10 @@ regexp *MCregexcache[PATTERN_CACHE_SIZE];
 regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 {
 	Boolean found = False;
-	regexp *re = nil;
+	regex_t *re = nil;
 	int flags = REG_EXTENDED;
-    if (!casesensitive)
-        flags |= REG_ICASE;
+	if (!casesensitive)
+		flags |= REG_ICASE;
 
 	// Search the cache - keeping a note of any free slots in t_last_free.
 	uint2 i;
@@ -344,8 +362,8 @@ regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 		// work if the same pattern valueref is used more than once, but
 		// not if a pattern has a different valueref but same content.
 		if (MCregexcache[i] &&
-            exp == MCregexcache[i]->pattern &&
-			flags == MCregexcache[i]->flags)
+			exp == MCregexcache[i]->re_pattern &&
+			flags == MCregexcache[i]->re_flags)
 		{
 			found = True;
 			re = MCregexcache[i];
@@ -356,15 +374,12 @@ regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 	// If the pattern isn't found with the given flags, then create a new one.
 	if (re == nil)
 	{
-		/* UNCHECKED */ re = new(std::nothrow) regexp;
-		/* UNCHECKED */ re->pattern = MCValueRetain(exp);
-		re->flags = flags;
+		/* UNCHECKED */ re = new(std::nothrow) regex_t;
 		int status;
-		status = regcomp(&re->rexp, exp, flags);
+		status = regcomp(re, exp, flags);
 		if (status != REG_OKAY)
 		{
 			regerror(status, nil, regexperror);
-			MCValueRelease(re->pattern);
 			delete re;
 			return(nil);
 		}
@@ -387,12 +402,16 @@ regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 		MCregexcache[0] = re;
 	}
 	
-	return re;
+	regexp *treg = nil;
+	/* UNCHECKED */ treg = new(std::nothrow) regexp;
+	treg->rexp = re;
+	
+	return treg;
 }
 
 int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range)
 {
-    int status;
+	int status;
 	int flags = 0;
 	
 	// Make sure we take a copy of the string to ensure it is Unicode.
@@ -405,9 +424,15 @@ int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range)
 		return 0;
 	}
 	
-    // AL-2014-06-25: [[ Bug 12676 ]] Ensure string is not unnativized by MCR_exec
-    // AL-2015-02-05: [[ Bug 14504 ]] Now that 'CanBeNative' flag is preserved, we can just use MCStringGetCharPtr here.
-    status = regexec(&prog->rexp, MCStringGetCharPtr(*t_uni_string) + p_range . offset, p_range . length, NSUBEXP, prog->matchinfo, flags);
+	// AL-2014-06-25: [[ Bug 12676 ]] Ensure string is not unnativized by MCR_exec
+	// AL-2015-02-05: [[ Bug 14504 ]] Now that 'CanBeNative' flag is preserved, we can just use MCStringGetCharPtr here.
+	status = regexec(prog->rexp,
+					 MCStringGetCharPtr(*t_uni_string) + p_range . offset,
+					 p_range . length,
+					 NSUBEXP,
+					 prog->matchinfo,
+					 flags);
+
 	if (status != REG_OKAY)
 	{
 		if (status == REG_NOMATCH)
@@ -421,14 +446,14 @@ int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range)
 	return (1);
 }
 
-void MCR_free(regexp *prog)
+void MCR_free(regex_t *preg)
 {
-	if (prog)
+	if (preg)
 	{
-		regfree(&prog->rexp);
+		regfree(preg);
 		// MW-2013-07-01: [[ EnhancedFilter ]] Release the pattern.
-		MCValueRelease(prog->pattern);
-		delete prog;
+		MCValueRelease(preg->re_pattern);
+		delete preg;
 	}
 }
 
@@ -439,7 +464,7 @@ void MCR_clearcache()
 	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
 	{
 		MCR_free(MCregexcache[i]);
-        // PM-2014-10-02: [[ Bug 11647 ]] Make sure we clear old data to prevent a crash when restarting the app
-        MCregexcache[i] = nil;
+		// PM-2014-10-02: [[ Bug 11647 ]] Make sure we clear old data to prevent a crash when restarting the app
+		MCregexcache[i] = nil;
 	}
 }
