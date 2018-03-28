@@ -6,7 +6,7 @@ group: deployment
 
 ## Introduction
 
-**Note: This is BETA release of HTML5 deployment support. If you intend to use it in production, please test thoroughly that it supports all the functionality you are looking for.**
+**Note: This release of HTML5 deployment support is not yet feature complete. If you intend to use it in production, please test thoroughly that it supports all the functionality you are looking for.**
 
 Almost every Internet-connected device has a web browser.  If your application can run in a browser, your app can be used anywhere and by anyone, without any need to download or install it.
 
@@ -26,18 +26,19 @@ We hope to broaden the range of supported browsers in the future.
 
 The HTML5 engine in this release of LiveCode has a limited range of features.  You can:
 
-* deploy single-stack applications with embedded resources
+* deploy single or multiple stack applications with embedded resources. Stacks other than the main stack will open in their own floating container windows.
 * use most of the engine's built-in controls and graphics capabilities.
 * read and write temporary files in a special virtual filesystem (which is erased when the user navigates away from the page)
 * use LiveCode Builder widgets and extensions
 * interact with JavaScript code in the web page using `do <script> as "JavaScript"`
+* call JavaScript from LiveCode Builder widgets and extensions using the com.livecode.emscripten module
+* implement widgets by embedding DOM elements as native layers
 * perform basic networking operations using the **load** command
 
 Several important features are not yet supported:
 
 * some `ask` and `answer` message boxes
 * multimedia (the "player" control)
-* JavaScript in LiveCode Builder extensions
 
 Two important unsupported features are unlikely to be added in the near future:
 
@@ -113,17 +114,19 @@ The default HTML5 page provided by the HTML5 standalone builder is designed for 
 
 ### The canvas
 
-The engine renders into a HTML5 `<canvas>` element.  There are three important considerations when creating the canvas:
+The engine renders into a HTML5 `<canvas>` element contained within a `<div>` element. There are some important considerations when creating the canvas & div:
 
-* the canvas must have absolutely no border, or mouse coordinate calculations will be incorrect
+* both the canvas and div must have absolutely no border, or mouse coordinate calculations will be incorrect
 
-* it will be automatically resized by the engine to match the size of your stack, so don't attempt to set its size using HTML or CSS
+* they will be automatically resized by the engine to match the size of your stack, so don't attempt to set their size using HTML or CSS
 
-* it needs to be easily uniquely identifiable, so that the engine can find it.
+* the canvas should be the only element within the containing div, which may be used to hold additional elements as native layers are added to the app.
+
+* the canvas needs to be easily uniquely identifiable, so that the engine can find it.
 
 The absolute minimum canvas element would look something like this:
 
-    <canvas style="border: 0px none;" id="canvas" oncontextmenu="event.preventDefault();"></canvas>
+    <div><canvas style="border: 0px none;" id="canvas" oncontextmenu="event.preventDefault();"></canvas></div>
 
 By default, most web browsers will indicate when the canvas has focus by displaying a highlighted outline.  This helps users identify which part of the web page is capturing their key presses.  You can usually disable this outline by adding `outline: none;` to the canvas's CSS styles.
 
@@ -155,7 +158,9 @@ Here's the complete skeleton web page for an HTML5 standalone:
 
     <html>
        <body>
-        <canvas style="border: 0px none;" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+          <div>
+             <canvas style="border: 0px none;" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+          </div>
 
          <script type="text/javascript">
            var Module = { canvas: document.getElementById('canvas')  };

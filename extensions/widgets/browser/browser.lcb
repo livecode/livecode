@@ -457,6 +457,8 @@ end handler
 
 --
 
+variable mOpenComplete as Boolean
+
 private unsafe handler InitBrowserView()
 	variable tParent as Pointer
 
@@ -486,13 +488,27 @@ private unsafe handler InitBrowserView()
 	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
 
 	applyProperties(mProperties)
+	
+	put true into mOpenComplete
 end handler
 
 private unsafe handler FinalizeBrowserView()
-	set my native layer to nothing
+	if mOpenComplete then
+		set my native layer to nothing
 
-	MCBrowserRelease(mBrowser)
-	put nothing into mBrowser
+		MCBrowserRelease(mBrowser)
+		put nothing into mBrowser
+		
+		put false into mOpenComplete
+	else
+		schedule timer in 0.1 seconds
+	end if
+end handler
+
+public handler OnTimer()
+	unsafe
+		FinalizeBrowserView()
+	end unsafe
 end handler
 
 --
