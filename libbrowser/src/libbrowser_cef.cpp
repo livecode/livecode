@@ -490,6 +490,7 @@ bool MCCefInitialise(void)
 	CefSettings t_settings;
 	t_settings.multi_threaded_message_loop = MC_CEF_USE_MULTITHREADED_MESSAGELOOP;
 	t_settings.command_line_args_disabled = true;
+	t_settings.windowless_rendering_enabled = true;
 	t_settings.no_sandbox = true;
 	t_settings.log_severity = LOGSEVERITY_DISABLE;
 	
@@ -725,7 +726,8 @@ class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandl
 {
 private:
 	int m_browser_id;
-	
+	int m_popup_browser_id = 0;
+
 	MCCefBrowserBase *m_owner;
 	
 	MCCefMessageResult m_message_result;
@@ -917,7 +919,11 @@ public:
 			if (m_owner != nil)
 				m_owner->OnCefBrowserCreated(p_browser);
 		}
-		
+		else
+		{
+			m_popup_browser_id = p_browser->GetIdentifier();
+		}
+
 		MCCefIncrementInstanceCount();
 	}
 	
@@ -960,16 +966,11 @@ public:
 		if (nil == m_owner)
 			return true;
 
-		if (!m_owner->GetAllowNewWindow())
-		{
-			char *t_url_str = nullptr;
-			if (MCCefStringToUtf8String(p_target_url, t_url_str))
-			{
-				m_owner->GoToURL(t_url_str);
-			}
-		}
-		
-		return !m_owner->GetAllowNewWindow();
+		CefWindowInfo(t_window_info);
+		t_window_info.SetAsWindowless(p_browser->GetHost()->GetWindowHandle());
+		p_window_info = t_window_info;
+		return false;
+
 	}
 	
 	// CefDragHandler interface
@@ -989,7 +990,18 @@ public:
 		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
 		if (nil == m_owner)
 			return true;
-		
+
+		if (p_browser->GetIdentifier() == m_popup_browser_id)
+		{
+			char * t_url = nullptr;
+			if (MCCefStringToUtf8String(p_request->GetURL(), t_url))
+			{
+				m_owner->GoToURL(t_url);
+			}
+			p_browser->GetHost()->CloseBrowser(true);
+			return false;
+		}
+
 		bool t_cancel;
 		t_cancel = false;
 		
