@@ -1059,6 +1059,11 @@ bool MCWidgetRoot::IsRoot(void) const
 
 MCWidget *MCWidgetRoot::GetHost(void) const
 {
+	if (!m_host.IsValid())
+	{
+		return nullptr;
+	}
+
     return m_host;
 }
 
