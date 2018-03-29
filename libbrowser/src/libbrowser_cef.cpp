@@ -21,7 +21,7 @@
 #include "libbrowser_cef.h"
 
 #include <include/cef_app.h>
-
+#include <include/wrapper/cef_scoped_temp_dir.h>
 #include <list>
 #include <set>
 
@@ -270,6 +270,8 @@ static bool s_cefbrowser_initialised = false;
 
 static uint32_t s_instance_count = 0;
 
+static CefScopedTempDir s_temp_cache;
+
 void MCCefBrowserExternalInit(void)
 {
 	// set up static vars
@@ -502,12 +504,18 @@ bool MCCefInitialise(void)
     if (t_success)
         t_success = __MCCefBuildPath(t_library_path, kCefProcessName, &t_settings.browser_subprocess_path);
 #endif
-    
-    if (t_success)
-        t_success = __MCCefBuildPath(t_library_path, "locales", &t_settings.locales_dir_path);
-    if (t_success)
-        t_success = __MCCefBuildPath(t_library_path, "", &t_settings.resources_dir_path);
+
+	if (t_success)
+		t_success = __MCCefBuildPath(t_library_path, "locales", &t_settings.locales_dir_path);
+	if (t_success)
+		t_success = __MCCefBuildPath(t_library_path, "", &t_settings.resources_dir_path);
+
+	if (t_success)
+		t_success = s_temp_cache.CreateUniqueTempDir();
 	
+	if (t_success)
+		CefString(&t_settings.cache_path).FromString(s_temp_cache.GetPath());
+
 	CefRefPtr<CefApp> t_app = new (nothrow) MCCefBrowserApp();
 	
 	if (t_success)
@@ -567,9 +575,14 @@ void MCCefFinalise(void)
 {
 	if (!s_cef_initialised)
 		return;
+
+	if (s_temp_cache.IsValid())
+	{
+		s_temp_cache.Delete();
+	}
 	
 	CefShutdown();
-	
+
 	s_cef_initialised = false;
 }
 
