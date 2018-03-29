@@ -547,6 +547,11 @@ private command revStandaloneCopyInclusions pStack, pStackFileList, pStackSource
    revCopyCEFResources pTarget, pStandalonePath, tRevBrowser, tLibBrowser
 end revStandaloneCopyInclusions
 
+local sLastUsedSettingsA
+function revStandaloneLastUsedSettings
+   return sLastUsedSettingsA
+end revStandaloneLastUsedSettings
+
 private function revStandaloneInitialDeployParams pTarget, pStackSourceFile, pStandalonePath, pEngineSourceFile
    -- This array contains the parameters for the deploy command
    local tDeployInfo
@@ -555,6 +560,9 @@ private function revStandaloneInitialDeployParams pTarget, pStackSourceFile, pSt
    put pStackSourceFile into tDeployInfo["stackfile"]
    put pStandalonePath into tDeployInfo["output"]
    put pEngineSourceFile into tDeployInfo["engine"]
+   
+   -- Store settings used to create deploy params
+   put sStandaloneSettingsA into sLastUsedSettingsA
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the library inclusions to the deploy parameters
    revSBUpdateDeployParams pStackSourceFile, pTarget, sStandaloneSettingsA, tDeployInfo
@@ -2123,7 +2131,7 @@ end revAddExternal
 private command revAddMapping pPlatform, pName, pLocation
    -- The name comes in without 'db' in front of it for the existing database
    -- drivers, but it needs to be 'db*'.
-   if pName is among the items of "sqlite,postgres,odbc,mysql,oracle" then
+   if pName is among the items of "sqlite,postgresql,odbc,mysql,oracle" then
       put "db" before pName
    end if
    revSBAddLibraryMapping pPlatform, pName, pLocation, sStandaloneSettingsA

@@ -1708,7 +1708,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 					if (newfact->parse(*this, doingthe) != PS_NORMAL)
 					{
 						delete newfact;
-						if (doingthe)
+						if (doingthe || !MCperror->isempty())
 						{
 							MCperror->add(PE_EXPRESSION_BADFUNCTION, *this);
 							return PS_ERROR;
