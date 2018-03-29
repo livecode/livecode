@@ -24,23 +24,40 @@ private function getCommandLineInfo
    return tArgs
 end getCommandLineInfo
 
-constant kLanguageArgs = "livecode,python,javascript"
+constant kLanguageArgs = "livecode,livecode_builder,python,javascript"
+constant kSourceLanguages = "livecode_builder,python,javascript"
+constant kTargetLanguages = "livecode,livecode_builder"
 private function ProcessArgs pArgs
    local tArgs
    repeat with x = 1  to the number of elements in pArgs
-      if pArgs[x] is "--language" then
-         local tLanguage
-         put pArgs[x + 1] into tLanguage
-         if tLanguage is not among the items of kLanguageArgs then
-            return merge("invalid language [[tLanguage]]")
-         end if
-         put tLanguage into tArgs["language"]
-      else if pArgs[x] is "--folder" then
-         put pArgs[x+1] into tArgs["folder"]
-      else if pArgs[x] begins with "--" then
-         return merge("invalid argument [[pArgs[x]]]")
-      end if
+      switch pArgs[x]
+         case "--from"
+         case "--to"
+         case"--language"
+            local tLanguage
+            put pArgs[x + 1] into tLanguage
+            if tLanguage is not among the items of kLanguageArgs then
+               return merge("invalid language [[tLanguage]]")
+            end if
+            put tLanguage into tArgs[char 3 to -1 of pArgs[x]]
+         case "--folder"
+            put pArgs[x+1] into tArgs["folder"]
+         default
+            if pArgs[x] begins with "--" then
+               return merge("invalid argument [[pArgs[x]]]")
+            end if
+      end switch
    end repeat
+   if (pArgs["from"] is empty) is not (pArgs["to"] is empty) then
+      if pArgs["from"] is empty then
+         return "missing source language - use --from"
+      else
+         return "missing target language - use --to"
+      end if
+   else if pArgs["language"] is not empty and \
+         pArgs["from"] is not empty then
+      return "--language and --from / --to forms mutually exclusive"
+   end if
    return tArgs
 end ProcessArgs
 
@@ -67,36 +84,37 @@ command CreateCheatSheetMain
       quit 1
    end if
    
-   if tArgs["language"] is empty then
+   if tArgs["language"] is empty and tArgs["from"] is empty then
       CreateAllCheatSheets tArgs["folder"]
-   else
+   else if tArgs["language"] is not empty then
       CreateCheatSheet tArgs["language"], tArgs["folder"]
+   else
+      CreateCheatSheetFrom tArgs["from"], tArgs["to"], tArgs["folder"]
    end if
 end CreateCheatSheetMain
 
-local sConfigured
+local sConfigured, sTargetStack
 private command ConfigureStack
    if sConfigured then
       exit ConfigureStack
    end if
    put true into sConfigured
    lock screen
-   open me
-   set the width of me to 595
-   set the height of me to 842
-   set the name of me to "Cheat Sheet"
-   set the topleft of me to 200,200
-   show me
+   set the name of the templateStack to "Cheat Sheet Stack"
+   create stack
+   put it into sTargetStack
+   set the width of sTargetStack to 595
+   set the height of sTargetStack to 842
+   set the topleft of sTargetStack to 200,200
    unlock screen
+   set the defaultStack to "Cheat Sheet Stack"
 end ConfigureStack
 
-private command ClearAll
-   repeat the number of cards of me
-      repeat for each line tID in the childControlIDs of this card of me
-         delete control id tID
-      end repeat
-      delete this card of me
-   end repeat
+command ClearAll
+   if exists(sTargetStack) then
+      delete stack sTargetStack
+   end if
+   put false into sConfigured
 end ClearAll
 
 /**
@@ -110,7 +128,16 @@ This command creates cheat sheets for all languages for which cheat
 sheets are available and outputs PDFs in <pOutputFolder>.
 */
 command CreateAllCheatSheets pOutputFolder
-   repeat for each item tItem in kLanguageArgs
+   -- First generate each combination of something -> lcs or lcb
+   repeat for each item tFrom in kSourceLanguages
+      repeat for each item tTo in kTargetLanguages
+         if tFrom is tTo then next repeat
+         CreateCheatSheetFrom tFrom, tTo, pOutputFolder
+      end repeat
+   end repeat
+   
+   -- Then do single cheat sheets for lcs or lcb
+   repeat for each item tItem in kTargetLanguages
       CreateCheatSheet tItem, pOutputFolder
    end repeat
 end CreateAllCheatSheets
@@ -121,6 +148,7 @@ Create a cheat sheet for the given language
 Parameters:
 pLanguage (enum):
 - "livecode": Create a cheat sheet for LiveCode
+- "livecode_builder": Create a cheat sheet for LiveCode
 - "python": Create a cheat sheet for Python to LiveCode transition
 - "javascript": Create a cheat sheet for JavaScript to LiveCode transition
 
@@ -136,9 +164,19 @@ command CreateCheatSheet pLanguage, pOutputFolder
       throw sArray
    end if
    ConfigureStack
-   BuildCheatSheet pLanguage, pOutputFolder
+   BuildCheatSheet pLanguage, "", pOutputFolder
    ClearAll
 end CreateCheatSheet
+
+command CreateCheatSheetFrom pFromLanguage, pToLanguage, pOutputFolder
+   put CheatSheetArray() into sArray
+   if sArray is not an array then
+      throw sArray
+   end if
+   ConfigureStack
+   BuildCheatSheet pFromLanguage, pToLanguage, pOutputFolder
+   ClearAll
+end CreateCheatSheetFrom
 
 private command CreatePDF pNumCards, pOutputFile
    local tPDFPath
@@ -163,41 +201,44 @@ private command CreatePDF pNumCards, pOutputFile
 end CreatePDF
 
 constant kTitleTextSize = 16
-command BuildCheatSheet pLanguage, pOutputFolder
+command BuildCheatSheet pFromLanguage, pToLanguage, pOutputFolder
    lock screen
-   ClearAll
-   
    set the style of the templatefield to "transparent"
    set the lockText of the templatefield to true
-   local tTitle
-   if pLanguage is "livecode" then
-      put "LiveCode Cheat Sheet" into tTitle
+   set the traversalOn of the templatefield to false
+   local tTitle, tFilename, tFromDisplayName
+   put LanguageToDisplayName(pFromLanguage) into tFromDisplayName
+   if pToLanguage is empty then
+      put merge("[[tFromDisplayName]] Cheat Sheet") into tTitle
+      put merge("cheat-sheet-[[pFromLanguage]].pdf") into tFilename
    else
-      local tDisplayName
-      put LanguageToDisplayName(pLanguage) into tDisplayName
-      put merge("[[tDisplayName]]-Livecode Cheat Sheet") into tTitle
+      local tToDisplayName
+      put LanguageToDisplayName(pToLanguage) into tToDisplayName
+      put merge("[[tFromDisplayName]] - [[tToDisplayName]] Cheat Sheet") into tTitle
+      put merge("cheat-sheet-[[pFromLanguage]]-[[pToLanguage]].pdf") into tFilename
    end if
    
-   local tTitleHeight
-   create group "Title"
-   set the backgroundBehavior of it to true
-   create field "title" in group "Title"
+   local tTitleHeight, tTitleGroup
+   create group "Title" in this card of sTargetStack
+   put it into tTitleGroup
+   set the backgroundBehavior of tTitleGroup to true
+   create field "title" in tTitleGroup
    set the textAlign of it to "center"
    set the text of it to tTitle
-   set the width of it to the width of me
+   set the width of it to the width of sTargetStack
    set the topleft of it to 0,0
    set the textSize of it to kTitleTextSize
    set the height of it to the formattedHeight of it
    put the height of it into tTitleHeight
    
    local tNumCards
-   if pLanguage is "livecode" then
-      BuildCheatSheetForLiveCode tTitleHeight
+   if pToLanguage is empty then
+      BuildCheatSheetForLiveCode pFromLanguage, tTitleHeight
    else
-      BuildCheatSheetForLanguage pLanguage, tTitleHeight
+      BuildCheatSheetForLanguage pFromLanguage, pToLanguage, tTitleHeight
    end if
    put the result into tNumCards
-   CreatePDF tNumCards, pOutputFolder & slash & merge("cheat-sheet-[[pLanguage]].pdf")
+   CreatePDF tNumCards, pOutputFolder & slash & tFilename
    unlock screen
 end BuildCheatSheet
 
@@ -209,6 +250,8 @@ private function LanguageToKey pLanguage
          return "js"
       case "livecode"
          return "lc"
+      case "livecode_builder"
+         return "lcb"
    end switch
 end LanguageToKey
 
@@ -220,22 +263,25 @@ private function LanguageToDisplayName pLanguage
          return "JavaScript"
       case "livecode"
          return "LiveCode"
+      case "livecode_builder"
+         return "LiveCode Builder"
    end switch
 end LanguageToDisplayName
 
-command BuildCheatSheetForLanguage pLanguage, pTitleBottom
+command BuildCheatSheetForLanguage pFromLanguage, pToLanguage, pTitleBottom
    local tContent, tColumns, tColNum, tKeys
    local tCurCard, tTop, tToFit
    put 1 into tCurCard
    put pTitleBottom into tTop
    
    repeat for each key tKey in sArray["content"]
-      BuildRowForLanguage sArray["content"][tKey], pLanguage
+      BuildRowForLanguage sArray["content"][tKey], pFromLanguage, pToLanguage
    end repeat
    put the keys of sArray["content"] into tToFit
    sort tToFit ascending numeric
    repeat while tToFit is not empty
-      PositionRowsForLanguage pTitleBottom, tTop, sArray["content"], tToFit, pLanguage, tCurCard
+      PositionRowsForLanguage pTitleBottom, tTop, sArray["content"], tToFit, \
+            pFromLanguage, pToLanguage, tCurCard
    end repeat
    return tCurCard
 end BuildCheatSheetForLanguage
@@ -247,10 +293,10 @@ constant kPadding = 5
 constant kSectionTitleTextSize = 14
 constant kCodeTextSize = 13
 constant kTextSize = 13
-command BuildRowForLanguage pContent, pLanguage
+command BuildRowForLanguage pContent, pFromLanguage, pToLanguage
    local tFromCodeText, tToCodeText
-   put pContent[LanguageToKey(pLanguage)] into tFromCodeText
-   put pContent[LanguageToKey("livecode")] into tToCodeText
+   put pContent[LanguageToKey(pFromLanguage)] into tFromCodeText
+   put pContent[LanguageToKey(pToLanguage)] into tToCodeText
    
    -- Skip the row if no equivalent section
    if tFromCodeText is empty or tToCodeText is empty then
@@ -258,7 +304,7 @@ command BuildRowForLanguage pContent, pLanguage
    end if
    
    local tColWidth, tWidth
-   put the width of me into tWidth
+   put the width of sTargetStack into tWidth
    put (tWidth - (kNumCols + 1)*kMargin) / kNumCols into tColWidth
    
    local tGroup, tTitle, tFromCode, tToCode, tText
@@ -295,6 +341,10 @@ command BuildRowForLanguage pContent, pLanguage
    set the text of tFromCode to tFromCodeText
    set the textSize of tFromCode to kCodeTextSize
    set the left of tFromCode to kMargin
+   if pFromLanguage is "livecode" then
+      _internal script colorize char 1 to the number \ 
+            of chars in tFromCodeText of tFromCode
+   end if
    set the height of tFromCode to the formattedHeight of tFromCode
    set the top of tFromCode to the bottom of tText + kPadding
    
@@ -305,8 +355,10 @@ command BuildRowForLanguage pContent, pLanguage
    set the textSize of tToCode to kCodeTextSize
    set the left of tToCode to kMargin*2 + tColWidth
    
-   _internal script colorize char 1 to the number \ 
-         of chars in tToCodeText of tToCode
+   if pToLanguage is "livecode" then
+      _internal script colorize char 1 to the number \ 
+            of chars in tToCodeText of tToCode
+   end if
    set the height of tToCode to the formattedHeight of tToCode
    set the top of tToCode to the bottom of tText + kPadding
 end BuildRowForLanguage
@@ -332,7 +384,8 @@ function RowHeight pGroupName
          tTextHeight + tCodeHeight + kPadding + kTitlePadding
 end RowHeight
 
-command PositionRowsForLanguage pTitleBottom, @xContentBottom, pContent, @xToFit, pLanguage, @xCurCard
+command PositionRowsForLanguage pTitleBottom, @xContentBottom, pContent, @xToFit, \
+      pFromLanguage, pToLanguage, @xCurCard
    local tCurGroup, tLines, tPositioned
    put false into tPositioned
    put xToFit into tLines
@@ -345,7 +398,7 @@ command PositionRowsForLanguage pTitleBottom, @xContentBottom, pContent, @xToFit
       
       local tRowHeight
       put RowHeight(tCurGroup) into tRowHeight
-      if tRowHeight + xContentBottom > the height of me then
+      if tRowHeight + xContentBottom > the height of sTargetStack then
          next repeat
       end if
       
@@ -368,22 +421,22 @@ command PositionRowsForLanguage pTitleBottom, @xContentBottom, pContent, @xToFit
    add 1 to xCurCard
    put pTitleBottom into xContentBottom
    repeat for each line tLine in xToFit
-      BuildRowForLanguage pContent[tLine], pLanguage
+      BuildRowForLanguage pContent[tLine], pFromLanguage, pToLanguage
    end repeat
 end PositionRowsForLanguage
 
-command BuildCheatSheetForLiveCode pTitleHeight
+command BuildCheatSheetForLiveCode pLanguage, pTitleHeight
    local tCurCard, tColNum, tTop, tToFit
    put 1 into tCurCard
    put the keys of sArray["content"] into tToFit
    sort tToFit ascending numeric
    
    local tColWidth, tWidth
-   put the width of me into tWidth
+   put the width of sTargetStack into tWidth
    put (tWidth - (kNumCols + 1)*kMargin) / kNumCols into tColWidth
    
    repeat for each key tKey in sArray["content"]
-      BuildGroupForLiveCode sArray["content"][tKey], tColWidth
+      BuildGroupForTarget pLanguage, sArray["content"][tKey], tColWidth
    end repeat
    put pTitleHeight into tTop
    put 1 into tColNum
@@ -398,19 +451,27 @@ command BuildCheatSheetForLiveCode pTitleHeight
       repeat for each line tLine in tToFit
          delete group sArray["content"][tLine]["title"]
       end repeat
-      create card 
+      create card in sTargetStack
       add 1 to tCurCard
       put 1 into tColNum
       repeat for each line tLine in tToFit
-         BuildGroupForLiveCode sArray["content"][tLine], tColWidth
+         BuildGroupForTarget pLanguage, sArray["content"][tLine], tColWidth
       end repeat
    end repeat
    return tCurCard
 end BuildCheatSheetForLiveCode
 
-command BuildGroupForLiveCode pContent, pWidth
+command BuildGroupForTarget pLanguage, pContent, pWidth
+   local tCodeText
+   put pContent[LanguageToKey(pLanguage)] into tCodeText
+   
+   -- Skip the section if empty
+   if tCodeText is empty then
+      exit BuildGroupForTarget
+   end if
+   
    local tGroup, tTitle, tCode, tText
-   create group pContent["title"]
+   create group pContent["title"] in this card of sTargetStack
    put it into tGroup
    
    create field "title" in tGroup
@@ -440,15 +501,17 @@ command BuildGroupForLiveCode pContent, pWidth
    create field "code" in tGroup
    put it into tCode
    set the width of tCode to pWidth
-   set the text of tCode to pContent[LanguageToKey("livecode")]
+   set the text of tCode to tCodeText
    set the textSize of tCode to kCodeTextSize
    
-   _internal script colorize char 1 to the number \ 
-         of chars in pContent[LanguageToKey("livecode")] of tCode
+   if pLanguage is "livecode" then
+      _internal script colorize char 1 to the number \ 
+            of chars in pContent[LanguageToKey("livecode")] of tCode
+   end if
    set the height of tCode to the formattedHeight of tCode
    set the loc of tCode to the loc of tTitle
    set the top of tCode to the bottom of tText + kPadding
-end BuildGroupForLiveCode
+end BuildGroupForTarget
 
 command PositionRowsInColumn @xCol, pColWidth, pTitleBottom, @xContentBottom, pContent, @xToFit
    local tLastBottom, tLeft
@@ -466,7 +529,7 @@ command PositionRowsInColumn @xCol, pColWidth, pTitleBottom, @xContentBottom, pC
       
       local tRowHeight
       put RowHeight(tCurGroup) into tRowHeight
-      if tRowHeight + xContentBottom > the height of me then
+      if tRowHeight + xContentBottom > the height of sTargetStack then
          next repeat
       end if
       

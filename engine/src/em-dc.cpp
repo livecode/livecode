@@ -231,6 +231,11 @@ MCScreenDC::uinttowindow(uintptr_t p_uint, Window &r_window)
 	return True;
 }
 
+void *MCScreenDC::GetNativeWindowHandle(Window p_window)
+{
+    return (void*)dtouint(p_window);
+}
+
 bool
 MCScreenDC::platform_getwindowgeometry(Window p_window,
                                        MCRectangle & r_rect)

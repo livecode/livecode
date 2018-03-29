@@ -465,12 +465,31 @@ private command storeAssets pZip, pFileData, pStandalonePath, pBaseFolder
    local tPath, tFiles, tCount
    
    -- Store all the files in the zip archive
-   local tZipPath
+   local tFolderFilesA,tFolderFilesCount
+   put 0 into tFolderFilesCount
+   repeat for each element tFileInfoElement in pFileData
+      if there is a file tFileInfoElement["resolved"] then
+         add 1 to tFolderFilesCount
+         put tFileInfoElement["name"] into tFolderFilesA[tFolderFilesCount]["name"]
+         put tFileInfoElement["name"] into tFolderFilesA[tFolderFilesCount]["dest"]
+         put tFileInfoElement["resolved"] into tFolderFilesA[tFolderFilesCount]["resolved"]
+      else if there is a folder tFileInfoElement["resolved"] then
+         local tFolderFiles
+         put files(tFileInfoElement["resolved"]) into tFolderFiles
+         repeat for each line tLine in tFolderFiles
+            add 1 to tFolderFilesCount
+            put tLine into tFolderFilesA[tFolderFilesCount]["name"]
+            put tFileInfoElement["name"] & slash & tLine into tFolderFilesA[tFolderFilesCount]["dest"]
+            put tFileInfoElement["resolved"] & slash & tLine into tFolderFilesA[tFolderFilesCount]["resolved"]
+         end repeat
+      end if
+   end repeat
    
-   repeat for each element tFileInfo in pFileData
+   local tZipPath
+   repeat for each element tFileInfo in tFolderFilesA
       logDebug "asset", "Storing" && tFileInfo["resolved"]
       
-      put pStandalonePath & slash & tFileInfo["name"] into tZipPath
+      put pStandalonePath & slash & tFileInfo["dest"] into tZipPath
       revZipAddUncompressedItemWithFile pZip, tZipPath, tFileInfo["resolved"]
       if the result is not empty then
          throw "could not store asset file in standalone archive"
