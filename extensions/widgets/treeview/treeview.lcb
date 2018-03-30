@@ -1289,8 +1289,8 @@ end handler
 
 -- Sorts numerically, converting strings to numbers where possible
 private handler CompareKeysNumeric(in pLeft as any, in pRight as any) returns Integer
-	variable tLeft as optional Number
-	variable tRight as optional Number
+	variable tLeft as optional any
+	variable tRight as optional any
 	
 	if pLeft is a number then
 		put pLeft into tLeft
@@ -1305,15 +1305,20 @@ private handler CompareKeysNumeric(in pLeft as any, in pRight as any) returns In
 	end if
 
 	if tRight is tLeft then
-		return 0
-	end if
+		-- Either both values are non-numbers or the numbers match but
+		-- hash as separate entries due to leading/trailing zeros
+		-- (e.g. 01.10).  In either case, sort the actual values.
+		put pLeft into tLeft
+		put pRight into tRight
+
+	else -- always group numbers ahead of non-numbers
+		if tRight is nothing then
+			return -1
+		end if
 		
-	if tRight is nothing then
-		return -1
-	end if
-	
-	if tLeft is nothing then
-		return 1
+		if tLeft is nothing then
+			return 1
+		end if
 	end if
 	
 	if tLeft < tRight then
