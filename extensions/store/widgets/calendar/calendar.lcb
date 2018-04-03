@@ -1,0 +1,424 @@
+/**
+A calendar control. The calendar displays the dates of a month with the selected date highlighted. The user can move to the previous or next month and click on a date to select it. When a date is selected the <dateChanged> message is sent.
+
+Name: dateChanged
+Type: message
+Syntax: on dateChanged pDate
+
+Summary: Sent when a date is selected.
+
+Parameters:
+pDate: The selected date in the form YYYY-MM-DD.
+
+Description:
+The <dateChanged> message is sent when a date in the calendar is clicked. The <pDate> parameter gives the selected date in the form YYYY-MM-DD.
+**/
+
+widget com.livecode.widget.calendar
+
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.library.widgetutils
+use com.livecode.widget.calendar.support
+
+metadata title is "Calendar"
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+metadata preferredSize is "150,150"
+
+private variable mHeaderColor as String
+private variable mDayNames as List
+private variable mMonthNames as List
+private variable mHiliteStyle as String
+
+private variable mSelectedDay as Number
+private variable mSelectedMonth as Number
+private variable mSelectedYear as Number
+
+private variable mCellToDate as List
+private variable mHeaderActionRects as Array
+
+/**
+Syntax: set the selectedDate of <widget> to <pDate>
+Syntax: get the selectedDate of <widget>
+
+Value (string): A string in the form "YYYY-MM-DD"
+
+Summary: Sets the selected date of the calendar. Shows the correct month and highlights the selected date.
+**/
+property "selectedDate" get getSelectedDate set setSelectedDate
+metadata selectedDate.label is "Selected date"
+
+/**
+Syntax: set the dayNames of <widget> to <pDayNames>
+Syntax: get the dayNames of <widget>
+
+Value (string): A comma-delimited list of day names.
+
+Summary: Sets the day names to be displayed as headers in the Calendar.
+**/
+property "dayNames" get getDayNames set setDayNames
+metadata dayNames.label is "Day names"
+metadata dayNames.default is "Su,Mo,Tu,We,Th,Fr,Sa"
+
+/**
+Syntax: set the monthNames of <widget> to <pMonthNames>
+Syntax: get the monthNames of <widget>
+
+Value (string): A comma-delimited list of month names.
+
+Summary: Sets the month names to be used when displaying the selected month in the Calendar header.
+**/
+property "monthNames" get getMonthNames set setMonthNames
+metadata monthNames.label is "Month names"
+metadata monthNames.default is "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"
+
+/**
+Syntax: set the headerBackround of <widget> to <pColor>
+Syntax: get the headerBackround of <widget>
+
+Value (string): A RGB color.
+
+Summary: The background color of the Calendar header.
+
+Description:
+The <headerBackround> is used to set the background color of the Calendar header bar.
+**/
+property "headerColor" get mHeaderColor set setHeaderColor
+metadata headerColor.editor is "com.livecode.pi.color"
+metadata headerColor.label is "Header color"
+metadata headerColor.default is "0,0,255"
+metadata headerColor.section is "Colors"
+
+/**
+Syntax: set the hiliteStyle of <widget> to [ Text | Background ]
+Syntax: get the hiliteStyle of <widget>
+
+Summary: The style with which selected dates are highlighted.
+
+Value(enum): The hilite style
+- "Text": the text color of the selected date is changed.
+- "Background": the background color of the selected date is changed.
+
+Description:
+The <hiliteStyle> is used to set the jighlight style of the selected date.
+**/
+property "hiliteStyle"	get mHiliteStyle	set setHiliteStyle
+metadata hiliteStyle.editor is "com.livecode.pi.enum"
+metadata hiliteStyle.options is "Text,Background"
+metadata hiliteStyle.default is "background"
+metadata hiliteStyle.label is "Hilite style"
+
+-- LiveCode Properties
+metadata backgroundColor.label is "Background color"
+metadata backgroundColor.default is "255,255,255"
+
+metadata foregroundColor.label is "Text color"
+metadata foregroundColor.default is "128,128,128"
+
+metadata borderColor.label is "Border color"
+metadata borderColor.default is "128,128,128"
+
+metadata hiliteColor.label is "Hilite color"
+metadata hiliteColor.default is "255,0,0"
+
+constant kNumRows is 8
+constant kNumCols is 7
+constant kPadding is 5
+
+public handler OnCreate()
+   put "0,0,255" into mHeaderColor
+   put "Text" into mHiliteStyle
+   put ["Su","Mo","Tu","We","Th","Fr","Sa"] into mDayNames
+   put ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] into mMonthNames
+
+   variable tDateTime as List
+   variable tDate as String
+   put the local date into tDateTime
+   put formatDate(tDateTime[1],tDateTime[2],tDateTime[3]) into tDate
+   setSelectedDate(tDate)
+end handler
+
+public handler OnPaint()
+   set the font of this canvas to my font
+
+   DrawBackground()
+   DrawHeader()
+   DrawGrid()
+   FillDates()
+end handler
+
+public handler OnSave(out rProperties as Array)
+	put the empty array into rProperties
+	put mHeaderColor into rProperties["headerColor"]
+	put mDayNames into rProperties["dayNames"]
+   put mMonthNames into rProperties["monthNames"]
+   put mHiliteStyle into rProperties["hiliteStyle"]
+   put formatDate(mSelectedYear,mSelectedMonth,mSelectedDay) into rProperties["selectedDate"]
+end handler
+
+public handler OnLoad(in pProperties as Array)
+   put pProperties["headerColor"] into mHeaderColor
+   put pProperties["dayNames"] into mDayNames
+   put pProperties["monthNames"] into mMonthNames
+   put pProperties["hiliteStyle"] into mHiliteStyle
+   setSelectedDate(pProperties["selectedDate"])
+end handler
+
+private handler DrawBackground()
+   variable tPath as Path
+
+   put rectangle path of rectangle [0,0,my width,my height] into tPath
+   set the paint of this canvas to my background paint
+   fill tPath on this canvas
+
+   set the paint of this canvas to my border paint
+   stroke tPath on this canvas
+end handler
+
+private handler DrawHeader()
+   variable tWidth as Number
+   variable tHeight as Number
+   variable tTitleHeight as Number
+   variable tArrowWidth as Number
+   variable tArrowHeight as Number
+   variable tPath as Path
+   variable tArrowVerticalPadding
+
+   put my width into tWidth
+   put my height into tHeight
+   put tHeight/kNumRows into tTitleHeight
+
+   put rectangle path of rectangle [0,0,tWidth,tTitleHeight] into tPath
+   set the paint of this canvas to solid paint with stringToColor(mHeaderColor)
+   fill tPath on this canvas
+
+   set the paint of this canvas to solid paint with color [1,1,1]
+   fill text (element mSelectedMonth of mMonthNames && mSelectedYear formatted as string) at center of rectangle [0,0,tWidth,tTitleHeight] on this canvas
+
+   put tWidth/10 into tArrowWidth
+   put the minimum of (tTitleHeight-kPadding*2)/2 and (tTitleHeight*0.7) into tArrowHeight
+   put (tTitleHeight-tArrowHeight)/2 into tArrowVerticalPadding
+
+   -- Previous month
+   put polyline path with points [point [tArrowWidth,tArrowVerticalPadding*2], point [kPadding*2,(tTitleHeight/2)], point [tArrowWidth,tTitleHeight-tArrowVerticalPadding*2]] into tPath
+   fill tPath on this canvas
+   put the bounding box of tPath into mHeaderActionRects["previous"]
+
+   -- Next month
+   put polyline path with points [point [tWidth - tArrowWidth,tArrowVerticalPadding*2], point [tWidth - (kPadding*2),(tTitleHeight/2)], point [tWidth - tArrowWidth,tTitleHeight-tArrowVerticalPadding*2]] into tPath
+   fill tPath on this canvas
+   put the bounding box of tPath into mHeaderActionRects["next"]
+end handler
+
+private handler DrawGrid()
+   variable tColWidth as Number
+   variable tRowHeight as Number
+   variable tLineNumber as Number
+   variable tLinePath as Path
+
+   put my width / kNumCols into tColWidth
+   put my height / kNumRows into tRowHeight
+
+   set the paint of this canvas to my border paint
+
+   -- Vertical
+   repeat with tLineNumber from 1 up to kNumCols-1
+      put line path from point [(tLineNumber*tColWidth),tRowHeight + kPadding] to point [(tLineNumber*tColWidth), my height - kPadding] into tLinePath
+      stroke tLinePath on this canvas
+   end repeat
+
+   -- Horizontal
+   repeat with tLineNumber from 2 up to kNumRows
+      put line path from point [kPadding,(tLineNumber*tRowHeight)] to point [my width - kPadding,(tLineNumber*tRowHeight)] into tLinePath
+      stroke tLinePath on this canvas
+   end repeat
+
+
+   variable tDayRect as Rectangle
+   set the paint of this canvas to my foreground paint
+   repeat with tLineNumber from 1 up to kNumCols
+      put rectangle [(tLineNumber-1)*tColWidth,tRowHeight,tLineNumber*tColWidth,tRowHeight*2] into tDayRect
+      fill text (element tLineNumber of mDayNames) at center of tDayRect on this canvas
+   end repeat
+end handler
+
+private handler FillDates()
+   variable tColWidth as Number
+   variable tRowHeight as Number
+   variable tMonthLength as Number
+   variable tFirstDayNumber as Number
+   variable tColumn as Number
+   variable tRow as Number
+   variable tCounter as Number
+   variable tDay as Number
+   variable tLeft as Number
+   variable tTop as Number
+   variable tPath as Path
+
+   put my width / kNumCols into tColWidth
+   put my height / kNumRows into tRowHeight
+   put monthLength(mSelectedYear, mSelectedMonth) into tMonthLength
+   put DayOfDate(mSelectedYear, mSelectedMonth, 1) into tFirstDayNumber
+
+   put 1 into tDay
+   put 1 into tCounter
+   put 0 into tLeft
+   put (2 * tRowHeight) into tTop
+   put the empty list into mCellToDate
+
+   repeat with tRow from 1 up to kNumRows - 2
+      repeat with tColumn from 1 up to kNumCols
+         if tCounter >= tFirstDayNumber and tCounter < (tFirstDayNumber + tMonthLength) then
+               if tDay is mSelectedDay then
+                  if mHiliteStyle is "Background" then
+                     set the paint of this canvas to my highlight paint
+                     put rectangle path of rectangle [tLeft,tTop,tLeft+tColWidth,tTop+tRowHeight] into tPath
+                     fill tPath on this canvas
+
+                     set the paint of this canvas to solid paint with color [1,1,1]
+                  else if mHiliteStyle is "Text" then
+                     set the paint of this canvas to my highlight paint
+                  end if
+               else
+                  set the paint of this canvas to my foreground paint
+               end if
+               fill text tDay formatted as string at center of rectangle [tLeft,tTop,tLeft+tColWidth,tTop+tRowHeight] on this canvas
+               push tDay onto mCellToDate
+               add 1 to tDay
+            else
+               push 0 onto mCellToDate
+         end if
+         add 1 to tCounter
+         add tColWidth to tLeft
+      end repeat
+      put 0 into tLeft
+      add tRowHeight to tTop
+   end repeat
+end handler
+
+private handler setSelectedDate(in pDate as String) returns nothing
+   variable tDate as List
+   split pDate by "-" into tDate
+
+   put tDate[1] parsed as number into mSelectedYear
+   put tDate[2] parsed as number into mSelectedMonth
+   put tDate[3] parsed as number into mSelectedDay
+
+   redraw all
+end handler
+
+private handler getSelectedDate() returns String
+   variable tDate as String
+   put formatDate(mSelectedYear,mSelectedMonth,mSelectedDay) into tDate
+   return tDate
+end handler
+
+private handler formatDate(in pYear as Number, in pMonth as Number, in pDay as Number) returns String
+   variable tDate as String
+   variable tYear
+   variable tMonth
+   variable tDay
+
+   put pYear formatted as string into tYear
+   put pMonth formatted as string into tMonth
+   put pDay formatted as string into tDay
+
+   if the number of chars in tMonth is 1 then
+      put "0" before tMonth
+   end if
+
+   if the number of chars in tDay is 1 then
+      put "0" before tDay
+   end if
+
+   put tYear & "-" & tMonth & "-" & tDay into tDate
+   return tDate
+end handler
+
+private handler setHeaderColor(in pColor as String) returns nothing
+   put pColor into mHeaderColor
+   redraw all
+end handler
+
+private handler setMonthNames(in pMonths as String)
+   split pMonths by "," into mMonthNames
+   redraw all
+end handler
+
+private handler getMonthNames() returns String
+   variable tMonths as String
+   combine mMonthNames with "," into tMonths
+   return tMonths
+end handler
+
+private handler setDayNames(in pDays as String)
+   split pDays by "," into mDayNames
+   redraw all
+end handler
+
+private handler getDayNames() returns String
+   variable tDays as String
+   combine mDayNames with "," into tDays
+   return tDays
+end handler
+
+private handler setHiliteStyle(in pStyle as String)
+   put pStyle into mHiliteStyle
+   redraw all
+end handler
+
+public handler OnMouseUp()
+   variable tSelectedCell as Number
+   variable tClickLoc as Point
+   variable tColWidth as Number
+   variable tRowHeight as Number
+   variable tRowNumber as Number
+   variable tColumnNumber as Number
+   variable tDate as String
+   variable tNewMonth
+
+   put my width / kNumCols into tColWidth
+   put my height / kNumRows into tRowHeight
+
+   put the click position into tClickLoc
+   put the trunc of (the y of tClickLoc/tRowHeight) + 1 into tRowNumber
+   put the trunc of (the x of tClickLoc/tColWidth) + 1 into tColumnNumber
+
+   if tRowNumber is 1 then
+      -- Header
+      if tClickLoc is within mHeaderActionRects["previous"] then
+         put previousMonth(mSelectedYear,mSelectedMonth) into tNewMonth
+         put tNewMonth["month"] into mSelectedMonth
+         put tNewMonth["year"] into mSelectedYear
+      else if tClickLoc is within mHeaderActionRects["next"] then
+         put nextMonth(mSelectedYear,mSelectedMonth) into tNewMonth
+         put tNewMonth["month"] into mSelectedMonth
+         put tNewMonth["year"] into mSelectedYear
+      end if
+      put 1 into mSelectedDay
+      put formatDate(mSelectedYear,mSelectedMonth,mSelectedDay) into tDate
+      setSelectedDate(tDate)
+   else if tRowNumber > 2 then
+      -- Grid
+      subtract 2 from tRowNumber
+
+      put (((tRowNumber-1)*kNumCols)+tColumnNumber) into tSelectedCell
+
+      if element tSelectedCell of mCellToDate is not 0 then
+         put element tSelectedCell of mCellToDate into mSelectedDay
+         put formatDate(mSelectedYear,mSelectedMonth,mSelectedDay) into tDate
+         setSelectedDate(tDate)
+
+         if currently popped up then
+            close popup returning tDate
+         else
+            post "dateChanged" with [tDate]
+         end if
+      end if
+   end if
+
+end handler
+
+end widget

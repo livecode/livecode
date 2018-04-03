@@ -1,0 +1,82 @@
+module com.livecode.widget.calendar.support
+
+metadata version is "1.0.0"
+metadata author is "Elanor Buchanan"
+metadata title is "Date Support Library"
+
+constant kDayValues is [7,1,2,3,4,5,6]
+constant kMonthLengths is [31,29,31,30,31,30,31,31,30,31,30,31]
+constant kMonthValues is [0,3,3,6,1,4,6,2,5,0,3,5]
+constant kLeapMonthValues is [6,2,3,6,1,4,6,2,5,0,3,5]
+
+public handler monthLength(in pYear as Number, pMonth as Number) returns Number
+   if pMonth is not 2 then
+      return element pMonth of kMonthLengths
+   else
+      if leapYear(pYear) then
+         return 29
+      else
+         return 28
+      end if
+   end if
+end handler
+
+public handler previousMonth(in pYear as Number, pMonth as Number) returns Array
+   variable tPrevMonth as Array
+
+   if pMonth = 1 then
+      put 12 into tPrevMonth["month"]
+      put pYear - 1 into tPrevMonth["year"]
+   else
+      put pMonth - 1 into tPrevMonth["month"]
+      put pYear into tPrevMonth["year"]
+   end if
+   return tPrevMonth
+end handler
+
+public handler nextMonth(in pYear as Number, pMonth as Number) returns Array
+   variable tNextMonth as Array
+
+   if pMonth = 12 then
+      put 1 into tNextMonth["month"]
+      put pYear + 1 into tNextMonth["year"]
+   else
+      put pMonth + 1 into tNextMonth["month"]
+      put pYear into tNextMonth["year"]
+   end if
+   return tNextMonth
+end handler
+
+public handler leapYear(pYear as Number) returns Boolean
+   if pYear mod 4 is not 0 then
+      return false
+   end if
+
+   if pYear mod 100 is not 0 then
+      return true
+   end if
+
+   return pYear mod 400 is 0
+end handler
+
+public handler DayOfDate(in pYear as Number, pMonth as Number, pDay as Number) returns Number
+   variable tMonthValues as List
+   variable tYear as Number
+   variable tCentury as Number
+   variable tDayNumber as Number
+
+   if leapYear(pYear) is true then
+      put kLeapMonthValues into tMonthValues
+   else
+      put kMonthValues into tMonthValues
+   end if
+
+   put pYear mod 1000 into tYear
+   put the trunc of (pYear/100) mod 4 into tCentury
+
+   put (pDay + element pMonth of tMonthValues + tYear + the floor of (tYear/4) + tCentury) mod 7 into tDayNumber
+   add 1 to tDayNumber
+  return element tDayNumber of kDayValues
+end handler
+
+end module

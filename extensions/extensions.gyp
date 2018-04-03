@@ -187,6 +187,9 @@
 				#'examples/widgets/progressbar/progressbar.lcb',
 				#'examples/widgets/pushbutton/pushbutton.lcb',
 				#'examples/widgets/radiobutton/radiobutton.lcb',
+				
+				'store/widgets/rotatedtext/rotatedtext.lcb',
+				'store/widgets/calendar/calendar.lcb',								
 			],
 
 			'actions':
