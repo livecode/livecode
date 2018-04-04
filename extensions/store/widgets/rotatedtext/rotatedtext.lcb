@@ -5,7 +5,7 @@ Name: mouseUp
 Type: message
 Syntax: on mouseUp
 
-Description:
+Summary:
 The <mouseUp> message is sent when the widget is clicked.
 
 Name: foregroundColor

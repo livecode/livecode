@@ -3,7 +3,7 @@ A calendar control. The calendar displays the dates of a month with the selected
 
 Name: dateChanged
 Type: message
-Syntax: on dateChanged pDate
+Syntax: dateChanged <pDate>
 
 Summary: Sent when a date is selected.
 
@@ -92,14 +92,14 @@ metadata headerColor.default is "0,0,255"
 metadata headerColor.section is "Colors"
 
 /**
-Syntax: set the hiliteStyle of <widget> to [ Text | Background ]
+Syntax: set the hiliteStyle of <widget> to <pStyle>
 Syntax: get the hiliteStyle of <widget>
 
 Summary: The style with which selected dates are highlighted.
 
 Value(enum): The hilite style
-- "Text": the text color of the selected date is changed.
-- "Background": the background color of the selected date is changed.
+- "text": the text color of the selected date is changed.
+- "background": the background color of the selected date is changed.
 
 Description:
 The <hiliteStyle> is used to set the jighlight style of the selected date.

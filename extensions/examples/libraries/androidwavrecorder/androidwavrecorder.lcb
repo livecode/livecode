@@ -128,7 +128,7 @@ Example:
 command LogAmplitude
    put androidWavRecorderGetMaxAmplitude()
    send "LogAmplitude" to me in 30 millisecs
-end UpdateAmplitudeAndTimer
+end LogAmplitude
 
 Description:
 Use the <androidWavRecorderGetMaxAmplitude> handler to retrieve the maximum
