@@ -37,9 +37,12 @@ bool MCEmscriptenEvaluateJavaScriptWithArguments(MCStringRef p_script, MCProperL
 }
 
 extern "C" MC_DLLEXPORT_DEF
-bool MCEmscriptenWrapJSEventHandler(MCHandlerRef p_handler, MCJSObjectRef &r_wrapper)
+bool MCEmscriptenWrapHandlerAsJSFunction(MCValueRef p_handler, MCJSObjectRef &r_wrapper)
 {
-	return MCEmscriptenJSWrapHandler(p_handler, r_wrapper);
+	if (MCValueGetTypeCode(p_handler) != kMCValueTypeCodeHandler)
+		return MCErrorThrowGeneric(MCSTR("Invalid value - expected Handler ref"));
+		
+	return MCEmscriptenJSWrapHandler((MCHandlerRef)p_handler, r_wrapper);
 }
 
 #else // !defined(__EMSCRIPTEN__)
@@ -51,7 +54,7 @@ bool MCEmscriptenEvaluateJavaScriptWithArguments(MCStringRef p_script, MCProperL
 }
 
 extern "C" MC_DLLEXPORT_DEF
-bool MCEmscriptenWrapJSEventHandler(MCHandlerRef p_handler, MCJSObjectRef &r_wrapper)
+bool MCEmscriptenWrapHandlerAsJSFunction(MCHandlerRef p_handler, MCJSObjectRef &r_wrapper)
 {
 	return false;
 }
