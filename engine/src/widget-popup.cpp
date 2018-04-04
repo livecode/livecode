@@ -57,8 +57,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MCObject *p_object, uint32_t p_part_id);
-extern void MCEngineSetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MCObject *p_object, uint32_t p_part_id, MCValueRef p_value);
+extern MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_set, MCStringRef p_property, MCObject *p_object, uint32_t p_part_id);
+extern void MCEngineSetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_set, MCStringRef p_property, MCObject *p_object, uint32_t p_part_id, MCValueRef p_value);
 
 class MCWidgetPopup: public MCStack
 {
@@ -188,7 +188,7 @@ private:
 		
 		while (MCArrayIterate(p_properties, t_iter, t_key, t_value))
 		{
-			MCEngineSetPropertyOfObject(ctxt, MCNameGetString(t_key), m_widget, 0, t_value);
+			MCEngineSetPropertyOfObject(ctxt, kMCEmptyString, MCNameGetString(t_key), m_widget, 0, t_value);
 			if (MCErrorIsPending())
 				return false;
 		}
@@ -230,7 +230,7 @@ private:
 	{
 		MCExecContext ctxt(MCdefaultstackptr, nil, nil);
 		MCAutoValueRef t_value;
-		t_value = MCEngineGetPropertyOfObject(ctxt, MCSTR("preferredSize"), m_widget, 0);
+		t_value = MCEngineGetPropertyOfObject(ctxt, kMCEmptyString, MCSTR("preferredSize"), m_widget, 0);
 		if (MCErrorIsPending())
 			return false;
 		

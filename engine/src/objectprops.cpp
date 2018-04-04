@@ -279,7 +279,7 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		t_getprop_name = p_set_name, t_param_name = p_prop_name;
     
 	Exec_stat t_stat = ES_NOT_HANDLED;
-	if (!MClockmessages && (ctxt . GetObject() != this || !ctxt . GetHandler() -> hasname(t_getprop_name)))
+	if (!MClockmessages && (ctxt . GetObject() != this || ctxt.GetHandler() == nil || !ctxt . GetHandler() -> hasname(t_getprop_name)))
 	{
 		MCParameter p1;
 		p1.setvalueref_argument(t_param_name);
