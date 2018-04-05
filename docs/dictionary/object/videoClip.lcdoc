@@ -11,6 +11,8 @@ An <object type> that contains movie data.
 
 Introduced: 1.0
 
+Deprecated: 8.1
+
 OS: mac, windows, linux
 
 Platforms: desktop
@@ -56,12 +58,15 @@ Changes:
 The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
 new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
 systems apart from pre OS X 10.8. The Windows build of LiveCode no
-longer supports any <QuickTime> features and setting the <dontUseQT> and
-<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+longer supports any <QuickTime> features and setting the <dontUseQT> 
+and <dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
 not include 64 bit support and therefore can not be supported on OS X 64
 bit builds of LiveCode.
 
+Desktop development should utilize the <player> control for 
+future video playback support.
+
 References: object type (glossary), templateVideoClip (keyword),
-stack (object), videoClipPlayer (property)
+stack (object), videoClipPlayer (property), player (object)
 
 Tags: multimedia
