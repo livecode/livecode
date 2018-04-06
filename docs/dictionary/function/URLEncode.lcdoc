@@ -25,6 +25,7 @@ Example:
 URLEncode("Test string $$") -- returns "Test+string+%24%24"
 
 Example:
+local tGoodURL
 put "http://www.example.net/" & URLEncode("A File Name with spaces.html") into tGoodURL
 
 Parameters:
