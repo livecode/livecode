@@ -768,6 +768,8 @@ MCDispatch::startup()
 
 	MCdefaultstackptr->extraopen(false);
 
+    MCdispatcher->resolveparentscripts();
+    
 	send_startup_message();
 
 	if (!MCquit)
