@@ -844,8 +844,8 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 		
 	if (sp.lookup(SP_FACTOR, te) != PS_NORMAL || te->type != TT_PREP)
 	{
-		sp.backup();
-		return PS_NORMAL;
+        MCperror->add(PE_PUT_BADPREP, sp);
+        return PS_ERROR;
 	}
 	prep = (Preposition_type)te->which;
 	if (prep != PT_BEFORE && prep != PT_INTO && prep != PT_AFTER)
