@@ -1158,7 +1158,10 @@ bool MCWebViewBrowser::Init(void)
 	else
 	{
 		[listener ignore];
-		m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        if (request.URL.absoluteString != nil)
+        {
+            m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        }
 	}
 }
 
@@ -1169,13 +1172,24 @@ bool MCWebViewBrowser::Init(void)
 	else
 	{
 		[listener ignore];
-		m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        if (request.URL.absoluteString != nil)
+        {
+            m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        }
 	}
 }
 
 @end
 
 @implementation MCWebUIDelegate
+
+- (WebView *)webView:(WebView *)webView
+            createWebViewWithRequest:(NSURLRequest *)request
+{
+    [[webView frameLoadDelegate] setPendingRequest: false];
+    [[webView mainFrame] loadRequest:request];
+    return webView;
+}
 
 - (NSUInteger)webView:(WebView *)webView dragDestinationActionMaskForDraggingInfo:(id<NSDraggingInfo>)draggingInfo
 {
