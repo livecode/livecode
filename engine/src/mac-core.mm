@@ -233,7 +233,7 @@ enum
 
 static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_reply, SRefCon p_context)
 {
-    return [[NSApp delegate] preDispatchAppleEvent: p_event withReply: p_reply];
+    return [(com_runrev_livecode_MCApplicationDelegate*)[NSApp delegate] preDispatchAppleEvent: p_event withReply: p_reply];
 }
 
 - (OSErr)preDispatchAppleEvent: (const AppleEvent *)p_event withReply: (AppleEvent *)p_reply
@@ -1176,7 +1176,7 @@ void MCPlatformGetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
 	NSScreen *t_screen;
 	t_screen = [[NSScreen screens] objectAtIndex: p_index];
 	if ([t_screen respondsToSelector: @selector(backingScaleFactor)])
-		r_scale = objc_msgSend_fpret_type<CGFloat>(t_screen, @selector(backingScaleFactor));
+		r_scale = static_cast<MCGFloat>([t_screen backingScaleFactor]);
 	else
 		r_scale = 1.0f;
 }
