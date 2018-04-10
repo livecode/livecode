@@ -472,8 +472,9 @@ Boolean MCcursorcanbecolor = False;
 Boolean MCcursorbwonly = True;
 int32_t MCcursormaxsize = 32;
 
-uint32_t MCstacklimit = 8 * 1024 * 1024;
-uint32_t MCpendingstacklimit = 1024 * 1024;
+#define kMCStackLimit 8 * 1024 * 1024
+uint32_t MCstacklimit = kMCStackLimit;
+uint32_t MCpendingstacklimit = kMCStackLimit;
 
 Boolean MCappisactive = False;
 

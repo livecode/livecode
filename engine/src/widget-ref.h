@@ -191,7 +191,7 @@ public:
     virtual bool CopyFont(MCFontRef& r_font);
     
 private:
-    MCWidget *m_host;
+    MCWidgetHandle m_host;
 };
 
 class MCWidgetChild: public MCWidgetBase

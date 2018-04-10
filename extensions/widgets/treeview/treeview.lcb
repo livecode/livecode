@@ -466,7 +466,7 @@ public handler OnCreate() returns nothing
 	put my width into mViewWidth	
 	
 	put 0 into mHoverRow
-    put "" into mHoverIcon
+	put "" into mHoverIcon
 	put 0 into mViewTopPosition
 	put true into mFrameBorder	
 	initialiseScrollbar()	
@@ -619,9 +619,9 @@ end handler
 private handler paintFirstRow(in pTop as Real)
 	// Apply any style to this data item
 	variable tStyle as String
-    put "" into tStyle
-    
-    variable tHover as Boolean
+	put "" into tStyle
+
+	variable tHover as Boolean
 	put mHoverRow is 1 into tHover
 		
 	variable tPath as Path	
@@ -848,6 +848,10 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 end handler
 
 public handler OnClick() returns nothing
+	if mHoverRow < 1 then
+		put yPosToRowNumber(the y of the mouse position) into mHoverRow
+	end if
+
 	// If the first row was clicked then add a new element
 	if mHoverRow is 1 then
 		addBaseLevelElement()
@@ -1272,12 +1276,13 @@ private handler setValueOnPath(in pPath as List, in pValue as any, inout xArray 
 end handler
 
 private handler getValueOnPath(in pPath as List, in pArray as Array) returns any
-	if the number of elements in pPath is 1 then
+	if pPath is the empty list then
+		return pArray
+	else if (element 1 of pPath) is not among the keys of pArray then
+		return the empty array
+	else if the number of elements in pPath is 1 then
 		return pArray[element 1 of pPath]
 	else
-		if (element 1 of pPath) is not among the keys of pArray then
-			return the empty array
-		end if
 		return getValueOnPath(element 2 to -1 of pPath, pArray[element 1 of pPath])
 	end if
 end handler
@@ -1348,7 +1353,11 @@ private handler addToListBuffer(in pAt as Integer, in pElement as Array, inout x
 	put pElement["more_data"] into tSorted
 	
 	variable tPath as List
-	put element 1 to -2 of pElement["path"] into tPath
+	if the number of elements in pElement["path"] is 1 then
+		put the empty list into tPath
+	else
+		put element 1 to -2 of pElement["path"] into tPath
+	end if
 	
 	variable tArray as Array
 	put getValueOnPath(tPath, mData) into tArray
@@ -1408,11 +1417,10 @@ private handler calculateMoreElements(in pLimit as Integer, in pLevel as Integer
 			else if pArray[tKey] is a number then
 				format pArray[tKey] as string into tString
 			else if pArray[tKey] is a data then
-                if not ConvertToString(pArray[tKey], tString) then
-                    put "Can't display value" into tString
-                end if
-            else
-
+				if not ConvertToString(pArray[tKey], tString) then
+					put "Can't display value" into tString
+				end if
+			else
 				put "Can't display value" into tString
 			end if	
 			put tString into tElement["string_value"]
