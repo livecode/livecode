@@ -97,7 +97,6 @@ private:
 	// Lifetime is managed entirely by the parent MCWin32RawClipboard
 	friend class MCWin32RawClipboardCommon;
 	friend class MCWin32RawClipboard;
-	MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_parent);
 	MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_parent, IDataObject* p_external_data);
 	~MCWin32RawClipboardItem();
 
