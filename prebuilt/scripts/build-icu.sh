@@ -161,7 +161,7 @@ function buildICU {
 		if [ ! -e "${ICU_ARCH_SRC}/custom-data/icudt${ICU_VERSION_MAJOR}l.dat" ] ; then
 			mkdir -p "${ICU_ARCH_SRC}/custom-data"
 			cd "${ICU_ARCH_SRC}/custom-data"
-			curl http://downloads.livecode.com/prebuilts/icudata/minimal/icudt${ICU_VERSION_MAJOR}l.dat -o "icudt${ICU_VERSION_MAJOR}l.dat"
+			curl https://downloads.livecode.com/prebuilts/icudata/minimal/icudt${ICU_VERSION_MAJOR}l.dat -o "icudt${ICU_VERSION_MAJOR}l.dat"
 		else
 			cd "${ICU_ARCH_SRC}/custom-data"
 		fi
