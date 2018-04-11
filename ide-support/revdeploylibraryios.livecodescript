@@ -42,7 +42,9 @@ function deployGetIphoneOSes
    else if tMacVersion < 101206 then
       put empty into tList[1]
       answer error "To use Xcode 9.2, you need to upgrade your Mac to MacOS Sierra 10.12.6"
-    else if tMacVersion < 101302 then
+   else if tMacVersion < 101300 then
+      put "11.2,9.2" into tList[1]
+   else if tMacVersion < 101302 then
       put empty into tList[1]
       answer error "To use Xcode 9.3, you need to upgrade your Mac to MacOS High Sierra 10.13.2"
    else
