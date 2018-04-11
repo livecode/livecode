@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblsyntax.h"
 #include "exec.h"
 
+#include <map>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCExecSetTypeElementInfo _kMCOrientationOrientationsElementInfo[] =
@@ -76,6 +78,10 @@ MCExecEnumTypeInfo *kMCOrientationOrientationTypeInfo = &_kMCOrientationOrientat
 
 ////////////////////////////////////////////////////////////////////////////////
 
+std::map<intenum_t,MCRectangle> s_fullscreen_orientation_rects;
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCOrientationGetDeviceOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
 {
 	MCOrientation t_orientation;
@@ -117,6 +123,36 @@ void MCOrientationExecLockOrientation(MCExecContext& ctxt)
 void MCOrientationExecUnlockOrientation(MCExecContext& ctxt)
 {
 	MCSystemUnlockOrientation();
+}
+
+void MCOrientationSetRectForOrientations(MCExecContext& ctxt, intset_t p_orientations, MCRectangle *p_rect)
+{
+    for (uindex_t i = 0; i < kMCOrientationOrientationTypeInfo -> count ; i++)
+    {
+        intenum_t t_orientation_bit = kMCOrientationOrientationTypeInfo -> elements[i].value;
+        if ((p_orientations & (1 << t_orientation_bit)) != 0)
+        {
+            if (p_rect != nullptr)
+            {
+                s_fullscreen_orientation_rects[t_orientation_bit] = *p_rect;
+            }
+            else
+            {
+                s_fullscreen_orientation_rects.erase(t_orientation_bit);
+            }
+        }
+    }
+}
+
+bool MCOrientationGetRectForOrientation(intenum_t p_orientation, MCRectangle& r_rect)
+{
+    if (s_fullscreen_orientation_rects.find(p_orientation) == s_fullscreen_orientation_rects.end())
+    {
+        return false;
+    }
+    
+    r_rect = s_fullscreen_orientation_rects[p_orientation];
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

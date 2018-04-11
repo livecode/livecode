@@ -407,7 +407,7 @@ bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, 
 // IM-2014-01-31: [[ HiDPI ]] Display info updating not yet implemented on Android
 bool MCScreenDC::platform_displayinfocacheable(void)
 {
-	return false;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2156,6 +2156,9 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doReconfigure(JNIEnv *env,
 	
 	s_android_bitmap_loc_x = x;
 	s_android_bitmap_loc_y = y;
+    
+    bool t_updated;
+    static_cast<MCScreenDC *>(MCscreen) -> updatedisplayinfo(t_updated);
 
 	// MW-2011-10-01: [[ Bug 9772 ]] If we are resizing, we do a 'fit window', else
 	//   we yield to engine.

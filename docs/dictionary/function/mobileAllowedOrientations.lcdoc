@@ -42,5 +42,4 @@ of the orientations the application supports.
 References: mobileSetAllowedOrientations (command),
 mobileLockOrientation (command), mobileUnlockOrientation (command),
 mobileDeviceOrientation (function), mobileOrientation (function),
-orientationChanged (message)
-
+orientationChanged (message), mobileSetFullScreenRectForOrientations (command)
