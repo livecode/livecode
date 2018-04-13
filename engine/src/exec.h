@@ -3050,10 +3050,10 @@ void MCEngineExecStopUsingStack(MCExecContext& ctxt, MCStack *p_stack);
 void MCEngineExecStopUsingStackByName(MCExecContext& ctxt, MCStringRef p_name);
 
 void MCEngineExecDispatch(MCExecContext& ctxt, int handler_type, MCNameRef message, MCObjectPtr *target, MCParameter *params);
-void MCEngineExecSend(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target);
+void MCEngineExecSend(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target, MCParameter *p_params);
 void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target);
-void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef script, MCObjectPtr target, double p_delay, int p_units);
-void MCEngineExecCall(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target);
+void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef script, MCObjectPtr target, double p_delay, int p_units, MCParameter *params);
+void MCEngineExecCall(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target, MCParameter *p_params);
 
 void MCEngineExecLockErrors(MCExecContext& ctxt);
 void MCEngineExecLockMessages(MCExecContext& ctxt);

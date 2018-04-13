@@ -85,7 +85,7 @@ on __SendError
 end __SendError
 
 on TestSendError
-	TestAssertThrow "send throws correct error", __SendError, \ 
+	TestAssertThrow "send throws correct error", "__SendError", \ 
 		the long id of me, "EE_CHUNK_NOSTACK"
 end TestSendError
 
@@ -130,3 +130,63 @@ on TestSendScriptEvaluation
 	TestAssert "send param evaluated in current context", \
 		the cVar of tStack is "Something"
 end TestSendScriptEvaluation
+
+on TestSendWithArgs
+	local tStack
+	create stack 
+	put it into tStack
+	set the script of tStack to "on setVar pValue; set the cVar of me to pValue; end setVar"
+	
+	local tVar
+	put uuid() into tVar
+	send "setVar" to tStack with tVar
+	TestAssert "send with args", \
+		the cVar of tStack is tVar
+end TestSendWithArgs
+
+on TestSendInTimeWithArgs
+	TestSkipIfNot "wait"
+	
+	local tStack
+	create stack 
+	put it into tStack
+	set the script of tStack to "on setVar pValue; set the cVar of me to pValue; end setVar"
+	
+	local tVar
+	put uuid() into tVar
+	send "setVar" to tStack in 0 with tVar
+	wait 50 milliseconds with messages
+	TestAssert "send in time with args", \
+		the cVar of tStack is tVar
+end TestSendInTimeWithArgs
+
+on _TestSendWithArgsInMessageAndExplicit
+	local tStack
+	create stack 
+	put it into tStack
+	set the script of tStack to "on setVar pValue; set the cVar of me to pValue; end setVar"
+	
+	local tVar
+	put uuid() into tVar
+	send "setVar tVar" to tStack with tVar
+end _TestSendWithArgsInMessageAndExplicit
+
+on TestSendWithArgsInMessageAndExplicit
+	TestAssertThrow "send with args in message and explicit throws", \
+		"_TestSendWithArgsInMessageAndExplicit", the long id of me, \
+		"EE_HANDLER_BADSTATEMENT"
+end TestSendWithArgsInMessageAndExplicit
+
+on TestSendWithArgsByReference
+	local tStack
+	create stack 
+	put it into tStack
+	set the script of tStack to "on setVar @xValue; put uuid() into xValue; end setVar"
+	
+	local tVar, tCheckVar
+	put uuid() into tVar
+	put tVar into tCheckVar
+	send "setVar" to tStack with tVar
+	TestAssert "send with args by reference", \
+			tVar is not tCheckVar
+end TestSendWithArgsByReference

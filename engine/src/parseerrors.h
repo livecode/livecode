@@ -1798,6 +1798,10 @@ enum Parse_errors
     
     // {PE-0584} out of memory
     PE_OUTOFMEMORY,
+    
+    // {PE-0585} send: bad parameters
+    PE_SEND_BADPARAMS,
+    
 };
 
 extern const char *MCparsingerrors;

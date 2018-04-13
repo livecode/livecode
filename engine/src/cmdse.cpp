@@ -527,6 +527,17 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
     MCKeywordsExecTeardownCommandOrFunction(params);
 }
 
+MCMessage::~MCMessage()
+{
+    while(params != NULL)
+    {
+        MCParameter *t_param;
+        t_param = params;
+        params = params -> getnext();
+        delete t_param;
+    }
+}
+
 Parse_stat MCMessage::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
@@ -552,49 +563,65 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
         return PS_ERROR;
     }
     
-	if (sp.skip_token(SP_FACTOR, TT_TO) != PS_NORMAL
-	        && sp.skip_token(SP_FACTOR, TT_OF) != PS_NORMAL)
-		return PS_NORMAL;
-	if (sp.skip_token(SP_ASK, TT_UNDEFINED, AT_PROGRAM) == PS_NORMAL)
-	{
-		program = True;
-		if (sp.parseexp(False, True, &(&in)) != PS_NORMAL)
-		{
-			MCperror->add(PE_SEND_BADTARGET, sp);
-			return PS_ERROR;
-		}
-		if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL
-		        && sp.skip_token(SP_COMMAND, TT_STATEMENT, S_REPLY) != PS_NORMAL)
-			if (sp.parseexp(False, True, &(&eventtype)) != PS_NORMAL)
-			{
-				MCperror->add(PE_SEND_BADEVENTTYPE, sp);
-				return PS_ERROR;
-			}
-		if (sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
-		{
-			sp.skip_token(SP_COMMAND, TT_STATEMENT, S_REPLY);
-			sp.skip_token(SP_MOVE, TT_UNDEFINED, MM_WAITING);
-			reply = False;
-		}
-	}
-	else
-	{
-		target = new (nothrow) MCChunk(False);
-		if (target->parse(sp, False) != PS_NORMAL)
-		{
-			MCperror->add(PE_SEND_BADTARGET, sp);
-			return PS_ERROR;
-		}
-
-        if (script && sp.skip_eol() != PS_NORMAL)
+    if (sp.skip_token(SP_FACTOR, TT_TO) == PS_NORMAL
+	        || sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
+    {
+        if (sp.skip_token(SP_ASK, TT_UNDEFINED, AT_PROGRAM) == PS_NORMAL)
         {
-            MCperror->add(PE_SEND_SCRIPTINTIME, sp);
+            program = True;
+            if (sp.parseexp(False, True, &(&in)) != PS_NORMAL)
+            {
+                MCperror->add(PE_SEND_BADTARGET, sp);
+                return PS_ERROR;
+            }
+            if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL
+                    && sp.skip_token(SP_COMMAND, TT_STATEMENT, S_REPLY) != PS_NORMAL)
+                if (sp.parseexp(False, True, &(&eventtype)) != PS_NORMAL)
+                {
+                    MCperror->add(PE_SEND_BADEVENTTYPE, sp);
+                    return PS_ERROR;
+                }
+            if (sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+            {
+                sp.skip_token(SP_COMMAND, TT_STATEMENT, S_REPLY);
+                sp.skip_token(SP_MOVE, TT_UNDEFINED, MM_WAITING);
+                reply = False;
+            }
+            
+            return PS_NORMAL;
+        }
+        else
+        {
+            target = new (nothrow) MCChunk(False);
+            if (target->parse(sp, False) != PS_NORMAL)
+            {
+                MCperror->add(PE_SEND_BADTARGET, sp);
+                return PS_ERROR;
+            }
+
+            if (script && sp.skip_eol() != PS_NORMAL)
+            {
+                MCperror->add(PE_SEND_SCRIPTINTIME, sp);
+                return PS_ERROR;
+            }
+            
+            if (gettime(sp, &(&in), units) != PS_NORMAL)
+            {
+                return PS_ERROR;
+            }
+        }
+    }
+    
+    if (!script && sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+    {
+        if (sp.is_eol() || getparams(sp, &params) != PS_NORMAL)
+        {
+            MCperror -> add(PE_SEND_BADPARAMS, sp);
             return PS_ERROR;
         }
-        
-        return gettime(sp, &(&in), units);
-	}
-	return PS_NORMAL;
+    }
+    
+    return PS_NORMAL;
 }
 
 void MCMessage::exec_ctxt(MCExecContext &ctxt)
@@ -635,30 +662,72 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 		}
 		else
 			t_target_ptr = nil;
-
-		if (*in != nil)
+        
+        // Evaluate the parameter list
+        bool t_success, t_can_debug;
+        MCParameter *tptr = params;
+        while (tptr != NULL)
+        {
+            // AL-2014-08-20: [[ ArrayElementRefParams ]] Use containers for potential reference parameters
+            MCAutoPointer<MCContainer> t_container = new (nothrow) MCContainer;
+            if (tptr -> evalcontainer(ctxt, **t_container))
+                tptr -> set_argument_container(t_container.Release());
+            else
+            {
+                MCExecValue t_value;
+                tptr -> clear_argument();
+                
+                do
+                {
+                    if (!(t_success = tptr->eval_ctxt(ctxt, t_value)))
+                        t_can_debug = MCB_error(ctxt, line, pos, EE_STATEMENT_BADPARAM);
+                    ctxt.IgnoreLastError();
+                }
+                while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+                
+                if (!t_success)
+                {
+                    ctxt . LegacyThrow(EE_STATEMENT_BADPARAM);
+                    return;
+                }
+                
+                tptr->give_exec_argument(t_value);
+            }
+            
+            tptr = tptr->getnext();
+        }
+        
+        if (*in != nil)
 		{
             double t_delay;
 
             if (!ctxt . EvalExprAsDouble(*in, EE_SEND_BADINEXP, t_delay))
                 return;
 
-            MCEngineExecSendInTime(ctxt, *t_message, t_target, t_delay, units);
+            MCEngineExecSendInTime(ctxt, *t_message, t_target, t_delay, units, params);
 		}
         else
         {
             ctxt . SetLineAndPos(line, pos);
+            
             if (!script)
             {
                 if (!send)
-                    MCEngineExecCall(ctxt, *t_message, t_target_ptr);
+                    MCEngineExecCall(ctxt, *t_message, t_target_ptr, params);
                 else
-                    MCEngineExecSend(ctxt, *t_message, t_target_ptr);
+                    MCEngineExecSend(ctxt, *t_message, t_target_ptr, params);
             }
             else
             {
                 MCEngineExecSendScript(ctxt, *t_message, t_target_ptr);
             }
+        }
+        
+        tptr = params;
+        while (tptr != NULL)
+        {
+            tptr -> clear_argument();
+            tptr = tptr->getnext();
         }
     }
 }

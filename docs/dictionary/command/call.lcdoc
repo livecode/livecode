@@ -2,7 +2,7 @@ Name: call
 
 Type: command
 
-Syntax: call <handlerName> [of <objectRef>]
+Syntax: call <handlerName> [of <objectRef>] [ with <argumentList> ]
 
 Summary:
 <execute|Executes> the specified <handler> in any <object(glossary)|object's>
@@ -20,15 +20,26 @@ call "mouseUp"
 Example:
 call "mouseUp" of button 1 of card 1
 
+Example:
+call "SaveFile" of button "save" with tFileName
+
 Parameters:
 handlerName:
-Any handler in the script of the specified object, along with
-any parameters that handler requires, separated by commas. The entire 
-handler including parameters must be enclosed in quotes.
+Any handler in the script of the specified object. Parameters that the handler
+requires may be included in the handlerName separated by commas or in the
+argumentList.
 
 objectRef:
 Any <object reference>. If no object is specified, LiveCode uses
 the current object.
+
+argumentList:
+A comma separated list of expressions containing the arguments to send.
+Arrays are expressions and are valid to send as arguments. 
+
+>**Note:** The argumentList is an alternative to including parameters
+> in the handlerName. If used then it is assumed no parameters are listed
+> in the handlerName.
 
 Description:
 Use the <call> <command> to use a <handler> that's not in the normal 

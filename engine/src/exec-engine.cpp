@@ -1256,12 +1256,20 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
 	r_params = params;
 }
 
-static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, bool p_is_send)
+static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, bool p_is_send, MCParameter *p_params)
 {
 	MCNewAutoNameRef t_message;
 	MCParameter *t_params;
-	MCEngineSplitScriptIntoMessageAndParameters(ctxt, p_script, &t_message, t_params);
-	
+    if (p_params == nullptr)
+    {
+        MCEngineSplitScriptIntoMessageAndParameters(ctxt, p_script, &t_message, t_params);
+    }
+    else
+    {
+        t_params = p_params;
+        MCNameCreate(p_script, &t_message);
+    }
+    
 	MCObject *optr;
 	if (p_target == nil)
 		optr = ctxt . GetObject();
@@ -1277,17 +1285,18 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
-	if ((stat = optr->message(*t_message, t_params, p_is_send, True)) == ES_NOT_HANDLED)
-	{
+    
+    if ((stat = optr->message(*t_message, t_params, p_is_send, True)) == ES_NOT_HANDLED)
+    {
         // The message was not handled by the target object, so this is
         // just a bunch of script to be executed as if it were in a handler
         // in the target object (using domess).
         
-		MCHandler *t_handler;
-		t_handler = optr -> findhandler(HT_MESSAGE, *t_message);
-		if (t_handler != NULL && t_handler -> isprivate())
+        MCHandler *t_handler;
+        t_handler = optr -> findhandler(HT_MESSAGE, *t_message);
+        if (t_handler != NULL && t_handler -> isprivate())
         {
-			ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
+            ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
             goto cleanup;
         }
 
@@ -1334,33 +1343,40 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
         
         if (optr->domess(*tptr, nil, false) == ES_ERROR)
             ctxt . Throw();
-	}
-	else if (stat == ES_PASS)
-		stat = ES_NORMAL;
-	else if (stat == ES_ERROR)
-		ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
-
+    }
+    else if (stat == ES_PASS)
+        stat = ES_NORMAL;
+    
+    if (stat == ES_ERROR)
+    {
+        ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
+    }
+    
 cleanup:
-    while (t_params != NULL)
-	{
-		MCParameter *tmp = t_params;
-		t_params = t_params->getnext();
-		delete tmp;
-	}
+    // If params came from with clause then they should be deleted in the command destructor
+    if (p_params == nullptr)
+    {
+        while (t_params != NULL)
+        {
+            MCParameter *tmp = t_params;
+            t_params = t_params->getnext();
+            delete tmp;
+        }
+    }
     
 	if (added)
 		MCnexecutioncontexts--;
 	MClockmessages = oldlock;
 }
 
-void MCEngineExecSend(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target)
+void MCEngineExecSend(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, MCParameter *p_params)
 {
-	MCEngineSendOrCall(ctxt, p_script, p_target, true);
+	MCEngineSendOrCall(ctxt, p_script, p_target, true, p_params);
 }
 
-void MCEngineExecCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target)
+void MCEngineExecCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, MCParameter *p_params)
 {
-	MCEngineSendOrCall(ctxt, p_script, p_target, false);
+	MCEngineSendOrCall(ctxt, p_script, p_target, false, p_params);
 }
 
 void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target)
@@ -1389,12 +1405,50 @@ void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef p_script, MCObjectP
 	MClockmessages = oldlock;
 }
 
-void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr p_target, double p_delay, int p_units)
+void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr p_target, double p_delay, int p_units, MCParameter * p_params)
 {
 	MCNewAutoNameRef t_message;
-	MCParameter *t_params;
-	MCEngineSplitScriptIntoMessageAndParameters(ctxt, p_script, &t_message, t_params);
-
+	MCParameter *t_params = nullptr;
+    if (p_params == nullptr)
+    {
+        MCEngineSplitScriptIntoMessageAndParameters(ctxt, p_script, &t_message, t_params);
+    }
+    else
+    {
+        // We need to copy the evaluated values to a new set of params
+        // which are deleted after the send in time
+        MCParameter * t_itr = p_params;
+        MCParameter * t_param;
+        MCParameter * t_copy;
+        while (t_itr != nullptr)
+        {
+            t_copy = new (nothrow) MCParameter;
+            
+            MCValueRef t_value;
+            if (t_itr->eval(ctxt, t_value))
+            {
+                t_copy->setvalueref_argument(t_value);
+            }
+            else
+            {
+                t_copy->setvalueref_argument(kMCEmptyString);
+            }
+            
+            if (t_params == nullptr)
+            {
+                t_params = t_param = t_copy;
+            }
+            else
+            {
+                t_param -> setnext(t_copy);
+                t_param = t_copy;
+            }
+            t_itr = t_itr->getnext();
+        }
+        
+        MCNameCreate(p_script, &t_message);
+    }
+    
 	switch (p_units)
 	{
 	case F_MILLISECS:
