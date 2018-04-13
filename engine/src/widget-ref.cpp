@@ -623,6 +623,137 @@ bool MCWidgetBase::Post(MCNameRef p_event, MCProperListRef p_args)
     return Dispatch(p_event, t_args . Ptr(), t_args . Count(), nil);
 }
 
+Exec_stat MCWidgetBase::Call(MCExecContext& ctxt, MCNameRef p_message, MCParameter *p_parameters)
+{
+    MCTypeInfoRef t_signature;
+    if (!MCScriptQueryHandlerSignatureOfModule(MCScriptGetModuleOfInstance(m_instance), p_message, t_signature))
+    {
+        ctxt.LegacyThrow(EE_INVOKE_HANDLERNOTFOUND);
+        return ES_ERROR;
+    }
+    
+    uindex_t t_arg_count;
+    t_arg_count = MCHandlerTypeInfoGetParameterCount(t_signature);
+    
+    MCAutoArray<MCValueRef> t_arguments;
+    
+    bool t_success;
+    t_success = true;
+    
+    MCParameter *t_param;
+    t_param = p_parameters;
+    for(uindex_t i = 0; i < t_arg_count && t_success; i++)
+    {
+        // Too few parameters error.
+        if (t_param == nil)
+        {
+            ctxt.LegacyThrow(EE_INVOKE_TOOFEWARGS);
+            t_success = false;
+            break;
+        }
+        
+        if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeOut)
+        {
+            MCValueRef t_value;
+            if (!t_param -> eval(ctxt, t_value))
+            {
+                t_success = false;
+                break;
+            }
+            
+            MCTypeInfoRef t_arg_type;
+            t_arg_type = MCHandlerTypeInfoGetParameterType(t_signature, i);
+            
+            if (!MCExtensionConvertFromScriptType(ctxt, t_arg_type, t_value))
+            {
+                ctxt.LegacyThrow(EE_INVOKE_TYPEERROR);
+                MCValueRelease(t_value);
+                t_success = false;
+                break;
+            }
+            
+            if (!t_arguments . Push(t_value))
+            {
+                t_success = false;
+                break;
+            }
+        }
+        else if (!t_arguments . Push(nil))
+        {
+            t_success = false;
+            break;
+        }
+        
+        t_param = t_param -> getnext();
+    }
+    
+    // Too many parameters error.
+    if (t_success &&
+        t_param != nil)
+    {
+        ctxt.LegacyThrow(EE_INVOKE_TOOMANYARGS);
+        t_success = false;
+    }
+    
+    MCValueRef t_result;
+    t_result = nil;
+    if (t_success &&
+        MCScriptCallHandlerInInstance(m_instance, p_message, t_arguments . Ptr(), t_arguments . Size(), t_result))
+    {
+        t_param = p_parameters;
+        for(uindex_t i = 0; i < t_arg_count && t_success; i++)
+        {
+            MCHandlerTypeFieldMode t_mode;
+            t_mode = MCHandlerTypeInfoGetParameterMode(t_signature, i);
+            
+            if (t_mode != kMCHandlerTypeFieldModeIn)
+            {
+                MCContainer t_container;
+                if (t_param -> evalcontainer(ctxt, t_container))
+                {
+                    if (!MCExtensionConvertToScriptType(ctxt, t_arguments[i]) ||
+                        !t_container.set(ctxt, t_arguments[i]))
+                        t_success = false;
+                }
+                else
+                    t_param -> set_argument(ctxt, t_arguments[i]);
+            }
+            
+            t_param = t_param -> getnext();
+        }
+        
+        if (t_success &&
+            !MCExtensionConvertToScriptType(ctxt, t_result))
+        {
+            t_success = false;
+        }
+        
+        if (t_success)
+            MCresult -> setvalueref(t_result);
+        
+        if (t_result != nil)
+            MCValueRelease(t_result);
+    }
+    else
+    {
+        t_success = false;
+    }
+    
+    for(uindex_t i = 0; i < t_arguments.Size(); i++)
+        if (t_arguments[i] != nil)
+            MCValueRelease(t_arguments[i]);
+    
+    // If we failed, then catch the error and create a suitable MCerror unwinding.
+    if (t_success)
+        return ES_NORMAL;
+    
+    // If the exec context is already in error, use that.
+    if (ctxt.HasError())
+        return ES_ERROR;
+    
+    return MCExtensionCatchError(ctxt);
+}
+
 void MCWidgetBase::ScheduleTimerIn(double p_timeout)
 {
     MCWidget *t_host;
@@ -1459,6 +1590,11 @@ void MCWidgetTriggerAll(MCWidgetRef self)
 bool MCWidgetPost(MCWidgetRef self, MCNameRef p_event, MCProperListRef p_args)
 {
     return MCWidgetAsBase(self) -> Post(p_event, p_args);
+}
+
+Exec_stat MCWidgetCall(MCExecContext& ctxt, MCWidgetRef self, MCNameRef p_message, MCParameter* p_parameters)
+{
+    return MCWidgetAsBase(self) -> Call(ctxt, p_message, p_parameters);
 }
 
 void MCWidgetScheduleTimerIn(MCWidgetRef self, double p_timeout)

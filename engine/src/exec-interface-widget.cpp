@@ -20,6 +20,7 @@
 #include "widget-ref.h"
 
 #include "exec.h"
+#include "param.h"
 
 #include "exec-interface.h"
 
@@ -52,3 +53,17 @@ void MCInterfaceExecDoInWidget(MCExecContext& ctxt, MCStringRef p_script, MCWidg
 	
 	MCWidgetPost(p_widget->getwidget(), MCNAME("OnDo"), *t_list);
 }
+
+Exec_stat MCInterfaceExecCallWidget(MCExecContext& ctxt, MCNameRef p_message, MCWidget *p_widget, MCParameter *p_parameters)
+{
+
+    if (p_widget->getwidget() == nullptr)
+    {
+        ctxt.LegacyThrow(EE_INVOKE_EXTENSIONNOTFOUND);
+        return ES_ERROR;
+    }
+
+    return MCWidgetCall(ctxt, p_widget->getwidget(), p_message, p_parameters);
+    
+}
+

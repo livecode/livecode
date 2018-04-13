@@ -2,7 +2,7 @@ Name: call
 
 Type: command
 
-Syntax: call <handlerName> [of <objectRef>] [ with <argumentList> ]
+Syntax: call [widget] <handlerName> [of <objectRef>] [ with <argumentList> ]
 
 Summary:
 <execute|Executes> the specified <handler> in any <object(glossary)|object's>
@@ -66,6 +66,10 @@ especially if some <parameter|parameters> contain
 <double quote|double quotes>, it may be simpler to put the <message> 
 name and <parameter|parameters> into a <variable>, then use the name of 
 the <variable> in the <call> <statement>.
+
+Use the call widget form of the command to call a public handler of a
+widget rather than a handler in the object script. Including parameters
+in the <handlerName> is not supported when using the call widget form.
 
 References: command (glossary), defaultStack (property), do (command), 
 double quote (glossary), execute (glossary), handler (glossary), 

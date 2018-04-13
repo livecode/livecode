@@ -1256,11 +1256,11 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
 	r_params = params;
 }
 
-static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, bool p_is_send, MCParameter *p_params)
+static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, bool p_is_send, MCParameter *p_params, bool p_widget)
 {
 	MCNewAutoNameRef t_message;
 	MCParameter *t_params;
-    if (p_params == nullptr)
+    if (!p_widget && p_params == nullptr)
     {
         MCEngineSplitScriptIntoMessageAndParameters(ctxt, p_script, &t_message, t_params);
     }
@@ -1286,66 +1286,73 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
 		added = True;
 	}
     
-    if ((stat = optr->message(*t_message, t_params, p_is_send, True)) == ES_NOT_HANDLED)
+    if (p_widget)
     {
-        // The message was not handled by the target object, so this is
-        // just a bunch of script to be executed as if it were in a handler
-        // in the target object (using domess).
-        
-        MCHandler *t_handler;
-        t_handler = optr -> findhandler(HT_MESSAGE, *t_message);
-        if (t_handler != NULL && t_handler -> isprivate())
-        {
-            ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
-            goto cleanup;
-        }
-
-        // The 'split into message and parameters' function above is used
-        // to ensure that all the parameters are evaluated in the current
-        // context (not the target). Since domess just takes a string, we
-        // convert the entire script back into a string with the params
-        // having been evaluated. This means in particular that variables
-        // containing arrays will not work here - they will be converted to
-        // the empty string.
-        
-        MCAutoListRef t_param_list;
-        MCListCreateMutable(',', &t_param_list);
-        MCParameter *t_param_ptr;
-        t_param_ptr = t_params;
-        
-        bool t_has_params;
-        t_has_params = t_params != nil;
-        while (t_param_ptr != NULL)
-        {
-            MCAutoValueRef t_value;
-            MCAutoStringRef t_value_string;
-            
-            if (!t_param_ptr->eval_argument(ctxt, &t_value) ||
-                !ctxt . ConvertToString(*t_value, &t_value_string) ||
-                !MCListAppend(*t_param_list, *t_value_string))
-                goto cleanup;
-
-            t_param_ptr = t_param_ptr -> getnext();
-        }
-        
-        MCAutoStringRef tptr;
-        if (t_has_params)
-        {
-            MCAutoStringRef t_params_string;
-            if (!MCListCopyAsString(*t_param_list, &t_params_string) ||
-                !MCStringCreateWithStringsAndSeparator(&tptr, ' ',
-                                                       MCNameGetString(*t_message),
-                                                       *t_params_string))
-                goto cleanup;
-        }
-        else
-            tptr = MCNameGetString(*t_message);
-        
-        if (optr->domess(*tptr, nil, false) == ES_ERROR)
-            ctxt . Throw();
+        stat = MCInterfaceExecCallWidget(ctxt, *t_message, reinterpret_cast<MCWidget*>(optr), t_params);
     }
-    else if (stat == ES_PASS)
-        stat = ES_NORMAL;
+    else
+    {
+        if ((stat = optr->message(*t_message, t_params, p_is_send, True)) == ES_NOT_HANDLED)
+        {
+            // The message was not handled by the target object, so this is
+            // just a bunch of script to be executed as if it were in a handler
+            // in the target object (using domess).
+            
+            MCHandler *t_handler;
+            t_handler = optr -> findhandler(HT_MESSAGE, *t_message);
+            if (t_handler != NULL && t_handler -> isprivate())
+            {
+                ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
+                goto cleanup;
+            }
+
+            // The 'split into message and parameters' function above is used
+            // to ensure that all the parameters are evaluated in the current
+            // context (not the target). Since domess just takes a string, we
+            // convert the entire script back into a string with the params
+            // having been evaluated. This means in particular that variables
+            // containing arrays will not work here - they will be converted to
+            // the empty string.
+            
+            MCAutoListRef t_param_list;
+            MCListCreateMutable(',', &t_param_list);
+            MCParameter *t_param_ptr;
+            t_param_ptr = t_params;
+            
+            bool t_has_params;
+            t_has_params = t_params != nil;
+            while (t_param_ptr != NULL)
+            {
+                MCAutoValueRef t_value;
+                MCAutoStringRef t_value_string;
+                
+                if (!t_param_ptr->eval_argument(ctxt, &t_value) ||
+                    !ctxt . ConvertToString(*t_value, &t_value_string) ||
+                    !MCListAppend(*t_param_list, *t_value_string))
+                    goto cleanup;
+
+                t_param_ptr = t_param_ptr -> getnext();
+            }
+            
+            MCAutoStringRef tptr;
+            if (t_has_params)
+            {
+                MCAutoStringRef t_params_string;
+                if (!MCListCopyAsString(*t_param_list, &t_params_string) ||
+                    !MCStringCreateWithStringsAndSeparator(&tptr, ' ',
+                                                           MCNameGetString(*t_message),
+                                                           *t_params_string))
+                    goto cleanup;
+            }
+            else
+                tptr = MCNameGetString(*t_message);
+            
+            if (optr->domess(*tptr, nil, false) == ES_ERROR)
+                ctxt . Throw();
+        }
+        else if (stat == ES_PASS)
+            stat = ES_NORMAL;
+    }
     
     if (stat == ES_ERROR)
     {
@@ -1371,12 +1378,12 @@ cleanup:
 
 void MCEngineExecSend(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, MCParameter *p_params)
 {
-	MCEngineSendOrCall(ctxt, p_script, p_target, true, p_params);
+	MCEngineSendOrCall(ctxt, p_script, p_target, true, p_params, false);
 }
 
-void MCEngineExecCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, MCParameter *p_params)
+void MCEngineExecCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, MCParameter *p_params, bool p_widget)
 {
-	MCEngineSendOrCall(ctxt, p_script, p_target, false, p_params);
+	MCEngineSendOrCall(ctxt, p_script, p_target, false, p_params, p_widget);
 }
 
 void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target)

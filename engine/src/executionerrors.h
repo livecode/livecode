@@ -2778,7 +2778,13 @@ enum Exec_errors
     EE_BAD_PERMISSION_NAME,
     
     // {EE-0910} Property: value is not a data
-    EE_PROPERTY_NOTADATA
+    EE_PROPERTY_NOTADATA,
+    
+    // {EE-0911} call: handler not found
+    EE_INVOKE_HANDLERNOTFOUND,
+    
+    // {EE-0912} call: extension not found
+    EE_INVOKE_EXTENSIONNOTFOUND,
     
 };
 

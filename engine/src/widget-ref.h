@@ -91,6 +91,7 @@ public:
     bool SetAnnotation(MCNameRef annotation, MCValueRef value);
     
     bool Post(MCNameRef event, MCProperListRef args);
+    Exec_stat Call(MCExecContext& ctxt, MCNameRef p_message, MCParameter* p_params);
     
     void ScheduleTimerIn(double timeout);
     void CancelTimer(void);

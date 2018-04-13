@@ -2776,6 +2776,7 @@ void MCInterfaceExecGoBackInWidget(MCExecContext& ctxt, MCWidget *p_widget);
 void MCInterfaceExecGoForwardInWidget(MCExecContext& ctxt, MCWidget *p_widget);
 void MCInterfaceExecLaunchUrlInWidget(MCExecContext& ctxt, MCStringRef p_url, MCWidget *p_widget);
 void MCInterfaceExecDoInWidget(MCExecContext& ctxt, MCStringRef p_script, MCWidget *p_widget);
+Exec_stat MCInterfaceExecCallWidget(MCExecContext& ctxt, MCNameRef p_handler, MCWidget *p_widget, MCParameter *p_params);
 
 ///////////
 
@@ -3053,7 +3054,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int handler_type, MCNameRef messa
 void MCEngineExecSend(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target, MCParameter *p_params);
 void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target);
 void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef script, MCObjectPtr target, double p_delay, int p_units, MCParameter *params);
-void MCEngineExecCall(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target, MCParameter *p_params);
+void MCEngineExecCall(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target, MCParameter *p_params, bool p_widget);
 
 void MCEngineExecLockErrors(MCExecContext& ctxt);
 void MCEngineExecLockMessages(MCExecContext& ctxt);

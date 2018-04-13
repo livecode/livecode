@@ -100,6 +100,7 @@ bool MCWidgetCopyAnnotation(MCWidgetRef widget, MCNameRef annotation, MCValueRef
 bool MCWidgetSetAnnotation(MCWidgetRef widget, MCNameRef annotation, MCValueRef value);
 
 bool MCWidgetPost(MCWidgetRef widget, MCNameRef event, MCProperListRef args);
+Exec_stat MCWidgetCall(MCExecContext& ctxt, MCWidgetRef self, MCNameRef p_message, MCParameter* p_parameters);
 
 void MCWidgetRedrawAll(MCWidgetRef widget);
 void MCWidgetScheduleTimerIn(MCWidgetRef widget, double timeout);

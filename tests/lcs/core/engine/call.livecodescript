@@ -72,3 +72,42 @@ on TestCallWithArgsByReference
 	TestAssert "call with args by reference", \
 		tVar is not tCheckVar
 end TestCallWithArgsByReference
+
+on TestCallWidget
+	TestSkipIfNot "lcb"
+   TestLoadAuxiliaryExtension "_widget_call"
+   
+	create stack "WidgetCall"
+   set the defaultStack to "WidgetCall"
+
+   create widget "Test" as "com.livecode.lcs_tests.core.widget_call"
+   
+	call widget "TestWidget_Foo" of widget "Test"
+	TestAssert "call widget", the result is "Bar"
+		
+	call widget "TestWidget_FooArg" of widget "Test" with "Baz"
+	TestAssert "call widget with args", the result is "BarBaz"
+	
+	local tArg
+	put "Baz" into tArg
+	call widget "TestWidget_FooOutArg" of widget "Test" with tArg
+	TestAssert "call widget with out arg", tArg is "Bar"
+	
+	TestAssertThrow "call widget with non-existant handler", \
+		"_TestCallWithNonExistantHandler", the long id of me, \
+		"EE_INVOKE_HANDLERNOTFOUND"
+		
+	create widget "Test2" as "com.livecode.lcs_tests.core.widget_call_non_existant"
+	
+	TestAssertThrow "call widget with extension not loaded", \
+		"_TestCallWithNonExistantExtension", the long id of me, \
+		"EE_INVOKE_EXTENSIONNOTFOUND"
+end TestCallWidget
+
+on _TestCallWithNonExistantHandler
+	call widget "TestWidget_DoesNotExist" of widget "Test" of stack "WidgetCall"
+end _TestCallWithNonExistantHandler
+
+on _TestCallWithNonExistantExtension
+	call widget "TestWidget_DoesNotExist" of widget "Test2" of stack "WidgetCall"
+end _TestCallWithNonExistantExtension
