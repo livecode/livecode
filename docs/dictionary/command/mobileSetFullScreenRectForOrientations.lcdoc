@@ -2,7 +2,7 @@ Name: mobileSetFullScreenRectForOrientations
 
 Type: command
 
-Syntax: mobileSetAllowedOrientations <orientations>[, <rect>]
+Syntax: mobileSetFullScreenRectForOrientations <orientations>[, <rect>]
 
 Summary:
 Set the list of allowed orientations.
