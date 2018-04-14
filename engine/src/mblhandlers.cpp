@@ -674,7 +674,8 @@ Exec_stat MCHandleSetFullScreenRectForOrientations(void *context, MCParameter *p
         p_parameters = p_parameters -> getnext();
     }
     
-    MCRectangle *t_rect = nullptr;
+    MCRectangle *t_rect_ptr = nullptr;
+    MCRectangle t_rect;
     
     if (t_success && p_parameters != nil)
     {
@@ -682,7 +683,11 @@ Exec_stat MCHandleSetFullScreenRectForOrientations(void *context, MCParameter *p
         if (p_parameters -> eval_argument(ctxt, &t_value))
         {
             bool t_have_rect = false;
-            ctxt.TryToConvertToLegacyRectangle(*t_value, t_have_rect, *t_rect);
+            ctxt.TryToConvertToLegacyRectangle(*t_value, t_have_rect, t_rect);
+            if (t_have_rect)
+            {
+                t_rect_ptr = &t_rect;
+            }
         }
     }
     
@@ -698,35 +703,35 @@ Exec_stat MCHandleSetFullScreenRectForOrientations(void *context, MCParameter *p
         t_orientations_count = MCArrayGetCount(*t_orientations_array);
     }
     
-    intset_t t_orientations_set;
-    t_orientations_set = 0;
+    intset_t t_orientations_set = 0;
     if (t_success)
     {
         for(uint32_t i = 0; i < t_orientations_count; i++)
         {
             // Note: 't_orientations_array' is an array of strings
             MCValueRef t_orien_value = nil;
-            /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_orientations_array, i + 1, t_orien_value);
-            MCStringRef t_orientation = (MCStringRef)(t_orien_value);
-            if (MCStringIsEqualToCString(t_orientation, "portrait", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_PORTRAIT;
-            else if (MCStringIsEqualToCString(t_orientation, "portrait upside down", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_PORTRAIT_UPSIDE_DOWN;
-            else if (MCStringIsEqualToCString(t_orientation, "landscape right", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_LANDSCAPE_RIGHT;
-            else if (MCStringIsEqualToCString(t_orientation, "landscape left", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_LANDSCAPE_LEFT;
-            else if (MCStringIsEqualToCString(t_orientation, "face up", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_FACE_UP;
-            else if (MCStringIsEqualToCString(t_orientation, "face down", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_FACE_DOWN;
-            
+            if (MCArrayFetchValueAtIndex(*t_orientations_array, i + 1, t_orien_value))
+            {
+                MCStringRef t_orientation = (MCStringRef)(t_orien_value);
+                if (MCStringIsEqualToCString(t_orientation, "portrait", kMCCompareCaseless))
+                    t_orientations_set |= ORIENTATION_PORTRAIT;
+                else if (MCStringIsEqualToCString(t_orientation, "portrait upside down", kMCCompareCaseless))
+                    t_orientations_set |= ORIENTATION_PORTRAIT_UPSIDE_DOWN;
+                else if (MCStringIsEqualToCString(t_orientation, "landscape right", kMCCompareCaseless))
+                    t_orientations_set |= ORIENTATION_LANDSCAPE_RIGHT;
+                else if (MCStringIsEqualToCString(t_orientation, "landscape left", kMCCompareCaseless))
+                    t_orientations_set |= ORIENTATION_LANDSCAPE_LEFT;
+                else if (MCStringIsEqualToCString(t_orientation, "face up", kMCCompareCaseless))
+                    t_orientations_set |= ORIENTATION_FACE_UP;
+                else if (MCStringIsEqualToCString(t_orientation, "face down", kMCCompareCaseless))
+                    t_orientations_set |= ORIENTATION_FACE_DOWN;
+            }
         }
     }
     
     if (t_success)
     {
-        MCOrientationSetRectForOrientations(ctxt, t_orientations_set, t_rect);
+        MCOrientationSetRectForOrientations(ctxt, t_orientations_set, t_rect_ptr);
     }
     
     if (t_success && !ctxt . HasError())
