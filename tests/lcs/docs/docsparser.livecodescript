@@ -68,3 +68,22 @@ on TestBug17523
    
    TestAssert "property name has quotes stripped", tArray["doc"][1]["display name"] is "testProp"
 end TestBug17523
+
+on TestPublicWidgetHandlerSyntax
+   local tModule
+   put "widget com.livecode.testdocs" into tModule
+   put return & "/**" after tModule
+   put return & "Summary: Test" after tModule
+   put return & "*/" after tModule
+   put return & "public handler Foo(in pBar as String) returns nothing" after tModule
+   put return & "end handler" after tModule
+   put return & "end widget" after tModule
+   
+   local tParsed
+   put revDocsGenerateDocsFileFromText(tModule, "") into tParsed
+   
+   local tArray
+   put revDocsParseDocTextToLibraryArray("", tParsed, "", "") into tArray
+   
+   TestAssert "public widget handler syntax uses call", tArray["doc"][1]["syntax"][1] begins with "call widget"
+end TestPublicWidgetHandlerSyntax

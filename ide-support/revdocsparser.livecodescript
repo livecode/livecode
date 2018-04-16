@@ -681,14 +681,14 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                   break
                case "handler"
                   revDocsParseHandler line 1 of tData, tHandlerData
-                  revDocsUpdateDocBlocks true, "handler", line 1 of tData, tComment, tAPIData
+                  revDocsUpdateDocBlocks true, tIsWidget, "handler", line 1 of tData, tComment, tAPIData
                   break
                case "function"
                case "command"
                   if tIsLCIDL then
                      revDocsUpdateDocBlocksForLCIDL  tEntryData["name"], tEntryData["type"], tData, tComment, tAPIData
                   else
-                     revDocsUpdateDocBlocks false, tEntryData["type"], line 1 of tData, tComment, tAPIData
+                     revDocsUpdateDocBlocks false, tIsWidget, tEntryData["type"], line 1 of tData, tComment, tAPIData
                   end if
                   break
                case "type"
@@ -1757,7 +1757,7 @@ command revDocsUpdateModularSyntaxDocBlocks pData, pComment, pHandlersA, pPhrase
    put tEntryName into xDataA[tEntryName]["name"]
 end revDocsUpdateModularSyntaxDocBlocks
 
-command revDocsUpdateDocBlocks pModular, pType, pLine, pComment, @xDataA
+command revDocsUpdateDocBlocks pModular, pIsWidget, pType, pLine, pComment, @xDataA
    if pComment is empty then
       exit revDocsUpdateDocBlocks
    end if
@@ -1802,9 +1802,13 @@ command revDocsUpdateDocBlocks pModular, pType, pLine, pComment, @xDataA
    end repeat
    delete the last char of tParamsSyntax
    if pType is "function" or pType is "handler" then
-      put "(" before tParamsSyntax
-      put ")" after tParamsSyntax
-      put tEntryName & tParamsSyntax into tSyntax
+      if pIsWidget then
+         put "call widget" && quote & tEntryName & quote && "of <widget> with" && tParamsSyntax into tSyntax
+      else
+         put "(" before tParamsSyntax
+         put ")" after tParamsSyntax
+         put tEntryName & tParamsSyntax into tSyntax
+      end if
    else
       put tEntryName && tParamsSyntax into tSyntax
    end if
