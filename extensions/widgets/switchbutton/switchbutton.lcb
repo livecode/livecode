@@ -501,16 +501,23 @@ public handler OnMouseUp() returns nothing
 		return
 	end if
 
+	variable tPostMessage as Boolean
 	if mMouseHasMoved then
+		put mSwitchIsInOnPosition is not mSwitchIsOn into tPostMessage
 		setSwitch(mSwitchIsInOnPosition)
 		put false into mMouseHasMoved
 	else
 		if the click position is within mClickableRect then
+			put true into tPostMessage
 			setSwitch(not(mSwitchIsOn))
+		else
+			put false into tPostMessage
 		end if
 	end if
 
-	post "hiliteChanged"
+	if tPostMessage is true then
+		post "hiliteChanged"
+	end if
 	put false into mIsPressed
 end handler
 
@@ -519,10 +526,14 @@ public handler OnMouseRelease() returns nothing
 		return
 	end if
 
+	variable tPostMessage as Boolean
 	if mMouseHasMoved then
+		put mSwitchIsInOnPosition is not mSwitchIsOn into tPostMessage
 		setSwitch(mSwitchIsInOnPosition)
 		put false into mMouseHasMoved
-		post "hiliteChanged"
+		if tPostMessage is true then
+			post "hiliteChanged"
+		end if
 		put false into mIsPressed
 	end if
 end handler
