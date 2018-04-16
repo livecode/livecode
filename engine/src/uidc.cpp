@@ -1152,7 +1152,7 @@ void MCUIDC::updatemenubar(Boolean force)
 // MW-2014-04-16: [[ Bug 11690 ]] Pending message list is now sorted by time, all
 //   pending message generation functions use 'doaddmessage()' to insert the
 //   message in the right place.
-void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, MCParameter *params)
+void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, MCParameter *params, bool p_widget)
 {
     // Find where in the list to insert the pending message.
     size_t t_index;
@@ -1160,7 +1160,7 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
         if (m_messages[t_index].m_time > time)
             break;
 
-    m_messages.InsertMessageAtIndex(t_index, MCPendingMessage(optr, mptr, time, params, id));
+    m_messages.InsertMessageAtIndex(t_index, MCPendingMessage(optr, mptr, time, params, id, p_widget));
 }
 
 // MW-2014-04-16: [[ Bug 11690 ]] Shift a message to a new time in the future.
@@ -1198,11 +1198,11 @@ void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStri
     doaddmessage(optr, mptr, MCS_time(), ++messageid, params);
 }
 
-void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params)
+void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params, bool p_widget)
 {
     uint4 t_id;
     t_id = ++messageid;
-    doaddmessage(optr, mptr, time, t_id, params);
+    doaddmessage(optr, mptr, time, t_id, params, p_widget);
     
     // MW-2014-05-28: [[ Bug 12463 ]] Previously the result would have been set here which is
     //   incorrect as engine pending messages should not set the result.
@@ -1319,13 +1319,13 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 //   It puts a limit on the number of script sent messages of 64k which should be enough for any
 //   reasonable app. Note that the engine's internal / sent messages are still allowed beyond this
 //   limit as they definitely do not have a double-propagation problem that could cause engine lock-up.
-bool MCUIDC::addusermessage(MCObject* optr, MCNameRef name, real8 time, MCParameter *params)
+bool MCUIDC::addusermessage(MCObject* optr, MCNameRef name, real8 time, MCParameter *params, bool p_widget)
 {
     // Arbitrary limit on the number of pending messages
     if (m_messages.GetCount() >= UINT16_MAX)
         return false;
     
-    addmessage(optr, name, time, params);
+    addmessage(optr, name, time, params, p_widget);
     
     // MW-2014-05-28: [[ Bug 12463 ]] Set the result to the pending message id.
 	char buffer[U4L];
@@ -1376,7 +1376,7 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
                 MCSaveprops sp;
                 MCU_saveprops(sp);
                 MCU_resetprops(False);
-                t_msg.m_object->timer(*t_msg.m_message, t_msg.m_params);
+                t_msg.m_object->timer(*t_msg.m_message, t_msg.m_params, t_msg.m_widget);
                 MCU_restoreprops(sp);
                 t_msg.DeleteParameters();
             }

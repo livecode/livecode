@@ -114,7 +114,7 @@ public:
 	virtual void munfocus();
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
-	virtual void timer(MCNameRef mptr, MCParameter *params);
+	virtual void timer(MCNameRef mptr, MCParameter *params, bool p_widget);
 	virtual uint2 gettransient() const;
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }

@@ -176,7 +176,7 @@ bool MCAudioClip::visit_self(MCObjectVisitor* p_visitor)
     return p_visitor -> OnAudioClip(this);
 }
 
-void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
+void MCAudioClip::timer(MCNameRef mptr, MCParameter *params, bool p_widget)
 {
     // PM-2014-11-11: [[ Bug 13950 ]] Make sure looping audioClip can be stopped
 #ifndef FEATURE_PLATFORM_AUDIO

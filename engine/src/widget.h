@@ -167,7 +167,7 @@ public:
 	
     virtual MCObject* hittest(int32_t x, int32_t y);
     
-	virtual void timer(MCNameRef p_message, MCParameter *p_parameters);
+	virtual void timer(MCNameRef p_message, MCParameter *p_parameters, bool p_widget = false);
 
 	virtual void recompute(void);
     

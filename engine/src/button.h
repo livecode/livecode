@@ -197,7 +197,7 @@ public:
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 #ifdef _MAC_DESKTOP
-	virtual void timer(MCNameRef mptr, MCParameter *params);
+	virtual void timer(MCNameRef mptr, MCParameter *params, bool p_widget = false);
 #endif
 
 	virtual uint2 gettransient() const;

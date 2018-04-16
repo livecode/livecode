@@ -780,7 +780,7 @@ Boolean MCObject::doubleup(uint2 which)
 	return False;
 }
 
-void MCObject::timer(MCNameRef mptr, MCParameter *params)
+void MCObject::timer(MCNameRef mptr, MCParameter *params, bool p_widget)
 {
 	if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 	{

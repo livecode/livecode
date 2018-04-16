@@ -82,3 +82,6 @@ statement (glossary), trap (glossary), value (function),
 variable (glossary)
 
 Tags: messages
+
+Changes: 
+In LiveCode 9.5 the with argumentList and call widget syntax was added.

@@ -2776,7 +2776,7 @@ void MCInterfaceExecGoBackInWidget(MCExecContext& ctxt, MCWidget *p_widget);
 void MCInterfaceExecGoForwardInWidget(MCExecContext& ctxt, MCWidget *p_widget);
 void MCInterfaceExecLaunchUrlInWidget(MCExecContext& ctxt, MCStringRef p_url, MCWidget *p_widget);
 void MCInterfaceExecDoInWidget(MCExecContext& ctxt, MCStringRef p_script, MCWidget *p_widget);
-Exec_stat MCInterfaceExecCallWidget(MCExecContext& ctxt, MCNameRef p_handler, MCWidget *p_widget, MCParameter *p_params);
+Exec_stat MCInterfaceExecCallWidget(MCExecContext& ctxt, MCNameRef p_handler, MCWidget *p_widget, MCParameter *p_params, bool p_is_send);
 
 ///////////
 
@@ -3051,9 +3051,9 @@ void MCEngineExecStopUsingStack(MCExecContext& ctxt, MCStack *p_stack);
 void MCEngineExecStopUsingStackByName(MCExecContext& ctxt, MCStringRef p_name);
 
 void MCEngineExecDispatch(MCExecContext& ctxt, int handler_type, MCNameRef message, MCObjectPtr *target, MCParameter *params);
-void MCEngineExecSend(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target, MCParameter *p_params);
+void MCEngineExecSend(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target, MCParameter *p_params, bool p_widget);
 void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target);
-void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef script, MCObjectPtr target, double p_delay, int p_units, MCParameter *params);
+void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef script, MCObjectPtr target, double p_delay, int p_units, MCParameter *params, bool p_widget);
 void MCEngineExecCall(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target, MCParameter *p_params, bool p_widget);
 
 void MCEngineExecLockErrors(MCExecContext& ctxt);

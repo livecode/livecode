@@ -155,7 +155,7 @@ on TestSendInTimeWithArgs
 	local tVar
 	put uuid() into tVar
 	send "setVar" to tStack in 0 with tVar
-	wait 50 milliseconds with messages
+	wait 0 milliseconds with messages
 	TestAssert "send in time with args", \
 		the cVar of tStack is tVar
 end TestSendInTimeWithArgs
@@ -190,3 +190,69 @@ on TestSendWithArgsByReference
 	TestAssert "send with args by reference", \
 			tVar is not tCheckVar
 end TestSendWithArgsByReference
+
+on TestSendWidget
+	TestSkipIfNot "lcb"
+   TestLoadAuxiliaryExtension "_widget_call"
+   
+	create stack "WidgetCall"
+   set the defaultStack to "WidgetCall"
+
+   create widget "Test" as "com.livecode.lcs_tests.core.widget_call"
+   
+	send widget "TestWidget_Foo" to widget "Test"
+	TestAssert "send widget", the result is "Bar"
+		
+	send widget "TestWidget_FooArg" to widget "Test" with "Baz"
+	TestAssert "send widget with args", the result is "BarBaz"
+	
+	local tArg
+	put "Baz" into tArg
+	send widget "TestWidget_FooOutArg" to widget "Test" with tArg
+	TestAssert "send widget with out arg", tArg is "Bar"
+	
+	TestAssertThrow "send widget with non-existant handler", \
+		"_TestSendWithNonExistantHandler", the long id of me, \
+		"EE_INVOKE_HANDLERNOTFOUND"
+		
+	create widget "Test2" as "com.livecode.lcs_tests.core.widget_call_non_existant"
+	
+	TestAssertThrow "send widget with extension not loaded", \
+		"_TestSendWithNonExistantExtension", the long id of me, \
+		"EE_INVOKE_EXTENSIONNOTFOUND"
+		
+	set the defaultStack to the short name of me
+	send widget "TestWidget_DefaultStack" to widget "Test" of stack "WidgetCall"
+	TestAssert "send widget changes defaultstack", the result is the name of stack "WidgetCall"
+end TestSendWidget
+
+on _TestSendWithNonExistantHandler
+	send widget "TestWidget_DoesNotExist" to widget "Test" of stack "WidgetCall"
+end _TestSendWithNonExistantHandler
+
+on _TestSendWithNonExistantExtension
+	send widget "TestWidget_DoesNotExist" to widget "Test2" of stack "WidgetCall"
+end _TestSendWithNonExistantExtension
+
+on TestSendWidgetInTimeWithArgs
+	TestSkipIfNot "wait"
+	TestSkipIfNot "lcb"
+   TestLoadAuxiliaryExtension "_widget_call"
+   
+	create stack "WidgetCall"
+   set the defaultStack to "WidgetCall"
+
+   create widget "Test" as "com.livecode.lcs_tests.core.widget_call"
+   
+	local tVar
+	put uuid() into tVar
+	send widget "TestWidget_SetProp" to widget "Test" with "uUUID", tVar
+	TestAssert "send widget in time with args", \
+			the uUUID of widget "Test" is tVar
+	
+	put uuid() into tVar
+	send widget "TestWidget_SetProp" to widget "Test" in 0 with "uUUID", tVar
+	wait 50 milliseconds with messages
+	TestAssert "send widget in time with args", \
+			the uUUID of widget "Test" is tVar
+end TestSendWidgetInTimeWithArgs

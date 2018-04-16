@@ -529,7 +529,7 @@ Boolean MCImage::doubleup(uint2 which)
 	return MCControl::doubleup(which);
 }
 
-void MCImage::timer(MCNameRef mptr, MCParameter *params)
+void MCImage::timer(MCNameRef mptr, MCParameter *params, bool p_widget)
 {
 	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
@@ -608,7 +608,7 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 			}
 		}
 		else
-			MCControl::timer(mptr, params);
+			MCControl::timer(mptr, params, p_widget);
 }
 
 void MCImage::applyrect(const MCRectangle &nrect)

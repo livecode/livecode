@@ -102,6 +102,10 @@ on TestCallWidget
 	TestAssertThrow "call widget with extension not loaded", \
 		"_TestCallWithNonExistantExtension", the long id of me, \
 		"EE_INVOKE_EXTENSIONNOTFOUND"
+		
+	set the defaultStack to the short name of me
+	call widget "TestWidget_DefaultStack" of widget "Test" of stack "WidgetCall"
+	TestAssert "call widget does not change defaultstack", the result is the defaultStack	
 end TestCallWidget
 
 on _TestCallWithNonExistantHandler

@@ -45,7 +45,7 @@ public:
 	MCTooltip();
 	virtual ~MCTooltip();
 	virtual void close(void);
-	virtual void timer(MCNameRef mptr, MCParameter *params);
+	virtual void timer(MCNameRef mptr, MCParameter *params, bool p_widget = false);
 	virtual void render(MCContext *target, const MCRectangle& dirty);
 
 	void mousemove(int2 x, int2 y, MCCard *c);

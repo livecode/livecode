@@ -605,7 +605,7 @@ void MCScrollbar::applyrect(const MCRectangle &nrect)
 }
 
 
-void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
+void MCScrollbar::timer(MCNameRef mptr, MCParameter *params, bool p_widget)
 {
 	if (MCNameIsEqualToCaseless(mptr, MCM_internal) ||
 		MCNameIsEqualToCaseless(mptr, MCM_internal2))
@@ -699,7 +699,7 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 #endif
 	}
 	else
-		MCControl::timer(mptr, params);
+		MCControl::timer(mptr, params, p_widget);
 }
 
 MCControl *MCScrollbar::clone(Boolean attach, Object_pos p, bool invisible)

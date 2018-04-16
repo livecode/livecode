@@ -310,7 +310,7 @@ void MCPlayer::applyrect(const MCRectangle &nrect)
 #endif
 }
 
-void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
+void MCPlayer::timer(MCNameRef mptr, MCParameter *params, bool p_widget)
 {
     if (MCNameIsEqualToCaseless(mptr, MCM_play_stopped))
     {
@@ -336,7 +336,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
         }
     }
     
-	MCControl::timer(mptr, params);
+	MCControl::timer(mptr, params, p_widget);
 }
 
 // MW-2011-09-23: Make sure we sync the buffer state at this point, rather than

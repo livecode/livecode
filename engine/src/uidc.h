@@ -116,18 +116,20 @@ public:
     real64_t            m_time = 0;
     MCParameter*        m_params = nullptr;
     uint32_t            m_id = 0;
+    bool                m_widget = false;
 
     constexpr MCPendingMessage() = default;
 
     MCPendingMessage(const MCPendingMessage& other) = default;
 
     // [[ C++11 ]] Replace with `MCPendingMessage(MCObject*, MCNameRef, real64_t, MCParameter*, uint32_t) = default;`
-    MCPendingMessage(MCObject* p_object, MCNameRef p_message, real64_t p_time, MCParameter* p_params, uint32_t p_id) :
+    MCPendingMessage(MCObject* p_object, MCNameRef p_message, real64_t p_time, MCParameter* p_params, uint32_t p_id, bool p_widget) :
       m_object(p_object),
       m_message(p_message),
       m_time(p_time),
       m_params(p_params),
-      m_id(p_id)
+      m_id(p_id),
+      m_widget(p_widget)
     {
     }
 
@@ -138,6 +140,7 @@ public:
         m_time = other.m_time;
         m_params = other.m_params;
         m_id = other.m_id;
+        m_widget = other.m_widget;
         
         return *this;
     }
@@ -540,7 +543,7 @@ public:
 	virtual uint2 querymods();
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
     virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
-    virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
+    virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params, bool p_widget = false);
     virtual void delaymessage(MCObject *optr, MCNameRef name, MCStringRef p1 = nil, MCStringRef p2 = nil);
 	
     // When called, all modal loops should be exited and control should return
@@ -662,7 +665,7 @@ public:
 	void cancelmessageid(uint4 id);
 	void cancelmessageobject(MCObject *optr, MCNameRef name, MCValueRef param = nil);
     bool listmessages(MCExecContext& ctxt, MCListRef& r_list);
-    void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params = nil);
+    void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params = nil, bool p_widget = false);
     size_t doshiftmessage(size_t index, real8 newtime);
     
     void addsubtimer(MCObject *target, MCValueRef subtarget, MCNameRef name, uint4 delay);
@@ -670,7 +673,7 @@ public:
 
     // MW-2014-05-28: [[ Bug 12463 ]] This is used by 'send in time' - separating user sent messages from
     //   engine sent messages. The former are subject to a limit to stop pending message queue overflow.
-    bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
+    bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params, bool p_widget);
     
     // Returns true if there are any pending messages to dispatch right now.
     bool hasmessagestodispatch(void);

@@ -58,7 +58,7 @@ void MCTooltip::close(void)
 	MCStack::close();
 }
 
-void MCTooltip::timer(MCNameRef mptr, MCParameter *params)
+void MCTooltip::timer(MCNameRef mptr, MCParameter *params, bool p_widget)
 {
 #ifndef _MOBILE
 	if (MCNameIsEqualToCaseless(mptr, MCM_internal))

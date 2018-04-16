@@ -2194,7 +2194,7 @@ void MCDispatch::remove_transient_stack(MCStack *sptr)
 	sptr->remove(m_transient_stacks);
 }
 
-void MCDispatch::timer(MCNameRef p_message, MCParameter *p_parameters)
+void MCDispatch::timer(MCNameRef p_message, MCParameter *p_parameters, bool p_widget)
 {
 	if (MCNameIsEqualToCaseless(p_message, MCM_internal))
 	{

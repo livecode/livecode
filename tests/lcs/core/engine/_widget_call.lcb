@@ -1,4 +1,6 @@
-library com.livecode.lcs_tests.core.widget_call
+widget com.livecode.lcs_tests.core.widget_call
+
+use com.livecode.engine
 
 public handler TestWidget_Foo() returns String
 	return "Bar"
@@ -12,4 +14,13 @@ public handler TestWidget_FooOutArg(out rArg as String) returns nothing
 	put "Bar" into rArg
 end handler
 
-end library
+public handler TestWidget_DefaultStack() returns String
+	execute script "return the defaultStack"
+	return the result
+end handler
+
+public handler TestWidget_SetProp(in pProp as String, in pValue as String) returns nothing
+	set property pProp of my script object to pValue
+end handler
+
+end widget

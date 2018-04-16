@@ -1085,7 +1085,7 @@ MCRectangle MCPlayer::GetNativeViewRect(const MCRectangle &p_object_rect)
 	return getvideorect(p_object_rect);
 }
 
-void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
+void MCPlayer::timer(MCNameRef mptr, MCParameter *params, bool p_widget)
 {
     if (MCNameIsEqualToCaseless(mptr, MCM_play_started))
     {
@@ -1128,7 +1128,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
         handle_mstilldown(Button1);
         MCscreen -> addtimer(this, MCM_internal, MCblinkrate);
     }
-    MCControl::timer(mptr, params);
+    MCControl::timer(mptr, params, p_widget);
 }
 
 void MCPlayer::toolchanged(Tool p_new_tool)

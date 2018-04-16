@@ -1288,7 +1288,7 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
     
     if (p_widget)
     {
-        stat = MCInterfaceExecCallWidget(ctxt, *t_message, reinterpret_cast<MCWidget*>(optr), t_params);
+        stat = MCInterfaceExecCallWidget(ctxt, *t_message, reinterpret_cast<MCWidget*>(optr), t_params, p_is_send);
     }
     else
     {
@@ -1376,9 +1376,9 @@ cleanup:
 	MClockmessages = oldlock;
 }
 
-void MCEngineExecSend(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, MCParameter *p_params)
+void MCEngineExecSend(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, MCParameter *p_params, bool p_widget)
 {
-	MCEngineSendOrCall(ctxt, p_script, p_target, true, p_params, false);
+	MCEngineSendOrCall(ctxt, p_script, p_target, true, p_params, p_widget);
 }
 
 void MCEngineExecCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, MCParameter *p_params, bool p_widget)
@@ -1412,11 +1412,11 @@ void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef p_script, MCObjectP
 	MClockmessages = oldlock;
 }
 
-void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr p_target, double p_delay, int p_units, MCParameter * p_params)
+void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr p_target, double p_delay, int p_units, MCParameter * p_params, bool p_widget)
 {
 	MCNewAutoNameRef t_message;
 	MCParameter *t_params = nullptr;
-    if (p_params == nullptr)
+    if (!p_widget && p_params == nullptr)
     {
         MCEngineSplitScriptIntoMessageAndParameters(ctxt, p_script, &t_message, t_params);
     }
@@ -1471,7 +1471,7 @@ void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef p_script, MCObjectP
     // AL-2014-07-22: [[ Bug 12846 ]] Copy bugfix to refactored code
     // MW-2014-05-28: [[ Bug 12463 ]] If we cannot add the pending message, then throw an
     //   error.
-	if (MCscreen->addusermessage(p_target . object, *t_message, MCS_time() + p_delay, t_params))
+	if (MCscreen->addusermessage(p_target . object, *t_message, MCS_time() + p_delay, t_params, p_widget))
         return;
     
     ctxt . LegacyThrow(EE_SEND_TOOMANYPENDING, *t_message);

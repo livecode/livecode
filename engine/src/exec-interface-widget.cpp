@@ -21,6 +21,8 @@
 
 #include "exec.h"
 #include "param.h"
+#include "stack.h"
+#include "globals.h"
 
 #include "exec-interface.h"
 
@@ -54,7 +56,7 @@ void MCInterfaceExecDoInWidget(MCExecContext& ctxt, MCStringRef p_script, MCWidg
 	MCWidgetPost(p_widget->getwidget(), MCNAME("OnDo"), *t_list);
 }
 
-Exec_stat MCInterfaceExecCallWidget(MCExecContext& ctxt, MCNameRef p_message, MCWidget *p_widget, MCParameter *p_parameters)
+Exec_stat MCInterfaceExecCallWidget(MCExecContext& ctxt, MCNameRef p_message, MCWidget *p_widget, MCParameter *p_parameters, bool p_is_send)
 {
 
     if (p_widget->getwidget() == nullptr)
@@ -62,8 +64,21 @@ Exec_stat MCInterfaceExecCallWidget(MCExecContext& ctxt, MCNameRef p_message, MC
         ctxt.LegacyThrow(EE_INVOKE_EXTENSIONNOTFOUND);
         return ES_ERROR;
     }
-
-    return MCWidgetCall(ctxt, p_widget->getwidget(), p_message, p_parameters);
     
+    MCStackHandle t_old_default_stack;
+    if (p_is_send)
+    {
+        t_old_default_stack = MCdefaultstackptr;
+        MCdefaultstackptr = p_widget->getstack();
+    }
+
+    Exec_stat t_stat = MCWidgetCall(ctxt, p_widget->getwidget(), p_message, p_parameters);
+    
+    if (p_is_send && t_old_default_stack.IsValid())
+    {
+        MCdefaultstackptr = t_old_default_stack;
+    }
+    
+    return t_stat;
 }
 

@@ -2,7 +2,7 @@ Name: send
 
 Type: command
 
-Syntax: send <message> [ to <object> [in <time> [{seconds | ticks | milliseconds}] ] ] [ with <argumentList> ]
+Syntax: send [widget] <message> [ to <object> [in <time> [{seconds | ticks | milliseconds}] ] ] [ with <argumentList> ]
 
 Syntax: send script <message> [ to <object> ]
 
@@ -133,6 +133,10 @@ It is a parse error to specify a time when using the `script` form.
 > want to delay the <message> or when the <handler> you want to execute
 > is not in the <message path>.
 
+Use the send widget form of the command to send a public handler of a
+widget rather than a handler in the object script. Including parameters
+in the <handlerName> is not supported when using the send widget form.
+
 References: debugDo (command), dispatch (command), call (command),
 cancel (command), function (control structure), result (function),
 pendingMessages (function), object (glossary), literal string (glossary),
@@ -144,3 +148,6 @@ word (keyword), mouseUp (message), callbacks (property),
 backgroundBehavior (property)
 
 Tags: messages
+
+Changes: 
+In LiveCode 9.5 the with argumentList and send widget syntax was added.

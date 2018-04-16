@@ -1199,7 +1199,7 @@ Boolean MCStack::doubleup(uint2 which)
 	return curcard->doubleup(which);
 }
 
-void MCStack::timer(MCNameRef mptr, MCParameter *params)
+void MCStack::timer(MCNameRef mptr, MCParameter *params, bool p_widget)
 {
 	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{

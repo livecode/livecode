@@ -122,7 +122,7 @@ public:
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void applyrect(const MCRectangle &nrect);
-	virtual void timer(MCNameRef mptr, MCParameter *params);
+	virtual void timer(MCNameRef mptr, MCParameter *params, bool p_widget = false);
     
 	// MW-2011-09-23: [[ Bug ]] Implement buffer / unbuffer at the point of
 	//   selection to stop redraw issues.

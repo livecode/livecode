@@ -674,7 +674,7 @@ public:
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	
-	virtual void timer(MCNameRef mptr, MCParameter *params);
+	virtual void timer(MCNameRef mptr, MCParameter *params, bool p_widget = false);
 	virtual uint2 gettransient() const;
 	virtual void applyrect(const MCRectangle &nrect);
 	void setrect(const MCRectangle &p_rect);

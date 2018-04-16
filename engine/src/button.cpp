@@ -1647,7 +1647,7 @@ Boolean MCButton::doubleup(uint2 which)
 }
 
 #ifdef _MAC_DESKTOP
-void MCButton::timer(MCNameRef mptr, MCParameter *params)
+void MCButton::timer(MCNameRef mptr, MCParameter *params, bool p_widget)
 {
 	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
@@ -1660,7 +1660,7 @@ void MCButton::timer(MCNameRef mptr, MCParameter *params)
 		}
 	}
 	else
-		MCControl::timer(mptr, params);
+		MCControl::timer(mptr, params, p_widget);
 }
 #endif
 

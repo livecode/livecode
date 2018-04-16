@@ -72,7 +72,7 @@ public:
     
     virtual bool visit_self(MCObjectVisitor *p_visitor);
 	
-	virtual void timer(MCNameRef mptr, MCParameter *params);
+	virtual void timer(MCNameRef mptr, MCParameter *params, bool p_widget);
 	
 	// dummy cut function for checking licensing
 	virtual Boolean cut(Boolean home);

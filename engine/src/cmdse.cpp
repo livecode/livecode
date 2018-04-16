@@ -556,7 +556,7 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
         }
         MCerrorlock--;
     }
-    else if (!send && sp.skip_token(SP_FACTOR, TT_CHUNK, CT_WIDGET) == PS_NORMAL)
+    else if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_WIDGET) == PS_NORMAL)
     {
         widget = True;
     }
@@ -717,7 +717,7 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
             if (!ctxt . EvalExprAsDouble(*in, EE_SEND_BADINEXP, t_delay))
                 return;
 
-            MCEngineExecSendInTime(ctxt, *t_message, t_target, t_delay, units, params);
+            MCEngineExecSendInTime(ctxt, *t_message, t_target, t_delay, units, params, widget);
 		}
         else
         {
@@ -728,7 +728,7 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
                 if (!send)
                     MCEngineExecCall(ctxt, *t_message, t_target_ptr, params, widget);
                 else
-                    MCEngineExecSend(ctxt, *t_message, t_target_ptr, params);
+                    MCEngineExecSend(ctxt, *t_message, t_target_ptr, params, widget);
             }
             else
             {

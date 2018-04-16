@@ -117,7 +117,7 @@ public:
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
-	virtual void timer(MCNameRef mptr, MCParameter *params);
+	virtual void timer(MCNameRef mptr, MCParameter *params, bool p_widget = false);
 
 	// IM-2016-06-01: [[ Bug 17700 ]] Override toolchanged to pause player when editing
     virtual void toolchanged(Tool p_new_tool);

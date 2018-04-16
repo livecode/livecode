@@ -336,8 +336,20 @@ MCObject* MCWidget::hittest(int32_t x, int32_t y)
     return nil;
 }
 
-void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
+void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters, bool p_widget)
 {
+    if (p_widget)
+    {
+        if (m_widget != nil)
+        {
+            MCExecContext ctxt(this, nil, nil);
+            Exec_stat stat = MCInterfaceExecCallWidget(ctxt, p_message, this, p_parameters, true);
+            if (stat == ES_ERROR)
+            {
+                senderror();
+            }
+        }
+    }
     if (p_message == MCM_internal)
     {
         if (m_widget != nil)
@@ -345,7 +357,7 @@ void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
     }
     else
     {
-        MCControl::timer(p_message, p_parameters);
+        MCControl::timer(p_message, p_parameters, p_widget);
     }
 }
 
