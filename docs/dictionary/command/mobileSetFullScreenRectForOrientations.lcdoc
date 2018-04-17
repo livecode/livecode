@@ -1,0 +1,56 @@
+Name: mobileSetFullScreenRectForOrientations
+
+Type: command
+
+Syntax: mobileSetFullScreenRectForOrientations <orientations>[, <rect>]
+
+Summary:
+Set the list of allowed orientations.
+
+Introduced: 8.1.10
+
+OS: ios, android
+
+Platforms: mobile
+
+Example:
+mobileSetFullScreenRectForOrientations "portrait,portrait upside down","0,0,375,667"
+mobileSetFullScreenRectForOrientations "landscape left,landscape right","0,0,667,375"
+
+Parameters:
+orientations (enum):
+A comma delimited list consisting of at least one of:
+
+- "portrait"
+- "portrait upside down"
+- "landscape left"
+- "landscape right"
+
+rect:
+A comma delimited rect for the stack to be set to. If not set the rect for
+the specified orientations will be cleared.
+
+
+Description:
+Use the <mobileSetFullScreenRectForOrientations> command to set the rect
+to resize the stack to when the orientation changes and the stack has its
+<fullscreenMode> set.
+
+Normally when a <fullscreenMode> is set the stack is not resized and does
+receive the <resizeStack> message. The rect is set after the <orientationChanged>
+message is sent. If the rect for the new orientation is different to the
+current stack rect the <resizeStack> message will be sent once the new
+rect is applied.
+
+The setting take affect the next time an orientation change is applied.
+The interface orientation only changes if the new orientation is among
+the <mobileAllowedOrientations>.
+
+>*Note:* Due to the limitation of the Android operating system,
+> landscape left and portrait upside-down are only supported on Android
+> 2.3 and later.
+
+References: mobileLockOrientation (command), mobileSetAllowedOrientations (command),
+mobileUnlockOrientation (command), mobileAllowedOrientations (function),
+mobileDeviceOrientation (function), mobileOrientation (function),
+orientationChanged (message), resizeStack (message)

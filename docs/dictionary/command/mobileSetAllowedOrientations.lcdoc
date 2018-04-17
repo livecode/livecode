@@ -49,5 +49,4 @@ the configured list.
 References: mobileLockOrientation (command),
 mobileUnlockOrientation (command), mobileAllowedOrientations (function),
 mobileDeviceOrientation (function), mobileOrientation (function),
-orientationChanged (message)
-
+orientationChanged (message), mobileSetFullScreenRectForOrientations (command)

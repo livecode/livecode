@@ -41,5 +41,4 @@ milliseconds(command)> command.
 References: mobileSetAllowedOrientations (command),
 mobileLockOrientation (command), mobileUnlockOrientation (command),
 mobileAllowedOrientations (function), mobileDeviceOrientation (function),
-mobileOrientation (function), resizeStack (message)
-
+mobileOrientation (function), resizeStack (message), mobileSetFullScreenRectForOrientations (command)
