@@ -442,7 +442,10 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, ui
 
 void MCPlatformHandleMouseDrag(MCPlatformWindowRef p_window, uint32_t p_button)
 {
-	MCdispatcher -> wmdrag(p_window);
+    MCAutoRefcounted<MCRawClipboard> t_dragboard(MCRawClipboard::CreateSystemDragboard());
+    MCdragboard->Rebind(t_dragboard);
+    
+    MCdispatcher -> wmdrag(p_window);
 }
 
 void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button, bool p_was_menu)
