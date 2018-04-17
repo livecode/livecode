@@ -328,7 +328,7 @@ MCGFloat MCMacPlatformSurface::GetBackingScaleFactor(void)
 {
 	if ([m_window -> GetHandle() respondsToSelector: @selector(backingScaleFactor)])
     {
-        return objc_msgSend_fpret_type<CGFloat>(m_window -> GetHandle(), @selector(backingScaleFactor));
+        return static_cast<MCGFloat>([m_window -> GetHandle() backingScaleFactor]);
     }
 	return 1.0f;
 }

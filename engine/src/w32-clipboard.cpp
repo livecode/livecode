@@ -169,8 +169,27 @@ MCWin32RawClipboardItem* MCWin32RawClipboardCommon::CreateNewItem()
 	if (m_item != NULL)
 		return NULL;
 
+	// clear the clipboard and take ownership
+	HRESULT t_result = OleSetClipboard(nullptr);
+
+	// Clipboard is now clean
+	if (t_result != S_OK)
+	{
+		return nullptr;
+	}
+
+	// Fetch the current clipboard IDataObject
+	IDataObject* t_contents;
+	t_result = OleGetClipboard(&t_contents);
+
+	// Clipboard is now clean
+	if (t_result != S_OK)
+	{
+		return nullptr;
+	}
+
 	// Create a new data item
-	m_item = new (nothrow) MCWin32RawClipboardItem(this);
+	m_item = new (nothrow) MCWin32RawClipboardItem(this, t_contents);
 	m_item->Retain();
 	return m_item;
 }
@@ -780,17 +799,6 @@ bool MCWin32RawClipboardNull::FlushData()
 {
 	// This clipboard is non-functional
 	return true;
-}
-
-
-MCWin32RawClipboardItem::MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_clipboard) :
-  MCRawClipboardItem(),
-  m_clipboard(p_clipboard),
-  m_object_is_external(false),
-  m_object(NULL),
-  m_reps()
-{
-	;
 }
 
 MCWin32RawClipboardItem::MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_clipboard, IDataObject* p_object) :
