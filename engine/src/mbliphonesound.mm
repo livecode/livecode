@@ -311,10 +311,13 @@ bool MCSystemPlaySound(MCStringRef p_sound, bool p_looping)
     if (t_success)
     {
         // Check if we are playing an ipod file or a resource file.
-		if (MCStringBeginsWithCString(p_sound, (const char_t *)"ipod-library://", kMCStringOptionCompareExact))
+		if (MCStringBeginsWith(p_sound, MCSTR("ipod-library://"), kMCCompareExact) || \
+			MCStringBeginsWith(p_sound, MCSTR("http://"), kMCCompareExact) || \
+			MCStringBeginsWith(p_sound, MCSTR("https://"), kMCCompareExact))
         {
             t_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_sound)];
         }
+		
         else
         {
             MCAutoStringRef t_sound_file;
