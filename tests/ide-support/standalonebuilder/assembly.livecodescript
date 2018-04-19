@@ -18,9 +18,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 local sSupportStack, sExtensionName
 on TestSetup   
-   put "com.livecode.library.assemblytest" into sExtensionName
-   __InstallExtension sExtensionName
-   
    start using stack "revSBLibrary"
 		
    set the itemdelimiter to slash
@@ -57,7 +54,10 @@ private function _TestScriptForInclusion
    return textDecode(url("binfile:" & tExternalTest), "utf-8")
 end _TestScriptForInclusion
 
-on TestStandaloneInclusions
+private command _TestStandaloneAssemblyInclusion pAssemblyMain
+   put pAssemblyMain into sExtensionName
+   __InstallExtension sExtensionName
+   
    local tDir
    set the itemdelimiter to slash
    set the defaultfolder to item 1 to -2 of the filename of me
@@ -68,7 +68,15 @@ on TestStandaloneInclusions
    _TestBuildStandaloneWithExtension tDir, sExtensionName
    
    revDeleteFolder tDir
-end TestStandaloneInclusions
+end _TestStandaloneAssemblyInclusion
+
+on TestStandaloneAssemblyInclusion
+   _TestStandaloneAssemblyInclusion "com.livecode.library.assemblytest"
+end TestStandaloneAssemblyInclusion
+
+on TestStandaloneAssemblySupportDepsInclusion
+   _TestStandaloneAssemblyInclusion "com.livecode.library.assemblydepstest"
+end TestStandaloneAssemblySupportDepsInclusion
 
 private command _TestBuildStandaloneWithExtension pDir, pExtension   
    local tStackFilename, tScript, tSettingsA
