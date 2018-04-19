@@ -31,6 +31,12 @@ typedef struct
 	void *re_pcre;
 	size_t re_nsub;
 	size_t re_erroffset;
+	// JS-2013-07-01: [[ EnhancedFilter ]] The pattern associated with the compiled
+	//   regexp (used by the cache).
+	MCStringRef re_pattern;
+	// JS-2013-07-01: [[ EnhancedFilter ]] The flags used to compile the pattern
+	//   (used to implement caseSensitive option).
+	int re_flags;
 }
 regex_t;
 
@@ -49,13 +55,7 @@ regmatch_t;
 
 typedef struct _regexp
 {
-	regex_t rexp;
-	// JS-2013-07-01: [[ EnhancedFilter ]] The pattern associated with the compiled
-	//   regexp (used by the cache).
-    MCStringRef pattern;
-	// JS-2013-07-01: [[ EnhancedFilter ]] The flags used to compile the pattern
-	//   (used to implement caseSensitive option).
-    int flags;
+	regex_t *rexp;
 	uint2 nsubs;
 	regmatch_t matchinfo[NSUBEXP];
 }
@@ -66,7 +66,7 @@ regexp;
 regexp *MCR_compile(MCStringRef exp, bool casesensitive);
 int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range);
 void MCR_copyerror(MCStringRef &r_error);
-void MCR_free(regexp *prog);
+void MCR_free(regex_t *prog);
 
 // JS-2013-07-01: [[ EnhancedFilter ]] Clear out the PCRE cache.
 void MCR_clearcache();
