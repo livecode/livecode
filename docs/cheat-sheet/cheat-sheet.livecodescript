@@ -42,6 +42,9 @@ private function ProcessArgs pArgs
             put tLanguage into tArgs[char 3 to -1 of pArgs[x]]
          case "--folder"
             put pArgs[x+1] into tArgs["folder"]
+         case "--markdown"
+            put true into tArgs["markdown"]
+            break
          default
             if pArgs[x] begins with "--" then
                return merge("invalid argument [[pArgs[x]]]")
@@ -85,11 +88,11 @@ command CreateCheatSheetMain
    end if
    
    if tArgs["language"] is empty and tArgs["from"] is empty then
-      CreateAllCheatSheets tArgs["folder"]
+      CreateAllCheatSheets tArgs["folder"], tArgs["markdown"]
    else if tArgs["language"] is not empty then
-      CreateCheatSheet tArgs["language"], tArgs["folder"]
+      CreateCheatSheet tArgs["language"], tArgs["folder"], tArgs["markdown"]
    else
-      CreateCheatSheetFrom tArgs["from"], tArgs["to"], tArgs["folder"]
+      CreateCheatSheetFrom tArgs["from"], tArgs["to"], tArgs["folder"], tArgs["markdown"]
    end if
 end CreateCheatSheetMain
 
@@ -127,18 +130,18 @@ Description:
 This command creates cheat sheets for all languages for which cheat
 sheets are available and outputs PDFs in <pOutputFolder>.
 */
-command CreateAllCheatSheets pOutputFolder
+command CreateAllCheatSheets pOutputFolder, pMarkdown
    -- First generate each combination of something -> lcs or lcb
    repeat for each item tFrom in kSourceLanguages
       repeat for each item tTo in kTargetLanguages
          if tFrom is tTo then next repeat
-         CreateCheatSheetFrom tFrom, tTo, pOutputFolder
+         CreateCheatSheetFrom tFrom, tTo, pOutputFolder, pMarkdown
       end repeat
    end repeat
    
    -- Then do single cheat sheets for lcs or lcb
    repeat for each item tItem in kTargetLanguages
-      CreateCheatSheet tItem, pOutputFolder
+      CreateCheatSheet tItem, pOutputFolder, pMarkdown
    end repeat
 end CreateAllCheatSheets
 
@@ -158,24 +161,32 @@ Description:
 This command creates a cheat sheet for the given language and outputs as
 a PDF in <pOutputFolder> with filename "cheat-sheet-'<pLanguage>'.pdf".
 */
-command CreateCheatSheet pLanguage, pOutputFolder
+command CreateCheatSheet pLanguage, pOutputFolder, pMarkdown
    put CheatSheetArray() into sArray
    if sArray is not an array then
       throw sArray
    end if
-   ConfigureStack
-   BuildCheatSheet pLanguage, "", pOutputFolder
-   ClearAll
+   if pMarkdown then
+      BuildCheatSheetMarkdown pLanguage, "", pOutputFolder
+   else
+      ConfigureStack
+      BuildCheatSheet pLanguage, "", pOutputFolder
+      ClearAll
+   end if
 end CreateCheatSheet
 
-command CreateCheatSheetFrom pFromLanguage, pToLanguage, pOutputFolder
+command CreateCheatSheetFrom pFromLanguage, pToLanguage, pOutputFolder, pMarkdown
    put CheatSheetArray() into sArray
    if sArray is not an array then
       throw sArray
    end if
-   ConfigureStack
-   BuildCheatSheet pFromLanguage, pToLanguage, pOutputFolder
-   ClearAll
+   if pMarkdown then
+      BuildCheatSheetMarkdown pFromLanguage, pToLanguage, pOutputFolder
+   else
+      ConfigureStack
+      BuildCheatSheet pFromLanguage, pToLanguage, pOutputFolder
+      ClearAll
+   end if
 end CreateCheatSheetFrom
 
 private command CreatePDF pNumCards, pOutputFile
@@ -242,6 +253,31 @@ command BuildCheatSheet pFromLanguage, pToLanguage, pOutputFolder
    unlock screen
 end BuildCheatSheet
 
+command BuildCheatSheetMarkdown pFromLanguage, pToLanguage, pOutputFolder
+   local tTitle, tFilename, tFromDisplayName
+   put LanguageToDisplayName(pFromLanguage) into tFromDisplayName
+   if pToLanguage is empty then
+      put merge("[[tFromDisplayName]] Cheat Sheet") into tTitle
+      put merge("[[tFromDisplayName]] Cheat Sheet.md") into tFilename
+   else
+      local tToDisplayName
+      put LanguageToDisplayName(pToLanguage) into tToDisplayName
+      put merge("[[tFromDisplayName]] - [[tToDisplayName]] Cheat Sheet") into tTitle
+      put merge("[[tFromDisplayName]] - [[tToDisplayName]] Cheat Sheet.md") into tFilename
+   end if
+   
+   local tMarkdown
+   put "#" && tTitle & return into tMarkdown
+   
+   if pToLanguage is empty then
+      put BuildCheatSheetMarkdownForLiveCode(pFromLanguage) after tMarkdown
+   else
+      put BuildCheatSheetMarkdownForLanguage(pFromLanguage, pToLanguage) after tMarkdown
+   end if
+   
+   put textEncode(tMarkdown, "utf-8") into url("binfile:" & pOutputFolder & slash & tFilename)
+end BuildCheatSheetMarkdown
+
 private function LanguageToKey pLanguage
    switch pLanguage
       case "python"
@@ -254,6 +290,19 @@ private function LanguageToKey pLanguage
          return "lcb"
    end switch
 end LanguageToKey
+
+private function LanguageToHighlightJS pLanguage
+   switch pLanguage
+      case "python"
+         return "python"
+      case "javascript"
+         return "javascript"
+      case "livecode"
+         return "livecode"
+      case "livecode_builder"
+         return "livecodebuilder"
+   end switch
+end LanguageToHighlightJS
 
 private function LanguageToDisplayName pLanguage
    switch pLanguage
@@ -285,6 +334,20 @@ command BuildCheatSheetForLanguage pFromLanguage, pToLanguage, pTitleBottom
    end repeat
    return tCurCard
 end BuildCheatSheetForLanguage
+
+function BuildCheatSheetMarkdownForLanguage pFromLanguage, pToLanguage
+   local tMarkdown
+   repeat for each element tContent in sArray["content"]
+      local tRowMarkdown
+      put BuildRowMarkdownForLanguage(tContent, pFromLanguage, pToLanguage) \
+            into tRowMarkdown
+      if tRowMarkdown is empty then
+         next repeat
+      end if
+      put tRowMarkdown & return after tMarkdown
+   end repeat
+   return tMarkdown
+end BuildCheatSheetMarkdownForLanguage
 
 constant kNumCols = 2
 constant kMargin = 12
@@ -362,6 +425,51 @@ command BuildRowForLanguage pContent, pFromLanguage, pToLanguage
    set the height of tToCode to the formattedHeight of tToCode
    set the top of tToCode to the bottom of tText + kPadding
 end BuildRowForLanguage
+
+private function escapeCode pCode
+   replace "<" with "&lt;" in pCode
+   replace ">" with "&gt;" in pCode
+   return pCode
+end escapeCode
+
+function BuildRowMarkdownForLanguage pContent, pFromLanguage, pToLanguage
+   local tFromCodeText, tToCodeText
+   put pContent[LanguageToKey(pFromLanguage)] into tFromCodeText
+   put pContent[LanguageToKey(pToLanguage)] into tToCodeText
+   
+   -- Skip the row if no equivalent section
+   if tFromCodeText is empty or tToCodeText is empty then
+      return empty
+   end if
+   
+   local tMarkdown
+   put "##" && pContent["title"] & return into tMarkdown
+   
+   if pContent["text"] is not empty then
+      put pContent["text"] & return & return after tMarkdown
+   end if
+   
+   put "<table>" after tMarkdown
+   put "<tr><td>" && LanguageToDisplayName(pFromLanguage) && "</td><td>" && \
+         LanguageToDisplayName(pToLanguage) && "</td></tr>" & return after tMarkdown
+   put "<tr><td><pre><code class=" & quote & LanguageToHighlightJS(pToLanguage) \
+         & quote & ">" & escapeCode(tFromCodeText) & "</code></pre></td>" & return after tMarkdown
+   put "<td><pre><code class=" & quote & LanguageToHighlightJS(pFromLanguage) \
+         & quote & ">" & escapeCode(tToCodeText) & "</code></pre></td></tr>" & return after tMarkdown
+   put "</table>" & return after tMarkdown
+   /*
+   put "|" && LanguageToDisplayName(pFromLanguage) && "|" && \
+         LanguageToDisplayName(pToLanguage) && "|" & return after tMarkdown
+   put "|----------------|------------------|" & return after tMarkdown
+   repeat with x = 1 to max(the number of lines in tFromCodeText, \
+         the number of lines in tToCodeText)
+      put "|" && "`" & line x of tFromCodeText & "`" && "|" && \
+            "`" & line x of tToCodeText & "`" && "|" & return \
+            after tMarkdown
+   end repeat
+   */
+   return tMarkdown
+end BuildRowMarkdownForLanguage
 
 function RowHeight pGroupName
    local tCodeHeight
@@ -460,6 +568,42 @@ command BuildCheatSheetForLiveCode pLanguage, pTitleHeight
    end repeat
    return tCurCard
 end BuildCheatSheetForLiveCode
+
+function BuildCheatSheetMarkdownForLiveCode pLanguage
+   local tMarkdown
+   repeat for each element tContent in sArray["content"]
+      local tRowMarkdown
+      put BuildGroupMarkdownForTarget(tContent, pLanguage) \
+            into tRowMarkdown
+      if tRowMarkdown is empty then
+         next repeat
+      end if
+      put tRowMarkdown & return after tMarkdown
+   end repeat
+   return tMarkdown
+end BuildCheatSheetMarkdownForLiveCode
+
+function BuildGroupMarkdownForTarget pContent, pLanguage
+   local tCodeText
+   put pContent[LanguageToKey(pLanguage)] into tCodeText
+   
+   -- Skip the row if no equivalent section
+   if tCodeText is empty then
+      return empty
+   end if
+   
+   local tMarkdown
+   put "##" && pContent["title"] & return into tMarkdown
+   
+   if pContent["text"] is not empty then
+      put pContent["text"] & return after tMarkdown
+   end if
+   
+   put "```" & return after tMarkdown
+   put tCodeText & return after tMarkdown
+   put "```" & return after tMarkdown
+   return tMarkdown
+end BuildGroupMarkdownForTarget
 
 command BuildGroupForTarget pLanguage, pContent, pWidth
    local tCodeText
