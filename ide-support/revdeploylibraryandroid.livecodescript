@@ -192,7 +192,7 @@ function deployIsValidSDK pPath
    
    // We need API 15 in order to be able to give the value 'screenSize' to the manifest variable configChanges
    // That was introduced in the API 13, but the SDK manager only have API 15 nowadays
-   if there is no folder (pPath & slash & "platforms/android-15") then
+   if there is no folder (pPath & slash & "platforms/android-19") then
       --return "could not find install of SDK level 8, make sure it has been installed with the Android SDK Manager"
       return false
    end if
@@ -326,7 +326,7 @@ function pathToRootClasses pRoot
    if pRoot is empty then
       put sAndroidRoot into pRoot
    end if
-   return pRoot & slash & "platforms/android-15/android.jar"
+   return pRoot & slash & "platforms/android-19/android.jar"
 end pathToRootClasses
 
 function pathToSDKClasses pRoot
