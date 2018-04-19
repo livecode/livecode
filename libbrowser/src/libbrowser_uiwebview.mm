@@ -631,6 +631,53 @@ bool MCUIWebViewBrowser::ExecLoad(const char *p_url, const char *p_html)
 	return true;
 }
 
+
+void MCUIWebViewBrowser::PrintToPDF(const char *p_filename, uint32_t p_width, uint32_t p_height)
+{
+    __block UIWebView *t_view;
+    if (!GetView(t_view))
+        return;
+    
+    __block NSMutableData *t_data = [NSMutableData data];
+    
+    MCBrowserRunBlockOnMainFiber(^{
+        
+        UIPrintPageRenderer *t_render = [[UIPrintPageRenderer alloc] init];
+        UIPrintFormatter *t_formatter = t_view.viewPrintFormatter;
+        [t_render addPrintFormatter:t_formatter startingAtPageAtIndex:0];
+
+        float t_margin = 72.0f;
+        CGRect printableRect = CGRectMake(t_margin,
+                                          t_margin,
+                                          p_width-t_margin-t_margin,
+                                          p_height-t_margin-t_margin);
+        CGRect paperRect = CGRectMake(0, 0, p_width, p_height);
+        [t_render setValue:[NSValue valueWithCGRect:paperRect] forKey:@"paperRect"];
+        [t_render setValue:[NSValue valueWithCGRect:printableRect] forKey:@"printableRect"];
+
+        UIGraphicsBeginPDFContextToData(t_data, t_render.paperRect, nil );
+
+        int t_pages = t_render.numberOfPages;
+        
+        [t_render prepareForDrawingPages: NSMakeRange(0, t_pages)];
+        CGRect t_rect = t_render.printableRect;
+        for ( int i = 0 ; i < t_pages ; i++ )
+        {
+            UIGraphicsBeginPDFPage();
+            try {
+                // one SO post referred to a hang here caused by an exception
+                [t_render drawPageAtIndex:i inRect: t_rect];
+            } catch (NSException *e) {}
+        }
+
+        UIGraphicsEndPDFContext();
+        
+        [t_render release];
+    });
+    
+    NSString *t_filename = [NSString stringWithCString:p_filename encoding:NSUTF8StringEncoding];
+    [t_data writeToFile:t_filename atomically:YES];
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool datadetectortypes_from_string(const char *p_list, UIDataDetectorTypes &r_types)

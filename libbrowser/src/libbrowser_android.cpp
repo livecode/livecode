@@ -748,6 +748,11 @@ public:
 	
 	//////////
 	
+	virtual void PrintToPDF(const char *p_filename, uint32_t p_width, uint32_t p_height)
+	{
+        // should be handled in widget
+	}
+	
 private:
 	bool GetVerticalScrollbarEnabled(bool &r_value)
 	{

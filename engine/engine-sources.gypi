@@ -952,6 +952,7 @@
 			'src/java/com/runrev/android/nativecontrol/VideoControl.java',
 			
 			'src/java/com/runrev/android/libraries/LibBrowser.java',
+			'src/java/com/android/print/PdfPrint.java',
 		],
 		
 		# AIDL sources for Android

@@ -285,8 +285,11 @@ void MCCefBrowserRunloopAction(void *p_context)
 	CefDoMessageLoopWork();
 }
 
-class MCCefBrowserApp : public CefApp, CefBrowserProcessHandler
+class MCCefBrowserApp : public CefApp, CefBrowserProcessHandler, CefPrintHandler
 {
+private:
+	uint32_t m_pdf_print_paper_width;
+	uint32_t m_pdf_print_paper_height;
 public:
 	virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE { return this; }
 
@@ -296,8 +299,49 @@ public:
 			p_command_line->AppendSwitch(MC_CEF_HIDPI_SWITCH);
 	}
 
+	virtual CefRefPtr<CefPrintHandler> GetPrintHandler() OVERRIDE { return this; }
+
+	virtual void OnPrintStart(CefRefPtr<CefBrowser> browser) {};
+
+	virtual void OnPrintSettings(CefRefPtr<CefBrowser> browser,
+		CefRefPtr<CefPrintSettings> settings,
+		bool get_defaults) {}
+
+	virtual bool OnPrintDialog(CefRefPtr<CefBrowser> browser,
+		bool has_selection,
+		CefRefPtr<CefPrintDialogCallback> callback)
+	{
+		return true;
+	}
+
+	virtual bool OnPrintJob(CefRefPtr<CefBrowser> browser,
+		const CefString& document_name,
+		const CefString& pdf_file_path,
+		CefRefPtr<CefPrintJobCallback> callback) 
+	{
+		return true;
+	}
+
+	virtual void OnPrintReset(CefRefPtr<CefBrowser> browser) {}
+
+	virtual CefSize GetPdfPaperSize(int device_units_per_inch)
+	{
+		CefSize t_size;
+		t_size.width = m_pdf_print_paper_width / 72 * device_units_per_inch;
+		t_size.height = m_pdf_print_paper_height / 72 * device_units_per_inch;
+		return t_size;
+	}
+
+	void SetPdfPaperSize(uint32_t p_width, uint32_t p_height)
+	{
+		m_pdf_print_paper_width = p_width;
+		m_pdf_print_paper_height = p_height;
+	}
+
 	IMPLEMENT_REFCOUNTING(MCCefBrowserApp)
 };
+
+static CefRefPtr<MCCefBrowserApp> s_app;
 
 extern "C" int initialise_weak_link_cef(void);
 
@@ -516,10 +560,10 @@ bool MCCefInitialise(void)
 	if (t_success)
 		CefString(&t_settings.cache_path).FromString(s_temp_cache.GetPath());
 
-	CefRefPtr<CefApp> t_app = new (nothrow) MCCefBrowserApp();
+	s_app = new (nothrow) MCCefBrowserApp();
 	
 	if (t_success)
-		t_success = -1 == CefExecuteProcess(t_args, t_app, nil);
+		t_success = -1 == CefExecuteProcess(t_args, s_app, nil);
 	
 	if (t_success)
 	{
@@ -530,7 +574,7 @@ bool MCCefInitialise(void)
 		setitimer(ITIMER_REAL, &t_new_timer, &t_old_timer);
 		BackupSignalHandlers();
 #endif
-		t_success = CefInitialize(t_args, t_settings, t_app, nil);
+		t_success = CefInitialize(t_args, t_settings, s_app, nil);
 		
 #if defined(TARGET_PLATFORM_POSIX)
 		RestoreSignalHandlers();
@@ -735,7 +779,7 @@ struct MCCefErrorInfo
 	CefLoadHandler::ErrorCode error_code;
 };
 
-class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler, CefDragHandler
+class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler, CefDragHandler, public CefPdfPrintCallback
 {
 private:
 	int m_browser_id;
@@ -1249,6 +1293,14 @@ public:
 			p_model->Clear();
 	}
 	
+
+	virtual void OnPdfPrintFinished(const CefString& path, bool ok)
+	{
+		m_message_result.SetResult(ok, path);
+
+		MCBrowserRunloopBreakWait();
+	}
+
 	IMPLEMENT_REFCOUNTING(MCCefBrowserClient)
 };
 
@@ -1842,6 +1894,42 @@ bool MCCefBrowserBase::GetJavaScriptHandlers(char *&r_handlers)
 		return MCCStringClone("", r_handlers);
 	else
 		return MCCStringClone(m_javascript_handlers, r_handlers);
+}
+
+void MCCefBrowserBase::PrintToPDF(const char *p_filename, uint32_t p_width, uint32_t p_height)
+{
+	CefRefPtr<CefBrowser> t_browser = GetCefBrowser();
+	if (t_browser == nil)
+	{
+		return;
+	}
+	
+	CefString t_filename;
+	if (!MCCefStringFromUtf8String(p_filename, t_filename))
+	{
+		return;
+	}
+
+	// Cef print sizes are in microns
+	CefPdfPrintSettings t_settings;
+	t_settings.landscape = p_height < p_width;
+	t_settings.margin_left = 25400;
+	t_settings.margin_top = 25400;
+	t_settings.margin_right = 25400;
+	t_settings.margin_bottom = 25400;
+	t_settings.page_width = p_width / 72 * 25400;
+	t_settings.page_height = p_height / 72 * 25400;
+	t_settings.backgrounds_enabled = true;
+	t_settings.header_footer_enabled = false;
+
+	// Linux needs an extra callback handler for some reason
+	s_app->SetPdfPaperSize(p_width, p_height);
+
+	t_browser->GetHost()->PrintToPDF(t_filename, t_settings, m_client);
+	
+	MCCefMessageResult &t_result = m_client->GetMessageResult();
+	t_result.Clear();
+	WaitOnResult();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

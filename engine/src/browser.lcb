@@ -82,6 +82,7 @@ public foreign handler MCBrowserGoBack(in pBrowser as MCBrowserRef) returns CBoo
 public foreign handler MCBrowserGoForward(in pBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserGoToURL(in pBrowser as MCBrowserRef, in pURL as ZStringUTF8) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserEvaluateJavaScript(in pBrowser as MCBrowserRef, in pScript as ZStringUTF8, out rResult as ZStringUTF8) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserPrintToPDF(in pBrowser as MCBrowserRef, in pFilename as ZStringUTF8, in pWidth as UInt32, in pHeight as UInt32) returns nothing binds to "<builtin>"
 
 ----------
 

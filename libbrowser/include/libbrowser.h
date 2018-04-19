@@ -104,6 +104,7 @@ public:
 	virtual bool GoForward() = 0;
 	virtual bool GoToURL(const char *p_url) = 0;
 	virtual bool EvaluateJavaScript(const char *p_script, char *&r_result) = 0;
+	virtual void PrintToPDF(const char *pFilename, uint32_t p_width, uint32_t p_height) = 0;
 };
 
 // Browser factory interface
@@ -260,6 +261,7 @@ MC_BROWSER_DLLEXPORT bool MCBrowserGoBack(MCBrowserRef p_browser);
 MC_BROWSER_DLLEXPORT bool MCBrowserGoForward(MCBrowserRef p_browser);
 MC_BROWSER_DLLEXPORT bool MCBrowserGoToURL(MCBrowserRef p_browser, const char *p_url);
 MC_BROWSER_DLLEXPORT bool MCBrowserEvaluateJavaScript(MCBrowserRef p_browser, const char *p_script, char *&r_result);
+MC_BROWSER_DLLEXPORT void MCBrowserPrintToPDF(MCBrowserRef p_browser, const char *p_filename, uint32_t p_width, uint32_t p_height);
 
 enum MCBrowserRequestType
 {
