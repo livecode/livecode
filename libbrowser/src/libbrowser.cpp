@@ -610,6 +610,15 @@ bool MCBrowserEvaluateJavaScript(MCBrowserRef p_browser, const char *p_script, c
 	return p_browser->EvaluateJavaScript(p_script, r_result);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
+void MCBrowserPrintToPDF(MCBrowserRef p_browser, const char *p_filename, uint32_t p_width, uint32_t p_height)
+{
+	if (p_browser == nil)
+		return;
+	
+	return p_browser->PrintToPDF(p_filename, p_width, p_height);
+}
+
 //////////
 
 // Navigation request handler c++ wrapper

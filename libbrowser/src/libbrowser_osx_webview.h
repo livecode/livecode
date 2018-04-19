@@ -52,6 +52,7 @@ public:
 	virtual bool StopLoading();
 	virtual bool Reload();
 	virtual bool EvaluateJavaScript(const char *p_script, char *&r_result);
+	virtual void PrintToPDF(const char *p_filename, uint32_t p_width, uint32_t p_height);
 	
 	void SyncJavaScriptHandlers();
 

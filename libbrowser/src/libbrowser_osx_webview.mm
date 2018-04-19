@@ -898,6 +898,39 @@ bool MCWebViewBrowser::LoadHTMLText(const char *p_html, const char *p_url)
 	return true;
 }
 
+
+void MCWebViewBrowser::PrintToPDF(const char *p_filename, uint32_t p_width, uint32_t p_height)
+{
+    NSPrintInfo *printInfo;
+    NSPrintInfo *sharedInfo;
+    NSPrintOperation *printOp;
+    NSMutableDictionary *printInfoDict;
+    NSMutableDictionary *sharedDict;
+    
+    sharedInfo = [NSPrintInfo sharedPrintInfo];
+    sharedDict = [sharedInfo dictionary];
+    printInfoDict = [NSMutableDictionary dictionaryWithDictionary:
+                     sharedDict];
+    [printInfoDict setObject:NSPrintSaveJob forKey:NSPrintJobDisposition];
+    
+    NSString * t_filename = [NSString stringWithCString:p_filename encoding:NSUTF8StringEncoding];
+    NSURL * t_url = [NSURL fileURLWithPath:t_filename];
+    
+    [printInfoDict setObject:t_url forKey:NSPrintJobSavingURL];
+    
+    printInfo = [[NSPrintInfo alloc] initWithDictionary: printInfoDict];
+    [printInfo setHorizontalPagination: NSAutoPagination];
+    [printInfo setVerticalPagination: NSAutoPagination];
+    [printInfo setVerticallyCentered:NO];
+    [printInfo setPaperSize:NSMakeSize(p_width,p_height)];
+    
+    printOp = [NSPrintOperation printOperationWithView:[[[m_view mainFrame] frameView] documentView] printInfo:printInfo];
+    
+    [printOp setShowsPrintPanel:NO];
+    [printOp setShowsProgressPanel:NO];
+    [printOp runOperation];
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 //
