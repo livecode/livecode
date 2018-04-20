@@ -37,6 +37,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "regex.h"
 
+#include <unistd.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCScriptEnvironment *s_pac_engine = nil;
@@ -186,7 +190,7 @@ void MCNetworkEvalHostNameToAddress(MCExecContext& ctxt, MCStringRef p_hostname,
 		ctxt.LegacyThrow(EE_NETWORK_NOPERM);
 		return;
 	}
-    
+
     // SN-2014-12-16: [[ Bug 14181 ]] We don't accept callback messages on server
 #ifdef _SERVER
     if (!MCNameIsEmpty(p_message))
@@ -196,7 +200,87 @@ void MCNetworkEvalHostNameToAddress(MCExecContext& ctxt, MCStringRef p_hostname,
     }
 #endif
 
-	MCAutoListRef t_list;
+MCAutoListRef t_list;
+
+// mdw 2018.04.21 [[ bugfix_5909 ]]
+/*
+gethostbyname() on linux will first check the /etc/hosts file.
+If localhost is declared there (as it is by default in linux distros)
+then that value will be returned. By default this is 127.0.0.1, which
+is not what we want to return here, so we have to go the long way around.
+*/
+#ifdef __LINUX__
+	// Google's DNS server IP
+	const char* target_name = "8.8.8.8";
+	// DNS port
+	const char* target_port = "53";
+
+	struct addrinfo hints;
+	if (MCStringGetLength(p_hostname) == 9 &&
+		MCStringBeginsWithCString(p_hostname, (const char_t*)"localhost", kMCCompareCaseless))
+	{
+		memset(&hints, 0, sizeof(hints));
+		// use just ipv4 for now until we have ipv6 support at this level
+		// (assume this will need a syntax extension to hostnameToAddress)
+		hints.ai_family = AF_INET;
+		// hints.ai_family = AF_INET6; // ready for ipv6
+		hints.ai_socktype = SOCK_STREAM;
+
+		struct addrinfo* info;
+		if (getaddrinfo(target_name, target_port, &hints, &info) != 0) {
+				r_string = MCValueRetain(kMCEmptyString);
+		}
+		else {
+			//if (info->ai_family == AF_INET6) {
+	    //    r_string = MCValueRetain(kMCEmptyString);
+	    //}
+			//else {
+	      /* create socket */
+	      int sock = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
+	      if (sock <= 0) {
+	          r_string = MCValueRetain(kMCEmptyString);
+	      }
+	      else {
+	          /* connect to server */
+	          if (connect(sock, info->ai_addr, info->ai_addrlen) < 0) {
+	              r_string = MCValueRetain(kMCEmptyString);
+	              close(sock);
+	          }
+	          else {
+	              /* get local socket info */
+	              struct sockaddr_in local_addr;
+	              socklen_t addr_len = sizeof(local_addr);
+	              if (getsockname(sock, (struct sockaddr*)&local_addr, &addr_len) < 0) {
+	                  r_string = MCValueRetain(kMCEmptyString);
+	                  close(sock);
+	              }
+	              else {
+	                  /* get peer ip addr */
+										if (info->ai_family == AF_INET6) { // ipv6 representation of localhost address
+											char myip6[INET6_ADDRSTRLEN];
+											if (0 == inet_ntop(local_addr.sin_family, &(local_addr.sin_addr), myip6, sizeof(myip6)) ) {
+		                      r_string = MCValueRetain(kMCEmptyString);
+		                  }
+											else {
+												MCStringCreateWithCString(myip6, r_string);
+											}
+										}
+										else { // ipv4 representation of localhost address
+											char myip[INET_ADDRSTRLEN];
+		                  if (0 == inet_ntop(local_addr.sin_family, &(local_addr.sin_addr), myip, sizeof(myip)) ) {
+		                      r_string = MCValueRetain(kMCEmptyString);
+		                  }
+											else {
+		                      MCStringCreateWithCString(myip, r_string);
+		                  }
+										}
+	              }
+	          }
+	      }
+		}
+	}
+	else {
+#endif
     if (MCS_ntoa(p_hostname, ctxt.GetObject(), p_message, &t_list))
     {
         if (!MCListCopyAsString(*t_list, r_string))
@@ -204,6 +288,9 @@ void MCNetworkEvalHostNameToAddress(MCExecContext& ctxt, MCStringRef p_hostname,
     }
     else
         r_string = MCValueRetain(kMCEmptyString);
+#ifdef __LINUX__
+	}
+#endif
 }
 
 //////////
@@ -286,7 +373,7 @@ void MCNetworkEvalHTTPProxyForURL(MCExecContext& ctxt, MCStringRef p_url, MCStri
 	char *t_url, *t_host;
     /* UNCHECKED */ MCStringConvertToCString(p_url, t_url);
     /* UNCHECKED */ MCStringConvertToCString(p_host, t_host);
-    
+
     t_arguments[0] = t_url;
     t_arguments[1] = t_host;
 
@@ -324,7 +411,7 @@ void MCNetworkEvalHTTPProxyForURLWithPAC(MCExecContext& ctxt, MCStringRef p_url,
 				s_pac_engine -> Run(p_pac, &t_result);
 				t_success = *t_result != NULL;
 			}
-			
+
 			if (!t_success)
 			{
 				s_pac_engine -> Release();
@@ -349,7 +436,7 @@ void MCNetworkExecLoadUrl(MCExecContext& ctxt, MCStringRef p_url, MCNameRef p_me
 	p1.setnext(&p2);
 	// MW-2006-03-03: I've changed this from False, True to True, True to ensure 'target' is returned correctly for libURL.
   Exec_stat t_stat = ctxt . GetObject() -> message(MCM_load_url, &p1, True, True);
-	
+
 	switch (t_stat)
 	{
   case ES_NOT_HANDLED:
@@ -362,7 +449,7 @@ void MCNetworkExecLoadUrl(MCExecContext& ctxt, MCStringRef p_url, MCNameRef p_me
   case ES_ERROR:
     ctxt . Throw();
     break;
-    
+
   default:
     break;
   }
@@ -375,7 +462,7 @@ void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url)
 	MCParameter p1;
 	p1 . setvalueref_argument(p_url);
   Exec_stat t_stat = ctxt . GetObject() -> message(MCM_unload_url, &p1, False, True);
-	
+
 	switch (t_stat)
 	{
   case ES_NOT_HANDLED:
@@ -388,7 +475,7 @@ void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url)
   case ES_ERROR:
     ctxt . Throw();
     break;
-    
+
   default:
     break;
   }
@@ -519,7 +606,7 @@ void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNam
 
 	// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 	MCresult -> clear();
-    
+
     // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
 	MCSocket *s = MCS_open_socket(p_name, p_from_address, p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, kMCEmptyString, p_end_hostname);
 	if (s != NULL)
@@ -546,9 +633,9 @@ void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNa
 void MCNetworkExecCloseSocket(MCExecContext& ctxt, MCNameRef p_socket)
 {
 	uindex_t t_index;
-	if (IO_findsocket(p_socket, t_index))	
-	{		
-		MCS_close_socket(MCsockets[t_index]);	
+	if (IO_findsocket(p_socket, t_index))
+	{
+		MCS_close_socket(MCsockets[t_index]);
 		ctxt . SetTheResultToEmpty();
 	}
 	else
@@ -562,7 +649,7 @@ void MCNetworkExecPerformAcceptConnections(MCExecContext& ctxt, uint2 p_port, MC
 	// MW-2005-01-28: Fix bug 2412 - accept doesn't clear the result.
 	MCresult -> clear();
     ctxt . SetItToValue(kMCEmptyData);
-    
+
 	if (!ctxt . EnsureNetworkAccessIsAllowed())
 		return;
 
@@ -601,7 +688,7 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
 			ctxt . LegacyThrow(EE_READ_NOTVALIDFORDATAGRAM);
 			return;
 		}
-		
+
 		// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 		ctxt . SetTheResultToEmpty();
 
@@ -623,9 +710,9 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
             else
                 ctxt . SetItToValue(t_data);
 		}
-        
+
         MCValueRelease(t_data);
-        
+
 	}
 	else
 		ctxt . SetTheResultToStaticCString("socket is not open");
@@ -683,7 +770,7 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
 		{
 			MCAutoValueRef t_old_data;
 			/* UNCHECKED */ MCU_geturl(ctxt, p_chunk.url, &t_old_data);
-            
+
             if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString
                 && MCValueGetTypeCode(*t_old_data) == kMCValueTypeCodeString)
             {
@@ -697,10 +784,10 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
             {
                 // Not strings, treat as data
                 MCAutoDataRef t_old, t_value;
-                
+
                 /* UNCHECKED */ ctxt.ConvertToData(*t_old_data, &t_old);
                 /* UNCHECKED */ ctxt.ConvertToData(p_value, &t_value);
-                
+
                 if (p_where == PT_AFTER)
                     MCDataCreateWithData((MCDataRef&)&t_new_value, *t_old, *t_value);
                 else
@@ -712,7 +799,7 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
 	{
         MCAutoStringRef t_value;
         /* UNCHECKED */ ctxt . ConvertToString(p_value, &t_value);
-        
+
         MCStringRef t_string;
         MCRange t_range;
         /* UNCHECKED */ MCStringMutableCopy((MCStringRef)p_chunk . mark . text, t_string);
@@ -729,7 +816,7 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
         /* UNCHECKED */ MCStringReplace(t_string, t_range, *t_value);
 		/* UNCHECKED */ MCStringCopyAndRelease(t_string, (MCStringRef&)&t_new_value);
 	}
-	
+
 	//ctxt.SetTheResultToValue(*t_new_value);
     ctxt.SetTheResultToEmpty();
 
@@ -743,7 +830,7 @@ void MCNetworkExecReturnValueAndUrlResult(MCExecContext& ctxt, MCValueRef p_resu
 	ctxt . SetTheResultToValue(p_result);
 	if (MCurlresult -> setvalueref(p_url_result))
 		return;
-	
+
 	ctxt . Throw();
 }
 
@@ -758,7 +845,7 @@ void MCNetworkGetUrlResponse(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	
+
 	if (MCStringIsEmpty(MCftpproxyhost))
 	{
 		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
@@ -775,7 +862,7 @@ void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCNetworkSetFtpProxy(MCExecContext& ctxt, MCStringRef p_value)
 {
-	
+
 	MCAutoStringRef t_host, t_port;
 	/* UNCHECKED */ MCStringDivideAtChar(p_value, ':', kMCCompareExact, &t_host, &t_port);
 	if (*t_port != nil)
@@ -783,7 +870,7 @@ void MCNetworkSetFtpProxy(MCExecContext& ctxt, MCStringRef p_value)
 	else
 		MCftpproxyport = 80;
 	MCValueAssign(MCftpproxyhost, *t_host);
-		
+
 }
 
 void MCNetworkGetHttpProxy(MCExecContext& ctxt, MCStringRef& r_value)
@@ -890,18 +977,18 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
     {
         MCAutoValueRef t_old_data;
         /* UNCHECKED */ MCU_geturl(ctxt, p_url, &t_old_data);
-        
+
         if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString
             && MCValueGetTypeCode(*t_old_data) == kMCValueTypeCodeString)
         {
             MCAutoStringRef t_new_value;
-            
+
             // Both old and new are strings
             if (p_where == PT_AFTER)
                 MCStringCreateWithStrings(&t_new_value, (MCStringRef)*t_old_data, (MCStringRef)p_value);
             else
                 MCStringCreateWithStrings(&t_new_value, (MCStringRef)p_value, (MCStringRef)*t_old_data);
-            
+
             MCNetworkExecSetUrl(ctxt, *t_new_value, p_url);
         }
         else
@@ -909,18 +996,18 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
             // Not strings, treat as data
             MCDataRef t_old, t_new;
             MCAutoDataRef t_value, t_new_value;
-            
+
             /* UNCHECKED */ ctxt.ConvertToData(*t_old_data, t_old);
             /* UNCHECKED */ ctxt.ConvertToData(p_value, &t_value);
-            
+
             /* UNCHECKED */ MCDataMutableCopyAndRelease(t_old, t_new);
             if (p_where == PT_AFTER)
             /* UNCHECKED */ MCDataAppend(t_new, *t_value);
             else
             /* UNCHECKED */ MCDataPrepend(t_new, *t_value);
-            
+
             /* UNCHECKED */ MCDataCopyAndRelease(t_new, &t_new_value);
-            
+
             MCNetworkExecSetUrl(ctxt, *t_new_value, p_url);
         }
     }
@@ -932,7 +1019,7 @@ void MCNetworkMarkUrl(MCExecContext& ctxt, MCStringRef p_url, MCMarkedText& r_ma
 
     MCU_geturl(ctxt, p_url, &t_data);
     /* UNCHECKED */ ctxt . ConvertToString(*t_data, (MCStringRef &)r_mark . text);
-    
+
     r_mark . start = 0;
     r_mark . finish = MAXUINT4;
 }
