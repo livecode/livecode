@@ -25,7 +25,7 @@ The widget displays a row of navigation items.  Each of these has a
 <itemIcons|icon>, or both.  All of the navigation item data is
 available as a single array via the <itemArray> property.
 
-At any time, one of the navigation items may be
+At any time, zero or one of the navigation items may be
 <hilitedItemName|highlighted>.  This is useful, for example, for
 indicating the current card.  When the user clicks one of the
 navigation items, the widget sends a <hiliteChanged> message.
@@ -117,7 +117,7 @@ use com.livecode.library.widgetutils
 
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata author is "LiveCode"
-metadata version is "2.0.0"
+metadata version is "2.1.0"
 metadata title is "Navigation Bar"
 metadata preferredSize is "320,49"
 metadata svgicon is "M0,0v29.5h80.2V0H0z M21.1,21.5c-0.2-0.1-0.4-0.2-0.4-0.2c-0.5-0.2-0.9-0.3-1.4-0.4c-0.7-0.1-0.9-0.4-0.9-1.1c0-0.1-0.1-0.9,0-1c0.4-0.2,0.5-0.9,0.5-1.3c0-0.3,0.2-0.5,0.3-0.7c0.2-0.3,0.2-0.6,0.3-0.9c0.1-0.2,0.2-0.6,0.1-0.8c0-0.2-0.2-0.4-0.2-0.6c0-0.3,0.1-0.6,0.1-0.9c0-0.5,0-0.9,0-1.4c-0.2-1.2-1.4-1.6-2.5-1.9c-1-0.2-2.2,0.3-2.9,1c-0.3,0.3-0.6,0.7-0.7,1.1c-0.1,0.4,0,0.9,0,1.2c0,0.2,0,0.4,0.1,0.6c0,0.2,0.1,0.3,0.1,0.5c0,0.1-0.1,0.2-0.1,0.3c-0.2,0.4,0,1,0.2,1.4c0.1,0.2,0.2,0.4,0.3,0.5c0.2,0.2,0.2,0.3,0.2,0.6c0,0.4,0.1,1.2,0.6,1.4c0.1,0.1,0,0.8-0.1,0.9c0,0.7,0,1-0.6,1.1c-0.5,0.1-0.9,0.2-1.4,0.4c-0.2,0.1-0.4,0.2-0.7,0.3c-2-1.4-3.4-3.8-3.4-6.4c0-4.3,3.5-7.8,7.8-7.8s7.8,3.5,7.8,7.8C24.3,17.8,23,20.1,21.1,21.5z M45.1,22.7l-4.9-3.6v-0.7l0.2,0.2l3.6,2.6L42.6,17l-0.1-0.4l0.3-0.3l3.4-2.5H42h-0.4l-0.1-0.4l-1.4-4.2l-1.4,4.2l-0.1,0.4h-0.4h-4.3l3.4,2.5l0.3,0.3L37.5,17l-1.4,4.2l3.6-2.6l0.2-0.2v0.7L35,22.7l1.9-5.9l-4.9-3.6h6.1l1.9-5.9l1.9,5.9h6.1l-4.9,3.6L45.1,22.7z M71.1,23.1l-4.9-4.9c-1,0.9-2.4,1.4-3.9,1.5V19c3-0.1,5.4-2.5,5.4-5.5c0-3.1-2.5-5.5-5.5-5.5c-3.1,0-5.5,2.5-5.5,5.5c0,3,2.4,5.4,5.4,5.5v0.7c-3.4-0.1-6-2.8-6-6.2c0-3.4,2.8-6.2,6.2-6.2c3.4,0,6.2,2.8,6.2,6.2c0,1.5-0.6,2.9-1.5,4l4.9,4.9L71.1,23.1z"
@@ -241,9 +241,11 @@ Description:
 The names of the icons displayed by the navigation items when not
 highlighted.
 
-Each icon name must be one of the predefined graphics provided by the "IconSVG"
+Each icon name must be one of the graphics supplied by the "IconSVG"
 library.  You can get a list of available predefined path names by running
-`put iconNames()` in the Message Box.
+`put iconNames()` in the Message Box.  See the 
+<com.livecode.library.iconsvg|Icon SVG Library>
+documentation for handlers to manage user icon families.
 
 Setting the <itemIcons> can add items to the navigation bar.  If the
 new value of the <itemIcons> has more items than the navigation bar,
@@ -256,7 +258,7 @@ navigation bar, the remaining navigation items have their icons reset
 to the default icon.
 
 References: hilitedItemIcons(property), itemLabels(property),
-itemNames(property)
+itemNames(property),  com.livecode.library.iconsvg (library)
 
 */
 property itemIcons		get getNavIcons			set setNavIcons
@@ -273,9 +275,11 @@ Description:
 The names of the icons displayed by the navigation items when
 highlighted.
 
-Each icon name must be one of the predefined graphics provided by the "IconSVG"
+Each icon name must be one of the graphics supplied by the "IconSVG"
 library.  You can get a list of available predefined path names by running
-`put iconNames()` in the Message Box.
+`put iconNames()` in the Message Box.  See the 
+<com.livecode.library.iconsvg|Icon SVG Library>
+documentation for handlers to manage user icon families.
 
 Setting the <hilitedItemIcons> can add items to the navigation bar.
 If the new value of the <hilitedItemIcons> has more items than the
@@ -287,7 +291,8 @@ If the new value of the <hilitedItemIcons> has fewer items than the
 navigation bar, the remaining navigation items have their
 highlighted-state icons reset to the default icon.
 
-References: itemIcons(property), itemLabels(property), itemNames(property)
+References: itemIcons(property), itemLabels(property), itemNames(property),
+com.livecode.library.iconsvg (library)
 */
 property hilitedItemIcons		get getNavSelectedIcons			set setNavSelectedIcons
 metadata hilitedItemIcons.user_visible is "false"
@@ -354,7 +359,7 @@ Value(integer): The item number of the navigation item that is highlighted.
 
 Description:
 The <hilitedItem> is the item number of the currently-highlighted navigation
-item, starting from 1.  It can be used as a key into the <itemArray>.
+item.  It can be used as a key into the <itemArray>.
 
 Setting 0 will cause nothing to be highlighted.
 
@@ -379,7 +384,7 @@ Value(string): The name of the navigation item that is highlighted.
 
 Description:
 The <hilitedItemName> is the name of the currently-highlighted navigation
-item.
+item.  If nothing is highlighted, the value is an empty string.
 
 References: hilitedItem (property)
 */
@@ -1262,6 +1267,11 @@ end handler
 public handler setNavSelectedItemName(in pName as String) returns nothing
 	variable tCount as Integer
 	variable tItem as Array
+
+	if pName is "" then
+		setNavSelectedItem(0)
+		return
+	end if
 
 	-- Find the item index corresponding to pName and set it as the
 	-- currently-highlighted item.
