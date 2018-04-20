@@ -35,7 +35,7 @@ formString (string):
 Returns:
 The <URLEncode> <function> <return|returns> the <formString>, with
 spaces converted to "+" and characters other than letters and numbers
-converted to their hexadecimal <Escape key|escape> representation.
+converted to their hexadecimal escape representation.
 
 Description:
 Use the <URLEncode> <function> to <encode> a <URL> so it can be safely
@@ -63,8 +63,8 @@ appears in the formString, it is converted to "%7E".
     end urlEncodeRFC
 
 References: post (command), function (control structure),
-hexadecimal (glossary), encode (glossary), Escape key (glossary),
-ASCII (glossary), return (glossary), server (glossary), URL (keyword),
+hexadecimal (glossary), encode (glossary), ASCII (glossary), 
+return (glossary), server (glossary), URL (keyword), 
 character (keyword), http (keyword), string (keyword)
 
 Tags: networking
