@@ -396,7 +396,7 @@ def validate_android_tools(opts):
 
     ndk_ver = opts['ANDROID_NDK_VERSION']
     if opts['ANDROID_PLATFORM'] is None:
-        opts['ANDROID_PLATFORM'] = 'android-17'
+        opts['ANDROID_PLATFORM'] = 'android-19'
 
     if opts['ANDROID_NDK'] is None:
         ndk = guess_android_tooldir('android-ndk')

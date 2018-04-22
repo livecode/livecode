@@ -42,7 +42,7 @@ Create a standalone toolchain (this simplifies setting up the build environment)
 
 ````bash
 android-ndk-r14/build/tools/make_standalone_toolchain.py \
-    --arch arm --api 9 \
+    --arch arm --api 19 \
     --install-dir ${HOME}/android/toolchain/standalone
 ````
 
@@ -85,7 +85,7 @@ AR="${BINDIR}/${TRIPLE}-ar"
 
 # Android platform information
 ANDROID_NDK_VERSION=r14
-ANDROID_PLATFORM=android-17
+ANDROID_PLATFORM=android-19
 ANDROID_NDK=${TOOLCHAIN}/android-ndk-r14
 ANDROID_SDK=${TOOLCHAIN}/android-sdk-linux
 ANDROID_BUILD_TOOLS=25.0.2
