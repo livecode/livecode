@@ -121,29 +121,3 @@ void MCStackSecurityExecutionTimeout(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/* ================================================================
- * Emscripten standalone deployment
- * ================================================================ */
-
-bool
-MCStackSecurityEmscriptenPrepareStartupStack(MCStack *r_stack)
-{
-	return true;
-}
-
-#if defined(__EMSCRIPTEN__)
-
-/* ================================================================
- * Emscripten standalone startup checks
- * ================================================================ */
-
-bool
-MCStackSecurityEmscriptenStartupCheck(MCStack *p_stack)
-{
-	return true;
-}
-
-#endif /* __EMSCRIPTEN__ */
-
-////////////////////////////////////////////////////////////////////////////////
