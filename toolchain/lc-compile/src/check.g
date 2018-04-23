@@ -2047,11 +2047,21 @@
 
 'sweep' CheckSafety_(ANY, SYMBOLSAFETY)
 
-    'rule' CheckSafety_(DEFINITION'handler(Position, _, Name, _, _, Body), _):
+    'rule' CheckSafety_(DEFINITION'handler(Position, Access, Handler, _, _, Body), _):
+        QuerySymbolId(Handler -> Symbol)
+        Symbol'Safety -> Safety
+        CheckSafety_(Body, Safety)
+
+        -- Check no public library handlers are unsafe
         [|
-            QuerySymbolId(Name -> Symbol)
-            Symbol'Safety -> Safety
-            CheckSafety_(Body, Safety)
+            where(Access -> public)
+            where(Safety -> unsafe)
+            QueryModuleOfId(Handler -> ModuleId)
+            QueryModuleId(ModuleId -> ModuleInfo)
+            ModuleInfo'Kind -> ModuleKind
+            where(ModuleKind -> library)
+            Handler'Name -> HandlerName
+            Error_UnsafePublicHandlerDefinitionNotAllowedInLibraryModule(Position, HandlerName)
         |]
 
     'rule' CheckSafety_(STATEMENT'unsafe(Position, Block), _):
@@ -2182,8 +2192,12 @@
         
     'rule' QueryId(Id -> Meaning):
         Id'Meaning -> Meaning
-        
+
+-- defined in generate.g
 'condition' QuerySymbolId(ID -> SYMBOLINFO)
+'condition' QueryModuleId(ID -> MODULEINFO)
 'action' GetQualifiedName(ID -> NAME)
+'action' QueryModuleOfId(ID -> ID)
+
 
 --------------------------------------------------------------------------------

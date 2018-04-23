@@ -2273,9 +2273,13 @@
 
 'action' QueryModuleOfId(ID -> ID)
 
+    'rule' QueryModuleOfId(Id -> Id):
+        QueryModuleId(Id -> Info)
+
     'rule' QueryModuleOfId(Id -> ModuleId):
-        QuerySymbolId(Id -> Info)
-        Info'Parent -> ModuleId
+        QueryId(Id -> symbol(Info))
+        Info'Parent -> ParentId
+        QueryModuleOfId(ParentId -> ModuleId)
 
 'condition' QuerySymbolId(ID -> SYMBOLINFO)
 

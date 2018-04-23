@@ -400,6 +400,7 @@ DEFINE_ERROR(IllegalNumberOfArgumentsForOpcode, "Wrong number of arguments for o
 
 DEFINE_ERROR(BytecodeNotAllowedInSafeContext, "Bytecode blocks can only be present in unsafe context")
 DEFINE_ERROR_I(UnsafeHandlerCallNotAllowedInSafeContext, "Unsafe handler '%s' can only be called in unsafe context")
+DEFINE_ERROR_I(UnsafePublicHandlerDefinitionNotAllowedInLibraryModule, "Public library handler '%s' cannot be unsafe")
 
 DEFINE_ERROR(VariadicParameterMustBeLast, "Variadic parameter must be the last")
 DEFINE_ERROR(VariadicParametersOnlyAllowedInForeignHandlers, "Variadic parameters only allowed in foreign handlers")
