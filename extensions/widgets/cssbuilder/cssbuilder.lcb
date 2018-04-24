@@ -1,0 +1,431 @@
+/*
+Copyright (C) 2018 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This widget displays a CSS box model 
+**/
+
+-- declaring the extension as a widget, followed by the identifier
+widget com.livecode.widget.cssbuilder
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.library.scriptitems
+
+-- metadata
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+metadata title is "CSS Builder"
+
+-- property declarations
+/**
+Name: styles
+
+Type: property
+
+Syntax: set the styles of <widget> to <pStyles>
+Syntax: get the styles of <widget>
+
+Summary: An array mapping the CSS style name to value.
+
+Parameter: 
+Any array that validly maps CSS properties names to values.
+
+Description: 
+Use the <styles> property to get or set the 
+styles of the box model being displayed.
+*/
+property styles    get getStyles   set setStyles
+metadata styles.label is "Styles"
+
+
+/**
+Name: box
+
+Type: property
+
+Syntax: set the box of <widget> to <pRectangle>
+Syntax: get the box of <widget>
+
+Summary: 
+The rect (relative to the top-left of the widget) which 
+should be interpreted relative to the box-sizing style
+
+Parameters:
+Any rectangle.
+
+Description: 
+Use the <box> property to get or set the rect the CSS builder 
+widget display, in accordance with the box-sizing style.
+*/
+property box1    get getBox    set setBox
+metadata box1.label is "Box"
+
+
+/**
+Name: effectiveBox
+
+Type: property
+
+Syntax: get the effectiveBox of <widget>
+
+Summary:
+The rect (relative to the top-left of the widget) which
+bounds all pixels rendered by the widget.
+
+Description:
+Use the <effectiveBox> property to get the rect the widget
+actually needs to be so that nothing is clipped.
+*/
+property effectiveBox    get getEffectiveBox
+
+
+-- private instance variables
+private variable mStyles as Array
+private variable mDefaultStyles as Array
+private variable mBox as Rectangle
+
+-- handler definitions
+public handler OnCreate() returns nothing 
+    -- set the default values of the styles property
+    put the empty array into mDefaultStyles["background"]
+    put "none" into mDefaultStyles["background"]["image"]
+    put "0%,0%" into mDefaultStyles["background"]["position"]
+    put "auto" into mDefaultStyles["background"]["size"]
+    put "repeat,repeat" into mDefaultStyles["background"]["repeat"]
+    put "padding-box" into mDefaultStyles["background"]["origin"]
+    put "border-box" into mDefaultStyles["background"]["clip"]
+    put "0,0,0,0" into mDefaultStyles["background"]["color"]
+    put the empty array into mDefaultStyles["border"]
+    put the empty array into mDefaultStyles["border"]["left"]
+    put the empty array into mDefaultStyles["border"]["right"]
+    put the empty array into mDefaultStyles["border"]["top"]
+    put the empty array into mDefaultStyles["border"]["bottom"]
+    put the empty array into mDefaultStyles["border"]["top-left"]
+    put the empty array into mDefaultStyles["border"]["top-right"]
+    put the empty array into mDefaultStyles["border"]["bottom-left"]
+    put the empty array into mDefaultStyles["border"]["bottom-right"]  
+    put "0,0,0,0" into mDefaultStyles["border"]["left"]["color"]
+    put "0,0,0,0" into mDefaultStyles["border"]["top"]["color"]
+    put "0,0,0,0" into mDefaultStyles["border"]["right"]["color"]
+    put "0,0,0,0" into mDefaultStyles["border"]["bottom"]["color"]
+    put "none" into mDefaultStyles["border"]["left"]["style"]
+    put "none" into mDefaultStyles["border"]["top"]["style"]
+    put "none" into mDefaultStyles["border"]["right"]["style"]
+    put "none" into mDefaultStyles["border"]["bottom"]["style"]
+    put "0" into mDefaultStyles["border"]["left"]["width"]
+    put "0" into mDefaultStyles["border"]["top"]["width"]
+    put "0" into mDefaultStyles["border"]["right"]["width"]
+    put "0" into mDefaultStyles["border"]["bottom"]["width"]
+    put "0,0" into mDefaultStyles["border"]["top-left"]["radius"]
+    put "0,0" into mDefaultStyles["border"]["top-right"]["radius"]
+    put "0,0" into mDefaultStyles["border"]["bottom-right"]["radius"]
+    put "0,0" into mDefaultStyles["border"]["bottom-left"]["radius"]
+    put "none" into mDefaultStyles["border"]["image-source"]
+    put the empty array into mDefaultStyles["padding"]
+    put "0" into mDefaultStyles["padding"]["left"]
+    put "0" into mDefaultStyles["padding"]["top"]
+    put "0" into mDefaultStyles["padding"]["right"]
+    put "0" into mDefaultStyles["padding"]["bottom"]
+    put the empty array into mDefaultStyles["margin"]
+    put "0" into mDefaultStyles["margin"]["left"]
+    put "0" into mDefaultStyles["margin"]["top"]
+    put "0" into mDefaultStyles["margin"]["right"]
+    put "0" into mDefaultStyles["margin"]["bottom"]
+    put the empty array into mDefaultStyles["border-image"]
+    put "100%,100%,100%,100%,fill" into mDefaultStyles["border-image"]["slice"]
+    put "1,1,1,1" into mDefaultStyles["border-image"]["width"]
+    put "0,0,0,0" into mDefaultStyles["border-image"]["outset"]
+    put "stretch,stretch" into mDefaultStyles["border-image"]["repeat"]
+    put the empty array into mDefaultStyles["outline"]
+    put "0" into mDefaultStyles["outline"]["width"]
+    put "invert" into mDefaultStyles["outline"]["color"]
+    put "0" into mDefaultStyles["outline"]["offset"]
+    put the empty array into mDefaultStyles["box"]
+    put "none" into mDefaultStyles["box"]["shadow"]
+    put "border-box" into mDefaultStyles["box"]["sizing"]
+
+    setStyles(mDefaultStyles)
+    setBox(rectangle[0,0,100,50])
+end handler
+
+public handler OnPaint() returns nothing
+    -- paint the background-color 
+    set the paint of this canvas to getPaint("background-color")
+    fill getPath("background-color") on this canvas
+
+    -- paint the background-image 
+    if mStyles["background"]["image"] is not "none" then
+    end if 
+
+    -- paint the border 
+    variable tBorderBox as Rectangle
+    put getRectangle("border") into tBorderBox
+    if mStyles["border"]["left"]["style"] is not "none" then 
+        set the paint of this canvas to getPaint("border-left")
+        drawBorder("left", tBorderBox)
+    end if
+
+    if mStyles["border"]["top"]["style"] is not "none" then 
+        set the paint of this canvas to getPaint("border-top")
+        drawBorder("top", tBorderBox)
+    end if
+
+    if mStyles["border"]["right"]["style"] is not "none" then 
+        set the paint of this canvas to getPaint("border-right")
+        drawBorder("right", tBorderBox)
+    end if
+
+    if mStyles["border"]["bottom"]["style"] is not "none" then 
+        set the paint of this canvas to getPaint("border-bottom")
+        drawBorder("bottom", tBorderBox)
+    end if
+    
+    -- paint the box shadow
+    if mStyles["box"]["shadow"] is not "none" then 
+    end if 
+
+    -- paint the offset 
+    variable tOutlineBox as Rectangle
+    if mStyles["outline"]["color"] is not "none" then 
+        set the paint of this canvas to getPaint("outline")
+        put rectangle [the left of tBorderBox - mStyles["outline"]["width"] parsed as number , \
+                       the top of tBorderBox - mStyles["outline"]["width"] parsed as number , \
+                       the right of tBorderBox - mStyles["outline"]["width"] parsed as number , \
+                       the bottom of tBorderBox - mStyles["outline"]["width"] parsed as number] into tOutlineBox
+        drawOutline(tOutlineBox)
+    end if
+end handler
+
+private handler getPaint(in pObject as String) returns Paint
+    variable tList as List
+    if pObject is "outline" then 
+        if mStyles["outline"]["color"] is "invert" then 
+            put [0, 0, 0, 1] into tList
+        else 
+            put parseItemsAsNumberList(mStyles["outline"]["color"], 4, 1) into tList
+        end if 
+    else  
+        if pObject is "background-color" then
+            put parseItemsAsNumberList(mStyles["background"]["color"], 4, 1) into tList
+        else 
+            if pObject is "border-left" then    
+                put parseItemsAsNumberList(mStyles["border"]["left"]["color"], 4, 1) into tList
+            else 
+                if pObject is "border-top" then
+                    put parseItemsAsNumberList(mStyles["border"]["top"]["color"], 4, 1) into tList
+                else 
+                    if pObject is "border-right" then
+                        put parseItemsAsNumberList(mStyles["border"]["right"]["color"], 4, 1) into tList
+                    else   
+                        put parseItemsAsNumberList(mStyles["border"]["bottom"]["color"], 4, 1) into tList
+                     end if
+                end if 
+            end if 
+        end if 
+    end if
+    return solid paint with color tList
+end handler
+
+private handler getPath(in pObject as String) returns Path
+    if pObject is "background-color" then
+        return rectangle path of getRectangle("background-color")
+    else 
+        return rectangle path of getRectangle("background-image")
+    end if 
+end handler
+
+private handler drawBorder(in pObject as String, in pBorderBox as Rectangle) returns nothing 
+    variable tBorder as Array
+    put mStyles["border"][pObject] into tBorder
+    set the stroke width of this canvas to tBorder["width"] parsed as number 
+    
+    if tBorder["style"] is "dashed" then 
+        set the dashes of this canvas to [2 * tBorder["width"] parsed as number, 2 * tBorder["width"] parsed as number]
+    end if 
+
+    if tBorder["style"] is "dotted" then 
+        set the dashes of this canvas to [tBorder["width"] parsed as number, tBorder["width"] parsed as number]
+    end if 
+
+    if tBorder["style"] is "hidden" then 
+        set the paint of this canvas to solid paint with color [0, 0, 0, 0]
+    end if 
+
+    variable tWidth
+    put tBorder["width"] parsed as number / 2 into tWidth
+
+    if pObject is "top" then 
+        move to point [the left of pBorderBox, the top of pBorderBox + tWidth] on this canvas 
+        line to point [the right of pBorderBox, the top of pBorderBox + tWidth] on this canvas 
+    else 
+        if pObject is "right" then 
+            move to point [the right of pBorderBox - tWidth, the top of pBorderBox] on this canvas 
+            line to point [the right of pBorderBox - tWidth , the bottom of pBorderBox] on this canvas
+        else
+            if pObject is "bottom" then 
+                move to point [the left of pBorderBox, the bottom of pBorderBox - tWidth] on this canvas 
+                line to point [the right of pBorderBox, the bottom of pBorderBox - tWidth] on this canvas
+            else 
+                move to point [the left of pBorderBox + tWidth, the top of pBorderBox] on this canvas
+                line to point [the left of pBorderBox + tWidth, the bottom of pBorderBox] on this canvas
+            end if 
+        end if 
+    end if
+    
+    stroke this canvas
+end handler
+
+private handler drawOutline(in pOutlineBox as Rectangle) returns nothing
+    set the stroke width of this canvas to mStyles["outline"]["width"] parsed as number
+    
+    variable tWidth
+    put mStyles["outline"]["width"] parsed as number / 2 into tWidth
+    
+    -- top outline 
+    move to point [the left of pOutlineBox, the top of pOutlineBox + tWidth] on this canvas 
+    line to point [the right of pOutlineBox, the top of pOutlineBox + tWidth] on this canvas
+    stroke this canvas 
+    
+    -- right outline 
+    move to point [the right of pOutlineBox - tWidth, the top of pOutlineBox] on this canvas 
+    line to point [the right of pOutlineBox - tWidth , the bottom of pOutlineBox] on this canvas
+    stroke this canvas 
+
+    -- bottom outline  
+    move to point [the left of pOutlineBox, the bottom of pOutlineBox - tWidth] on this canvas 
+    line to point [the right of pOutlineBox, the bottom of pOutlineBox - tWidth] on this canvas
+    stroke this canvas 
+
+    -- left outline 
+    move to point [the left of pOutlineBox + tWidth, the top of pOutlineBox] on this canvas
+    line to point [the left of pOutlineBox + tWidth, the bottom of pOutlineBox] on this canvas
+    stroke this canvas
+end handler
+
+private handler getRectangle(in pObject as String) returns Rectangle
+    variable tSizing as String 
+    if pObject is "background-color" then 
+        put mStyles["background"]["clip"] into tSizing
+    else 
+        if pObject is "background-image" then 
+            put mStyles["background"]["origin"] into tSizing
+        else 
+            put "border-box" into tSizing
+        end if
+    end if
+
+    if mStyles["box"]["sizing"] is tSizing then 
+        return mBox
+    else 
+        if mStyles["box"]["sizing"] is "border-box" then
+            if tSizing is "padding-box" then 
+                return rectangle[ the left of mBox + mStyles["border"]["left"]["width"] parsed as number , \
+                                  the top of mBox + mStyles["border"]["top"]["width"] parsed as number , \
+                                  the right of mBox - mStyles["border"]["right"]["width"] parsed as number , \
+                                  the bottom of mBox - mStyles["border"]["bottom"]["width"] parsed as number ]
+            else 
+                return rectangle[ the left of mBox + mStyles["border"]["left"]["width"] parsed as number + mStyles["padding"]["left"] parsed as number , \
+                                  the top of mBox + mStyles["border"]["top"]["width"] parsed as number + mStyles["padding"]["top"] parsed as number , \
+                                  the right of mBox - mStyles["border"]["right"]["width"] parsed as number - mStyles["padding"]["right"] parsed as number , \
+                                  the bottom of mBox - mStyles["border"]["bottom"]["width"] parsed as number - mStyles["padding"]["bottom"] parsed as number ]
+            end if
+        else 
+            if mStyles["box"]["sizing"] is "padding-box" then
+                if tSizing is "border-box" then 
+                    return rectangle[ the left of mBox - mStyles["border"]["left"]["width"] parsed as number , \
+                                      the top of mBox - mStyles["border"]["top"]["width"] parsed as number , \
+                                      the right of mBox + mStyles["border"]["right"]["width"] parsed as number , \
+                                      the bottom of mBox + mStyles["border"]["bottom"]["width"] parsed as number ]
+                else     
+                    return rectangle[ the left of mBox + mStyles["padding"]["left"] parsed as number , \
+                                      the top of mBox + mStyles["padding"]["top"] parsed as number , \
+                                      the right of mBox - mStyles["padding"]["right"] parsed as number , \
+                                      the bottom of mBox - mStyles["padding"]["bottom"] parsed as number ]
+                end if 
+            else 
+                if tSizing is "border-box" then 
+                    return rectangle[ the left of mBox - mStyles["border"]["left"]["width"] parsed as number - mStyles["padding"]["left"] parsed as number, \
+                                      the top of mBox - mStyles["border"]["top"]["width"] parsed as number - mStyles["padding"]["top"] parsed as number , \
+                                      the right of mBox + mStyles["border"]["right"]["width"] parsed as number + mStyles["padding"]["right"] parsed as number, \
+                                      the bottom of mBox + mStyles["border"]["bottom"]["width"] parsed as number + mStyles["padding"]["bottom"] parsed as number ]
+                else 
+                    return rectangle[ the left of mBox - mStyles["padding"]["left"] parsed as number , \
+                                      the top of mBox - mStyles["padding"]["top"] parsed as number , \
+                                      the right of mBox + mStyles["padding"]["right"] parsed as number , \
+                                      the bottom of mBox + mStyles["padding"]["bottom"] parsed as number ]
+                end if
+            end if
+        end if
+    end if
+
+end handler
+
+-- handlers for data managment
+private handler getStyles() returns Array
+    return mStyles
+end handler
+
+private handler verifyStyles(in pStyles as Array) returns Boolean
+    return true
+end handler
+
+private handler setStyles(in pStyles as Array) returns nothing
+    variable tValid as Boolean
+    put verifyStyles(pStyles) into tValid
+    if not tValid then 
+        throw "Invalid Styles"
+    else 
+        put pStyles into mStyles
+        redraw all
+    end if
+end handler
+
+private handler getBox() returns Rectangle
+    return mBox
+end handler
+
+private handler setBox(in pBox as Rectangle) returns nothing
+    put pBox into mBox
+    redraw all
+end handler
+
+private handler getEffectiveBox() returns Rectangle
+    if mStyles["box"]["sizing"] is "content-box" then
+        return rectangle[ the left of mBox - mStyles["padding"]["left"] parsed as number - mStyles["border"]["left"]["width"] parsed as number - mStyles["margin"]["left"] parsed as number , \
+                          the top of mBox - mStyles["padding"]["top"] parsed as number - mStyles["border"]["top"]["width"] parsed as number - mStyles["margin"]["top"] parsed as number, \
+                          the right of mBox + mStyles["padding"]["right"] parsed as number + mStyles["border"]["right"]["width"] parsed as number + mStyles["margin"]["rigth"] parsed as number , \
+                          the bottom of mBox + mStyles["padding"]["bottom"] parsed as number + mStyles["border"]["bottom"]["width"] parsed as number + mStyles["margin"]["bottom"] parsed as number ]
+    else 
+        if mStyles["box"]["sizing"] is "padding-box" then
+            return rectangle[ the left of mBox - mStyles["border"]["left"]["width"] parsed as number - mStyles["margin"]["left"] parsed as number , \
+                              the top of mBox - mStyles["border"]["top"]["width"] parsed as number - mStyles["margin"]["top"] parsed as number , \
+                              the right of mBox + mStyles["border"]["right"]["width"] parsed as number + mStyles["margin"]["rigth"] parsed as number , \
+                              the bottom of mBox + mStyles["border"]["bottom"]["width"] parsed as number + mStyles["margin"]["bottom"] parsed as number ]
+        else  
+            return rectangle[ the left of mBox - mStyles["margin"]["left"] parsed as number , \
+                              the top of mBox - mStyles["margin"]["top"] parsed as number , \
+                              the right of mBox + mStyles["margin"]["rigth"] parsed as number , \
+                              the bottom of mBox + mStyles["margin"]["bottom"] parsed as number ]
+        end if
+    end if
+end handler
+
+end widget
+
