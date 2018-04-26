@@ -35,9 +35,9 @@ You can set the <httpHeaders> <property> to send custom headers in
 addition to the default headers. Whenever LiveCode contacts a <web
 server> to <download> a page (with the <load> <command> or by using a
 <URL> in an <expression>) or to post data (with the <post> <command>),
-the contents of the <httpHeaders> <property> is sent to the <web
-server>. The <libURLLastHTTPHeaders> <function> returns the last set of
-custom headers used.
+the contents of the <httpHeaders> <property> is sent to the 
+<web server>. The <libURLLastHTTPHeaders> <function> returns the last 
+set of custom headers used.
 
 >*Important:* The <libURLLastHTTPHeaders> <function> is part of the 
 > <Internet library>. To ensure that the <function> works in a 

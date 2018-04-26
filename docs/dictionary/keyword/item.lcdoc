@@ -5,8 +5,8 @@ Type: keyword
 Syntax: item
 
 Summary:
-Designates a comma-<delimit|delimited> <string> as part of a <chunk
-expression>. 
+Designates a comma-<delimit|delimited> <string> as part of a 
+<chunk expression>. 
 
 Introduced: 1.0
 
