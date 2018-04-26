@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "lnxdc.h"
 
-#include "lcms.h"
+#include "lcms2.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -89,15 +89,15 @@ MCColorTransformRef MCScreenDC::createcolortransform(const MCColorSpaceInfo& p_i
 			t_primaries . Blue . y = p_info . calibrated . blue_y;
 			t_primaries . Blue . Y = 1.0;
 
-			LPGAMMATABLE t_gamma_table[3];
-			t_gamma_table[0] = t_gamma_table[1] = t_gamma_table[2] = cmsBuildGamma(256, 1.0 / p_info . calibrated . gamma);
+			cmsToneCurve* t_gamma_table[3];
+			t_gamma_table[0] = t_gamma_table[1] = t_gamma_table[2] = cmsBuildGamma(NULL, 1.0 / p_info . calibrated . gamma);
 			if (t_gamma_table[0] != nil)
 			{
 				t_in_profile = cmsCreateRGBProfile(&t_whitepoint, &t_primaries, t_gamma_table);
 				if (t_in_profile == nil)
 					t_success = false;
 
-				cmsFreeGamma(t_gamma_table[0]);
+				cmsFreeToneCurve(t_gamma_table[0]);
 			}
 			else
 				t_success = false;
@@ -117,13 +117,13 @@ MCColorTransformRef MCScreenDC::createcolortransform(const MCColorSpaceInfo& p_i
 	t_transform = nil;
 	if (t_success)
 	{
-		icColorSpaceSignature t_input_sig;
+		cmsColorSpaceSignature t_input_sig;
 		t_input_sig = cmsGetColorSpace(t_in_profile);
 
-		DWORD t_input_type;
-		if (t_input_sig == icSigCmykData)
+		cmsUInt32Number t_input_type;
+		if (t_input_sig == cmsSigCmykData)
 			t_input_type = TYPE_CMYK_8;
-		else if (t_input_sig == icSigRgbData)
+		else if (t_input_sig == cmsSigRgbData)
 			t_input_type = TYPE_BGRA_8;
 		else
 			t_input_type = 0;

@@ -1,7 +1,7 @@
 ﻿script "BuilderUtilities"
 
-constant kMergExtVersion = "2017-12-14"
-constant kTSNetVersion = "1.3.4"
+constant kMergExtVersion = "2018-4-4"
+constant kTSNetVersion = "1.3.5"
 
 local sEngineDir
 local sWorkDir
@@ -9,6 +9,7 @@ local sOutputDir
 local sPrivateDir
 local sDocsDir
 local sBuiltDocsDir
+local sTargetArch
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +52,10 @@ end builderSetBuiltDocsDir
 command builderSetOutputDir pDir
    put pDir into sOutputDir
 end builderSetOutputDir
+
+command builderSetTargetArch pArch
+   put pArch into sTargetArch
+end builderSetTargetArch
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,6 +106,15 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
          put builderGetBuildNumber() into tBuildNumber
          dispatch "archiveBuilderRun" to stack builderArchiveBuilderStack() with tVersion, tBuildNumber, pType
          break
+      case "FMPackage"
+         local tGitRevision, tOutputFolder, tPrivateRepo, tTargetArch
+         put builderOutputFolder() into tOutputFolder
+         put builderGetGitFullHash() into tGitRevision
+         put builderPrivateRepoFolder() into tPrivateRepo
+         put builderTargetArch() into tTargetArch
+         repeat for each line tPlatform in pPlatforms
+            dispatch "fmPackageBuilderRun" to stack builderFMPackageBuilderStack() with tPlatform, tPrivateRepo, tOutputFolder, tGitRevision, tTargetArch
+         end repeat
    end switch
    	
    builderFinalize	
@@ -226,6 +240,10 @@ private command copyFolder @xManifest, pPrefix, pSrcFolder, pDstFolder
 end copyFolder
 
 ////////////////////////////////////////////////////////////////////////////////
+
+function builderTargetArch
+   return sTargetArch
+end builderTargetArch
 
 -- Returns the folder of the repository
 function builderRepoFolder
@@ -400,6 +418,10 @@ function builderArchiveBuilderStack
    return builderSystemPrivateFolder() & slash & "archive_builder.livecodescript"
 end builderArchiveBuilderStack
 
+function builderFMPackageBuilderStack
+   return builderSystemPrivateFolder() & slash & "package_solution.livecodescript"
+end builderFMPackageBuilderStack
+
 function builderModuleInterfaceFolder
    builderFetchEngine "", "macosx"
    return the result & slash & "modules" & slash & "lci"
@@ -494,6 +516,16 @@ end builderGetBuildNumber
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function builderGetGitShortHash
+	return word 1 of shell("git --git-dir=../.git rev-parse --short HEAD")
+end builderGetGitShortHash
+
+function builderGetGitFullHash
+	return word 1 of shell("git --git-dir=../.git rev-parse HEAD")
+end builderGetGitFullHash
+
+////////////////////////////////////////////////////////////////////////////////
+
 function getExecutableArchs pInput
    get shell("lipo -info" && quote & pInput & quote)
    set the itemDelimiter to ":"
@@ -571,7 +603,7 @@ command builderEnsureZip pZipfile, pURL
       builderEnsureFolderForFile pZipfile
       
       builderLog "message", "Downloading zip file:" && pZipfile
-      get shell(merge("curl -o '[[pZipfile]]' '[[pUrl]]'"))
+      get shell(merge("curl -k -o '[[pZipfile]]' '[[pUrl]]'"))
       if the result is not zero then
          builderLog "error", "Failed to download zip file:" && it
          throw "failure"
@@ -674,7 +706,7 @@ An commma delimited list
 
 **/
 function builderComponentCategories
-   return "engine,IDE,extension"
+   return "engine,IDE,builder,extension"
 end builderComponentCategories
 
 /**

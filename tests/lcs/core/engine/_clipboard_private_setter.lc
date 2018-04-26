@@ -1,0 +1,4 @@
+#!
+
+set the clipboardData["private"] to "Hello World!"
+quit 0

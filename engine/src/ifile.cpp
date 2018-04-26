@@ -183,7 +183,6 @@ void MCImage::openimage()
 	{
 		// MW-2013-06-21: [[ Valgrind ]] Initialize width/height to defaults in
 		//   case GetGeometry fails.
-		uindex_t t_width, t_height;
 		t_width = rect . width;
 		t_height = rect . height;
 		

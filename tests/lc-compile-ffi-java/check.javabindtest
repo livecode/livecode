@@ -1,0 +1,71 @@
+%% Copyright (C) 2016 LiveCode Ltd.
+%%
+%% This file is part of LiveCode.
+%%
+%% LiveCode is free software; you can redistribute it and/or modify it under
+%% the terms of the GNU General Public License v3 as published by the Free
+%% Software Foundation.
+%%
+%% LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+%% WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+%% for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+%TEST CheckClassInheritsClass
+foreign package java.import
+interface A
+end interface
+end package
+foreign package java.test
+use java.import.A
+%{BEFORE_INHERITING_CLASS}class B inherits A
+end class
+end package
+%EXPECT PASS
+%ERROR "Classes may only inherit from classes" AT BEFORE_INHERITING_CLASS
+%ENDTEST
+
+%TEST CheckClassImplementsInterface
+foreign package java.import
+class A
+end class
+end package
+foreign package java.test
+use java.import.A
+%{BEFORE_IMPLEMENTING_CLASS}class B implements A
+end class
+end package
+%EXPECT PASS
+%ERROR "Classes may only implement interfaces" AT BEFORE_IMPLEMENTING_CLASS
+%ENDTEST
+
+%TEST CheckInterfaceInheritsInterface
+foreign package java.import
+class A
+end class
+end package
+foreign package java.test
+use java.import.A
+%{BEFORE_INHERITING_INTERFACE}interface B inherits A
+end interface
+end package
+%EXPECT PASS
+%ERROR "Interfaces may only inherit from interfaces" AT BEFORE_INHERITING_INTERFACE
+%ENDTEST
+
+%TEST CheckMatchingTemplateArguments
+foreign package java.test
+class A<T,U,V>
+end class
+class X
+end class
+class B
+constant T as %{BEFORE_TYPE}A<X>
+end class
+end package
+%EXPECT PASS
+%ERROR "Generic type parameters do not match definition" AT BEFORE_TYPE
+%ENDTEST

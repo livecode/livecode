@@ -970,7 +970,7 @@ void MCAndroidInputControl::DeleteView(jobject p_view)
 
 bool MCNativeInputControlCreate(MCNativeControl *&r_control)
 {
-    MCAndroidInputControl *t_control = new MCAndroidInputControl();
+    MCAndroidInputControl *t_control = new (nothrow) MCAndroidInputControl();
     // configure as single-line input control
     t_control->SetMultiLine(false);
     
@@ -981,7 +981,7 @@ bool MCNativeInputControlCreate(MCNativeControl *&r_control)
 bool MCNativeMultiLineInputControlCreate(MCNativeControl *&r_control)
 {
     // configure as multi-line input control
-    MCAndroidInputControl *t_control = new MCAndroidInputControl();
+    MCAndroidInputControl *t_control = new (nothrow) MCAndroidInputControl();
     t_control->SetMultiLine(true);
     
     r_control = t_control;

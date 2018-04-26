@@ -273,12 +273,6 @@ MCVectorImageRep::~MCVectorImageRep()
 	MCMemoryDeallocate(m_data);
 }
 
-bool MCVectorImageRep::Render(MCDC *p_context, bool p_embed, MCRectangle &p_image_rect, MCRectangle &p_clip_rect)
-{
-	p_context->drawpict((uint8_t*)m_data, m_size, p_embed, p_image_rect, p_clip_rect);
-	return true;
-}
-
 bool MCVectorImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
 {
 	/* OVERHAUL - REVISIT - should be able to render into an image context

@@ -56,6 +56,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 #include "scriptpt.h"
 #include "widget-events.h"
+#include "parentscript.h"
 
 #include "exec.h"
 #include "exec-interface.h"
@@ -556,6 +557,11 @@ IO_stat MCDispatch::readscriptonlystartupstack(IO_handle stream, uindex_t p_leng
     // stack list.
     stacks = t_stack;
     
+    // Mark the stack as needed parentscript resolution. This is done after
+    // aux stacks have been loaded.
+    if (s_loaded_parent_script_reference)
+        t_stack -> setextendedstate(True, ECS_USES_PARENTSCRIPTS);
+    
     r_stack = t_stack;
     return IO_NORMAL;
 }
@@ -603,15 +609,13 @@ IO_stat MCDispatch::trytoreadbinarystack(MCStringRef p_openpath,
     
     // MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
     uint1 charset, type;
-    char* t_newsf = nullptr;
     if (IO_read_uint1(&charset, x_stream) != IO_NORMAL
         || IO_read_uint1(&type, x_stream) != IO_NORMAL
-        || IO_read_cstring_legacy(t_newsf, x_stream, 2) != IO_NORMAL)
+        || IO_discard_cstring_legacy(x_stream, 2) != IO_NORMAL)
     {
         r_result = "stack is corrupted, check for ~ backup file";
         return checkloadstat(IO_ERROR);
     }
-    MCMemoryDeallocate(t_newsf);
 
     MCtranslatechars = charset != CHARSET;
 
@@ -635,17 +639,12 @@ IO_stat MCDispatch::trytoreadbinarystack(MCStringRef p_openpath,
     {
         // MW-2013-11-19: [[ UnicodeFileFormat ]] These strings are never written out, so
         //   legacy.
-        char* lstring = nullptr;
-        char* cstring = nullptr;
-        if (IO_read_cstring_legacy(lstring, x_stream, 2) != IO_NORMAL
-            || IO_read_cstring_legacy(cstring, x_stream, 2) != IO_NORMAL)
+        if (IO_discard_cstring_legacy(x_stream, 2) != IO_NORMAL
+            || IO_discard_cstring_legacy(x_stream, 2) != IO_NORMAL)
         {
             r_result = "stack is corrupted, check for ~ backup file";
             return checkloadstat(IO_ERROR);
         }
-
-        MCMemoryDeallocate(lstring);
-        MCMemoryDeallocate(cstring);
     }
     
     if (IO_read_uint1(&type, x_stream) != IO_NORMAL
@@ -678,18 +677,24 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
                                              uindex_t p_size,
                                              MCStringEncoding p_encoding)
 {
-    MCAutoStringRef t_raw_script_string, t_LC_script_string;
+    MCAutoStringRef t_raw_script_string, t_lc_script_string;
+    MCStringLineEndingStyle t_line_encoding_style;
+    
     if (!MCStringCreateWithBytes(p_bytes, p_size, p_encoding, false,
                                  &t_raw_script_string) ||
-        !MCStringConvertLineEndingsToLiveCode(*t_raw_script_string,
-                                              &t_LC_script_string))
+        !MCStringNormalizeLineEndings(*t_raw_script_string,
+                                      kMCStringLineEndingStyleLF, 
+                                      kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                      kMCStringLineEndingOptionNormalizeLSToVT,
+                                      &t_lc_script_string,
+                                      &t_line_encoding_style))
     {
         return nullptr;
     }
     
     // Now attempt to parse the header line:
     //   'script' <string>
-    MCScriptPoint sp(*t_LC_script_string);
+    MCScriptPoint sp(*t_lc_script_string);
     
     // Parse 'script' token.
     if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) != PS_NORMAL)
@@ -704,12 +709,27 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
         return nullptr;
     }
     
-    MCNewAutoNameRef t_script_name;
-    if (!MCNameClone(sp . gettoken_nameref(), &t_script_name))
-    {
-        return nullptr;
-    }
+    MCNewAutoNameRef t_script_name = sp.gettoken_nameref();
     
+    // If 'with' is next then parse the behavior reference.
+    MCNewAutoNameRef t_behavior_name;
+    if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+    {
+        // Ensure 'behavior' is next 
+        if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_PARENT_SCRIPT) != PS_NORMAL)
+        {
+            return nullptr;
+        }
+        
+        // Read the behavior name
+        if (sp.next(t_type) != PS_NORMAL || t_type != ST_LIT)
+        {
+            return nullptr;
+        }
+        
+        t_behavior_name = sp.gettoken_nameref();
+    }
+
     // Parse end of line.
     Parse_stat t_stat;
     t_stat = sp . next(t_type);
@@ -724,7 +744,7 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
     uint32_t t_index = 0;
     
     // Jump over the possible lines before the string token
-    while (MCStringFirstIndexOfChar(*t_LC_script_string, '\n', t_index,
+    while (MCStringFirstIndexOfChar(*t_lc_script_string, '\n', t_index,
                                     kMCStringOptionCompareExact, t_index)
            && t_lines > 0)
     {
@@ -735,13 +755,13 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
     t_index += 1;
     
     // t_line now has the last LineFeed of the token
-    MCAutoStringRef t_LC_script_body;
+    MCAutoStringRef t_lc_script_body;
     
     // We copy the body of the stack script
-    if (!MCStringCopySubstring(*t_LC_script_string,
+    if (!MCStringCopySubstring(*t_lc_script_string,
                                MCRangeMake(t_index,
-                                           MCStringGetLength(*t_LC_script_string)
-                                           - t_index), &t_LC_script_body))
+                                           MCStringGetLength(*t_lc_script_string)
+                                           - t_index), &t_lc_script_body))
     {
         return nullptr;
     }
@@ -752,10 +772,19 @@ static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
         return nullptr;
     
     // Set it up as script only.
-    t_stack -> setasscriptonly(*t_LC_script_body);
+    t_stack -> setasscriptonly(*t_lc_script_body);
     
     // Set its name.
     t_stack -> setname(*t_script_name);
+    
+    // Save line endings from raw script string to restore when saving file.
+    t_stack -> setlineencodingstyle(t_line_encoding_style);
+
+    // If we parsed a behavior reference, then set it.
+    if (*t_behavior_name != nullptr)
+    {
+        t_stack->setparentscript_onload(0, *t_behavior_name);
+    }
     
     return t_stack;
 }
@@ -852,8 +881,7 @@ void MCDispatch::processstack(MCStringRef p_openpath, MCStack* &x_stack)
         {
             if (x_stack->hasname(tstk->getname()))
             {
-                MCAutoNameRef t_stack_name;
-                /* UNCHECKED */ t_stack_name . Clone(x_stack -> getname());
+                MCNewAutoNameRef t_stack_name = x_stack->getname();
                 
                 delete x_stack;
                 x_stack = nullptr;
@@ -867,7 +895,7 @@ void MCDispatch::processstack(MCStringRef p_openpath, MCStack* &x_stack)
                     tstk = stacks;
                     do
                     {
-                        if (MCNameIsEqualTo(t_stack_name, tstk->getname(), kMCCompareCaseless))
+                        if (MCNameIsEqualToCaseless(*t_stack_name, tstk->getname()))
                         {
                             x_stack = tstk;
                             break;
@@ -898,7 +926,10 @@ void MCDispatch::processstack(MCStringRef p_openpath, MCStack* &x_stack)
     // this - so we just ignore the result for now (note that all the 'load'
     // methods *fail* to check for no-memory errors!).
     if (s_loaded_parent_script_reference)
+    {
         x_stack -> resolveparentscripts();
+        x_stack -> setextendedstate(True, ECS_USES_PARENTSCRIPTS);
+    }
 }
 
 // MW-2012-02-17: [[ LogFonts ]] Actually load the stack file (wrapped by readfile
@@ -946,16 +977,15 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
     if (stacks == NULL)
     {
         MCnoui = True;
-        MCscreen = new MCUIDC;
+        MCscreen = new (nothrow) MCUIDC;
         /* UNCHECKED */ MCStackSecurityCreateStack(stacks);
         MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
         stacks->setparent(this);
         stacks->setname_cstring("revScript");
         uint4 size = (uint4)MCS_fsize(stream);
-        MCAutoPointer<char> script;
-        script = new char[size + 2];
-        (*script)[size] = '\n';
-        (*script)[size + 1] = '\0';
+        /* UNCHECKED */ MCAutoPointer<char[]> script = new (nothrow) char[size + 2];
+        script[size] = '\n';
+        script[size + 1] = '\0';
         if (IO_read(*script, size, stream) != IO_NORMAL)
             return IO_ERROR;
         MCAutoStringRef t_script_str;
@@ -1004,7 +1034,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
         MCAutoStringRef t_leaf_name;
 		uindex_t t_leaf_index;
 		if (MCStringLastIndexOfChar(p_name, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
-			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMake(t_leaf_index + 1, MCStringGetLength(p_name) - (t_leaf_index + 1)), &t_leaf_name);
+			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMakeMinMax(t_leaf_index + 1, MCStringGetLength(p_name)), &t_leaf_name);
 		else
 			t_leaf_name = p_name;
 		if ((stream = MCS_open(*t_leaf_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
@@ -1136,15 +1166,28 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
         // Ensure script isn't encrypted if a password was removed in session
         sptr -> unsecurescript(sptr);
         
-        // Write out the standard script stack header, and then the script itself
-		MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+        // Write out the standard script stack header with behavior reference 
+        // (if applicable) and then the script itself
+        MCParentScript *t_parent_script = sptr->getparentscript();
+        if (t_parent_script != nullptr &&
+            t_parent_script->GetObjectId() == 0)
+        {
+            MCStringFormat(&t_script_body,
+                           "script \"%@\" with behavior \"%@\"\n%@",
+                           sptr->getname(),
+                           t_parent_script->GetObjectStack(),
+                           sptr->_getscript());
+        }
+        else
+        {
+            MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+        }
 
-		// Convert line endings - but only if the native line ending isn't CR!
-#ifndef __CR__
-		MCStringConvertLineEndingsToLiveCode(*t_script_body, &t_converted);
-#else
-		t_converted = *t_script_body;
-#endif
+        MCStringNormalizeLineEndings(*t_script_body, 
+                                     sptr -> getlineencodingstyle(), 
+                                     false,
+                                     &t_converted, 
+                                     nullptr);
 	}
     
     // Open the output stream.
@@ -1305,6 +1348,9 @@ void send_relaunch(void)
 #endif
 }
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 void send_startup_message(bool p_do_relaunch = true)
 {
 	if (p_do_relaunch)
@@ -1741,7 +1787,7 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 		fonts = MCFontlistCreateNew();
 #else
 	if (fonts == nil)
-		fonts = new MCFontlist;
+		fonts = new (nothrow) MCFontlist;
 #endif
 	return fonts->getfont(fname, size, style, printer);
 }
@@ -1750,7 +1796,7 @@ MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle, MCNameRef
 {
 #if defined(_MACOSX) || defined (_MAC_SERVER) || defined (TARGET_SUBPLATFORM_IPHONE)
     if (fonts == nil)
-        fonts = new MCFontlist;
+        fonts = new (nothrow) MCFontlist;
     return fonts->getfontbyhandle(p_handle, p_name);
 #else
     return NULL;
@@ -2029,7 +2075,7 @@ check:
                     }
                 }
                 
-				iptr = new MCImage;
+				iptr = new (nothrow) MCImage;
                 iptr->appendto(imagecache);
                 iptr->SetText(*ctxt, *t_data);
 				iptr->setname(*t_image_name);
@@ -2128,7 +2174,7 @@ void MCDispatch::remove_transient_stack(MCStack *sptr)
 
 void MCDispatch::timer(MCNameRef p_message, MCParameter *p_parameters)
 {
-	if (MCNameIsEqualTo(p_message, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(p_message, MCM_internal))
 	{
 		MCStackSecurityExecutionTimeout();
 	}
@@ -2151,7 +2197,7 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
     
 	if (MCStringLastIndexOfChar(p_external, '/', t_ext_length, kMCStringOptionCompareExact, t_slash_index))
     {
-		if (!MCStringCopySubstring(p_external, MCRangeMake(t_slash_index + 1, t_ext_length - t_slash_index - 1), t_external_leaf))
+		if (!MCStringCopySubstring(p_external, MCRangeMakeMinMax(t_slash_index + 1, t_ext_length), t_external_leaf))
             return false;
     }
     else
@@ -2178,7 +2224,7 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
 #endif
 	
 	if (m_externals == nil)
-		m_externals = new MCExternalHandlerList;
+		m_externals = new (nothrow) MCExternalHandlerList;
 	
 	bool t_loaded;
 	t_loaded = m_externals -> Load(t_filename);
@@ -2243,7 +2289,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
             MCExecContext ctxt(nil, nil, nil);
 
 			MCImage *t_image;
-			t_image = new MCImage;
+			t_image = new (nothrow) MCImage;
 			t_image -> open();
 			t_image -> openimage();
 			t_image -> SetText(ctxt, *t_data);
@@ -2284,7 +2330,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
             {
                 MCExecContext ctxt(nil, nil, nil);
 				
-				t_objects = new MCImage(*MCtemplateimage);
+				t_objects = new (nothrow) MCImage(*MCtemplateimage);
 				t_objects -> open();
 				static_cast<MCImage *>(t_objects) -> SetText(ctxt, *t_data);
 				t_objects -> close();
@@ -2723,6 +2769,12 @@ bool MCDispatch::fetchlibrarymapping(MCStringRef p_name, MCStringRef& r_path)
     return true;
 }
 
+bool MCDispatch::haslibrarymapping(MCStringRef p_name)
+{
+    MCAutoStringRef t_mapping;
+    return fetchlibrarymapping(p_name, &t_mapping);
+}
+
 bool MCDispatch::recomputefonts(MCFontRef, bool p_force)
 {
     // Call the general recompute function first
@@ -2739,3 +2791,22 @@ bool MCDispatch::recomputefonts(MCFontRef, bool p_force)
     
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCDispatch::resolveparentscripts()
+{
+    if (stacks != NULL)
+    {
+        MCStack* t_stack = stacks;
+        do
+        {
+            if (t_stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
+                t_stack -> resolveparentscripts();
+            
+            t_stack = t_stack->next();
+        }
+        while(t_stack != stacks);
+    }
+}
+

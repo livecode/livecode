@@ -1,0 +1,10 @@
+widget com.livecode.idesupport_tests.development.widget_propertychanged
+
+use com.livecode.widget
+use com.livecode.engine
+
+public handler OnSave(out rProperties as Array)
+	trigger all
+end handler
+
+end widget

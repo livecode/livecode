@@ -24,18 +24,32 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCGSolidColorRef kMCGBlackSolidColor = nullptr;
+
+#ifdef _DEBUG
+size_t MCGObject::s_object_count = 0;
+#endif
+
 void MCGraphicsInitialize(void)
 {
 	MCGPlatformInitialize();
 	MCGTextMeasureCacheInitialize();
 	MCGBlendModesInitialize();
+    
+    MCGSolidColor::Create(0.0, 0.0, 0.0, 1.0, kMCGBlackSolidColor);
 }
 
 void MCGraphicsFinalize(void)
 {
+    MCGRelease(kMCGBlackSolidColor);
+    
 	MCGPlatformFinalize();
 	MCGTextMeasureCacheFinalize();
 	MCGBlendModesFinalize();
+    
+#ifdef _DEBUG
+    MCLog("Graphic object count = %d", MCGObject::s_object_count);
+#endif
 }
 
 void MCGraphicsCompact(void)
@@ -45,168 +59,377 @@ void MCGraphicsCompact(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-static void MCGPatternDestroy(MCGPatternRef self)
+bool MCGSolidColor::Apply(SkPaint& r_paint)
 {
-	if (self != NULL)
-	{
-		MCGImageRelease(self -> pattern);
-		MCMemoryDelete(self);
-	}
+    r_paint.setColor(MCGColorToSkColor(m_color));
+    return true;
 }
 
-bool MCGPatternCreate(MCGImageRef p_image, MCGAffineTransform p_transform, MCGImageFilter p_filter, MCGPatternRef& r_pattern)
+bool MCGSolidColor::Create(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha, MCGSolidColorRef& r_solid_color)
 {
-	bool t_success;
-	t_success = true;
-	
-	__MCGPattern *t_pattern;
-	t_pattern = NULL;
-	if (t_success)
-		t_success = MCMemoryNew(t_pattern);
-	
-	if (t_success)
-	{
-		t_pattern -> pattern = MCGImageRetain(p_image);
-		t_pattern -> transform = p_transform;
-		t_pattern -> filter = p_filter;
-		t_pattern -> references = 1;
-		r_pattern = t_pattern;
-	}
-	else
-		MCMemoryDelete(t_pattern);
-		
-	return t_success;
-}
-
-MCGPatternRef MCGPatternRetain(MCGPatternRef self)
-{
-	if (self != NULL)
-		self -> references++;
-	return self;	
-}
-
-void MCGPatternRelease(MCGPatternRef self)
-{
-	if (self != NULL)
-	{
-		self -> references--;
-		if (self -> references <= 0)
-			MCGPatternDestroy(self);
-	}
-}
-
-bool MCGPatternToSkShader(MCGPatternRef self, SkShader*& r_shader)
-{
-	bool t_success;
-	t_success = true;
-	
-	SkShader *t_pattern_shader;
-	t_pattern_shader = NULL;
-	if (t_success)
-	{
-		t_pattern_shader = SkShader::CreateBitmapShader(*self -> pattern -> bitmap, SkShader::kRepeat_TileMode, SkShader::kRepeat_TileMode);
-		t_success = t_pattern_shader != NULL;
-	}
-	
-	if (t_success)
-	{
-		SkMatrix t_transform;
-		MCGAffineTransformToSkMatrix(self -> transform, t_transform);
-		t_pattern_shader -> setLocalMatrix(t_transform);
-		r_shader = t_pattern_shader;
-	}
-	else if (t_pattern_shader != NULL)
-		t_pattern_shader -> unref();
-	
-	return t_success;	
+    MCGSolidColorRef t_color = new (nothrow) MCGSolidColor;
+    if (t_color == nullptr)
+    {
+        return false;
+    }
+    
+    t_color->m_color = MCGColorMakeRGBA(p_red, p_green, p_blue, p_alpha);
+    
+    r_solid_color = t_color;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void MCGGradientDestroy(MCGGradientRef self)
+MCGPattern::~MCGPattern(void)
 {
-	if (self != NULL)
-	{
-		MCMemoryDeleteArray(self -> colors);
-		MCMemoryDeleteArray(self -> stops);
-		MCMemoryDelete(self);
-	}
+    MCGImageRelease(m_image);
 }
 
-bool MCGGradientCreate(MCGGradientFunction p_function, const MCGFloat* p_stops, const MCGColor* p_colors, uindex_t p_ramp_length, bool p_mirror, bool p_wrap, uint32_t p_repeats, MCGAffineTransform p_transform, MCGImageFilter p_filter, MCGGradientRef& r_gradient)
+bool MCGPattern::Create(MCGImageRef p_image, MCGAffineTransform p_transform, MCGImageFilter p_filter, MCGPatternRef& r_pattern)
 {
-	bool t_success;
-	t_success = true;
-	
-	__MCGGradient *t_gradient;
-	t_gradient = NULL;
-	if (t_success)
-		t_success = MCMemoryNew(t_gradient);	
-	
-	if (t_success)
-		t_success = MCMemoryNewArray(p_ramp_length, t_gradient -> colors);
-	
-	if (t_success)
-		t_success = MCMemoryNewArray(p_ramp_length, t_gradient -> stops);
-	
-	if (t_success)
-	{
-		for (uint32_t i = 0; i < p_ramp_length; i++)
-		{
-			t_gradient -> stops[i] = p_stops[i];
-			t_gradient -> colors[i] = p_colors[i];
-		}
-		
-		t_gradient -> function = p_function;
-		t_gradient -> ramp_length = p_ramp_length;
-		t_gradient -> mirror = p_mirror;
-		t_gradient -> wrap = p_wrap;
-		t_gradient -> repeats = p_repeats;
-		t_gradient -> transform = p_transform;
-		t_gradient -> filter = p_filter;
-		t_gradient -> references = 1;
-		r_gradient = t_gradient;
-	}
-	else
-		MCGGradientDestroy(t_gradient);
-	
-	return t_success;
+    MCGPatternRef t_pattern = new (nothrow) MCGPattern;
+    if (t_pattern == nullptr)
+    {
+        return false;
+    }
+    
+    t_pattern->m_image = MCGImageRetain(p_image);
+    t_pattern->m_transform = p_transform;
+    t_pattern->m_filter = p_filter;
+    
+    r_pattern = t_pattern;
+    
+    return true;
 }
 
-MCGGradientRef MCGGradientRetain(MCGGradientRef self)
+bool MCGPattern::Apply(SkPaint& r_paint)
 {
-	if (self != NULL)
-		self -> references++;
-	return self;
+	SkMatrix t_transform;
+    MCGAffineTransformToSkMatrix(m_transform, t_transform);
+
+    sk_sp<SkShader> t_shader =
+            SkShader::MakeBitmapShader(*m_image->bitmap, SkShader::kRepeat_TileMode, SkShader::kRepeat_TileMode, &t_transform);
+    if (t_shader == nullptr)
+    {
+        return false;
+    }
+
+    switch (m_filter)
+    {
+        case kMCGImageFilterNone:
+            r_paint.setFilterQuality(SkFilterQuality::kNone_SkFilterQuality);
+            break;
+        case kMCGImageFilterLow:
+            r_paint.setFilterQuality(SkFilterQuality::kLow_SkFilterQuality);
+            break;
+        case kMCGImageFilterMedium:
+            r_paint.setFilterQuality(SkFilterQuality::kMedium_SkFilterQuality);
+            break;
+        case kMCGImageFilterHigh:
+            r_paint.setFilterQuality(SkFilterQuality::kHigh_SkFilterQuality);
+            break;
+    }
+
+    r_paint.setShader(t_shader);
+
+	return true;
 }
 
-void MCGGradientRelease(MCGGradientRef self)
+////////////////////////////////////////////////////////////////////////////////
+
+MCGRamp::~MCGRamp(void)
 {
-	if (self != NULL)
-	{
-		self -> references--;
-		if (self -> references <= 0)
-			MCGGradientDestroy(self);
-	}
+    MCMemoryDeleteArray(m_stops);
+    MCMemoryDeleteArray(m_colors);
 }
 
-bool MCGGradientToSkShader(MCGGradientRef self, MCGRectangle p_clip, SkShader*& r_shader)
+bool MCGRamp::Create(const MCGFloat *p_stops, const MCGColor *p_colors, size_t p_ramp_length, MCGRampRef& r_ramp)
 {
-	bool t_success;
-	t_success = true;	
-	
-	// MM-2013-11-19: [[ Bug 11471 ]] Move to legacy gradient code for all gradient kinds - there was a loss of quality using Skia.
-	SkShader *t_gradient_shader;
-	t_gradient_shader = new MCGLegacyGradientShader(self, p_clip);
-	t_success = t_gradient_shader != NULL;
-	
-	if (t_success)
-		r_shader = t_gradient_shader;
-	else if (t_gradient_shader != NULL)
-		t_gradient_shader -> unref();		
+    MCGRampRef t_ramp = new (nothrow) MCGRamp;
+    if (t_ramp == nullptr)
+    {
+        return false;
+    }
+    
+    if (MCMemoryNewArray(p_ramp_length, t_ramp->m_stops) &&
+        MCMemoryNewArray(p_ramp_length, t_ramp->m_colors))
+    {
+        for(size_t i = 0; i < p_ramp_length; i++)
+        {
+            t_ramp->m_stops[i] = p_stops[i];
+            t_ramp->m_colors[i] = MCGColorToSkColor(p_colors[i]);
+        }
+        t_ramp->m_ramp_length = p_ramp_length;
+    }
+    else
+    {
+        MCGRelease(t_ramp);
+        return false;
+    }
+    
+    r_ramp = t_ramp;
+    
+    return true;
+}
 
-	return t_success;
+bool MCGRamp::Create4f(const MCGFloat *p_stops, const MCGColor4f *p_colors, size_t p_ramp_length, MCGRampRef& r_ramp)
+{
+    MCGRampRef t_ramp = new (nothrow) MCGRamp;
+    if (t_ramp == nullptr)
+    {
+        return false;
+    }
+    
+    if (MCMemoryNewArray(p_ramp_length, t_ramp->m_stops) &&
+        MCMemoryNewArray(p_ramp_length, t_ramp->m_colors))
+    {
+        for(size_t i = 0; i < p_ramp_length; i++)
+        {
+            t_ramp->m_stops[i] = p_stops[i];
+            t_ramp->m_colors[i] = MCGColorMakeRGBA(p_colors[i].red, p_colors[i].green, p_colors[i].blue, p_colors[i].alpha);
+        }
+        t_ramp->m_ramp_length = p_ramp_length;
+    }
+    else
+    {
+        MCGRelease(t_ramp);
+        return false;
+    }
+    
+    r_ramp = t_ramp;
+    
+    return true;
+}
+
+/**/
+
+static SkShader::TileMode MCGGradientSpreadMethodToSkTileMode(MCGGradientSpreadMethod p_method)
+{
+    switch(p_method)
+    {
+    case kMCGGradientSpreadMethodPad:
+        return SkShader::kClamp_TileMode;
+    case kMCGGradientSpreadMethodRepeat:
+        return SkShader::kRepeat_TileMode;
+    case kMCGGradientSpreadMethodReflect:
+        return SkShader::kMirror_TileMode;
+    }
+    
+    MCUnreachableReturn(SkShader::kClamp_TileMode);
+}
+
+MCGGradient::~MCGGradient(void)
+{
+    MCGRelease(m_ramp);
+}
+
+/**/
+
+bool MCGLinearGradient::Create(MCGPoint p_from, MCGPoint p_to, MCGRampRef p_ramp, MCGGradientSpreadMethod p_spread_method, MCGAffineTransform p_transform, MCGGradientRef& r_gradient)
+{
+    MCGLinearGradientRef t_gradient = new (nothrow) MCGLinearGradient;
+    if (t_gradient == nullptr)
+    {
+        return false;
+    }
+    
+    t_gradient->m_from = p_from;
+    t_gradient->m_to = p_to;
+    t_gradient->m_ramp = MCGRetain(p_ramp);
+    t_gradient->m_spread_method = p_spread_method;
+    t_gradient->m_transform = p_transform;
+    
+    r_gradient = t_gradient;
+    
+    return true;
+}
+
+bool MCGLinearGradient::Apply(SkPaint& r_paint)
+{
+	SkMatrix t_transform;
+    MCGAffineTransformToSkMatrix(m_transform, t_transform);
+
+    SkPoint t_points[2] = {MCGPointToSkPoint(m_from), MCGPointToSkPoint(m_to)};
+    sk_sp<SkShader> t_shader =
+            SkGradientShader::MakeLinear(t_points,
+                                         m_ramp->GetColors(),
+                                         m_ramp->GetStops(),
+                                         m_ramp->GetLength(),
+                                         MCGGradientSpreadMethodToSkTileMode(m_spread_method),
+                                         0,
+                                         &t_transform);
+    if (t_shader == nullptr)
+    {
+        return false;
+    }
+
+    r_paint.setShader(t_shader);
+    
+    return true;
+}
+
+/**/
+
+bool MCGRadialGradient::Create(MCGPoint p_focal_point, MCGFloat p_radius, MCGRampRef p_ramp, MCGGradientSpreadMethod p_spread_method, MCGAffineTransform p_transform, MCGGradientRef& r_gradient)
+{
+    MCGRadialGradientRef t_gradient = new (nothrow) MCGRadialGradient;
+    if (t_gradient == nullptr)
+    {
+        return false;
+    }
+    
+    t_gradient->m_focal_point = p_focal_point;
+    t_gradient->m_radius = p_radius;
+    t_gradient->m_ramp = MCGRetain(p_ramp);
+    t_gradient->m_spread_method = p_spread_method;
+    t_gradient->m_transform = p_transform;
+    
+    r_gradient = t_gradient;
+    
+    return true;
+}
+
+bool MCGRadialGradient::Apply(SkPaint& r_paint)
+{
+	SkMatrix t_transform;
+    MCGAffineTransformToSkMatrix(m_transform, t_transform);
+
+    sk_sp<SkShader> t_shader =
+            SkGradientShader::MakeRadial(MCGPointToSkPoint(m_focal_point),
+                                         m_radius,
+                                         m_ramp->GetColors(),
+                                         m_ramp->GetStops(),
+                                         m_ramp->GetLength(),
+                                         MCGGradientSpreadMethodToSkTileMode(m_spread_method),
+                                         0,
+                                         &t_transform);
+    if (t_shader == nullptr)
+    {
+        return false;
+    }
+
+    r_paint.setShader(t_shader);
+    
+    return true;
+}
+
+/**/
+
+bool MCGConicalGradient::Create(MCGPoint p_center_point, MCGFloat p_radius, MCGPoint p_focal_point, MCGFloat p_focal_radius, MCGRampRef p_ramp, MCGGradientSpreadMethod p_spread_method, MCGAffineTransform p_transform, MCGGradientRef& r_gradient)
+{
+    MCGConicalGradientRef t_gradient = new (nothrow) MCGConicalGradient;
+    if (t_gradient == nullptr)
+    {
+        return false;
+    }
+    
+    t_gradient->m_center_point = p_center_point;
+    t_gradient->m_radius = p_radius;
+    t_gradient->m_focal_point = p_focal_point;
+    t_gradient->m_focal_radius = p_focal_radius;
+    t_gradient->m_ramp = MCGRetain(p_ramp);
+    t_gradient->m_spread_method = p_spread_method;
+    t_gradient->m_transform = p_transform;
+    
+    r_gradient = t_gradient;
+    
+    return true;
+}
+
+bool MCGConicalGradient::Apply(SkPaint& r_paint)
+{
+	SkMatrix t_transform;
+    MCGAffineTransformToSkMatrix(m_transform, t_transform);
+
+    sk_sp<SkShader> t_shader =
+            SkGradientShader::MakeTwoPointConical(MCGPointToSkPoint(m_center_point),
+                                                  m_radius,
+                                                  MCGPointToSkPoint(m_focal_point),
+                                                  m_focal_radius,
+                                                  m_ramp->GetColors(),
+                                                  m_ramp->GetStops(),
+                                                  m_ramp->GetLength(),
+                                                  MCGGradientSpreadMethodToSkTileMode(m_spread_method),
+                                                  0,
+                                                  &t_transform);
+    if (t_shader == nullptr)
+    {
+        return false;
+    }
+
+    r_paint.setShader(t_shader);
+    
+    return true;
+}
+
+/**/
+
+bool MCGSweepGradient::Create(MCGPoint p_center, MCGRampRef p_ramp, MCGGradientSpreadMethod p_spread_method, MCGAffineTransform p_transform, MCGGradientRef& r_gradient)
+{
+    MCGSweepGradientRef t_gradient = new (nothrow) MCGSweepGradient;
+    if (t_gradient == nullptr)
+    {
+        return false;
+    }
+    
+    t_gradient->m_center = p_center;
+    t_gradient->m_ramp = MCGRetain(p_ramp);
+    t_gradient->m_spread_method = p_spread_method;
+    t_gradient->m_transform = p_transform;
+    
+    r_gradient = t_gradient;
+    
+    return true;
+}
+
+bool MCGSweepGradient::Apply(SkPaint& r_paint)
+{
+	SkMatrix t_transform;
+    MCGAffineTransformToSkMatrix(m_transform, t_transform);
+
+    sk_sp<SkShader> t_shader =
+            SkGradientShader::MakeSweep(m_center.x, m_center.y,
+                                        m_ramp->GetColors(),
+                                        m_ramp->GetStops(),
+                                        m_ramp->GetLength(),
+                                        0,
+                                        &t_transform);
+    if (t_shader == nullptr)
+    {
+        return false;
+    }
+
+    r_paint.setShader(t_shader);
+    
+    return true;
+}
+
+bool MCGGeneralizedGradient::Create(MCGGradientFunction p_function, MCGRampRef p_ramp, bool p_mirror, bool p_wrap, uint32_t p_repeats, MCGAffineTransform p_transform, MCGImageFilter p_filter, MCGGradientRef& r_gradient)
+{
+    MCGGeneralizedGradientRef t_gradient = new (nothrow) MCGGeneralizedGradient;
+    if (t_gradient == nullptr)
+    {
+        return false;
+    }
+
+    t_gradient->m_function = p_function;
+    t_gradient->m_ramp = MCGRetain(p_ramp);
+    t_gradient->m_mirror = p_mirror;
+    t_gradient->m_wrap = p_wrap;
+    t_gradient->m_repeats = p_repeats;
+    t_gradient->m_filter = p_filter;
+    t_gradient->m_transform = p_transform;
+
+    r_gradient = t_gradient;
+    
+    return true;
+}
+
+bool MCGGeneralizedGradient::Apply(SkPaint& r_paint)
+{
+    return MCGGeneralizedGradientShaderApply(this, r_paint);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -273,43 +496,33 @@ void MCGDashesRelease(MCGDashesRef self)
 	}	
 }
 
-bool MCGDashesToSkDashPathEffect(MCGDashesRef self, SkDashPathEffect*& r_path_effect)
+bool MCGDashesToSkDashPathEffect(MCGDashesRef self, sk_sp<SkPathEffect>& r_path_effect)
 {
 	if (self -> count <= 0)
 	{
-		r_path_effect = NULL;
+		r_path_effect = nullptr;
 		return true;
 	}
-	
-	bool t_success;
-	t_success = true;
-	
+
     // Skia won't except odd numbers of dashes, so we must replicate in that case.
-    uint32_t t_dash_count;
-    if (t_success)
-        t_dash_count = (self -> count % 2) == 0 ? self -> count : self -> count * 2;
-        
-	SkScalar *t_dashes;
-	if (t_success)
-		t_success = MCMemoryNewArray(t_dash_count, t_dashes);
-	
-	SkDashPathEffect *t_dash_effect;
-	t_dash_effect = NULL;
-	if (t_success)
-	{
-		for (uint32_t i = 0; i < t_dash_count; i++)
-			t_dashes[i] = MCGFloatToSkScalar(self -> lengths[i % self -> count]);
-	
-		t_dash_effect = new SkDashPathEffect(t_dashes, (int)t_dash_count, MCGFloatToSkScalar(self -> phase));
-		t_success = t_dash_effect != NULL;
-	}
-	
-	if (t_success)
-		r_path_effect = t_dash_effect;
-	
-	MCMemoryDeleteArray(t_dashes);
-	
-	return t_success;	
+    uint32_t t_dash_count =
+        (self -> count % 2) == 0 ? self -> count : self -> count * 2;
+
+    MCAutoPointer<SkScalar[]> t_dashes = new (nothrow) SkScalar[t_dash_count];
+    if (!t_dashes)
+        return false;
+
+    for (uint32_t i = 0; i < t_dash_count; i++)
+        t_dashes[i] = MCGFloatToSkScalar(self -> lengths[i % self -> count]);
+    
+    sk_sp<SkPathEffect> t_dash_effect =
+        SkDashPathEffect::Make(*t_dashes, (int)t_dash_count, MCGFloatToSkScalar(self -> phase));
+
+    if (t_dash_effect == nullptr)
+        return false;
+
+    r_path_effect = t_dash_effect;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -337,11 +550,10 @@ bool MCGMaskCreateWithInfoAndRelease(const MCGDeviceMaskInfo& p_info, MCGMaskRef
 				t_mask -> mask . fFormat = SkMask::kA8_Format;
 				t_mask -> mask . fRowBytes = p_info . width;
 				break;
-				
-			case kMCGMaskFormat_LCD32:
-				t_mask -> mask . fFormat = SkMask::kLCD32_Format;
-				t_mask -> mask . fRowBytes = p_info . width * 4;
-				break;				
+                
+            case kMCGMaskFormat_LCD32:
+                MCUnreachable();
+                break;
 		}		
 		
 		t_mask -> mask . fBounds . setXYWH(p_info . x, p_info . y, p_info . width, p_info . height);
@@ -376,102 +588,77 @@ MCGRectangle MCGMaskGetBounds(MCGMaskRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static SkXfermode** s_skia_blend_modes = NULL;
-
 void MCGBlendModesInitialize(void)
 {
-	/* UNCHECKED */ MCMemoryNewArray(kMCGBlendModeCount, s_skia_blend_modes);	
-	
-	s_skia_blend_modes[kMCGBlendModeClear] = SkXfermode::Create(SkXfermode::kClear_Mode);
-	s_skia_blend_modes[kMCGBlendModeCopy] = SkXfermode::Create(SkXfermode::kSrcOver_Mode);
-	s_skia_blend_modes[kMCGBlendModeSourceOver] = SkXfermode::Create(SkXfermode::kSrcOver_Mode);
-	s_skia_blend_modes[kMCGBlendModeSourceIn] = SkXfermode::Create(SkXfermode::kSrcIn_Mode);
-	s_skia_blend_modes[kMCGBlendModeSourceOut] = SkXfermode::Create(SkXfermode::kSrcOut_Mode);
-	s_skia_blend_modes[kMCGBlendModeSourceAtop] = SkXfermode::Create(SkXfermode::kSrcATop_Mode);
-	s_skia_blend_modes[kMCGBlendModeDestinationOver] = SkXfermode::Create(SkXfermode::kDstOver_Mode);
-	s_skia_blend_modes[kMCGBlendModeDestinationIn] = SkXfermode::Create(SkXfermode::kDstIn_Mode);
-	s_skia_blend_modes[kMCGBlendModeDestinationOut] = SkXfermode::Create(SkXfermode::kDstOut_Mode);
-	s_skia_blend_modes[kMCGBlendModeDestinationAtop] = SkXfermode::Create(SkXfermode::kDstATop_Mode);
-	s_skia_blend_modes[kMCGBlendModeXor] = SkXfermode::Create(SkXfermode::kXor_Mode);		
-	
-	// the non porter duff blend modes don't appear to be officially documented
-	s_skia_blend_modes[kMCGBlendModePlusLighter] = SkXfermode::Create(SkXfermode::kPlus_Mode);
-	s_skia_blend_modes[kMCGBlendModeScreen] = SkXfermode::Create(SkXfermode::kScreen_Mode);
-	s_skia_blend_modes[kMCGBlendModeOverlay] = SkXfermode::Create(SkXfermode::kOverlay_Mode);
-	s_skia_blend_modes[kMCGBlendModeDarken] = SkXfermode::Create(SkXfermode::kDarken_Mode);
-	s_skia_blend_modes[kMCGBlendModeLighten] = SkXfermode::Create(SkXfermode::kLighten_Mode);		
-	s_skia_blend_modes[kMCGBlendModeColorDodge] = SkXfermode::Create(SkXfermode::kColorDodge_Mode);
-	s_skia_blend_modes[kMCGBlendModeColorBurn] = SkXfermode::Create(SkXfermode::kColorBurn_Mode);
-	s_skia_blend_modes[kMCGBlendModeHardLight] = SkXfermode::Create(SkXfermode::kHardLight_Mode);
-	s_skia_blend_modes[kMCGBlendModeSoftLight] = SkXfermode::Create(SkXfermode::kSoftLight_Mode);
-	s_skia_blend_modes[kMCGBlendModeDifference] = SkXfermode::Create(SkXfermode::kDifference_Mode);
-	s_skia_blend_modes[kMCGBlendModeExclusion] = SkXfermode::Create(SkXfermode::kExclusion_Mode);
-	
-	// legacy blend modes
-	s_skia_blend_modes[kMCGBlendModeLegacyClear] = new MCGLegacyBlendMode(kMCGBlendModeLegacyClear);
-	s_skia_blend_modes[kMCGBlendModeLegacyAnd] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAnd);
-	s_skia_blend_modes[kMCGBlendModeLegacyAndReverse] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAndReverse);
-	s_skia_blend_modes[kMCGBlendModeLegacyCopy] = new MCGLegacyBlendMode(kMCGBlendModeLegacyCopy);
-	s_skia_blend_modes[kMCGBlendModeLegacyInverted] = new MCGLegacyBlendMode(kMCGBlendModeLegacyInverted);
-	s_skia_blend_modes[kMCGBlendModeLegacyNoop] = new MCGLegacyBlendMode(kMCGBlendModeLegacyNoop);
-	s_skia_blend_modes[kMCGBlendModeLegacyXor] = new MCGLegacyBlendMode(kMCGBlendModeLegacyXor);
-	s_skia_blend_modes[kMCGBlendModeLegacyOr] = new MCGLegacyBlendMode(kMCGBlendModeLegacyOr);
-	s_skia_blend_modes[kMCGBlendModeLegacyNor] = new MCGLegacyBlendMode(kMCGBlendModeLegacyNor);
-	s_skia_blend_modes[kMCGBlendModeLegacyEquiv] = new MCGLegacyBlendMode(kMCGBlendModeLegacyEquiv);
-	s_skia_blend_modes[kMCGBlendModeLegacyInvert] = new MCGLegacyBlendMode(kMCGBlendModeLegacyInvert);
-	s_skia_blend_modes[kMCGBlendModeLegacyOrReverse] = new MCGLegacyBlendMode(kMCGBlendModeLegacyOrReverse);
-	s_skia_blend_modes[kMCGBlendModeLegacyCopyInverted] = new MCGLegacyBlendMode(kMCGBlendModeLegacyCopyInverted);
-	s_skia_blend_modes[kMCGBlendModeLegacyOrInverted] = new MCGLegacyBlendMode(kMCGBlendModeLegacyOrInverted);
-	s_skia_blend_modes[kMCGBlendModeLegacyNand] = new MCGLegacyBlendMode(kMCGBlendModeLegacyNand);
-	s_skia_blend_modes[kMCGBlendModeLegacySet] = new MCGLegacyBlendMode(kMCGBlendModeLegacySet);
-	s_skia_blend_modes[kMCGBlendModeLegacyBlend] = new MCGLegacyBlendMode(kMCGBlendModeLegacyBlend);
-	s_skia_blend_modes[kMCGBlendModeLegacyAddPin] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAddPin);
-	s_skia_blend_modes[kMCGBlendModeLegacyAddOver] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAddOver);
-	s_skia_blend_modes[kMCGBlendModeLegacySubPin] = new MCGLegacyBlendMode(kMCGBlendModeLegacySubPin);
-	s_skia_blend_modes[kMCGBlendModeLegacyTransparent] = new MCGLegacyBlendMode(kMCGBlendModeLegacyTransparent);
-	s_skia_blend_modes[kMCGBlendModeLegacyAdMax] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAdMax);
-	s_skia_blend_modes[kMCGBlendModeLegacySubOver] = new MCGLegacyBlendMode(kMCGBlendModeLegacySubOver);
-	s_skia_blend_modes[kMCGBlendModeLegacyAdMin] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAdMin);		
-	s_skia_blend_modes[kMCGBlendModeLegacyBlendSource] = new MCGLegacyBlendMode(kMCGBlendModeLegacyBlendSource);
-	s_skia_blend_modes[kMCGBlendModeLegacyBlendDestination] = new MCGLegacyBlendMode(kMCGBlendModeLegacyBlendDestination);
-	
-	// MM-2013-11-11: [[ Bug 11422 ]] Use legacy multiply. Skia's multiply appears to blend differently.
-	s_skia_blend_modes[kMCGBlendModeMultiply] = new MCGLegacyBlendMode(kMCGBlendModeMultiply);
-	
-	// TODO: non-separable blend modes and plus darker?
-	// kMCGBlendModeHue
-	// kMCGBlendModeSaturation
-	// kMCGBlendModeColor
-	// kMCGBlendModeLuminosity	
 }
 
 void MCGBlendModesFinalize(void)
 {
-	if (s_skia_blend_modes != NULL)
-		for (uint32_t i = 0; i < kMCGBlendModeCount; i++)
-			if (s_skia_blend_modes[i] != NULL)
-				s_skia_blend_modes[i] -> unref();
-	MCMemoryDeleteArray(s_skia_blend_modes);
 }
 
-SkXfermode* MCGBlendModeToSkXfermode(MCGBlendMode p_mode)
+SkBlendMode MCGBlendModeToSkBlendMode(MCGBlendMode p_mode)
 {
-	SkXfermode *t_blend_mode;
-	t_blend_mode = NULL;
-	if (s_skia_blend_modes != NULL)
+	switch (p_mode)
 	{
-		if (p_mode < kMCGBlendModeCount)
-			t_blend_mode = s_skia_blend_modes[p_mode];
-		if (t_blend_mode != NULL) 
-			t_blend_mode -> ref();		
-	}
-	return t_blend_mode;
-}
+	case kMCGBlendModeClear:
+		return SkBlendMode::kClear;
+	case kMCGBlendModeCopy:
+	case kMCGBlendModeSourceOver:
+		return SkBlendMode::kSrcOver;
+	case kMCGBlendModeSourceIn:
+		return SkBlendMode::kSrcIn;
+	case kMCGBlendModeSourceOut:
+		return SkBlendMode::kSrcOut;
+	case kMCGBlendModeSourceAtop:
+		return SkBlendMode::kSrcATop;
+	case kMCGBlendModeDestinationOver:
+		return SkBlendMode::kDstOver;
+	case kMCGBlendModeDestinationIn:
+		return SkBlendMode::kDstIn;
+	case kMCGBlendModeDestinationOut:
+		return SkBlendMode::kDstOut;
+	case kMCGBlendModeDestinationAtop:
+		return SkBlendMode::kDstATop;
+	case kMCGBlendModeXor:
+		return SkBlendMode::kXor;
+	case kMCGBlendModePlusDarker:
+	case kMCGBlendModePlusLighter:
+		return SkBlendMode::kPlus;
+	case kMCGBlendModeMultiply:
+		return SkBlendMode::kMultiply;
+	case kMCGBlendModeScreen:
+		return SkBlendMode::kScreen;
+	case kMCGBlendModeOverlay:
+		return SkBlendMode::kOverlay;
+	case kMCGBlendModeDarken:
+		return SkBlendMode::kDarken;
+	case kMCGBlendModeLighten:
+		return SkBlendMode::kLighten;
+	case kMCGBlendModeColorDodge:
+		return SkBlendMode::kColorDodge;
+	case kMCGBlendModeColorBurn:
+		return SkBlendMode::kColorBurn;
+	case kMCGBlendModeSoftLight:
+		return SkBlendMode::kSoftLight;
+	case kMCGBlendModeHardLight:
+		return SkBlendMode::kHardLight;
+	case kMCGBlendModeDifference:
+		return SkBlendMode::kDifference;
+	case kMCGBlendModeExclusion:
+		return SkBlendMode::kExclusion;
+	case kMCGBlendModeHue:
+		return SkBlendMode::kHue;
+	case kMCGBlendModeSaturation:
+		return SkBlendMode::kSaturation;
+	case kMCGBlendModeColor:
+		return SkBlendMode::kColor;
+	case kMCGBlendModeLuminosity:
+		return SkBlendMode::kLuminosity;
 
-MCGBlendMode MCGBlendModeFromSkXfermode(SkXfermode *p_mode)
-{
-	// TODO: Implement
-	return kMCGBlendModeSourceOver;
+	default:
+            return SkBlendMode::kSrcOver;
+		MCUnreachableReturn(SkBlendMode::kSrcOver);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -483,12 +670,9 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 	
 	if (t_success)
 	{		
-		SkBitmap::Config t_config = MCGRasterFormatToSkBitmapConfig(p_raster . format);
-		r_bitmap . setConfig(t_config, p_raster . width, p_raster . height, p_raster . stride);
-        if (p_raster . format == kMCGRasterFormat_xRGB)
-            r_bitmap . setAlphaType(kOpaque_SkAlphaType);
-        else
-            r_bitmap . setAlphaType(kPremul_SkAlphaType);
+		SkColorType t_color_type = MCGRasterFormatToSkBitmapConfig(p_raster . format);
+		SkImageInfo t_info = SkImageInfo::Make(p_raster.width, p_raster.height, t_color_type, p_raster.format == kMCGRasterFormat_xRGB ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
+		r_bitmap.setInfo(t_info);
 		
 		// for non-premultiplied bitmaps, allocate the space then set pixels one by one
 		// for premultiplied bitmaps, just set the pixels in the target directly
@@ -501,49 +685,41 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 		switch (p_ownership)
 		{
 			case kMCGPixelOwnershipTypeBorrow:
-				r_bitmap . setPixels(p_raster . pixels);
+				r_bitmap.installPixels(t_info, p_raster.pixels, p_raster.stride);
 				break;
 				
 			case kMCGPixelOwnershipTypeTake:
             {
-                SkImageInfo t_image_info;
-                if (t_success)
-                    t_success = r_bitmap  . asImageInfo(&t_image_info);
-                
-                SkData *t_data = NULL;
+                sk_sp<SkData> t_data;
                 if (t_success)
                 {
-                    t_data = SkData::NewFromMalloc(p_raster . pixels, p_raster . stride * p_raster . height);
-                    t_success = t_data != NULL;
+                    t_data = SkData::MakeFromMalloc(p_raster.pixels, p_raster.stride * p_raster.height);
+                    t_success = t_data != nullptr;
                 }
                 
-				SkMallocPixelRef *t_pixelref = NULL;
+				SkMallocPixelRef *t_pixelref = nullptr;
                 if (t_success)
                 {
-                    t_pixelref = SkMallocPixelRef::NewWithData(t_image_info, p_raster . stride, NULL, t_data, 0);
-                    t_success = t_pixelref != NULL;
+                    t_pixelref = SkMallocPixelRef::NewWithData(t_info, p_raster.stride, nullptr, t_data.get());
+                    t_success = t_pixelref != nullptr;
                 }
                 if (t_success)
 				{
-					r_bitmap . setPixelRef(t_pixelref);
+					r_bitmap.setPixelRef(t_pixelref);
 					t_pixelref -> unref();
-					// MM-2014-03-07: [[ Bug 11885 ]] Make sure we free up the data as well as pixel ref.
-                    t_data -> unref();
 				}
                 
                 if (!t_success)
                 {
                     if (t_pixelref != NULL)
                         t_pixelref -> unref();
-                    if (t_data != NULL)
-                        t_data -> unref();
                 }
                 
                 break;
             }
 				
 			case kMCGPixelOwnershipTypeCopy:
-				t_success = r_bitmap . allocPixels();
+				t_success = r_bitmap.tryAllocPixels(t_info);
 				break;
 		}
 	}

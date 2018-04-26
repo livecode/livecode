@@ -317,7 +317,7 @@ void MCAndroidPlayerControl::DeleteView(jobject p_view)
 
 bool MCNativePlayerControlCreate(MCNativeControl *&r_control)
 {
-    r_control = new MCAndroidPlayerControl();
+    r_control = new (nothrow) MCAndroidPlayerControl();
     return true;
 }
 
@@ -370,7 +370,7 @@ void MCAndroidPlayerControl::HandlePropertyAvailableEvent(const char *p_property
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPlayerFinished(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPlayerFinished(JNIEnv *env, jobject object)
 {
-    MCLog("doPlayerFinished", nil);
+    MCLog("doPlayerFinished");
     MCAndroidControl *t_control = nil;
     
     if (MCAndroidControl::FindByView(object, t_control))
@@ -380,7 +380,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPlay
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPlayerError(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPlayerError(JNIEnv *env, jobject object)
 {
-    MCLog("doPlayerError", nil);
+    MCLog("doPlayerError");
     MCAndroidControl *t_control = nil;
     
     if (MCAndroidControl::FindByView(object, t_control))
@@ -396,7 +396,7 @@ typedef enum
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPropertyAvailable(JNIEnv *env, jobject object, jint availableProperty) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPropertyAvailable(JNIEnv *env, jobject object, jint availableProperty)
 {
-    MCLog("doPropertyAvailable", nil);
+    MCLog("doPropertyAvailable");
     MCAndroidControl *t_control = nil;
     
     if (MCAndroidControl::FindByView(object, t_control))
@@ -413,7 +413,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doProp
         }
         MCAndroidPlayerControl *t_player = (MCAndroidPlayerControl*)t_control;
         MCCustomEvent *t_event;
-        t_event = new MCNativePlayerPropertyAvailableEvent(t_player, t_prop_name);
+        t_event = new (nothrow) MCNativePlayerPropertyAvailableEvent(t_player, t_prop_name);
         MCEventQueuePostCustom(t_event);
     }
 }
@@ -422,7 +422,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doProp
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doMovieTouched(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doMovieTouched(JNIEnv *env, jobject object)
 {
-    MCLog("doMovieTouched", nil);
+    MCLog("doMovieTouched");
     MCAndroidControl *t_control = nil;
     
     if (MCAndroidControl::FindByView(object, t_control))

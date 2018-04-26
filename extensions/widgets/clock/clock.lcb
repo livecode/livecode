@@ -47,11 +47,13 @@ metadata timeZone.default is ""
 
 -- property declarations
 /**
+Whether the clock's current display is in "day" mode.
+
 Syntax: get the isDay of <widget>
 
 Value(boolean): True if the widget is in "day" mode; false otherwise
 
-Summary:
+Description:
 The <isDay> property indicates whether the clock widget is using its
 "day" mode or "night" mode.  Its value depends on the current time,
 and is read-only.

@@ -173,7 +173,7 @@ void MCGroup::GetHilitedButton(MCExecContext& ctxt, uint32_t part, integer_t& r_
 			{
 				MCButton *bptr = (MCButton *)cptr;
 				if (!(mgrabbed == True && cptr == mfocused)
-				        && bptr->gethilite(part))
+                    && !bptr->gethilite(part).isFalse())
                 {
                     t_found = true;
 					break;
@@ -259,7 +259,7 @@ void MCGroup::SetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringR
                 // Clicking on the button attemps to hilite the option "title,menu,maximize,minimise,close"
                 // but only "title,menu,minimize,maximise,close" exists, returning a nil NameRef
                 MCNameRef t_nameref;
-                t_nameref = MCNameLookup(p_name);
+                t_nameref = MCNameLookupCaseless(p_name);
                 if (t_nameref != nil)
                     bptr->resethilite(part, bptr->hasname(t_nameref));
                 else
@@ -706,8 +706,8 @@ void MCGroup::GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_i
 	{
         MCObject *t_object = controls;
         MCObject *t_start_object = t_object;
-		uint2 i = 0;
-		do
+		
+        do
 		{
 			MCAutoStringRef t_property;
             

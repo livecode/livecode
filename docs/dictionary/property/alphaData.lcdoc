@@ -37,9 +37,9 @@ A value of zero means the pixel is fully transparent; a value of 255 is
 fully opaque; and values in between indicate a level of partial
 translucency. 
 
->*Important:*  Since the <alphaData> of an <image> is <binary
-> file|binary data> rather than text, trying to display the data in a
-> <field> may cause unexpected behavior.
+>*Important:*  Since the <alphaData> of an <image> is 
+> <binary file|binary data> rather than text, trying to display the data
+> in a <field> may cause unexpected behavior.
 
 Since each pixel is represented by 8 bits (1 byte or 1 character), you
 can obtain the numeric value for a given pixel using the charToNum

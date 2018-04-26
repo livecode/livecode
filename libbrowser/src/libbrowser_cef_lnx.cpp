@@ -32,7 +32,6 @@ public:
 	bool GetXWindow(Window &r_window);
 
 	virtual void PlatformConfigureWindow(CefWindowInfo &r_info);
-	virtual void PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser);
 	virtual bool PlatformGetNativeLayer(void *&r_layer);
 
 	virtual bool PlatformSetVisible(bool p_visible);
@@ -80,7 +79,7 @@ bool MCCefLinuxBrowser::GetXWindow(Window &r_window)
 	Window t_window;
 	t_window = t_browser->GetHost()->GetWindowHandle();
 
-	if (t_window == nil)
+	if (t_window == None)
 		return false;
 
 	r_window = t_window;
@@ -97,7 +96,10 @@ bool MCCefLinuxBrowser::PlatformGetNativeLayer(void *&r_layer)
 
 void MCCefLinuxBrowser::PlatformConfigureWindow(CefWindowInfo &r_info)
 {
-	r_info.SetAsChild(m_parent_window, CefRect(0,0,1,1));
+	// Let CEF use DefaultRootWindow as the parent window so
+	// it is created with a visual it supports otherwise the content
+	// views will not be create causing a crash
+	//r_info.SetAsChild(m_parent_window, CefRect(0,0,1,1));
 }
 
 bool MCCefLinuxBrowser::PlatformGetRect(MCBrowserRect &r_rect)
@@ -188,26 +190,12 @@ bool MCCefLinuxBrowser::PlatformGetAuthCredentials(bool p_is_proxy, const CefStr
 	return false;
 }
 
-//////////
-
-void MCCefLinuxBrowser::PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser)
-{
-	Window t_window;
-	t_window = p_browser->GetHost()->GetWindowHandle();
-	
-	Display *t_display;
-	if (!GetXDisplay(t_display))
-		return;
-	
-	XDestroyWindow(t_display, t_window);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCCefPlatformCreateBrowser(void *p_display, void *p_window_id, MCCefBrowserBase *&r_browser)
 {
 	MCCefLinuxBrowser *t_browser;
-	t_browser = new MCCefLinuxBrowser((Display*)p_display, (Window)p_window_id);
+	t_browser = new (nothrow) MCCefLinuxBrowser((Display*)p_display, (Window)p_window_id);
 	
 	if (t_browser == nil)
 		return false;
@@ -219,20 +207,14 @@ bool MCCefPlatformCreateBrowser(void *p_display, void *p_window_id, MCCefBrowser
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define CEF_PATH_PREFIX "Externals/CEF"
-
-const char *MCCefPlatformGetExecutableFolder(void);
-bool MCCefLinuxAppendPath(const char *p_base, const char *p_path, char *&r_path);
-
-const char *MCCefPlatformGetCefFolder(void)
+bool MCCefPlatformEnableHiDPI()
 {
-	static char *s_cef_path = nil;
-
-	if (s_cef_path == nil)
-		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetExecutableFolder(), CEF_PATH_PREFIX, s_cef_path);
-	
-	MCLog("libbrowser cef folder: %s", s_cef_path);
-
-	return s_cef_path;
+    return true;
 }
 
+bool MCCefPlatformGetHiDPIEnabled()
+{
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////

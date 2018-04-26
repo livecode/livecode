@@ -54,7 +54,7 @@ bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_al
     if (p_alert_body == nil || MCStringGetLength(p_alert_body) == 0)
         t_local_notification.alertBody = nil;
     else
-        t_local_notification.alertBody = [NSString stringWithMCStringRef: p_alert_body];
+        t_local_notification.alertBody = MCStringConvertToAutoreleasedNSString(p_alert_body);
     if (p_alert_action == nil || MCStringGetLength(p_alert_action) == 0)
     {
         t_local_notification.alertAction = nil;
@@ -62,13 +62,13 @@ bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_al
     }
     else
     {
-        t_local_notification.alertAction = [NSString stringWithMCStringRef: p_alert_action];
+        t_local_notification.alertAction = MCStringConvertToAutoreleasedNSString(p_alert_action);
         t_local_notification.hasAction = YES;
     }
     // Create the dictionary.
     NSDictionary *t_dictionary;
     if (MCStringGetLength(p_user_info) > 0)
-        t_dictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithMCStringRef: p_user_info],@"payload",[NSString stringWithFormat:@"%i", t_message_id],@"notificationId", nil];
+        t_dictionary = [NSDictionary dictionaryWithObjectsAndKeys:MCStringConvertToAutoreleasedNSString(p_user_info),@"payload",[NSString stringWithFormat:@"%i", t_message_id],@"notificationId", nil];
     else
         t_dictionary = [NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"%i", t_message_id] forKey: @"notificationId"];
     t_local_notification.userInfo = t_dictionary;
@@ -107,7 +107,7 @@ bool MCSystemGetRegisteredNotifications (MCStringRef& r_registered_alerts)
     if (t_result == nil)
         r_registered_alerts = MCValueRetain(kMCEmptyString);
     else
-        return MCStringCreateWithCFString((CFStringRef)t_result, r_registered_alerts);
+        return MCStringCreateWithCFStringRef((CFStringRef)t_result, r_registered_alerts);
     return true;
 }
 
@@ -122,17 +122,17 @@ bool MCSystemGetNotificationDetails(int32_t p_id, MCNotification &r_notification
 			if ([t_local_notification alertBody] == nil)
 				r_notification.body = MCValueRetain(kMCEmptyString);
 			else
-				MCStringCreateWithCFString ((CFStringRef)[t_local_notification alertBody], r_notification.body); // or ""
+				MCStringCreateWithCFStringRef ((CFStringRef)[t_local_notification alertBody], r_notification.body); // or ""
 			
 			if ([t_local_notification alertAction] == nil)
 				r_notification.action = MCValueRetain(kMCEmptyString);
 			else
-				MCStringCreateWithCFString ((CFStringRef)[t_local_notification alertAction], r_notification.action); // or ""
+				MCStringCreateWithCFStringRef ((CFStringRef)[t_local_notification alertAction], r_notification.action); // or ""
 			
 			if ([t_local_notification.userInfo objectForKey:@"payload"] == nil)
 				r_notification.user_info = MCValueRetain(kMCEmptyString);
 			else
-				MCStringCreateWithCFString ((CFStringRef)[t_local_notification.userInfo objectForKey:@"payload"], r_notification.user_info);
+				MCStringCreateWithCFStringRef ((CFStringRef)[t_local_notification.userInfo objectForKey:@"payload"], r_notification.user_info);
             r_notification.time = [[t_local_notification fireDate] timeIntervalSince1970];
             r_notification.badge_value = t_local_notification.applicationIconBadgeNumber;
             r_notification.play_sound = t_local_notification.soundName != nil ? true : false;

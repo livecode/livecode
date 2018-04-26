@@ -54,7 +54,7 @@ bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path)
     if (MCStringGetNativeCharAtIndex(p_path, MCStringGetLength(MCcmd)) == '/')
         t_start++;
         
-    return MCStringCopySubstring(p_path, MCRangeMake(t_start, MCStringGetLength(p_path) - t_start), r_apk_path);
+    return MCStringCopySubstring(p_path, MCRangeMakeMinMax(t_start, MCStringGetLength(p_path)), r_apk_path);
 }
 
 bool path_from_apk_path(MCStringRef p_apk_path, MCStringRef& r_path)
@@ -419,8 +419,8 @@ Boolean MCAndroidSystem::GetStandardFolder(MCNameRef p_folder, MCStringRef &r_fo
 {
     // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
     //   as the engine folder.
-    if (MCNameIsEqualTo(p_folder, MCN_engine, kMCCompareCaseless)
-            || MCNameIsEqualTo(p_folder, MCN_resources, kMCCompareCaseless))
+    if (MCNameIsEqualToCaseless(p_folder, MCN_engine)
+            || MCNameIsEqualToCaseless(p_folder, MCN_resources))
     {
         MCLog("GetStandardFolder(\"%@\") -> \"%@\"", MCNameGetString(p_folder), MCcmd);
 		return MCStringCopy(MCcmd, r_folder);
@@ -448,11 +448,6 @@ bool MCAndroidSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_pat
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// ST-2014-12-18: [[ Bug 14259 ]] Not implemented / needed on Android
-bool MCAndroidSystem::GetExecutablePath(MCStringRef& r_path)
-{
-    return false;
-}
 
 bool MCAndroidSystem::PathToNative(MCStringRef p_path, MCStringRef& r_native)
 {
@@ -530,7 +525,7 @@ bool MCAndroidSystem::ListFolderEntries(MCStringRef p_folder, MCSystemListFolder
 	 * path, a path separator character, and any possible filename. */
 	size_t t_path_len = strlen(*t_path);
 	size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
-	char *t_entry_path = new char[t_entry_path_len + 1];
+	char *t_entry_path = new (nothrow) char[t_entry_path_len + 1];
 	strcpy (t_entry_path, *t_path);
 	if ((*t_path)[t_path_len - 1] != '/')
 	{

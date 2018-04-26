@@ -347,7 +347,7 @@ void MCPrinter::SetJobRanges(MCPrinterPageRangeCount p_count, const MCInterval *
 	m_job_range_count = p_count;
 	if (p_count > 0)
 	{
-		m_job_ranges = new MCInterval[p_count];
+		m_job_ranges = new (nothrow) MCInterval[p_count];
 		memcpy(m_job_ranges, p_ranges, sizeof(MCInterval) * p_count);
 	}
 }

@@ -1,0 +1,11 @@
+--- a-no-nl-del-no-nl.txt	2017-01-17 17:10:39.000000000 +0000
++++ a-no-nl.txt	2017-01-17 17:07:30.000000000 +0000
+@@ -2,4 +2,5 @@
+ 
+ ********
+ 
+-********
+\ No newline at end of file
++********
++Sample text
+\ No newline at end of file

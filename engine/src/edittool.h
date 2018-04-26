@@ -40,7 +40,6 @@ public:
 	virtual void drawhandles(MCDC *dc) = 0;
 	virtual uint4 handle_under_point(int2 x, int2 y) = 0;
 	virtual MCRectangle drawrect() = 0;
-	virtual MCRectangle minrect() = 0;
 	virtual MCEditMode type() = 0;
 };
 
@@ -53,7 +52,6 @@ public:
 	void drawhandles(MCDC *dc);
 	uint4 handle_under_point(int2 x, int2 y);
 	MCRectangle drawrect();
-	MCRectangle minrect();
 	MCEditMode type();
 
 	MCGradientEditTool(MCGraphic *p_graphic, MCGradientFill *p_gradient, MCEditMode p_mode);
@@ -76,7 +74,6 @@ public:
 	void drawhandles(MCDC *dc);
 	uint4 handle_under_point(int2 x, int2 y);
 	MCRectangle drawrect();
-	MCRectangle minrect();
 	MCEditMode type();
 
 	MCPolygonEditTool(MCGraphic *p_graphic);

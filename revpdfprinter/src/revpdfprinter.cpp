@@ -1341,44 +1341,9 @@ bool custom_printer_clusters_to_cairo_clusters(const uint32_t *p_cp_clusters, ui
 	r_clusters = t_clusters;
 	r_cluster_count = t_cluster_count;
 	r_reverse_clusters = t_reverse;
-
-#if 0
-	fprintf(stderr, "\nInput:  ");
-	for(uint32_t i = 0; i < p_count; i++)
-		fprintf(stderr, "%04x ", p_cp_clusters[i]);
-	fprintf(stderr, "\nOutput: ");
-	for(uint32_t i = 0; i < t_cluster_count; i++)
-		fprintf(stderr, "%02x/%02x ", t_clusters[i] . num_bytes, t_clusters[i] . num_glyphs);
-	fprintf(stderr, "\n");
-#endif
 	
 	return true;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-// We scarecly use any C++ features so to avoid having to link with the heavy
-// stdc++ library, we just define what we need.
-
-#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
-void * operator new (long unsigned int p_amount)
-#else
-// MP-2013-05-02: [[ x64 ]] Make sure we use the right type for 64-bit.
-void * operator new (size_t p_amount)
-#endif
-{
-	void *t_result;
-	if (!MCMemoryAllocate(p_amount, t_result))
-		return nil;
-	return t_result;
-}
-
-void operator delete(void *p_block)
-{
-	MCMemoryDeallocate(p_block);
-}
-
-extern "C" void __cxa_pure_virtual() { while (1); }
 
 ////////////////////////////////////////////////////////////////////////////////
 

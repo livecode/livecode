@@ -63,7 +63,7 @@ static NSPoint cocoa_point_from_carbon(CGFloat x, CGFloat y)
 
 static NSRect cocoa_rect_from_carbon(CGRect p_rect)
 {
-	NSPoint t_top_left, t_bottom_right;
+	NSPoint t_top_left;
 	t_top_left = cocoa_point_from_carbon(p_rect . origin . x, p_rect . origin . y + p_rect . size . height);
 	return NSMakeRect(t_top_left . x, t_top_left . y, p_rect . size . width, p_rect . size . height);
 }

@@ -47,7 +47,7 @@ References: arrayData (property)
 
 Name: actionInspect
 Type: message
-Syntax: actionInspect pPath
+Syntax: actionInspect <pPath>
 
 Summary: Sent when an the inspect icon is clicked in read only mode
 
@@ -62,7 +62,7 @@ element whose icon was clicked.
 
 Name: actionDoubleClick
 Type: message
-Syntax: actionDoubleClick pPath
+Syntax: actionDoubleClick <pPath>
 
 Summary: Sent when a leaf node of the tree view is double-clicked.
 
@@ -74,7 +74,7 @@ The actionDoubleClick message is sent to the widget's script object when a row o
 is double-clicked. The <pPath> parameter contains the path to the element whose row was clicked.
 **/
 
-widget com.livecode.widget.treeView
+widget com.livecode.widget.treeview
 
 use com.livecode.canvas
 use com.livecode.widget
@@ -86,6 +86,7 @@ metadata author is "LiveCode"
 metadata version is "2.0.2"
 metadata title is "Tree View"
 metadata svgicon is "M152.4,249.7c-6.4,0-11.8,4.3-13.5,10.1h-10v-26.7h10c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1s-6.3-14.1-14.1-14.1c-6.4,0-11.8,4.3-13.5,10.1h-10v-16.1c8.4-1.8,14.8-9.3,14.8-18.3c0-10.4-8.4-18.8-18.8-18.8s-18.8,8.4-18.8,18.8c0,9,6.3,16.5,14.7,18.3v58.8h18c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1S160.2,249.7,152.4,249.7z M128.7,202h-7.5v-7.5h-7.5V187h7.5v-7.5h7.5v7.5h7.5v7.5h-7.5V202z"
+metadata _ide is "true"
 
 -- property declarations
 /**
@@ -251,6 +252,25 @@ metadata sortType.options is "text,numeric"
 metadata sortType.label is "Sort type"
 
 /**
+Name: pathDelimiter
+
+Type: property
+
+Syntax: set the pathDelimiter of <widget> to <pType>
+Syntax: get the pathDelimiter of <widget>
+
+Summary: Manipulates the separator between the elements of the array viewer
+
+Description:
+Use the <pathDelimiter> property as the separator between the elements describing
+a path in the tree view widget.
+**/
+
+property pathDelimiter		get mPathDelimiter		set mPathDelimiter
+metadata pathDelimiter.label is "Path delimiter"
+metadata pathDelimiter.default is ","
+
+/**
 Syntax: set the alternateRowBackgrounds of <widget> to {true|false}
 Syntax: get the alternateRowBackgrounds of <widget>
 
@@ -400,6 +420,8 @@ private variable mArrayStyle as Boolean
 private variable mSortAscending as Boolean
 private variable mSortNumeric as Boolean
 
+private variable mPathDelimiter as String
+
 private variable mShowSeparator as Boolean
 private variable mSeparatorRatio as Number
 private variable mSeparatorDragging as Boolean
@@ -444,7 +466,7 @@ public handler OnCreate() returns nothing
 	put my width into mViewWidth	
 	
 	put 0 into mHoverRow
-    put "" into mHoverIcon
+	put "" into mHoverIcon
 	put 0 into mViewTopPosition
 	put true into mFrameBorder	
 	initialiseScrollbar()	
@@ -454,6 +476,8 @@ public handler OnCreate() returns nothing
 
     put true into mSortNumeric
     put true into mSortAscending
+
+    put "," into mPathDelimiter
 
 	put true into mRecalculate
 	put true into mUpdateDataList
@@ -595,9 +619,9 @@ end handler
 private handler paintFirstRow(in pTop as Real)
 	// Apply any style to this data item
 	variable tStyle as String
-    put "" into tStyle
-    
-    variable tHover as Boolean
+	put "" into tStyle
+
+	variable tHover as Boolean
 	put mHoverRow is 1 into tHover
 		
 	variable tPath as Path	
@@ -824,6 +848,10 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 end handler
 
 public handler OnClick() returns nothing
+	if mHoverRow < 1 then
+		put yPosToRowNumber(the y of the mouse position) into mHoverRow
+	end if
+
 	// If the first row was clicked then add a new element
 	if mHoverRow is 1 then
 		addBaseLevelElement()
@@ -858,8 +886,8 @@ public handler OnClick() returns nothing
         variable tPrompt as String
         variable tPath
         put tData["path"] into tPath
-        combine tPath with ","
-        put "Really delete array key" && the result & "?" into tPrompt
+        combine tPath with "]["
+        put "Really delete array element at path [" & the result & "]?" into tPrompt
         execute script "answer \q" & tPrompt & "\q with OK and Cancel; return it"
         if the result is "OK" then
             removePath(tData["path"])
@@ -875,7 +903,7 @@ public handler OnClick() returns nothing
 
     variable tPathString as String
     if mHoverIcon is "inspect" then
-        combine tData["path"] with "," into tPathString
+        combine tData["path"] with mPathDelimiter into tPathString
         post "actionInspect" with [tPathString]
         return
     end if
@@ -912,7 +940,7 @@ public handler OnClick() returns nothing
 
 	if the click count > 1 then
 		if tData["leaf"] then
-            combine tData["path"] with "," into tPathString
+            combine tData["path"] with mPathDelimiter into tPathString
 			post "actionDoubleClick" with [tPathString]
 		else
 		   if tData["folded"] is true then
@@ -1248,12 +1276,13 @@ private handler setValueOnPath(in pPath as List, in pValue as any, inout xArray 
 end handler
 
 private handler getValueOnPath(in pPath as List, in pArray as Array) returns any
-	if the number of elements in pPath is 1 then
+	if pPath is the empty list then
+		return pArray
+	else if (element 1 of pPath) is not among the keys of pArray then
+		return the empty array
+	else if the number of elements in pPath is 1 then
 		return pArray[element 1 of pPath]
 	else
-		if (element 1 of pPath) is not among the keys of pArray then
-			return the empty array
-		end if
 		return getValueOnPath(element 2 to -1 of pPath, pArray[element 1 of pPath])
 	end if
 end handler
@@ -1324,7 +1353,11 @@ private handler addToListBuffer(in pAt as Integer, in pElement as Array, inout x
 	put pElement["more_data"] into tSorted
 	
 	variable tPath as List
-	put element 1 to -2 of pElement["path"] into tPath
+	if the number of elements in pElement["path"] is 1 then
+		put the empty list into tPath
+	else
+		put element 1 to -2 of pElement["path"] into tPath
+	end if
 	
 	variable tArray as Array
 	put getValueOnPath(tPath, mData) into tArray
@@ -1384,11 +1417,10 @@ private handler calculateMoreElements(in pLimit as Integer, in pLevel as Integer
 			else if pArray[tKey] is a number then
 				format pArray[tKey] as string into tString
 			else if pArray[tKey] is a data then
-                if not ConvertToString(pArray[tKey], tString) then
-                    put "Can't display value" into tString
-                end if
-            else
-
+				if not ConvertToString(pArray[tKey], tString) then
+					put "Can't display value" into tString
+				end if
+			else
 				put "Can't display value" into tString
 			end if	
 			put tString into tElement["string_value"]
@@ -1723,16 +1755,16 @@ end handler
 
 private handler setSelectedElement(in pElement as String)
 	variable tPath as List
-	split pElement by "," into tPath
+	split pElement by mPathDelimiter into tPath
 	selectPath(tPath)
 end handler
 
 private handler getSelectedElement() returns String
 	variable tElement as String
 	if mSelectedElement is not nothing then
-		combine mSelectedElement with "," into tElement
+		combine mSelectedElement with mPathDelimiter into tElement
 		// Make sure empty path is recognised as a valid path
-		put "," after tElement
+		put mPathDelimiter after tElement
 	else
 		put the empty string into tElement
 	end if

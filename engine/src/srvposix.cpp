@@ -84,16 +84,16 @@ class MCStdioFileHandle;
 
 bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_handle &r_file, MCStringRef &r_name)
 {
-    char* t_temp_file;
-    if (!MCCStringFormat(t_temp_file, "%s/%sXXXXXXXX", MCStringGetCString(p_path), MCStringGetCString(p_prefix)))
+    MCAutoCustomPointer<char,MCCStringFree> t_temp_file;
+    if (!MCCStringFormat(&t_temp_file, "%s/%sXXXXXXXX", MCStringGetCString(p_path), MCStringGetCString(p_prefix)))
 		return false;
 	
 	int t_fd;
-    t_fd = mkstemp(t_temp_file);
+    t_fd = mkstemp(*t_temp_file);
     if (t_fd == -1)
         return false;
 	
-    if (!MCStringCreateWithCString(t_temp_file, r_name))
+    if (!MCStringCreateWithCString(*t_temp_file, r_name))
         return false;
 
     r_file = MCsystem->OpenFd(t_fd, kMCOpenFileModeWrite);

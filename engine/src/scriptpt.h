@@ -37,6 +37,9 @@ struct Cvalue
 
 class MCScriptPoint
 {
+    MCDataRef utf16_script;
+    uint32_t length;
+
 	MCObject *curobj;
 	MCHandlerlist *curhlist;
 	MCHandler *curhandler;
@@ -51,8 +54,6 @@ class MCScriptPoint
 	Boolean escapes;
 	Symbol_type m_type;
 	
-    uint32_t length;
-    MCDataRef utf16_script;
     codepoint_t codepoint;
     uint1 curlength;
     
@@ -134,6 +135,14 @@ public:
         MCAssert(uindex_t(index) == index);
         
         return uindex_t(index);
+    }
+    
+    bool is_eol()
+    {
+        Symbol_type t_dummy;
+        Parse_stat t_stat = next(t_dummy);
+        backup();
+        return t_stat == PS_EOL;
     }
 
 	Parse_stat skip_space();

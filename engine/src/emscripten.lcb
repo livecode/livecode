@@ -1,0 +1,190 @@
+/* Copyright (C) 2018 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This module provides utility handlers for converting to and from Emscripten types.
+
+Description:
+
+*/
+
+module com.livecode.emscripten
+
+use com.livecode.foreign
+
+public foreign type JSObject binds to "MCJSObjectTypeInfo"
+
+foreign handler MCEmscriptenPointerFromJSObject(in pObj as JSObject, out rPtr as Pointer) returns nothing binds to "<builtin>"
+foreign handler MCEmscriptenPointerToJSObject(in pPtr as Pointer, out rObj as JSObject) returns nothing binds to "<builtin>"
+
+__safe foreign handler MCEmscriptenEvaluateJavaScriptWithArguments(in pScript as String, in pArgs as List, out rResult as any) returns bool binds to "<builtin>"
+
+public handler type JSEventHandler(in pEvent as JSObject) returns nothing
+__safe foreign handler MCEmscriptenWrapJSEventHandler(in pHandler as JSEventHandler, out rRef as JSObject) returns bool binds to "<builtin>"
+
+/**
+Summary:    Convert a JavaScript object value to a pointer
+
+Parameters:
+pObj: The object to convert
+
+Example:
+
+public handler InitNativeButton()
+	variable tButton as JSObject
+	put EvalJavaScript("document.createElement('button')") into tButton
+
+	variable tPointer as Pointer
+	put PointerFromJSObject(tButton) into tPointer
+
+	set my native layer to tPointer
+end handler
+
+
+Description:
+Use <PointerFromJSObject> to convert a JavaScript object to a variable of type Pointer.
+
+*/
+public handler PointerFromJSObject(in pObj as JSObject) returns Pointer
+	variable tPointer as Pointer
+    unsafe
+		MCEmscriptenPointerFromJSObject(pObj, tPointer)
+    end unsafe
+	return tPointer
+end handler
+
+/**
+Summary:    Convert a Pointer into a JavaScript object
+
+Parameters:
+pPointer: The Pointer to convert
+
+Returns:
+An value of type JSObject
+
+Example:
+variable mButtonPointer as Pointer
+
+public handler SetButtonText(in pText as String)
+	variable tJSButton as JSObject
+	put PointerToJSObject(mButtonPointer) into tJSButton
+	
+	EvalJavaScriptWithArguments("arguments[0].innerHTML = arguments[1]", [tJSButton, pText])
+end handler
+	 
+Description:
+Use <PointerToJSObject> to convert a variable of type Pointer to a JavaScript object.
+*/
+public handler PointerToJSObject(in pPointer as Pointer) returns JSObject
+	variable tObject as JSObject
+    unsafe
+		MCEmscriptenPointerToJSObject(pPointer, tObject)
+    end unsafe
+	return tObject
+end handler
+
+/**
+Summary:    Evaluate JavaScript code within the browser
+
+Parameters:
+pScript: The script to evaluate
+
+Returns:
+A value of any type
+
+Example:
+public handler GetInputText() returns String
+	return EvalJavaScript("document.getElementById('myText').value")
+end handler
+
+Description:
+Use <EvalJavaScript> to get the result of running a block of JavaScript code
+*/
+public handler EvalJavaScript(in pScript as String) returns optional any
+	variable tResult as any
+	if MCEmscriptenEvaluateJavaScriptWithArguments(pScript, [], tResult) then
+		return tResult
+	end if
+	
+	return nothing
+end handler
+
+/**
+Summary:    Evaluate JavaScript code within the browser with arguments
+
+Parameters:
+pScript: The script to evaluate
+pArgs: The list of arguments to pass to the script
+
+Returns:
+A value of any type
+
+Example:
+variable mButton as JSObject
+
+public handler SetButtonText(in pText as String)
+	EvalJavaScriptWithArguments("arguments[0].innerHTML = arguments[1]", [mButton, pText])
+end handler
+	 
+Description:
+Use <EvalJavaScriptWithArguments> to get the result of running a block of JavaScript code, where you need to pass values to the script.
+*/
+public handler EvalJavaScriptWithArguments(in pScript as String, in pArgs as List) returns optional any
+	variable tResult as optional any
+	if MCEmscriptenEvaluateJavaScriptWithArguments(pScript, pArgs, tResult) then
+		return tResult
+	end if
+	
+	return nothing
+end handler
+
+/**
+Summary:    Wrap a LiveCode Builder handler within a JavaScript function, suitable for passing as an event handler.
+
+Parameters:
+pHandler: The handler to wrap
+
+Returns:
+A JavaScript function object, wrapping the handler
+
+Example:
+variable mButton as JSObject
+variable mOnClickHandler as JSObject
+
+private handler OnJSClick(pEvent as JSObject) returns nothing
+	SetLabel("Clicked!")
+end handler
+
+private handler SetJSEventHandler(in pElement as JSObject, in pEvent as String, in pHandler as JSObject)
+	EvalJavaScriptWithArguments("arguments[0].addEventListener(arguments[1], arguments[2]);", [pElement, pEvent, pHandler])
+end handler
+
+private handler SetupEventHandler()
+	put HandlerAsJSFunction(OnJSClick) into mOnClickHandler
+	SetJSEventHandler(mButton, "click", mOnClickHandler)
+end handler
+	 
+Description:
+Use <HandlerAsJSFunction> to convert a handler reference to a JavaScript function object reference.
+*/
+public handler HandlerAsJSFunction(in pHandler as JSEventHandler) returns JSObject
+	variable tJSHandler as JSObject
+	MCEmscriptenWrapJSEventHandler(pHandler, tJSHandler)
+	return tJSHandler
+end handler
+
+end module
+

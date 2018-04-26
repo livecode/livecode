@@ -23,7 +23,7 @@ extern bool load_ssl_library();
 char *strndup(const char *p_string, int p_length)
 {
 	char *t_result;
-	t_result = new char[p_length + 1];
+	t_result = new (nothrow) char[p_length + 1];
 	memcpy(t_result, p_string, p_length);
 	t_result[p_length] = '\0';
 	return t_result;
@@ -394,7 +394,7 @@ DBCursor *DBConnection_POSTGRESQL::sqlQuery(char *p_query, DBString *p_arguments
 		t_column_count = PQnfields(t_postgres_result);
 		if (t_column_count != 0)
 		{
-			t_cursor = new DBCursor_POSTGRESQL();
+			t_cursor = new (nothrow) DBCursor_POSTGRESQL();
 			if (!t_cursor -> open((DBConnection *)this, t_postgres_result))
 			{
 				delete t_cursor;
@@ -449,9 +449,12 @@ void DBConnection_POSTGRESQL::getTables(char *buffer, int *bufsize)
         long buffersize = 0;
         char tsql[] = "SELECT tablename FROM pg_tables WHERE tablename NOT LIKE 'pg%'";
         DBCursor *newcursor = sqlQuery(tsql, NULL, 0, 0);
-        if (newcursor) {
-            if (!newcursor->getEOF()){
-                while (True){
+        if (newcursor) 
+        {
+            if (!newcursor->getEOF())
+            {
+                while (True)
+                {
                     unsigned int colsize;
                     char *coldata = newcursor->getFieldDataBinary(1,colsize);
                     colsize = strlen(coldata);
@@ -459,7 +462,8 @@ void DBConnection_POSTGRESQL::getTables(char *buffer, int *bufsize)
                     m_internal_buffer->append('\n');
                     buffersize += colsize + 1;
                     newcursor->next();
-                    if (newcursor->getEOF()) break;
+                    if (newcursor->getEOF()) 
+                        break;
                 }
             }
             deleteCursor(newcursor->GetID());

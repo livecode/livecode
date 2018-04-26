@@ -17,7 +17,7 @@ Associations: internet library
 
 Introduced: 1.0
 
-OS: mac, windows, linux
+OS: mac, windows, linux, html5
 
 Platforms: desktop, server
 
@@ -50,11 +50,9 @@ finished with a URL, use the <unload> <command> to remove it from the
 <cache>. You can use this <handler> to unload all <URL(glossary)|URLs>:
 
     on unloadAll
-    repeat for each line thisURL in the cachedURLs
-
-    unload URL thisURL
-    end repeat
-
+        repeat for each line tThisURL in the cachedURLs
+            unload URL tThisURL
+        end repeat
     end unloadAll
 
 

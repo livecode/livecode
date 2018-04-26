@@ -71,7 +71,7 @@ class MCChunk : public MCExpression
 	MCObject *destobj;
 	Dest_type desttype;
 	Functions function;
-	Boolean marked : 1;
+	bool marked : 1;
     
     // MW-2014-05-28: [[ Bug 11928 ]] This is set to true after 'destvar' has been evaluated
     //   as a chunk. This stops stale chunk information being used in MCChunk::del.
@@ -86,12 +86,6 @@ public:
     void eval_ctxt(MCExecContext &ctxt, MCExecValue& r_value);
 
 	MCVarref *getrootvarref(void);
-	
-	void compile(MCSyntaxFactoryRef factory);
-	void compile_in(MCSyntaxFactoryRef factory);
-	void compile_out(MCSyntaxFactoryRef factory);
-	void compile_inout(MCSyntaxFactoryRef factory);	
-	void compile_object_ptr(MCSyntaxFactoryRef factory);
 
 	Chunk_term getlastchunktype(void);
 

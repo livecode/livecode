@@ -31,18 +31,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 
-inline void *operator new(size_t size, const char *fnm, int line)
+#define _DEBUG_MEMORY
+#undef new
+#undef delete
+
+inline void *operator new(size_t size, std::nothrow_t, const char *fnm, int line) throw () {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
+inline void *operator new[](size_t size, std::nothrow_t, const char *fnm, int line) throw () {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
+
+inline void *operator new(size_t, void *p, const char *, long)
 {
-	return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);
+	return p;
 }
 
-inline void *operator new[](size_t size, const char *fnm, int line)
-{
-	return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);
-}
-
-#define new new(__FILE__, __LINE__)
-
+#define new(...) new(__VA_ARGS__, __FILE__, __LINE__ )
+#define delete delete
 #endif
 
 

@@ -54,7 +54,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "socket.h"
 
 #include "exec.h"
-#include "syntax.h"
 
 MCAccept::~MCAccept()
 {
@@ -69,21 +68,36 @@ Parse_stat MCAccept::parse(MCScriptPoint &sp)
 		secure = True;
 	else if (sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_DATAGRAM) == PS_NORMAL)
 		datagram = True;
-	sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED); // connections
-	sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED); // on
-	sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_UNDEFINED); // port
-	if (sp.parseexp(False, True, &port) != PS_NORMAL)
+	
+	Parse_stat t_stat = PS_NORMAL;
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_CONNECTIONS);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_ON);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_ACCEPT, TT_UNDEFINED, AC_PORT);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.parseexp(False, True, &port);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.skip_token(SP_SUGAR, TT_CHUNK, CT_UNDEFINED);
+	
+	if (PS_NORMAL == t_stat)
+		t_stat = sp.parseexp(False, True, &message);
+		
+	if (PS_NORMAL != t_stat)
 	{
 		MCperror->add(PE_ACCEPT_BADEXP, sp);
 		return PS_ERROR;
 	}
-	sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH); // with
-	sp.skip_token(SP_SUGAR, TT_CHUNK, CT_UNDEFINED); // message
-	if (sp.parseexp(False, True, &message) != PS_NORMAL)
-	{
-		MCperror->add(PE_ACCEPT_BADEXP, sp);
-		return PS_ERROR;
-	}
+	
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL
 	        && sp.skip_token(SP_SSL, TT_STATEMENT, SSL_VERIFICATION) != PS_NORMAL)
 	{
@@ -103,38 +117,23 @@ void MCAccept::exec_ctxt(MCExecContext &ctxt)
     uinteger_t t_port;
     if (!ctxt . EvalExprAsUInt(port, EE_ACCEPT_BADEXP, t_port))
         return;
-    
+	
+	if (t_port > UINT16_MAX)
+	{
+		ctxt . LegacyThrow(EE_ACCEPT_BADEXP);
+		return;
+	}
+	
     MCNewAutoNameRef t_message;
     if (!ctxt . EvalExprAsNameRef(message, EE_ACCEPT_BADEXP, &t_message))
         return;
     
     if (datagram)
-		MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, t_port, *t_message);
+		MCNetworkExecAcceptDatagramConnectionsOnPort(ctxt, uint16_t(t_port), *t_message);
 	else if (secure)
-		MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, t_port, *t_message, secureverify == True);
+		MCNetworkExecAcceptSecureConnectionsOnPort(ctxt, uint16_t(t_port), *t_message, secureverify == True);
 	else
-		MCNetworkExecAcceptConnectionsOnPort(ctxt, t_port, *t_message);
-}
-
-void MCAccept::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	port -> compile(ctxt);
-	message -> compile(ctxt);
-
-	if (datagram)
-		MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecAcceptDatagramConnectionsOnPortMethodInfo);
-	else if (secure)
-	{
-		MCSyntaxFactoryEvalConstantBool(ctxt, secureverify == True);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecAcceptSecureConnectionsOnPortMethodInfo);
-	}
-	else
-		MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecAcceptConnectionsOnPortMethodInfo);
-	
-	MCSyntaxFactoryEndStatement(ctxt);
+		MCNetworkExecAcceptConnectionsOnPort(ctxt, uint16_t(t_port), *t_message);
 }
 
 MCBeep::~MCBeep()
@@ -166,35 +165,9 @@ void MCBeep::exec_ctxt(MCExecContext& ctxt)
 	MCInterfaceExecBeep(ctxt, t_count);
 }
 
-void MCBeep::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (times != nil)
-		times -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstantUInt(ctxt, 1);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecBeepMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 void MCBreakPoint::exec_ctxt(MCExecContext& ctxt)
 {
     MCDebuggingExecBreakpoint(ctxt, line, pos);
-}
-
-void MCBreakPoint::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	MCSyntaxFactoryEvalConstantUInt(ctxt, line);
-	MCSyntaxFactoryEvalConstantUInt(ctxt, pos);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCDebuggingExecBreakpointMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCCancel::~MCCancel()
@@ -229,22 +202,6 @@ void MCCancel::exec_ctxt(MCExecContext& ctxt)
             return;
         MCEngineExecCancelMessage(ctxt, t_id);
     }
-}
-
-void MCCancel::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (m_id == nil)
-		MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecCancelPrintingMethodInfo);
-	else
-	{
-		m_id -> compile(ctxt);
-		
-		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecCancelMessageMethodInfo);
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCClickCmd::~MCClickCmd()
@@ -292,23 +249,6 @@ void MCClickCmd::exec_ctxt(MCExecContext& ctxt)
         return;
     
     MCInterfaceExecClickCmd(ctxt, which, t_location, mstate);
-}
-
-void MCClickCmd::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (button != nil)
-		button -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstantUInt(ctxt, which);
-
-	location -> compile(ctxt);
-	MCSyntaxFactoryEvalConstantUInt(ctxt, mstate);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecClickCmdMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCDrag::~MCDrag()
@@ -373,24 +313,6 @@ void MCDrag::exec_ctxt(MCExecContext& ctxt)
     MCInterfaceExecDrag(ctxt, which, t_start, t_end, mstate);
 }
 
-void MCDrag::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (button != nil)
-		button -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstantUInt(ctxt, which);
-
-	startloc -> compile(ctxt);
-	endloc -> compile(ctxt);
-	MCSyntaxFactoryEvalConstantUInt(ctxt, mstate);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDragMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCFocus::~MCFocus()
 {
 	delete object;
@@ -407,7 +329,7 @@ Parse_stat MCFocus::parse(MCScriptPoint &sp)
 		object = NULL;
 	else
 	{
-		object = new MCChunk(False);
+		object = new (nothrow) MCChunk(False);
 		if (object->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_FOCUS_BADOBJECT, sp);
@@ -435,22 +357,6 @@ void MCFocus::exec_ctxt(MCExecContext &ctxt)
     }
 }
 
-void MCFocus::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (object == nil)
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecFocusOnNothingMethodInfo);
-	else
-	{
-		object -> compile_object_ptr(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecFocusOnMethodInfo);
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCInsert::~MCInsert()
 {
 	delete target;
@@ -470,7 +376,7 @@ Parse_stat MCInsert::parse(MCScriptPoint &sp)
 		MCperror->add(PE_INSERT_NOSCRIPT, sp);
 		return PS_ERROR;
 	}
-	target = new MCChunk(False);
+	target = new (nothrow) MCChunk(False);
 	if (target->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_INSERT_BADOBJECT, sp);
@@ -502,18 +408,6 @@ void MCInsert::exec_ctxt(MCExecContext &ctxt)
     }
 
     MCEngineExecInsertScriptOfObjectInto(ctxt, optr, where == IP_FRONT);
-}
-
-void MCInsert::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	target -> compile_object_ptr(ctxt);
-	MCSyntaxFactoryEvalConstantBool(ctxt, where == IP_FRONT);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecInsertScriptOfObjectIntoMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 // MW-2008-11-05: [[ Dispatch Command ]] Implementation for the dispatch command.
@@ -553,7 +447,7 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
 	// MW-2008-12-04: Added 'to <target>' form to the syntax
 	if (sp.skip_token(SP_FACTOR, TT_TO) == PS_NORMAL)
 	{
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target -> parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_DISPATCH_BADTARGET, sp);
@@ -563,7 +457,7 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
 	
 	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 	{
-		if (getparams(sp, &params) != PS_NORMAL)
+		if (sp.is_eol() || getparams(sp, &params) != PS_NORMAL)
 		{
 			MCperror -> add(PE_DISPATCH_BADPARAMS, sp);
 			return PS_ERROR;
@@ -576,7 +470,6 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
 // This method follows along the same lines as MCComref::exec
 void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 {
-	
     MCNewAutoNameRef t_message;
     if (!ctxt . EvalExprAsNameRef(message, EE_DISPATCH_BADMESSAGEEXP, &t_message))
         return;
@@ -602,9 +495,9 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 	while (tptr != NULL)
 	{
         // AL-2014-08-20: [[ ArrayElementRefParams ]] Use containers for potential reference parameters
-        MCContainer *t_container;
-        if (tptr -> evalcontainer(ctxt, t_container))
-            tptr -> set_argument_container(t_container);
+        MCAutoPointer<MCContainer> t_container = new (nothrow) MCContainer;
+        if (tptr -> evalcontainer(ctxt, **t_container))
+            tptr -> set_argument_container(t_container.Release());
         else
         {
             MCExecValue t_value;
@@ -694,7 +587,7 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
 	}
 	else
 	{
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_SEND_BADTARGET, sp);
@@ -778,52 +671,6 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
     }
 }
 
-void MCMessage::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-	
-	if (program)
-	{
-		message -> compile(ctxt);
-		in -> compile(ctxt);
-
-		if (*eventtype != nil)
-			eventtype -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-		
-		MCSyntaxFactoryEvalConstantBool(ctxt, reply == True);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCScriptingExecSendToProgramMethodInfo);
-	}
-	else
-	{
-		message -> compile(ctxt);
-
-		if (*target != nil)
-			target -> compile_object_ptr(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		if (*in != nil)
-		{
-			in -> compile(ctxt);
-			MCSyntaxFactoryEvalConstantInt(ctxt, units);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecSendInTimeMethodInfo);
-		}
-		else
-		{
-			if (!send)
-				MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecCallMethodInfo);
-			else
-				MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecSendMethodInfo);
-		}
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCMove::~MCMove()
 {
 	delete object;
@@ -835,7 +682,7 @@ MCMove::~MCMove()
 Parse_stat MCMove::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	object = new MCChunk(False);
+	object = new (nothrow) MCChunk(False);
 	if (object->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_MOVE_BADOBJECT, sp);
@@ -923,48 +770,6 @@ void MCMove::exec_ctxt(MCExecContext &ctxt)
    }
 }
 
-void MCMove::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	object -> compile_object_ptr(ctxt);
-	
-	if (startloc != nil)
-	{
-		startloc -> compile(ctxt);
-		endloc -> compile(ctxt);
-
-		if (durationexp != nil)
-			durationexp -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantDouble(ctxt, 0);
-
-		MCSyntaxFactoryEvalConstantInt(ctxt, units);
-		MCSyntaxFactoryEvalConstantBool(ctxt, waiting == True);
-		MCSyntaxFactoryEvalConstantBool(ctxt, messages == True);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecMoveObjectBetweenMethodInfo);
-	}
-	else
-	{
-		endloc -> compile(ctxt);
-		MCSyntaxFactoryEvalConstantBool(ctxt, relative == True);
-
-		if (durationexp != nil)
-			durationexp -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantDouble(ctxt, 0);
-
-		MCSyntaxFactoryEvalConstantInt(ctxt, units);
-		MCSyntaxFactoryEvalConstantBool(ctxt, waiting == True);
-		MCSyntaxFactoryEvalConstantBool(ctxt, messages == True);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecMoveObjectAlongMethodInfo);
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCMM::~MCMM()
 {
 	delete clip;
@@ -992,7 +797,7 @@ Parse_stat MCMM::parse(MCScriptPoint &sp)
 		}
 		
 		sp.backup();
-		stack = new MCChunk(False);
+		stack = new (nothrow) MCChunk(False);
 		if (stack->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_PLAY_BADSTACK, sp);
@@ -1060,7 +865,7 @@ Parse_stat MCMM::parse(MCScriptPoint &sp)
 	MCerrorlock--;
 	if (sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
 	{
-		stack = new MCChunk(False);
+		stack = new (nothrow) MCChunk(False);
 		if (stack->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_PLAY_BADSTACK, sp);
@@ -1234,127 +1039,6 @@ void MCMM::exec_ctxt(MCExecContext &ctxt)
     }
 }
 
-void MCMM::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (prepare && image)
-	{
-		stack -> compile_object_ptr(ctxt);
-		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecPrepareImageMethodInfo);
-	}
-	else if (prepare && image_file)
-	{
-		clip -> compile(ctxt);
-		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecPrepareImageFileMethodInfo);
-	}
-	else if (clip == NULL)
-	{
-		if (video)
-		{
-			if (stepforward)
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_FORWARD);
-			else if (stepback)
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_BACK);
-			else if (pause)
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_PAUSE);
-			else if (stop)
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_STOP);
-			else if (resume)
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_RESUME);
-			else
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_UNDEFINED);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecPlayLastVideoOperationMethodInfo);
-		}
-	}
-	else 
-	{
-		if (stack != nil)
-			stack -> compile_object_ptr(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		MCSyntaxFactoryEvalConstantInt(ctxt, etype);
-		clip -> compile(ctxt);
-
-		if (player)
-		{
-			MCSyntaxFactoryEvalConstantInt(ctxt, ptype);
-			
-			if (stepforward)
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_FORWARD);
-			else if (stepback)
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_BACK);
-			else if (pause)
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_PAUSE);
-			else if (stop)
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_STOP);
-			else if (resume)
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_RESUME);
-			else
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_UNDEFINED);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecPlayPlayerOperationMethodInfo);
-		}
-		else if (video)
-		{
-			if (stepforward)
-			{
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_FORWARD);
-				MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecPlayVideoOperationMethodInfo);
-			}
-			else if (stepback)
-			{
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_BACK);
-				MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecPlayVideoOperationMethodInfo);
-			}
-			else if (pause)
-			{
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_PAUSE);
-				MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecPlayVideoOperationMethodInfo);
-			}
-			else if (stop)
-			{
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_STOP);
-				MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecPlayVideoOperationMethodInfo);
-			}
-			else if (resume)
-			{
-				MCSyntaxFactoryEvalConstantInt(ctxt, PP_RESUME);
-				MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecPlayVideoOperationMethodInfo);
-			}
-			else
-			{
-				MCSyntaxFactoryEvalConstantBool(ctxt, looping == True);
-
-				if (loc != nil)
-					loc -> compile(ctxt);
-				else
-					MCSyntaxFactoryEvalConstantNil(ctxt);
-
-				if (options != nil)
-					options -> compile(ctxt);
-				else
-					MCSyntaxFactoryEvalConstantNil(ctxt);
-				
-				if (!prepare)
-					MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecPlayVideoClipMethodInfo);
-				else
-					MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecPrepareVideoClipMethodInfo);
-			}
-		}
-		else
-		{
-			MCSyntaxFactoryEvalConstantBool(ctxt, looping == True);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecPlayAudioClipMethodInfo);
-		}
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCReply::~MCReply()
 {
 	delete message;
@@ -1400,27 +1084,6 @@ void MCReply::exec_ctxt(MCExecContext& ctxt)
 		MCScriptingExecReply(ctxt, *t_message, *t_keyword);
 	else
 		MCScriptingExecReplyError(ctxt, *t_message);
-}
-
-void MCReply::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	message -> compile(ctxt);
-
-	if (!error)
-	{
-		if (keyword != nil)
-			keyword -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCScriptingExecReplyMethodInfo);
-	}
-	else
-		MCSyntaxFactoryExecMethod(ctxt, kMCScriptingExecReplyErrorMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCRequest::~MCRequest()
@@ -1499,32 +1162,6 @@ void MCRequest::exec_ctxt(MCExecContext& ctxt)
 	}
 }
 
-void MCRequest::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (ae != AE_UNDEFINED)
-	{
-		MCSyntaxFactoryEvalConstantInt(ctxt, ae);
-
-		if (program != nil)
-			program -> compile(ctxt);
-		else
-			MCSyntaxFactoryEvalConstantNil(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCScriptingExecRequestAppleEventMethodInfo);
-	}
-	else
-	{
-		message -> compile(ctxt);
-		program -> compile(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCScriptingExecRequestFromProgramMethodInfo);
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCStart::~MCStart()
 {
 	delete target;
@@ -1558,7 +1195,7 @@ Parse_stat MCStart::parse(MCScriptPoint &sp)
 		        || sp.skip_token(SP_FACTOR, TT_CHUNK, CT_THIS) == PS_NORMAL)
 		{
 			sp.backup();
-			target = new MCChunk(False);
+			target = new (nothrow) MCChunk(False);
 			if (target->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add(PE_START_BADCHUNK, sp);
@@ -1599,7 +1236,7 @@ Parse_stat MCStart::parse(MCScriptPoint &sp)
 	{
 		if (mode == SC_PLAYER)
 			sp.backup();
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_START_BADCHUNK, sp);
@@ -1684,48 +1321,6 @@ void MCStart::exec_ctxt(MCExecContext &ctxt)
     }
 }
 
-void MCStart::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (mode == SC_USING)
-	{
-        if (font != nil)
-        {
-            font -> compile(ctxt);
-            MCSyntaxFactoryEvalConstantBool(ctxt, is_globally);
-            MCSyntaxFactoryExecMethod(ctxt, kMCTextExecStartUsingFontMethodInfo);
-        }
-		else if (target != nil)
-		{
-			target -> compile_object_ptr(ctxt);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecStartUsingStackMethodInfo);
-		}
-		else
-		{
-			stack -> compile(ctxt);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecStartUsingStackByNameMethodInfo);
-		}
-	}
-	else if (mode == SC_SESSION)
-	{
-#ifdef _SERVER
-		MCSyntaxFactoryExecMethod(ctxt, kMCServerExecStartSessionMethodInfo);
-#endif
-	}
-	else
-	{
-		target -> compile(ctxt);
-			
-		MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecStartPlayerMethodInfo);
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecStartEditingGroupMethodInfo);
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCStop::~MCStop()
 {
 	delete target;
@@ -1761,7 +1356,7 @@ Parse_stat MCStop::parse(MCScriptPoint &sp)
 		        || sp.skip_token(SP_FACTOR, TT_CHUNK, CT_THIS) == PS_NORMAL)
 		{
 			sp.backup();
-			target = new MCChunk(False);
+			target = new (nothrow) MCChunk(False);
 			if (target->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add(PE_START_BADCHUNK, sp);
@@ -1794,7 +1389,7 @@ Parse_stat MCStop::parse(MCScriptPoint &sp)
 	{
 		if (mode == SC_PLAYER)
 			sp.backup();
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		MCScriptPoint oldsp(sp);
 		MCerrorlock++;
 		if (target->parse(sp, False) != PS_NORMAL)
@@ -1874,9 +1469,7 @@ void MCStop::exec_ctxt(MCExecContext &ctxt)
             }
             else if (target != NULL)
 			{
-				MCObject *optr;
-				uint4 parid;
-                if (!target->getobj(ctxt, optr, parid, True)
+				if (!target->getobj(ctxt, optr, parid, True)
 				        || optr->gettype() != CT_STACK)
 				{
                     ctxt . LegacyThrow(EE_STOP_BADTARGET);
@@ -1908,76 +1501,6 @@ void MCStop::exec_ctxt(MCExecContext &ctxt)
     }
 }
 
-void MCStop::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	switch (mode)
-	{
-	case SC_EDITING:
-        if (target != nil)
-		{
-			target -> compile_object_ptr(ctxt);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecStopEditingGroupMethodInfo);
-		}
-		else
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecStopEditingDefaultStackMethodInfo);
-		break;
-
-	case SC_MOVING:
-		target -> compile_object_ptr(ctxt);
-		
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecStopMovingObjectMethodInfo);
-		break;
-
-	case SC_PLAYER:
-	case SC_PLAYING:
-		if (target == nil)
-			MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecStopPlayingMethodInfo);
-		else
-		{
-			target -> compile_object_ptr(ctxt);
-			MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecStopPlayingObjectMethodInfo);
-		}
-		break;
-
-	case SC_RECORDING:
-		MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecStopRecordingMethodInfo);
-		break;
-
-    case SC_USING:
-        if (font != nil)
-        {
-            font -> compile(ctxt);
-            MCSyntaxFactoryExecMethod(ctxt, kMCTextExecStopUsingFontMethodInfo);
-        }
-        else if (target != nil)
-        {
-			target -> compile_object_ptr(ctxt);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecStopUsingStackMethodInfo);
-		}
-		else
-		{
-			stack -> compile(ctxt);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecStopUsingStackByNameMethodInfo);
-		}
-		break;
-
-	case SC_SESSION:
-#ifdef _SERVER
-		MCSyntaxFactoryExecMethod(ctxt, kMCServerExecStopSessionMethodInfo);
-#endif
-		break;
-	default:
-		break;
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCType::~MCType()
 {
 	delete message;
@@ -2003,16 +1526,4 @@ void MCType::exec_ctxt(MCExecContext &ctxt)
         return;
 
     MCInterfaceExecType(ctxt, *t_typing, mstate);
-}
-
-void MCType::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	message -> compile(ctxt);
-	MCSyntaxFactoryEvalConstantUInt(ctxt, mstate);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecTypeMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }

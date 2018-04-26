@@ -89,8 +89,7 @@ bool OSXSpeechNarrator::Stop(void)
 
 bool OSXSpeechNarrator::Busy(void)
 {
-	char *result = NULL;
-    if (spchannel != nil)
+	if (spchannel != nil)
 	 {
         if (SpeechBusy())
 		{

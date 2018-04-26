@@ -40,7 +40,7 @@ This repository contains a number of subprojects, each of which has its own subd
 
   * `revspeech/` — Text-to-speech support
 
-  * `revvideograbber/` — Video capture
+  * `revvideograbber/` — Video capture (Windows only)
 
   * `revxml/` — XML parsing and generation
 
@@ -75,13 +75,13 @@ On Linux or Mac, you can quickly build LiveCode by installing basic development 
 
 Please see the following table, which shows which target platforms are supported by which host platforms.  The documentation for compiling for each target platform is linked.
 
-| Target platform                             | Host platforms    |
-| ------------------------------------------- | ----------------- |
-| [mac, ios](INSTALL-mac.md)                  | mac               |
-| [win](INSTALL-win.md)                       | win, linux (Wine) |
-| [linux](INSTALL-linux.md)                   | linux             |
-| [android](INSTALL-android.md)               | mac, linux        |
-| [emscripten (html5)](INSTALL-emscripten.md) | linux             |
+| Target platform                                            | Host platforms    |
+| ---------------------------------------------------------- | ----------------- |
+| [mac, ios](docs/development/build-mac.md)                  | mac               |
+| [win](docs/development/build-win.md)                       | win, linux (Wine) |
+| [linux](docs/development/build-linux.md)                   | linux             |
+| [android](docs/development/build-android.md)               | mac, linux        |
+| [emscripten (html5)](docs/development/build-emscripten.md) | linux             |
 
 ## Getting help
 

@@ -46,7 +46,7 @@ bool MCGImageCreateWithSkBitmap(const SkBitmap &p_bitmap, MCGImageRef &r_image)
 	t_bitmap = nil;
 	if (t_success)
 	{
-		t_bitmap = new SkBitmap(p_bitmap);
+		t_bitmap = new (nothrow) SkBitmap(p_bitmap);
 		t_success = nil != t_bitmap;
 	}
 	
@@ -121,7 +121,7 @@ bool MCGImageGetRaster(MCGImageRef p_image, MCGRaster &r_raster)
 	t_image->bitmap->lockPixels();
 	
 	// IM-2014-05-20: [[ GraphicsPerformance ]] Use bitmap opaqueness when setting the raster format.
-	r_raster.format = MCGRasterFormatFromSkBitmapConfig(t_image->bitmap->config(), t_image->bitmap->isOpaque());
+	r_raster.format = MCGRasterFormatFromSkImageInfo(t_image->bitmap->info(), t_image->bitmap->isOpaque());
 	r_raster.width = t_image->bitmap->width();
 	r_raster.height = t_image->bitmap->height();
 	r_raster.pixels = t_image->bitmap->getPixels();
@@ -228,7 +228,8 @@ bool MCGImageHasPartialTransparency(MCGImageRef self)
 		return false;
 
 	MCGRaster t_raster;
-	/* UNCHECKED */ MCGImageGetRaster(self, t_raster);
+	if (!MCGImageGetRaster(self, t_raster))
+        return false;
 
 	if (t_raster.format == kMCGRasterFormat_A)
 		return true;

@@ -36,8 +36,11 @@ end TestTeardown
 private function _TestSavingStandaloneStackScript
 	local tScript
 	put "on startup" & return after tScript
-	put "write the cModified of me to stdout" & return after tScript
+	put "if the cModified of me then" & return after tScript
 	put "quit 0" & return after tScript
+	put "else" & return after tScript
+	put "quit 1" & return after tScript
+	put "end if" & return after tScript
 	put "end startup" & return after tScript
 	put "on savingStandalone" & return after tScript
 	put "set the cModified of me to true" & return after tScript
@@ -73,7 +76,8 @@ on TestSavingStandalone
    
    revIDESaveStack tStackID
 	 
-   _TestBuildStandalone tStackFilename
+   local tStandalonePath
+   _TestBuildStandalone tStackFilename, tStandalonePath
    if the result is not empty then
       TestAssert "building standalone", false
       exit TestSavingStandalone
@@ -84,35 +88,34 @@ on TestSavingStandalone
    
    local tFolder
    put the cFolder of stack tStackName into tFolder
+
+   TestDiagnostic "location" && tStandalonePath
+   TestAssert "standalone in expected location", there is a file tStandalonePath
    
-   local tExe
-   if the platform is "MacOS" then 
-      put tFolder & tStackName & ".app/Contents/MacOS/" \ 
-      		& tStackName into tExe
-   else
-      put tFolder & tStackName into tExe
+   local tResult, tShellCmd
+   put quote & tStandalonePath & quote into tShellCmd
+   if the environment contains "command line" then
+      put " -ui" after tShellCmd
    end if
-   
-   TestDiagnostic "location" && tExe
-   TestAssert "standalone in expected location", there is a file tExe
-   
-   local tOutput
-   put shell(quote & tExe & quote && "-ui") into tOutput
-   
-   TestDiagnostic "shell output" && tOutput
-   
+   get shell(tShellCmd)
+   put the result into tResult
+
+   if tResult is not empty then
+      TestDiagnostic "standalone quit with" && tResult & ":" && it
+   end if
+      
    TestAssert "savingStandalone side-effect present in standalone", \ 
-   		tOutput is "true"
+   		tResult is empty
    
    revDeleteFolder tDir
 end TestSavingStandalone
 
-private command _TestBuildStandalone pStackPath
+private command _TestBuildStandalone pStackPath, @xStandalonePath
 	local tStackName, tResult
 	put the short name of stack pStackPath into tStackName
 	
 	TestDiagnostic "Building standalone -" && pStackPath
 	
-	StandaloneBuilderSaveAsStandalone tStackName
+	StandaloneBuilderSaveAsStandalone tStackName, xStandalonePath
 	return the result
 end _TestBuildStandalone

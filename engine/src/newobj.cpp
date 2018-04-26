@@ -28,6 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "newobj.h"
 #include "answer.h"
 #include "ask.h"
+#include "internal.h"
 
 #include "mode.h"
 
@@ -35,6 +36,8 @@ MCStatement *MCN_new_statement(int2 which)
 {
 	switch (which)
 	{
+    case S_INTERNAL:
+        return new MCInternal;
 	case S_ACCEPT:
 		return new MCAccept;
 	case S_ADD:
@@ -88,6 +91,8 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCDefine;
 	case S_DELETE:
 		return new MCDelete;
+    case S_DIFFERENCE:
+        return new MCSetOp(MCSetOp::kOpDifference);
 	case S_DISABLE:
 		return new MCDisable;
 	// MW-2008-11-05: [[ Dispatch Command ]] Create a dispatch statement object
@@ -146,7 +151,7 @@ MCStatement *MCN_new_statement(int2 which)
 	case S_INSERT:
 		return new MCInsert;
 	case S_INTERSECT:
-		return new MCArrayIntersectCmd;
+		return new MCSetOp(MCSetOp::kOpIntersect);
 	case S_KILL:
 		return new MCKill;
 	case S_LAUNCH:
@@ -266,6 +271,8 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCSubtract;
 	case S_SWITCH:
 		return new MCSwitch;
+    case S_SYMMETRIC:
+        return new MCSetOp(MCSetOp::kOpSymmetricDifference);
 	case S_THROW:
 		return new MCThrowKeyword;
 	case S_TOP_LEVEL:
@@ -283,7 +290,7 @@ MCStatement *MCN_new_statement(int2 which)
 	case S_UNHILITE:
 		return new MCUnhilite;
 	case S_UNION:
-		return new MCArrayUnionCmd;
+		return new MCSetOp(MCSetOp::kOpUnion);
 	case S_UNLOAD:
 		return new MCUnload;
 	case S_UNLOCK:
@@ -426,7 +433,7 @@ MCExpression *MCN_new_function(int2 which)
 	case F_DELETE_RESOURCE:
 		return new MCDeleteResource;
 	case F_DIRECTORIES:
-		return new MCDirectories;
+		return new MCFileItems(false);
 	case F_DISK_SPACE:
 		return new MCDiskSpace;
 	case F_DNS_SERVERS:
@@ -468,7 +475,7 @@ MCExpression *MCN_new_function(int2 which)
 	case F_EXTENTS:
 		return new MCExtents;
 	case F_FILES:
-		return new MCTheFiles;
+		return new MCFileItems(true);
 	case F_FLUSH_EVENTS:
 		return new MCFlushEvents;
 	case F_FOCUSED_OBJECT:
@@ -589,6 +596,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCMenuObject;
 	case F_MERGE:
 		return new MCMerge;
+    case F_MESSAGE_DIGEST:
+        return new MCMessageDigestFunc;
 	case F_MILLISECS:
 		return new MCMillisecs;
 	case F_MIN:
@@ -689,6 +698,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCRandom;
 	case F_RECORD_COMPRESSION_TYPES:
 		return new MCRecordCompressionTypes;
+    case F_RECORD_FORMATS:
+        return new MCRecordFormats;
 	case F_RECORD_LOUDNESS:
 		return new MCRecordLoudness;
 	case F_REPLACE_TEXT:

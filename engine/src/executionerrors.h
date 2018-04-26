@@ -2729,20 +2729,51 @@ enum Exec_errors
 	// {EE-0893} folders: error in folder parameter
 	EE_FOLDERS_BADFOLDER,
 
-	// {EE-0894} no target object
+    // {EE-0894} no target object
     EE_NOTARGET,
-    
+
     // {EE-0895} image: cannot change image while being edited
     EE_IMAGE_MUTABLELOCK,
-    
+
     // {EE-0896} graphic : too many points
     EE_GRAPHIC_TOOMANYPOINTS,
 
-    // {EE-0897} stack: password protecting stacks not supported in this edition
-    EE_STACK_PASSWORD_NOT_SUPPORTED,
-
+	// {EE-0897} extension: error occurred with column
+	EE_EXTENSION_ERROR_COLUMN,
+	
 	// {EE-0898} parentScript: can't change parent while parent script is executing
-	EE_PARENTSCRIPT_EXECUTING,
+    EE_PARENTSCRIPT_EXECUTING,
+    
+    // {EE-0899} call: type conversion error
+    EE_INVOKE_TYPEERROR,
+
+    // {EE-0900} open: error in from address expression
+    EE_OPEN_BADFROMADDRESS,
+
+    // {EE-0901} messageDigest: error in digest type parameter
+    EE_MESSAGEDIGEST_BADTYPE,
+
+    // {EE-0902} messageDigest: error in message data parameter
+    EE_MESSAGEDIGEST_BADDATA,
+
+    // {EE-0903} snapshot: no screen
+    EE_SNAPSHOT_FAILED,
+
+    // {EE-0904} stack: password protecting stacks not supported in this edition
+    EE_STACK_PASSWORD_NOT_SUPPORTED,
+    
+    // {EE-0905} files: error in kind parameter
+    EE_FILES_BADKIND,
+    
+    // {EE-0906} folders: error in kind parameter
+    EE_FOLDERS_BADKIND,
+
+    // {EE-0907} library mapping: bad mapping
+    EE_BAD_LIBRARY_MAPPING,
+
+    // {EE-0908} fontLanguage: bad font name
+    EE_FONTLANGUAGE_BADFONTNAME,
+    
 };
 
 extern const char *MCexecutionerrors;

@@ -187,7 +187,7 @@ MCNativeControl *MCNativeControl::CurrentTarget(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct {const char *name; MCNativeControlType type;} s_native_control_types[] =
+static const struct {const char *name; MCNativeControlType type;} s_native_control_types[] =
 {
 	{"browser", kMCNativeControlTypeBrowser},
 	{"scroller", kMCNativeControlTypeScroller},
@@ -197,7 +197,7 @@ static struct {const char *name; MCNativeControlType type;} s_native_control_typ
 	{nil, kMCNativeControlTypeUnknown}
 };
 
-static struct {const char *name; Properties property;} s_native_control_properties[] =
+static const struct {const char *name; Properties property;} s_native_control_properties[] =
 {
 	{"id", P_ID},
 	{"name", P_NAME},
@@ -276,6 +276,8 @@ static struct {const char *name; Properties property;} s_native_control_properti
 	{"editing", P_EDITING},
     
 	{"minimumfontsize", P_MINIMUM_FONT_SIZE},
+    {"maximumtextlength", P_MAXIMUM_TEXT_LENGTH},
+
 	{"autoclear", P_AUTO_CLEAR},
 	{"clearbuttonmode", P_CLEAR_BUTTON_MODE},
 	{"borderstyle", P_BORDER_STYLE},
@@ -297,7 +299,7 @@ static struct {const char *name; Properties property;} s_native_control_properti
 	{nil, P_UNDEFINED}
 };
 
-static struct {const char *name; MCNativeControlAction action;} s_native_control_actions[] =
+static const struct {const char *name; MCNativeControlAction action;} s_native_control_actions[] =
 {
 	{"advance", kMCNativeControlActionAdvance},
 	{"retreat", kMCNativeControlActionRetreat},

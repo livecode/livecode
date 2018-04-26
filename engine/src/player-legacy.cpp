@@ -94,6 +94,7 @@ MCPlayer::MCPlayer()
 #ifdef FEATURE_MPLAYER
 	command = NULL;
 	m_player = NULL ;
+	atom = GDK_NONE;
 #endif
     
 }
@@ -118,6 +119,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 #ifdef FEATURE_MPLAYER
 	command = NULL;
 	m_player = NULL ;
+	atom = GDK_NONE;
 #endif
     
 }
@@ -302,7 +304,7 @@ void MCPlayer::applyrect(const MCRectangle &nrect)
 
 void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 {
-    if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
+    if (MCNameIsEqualToCaseless(mptr, MCM_play_stopped))
     {
         state |= CS_PAUSED;
         if (isbuffering()) //so the last frame gets to be drawn
@@ -316,7 +318,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
             return; //obj is already deleted, do not pass msg up.
         }
     }
-    else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
+    else if (MCNameIsEqualToCaseless(mptr, MCM_play_paused))
     {
         state |= CS_PAUSED;
         if (isbuffering()) //so the last frame gets to be drawn
@@ -347,7 +349,7 @@ void MCPlayer::deselect(void)
 
 MCControl *MCPlayer::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCPlayer *newplayer = new MCPlayer(*this);
+	MCPlayer *newplayer = new (nothrow) MCPlayer(*this);
 	if (attach)
 		newplayer->attach(p, invisible);
 	return newplayer;
@@ -931,12 +933,8 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	
 	if (!p_isolated)
 	{
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
-	}
-    
-	if (!p_isolated)
 		dc -> end();
+	}
 }
 
     
@@ -981,7 +979,7 @@ bool MCPlayer::gethotspot(uindex_t index, uint2 &id, MCMultimediaQTVRHotSpotType
 Boolean MCPlayer::x11_prepare(void)
 {
     if ( m_player == NULL )
-        m_player = new MPlayer();
+        m_player = new (nothrow) MPlayer();
     
     // OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player.
     // MCPlayer::init appears to duplicate the filename buffer, so freeing it after the call should be ok.

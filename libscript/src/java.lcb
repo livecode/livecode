@@ -1,0 +1,248 @@
+/* Copyright (C) 2016 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This module provides utility handlers for converting to and from Java types.
+
+Description:
+
+> **Important:** This library is currently supported on Android, Mac and
+> Linux. Binding to java classes requires the availability of a Java 
+> runtime and access to the appropriate libraries. On Mac, 
+> the `JAVA_HOME` environment variable must be set to the path to your 
+> Java installation (usually at 
+> `/Library/Java/JavaVirtualMachines/jdk1.7.0_55.jdk/Contents/Home`). 
+> On Linux, your `LD_LIBRARY_PATH` must be set to the folder containing 
+> the `libjvm.so` library (usually at `${JAVA_HOME}/jre/lib/amd64/server`
+> on 64-bit Linux).
+
+*/
+module com.livecode.java
+
+use com.livecode.foreign
+
+public type JBoolean is Bool
+public type JByte is Int8
+public type JChar is UInt16
+public type JShort is Int16
+public type JInt is Int32
+public type JLong is Int64
+public type JFloat is Float32
+public type JDouble is Float64
+
+public foreign type JObject binds to "MCJavaObjectTypeInfo"
+public type JString is JObject
+public type JByteArray is JObject
+
+foreign handler MCJavaStringFromJString(in pString as JObject, out rString as String) returns nothing binds to "<builtin>"
+foreign handler MCJavaStringToJString(in pString as String, out rString as JObject) returns nothing binds to "<builtin>"
+foreign handler MCJavaDataFromJByteArray(in pByteArray as JObject, out rData as Data) returns nothing binds to "<builtin>"
+foreign handler MCJavaDataToJByteArray(in pData as Data, out rByteArray as JObject) returns nothing binds to "<builtin>"
+
+foreign handler MCJavaGetClassName(in pObject as JObject, out rName as String) returns nothing binds to "<builtin>"
+foreign handler MCJavaUnwrapJObject(in pObject as JObject, out rPointer as Pointer) returns nothing binds to "<builtin>"
+foreign handler MCJavaWrapJObject(in pPointer as Pointer, out rObj as JObject) returns nothing binds to "<builtin>"
+
+/**
+Summary:    Get Java class name of a Java object
+
+Parameters:
+pObj: A JObject
+
+Example:
+	foreign handler CreateJavaObject() returns JObject binds to "java:java.lang.Object>new()"
+	
+public handler GetNewJavaObject() returns JObject
+	variable tObj as JObject
+	unsafe
+		put CreateJavaObject() into tObj
+	
+		variable tClassName as String
+		put GetJavaClassName(pObj) into tClassName
+	
+		-- tClassName contains "java.lang.Object"
+	end unsafe
+	
+	return tObj
+end handler
+
+Description:
+Use <GetJavaClassName> to find out what class a given Java object is an
+instance of.
+
+*/
+public handler GetJavaClassName(in pObj as JObject) returns String
+	variable tString as String
+    unsafe
+		MCJavaGetClassName(pObj, tString)
+    end unsafe
+	return tString
+end handler
+
+/**
+Summary:    Convert a java string into a String
+
+Parameters:
+pObj: The JString to convert
+
+Example:
+
+foreign handler JavaGetDefaultLocale() returns JObject binds to "java:java.util.Locale>getDefault()Ljava/util/Locale;!static"
+foreign handler JavaLocaleDisplayName(in pLocale as JObject) returns JObject binds to "java:java.util.Locale>getDisplayName()Ljava/lang/String;"
+
+public handler GetDefaultLocaleDisplayName() returns String
+	unsafe 
+		variable tLocale as JObject
+		put JavaGetDefaultLocale() into tLocale
+		
+		variable tDisplay as JString
+		put JavaLocaleDisplayName(tLocale) into tDisplay
+		
+		return StringFromJString(tDisplay)
+	end unsafe
+end handler
+
+
+Description:
+Use <StringFromJString> to convert an instance of the class java.lang.String
+to a variable of type String.
+
+*/
+public handler StringFromJString(in pObj as JString) returns String
+	variable tString as String
+    unsafe
+		MCJavaStringFromJString(pObj, tString)
+    end unsafe
+	return tString
+end handler
+
+/**
+Summary:    Convert a String into a java string
+
+Parameters:
+pString: The String to convert
+
+Returns:
+A JObject of type java.lang.String
+
+Example:
+	foreign handler CreateJavaCurrencyWithCode(in pString as JString) returns JObject binds to "java:java.util.Currency>getInstance(Ljava/lang/String;)Ljava/util/Currency;!static"
+	
+	-- Create a new Currency object
+	variable tCurrency as JObject
+	unsafe
+		variable tCode as JString
+		put StringToJString("AMD") into tCode
+		
+		put CreateJavaCurrencyWithCode(tCode) into tCurrency
+	end unsafe
+	 
+Description:
+Use <StringToJString> to convert a variable of type String to an instance
+of the class java.lang.String.
+*/
+public handler StringToJString(in pString as String) returns JString
+	variable tString as JString
+    unsafe
+		MCJavaStringToJString(pString, tString)
+    end unsafe
+	return tString
+end handler
+
+public handler DataToJByteArray(in pData as Data) returns JByteArray
+	variable tBytes as JByteArray
+    unsafe
+		MCJavaDataToJByteArray(pData, tBytes)
+    end unsafe
+	return tBytes
+end handler
+
+public handler DataFromJByteArray(in pBytes as JByteArray) returns Data
+	variable tData as Data
+    unsafe
+		MCJavaDataFromJByteArray(pBytes, tData)
+    end unsafe
+	return tData
+end handler
+
+/**
+Summary:    Convert a JObject into a Pointer
+
+Parameters:
+pObj: The JObject to convert
+
+Returns:
+The jobject Pointer wrapped by the JObject type
+
+Example:
+	handler SetNativeLayerToView(in pView as JObject)
+		variable tViewPtr as Pointer
+		put PointerFromJObject(pView) into tViewPtr
+		set my native layer to tViewPtr
+	end handler
+	 
+Description:
+Use <PointerFromJObject> to convert a variable of type JObject to one of
+type Pointer, i.e. to extract the underlying jobject pointer from a JObject
+*/
+
+public handler PointerFromJObject(in pObj as JObject) returns Pointer
+	variable tPointer as Pointer
+    unsafe
+		MCJavaUnwrapJObject(pObj, tPointer)
+    end unsafe
+	return tPointer
+end handler
+
+/**
+Summary:    Convert a Pointer into a JObject
+
+Parameters:
+pPointer: The Pointer to convert
+
+Returns:
+A JObject wrapping the jobject Pointer
+
+Example:
+	foreign handler _JNI_SetTextViewText(in pView as JObject, in pValue as JString) returns nothing binds to "java:android.widget.TextView>setText(Ljava/lang/CharSequence;)V"
+	
+	-- set the text of a view
+	unsafe handler ViewSetText(in pString as String)
+		variable tViewPtr as Pointer
+		put my native layer into tPointer
+		
+		variable tView as JObject
+		put PointerToJObject into tView
+		_JNI_SetTextViewText(tView, StringToJString(pString))
+	end handler
+	 
+Description:
+Use <PointerToJObject> to convert a variable of type Pointer to one of 
+type JObject. 
+
+> *Important:* Your application will likely crash if the underlying type
+> of the Pointer is not actually jobject.
+*/
+
+public handler PointerToJObject(in pPointer as Pointer) returns JObject
+	variable tObj as JObject
+    unsafe
+		MCJavaWrapJObject(pPointer, tObj)
+    end unsafe
+	return tObj
+end handler
+
+end module

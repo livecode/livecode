@@ -1,0 +1,5 @@
+This file uses CRLF
+
+a
+b
+c

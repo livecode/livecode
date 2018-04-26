@@ -88,7 +88,7 @@ bool MCCefLinuxBrowser::GetXWindow(Window &r_window)
 	Window t_window;
 	t_window = t_browser->GetHost()->GetWindowHandle();
 
-	if (t_window == nil)
+	if (t_window == None)
 		return false;
 
 	r_window = t_window;
@@ -210,7 +210,7 @@ void MCCefPlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser)
 bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
 {
 	MCCefLinuxBrowser *t_browser;
-	t_browser = new MCCefLinuxBrowser((Window)p_window_id);
+	t_browser = new (nothrow) MCCefLinuxBrowser((Window)p_window_id);
 	
 	if (t_browser == nil)
 		return false;
@@ -221,37 +221,4 @@ bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-#define CEF_PATH_PREFIX "CEF"
-
-const char *MCCefPlatformGetCefFolder(void)
-{
-	static char *s_cef_path = nil;
-
-	if (s_cef_path == nil)
-	{
-		bool t_success;
-		t_success = true;
-
-		Dl_info t_info;
-		if (t_success)
-			t_success = 0 != dladdr((const void*)MCCefPlatformGetCefFolder, &t_info);
-			
-		if (t_success)
-			t_success = MCCStringClone(t_info.dli_fname, s_cef_path);
-
-		if (t_success)
-		{
-			// remove library component from path
-			uint32_t t_index;
-			if (MCCStringLastIndexOf(s_cef_path, '/', t_index))
-				s_cef_path[t_index] = '\0';
-            
-            // Append the name of the folder containing the CEF components
-            MCCStringAppend(s_cef_path, "/" CEF_PATH_PREFIX);
-		}
-	}
-
-	return s_cef_path;
-}
 

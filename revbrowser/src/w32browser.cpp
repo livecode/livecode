@@ -22,7 +22,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef long SHANDLE_PTR;
 int CWebBrowser::browseridcounter= 121;
 HRESULT LoadWebBrowserFromStream(IWebBrowser2* pWebBrowser, HGLOBAL pText);
 HRESULT LoadWebBrowserFromStreamDo(IDispatch *pHtmlDoc, HGLOBAL pText);
@@ -68,7 +67,7 @@ struct MYBITMAP
 
 MYBITMAP *createmybitmap(uint2 depth, uint2 width, uint2 height)
 {
-  MYBITMAP *image = new MYBITMAP;
+  MYBITMAP *image = new (nothrow) MYBITMAP;
   image->width = width;
   image->height = height;
   image->depth = (uint1)depth;
@@ -160,9 +159,9 @@ CWebBrowser::CWebBrowser(HWND hparent,  BOOL isvisible)
 	if (SUCCEEDED(hr)) 
 		iunknown->QueryInterface(IID_IWebBrowser2,(void**)&iwebbrowser2); 
 	if (!iwebbrowser2) return;
-	browserevents = new CWebEvents(this); 
+	browserevents = new (nothrow) CWebEvents(this); 
 	browserevents->AddRef();
-	webui = new CWebUI(this);
+	webui = new (nothrow) CWebUI(this);
 	webui->AddRef();
 	browserwindow.SetExternalUIHandler(webui);
 	AtlAdvise(iwebbrowser2, browserevents, DIID_DWebBrowserEvents2,
@@ -460,7 +459,7 @@ char *CWebBrowser::CallScript(const char *p_function_name, char **p_arguments, u
 	t_ole_arguments = NULL;
 	if (t_result == S_OK)
 	{
-		t_ole_arguments = new VARIANTARG[p_argument_count];
+		t_ole_arguments = new (nothrow) VARIANTARG[p_argument_count];
 		if (t_ole_arguments != NULL)
 			memset(t_ole_arguments, 0, sizeof(VARIANTARG) * p_argument_count);
 		else
@@ -1554,10 +1553,10 @@ void CWebBrowser::swapBrowser()
 	if (SUCCEEDED(hr)) 
 		iunknown->QueryInterface(IID_IWebBrowser2,(void**)&iwebbrowser2); 
 	if (!iwebbrowser2) return;
-	browserevents = new CWebEvents(this); 
+	browserevents = new (nothrow) CWebEvents(this); 
 	browserevents->AddRef();
 	iwebbrowser2->put_Silent(VARIANT_TRUE);
-	webui = new CWebUI(this); webui->AddRef();
+	webui = new (nothrow) CWebUI(this); webui->AddRef();
 	browserwindow.SetExternalUIHandler(webui);
 	AtlAdvise(iwebbrowser2, browserevents, DIID_DWebBrowserEvents2,
 		&browserevents2_cookie);

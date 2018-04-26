@@ -503,6 +503,8 @@ extern void WindowToStackRect(uintptr_t p_win_id, MCRectangle32 *x_rect, int *r_
 extern void LoadModuleByName(const char *p_module, void **r_handle, int *r_success);
 extern void UnloadModule(void *p_handle, int *r_success);
 extern void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolved, int *r_success);
+
+extern char *CopyNativePathOfModule(void *p_handle, int* r_success);
     
 //
 extern Bool SecurityCanAccessFile(const char *p_file);

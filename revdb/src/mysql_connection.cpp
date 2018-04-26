@@ -218,7 +218,7 @@ DBCursor *DBConnection_MYSQL::sqlQuery(char *p_query, DBString *p_arguments, int
 
 	if (ExecuteQuery(p_query, p_arguments, p_argument_count))
 	{
-		t_cursor = new DBCursor_MYSQL();
+		t_cursor = new (nothrow) DBCursor_MYSQL();
 		if (!t_cursor -> open((DBConnection *)this))
 		{
 			delete t_cursor;
@@ -310,7 +310,7 @@ bool DBConnection_MYSQL::ExecuteQuery(char *p_query, DBString *p_arguments, int 
 	int t_error_code;
 	if (t_success)
 	{
-		if (t_error_code = mysql_real_query(getMySQL(), t_parsed_query, t_query_length))
+		if ((t_error_code = mysql_real_query(getMySQL(), t_parsed_query, t_query_length)))
 			t_success = false;
 	}
 

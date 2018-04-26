@@ -40,6 +40,8 @@ follows:
 
  - **Identifier**: [A-Za-z_][A-Za-z0-9_.]*
  - **Integer**: [0-9]+
+ - **Binary Integer**: 0b[01]+
+ - **Hexadecimal Integer**: 0x[0-9a-fA-F]+
  - **Real**: [0-9]+"."[0-9]+([eE][-+]?[0-9]+)?
  - **String**: "[^\n\r"]*"
  - **Separator**: Any whitespace containing at least one newline
@@ -77,7 +79,10 @@ A LiveCode builder statement or declaration can be continued onto
 multiple lines of code by placing the line continuation character `\`
 at the end each line.
 
-- **Line continuation**: \\(\n|\r\n|\r)
+- **Line continuation**: \\[\t ]*(\n|\r\n|\r)
+
+> **Note:** Tab and space characters are allowed after the `\` and before the
+> newline, but no other characters.
 
 > **Note:** A line continuation cannot occur within a comment.
 
@@ -319,6 +324,19 @@ parameter in a foreign handler definition.
 > creation of a function pointer. The lifetime of the function pointer
 > is the same as the widget or module which created it.
 
+### Record Types
+
+    RecordTypeDefinition
+      : 'record' 'type' <Name: Identifier> SEPARATOR
+        { RecordTypeFieldDefinition }
+        'end' 'record'
+
+    RecordTypeFieldDefinition
+      : <Name: Identifier> [ 'as' <TypeOf: Type> ]
+
+A record type definition defines a type that consists of 0 or more
+named fields, each with its own optional type.
+
 ### Variables
 
     VariableDefinition
@@ -412,31 +430,76 @@ statement blocks.
     ForeignHandlerDefinition
       : 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ) ] 'binds' 'to' <Binding: String>
 
-    ForeignType
-      : Type
-      | 'CBool'
-      | 'CInt'
-      | 'CUInt'
-      | 'CFloat'
-      | 'CDouble'
-
 A foreign handler definition binds an identifier to a handler defined in
 foreign code.
 
-Foreign handler definitions can contain more types in their parameters
-than elsewhere - those specified in the ForeignType clause. These allow
-low-level types to be specified making it easier to interoperate.
+The last parameter in a foreign handler declaration may be '...' to indicate
+that the handler is variadic. This allows binding to C functions such as
+sprintf.
 
-Foreign types map to high-level types as follows:
+Note: No bridging of types will occur when passing a parameter in the non-fixed
+section of a variadic argument list. You must ensure the arguments you pass there
+are of the appropriate foreign type (e.g. CInt, CDouble).
 
- - bool maps to boolean
- - int and uint map to integer (number)
- - float and double map to real (number)
+There are a number of types defined in the foreign, java and objc modules which
+map to the appropriate foreign type when used in foreign handler signatures.
 
-This mapping means that a foreign handler with a bool parameter say,
-will accept a boolean from LiveCode Builder code when called.
+There are the standard machine types (defined in the foreign module):
 
-At present, only C binding is allowed and follow these rules:
+ - Bool maps to an 8-bit boolean
+ - Int8/SInt8 and UInt8 map to 8-bit integers
+ - Int16/SInt16 and UInt16 map to 16-bit integers
+ - Int32/SInt32 and UInt32 map to 32-bit integers
+ - Int64/SInt64 and UInt64 map to 64-bit integers
+ - IntSize/SIntSize and UIntSize map to the integer size needed to hold a memory size
+ - IntPtr/SIntPtr and UIntPtr map to the integer size needed to hold a pointer
+ - NaturalSInt and NaturalUInt map to 32-bit integers on 32-bit processors and
+   64-bit integers on 64-bit processors
+ - NaturalFloat maps to the 32-bit float type on 32-bit processors and the 64-bit
+   float (double) type on 64-bit processors
+
+There are the standard C primitive types (defined in the foreign module)
+
+ - CBool maps to 'bool'
+ - CChar, CSChar and CUChar map to 'char', 'signed char' and 'unsigned char'
+ - CShort/CSShort and CUShort map to 'signed short' and 'unsigned short'
+ - CInt/CSInt and CUInt map to 'signed int' and 'unsigned int'
+ - CLong/CSLong and CULong map to 'signed long' and 'unsigned long'
+ - CLongLong/CSLongLong and CULongLong map to 'signed long long' and 'unsigned long long'
+ - CFloat maps to 'float'
+ - CDouble maps to 'double'
+
+There are types specific to Obj-C types (defined in the objc module):
+
+  - ObjcObject wraps an obj-c 'id', i.e. a pointer to an objective-c object
+  - ObjcId maps to 'id'
+  - ObjcRetainedId maps to 'id', and should be used where a foreign handler
+    argument expects a +1 reference count, or where a foreign handler returns
+    an id with a +1 reference count.
+
+Note: When an ObjcId is converted to ObjcObject, the id is retained;
+when an ObjcObject converted to an ObjcId, the id is not retained. Conversely,
+when an ObjcRetainedId is converted to an ObjcObject, the object takes the
++1 reference count (so does not retain); when an ObjcObject is put into an
+ObjcRetainedId, a +1 reference count is taken (so does retain).
+
+There are aliases for the Java primitive types (defined in the java module)
+
+ - JBoolean maps to Bool
+ - JByte maps to Int8
+ - JShort maps to Int16
+ - JInt maps to Int32
+ - JLong maps to Int64
+ - JFloat maps to Float32
+ - JDouble maps to Float64
+
+All the primitive types above will implicitly bridge between corresponding
+high level types:
+
+  - CBool and Bool bridge to and from Boolean
+  - All integer and real types bridge to and from Number
+
+Other LCB types pass as follows into foreign handlers:
 
  - any type passes an MCValueRef
  - nothing type passes as the null pointer
@@ -448,12 +511,11 @@ At present, only C binding is allowed and follow these rules:
  - Data type passes an MCDataRef
  - Array type passes an MCArrayRef
  - List type passes an MCProperListRef
- - Pointer type passes a void *
- - CBool type passes a bool (i.e. an int - pre-C99).
- - CInt type passes an int
- - CUInt type passes an unsigned int
- - CFloat type passes a float
- - CDouble type passes a double
+
+Finally, the Pointer type passes as void * to foreign handlers. If you want
+a pointer which can be null, then use optional Pointer - LCB will throw an
+error if there is an attempt to map from the null pointer value to a slot
+with a non-optional Pointer type.
 
 Modes map as follows:
 
@@ -468,11 +530,21 @@ If an out parameter is of a Ref type, then it must be a copy (on exit)
 If an inout parameter is of a Ref type, then its existing value must be
 released, and replaced by a copy (on exit).
 
-The binding string for foreign handlers has the following form:
+The binding string for foreign handlers is language-specific and currently
+supported forms are explained in the following sections.
 
-    [lang:][library>][class.]function[!calling]
+Foreign handlers' bound symbols are resolved on first use and an error
+is thrown if the symbol cannot be found.
 
-Here *lang* specifies the language (must be 'c' at the moment)
+Foreign handlers are always considered unsafe, and thus may only be called
+from unsafe context - i.e. from within an unsafe handler, or unsafe statement
+block.
+
+#### The C binding string
+
+The C binding string has the following form:
+
+    "c:[library>][class.]function[!calling][?thread]"
 
 Here *library* specifies the name of the library to bind to (if no
 library is specified a symbol from the engine executable is assumed).
@@ -485,31 +557,151 @@ by listing it in a DEF module).
 
 Here *calling* specifies the calling convention which can be one of:
 
- - default
- - stdcall
- - thiscall
- - fastcall
- - cdecl
- - pascal
- - register
+ - `default`
+ - `stdcall`
+ - `thiscall`
+ - `fastcall`
+ - `cdecl`
+ - `pascal`
+ - `register`
 
-All but 'default' are Win32-only, and on Win32 'default' maps to
-'cdecl'. If a Win32-only calling convention is specified on a
-non-Windows platform then it is taken to be 'default'.
+All but `default` are Win32-only, and on Win32 `default` maps to
+`cdecl`. If a Win32-only calling convention is specified on a
+non-Windows platform then it is taken to be `default`.
 
-Foreign handler's bound symbols are resolved on first use and an error
-is thrown if the symbol cannot be found.
+Here *thread* is either empty or `ui`. The `ui` form is used to determine
+whether the method should be run on the UI thread (currently only applicable
+on Android and iOS).
 
-Foreign handlers are always considered unsafe, and thus may only be called
-from unsafe context - i.e. from within an unsafe handler, or unsafe statement
-block.
+#### The Obj-C binding string
 
-> **Note:** The current foreign handler definition is an initial
-> version, mainly existing to allow binding to implementation of the
-> syntax present in the standard language modules. It will be expanded
-> and improved in a subsequent version to make it very easy to import
-> and use functions (and types) from other languages including
-> Objective-C (on Mac and iOS) and Java (on Android).
+The Obj-C binding string has the following form:
+
+    "objc:[class.](+|-)method[?thread]"
+
+Here *class* specifies the name of the class containing the method to
+bind to. If the method is an instance method, the class can be omitted,
+creating a 'dynamic binding', i.e. just resolving the selector.
+
+Here *method* specifies the method name to bind to in standard Obj-C selector
+form, e.g. addTarget:action:forControlEvents:. If the method is a class method
+then prefix it with '+', if it is an instance method then prefix it with '-'.
+
+Here *thread* is either empty or `ui`. The `ui` form is used to determine
+whether the method should be run on the UI thread (currently only applicable
+on Android and iOS).
+
+#### The Java binding string
+
+The Java binding string has the following form:
+
+    "java:[className>][functionType.]function[!calling][?thread]"
+
+Here *className* is the qualified name of the Java class to bind to.
+
+Here *functionType* is either empty, or `get` or `set`, which are 
+currently used for getting and setting member fields of a Java class.
+
+For example
+
+	"java:java.util.Calendar>set.time(J)"
+	"java:java.util.Calendar>get.time()J"
+
+are binding strings for setting and getting the `time` field of a 
+Calendar object.
+
+Here *function* specifies the name of the method or field to bind to. The
+function `new` may be used to call a class constructor. *function* also
+includes the specification of function signature, according to the 
+[standard rules for forming these](http://journals.ecs.soton.ac.uk/java/tutorial/native1.1/implementing/method.html) 
+when calling the JNI.
+
+The function `interface` may be used on Android to create an interface 
+proxy - that is an instance of a generic Proxy class for a given 
+interface. This effectively allows LCB handlers to be registered as the 
+targets for java interface callbacks, such as event listeners.
+
+The foreign handler binding to such a function takes a value that should 
+either be a `Handler` or an `Array` - if it is a `Handler`, the specified 
+listener should only have one available callback. If the listener has 
+multiple callbacks, an array can be used to assign handlers to each. Each 
+key in the array must match the name of a callback in the listener. The 
+specified handlers must match the callback's parameters and return type, 
+using JObject where primitive type parameters are used.
+
+Overloaded methods in the interface are not currently supported.
+
+For example:
+
+	handler type ClickCallback(in pView as JObject) returns nothing
+
+	foreign handler _JNI_OnClickListener(in pHandler as ClickCallback) returns JObject binds to "java:android.view.View$OnClickListener>interface()"
+
+	foreign handler _JNI_SetOnClickListener(in pButton as JObject, in pListener as JObject) returns nothing binds to "java:android.view.View>setOnClickListener(Landroid/view/View$OnClickListener;)V"	
+	
+	public handler ButtonClicked(in pView as JObject) returns nothing
+		post "buttonClicked"
+		MCEngineRunloopBreakWait()
+	end handler
+	
+	public handler SetOnClickListenerCallback(in pButton as JObject)
+		unsafe
+			variable tListener as JObject
+			put _JNI_OnClickListener(ButtonClicked) into tListener
+			_JNI_SetOnClickListener(pButton, tListener)
+		end unsafe
+	end handler
+	
+or
+
+	handler type MouseEventCallback(in pMouseEvent as JObject) returns nothing
+
+	foreign handler _JNI_MouseListener(in pCallbacks as Array) returns JObject binds to "java:java.awt.event.MouseListener>interface()"
+
+	foreign handler _JNI_SetMouseListener(in pJButton as JObject, in pListener as JObject) returns nothing binds to "java:java.awt.Component>addMouseListener(Ljava/awt/event/MouseListener;)V"	
+	
+	public handler MouseEntered(in pEvent as JObject) returns nothing
+		post "mouseEnter"
+		MCEngineRunloopBreakWait()
+	end handler
+	
+	public handler MouseExited(in pEvent as JObject)
+		-- do something on mouse entter
+	end handler
+	
+	public handler SetMouseListenerCallbacks(in pJButton as JObject)
+		variable tArray as Array
+		put MouseEntered into tArray["mouseEntered"]
+		put MouseExited into tArray["mouseExited"]
+		unsafe
+			variable tListener as JObject
+			put _JNI_MouseListener(tArray) into tListener
+			_JNI_SetMouseListener(pJButton, tListener)
+		end unsafe
+	end handler
+
+>*Important:* On Android, interface callbacks are *always* run on the
+> engine thread. This means JNI local references from other threads
+> (in particular the UI thread) are unavailable. Therefore it is not 
+> advised to do anything using the JNI in interface callbacks. 
+
+Here *calling* specifies the calling convention which can be one of:
+
+ - `instance`
+ - `static`
+ - `nonvirtual`
+
+Instance and nonvirtual calling conventions require instances of the given
+Java class, so the foreign handler declaration will always require a Java
+object parameter.
+
+Here, *thread* is either empty or `ui`. The `ui` form is used to determine
+whether the method should be run on the UI thread (currently only applicable
+on Android and iOS).
+
+> **Warning:** At the moment it is not advised to use callbacks that may be
+> executed on arbitrary threads, as this is likely to cause your application
+> to crash.
 
 ### Properties
 
@@ -908,3 +1100,144 @@ available as **the result**.
 > **Note:** Handlers which return no value (i.e. have nothing as their
 > result type) can still be used in call expressions. In this case the
 > value of the call is **nothing**.
+
+## Namespaces
+
+Identifiers declared in a module are placed in a scope named using the
+module name. This allows disambiguation between an identifier declared
+in a module and an identical one declared in any of its imports, by
+using a fully qualified name.
+
+For example:
+
+	module com.livecode.module.importee
+
+	public constant MyName is "Importee"
+	public handler GetMyName() returns String
+		return MyName
+	end handler
+
+	public type MyType is Number
+
+	end module
+
+	module com.livecode.module.usesimport
+
+	use com.livecode.module.importee
+
+	public constant MyName is "Uses Import"
+	public handler GetMyName() returns String
+		return MyName
+	end handler
+	public type MyType is String
+
+	handler TestImports()
+		variable tVar as String
+		put MyName into tVar
+		-- tVar contains "Uses Import"
+
+		put com.livecode.module.importee.MyName into tVar
+		-- tVar contains "Importee"
+
+		put com.livecode.module.usesimport.MyName into tVar
+		-- tVar contains "Uses Import"
+
+		put com.livecode.module.importee.GetMyName() into tVar
+		-- tVar contains "Importee"
+
+		variable tVarMyType as MyType
+		put tVar into tVar1 -- valid
+
+		variable tVarImportedType as com.livecode.module.importee.MyType
+		put tVar into tVarImportedType -- compile error
+	end handler
+
+	end module
+
+## Experimental Features
+
+**Warning**: This section describes current language features and syntax
+that are considered experimental and unstable.  They are likely to change
+or go away without warning.
+
+### Safe Foreign Handlers
+
+    SafeForeignHandler
+      : '__safe' 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ) ] 'binds' 'to' <Binding: String>
+
+By default foreign handlers are considered unsafe and thus can only be used in
+unsafe blocks, or unsafe handlers. However, at the moment it is possible for a
+foreign handler to actually be safe if it has been explicitly written to wrap
+a foreign function so it can be easily used from LCB.
+
+Specifically, it is reasonable to consider a foreign handler safe if it
+conforms to the following rules:
+
+ - Parameter types and return type are either ValueRefs, or bridgeable types
+ - Return values of ValueRef type are retained
+ - If the function fails then MCErrorThrow has been used
+ - 'out' mode parameters are only changed if the function succeeds
+ - A return value is only provided if the function succeeds
+
+Examples of foreign handlers which can be considered safe are all the foreign
+handlers which bind to syntax in the LCB standard library.
+
+### Foreign Aggregate Types
+
+C-style aggregates (e.g. structs) can now be accessed from LCB via the new
+aggregate parameterized type. This allows calling foreign functions which has
+arguments taking aggregates by value, or has an aggregate return value.
+
+Aggregate types are foreign types and can be used in C and Obj-C foreign
+handler definitions. They bridge to and from the List type, allowing an
+aggregate's contents to be viewed as a sequence of discrete values.
+
+Aggregate types are defined using a `foreign type` clause and binding string.
+e.g.
+
+    public foreign type NSRect binds to "MCAggregateTypeInfo:qqqq"
+
+The structure of the aggregate is defined by using a sequence of type codes
+after the ':', each type code represents a specific foreign (C) type:
+
+| Char | Type         |
+| ---- | ------------ |
+|  a   | CBool        |
+|  b   | CChar        |
+|  c   | CUChar       |
+|  C   | CSChar       |
+|  d   | CUShort      |
+|  D   | CSShort      |
+|  e   | CUInt        |
+|  E   | CSInt        |
+|  f   | CULong       |
+|  F   | CSLong       |
+|  g   | CULongLong   |
+|  G   | CSLongLong   |
+|  h   | UInt8        |
+|  H   | SInt8        |
+|  i   | UInt16       |
+|  I   | SInt16       |
+|  j   | UInt32       |
+|  J   | SInt32       |
+|  k   | UInt64       |
+|  K   | SInt64       |
+|  l   | UIntPtr      |
+|  L   | SIntPtr      | 
+|  m   | UIntSize     |  
+|  M   | SIntSize     |  
+|  n   | Float        |
+|  N   | Double       |
+|  o   | LCUInt       |
+|  O   | LCSInt       |
+|  p   | NaturalUInt  |
+|  P   | NaturalSInt  |
+|  q   | NaturalFloat |
+|  r   | Pointer      |
+
+When importing an aggregate to a List, each field in the aggregate is also
+bridged, except for Pointer types which are left as Pointer. When exporting
+an aggregate from a List, each element is bridged to the target field type.
+
+*Note*: Any foreign type binding to an aggregate must be public otherwise the
+type will not work correctly.

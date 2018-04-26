@@ -74,7 +74,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
     
     uinteger_t t_comma_index;
     MCAutoStringRef t_reqname;
-	font = new MCFontStruct; //create MCFont structure
+	font = new (nothrow) MCFontStruct; //create MCFont structure
 	font -> size = size;
 	
     if (MCStringFirstIndexOfChar(MCNameGetString(fname), ',', 0, kMCStringOptionCompareExact, t_comma_index))
@@ -110,7 +110,7 @@ MCFontnode::MCFontnode(MCSysFontHandle p_handle, MCNameRef p_name)
     reqsize = coretext_get_font_size(p_handle);
     reqstyle = FA_DEFAULT_STYLE | FA_SYSTEM_FONT;
     
-    font = new MCFontStruct;
+    font = new (nothrow) MCFontStruct;
     font->size = reqsize;
     
     font->fid = p_handle;
@@ -126,7 +126,7 @@ void MCFontnode::calculatemetrics()
 
 MCFontnode::~MCFontnode()
 {
-    MCNameDelete(reqname);
+    MCValueRelease(reqname);
     
     // Don't delete the fontstruct for system fonts (it is still cached elsewhere)
     if ((reqstyle & FA_SYSTEM_FONT) == 0)
@@ -141,7 +141,7 @@ MCFontStruct *MCFontnode::getfont(MCNameRef fname, uint2 size, uint2 style)
 {
 	if (reqstyle & FA_SYSTEM_FONT)
         return NULL;
-    if (!MCNameIsEqualTo(fname, reqname))
+    if (!MCNameIsEqualToCaseless(fname, reqname))
 		return NULL;
 	if (size == 0)
 		return font;
@@ -176,7 +176,7 @@ MCFontStruct *MCFontlist::getfont(MCNameRef fname, uint2 &size, uint2 style, Boo
 			tmp = tmp->next();
 		}
 		while (tmp != fonts);
-	tmp = new MCFontnode(fname, size, style);
+	tmp = new (nothrow) MCFontnode(fname, size, style);
 	tmp->appendto(fonts);
 	return tmp->getfont(fname, size, style);
 }
@@ -195,7 +195,7 @@ MCFontStruct *MCFontlist::getfontbyhandle(MCSysFontHandle p_fid, MCNameRef p_nam
     while (tmp != fonts);
     
     // Font has not yet been added to the list
-    tmp = new MCFontnode(p_fid, p_name);
+    tmp = new (nothrow) MCFontnode(p_fid, p_name);
     tmp->appendto(fonts);
     return tmp->getfontstruct();
 }

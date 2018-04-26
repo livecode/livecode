@@ -2,7 +2,7 @@ Name: touchEnd
 
 Type: message
 
-Syntax: touchEnd <touchID>
+Syntax: touchEnd <pTouchID>
 
 Summary:
 Sent when the user ends a touch sequence
@@ -19,7 +19,7 @@ on touchEnd
 end touchEnd
 
 Parameters:
-touchID:
+pTouchID:
 A number which uniquely identifies an individual physical touch action from  
 a sequence of touch messages 
 

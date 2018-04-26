@@ -55,6 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "deploy.h"
 #include "capsule.h"
 #include "player.h"
+#include "internal.h"
 
 #if defined(_WINDOWS_DESKTOP)
 #include "prefix.h"
@@ -65,6 +66,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 #include "libscript/script.h"
+#include <libscript/script-auto.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -90,19 +92,19 @@ struct MCCapsuleInfo
 
 #if defined(_WINDOWS)
 #pragma section(".project", read, discard)
-__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {0};
+__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(_LINUX)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(_MACOSX)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0};
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0};
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(TARGET_PLATFORM_MOBILE)
-MCCapsuleInfo MCcapsule = {0};
+MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(__EMSCRIPTEN__)
-MCCapsuleInfo MCcapsule = {0};
+MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #endif
 
 MCLicenseParameters MClicenseparameters =
@@ -225,7 +227,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	case kMCCapsuleSectionTypeRedirect:
 	{
 		char *t_redirect;
-		t_redirect = new char[p_length];
+		t_redirect = new (nothrow) char[p_length];
 		if (IO_read(t_redirect, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read redirect ref");
@@ -243,7 +245,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeFontmap:
     {
         char *t_fontmap;
-        t_fontmap = new char[p_length];
+        t_fontmap = new (nothrow) char[p_length];
         if (IO_read(t_fontmap, p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read fontmap");
@@ -286,15 +288,23 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	case kMCCapsuleSectionTypeExternal:
 	{
 		MCAutoStringRef t_external_str;
-		if (!MCStandaloneCapsuleReadString(p_stream, p_length, &t_external_str))
+        MCAutoStringRef t_resolved_external_str;
+		if (!MCStandaloneCapsuleReadString(p_stream, p_length, &t_external_str) ||
+            !MCStringFormat(&t_resolved_external_str,
+                            "./%@",
+                            *t_external_str))
 		{
 			MCresult -> sets("failed to read external ref");
 			return false;
 		}
 		
-		if (!MCdispatcher -> loadexternal(*t_external_str))
+		if (!MCdispatcher -> loadexternal(*t_resolved_external_str))
 		{
-			MCresult -> sets("failed to load external");
+            MCAutoStringRef t_error;
+            if (!MCStringFormat(&t_error, "failed to load external: %@", *t_external_str))
+                MCresult -> sets("failed to load external");
+            else
+                MCresult -> setvalueref(*t_error);
 			return false;
 		}
 	}
@@ -378,32 +388,73 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             MCresult -> sets("failed to read module");
             return false;
         }
-    
-        bool t_success;
-        t_success = true;
         
-        MCStreamRef t_stream;
-        t_stream = nil;
-        if (t_success)
-            t_success = MCMemoryInputStreamCreate(t_module_data.Bytes(), p_length, t_stream);
-        
-        MCScriptModuleRef t_module;
-        if (t_success)
-            t_success = MCScriptCreateModuleFromStream(t_stream, t_module);
-        
-        if (t_stream != nil)
-            MCValueRelease(t_stream);
-        
-        if (!t_success)
+        MCAutoValueRefBase<MCStreamRef> t_stream;
+        if (!MCMemoryInputStreamCreate(t_module_data.Bytes(),
+                                       p_length, &t_stream))
         {
-            MCresult -> sets("failed to load module");
+            MCresult -> sets("out of memory");
             return false;
         }
         
-        extern bool MCEngineAddExtensionFromModule(MCScriptModuleRef module);
-        if (!MCEngineAddExtensionFromModule(t_module))
+        MCAutoScriptModuleRefArray t_modules;
+        if (!MCScriptCreateModulesFromStream(*t_stream, t_modules))
         {
-            MCScriptReleaseModule(t_module);
+            MCAutoErrorRef t_error;
+            if (MCErrorCatch(&t_error))
+                MCresult->setvalueref(MCErrorGetMessage(*t_error));
+            else
+                MCresult->sets("out of memory");
+            
+            return false;
+        }
+        
+        MCScriptModuleRef t_main = t_modules[0];
+
+        MCAutoStringRef t_module_resources;
+        if (!MCStringFormat(&t_module_resources, "%@/resources",
+                            MCScriptGetNameOfModule(t_main)))
+        {
+            MCresult->sets("out of memory");
+            return false;
+        }
+
+        MCAutoStringRef t_resources_path;
+        MCAutoStringRef t_resolved_path;
+        if (MCdispatcher -> fetchlibrarymapping(*t_module_resources,
+                                                &t_resources_path))
+        {
+            // Resolve the relative path
+            if (MCStringBeginsWith(*t_resources_path, MCSTR("./"),
+                                   kMCStringOptionCompareExact) && MCcmd)
+            {
+                uindex_t t_last_slash_index;
+                // On Android, we need to substitute in the whole of MCcmd so
+                // that the apk path resolution works
+#ifndef TARGET_SUBPLATFORM_ANDROID
+                if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash_index))
+#endif
+                    t_last_slash_index = MCStringGetLength(MCcmd);
+                
+                MCRange t_range;
+                t_range = MCRangeMake(0, t_last_slash_index);
+                if (!MCStringFormat(&t_resolved_path, "%*@/%@", &t_range, MCcmd, *t_resources_path))
+                {
+                    MCresult->sets("out of memory");
+                    return false;
+                }
+            }
+            else
+                t_resolved_path = *t_resources_path;
+        }
+        
+        extern void MCEngineAddExtensionsFromModulesArray(MCAutoScriptModuleRefArray&, MCStringRef, MCStringRef&);
+        
+        MCAutoStringRef t_error;
+        MCEngineAddExtensionsFromModulesArray(t_modules, *t_resolved_path, &t_error);
+        if (*t_error != nullptr)
+        {
+            MCresult->setvalueref(*t_error);
             return false;
         }
     }
@@ -535,10 +586,8 @@ IO_stat MCDispatch::startup(void)
 		
 		t_stack -> extraopen(false);
 		
-		// Resolve parent scripts *after* we've loaded aux stacks.
-		if (t_stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
-			t_stack -> resolveparentscripts();
-		
+        MCdispatcher->resolveparentscripts();
+        
 		MCscreen->resetcursors();
 		MCImage::init();
 		
@@ -634,10 +683,8 @@ IO_stat MCDispatch::startup(void)
 	{
 		t_info . stack -> extraopen(false);
 	
-		// Resolve parent scripts *after* we've loaded aux stacks.
-		if (t_info . stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
-			t_info . stack -> resolveparentscripts();
-		
+        MCdispatcher->resolveparentscripts();
+        
 		MCscreen->resetcursors();
 		MCImage::init();
 	}
@@ -654,6 +701,9 @@ IO_stat MCDispatch::startup(void)
 #define kMCEmscriptenBootStackFilename "/boot/standalone/__boot.livecode"
 #define kMCEmscriptenStartupStackFilename "/boot/__startup.livecode"
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 IO_stat
 MCDispatch::startup()
 {
@@ -707,6 +757,10 @@ MCDispatch::startup()
 	}
 
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+    
+    // the first auxiliary stack loaded during startup will currently be the home stack
+    // we want it to be the initial stack
+    MCdispatcher->changehome(t_stack);
 
 	/* Complete startup tasks and send the startup message */
 
@@ -717,6 +771,8 @@ MCDispatch::startup()
 
 	MCdefaultstackptr->extraopen(false);
 
+    MCdispatcher->resolveparentscripts();
+    
 	send_startup_message();
 
 	if (!MCquit)
@@ -740,7 +796,6 @@ IO_stat MCDispatch::startup(void)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = t_mccmd; //point to MCcmd string
 
 #ifdef _DEBUG
 	// MW-2013-06-13: [[ CloneAndRun ]] When compiling in DEBUG mode, first check
@@ -836,7 +891,7 @@ IO_stat MCDispatch::startup(void)
 		
 		MCCapsuleClose(t_capsule);
 		
-		t_mainstack = t_info . stack;
+        t_mainstack = t_info . stack;
 	}
 	else if (MCnstacks > 1 && MClicenseparameters . license_class == kMCLicenseClassCommunity)
 	{
@@ -931,9 +986,7 @@ IO_stat MCDispatch::startup(void)
 	// Now open the main stack.
 	t_mainstack-> extraopen(false);
     
-    // Resolve parent scripts *after* we've loaded aux stacks.
-    if (t_mainstack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
-        t_mainstack -> resolveparentscripts();
+    MCdispatcher->resolveparentscripts();
     
 	send_startup_message();
 	if (!MCquit)
@@ -1120,12 +1173,6 @@ bool MCModeShouldCheckCantStandalone(void)
 	return true;
 }
 
-// The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_msg)
-{
-	return false;
-}
-
 // The standalone mode causes a relaunch message.
 bool MCModeHandleRelaunch(MCStringRef &r_id)
 {
@@ -1272,13 +1319,6 @@ void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, u
 {
 }
 
-#ifdef _MACOSX
-uint32_t MCModePopUpMenu(MCMacSysMenuHandle p_menu, int32_t p_x, int32_t p_y, uint32_t p_index, MCStack *p_stack)
-{
-	return 0;
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of Windows-specific mode hooks for STANDALONE mode.
@@ -1316,6 +1356,12 @@ void MCModeSetupCrashReporting(void)
 bool MCModeHandleMessage(LPARAM lparam)
 {
 	return false;
+}
+
+// Pixel scaling can be enabled in standalone mode.
+bool MCModeCanEnablePixelScaling()
+{
+	return true;
 }
 
 // IM-2014-08-08: [[ Bug 12372 ]] Only use pixel scaling in the standalone
@@ -1371,3 +1417,14 @@ void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
 }
 
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of internal verbs
+//
+
+// The internal verb table used by the '_internal' command
+MCInternalVerbInfo MCinternalverbs[] =
+{
+	{ nil, nil, nil }
+};

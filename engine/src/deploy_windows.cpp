@@ -800,7 +800,7 @@ static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, MCStringRef p_ic
 	t_entries = NULL;
 	if (t_success)
 	{
-		t_entries = new ICONDIRENTRY[t_dir . idCount];
+		t_entries = new (nothrow) ICONDIRENTRY[t_dir . idCount];
 		if (t_entries == NULL)
 			t_success = MCDeployThrow(kMCDeployErrorNoMemory);
 	}
@@ -844,7 +844,7 @@ static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, MCStringRef p_ic
 	t_grpicon_data = NULL;
 	if (t_success)
 	{
-		t_grpicon_data = new uint8_t[sizeof_GRPICONDIR + sizeof_GRPICONDIRENTRY * t_dir . idCount];
+		t_grpicon_data = new (nothrow) uint8_t[sizeof_GRPICONDIR + sizeof_GRPICONDIRENTRY * t_dir . idCount];
 		if (t_grpicon_data == NULL)
 			t_success = MCDeployThrow(kMCDeployErrorNoMemory);
 	}
@@ -890,7 +890,7 @@ static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, MCStringRef p_ic
 		{
 			// First allocate memory and load the image data
 			uint8_t *t_image;
-			t_image = new uint8_t[t_entries[i] . dwBytesInRes];
+			t_image = new (nothrow) uint8_t[t_entries[i] . dwBytesInRes];
 			if (t_image != NULL)
 				t_success = MCDeployFileReadAt(t_icon, t_image, t_entries[i] . dwBytesInRes, t_entries[i] . dwImageOffset);
 
@@ -936,7 +936,7 @@ static bool MCWindowsVersionInfoAdd(MCWindowsVersionInfo *p_parent, const char *
 	t_child = NULL;
 	if (t_success)
 	{
-		t_child = new MCWindowsVersionInfo;
+		t_child = new (nothrow) MCWindowsVersionInfo;
 		if (t_child == NULL)
 			t_success = MCDeployThrow(kMCDeployErrorNoMemory);
 	}
@@ -1116,9 +1116,13 @@ static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRe
             !t_bytes . Push('\0'))
             return false;
 	}
-	
+
+    MCAutoStringRefAsCString t_key_str;
+    if (!t_key_str.Lock(MCNameGetString(p_key)))
+        return false;
+
     MCWindowsVersionInfo *t_string;
-    return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCNameGetCString(p_key), true, t_bytes . Ptr(), t_bytes . Size(), t_string);
+    return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, *t_key_str, true, t_bytes . Ptr(), t_bytes . Size(), t_string);
 }
 
 static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)
@@ -1292,7 +1296,7 @@ static bool MCWindowsReadResourceEntryName(MCDeployFileRef p_file, uint32_t p_st
 	swap_uint16(t_length);
 	r_entry . name_length = t_length;
 
-	r_entry . name = new uint16_t[r_entry . name_length];
+	r_entry . name = new (nothrow) uint16_t[r_entry . name_length];
 	if (r_entry . name == NULL)
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 
@@ -1333,7 +1337,7 @@ static bool MCWindowsReadResourceDir(MCDeployFileRef p_file, uint32_t p_address,
 	// Make sure we have enough room in the table.
 	r_resources . is_table = true;
 	r_resources . table . entry_count = t_dir . NumberOfIdEntries + t_dir . NumberOfNamedEntries;
-	r_resources . table . entries = new MCWindowsResources[r_resources . table . entry_count];
+	r_resources . table . entries = new (nothrow) MCWindowsResources[r_resources . table . entry_count];
 	if (r_resources . table . entries == NULL)
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 
@@ -1617,7 +1621,7 @@ static bool MCDeployToWindowsReadHeaders(MCDeployFileRef p_file, IMAGE_DOS_HEADE
 	if (!MCDeployFileSeekSet(p_file, r_dos_header . e_lfanew + FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader) + r_nt_header . FileHeader . SizeOfOptionalHeader))
 		return MCDeployThrow(kMCDeployErrorWindowsBadSectionHeaderOffset);
 
-	r_section_headers = new IMAGE_SECTION_HEADER[r_nt_header . FileHeader . NumberOfSections];
+	r_section_headers = new (nothrow) IMAGE_SECTION_HEADER[r_nt_header . FileHeader . NumberOfSections];
 	if (r_section_headers == NULL)
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 
@@ -1695,8 +1699,8 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	// Next we check that there are at least two sections, and they are the
 	// right ones.
 	if (t_success &&
-		(MCStringIsEmpty(p_params . payload) && t_section_count < 2 ||
-			!MCStringIsEmpty(p_params . payload) && t_section_count < 3))
+		((MCStringIsEmpty(p_params . payload) && t_section_count < 2) ||
+			(!MCStringIsEmpty(p_params . payload) && t_section_count < 3)))
 		t_success = MCDeployThrow(kMCDeployErrorWindowsMissingSections);
 	if (t_success && memcmp(t_resource_section -> Name, ".rsrc", 6) != 0)
 		t_success = MCDeployThrow(kMCDeployErrorWindowsNoResourceSection);

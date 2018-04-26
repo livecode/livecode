@@ -41,8 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
-#include "syntax.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Boolean MCHandler::gotpass;
@@ -50,6 +48,10 @@ Boolean MCHandler::gotpass;
 ////////////////////////////////////////////////////////////////////////////////
 
 MCHandler::MCHandler(uint1 htype, bool p_is_private)
+    : hlist(),
+      npassedparams(),
+      firstline(),
+      lastline()
 {
 	statements = NULL;
 	vars = NULL;
@@ -83,20 +85,20 @@ MCHandler::~MCHandler()
 
 	for(uint32_t i = 0; i < nvnames; i++)
 	{
-		MCNameDelete(vinfo[i] . name);
+		MCValueRelease(vinfo[i] . name);
 		MCValueRelease(vinfo[i] . init);
 	}
 	delete[] vinfo; /* Allocated with new[] */
 
 	for(uint32_t i = 0; i < npnames; i++)
-		MCNameDelete(pinfo[i] . name);
+		MCValueRelease(pinfo[i] . name);
 	delete[] pinfo; /* Allocated with new[] */
 
 	delete[] globals; /* Allocated with new[] */
 
 	for(uint32_t i = 0; i < nconstants; i++)
 	{
-		MCNameDelete(cinfo[i] . name);
+		MCValueRelease(cinfo[i] . name);
 		MCValueRelease(cinfo[i] . value);
 	}
 	delete[] cinfo; /* Allocated with new[] */
@@ -104,7 +106,7 @@ MCHandler::~MCHandler()
 	// MW-2013-11-08: [[ RefactorIt ]] Delete the it varref.
 	delete m_it;
 
-	MCNameDelete(name);
+	MCValueRelease(name);
 }
 
 Parse_stat MCHandler::newparam(MCScriptPoint& sp)
@@ -122,7 +124,7 @@ Parse_stat MCHandler::newparam(MCScriptPoint& sp)
 	else
 	{
 		t_is_reference = true;
-		/* UNCHECKED */ MCStringCopySubstring(t_token, MCRangeMake(1, MCStringGetLength(t_token) - 1), &t_token_name);
+		/* UNCHECKED */ MCStringCopySubstring(t_token, MCRangeMakeMinMax(1, MCStringGetLength(t_token)), &t_token_name);
 	}
 
 	MCNameRef t_name;
@@ -131,9 +133,9 @@ Parse_stat MCHandler::newparam(MCScriptPoint& sp)
 	// OK-2010-01-11: [[Bug 7744]] - Check existing parsed parameters for duplicates.
 	for (uint2 i = 0; i < npnames; i++)
 	{
-		if (MCNameIsEqualTo(pinfo[i] . name, t_name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(pinfo[i] . name, t_name))
 		{
-			MCNameDelete(t_name);
+			MCValueRelease(t_name);
 			MCperror -> add(PE_HANDLER_DUPPARAM, sp);
 			return PS_ERROR;
 		}
@@ -150,23 +152,23 @@ Parse_stat MCHandler::newparam(MCScriptPoint& sp)
 Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 {
 	Parse_stat stat;
-	Symbol_type type;
+	Symbol_type t_type;
 	
 	firstline = sp.getline();
 	hlist = sp.gethlist();
 	prop = isprop;
 
-	if (sp.next(type) != PS_NORMAL)
+	if (sp.next(t_type) != PS_NORMAL)
 	{
 		MCperror->add(PE_HANDLER_NONAME, sp);
 		return PS_ERROR;
 	}
 
-	/* UNCHECKED */ MCNameClone(sp . gettoken_nameref(), name);
+    name = MCValueRetain(sp . gettoken_nameref());
 	
 	const LT *te;
 	// MW-2010-01-08: [[Bug 7792]] Check whether the handler name is a reserved function identifier
-	if (type != ST_ID ||
+	if (t_type != ST_ID ||
 			sp.lookup(SP_COMMAND, te) != PS_NO_MATCH ||
 			(sp.lookup(SP_FACTOR, te) != PS_NO_MATCH &&
 			te -> type == TT_FUNCTION))
@@ -176,11 +178,11 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 	}
 	if (prop)
 	{
-		if (sp.next(type) == PS_NORMAL)
+		if (sp.next(t_type) == PS_NORMAL)
 		{
-			if (type == ST_LB)
+			if (t_type == ST_LB)
 			{
-				if (sp.next(type) != PS_NORMAL || type != ST_ID)
+				if (sp.next(t_type) != PS_NORMAL || t_type != ST_ID)
 				{
 					MCperror->add(PE_HANDLER_BADPARAM, sp);
 					return PS_ERROR;
@@ -189,7 +191,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 				if (newparam(sp) != PS_NORMAL)
 					return PS_ERROR;
 
-				if (sp.next(type) != PS_NORMAL || type != ST_RB)
+				if (sp.next(t_type) != PS_NORMAL || t_type != ST_RB)
 				{
 					MCperror->add(PE_HANDLER_BADPARAM, sp);
 					return PS_ERROR;
@@ -204,14 +206,15 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
     bool t_needs_it;
     t_needs_it = true;
     
-	while (sp.next(type) == PS_NORMAL)
+	while (sp.next(t_type) == PS_NORMAL)
 	{
-		if (type == ST_SEP)
+		if (t_type == ST_SEP)
 			continue;
-		const LT *te;
-		MCExpression *newfact = NULL;
-		if (type != ST_ID
-		        || sp.lookup(SP_FACTOR, te) != PS_NO_MATCH
+		const LT *t_te;
+		
+        MCExpression *newfact = NULL;
+		if (t_type != ST_ID
+		        || sp.lookup(SP_FACTOR, t_te) != PS_NO_MATCH
 		        || sp.lookupconstant(&newfact) == PS_NORMAL)
 		{
 			delete newfact;
@@ -223,7 +226,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
             return PS_ERROR;
         
         // AL-2014-11-04: [[ Bug 13902 ]] Check if the param we just created was called 'it'.
-        if (MCNameIsEqualTo(pinfo[npnames - 1] . name, MCN_it))
+        if (MCNameIsEqualToCaseless(pinfo[npnames - 1] . name, MCN_it))
             t_needs_it = false;
     }
 		
@@ -241,7 +244,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 	MCStatement *newstatement = NULL;
 	while (True)
 	{
-		if ((stat = sp.next(type)) != PS_NORMAL)
+		if ((stat = sp.next(t_type)) != PS_NORMAL)
 		{
 			if (stat == PS_EOL)
 			{
@@ -259,16 +262,16 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 				return PS_ERROR;
 			}
 		}
-		if (type == ST_DATA)
-			newstatement = new MCEcho;
+		if (t_type == ST_DATA)
+			newstatement = new (nothrow) MCEcho;
 		else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 		{
-			if (type != ST_ID)
+			if (t_type != ST_ID)
 			{
 				MCperror->add(PE_HANDLER_NOCOMMAND, sp);
 				return PS_ERROR;
 			}
-			newstatement = new MCComref(sp.gettoken_nameref());
+			newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 		}
 		else
 		{
@@ -278,12 +281,12 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 				newstatement = MCN_new_statement(te->which);
 				break;
 			case TT_END:
-				if ((stat = sp.next(type)) != PS_NORMAL)
+				if ((stat = sp.next(t_type)) != PS_NORMAL)
 				{
 					MCperror->add(PE_HANDLER_NOEND, sp);
 					return PS_ERROR;
 				}
-				if (!MCNameIsEqualTo(name, sp.gettoken_nameref(), kMCCompareCaseless))
+				if (!MCNameIsEqualToCaseless(name, sp.gettoken_nameref()))
 				{
 					MCperror->add(PE_HANDLER_BADEND, sp);
 					return PS_ERROR;
@@ -328,7 +331,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 	if (newnparams == 0)
 		newparams = NULL;
 	else
-		newparams = new MCContainer *[newnparams];
+		newparams = new (nothrow) MCContainer *[newnparams];
     
 	Boolean err = False;
 	for (i = 0 ; i < newnparams ; i++)
@@ -353,16 +356,17 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 				}
                 
                 MCVariable *t_new_var;
+                /* UNCHECKED */ newparams[i] = new(nothrow) MCContainer;
 				/* UNCHECKED */ MCVariable::createwithname(i < npnames ? pinfo[i] . name : kMCEmptyName, t_new_var);
-                /* UNCHECKED */ MCContainer::createwithvariable(t_new_var, newparams[i]);
+                /* UNCHECKED */ MCContainer::createwithvariable(t_new_var, *newparams[i]);
                 
 				newparams[i]->give_value(ctxt, t_value);
 			}
             
             // AL-2014-11-04: [[ Bug 13902 ]] If 'it' was this parameter's name then create the MCVarref as a
             //  param type, with this handler and param index, so that use of the get command syncs up correctly.
-            if (i < npnames && MCNameIsEqualTo(pinfo[i] . name, MCN_it))
-                m_it = new MCVarref(this, i, True);
+            if (i < npnames && MCNameIsEqualToCaseless(pinfo[i] . name, MCN_it))
+                m_it = new (nothrow) MCVarref(this, i, True);
             
 			plist = plist->getnext();
 		}
@@ -374,8 +378,9 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 				break;
 			}
             MCVariable *t_new_var;
+            /* UNCHECKED */ newparams[i] = new(nothrow) MCContainer;
             /* UNCHECKED */ MCVariable::createwithname(i < npnames ? pinfo[i] . name : kMCEmptyName, t_new_var);
-            /* UNCHECKED */ MCContainer::createwithvariable(t_new_var, newparams[i]);
+            /* UNCHECKED */ MCContainer::createwithvariable(t_new_var, *newparams[i]);
 		}
 	}
 	if (err)
@@ -405,7 +410,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 		vars = NULL;
 	else
 	{
-		vars = new MCVariable *[nvnames];
+		vars = new (nothrow) MCVariable *[nvnames];
 		i = nvnames;
 		while (i--)
 		{
@@ -531,7 +536,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 		{
 			if (nvnames >= oldnvnames)
 			{
-				MCNameDelete(vinfo[nvnames] . name);
+				MCValueRelease(vinfo[nvnames] . name);
 				MCValueRelease(vinfo[nvnames] . init);
 			}
 			delete vars[nvnames];
@@ -586,16 +591,16 @@ Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)
 {
 	uint2 i;
 	for (i = 0 ; i < nvnames ; i++)
-		if (MCNameIsEqualTo(p_name, vinfo[i] . name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(p_name, vinfo[i] . name))
 		{
-			*dptr = new MCVarref(this, i, False);
+			*dptr = new (nothrow) MCVarref(this, i, False);
 			return PS_NORMAL;
 		}
 
 	for (i = 0 ; i < npnames ; i++)
-		if (MCNameIsEqualTo(p_name, pinfo[i] . name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(p_name, pinfo[i] . name))
 	{
-			*dptr = new MCVarref(this, i, True);
+			*dptr = new (nothrow) MCVarref(this, i, True);
 			return PS_NORMAL;
 		}
 
@@ -608,7 +613,7 @@ Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)
 		}
 	}
 
-	if (MCNameGetCharAtIndex(p_name, 0) == '$')
+	if (MCStringGetNativeCharAtIndex(MCNameGetString(p_name), 0) == '$')
 	{
 		MCVariable *t_global;
 		/* UNCHECKED */ MCVariable::ensureglobal(p_name, t_global);
@@ -624,7 +629,7 @@ Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)
 Parse_stat MCHandler::newvar(MCNameRef p_name, MCValueRef p_init, MCVarref **r_ref)
 {
 	MCU_realloc((char **)&vinfo, nvnames, nvnames + 1, sizeof(MCHandlerVarInfo));
-	/* UNCHECKED */ MCNameClone(p_name, vinfo[nvnames] . name);
+    vinfo[nvnames] . name = MCValueRetain(p_name);
 	if (p_init != nil)
 		/* UNCHECKED */ vinfo[nvnames] . init = MCValueRetain(p_init);
 	else
@@ -644,7 +649,7 @@ Parse_stat MCHandler::newvar(MCNameRef p_name, MCValueRef p_init, MCVarref **r_r
 		}
 	}
 
-	*r_ref = new MCVarref(this, nvnames++, False);
+	*r_ref = new (nothrow) MCVarref(this, nvnames++, False);
 
 	return PS_NORMAL;
 }
@@ -653,9 +658,9 @@ Parse_stat MCHandler::findconstant(MCNameRef p_name, MCExpression **dptr)
 {
 	uint2 i;
 	for (i = 0 ; i < nconstants ; i++)
-		if (MCNameIsEqualTo(p_name, cinfo[i].name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(p_name, cinfo[i].name))
 		{
-			*dptr = new MCLiteral(cinfo[i].value);
+			*dptr = new (nothrow) MCLiteral(cinfo[i].value);
 			return PS_NORMAL;
 		}
 	return hlist->findconstant(p_name, dptr);
@@ -664,8 +669,8 @@ Parse_stat MCHandler::findconstant(MCNameRef p_name, MCExpression **dptr)
 Parse_stat MCHandler::newconstant(MCNameRef p_name, MCValueRef p_value)
 {
 	MCU_realloc((char **)&cinfo, nconstants, nconstants + 1, sizeof(MCHandlerConstantInfo));
-	/* UNCHECKED */ MCNameClone(p_name, cinfo[nconstants].name);
-	/* UNCHECKED */ cinfo[nconstants++].value = MCValueRetain(p_value);
+    cinfo[nconstants].name = MCValueRetain(p_name);
+	cinfo[nconstants++].value = MCValueRetain(p_value);
 	return PS_NORMAL;
 }
 
@@ -858,46 +863,6 @@ uint4 MCHandler::linecount()
 		stmp = stmp->getnext();
 	}
 	return count;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCHandler::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxHandlerType t_type;
-	switch(type)
-	{
-		case HT_MESSAGE:
-			t_type = is_private ? kMCSyntaxHandlerTypePrivateCommand : kMCSyntaxHandlerTypeMessage;
-			break;
-		case HT_FUNCTION:
-			t_type = is_private ? kMCSyntaxHandlerTypePrivateFunction : kMCSyntaxHandlerTypeFunction;
-			break;
-		case HT_GETPROP:
-			t_type = kMCSyntaxHandlerTypeGetProp;
-			break;
-		case HT_SETPROP:
-			t_type = kMCSyntaxHandlerTypeSetProp;
-			break;
-		case HT_BEFORE:
-			t_type = kMCSyntaxHandlerTypeBeforeMessage;
-			break;
-		case HT_AFTER:
-			t_type = kMCSyntaxHandlerTypeAfterMessage;
-			break;
-        default:
-            MCUnreachableReturn();
-	}
-	
-	MCSyntaxFactoryBeginHandler(ctxt, t_type, name);
-	
-	for(uindex_t i = 0; i < npnames; i++)
-		MCSyntaxFactoryDefineParameter(ctxt, pinfo[i] . name, pinfo[i] . is_reference);
-	
-	for(MCStatement *t_statement = statements; t_statement != nil; t_statement = t_statement -> getnext())
-		t_statement -> compile(ctxt);
-	
-	MCSyntaxFactoryEndHandler(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

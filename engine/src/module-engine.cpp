@@ -40,6 +40,8 @@
 #include "notify.h"
 
 #include "module-engine.h"
+#include "widget.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -127,7 +129,7 @@ void MCEngineScriptObjectAllowAccess(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCValueRef
+MCValueRef
 MCEngineEvalScriptResult (MCExecContext& ctxt)
 {
 	if (MCresult->isclear())
@@ -160,7 +162,7 @@ extern "C" MC_DLLEXPORT_DEF MCScriptObjectRef MCEngineExecResolveScriptObject(MC
     
 	// Create a new chunk object to parse the reference into.
     MCChunk *t_chunk;
-    t_chunk = new MCChunk(False);
+    t_chunk = new (nothrow) MCChunk(False);
     if (t_chunk == nil)
     {
         MCErrorThrowOutOfMemory();
@@ -249,7 +251,7 @@ static Properties parse_property_name(MCStringRef p_name)
 	return P_CUSTOM;
 }
 
-static inline bool MCEngineEvalObjectOfScriptObject(MCScriptObjectRef p_object, MCObject *&r_object, uint32_t &r_part_id)
+bool MCEngineEvalObjectOfScriptObject(MCScriptObjectRef p_object, MCObject *&r_object, uint32_t &r_part_id)
 {
 	__MCScriptObjectImpl *t_script_object_imp;
 	t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
@@ -436,21 +438,24 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineEvalChildrenOfScriptObject(MCScriptObje
 	MCProperListCopy(*t_list, r_controls);
 }
 
-static void MCEngineFreeScriptParameters(MCParameter*& x_params)
+/* TODO[C++11] This should be "static" but MSVC2010 doesn't support
+ * using objects with internal linkage as non-type template
+ * arguments. */
+void MCEngineFreeScriptParameters(MCParameter* p_params)
 {
-	while(x_params != nil)
+	while(p_params != nil)
 	{
 		MCParameter *t_param;
-		t_param = x_params;
-		x_params = x_params -> getnext();
+		t_param = p_params;
+		p_params = p_params -> getnext();
 		delete t_param;
 	}
 }
 
-static bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListRef p_arguments, MCParameter*& r_script_params)
+bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListRef p_arguments, MCParameter*& r_script_params)
 {
-	MCParameter *t_params, *t_last_param;
-	t_params = t_last_param = nil;
+    MCAutoCustomPointer<MCParameter, MCEngineFreeScriptParameters> t_params;
+    MCParameter *t_last_param = nullptr;
 	for(uint32_t i = 0; i < MCProperListGetLength(p_arguments); i++)
 	{
         MCValueRef t_value;
@@ -459,27 +464,23 @@ static bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListR
         if (!MCExtensionConvertToScriptType(ctxt, t_value))
         {
             MCValueRelease(t_value);
-            goto error_exit;
+            return false;
         }
         
 		MCParameter *t_param;
-		t_param = new MCParameter;
+		t_param = new (nothrow) MCParameter;
 		t_param -> setvalueref_argument(t_value);
         
 		if (t_last_param == nil)
-			t_params = t_param;
+			&t_params = t_param;
 		else
 			t_last_param -> setnext(t_param);
         
 		t_last_param = t_param;
 	}
     
-    r_script_params = t_params;
+    r_script_params = t_params.Release();
     return true;
-    
-error_exit:
-    MCEngineFreeScriptParameters(t_params);
-    return false;
 }
 
 MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments)
@@ -489,22 +490,22 @@ MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p
         return nil;
     
     MCExecContext ctxt(MCdefaultstackptr, nil, nil);
-    MCParameter *t_params;
+    MCAutoCustomPointer<MCParameter, MCEngineFreeScriptParameters> t_params;
     t_params = nil;
     
-    if (!MCEngineConvertToScriptParameters(ctxt, p_arguments, t_params))
-        goto cleanup;
-
+    if (!MCEngineConvertToScriptParameters(ctxt, p_arguments, &t_params))
+        return nullptr;
+    
 	/* Clear any existing value from the result to enable testing
 	 * whether dispatching generated a result. */
 	MCresult->clear();
 
     Exec_stat t_stat;
-    t_stat = p_object -> dispatch(!p_is_function ? HT_MESSAGE : HT_FUNCTION, *t_message_as_name, t_params);
+    t_stat = p_object -> dispatch(!p_is_function ? HT_MESSAGE : HT_FUNCTION, *t_message_as_name, *t_params);
     if (t_stat == ES_ERROR)
     {
         MCEngineThrowScriptError();
-        goto cleanup;
+        return nullptr;
     }
     
     if (t_stat == ES_NORMAL)
@@ -512,8 +513,6 @@ MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p
     else
         s_last_message_was_handled = false;
 
-cleanup:
-    MCEngineFreeScriptParameters(t_params);
     return MCEngineEvalScriptResult(ctxt);
 }
 
@@ -535,6 +534,26 @@ extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendToScriptObject(bool p_is_
     return MCEngineExecSendToScriptObjectWithArguments(p_is_function, p_message, p_object, kMCEmptyProperList);
 }
 
+extern MCWidgetRef MCcurrentwidget;
+extern void MCWidgetExecPostToParentWithArguments(MCStringRef p_message, MCProperListRef p_arguments);
+
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
+{
+    // PM-2017-10-31: [[ Bugfix 20625 ]] May have no default stack on startup
+    if (!MCdefaultstackptr)
+        return nil;
+    MCObject *t_target = MCdefaultstackptr -> getcurcard();
+    if (MCcurrentwidget)
+        t_target = MCWidgetGetHost(MCcurrentwidget);
+    
+    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, t_target, p_arguments);
+}
+
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSend(bool p_is_function, MCStringRef p_message)
+{
+    return MCEngineExecSendWithArguments(p_is_function, p_message, kMCEmptyProperList);
+}
+
 void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments)
 {
     MCNewAutoNameRef t_message_as_name;
@@ -551,6 +570,8 @@ void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_obje
         return;
     
     MCscreen -> addmessage(p_object, *t_message_as_name, 0.0f, t_params);
+    
+    MCEngineRunloopBreakWait();
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostToScriptObjectWithArguments(MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
@@ -571,6 +592,31 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostToScriptObject(MCStringRef p_me
     MCEngineExecPostToScriptObjectWithArguments(p_message, p_object, kMCEmptyProperList);
 }
 
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
+{
+	// PM-2017-10-31: [[ Bugfix 20625 ]] May have no default stack on startup
+	if (!MCdefaultstackptr)
+		return;
+		
+    MCObject *t_target = MCdefaultstackptr -> getcurcard();
+    if (MCcurrentwidget)
+    {
+        if (!MCWidgetIsRoot(MCcurrentwidget))
+        {
+            MCWidgetExecPostToParentWithArguments(p_message, p_arguments);
+            return;
+        }
+        t_target = MCWidgetGetHost(MCcurrentwidget);
+    }
+    
+    MCEngineDoPostToObjectWithArguments(p_message, t_target, p_arguments);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecPost(MCStringRef p_message)
+{
+    MCEngineExecPostWithArguments(p_message, kMCEmptyProperList);
+}
+
 extern "C" MC_DLLEXPORT_DEF void MCEngineEvalMessageWasHandled(bool& r_handled)
 {
     r_handled = s_last_message_was_handled;
@@ -583,36 +629,84 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineEvalMessageWasNotHandled(bool& r_not_ha
     r_not_handled = !t_handled;
 }
 
+extern MCExecContext *MCECptr;
+extern "C" MC_DLLEXPORT_DEF void MCEngineEvalCaller(MCScriptObjectRef& r_script_object)
+{
+    if (!MCEngineScriptObjectCreate(MCECptr->GetObject(), 0, r_script_object))
+        return;
+}
 ////////////////////////////////////////////////////////////////////////////////
+
+static MCValueRef
+MCEngineDoExecuteScriptInObjectWithArguments(MCStringRef p_script, MCObject *p_object, MCProperListRef p_arguments)
+{
+	if (p_object == nil)
+	{
+		if (!MCdefaultstackptr)
+		{
+			MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no default stack"), nil);
+			return nullptr;
+		}
+		
+		p_object = MCdefaultstackptr->getcurcard();
+	}
+	
+	MCExecContext ctxt(p_object, nil, nil);
+	MCAutoCustomPointer<MCParameter, MCEngineFreeScriptParameters> t_params;
+	
+	if (!MCEngineConvertToScriptParameters(ctxt, p_arguments, &t_params))
+        return nullptr;
+	
+	MCRedrawLockScreen();
+	
+	Exec_stat t_stat;
+	t_stat = p_object -> domess(p_script,
+								*t_params);
+	
+	MCRedrawUnlockScreen();
+	
+	if (t_stat == ES_ERROR)
+	{
+        MCEngineThrowScriptError();
+        return nullptr;
+	}
+	
+	return MCEngineEvalScriptResult(ctxt);
+}
+
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScriptInScriptObjectWithArguments(MCStringRef p_script, MCScriptObjectRef p_object, MCProperListRef p_arguments)
+{
+	if (!MCEngineEnsureScriptObjectAccessIsAllowed())
+		return nil;
+	
+	MCObject *t_object = nil;
+	uint32_t t_part_id = 0;
+	if (p_object != nil)
+	{
+		if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
+			return nil;
+	}
+
+	return MCEngineDoExecuteScriptInObjectWithArguments(p_script, t_object, p_arguments);
+}
+
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScriptInScriptObject(MCStringRef p_script, MCScriptObjectRef p_object)
+{
+	return MCEngineExecExecuteScriptInScriptObjectWithArguments(p_script, p_object, kMCEmptyProperList);
+}
+
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScriptWithArguments(MCStringRef p_script, MCProperListRef p_arguments)
+{
+	return MCEngineExecExecuteScriptInScriptObjectWithArguments(p_script,
+																nil,
+																p_arguments);
+}
 
 extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScript(MCStringRef p_script)
 {
-    if (!MCEngineEnsureScriptObjectAccessIsAllowed())
-        return nil;
-    
-    MCStack *t_stack;
-    t_stack = MCdefaultstackptr;
-    if (t_stack == nil)
-    {
-        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no default stack"), nil);
-        return nil;
-    }
-    
-    MCRedrawLockScreen();
-    
-    Exec_stat t_stat;
-    t_stat = t_stack -> getcurcard() -> domess(p_script);
-    
-    MCRedrawUnlockScreen();
-    
-    if (t_stat == ES_ERROR)
-    {
-        MCEngineThrowScriptError();
-        return nil;
-    }
-
-	MCExecContext ctxt(MCdefaultstackptr, nil, nil);
-	return MCEngineEvalScriptResult(ctxt);
+	return MCEngineExecExecuteScriptInScriptObjectWithArguments(p_script,
+																nil,
+																kMCEmptyProperList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -654,7 +748,25 @@ static hash_t __MCScriptObjectHash(MCValueRef p_value)
 
 static bool __MCScriptObjectDescribe(MCValueRef p_value, MCStringRef& r_description)
 {
-    return false;
+    auto self =
+            reinterpret_cast<__MCScriptObjectImpl *>(MCValueGetExtraBytesPtr(p_value));
+    
+    if (!self->handle.IsValid())
+    {
+        return MCStringCopy(MCSTR("<deleted script object>"),
+                            r_description);
+    }
+    
+    MCAutoValueRef t_object_name;
+    if (!self->handle->names(P_LONG_NAME_NO_FILENAME,
+                             &t_object_name))
+    {
+        return false;
+    }
+    
+    return MCStringFormat(r_description,
+                          "<script object %@>",
+                          *t_object_name);
 }
 
 static MCValueCustomCallbacks kMCScriptObjectCustomValueCallbacks =
@@ -665,6 +777,8 @@ static MCValueCustomCallbacks kMCScriptObjectCustomValueCallbacks =
     __MCScriptObjectEqual,
     __MCScriptObjectHash,
     __MCScriptObjectDescribe,
+    nil,
+    nil,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -798,13 +912,77 @@ static void break_no_op(void*)
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineRunloopBreakWait()
 {
+#if defined(FEATURE_NOTIFY)
 	// IM-2016-07-21: [[ Bug 17633 ]] Need to give notify dispatch something
 	//    to do as just pinging the queue doesn't break out of the wait loop.
 	MCNotifyPush(break_no_op, nil, false, true);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern MCExecContext *MCECptr;
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalTheColumnDelimiter(MCStringRef& r_del)
+{
+    MCStringRef t_del =
+        MCECptr != nil ? MCECptr->GetColumnDelimiter() : MCSTR("\t");
+
+    r_del = MCValueRetain(t_del);
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalTheRowDelimiter(MCStringRef& r_del)
+{
+    MCStringRef t_del =
+        MCECptr != nil ? MCECptr->GetRowDelimiter() : MCSTR("\n");
+    
+    r_del = MCValueRetain(t_del);
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalTheLineDelimiter(MCStringRef& r_del)
+{
+    MCStringRef t_del =
+            MCECptr != nil ? MCECptr->GetLineDelimiter() : MCSTR("\n");
+
+    r_del = MCValueRetain(t_del);
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalTheItemDelimiter(MCStringRef& r_del)
+{
+    MCStringRef t_del =
+            MCECptr != nil ? MCECptr->GetItemDelimiter() : MCSTR(",");
+    
+    r_del = MCValueRetain(t_del);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef &r_resource_path);
+
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalMyResourcesFolder(MCStringRef& r_folder)
+{
+    MCScriptModuleRef t_module = MCScriptGetCurrentModule();
+    if (t_module == nullptr)
+    {
+        r_folder = nullptr;
+        return;
+    }
+    
+    if (!MCEngineLookupResourcePathForModule(t_module,
+                                             r_folder))
+    {
+        r_folder = nullptr;
+        return;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+    
 static bool
 __MCEngineDescribeScriptOfScriptObject_ConstantCallback(void *p_context,
                                                         MCHandlerConstantInfo *p_info)

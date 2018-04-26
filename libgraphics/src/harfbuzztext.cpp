@@ -25,9 +25,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <hb-icu.h>
 
 #include <SkTypeface.h>
-#include <SkTypeface_android.h>
 #include <SkPoint.h>
 #include <SkTypes.h>
+#include <SkFontMgr.h>
+#include <SkUtils.h>
 
 #include "foundation-unicode.h"
 #include <unicode/uscript.h>
@@ -41,7 +42,7 @@ extern void MCCStringFree(char *p_string);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void skia_get_replacement_glyph(uint16_t p_size, SkTypeface *p_typeface, uint16_t& glyph, uindex_t& advance)
+static void skia_get_replacement_glyph(uint16_t p_size, sk_sp<SkTypeface> p_typeface, uint16_t& glyph, uindex_t& advance)
 {
     SkPaint paint;
     paint . setTextEncoding(SkPaint::kUTF16_TextEncoding);
@@ -63,14 +64,18 @@ struct MCGlyphRun
     uindex_t count;
     SkPoint *positions;
     uint16_t *glyphs;
-    SkTypeface *typeface;
+    sk_sp<SkTypeface> typeface;
 };
 
-void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, MCGPoint* x_location, uindex_t p_start, uindex_t p_end, const MCGFont &p_font, MCGlyphRun& r_run)
+void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, MCGPoint* x_location, uindex_t p_start, uindex_t p_end, SkTypeface* p_typeface, uint16_t p_size, MCGlyphRun& r_run)
 {
+    // Skia APIs expect typefaces to be passed as shared pointers
+    sk_sp<SkTypeface> t_typeface(p_typeface);
+    t_typeface->ref();
+    
     uindex_t t_count = p_end - p_start;
-    MCMemoryAllocate(sizeof(uint16_t) * t_count, r_run . glyphs);
-    MCMemoryAllocate(sizeof(MCGPoint) * t_count, r_run . positions);
+    MCMemoryNewArray(t_count, r_run.glyphs);
+    MCMemoryNewArray(t_count, r_run.positions);
     
 	// IM-2016-03-31: [[ Bug 17281 ]] positions may have negative values, so we need to use signed offsets.
 	index_t x_offset, y_offset;
@@ -96,7 +101,7 @@ void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, 
         else
         {
             uindex_t advance;
-            skia_get_replacement_glyph(p_font . size, (SkTypeface *)p_font . fid, r_run . glyphs[run_index], advance);
+            skia_get_replacement_glyph(p_size, t_typeface, r_run . glyphs[run_index], advance);
             advance_x += advance;
         }
             
@@ -106,17 +111,16 @@ void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, 
     x_location -> x += advance_x;
     x_location -> y += advance_y;
     
-    r_run . typeface = (SkTypeface *)p_font . fid;
-    r_run . typeface -> ref();
+    r_run.typeface = t_typeface;
     
     r_run . count = t_count;
 }
 
 void MCGlyphRunDestroy(MCGlyphRun& p_run)
 {
-    MCMemoryDeallocate(p_run . glyphs);
-    MCMemoryDeallocate(p_run . positions);
-    p_run . typeface -> unref();
+    MCMemoryDeleteArray(p_run.glyphs);
+    MCMemoryDeleteArray(p_run.positions);
+    p_run.typeface.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -207,12 +211,12 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
 		}
         
         hb_skia_face_t *t_face;
-        t_face = new hb_skia_face_t;
+        t_face = new (nothrow) hb_skia_face_t;
             
         t_face -> typeface = p_typeface;
         t_face -> size = p_size;
         
-        t_hb_sk_face = new MCHarfbuzzSkiaFace;
+        t_hb_sk_face = new (nothrow) MCHarfbuzzSkiaFace;
         t_hb_sk_face -> face = nil;
         t_hb_sk_face -> skia_face = nil;
 
@@ -232,31 +236,57 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
 	return nil;
 }
 
-void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, bool p_rtl, const MCGFont &p_font, MCGlyphRun*& r_runs, uindex_t& r_run_count)
+// Check if the font supports all glyphs in a given cluster from shape info
+static bool cluster_is_supported(hb_glyph_info_t* p_info, uindex_t p_index, uindex_t p_count, uindex_t& r_cluster_end)
 {
-    MCAutoArray<MCGlyphRun> t_runs;
+    bool t_supported = true;
+    uindex_t t_cluster = p_info[p_index] . cluster;
+    while (++p_index < p_count &&
+           p_info[p_index] . cluster == t_cluster)
+    {
+        if (p_info[p_index] . codepoint == 0)
+        {
+            // If any of these glyphs' codepoints are 0 then the
+            // whole cluster is unsupported
+            t_supported = false;
+        }
+    }
+    
+    r_cluster_end = p_index;
+    return t_supported;
+}
 
-	if (p_font . fid == nil)
-	{
-		MCLog("%s: Found null font!", __FUNCTION__);
-		r_run_count = 0;
-		r_runs = nil;
-		return;
-	}
-
-    SkTypeface *t_typeface = (SkTypeface *)p_font . fid;
- 
-    //MCLog("typeface name %d", t_typeface -> uniqueID());
+static uindex_t shape_text_and_add_to_glyph_array(const unichar_t* p_text, uindex_t p_char_count, bool p_rtl, const MCGFont &p_font, bool p_use_fallback, MCGPoint* x_location, MCAutoArray<MCGlyphRun>& x_runs)
+{
+    if (p_font . fid == nil)
+        return 0;
+    
+    SkTypeface *t_typeface = nil;
+    if (p_use_fallback)
+    {
+        // If we're to use a fallback font, use Skia's font manager to find a
+        // font that has glyphs for the first char in the string.
+        const unichar_t* t_text = p_text;
+        SkUnichar t_uni_char = SkUTF16_NextUnichar(&t_text);
+        sk_sp<SkFontMgr> t_fnt_mgr(SkFontMgr::RefDefault());
+        t_typeface = t_fnt_mgr -> matchFamilyStyleCharacter(nil, ((SkTypeface *)p_font . fid) -> fontStyle(), nil, 0, t_uni_char);
+        
+        // If there is no fallback font for the char, use the replacement glyph
+        // in the original font.
+        if (t_typeface == nil)
+            t_typeface = (SkTypeface *)p_font . fid;
+    }
+    else
+        t_typeface = (SkTypeface *)p_font . fid;
+    
+    if (t_typeface == nil)
+        return 0;
     
     MCHarfbuzzSkiaFace *t_hb_sk_face;
     t_hb_sk_face = MCHarfbuzzGetFaceForSkiaTypeface(t_typeface, p_font . size);
     
     if (t_hb_sk_face == nil)
-    {
-        r_run_count = 0;
-        r_runs = nil;
-        return;
-    }
+        return 0;
     
     // Set up the HarfBuzz buffer
     hb_buffer_t *buffer = hb_buffer_create();
@@ -269,84 +299,100 @@ void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, 
     
     hb_shape(HBSkiaFaceToHBFont(t_hb_sk_face), buffer, NULL, 0);
     
-    int glyph_count = hb_buffer_get_length(buffer);
+    uindex_t glyph_count = hb_buffer_get_length(buffer);
     hb_glyph_info_t *glyph_info = hb_buffer_get_glyph_infos(buffer, 0);
     hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buffer, 0);
     
-    uindex_t t_cur_glyph = 0;
-    uindex_t t_start, t_end;
-    uindex_t t_char_index = 0;
+    uindex_t t_cur_glyph = 0, t_start = 0, t_run_count = 0;
+    uindex_t t_cluster_end = 0;
     
     // deal with runs of supported and unsupported glyphs
     while (t_cur_glyph < glyph_count)
     {
         MCGlyphRun t_run;
-        t_start = t_end = t_cur_glyph;
+        t_start = t_cur_glyph;
         
-        // Run of successfully shaped glyphs
-        while (t_cur_glyph < glyph_count && glyph_info[t_cur_glyph] . codepoint != 0)
+        // Run of glyphs in successfully shaped clusters
+        while (t_cur_glyph < glyph_count &&
+               cluster_is_supported(glyph_info, t_cur_glyph, glyph_count, t_cluster_end))
         {
-            t_char_index++;
-            t_end++;
-            t_cur_glyph++;
+            t_cur_glyph = t_cluster_end;
         }
-        
-        if (t_start != t_end)
+
+        if (t_start != t_cur_glyph)
         {
-            MCGlyphRunMake(glyph_info, glyph_pos, &p_location, t_start, t_end, p_font, t_run);
-            t_runs . Push(t_run);
+            MCGlyphRunMake(glyph_info, glyph_pos, x_location, t_start, t_cur_glyph, t_typeface, p_font . size, t_run);
+            x_runs . Push(t_run);
             t_start = t_cur_glyph;
-            t_end = t_cur_glyph;
+            t_run_count++;
         }
         
-        // Deal with run of unsupported characters for this font.
-        while (t_cur_glyph < glyph_count && glyph_info[t_cur_glyph] . codepoint == 0)
+        // If the first cluster is unsupported and we're already using the fallback
+        // font for that cluster, assume there is no support and use a replacement.
+        if (t_cur_glyph == 0 &&
+            !cluster_is_supported(glyph_info, t_cur_glyph, glyph_count, t_cluster_end)
+            && p_use_fallback)
         {
-            t_end++;
-            t_cur_glyph++;
-        }
-        
-        if (t_start != t_end)
-        {
-            // Need to get a fallback font here.
-	        SkTypeface *t_fallback = nil;
-#if defined(__ANDROID__)
-	        SkCreateFallbackTypefaceForChar(*(p_text + t_char_index), SkTypeface::kNormal);
-#endif /* __ANDROID__ */
-
-            // TODO: This currently seems to return nil all the time.
-            if (t_fallback != nil)
-            {
-                MCGFont t_font = MCGFontMake(t_fallback, p_font . size, p_font . fixed_advance, p_font . m_ascent, p_font . m_descent, p_font . m_leading, p_font . ideal);
-                
-                MCGlyphRun *t_fallback_runs;
-                uindex_t t_fallback_run_count;
-
-                shape(p_text + t_char_index, t_end - t_start, p_location, p_rtl, t_font, t_fallback_runs, t_fallback_run_count);
-            
-                for (uindex_t i = 0; i < t_fallback_run_count; i++)
-                    t_runs . Push(t_fallback_runs[i]);
-                
-                t_fallback -> unref();
-                
-                MCMemoryDeleteArray(t_fallback_runs);
-            }
-            else
-            {
-                // For now, just fail to display the glyphs. Should display 'missing character' glyph.
-                MCGlyphRunMake(glyph_info, glyph_pos, &p_location, t_start, t_end, p_font, t_run);
-                t_runs . Push(t_run);
-            }
-            
+            // Enforce a replacement glyph for the whole cluster by passing a 0
+            // codepoint and only adding a single glyph to the run
+            glyph_info[t_cur_glyph].codepoint = 0;
+            MCGlyphRunMake(glyph_info, glyph_pos, x_location, t_start, t_start + 1, (SkTypeface *)p_font . fid, p_font . size, t_run);
+            x_runs . Push(t_run);
+            t_cur_glyph = t_cluster_end;
             t_start = t_cur_glyph;
-            t_end = t_cur_glyph;
+            t_run_count++;
         }
+        
+        // Deal with run of unsupported clusters for this font.
+        while (t_cur_glyph < glyph_count &&
+               !cluster_is_supported(glyph_info, t_cur_glyph, glyph_count, t_cluster_end))
+        {
+            t_cur_glyph = t_cluster_end;
+        }
+        
+        // For the run of unsupported clusters, shape using a fallback font.
+        if (t_start != t_cur_glyph)
+        {
+            // Reshape from the beginning of the unsupported cluster run
+            // to the beginning of the cluster containing t_cur_glyph.
+            // At this point, t_cur_glyph might be equal to glyph_count,
+            // in which case compute the reshape char count using the old char
+            // count.
+            uindex_t t_end_index = p_char_count;
+            if (t_cur_glyph != glyph_count)
+                t_end_index = glyph_info[t_cur_glyph] . cluster;
 
-        t_char_index += (t_end - t_start);
+            t_run_count += shape_text_and_add_to_glyph_array(
+                p_text + glyph_info[t_start] . cluster,
+                t_end_index - glyph_info[t_start] . cluster,
+                p_rtl,
+                p_font,
+                true,
+                x_location,
+                x_runs
+            );
+        }
     }
     
     hb_buffer_destroy(buffer);
-    t_runs . Take(r_runs, r_run_count);
+    return t_run_count;
+}
+
+void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, bool p_rtl, const MCGFont &p_font, MCGlyphRun*& r_runs, uindex_t& r_run_count)
+{
+    MCAutoArray<MCGlyphRun> t_runs;
+    uindex_t t_run_count = shape_text_and_add_to_glyph_array(p_text, p_char_count, p_rtl, p_font, false, &p_location, t_runs);
+
+    if (t_run_count == 0)
+    {
+        r_run_count = 0;
+        r_runs = nil;
+    }
+    else
+    {
+        r_run_count = t_run_count;
+        t_runs . Take(r_runs, r_run_count);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -357,17 +403,17 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		return;	
     
     SkPaint t_paint;
-    t_paint . setStyle(SkPaint::kFill_Style);
+    if (!MCGContextSetupFill(self, t_paint))
+    {
+        self->is_valid = false;
+        return;
+    }
+    
+    // Force skia to render text with antialiasing enabled.
     t_paint . setAntiAlias(true);
-    t_paint . setColor(MCGColorToSkColor(self -> state -> fill_color));
+
     t_paint . setTextSize(p_font . size);
     t_paint . setTextEncoding(SkPaint::kGlyphID_TextEncoding);
-    
-    SkXfermode *t_blend_mode;
-    t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
-    t_paint . setXfermode(t_blend_mode);
-    if (t_blend_mode != NULL)
-        t_blend_mode -> unref();
     
     MCGlyphRun *t_glyph_runs;
     uindex_t t_count;

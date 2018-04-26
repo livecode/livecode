@@ -155,12 +155,12 @@ static void MCMacPlatformBeginOpenSaveDialog(MCPlatformWindowRef p_owner, NSSave
 	NSString *t_initial_folder;
 	t_initial_folder = nil;
 	if (p_folder != nil)
-		t_initial_folder = [NSString stringWithMCStringRef: p_folder];
+		t_initial_folder = MCStringConvertToAutoreleasedNSString(p_folder);
 	
 	NSString *t_initial_file;
 	t_initial_file = nil;
 	if (p_file != nil)
-		t_initial_file = [NSString stringWithMCStringRef: p_file];
+		t_initial_file = MCStringConvertToAutoreleasedNSString(p_file);
 	
 	
 	if (p_owner == nil)
@@ -213,7 +213,7 @@ MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef& r_selected_folder)
 	{
 		NSString *t_alias;
 		resolve_alias([s_dialog_nesting -> panel filename], t_alias);
-        /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_alias, r_selected_folder);
+        /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_alias, r_selected_folder);
 		[t_alias release];
 	}
 	else
@@ -266,7 +266,6 @@ static bool MCFileFilterCreate(MCStringRef p_desc, MCFileFilter*& r_filter)
 	// MM-2012-03-09: [[Bug]] Make sure we don't try and copy empty tags (causes a crash on Lion)
 	if (t_success)
     {
-        MCValueRef t_tag;
         if (!MCStringIsEmpty(t_items[0]))
             self -> tag = MCValueRetain(t_items[0]);
     }
@@ -357,7 +356,7 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 
 @implementation com_runrev_livecode_MCFileDialogAccessoryView
 
-- (id)initWithPanel: (NSSavePanel *)panel;
+- (id)initWithPanel: (NSSavePanel *)panel
 {
 	self = [ super init ];
     if (self == nil)
@@ -413,7 +412,7 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 		{
 			MCListPushBack(m_filters, t_filter);
 			if (t_filter -> tag != nil)
-				[ m_options addItemWithTitle: [ NSString stringWithMCStringRef: t_filter -> tag ]];
+				[ m_options addItemWithTitle: MCStringConvertToAutoreleasedNSString(t_filter -> tag)];
 		}
 	}
 	m_filter = m_filters;
@@ -510,7 +509,7 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 	if (!t_should_show && m_filter->extension_count > 0)
 	{
         MCAutoStringRef t_filename;
-		if (MCStringCreateWithCFString((CFStringRef)t_filename_resolved, &t_filename) && *t_filename != nil)
+		if (MCStringCreateWithCFStringRef((CFStringRef)t_filename_resolved, &t_filename) && *t_filename != nil)
 		{
 			uindex_t t_dot;
             // AL-2014-04-01: [[ Bug 12081 ]] Find last occurrence of '.' rather than first, for file extension detection.
@@ -587,16 +586,16 @@ void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatfo
     // If there is no title, then on 10.11+ we must use the message field of the dialog; on <10.11 we must use the title field
     if (p_title != nil && !MCStringIsEmpty(p_title))
     {
-        [t_panel setTitle: [NSString stringWithMCStringRef: p_title]];
-        [t_panel setMessage: [NSString stringWithMCStringRef: p_prompt]];
+        [t_panel setTitle: MCStringConvertToAutoreleasedNSString(p_title)];
+        [t_panel setMessage:MCStringConvertToAutoreleasedNSString(p_prompt)];
     }
     else
     {
         extern uint4 MCmajorosversion;
         if (MCmajorosversion >= 0x10B0 && p_kind != kMCPlatformFileDialogKindSave)
-            [t_panel setMessage: [NSString stringWithMCStringRef: p_prompt]];
+            [t_panel setMessage:MCStringConvertToAutoreleasedNSString(p_prompt)];
         else
-            [t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
+            [t_panel setTitle: MCStringConvertToAutoreleasedNSString(p_prompt)];
     }
     
     if (p_kind != kMCPlatformFileDialogKindFolder)
@@ -627,18 +626,12 @@ void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatfo
     else
     {
         [t_panel setPrompt: @"Choose"];
-        [t_panel setCanChooseFiles: NO];
-        [t_panel setCanChooseDirectories: YES];
-        [t_panel setAllowsMultipleSelection: NO];
+        [(NSOpenPanel *)t_panel setCanChooseFiles: NO];
+        [(NSOpenPanel *)t_panel setCanChooseDirectories: YES];
+        [(NSOpenPanel *)t_panel setAllowsMultipleSelection: NO];
         
         // MM-2012-03-01: [[ BUG 10046]] Make sure the "new folder" button is enabled for folder dialogs
         [t_panel setCanCreateDirectories: YES];
-    }
-    
-    if ([t_panel respondsToSelector:@selector(isAccessoryViewDisclosed)])
-    {
-        // show accessory view when dialog opens
-        [t_panel setAccessoryViewDisclosed: YES];
     }
     
     MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, *t_initial_folder, p_kind != kMCPlatformFileDialogKindFolder ? *t_initial_file : nil);
@@ -656,7 +649,7 @@ MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, 
 		
 		if (p_kind == kMCPlatformFileDialogKindSave)
 		{
-            /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[s_dialog_nesting -> panel filename], r_paths);
+            /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[s_dialog_nesting -> panel filename], r_paths);
 			if (t_accessory != nil && [t_accessory currentType] != nil)
 				r_type = MCValueRetain([t_accessory currentType]);
 			else
@@ -673,7 +666,7 @@ MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, 
 				resolve_alias([[(NSOpenPanel *)s_dialog_nesting -> panel filenames] objectAtIndex: i], t_alias);
                 
 				MCAutoStringRef t_conv_filename;			
-				if (MCStringCreateWithCFString((CFStringRef)t_alias, &t_conv_filename))
+				if (MCStringCreateWithCFStringRef((CFStringRef)t_alias, &t_conv_filename))
 					/* UNCHECKED */ MCStringAppendFormat(r_paths, "%s%@", i > 0 ? "\n" : "", *t_conv_filename);
 
 				[t_alias release];
@@ -712,9 +705,6 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
              contentView: (NSView*) p_view
 {
     self = [super init];
-    
-    NSButton *t_ok_button;
-    NSButton *t_cancel_button;
     
     // Get the colour picker's view and store it
     mColorPanel = [p_panel retain];
@@ -961,7 +951,7 @@ void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color)
     // as modal mode breaks the color picker
     //[NSApp runModalForWindow: t_colorPicker];
     [t_colorPicker makeKeyAndOrderFront:t_colorPicker];
-    [NSApp becomePseudoModalFor: t_colorPicker];
+	MCMacPlatformApplicationBecomePseudoModalFor(t_colorPicker);
 }
 
 MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_color)
@@ -971,11 +961,12 @@ MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_color)
     {
         if (s_color_dialog_result == kMCPlatformDialogResultSuccess)
             r_color = s_color_dialog_color;
-        
-        [NSApp becomePseudoModalFor: nil];
+
+		MCMacPlatformApplicationBecomePseudoModalFor(nil);
     
         [s_color_dialog_delegate closePanel];
         [s_color_dialog_delegate release];
+
         s_color_dialog_delegate = NULL;
     }
     

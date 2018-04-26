@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mccontrol.h"
 #include "stack.h"
-
+#include "mctristate.h"
 
 #define AQUA_FUDGE 8
 
@@ -147,7 +147,7 @@ private:
 	static uint2 focusedtab;
 	static uint2 mnemonicoffset;
 	static MCRectangle optionrect;
-	static Keynames button_keys[];
+	static const Keynames button_keys[];
 	static uint4 clicktime;
 	static uint2 menubuttonheight;
 	static Boolean starthilite;
@@ -196,7 +196,7 @@ public:
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
-#ifdef _MACOSX
+#ifdef _MAC_DESKTOP
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 #endif
 
@@ -234,10 +234,10 @@ public:
 	void setupmnemonic();
 	MCCdata *getbptr(uint4 cardid);
 	uint2 getfamily();
-	Boolean gethilite(uint4 parid);
+	MCTristate gethilite(uint4 parid);
 	void setdefault(Boolean def);
-	Boolean sethilite(uint4 parid, Boolean hilite);
-	void resethilite(uint4 parid, Boolean hilite);
+	Boolean sethilite(uint4 parid, MCTristate hilite);
+	void resethilite(uint4 parid, MCTristate hilite);
 
 	// MW-2011-09-30: [[ Redraw ]] This function conditionally does a redraw all
 	//   if flags means it might need to be.

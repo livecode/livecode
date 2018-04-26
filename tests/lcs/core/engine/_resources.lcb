@@ -1,0 +1,9 @@
+library com.livecode.lcs_tests.core.resources
+
+use com.livecode.engine
+
+public handler ResourcesGetMyResourcesFolder() returns optional String
+	return my resources folder
+end handler
+
+end library

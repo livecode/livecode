@@ -22,7 +22,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-
 #include "hndlrlst.h"
 #include "scriptpt.h"
 #include "handler.h"
@@ -61,64 +60,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
-#include "syntax.h"
 #include "resolution.h"
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCFunction::compile_with_args(MCSyntaxFactoryRef ctxt, MCExecMethodInfo *p_method, ...)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	// The rest of the argument list will be the MCExpression's that should be
-	// compiled to form the argument list. We loop through them and compile
-	// in turn.
-	va_list t_args;
-	va_start(t_args, p_method);
-	for(uindex_t i = 0; i < p_method -> arity - 1; i++)
-	{
-		MCExpression *t_arg;
-		t_arg = va_arg(t_args, MCExpression *);
-		t_arg -> compile(ctxt);
-	}
-	va_end(t_args);
-	
-	MCSyntaxFactoryEvalMethod(ctxt, p_method);
-	
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-void MCConstantFunction::compile(MCSyntaxFactoryRef ctxt)
-{
-	// A constant function takes no arguments.
-	compile_with_args(ctxt, getmethodinfo());
-}
-
-void MCUnaryFunction::compile(MCSyntaxFactoryRef ctxt)
-{
-	// An unary function takes a single argument.
-	compile_with_args(ctxt, getmethodinfo(), getmethodarg());
-}
-
-void MCParamFunction::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	uindex_t t_count;
-	t_count = 0;
-
-	for (MCParameter *t_param = getmethodarg(); t_param != nil; t_param = t_param -> getnext())
-	{
-		t_param -> compile(ctxt);
-		t_count++;
-	}
-	
-	MCSyntaxFactoryEvalList(ctxt, t_count);
-
-	MCSyntaxFactoryEvalMethod(ctxt, getmethodinfo());
-
-	MCSyntaxFactoryEndExpression(ctxt);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -144,7 +86,7 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 	initpoint(sp);
 	if (sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
 	{
-		object = new MCChunk(False);
+		object = new (nothrow) MCChunk(False);
 		if (object->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -163,7 +105,7 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 			}
 			if (!needone && sp.skip_token(SP_FACTOR, TT_RPAREN) == PS_NORMAL)
 				return PS_NORMAL;
-			object = new MCChunk(False);
+			object = new (nothrow) MCChunk(False);
 			if (object->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add
@@ -216,23 +158,6 @@ void MCArrayEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
         r_value . type = kMCExecValueTypeDataRef;
 }
 
-void MCArrayEncode::compile(MCSyntaxFactoryRef ctxt)
-{
-    MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-    
-    source -> compile(ctxt);
-    
-    if (version)
-        version -> compile(ctxt);
-    else
-        MCSyntaxFactoryEvalConstantNil(ctxt);
-        
-	MCSyntaxFactoryEvalMethod(ctxt, kMCArraysEvalArrayEncodeMethodInfo);
-    
-	MCSyntaxFactoryEndExpression(ctxt);
-        
-}
-
 MCBaseConvert::~MCBaseConvert()
 {
 	delete source;
@@ -268,11 +193,6 @@ void MCBaseConvert::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     
 	MCMathEvalBaseConvert(ctxt, *t_source, sbase, dbase, r_value . stringref_value);
     r_value . type = kMCExecValueTypeStringRef;
-}
-
-void MCBaseConvert::compile(MCSyntaxFactoryRef ctxt)
-{
-	compile_with_args(ctxt,kMCMathEvalBaseConvertMethodInfo, source, sourcebase, destbase);
 }
 
 MCBinaryDecode::~MCBinaryDecode()
@@ -339,14 +259,14 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
             {
                 // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
                 // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
-                MCAutoPointer<MCContainer> t_container;
-                if (!t_params->evalcontainer(ctxt, &t_container))
+                MCContainer t_container;
+                if (!t_params->evalcontainer(ctxt, t_container))
                 {
                     ctxt . LegacyThrow(EE_BINARYD_BADDEST);
                     return;
                 }
                 
-                /* UNCHECKED */ t_container->set_valueref(t_results[i]);
+                /* UNCHECKED */ t_container.set_valueref(t_results[i]);
             }
             else
             {
@@ -361,38 +281,6 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         else
             r_value . int_value -= t_skipped;
     }
-}
-
-void MCBinaryDecode::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	uindex_t t_count;
-	t_count = 0;
-
-	MCParameter *t_parameter = params;
-	t_parameter -> compile(ctxt);
-	t_parameter = t_parameter -> getnext();
-
-	if (t_parameter != nil)
-	{
-		t_parameter -> compile(ctxt);
-		t_parameter = t_parameter -> getnext();
-	}
-	else
-		MCSyntaxFactoryEvalConstantNil(ctxt);
-		
-	for (MCParameter *p = t_parameter; p != nil; p = p -> getnext())
-	{
-		p -> compile_out(ctxt);
-		t_count++;
-	}
-	
-	MCSyntaxFactoryEvalList(ctxt, t_count);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCFiltersEvalBinaryDecodeMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 MCBinaryEncode::~MCBinaryEncode()
@@ -444,26 +332,6 @@ void MCBinaryEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 
     MCFiltersEvalBinaryEncode(ctxt, *t_format, *t_values, t_value_count, r_value . dataref_value);
     r_value . type = kMCExecValueTypeDataRef;
-}
-
-void MCBinaryEncode::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	uindex_t t_count;
-	t_count = 0;
-
-	for (MCParameter *t_parameter = params; t_parameter != nil; t_parameter = t_parameter -> getnext())
-	{
-		t_parameter -> compile(ctxt);
-		t_count++;
-	}
-	
-	MCSyntaxFactoryEvalList(ctxt, t_count - 1);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCFiltersEvalBinaryEncodeMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 MCChunkOffset::~MCChunkOffset()
@@ -552,35 +420,6 @@ void MCChunkOffset::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value . type = kMCExecValueTypeUInt;
 }
 
-void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	part -> compile(ctxt);
-	whole -> compile(ctxt);
-
-	if (offset != nil)
-		offset -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstantUInt(ctxt, 0);
-
-	switch (delimiter)
-	{
-	case CT_ITEM:
-		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalItemOffsetMethodInfo);
-		break;
-	case CT_LINE:
-		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalLineOffsetMethodInfo);
-		break;
-	case CT_WORD:
-		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalWordOffsetMethodInfo);
-		break;
-	case CT_CHARACTER:
-		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalOffsetMethodInfo);
-		break;
-	}
-}
-
 Parse_stat MCCommandArguments::parse(MCScriptPoint &sp, Boolean the)
 {
     if (!get0or1param(sp, &(&argument_index), the))
@@ -618,62 +457,6 @@ void MCCommandName::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     r_value.type = kMCExecValueTypeStringRef;
 }
 
-MCDirectories::~MCDirectories()
-{
-	delete m_folder;
-}
-
-Parse_stat
-MCDirectories::parse(MCScriptPoint & sp, Boolean p_is_the)
-{
-	if (p_is_the)
-	{
-		initpoint(sp);
-	}
-	else
-	{
-		if (PS_NORMAL != get0or1param(sp, &m_folder, p_is_the))
-		{
-			MCperror->add(PE_FILES_BADPARAM, sp);
-			return PS_ERROR;
-		}
-	}
-	return PS_NORMAL;
-}
-
-void
-MCDirectories::eval_ctxt(MCExecContext & ctxt, MCExecValue & r_value)
-{
-	if (m_folder) {
-		MCAutoStringRef t_folder;
-		if (!ctxt.EvalExprAsStringRef(m_folder, EE_FILES_BADFOLDER, &t_folder))
-			return;
-
-		r_value.type = kMCExecValueTypeStringRef;
-		MCFilesEvalDirectoriesOfDirectory(ctxt, *t_folder, r_value.stringref_value);
-	}
-	else
-	{
-		r_value.type = kMCExecValueTypeStringRef;
-		MCFilesEvalDirectories(ctxt, r_value.stringref_value);
-	}
-}
-
-void
-MCDirectories::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	if (nil != m_folder)
-	{
-		m_folder -> compile(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCFilesEvalDirectoriesOfDirectoryMethodInfo);
-	}
-	else
-	{
-		MCSyntaxFactoryEvalMethod(ctxt, kMCFilesEvalDirectoriesMethodInfo);
-	}
-	MCSyntaxFactoryEndExpression(ctxt);
-}
 
 MCDriverNames::~MCDriverNames()
 {
@@ -733,24 +516,15 @@ void MCExists::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value . type = kMCExecValueTypeBool;
 }
 
-void MCExists::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
 
-	object -> compile(ctxt);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalThereIsAnObjectMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-MCTheFiles::~MCTheFiles()
+MCFileItems::~MCFileItems()
 {
 	delete m_folder;
+    delete m_kind;
 }
 
 Parse_stat
-MCTheFiles::parse(MCScriptPoint & sp, Boolean p_is_the)
+MCFileItems::parse(MCScriptPoint & sp, Boolean p_is_the)
 {
 	if (p_is_the)
 	{
@@ -758,9 +532,9 @@ MCTheFiles::parse(MCScriptPoint & sp, Boolean p_is_the)
 	}
 	else
 	{
-		if (PS_NORMAL != get0or1param(sp, &m_folder, p_is_the))
+		if (PS_NORMAL != get0or1or2params(sp, &m_folder, &m_kind, p_is_the))
 		{
-			MCperror->add(PE_FOLDERS_BADPARAM, sp);
+			MCperror->add(m_files ? PE_FILES_BADPARAM : PE_FOLDERS_BADPARAM, sp);
 			return PS_ERROR;
 		}
 	}
@@ -768,38 +542,38 @@ MCTheFiles::parse(MCScriptPoint & sp, Boolean p_is_the)
 }
 
 void
-MCTheFiles::eval_ctxt(MCExecContext & ctxt, MCExecValue & r_value)
+MCFileItems::eval_ctxt(MCExecContext & ctxt, MCExecValue & r_value)
 {
-	if (m_folder) {
-		MCAutoStringRef t_folder;
-		if (!ctxt.EvalExprAsStringRef(m_folder, EE_FOLDERS_BADFOLDER, &t_folder))
+    MCAutoStringRef t_folder;
+    bool t_is_detailed = false;
+	if (m_folder)
+    {
+		if (!ctxt.EvalExprAsStringRef(m_folder, m_files ? EE_FILES_BADFOLDER : EE_FOLDERS_BADFOLDER, &t_folder))
 			return;
 
-		r_value.type = kMCExecValueTypeStringRef;
-		MCFilesEvalFilesOfDirectory(ctxt, *t_folder, r_value.stringref_value);
-	}
-	else
-	{
-		r_value.type = kMCExecValueTypeStringRef;
-		MCFilesEvalFiles(ctxt, r_value.stringref_value);
-	}
+        if (m_kind != nullptr)
+        {
+            MCAutoStringRef t_kind;
+            if (!ctxt.EvalExprAsStringRef(m_kind, m_files ? EE_FILES_BADKIND : EE_FOLDERS_BADKIND, &t_kind))
+            {
+                return;
+            }
+            if (!MCStringIsEmpty(*t_kind))
+            {
+                if (!MCStringIsEqualToCString(*t_kind, "detailed", kMCStringOptionCompareCaseless))
+                {
+                    ctxt.LegacyThrow(m_files ? EE_FILES_BADKIND : EE_FOLDERS_BADKIND);
+                    return;
+                }
+                t_is_detailed = true;
+            }
+        }
+    }
+    
+    r_value.type = kMCExecValueTypeStringRef;
+    MCFilesEvalFileItemsOfDirectory(ctxt, *t_folder, m_files, t_is_detailed, r_value.stringref_value);
 }
 
-void
-MCTheFiles::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	if (nil != m_folder)
-	{
-		m_folder -> compile(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCFilesEvalFilesOfDirectoryMethodInfo);
-	}
-	else
-	{
-		MCSyntaxFactoryEvalMethod(ctxt, kMCFilesEvalFilesMethodInfo);
-	}
-	MCSyntaxFactoryEndExpression(ctxt);
-}
 
 MCFontNames::~MCFontNames()
 {
@@ -867,11 +641,6 @@ void MCFontStyles::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value . type = kMCExecValueTypeStringRef;
 }
 
-void MCFontStyles::compile(MCSyntaxFactoryRef ctxt)
-{
-	compile_with_args(ctxt, kMCTextEvalFontStylesMethodInfo, fontname, fontsize);
-}
-
 MCFormat::~MCFormat()
 {
 	while (params != NULL)
@@ -931,27 +700,6 @@ void MCFormat::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value . type = kMCExecValueTypeStringRef;
 }
 
-void MCFormat::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	uindex_t t_count;
-	t_count = 0;
-
-	for (MCParameter *t_parameter = params; t_parameter != nil; t_parameter = t_parameter -> getnext())
-	{
-		t_parameter -> compile(ctxt);
-		t_count++;
-	}
-	
-	MCSyntaxFactoryEvalList(ctxt, t_count - 1);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalFormatMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-
 MCHostNtoA::~MCHostNtoA()
 {
 	delete name;
@@ -980,22 +728,6 @@ void MCHostNtoA::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
 	MCNetworkEvalHostNameToAddress(ctxt, *t_hostname, *t_message, r_value . stringref_value);
     r_value . type = kMCExecValueTypeStringRef;
-}
-
-void MCHostNtoA::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	name -> compile(ctxt);
-
-	if (message)
-		message -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstant(ctxt, kMCEmptyName);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCNetworkEvalHostNameToAddressMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 void MCInsertScripts::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
@@ -1028,8 +760,8 @@ Parse_stat MCIntersect::parse(MCScriptPoint &sp, Boolean the)
 		return PS_ERROR;
 	}
 	
-	o1 = new MCChunk(False);
-	o2 = new MCChunk(False);
+	o1 = new (nothrow) MCChunk(False);
+	o2 = new (nothrow) MCChunk(False);
 	
 	Symbol_type stype;
 	if (o1->parse(sp, False) != PS_NORMAL
@@ -1091,24 +823,6 @@ void MCIntersect::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 		MCInterfaceEvalIntersect(ctxt, t_object_a, t_object_b, r_value . bool_value);
         r_value . type = kMCExecValueTypeBool;
     }
-}
-
-void MCIntersect::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	o1 -> compile_object_ptr(ctxt);
-	o2 -> compile_object_ptr(ctxt);
-
-	if (threshold != nil)
-	{
-		threshold -> compile(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalIntersectWithThresholdMethodInfo);
-	}
-	else
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalIntersectMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 MCKeys::~MCKeys()
@@ -1194,37 +908,6 @@ void MCKeys::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         r_value . type = kMCExecValueTypeStringRef;
 	}
 }
-
-void MCKeys::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	if (source != nil)
-	{
-		source -> compile(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCArraysEvalKeysMethodInfo);
-	}
-	else
-	{
-		if (which == P_DRAG_DATA)
-			MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalDragDropKeysMethodInfo);
-        else if (which == P_RAW_CLIPBOARD_DATA)
-            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalRawClipboardKeysMethodInfo);
-        else if (which == P_RAW_DRAGBOARD_DATA)
-            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalRawDragKeysMethodInfo);
-		else if (which == P_CLIPBOARD_DATA)
-			MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalClipboardKeysMethodInfo);
-        else if (which == P_FULL_CLIPBOARD_DATA)
-            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalFullClipboardKeysMethodInfo);
-        else if (which == P_FULL_DRAGBOARD_DATA)
-            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalFullDragKeysMethodInfo);
-        else
-            MCUnreachable();
-	}
-
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 
 MCLicensed::~MCLicensed()
 {
@@ -1335,43 +1018,17 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     for (uindex_t i = 0; i < t_result_count; i++)
     {
         // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
-        // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
-        MCAutoPointer<MCContainer> t_container;
-        if (!t_result_params->evalcontainer(ctxt, &t_container))
-        {
-            ctxt . LegacyThrow(EE_MATCH_BADDEST);
-            return;
-        }
-        /* UNCHECKED */ t_container->set_valueref(t_results[i]);
+		MCContainer t_container;
+		if (!t_result_params->evalcontainer(ctxt, t_container))
+		{
+			ctxt . LegacyThrow(EE_MATCH_BADDEST);
+			return;
+		}
+		
+        /* UNCHECKED */ t_container.set_valueref(t_results[i]);
         
         t_result_params = t_result_params->getnext();
     }
-}
-
-void MCMatch::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	uindex_t t_count;
-	t_count = 0;
-
-	for (MCParameter *t_parameter = params; t_parameter != nil; t_parameter = t_parameter -> getnext())
-	{
-		if (t_count < 2)
-			t_parameter -> compile(ctxt);
-		else
-			t_parameter -> compile_out(ctxt);
-		t_count++;
-	}
-	
-	MCSyntaxFactoryEvalList(ctxt, t_count - 2);
-
-	if (chunk)
-		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalMatchChunkMethodInfo);
-	else
-		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalMatchTextMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 Parse_stat MCMe::parse(MCScriptPoint &sp, Boolean the)
@@ -1416,21 +1073,6 @@ void MCMouse::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	MCInterfaceEvalMouse(ctxt, b, r_value . nameref_value);
     r_value . type = kMCExecValueTypeNameRef;
 }
-
-void MCMouse::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	if (which != nil)
-		which -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstantUInt(ctxt, 0);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalMouseMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 
 Parse_stat MCParamCount::parse(MCScriptPoint &sp, Boolean the)
 {
@@ -1478,11 +1120,6 @@ void MCReplaceText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value . type = kMCExecValueTypeStringRef;
 }
 
-void MCReplaceText::compile(MCSyntaxFactoryRef ctxt)
-{
-	compile_with_args(ctxt, kMCStringsEvalReplaceTextMethodInfo, source, pattern, replacement);
-}
-
 // MW-2010-12-15: [[ Bug ]] Make sure the value of 'the result' is grabbed, otherwise
 //   if it is modified by a function in an expression and used directly in that
 //   expression, bogus things can happen. i.e.
@@ -1492,19 +1129,6 @@ void MCScreenRect::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
     MCInterfaceEvalScreenRect(ctxt, false, f_plural, false, r_value . stringref_value);
     r_value . type = kMCExecValueTypeStringRef;
-}
-
-void MCScreenRect::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	MCSyntaxFactoryEvalConstantBool(ctxt, false);
-	MCSyntaxFactoryEvalConstantBool(ctxt, f_plural);
-	MCSyntaxFactoryEvalConstantBool(ctxt, false);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalScreenRectMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 MCSelectedButton::~MCSelectedButton()
@@ -1537,7 +1161,7 @@ Parse_stat MCSelectedButton::parse(MCScriptPoint &sp, Boolean the)
 	}
 	if (sp.skip_token(SP_FACTOR, TT_OF) == PS_NORMAL)
 	{
-		object = new MCChunk(False);
+		object = new (nothrow) MCChunk(False);
 		if (object->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_SELECTEDBUTTON_NOOBJECT, sp);
@@ -1569,24 +1193,6 @@ void MCSelectedButton::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 		MCLegacyEvalSelectedButton(ctxt, bg == True, t_family, r_value . stringref_value);
         r_value . type = kMCExecValueTypeStringRef;
 	}
-}
-
-void MCSelectedButton::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	MCSyntaxFactoryEvalConstantBool(ctxt, bg == True);
-	family -> compile(ctxt);
-
-	if (object != nil)
-	{
-		object -> compile_object_ptr(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCLegacyEvalSelectedButtonOfMethodInfo);
-	}
-	else
-		MCSyntaxFactoryEvalMethod(ctxt, kMCLegacyEvalSelectedButtonMethodInfo);	
-
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 MCSelectedChunk::~MCSelectedChunk()
@@ -1621,22 +1227,6 @@ void MCSelectedChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	}
 }
 
-void MCSelectedChunk::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	if (object != nil)
-	{
-		object -> compile_object_ptr(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSelectedChunkOfMethodInfo);
-	}
-	else
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSelectedChunkMethodInfo);	
-
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-
 MCSelectedLine::~MCSelectedLine()
 {
 	delete object;
@@ -1665,21 +1255,6 @@ void MCSelectedLine::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 		MCInterfaceEvalSelectedLine(ctxt, r_value . stringref_value);
         r_value . type = kMCExecValueTypeStringRef;
 	}
-}
-
-void MCSelectedLine::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	if (object != nil)
-	{
-		object -> compile_object_ptr(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSelectedLineOfMethodInfo);
-	}
-	else
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSelectedLineMethodInfo);	
-
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 MCSelectedLoc::~MCSelectedLoc()
@@ -1713,22 +1288,6 @@ void MCSelectedLoc::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	}
 }
 
-void MCSelectedLoc::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-    
-	if (object != nil)
-	{
-		object -> compile_object_ptr(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSelectedLocOfMethodInfo);
-	}
-	else
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSelectedLocMethodInfo);
-    
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-
 MCSelectedText::~MCSelectedText()
 {
 	delete object;
@@ -1760,22 +1319,6 @@ void MCSelectedText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         r_value .type = kMCExecValueTypeStringRef;
 	}
 }
-
-void MCSelectedText::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	if (object != nil)
-	{
-		object -> compile_object_ptr(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSelectedTextOfMethodInfo);
-	}
-	else
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSelectedTextMethodInfo);	
-
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 
 Parse_stat MCTarget::parse(MCScriptPoint &sp, Boolean the)
 {
@@ -1832,17 +1375,6 @@ void MCOwner::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value .type = kMCExecValueTypeStringRef;
 }
 
-void MCOwner::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	object -> compile_object_ptr(ctxt);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCEngineEvalOwnerMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 MCTextDecode::~MCTextDecode()
 {
     delete m_data;
@@ -1887,11 +1419,6 @@ void MCTextDecode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     
     MCStringsEvalTextDecode(ctxt, *t_encoding, *t_data, r_value.stringref_value);
     r_value.type = kMCExecValueTypeStringRef;
-}
-
-void MCTextDecode::compile(MCSyntaxFactoryRef ctxt)
-{
-    compile_with_args(ctxt, kMCStringsEvalTextDecodeMethodInfo, m_data, m_encoding);
 }
 
 MCTextEncode::~MCTextEncode()
@@ -1940,11 +1467,6 @@ void MCTextEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     r_value.type = kMCExecValueTypeDataRef;
 }
 
-void MCTextEncode::compile(MCSyntaxFactoryRef ctxt)
-{
-    compile_with_args(ctxt, kMCStringsEvalTextEncodeMethodInfo, m_string, m_encoding);
-}
-
 MCNormalizeText::~MCNormalizeText()
 {
     delete m_text;
@@ -1982,11 +1504,6 @@ void MCNormalizeText::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     
     MCStringsEvalNormalizeText(ctxt, *t_text, *t_form, r_value.stringref_value);
     r_value.type = kMCExecValueTypeStringRef;
-}
-
-void MCNormalizeText::compile(MCSyntaxFactoryRef ctxt)
-{
-    compile_with_args(ctxt, kMCStringsEvalNormalizeTextMethodInfo, m_text, m_form);
 }
 
 MCCodepointProperty::~MCCodepointProperty()
@@ -2028,11 +1545,6 @@ void MCCodepointProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     r_value.type = kMCExecValueTypeValueRef;
 }
 
-void MCCodepointProperty::compile(MCSyntaxFactoryRef ctxt)
-{
-    compile_with_args(ctxt, kMCStringsEvalCodepointPropertyMethodInfo, m_codepoint, m_property);
-}
-
 MCTextHeightSum::~MCTextHeightSum()
 {
 	delete object;
@@ -2045,9 +1557,7 @@ Parse_stat MCTextHeightSum::parse(MCScriptPoint &sp, Boolean the)
 
 void MCTextHeightSum::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
-	integer_t t_result;
-
-	MCObjectPtr t_object;
+    MCObjectPtr t_object;
 	if (!object->getobj(ctxt, t_object, True))
 	{
 		ctxt . LegacyThrow(EE_TEXT_HEIGHT_SUM_NOOBJECT);
@@ -2057,18 +1567,6 @@ void MCTextHeightSum::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	MCLegacyEvalTextHeightSum(ctxt, t_object, r_value . int_value);
     r_value . type = kMCExecValueTypeInt;
 }
-
-void MCTextHeightSum::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	object -> compile_object_ptr(ctxt);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCLegacyEvalTextHeightSumMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 
 MCTopStack::~MCTopStack()
 {
@@ -2105,17 +1603,8 @@ void MCTopStack::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     }
 }
 
-void MCTopStack::compile(MCSyntaxFactoryRef ctxt)
-{
-	if (which != nil)
-		compile_with_args(ctxt, kMCInterfaceEvalTopStackOfMethodInfo, which);
-	else
-		compile_with_args(ctxt, kMCInterfaceEvalTopStackMethodInfo);
-}
-
 MCUniDecode::~MCUniDecode()
 {
-
 	delete source;
 	delete language;
 }
@@ -2156,22 +1645,6 @@ void MCUniDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 		MCFiltersEvalUniDecodeToNative(ctxt, *t_source, r_value . stringref_value);
         r_value . type = kMCExecValueTypeStringRef;
 	}
-}
-
-void MCUniDecode::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	source -> compile(ctxt);
-
-	if (language)
-		language -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstant(ctxt, kMCEmptyName);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCFiltersEvalUniDecodeMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 MCUniEncode::~MCUniEncode()
@@ -2225,22 +1698,6 @@ void MCUniEncode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	}
 }
 
-void MCUniEncode::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	source -> compile(ctxt);
-
-	if (language)
-		language -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstant(ctxt, kMCEmptyName);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCFiltersEvalUniEncodeMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 MCValue::~MCValue()
 {
 	delete source;
@@ -2278,7 +1735,7 @@ Parse_stat MCValue::parse(MCScriptPoint &sp, Boolean the)
 		}
 		if (type == ST_SEP)
 		{
-			object = new MCChunk(False);
+			object = new (nothrow) MCChunk(False);
 			if (object->parse(sp, False) != PS_NORMAL)
 			{
 				MCperror->add(PE_VALUE_BADOBJECT, sp);
@@ -2322,27 +1779,6 @@ void MCValue::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     }
 }
 
-void MCValue::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	if (source != nil)
-		source -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstantNil(ctxt);
-
-	if (source != nil && object != nil)
-	{
-		object -> compile_object_ptr(ctxt);
-
-		MCSyntaxFactoryEvalMethod(ctxt, kMCEngineEvalValueWithObjectMethodInfo);
-	}
-	else
-		MCSyntaxFactoryEvalMethod(ctxt,kMCEngineEvalValueMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 Parse_stat MCVariables::parse(MCScriptPoint &sp, Boolean the)
 {
 	return MCFunction::parse(sp, the);
@@ -2363,7 +1799,7 @@ Parse_stat MCWithin::parse(MCScriptPoint &sp, Boolean the)
 		MCperror->add(PE_FACTOR_NOLPAREN, sp);
 		return PS_ERROR;
 	}
-	object = new MCChunk(False);
+	object = new (nothrow) MCChunk(False);
 	if (object->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_WITHIN_NOOBJECT, sp);
@@ -2408,19 +1844,6 @@ void MCWithin::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     }
 }
 
-void MCWithin::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	object -> compile_object_ptr(ctxt);
-
-	point -> compile(ctxt);
-
-	MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalWithinMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 // platform specific functions
 MCMCISendString::~MCMCISendString()
 {
@@ -2458,17 +1881,6 @@ void MCMCISendString::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
         MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(*t_result));
 }
 
-void MCMCISendString::compile(MCSyntaxFactoryRef ctxt)
-{
-    MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-    
-    string -> compile(ctxt);
-    
-    MCSyntaxFactoryEvalMethod(ctxt, kMCMultimediaEvalMCISendStringMethodInfo);
-    
-    MCSyntaxFactoryEndExpression(ctxt);
-}
-
 MCQueryRegistry::~MCQueryRegistry()
 {
 	delete key;
@@ -2491,11 +1903,11 @@ void MCQueryRegistry::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt . EvalExprAsStringRef(key, EE_QUERYREGISTRY_BADEXP, &t_key))
         return;
 
-	MCAutoPointer<MCContainer> t_container;
+    MCContainer t_container;
     MCAutoStringRef t_type;
 	if (type != NULL)
 	{
-		if (!type -> evalcontainer(ctxt, &t_container))
+		if (!type -> evalcontainer(ctxt, t_container))
 		{
 			ctxt . LegacyThrow(EE_QUERYREGISTRY_BADDEST);
 			return;
@@ -2512,26 +1924,9 @@ void MCQueryRegistry::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
 	if (!ctxt.HasError())
 	{
-		if (*t_container != nil)
-			/* UNCHECKED */ t_container->set_valueref(*t_type);
+        if (type != NULL)
+            /* UNCHECKED */ t_container.set_valueref(*t_type);
 	}
-}
-
-void MCQueryRegistry::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-
-	key -> compile(ctxt);
-
-	if (type != nil)
-	{
-		type -> compile_out(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, kMCFilesEvalQueryRegistryWithTypeMethodInfo);
-	}
-	else
-		MCSyntaxFactoryEvalMethod(ctxt, kMCFilesEvalQueryRegistryMethodInfo);
-
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 MCSetRegistry::~MCSetRegistry()
@@ -2575,14 +1970,6 @@ void MCSetRegistry::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 		MCFilesEvalSetRegistry(ctxt, *t_key, *t_value, r_value . bool_value);
         r_value . type = kMCExecValueTypeBool;
     }
-}
-
-void MCSetRegistry::compile(MCSyntaxFactoryRef ctxt)
-{
-	if (type != nil)
-		compile_with_args(ctxt, kMCFilesEvalSetRegistryWithTypeMethodInfo, key, value, type);
-	else
-		compile_with_args(ctxt, kMCFilesEvalSetRegistryWithTypeMethodInfo, key, value);
 }
 
 MCCopyResource::~MCCopyResource()
@@ -2635,14 +2022,6 @@ void MCCopyResource::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value . type = kMCExecValueTypeStringRef;
 }
 
-void MCCopyResource::compile(MCSyntaxFactoryRef ctxt)
-{
-	if (newid != nil)
-		compile_with_args(ctxt, kMCFilesEvalCopyResourceWithNewIdMethodInfo, source, dest, type, name, newid);
-	else
-		compile_with_args(ctxt, kMCFilesEvalCopyResourceMethodInfo, source, dest, type, name);
-}
-
 MCDeleteResource::~MCDeleteResource()
 {
 	delete source;
@@ -2676,11 +2055,6 @@ void MCDeleteResource::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	
 	MCFilesEvalDeleteResource(ctxt, *t_source, *t_type, *t_name, r_value . stringref_value);
     r_value . type = kMCExecValueTypeStringRef;
-}
-
-void MCDeleteResource::compile(MCSyntaxFactoryRef ctxt)
-{
-	compile_with_args(ctxt, kMCFilesEvalDeleteResourceMethodInfo, source, type, name);
 }
 
 MCGetResource::~MCGetResource()
@@ -2719,11 +2093,6 @@ void MCGetResource::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value . type = kMCExecValueTypeStringRef;
 }
 
-void MCGetResource::compile(MCSyntaxFactoryRef ctxt)
-{
-	compile_with_args(ctxt, kMCFilesEvalGetResourceMethodInfo, source, type, name);
-}
-
 MCGetResources::~MCGetResources()
 {
 	delete source;
@@ -2756,14 +2125,6 @@ void MCGetResources::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 		MCFilesEvalGetResources(ctxt, *t_source, r_value . stringref_value);
     
     r_value . type = kMCExecValueTypeStringRef;
-}
-
-void MCGetResources::compile(MCSyntaxFactoryRef ctxt)
-{
-	if (type != nil)
-		compile_with_args(ctxt, kMCFilesEvalGetResourcesWithTypeMethodInfo, source, type);
-	else
-		compile_with_args(ctxt, kMCFilesEvalGetResourcesMethodInfo, source);
 }
 
 MCSetResource::~MCSetResource()
@@ -2823,11 +2184,6 @@ void MCSetResource::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     r_value . type = kMCExecValueTypeStringRef;
 }
 
-void MCSetResource::compile(MCSyntaxFactoryRef ctxt)
-{
-	compile_with_args(ctxt, kMCFilesEvalSetResourceMethodInfo, source, type, id, name, flags, value);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 MCHTTPProxyForURL::~MCHTTPProxyForURL(void)
@@ -2866,14 +2222,6 @@ void MCHTTPProxyForURL::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	else
 		MCNetworkEvalHTTPProxyForURLWithPAC(ctxt, *t_url, *t_host, *t_pac, r_value . stringref_value);
     r_value . type = kMCExecValueTypeStringRef;
-}
-
-void MCHTTPProxyForURL::compile(MCSyntaxFactoryRef ctxt)
-{
-	if (pac != nil)
-		compile_with_args(ctxt, kMCNetworkEvalHTTPProxyForURLWithPACMethodInfo, url, host, pac);
-	else
-		compile_with_args(ctxt, kMCNetworkEvalHTTPProxyForURLMethodInfo, url, host);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3071,7 +2419,7 @@ Parse_stat MCMeasureText::parse(MCScriptPoint &sp, Boolean the)
 	}
 	
 	Symbol_type type;
-	m_object = new MCChunk(False);
+	m_object = new (nothrow) MCChunk(False);
 	if (sp.next(type) != PS_NORMAL || type != ST_SEP
         || m_object->parse(sp, False) != PS_NORMAL)
 	{
@@ -3134,6 +2482,51 @@ void MCMeasureText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         r_value . type = kMCExecValueTypeStringRef;
     }
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+Parse_stat
+MCMessageDigestFunc::parse(MCScriptPoint &sp,
+                           Boolean the)
+{
+    MCExpression *t_params[MAX_EXP];
+    uint2 t_param_count = 0;
+
+    if (getexps(sp, t_params, t_param_count) != PS_NORMAL ||
+        (t_param_count != 2))
+    {
+        /* Wrong number of parameters or some other probleem */
+        freeexps(t_params, t_param_count);
+
+        MCperror->add(PE_MESSAGEDIGEST_BADPARAM, sp);
+        return PS_ERROR;
+    }
+
+    m_data.Reset(t_params[0]);
+    m_type.Reset(t_params[1]);
+    return PS_NORMAL;
+}
+
+void
+MCMessageDigestFunc::eval_ctxt(MCExecContext &ctxt,
+                               MCExecValue &r_value)
+{
+    MCNewAutoNameRef t_name;
+    if (!ctxt.EvalExprAsNameRef(m_type.Get(), EE_MESSAGEDIGEST_BADTYPE, &t_name))
+        return;
+    MCAutoDataRef t_data;
+    if (!ctxt.EvalExprAsDataRef(m_data.Get(), EE_MESSAGEDIGEST_BADDATA, &t_data))
+        return;
+    MCAutoDataRef t_digest;
+    MCFiltersEvalMessageDigest(ctxt, *t_data, *t_name, &t_digest);
+    if (!ctxt.HasError())
+    {
+        r_value.dataref_value = t_digest.Take();
+        r_value.type = kMCExecValueTypeDataRef;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST
 #include "test.h"

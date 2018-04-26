@@ -18,10 +18,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "literal.h"
-#include "position.h"
-#include "literal.h"
-#include "report.h"
+#include <literal.h>
+#include <position.h>
+#include <report.h>
+#include "outputfile.h"
 
 extern void ROOT(void);
 extern void yyExtend(void);
@@ -31,11 +31,17 @@ static int s_is_bootstrap = 0;
 
 extern enum DependencyModeType DependencyMode;
 extern int OutputFileAsC;
+extern int OutputFileAsAuxC;
 extern int OutputFileAsBytecode;
 
 int IsBootstrapCompile(void)
 {
     return s_is_bootstrap;
+}
+
+int IsNotBytecodeOutput(void)
+{
+    return OutputFileAsBytecode == 0;
 }
 
 int IsDependencyCompile(void)
@@ -95,8 +101,8 @@ static void
 usage(int status)
 {
     fprintf(stderr,
-"Usage: lc-compile [OPTION ...] --output OUTFILE [--] LCBFILE\n"
-"       lc-compile [OPTION ...] --outputc OUTFILE [--] LCBFILE\n"
+"Usage: lc-compile [OPTION ...] --output OUTFILE [--] LCBFILE ... LCBFILE\n"
+"       lc-compile [OPTION ...] --outputc OUTFILE [--] LCBFILE ... LCBFILE\n"
 "       lc-compile [OPTION ...] --deps DEPTYPE [--] LCBFILE ... LCBFILE\n"
 "\n"
 "Compile a LiveCode Builder source file.\n"
@@ -105,6 +111,10 @@ usage(int status)
 "      --modulepath PATH      Search PATH for module interface files.\n"
 "      --output OUTFILE       Filename for bytecode output.\n"
 "      --outputc OUTFILE      Filename for C source code output.\n"
+"      --outputauxc OUTFILE   Filename for C source code output in auxillary mode.\n"
+"                             This generates an auxillary set of C source code\n"
+"                             modules, which do *not* include the builtin module and\n"
+"                             do not produce builtin shims.\n"
 "      --deps make            Generate lci file dependencies in make format for\n"
 "                             the input source files.\n"
 "      --deps order           Generate the order the input source files should be\n"
@@ -133,6 +143,8 @@ static void full_main(int argc, char *argv[])
     /* Process options. */
     int have_input_file = 0;
     int have_output_file = 0;
+	int have_interface_file = 0;
+	int have_manifest_file = 0;
     int end_of_args = 0;
     int argi;
 
@@ -175,6 +187,7 @@ static void full_main(int argc, char *argv[])
                 SetOutputBytecodeFile(argv[++argi]);
                 OutputFileAsBytecode = 1;
                 OutputFileAsC = 0;
+                OutputFileAsAuxC = 0;
                 have_output_file = 1;
                 continue;
             }
@@ -182,6 +195,16 @@ static void full_main(int argc, char *argv[])
             {
                 SetOutputCodeFile(argv[++argi]);
                 OutputFileAsC = 1;
+                OutputFileAsAuxC = 0;
+                OutputFileAsBytecode = 0;
+                have_output_file = 1;
+                continue;
+            }
+            if (0 == strcmp(opt, "--outputauxc") && optarg)
+            {
+                SetOutputCodeFile(argv[++argi]);
+                OutputFileAsC = 1;
+                OutputFileAsAuxC = 1;
                 OutputFileAsBytecode = 0;
                 have_output_file = 1;
                 continue;
@@ -189,11 +212,13 @@ static void full_main(int argc, char *argv[])
             if (0 == strcmp(opt, "--manifest") && optarg)
             {
                 SetManifestOutputFile(argv[++argi]);
+				have_manifest_file = 1;
                 continue;
             }
             if (0 == strcmp(opt, "--interface") && optarg)
             {
                 SetInterfaceOutputFile(argv[++argi]);
+				have_interface_file = 1;
                 continue;
             }
             /* FIXME This should be expanded to support "-W error",
@@ -230,28 +255,9 @@ static void full_main(int argc, char *argv[])
             }
         }
 
-        /* Accept only one input file */
-        if (DependencyMode == 0 || have_output_file)
-        {
-            if (!have_input_file)
-            {
-                AddFile(opt);
-                have_input_file = 1;
-                continue;
-            }
-            else
-            {
-                fprintf(stderr, "WARNING: Ignoring multiple input filenames.\n");
-                continue;
-            }
-            
-            break; /* Doesn't match any option */
-        }
-        else
-        {
-            AddFile(opt);
-            have_input_file = 1;
-        }
+        /* Accept any number of input files */
+        AddFile(opt);
+        have_input_file = 1;
     }
 
 	// If there is no filename, error.
@@ -268,10 +274,6 @@ static void full_main(int argc, char *argv[])
         ROOT();
     }
 }
-
-// No built-in modules for the compiler
-void* g_builtin_modules[1] = {NULL};
-unsigned int g_builtin_module_count = 0;
 
 extern int yydebug;
 extern void InitializeFoundation(void);

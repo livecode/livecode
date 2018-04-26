@@ -122,8 +122,8 @@ static void compose_text_message_prewait(void *p_context)
 	
 	ctxt -> dialog = [[com_runrev_livecode_MCIPhoneSmsComposerDialog alloc] init];
     [ctxt -> dialog setMessageComposeDelegate: ctxt -> dialog];
-    [ctxt -> dialog setRecipients: [[NSString stringWithMCStringRef: ctxt -> recipients] componentsSeparatedByString:@","]];
-    [ctxt -> dialog setBody: [NSString stringWithMCStringRef: ctxt -> body]];
+    [ctxt -> dialog setRecipients: [MCStringConvertToAutoreleasedNSString(ctxt -> recipients) componentsSeparatedByString:@","]];
+    [ctxt -> dialog setBody: MCStringConvertToAutoreleasedNSString(ctxt -> body)];
 	[ctxt -> dialog preWait];
 	
 	ctxt -> success = true;

@@ -22,10 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SkDashPathEffect.h>
 #include <SkMask.h>
 #include <SkShader.h>
-
-#ifndef M_PI
-#define M_PI 3.141592653589793238462643
-#endif
+#include <SkSurface.h>
 
 #ifdef __MOBILE
 #define kMCGTextMeasureCacheTableSize 16384
@@ -39,43 +36,243 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct __MCGPattern *MCGPatternRef;
+typedef class MCGObject *MCGObjectRef;
 
-struct __MCGPattern
+class MCGObject
 {
-	MCGImageRef			pattern;
-	MCGAffineTransform	transform;
-	MCGImageFilter		filter;
-	uint32_t			references;
-};
+public:
+#ifdef _DEBUG
+    static size_t s_object_count;
+#endif
 
-bool MCGPatternCreate(MCGImageRef image, MCGAffineTransform transform, MCGImageFilter filter, MCGPatternRef& r_pattern);
-MCGPatternRef MCGPatternRetain(MCGPatternRef pattern);
-void MCGPatternRelease(MCGPatternRef pattern);
-bool MCGPatternToSkShader(MCGPatternRef pattern, SkShader*& r_shader);
+    MCGObject(void)
+        : m_references(1)
+    {
+#ifdef _DEBUG
+        s_object_count += 1;
+#endif
+    }
+
+protected:
+    virtual ~MCGObject(void)
+    {
+#ifdef _DEBUG
+        s_object_count -= 1;
+#endif
+    }
+
+private:
+    virtual void Retain(void)
+    {
+        m_references += 1;
+    }
+    
+    virtual void Release(void)
+    {
+        m_references -= 1;
+        if (m_references == 0)
+        {
+            delete this;
+        }
+    }
+    
+    template<typename T>
+    friend T MCGRetain(T p_object)
+    {
+        if (p_object == nullptr)
+        {
+            return nullptr;
+        }
+        
+        p_object->Retain();
+        
+        return p_object;
+    }
+    
+    template<typename T>
+    friend void MCGRelease(T p_object)
+    {
+        if (p_object == nullptr)
+        {
+            return;
+        }
+        
+        p_object->Release();
+    }
+    
+    template<typename T>
+    friend void MCGAssignAndRelease(T& x_target, T p_source)
+    {
+        if (x_target != nullptr)
+        {
+            x_target->Release();
+        }
+        
+        x_target = p_source;
+    }
+    
+    uint32_t m_references;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct __MCGGradient *MCGGradientRef;
+typedef class MCGPaint *MCGPaintRef;
 
-struct __MCGGradient
+class MCGPaint: public MCGObject
 {
-	MCGGradientFunction	function;	
-	MCGColor			*colors;
-	MCGFloat			*stops;
-	uindex_t			ramp_length;	
-	bool				mirror;
-	bool				wrap;
-	uint32_t			repeats;	
-	MCGAffineTransform	transform;
-	MCGImageFilter		filter;	
-	uint32_t			references;
+public:
+    virtual bool Apply(SkPaint& r_paint) = 0;
 };
 
-bool MCGGradientCreate(MCGGradientFunction function, const MCGFloat* stops, const MCGColor* colors, uindex_t ramp_length, bool mirror, bool wrap, uint32_t repeats, MCGAffineTransform transform, MCGImageFilter filter, MCGGradientRef& r_gradient);
-MCGGradientRef MCGGradientRetain(MCGGradientRef gradient);
-void MCGGradientRelease(MCGGradientRef gradient);
-bool MCGGradientToSkShader(MCGGradientRef gradient, MCGRectangle clip, SkShader*& r_shader);
+////////////////////////////////////////////////////////////////////////////////
+
+typedef class MCGSolidColor *MCGSolidColorRef;
+
+class MCGSolidColor: public MCGPaint
+{
+public:
+    virtual bool Apply(SkPaint& r_paint);
+    
+    static bool Create(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha, MCGSolidColorRef& r_solid_color);
+    
+private:
+    MCGColor m_color;
+};
+
+extern MCGSolidColorRef kMCGBlackSolidColor;
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef class MCGPattern *MCGPatternRef;
+
+class MCGPattern: public MCGPaint
+{
+public:
+    virtual ~MCGPattern(void);
+    
+    virtual bool Apply(SkPaint& r_paint);
+    
+    static bool Create(MCGImageRef image, MCGAffineTransform transform, MCGImageFilter filter, MCGPatternRef& r_pattern);
+    
+private:
+	MCGImageRef			m_image;
+	MCGAffineTransform	m_transform;
+	MCGImageFilter		m_filter;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef class MCGRamp *MCGRampRef;
+
+class MCGRamp: public MCGObject
+{
+public:
+    virtual ~MCGRamp(void);
+
+    static bool Create(const MCGFloat *p_stops, const MCGColor *p_colors, size_t p_ramp_length, MCGRampRef& r_ramp);
+
+    static bool Create4f(const MCGFloat *p_stops, const MCGColor4f *p_colors, size_t p_ramp_length, MCGRampRef& r_ramp);
+
+    const SkScalar* GetStops(void) const { return m_stops; }
+    const SkColor* GetColors(void) const { return m_colors; }
+    size_t GetLength(void) const { return m_ramp_length; }
+
+private:
+    SkScalar *m_stops = nullptr;
+    SkColor *m_colors = nullptr;
+    size_t m_ramp_length = 0;
+};
+
+typedef class MCGGradient *MCGGradientRef;
+
+class MCGGradient: public MCGPaint
+{
+public:
+    virtual ~MCGGradient(void);
+
+protected:
+    MCGRampRef m_ramp = nullptr;
+    MCGGradientSpreadMethod m_spread_method;
+	MCGAffineTransform m_transform;
+};
+
+typedef class MCGGeneralizedGradient *MCGGeneralizedGradientRef;
+
+class MCGGeneralizedGradient: public MCGGradient
+{
+public:
+    virtual bool Apply(SkPaint& r_paint);
+
+    static bool Create(MCGGradientFunction function, MCGRampRef ramp, bool mirror, bool wrap, uint32_t repeats, MCGAffineTransform transform, MCGImageFilter filter, MCGGradientRef& r_gradient);
+    
+private:
+	MCGGradientFunction	m_function;
+	uint32_t			m_repeats;
+    MCGImageFilter		m_filter;
+    bool m_mirror;
+    bool m_wrap;
+    
+    friend class MCGGeneralizedGradientShader;
+};
+
+extern bool MCGGeneralizedGradientShaderApply(MCGGeneralizedGradientRef p_gradient, SkPaint& r_paint);
+
+typedef class MCGLinearGradient *MCGLinearGradientRef;
+
+class MCGLinearGradient: public MCGGradient
+{
+public:
+    virtual bool Apply(SkPaint& r_paint);
+    
+    static bool Create(MCGPoint p_from, MCGPoint p_to, MCGRampRef p_ramp, MCGGradientSpreadMethod p_spread_method, MCGAffineTransform p_transform, MCGGradientRef& r_gradient);
+    
+private:
+    MCGPoint m_from;
+    MCGPoint m_to;
+};
+
+typedef class MCGRadialGradient *MCGRadialGradientRef;
+
+class MCGRadialGradient: public MCGGradient
+{
+public:
+    virtual bool Apply(SkPaint& r_paint);
+
+    static bool Create(MCGPoint p_focal_point, MCGFloat p_radius, MCGRampRef p_ramp, MCGGradientSpreadMethod p_tile_mode, MCGAffineTransform p_transform, MCGGradientRef& r_gradient);
+    
+private:
+    MCGPoint m_focal_point;
+    MCGFloat m_radius;
+};
+
+typedef class MCGConicalGradient *MCGConicalGradientRef;
+
+class MCGConicalGradient: public MCGGradient
+{
+public:
+    virtual bool Apply(SkPaint& r_paint);
+    
+    static bool Create(MCGPoint p_center_point, MCGFloat p_radius, MCGPoint p_focal_point, MCGFloat p_focal_radius, MCGRampRef p_ramp, MCGGradientSpreadMethod p_tile_mode, MCGAffineTransform p_transform, MCGGradientRef& r_gradient);
+    
+private:
+    MCGPoint m_center_point;
+    MCGFloat m_radius;
+    MCGPoint m_focal_point;
+    MCGFloat m_focal_radius;
+};
+
+typedef class MCGSweepGradient *MCGSweepGradientRef;
+
+class MCGSweepGradient: public MCGGradient
+{
+public:
+    virtual bool Apply(SkPaint& r_paint);
+
+    static bool Create(MCGPoint p_center, MCGRampRef p_ramp, MCGGradientSpreadMethod p_tile_mode, MCGAffineTransform p_transform, MCGGradientRef& r_gradient);
+    
+private:
+    MCGPoint m_center;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -83,23 +280,22 @@ typedef struct __MCGContextState *MCGContextStateRef;
 
 struct __MCGContextState
 {
+    MCGAffineTransform  base_transform;
+    MCGAffineTransform  transform;
+
 	MCGFloat			opacity;
 	MCGBlendMode		blend_mode;
 	MCGFloat			flatness;
 	bool				should_antialias;
 	
-	MCGColor			fill_color;
+    MCGPaintRef         fill_paint;
 	MCGFloat			fill_opacity;
 	MCGFillRule			fill_rule;
-	MCGPatternRef		fill_pattern;
-	MCGGradientRef		fill_gradient;
 	MCGPaintStyle		fill_style;
 	
-	MCGColor			stroke_color;
+    MCGPaintRef         stroke_paint;
 	MCGFloat			stroke_opacity;
 	MCGStrokeAttr		stroke_attr;
-	MCGPatternRef		stroke_pattern;
-	MCGGradientRef		stroke_gradient;
 	MCGPaintStyle		stroke_style;
 	
 	bool				is_layer_begin_pt;
@@ -111,6 +307,7 @@ typedef struct __MCGContextLayer *MCGContextLayerRef;
 struct __MCGContextLayer
 {
 	SkCanvas *canvas;
+	sk_sp<SkSurface> m_surface;
 	
 	uint32_t nesting;
 	
@@ -169,7 +366,7 @@ struct __MCGDashes
 bool MCGDashesCreate(MCGFloat phase, const MCGFloat *lengths, uindex_t arity, MCGDashesRef& r_dashes);
 MCGDashesRef MCGDashesRetain(MCGDashesRef dashes);
 void MCGDashesRelease(MCGDashesRef dashes);
-bool MCGDashesToSkDashPathEffect(MCGDashesRef dashes, SkDashPathEffect*& r_path_effect);
+bool MCGDashesToSkDashPathEffect(MCGDashesRef dashes, sk_sp<SkPathEffect>& r_path_effect);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -216,8 +413,7 @@ enum MCGPixelOwnershipType
 };
 
 bool MCGRasterToSkBitmap(const MCGRaster& raster, MCGPixelOwnershipType p_ownership, SkBitmap& bitmap);
-SkXfermode* MCGBlendModeToSkXfermode(MCGBlendMode mode);
-MCGBlendMode MCGBlendModeToSkXfermode(SkXfermode* mode);
+SkBlendMode MCGBlendModeToSkBlendMode(MCGBlendMode);
 void MCGAffineTransformToSkMatrix(const MCGAffineTransform& transform, SkMatrix& r_matrix);
 void MCGAffineTransformFromSkMatrix(const SkMatrix &matrix, MCGAffineTransform &r_transform);
 
@@ -387,29 +583,30 @@ inline MCGFillRule MCGFillRuleToSkFillType(SkPath::FillType p_fill_type)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline SkBitmap::Config MCGRasterFormatToSkBitmapConfig(MCGRasterFormat p_format)
+inline SkColorType MCGRasterFormatToSkBitmapConfig(MCGRasterFormat p_format)
 {
 	switch (p_format)
 	{
 	case kMCGRasterFormat_A:
-		return SkBitmap::kA8_Config;
+		return kAlpha_8_SkColorType;
 	case kMCGRasterFormat_ARGB:
 	case kMCGRasterFormat_U_ARGB:
 	case kMCGRasterFormat_xRGB:
-		return SkBitmap::kARGB_8888_Config;
+		return kN32_SkColorType;
     default:
-        MCUnreachableReturn(SkBitmap::kA8_Config);
+        MCUnreachableReturn(kAlpha_8_SkColorType);
 	}
 }
 
 // IM-2014-05-20: [[ GraphicsPerformance ]] Use bitmap opaqueness when determining raster format
-inline MCGRasterFormat MCGRasterFormatFromSkBitmapConfig(SkBitmap::Config p_config, bool p_opaque)
+inline MCGRasterFormat MCGRasterFormatFromSkImageInfo(const SkImageInfo& p_config, bool p_opaque)
 {
-	switch (p_config)
+	switch (p_config.colorType())
 	{
-	case SkBitmap::kA8_Config:
+	case kAlpha_8_SkColorType:
 		return kMCGRasterFormat_A;
-	case SkBitmap::kARGB_8888_Config:
+	case kBGRA_8888_SkColorType:
+	case kRGBA_8888_SkColorType:
 		return p_opaque ? kMCGRasterFormat_xRGB : kMCGRasterFormat_ARGB;
     default:
         MCUnreachableReturn(kMCGRasterFormat_A);
@@ -444,6 +641,11 @@ void *MCGCacheTableGet(MCGCacheTableRef cache_table, void *key, uint32_t key_len
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCGContextSetFillPaint(MCGContextRef p_context, MCGPaintRef p_paint);
+void MCGContextSetStrokePaint(MCGContextRef p_context, MCGPaintRef p_paint);
+
+bool MCGContextSetupFill(MCGContextRef p_context, SkPaint& r_paint);
+
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
 
@@ -458,59 +660,6 @@ void MCGTextMeasureCacheCompact(void);
 
 void MCGBlendModesInitialize(void);
 void MCGBlendModesFinalize(void);
-
-////////////////////////////////////////////////////////////////////////////////
-
-class MCGLegacyBlendMode : public SkXfermode
-{
-public:
-	MCGLegacyBlendMode(MCGBlendMode blend_mode);
-	
-    /*virtual void xfer32(SkPMColor dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
-    virtual void xfer16(uint16_t dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
-    virtual void xfer4444(uint16_t dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
-    virtual void xferA8(SkAlpha dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;*/
-	
-	virtual SkPMColor xferColor(SkPMColor src, SkPMColor dst) const;
-	
-	virtual bool asCoeff(Coeff* src, Coeff* dst) const;
-	virtual bool asMode(Mode* mode) const;
-	
-    virtual Factory getFactory() const SK_OVERRIDE { return nil; }
-	virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE {}
-	
-private:
-	uint32_t m_function;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-typedef struct MCGradientAffineCombiner MCGradientCombiner_t;
-
-class MCGLegacyGradientShader : public SkShader
-{
-public:
-	MCGLegacyGradientShader(MCGGradientRef gradient_ref, MCGRectangle clip);
-	~MCGLegacyGradientShader();
-	
-    virtual bool setContext(const SkBitmap&, const SkPaint&, const SkMatrix&) SK_OVERRIDE;
-    virtual uint32_t getFlags() SK_OVERRIDE;
-    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count) SK_OVERRIDE;
-    virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count) SK_OVERRIDE;
-	virtual SkShader::BitmapType asABitmap(SkBitmap*, SkMatrix*, TileMode[2]) const SK_OVERRIDE;
-	
-	virtual void flatten(SkFlattenableWriteBuffer& ) const SK_OVERRIDE {} ;
-    virtual Factory getFactory() const SK_OVERRIDE { return nil; }
-	
-private:
-	MCGGradientRef			m_gradient_ref;
-	int32_t					m_y;
-	uint8_t					*m_mask;
-	MCGRectangle			m_clip;
-	MCGradientCombiner_t	*m_gradient_combiner;
-	
-    typedef SkShader INHERITED;
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 

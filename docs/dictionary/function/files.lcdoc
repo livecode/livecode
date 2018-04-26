@@ -4,7 +4,7 @@ Type: function
 
 Syntax: the [{ detailed | long }] files
 
-Syntax: files([<targetFolder>])
+Syntax: files([<targetFolder>[, <outputKind>]])
 
 Summary:
 List the files in a folder.
@@ -38,6 +38,10 @@ filter tDiskContents["the defaultFolder"] without ".."
 Parameters:
 targetFolder (String):
 The folder path to search.
+
+outputKind (enum):
+- empty: Use the short form
+- "detailed": Use the long/detailed form
 
 Returns (String):
 A list of file names or file information, with one

@@ -44,10 +44,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-
 #include "exec.h"
 #include "scriptpt.h"
 #include "mcerror.h"
+#include "express.h"
 
 #include "debug.h"
 #include "globals.h"
@@ -56,6 +56,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCInternalVerbInfo MCinternalverbs[];
+extern MCInternalVerbInfo MCinternalverbs_base[];
 
 MCInternal::~MCInternal(void)
 {
@@ -103,6 +104,34 @@ Parse_stat MCInternal::parse(MCScriptPoint& sp)
 			f_statement = MCinternalverbs[i] . factory();
 		}
 
+    if (f_statement == nullptr)
+    {
+        // Look for a match on the first token.
+        for(uint32_t i = 0; MCinternalverbs_base[i] . first_token != nil; i++)
+            if (MCStringIsEqualToCString(*t_first_token, MCinternalverbs_base[i] . first_token, kMCCompareExact))
+            {
+                // If the second token is non-nil then check for a match
+                if (MCinternalverbs_base[i] . second_token != nil)
+                {
+                    // No next token means try the next entry
+                    if (sp . next(t_type) != PS_NORMAL)
+                        continue;
+                    
+                    // If the next token isn't an id, or doesn't match try
+                    // the next entry
+                    if (t_type != ST_ID ||
+                        !MCStringIsEqualToCString(sp . gettoken_stringref(), MCinternalverbs_base[i] . second_token, kMCCompareExact))
+                    {
+                        sp . backup();
+                        continue;
+                    }
+                }
+
+                // We've found a match, so construct the statement.
+                f_statement = MCinternalverbs_base[i] . factory();
+            }
+    }
+    
 	if (f_statement == nil)
 	{
 		MCperror -> add(PE_INTERNAL_BADVERB, sp);
@@ -129,5 +158,86 @@ void MCInternal::exec_ctxt(MCExecContext &ctxt)
     if (ctxt . GetExecStat() != ES_NORMAL)
         ctxt . Throw();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+#include "module-canvas.h"
+#include "module-canvas-internal.h"
+
+class MCInternalVectorPathGetBBox: public MCStatement
+{
+public:
+	MCInternalVectorPathGetBBox(void)
+	{
+		m_path_string = nil;
+	}
+
+	~MCInternalVectorPathGetBBox(void)
+	{
+		delete m_path_string;
+	}
+
+	Parse_stat parse(MCScriptPoint& sp)
+	{
+		if (sp . parseexp(False, True, &m_path_string) != PS_NORMAL)
+		{
+			MCperror -> add(PE_PUT_BADEXP, sp);
+			return PS_ERROR;
+		}
+
+		return PS_NORMAL;
+	}
+
+    void exec_ctxt(MCExecContext &ctxt)
+    {
+        MCAutoStringRef t_path_string;
+        if (!ctxt.EvalExprAsStringRef(m_path_string, EE_PROPERTY_NAS, &t_path_string))
+            return;
+        
+        MCCanvasPathRef t_canvas_path = nullptr;
+        MCCanvasPathMakeWithInstructionsAsString(*t_path_string, t_canvas_path);
+        if (MCErrorIsPending())
+        {
+            ctxt.Throw();
+            return;
+        }
+        
+        MCGPathRef t_path = MCCanvasPathGetMCGPath(t_canvas_path);
+        MCGRectangle t_bbox;
+        if (!MCGPathGetBoundingBox(t_path, t_bbox))
+        {
+            ctxt.Throw();
+            MCValueRelease(t_canvas_path);
+            return;
+        }
+        
+        MCValueRelease(t_canvas_path);
+        
+        MCAutoStringRef t_bbox_string;
+        if (!MCStringFormat(&t_bbox_string, "%.10lf,%.10lf,%.10lf,%.10lf", t_bbox.origin.x, t_bbox.origin.y, t_bbox.origin.x+t_bbox.size.width, t_bbox.origin.y + t_bbox.size.height))
+        {
+            ctxt.Throw();
+            return;
+        }
+        
+        ctxt.SetTheResultToValue(*t_bbox_string);
+    }
+    
+private:
+    MCExpression *m_path_string;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+template<class T> inline MCStatement *class_factory(void)
+{
+	return new T;
+}
+
+MCInternalVerbInfo MCinternalverbs_base[] =
+{
+	{ "vectorpath", "getbbox", class_factory<MCInternalVectorPathGetBBox> },
+    { nullptr, nullptr, nullptr},
+};
 
 ////////////////////////////////////////////////////////////////////////////////

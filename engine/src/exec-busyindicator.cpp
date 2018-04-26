@@ -31,14 +31,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StartBusyIndicator, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StopBusyIndicator, 0)
-
-MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StartActivityIndicator, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StopActivityIndicator, 0)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCBusyIndicatorElementInfo[] =
 {
 	{ "in line", kMCBusyIndicatorInLine, false },

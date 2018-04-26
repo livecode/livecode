@@ -1,0 +1,216 @@
+%% Copyright (C) 2016 LiveCode Ltd.
+%%
+%% This file is part of LiveCode.
+%%
+%% LiveCode is free software; you can redistribute it and/or modify it under
+%% the terms of the GNU General Public License v3 as published by the Free
+%% Software Foundation.
+%%
+%% LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+%% WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+%% for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+%TEST DecimalIntegerLiterals
+module compiler_test
+constant Valid is [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+constant InvalidPrefix is %{BEFORE_PREFIX}00
+constant InvalidSuffix is %{BEFORE_SUFFIX}100foo
+handler Compute()
+  variable tVar
+  put 100+200 into tVar
+end handler
+end module
+%EXPECT PASS
+%ERROR "Malformed integer literal" AT BEFORE_PREFIX
+%ERROR "Malformed integer literal" AT BEFORE_SUFFIX
+%ENDTEST
+
+%% Note that decimal integer literals are always unsigned
+%TEST DecimalIntegerLiteralRange
+module compiler_test
+constant BiggerThanU8 is %{U8}256
+constant SmallerThanU8 is %{U8S}255
+constant BiggerThanU16 is %{U16}65536
+constant SmallerThanU16 is %{U16S}65535
+constant BiggerThanU32 is %{U32}4294967296
+constant SmallerThanU32 is %{U32S}4294967295
+constant BiggerThanU64 is %{U64}9223372036854775808
+constant SmallerThanU64 is %{U64S}9223372036854775807
+end module
+%EXPECT PASS
+%ERROR "Integer literal too big" at U32
+%ERROR "Integer literal too big" at U64
+%ERROR "Integer literal too big" at U64S
+%ENDTEST
+
+%TEST BinaryIntegerLiterals
+module compiler_test
+constant ValidLower is [ 0b0, 0b1, 0b01, 0b10, 0b010, 0b101 ]
+constant ValidUpper is [ 0B0, 0B1, 0B01, 0B10, 0B010, 0B101 ]
+constant InvalidSuffixLower is %{BEFORE_SUFFIX_LOWER}0b01foo
+constant InvalidSuffixUpper is %{BEFORE_SUFFIX_UPPER}0B01foo
+handler Compute()
+  variable tVar
+  put 0b100+0b001 into tVar
+end handler
+end module
+%EXPECT PASS
+%ERROR "Malformed integer literal" AT BEFORE_SUFFIX_LOWER
+%ERROR "Malformed integer literal" AT BEFORE_SUFFIX_UPPER
+%ENDTEST
+
+%TEST BinaryIntegerLiteralRange
+module compiler_test
+constant BiggerThanU8 is %{U8}0b111111111
+constant SmallerThanU8 is %{U8S}0b011111111
+constant BiggerThanU16 is %{U16}0b11111111111111111
+constant SmallerThanU16 is %{U16S}0b01111111111111111
+constant BiggerThanU32 is %{U32}0b111111111111111111111111111111111
+constant SmallerThanU32 is %{U32S}0b011111111111111111111111111111111
+constant BiggerThanU64 is %{U64}0b11111111111111111111111111111111111111111111111111111111111111111
+constant SmallerThanU64 is %{U64S}0b01111111111111111111111111111111111111111111111111111111111111111
+end module
+%EXPECT PASS
+%ERROR "Integer literal too big" at U32
+%ERROR "Integer literal too big" at U64
+%ERROR "Integer literal too big" at U64S
+%ENDTEST
+
+%TEST HexadecimalIntegerLiterals
+module compiler_test
+constant ValidLower is [ 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa,\
+                         0xb, 0xc, 0xd, 0xe, 0xf, 0x01, 0x10, 0x01, 0x0F, 0xF0 ]
+constant ValidLower is [ 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa,\
+                         0xB, 0xC, 0xD, 0xE, 0xF, 0x01, 0x10, 0x01, 0x0F, 0xF0 ]
+constant InvalidSuffixLower is %{BEFORE_SUFFIX_LOWER}0x01foo
+constant InvalidSuffixUpper is %{BEFORE_SUFFIX_UPPER}0X01foo
+handler Compute()
+  variable tVar
+  put 0x100f+0xf001 into tVar
+end handler
+end module
+%EXPECT PASS
+%ERROR "Malformed integer literal" AT BEFORE_SUFFIX_LOWER
+%ERROR "Malformed integer literal" AT BEFORE_SUFFIX_UPPER
+%ENDTEST
+
+%TEST HexadecimalIntegerLiteralRange
+module compiler_test
+constant BiggerThanU8 is %{U8}0x1FF
+constant SmallerThanU8 is %{U8S}0x0FF
+constant BiggerThanU16 is %{U16}0x1FFFF
+constant SmallerThanU16 is %{U16S}0x0FFFF
+constant BiggerThanU32 is %{U32}0x1FFFFFFFF
+constant SmallerThanU16 is %{U32S}0x0FFFFFFFF
+constant BiggerThanU64 is %{U64}0x1FFFFFFFFFFFFFFFF
+constant SmallerThanU16 is %{U64S}0x0FFFFFFFFFFFFFFFF
+end module
+%EXPECT PASS
+%ERROR "Integer literal too big" at U32
+%ERROR "Integer literal too big" at U64
+%ERROR "Integer literal too big" at U64S
+%ENDTEST
+
+%% The general pattern for real literals is:
+%%    I:Int P:Period F:ZeroesInt E:(Exp PlusMinus Int)
+%% Assuming all are optional then we have the following combinations
+%%    I, IP, IPF, IPFE, IF, IFE, IE, IPE
+%%    P, PF, PFE, PE
+%%    F, FE
+%%    EE
+%% Due to the underlying regex patterns there are the folllowing
+%% combinations which are the same:
+%%    IF == I, IFE == IE
+%% Which leaves the following classification:
+%%    I -- matches as integer
+%%    IP - e.g. 1. -- VALID
+%%    IPF - e.g. 1.1 -- VALID
+%%    IPFE - e.g. 1.1e1 -- VALID
+%%    IE - e.g. 1e1 -- VALID
+%%    IPE - e.g. 1.e1 -- VALID
+%%    P - . -- INVALID
+%%    PF - e.g. .1 -- VALID
+%%    PFE - e.g. .1e1 -- VALID
+%%    PE - .e1 -- INVALID
+%%    F - e.g. 01 -- INVALID
+%%    FE - e.g. 01e1 -- INVALID
+%%    E - e.g. e1 -- matches as identifier
+%%
+%TEST RealLiterals
+module compiler_test
+constant ValidInt is [ 0. , 1. , 10. ]
+constant ValidFrac is [ .0, .1, .00, .10, .01 ]
+constant ValidIntFrac is [ 0.0, 0.1, 0.00, 0.10, 0.01, \
+                          1.0, 1.1, 1.00, 1.10, 1.01, \
+                          10.0, 10.1, 10.00, 10.10, 10.01 ]
+constant ValidExp is [ 0e10, 1e1 , 10e10, 1e1 ]
+constant ValidDecExp is [ 0.e10, 0.e1 , .0e10, .0e1 ]
+constant ValidPosExp is [ 0.e+10, 0.e+1 , .0e+10, .0e+1 ]
+constant ValidNegExp is [ 0.e-10, 0.e-1 , .0e-10, .0e-1 ]
+
+constant Invalid_PE is %{INVALID_PE}.e1
+constant Invalid_F is %{INVALID_F}01
+constant Invalid_FE is %{INVALID_FE}01e1
+
+constant InvalidInt is [ %{INVALID_INT}01. ]
+constant InvalidIntFrac is [ %{INVALID_INTFRAC}01.0 ]
+constant InvalidExp is [ %{INVALID_EXP1}00e10, %{INVALID_EXP2}0e010 ]
+
+constant IntSuffix is %{INT_SUFFIX}0.foo
+constant FracSuffix is %{FRAC_SUFFIX}.0foo
+constant IntFracSuffix is %{INTFRAC_SUFFIX}0.1foo
+constant ExpSuffix is %{EXP_SUFFIX}0e10foo
+constant DecExpSuffix is %{DECEXP_SUFFIX}.0e1foo
+constant PosExpSuffix is %{POSEXP_SUFFIX}.0e+1foo
+constant NegExpSuffix is %{NEGEXP_SUFFIX}.0e-1foo
+
+constant IntDotSuffix is %{INTDOT_SUFFIX}0..
+constant FracDotSuffix is %{FRACDOT_SUFFIX}.0.
+constant IntFracDotSuffix is %{INTFRACDOT_SUFFIX}0.1.
+constant ExpDotSuffix is %{EXPDOT_SUFFIX}0e10.
+constant DecExpDotSuffix is %{DECEXPDOT_SUFFIX}.0e1.
+constant PosExpDotSuffix is %{POSEXPDOT_SUFFIX}.0e+1.
+constant NegExpDotSuffix is %{NEGEXPDOT_SUFFIX}.0e-1.
+
+end module
+%EXPECT PASS
+%ERROR "Malformed real literal" AT INVALID_PE
+%ERROR "Malformed integer literal" AT INVALID_F
+%ERROR "Malformed real literal" AT INVALID_FE
+
+%ERROR "Malformed real literal" AT INVALID_INT
+%ERROR "Malformed real literal" AT INVALID_INTFRAC
+%ERROR "Malformed real literal" AT INVALID_EXP1
+%ERROR "Malformed real literal" AT INVALID_EXP2
+
+%ERROR "Malformed real literal" AT INT_SUFFIX
+%ERROR "Malformed real literal" AT FRAC_SUFFIX
+%ERROR "Malformed real literal" AT INTFRAC_SUFFIX
+%ERROR "Malformed real literal" AT EXP_SUFFIX
+%ERROR "Malformed real literal" AT DECEXP_SUFFIX
+%ERROR "Malformed real literal" AT POSEXP_SUFFIX
+%ERROR "Malformed real literal" AT NEGEXP_SUFFIX
+
+%ERROR "Malformed real literal" AT INTDOT_SUFFIX
+%ERROR "Malformed real literal" AT FRACDOT_SUFFIX
+%ERROR "Malformed real literal" AT INTFRACDOT_SUFFIX
+%ERROR "Malformed real literal" AT EXPDOT_SUFFIX
+%ERROR "Malformed real literal" AT DECEXPDOT_SUFFIX
+%ERROR "Malformed real literal" AT POSEXPDOT_SUFFIX
+%ERROR "Malformed real literal" AT NEGEXPDOT_SUFFIX
+%ENDTEST
+
+%TEST RealLiteralRange
+module compiler_test
+constant BiggerThanFloat is %{BIGF}3.40282347E+39
+constant SmallerThanFloat is %{SMALLF}3.40282347E+38
+constant BiggerThanDouble is %{BIGD}1.7976931348623157E+309
+constant SmallerThanDouble is %{SMALLD}1.7976931348623157E+308
+end module
+%EXPECT PASS
+%ERROR "Real literal too big" at BIGD
+%ENDTEST

@@ -694,7 +694,9 @@ void MCPlayer::SetBorderWidth(MCExecContext& ctxt, uinteger_t width)
 
 void MCPlayer::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 {
+#ifndef FEATURE_PLATFORM_PLAYER
     uint4 oldflags = flags;
+#endif
 	MCControl::SetVisible(ctxt, part, setting);
     
     // PM-2015-07-01: [[ Bug 15191 ]] Keep the LC 6.7 behaviour in non-platform player, to make the video layer to hide 

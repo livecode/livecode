@@ -135,26 +135,25 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 
-		MCAutoNameRef t_token_name;
-		/* UNCHECKED */ t_token_name . Clone(sp . gettoken_nameref());
+		MCNewAutoNameRef t_token_name = sp . gettoken_nameref();
 
 		// MW-2013-11-08: [[ RefactorIt ]] The 'it' variable is always present now,
 		//   so there's no need to 'local it'. However, scripts do contain this so
 		//   don't do a check for an existing var in this case.
-		if (!MCNameIsEqualTo(t_token_name, MCN_it, kMCCompareCaseless))
+		if (!MCNameIsEqualToCaseless(*t_token_name, MCN_it))
 		{
 			MCExpression *e = NULL;
 			MCVarref *v = NULL;
 			if (sp.gethandler() == NULL)
 				if (constant)
-					sp.gethlist()->findconstant(t_token_name, &e);
+					sp.gethlist()->findconstant(*t_token_name, &e);
 				else
-					sp.gethlist()->findvar(t_token_name, false, &v);
+					sp.gethlist()->findvar(*t_token_name, false, &v);
 			else
 				if (constant)
-					sp.gethandler()->findconstant(t_token_name, &e);
+					sp.gethandler()->findconstant(*t_token_name, &e);
 				else
-					sp.gethandler()->findvar(t_token_name, &v);
+					sp.gethandler()->findvar(*t_token_name, &v);
 			if (e != NULL || v != NULL)
 			{
 				MCperror->add(PE_LOCAL_SHADOW, sp);
@@ -245,8 +244,8 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 		if (sp.gethandler() == NULL)
 		{
 			if (constant)
-				sp.gethlist()->newconstant(t_token_name, *t_init_value);
-			else if (sp.gethlist()->newvar(t_token_name, *t_init_value, &tvar, initialised) != PS_NORMAL)
+				sp.gethlist()->newconstant(*t_token_name, *t_init_value);
+			else if (sp.gethlist()->newvar(*t_token_name, *t_init_value, &tvar, initialised) != PS_NORMAL)
 				{
 					MCperror->add(PE_LOCAL_BADNAME, sp);
 					return PS_ERROR;
@@ -254,8 +253,8 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 
 		}
 		else if (constant)
-			sp.gethandler()->newconstant(t_token_name, *t_init_value);
-		else if (sp.gethandler()->newvar(t_token_name, *t_init_value, &tvar) != PS_NORMAL)
+			sp.gethandler()->newconstant(*t_token_name, *t_init_value);
+		else if (sp.gethandler()->newvar(*t_token_name, *t_init_value, &tvar) != PS_NORMAL)
 				{
 					MCperror->add(PE_LOCAL_BADNAME, sp);
 					return PS_ERROR;
@@ -318,9 +317,9 @@ Parse_stat MCIf::parse(MCScriptPoint &sp)
 				if (needstatement)
 				{
 					if (type == ST_ID)
-						newstatement = new MCComref(sp.gettoken_nameref());
+						newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 					else if (type == ST_DATA)
-						newstatement = new MCEcho;
+						newstatement = new (nothrow) MCEcho;
 					else
 					{
 						MCperror->add(PE_IF_NOTCOMMAND, sp);
@@ -739,11 +738,11 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 		{
 		case PS_NORMAL:
 			if (type == ST_DATA)
-				newstatement = new MCEcho;
+				newstatement = new (nothrow) MCEcho;
 			else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 			{
 				if (type == ST_ID)
-					newstatement = new MCComref(sp.gettoken_nameref());
+					newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 				else
 				{
 					MCperror->add
@@ -1019,11 +1018,11 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 		{
 		case PS_NORMAL:
 			if (type == ST_DATA)
-				newstatement = new MCEcho;
+				newstatement = new (nothrow) MCEcho;
 			else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 			{
 				if (type == ST_ID)
-					newstatement = new MCComref(sp.gettoken_nameref());
+					newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 				else
 				{
 					MCperror->add
@@ -1177,11 +1176,11 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 		{
 		case PS_NORMAL:
 			if (type == ST_DATA)
-				newstatement = new MCEcho;
+				newstatement = new (nothrow) MCEcho;
 			else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 			{
 				if (type == ST_ID)
-					newstatement = new MCComref(sp.gettoken_nameref());
+					newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 				else
 				{
 					MCperror->add
@@ -1212,12 +1211,10 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 						return PS_ERROR;
 					}
 					continue;
-					break;
 				case TT_FINALLY:
 					state = TS_FINALLY;
 					curstatement = NULL;
 					continue;
-					break;
 				case TT_END:
 					if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_TRY) != PS_NORMAL)
 					{

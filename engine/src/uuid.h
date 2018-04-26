@@ -46,11 +46,11 @@ bool MCUuidGenerateRandom(MCUuid& r_uuid);
 
 // Generate a (non-random) type v3 UUID using the given name and namespace
 // id.
-void MCUuidGenerateMD5(const MCUuid& namespace_id, const MCString& name, MCUuid& r_uuid);
+void MCUuidGenerateMD5(const MCUuid& namespace_id, MCStringRef name, MCUuid& r_uuid);
 
 // Generate a (non-random) type v4 UUID using the given name and namespace
 // id.
-void MCUuidGenerateSHA1(const MCUuid& namespace_id, const MCString& name, MCUuid& r_uuid);
+void MCUuidGenerateSHA1(const MCUuid& namespace_id, MCStringRef name, MCUuid& r_uuid);
 
 // Convert a UUID to a string. The output buffer is expected to be at
 // least 37 bytes long.

@@ -18,10 +18,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 
 on TestSetup
-   -- Only run these tests on desktop platforms
-   if the platform is not among the items of "MacOS,Linux" then
-      return "SKIP Tests are not runnable on" && the platform
-   end if
+   TestSkipIfNot "platform", "MacOS,Linux"
+   TestSkipIf "stack", "StandaloneTestRunnerMainstack"
    
    local tBuilderUtilities
    put TestGetEngineRepositoryPath() & "/builder/builder_utilities.livecodescript" into tBuilderUtilities
@@ -45,7 +43,7 @@ on TestMergExtURL
       local tURL
       put builderMergExtUrl(tVersion,tEdition) into tURL
       
-      get shell("curl  -s -o /dev/null -IL -w" && quote & "%{http_code}" & quote && tURL)
+      get shell("curl -k -s -o /dev/null -IL -w" && quote & "%{http_code}" & quote && tURL)
       TestAssert "mergExt" && tEdition && "url is valid", it is 200
    end repeat
 end TestMergExtURL
@@ -59,7 +57,7 @@ on TestTSNetURL
       local tURL
       put builderTSNetUrl(tVersion, tEdition) into tURL
       
-      get shell("curl  -s -o /dev/null -IL -w" && quote & "%{http_code}" & quote && tURL)
+      get shell("curl -k -s -o /dev/null -IL -w" && quote & "%{http_code}" & quote && tURL)
       TestAssert "tsNet" && tEdition && "url is valid", it is 200
    end repeat
 end TestTSNetURL

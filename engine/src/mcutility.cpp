@@ -52,7 +52,7 @@ char *strclone(const char *one)
 	char *two = NULL;
 	if (one != NULL)
 	{
-		two = new char[strlen(one) + 1];
+		two = new (nothrow) char[strlen(one) + 1];
 		strcpy(two, one);
 	}
 	return two;
@@ -60,7 +60,7 @@ char *strclone(const char *one)
 
 char *strclone(const char *one, uint4 length)
 {
-	char *two = new char[length + 1];
+	char *two = new (nothrow) char[length + 1];
 	memcpy(two, one, length);
 	two[length] = '\0';
 	return two;
@@ -158,7 +158,7 @@ MCString::MCString(const char *s)
 
 char *MCString::clone() const
 {
-	char *dptr = new char[length + 1];
+	char *dptr = new (nothrow) char[length + 1];
 	memcpy(dptr, sptr, length);
 	dptr[length] = '\0';
 	return dptr;

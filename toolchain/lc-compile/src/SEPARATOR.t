@@ -1,4 +1,4 @@
-\\(\n|\r|\r\n) {
+\\[ \t]*(\n|\r|\r\n) {
     AdvanceCurrentPosition(1);
     AdvanceCurrentPositionToNextRow();
 }

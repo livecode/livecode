@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 	if (t_success && t_interface != nil)
 		t_success = InterfaceGenerate(t_interface, argv[2]);
 
-#if 0
+#if DUMP_TOKENS
 	while(t_success)
 	{
 		const Token *t_token;

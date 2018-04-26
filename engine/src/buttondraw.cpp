@@ -125,12 +125,12 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		Boolean macoption = IsMacEmulatedLF() && style == F_MENU
 		                    && (menumode == WM_OPTION || menumode == WM_COMBO);
 		Boolean white = MClook != LF_MOTIF && !macoption && !(t_isvista && style == F_MENU && menumode == WM_OPTION)
-		                && (style == F_MENU && (menumode == WM_OPTION || menumode == WM_COMBO)
-		                    || flags & F_AUTO_ARM && state & CS_ARMED
-		                    && !(flags & F_SHOW_BORDER));
+		                && ((style == F_MENU && (menumode == WM_OPTION || menumode == WM_COMBO))
+		                    || (flags & F_AUTO_ARM && state & CS_ARMED
+		                    && !(flags & F_SHOW_BORDER)));
 		if (flags & F_3D && MClook == LF_WIN95
 		        && state & CS_HILITED && (style == F_STANDARD
-		                                  || indicator && flags & F_SHOW_ICON))
+		                                  || (indicator && flags & F_SHOW_ICON)))
 			loff = 1;
 
 		if (style == F_MENU && menumode == WM_PULLDOWN && MCcurtheme != NULL &&
@@ -152,10 +152,10 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		else
 		{
 		if (flags & F_OPAQUE && (MCcurtheme == NULL || !noback
-		                         || (style == F_STANDARD && (MCcurtheme != NULL &&
-		                                                     !MCcurtheme->iswidgetsupported(WTHEME_TYPE_PUSHBUTTON)) ||
-		                             style == F_RECTANGLE && (MCcurtheme != NULL &&
-		                                                      !MCcurtheme->iswidgetsupported(WTHEME_TYPE_BEVELBUTTON)))
+		                         || ((style == F_STANDARD && (MCcurtheme != NULL &&
+		                                                     !MCcurtheme->iswidgetsupported(WTHEME_TYPE_PUSHBUTTON))) ||
+		                             (style == F_RECTANGLE && (MCcurtheme != NULL &&
+		                                                      !MCcurtheme->iswidgetsupported(WTHEME_TYPE_BEVELBUTTON))))
 		                         || !(flags & F_SHOW_BORDER)
 		                         || flags & F_SHADOW))
 		{//define when to not draw using themes
@@ -169,16 +169,15 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				if (flags & F_SHOW_BORDER)
 					trect = MCU_reduce_rect(trect, borderwidth >> 1);
 			setforeground(dc, DI_BACK,
-			              (state & CS_HILITED && flags & F_HILITE_FILL
-			               || state & CS_ARMED && flags & F_ARM_FILL
-			               || state & CS_ARMED && !(flags & F_SHOW_BORDER)
-
-			               && MClook != LF_MOTIF) && loff == 0
-			              && (flags & F_SHOW_ICON || !indicator)
-			              || white && state & CS_KFOCUSED && !(state & CS_SUBMENU)
-			              || macoption && state & CS_SUBMENU,
-			              (white || state & CS_ARMED && !(flags & F_SHOW_BORDER))
-			              && !macoption);
+			              (((state & CS_HILITED && flags & F_HILITE_FILL)
+			               || (state & CS_ARMED && flags & F_ARM_FILL)
+			               || (state & CS_ARMED && !(flags & F_SHOW_BORDER)
+			               && MClook != LF_MOTIF)) && loff == 0
+			              && (flags & F_SHOW_ICON || !indicator))
+			              || (white && state & CS_KFOCUSED && !(state & CS_SUBMENU))
+			              || (macoption && state & CS_SUBMENU),
+                          (white || ((state & CS_ARMED && !(flags & F_SHOW_BORDER))
+                                     && !macoption)));
 			switch (style)
 			{
 			case F_MENU:
@@ -197,8 +196,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 						trect = MCU_reduce_rect(trect, 1);
 						if (state & CS_HILITED)
 						{
-							uint2 i;
-							if (getcindex(DI_HILITE, i) || getpindex(DI_HILITE, i))
+                            uint2 t_index;
+							if (getcindex(DI_HILITE, t_index) || getpindex(DI_HILITE, t_index))
 								setforeground(dc, DI_HILITE, False, False);
 							else
 								dc->setforeground(dc->getgray());
@@ -247,9 +246,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			switch (menumode)
 			{
 			case WM_PULLDOWN:
-				if (state & CS_ARMED && !(flags & F_SHOW_BORDER) &&
-				        (MClook == LF_MOTIF || MCcurtheme &&
-				         MCcurtheme->getthemeid() == LF_NATIVEGTK)
+                    if ((state & CS_ARMED && !(flags & F_SHOW_BORDER) &&
+                         (MClook == LF_MOTIF || (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEGTK)))
 				        || flags & F_SHOW_BORDER)
 					drawpulldown(dc, shadowrect);
 				break;
@@ -272,9 +270,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				drawshadow(dc, rect, shadowoffset);
 			if (flags & F_3D)
 			{
-				if (state & CS_HILITED && flags & F_HILITE_BORDER
-				        || flags & F_AUTO_ARM && state & CS_ARMED && flags & F_ARM_BORDER
-				        && !indicator && MClook == LF_MOTIF)
+				if ((state & CS_HILITED && flags & F_HILITE_BORDER)
+				        || (flags & F_AUTO_ARM && state & CS_ARMED && flags & F_ARM_BORDER
+				        && !indicator && MClook == LF_MOTIF))
 					if (isstdbtn && noback)
 						drawstandardbutton(dc, shadowrect);
 					else
@@ -288,8 +286,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 							draw3d(dc, shadowrect, flags & F_SHOW_BORDER ? ETCH_SUNKEN_BUTTON
 							       : ETCH_RAISED, borderwidth);
 				else
-					if (flags & F_SHOW_BORDER || MClook == LF_MOTIF
-					        && state & (CS_ARMED | CS_KFOCUSED) && flags & F_ARM_BORDER)
+					if (flags & F_SHOW_BORDER || (MClook == LF_MOTIF
+					        && (state & (CS_ARMED | CS_KFOCUSED)) && flags & F_ARM_BORDER))
 					{
 						if (isstdbtn && noback)
 							drawstandardbutton(dc, shadowrect);
@@ -297,7 +295,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 						{
 							uint2 bwidth = borderwidth;
 							draw3d(dc, shadowrect, shadowrect.height <= bwidth
-							       || state & CS_HILITED && flags & F_HILITE_BORDER
+							       || (state & CS_HILITED && flags & F_HILITE_BORDER)
 							       ? ETCH_SUNKEN_BUTTON : ETCH_RAISED, bwidth);
 						}
 					}
@@ -321,9 +319,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 
 			}
 			else
-				if (state & CS_HILITED && flags & F_HILITE_BORDER
+				if ((state & CS_HILITED && flags & F_HILITE_BORDER)
 				        || flags & F_SHOW_BORDER
-				        || state & (CS_ARMED | CS_KFOCUSED) && flags & F_ARM_BORDER)
+				        || ((state & (CS_ARMED | CS_KFOCUSED)) && flags & F_ARM_BORDER))
 					drawborder(dc, shadowrect, borderwidth);
 			break;
 		case F_ROUNDRECT:
@@ -339,9 +337,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			}
 			break;
 		case F_OVAL_BUTTON:
-			if (state & CS_HILITED && flags & F_HILITE_BORDER
+			if ((state & CS_HILITED && flags & F_HILITE_BORDER)
 			        || flags & F_SHOW_BORDER
-			        || state & (CS_ARMED | CS_KFOCUSED) && flags & F_ARM_BORDER)
+			        || ((state & (CS_ARMED | CS_KFOCUSED)) && flags & F_ARM_BORDER))
 			{
 				setforeground(dc, DI_FORE, False);
 				dc->drawarc(shadowrect, 0, 360);
@@ -371,15 +369,15 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				(MClook != LF_MOTIF && style == F_MENU && flags & F_OPAQUE && state & CS_ARMED && !(flags & F_SHOW_BORDER)))
 				setforeground(dc, DI_PSEUDO_BUTTON_TEXT_SEL, False, True);
 			else
-				setforeground(dc, DI_FORE, (state & CS_HILITED && flags & F_HILITE_FILL
-				                            || state & CS_ARMED && flags & F_ARM_FILL) && flags & F_OPAQUE && ((MClook != LF_WIN95 && !MCaqua)
+				setforeground(dc, DI_FORE, ((state & CS_HILITED && flags & F_HILITE_FILL)
+				                            || ((state & CS_ARMED && flags & F_ARM_FILL) && flags & F_OPAQUE && ((MClook != LF_WIN95 && !MCaqua)))
 				                            || style != F_STANDARD), False);
         }
 		}
 
 		// MW-2009-06-14: We will assume (perhaps unwisely) that is 'opaque' is set
 		//   then the background is now, completely opaque.
-		bool t_was_opaque;
+		bool t_was_opaque = false;
 		if (getflag(F_OPAQUE))
 			t_was_opaque = dc -> changeopaque(true);
 
@@ -445,7 +443,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
             }
             
             coord_t starty = sy;
-            uint2 i;
+            uint2 t_line;
             coord_t twidth = 0;
             
             dc->save();
@@ -479,11 +477,11 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			}
 			
 			uindex_t t_totallen = 0;
-			for (i = 0 ; i < nlines ; i++)
+			for (t_line = 0 ; t_line < nlines ; t_line++)
 			{
 				// Note: 'lines' is an array of strings
 				MCValueRef lineval = nil;
-				/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, lineval);
+				/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, t_line + 1, lineval);
 				MCStringRef line = (MCStringRef)(lineval);
                 // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
                 twidth = MCFontMeasureTextFloat(m_font, line, getstack() -> getdevicetransform());
@@ -498,7 +496,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				{
 				case F_ALIGN_LEFT:
 				case F_ALIGN_JUSTIFY:
-					if (i == 0)
+					if (t_line == 0)
 					{
 						if (indicator && !(flags & F_SHOW_ICON))
 						{
@@ -510,8 +508,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 							}
 						}
 						if (MCaqua && IsMacLFAM()
-						        && ((style == F_STANDARD && noback)|| style == F_MENU
-						            && menumode == WM_OPTION))
+                            && ((style == F_STANDARD && noback)|| (style == F_MENU
+                                                                   && menumode == WM_OPTION)))
 							sx += 5;
 					}
 					break;
@@ -520,7 +518,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					if (menumode == WM_OPTION || menumode == WM_COMBO)
 						sx -= optionrect.width;
 					// MH-2007-03-16 [[ Bug 3598 ]] Centering of the label did not work correctly on mac os classic and non vista windows option buttons.
-					if (menumode == WM_OPTION && (MClook == LF_WIN95 && !t_themed_menu || MClook == LF_MAC))
+					if (menumode == WM_OPTION && ((MClook == LF_WIN95 && !t_themed_menu) || MClook == LF_MAC))
 						sx = t_content_rect . x + (t_content_rect . width - leftmargin) / 2 - twidth / 2;
 					if (menumode == WM_CASCADE)
 						sx -= rect.height >> 1;
@@ -564,7 +562,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 
 				if (getstyleint(flags) == F_MENU && menumode == WM_CASCADE && !t_themed_menu)
 					drawcascade(dc, shadowrect); // draw arrow in text color
-				if (flags & F_DISABLED && MClook == LF_WIN95 || t_themed_menu)
+				if ((flags & F_DISABLED && MClook == LF_WIN95) || t_themed_menu)
 					setforeground(dc, DI_TOP, False);
 				sy += fheight;
 				
@@ -869,7 +867,6 @@ void MCButton::drawradio(MCDC *dc, MCRectangle &srect, Boolean white)
 	if (!(flags & F_AUTO_ARM) && MCcurtheme &&
 	        MCcurtheme->iswidgetsupported(WTHEME_TYPE_RADIOBUTTON))
 	{
-		MCRectangle trect;
 		if (!IsNativeGTK())
 		{
 			trect.x = srect.x + leftmargin - 2;
@@ -1519,7 +1516,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				twidth += 12;
 				uint2 index;
 				if (i + 1 == menuhistory
-				        || !getcindex(DI_SHADOW, index) && !getpindex(DI_SHADOW, index))
+				        || (!getcindex(DI_SHADOW, index) && !getpindex(DI_SHADOW, index)))
 					setforeground(dc, DI_BACK, False); //fill with background color
 				else
 					setforeground(dc, DI_SHADOW, False);

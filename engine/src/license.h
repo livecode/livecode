@@ -45,6 +45,7 @@ enum
 	kMCLicenseDeployToIOSEmbedded = 1 << 8,
 	kMCLicenseDeployToAndroidEmbedded = 1 << 9,
     kMCLicenseDeployToHTML5 = 1 << 10,
+    kMCLicenseDeployToFileMaker = 1 << 11,
 };
 
 enum MCLicenseClass
@@ -78,6 +79,11 @@ struct MCLicenseParameters
 
 extern MCLicenseParameters MClicenseparameters;
 extern Boolean MCenvironmentactive;
+
+void MCLicenseSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings);
+void MCLicenseGetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef& r_limits);
+void MCLicenseGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info);
+void MCLicenseGetRevLicenseInfoByKey(MCExecContext& ctxt, MCNameRef p_key, MCArrayRef& r_info);
 
 static const struct { MCLicenseClass license_class; const char *class_string; const char *edition_string; } s_class_map[] =
 {
@@ -146,6 +152,20 @@ inline bool MCEditionStringFromLicenseClass(MCLicenseClass p_class, MCStringRef 
         if (s_class_map[t_index].license_class == p_class)
         {
             return MCStringCreateWithCString(s_class_map[t_index].edition_string, r_edition);
+        }
+    }
+    
+    return false;
+}
+
+inline bool MCEditionStringToLicenseClass(MCStringRef p_edition, MCLicenseClass &r_class)
+{
+    for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
+    {
+        if (MCStringIsEqualToCString(p_edition, s_class_map[t_index].edition_string, kMCCompareCaseless))
+        {
+            r_class = s_class_map[t_index].license_class;
+            return true;
         }
     }
     

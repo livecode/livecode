@@ -104,10 +104,10 @@ MCColor MCObject::maccolors[MAC_NCOLORS] = {
         };
 
 MCObject::MCObject()
+    : _name(kMCEmptyName)
 {
 	parent = nil;
 	obj_id = 0;
-	/* UNCHECKED */ MCNameClone(kMCEmptyName, _name);
 	flags = F_VISIBLE | F_SHOW_BORDER | F_3D | F_OPAQUE;
 	fontheight = 0;
 	dflags = 0;
@@ -175,14 +175,14 @@ MCObject::MCObject()
     MCDeletedObjectsOnObjectCreated(this);
 }
 
-MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
+MCObject::MCObject(const MCObject &oref)
+    : MCDLlist(oref),
+      _name(oref._name)
 {
 	if (!oref.parent)
 		parent = MCdefaultstackptr;
 	else
 		parent = oref.parent;
-	
-	/* UNCHECKED */ MCNameClone(oref . getname(), _name);
 	
 	obj_id = 0;
 	rect = oref.rect;
@@ -192,8 +192,8 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	ncolors = oref.ncolors;
 	if (ncolors > 0)
 	{
-		colors = new MCColor[ncolors];
-		colornames = new MCStringRef[ncolors];
+		colors = new (nothrow) MCColor[ncolors];
+		colornames = new (nothrow) MCStringRef[ncolors];
 		uint2 i;
 		for (i = 0 ; i < ncolors ; i++)
 		{
@@ -301,7 +301,6 @@ MCObject::~MCObject()
 	IO_freeobject(this);
 	MCundos->freeobject(this);
 	delete hlist;
-	MCNameDelete(_name);
 	delete[] colors; /* Allocated with new[] */
 	if (colornames != nil)
 	{
@@ -346,19 +345,19 @@ const char *MCObject::gettypestring()
 // Object names are always compared effectively.
 bool MCObject::hasname(MCNameRef p_other_name)
 {
-	return MCNameIsEqualTo(getname(), p_other_name, kMCCompareCaseless);
+	return MCNameIsEqualToCaseless(getname(), p_other_name);
 }
 
 void MCObject::setname(MCNameRef p_new_name)
 {
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameClone(p_new_name, _name);
+	_name.Reset(p_new_name);
 }
 
 void MCObject::setname_cstring(const char *p_new_name)
 {
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, _name);
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)p_new_name, strlen(p_new_name), &t_name);
+	setname(*t_name);
 }
 
 void MCObject::setscript(MCStringRef p_script)
@@ -548,7 +547,7 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 			return True;
         break;
     default:
-		MCAutoStringRef t_string;
+		MCAutoStringRef t_key_string;
 			
 		// Special keys as their number converted to a string, the rest by value
         // SN-2014-12-08: [[ Bug 12681 ]] Avoid to print the keycode in case we have a
@@ -556,26 +555,26 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
         // SN-2015-05-05: [[ Bug 15305 ]] Ensure that the keys are not printing
         //  their numeric value, if not wanted.
         if (key > 0xFF && (key & XK_Class_mask) == XK_Class_compat && (key < XK_KP_Space || key > XK_KP_Equal))
-            /* UNCHECKED */ MCStringFormat(&t_string, "%ld", key);
+            /* UNCHECKED */ MCStringFormat(&t_key_string, "%ld", key);
         else if (MCmodifierstate & MS_CONTROL)
-            /* UNCHECKED */ MCStringFormat(&t_string, "%c", (char)key);
+            /* UNCHECKED */ MCStringFormat(&t_key_string, "%c", (char)key);
 		else
-			t_string = p_string;
+			t_key_string = p_string;
 			
 		if (MCmodifierstate & MS_CONTROL)
         {
-			if (message_with_valueref_args(MCM_command_key_down, *t_string) == ES_NORMAL)
+			if (message_with_valueref_args(MCM_command_key_down, *t_key_string) == ES_NORMAL)
 				return True;
 		}
 		else if (MCmodifierstate & MS_MOD1)
         {
-				if (message_with_valueref_args(MCM_option_key_down, *t_string) == ES_NORMAL)
+				if (message_with_valueref_args(MCM_option_key_down, *t_key_string) == ES_NORMAL)
 				return True;
         }
 #ifdef _MACOSX
 		else if (MCmodifierstate & MS_MAC_CONTROL)
         {
-			if (message_with_valueref_args(MCM_control_key_down, *t_string) == ES_NORMAL)
+			if (message_with_valueref_args(MCM_control_key_down, *t_key_string) == ES_NORMAL)
 				return True;
         }
 #endif
@@ -783,7 +782,7 @@ Boolean MCObject::doubleup(uint2 which)
 
 void MCObject::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_idle, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 	{
 		if (opened && hashandlers & HH_IDLE
 		        && getstack()->gettool(this) == T_BROWSE)
@@ -820,7 +819,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
                 domess(*t_mptr_string);
 
 		}
-		if (stat == ES_ERROR && !MCNameIsEqualTo(mptr, MCM_error_dialog, kMCCompareCaseless))
+		if (stat == ES_ERROR && !MCNameIsEqualToCaseless(mptr, MCM_error_dialog))
 			senderror();
 	}
 }
@@ -897,12 +896,14 @@ Boolean MCObject::del(bool p_check_flag)
 
 void MCObject::paste(void)
 {
-	fprintf(stderr, "Object: ERROR tried to paste %s\n", getname_cstring());
+	MCLog("Object: tried to paste %@", getname());
+	MCUnreachable();
 }
 
 void MCObject::undo(Ustruct *us)
 {
-	fprintf(stderr, "Object: ERROR tried to undo %s\n", getname_cstring());
+	MCLog("Object:: tried to paste %@", getname());
+	MCUnreachable();
 }
 
 void MCObject::freeundo(Ustruct *us)
@@ -951,9 +952,9 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 		//   differently.
 		if (hptr -> getfileindex() == 0)
         {
-            MCExecContext ctxt(this, nil, nil);
+            MCExecContext ctxt2(this, nil, nil);
             MCAutoStringRef t_id;
-			getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+			getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
             MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 		}
 		else
@@ -1002,9 +1003,9 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
     {
-        MCExecContext ctxt(this, nil, nil);
+        MCExecContext ctxt2(this, nil, nil);
         MCAutoStringRef t_id;
-        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
         MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
 	t_parentscript_object->unlockforexecution();
@@ -1606,7 +1607,7 @@ Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
 			c = MCscreen->getblack();
 		break;
 	case DI_BACK:
-#ifdef _MACOSX
+#ifdef _MAC_DESKTOP
 		if (IsMacLFAM() && dc_type != CONTEXT_TYPE_PRINTER)
 		{
 			extern bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern);
@@ -1745,18 +1746,17 @@ Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 Boolean MCObject::setpatterns(MCStringRef data)
 {
 	uint2 p;
-	Boolean done = False;
-    uindex_t t_start_pos, t_end_pos;
+	uindex_t t_start_pos, t_end_pos;
     t_start_pos = 0;
     t_end_pos = t_start_pos;
 	for (p = P_FORE_PATTERN ; p <= P_FOCUS_PATTERN ; p++)
 	{
 		MCAutoStringRef t_substring;
         if (!MCStringFirstIndexOfChar(data, '\n', t_start_pos, kMCCompareExact, t_end_pos))
-            MCStringCopySubstring(data, MCRangeMake(t_start_pos, MCStringGetLength(data) - t_start_pos), &t_substring);
+            MCStringCopySubstring(data, MCRangeMakeMinMax(t_start_pos, MCStringGetLength(data)), &t_substring);
         else
         {
-            MCStringCopySubstring(data, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &t_substring);
+            MCStringCopySubstring(data, MCRangeMakeMinMax(t_start_pos, t_end_pos), &t_substring);
             t_start_pos = t_end_pos + 1;
         }
             
@@ -1789,8 +1789,8 @@ uint2 MCObject::createcindex(uint2 di)
 	MCColor *oldcolors = colors;
 	MCStringRef *oldnames = colornames;
 	ncolors++;
-	colors = new MCColor[ncolors];
-	colornames = new MCStringRef[ncolors];
+	colors = new (nothrow) MCColor[ncolors];
+	colornames = new (nothrow) MCStringRef[ncolors];
 	uint2 ri = 0;
 	uint2 i = 0;
 	uint2 c = 0;
@@ -1942,10 +1942,10 @@ uint32_t MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 	{
 		if (this != MCdispatcher)
 		{
-			if (!parent)
-				t_explicit_flags = MCdefaultstackptr -> getfontattsnew(fname, size, style);
-			else
+			if (parent)
 				t_explicit_flags = parent -> getfontattsnew(fname, size, style);
+            else if (MCdefaultstackptr)
+                t_explicit_flags = MCdefaultstackptr -> getfontattsnew(fname, size, style);
 		}
 
         MCFontRef t_default_font;
@@ -2123,10 +2123,6 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	MCStackHandle t_stack = getstack();
 	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || !parent || (flags & F_DISABLED && t_stack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
 			return ES_NOT_HANDLED;
-
-    // AL-2013-01-14: [[ Bug 11343 ]] Moved check and time addition to MCCard::mdown methods.
-	//if (MCNameIsEqualTo(mess, MCM_mouse_down, kMCCompareCaseless) && hashandlers & HH_MOUSE_STILL_DOWN)
-    //	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 
 	MCscreen->flush(t_stack->getw());
 	
@@ -2348,8 +2344,8 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 	};
 	enum { max_htype = (sizeof(htypes)/sizeof(htypes[0])) - 1 };
     
-	MCAssert(htype <= max_htype);
-	MCStaticAssert(max_htype == HT_MAX);
+	MCAssert(htype <= Handler_type(max_htype));
+	MCStaticAssert(Handler_type(max_htype) == HT_MAX);
     MCmessagemessages = False;
 
     MCExecContext ctxt(this, nil, nil);
@@ -2374,7 +2370,9 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
     MCAutoPointer<char[]> tmptypestring;
     if (parent && gettype() >= CT_BUTTON && getstack()->hcaddress())
     {
-        tmptypestring = new char[strlen(itypestring) + 7];
+        tmptypestring.Reset(new (nothrow) char[strlen(itypestring) + 7]);
+        if (!tmptypestring)
+            return false;
         if (parent->gettype() == CT_GROUP)
             sprintf(*tmptypestring, "%s %s", "bkgnd", itypestring);
         else
@@ -2389,10 +2387,11 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
         case P_ABBREV_ID:
             return MCStringFormat(r_name, "%s id %d", itypestring, obj_id);
             
-            // The stack object has its own version of long * which we check for here. We
-            // could make 'names()' virtual and do this that way, but since there shouldn't
-            // really be an exception to how id is formatted (and there won't be for any
-            // future object types) we handle it here.
+        // The stack object has its own version of long * which we check for here. We
+        // could make 'names()' virtual and do this that way, but since there shouldn't
+        // really be an exception to how id is formatted (and there won't be for any
+        // future object types) we handle it here.
+        case P_LONG_NAME_NO_FILENAME:
         case P_LONG_NAME:
         case P_LONG_ID:
             if (gettype() == CT_STACK)
@@ -2402,7 +2401,11 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
                 
                 MCStringRef t_filename;
                 t_filename = t_this -> getfilename();
-                if (MCStringIsEmpty(t_filename))
+                
+                /* If the property type is 'NO_FILENAME' then we resolve the name
+                 * of the mainstack, and not its filename. */
+                if (MCStringIsEmpty(t_filename) ||
+                    which == P_LONG_NAME_NO_FILENAME)
                 {
                     if (MCdispatcher->ismainstack(t_this))
                     {
@@ -2426,7 +2429,7 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
             //   but *only* for this control (continue with names the rest of the way).
             Properties t_which_requested;
             t_which_requested = which;
-            if (which == P_LONG_NAME && isunnamed())
+            if ((which == P_LONG_NAME || which == P_LONG_NAME_NO_FILENAME) && isunnamed())
                 which = P_LONG_ID;
             if (parent)
             {
@@ -2502,7 +2505,7 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			MCscreen->cancelmessageobject(this, MCM_idle);
 			hashandlers = 0;
 			if (hlist == NULL)
-				hlist = new MCHandlerlist;
+				hlist = new (nothrow) MCHandlerlist;
 			
 			getstack() -> unsecurescript(this);
 			
@@ -2675,15 +2678,14 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 	MCLineSegment *b = bb;
 	if (bwidth > DEFAULT_BORDER)
 	{
-		t = new MCLineSegment[bwidth * 2];
-		b = new MCLineSegment[bwidth * 2];
+		t = new (nothrow) MCLineSegment[bwidth * 2];
+		b = new (nothrow) MCLineSegment[bwidth * 2];
 	}
 	int2 lx = drect.x;
 	int2 rx = drect.x + drect.width;
 	int2 ty = drect.y;
 	int2 by = drect.y + drect.height;
-	uint2 i;
-
+	
 	Boolean reversed = style == ETCH_SUNKEN || style == ETCH_SUNKEN_BUTTON;
 	switch (MClook)
 	{
@@ -2916,12 +2918,12 @@ void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_str
 #endif
 }
 
-Exec_stat MCObject::domess(MCStringRef sptr, bool p_ignore_errors)
+Exec_stat MCObject::domess(MCStringRef sptr, MCParameter* p_args, bool p_ignore_errors)
 {
 	MCAutoStringRef t_temp_script;
 	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on message\n%@\nend message\n", sptr);
 	
-	MCHandlerlist *handlist = new MCHandlerlist;
+	MCHandlerlist *handlist = new (nothrow) MCHandlerlist;
 	// SMR 1947, suppress parsing errors
 	MCerrorlock++;
 	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
@@ -2939,7 +2941,9 @@ Exec_stat MCObject::domess(MCStringRef sptr, bool p_ignore_errors)
     MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
-	Exec_stat stat = hptr->exec(ctxt, NULL);
+
+	Exec_stat stat = hptr->exec(ctxt, p_args);
+
 	MClockerrors = oldlock;
 	delete handlist;
     swap(MCtargetptr, oldtargetptr);
@@ -2958,7 +2962,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	MCAutoStringRef t_temp_script;
 	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %@\nend eval\n", p_script);
 	
-	MCHandlerlist *handlist = new MCHandlerlist;
+	MCHandlerlist *handlist = new (nothrow) MCHandlerlist;
 	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
 	{
 		r_value = MCSTR("Error parsing expression\n");
@@ -3111,7 +3115,7 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	
 	// MW-2014-01-07: [[ bug 11632 ]] Use the offscreen variant of the context so its
 	//   type field is appropriate for use by the player.
-	MCContext *t_context = new MCOffscreenGraphicsContext(t_gcontext);
+	MCContext *t_context = new (nothrow) MCOffscreenGraphicsContext(t_gcontext);
 	t_context -> setclip(r);
 
 	// MW-2011-01-29: [[ Bug 9355 ]] Make sure we only open a control if it needs it!
@@ -3216,11 +3220,10 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	MCNameRef t_name;
-	if ((stat = IO_read_nameref_new(t_name, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
+	MCNewAutoNameRef t_name;
+	if ((stat = IO_read_nameref_new(&t_name, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return checkloadstat(stat);
-	MCNameDelete(_name);
-	_name = t_name;
+	setname(*t_name);
 
 	if ((stat = IO_read_uint4(&flags, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
@@ -3294,8 +3297,8 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	if (ncolors > 0)
 	{
-		colors = new MCColor[ncolors];
-		colornames = new MCStringRef[ncolors];
+		colors = new (nothrow) MCColor[ncolors];
+		colornames = new (nothrow) MCStringRef[ncolors];
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			if ((stat = IO_read_mccolor(colors[i], stream)) != IO_NORMAL)
@@ -3540,7 +3543,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 		return stat;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_write_nameref_new(_name, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
+	if ((stat = IO_write_nameref_new(getname(), stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return stat;
 
 	if (!MCStringIsEmpty(_script))
@@ -4051,14 +4054,13 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
 
 		if (t_stat == IO_NORMAL)
 		{
-			parent_script = MCParentScript::Acquire(this, t_id, t_stack);
-			if (parent_script == NULL)
-				t_stat = IO_ERROR;
+            if (!setparentscript_onload(t_id, t_stack))
+            {
+                t_stat = IO_ERROR;
+            }
+        }
 
-			s_loaded_parent_script_reference = true;
-		}
-
-		MCNameDelete(t_stack);
+		MCValueRelease(t_stack);
 	}
 	
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_BITMAPEFFECTS) != 0)
@@ -4134,6 +4136,18 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
 	return t_stat;
 }
 
+bool MCObject::setparentscript_onload(uint32_t p_id, MCNameRef p_stack)
+{
+    parent_script = MCParentScript::Acquire(this, p_id, p_stack);
+    if (parent_script == NULL)
+    {
+        return false;
+    }
+    
+    s_loaded_parent_script_reference = true;
+    
+    return true;
+}
 
 // MW-2008-10-28: [[ ParentScripts ]] This method attempts to resolve the
 //   parentscript reference for this object (if any).
@@ -4375,7 +4389,7 @@ static void compute_objectshape_mask(MCObject *p_object, const MCObjectShape& p_
 	MCGContextClipToRect(t_context, MCRectangleToMCGRectangle(t_rect));
 
 	MCContext *t_gfxcontext = nil;
-	/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
+	/* UNCHECKED */ t_gfxcontext = new (nothrow) MCGraphicsContext(t_context);
 	
 	// Make sure the object is opened.
 	bool t_needs_open;
@@ -4764,7 +4778,7 @@ bool MCObject::mapfont(bool recursive)
 
         // If the font is explicitly requesting the default font for this
         // control type, use the themed font
-        if (MCNameIsEqualTo(t_textfont, MCN_font_default))
+        if (MCNameIsEqualToCaseless(t_textfont, MCN_font_default))
         {
             // Don't inherit the parent's themed font
             if (recursive)
@@ -4884,7 +4898,7 @@ void MCObject::copyfontattrs(const MCObject& p_other)
 
 	/* UNCHECKED */ MCMemoryNew(m_font_attrs);
 	if ((m_font_flags & FF_HAS_TEXTFONT) != 0)
-		MCNameClone(p_other . m_font_attrs -> name, m_font_attrs -> name);
+        m_font_attrs -> name = MCValueRetain(p_other . m_font_attrs -> name);
 	if ((m_font_flags & FF_HAS_TEXTSIZE) != 0)
 		m_font_attrs -> size = p_other . m_font_attrs -> size;
 	if ((m_font_flags & FF_HAS_TEXTSTYLE) != 0)
@@ -4897,7 +4911,7 @@ void MCObject::clearfontattrs(void)
 	if (m_font_attrs == nil)
 		return;
 
-	MCNameDelete(m_font_attrs -> name);
+	MCValueRelease(m_font_attrs -> name);
 	MCMemoryDelete(m_font_attrs); /* Allocated with MCMemoryNew() */
 	m_font_attrs = nil;
 
@@ -4954,7 +4968,7 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 	if (p_which == 0)
 	{
 		if (m_font_attrs != nil)
-			MCNameDelete(m_font_attrs -> name);
+			MCValueRelease(m_font_attrs -> name);
 		delete m_font_attrs;
 		m_font_attrs = nil;
 		m_font_flags &= ~FF_HAS_ALL_FATTR;
@@ -4966,10 +4980,10 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 
 	if ((p_which & FF_HAS_TEXTFONT) != 0)
 	{
-		MCNameDelete(m_font_attrs -> name);
+		MCValueRelease(m_font_attrs -> name);
 		if (p_textfont != nil && !MCNameIsEmpty(p_textfont))
 		{
-			/* UNCHECKED */ MCNameClone(p_textfont, m_font_attrs -> name);
+            m_font_attrs -> name = MCValueRetain(p_textfont);
 			m_font_flags |= FF_HAS_TEXTFONT;
 		}
 		else
@@ -5012,9 +5026,9 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 //   using a c-string for the name.
 void MCObject::setfontattrs(MCStringRef p_textfont, uint2 p_textsize, uint2 p_textstyle)
 {
-	MCAutoNameRef t_textfont_name;
-	/* UNCHECKED */ MCNameCreate(p_textfont, t_textfont_name);
-	setfontattrs(FF_HAS_ALL_FATTR, t_textfont_name, p_textsize, p_textstyle);
+	MCNewAutoNameRef t_textfont_name;
+    /* UNCHECKED */ MCNameCreate(p_textfont, &t_textfont_name);
+	setfontattrs(FF_HAS_ALL_FATTR, *t_textfont_name, p_textsize, p_textstyle);
 }
 
 // MW-2012-02-19: [[ SplitTextAttrs ]] This method returns true if any of the font
@@ -5755,7 +5769,7 @@ MCObjectPartHandle::getObjectPtr() const
 
 void swap(MCObjectPartHandle &x_left, MCObjectPartHandle &x_right)
 {
-    using std_::swap;
+    using std::swap;
     swap(x_left.m_part_id, x_right.m_part_id);
     swap(static_cast<MCObjectHandle&>(x_left),
          static_cast<MCObjectHandle&>(x_right));

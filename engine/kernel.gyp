@@ -14,9 +14,9 @@
 			'dependencies':
 			[
 				'../libfoundation/libfoundation.gyp:libFoundation',
-				#'../libexternal/libexternal.gyp:libExternal',
 				'../libgraphics/libgraphics.gyp:libGraphics',
 				'../libscript/libscript.gyp:libScript',
+				'../libscript/libscript.gyp:stdscript',
 				
 				'../libbrowser/libbrowser.gyp:libbrowser',
 
@@ -31,8 +31,6 @@
 
 				'engine-common.gyp:encode_version',
 				'engine-common.gyp:quicktime_stubs',
-				
-				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'include_dirs':
@@ -83,12 +81,18 @@
 							'src/mblcamera.cpp',
 						],
 										
-						# Force the entry point to be included in the output
+						
 						'link_settings':
 						{
 							'ldflags':
 							[
-								'-Wl,--undefined,Java_com_runrev_android_Engine_doCreate'
+								# Force the entry point to be included in the output
+								'-Wl,--undefined,Java_com_runrev_android_Engine_doCreate',
+								
+								# mblandroidlcb.cpp contains nothing other than the LCB Invocation Handler 
+								# native callback function, so force the symbol to be included as otherwise it
+								# will be discarded by the linker because nothing in the file is used statically
+								'-Wl,--undefined,Java_com_runrev_android_LCBInvocationHandler_doNativeListenerCallback',
 							],
 						},
 					},

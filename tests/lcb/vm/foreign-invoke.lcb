@@ -18,4 +18,120 @@ public handler TestForeignInvoke_OptionalPointerResult()
    test "non-nullptr maps to non-nothing for optional Pointer" when tNonNullNativeCharPtr is not nothing
 end handler
 
+--
+
+foreign handler malloc(in pSize as UIntSize) returns Pointer binds to "<builtin>"
+foreign handler free(in pBlock as Pointer) returns nothing binds to "<builtin>"
+foreign handler sprintf(in pTarget as Pointer, in pFormat as ZStringNative, ...) returns CInt binds to "<builtin>"
+foreign handler MCStringCreateWithCString(in pCString as Pointer, out rString as String) returns CBool binds to "<builtin>"
+
+public handler TestForeignInvoke_Varargs()
+   variable tString1 as String
+   variable tString2 as String
+   unsafe
+      variable tOutputBuffer as Pointer
+      put malloc(4096) into tOutputBuffer
+
+      sprintf(tOutputBuffer, "no formats")
+      MCStringCreateWithCString(tOutputBuffer, tString1)
+
+      variable tInt as SInt16
+      variable tLong as SInt32
+      variable tLongLong as SInt64
+      variable tFloat as CFloat
+      variable tDouble as CDouble
+      put 1000 into tInt
+      put 1000000000 into tLong
+      put tLong * 1000000 into tLongLong
+      put 3.5 into tFloat
+      put 7.5 into tDouble
+      sprintf(tOutputBuffer, "%d %ld %lld %.1f %.1lf", tInt, tLong, tLongLong, tFloat, tDouble)
+      MCStringCreateWithCString(tOutputBuffer, tString2)
+
+      free(tOutputBuffer)
+   end unsafe
+   test "sprintf works with no variadic arguments" when tString1 is "no formats"
+   test "sprintf works with variadic arguments" when tString2 is "1000 1000000000 1000000000000000 3.5 7.5"
+end handler
+
+--------
+
+public foreign type NSRect binds to "MCAggregateTypeInfo:qqqq"
+__safe foreign handler NSContainsRect(in aRect as NSRect, in bRect as NSRect) returns CBool binds to "<builtin>"
+
+public foreign type RECT binds to "MCAggregateTypeInfo:JJJJ"
+public foreign type POINT binds to "MCAggregateTypeInfo:JJ"
+__safe foreign handler PtInRect(inout pLPRC as RECT, in pPoint as POINT) returns CBool binds to "user32>PtInRect!stdcall"
+
+public handler TestForeignInvoke_AggregateByValue()
+   if the operating system is in [ "mac", "ios" ] then
+      test "aggregate by value works (NSContainsRect)" when NSContainsRect([10, 10, 200, 200], [15, 15, 100, 100])
+   end if
+   if the operating system is in [ "linux", "android" ] then
+      -- TODO
+   end if
+   if the operating system is in [ "windows" ] then
+      variable tRect as RECT
+      put [10, 10, 200, 200] into tRect
+      test "aggregate by value works (PtInRect)" when PtInRect(tRect, [15, 15])
+   end if
+end handler
+
+--------
+
+public foreign type ldiv_t binds to "MCAggregateTypeInfo:FF"
+
+__safe foreign handler ldiv(in pNumer as CSLong, in pDenom as CSLong) returns ldiv_t binds to "<builtin>"
+
+public handler TestForeignInvoke_AggregateReturnValue()
+   variable tResult as List
+   put ldiv(10000000, 314159) into tResult
+   test "aggregate return value of ldiv is correct" when tResult[1] * 314159 + tResult[2] is 10000000
+end handler
+
+--------
+
+foreign handler MCProperListConvertToForeignValues(in pList as List, in pTypeInfo as Pointer, \
+   out rCArray as Pointer, out rCount as LCUIndex) returns CBool binds to "<builtin>"
+foreign handler MCAggregateTypeInfo(in pBinding as String, out rTypeInfo as Pointer) returns CBool binds to "<builtin>"
+foreign handler MCValueRelease(in pValue as Pointer) returns nothing binds to "<builtin>"
+foreign handler MCMemoryDelete(in pBlock as Pointer) returns nothing binds to "<builtin>"
+
+unsafe handler CreateCArray(in pList as List, in pAggregateBinding as String, out rPointer as Pointer, out rCount as Integer) returns Boolean
+   variable tCArray as Pointer
+   variable tCount as Integer
+   variable tTypeInfo as Pointer
+   if not MCAggregateTypeInfo(pAggregateBinding, tTypeInfo) then
+      return false
+   end if
+
+   variable tSuccess as Boolean
+   put MCProperListConvertToForeignValues(pList, tTypeInfo, tCArray, tCount) into tSuccess
+
+   MCValueRelease(tTypeInfo)
+   if not tSuccess then
+      return false
+   end if
+
+   put tCArray into rPointer
+   put tCount into rCount
+   return true
+end handler
+
+-- Create a c-array of structs and delete it
+public handler TestProperListToCArray()
+	variable tList as List
+	put [[true, true, true], [false, false, false]] into tList
+    variable tArray as Pointer
+    variable tCount as Integer
+    unsafe
+		test "create c-array of structs" when \
+			CreateCArray(tList, "aaa", tArray, tCount)
+		
+		test "c-array has correct length" when tCount is 2
+	
+		-- Hopefully this would crash if there was a memory issue
+		MCMemoryDelete(tArray)
+	end unsafe
+end handler
 end module

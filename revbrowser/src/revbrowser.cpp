@@ -151,7 +151,7 @@ bool BrowserInstances::FindInstanceById(int p_id, BrowserInstance *&r_instance)
 void BrowserInstances::Add(CWebBrowserBase *p_browser, bool p_is_xbrowser)
 {
 	BrowserInstance *t_instance;
-	t_instance = new BrowserInstance;
+	t_instance = new (nothrow) BrowserInstance;
 	t_instance -> next = m_instances;
 	t_instance -> instance_id = ++m_last_instance_id;
 	t_instance -> stack_id = NULL;
@@ -511,7 +511,7 @@ send \"browser%s\" && %d, quote & \"%s\" & quote to this card of XBrowservar";
 	SendCardMessageUTF8(t_message, &t_retval);
 	t_instance -> callback_depth -= 1;
 	
-    delete t_message;
+    MCCStringFree (t_message);
     
 	if (t_instance -> stack_id != NULL)
 		free(t_instance -> stack_id);
@@ -1335,9 +1335,7 @@ void revBrowserSnapshot(CWebBrowserBase *p_instance, char *args[], int nargs, ch
 // creates a JS function with the same name as the handler within a global liveCode JS object
 void revBrowserAddJavaScriptHandler(CWebBrowserBase *p_instance, char *p_args[], int p_arg_count, char **r_result, Bool *r_pass, Bool *r_error)
 {
-	char *result = NULL;
-
-	bool t_success;
+    bool t_success;
 	t_success = true;
 
 	// We must be given 1 argument. The argument is the handler name to add.
@@ -1362,9 +1360,7 @@ void revBrowserAddJavaScriptHandler(CWebBrowserBase *p_instance, char *p_args[],
 // IM-2014-03-06: [[ revBrowserCEF ]] Removes the named handler function from the global liveCode JS object
 void revBrowserRemoveJavaScriptHandler(CWebBrowserBase *p_instance, char *p_args[], int p_arg_count, char **r_result, Bool *r_pass, Bool *r_error)
 {
-	char *result = NULL;
-
-	bool t_success;
+    bool t_success;
 	t_success = true;
 
 	// We must be given 1 argument. The argument is the handler name to add.

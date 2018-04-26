@@ -728,9 +728,9 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
 
     id t_url;
     if (!p_is_url)
-        t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: p_filename_or_url]];
+        t_url = [NSURL fileURLWithPath: MCStringConvertToAutoreleasedNSString(p_filename_or_url)];
     else
-        t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: p_filename_or_url]];
+        t_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_filename_or_url)];
 
     AVPlayer *t_player;
     t_player = [[AVPlayer alloc] initWithURL: t_url];
@@ -1219,6 +1219,9 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             MCMemoryCopy(m_markers, t_markers -> ptr, m_marker_count * sizeof(MCPlatformPlayerDuration));
         }
         break;
+		
+		default:
+			break;
 	}
     
     m_synchronizing = false;
@@ -1343,6 +1346,8 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 		case kMCPlatformPlayerPropertyScalefactor:
             *(double *)r_value = m_scale;
 			break;
+		default:
+			break;
 	}
 }
 
@@ -1399,7 +1404,7 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 		{
             NSString *t_mediaType;
             t_mediaType = [t_asset_track mediaType];
-            MCStringCreateWithCFString((CFStringRef)t_mediaType, *(MCStringRef*)r_value);
+            MCStringCreateWithCFStringRef((CFStringRef)t_mediaType, *(MCStringRef*)r_value);
 		}
             break;
 		case kMCPlatformPlayerTrackPropertyOffset:

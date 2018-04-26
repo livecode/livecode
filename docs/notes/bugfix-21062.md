@@ -1,0 +1,1 @@
+# Fix detection of HTTP digest authentication with tsNet

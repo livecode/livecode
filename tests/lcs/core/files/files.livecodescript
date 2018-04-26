@@ -211,6 +211,7 @@ end TestSpecialFolderPath
 
 
 on TestTempName
+   TestSkipIf "platform", "HTML5"
    local tPath
    put tempname() into tPath
    
@@ -322,10 +323,7 @@ end TestLaunch
 
 
 on TestLaunchWith
-   if the platform is "HTML5" then
-      TestSkip "launch subprocess with", "HTML5 platform does not support subprocesses"
-      exit TestLaunchWith
-   end if
+   TestSkipIf "platform", "HTML5,iPhone,Android"
 
    set the defaultFolder to specialFolderPath("Desktop")
    
@@ -404,12 +402,12 @@ on TestReadFromProcess
    else if the platform is "macos" or the platform contains "linux" then
       put "/bin/sh" into tProcess
       
-      open process tProcess for update
+      open process tProcess for binary update
       
       write "echo " & quote & "foo" & quote & LF to process tProcess
       
-      read from process tProcess for  1 line
-      put char 1 to 3 of  it into tOutput
+      read from process tProcess for 3 bytes
+      put it into tOutput
       
       TestAssert "Reading from process", tOutput is "foo"
       

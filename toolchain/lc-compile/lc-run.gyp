@@ -81,7 +81,7 @@
 					
 					'outputs':
 					[
-						'<(INTERMEDIATE_DIR)/lc-run_lcb_modules.c',
+						'<(INTERMEDIATE_DIR)/lc-run_lcb_modules.cpp',
 
 						# A specific output file is required here to ensure that
 						# all build systems create the output directory while
@@ -96,7 +96,7 @@
 						'--bootstrap',
 						'--inputg', 'src/grammar.g',
 						'--outputi', '<(INTERMEDIATE_DIR)/lc-run-modules/lci',
-						'--outputc', '<(INTERMEDIATE_DIR)/lc-run_lcb_modules.c',
+						'--outputc', '<(INTERMEDIATE_DIR)/lc-run_lcb_modules.cpp',
 						'<@(_inputs)',
 					],
 				},

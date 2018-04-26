@@ -25,7 +25,7 @@ MCRGB;
 
 #define NAME_LENGTH 6000
 
-static MCRGB color_table[] =
+static const MCRGB color_table[] =
     {
         {"AliceBlue", 239, 247, 255},
         {"AntiqueWhite", 249, 232, 210},

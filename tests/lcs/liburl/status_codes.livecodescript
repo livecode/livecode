@@ -3,14 +3,14 @@ script "TestLibUrlStatusCodes"
 local sLogField
 
 on TestSetup
-   -- Only run these tests on desktop platforms
-   if the platform is not among the items of "MacOS,Windows,Linux" then
-      return "SKIP Tests are not runnable on" && the platform
+   TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIf "environment", "server"
+   
+   if not TestIsInStandalone() then
+      local tLibURl
+      put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
+      send "extensionInitialize" to stack tLibUrl
    end if
-
-   local tLibURl
-   put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
-   send "revLoadLibrary" to stack tLibUrl
 end TestSetup
 
 

@@ -1,0 +1,1 @@
+# Fix setting stack to fullscreen hides all other stacks on Linux

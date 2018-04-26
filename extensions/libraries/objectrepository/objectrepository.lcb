@@ -83,7 +83,7 @@ As long ID of an object may mutate during a session the IDE needs an
 object reference that can handle that mutation.
 
 Parameters:
-pObject (String): An object repository ID
+pID (String): An object repository ID
 
 Returns:
 An object long ID or empty if the object is not in the repository or
@@ -114,7 +114,7 @@ As long ID of an object may mutate during a session the IDE needs an
 object reference that can handle that mutation.
 
 Parameters:
-pObject (String): An object repository ID
+pID (String): An object repository ID
 
 */
 public handler objectRepositoryRemove(in pID as String) returns nothing

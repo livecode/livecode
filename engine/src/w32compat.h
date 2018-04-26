@@ -27,20 +27,20 @@ structures and weak-linked functions required to use those newer features.
 
 #include "foundation.h"
 
-typedef enum __MCWin32ProcessDPIAwareness
+typedef enum __MCWin32ProcessDpiAwareness
 {
-	kMCWin32ProcessDPIUnaware,
-	kMCWin32ProcessSystemDPIAware,
-	kMCWin32ProcessPerMonitorDPIAware,
-} MCWin32ProcessDPIAwareness;
+	kMCWin32ProcessDpiUnaware,
+	kMCWin32ProcessSystemDpiAware,
+	kMCWin32ProcessPerMonitorDpiAware,
+} MCWin32ProcessDpiAwareness;
 
-typedef enum __MCWin32MonitorDPIType
+typedef enum __MCWin32MonitorDpiType
 {
-	kMCWin32MDTEffectiveDPI,
-	kMCWin32MDTAngularDPI,
-	kMCWin32MDTRawDPI,
-	kMCWin32MDTDefault = kMCWin32MDTEffectiveDPI,
-} MCWin32MonitorDPIType;
+	kMCWin32MDTEffectiveDpi,
+	kMCWin32MDTAngularDpi,
+	kMCWin32MDTRawDpi,
+	kMCWin32MDTDefault = kMCWin32MDTEffectiveDpi,
+} MCWin32MonitorDpiType;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,12 +58,12 @@ bool MCWin32SetProcessDPIAware(BOOL &r_result);
 bool MCWin32IsProcessDPIAware(BOOL &r_result);
 
 // Windows 8.1, shcore.dll
-bool MCWin32GetProcessDPIAwareness(HRESULT &r_result, HANDLE p_hprocess,
-								   MCWin32ProcessDPIAwareness *r_awareness);
+bool MCWin32GetProcessDpiAwareness(HRESULT &r_result, HANDLE p_hprocess,
+								   MCWin32ProcessDpiAwareness *r_awareness);
 
 // Windows 8.1, shcore.dll
-bool MCWin32GetDPIForMonitor(HRESULT &r_result, HMONITOR p_monitor,
-							 MCWin32MonitorDPIType p_dpi_type,
+bool MCWin32GetDpiForMonitor(HRESULT &r_result, HMONITOR p_monitor,
+							 MCWin32MonitorDpiType p_dpi_type,
 							 UINT *r_dpi_x, UINT *r_dpi_y);
 
 ////////////////////////////////////////////////////////////////////////////////

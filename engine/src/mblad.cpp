@@ -45,7 +45,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 void MCSystemInneractiveAdInit();
-//bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -200,7 +199,7 @@ private:
 void MCAdPostMessage(MCAd *p_ad, MCAdEventType p_type)
 {
     MCCustomEvent *t_event;
-    t_event = new MCAdEvent(p_ad, p_type);
+    t_event = new (nothrow) MCAdEvent(p_ad, p_type);
     if (t_event != nil)
         MCEventQueuePostCustom(t_event);
 }

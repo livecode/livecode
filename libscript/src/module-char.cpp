@@ -272,6 +272,15 @@ extern "C" MC_DLLEXPORT_DEF bool MCCharRepeatForEachChar(void*& x_iterator, MCSt
     return true;
 }
 
+extern "C" MC_DLLEXPORT_DEF void
+MCStringExecReverseCharsOf(MCStringRef &x_string)
+{
+    MCStringRef t_reversed = nullptr;
+    if (!MCStringCopyReversed(x_string, t_reversed))
+        return;
+    MCValueAssign(x_string, t_reversed);
+}
+
 ////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT_DEF void MCStringEvalCodeOfChar(MCStringRef p_string, uinteger_t& r_code)

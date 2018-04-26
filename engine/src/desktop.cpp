@@ -49,10 +49,6 @@
 
 #if defined(FEATURE_PLATFORM_APPLICATION)
 
-bool X_init(int argc, MCStringRef argv[], MCStringRef envp[]);
-void X_main_loop_iteration();
-int X_close();
-
 void X_main_loop(void)
 {
 	while(!MCquit)
@@ -63,7 +59,13 @@ void X_main_loop(void)
 
 void MCPlatformHandleApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef & r_error_message)
 {
-	if (X_init(p_argc, p_argv, p_envp))
+    struct X_init_options t_options;
+    t_options.argc = p_argc;
+    t_options.argv = p_argv;
+    t_options.envp = p_envp;
+    t_options.app_code_path = nullptr;
+
+	if (X_init(t_options))
 	{
 		r_error_code = 0;
 		r_error_message = nil;
@@ -440,7 +442,10 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, ui
 
 void MCPlatformHandleMouseDrag(MCPlatformWindowRef p_window, uint32_t p_button)
 {
-	MCdispatcher -> wmdrag(p_window);
+    MCAutoRefcounted<MCRawClipboard> t_dragboard(MCRawClipboard::CreateSystemDragboard());
+    MCdragboard->Rebind(t_dragboard);
+    
+    MCdispatcher -> wmdrag(p_window);
 }
 
 void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button, bool p_was_menu)
@@ -635,7 +640,7 @@ void MCKeyMessageClear(MCKeyMessage *&p_message_queue)
 void MCKeyMessageAppend(MCKeyMessage *&p_message_queue, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint, bool p_needs_mapping = true)
 {
     MCKeyMessage *t_new;
-    t_new = new MCKeyMessage;
+    t_new = new (nothrow) MCKeyMessage;
     
     t_new -> key_code = p_key_code;
     t_new -> mapped_codepoint = p_mapped_codepoint;
@@ -793,11 +798,11 @@ void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRa
 	int4 si, ei;
 	MCactivefield -> selectedmark(False, si, ei, False);
 	MCactivefield -> unresolvechars(0, si, ei);
-	r_selected_range = MCRangeMake(si, ei - si);
+	r_selected_range = MCRangeMakeMinMax(si, ei);
 	if (MCactivefield -> getcompositionrange(si, ei))
 	{
 		MCactivefield -> unresolvechars(0, si, ei);
-		r_marked_range = MCRangeMake(si, ei - si);
+		r_marked_range = MCRangeMakeMinMax(si, ei);
 	}
 	else
 		r_marked_range = MCRangeMake(UINDEX_MAX, 0);
@@ -847,7 +852,7 @@ void MCPlatformHandleTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRang
 	t_bottom_right = MCactivefield -> getstack() -> stacktowindowloc(MCPointMake(t_rect . x + t_rect . width, t_rect . y + t_rect . height));
 	
 	r_first_line_rect = MCRectangleMake(t_top_left . x, t_top_left . y, t_bottom_right . x - t_top_left . x, t_bottom_right . y - t_top_left . y);
-	r_actual_range = MCRangeMake(t_si, t_ei - t_si);
+	r_actual_range = MCRangeMakeMinMax(t_si, t_ei);
 }
 
 void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
@@ -871,7 +876,7 @@ void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_
 	MCactivefield -> unresolvechars(0, t_si, t_ei);
     
     /* UNCHECKED */ MCStringConvertToUnicode(*t_text, r_chars, r_char_count);
-    r_actual_range = MCRangeMake(t_si, t_ei - t_si);
+    r_actual_range = MCRangeMakeMinMax(t_si, t_ei);
 }
 
 void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t *p_chars, uindex_t p_char_count, MCRange p_replace_range, MCRange p_selection_range, bool p_mark)

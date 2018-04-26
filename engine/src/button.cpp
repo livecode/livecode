@@ -68,7 +68,7 @@ uint2 MCButton::focusedtab = MAXUINT2;
 
 bool MCmenupoppedup = false;
 
-Keynames MCButton::button_keys[] =
+const Keynames MCButton::button_keys[] =
     {
         {XK_F1, "f1"},
         {XK_F2, "f2"},
@@ -212,23 +212,6 @@ typedef struct
 	const char *token;
 } ModKeyToken;
 
-static ModKeyToken modifier_tokens[] =
-	{
-		{MS_SHIFT, 5, "shift"},
-		{MS_SHIFT, 1, "@"},
-		{MS_ALT, 6, "option"},
-		{MS_ALT, 3, "opt"},
-		{MS_ALT, 3, "alt"},
-		{MS_ALT, 1, "#"},
-		{MS_MAC_CONTROL, 7, "control"},
-		{MS_MAC_CONTROL, 4, "ctrl"},
-		{MS_MAC_CONTROL, 1, "%"},
-		{MS_CONTROL, 7, "command"},
-		{MS_CONTROL, 3, "cmd"},
-		{MS_CONTROL, 1, "^"},
-		{0, 0, NULL}
-	};
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPropertyInfo MCButton::kProperties[] =
@@ -336,7 +319,7 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 {
 	if (bref.icons != NULL)
 	{
-		icons = new iconlist;
+		icons = new (nothrow) iconlist;
 		memcpy(icons, bref.icons, sizeof(iconlist));
 		icons->curicon = NULL;
 	}
@@ -367,7 +350,7 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 		MCCdata *bptr = bref.bdata;
 		do
 		{
-			MCCdata *newbdata = new MCCdata(*bptr);
+			MCCdata *newbdata = new (nothrow) MCCdata(*bptr);
 			newbdata->appendto(bdata);
 			bptr = (MCCdata *)bptr->next();
 		}
@@ -457,16 +440,16 @@ void MCButton::open()
 	//   has changed (i.e. background transition has occurred).
 	uint32_t t_old_state;
 	t_old_state = state;
-	switch(gethilite(0))
+	switch(gethilite(0).value)
 	{
-	case True:
+	case kMCTristateTrue:
 		state |= CS_HILITED;
 		state &= ~CS_MIXED;
 		break;
-	case False:
+	case kMCTristateFalse:
 		state &= ~(CS_HILITED | CS_MIXED);
 		break;
-	case Mixed:
+	case kMCTristateMixed:
 		state &= ~CS_HILITED;
 		state |= CS_MIXED;
 		break;
@@ -911,6 +894,10 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 						bptr->message_with_args(MCM_mouse_down, menubutton);
                         MCRedrawUnlockScreen();
 						bptr->findmenu();
+                        if (menudepth == 0)
+                        {
+                            MCmenuobjectptr = nullptr;
+                        }
 						bptr->openmenu(False);
 						return True;
 					}
@@ -1390,18 +1377,20 @@ Boolean MCButton::mup(uint2 which, bool p_release)
                 // We also need to close the menu if the button release happened
                 // outside of the menu tree.
                 bool t_outside = true;
-                MCObject* t_menu = this;
+                MCObject* t_menu = menu;
                 while (t_outside && t_menu != NULL)
                 {
                     // Check whether the click was inside the menu (the rect
                     // that we need to check is the rect of the stack containing
                     // the menu).
                     MCRectangle t_rect = t_menu->getstack()->getrect();
-                    t_outside = !MCU_point_in_rect(rect, mx, my);
+                    t_outside = !MCU_point_in_rect(t_rect, mx, my);
                     
                     // Move to the parent menu, if it exists
                     if (t_menu->getstack()->getparent()    // Stack's parent
-                        && t_menu->getstack()->getparent()->gettype() == CT_BUTTON)
+                        && t_menu->getstack()->getparent()->gettype() == CT_BUTTON
+						&& t_menu->getstack()->getparent()->getstack()->getparent()
+						&& t_menu->getstack()->getparent()->getstack()->getparent()->gettype() == CT_BUTTON)
                     {
                         // This is a submenu
                         t_menu = t_menu->getstack()->getparent();
@@ -1471,7 +1460,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 	}
 	if (state & CS_GRAB)
 	{
-		if (flags && F_AUTO_HILITE)
+		if (flags & F_AUTO_HILITE)
 		{
 			if (starthilite)
 				state &= ~CS_HILITED;
@@ -1660,7 +1649,7 @@ Boolean MCButton::doubleup(uint2 which)
 #ifdef _MAC_DESKTOP
 void MCButton::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
 		if (state & CS_SHOW_DEFAULT)
 		{
@@ -1777,7 +1766,7 @@ void MCButton::closemenu(Boolean kfocus, Boolean disarm)
 
 MCControl *MCButton::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCButton *newbutton = new MCButton(*this);
+	MCButton *newbutton = new (nothrow) MCButton(*this);
 	if (attach)
 		newbutton->attach(p, invisible);
 	return newbutton;
@@ -1880,16 +1869,16 @@ void MCButton::replacedata(MCCdata *&data, uint4 newid)
 	bptr->appendto(bdata);
 	if (opened)
 	{
-		switch(gethilite(newid))
+		switch(gethilite(newid).value)
 		{
-		case True:
+		case kMCTristateTrue:
 			state |= CS_HILITED;
 			state &= ~CS_MIXED;
 			break;
-		case False:
+		case kMCTristateFalse:
 			state &= ~(CS_HILITED | CS_MIXED);
 			break;
-		case Mixed:
+		case kMCTristateMixed:
 			state &= ~CS_HILITED;
 			state |= CS_MIXED;
 			break;
@@ -2069,7 +2058,7 @@ MCCdata *MCButton::getbptr(uint4 cardid)
 	}
 	if (foundptr == NULL)
 	{
-		foundptr = new MCCdata(cardid);
+		foundptr = new (nothrow) MCCdata(cardid);
 		foundptr->appendto(bdata);
 	}
 	return foundptr;
@@ -2080,7 +2069,7 @@ uint2 MCButton::getfamily()
 	return family;
 }
 
-Boolean MCButton::gethilite(uint4 parid)
+MCTristate MCButton::gethilite(uint4 parid)
 {
 	if (flags & F_SHARED_HILITE)
 		parid = 0;
@@ -2109,7 +2098,7 @@ void MCButton::setdefault(Boolean def)
 	}
 }
 
-Boolean MCButton::sethilite(uint4 parid, Boolean hilite)
+Boolean MCButton::sethilite(uint4 parid, MCTristate hilite)
 {
 	Boolean set
 		= True;
@@ -2124,21 +2113,21 @@ Boolean MCButton::sethilite(uint4 parid, Boolean hilite)
 	MCCdata *foundptr = getbptr(parid);
 	
 	bool t_hilite_changed;
-	t_hilite_changed = hilite != foundptr -> getset();
+	t_hilite_changed = hilite != MCTristate(foundptr -> getset());
 	
-	foundptr->setset(hilite);
+	foundptr->setset(!hilite.isFalse());
 	uint4 oldstate = state;
 	if (opened && set)
-			switch (hilite)
+			switch (hilite.value)
 			{
-			case True:
+			case kMCTristateTrue:
 				state |= CS_HILITED;
 				state &= ~CS_MIXED;
 				break;
-			case False:
+			case kMCTristateFalse:
 				state &= ~(CS_HILITED | CS_MIXED);
 				break;
-			case Mixed:
+			case kMCTristateMixed:
 				state &= ~CS_HILITED;
 				state |= CS_MIXED;
 			}
@@ -2149,7 +2138,7 @@ Boolean MCButton::sethilite(uint4 parid, Boolean hilite)
 	return state != oldstate;
 }
 
-void MCButton::resethilite(uint4 parid, Boolean hilite)
+void MCButton::resethilite(uint4 parid, MCTristate hilite)
 {
 	if (sethilite(parid, hilite))
 	{
@@ -2221,7 +2210,7 @@ MCRange MCButton::getmenurange()
 		if (!MCStringFind(menustring, t_search, MCSTR("\n"), kMCStringOptionCompareExact, &t_temp))
 		{
 			if (++i == menuhistory)
-				return MCRangeMake(sptr, t_length - sptr);
+				return MCRangeMakeMinMax(sptr, t_length);
 			else
 				return MCRangeMake(0, 0);
 			break;
@@ -2234,7 +2223,7 @@ MCRange MCButton::getmenurange()
 	}
 	while (i < menuhistory);
 		
-	return MCRangeMake(sptr, t_search.offset - sptr);
+	return MCRangeMakeMinMax(sptr, t_search.offset);
 }
 
 void MCButton::makemenu(sublist *bstack, int2 &stackdepth, uint2 menuflags, MCFontRef fontref)
@@ -2443,7 +2432,7 @@ public:
 		}
 		while (newdepth < stackdepth)
 			parent->makemenu(bstack, stackdepth, menuflags, fontref);
-		MCButton *newbutton = new MCButton;
+		MCButton *newbutton = new (nothrow) MCButton;
 		newbutton->appendto(bstack[stackdepth].buttons);
 		MCNameRef t_name = nil;
 		if (!MCStringIsEmpty(p_menuitem->tag))
@@ -2464,7 +2453,7 @@ public:
 		newbutton->menubutton = parent->menubutton;
 		newbutton->menucontrol = MENUCONTROL_ITEM;
         newbutton->m_theme_type = kMCPlatformControlTypeMenu;
-		if (MCNameGetCharAtIndex(newbutton -> getname(), 0) == '-')
+		if (MCStringGetNativeCharAtIndex(MCNameGetString(newbutton->getname()), 0) == '-')
 		{
 			newbutton->rect.height = 2;
 			newbutton->flags = DIVIDER_FLAGS;
@@ -2579,7 +2568,6 @@ public:
 
 Boolean MCButton::findmenu(bool p_just_for_accel)
 {
-	Boolean isunicode = hasunicode();
 	if (!MCNameIsEmpty(menuname))
 	{
 		if (!(menu.IsValid()))
@@ -2611,7 +2599,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 				//major menustring
 				nlines = MCStringCountChar(menustring, MCRangeMake(0, MCStringGetLength(menustring)), '\n', kMCStringOptionCompareExact) + 1;
 
-				MCField *fptr = new MCField;
+				MCField *fptr = new (nothrow) MCField;
 				uint2 height;
 				if (nlines > menulines)
 				{
@@ -2749,7 +2737,7 @@ void MCButton::openmenu(Boolean grab)
 			
 			MCAutoStringRef t_label;
 			/* UNCHECKED */ MCStringCopySubstring(t_menustring, 
-												  MCRangeMake(t_offset, t_new_offset - t_offset),
+												  MCRangeMakeMinMax(t_offset, t_new_offset),
 												  &t_label);
 			MCValueAssign(label, *t_label);
 			flags |= F_LABEL;
@@ -2923,7 +2911,7 @@ void MCButton::docascade(MCStringRef p_pick)
 		//    menu button, rather than of this one.
 		if (pptr->m_menu_handler == nil || !pptr->m_menu_handler->OnMenuPick(pptr, *t_pick, nil))
 		{
-			MCParameter *param = new MCParameter;
+			MCParameter *param = new (nothrow) MCParameter;
 			param->setvalueref_argument(*t_pick);
 			MCscreen->addmessage(pptr, MCM_menu_pick, MCS_time(), param);
 		}
@@ -3304,7 +3292,7 @@ uint2 MCButton::getmousetab(int2 &curx)
             totalwidth += MCFontMeasureTextSubstring(m_font, t_tab, t_range, getstack() -> getdevicetransform()) + 23;
 		}
 		if (totalwidth < rect.width)
-			curx += rect.width - totalwidth >> 1;
+			curx += (rect.width - totalwidth) >> 1;
 		if (mx < curx)
 			return MAXUINT2;
 	}
@@ -3406,7 +3394,7 @@ static void openicon(MCImage *&icon, uint1 *data, uint4 size)
 	// MW-2012-02-17: [[ FontRefs ]] Make sure we set a parent on the icon, and also
 	//   make it invisible. If we don't do this we get issues with parent references
 	//   and fontrefs.
-	icon = new MCImage;
+	icon = new (nothrow) MCImage;
 	icon->setparent(MCdispatcher);
 	icon->setflag(False, F_VISIBLE);
 	icon->setflag(True, F_I_ALWAYS_BUFFER);
@@ -3518,7 +3506,7 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 		t_stat = checkloadstat(p_stream . ReadU32(t_hover_icon_id));
 		if (t_stat == IO_NORMAL)
 		{
-			icons = new iconlist;
+			icons = new (nothrow) iconlist;
 			memset(icons, 0, sizeof(iconlist));
 			icons -> iconids[CI_HOVER] = t_hover_icon_id;
 		}
@@ -3718,7 +3706,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		if (iconid != 0 || hiliteiconid != 0)
 		{
 			flags |= F_HAS_ICONS;
-			icons = new iconlist;
+			icons = new (nothrow) iconlist;
 			memset(icons, 0, sizeof(iconlist));
 			icons->iconids[CI_DEFAULT] = iconid;
 			icons->iconids[CI_HILITED] = hiliteiconid;
@@ -3734,7 +3722,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 			//   area.
 			if (icons == NULL)
 			{
-				icons = new iconlist;
+				icons = new (nothrow) iconlist;
 				memset(icons, 0, sizeof(iconlist));
 			}
 
@@ -3834,8 +3822,6 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 	}
 
-	uint4 tacceltextsize;
-
 	if ((stat = IO_read_uint2(&accelkey, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
 	if (accelkey < 256)
@@ -3876,7 +3862,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (type == OT_BDATA)
 		{
-			MCCdata *newbdata = new MCCdata;
+			MCCdata *newbdata = new (nothrow) MCCdata;
 			if ((stat = newbdata->load(stream, this, version)) != IO_NORMAL)
 			{
 				delete newbdata;

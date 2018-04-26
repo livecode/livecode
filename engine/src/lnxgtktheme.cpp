@@ -238,7 +238,7 @@ static gboolean reload_theme(void)
 		// We have changed themes, so remove the image cache and replace with new one
 		if ( MCimagecache != NULL)
 			delete MCimagecache ;
-		MCimagecache = new MCXImageCache ;
+		MCimagecache = new (nothrow) MCXImageCache ;
 
 		MCcurtheme->unload();
 		MCcurtheme->load();
@@ -813,17 +813,16 @@ Widget_Part MCNativeTheme::hittestcombobutton(const MCWidgetInfo &winfo,
         int2 mx, int2 my, const MCRectangle &drect)
 {
 	Widget_Part wpart = WTHEME_PART_UNDEFINED;
-	const int btnWidth = getmetric(WTHEME_METRIC_COMBOSIZE);
-
-
-	MCRectangle btnRect = {	int2(drect.x + (drect.width - btnWidth)),
-	                        drect.y,
-	                        int2(btnWidth),
-	                        drect.height };
-	MCRectangle txtRect = { drect.x,
-	                        drect.y,
-	                        int2(drect.width - btnWidth),
-	                        drect.height };
+	const uint2 btnWidth = MCClamp(getmetric(WTHEME_METRIC_COMBOSIZE),
+								   0, drect.width);
+	
+	uint2 t_text_width = drect.width - btnWidth;
+	int2 t_btn_left = drect.x + t_text_width;
+	
+	MCRectangle btnRect = {	t_btn_left, drect.y,
+							btnWidth, drect.height };
+	MCRectangle txtRect = { drect.x, drect.y,
+		                    t_text_width, drect.height };
 
 	if(MCU_point_in_rect(btnRect, mx, my))
 		wpart = WTHEME_PART_COMBOBUTTON;

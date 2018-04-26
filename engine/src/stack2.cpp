@@ -634,10 +634,13 @@ void MCStack::kfocusset(MCControl *target)
 			if (MCactivefield->getstack() == this)
 				curcard->kunfocus();
 			else
+            {
 				if (MCactivefield->getstack()->state & CS_KFOCUSED)
 					MCactivefield->getstack()->kunfocus();
 				else
 					MCactivefield->unselect(True, True);
+            }
+
         }
 	}
 	if (MCactivefield && target != NULL)
@@ -667,7 +670,7 @@ MCStack *MCStack::clone()
 	/* UNCHECKED */ MCStackSecurityCopyStack(this, newsptr);
 	MCdispatcher->appendstack(newsptr);
 	newsptr->parent = MCdispatcher->gethome();
-	if (this != MCtemplatestack || rect.x == 0 && rect.y == 0)
+	if (this != MCtemplatestack || (rect.x == 0 && rect.y == 0))
 	{
 		newsptr->positionrel(MCdefaultstackptr->rect, OP_CENTER, OP_MIDDLE);
 		newsptr->rect.x += MCcloneoffset;
@@ -755,7 +758,7 @@ MCStack *MCStack::findname(Chunk_term type, MCNameRef p_name)
 
 MCStack *MCStack::findid(Chunk_term type, uint4 inid, Boolean alt)
 {
-	if (type == CT_STACK && (inid == obj_id || alt && inid == altid))
+	if (type == CT_STACK && (inid == obj_id || (alt && inid == altid)))
 		return this;
 	else
 		return NULL;
@@ -856,7 +859,7 @@ void MCStack::startedit(MCGroup *group)
 	editing->setcontrols(NULL);
 
 	// Create a temporary card
-	cards = curcard = new MCCard;
+	cards = curcard = new (nothrow) MCCard;
 
 	// Link the card to the parent, give it the same id as the current card and give it a temporary script
 	curcard->setparent(this);
@@ -935,6 +938,7 @@ void MCStack::updatemenubar()
         {
 			MCmenubar = nil;
         }
+        
 		else
         {
 			MCmenubar = MCObjectCast<MCGroup>(getobjname(CT_GROUP, (getmenubar())));
@@ -2000,19 +2004,22 @@ void MCStack::reopenwindow()
 
 Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentptr, Window_position wpos,  Object_pos walign)
 {
-	MCRectangle myoldrect = rect;
 	if (state & (CS_IGNORE_CLOSE | CS_NO_FOCUS | CS_DELETE_STACK))
 		return ES_NORMAL;
     
     MCtodestroy -> remove(this);
 	if (wm == WM_LAST)
+    {
 		if (opened)
 			wm = mode;
 		else
+        {
 			if (getstyleint(flags) == 0)
 				wm = WM_TOP_LEVEL;
 			else
 				wm = (Window_mode)(getstyleint(flags) + WM_TOP_LEVEL_LOCKED);
+        }
+    }
 	if (wm == WM_TOP_LEVEL
 	        && (flags & F_CANT_MODIFY || m_is_ide_stack || !MCdispatcher->cut(True)))
 		wm = WM_TOP_LEVEL_LOCKED;
@@ -2024,7 +2031,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	//   it might not be.
 	if (opened)
 	{
-		if (window == NULL && !MCModeMakeLocalWindows() && (wm != WM_MODAL && wm != WM_SHEET || wm == mode))
+		if (window == NULL && !MCModeMakeLocalWindows() && ((wm != WM_MODAL && wm != WM_SHEET) || wm == mode))
 			return ES_NORMAL;
 
 		if (wm == mode && parentptr == NULL)
@@ -2066,7 +2073,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		}
 	}
 	
-#ifdef _MACOSX
+#ifdef _MAC_DESKTOP
 	// MW-2008-02-28: [[ Bug 4614 ]] Ensure that sheeting inside a not yet visible window causes
 	//   it to be displayed as modal.
 	// MW-2008-03-03: [[ Bug 5985 ]] Crash when using 'sheet' command. It seems that 'go' is not
@@ -2418,7 +2425,8 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		// Just do a little more adjusting for Full Screen Menus that are cascaded.
 		// We need to pull the Y co-ord up again to be level (a little above in fact) of
 		// the control we are bound to.
-		if (( mode == WM_CASCADE ) && t_fullscreen_menu ) 
+		if (( mode == WM_CASCADE ) && t_fullscreen_menu )
+        {
 			if ( t_menu_downwards )
 				rect.y = ( rel.y - 2) ;
 			else
@@ -2428,6 +2436,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 				//   adjust the y-coord.
 				rect.y += rel.height + 2 ;
 			}
+        }
 	
 	}
 
@@ -2461,6 +2470,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	// MW-2011-01-12: [[ Bug 9282 ]] Set to true if the props need restoring.
 	bool t_restore_props;
 	
+    Exec_stat t_stat = ES_NORMAL;
 	if (opened && flags & F_VISIBLE)
 	{
 		// MW-2011-08-19: [[ Redraw ]] Set the update region to everything.
@@ -2510,22 +2520,40 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			// If opening the dialog failed for some reason, this will return false.
 			if (mode_openasdialog())
 			{
-				while (opened && (mode == WM_MODAL || mode == WM_SHEET) && !MCquit)
+				while (opened &&
+                       (mode == WM_MODAL || mode == WM_SHEET) &&
+                       !MCquit &&
+                       !MCabortscript)
 				{
 					MCU_resetprops(True);
 					// MW-2011-09-08: [[ Redraw ]] Make sure we flush any updates.
 					MCRedrawUpdateScreen();
 					MCscreen->siguser();
-					MCscreen->wait(REFRESH_INTERVAL, True, True);
+					if (MCscreen->wait(REFRESH_INTERVAL, True, True))
+                    {
+                        MCeerror->add(EE_WAIT_ABORT, 0, 0);
+                        t_stat = ES_ERROR;
+                        break;
+                    }
 				}
 				mode_closeasdialog();
 				if (MCquit)
 					MCabortscript = False;
 			}
 
-			// Make sure the mode is reset to closed so dialogs can be reopened.
-			mode = WM_CLOSED;
-			
+            // If there was no error, make sure the mode is reset to closed so
+            // it can be reopened. Otherwise, do the equivalent of 'close this
+            // stack'.
+            if (t_stat != ES_ERROR)
+            {
+                mode = WM_CLOSED;
+            }
+            else
+            {
+                close();
+                checkdestroy();
+			}
+            
 			t_restore_props = true;
 		}
 		else
@@ -2560,7 +2588,8 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	}
 	if (reopening)
 		MClockmessages = oldlock;
-	return ES_NORMAL;
+    
+	return t_stat;
 	
 	
 }
@@ -2616,7 +2645,7 @@ bool MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &
 		if (!MCStringFirstIndexOfChar(d_strref, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
         
-		t_success = MCStringCopySubstring(d_strref, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_line);
+		t_success = MCStringCopySubstring(d_strref, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_line);
 		if (t_success && t_new_offset > t_old_offset)
 		{
 			MCAutoStringRef t_stack_name;
@@ -2874,7 +2903,7 @@ void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 	t_rect = MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformInvert(t_transform));
 	
 	MCGraphicsContext *t_old_context = nil;
-	t_old_context = new MCGraphicsContext(p_context);
+	t_old_context = new (nothrow) MCGraphicsContext(p_context);
 	if (t_old_context != nil)
 		render(t_old_context, t_rect);
 	delete t_old_context;
@@ -3028,7 +3057,7 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 			// IM-2013-09-30: [[ FullscreenMode ]] Apply stack transform to snapshot context
 			MCGContextConcatCTM(t_context, t_transform);
 			
-			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
+			t_success = nil != (t_gfxcontext = new (nothrow) MCGraphicsContext(t_context));
 		}
 
 		if (t_success)

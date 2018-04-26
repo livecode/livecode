@@ -37,7 +37,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 enum {
 	kSize =
-#if defined(__32_BIT__)
+// MSVC borks if a declared array is > 0x7fffffff bytes long, so make sure
+// VeryBig doesn't exceed this.
+#if defined(__32_BIT__) || defined(__WINDOWS__)
 	1 << 15
 #else
 	1 << 20
@@ -76,11 +78,11 @@ TEST(new, new)
 	VeryBig* pointers[1000];
 	int i = 0;
 
-	VeryBig* p = new VeryBig;
+	VeryBig* p = new (nothrow) VeryBig;
 
 	for (; p != NULL && i < 1000; i++) {
 		pointers[i] = p;
-		p = new VeryBig;
+		p = new (nothrow) VeryBig;
 	}
 
 	ASSERT_NE(1000, i) << "All alocations succeed!";
@@ -103,11 +105,11 @@ TEST(new, array)
 	VeryBig* pointers[1000];
 	int i = 0;
 
-	VeryBig* p = new VeryBig[1];
+	VeryBig* p = new (nothrow) VeryBig[1];
 
 	for (; p != NULL && i < 1000; i++) {
 		pointers[i] = p;
-		p = new VeryBig[1];
+		p = new (nothrow) VeryBig[1];
 	}
 
 	ASSERT_NE(1000, i) << "All alocations succeed!";

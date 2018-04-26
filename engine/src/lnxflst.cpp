@@ -159,10 +159,10 @@ MCFontStruct *MCNewFontlist::getfont(MCNameRef p_family, uint2& p_size, uint2 p_
 {
 	MCNewFontStruct *t_font;
 	for(t_font = m_fonts; t_font != nil; t_font = t_font -> next)
-		if (MCNameIsEqualTo(p_family, t_font -> family) && p_size == t_font -> size && p_style == t_font -> style)
+		if (MCNameIsEqualToCaseless(p_family, t_font -> family) && p_size == t_font -> size && p_style == t_font -> style)
 			return t_font;
 
-	t_font = new MCNewFontStruct;
+	t_font = new (nothrow) MCNewFontStruct;
 	t_font -> family = MCValueRetain(p_family);
 	t_font -> size = p_size;
 	t_font -> style = p_style;
@@ -171,17 +171,17 @@ MCFontStruct *MCNewFontlist::getfont(MCNameRef p_family, uint2& p_size, uint2 p_
 
     // If the font name identifies one of the special fonts, resolve it
     MCAutoStringRef t_family_name;
-    if (MCNameIsEqualTo(p_family, MCN_font_usertext))
+    if (MCNameIsEqualToCaseless(p_family, MCN_font_usertext))
         MCPlatformGetControlThemePropString(kMCPlatformControlTypeInputField, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, &t_family_name);
-    else if (MCNameIsEqualTo(p_family, MCN_font_menutext))
+    else if (MCNameIsEqualToCaseless(p_family, MCN_font_menutext))
         MCPlatformGetControlThemePropString(kMCPlatformControlTypeMenu, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, &t_family_name);
-    else if (MCNameIsEqualTo(p_family, MCN_font_content))
+    else if (MCNameIsEqualToCaseless(p_family, MCN_font_content))
         MCPlatformGetControlThemePropString(kMCPlatformControlTypeInputField, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, &t_family_name);
-    else if (MCNameIsEqualTo(p_family, MCN_font_message))
+    else if (MCNameIsEqualToCaseless(p_family, MCN_font_message))
         MCPlatformGetControlThemePropString(kMCPlatformControlTypeButton, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, &t_family_name);
-    else if (MCNameIsEqualTo(p_family, MCN_font_tooltip))
+    else if (MCNameIsEqualToCaseless(p_family, MCN_font_tooltip))
         MCPlatformGetControlThemePropString(kMCPlatformControlTypeLabel, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, &t_family_name);
-    else if (MCNameIsEqualTo(p_family, MCN_font_system))
+    else if (MCNameIsEqualToCaseless(p_family, MCN_font_system))
         MCPlatformGetControlThemePropString(kMCPlatformControlTypeGeneric, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, &t_family_name);
     else
     {
@@ -550,7 +550,7 @@ public:
 MCFontlist *MCFontlistCreateNew(void)
 {
 	MCNewFontlist *t_fontlist;
-	t_fontlist = new MCNewFontlist;
+	t_fontlist = new (nothrow) MCNewFontlist;
 	if (!t_fontlist -> create())
 	{
 		delete t_fontlist;

@@ -364,10 +364,11 @@ __MCSFileSetContents (MCStringRef p_native_path,
 
 	if (0 != rename (*t_temp_path_sys, *t_path_sys))
 	{
-		int t_save_errno = errno;
-
-		/* UNCHECKED */ unlink (*t_temp_path_sys);
-
+		t_save_errno = errno;
+        
+        /* UNCHECKED */ unlink (*t_temp_path_sys);
+        errno = t_save_errno;
+        
 		/* Report rename error */
 		MCAutoStringRef t_description, t_path, t_temp_path;
 		MCAutoNumberRef t_error_code;
@@ -479,6 +480,31 @@ __MCSFilePathFromNative (MCStringRef p_native_path,
 	return MCStringCopy (p_native_path, r_path);
 }
 
+bool
+__MCSFileGetCurrentDirectory (MCStringRef & r_native_path)
+{
+	/* Assume that we have a C library that will allocate a buffer when getcwd(3)
+	 * is called with a NULL string buffer. */
+	char *t_cwd_sys;
+	errno = 0;
+	t_cwd_sys = getcwd (NULL, 0);
+
+	if (NULL == t_cwd_sys)
+	{
+		return __MCSFileThrowIOErrorWithErrno (kMCEmptyString, MCSTR("Failed to get current working directory: %{description}"), errno);
+	}
+
+	bool t_success = MCStringCreateWithSysString (t_cwd_sys, r_native_path);
+	free (t_cwd_sys);
+	return t_success;
+}
+
+bool
+__MCSFilePathIsAbsolute (MCStringRef p_path)
+{
+	return MCStringBeginsWithCString(p_path, (const char_t *) "/",
+	                                 kMCStringOptionCompareExact);
+}
 
 /* ================================================================
  * File stream creation

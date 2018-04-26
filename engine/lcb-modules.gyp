@@ -10,18 +10,22 @@
 	[
 		{
 			'target_name': 'engine_lcb_modules',
-			'type': 'static_library',
-			
+			'type': 'none',
+
 			'dependencies':
 			[
-				'../libscript/libscript.gyp:stdscript',
-				'../toolchain/lc-compile/lc-compile.gyp:lc-compile',
+				'../toolchain/lc-compile/lc-compile.gyp:lc-compile#host',
 			],
 			
 			'all_dependent_settings':
 			{
 				'variables':
 				{
+					'builtin_lcb_modules':
+					[
+						'<(SHARED_INTERMEDIATE_DIR)/engine_lcb_modules.cpp',
+					],
+
 					'dist_aux_files':
 					[
 						# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
@@ -29,7 +33,7 @@
 					],
 				},
 			},
-			
+
 			'actions':
 			[
 				{
@@ -44,10 +48,23 @@
 						'<@(stdscript_syntax_lcb_files)',
 						'<@(stdscript_other_lcb_files)',
 					],
-					
+								
+					'conditions':
+					[
+						[
+							'OS != "mac" and OS != "ios"',
+							{
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/modules/',
+								],
+							},
+						],
+					],
+
 					'outputs':
 					[
-						'<(INTERMEDIATE_DIR)/engine_lcb_modules.c',
+						'<(SHARED_INTERMEDIATE_DIR)/engine_lcb_modules.cpp',
                         
   						# A specific output file is required here to ensure that
   						# all build systems create the output directory while
@@ -62,7 +79,7 @@
 						'--bootstrap',
 						'--inputg', '../toolchain/lc-compile/src/grammar.g',
 						'--outputi', '<(PRODUCT_DIR)/modules/lci',
-						'--outputc', '<(INTERMEDIATE_DIR)/engine_lcb_modules.c',
+						'--outputc', '<(SHARED_INTERMEDIATE_DIR)/engine_lcb_modules.cpp',
 						'<@(_inputs)',
 					],
 				},

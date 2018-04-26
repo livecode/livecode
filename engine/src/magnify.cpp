@@ -136,7 +136,7 @@ IO_stat MCMagnify::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32
 
 MCControl *MCMagnify::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCMagnify *newmagnify = new MCMagnify(*this);
+	MCMagnify *newmagnify = new (nothrow) MCMagnify(*this);
 	if (attach)
 		newmagnify->attach(p, invisible);
 	return newmagnify;

@@ -14,6 +14,7 @@
 		'dependencies':
 		[
 			'../../gentle/gentle/grts.gyp:grts',
+			'../../libcompile/libcompile.gyp:libcompile',
 			'lc-compile-lib.gyp:lc-compile-lib',
 		],
 		

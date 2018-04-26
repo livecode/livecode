@@ -367,7 +367,6 @@ void MCButton::macopenmenu(void)
 		return;
 	
 	MCRectangle trect;
-	long result;
 	
 	int4 tmenux,tmenuy;
 	tmenux = tmenuy = 0;
@@ -583,7 +582,7 @@ void MCScreenDC::updatemenubar(Boolean force)
 		newMenuGroup = MCdefaultmenubar;
 	
 	//if doesn't need update and not force update then exit
-	if (newMenuGroup == NULL || newMenuGroup == curMenuGroup && !force && !curMenuGroup->getstate(CS_NEED_UPDATE))
+	if (newMenuGroup == NULL || (newMenuGroup == curMenuGroup && !force && !curMenuGroup->getstate(CS_NEED_UPDATE)))
 		return;
 
 	// Count the number of menus.
@@ -830,7 +829,7 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu)
 				;
 			
 			MenuItemDescriptor *t_item;
-			t_item = new MenuItemDescriptor;
+			t_item = new (nothrow) MenuItemDescriptor;
 			if (t_item == NULL)
 				break;
             

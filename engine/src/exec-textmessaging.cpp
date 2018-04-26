@@ -29,11 +29,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(TextMessaging, ComposeTextMessage, 2)
-MC_EXEC_DEFINE_GET_METHOD(TextMessaging, CanComposeTextMessage, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCTextMessagingGetCanComposeTextMessage(MCExecContext& ctxt, bool& r_result)
 {
     r_result = MCSystemCanSendTextMessage();

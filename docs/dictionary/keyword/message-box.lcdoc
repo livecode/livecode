@@ -1,6 +1,6 @@
 Name: message box
 
-Synonyms: message window, message, msg box, msg window, msg
+Synonyms: message window, message, msg box, msg window
 
 Type: keyword
 
@@ -10,6 +10,8 @@ Summary:
 Indicates the <message box>.
 
 Introduced: 1.0
+
+Deprecated: 9.0
 
 OS: mac, windows, linux
 
@@ -30,9 +32,12 @@ it.
 
 The two-word synonyms message window and msg window can be used only to
 show and hide the message box. To put a value into the message box or
-read the value in the message box, use the forms message, msg, message
+read the value in the message box, use the forms message, message
 box, and msg box.
 
-References: put (command), do (command), keyword (glossary),
-message box (keyword), blindTyping (property)
+From LiveCode 9.0 onwards use the <msg> global variable to refer to get
+and set the content of the message box as other legacy synonyms
+described here have been deprecated.
 
+References: put (command), do (command), keyword (glossary),
+blindTyping (property), msg (keyword)

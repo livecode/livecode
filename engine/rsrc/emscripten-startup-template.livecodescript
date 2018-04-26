@@ -1,6 +1,7 @@
 ﻿script "__startup"
 constant kBootHash = "@BOOT_HASH@"
 constant kEngineVersion = "@ENGINE_VERSION@"
+constant kModuleVersion = "@MODULE_VERSION@"
 
 -- Directories that engine expects to normally be present
 constant kStandardFolders = "/tmp:/livecode:/boot:/boot/standalone:/boot/fonts"
@@ -12,7 +13,7 @@ constant kStartupStackFile = "/boot/standalone/__boot.livecode"
 -- Directory containing auxiliary stack files
 constant kAuxStackFolder = "/boot/auxiliary_stackfiles"
 -- Auxiliary stack file list
-constant kAuxStackFileList = "/boot/auxiliary_stackfiles/auxiliary_stackfiles.txt"
+constant kAuxStackListFile = "/boot/auxiliary_stackfiles/auxiliary_stackfiles.txt"
 -- Directory containing extensions
 constant kExtensionFolder = "/boot/extensions"
 -- Extension list file
@@ -34,7 +35,7 @@ on startup
             end if
          end if
       end repeat
-
+      
       -------------------------------------------------------------
       -- Validate engine version
       if the version is not kEngineVersion then
@@ -53,7 +54,7 @@ on startup
          throw the result
       end if
       close file kStartupStackFile
-
+      
       put the sha1Digest of (byte 1 to 1024 of tStackData) into tStackData
       put empty into tStackHashString
       repeat for each byte tByte in tStackData
@@ -65,28 +66,28 @@ on startup
                put tByteString after tStackHashString
          end switch
       end repeat
-
+      
       if kBootHash is not tStackHashString then
-        throw  "Boot stack hash mismatch - standalone is corrupted"
+         throw  "Boot stack hash mismatch - standalone is corrupted"
       end if
       
-      if there is a file kAuxStackFileList then
+      -------------------------------------------------------------
+      -- Load auxiliary stack files and run their load handlers
+      
+      if there is a file kAuxStackListFile then
          
-         -- Read list of extensions
-         open file kAuxStackFileList for "UTF-8" text read
-         read from file kAuxStackFileList until end
-         put it into tAuxiliaryList
-         close file kAuxStackFileList
-         repeat for each line tFile in tAuxiliaryList
-            
+         local tAuxStacks
+         open file kAuxStackListFile for "UTF-8" text read
+         read from file kAuxStackListFile until end
+         put it into tAuxStacks
+         close file kAuxStackListFile
+         
+         set the defaultfolder to kAuxStackFolder
+         repeat for each line tFile in tAuxStacks
             -- This should autoload the file
-            put the name of stack (kAuxStackFolder & "/" & tFile) into tStackName
-            
-            -- The revLoadLibrary handler should insert the stack into
-            -- the backscripts or frontscripts as necessary.
-            send "revLoadLibrary" to stack tStackName
-            
-         end repeat
+            put the name of stack tFile into tStackName
+         end repeat  
+         
       end if
       
       -------------------------------------------------------------
@@ -102,14 +103,28 @@ on startup
          repeat for each line tModuleName in tModuleList
             put kExtensionFolder & slash & tModuleName into tFolder
             
-            load extension from file (tFolder & slash & "module.lcm") \
-                  with resource path (tFolder & slash & "resources")
+            local tModule
+            put tFolder & slash & "module." & kModuleVersion & ".lcm" \
+            	into tModule
+            	
+            if there is not a file tModule then
+            	put tFolder & slash & "module.lcm" into tModule
+            end if
+            
+            if there is not a file tModule then
+               throw tModuleName & ": missing module file"
+            end if
+            
+            load extension from file tModule \
+               with resource path (tFolder & slash & "resources")
             
             if the result is not empty then
                throw tModuleName & ":" && the result
             end if
          end repeat
       end if
+      
+      @STARTUP_SCRIPT@
       
    catch tError
    end try

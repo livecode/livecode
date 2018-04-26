@@ -42,73 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ToLower, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ToUpper, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, NumToChar, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CharToNum, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, NumToByte, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ByteToNum, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TextDecode, 2);
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TextEncode, 2);
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, NormalizeText, 2);
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CodepointProperty, 2);
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, Length, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, MatchText, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, MatchChunk, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ReplaceText, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, Format, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, Merge, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, Concatenate, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ConcatenateWithSpace, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ConcatenateWithComma, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, Contains, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, DoesNotContain, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, BeginsWith, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, EndsWith, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheLinesOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheLinesOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheParagraphsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheParagraphsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheSentencesOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheSentencesOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheItemsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheItemsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheWordsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheWordsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheTrueWordsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheTrueWordsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheTokensOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheTokensOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheCharsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheCharsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheCodepointsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheCodepointsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheCodeunitsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheCodeunitsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheBytesOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheBytesOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, LineOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ParagraphOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, SentenceOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ItemOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, WordOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TrueWordOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TokenOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CodepointOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CodeunitOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ByteOffset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, Offset, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAscii, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAscii, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Strings, Replace, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterWildcard, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterRegex, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterWildcardIntoIt, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterRegexIntoIt, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, BidiDirection, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count)
 {
 	uindex_t t_current = 0;
@@ -122,7 +55,7 @@ bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&
 	{
 		if (!t_strings.Extend(t_count + 1))
 			return false;
-		if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, t_found - t_current), t_strings[t_count++]))
+		if (!MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_current, t_found), t_strings[t_count++]))
 			return false;
         
 		t_current = t_found + 1;
@@ -130,7 +63,7 @@ bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&
     
 	if (!t_strings.Extend(t_count + 1))
 		return false;
-	if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, MCStringGetLength(p_string) - t_current), t_strings[t_count++]))
+	if (!MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_current, MCStringGetLength(p_string)), t_strings[t_count++]))
 		return false;
     
 	t_strings.Take(r_strings, r_count);
@@ -150,7 +83,7 @@ bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&
 	{
 		if (!t_strings.Extend(t_count + 1))
 			return false;
-		if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, t_found - t_current), t_strings[t_count++]))
+		if (!MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_current, t_found), t_strings[t_count++]))
 			return false;
 
 		t_current = t_found + MCStringGetLength(p_separator);
@@ -158,7 +91,7 @@ bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&
 
 	if (!t_strings.Extend(t_count + 1))
 		return false;
-	if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, MCStringGetLength(p_string) - t_current), t_strings[t_count++]))
+	if (!MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_current, MCStringGetLength(p_string)), t_strings[t_count++]))
 		return false;
 
 	t_strings.Take(r_strings, r_count);
@@ -415,7 +348,8 @@ bool MCStringsEvalTextEncoding(MCStringRef p_encoding, MCStringEncoding &r_encod
     //  Map A-Z to a-z
     //  From left-to-right, delete each 0 not preceded by a digit
     MCAutoArray<char_t> t_cleaned;
-    t_cleaned.New(MCStringGetLength(p_encoding) + 1);   // Cannot exceed incoming length
+    if (!t_cleaned.New(MCStringGetLength(p_encoding) + 1))   // Cannot exceed incoming length
+        return false;
     
     uindex_t t_cleaned_len;
     t_cleaned_len = 0;
@@ -924,10 +858,8 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
     
     uindex_t t_source_length = MCStringGetLength(p_string);
     uindex_t t_source_offset = 0;
-	MCStringRef t_substring;
-	t_substring = nil;
     
-    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, *t_unicode_string, MCRangeMake(t_source_offset, MCStringGetLength(p_string) - (t_source_offset))))
+    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, *t_unicode_string, MCRangeMakeMinMax(t_source_offset, MCStringGetLength(p_string))))
     {
         uindex_t t_start = t_compiled->matchinfo[0].rm_so;
         uindex_t t_end = t_compiled->matchinfo[0].rm_eo;
@@ -947,13 +879,6 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
         
         // Begin searching again after the end of the match
         t_source_offset += t_end;
-
-		if (t_substring != nil)
-		{
-			MCValueRelease(t_substring);
-			t_substring = nil;
-		}
-
         
         if (MCStringGetCharAtIndex(p_pattern, 0) == '^')
             break;
@@ -961,7 +886,7 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
     
     MCAutoStringRef t_post_match;
     if (t_success)
-        t_success = MCStringCopySubstring(p_string, MCRangeMake(t_source_offset, t_source_length - t_source_offset), &t_post_match) &&
+        t_success = MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_source_offset, t_source_length), &t_post_match) &&
             MCStringAppend(*t_result, *t_post_match);
     
     if (t_success)
@@ -997,7 +922,6 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
     MCAutoStringRefAsWString t_wide_string;
     t_wide_string . Lock(p_format);
 
-    const unichar_t *t_pos = *t_wide_string;
     const unichar_t *format = *t_wide_string;
 
 	t_success = MCStringCreateMutable(0, &t_result);
@@ -1983,8 +1907,7 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
 	if (t_length == 0)
         MCStringCopy(kMCEmptyString, r_result);
 
-	uint4 offset = 0;
-    MCAutoListRef t_output;
+	MCAutoListRef t_output;
     MCListCreateMutable(p_delimiter, &t_output);
 
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
@@ -2035,7 +1958,7 @@ void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCSt
 {
     // Create the pattern matcher
 	MCPatternMatcher *matcher;
-    matcher = new MCWildcardMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
+    matcher = new (nothrow) MCWildcardMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
     
     MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher, r_result);
     
@@ -2046,7 +1969,7 @@ void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStrin
 {
 	// Create the pattern matcher
 	MCPatternMatcher *matcher;
-    matcher = new MCRegexMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
+    matcher = new (nothrow) MCRegexMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
     
     MCAutoStringRef t_regex_error;
     if (!matcher -> compile(&t_regex_error))
@@ -2225,7 +2148,7 @@ void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type
 {
     if (nitems > 1)
     {
-        MCSortnode *tmp = new MCSortnode[nitems];
+        MCSortnode *tmp = new (nothrow) MCSortnode[nitems];
         MCStringsDoSort(p_items, nitems, tmp, p_form, p_dir == ST_DESCENDING, p_options);
         delete[] tmp;
     }
@@ -2289,7 +2212,7 @@ void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems,
                     
                     MCAutoStringRef t_numeric_part;
                     if (t_end != t_start &&
-                        MCStringCopySubstring(*t_string, MCRangeMake(t_start, t_end - t_start), &t_numeric_part) &&
+                        MCStringCopySubstring(*t_string, MCRangeMakeMinMax(t_start, t_end), &t_numeric_part) &&
                         ctxt . ConvertToNumber(*t_numeric_part, items[nitems].nvalue))
                         break;
                 }
@@ -2410,7 +2333,7 @@ static void MCStringsSortIndirect(uindex_t *p_items, uint4 nitems, comparator_t 
     if (nitems == 0)
         return;
     
-    uindex_t *tmp = new uindex_t[nitems];
+    uindex_t *tmp = new (nothrow) uindex_t[nitems];
     MCStringsDoSortIndirect(p_items, nitems, tmp, is_less_or_equal, context);
     delete[] tmp;
 }
@@ -2511,7 +2434,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
     t_temp_items = nil;
     if (p_by != nil)
     {
-        t_temp_items = new MCValueRef[p_count];
+        t_temp_items = new (nothrow) MCValueRef[p_count];
         MCerrorlock++;
         for(uindex_t i = 0; i < p_count; i++)
         {
@@ -2529,7 +2452,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
     
     // Build the vector of indicies to sort.
     uindex_t *t_indicies;
-    t_indicies = new uindex_t[p_count];
+    t_indicies = new (nothrow) uindex_t[p_count];
     for(uindex_t i = 0; i < p_count; i++)
         t_indicies[i] = i;
     
@@ -2545,7 +2468,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
         {
             // DateTime is sorted by seconds.
             double *t_seconds;
-            t_seconds = new double[p_count];
+            t_seconds = new (nothrow) double[p_count];
             for(uindex_t i = 0; i < p_count; i++)
             {
                 MCDateTime t_datetime;
@@ -2563,7 +2486,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
         case ST_NUMERIC:
         {
             double *t_numbers;
-            t_numbers = new double[p_count];
+            t_numbers = new (nothrow) double[p_count];
             for(uindex_t i = 0; i < p_count; i++)
             {
                 if (MCValueIsEmpty(t_items[i]))
@@ -2601,7 +2524,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
                     
                     MCAutoStringRef t_numeric_part;
                     if (t_end == t_start ||
-                        !MCStringCopySubstring(*t_string, MCRangeMake(t_start, t_end - t_start), &t_numeric_part) ||
+                        !MCStringCopySubstring(*t_string, MCRangeMakeMinMax(t_start, t_end), &t_numeric_part) ||
                         !ctxt . ConvertToReal(*t_numeric_part, t_numbers[i]))
                     {
                         t_numbers[i] = -MAXREAL8;
@@ -2619,7 +2542,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
         case ST_BINARY:
         {
             MCDataRef *t_datas;
-            t_datas = new MCDataRef[p_count];
+            t_datas = new (nothrow) MCDataRef[p_count];
             for(uindex_t i = 0; i < p_count; i++)
             {
                 if (!ctxt . ConvertToData(t_items[i], t_datas[i]))
@@ -2646,7 +2569,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
             else
             {
                 MCStringRef *t_strings;
-                t_strings = new MCStringRef[p_count];
+                t_strings = new (nothrow) MCStringRef[p_count];
                 for(uindex_t i = 0; i < p_count; i++)
                 {
                     if (!ctxt . ConvertToString(t_items[i], t_strings[i]) ||
@@ -2670,7 +2593,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
             /* UNCHECKED */ MCUnicodeCreateCollator(kMCSystemLocale, t_options, t_collator);
             
             MCDataRef *t_datas;
-            t_datas = new MCDataRef[p_count];
+            t_datas = new (nothrow) MCDataRef[p_count];
             for(uindex_t i = 0; i < p_count; i++)
             {
                 MCAutoStringRef t_string;

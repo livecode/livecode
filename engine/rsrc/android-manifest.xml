@@ -24,6 +24,7 @@ ${USES_PERMISSION}${USES_FEATURE}
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
+      ${NFC_FILTER}
       ${CUSTOM_URL_FILTER}
     </activity>
     ${PROVIDER}

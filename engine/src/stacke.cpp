@@ -51,9 +51,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static uint2 Checkersize = 64;
 static uint2 Venetiansize = 64;
+#if INCLUDE_ZOOM_EFFECT
 static uint2 Zoomsize = 16;
-
-static int2 dissolve_array[DISSOLVE_SIZE] = { 13, 2, 10, 7, 14, 8, 11, 3, 0, 5, 12, 9, 1, 6, 4, 15};
+#endif
 
 static Boolean barneffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
 static Boolean checkerboardeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
@@ -293,7 +293,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				case VE_INVERSE:
 					{
 						MCContext *t_old_context = nil;
-						/* UNCHECKED */ t_old_context = new MCGraphicsContext(t_context);
+						/* UNCHECKED */ t_old_context = new (nothrow) MCGraphicsContext(t_context);
 						curcard->draw(t_old_context, t_user_rect, false);
 						delete t_old_context;
 						
@@ -325,7 +325,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				default:
 				{
 					MCContext *t_old_context = nil;
-					/* UNCHECKED */ t_old_context = new MCGraphicsContext(t_context);
+					/* UNCHECKED */ t_old_context = new (nothrow) MCGraphicsContext(t_context);
 					curcard->draw(t_old_context, t_user_rect, false);
 					delete t_old_context;
 				}
@@ -358,7 +358,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				IO_handle stream;
 				if ((stream = MCS_open(t_effects->sound, kMCOpenFileModeRead, True, False, 0)) != NULL)
 				{
-					acptr = new MCAudioClip;
+					acptr = new (nothrow) MCAudioClip;
 					acptr->setdisposable();
 					if (!acptr->import(t_effects->sound, stream))
 					{
@@ -419,14 +419,9 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 			{
 				t_context.delta = t_delta;
 				
-				Boolean t_drawn = False;
 				view_platform_updatewindowwithcallback(t_effect_region, MCStackRenderEffect, &t_context);
 				
-				// Now redraw the window with the new image.
-//				if (t_drawn)
-				{
-					MCscreen -> sync(getw());
-				}
+                MCscreen -> sync(getw());
 				
 				// Update the window's blendlevel (if needed)
 				if (old_blendlevel != blendlevel)
@@ -987,7 +982,7 @@ Boolean zoomeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGI
 	return True;
 }
 
-#if 0
+#if INCLUDE_ZOOM_EFFECT
 Boolean zoomeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
 {
 

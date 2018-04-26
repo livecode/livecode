@@ -409,6 +409,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    put pVersion into tParams["version"]["ProductVersion"]
    put pVersion into tParams["version"]["FileVersion"]
    
+   # TODO: Add the initialisation library and init libs in same way as normal standalone building
    # AL-2015-03-14: Use deploy parameters to include libURL scriptified stack in installer standalone
    local tAuxStackfiles
    if there is a stack "revLibUrl" then
@@ -419,8 +420,8 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    put return & builderSystemFolder() & slash & "installer_utilities.livecodescript" after tAuxStackfiles
    put tAuxStackfiles into tParams["auxiliary_stackfiles"]
    
-   // revLibURL needs to initialise its custom props, and revLoadLibrary must therefore be called.
-   put merge("send [[quote]]revLoadLibrary[[quote]] to stack [[quote]]revLibUrl[[quote]]") into tParams["startup_script"]
+   // revLibURL needs to initialise its custom props, and extensionInitialize must therefore be called.
+   put merge("send [[quote]]extensionInitialize[[quote]] to stack [[quote]]revLibUrl[[quote]]") into tParams["startup_script"]
    put return & "insert script of stack" && quote & "InstallerUtilities" & quote && "into back" after tParams["startup_script"]
    
    switch pPlatform
@@ -597,7 +598,7 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    
    -- Run the installer to generate the raw app bundle
    builderLog "message", "Installing macosx IDE to" && "'" & tAppBundle & "'"
-   get shell(tOutputFileStub & ".app/Contents/MacOS/installer install noui -log /dev/stderr -location" && escapeArg(tAppBundle))
+   get shell(tOutputFileStub & ".app/Contents/MacOS/installer install -ui -log /dev/stderr -location" && escapeArg(tAppBundle))
    if the result is not zero then
       builderLog "error", "Failed to run macosx installer:" && it
       throw "failure"
@@ -693,6 +694,44 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
                 builderLog "error", "Could not sign iOS extension:" && it
                 throw "failure"
             end if
+         end repeat
+      end repeat
+      
+      -- Sign any extension code resources
+      local tExtensions
+      put folders(tAppBundle & "/Contents/Tools/Extensions") into tExtensions
+      repeat for each line tExtension in tExtensions
+         local tCodeFolders
+         put folders(tAppBundle & "/Contents/Tools/Extensions/" & tExtension & "/code") into tCodeFolders
+         filter tCodeFolders with "*iphonesimulator*"
+         if tCodeFolders is empty then next repeat
+         
+         
+         repeat for each line tCodeFolder in tCodeFolders
+            local tDylibs
+            filter files(tAppBundle & "/Contents/Tools/Extensions/" & tExtension & "/code/" & tCodeFolder) \
+               with "*.dylib" into tDylibs
+            if tDylibs is empty then next repeat
+            
+            repeat for each line tFile in tDylibs
+               -- Ignore files that aren't dylibs
+               local tFullCodePath
+               put tAppBundle & "/Contents/Tools/Extensions/" & tExtension & "/code/" & tCodeFolder & "/" & tFile into tFullCodePath
+               get shell("file" && escapeArg(tFullCodePath))
+               if "Mach-O" is not among the words of it then next repeat
+
+               clearExtendedAttributes escapeArg(tFullCodePath)
+   			
+               -- Sign the extension
+               -- The "--force" parameter strips the existing signature (which was
+               -- made using a not-valid-for-distribution profile)
+               builderLog "message", "Signing iOS extension" && "'" & tFullCodePath & "'"
+               get shell("/usr/bin/codesign --sign" && word 2 of tSigningId && "--force --verbose=2" && escapeArg(tFullCodePath))
+               if the result is not zero then
+                   builderLog "error", "Could not sign iOS extension:" && it
+                   throw "failure"
+               end if
+            end repeat
          end repeat
       end repeat
 

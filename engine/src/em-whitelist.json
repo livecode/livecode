@@ -1,12 +1,12 @@
 [
     "^_main$",
-    "^__Z6X_initiPP10__MCStringiS1_$",
+    "^__Z6X_initRK14X_init_options$",
     "^__Z6X_openiPP10__MCStringS1_$",
     "^__ZN10MCDispatch7startupEv$",
     "^__Z20send_startup_messageb",
     "^__Z13platform_mainiPPcS0_$",
     "^__Z21X_main_loop_iterationv$",
-    "^__ZN10MCScreenDC4waitEdhh$",
+    "^__ZN10MCScreenDC4waitEdbb$",
 
     "^_MCEventQueueDispatch$",
     "^__ZL25MCEventQueueDispatchEventP7MCEvent$",

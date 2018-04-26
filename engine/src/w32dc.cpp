@@ -157,6 +157,9 @@ bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_f
 	if (t_success && p_globally)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     
+	if (t_success && !p_globally)
+		t_success = MCGFontAddPlatformFileResource(p_path);
+
 	return t_success;
 }
 
@@ -166,7 +169,7 @@ bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_
     bool t_success = true;
     DWORD t_private = NULL;
     
-    if (p_globally)
+    if (!p_globally)
         t_private = FR_PRIVATE;
     
     MCAutoStringRefAsWString t_wide_path;
@@ -179,6 +182,9 @@ bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_
 	if (t_success && p_globally)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     
+	if (t_success && !p_globally)
+		t_success = MCGFontRemovePlatformFileResource(p_path);
+
 	return t_success;
 }
 
@@ -190,7 +196,7 @@ LPWSTR MCScreenDC::convertutf8towide(const char *p_utf8_string)
 	t_new_length = UTF8ToUnicode(p_utf8_string, strlen(p_utf8_string), NULL, 0);
 
 	LPWSTR t_result;
-	t_result = new WCHAR[t_new_length + 2];
+	t_result = new (nothrow) WCHAR[t_new_length + 2];
 
 	t_new_length = UTF8ToUnicode(p_utf8_string, strlen(p_utf8_string), (uint2*)t_result, t_new_length);
 	t_result[t_new_length / 2] = 0;
@@ -207,7 +213,7 @@ LPCSTR MCScreenDC::convertutf8toansi(const char *p_utf8_string)
 	t_length = WideCharToMultiByte(CP_ACP, 0, t_wide, -1, NULL, 0, NULL, NULL);
 
 	LPSTR t_result;
-	t_result = new CHAR[t_length];
+	t_result = new (nothrow) CHAR[t_length];
 	WideCharToMultiByte(CP_ACP, 0, t_wide, -1, t_result, t_length, NULL, NULL);
 
 	delete t_wide;
@@ -339,7 +345,7 @@ bool MCWin32GetMonitorPixelScale(HMONITOR p_monitor, MCGFloat &r_pixel_scale)
 	HRESULT t_result;
 	
 	// try to get per-monitor DPI setting
-	if (!MCWin32GetDPIForMonitor(t_result, p_monitor, kMCWin32MDTDefault, &t_xdpi, &t_ydpi) ||
+	if (!MCWin32GetDpiForMonitor(t_result, p_monitor, kMCWin32MDTDefault, &t_xdpi, &t_ydpi) ||
 		t_result != S_OK)
 	{
 		// fallback to the global system DPI setting
@@ -360,7 +366,7 @@ bool MCWin32GetMonitorPixelScale(HMONITOR p_monitor, MCGFloat &r_pixel_scale)
 // IM-2014-08-08: [[ Bug 12372 ]] Set up dpi-awareness if pixel scaling is enabled
 void MCResPlatformInitPixelScaling()
 {
-	if (MCModeGetPixelScalingEnabled())
+	if (MCModeCanEnablePixelScaling() && MCModeGetPixelScalingEnabled())
 	{
 		BOOL t_result;
 		/* UNCHECKED */ MCWin32SetProcessDPIAware(t_result);

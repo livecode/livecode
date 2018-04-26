@@ -61,7 +61,7 @@ void MCTooltip::close(void)
 void MCTooltip::timer(MCNameRef mptr, MCParameter *params)
 {
 #ifndef _MOBILE
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 		opentip();
 	else
 		close();
@@ -75,11 +75,13 @@ void MCTooltip::mousemove(int2 x, int2 y, MCCard *c)
 	my = y;
 	card = c;
 	if (!MCStringIsEmpty(tip))
+    {
 		if (opened)
 			MCscreen->addtimer(this, MCM_internal2, MCtooltime);
 		else
 			if (!(state & CS_NO_FOCUS) && MCtooltipdelay != 0)
 				MCscreen->addtimer(this, MCM_internal, MCtooltipdelay);
+    }
 }
 
 void MCTooltip::clearmatch(MCCard *c)
@@ -171,9 +173,9 @@ void MCTooltip::opentip()
     {
         // MW-2012-02-17: [[ LogFonts ]] Convert the tooltip font string to
         //   a name and create the font.
-        MCAutoNameRef t_tt_font;
-        /* UNCHECKED */ MCNameCreate(MCttfont, t_tt_font);
-        /* UNCHECKED */ MCFontCreate(t_tt_font, MCFontStyleFromTextStyle(FA_DEFAULT_STYLE), MCttsize, m_font);
+        MCNewAutoNameRef t_tt_font;
+        /* UNCHECKED */ MCNameCreate(MCttfont, &t_tt_font);
+        /* UNCHECKED */ MCFontCreate(*t_tt_font, MCFontStyleFromTextStyle(FA_DEFAULT_STYLE), MCttsize, m_font);
     }
     
 	rect.width = 0;

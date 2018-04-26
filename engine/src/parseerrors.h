@@ -1637,7 +1637,7 @@ enum Parse_errors
 	PE_RESOLVE_BADOBJECT,
 	
 	// MERG-2013-10-04: [[ EditScriptAt ]] edit script of object at.
-    // {EE-0536} edit script: no at expression
+    // {PE-0536} edit script: no at expression
 	PE_EDIT_NOAT,
 	
 	// MW-2013-11-14: [[ AssertCmd ]] Parsing errors for assert command.
@@ -1775,8 +1775,27 @@ enum Parse_errors
 	// {PE-0576} folders: bad folder expression
 	PE_FOLDERS_BADPARAM,
 
-    // {PE-0575} send: can't send script in time
+    // {PE-0577} open: expected 'from' address
+    PE_OPEN_NOFROM,
+
+    // {PE-0578} messageDigest: bad parameters
+    PE_MESSAGEDIGEST_BADPARAM,
+    
+    // {PE-0579} setop: missing 'difference'
+    PE_ARRAYOP_NODIFFERENCE,
+    
+    // {PE-0580} setop: 'recursive' only makes sense for union or intersect
+    PE_ARRAYOP_BADRECURSIVE,
+    
+    // {PE-0581} setop: destination is not a container (did you mean to use 'into'?)
+    PE_ARRAYOP_DSTNOTCONTAINER,
+	
+    // {PE-0582} send: can't send script in time
     PE_SEND_SCRIPTINTIME,
+    
+    // {PE-0583} fontLanguage: bad type expression
+    PE_FONTLANGUAGE_BADPARAM,
+    
 };
 
 extern const char *MCparsingerrors;

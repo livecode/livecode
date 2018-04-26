@@ -35,7 +35,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#include "syntax.h"
 #include "statemnt.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,12 +59,7 @@ MCVarref *MCExpression::getrootvarref(void)
 	return NULL;
 }
 
-MCVariable *MCExpression::evalvar(MCExecContext& ctxt)
-{
-    return NULL;
-}
-
-bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
+bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer& r_container)
 {
     return false;
 }
@@ -131,34 +125,41 @@ Parse_stat MCExpression::get0params(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+Parse_stat MCExpression::gettheparam(MCScriptPoint& sp, Boolean single, MCExpression** exp)
+{
+    initpoint(sp);
+    if (sp.skip_token(SP_FACTOR, TT_OF) != PS_NORMAL)
+        return PS_NORMAL;
+    if (sp.parseexp(single, False, exp) != PS_NORMAL)
+    {
+        MCperror->add
+        (PE_FACTOR_BADPARAM, sp);
+        return PS_ERROR;
+    }
+	return PS_NORMAL;
+}
+
 Parse_stat MCExpression::get0or1param(MCScriptPoint &sp, MCExpression **exp,
                                       Boolean the)
 {
 	if (the)
 	{
-		initpoint(sp);
-		if (sp.skip_token(SP_FACTOR, TT_OF) != PS_NORMAL)
-			return PS_NORMAL;
-		if (sp.parseexp(False, False, exp) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_FACTOR_BADPARAM, sp);
-			return PS_ERROR;
-		}
+        return gettheparam(sp, False, exp);
 	}
-	else
-	{
-		MCExpression *earray[MAX_EXP];
-		uint2 ecount = 0;
-		if (getexps(sp, earray, ecount) != PS_NORMAL || ecount > 1)
-		{
-			freeexps(earray, ecount);
-			return PS_ERROR;
-		}
-		else
-			if (ecount == 1)
-				*exp = earray[0];
+
+    MCExpression *earray[MAX_EXP];
+    uint2 ecount = 0;
+    if (getexps(sp, earray, ecount) != PS_NORMAL || ecount > 1)
+    {
+        freeexps(earray, ecount);
+        return PS_ERROR;
+    }
+    
+    if (ecount == 1)
+    {
+        *exp = earray[0];
 	}
+    
 	return PS_NORMAL;
 }
 
@@ -167,32 +168,47 @@ Parse_stat MCExpression::get1param(MCScriptPoint &sp, MCExpression **exp,
 {
 	if (the)
 	{
-		initpoint(sp);
-		if (sp.skip_token(SP_FACTOR, TT_OF) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_FACTOR_NOOF, sp);
-			return PS_ERROR;
-		}
-		if (sp.parseexp(True, False, exp) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_FACTOR_BADPARAM, sp);
-			return PS_ERROR;
-		}
+        return gettheparam(sp, True, exp);
 	}
-	else
+    
+    MCExpression *earray[MAX_EXP];
+    uint2 ecount = 0;
+    if (getexps(sp, earray, ecount) != PS_NORMAL || ecount != 1)
+    {
+        freeexps(earray, ecount);
+        return PS_ERROR;
+    }
+    
+    *exp = earray[0];
+	
+    return PS_NORMAL;
+}
+
+Parse_stat MCExpression::get0or1or2params(MCScriptPoint &sp, MCExpression **exp1,
+                                            MCExpression **exp2, Boolean the)
+{
+	if (the)
 	{
-		MCExpression *earray[MAX_EXP];
-		uint2 ecount = 0;
-		if (getexps(sp, earray, ecount) != PS_NORMAL || ecount != 1)
-		{
-			freeexps(earray, ecount);
-			return PS_ERROR;
-		}
-		else
-			*exp = earray[0];
+        return gettheparam(sp, False, exp1);
 	}
+    
+    MCExpression *earray[MAX_EXP];
+    uint2 ecount = 0;
+    if (getexps(sp, earray, ecount) != PS_NORMAL || ecount > 2)
+    {
+        freeexps(earray, ecount);
+        return PS_ERROR;
+    }
+    
+    if (ecount > 0)
+    {
+        *exp1 = earray[0];
+        if (ecount > 1)
+        {
+            *exp2 = earray[1];
+        }
+    }
+    
 	return PS_NORMAL;
 }
 
@@ -201,33 +217,24 @@ Parse_stat MCExpression::get1or2params(MCScriptPoint &sp, MCExpression **exp1,
 {
 	if (the)
 	{
-		initpoint(sp);
-		if (sp.skip_token(SP_FACTOR, TT_OF) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_FACTOR_NOOF, sp);
-			return PS_ERROR;
-		}
-		if (sp.parseexp(True, False, exp1) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_FACTOR_BADPARAM, sp);
-			return PS_ERROR;
-		}
+        return gettheparam(sp, True, exp1);
 	}
-	else
-	{
-		MCExpression *earray[MAX_EXP];
-		uint2 ecount = 0;
-		if (getexps(sp, earray, ecount) != PS_NORMAL || ecount < 1 || ecount > 2)
-		{
-			freeexps(earray, ecount);
-			return PS_ERROR;
-		}
-		*exp1 = earray[0];
-		if (ecount == 2)
-			*exp2 = earray[1];
-	}
+    
+    MCExpression *earray[MAX_EXP];
+    uint2 ecount = 0;
+    if (getexps(sp, earray, ecount) != PS_NORMAL || ecount < 1 || ecount > 2)
+    {
+        freeexps(earray, ecount);
+        return PS_ERROR;
+    }
+    
+    *exp1 = earray[0];
+    
+    if (ecount == 2)
+    {
+        *exp2 = earray[1];
+    }
+    
 	return PS_NORMAL;
 }
 
@@ -361,7 +368,7 @@ Parse_stat MCExpression::getparams(MCScriptPoint &sp, MCParameter **params)
 	while (True)
 	{
 		if (pptr == NULL)
-			*params = pptr = new MCParameter;
+			*params = pptr = new (nothrow) MCParameter;
 		else
 		{
 			pptr->setnext(new MCParameter);
@@ -424,25 +431,11 @@ void MCExpression::initpoint(MCScriptPoint &sp)
 	pos = sp.getpos();
 }
 
-void MCExpression::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-void MCExpression::compile_out(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalUnimplemented(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCFuncref::MCFuncref(MCNameRef inname)
+    : name(inname)
 {
-	/* UNCHECKED */ MCNameClone(inname, name);
 	handler = nil;
 	params = NULL;
 	resolved = false;
@@ -457,12 +450,10 @@ MCFuncref::~MCFuncref()
 		params = params->getnext();
 		delete tmp;
 	}
-	MCNameDelete(name);
 }
 
 Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 {
-	parent = sp.getobj();
 	initpoint(sp);
 	if (getparams(sp, &params) != PS_NORMAL)
 	{
@@ -470,7 +461,7 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 		return PS_ERROR;
 	}
     
-    if (MCIsGlobalHandler(name))
+    if (MCIsGlobalHandler(*name))
     {
         global_handler = true;
         resolved = true;
@@ -481,7 +472,7 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 
 void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, global_handler, true);
+    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, *name, line, pos, global_handler, true);
     
     Exec_stat stat = ctxt . GetExecStat();
     
@@ -489,7 +480,7 @@ void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 	//   exception.
 	if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
 	{
-		ctxt . LegacyThrow(EE_FUNCTION_BADFUNCTION, name);
+		ctxt . LegacyThrow(EE_FUNCTION_BADFUNCTION, *name);
 		return;
 	}
 

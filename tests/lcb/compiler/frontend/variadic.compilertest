@@ -1,0 +1,59 @@
+%% Copyright (C) 2017 LiveCode Ltd.
+%%
+%% This file is part of LiveCode.
+%%
+%% LiveCode is free software; you can redistribute it and/or modify it under
+%% the terms of the GNU General Public License v3 as published by the Free
+%% Software Foundation.
+%%
+%% LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+%% WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+%% for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+%% Variadic parameter must be the last in the parameter list
+%TEST VariadicLastInForeignHandler
+module compiler_test
+foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%% Variadic parameter must be the last in the parameter list
+%TEST VariadicNotLastInForeignHandler
+module compiler_test
+foreign handler TestVariadic(in pA as any, %{BEFORE_VARIADIC}..., in pB as any) returns nothing binds to ""
+end module
+%EXPECT PASS
+%ERROR "Variadic parameter must be the last" AT BEFORE_VARIADIC
+%ENDTEST
+
+%% Variadic parameters are not allowed in non-foreign handlers
+%TEST VariadicNotAllowedInNonForeign
+module compiler_test
+handler TestVariadic(in pA as any, %{BEFORE_VARIADIC}...) returns nothing
+end handler
+end module
+%EXPECT PASS
+%ERROR "Variadic parameters only allowed in foreign handlers" AT BEFORE_VARIADIC
+%ENDTEST
+
+%% You can have 0 to any number of variadic arguments
+%TEST VariadicParametersAnyCount
+module compiler_test
+__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
+handler CallVariadic()
+	TestVariadic(1)
+	TestVariadic(1, 2)
+	TestVariadic(1, 2, 3)
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%%%ERROR "Too few arguments for specified handler" AT BEFORE_ZERO

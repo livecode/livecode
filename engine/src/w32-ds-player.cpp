@@ -1129,6 +1129,15 @@ bool MCWin32DSPlayer::SetMirrored(bool p_mirrored)
 	if (!SUCCEEDED(t_mc9->SetOutputRect(0, &t_rect)))
 		return false;
 
+	if (m_state != kMCWin32DSPlayerRunning)
+	{
+		MCPlatformPlayerDuration t_duration;
+		if (GetCurrentPosition(t_duration))
+		{
+			SetCurrentPosition(t_duration);
+		}
+	}
+
 	m_mirrored = p_mirrored;
 	return true;
 }
@@ -1589,7 +1598,7 @@ void MCWin32DSPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 MCWin32DSPlayer *MCWin32DSPlayerCreate()
 {
 	MCWin32DSPlayer *t_player;
-	t_player = new MCWin32DSPlayer();
+	t_player = new (nothrow) MCWin32DSPlayer();
 
 	if (t_player == nil)
 		return nil;

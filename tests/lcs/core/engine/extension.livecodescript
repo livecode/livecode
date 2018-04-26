@@ -16,12 +16,39 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+local sTestExtension
 on TestSetup
+   TestSkipIfNot "lcb"
+   
     TestLoadExtension "com.livecode.library.json"
     TestLoadExtension "com.livecode.widget.clock"
 
-	TestLoadAuxillaryExtension "_extension"
+    buildMultiModuleExtension "_extension,_extension_support"
+    if the result is not empty then
+       throw "Failed to build test support extension:" && the result
+    end if
+    put it into sTestExtension
+
+    load extension from data sTestExtension
+    if the result is not empty then
+       throw "Failed to load test support extension:" && the result
+    end if
 end TestSetup
+
+private command buildMultiModuleExtension pInputs, pOutput
+    -- Build a multi-module extension
+    local tBasename, tBytecode, tFile, tResult, tExtensionFile
+    repeat for each item tBasename in pInputs
+       put TestGetBuiltBytecodeFile(tBasename) into tFile
+       put url("binfile:" & tFile) after tBytecode
+       put the result into tResult
+       if tResult is not empty then
+          return merge("Failed to load [[tFile]]: [[tResult]]") for error
+       end if
+    end repeat
+
+    return tBytecode for value
+end buildMultiModuleExtension
 
 /////////
 
@@ -66,37 +93,76 @@ on TestExtensionBridgeNumbers
          TestExtensionBridgeNumbers_ExecuteScript()
 end TestExtensionBridgeNumbers
 
-/////////
+on TestExtensionBridgeEmptyArrays
+   TestAssert "LCS empty arrays bridge to LCB empty lists in library handlers", \
+         TestExtensionBridgeArrays_EmptyToEmptyList(empty)
+end TestExtensionBridgeEmptyArrays
 
-local sLastLog
-on logChanged pMsg
-   put pMsg into sLastLog
-end logChanged
+//////////
 
-on TestExtensionLogInteger
-	// log 1
-	get TestExtensionLog_Integer()
-	wait for 0 with messages
-	TestAssert "extension log integer", sLastLog is 1
-end TestExtensionLogInteger
+on TestMultiModuleExtensions
+   TestAssert "support modules are not in extension list", \
+         "com.livecode.lcs_tests.core.extension.support" is not among \
+         the lines of the loadedExtensions
+   TestAssert "main modules are in extension list", \
+         "com.livecode.lcs_tests.core.extension" is among \
+         the lines of the loadedExtensions
+   TestAssert "extension support module handlers work", \
+         TestExtensionSupportModule_Handler()
 
-on TestExtensionLogList
-	// log [1,2,3]
-	get TestExtensionLog_List()
-	wait for 0 with messages
-	TestAssert "extension log list", sLastLog is "[1, 2, 3]"
-end TestExtensionLogList
+   -- Check that unloading an extension also unloads support modules
+   -- (allowing them to be loaded again)
+   unload extension "com.livecode.lcs_tests.core.extension"
+   TestAssert "unload multi-module extension", the result is empty
 
-on TestExtensionLogArray
-	// log {a: 1}
-	get TestExtensionLog_Array()
-	wait for 0 with messages
-	TestAssert "extension log array", sLastLog is "{a: 1}"
-end TestExtensionLogArray
+   load extension from data sTestExtension
+   TestAssert "reload multi-module extension", the result is empty
 
-on TestExtensionLogString
-	// log "log"
-	get TestExtensionLog_String()
-	wait for 0 with messages
-	TestAssert "extension log string", sLastLog is quote & "log" & quote
-end TestExtensionLogString
+   -- Check that extensions with incorrect support module names don't
+   -- load
+   unload extension "com.livecode.lcs_tests.core.extension"
+   buildMultiModuleExtension "_extension_support,_extension"
+   if the result is not empty then
+      throw "Failed to build assembly:" && the result
+   end if
+   load extension from data it
+   TestAssert "can't load multi-module extensions with bad module names", \
+         the result is not empty
+end TestMultiModuleExtensions
+
+//////////
+
+command CallLibraryHandlerWithString
+   get TestExtensionLibraryHandler("foobar")
+end CallLibraryHandlerWithString
+
+command CallLibraryHandlerWithTooFewParams
+   get TestExtensionLibraryHandler()
+end CallLibraryHandlerWithTooFewParams
+
+command CallLibraryHandlerWithTooManyParams
+   get TestExtensionLibraryHandler(1, 2)
+end CallLibraryHandlerWithTooManyParams
+
+on TestExtensionLibraryHandlerCallErrors
+   /* In all cases in this test we expect the error stack to be:
+    *    <specific error>
+    *    219, ...
+    * Here '219' is the error in handler error which the call to the actual
+    * TestExtensionLibraryHandler function will generate. */
+
+   TestAssertThrow "library handler call throws correct error on type error", \
+         "CallLibraryHandlerWithString", \
+         the long id of me, \
+         ("EE_INVOKE_TYPEERROR", "EE_FUNCTION_BADFUNCTION")
+
+   TestAssertThrow "library handler call throws correct error on too few args error", \
+         "CallLibraryHandlerWithTooFewParams", \
+         the long id of me, \
+         ("EE_INVOKE_TOOFEWARGS", "EE_FUNCTION_BADFUNCTION")
+
+   TestAssertThrow "library handler call throws correct error on too many args error", \
+         "CallLibraryHandlerWithTooManyParams", \
+         the long id of me, \
+         ("EE_INVOKE_TOOMANYARGS", "EE_FUNCTION_BADFUNCTION")
+end TestExtensionLibraryHandlerCallErrors

@@ -124,9 +124,9 @@ bool MCNSArrayToBrowserList(NSArray *p_array, MCBrowserListRef &r_list)
 
 bool MCNSNumberToBrowserValue(NSNumber *p_number, MCBrowserValue &r_value)
 {
-	if (p_number == @(YES))
+	if ([p_number isEqual:@YES])
 		return MCBrowserValueSetBoolean(r_value, true);
-	else if (p_number == @(NO))
+	else if ([p_number isEqual:@NO])
 		return MCBrowserValueSetBoolean(r_value, false);
 	else if (MCCStringEqual([p_number objCType], @encode(int)))
 		return MCBrowserValueSetInteger(r_value, [p_number intValue]);
@@ -1141,6 +1141,16 @@ bool MCWebViewBrowser::Init(void)
 	[super dealloc];
 }
 
+- (void)webView:(WebView *)webView
+        decidePolicyForNewWindowAction:(NSDictionary *)actionInformation
+        request:(NSURLRequest *)request
+        newFrameName:(NSString *)frameName
+        decisionListener:(id<WebPolicyDecisionListener>)listener
+{
+    [listener ignore];
+    [[webView mainFrame] loadRequest:request];
+}
+
 - (void)webView:(WebView *)webView decidePolicyForMIMEType:(NSString *)type request:(NSURLRequest *)request frame:(WebFrame *)frame decisionListener:(id<WebPolicyDecisionListener>)listener
 {
 	if ([WebView canShowMIMEType:type])
@@ -1148,7 +1158,10 @@ bool MCWebViewBrowser::Init(void)
 	else
 	{
 		[listener ignore];
-		m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        if (request.URL.absoluteString != nil)
+        {
+            m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        }
 	}
 }
 
@@ -1159,13 +1172,24 @@ bool MCWebViewBrowser::Init(void)
 	else
 	{
 		[listener ignore];
-		m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        if (request.URL.absoluteString != nil)
+        {
+            m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        }
 	}
 }
 
 @end
 
 @implementation MCWebUIDelegate
+
+- (WebView *)webView:(WebView *)webView
+            createWebViewWithRequest:(NSURLRequest *)request
+{
+    [[webView frameLoadDelegate] setPendingRequest: false];
+    [[webView mainFrame] loadRequest:request];
+    return webView;
+}
 
 - (NSUInteger)webView:(WebView *)webView dragDestinationActionMaskForDraggingInfo:(id<NSDraggingInfo>)draggingInfo
 {

@@ -288,7 +288,7 @@ bool MCGIFImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 	// restoration info
 	MCImageBitmap *t_restore_image = nil;
 	int t_disposal_mode = DISPOSAL_UNSPECIFIED;
-	MCRectangle t_disposal_region;
+	MCRectangle t_disposal_region = kMCEmptyRectangle;
 
 	// The list of frames.
 	MCBitmapFrame *t_frames = nil;
@@ -435,7 +435,7 @@ bool MCGIFImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForGIFStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCGIFImageLoader *t_loader;
-	t_loader = new MCGIFImageLoader(p_stream);
+	t_loader = new (nothrow) MCGIFImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -478,8 +478,7 @@ bool MCImageEncodeGIF(MCImageIndexedBitmap *p_indexed, IO_handle p_stream, uinde
 	int t_err = 0;
 	GifFileType *t_gif = nil;
 	ColorMapObject *t_colormap = nil;
-	GifColorType *t_gifcolors = nil;
-
+	
 	MCGIFWriteContext t_context;
 	t_context.stream = p_stream;
 	t_context.byte_count = 0;

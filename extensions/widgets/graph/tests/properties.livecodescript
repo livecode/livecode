@@ -27,10 +27,11 @@ end getGraphData
 
 on TestSetup
 	TestLoadExtension "com.livecode.library.widgetutils"
-	TestLoadExtension "com.livecode.widget.lineGraph"	
+	TestLoadExtension "com.livecode.library.iconsvg"
+	TestLoadExtension "com.livecode.widget.linegraph"	
 	
 	create stack
-	create widget as "com.livecode.widget.lineGraph"
+	create widget as "com.livecode.widget.linegraph"
 	
 	put it into sGraphID
 end TestSetup

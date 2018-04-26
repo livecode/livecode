@@ -21,6 +21,7 @@
 
 'export'
     IsBootstrapCompile
+    IsNotBytecodeOutput
 
     NegateReal
 
@@ -31,6 +32,7 @@
     GetColumnOfCurrentPosition
     GetUndefinedPosition
     AddImportedModuleFile
+	AddImportedModuleName
     GetFilenameOfPosition
 
     InitializeLiterals
@@ -47,17 +49,25 @@
     IsStringEqualToString
 
     IsNameSuitableForDefinition
+    IsNameSuitableForNamespace
+    IsNameValidForNamespace
     IsStringSuitableForKeyword
 
+	ConcatenateNameParts
+	ContainsNamespaceOperator
+	SplitNamespace
+	
     InitializeScopes
     FinalizeScopes
     DumpScopes
     EnterScope
     LeaveScope
     DefineMeaning
+	DefineUnqualifiedMeaning
     UndefineMeaning
     HasLocalMeaning
     HasMeaning
+	HasUnqualifiedMeaning
 
     PushEmptySet
     DuplicateSet
@@ -182,12 +192,6 @@
     EmitDefinedType
     EmitForeignType
     EmitOptionalType
-    EmitPointerType
-    EmitBoolType
-    EmitIntType
-    EmitUIntType
-    EmitFloatType
-    EmitDoubleType
     EmitAnyType
     EmitBooleanType
     EmitIntegerType
@@ -206,6 +210,7 @@
     EmitHandlerTypeInParameter
     EmitHandlerTypeOutParameter
     EmitHandlerTypeInOutParameter
+    EmitHandlerTypeVariadicParameter
     EmitEndHandlerType
     EmitHandlerParameter
     EmitHandlerVariable
@@ -271,6 +276,7 @@
     Error_MalformedToken
     Error_MalformedSyntax
     Error_MalformedEscapedString
+	Error_IllegalNamespaceOperator
     Error_IdentifierPreviouslyDeclared
     Error_IdentifierNotDeclared
     Error_InvalidNameForSyntaxMarkVariable
@@ -348,15 +354,20 @@
     Error_IllegalNumberOfArgumentsForOpcode
     Error_BytecodeNotAllowedInSafeContext
     Error_UnsafeHandlerCallNotAllowedInSafeContext
+    Error_InvalidNameForNamespace
+    Error_VariadicParametersOnlyAllowedInForeignHandlers
+    Error_VariadicParameterMustBeLast
 
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
+    Warning_UnsuitableNameForNamespace
     Warning_DeprecatedSyntax
 
 --------------------------------------------------------------------------------
 
 'condition' IsBootstrapCompile()
+'condition' IsNotBytecodeOutput()
 
 --------------------------------------------------------------------------------
 
@@ -375,6 +386,7 @@
 'action' GetUndefinedPosition(-> Position: POS)
 
 'condition' AddImportedModuleFile(Name: STRING)
+'action' AddImportedModuleName(Name: STRING)
 
 'action' GetFilenameOfPosition(Position: POS -> Filename: STRING)
 
@@ -384,7 +396,7 @@
 'action' FinalizeLiterals()
 
 'condition' MakeIntegerLiteral(Token: STRING -> Literal: INT)
-'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
+'condition' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
 'condition' UnescapeStringLiteral(Position:POS, String: STRING -> UnescapedString: STRING)
 'action' MakeNameLiteral(Token: STRING -> Literal: NAME)
@@ -396,7 +408,13 @@
 'condition' IsNameNotEqualToName(NAME, NAME)
 
 'condition' IsNameSuitableForDefinition(NAME)
+'condition' IsNameSuitableForNamespace(NAME)
+'condition' IsNameValidForNamespace(NAME)
 'condition' IsStringSuitableForKeyword(STRING)
+
+'action' ConcatenateNameParts(NAME, NAME -> NAME)
+'action' SplitNamespace(NAME -> NAME, NAME)
+'condition' ContainsNamespaceOperator(NAME)
 
 --------------------------------------------------------------------------------
 
@@ -422,10 +440,12 @@
 'action' EnterScope()
 'action' LeaveScope()
 
-'action' DefineMeaning(Name: NAME, Meaning: MEANING)
-'action' UndefineMeaning(Name: NAME)
+'action' DefineMeaning(Name: NAME, Namespace: NAME, Meaning: MEANING)
+'action' DefineUnqualifiedMeaning(Name: NAME, Meaning: MEANING)
+'action' UndefineMeaning(Name: NAME, Namespace: NAME)
 'condition' HasLocalMeaning(Name: NAME -> Meaning: MEANING)
-'condition' HasMeaning(Name: NAME -> Meaning: MEANING)
+'condition' HasMeaning(Name: NAME, Namespace: NAME -> Meaning: MEANING)
+'condition' HasUnqualifiedMeaning(Name: NAME -> Meaning: MEANING)
 
 --------------------------------------------------------------------------------
 
@@ -577,12 +597,6 @@
 'action' EmitOptionalType(INT -> INT)
 --'action' EmitNamedType(Module: NAME, Name: NAME -> INT)
 --'action' EmitAliasType(Name: NAME, TypeIndex: INT -> INT)
-'action' EmitPointerType(-> INT)
-'action' EmitBoolType(-> INT)
-'action' EmitIntType(-> INT)
-'action' EmitUIntType(-> INT)
-'action' EmitFloatType(-> INT)
-'action' EmitDoubleType(-> INT)
 'action' EmitAnyType(-> INT)
 'action' EmitBooleanType(-> INT)
 'action' EmitIntegerType(-> INT)
@@ -594,7 +608,7 @@
 'action' EmitListType(-> INT)
 'action' EmitUndefinedType(-> INT)
 
-'action' EmitBeginRecordType(BaseType: INT)
+'action' EmitBeginRecordType()
 'action' EmitRecordTypeField(Name: NAME, Type: INT)
 'action' EmitEndRecordType(-> INT)
 
@@ -603,6 +617,7 @@
 'action' EmitHandlerTypeInParameter(Name: NAME, Type: INT)
 'action' EmitHandlerTypeOutParameter(Name: NAME, Type: INT)
 'action' EmitHandlerTypeInOutParameter(Name: NAME, Type: INT)
+'action' EmitHandlerTypeVariadicParameter(Name: NAME)
 'action' EmitEndHandlerType(-> INT)
 
 'action' EmitHandlerParameter(Name: NAME, Type: INT -> Index: INT)
@@ -675,10 +690,12 @@
 'action' Error_MalformedToken(Position: POS, Token: STRING)
 'action' Error_MalformedSyntax(Position: POS)
 'action' Error_MalformedEscapedString(Position: POS, Token: STRING)
+'action' Error_IllegalNamespaceOperator(Position: POS)
 'action' Error_IdentifierPreviouslyDeclared(Position: POS, Identifier: NAME, PreviousPosition: POS)
 'action' Error_IdentifierNotDeclared(Position: POS, Identifier: NAME)
 'action' Error_InvalidNameForSyntaxMarkVariable(Position: POS, Name: NAME)
 'action' Error_SyntaxMarkVariableAlreadyDefined(Position: POS, Name: NAME)
+'action' Error_InvalidNameForNamespace(Position: POS, Identifier: NAME)
 
 'action' Error_ExpressionSyntaxCannotStartWithExpression(Position: POS)
 'action' Error_ExpressionSyntaxCannotFinishWithExpression(Position: POS)
@@ -769,9 +786,13 @@
 'action' Error_BytecodeNotAllowedInSafeContext(Position: POS)
 'action' Error_UnsafeHandlerCallNotAllowedInSafeContext(Position: POS, Identifier: NAME)
 
+'action' Error_VariadicParametersOnlyAllowedInForeignHandlers(Position: POS)
+'action' Error_VariadicParameterMustBeLast(Position: POS)
+
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
+'action' Warning_UnsuitableNameForNamespace(Position: POS, Identifier: NAME)
 'action' Warning_DeprecatedSyntax(Position: POS, Message: STRING)
 
 --------------------------------------------------------------------------------

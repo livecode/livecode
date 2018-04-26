@@ -121,6 +121,11 @@ void MCStack::destroywindowshape(void)
 {
 }
 
+bool MCStack::view_platform_dirtyviewonresize() const
+{
+	return false;
+}
+
 MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 {
 	return MCRectangleMake(0,0,0,0);

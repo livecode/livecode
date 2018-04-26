@@ -36,8 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#include "syntax.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCVariable **MCHandlerlist::s_old_variables = NULL;
@@ -172,7 +170,7 @@ void MCHandlerlist::reset(void)
 
 	for(uint32_t i = 0; i < nconstants; i++)
 	{
-		MCNameDelete(cinfo[i] . name);
+		MCValueRelease(cinfo[i] . name);
 		MCValueRelease(cinfo[i] . value);
 	}
 	delete[] cinfo; /* Allocated with new[] */
@@ -195,7 +193,7 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 	for (tmp = vars, t_vindex = 0 ; tmp != NULL ; tmp = tmp->getnext(), t_vindex += 1)
 		if ((!tmp -> isuql() || !p_ignore_uql) && tmp->hasname(p_name))
 		{
-			*dptr = new MCVarref(tmp, t_vindex);
+			*dptr = new (nothrow) MCVarref(tmp, t_vindex);
 			return PS_NORMAL;
 		}
 
@@ -209,24 +207,23 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 		}
 	}
 
-	if (MCNameIsEqualTo(p_name, MCN_msg, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(p_name, MCN_msg))
 	{
-		*dptr = new MCVarref(MCmb);
+		*dptr = new (nothrow) MCVarref(MCmb);
 		return PS_NORMAL;
 	}
 
-	if (MCNameIsEqualTo(p_name, MCN_each, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(p_name, MCN_each))
 	{
-		*dptr = new MCVarref(MCeach);
+		*dptr = new (nothrow) MCVarref(MCeach);
 		return PS_NORMAL;
 	}
 
 	// In server mode, we need to resolve $ vars in the context of the global
 	// scope. (This doesn't happen in non-server mode as there is never any
 	// 'code' in 'global' scope).
-	if (MCNameGetCharAtIndex(p_name, 0) == '$')
+	if (MCStringGetNativeCharAtIndex(MCNameGetString(p_name), 0) == '$')
 	{
-		MCVariable *tmp;
 		for (tmp = MCglobals ; tmp != NULL ; tmp = tmp->getnext())
 			if (tmp->hasname(p_name))
 			{
@@ -309,7 +306,7 @@ Parse_stat MCHandlerlist::newvar(MCNameRef p_name, MCValueRef p_init, MCVarref *
 	}
 
 	// MW-2008-10-28: [[ ParentScripts ]] Make a varref for a script local variable.
-	*newptr = new MCVarref(lastvar, nvars);
+	*newptr = new (nothrow) MCVarref(lastvar, nvars);
 
 	// MW-2008-10-28: [[ ParentScripts ]] Extend the vinits array
 	// MW-2011-08-22: [[ Bug ]] Don't clone the init when we are creating a UQL in
@@ -330,9 +327,9 @@ Parse_stat MCHandlerlist::findconstant(MCNameRef p_name, MCExpression **dptr)
 {
 	uint2 i;
 	for (i = 0 ; i < nconstants ; i++)
-		if (MCNameIsEqualTo(p_name, cinfo[i].name, kMCCompareCaseless))
+		if (MCNameIsEqualToCaseless(p_name, cinfo[i].name))
 		{
-			*dptr = new MCLiteral(cinfo[i].value);
+			*dptr = new (nothrow) MCLiteral(cinfo[i].value);
 			return PS_NORMAL;
 		}
 	return PS_NO_MATCH;
@@ -341,8 +338,8 @@ Parse_stat MCHandlerlist::findconstant(MCNameRef p_name, MCExpression **dptr)
 Parse_stat MCHandlerlist::newconstant(MCNameRef p_name, MCValueRef p_value)
 {
 	MCU_realloc((char **)&cinfo, nconstants, nconstants + 1, sizeof(MCHandlerConstantInfo));
-	/* UNCHECKED */ MCNameClone(p_name, cinfo[nconstants].name);
-	/* UNCHECKED */ cinfo[nconstants++].value = MCValueRetain(p_value);
+    cinfo[nconstants].name = MCValueRetain(p_name);
+	cinfo[nconstants++].value = MCValueRetain(p_value);
 	return PS_NORMAL;
 }
 
@@ -444,7 +441,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 	{
 		// MW-2008-11-02: [[ ParentScripts ]] Rejig the old variables list to be a vector
 		//   so we can preserve the ordering for later mapping.
-		s_old_variables = new MCVariable *[nvars];
+		s_old_variables = new (nothrow) MCVariable *[nvars];
 		s_old_variable_count = nvars;
 		for(uint32_t i = 0; vars != NULL; vars = vars -> getnext(), i++)
 			s_old_variables[i] = vars;
@@ -453,7 +450,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 		//   but only if this object is used as a parentscript.
 		if (t_is_parent_script)
 		{
-			s_old_variable_map = new uint32_t[nvars];
+			s_old_variable_map = new (nothrow) uint32_t[nvars];
 
 			// We initialize the map to all 0xffffffff's - this indicates that the existing
 			// value should not be brought forward.
@@ -500,7 +497,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 
 						t_is_private = true;
 					}
-					newhandler = new MCHandler((uint1)te->which, t_is_private);
+					newhandler = new (nothrow) MCHandler((uint1)te->which, t_is_private);
 					if (newhandler->parse(sp, te->which == HT_GETPROP || te->which == HT_SETPROP) != PS_NORMAL)
 					{
 						sp.sethandler(NULL);
@@ -527,7 +524,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 					{
 					case S_GLOBAL:
 						{
-							MCGlobal *gptr = new MCGlobal;
+							MCGlobal *gptr = new (nothrow) MCGlobal;
 							if (gptr->parse(sp) != PS_NORMAL)
 							{
 								MCperror->add(PE_HANDLER_BADVAR, sp);
@@ -538,7 +535,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 						}
 					case S_LOCAL:
 						{
-							MCLocalVariable *lptr = new MCLocalVariable;
+							MCLocalVariable *lptr = new (nothrow) MCLocalVariable;
 							if (lptr->parse(sp) != PS_NORMAL)
 							{
 								MCperror->add(PE_HANDLER_BADVAR, sp);
@@ -549,7 +546,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 						}
 					case S_CONSTANT:
 						{
-							MCLocalConstant *cptr = new MCLocalConstant;
+							MCLocalConstant *cptr = new (nothrow) MCLocalConstant;
 							if (cptr->parse(sp) != PS_NORMAL)
 							{
 								MCperror->add(PE_HANDLER_BADVAR, sp);
@@ -792,30 +789,6 @@ bool MCHandlerlist::listhandlers(MCHandlerlistListHandlersCallback p_callback, v
 	}
 	
 	return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCHandlerlist::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginHandlerList(ctxt);
-	
-	for(uindex_t i = 0; i < nglobals; i++)
-		MCSyntaxFactoryDefineGlobal(ctxt, globals[i] -> getname());
-
-	for(uindex_t i = 0; i < nconstants; i++)
-		MCSyntaxFactoryDefineConstant(ctxt, cinfo[i] . name, cinfo[i] . value);
-	
-	MCVariable *t_var;
-	t_var = vars;
-	for(uindex_t i = 0; t_var != nil; t_var = t_var -> getnext(), i++)
-		MCSyntaxFactoryDefineLocal(ctxt, t_var -> getname(), vinits[i]);
-
-	for(uindex_t i = 0; i < 6; i++)
-		for(uindex_t j = 0; j < handlers[i] . count(); j++)
-			handlers[i] . get()[j] -> compile(ctxt);
-			
-	MCSyntaxFactoryEndHandlerList(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

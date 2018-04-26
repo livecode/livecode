@@ -1612,7 +1612,7 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
     return t_success;
 }
 
-#if 0
+#if LEGACY_EMBEDDED_DEPLOY
 static bool MCDeployToMacOSXEmbedded(const MCDeployParameters& p_params, bool p_big_endian, MCDeployFileRef p_engine, uint32_t p_engine_offset, uint32_t p_engine_size, uint32_t& x_offset, MCDeployFileRef p_output)
 {
 	bool t_success;
@@ -1872,7 +1872,7 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
 		t_output_offset = 0;
 		if (!p_embedded)
             t_success = MCDeployToMacOSXMain(p_params, false, p_engine, 0, 0, t_output_offset, p_output, p_validate_header_callback);
-#if 0
+#if LEGACY_EMBEDDED_DEPLOY
 		else
 			t_success = MCDeployToMacOSXEmbedded(p_params, false, p_engine, 0, 0, t_output_offset, p_output);
 #endif
@@ -1933,7 +1933,7 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
                     // Write out this arch's portion.
                     if (!p_embedded)
                         t_success = MCDeployToMacOSXMain(p_params, false, p_engine, t_fat_arch . offset, t_fat_arch . size, t_output_offset, p_output, p_validate_header_callback);
-    #if 0
+    #if LEGACY_EMBEDDED_DEPLOY
                     else
                         t_success = MCDeployToMacOSXEmbedded(p_params, false, p_engine, 0, 0, t_output_offset, p_output);
     #endif
@@ -2413,7 +2413,9 @@ static bool diet_strip_symbols(MCDeployDietContext& context, bool p_big_endian, 
 	t_symtab_command = nil;
 	t_dysymtab_command = nil;
 	if (t_success)
+    {
 		for(uint32_t i = 0; i < t_header . ncmds; i++)
+        {
 			if (t_commands[i] -> cmd == LC_SEGMENT)
 			{
 				segment_command *t_command;
@@ -2425,6 +2427,8 @@ static bool diet_strip_symbols(MCDeployDietContext& context, bool p_big_endian, 
 				t_symtab_command = (symtab_command *)t_commands[i];
 			else if (t_commands[i] -> cmd == LC_DYSYMTAB)
 				t_dysymtab_command = (dysymtab_command *)t_commands[i];
+        }
+    }
 
 	// The 'linkedit' segment contains all the data used by the symtab
 	// and dysymtab commands. We need to rebuild this segment in the following

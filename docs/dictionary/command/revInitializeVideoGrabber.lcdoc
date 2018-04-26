@@ -11,14 +11,11 @@ Associations: video library
 
 Introduced: 2.0
 
-OS: mac, windows
+OS: windows
 
 Platforms: desktop
 
 Security: disk, privacy
-
-Example:
-revInitializeVideoGrabber the short name of this stack, "QT","100,100,200,200"
 
 Example:
 revInitializeVideoGrabber the short name of this stack, "VFW",the rect of this stack
@@ -29,7 +26,7 @@ The short name of the stack that the video-grabber should attach itself
 to. 
 
 videoMethod:
-Either "QT" or "VFW".
+Must be "VFW".
 
 grabberRect:
 The rectangle of the video grabber window, and consists of four integers
@@ -58,9 +55,8 @@ connected. Use the <revRecordVideo> <command> to record video from the
 camera to a <file>, or use the <revPreviewVideo> command to display
 video without saving it.
 
-To use QuickTime for video capture on Mac OS X specify "QT" as the
-<videoMethod>. To use <VFW|Video for Windows> (on <Windows|Windows
-systems>), specify "VFW".
+To use <VFW|Video for Windows> (on <Windows|Windows systems>), specify
+"VFW".
 
 To close the window and unload the video capture code, you should use
 the <revCloseVideoGrabber> <command> when you're done with <video
@@ -80,9 +76,10 @@ The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
 new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
 systems apart from pre OS X 10.8. The Windows build of LiveCode no
 longer supports any <QuickTime> features and setting the <dontUseQT> and
-<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
-not include 64 bit support and therefore can not be supported on OS X 64
-bit builds of LiveCode.
+<dontUseQTEffects> will have no effect.
+
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
 References: revCloseVideoGrabber (command),
 revSetVideoGrabberRect (command), revRecordVideo (command),

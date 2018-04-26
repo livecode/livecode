@@ -39,11 +39,16 @@ command createTables pConnection, pStrings
 end createTables
 
 on TestDBTableGettersMySQL
-   TestSkip "skipping DB test","cannot use revOpenDatabase"
+   TestSkip "skipping DB test", "cannot use mysql in database tests"
    exit TestDBTableGettersMySQL
+   
+   TestSkipIfNot "database", "mysql"
+
+   TestLoadExternal "revdb"
+   
    local tArray
    put generateStrings() into tArray
-   local  tDatabaseID, tNames
+   local tDatabaseID, tNames
    put revOpenDatabase("mysql","localhost","t2","root","test_password",false,"/tmp/mysql.sock",10,true) into tDatabaseID
    createTables(tDatabaseID, tArray)
    put revDatabaseTableNames(tDatabaseID) into tNames

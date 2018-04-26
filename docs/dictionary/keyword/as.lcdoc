@@ -12,12 +12,12 @@ with the <go> <command> to specify the mode of a <stack>; used with the
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
 Example:
-do field 1 as Javascript
+do field 1 as "Javascript"
 
 Example:
 export image "image" to file myFile as PNG
@@ -32,11 +32,12 @@ Description:
 Use the <as> <keyword> to modify the <do>, <export>, <go>, or <save>
 <command|commands>. 
 
-Use the alternateLanguages <function> to find out which languages can be
-used with the <do> command on <Mac OS> and <OS X|OS X systems>.
+Use the <alternateLanguages> <function> to find out which languages
+can be used with the <do as alternateLanguage> command on <Mac OS> and
+<OS X|OS X systems>.
 
-References: export (command), go (command), do (command), save (command),
-function (control structure), format (function), keyword (glossary),
-file path (glossary), command (glossary), Mac OS (glossary),
-OS X (glossary), file (keyword), stack (object)
-
+References: export (command), go (command), do (command),
+save (command), function (control structure), format (function),
+keyword (glossary), file path (glossary), command (glossary),
+Mac OS (glossary), OS X (glossary), file (keyword), stack (object),
+alternateLanguages (function), do as alternateLanguage (command)

@@ -323,7 +323,7 @@ void MCStack::view_on_rect_changed(void)
 	// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the tilecache geometry
 	view_updatetilecacheviewport();
 	
-	if (view_getfullscreen())
+	if (view_getfullscreen() || view_platform_dirtyviewonresize())
 		view_dirty_all();
 }
 
@@ -426,11 +426,21 @@ void MCStack::view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectan
 	// IM-2014-01-16: [[ StackScale ]] append scale transform to fullscreenmode transform
 	r_transform = MCGAffineTransformConcat(view_get_stack_transform(t_mode, MCGRectangleGetIntegerBounds(t_scaled_rect), t_view_rect), t_transform);
 }
+
+#if defined(_MOBILE)
+#include "mblsyntax.h"
+#endif
 	
 void MCStack::view_update_transform(bool p_ensure_onscreen)
 {
 	MCRectangle t_view_rect;
 	MCGAffineTransform t_transform;
+    
+#if defined(_MOBILE)
+    MCOrientation t_orientation;
+    MCSystemGetOrientation(t_orientation);
+    MCOrientationGetRectForOrientation(t_orientation ,m_view_requested_stack_rect);
+#endif
 	
 	// IM-2014-01-16: [[ StackScale ]] Use utility method to calculate new values
 	view_calculate_viewports(m_view_requested_stack_rect, m_view_adjusted_stack_rect, t_view_rect, t_transform);

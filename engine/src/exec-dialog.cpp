@@ -57,24 +57,6 @@ static MCNameRef *s_dialog_types[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerColor, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFileWithTypes, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFileWithFilter, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFile, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFolder, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerNotify, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, CustomAnswerDialog, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskQuestion, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskPassword, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFile, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFileWithFilter, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFileWithTypes, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, CustomAskDialog, 7)
-MC_EXEC_DEFINE_GET_METHOD(Dialog, ColorDialogColors, 2)
-MC_EXEC_DEFINE_SET_METHOD(Dialog, ColorDialogColors, 2)
-    
-////////////////////////////////////////////////////////////////////////////////
-
 void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCStringRef p_title, bool p_as_sheet)
 {
     MCAutoStringRef t_value;
@@ -222,48 +204,56 @@ void MCDialogExecAnswerFileWithTypes(MCExecContext &ctxt, bool p_plural, MCStrin
 		if (t_success)
 			t_success = t_types.Append(t_split);
 	}
-	if (MCsystemFS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
-    {
-        uint32_t t_options = 0;
-        if (p_plural)
-            t_options |= MCA_OPTION_PLURAL;
-        if (p_sheet)
-            t_options |= MCA_OPTION_SHEET;
-
-        int error;
-        error = MCA_file_with_types(p_title, p_prompt, *t_types, t_types.Count(), p_initial, t_options, &t_value, &t_result);
-	}
-	else
+	if (t_success)
 	{
-		MCAutoListRef t_type_list;
-		MCAutoStringRef t_types_string;
-
-		/* UNCHECKED */ MCListCreateMutable('\n', &t_type_list);
-		for (uindex_t i = 0; i < t_types.Count(); i++)
-			/* UNCHECKED */ MCListAppend(*t_type_list, t_types[i]);
-		/* UNCHECKED */ MCListCopyAsString(*t_type_list, &t_types_string);
-
-		MCStringRef t_args[5];
-		uindex_t t_arg_count = 5;
-		t_args[0] = p_title;
-		t_args[1] = p_prompt;
-		t_args[2] = nil;
-		t_args[3] = p_initial;
-		t_args[4] = *t_types_string;
-		MCDialogExecCustomAnswerDialog(ctxt, MCN_file_selector, p_plural ? MCN_files : MCN_file, p_sheet, t_args, t_arg_count, &t_value);
-		if (ctxt.HasError())
-			return;
-
-		if (MCStringGetLength(*t_value) == 0)
+		if (MCsystemFS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
 		{
-			if (!MCStringCopy(MCNameGetString(MCN_cancel), &t_result))
+			uint32_t t_options = 0;
+			if (p_plural)
+				t_options |= MCA_OPTION_PLURAL;
+			if (p_sheet)
+				t_options |= MCA_OPTION_SHEET;
+
+			int error;
+			error = MCA_file_with_types(p_title, p_prompt, *t_types, t_types.Count(), p_initial, t_options, &t_value, &t_result);
+		}
+		else
+		{
+			MCAutoListRef t_type_list;
+			MCAutoStringRef t_types_string;
+			t_success = MCListCreateMutable('\n', &t_type_list);
+			
+			for (uindex_t i = 0; t_success && i < t_types.Count(); i++)
+				t_success = MCListAppend(*t_type_list, t_types[i]);
+			
+			if (t_success)
+				t_success = MCListCopyAsString(*t_type_list, &t_types_string);
+
+			if (t_success)
 			{
-				ctxt.Throw();
-				return;
+				MCStringRef t_args[5];
+				uindex_t t_arg_count = 5;
+				t_args[0] = p_title;
+				t_args[1] = p_prompt;
+				t_args[2] = nil;
+				t_args[3] = p_initial;
+				t_args[4] = *t_types_string;
+				MCDialogExecCustomAnswerDialog(ctxt, MCN_file_selector, p_plural ? MCN_files : MCN_file, p_sheet, t_args, t_arg_count, &t_value);
+				if (ctxt.HasError())
+					return;
 			}
+
+			if (t_success && MCStringGetLength(*t_value) == 0)
+				t_success = MCStringCopy(MCNameGetString(MCN_cancel), &t_result);
 		}
 	}
-
+	
+	if (!t_success)
+	{
+		ctxt.Throw();
+		return;
+	}
+	
 	if (*t_value != nil)
 	{
 		ctxt.SetItToValue(*t_value);
@@ -774,6 +764,8 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 		else
 			r_cancelled = false;
 	}
+    else
+        ctxt.Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

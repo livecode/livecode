@@ -117,6 +117,7 @@ public class Engine extends View implements EngineApi
     private NativeControlModule m_native_control_module;
     private SoundModule m_sound_module;
     private NotificationModule m_notification_module;
+	private NFCModule m_nfc_module;
     private RelativeLayout m_view_layout;
 
     private PowerManager.WakeLock m_wake_lock;
@@ -174,6 +175,7 @@ public class Engine extends View implements EngineApi
         m_native_control_module = new NativeControlModule(this, ((LiveCodeActivity)getContext()).s_main_layout);
         m_sound_module = new SoundModule(this);
         m_notification_module = new NotificationModule(this);
+		m_nfc_module = new NFCModule(this);
         m_view_layout = null;
         
         // MM-2012-08-03: [[ Bug 10316 ]] Initialise the wake lock object.
@@ -2791,6 +2793,29 @@ public class Engine extends View implements EngineApi
 
 ////////
 
+	// NFC
+	public boolean isNFCAvailable()
+	{
+		return m_nfc_module.isAvailable();
+	}
+	
+	public boolean isNFCEnabled()
+	{
+		return m_nfc_module.isEnabled();
+	}
+	
+	public void enableNFCDispatch()
+	{
+		m_nfc_module.setDispatchEnabled(true);
+	}
+	
+	public void disableNFCDispatch()
+	{
+		m_nfc_module.setDispatchEnabled(false);
+	}
+	
+////////
+
     // if the app was launched to handle a Uri view intent, return the Uri as a string, else return null
     public String getLaunchUri(Intent intent)
     {
@@ -2992,6 +3017,9 @@ public class Engine extends View implements EngineApi
 		if (m_native_control_module != null)
 			m_native_control_module.onPause();
 		
+		if (m_nfc_module != null)
+			m_nfc_module.onPause();
+		
 		if (m_video_is_playing)
 			m_video_control . suspend();
 
@@ -3014,6 +3042,9 @@ public class Engine extends View implements EngineApi
 		
 		if (m_native_control_module != null)
 			m_native_control_module.onResume();
+		
+		if (m_nfc_module != null)
+			m_nfc_module.onResume();
 
 		if (m_video_is_playing)
 			m_video_control . resume();
@@ -3022,6 +3053,9 @@ public class Engine extends View implements EngineApi
 
 		if (m_new_intent)
 		{
+			if (m_nfc_module != null)
+				m_nfc_module.onNewIntent(((Activity)getContext()).getIntent());
+				
 			doLaunchDataChanged();
 			
 			String t_launch_url;
@@ -3206,6 +3240,14 @@ public class Engine extends View implements EngineApi
     {
         Log.i("revandroid", "compareInternational"); 
         return m_collator.compare(left, right);
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////////
+    
+    public Object createTypefaceFromAsset(String path)
+    {
+        Log.i("revandroid", "createTypefaceFromAsset");
+        return Typeface.createFromAsset(getContext().getAssets(),path);
     }
     
     ////////////////////////////////////////////////////////////////////////////////
@@ -3463,6 +3505,115 @@ public class Engine extends View implements EngineApi
 
     ////////////////////////////////////////////////////////////////////////////////
 
+    public interface ServiceListener
+    {
+        public void onStart(Context context);
+        public void onFinish(Context context);
+    }
+    
+    Context m_service_context = null;
+    ArrayList<ServiceListener> m_running_services = null;
+    ArrayList<ServiceListener> m_pending_services = null;
+    
+    private int serviceListFind(ArrayList<ServiceListener> p_list, ServiceListener p_obj)
+    {
+        for(int i = 0; i < p_list.size(); i++)
+        {
+            if (p_list.get(i) == p_obj)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    public void startService(ServiceListener p_listener)
+    {
+        if (m_running_services == null)
+        {
+            m_pending_services = new ArrayList<ServiceListener>();
+        }
+        
+        m_pending_services.add(p_listener);
+        
+        Intent t_service = new Intent(getContext(), getServiceClass());
+        getContext().startService(t_service);
+    }
+    
+    public void stopService(ServiceListener p_listener)
+    {
+        if (serviceListFind(m_pending_services, p_listener) != -1)
+        {
+            m_pending_services.remove(serviceListFind(m_pending_services, p_listener));
+            return;
+        }
+        
+        if (serviceListFind(m_running_services, p_listener) != -1)
+        {
+            p_listener.onFinish(m_service_context);
+            m_running_services.remove(serviceListFind(m_running_services, p_listener));
+        }
+        
+        if (m_pending_services.isEmpty() &&
+            m_running_services.isEmpty())
+        {
+            Intent t_service = new Intent(getContext(), getServiceClass());
+            getContext().stopService(t_service);
+        }
+    }
+    
+    public int handleStartService(Context p_service_context, Intent p_intent, int p_flags, int p_start_id)
+    {
+        if (m_pending_services == null ||
+            m_pending_services.isEmpty())
+        {
+            if (m_running_services == null ||
+                m_running_services.isEmpty())
+            {
+                Intent t_service = new Intent(getContext(), getServiceClass());
+                getContext().stopService(t_service);
+                return Service.START_NOT_STICKY;
+            }
+            return Service.START_STICKY;
+        }
+        
+        m_service_context = p_service_context;
+        
+        ServiceListener t_listener = m_pending_services.get(0);
+        m_pending_services.remove(0);
+        
+        if (m_running_services == null)
+        {
+            m_running_services = new ArrayList<ServiceListener>();
+        }
+        
+        m_running_services.add(t_listener);
+        t_listener.onStart(p_service_context);
+        
+        return Service.START_STICKY;
+    }
+    
+    public void handleFinishService(Context p_service_context)
+    {
+        m_pending_services = null;
+        
+        while(!m_running_services.isEmpty())
+        {
+            m_running_services.get(0).onFinish(p_service_context);
+            m_running_services.remove(0);
+        }
+        m_running_services = null;
+        
+        m_service_context = null;
+    }
+    
+    public Class getServiceClass()
+    {
+        return ((LiveCodeActivity)getContext()).getServiceClass();
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////////
+    
     // url launch callback
     public static native void doLaunchFromUrl(String url);
 	// intent launch callback

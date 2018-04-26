@@ -1,0 +1,39 @@
+widget com.livecode.lcs_tests.core.engine_lcb.widget_sendpost
+
+use com.livecode.widget
+use com.livecode.engine
+
+private variable mTestData as Array
+property testData get mTestData set SetTestData
+
+handler OnCreate()
+	put {} into mTestData
+end handler
+
+handler SetTestData(in pData as Array)
+	if pData["mode"] is "send" then
+		send pData["message"]
+		put the result into mTestData["result"]
+	else if pData["mode"] is "send function" then
+		send function pData["message"]	
+		put the result into mTestData["result"]
+	else if pData["mode"] is "send command" then
+		send command pData["message"]	
+		put the result into mTestData["result"]	
+	else if pData["mode"] is "send args" then
+		send pData["message"] with [pData["arg"]]
+		put the result into mTestData["result"]
+	else if pData["mode"] is "send function args" then
+		send function pData["message"] with [pData["arg"]]
+		put the result into mTestData["result"]	
+	else if pData["mode"] is "send command args" then
+		send command pData["message"] with [pData["arg"]]
+		put the result into mTestData["result"]	
+	else if pData["mode"] is "post" then
+		post pData["message"]
+	else if pData["mode"] is "post args" then
+		post pData["message"] with [pData["arg"]]
+	end if
+end handler
+
+end widget

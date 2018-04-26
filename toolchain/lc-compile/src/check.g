@@ -54,6 +54,9 @@
         -- Check that safe / unsafe boundaries are respected
         CheckSafety(Module)
 
+        -- Check that variadic parameters only appear in foreign handlers
+        CheckVariadic(Module)
+
 --------------------------------------------------------------------------------
 
 -- At this point all identifiers either have a defined meaning, or are defined
@@ -188,7 +191,7 @@
         QueryKindOfSymbolId(Id -> type)
         
     'rule' CheckBindingIsTypeId(Id):
-        Id'Name -> Name
+		GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAType(Position, Name)
         -- Mark this id as being in error.
@@ -204,7 +207,7 @@
         QueryKindOfSymbolId(Id -> handler)
         
     'rule' CheckBindingIsHandlerId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAHandler(Position, Name)
         -- Mark this id as being in error.
@@ -229,7 +232,7 @@
         QueryKindOfSymbolId(Id -> context)
 
     'rule' CheckBindingIsVariableId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAVariable(Position, Name)
         -- Mark this id as being in error.
@@ -257,7 +260,7 @@
         QueryKindOfSymbolId(Id -> handler)
 
     'rule' CheckBindingIsVariableOrHandlerId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAVariableOrHandler(Position, Name)
         -- Mark this id as being in error.
@@ -288,7 +291,7 @@
         QueryKindOfSymbolId(Id -> handler)
 
     'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAConstantOrVariableOrHandler(Position, Name)
         -- Mark this id as being in error.
@@ -335,14 +338,14 @@
             where(Signature -> signature(nil, ReturnType))
             (|
                 where(ReturnType -> undefined(_))
-                Id'Name -> Name
+                GetQualifiedName(Id -> Name)
                 Id'Position -> Position
                 Error_HandlerNotSuitableForPropertyGetter(Position, Name)
             ||
                 -- all non-void return values are fine
             |)
         ||
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             Id'Position -> Position
             Error_HandlerNotSuitableForPropertyGetter(Position, Name)
         |)
@@ -359,7 +362,7 @@
         (|
             where(Signature -> signature(parameterlist(parameter(_, in, _, _), nil), _))
         ||
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             Id'Position -> Position
             Error_HandlerNotSuitableForPropertySetter(Position, Name)
         |)
@@ -1019,7 +1022,7 @@
             where(Type -> boolean(_))
         ||
             where(Type -> named(_, Id))
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             IsNameEqualToString(Name, "CBool")
         ||
             Error_IterateSyntaxMethodMustReturnBoolean(Position)
@@ -1458,6 +1461,14 @@
     'rule' CheckCallArguments(_, nil, nil):
         -- done!
 
+    -- variadic parameter 'sticks' and matches the rest of the argument list
+    'rule' CheckCallArguments(Position, ParamRest:parameterlist(parameter(_, variadic, _, _), _), expressionlist(Argument, ArgRest)):
+        CheckExpressionIsEvaluatable(Argument)
+        CheckCallArguments(Position, ParamRest, ArgRest)
+
+    'rule' CheckCallArguments(Position, parameterlist(parameter(_, variadic, _, _), _), nil):
+        -- done!
+
     'rule' CheckCallArguments(Position, parameterlist(parameter(_, Mode, _, _), ParamRest), expressionlist(Argument, ArgRest)):
         [|
             ne(Mode, out)
@@ -1532,11 +1543,11 @@
     'rule' CheckExpressionIsAssignable(slot(Position, Id)):
         (|
             QueryKindOfSymbolId(Id -> handler)
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             Error_CannotAssignToHandlerId(Position, Name)
         ||
             QueryKindOfSymbolId(Id -> constant)
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             Error_CannotAssignToConstantId(Position, Name)
         ||
         |)
@@ -1647,13 +1658,17 @@
         
 'action' CheckForeignHandlerParameterTypes(PARAMETERLIST)
 
+    'rule' CheckForeignHandlerParameterTypes(parameterlist(parameter(_, variadic, _, _), Rest)):
+        CheckForeignHandlerParameterTypes(Rest)
+
     'rule' CheckForeignHandlerParameterTypes(parameterlist(parameter(Position, _, _, Type), Rest)):
         [|
             where(Type -> unspecified)
             Error_NoTypeSpecifiedForForeignHandlerParameter(Position)
         |]
         CheckForeignHandlerParameterTypes(Rest)
-        
+
+
     'rule' CheckForeignHandlerParameterTypes(nil):
         -- do nothing
 
@@ -1674,7 +1689,7 @@
     'rule' IsHighLevelType(optional(_, Type)):
         IsHighLevelType(Type)
     'rule' IsHighLevelType(handler(_, _, _)):
-    'rule' IsHighLevelType(record(_, _, _)):
+    'rule' IsHighLevelType(record(_, _)):
     'rule' IsHighLevelType(boolean(_)):
     'rule' IsHighLevelType(integer(_)):
     'rule' IsHighLevelType(real(_)):
@@ -1700,7 +1715,7 @@
 'sweep' CheckIdentifiers(ANY)
 
     'rule' CheckIdentifiers(MODULE'module(_, _, Id, Definitions)):
-        CheckIdIsSuitableForDefinition(Id)
+        CheckIdIsSuitableForNamespace(Id)
         CheckIdentifiers(Definitions)
 
     --
@@ -1747,11 +1762,34 @@
     'rule' CheckIdentifiers(STATEMENT'variable(_, Id, _)):
         CheckIdIsSuitableForDefinition(Id)
 
+'action' CheckIdIsSuitableForNamespace(ID)
+
+    'rule' CheckIdIsSuitableForNamespace(Id):
+        Id'Name -> Name
+        Id'Position -> Position
+        Id'Namespace -> Namespace
+        (|
+            IsNameValidForNamespace(Name)
+
+            (|
+                IsNameSuitableForNamespace(Name)
+            ||
+                Warning_UnsuitableNameForNamespace(Position, Name)
+            |)
+        ||
+            Error_InvalidNameForNamespace(Position, Name)
+        |)
+        [|
+            where(Namespace -> id(NextId))
+            CheckIdIsSuitableForNamespace(NextId)
+        |]
+
 'action' CheckIdIsSuitableForDefinition(ID)
 
     'rule' CheckIdIsSuitableForDefinition(Id):
         Id'Name -> Name
         Id'Position -> Position
+		Id'Namespace -> Namespace
         (|
             IsNameSuitableForDefinition(Name)
         ||
@@ -2050,11 +2088,35 @@
                 (|
                     where(Safety -> unsafe)
                 ||
-                    Handler'Name -> Name
+                    GetQualifiedName(Handler -> Name)
                     Error_UnsafeHandlerCallNotAllowedInSafeContext(Position, Name)
                 |)
             |)
         |]
+
+--------------------------------------------------------------------------------
+
+'sweep' CheckVariadic(ANY)
+
+    'rule' CheckVariadic(DEFINITION'handler(_, _, Name, signature(Parameters, _), _, _)):
+        [|
+            ParameterListContainsVariadic(Parameters -> Position)
+            Error_VariadicParametersOnlyAllowedInForeignHandlers(Position)
+        |]
+
+    'rule' CheckVariadic(PARAMETERLIST'parameterlist(parameter(Position, variadic, _, _), Tail)):
+        [|
+            ne(Tail, nil)
+            Error_VariadicParameterMustBeLast(Position)
+        |]
+
+'condition' ParameterListContainsVariadic(PARAMETERLIST -> POS)
+
+    'rule' ParameterListContainsVariadic(parameterlist(parameter(Position, variadic, _, _), _) -> Position):
+        --
+
+    'rule' ParameterListContainsVariadic(parameterlist(_, Tail) -> Position):
+        ParameterListContainsVariadic(Tail -> Position)
 
 --------------------------------------------------------------------------------
 
@@ -2122,15 +2184,6 @@
         Id'Meaning -> Meaning
         
 'condition' QuerySymbolId(ID -> SYMBOLINFO)
-
---------------------------------------------------------------------------------
-
-'action' QueryExpressionListLength(EXPRESSIONLIST -> INT)
-
-    'rule' QueryExpressionListLength(expressionlist(_, Tail) -> TailCount + 1)
-        QueryExpressionListLength(Tail -> TailCount)
-
-    'rule' QueryExpressionListLength(nil -> 0)
-        -- nothing
+'action' GetQualifiedName(ID -> NAME)
 
 --------------------------------------------------------------------------------

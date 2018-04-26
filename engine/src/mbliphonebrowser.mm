@@ -199,7 +199,7 @@ void MCiOSBrowserControl::SetUrl(MCExecContext& ctxt, MCStringRef p_url)
     if (t_view != nil)
     {
         [m_delegate setPendingRequest: true];
-        [t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithMCStringRef: p_url]]]];
+        [t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_url)]]];
     }
 }
 
@@ -280,7 +280,7 @@ void MCiOSBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
 	t_view = (UIWebView *)GetView();
 	if (t_view != nil && [[t_view request] URL] != nil)
     {
-        /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[[[t_view request] URL] absoluteString], r_url);
+        /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[[[t_view request] URL] absoluteString], r_url);
         return;
     }
 	
@@ -435,7 +435,7 @@ void MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
 	t_view = (UIWebView *)GetView();
     
     NSString *t_result;
-    t_result = [t_view stringByEvaluatingJavaScriptFromString: [NSString stringWithMCStringRef: p_script]];
+    t_result = [t_view stringByEvaluatingJavaScriptFromString: MCStringConvertToAutoreleasedNSString(p_script)];
     
     if (t_result == nil)
     {
@@ -443,7 +443,7 @@ void MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
         return;
     }
     MCAutoStringRef t_result_string;
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_result, &t_result_string);
+    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_result, &t_result_string);
     ctxt.SetTheResultToValue(*t_result_string);
 }
 
@@ -458,7 +458,7 @@ void MCiOSBrowserControl::ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStr
     // MW-2012-10-01: [[ Bug 10422 ]] Make sure we mark a pending request so the
     //   HTML loading doesn't divert through a loadRequested message.
     [m_delegate setPendingRequest: true];
-    [t_view loadHTMLString: [NSString stringWithMCStringRef: p_html] baseURL: [NSURL URLWithString: [NSString stringWithMCStringRef: p_url]]];
+    [t_view loadHTMLString: MCStringConvertToAutoreleasedNSString(p_html) baseURL: [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_url)]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -631,7 +631,7 @@ bool MCiOSBrowserControl::HandleLoadRequest(NSURLRequest *p_request, UIWebViewNa
 	// Whether we send loadRequest or loadRequested depends on 'notify'.
 	Exec_stat t_stat;
     MCAutoStringRef t_url, t_type;
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[[p_request URL] absoluteString], &t_url);
+    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[[p_request URL] absoluteString], &t_url);
     /* UNCHECKED */ MCStringCreateWithCString(s_types[p_type], &t_type);
 	t_stat = t_target -> message_with_valueref_args(p_notify ? MCM_browser_load_requested : MCM_browser_load_request, *t_url, *t_type);
 	
@@ -662,7 +662,7 @@ void MCiOSBrowserControl::HandleLoadFailed(NSError *p_error)
         MCAutoStringRef t_url, t_description;
         MCExecContext ctxt(nil, nil, nil);
         GetUrl(ctxt, &t_url);
-        /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[p_error localizedDescription], &t_description);
+        /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[p_error localizedDescription], &t_description);
         MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
 		t_target -> message_with_valueref_args(MCM_browser_load_failed, *t_url, *t_description);

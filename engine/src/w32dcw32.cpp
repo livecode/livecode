@@ -133,7 +133,7 @@ void MCScreenDC::appendevent(MCEventnode *tptr)
 	tptr->appendto(pendingevents);
 }
 
-void CALLBACK mouseproc(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
+void CALLBACK mouseproc(UINT id, UINT msg, DWORD_PTR user, DWORD_PTR dw1, DWORD_PTR dw2)
 {
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	pms->setmousetimer(0);
@@ -607,7 +607,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 						MCParameter *t_parameter;
 						MCAutoStringRef t_param;
 						/* UNCHECKED */ MCStringCopySubstring(*t_cmdline, MCRangeMake(t_argument, t_argument_length), &t_param);
-						t_parameter = new MCParameter;
+						t_parameter = new (nothrow) MCParameter;
 						t_parameter -> setvalueref_argument(*t_param);
 						if (t_first_parameter == NULL)
 							t_first_parameter = t_parameter;
@@ -693,7 +693,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		else
 		{
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 		}
@@ -707,7 +707,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		else
 		{
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 		}
@@ -726,7 +726,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		// Don't bother processing if we're not dispatching
 		if (!curinfo->dispatch)
 		{
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 			break;
@@ -737,7 +737,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		// 'flushEvents' can purge any repeated key messages.
 		if (LOWORD(lParam) > 1)
 		{
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, MAKELPARAM(LOWORD(lParam) - 1, HIWORD(lParam)), 0, MCmodifierstate, MCeventtime);
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, MAKELPARAM(LOWORD(lParam) - 1, HIWORD(lParam)), 0, MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 			lParam = MAKELPARAM(1, HIWORD(lParam));
 		}
@@ -919,7 +919,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		else
 		{
 			// Dispatch isn't currently enabled; accumulate to the event queue.
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, keysym,
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, keysym,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 		}
@@ -977,7 +977,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		else
 		{
 			// Add to the event queue
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 		}
@@ -1037,7 +1037,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				unichar_t *t_resstr;
 				MCAutoStringRef t_string;
 				t_reslen = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
-				t_resstr = new unichar_t[t_reslen/sizeof(unichar_t) + 1];
+				t_resstr = new (nothrow) unichar_t[t_reslen/sizeof(unichar_t) + 1];
 				/* UNCHECKED */ ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, t_resstr, t_reslen);
 				/* UNCHECKED */ MCStringCreateWithCharsAndRelease(t_resstr, t_reslen/2, &t_string);
 				MCactivefield->finsertnew(FT_IMEINSERT, *t_string, 0);
@@ -1052,7 +1052,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				unichar_t *t_compstr;
 				MCAutoStringRef t_string;
 				t_complen = ImmGetCompositionStringW(hIMC, GCS_COMPSTR, NULL, 0);
-				t_compstr = new unichar_t[t_complen/sizeof(unichar_t) + 1];
+				t_compstr = new (nothrow) unichar_t[t_complen/sizeof(unichar_t) + 1];
 				/* UNCHECKED */ ImmGetCompositionStringW(hIMC, GCS_COMPSTR, t_compstr, t_complen);
 				/* UNCHECKED */ MCStringCreateWithCharsAndRelease(t_compstr, t_complen/2, &t_string);
 				MCactivefield->finsertnew(FT_IMEINSERT, *t_string, 0);
@@ -1188,7 +1188,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			}
 			else
 			{
-				MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+				MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
 				                                    MCmodifierstate, MCeventtime);
 				pms->appendevent(tptr);
 			}
@@ -1298,7 +1298,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		else
 		{
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 		}
@@ -1394,7 +1394,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			{
 				if (WSAGETSELECTERROR(lParam))
 				{
-					MCsockets[i]->error = new char[16 + I4L];
+					MCsockets[i]->error = new (nothrow) char[16 + I4L];
 					sprintf(MCsockets[i]->error, "Error %d on socket",
 					        WSAGETSELECTERROR(lParam));
 					MCsockets[i]->doclose();

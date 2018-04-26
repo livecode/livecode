@@ -37,7 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#include "syntax.h"
 #include "redraw.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,7 +132,7 @@ Parse_stat MCStatement::gettargets(MCScriptPoint &sp, MCChunk **targets,
 			sp.backup();
 			return PS_NORMAL;
 		}
-		MCChunk *newptr = new MCChunk(forset);
+		MCChunk *newptr = new (nothrow) MCChunk(forset);
 		if (newptr->parse(sp, False) != PS_NORMAL)
 		{
 			delete newptr;
@@ -200,7 +199,7 @@ Parse_stat MCStatement::getparams(MCScriptPoint &sp, MCParameter **params)
 			sp.backup();
 			return PS_NORMAL;
 		}
-		MCParameter *newptr = new MCParameter;
+		MCParameter *newptr = new (nothrow) MCParameter;
 		if (newptr->parse(sp) != PS_NORMAL)
 		{
 			delete newptr;
@@ -332,19 +331,11 @@ void MCStatement::initpoint(MCScriptPoint &sp)
 	pos = sp.getpos();
 }
 
-void MCStatement::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-	MCSyntaxFactoryExecUnimplemented(ctxt);
-	MCSyntaxFactoryEndStatement(ctxt);
-};
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCComref::MCComref(MCNameRef n)
 {
-	/* UNCHECKED */ MCNameClone(n, name);
+    name = MCValueRetain(n);
 	handler = nil;
 	params = NULL;
 	resolved = false;
@@ -359,7 +350,7 @@ MCComref::~MCComref()
 		params = params->getnext();
 		delete tmp;
 	}
-	MCNameDelete(name);
+	MCValueRelease(name);
 }
 
 Parse_stat MCComref::parse(MCScriptPoint &sp)

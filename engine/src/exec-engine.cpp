@@ -54,129 +54,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Version, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, BuildNumber, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Platform, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Environment, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Machine, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Processor, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, SystemVersion, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, CommandNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ConstantNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, FunctionNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, PropertyNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, GlobalNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, LocalNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, VariableNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Param, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ParamCount, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Params, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Result, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, BackScripts, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, FrontScripts, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, PendingMessages, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Interrupt, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Me, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Target, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, TargetContents, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Owner, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ScriptLimits, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, SysError, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, Value, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ValueWithObject, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Get, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, PutIntoVariable, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, PutOutput, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Do, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, DoInCaller, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, InsertScriptOfObjectInto, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Quit, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, CancelMessage, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, DeleteVariable, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, DeleteVariableChunks, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, RemoveAllScriptsFrom, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, RemoveScriptOfObjectFrom, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, LoadExtension, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnloadExtension, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, WaitFor, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, WaitUntil, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, WaitWhile, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StartUsingStack, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StartUsingStackByName, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStack, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, StopUsingStackByName, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Dispatch, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Send, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, SendScript, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, SendInTime, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Call, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, LockErrors, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, LockMessages, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnlockErrors, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnlockMessages, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Set, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Return, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, ReturnValue, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, ReturnError, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, CaseSensitive, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, CaseSensitive, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, CenturyCutOff, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, CenturyCutOff, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, ConvertOctals, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ConvertOctals, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, ItemDelimiter, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ItemDelimiter, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, LineDelimiter, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, LineDelimiter, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, ColumnDelimiter, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ColumnDelimiter, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, RowDelimiter, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, RowDelimiter, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, WholeMatches, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, WholeMatches, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, UseSystemDate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, UseSystemDate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, UseUnicode, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, UseUnicode, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, NumberFormat, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, NumberFormat, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ScriptExecutionErrors, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ScriptParsingErrors, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, AllowInterrupts, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, AllowInterrupts, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, ExplicitVariables, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, ExplicitVariables, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, PreserveVariables, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, PreserveVariables, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, StackLimit, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, EffectiveStackLimit, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, StackLimit, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, SecureMode, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, SecureMode, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, SecurityCategories, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, SecurityPermissions, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, SecurityPermissions, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, RecursionLimit, 1)
-MC_EXEC_DEFINE_SET_METHOD(Engine, RecursionLimit, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, Address, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, StacksInUse, 1)
-MC_EXEC_DEFINE_GET_METHOD(Engine, EditionType, 1)
-
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ValueAsObject, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, OwnerAsObject, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, TemplateAsObject, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, MeAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, MenuObjectAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, TargetAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, ErrorObjectAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, FontfilesInUse, 1)
-
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, CommandName, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, CommandArguments, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Engine, CommandArgumentAtIndex, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
 struct MCEngineNumberFormat
 {
 	uint2 fw;
@@ -234,7 +111,6 @@ static MCExecSetTypeInfo _kMCEngineSecurityCategoriesTypeInfo =
 	_kMCEngineSecurityCategoriesElementInfo
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCEngineNumberFormatTypeInfo = &_kMCEngineNumberFormatTypeInfo;
@@ -242,11 +118,11 @@ MCExecSetTypeInfo *kMCEngineSecurityCategoriesTypeInfo = &_kMCEngineSecurityCate
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern LT command_table[];
+extern const LT command_table[];
 extern const uint4 command_table_size;
-extern Cvalue constant_table[];
+extern const Cvalue constant_table[];
 extern const uint4 constant_table_size;
-extern LT factor_table[];
+extern const LT factor_table[];
 extern const uint4 factor_table_size;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -753,7 +629,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 if (!MCDataMutableCopyAndRelease((MCDataRef)p_var . mark . text, &t_data))
                     return;
                 
-                /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), (MCDataRef)p_value);
+                /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMakeMinMax(p_var . mark . start, p_var . mark . finish), (MCDataRef)p_value);
                 p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
             }
             else
@@ -762,7 +638,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 //  can take advantage of the fact that z has only one reference. Otherwise it requires a copy
                 MCValueRelease(p_var . mark . text);
                 
-                p_var . variable -> replace(ctxt, (MCDataRef)p_value, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
+                p_var . variable -> replace(ctxt, (MCDataRef)p_value, MCRangeMakeMinMax(p_var . mark . start, p_var . mark . finish));
             }
         }
         else
@@ -796,7 +672,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 if (!MCStringMutableCopyAndRelease((MCStringRef)p_var . mark . text, &t_string))
                     return;
             
-                /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
+                /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMakeMinMax(p_var . mark . start, p_var . mark . finish), *t_value_string);
                 p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
             }
             else
@@ -805,7 +681,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 //  can take advantage of the fact that z has only one reference. Otherwise it requires a copy
                 MCValueRelease(p_var . mark . text);
                 
-                p_var . variable -> replace(ctxt, *t_value_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
+                p_var . variable -> replace(ctxt, *t_value_string, MCRangeMakeMinMax(p_var . mark . start, p_var . mark . finish));
             }
         }
 	}
@@ -975,7 +851,7 @@ void MCEngineExecInsertScriptOfObjectInto(MCExecContext& ctxt, MCObject *p_scrip
 		ctxt . LegacyThrow(EE_INSERT_NOTLICENSED);
 		return;
 	}
-	MCObjectList *olptr = new MCObjectList(p_script);
+	MCObjectList *olptr = new (nothrow) MCObjectList(p_script);
 	olptr->insertto(listptr);
 }
 
@@ -1091,12 +967,12 @@ void MCEngineExecDeleteVariableChunks(MCExecContext& ctxt, MCVariableChunkPtr *p
         if (!ctxt . EvalExprAsMutableStringRef(p_chunks[i] . variable, EE_ENGINE_DELETE_BADVARCHUNK, &t_string))
             return;
 
-        if (MCStringReplace(*t_string, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start), kMCEmptyString))
+        if (MCStringReplace(*t_string, MCRangeMakeMinMax(p_chunks[i] . mark . start, p_chunks[i] . mark . finish), kMCEmptyString))
         {
             p_chunks[i] . variable -> set(ctxt, *t_string, kMCVariableSetInto);
         } */
         // SN-2014-04-11 [[ FasterVariables ]] Deletiong of the content of a variable is now done without copying
-        p_chunks[i] . variable -> deleterange(ctxt, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start));
+        p_chunks[i] . variable -> deleterange(ctxt, MCRangeMakeMinMax(p_chunks[i] . mark . start, p_chunks[i] . mark . finish));
 	}
 }
 
@@ -1182,12 +1058,12 @@ void MCEngineExecStopUsingStackByName(MCExecContext& ctxt, MCStringRef p_name)
 			        
 ///////////////////////////////////////////////////////////////////////////////
 
-void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_message, MCObjectPtr *p_target, MCParameter *p_parameters)
+Exec_stat _MCEngineExecDoDispatch(MCExecContext &ctxt, int p_handler_type, MCNameRef p_message, MCObjectPtr *p_target, MCParameter *p_parameters)
 {
 	if (MCscreen -> abortkey())
 	{
 		ctxt . LegacyThrow(EE_HANDLER_ABORT);
-		return;
+		return ES_ERROR;
 	}
 	
 	// Work out the target object
@@ -1243,6 +1119,32 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
         }
     }
 	
+	// Reset the default stack pointer and target - note that we use 'send'esque
+	// semantics here. i.e. If the default stack has been changed, the change sticks.
+	if (t_old_stack.IsValid() &&
+		MCdefaultstackptr == t_this_stack)
+		MCdefaultstackptr = t_old_stack;
+
+	// Reset target pointer
+    swap(MCtargetptr, t_old_target);
+	MCdynamicpath = olddynamic;
+	
+	// MW-2012-10-30: [[ Bug 10478 ]] Restore lockMessages.
+	MClockmessages = t_old_lock;
+	
+	// Remove our entry from the contexts list
+	MCECptr = oldctxt;
+	if (added)
+		MCnexecutioncontexts--;
+	
+	return t_stat;
+}
+
+void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_message, MCObjectPtr *p_target, MCParameter *p_parameters)
+{
+	Exec_stat t_stat;
+	t_stat = _MCEngineExecDoDispatch(ctxt, p_handler_type, p_message, p_target, p_parameters);
+	
 	// Set 'it' appropriately
 	switch(t_stat)
 	{
@@ -1267,24 +1169,6 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		ctxt . SetItToValue(kMCEmptyString);
 	break;
 	}
-	
-	// Reset the default stack pointer and target - note that we use 'send'esque
-	// semantics here. i.e. If the default stack has been changed, the change sticks.
-	if (t_old_stack.IsValid() &&
-		MCdefaultstackptr == t_this_stack)
-		MCdefaultstackptr = t_old_stack;
-
-	// Reset target pointer
-    swap(MCtargetptr, t_old_target);
-	MCdynamicpath = olddynamic;
-	
-	// MW-2012-10-30: [[ Bug 10478 ]] Restore lockMessages.
-	MClockmessages = t_old_lock;
-	
-	// Remove our entry from the contexts list
-	MCECptr = oldctxt;
-	if (added)
-		MCnexecutioncontexts--;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1321,12 +1205,12 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
         
         if (t_offset == t_length || t_char == ',')
         {
-            t_exp_range = MCRangeMake(t_start_offset, t_offset - t_start_offset);
+            t_exp_range = MCRangeMakeMinMax(t_start_offset, t_offset);
 
             MCAutoStringRef t_expression;
             /* UNCHECKED */ MCStringCopySubstring(p_script, t_exp_range, &t_expression);
             
-            MCParameter *newparam = new MCParameter;
+            MCParameter *newparam = new (nothrow) MCParameter;
             
             // MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
             //   mptr (into which it points) only lasts as long as this method call.
@@ -1444,7 +1328,7 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
         else
             tptr = MCNameGetString(*t_message);
         
-        if (optr->domess(*tptr, false) == ES_ERROR)
+        if (optr->domess(*tptr, nil, false) == ES_ERROR)
             ctxt . Throw();
 	}
 	else if (stat == ES_PASS)
@@ -1493,7 +1377,7 @@ void MCEngineExecSendScript(MCExecContext& ctxt, MCStringRef p_script, MCObjectP
         added = True;
     }
     
-    if (optr->domess(p_script, false) == ES_ERROR)
+    if (optr->domess(p_script, nil, false) == ES_ERROR)
         ctxt . Throw();
     
 	if (added)
@@ -1837,7 +1721,7 @@ bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r
     ctxt . ConvertToString(p_value, &t_string);
     MCScriptPoint sp(ctxt, *t_string);
 
-    MCChunk *tchunk = new MCChunk(False);
+    MCChunk *tchunk = new (nothrow) MCChunk(False);
     MCerrorlock++;
     Symbol_type type;
     
@@ -1939,8 +1823,6 @@ void MCEngineEvalMeAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     // (indicated by getparentscript() of the EP being non-NULL) 'me'
     // refers to the derived object context, otherwise it is the object
     // we were compiled in.
-    
-    MCObjectPtr t_object;
     
     if (ctxt . GetParentScript() == NULL)
         r_object . object = nil; // destobj!
@@ -2047,9 +1929,9 @@ void MCEngineDoEvalUuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStrin
     }
     
     if (p_is_md5)
-        MCUuidGenerateMD5(t_namespace, MCStringGetOldString(p_name), t_uuid);
+        MCUuidGenerateMD5(t_namespace, p_name, t_uuid);
     else
-        MCUuidGenerateSHA1(t_namespace, MCStringGetOldString(p_name), t_uuid);
+        MCUuidGenerateSHA1(t_namespace, p_name, t_uuid);
     
     if (MCEngineUuidToStringRef(t_uuid, r_uuid))
         return;
@@ -2185,3 +2067,32 @@ void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index,
 
     r_result = MCValueRetain(t_result);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCEngineGetRevLibraryMappingByKey(MCExecContext& ctxt, MCNameRef p_library, MCStringRef& r_mapping)
+{
+    MCArrayRef t_mappings = MCdispatcher->getlibrarymappings();
+    
+    MCStringRef t_value = nullptr;
+    // m_library_mapping only stores strings (function above)
+    if (!MCArrayFetchValue(t_mappings, false, p_library, (MCValueRef&)t_value) ||
+        MCStringIsEmpty(t_value))
+    {
+        ctxt . LegacyThrow(EE_BAD_LIBRARY_MAPPING);
+        return;
+    }
+    
+    r_mapping = MCValueRetain(t_value);
+}
+
+void MCEngineSetRevLibraryMappingByKey(MCExecContext& ctxt, MCNameRef p_library, MCStringRef p_mapping)
+{
+    MCArrayRef t_mappings = MCdispatcher->getlibrarymappings();
+    if (!MCArrayStoreValue(t_mappings, false, p_library, p_mapping))
+    {
+        ctxt . LegacyThrow(EE_BAD_LIBRARY_MAPPING);
+        return;
+    }
+}
+

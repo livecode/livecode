@@ -34,6 +34,7 @@ public foreign handler MCStringEvalConcatenateWithSpace(in Left as String, in Ri
 public foreign handler MCStringEvalLowercaseOf(in Source as String, out Result as String) returns nothing binds to "<builtin>"
 public foreign handler MCStringEvalUppercaseOf(in Source as String, out Result as String) returns nothing binds to "<builtin>"
 
+/* No implementation
 // The following all need some notion of context 
 public foreign handler MCStringEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCStringEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) returns nothing binds to "<builtin>"
@@ -45,6 +46,7 @@ public foreign handler MCStringEvalLastOffset(in Needle as String, in Source as 
 public foreign handler MCStringEvalLastOffsetBefore(in Needle as String, in Before as LCIndex, in Source as String, out Result as LCIndex) returns nothing binds to "<builtin>"
 
 public foreign handler MCStringEvalContainsChars(in Source as String, in Needle as String, out Result as CBool) returns nothing binds to "<builtin>"
+*/
 
 public foreign handler MCStringEvalIsEqualTo(in Left as String, in Right as String, out Value as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCStringEvalIsNotEqualTo(in Left as String, in Right as String, out Value as CBool) returns nothing binds to "<builtin>"

@@ -379,7 +379,7 @@ Boolean MCControl::doubleup(uint2 which)
 
 void MCControl::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_idle, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 	{
 		if (opened && getstack()->gettool(this) == T_BROWSE)
 		{
@@ -428,13 +428,6 @@ void MCControl::select()
 	state |= CS_SELECTED;
 	kunfocus();
 
-	// MW-2011-09-23: [[ Layers ]] Mark the layer attrs as having changed - the selection
-	//   setting can influence the layer type.
-	m_layer_attr_changed = true;
-
-	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-	layer_redrawall();
-	
 	getcard()->dirtyselection(rect);
 }
 
@@ -442,13 +435,6 @@ void MCControl::deselect()
 {
 	if (state & CS_SELECTED)
 	{
-		// MW-2011-09-23: [[ Layers ]] Mark the layer attrs as having changed - the selection
-		//   setting can influence the layer type.
-		m_layer_attr_changed = true;
-
-		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-		layer_redrawall();
-        
 		getcard()->dirtyselection(rect);
 
         state &= ~(CS_SELECTED | CS_MOVE | CS_SIZE | CS_CREATE);
@@ -869,10 +855,14 @@ void MCControl::sizerects(const MCRectangle &p_object_rect, MCRectangle r_rects[
 			}
 }
 
-void MCControl::drawselected(MCDC *dc)
+void MCControl::drawselection(MCDC *dc, const MCRectangle& p_dirty)
 {
-    if (!opened || !(getflag(F_VISIBLE) || showinvisible()))
+    MCAssert(getopened() != 0 && (getflag(F_VISIBLE) || showinvisible()));
+    
+    if (!getselected())
+    {
         return;
+    }
     
 	if (MCdragging)
 		return;
@@ -1149,11 +1139,11 @@ void MCControl::continuesize(int2 x, int2 y)
 		}
 		else
 		{
-			int2 newwidth;
-			newwidth = (int2)(newrect.height / aspect);
+			int2 t_newwidth;
+			t_newwidth = (int2)(newrect.height / aspect);
 			if (state & CS_SIZEL)
-				newrect.x += newrect.width - newwidth;
-			newrect.width = newwidth;
+				newrect.x += newrect.width - t_newwidth;
+			newrect.width = t_newwidth;
 		}
 	}
 	else if (MCmodifierstate & MS_MOD1)
@@ -1311,7 +1301,7 @@ void MCControl::start(Boolean canclone)
 			}
 			else
 			{
-				Ustruct *us = new Ustruct;
+				Ustruct *us = new (nothrow) Ustruct;
 				us->type = UT_SIZE;
 				us->ud.rect = rect;
 				MCundos->freestate();
@@ -1639,7 +1629,7 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 		{
 			if (flags & F_HSCROLLBAR)
 			{
-				hsb = new MCScrollbar(*MCtemplatescrollbar);
+				hsb = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 				hsb->setparent(this);
 				hsb->setflag(False, F_TRAVERSAL_ON);
 				hsb->setflag(flags & F_3D, F_3D);
@@ -1685,7 +1675,7 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 		{
 			if (flags & F_VSCROLLBAR)
 			{
-				vsb = new MCScrollbar(*MCtemplatescrollbar);
+				vsb = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 				vsb->setparent(this);
 				vsb->setflag(False, F_TRAVERSAL_ON);
 				vsb->setflag(flags & F_3D, F_3D);

@@ -44,7 +44,7 @@ MCExternalHandlerList::~MCExternalHandlerList(void)
 		MCExternal::Unload(m_externals[i]);
 
 	for(uint32_t i = 0; i < m_handlers . Count(); i++)
-		MCNameDelete(m_handlers[i] . name);
+		MCValueRelease(m_handlers[i] . name);
 }
 
 bool MCExternalHandlerList::IsEmpty(void)
@@ -62,7 +62,7 @@ bool MCExternalHandlerList::ListExternals(MCStringRef& r_list)
 	if (t_success)
 		t_success = MCListCreateMutable('\n', &t_external_list);
 
-	for(uindex_t i = 0, j = 0; i < m_externals . Count(); i++)
+	for(uindex_t i = 0; i < m_externals . Count(); i++)
 	{
 		MCAutoStringRef t_name_string;
 
@@ -88,7 +88,7 @@ bool MCExternalHandlerList::ListHandlers(Handler_type p_type, MCStringRef& r_lis
 	if (t_success)
 		t_success = MCListCreateMutable('\n', &t_handler_list);
 
-	for(uindex_t i = 0, j = 0; i < m_handlers . Count(); i++)
+	for(uindex_t i = 0; i < m_handlers . Count(); i++)
 	{
 		if (t_success && m_externals[m_handlers[i] . external] -> GetHandlerType(m_handlers[i] . handler) == p_type)
 			t_success = MCListAppend(*t_handler_list, m_handlers[i] . name);
@@ -173,19 +173,21 @@ bool MCExternalHandlerList::AddHandler(void *state, Handler_type type, const cha
 	self = (MCExternalHandlerList *)state;
 
 	// Inter the name of the handler.
-	MCAutoNameRef t_name;
-	if (!t_name . CreateWithCString(p_name_cstring))
-		return false;
-
+	MCNewAutoNameRef t_name;
+    if (!MCNameCreateWithNativeChars((const char_t*)p_name_cstring, strlen(p_name_cstring), &t_name))
+    {
+        return false;
+    }
+	
 	// If the handler is already in the table, then do nothing. Note that
 	// 't_index' will always be set to the index the handler would be at.
 	uindex_t t_index;
-	if (self -> Lookup(t_name, t_index))
+	if (self -> Lookup(*t_name, t_index))
 		return true;
 
 	// Make the entry.
 	MCExternalHandlerListEntry t_entry;
-	t_entry . name = t_name;
+	t_entry . name = *t_name;
 	t_entry . external = self -> m_externals . Count();
 	t_entry . handler = p_index;
 	if (!self -> m_handlers . Insert(t_index, t_entry))
@@ -233,7 +235,6 @@ MCExternal::MCExternal(void)
 {
 	m_next = nil;
 	m_references = 0;
-	m_module = nil;
 	m_name = nil;
 }
 
@@ -247,17 +248,22 @@ MCExternal *MCExternal::Load(MCStringRef p_filename)
 	t_success = true;
 	
 	// Load the referenced module.
-	MCSysModuleHandle t_module;
-	t_module = nil;
+	MCSAutoLibraryRef t_module;
 	if (t_success)
 	{
-        // AL-2015-02-10: [[ SB Inclusions ]] Load external using new module loading utility
-        // SN-2015-04-07: [[ Bug 15164 ]] Use StringRef (we might want a Unicode
-        //  path to keep its Unicode chars).
-        t_module = (MCSysModuleHandle)MCU_loadmodule_stringref(p_filename);
-
-		if (t_module == NULL)
-			t_success = false;
+        &t_module = MCU_library_load(p_filename);
+        if (!t_module.IsSet())
+        {
+            // try a relative path
+            MCAutoStringRef t_relative_filename;
+            if (MCStringFormat(&t_relative_filename, "./%@", p_filename))
+            {
+                &t_module = MCU_library_load(*t_relative_filename);
+            }
+        }
+        
+        if (!t_module.IsSet())
+            t_success = false;
 	}
 
 	// Now loop through the loaded externals to see if we are already loaded.
@@ -265,17 +271,18 @@ MCExternal *MCExternal::Load(MCStringRef p_filename)
 	t_external = nil;
 	if (t_success)
 		for(t_external = s_externals; t_external != nil; t_external = t_external -> m_next)
-			if (t_external -> m_module == t_module)
+			if (MCValueIsEqualTo(*t_module,
+                                 *(t_external->m_module)))
 				break;
 
 	// If we failed to find the external, then we must try and prepare it.
 	if (t_success && t_external == nil)
 	{
 		// First try and load it as a new style external.
-	
-		if (MCS_resolvemodulesymbol(t_module, MCSTR("MCExternalDescribe")) != nil)
+        
+		if (MCU_library_lookup(*t_module, MCSTR("MCExternalDescribe")) != nil)
 			t_external = MCExternalCreateV1();
-		else if (MCS_resolvemodulesymbol(t_module, MCSTR("getXtable")) != nil)
+		else if (MCU_library_lookup(*t_module, MCSTR("getXtable")) != nil)
 			t_external = MCExternalCreateV0();
 		
 		if (t_external != nil)
@@ -284,7 +291,7 @@ MCExternal *MCExternal::Load(MCStringRef p_filename)
 			s_externals = t_external;
 
 			t_external -> m_references = 0;
-			t_external -> m_module = t_module;
+			t_external -> m_module = t_module.Take();
 			t_external -> m_name = nil;
 			
 			t_success = t_external -> Prepare();

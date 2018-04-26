@@ -20,7 +20,7 @@ end deleteVideoclip
 
 on TestAudioclipMessages
    local tObject
-   import audioclip from file "lcs-input-files/testBlankAudio.wav"
+   import audioclip from file (TestGetInputFile("testBlankAudio.wav"))
    put the long id of the last audioclip into tObject
    TestAssert "newAudioclip message", sNewObject is tObject
    delete tObject
@@ -29,7 +29,7 @@ end TestAudioclipMessages
 
 on TestVideoclipMessages
    local tObject
-   import videoclip from file "lcs-input-files/testBlankVideo.mpeg"
+   import videoclip from file (TestGetInputFile("/testBlankVideo.mpeg"))
    put the long id of the last videoclip into tObject
    TestAssert "newVideoclip message", sNewObject is tObject
    delete tObject

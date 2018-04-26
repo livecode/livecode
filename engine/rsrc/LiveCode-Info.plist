@@ -55,8 +55,8 @@
 	<true/>
 	<key>LSArchitecturePriority</key>
 	<array>
-		<string>i386</string>
 		<string>x86_64</string>
+		<string>i386</string>
 	</array>
 	<key>NSAppleScriptEnabled</key>
 	<string>YES</string>

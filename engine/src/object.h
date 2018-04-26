@@ -29,33 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "native-layer.h"
 
-// TODO[C++11] Remove this and change uses of std_ to std when merging into
-// develop.
-//
-// When compiling on develop-8.1, various toolchains have differing support
-// for C++11, and including C++11 headers at this point causes problems elsewhere.
-namespace std_ {
-    template<typename _Tp>
-    struct remove_reference
-    { typedef _Tp     type; };
-
-    template<typename _Tp>
-    struct remove_reference<_Tp&>
-    { typedef _Tp     type; };
-    
-    template <class _Tp>
-    inline typename std_::remove_reference<_Tp>::type&& move(_Tp&& __t)
-    {
-        typedef typename std_::remove_reference<_Tp>::type _Up;
-        return static_cast<_Up&&>(__t);
-    }
-    
-    template <typename T> void swap(T& t1, T& t2) {
-        T temp = std_::move(t1);
-        t1 = std_::move(t2);
-        t2 = std_::move(temp);
-    }
-}
+#include <utility>
 
 enum {
     MAC_SHADOW,
@@ -292,33 +266,29 @@ class MCObjectProxy<T>::Handle
 {
 public:
     
-    Handle() :
-      m_proxy(nullptr)
-    {
-    }
+	constexpr Handle() = default;
     
-    Handle(MCObjectProxy* p_proxy) :
-      m_proxy(nullptr)
+    Handle(MCObjectProxy* p_proxy)
     {
         Set(p_proxy);
     }
     
-    explicit Handle(const T* p_object) :
-      m_proxy(nullptr)
+    explicit Handle(const T* p_object)
     {
         Set(p_object);
     }
     
-    Handle(const Handle& p_handle) :
-      m_proxy(nullptr)
+    Handle(const Handle& p_handle)
     {
         Set(p_handle.m_proxy);
     }
     
-    Handle(decltype(nullptr)) :
-      m_proxy(nullptr)
+    Handle(Handle&& p_handle)
     {
+        std::swap(m_proxy, p_handle.m_proxy);
     }
+
+    constexpr Handle(decltype(nullptr)) {}
     
     Handle& operator= (MCObjectProxy* p_proxy)
     {
@@ -338,6 +308,13 @@ public:
         return *this;
     }
     
+    Handle& operator=(Handle&& p_handle)
+    {
+        Set(nullptr);
+        std::swap(m_proxy, p_handle.m_proxy);
+        return *this;
+    }
+
     Handle& operator= (decltype(nullptr))
     {
         Set(nullptr);
@@ -451,7 +428,7 @@ public:
     
     // Conversion to handles to compatible types
     // [[ C++11 ]] Currently disabled due to lack of required C++11 support on all platforms
-#if 0 && __cplusplus >= 201103L
+#if NEEDS_CPP_11 && __cplusplus >= 201103L
     template <class U, class = typename std::enable_if<std::is_convertible<T*, U*>::value, void>::type>
     operator typename MCObjectProxy<U>::Handle () const
     {
@@ -463,7 +440,7 @@ public:
      * used on MCObjectHandle instances of exactly the same type. */
     void swap(Handle& x_other)
     {
-        using std_::swap;
+        using std::swap;
         swap(m_proxy, x_other.m_proxy);
     }
 
@@ -475,7 +452,7 @@ public:
 private:
     
     // The proxy for the object this is a handle to
-    MCObjectProxy*  m_proxy;
+    MCObjectProxy*  m_proxy = nullptr;
     
     void Set(MCObjectProxy* p_proxy)
     {
@@ -552,7 +529,7 @@ class MCObject :
 protected:
 	uint4 obj_id;
 	MCObjectHandle parent;
-	MCNameRef _name;
+	MCNewAutoNameRef _name;
 	uint4 flags;
 	MCRectangle rect;
 	MCColor *colors;
@@ -663,6 +640,7 @@ public:
 	MCObject();
 	MCObject(const MCObject &oref);
 	virtual ~MCObject();
+    
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
 
@@ -839,28 +817,14 @@ public:
 	// Returns true if the object has not been named.
 	bool isunnamed(void) const
 	{
-		return MCNameIsEmpty(_name);
+		return MCNameIsEmpty(getname());
 	}
 
 	// Returns the name of the object.
 	MCNameRef getname(void) const
 	{
-		return _name;
+		return *_name;
 	}
-
-	const char *getname_cstring(void) const
-	{
-        char *t_name;
-        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(_name), t_name);
-		return t_name;
-	}
-
-    /*
-	MCString getname_oldstring(void) const
-	{
-		return MCNameGetOldString(_name);
-	}
-    */
 
 	// Tests to see if the object has the given name, interpreting unnamed as
 	// the empty string.
@@ -934,7 +898,10 @@ public:
 
 	MCObject *getparent() const
 	{
-		return parent;
+        if (parent)
+            return parent;
+        else
+            return NULL;
 	}
 	
 	uint4 getscriptdepth() const
@@ -971,6 +938,10 @@ public:
 	// is no parentScript, it returns NULL - note that this is an MCParentScript,
 	// not an MCParentScriptUse.
 	MCParentScript *getparentscript(void) const;
+    
+    // Set the parentScript of the object at load time of it (used by the script
+    // only stack loader).
+    bool setparentscript_onload(uint32_t p_id, MCNameRef p_stack);
 
 	// MW-2009-01-28: [[ Inherited parentScripts ]]
 	// This method returns false if there was not enough memory to complete the
@@ -1071,7 +1042,8 @@ public:
     // SN-2014-04-16 [[ Bug 12078 ]] Buttons and tooltip label are not drawn in the text direction
     void drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font);
 
-	Exec_stat domess(MCStringRef sptr, bool p_ignore_errors = true);
+	Exec_stat domess(MCStringRef sptr, MCParameter *args = nil, bool p_ignore_errors = true);
+    
 	void eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value);
 	// MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
     void editscript(MCStringRef p_at = nil);
@@ -1708,7 +1680,7 @@ inline T* MCObjectCast(MCObject* p_object)
     
     // Check that the object's type matches the (static) type of the desired
     // type. This will break horribly if the desired type has derived types...
-    MCAssert(p_object->gettype() == T::kObjectType);
+    MCAssert(p_object->gettype() == Chunk_term(T::kObjectType));
     return static_cast<T*> (p_object);
 }
 
@@ -1771,7 +1743,7 @@ public:
     MCObjectPartHandle(MCObjectPartHandle&& other)
       : MCObjectHandle(nullptr), m_part_id(0)
     {
-        using std_::swap;
+        using std::swap;
         swap(*this, other);
     }
 
@@ -1788,7 +1760,7 @@ public:
     /* TODO[C++11] MCObjectPartHandle& operator=(MCObjectPartHandle&&) = default; */
     MCObjectPartHandle& operator=(MCObjectPartHandle&& other)
     {
-        MCObjectHandle::operator=(std_::move(other));
+        MCObjectHandle::operator=(std::move(other));
         m_part_id = other.m_part_id;
         return *this;
     }

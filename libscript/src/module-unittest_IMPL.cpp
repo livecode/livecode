@@ -17,12 +17,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool com_livecode_unittest___IMPL_Initialize (void)
+extern "C" bool com_livecode_unittest___impl_Initialize (void)
 {
 	return true;
 }
 
-extern "C" void com_livecode_unittest___IMPL_Finalize (void)
+extern "C" void com_livecode_unittest___impl_Finalize (void)
 {
 }
 

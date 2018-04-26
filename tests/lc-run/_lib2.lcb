@@ -1,0 +1,7 @@
+module com.livecode.lc_run.tests.lib2
+
+public handler Hello2()
+	return the byte with code 50 /* 2 */
+end handler
+
+end module

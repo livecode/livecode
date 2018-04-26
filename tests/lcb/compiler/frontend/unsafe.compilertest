@@ -129,3 +129,26 @@ end module
 %EXPECT PASS
 %SUCCESS
 %ENDTEST
+
+%TEST ForeignHandlerCallInSafeContext
+module compiler_test
+foreign handler ForeignHandler(in pArg as optional any) returns nothing binds to "<builtin>"
+handler SafeHandler()
+    %{BEFORE_CALL}ForeignHandler(%{BEFORE_EVAL}ForeignHandler(nothing))
+end handler
+end module
+%EXPECT PASS
+%ERROR "Unsafe handler 'ForeignHandler' can only be called in unsafe context" AT BEFORE_CALL
+%ERROR "Unsafe handler 'ForeignHandler' can only be called in unsafe context" AT BEFORE_EVAL
+%ENDTEST
+
+%TEST SafeForeignHandlerCallInSafeContext
+module compiler_test
+__safe foreign handler SafeForeignHandler(in pArg as optional any) returns nothing binds to "<builtin>"
+handler SafeHandler()
+    %{BEFORE_CALL}SafeForeignHandler(%{BEFORE_EVAL}SafeForeignHandler(nothing))
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST

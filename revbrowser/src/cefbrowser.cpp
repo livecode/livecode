@@ -20,7 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "cefbrowser.h"
 #include "cefbrowser_msg.h"
-#include "cefshared.h"
 
 #include <include/cef_app.h>
 
@@ -89,8 +88,6 @@ static const char *s_auth_scheme_strings[] =
 
 bool MCCefAuthSchemeFromCefString(const CefString &p_string, MCCefAuthScheme &r_scheme)
 {
-	const char **t_strings;
-	t_strings = s_auth_scheme_strings;
 	
 	for (uint32_t i = 0; s_auth_scheme_strings[i] != nil; i++)
 	{
@@ -128,7 +125,94 @@ void MCCefBrowserRunloopAction(void *p_context)
 }
 
 extern "C" int initialise_weak_link_cef(void);
-extern "C" int initialise_weak_link_cef_with_path(const char *p_path);
+
+#if defined(WIN32)
+static const char *kCefProcessName = "revbrowser-cefprocess.exe";
+static const char *kCefPathSeparatorStr = "\\";
+static const char kCefPathSeparator = '\\';
+#else
+static const char *kCefProcessName = "revbrowser-cefprocess";
+static const char *kCefPathSeparatorStr = "/";
+static const char kCefPathSeparator = '/';
+#endif
+
+static bool __MCCefGetLibraryPath(char*& r_path)
+{
+    int t_retval = EXTERNAL_SUCCESS;
+
+    void *t_module = nullptr;
+    if (t_module == nullptr)
+    {
+        LoadModuleByName("./CEF/libcef", &t_module, &t_retval);
+        if (t_retval != EXTERNAL_SUCCESS)
+            t_module = nullptr;
+    }
+#if defined(WIN32) || defined(TARGET_PLATFORM_LINUX)
+    if (t_module == nullptr)
+    {
+        LoadModuleByName("./Externals/CEF/libcef", &t_module, &t_retval);
+        if (t_retval != EXTERNAL_SUCCESS)
+            t_module = nullptr;
+    }
+#endif
+
+    char *t_module_path =
+        t_module != nullptr ? CopyNativePathOfModule(t_module, &t_retval)
+        : nullptr;
+    if (t_retval != EXTERNAL_SUCCESS)
+        t_module_path = nullptr;
+
+    UnloadModule(t_module, &t_retval);
+
+    if (t_module_path == nullptr)
+    {
+        return false;
+    }
+
+    char *t_last_sep =
+        strrchr(t_module_path,
+            kCefPathSeparator);
+
+    if (t_last_sep == nullptr)
+    {
+        free(t_module_path);
+        return false;
+    }
+
+    *t_last_sep = '\0';
+
+    r_path = t_module_path;
+
+    return true;
+}
+
+static bool __MCCefAppendPath(const char *p_base, const char *p_path, char *&r_path)
+{
+    if (p_base == nil)
+        return MCCStringClone(p_path, r_path);
+    else if (MCCStringEndsWith(p_base, kCefPathSeparatorStr))
+        return MCCStringFormat(r_path, "%s%s", p_base, p_path);
+    else
+        return MCCStringFormat(r_path, "%s%s%s", p_base, kCefPathSeparatorStr, p_path);
+}
+
+static bool __MCCefBuildPath(const char *p_library_path,
+    const char *p_suffix,
+    cef_string_t* r_string)
+{
+    char *t_process_path = nullptr;
+    if (!__MCCefAppendPath(p_library_path,
+        p_suffix,
+        t_process_path) ||
+        !MCCefStringFromUtf8String(t_process_path,
+            r_string))
+    {
+        free(t_process_path);
+        return false;
+    }
+
+    return true;
+}
 
 // IM-2014-03-13: [[ revBrowserCEF ]] Initialisation of the CEF library
 bool MCCefInitialise(void)
@@ -136,28 +220,29 @@ bool MCCefInitialise(void)
 	if (s_cef_initialised)
 		return true;
 
+    ////////
+
+    char *t_library_path = nullptr;
+    if (!__MCCefGetLibraryPath(t_library_path))
+        return false;
+
+    ////////
+
 	CefMainArgs t_args;
 	CefSettings t_settings;
 	t_settings.multi_threaded_message_loop = false;
 	t_settings.command_line_args_disabled = true;
 	t_settings.no_sandbox = true;
+	t_settings.log_severity = LOGSEVERITY_VERBOSE;
 
-	bool t_success;
-	t_success = MCCefStringFromUtf8String(MCCefPlatformGetSubProcessName(), &t_settings.browser_subprocess_path);
+    bool t_success = true;
+    if (t_success)
+        t_success = __MCCefBuildPath(t_library_path, kCefProcessName, &t_settings.browser_subprocess_path);
+    if (t_success)
+        t_success = __MCCefBuildPath(t_library_path, "locales", &t_settings.locales_dir_path);
+    if (t_success)
+        t_success = __MCCefBuildPath(t_library_path, "", &t_settings.resources_dir_path);
 
-	if (t_success)
-	{
-		// IM-2014-03-25: [[ revBrowserCEF ]] Allow per-platform locale path settings
-        const char *t_locale_path, *t_resource_path;
-		t_locale_path = MCCefPlatformGetLocalePath();
-        t_resource_path = MCCefPlatformGetResourcesDirPath();
-
-		if (t_locale_path != nil)
-			t_success = MCCefStringFromUtf8String(t_locale_path, &t_settings.locales_dir_path);
-        
-        if (t_resource_path != nil)
-            t_success = MCCefStringFromUtf8String(t_resource_path, &t_settings.resources_dir_path);
-	}
 
 	CefRefPtr<CefApp> t_app = nil;
 
@@ -194,23 +279,15 @@ bool MCCefBrowserInitialise(void)
 	
 	bool t_success;
 	t_success = true;
-	
-	// IM-2014-03-18: [[ revBrowserCEF ]] Initialise dynamically loaded cef library
-	if (t_success)
-	{
-		const char *t_lib_path;
-		t_lib_path = MCCefPlatformGetCefLibraryPath();
-		
-		// IM-2014-03-25: [[ revBrowserCEF ]] Look for libcef in platform-defined location
-		if (t_lib_path != nil)
-			t_success = initialise_weak_link_cef_with_path(t_lib_path);
-		else
-			t_success = initialise_weak_link_cef();
-	}
+
+    if (t_success)
+    {
+        t_success = initialise_weak_link_cef();
+    }
 
 	if (t_success)
 		t_success = MCCefInitialise();
-	
+
 	if (t_success)
 	{
 		int t_result;
@@ -339,6 +416,15 @@ public:
 					MCCStringFree(t_tmp);
 			}
 			break;
+			case VTYPE_NULL:
+			case VTYPE_BOOL:
+			case VTYPE_DOUBLE:
+			case VTYPE_BINARY:
+			case VTYPE_STRING:
+			case VTYPE_DICTIONARY:
+			case VTYPE_LIST:
+			case VTYPE_INVALID:
+				break;
 		}
 
 		return t_converted;
@@ -735,7 +821,7 @@ public:
 	// CefLoadHandler interface
 	// Methods called on UI thread or render process main thread
 
-	virtual void OnLoadStart(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame) OVERRIDE
+	virtual void OnLoadStart(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, cef_transition_type_t p_transition_type) OVERRIDE
 	{
 		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
 		if (nil == m_owner)
@@ -837,7 +923,7 @@ public:
 bool MCCefBrowserBase::Initialize()
 {
 	// create client and browser
-	m_client = new MCCefBrowserClient(this);
+	m_client = new (nothrow) MCCefBrowserClient(this);
 
 	CefWindowInfo t_window_info;
 	CefBrowserSettings t_settings;
@@ -1177,7 +1263,7 @@ char *MCCefBrowserBase::GetSource(void)
 	t_result.Clear();
 
 	CefRefPtr<CefStringVisitor> t_visitor;
-	t_visitor = new MCStringVisitor(t_result);
+	t_visitor = new (nothrow) MCStringVisitor(t_result);
 
 	m_browser->GetMainFrame()->GetSource(t_visitor);
 
@@ -1501,9 +1587,6 @@ char *MCCefBrowserBase::ExecuteScript(const char *p_javascript_string)
 {
 	bool t_success;
 	t_success = true;
-
-	const MCCefMessageResult *t_result;
-	t_result = nil;
 
 	CefString t_script;
 	t_success = MCCefStringFromUtf8String(p_javascript_string, t_script);

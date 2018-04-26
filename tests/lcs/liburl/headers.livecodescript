@@ -3,15 +3,16 @@
 local sLogField
 
 on TestSetup
-   -- Only run these tests on desktop platforms
-   if the platform is not among the items of "MacOS,Windows,Linux" then
-      return "SKIP Tests are not runnable on" && the platform
+   TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIf "stacks loaded", "tsNetLibURL"
+   TestSkipIf "environment", "server"
+   
+   if not TestIsInStandalone() then
+      local tLibURl
+      put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
+      send "extensionInitialize" to stack tLibUrl
    end if
-
-   local tLibURl
-   put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
-   send "revLoadLibrary" to stack tLibUrl
-
+   
    create field
    put it into sLogField
    libUrlSetLogField sLogField
@@ -61,3 +62,8 @@ on TestHostHeader
 
    TestAssert "exactly one host header", tHostCount is 1
 end TestHostHeader
+
+on TestTeardown
+   set the httpHeaders to empty
+   libUrlSetLogField empty
+end TestTeardown

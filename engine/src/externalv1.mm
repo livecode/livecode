@@ -92,7 +92,7 @@ extern "C" MCExternalError MCValueFromObjcValue(id src, MCValueRef &var)
     {
         MCAutoStringRef t_string;
         
-        if (!MCStringCreateWithCFString((CFStringRef)src, &t_string))
+        if (!MCStringCreateWithCFStringRef((CFStringRef)src, &t_string))
             return kMCExternalErrorNotAString;
         
         var = MCValueRetain(*t_string);
@@ -118,7 +118,7 @@ extern "C" MCExternalError MCValueFromObjcValue(id src, MCValueRef &var)
         MCAutoStringRef t_string;
         NSString *t_as_string;
         t_as_string = [src description];
-        if (!MCStringCreateWithCFString((CFStringRef)t_as_string, &t_string))
+        if (!MCStringCreateWithCFStringRef((CFStringRef)t_as_string, &t_string))
             return kMCExternalErrorOutOfMemory;
         
         var = MCValueRetain(*t_string);
@@ -337,7 +337,7 @@ extern "C" MCExternalError MCArrayFromObjcDictionary(NSDictionary *p_src, MCArra
             
             if (t_error == kMCExternalErrorNone)
             {
-                if (!MCStringCreateWithCFString((CFStringRef)t_key, &t_key_stringref) ||
+                if (!MCStringCreateWithCFStringRef((CFStringRef)t_key, &t_key_stringref) ||
                     !MCNameCreate(*t_key_stringref, &t_key_nameref))
                     t_error = kMCExternalErrorOutOfMemory;
             }

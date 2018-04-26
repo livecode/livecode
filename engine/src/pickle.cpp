@@ -83,7 +83,7 @@ MCPickleContext *MCObject::startpickling(bool p_include_legacy)
 	t_context = NULL;
 	if (t_success)
 	{
-		t_context = new MCPickleContext;
+		t_context = new (nothrow) MCPickleContext;
 		if (t_context == NULL)
 			t_success = false;
 	}
@@ -401,49 +401,49 @@ static bool unpickle_object_from_stream(IO_handle p_stream, uint32_t p_version, 
 			/* UNCHECKED */ MCStackSecurityCreateStack((MCStack*&)t_object);
 		break;
 		case OT_CARD:
-			t_object = new MCCard;
+			t_object = new (nothrow) MCCard;
 		break;
 		case OT_GROUP:
-			t_object = new MCGroup;
+			t_object = new (nothrow) MCGroup;
 		break;
 		case OT_BUTTON:
-			t_object = new MCButton;
+			t_object = new (nothrow) MCButton;
 		break;
 		case OT_FIELD:
-			t_object = new MCField;
+			t_object = new (nothrow) MCField;
 		break;
 		case OT_IMAGE:
-			t_object = new MCImage;
+			t_object = new (nothrow) MCImage;
 		break;
 		case OT_SCROLLBAR:
-			t_object = new MCScrollbar;
+			t_object = new (nothrow) MCScrollbar;
 		break;
 		case OT_GRAPHIC:
-			t_object = new MCGraphic;
+			t_object = new (nothrow) MCGraphic;
 		break;
 		case OT_PLAYER:
-			t_object = new MCPlayer;
+			t_object = new (nothrow) MCPlayer;
 		break;
 		case OT_MCEPS:
-			t_object = new MCEPS;
+			t_object = new (nothrow) MCEPS;
         break;
         case OT_WIDGET:
-            t_object = new MCWidget;
+            t_object = new (nothrow) MCWidget;
         break;
 		case OT_MAGNIFY:
-			t_object = new MCMagnify;
+			t_object = new (nothrow) MCMagnify;
 		break;
 		case OT_COLORS:
-			t_object = new MCColors;
+			t_object = new (nothrow) MCColors;
 		break;
 		case OT_AUDIO_CLIP:
-			t_object = new MCAudioClip;
+			t_object = new (nothrow) MCAudioClip;
 		break;
 		case OT_VIDEO_CLIP:
-			t_object = new MCVideoClip;
+			t_object = new (nothrow) MCVideoClip;
 		break;
 		case OT_STYLED_TEXT:
-			t_object = new MCStyledText;
+			t_object = new (nothrow) MCStyledText;
 		break;
 		default:
 			t_success = false;

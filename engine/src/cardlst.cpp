@@ -35,6 +35,7 @@ MCCardnode::~MCCardnode()
 { }
 
 MCCardlist::MCCardlist()
+    : first(nullptr)
 {
 	cards = NULL;
 	interval = 0;
@@ -118,7 +119,7 @@ void MCCardlist::addcard(MCCard *card)
     if ((cards != NULL && cards->card == card) || MClockrecent)
 		return;
 
-	MCCardnode *nptr = new MCCardnode;
+	MCCardnode *nptr = new (nothrow) MCCardnode;
 	nptr->card = card;
 	
 	if (cards == NULL)
@@ -256,7 +257,7 @@ void MCCardlist::pushcard(MCCard *card)
 {
 	if (card == NULL)
 		return;
-	MCCardnode *nptr = new MCCardnode;
+	MCCardnode *nptr = new (nothrow) MCCardnode;
 	nptr->card = card;
 	nptr->insertto(cards);
 }

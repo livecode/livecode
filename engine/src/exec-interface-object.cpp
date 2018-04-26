@@ -63,7 +63,7 @@ typedef struct _PropList
 }
 PropList;
 
-static PropList stackprops[] =
+static const PropList stackprops[] =
     {
         {"altId", P_ALT_ID},
         {"alwaysBuffer", P_ALWAYS_BUFFER},
@@ -133,7 +133,7 @@ static PropList stackprops[] =
         {"windowShape", P_WINDOW_SHAPE}
     };
 
-static PropList cardprops[] =
+static const PropList cardprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -171,7 +171,7 @@ static PropList cardprops[] =
         {"topPattern", P_TOP_PATTERN}
     };
 
-static PropList groupprops[] =
+static const PropList groupprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -241,7 +241,7 @@ static PropList groupprops[] =
         {"vScrollbar", P_VSCROLLBAR}
     };
 
-static PropList buttonprops[] =
+static const PropList buttonprops[] =
     {
         {"accelKey", P_ACCELERATOR_KEY},
         {"accelMods", P_ACCELERATOR_MODIFIERS},
@@ -329,7 +329,7 @@ static PropList buttonprops[] =
         {"visitedIcon", P_VISITED_ICON}
     };
 
-static PropList fieldprops[] =
+static const PropList fieldprops[] =
     {
         {"altId", P_ALT_ID},
         {"autoHilite", P_AUTO_HILITE},
@@ -409,7 +409,7 @@ static PropList fieldprops[] =
         {"vScrollbar", P_VSCROLLBAR}
     };
 
-static PropList imageprops[] =
+static const PropList imageprops[] =
     {
         {"altId", P_ALT_ID},
         {"angle", P_ANGLE},
@@ -470,7 +470,7 @@ static PropList imageprops[] =
         {"yHot", P_YHOT}
     };
 
-static PropList graphicprops[] =
+static const PropList graphicprops[] =
     {
         {"altId", P_ALT_ID},
         {"angle", P_ANGLE},
@@ -549,7 +549,7 @@ static PropList graphicprops[] =
         {"miterLimit", P_MITER_LIMIT},
     };
 
-static PropList scrollbarprops[] =
+static const PropList scrollbarprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -607,7 +607,7 @@ static PropList scrollbarprops[] =
         {"thumbSize", P_THUMB_SIZE}
     };
 
-static PropList playerprops[] =
+static const PropList playerprops[] =
     {
         {"altId", P_ALT_ID},
         {"alwaysBuffer", P_ALWAYS_BUFFER},
@@ -668,7 +668,7 @@ static PropList playerprops[] =
         {"visible", P_VISIBLE},
     };
 
-static PropList epsprops[] =
+static const PropList epsprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -723,7 +723,7 @@ static PropList epsprops[] =
         {"yScale", P_Y_SCALE}
     };
 
-static PropList colorpaletteprops[] =
+static const PropList colorpaletteprops[] =
     {
         {"name", P_SHORT_NAME},
         {"id", P_ID},
@@ -731,7 +731,7 @@ static PropList colorpaletteprops[] =
         {"rect", P_RECTANGLE}
     };
 
-static PropList audioclipprops[] =
+static const PropList audioclipprops[] =
     {
         {"altID", P_ALT_ID},
         {"id", P_ID},
@@ -739,7 +739,7 @@ static PropList audioclipprops[] =
         {"playLoudness", P_PLAY_LOUDNESS},
     };
 
-static PropList videoclipprops[] =
+static const PropList videoclipprops[] =
     {
         {"altID", P_ALT_ID},
         {"dontRefresh", P_DONT_REFRESH},
@@ -820,7 +820,7 @@ static void MCInterfaceTextStyleParse(MCExecContext& ctxt, MCStringRef p_input, 
 		while (MCStringGetNativeCharAtIndex(p_input, t_old_offset) == ' ')
 			t_old_offset++;
 
-		t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_text_style);
+		t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_text_style);
 
 		if (t_success)
 		{
@@ -1124,13 +1124,14 @@ void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterf
 {
     if (MCStringIsEqualToCString(p_input, "mixed", kMCCompareCaseless))
     {
-        r_output . mixed = Mixed;
-        r_output . type = kMCInterfaceTriStateMixed;
+        r_output . value = kMCTristateMixed;
+        return;
     }
-    
-    if (MCTypeConvertStringToBool(p_input, r_output . state))
+
+    bool t_bool = false;
+    if (MCTypeConvertStringToBool(p_input, t_bool))
     {
-        r_output . type = kMCInterfaceTriStateBoolean;
+        r_output . value = t_bool;
         return;
     }
     
@@ -1139,16 +1140,14 @@ void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterf
 
 void MCInterfaceTriStateFormat(MCExecContext& ctxt, const MCInterfaceTriState& p_input, MCStringRef& r_output)
 {
-    if (p_input . type == kMCInterfaceTriStateBoolean)
+    if (p_input.value.isMixed())
     {
-        r_output = MCValueRetain(p_input . state ? kMCTrueString : kMCFalseString);
+        if (!MCStringCreateWithCString("mixed", r_output))
+            ctxt.Throw();
         return;
     }
-    
-    if (MCStringCreateWithCString("mixed", r_output))
-        return;
-    
-    ctxt . Throw();
+
+    r_output = MCValueRetain(p_input.value.isFalse() ? kMCFalseString : kMCTrueString);
 }
 
 void MCInterfaceTriStateFree(MCExecContext& ctxt, MCInterfaceTriState& p_input)
@@ -1170,7 +1169,6 @@ MCExecEnumTypeElementInfo _kMCInterfaceEncodingElementInfo[] =
 {
 	{ MCnativestring, 0, true },
 	{ MCunicodestring, 1, true },
-	{ MCmixedstring, 2, true },
 };
 
 MCExecEnumTypeInfo _kMCInterfaceEncodingTypeInfo =
@@ -1469,10 +1467,9 @@ void MCObject::SetName(MCExecContext& ctxt, MCStringRef p_name)
 	//   change case of names of objects.
 	if (t_success && getname() != *t_new_name)
 	{
-		MCAutoNameRef t_old_name;
-		t_old_name . Clone(getname());
+		MCNewAutoNameRef t_old_name = getname();
 		setname(*t_new_name);
-		message_with_valueref_args(MCM_name_changed, t_old_name, getname());
+		message_with_valueref_args(MCM_name_changed, *t_old_name, getname());
 	}
 	
 	if (t_success)
@@ -1727,8 +1724,7 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	MCScriptPoint sp(new_parent_script);
 
 	// Create a new chunk object to parse the reference into
-	MCAutoPointer<MCChunk> t_chunk;
-	t_chunk = new MCChunk(False);
+	/* UNCHECKED */ MCAutoPointer<MCChunk> t_chunk = new (nothrow) MCChunk(False);
 
 	// Attempt to parse a chunk. We also check that there is no 'junk' at
 	// the end of the string - if there is, its an error. Note the errorlock
@@ -2378,7 +2374,7 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 		else if (t_new_offset > t_old_offset)
 		{
 			MCInterfaceNamedColor t_color;
-			t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_color_string);
+			t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_color_string);
 			if (t_success)
 			{
 				MCInterfaceNamedColorParse(ctxt, *t_color_string, t_color);
@@ -2713,7 +2709,7 @@ void MCObject::GetPatterns(MCExecContext& ctxt, MCStringRef& r_patterns)
 	ctxt . Throw();
 }
 
-void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef patterns)
+void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef p_patterns)
 {
 	bool t_success;
 	t_success = true;
@@ -2721,18 +2717,18 @@ void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef patterns)
 	uindex_t t_old_offset = 0;
 	uindex_t t_new_offset = 0;
 	uindex_t t_length;
-	t_length = MCStringGetLength(patterns);
+	t_length = MCStringGetLength(p_patterns);
 
 	for (uint2 p = P_FORE_PATTERN; p <= P_FOCUS_PATTERN; p++)
 	{
 		MCAutoStringRef t_pattern;
 		uint4 t_id;
-		if (!MCStringFirstIndexOfChar(patterns, '\n', t_old_offset, kMCCompareExact, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_patterns, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
 		if (t_new_offset > t_old_offset)
 		{
-			t_success = MCStringCopySubstring(patterns, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_pattern);
+			t_success = MCStringCopySubstring(p_patterns, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_pattern);
 			if (t_success)
 				t_success = MCU_stoui4(*t_pattern, t_id);
 			if (t_success)
@@ -3305,7 +3301,7 @@ void MCObject::GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef
 
 void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props)
 {
-	PropList *table;
+	const PropList *table;
 	uint2 tablesize;
 
 	switch (gettype())
@@ -3453,7 +3449,7 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_PATTERNS, "patterns" },
 };
 
-void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props)
+void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef p_props)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
 	MCRedrawLockScreen();
@@ -3469,7 +3465,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
     {
 		// MERG-2013-06-24: [[ RevisedPropsProp ]] Make sure we do a case-insensitive search
 		//   for the property name.
-        if (!MCArrayFetchValue(props, false, MCNAME(s_preprocess_props[j].tag), t_value))
+        if (!MCArrayFetchValue(p_props, false, MCNAME(s_preprocess_props[j].tag), t_value))
             continue;
 
         // MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only set the
@@ -3488,7 +3484,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
 	uintptr_t t_iterator;
 	t_iterator = 0;
     MCNameRef t_key;
-	while(MCArrayIterate(props, t_iterator, t_key, t_value))
+	while(MCArrayIterate(p_props, t_iterator, t_key, t_value))
 	{
 		MCScriptPoint sp(MCNameGetString(t_key));
 		Symbol_type type;
@@ -4192,9 +4188,9 @@ void MCObject::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool 
         
         MCF_changetextstyle(t_style_set, t_style, p_setting);
         
-        MCInterfaceTextStyle t_style;
-        t_style . style = t_style_set;
-        SetTextStyle(ctxt, t_style);
+        MCInterfaceTextStyle t_interface_style;
+        t_interface_style . style = t_style_set;
+        SetTextStyle(ctxt, t_interface_style);
         return;
     }
     
@@ -4421,7 +4417,7 @@ static bool MCObjectListAppendObject(MCObjectList *&x_list, MCObject *p_object)
      * handlers, assuming it compiles. */
     p_object -> parsescript(False);
     
-	t_newobject = new MCObjectList(p_object);
+	t_newobject = new (nothrow) MCObjectList(p_object);
 	
 	if (t_newobject == nil)
 		return false;

@@ -59,7 +59,7 @@ uint4 MCAudioClip::curindex;
 Boolean MCAudioClip::looping;
 real8 MCAudioClip::endtime;
 
-static int2 ulaw_table[256] = {
+static const int2 ulaw_table[256] = {
                                   -32124, -31100, -30076, -29052, -28028, -27004, -25980, -24956,
                                   -23932, -22908, -21884, -20860, -19836, -18812, -17788, -16764,
                                   -15996, -15484, -14972, -14460, -13948, -13436, -12924, -12412,
@@ -122,7 +122,7 @@ MCAudioClip::MCAudioClip()
 	disposable = False;
 	loudness = 100;
 #ifdef TARGET_PLATFORM_LINUX
-	x11audio = new X11Audio ;
+	x11audio = new (nothrow) X11Audio ;
 #endif
 }
 
@@ -132,7 +132,7 @@ MCAudioClip::MCAudioClip(const MCAudioClip &aref) : MCObject(aref)
 	samples = osamples = NULL;
 	if (size != 0)
 	{
-		samples = new int1[size];
+		samples = new (nothrow) int1[size];
 		memcpy(samples, aref.samples, size);
 	}
 	format = aref.format;
@@ -142,7 +142,7 @@ MCAudioClip::MCAudioClip(const MCAudioClip &aref) : MCObject(aref)
 	disposable = False;
 	loudness = aref.loudness;
 #ifdef TARGET_PLATFORM_LINUX
-	x11audio = new X11Audio ;
+	x11audio = new (nothrow) X11Audio ;
 #endif
 }
 
@@ -244,7 +244,7 @@ void MCAudioClip::init()
 
 void MCAudioClip::convert_mulawtolin16()
 {
-	int2 *newsamples = new int2[size];
+	int2 *newsamples = new (nothrow) int2[size];
 	uint1 *sptr = (uint1 *)samples;
 	int2 *dptr = newsamples;
 	uint4 count = size;
@@ -264,7 +264,7 @@ void MCAudioClip::convert_mulawtolin16()
 
 void MCAudioClip::convert_mulawtoulin8()
 {
-	int1 *newsamples = new int1[size];
+	int1 *newsamples = new (nothrow) int1[size];
 	uint1 *sptr = (uint1 *)samples;
 	int1 *dptr = newsamples;
 	uint4 count = size;
@@ -291,7 +291,7 @@ void MCAudioClip::convert_slin8toslin16()
 	uint4 count = size;
 	size <<= 1;
 	swidth = 2;
-	int1 *newsamples = new int1[size];
+	int1 *newsamples = new (nothrow) int1[size];
 	int1 *sptr = samples;
 	int2 *dptr = (int2 *)newsamples;
 	while(count--)
@@ -363,7 +363,7 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 	size = (uint4)MCS_fsize(stream);
 	if (size == 0)
 		return False;
-	samples = new int1[size];
+	samples = new (nothrow) int1[size];
 	if (IO_read(samples, size, stream) != IO_NORMAL)
 		return False;
 	if (strnequal((char*)samples, ".snd", 4))
@@ -476,7 +476,7 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
     uindex_t t_sep;
     MCStringRef t_fname;
     if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_sep))
-        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_sep + 1, MCStringGetLength(fname) - (t_sep + 1)), t_fname);
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMakeMinMax(t_sep + 1, MCStringGetLength(fname)), t_fname);
     else
         t_fname = MCValueRetain(fname);
     
@@ -603,7 +603,7 @@ Boolean MCAudioClip::open_audio()
 	}
 	return True;
 }
-#elif defined _MACOSX
+#elif defined _MAC_DESKTOP
 Boolean MCAudioClip::open_audio() //plays a sound immediately
 {
 	if (sound != NULL)  //if sound is already open and constructed
@@ -657,7 +657,7 @@ Boolean MCAudioClip::open_audio() //plays a sound immediately
 	else
 		return True;
 }
-#elif defined _LINUX
+#elif defined TARGET_PLATFORM_LINUX
 // TS-2007-11-20 : Stopping LINUX from playing any sound - for 2.9.0-DP-2
 // TS-2007-12-04 : Adding in support for ESD
 Boolean MCAudioClip::open_audio()
@@ -691,7 +691,7 @@ Boolean MCAudioClip::play()
 	if (!open_audio())
 	{
 		real8 delay =  MCS_time() + (real8)size / (real8)(rate*nchannels*swidth);
-		MCParameter *newparam = new MCParameter;
+		MCParameter *newparam = new (nothrow) MCParameter;
 		newparam->setvalueref_argument(getname());
 		MCscreen->addmessage(MCdefaultstackptr->getcurcard(), MCM_play_stopped, delay, newparam);
 		return False;
@@ -718,7 +718,7 @@ Boolean MCAudioClip::play()
 		return False;
 	}
 	return True;
-#elif defined _MACOSX
+#elif defined _MAC_DESKTOP
 	SCStatus cs;       //channel status record
 	OSErr err = noErr;
 	// the sizeof(SCStatus) gives 27 bytes, but the actual record size is 24
@@ -750,7 +750,7 @@ Boolean MCAudioClip::play()
 			return False;
 		}
 	return True;
-#elif defined(_LINUX)
+#elif defined(TARGET_PLATFORM_LINUX)
 	if (looping || curindex < size)
 	{
 		while (True)
@@ -826,7 +826,7 @@ void MCAudioClip::stop(Boolean abort)
 		waveOutClose(hwaveout);
 		hwaveout = NULL;
 	}
-#elif defined _MACOSX  //minshe
+#elif defined _MAC_DESKTOP  //minshe
 	//MAC stuff here.... Send a quiet command to stop a sound that is currenty playing
 	if (sound != NULL)
 	{
@@ -914,7 +914,7 @@ IO_stat MCAudioClip::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	if (size != 0)
 	{
-		samples = new int1[size];
+		samples = new (nothrow) int1[size];
 		if ((stat = IO_read(samples, size, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
 	}
@@ -963,13 +963,13 @@ uint2 MCS_getplayloudness()
             hwaveout = NULL;
         }
     }
-#elif defined _MACOSX
+#elif defined _MAC_DESKTOP
     long volume;
     GetDefaultOutputVolume(&volume);
     t_loudness = (HiWord(volume) + LoWord(volume)) * 50 / 255;
 #elif defined TARGET_PLATFORM_LINUX
     X11Audio *t_x11audio = nil;
-    t_x11audio = new X11Audio ;
+    t_x11audio = new (nothrow) X11Audio ;
     if ( t_x11audio != nil)
     {
         t_loudness = t_x11audio -> getloudness() ;
@@ -1007,12 +1007,12 @@ void MCS_setplayloudness(uint2 p_loudness)
             hwaveout = NULL;
         }
     }
-#elif defined _MACOSX
+#elif defined _MAC_DESKTOP
     long volume = p_loudness * 255 / 100;
     SetDefaultOutputVolume(volume | volume << 16);
 #elif defined TARGET_PLATFORM_LINUX
     X11Audio *t_x11audio = nil;
-    t_x11audio = new X11Audio ;
+    t_x11audio = new (nothrow) X11Audio ;
     if (t_x11audio != nil)
     {
         t_x11audio -> setloudness(p_loudness);

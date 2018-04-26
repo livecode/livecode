@@ -45,5 +45,4 @@ interface.
 References: mobileSetAllowedOrientations (command),
 mobileLockOrientation (command), mobileUnlockOrientation (command),
 mobileDeviceOrientation (function), mobileAllowedOrientations (function),
-orientationChanged (message)
-
+orientationChanged (message), mobileSetFullScreenRectForOrientations (command)

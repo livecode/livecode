@@ -61,7 +61,8 @@ public:
     void event_visibilitychanged(MCWidget*, bool);
     
     // Non-MCControl event for handling touches
-    void event_touch(MCWidget*, uint32_t p_id, MCEventTouchPhase, int2 p_x, int2 p_y);
+    bool event_touch(MCWidget*, uint32_t p_id, MCEventTouchPhase, int2 p_x, int2 p_y);
+    void event_cancel_touches(MCWidgetRef widget);
     
     // Non-MCControl events called by platform-specific gesture recognition
     void event_gesture_begin(MCWidget*);    // Suppress touch events until end
@@ -96,6 +97,12 @@ public:
     void GetAsynchronousMousePosition(coord_t& r_x, coord_t& r_y) const;
     void GetAsynchronousClickPosition(coord_t& r_x, coord_t& r_y) const;
     
+    // Returns touch state
+    uindex_t GetTouchCount(void);
+    bool GetActiveTouch(integer_t& r_index);
+    bool GetTouchPosition(integer_t p_index, MCPoint& r_point);
+    bool GetTouchIDs(MCProperListRef& r_touch_ids);
+    
 private:
     void TriggerEvent(MCWidgetRef widget, MCWidgetEventTriggerType type, MCNameRef event);
     
@@ -129,6 +136,10 @@ private:
     // State for touch events
     struct MCWidgetTouchEvent;
     MCAutoArray<MCWidgetTouchEvent> m_touches;
+    uindex_t m_touch_count;
+    uindex_t m_touch_sequence;
+    MCWidgetRef m_touched_widget;
+    uindex_t m_touch_id;
     
     // Common functions for mouse gesture processing
     MCWidgetRef hitTest(MCWidgetRef, coord_t x, coord_t y);
@@ -145,17 +156,10 @@ private:
     bool keyDown(MCWidgetRef, MCStringRef, KeySym);
     bool keyUp(MCWidgetRef, MCStringRef, KeySym);
     
-    // Common functions for touch gesture processing
-    void touchBegin(MCWidgetRef, uinteger_t p_id, coord_t p_x, coord_t p_y);
-    void touchMove(MCWidgetRef, uinteger_t p_id, coord_t p_x, coord_t p_y);
-    void touchEnd(MCWidgetRef, uinteger_t p_id, coord_t p_x, coord_t p_y);
-    void touchCancel(MCWidgetRef, uinteger_t p_id, coord_t p_x, coord_t p_y);
-    void touchEnter(MCWidgetRef, uinteger_t p_id);
-    void touchLeave(MCWidgetRef, uinteger_t p_id);
-    
     // Utility functions for managing touch events
     uinteger_t allocateTouchSlot();
-    bool findTouchSlot(uinteger_t p_id, uinteger_t& r_which);
+    bool findTouchSlotById(uinteger_t p_id, uinteger_t& r_which);
+    bool findTouchSlotByIndex(uinteger_t p_index, uinteger_t& r_which);
     void freeTouchSlot(uinteger_t p_which);
     
     // Indicates whether the given widget is in run mode or not

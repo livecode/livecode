@@ -283,29 +283,6 @@ bool MCNumberParseOffsetPartial(MCStringRef p_string, uindex_t offset, uindex_t 
 	return t_success;
 }
 
-#if defined(__MAC__) || defined (__IOS__)
-#include <CoreFoundation/CoreFoundation.h>
-MC_DLLEXPORT_DEF
-bool MCNumberConvertToCFNumberRef(MCNumberRef self, CFNumberRef& r_number)
-{
-    CFNumberRef t_number;
-    if (MCNumberIsInteger(self))
-        t_number = CFNumberCreate(NULL,
-                                  kCFNumberIntType,
-                                  &self -> integer);
-    else
-        t_number = CFNumberCreate(NULL,
-                                  kCFNumberFloat64Type,
-                                  &self -> real);
-    
-    if (t_number == NULL)
-        return false;
-    
-    r_number = t_number;
-    return true;
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool __MCNumberCopyDescription(__MCNumber *self, MCStringRef& r_string)

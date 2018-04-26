@@ -163,6 +163,9 @@ class MCScreenDC : public MCUIDC
 
 	HANDLE m_srgb_profile;
 
+    int m_main_window_depth = 0;
+    HWND m_main_window_current = nullptr;
+
 protected:
 	static uint4 pen_inks[];
 	static uint4 image_inks[];

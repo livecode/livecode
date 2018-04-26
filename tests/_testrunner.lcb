@@ -292,11 +292,11 @@ end handler
 ----------------------------------------------------------------
 -- Check whether a handler should be considered as a test
 handler IsTestHandler(in pHandlerName as String) returns Boolean
-	if 1 is the first offset of "Test" in pHandlerName then
-		return true
-	else
+	if the number of chars in pHandlerName < 4 then
 		return false
 	end if
+
+	return "test" is the lower of char 1 to 4 of pHandlerName
 end handler
 
 ----------------------------------------------------------------

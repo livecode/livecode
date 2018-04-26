@@ -326,18 +326,41 @@ static Boolean byte_swapped()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
-extern void X_clear_globals(void);
-int X_close();
-
 extern bool cgi_initialize();
 extern void cgi_finalize(void);
-extern void MCU_initialize_names();
 
-bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
+static void
+X_initialize_mccmd(const X_init_options& p_options)
 {
-	int i;
-	MCstackbottom = (char *)&i;
+    MCSAutoLibraryRef t_self;
+    MCSLibraryCreateWithAddress(reinterpret_cast<void *>(X_initialize_mccmd),
+                                &t_self);
+    MCSLibraryCopyPath(*t_self,
+                       MCcmd);
+}
+
+static void
+X_initialize_mcappcodepath(const X_init_options& p_options)
+{
+    if (p_options.app_code_path != nullptr)
+    {
+        MCappcodepath = MCValueRetain(p_options.app_code_path);
+        return;
+    }
+    
+    MCU_path_split(MCcmd,
+                   &MCappcodepath,
+                   nullptr);
+}
+
+bool X_init(const X_init_options& p_options)
+{
+    int argc = p_options.argc;
+    MCStringRef *argv = p_options.argv;
+    MCStringRef *envp = p_options.envp;
+    
+	int t_bottom;
+	MCstackbottom = (char *)&t_bottom;
 
     ////
 
@@ -366,12 +389,20 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 #endif
 
 	////
-
+    
 	MCS_init();
+
+    /* Set up MCcmd correctly - this is the path to the loadable object
+     * containing this folder. */
+    X_initialize_mccmd(p_options);
+    
+    /* Setup MCappcodepath correctly - this is the folder containing the
+     * MCcmd. */
+    X_initialize_mcappcodepath(p_options);
 
 	////
 	
-	MCU_initialize_names();
+	X_initialize_names();
 	
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the font module.
 	MCFontInitialize();
@@ -391,10 +422,6 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
         return false;
     
     ////
-    
-    // ST-2014-12-18: [[ Bug 14259 ]] Update to get the executable file from the system
-    // since ResolvePath must behave differently on Linux
-	MCsystem -> GetExecutablePath(MCcmd);
 	
 	// Fetch the home folder (for resources and such) - this is either that which
 	// is specified by REV_HOME environment variable, or the folder containing the
@@ -577,10 +604,10 @@ void X_main_loop(void)
 		if (t_stat == ES_NOT_HANDLED && MCS_get_errormode() != kMCSErrorModeQuiet)
 		{
 			MCHandlerlist *t_handlerlist;
-			t_handlerlist = new MCHandlerlist;
+			t_handlerlist = new (nothrow) MCHandlerlist;
 			
 			MCHandler *t_handler;
-			t_handler = new MCHandler(HT_MESSAGE, true);
+			t_handler = new (nothrow) MCHandler(HT_MESSAGE, true);
 			
 			MCScriptPoint sp(MCserverscript, t_handlerlist, MCSTR(s_default_error_handler));
 			
@@ -616,13 +643,11 @@ void X_main_loop(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MCModulesInitialize();
-extern "C" void MCModulesFinalize();
-
 int platform_main(int argc, char *argv[], char *envp[])
 {
-	if (!MCInitialize() || !MCSInitialize() ||
-	    !MCModulesInitialize() || !MCScriptInitialize())
+	if (!MCInitialize() ||
+        !MCSInitialize() ||
+	    !MCScriptInitialize())
 		exit(-1);
     
 // THIS IS MAC SPECIFIC AT THE MOMENT BUT SHOULD WORK ON LINUX
@@ -631,31 +656,36 @@ int platform_main(int argc, char *argv[], char *envp[])
 	MCStringRef *t_new_argv;
 	/* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
 	
-	for (int i = 0; i < argc; i++)
+	for (int t_arg = 0; t_arg < argc; t_arg++)
 	{
-		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)argv[i], strlen(argv[i]), kMCStringEncodingUTF8, false, t_new_argv[i]);
+		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)argv[t_arg], strlen(argv[t_arg]), kMCStringEncodingUTF8, false, t_new_argv[t_arg]);
 	}
 	
 	MCStringRef *t_new_envp;
 	/* UNCHECKED */ MCMemoryNewArray(1, t_new_envp);
 	
-	int i = 0;
+	uindex_t t_env = 0;
 	uindex_t t_envp_count = 0;
 	
-	while (envp[i] != NULL)
+	while (envp[t_env] != NULL)
 	{
 		t_envp_count++;
-		uindex_t t_count = i;
-		/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_count);
-		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)envp[i], strlen(envp[i]), kMCStringEncodingUTF8, false, t_new_envp[i]);
-		i++;
+		uindex_t t_count = t_env;
+		/* UNCHECKED */ MCMemoryResizeArray(t_env + 1, t_new_envp, t_count);
+		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)envp[t_env], strlen(envp[t_env]), kMCStringEncodingUTF8, false, t_new_envp[t_env]);
+		t_env++;
 	}
 	
-	/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_envp_count);
-	t_new_envp[i] = nil;
+	/* UNCHECKED */ MCMemoryResizeArray(t_env + 1, t_new_envp, t_envp_count);
+	t_new_envp[t_env] = nil;
 // END MAC SPECIFIC	
 
-	if (!X_init(argc, t_new_argv, t_new_envp))
+    struct X_init_options t_options;
+    t_options.argc = argc;
+    t_options.argv = t_new_argv;
+    t_options.envp = t_new_envp;
+    t_options.app_code_path = nullptr;
+	if (!X_init(t_options))
 		exit(-1);
 	
 	X_main_loop();
@@ -663,20 +693,19 @@ int platform_main(int argc, char *argv[], char *envp[])
 	int t_exit_code;
 	t_exit_code = X_close();
 
-	for (int i = 0; i < argc; i++)
+	for (int t_arg = 0; t_arg < argc; t_arg++)
 	{
-		MCValueRelease(t_new_argv[i]);
+		MCValueRelease(t_new_argv[t_arg]);
 	}
 	MCMemoryDeleteArray(t_new_argv);
 
-	for (uindex_t i = 0; i < t_envp_count; i++)
+	for (t_env = 0; t_env < t_envp_count; t_env++)
 	{
-		MCValueRelease(t_new_envp[i]);
+		MCValueRelease(t_new_envp[t_env]);
 	}
 	MCMemoryDeleteArray(t_new_envp);
 
     MCScriptFinalize();
-    MCModulesFinalize();
 	MCFinalize();
 
 	exit(t_exit_code);
