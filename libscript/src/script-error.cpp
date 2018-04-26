@@ -302,6 +302,9 @@ MCScriptThrowUnableToResolveMultiInvokeError(MCScriptInstanceRef p_instance,
 								 *t_type_list,
 								 nil);
 }
+#if defined(__ANDROID__)
+#include <dlfcn.h>
+#endif
 
 bool
 MCScriptThrowUnableToResolveForeignHandlerError(MCScriptInstanceRef p_instance,
@@ -313,6 +316,10 @@ MCScriptThrowUnableToResolveForeignHandlerError(MCScriptInstanceRef p_instance,
 								 "handler",
 								 MCScriptGetNameOfDefinitionInModule(p_instance->module,
 																	 p_definition),
+#if defined(__ANDROID__)
+                                 "error",
+                                 MCSTR(dlerror()),
+#endif
 								 nil);
 }
 

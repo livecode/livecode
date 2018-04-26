@@ -110,7 +110,11 @@ bool MCScriptInitialize(void)
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.WrongNumberOfArgumentsError"), MCNAME("runtime"), MCSTR("Wrong number of arguments passed to handler %{module}.%{handler}"), kMCScriptWrongNumberOfArgumentsErrorTypeInfo))
 			return false;
-		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.ForeignHandlerBindingError"), MCNAME("runtime"), MCSTR("Unable to bind foreign handler %{module}.%{handler}"), kMCScriptForeignHandlerBindingErrorTypeInfo))
+#if defined(__ANDROID__)
+        if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.ForeignHandlerBindingError"), MCNAME("runtime"), MCSTR("Unable to bind foreign handler %{module}.%{handler}:%{error}"), kMCScriptForeignHandlerBindingErrorTypeInfo))
+#else
+        if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.ForeignHandlerBindingError"), MCNAME("runtime"), MCSTR("Unable to bind foreign handler %{module}.%{handler}"), kMCScriptForeignHandlerBindingErrorTypeInfo))
+#endif
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.PolymorphicHandlerBindingError"), MCNAME("runtime"), MCSTR("Unable to bind appropriate handler"), kMCScriptMultiInvokeBindingErrorTypeInfo))
 			return false;
