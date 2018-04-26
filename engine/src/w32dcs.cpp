@@ -79,6 +79,8 @@ static MCColor vgapalette[16] =
 		{0xFFFF, 0xFFFF, 0xFFFF},
     };
 
+static HWINEVENTHOOK s_focus_object_hook = nullptr;
+
 void MCScreenDC::setstatus(MCStringRef status)
 { //No action
 }
@@ -277,6 +279,15 @@ Boolean MCScreenDC::open()
 	t_profile_info . cbDataSize = strlen((char *)t_profile_info . pProfileData) + 1;
 	m_srgb_profile = OpenColorProfileA(&t_profile_info, PROFILE_READ, FILE_SHARE_READ, OPEN_EXISTING);
 
+	s_focus_object_hook = SetWinEventHook(
+		EVENT_OBJECT_FOCUS, 
+		EVENT_OBJECT_END,
+		nullptr, 
+		MCHandleEventObjectFocus,
+		GetCurrentProcessId(), 
+		0,
+		WINEVENT_OUTOFCONTEXT);
+
 	return True;
 }
 
@@ -314,6 +325,8 @@ Boolean MCScreenDC::close(Boolean force)
 
 	DestroyWindow(invisiblehwnd);
 	invisiblehwnd = NULL;
+
+	UnhookWinEvent(s_focus_object_hook);
 
 	return True;
 }
@@ -1573,5 +1586,41 @@ LRESULT CALLBACK MCBackdropWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
 	return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void CALLBACK MCHandleEventObjectFocus(HWINEVENTHOOK hook, DWORD evt,
+	HWND hwnd, LONG idObj, LONG idChild, DWORD thread, DWORD time)
+{
+	if (EVENT_OBJECT_FOCUS != evt)
+	{
+		return;
+	}
+
+	if (MCmousestackptr)
+	{
+		MCscreen->focusonview(MCmousestackptr, hwnd);
+	}
+}
+
+void MCScreenDC::controlgainedfocus(MCStack *p_stack, uint32_t p_id, void *p_native_view)
+{
+	if (nullptr != p_native_view)
+	{
+		HWND t_hwnd = HWND(p_native_view);
+		SetFocus(t_hwnd);
+	}
+}
+
+void MCScreenDC::controllostfocus(MCStack *p_stack, uint32_t p_id, void *p_native_view)
+{
+	if (nullptr != p_native_view)
+	{
+		Window t_window = p_stack->getwindow();
+		HWND t_hwnd = HWND(t_window->handle.window);
+		SetFocus(t_hwnd);
+	}
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////

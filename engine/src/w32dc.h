@@ -60,6 +60,9 @@ extern LRESULT CALLBACK MCBackdropWindowProc(HWND hwnd, UINT msg,
 extern LRESULT CALLBACK MCSocketWindowProc(HWND hwnd, UINT msg,
 	        WPARAM wParam, LPARAM lParam);
 
+extern void CALLBACK MCHandleEventObjectFocus(HWINEVENTHOOK hook, DWORD evt, 
+	        HWND hwnd, LONG idObj, LONG idChild, DWORD thread, DWORD time);
+
 class MCEventnode : public MCDLlist
 {
 public:
@@ -360,6 +363,9 @@ public:
 	// caller is reponsible for freeing the returned string.
 	static LPWSTR convertutf8towide(const char *p_utf8_string);
 	static LPCSTR convertutf8toansi(const char *p_utf8_string);
+
+	virtual void controlgainedfocus(MCStack *s, uint32_t id, void *p_native_view);
+	virtual void controllostfocus(MCStack *s, uint32_t id, void *p_native_view);
 
 private:
 	bool initialisebackdrop(void);

@@ -247,6 +247,21 @@ bool MCNativeLayerMac::GetNativeView(void *&r_view)
 	return true;
 }
 
+bool MCNativeLayerMac::ContainsView(void *p_native_view)
+{
+    NSView *t_view = (NSView *)p_native_view;
+    while (t_view != nullptr)
+    {
+        if (t_view == m_view)
+        {
+            return true;
+        }
+        t_view = [t_view superview];
+    }
+    
+    return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view)

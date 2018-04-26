@@ -179,6 +179,12 @@ bool MCNativeLayerEmscripten::GetNativeView(void *&r_view)
 	return true;
 }
 
+bool MCNativeLayerEmscripten::ContainsView(void *p_native_view)
+{
+    void *t_view;
+    return GetNativeView(t_view) && t_view == p_native_view;
+}
+
 MCJSObjectID MCNativeLayerEmscripten::getStackWindow()
 {
     return (MCJSObjectID)m_object->getstack()->getwindow();

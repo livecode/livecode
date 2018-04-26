@@ -26,6 +26,8 @@ public:
     
 	virtual bool GetCanRenderToContext();
 
+    virtual bool ContainsView(void *p_native_view);
+    
     MCNativeLayerAndroid(MCObject *p_object, jobject p_view);
     ~MCNativeLayerAndroid();
     

@@ -239,6 +239,30 @@ bool MCNativeLayerAndroid::GetNativeView(void *&r_view)
 	return true;
 }
 
+bool MCNativeLayerAndroid::ContainsView(void *p_native_view)
+{
+    if (nullptr == m_view)
+    {
+        return false;
+    }
+    
+    jobject t_view = (jobject)p_native_view;
+    
+    while (!(MCJavaGetThreadEnv()->IsSameObject(t_view, nullptr)))
+    {
+        if (MCJavaGetThreadEnv()->IsSameObject(t_view, m_view))
+        {
+            return true;
+        }
+    
+        jobject t_parent = nullptr;
+        MCAndroidEngineRemoteCall("getParentOfView", "oo", &t_parent, t_view);
+        t_view = t_parent;
+    }
+    
+    return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view)

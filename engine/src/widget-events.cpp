@@ -188,18 +188,24 @@ void MCWidgetEventManager::event_close(MCWidget* p_widget)
 void MCWidgetEventManager::event_kfocus(MCWidget* p_widget)
 {
     // Keyboard focus has changed
-    m_keyboard_focus = p_widget;
+    m_keyboard_focus = p_widget->getwidget();
     
-    bubbleEvent(p_widget, MCWidgetOnFocusEnter);
+    if (m_keyboard_focus != nullptr)
+    {
+        bubbleEvent(m_keyboard_focus, MCWidgetOnFocusEnter);
+    }
 }
 
 void MCWidgetEventManager::event_kunfocus(MCWidget* p_widget)
 {
     // Keyboard focus has changed
     // TODO: does the unfocus *always* happen before the next focus?
-    m_keyboard_focus = nil;
+    m_keyboard_focus = nullptr;
     
-    bubbleEvent(p_widget, MCWidgetOnFocusLeave);
+    if (p_widget->getwidget() != nullptr)
+    {
+        bubbleEvent(p_widget->getwidget(), MCWidgetOnFocusLeave);
+    }
 }
 
 Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text, KeySym p_key)

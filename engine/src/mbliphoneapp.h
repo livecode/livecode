@@ -372,7 +372,7 @@ void MCIPhoneHandleRemoteControlEvent(UIEventSubtype event, NSTimeInterval times
 void MCIPhoneHandleKeyboardWillActivate(float height);
 void MCIPhoneHandleKeyboardWillDeactivate(void);
 void MCIPhoneHandlePerformRedraw(void);
-
+void MCIPhoneHandleFirstResonderChanged(UIView *p_current);
 ////////////////////////////////////////////////////////////////////////////////
 
 MCIPhoneApplication *MCIPhoneGetApplication(void);

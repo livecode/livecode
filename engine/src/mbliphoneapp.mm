@@ -105,7 +105,8 @@ static void dispatch_notification_events(void)
             case kMCPendingNotificationEventTypeDidRegisterForRemoteNotification:
                 MCNotificationPostPushRegistered(*t_text);
                 break;
-            case kMCPendingNotificationEventTypeDidFailToRegisterForRemoteNotification:MCNotificationPostPushRegistrationError(*t_text);
+            case kMCPendingNotificationEventTypeDidFailToRegisterForRemoteNotification:
+                MCNotificationPostPushRegistrationError(*t_text);
                 break;
         }
         
@@ -131,29 +132,62 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 
 @interface UIView (com_runrev_livecode_MCIPhoneUIViewUtilities)
 
-- (UIView *)com_runrev_livecode_findFirstResponder;
++ (UIView *)com_runrev_livecode_currentFirstResponder;
+- (BOOL)com_runrev_livecode_becomeFirstResponder;
 
 - (BOOL)com_runrev_livecode_passMotionEvents;
 
 @end
 
 @implementation UIView (com_runrev_livecode_MCIPhoneUIViewUtilities)
+static UIView * s_current_first_responder = nil;
 
-- (UIView *)com_runrev_livecode_findFirstResponder
+// swizzle becomeFirstResponder in order to track which view is the current first
+// responder and update focus correctly when the responder is changed
++ (void)load
 {
-    if ([self isFirstResponder])        
-        return self;     
-	
-    for (UIView *t_subview in [self subviews])
-	{
-        UIView *t_first_responder;
-		t_first_responder = [t_subview com_runrev_livecode_findFirstResponder];
-		
-        if (t_first_responder != nil)
-			return t_first_responder;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        Class t_class = [self class];
+        
+        SEL t_default_selector = @selector(becomeFirstResponder);
+        SEL t_swizzled_selector = @selector(com_runrev_livecode_becomeFirstResponder);
+        
+        Method t_default_method = class_getInstanceMethod(t_class, t_default_selector);
+        Method t_swizzled_method = class_getInstanceMethod(t_class, t_swizzled_selector);
+        
+        BOOL t_exists = !class_addMethod(t_class, t_default_selector, method_getImplementation(t_swizzled_method), method_getTypeEncoding(t_swizzled_method));
+        
+        if (t_exists) {
+            method_exchangeImplementations(t_default_method, t_swizzled_method);
+        }
+        else {
+            class_replaceMethod(t_class, t_swizzled_selector, method_getImplementation(t_default_method), method_getTypeEncoding(t_default_method));
+        }
+    });
+}
+
++ (UIView *)com_runrev_livecode_currentFirstResponder
+{
+    return s_current_first_responder;
+}
+
+- (BOOL)com_runrev_livecode_becomeFirstResponder
+{
+    BOOL t_is_first = [self com_runrev_livecode_becomeFirstResponder];
+    
+    if (t_is_first)
+    {
+        UIView * t_previous = s_current_first_responder;
+        s_current_first_responder = self;
+        
+        if (t_previous != s_current_first_responder)
+        {
+            MCIPhoneHandleFirstResonderChanged(s_current_first_responder);
+        }
     }
-	
-    return nil;
+    
+    return t_is_first;
 }
 
 - (BOOL)com_runrev_livecode_passMotionEvents
@@ -982,7 +1016,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	
 	// Otherwise, find the current first responder and force it to resign.
 	UIView *t_first_responder;
-	t_first_responder = [m_window com_runrev_livecode_findFirstResponder];
+	t_first_responder = [UIView com_runrev_livecode_currentFirstResponder];
 	if (t_first_responder != nil)
 		[t_first_responder resignFirstResponder];
 	
@@ -1242,7 +1276,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 - (BOOL)passMotion
 {
 	UIView *t_responder;
-	t_responder = [self com_runrev_livecode_findFirstResponder];
+	t_responder = [UIView com_runrev_livecode_currentFirstResponder];
 	if (t_responder != nil)
 		return [t_responder com_runrev_livecode_passMotionEvents];
 	return NO;

@@ -1236,7 +1236,7 @@ MCPlatformDialogResult MCPlatformSoundRecorderEndConfigurationDialog(MCPlatformS
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformSwitchFocusToView(MCPlatformWindowRef window, uint32_t id);
+void MCPlatformSwitchFocusToView(MCPlatformWindowRef window, uint32_t id, void *p_native_view);
 
 ////////////////////////////////////////////////////////////////////////////////
 

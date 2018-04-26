@@ -38,6 +38,7 @@ import android.graphics.*;
 import android.graphics.drawable.*;
 import android.view.*;
 import android.view.inputmethod.*;
+import android.view.ViewTreeObserver.*;
 import android.os.*;
 import android.app.*;
 import android.text.*;
@@ -228,6 +229,16 @@ public class Engine extends View implements EngineApi
 
 		m_photo_width = 0;
 		m_photo_height = 0;
+        
+        getViewTreeObserver().addOnGlobalFocusChangeListener(new OnGlobalFocusChangeListener() {
+            @Override
+            public void onGlobalFocusChanged(View oldFocus, View newFocus) {
+                if (newFocus != null)
+                {
+                    doFocusOnView(newFocus);
+                }
+            }
+        });
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -741,6 +752,16 @@ public class Engine extends View implements EngineApi
 
 ////////////////////////////////////////////////////////////////////////////////
 
+    public Object getParentOfView(Object p_view)
+    {
+        ViewParent t_parent = ((View)p_view).getParent();
+        if (t_parent instanceof View)
+            return t_parent;
+
+        return null;
+    }
+    
+////////////////////////////////////////////////////////////////////////////////
 	// string utility functions
 
 	public int conversionByteCount(byte[] p_input, String p_in_charset, String p_out_charset)
@@ -3662,6 +3683,7 @@ public class Engine extends View implements EngineApi
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Native wrapper around MCScreenDC::wait
 	//   used by runActivity() API.
 	public static native void doWait(double time, boolean dispatch, boolean anyevent);
+    public static native void doFocusOnView(View view);
 	
     // sensor handlers
     public static native void doLocationChanged(double p_latitude, double p_longitude, double p_altitude, double p_timestamp, float p_accuracy, double p_speed, double p_course);

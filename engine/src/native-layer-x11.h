@@ -35,9 +35,10 @@ public:
     
     virtual bool GetNativeView(void *&r_view);
     
+    virtual bool ContainsView(void *p_native_view);
+    
     MCNativeLayerX11(MCObject *p_object, x11::Window p_view);
     ~MCNativeLayerX11();
-    
 private:
     
     GtkWindow* m_child_window;

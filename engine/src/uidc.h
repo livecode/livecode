@@ -646,8 +646,9 @@ public:
     
     //
 	
-	virtual void controlgainedfocus(MCStack *s, uint32_t id);
-	virtual void controllostfocus(MCStack *s, uint32_t id);
+	virtual void controlgainedfocus(MCStack *s, uint32_t id, void *p_native_view);
+	virtual void controllostfocus(MCStack *s, uint32_t id, void *p_native_view);
+    void focusonview(MCStack * p_stack, void *p_native_view);
 	
 	//
     

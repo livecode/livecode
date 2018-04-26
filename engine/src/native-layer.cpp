@@ -291,3 +291,41 @@ bool MCNativeLayer::GetCanRenderToContext()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+struct MCNativeLayerFindNativeLayerWithView: public MCObjectVisitor
+{
+    void *view;
+    MCObject *found_object;
+    
+    bool OnObject(MCObject *p_object)
+    {
+        // We are only looking for objects with a native layer
+        MCNativeLayer *t_layer = p_object->getNativeLayer();
+        if (t_layer != nullptr && t_layer->ContainsView(view))
+        {
+            found_object = p_object;
+            return false;
+        }
+        return true;
+    }
+};
+
+bool MCNativeLayer::FindObjectWithNativeLayer(MCObject *p_parent, void *p_native_view, MCObject *&r_object)
+{
+    MCNativeLayerFindNativeLayerWithView t_visitor;
+    t_visitor.found_object = nullptr;
+    t_visitor.view = p_native_view;
+    
+    p_parent->visit_children(0, 0, &t_visitor);
+    
+    if (nullptr == t_visitor.found_object)
+    {
+        return false;
+    }
+    
+    r_object = t_visitor.found_object;;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

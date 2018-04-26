@@ -30,6 +30,8 @@ public:
 	virtual bool GetCanRenderToContext();
 	virtual bool GetNativeView(void *&r_view);
 
+    virtual bool ContainsView(void *p_native_view);
+    
 private:
     // Performs the attach/detach operations
     virtual void doAttach();

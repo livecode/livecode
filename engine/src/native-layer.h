@@ -50,6 +50,8 @@ public:
 	void SetCanRenderToContext(bool p_can_render);
 	virtual bool GetCanRenderToContext();
 
+    static bool FindObjectWithNativeLayer(MCObject *p_parent, void *p_native_view, MCObject *&r_object);
+    virtual bool ContainsView(void *p_native_view) = 0;
 protected:
 	
 	void UpdateVisibility();

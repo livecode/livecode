@@ -852,6 +852,21 @@ Window MCScreenDC::get_current_window(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCScreenDC::controlgainedfocus(MCStack *s, uint32_t id, void *p_native_view)
+{
+    if (nullptr != p_native_view)
+    {
+        MCFiberCallSelector(s_main_fiber, (UIView*)p_native_view, @selector(becomeFirstResponder));
+    }
+}
+
+void MCScreenDC::controllostfocus(MCStack *s, uint32_t id, void *p_native_view)
+{
+    
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic);
 extern bool coretext_font_destroy(void *p_font);
 extern bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight);
@@ -1437,6 +1452,44 @@ void MCIPhoneHandleDidReceiveMemoryWarning(void)
 void MCIPhoneHandleViewBoundsChanged(void)
 {
 	MCFiberCall(s_script_fiber, MCIPhoneDoViewBoundsChanged, nil);
+}
+
+//////////
+
+struct MCFocusOnViewEvent: public MCCustomEvent
+{
+    MCFocusOnViewEvent(UIView * p_view)
+    {
+        m_view = [p_view retain];
+    }
+    
+    void Destroy(void)
+    {
+        [m_view release];
+        delete this;
+    }
+    
+    void Dispatch(void)
+    {
+        Window t_window = static_cast<MCScreenDC *>(MCscreen)->get_current_window();
+        MCStack *t_stack = nullptr;
+        if (nullptr != t_window)
+        {
+            t_stack = MCdispatcher->findstackd(t_window);
+        }
+        
+        if (nullptr != t_stack)
+        {
+            MCscreen->focusonview(t_stack, (void *)m_view);
+        }
+    }
+private:
+    UIView * m_view;
+};
+
+void MCIPhoneHandleFirstResonderChanged(UIView *p_current)
+{
+    MCEventQueuePostCustom(new MCFocusOnViewEvent(p_current));
 }
 
 //////////

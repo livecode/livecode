@@ -1290,3 +1290,22 @@ void MCScreenDC::DnDClientEvent(GdkEvent* p_event)
             break;
     }
 }
+
+void MCScreenDC::controlgainedfocus(MCStack *p_stack, uint32_t id, void *p_native_view)
+{
+	if (nullptr != p_native_view)
+	{
+		x11::XSetInputFocus(x11::gdk_x11_display_get_xdisplay(dpy), x11::Window(p_native_view), RevertToParent, CurrentTime);
+	}
+}
+
+void MCScreenDC::controllostfocus(MCStack *p_stack, uint32_t id, void *p_native_view)
+{
+	if (nullptr != p_native_view)
+	{
+		x11::Window t_window = x11::gdk_x11_drawable_get_xid(p_stack->getwindow());
+		x11::XSetInputFocus(x11::gdk_x11_display_get_xdisplay(dpy), t_window, RevertToParent, CurrentTime);
+	}
+}
+
+

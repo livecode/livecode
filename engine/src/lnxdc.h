@@ -357,6 +357,8 @@ public:
     virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
     virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
 
+		virtual void controlgainedfocus(MCStack *s, uint32_t id, void *p_native_view);
+		virtual void controllostfocus(MCStack *s, uint32_t id, void *p_native_view);
 private:
     
     void DnDClientEvent(GdkEvent*);
