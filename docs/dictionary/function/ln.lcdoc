@@ -43,8 +43,7 @@ To find the logarithm of a number in any base, use the following
 function: 
 
     function logarithm theBase,theNumber
-    return ln(theNumber)/ln(theBase)
-
+        return ln(theNumber)/ln(theBase)
     end logarithm
 
 

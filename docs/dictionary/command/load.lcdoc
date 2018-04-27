@@ -45,8 +45,8 @@ order to speed up access when using it in an <expression> with the
 <URL> <keyword>.
 
 To use a file that has been downloaded by the <load> <command>, refer
-to it using the <URL> <keyword> as usual. When you request the original
-<URL>, LiveCode uses the <cache|cached> <file> automatically.
+to it using the <URL> <keyword> as usual. When you request the 
+original <URL>, LiveCode uses the <cache|cached> <file> automatically.
 
 The <callbackMessage> is sent to the <object(glossary)> whose <script> 
 contains the <load> <command>, after the <URL> is <load|loaded>, so you 
@@ -75,8 +75,7 @@ URL even if it is not in the cache, so use of the <load> <command> is
 optional.
 
 >*Note:* Cached <files> consume memory. To release this memory after
-> you 
-are finished with a <URL>, use the <unload (command)> <command> to 
+> you are finished with a <URL>, use the <unload (command)> <command> to 
 remove it from the <cache>.
 
 >*Important:*  The <load> <command> is part of the 
@@ -108,21 +107,19 @@ remove it from the <cache>.
 > appropriately.
 
 References: unload (command), libURLftpUpload (command),
-libURLDownloadToFile (command), get (command), load (command),
+libURLDownloadToFile (command), get (command),
 group (command), function (control structure),
 libURLLastRHHeaders (function), URLEncode (function), files (function),
 libURLErrorData (function), URLStatus (function), cachedURLs (function),
 object (glossary), LiveCode custom library (glossary),
 application (glossary), standalone application (glossary),
 load (glossary), cache (glossary), command (glossary),
-standalone desktop application (glossary), main stack (glossary),
-expression (glossary), keyword (glossary),
-Standalone Application Settings (glossary), download (glossary),
-message (glossary), parameter (glossary), handler (glossary),
-url (keyword), file (keyword), Internet library (library),
-library (library), startup (message), openBackground (message),
-preOpenStack (message), openStack (message), preOpenCard (message),
-script (property)
+main stack (glossary), expression (glossary), keyword (glossary), 
+download (glossary), message (glossary), parameter (glossary), 
+handler (glossary), URL (keyword), file (keyword), 
+Internet library (library), library (library), startup (message), 
+openBackground (message), preOpenStack (message), openStack (message), 
+preOpenCard (message), script (property)
 
 Tags: networking
 
