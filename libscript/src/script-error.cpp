@@ -353,9 +353,15 @@ MCScriptThrowMissingFunctionInForeignBindingError(void)
 bool
 MCScriptThrowUnableToLoadForiegnLibraryError(void)
 {
+    MCAutoStringRef t_reason;
+#if defined(__ANDROID__)
+    MCStringFormat(&t_reason, "unable to load foreign library - %s", dlerror());
+#else
+    MCStringCreateWithCString("unable to load foreign library", &t_reason);
+#endif
 	return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo,
 								 "reason",
-								 MCSTR("unable to load foreign library"),
+								 *t_reason,
 								 nil);
 }
 

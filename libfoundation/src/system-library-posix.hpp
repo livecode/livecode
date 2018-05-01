@@ -68,11 +68,12 @@ public:
             return false;
         }
         
+        dlerror();
         m_handle = dlopen(*t_sys_exe_path,
-                          RTLD_LAZY);
+                          RTLD_NOW);
         if (m_handle == nullptr)
         {
-            MCLog("dlopen failed %s",dlerror());
+            //MCLog("dlopen failed %s",dlerror());
             /* TODO: dlerror message */
             return __MCSLibraryThrowCreateWithNativePathFailed(p_native_path);
         }
