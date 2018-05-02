@@ -35,13 +35,11 @@ interactions.
 A good example of when this command might be useful is when playing an
 instructional sound:
 
-on tellUserInstructions
-
-    play specialFolderPath("engine") & slash & "Instruction_1.mp3"
-    wait until the sound is "done"
-    iphoneClearTouches
-
-end tellUserInstructions
+    on tellUserInstructions
+        play specialFolderPath("engine") & slash & "Instruction_1.mp3"
+        wait until the sound is "done"
+        iphoneClearTouches
+    end tellUserInstructions
 
 Here, if the <iphoneClearTouches> call was not made, any touch events
 the user created while the sound was playing would be queued and then be

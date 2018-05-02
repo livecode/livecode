@@ -5,9 +5,9 @@ Synonyms: pointer focus, implicit focus
 Type: glossary
 
 Description:
-A mode in which the window under the <mouse pointer> is the <active
-window> and receives all typed characters, even if that window is not
-frontmost. 
+A mode in which the window under the <mouse pointer> is the 
+<active window> and receives all typed characters, even if 
+that window is not frontmost. 
 
 Also called "pointer focus" and "sloppy focus".
 

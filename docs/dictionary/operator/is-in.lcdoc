@@ -33,7 +33,9 @@ Use the <is in> <operator> to find out whether a <string> contains a
 substring. 
 
 The expression
-firstString is in secondString
+
+    firstString is in secondString
+
 is equivalent to
 
     secondString contains firstString

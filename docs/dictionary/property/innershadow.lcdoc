@@ -32,69 +32,29 @@ the Graphic Effects card of the property inspector which has full
 control over each parameter. To control the effect by script use the
 following properties:
 
-innerShadow["color"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The color of the shadow, in the format
+* innerShadow["color"] : The color of the shadow, in the format
 red,green,blue where each value is between 0 and 255.
-
-innerShadow["blendMode"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;How the shadow is blended with objects
-behind it. This is one of the following values:
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "normal" :
-the shadow is laid over the background.
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "multiply"
-: this results in a darkening effect
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-
-"colorDodge" : this results in a lightening effect
-
-innerShadow["opacity"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;How opaque the shadow is. The value is
-between 0 (fully transparent) and 255 (fully opaque).
-
-innerShadow["filter"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Which algorithm is used to render the
-shadow. This is one of the following options:
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"gaussian" :
-highest quality (and slowest)
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"box3pass" :
-high quality.
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"box2pass" :
-medium quality
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"box1pass" :
-low quality (and fastest)
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;When using the "colorDodge" blend mode, it
-is recommended that you set the filter mode to "gaussian".
-
-innerShadow["size"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The size of the shadow, i.e. how large the
-shadow is. This is between 0 and 255.
-
-innerShadow["spread"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This controls where the effect begins to
-blend. This is between 0 and 255.
-
-innerShadow["distance"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This controls how far the effect is offset
+* innerShadow["blendMode"] :  How the shadow is blended with objects behind it. This is one of the 
+following values:
+    * "normal" : the shadow is laid over the background.
+    * "multiply" : this results in a darkening effect
+    * "colorDodge" : this results in a lightening effect
+<p style="margin-left:-2.5em"> *Note:* When using the "colorDodge" blend mode, it is recommended 
+ that you set the filter mode to "gaussian".</p>
+* innerShadow["opacity"] : How opaque the shadow is. The value is between 0 (fully transparent) 
+and 255 (fully opaque).
+* innerShadow["filter"] : Which algorithm is used to render the shadow. This is one of the 
+following options:
+    * "gaussian" : highest quality (and slowest)
+    * "box3pass" : high quality.
+    * "box2pass" : medium quality
+    * "box1pass" : low quality (and fastest)
+* innerShadow["size"] : The size of the shadow, i.e. how large the shadow is. This is between 0 
+and 255.
+* innerShadow["spread"] : This controls where the effect begins to blend. This is between 0 and 255.
+* innerShadow["distance"] : This controls how far the effect is offset
 from the object. This is between 0 and 359.
-
-innerShadow["angle"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The controls the direction the shadow is
-cast in. This is between 0 and 360.
+* innerShadow["angle"] : The controls the direction the shadow is cast in. This is between 0 and 360.
 
 References: colorOverlay (property), innerGlow (property),
 dropShadow (property), outerGlow (property), blendLevel (property),
