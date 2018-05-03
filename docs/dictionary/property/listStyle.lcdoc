@@ -20,7 +20,7 @@ set the listStyle of line 1 of field 1 to "disc"
 
 Parameters:
 style (enum):
-The style of bullet to use for the line of text in the list. One of:
+The style of bullet to use for the line of text in the list.
 
 -   "disc": A solid round bullet.
 -   "circle": A ring.

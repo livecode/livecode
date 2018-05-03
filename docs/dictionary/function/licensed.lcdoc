@@ -36,7 +36,7 @@ limitations are described by the <scriptLimits> <function>.
 > <function> returns true.
 
 References: edit (command), function (control structure),
-mcLicense (function), revLicenseType (function), scriptLimits (function),
+revLicenseType (function), scriptLimits (function),
 development environment (glossary), return (glossary),
 standalone application (glossary)
 

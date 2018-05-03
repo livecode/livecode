@@ -31,13 +31,13 @@ filePath:
 The path to a compiled <LiveCode Builder extension> file.
 
 moduleData:
-Binary data that constitutes a valid compiled <LiveCode Builder
-extension>. 
+Binary data that constitutes a valid compiled 
+<LiveCode Builder extension>. 
 
 resourcePath:
-The path to use for any operations in the <LiveCode Builder
-extension|extensions> that use resource files (eg 'image from resource
-file'). 
+The path to use for any operations in the 
+<LiveCode Builder extension|extensions> 
+that use resource files (eg 'image from resource file'). 
 
 The result:
 If the <load extension> <command> succeeds, the <result> is empty.
@@ -45,11 +45,11 @@ Otherwise the <result> contains an error message describing why the
 extension could not be loaded.
 
 Description:
-Use the <load extension> <command> to load a <LiveCode Builder
-extension>. If the extension is a library, its public handlers will be
-added to the bottom of the message path. If it is a widget, it will be
-available as a control in the tools palette to drag out, or to create
-with the <create widget> <command>.
+Use the <load extension> <command> to load a 
+<LiveCode Builder extension>. If the extension is a library, its 
+public handlers will be added to the bottom of the message path. 
+If it is a widget, it will be available as a control in the tools 
+palette to drag out, or to create with the <create widget> <command>.
 
 If the <moduleData> or the data loaded from <filePath> contains more
 than one LiveCode Builder module, then the first module is treated as

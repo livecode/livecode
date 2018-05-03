@@ -5,10 +5,10 @@ Type: keyword
 Syntax: line
 
 Summary:
-Designates a return-<delimit|delimited> <string> as part of a <chunk
-expression>. It also designates the <paint tool> used to draw line
-shapes and specifies, through the <style> <property>, that a <graphic>
-is a line.
+Designates a return-<delimit|delimited> <string> as part of a 
+<chunk expression>. It also designates the <paint tool> used to draw 
+line shapes and specifies, through the <style> <property>, that a 
+<graphic> is a line.
 
 Introduced: 1.0
 
@@ -44,8 +44,8 @@ Setting the <style> of a <graphic(keyword)> to "line" makes the
 unlike painted lines, can be changed and reshaped: use the <points>
 <property> to change the line's angle and position.
 
->*Note:* To avoid script errors, enclose the word "line" in <double
-> quote|double quotes> when you use it to indicate a
+>*Note:* To avoid script errors, enclose the word "line" in 
+> <double quote|double quotes> when you use it to indicate a
 > <graphic(object)|graphic's> <style>. This prevents <LiveCode> from
 > getting confused about whether you mean the line style, or the
 > contents of a line in a <container>.
