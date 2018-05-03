@@ -257,7 +257,7 @@ DBCursor *DBConnection_MYSQL::sqlQuery(char *p_query, DBString *p_arguments, int
 	if (t_cursor != NULL)
 	{
 		if (t_success)
-			addCursor(t_cursor)
+			addCursor(t_cursor);
 		else
 		{
 			delete t_cursor;
