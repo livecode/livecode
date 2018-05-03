@@ -34,12 +34,11 @@ moving, then set the <lockMoves> to false to begin the motion, as in the
 following example:
 
     on mouseUp
-    set the lockMoves to true
-    move button 1 to 300,200 in 2 seconds -- doesn't move yet
-    move field 2 to 0,0 in 2 seconds -- doesn't move yet
-    move graphic 3 to 0,400 in 2 seconds -- doesn't move yet
-    set the lockMoves to false -- all three objects start moving
-
+        set the lockMoves to true
+        move button 1 to 300,200 in 2 seconds -- doesn't move yet
+        move field 2 to 0,0 in 2 seconds -- doesn't move yet
+        move graphic 3 to 0,400 in 2 seconds -- doesn't move yet
+        set the lockMoves to false -- all three objects start moving
     end mouseUp
 
 

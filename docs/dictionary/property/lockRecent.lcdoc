@@ -5,8 +5,9 @@ Type: property
 Syntax: set the lockRecent to {true | false}
 
 Summary:
-Specifies whether visited <card|cards> are added to the <recent
-cards|recent cards list> used by go back, go forth, and go recent.
+Specifies whether visited <card|cards> are added to the 
+<recent cards|recent cards list> used by go back, go forth, and go 
+recent.
 
 Introduced: 1.0
 

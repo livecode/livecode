@@ -7,8 +7,8 @@ Syntax: the longFilePath of <filePath>
 Syntax: longFilePath(<filePath>)
 
 Summary:
-<return|Returns> the long-format equivalent of an 8.3-format <file
-path>. 
+<return|Returns> the long-format equivalent of an 8.3-format 
+<file path>. 
 
 Introduced: 1.1
 
