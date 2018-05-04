@@ -34,9 +34,9 @@ the new stack file. This means that (if the substack does not trap the
 message) the <mainStackChanged> message is received by the new main
 stack, and can be handled in the main stack's script.
 
-The <mainStackChanged> <message> is used by the LiveCode <development
-environment>, so if you <handle> this <message>, be sure to <pass> it at
-the end of the <handler>.
+The <mainStackChanged> <message> is used by the LiveCode 
+<development environment>, so if you <handle> this <message>, be sure to 
+<pass> it at the end of the <handler>.
 
 References: pass (control structure), substack (glossary),
 stack file (glossary), message (glossary), handler (glossary),

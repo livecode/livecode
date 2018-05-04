@@ -6,9 +6,9 @@ Type: glossary
 
 Description:
 A <format> for transferring a <Mac OS> <file> from one system to
-another. The MacBinary <format> preserves the <data fork> and <resource
-fork> of the file, as well as additional information such as the
-<file|file's> <type signature> and <creator signature>.
+another. The MacBinary <format> preserves the <data fork> and 
+<resource fork> of the file, as well as additional information such 
+as the <file|file's> <type signature> and <creator signature>.
 
 References: file (glossary), type signature (glossary),
 resource fork (glossary), format (glossary), data fork (glossary),
