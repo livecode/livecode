@@ -9,8 +9,8 @@ Associations: profile library
 Description:
 The default <property profile> of an <object(glossary)>. The master
 profile holds the <default> settings for the <object|object's>
-<property|properties>, which are used if no other <property
-profile|profile> is active.
+<property|properties>, which are used if no other 
+<property profile|profile> is active.
 
 References: default (glossary), property (glossary),
 property profile (glossary), object (glossary)

@@ -7,9 +7,9 @@ Syntax: the macToISO of <macString>
 Syntax: macToISO(<macString>)
 
 Summary:
-<return|Returns> the equivalent of a <Mac OS> <character
-set|character-set> <string>, translated into the Windows Latin 1<
-character set(glossary)>.
+<return|Returns> the equivalent of a <Mac OS> 
+<character set|character-set> <string>, translated into the Windows 
+Latin 1 <character set(glossary)>.
 
 Introduced: 1.0
 
