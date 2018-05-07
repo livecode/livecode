@@ -54,6 +54,10 @@ FRAMEWORK_SEARCH_PATHS=$(echo ${FRAMEWORK_SEARCH_PATHS} | xargs)
 
 FRAMEWORK_SEARCH_PATHS="-F${FRAMEWORK_SEARCH_PATHS// / -F}"
 
+LIBRARY_SEARCH_PATHS=$(echo ${LIBRARY_SEARCH_PATHS} | xargs)
+
+LIBRARY_SEARCH_PATHS="-L${LIBRARY_SEARCH_PATHS// / -L}"
+
 # Support using the same script for old externals
 if [ "$SYMBOLS" != "_getXtable" ]; then
     # The list of symbols exported by an iOS external is fixed
@@ -105,7 +109,7 @@ if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
 
 	# Build the 'dylib' form of the external - this is used by simulator builds, and as
 	# a dependency check for device builds - otherwise dsymutil call below may fail
-	"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS $OTHER_FLAGS
+	"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" $LIBRARY_SEARCH_PATHS $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS $OTHER_FLAGS
   RESULT=$?
   if [ $RESULT != 0 ]; then
   	exit $RESULT
@@ -113,7 +117,7 @@ if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
 
 	# Only build static library on device builds
 	if [ $BUILD_DYLIB -eq 0 ]; then
-		"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION $OTHER_FLAGS -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
+		"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" $LIBRARY_SEARCH_PATHS $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION $OTHER_FLAGS -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
     RESULT=$?
     if [ $RESULT != 0 ]; then
     	exit $RESULT
@@ -139,7 +143,7 @@ else
 
 		# Build the 'dylib' form of the external - this is used by simulator builds, and as
 		# a dependency check for device builds.
-    "$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib -arch $ARCH -miphoneos-version-min=${MIN_VERSION} -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$DYLIB_FILE" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS $OTHER_FLAGS
+    "$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib -arch $ARCH -miphoneos-version-min=${MIN_VERSION} -isysroot "$SDKROOT" $LIBRARY_SEARCH_PATHS $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$DYLIB_FILE" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS $OTHER_FLAGS
     RESULT=$?
     if [ $RESULT != 0 ]; then
     	echo "error: linking step of external dylib build failed, probably due to missing framework or library references - check the contents of the $PRODUCT_NAME.ios file"
@@ -147,7 +151,7 @@ else
 		fi
 
 		# Build the 'object file' form of the external - this is used by device builds.
-		"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x -arch $ARCH  -miphoneos-version-min=${MIN_VERSION} -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$LCEXT_FILE" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION $OTHER_FLAGS -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
+		"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x -arch $ARCH  -miphoneos-version-min=${MIN_VERSION} -isysroot "$SDKROOT" $LIBRARY_SEARCH_PATHS $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$LCEXT_FILE" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION $OTHER_FLAGS -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
     RESULT=$?
     if [ $RESULT != 0 ]; then
     	echo "error: linking step of external object build failed"
