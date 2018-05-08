@@ -280,8 +280,17 @@ bool MCWildcardMatcher::match(MCRange p_source_range)
 {
     if (m_native)
     {
-        const char *t_source = (const char *)MCStringGetNativeCharPtr(m_string_source);
-        const char *t_pattern = (const char *)MCStringGetNativeCharPtr(m_pattern);
+        MCAutoStringRef t_source_folded;
+        MCAutoStringRef t_pattern_folded;
+        
+        if (!MCStringMutableCopy(m_string_source, &t_source_folded) || !MCStringMutableCopy(m_pattern, &t_pattern_folded))
+            return false;
+        
+        if (!MCStringFold(*t_source_folded, m_options) || !MCStringFold(*t_pattern_folded, m_options))
+            return false;
+        
+        const char *t_source = (const char *)MCStringGetNativeCharPtr(*t_source_folded);
+        const char *t_pattern = (const char *)MCStringGetNativeCharPtr(*t_pattern_folded);
         
         // AL-2014-05-23: [[ Bug 12489 ]] Pass through case sensitivity properly
         if (t_source != nil && t_pattern != nil)
