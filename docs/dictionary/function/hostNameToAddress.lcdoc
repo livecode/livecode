@@ -43,8 +43,8 @@ connection to the Internet is not available, the <hostNameToAddress>
 <function> returns an error message in the <result> function.
 
 Description:
-Use the <hostNameToAddress> <function> to find the <numeric> <IP
-address> of the computer or computers at a given <domain name>.
+Use the <hostNameToAddress> <function> to find the <numeric> 
+<IP address> of the computer or computers at a given <domain name>.
 
 If the <callback> parameter is specified then the call will return
 immediately and upon completion of the lookup, the callback will be

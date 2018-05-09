@@ -27,28 +27,26 @@ set the imageSource of last char of me to "binfile:My Image"
 
 Value:
 The <imageSource> of a <character> is either empty or an image
-specifier. An <imageID> is the ID of an <image> to display instead of
+specifier. An imageID is the ID of an <image> to display instead of
 the <character>. LiveCode looks for the specified <image> first in the
 <current stack>, then in other open <stacks>.
 
-An <imageName> is the short <name> of an <image> to display instead of
+An imageName is the short <name> of an <image> to display instead of
 the <character>.
 
 LiveCode looks for the specified image (if an ID or name is given) in
 the following order:
 
-1) The stack of the object's <behavior> (if applicable)
-2) The stack of the owner of the object's <behavior> (if applicable)
+* 1. The stack of the object's <behavior> (if applicable)
+* 2. The stack of the owner of the object's <behavior> (if applicable)
+*  ...
+* n. The stack of the object's stack's <behavior> (if applicable)
+* A. The object's stack
+* B. The object's stack's mainstack (if a substack)
+* C. The object's stack's mainstacks substacks
+* D. The list of open stacks, in order they were loaded
 
-    ...
-
-n) The stack of the object's stack's <behavior> (if applicable)
-A) The object's stack
-B) The object's stack's mainstack (if a substack)
-C) The object's stack's mainstacks substacks
-D) The list of open stacks, in order they were loaded
-
-An <imageURL> is any valid <URL> that specifies an <image> in a <format>
+An imageURL is any valid <URL> that specifies an <image> in a <format>
 LiveCode can display.
 
 By default, the <imageSource> for all <characters> is empty.
@@ -68,7 +66,7 @@ To correct this problem, set the <field(object)|field's>
 <fixedLineHeight> to false.
 
 >*Important:*  Do not use the <URL> <keyword> when specifying an
-> <imageURL>. The <imageSource> of a <character> is a file location (or
+> imageURL. The <imageSource> of a <character> is a file location (or
 > image ID or name), not the image data itself. If you use the URL
 > <keyword>, the <imageSource> <property> is set to the contents of the
 > <URL>, not the <URL> itself, and this is usually not what's wanted.
