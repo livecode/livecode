@@ -305,7 +305,7 @@ end handler
 
 /****/
 
-private foreign handler _MCObjcObjectCreateWithId_AsPointer(in pPointer as optional Pointer) returns ObjcObject binds to "MCObjcObjectCreateWithId"
+private foreign handler _MCObjcObjectCreateWithId_AsPointer(in pPointer as optional Pointer, out rObject as ObjcObject) returns CBool binds to "MCObjcObjectCreateWithId"
 private foreign handler _MCObjcObjectGetId_AsPointer(in pObject as ObjcObject) returns optional Pointer binds to "MCObjcObjectGetId"
 
 /**/
@@ -323,12 +323,12 @@ Description:
 Use <PointerToObjcObject> to convert a variable of type Pointer to one of type
 ObjcObject.
 */
-public handler PointerToObjcObject(in pPointer as optional Pointer) returns ObjcObject
-	variable tObject as ObjcObject
+public handler PointerToObjcObject(in pPointer as optional Pointer) returns optional ObjcObject
+	variable tObject as optional ObjcObject
 	unsafe
-		put _MCObjcObjectCreateWithId_AsPointer(pPointer) into tObject
+		_MCObjcObjectCreateWithId_AsPointer(pPointer, tObject)
 	end unsafe
-	return tObject
+    return tObject
 end handler
 
 /**
