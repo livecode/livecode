@@ -110,6 +110,7 @@ enum MCGDrawingPaintType
     kMCGDrawingPaintTypeLinearGradient,
     kMCGDrawingPaintTypeRadialGradient,
     kMCGDrawingPaintTypeConicalGradient,
+    kMCGDrawingPaintTypeCurrentColor,
 };
 
 struct MCGDrawingPaint
@@ -312,8 +313,10 @@ enum MCGDrawingPaintOpcode : uint8_t
     
     kMCGDrawingPaintOpcodeConicalGradient = 4,
     
+    kMCGDrawingPaintOpcodeCurrentColor = 5,
+    
     /* _Last is used for range checking on the paint opcodes. */
-    kMCGDrawingPaintOpcode_Last = kMCGDrawingPaintOpcodeConicalGradient,
+    kMCGDrawingPaintOpcode_Last = kMCGDrawingPaintOpcodeCurrentColor,
 };
 
 /* SPREAD METHOD OPCODES */
@@ -1161,6 +1164,10 @@ public:
                     return false;
                 }
                 break;
+            
+            case kMCGDrawingPaintOpcodeCurrentColor:
+                r_paint.type = kMCGDrawingPaintTypeCurrentColor;
+                break;
         }
         
         return true;
@@ -1799,6 +1806,7 @@ void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
 struct MCGDrawingRenderVisitor
 {
     MCGContextRef gcontext = nullptr;
+    MCGPaintRef current_color = nullptr;
 
     /**/
     
@@ -2127,14 +2135,28 @@ private:
                 MCGRelease(t_gradient);
             }
             break;
+                
+            case kMCGDrawingPaintTypeCurrentColor:
+                if (current_color != nullptr)
+                {
+                    (!p_is_stroke ? MCGContextSetFillPaint
+                                  : MCGContextSetStrokePaint)(gcontext, current_color);
+                }
+                else
+                {
+                    (!p_is_stroke ? MCGContextSetFillNone
+                                  : MCGContextSetStrokeNone)(gcontext);
+                }
+            break;
         }
     }
 };
 
-void MCGContextPlaybackRectOfDrawing(MCGContextRef p_gcontext, MCSpan<const byte_t> p_drawing, MCGRectangle p_src_rect, MCGRectangle p_dst_rect)
+void MCGContextPlaybackRectOfDrawing(MCGContextRef p_gcontext, MCSpan<const byte_t> p_drawing, MCGRectangle p_src_rect, MCGRectangle p_dst_rect, MCGPaintRef p_current_color)
 {
     MCGDrawingRenderVisitor t_render_visitor;
     t_render_visitor.gcontext = p_gcontext;
+    t_render_visitor.current_color = p_current_color;
     
     MCGDrawingContext t_context(p_drawing);
     t_context.Execute(t_render_visitor, p_src_rect, p_dst_rect);

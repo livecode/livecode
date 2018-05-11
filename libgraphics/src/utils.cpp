@@ -1179,3 +1179,143 @@ bool MCGAffineTransformFromPoints(const MCGPoint p_src[3], const MCGPoint p_dst[
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCGPaintCreateWithNone(MCGPaintRef& r_paint)
+{
+    r_paint = nullptr;
+    return true;
+}
+
+bool MCGPaintCreateWithSolidColor(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha, MCGPaintRef& r_paint)
+{
+    return MCGSolidColor::Create(p_red, p_green, p_blue, p_alpha, (MCGSolidColorRef&)r_paint);
+}
+
+bool MCGPaintCreateWithPattern(MCGImageRef p_image, MCGAffineTransform p_transform, MCGImageFilter p_filter, MCGPaintRef& r_paint)
+{
+    return MCGPattern::Create(p_image, p_transform, p_filter, (MCGPatternRef&)r_paint);
+}
+
+bool MCGPaintCreateWithGradient(MCGGradientFunction p_function, const MCGFloat* p_stops, const MCGColor* p_colors, uindex_t p_ramp_length, bool p_mirror, bool p_wrap, uint32_t p_repeats, MCGAffineTransform p_transform, MCGImageFilter p_filter, MCGPaintRef& r_paint)
+{
+    bool t_success = true;
+    MCGRampRef t_ramp = nullptr;
+    MCGGradientRef t_gradient = nullptr;
+    
+    /* If the gradient is Skia-supported and the image filter is none, then use
+     * Skia shaders, else use our generalized gradient shader. */
+    if (p_function < kMCGLegacyGradientDiamond && p_filter == kMCGImageFilterNone)
+    {
+        MCGGradientSpreadMethod t_spread = kMCGGradientSpreadMethodPad;
+        MCGFloat t_gradient_scale = 1.0;
+        size_t t_repeats = MCMax(1, p_repeats);
+        if (p_wrap)
+        {
+            t_spread = kMCGGradientSpreadMethodRepeat;
+        }
+        if (t_repeats == 1 && !p_mirror)
+        {
+            if (!MCGRamp::Create(p_stops, p_colors, p_ramp_length, t_ramp))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (p_wrap && p_mirror && p_function != kMCGGradientFunctionSweep)
+            {
+                t_gradient_scale = 2.0 / t_repeats;
+                t_repeats = 2;
+            }
+            
+            size_t t_length = p_ramp_length * t_repeats;
+            MCGFloat t_scale = MCGFloat(1) / t_repeats;
+            MCAutoArray<MCGColor> t_colors;
+            MCAutoArray<MCGFloat> t_stops;
+            if (!t_colors.Extend(t_length) ||
+                !t_stops.Extend(t_length))
+            {
+                return false;
+            }
+            
+            for(size_t i = 0; i < t_repeats; i++)
+            {
+                // Offset added to stops
+                MCGFloat t_offset = t_scale * i;
+                
+                // If mirrored, odd-numbered repeats need to be handled specially
+                if (p_mirror && (i % 2))
+                {
+                    // Copy the colours and stops in reverse order
+                    for (uindex_t j = 0; j < p_ramp_length; j++)
+                    {
+                        t_colors[i * p_ramp_length + j] = p_colors[p_ramp_length - j - 1];
+                        t_stops[i * p_ramp_length + j] = t_offset + t_scale * (1 - p_stops[p_ramp_length - j - 1]);
+                    }
+                }
+                else
+                {
+                    // Copy the colours and stops in original order
+                    for (uindex_t j = 0; j < p_ramp_length; j++)
+                    {
+                        t_colors[i * p_ramp_length + j] = p_colors[j];
+                        t_stops[i * p_ramp_length + j] = t_offset + t_scale * p_stops[j];
+                    }
+                }
+            }
+            
+            if (!MCGRamp::Create(t_stops.Ptr(), t_colors.Ptr(), t_length, t_ramp))
+            {
+                return false;
+            }
+        }
+        
+        switch(p_function)
+        {
+            case kMCGLegacyGradientXY:
+            case kMCGLegacyGradientSpiral:
+            case kMCGLegacyGradientSqrtXY:
+            case kMCGLegacyGradientDiamond:
+                t_success = false;
+                break;
+            case kMCGGradientFunctionLinear:
+                t_success = MCGLinearGradient::Create({0, 0}, {t_gradient_scale, 0}, t_ramp, t_spread, p_transform, t_gradient);
+                break;
+            case kMCGGradientFunctionRadial:
+                t_success = MCGRadialGradient::Create({0, 0}, t_gradient_scale, t_ramp, t_spread, p_transform, t_gradient);
+                break;
+            case kMCGGradientFunctionSweep:
+                t_success = MCGSweepGradient::Create({0, 0}, t_ramp, t_spread, p_transform, t_gradient);
+                break;
+        }
+    }
+    else
+    {
+        if (!MCGRamp::Create(p_stops, p_colors, p_ramp_length, t_ramp))
+        {
+            return false;
+        }
+        
+        t_success = MCGGeneralizedGradient::Create(p_function, t_ramp, p_mirror, p_wrap, p_repeats, p_transform, p_filter, t_gradient);
+    }
+    
+    if (t_success)
+    {
+        r_paint = t_gradient;
+    }
+    
+    MCGRelease(t_ramp);
+    
+    return t_success;
+}
+
+MCGPaintRef MCGPaintRetain(MCGPaintRef paint)
+{
+    MCGRetain(paint);
+    return paint;
+}
+
+void MCGPaintRelease(MCGPaintRef paint)
+{
+    MCGRelease(paint);
+}
