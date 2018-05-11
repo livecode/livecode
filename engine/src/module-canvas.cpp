@@ -5073,6 +5073,8 @@ static void __MCCanvasDestroy(MCValueRef p_canvas)
 		MCMemoryDeleteArray(t_canvas->prop_stack);
 	}
 	
+    MCGPaintRelease(t_canvas->last_paint);
+    
 	MCGContextRelease(t_canvas->context);
 }
 
@@ -5372,22 +5374,15 @@ void MCCanvasGetClipBounds(MCCanvasRef p_canvas, MCCanvasRectangleRef &r_bounds)
 
 //////////
 
-void MCCanvasApplySolidPaint(__MCCanvasImpl &x_canvas, MCCanvasSolidPaintRef p_paint)
+void MCCanvasCreateSolidPaint(__MCCanvasImpl &x_canvas, MCCanvasSolidPaintRef p_paint, MCGPaintRef& r_paint)
 {
-	__MCCanvasColorImpl *t_color;
-	t_color = MCCanvasColorGet(MCCanvasSolidPaintGet(p_paint)->color);
-	
-	MCGContextSetFillRGBAColor(x_canvas.context, t_color->red, t_color->green, t_color->blue, t_color->alpha);
-	MCGContextSetStrokeRGBAColor(x_canvas.context, t_color->red, t_color->green, t_color->blue, t_color->alpha);
-	
-	MCGPaintStyle t_style;
-	t_style = x_canvas.props().stippled ? kMCGPaintStyleStippled : kMCGPaintStyleOpaque;
-	
-	MCGContextSetFillPaintStyle(x_canvas.context, t_style);
-	MCGContextSetStrokePaintStyle(x_canvas.context, t_style);
+    __MCCanvasColorImpl *t_color;
+    t_color = MCCanvasColorGet(MCCanvasSolidPaintGet(p_paint)->color);
+    
+    MCGPaintCreateWithSolidColor(t_color->red, t_color->green, t_color->blue, t_color->alpha, r_paint);
 }
 
-void MCCanvasApplyPatternPaint(__MCCanvasImpl &x_canvas, MCCanvasPatternRef p_pattern)
+void MCCanvasCreatePatternPaint(__MCCanvasImpl &x_canvas, MCCanvasPatternRef p_pattern, MCGPaintRef& r_paint)
 {
 	__MCCanvasPatternImpl *t_pattern;
 	t_pattern = MCCanvasPatternGet(p_pattern);
@@ -5415,16 +5410,13 @@ void MCCanvasApplyPatternPaint(__MCCanvasImpl &x_canvas, MCCanvasPatternRef p_pa
 		// return image & transform scaled for image density
 		t_transform = MCGAffineTransformConcat(t_pattern_transform, t_transform);
 		
-
-		MCGContextSetFillPattern(x_canvas.context, t_frame.image, t_transform, x_canvas.props().image_filter);
-		MCGContextSetStrokePattern(x_canvas.context, t_frame.image, t_transform, x_canvas.props().image_filter);
-		
+        MCGPaintCreateWithPattern(t_frame.image, t_transform, x_canvas.props().image_filter, r_paint);
+        
 		MCImageRepUnlock(t_pattern_image, 0, t_frame);
 	}
-	
 }
 
-bool MCCanvasApplyGradientPaint(__MCCanvasImpl &x_canvas, MCCanvasGradientRef p_gradient)
+void MCCanvasCreateGradientPaint(__MCCanvasImpl &x_canvas, MCCanvasGradientRef p_gradient, MCGPaintRef& r_paint)
 {
 	bool t_success;
 	t_success = true;
@@ -5458,27 +5450,39 @@ bool MCCanvasApplyGradientPaint(__MCCanvasImpl &x_canvas, MCCanvasGradientRef p_
 					t_colors[i] = MCCanvasColorToMCGColor(MCCanvasGradientStopGet(t_stop)->color);
 			}
 		}
-		
-		MCGContextSetFillGradient(x_canvas.context, t_gradient->function, t_offsets, t_colors, t_ramp_length, t_gradient->mirror, t_gradient->wrap, t_gradient->repeats, t_gradient_transform, t_gradient->filter);
-		MCGContextSetStrokeGradient(x_canvas.context, t_gradient->function, t_offsets, t_colors, t_ramp_length, t_gradient->mirror, t_gradient->wrap, t_gradient->repeats, t_gradient_transform, t_gradient->filter);
+        
+        MCGPaintCreateWithGradient(t_gradient->function, t_offsets, t_colors, t_ramp_length, t_gradient->mirror, t_gradient->wrap, t_gradient->repeats, t_gradient_transform, t_gradient->filter, r_paint);
 	}
 
 	MCMemoryDeleteArray(t_offsets);
 	MCMemoryDeleteArray(t_colors);
-	
-	return t_success;
+}
+
+void MCCanvasCreatePaint(__MCCanvasImpl &x_canvas, MCCanvasPaintRef& p_paint, MCGPaintRef& r_paint)
+{
+    if (MCCanvasPaintIsSolidPaint(p_paint))
+        MCCanvasCreateSolidPaint(x_canvas, (MCCanvasSolidPaintRef)p_paint, r_paint);
+    else if (MCCanvasPaintIsPattern(p_paint))
+        MCCanvasCreatePatternPaint(x_canvas, (MCCanvasPatternRef)p_paint, r_paint);
+    else if (MCCanvasPaintIsGradient(p_paint))
+        MCCanvasCreateGradientPaint(x_canvas, (MCCanvasGradientRef)p_paint, r_paint);
+    else
+        MCAssert(false);
 }
 
 void MCCanvasApplyPaint(__MCCanvasImpl &x_canvas, MCCanvasPaintRef &p_paint)
 {
-	if (MCCanvasPaintIsSolidPaint(p_paint))
-		MCCanvasApplySolidPaint(x_canvas, (MCCanvasSolidPaintRef)p_paint);
-	else if (MCCanvasPaintIsPattern(p_paint))
-		MCCanvasApplyPatternPaint(x_canvas, (MCCanvasPatternRef)p_paint);
-	else if (MCCanvasPaintIsGradient(p_paint))
-		MCCanvasApplyGradientPaint(x_canvas, (MCCanvasGradientRef)p_paint);
-	else
-		MCAssert(false);
+    MCGPaintRelease(x_canvas.last_paint);
+    
+    MCCanvasCreatePaint(x_canvas, p_paint, x_canvas.last_paint);
+    MCGContextSetFillPaint(x_canvas.context, x_canvas.last_paint);
+    MCGContextSetStrokePaint(x_canvas.context, x_canvas.last_paint);
+    
+    MCGPaintStyle t_style;
+    t_style = x_canvas.props().stippled ? kMCGPaintStyleStippled : kMCGPaintStyleOpaque;
+    
+    MCGContextSetFillPaintStyle(x_canvas.context, t_style);
+    MCGContextSetStrokePaintStyle(x_canvas.context, t_style);
 }
 
 void MCCanvasApplyChanges(__MCCanvasImpl &x_canvas)
@@ -5814,7 +5818,7 @@ void MCCanvasDrawRectOfImage(MCCanvasRef p_canvas, MCCanvasImageRef p_image, con
 	
 	MCCanvasApplyChanges(*t_canvas);
 
-    MCImageRepRender(t_image, t_canvas->context, 0, p_src_rect, p_dst_rect, t_canvas->props().image_filter);
+    MCImageRepRender(t_image, t_canvas->context, 0, p_src_rect, p_dst_rect, t_canvas->props().image_filter, t_canvas->last_paint);
 }
 
 MC_DLLEXPORT_DEF
