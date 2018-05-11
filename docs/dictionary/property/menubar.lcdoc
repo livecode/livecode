@@ -24,8 +24,8 @@ By default, the <menubar> of newly created <stacks> is set to empty.
 
 Description:
 Use the <menubar> <property> to specify which <menus> appear in the
-<menu bar> on <Mac OS|Mac OS systems> when a <stack> is the <active
-window>. 
+<menu bar> on <Mac OS|Mac OS systems> when a <stack> is the 
+<active window>. 
 
 On Mac OS systems, the menu bar appears at the top of the screen. On
 Unix and Windows systems, the menu bar appears at the top of the stack
@@ -34,10 +34,11 @@ whose menuMode <property> is set to "pulldown" ; these <button|buttons>
 are then grouped to form a <menu bar>.)
 
 The <menubar> is the <group(command)> that contains the <button|buttons>
-used to build the <menu bar>. This <menu bar> is used when the <stack
-window> is active, replacing the <defaultMenubar>. If the <menubar> of a
-<stack> is empty, the <stack> does not have its own custom <menu bar>,
-and the <defaultMenubar> is used when the <stack> is active.
+used to build the <menu bar>. This <menu bar> is used when the 
+<stack window> is active, replacing the <defaultMenubar>. If the 
+<menubar> of a <stack> is empty, the <stack> does not have its own 
+custom <menu bar>, and the <defaultMenubar> is used when the <stack> is 
+active.
 
 On Mac OS systems, when a stack's <menubar> <property> is set, the
 <stack> is scrolled and resized on <Mac OS|Mac OS systems> so that the

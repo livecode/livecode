@@ -97,8 +97,8 @@ References: pulldown (command), property (glossary),
 tabbed button (glossary), menu item (glossary), handler (glossary),
 message (glossary), menu (glossary), button menu (glossary),
 parameter (glossary), character (keyword), menu (keyword),
-button (keyword), button (object), menuName (property),
-menuHistory (property)
+button (keyword), button (object), label (property), 
+ menuName (property), menuHistory (property)
 
 Tags: menus
 

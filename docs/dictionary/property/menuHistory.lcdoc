@@ -39,15 +39,15 @@ If the button's menuMode is "tabbed", setting its <menuHistory> also
 changes the active tab.
 
 If the button's menuMode is "option", setting its <menuHistory> changes
-the <label>. It also determines which <menu item> is under the <mouse
-pointer> when the <menu> next appears. Make sure to set the
+the <label>. It also determines which <menu item> is under the 
+<mouse pointer> when the <menu> next appears. Make sure to set the
 <menuHistory> <property> of an option menu whenever you change the
 current choice, so that the choice is under the <mouse pointer> when the
 user clicks the menu.
 
->*Note:* The effect of the <menuHistory> <property> in <cascading
-> menu|cascading menus> is ambiguous. Avoid setting or relying on the
-> <menuHistory> of a <cascading menu>.
+>*Note:* The effect of the <menuHistory> <property> in 
+> <cascading menu|cascading menus> is ambiguous. Avoid setting or relying 
+> on the <menuHistory> of a <cascading menu>.
 
 References: pulldown (command), menuButton (function),
 selectedText (function), property (glossary), message (glossary),

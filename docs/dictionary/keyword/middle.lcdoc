@@ -25,8 +25,8 @@ Example:
 select the middle line of field 22
 
 Description:
-Use the <middle> <keyword> in an <object reference> or <chunk
-expression>. 
+Use the <middle> <keyword> in an <object reference> or 
+<chunk expression>. 
 
 The <middle> <keyword> can be used to specify any <object(glossary)>. It
 can also be used in a <chunk expression> to designate the middle <chunk>
