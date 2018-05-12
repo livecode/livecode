@@ -32,8 +32,8 @@ box in a window's title bar.
 The terminology varies depending on platform. The <minimizeBox>
 <property> determines whether the <collapse box> (<Mac OS|Mac OS
 systems>), <minimize button|minimize box> (OS X and <Windows|Windows
-systems>) or <iconify> box (<Unix|Unix systems>) appears in a <stack
-window|stack window's> <title bar>.
+systems>) or <iconify> box (<Unix|Unix systems>) appears in a 
+<stack window|stack window's> <title bar>.
 
 >*Note:* On <OS X|OS X systems>, if the <minimizeBox> <property> is
 > false, the <minimize button|minimize box> is disabled rather than

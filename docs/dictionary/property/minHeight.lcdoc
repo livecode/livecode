@@ -47,14 +47,15 @@ If the stack's <resizable> <property> is false, the setting of this
 > false (that is, if the <stack window> is scrolled up so the menubar
 > buttons are not visible in the window), the <minHeight> does not
 > include the height of the <menu bar>. However, on <Windows> and
-> <Unix|Unix systems>, the <minHeight> includes the height of the <menu
-> bar>, since on these platforms the <menu bar> is in the <stack
-> window>. This means that if you set a <minHeight> for a <stack> that
-> contains a <menu bar>, you may need to adjust it depending on
-> <platform> so that the <minHeight> on <Unix> and <Windows|Windows
-> systems> includes the height of the <menu bar>, while the <minHeight>
-> on <Mac OS> and <OS X|OS X systems> does not. (The standard height of
-> <menu bar|menu bars> created with the <Menu Builder> is 21 pixels.)
+> <Unix|Unix systems>, the <minHeight> includes the height of the 
+> <menu bar>, since on these platforms the <menu bar> is in the 
+> <stack window>. This means that if you set a <minHeight> for a <stack> 
+> that contains a <menu bar>, you may need to adjust it depending on
+> <platform> so that the <minHeight> on <Unix> and 
+> <Windows|Windows systems> includes the height of the <menu bar>, 
+> while the <minHeight> on <Mac OS> and <OS X|OS X systems> does not. 
+> (The standard height of <menu bar|menu bars> created with the 
+> <Menu Builder> is 21 pixels.)
 
 >*Note:* The current architecture uses 16-bit signed integers for all
 > co-ordinates, which means that the value range is -32768 to 32767.

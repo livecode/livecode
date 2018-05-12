@@ -41,13 +41,11 @@ You can also associate a stack with the button, using the <menuName>
   contents as a <menu item> in a normal pulldown menu. Use this
   <menuMode> for <button(object)|buttons> that are grouped into a
   <menubar>. 
-
-
-    Setting a button's <menuMode> to "pulldown" has the same result as
-    creating the equivalent <menu item|menu items> (as
-    <button(object)|buttons>) in a <stack>, then using the <pulldown>
-    command to display the <stack> as a <menu>.
-
+  
+  Setting a button's <menuMode> to "pulldown" has the same result as
+  creating the equivalent <menu item|menu items> (as
+  <button(object)|buttons>) in a <stack>, then using the <pulldown>
+  command to display the <stack> as a <menu>.
 
   **Note:** On <Mac OS> and <OS X|OS X systems>, pulldown menus in a
   window are drawn by the standard operating system routines if the
@@ -65,11 +63,10 @@ You can also associate a stack with the button, using the <menuName>
   contents as a <menu item> in a <popup menu>. The <menu> appears at the
   <point> of the mouse click.
 
-
-    Setting a button's <menuMode> to "popup" has the same result as
-    creating the equivalent <menu item|menu items> (as
-    <button(object)|buttons>) in a <stack>, then using the <popup>
-    <command> to display the <stack> as a <menu>.
+  Setting a button's <menuMode> to "popup" has the same result as
+  creating the equivalent <menu item|menu items> (as
+  <button(object)|buttons>) in a <stack>, then using the <popup>
+  <command> to display the <stack> as a <menu>.
 
 
 * "tabbed":  Displays the <button(object)|button's> contents as a
@@ -82,27 +79,23 @@ You can also associate a stack with the button, using the <menuName>
 
 
     on menuPick newTab,oldTab -- sent when user clicks a tab
-
-    lock screen -- hide the swap
-    hide group oldTab
-    show group newTab
-    unlock screen
-
+        lock screen -- hide the swap
+        hide group oldTab
+        show group newTab
+        unlock screen
     end menuPick
 
 
 * "comboBox":  Displays the <button(object)|button's> contents as a
   drop-down scrolling list, with an editable <field> at the top.
 
-
   **Note:** If a <button(object)|button's> <menuMode> is set to
   "comboBox", the <button(keyword)> receives <field> <message|messages>.
   For example, when the user clicks in the editable <field(object)>, an
   <openField> <message> is sent to the <button(keyword)>.
 
-
 * "option":  Displays an option menu (when the <lookAndFeel> <property>
-  is set to "Motif" ), a drop-down list (when the <lookAndFeel>
+  is set to "Motif"), a drop-down list (when the <lookAndFeel>
   <property> is set to "Windows 95" ), or a Mac-style <popup menu> (when
   the <lookAndFeel> <property> is set to "Appearance Manager" or
   "Macintosh" ). Setting a <button(object)|button's> <menuMode> to
@@ -123,11 +116,11 @@ popup menu (glossary), stack menu (glossary), appearance (glossary),
 field (glossary), cascading menu (glossary), line (glossary),
 property (glossary), command (glossary), tabbed button (glossary),
 behavior (glossary), handle (glossary), palette (glossary),
-message (glossary), Mac OS (glossary), OS X (glossary),
+message (glossary), Mac OS (glossary), OS X (glossary), control (glossary),
 dialog box (glossary), menu bar (glossary), menu (glossary),
 point (glossary), menu item (glossary), card (glossary), file (keyword),
 button (keyword), text (keyword), popup (keyword), openField (message),
-menuPick (message), stack (object), control (object), button (object),
+menuPick (message), stack (object), button (object),
 menuLines (property), showBorder (property), menuName (property),
 menubar (property), borderWidth (property), lookAndFeel (property),
 titleWidth (property)

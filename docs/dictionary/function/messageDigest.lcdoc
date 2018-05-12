@@ -33,7 +33,7 @@ Example:
 put textEncode("My very large data", "UTF-8") into tOriginal
 put messageDigest(tOriginal, "SHA3-256") into tChecksum
 -- ... some time later ...
-put textEncode("My very laRge data", "UTF-8") into tLoaded
+put textEncode("My very large data", "UTF-8") into tLoaded
 if messageDigest(tLoaded, "SHA3-256") is not tChecksum then
    put "The data changed and may be corrupted!"
 end if
@@ -87,7 +87,7 @@ function returns; for example, if you specify the "SHA3-256"
 | Name  | <digestType> | Notes
 | ----- | ------------ | -----
 | MD5   | "MD5"        | MD5 is cryptographically broken and unsuitable for further use.  Do not use for security-critical purposes, unless required for backward compatibility with existing systems.
-| SHA-1 | "SHA-1"      | SHA-1 has been severely weakened and there are practical approaches for generating collisions.  Do not use for security-critical purposes, enless required for backward compatibility with existing systems.
+| SHA-1 | "SHA-1"      | SHA-1 has been severely weakened and there are practical approaches for generating collisions.  Do not use for security-critical purposes, unless required for backward compatibility with existing systems.
 | SHA-2 | "SHA-224", "SHA-256", "SHA-384", "SHA-512" | SHA-2 has been found to have some minor weaknesses.
 | SHA-3 | "SHA3-224", "SHA3-256", "SHA3-384", "SHA3-512" | SHA-3 has no known weaknesses
 

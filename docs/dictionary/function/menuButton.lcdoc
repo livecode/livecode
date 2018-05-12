@@ -29,9 +29,10 @@ The <menuButton> <function> <return|returns> the <name> <property> of
 the <button>. You create a stack menu by laying out the menu items as
 buttons in a stack window, then setting the menuName <property> of a
 <button> in another <stack> to the menu stack's name. Clicking the
-<button> displays the menu stack as a <menu>. If you use the same <stack
-menu> as the <menuName> of more than one <button>, the <menuButton>
-tells you which button the user clicked to display the <stack menu>.
+<button> displays the menu stack as a <menu>. If you use the same 
+<stack menu> as the <menuName> of more than one <button>, the 
+<menuButton> tells you which button the user clicked to display the 
+<stack menu>.
 
 For example, suppose you create a stack menu listing all your mailboxes,
 and display it when clicking both a "Delete" button and an "Open"

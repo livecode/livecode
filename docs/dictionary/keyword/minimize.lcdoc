@@ -5,8 +5,8 @@ Type: keyword
 Syntax: minimize
 
 Summary:
-Used with the <decorations> <property> to indicate whether the <minimize
-button> appears in a window's <title bar>.
+Used with the <decorations> <property> to indicate whether the 
+<minimize button> appears in a window's <title bar>.
 
 Introduced: 1.0
 
@@ -24,7 +24,7 @@ on or off.
 Setting a stack's <decorations> <property> to <minimize> automatically
 includes 'title' in the value of the <decorations>, turning on the
 <systemWindow|window>'s <title bar>. The name on the <title bar> can be set 
- +using the <systemWindow|window>'s <label> property.
+using the <systemWindow|window>'s <label> property.
 
 On Windows systems, the <menu> <decorations|decoration> must be set along with
 <minimize> : you cannot use <minimize> without including <menu>.
