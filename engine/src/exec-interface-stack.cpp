@@ -509,7 +509,7 @@ void MCStack::GetLayer(MCExecContext& ctxt, integer_t& r_layer)
 
 void MCStack::GetFileName(MCExecContext& ctxt, MCStringRef& r_file_name)
 {
-	r_file_name = MCValueRetain(filename);
+	r_file_name = MCValueRetain(MCNameGetString(filename));
 }
 
 void MCStack::SetFileName(MCExecContext& ctxt, MCStringRef p_file_name)
@@ -520,8 +520,9 @@ void MCStack::SetFileName(MCExecContext& ctxt, MCStringRef p_file_name)
 		ctxt . LegacyThrow(EE_STACK_NOTMAINSTACK);
 		return;
 	}
-	
-	MCValueAssign(filename, p_file_name);
+
+	MCValueRelease(filename);
+	MCNameCreate(p_file_name, filename);
 }
 
 void MCStack::GetEffectiveFileName(MCExecContext& ctxt, MCStringRef& r_file_name)
@@ -534,7 +535,7 @@ void MCStack::GetEffectiveFileName(MCExecContext& ctxt, MCStringRef& r_file_name
 		return;
 	}
 
-	r_file_name = MCValueRetain(filename);
+	r_file_name = MCValueRetain(MCNameGetString(filename));
 }
 
 void MCStack::GetSaveCompressed(MCExecContext& ctxt, bool& r_setting)
