@@ -19,8 +19,7 @@ Example:
 put the loadedExtensions
 
 Example:
-if "com.livecode.extensions.livecode.switchButton" is among the lines \
-      of the loadedExtensions then
+if "com.livecode.extensions.livecode.switchButton" is among the lines of the loadedExtensions then
     create widget as "com.livecode.extensions.livecode.switchButton"
 end if    
 
@@ -29,11 +28,11 @@ The <loadedExtensions> <function> <return|returns> a list of the loaded
 <LiveCode Builder extension|extensions>, one per <line>.
 
 Description:
-Use the <loadedExtensions> <function> to find out which <LiveCode
-Builder extension|extensions> are loaded, in order to determine (for
-<library extension|libraries>) if its public handlers are available in
-the message path, or (for <widget|widgets>) if it is available to create
-with the <create widget> <command>.
+Use the <loadedExtensions> <function> to find out which 
+<LiveCode Builder extension|extensions> are loaded, in order to determine 
+(for <library extension|libraries>) if its public handlers are available 
+in the message path, or (for <widget|widgets>) if it is available to 
+create with the <create widget> <command>.
 
 Each line of the list returned by the <loadedExtensions> <function> is
 the <kind> of the corresponding <LiveCode Builder extension|extension>.
@@ -41,8 +40,8 @@ the <kind> of the corresponding <LiveCode Builder extension|extension>.
 References: create widget (command), load extension (command),
 unload extension (command), function (glossary), return (glossary),
 LiveCode Builder extension (glossary),
-library LiveCode Builder extension (glossary), line (keyword),
-widget (object), kind (property)
+LiveCode Builder extension (glossary), command (glossary), 
+line (keyword), widget (object), kind (property)
 
 Tags: extensions
 

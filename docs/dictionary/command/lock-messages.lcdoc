@@ -5,9 +5,10 @@ Type: command
 Syntax: lock messages
 
 Summary:
-Sets the <lockMessages> <property> to true, preventing <setProp
-trigger|setProp triggers>, <getProp call|getProp calls>, and certain
-<message|messages> from being sent.
+Sets the <lockMessages> <property> to true, preventing 
+<setProp trigger|setProp triggers>, 
+<getProp call|getProp calls>, and certain <message|messages> from 
+being sent.
 
 Introduced: 1.0
 
