@@ -131,6 +131,7 @@ private:
     uint32_t m_selection_duration;
     uint32_t m_buffered_time;
 	double m_scale;
+    double m_rate;
     CMTimeScale m_time_scale;
     
     bool m_play_selection_only : 1;
@@ -315,6 +316,7 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_buffered_time = 0;
 	
 	m_scale = 1.0;
+    m_rate = 0.0;
     
     m_time_observer_token = nil;
     m_endtime_observer_token = nil;
@@ -460,8 +462,8 @@ void MCAVFoundationPlayer::MovieFinished(void)
         
         if (m_offscreen)
             CVDisplayLinkStart(m_display_link);
-
-        [m_player play];
+        // remember existing playrate when looping
+        [m_player setRate:m_rate];
         m_playing = true;
         m_finished = false;
     }
@@ -1185,7 +1187,10 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             break;
 		case kMCPlatformPlayerPropertyPlayRate:
             if (m_player != nil)
+            {
                 [m_player setRate: *(double *)p_value];
+                m_rate = *(double *)p_value;
+            }
 			break;
 		case kMCPlatformPlayerPropertyVolume:
             if (m_player != nil)
@@ -1321,7 +1326,7 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 			*(MCPlatformPlayerDuration*)r_value = m_selection_finish;
 			break;
 		case kMCPlatformPlayerPropertyPlayRate:
-			*(double *)r_value = [m_player rate];
+            *(double *)r_value = m_rate;
 			break;
 		case kMCPlatformPlayerPropertyVolume:
 			*(uint16_t *)r_value = [m_player volume] * 100.0f;
