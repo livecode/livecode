@@ -6,11 +6,10 @@ Type: glossary
 
 Description:
 A <library extension> is an extension to the LiveCode environment
-written in the <LiveCode Builder language>. When a <library
-extension|library> is loaded has its public handlers added to the bottom
-of the <message path>. These public handlers can be called in <LiveCode>
-in exactly the same way as script handlers.
+written in the <LiveCode Builder language>. When a 
+<library> is loaded it has its public handlers added 
+to the bottom of the <message path>. These public handlers can be 
+called in <LiveCode> in exactly the same way as script handlers.
 
 References: LiveCode Builder language (glossary), LiveCode (glossary),
-message path (glossary)
-
+message path (glossary), library (library)
