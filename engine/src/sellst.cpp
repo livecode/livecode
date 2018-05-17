@@ -133,7 +133,12 @@ void MCSellist::Clean()
             MCSelnode* t_next = t_cursor->next();
             t_cursor->remove(objects);
             delete t_cursor;
-            t_cursor = t_next;
+            if (objects == nil)
+            	t_cursor = nil;
+			else if (objects == t_next)
+				t_cursor = objects->next();
+			else
+            	t_cursor = t_next;
         }
         else
         {
@@ -210,6 +215,9 @@ void MCSellist::add(MCObject *objptr, bool p_sendmessage)
 
 void MCSellist::remove(MCObject *objptr, bool p_sendmessage)
 {
+    // Remove any dead objects before removing objptr
+    Clean();
+
 	if (objects != NULL)
 	{
 		MCSelnode *tptr = objects;
