@@ -343,7 +343,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       if the result is not empty then
          throw "Cannot find the template Manifest"
       end if
-      replace "${LABEL}" with pSettings["android,label"] in tManifest
+      replace "${LABEL}" with textEncode(pSettings["android,label"], "utf-8") in tManifest
       replace "${NAME}" with ".mblandroid" in tManifest
       replace "${IDENTIFIER}" with pSettings["android,identifier"] in tManifest
       replace "${VERSION_NAME}" with pSettings["android,version name"] in tManifest
@@ -1907,7 +1907,7 @@ private function EncodeString pString, pInEncoding, pOutEncoding
       put textDecode(pString, pInEncoding) into pString
    end if
    
-   if pOutEncoding is not empty then
+   if pOutEncoding is not empty and not (pString contains "android:label") then
       -- if pInEncoding is empty then pString is assumed to be in the current platform encoding
       put textEncode(pString, pOutEncoding) into pString
    end if
