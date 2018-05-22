@@ -98,7 +98,7 @@ public:
 	int getConnectionType(void) { return -1; }
 protected:
 	void SetError(SQLHSTMT tcursor);
-	Bool BindVariables(SQLHSTMT tcursor, DBString *args, int numargs, int *paramsizes, PlaceholderMap *p_placeholder_map);
+	Bool BindVariables(SQLHSTMT tcursor, DBString *args, int numargs, SQLLEN *paramsizes, PlaceholderMap *p_placeholder_map);
 	bool ExecuteQuery(char *p_query, DBString *p_arguments, int p_argument_count, SQLHSTMT &p_statement, SQLRETURN &p_result);
 	bool handleDataAtExecutionParameters(SQLHSTMT p_statement);
 	bool useDataAtExecution(void);
