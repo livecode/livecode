@@ -2563,6 +2563,9 @@ bool MCObject::handlesmessage(MCNameRef p_message)
 	t_object = this;
 	while(t_object != nil)
 	{
+		// Make sure the handler list has been constructed from the parsed script
+		if (t_object->hlist == nil)
+			t_object->parsescript(False, False);
 		if (t_object -> hlist != nil && should_send_message(t_object -> hlist, p_message))
             return true;
 		
