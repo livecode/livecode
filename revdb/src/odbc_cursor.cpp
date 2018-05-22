@@ -36,6 +36,7 @@ last - move to last row of resultset
 */
 
 #include <stdio.h>
+#include <stdint.h>
 #include "dbodbc.h"
 
 char DBCursor_ODBC::errmsg[512];
@@ -542,6 +543,37 @@ Bool DBCursor_ODBC::getRowData()
 					ofield->dataSize = offset;
 				}
 			}
+            
+            if (ofield -> fieldType == FT_WSTRING && sizeof(SQLWCHAR) != sizeof(uint16_t))
+            {
+                uint16_t * t_buffer = static_cast<uint16_t *>(malloc(ofield -> dataSize));
+            
+                size_t t_in_offset;
+                size_t t_out_offset = 0;
+                for (t_in_offset = 0; t_in_offset < size_t(ofield -> dataSize); t_in_offset += sizeof(uint32_t))
+                {
+                    uint32_t t_codepoint = *(uint32_t*)&ofield -> data[t_in_offset];
+                    if (t_codepoint < 0x10000)
+                    {
+                        t_buffer[t_out_offset] = uint16_t(t_codepoint);
+                        t_out_offset += 1;
+                    }
+                    else
+                    {
+                        uint16_t t_lead, t_trail;
+                        t_lead =  uint16_t((t_codepoint - 0x10000) >> 10) + 0xD800;
+                        t_trail = uint16_t((t_codepoint - 0x10000) & 0x3FF) + 0xDC00;
+                        t_buffer[t_out_offset] = t_lead;
+                        t_buffer[t_out_offset + 1] = t_trail;
+                        t_out_offset += 2;
+                    }
+                }
+                
+                memcpy(ofield->data, t_buffer, t_out_offset * sizeof(uint16_t));
+                free(t_buffer);
+                
+                ofield -> dataSize = t_out_offset * sizeof(uint16_t);
+            }
 		}
 	}
 	return True;

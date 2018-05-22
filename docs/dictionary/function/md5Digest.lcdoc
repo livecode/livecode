@@ -26,8 +26,8 @@ Parameters:
 message(data): A <binary data> string.
 
 Returns:
-Returns the message digest of the <message> as a 16 <byte> <binary
-data> string.
+Returns the message digest of the <message> as a 16 <byte> 
+<binary data> string.
 
 Description:
 Compute a message digest of <message> using the MD5 cryptographic

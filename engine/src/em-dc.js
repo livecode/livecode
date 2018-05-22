@@ -135,14 +135,12 @@ mergeInto(LibraryManager.library, {
 		},
 		
 		destroyWindow: function(pID) {
-			LiveCodeDC.setWindowVisible(pID, false);
-			LiveCodeDC.raiseWindow(pID);
 			var window = LiveCodeUtil.fetchObject(pID);
 			if (window)
 			{
-				window.element.removeChild(window.container.element);
 				LiveCodeDC._removeResizeMonitor(window.canvas);
-		  
+				LiveCodeDC.setWindowVisible(pID, false);
+				
 				if (window.mainWindow)
 				{
 					// TODO - handle cleanup of embedded canvas
@@ -332,9 +330,13 @@ mergeInto(LibraryManager.library, {
 		
 		_removeResizeMonitor: function(element) {
 			if (LiveCodeDC._monitorResize.watched) {
-				var index = LiveCodeDC._monitorResize.watched.indexOf(element);
-				if (index !== -1) {
-					LiveCodeDC._monitorResize.watched.splice(index, 1);
+				var index = 0;
+				while (index < LiveCodeDC._monitorResize.watched.length)
+				{
+					if (LiveCodeDC._monitorResize.watched[index].element === element)
+						LiveCodeDC._monitorResize.watched.splice(index, 1);
+					else
+						index++;
 				}
 			}
 		},

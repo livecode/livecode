@@ -701,6 +701,9 @@ IO_stat MCDispatch::startup(void)
 #define kMCEmscriptenBootStackFilename "/boot/standalone/__boot.livecode"
 #define kMCEmscriptenStartupStackFilename "/boot/__startup.livecode"
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 IO_stat
 MCDispatch::startup()
 {
@@ -768,6 +771,8 @@ MCDispatch::startup()
 
 	MCdefaultstackptr->extraopen(false);
 
+    MCdispatcher->resolveparentscripts();
+    
 	send_startup_message();
 
 	if (!MCquit)
@@ -780,9 +785,6 @@ MCDispatch::startup()
 
 #else
 
-// Important: This function is on the emterpreter whitelist. If its
-// signature function changes, the mangled name must be updated in
-// em-whitelist.json
 IO_stat MCDispatch::startup(void)
 {
     char *t_mccmd;

@@ -5,9 +5,9 @@ Synonyms: lcb extension
 Type: glossary
 
 Description:
-An extension to the LiveCode environment written in the <LiveCode
-Builder language>. The extension can be either a <widget> or a <library
-extension|library>. 
+An extension to the LiveCode environment written in the 
+<LiveCode Builder language>. The extension can be either a <widget> or 
+a <library extension|library>. 
 
 A <widget> when loaded is a <control> that can be created on the <stack>
 by dragging it out from the tools palette, or using the <create widget>

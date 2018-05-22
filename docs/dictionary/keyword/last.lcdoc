@@ -23,8 +23,8 @@ put the last line of it after field "Answers"
 Description:
 The <last> <keyword> can be used to specify any <object(glossary)> whose
 <number> <property> is equal to the number of <object|objects> of that
-type. It can also be used to designate the last <chunk> in a <chunk
-expression>. 
+type. It can also be used to designate the last <chunk> in a 
+<chunk expression>. 
 
 The last control is the topmost control on a card. The last button is
 the topmost button, and similarly for other types of controls.

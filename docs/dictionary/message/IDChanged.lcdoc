@@ -43,12 +43,12 @@ not to set an <image> <ID> to a number that's the <ID> of another
 or both <object|objects>. The following ID numbers are reserved and
 should not be used for <image> IDs:
 
-        * 1-100: reserved for built-in cursors
-        * 101-135: reserved for built-in brush shapes
-        * 236-300: reserved for built-in patterns
-        * 301-1000: reserved for built-in icons
-        * 101,000-103,000: reserved
-        * 200,000-299,999: reserved for application use
+* 1-100: reserved for built-in cursors
+* 101-135: reserved for built-in brush shapes
+* 236-300: reserved for built-in patterns
+* 301-1000: reserved for built-in icons
+* 101,000-103,000: reserved
+* 200,000-299,999: reserved for application use
 
 
 The actual change is not triggered by the <IDChanged> <message>, so

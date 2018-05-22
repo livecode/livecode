@@ -7,6 +7,20 @@ constant kArchs = "armeabi"
 ################################################################################
 
 command revSaveAsMobileStandalone pStack, pApkFile, pTarget, pSettings
+   local tPath
+   put the cMobileSupport["android.sdk"] of stack "revPreferences" into tPath
+   
+   if tPath is empty then
+      throw revIDELocalise("In order to build Android standalones" & \ 
+            " you need to choose the location of your Android development SDK" & \
+            " in Preferences -> Mobile Support")
+   end if
+   if not revIDEDeployAndroidIsValidSDK(tPath) then
+      throw revIDELocalise("The chosen folder in Preferences -> Mobile Support" & \
+            " is not a valid Android SDK. Please ensure you have installed it correctly," & \
+            " and enabled support for") && revIDEDeployAndroidRequiredSDK()
+   end if
+   
    local tTargetType
    if pTarget contains "build" then
       put "android release" into tTargetType

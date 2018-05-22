@@ -35,8 +35,9 @@ Use the <is not strictly> operator to determine what the true type of
 a value is not.  The true type of a value is the representation which
 the engine is currently holding for it, without performing any
 implicit type coercion. The true type of a value can be one of the
-following:- nothing: no value, typically seen as <empty>
+following:
 
+- nothing: no value, typically seen as <empty>
 - boolean: either true or false, typically seen as the result of a
   comparison operator
 - integer: a number with no fractional part

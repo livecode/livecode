@@ -8,8 +8,8 @@ Syntax: interrupt()
 
 Summary:
 <return|Returns> true if the <allowInterrupts> <property> is false and
-the user has attempted to halt the current <handler> with a <key
-combination>. 
+the user has attempted to halt the current <handler> with a 
+<key combination>. 
 
 Introduced: 1.0
 

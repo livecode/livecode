@@ -5,9 +5,9 @@ Type: property
 Syntax: set the lockMessages to {true | false}
 
 Summary:
-Specifies whether <setProp trigger|setProp triggers>, <getProp
-call|getProp calls>, and certain <built-in message|built-in messages>
-are sent automatically.
+Specifies whether <setProp trigger|setProp triggers>, 
+<getProp call|getProp calls>, and certain 
+<built-in message|built-in messages> are sent automatically.
 
 Introduced: 1.0
 
@@ -25,7 +25,7 @@ to false when no <handler|handlers> are <execute|executing>.
 
 Description:
 Use the <lockMessages> <property> to prevent unwanted <handler|handlers>
-from being <trigger|triggered>,or to speed up operations when
+from being <trigger|triggered>, or to speed up operations when
 <handler|handlers> that are normally run automatically are not needed.
 
 If the <lockMessages> <property> is set to true, the following are not sent:  

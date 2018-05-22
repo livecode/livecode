@@ -399,8 +399,7 @@ bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p
 #endif
 		if (t_result == SQL_SUCCESS || t_result == SQL_SUCCESS_WITH_INFO)
 		{
-			int *t_argument_sizes = NULL;
-			t_argument_sizes = new (nothrow) int[t_placeholder_map . length];
+			SQLLEN *t_argument_sizes = new (nothrow) SQLLEN[t_placeholder_map . length];
 			if (BindVariables(t_statement, p_arguments, p_argument_count, t_argument_sizes, &t_placeholder_map))
 			{
 				t_result = SQLExecute(t_statement);
@@ -528,7 +527,7 @@ char *DBConnection_ODBC::getErrorMessage(Bool p_last)
 
 
 /*BindVariables-parses querystring and binds variables*/
-Bool DBConnection_ODBC::BindVariables(SQLHSTMT p_cursor, DBString *p_arguments, int p_argument_count, int *p_argument_sizes, PlaceholderMap *p_placeholder_map)
+Bool DBConnection_ODBC::BindVariables(SQLHSTMT p_cursor, DBString *p_arguments, int p_argument_count, SQLLEN *p_argument_sizes, PlaceholderMap *p_placeholder_map)
 {
 	if (p_argument_count == 0)
 		return True;
@@ -564,15 +563,14 @@ Bool DBConnection_ODBC::BindVariables(SQLHSTMT p_cursor, DBString *p_arguments, 
 
 			// MW-2008-07-30: [[ Bug 6415 ]] Inserting data into SQL Server doesn't work.
 			//   This is because the bind parameter call was only being issued for binary columns!
-			SQLLEN t_argument_size;
-			t_result = SQLBindParameter(p_cursor, i + 1, SQL_PARAM_INPUT,
+            
+            SQLLEN * t_argument_size = &p_argument_sizes[i];
+            t_result = SQLBindParameter(p_cursor, i + 1, SQL_PARAM_INPUT,
 				t_value -> isbinary ? SQL_C_BINARY : SQL_C_CHAR, t_data_type,
-				t_value -> length, 0, (void *)t_value -> sptr, t_value -> length, &t_argument_size);
+				t_value -> length, 0, (void *)t_value -> sptr, t_value -> length, t_argument_size);
 
 			if (!(t_result == SQL_SUCCESS || t_result == SQL_SUCCESS_WITH_INFO))
 				return False;
-
-			p_argument_sizes[i] = t_argument_size;
 		}
 		else
 		{

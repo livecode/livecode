@@ -290,6 +290,70 @@ void MCSystemGetAllowedOrientations(uint32_t& r_orientations)
 void MCSystemSetAllowedOrientations(uint32_t p_orientations)
 {
 	s_allowed_orientations = get_android_orientations(p_orientations);
+    
+    MCAndroidDisplayFormat t_dev_format = android_get_device_format();
+    int t_dev_rotation = android_get_device_rotation();
+    MCAndroidDisplayOrientation t_dev_orientation = android_device_orientation_from_rotation(t_dev_format, t_dev_rotation);
+    MCAndroidDisplayOrientation t_new_orientation = t_dev_orientation;
+    
+    if (!((1 << (int)(t_new_orientation)) & s_allowed_orientations))
+    {
+        // check landscape v portrait first
+        if (t_dev_orientation == kMCDisplayOrientationLandscapeLeft ||
+            t_dev_orientation == kMCDisplayOrientationLandscapeRight)
+        {
+            if ((1 << (int)(kMCDisplayOrientationLandscapeLeft)) & s_allowed_orientations)
+            {
+                t_new_orientation = kMCDisplayOrientationLandscapeLeft;
+            }
+            else if ((1 << (int)(kMCDisplayOrientationLandscapeRight)) & s_allowed_orientations)
+            {
+                t_new_orientation = kMCDisplayOrientationLandscapeRight;
+            }
+        }
+        else if (t_dev_orientation == kMCDisplayOrientationPortrait ||
+            t_dev_orientation == kMCDisplayOrientationPortraitUpsideDown)
+        {
+            if ((1 << (int)(kMCDisplayOrientationPortrait)) & s_allowed_orientations)
+            {
+                t_new_orientation = kMCDisplayOrientationPortrait;
+            }
+            else if ((1 << (int)(kMCDisplayOrientationPortraitUpsideDown)) & s_allowed_orientations)
+            {
+                t_new_orientation = kMCDisplayOrientationPortraitUpsideDown;
+            }
+        }
+        
+        // if we have not found an appropriate orientation then try them in order
+        if (t_new_orientation == t_dev_orientation)
+        {
+            if ((1 << (int)(kMCDisplayOrientationPortrait)) & s_allowed_orientations)
+            {
+                t_new_orientation = kMCDisplayOrientationPortrait;
+            }
+            else if ((1 << (int)(kMCDisplayOrientationLandscapeLeft)) & s_allowed_orientations)
+            {
+                t_new_orientation = kMCDisplayOrientationLandscapeLeft;
+            }
+            else if ((1 << (int)(kMCDisplayOrientationLandscapeRight)) & s_allowed_orientations)
+            {
+                t_new_orientation = kMCDisplayOrientationLandscapeRight;
+            }
+            else if ((1 << (int)(kMCDisplayOrientationPortraitUpsideDown)) & s_allowed_orientations)
+            {
+                t_new_orientation = kMCDisplayOrientationPortraitUpsideDown;
+            }
+            else if ((1 << (int)(kMCDisplayOrientationFaceUp)) & s_allowed_orientations)
+            {
+                t_new_orientation = kMCDisplayOrientationFaceUp;
+            }
+        }
+    }
+    
+    // set orientation regardless of whether we have changed it because
+    // it may have already been in a supported orientation but not
+    // set to it because it was previouslu not allowed
+    android_set_display_orientation(t_new_orientation);
 }
 
 void MCSystemGetOrientation(MCOrientation& r_orientation)

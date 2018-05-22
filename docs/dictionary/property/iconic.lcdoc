@@ -31,12 +31,12 @@ Set a stack's <iconic> <property> to true to make the <stack window>
 take up less space. The way in which this is done depends on the
 <platform> :
 
-        * On Mac OS systems, the window is collapsed to its title bar
-        * On OS X systems, the window is collapsed to an icon in the
-          Dock 
-        * On Unix systems, the window is iconified into a desktop icon
-        * On Windows systems, the window is minimized to an icon in the
-          task bar
+* On Mac OS systems, the window is collapsed to its title bar
+* On OS X systems, the window is collapsed to an icon in the
+  Dock 
+* On Unix systems, the window is iconified into a desktop icon
+* On Windows systems, the window is minimized to an icon in the
+  task bar
 
 
 If the user has collapsed, iconified, or minimized the stack, its

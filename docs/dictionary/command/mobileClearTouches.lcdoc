@@ -30,20 +30,18 @@ the point of calling, all pending touch interactions are removed from
 the event queue.
 
 <mobileClearTouches> also cancels any existing mouse or touch sequences,
-meaning that you (and the engine) will not receive a mouseUp,
-mouseRelease, touchEnd or touchCancel message for any current
+meaning that you (and the engine) will not receive a <mouseUp>,
+<mouseRelease>, <touchEnd> or <touchCancel> message for any current
 interactions. 
 
 A good example of when this command might be useful is when playing an
 instructional sound:
 
-on tellUserInstructions
-
-    play specialFolderPath("engine") & slash & "Instruction_1.mp3"
-    wait until the sound is "done"
-    mobileClearTouches
-
-end tellUserInstructions
+    on tellUserInstructions
+        play specialFolderPath("engine") & slash & "Instruction_1.mp3"
+        wait until the sound is "done"
+        mobileClearTouches
+    end tellUserInstructions
 
 Here, if the <mobileClearTouches> call was not made, any touch events
 the user created while the sound was playing would be queued and then be

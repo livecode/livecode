@@ -46,23 +46,21 @@ the <OS X> dock.
 
 LiveCode looks for the specified image in the following order:
 
-1) The stack of the object's <behavior> (if applicable)
-2) The stack of the owner of the object's <behavior> (if applicable)
-
-    ...
-
-n) The stack of the object's stack's <behavior> (if applicable)
-A) The object's stack
-B) The object's stack's mainstack (if a substack)
-C) The object's stack's mainstacks substacks
-D) The list of open stacks, in order they were loaded
+* 1. The stack of the object's <behavior> (if applicable)
+* 2. The stack of the owner of the object's <behavior> (if applicable)
+*    ...
+* n. The stack of the object's stack's <behavior> (if applicable)
+* A. The object's stack
+* B. The object's stack's mainstack (if a substack)
+* C. The object's stack's mainstack's substacks
+* D. The list of open stacks, in order they were loaded
 
 If a button has been clicked during the current session and its
 visitedIcon <property> is set, its <visitedIcon> is displayed instead of
 its <icon>. If the button is disabled and its <disabledIcon> <property>
 is set, its <disabledIcon> is displayed instead of its <icon>.
 
->*Cross-platform note:* On <OS X|OS X systems>, a <stack's (object)>
+>*Cross-platform note:* On <OS X|OS X systems>, a <stack|stack's>
 > <icon> is displayed in the dock when the stack is minimized. On
 > <Unix|Unix systems>, the <stack|stack's> <icon> is displayed on the
 > <desktop> when the <stack> is <iconify|iconified>. Setting a
@@ -75,6 +73,7 @@ is set, its <disabledIcon> is displayed instead of its <icon>.
 > 128x128 and then set it as the dock icon for the application. The
 > setting of the <global> icon <property> has no effect on <Mac OS>,
 > <Unix>, or <Windows|Windows systems>.
+
 >*Note:* The image is only guaranteed to persist while the application
 > runs, although in some cases the OS does appear to cache it beyond
 > this. 
