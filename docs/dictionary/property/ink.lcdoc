@@ -51,39 +51,39 @@ There are 25 transfer modes:
 
 Structural Blends (Porter Duff operators):
 
-        * blendClear
-        * blendSrc
-        * blendDst
-        * blendSrcOver
-        * blendDstOver
-        * blendSrcIn
-        * blendDstIn
-        * blendSrcOut
-        * blendDstOut
-        * blendSrcAtop
-        * blendDstAtop
-        * blendXor
+* blendClear
+* blendSrc
+* blendDst
+* blendSrcOver
+* blendDstOver
+* blendSrcIn
+* blendDstIn
+* blendSrcOut
+* blendDstOut
+* blendSrcAtop
+* blendDstAtop
+* blendXor
 
 
 Image Processing Blends (SVG/PDF operators):
 
-        * blendPlus
-        * blendMultiply
-        * blendScreen
-        * blendOverlay
-        * blendDarken
-        * blendLighten
-        * blendDodge
-        * blendBurn
-        * blendHardLight
-        * blendSoftLight
-        * blendDifference
-        * blendExclusion
+* blendPlus
+* blendMultiply
+* blendScreen
+* blendOverlay
+* blendDarken
+* blendLighten
+* blendDodge
+* blendBurn
+* blendHardLight
+* blendSoftLight
+* blendDifference
+* blendExclusion
 
 
 Bitwise - This ink has been deprecated from version 5.0
 
-        * srcCopy
+* srcCopy
 
 The rendered pixels of an object are combined with the corresponding
 background pixels using the specified ink before the blendLevel is

@@ -25,10 +25,9 @@ Returns:
 The <localNames> <function> <return|returns> a <value> consisting of
 three lines:
 
-        1. Parameters passed to the current handler
-        2. Local variables created in the current handler
-        3. Local variables created in the current script but outside all
-           handlers. 
+1. Parameters passed to the current handler
+2. Local variables created in the current handler
+3. Local variables created in the current script but outside all handlers. 
 
 
 Description:

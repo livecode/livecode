@@ -1583,24 +1583,24 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       local tDtPlatformBuild, tDtPlatformVersion, tDtSdkBuild, tDtSdkName, tDtXcode, tDtXcodeBuild
       
       -- Note: The values returned by the shell commands contain a trailing LF, so we have to remove it
-      get shell("xcodebuild -version -sdk iphoneos ProductBuildVersion")
+      get shell("xcodebuild -version -sdk iphoneos ProductBuildVersion 2> /dev/null")
       -- Those 2 values are the same, e.g. "15C107"
       put it into tDtPlatformBuild
       delete last char of tDtPlatformBuild
       put it into tDtSdkBuild 
       delete last char of tDtSdkBuild
       
-      get shell("xcodebuild -version -sdk iphoneos PlatformVersion") -- e.g. "11.2"
+      get shell("xcodebuild -version -sdk iphoneos PlatformVersion 2> /dev/null") -- e.g. "11.2"
       put it into tDtPlatformVersion
       delete last char of tDtPlatformVersion
       
       put "iphoneos" & tDtPlatformVersion into tDtSdkName
       
-      get shell("xcodebuild -version | awk '/Xcode/ {print $NF}' ") -- e.g. "9.2"
+      get shell("xcodebuild -version 2> /dev/null| awk '/Xcode/ {print $NF}' ") -- e.g. "9.2"
       put it into tDtXcode
       put convertXcodeVersion(tDtXcode) into tDtXcode 
       
-      get shell("xcodebuild -version | awk 'END {print $NF}' ") -- e.g. "9C40b"
+      get shell("xcodebuild -version 2> /dev/null| awk 'END {print $NF}' ") -- e.g. "9C40b"
       put it into tDtXcodeBuild
       delete last char of tDtXcodeBuild
       

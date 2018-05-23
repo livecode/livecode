@@ -43,9 +43,9 @@ Use the <local> <command> to define a <local variable> for a <handler>,
 or to define a <script local variable> that is shared between all the
 <handler|handlers> in a <script>.
 
-The <local> <declare|declaration> is optional. You can use a <local
-variable> without <declare|declaring> it first in the <handler>. In this
-case, the <local variable> can be used only within that <handler>.
+The <local> <declare|declaration> is optional. You can use a 
+<local variable> without <declare|declaring> it first in the <handler>. 
+In this case, the <local variable> can be used only within that <handler>.
 
 The <local> <command> can appear anywhere in a <handler>. However,
 <variable> <declare|declarations> are usually placed at the beginning of
@@ -53,8 +53,8 @@ a <handler>. This makes them easier to find and as local variables are
 created at the point in the script where they are declared it will
 ensure the variable isn't used before the declaration.
 
-You can also use the <local> <command> to create a <script local
-variable>. <script local variable|Script local variables> can be used by
+You can also use the <local> <command> to create a <script local variable>. 
+<script local variable|Script local variables> can be used by
 any <handler> in that <script>, without needing to be <declare|declared>
 in the <handler> itself, and their <value|values> are maintained from
 <handler> to <handler>. You create a <script local variable> by using

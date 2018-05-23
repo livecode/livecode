@@ -55,19 +55,17 @@ following pair of handlers draws everything while the display is still
 locked: 
 
     on mouseUp
-    lock screen    -- first lock
-    drawStuff      -- gets locked again and unlocked in drawStuff
-    show image "Sprite"
-    unlock screen  -- now unlocked - 2 locks balanced by 2 unlocks
-
+        lock screen    -- first lock
+        drawStuff      -- gets locked again and unlocked in drawStuff
+        show image "Sprite"
+        unlock screen  -- now unlocked - 2 locks balanced by 2 unlocks
     end mouseUp
 
 
     on drawStuff
-    lock screen    -- screen now locked twice
-    show field "Notify"
-    unlock screen  -- not unlocked yet - locked twice, unlocked once
-
+        lock screen    -- screen now locked twice
+        show field "Notify"
+        unlock screen  -- not unlocked yet - locked twice, unlocked once
     end drawStuff
 
 

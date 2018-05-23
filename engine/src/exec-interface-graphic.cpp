@@ -781,6 +781,7 @@ void MCGraphic::SetMarkerPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* 
     {
         flags &= ~F_MARKER_DRAWN;
         delete[] markerpoints;
+		markerpoints = NULL;
         nmarkerpoints = 0;
     }
     else

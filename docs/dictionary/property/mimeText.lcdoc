@@ -5,8 +5,8 @@ Type: property
 Syntax: mimeText
 
 Summary:
-The <mimeText> <property> is not implemented and is <reserved
-word|reserved>.
+The <mimeText> <property> is not implemented and is 
+<reserved word|reserved>.
 
 Associations: field
 

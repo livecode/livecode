@@ -7,8 +7,8 @@ Type: property
 Syntax: set the listBehavior of <field> to {true | false}
 
 Summary:
-Specifies whether a <lock|locked> <field> behaves as a <list
-field|clickable list>.
+Specifies whether a <lock|locked> <field> behaves as a 
+<list field|clickable list>.
 
 Associations: field
 

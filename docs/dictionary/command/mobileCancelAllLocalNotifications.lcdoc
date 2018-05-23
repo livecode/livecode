@@ -18,15 +18,15 @@ mobileCancelAllLocalNotifications
 
 Description:
 Use the <mobileCancelAllLocalNotifications> <command> to cancel all
-Local Notification with the operating system from within a <stack on iOS
-or Android>.
+Local Notification with the operating system from within a <stack> on iOS
+or Android.
 
 This command cancels all Local Notifications with the iOS operating
 sytem. 
 
 References: mobileCreateLocalNotification (command),
 mobileCancelLocalNotification (command), command (glossary),
-stack on iOS or Android (object)
+stack (object)
 
 Tags: networking
 

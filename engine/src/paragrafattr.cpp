@@ -103,10 +103,11 @@ void MCParagraph::fetchattrs(MCArrayRef src)
 
         if (MCField::parsetabstops(P_TAB_STOPS, t_stringref_value, t_uint16_tabs, t_count))
         {
-            /* UNCHECKED */ MCMemoryAllocate(t_count, t_tabstops . elements);
+            /* UNCHECKED */ MCMemoryAllocate(sizeof(uinteger_t) * t_count, t_tabstops . elements);
             for (uint16_t i = 0; i < t_count; ++i)
                 t_tabstops . elements[i] = t_uint16_tabs[i];
 
+			t_tabstops . count = t_count;
             SetTabStops(ctxt, t_tabstops);
             MCMemoryDeallocate(t_tabstops . elements);
             MCMemoryDeallocate(t_uint16_tabs);

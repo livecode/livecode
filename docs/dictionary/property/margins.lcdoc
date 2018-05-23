@@ -46,9 +46,9 @@ to that number of pixels. If four integers are provided, the object's
 top, left, bottom, and right margins are set to each one respectively:
 
 * item 1 of the <margins> <property> is equal to the leftMargin
-*  2 of the <margins> is equal to the topMargin
-*  3 of the <margins> is equal to the rightMargin
-*  4 is equal to the bottomMargin
+* item 2 of the <margins> is equal to the topMargin
+* item 3 is equal to the rightMargin
+* item 4 is equal to the bottomMargin
 
 
 If the lookAndFeel is set to "Motif", <control(object)|controls> require
@@ -70,11 +70,11 @@ The <margins> setting of an <image>, <player>, or <scrollbar> has no
 effect. 
 
 References: group (command), object (glossary), property (glossary),
-pixel (glossary), group (glossary), Unix (glossary),
+pixel (glossary), group (glossary), Unix (glossary), control (glossary)
 active control (glossary), non-negative (glossary), integer (glossary),
 image (keyword), integer (keyword), button (keyword), scrollbar (keyword),
 graphic (keyword), player (keyword), field (keyword), control (keyword),
-field (object), control (object), topMargin (property), pixels (property),
+field (object), topMargin (property), pixels (property),
 formattedWidth (property), textAlign (property),
 formattedHeight (property), wideMargins (property),
 boundingRect (property), rectangle (property), rightMargin (property),

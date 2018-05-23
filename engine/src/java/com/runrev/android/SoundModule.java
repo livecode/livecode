@@ -354,7 +354,6 @@ public class SoundModule
             {
                 case SoundModule.k_playback_now:
                 case SoundModule.k_playback_looping:
-                default:
                     // if we have an existing player, stop its activity and use this to play the new sound
                     // otherwise create a new player
                     if (m_current_player != null)
@@ -377,11 +376,18 @@ public class SoundModule
                     return m_current_player.setSound(p_sound, p_type == k_playback_looping, true, p_sound_path, p_is_asset, p_callback_handle);
                     
                 case SoundModule.k_playback_next:
+				{
                     // if there is no current player or the current player is not playing
                     // then queue the sound on the current player but don't play it (the sound is prepared but the channel is paused)
                     // otherwise set up the sound on the next player ready for when the current player completes
+					
+					// To check if the current player is not playing we cannot rely *only* on the isPlaying() method of the MediaPlayer class,
+					// as this returns false until the player actually starts playing. For our purposes, the current player is "playing" if:
+					// 1. Either MediaPlayer.isPlaying() returns true
+					// 2. OR there is a pending and unprepared sound, waiting to be played
+
                     SoundPlayer t_player = null;
-                    if (m_current_player != null && !m_current_player.m_player.isPlaying())
+                    if (m_current_player != null && !(m_current_player.m_player.isPlaying() || (m_current_player.isPending() && !m_current_player.isPrepared())))
                     {
                         m_current_player.reset();
                         t_player = m_current_player;
@@ -403,7 +409,9 @@ public class SoundModule
                     if (t_player == null)
                         return false;
                     return t_player.setSound(p_sound, false, false, p_sound_path, p_is_asset, p_callback_handle);
-                    
+				}
+				default:
+					return false;
             }
         }
         

@@ -2353,7 +2353,8 @@ struct MCKeyboardActivatedEvent: public MCCustomEvent
 	
 	void Dispatch(void)
 	{
-		MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_activated);
+        MCscreen -> cleardisplayinfocache();
+        MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_activated);
 	}
 	
 private:
@@ -2369,7 +2370,8 @@ struct MCKeyboardDeactivatedEvent: public MCCustomEvent
 	
 	void Dispatch(void)
 	{
-		MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_deactivated);
+        MCscreen -> cleardisplayinfocache();
+        MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_deactivated);
 	}
 };
 

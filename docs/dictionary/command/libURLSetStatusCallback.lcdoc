@@ -152,8 +152,7 @@ callback (glossary), command (glossary), control structure (glossary),
 main stack (glossary), Standalone Application Settings (glossary),
 upload (glossary), download (glossary), server (glossary),
 HTTP (glossary), handler (glossary), URL (keyword), ftp (keyword),
-item (keyword), http (keyword), libURLftpUpload (library),
-libURLDownloadToFile (library), library (library),
+item (keyword), http (keyword), library (library), 
 Internet library (library), startup (message), openBackground (message),
 preOpenStack (message), openStack (message), preOpenCard (message)
 
