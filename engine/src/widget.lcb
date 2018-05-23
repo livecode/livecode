@@ -1298,7 +1298,9 @@ private handler EventCallback() returns nothing
 end handler
 
 Description:
-This widget evaluates to the current widget. This can be used to retain a reference for occasions where widget handlers may be called from another module, where the current widget may not be valid.
+This widget evaluates to the current widget. This can be used to retain a
+reference for occasions where widget handlers may be called from another module,
+where the current widget may not be valid.
 */
 
 syntax ThisWidget is expression
