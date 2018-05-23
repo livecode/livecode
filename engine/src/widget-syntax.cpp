@@ -143,6 +143,11 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetExecTriggerAll(void)
     MCWidgetTriggerAll(MCcurrentwidget);
 }
 
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecTriggerAllInWidget(MCWidgetRef p_widget)
+{
+	MCWidgetTriggerAll(p_widget);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyScriptObject(MCScriptObjectRef& r_script_object)
@@ -474,6 +479,14 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMouseButtonState(uinteger_t p_index,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetEvalThisWidget(MCWidgetRef& r_widget)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	r_widget = MCValueRetain(MCcurrentwidget);
+}
 
 extern "C" MC_DLLEXPORT_DEF void MCWidgetEvalTheTarget(MCWidgetRef& r_widget)
 {

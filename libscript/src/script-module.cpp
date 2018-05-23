@@ -809,6 +809,9 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 }
                 else
                 {
+#if defined(__EMSCRIPTEN__) // Skip foreign type constructor check on emscripten
+					t_typeinfo = kMCNullTypeInfo;
+#else
                     MCAutoStringRef t_type_func, t_args;
                     if (!MCStringDivideAtChar(t_type->binding, ':', kMCStringOptionCompareExact, &t_type_func, &t_args))
                     {
@@ -834,6 +837,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     {
                         goto error_cleanup;
                     }
+ #endif
                 }
             }
             break;
