@@ -1625,8 +1625,10 @@ Boolean MCPlayer::playpause(Boolean on)
 		if (!on)
         {
             playselection(getflag(F_PLAY_SELECTION) && !m_modify_selection_while_playing);
-            // PM-2014-08-06: [[ Bug 13104 ]] Force playRate to 1.0 (needed when starting player by pressing space/enter keys 
-            rate = 1.0;
+            // PM-2014-08-06: [[ Bug 13104 ]] Remember existing playrate when starting player after a pause
+            double t_rate;
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
+            rate = t_rate;
 			MCPlatformStartPlayer(m_platform_player, rate);
 		}
         else
