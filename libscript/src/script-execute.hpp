@@ -672,7 +672,7 @@ MCScriptExecuteContext::CheckedStoreVariable(MCScriptInstanceRef p_instance,
     
     StoreVariable(p_instance,
                   p_definition,
-                  p_value);
+                  *t_converted_value);
 }
 
 inline void
