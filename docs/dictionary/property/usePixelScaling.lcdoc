@@ -54,7 +54,7 @@ scale values when multiple displays are available:
 
 * The <screenPixelScale> <property> returns the pixel scale of
   the main screen
-* The <screenPixelScales> <property> a return-delimited list of the pixel
+* The <screenPixelScales> <property> returns a return-delimited list of the pixel
   scale of each connected display
 
 
