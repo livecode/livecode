@@ -1175,7 +1175,7 @@ private command revCopyMobileFiles pSettings, pBaseFolder, pAppBundle, pAppTarge
       end if
       
       -- If the file is a font, then just copy and record as such
-      if tSource ends with ".ttf" or tSource ends with ".ttc" then
+      if revSBFileIsFontFile(tSource) then
          revSBCopyFileToFile tSource, tTarget, "revStandaloneProgressCallback", the long id of me
          put "font", tTarget & return after rFonts
          next repeat

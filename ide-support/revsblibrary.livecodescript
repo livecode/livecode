@@ -1191,6 +1191,10 @@ function revSBDatabaseDriversMapping
    return "mysql MySQL,odbc ODBC,postgresql PostgreSQL,sqlite SQLite,oracle Oracle"
 end revSBDatabaseDriversMapping
 
+function revSBFileIsFontFile pFile
+   return (pFile ends with ".ttf" or pFile ends with ".ttc" or pFile ends with ".otf")
+end revSBFileIsFontFile
+
 -- MW-2013-06-13: [[ CloneAndRun ]] If we aren't installed, then generate the externals
 --   list by hand.
 private function revSBExternalsBuildList pPlatform
