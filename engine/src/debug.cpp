@@ -140,6 +140,9 @@ void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
     
     if (t_target != nil)
     {
+		Boolean oldlock = MClockmessages;
+		MClockmessages = False;
+
         MCAutoStringRef t_handler;
         t_handler = MCNameGetString(ctxt.GetHandler()->getname());
         MCParameter *t_handler_parameter = new (nothrow) MCParameter;
@@ -165,6 +168,8 @@ void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
         
         if (t_added)
             MCnexecutioncontexts--;
+
+		MClockmessages = oldlock;
     }
     
     if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
