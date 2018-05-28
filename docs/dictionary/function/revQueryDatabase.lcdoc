@@ -20,16 +20,18 @@ Platforms: desktop, server, mobile
 Security: disk, network
 
 Example:
-revQueryDatabase(2,"SELECT * FROM EmpStats")
+revQueryDatabase(2, "SELECT * FROM EmpStats")
 
 Example:
-revQueryDatabase(currentDB,field "Query")
+revQueryDatabase(currentDB, field "Query")
 
 Example:
-revQueryDatabase(the database of me,myQuery,"myVar1","myVar2","myVar3")
+revQueryDatabase(the database of me, myQuery, "myVar1", "myVar2", \
+"myVar3")
 
 Example:
-revQueryDatabase(tConnectionId, tQuery, "tInputData[id]", "tInputData[name]")
+revQueryDatabase(tConnectionId, tQuery, "tInputData[id]", \
+"tInputData[name]")
 
 Parameters:
 databaseID:
@@ -69,8 +71,8 @@ name in the <variablesList> for each of these placeholders. For example,
 if you have two <variable|variables> called "valueX" and "valueY", you
 can use a <SQLQuery> that includes placeholders as follows:
 
-    get revQueryDatabase(myID,"SELECT * FROM empStats WHERE id=:1 OR
-    stat_id=:1 OR population=:2","valueX","valueY")
+    get revQueryDatabase(myID, "SELECT * FROM empStats WHERE id=:1" && \
+    "OR stat_id=:1 OR population=:2", "valueX", "valueY")
 
 
 The content of the variable valueX is substituted for the ":1" in the
@@ -82,20 +84,20 @@ If you specify an <arrayName> rather than a list of ordinary
 corresponding <element(keyword)> of the <array> for each of the
 placeholders in the <SQL query|query>:
 
-    get revQueryDatabase(myID,"SELECT :1,:2 FROM empStats WHERE
-    1",myArray) 
+    get revQueryDatabase(myID, "SELECT :1,:2 FROM empStats WHERE" && \
+    "id=:1", "myArray") 
 
 
 The content of the element myArray[1] is substituted for the ":1" in the
 <SQLQuery> (in both places where ":1" appears), and the content of
 myArray[2] is substituted for ":2".
 
-To pass binary data in a variable in the <variablesList>, <prepend> "*b"
+To pass binary data in a variable in the <variablesList>, <prepend> `"*b"`
 to the variable name. The <revQueryDatabase> <function> strips the
-binary marker "*b" and passes it to the database as binary data, rather
+binary marker `"*b"` and passes it to the database as binary data, rather
 than text data. To pass <binary file|binary data> in an <array>
-<element(keyword)>, prepend "*b" to the <element(glossary)|element's>
-value. 
+<element(keyword)>, prepend `"*b"` to the <element(glossary)|element's>
+value.  See <revDataFromQuery> for binary data examples.
 
 >*Tip:*  To execute a <SQL query> that does not return a <record set
 > (database cursor)(glossary)> (such as INSERT or DELETE), use the
@@ -121,10 +123,10 @@ you can check whether the query was successful by checking whether the
 Changes:
 The revQueryDatabase synonym was added in version 2.0.
 
-References: command (glossary), revCloseCursor (command),
-revExecuteSQL (command), function (control structure),
-revQueryIsAtStart (function), LiveCode custom library (glossary),
-variable (glossary), element (glossary),
+References: command (glossary), revCloseCursor (command), 
+revDataFromQuery (function), revExecuteSQL (command), 
+function (control structure), revQueryIsAtStart (function), 
+LiveCode custom library (glossary), variable (glossary), element (glossary),
 standalone application (glossary), binary file (glossary),
 array (glossary), prepend (glossary), SQL query (glossary),
 record set (database cursor) (glossary), return value (glossary),
