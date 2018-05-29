@@ -2737,8 +2737,17 @@ void MCInterfaceExecPopupWidget(MCExecContext &ctxt, MCNameRef p_kind, MCPoint *
 	}
 	else
 	{
+        MCValueRef t_value;
+        if (!MCExtensionConvertToScriptType(ctxt, t_value))
+        {
+            MCValueRelease(t_value);
+            CatchError(ctxt);
+            return false;
+        }
+        
 		ctxt.SetTheResultToEmpty();
-		ctxt.SetItToValue(*t_result);
+		ctxt.SetItToValue(t_value);
+        MCValueRelease(t_value);
 	}
 }
 
