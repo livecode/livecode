@@ -121,31 +121,26 @@ bool MCSellist::getids(MCListRef& r_list)
 
 void MCSellist::Clean()
 {
-    if (objects == nil)
-        return;
-    
-    // Remove any dead objects from the selected list
-    MCSelnode* t_cursor = objects;
-    do
-    {
-        if (!t_cursor->m_ref)
-        {
-            MCSelnode* t_next = t_cursor->next();
-            t_cursor->remove(objects);
-            delete t_cursor;
-            if (objects == nil)
-            	t_cursor = nil;
-			else if (objects == t_next)
-				t_cursor = objects->next();
-			else
-            	t_cursor = t_next;
-        }
-        else
-        {
-            t_cursor = t_cursor->next();
-        }
-    }
-    while (t_cursor != objects);
+	if (objects == nil)
+		return;
+
+	// Remove any dead objects from the selected list
+	MCSelnode* t_cursor = objects;
+	bool t_continue = true;
+
+	while (t_continue && objects != nil)
+	{
+		// If the next object wraps around then we've reached the end of the list
+		MCSelnode* t_next = t_cursor->next();
+		t_continue = t_next != objects;
+		if (!t_cursor->m_ref)
+		{
+			t_cursor->remove(objects);
+			delete t_cursor;
+		}
+
+		t_cursor = t_next;
+	}
 }
 
 void MCSellist::clear(Boolean message)
