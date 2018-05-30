@@ -83,6 +83,8 @@ public foreign handler MCEngineEvalTheItemDelimiter(out rDelimiter as String) re
 
 public foreign handler MCEngineEvalMyResourcesFolder(out pFile as optional String) returns nothing binds to "<builtin>"
 
+public foreign handler MCEngineEvalKeyIsDown(in pKey as UInt8, in pEvent as CBool, out rState as CBool) returns nothing binds to "<builtin>"
+
 /**
 Summary:	Resolves a string to a script object.
 Object:		The string describing the script object.
@@ -632,6 +634,32 @@ syntax MyResourcesFolder is expression
     "my" "resources" "folder"
 begin
     MCEngineEvalMyResourcesFolder(output)
+end syntax
+
+/**
+Summary:    Returns true if the key is down
+
+Returns:    The state of the key
+
+Description:
+Use 'the ... key is down' to determine if the key was down at the start of the
+current event. Use 'the ... key is currently down' to determine if the key is
+down at the time it is being checked.
+
+As in script, command and control keys return the state of the same key on non-macOS
+systems while on macOS they are separate keys. Additionally alt and option are
+different names for the same key.
+
+*/
+syntax KeyIsDown is expression
+    "the" ( "shift" <mKey=0> | \
+            "command" <mKey=1> | \
+            "control" <mKey=2> | \
+            "alt" <mKey=3> | \
+            "option" <mKey=3> | \
+            "caps" "lock" <mKey=4> ) "key" "is" ( "currently" <mEvent=false> | <mEvent=true> ) "down"
+begin
+    MCEngineEvalKeyIsDown(mKey, mEvent, output)
 end syntax
 
 end module
