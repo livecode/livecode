@@ -769,8 +769,7 @@ static bool MCWin32DSReconnectVideoRendererConnection(IGraphBuilder *p_graph, IB
 			t_success = SUCCEEDED(t_other_pin->EnumMediaTypes(&t_mediatype_enum));
 
 		AM_MEDIA_TYPE *t_mt = nil;
-		ULONG t_mt_fetched = 0;
-		while (t_success && (t_new_mediatype.majortype == MEDIATYPE_NULL) && (S_OK == t_mediatype_enum->Next(1, &t_mt, &t_mt_fetched)))
+		while (t_success && (t_new_mediatype.majortype == MEDIATYPE_NULL) && (S_OK == t_mediatype_enum->Next(1, &t_mt, NULL)))
 		{
 			if (_mediasubtype_supports_mirror(t_mt->subtype))
 			{
