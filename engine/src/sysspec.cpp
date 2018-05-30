@@ -233,18 +233,6 @@ void MCS_common_init(void)
     MCsystem -> SetErrno(errno);
 	
 	MCinfinity = HUGE_VAL;
-
-	// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
-	//   we use a fixed locale which isn't available on all systems.
-#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER) && !defined(__EMSCRIPTEN__)
-	MCuppercasingtable = new (nothrow) uint1[256];
-	for(uint4 i = 0; i < 256; ++i)
-		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
-	
-	MClowercasingtable = new (nothrow) uint1[256];
-	for(uint4 i = 0; i < 256; ++i)
-		MClowercasingtable[i] = (uint1)tolower((uint1)i);
-#endif
     
 #if defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
     MCHookRegister(kMCHookGlobalHandlers, &s_global_handlers_desc);
