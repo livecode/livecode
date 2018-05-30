@@ -2077,14 +2077,14 @@ IO_stat MCHcstak::read(IO_handle stream)
 	}
 	uint2 i;
 	uint4 type = 0;
-	char *buffer;
+	char *t_buffer;
 	while (type != HC_TAIL)
 	{
 		if (filetype == HC_BINHEX)
 		{
-			buffer = &fullbuffer[boffset];
-			uint2buff = (uint2 *)buffer;
-			uint4buff = (uint4 *)buffer;
+			t_buffer = &fullbuffer[boffset];
+			uint2buff = (uint2 *)t_buffer;
+			uint4buff = (uint4 *)t_buffer;
 			type = swap_uint4(&uint4buff[1]);
 			size = swap_uint4(&uint4buff[0]);
 			boffset += size;
@@ -2099,15 +2099,15 @@ IO_stat MCHcstak::read(IO_handle stream)
 			fullbuffer = new char[size];
 			if (IO_read(&fullbuffer[8], size - 8, stream) != IO_NORMAL)
 				return IO_ERROR;
-			buffer = fullbuffer;
-			uint2buff = (uint2 *)buffer;
-			uint4buff = (uint4 *)buffer;
+			t_buffer = fullbuffer;
+			uint2buff = (uint2 *)t_buffer;
+			uint4buff = (uint4 *)t_buffer;
 		}
 		uint2 offset;
 		switch (type)
 		{
 		case HC_STAK:
-			version = buffer[108];
+			version = t_buffer[108];
 			if (version > 2)
 				return IO_ERROR;
 			if (version == 0)
@@ -2119,7 +2119,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 				rect.width = 512;
 				rect.height = 342;
 			}
-			script = convert_script(&buffer[1536]);
+			script = convert_script(&t_buffer[1536]);
 			break;
 		case HC_LIST:
 			if (version == 1)
@@ -2134,13 +2134,13 @@ IO_stat MCHcstak::read(IO_handle stream)
 			            npbuffers + 1, sizeof(uint2));
 			pbuffersizes[npbuffers] = size;
 			pbuffers[npbuffers] = new char[size];
-			memcpy(pbuffers[npbuffers++], buffer, size);
+			memcpy(pbuffers[npbuffers++], t_buffer, size);
 			break;
 		case HC_BKGD:
 			{
 				MCHcbkgd *newbkgd = new MCHcbkgd;
 				newbkgd->appendto(hcbkgds);
-				if (newbkgd->parse(buffer) != IO_NORMAL)
+				if (newbkgd->parse(t_buffer) != IO_NORMAL)
 					return IO_ERROR;
 			}
 			break;
@@ -2148,7 +2148,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 			{
 				MCHccard *newcard = new MCHccard;
 				newcard->appendto(hccards);
-				if (newcard->parse(buffer) != IO_NORMAL)
+				if (newcard->parse(t_buffer) != IO_NORMAL)
 					return IO_ERROR;
 			}
 			break;
@@ -2156,7 +2156,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 			{
 				MCHcbmap *newbmap = new MCHcbmap;
 				newbmap->appendto(hcbmaps);
-				if (newbmap->parse(buffer) != IO_NORMAL)
+				if (newbmap->parse(t_buffer) != IO_NORMAL)
 					return IO_ERROR;
 			}
 			break;
@@ -2183,8 +2183,8 @@ IO_stat MCHcstak::read(IO_handle stream)
 				for (i = 0 ; i < nfonts ; i++)
 				{
 					fonts[i].id = swap_uint2(&uint2buff[offset]);
-					fonts[i].name = convert_font(&buffer[(offset + 1) * 2]);
-					offset += (strlen(&buffer[(offset + 1) * 2]) + 4) >> 1;
+					fonts[i].name = convert_font(&t_buffer[(offset + 1) * 2]);
+					offset += (strlen(&t_buffer[(offset + 1) * 2]) + 4) >> 1;
 				}
 			}
 			break;
@@ -2226,8 +2226,8 @@ IO_stat MCHcstak::read(IO_handle stream)
 	else
 		memcpy(fullbuffer, &fullbuffer[roffset], rsize);
 	iconx = icony = cursorx = cursory = 0;
-	buffer = fullbuffer;
-	uint4buff = (uint4 *)buffer;
+	t_buffer = fullbuffer;
+	uint4buff = (uint4 *)t_buffer;
 	char *rdata = &buffer[swap_uint4(&uint4buff[0])];
 	char *rheader = rdata + swap_uint4(&uint4buff[2]);
 	uint2 typecount = get_uint2(&rheader[28]) + 1;
@@ -2475,6 +2475,7 @@ IO_stat hc_import(MCStringRef name, IO_handle stream, MCStack *&sptr)
 
     char* t_name;
     /* UNCHECKED */ MCStringConvertToCString(name, t_name);
+	
 	MCHcstak *hcstak = new MCHcstak(t_name);
 	hcstat_append("Loading stack %s...", t_name);
 	uint2 startlen = MCStringGetLength(MChcstat);
