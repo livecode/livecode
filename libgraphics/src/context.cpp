@@ -1340,6 +1340,14 @@ void MCGContextClipToRect(MCGContextRef self, MCGRectangle p_rect)
 	self -> layer -> canvas -> clipRect(MCGRectangleToSkRect(p_rect), SkRegion::kIntersect_Op, self -> state -> should_antialias);
 }
 
+void MCGContextClipToPath(MCGContextRef self, MCGPathRef p_path)
+{
+    if (!MCGContextIsValid(self) || !MCGPathIsValid(p_path))
+        return;
+    
+    self -> layer -> canvas -> clipPath(*p_path -> path, SkRegion::kIntersect_Op, self -> state -> should_antialias);
+}
+
 void MCGContextSetClipToDeviceRegion(MCGContextRef self, MCGRegionRef p_region)
 {
 	if (!MCGContextIsValid(self) || p_region == nil)

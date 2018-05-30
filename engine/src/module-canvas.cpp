@@ -5786,6 +5786,15 @@ void MCCanvasClipToRect(MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
 }
 
 MC_DLLEXPORT_DEF
+void MCCanvasClipToPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas)
+{
+    __MCCanvasImpl *t_canvas;
+    t_canvas = MCCanvasGet(p_canvas);
+    
+    MCGContextClipToPath(t_canvas->context, *MCCanvasPathGet(p_path));
+}
+
+MC_DLLEXPORT_DEF
 void MCCanvasAddPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
