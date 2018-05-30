@@ -1280,6 +1280,45 @@ extern "C" MC_DLLEXPORT_DEF MCArrayRef MCEngineExecDescribeScriptOfScriptObject(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" MC_DLLEXPORT_DEF void
+MCEngineEvalKeyIsDown(uint8_t p_key, bool p_event, bool& r_down)
+{
+    uint8_t t_modifier = 0;
+    switch (p_key)
+    {
+        case 0:
+            t_modifier = MS_SHIFT;
+            break;
+        case 1:
+            t_modifier = MS_CONTROL;
+            break;
+        case 2:
+            t_modifier = MS_MAC_CONTROL;
+            break;
+        case 3:
+            t_modifier = MS_MOD1;
+            break;
+        case 4:
+            t_modifier = MS_CAPS_LOCK;
+            break;
+        default:
+            r_down = false;
+            MCUnreachable();
+            break;
+    }
+    
+    if (p_event)
+    {
+        r_down = (MCmodifierstate & t_modifier) != 0;
+    }
+    else
+    {
+        r_down = (MCscreen->querymods() & t_modifier) != 0;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCEngineScriptObjectDoesNotExistErrorTypeInfo = nil;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCEngineScriptObjectNoContextErrorTypeInfo = nil;
 
