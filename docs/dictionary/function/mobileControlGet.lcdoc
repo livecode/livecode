@@ -48,11 +48,14 @@ Use the <mobileControlGet> function to get the value of
 **Global properties (All native mobile controls)**
 
 - "id": Returns the id of the control where the name is passed.
+
 - "name": Returns the name of the control where the id is passed.
+
 - "rect": Returns the bounds of the control, relative to the top-left of
 the card. For example "0,0,100,100".
 
 - "visible": Returns true if the control is visible.
+
 - "alpha": Returns the blendlevel of the control as an integer between 0
 and 255.
 
@@ -62,28 +65,33 @@ integer between 0 to 255.
 **Global properties (All native iOS controls)**
 
 - "opaque": Returns true if the control is opaque.
+
 - "ignoreVoiceOverSensitivity": Returns true if the control is
 accessible through Voice Over. Default value is false.
 
 **Browser Specific Properties**
 
 - "URL": returns the currently loaded URL of the webview.
+
 - "canAdvance": returns true if there is a next page in the history.
+
 - "canRetreat": Returns true if there is a previous page in the history.
+
 - "autoFit" (iOS Only): returns true if the page is scaled to fit the
 rect of the control
 
 - "delayRequests" (iOS Only): returns true | false
+
+
 - "dataDetectorTypes": returns a comma delimited list of the types of
 data that are automatically converted to clickable URLs. This is none 
 or more of the following:
-
   - "phone number" 
   - "calendar event" (iOS4.0+)
   - "link"
   - "address" (OS4.0+)
-  
-  
+
+
 - "allowsInlinePlayback" (iOS Only): returns true if the web-view allows
 media files to be played 'inline' in the page.
 
@@ -159,13 +167,14 @@ decelerates when a finger is lifted (maps to the UIScrollView
 decelerationRate property). This can be either normal, fast or a real
 number.
 
+
 - "indicatorStyle" (iOS Only): returns the style of indicators to
 display (maps to the UIScrollView indicatorStyle property). One of the
 following:
   - "default"
   - "white"
   - "black"
-  
+
   
 - "indicatorInsets" (iOS Only): returns how far from the edge of the
 scroller's bounds, the indicators are inset (maps to the UIScrollView
@@ -240,6 +249,7 @@ content. A value of 0.0 indicates playback is stopped, while a value of
 1.0 indicates normal speed. Positive values indicate forward playback,
 while negative values indicate reverse playback. This is real value.
 
+
 - "loadState" (iOS Only): returns the network load state of the player
 (maps to the native loadStateproperty). This is a comma delimited list
 of zero or more of the following:
@@ -253,7 +263,8 @@ automatically if the player runs out of data.
 
 - "playbackState" (iOS Only): returns the current playback state of the
 player (maps to the native playbackState property). This is one of the
-following:  - "stopped": playback is stopped and commences from the
+following:
+  - "stopped": playback is stopped and commences from the
 beginning when started.
   - "playing": playback is current underway.
   - "paused": playback is paused and resumes from the point it was
@@ -290,6 +301,7 @@ the control. This is a string value.
 - "fontSize": returns the size of the font used for text in the control.
 This is an integer value.
 
+
 - "textAlign": returns the alignment used for text in the control (maps
 to the native textAlignment property). One of:
   - "left"
@@ -312,6 +324,7 @@ that can be entered in the field. This is an integer value.
 automatically when editing begins (maps to the native
 clearsOnBeginEditing property). This is a boolean.
 
+
 - "clearButtonMode" (iOS Only): returns the display mode of the standard
 'clear' button overlay (maps to the native clearButtonMode property).
 This is one of the following:
@@ -332,6 +345,7 @@ following:  - "none": do not draw a border
 - "editing" (iOS Only): returns true if control is currently being
 edited (maps to the native editing property). This is a boolean value.
 
+
 - "autoCapitalizationType": returns when the shift-key is automatically
 enabled (maps to the native autocapitalizationType property). This is
 one of the following:
@@ -341,9 +355,11 @@ one of the following:
   - "all characters": the shift-key is enabled at the start of each
 character
 
+
 - "autoCorrectionType": returns whether auto-correct behavior is enabled
 (maps to the native autocorrectionType property). This is one of the
-following:  - "default": use the appropriate auto-correct behavior for
+following:
+  - "default": use the appropriate auto-correct behavior for
 the current script system
   - "no": disable auto-correct behavior
   - "yes": enable auto-correct behavior
@@ -353,6 +369,7 @@ the current script system
 automatically enabled or disabled based on whether the control has
 content or not (maps to the native enablesReturnKeyAutomatically
 property). This is a boolean value.
+
 
 - "keyboardStyle" (iOS Only): returns what kind of appearance the
 keyboard has (maps to the native keyboardAppearance property). This is
@@ -422,15 +439,17 @@ the control. This is a string value.
 - "fontSize": returns the size of the font used for text in the control.
 This is an integer value.
 
+
 - "textAlign": returns the alignment used for text in the control (maps
 to the native textAlignment property). One of:
   - "left"
   - "center"
   - "right"
-  
-  
+
+
 - "editing" (iOS Only): returns true if control is currently being
 edited (maps to the native editing property). This is a boolean value.
+
 
 - "autoCapitalizationType": returns when the shift-key is automatically
 enabled (maps to the native autocapitalizationType property). This is
@@ -444,7 +463,8 @@ character
 
 - "autoCorrectionType": returns whether auto-correct behavior is enabled
 (maps to the native autocorrectionType property). This is one of the
-following:  - "default": use the appropriate auto-correct behavior for
+following:  
+  - "default": use the appropriate auto-correct behavior for
 the current script system
   - "no": disable auto-correct behavior
   - "yes": enable auto-correct behavior
@@ -454,6 +474,7 @@ the current script system
 automatically enabled or disabled based on whether the control has
 content or not (maps to the native enablesReturnKeyAutomatically
 property). This is a boolean value.
+
 
 - "keyboardStyle" (iOS Only): returns what kind of appearance the
 keyboard has (maps to the native keyboardAppearance property). This is
@@ -478,7 +499,8 @@ the native keyboardType property). This is one of the following:
   
 - "returnKeyType": returns what kind of return-key the keyboard has
 (maps to the native returnKeyType property). This is one of the
-following:  - "default": the normal return key
+following:
+  - "default": the normal return key
   - "go": the 'Go' return key
   - "google": the 'Google' return key
   - "join": the 'Join' return key
@@ -557,6 +579,7 @@ pagingEnabled property).
 decelerates when a finger is lifted (maps to the UIScrollView
 decelerationRate property). This can be either normal, fast or a real
 number.
+
 
 - "indicatorStyle" (iOS Only): returns the style of indicators to
 display (maps to the UIScrollView indicatorStyle property). One of the

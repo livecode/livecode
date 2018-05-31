@@ -54,7 +54,7 @@ cannot be an integer.
 
 The result:
 The unique (numeric) id for the new control is returned in
-<the result>.
+<result|the result>.
 
 Description:
 Low-level support has been added for creating and manipulating some 
@@ -64,12 +64,15 @@ Native mobile iOS and Android controllers can only be created
 dynamically in script. 
 
 To destroy a native control use: <mobileControlDelete> 
+
 To configure a native control use: <mobileControlSet> 
+
 To read a property of a native control use: <mobileControlGet> 
+
 To control the behavior of a native control use: <mobileControlDo> 
 
 References: mobileControlDelete (command), mobileControlDo (command),
-mobileControlSet (command), mobileControlGet (command),
+mobileControlSet (command),
 mobileControlGet (function), mobileControlTarget (function),
-the result (function), mobileControls (function)
+result (function), mobileControls (function)
 

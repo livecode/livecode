@@ -26,13 +26,17 @@ the id number of the notification
 
 Returns (array):
 The <mobileGetNotificationDetails> function returns an array containing
-the following entries: body - the text that is to be displayed on the
+the following entries: 
+ - body - the text that is to be displayed on the
 notification dialog (iOS) or statusbar entry (Android) when the
-application is not running title - the button text on the notification
-dialog (iOS) or the title of the statusbar entry (Android) payload - the
+application is not running 
+ - title - the button text on the notification
+dialog (iOS) or the title of the statusbar entry (Android) 
+ - payload - the 
 text presented to the app via the <localNotificationReceived> message
-play sound - boolean indicating if a sound is to be played when the
-notification is received badge value - the number value which should be
+ - play sound - boolean indicating if a sound is to be played when the
+notification is received 
+ - badge value - the number value which should be
 displayed on the app logo (iOS) or on the status bar icon (Android) when
 the notification is received. No number is displayed if this is 0
 (zero). 
