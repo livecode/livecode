@@ -93,10 +93,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    put true into tConfirm
    if pSettings["inclusions"] is "search" then 
       put false into tConfirm
-      -- search for inclusions when building for simulator
-      if pTarget contains "simulator" then
-         revSBSearchForInclusions pStack, pSettings
-      end if
+      revSBSearchForInclusions pStack, pSettings
    end if
    
    -- Get the development root for device builds
