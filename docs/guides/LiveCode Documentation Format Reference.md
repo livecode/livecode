@@ -85,6 +85,8 @@ gives an example of the repetition notation, namely it allows something like
 
 >*Note:* For inline docs, the Syntax elements are automatically generated
 
+All parameters described in the parameters section should appear in angle brackets in the syntax.
+
 #### Summary (required)
 A summary of the API entry being documented. The summary should be a single line. Anything more in-depth should be included in the description.
 
@@ -165,6 +167,8 @@ The key type and value type are optional. If one of the values is a sub-array, a
 }
 ```
 The indentation is not necessary, but is helpful for readability.
+
+Any parameter specified using `<parameterName>` in the Syntax element should be described in the parameters section.
 
 #### Value and return parameters
 For simple return parameters, i.e. the direct return value of a function, use the Returns element.
