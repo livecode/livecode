@@ -38,7 +38,7 @@ public handler TestAssignListOpForeignBridge()
 		put false into tVar
 	
 		variable tValue as Pointer	
-		put MCProperListFetchElementAtIndex([tVar], 1) into tValue
+		put MCProperListFetchElementAtIndex([tVar], 0) into tValue
 	
 		test "foreign value bridged to optional any in list assign" \
 			when not __IsForeignValue(tValue)
