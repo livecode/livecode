@@ -32,22 +32,22 @@ A comma-delimited list of synonyms for this API entry.
 #### Type (required)
 The type of this API entry. One of the following:
 (API-level)
-	* command
-	* function
-	* property
-	* message
-	* constant
-	* keyword
-	* control structure
-	* operator
-	* statement
-	* expression
+* command
+* function
+* property
+* message
+* constant
+* keyword
+* control structure
+* operator
+* statement
+* expression
 	
 (Glossary-level)
-	* library
-	* widget
-	* glossary
-	* object
+* library
+* widget
+* glossary
+* object
 
 The glossary-level entries have part of their content generated from the API-level entries.
 
@@ -58,14 +58,14 @@ A description of how to use or call this facet of the API. May just be the name 
 An entry may have a number of Syntax elements, if there are variations within the same entry.
 
 The following can be used to specify livecode syntax:
-- [optional]
-- [repeated optional ...]
-- { variant 1 | variant 2 }
-- <parameterName>
+- `[optional]`
+- `[repeated optional ...]`
+- `{ variant 1 | variant 2 }`
+- `<parameterName>`
 
 For example, the syntax for the first variant of the `split` command:
 
-	split <variable> {by | using | with} <primaryDelimiter> [and <secondaryDelimiter>]
+	split <variableToSplit> {by | using | with} <primaryDelimiter> [and <secondaryDelimiter>]
 	
 describes the following possible usages:
 - `split tVar by comma`
