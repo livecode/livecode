@@ -521,7 +521,6 @@ public class NotificationModule
         NotificationManager t_notification_manager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
         
         Notification.Builder t_builder = new Notification.Builder(context);
-        t_builder.setContentTitle(p_title);
         t_builder.setSmallIcon(t_icon);
         t_builder.setAutoCancel(true);
         t_builder.setNumber(p_badge_value);
