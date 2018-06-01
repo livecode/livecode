@@ -152,9 +152,11 @@ public class NFCModule
 	private void handleIntent(Intent p_intent)
 	{
 		String t_action = p_intent.getAction();
-		if (t_action.equals(NfcAdapter.ACTION_NDEF_DISCOVERED) ||
-			t_action.equals(NfcAdapter.ACTION_TECH_DISCOVERED) ||
-			t_action.equals(NfcAdapter.ACTION_TAG_DISCOVERED))
+        
+        // t_action can be NULL
+		if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(t_action) ||
+			NfcAdapter.ACTION_TECH_DISCOVERED.equals(t_action) ||
+			NfcAdapter.ACTION_TAG_DISCOVERED.equals(t_action))
 		{
 			Map<String, Object> t_tag_map = new HashMap<String, Object>();
 			
