@@ -129,7 +129,15 @@ Parse_stat MCExpression::gettheparam(MCScriptPoint& sp, Boolean single, MCExpres
 {
     initpoint(sp);
     if (sp.skip_token(SP_FACTOR, TT_OF) != PS_NORMAL)
-        return PS_NORMAL;
+	{
+		if (!single)
+			return PS_NORMAL;
+		else
+		{
+			MCperror->add(PE_FACTOR_NOOF, sp);
+			return PS_ERROR;
+		}
+	}
     if (sp.parseexp(single, False, exp) != PS_NORMAL)
     {
         MCperror->add
