@@ -2875,17 +2875,20 @@ bool MCField::imagechanged(MCImage *p_image, bool p_deleting)
 	bool t_used = false;
 	MCParagraph *t_para = paragraphs;
 
-	do
+	if (t_para != NULL)
 	{
-		t_used = t_para->imagechanged(p_image, p_deleting) || t_used;
-		t_para = t_para->next();
-	}
-	while (t_para != paragraphs);
-
-	if (t_used)
-	{
-		do_recompute(true);
-		layer_redrawall();
+		do
+		{
+			t_used = t_para->imagechanged(p_image, p_deleting) || t_used;
+			t_para = t_para->next();
+		}
+		while (t_para != paragraphs);
+		
+		if (t_used)
+		{
+			do_recompute(true);
+			layer_redrawall();
+		}
 	}
 
 	return t_used;
