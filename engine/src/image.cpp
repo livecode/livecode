@@ -2011,7 +2011,12 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, const MC
             uindex_t t_data_size;
             t_vector_rep->GetData(t_data, t_data_size);
             
-            MCGContextPlaybackRectOfDrawing(t_context, MCMakeSpan((const byte_t*)t_data, t_data_size), MCGRectangleMake(0, 0, t_width, t_height), MCGRectangleMake(0, 0, t_size.width, t_size.height));
+            MCGPaintRef t_current_color;
+            getcurrentcolor(t_current_color);
+            
+            MCGContextPlaybackRectOfDrawing(t_context, MCMakeSpan((const byte_t*)t_data, t_data_size), MCGRectangleMake(0, 0, t_width, t_height), MCGRectangleMake(0, 0, t_size.width, t_size.height), t_current_color);
+            
+            MCGPaintRelease(t_current_color);
         }
         
         MCGContextRelease(t_context);

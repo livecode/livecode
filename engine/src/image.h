@@ -483,6 +483,8 @@ public:
 		return resizequalitytoimagefilter(resizequality);
 	}
 
+    void getcurrentcolor(MCGPaintRef& r_current_color);
+    
 	void setframe(int32_t p_newframe);
 	void advanceframe();
 

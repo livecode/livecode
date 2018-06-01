@@ -30,6 +30,8 @@ typedef struct __MCGMask *MCGMaskRef;
 typedef struct __MCGDashes *MCGDashesRef;
 typedef struct __MCGRegion *MCGRegionRef;
 
+typedef class MCGPaint *MCGPaintRef;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Pixel format (32bit)
@@ -783,6 +785,16 @@ void MCGraphicsCompact(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCGPaintCreateWithNone(MCGPaintRef& r_paint);
+bool MCGPaintCreateWithSolidColor(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha, MCGPaintRef& r_paint);
+bool MCGPaintCreateWithPattern(MCGImageRef p_image, MCGAffineTransform p_transform, MCGImageFilter p_filter, MCGPaintRef& r_paint);
+bool MCGPaintCreateWithGradient(MCGGradientFunction function, const MCGFloat* stops, const MCGColor* colors, uindex_t ramp_length, bool mirror, bool wrap, uint32_t repeats, MCGAffineTransform transform, MCGImageFilter filter, MCGPaintRef& r_paint);
+
+MCGPaintRef MCGPaintRetain(MCGPaintRef paint);
+void MCGPaintRelease(MCGPaintRef paint);
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Create new image with pixel data copied from raster
 bool MCGImageCreateWithRaster(const MCGRaster& raster, MCGImageRef& r_image);
 
@@ -937,6 +949,7 @@ void MCGContextClipToRegion(MCGContextRef self, MCGRegionRef p_region);
 // Fill attributes
 void MCGContextSetFillRule(MCGContextRef context, MCGFillRule rule);
 void MCGContextSetFillOpacity(MCGContextRef context, MCGFloat opacity);
+void MCGContextSetFillPaint(MCGContextRef context, MCGPaintRef paint);
 void MCGContextSetFillNone(MCGContextRef context);
 void MCGContextSetFillRGBAColor(MCGContextRef context, MCGFloat red, MCGFloat green, MCGFloat blue, MCGFloat alpha);
 void MCGContextSetFillPattern(MCGContextRef context, MCGImageRef image, MCGAffineTransform transform, MCGImageFilter filter);
@@ -945,6 +958,7 @@ void MCGContextSetFillPaintStyle(MCGContextRef context, MCGPaintStyle style);
 
 // Stroke attributes
 void MCGContextSetStrokeOpacity(MCGContextRef context, MCGFloat opacity);
+void MCGContextSetStrokePaint(MCGContextRef context, MCGPaintRef paint);
 void MCGContextSetStrokeNone(MCGContextRef context);
 void MCGContextSetStrokeRGBAColor(MCGContextRef context, MCGFloat red, MCGFloat green, MCGFloat blue, MCGFloat alpha);
 void MCGContextSetStrokePattern(MCGContextRef context, MCGImageRef image, MCGAffineTransform transform, MCGImageFilter filter);
@@ -1023,7 +1037,7 @@ void MCGContextDrawPlatformText(MCGContextRef context, const unichar_t *text, ui
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
 bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds);
 
-void MCGContextPlaybackRectOfDrawing(MCGContextRef context, MCSpan<const byte_t> p_drawing, MCGRectangle p_src, MCGRectangle p_dst);
+void MCGContextPlaybackRectOfDrawing(MCGContextRef context, MCSpan<const byte_t> p_drawing, MCGRectangle p_src, MCGRectangle p_dst, MCGPaintRef p_current_color);
 
 ////////////////////////////////////////////////////////////////////////////////
 

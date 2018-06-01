@@ -195,6 +195,8 @@ struct __MCCanvasImpl
 	const MCCanvasProperties &props() const { return prop_stack[prop_index]; }
 	
 	MCGContextRef context;
+    
+    MCGPaintRef last_paint;
 };
 
 __MCCanvasImpl *MCCanvasGet(MCCanvasRef p_canvas);
