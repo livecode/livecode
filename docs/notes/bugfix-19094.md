@@ -1,1 +1,1 @@
-# Certain unicode characters render incorrectly on Android 7
+# Ensure single-codepoint grapheme clusters are checked for font support
