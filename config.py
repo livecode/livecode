@@ -21,6 +21,26 @@ import re
 import os
 import subprocess
 
+# The set of platforms for which this branch supports automated builds
+BUILDBOT_PLATFORM_TRIPLES = (
+    'x86-linux-debian8',
+    'x86_64-linux-debian8',
+    'armv6-android-api9',
+    'universal-mac-macosx10.9', # Minimum deployment target
+    'universal-ios-iphoneos11.4',
+    'universal-ios-iphoneos11.2',
+    'universal-ios-iphoneos10.2',
+    'universal-ios-iphoneos9.2',
+    'universal-ios-iphonesimulator11.4',
+    'universal-ios-iphonesimulator11.2',
+    'universal-ios-iphonesimulator10.2',
+    'universal-ios-iphonesimulator9.2',
+    'universal-ios-iphonesimulator8.2',
+    'x86-win32', # TODO[2017-03-23] More specific ABI
+    'x86_64-win32',
+    'js-emscripten-sdk1.35',
+)
+
 KNOWN_PLATFORMS = (
     'linux-x86', 'linux-x86_64', 'android-armv6',
     'mac', 'ios', 'win-x86', 'win-x86_64', 'emscripten'

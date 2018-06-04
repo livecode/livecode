@@ -36,25 +36,6 @@ import uuid
 import config
 import fetch
 
-# The set of platforms for which this branch supports automated builds
-BUILDBOT_PLATFORM_TRIPLES = (
-    'x86-linux-debian8',
-    'x86_64-linux-debian8',
-    'armv6-android-api9',
-    'universal-mac-macosx10.9', # Minimum deployment target
-    'universal-ios-iphoneos11.4',
-    'universal-ios-iphoneos11.2',
-    'universal-ios-iphoneos10.2',
-    'universal-ios-iphoneos9.2',
-    'universal-ios-iphonesimulator11.4',
-    'universal-ios-iphonesimulator11.2',
-    'universal-ios-iphonesimulator10.2',
-    'universal-ios-iphonesimulator9.2',
-    'universal-ios-iphonesimulator8.2',
-    'x86-win32', # TODO[2017-03-23] More specific ABI
-    'x86_64-win32',
-    'js-emscripten-sdk1.35',
-)
 # The set of build tasks that this branch supports
 BUILDBOT_TARGETS = ('fetch', 'config', 'compile', 'bin-archive', 'bin-extract',
     'dist-notes', 'dist-docs', 'dist-server', 'dist-tools', 'dist-upload',
@@ -104,7 +85,7 @@ def get_build_edition():
 def check_target_triple():
     # Check that this branch can actually be built for the specified platform
     triple = get_target_triple()
-    if not triple in BUILDBOT_PLATFORM_TRIPLES:
+    if not triple in config.BUILDBOT_PLATFORM_TRIPLES:
         print('Buildbot build for "{}" platform is not supported'.format(triple))
         sys.exit(SKIP_EXIT_STATUS)
 
