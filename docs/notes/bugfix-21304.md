@@ -1,0 +1,1 @@
+# Clear unshared data when compacting stack
