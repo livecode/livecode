@@ -613,7 +613,8 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCVariabl
 
 bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting)
 {
-    if (p_value . type == kMCExecValueTypeDataRef)
+    if (MCExecTypeIsValueRef(p_value.type) &&
+        MCValueGetTypeCode(p_value.valueref_value) == kMCValueTypeCodeData)
     {
         if (can_become_data(ctxt, p_path))
         {
