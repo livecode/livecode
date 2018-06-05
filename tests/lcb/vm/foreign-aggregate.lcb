@@ -26,4 +26,18 @@ public handler TestForeignAggregate_Roundtrip()
 	end repeat
 end handler
 
+public foreign type AggregateWithPointer binds to "MCAggregateTypeInfo:r"
+constant kAggregateWithNullPointer is [nothing]
+
+public handler TestForeignAggregateNullPointerRoundTrip()
+	variable tAggregate as AggregateWithPointer
+	put kAggregateWithNullPointer into tAggregate
+	
+	variable tList as List
+	put tAggregate into tList
+	
+	test "aggregate containing null pointer roundtrips" when \
+		tList[1] is kAggregateWithNullPointer[1]
+end handler
+
 end module
