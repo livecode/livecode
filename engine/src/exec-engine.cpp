@@ -704,7 +704,8 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
 	else
     {
         if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeData &&
-            p_value . type == kMCExecValueTypeDataRef)
+            MCExecTypeIsValueRef(p_value.type) &&
+            MCValueGetTypeCode(p_value.valueref_value) == kMCValueTypeCodeData)
         {
             // AL-2014-11-20: Make sure the incoming exec value is released.
             MCAutoDataRef t_value_data;
