@@ -2811,25 +2811,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         _CurrentRuneLocale->__runetype[202] = _CurrentRuneLocale->__runetype[201];
         
-        // Initialize our case mapping tables. We always use the MacRoman locale.
-        CFStringRef t_raw;
-        CFMutableStringRef t_lower, t_upper;
-        CFIndex t_ignored;
-        MCuppercasingtable = new (nothrow) uint8_t[256];
-        MClowercasingtable = new (nothrow) uint8_t[256];
-        for(uindex_t i = 0; i < 256; ++i)
-            MCuppercasingtable[i] = uint8_t(i);
-        t_raw = CFStringCreateWithBytes(NULL, MCuppercasingtable, 256, kCFStringEncodingMacRoman, false);
-        t_lower = CFStringCreateMutableCopy(NULL, 0, t_raw);
-        t_upper = CFStringCreateMutableCopy(NULL, 0, t_raw);
-        CFStringLowercase(t_lower, NULL);
-        CFStringUppercase(t_upper, NULL);
-        CFStringGetBytes(t_lower, CFRangeMake(0, 256), kCFStringEncodingMacRoman, '?', false, MClowercasingtable, 256, &t_ignored);
-        CFStringGetBytes(t_upper, CFRangeMake(0, 256), kCFStringEncodingMacRoman, '?', false, MCuppercasingtable, 256, &t_ignored);
-        CFRelease(t_raw);
-        CFRelease(t_lower);
-        CFRelease(t_upper);
-        
         MCinfinity = HUGE_VAL;
         
         // SN-2014-10-08: [[ YosemiteUpdate ]] gestaltSystemVersion stops to 9 after any Minor/Bugfix >= 10
@@ -2920,6 +2901,25 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             setlinebuf(stderr);
         }
 #endif // _MAC_SERVER
+
+        // Initialize our case mapping tables. We always use the MacRoman locale.
+        CFStringRef t_raw;
+        CFMutableStringRef t_lower, t_upper;
+        CFIndex t_ignored;
+        MCuppercasingtable = new (nothrow) uint8_t[256];
+        MClowercasingtable = new (nothrow) uint8_t[256];
+        for(uindex_t i = 0; i < 256; ++i)
+            MCuppercasingtable[i] = uint8_t(i);
+        t_raw = CFStringCreateWithBytes(NULL, MCuppercasingtable, 256, kCFStringEncodingMacRoman, false);
+        t_lower = CFStringCreateMutableCopy(NULL, 0, t_raw);
+        t_upper = CFStringCreateMutableCopy(NULL, 0, t_raw);
+        CFStringLowercase(t_lower, NULL);
+        CFStringUppercase(t_upper, NULL);
+        CFStringGetBytes(t_lower, CFRangeMake(0, 256), kCFStringEncodingMacRoman, '?', false, MClowercasingtable, 256, &t_ignored);
+        CFStringGetBytes(t_upper, CFRangeMake(0, 256), kCFStringEncodingMacRoman, '?', false, MCuppercasingtable, 256, &t_ignored);
+        CFRelease(t_raw);
+        CFRelease(t_lower);
+        CFRelease(t_upper);
         
         return true;
     }

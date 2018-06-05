@@ -37,7 +37,7 @@ is set to 1 and is not modifiable.
 Due to limitations of the platform, applications on Windows will not be
 able to enable or disable pixel scaling. On Android there is no
 equivalent OS-level scaling provided, so pixel scaling will always be
-used. 
+used and attempting to set this property on Android will throw an error. 
 
 Handling multiple displays
 Desktop systems may have multiple displays attached, each with their own
@@ -52,17 +52,16 @@ all connected displays.
 Two additional global properties have been added to provide the pixel
 scale values when multiple displays are available:
 
-* The <screenPixelScale property (property)>returns the pixel scale of
+* The <screenPixelScale> <property> returns the pixel scale of
   the main screen
-* The <screenPixelScales> <property> a return-delimited list of the pixel
+* The <screenPixelScales> <property> returns a return-delimited list of the pixel
   scale of each connected display
 
 
 References: iphoneUseDeviceResolution (command), pixelScale (property),
 systemPixelScale (property), usePixelScaling (property),
 property (glossary), screenPixelScales (property),
-screenPixelScale (property),
-screenPixelScale property (property)
+screenPixelScale (property)
 
 Tags: windowing
 

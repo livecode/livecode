@@ -28,7 +28,8 @@ Example:
 get revDataFromQuery(comma, return, tConnectionId, tQuery)
 
 Example:
-get revDataFromQuery(tab, return, tConnectionId, "SELECT * FROM myTable WHERE id = :1", "tCustomerDetails[id]")
+get revDataFromQuery(tab, return, tConnectionId, \
+"SELECT * FROM myTable WHERE id = :1", "tCustomerDetails[id]")
 
 Parameters:
 columnDelim:
@@ -86,40 +87,40 @@ name in the variablesList for each of these placeholders. For example,
 if you have two <variable|variables> called "valueX" and "valueY", you
 can use a <SQLQuery> that includes placeholders as follows:
 
-get revDataFromQuery(, , myID,"SELECT x,y FROM test WHERE x = :1 AND y =
-:2", "valueX", "valueY" )
+    get revDataFromQuery(, , myID, "SELECT x,y FROM test " && \
+    "WHERE x = :1 AND y = :2", "valueX", "valueY" )
 
 The content of the variable valueX is substituted for the ":1" in the
 <SQLQuery> (in both places where ":1" appears), and the content of
 valueY is substituted for ":2".
 
-To pass binary data in a variable in the variablesList, <prepend> "*b"
+To pass binary data in a variable in the variablesList, <prepend> `"*b"`
 to the variable name. The <revDataFromQuery> <function> strips the
-binary marker "*b" and passes it to the database as binary data, rather
+binary marker `"*b"` and passes it to the database as binary data, rather
 than text data.
 
-local tImageData
-put the text of image "MyImage" into tImageData
-get revDataFromQuery(, , myID,
-"SELECT size FROM images WHERE imagedata = :1", "*btImageData" )
+    local tImageData
+    put the text of image "MyImage" into tImageData
+    get revDataFromQuery(, , myID, \
+    "SELECT size FROM images WHERE imagedata = :1", "*btImageData" )
 
 You can also use the name of a numerically indexed array, instead of a
 list of variable names. In this case, the elements of the array are
 substituted for the corresponding placeholders. To pass binary data in
-an array element, prepend "*b" to the element's value.
+an array element, prepend `"*b"` to the element's value.
 
-local tImageDataArray
-put "*b" & the text of image "MyImage" into tImageDataArray[1]
-get revDataFromQuery(, , myId,
-"SELECT size FROM images WHERE imagedata = :1", "tImageDataArray" )
+    local tImageDataArray
+    put "*b" & the text of image "MyImage" into tImageDataArray[1]
+    get revDataFromQuery(, , myId, \
+    "SELECT size FROM images WHERE imagedata = :1", "tImageDataArray" )
 
 To pass an asterisk as part of the query, substitute a percent sign (%).
 For example, to use the query
-"SELECT * FROM Customers WHERE Cust.Name Like '*Inc.'", use a statement
+`"SELECT * FROM Customers WHERE Cust.Name Like '*Inc.'"`, use a statement
 like the following:
 
-get revDataFromQuery(2,
-"SELECT * FROM Customers WHERE Cust.Name Like '%Inc.'" )
+    get revDataFromQuery(2, \
+    "SELECT * FROM Customers WHERE Cust.Name Like '%Inc.'" )
 
 If the query is not successful, the <revDataFromQuery> <function>
 <return|returns> an error message beginning with the <string>

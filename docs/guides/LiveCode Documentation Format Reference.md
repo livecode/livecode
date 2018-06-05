@@ -32,22 +32,22 @@ A comma-delimited list of synonyms for this API entry.
 #### Type (required)
 The type of this API entry. One of the following:
 (API-level)
-	* command
-	* function
-	* property
-	* message
-	* constant
-	* keyword
-	* control structure
-	* operator
-	* statement
-	* expression
+* command
+* function
+* property
+* message
+* constant
+* keyword
+* control structure
+* operator
+* statement
+* expression
 	
 (Glossary-level)
-	* library
-	* widget
-	* glossary
-	* object
+* library
+* widget
+* glossary
+* object
 
 The glossary-level entries have part of their content generated from the API-level entries.
 
@@ -58,14 +58,14 @@ A description of how to use or call this facet of the API. May just be the name 
 An entry may have a number of Syntax elements, if there are variations within the same entry.
 
 The following can be used to specify livecode syntax:
-- [optional]
-- [repeated optional ...]
-- { variant 1 | variant 2 }
-- <parameterName>
+- `[optional]`
+- `[repeated optional ...]`
+- `{ variant 1 | variant 2 }`
+- `<parameterName>`
 
 For example, the syntax for the first variant of the `split` command:
 
-	split <variable> {by | using | with} <primaryDelimiter> [and <secondaryDelimiter>]
+	split <variableToSplit> {by | using | with} <primaryDelimiter> [and <secondaryDelimiter>]
 	
 describes the following possible usages:
 - `split tVar by comma`
@@ -84,6 +84,8 @@ gives an example of the repetition notation, namely it allows something like
 	answer files with type tType1 or type tType2 or type tType3 or type tType4
 
 >*Note:* For inline docs, the Syntax elements are automatically generated
+
+All parameters described in the parameters section should appear in angle brackets in the syntax.
 
 #### Summary (required)
 A summary of the API entry being documented. The summary should be a single line. Anything more in-depth should be included in the description.
@@ -165,6 +167,8 @@ The key type and value type are optional. If one of the values is a sub-array, a
 }
 ```
 The indentation is not necessary, but is helpful for readability.
+
+Any parameter specified using `<parameterName>` in the Syntax element should be described in the parameters section.
 
 #### Value and return parameters
 For simple return parameters, i.e. the direct return value of a function, use the Returns element.

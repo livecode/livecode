@@ -1,1 +1,1 @@
-# Fix crash when launching android app from local notification
+# Fix crash when launching or resuming android app from local notification

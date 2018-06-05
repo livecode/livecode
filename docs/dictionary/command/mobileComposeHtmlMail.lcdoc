@@ -69,7 +69,7 @@ Set by <mobileComposeHtmlMail> to indicate its results.
 
 Description:
 Use the <mobileComposeHtmlMail> <command> to create an HTML email
-message with attachments from within a <stack on iOS or Android>.
+message with attachments from within a <stack> on iOS or Android.
 
 This command interfaces with the iOS and Android mail composition
 interface 
@@ -100,7 +100,7 @@ function. This returns true if the mail client is configured.
 References: revMail (command), revGoURL (command),
 revMailUnicode (command), mobileComposeUnicodeMail (command),
 mobileComposeMail (command), mobileCanSendMail (function),
-command (glossary), stack on iOS or Android (object)
+command (glossary), stack (object)
 
 Tags: networking
 

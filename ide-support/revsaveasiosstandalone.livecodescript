@@ -93,10 +93,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    put true into tConfirm
    if pSettings["inclusions"] is "search" then 
       put false into tConfirm
-      -- search for inclusions when building for simulator
-      if pTarget contains "simulator" then
-         revSBSearchForInclusions pStack, pSettings
-      end if
+      revSBSearchForInclusions pStack, pSettings
    end if
    
    -- Get the development root for device builds
@@ -1175,7 +1172,7 @@ private command revCopyMobileFiles pSettings, pBaseFolder, pAppBundle, pAppTarge
       end if
       
       -- If the file is a font, then just copy and record as such
-      if tSource ends with ".ttf" or tSource ends with ".ttc" then
+      if revSBFileIsFontFile(tSource) then
          revSBCopyFileToFile tSource, tTarget, "revStandaloneProgressCallback", the long id of me
          put "font", tTarget & return after rFonts
          next repeat

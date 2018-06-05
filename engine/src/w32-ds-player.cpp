@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <DShow.h>
 #include <d3d9.h>
 #include <vmr9.h>
+#include <dvdmedia.h>
 
 #include "globals.h"
 #include "stack.h"
@@ -364,18 +365,27 @@ bool MCWin32DSPlayer::HandleTimer()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCWin32DSFreeMediaType(AM_MEDIA_TYPE &t_type)
+void MCWin32DSFreeMediaType(AM_MEDIA_TYPE &p_type)
 {
-	if (t_type.cbFormat != 0)
+	if (p_type.cbFormat != 0)
 	{
-		CoTaskMemFree(t_type.pbFormat);
-		t_type.cbFormat = 0;
-		t_type.pbFormat = nil;
+		CoTaskMemFree(p_type.pbFormat);
+		p_type.cbFormat = 0;
+		p_type.pbFormat = nil;
 	}
-	if (t_type.pUnk != nil)
+	if (p_type.pUnk != nil)
 	{
-		t_type.pUnk->Release();
-		t_type.pUnk = nil;
+		p_type.pUnk->Release();
+		p_type.pUnk = nil;
+	}
+}
+
+void MCWin32DSDeleteMediaType(AM_MEDIA_TYPE *p_type)
+{
+	if (p_type != nil)
+	{
+		MCWin32DSFreeMediaType(*p_type);
+		CoTaskMemFree(p_type);
 	}
 }
 
@@ -474,6 +484,60 @@ bool MCWin32DSFilterIsConnected(IBaseFilter *p_filter, PIN_DIRECTION p_direction
 	return false;
 }
 
+bool MCWin32DSFilterGetFirstPin(IBaseFilter *p_filter, PIN_DIRECTION p_direction, CComPtr<IPin> &r_pin)
+{
+	CComPtr<IEnumPins> t_enum_pins;
+	if (!SUCCEEDED(p_filter->EnumPins(&t_enum_pins)))
+		return false;
+
+	CComPtr<IPin> t_pin;
+	while (S_OK == t_enum_pins->Next(1, &t_pin, NULL))
+	{
+		PIN_DIRECTION t_direction;
+		if (SUCCEEDED(t_pin->QueryDirection(&t_direction)))
+		{
+			if (MCWin32DSPinIsConnected(t_pin) && t_direction == p_direction)
+			{
+				r_pin = t_pin;
+				return true;
+			}
+		}
+		t_pin.Release();
+	}
+
+	return false;
+}
+
+bool MCWin32DSGetMediaTypeFrameDuration(const AM_MEDIA_TYPE *p_type, MCPlayerDuration &r_duration)
+{
+	if (p_type == nil)
+		return false;
+
+	if (p_type->pbFormat == nil)
+		return false;
+
+	if (p_type->formattype == FORMAT_VideoInfo)
+	{
+		if (p_type->cbFormat < sizeof(VIDEOINFOHEADER))
+			return false;
+
+		VIDEOINFOHEADER *t_videoinfoheader = (VIDEOINFOHEADER*)p_type->pbFormat;
+		r_duration = t_videoinfoheader->AvgTimePerFrame;
+	}
+	else if (p_type->formattype == FORMAT_VideoInfo2)
+	{
+		if (p_type->cbFormat < sizeof(VIDEOINFOHEADER2))
+			return false;
+
+		VIDEOINFOHEADER2 *t_videoinfoheader2 = (VIDEOINFOHEADER2*)p_type->pbFormat;
+		r_duration = t_videoinfoheader2->AvgTimePerFrame;
+	}
+	else
+		return false;
+
+	return true;
+}
+
 // Examines the input pins of each renderer filter to determine the supported media types, and video frame-rate if applicable
 bool MCWin3DSGetFilterGraphMediaInfo(IFilterGraph *p_graph, MCPlatformPlayerMediaTypes &r_types, MCPlatformPlayerDuration &r_frame_length)
 {
@@ -525,12 +589,7 @@ bool MCWin3DSGetFilterGraphMediaInfo(IFilterGraph *p_graph, MCPlatformPlayerMedi
 						else if (t_media_type.majortype == MEDIATYPE_Video)
 						{
 							// Take a note of the video frame rate
-							VIDEOINFOHEADER *t_videoinfoheader = nil;
-							if (t_media_type.cbFormat >= sizeof(VIDEOINFOHEADER))
-							{
-								t_videoinfoheader = (VIDEOINFOHEADER*)t_media_type.pbFormat;
-								t_frame_length = t_videoinfoheader->AvgTimePerFrame;
-							}
+							/* UNCHECKED */ MCWin32DSGetMediaTypeFrameDuration(&t_media_type, t_frame_length);
 
 							t_filter_types |= kMCPlatformPlayerMediaTypeVideo;
 						}
@@ -676,6 +735,70 @@ bool MCWin32DSPlayer::SetVisible(bool isVisible)
 	return S_OK == pVideo->put_Visible(isVisible ? OATRUE : OAFALSE );
 }
 
+static inline bool _mediasubtype_supports_mirror(const GUID &p_subtype)
+{
+	return p_subtype == MEDIASUBTYPE_ARGB32;
+}
+
+// check the connection video subformat and attempt to reconnect if it'll break video mirroring.
+static bool MCWin32DSReconnectVideoRendererConnection(IGraphBuilder *p_graph, IBaseFilter *p_vmr9)
+{
+	bool t_success = true;
+
+	CComPtr<IPin> t_pin;
+	if (t_success)
+		t_success = MCWin32DSFilterGetFirstPin(p_vmr9, PINDIR_INPUT, t_pin);
+
+	AM_MEDIA_TYPE t_current_mediatype;
+	MCMemoryClear(t_current_mediatype);
+	if (t_success)
+		t_success = SUCCEEDED(t_pin->ConnectionMediaType(&t_current_mediatype));
+
+	AM_MEDIA_TYPE t_new_mediatype;
+	MCMemoryClear(t_new_mediatype);
+
+	// If the current connection media type is not compatible then look for one that is
+	if (t_success && !_mediasubtype_supports_mirror(t_current_mediatype.subtype))
+	{
+		CComPtr<IPin> t_other_pin;
+		if (t_success)
+			t_success = SUCCEEDED(t_pin->ConnectedTo(&t_other_pin));
+
+		CComPtr<IEnumMediaTypes> t_mediatype_enum;
+		if (t_success)
+			t_success = SUCCEEDED(t_other_pin->EnumMediaTypes(&t_mediatype_enum));
+
+		AM_MEDIA_TYPE *t_mt = nil;
+		while (t_success && (t_new_mediatype.majortype == MEDIATYPE_NULL) && (S_OK == t_mediatype_enum->Next(1, &t_mt, NULL)))
+		{
+			if (_mediasubtype_supports_mirror(t_mt->subtype))
+			{
+				t_new_mediatype.majortype = t_mt->majortype;
+				t_new_mediatype.subtype = t_mt->subtype;
+				t_new_mediatype.bFixedSizeSamples = t_mt->bFixedSizeSamples;
+				t_new_mediatype.bTemporalCompression = t_mt->bTemporalCompression;
+			}
+
+			MCWin32DSDeleteMediaType(t_mt);
+		}
+
+		// Fail if a compatible media type was not found
+		if (t_success)
+			t_success = t_new_mediatype.majortype != MEDIATYPE_NULL;
+
+		CComPtr<IFilterGraph2> t_fg2;
+		if (t_success)
+			t_success = SUCCEEDED(p_graph->QueryInterface(&t_fg2));
+		if (t_success)
+			t_success = SUCCEEDED(t_fg2->ReconnectEx(t_pin, &t_new_mediatype));
+	}
+
+	MCWin32DSFreeMediaType(t_current_mediatype);
+	MCWin32DSFreeMediaType(t_new_mediatype);
+
+	return t_success;
+}
+
 //open file
 bool MCWin32DSPlayer::OpenFile(MCStringRef p_filename)
 {
@@ -762,8 +885,13 @@ bool MCWin32DSPlayer::OpenFile(MCStringRef p_filename)
 		}
 	}
 
-	if (t_success && t_vmr9 != NULL && !MCWin32DSFilterIsConnected(t_vmr9, PINDIR_INPUT))
-		t_success = SUCCEEDED(t_graph->RemoveFilter(t_vmr9));
+	if (t_success && t_vmr9 != NULL)
+	{
+		if (MCWin32DSFilterIsConnected(t_vmr9, PINDIR_INPUT))
+			/* UNCHECKED */ MCWin32DSReconnectVideoRendererConnection(t_graph, t_vmr9);
+		else
+			t_success = SUCCEEDED(t_graph->RemoveFilter(t_vmr9));
+	}
 
 	if (t_success)
 		t_success = SetFilterGraph(t_graph);
@@ -1105,6 +1233,9 @@ bool MCWin32DSPlayer::SetMirrored(bool p_mirrored)
 {
 	if (m_mirrored == p_mirrored)
 		return true;
+
+	if (m_graph == nil)
+		return false;
 
 	CComPtr<IBaseFilter> t_vmr9;
 	if (!SUCCEEDED(m_graph->FindFilterByName(L"MCWin32DSVMR9Filter", &t_vmr9)))

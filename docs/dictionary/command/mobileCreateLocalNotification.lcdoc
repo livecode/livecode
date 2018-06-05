@@ -50,8 +50,8 @@ The id of the local notification that is created is returned by the
 
 Description:
 Use the <mobileCreateLocalNotification> <command> to schedule a Local
-Notification with the operating system from within a <stack on iOS or
-Android>. 
+Notification with the operating system from within a <stack> on iOS or
+Android. 
 
 This command schedules Local Notifications with the iOS or Android
 operating sytem and delivers the <alertPayload> to the application. The
@@ -61,7 +61,7 @@ message.
 References: mobileCancelAllLocalNotifications (command),
 mobileCancelLocalNotification (command), result (function),
 command (glossary), localNotificationReceived (message),
-stack on iOS or Android (object)
+stack (object)
 
 Tags: networking
 

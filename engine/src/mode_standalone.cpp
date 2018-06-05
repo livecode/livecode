@@ -699,7 +699,7 @@ IO_stat MCDispatch::startup(void)
 #include "stacksecurity.h"
 
 #define kMCEmscriptenBootStackFilename "/boot/standalone/__boot.livecode"
-#define kMCEmscriptenStartupStackFilename "/boot/__startup.livecode"
+#define kMCEmscriptenStartupCapsuleFilename "/boot/__startup.data"
 
 // Important: This function is on the emterpreter whitelist. If its
 // signature function changes, the mangled name must be updated in
@@ -709,52 +709,39 @@ MCDispatch::startup()
 {
 	/* The standalone data should already have been unpacked by now */
 
-	/* Load & run the startup script in a temporary stack */
-	MCStack *t_startup_stack = nil;
-	if (IO_NORMAL != MCdispatcher->loadfile(MCSTR(kMCEmscriptenStartupStackFilename),
-	                                        t_startup_stack))
+	/* Load the standalone capsule data */
+
+	// The info structure that will be filled in while parsing the capsule.
+	MCStandaloneCapsuleInfo t_info;
+	memset(&t_info, 0, sizeof(MCStandaloneCapsuleInfo));
+
+	// Create a capsule and fill with the standalone data
+	MCCapsuleRef t_capsule;
+	t_capsule = nil;
+	if (!MCCapsuleOpen(MCStandaloneCapsuleCallback, &t_info, t_capsule))
 	{
-		MCresult->sets("failed to load startup stack");
+		MCresult->sets("failed to create startup capsule");
+		return IO_ERROR;
+	}
+	
+	if (!MCCapsuleFillFromFile(t_capsule, MCSTR(kMCEmscriptenStartupCapsuleFilename), 4, false))
+	{
+		MCresult->sets("failed to read startup data file");
+		MCCapsuleClose(t_capsule);
+		return IO_ERROR;
+	}
+	
+	// Process the capsule
+	if (!MCCapsuleProcess(t_capsule))
+	{
+		MCLog("failed to process startup data file");
+		MCresult->sets("failed to process startup data file");
+		MCCapsuleClose(t_capsule);
 		return IO_ERROR;
 	}
 
-	/* Check the stack */
-	if (!MCStackSecurityEmscriptenStartupCheck(t_startup_stack))
-	{
-		MCresult->sets("startup stack checks failed");
-		return IO_ERROR;
-	}
-
-	MCdefaultstackptr = MCstaticdefaultstackptr = t_startup_stack;
-
-	/* Attempt to run the startup handler */
-	if (ES_NORMAL != t_startup_stack->message(MCM_start_up, nil, false, true))
-	{
-		/* Handler couldn't be run at all, or threw an error */
-		MCresult->sets("failed to run startup stack");
-	}
-	/* The startup stack *should* set the result on failure */
-	{
-		MCExecContext ctxt;
-		MCAutoValueRef t_result;
-		MCresult->eval(ctxt, &t_result);
-		if (!MCValueIsEmpty(*t_result))
-		{
-			return IO_ERROR;
-		}
-	}
-
-	/* Delete the startup stack */
-	MCdispatcher->destroystack(t_startup_stack, true);
-
-	/* Load the initial stack */
-	MCStack *t_stack;
-	if (IO_NORMAL != MCdispatcher->loadfile(MCSTR(kMCEmscriptenBootStackFilename),
-	                                        t_stack))
-	{
-		MCresult->sets("failed to read initial stackfile");
-		return IO_ERROR;
-	}
+	MCStack *t_stack = t_info . stack;
+	MCCapsuleClose(t_capsule);
 
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
     
