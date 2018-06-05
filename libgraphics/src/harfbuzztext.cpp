@@ -241,7 +241,7 @@ static bool cluster_is_supported(hb_glyph_info_t* p_info, uindex_t p_index, uind
 {
     bool t_supported = true;
     uindex_t t_cluster = p_info[p_index] . cluster;
-    while (++p_index < p_count &&
+    while (p_index < p_count &&
            p_info[p_index] . cluster == t_cluster)
     {
         if (p_info[p_index] . codepoint == 0)
@@ -250,6 +250,7 @@ static bool cluster_is_supported(hb_glyph_info_t* p_info, uindex_t p_index, uind
             // whole cluster is unsupported
             t_supported = false;
         }
+        p_index++;
     }
     
     r_cluster_end = p_index;

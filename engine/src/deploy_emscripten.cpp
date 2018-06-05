@@ -29,39 +29,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 Exec_stat
 MCDeployToEmscripten(const MCDeployParameters & p_params)
 {
-	MCStack *t_startup_stack = nil;
+	bool t_success = true;
 
-	/* Load the startup stack */
-	if (IO_NORMAL != MCdispatcher->loadfile(p_params.output, t_startup_stack))
-	{
-		MCDeployThrow(kMCDeployErrorBadRead);
-		goto error_cleanup;
-	}
+	/* Open the output file */
+	MCDeployFileRef t_output = nil;
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCOpenFileModeCreate, t_output))
+		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
-	/* Prepare the startup stack for use during engine boot  */
-	if (!MCStackSecurityEmscriptenPrepareStartupStack(t_startup_stack))
-	{
-		MCDeployThrow(kMCDeployErrorEmscriptenBadStack);
-		goto error_cleanup;
-	}
-
-	/* Save the stack back to disk */
-	if (IO_NORMAL != MCdispatcher->savestack(t_startup_stack, p_params.output))
-	{
-		MCDeployThrow(kMCDeployErrorBadWrite);
-		goto error_cleanup;
-	}
-
-	/* Clean up */
-	delete t_startup_stack;
-
-	return ES_NORMAL;
-
- error_cleanup:
-	if (nil != t_startup_stack)
-	{
-		delete t_startup_stack;
-	}
-
-	return ES_ERROR;
+	uint32_t t_project_size = 0;
+	/* Write the stack capsule data */
+	if (t_success)
+		t_success = MCDeployWriteProject(p_params, false, t_output, 0, t_project_size);
+	
+	MCDeployFileClose(t_output);
+	
+	return t_success ? ES_NORMAL : ES_ERROR;
 }

@@ -1992,9 +1992,9 @@ void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MCDataRef &r_pixels)
 	t_buffer_size = t_raster->height * t_raster->stride;
 	
 	/* UNCHECKED */ MCMemoryAllocate(t_buffer_size, t_buffer);
-	
+    uint32_t *t_buffer_ptr = (uint32_t *)t_buffer;
 	uint8_t *t_pixel_row;
-	t_pixel_row = t_buffer;
+	t_pixel_row = (uint8_t*)t_raster->data;
 	
 	for (uint32_t y = 0; y < t_raster->height; y++)
 	{
@@ -2003,7 +2003,7 @@ void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MCDataRef &r_pixels)
 		
 		for (uint32_t x = 0; x < t_raster->width; x++)
 		{
-			*t_pixel_ptr = MCGPixelFromNative(kMCGPixelFormatARGB, *t_pixel_ptr);
+			*t_buffer_ptr++ = MCGPixelFromNative(kMCGPixelFormatARGB, *t_pixel_ptr);
 			t_pixel_ptr++;
 		}
 		

@@ -17,6 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 package com.runrev.android;
 
 import android.app.*;
+import android.app.Notification.Builder;
 import android.database.*;
 import android.database.sqlite.*;
 import android.content.*;
@@ -482,20 +483,8 @@ public class NotificationModule
         }
     }
     
-    public static void showStatusBarNotification(Context context, int p_id, String p_body, String p_title, boolean p_play_sound, int p_badge_value)
+    private static PendingIntent createNotificationContentIntent(Context context)
     {
-        // create status bar notification for activity
-        int t_icon;
-        t_icon = context.getResources().getIdentifier("drawable/notify_icon", null, context.getPackageName());
-          
-        NotificationManager t_notification_manager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-        
-        Notification t_notification = new Notification(t_icon, p_title, System.currentTimeMillis());
-        t_notification . flags |= Notification.FLAG_AUTO_CANCEL;
-        t_notification . number = p_badge_value;
-        if (p_play_sound)
-            t_notification.defaults = Notification.DEFAULT_SOUND;
-        
         Class t_activity_class = null;
         
         String t_class_fqn = context.getPackageName() + ".mblandroid";
@@ -511,14 +500,41 @@ public class NotificationModule
         
         Intent t_intent = new Intent(context, t_activity_class);
         
-        Intent t_cancel_intent = new Intent(context, getReceiverClass(context));
-        t_cancel_intent.setAction(ACTION_CANCEL_NOTIFICATION);
-        t_cancel_intent.putExtra(NOTIFY_ID, p_id);
-
-        t_notification.setLatestEventInfo(context.getApplicationContext(), p_title, p_body, PendingIntent.getActivity(context, 0, t_intent, 0));
-        t_notification.deleteIntent = PendingIntent.getBroadcast(context, 0, t_cancel_intent, 0);
+        return PendingIntent.getActivity(context, 0, t_intent, 0);
+    }
+    
+    private static PendingIntent createNotificationCancelIntent(Context context, int p_id)
+    {
+        Intent t_intent = new Intent(context, getReceiverClass(context));
+        t_intent.setAction(ACTION_CANCEL_NOTIFICATION);
+        t_intent.putExtra(NOTIFY_ID, p_id);
         
-        t_notification_manager.notify(p_id, t_notification);
+        return PendingIntent.getBroadcast(context, 0, t_intent, 0);
+    }
+    
+    public static void showStatusBarNotification(Context context, int p_id, String p_body, String p_title, boolean p_play_sound, int p_badge_value)
+    {
+        // create status bar notification for activity
+        int t_icon;
+        t_icon = context.getResources().getIdentifier("drawable/notify_icon", null, context.getPackageName());
+          
+        NotificationManager t_notification_manager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+        
+        Notification.Builder t_builder = new Notification.Builder(context);
+        t_builder.setSmallIcon(t_icon);
+        t_builder.setAutoCancel(true);
+        t_builder.setNumber(p_badge_value);
+        
+        if (p_play_sound)
+        	t_builder.setDefaults(Notification.DEFAULT_SOUND);
+        
+        t_builder.setContentIntent(createNotificationContentIntent(context));
+        t_builder.setContentText(p_body);
+        t_builder.setContentTitle(p_title);
+		
+        t_builder.setDeleteIntent(createNotificationCancelIntent(context, p_id));
+
+        t_notification_manager.notify(p_id, t_builder.build());
     }
     
 ////////////////////////////////////////////////////////////////////////////////

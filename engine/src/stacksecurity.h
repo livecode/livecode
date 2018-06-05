@@ -52,19 +52,6 @@ void MCStackSecurityProcessCapsule(void *p_start, void *p_finish);
 
 //////////
 
-/* Create a startup stack for an Emscripten standalone. */
-bool MCStackSecurityEmscriptenPrepareStartupStack(MCStack *r_stack);
-
-#if defined(__EMSCRIPTEN__)
-
-/* Perform any standalone-specific initialisation tasks, and load the
- * default stack. */
-bool MCStackSecurityEmscriptenStartupCheck(MCStack *p_stack);
-
-#endif /* __EMSCRIPTEN__ */
-
-//////////
-
 struct MCDeployParameters;
 bool MCStackSecurityPreDeploy(uint32_t p_platform, MCDeployParameters& p_params);
 void MCStackSecurityExecutionTimeout(void);

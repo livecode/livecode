@@ -1163,7 +1163,7 @@ private command addAssetsToArchive pFileData, pBaseFolder, pArchive
          if tConfigFile is not empty and tFile["name"] ends with "lc_device_config.txt" then
             // need to merge config files
             put tFile["resolved"] into tCustomConfigFile
-         else if tFile["name"] ends with ".ttf" or tFile["name"] ends with ".ttc" then
+         else if revSBFileIsFontFile(tFile["name"]) then
             -- MM-2012-03-07: [[ Custom fonts ]] If any fonts are found, add to the list so that they are handled correctly
             put tFile["resolved"] & return after tFonts
          else if tFile["name"] ends with ".lcext" or tFile["name"] ends with ".dylib" then
@@ -1216,7 +1216,7 @@ private command addAssetsFromFolderToArchive pFolder, pBaseName, pArchive, @pFon
    end if
    
    repeat for each line tFile in the files
-      if tFile ends with ".ttf" or tFile ends with ".ttc" then
+      if revSBFileIsFontFile(tFile) then
          -- MM-2012-03-07: [[ Custom fonts ]] If any fonts are found, add to the list so that they are handled correctly
          put the folder & slash & tFile & return after pFonts
       else if tFile ends with ".lcext" or tFile ends with ".dylib" then

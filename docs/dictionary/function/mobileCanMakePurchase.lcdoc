@@ -24,8 +24,8 @@ end if
 Returns (enum):
 Returns a boolean result:
 
--   true: in:app purchases can be made
--   false: in:app purchases cannot be made
+-   true: in-app purchases can be made
+-   false: in-app purchases cannot be made
 
 
 Description:
