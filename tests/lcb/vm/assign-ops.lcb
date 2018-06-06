@@ -1,0 +1,48 @@
+module __VMTEST.assign_ops
+
+use com.livecode.foreign
+
+foreign handler MCValueGetTypeInfo(in pValue as Pointer) returns Pointer binds to "<builtin>"
+
+foreign handler MCTypeInfoIsForeign(in pTypeInfo as Pointer) returns CBool binds to "<builtin>"
+
+foreign handler MCArrayFetchValue(in pArray as Array, in pCaseSensitive as CBool, in pKey as Pointer, out rValue as Pointer) returns CBool binds to "<builtin>"
+
+foreign handler MCNameCreate(in pString as String, out rName as Pointer) returns CBool binds to "<builtin>"
+
+foreign handler MCProperListFetchElementAtIndex(in pList as List, in pIndex as LCUIndex) returns Pointer binds to "<builtin>"
+
+unsafe handler __IsForeignValue(in pValue as Pointer) returns Boolean
+	return MCTypeInfoIsForeign(MCValueGetTypeInfo(pValue))
+end handler
+
+public handler TestAssignArrayOpForeignBridge()
+	unsafe
+		variable tVar as CBool
+		put false into tVar
+
+		variable tKey as Pointer
+		MCNameCreate("key", tKey)
+	
+		variable tValue as Pointer
+		MCArrayFetchValue({"key": tVar}, false, tKey, tValue)
+
+		test "foreign value bridged to optional any in array assign" \
+			when not __IsForeignValue(tValue)
+	end unsafe
+end handler
+
+public handler TestAssignListOpForeignBridge()
+	unsafe
+		variable tVar as CBool
+		put false into tVar
+	
+		variable tValue as Pointer	
+		put MCProperListFetchElementAtIndex([tVar], 0) into tValue
+	
+		test "foreign value bridged to optional any in list assign" \
+			when not __IsForeignValue(tValue)
+	end unsafe
+end handler
+
+end module

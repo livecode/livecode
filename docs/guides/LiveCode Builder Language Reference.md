@@ -1062,7 +1062,8 @@ Result expressions are not assignable.
       : '[' [ <Elements: ExpressionList> ] ']'
 
 A list expression evaluates all the elements in the expression list from
-left to right and constructs a list value with them as elements.
+left to right and constructs a list value with them as elements. Each 
+expression is converted to `optional any` when constructing the list.
 
 The elements list is optional, so the empty list can be specified as
 *[]*.
@@ -1080,7 +1081,8 @@ List expressions are not assignable.
 
 An array expression evaluates all of the key and value expressions
 from left to right, and constructs an **Array** value as appropriate.
-Each key expression must evaluate to a **String**.
+Each key expression must evaluate to a **String**. Each value expression 
+is converted to `optional any` when constructing the array.
 
 The contents are optional, so the empty array can be written as `{}`.
 
