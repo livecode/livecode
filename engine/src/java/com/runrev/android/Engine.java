@@ -1916,12 +1916,15 @@ public class Engine extends View implements EngineApi
 			doPhotoPickerError("error: could not create temporary image file");
 			return;
 		}
-		
 
-		Uri t_tmp_uri = Uri.fromFile(m_temp_image_file);
+		String t_path = m_temp_image_file.getPath();
+
+		Uri t_uri;
+		t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, "image/jpeg", true, ParcelFileDescriptor.MODE_WRITE_ONLY);
 
 		Intent t_image_capture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_tmp_uri);
+		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_uri);
+		t_image_capture.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 		t_activity.startActivityForResult(t_image_capture, IMAGE_RESULT);
 	}
 
@@ -1978,7 +1981,7 @@ public class Engine extends View implements EngineApi
 			}
 			if (m_temp_image_file != null)
 			{
-				m_temp_image_file.delete();
+				FileProvider.getProvider(getContext()).removePath(m_temp_image_file.getPath());
 				m_temp_image_file = null;
 			}
 		}
@@ -2009,9 +2012,7 @@ public class Engine extends View implements EngineApi
 
 	public void prepareEmail(String address, String cc, String bcc, String subject, String message_body, boolean is_html)
 	{
-        String t_provider_authority = getContext().getPackageName();
-        t_provider_authority += ".attachmentprovider";
-		m_email = new Email(address, cc, bcc, subject, message_body, t_provider_authority, is_html);
+		m_email = new Email(address, cc, bcc, subject, message_body, is_html);
 	}
 
 	public void addAttachment(String path, String mime_type, String name)
@@ -2033,7 +2034,7 @@ public class Engine extends View implements EngineApi
 
 	private void onEmailResult(int resultCode, Intent data)
 	{
-		m_email.cleanupAttachments(getActivity().getContentResolver());
+		m_email.cleanupAttachments(getContext());
 
 		if (resultCode == Activity.RESULT_CANCELED)
 		{
