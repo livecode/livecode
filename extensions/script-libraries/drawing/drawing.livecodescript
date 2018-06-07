@@ -3279,8 +3279,10 @@ end seqLast
 private function _GetResourcesPath
    local tResourcesFolder
    -- in the mapping, tResourcesFolder begins with ./
-   put char 3 to -1 of revLibraryMapping[the short name of me  & slash & "resources"] \
-         into tResourcesFolder
+   try
+      put char 3 to -1 of revLibraryMapping[the short name of me & \
+         slash & "resources"] into tResourcesFolder
+   end try
    if tResourcesFolder is empty then
       set the itemDelimiter to slash
       return item 1 to -2 of the filename of me & slash & "resources"
