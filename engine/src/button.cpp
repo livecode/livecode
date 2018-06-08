@@ -2735,6 +2735,11 @@ void MCButton::openmenu(Boolean grab)
 				/* UNCHECKED */ MCStringFirstIndexOfChar(t_menustring, '\n', t_offset, kMCStringOptionCompareExact, t_new_offset);
             }
 			
+			// if the user selects the last option, t_new_offset will not be updated, as there is no \n after the last option
+			// so update t_new_offset here if this is the case
+			if (t_new_offset == t_offset - 1)
+				t_new_offset = MCStringGetLength(t_menustring) + 1;
+			
 			MCAutoStringRef t_label;
 			/* UNCHECKED */ MCStringCopySubstring(t_menustring, 
 												  MCRangeMakeMinMax(t_offset, t_new_offset),

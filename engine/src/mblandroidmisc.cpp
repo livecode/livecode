@@ -269,7 +269,66 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 
 bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect)
 {
-	return false;
+	// Split the string on new lines
+	MCAutoArrayRef t_options_arrayref;
+	uindex_t noptions = 0;
+	r_chosen_index = 0;
+	
+	MCStringRef *t_options_array = nil;
+	MCPickList *t_pick_list = nil;
+	
+	bool t_success = true;
+	t_success = MCStringSplit(p_options, MCSTR("\n"), nil, kMCCompareExact, &t_options_arrayref);
+	
+	if (t_success)
+	{
+		noptions = MCArrayGetCount(*t_options_arrayref);
+		
+		t_success = MCMemoryNewArray(noptions, t_options_array);
+		
+		for (uindex_t i = 0 ; t_success && i < noptions ; i++)
+		{
+			// Note: 't_options' is an array of strings
+			MCValueRef t_optionval = nil;
+			t_success = MCArrayFetchValueAtIndex(*t_options_arrayref, i + 1, t_optionval);
+			t_options_array[i] = MCValueRetain((MCStringRef)t_optionval);
+		}
+	}
+	
+	if (t_success)
+	{
+		t_success = MCMemoryNew(t_pick_list);
+		
+		t_pick_list -> options = t_options_array;
+		t_pick_list -> option_count = noptions;
+		t_pick_list -> initial = p_initial_index;
+	}
+	
+	if (t_success)
+	{
+		uindex_t *t_result = nil;
+		uint32_t t_chosen_index;
+		
+		bool t_cancelled;
+		
+		t_success = MCSystemPickOption(t_pick_list, 1, t_result, t_chosen_index, p_use_checkmark, false, false, false, t_cancelled, p_button_rect);
+		
+		r_chosen_index = t_cancelled ? 0 : *t_result;
+	}
+	
+	if (t_success)
+	{
+		// cleanup
+		for (uindex_t i = 0; i < noptions; i++)
+		{
+			MCValueRelease(t_options_array[i]);
+		}
+		
+		MCMemoryDeleteArray(t_options_array);
+		MCMemoryDelete(t_pick_list);
+	}
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
