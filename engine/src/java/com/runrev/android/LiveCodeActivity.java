@@ -69,7 +69,7 @@ public class LiveCodeActivity extends Activity
 												  ViewGroup.LayoutParams.MATCH_PARENT));
         
         // prevent soft keyboard from resizing our view when shown
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 	}
 
 	@Override

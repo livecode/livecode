@@ -593,6 +593,8 @@ LT factor_table[] =
         {"autoarm", TT_PROPERTY, P_AUTO_ARM},
         {"autohilight", TT_PROPERTY, P_AUTO_HILITE},
         {"autohilite", TT_PROPERTY, P_AUTO_HILITE},
+        // Hao-2017-02-07: [[ Bug 16714]] Auto reposition field when IME activate.
+        {"autoreposition", TT_PROPERTY, P_AUTO_REPOSITION},
         {"autoselect", TT_PROPERTY, P_LIST_BEHAVIOR},
         {"autotab", TT_PROPERTY, P_AUTO_TAB},
 		{"availableprinters", TT_PROPERTY, P_PRINTER_NAMES},

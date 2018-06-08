@@ -171,6 +171,7 @@ public:
 	void clearIME(Window w);
 	void openIME();
 	void activateIME(Boolean activate);
+	void activateIME(Boolean activate, Boolean reposition);
 	void closeIME();
 
 	void enactraisewindows(void);

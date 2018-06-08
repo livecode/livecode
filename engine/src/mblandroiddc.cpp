@@ -635,7 +635,12 @@ void MCScreenDC::openIME()
 
 void MCScreenDC::activateIME(Boolean activate)
 {
-	MCAndroidEngineRemoteCall("setTextInputVisible", "vb", nil, activate);
+	activateIME(false);
+}
+
+void MCScreenDC::activateIME(Boolean activate, Boolean reposition)
+{
+	MCAndroidEngineRemoteCall("setTextInputVisible", "vbb", nil, activate, reposition);
 }
 
 void MCScreenDC::closeIME()
