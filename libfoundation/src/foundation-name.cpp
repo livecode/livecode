@@ -298,7 +298,7 @@ void __MCNameDestroy(__MCName *self)
 	// Find the previous link in the chain
 	__MCName *t_previous;
 	t_previous = nil;
-	for(__MCName *t_name = s_name_table[t_index]; t_name != self; t_name = t_name -> next)
+	for(__MCName *t_name = s_name_table[t_index]; t_name != nullptr && t_name != self; t_name = t_name -> next)
 		t_previous = t_name;
 
 	// Update the previous name's next field
