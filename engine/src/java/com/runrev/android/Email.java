@@ -20,6 +20,7 @@ import java.io.*;
 import java.util.*;
 import android.content.*;
 import android.net.*;
+import android.os.ParcelFileDescriptor;
 import android.text.*;
 import android.util.*;
 
@@ -34,9 +35,8 @@ class Email
 	private ArrayList<Uri> m_attachment_uris;
 	
 	private String m_mime_type;
-    private String m_provider_uri;
 	
-	public Email(String address, String cc, String bcc, String subject, String message_body, String p_provider_authority, boolean is_html)
+	public Email(String address, String cc, String bcc, String subject, String message_body, boolean is_html)
 	{
 		if (address != null && address.length() > 0)
 			m_email = address.trim().split(" *, *");
@@ -60,8 +60,6 @@ class Email
 				m_mime_type = "text/plain";
 			}
 		}
-        
-        m_provider_uri = "content://" + p_provider_authority;
 	}
 	
 	private static String getMimeCategory(String mime_type)
@@ -103,27 +101,14 @@ class Email
 		return true;
 	}
     
-    private ContentValues createAttachmentValues(String p_name, String p_mime_type, boolean p_temporary)
-    {        
-        ContentValues t_values = new ContentValues(2);
-        t_values . put(AttachmentProvider.NAME, p_name);
-        t_values . put(AttachmentProvider.MIME_TYPE, p_mime_type);
-        t_values . put(AttachmentProvider.TEMPORARY, p_temporary);
-        
-        return t_values;
-    }
-	
 	public boolean addAttachment(Context p_context, String path, String mime_type, String name)
 	{
-//        Log.i("revandroid", String.format("addAttachment string attachment %s", m_provider_uri + "/" + path));
-        File t_file = new File(path);
-        
-        // SN-2014-02-03: [[ Bug 11069 ]] Generate a URI leading to the AttachmentProvider
-        Uri t_uri = Uri.parse(m_provider_uri + "/" + path);
-        ContentValues t_values = createAttachmentValues(name, mime_type, false);
-                
-        p_context . getContentResolver() . insert(t_uri, t_values);
-        
+		// Log.i("revandroid", String.format("addAttachment %s", path));
+		File t_file = new File(path);
+
+		Uri t_uri;
+		t_uri = FileProvider.getProvider(p_context).addPath(name, path, mime_type, false, ParcelFileDescriptor.MODE_READ_ONLY);
+
 		return addAttachment(t_uri, mime_type, name);
 	}
 	
@@ -132,24 +117,21 @@ class Email
 		try
 		{
 			File t_tempfile;
-            // SN-2014-02-04: [[ Bug 11069 ]] Temporary files are created in the cache directory
-            t_tempfile = File.createTempFile("eml", name, p_context . getCacheDir());
+			// SN-2014-02-04: [[ Bug 11069 ]] Temporary files are created in the cache directory
+			t_tempfile = File.createTempFile("eml", name, p_context . getCacheDir());
 			
 			FileOutputStream t_out = new FileOutputStream(t_tempfile);
 			t_out.write(data);
 			t_out.close();
-						            
-            // SN-2014-02-03: [[ Bug 11069 ]] Generate a URI leading to AttachmentProvider
-            Uri t_uri = Uri.parse(m_provider_uri + "/" + t_tempfile.getPath());
-                        
-            ContentValues t_values = createAttachmentValues(name, mime_type, true);
-            p_context . getContentResolver() . insert(t_uri, t_values);
-            			
+			
+			Uri t_uri;
+			t_uri = FileProvider.getProvider(p_context).addPath(name, t_tempfile.getPath(), mime_type, true, ParcelFileDescriptor.MODE_READ_ONLY);
+
 			return addAttachment(t_uri, mime_type, name);
 		}
 		catch (Exception e)
 		{
-//            Log.i("revandroid", "creatTempFile exception: " + e.getMessage());
+			// Log.i("revandroid", "createTempFile exception: " + e.getMessage());
 			return false;
 		}
 	}
@@ -195,14 +177,12 @@ class Email
 		return t_mail_intent;
 	}
 	
-	public void cleanupAttachments(ContentResolver p_resolver)
+	public void cleanupAttachments(Context p_context)
 	{		
 		try
 		{
-            for (Uri t_uri : m_attachment_uris)
-            {
-                p_resolver . delete(t_uri, AttachmentProvider.FILE, null);
-            }
+			for (Uri t_uri : m_attachment_uris)
+				FileProvider.getProvider(p_context).removePath(t_uri.getPath());
 		}
 		catch (Exception e)
 		{
