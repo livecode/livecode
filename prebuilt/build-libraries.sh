@@ -16,8 +16,8 @@ mkdir -p "${OUTPUT_DIR}"
 export PLATFORM=$1
 export ARCH=$2
 
-#only ios subplatforms are used
-if [ "${PLATFORM}" = "ios" ] ; then
+#only ios and android subplatforms are used
+if [ "${PLATFORM}" == "ios" ] || [ "${PLATFORM}" == "android" ] ; then
 	export SUBPLATFORM=$3
 else
 	export SUBPLATFORM=

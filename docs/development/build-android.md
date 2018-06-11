@@ -22,10 +22,10 @@ Extract both the NDK and SDK to a suitable directory, e.g. `~/android/toolchain`
 mkdir -p ~/android/toolchain/android-sdk-linux
 cd ~/android/toolchain
 
-wget https://dl.google.com/android/repository/android-ndk-r17-linux-x86_64.zip
+wget https://dl.google.com/android/repository/android-ndk-r15-linux-x86_64.zip
 wget https://dl.google.com/android/repository/tools_r25.2.3-linux.zip
 
-unzip android-ndk-r17-linux-x86_64.zip
+unzip android-ndk-r15-linux-x86_64.zip
 
 pushd android-sdk-linux
 unzip tools_r25.2.3-linux.zip
@@ -41,7 +41,7 @@ Update the SDK:
 Create a standalone toolchain (this simplifies setting up the build environment):
 
 ````bash
-android-ndk-r17/build/tools/make_standalone_toolchain.py \
+android-ndk-r15/build/tools/make_standalone_toolchain.py \
     --arch arm --api 26 \
     --install-dir ${HOME}/android/toolchain/standalone
 ````
@@ -49,7 +49,7 @@ android-ndk-r17/build/tools/make_standalone_toolchain.py \
 Add a couple of symlinks to allow the engine configuration script to find the Android toolchain:
 
 ````bash
-ln -s android-ndk-r17 android-ndk
+ln -s android-ndk-r15 android-ndk
 ln -s android-sdk-linux android-sdk
 ````
 
@@ -80,9 +80,9 @@ LINK="${BINDIR}/${TRIPLE}-clang ${COMMON_FLAGS} -fuse-ld=bfd"
 AR="${BINDIR}/${TRIPLE}-ar"
 
 # Android platform information
-ANDROID_NDK_VERSION=r17
+ANDROID_NDK_VERSION=r15
 ANDROID_PLATFORM=android-26
-ANDROID_NDK=${TOOLCHAIN}/android-ndk-r17
+ANDROID_NDK=${TOOLCHAIN}/android-ndk-r15
 ANDROID_SDK=${TOOLCHAIN}/android-sdk-linux
 ANDROID_BUILD_TOOLS=27.0.3
 ANDROID_LIB_PATH=${TOOLCHAIN}/standalone/${TRIPLE}/lib

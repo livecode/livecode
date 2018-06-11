@@ -412,7 +412,7 @@ def guess_android_build_tools(sdkdir):
 
 def validate_android_tools(opts):
     if opts['ANDROID_NDK_VERSION'] is None:
-        opts['ANDROID_NDK_VERSION'] = 'r17'
+        opts['ANDROID_NDK_VERSION'] = 'r15'
 
     ndk_ver = opts['ANDROID_NDK_VERSION']
     if opts['ANDROID_PLATFORM'] is None:
