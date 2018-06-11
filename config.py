@@ -25,7 +25,7 @@ import subprocess
 BUILDBOT_PLATFORM_TRIPLES = (
     'x86-linux-debian8',
     'x86_64-linux-debian8',
-    'armv6-android-api9',
+    'armv6-android-api26',
     'universal-mac-macosx10.9', # Minimum deployment target
     'universal-ios-iphoneos11.4',
     'universal-ios-iphoneos11.2',
@@ -412,11 +412,11 @@ def guess_android_build_tools(sdkdir):
 
 def validate_android_tools(opts):
     if opts['ANDROID_NDK_VERSION'] is None:
-        opts['ANDROID_NDK_VERSION'] = 'r14'
+        opts['ANDROID_NDK_VERSION'] = 'r17'
 
     ndk_ver = opts['ANDROID_NDK_VERSION']
     if opts['ANDROID_PLATFORM'] is None:
-        opts['ANDROID_PLATFORM'] = 'android-17'
+        opts['ANDROID_PLATFORM'] = 'android-26'
 
     if opts['ANDROID_NDK'] is None:
         ndk = guess_android_tooldir('android-ndk')
