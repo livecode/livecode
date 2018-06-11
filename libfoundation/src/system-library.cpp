@@ -183,6 +183,10 @@ __MCSLibraryInitialize(void)
         return false;
     }
     
+    #if defined(__ANDROID__)
+    sMCSLibraryAndroidNativeLibPath = nullptr;
+    #endif
+    
     return true;
 }
 
@@ -191,6 +195,7 @@ __MCSLibraryFinalize(void)
 {
 #if defined(__ANDROID__)
     MCValueRelease(sMCSLibraryAndroidNativeLibPath);
+    sMCSLibraryAndroidNativeLibPath = nil;
 #endif
     
     MCValueRelease(kMCSLibraryTypeInfo);
