@@ -269,30 +269,25 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 
 bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect)
 {
-	// Split the string on new lines
-	MCAutoArrayRef t_options_arrayref;
-	uindex_t noptions = 0;
 	r_chosen_index = 0;
 	
 	MCStringRef *t_options_array = nil;
 	MCPickList *t_pick_list = nil;
 	
+	MCAutoProperListRef t_options_list;
+	uindex_t t_count = 0;
+	
+	// Split the string on new lines
 	bool t_success = true;
-	t_success = MCStringSplit(p_options, MCSTR("\n"), nil, kMCCompareExact, &t_options_arrayref);
+	t_success = MCStringSplitByDelimiter(p_options, kMCLineEndString, kMCStringOptionCompareExact, &t_options_list);
 	
 	if (t_success)
 	{
-		noptions = MCArrayGetCount(*t_options_arrayref);
+		t_count = MCProperListGetLength(*t_options_list);
+		t_success = MCMemoryNewArray(t_count, t_options_array);
 		
-		t_success = MCMemoryNewArray(noptions, t_options_array);
-		
-		for (uindex_t i = 0 ; t_success && i < noptions ; i++)
-		{
-			// Note: 't_options' is an array of strings
-			MCValueRef t_optionval = nil;
-			t_success = MCArrayFetchValueAtIndex(*t_options_arrayref, i + 1, t_optionval);
-			t_options_array[i] = MCValueRetain((MCStringRef)t_optionval);
-		}
+		for (uindex_t i = 0; t_success && i < t_count; i++)
+			t_options_array[i] = static_cast<MCStringRef>(MCProperListFetchElementAtIndex(*t_options_list, i));
 	}
 	
 	if (t_success)
@@ -300,7 +295,7 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 		t_success = MCMemoryNew(t_pick_list);
 		
 		t_pick_list -> options = t_options_array;
-		t_pick_list -> option_count = noptions;
+		t_pick_list -> option_count = t_count;
 		t_pick_list -> initial = p_initial_index;
 	}
 	
@@ -319,11 +314,6 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 	if (t_success)
 	{
 		// cleanup
-		for (uindex_t i = 0; i < noptions; i++)
-		{
-			MCValueRelease(t_options_array[i]);
-		}
-		
 		MCMemoryDeleteArray(t_options_array);
 		MCMemoryDelete(t_pick_list);
 	}
