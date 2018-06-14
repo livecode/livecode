@@ -2737,7 +2737,6 @@ void MCButton::openmenu(Boolean grab)
 			
 			MCStringRef t_label = static_cast<MCStringRef>(MCProperListFetchElementAtIndex(*t_options, t_chosen_option - 1));
 			
-			
 			MCValueAssign(label, t_label);
 			
 			flags |= F_LABEL;
