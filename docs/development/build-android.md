@@ -68,7 +68,7 @@ TRIPLE=arm-linux-androideabi
 TOOLCHAIN=${HOME}/android/toolchain # Edit me!
 
 # Java SDK
-JAVA_SDK=/usr/lib/jvm/java-7-openjdk-amd64/ # Edit me!
+JAVA_SDK=/usr/lib/jvm/java-8-openjdk-amd64/ # Edit me!
 
 # Build tools
 BINDIR=$TOOLCHAIN/standalone/bin
@@ -81,8 +81,9 @@ AR="${BINDIR}/${TRIPLE}-ar"
 
 # Android platform information
 ANDROID_NDK_VERSION=r15
-ANDROID_PLATFORM=android-26
-ANDROID_NDK=${TOOLCHAIN}/android-ndk-r15
+ANDROID_API_VERSION=26
+ANDROID_PLATFORM=android-${ANDROID_API_VERSION}
+ANDROID_NDK=${TOOLCHAIN}/android-ndk-${ANDROID_NDK_VERSION}
 ANDROID_SDK=${TOOLCHAIN}/android-sdk-linux
 ANDROID_BUILD_TOOLS=27.0.3
 ANDROID_LIB_PATH=${TOOLCHAIN}/standalone/${TRIPLE}/lib
@@ -90,7 +91,7 @@ ANDROID_LIB_PATH=${TOOLCHAIN}/standalone/${TRIPLE}/lib
 export JAVA_SDK
 export CC CXX LINK AR
 export ANDROID_PLATFORM ANDROID_NDK ANDROID_SDK ANDROID_BUILD_TOOLS
-export ANDROID_LIB_PATH
+export ANDROID_LIB_PATH ANDROID_API_VERSION
 ````
 
 ### Generating makefiles

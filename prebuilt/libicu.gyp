@@ -179,7 +179,7 @@
 							# Gyp doesn't seem to handle non-absolute paths here properly...
 							'library_dirs':
 							[
-								'lib/android/<(target_arch)',
+								'lib/android/<(target_arch)/api<(android_api_version)',
 							],
 							
 							'libraries':

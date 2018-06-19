@@ -414,15 +414,19 @@ def validate_android_tools(opts):
     if opts['ANDROID_NDK_VERSION'] is None:
         opts['ANDROID_NDK_VERSION'] = 'r15'
 
-    ndk_ver = opts['ANDROID_NDK_VERSION']
-    if opts['ANDROID_PLATFORM'] is None:
-        opts['ANDROID_PLATFORM'] = 'android-26'
+    ndk_ver = opts['ANDROID_NDK_VERSION']     
 
     if opts['ANDROID_NDK'] is None:
         ndk = guess_android_tooldir('android-ndk')
         if ndk is None:
             error('Android NDK not found; set $ANDROID_NDK')
         opts['ANDROID_NDK'] = ndk
+
+    if opts['ANDROID_API_VERSION'] is None:
+        opts['ANDROID_API_VERSION'] = '26'
+     
+    if opts['ANDROID_PLATFORM'] is None:
+        opts['ANDROID_PLATFORM'] = 'android-26'   
 
     if opts['ANDROID_SDK'] is None:
         sdk = guess_android_tooldir('android-sdk')
@@ -532,6 +536,7 @@ def configure_android(opts):
 
     export_opts(opts, ('ANDROID_BUILD_TOOLS', 'ANDROID_NDK',
                        'ANDROID_PLATFORM', 'ANDROID_SDK',
+                       'ANDROID_API_VERSION',
                        'JAVA_SDK', 'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY',
                        'OBJDUMP', 'STRIP'))
     args = core_gyp_args(opts) + ['-Dtarget_arch=' + opts['TARGET_ARCH'],
