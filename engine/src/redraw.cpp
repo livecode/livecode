@@ -1300,7 +1300,7 @@ void MCRedrawDirtyScreen(void)
 	do
 	{
 		MCStack *sptr = tptr->getstack();
-		sptr -> view_dirty_all();
+		sptr -> dirtyall();
 		tptr = tptr->prev();
 	}
 	while (tptr != t_stacks -> prev());
