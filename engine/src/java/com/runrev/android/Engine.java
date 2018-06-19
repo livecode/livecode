@@ -2141,25 +2141,25 @@ public class Engine extends View implements EngineApi
 
 		Log.i("revandroid", "enableOpenGLView");
 
-
-		// If we have an old OpenGL view, use it.
-		if (m_old_opengl_view != null)
-		{
-			m_opengl_view = m_old_opengl_view;
-			m_old_opengl_view = null;
-		}
-
-		// Create the OpenGL view, if needed.
-		if (m_opengl_view == null)
-		{
-			m_opengl_view = new OpenGLView(getContext());
-            
-			// Add the view to the hierarchy - we add at the bottom and bring to
-			// the front as soon as we've shown the first frame.
-			((ViewGroup)getParent()).addView(m_opengl_view, 0,
-											 new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
-																		  FrameLayout.LayoutParams.MATCH_PARENT));
-		}
+        post(new Runnable() {
+            public void run() {
+                if (m_opengl_view != null)
+                {
+                    return;
+                }
+                
+                m_opengl_view = new OpenGLView(getContext());
+                    
+                Log.i("revandroid", "enableOpenGLView callback");
+                
+                // Add the view to the hierarchy - we add at the bottom and bring to
+                // the front as soon as we've shown the first frame.
+                ((ViewGroup)getParent()).addView(m_opengl_view, 0,
+                                                 new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                                                                              FrameLayout.LayoutParams.MATCH_PARENT));
+                
+            }
+        });
 	}
 
 	public void disableOpenGLView()
