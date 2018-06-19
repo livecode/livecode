@@ -140,8 +140,10 @@ private:
     ResolveFrameworkExecutable(MCStringRef p_native_path,
                                MCStringRef& r_exe)
     {
+        const char *t_framework_ext = ".framework";
+        
         if (!MCStringEndsWithCString(p_native_path,
-                                     (const char_t *)".framework",
+                                     reinterpret_cast<const char_t *>(t_framework_ext),
                                      kMCStringOptionCompareCaseless))
         {
             return false;
@@ -161,9 +163,15 @@ private:
             t_last_component_start = 0;
         }
         
+        // The last component length is the length of the string
+        // minus the last component start minus the length of the
+        // .framework extension
+        uindex_t t_last_component_length = MCStringGetLength(p_native_path)
+            - t_last_component_start - strlen(t_framework_ext);
+        
         MCRange t_last_component_range =
                 MCRangeMake(t_last_component_start,
-                            MCStringGetLength(p_native_path) - 10);
+                            t_last_component_length);
         
         return MCStringFormat(r_exe,
                               "%@/%*@",
