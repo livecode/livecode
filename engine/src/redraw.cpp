@@ -947,7 +947,7 @@ static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback
 	
 	MCRectangle t_user_rect;
 	t_user_rect = MCRectangleGetTransformedBounds(p_rectangle, MCGAffineTransformInvert(t_transform));
-	
+    
 	bool t_success;
 	t_success = p_callback(p_context, t_gfx_context, t_user_rect);
 	
@@ -1002,6 +1002,8 @@ static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target,
 {
 	MCControl *t_control;
 	t_control = (MCControl *)p_context;
+    
+    p_target->setclip(t_control->getstack()->getvisiblerect());
 
 	// IM-2014-07-02: [[ GraphicsPerformance ]] Use the redraw() method instead of 
 	// reproducing the visibility tests and context clipping here.
