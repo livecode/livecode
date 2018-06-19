@@ -565,7 +565,10 @@ MCRectangle MCStack::view_getstackvisiblerect(void)
 
 void MCStack::view_render(MCGContextRef p_target, MCRectangle p_rect)
 {
-	// redraw borders if visible
+    if (getextendedstate(ECS_DONTDRAW))
+        return;
+    
+    // redraw borders if visible
 
 	// scale & position stack redraw rect
 	// update stack region
