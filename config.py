@@ -425,8 +425,10 @@ def validate_android_tools(opts):
     if opts['ANDROID_API_VERSION'] is None:
         opts['ANDROID_API_VERSION'] = '26'
      
+    api_ver = opts['ANDROID_API_VERSION']
+
     if opts['ANDROID_PLATFORM'] is None:
-        opts['ANDROID_PLATFORM'] = 'android-26'   
+        opts['ANDROID_PLATFORM'] = 'android-' + api_ver
 
     if opts['ANDROID_SDK'] is None:
         sdk = guess_android_tooldir('android-sdk')
