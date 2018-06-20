@@ -1,6 +1,6 @@
 # Android options
 ANDROID_NDK=${ANDROID_NDK:-"${HOME}/android/toolchain/android-ndk"}
-ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-17}
+ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-26}
 
 # Has a full, custom toolchain been specified?
 #  AR, CC, CXX, LINK, OBJCOPY, RANLIB, STRIP
