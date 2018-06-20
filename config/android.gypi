@@ -30,6 +30,7 @@
 		'strip':   '<!(echo ${STRIP:-strip})',
 
 		'android_ndk_path%': '<(android_ndk_path)',
+		'android_api_version%': '<(android_api_version)',
 	},
 	
 	'target_defaults':
