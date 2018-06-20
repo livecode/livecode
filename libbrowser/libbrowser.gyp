@@ -141,11 +141,14 @@
 						],
 					},
 				],
-				
+			],
+
+			'link_settings':
+			{
+				'target_conditions':
 				[
-					'toolset_os == "mac"',
-					{
-						'link_settings':
+					[
+						'toolset_os == "mac"',
 						{
 							'libraries':
 							[
@@ -153,10 +156,10 @@
 								'$(SDKROOT)/System/Library/Frameworks/JavaScriptCore.framework',
 							],
 						},
-					},
+					],
 				],
-			],
-
+			},
+			
 			# Gyp doesn't like dependencies in 'target_conditions'...
 			'conditions':
 			[
