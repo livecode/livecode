@@ -880,7 +880,9 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 		// layer below.
 		MCObjptr *t_objptr;
 		t_objptr = p_next;
-		while(t_objptr != p_previous && t_objptr -> getref() -> layer_getid() == p_control -> layer_getid())
+		while(t_objptr != p_previous &&
+              !t_objptr->getref()->layer_issprite() &&
+              t_objptr -> getref() -> layer_getid() == p_control -> layer_getid())
 		{
 			t_objptr -> getref() -> layer_setid(t_before_layer_id);
 			t_objptr = t_objptr -> next();
