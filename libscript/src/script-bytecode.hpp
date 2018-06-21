@@ -753,7 +753,7 @@ struct MCScriptBytecodeOp_AssignList
 	
 	static void Execute(MCScriptExecuteContext& ctxt)
 	{
-		MCAutoArray<MCValueRef> t_elements;
+		MCAutoValueRefArray t_elements;
 		if (!t_elements.Resize(ctxt.GetArgumentCount() - 1))
 		{
 			ctxt.Rethrow();
@@ -762,16 +762,26 @@ struct MCScriptBytecodeOp_AssignList
 		
 		for(uindex_t t_element_idx = 0; t_element_idx < t_elements.Size(); t_element_idx++)
 		{
-			t_elements[t_element_idx] = ctxt.CheckedFetchRegister(ctxt.GetArgument(t_element_idx + 1));
-			if (t_elements[t_element_idx] == nil)
-				return;
+            MCValueRef t_raw_value = ctxt.CheckedFetchRegister(ctxt.GetArgument(t_element_idx + 1));
+            if (t_raw_value == nullptr)
+            {
+                return;
+            }
+
+            /* When assigning to a normal slot, Convert is called which bridges
+             * foreign values when being placed into an explicitly typed non-
+             * foreign slot. The case of assigning to an array element is the
+             * same, so we must explicitly bridge. */
+            if (!ctxt.Bridge(t_raw_value,
+                             t_elements[t_element_idx]))
+            {
+                return;
+            }
 		}
 		
 		MCAutoProperListRef t_list;
-		if (!MCProperListCreate(t_elements.Ptr(),
-								t_elements.Size(),
-								&t_list))
-		{
+        if (!t_elements.TakeAsProperList(&t_list))
+        {
 			ctxt.Rethrow();
 			return;
 		}
@@ -828,6 +838,7 @@ struct MCScriptBytecodeOp_AssignArray
 			{
 				return;
 			}
+
 			if (MCValueGetTypeCode(t_raw_key) != kMCValueTypeCodeString)
 			{
 				ctxt.ThrowNotAStringValue(t_raw_key);
@@ -842,17 +853,28 @@ struct MCScriptBytecodeOp_AssignArray
 				return;
 			}
 			
-			MCValueRef t_value;
-			t_value = ctxt.CheckedFetchRegister(ctxt.GetArgument(t_arg_idx + 1));
-			if (t_value == nil)
+			MCValueRef t_raw_value;
+			t_raw_value = ctxt.CheckedFetchRegister(ctxt.GetArgument(t_arg_idx + 1));
+			if (t_raw_value == nil)
 			{
 				return;
 			}
+            
+            /* When assigning to a normal slot, Convert is called which bridges
+             * foreign values when being placed into an explicitly typed non-
+             * foreign slot. The case of assigning to an array element is the
+             * same, so we must explicitly bridge. */
+            MCAutoValueRef t_value;
+            if (!ctxt.Bridge(t_raw_value,
+                             &t_value))
+            {
+                return;
+            }
 			
 			if (!MCArrayStoreValue(*t_array,
 								   false,
 								   *t_key,
-								   t_value))
+								   *t_value))
 			{
 				ctxt.Rethrow();
 				return;

@@ -2728,20 +2728,19 @@ void MCButton::openmenu(Boolean grab)
 			
 			uindex_t t_offset = 0;
             uindex_t t_new_offset = 0;
-			for (uindex_t i = 0; i < t_chosen_option; i++)
-            {
-                if (i != 0)
-                    t_offset = t_new_offset + 1;
-				/* UNCHECKED */ MCStringFirstIndexOfChar(t_menustring, '\n', t_offset, kMCStringOptionCompareExact, t_new_offset);
-            }
+			bool t_success = true;
 			
-			MCAutoStringRef t_label;
-			/* UNCHECKED */ MCStringCopySubstring(t_menustring, 
-												  MCRangeMakeMinMax(t_offset, t_new_offset),
-												  &t_label);
-			MCValueAssign(label, *t_label);
+			MCAutoProperListRef t_options;
+			
+			if (t_success)
+				t_success = MCStringSplitByDelimiter(t_menustring, kMCLineEndString, kMCStringOptionCompareExact, &t_options);
+			
+			MCStringRef t_label = static_cast<MCStringRef>(MCProperListFetchElementAtIndex(*t_options, t_chosen_option - 1));
+			
+			MCValueAssign(label, t_label);
+			
 			flags |= F_LABEL;
-			handlemenupick(*t_label, nil);
+			handlemenupick(t_label, nil);
 		}
 		return;
 	}
