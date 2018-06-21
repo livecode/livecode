@@ -22,10 +22,10 @@ Extract both the NDK and SDK to a suitable directory, e.g. `~/android/toolchain`
 mkdir -p ~/android/toolchain/android-sdk-linux
 cd ~/android/toolchain
 
-wget https://dl.google.com/android/repository/android-ndk-r14-linux-x86_64.zip
+wget https://dl.google.com/android/repository/android-ndk-r15-linux-x86_64.zip
 wget https://dl.google.com/android/repository/tools_r25.2.3-linux.zip
 
-unzip android-ndk-r14-linux-x86_64.zip
+unzip android-ndk-r15-linux-x86_64.zip
 
 pushd android-sdk-linux
 unzip tools_r25.2.3-linux.zip
@@ -41,19 +41,15 @@ Update the SDK:
 Create a standalone toolchain (this simplifies setting up the build environment):
 
 ````bash
-android-ndk-r14/build/tools/make_standalone_toolchain.py \
-    --arch arm --api 9 \
+android-ndk-r15/build/tools/make_standalone_toolchain.py \
+    --arch arm --api 26 \
     --install-dir ${HOME}/android/toolchain/standalone
 ````
-
-**Note:** We currently use NDK API 9 for building the LiveCode Android engine and
-do not specify the '--stl' option as we currently require the C++ library (if used)
-to be statically linked into the executable.
 
 Add a couple of symlinks to allow the engine configuration script to find the Android toolchain:
 
 ````bash
-ln -s android-ndk-r14 android-ndk
+ln -s android-ndk-r15 android-ndk
 ln -s android-sdk-linux android-sdk
 ````
 
@@ -72,7 +68,7 @@ TRIPLE=arm-linux-androideabi
 TOOLCHAIN=${HOME}/android/toolchain # Edit me!
 
 # Java SDK
-JAVA_SDK=/usr/lib/jvm/java-7-openjdk-amd64/ # Edit me!
+JAVA_SDK=/usr/lib/jvm/java-8-openjdk-amd64/ # Edit me!
 
 # Build tools
 BINDIR=$TOOLCHAIN/standalone/bin
@@ -84,17 +80,18 @@ LINK="${BINDIR}/${TRIPLE}-clang ${COMMON_FLAGS} -fuse-ld=bfd"
 AR="${BINDIR}/${TRIPLE}-ar"
 
 # Android platform information
-ANDROID_NDK_VERSION=r14
-ANDROID_PLATFORM=android-17
-ANDROID_NDK=${TOOLCHAIN}/android-ndk-r14
+ANDROID_NDK_VERSION=r15
+ANDROID_API_VERSION=26
+ANDROID_PLATFORM=android-${ANDROID_API_VERSION}
+ANDROID_NDK=${TOOLCHAIN}/android-ndk-${ANDROID_NDK_VERSION}
 ANDROID_SDK=${TOOLCHAIN}/android-sdk-linux
-ANDROID_BUILD_TOOLS=25.0.2
+ANDROID_BUILD_TOOLS=27.0.3
 ANDROID_LIB_PATH=${TOOLCHAIN}/standalone/${TRIPLE}/lib
 
 export JAVA_SDK
 export CC CXX LINK AR
 export ANDROID_PLATFORM ANDROID_NDK ANDROID_SDK ANDROID_BUILD_TOOLS
-export ANDROID_LIB_PATH
+export ANDROID_LIB_PATH ANDROID_API_VERSION
 ````
 
 ### Generating makefiles
