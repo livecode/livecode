@@ -239,7 +239,7 @@ void MCStack::uniconify()
 		MCstacks->top(this);
 		curcard->message(MCM_uniconify_stack);
 		// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
-		view_dirty_all();
+		dirtyall();
 		resetcursor(True);
 		dirtywindowname();
 	}
@@ -2826,8 +2826,7 @@ void MCStack::dirtyall(void)
 		while(t_objptr != curcard -> getobjptrs());
 	}
 
-	// Defer to the rect dirtying routine to update the update region.
-	dirtyrect(curcard -> getrect());
+    dirtyrect(view_getstackvisiblerect());
 }
 
 void MCStack::dirtywindowname(void)

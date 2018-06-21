@@ -2128,7 +2128,7 @@ void MCStack::sethiddenobjectvisibility(MCStackObjectVisibility p_visibility)
 	if (t_visible != showinvisible())
 	{
 		// Visibility of objects has changed so redraw the stack.
-		view_dirty_all();
+		dirtyall();
 	}
 }
 

@@ -1202,7 +1202,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 		}
 
 		// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
-		dirtyall();
+        dirtyall();
 	}
 	
 	// MW-2011-09-14: [[ Redraw ]] Unlock the screen so the effect stuff has a chance

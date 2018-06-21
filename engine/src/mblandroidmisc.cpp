@@ -732,7 +732,7 @@ bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces)
     MCAutoStringRef t_interfaces;
 	MCAndroidEngineCall("getNetworkInterfaces", "x", &(&t_interfaces));
 
-	if (*t_interfaces == nil)
+    if (MCStringIsEmpty(*t_interfaces))
 		r_interfaces = MCValueRetain(kMCEmptyString);
 	else
 		r_interfaces = MCValueRetain(*t_interfaces);
