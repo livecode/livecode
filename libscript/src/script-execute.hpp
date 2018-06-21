@@ -179,7 +179,16 @@ public:
 	// Leave the LCB VM. If a execution completed successfully then true is
 	// returned, otherwise false is returned.
 	bool Leave(void);
-	
+    
+    // Attempt to bridge the input value. If the input value is foreign and
+    // the foreign type is bridgeable, doimport is used to create the output
+    // value. Otherwise, the input value is retained and returned as the output
+    // value.
+    // Note: This is a specialization of Convert where the to_type is 'optional
+    // any'.
+    bool Bridge(MCValueRef value,
+                MCValueRef& r_bridged_value);
+    
 	// Attempt to convert the input value to the specified type. If the conversion
 	// cannot be performed because the type does not conform, then 'true' will
 	// be returned, but r_new_value will be nil; allowing the context to throw

@@ -521,11 +521,11 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       replace "${PUSH_PERMISSIONS}" with tPushPermissions in tManifest
       replace "${PUSH_RECEIVER}" with tPushReceiver in tManifest
       
-      -- SN-2014-02-07: Add the email attachments provider in the manifest
+      // Add the file provider to the manifest
       local tProvider
       put "<provider " & return into tProvider
       put "      android:name=" & quote & pSettings["android,identifier"] & ".AppProvider" & quote & return after tProvider
-      put "      android:authorities=" & quote & pSettings["android,identifier"] & ".attachmentprovider" & quote & return after tProvider
+      put "      android:authorities=" & quote & pSettings["android,identifier"] & ".fileprovider" & quote & return after tProvider
       put "      android:exported=" & quote & "true" & quote & return after tProvider
       put "      android:grantUriPermissions=" & quote & "true" & quote & " >" & return after tProvider
       put "    </provider>" & return after tProvider
@@ -678,40 +678,23 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          put tBuildFolder & slash & "classes_app/" & tCompiledClassFilePath & "/PushReceiver.class" & return after tBuiltClassFiles
       end if
       
-      -- SN-2014-02-07: Generate email attachment provider
-      local tAttachmentClass, tAttachmentClassFile      
-      put tBuildFolder & slash & "classes_app/AppProvider.java" into tAttachmentClassFile
+      // Generate app content provider class
+      local tProviderClass, tProviderClassFile
+      put tBuildFolder & slash & "classes_app/AppProvider.java" into tProviderClassFile
       
-      put "package" && pSettings["android,identifier"] & ";" & return into tAttachmentClass
-      put "import android.content.*;" & return after tAttachmentClass
-      put "import android.net.Uri;" & return after tAttachmentClass
-      put "import android.app.*;" & return after tAttachmentClass
-      put "import android.database.*;" & return after tAttachmentClass
-      put "import java.io.*;" & return after tAttachmentClass
-      put "import android.util.Log;" & return after tAttachmentClass
-      put "import android.os.ParcelFileDescriptor;" & return after tAttachmentClass
-      put "import com.runrev.android.AttachmentProvider;" & return after tAttachmentClass
-      put "public class AppProvider extends ContentProvider {" & return after tAttachmentClass
-      put "public static final String URI = " & quote & "content://" & pSettings["android,identifier"] & ".attachmentprovider" & quote & ";" & return after tAttachmentClass
-      put "public static final String AUTHORITY = " & quote & pSettings["android,identifier"] & ".attachmentprovider" & quote & ";" & return after tAttachmentClass
-      put "private com.runrev.android.AttachmentProvider m_attachments;" & return after tAttachmentClass
-      put "@Override" & return & "public boolean onCreate() { m_attachments = new AttachmentProvider(getContext()); return true; }" & return after tAttachmentClass
-      put "@Override" & return & "public ParcelFileDescriptor openFile(Uri uri, String mode) throws FileNotFoundException { Log.i(" & quote & "revandroid" & quote & ", uri.toString()); return m_attachments.doOpenFile(uri); }" & return after tAttachmentClass
-      put "@Override" & return & "public Cursor query (Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) { Log.i(" & quote & "revandroid" & quote & ", " & quote & "query: " & quote & " + uri.toString()); return m_attachments.doQuery(uri, projection, selection, selectionArgs, sortOrder); }" & return after tAttachmentClass
-      put "@Override" & return & "public Uri insert (Uri uri, ContentValues p_values) { return m_attachments.doInsert(uri, p_values); }" & return after tAttachmentClass
-      put "@Override" & return & "public int update (Uri uri, ContentValues values, String selection, String[] selectionArgs) { return 0; }" & return after tAttachmentClass
-      put "@Override" & return & "public int delete (Uri uri, String selection, String[] selectionArgs) { return m_attachments.doDelete(uri, selection, selectionArgs); }" & return after tAttachmentClass
-      put "@Override" & return & "public String getType (Uri uri){ return m_attachments.doGetType(uri); }" & return after tAttachmentClass      
-      put "}" & return after tAttachmentClass
-      put tAttachmentClass into url ("binfile:" & tAttachmentClassFile)
+      put "package" && pSettings["android,identifier"] & ";" & return into tProviderClass
+      put "import com.runrev.android.*;" & return after tProviderClass
+      put "public class AppProvider extends com.runrev.android.AppProvider {}" & return after tProviderClass
+      
+      put tProviderClass into url ("binfile:" & tProviderClassFile)
       if the result is not empty then
-         throw "could not create email attachment provider"
+         throw "could not create app content provider"
       end if
-      put tAttachmentClassFile & return after tBuiltClassFiles
+      put tProviderClassFile & return after tBuiltClassFiles
       
-      executeShellCommand pathToJavac(), "-target 1.5 -source 1.5 -Xlint:none -d", tClassesBuildFolder, "-cp", tClassPath, tAttachmentClassFile
+      executeShellCommand pathToJavac(), "-target 1.5 -source 1.5 -Xlint:none -d", tClassesBuildFolder, "-cp", tClassPath, tProviderClassFile
       if the result is not empty then
-         throw "could not compile email attachment provider" & return & the result
+         throw "could not compile app content provider" & return & the result
       end if
       put tBuildFolder & slash & "classes_app/" & tCompiledClassFilePath & "/AppProvider.class" & return after tBuiltClassFiles
       

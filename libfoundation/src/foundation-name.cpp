@@ -446,6 +446,12 @@ void __MCNameFinalize(void)
 	MCValueRelease(kMCEmptyName);
 	kMCEmptyName = nil;
 
+    MCValueRelease(kMCTrueName);
+    kMCTrueName = nil;
+
+    MCValueRelease(kMCFalseName);
+    kMCFalseName = nil;
+
 	MCMemoryDeleteArray(s_name_table);
 	s_name_table = nil;
 	s_name_table_capacity = 0;

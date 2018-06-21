@@ -82,7 +82,7 @@ function buildICU {
 
 	# Utility for displaying platform name
 	if [ ! -z "${SUBPLATFORM}" ] ; then
-		local NAME="${PLATFORM}/${SUBPLATFORM}/${ARCH}"
+		local NAME="${PLATFORM}/${ARCH}/${SUBPLATFORM}"
 		local PLATFORM_NAME=${SUBPLATFORM}
 	else
 		local NAME="${PLATFORM}/${ARCH}"

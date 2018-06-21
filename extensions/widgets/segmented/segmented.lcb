@@ -241,6 +241,7 @@ public handler OnSave(out rProperties as Array)
 	put mSegmentMinExtent	into rProperties["segmentMinWidth"]
 	put getSelected()		into rProperties["selectedSegment"]
 	put mShowFrameBorder	into rProperties["showFrameBorder"]
+	put mIsHorizontal		into rProperties["horizontal"]
 	put mRadius into rProperties["cornerRadius"]
 	
 	if mSelectedLabelColor is not nothing then
@@ -276,6 +277,10 @@ public handler OnLoad(in pProperties as Array)
 
 	if "selectedLabelColor" is among the keys of pProperties then
 		put stringToColor(pProperties["selectedLabelColor"]) into mSelectedLabelColor
+	end if
+	
+	if "horizontal" is among the keys of pProperties then
+		put pProperties["horizontal"] into mIsHorizontal
 	end if
 	
 end handler
