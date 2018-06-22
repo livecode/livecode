@@ -23,15 +23,13 @@ mobilePickPhoto "front camera", 250, 250
 
 Parameters:
 source (enum):
-The source for the image. One of:
+The source for the image.
 
-- "library"
-- "album"
-- "camera"
-
-
--   "rear camera": iOS only
--   "front camera": iOS only
+- "library":
+- "album":
+- "camera":
+- "rear camera": iOS only
+- "front camera": iOS only
 
 
 maxwidth:

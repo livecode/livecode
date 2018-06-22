@@ -33,8 +33,6 @@ channel:
 The name of the channel to play the sound on.
 
 type (enum):
-One of:
-
 -   "now": The sound is played immediately, replacing any current sound
     (and queued sound) on the channel.
 -   "next": The sound is queued to play immediately after the current

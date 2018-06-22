@@ -57,21 +57,19 @@ sample provided with the <locationChanged> event (which will always be
 the last sample in the history). e.g.
 
     on locationChanged
-
-    local tHistory
-    put mobileGetLocationHistory() into tHistory
-    repeat for each element tSample in tHistory
-
-    processLocationChanged tSample
-
-    end repeat
+        local tHistory
+        put mobileGetLocationHistory() into tHistory
+        repeat for each element tSample in tHistory
+            processLocationChanged tSample
+        end repeat
     end locationChanged
 
 
 References: mobileStopTrackingSensor (command),
-mobileStartTrackingSensor (command), mobileGetLocationHistory (function),
+mobileStartTrackingSensor (command), function (control structure),
+mobileGetLocationHistory (function),
 mobileGetLocationHistoryLimit (function),
 mobileSensorAvailable (function), mobileSensorReading (function),
-mobileLocationAuthorizationStatus (function), locationChanged (message),
-trackingError (message)
+mobileLocationAuthorizationStatus (function), array (glossary), 
+locationChanged (message), trackingError (message)
 
