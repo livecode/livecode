@@ -125,7 +125,7 @@
 						{
 							'library_dirs':
 							[
-								'lib/android/>(toolset_arch)',
+								'lib/android/<(target_arch)/api<(android_api_version)',
 							],
 							
 							'libraries':

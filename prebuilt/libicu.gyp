@@ -177,20 +177,28 @@
 						'toolset_os == "android"',
 						{
 							# Gyp doesn't seem to handle non-absolute paths here properly...
-							'library_dirs':
+							'conditions':
 							[
-								'lib/android/<(target_arch)',
-							],
-							
-							'libraries':
-							[
-								'-licui18n',
-								'-licuio',
-								'-licuuc',
-								'-licudata',
-								'-lstdc++',
-								'-lm',
-								'-latomic',
+								[
+									'OS == "android"',
+									{
+										'library_dirs':
+										[
+											'lib/android/<(target_arch)/api<(android_api_version)',
+										],
+										
+										'libraries':
+										[
+											'-licui18n',
+											'-licuio',
+											'-licuuc',
+											'-licudata',
+											'-lstdc++',
+											'-lm',
+											'-latomic',
+										],
+									},
+								],
 							],
 						},
 					],

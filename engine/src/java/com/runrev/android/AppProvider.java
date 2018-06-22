@@ -22,19 +22,16 @@ import android.database.*;
 import java.io.*;
 import android.util.Log;
 import android.os.ParcelFileDescriptor;
-import com.runrev.android.AttachmentProvider;
+import com.runrev.android.*;
 
 public class AppProvider extends ContentProvider
 {
-    public static final String URI = "content://com.runv.android.attachmentprovider";
-    public static final String AUTHORITY = "com.runv.android.attachmentprovider";
-    
-    private com.runrev.android.AttachmentProvider m_attachments;
+    private com.runrev.android.FileProvider m_files;
     
     @Override
     public boolean onCreate()
     {
-        m_attachments = new AttachmentProvider(getContext());
+		m_files = FileProvider.getProvider(getContext());
         return true;
     }
     
@@ -43,38 +40,38 @@ public class AppProvider extends ContentProvider
     throws FileNotFoundException
     {
         Log.i("revandroid", uri.toString());
-        return m_attachments.doOpenFile(uri);
+        return m_files.doOpenFile(uri);
     }
     
     @Override
     public Cursor query (Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder)
     {
         Log.i("revandroid", "query: " + uri.toString());
-        return m_attachments.doQuery(uri, projection, selection, selectionArgs, sortOrder);
+        return m_files.doQuery(uri, projection, selection, selectionArgs, sortOrder);
     }
     
     @Override
     public Uri insert (Uri uri, ContentValues p_values)
     {
-        return m_attachments.doInsert(uri, p_values);
+        return m_files.doInsert(uri, p_values);
     }
     
     @Override
     public int update (Uri uri, ContentValues values, String selection, String[] selectionArgs)
     {
-        return 0;
+        return m_files.doUpdate(uri, values, selection, selectionArgs);
     }
     
     @Override
     public int delete (Uri uri, String selection, String[] selectionArgs)
     {
-        return m_attachments.doDelete(uri, selection, selectionArgs);
+        return m_files.doDelete(uri, selection, selectionArgs);
     }
     
     @Override
     public String getType (Uri uri)
     {
-        return m_attachments.doGetType(uri);
+        return m_files.doGetType(uri);
     }
     
 }

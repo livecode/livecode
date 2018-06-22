@@ -900,7 +900,7 @@
 		[
 			'src/java/com/runrev/android/AccelerationChangeListener.java',
 			'src/java/com/runrev/android/Alert.java',
-			'src/java/com/runrev/android/AttachmentProvider.java',
+			'src/java/com/runrev/android/AppProvider.java',
 			'src/java/com/runrev/android/BitmapView.java',
 			'src/java/com/runrev/android/BusyIndicator.java',
 			'src/java/com/runrev/android/CalendarEvents.java',
@@ -911,6 +911,7 @@
 			'src/java/com/runrev/android/Engine.java',
 			'src/java/com/runrev/android/EngineApi.java',
 			'src/java/com/runrev/android/EngineReceiver.java',
+			'src/java/com/runrev/android/FileProvider.java',
 			'src/java/com/runrev/android/LCBInvocationHandler.java',
 			'src/java/com/runrev/android/LiveCodeActivity.java',
 			'src/java/com/runrev/android/LiveCodeService.java',

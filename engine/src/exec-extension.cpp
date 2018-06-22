@@ -1438,6 +1438,11 @@ static bool __script_try_to_convert_to_foreign(MCExecContext& ctxt, MCTypeInfoRe
 bool
 MCExtensionInitialize(void)
 {
+	// Initialize static variables
+	MCextensions = nil;
+	MCextensionschanged = false;
+	MCextensionshandlermap = nil;
+
     MCScriptSetLoadLibraryCallback(MCEngineLoadLibrary);
     
     return MCScriptForEachBuiltinModule([](void *p_context, MCScriptModuleRef p_module) {
@@ -1463,6 +1468,10 @@ MCExtensionFinalize(void)
         /* Free the extensions */
         __MCEngineFreeExtension(t_ext);
     }
+    
+    if (MCextensionshandlermap != nil)
+		MCValueRelease(MCextensionshandlermap);
+	MCextensionshandlermap = nil;
 }
 
 

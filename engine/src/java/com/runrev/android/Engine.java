@@ -98,7 +98,9 @@ public class Engine extends View implements EngineApi
     private CalendarEvents m_calendar_module;
     
     private OpenGLView m_opengl_view;
-	private OpenGLView m_old_opengl_view;
+	private boolean m_disabling_opengl;
+    private boolean m_enabling_opengl;
+    
 	private BitmapView m_bitmap_view;
 
 	private File m_temp_image_file;
@@ -207,8 +209,9 @@ public class Engine extends View implements EngineApi
 
 		// We have no opengl view to begin with.
 		m_opengl_view = null;
-		m_old_opengl_view = null;
-
+        m_disabling_opengl = false;
+        m_enabling_opengl = false;
+        
 		// But we do have a bitmap view.
 		m_bitmap_view = new BitmapView(getContext());
         
@@ -1916,12 +1919,15 @@ public class Engine extends View implements EngineApi
 			doPhotoPickerError("error: could not create temporary image file");
 			return;
 		}
-		
 
-		Uri t_tmp_uri = Uri.fromFile(m_temp_image_file);
+		String t_path = m_temp_image_file.getPath();
+
+		Uri t_uri;
+		t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, "image/jpeg", true, ParcelFileDescriptor.MODE_WRITE_ONLY);
 
 		Intent t_image_capture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_tmp_uri);
+		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_uri);
+		t_image_capture.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 		t_activity.startActivityForResult(t_image_capture, IMAGE_RESULT);
 	}
 
@@ -1978,7 +1984,7 @@ public class Engine extends View implements EngineApi
 			}
 			if (m_temp_image_file != null)
 			{
-				m_temp_image_file.delete();
+				FileProvider.getProvider(getContext()).removePath(m_temp_image_file.getPath());
 				m_temp_image_file = null;
 			}
 		}
@@ -2009,9 +2015,7 @@ public class Engine extends View implements EngineApi
 
 	public void prepareEmail(String address, String cc, String bcc, String subject, String message_body, boolean is_html)
 	{
-        String t_provider_authority = getContext().getPackageName();
-        t_provider_authority += ".attachmentprovider";
-		m_email = new Email(address, cc, bcc, subject, message_body, t_provider_authority, is_html);
+		m_email = new Email(address, cc, bcc, subject, message_body, is_html);
 	}
 
 	public void addAttachment(String path, String mime_type, String name)
@@ -2033,7 +2037,7 @@ public class Engine extends View implements EngineApi
 
 	private void onEmailResult(int resultCode, Intent data)
 	{
-		m_email.cleanupAttachments(getActivity().getContentResolver());
+		m_email.cleanupAttachments(getContext());
 
 		if (resultCode == Activity.RESULT_CANCELED)
 		{
@@ -2131,63 +2135,108 @@ public class Engine extends View implements EngineApi
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
+    
+    private boolean openGLViewEnabled()
+    {
+        return m_opengl_view != null && m_opengl_view.getParent() != null;
+    }
+    
+    private void ensureBitmapViewVisibility()
+    {
+        if (openGLViewEnabled())
+        {
+            m_bitmap_view.setVisibility(View.INVISIBLE);
+        }
+        else
+        {
+            m_bitmap_view.setVisibility(View.VISIBLE);
+        }
+    }
 
 	public void enableOpenGLView()
 	{
-		// If OpenGL is already enabled, do nothing.
-		if (m_opengl_view != null)
-			return;
-
-		Log.i("revandroid", "enableOpenGLView");
-
-
-		// If we have an old OpenGL view, use it.
-		if (m_old_opengl_view != null)
-		{
-			m_opengl_view = m_old_opengl_view;
-			m_old_opengl_view = null;
-		}
-
-		// Create the OpenGL view, if needed.
-		if (m_opengl_view == null)
-		{
-			m_opengl_view = new OpenGLView(getContext());
+        Log.i("revandroid", "enableOpenGLView");
+        
+        if (m_disabling_opengl)
+        {
+            m_disabling_opengl = false;
+        }
+        
+        if (!m_enabling_opengl)
+        {
+            m_enabling_opengl = true;
             
-			// Add the view to the hierarchy - we add at the bottom and bring to
-			// the front as soon as we've shown the first frame.
-			((ViewGroup)getParent()).addView(m_opengl_view, 0,
-											 new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
-																		  FrameLayout.LayoutParams.MATCH_PARENT));
-		}
+            post(new Runnable() {
+                public void run() {
+                    Log.i("revandroid", "enableOpenGLView callback");
+                    
+                    if (!m_disabling_opengl && m_enabling_opengl)
+                    {
+                        if (!openGLViewEnabled())
+                        {
+                            Log.i("revandroid", "enableOpenGLView adding");
+                            if (m_opengl_view == null)
+                            {
+                                m_opengl_view = new OpenGLView(getContext());
+                            }
+                            
+                            // Add the view to the hierarchy - we add at the bottom and bring to
+                            // the front as soon as we've shown the first frame.
+                            ((ViewGroup)getParent()).addView(m_opengl_view, 0,
+                                                             new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                                                                                          FrameLayout.LayoutParams.MATCH_PARENT));
+                        }
+                        else
+                        {
+                            // We need to call this explicitly here as we must re-enable drawing
+                            m_opengl_view.doSurfaceChanged(m_opengl_view);
+                        }
+                    }
+                    
+                    m_enabling_opengl = false;
+                    ensureBitmapViewVisibility();
+                }
+            });
+        }
 	}
 
 	public void disableOpenGLView()
 	{
-		// If OpenGL is not enabled, do nothing.
-		if (m_opengl_view == null)
-			return;
+        Log.i("revandroid", "disableOpenGLView");
+        
+        if (m_enabling_opengl)
+        {
+            m_enabling_opengl = false;
+        }
+        
+        if (!m_disabling_opengl)
+        {
+            m_disabling_opengl = true;
+            
+            // Before removing the OpenGL mode, make sure we show the bitmap view.
+            m_bitmap_view.setVisibility(View.VISIBLE);
 
-		Log.i("revandroid", "disableOpenGLView");
-
-		// Before removing the OpenGL mode, make sure we show the bitmap view.
-		m_bitmap_view.setVisibility(View.VISIBLE);
-
-		// Move the current opengl view to old.
-		m_old_opengl_view = m_opengl_view;
-		m_opengl_view = null;
-
-		// Post an runnable that removes the OpenGL view. Doing that here will
-		// cause a black screen.
-		post(new Runnable() {
-			public void run() {
-				if (m_old_opengl_view == null)
-					return;
-
-				Log.i("revandroid", "disableOpenGLView callback");
-				((ViewGroup)m_old_opengl_view.getParent()).removeView(m_old_opengl_view);
-				m_old_opengl_view = null;
-		}
-		});
+            // Move the current opengl view to old.
+            // Post an runnable that removes the OpenGL view. Doing that here will
+            // cause a black screen.
+            post(new Runnable() {
+                public void run() {
+                    Log.i("revandroid", "disableOpenGLView callback");
+                    
+                    if (!m_enabling_opengl && m_disabling_opengl)
+                    {
+                       if (openGLViewEnabled())
+                        {
+                            Log.i("revandroid", "disableOpenGLView removing");
+                            ((ViewGroup)m_opengl_view.getParent()).removeView(m_opengl_view);
+                        }
+                    }
+                    
+                    m_disabling_opengl = false;
+                    ensureBitmapViewVisibility();
+                }
+            });
+        }
 	}
     
     // MW-2015-05-06: [[ Bug 15232 ]] Post a runnable to prevent black flash when enabling openGLView
@@ -2195,16 +2244,14 @@ public class Engine extends View implements EngineApi
     {
         post(new Runnable() {
             public void run() {
-                if (m_opengl_view == null)
-                    return;
-                m_bitmap_view.setVisibility(View.INVISIBLE);
+                ensureBitmapViewVisibility();
             }
         });
     }
     
 	public void showBitmapView()
 	{
-		m_bitmap_view.setVisibility(View.VISIBLE);
+		ensureBitmapViewVisibility();
 	}
 
 ////////////////////////////////////////////////////////////////////////////////

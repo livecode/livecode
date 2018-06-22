@@ -25,7 +25,7 @@ import subprocess
 BUILDBOT_PLATFORM_TRIPLES = (
     'x86-linux-debian8',
     'x86_64-linux-debian8',
-    'armv6-android-api9',
+    'armv6-android-api26',
     'armv7-android-api9',
     'arm64-android-api9',
     'x86-android-api9',
@@ -148,7 +148,8 @@ def process_env_options(opts):
         'WIN_MSVS_VERSION', 'XCODE_TARGET_SDK', 'XCODE_HOST_SDK',
         'TARGET_ARCH', 'PERL', 'ANDROID_NDK_VERSION', 'ANDROID_PLATFORM',
         'ANDROID_SDK', 'ANDROID_NDK', 'ANDROID_BUILD_TOOLS', 'LTO',
-        'ANDROID_TOOLCHAIN', 'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY', 'OBJDUMP',
+        'ANDROID_TOOLCHAIN', 'ANDROID_API_VERSION',
+        'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY', 'OBJDUMP',
         'STRIP', 'JAVA_SDK', 'NODE_JS', 'BUILD_EDITION', 'CC_PREFIX', 'CROSS',
         'SYSROOT', 'AUX_SYSROOT', 'TRIPLE', 'MS_SPEECH_SDK5', 'QUICKTIME_SDK',
         )
@@ -596,17 +597,23 @@ def android_extra_ldflags(target_arch):
 
 def validate_android_tools(opts):
     if opts['ANDROID_NDK_VERSION'] is None:
-        opts['ANDROID_NDK_VERSION'] = 'r14'
+        opts['ANDROID_NDK_VERSION'] = 'r15'
 
-    ndk_ver = opts['ANDROID_NDK_VERSION']
-    if opts['ANDROID_PLATFORM'] is None:
-        opts['ANDROID_PLATFORM'] = 'android-17'
+    ndk_ver = opts['ANDROID_NDK_VERSION']     
 
     if opts['ANDROID_NDK'] is None:
         ndk = guess_android_tooldir('android-ndk')
         if ndk is None:
             error('Android NDK not found; set $ANDROID_NDK')
         opts['ANDROID_NDK'] = ndk
+
+    if opts['ANDROID_API_VERSION'] is None:
+        opts['ANDROID_API_VERSION'] = '26'
+     
+    api_ver = opts['ANDROID_API_VERSION']
+
+    if opts['ANDROID_PLATFORM'] is None:
+        opts['ANDROID_PLATFORM'] = 'android-' + api_ver
 
     if opts['ANDROID_SDK'] is None:
         sdk = guess_android_tooldir('android-sdk')
@@ -740,6 +747,7 @@ def configure_android(opts):
 
     export_opts(opts, ('ANDROID_BUILD_TOOLS', 'ANDROID_NDK',
                        'ANDROID_PLATFORM', 'ANDROID_SDK',
+                       'ANDROID_API_VERSION',
                        'JAVA_SDK', 'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY',
                        'OBJDUMP', 'STRIP'))
     args = core_gyp_args(opts) + ['-Dtarget_arch=' + opts['TARGET_ARCH'],

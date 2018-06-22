@@ -1,0 +1,1 @@
+# Ensure the area outside the stack rect is re-rendered when going to a new card in fullscreen mode showAll
