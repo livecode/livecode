@@ -25,7 +25,7 @@ import subprocess
 BUILDBOT_PLATFORM_TRIPLES = (
     'x86-linux-debian8',
     'x86_64-linux-debian8',
-    'armv6-android-api26',
+    'armv6-android-sdk26_ndk16r15',
     'universal-mac-macosx10.9', # Minimum deployment target
     'universal-ios-iphoneos11.4',
     'universal-ios-iphoneos11.2',
@@ -119,7 +119,8 @@ def exec_gyp(args):
 def process_env_options(opts):
     vars = ('OS', 'PLATFORM', 'GENERATOR_OUTPUT', 'FORMATS', 'DEPTH',
         'WIN_MSVS_VERSION', 'XCODE_TARGET_SDK', 'XCODE_HOST_SDK',
-        'TARGET_ARCH', 'PERL', 'ANDROID_NDK_VERSION', 'ANDROID_PLATFORM',
+        'TARGET_ARCH', 'PERL', 'ANDROID_NDK_VERSION',
+        'ANDROID_NDK_PLATFORM_VERSION', 'ANDROID_PLATFORM',
         'ANDROID_SDK', 'ANDROID_NDK', 'ANDROID_BUILD_TOOLS',
         'ANDROID_TOOLCHAIN', 'ANDROID_API_VERSION',
         'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY', 'OBJDUMP',
@@ -423,6 +424,9 @@ def validate_android_tools(opts):
             error('Android NDK not found; set $ANDROID_NDK')
         opts['ANDROID_NDK'] = ndk
 
+    if opts['ANDROID_NDK_PLATFORM_VERSION'] is None:
+        opts['ANDROID_NDK_PLATFORM_VERSION'] = '16'
+
     if opts['ANDROID_API_VERSION'] is None:
         opts['ANDROID_API_VERSION'] = '26'
      
@@ -539,6 +543,7 @@ def configure_android(opts):
 
     export_opts(opts, ('ANDROID_BUILD_TOOLS', 'ANDROID_NDK',
                        'ANDROID_PLATFORM', 'ANDROID_SDK',
+                       'ANDROID_NDK_VERSION', 'ANDROID_NDK_PLATFORM_VERSION',
                        'ANDROID_API_VERSION',
                        'JAVA_SDK', 'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY',
                        'OBJDUMP', 'STRIP'))
