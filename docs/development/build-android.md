@@ -42,7 +42,7 @@ Create a standalone toolchain (this simplifies setting up the build environment)
 
 ````bash
 android-ndk-r15/build/tools/make_standalone_toolchain.py \
-    --arch arm --api 26 \
+    --arch arm --api 16 --deprecated-headers \
     --install-dir ${HOME}/android/toolchain/standalone
 ````
 
@@ -81,6 +81,7 @@ AR="${BINDIR}/${TRIPLE}-ar"
 
 # Android platform information
 ANDROID_NDK_VERSION=r15
+ANDROID_NDK_PLATFORM_VERSION=16
 ANDROID_API_VERSION=26
 ANDROID_PLATFORM=android-${ANDROID_API_VERSION}
 ANDROID_NDK=${TOOLCHAIN}/android-ndk-${ANDROID_NDK_VERSION}
@@ -90,7 +91,8 @@ ANDROID_LIB_PATH=${TOOLCHAIN}/standalone/${TRIPLE}/lib
 
 export JAVA_SDK
 export CC CXX LINK AR
-export ANDROID_PLATFORM ANDROID_NDK ANDROID_SDK ANDROID_BUILD_TOOLS
+export ANDROID_PLATFORM ANDROID_NDK ANDROID_NDK_PLATFORM_VERSION
+export ANDROID_SDK ANDROID_BUILD_TOOLS
 export ANDROID_LIB_PATH ANDROID_API_VERSION
 ````
 
