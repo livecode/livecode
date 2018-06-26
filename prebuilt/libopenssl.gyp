@@ -123,17 +123,26 @@
 					[
 						'toolset_os == "android"',
 						{
-							'library_dirs':
+							# Gyp doesn't seem to handle non-absolute paths here properly...
+							'conditions':
 							[
-								'lib/android/<(target_arch)/<(android_subplatform)',
-							],
+								[
+									'OS == "android"',
+									{
+										'library_dirs':
+										[
+											'lib/android/<(target_arch)/<(android_subplatform)',
+										],
 							
-							'libraries':
-							[
-								'-Wl,-whole-archive',
-								'-lcustomcrypto',
-								'-lcustomssl',
-								'-Wl,-no-whole-archive',
+										'libraries':
+										[
+											'-Wl,-whole-archive',
+											'-lcustomcrypto',
+											'-lcustomssl',
+											'-Wl,-no-whole-archive',
+										],
+									},
+								],
 							],
 						},
 					],
