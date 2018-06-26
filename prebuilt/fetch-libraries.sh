@@ -53,11 +53,6 @@ function fetchLibrary {
 	local ARCH=$3
 	local SUBPLATFORM=$4
 
-	# Skip CEF on non-supported Linux platforms
-	if [ "${PLATFORM}" == "linux" -a "${LIB}" == "CEF" ] ; then
-		return
-	fi
-
 	eval "local VERSION=\${${LIB}_VERSION}"
 	eval "local BUILDREVISION=\${${LIB}_BUILDREVISION}"
 
