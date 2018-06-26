@@ -147,22 +147,32 @@ private command __EnsureExternal pExternal
       exit __EnsureExternal
    end if
    
-   -- If we are running in the IDE we should have externals available
-   if the environment begins with "development" then
-      exit __EnsureExternal
-   end if
+   local tEnvironment
+   put the environment into tEnvironment
+   switch tEnvironment
+      case "development"
+      case "development command line"
+      -- If we are running in the IDE we should have externals available
+      	exit __EnsureExternal
+      case "standalone application"
+      case "command line"
+         -- In a build standalone externals should have been included
+         -- If we are running tests, externals should be loaded.
+         exit __EnsureExternal
+      case "server"
+      default
+         break
+   end switch
    
-   -- If we are running on server with an 'externals' folder, assume
+   -- If we are running with an 'externals' folder, assume
    -- the externals are loaded
-   if the environment is "server" then
-      local tHomeFolder
-      put $REV_HOME into tHomeFolder
-      if tHomeFolder is empty then
-         put $LIVECODE_SERVER_HOME into tHomeFolder
-      end if
-      if tHomeFolder is empty then
-         put specialfolderpath("engine") into tHomeFolder
-      end if
+   local tHomeFolder
+   put $REV_HOME into tHomeFolder
+   if tHomeFolder is empty then
+      put $LIVECODE_SERVER_HOME into tHomeFolder
+   end if
+   if tHomeFolder is empty then
+      put specialfolderpath("engine") into tHomeFolder
    end if
    
    local tFileExtension
