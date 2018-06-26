@@ -22,9 +22,12 @@ import android.database.*;
 import android.database.sqlite.*;
 import android.content.*;
 import android.util.*;
+import android.os.Build;
+import android.graphics.Color;
 
 import java.io.*;
 import java.util.*;
+
 
 public class NotificationModule
 {
@@ -82,7 +85,6 @@ public class NotificationModule
         
         Intent t_intent = new Intent(context, t_receiver_class);
         t_intent.setAction(ACTION_DISPATCH_NOTIFICATIONS);
-        
         PendingIntent t_pending_intent = PendingIntent.getBroadcast(context, 0, t_intent, 0);
 
         long t_next_notification = getEarliestNotificationTime(context);
@@ -531,6 +533,25 @@ public class NotificationModule
         t_builder.setContentIntent(createNotificationContentIntent(context));
         t_builder.setContentText(p_body);
         t_builder.setContentTitle(p_title);
+        
+        // If the device runs Android OREO use NotificationChannel - Added in API level 26
+        // Note the constant value of Build.VERSION_CODES.O is 26
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        {
+            String t_channel_id = "android_channel_id";
+            String t_channel_description = "Notification Channel";
+            CharSequence t_channel_name = "My Notifications";
+            
+            NotificationChannel t_notification_channel = new NotificationChannel(t_channel_id, t_channel_name, NotificationManager.IMPORTANCE_MAX);
+            
+            // Configure the notification channel.
+            t_notification_channel.setDescription(t_channel_description);
+            t_notification_channel.enableLights(true);
+            t_notification_channel.enableVibration(true);
+            t_notification_manager.createNotificationChannel(t_notification_channel);
+            
+            t_builder.setChannelId(t_channel_id);
+        }
 		
         t_builder.setDeleteIntent(createNotificationCancelIntent(context, p_id));
 
@@ -553,6 +574,10 @@ public class NotificationModule
         try
         {
             Intent t_registration_intent = new Intent("com.google.android.c2dm.intent.REGISTER");
+            
+            // Needed for registering devices that run Android Oreo+
+            t_registration_intent.setPackage("com.google.android.gms");
+            
             t_registration_intent.putExtra("app", PendingIntent.getBroadcast(m_engine.getContext(), 0, new Intent(), 0));
             t_registration_intent.putExtra("sender", senderEmail);
             m_engine.getContext().startService(t_registration_intent);
@@ -606,7 +631,6 @@ public class NotificationModule
     {
         long t_row_id;
         t_row_id = insertNotification(context, NOTIFY_TYPE_REMOTE, System.currentTimeMillis(), body, title, user_info, play_sound, badge_value);
-        
         resetTimer(context);
     }
 
