@@ -124,8 +124,7 @@
 						'toolset_os == "android"',
 						{
 							'library_dirs':
-							[
-								'lib/android/>(toolset_arch)',
+							[					'lib/android/>(toolset_arch)/<(android_subplatform)',
 							],
 							
 							'libraries':

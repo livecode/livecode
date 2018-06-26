@@ -2473,7 +2473,8 @@ bool revandroid_getAssetOffsetAndLength(JNIEnv *env, jobject object, const char 
 bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_path)
 {
 	MCAndroidEngineRemoteCall("loadExternalLibrary", "xx", &r_path, p_external);
-	return r_path != nil;
+	
+    return !MCStringIsEmpty(r_path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2482,10 +2483,7 @@ bool MCAndroidGetBuildInfo(MCStringRef p_key, MCStringRef& r_value)
 {
 	MCAndroidEngineCall("getBuildInfo", "xx", &r_value, p_key);
 
-	if (r_value == nil)
-		return false;
-
-    return true;
+    return !MCStringIsEmpty(r_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

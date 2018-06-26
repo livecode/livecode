@@ -190,7 +190,7 @@ MCScreenDC::openwindow(Window p_window,
 	MCEmscriptenSetWindowRect(t_window, t_stack->view_getrect());
 
 	t_stack->view_configure(true);
-	t_stack->view_dirty_all();
+	t_stack->dirtyall();
 }
 
 void

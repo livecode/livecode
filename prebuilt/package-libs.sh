@@ -47,6 +47,8 @@ function doPackage {
 		source "scripts/ios.inc"
 		queryiOS "${SUBPLATFORM}"
 		local PACKAGE_SUBPLATFORM="${SUBPLATFORM_NAME}${VERSION}"
+	elif  [ "${PLATFORM}" == "android" ] ; then
+		local PACKAGE_SUBPLATFORM="${SUBPLATFORM}"
 	else
 		local PACKAGE_SUBPLATFORM=
 	fi
@@ -138,8 +140,8 @@ function doPackage {
 PLATFORM=$1
 ARCH=$2
 
-#only ios subplatforms are used
-if [ "${PLATFORM}" = "ios" ] ; then
+#only ios and android subplatforms are used
+if [ "${PLATFORM}" == "ios" ] || [ "${PLATFORM}" == "android" ] ; then
 	SUBPLATFORM=$3
 else
 	SUBPLATFORM=

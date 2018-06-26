@@ -2371,17 +2371,17 @@ private command __InitialiseInclusionDependencies
    revSBAddDependencyForInclusion "scriptLibraries", "XMLRPC", "scriptLibraries", "XML"
 end __InitialiseInclusionDependencies
 
-command revSBAddDependencyForInclusion pInclusionType, pInclusion, pDependenyType, pDependeny, pPlatforms
+command revSBAddDependencyForInclusion pInclusionType, pInclusion, pDependencyType, pDependency, pPlatforms
    if pPlatforms is empty then
       put revSBAllPlatforms() into pPlatforms
    end if
    repeat for each item tPlatform in pPlatforms
-      put true into sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny][tPlatform]
+      put true into sDependencies[pInclusionType][pInclusion][pDependencyType][pDependency][tPlatform]
    end repeat
 end revSBAddDependencyForInclusion
 
-command revSBRemoveDependencyForInclusion pInclusion, pInclusionType, pDependeny, pDependenyType
-   delete variable sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny]
+command revSBRemoveDependencyForInclusion pInclusionType, pInclusion, pDependencyType, pDependency
+   delete variable sDependencies[pInclusionType][pInclusion][pDependencyType][pDependency]
 end revSBRemoveDependencyForInclusion
 
 command revSBUpdateForDependencies pPlatform, pArchs, pSDK, @xSettings

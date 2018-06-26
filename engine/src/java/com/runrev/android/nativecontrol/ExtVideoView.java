@@ -806,4 +806,12 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
     public boolean canSeekForward() {
         return mCanSeekForward;
     }
+    
+    @Override
+    public int getAudioSessionId() {
+      if (mMediaPlayer != null) {
+          return mMediaPlayer.getAudioSessionId();
+      }
+      return 0;
+    }
 }

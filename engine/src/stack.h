@@ -533,8 +533,6 @@ public:
 	void view_reset_updates(void);
 	// IM-2013-10-14: [[ FullscreenMode ]] Mark the given view region as needing redrawn
 	void view_dirty_rect(const MCRectangle &p_rect);
-	// IM-2013-10-14: [[ FullscreenMode ]] Mark the entire view surface as needing redrawn
-	void view_dirty_all(void);
 	// IM-2013-10-14: [[ FullscreenMode ]] Request a redraw of the marked areas
 	void view_updatewindow(void);
 	// IM-2013-10-14: [[ FullscreenMode ]] Ensure the view content is up to date
