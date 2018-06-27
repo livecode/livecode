@@ -146,7 +146,7 @@ def exec_gyp(args):
 def process_env_options(opts):
     vars = ('OS', 'PLATFORM', 'GENERATOR_OUTPUT', 'FORMATS', 'DEPTH',
         'WIN_MSVS_VERSION', 'XCODE_TARGET_SDK', 'XCODE_HOST_SDK',
-        'TARGET_ARCH', 'PERL', 'ANDROID_NDK_VERSION',
+        'TARGET_ARCH', 'PERL', 'ANDROID_NDK_VERSION', 'ANDROID_TOOLCHAIN_DIR',
         'ANDROID_NDK_PLATFORM_VERSION', 'ANDROID_PLATFORM',
         'ANDROID_SDK', 'ANDROID_NDK', 'ANDROID_BUILD_TOOLS', 'LTO',
         'ANDROID_TOOLCHAIN', 'ANDROID_API_VERSION',
@@ -515,8 +515,11 @@ def validate_xcode_sdks(opts):
 
 # We suggest some symlinks for Android toolchain components in the
 # INSTALL-android.md file.  This checks if a directory is present
-def guess_android_tooldir(name):
-    dir = os.path.join(os.path.expanduser('~'), 'android', 'toolchain', name)
+def guess_android_tooldir(toolchain, name):
+    if toolchain is None:
+        dir = os.path.join(os.path.expanduser('~'), 'android', 'toolchain', name)
+    else:
+        dir = os.path.join(toolchain, name)
     if os.path.isdir(dir):
         return dir
     return None
@@ -602,8 +605,10 @@ def validate_android_tools(opts):
 
     ndk_ver = opts['ANDROID_NDK_VERSION']     
 
+    toolchain_dir = opts['ANDROID_TOOLCHAIN_DIR']
+
     if opts['ANDROID_NDK'] is None:
-        ndk = guess_android_tooldir('android-ndk')
+        ndk = guess_android_tooldir(toolchain_dir, 'android-ndk')
         if ndk is None:
             error('Android NDK not found; set $ANDROID_NDK')
         opts['ANDROID_NDK'] = ndk
@@ -620,7 +625,7 @@ def validate_android_tools(opts):
         opts['ANDROID_PLATFORM'] = 'android-' + api_ver
 
     if opts['ANDROID_SDK'] is None:
-        sdk = guess_android_tooldir('android-sdk')
+        sdk = guess_android_tooldir(toolchain_dir, 'android-sdk')
         if sdk is None:
             error('Android SDK not found; set $ANDROID_SDK')
         opts['ANDROID_SDK'] = sdk
@@ -632,7 +637,7 @@ def validate_android_tools(opts):
         opts['ANDROID_BUILD_TOOLS'] = tools
 
     if opts['ANDROID_TOOLCHAIN'] is None:
-        dir = guess_android_tooldir(guess_standalone_toolchain_dir_name(opts['TARGET_ARCH']))
+        dir = guess_android_tooldir(toolchain_dir, guess_standalone_toolchain_dir_name(opts['TARGET_ARCH']))
         if dir is None:
             error('Android toolchain not found for architecture {}; set $ANDROID_TOOLCHAIN'.format(opts['TARGET_ARCH']))
         prefix = guess_compiler_prefix(opts['TARGET_ARCH'])
