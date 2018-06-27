@@ -194,8 +194,10 @@ typedef struct
 #define EM_860		 7		/* Intel 80860 */
 #define EM_MIPS		 8		/* MIPS R3000 big-endian */
 #define EM_S370		 9		/* IBM System/370 */
-#define EM_MIPS_RS3_LE	10		/* MIPS R3000 little-endian */
-#define EM_ARM		40
+#define EM_MIPS_RS3_LE	10	/* MIPS R3000 little-endian */
+#define EM_ARM		40      /* ARM */
+#define EM_X86_64   62      /* AMD x86-64 */
+#define EM_AARCH64  183     /* ARM AArch64 */
 
 /* Legal values for e_version (version).  */
 
@@ -452,6 +454,17 @@ static void swap_ElfX_Phdr(Elf64_Phdr& x)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool MCDeployIsValidAndroidArch(uint16_t p_machine)
+{
+    if (p_machine == EM_ARM ||
+        p_machine == EM_AARCH64 ||
+        p_machine == EM_386 ||
+        p_machine == EM_X86_64)
+        return true;
+    
+    return false;
+}
+
 template<typename T>
 static bool MCDeployToLinuxReadHeader(MCDeployFileRef p_file, bool p_is_android, typename T::Ehdr& r_header)
 {
@@ -487,7 +500,7 @@ static bool MCDeployToLinuxReadHeader(MCDeployFileRef p_file, bool p_is_android,
 	else
 	{
 		if (r_header . e_type != ET_DYN ||
-			r_header . e_machine != EM_ARM ||
+			!MCDeployIsValidAndroidArch(r_header.e_machine) ||
 			r_header . e_version != EV_CURRENT)
 			return MCDeployThrow(kMCDeployErrorLinuxBadImage);
 	}
