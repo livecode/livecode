@@ -249,29 +249,39 @@ void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_da
 
 static bool MCEngineLoadLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCSLibraryRef& r_library)
 {
-    MCSLibraryRef t_library = nullptr;
+    // Extension libraries should be mapped by the IDE or deploy params
+    // We first check <module_name>/<lib_name> so that two modules
+    // can use distinct code resources with the same name
+    MCNameRef t_module_name = MCScriptGetNameOfModule(p_module);
+    MCAutoStringRef t_module_lib_name;
+    if (!MCStringFormat(&t_module_lib_name, "%@/%@", t_module_name, p_name))
+        return false;
     
-    // extension libraries should be mapped by the IDE or deploy params
-    if (MCdispatcher->haslibrarymapping(p_name))
+    MCAutoStringRef t_map_name;
+    bool t_has_mapping = false;
+    if (MCdispatcher->haslibrarymapping(*t_module_lib_name))
     {
-        MCAutoStringRef t_map_name;
+        t_has_mapping = true;
+        if (!MCStringFormat(&t_map_name, "./%@", *t_module_lib_name))
+            return false;
+    }
+    else if (MCdispatcher->haslibrarymapping(p_name))
+    {
+        t_has_mapping = true;
         if (!MCStringFormat(&t_map_name, "./%@", p_name))
             return false;
-    
-        t_library = MCU_library_load(*t_map_name);
-        
-        // there was a mapping and it failed to load
-        if (t_library == nullptr)
-        {
-            return false;
-        }
+    }
+    else
+    {
+        t_map_name = p_name;
     }
     
-    // if not mapped then fallback to assuming a full path or a location
-    // supported by dlopen
-    if (t_library == nullptr)
+    MCSLibraryRef t_library = MCU_library_load(*t_map_name);
+        
+    // there was a mapping and it failed to load
+    if (t_has_mapping && t_library == nullptr)
     {
-        t_library = MCU_library_load(p_name);
+        return false;
     }
     
 #if defined(__IOS__)
