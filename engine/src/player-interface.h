@@ -85,6 +85,10 @@ protected:
     MCPlayerDuration lasttime;
     Boolean dontuseqt;
     Boolean usingqt;
+	
+    double m_left_balance;
+    double m_right_balance;
+    double m_audio_pan;
     
 public:
     MCPlayerInterface(){};
@@ -110,7 +114,13 @@ public:
 	virtual MCRectangle getpreferredrect() = 0;
 	virtual uint2 getloudness() = 0;
 	virtual void setloudness() = 0;
-    
+	virtual double getleftbalance() = 0;
+	virtual void setleftbalance(double p_left_balance) = 0;
+	virtual double getrightbalance() = 0;
+	virtual void setrightbalance(double p_right_balance) = 0;
+	virtual double getaudiopan() = 0;
+	virtual void setaudiopan(double p_pan) = 0;
+
     Boolean isdisposable()
     {
         return disposable;

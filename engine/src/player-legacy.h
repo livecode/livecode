@@ -173,6 +173,12 @@ public:
 	virtual MCRectangle getpreferredrect();
     virtual uint2 getloudness();
 	virtual void setloudness();
+	virtual double getleftbalance();
+	virtual void setleftbalance(double p_left_balance);
+	virtual double getrightbalance();
+	virtual void setrightbalance(double p_right_balance);
+	virtual double getaudiopan();
+	virtual void setaudiopan(double p_pan);
 
 	virtual Boolean prepare(MCStringRef options);
 	virtual Boolean playstart(MCStringRef options);
