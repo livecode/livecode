@@ -1599,7 +1599,7 @@ function androidCreateAppManifest pMainManifest, pAdditionalManifestsA
    end repeat
    
    MergeManifestArrays tMainArrayA, tAdditionalArraysA
-   return ConvertArrayToXML(tMainArrayA)
+   return ConvertArrayToXML(tMainArrayA, "utf-8")
 end androidCreateAppManifest
 
 command MergeManifestArrays @xManifestArrayA, pAdditionalsA
@@ -1902,12 +1902,16 @@ private function ConvertXMLNodeToArray pTreeID, pNode, pXMLTreeEncoding, pStoreE
 end ConvertXMLNodeToArray
  
 private function EncodeString pString, pInEncoding, pOutEncoding
+   if pInEncoding is pOutEncoding then
+      return pString
+   end if
+   
    if pInEncoding is not empty then
       -- if pOutEncoding is empty then pString will be converted to the current platform encoding
       put textDecode(pString, pInEncoding) into pString
    end if
    
-   if pOutEncoding is not empty and not (pString contains "android:label") then
+   if pOutEncoding is not empty then
       -- if pInEncoding is empty then pString is assumed to be in the current platform encoding
       put textEncode(pString, pOutEncoding) into pString
    end if
