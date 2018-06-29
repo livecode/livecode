@@ -357,7 +357,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       if the result is not empty then
          throw "Cannot find the template Manifest"
       end if
-      replace "${LABEL}" with pSettings["android,label"] in tManifest
+      replace "${LABEL}" with textEncode(pSettings["android,label"], "utf-8") in tManifest
       replace "${NAME}" with ".mblandroid" in tManifest
       replace "${IDENTIFIER}" with pSettings["android,identifier"] in tManifest
       replace "${VERSION_NAME}" with pSettings["android,version name"] in tManifest
@@ -1598,7 +1598,7 @@ function androidCreateAppManifest pMainManifest, pAdditionalManifestsA
    end repeat
    
    MergeManifestArrays tMainArrayA, tAdditionalArraysA
-   return ConvertArrayToXML(tMainArrayA)
+   return ConvertArrayToXML(tMainArrayA, "utf-8")
 end androidCreateAppManifest
 
 command MergeManifestArrays @xManifestArrayA, pAdditionalsA
@@ -1901,6 +1901,10 @@ private function ConvertXMLNodeToArray pTreeID, pNode, pXMLTreeEncoding, pStoreE
 end ConvertXMLNodeToArray
  
 private function EncodeString pString, pInEncoding, pOutEncoding
+   if pInEncoding is pOutEncoding then
+      return pString
+   end if
+   
    if pInEncoding is not empty then
       -- if pOutEncoding is empty then pString will be converted to the current platform encoding
       put textDecode(pString, pInEncoding) into pString
