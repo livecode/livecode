@@ -250,7 +250,13 @@ public:
 	virtual void SetTilt(MCExecContext& ctxt, double p_tilt) = 0;
 	virtual void GetZoom(MCExecContext& ctxt, double& r_zoom) = 0;
 	virtual void SetZoom(MCExecContext& ctxt, double p_zoom) = 0;
-    
+	virtual void GetLeftBalance(MCExecContext& ctxt, double &r_left_balance) = 0;
+	virtual void SetLeftBalance(MCExecContext& ctxt, double p_left_balance) = 0;
+	virtual void GetRightBalance(MCExecContext& ctxt, double &r_right_balance) = 0;
+	virtual void SetRightBalance(MCExecContext& ctxt, double p_right_balance) = 0;
+	virtual void GetAudioPan(MCExecContext& ctxt, double &r_pan) = 0;
+	virtual void SetAudioPan(MCExecContext& ctxt, double p_pan) = 0;
+
 	virtual void GetTracks(MCExecContext& ctxt, MCStringRef& r_tracks) = 0;
     
 	virtual void GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& r_constraints) = 0;
