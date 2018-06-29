@@ -16,6 +16,7 @@
 
 #include <Cocoa/Cocoa.h>
 #include <AVFoundation/AVFoundation.h>
+#include <Accelerate/Accelerate.h>
 
 #include "globdefs.h"
 #include "imagebitmap.h"
@@ -28,6 +29,18 @@
 #include "mac-internal.h"
 
 #include "graphics_util.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCAVPlayerPanningFilter
+{
+	float left_balance;
+	float right_balance;
+	float left_pan;
+	float right_pan;
+};
+
+bool MCAVPlayerSetupPanningFilter(AVPlayer *p_player, MCAVPlayerPanningFilter *p_filter);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -120,6 +133,8 @@ private:
     static void DoUpdateCurrentTime(void *ctxt);
     void Mirror(void);
     void Unmirror(void);
+	
+    void UpdatePanningFilter(double p_left_balance, double p_right_balance, double p_pan);
     
     NSLock *m_lock;
     
@@ -132,6 +147,13 @@ private:
     uint32_t m_buffered_time;
 	double m_scale;
     double m_rate;
+	
+	double m_left_balance;
+	double m_right_balance;
+	double m_pan;
+	
+	MCAVPlayerPanningFilter m_panning_filter;
+	
     CMTimeScale m_time_scale;
     
     bool m_play_selection_only : 1;
@@ -296,6 +318,11 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_play_selection_only = false;
     m_looping = false;
     
+	m_left_balance = 1.0;
+	m_right_balance = 1.0;
+	m_pan = 0.0;
+	UpdatePanningFilter(m_left_balance, m_right_balance, m_pan);
+	
 	m_rect = MCRectangleMake(0, 0, 0, 0);
 	m_visible = true;
 	m_offscreen = false;
@@ -774,6 +801,8 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
         return;
     }
 
+	/* UNCHECKED */ MCAVPlayerSetupPanningFilter(t_player, &m_panning_filter);
+
     m_has_invalid_filename = false;
 
     CVDisplayLinkSetOutputCallback(m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, this);
@@ -860,6 +889,145 @@ void MCAVFoundationPlayer::Mirror(void)
 void MCAVFoundationPlayer::Unmirror(void)
 {
     m_view.layer.sublayerTransform = CATransform3DMakeAffineTransform(CGAffineTransformMakeScale(1, 1));
+}
+
+void MCAVFoundationPlayer::UpdatePanningFilter(double p_left_balance, double p_right_balance, double p_pan)
+{
+	double t_left_balance, t_right_balance;
+	t_left_balance = sqrt(p_left_balance);
+	t_right_balance = sqrt(p_right_balance);
+	
+	double t_left_pan, t_right_pan;
+	if (p_pan == 0.0)
+	{
+		t_left_pan = 0.0;
+		t_right_pan = 0.0;
+	}
+	else if (p_pan < 0.0)
+	{
+		t_left_pan = 0;
+		t_right_pan = sqrt(-p_pan);
+	}
+	else
+	{
+		t_left_pan = sqrt(p_pan);
+		t_right_pan = 0.0;
+	}
+	
+	m_panning_filter.left_balance = t_left_balance * (1.0 - t_left_pan);
+	m_panning_filter.right_balance = t_right_balance * (1.0 - t_right_pan);
+	m_panning_filter.left_pan = t_left_pan * t_left_balance;
+	m_panning_filter.right_pan = t_right_pan * t_right_balance;
+}
+
+struct _audioprocessingcontext
+{
+	MCAVPlayerPanningFilter *panning_filter;
+	void *buffer;
+	uinteger_t buffer_length;
+};
+
+void _audioprocessingtap_init(MTAudioProcessingTapRef tap, void *clientInfo, void **tapStorageOut)
+{
+	_audioprocessingcontext *t_context;
+	MCMemoryNew(t_context);
+	t_context->panning_filter = (MCAVPlayerPanningFilter*)clientInfo;
+	t_context->buffer = nil;
+	t_context->buffer_length = 0;
+	*tapStorageOut = t_context;
+}
+
+void _audioprocessingtap_finalize(MTAudioProcessingTapRef tap)
+{
+	_audioprocessingcontext *t_context;
+	t_context = (_audioprocessingcontext*) MTAudioProcessingTapGetStorage(tap);
+	MCMemoryDelete(t_context);
+}
+
+void _audioprocessingtap_prepare(MTAudioProcessingTapRef tap, CMItemCount maxFrames, const AudioStreamBasicDescription *processingFormat)
+{
+	_audioprocessingcontext *t_context;
+	t_context = (_audioprocessingcontext*) MTAudioProcessingTapGetStorage(tap);
+	if (processingFormat->mChannelsPerFrame == 2)
+	{
+		t_context->buffer_length = maxFrames * processingFormat->mBitsPerChannel / 8;
+		MCMemoryAllocate(4 * t_context->buffer_length, t_context->buffer);
+	}
+}
+
+void _audioprocessingtap_unprepare(MTAudioProcessingTapRef tap)
+{
+	_audioprocessingcontext *t_context;
+	t_context = (_audioprocessingcontext*) MTAudioProcessingTapGetStorage(tap);
+	if (t_context->buffer != nil)
+		MCMemoryDeallocate(t_context->buffer);
+}
+
+void _audioprocessingtap_process(MTAudioProcessingTapRef tap, CMItemCount numberFrames,
+	MTAudioProcessingTapFlags flags, AudioBufferList *bufferListInOut,
+	CMItemCount *numberFramesOut, MTAudioProcessingTapFlags *flagsOut)
+{
+	MTAudioProcessingTapGetSourceAudio(tap, numberFrames, bufferListInOut, flagsOut, nil, numberFramesOut);
+	
+	if (bufferListInOut->mNumberBuffers == 2)
+	{
+		_audioprocessingcontext *t_context;
+		t_context = (_audioprocessingcontext*)MTAudioProcessingTapGetStorage(tap);
+		
+		void *t_ll = t_context->buffer;
+		void *t_lr = ((uint8_t*)t_context->buffer) + t_context->buffer_length;
+		void *t_rl = ((uint8_t*)t_context->buffer) + t_context->buffer_length * 2;
+		void *t_rr = ((uint8_t*)t_context->buffer) + t_context->buffer_length * 3;
+
+		vDSP_vsmul((float*)bufferListInOut->mBuffers[0].mData, 1, &t_context->panning_filter->left_balance, (float*)t_ll, 1, *numberFramesOut);
+		vDSP_vsmul((float*)bufferListInOut->mBuffers[1].mData, 1, &t_context->panning_filter->right_balance, (float*)t_rr, 1, *numberFramesOut);
+
+		vDSP_vsmul((float*)bufferListInOut->mBuffers[0].mData, 1, &t_context->panning_filter->left_pan, (float*)t_rl, 1, *numberFramesOut);
+		vDSP_vsmul((float*)bufferListInOut->mBuffers[1].mData, 1, &t_context->panning_filter->right_pan, (float*)t_lr, 1, *numberFramesOut);
+
+		vDSP_vadd((float*)t_ll, 1, (float*)t_lr, 1, (float*)bufferListInOut->mBuffers[0].mData, 1, *numberFramesOut);
+		vDSP_vadd((float*)t_rl, 1, (float*)t_rr, 1, (float*)bufferListInOut->mBuffers[1].mData, 1, *numberFramesOut);
+	}
+}
+
+bool MCAVPlayerSetupPanningFilter(AVPlayer *p_player, MCAVPlayerPanningFilter *p_panning_filter)
+{
+	AVPlayerItem *t_current_item = [p_player currentItem];
+
+	AVAsset *t_asset = [t_current_item asset];
+
+	MTAudioProcessingTapCallbacks t_callbacks;
+	t_callbacks.version = kMTAudioProcessingTapCallbacksVersion_0;
+	t_callbacks.clientInfo = p_panning_filter;
+	t_callbacks.init = _audioprocessingtap_init;
+	t_callbacks.prepare = _audioprocessingtap_prepare;
+	t_callbacks.process = _audioprocessingtap_process;
+	t_callbacks.unprepare = _audioprocessingtap_unprepare;
+	t_callbacks.finalize = _audioprocessingtap_finalize;
+
+	MTAudioProcessingTapRef t_tap;
+	OSStatus t_error;
+	t_error = MTAudioProcessingTapCreate(kCFAllocatorDefault, &t_callbacks, kMTAudioProcessingTapCreationFlag_PostEffects, &t_tap);
+
+	NSMutableArray *t_inputparam_array;
+	t_inputparam_array = [NSMutableArray array];
+	
+	for (AVAssetTrack *t_assettrack in [t_asset tracksWithMediaType:AVMediaTypeAudio])
+	{
+		AVMutableAudioMixInputParameters *t_inputparams;
+		t_inputparams = [AVMutableAudioMixInputParameters audioMixInputParametersWithTrack:t_assettrack];
+		t_inputparams.audioTapProcessor = t_tap;
+		
+		[t_inputparam_array addObject:t_inputparams];
+	}
+	
+	AVMutableAudioMix *t_mix;
+	t_mix = [AVMutableAudioMix audioMix];
+	t_mix.inputParameters = [t_inputparam_array copy];
+
+	t_current_item.audioMix = t_mix;
+	
+	return true;
 }
 
 void MCAVFoundationPlayer::Synchronize(void)
@@ -1196,6 +1364,18 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             if (m_player != nil)
                 [m_player setVolume: *(uint16_t *)p_value / 100.0f];
 			break;
+		case kMCPlatformPlayerPropertyLeftBalance:
+			m_left_balance = *(double *)p_value / 100.0;
+			UpdatePanningFilter(m_left_balance, m_right_balance, m_pan);
+			break;
+		case kMCPlatformPlayerPropertyRightBalance:
+			m_right_balance = *(double *)p_value / 100.0;
+			UpdatePanningFilter(m_left_balance, m_right_balance, m_pan);
+			break;
+		case kMCPlatformPlayerPropertyPan:
+			m_pan = *(double *)p_value / 100.0;
+			UpdatePanningFilter(m_left_balance, m_right_balance, m_pan);
+			break;
         case kMCPlatformPlayerPropertyOnlyPlaySelection:
 			m_play_selection_only = *(bool *)p_value;
 			break;
@@ -1330,6 +1510,15 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 			break;
 		case kMCPlatformPlayerPropertyVolume:
 			*(uint16_t *)r_value = [m_player volume] * 100.0f;
+			break;
+		case kMCPlatformPlayerPropertyLeftBalance:
+			*(double *)r_value = m_left_balance * 100.0;
+			break;
+		case kMCPlatformPlayerPropertyRightBalance:
+			*(double *)r_value = m_right_balance * 100.0;
+			break;
+		case kMCPlatformPlayerPropertyPan:
+			*(double *)r_value = m_pan * 100.0;
 			break;
 		case kMCPlatformPlayerPropertyOnlyPlaySelection:
 			*(bool *)r_value = m_play_selection_only;
