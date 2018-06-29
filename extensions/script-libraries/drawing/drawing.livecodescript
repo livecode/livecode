@@ -3280,8 +3280,7 @@ private function _GetResourcesPath
    local tResourcesFolder
    -- in the mapping, tResourcesFolder begins with ./
    try
-      put char 3 to -1 of revLibraryMapping[the short name of me & \
-         slash & "resources"] into tResourcesFolder
+      put char 3 to -1 of the revLibraryMapping[the short name of me] into tResourcesFolder
    end try
    if tResourcesFolder is empty then
       set the itemDelimiter to slash
