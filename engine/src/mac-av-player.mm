@@ -111,6 +111,7 @@ protected:
 	virtual void Unrealize(void);
 private:
 	void Load(MCStringRef filename, bool is_url);
+	void Unload();
 	void Synchronize(void);
 	void Switch(bool new_offscreen);
     
@@ -743,14 +744,26 @@ void MCAVFoundationPlayer::Unrealize(void)
 
 void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
 {
+	Unload();
+	
+	if (m_player == nil)
+	{
+		/* SETUP PLAYER */
+    	m_player = [[AVPlayer alloc] init];
+    	CVDisplayLinkSetOutputCallback(m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, this);
+
+		NSDictionary* t_settings = @{ (id)kCVPixelBufferPixelFormatTypeKey : [NSNumber numberWithInt:kCVPixelFormatType_32ARGB] };
+		// AVPlayerItemVideoOutput is available in OSX version >= 10.8
+		m_player_item_video_output = [[[AVPlayerItemVideoOutput alloc] initWithPixelBufferAttributes:t_settings] autorelease];;
+
+		// Now set the player of the view.
+		[m_view setPlayer: m_player];
+	}
     // Ensure that removing the video source from the property inspector results immediately in empty player with the controller thumb in the beginning
     if (MCStringIsEmpty(p_filename_or_url))
     {
-        m_player_item_video_output = nil;
-        [m_view setPlayer: nil];
         MCPlatformPlayerDuration t_zero_time = 0;
         // PM-2014-12-17: [[ Bug 14233 ]] Setting the filename to empty should reset the currentItem
-        [m_player replaceCurrentItemWithPlayerItem:nil];
         SetProperty(kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypePlayerDuration, &t_zero_time);
         return;
     }
@@ -761,27 +774,26 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     else
         t_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_filename_or_url)];
 
-    AVPlayer *t_player;
-    t_player = [[AVPlayer alloc] initWithURL: t_url];
+    [m_player replaceCurrentItemWithPlayerItem:[AVPlayerItem playerItemWithURL:t_url]];
 
     // PM-2014-08-19 [[ Bug 13121 ]] Added feature for displaying download progress
     if (p_is_url)
-        [t_player addObserver:m_observer forKeyPath:@"currentItem.loadedTimeRanges" options:NSKeyValueObservingOptionNew context:nil];
+        [m_player addObserver:m_observer forKeyPath:@"currentItem.loadedTimeRanges" options:NSKeyValueObservingOptionNew context:nil];
     
     // Block-wait until the status becomes something.
-    [t_player addObserver: m_observer forKeyPath: @"status" options: 0 context: nil];
-    while([t_player status] == AVPlayerStatusUnknown)
+    [m_player addObserver: m_observer forKeyPath: @"status" options: 0 context: nil];
+    while([m_player status] == AVPlayerStatusUnknown)
         MCPlatformWaitForEvent(60.0, true);
 
-    [t_player removeObserver: m_observer forKeyPath: @"status"];
+    [m_player removeObserver: m_observer forKeyPath: @"status"];
 
     // If we've failed, leave things as they are (dealloc the new player).
-    if ([t_player status] == AVPlayerStatusFailed)
+    if ([m_player status] == AVPlayerStatusFailed)
     {
         // error obtainable via [t_player error]
         if (p_is_url)
-            [t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
-        [t_player release];
+            [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
+		Unload();
         return;
     }
 
@@ -789,15 +801,13 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
         PM-2014-07-07: [[Bugs 12758 and 12760]] When the filename is set to a URL or to a local file
         that is not a video, or does not exist, then currentItem is nil. Do this chack to prevent a crash
     */
-    if ([t_player currentItem] == nil)
+    if ([m_player currentItem] == nil)
     {
         if(p_is_url)
-            [t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
+            [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
         // PM-2014-12-17: [[ Bug 14232 ]] If we reach here it means the filename is invalid
         m_has_invalid_filename = true;
-        [t_player release];
-        // PM-2014-12-17: [[ Bug 14233 ]] Setting an invalid filename should reset a previously opened movie
-        [m_player replaceCurrentItemWithPlayerItem:nil];
+        Unload();
         return;
     }
 
@@ -805,19 +815,8 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
 
     m_has_invalid_filename = false;
 
-    CVDisplayLinkSetOutputCallback(m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, this);
-    //CVDisplayLinkStop(m_display_link);
+    [[m_player currentItem] addOutput:m_player_item_video_output];
 
-    NSDictionary* t_settings = @{ (id)kCVPixelBufferPixelFormatTypeKey : [NSNumber numberWithInt:kCVPixelFormatType_32ARGB] };
-    // AVPlayerItemVideoOutput is available in OSX version >= 10.8
-    AVPlayerItemVideoOutput* t_output = [[[AVPlayerItemVideoOutput alloc] initWithPixelBufferAttributes:t_settings] autorelease];
-    m_player_item_video_output = t_output;
-    AVPlayerItem* t_player_item = [t_player currentItem];
-    [t_player_item addOutput:m_player_item_video_output];
-    [t_player replaceCurrentItemWithPlayerItem:t_player_item];
-
-    // Release the old player (if any).
-    [m_view setPlayer: nil];
     if (m_time_observer_token != nil)
     {
         [m_player removeTimeObserver:m_time_observer_token];
@@ -838,7 +837,6 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     @catch (id anException) {
         //do nothing, obviously it wasn't attached because an exception was thrown
     }
-    [m_player release];
     
     // PM-2014-08-25: [[ Bug 13268 ]] Make sure we release the frame of the old movie before loading a new one
     if (m_current_frame != nil)
@@ -850,12 +848,6 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     // PM-2014-09-02: [[ Bug 13306 ]] Make sure we reset the previous value of loadedtime when loading a new movie 
     m_buffered_time = 0;
     
-    // We want this player.
-    m_player = t_player;
-
-    // Now set the player of the view.
-    [m_view setPlayer: m_player];
-
     Synchronize();
 
     m_last_marker = UINT32_MAX;
@@ -873,6 +865,11 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     m_selection_duration = 0;
     m_selection_finish = 0;
     m_selection_start = 0;
+}
+
+void MCAVFoundationPlayer::Unload()
+{
+	[m_player replaceCurrentItemWithPlayerItem:nil];
 }
 
 void MCAVFoundationPlayer::Mirror(void)
