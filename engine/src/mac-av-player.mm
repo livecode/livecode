@@ -880,11 +880,6 @@ void MCAVFoundationPlayer::Unload()
 	[m_player replaceCurrentItemWithPlayerItem:nil];
 }
 
-void MCAVFoundationPlayer::Unload()
-{
-	[m_player replaceCurrentItemWithPlayerItem:nil];
-}
-
 void MCAVFoundationPlayer::Mirror(void)
 {
     CGAffineTransform t_transform1 = CGAffineTransformMakeScale(-1, 1);
