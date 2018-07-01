@@ -40,7 +40,8 @@ struct MCAVPlayerPanningFilter
 	float right_pan;
 };
 
-bool MCAVPlayerSetupPanningFilter(AVPlayer *p_player, MCAVPlayerPanningFilter *p_filter);
+bool MCAVPlayerCreateAudioProcessingTap(MCAVPlayerPanningFilter *p_panning_filter, MTAudioProcessingTapRef &r_tap);
+bool MCAVPlayerSetupPanningFilter(AVPlayer *p_player, MTAudioProcessingTapRef p_tap);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -153,6 +154,7 @@ private:
 	double m_right_balance;
 	double m_pan;
 	
+	MTAudioProcessingTapRef m_audio_processing_tap;
 	MCAVPlayerPanningFilter m_panning_filter;
 	
     CMTimeScale m_time_scale;
@@ -303,6 +305,7 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     //   an AVPlayer until we load, so that starts off as nil and we create a PlayerView
     //   with zero frame.
     m_player = nil;
+    m_audio_processing_tap = nil;
     m_view = [[com_runrev_livecode_MCAVFoundationPlayerView alloc] initWithFrame: NSZeroRect];
 	m_observer = [[com_runrev_livecode_MCAVFoundationPlayerObserver alloc] initWithPlayer: this];
     
@@ -392,6 +395,9 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     
     // Finally we can release the player.
     [m_player release];
+	
+    if (m_audio_processing_tap)
+    	CFRelease(m_audio_processing_tap);
     
     MCMemoryDeleteArray(m_markers);
     
@@ -758,6 +764,8 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
 
 		// Now set the player of the view.
 		[m_view setPlayer: m_player];
+
+		MCAVPlayerCreateAudioProcessingTap(&m_panning_filter, m_audio_processing_tap);
 	}
     // Ensure that removing the video source from the property inspector results immediately in empty player with the controller thumb in the beginning
     if (MCStringIsEmpty(p_filename_or_url))
@@ -811,7 +819,7 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
         return;
     }
 
-	/* UNCHECKED */ MCAVPlayerSetupPanningFilter(t_player, &m_panning_filter);
+	/* UNCHECKED */ MCAVPlayerSetupPanningFilter(m_player, m_audio_processing_tap);
 
     m_has_invalid_filename = false;
 
@@ -865,6 +873,11 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     m_selection_duration = 0;
     m_selection_finish = 0;
     m_selection_start = 0;
+}
+
+void MCAVFoundationPlayer::Unload()
+{
+	[m_player replaceCurrentItemWithPlayerItem:nil];
 }
 
 void MCAVFoundationPlayer::Unload()
@@ -987,12 +1000,8 @@ void _audioprocessingtap_process(MTAudioProcessingTapRef tap, CMItemCount number
 	}
 }
 
-bool MCAVPlayerSetupPanningFilter(AVPlayer *p_player, MCAVPlayerPanningFilter *p_panning_filter)
+bool MCAVPlayerCreateAudioProcessingTap(MCAVPlayerPanningFilter *p_panning_filter, MTAudioProcessingTapRef &r_tap)
 {
-	AVPlayerItem *t_current_item = [p_player currentItem];
-
-	AVAsset *t_asset = [t_current_item asset];
-
 	MTAudioProcessingTapCallbacks t_callbacks;
 	t_callbacks.version = kMTAudioProcessingTapCallbacksVersion_0;
 	t_callbacks.clientInfo = p_panning_filter;
@@ -1006,6 +1015,17 @@ bool MCAVPlayerSetupPanningFilter(AVPlayer *p_player, MCAVPlayerPanningFilter *p
 	OSStatus t_error;
 	t_error = MTAudioProcessingTapCreate(kCFAllocatorDefault, &t_callbacks, kMTAudioProcessingTapCreationFlag_PostEffects, &t_tap);
 
+	r_tap = t_tap;
+	
+	return true;
+}
+
+bool MCAVPlayerSetupPanningFilter(AVPlayer *p_player, MTAudioProcessingTapRef p_tap)
+{
+	AVPlayerItem *t_current_item = [p_player currentItem];
+
+	AVAsset *t_asset = [t_current_item asset];
+
 	NSMutableArray *t_inputparam_array;
 	t_inputparam_array = [NSMutableArray array];
 	
@@ -1013,7 +1033,7 @@ bool MCAVPlayerSetupPanningFilter(AVPlayer *p_player, MCAVPlayerPanningFilter *p
 	{
 		AVMutableAudioMixInputParameters *t_inputparams;
 		t_inputparams = [AVMutableAudioMixInputParameters audioMixInputParametersWithTrack:t_assettrack];
-		t_inputparams.audioTapProcessor = t_tap;
+		t_inputparams.audioTapProcessor = p_tap;
 		
 		[t_inputparam_array addObject:t_inputparams];
 	}
