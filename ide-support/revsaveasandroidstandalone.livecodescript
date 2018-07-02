@@ -1278,7 +1278,7 @@ private function addExternalFromFile pExternal, pClassesFolder, pLibsFolder
       
       repeat for each word tArch in kArchs
          local tPattern
-         put "^(?:External-" & tArch & "|lib.+" & tArch & "\.so)$" into tPattern
+         put "^Android/(?:External-" & tArch & "|lib.+" & tArch & "\.so)$" into tPattern
          filter tZipItems with regex pattern tPattern into tZipItemsFiltered
          put pLibsFolder & slash & tArch & slash & "lib" & tExternalName & ".so" into tLibFileA[tArch]
          
