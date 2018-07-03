@@ -241,10 +241,7 @@ end deployGetJDK
 // SN-2015-05-13: [[ AndroidVersions ]] Make the available Android minimum versions
 //  something changeable from a script-only stack
 function deployGetVersionsList
-   return "2.3.3 - Gingerbread," & \
-         "3.0 - Honeycomb,3.1,3.2," & \
-         "4.0 - IceCream Sandwich," & \
-         "4.1 - Jelly Bean,4.2,4.3," & \
+   return "4.1 - Jelly Bean,4.2,4.3," & \
          "4.4 - KitKat," & \
          "5.0 - Lollipop,5.1," & \
          "6.0 - Marshmallow," & \
@@ -253,7 +250,7 @@ function deployGetVersionsList
 end deployGetVersionsList
 
 function deployGetAPIsList
-   return "10,11,12,13,14,16,17,18,19,21,22,23,24,25,26,27"
+   return "16,17,18,19,21,22,23,24,25,26,27"
 end deployGetAPIsList
 
 function deployGetApiFromVersion pVersion

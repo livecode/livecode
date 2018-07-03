@@ -719,7 +719,7 @@ Boolean MCStack::checkid(uint4 cardid, uint4 controlid)
 		}
 		while (cptr != cards);
 	}
-	if (curcard != NULL)
+	if (curcard != NULL && curcard->getid() == cardid)
 		return curcard->checkid(controlid);
 	return False;
 }

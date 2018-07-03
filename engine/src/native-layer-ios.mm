@@ -225,7 +225,8 @@ bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_view)
 		return false;
 	
 	[t_view setAutoresizesSubviews:NO];
-	
+    [t_view setClipsToBounds:YES];
+    
 	r_view = t_view;
 	
 	return true;

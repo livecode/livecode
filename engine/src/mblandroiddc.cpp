@@ -1130,7 +1130,7 @@ void MCStack::view_device_updatewindow(MCRegionRef p_region)
 
 			// MW-2011-12-12: [[ Bug 9908 ]] Make sure both front and back buffers hold the same image
 			//   to prevent a flicker back to an old frame when making the opengl layer visible.
-			view_device_updatewindow(p_region);
+			dirtyall();
 
             // MW-2015-05-06: [[ Bug 15232 ]] Prevent black flash when enabling setting acceleratedRendering to true
 			MCAndroidEngineRemoteCall("hideBitmapViewInTime", "v", nil);
