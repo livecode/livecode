@@ -25,11 +25,12 @@ Use the leftBalance property to set the volume of audio played through the left 
 
 Setting the leftBalance to zero turns off audio to the left speaker.
 
-Important:
-This property only has an effect on media files that contain stereo audio tracks.
-Mono audio tracks cannot currently be balanced.
+>**Important:** This property only has an effect on media files that contain stereo audio tracks.
+> Mono audio tracks cannot currently be balanced.
 
 References: player (object), rightBalance (property), audioPan (property)
+
+Associations: player
 
 Tags: multimedia
 

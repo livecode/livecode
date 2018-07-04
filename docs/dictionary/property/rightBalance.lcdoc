@@ -25,11 +25,12 @@ Use the rightBalance property to set the volume of audio played through the righ
 
 Setting the rightBalance to zero turns off audio to the right speaker.
 
-Important:
-This property only has an effect on media files that contain stereo audio tracks.
-Mono audio tracks cannot currently be balanced.
+>**Important:** This property only has an effect on media files that contain stereo audio tracks.
+> Mono audio tracks cannot currently be balanced.
 
 References: player (object), rightBalance (property), audioPan (property)
+
+Associations: player
 
 Tags: multimedia
 
