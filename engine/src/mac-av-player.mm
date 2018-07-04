@@ -42,6 +42,7 @@ struct MCAVPlayerPanningFilter
 
 bool MCAVPlayerCreateAudioProcessingTap(MCAVPlayerPanningFilter *p_panning_filter, MTAudioProcessingTapRef &r_tap);
 bool MCAVPlayerSetupPanningFilter(AVPlayer *p_player, MTAudioProcessingTapRef p_tap);
+void MCAVPlayerRemovePanningFilter(AVPlayer *p_player);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -880,6 +881,9 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
 
 void MCAVFoundationPlayer::Unload()
 {
+	if (m_player == nil)
+		return;
+	MCAVPlayerRemovePanningFilter(m_player);
 	[m_player replaceCurrentItemWithPlayerItem:nil];
 }
 
@@ -937,7 +941,7 @@ struct _audioprocessingcontext
 
 void _audioprocessingtap_init(MTAudioProcessingTapRef tap, void *clientInfo, void **tapStorageOut)
 {
-	_audioprocessingcontext *t_context;
+	_audioprocessingcontext *t_context = nil;
 	MCMemoryNew(t_context);
 	t_context->panning_filter = (MCAVPlayerPanningFilter*)clientInfo;
 	t_context->buffer = nil;
@@ -969,6 +973,7 @@ void _audioprocessingtap_unprepare(MTAudioProcessingTapRef tap)
 	t_context = (_audioprocessingcontext*) MTAudioProcessingTapGetStorage(tap);
 	if (t_context->buffer != nil)
 		MCMemoryDeallocate(t_context->buffer);
+	t_context->buffer = nil;
 }
 
 void _audioprocessingtap_process(MTAudioProcessingTapRef tap, CMItemCount numberFrames,
@@ -1038,11 +1043,30 @@ bool MCAVPlayerSetupPanningFilter(AVPlayer *p_player, MTAudioProcessingTapRef p_
 	
 	AVMutableAudioMix *t_mix;
 	t_mix = [AVMutableAudioMix audioMix];
-	t_mix.inputParameters = [t_inputparam_array copy];
+	t_mix.inputParameters = t_inputparam_array;
 
 	t_current_item.audioMix = t_mix;
 	
 	return true;
+}
+
+void MCAVPlayerRemovePanningFilter(AVPlayer *p_player)
+{
+	AVPlayerItem *t_current_item = [p_player currentItem];
+	if (t_current_item == nil)
+		return;
+	
+	AVAudioMix *t_mix = [t_current_item audioMix];
+	if (t_mix == nil)
+		return;
+	
+	for (AVAudioMixInputParameters *t_params in [t_mix inputParameters])
+	{
+		if (t_params.audioTapProcessor != nil)
+			((AVMutableAudioMixInputParameters*)t_params).audioTapProcessor = nil;
+	}
+	
+	t_current_item.audioMix = nil;
 }
 
 void MCAVFoundationPlayer::Synchronize(void)
