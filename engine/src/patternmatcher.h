@@ -47,6 +47,7 @@ protected:
 public:
     MCRegexMatcher(MCStringRef p_pattern, MCStringRef p_string, MCStringOptions p_options);
     MCRegexMatcher(MCStringRef p_pattern, MCArrayRef p_array, MCStringOptions p_options);
+    virtual ~MCRegexMatcher();
     virtual bool compile(MCStringRef& r_error);
     virtual bool match(MCRange p_range);
     virtual bool match(MCExecContext ctxt, MCNameRef p_key, bool p_match_key);
@@ -58,7 +59,7 @@ class MCWildcardMatcher : public MCPatternMatcher
 public:
     MCWildcardMatcher(MCStringRef p_pattern, MCStringRef p_string, MCStringOptions p_options);
     MCWildcardMatcher(MCStringRef p_pattern, MCArrayRef p_array, MCStringOptions p_options);
-    ~MCWildcardMatcher();
+    virtual ~MCWildcardMatcher();
     virtual bool compile(MCStringRef& r_error);
     virtual bool match(MCRange p_range);
     virtual bool match(MCExecContext ctxt, MCNameRef p_key, bool p_match_key);

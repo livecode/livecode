@@ -558,4 +558,21 @@ public handler TestDelegateRequiredMethod()
                                 "Creating delegate throws error when required protocol method is not mapped")
 end handler
 
+__safe foreign handler CallClassMethodWithInstance(in pInstance as ObjcObject) returns ObjcId binds to "objc:NSObject.+class"
+
+private handler TestObjcInterop_CallClassMethodWithInstance()
+   variable tObj as ObjcObject
+   put NSObjectAlloc() into tObj
+   put CallClassMethodWithInstance(tObj) into tObj
+end handler
+
+public handler TestObjcInterop_ArgumentCountMatchesMethod()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc binding succeeds" because "not implemented on" && the operating system
+		return
+	end if
+
+  	MCUnitTestHandlerThrowsNamed(TestObjcInterop_CallClassMethodWithInstance, "livecode.lang.ForeignHandlerBindingError", "Failure to bind with incorrect arguments objc function throws error")
+end handler
+
 end module

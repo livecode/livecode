@@ -3132,7 +3132,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             MCAutoStringRef t_input;
             MCPoint *t_value;
-            uindex_t t_count;
+            uindex_t t_count = 0;
         
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_input));
             

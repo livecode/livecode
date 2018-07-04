@@ -231,7 +231,7 @@ __MCSStdioStreamRead (MCStreamRef p_stream,
 	if (!__MCSStdioStreamInterleave (p_stream))
 		return false;
 
-	byte_t *t_buffer;
+	byte_t *t_buffer = nullptr;
 	size_t t_total_read = 0;
 
 	if (t_success)

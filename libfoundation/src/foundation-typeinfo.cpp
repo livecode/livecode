@@ -181,7 +181,7 @@ bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
     if (t_ext_typecode == kMCTypeInfoTypeIsNamed)
     {
         // Attempt to resolve the binding, this will throw an error if it fails.
-        MCTypeInfoRef t_next_type;
+        MCTypeInfoRef t_next_type = nullptr;
         if (!MCNamedTypeInfoResolve(self, t_next_type))
             return false;
         

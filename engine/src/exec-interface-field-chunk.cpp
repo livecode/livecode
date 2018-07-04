@@ -557,6 +557,7 @@ template<typename T> void GetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
     do
     {
         typename T::stack_type t_new_value;
+        T::init(t_new_value);
         T::getter(ctxt, sptr, p_getter, t_new_value);
         if (ctxt . HasError())
             return;

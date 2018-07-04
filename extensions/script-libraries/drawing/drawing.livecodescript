@@ -823,6 +823,9 @@ private command _svgCompilePaint @xContext, pPaint, @rCompiledPaint
 	case "none"
 		put "none" into rCompiledPaint[1]
 		break
+	case "current"
+		put "current" into rCompiledPaint[1]
+		break
 	case "color"
 		put "color" into rCompiledPaint[1]
 		put pPaint["red"] into rCompiledPaint[2]
@@ -1308,6 +1311,7 @@ constant kMCGDrawingPaintOpcodeSolidColor = 1
 constant kMCGDrawingPaintOpcodeLinearGradient = 2
 constant kMCGDrawingPaintOpcodeRadialGradient = 3
 constant kMCGDrawingPaintOpcodeConicalGradient = 4
+constant kMCGDrawingPaintOpcodeCurrentColor = 5
 
 constant kMCGDrawingSpreadMethodOpcodePad = 0
 constant kMCGDrawingSpreadMethodOpcodeReflect = 1
@@ -1516,6 +1520,8 @@ end _svgEncodeScalars
 private command _svgEncodePaint @xContext, pPaint
 	if pPaint[1] is "none" then
 		_svgEncodeOp xContext, kMCGDrawingPaintOpcodeNone
+	else if pPaint[1] is "current" then
+		_svgEncodeOp xContext, kMCGDrawingPaintOpcodeCurrentColor
 	else if pPaint[1] is "color" then
 		_svgEncodeOp xContext, kMCGDrawingPaintOpcodeSolidColor, pPaint[2], pPaint[3], pPaint[4], pPaint[5]
 	else if pPaint[1] is "linear" or pPaint[1] is "radial" or pPaint[1] is "conical" then
@@ -3271,14 +3277,16 @@ end seqLast
  ******************************************************************************/
 
 private function _GetResourcesPath
-   if the environment begins with "development" then
+   local tResourcesFolder
+   -- in the mapping, tResourcesFolder begins with ./
+   try
+      put char 3 to -1 of revLibraryMapping[the short name of me & \
+         slash & "resources"] into tResourcesFolder
+   end try
+   if tResourcesFolder is empty then
       set the itemDelimiter to slash
       return item 1 to -2 of the filename of me & slash & "resources"
    else
-      local tResourcesFolder
-      -- in the mapping, tResourcesFolder begins with ./
-      put char 3 to -1 of revLibraryMapping[the short name of me  & slash & "resources"] \
-            into tResourcesFolder
       put specialFolderPath("resources") & slash before tResourcesFolder
       return tResourcesFolder
    end if

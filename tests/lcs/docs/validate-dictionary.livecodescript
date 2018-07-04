@@ -204,7 +204,7 @@ command __TestDocsLibraryArray pDocsPath, pLibrary, pTestSyntax
          tElement["display name"] is not among the words of "sessionName errorObject" then
          repeat for each element tValue in tElement["Example"]
             
-            if word 1 of tValue is among the words of "end case" then
+         if word 1 of tValue is among the words of "end case catch" then
                next repeat
             end if
             

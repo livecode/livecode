@@ -4288,6 +4288,7 @@ public foreign handler MCCanvasFillPath(in pPath as Path, in pCanvas as Canvas) 
 public foreign handler MCCanvasStroke(in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasStrokePath(in pPath as Path, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasClipToRect(in pClip as Rectangle, in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasClipToPath(in pClip as Path, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasAddPath(in pPath as Path, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasDrawImage(in pImage as Image, in pDest as Rectangle, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasDrawRectOfImage(in pSrc as Rectangle, in pImage as Image, in pDst as Rectangle, in pCanvas as Canvas) returns nothing binds to "<builtin>"
@@ -4608,6 +4609,31 @@ syntax CanvasOperationClip is statement
 	"clip" "to" <mRect: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasClipToRect(mRect, mCanvas)
+end syntax
+
+//////////
+
+/**
+Summary:    Clip to a path on a canvas.
+
+mCanvas:        An expression which evaluates to a canvas.
+mPath:    An expression which evaluates to a path.
+
+Description:    Modifies the clip of <mCanvas> by intersecting with <mRect>. Drawing operations on <mCanvas> will be confined to the clip region.
+
+Example:
+// Set the canvas clip
+clip to circle path centered at point [100,100] with radius 50 on this canvas
+
+// Fill rectangle path on canvas. only the region of the rectangle that falls within the canvas clip will be rendered.
+fill rectangle path of rectangle [25, 25, 75, 75] on this canvas
+
+Tags:    Canvas
+*/
+syntax CanvasOperationClipPath is statement
+    "clip" "to" <mPath: Expression> "on" <mCanvas: Expression>
+begin
+    MCCanvasClipToPath(mPath, mCanvas)
 end syntax
 
 //////////

@@ -38,6 +38,25 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCImage::getcurrentcolor(MCGPaintRef& r_paint)
+{
+    MCColor t_color;
+    MCPatternRef t_pattern = nil;
+    int2 x, y;
+    if (getforecolor(DI_BACK, false, false, t_color, t_pattern, x, y, CONTEXT_TYPE_SCREEN, this, false))
+    {
+        MCGPaintCreateWithSolidColor(t_color.red / 65535.0f, t_color.green / 65535.0f, t_color.blue / 65535.0f, 1.0f, r_paint);
+    }
+    else if (t_pattern != nullptr)
+    {
+        r_paint = nullptr;
+    }
+    else
+    {
+        r_paint = nullptr;
+    }
+}
+
 bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, MCGAffineTransform &r_transform)
 {
 	// IM-2013-11-05: [[ RefactorGraphics ]] Use resampled image rep for best-quality scaling
@@ -137,7 +156,12 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
                 uindex_t t_data_size;
                 t_vector_rep->GetData(t_data, t_data_size);
                 
-                MCGContextPlaybackRectOfDrawing(t_gcontext, MCMakeSpan((const byte_t*)t_data, t_data_size), MCGRectangleMake(0, 0, t_rep_width, t_rep_height), MCGRectangleMake(dx - sx, dy - sy, t_rep_width, t_rep_height));
+                MCGPaintRef t_current_color;
+                getcurrentcolor(t_current_color);
+                
+                MCGContextPlaybackRectOfDrawing(t_gcontext, MCMakeSpan((const byte_t*)t_data, t_data_size), MCGRectangleMake(0, 0, t_rep_width, t_rep_height), MCGRectangleMake(dx - sx, dy - sy, t_rep_width, t_rep_height), t_current_color);
+                
+                MCGPaintRelease(t_current_color);
                 
                 MCGContextRestore(t_gcontext);
                 

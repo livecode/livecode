@@ -407,7 +407,8 @@ int MCSystemElevatedMain(int argc, char* argv[])
 
 	// Now we can read in the arguments
 	uint32_t t_arg_count;
-	read_uint32_from_fd(fileno(stdin), t_arg_count);
+	if (!read_uint32_from_fd(fileno(stdin), t_arg_count))
+		return -1;
 
 	// The arguments read from the FIFO are encoded in the system encoding
 	char **t_args;
