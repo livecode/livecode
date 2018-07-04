@@ -396,6 +396,9 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     // Finally we can release the player.
     [m_player release];
 	
+	// Release the video output
+	[m_player_item_video_output release];
+	
     if (m_audio_processing_tap)
     	CFRelease(m_audio_processing_tap);
     
@@ -760,7 +763,7 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
 
 		NSDictionary* t_settings = @{ (id)kCVPixelBufferPixelFormatTypeKey : [NSNumber numberWithInt:kCVPixelFormatType_32ARGB] };
 		// AVPlayerItemVideoOutput is available in OSX version >= 10.8
-		m_player_item_video_output = [[[AVPlayerItemVideoOutput alloc] initWithPixelBufferAttributes:t_settings] autorelease];;
+		m_player_item_video_output = [[AVPlayerItemVideoOutput alloc] initWithPixelBufferAttributes:t_settings];;
 
 		// Now set the player of the view.
 		[m_view setPlayer: m_player];
