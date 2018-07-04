@@ -1386,10 +1386,17 @@ void MCPlayer::setplayrate()
 {
 	if (m_platform_player != nil && hasfilename())
 	{
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &rate);
-		if (rate != 0.0f)
-        // PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
+		if (rate == 0.0f)
+		{
+			// Setting playrate to 0 should pause the player (if playing)
+			MCPlatformStopPlayer(m_platform_player);
+		}
+		else
+		{
+			// start / resume at the new rate
+			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &rate);
 			MCPlatformStartPlayer(m_platform_player, rate);
+		}
 	}
     
 	if (rate != 0)
