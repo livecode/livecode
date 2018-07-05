@@ -1007,10 +1007,13 @@ bool MCAVPlayerCreateAudioProcessingTap(MCAVPlayerPanningFilter *p_panning_filte
 	t_callbacks.unprepare = _audioprocessingtap_unprepare;
 	t_callbacks.finalize = _audioprocessingtap_finalize;
 
-	MTAudioProcessingTapRef t_tap;
+	MTAudioProcessingTapRef t_tap = nil;
 	OSStatus t_error;
 	t_error = MTAudioProcessingTapCreate(kCFAllocatorDefault, &t_callbacks, kMTAudioProcessingTapCreationFlag_PostEffects, &t_tap);
 
+	if (t_error || t_tap == nil)
+		return false;
+	
 	r_tap = t_tap;
 	
 	return true;
@@ -1019,29 +1022,51 @@ bool MCAVPlayerCreateAudioProcessingTap(MCAVPlayerPanningFilter *p_panning_filte
 bool MCAVPlayerSetupPanningFilter(AVPlayer *p_player, MCAVPlayerPanningFilter *p_panning_filter)
 {
 	AVPlayerItem *t_current_item = [p_player currentItem];
-
-	AVAsset *t_asset = [t_current_item asset];
-
-	NSMutableArray *t_inputparam_array;
-	t_inputparam_array = [NSMutableArray array];
+	if (t_current_item == nil)
+		return false;
 	
+	AVAsset *t_asset = [t_current_item asset];
+	if (t_asset == nil)
+		return false;
+
+	NSMutableArray *t_inputparam_array = [NSMutableArray array];
+	if (t_inputparam_array == nil)
+		return false;
+	
+	AVMutableAudioMix *t_mix = [AVMutableAudioMix audioMix];
+	if (t_mix == nil)
+		return false;
+
+	bool t_success = true;
 	for (AVAssetTrack *t_assettrack in [t_asset tracksWithMediaType:AVMediaTypeAudio])
 	{
 		AVMutableAudioMixInputParameters *t_inputparams;
 		t_inputparams = [AVMutableAudioMixInputParameters audioMixInputParametersWithTrack:t_assettrack];
+		t_success = t_inputparams != nil;
+		if (!t_success)
+			break;
 		
 		MTAudioProcessingTapRef t_tap = nil;
-		/* UNCHECKED */ MCAVPlayerCreateAudioProcessingTap(p_panning_filter, t_tap);
+		t_success = MCAVPlayerCreateAudioProcessingTap(p_panning_filter, t_tap);
+		if (!t_success)
+			break;
+		
 		t_inputparams.audioTapProcessor = t_tap;
 		CFRelease(t_tap);
 		
 		[t_inputparam_array addObject:t_inputparams];
 	}
 	
-	AVMutableAudioMix *t_mix;
-	t_mix = [AVMutableAudioMix audioMix];
+	if (!t_success)
+	{
+		// clear taps from array of input params
+		for (AVMutableAudioMixInputParameters *t_params in t_inputparam_array)
+			t_params.audioTapProcessor = nil;
+		
+		return false;
+	}
+	
 	t_mix.inputParameters = t_inputparam_array;
-
 	t_current_item.audioMix = t_mix;
 	
 	return true;
