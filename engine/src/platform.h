@@ -988,6 +988,10 @@ enum MCPlatformPlayerProperty
 	kMCPlatformPlayerPropertyVolume,
     kMCPlatformPlayerPropertyMarkers,
     kMCPlatformPlayerPropertyLoadedTime,
+	
+    kMCPlatformPlayerPropertyLeftBalance,
+    kMCPlatformPlayerPropertyRightBalance,
+    kMCPlatformPlayerPropertyPan,
     
     kMCPlatformPlayerPropertyShowSelection,
 	kMCPlatformPlayerPropertyOnlyPlaySelection,

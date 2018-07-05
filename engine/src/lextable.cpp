@@ -603,6 +603,7 @@ const LT factor_table[] =
         {"atan2", TT_FUNCTION, F_ATAN2},
         {"audioclip", TT_CHUNK, CT_AUDIO_CLIP},
         {"audioclips", TT_CLASS, CT_AUDIO_CLIP},
+        {"audiopan", TT_PROPERTY, P_AUDIO_PAN},
         {"autoarm", TT_PROPERTY, P_AUTO_ARM},
         {"autohilight", TT_PROPERTY, P_AUTO_HILITE},
         {"autohilite", TT_PROPERTY, P_AUTO_HILITE},
@@ -1117,6 +1118,7 @@ const LT factor_table[] =
 		{"layermode", TT_PROPERTY, P_LAYER_MODE},
         {"layers", TT_CLASS, CT_LAYER},
         {"left", TT_PROPERTY, P_LEFT},
+		{"leftbalance", TT_PROPERTY, P_LEFT_BALANCE},
 		// MW-2011-01-25: [[ ParaStyles ]] The leftIndent paragraph property.
 		{"leftindent", TT_PROPERTY, P_LEFT_INDENT},
         {"leftmargin", TT_PROPERTY, P_LEFT_MARGIN},
@@ -1495,6 +1497,7 @@ const LT factor_table[] =
 		{"revunplacedgroupids", TT_PROPERTY, P_UNPLACED_GROUP_IDS},
 #endif
         {"right", TT_PROPERTY, P_RIGHT},
+        {"rightbalance", TT_PROPERTY, P_RIGHT_BALANCE},
 		// MW-2011-01-25: [[ ParaStyles ]] The rightIndent paragraph property.
 		{"rightindent", TT_PROPERTY, P_RIGHT_INDENT},
         {"rightmargin", TT_PROPERTY, P_RIGHT_MARGIN},

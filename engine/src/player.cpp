@@ -67,6 +67,9 @@ MCPropertyInfo MCPlayer::kProperties[] =
     DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, Int32, MCPlayer, FormattedHeight)
     DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, Int32, MCPlayer, FormattedWidth)
     DEFINE_RW_OBJ_PROPERTY(P_DONT_USE_QT, Bool, MCPlayer, DontUseQT)
+    DEFINE_RW_OBJ_PROPERTY(P_LEFT_BALANCE, Double, MCPlayer, LeftBalance)
+    DEFINE_RW_OBJ_PROPERTY(P_RIGHT_BALANCE, Double, MCPlayer, RightBalance)
+    DEFINE_RW_OBJ_PROPERTY(P_AUDIO_PAN, Double, MCPlayer, AudioPan)
 #ifdef FEATURE_PLATFORM_PLAYER
     DEFINE_RO_OBJ_ENUM_PROPERTY(P_STATUS, InterfacePlayerStatus, MCPlayer, Status)
     DEFINE_RW_OBJ_PROPERTY(P_MIRRORED, Bool, MCPlayer, Mirrored)

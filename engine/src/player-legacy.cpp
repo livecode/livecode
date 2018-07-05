@@ -91,6 +91,10 @@ MCPlayer::MCPlayer()
 	dontuseqt = False;
 	usingqt = False;
 	
+	m_left_balance = 100.0;
+	m_right_balance = 100.0;
+	m_audio_pan = 0.0;
+	
 #ifdef FEATURE_MPLAYER
 	command = NULL;
 	m_player = NULL ;
@@ -115,6 +119,10 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	loudness = sref.loudness;
 	dontuseqt = False;
 	usingqt = False;
+	
+	m_left_balance = sref.m_left_balance;
+	m_right_balance = sref.m_right_balance;
+	m_audio_pan = sref.m_audio_pan;
 	
 #ifdef FEATURE_MPLAYER
 	command = NULL;
@@ -739,6 +747,39 @@ void MCPlayer::setloudness()
 #else
 	loudness = loudness;
 #endif
+}
+
+double MCPlayer::getleftbalance()
+{
+	/* UNSUPPORTED */
+	return 1.0;
+}
+
+void MCPlayer::setleftbalance(double p_left_balance)
+{
+	/* UNSUPPORTED */
+}
+
+double MCPlayer::getrightbalance()
+{
+	/* UNSUPPORTED */
+	return 1.0;
+}
+
+void MCPlayer::setrightbalance(double p_right_balance)
+{
+	/* UNSUPPORTED */
+}
+
+double MCPlayer::getaudiopan()
+{
+	/* UNSUPPORTED */
+	return 0.0;
+}
+
+void MCPlayer::setaudiopan(double p_pan)
+{
+	/* UNSUPPORTED */
 }
 
 void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)

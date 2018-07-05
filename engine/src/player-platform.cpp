@@ -816,6 +816,10 @@ MCPlayer::MCPlayer()
     m_scrub_forward_is_pressed = false;
     m_modify_selection_while_playing = false;
     
+	m_left_balance = 100.0;
+	m_right_balance = 100.0;
+	m_audio_pan = 0.0;
+	
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
@@ -854,6 +858,10 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     m_scrub_forward_is_pressed = false;
     m_modify_selection_while_playing = false;
     
+	m_left_balance = sref.m_left_balance;
+	m_right_balance = sref.m_right_balance;
+	m_audio_pan = sref.m_audio_pan;
+	
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
@@ -1813,6 +1821,54 @@ void MCPlayer::setloudness()
 	if (state & CS_PREPARED)
 		if (m_platform_player != nil)
 			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVolume, kMCPlatformPropertyTypeUInt16, &loudness);
+}
+
+double MCPlayer::getleftbalance()
+{
+	if (state & CS_PREPARED)
+		if (m_platform_player != nil)
+			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLeftBalance, kMCPlatformPropertyTypeDouble, &m_left_balance);
+	return m_left_balance;
+}
+
+void MCPlayer::setleftbalance(double p_left_balance)
+{
+	m_left_balance = p_left_balance;
+	if (state & CS_PREPARED)
+		if (m_platform_player != nil)
+			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLeftBalance, kMCPlatformPropertyTypeDouble, &m_left_balance);
+}
+
+double MCPlayer::getrightbalance()
+{
+	if (state & CS_PREPARED)
+		if (m_platform_player != nil)
+			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRightBalance, kMCPlatformPropertyTypeDouble, &m_right_balance);
+	return m_right_balance;
+}
+
+void MCPlayer::setrightbalance(double p_right_balance)
+{
+	m_right_balance = p_right_balance;
+	if (state & CS_PREPARED)
+		if (m_platform_player != nil)
+			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRightBalance, kMCPlatformPropertyTypeDouble, &m_right_balance);
+}
+
+double MCPlayer::getaudiopan()
+{
+	if (state & CS_PREPARED)
+		if (m_platform_player != nil)
+			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPan, kMCPlatformPropertyTypeDouble, &m_audio_pan);
+	return m_audio_pan;
+}
+
+void MCPlayer::setaudiopan(double p_pan)
+{
+	m_audio_pan = p_pan;
+	if (state & CS_PREPARED)
+		if (m_platform_player != nil)
+			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPan, kMCPlatformPropertyTypeDouble, &m_audio_pan);
 }
 
 void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)
