@@ -317,8 +317,8 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_buffered_time = 0;
 	
 	m_scale = 1.0;
-    m_rate = 0.0;
-    
+    m_rate = 1.0;
+	
     m_time_observer_token = nil;
     m_endtime_observer_token = nil;
 

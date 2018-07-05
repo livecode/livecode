@@ -856,6 +856,8 @@ void X_clear_globals(void)
     
     MChooks = nil;
 
+    memset(&MClicenseparameters, 0, sizeof(MCLicenseParameters));
+    
 #if defined(MCSSL)
     MCSocketsInitialize();
 #endif
