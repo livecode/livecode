@@ -2563,6 +2563,9 @@ command revRedirectMacOSResourcesRecurse pSourceFolder, pTargetFolder
       if tFolder ends with ".app" then
          next repeat
       end if
+      if tFolder ends with ".framework" then
+         next repeat
+      end if
       revRedirectMacOSResourcesRecurse pSourceFolder & slash & tFolder, pTargetFolder & slash & tFolder
    end repeat
    
