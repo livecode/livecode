@@ -394,6 +394,73 @@ void MCEngineEvalParams(MCExecContext& ctxt, MCStringRef& r_string)
     ctxt.Throw();
 }
 
+void MCEngineEvalParamsRange(MCExecContext& ctxt, integer_t p_start, integer_t p_finish, MCArrayRef& r_seq)
+{
+    MCHandler *t_handler = ctxt.GetHandler();
+    integer_t t_param_count = 0;
+    if (t_handler != nullptr)
+    {
+        t_param_count = t_handler->getnparams();
+    }
+    
+    if (t_param_count == 0)
+    {
+        r_seq = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
+    if (p_start < 0)
+    {
+        p_start = t_param_count + p_start + 1;
+    }
+    
+    if (p_finish < 0)
+    {
+        p_finish = t_param_count + p_finish + 1;
+    }
+    
+    if (p_start > t_param_count)
+    {
+        r_seq = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
+    if (p_start > p_finish)
+    {
+        r_seq = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+
+    p_start = MCClamp(p_start, 1, t_param_count);
+    p_finish = MCClamp(p_finish, 1, t_param_count);
+    
+    MCAutoArrayRef t_seq;
+    if (!MCArrayCreateMutable(&t_seq))
+    {
+        ctxt.Throw();
+        return;
+    }
+    
+    for(integer_t t_param_index = p_start; t_param_index <= p_finish; t_param_index++)
+    {
+        if (!MCArrayStoreValueAtIndex(*t_seq,
+                                      t_param_index - p_start + 1,
+                                      t_handler->getparam(t_param_index)))
+        {
+            ctxt.Throw();
+            return;
+        }
+    }
+    
+    if (!t_seq.MakeImmutable())
+    {
+        ctxt.Throw();
+        return;
+    }
+    
+    r_seq = t_seq.Take();
+}
+
 //////////
 
 void MCEngineEvalResult(MCExecContext& ctxt, MCValueRef& r_value)

@@ -2989,6 +2989,7 @@ void MCEngineEvalVariableNames(MCExecContext& ctxt, MCStringRef& r_string);
 void MCEngineEvalParam(MCExecContext& ctxt, integer_t p_index, MCValueRef& r_value);
 void MCEngineEvalParamCount(MCExecContext& ctxt, integer_t& r_count);
 void MCEngineEvalParams(MCExecContext& ctxt, MCStringRef& r_string);
+void MCEngineEvalParamsRange(MCExecContext& ctxt, integer_t p_start, integer_t p_finish, MCArrayRef& r_seq);
 
 void MCEngineEvalResult(MCExecContext& ctxt, MCValueRef& r_value);
 

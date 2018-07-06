@@ -2777,6 +2777,11 @@ enum Exec_errors
     // {EE-0909} android permission: bad permission name
     EE_BAD_PERMISSION_NAME,
     
+    // {EE-0910} params: bad start index
+    EE_PARAMS_BADSTART,
+    
+    // {EE-0911} params: bad finish index
+    EE_PARAMS_BADFINISH,
 };
 
 extern const char *MCexecutionerrors;
