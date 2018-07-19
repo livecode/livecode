@@ -75,14 +75,14 @@ On Linux or Mac, you can quickly build LiveCode by installing basic development 
 
 Please see the following table, which shows which target platforms are supported by which host platforms.  The documentation for compiling for each target platform is linked.
 
-| Target platform                             | Host platforms    |
-| ------------------------------------------- | ----------------- |
-| [mac, ios](INSTALL-mac.md)                  | mac               |
-| [win](INSTALL-win.md)                       | win, linux (Wine) |
-| [linux](INSTALL-linux.md)                   | linux             |
-| [android](INSTALL-android.md)               | mac, linux        |
-| [emscripten (html5)](INSTALL-emscripten.md) | linux             |
-
+| Target platform                                  | Host platforms                 |
+| ------------------------------------------------ | -------------------------------|
+| [mac, ios](INSTALL-mac.md)                       | mac                            |
+| [win](INSTALL-win.md)                            | win, linux (Wine)              |
+| [linux](INSTALL-linux.md)                        | linux                          |
+| [android](INSTALL-android.md)                    | mac, linux                     |
+| [emscripten (html5)](INSTALL-emscripten.md)      | linux                          |
+| [raspbian (Raspberry pi)](INSTALL-rpi.md)        | raspbian (Raspberry Pi)        |
 ## Getting help
 
 There are several ways to get help with installing and using LiveCode:
