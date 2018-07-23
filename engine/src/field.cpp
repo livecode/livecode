@@ -623,6 +623,11 @@ void MCField::kunfocus()
 {
 	if (state & CS_KFOCUSED)
 	{
+        if (MCundos && MCundos -> getstate())
+        {
+            MCundos -> freeobject(this);
+        }
+        
 		getstack() -> resetcursor(True);
 	
 		stopcomposition(False, True);
