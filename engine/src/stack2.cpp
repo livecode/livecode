@@ -816,6 +816,7 @@ void MCStack::ungroup(MCGroup *source)
 	cptr->remove(controls);
 	source->insertto(MCsavegroupptr);
 	source->setparent(this);
+    source->removereferences();
 
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
