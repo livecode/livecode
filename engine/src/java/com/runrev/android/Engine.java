@@ -2251,7 +2251,8 @@ public class Engine extends View implements EngineApi
     
 	public void showBitmapView()
 	{
-		ensureBitmapViewVisibility();
+        // force visible for visual effects
+		m_bitmap_view.setVisibility(View.VISIBLE);
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
