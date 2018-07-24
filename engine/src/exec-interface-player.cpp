@@ -594,6 +594,36 @@ void MCPlayer::SetPlayLoudness(MCExecContext& ctxt, uinteger_t p_loudness)
 	setloudness();
 }
 
+void MCPlayer::GetLeftBalance(MCExecContext &ctxt, double &r_left_balance)
+{
+	r_left_balance = getleftbalance();
+}
+
+void MCPlayer::SetLeftBalance(MCExecContext &ctxt, double p_left_balance)
+{
+	setleftbalance(MCMin(p_left_balance, 100.0));
+}
+
+void MCPlayer::GetRightBalance(MCExecContext &ctxt, double &r_right_balance)
+{
+	r_right_balance = getrightbalance();
+}
+
+void MCPlayer::SetRightBalance(MCExecContext &ctxt, double p_right_balance)
+{
+	setrightbalance(MCMin(p_right_balance, 100.0));
+}
+
+void MCPlayer::GetAudioPan(MCExecContext &ctxt, double &r_pan)
+{
+	r_pan = getaudiopan();
+}
+
+void MCPlayer::SetAudioPan(MCExecContext &ctxt, double p_pan)
+{
+	setaudiopan(MCClamp(p_pan, -100.0, 100.0));
+}
+
 void MCPlayer::GetTrackCount(MCExecContext& ctxt, uinteger_t& r_count)
 {
 	r_count = gettrackcount();

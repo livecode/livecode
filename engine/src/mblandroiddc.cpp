@@ -1130,7 +1130,7 @@ void MCStack::view_device_updatewindow(MCRegionRef p_region)
 
 			// MW-2011-12-12: [[ Bug 9908 ]] Make sure both front and back buffers hold the same image
 			//   to prevent a flicker back to an old frame when making the opengl layer visible.
-			view_device_updatewindow(p_region);
+			dirtyall();
 
             // MW-2015-05-06: [[ Bug 15232 ]] Prevent black flash when enabling setting acceleratedRendering to true
 			MCAndroidEngineRemoteCall("hideBitmapViewInTime", "v", nil);
@@ -2473,7 +2473,8 @@ bool revandroid_getAssetOffsetAndLength(JNIEnv *env, jobject object, const char 
 bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef &r_path)
 {
 	MCAndroidEngineRemoteCall("loadExternalLibrary", "xx", &r_path, p_external);
-	return r_path != nil;
+	
+    return !MCStringIsEmpty(r_path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2482,10 +2483,7 @@ bool MCAndroidGetBuildInfo(MCStringRef p_key, MCStringRef& r_value)
 {
 	MCAndroidEngineCall("getBuildInfo", "xx", &r_value, p_key);
 
-	if (r_value == nil)
-		return false;
-
-    return true;
+    return !MCStringIsEmpty(r_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

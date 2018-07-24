@@ -1,0 +1,1 @@
+# Fix crash when relayering objects with accelerated rendering true

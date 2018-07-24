@@ -148,9 +148,11 @@
 							'libraries':
 							[
 								'$(SDKROOT)/usr/lib/libcups.dylib',
+								'$(SDKROOT)/System/Library/Frameworks/Accelerate.framework',
 								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
+								'$(SDKROOT)/System/Library/Frameworks/MediaToolbox.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Quartz.framework',
 							],
 						},
@@ -174,8 +176,10 @@
                         {
                             'libraries!':
                             [
+								'$(SDKROOT)/System/Library/Frameworks/Accelerate.framework',
                                 '$(SDKROOT)/System/Library/Frameworks/AVFoundation.framework',
                                 '$(SDKROOT)/System/Library/Frameworks/CoreMedia.framework',
+								'$(SDKROOT)/System/Library/Frameworks/MediaToolbox.framework',
                             ],
                         },
                     ],

@@ -173,6 +173,12 @@ public:
 	virtual MCRectangle getpreferredrect();
     virtual uint2 getloudness();
 	virtual void setloudness();
+	virtual double getleftbalance();
+	virtual void setleftbalance(double p_left_balance);
+	virtual double getrightbalance();
+	virtual void setrightbalance(double p_right_balance);
+	virtual double getaudiopan();
+	virtual void setaudiopan(double p_pan);
 
 	virtual Boolean prepare(MCStringRef options);
 	virtual Boolean playstart(MCStringRef options);
@@ -458,7 +464,13 @@ public:
 	virtual void SetTilt(MCExecContext& ctxt, double p_tilt);
 	virtual void GetZoom(MCExecContext& ctxt, double& r_zoom);
 	virtual void SetZoom(MCExecContext& ctxt, double p_zoom);
-    
+	virtual void GetLeftBalance(MCExecContext& ctxt, double &r_left_balance);
+	virtual void SetLeftBalance(MCExecContext& ctxt, double p_left_balance);
+	virtual void GetRightBalance(MCExecContext& ctxt, double &r_right_balance);
+	virtual void SetRightBalance(MCExecContext& ctxt, double p_right_balance);
+	virtual void GetAudioPan(MCExecContext& ctxt, double &r_pan);
+	virtual void SetAudioPan(MCExecContext& ctxt, double p_pan);
+
 	virtual void GetTracks(MCExecContext& ctxt, MCStringRef& r_tracks);
     
 	virtual void GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& r_constraints);

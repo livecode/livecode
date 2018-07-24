@@ -880,7 +880,9 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 		// layer below.
 		MCObjptr *t_objptr;
 		t_objptr = p_next;
-		while(t_objptr != p_previous && t_objptr -> getref() -> layer_getid() == p_control -> layer_getid())
+		while(t_objptr != p_previous &&
+              !t_objptr->getref()->layer_issprite() &&
+              t_objptr -> getref() -> layer_getid() == p_control -> layer_getid())
 		{
 			t_objptr -> getref() -> layer_setid(t_before_layer_id);
 			t_objptr = t_objptr -> next();
@@ -947,7 +949,7 @@ static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback
 	
 	MCRectangle t_user_rect;
 	t_user_rect = MCRectangleGetTransformedBounds(p_rectangle, MCGAffineTransformInvert(t_transform));
-	
+    
 	bool t_success;
 	t_success = p_callback(p_context, t_gfx_context, t_user_rect);
 	
@@ -1002,6 +1004,8 @@ static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target,
 {
 	MCControl *t_control;
 	t_control = (MCControl *)p_context;
+    
+    p_target->setclip(t_control->getstack()->getvisiblerect());
 
 	// IM-2014-07-02: [[ GraphicsPerformance ]] Use the redraw() method instead of 
 	// reproducing the visibility tests and context clipping here.
@@ -1300,7 +1304,7 @@ void MCRedrawDirtyScreen(void)
 	do
 	{
 		MCStack *sptr = tptr->getstack();
-		sptr -> view_dirty_all();
+		sptr -> dirtyall();
 		tptr = tptr->prev();
 	}
 	while (tptr != t_stacks -> prev());
