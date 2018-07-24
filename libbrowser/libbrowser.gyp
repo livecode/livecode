@@ -291,7 +291,7 @@
 
                                     'library_dirs':
                                     [
-                                        '../prebuilt/unpacked/cef/>(toolset_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/',
+                                        '../prebuilt/unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/',
                                     ],
 
                                     'libraries':
