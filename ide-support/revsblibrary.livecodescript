@@ -316,12 +316,10 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    
    local tSourceFileIsLink
    if tResult is empty then
-      if there is no file pSourceFile then
-         if __readlink(pSourceFile) is not empty then
-            put true into tSourceFileIsLink
-         else
-            put "cannot find source file" into tResult
-         end if
+      if __readlink(pSourceFile) is not empty then
+         put true into tSourceFileIsLink
+      else if there is no file pSourceFile then
+         put "cannot find source file" into tResult
       end if
    end if
    
