@@ -21,7 +21,7 @@
 			[
 				# Workaround x86 linux builder identifying (via uname -m) as x86_64:
 				#   Use target arch executables if building on linux for linux
-				'host_os == "linux" and OS == "linux"',
+				'host_os == "linux" and OS == "linux" and cross_compile == 0',
 				{
 					'variables':
 					{
@@ -32,7 +32,7 @@
 				},
 			],
 			[
-				'host_os == "linux" and OS != "linux"',
+				'host_os == "linux" and (OS != "linux" or cross_compile != 0)',
 				{
 					'variables':
 					{
@@ -195,6 +195,7 @@
 											'-licudata',
 											'-lstdc++',
 											'-lm',
+											'-latomic',
 										],
 									},
 								],

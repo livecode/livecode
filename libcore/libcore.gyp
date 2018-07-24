@@ -11,6 +11,8 @@
 			'target_name': 'libCore',
 			'type': 'static_library',
 
+			'toolsets': ['host', 'target'],
+
 			'variables':
 			{
 				'library_for_module': 1,

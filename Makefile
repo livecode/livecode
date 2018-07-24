@@ -91,7 +91,7 @@ endif
 # Linux rules
 ################################################################
 
-LINUX_ARCHS = x86_64 x86
+LINUX_ARCHS = x86_64 x86 armv6hf armv7
 
 config-linux-%:
 ifneq ($(TRAVIS),undefined)
@@ -134,7 +134,7 @@ $(addsuffix -linux,all config compile check): %: %-$(guess_linux_arch)
 # Android rules
 ################################################################
 
-ANDROID_ARCHS = armv6
+ANDROID_ARCHS = armv6 armv7 arm64 x86 x86_64
 
 config-android-%:
 	./config.sh --platform android-$*
