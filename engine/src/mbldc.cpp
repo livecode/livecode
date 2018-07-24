@@ -523,7 +523,7 @@ void MCScreenDC::refresh_window(Window p_window)
 		do_fit_window(false, true);
 		
 		if (t_need_redraw)
-			t_new_stack -> view_dirty_all();
+			t_new_stack -> dirtyall();
 	}
 }
 
@@ -532,7 +532,7 @@ void MCScreenDC::redraw_current_window(void)
 	MCStack *t_stack;
 	t_stack = (MCStack *)m_current_window;
 	if (t_stack != nil)
-		t_stack -> view_dirty_all();
+		t_stack -> dirtyall();
 }
 
 void MCScreenDC::unfocus_current_window(void)

@@ -1,0 +1,1 @@
+# Ensure objects are clipped correctly when rendering fullscreen mode leterbox with acceleratedRendering true

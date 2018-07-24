@@ -1375,6 +1375,9 @@ enum Properties {
     P_PAN,
     P_CONSTRAINTS,
     P_HOT_SPOTS,
+    P_LEFT_BALANCE,
+    P_RIGHT_BALANCE,
+    P_AUDIO_PAN,
     // EPS properties
     P_POSTSCRIPT,
     P_ANGLE,

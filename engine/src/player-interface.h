@@ -85,6 +85,10 @@ protected:
     MCPlayerDuration lasttime;
     Boolean dontuseqt;
     Boolean usingqt;
+	
+    double m_left_balance;
+    double m_right_balance;
+    double m_audio_pan;
     
 public:
     MCPlayerInterface(){};
@@ -110,7 +114,13 @@ public:
 	virtual MCRectangle getpreferredrect() = 0;
 	virtual uint2 getloudness() = 0;
 	virtual void setloudness() = 0;
-    
+	virtual double getleftbalance() = 0;
+	virtual void setleftbalance(double p_left_balance) = 0;
+	virtual double getrightbalance() = 0;
+	virtual void setrightbalance(double p_right_balance) = 0;
+	virtual double getaudiopan() = 0;
+	virtual void setaudiopan(double p_pan) = 0;
+
     Boolean isdisposable()
     {
         return disposable;
@@ -240,7 +250,13 @@ public:
 	virtual void SetTilt(MCExecContext& ctxt, double p_tilt) = 0;
 	virtual void GetZoom(MCExecContext& ctxt, double& r_zoom) = 0;
 	virtual void SetZoom(MCExecContext& ctxt, double p_zoom) = 0;
-    
+	virtual void GetLeftBalance(MCExecContext& ctxt, double &r_left_balance) = 0;
+	virtual void SetLeftBalance(MCExecContext& ctxt, double p_left_balance) = 0;
+	virtual void GetRightBalance(MCExecContext& ctxt, double &r_right_balance) = 0;
+	virtual void SetRightBalance(MCExecContext& ctxt, double p_right_balance) = 0;
+	virtual void GetAudioPan(MCExecContext& ctxt, double &r_pan) = 0;
+	virtual void SetAudioPan(MCExecContext& ctxt, double p_pan) = 0;
+
 	virtual void GetTracks(MCExecContext& ctxt, MCStringRef& r_tracks) = 0;
     
 	virtual void GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& r_constraints) = 0;
