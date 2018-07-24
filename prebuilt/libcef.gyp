@@ -9,6 +9,8 @@
 		{
 			'target_name': 'libcef',
 			'type': 'none',
+
+			'toolsets': ['host', 'target'],
 			
 			'dependencies':
 			[
@@ -132,7 +134,7 @@
 				],
 				
 				[
-				    'OS == "linux"',
+				    'OS == "linux" and target_arch in ("x86", "x86_64")',
                     {
                         'copies':
                         [

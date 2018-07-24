@@ -10,6 +10,8 @@
 		{
 			'target_name': 'encode_version',
 			'type': 'none',
+
+			'toolsets': ['host', 'target'],
 			
 			'actions':
 			[
@@ -50,6 +52,8 @@
 			'target_name': 'quicktime_stubs',
 			'type': 'none',
 			
+			'toolsets': ['host', 'target'],
+
 			'actions':
 			[
 				{

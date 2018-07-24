@@ -9,6 +9,8 @@
 		{
 			'target_name': 'libGraphics',
 			'type': 'static_library',
+
+			'toolsets': ['host', 'target'],
 			
 			'dependencies':
 			[
@@ -49,7 +51,22 @@
 			'conditions':
 			[
 				[
-					'OS != "mac" and OS != "ios"',
+					'OS in ("emscripten", "android")',
+					{
+						'dependencies':
+						[
+							'../prebuilt/libicu.gyp:libicu',
+							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
+							'../thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
+						],
+					},
+				],
+			],
+
+			'target_conditions':
+			[
+				[
+					'toolset_os != "mac" and toolset_os != "ios"',
 					{
 						'sources!':
 						[
@@ -58,7 +75,7 @@
 					},
 				],
 				[
-					'OS != "win"',
+					'toolset_os != "win"',
 					{
 						'sources!':
 						[
@@ -67,23 +84,12 @@
 					},
 				],
 				[
-					'OS != "android" and OS != "emscripten"',
+					'toolset_os != "android" and toolset_os != "emscripten"',
 					{
 						'sources!':
 						[
 							'src/harfbuzztext.cpp',
 							'src/hb-sk.cpp',
-						],
-					},
-				],
-				[
-					'OS == "android" or OS == "emscripten"',
-					{
-						'dependencies':
-						[
-							'../prebuilt/libicu.gyp:libicu',
-							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
-							'../thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
 						],
 					},
 				],
