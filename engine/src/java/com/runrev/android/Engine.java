@@ -1863,6 +1863,7 @@ public class Engine extends View implements EngineApi
 
     private String m_source;
     public static final int CAMERA_PERMISSION_REQUEST_CODE = 1;
+    public static final int LOCATION_PERMISSION_REQUEST_CODE = 3;
 	public void showPhotoPicker(String p_source, int p_width, int p_height)
 	{
         m_photo_width = p_width;
@@ -1912,12 +1913,27 @@ public class Engine extends View implements EngineApi
         }
     }
     
+    private void onLocationRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults)
+    {
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+        {
+            m_sensor_module.createLocationTracker();
+        }
+        else
+        {
+            Log.e(TAG,"Permission denied. You can change this in the Settings app");
+        }
+    }
+
+    
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
     {
-        onCameraRequestPermissionResult(requestCode, permissions, grantResults);
+        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE)
+            onCameraRequestPermissionResult(requestCode, permissions, grantResults);
+        else if (requestCode == LOCATION_PERMISSION_REQUEST_CODE)
+            onLocationRequestPermissionResult(requestCode, permissions, grantResults);
     }
     
-
 	public void showCamera()
 	{
 		// 2012-01-18-IM temp file may be created in app cache folder, in which case

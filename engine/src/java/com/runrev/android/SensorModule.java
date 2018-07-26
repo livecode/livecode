@@ -19,6 +19,9 @@ package com.runrev.android;
 import android.content.*;
 import android.os.*;
 import android.util.*;
+import android.Manifest;
+import java.lang.Object.*;
+import android.app.Activity;
 
 import java.util.*;
 
@@ -43,6 +46,8 @@ class SensorModule
         public static final int NO_TRACKING = 0;
         public static final int COARSE_TRACKING = 1;
         public static final int FINE_TRACKING = 2;
+        
+        public static final int LOCATION_PERMISSION_REQUEST_CODE = 3;
         
         protected boolean m_paused;
         protected int m_tracking_requested;
@@ -230,6 +235,21 @@ class SensorModule
         LocationListener m_gps_location_listener;
         
         public LocationTracker()
+        {
+            if (Build.VERSION.SDK_INT >= 23 && ((m_engine.getContext().checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+                                                 != m_engine.getContext().getPackageManager().PERMISSION_GRANTED || m_engine.getContext().checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                                                 != m_engine.getContext().getPackageManager().PERMISSION_GRANTED)))
+            {
+                Activity t_activity = (LiveCodeActivity)m_engine.getContext();
+                t_activity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+            }
+            else
+            {
+                createLocationTracker();
+            }
+        }
+        
+        private void createLocationTracker()
         {
             // Get the number of seconds since the device was booted
             double t_seconds_since_boot;
@@ -688,5 +708,10 @@ class SensorModule
         m_heading_tracker.stopTracking(); 
         m_accel_tracker.stopTracking();
         m_location_tracker.stopTracking();
+    }
+    
+    public void createLocationTracker()
+    {
+        m_location_tracker.createLocationTracker();
     }
 }
