@@ -53,6 +53,8 @@ import android.provider.MediaStore.*;
 import android.provider.MediaStore.Images.Media;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.Manifest;
+import java.lang.Object;
 
 import java.net.*;
 import java.io.*;
@@ -1859,22 +1861,62 @@ public class Engine extends View implements EngineApi
 		return new String(t_directions);
 	}
 
+    private String m_source;
+    public static final int CAMERA_PERMISSION_REQUEST_CODE = 1;
 	public void showPhotoPicker(String p_source, int p_width, int p_height)
 	{
-		m_photo_width = p_width;
-		m_photo_height = p_height;
-
-		if (p_source.equals("camera"))
-			showCamera();
-		else if (p_source.equals("album"))
-			showLibrary();
-		else if (p_source.equals("library"))
-			showLibrary();
-		else
-		{
-			doPhotoPickerError("source not available");
-		}
+        m_photo_width = p_width;
+        m_photo_height = p_height;
+        m_source = p_source;
+        
+        // Camera permission not granted, so ask for it
+        if (Build.VERSION.SDK_INT >= 23 && getContext().checkSelfPermission(Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED)
+        {
+            Activity t_activity = (LiveCodeActivity)getContext();
+            t_activity.requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
+        }
+        // Camera permission already granted, or we are in a device running Android API < 23
+        else
+        {
+            onCameraPermissionGranted(m_source);
+        }
 	}
+    
+    private void onCameraPermissionGranted(String p_source)
+    {
+        if (p_source.equals("camera"))
+            showCamera();
+        else if (p_source.equals("album"))
+            showLibrary();
+        else if (p_source.equals("library"))
+            showLibrary();
+        else
+        {
+            doPhotoPickerError("source not available");
+        }
+    }
+    
+    private void onCameraRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults)
+    {
+        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE)
+        {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+            {
+                onCameraPermissionGranted(m_source);
+            }
+            else
+            {
+                doPhotoPickerError("Permission denied. You can change this in the Settings app");
+            }
+        }
+    }
+    
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    {
+        onCameraRequestPermissionResult(requestCode, permissions, grantResults);
+    }
+    
 
 	public void showCamera()
 	{
