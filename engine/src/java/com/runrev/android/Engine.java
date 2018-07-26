@@ -1900,16 +1900,13 @@ public class Engine extends View implements EngineApi
     
     private void onCameraRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults)
     {
-        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE)
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
         {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-            {
-                onCameraPermissionGranted(m_source);
-            }
-            else
-            {
-                doPhotoPickerError("Permission denied. You can change this in the Settings app");
-            }
+            onCameraPermissionGranted(m_source);
+        }
+        else
+        {
+            doPhotoPickerError("Permission denied. You can change this in the Settings app");
         }
     }
     
@@ -1925,7 +1922,6 @@ public class Engine extends View implements EngineApi
         }
     }
 
-    
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
     {
         if (requestCode == CAMERA_PERMISSION_REQUEST_CODE)
