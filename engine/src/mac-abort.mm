@@ -151,6 +151,58 @@ static CGEventRef abort_key_callback(CGEventTapProxy p_proxy, CGEventType p_type
 }
 #endif
 
+static void update_keyboard_input_source()
+{
+    // Update our period key mapping if the input source has changed / hasn't
+    // been initialized.
+    TISInputSourceRef t_input_source;
+    t_input_source = TISCopyCurrentKeyboardInputSource();
+    if (t_input_source != s_current_input_source || s_current_input_source == nil)
+    {
+        if (s_current_input_source != nil)
+            CFRelease(s_current_input_source);
+        
+        s_current_input_source = t_input_source;
+        s_current_period_keycode = 0xffff;
+        s_current_period_needs_shift = false;
+        
+        // If we have a valid keyboard input source then resolve '.'.
+        if (s_current_input_source != nil)
+        {
+            // Loop through all possible keycodes and map with no-shift and shift
+            // to see if we can find our '.' key.
+            for(uindex_t i = 0; i < 127; i++)
+            {
+                unichar t_char;
+                t_char = map_keycode_to_char(t_input_source, i, false);
+                if (t_char == '.')
+                {
+                    s_current_period_keycode = i;
+                    s_current_period_needs_shift = false;
+                    break;
+                }
+                
+                t_char = map_keycode_to_char(t_input_source, i, true);
+                if (t_char == '.')
+                {
+                    s_current_period_keycode = i;
+                    s_current_period_needs_shift = true;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void update_keyboard_input_source_callback(CFNotificationCenterRef p_center,
+                                          void *p_observer,
+                                          CFStringRef p_name,
+                                          const void *p_object,
+                                          CFDictionaryRef p_userInfo)
+{
+    update_keyboard_input_source();
+}
+
 static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 {
     if (s_abort_key_disabled > 0)
@@ -159,46 +211,6 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
     }
 
 	s_abort_key_checked = false;
-
-	// Update our period key mapping if the input source has changed / hasn't
-	// been initialized.
-	TISInputSourceRef t_input_source;
-	t_input_source = TISCopyCurrentKeyboardInputSource();
-	if (t_input_source != s_current_input_source || s_current_input_source == nil)
-	{
-		if (s_current_input_source != nil)
-			CFRelease(s_current_input_source);
-		
-		s_current_input_source = t_input_source;
-		s_current_period_keycode = 0xffff;
-		s_current_period_needs_shift = false;
-		
-		// If we have a valid keyboard input source then resolve '.'.
-		if (s_current_input_source != nil)
-		{
-			// Loop through all possible keycodes and map with no-shift and shift
-			// to see if we can find our '.' key.
-			for(uindex_t i = 0; i < 127; i++)
-			{
-				unichar t_char;
-				t_char = map_keycode_to_char(t_input_source, i, false);
-				if (t_char == '.')
-				{
-					s_current_period_keycode = i;
-					s_current_period_needs_shift = false;
-					break;
-				}
-				
-				t_char = map_keycode_to_char(t_input_source, i, true);
-				if (t_char == '.')
-				{
-					s_current_period_keycode = i;
-					s_current_period_needs_shift = true;
-					break;
-				}
-			}
-		}
-	}
 	
 	// If we successfully found period - we must now check the state of the keys.
 	if (s_current_period_keycode != 0xffff)
@@ -343,6 +355,15 @@ bool MCPlatformInitializeAbortKey(void)
 	if (!AXAPIEnabled())
 		return true;
 #endif
+    
+    update_keyboard_input_source();
+    
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDistributedCenter(),
+                                nullptr,
+                                update_keyboard_input_source_callback,
+                                kTISNotifySelectedKeyboardInputSourceChanged,
+                                nullptr,
+                                CFNotificationSuspensionBehaviorDeliverImmediately);
 	
 	s_abort_key_thread = [[MCAbortKeyThread alloc] init];
 	[s_abort_key_thread start];
@@ -351,6 +372,11 @@ bool MCPlatformInitializeAbortKey(void)
 
 void MCPlatformFinalizeAbortKey(void)
 {
+    CFNotificationCenterRemoveObserver(CFNotificationCenterGetDistributedCenter(),
+                                  nullptr,
+                                  kTISNotifySelectedKeyboardInputSourceChanged,
+                                  nullptr);
+    
 	[s_abort_key_thread terminate];
 	[s_abort_key_thread release];
 	s_abort_key_thread = nil;
