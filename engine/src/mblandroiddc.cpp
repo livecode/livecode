@@ -2817,6 +2817,35 @@ void MCAndroidDisableOpenGLMode(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool s_in_permission_dialog = false;
+static bool s_permission_granted = false;
+bool MCAndroidCheckRuntimePermission(MCStringRef p_permission)
+{
+    bool t_result;
+    s_in_permission_dialog = true;
+    MCAndroidEngineRemoteCall("askPermission", "bx", &t_result, p_permission);
+    
+    while (s_in_permission_dialog)
+        MCscreen -> wait(60.0, True, True);
+    
+    return s_permission_granted;
+}
+
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskPermissionDone(JNIEnv *env, jobject object, bool granted) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskPermissionDone(JNIEnv *env, jobject object, bool granted)
+{
+    s_in_permission_dialog = false;
+    s_permission_granted = granted;
+    MCAndroidBreakWait();
+}
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////
+
 bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_options);
 
 typedef void (*MCExternalThreadOptionalCallback)(void *state);

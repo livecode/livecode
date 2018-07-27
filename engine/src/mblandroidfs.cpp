@@ -415,8 +415,16 @@ bool MCAndroidSystem::GetTemporaryFileName(MCStringRef &r_tmp_name)
 	return MCStringCreateWithCString(tmpnam(NULL), r_tmp_name);
 }
 
+extern bool MCAndroidCheckRuntimePermission(MCStringRef p_permission);
 Boolean MCAndroidSystem::GetStandardFolder(MCNameRef p_folder, MCStringRef &r_folder)
 {
+    // accessing "external documents", "external cache" etc requires Write External Storage permission
+    if (MCStringBeginsWith(MCNameGetString(p_folder), MCSTR("external"), kMCStringOptionCompareCaseless) && !MCAndroidCheckRuntimePermission(MCSTR("android.permission.WRITE_EXTERNAL_STORAGE")))
+    {
+        r_folder = MCValueRetain(kMCEmptyString);
+        return False;
+    }
+    
     // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
     //   as the engine folder.
     if (MCNameIsEqualToCaseless(p_folder, MCN_engine)

@@ -236,21 +236,6 @@ class SensorModule
         
         public LocationTracker()
         {
-            if (Build.VERSION.SDK_INT >= 23 && ((m_engine.getContext().checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-                                                 != m_engine.getContext().getPackageManager().PERMISSION_GRANTED || m_engine.getContext().checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                                                 != m_engine.getContext().getPackageManager().PERMISSION_GRANTED)))
-            {
-                Activity t_activity = (LiveCodeActivity)m_engine.getContext();
-                t_activity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
-            }
-            else
-            {
-                createLocationTracker();
-            }
-        }
-        
-        private void createLocationTracker()
-        {
             // Get the number of seconds since the device was booted
             double t_seconds_since_boot;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -708,10 +693,5 @@ class SensorModule
         m_heading_tracker.stopTracking(); 
         m_accel_tracker.stopTracking();
         m_location_tracker.stopTracking();
-    }
-    
-    public void createLocationTracker()
-    {
-        m_location_tracker.createLocationTracker();
     }
 }

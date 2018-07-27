@@ -1153,6 +1153,11 @@ public class Engine extends View implements EngineApi
         if (m_wake_on_event)
             doProcess(false);
     }
+    
+    public void onAskPermissionDone(boolean p_granted)
+    {
+        doAskPermissionDone(p_granted);
+    }
 
 ////////////////////////////////////////////////////////////////////////////////
 	
@@ -1861,28 +1866,61 @@ public class Engine extends View implements EngineApi
 		return new String(t_directions);
 	}
 
-    private String m_source;
     public static final int CAMERA_PERMISSION_REQUEST_CODE = 1;
-    public static final int LOCATION_PERMISSION_REQUEST_CODE = 3;
-	public void showPhotoPicker(String p_source, int p_width, int p_height)
-	{
-        m_photo_width = p_width;
-        m_photo_height = p_height;
-        m_source = p_source;
-        
-        // Camera permission not granted, so ask for it
-        if (Build.VERSION.SDK_INT >= 23 && getContext().checkSelfPermission(Manifest.permission.CAMERA)
+    public static final int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 2;
+    public static final int FINE_LOCATION_PERMISSION_REQUEST_CODE = 3;
+    public static final int READ_CONTACTS_PERMISSION_REQUEST_CODE = 4;
+    public static final int WRITE_CONTACTS_PERMISSION_REQUEST_CODE = 5;
+    public static final int WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE = 6;
+    
+    public boolean askPermission(String p_permission)
+    {
+        if (Build.VERSION.SDK_INT >= 23 && getContext().checkSelfPermission(p_permission)
             != PackageManager.PERMISSION_GRANTED)
         {
             Activity t_activity = (LiveCodeActivity)getContext();
-            t_activity.requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
+            t_activity.requestPermissions(new String[]{p_permission}, mapPermissionToRequestCode(p_permission));
         }
-        // Camera permission already granted, or we are in a device running Android API < 23
+        else
+            onAskPermissionDone(true);
+        return true;
+    }
+    
+    private int mapPermissionToRequestCode(String p_permission)
+    {
+        if (p_permission.equals("android.permission.CAMERA"))
+            return CAMERA_PERMISSION_REQUEST_CODE;
+        else if (p_permission.equals("android.permission.ACCESS_COARSE_LOCATION"))
+            return COARSE_LOCATION_PERMISSION_REQUEST_CODE;
+        else if (p_permission.equals("android.permission.ACCESS_FINE_LOCATION"))
+            return FINE_LOCATION_PERMISSION_REQUEST_CODE;
+        else if (p_permission.equals("android.permission.READ_CONTACTS"))
+            return READ_CONTACTS_PERMISSION_REQUEST_CODE;
+        else if (p_permission.equals("android.permission.WRITE_CONTACTS"))
+            return WRITE_CONTACTS_PERMISSION_REQUEST_CODE;
+        else if (p_permission.equals("android.permission.WRITE_EXTERNAL_STORAGE"))
+            return WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE;
+        else
+            return -1;
+    }
+    
+    public void showPhotoPicker(String p_source, int p_width, int p_height)
+    {
+        m_photo_width = p_width;
+        m_photo_height = p_height;
+        
+        if (p_source.equals("camera"))
+            showCamera();
+        else if (p_source.equals("album"))
+            showLibrary();
+        else if (p_source.equals("library"))
+            showLibrary();
         else
         {
-            onCameraPermissionGranted(m_source);
+            doPhotoPickerError("source not available");
         }
-	}
+        
+    }
     
     private void onCameraPermissionGranted(String p_source)
     {
@@ -1898,36 +1936,10 @@ public class Engine extends View implements EngineApi
         }
     }
     
-    private void onCameraRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults)
-    {
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-        {
-            onCameraPermissionGranted(m_source);
-        }
-        else
-        {
-            doPhotoPickerError("Permission denied. You can change this in the Settings app");
-        }
-    }
-    
-    private void onLocationRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults)
-    {
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-        {
-            m_sensor_module.createLocationTracker();
-        }
-        else
-        {
-            Log.e(TAG,"Permission denied. You can change this in the Settings app");
-        }
-    }
-
+    // sent by the callback
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
     {
-        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE)
-            onCameraRequestPermissionResult(requestCode, permissions, grantResults);
-        else if (requestCode == LOCATION_PERMISSION_REQUEST_CODE)
-            onLocationRequestPermissionResult(requestCode, permissions, grantResults);
+        onAskPermissionDone(grantResults[0] == PackageManager.PERMISSION_GRANTED);
     }
     
 	public void showCamera()
@@ -3791,6 +3803,7 @@ public class Engine extends View implements EngineApi
     public static native void doDatePickerDone(int year, int month, int day, boolean done);
     public static native void doTimePickerDone(int hour, int minute, boolean done);
     public static native void doListPickerDone(int index, boolean done);
+    public static native void doAskPermissionDone(boolean granted);
 
 	public static native void doMovieStopped();
 	public static native void doMovieTouched();
