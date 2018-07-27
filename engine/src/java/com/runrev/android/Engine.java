@@ -53,8 +53,6 @@ import android.provider.MediaStore.*;
 import android.provider.MediaStore.Images.Media;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.Manifest;
-import java.lang.Object;
 
 import java.net.*;
 import java.io.*;
@@ -1920,20 +1918,6 @@ public class Engine extends View implements EngineApi
             doPhotoPickerError("source not available");
         }
         
-    }
-    
-    private void onCameraPermissionGranted(String p_source)
-    {
-        if (p_source.equals("camera"))
-            showCamera();
-        else if (p_source.equals("album"))
-            showLibrary();
-        else if (p_source.equals("library"))
-            showLibrary();
-        else
-        {
-            doPhotoPickerError("source not available");
-        }
     }
     
     // sent by the callback

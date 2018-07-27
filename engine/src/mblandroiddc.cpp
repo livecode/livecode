@@ -2839,11 +2839,6 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskPermissionDone(JNIEnv
     MCAndroidBreakWait();
 }
 
-
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////
 
 bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_options);

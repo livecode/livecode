@@ -19,10 +19,6 @@ package com.runrev.android;
 import android.content.*;
 import android.os.*;
 import android.util.*;
-import android.Manifest;
-import java.lang.Object.*;
-import android.app.Activity;
-
 import java.util.*;
 
 import android.hardware.*;
@@ -46,8 +42,6 @@ class SensorModule
         public static final int NO_TRACKING = 0;
         public static final int COARSE_TRACKING = 1;
         public static final int FINE_TRACKING = 2;
-        
-        public static final int LOCATION_PERMISSION_REQUEST_CODE = 3;
         
         protected boolean m_paused;
         protected int m_tracking_requested;
