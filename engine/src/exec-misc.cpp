@@ -481,6 +481,15 @@ void MCMiscGetDoNotBackupFile(MCExecContext& ctxt, MCStringRef p_path, bool& r_n
     ctxt.Throw();
 }
 
+void MCMiscExecRequestPermission(MCExecContext& ctxt, MCStringRef p_permission, bool& r_granted)
+{
+    if (MCSystemRequestPermission(p_permission, r_granted))
+        return;
+    
+    ctxt.Throw();
+}
+
+
 void MCMiscSetDoNotBackupFile(MCExecContext& ctxt, MCStringRef p_path, bool p_no_backup)
 {
     if (MCSystemFileSetDoNotBackup(p_path, p_no_backup))

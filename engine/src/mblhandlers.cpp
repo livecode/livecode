@@ -3377,6 +3377,32 @@ Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
+Exec_stat MCHandleRequestPermission(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_permission;
+    bool t_success, t_granted;
+    
+    t_success = MCParseParameters(p_parameters, "x", &(&t_permission));
+    
+    if (t_success)
+        MCMiscExecRequestPermission(ctxt, *t_permission, t_granted);
+    
+    if (!ctxt . HasError())
+    {
+        if (t_granted)
+            ctxt.SetTheResultToValue(kMCTrueString);
+        else
+            ctxt.SetTheResultToValue(kMCFalseString);
+        
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 
 static MCMediaType MCMediaTypeFromString(MCStringRef p_string)
@@ -4529,6 +4555,7 @@ static const MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileLocationAuthorizationStatus", MCHandleLocationAuthorizationStatus, nil},
     
 	{false, "mobileBuildInfo", MCHandleBuildInfo, nil},
+    {false, "androidRequestPermission", MCHandleRequestPermission, nil},
 	
 	{false, "mobileCanMakePurchase", MCHandleCanMakePurchase, nil},
 	{false, "mobileEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
