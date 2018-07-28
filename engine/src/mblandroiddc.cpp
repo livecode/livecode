@@ -2826,7 +2826,7 @@ bool MCAndroidCheckRuntimePermission(MCStringRef p_permission)
     MCAndroidEngineRemoteCall("askPermission", "bx", &t_result, p_permission);
     
     while (s_in_permission_dialog)
-        MCscreen -> wait(60.0, True, True);
+        MCscreen -> wait(60.0, False, True);
     
     return s_permission_granted;
 }

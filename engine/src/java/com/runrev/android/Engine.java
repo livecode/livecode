@@ -1864,42 +1864,18 @@ public class Engine extends View implements EngineApi
 		return new String(t_directions);
 	}
 
-    public static final int CAMERA_PERMISSION_REQUEST_CODE = 1;
-    public static final int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 2;
-    public static final int FINE_LOCATION_PERMISSION_REQUEST_CODE = 3;
-    public static final int READ_CONTACTS_PERMISSION_REQUEST_CODE = 4;
-    public static final int WRITE_CONTACTS_PERMISSION_REQUEST_CODE = 5;
-    public static final int WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE = 6;
-    
+    public static final int PERMISSION_REQUEST_CODE = 1;
     public boolean askPermission(String p_permission)
     {
         if (Build.VERSION.SDK_INT >= 23 && getContext().checkSelfPermission(p_permission)
             != PackageManager.PERMISSION_GRANTED)
         {
             Activity t_activity = (LiveCodeActivity)getContext();
-            t_activity.requestPermissions(new String[]{p_permission}, mapPermissionToRequestCode(p_permission));
+            t_activity.requestPermissions(new String[]{p_permission}, PERMISSION_REQUEST_CODE);
         }
         else
             onAskPermissionDone(true);
         return true;
-    }
-    
-    private int mapPermissionToRequestCode(String p_permission)
-    {
-        if (p_permission.equals("android.permission.CAMERA"))
-            return CAMERA_PERMISSION_REQUEST_CODE;
-        else if (p_permission.equals("android.permission.ACCESS_COARSE_LOCATION"))
-            return COARSE_LOCATION_PERMISSION_REQUEST_CODE;
-        else if (p_permission.equals("android.permission.ACCESS_FINE_LOCATION"))
-            return FINE_LOCATION_PERMISSION_REQUEST_CODE;
-        else if (p_permission.equals("android.permission.READ_CONTACTS"))
-            return READ_CONTACTS_PERMISSION_REQUEST_CODE;
-        else if (p_permission.equals("android.permission.WRITE_CONTACTS"))
-            return WRITE_CONTACTS_PERMISSION_REQUEST_CODE;
-        else if (p_permission.equals("android.permission.WRITE_EXTERNAL_STORAGE"))
-            return WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE;
-        else
-            return -1;
     }
     
     public void showPhotoPicker(String p_source, int p_width, int p_height)
