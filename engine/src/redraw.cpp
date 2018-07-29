@@ -1148,15 +1148,21 @@ void MCCard::render(void)
 				t_layer_region = t_control -> layer_getcontentrect();
 				t_layer_clip = t_control -> geteffectiverect();
 			}
-
+            
 			// IM-2013-10-14: [[ FullscreenMode ]] Constrain each layer to the visible area
 			t_layer_clip = MCU_intersect_rect(t_layer_clip, t_visible_rect);
-			
+            
+            /* If the layer has a layerClipRect, then apply it here. */
+            if (t_control->layer_has_clip_rect())
+            {
+                t_layer_clip = MCU_intersect_rect(t_layer_clip, t_control->layer_get_clip_rect());
+            }
+             
 			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
 			// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 			t_layer . region = MCRectangle32GetTransformedBounds(t_layer_region, t_transform);
 			t_layer . clip = MCRectangle32GetTransformedBounds(t_layer_clip, t_transform);
-			
+            
 			// Now render the layer - what method we use depends on whether the
 			// layer is a sprite or not.
 			if (t_control -> layer_issprite())

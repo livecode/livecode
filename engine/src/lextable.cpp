@@ -1114,6 +1114,7 @@ const LT factor_table[] =
         {"labelwidth", TT_PROPERTY, P_LABEL_WIDTH},
         {"last", TT_CHUNK, CT_LAST},
         {"layer", TT_PROPERTY, P_LAYER},
+        {"layercliprect", TT_PROPERTY, P_LAYER_CLIP_RECT},
 		// MW-2011-08-25: [[ TileCache ]] The layerMode property token.
 		{"layermode", TT_PROPERTY, P_LAYER_MODE},
         {"layers", TT_CLASS, CT_LAYER},
