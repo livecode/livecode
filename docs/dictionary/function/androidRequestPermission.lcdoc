@@ -1,0 +1,44 @@
+Name: androidRequestPermission
+
+Type: function
+
+Syntax: androidRequestPermission(<permissionName>)
+
+Summary:
+Returns if permission <permissionName> has been granted by the user. If the user has not been asked before, a dialog is displayed,
+showing a permission request for <permissionName>.
+
+Introduced: 9.0.1
+
+OS: mobile
+
+Platforms: android
+
+Example:
+local tCameraPermissionGranted
+put androidRequestPermission("android.permission.CAMERA") into tCameraPermissionGranted
+if not tCameraPermissionGranted then
+   answer "This app is not permitted to access the device camera. You can change this \
+      in the Settings app."
+end if
+
+
+Parameters:
+permissionName (enum):
+The name of the permission to request.
+
+-   "android.permission.CAMERA": permission to access the device camera.
+-   "android.permission.ACCESS_COARSE_LOCATION": permission to access the device coarse location.
+-   "android.permission.ACCESS_FINE_LOCATION": permission to access the device fine location.
+-   "android.permission.WRITE_CONTACTS": permission to write date to the device contacts.
+-   "android.permission.READ_CONTACTS": permission to read data from the device contacts.
+-   "android.permission.WRITE_EXTERNAL_STORAGE": permission to write data to the device external storage.
+
+Returns(boolean):
+True if permission has been granted, false otherwise.
+
+
+Description:
+Use the <androidRequestPermission> function to request permission for <permissionName> from the user, or to find out if permission <permissionName> has been granted.
+
+>*Note:* Permission names are case sensitive.
