@@ -64,7 +64,8 @@ bool MCSystemGetSensorAvailable(MCSensorType p_sensor, bool& r_available)
 {
     if (p_sensor == kMCSensorTypeLocation)
     {
-        bool t_success = MCAndroidCheckRuntimePermission(MCSTR("android.permission.ACCESS_COARSE_LOCATION")) && MCAndroidCheckRuntimePermission(MCSTR("android.permission.ACCESS_FINE_LOCATION"));
+        bool t_success = MCAndroidCheckRuntimePermission(MCSTR("android.permission.ACCESS_COARSE_LOCATION")) && \
+        MCAndroidCheckRuntimePermission(MCSTR("android.permission.ACCESS_FINE_LOCATION"));
         if (!t_success)
             return false;
     }

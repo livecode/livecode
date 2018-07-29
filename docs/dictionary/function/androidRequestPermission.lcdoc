@@ -10,16 +10,16 @@ showing a permission request for <permissionName>.
 
 Introduced: 9.0.1
 
-OS: mobile
+OS: android
 
-Platforms: android
+Platforms: mobile
 
 Example:
 local tCameraPermissionGranted
 put androidRequestPermission("android.permission.CAMERA") into tCameraPermissionGranted
 if not tCameraPermissionGranted then
-   answer "This app is not permitted to access the device camera. You can change this \
-      in the Settings app."
+   answer "This app is not permitted to access the device camera. You can change this" && \
+         "in the Settings app."
 end if
 
 
