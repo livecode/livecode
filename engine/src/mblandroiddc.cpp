@@ -2831,6 +2831,22 @@ bool MCAndroidCheckRuntimePermission(MCStringRef p_permission)
     return s_permission_granted;
 }
 
+bool MCAndroidCheckPermissionExists(MCStringRef p_permission)
+{
+    bool t_result;
+    MCAndroidEngineRemoteCall("checkPermissionExists", "bx", &t_result, p_permission);
+    
+    return t_result;
+}
+
+bool MCAndroidHasPermission(MCStringRef p_permission)
+{
+    bool t_result;
+    MCAndroidEngineRemoteCall("checkHasPermissionGranted", "bx", &t_result, p_permission);
+    
+    return t_result;
+}
+
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskPermissionDone(JNIEnv *env, jobject object, bool granted) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskPermissionDone(JNIEnv *env, jobject object, bool granted)
 {

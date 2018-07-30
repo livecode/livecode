@@ -1,0 +1,45 @@
+Name: androidRequestPermission
+
+Type: command
+
+Syntax: androidRequestPermission(<permissionName>)
+
+Summary:
+Displays a dialog showing a permission request for <permissionName>. If a user has already granted permission for <permissionName>, this command does nothing.
+
+Introduced: 9.0.1
+
+OS: android
+
+Platforms: mobile
+
+Example:
+local tCameraPermissionGranted
+put androidHasPermission("android.permission.CAMERA") into tCameraPermissionGranted
+if not tCameraPermissionGranted then
+   androidRequestPermission("android.permission.CAMERA")
+end if
+put androidHasPermission("android.permission.CAMERA") into tCameraPermissionGranted
+if not tCameraPermissionGranted then
+   answer "This app is not permitted to access the device camera. You can change this" && \
+         "in the Settings app."
+end if
+
+
+Parameters:
+permissionName (enum):
+The name of the permission to request.
+
+-   "android.permission.CAMERA": permission to access the device camera.
+-   "android.permission.ACCESS_COARSE_LOCATION": permission to access the device coarse location.
+-   "android.permission.ACCESS_FINE_LOCATION": permission to access the device fine location.
+-   "android.permission.WRITE_CONTACTS": permission to write date to the device contacts.
+-   "android.permission.READ_CONTACTS": permission to read data from the device contacts.
+-   "android.permission.WRITE_EXTERNAL_STORAGE": permission to write data to the device external storage.
+
+
+
+Description:
+Use the <androidRequestPermission> command to request permission for <permissionName> from the user.
+
+>*Note:* Permission names are case sensitive.

@@ -1,12 +1,11 @@
-Name: androidRequestPermission
+Name: androidHasPermission
 
 Type: function
 
-Syntax: androidRequestPermission(<permissionName>)
+Syntax: androidHasPermission(<permissionName>)
 
 Summary:
-Returns if permission <permissionName> has been granted by the user. If the user has not been asked before, a dialog is displayed,
-showing a permission request for <permissionName>.
+Returns if permission <permissionName> has been granted by the user.
 
 Introduced: 9.0.1
 
@@ -15,10 +14,13 @@ OS: android
 Platforms: mobile
 
 Example:
-local tCameraPermissionGranted
-put androidRequestPermission("android.permission.CAMERA") into tCameraPermissionGranted
-if not tCameraPermissionGranted then
-   answer "This app is not permitted to access the device camera. You can change this" && \
+local tLocationPermissionGranted
+put androidHasPermission("android.permission.ACCESS_FINE_LOCATION") into tLocationPermissionGranted
+if not tLocationPermissionGranted then
+   androidRequestPermission("android.permission.ACCESS_FINE_LOCATION")
+end if
+if not tLocationPermissionGranted then
+   answer "This app is not permitted to access the device location. You can change this" && \
          "in the Settings app."
 end if
 
@@ -39,6 +41,6 @@ True if permission has been granted, false otherwise.
 
 
 Description:
-Use the <androidRequestPermission> function to request permission for <permissionName> from the user, or to find out if permission <permissionName> has been granted.
+Use the <androidRequestPermission> function to find out if permission <permissionName> has been granted by the user.
 
 >*Note:* Permission names are case sensitive.

@@ -489,6 +489,22 @@ void MCMiscExecRequestPermission(MCExecContext& ctxt, MCStringRef p_permission, 
     ctxt.Throw();
 }
 
+void MCMiscExecPermissionExists(MCExecContext& ctxt, MCStringRef p_permission, bool& r_exists)
+{
+    if (MCSystemPermissionExists(p_permission, r_exists))
+        return;
+    
+    ctxt.Throw();
+}
+
+void MCMiscExecHasPermission(MCExecContext& ctxt, MCStringRef p_permission, bool& r_permission_granted)
+{
+    if (MCSystemHasPermission(p_permission, r_permission_granted))
+        return;
+    
+    ctxt.Throw();
+}
+
 
 void MCMiscSetDoNotBackupFile(MCExecContext& ctxt, MCStringRef p_path, bool p_no_backup)
 {

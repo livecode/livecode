@@ -808,6 +808,18 @@ bool MCSystemRequestPermission(MCStringRef p_permission, bool& r_granted)
     return true;
 }
 
+bool MCSystemPermissionExists(MCStringRef p_permission, bool& r_exists)
+{
+    r_exists = MCAndroidCheckPermissionExists(p_permission);
+    return true;
+}
+
+bool MCSystemHasPermission(MCStringRef p_permission, bool& r_permission_granted)
+{
+    r_permission_granted = MCAndroidHasPermission(p_permission);
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 

@@ -467,6 +467,8 @@ bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection
 
 bool MCSystemBuildInfo(MCStringRef p_key, MCStringRef& r_value);
 bool MCSystemRequestPermission(MCStringRef p_permission, bool& r_granted);
+bool MCSystemPermissionExists(MCStringRef p_permission, bool& r_exists);
+bool MCSystemHasPermission(MCStringRef p_permission, bool& r_permission_granted);
 
 bool MCSystemEnableRemoteControl();
 bool MCSystemDisableRemoteControl();

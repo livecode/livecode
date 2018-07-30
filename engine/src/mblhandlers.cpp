@@ -3377,6 +3377,7 @@ Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
+/////////////////// Android 6.0 runtime permissions /////////////////////////
 Exec_stat MCHandleRequestPermission(void *context, MCParameter *p_parameters)
 {
     MCExecContext ctxt(nil, nil, nil);
@@ -3386,12 +3387,78 @@ Exec_stat MCHandleRequestPermission(void *context, MCParameter *p_parameters)
     
     t_success = MCParseParameters(p_parameters, "x", &(&t_permission));
     
+    bool t_permission_exists;
+    MCMiscExecPermissionExists(ctxt, *t_permission, t_permission_exists);
+    
+    if (!t_permission_exists)
+    {
+        ctxt.LegacyThrow(EE_BAD_PERMISSION_NAME);
+        t_success = false;
+    }
+    
     if (t_success)
         MCMiscExecRequestPermission(ctxt, *t_permission, t_granted);
     
+    Exec_stat t_stat;
+    if (!ctxt . HasError())
+        t_stat = ES_NORMAL;
+    else
+        t_stat = ES_ERROR;
+    
+    ctxt.SetTheResultToEmpty();
+    return t_stat;
+}
+
+Exec_stat MCHandlePermissionExists(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_permission;
+    bool t_success, t_exists;
+    
+    t_success = MCParseParameters(p_parameters, "x", &(&t_permission));
+    
+    if (t_success)
+        MCMiscExecPermissionExists(ctxt, *t_permission, t_exists);
+    
     if (!ctxt . HasError())
     {
-        if (t_granted)
+        if (t_exists)
+            ctxt.SetTheResultToValue(kMCTrueString);
+        else
+            ctxt.SetTheResultToValue(kMCFalseString);
+        
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleHasPermission(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_permission;
+    bool t_success, t_permission_granted;
+    
+    t_success = MCParseParameters(p_parameters, "x", &(&t_permission));
+    
+    bool t_permission_exists;
+    MCMiscExecPermissionExists(ctxt, *t_permission, t_permission_exists);
+    
+    if (!t_permission_exists)
+    {
+        ctxt.LegacyThrow(EE_BAD_PERMISSION_NAME);
+        t_success = false;
+    }
+    
+    if (t_success)
+        MCMiscExecHasPermission(ctxt, *t_permission, t_permission_granted);
+    
+    if (!ctxt . HasError())
+    {
+        if (t_permission_granted)
             ctxt.SetTheResultToValue(kMCTrueString);
         else
             ctxt.SetTheResultToValue(kMCFalseString);
@@ -4556,6 +4623,8 @@ static const MCPlatformMessageSpec s_platform_messages[] =
     
 	{false, "mobileBuildInfo", MCHandleBuildInfo, nil},
     {false, "androidRequestPermission", MCHandleRequestPermission, nil},
+    {false, "androidPermissionExists", MCHandlePermissionExists, nil},
+    {false, "androidHasPermission", MCHandleHasPermission, nil},
 	
 	{false, "mobileCanMakePurchase", MCHandleCanMakePurchase, nil},
 	{false, "mobileEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},

@@ -1,0 +1,33 @@
+Name: androidPermissionExists
+
+Type: function
+
+Syntax: androidPermissionExists(<permissionName>)
+
+Summary:
+Returns true if <permissionName> is a valid Android permission name
+
+Introduced: 9.0.1
+
+OS: android
+
+Platforms: mobile
+
+Example:
+
+if not androidPermissionExists(pPermission) then
+   answer pPermission && "is not a valid permission name"
+end if
+
+
+Parameters:
+permissionName (string):
+The name of the permission to check.
+
+Returns(boolean):
+True if <permissionName> is a valid Android permission name, false otherwise.
+
+Description:
+Use the <androidPermissionExists> function to check if <permissionName> is a valid Android permission name.
+
+>*Note:* Permission names are case sensitive.
