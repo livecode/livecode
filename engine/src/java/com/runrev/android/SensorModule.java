@@ -19,7 +19,6 @@ package com.runrev.android;
 import android.content.*;
 import android.os.*;
 import android.util.*;
-
 import java.util.*;
 
 import android.hardware.*;

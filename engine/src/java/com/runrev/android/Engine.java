@@ -1151,6 +1151,11 @@ public class Engine extends View implements EngineApi
         if (m_wake_on_event)
             doProcess(false);
     }
+    
+    public void onAskPermissionDone(boolean p_granted)
+    {
+        doAskPermissionDone(p_granted);
+    }
 
 ////////////////////////////////////////////////////////////////////////////////
 	
@@ -1859,23 +1864,121 @@ public class Engine extends View implements EngineApi
 		return new String(t_directions);
 	}
 
-	public void showPhotoPicker(String p_source, int p_width, int p_height)
-	{
-		m_photo_width = p_width;
-		m_photo_height = p_height;
-
-		if (p_source.equals("camera"))
-			showCamera();
-		else if (p_source.equals("album"))
-			showLibrary();
-		else if (p_source.equals("library"))
-			showLibrary();
-		else
-		{
-			doPhotoPickerError("source not available");
-		}
-	}
-
+    public static final int PERMISSION_REQUEST_CODE = 1;
+    public boolean askPermission(String p_permission)
+    {
+        if (Build.VERSION.SDK_INT >= 23 && getContext().checkSelfPermission(p_permission)
+            != PackageManager.PERMISSION_GRANTED)
+        {
+            Activity t_activity = (LiveCodeActivity)getContext();
+            t_activity.requestPermissions(new String[]{p_permission}, PERMISSION_REQUEST_CODE);
+        }
+        else
+            onAskPermissionDone(true);
+        return true;
+    }
+    
+    public boolean checkHasPermissionGranted(String p_permission)
+    {
+        if (Build.VERSION.SDK_INT >= 23)
+        {
+            return getContext().checkSelfPermission(p_permission) == PackageManager.PERMISSION_GRANTED;
+        }
+        return true;
+    }
+    
+    
+    public boolean checkPermissionExists(String p_permission)
+    {
+        if (Build.VERSION.SDK_INT >= 23)
+        {
+            List<PermissionGroupInfo> t_group_info_list = getAllPermissionGroups();
+            if (t_group_info_list == null)
+                return false;
+            
+            ArrayList<String> t_group_name_list = new ArrayList<String>();
+            for (PermissionGroupInfo t_group_info : t_group_info_list)
+            {
+                String t_group_name = t_group_info.name;
+                if (t_group_name != null)
+                    t_group_name_list.add(t_group_name);
+            }
+            
+            for (String t_group_name : t_group_name_list)
+            {
+                ArrayList<String> t_permission_name_list = getPermissionsForGroup(t_group_name);
+                
+                if (t_permission_name_list.contains(p_permission))
+                    return true;
+            }
+            return false;
+        }
+        return true;
+    }
+    
+    private List<PermissionGroupInfo> getAllPermissionGroups()
+    {
+        final PackageManager t_package_manager = getContext().getPackageManager();
+        if (t_package_manager == null)
+            return null;
+        
+        return t_package_manager.getAllPermissionGroups(0);
+    }
+    
+    private ArrayList<String> getPermissionsForGroup(String p_group_name)
+    {
+        final PackageManager t_package_manager = getContext().getPackageManager();
+        final ArrayList<String> t_permission_name_list = new ArrayList<String>();
+        
+        try
+        {
+            List<PermissionInfo> t_permission_info_list =
+            t_package_manager.queryPermissionsByGroup(p_group_name, PackageManager.GET_META_DATA);
+            if (t_permission_info_list != null)
+            {
+                for (PermissionInfo t_permission_info : t_permission_info_list)
+                {
+                    String t_permission_name = t_permission_info.name;
+                    t_permission_name_list.add(t_permission_name);
+                }
+            }
+        }
+        catch (PackageManager.NameNotFoundException e)
+        {
+            // e.printStackTrace();
+            Log.d(TAG, "permissions not found for group = " + p_group_name);
+        }
+        
+        Collections.sort(t_permission_name_list);
+        
+        return t_permission_name_list;
+    }
+    
+    
+    public void showPhotoPicker(String p_source, int p_width, int p_height)
+    {
+        m_photo_width = p_width;
+        m_photo_height = p_height;
+        
+        if (p_source.equals("camera"))
+            showCamera();
+        else if (p_source.equals("album"))
+            showLibrary();
+        else if (p_source.equals("library"))
+            showLibrary();
+        else
+        {
+            doPhotoPickerError("source not available");
+        }
+        
+    }
+    
+    // sent by the callback
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    {
+        onAskPermissionDone(grantResults[0] == PackageManager.PERMISSION_GRANTED);
+    }
+    
 	public void showCamera()
 	{
 		// 2012-01-18-IM temp file may be created in app cache folder, in which case
@@ -3737,6 +3840,7 @@ public class Engine extends View implements EngineApi
     public static native void doDatePickerDone(int year, int month, int day, boolean done);
     public static native void doTimePickerDone(int hour, int minute, boolean done);
     public static native void doListPickerDone(int index, boolean done);
+    public static native void doAskPermissionDone(boolean granted);
 
 	public static native void doMovieStopped();
 	public static native void doMovieTouched();

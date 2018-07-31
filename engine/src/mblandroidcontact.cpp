@@ -58,9 +58,11 @@ static MCAndroidContactStatus s_contact_status = kMCAndroidContactWaiting;
 static int32_t s_contact_selected = 0;
 static MCString s_contacts_selected = "";
 
+extern bool MCAndroidCheckRuntimePermission(MCStringRef p_permission);
 bool MCSystemPickContact(int32_t& r_result)
 {
     MCLog("MCSystemPickContact");
+    
     MCAndroidEngineRemoteCall("pickContact", "i", &r_result);
     s_contact_status = kMCAndroidContactWaiting;
     while (s_contact_status == kMCAndroidContactWaiting)
@@ -156,6 +158,9 @@ bool MCSystemUpdateContact(MCArrayRef p_contact,
 						   MCStringRef p_title, MCStringRef p_message, MCStringRef p_alternate_name,
 						   int32_t &r_result)
 {
+    if (!(MCAndroidCheckRuntimePermission(MCSTR("android.permission.WRITE_CONTACTS"))))
+        return false;
+    
     MCLog("MCSystemUpdateContact");
 	bool t_success = true;
 	
@@ -192,6 +197,10 @@ void MCAndroidUpdateContactCanceled(int32_t p_contact_id)
 bool MCSystemGetContactData(int32_t p_contact_id, MCArrayRef &r_contact_data)
 {
     MCLog("MCSystemGetContactData: %d", p_contact_id);
+    
+    if (!(MCAndroidCheckRuntimePermission(MCSTR("android.permission.READ_CONTACTS"))))
+        return false;
+    
 	jobject t_jmap = nil;
     MCAndroidEngineRemoteCall("getContactData", "mi", &t_jmap, p_contact_id);
 	MCLog("contact map: %p", t_jmap);
@@ -209,6 +218,10 @@ bool MCSystemGetContactData(int32_t p_contact_id, MCArrayRef &r_contact_data)
 bool MCSystemRemoveContact(int32_t p_contact_id)
 {
     MCLog("MCSystemRemoveContact: %d", p_contact_id);
+    
+    if (!(MCAndroidCheckRuntimePermission(MCSTR("android.permission.WRITE_CONTACTS"))))
+        return false;
+    
     MCAndroidEngineRemoteCall("removeContact", "vi", nil, p_contact_id);
     return true;
 }
@@ -216,6 +229,9 @@ bool MCSystemRemoveContact(int32_t p_contact_id)
 bool MCSystemAddContact(MCArrayRef p_contact, int32_t &r_result)
 {
     MCLog("MCSystemAddContact");
+    
+    if (!(MCAndroidCheckRuntimePermission(MCSTR("android.permission.WRITE_CONTACTS"))))
+        return false;
 	
 	bool t_success = true;
 	jobject t_map = nil;
@@ -229,8 +245,12 @@ bool MCSystemAddContact(MCArrayRef p_contact, int32_t &r_result)
 	return false;
 }
 
+
 bool MCSystemFindContact(MCStringRef p_contact_name, MCStringRef& r_result)
 {
+    if (!(MCAndroidCheckRuntimePermission(MCSTR("android.permission.READ_CONTACTS"))))
+        return false;
+    
     MCAndroidEngineRemoteCall("findContact", "vx", nil, p_contact_name);
     return MCStringCreateWithCString(s_contacts_selected . getstring(), r_result);
 }

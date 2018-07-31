@@ -1,0 +1,66 @@
+Name: androidHasPermission
+
+Type: function
+
+Syntax: androidHasPermission(<permissionName>)
+
+Summary:
+Returns if permission <permissionName> has been granted by the user.
+
+Introduced: 9.0.1
+
+OS: android
+
+Platforms: mobile
+
+Example:
+local tLocationPermissionGranted
+put androidHasPermission("android.permission.ACCESS_FINE_LOCATION") into tLocationPermissionGranted
+if not tLocationPermissionGranted then
+   androidRequestPermission "android.permission.ACCESS_FINE_LOCATION"
+end if
+if not tLocationPermissionGranted then
+   answer "This app is not permitted to access the device location. You can change this" && \
+         "in the Settings app."
+end if
+
+
+Parameters:
+permissionName (enum):
+The name of the permission to request.
+
+-   "android.permission.READ_CALENDAR": permission to allow an application to read the device's calendar.
+-   "android.permission.WRITE_CALENDAR": permission to allow an application to write to the device's calendar.
+-   "android.permission.CAMERA": permission to allow an application to access the device's camera.
+-   "android.permission.ACCESS_COARSE_LOCATION": permission to allow an application to access the device's coarse location.
+-   "android.permission.ACCESS_FINE_LOCATION": permission to allow an application to access the device's fine location.
+-   "android.permission.READ_CONTACTS": permission to allow an application to read data from the device's contacts.
+-   "android.permission.WRITE_CONTACTS": permission to allow an application to write date to the device's contacts.
+-   "android.permission.GET_ACCOUNTS": permission to allow an application to access to the list of accounts in the Accounts Service.
+-   "android.permission.RECORD_AUDIO": permission to allow an application to allow an application to record audio.
+-   "android.permission.READ_EXTERNAL_STORAGE": permission to allow an application to read data from the device's external storage.
+-   "android.permission.WRITE_EXTERNAL_STORAGE": permission to allow an application to write data to the device's external storage.
+-   "android.permission.READ_PHONE_STATE": permission to allow an application to access phone state, including the phone number of the device, current cellular network information, the status of any ongoing calls, and a list of any PhoneAccounts registered on the device.
+-   "android.permission.READ_PHONE_NUMBERS": permission to allow an application to access the device's phone number(s).
+-   "android.permission.CALL_PHONE": permission to allow an application to initiate a phone call without going through the Dialer user interface for the user to confirm the call. 
+-   "android.permission.ANSWER_PHONE_CALLS": permission to allow an application to answer an incoming phone call.
+-   "android.permission.READ_CALL_LOG": permission to allow an application to read the user's call log.
+-   "android.permission.WRITE_CALL_LOG": permission to allow an application to write to the user's call log.
+-   "android.permission.ADD_VOICEMAIL": permission to allow an application to add voicemails into the system.
+-   "android.permission.USE_SIP": permission to allow an application to use SIP service.
+-   "android.permission.PROCESS_OUTGOING_CALLS": permission to allow an application to see the number being dialed during an outgoing call with the option to redirect the call to a different number or abort the call altogether.
+-   "android.permission.SEND_SMS": permission to allow an application to send SMS messages.
+-   "android.permission.RECEIVE_SMS": permission to allow an application to receive SMS messages
+-   "android.permission.READ_SMS": permission to allow an application to read SMS messages.
+-   "android.permission.RECEIVE_WAP_PUSH": permission to allow an application to receive WAP push messages.
+-   "android.permission.RECEIVE_MMS": permission to allow an application to receive MMS messages.
+-   "android.permission.BODY_SENSORS": permission to allow an application to access data from sensors that the user uses to measure what is happening inside his/her body, such as heart rate.
+
+Returns(boolean):
+True if permission has been granted, false otherwise.
+
+
+Description:
+Use the <androidRequestPermission> function to find out if permission <permissionName> has been granted by the user.
+
+>*Note:* Permission names are case sensitive.
