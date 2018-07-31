@@ -2,7 +2,7 @@ Name: androidRequestPermission
 
 Type: command
 
-Syntax: androidRequestPermission(<permissionName>)
+Syntax: androidRequestPermission <permissionName>
 
 Summary:
 Displays a dialog showing a permission request for <permissionName>. If a user has already granted permission for <permissionName>, this command does nothing.
