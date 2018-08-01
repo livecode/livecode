@@ -1,0 +1,1 @@
+# Fix view moving up when acceleratedRendering is true
