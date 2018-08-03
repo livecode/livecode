@@ -16,6 +16,7 @@ library com.livecode.library.androidaudiorecorder
 metadata version is "1.0.0"
 metadata author is "LiveCode"
 metadata title is "Android Audio Recorder"
+metadata os is "android"
 
 -- We need permissions to record audio and write to the external
 -- storage directory.
