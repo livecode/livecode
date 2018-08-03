@@ -760,6 +760,8 @@ constant kNameKey = "name"
 constant kVersionKey = "version"
 constant kAuthorKey = "author"
 constant kTitleKey = "title"
+constant kPlatformsKey = "platforms"
+constant kOsKey = "os"
 constant kTypeKey = "type"
 constant kIdeKey = "ide"
 constant kModuleFilesKey = "module_files"
@@ -1474,6 +1476,20 @@ function extensionFetchMetadata pManifestPath
       put empty into tTargetAuthor
    end if
    put tTargetAuthor into tDataA[kAuthorKey]
+   
+   local tTargetPlatforms
+   put textDecode(revXMLNodeContents(tTreeID, "/package/platforms"), "utf-8") into tTargetPlatforms
+   if tTargetPlatforms is empty or tTargetPlatforms begins with "xmlerr" then
+      put empty into tTargetPlatforms
+   end if
+   put tTargetPlatforms into tDataA[kPlatformsKey]
+   
+   local tTargetOs
+   put textDecode(revXMLNodeContents(tTreeID, "/package/os"), "utf-8") into tTargetOs
+   if tTargetOs is empty or tTargetOs begins with "xmlerr" then
+      put empty into tTargetOs
+   end if
+   put tTargetOs into tDataA[kOsKey]
    
    # Fetch property metadata
    local tMetadataValue, tMetadataKey

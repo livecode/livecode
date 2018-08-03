@@ -1636,6 +1636,43 @@ function revSBAllMobilePlatforms
          kAndroidPlatform
 end revSBAllMobilePlatforms
 
+function revSBNormalizePlatforms pOS, pPlatforms
+   local tPlatformList
+   if pOS is empty then
+      if pPlatforms contains "mobile" then
+         put revSBAllMobilePlatforms() & comma after tPlatformList
+      end if
+      if pPlatforms contains "desktop" or pPlatforms contains "server" then
+         put revSBAllDesktopPlatforms() & comma after tPlatformList
+      end if
+   else
+      if pOS contains "mac" then
+         put kMacPlatform & comma after tPlatformList
+      end if
+      if pOS contains "win" then
+         put kWindowsPlatform & comma after tPlatformList
+      end if
+      if pOS contains "linux" then
+         put kLinuxPlatform & comma after tPlatformList
+      end if
+      if pOS contains "ios" then
+         put kiOSPlatform & comma after tPlatformList
+      end if
+      if pOS contains "android" then
+         put kAndroidPlatform & comma after tPlatformList
+      end if
+      if pOS contains "html5" then
+         put kEmscriptenPlatform & comma after tPlatformList
+      end if
+   end if
+   if tPlatformList is empty then
+      put revSBAllPlatforms() into tPlatformList
+   else
+      delete char -1 of tPlatformList
+   end if
+   return tPlatformList
+end revSBNormalizePlatforms
+
 private command addToList pElement, @xArray
    put pElement into xArray[the number of elements in xArray + 1]
 end addToList
@@ -1653,9 +1690,15 @@ private function revSBAvailableExtensions pType
    local tExtensions, tInclusions
    put revIDEExtensions(pType, "installed") into tExtensions
    repeat for each key tID in tExtensions
-      local tExtension
-      -- LCB extensions are available on all platforms
-      put revSBAllPlatforms() into tExtension["platforms"]
+      local tExtension, tOS, tPlatforms
+      put tExtensions[tID]["os"] into tOS
+      put tExtensions[tID]["platforms"] into tPlatforms
+      if tOS is empty and tPlatforms is empty then
+         -- LCB extensions are available on all platforms by default
+         put revSBAllPlatforms() into tExtension["platforms"]
+      else
+         put revSBNormalizePlatforms(tOS, tPlatforms) into tExtension["platforms"]
+      end if
       put pType into tExtension["type"]
       put tExtensions[tID]["title"] into tExtension["title"]
       put tID into tExtension["id"]

@@ -169,6 +169,14 @@
             QueryMetadata(Definitions, "version" -> VersionString)
             OutputWriteXmlS("  <version>", VersionString, "</version>\n")
         |]
+        [|
+            QueryMetadata(Definitions, "platforms" -> PlatformsString)
+            OutputWriteXmlS("  <platforms>", PlatformsString, "</platforms>\n")
+        |]
+        [|
+            QueryMetadata(Definitions, "os" -> OsString)
+            OutputWriteXmlS("  <os>", OsString, "</os>\n")
+        |]
         OutputWrite("  <license>community</license>\n")
         (|
             where(Kind -> module)
@@ -256,6 +264,10 @@
             IsStringEqualToString(Key, "description")
         ||
             IsStringEqualToString(Key, "version")
+        ||
+            IsStringEqualToString(Key, "platforms")
+        ||
+            IsStringEqualToString(Key, "os")
         ||
             OutputWriteXmlS("  <metadata key=\"", Key, "\">")
             OutputWriteXmlS("", Value, "</metadata>\n")

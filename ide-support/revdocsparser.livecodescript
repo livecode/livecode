@@ -437,7 +437,7 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
    put false into tInEntry
    
    local tFirstWord, tEntryData, tTrimLine
-   local tComment, tData
+   local tComment, tCommentOffset, tData
    local tHandlerData, tPhraseData
    
    local tLibraryData, tAPIData
@@ -485,6 +485,23 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                put word 2 to -1 of tLine into tEntryData["name"]
                put true into tEntryEnded
                put true into tEntryData["need_docs"]
+               break
+            case "metadata"
+               # Handle library metadata as a special case
+               local tSecondWord
+               put word 2 of tLine into tSecondWord
+               if tSecondWord is among the items of "author,os,platforms,version" then
+                  put tSecondWord & ":" && value(word 4 of tLine) into tLine
+                  put Offset(lf & "Name:", tLibraryData["comments"]) into tCommentOffset
+                  if tCommentOffset is 0 then 
+                     put tLine & lf after tLibraryData["comments"]
+                  else
+                     # insert metadata above property definitions
+                     put lf & tline & lf before char tCommentOffset of tLibraryData["comments"]
+                  end if
+               end if
+               # Metadata is not treated as an entry
+               put false into tInEntry
                break
             case "handler"
                put "handler" into tEntryData["type"]
@@ -589,7 +606,6 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                   
                   # Discard any previous comments
                   put empty into tComment
-                  local tCommentOffset
                   put true into tInComment
                   put offset("/**", tLine) into tCommentOffset
                   put char (tCommentOffset + 3) to -1 of tLine into tLine
@@ -1314,9 +1330,6 @@ function revDocsParseElements pExtractedA, pBlocksA, pFilename
       if tParsedA[tItem] is empty then
          put pBlocksA[tItem] into tParsedA[tItem]
       end if
-      if tParsedA["display name"] is empty then
-         put tParsedA["name"] into tParsedA["display name"]
-      end if
    end repeat
    
    if tParsedA["display name"] is empty then
@@ -1426,9 +1439,9 @@ end revDocsGroupElements
 
 -- Elements that when defined at the library level
 -- apply to all docs in the api
-constant kInheritedElements = "author,version,associations,tags,requires,uses"
+constant kInheritedElements = "author,version,associations,tags,requires,uses,os,platforms"
 -- Elements that should be in the library's actual docs entry
-constant kLibraryEntryElements = "name,display name,summary,description,type,example,references,edition"
+constant kLibraryEntryElements = "name,display name,summary,description,type,example,references,edition,os,platforms,associations"
 function revDocsParseDocText pText, pFilename, pDefaults, pOverrides
    local tElementsA
    put revDocsExtractElements(pText) into tElementsA
@@ -1448,21 +1461,23 @@ function revDocsParseDocText pText, pFilename, pDefaults, pOverrides
       switch it
          case "Name"
          case empty
-            exit repeat     
+            exit repeat
          case "Library"
             put tElementsA[tStartNum]["content"] into tParsedA["library"]
             add 1 to tStartNum
             break
-         case "Title"  
+         case "Title"
          case "Summary"
          case "Description"
          case "Author"
          case "Type"
          case "Version"
-         case "Requires" 
-         case "Uses"    
-         case "SVGIcon"   
+         case "Requires"
+         case "Uses"
+         case "SVGIcon"
          case "Summary"
+         case "OS"
+         case "Platforms"
             // Add top-level tags to all library entries
          case "Tags"
             // Library entries can have examples
