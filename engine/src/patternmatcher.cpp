@@ -42,14 +42,18 @@
 
 MCPatternMatcher::MCPatternMatcher(MCStringRef p_pattern, MCStringRef p_string, MCStringOptions p_options)
 {
-    m_pattern = MCValueRetain(p_pattern);
+    m_pattern = p_pattern;
+    if (m_pattern != nil)
+        MCValueRetain(m_pattern);
     m_string_source = MCValueRetain(p_string);
     m_options = p_options;
     m_array_source = nil;
 }
 MCPatternMatcher::MCPatternMatcher(MCStringRef p_pattern, MCArrayRef p_array, MCStringOptions p_options)
 {
-    m_pattern = MCValueRetain(p_pattern);
+    m_pattern = p_pattern;
+    if (m_pattern != nil)
+        MCValueRetain(m_pattern);
     m_array_source = MCValueRetain(p_array);
     m_options = p_options;
     m_string_source = nil;
@@ -109,7 +113,7 @@ bool MCRegexMatcher::compile(MCStringRef& r_error)
     return true;
 }
 
-bool MCRegexMatcher::match(MCRange p_range)
+bool MCRegexMatcher::match(MCExecContext& ctxt, MCRange p_range)
 {
     // if appropriate, normalize the source string.
     // AL-2014-07-11: [[ Bug 12797 ]] Compare options correctly and normalize the source, not the pattern
@@ -125,7 +129,7 @@ bool MCRegexMatcher::match(MCRange p_range)
     
 }
 
-bool MCRegexMatcher::match(MCExecContext ctxt, MCNameRef p_key, bool p_match_key)
+bool MCRegexMatcher::match(MCExecContext& ctxt, MCNameRef p_key, bool p_match_key)
 {
     MCAutoStringRef t_string;
     MCAutoStringRef t_normalized_source;
@@ -282,7 +286,7 @@ static bool MCStringsWildcardMatchNative(const char *s, uindex_t s_length, const
     return p_index == p_length;
 }
 
-bool MCWildcardMatcher::match(MCRange p_source_range)
+bool MCWildcardMatcher::match(MCExecContext& ctxt, MCRange p_source_range)
 {
     if (m_native)
     {
@@ -297,7 +301,7 @@ bool MCWildcardMatcher::match(MCRange p_source_range)
     return MCStringWildcardMatch(m_string_source, p_source_range, m_pattern, m_options);
 }
 
-bool MCWildcardMatcher::match(MCExecContext ctxt, MCNameRef p_key, bool p_match_key)
+bool MCWildcardMatcher::match(MCExecContext& ctxt, MCNameRef p_key, bool p_match_key)
 {
     MCAutoStringRef t_string;
     if (p_match_key)
@@ -313,3 +317,71 @@ bool MCWildcardMatcher::match(MCExecContext ctxt, MCNameRef p_key, bool p_match_
     
     return MCStringWildcardMatch(*t_string, MCRangeMake(0, MCStringGetLength(*t_string)), m_pattern, m_options);
 }
+
+
+MCExpressionMatcher::MCExpressionMatcher(MCExpression* p_expression, MCStringRef p_string, MCStringOptions p_options)
+    : MCPatternMatcher(nil, p_string, p_options)
+{
+    m_expression = p_expression;
+}
+
+MCExpressionMatcher::MCExpressionMatcher(MCExpression* p_expression, MCArrayRef p_array, MCStringOptions p_options)
+    : MCPatternMatcher(nil, p_array, p_options)
+{
+    m_expression = p_expression;
+}
+
+MCExpressionMatcher::~MCExpressionMatcher()
+{
+}
+
+bool MCExpressionMatcher::compile(MCStringRef& r_error)
+{
+    // expression patterns are not compiled
+    return true;
+}
+
+bool MCExpressionMatcher::match(MCExecContext& ctxt, MCRange p_source_range)
+{
+    MCAutoStringRef t_string;
+    if (!MCStringCopySubstring(m_string_source, p_source_range, &t_string))
+        return false;
+    
+    MCeach->set(ctxt, *t_string);
+    
+    MCerrorlock++;
+    bool t_match, t_success;
+    t_success = ctxt . EvalExprAsBool(m_expression, EE_UNDEFINED, t_match);
+    MCerrorlock--;
+    
+    if (!t_success)
+        return t_success;
+    
+    return t_match;
+}
+
+bool MCExpressionMatcher::match(MCExecContext& ctxt, MCNameRef p_key, bool p_match_key)
+{
+    if (p_match_key)
+    {
+        MCeach->set(ctxt, p_key);
+    }
+    else
+    {
+        MCValueRef t_element;
+        if (!MCArrayFetchValue(m_array_source, m_options == kMCStringOptionCompareCaseless, p_key, t_element))
+            return false;
+        MCeach->set(ctxt, t_element);
+    }
+    
+    MCerrorlock++;
+    bool t_match, t_success;
+    t_success = ctxt . EvalExprAsBool(m_expression, EE_UNDEFINED, t_match);
+    MCerrorlock--;
+    
+    if (!t_success)
+        return t_success;
+    
+    return t_match;
+}
+

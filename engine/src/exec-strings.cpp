@@ -1942,7 +1942,7 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
             t_chunk_range . length = t_found_range . offset - t_last_offset;
         }
         
-        if (t_success && (p_matcher -> match(t_chunk_range) != p_without))
+        if (t_success && (p_matcher -> match(ctxt, t_chunk_range) != p_without))
         {
             MCAutoStringRef t_line;
             t_success = MCStringCopySubstring(p_source, t_chunk_range, &t_line) && MCListAppend(*t_output, *t_line);
@@ -1986,26 +1986,12 @@ void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStrin
     MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), &t_matcher, r_result);
 }
 
-void MCStringsExecFilterWildcardIntoIt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines)
+void MCStringsExecFilterExpression(MCExecContext& ctxt, MCStringRef p_source, MCExpression* p_expression, bool p_without, bool p_lines, MCStringRef &r_result)
 {
-    MCAutoStringRef t_result;
-    MCStringsExecFilterWildcard(ctxt, p_source, p_pattern, p_without, p_lines, &t_result);
+    // Create the pattern matcher
+    MCExpressionMatcher t_matcher(p_expression, p_source, ctxt . GetStringComparisonType());
     
-    if (*t_result != nil)
-        ctxt . SetItToValue(*t_result);
-    else
-        ctxt . SetItToEmpty();
-}
-
-void MCStringsExecFilterRegexIntoIt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines)
-{
-    MCAutoStringRef t_result;
-    MCStringsExecFilterRegex(ctxt, p_source, p_pattern, p_without, p_lines, &t_result);
-
-    if (*t_result != nil)
-        ctxt . SetItToValue(*t_result);
-    else
-        ctxt . SetItToEmpty();
+    MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), &t_matcher, r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

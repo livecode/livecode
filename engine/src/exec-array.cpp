@@ -1415,26 +1415,12 @@ void MCArraysExecFilterRegex(MCExecContext& ctxt, MCArrayRef p_source, MCStringR
     MCArraysExecFilter(ctxt, p_source, p_without, &t_matcher, p_match_keys, r_result);
 }
 
-void MCArraysExecFilterWildcardIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys)
+void MCArraysExecFilterExpression(MCExecContext& ctxt, MCArrayRef p_source, MCExpression* p_expression, bool p_without, bool p_match_keys, MCArrayRef &r_result)
 {
-    MCAutoArrayRef t_result;
-    MCArraysExecFilterWildcard(ctxt, p_source, p_pattern, p_without, p_match_keys, &t_result);
+    // Create the pattern matcher
+    MCExpressionMatcher t_matcher(p_expression, p_source, ctxt . GetStringComparisonType());
     
-    if (*t_result != nil)
-        ctxt . SetItToValue(*t_result);
-    else
-        ctxt . SetItToEmpty();
-}
-
-void MCArraysExecFilterRegexIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys)
-{
-    MCAutoArrayRef t_result;
-    MCArraysExecFilterRegex(ctxt, p_source, p_pattern, p_without, p_match_keys, &t_result);
-    
-    if (*t_result != nil)
-        ctxt . SetItToValue(*t_result);
-    else
-        ctxt . SetItToEmpty();
+    MCArraysExecFilter(ctxt, p_source, p_without, &t_matcher, p_match_keys, r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

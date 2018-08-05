@@ -1854,9 +1854,7 @@ void MCArraysEvalIsNotAmongTheKeysOf(MCExecContext& ctxt, MCNameRef p_key, MCArr
 
 void MCArraysExecFilterWildcard(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCArrayRef &r_result);
 void MCArraysExecFilterRegex(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCArrayRef &r_result);
-void MCArraysExecFilterWildcardIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines);
-void MCArraysExecFilterRegexIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines);
-
+void MCArraysExecFilterExpression(MCExecContext& ctxt, MCArrayRef p_source, MCExpression* p_expression, bool p_without, bool p_lines, MCArrayRef &r_result);
 
 ///////////
 
@@ -2060,8 +2058,7 @@ void MCStringsExecReplace(MCExecContext& ctxt, MCStringRef p_pattern, MCStringRe
 
 void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCStringRef &r_result);
 void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCStringRef &r_result);
-void MCStringsExecFilterWildcardIntoIt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines);
-void MCStringsExecFilterRegexIntoIt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines);
+void MCStringsExecFilterExpression(MCExecContext& ctxt, MCStringRef p_source, MCExpression* p_expression, bool p_without, bool p_lines, MCStringRef &r_result);
 
 void MCStringsEvalIsAscii(MCExecContext& ctxt, MCValueRef p_string, bool& r_result);
 void MCStringsEvalIsNotAscii(MCExecContext& ctxt, MCValueRef p_string, bool& r_result);

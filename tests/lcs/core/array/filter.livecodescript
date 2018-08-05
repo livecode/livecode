@@ -299,6 +299,24 @@ on TestFilterRegex
 	filter keys of tSource with regex pattern "f.*" into tTest
 	TestAssert "filter keys of array with regex", the keys of tTest is "foo"
 	
+	put "foo" into tSource["foo"]
+	put "bar" into tSource["bar"]
+	
 	filter elements of tSource with regex pattern "f.*" into tTest
 	TestAssert "filter elements of array with regex", the keys of tTest is "foo"
 end TestFilterRegex
+
+on TestFilterExpression
+	local tSource, tTest
+	put "foo" into tSource["foo"]
+	put "bar" into tSource["bar"]
+	
+	filter keys of tSource where each begins with "f" into tTest
+	TestAssert "filter keys of array where expression", the keys of tTest is "foo"
+	
+	put "foo" into tSource["foo"]
+	put "bar" into tSource["bar"]
+	
+	filter elements of tSource where each begins with "f" into tTest
+	TestAssert "filter elements of array where expression", the keys of tTest is "foo"
+end TestFilterExpression

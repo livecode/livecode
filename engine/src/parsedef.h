@@ -730,7 +730,8 @@ enum Mark_constants {
 enum Match_mode {
     MA_UNDEFINED,
     MA_WILDCARD,
-    MA_REGEX
+    MA_REGEX,
+    MA_EXPRESSION
 };
 
 enum Move_mode {
