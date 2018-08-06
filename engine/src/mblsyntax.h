@@ -441,6 +441,8 @@ bool MCSystemHideStatusBar();
 
 bool MCSystemSetKeyboardType(intenum_t p_type);
 bool MCSystemSetKeyboardReturnKey(intenum_t p_type);
+bool MCSystemSetKeyboardDisplay(intenum_t p_type);
+bool MCSystemGetKeyboardDisplay(intenum_t& r_type);
 
 bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages);
 bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale);

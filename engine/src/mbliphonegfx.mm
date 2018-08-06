@@ -63,11 +63,6 @@ static inline MCGRectangle MCGRectangleFromCGRect(CGRect p_rect)
 	return MCGRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
 }
 
-static inline CGRect MCRectangleToCGRect(const MCRectangle &p_rect)
-{
-	return CGRectMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
-}
-
 static inline MCRectangle MCRectangleFromCGRect(const CGRect &p_rect)
 {
 	return MCRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);

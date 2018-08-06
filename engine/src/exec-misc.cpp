@@ -224,8 +224,26 @@ void MCMiscSetKeyboardReturnKey(MCExecContext& ctxt, intenum_t p_keyboard_return
 {
     if (MCSystemSetKeyboardReturnKey(p_keyboard_return_key))
         return;
+
+    ctxt.Throw();
+}
+
+static intenum_t s_current_keyboard_display = 0;
+
+void MCMiscExecSetKeyboardDisplay(MCExecContext& ctxt, intenum_t p_mode)
+{
+    if (MCSystemSetKeyboardDisplay(p_mode))
+    {
+        s_current_keyboard_display = p_mode;
+        return;
+    }
     
     ctxt.Throw();
+}
+
+void MCMiscExecGetKeyboardDisplay(MCExecContext& ctxt, intenum_t& r_mode)
+{
+    r_mode = s_current_keyboard_display;
 }
 
 void MCMiscGetPreferredLanguages(MCExecContext& ctxt, MCStringRef& r_languages)

@@ -707,6 +707,13 @@ bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
     return false;
 }
 
+
+bool MCSystemSetKeyboardDisplay(intenum_t p_type)
+{
+    MCAndroidEngineRemoteCall("setKeyboardDisplay", "vi", nullptr, p_type);
+    return true;
+}
+
 // SN-2014-12-18: [[ Bug 13860 ]] Parameter added in case it's a filename, not raw data, in the DataRef
 bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension, bool p_is_raw_data)
 {

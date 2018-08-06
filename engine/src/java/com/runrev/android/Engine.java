@@ -609,6 +609,40 @@ public class Engine extends View implements EngineApi
         imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
 		updateKeyboardVisible(true);
     }
+    
+    @Override
+    public void getFocusedRect(Rect r_rect)
+    {
+        Rect t_rect = doGetFocusedRect();
+        
+        if (t_rect == null)
+        {
+            super.getFocusedRect(r_rect);
+        }
+        else
+        {
+            r_rect.set(t_rect);
+        }
+    }
+    
+    private static final int KEYBOARD_DISPLAY_OVER = 0;
+    private static final int KEYBOARD_DISPLAY_PAN = 1;
+    
+    public void setKeyboardDisplay(int p_mode)
+    {
+        if (p_mode == KEYBOARD_DISPLAY_PAN)
+        {
+            getActivity()
+                .getWindow()
+                .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+        }
+        else if (p_mode == KEYBOARD_DISPLAY_OVER)
+        {
+            getActivity()
+                .getWindow()
+                .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        }
+    }
 
     public void hideKeyboard()
     {
@@ -3705,6 +3739,8 @@ public class Engine extends View implements EngineApi
 	public static native void doReconfigure(int x, int y, int w, int h, Bitmap bitmap);
 
     public static native String doGetCustomPropertyValue(String set, String property);
+    
+    public static native Rect doGetFocusedRect();
 
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Native wrapper around MCScreenDC::wait
 	//   used by runActivity() API.
