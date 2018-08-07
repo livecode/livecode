@@ -148,7 +148,7 @@ typedef float natural_float_t;
 #elif defined(__64_BIT__)
 typedef uint64_t natural_uint_t;
 typedef int64_t natural_sint_t;
-typedef float natural_float_t;
+typedef double natural_float_t;
 #else
 #error Bitness of target not defined
 #endif
