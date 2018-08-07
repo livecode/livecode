@@ -2573,7 +2573,7 @@ private command __UpdateSettingsFromCodeFolder pPath, pCodeFolderName, pPlatform
                appendToStringList tFolderPath & slash & tLine, xSettings["extension_code_resources"]
             end repeat
             
-            if pPlatform is "mac" then
+            if pPlatform is among the words of "mac ios" then
                local tFolders
                put folders(tFolderPath) into tFolders
                filter tFolders without ".*"
