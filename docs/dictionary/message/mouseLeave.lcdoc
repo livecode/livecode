@@ -22,8 +22,8 @@ on mouseLeave -- hide another object
 end mouseLeave
 
 Description:
-Handle the <mouseLeave> <message> to update a <control> when the <mouse
-pointer> moves outside it.
+Handle the <mouseLeave> <message> to update a <control> when the 
+<mouse pointer> moves outside it.
 
 The <mouseLeave> <message> is sent only when the <Browse tool> is being
 used. 

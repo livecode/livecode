@@ -36,11 +36,11 @@ receive a <mouseWithin> <message>.
 
 If the mouse button is down when the mouse pointer enters the control,
 no <mouseWithin> <message|messages> are sent until the mouse button is
-released. If the <mouse pointer> leaves the <control> while the <mouse
-button> is still down, no <mouseWithin> <message|messages> are sent. If
-the <mouse button> is pressed while the <pointer> is in the <control>,
-however, <mouseWithin> <message|messages> continue to be sent, even
-while the <mouse button> is down.
+released. If the <mouse pointer> leaves the <control> while the 
+<mouse button> is still down, no <mouseWithin> <message|messages> are 
+sent. If the <mouse button> is pressed while the <pointer> is in the 
+<control>, however, <mouseWithin> <message|messages> continue to be 
+sent, even while the <mouse button> is down.
 
 Usually, it is easier and more efficient to use the mouseMove <message>
 to track the movement of the mouse while the button is being held down.
