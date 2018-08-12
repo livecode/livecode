@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -98,8 +98,9 @@ MCWidgetEventManager* MCwidgeteventmanager = nil;
 
 struct MCWidgetEventManager::MCWidgetTouchEvent
 {
+    bool m_active;
     uinteger_t  m_id;
-    MCWidgetRef m_widget;
+    uinteger_t  m_index;
     coord_t     m_x;
     coord_t     m_y;
 };
@@ -138,9 +139,12 @@ MCWidgetEventManager::MCWidgetEventManager() :
   m_doubleclick_time(MCdoubletime),
   m_doubleclick_distance(MCdoubledelta),
   m_check_mouse_focus(false),
-  m_touches()
+  m_touches(),
+  m_touch_count(0),
+  m_touch_sequence(0),
+  m_touched_widget(nullptr),
+  m_touch_id(0)
 {
-    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,6 +179,9 @@ void MCWidgetEventManager::event_close(MCWidget* p_widget)
         }
     }
     
+    /* Issue a cancel touches event. */
+    event_cancel_touches(p_widget->getwidget());
+    
     MCWidgetOnClose(p_widget -> getwidget());
 }
 
@@ -182,7 +189,7 @@ void MCWidgetEventManager::event_kfocus(MCWidget* p_widget)
 {
     // WIDGET-TODO: Reinstate FocusEnter
     
-#if 0
+#if WIDGET_KEYBOARD_FOCUS
     // Keyboard focus has changed
     m_keyboard_focus = p_widget;
     
@@ -194,7 +201,7 @@ void MCWidgetEventManager::event_kunfocus(MCWidget* p_widget)
 {
     // WIDGET-TODO: Reinstate FocusLeave
     
-#if 0
+#if WIDGET_KEYBOARD_FOCUS
     // Keyboard focus has changed
     // TODO: does the unfocus *always* happen before the next focus?
     m_keyboard_focus = nil;
@@ -208,6 +215,11 @@ Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text
     // Prevent the IDE from breaking
     if (!widgetIsInRunMode(p_widget))
         return p_widget->MCControl::kdown(p_text, p_key);
+    
+    // If the control that is the target of the event is not the mouse focus's
+    // host widget - then this indicates the sync error has occurred.
+    if (!check_mouse_focus(p_widget, "event_kdown"))
+        return False;
     
     // Mouse scroll events are sent as key events
     switch (p_key)
@@ -227,9 +239,9 @@ Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text
         default:
             break;
     }
-    
+
     // WIDGET-TODO: Reinstate keyDown
-#if 0
+#if WIDGET_KEYBOARD_FOCUS
     return keyDown(p_widget, p_text, p_key);
 #else
     return False;
@@ -239,7 +251,7 @@ Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text
 Boolean MCWidgetEventManager::event_kup(MCWidget* p_widget, MCStringRef p_text, KeySym p_key)
 {
     // WIDGET-TODO: Reinstate keyUp
-#if 0
+#if WIDGET_KEYBOARD_FOCUS
     return keyUp(p_widget, p_text, p_key);
 #else
     return False;
@@ -251,7 +263,10 @@ Boolean MCWidgetEventManager::event_mdown(MCWidget* p_widget, uint2 p_which)
     // Prevent the IDE from breaking
     if (!widgetIsInRunMode(p_widget))
         return p_widget->MCControl::mdown(p_which);
-    
+	
+	if (!check_mouse_focus(p_widget, "event_mdown"))
+		return False;
+	
     return mouseDown(m_mouse_focus, p_which);
 }
 
@@ -377,11 +392,17 @@ void MCWidgetEventManager::event_munfocus(MCWidget* p_widget)
 {
     // If a widget is currently grabbed, do nothing.
     if (m_mouse_grab != nil)
-        return;
-    
+    {
+        if (MCWidgetGetHost(m_mouse_grab) == p_widget)
+        {
+            mouseCancel(m_mouse_grab, 0);
+        }
+    }
+
     // If the unfocused widget is the currently focused widget, then
     // leave it.
-    if (p_widget -> getwidget() == m_mouse_focus)
+    if (m_mouse_focus != nil &&
+		MCWidgetGetHost(m_mouse_focus) == p_widget)
     {
         mouseLeave(m_mouse_focus);
         MCValueRelease(m_mouse_focus);
@@ -392,7 +413,7 @@ void MCWidgetEventManager::event_munfocus(MCWidget* p_widget)
 void MCWidgetEventManager::event_mdrag(MCWidget* p_widget)
 {
     // WIDGET-TODO: Reinstate DragStart
-#if 0
+#if WIDGET_DRAG_MESSAGES
     // If this widget is not a drag source, reject the drag attempt
     bool t_drag_accepted;
     t_drag_accepted = p_widget->isDragSource();
@@ -431,6 +452,12 @@ void MCWidgetEventManager::event_layerchanged(MCWidget* p_widget)
 
 void MCWidgetEventManager::event_visibilitychanged(MCWidget* p_widget, bool p_visible)
 {
+    /* Issue a cancel touches event if we are going invisible */
+    if (!p_visible)
+    {
+        event_cancel_touches(p_widget->getwidget());
+    }
+            
     MCWidgetOnVisibilityChanged(p_widget -> getwidget(), p_visible);
 }
 
@@ -482,25 +509,128 @@ void MCWidgetEventManager::event_paint(MCWidget *p_widget, MCGContextRef p_gcont
     MCWidgetOnPaint(p_widget -> getwidget(), p_gcontext);
 }
 
-void MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEventTouchPhase p_phase, int2 p_x, int2 p_y)
+bool MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEventTouchPhase p_phase, int2 p_x, int2 p_y)
 {
+    if (!widgetIsInRunMode(p_widget))
+    {
+        return false;
+    }
+    
+    /* If a touch is just starting, and this is the first touch then we need
+     * to compute the touched widget. */
+    MCWidgetRef t_touched_widget = m_touched_widget;
+    if (p_phase == kMCEventTouchPhaseBegan)
+    {
+        if (t_touched_widget == nullptr)
+        {
+            t_touched_widget = hitTest(p_widget->getwidget(), p_x, p_y);
+        }
+    }
+    
+    /* If we don't have a touched widget, then ignore the touch. */
+    if (t_touched_widget == nullptr)
+    {
+        return false;
+    }
+    
+    /* If we have a touched widget, but it doesn't want touch, let default
+     * processing occur. */
+    if (!MCWidgetHandlesTouchEvents(t_touched_widget))
+    {
+        return false;
+    }
+    
+    /* See if there is already a slot for the given touch. If none is found
+     * and this is not a begin, we ignore it - otherwise we create one. */
+    uinteger_t t_slot;
+    if (!findTouchSlotById(p_id, t_slot))
+    {
+        if (p_phase == kMCEventTouchPhaseBegan)
+        {
+            t_slot = allocateTouchSlot();
+            m_touches[t_slot].m_id = p_id;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else if (p_phase == kMCEventTouchPhaseBegan)
+    {
+        /* This shouldn't happen - it would mean we are getting two began
+         * phases for the same touch, so we ignore it. */
+        return false;
+    }
+    
+    /* Assign the touched widget (which will be the same as the widget which
+     * was touched by the first touch in a sequence - i.e. the first touched
+     * widget grabs all touches. */
+    MCValueAssign(m_touched_widget, t_touched_widget);
+    
+    /* Update the position information in the touch. */
+    m_touches[t_slot].m_x = p_x;
+    m_touches[t_slot].m_y = p_y;
+    
+    /* Update the 'current' touch id - i.e the touch which is pertinent to
+     * this event. */
+    m_touch_id = p_id;
+    
+    /* Process the specific kind of touch. */
     switch (p_phase)
     {
         case kMCEventTouchPhaseBegan:
-            touchBegin(p_widget, p_id, p_x, p_y);
+            bubbleEvent(m_touched_widget, MCWidgetOnTouchStart);
             break;
             
         case kMCEventTouchPhaseMoved:
-            touchMove(p_widget, p_id, p_x, p_y);
+            bubbleEvent(m_touched_widget, MCWidgetOnTouchMove);
             break;
             
         case kMCEventTouchPhaseEnded:
-            touchEnd(p_widget, p_id, p_x, p_y);
+            bubbleEvent(m_touched_widget, MCWidgetOnTouchFinish);
             break;
             
         case kMCEventTouchPhaseCancelled:
-            touchCancel(p_widget, p_id, p_x, p_y);
+            bubbleEvent(m_touched_widget, MCWidgetOnTouchCancel);
             break;
+    }
+    
+    /* The touch id is only valid whilst an event is happening */
+    m_touch_id = 0;
+    
+    /* If the phase ends the touch, then free the slot and release the touched
+     * widget if there are no other touches. */
+    if (p_phase == kMCEventTouchPhaseEnded ||
+        p_phase == kMCEventTouchPhaseCancelled)
+    {
+        freeTouchSlot(t_slot);
+        if (m_touch_count == 0)
+        {
+            MCValueAssignOptional(m_touched_widget, nullptr);
+            m_touch_sequence = 0;
+        }
+    }
+    
+    return true;
+}
+
+void MCWidgetEventManager::event_cancel_touches(MCWidgetRef p_widget)
+{
+    /* If there is a touched widget, and the p_widget is an ancestor of it then
+     * we must make sure all touches are cancelled. */
+    if (m_touched_widget != nullptr &&
+        MCWidgetIsAncestorOf(p_widget, m_touched_widget))
+    {
+        /* Loop through all touches and cancel the active ones. This will also
+         * cause m_touched_widget to be unset after the last active touch is
+         * cancelled. */
+        for(uindex_t i = 0; i < m_touches.Size(); i++)
+        {
+            if (m_touches[i].m_active)
+            {
+                event_touch(MCWidgetGetHost(p_widget), m_touches[i].m_id, kMCEventTouchPhaseCancelled, m_touches[i].m_x, m_touches[i].m_y);
+            }
+        }
     }
 }
 
@@ -558,6 +688,9 @@ void MCWidgetEventManager::widget_disappearing(MCWidgetRef p_widget)
     if (m_mouse_grab != nil &&
         MCWidgetIsAncestorOf(p_widget, m_mouse_grab))
         mouseCancel(p_widget, 0);
+    
+    /* Cancel any touches */
+    event_cancel_touches(p_widget);
 }
 
 void MCWidgetEventManager::widget_sync(void)
@@ -620,6 +753,91 @@ void MCWidgetEventManager::GetAsynchronousClickPosition(coord_t& r_x, coord_t& r
     r_y = MCclicklocy;
 }
 
+uindex_t MCWidgetEventManager::GetTouchCount(void)
+{
+    return m_touch_count;
+}
+
+bool MCWidgetEventManager::GetActiveTouch(integer_t& r_index)
+{
+    if (m_touch_id == 0)
+    {
+        return false;
+    }
+    
+    uindex_t t_slot;
+    if (!findTouchSlotById(m_touch_id, t_slot))
+    {
+        return false;
+    }
+    
+    r_index = m_touches[t_slot].m_index;
+    
+    return true;
+}
+
+bool MCWidgetEventManager::GetTouchPosition(integer_t p_index, MCPoint& r_point)
+{
+    uinteger_t t_slot;
+    if (!findTouchSlotByIndex(p_index, t_slot))
+    {
+        return false;
+    }
+    
+    r_point.x = m_touches[t_slot].m_x;
+    r_point.y = m_touches[t_slot].m_y;
+    
+    return true;
+}
+
+static compare_t _MCSortWidgetTouchIndexes(const MCValueRef *p_left, const MCValueRef *p_right)
+{
+    MCAssert(MCValueGetTypeCode(*p_left) == kMCValueTypeCodeNumber);
+    MCAssert(MCValueGetTypeCode(*p_right) == kMCValueTypeCodeNumber);
+    
+    return MCNumberCompareTo(MCNumberRef(*p_left), MCNumberRef(*p_right));
+}
+
+bool MCWidgetEventManager::GetTouchIDs(MCProperListRef &r_touch_ids)
+{
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+    {
+        return false;
+    }
+    
+    for (uinteger_t i = 0; i < m_touches.Size(); i++)
+    {
+        if (m_touches[i].m_active)
+        {
+            MCAutoNumberRef t_index;
+            if (!MCNumberCreateWithInteger(m_touches[i].m_index, &t_index))
+            {
+                return false;
+            }
+            
+            if (!MCProperListPushElementOntoBack(*t_list, &t_index))
+            {
+                return false;
+            }
+        }
+    }
+    
+    // indexes may be out of order if filling inactive slots so sort
+    if (!MCProperListSort(*t_list, false, _MCSortWidgetTouchIndexes))
+        return false;
+        
+    if (!t_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_touch_ids = t_list.Take();
+    
+    return true;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCWidgetRef MCWidgetEventManager::hitTest(MCWidgetRef p_widget, coord_t x, coord_t y)
@@ -634,7 +852,7 @@ MCWidgetRef MCWidgetEventManager::hitTest(MCWidgetRef p_widget, coord_t x, coord
 void MCWidgetEventManager::mouseMove(MCWidgetRef p_widget)
 {
     // WIDGET-TODO: Reinstate DragMove
-#if 0
+#if WIDGET_DRAG_MESSAGES
     // Update the mouse coordinates
     m_mouse_x = p_x;
     m_mouse_y = p_y;
@@ -652,7 +870,7 @@ void MCWidgetEventManager::mouseMove(MCWidgetRef p_widget)
 void MCWidgetEventManager::mouseEnter(MCWidgetRef p_widget)
 {
     // WIDGET-TODO: Reinstate DragEnter
-#if 0
+#if WIDGET_DRAG_MESSAGES
     if (MCdispatcher->isdragtarget())
     {
         // Set this widget as the drag target if it would accept the drop
@@ -682,7 +900,7 @@ void MCWidgetEventManager::mouseEnter(MCWidgetRef p_widget)
 void MCWidgetEventManager::mouseLeave(MCWidgetRef p_widget)
 {
     // WIDGET-TODO: Reinstate DragLeave
-#if 0
+#if WIDGET_DRAG_MESSAGES
     if (MCdispatcher->isdragtarget())
     {
         p_widget->OnDragLeave();
@@ -846,7 +1064,7 @@ bool MCWidgetEventManager::mouseScroll(MCWidgetRef p_widget, real32_t p_delta_x,
 bool MCWidgetEventManager::keyDown(MCWidgetRef p_widget, MCStringRef p_string, KeySym p_key)
 {
     // WIDGET-TODO: Reinstate keyDown
-#if 0
+#if WIDGET_KEYBOARD_FOCUS
     // Todo: key gesture (shortcuts, accelerators, etc) processing
 
     // Has there been a change of modifiers?
@@ -880,7 +1098,7 @@ bool MCWidgetEventManager::keyDown(MCWidgetRef p_widget, MCStringRef p_string, K
 bool MCWidgetEventManager::keyUp(MCWidgetRef p_widget, MCStringRef p_string, KeySym p_key)
 {
     // WIDGET-TODO: Reinstate keyUp
-#if 0
+#if WIDGET_KEYBOARD_FOCUS
     // Todo: key gesture (shortcuts, accelerators, etc) processing
     
     // Has there been a change of modifiers?
@@ -905,199 +1123,60 @@ bool MCWidgetEventManager::keyUp(MCWidgetRef p_widget, MCStringRef p_string, Key
 #endif
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-void MCWidgetEventManager::touchBegin(MCWidgetRef p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
-{
-    // WIDGET-TODO: Reinstate touchBegin
-#if 0
-    // Check whether this touch already exists within our touch event list
-    uinteger_t t_slot;
-    if (findTouchSlot(p_id, t_slot))
-    {
-        // Already exists. This ought not to happen... ignore the event.
-        return;
-    }
-    
-    // Allocate a slot to store the event details
-    t_slot = allocateTouchSlot();
-    m_touches[t_slot].m_id = p_id;
-    m_touches[t_slot].m_widget = p_widget;
-    m_touches[t_slot].m_x = p_x;
-    m_touches[t_slot].m_y = p_y;
-    
-    if (!widgetIsInRunMode(p_widget))
-        return;
-    
-    // Send an event to the widget
-    if (p_widget->handlesTouches())
-        p_widget->OnTouchStart(p_id, p_x, p_y, 0.0, 0.0);
-    else if (p_id == 1)
-    {
-        mouseMove(p_widget, p_x, p_y);
-        mouseDown(p_widget, 1);
-    }
-#endif
-}
-
-void MCWidgetEventManager::touchMove(MCWidgetRef p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
-{
-    // WIDGET-TODO: Reinstate touchMove
-#if 0
-    // Does this touch event exist in the list yet? If not, create it. (This
-    // might happen if a touch starts on a non-widget MCControl and later moves
-    // onto a widget).
-    uinteger_t t_slot;
-    if (!findTouchSlot(p_id, t_slot))
-    {
-        touchBegin(p_widget, p_id, p_x, p_y);
-        /* UNCHECKED */ findTouchSlot(p_id, t_slot);
-    }
-    else
-    {
-        // Pre-existing touch. Check for enter/leave events.
-        if (m_touches[t_slot].m_widget != p_widget)
-        {
-            touchLeave(m_touches[t_slot].m_widget, p_id);
-            m_touches[t_slot].m_widget = p_widget;
-            touchEnter(p_widget, p_id);
-        }
-        
-        // Update the touch status
-        m_touches[t_slot].m_x = p_x;
-        m_touches[t_slot].m_y = p_y;
-        
-        if (!widgetIsInRunMode(p_widget))
-            return;
-        
-        // Send a move event
-        if (p_widget->handlesTouches())
-            p_widget->OnTouchMove(p_id, p_x, p_y, 0, 0);
-        else if (p_id == 1)
-        {
-            mouseMove(p_widget, p_x, p_y);
-        }
-    }
-#endif
-}
-
-void MCWidgetEventManager::touchEnd(MCWidgetRef p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
-{
-    // WIDGET-TODO: Reinstate touchEnd
-#if 0
-    // Ignore the event if this touch has not been registered
-    uinteger_t t_slot;
-    if (!findTouchSlot(p_id, t_slot))
-        return;
-    
-    // Update touch status
-    m_touches[t_slot].m_x = p_x;
-    m_touches[t_slot].m_y = p_y;
-    
-    if (!widgetIsInRunMode(p_widget))
-        return;
-    
-    // Send a touch finish event
-    if (p_widget->handlesTouches())
-        p_widget->OnTouchFinish(p_id, p_x, p_y);
-    else if (p_id == 1)
-    {
-        mouseMove(p_widget, p_x, p_y);
-        mouseUp(p_widget, 1);
-    }
-    
-    // Delete the event
-    freeTouchSlot(t_slot);
-#endif
-}
-
-void MCWidgetEventManager::touchCancel(MCWidgetRef p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
-{
-    // WIDGET-TODO: Reinstate touchCancel
-#if 0
-    // Ignore the event if this touch has not been registered
-    uinteger_t t_slot;
-    if (!findTouchSlot(p_id, t_slot))
-        return;
-    
-    // Update touch status
-    m_touches[t_slot].m_x = p_x;
-    m_touches[t_slot].m_y = p_y;
-    
-    if (!widgetIsInRunMode(p_widget))
-        return;
-    
-    // Send a touch cancel event
-    if (p_widget->handlesTouches())
-        p_widget->OnTouchCancel(p_id);
-    else if (p_id == 1)
-    {
-        mouseMove(p_widget, p_x, p_y);
-        mouseRelease(p_widget, 1);
-    }
-    
-    // Delete the event
-    freeTouchSlot(t_slot);
-#endif
-}
-
-void MCWidgetEventManager::touchEnter(MCWidgetRef p_widget, uinteger_t p_id)
-{
-    // WIDGET-TODO: Reinstate touchEnter
-#if 0
-    if (!widgetIsInRunMode(p_widget))
-        return;
-    
-    if (p_widget->handlesTouches())
-        p_widget->OnTouchEnter(p_id);
-    else if (p_id == 1)
-    {
-        mouseEnter(p_widget);
-    }
-#endif
-}
-
-void MCWidgetEventManager::touchLeave(MCWidgetRef p_widget, uinteger_t p_id)
-{
-    // WIDGET-TODO: Reinstate touchLeave
-#if 0
-    if (!widgetIsInRunMode(p_widget))
-        return;
-    
-    if (p_widget->handlesTouches())
-        p_widget->OnTouchLeave(p_id);
-    else if (p_id == 1)
-    {
-        mouseLeave(p_widget);
-    }
-#endif
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 uinteger_t MCWidgetEventManager::allocateTouchSlot()
 {
     // Search the list for an empty slot
-    for (uinteger_t i = 0; i < m_touches.Size(); i++)
+    uinteger_t i = 0;
+    for (; i < m_touches.Size(); i++)
     {
-        // Look for a slot with no widget
-        if (m_touches[i].m_widget == nil)
+        // Look for a slot which is not active.
+        if (!m_touches[i].m_active)
         {
-            return i;
+            break;
         }
     }
     
-    // No empty slots found. Extend the array.
-    /* UNCHECKED */ m_touches.Extend(m_touches.Size() + 1);
-    return m_touches.Size() - 1;
+    if (i == m_touches.Size())
+    {
+        // No empty slots found. Extend the array.
+        /* UNCHECKED */ m_touches.Extend(i + 1);
+    }
+    
+    m_touches[i].m_active = true;
+    m_touches[i].m_index = ++m_touch_sequence;
+    
+    m_touch_count += 1;
+    
+    return i;
 }
 
-bool MCWidgetEventManager::findTouchSlot(uinteger_t p_id, uinteger_t& r_which)
+bool MCWidgetEventManager::findTouchSlotById(uinteger_t p_id, uinteger_t& r_which)
 {
     // Search the list for a touch event with the given ID
     for (uinteger_t i = 0; i < m_touches.Size(); i++)
     {
-        if (m_touches[i].m_id == p_id)
+        if (m_touches[i].m_active &&
+            m_touches[i].m_id == p_id)
+        {
+            r_which = i;
+            return true;
+        }
+    }
+    
+    // Could not find any touch event with that ID
+    return false;
+}
+
+bool MCWidgetEventManager::findTouchSlotByIndex(uinteger_t p_index, uinteger_t& r_which)
+{
+    // Search the list for a touch event with the given ID
+    for (uinteger_t i = 0; i < m_touches.Size(); i++)
+    {
+        if (m_touches[i].m_active &&
+            m_touches[i].m_index == p_index)
         {
             r_which = i;
             return true;
@@ -1111,7 +1190,8 @@ bool MCWidgetEventManager::findTouchSlot(uinteger_t p_id, uinteger_t& r_which)
 void MCWidgetEventManager::freeTouchSlot(uinteger_t p_which)
 {
     // Mark as free by clearing the widget pointer for the event
-    m_touches[p_which].m_widget = nil;
+    m_touches[p_which].m_active = false;
+    m_touch_count -= 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1181,6 +1261,19 @@ bool MCWidgetEventManager::doBubbleEvent(bool p_always_bubble, MCWidgetRef p_tar
     m_target = t_old_target;
     
     return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCWidgetEventManager::check_mouse_focus(MCWidget *p_widget, const char *p_event)
+{
+	if (m_mouse_focus != nil &&
+		MCWidgetGetHost(m_mouse_focus) == p_widget)
+		return true;
+	
+	MCLog("mfocus-sync-error: %s invoked on widget (%p) which is not m_mouse_focus (%p)", p_event, p_widget -> getwidget(), m_mouse_focus);
+	
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -4,13 +4,17 @@ Type: property
 
 Syntax: set the boundingRect of <group> to {<left>, <top>, <right>, <bottom> | empty }
 
-Summary: Specifies whether a <group> automatically changes size to fit when its <control|controls> are moved or resized.
+Summary:
+Specifies whether a <group> automatically changes size to fit when its
+<control|controls> are moved or resized.
+
+Associations: group
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the boundingRect of group "Icons" to 100,100,500,500
@@ -19,18 +23,38 @@ Example:
 set the boundingRect of the target to the rect of the target
 
 Value:
-The <boundingRect> of a <group> consists of four <integer|integers> separated by commas.
-By default, the <boundingRect> <property> of a <group> is set to empty.
+The <boundingRect> of a <group> consists of four <integer|integers>
+separated by commas. By default, the <boundingRect> <property> of a
+<group> is set to empty.
 
 Description:
-Use the <boundingRect> <property> to <control(keyword)> how a <group(command)> responds when you move one of the <group(glossary)|group's> <control(object)|controls> to the edge of the <group(command)>.
+Use the <boundingRect> <property> to <control(keyword)> how a
+<group(command)> responds when you move one of the
+<group(glossary)|group's> <control(object)|controls> to the edge of the
+<group(command)>. 
 
-If a group's <boundingRect> is empty and its <lockLocation> is false, when you drag an <object> toward the boundary of the <group(command)>, the <group(command)> automatically expands, resizing itself to fit. If the <lockLocation> is true, the <object> is clipped to the <group(glossary)|group's> <rectangle>.
+If a group's <boundingRect> is empty and its <lockLocation> is false,
+when you drag an <object(glossary)> toward the boundary of the
+<group(command)>, the <group(command)> automatically expands, resizing
+itself to fit. If the <lockLocation> is true, the <object(glossary)> is
+clipped to the <group(glossary)|group's> <rectangle>.
 
-If a group's <boundingRect> is not empty and its <lockLocation> is false, when you drag an <object> toward the boundary of the <group(command)>, the <group(command)> does not automatically resize to fit its <object|objects>. Instead, the <object> is clipped at the <boundingRect>. (In <group-editing mode>, the entire <control(keyword)> is shown, but when you exit <group-editing mode>, <control(object)|controls> outside the <boundingRect> are clipped.)
+If a group's <boundingRect> is not empty and its <lockLocation> is
+false, when you drag an <object(glossary)> toward the boundary of the
+<group(command)>, the <group(command)> does not automatically resize to
+fit its <object|objects>. Instead, the <object(glossary)> is clipped at
+the <boundingRect>. (In <group-editing mode>, the entire
+<control(keyword)> is shown, but when you exit <group-editing mode>,
+<control(object)|controls> outside the <boundingRect> are clipped.)
 
-If the group is a scrolling group, dragging an object in it automatically scrolls the group. When you drag beyond the scrollable area, the object is clipped.
+If the group is a scrolling group, dragging an object in it
+automatically scrolls the group. When you drag beyond the scrollable
+area, the object is clipped.
 
-References: boundingRect (property), lockLocation (property), margins (property), control (keyword), rectangle (keyword), group (command), control (object), object (object), property (glossary), integer (glossary), group-editing mode (glossary), group (glossary)
+References: group (command), object (glossary), property (glossary),
+integer (glossary), group-editing mode (glossary), group (glossary),
+control (keyword), rectangle (keyword), control (object),
+boundingRect (property), lockLocation (property), margins (property)
 
 Tags: ui
+

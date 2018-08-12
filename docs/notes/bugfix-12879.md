@@ -1,1 +1,0 @@
-# Inspector opening at odd location

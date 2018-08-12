@@ -1,0 +1,1 @@
+# Fixed bug causing crash when using multiple players.

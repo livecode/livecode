@@ -4,15 +4,18 @@ Type: command
 
 Syntax: revVideoGrabDialog [<settingsType>]
 
-Summary: Displays a dialog box for configuring <QuickTime> or <VFW|Video for Windows> <video capture>.
+Summary:
+Displays a dialog box for configuring <VFW|Video for Windows> <video capture>.
+
+Associations: video library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: windows
 
 Platforms: desktop
 
-Security: disk,privacy
+Security: disk, privacy
 
 Example:
 revVideoGrabDialog
@@ -25,28 +28,52 @@ revVideoGrabDialog the label of button "Dialog Type"
 
 Parameters:
 settingsType (enum):
-- compression: Settings for compression when recording video
-- format: Video format, dimensions, and image depth
-- display: Appearance of previewed video in the video grabber
-- source: Video input channels and hue, contrast, and saturation settings
-- video: Pops up the QT video compression choice dialog for the videograbber
-- audio: Pops up the QT audio compression choice dialog for the videograbber
+-   compression: Settings for compression when recording video
+-   format: Video format, dimensions, and image depth
+-   display: Appearance of previewed video in the video grabber
+-   source: Video input channels and hue, contrast, and saturation settings 
+-   video: Pops up the video compression choice dialog for the videograbber 
+-   audio: Pops up the audio compression choice dialog for the videograbber 
+
 
 Description:
-Use the <revVideoGrabDialog> <command> to specify settings for use with the <video grabber>. 
+Use the <revVideoGrabDialog> <command> to specify settings for use with
+the <video grabber>.
 
-You must use the revInitializeVideoGrabber <command> to open the <video grabber> before you can use the <revVideoGrabDialog> <command>. 
+You must use the revInitializeVideoGrabber <command> to open the <video
+grabber> before you can use the <revVideoGrabDialog> <command>.
 
-If you specified "QT" as the video method when you executed the revInitializeVideoGrabber <command>, do not specify a <settingsType>. <QuickTime> video recording settings are found in a single <dialog box>, which you display with the following <statement> :
+Use the <settingsType> <parameter> to specify which <dialog box> you
+want to show.
 
-  revVideoGrabDialog
+>*Note:* Some video camera drivers don't support some <settingsType>
+> values. 
 
-If you specified "VFW", use the <settingsType> <parameter> to specify which <dialog box> you want to show. 
+>*Important:*  The <revVideoGrabDialog> <command> is part of the 
+> <Video library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the
+> "Video Grabber" 
+> library checkbox is checked.
 
->*Note:* Some video camera drivers don't support some <settingsType> values.
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect.
 
->*Important:*  The <revVideoGrabDialog> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
-References: revVideoGrabSettings (command), command (glossary), video capture (glossary), VFW (glossary), Standalone Application Settings (glossary), QuickTime (glossary), statement (glossary), standalone application (glossary), parameter (glossary), video grabber (glossary), dialog box (glossary), Video library (library), LiveCode custom library (library)
+References: revVideoGrabSettings (command), command (glossary),
+video capture (glossary), VFW (glossary),
+Standalone Application Settings (glossary), QuickTime (glossary),
+statement (glossary), standalone application (glossary),
+parameter (glossary), video grabber (glossary), dialog box (glossary),
+LiveCode custom library (glossary), Video library (library)
 
 Tags: multimedia
+

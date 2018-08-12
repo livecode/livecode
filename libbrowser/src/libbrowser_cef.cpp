@@ -21,7 +21,7 @@
 #include "libbrowser_cef.h"
 
 #include <include/cef_app.h>
-
+#include <include/wrapper/cef_scoped_temp_dir.h>
 #include <list>
 #include <set>
 
@@ -249,9 +249,7 @@ static const char *s_auth_scheme_strings[] =
 
 bool MCCefAuthSchemeFromCefString(const CefString &p_string, MCCefAuthScheme &r_scheme)
 {
-	const char **t_strings;
-	t_strings = s_auth_scheme_strings;
-	
+
 	for (uint32_t i = 0; s_auth_scheme_strings[i] != nil; i++)
 	{
 		if (p_string == s_auth_scheme_strings[i])
@@ -272,6 +270,8 @@ static bool s_cefbrowser_initialised = false;
 
 static uint32_t s_instance_count = 0;
 
+static CefScopedTempDir s_temp_cache;
+
 void MCCefBrowserExternalInit(void)
 {
 	// set up static vars
@@ -285,40 +285,238 @@ void MCCefBrowserRunloopAction(void *p_context)
 	CefDoMessageLoopWork();
 }
 
+class MCCefBrowserApp : public CefApp, CefBrowserProcessHandler
+{
+public:
+	virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE { return this; }
+
+	virtual void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> p_command_line) OVERRIDE
+	{
+		if (MCCefPlatformGetHiDPIEnabled())
+			p_command_line->AppendSwitch(MC_CEF_HIDPI_SWITCH);
+	}
+
+	IMPLEMENT_REFCOUNTING(MCCefBrowserApp)
+};
+
 extern "C" int initialise_weak_link_cef(void);
-extern "C" int initialise_weak_link_cef_with_path(const char *p_path);
+
+// These come from the engine we link to.
+extern "C" void *MCSupportLibraryLoad(const char *p_path);
+extern "C" void *MCSupportLibraryUnload(void *p_handle);
+extern "C" char *MCSupportLibraryCopyNativePath(void *p_handle);
+
+#if defined(WIN32)
+static const char *kCefProcessName = "libbrowser-cefprocess.exe";
+static const char *kCefPathSeparatorStr = "\\";
+static const char kCefPathSeparator = '\\';
+#else
+static const char *kCefProcessName = "libbrowser-cefprocess";
+static const char *kCefPathSeparatorStr = "/";
+static const char kCefPathSeparator = '/';
+#endif
+
+#if defined(TARGET_PLATFORM_LINUX)
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+////////////////////////////////////////////////////////////////////////////////
+
+static bool get_link_size(const char *p_path, uint32_t &r_size)
+{
+    if (p_path == nil)
+        return false;
+    
+    struct stat t_stat;
+    if (lstat(p_path, &t_stat) == -1)
+        return false;
+    
+    r_size = t_stat.st_size;
+    return true;
+}
+
+static bool get_link_path(const char *p_link, char *&r_path)
+{
+    bool t_success;
+    t_success = true;
+    
+    char *t_buffer;
+    t_buffer = nil;
+    uint32_t t_buffer_size;
+    t_buffer_size = 0;
+    
+    uint32_t t_link_size;
+    t_success = get_link_size(p_link, t_link_size);
+    
+    while (t_success && t_link_size + 1 > t_buffer_size)
+    {
+        t_buffer_size = t_link_size + 1;
+        t_success = MCBrowserMemoryReallocate(t_buffer, t_buffer_size, t_buffer);
+        
+        if (t_success)
+        {
+            int32_t t_read;
+            t_read = readlink(p_link, t_buffer, t_buffer_size);
+            
+            t_success = t_read >= 0;
+            t_link_size = t_read;
+        }
+    }
+    
+    if (t_success)
+    {
+        t_buffer[t_link_size] = '\0';
+        r_path = t_buffer;
+    }
+    else
+        MCBrowserMemoryDeallocate(t_buffer);
+    
+    return t_success;
+}
+
+static bool get_exe_path_from_proc_fs(char *&r_path)
+{
+    return get_link_path("/proc/self/exe", r_path);
+}
+
+//////////
+
+const char *__MCCefPlatformGetExecutableFolder(void)
+{
+    static char *s_exe_path = nil;
+    
+    if (s_exe_path == nil)
+    {
+        bool t_success;
+        t_success = get_exe_path_from_proc_fs(s_exe_path);
+        if (t_success)
+        {
+            // remove library component from path
+            uint32_t t_index;
+            if (MCCStringLastIndexOf(s_exe_path, '/', t_index))
+                s_exe_path[t_index] = '\0';
+        }
+    }
+    
+    return s_exe_path;
+}
+#endif
+
+static bool __MCCefGetLibraryPath(char*& r_path)
+{
+    void *t_module = nullptr;
+    if (t_module == nullptr)
+        t_module = MCSupportLibraryLoad("./CEF/libcef");
+    /* TODO[Bug 19381] On Linux and Windows, the in-git-checkout
+     * location of CEF is "./CEF" but once LiveCode is installed it's
+     * in "./Externals/CEF". */
+#if defined(WIN32) || defined(TARGET_PLATFORM_LINUX)
+    if (t_module == nullptr)
+        t_module = MCSupportLibraryLoad("./Externals/CEF/libcef");
+#endif
+
+    char *t_module_path =
+            t_module != nullptr ? MCSupportLibraryCopyNativePath(t_module)
+                                : nullptr;
+    
+    MCSupportLibraryUnload(t_module);
+
+    if (t_module_path == nullptr)
+    {
+        return false;
+    }
+
+    char *t_last_sep =
+        strrchr(t_module_path,
+                kCefPathSeparator);
+
+    if (t_last_sep == nullptr)
+    {
+        free(t_module_path);
+        return false;
+    }
+
+    *t_last_sep = '\0';
+
+    r_path = t_module_path;
+
+    return true;
+}
+
+static bool __MCCefAppendPath(const char *p_base, const char *p_path, char *&r_path)
+{
+    if (p_base == nil)
+        return MCCStringClone(p_path, r_path);
+    else if (MCCStringEndsWith(p_base, kCefPathSeparatorStr) ||
+             *p_path == '\0')
+        return MCCStringFormat(r_path, "%s%s", p_base, p_path);
+    else
+        return MCCStringFormat(r_path, "%s%s%s", p_base, kCefPathSeparatorStr, p_path);
+}
+
+static bool __MCCefBuildPath(const char *p_library_path,
+                             const char *p_suffix,
+                             cef_string_t* r_string)
+{
+    char *t_process_path = nullptr;
+    if (!__MCCefAppendPath(p_library_path,
+                           p_suffix,
+                           t_process_path) ||
+        !MCCefStringFromUtf8String(t_process_path,
+                                   r_string))
+    {
+        free(t_process_path);
+        return false;
+    }
+
+    return true;
+}
 
 // IM-2014-03-13: [[ revBrowserCEF ]] Initialisation of the CEF library
 bool MCCefInitialise(void)
 {
 	if (s_cef_initialised)
 		return true;
-	
+
+    ////////
+
+    char *t_library_path = nullptr;
+    if (!__MCCefGetLibraryPath(t_library_path))
+        return false;
+
+    ////////
+
 	CefMainArgs t_args;
 	CefSettings t_settings;
 	t_settings.multi_threaded_message_loop = MC_CEF_USE_MULTITHREADED_MESSAGELOOP;
 	t_settings.command_line_args_disabled = true;
+	t_settings.windowless_rendering_enabled = true;
 	t_settings.no_sandbox = true;
 	t_settings.log_severity = LOGSEVERITY_DISABLE;
 	
-	bool t_success;
-	t_success = MCCefStringFromUtf8String(MCCefPlatformGetSubProcessName(), &t_settings.browser_subprocess_path);
+    bool t_success = true;
+#ifdef TARGET_PLATFORM_LINUX
+    if (t_success)
+        t_success = __MCCefBuildPath(__MCCefPlatformGetExecutableFolder(), kCefProcessName, &t_settings.browser_subprocess_path);
+#else
+    if (t_success)
+        t_success = __MCCefBuildPath(t_library_path, kCefProcessName, &t_settings.browser_subprocess_path);
+#endif
+
+	if (t_success)
+		t_success = __MCCefBuildPath(t_library_path, "locales", &t_settings.locales_dir_path);
+	if (t_success)
+		t_success = __MCCefBuildPath(t_library_path, "", &t_settings.resources_dir_path);
+
+	if (t_success)
+		t_success = s_temp_cache.CreateUniqueTempDir();
 	
 	if (t_success)
-	{
-		// IM-2014-03-25: [[ revBrowserCEF ]] Allow per-platform locale path settings
-		const char *t_locale_path, *t_resource_path;
-		t_locale_path = MCCefPlatformGetLocalePath();
-		t_resource_path = MCCefPlatformGetResourcesDirPath();
-		
-		if (t_locale_path != nil)
-			t_success = MCCefStringFromUtf8String(t_locale_path, &t_settings.locales_dir_path);
-		
-		if (t_resource_path != nil)
-			t_success = MCCefStringFromUtf8String(t_resource_path, &t_settings.resources_dir_path);
-	}
-	
-	CefRefPtr<CefApp> t_app = nil;
+		CefString(&t_settings.cache_path).FromString(s_temp_cache.GetPath());
+
+	CefRefPtr<CefApp> t_app = new (nothrow) MCCefBrowserApp();
 	
 	if (t_success)
 		t_success = -1 == CefExecuteProcess(t_args, t_app, nil);
@@ -341,6 +539,8 @@ bool MCCefInitialise(void)
 	}
 	
 	s_cef_initialised = t_success;
+
+    free(t_library_path);
 	
 	return s_cef_initialised;
 }
@@ -354,17 +554,9 @@ bool MCCefBrowserInitialise(void)
 	bool t_success;
 	t_success = true;
 	
-	// IM-2014-03-18: [[ revBrowserCEF ]] Initialise dynamically loaded cef library
 	if (t_success)
 	{
-		const char *t_lib_path;
-		t_lib_path = MCCefPlatformGetCefLibraryPath();
-		
-		// IM-2014-03-25: [[ revBrowserCEF ]] Look for libcef in platform-defined location
-		if (t_lib_path != nil)
-			t_success = initialise_weak_link_cef_with_path(t_lib_path);
-		else
-			t_success = initialise_weak_link_cef();
+		t_success = initialise_weak_link_cef();
 	}
 	
 	if (t_success)
@@ -383,9 +575,14 @@ void MCCefFinalise(void)
 {
 	if (!s_cef_initialised)
 		return;
+
+	if (s_temp_cache.IsValid())
+	{
+		s_temp_cache.Delete();
+	}
 	
 	CefShutdown();
-	
+
 	s_cef_initialised = false;
 }
 
@@ -491,6 +688,16 @@ public:
 					MCCStringFree(t_tmp);
 			}
 				break;
+				case VTYPE_NULL:
+				case VTYPE_BOOL:
+				case VTYPE_DOUBLE:
+				case VTYPE_STRING:
+				case VTYPE_BINARY:
+				case VTYPE_DICTIONARY:
+				case VTYPE_LIST:
+				case VTYPE_INVALID:
+				/* UNIMPLEMENTED */
+				break;
 		}
 		
 		return t_converted;
@@ -532,7 +739,8 @@ class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandl
 {
 private:
 	int m_browser_id;
-	
+	int m_popup_browser_id = 0;
+
 	MCCefBrowserBase *m_owner;
 	
 	MCCefMessageResult m_message_result;
@@ -690,10 +898,7 @@ public:
 			
 			if (t_success)
 				t_success = MCCefStringToUtf8String(t_args->GetString(0), t_handler);
-			
-			uint32_t t_arg_count;
-			t_arg_count = 0;
-			
+
 			MCBrowserListRef t_param_list;
 			t_param_list = nil;
 			
@@ -727,24 +932,12 @@ public:
 			if (m_owner != nil)
 				m_owner->OnCefBrowserCreated(p_browser);
 		}
-		
-		MCCefIncrementInstanceCount();
-	}
-	
-	virtual bool DoClose(CefRefPtr<CefBrowser> p_browser) OVERRIDE
-	{
-		// We handle browser closing here to stop CEF sending WM_CLOSE to the stack window
-		if (p_browser->GetIdentifier() == m_browser_id)
+		else
 		{
-			// Close the browser window
-			if (m_owner != nil)
-				m_owner->PlatformCloseBrowserWindow(p_browser);
-			
-			// return true to prevent default handling
-			return true;
+			m_popup_browser_id = p_browser->GetIdentifier();
 		}
-		
-		return CefLifeSpanHandler::DoClose(p_browser);
+
+		MCCefIncrementInstanceCount();
 	}
 	
 	virtual void OnBeforeClose(CefRefPtr<CefBrowser> p_browser) OVERRIDE
@@ -760,6 +953,8 @@ public:
 							   CefRefPtr<CefFrame> p_frame,
 							   const CefString& p_target_url,
 							   const CefString& p_target_frame_name,
+							   CefLifeSpanHandler::WindowOpenDisposition p_target_disposition,
+							   bool p_user_gesture,
 							   const CefPopupFeatures& p_popup_features,
 							   CefWindowInfo& p_window_info,
 							   CefRefPtr<CefClient>& p_client,
@@ -770,8 +965,12 @@ public:
 		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
 		if (nil == m_owner)
 			return true;
-		
-		return !m_owner->GetAllowNewWindow();
+
+		CefWindowInfo(t_window_info);
+		t_window_info.SetAsWindowless(p_browser->GetHost()->GetWindowHandle());
+		p_window_info = t_window_info;
+		return false;
+
 	}
 	
 	// CefDragHandler interface
@@ -791,7 +990,18 @@ public:
 		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
 		if (nil == m_owner)
 			return true;
-		
+
+		if (p_browser->GetIdentifier() == m_popup_browser_id)
+		{
+			char * t_url = nullptr;
+			if (MCCefStringToUtf8String(p_request->GetURL(), t_url))
+			{
+				m_owner->GoToURL(t_url);
+			}
+			p_browser->GetHost()->CloseBrowser(true);
+			return false;
+		}
+
 		bool t_cancel;
 		t_cancel = false;
 		
@@ -811,23 +1021,23 @@ public:
 		return t_cancel;
 	}
 	
-	virtual bool OnBeforeResourceLoad(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefRequest> p_request) OVERRIDE
+	virtual CefRequestHandler::ReturnValue OnBeforeResourceLoad(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefRequest> p_request, CefRefPtr<CefRequestCallback> p_callback) OVERRIDE
 	{
 		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
 		if (nil == m_owner)
-			return true;
+			return RV_CANCEL;
 		
 		CefString t_url;
 		t_url = p_request->GetURL();
 		
 		if (IgnoreUrl(t_url))
-			return false;
+			return RV_CONTINUE;
 		
 		m_last_request_url = t_url;
 		
 		CefString t_user_agent;
 		if (!m_owner->GetUserAgent(t_user_agent))
-			return false;
+			return RV_CONTINUE;
 		
 		// modify request headers to set user agent
 		
@@ -843,7 +1053,7 @@ public:
 		
 		p_request->SetHeaderMap(t_headers);
 		
-		return false;
+		return RV_CONTINUE;
 	}
 	
 	// IM-2014-04-28: [[ CefBrowser ]] Use platform-specific method to get credentials when requested
@@ -877,7 +1087,7 @@ public:
 	// CefDownloadHandler interface
 	// Methods called on UI thread
 	
-#if 0
+#if CEF_ON_DOWNLOAD_CALLBACK
 	// TODO - Implement OnDownload callback
 	virtual void OnBeforeDownload(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefDownloadItem> p_item, const CefString & p_suggested_name, CefRefPtr<CefBeforeDownloadCallback> p_callback) OVERRIDE
 	{
@@ -909,8 +1119,8 @@ public:
 	
 	// CefLoadHandler interface
 	// Methods called on UI thread or render process main thread
-	
-	virtual void OnLoadStart(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame) OVERRIDE
+
+	virtual void OnLoadStart(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, cef_transition_type_t p_transition_type) OVERRIDE
 	{
 		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
 		if (nil == m_owner)
@@ -938,12 +1148,7 @@ public:
 		bool t_frame;
 		t_frame = !p_frame->IsMain();
 		
-		if (t_is_error)
-		{
-			if (t_error_code == ERR_UNKNOWN_URL_SCHEME)
-				m_owner->OnNavigationRequestUnhandled(t_frame, t_url_str);
-		}
-		else
+		if (!t_is_error)
 		{
 			if (!t_frame)
 				m_owner->OnNavigationBegin(t_frame, t_url_str);
@@ -1011,10 +1216,23 @@ public:
 	
 	virtual void OnLoadError(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefLoadHandler::ErrorCode p_error_code, const CefString &p_error_text, const CefString &p_failed_url) OVERRIDE
 	{
-		// IM-2015-11-16: [[ Bug 16360 ]] Contrary to the CEF API docs, OnLoadEnd is NOT called after OnLoadError when the error code is ERR_ABORTED.
-		//    This occurs when requesting a new url be loaded when in the middle of loading the previous url, or when the url load is otherwise cancelled.
-		if (p_error_code != ERR_ABORTED)
+		if (p_error_code == ERR_UNKNOWN_URL_SCHEME)
+		{
+			bool t_frame;
+			t_frame = !p_frame->IsMain();
+
+			char *t_url_str = nullptr;
+			if (MCCefStringToUtf8String(p_failed_url, t_url_str))
+			{
+				m_owner->OnNavigationRequestUnhandled(t_frame, t_url_str);
+			}
+		}
+		else if (p_error_code != ERR_ABORTED)
+		{
+			// IM-2015-11-16: [[ Bug 16360 ]] Contrary to the CEF API docs, OnLoadEnd is NOT called after OnLoadError when the error code is ERR_ABORTED.
+			//    This occurs when requesting a new url be loaded when in the middle of loading the previous url, or when the url load is otherwise cancelled.
 			AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url, p_error_text, p_error_code);
+		}
 	}
 	
 	// ContextMenuHandler interface
@@ -1037,7 +1255,7 @@ public:
 bool MCCefBrowserBase::Initialize()
 {
 	// create client and browser
-	m_client = new MCCefBrowserClient(this);
+	m_client = new (nothrow) MCCefBrowserClient(this);
 	
 	CefWindowInfo t_window_info;
 	CefBrowserSettings t_settings;
@@ -1068,7 +1286,7 @@ bool MCCefBrowserBase::Initialize()
 void MCCefBrowserBase::Finalize()
 {
 	if (m_browser != nil)
-		m_browser->GetHost()->CloseBrowser(false);
+		m_browser->GetHost()->CloseBrowser(true);
 	
 	// IM-2014-07-21: [[ Bug 12296 ]] Notify client of browser being closed
 	if (m_client)
@@ -1327,7 +1545,7 @@ char *MCCefBrowserBase::GetSource(void)
 	t_result.Clear();
 	
 	CefRefPtr<CefStringVisitor> t_visitor;
-	t_visitor = new MCStringVisitor(t_result);
+	t_visitor = new (nothrow) MCStringVisitor(t_result);
 	
 	m_browser->GetMainFrame()->GetSource(t_visitor);
 	
@@ -1484,10 +1702,7 @@ bool MCCefBrowserBase::EvaluateJavaScript(const char *p_script, char *&r_result)
 {
 	bool t_success;
 	t_success = true;
-	
-	const MCCefMessageResult *t_result;
-	t_result = nil;
-	
+
 	CefString t_script;
 	t_success = MCCefStringFromUtf8String(p_script, t_script);
 	
@@ -1581,7 +1796,7 @@ bool MCCefBrowserBase::SetJavaScriptHandlers(const char *p_handlers)
 	if (!MCCStringIsEmpty(t_new_handlers))
 	{
 		if (t_success)
-			t_success = MCCStringSplit(t_new_handlers, ',', t_handlers, t_handler_count);
+			t_success = MCCStringSplit(t_new_handlers, '\n', t_handlers, t_handler_count);
 		
 		if (t_success)
 			t_success = t_handler_list->SetSize(t_handler_count);
@@ -1783,7 +1998,7 @@ bool MCCefBrowserFactory::CreateBrowser(void *p_display, void *p_parent_view, MC
 bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory)
 {
 	MCCefBrowserFactory *t_factory;
-	t_factory = new MCCefBrowserFactory();
+	t_factory = new (nothrow) MCCefBrowserFactory();
 	
 	if (t_factory == nil)
 		return false;

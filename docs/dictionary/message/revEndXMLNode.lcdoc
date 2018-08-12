@@ -2,17 +2,19 @@ Name: revEndXMLNode
 
 Type: message
 
-Syntax: revEndXMLNode <nodeName> 
+Syntax: revEndXMLNode <pNodeName>
 
-Summary: Sent to the <current card> when the <revXMLCreateTreeFromFile> <function> encounters a closing <tag> while parsing an <XML> file.
+Summary:
+Sent to the <current card> when the <revXMLCreateTreeFromFile>
+<function> encounters a closing <tag> while parsing an <XML> file.
 
 Associations: card
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -24,13 +26,25 @@ on revEndXMLNode -- notify user how many nodes have been parsed
 end revEndXMLNode
 
 Parameters:
-nodeName (string): A string containing the name of the XML element currently being parsed.
+pNodeName (string):
+A string containing the name of the XML element currently being parsed.
 
 Description:
-Handle the <revEndXMLNode> <message> if you want to build your own subset of an <XML document>.
+Handle the <revEndXMLNode> <message> if you want to build your own
+subset of an <XML document>.
 
-The revXMLCreateTree or <revXMLCreateTreeFromFile> <function(glossary)|functions> take <XML> data and parse it. When you <call> either of these <function(glossary)|functions>, you can specify whether or not to send <message|messages> during the parsing operation.
+The revXMLCreateTree or <revXMLCreateTreeFromFile>
+<function(glossary)|functions> take <XML> data and parse it. When you
+<call> either of these <function(glossary)|functions>, you can specify
+whether or not to send <message|messages> during the parsing operation.
 
-If you have specified that you want the function to send messages, the <revEndXMLNode> <message> is sent when the <function(control_st)> encounters a close tag. If you have specified that you don't want <message|messages> sent, no <revEndXMLNode> <message|messages> are sent.
+If you have specified that you want the function to send messages, the
+<revEndXMLNode> <message> is sent when the <function(control structure)>
+encounters a close tag. If you have specified that you don't want
+<message|messages> sent, no <revEndXMLNode> <message|messages> are sent.
 
-References: call (command), revXMLDeleteNode (command), revXMLCreateTreeFromFile (function), function (control_st), current card (glossary), tag (glossary), message (glossary), function (glossary), XML (glossary), XML document (glossary)
+References: call (command), revXMLDeleteNode (command),
+function (control structure), revXMLCreateTreeFromFile (function),
+current card (glossary), tag (glossary), message (glossary),
+function (glossary), XML (glossary), XML document (glossary)
+

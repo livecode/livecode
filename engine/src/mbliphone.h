@@ -87,14 +87,9 @@ public:
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
 	virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name);
 	
-	virtual MCSysModuleHandle LoadModule(MCStringRef p_path);
-	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
-	virtual void UnloadModule(MCSysModuleHandle p_module);
-	
 	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context);
     
     // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
-    virtual bool GetExecutablePath(MCStringRef& r_path);
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native);
 	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path);
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path);

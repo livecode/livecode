@@ -2,15 +2,18 @@ Name: revSpeak
 
 Type: command
 
-Syntax: revSpeak <phraseToSpeak> 
+Syntax: revSpeak <phraseToSpeak>
 
-Summary: Speaks text through the computer's speakers.
+Summary:
+Speaks text through the computer's speakers.
+
+Associations: speech library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revSpeak "Hello world"
@@ -19,24 +22,56 @@ Example:
 revSpeak field "Biography Text"
 
 Parameters:
-phraseToSpeak (string): A string of any length.
+phraseToSpeak (string):
+A string of any length.
 
-The result: If text to speech is not available on the current system, the <revSpeak> <command> sets the <result> <function> to an error message.
+The result:
+If text to speech is not available on the current system, the <revSpeak>
+<command> sets the <result> <function> to an error message.
 
 Description:
-Use the <revSpeak> <command> to use the computer's <text to speech|text-to-speech> capability.
+Use the <revSpeak> <command> to use the computer's <text to
+speech|text-to-speech> capability.
 
-The <revSpeak> <command> uses the voice, pitch, and speed specified by the <revSetSpeechVoice>, <revSetSpeechPitch>, and <revSetSpeechSpeed> <command|commands>. If you haven't used these <command|commands> during the current session to specify a voice, pitch, or speed, the system's settings are used.
+The <revSpeak> <command> uses the voice, pitch, and speed specified by
+the <revSetSpeechVoice>, <revSetSpeechPitch>, and <revSetSpeechSpeed>
+<command|commands>. If you haven't used these <command|commands> during
+the current session to specify a voice, pitch, or speed, the system's
+settings are used.
 
->*Note:* If you <execute> the <revSpeak> <command> while another speech is being spoken, the first speech is stopped and the second speech begins immediately. To find out whether the computer is already speaking, use the <revIsSpeaking> <function>, as in the following example:
+>*Note:* If you <execute> the <revSpeak> <command> while another speech
+> is being spoken, the first speech is stopped and the second speech
+> begins immediately. To find out whether the computer is already
+> speaking, use the <revIsSpeaking> <function>, as in the following
+> example: 
 
-  if revIsSpeaking then answer "Just a moment..."
-  else revSpeak it
+    if revIsSpeaking() then answer "Just a moment..."
+    else revSpeak it
 
->*Important:*  If your application uses <text to speech>, you should <execute> the <revUnloadSpeech> <command> either when your application is finished using <text to speech>, when the <stack> that uses <text to speech|speech> is closed (in a <closeStack> <handler>), or when your application quits (in a <shutdown> <handler>). This saves memory.
 
->*Important:*  The <revSpeak> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+>*Important:*  If your application uses <text to speech>, you should
+> <execute> the <revUnloadSpeech> <command> either when your application
+> is finished using <text to speech>, when the <stack> that uses <text
+> to speech|speech> is closed (in a <closeStack> <handler>), or when
+> your application quits (in a <shutdown> <handler>). This saves memory.
 
-References: closeStack (message), shutdown (message), Speech library (library), LiveCode custom library (library), handler (glossary), Standalone Application Settings (glossary), standalone application (glossary), text to speech (glossary), execute (glossary), command (glossary), stack (object), revIsSpeaking (function), revSpeechVoices (function), result (function), revSetSpeechSpeed (command), revUnloadSpeech (command), revSetSpeechVoice (command), revSetSpeechPitch (command), revSetSpeechVolume (command), function (control_st)
+>*Important:*  The <revSpeak> <command> is part of the 
+> <Speech library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Speech" 
+> library checkbox is checked.
+
+References: revSetSpeechSpeed (command), revUnloadSpeech (command),
+revSetSpeechVoice (command), revSetSpeechPitch (command),
+revSetSpeechVolume (command), function (control structure),
+revIsSpeaking (function), revSpeechVoices (function), result (function),
+LiveCode custom library (glossary), handler (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), text to speech (glossary),
+execute (glossary), command (glossary), Speech library (library),
+closeStack (message), shutdown (message), stack (object)
 
 Tags: multimedia
+

@@ -1,20 +1,19 @@
 Name: browserDocumentCompleteFrame
 
+Synonyms: xbrowser_documentcompleteframe
+
 Type: message
 
-Syntax: browserDocumentCompleteFrame <instanceId>, <url> 
+Syntax: browserDocumentCompleteFrame <pInstanceId>, <pUrl>
 
-Syntax: XBrowser_DocumentCompleteFrame <url>, <instanceId> 
+Syntax: XBrowser_DocumentCompleteFrame <pUrl>, <pInstanceId>
 
-Summary: Sent when a browser object finishes loading a url in a frame
-
-Synonyms: XBrowser_DocumentCompleteFrame
-
-Associations: card
+Summary:
+Sent when a browser object finishes loading a url in a frame
 
 Introduced: 2.8.1
 
-OS: mac,windows
+OS: mac, windows
 
 Platforms: desktop
 
@@ -26,14 +25,25 @@ on browserDocumentCompleteFrame
 end browserDocumentCompleteFrame
 
 Parameters:
-instanceId: The integer identifier of the browser object >*Note:* For general information on using the browser library, see the notes in the revBrowserOpen function reference.
-url: The url that finished loading in a frame
+pInstanceId:
+The integer identifier of the browser object
+
+pUrl:
+The url that finished loading in a frame
 
 Description:
-The <browserDocumentCompleteFrame> message is sent to the current card of a stack containing a browser object when the browser object has finished loading a url and all its dependent resources in a frame.
+The <browserDocumentCompleteFrame> message is sent to the current card
+of a stack containing a browser object when the browser object has
+finished loading a url and all its dependent resources in a frame.
 
-If the target is the main frame of the browser then the <browserDocumentComplete message> is sent instead.
+If the target is the main frame of the browser then the
+<browserDocumentComplete> <message> is sent instead.
 
->*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+>*Note:* For general information on using the browser library, see the
+> notes in the <revBrowserOpen> <function> reference.
 
-References: browserDownloadRequest (message), browserDocumentComplete message (message), browserNavigateCompleteFrame (message), revBrowserOpen function (function)
+References: revBrowserOpen (function), function (glossary),
+browserDownloadRequest (message),
+browserDocumentComplete (message), message (glossary),
+browserNavigateCompleteFrame (message)
+

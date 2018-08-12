@@ -437,7 +437,7 @@ static void scaleimage_bicubic(void *p_src_ptr, uint4 p_src_stride, void *p_dst_
 	// Temporary resizes rows data
 	const int tmp_bytes_per_line = p_dst_width << 2;
 
-	uint1* const tmp_data = new uint1[tmp_bytes_per_line * p_src_height];
+	uint1* const tmp_data = new (nothrow) uint1[tmp_bytes_per_line * p_src_height];
 
 	// Clearing temp and destination data
 	memset(tmp_data, 0, tmp_bytes_per_line * p_src_height);
@@ -448,9 +448,9 @@ static void scaleimage_bicubic(void *p_src_ptr, uint4 p_src_stride, void *p_dst_
 	real8* bb;
 
 	if(p_src_width > p_src_height)
-		aa = new real8[p_src_width], bb = new real8[p_src_width];
+		aa = new (nothrow) real8[p_src_width], bb = new (nothrow) real8[p_src_width];
 	else
-		aa = new real8[p_src_height], bb = new real8[p_src_height];
+		aa = new (nothrow) real8[p_src_height], bb = new (nothrow) real8[p_src_height];
 
 	// resizing rows
 	for(i=0 ; i< (signed)p_src_height ; i++)
@@ -524,6 +524,12 @@ bool MCImageScaleBitmap(MCImageBitmap *p_src_bitmap, uindex_t p_width, uindex_t 
 {
 	if (!MCImageBitmapCreate(p_width, p_height, r_scaled))
 		return false;
+
+	/* If the target bitmap has 0 pixels, then no scaling is required. */
+	if (0 == p_width || 0 == p_height)
+	{
+		return true;
+	}
 
 	uindex_t owidth = p_src_bitmap->width;
 	uindex_t oheight = p_src_bitmap->height;

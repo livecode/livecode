@@ -1,0 +1,1 @@
+# Fix 'cut tVar' where tVar contains an object text chunk

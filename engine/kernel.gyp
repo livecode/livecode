@@ -14,9 +14,9 @@
 			'dependencies':
 			[
 				'../libfoundation/libfoundation.gyp:libFoundation',
-				#'../libexternal/libexternal.gyp:libExternal',
 				'../libgraphics/libgraphics.gyp:libGraphics',
 				'../libscript/libscript.gyp:libScript',
+				'../libscript/libscript.gyp:stdscript',
 				
 				'../libbrowser/libbrowser.gyp:libbrowser',
 
@@ -27,10 +27,10 @@
 				'../thirdparty/libpng/libpng.gyp:libpng',
 				'../thirdparty/libz/libz.gyp:libz',
 				
+				'../prebuilt/libopenssl.gyp:libopenssl_headers',
+
 				'engine-common.gyp:encode_version',
 				'engine-common.gyp:quicktime_stubs',
-				
-				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'include_dirs':
@@ -81,23 +81,20 @@
 							'src/mblcamera.cpp',
 						],
 										
-						# Force the entry point to be included in the output
+						
 						'link_settings':
 						{
 							'ldflags':
 							[
-								'-Wl,--undefined,Java_com_runrev_android_Engine_doCreate'
+								# Force the entry point to be included in the output
+								'-Wl,--undefined,Java_com_runrev_android_Engine_doCreate',
+								
+								# mblandroidlcb.cpp contains nothing other than the LCB Invocation Handler 
+								# native callback function, so force the symbol to be included as otherwise it
+								# will be discarded by the linker because nothing in the file is used statically
+								'-Wl,--undefined,Java_com_runrev_android_LCBInvocationHandler_doNativeListenerCallback',
 							],
 						},
-					},
-				],
-				[
-					'OS == "win"',
-					{
-						'include_dirs':
-						[
-							'<(quicktime_sdk)/CIncludes',
-						],
 					},
 				],
 				[
@@ -151,9 +148,11 @@
 							'libraries':
 							[
 								'$(SDKROOT)/usr/lib/libcups.dylib',
+								'$(SDKROOT)/System/Library/Frameworks/Accelerate.framework',
 								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
+								'$(SDKROOT)/System/Library/Frameworks/MediaToolbox.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Quartz.framework',
 							],
 						},
@@ -177,8 +176,10 @@
                         {
                             'libraries!':
                             [
+								'$(SDKROOT)/System/Library/Frameworks/Accelerate.framework',
                                 '$(SDKROOT)/System/Library/Frameworks/AVFoundation.framework',
                                 '$(SDKROOT)/System/Library/Frameworks/CoreMedia.framework',
+								'$(SDKROOT)/System/Library/Frameworks/MediaToolbox.framework',
                             ],
                         },
                     ],
@@ -241,11 +242,6 @@
 					[
 						'OS == "win"',
 						{
-							'library_dirs':
-							[
-								'<(quicktime_sdk)/Libraries',
-							],
-							
 							'libraries':
 							[
 								'-ladvapi32',
@@ -262,14 +258,13 @@
 								'-lrpcrt4',
 								'-lshell32',
 								'-lshlwapi',
+								'-lstrmiids',
 								'-luser32',
 								'-lusp10',
+								'-lversion',
 								'-lwinmm',
 								'-lwinspool',
 								'-lws2_32',
-								
-								'-lQTMLClient',
-								'-lQTVR',
 							],
 						},
 					],

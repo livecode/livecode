@@ -98,8 +98,8 @@ static bool ScannerIsIdentifierPrefix(ScannerRef self)
 {
 	char t_lookahead;
 	t_lookahead = self -> input_buffer[self -> input_frontier];
-	if (t_lookahead >= 'a' && t_lookahead <= 'z' ||
-		t_lookahead >= 'A' && t_lookahead <= 'Z' ||
+	if ((t_lookahead >= 'a' && t_lookahead <= 'z') ||
+		(t_lookahead >= 'A' && t_lookahead <= 'Z') ||
 		t_lookahead == '_')
 		return true;
 		
@@ -110,9 +110,9 @@ static bool ScannerIsIdentifierSuffix(ScannerRef self)
 {
 	char t_lookahead;
 	t_lookahead = self -> input_buffer[self -> input_frontier];
-	if (t_lookahead >= 'a' && t_lookahead <= 'z' ||
-		t_lookahead >= 'A' && t_lookahead <= 'Z' ||
-		t_lookahead >= '0' && t_lookahead <= '9' ||
+	if ((t_lookahead >= 'a' && t_lookahead <= 'z') ||
+		(t_lookahead >= 'A' && t_lookahead <= 'Z') ||
+		(t_lookahead >= '0' && t_lookahead <= '9') ||
 		t_lookahead == '_' ||
 		t_lookahead == '-' || t_lookahead == '+' ||
 		t_lookahead == '.')
@@ -203,16 +203,20 @@ static void ScannerSkipMultilineComment(ScannerRef self)
 	while(!ScannerIsEndPrefix(self))
 	{
 		if (ScannerIsNewlinePrefix(self))
+		{
 			ScannerSkipNewline(self);
+		}
 		else if (ScannerIsMultilineCommentSuffix(self))
 		{
 			self -> input_frontier += 2;
 			self -> input_column += 2;
 			break;
 		}
-		
-		self -> input_frontier += 1;
-		self -> input_column += 1;
+		else
+		{
+			self->input_frontier += 1;
+			self->input_column += 1;
+		}
 	}
 }
 

@@ -2,17 +2,19 @@ Name: qtDebugStr
 
 Type: message
 
-Syntax: qtDebugStr <string> 
+Syntax: qtDebugStr <pString>
 
-Summary: Sent to a <player> containing a <QuickTime> movie when the movie performs a "DebugStr" action.
+Summary:
+Sent to a <player> containing a <QuickTime> movie when the movie
+performs a "DebugStr" action.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop
 
 Example:
 on qtDebugStr myMessage
@@ -20,13 +22,30 @@ on qtDebugStr myMessage
 end qtDebugStr
 
 Parameters:
-string (string): The QuickTime parameter the movie passed to LiveCode when it performed the "DebugStr" action.
+pString (string):
+The QuickTime parameter the movie passed to LiveCode when it performed
+the "DebugStr" action.
 
 Description:
-Handle the <qtDebugStr> <message> to respond to actions embedded in a <QuickTime> movie.
+Handle the <qtDebugStr> <message> to respond to actions embedded in a
+<QuickTime> movie.
 
-The movie author sets the <string> during development of the movie.  When <QuickTime> executes the "DebugStr" action, LiveCode sends the <qtDebugStr> <message> to the <player>, with the <string> the movie author specified.
+The movie author sets the <string> during development of the movie.
+When <QuickTime> executes the "DebugStr" action, LiveCode sends the
+<qtDebugStr> <message> to the <player>, with the <string> the movie
+author specified.
 
-References: player (keyword), hotspotClicked (message), QuickTime (glossary), message (glossary), player (glossary)
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: QuickTime (glossary), message (glossary), player (glossary),
+player (keyword), hotspotClicked (message)
 
 Tags: multimedia
+

@@ -2,17 +2,19 @@ Name: scrollbarLineInc
 
 Type: message
 
-Syntax: scrollbarLineInc <newPosition> 
+Syntax: scrollbarLineInc <pNewPosition>
 
-Summary: Sent to a <scrollbar> when the user clicks the increase arrow, scrolling forward one <line>.
+Summary:
+Sent to a <scrollbar> when the user clicks the increase arrow, scrolling
+forward one <line>.
 
 Associations: scrollbar
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on scrollbarLineInc theCard -- use a scrollbar to navigate through cards
@@ -20,15 +22,24 @@ on scrollbarLineInc theCard -- use a scrollbar to navigate through cards
 end scrollbarLineInc
 
 Parameters:
-newPosition: The new position of the scrollbar thumb.
+pNewPosition:
+The new position of the scrollbar thumb.
 
 Description:
-Handle the <scrollbarLineInc> <message> if you want to respond to the use of the bottom or right scrollbar arrow.
+Handle the <scrollbarLineInc> <message> if you want to respond to the
+use of the bottom or right scrollbar arrow.
 
-Dragging the scrollbar thumb does not send a <scrollbarLineInc> <message>.
+Dragging the scrollbar thumb does not send a <scrollbarLineInc>
+<message>. 
 
-If the <scrollbarLineInc> <message> is not <handle|handled>, a <scrollbarDrag> <message> is sent in addition.
+If the <scrollbarLineInc> <message> is not <handle|handled>, a
+<scrollbarDrag> <message> is sent in addition.
 
-References: lineIncrement (property), endValue (property), repeatRate (property), startValue (property), thumbPosition (property), scrollbar (keyword), line (keyword), scrollbarDrag (message), scrollbarPageInc (message), mouseDown (message), scrollbarLineDec (message), scrollbarEnd (message), handle (glossary), message (glossary)
+References: handle (glossary), message (glossary), scrollbar (keyword),
+line (keyword), scrollbarDrag (message), scrollbarPageInc (message),
+mouseDown (message), scrollbarLineDec (message), scrollbarEnd (message),
+lineIncrement (property), endValue (property), repeatRate (property),
+startValue (property), thumbPosition (property)
 
 Tags: ui
+

@@ -4,17 +4,19 @@ Type: command
 
 Syntax: wait {until | while} <condition> [with messages]
 
-Syntax: wait [for] <number> [seconds | ticks | milliseconds] [with messages]
+Syntax: wait [for] <number> [{seconds | ticks | milliseconds}] [with messages]
 
 Syntax: wait for messages
 
-Summary: Pauses a <handler> before <execute|executing> the rest of its <statement|statements>.
+Summary:
+Pauses a <handler> before <execute|executing> the rest of its
+<statement|statements>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 wait for 2 seconds -- Waits for 2 seconds and blocks
@@ -29,20 +31,44 @@ Example:
 wait 10 milliseconds with messages -- Waits 10 milliseconds and DOES NOT block
 
 Parameters:
-condition (bool): The wait command continuously evaluates this expression while waiting.
-number (integer): If you don't specify a unit of time, the wait command waits for number ticks.
+condition (bool):
+The wait command continuously evaluates this expression while waiting.
+
+number (integer):
+If you don't specify a unit of time, the wait command waits for number
+ticks. 
 
 Description:
-Use the <wait> <command> to delay a certain amount of time, or until something happens, before continuing a <handler>.
+Use the <wait> <command> to delay a certain amount of time, or until
+something happens, before continuing a <handler>.
 
-The <wait> <command> freezes <execute|execution> for the specified amount of time, or until the specified condition has been met, or until a <message> has been sent.
+The <wait> <command> freezes <execute|execution> for the specified
+amount of time, or until the specified condition has been met, or until
+a <message> has been sent.
 
-The wait for time form waits for the specified time period. (The time elapsed during a <wait> <command> may be a few <milliseconds> more than the specified time, depending on the speed of the system and on the system's minimum time slice.)
+The wait for time form waits for the specified time period. (The time
+elapsed during a <wait> <command> may be a few <milliseconds> more than
+the specified time, depending on the speed of the system and on the
+system's minimum time slice.)
 
-If the wait..with messages form is used, LiveCode continues normal processing during the wait. The current handler is frozen, but the user can start other handlers and perform other actions such as switching cards.
+If the wait..with messages form is used, LiveCode continues normal
+processing during the wait. The current handler is frozen, but the user
+can start other handlers and perform other actions such as switching
+cards. 
 
->*Tip:* To complete a process after a pause while allowing LiveCode to run normally until that time, you can use the send in time form of the <send command> instead of using the wait...with messages form of the <wait> command.
+>*Tip:* To complete a process after a pause while allowing LiveCode to
+> run normally until that time, you can use the send in time form of the
+> <send> <command> instead of using the wait...with messages form of the
+> <wait> command.
 
-The wait for messages form waits until any message has been sent and the message has been handled. After any message handler runs, the handler containing the wait for messages statement resumes executing. Wait for messages handles at least one message but can handle more.
+The wait for messages form waits until any message has been sent and the
+message has been handled. After any message handler runs, the handler
+containing the wait for messages statement resumes executing. Wait for
+messages handles at least one message but can handle more.
 
-References: lowResolutionTimers (property), idle (message), open socket (command), send command (command), seconds (function), waitDepth (function), milliseconds (function), ticks (function), repeat (control_st), handler (glossary), statement (glossary), message (glossary), command (glossary), execute (glossary)
+References: open socket (command), send (command),
+repeat (control structure), seconds (function), waitDepth (function),
+milliseconds (function), ticks (function), handler (glossary),
+statement (glossary), message (glossary), command (glossary),
+execute (glossary), idle (message), lowResolutionTimers (property)
+

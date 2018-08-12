@@ -2,17 +2,19 @@ Name: shortFilePath
 
 Type: function
 
-Syntax: the shortFilePath of <filePath> 
+Syntax: the shortFilePath of <filePath>
 
 Syntax: shortFilePath(<filePath>)
 
-Summary: <return|Returns> the 8.3-format equivalent of a <Windows> long <file path>.
+Summary:
+<return|Returns> the 8.3-format equivalent of a <Windows> long <file
+path>. 
 
 Introduced: 1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: disk
 
@@ -23,17 +25,28 @@ Example:
 if it is the shortFilePath of it then put it into myFilePath
 
 Parameters:
-filePath: The location and name of the file or folder whose short equivalent you want. If you specify a name but not a location, LiveCode assumes the file or folder is in the defaultFolder.
+filePath:
+The location and name of the file or folder whose short equivalent you
+want. If you specify a name but not a location, LiveCode assumes the
+file or folder is in the defaultFolder.
 
-Returns: The <shortFilePath> <function> <return|returns> a <file path>.
+Returns:
+The <shortFilePath> <function> <return|returns> a <file path>.
 
 Description:
-Use the <shortFilePath> <function> to obtain the equivalent of a file path in short format for use in situations that require it.
+Use the <shortFilePath> <function> to obtain the equivalent of a file
+path in short format for use in situations that require it.
 
-The <shortFilePath> <function> transforms the <filePath> without looking for the <file>, so it <return|returns> a value even if the <filePath> does not exist.
+The <shortFilePath> <function> transforms the <filePath> without looking
+for the <file>, so it <return|returns> a value even if the <filePath>
+does not exist.
 
-On Mac OS, OS X, or Unix systems, the <shortFilePath> simply returns the <filePath> without changing it.
+On Mac OS, OS X, or Unix systems, the <shortFilePath> simply returns the
+<filePath> without changing it.
 
-References: filename (property), file (keyword), longFilePath (function), Windows (glossary), file path (glossary), return (glossary), function (control_st)
+References: function (control structure), longFilePath (function),
+Windows (glossary), file path (glossary), return (glossary),
+file (keyword), filename (property)
 
 Tags: file system
+

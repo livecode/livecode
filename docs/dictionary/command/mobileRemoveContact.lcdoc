@@ -2,13 +2,14 @@ Name: mobileRemoveContact
 
 Type: command
 
-Syntax: mobileRemoveContact <contactId> 
+Syntax: mobileRemoveContact <contactId>
 
-Summary: Allows the user to remove a contact from the contacts list.
+Summary:
+Allows the user to remove a contact from the contacts list.
 
 Introduced: 5.5.1
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -16,15 +17,23 @@ Example:
 mobileRemoveContact 21
 
 Parameters:
-contactId: 
+contactId:
+
 
 Returns:
 The ID of the contact that was removed from the list of contacts.
 If no contact could be found, then empty is returned.
 
 Description:
-Allows the user to remove a contact from the contact list, based on a contact ID.
+Allows the user to remove a contact from the contact list, based on a
+contact ID.
 
-Use the <mobileRemoveContact> command to remove a contact the contact list.
+Use the <mobileRemoveContact> command to remove a contact the contact
+list. 
 
-References: mobilePickDate (command), mobilePickMedia (command), mobilePickContact (command), mobileShowContact (command), mobilePick (command), mobileAddContact (command), mobileFindContact (command), mobileCreateContact (command), mobileGetContactData (function)
+References: mobilePickDate (command), mobilePickMedia (command),
+mobilePickContact (command), mobileShowContact (command),
+mobilePick (command), mobileAddContact (command),
+mobileFindContact (command), mobileCreateContact (command),
+mobileGetContactData (function)
+

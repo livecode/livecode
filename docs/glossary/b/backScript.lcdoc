@@ -1,12 +1,16 @@
 Name: backScript
 
-Synonyms: backScript
+Synonyms: backscript
 
 Type: glossary
 
 Description:
-A <script> that has been inserted into the <message path> after all other <object|objects>, and  receives all <message|messages> that are not intercepted earlier by other objects in the <message path>.
+A <script> that has been inserted into the <message path> after all
+other <object|objects>, and receives all <message|messages> that are not
+intercepted earlier by other objects in the <message path>.
 
-References: message path (glossary), message (glossary), script (glossary), object (object)
+References: message path (glossary), message (glossary),
+script (glossary), object (glossary)
 
 Tags: objects
+

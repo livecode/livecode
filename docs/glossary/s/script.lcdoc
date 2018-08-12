@@ -5,6 +5,7 @@ Synonyms: script
 Type: glossary
 
 Description:
-All the <LiveCode> code associated with a particular <object>.
+All the <LiveCode> code associated with a particular <object(glossary)>.
 
-References: LiveCode (glossary), object (object)
+References: LiveCode (glossary), object (glossary)
+

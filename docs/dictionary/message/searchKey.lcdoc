@@ -4,7 +4,9 @@ Type: message
 
 Syntax: searchKey
 
-Summary: Sent to the current card of the defaultStack when the hardware search button is pressed.
+Summary:
+Sent to the current card of the defaultStack when the hardware search
+button is pressed.
 
 Introduced: 5.0.1
 
@@ -18,10 +20,14 @@ on searchKey
 end searchKey
 
 Description:
-Handle the <searchKey> message to perform an action when the search button is pressed.
+Handle the <searchKey> message to perform an action when the search
+button is pressed.
 
-The <searchKey> message is sent to the current card of the <default stack> when the hardware search button is pressed.
+The <searchKey> message is sent to the current card of the <default
+stack> when the hardware search button is pressed.
 
-References: default stack (property), backKey (message), menuKey (message)
+References: backKey (message), menuKey (message),
+default stack (property)
 
 Tags: ui
+

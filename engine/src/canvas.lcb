@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*  
+/**
 This module specifies the syntax definitions and bindings for canvas drawing operations in modular LiveCode.
 */
 
@@ -84,7 +84,7 @@ public foreign handler MCCanvasRectangleSetWidth(in pWidth as CanvasFloat, inout
 public foreign handler MCCanvasRectangleGetHeight(in pRect as Rectangle, out rHeight as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasRectangleSetHeight(in pHeight as CanvasFloat, inout xRect as Rectangle) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	Creates a new rectangle value.
 
 mRect:		An expression which evaluates to a list of 4 numbers, the left, top, right and bottom edges of the rectangle.
@@ -105,7 +105,7 @@ begin
     MCCanvasRectangleMakeWithList(mRect, output)
 end syntax
 
-/*
+/**
 Summary:	The left edge of a rectangle value.
 
 mRect:		An expression which evaluates to a rectangle.
@@ -143,7 +143,7 @@ begin
 	MCCanvasRectangleSetLeft(input, mRect)
 end syntax
 
-/*
+/**
 Summary:	The top edge of a rectangle value.
 
 mRect:		An expression which evaluates to a rectangle.
@@ -181,7 +181,7 @@ begin
 	MCCanvasRectangleSetTop(input, mRect)
 end syntax
 
-/*
+/**
 Summary:	The right edge of a rectangle value.
 
 mRect:		An expression which evaluates to a rectangle.
@@ -212,7 +212,7 @@ begin
 	MCCanvasRectangleSetRight(input, mRect)
 end syntax
 
-/*
+/**
 Summary:	The bottom edge of a rectangle value.
 
 mRect:		An expression which evaluates to a rectangle.
@@ -243,7 +243,7 @@ begin
 	MCCanvasRectangleSetBottom(input, mRect)
 end syntax
 
-/*
+/**
 Summary:	The width of a rectangle value.
 
 mRect:		An expression which evaluates to a rectangle.
@@ -274,7 +274,7 @@ begin
 	MCCanvasRectangleSetWidth(input, mRect)
 end syntax
 
-/*
+/**
 Summary:	The height of a rectangle value.
 
 mRect:		An expression which evaluates to a rectangle.
@@ -317,7 +317,7 @@ public foreign handler MCCanvasPointSetX(in pX as CanvasFloat, inout xPoint as P
 public foreign handler MCCanvasPointGetY(in pPoint as Point, out rY as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPointSetY(in pY as CanvasFloat, inout xPoint as Point) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	Creates a new point value.
 
 mPoint:		An expression which evaluates to a list of 2 numbers, the x and y coordinates of the point.
@@ -337,7 +337,7 @@ begin
 	MCCanvasPointMakeWithList(mPoint, output)
 end syntax
 
-/*
+/**
 Summary:	The x coordinate of a point value.
 
 mPoint:		An expression which evaluates to a point.
@@ -365,7 +365,7 @@ begin
 	MCCanvasPointSetX(input, mPoint)
 end syntax
 
-/*
+/**
 Summary:	The y coordinate of a point value.
 
 mPoint:		An expression which evaluates to a point.
@@ -402,7 +402,7 @@ public foreign handler MCCanvasColorMakeRGBA(in pRed as CanvasFloat, in pGreen a
 public foreign handler MCCanvasColorMakeWithList(in pColor as List, out rColor as Color) returns nothing binds to "<builtin>"
 //public foreign handler MCCanvasColorMakeWithString(in pList as String, out rColor as Color)
 
-/*
+/**
 Summary:	Creates a new color value.
 
 mColor:		An expression which evaluates to a list of 3 or 4 numbers, the red, green, blue, and (optional) alpha components of the color.
@@ -442,7 +442,7 @@ public foreign handler MCCanvasColorSetBlue(in pBlue as CanvasFloat, inout xColo
 public foreign handler MCCanvasColorGetAlpha(in pColor as Color, out rAlpha as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasColorSetAlpha(in pAlpha as CanvasFloat, inout xColor as Color) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	The red component of a color value.
 
 mColor:		An expression which evaluates to a color.
@@ -473,7 +473,7 @@ begin
 	MCCanvasColorSetRed(input, mColor)
 end syntax
 
-/*
+/**
 Summary:	The green component of a color value.
 
 mColor:		An expression which evaluates to a color.
@@ -504,7 +504,7 @@ begin
 	MCCanvasColorSetGreen(input, mColor)
 end syntax
 
-/*
+/**
 Summary:	The blue component of a color value.
 
 mColor:		An expression which evaluates to a color.
@@ -535,7 +535,7 @@ begin
 	MCCanvasColorSetBlue(input, mColor)
 end syntax
 
-/*
+/**
 Summary:	The alpha component of a color value.
 
 mColor:		An expression which evaluates to a color.
@@ -582,7 +582,7 @@ public foreign handler MCCanvasTransformMakeTranslationWithList(in pTranslation 
 public foreign handler MCCanvasTransformMakeWithMatrixValues(in pA as CanvasFloat, in pB as CanvasFloat, in pC as CanvasFloat, in pD as CanvasFloat, in pTX as CanvasFloat, in pTY as CanvasFloat, out rTransform as Transform) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasTransformMakeWithMatrixAsList(in pMatrix as List, out rTransform as Transform) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	The identity transform.
 
 Returns:	A new identity transform.
@@ -603,7 +603,7 @@ begin
 	MCCanvasTransformMakeIdentity(output)
 end syntax
 
-/*
+/**
 Summary:	Creates a new scaling transform value.
 
 mScale:		An expression which evaluates to a list of 1 or 2 numbers, the x-axis scale and y-axis scale, or the uniform scale when only a single value is given.
@@ -627,7 +627,7 @@ begin
     MCCanvasTransformMakeScaleWithList(mScale, output)
 end syntax
 
-/*
+/**
 Summary:	Creates a new skewing transform value.
 
 mScale:		An expression which evaluates to a list of 2 numbers, the x-axis skew and y-axis skew.
@@ -648,7 +648,7 @@ begin
 	MCCanvasTransformMakeSkewWithList(mSkew, output)
 end syntax
 
-/*
+/**
 Summary:	Creates a new rotation transform value.
 
 mRotation:	An expression which evaluates to a number, the number of degrees of the rotation.
@@ -669,7 +669,7 @@ begin
 	MCCanvasTransformMakeRotation(mRotation, output)
 end syntax
 
-/*
+/**
 Summary:		Creates a new translation transform.
 
 mTranslation:	An expression which evaluates to a list of 2 numbers, the x and y offsets of the translation.
@@ -690,7 +690,7 @@ begin
     MCCanvasTransformMakeTranslationWithList(mTranslation, output)
 end syntax
 
-/*
+/**
 Summary:		Creates a new transform.
 
 mTranslation:	An expression which evaluates to a list of 6 numbers, the a, b, c, d, tx and ty values of the transform matrix.
@@ -728,7 +728,7 @@ public foreign handler MCCanvasTransformSetMatrixAsList(in pMatrix as List, inou
 
 public foreign handler MCCanvasTransformGetInverse(in pTransform as Transform, out rInverse as Transform) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:		The scale component of a transform.
 
 mTransform:		An expression which evaluates to a transform.
@@ -756,7 +756,7 @@ begin
 	MCCanvasTransformSetScaleAsList(input, mTransform)
 end syntax
 
-/*
+/**
 Summary:		The rotation component of a transform.
 
 mTransform:		An expression which evaluates to a transform.
@@ -784,7 +784,7 @@ begin
 	MCCanvasTransformSetRotation(input, mTransform)
 end syntax
 
-/*
+/**
 Summary:		The skew component of a transform.
 
 mTransform:		An expression which evaluates to a transform.
@@ -812,7 +812,7 @@ begin
 	MCCanvasTransformSetSkewAsList(input, mTransform)
 end syntax
 
-/*
+/**
 Summary:		The translation component of a transform.
 
 mTransform:		An expression which evaluates to a transform.
@@ -840,7 +840,7 @@ begin
 	MCCanvasTransformSetTranslationAsList(input, mTransform)
 end syntax
 
-/*
+/**
 Summary:		The matrix values of a transform.
 
 mTransform:		An expression which evaluates to a transform.
@@ -874,7 +874,7 @@ begin
 	MCCanvasTransformSetMatrixAsList(input, mTransform)
 end syntax
 
-/*
+/**
 Summary:		The inverse of a transform.
 
 mTransform:		An expression which evaluates to a transform.
@@ -918,7 +918,7 @@ public foreign handler MCCanvasTransformTranslate(inout xTransform as Transform,
 public foreign handler MCCanvasTransformTranslateWithList(inout xTransform as Transform, in pTranslation as List) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasTransformMultiply(in pTransformA as Transform, in pTransformB as Transform, out rTransform as Transform) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:		Concatenate transform a with transform b.
 
 mTransformA:	An expression which evaluates to a transform.
@@ -955,7 +955,7 @@ begin
 	MCCanvasTransformConcat(mTransformA, mTransformB)
 end syntax
 
-/*
+/**
 Summary:		Apply a scale to a transform.
 
 mTransform:		An expression which evaluates to a transform.
@@ -984,7 +984,7 @@ begin
     MCCanvasTransformScaleWithList(mTransform, mScale)
 end syntax
 
-/*
+/**
 Summary:		Apply a skew to a transform.
 
 mTransform:		An expression which evaluates to a transform.
@@ -1009,7 +1009,7 @@ begin
 	MCCanvasTransformSkewWithList(mTransform, mSkew)
 end syntax
 
-/*
+/**
 Summary:		Apply a rotation to a transform.
 
 mTransform:		An expression which evaluates to a transform.
@@ -1035,7 +1035,7 @@ begin
 	MCCanvasTransformRotate(mTransform, mRotation)
 end syntax
 
-/*
+/**
 Summary:		Apply a translation to a transform.
 
 mTransform:		An expression which evaluates to a transform.
@@ -1064,7 +1064,7 @@ begin
     MCCanvasTransformTranslateWithList(mTransform, mTranslation)
 end syntax
 
-/*
+/**
 Summary:		Multiply two transforms together.
 
 Left:		An expression which evaluates to a transform.
@@ -1109,7 +1109,7 @@ end syntax
 
 public foreign handler MCCanvasSolidPaintMakeWithColor(in pColor as Color, out rSolid as SolidPaint) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	Creates a new solid color paint.
 
 mColor:		An expression which evaluates to a color.
@@ -1137,7 +1137,7 @@ end syntax
 public foreign handler MCCanvasSolidPaintGetColor(in pSolid as SolidPaint, out rColor as Color) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasSolidPaintSetColor(in pColor as Color, inout pSolid as SolidPaint) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	The color of a solid paint value.
 
 mPaint:		An expression which evaluates to a solid paint.
@@ -1179,7 +1179,7 @@ public foreign handler MCCanvasPatternMakeWithRotatedImage(in pImage as Image, i
 public foreign handler MCCanvasPatternMakeWithTranslatedImage(in pImage as Image, in pX as CanvasFloat, in pY as CanvasFloat, out rPattern as Pattern) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPatternMakeWithImageTranslatedWithList(in pImage as Image, in pTranslation as List, out rPattern as Pattern) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	Creates a new pattern paint.
 
 mImage:		An expression which evaluates to an image.
@@ -1204,7 +1204,7 @@ begin
 	MCCanvasPatternMakeWithImage(mImage, output)
 end syntax
 
-/*
+/**
 Summary:	Creates a new transformed pattern paint.
 
 mImage:		An expression which evaluates to an image.
@@ -1234,7 +1234,7 @@ begin
     MCCanvasPatternMakeWithTransformedImage(mImage, mTransform, output)
 end syntax
 
-/*
+/**
 Summary:	Creates a new scaled pattern paint.
 
 mImage:		An expression which evaluates to an image.
@@ -1260,7 +1260,7 @@ begin
 	MCCanvasPatternMakeWithImageScaledWithList(mImage, mScale, output)
 end syntax
 
-/*
+/**
 Summary:	Creates a new translated pattern paint.
 
 mImage:		An expression which evaluates to an image.
@@ -1288,7 +1288,7 @@ begin
 	MCCanvasPatternMakeWithImageTranslatedWithList(mImage, mTranslation, output)
 end syntax
 
-/*
+/**
 Summary:	Creates a new rotated pattern paint.
 
 mImage:		An expression which evaluates to an image.
@@ -1323,7 +1323,7 @@ public foreign handler MCCanvasPatternSetImage(in pImage as Image, inout xPatter
 public foreign handler MCCanvasPatternGetTransform(in pPattern as Pattern, out rTransform as Transform) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPatternSetTransform(in pTransform as Transform, inout xPattern as Pattern) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	The image of a pattern value.
 
 mPattern:		An expression which evaluates to a pattern.
@@ -1352,7 +1352,7 @@ begin
 	MCCanvasPatternSetImage(input, mPattern)
 end syntax
 
-/*
+/**
 Summary:	The transform of a pattern value.
 
 mPattern:		An expression which evaluates to a pattern.
@@ -1395,7 +1395,7 @@ public foreign handler MCCanvasPatternRotate(inout xPattern as Pattern, in pRota
 public foreign handler MCCanvasPatternTranslate(inout xPattern as Pattern, in pX as CanvasFloat, in pY as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPatternTranslateWithList(inout xPattern as Pattern, in pTranslation as List) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:		Apply a transform to a pattern.
 
 mPattern:	An expression which evaluates to a pattern.
@@ -1421,7 +1421,7 @@ begin
 	MCCanvasPatternTransform(mPattern, mTransform)
 end syntax
 
-/*
+/**
 Summary:	Apply a scale to a pattern.
 
 mPattern:	An expression which evaluates to a pattern.
@@ -1447,7 +1447,7 @@ begin
 	MCCanvasPatternScaleWithList(mPattern, mScale)
 end syntax
 
-/*
+/**
 Summary:	Apply a rotation to a pattern.
 
 mPattern:	An expression which evaluates to a pattern.
@@ -1473,7 +1473,7 @@ begin
 	MCCanvasPatternRotate(mPattern, mRotation)
 end syntax
 
-/*
+/**
 Summary:	Apply a translation to a pattern.
 
 mPattern:	An expression which evaluates to a pattern.
@@ -1517,7 +1517,7 @@ end syntax
 public foreign handler MCCanvasGradientStopMake(in pOffset as CanvasFloat, in pColor as Color, out rStop as GradientStop) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGradientMakeWithRamp(in pType as LCInt, in pRamp as List, out rGradient as Gradient) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	Creates a new gradient stop.
 
 mOffset:	An expression which evaluates to a number.
@@ -1548,7 +1548,7 @@ begin
 	MCCanvasGradientStopMake(mOffset, mColor, output)
 end syntax
 
-/*
+/**
 Summary:	Creates a new gradient paint.
 
 mRamp:		An expression which evaluates to a list of gradient stops.
@@ -1608,7 +1608,7 @@ public foreign handler MCCanvasGradientSetVia(in pVia as Point, inout xGradient 
 public foreign handler MCCanvasGradientGetTransform(in pGradient as Gradient, out rTransform as Transform) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGradientSetTransform(in pTransform as Transform, inout xGradient as Gradient) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	The offset of a gradient stop value.
 
 mStop:		An expression which evaluates to a gradient stop.
@@ -1636,7 +1636,7 @@ begin
 	MCCanvasGradientStopSetOffset(input, mStop)
 end syntax
 
-/*
+/**
 Summary:	The color of a gradient stop value.
 
 mStop:		An expression which evaluates to a gradient stop.
@@ -1664,7 +1664,7 @@ begin
 	MCCanvasGradientStopSetColor(input, mStop)
 end syntax
 
-/*
+/**
 Summary:	The ramp of a gradient paint.
 
 mGradient:		An expression which evaluates to a gradient.
@@ -1696,7 +1696,7 @@ begin
 	MCCanvasGradientSetRamp(input, mGradient)
 end syntax
 
-/*
+/**
 Summary:	The type of a gradient paint.
 
 mGradient:		An expression which evaluates to a gradient.
@@ -1725,7 +1725,7 @@ begin
 	MCCanvasGradientSetTypeAsString(input, mGradient)
 end syntax
 
-/*
+/**
 Summary:	The repeat count of a gradient paint.
 
 mGradient:		An expression which evaluates to a gradient.
@@ -1754,7 +1754,7 @@ begin
 	MCCanvasGradientSetRepeat(input, mGradient)
 end syntax
 
-/*
+/**
 Summary:	The wrap of a gradient paint.
 
 mGradient:		An expression which evaluates to a gradient.
@@ -1781,7 +1781,7 @@ begin
 	MCCanvasGradientSetWrap(input, mGradient)
 end syntax
 
-/*
+/**
 Summary:	The mirror of a gradient paint.
 
 mGradient:		An expression which evaluates to a gradient.
@@ -1808,7 +1808,7 @@ begin
 	MCCanvasGradientSetMirror(input, mGradient)
 end syntax
 
-/*
+/**
 Summary:	The from point of a gradient paint.
 
 mGradient:		An expression which evaluates to a gradient.
@@ -1836,7 +1836,7 @@ begin
 	MCCanvasGradientSetFrom(input, mGradient)
 end syntax
 
-/*
+/**
 Summary:	The to point of a gradient paint.
 
 mGradient:		An expression which evaluates to a gradient.
@@ -1864,7 +1864,7 @@ begin
 	MCCanvasGradientSetTo(input, mGradient)
 end syntax
 
-/*
+/**
 Summary:	The via point of a gradient paint.
 
 mGradient:		An expression which evaluates to a gradient.
@@ -1892,7 +1892,7 @@ begin
 	MCCanvasGradientSetVia(input, mGradient)
 end syntax
 
-/*
+/**
 Summary:	The transform of a gradient paint.
 
 mGradient:		An expression which evaluates to a gradient.
@@ -1943,7 +1943,7 @@ public foreign handler MCCanvasGradientRotate(inout xGradient as Gradient, in pR
 public foreign handler MCCanvasGradientTranslate(inout xGradient as Gradient, in pX as CanvasFloat, in pY as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGradientTranslateWithList(inout xGradient as Gradient, in pTranslation as List) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	Add a new stop to the ramp of a gradient paint.
 
 mStop:	An expression which evaluates to a gradient stop
@@ -1969,7 +1969,7 @@ begin
 	MCCanvasGradientAddStop(mStop, mGradient)
 end syntax
 
-/*
+/**
 Summary:	Apply a transform to a gradient paint.
 
 mTransform:	An expression which evaluates to a transform.
@@ -1994,7 +1994,7 @@ begin
 	MCCanvasGradientTransform(mGradient, mTransform)
 end syntax
 
-/*
+/**
 Summary:	Apply a scale to a gradient paint.
 
 mScale:	An expression which evaluates to a list of numbers.
@@ -2019,7 +2019,7 @@ begin
 	MCCanvasGradientScaleWithList(mGradient, mScale)
 end syntax
 
-/*
+/**
 Summary:	Apply a rotation to a gradient paint.
 
 mRotation:	An expression which evaluates to a number.
@@ -2044,7 +2044,7 @@ begin
 	MCCanvasGradientRotate(mGradient, mRotation)
 end syntax
 
-/*
+/**
 Summary:	Apply a translation to a gradient paint.
 
 mTranslation:	An expression which evaluates to a list of numbers.
@@ -2079,11 +2079,12 @@ public foreign handler MCCanvasImageMakeWithPath(in pPath as String, out rImage 
 public foreign handler MCCanvasImageMakeWithResourceFile(in pResourcePath as String, out rImage as Image) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithData(in pData as Data, out rImage as Image) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixels(in pWidth as LCInt, in pHeight as LCInt, in pPixels as Data, out rImage as Image) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithPixelsInFormat(in pWidth as LCInt, in pHeight as LCInt, in pPixels as Data, in pFormat as LCInt, out rImage as Image) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as List, in pPixels as Data, out rImage as Image) returns nothing binds to "<builtin>"
 
 //////////
 
-/*
+/**
 Summary:	Creates a new image.
 
 mPath:		An expression which evaluates to a string.
@@ -2106,7 +2107,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new image.
 
 mResource:		An expression which evaluates to a string.
@@ -2128,7 +2129,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new image.
 
 mData:	An expression which evaluates to binary data
@@ -2153,7 +2154,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new image using raw pixel data.
 
 mSize:		An expression which evaluates to a list of integers.
@@ -2192,7 +2193,7 @@ public foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as
 
 //////////
 
-/*
+/**
 Summary:	The width of an image.
 
 mImage:		An expression which evaluates to an image.
@@ -2218,7 +2219,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The height of an image.
 
 mImage:		An expression which evaluates to an image.
@@ -2252,7 +2253,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The pixel data of an image.
 
 mImage:		An expression which evaluates to an image.
@@ -2284,10 +2285,10 @@ end syntax
 // TODO - add resize operation? "resize <image> to <width>,<height>"
 // TODO - implement image operations
 
-public foreign handler MCCanvasImageTransform(inout xImage as Image, in pTransform as Transform) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasImageScale(inout xImage as Image, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasImageRotate(inout xImage as Image, in pRotation as CanvasFloat) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rectangle) returns nothing binds to "<builtin>"
+// public foreign handler MCCanvasImageTransform(inout xImage as Image, in pTransform as Transform) returns nothing binds to "<builtin>"
+// public foreign handler MCCanvasImageScale(inout xImage as Image, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) returns nothing binds to "<builtin>"
+// public foreign handler MCCanvasImageRotate(inout xImage as Image, in pRotation as CanvasFloat) returns nothing binds to "<builtin>"
+// public foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rectangle) returns nothing binds to "<builtin>"
 
 //syntax TransformImage is statement
 //	"transform" <mImage: Expression> "by" <mTransform: Expression>
@@ -2325,7 +2326,7 @@ public foreign handler MCCanvasPathMakeWithInstructionsAsString(in pString as St
 
 //////////
 
-/*
+/**
 Summary:	Creates a new empty path.
 
 Returns:	An empty path.
@@ -2349,7 +2350,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new path.
 
 mInstructions:	An expression which evaluates to a string.
@@ -2391,7 +2392,7 @@ public foreign handler MCCanvasPathMakeWithSegmentWithRadiiAsList(in pCenter as 
 
 //////////
 
-/*
+/**
 Summary:	Creates a new path.
 
 mRect: An expression which evaluates to a rectangle.
@@ -2418,15 +2419,35 @@ begin
 	MCCanvasPathMakeWithRoundedRectangle(mRect, mRadius, output)
 end syntax
 
+/**
+Summary:	Create a new rectangle path with elliptical corner rounding
+
+Parameters:
+Rectangle (Rectangle):	A rectangle to create the path from
+Radii (List):	A list of the horizontal radius and vertical radius for rounding
+
+Returns (Path):	A newly-created canvas path
+
+Description:
+Create a new rounded rectangle path based on <Rectangle>.
+
+The <Radii> is a list of two numbers.  The first specifies the
+horizontal rounding radius and the second specifies the vertical
+rounding radius.
+
+References: PathMakeWithRoundedRectangle
+
+Tags: Canvas
+*/
 syntax PathMakeWithRoundedRectangleWithRadii is prefix operator with constructor precedence
-	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" "radii" <mRadii: Expression>
+	"rounded" "rectangle" "path" "of" <Rectangle: Expression> "with" "radii" <Radii: Expression>
 begin
-	MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(mRect, mRadii, output)
+	MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(Rectangle, Radii, output)
 end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new path.
 
 mRect: An expression which evaluates to a rectangle.
@@ -2448,7 +2469,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new path.
 
 mCenter:	An expression which evaluates to a point.
@@ -2471,7 +2492,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new path.
 
 mCenter:	An expression which evaluates to a point.
@@ -2494,7 +2515,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new path.
 
 mFrom:	An expression which evaluates to a point.
@@ -2517,7 +2538,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new path.
 
 mPoints:	An expression which evaluates to a list of points.
@@ -2544,7 +2565,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new path.
 
 mCenter:	An expression which evaluates to a point.
@@ -2575,7 +2596,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new path.
 
 mCenter:	An expression which evaluates to a point.
@@ -2606,7 +2627,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new path.
 
 mCenter:	An expression which evaluates to a point.
@@ -2646,7 +2667,7 @@ public foreign handler MCCanvasPathGetInstructionsAsString(in pPath as Path, out
 
 //////////
 
-/*
+/**
 Summary:	The subpaths of a path.
 
 mPath:		An expression which evaluates to a path.
@@ -2678,7 +2699,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The bounding box of a path.
 
 mPath:		An expression which evaluates to a path.
@@ -2704,7 +2725,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The instructions of a path.
 
 mPath:		An expression which evaluates to a path.
@@ -2756,7 +2777,7 @@ public foreign handler MCCanvasPathClosePath(inout xPath as Path) returns nothin
 
 //////////
 
-/*
+/**
 Summary:	Move to a new point on a path.
 
 mPath:		An expression which evaluates to a path.
@@ -2791,7 +2812,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Adds a line to a path.
 
 mPath:		An expression which evaluates to a path.
@@ -2820,7 +2841,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Adds a curve to a path.
 
 mThroughA:		An expression which evaluates to a point.
@@ -2839,10 +2860,10 @@ Example:
 	move to point [25, 50] on tPath
 
 	// Continue path with a curve through 25,100 to 50,100
-	curve through [25,100] to [50,100] on tPath
+	curve through point [25,100] to point [50,100] on tPath
 
 	// Continue path with a curve through 50,75 then 50,50 to 50,100
-	curve through [50,75] then [50,50] to [25,50] on tPath
+	curve through point [50,75] then point [50,50] to point [25,50] on tPath
 
 Tags:	Canvas
 */
@@ -2853,7 +2874,7 @@ begin
 	MCCanvasPathCurveThroughPoints(mThroughA, mThroughB, mTo, mPath)
 end syntax
 
-/*
+/**
 Summary:	Adds an arc to a path.
 
 mThrough:		An expression which evaluates to a point.
@@ -2889,7 +2910,7 @@ begin
 end syntax
 
 
-/*
+/**
 Summary:	Adds an arc to a path.
 
 mEnd:		An expression which evaluates to a point.
@@ -2924,7 +2945,7 @@ begin
 end syntax
 
 
-/*
+/**
 Summary:	Adds an arc to a path.
 
 mEnd:		An expression which evaluates to a point.
@@ -2971,7 +2992,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Closes the current subpath of a path.
 
 mPath:		An expression which evaluates to a path.
@@ -3002,7 +3023,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Apply a transform to a path.
 
 mTransform:	An expression which evaluates to a transform.
@@ -3028,7 +3049,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Apply a scale to a path.
 
 mScale:	An expression which evaluates to a list of numbers.
@@ -3054,7 +3075,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Apply a rotation to a path.
 
 mRotation:	An expression which evaluates to a number.
@@ -3080,7 +3101,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Apply a translation to a path.
 
 mTranslation:	An expression which evaluates to a list of numbers.
@@ -3107,7 +3128,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Extend a path by adding another path.
 
 mSource:		An expression which evaluates to a path.
@@ -3152,7 +3173,7 @@ public foreign handler MCCanvasEffectMake(in pType as LCInt, out rEffect as Effe
 
 //////////
 
-/*
+/**
 Summary:	Creates a new effect.
 
 mType:		One of color overlay, inner shadow, outer shadow, inner glow, outer glow.
@@ -3173,7 +3194,7 @@ begin
 end syntax
 
 
-/*
+/**
 Summary:	Creates a new effect.
 
 mType:		One of color overlay, inner shadow, outer shadow, inner glow, outer glow.
@@ -3232,7 +3253,7 @@ public foreign handler MCCanvasEffectSetSourceAsString(in pSource as String, ino
 
 //////////
 
-/*
+/**
 Summary:	The type of an effect.
 
 mEffect:		An expression which evaluates to an effect.
@@ -3258,7 +3279,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The color of an effect.
 
 mEffect:		An expression which evaluates to an effect.
@@ -3289,7 +3310,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The blend mode of an effect.
 
 mEffect:		An expression which evaluates to an effect.
@@ -3321,7 +3342,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The size of an effect.
 
 mEffect:		An expression which evaluates to an effect.
@@ -3352,7 +3373,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The spread of an effect.
 
 mEffect:		An expression which evaluates to an effect.
@@ -3383,7 +3404,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The distance of an effect.
 
 mEffect:		An expression which evaluates to an effect.
@@ -3414,7 +3435,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The angle of an effect.
 
 mEffect:		An expression which evaluates to an effect.
@@ -3445,7 +3466,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The knockout of an effect.
 
 mEffect:		An expression which evaluates to an effect.
@@ -3476,7 +3497,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The source of an effect.
 
 mEffect:		An expression which evaluates to an effect.
@@ -3517,7 +3538,7 @@ public foreign handler MCCanvasFontMakeWithSize(in pName as String, in pBold as 
 
 //////////
 
-/*
+/**
 Summary:	Creates a new instance of the named font.
 
 mName:		An expression which evaluates to a string.
@@ -3539,7 +3560,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new instance of the named font.
 
 mName:		An expression which evaluates to a string.
@@ -3562,7 +3583,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new instance of the named font.
 
 mName:		An expression which evaluates to a string.
@@ -3584,7 +3605,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Creates a new instance of the named font.
 
 mName:		An expression which evaluates to a string.
@@ -3621,7 +3642,7 @@ public foreign handler MCCanvasFontSetSize(in pSize as LCUInt, inout xFont as Fo
 
 //////////
 
-/*
+/**
 Summary:	The name of a font.
 
 mFont:		An expression which evaluates to a font.
@@ -3651,7 +3672,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The bold setting of a font.
 
 mFont:		An expression which evaluates to a font.
@@ -3677,7 +3698,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The italic setting of a font.
 
 mFont:		An expression which evaluates to a font.
@@ -3703,7 +3724,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The size of a font.
 
 mFont:		An expression which evaluates to a font.
@@ -3739,7 +3760,7 @@ public foreign handler MCCanvasFontMeasureTextImageBoundsOnCanvas(in pText as St
 
 //////////
 
-/*
+/**
 Summary:	Measure text when drawn with a font.
 
 mText:	An expression which evaluates to a string.
@@ -3770,7 +3791,7 @@ begin
 end syntax
 
 
-/*
+/**
 Summary:	Measure text when drawn to a canvas.
 
 mText:	An expression which evaluates to a string.
@@ -3799,7 +3820,7 @@ begin
 end syntax
 
 
-/*
+/**
 Summary:	Measure text precisely when drawn with a font.
 
 mText:	An expression which evaluates to a string.
@@ -3830,7 +3851,7 @@ begin
 end syntax
 
 
-/*
+/**
 Summary:	Measure text precisely when drawn to a canvas.
 
 mText:	An expression which evaluates to a string.
@@ -3905,7 +3926,7 @@ public foreign handler MCCanvasGetClipBounds(in pCanvas as Canvas, out rBounds a
 
 //////////
 
-/*
+/**
 Summary:	The current paint of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -3927,7 +3948,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current fill rule of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -3949,7 +3970,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current antialias setting of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -3971,7 +3992,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current opacity setting of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -3993,7 +4014,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current blend mode of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4015,7 +4036,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current stippled setting of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4038,7 +4059,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current image resize quality of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4060,7 +4081,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current stroke width of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4082,7 +4103,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current font of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4104,7 +4125,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current join style of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4127,7 +4148,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current cap style of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4150,7 +4171,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current miter limit of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4173,7 +4194,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current dashes of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4196,7 +4217,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current dash phase of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4220,7 +4241,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	The current clipping bounds of the canvas.
 
 mCanvas:	An expression which evaluates to a canvas.
@@ -4281,7 +4302,7 @@ public foreign handler MCCanvasMeasureText(in pText as String, in pCanvas as Can
 
 //////////
 
-/*
+/**
 Summary:	Apply a transform to a canvas.
 
 mTransform:	An expression which evaluates to a transform.
@@ -4303,7 +4324,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Apply a scale to a canvas.
 
 mScale:	An expression which evaluates to a list of numbers.
@@ -4325,7 +4346,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Apply a rotation to a canvas.
 
 mRotation:	An expression which evaluates to a number.
@@ -4347,7 +4368,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Apply a translation to a canvas.
 
 mTranslation:	An expression which evaluates to a list of numbers.
@@ -4370,7 +4391,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Save the current state of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4400,7 +4421,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Restore the previously saved state of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4430,7 +4451,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Begin a new drawing layer on a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4467,7 +4488,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	End the current drawing layer on a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4502,7 +4523,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Fill a path on a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4534,7 +4555,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Stroke a path on a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4566,7 +4587,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Clip to a rectangle on a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4591,7 +4612,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Add a path to a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4615,7 +4636,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Draw an image on a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4652,7 +4673,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Move to a point on a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4679,7 +4700,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Add a line to a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4707,7 +4728,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Add a curve to a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4721,10 +4742,10 @@ Example:
 	move to point [25, 50] on this canvas
 
 	// Continue path with a curve through 25,100 to 50,100
-	curve through [25,100] to [50,100] on this canvas
+	curve through point [25,100] to point [50,100] on this canvas
 
 	// Continue path with a curve through 50,75 then 50,50 to 50,100
-	curve through [50,75] then [50,50] to [25,50] on this canvas
+	curve through point [50,75] then point [50,50] to point [25,50] on this canvas
 
 	// stroke the canvas path
 	stroke this canvas
@@ -4738,7 +4759,7 @@ begin
 	MCCanvasCurveThroughPoints(mThroughA, mThroughB, mPoint, mCanvas)
 end syntax
 
-/*
+/**
 Summary:	Closes the current subpath of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4768,7 +4789,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Render filled text on a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4794,7 +4815,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Render filled text on a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
@@ -4820,7 +4841,7 @@ end syntax
 
 //////////
 
-/*
+/**
 Summary:	Measure text when drawn to a canvas.
 
 mText:	An expression which evaluates to a string.
@@ -4845,7 +4866,7 @@ end syntax
 ////////////////////////////////////////////////////////////////////////////////
 
 public foreign handler MCCanvasThisCanvas(out rCanvas as Canvas) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasPretendToAssignThisCanvas(in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasPretendToAssignToThisCanvas(in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasNewCanvasWithSize(in pSize as List, out rCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetPixelDataOfCanvas(in pCanvas as Canvas, out rData as Data) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetPixelHeightOfCanvas(in pCanvas as Canvas, out rHeight as LCUInt) returns nothing binds to "<builtin>"
@@ -4853,7 +4874,7 @@ public foreign handler MCCanvasGetPixelWidthOfCanvas(in pCanvas as Canvas, out r
 
 //////////
 
-/*
+/**
 Summary:	The canvas used when drawing a widget.
 
 Returns:	The target canvas for widget drawing operations.
@@ -4869,29 +4890,78 @@ syntax ThisCanvas is expression
     "this" "canvas"
 begin
     MCCanvasThisCanvas(output)
-    MCCanvasPretendToAssignThisCanvas(input)
+    MCCanvasPretendToAssignToThisCanvas(input)
 end syntax
 
 //////////
 
+/**
+Summary:	Create a new canvas
+
+Parameters:
+Size (List):	A list containing the width and height of the new canvas in pixels
+
+Returns (Canvas):	A newly-created canvas
+
+Description:
+Create and return a new temporary canvas of the specified pixel width
+and height.
+
+Tags:	Canvas
+*/
 syntax NewCanvasWithSize is prefix operator with constructor precedence
   "a" "new" "canvas" "with" "size" <Size: Expression>
 begin
   MCCanvasNewCanvasWithSize(Size, output)
 end syntax
 
+/**
+Summary:	Get the current contents of a canvas as raw pixel data
+
+Parameters:
+Canvas (Canvas):	The canvas to be examined.
+
+Returns (Data):	The raw pixel values as binary data.
+
+Description:
+Capture the current contents of the <Canvas> as raw pixel data in RGBA
+format with 8 bits per colour component, i.e. 32 bits or 4 bytes per
+pixel.
+
+Tags:	Canvas
+*/
 syntax GetPixelDataOfCanvas is prefix operator with property precedence
   "the" "pixel" "data" "of" <Canvas: Expression>
 begin
   MCCanvasGetPixelDataOfCanvas(Canvas, output)
 end syntax
 
+/**
+Summary:	Get the width of a canvas in pixels.
+
+Parameters:
+Canvas (Canvas):	The canvas to be examined.
+
+Returns (Number):	The width of the canvas, in pixels.
+
+Tags:	Canvas
+*/
 syntax GetPixelWidthOfCanvas is prefix operator with property precedence
   "the" "pixel" "width" "of" <Canvas: Expression>
 begin
   MCCanvasGetPixelWidthOfCanvas(Canvas, output)
 end syntax
 
+/**
+Summary:	Get the height of a canvas in pixels.
+
+Parameters:
+Canvas (Canvas):	The canvas to be examined.
+
+Returns (Number):	The height of the canvas, in pixels.
+
+Tags:	Canvas
+*/
 syntax GetPixelHeightOfCanvas is prefix operator with property precedence
   "the" "pixel" "height" "of" <Canvas: Expression>
 begin

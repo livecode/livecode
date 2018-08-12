@@ -1,2 +1,0 @@
-# The optional *recursively* adverb has been added to union and intersect commands
-Using the *recursively* adverb causes the union or intersect command to recurse through the arrays rather than only working on the root elements.

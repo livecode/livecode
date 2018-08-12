@@ -4,15 +4,18 @@ Type: function
 
 Syntax: revDatabaseColumnNamed(<recordSetID>, <columnName> [, <holderVariable>])
 
-Summary: <return|Returns> data from a specified <database field> in a <database>.
+Summary:
+<return|Returns> data from a specified <database field> in a <database>.
+
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revDatabaseColumnNamed(myResults,"LASTNAME")
@@ -24,24 +27,58 @@ Example:
 revDatabaseColumnNamed(tCursor, "id", "tRetrievedDataArray[id]")
 
 Parameters:
-recordSetID: The number returned by the revQueryDatabase function when the record set was created.
-columnName: The name of a database field.
-holderVariable: A valid variable name or the name of an array element.
+recordSetID:
+The number returned by the revQueryDatabase function when the record set
+was created.
 
-Returns: The <revDatabaseColumnNamed> <function> returns the text from the specified field of the current <record> if no <holderVariable> is specified. If a <holderVariable> is specified the function returns empty if successful, an error string otherwise.
+columnName:
+The name of a database field.
+
+holderVariable:
+A valid variable name or the name of an array element.
+
+Returns:
+The <revDatabaseColumnNamed> <function> returns the text from the
+specified field of the current <record> if no <holderVariable> is
+specified. If a <holderVariable> is specified the function returns empty
+if successful, an error string otherwise.
 
 Description:
-Use the <revDatabaseColumnNamed> <function> to obtain the contents of a given <database field>, in the current <record> of the specified <record set (database cursor)(glossary)>.
+Use the <revDatabaseColumnNamed> <function> to obtain the contents of a
+given <database field>, in the current <record> of the specified <record
+set (database cursor)(glossary)>.
 
-If you specify a <holderVariable>, the data is placed in that <variable>. Otherwise, the data is <return|returned> by the <function>. To retrieve binary data from the database, a holder variable must be specified, otherwise the <revDatabaseColumnNamed> function may return truncated data. This is due to limitations in the current architecture.
+If you specify a <holderVariable>, the data is placed in that
+<variable>. Otherwise, the data is <return|returned> by the <function>.
+To retrieve binary data from the database, a holder variable must be
+specified, otherwise the <revDatabaseColumnNamed> function may return
+truncated data. This is due to limitations in the current architecture.
 
-If the attempt to get the data is not successful, the <revDatabaseColumnNamed> <function> returns an error message that begins with the <string> "revdberr".
+If the attempt to get the data is not successful, the
+<revDatabaseColumnNamed> <function> returns an error message that begins
+with the <string> "revdberr".
 
->*Important:*  The <revDatabaseColumnNamed> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revDatabaseColumnNamed> <function> is part of the 
+> <Database library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
 Changes:
-The ability to specify array elements as holder variables was added in version 2.9
+The ability to specify array elements as holder variables was added in
+version 2.9
 
-References: string (keyword), Database library (library), LiveCode custom library (library), revDatabaseColumnNames (function), revDatabaseColumnLengths (function), revDatabaseColumnNumbered (function), return (glossary), variable (glossary), database (glossary), record set (database cursor) (glossary), record (glossary), Standalone Application Settings (glossary), standalone application (glossary), database field (glossary), function (control_st)
+References: function (control structure),
+revDatabaseColumnNames (function), revDatabaseColumnLengths (function),
+revDatabaseColumnNumbered (function), LiveCode custom library (glossary),
+return (glossary), variable (glossary), database (glossary),
+record set (database cursor) (glossary), record (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), database field (glossary),
+string (keyword), Database library (library)
 
 Tags: database
+

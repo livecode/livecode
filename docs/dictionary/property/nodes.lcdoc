@@ -2,35 +2,58 @@ Name: nodes
 
 Type: property
 
-Syntax: get the nodes of <player> 
+Syntax: get the nodes of <player>
 
-Summary: Reports a list of the nodes in a <QuickTime VR> movie.
+Summary:
+Reports a list of the nodes in a <QuickTime VR> movie.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows
+Deprecated: 8.1
 
-Platforms: desktop,server,web
+OS: mac, windows
+
+Platforms: desktop, server
 
 Example:
-repeat for each line in the nodes of player "Arctic"
-if item 2 of line 1 of the nodes of me is "panorama" then zoomOut
+repeat for each line tLine in the nodes of player "Arctic"
+   if item 2 of line 1 of the nodes of me is "panorama" then zoomOut
+end repeat
 
-Value (enum): The <nodes> consists of a list of nodes, one per <line>. Each <line> consists of two <items>, separated by a comma:
+Value (enum):
+The <nodes> consists of a list of nodes, one per <line>. Each <line>
+consists of two <items>, separated by a comma:
+
 	- the node ID (an integer)
 	- the node type (either "object" or "panorama")
 
 The <nodes> <property> is <read:only> and cannot be set
 
+
 Description:
 Use the <nodes> <property> to list the nodes of a <QuickTime VR> movie.
 
-Each node of a QuickTime VR movie is a viewpoint. The movie author sets the nodes during development of the movie. The user can change nodes using the navigational controls in the player; a handler can change nodes by setting the player's <currentNode> <property>.
+Each node of a QuickTime VR movie is a viewpoint. The movie author sets
+the nodes during development of the movie. The user can change nodes
+using the navigational controls in the player; a handler can change
+nodes by setting the player's <currentNode> <property>.
 
-If the player does not contain a QuickTime VR movie, its <nodes> <property> is empty.
+If the player does not contain a QuickTime VR movie, its <nodes>
+<property> is empty.
 
-References: tilt (property), trackCount (property), currentNode (property), QuickTime VR (glossary), property (glossary), read-only (glossary), items (keyword), line (keyword)
+Changes:
+This property was deprecated in version 8.1.0 due to the retirement of
+the QuickTime player implementation. In order to support 64-bit on Mac 
+we have been required to switch to using AVFoundation on Mac, which does 
+not support QTVR. In addition, the Windows player object is now based on 
+DirectShow, as Apple have dropped support for the QuickTime libraries 
+previously used.
+
+References: QuickTime VR (glossary), property (glossary),
+read-only (glossary), items (keyword), line (keyword), tilt (property),
+trackCount (property), currentNode (property)
 
 Tags: multimedia
+

@@ -2,13 +2,15 @@ Name: mobilePurchaseSendRequest
 
 Type: command
 
-Syntax: mobilePurchaseSendRequest <purchaseID> 
+Syntax: mobilePurchaseSendRequest <purchaseID>
 
-Summary: Notify the AppStore/Market Place that a purchase request has been initiated.
+Summary:
+Notify the AppStore/Market Place that a purchase request has been
+initiated. 
 
 Introduced: 5.0.1
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -16,11 +18,24 @@ Example:
 mobilePurchaseSendRequest thePurchaseId
 
 Parameters:
-purchaseID: The identifier of the purchase request.
+purchaseID:
+The identifier of the purchase request.
 
 Description:
-Use <mobilePurchaseSendRequest> to confirm to the AppStore/Market Place that a purchase request has been initiated.
+Use <mobilePurchaseSendRequest> to confirm to the AppStore/Market Place
+that a purchase request has been initiated.
 
-The command <mobilePurchaseSendRequest> is used to confirm to the AppStore/Market Place that an item has been requested for purchase. This should only be called once a purchase request is in the 'initialzed' state.
+The command <mobilePurchaseSendRequest> is used to confirm to the
+AppStore/Market Place that an item has been requested for purchase. This
+should only be called once a purchase request is in the 'initialzed'
+state. 
 
-References: mobilePurchaseSet (command), mobileDisablePurchaseUpdates (command), mobilePurchaseVerify (command), mobileRestorePurchases (command), iphoneRequestProductDetails (command), mobilePurchaseConfirmDelivery (command), mobileEnablePurchaseUpdates (command), mobilePurchaseCreate (command), mobilePurchaseState (function), mobilePurchaseError (function), mobileCanMakePurchase (function), mobilePurchaseGet (function), mobilePurchases (function), purchaseStateUpdate (message)
+References: mobilePurchaseSet (command),
+mobileDisablePurchaseUpdates (command), mobilePurchaseVerify (command),
+mobileRestorePurchases (command), iphoneRequestProductDetails (command),
+mobilePurchaseConfirmDelivery (command),
+mobileEnablePurchaseUpdates (command), mobilePurchaseCreate (command),
+mobilePurchaseState (function), mobilePurchaseError (function),
+mobileCanMakePurchase (function), mobilePurchaseGet (function),
+mobilePurchases (function), purchaseStateUpdate (message)
+

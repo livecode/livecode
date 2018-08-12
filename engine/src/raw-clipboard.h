@@ -180,6 +180,14 @@ public:
 	// Reverses CreateEncodedFileList.
 	virtual MCStringRef DecodeTransferredFileList(MCDataRef p_data) const = 0;
 
+	// Convert html to system-specific encoding for transfer on the clipboard
+	virtual MCDataRef EncodeHTMLFragmentForTransfer(MCDataRef p_html) const = 0;
+	virtual MCDataRef DecodeTransferredHTML(MCDataRef p_html) const = 0;
+
+	// Converts a Windows DIB (BMP file) to and from the on-clipboard format
+	virtual MCDataRef EncodeBMPForTransfer(MCDataRef p_bmp) const;
+	virtual MCDataRef DecodeTransferredBMP(MCDataRef p_bmp) const;
+
     // Destructor
     virtual ~MCRawClipboard() = 0;
     

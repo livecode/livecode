@@ -2,17 +2,18 @@ Name: compress
 
 Type: function
 
-Syntax: the compress of <data> 
+Syntax: the compress of <data>
 
 Syntax: compress(<data>)
 
-Summary: <return|Returns> a gzip-compressed <string>.
+Summary:
+<return|Returns> a gzip-compressed <string>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 compress(URL "file:image.pict")
@@ -21,21 +22,40 @@ Example:
 put compress(field "Outgoing") into URL "binfile:data.gz"
 
 Parameters:
-data (string): A string of binary data of any length.
+data (string):
+A string of binary data of any length.
 
-Returns: The <compress> <function> <return|returns> a <string> of <binary file|binary data>.
+Returns:
+The <compress> <function> <return|returns> a <string> of 
+<binary file|binary data>.
 
 Description:
-Use the <compress> <function> to <compress> data to a smaller size for transmission.
+Use the <compress> <function> to <compress> data to a smaller size for
+transmission. 
 
-The <compress> <function> is the <inverse> of the <decompress> <function>.
+The <compress> <function> is the <inverse> of the <decompress>
+<function>. 
 
-The compressed result is typically about half to a third the size of the original data, although different results may be obtained depending on the amount of data and whether it has already been compressed.
+The compressed result is typically about half to a third the size of the
+original data, although different results may be obtained depending on
+the amount of data and whether it has already been compressed.
 
->*Important:*  The value <return|returned> by the <compress> <function> consists of <binary file|binary data> and may include control characters, so displaying it on screen or trying to edit it may produce unexpected results. If you use a <URL> to place the <return|returned> data in a <file>, it's important to use the <binfile> <URL> scheme; using the <file> <URL> scheme will corrupt <binary file|binary data>.
+>*Important:*  The value <return|returned> by the <compress> <function>
+> consists of <binary file|binary data> and may include control
+> characters, so displaying it on screen or trying to edit it may
+> produce unexpected results. If you use a <URL> to place the
+> <return|returned> data in a <file>, it's important to use the
+> <binfile> <URL> scheme; using the <file> <URL> scheme will corrupt
+> <binary file|binary data>.
 
-For technical information about the format used by the <compress> <function>, see [RFC 1952](https://tools.ietf.org/html/rfc1952). The <compress> <function> uses the zlib compression library.
+For technical information about the format used by the <compress>
+<function>, see [RFC 1952](https://tools.ietf.org/html/rfc1952). The
+<compress> <function> uses the zlib compression library.
 
-References: URL (keyword), inverse (keyword), file (keyword), binfile (keyword), string (keyword), compress (function), decompress (function), return (glossary), binary file (glossary), function (control_st)
+References: function (control structure), compress (function),
+decompress (function), return (glossary), binary file (glossary),
+URL (keyword), inverse (keyword), file (keyword), binfile (keyword),
+string (keyword)
 
 Tags: text processing
+

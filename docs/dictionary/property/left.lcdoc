@@ -2,17 +2,20 @@ Name: left
 
 Type: property
 
-Syntax: set the left of <object> to <numberOfPixels> 
+Syntax: set the left of <object> to <numberOfPixels>
 
-Summary: Specifies how far an object's left edge is from the left edge of the window or screen.
+Summary:
+Specifies how far an object's left edge is from the left edge of the
+window or screen.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the left of graphic 3 to the left of graphic 2
@@ -21,20 +24,40 @@ Example:
 set the left of this stack to 128
 
 Value:
-The <left> of an <object> is an <integer>. A <negative> <integer> indicates that the position is to the left of the left edge of the screen or <card> (and therefore cannot be seen).
-A stack's <left> is the distance in <pixels> from the left edge of the screen to the left edge of the <stack window>.
+The <left> of an <object(glossary)> is an <integer>. A <negative>
+<integer> indicates that the position is to the left of the left edge of
+the screen or <card> (and therefore cannot be seen). A stack's <left> is
+the distance in <pixels> from the left edge of the screen to the left
+edge of the <stack window>.
 
-A card's or control's <left> is the distance in <pixels> from the left edge of the <card> to the left edge of the <card> or <control>.
+A card's or control's <left> is the distance in <pixels> from the left
+edge of the <card> to the left edge of the <card> or <control>.
 
 Description:
-Use the <left> <property> to change the horizontal placement of a <control> or window.
+Use the <left> <property> to change the horizontal placement of a
+<control> or window.
 
-The <left> of a <stack> is in <absolute (screen) coordinates(glossary)>. The <left> of a <card> is always zero; setting the <left> of a <card> does not cause a <error|script error>, but it has no effect. The <left> of a <group> or <control> is in <relative (window) coordinates(glossary)>.
+The <left> of a <stack> is in <absolute (screen) coordinates(glossary)>.
+The <left> of a <card> is always zero; setting the <left> of a <card>
+does not cause a <error|script error>, but it has no effect. The <left>
+of a <group> or <control> is in <relative (window)
+coordinates(glossary)>. 
 
-Changing the <left> of an <object> shifts it to the new position without resizing it. To change an <object|object's> width, set its width or <rectangle> <property>.
+Changing the <left> of an <object(glossary)> shifts it to the new
+position without resizing it. To change an <object|object's> width, set
+its width or <rectangle> <property>.
 
-The <width> <property> of an <object> is equal to its <right> minus its <left>.
+The <width> <property> of an <object(glossary)> is equal to its <right>
+minus its <left>.
 
-References: leftMargin (property), pixels (property), right (property), width (property), bottomLeft (property), xOffset (property), hotSpot (property), topLeft (property), control (keyword), integer (keyword), rectangle (keyword), card (keyword), right (constant), group (command), stack (object), object (object), property (glossary), relative coordinates (glossary), absolute coordinates (glossary), error (glossary), negative (glossary), stack window (glossary)
+References: group (command), right (constant), object (glossary),
+property (glossary), relative coordinates (glossary),
+absolute coordinates (glossary), error (glossary), negative (glossary),
+stack window (glossary), control (keyword), integer (keyword),
+rectangle (keyword), card (keyword), stack (object),
+leftMargin (property), pixels (property), right (property),
+width (property), bottomLeft (property), xOffset (property),
+hotSpot (property), topLeft (property)
 
 Tags: ui
+

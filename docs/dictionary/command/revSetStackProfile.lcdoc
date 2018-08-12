@@ -4,13 +4,17 @@ Type: command
 
 Syntax: revSetStackProfile <profileName> [, <stackName>]
 
-Summary: Changes the current <property profile|profile> used for a <stack> and all its <object|objects>.
+Summary:
+Changes the current <property profile|profile> used for a <stack> and
+all its <object|objects>.
+
+Associations: profile library
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web
+Platforms: desktop, server, mobile
 
 Example:
 revSetStackProfile "LargeFonts","Preferences"
@@ -22,18 +26,42 @@ Example:
 revSetStackProfile "Master",the short name of this stack
 
 Parameters:
-profileName: The profileName specifies which profile to use.
-stackName: The short name of an open stack. If you don't specify a stack, the topStack is changed.
+profileName:
+The profileName specifies which profile to use.
+
+stackName:
+The short name of an open stack. If you don't specify a stack, the
+topStack is changed.
 
 Description:
-Use the <revSetStackProfile> <command> to change <property> settings throughout a <stack> to a different set of stored settings.
+Use the <revSetStackProfile> <command> to change <property> settings
+throughout a <stack> to a different set of stored settings.
 
-A profile is a set of property settings for an object. You create a profile for an object, and give it a name, using the Property Profiles pane in the object's property inspector. When you change that object to use a profile, the properties you specified in the profile are changed to the settings you specified. This helps you quickly switch the appearance and behavior of the <object> without needing to set its <properties> individually.
+A profile is a set of property settings for an object. You create a
+profile for an object, and give it a name, using the Property Profiles
+pane in the object's property inspector. When you change that object to
+use a profile, the properties you specified in the profile are changed
+to the settings you specified. This helps you quickly switch the
+appearance and behavior of the <object(glossary)> without needing to set
+its <properties> individually.
 
-The <revSetStackProfile> <command> changes the current <property profile|profile> of the specified <stack> and all the <object|objects> in the <stack>. If an <object> does not have a <property profile|profile> with the specified <profileName>, the <object|object's> <properties> are not changed.
+The <revSetStackProfile> <command> changes the current <property
+profile|profile> of the specified <stack> and all the <object|objects>
+in the <stack>. If an <object(glossary)> does not have a <property
+profile|profile> with the specified <profileName>, the <object|object's>
+<properties> are not changed.
 
->*Important:*  The <revSetStackProfile> <command> is part of the <Profile library>. To ensure that the <command> works in a <standalone application>, in the Profiles section on the General screen of the <Standalone Application Settings> window, make sure you choose to include profiles in your application.
+>*Important:*  The <revSetStackProfile> <command> is part of the
+> <Profile library>. To ensure that the <command> works in a 
+> <standalone application>, in the Profiles section on the General 
+> screen of the <Standalone Application Settings> window, make sure you
+> choose to include profiles in your application.
 
-References: properties (property), revSetStackFileProfile (command), stack (object), object (object), property (glossary), Standalone Application Settings (glossary), property profile (glossary), command (glossary), standalone application (glossary), Profile library (library)
+References: revSetStackFileProfile (command), object (glossary),
+property (glossary), Standalone Application Settings (glossary),
+property profile (glossary), command (glossary),
+standalone application (glossary), Profile library (library),
+stack (object), properties (property)
 
 Tags: properties
+

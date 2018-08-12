@@ -4,39 +4,58 @@ Type: function
 
 Syntax: revBrowserExecuteScript(<instanceId>, <script>)
 
-Summary: Executes a string as web script in the context of the specified browser object.
+Summary:
+Executes a string as web script in the context of the specified browser
+object. 
 
 Introduced: 3.5
 
-OS: mac,windows
+OS: mac, windows
 
 Platforms: desktop
 
 Security: network
 
 Example:
-get revBrowserExecuteScript(sBrowserId, "alert('This is a debugging message');"
+get revBrowserExecuteScript(sBrowserId, "alert('This is a debugging message');")
 
 Example:
 get revBrowserExecuteScript(sBrowserId, the text of field "JavaScript" of me)
 
 Parameters:
-instanceId: The instanceId  is the integer identifier of a browser object
-script (string): A string containing the web script to execute.
+instanceId:
+The instanceId  is the integer identifier of a browser object
 
-The result: The return value of the function is the value of the "result" global variable in the script environment. Any values to be returned from the script should be placed into this variable. For example the following line of code produces the result "2":.
+script (string):
+A string containing the web script to execute.
+
+The result:
+The return value of the function is the value of the "result" global
+variable in the script environment. Any values to be returned from the
+script should be placed into this variable. For example the following
+line of code produces the result "2" :.
 
 Description:
-Use the <revBrowserExecuteScript> function to modify the current page being displayed in a browser object, or to retrieve information about it.
+Use the <revBrowserExecuteScript> function to modify the current page
+being displayed in a browser object, or to retrieve information about
+it. 
 
-The <revBrowserExecuteScript> function currently executes JScript on Windows and JavaScript on OS X. If the specified <script> contains more than one line, each line must be terminated with a semi-colon (;). 
+The <revBrowserExecuteScript> function currently executes JScript on
+Windows and JavaScript on OS X. If the specified <script> contains more
+than one line, each line must be terminated with a semi-colon (;).
 
 put revBrowserExecuteScript(sBrowserId, "result = 1 + 1;")
 
-If there is an existing JavaScript function you wish to call, its better to use the <revBrowserCallScript function> instead. This will be faster than executing arbitrary code and also allows parameters to be passed.
+If there is an existing JavaScript function you wish to call, its better
+to use the <revBrowserCallScript> <function> instead. This will be faster
+than executing arbitrary code and also allows parameters to be passed.
 
-If the <script> fails to execute, an "error in script" exception will be thrown.
+If the <script> fails to execute, an "error in script" exception will be
+thrown. 
 
->*Note:* For general information on using the browser library, please see the notes in the <revBrowserOpen function> reference.
+>*Note:* For general information on using the browser library, please
+> see the notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserOpen function (function), revBrowserCallScript (function), revBrowserCallScript function (function)
+References: revBrowserOpen (function),
+revBrowserCallScript (function), function (glossary)
+

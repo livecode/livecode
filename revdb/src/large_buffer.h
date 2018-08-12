@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __LARGE_BUFFER__
 #define __LARGE_BUFFER__
 
+#include "stddef.h"
+
 class large_buffer_t
 {
 public:
@@ -48,10 +50,20 @@ public:
 		m_frontier = m_frontier + p_length;
 	}
 
+    void *ptr(void)
+    {
+        return m_data;
+    }
+    
+    ptrdiff_t length(void)
+    {
+        return m_frontier - m_data;
+    }
+    
 	void grab(void*& r_data, unsigned int& r_length)
 	{
 		r_length = m_frontier - m_data;
-		r_data = (void *)realloc(m_data, m_frontier - m_data);
+		r_data = (void *)realloc(m_data, r_length);
 		
 		m_data = NULL;
 		m_frontier = NULL;

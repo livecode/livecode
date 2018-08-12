@@ -1,35 +1,49 @@
 Name: characters
 
+Synonyms: chars
+
 Type: keyword
 
 Syntax: characters
 
-Summary: Used with the <sort> <command>, <number> <function>, and <is among> and <is not among> <operator|operators> to designate each <character> as a separate portion of a <string>.  Also used with the <find> <command> to search for a string of characters.
-
-Synonyms: chars
+Summary:
+Used with the <sort> <command>, <number> <function>, and <is among> and
+<is not among> <operator|operators> to designate each <character> as a
+separate portion of a <string>. Also used with the <find> <command> to
+search for a string of characters.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 get the number of chars of field "Entry"
 
 Example:
-if "A" is among the characters of the bloodTypes then beep
+if "A" is among the characters of the bloodTypes of me then beep
 
 Example:
 find characters "run" -- finds "run", "grunt", or "running"
 
 Description:
-Use the <characters> <keyword> to <sort> or <select> individual <characters>.
+Use the <characters> <keyword> to <sort> or <select> individual
+<characters>. 
 
-A character is a single letter, digit, punctuation mark, or control character. Spaces, tabs, and returns are all characters.
+A character is a single letter, digit, punctuation mark, or control
+character. Spaces, tabs, and returns are all characters.
 
-When used with the <find> <command>, the <characters> <keyword> finds <card|cards> that contain the specified <string> of <characters>, wherever that <string> appears in a <word>.
+When used with the <find> <command>, the <characters> <keyword> finds
+<card|cards> that contain the specified <string> of <characters>,
+wherever that <string> appears in a <word>.
 
-References: card (object), is among (operator), is not among (operator), whole (keyword), characters (keyword), string (keyword), character (keyword), lines (keyword), word (keyword), items (keyword), command (glossary), operator (glossary), keyword (glossary), number (function), find (command), sort (command), select (command), function (control_st)
+References: find (command), sort (command), select (command),
+function (control structure), number (function), command (glossary),
+operator (glossary), keyword (glossary), whole (keyword),
+characters (keyword), string (keyword), character (keyword),
+lines (keyword), word (keyword), items (keyword), card (object),
+is among (operator), is not among (operator)
 
 Tags: database
+

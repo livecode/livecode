@@ -1,10 +1,12 @@
 Name: timeout
 
-Synonyms: timeout,time out,timed out,times out,timing out
+Synonyms: timeout, time out, timed out, times out, timing out
 
 Type: glossary
 
 Description:
-A period of time to wait for an event (such as a connection or the launch of a process) before giving up.
+A period of time to wait for an event (such as a connection or the
+launch of a process) before giving up.
 
 Tags: networking
+

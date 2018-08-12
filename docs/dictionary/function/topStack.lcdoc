@@ -1,20 +1,21 @@
 Name: topStack
 
+Synonyms: topwindow, currentwindow
+
 Type: function
 
 Syntax: the topStack
 
 Syntax: topStack()
 
-Summary: <return|Returns> the long <name> of the topmost <stack>.
-
-Synonyms: topWindow,currentWindow
+Summary:
+<return|Returns> the long <name> of the topmost <stack>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the topStack
@@ -22,17 +23,34 @@ the topStack
 Example:
 set the defaultStack to the topStack
 
-Returns: The <topStack> <return|returns> the long <name> of a <stack>.
+Returns:
+The <topStack> <return|returns> the long <name> of a <stack>.
 
 Description:
-Use the <topStack> <function> to find out which <stack> is in the <current stack>.
+Use the <topStack> <function> to find out which <stack> is in the
+<current stack>.
 
-In most applications, the active window holds the current document, and menu commands operate on the active window. In LiveCode, because of the ability to open stacks in various modes, this is not necessarily the case.
+In most applications, the active window holds the current document, and
+menu commands operate on the active window. In LiveCode, because of the
+ability to open stacks in various modes, this is not necessarily the
+case. 
 
-Each open window has a mode associated with it. The <topStack> is the frontmost stack with the lowest <mode>.
+Each open window has a mode associated with it. The <topStack> is the
+frontmost stack with the lowest <mode>.
 
-For example, an editable window has a mode of 1, and a <palette(command)> has a mode of 4. If several <palette(glossary)|palettes> and <editable window|editable windows> are open, the <topStack> is the frontmost editable <stack>, although <palette(glossary)|palettes> may be in front of it. If all the <editable window|editable windows> are then closed, the frontmost <palette(command)> becomes the <topStack>, since there is now no window with a lower <mode>.
+For example, an editable window has a mode of 1, and a
+<palette(command)> has a mode of 4. If several
+<palette(glossary)|palettes> and <editable window|editable windows> are
+open, the <topStack> is the frontmost editable <stack>, although
+<palette(glossary)|palettes> may be in front of it. If all the <editable
+window|editable windows> are then closed, the frontmost
+<palette(command)> becomes the <topStack>, since there is now no window
+with a lower <mode>.
 
-References: mode (property), name (property), function (control_st), palette (command), mainStacks (function), current stack (glossary), editable window (glossary), return (glossary), palette (glossary), stack (object)
+References: palette (command), function (control structure),
+mainStacks (function), current stack (glossary),
+editable window (glossary), return (glossary), palette (glossary),
+stack (object), mode (property), name (property)
 
 Tags: windowing
+

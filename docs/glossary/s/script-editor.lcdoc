@@ -1,10 +1,15 @@
 Name: script editor
 
-Synonyms: script editor,script window,script palette
+Synonyms: script editor, script window, script palette
 
 Type: glossary
 
 Description:
-The window in which you edit <script|scripts>. You can open the script editor by selecting the <object> and clicking on the Script button in the LiveCode Menubar or choosing Development menu<img src="202656"></img>Object Script, by using the contextual-menu shortcut, or by using the edit command.
+The window in which you edit <script|scripts>. You can open the script
+editor by selecting the <object(glossary)> and clicking on the Script
+button in the LiveCode Menubar or choosing Development → Object Script
+from the menubar, by using the contextual-menu shortcut, or by using the
+edit command.
 
-References: script (glossary), object (object)
+References: script (glossary), object (glossary)
+

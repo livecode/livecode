@@ -2,15 +2,16 @@ Name: open process
 
 Type: command
 
-Syntax: open [elevated] process <appName> [for [[<encoding>] text | binary] {read | write | update | neither}]
+Syntax: open [elevated] process <appName> [for [[{<encoding>] text | binary}] {read | write | update | neither}]
 
-Summary: Starts a program.
+Summary:
+Starts a program.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Security: process
 
@@ -27,43 +28,122 @@ command startSlave pProcess
 end startSlave
 
 Parameters:
-appName: The location and name of the program you want to open. You can run only one instantiation of a given program at one time. The appName can be any program on the system.
-encoding: 
+appName:
+The location and name of the program you want to open. You can run only
+one instantiation of a given program at one time. The appName can be any
+program on the system.
+
+encoding (enum):
+the encoding to be used
+
+- "ASCII"
+- "UTF-16"
+- "UTF-16BE"
+- "UTF-16LE"
+- "UTF-32"
+- "UTF-32BE"
+- "UTF-32LE"
+- "UTF-8"
+- "CP1252"
+- "ISO-8859-1": Linux only
+- "MacRoman": OS X only
+- "Native": ISO-8859-1 on Linux, MacRoman on OS X, CP1252 on Windows
+
 
 Description:
-Use the <open process> <command> to start up a <process> you want to either send data to or get data from or both.
+Use the <open process> <command> to start up a <process> you want to
+either send data to or get data from or both.
 
-Usually, you should use the <open process> <command> only to start up programs that run in the <background>, without any user interaction. When you are finished with the <process>, use the <close process> <command> to cause it to <exit>.
+Usually, you should use the <open process> <command> only to start up
+programs that run in the <background>, without any user interaction.
+When you are finished with the <process>, use the <close process>
+<command> to cause it to <exit>.
 
-You can optionally specify either text or binary mode. If you specify text mode, when you use the write to process <command>, any line feed and return <characters> are translated to the appropriate end-of-line marker for the current operating system before being written to the process. (The end-of-line marker on <Mac OS> and <OS X|OS X systems> is a return character; on <Unix>, a line feed; on <Windows>, a CRLF.) If you specify binary mode, return and line feed characters are not translated. If you don't specify a mode, the process is opened in text mode.
+You can optionally specify either text or binary mode. If you specify
+text mode, when you use the write to process <command>, any line feed
+and return <characters> are translated to the appropriate end-of-line
+marker for the current operating system before being written to the
+process. (The end-of-line marker on <Mac OS> and <OS X|OS X systems> is
+a return character; on <Unix>, a line feed; on <Windows>, a CRLF.) If
+you specify binary mode, return and line feed characters are not
+translated. If you don't specify a mode, the process is opened in text
+mode. 
 
-Use the read form to open the process for reading. If the process is opened for reading, you can use the <read from process> <command> to examine its output, but you can't send data to it.
+Use the read form to open the process for reading. If the process is
+opened for reading, you can use the <read from process> <command> to
+examine its output, but you can't send data to it.
 
-Use the write form to open the process for writing. If the process is opened for writing, you can use the write to process <command> to send input data to it.
+Use the write form to open the process for writing. If the process is
+opened for writing, you can use the write to process <command> to send
+input data to it.
 
-Use the update form to open the file for both reading and writing. If the file is opened for update, you can use both the <read from process> and <write to process> <command|commands> to send input to it or get output from it.
+Use the update form to open the file for both reading and writing. If
+the file is opened for update, you can use both the <read from process>
+and <write to process> <command|commands> to send input to it or get
+output from it.
 
-Use the neither form to run the process without reading data from it or sending data to it. (Using this form is equivalent to using the launch <command> to start up a program.) <process|Processes> opened with the neither form will quit automatically when finished running.
+Use the neither form to run the process without reading data from it or
+sending data to it. (Using this form is equivalent to using the launch
+<command> to start up a program.) <process|Processes> opened with the
+neither form will quit automatically when finished running.
 
-When you quit the application, processes opened with the read, write, or update forms are quit automatically.
+When you quit the application, processes opened with the read, write, or
+update forms are quit automatically.
 
->*Note:* On OS X systems, you can use the <open process> command to start up an application, but not a Unix process. To work with a Unix process, use the shell func instead.
+>*Note:* On OS X systems, you can use the <open process> command to
+> start up an application, but not a Unix process. To work with a Unix
+> process, use the shell func instead.
 
-The possibility of choosing an encoding when opening a process for a text operation was added in 7.0. It follows the encodings available in the functions <textEncode> and <textDecode>.
+The possibility of choosing an encoding when opening a process for a
+text operation was added in 7.0. It follows the encodings available in
+the functions <textEncode> and <textDecode>.
 
 Changes:
-In versions before 1.1.1, when you quit the application, any processes that had been opened with the neither form were quit automatically on Windows systems.
+In versions before 1.1.1, when you quit the application, any processes
+that had been opened with the neither form were quit automatically on
+Windows systems.
 
-Support for using the <open process> <command> on <OS X|OS X systems> was added in version 2.0.
+Support for using the <open process> <command> on <OS X|OS X systems>
+was added in version 2.0.
 
-Sometimes it is necessary to perform operations on the local machine as an administrator, and a typical pattern for a GUI application doing this is for it to prompt for authentication at certain points.
+Sometimes it is necessary to perform operations on the local machine as
+an administrator, and a typical pattern for a GUI application doing this
+is for it to prompt for authentication at certain points.
 
-Modern operating systems do not permit a process to elevate itself, nor grant itself increased privilege. Instead, they only allow a running process to launch another process with increased privilege. Therefore, in order to support this, in version 4.5 a new form of the open process command was introduced that can launch a slave process with elevated permissions:
+Modern operating systems do not permit a process to elevate itself, nor
+grant itself increased privilege. Instead, they only allow a running
+process to launch another process with increased privilege. Therefore,
+in order to support this, in version 4.5 a new form of the open process
+command was introduced that can launch a slave process with elevated
+permissions: 
 
-open elevated process process [ for [ text | binary ] ( read | write | update | neither ) ]
+    open elevated process processName [ for [{ text | binary }] ({ read | write | update | neither }) ]
 
-This form operates identically to the normal version, except that engine will ask the system to launch the given process with admin/root privileges.
+This form operates identically to the normal version, except that engine
+will ask the system to launch the given process with admin/root
+privileges. 
 
-The standard way for a GUI application that needs to perform privileged operations to be structured is to split the application into two parts: a GUI front-end that interacts with the user, and a command-line back-end that is run with elevated permissions. These two parts can then talk to each other using a standard master-slave approach, or some other form of IPC such as sockets
+The standard way for a GUI application that needs to perform privileged
+operations to be structured is to split the application into two parts:
+a GUI front-end that interacts with the user, and a command-line
+back-end that is run with elevated permissions. These two parts can then
+talk to each other using a standard master-slave approach, or some other
+form of IPC such as sockets
 
-References: hideConsoleWindows (property), characters (keyword), kill (command), close process (command), read from process (command), write to process (command), screenName (function), exit (control_st), command (glossary), OS X (glossary), textDecode (glossary), Windows (glossary), Mac OS (glossary), Unix (glossary), textEncode (glossary), background (glossary), process (glossary)
+Changes:
+From 7.0, it's possible to specify an encoding for the file being
+opened. By doing so, you can straight read or write to a file without
+having to call <textEncode> or <textDecode>; the encoding supported by
+open file are the same as these text encoding functions. If no encoding
+is provided, then <open file> tries to read a Byte Order Mark (BOM) exists 
+at the beginning of the file. In success, the encoding is adapted and the
+BOM is ignored.
+
+References: kill (command), close process (command),
+read from process (command), write to process (command),
+exit (control structure), screenName (function), command (glossary),
+OS X (glossary), textDecode (glossary), Windows (glossary),
+Mac OS (glossary), Unix (glossary), textEncode (glossary),
+background (glossary), process (glossary), characters (keyword),
+hideConsoleWindows (property)
+

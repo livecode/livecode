@@ -1,20 +1,21 @@
 Name: globalNames
 
+Synonyms: globals
+
 Type: function
 
 Syntax: the globalNames
 
 Syntax: globalNames()
 
-Summary: <return|Returns> a list of <declare|declared> <global|global variables>.
-
-Synonyms: globals
+Summary:
+<return|Returns> a list of <declare|declared> <global|global variables>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the globalNames
@@ -22,13 +23,25 @@ the globalNames
 Example:
 if "myGlob" is not among the items of the globalNames then global myGlob
 
-Returns: The <globalNames> <function> <return|returns> a list of all <global|global variables>, separated by commas.
+Returns:
+The <globalNames> <function> <return|returns> a list of all
+<global|global variables>, separated by commas.
 
 Description:
-Use the <globalNames> <function> to determine which <global|global variables> are available, or to make sure a <global|global variable> name has not already been used before <declare|declaring> it.
+Use the <globalNames> <function> to determine which <global|global
+variables> are available, or to make sure a <global|global variable>
+name has not already been used before <declare|declaring> it.
 
-Global variables are created with the <global> command. They can be deleted with the <delete variable> command. All <global|global variables> that have been <declare|declared> since the <application> was started up are included in the <globalNames> <function>, except any that have been explictly deleted.
+Global variables are created with the <global> command. They can be
+deleted with the <delete variable> command. All <global|global
+variables> that have been <declare|declared> since the <application> was
+started up are included in the <globalNames> <function>, except any that
+have been explictly deleted.
 
-References: global (command), delete variable (command), variableNames (function), localNames (function), declare (glossary), application (glossary), return (glossary), global (glossary), function (control_st)
+References: global (command), delete variable (command),
+function (control structure), variableNames (function),
+localNames (function), declare (glossary), application (glossary),
+return (glossary), global (glossary)
 
 Tags: properties
+

@@ -4,25 +4,37 @@ Type: keyword
 
 Syntax: forever
 
-Summary: Used in a <repeat> <loop> <control structure|structure> to specify that the <loop> should repeat until halted by an <exit repeat>.
+Summary:
+Used in a <repeat> <loop> <control structure|structure> to specify that
+the <loop> should repeat until halted by an <exit repeat>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 repeat forever
 
 Description:
-Use the <forever> <keyword> to repeat until an <exit repeat> <statement> within the <loop> explicitly ends the <loop> or until the heat death of the universe, whichever comes first.
+Use the <forever> <keyword> to repeat until an <exit repeat> <statement>
+within the <loop> explicitly ends the <loop> or until the heat death of
+the universe, whichever comes first.
 
-All forms of the <repeat> <control structure> that test for a condition, test at the top of the <loop> (before each <iteration>). If you want to test at the bottom of the <loop>, use the <forever> <keyword>, and use a <conditional> <exit repeat> at the bottom of the <loop> :
+All forms of the <repeat> <control structure> that test for a condition,
+test at the top of the <loop> (before each <iteration>). If you want to
+test at the bottom of the <loop>, use the <forever> <keyword>, and use a
+<conditional> <exit repeat> at the bottom of the <loop>:
 
-  repeat forever
-    -- statements here
-    if myCondition is true then exit repeat
-  end repeat
+    repeat forever
+        -- statements here
+        if myCondition is true then exit repeat
+    end repeat
 
-References: until (keyword), while (keyword), keyword (glossary), conditional (glossary), statement (glossary), loop (glossary), iteration (glossary), control structure (glossary), exit repeat (control_st), repeat (control_st)
+
+References: exit repeat (control structure), repeat (control structure),
+keyword (glossary), conditional (glossary), statement (glossary),
+loop (glossary), iteration (glossary), control structure (glossary),
+until (keyword), while (keyword)
+

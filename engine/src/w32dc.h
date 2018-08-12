@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define MC_WIN_CLASS_NAME		"MCWinClass"
 #define MC_WIN_CLASS_NAME_W L"MCWinClassW"
 #define MC_VIDEO_WIN_CLASS_NAME		"MCVideoWinClass"
-#define MC_QTVIDEO_WIN_CLASS_NAME	"MCQTVideoWinClass"
 #define MC_POPUP_WIN_CLASS_NAME		"MCPopupWinClass"
 #define MC_MENU_WIN_CLASS_NAME		"MCMenuWinClass"
 #define MC_SNAPSHOT_WIN_CLASS_NAME	"MCSnapshotWinClass"
@@ -49,8 +48,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define fixmaskrop(a) ((a == GXand || a == GXor)?(a == GXand?GXor:GXand):(a == GXandInverted?GXorInverted:GXandInverted))//DEBUG
 #define fixmaskcolor(a) (a.pixel == 0 ? MConecolor:MCzerocolor)//DEBUG
 
-extern LRESULT CALLBACK MCQTPlayerWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
-	        LPARAM lParam);
 
 extern LRESULT CALLBACK MCPlayerWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	        LPARAM lParam);
@@ -165,6 +162,9 @@ class MCScreenDC : public MCUIDC
 	bool m_printer_dc_changed;
 
 	HANDLE m_srgb_profile;
+
+    int m_main_window_depth = 0;
+    HWND m_main_window_current = nullptr;
 
 protected:
 	static uint4 pen_inks[];
@@ -352,7 +352,7 @@ public:
 	void redrawbackdrop(void);
 
 	void settaskbarstate(bool p_visible);
-	void processdesktopchanged(bool p_notify = true);
+	void processdesktopchanged(bool p_notify = true, bool p_update_fonts = true);
 	void processtaskbarnotify(HWND hwnd, WPARAM wparam, LPARAM lparam);
 
 	// These rountines convert a UTF-8 string into with a 'WIDE' or 'ANSI'

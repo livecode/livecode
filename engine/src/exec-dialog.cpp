@@ -57,24 +57,6 @@ static MCNameRef *s_dialog_types[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerColor, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFileWithTypes, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFileWithFilter, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFile, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFolder, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerNotify, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, CustomAnswerDialog, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskQuestion, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskPassword, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFile, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFileWithFilter, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFileWithTypes, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Dialog, CustomAskDialog, 7)
-MC_EXEC_DEFINE_GET_METHOD(Dialog, ColorDialogColors, 2)
-MC_EXEC_DEFINE_SET_METHOD(Dialog, ColorDialogColors, 2)
-    
-////////////////////////////////////////////////////////////////////////////////
-
 void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCStringRef p_title, bool p_as_sheet)
 {
     MCAutoStringRef t_value;
@@ -222,48 +204,56 @@ void MCDialogExecAnswerFileWithTypes(MCExecContext &ctxt, bool p_plural, MCStrin
 		if (t_success)
 			t_success = t_types.Append(t_split);
 	}
-	if (MCsystemFS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
-    {
-        uint32_t t_options = 0;
-        if (p_plural)
-            t_options |= MCA_OPTION_PLURAL;
-        if (p_sheet)
-            t_options |= MCA_OPTION_SHEET;
-
-        int error;
-        error = MCA_file_with_types(p_title, p_prompt, *t_types, t_types.Count(), p_initial, t_options, &t_value, &t_result);
-	}
-	else
+	if (t_success)
 	{
-		MCAutoListRef t_type_list;
-		MCAutoStringRef t_types_string;
-
-		/* UNCHECKED */ MCListCreateMutable('\n', &t_type_list);
-		for (uindex_t i = 0; i < t_types.Count(); i++)
-			/* UNCHECKED */ MCListAppend(*t_type_list, t_types[i]);
-		/* UNCHECKED */ MCListCopyAsString(*t_type_list, &t_types_string);
-
-		MCStringRef t_args[5];
-		uindex_t t_arg_count = 5;
-		t_args[0] = p_title;
-		t_args[1] = p_prompt;
-		t_args[2] = nil;
-		t_args[3] = p_initial;
-		t_args[4] = *t_types_string;
-		MCDialogExecCustomAnswerDialog(ctxt, MCN_file_selector, p_plural ? MCN_files : MCN_file, p_sheet, t_args, t_arg_count, &t_value);
-		if (ctxt.HasError())
-			return;
-
-		if (MCStringGetLength(*t_value) == 0)
+		if (MCsystemFS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
 		{
-			if (!MCStringCopy(MCNameGetString(MCN_cancel), &t_result))
+			uint32_t t_options = 0;
+			if (p_plural)
+				t_options |= MCA_OPTION_PLURAL;
+			if (p_sheet)
+				t_options |= MCA_OPTION_SHEET;
+
+			int error;
+			error = MCA_file_with_types(p_title, p_prompt, *t_types, t_types.Count(), p_initial, t_options, &t_value, &t_result);
+		}
+		else
+		{
+			MCAutoListRef t_type_list;
+			MCAutoStringRef t_types_string;
+			t_success = MCListCreateMutable('\n', &t_type_list);
+			
+			for (uindex_t i = 0; t_success && i < t_types.Count(); i++)
+				t_success = MCListAppend(*t_type_list, t_types[i]);
+			
+			if (t_success)
+				t_success = MCListCopyAsString(*t_type_list, &t_types_string);
+
+			if (t_success)
 			{
-				ctxt.Throw();
-				return;
+				MCStringRef t_args[5];
+				uindex_t t_arg_count = 5;
+				t_args[0] = p_title;
+				t_args[1] = p_prompt;
+				t_args[2] = nil;
+				t_args[3] = p_initial;
+				t_args[4] = *t_types_string;
+				MCDialogExecCustomAnswerDialog(ctxt, MCN_file_selector, p_plural ? MCN_files : MCN_file, p_sheet, t_args, t_arg_count, &t_value);
+				if (ctxt.HasError())
+					return;
 			}
+
+			if (t_success && MCStringGetLength(*t_value) == 0)
+				t_success = MCStringCopy(MCNameGetString(MCN_cancel), &t_result);
 		}
 	}
-
+	
+	if (!t_success)
+	{
+		ctxt.Throw();
+		return;
+	}
+	
 	if (*t_value != nil)
 	{
 		ctxt.SetItToValue(*t_value);
@@ -352,11 +342,22 @@ void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef
 	MCAutoListRef t_button_list;
 	MCAutoStringRef t_buttons_string;
 
-	/* UNCHECKED */ MCListCreateMutable('\n', &t_button_list);
-	for (uindex_t i = 0; i < p_button_count; i++)
-		/* UNCHECKED */ MCListAppend(*t_button_list, p_buttons[i]);
-	/* UNCHECKED */ MCListCopyAsString(*t_button_list, &t_buttons_string);
+	bool t_success;
+	t_success = true;
+	
+	if (t_success)
+		t_success = MCListCreateMutable('\n', &t_button_list);
+	for (uindex_t i = 0; t_success && i < p_button_count; i++)
+		t_success = MCListAppend(*t_button_list, p_buttons[i]);
+	if (t_success)
+		t_success = MCListCopyAsString(*t_button_list, &t_buttons_string);
 
+	if (!t_success)
+	{
+		ctxt.Throw();
+		return;
+	}
+	
 	MCStringRef t_args[4];
 	t_args[0] = p_title;
 	t_args[1] = p_prompt;
@@ -435,7 +436,7 @@ void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNa
 	{
 		MCStack *t_parent_stack = nil;
 
-		if (MCdefaultstackptr->getopened() || MCtopstackptr == nil)
+		if (MCdefaultstackptr->getopened() || !MCtopstackptr)
 			t_parent_stack = MCdefaultstackptr;
 		else
 			t_parent_stack = MCtopstackptr;
@@ -628,6 +629,12 @@ void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCS
 			t_success = t_types.Append(t_split);
 	}
 	
+	if (!t_success)
+	{
+		ctxt.Throw();
+		return;
+	}
+	
 	bool t_cancelled;
 	MCAutoStringRef t_value, t_result;
 	if (MCsystemFS && MCscreen -> hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
@@ -647,10 +654,17 @@ void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCS
 		MCAutoListRef t_type_list;
 		MCAutoStringRef t_types_string;
 		
-		/* UNCHECKED */ MCListCreateMutable('\n', &t_type_list);
-		for (uindex_t i = 0; i < t_types.Count(); i++)
-			/* UNCHECKED */ MCListAppend(*t_type_list, t_types[i]);
-		/* UNCHECKED */ MCListCopyAsString(*t_type_list, &t_types_string);
+		t_success = MCListCreateMutable('\n', &t_type_list);
+		for (uindex_t i = 0; t_success && i < t_types.Count(); i++)
+			t_success = MCListAppend(*t_type_list, t_types[i]);
+		if (t_success)
+			t_success = MCListCopyAsString(*t_type_list, &t_types_string);
+		
+		if (!t_success)
+		{
+			ctxt.Throw();
+			return;
+		}
 		
 		MCStringRef t_args[5];
 		uindex_t t_arg_count = 5;
@@ -687,10 +701,25 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 	t_success = MCStringCreateMutable(0, &t_arg_string) &&
 	MCStringAppendFormat(*t_arg_string, "ask %@", p_type);
 	
+    /* Custom ask dialog parameters are '\0' separated. Prior to 7, any arguments
+     * containing '\0' would be truncated at the NUL. However, since 7 such strings
+     * have caused extra arguments to be passed. Therefore, we revert to the pre-7
+     * behavior and truncate. */
 	for (uindex_t i = 0; t_success && i < p_arg_count; i++)
-		t_success = MCStringAppendNativeChar(*t_arg_string, '\0') &&
-		(p_args[i] == nil || MCStringAppend(*t_arg_string, p_args[i]));
-	
+    {
+        t_success = MCStringAppendNativeChar(*t_arg_string, '\0');
+        if (t_success && p_args[i] != nullptr)
+        {
+            MCRange t_range;
+            t_range.offset = 0;
+            if (!MCStringFirstIndexOfChar(p_args[i], '\0', 0, kMCStringOptionCompareExact, t_range.length))
+            {
+                t_range.length = UINDEX_MAX;
+            }
+            t_success = MCStringAppendSubstring(*t_arg_string, p_args[i], t_range);
+        }
+    }
+    
 	if (t_success)
 		t_success = MCdialogdata->setvalueref(*t_arg_string);
 	
@@ -705,7 +734,7 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 	{
 		MCStack *t_parent_stack = nil;
 		
-		if (MCdefaultstackptr->getopened() || MCtopstackptr == nil)
+		if (MCdefaultstackptr->getopened() || !MCtopstackptr)
 			t_parent_stack = MCdefaultstackptr;
 		else
 			t_parent_stack = MCtopstackptr;
@@ -735,6 +764,8 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 		else
 			r_cancelled = false;
 	}
+    else
+        ctxt.Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -752,13 +783,13 @@ void MCDialogGetColorDialogColors(MCExecContext& ctxt, uindex_t& r_count, MCStri
     
     for (uindex_t i = 0; t_success && i < t_count; i++)
     {
-        if (t_list[i] . flags != 0)
-        {
-            MCStringRef t_color;
-            t_success = MCStringFormat(t_color, "%d,%d,%d", t_list[i] . red, t_list[i] . green, t_list[i] . blue) && t_colors . Push(t_color);
-        }
-        else
-            t_colors . Push(kMCEmptyString);
+		if (t_list[i].red != 0 || t_list[i].green != 0 || t_list[i].blue != 0)
+		{
+			MCStringRef t_color;
+			t_success = MCStringFormat(t_color, "%d,%d,%d", t_list[i] . red, t_list[i] . green, t_list[i] . blue) && t_colors . Push(t_color);
+		}
+		else
+			t_success = t_colors.Push(kMCEmptyString);
     }
     
     t_colors . Take(r_color_list, r_count);
@@ -775,12 +806,11 @@ void MCDialogSetColorDialogColors(MCExecContext& ctxt, uindex_t p_count, MCStrin
         MCColor t_color;
         if (i >= p_count || MCStringIsEmpty(p_color_list[i]))
         {
-            t_color . flags = 0;
+			t_color = MCzerocolor;
             t_success = t_list . Push(t_color);
         }
         else
         {
-            t_color . flags = DoRed | DoGreen | DoBlue;
             t_success = MCscreen -> parsecolor(p_color_list[i], t_color) && t_list . Push(t_color);
         }
     }

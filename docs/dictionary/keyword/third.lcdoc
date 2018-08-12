@@ -4,27 +4,34 @@ Type: keyword
 
 Syntax: third
 
-Summary: Designates the third member of a set.
+Summary:
+Designates the third member of a set.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the hilite of the third button to true
 
 Example:
-repeat until third line of keysPressed is "Control"
+repeat until third line of tKeysPressed is "Control"
 
 Description:
-Use the <third> <keyword> in an <object reference> or <chunk expression>.
+Use the <third> <keyword> in an <object reference> or <chunk
+expression>. 
 
-The <third> <keyword> can be used to specify any <object> whose <number> <property> is 3. It can also be used to designate the third <chunk> in a <chunk expression>.
+The <third> <keyword> can be used to specify any <object(glossary)>
+whose <number> <property> is 3. It can also be used to designate the
+third <chunk> in a <chunk expression>.
 
 The word the is optional when using the <third> <keyword>.
 
-References: three (constant), object (object), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
+References: three (constant), number (function), object (glossary),
+keyword (glossary), property (glossary), object reference (glossary),
+chunk expression (glossary), chunk (glossary)
 
 Tags: math
+

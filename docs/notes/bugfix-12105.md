@@ -1,1 +1,0 @@
-# Livecode server crashed if you call paramCount() 

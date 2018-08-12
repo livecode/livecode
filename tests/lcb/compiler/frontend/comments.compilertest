@@ -1,0 +1,54 @@
+%% Copyright (C) 2016 LiveCode Ltd.
+%%
+%% This file is part of LiveCode.
+%%
+%% LiveCode is free software; you can redistribute it and/or modify it under
+%% the terms of the GNU General Public License v3 as published by the Free
+%% Software Foundation.
+%%
+%% LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+%% WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+%% for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+%% Single line // comments
+%TEST SingleLineCommentSlashes
+module compiler_test
+// this should not be compiled
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%% Single line -- comments
+%TEST SingleLineCommentDashes
+module compiler_test
+-- this should not be compiled
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%% Block /* ... */ comments
+%TEST BlockComment
+module compiler_test
+/*
+this should not be compiled
+*/
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%% Bug 18022: Block comments that extend over multiple lines are
+%% supposed to terminate the line that they start on.
+%TEST ContinuationMultilineComment
+module /*
+*/ %{INCOMPLETE_MODULE}compiler_test
+end module
+%EXPECT PASS
+%ERROR "syntax error" at INCOMPLETE_MODULE
+%ENDTEST

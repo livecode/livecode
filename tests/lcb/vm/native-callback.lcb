@@ -10,27 +10,31 @@ variable sTotal_Manual as Number
 handler type ProperListCallbackThunk_Manual(in pContext as optional Pointer, in pElement as optional any) returns CBool
 
 handler SumElementOfList_Manual(in pContext as optional Pointer, in pElement as optional any) returns CBool
-    add pElement to sTotal_Manual
-    return true
+	add pElement to sTotal_Manual
+	return true
 end handler
 
 foreign handler MCHandlerGetFunctionPtr_Manual(in pHandler as any, out rFuncPtr as Pointer) returns CBool binds to "MCHandlerGetFunctionPtr"
 foreign handler MCProperListApply_Manual(in pList as List, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "MCProperListApply"
 
 public handler TestNativeCallback_Manual()
-    -- For memory management reasons we need to keep a reference to the handler
-    -- we want to use around for as long as the function ptr we need.
-    variable tHandler as ProperListCallbackThunk_Manual
-    put SumElementOfList_Manual into tHandler
+	-- For memory management reasons we need to keep a reference to the handler
+	-- we want to use around for as long as the function ptr we need.
+	variable tHandler as ProperListCallbackThunk_Manual
+	put SumElementOfList_Manual into tHandler
 
-    -- Fetch the function pointer
-    variable tFunctionPtr as Pointer
-    test "create function pointer - manual" when MCHandlerGetFunctionPtr_Manual(tHandler, tFunctionPtr)
+	-- Fetch the function pointer
+	variable tFunctionPtr as Pointer
+	unsafe
+		test "create function pointer - manual" when MCHandlerGetFunctionPtr_Manual(tHandler, tFunctionPtr)
+	end unsafe
 
-    -- See if it works
-    put 0 into sTotal_Manual
-    MCProperListApply_Manual([1, 2, 3, 4, 5, 6], tFunctionPtr, nothing)
-    test "use function pointer - manual" when sTotal_Manual is (1 + 2 + 3 + 4 + 5 + 6)
+	-- See if it works
+	put 0 into sTotal_Manual
+	unsafe
+		MCProperListApply_Manual([1, 2, 3, 4, 5, 6], tFunctionPtr, nothing)
+	end unsafe
+	test "use function pointer - manual" when sTotal_Manual is (1 + 2 + 3 + 4 + 5 + 6)
 end handler
 
 --------- AUTOMATIC FUNCTION PTRS
@@ -40,16 +44,18 @@ variable sTotal as Number
 foreign handler type MCProperListApplyCallback(in pContext as optional Pointer, in pElement as optional any) returns CBool
 
 handler SumElementOfList(in pContext as optional Pointer, in pElement as optional any) returns CBool
-    add pElement to sTotal
-    return true
+	add pElement to sTotal
+	return true
 end handler
 
 foreign handler MCProperListApply(in pList as List, in pCallback as MCProperListApplyCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 
 public handler TestNativeCallback()
-    put 0 into sTotal
-    MCProperListApply([1, 2, 3, 4, 5, 6], SumElementOfList, nothing)
-    test "use function pointer" when sTotal is (1 + 2 + 3 + 4 + 5 + 6)
+	put 0 into sTotal
+	unsafe
+		MCProperListApply([1, 2, 3, 4, 5, 6], SumElementOfList, nothing)
+	end unsafe
+	test "use function pointer" when sTotal is (1 + 2 + 3 + 4 + 5 + 6)
 end handler
 
 --------- FOREIGN HANDLER FUNCTION PTRS

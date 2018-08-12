@@ -2,17 +2,18 @@ Name: keys
 
 Type: function
 
-Syntax: the keys of <arrayName> 
+Syntax: the keys of <arrayName>
 
 Syntax: keys(<arrayName>)
 
-Summary: Returns a list of the <element> names in an <array variable>.
+Summary:
+Returns a list of the <element> names in an <array>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 the keys of myArray
@@ -26,20 +27,37 @@ repeat for each line tKey in the keys of tArray
 end repeat
 
 Parameters:
-arrayName (array): The name of a <variable>.
+arrayName (array):
+The name of a <variable>.
+
 
 Returns:
 The <keys> <function> returns a list of <keys>, one per <line>.
->*Note:*  The order of the <keys> is not alphabetical or chronological; it is based on the internal order.  To obtain an alphabetical list of <keys>, use the <sort command>:
-
-  put the keys of myArray into myVariable
-  sort lines of myVariable
-
->*Note:*  Arrays in LiveCode are associative (also known as hash tables). This means that the keys of an array are strings which LiveCode uses to "look up" the array elements rather than numeric indices as in C, Pascal and other languages. Of course it is possible to use numeric values for array keys, but LiveCode will internally convert these into strings before retrieving the array elements.
 
 Description:
-Use the <keys> function to manage the elements of an <array>, or to perform some action on each <element> in an <array>.
+Use the <keys> function to manage the elements of an <array>, or to
+perform some action on each <element> in an <array>.
 
-References: properties (property), is among the keys of (operator), line (keyword), element (keyword), array variable (glossary), array (glossary), arrayEncode (function), transpose (function), extents (function), keys (function), combine (command), split (command), sort command (command), function (control_st)
+>*Note:*  The order of the <keys> is not alphabetical or chronological;
+> it is based on the internal order. To obtain an alphabetical list of
+> <keys>, use the <sort> <command>:
+
+    put the keys of myArray into myVariable
+    sort lines of myVariable
+
+
+>*Note:*  Arrays in LiveCode are associative (also known as hash
+> tables). This means that the keys of an array are strings which
+> LiveCode uses to "look up" the array elements rather than numeric
+> indices as in C, Pascal and other languages. Of course it is possible
+> to use numeric values for array keys, but LiveCode will internally
+> convert these into strings before retrieving the array elements.
+
+References: combine (command), split (command), sort (command),
+command (glossary), function (control structure), arrayEncode (function),
+transpose (function), extents (function), keys (function),
+variable (glossary), array (glossary), line (keyword),
+element (keyword), is among the keys of (operator), properties (property)
 
 Tags: properties
+

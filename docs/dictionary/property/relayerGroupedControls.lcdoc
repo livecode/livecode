@@ -4,33 +4,60 @@ Type: property
 
 Syntax: set the relayerGroupedControls to {true | false}
 
-Summary: Specifies whether you can change the <layer> of <control|controls> in a <group> even if not in <group-editing mode>.
+Summary:
+Specifies whether you can change the <layer> of <control|controls> in a
+<group> even if not in <group-editing mode>.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the relayerGroupedControls to true
 
-Value (bool):The <relayerGroupedControls> is true or false.
+Value (bool):
+The <relayerGroupedControls> is true or false.
 By default, the <relayerGroupedControls> <property> is set to false.
 
 Description:
-Use the <relayerGroupedControls> <property> to change the <layer> of <grouped control|grouped controls> without being in <group-editing mode>, or to move <control(object)|controls> out of a <group> by changing their <layer>.
+Use the <relayerGroupedControls> <property> to change the <layer> of
+<grouped control|grouped controls> without being in <group-editing
+mode>, or to move <control(object)|controls> out of a <group> by
+changing their <layer>.
 
-The <layer> of a control is its order on the <card>. If two <control(object)|controls> overlap, the one whose <layer> is higher covers the one whose <layer> is lower.
+The <layer> of a control is its order on the <card>. If two
+<control(object)|controls> overlap, the one whose <layer> is higher
+covers the one whose <layer> is lower.
 
-If the <relayerGroupedControls> is false, you can change the <layer> of a <control(keyword)> that's part of a <group> only when editing the <group>. If the <relayerGroupedControls> is true, you can change the <layer> of a <grouped control> at any time.
+If the <relayerGroupedControls> is false, you can change the <layer> of
+a <control(keyword)> that's part of a <group> only when editing the
+<group>. If the <relayerGroupedControls> is true, you can change the
+<layer> of a <grouped control> at any time.
 
->*Important:*  It is not possible for other <control(object)|controls> to be interspersed between the <control(object)|controls> in a single <group>, so changing a <grouped control|grouped control's> <layer> may change its group membership if the <relayerGroupedControls> is true:
+>*Important:*  It is not possible for other <control(object)|controls>
+> to be interspersed between the <control(object)|controls> in a single
+> <group>, so changing a <grouped control|grouped control's> <layer> may
+> change its group membership if the <relayerGroupedControls> is true:
 
-* You can move a control out of a group by setting the control's <layer> to a number greater than the topmost <control(keyword)> in the <group>, or less than the bottom-most <control(keyword)> in the <group>.
+* You can move a control out of a group by setting the control's <layer>
+  to a number greater than the topmost <control(keyword)> in the
+  <group>, or less than the bottom-most <control(keyword)> in the
+  <group>. 
 
-* Conversely, you can move a control into a group by setting the control's <layer> to a number between the bottom-most and topmost <control(object)|controls> in the <group>.
 
-References: editBackground (property), layer (property), card (keyword), control (keyword), group (command), start editing (command), control (object), property (glossary), grouped control (glossary), group-editing mode (glossary)
+* Conversely, you can move a control into a group by setting the
+  control's <layer> to a number between the bottom-most and topmost
+  <control(object)|controls> in the <group>.
+
+
+References: group (command), start editing (command), property (glossary),
+grouped control (glossary), group-editing mode (glossary), card (keyword),
+control (keyword), control (object), editBackground (property),
+layer (property)
 
 Tags: ui
+

@@ -4,22 +4,29 @@ Type: object
 
 Syntax: EPS
 
-Summary: A <control> that displays <EPS|Encapsulated PostScript> (<EPS>).
+Summary:
+A <control> that displays <EPS|Encapsulated PostScript> (<EPS>).
 
 Introduced: 1.0
 
 OS: linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the postscript of EPS "Preview" to field "Code"
 
 Description:
-Use the <EPS> <object type> to display a screen preview of a <PostScript> <file>, or to show <PostScript> graphics.
+Use the <EPS> <object type> to display a screen preview of a
+<PostScript> <file>, or to show <PostScript> graphics.
 
-This object type is supported only on Unix systems with Display PostScript installed.
+This object type is supported only on Unix systems with Display
+PostScript installed.
 
-An EPS object is contained in a card, group, or background. EPS objects cannot contain other objects.
+An EPS object is contained in a card, group, or background. EPS objects
+cannot contain other objects.
 
-References: file (keyword), templateEPS (keyword), control (keyword), postScript (property), EPS (object), EPS (glossary), object type (glossary)
+References: EPS (glossary), object type (glossary), file (keyword),
+templateEPS (keyword), control (keyword), EPS (object),
+postScript (property)
+

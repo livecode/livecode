@@ -173,7 +173,7 @@ void MCGroup::GetHilitedButton(MCExecContext& ctxt, uint32_t part, integer_t& r_
 			{
 				MCButton *bptr = (MCButton *)cptr;
 				if (!(mgrabbed == True && cptr == mfocused)
-				        && bptr->gethilite(part))
+                    && !bptr->gethilite(part).isFalse())
                 {
                     t_found = true;
 					break;
@@ -238,11 +238,11 @@ void MCGroup::SetHilitedButtonId(MCExecContext& ctxt, uint32_t part, integer_t p
 
 void MCGroup::GetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringRef& r_name)
 {
-	MCButton *bptr = gethilitedbutton(part);
-	if (bptr != NULL)
-		r_name = MCValueRetain(MCNameGetString(bptr->getname()));
-	else
-		r_name = MCValueRetain(kMCEmptyString);
+    MCButton *bptr = gethilitedbutton(part);
+    if (bptr != NULL)
+        bptr -> GetShortName(ctxt, r_name);
+    else
+        r_name = MCValueRetain(kMCEmptyString);
 }
 
 void MCGroup::SetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringRef p_name)
@@ -259,7 +259,7 @@ void MCGroup::SetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringR
                 // Clicking on the button attemps to hilite the option "title,menu,maximize,minimise,close"
                 // but only "title,menu,minimize,maximise,close" exists, returning a nil NameRef
                 MCNameRef t_nameref;
-                t_nameref = MCNameLookup(p_name);
+                t_nameref = MCNameLookupCaseless(p_name);
                 if (t_nameref != nil)
                     bptr->resethilite(part, bptr->hasname(t_nameref));
                 else
@@ -492,7 +492,7 @@ void MCGroup::SetBackgroundBehavior(MCExecContext& ctxt, bool setting)
 void MCGroup::GetSharedBehavior(MCExecContext& ctxt, bool& r_setting)
 {
 	// MW-2011-08-09: [[ Groups ]] Returns whether the group is shared.
-	r_setting = isshared() && (parent == nil || parent -> gettype() == CT_CARD);
+	r_setting = isshared() && (!parent || parent -> gettype() == CT_CARD);
 }
 
 void MCGroup::SetSharedBehavior(MCExecContext& ctxt, bool setting)
@@ -706,12 +706,12 @@ void MCGroup::GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_i
 	{
         MCObject *t_object = controls;
         MCObject *t_start_object = t_object;
-		uint2 i = 0;
-		do
+		
+        do
 		{
 			MCAutoStringRef t_property;
             
-			if (which == P_CHILD_CONTROL_NAMES)
+			if (which == P_CHILD_CONTROL_NAMES || which == P_CONTROL_NAMES)
 			{
 				t_object -> GetShortName(ctxt, &t_property);
 				t_success = !ctxt . HasError();
@@ -806,16 +806,4 @@ void MCGroup::GetClipsToRect(MCExecContext& ctxt, bool& r_clips_to_rect)
 void MCGroup::SetVisible(MCExecContext &ctxt, uinteger_t part, bool setting)
 {
 	MCControl::SetVisible(ctxt, part, setting);
-#ifdef PLATFORM_PLAYER
-	for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-	{
-		if (t_player -> getparent() == this)
-		{
-			if (setting)
-				t_player -> attachplayer();
-			else
-				t_player -> detachplayer();
-		}
-	}
-#endif
 }

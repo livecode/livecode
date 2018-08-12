@@ -1,18 +1,19 @@
 Name: average
 
+Synonyms: avg, arithmeticmean, mean
+
 Type: function
 
 Syntax: average(<numbersList>)
 
-Summary: <return|Returns> the arithmetic mean of a list of numbers.
-
-Synonyms: avg,arithmeticMean,mean
+Summary:
+<return|Returns> the arithmetic mean of a list of numbers.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 average(4,36,45,50,75) -- returns 42
@@ -24,24 +25,36 @@ Example:
 put average(replaceText(field "Values",return,comma)) into avgValue
 
 Parameters:
-numbersList: A comma-separated list of numbers, or an expression that evaluates to such a list, or an array containing only numbers.
+numbersList:
+A comma-separated list of numbers, or an expression that evaluates to
+such a list, or an array containing only numbers.
 
-Returns: The <average> function <return|returns> a number.
+Returns:
+The <average> function <return|returns> a number.
 
 Description:
-Use the <average> <function> to find the <value(function)> that best represents a group of <value(glossary)|values>.
+Use the <average> <function> to find the <value(function)> that best
+represents a group of <value(glossary)|values>.
 
-The average of a list of numbers is the sum of the items in the list or elements in the array, divided by the number of items or elements.
+The average of a list of numbers is the sum of the items in the list or
+elements in the array, divided by the number of items or elements.
 
 The <average> <function> can also be written like this:
 
-   sum(numbersList)/the number of items in numbersList
+    sum(numbersList)/the number of items in numbersList
+
 
 If the <numbersList> is empty, the <average> <function> returns zero.
 
 Changes:
-The ability to use an array was introduced in version 1.1. In previous versions, only lists of numbers could be used with the average function.
+The ability to use an array was introduced in version 1.1. In previous
+versions, only lists of numbers could be used with the average function.
 
-References: function (control_st), min (function), geometricMean (function), statRound (function), harmonicMean (function), variance (function), round (function), value (function), max (function), median (function), standardDeviation (function), return (glossary), value (glossary)
+References: function (control structure), min (function),
+geometricMean (function), statRound (function), harmonicMean (function),
+variance (function), round (function), value (function), max (function),
+median (function), standardDeviation (function), return (glossary),
+value (glossary)
 
 Tags: math
+

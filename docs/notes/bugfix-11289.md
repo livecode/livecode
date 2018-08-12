@@ -1,1 +1,0 @@
-# Some long URLs cause crash in revBrowser

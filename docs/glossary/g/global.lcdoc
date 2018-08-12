@@ -1,14 +1,20 @@
 Name: global
 
-Synonyms: global,globally,global variable,global property,global properties
+Synonyms: global, globally, global variable, global property,
+global properties
 
 Type: glossary
 
 Description:
-Pertaining to the whole application environment, rather than a single <handler> or <object>. 
- 
-A global <variable|variable's> value is available to any <handler>; a global <property> affects the overall environment, not just one <object>.
+Pertaining to the whole application environment, rather than a single
+<handler> or <object(glossary)>.
 
-References: property (glossary), handler (glossary), variable (glossary), object (object)
+A global <variable|variable's> value is available to any <handler>; a
+global <property> affects the overall environment, not just one
+<object(glossary)>. 
+
+References: property (glossary), handler (glossary), variable (glossary),
+object (glossary)
 
 Tags: properties
+

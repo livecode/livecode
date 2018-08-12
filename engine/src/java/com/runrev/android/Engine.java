@@ -51,6 +51,8 @@ import android.os.Vibrator;
 import android.os.Environment;
 import android.provider.MediaStore.*;
 import android.provider.MediaStore.Images.Media;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import java.net.*;
 import java.io.*;
@@ -96,7 +98,9 @@ public class Engine extends View implements EngineApi
     private CalendarEvents m_calendar_module;
     
     private OpenGLView m_opengl_view;
-	private OpenGLView m_old_opengl_view;
+	private boolean m_disabling_opengl;
+    private boolean m_enabling_opengl;
+    
 	private BitmapView m_bitmap_view;
 
 	private File m_temp_image_file;
@@ -115,6 +119,7 @@ public class Engine extends View implements EngineApi
     private NativeControlModule m_native_control_module;
     private SoundModule m_sound_module;
     private NotificationModule m_notification_module;
+	private NFCModule m_nfc_module;
     private RelativeLayout m_view_layout;
 
     private PowerManager.WakeLock m_wake_lock;
@@ -127,6 +132,8 @@ public class Engine extends View implements EngineApi
     private String m_last_certificate_verification_error;
 	
 	private boolean m_new_intent;
+
+	private int m_photo_width, m_photo_height;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -170,6 +177,7 @@ public class Engine extends View implements EngineApi
         m_native_control_module = new NativeControlModule(this, ((LiveCodeActivity)getContext()).s_main_layout);
         m_sound_module = new SoundModule(this);
         m_notification_module = new NotificationModule(this);
+		m_nfc_module = new NFCModule(this);
         m_view_layout = null;
         
         // MM-2012-08-03: [[ Bug 10316 ]] Initialise the wake lock object.
@@ -201,8 +209,9 @@ public class Engine extends View implements EngineApi
 
 		// We have no opengl view to begin with.
 		m_opengl_view = null;
-		m_old_opengl_view = null;
-
+        m_disabling_opengl = false;
+        m_enabling_opengl = false;
+        
 		// But we do have a bitmap view.
 		m_bitmap_view = new BitmapView(getContext());
         
@@ -219,6 +228,9 @@ public class Engine extends View implements EngineApi
 		System.setProperty("http.keepAlive", "false");
 		
 		m_new_intent = false;
+
+		m_photo_width = 0;
+		m_photo_height = 0;
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,6 +459,20 @@ public class Engine extends View implements EngineApi
 						case KeyEvent.KEYCODE_DEL:
 							keyCode = 0xff08;
 							break;
+						// Hao-2017-02-08: [[ Bug 11727 ]] Detect arrow key for field input
+						case KeyEvent.KEYCODE_DPAD_LEFT:
+							keyCode = 0xff51;
+							break;
+						case KeyEvent.KEYCODE_DPAD_UP:
+							keyCode = 0xff52;
+							break;
+						case KeyEvent.KEYCODE_DPAD_RIGHT:
+							keyCode = 0xff53;
+							break;
+						case KeyEvent.KEYCODE_DPAD_DOWN:
+							keyCode = 0xff54;
+							break;
+							
 							
 						default:
 					}
@@ -579,7 +605,9 @@ public class Engine extends View implements EngineApi
 		if (imm != null)
 			imm.restartInput(this);
 		
-        imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT);
+		// HH-2017-01-18: [[ Bug 18058 ]] Fix keyboard not show in landscape orientation
+        imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
+		updateKeyboardVisible(true);
     }
 
     public void hideKeyboard()
@@ -592,6 +620,7 @@ public class Engine extends View implements EngineApi
 			imm.restartInput(this);
 		
         imm.hideSoftInputFromWindow(getWindowToken(), 0);
+		updateKeyboardVisible(false);
     }
 
 	public void resetKeyboard()
@@ -1389,10 +1418,22 @@ public class Engine extends View implements EngineApi
 	{
 		// Log.i(TAG, "onSizeChanged({" + w + "x" + h + "}, {" + oldw + ", " + oldh + "})");
 		
-		// IM-2013-11-15: [[ Bug 10485 ]] As we can't determine directly if the resize is due to the keyboard
-		// being made visible, we use a rule of thumb that anything larger than 100 pixels must be the keyboard.
-		int t_height_diff = getContainer().getRootView().getHeight() - getContainer().getHeight();
-		updateKeyboardVisible(t_height_diff > 100);
+		// status bar height
+		int t_status_bar_height = 0;
+		int t_resource_id = getResources().getIdentifier("status_bar_height", "dimen", "android");
+		if (t_resource_id > 0)
+		{
+			t_status_bar_height = getResources().getDimensionPixelSize(t_resource_id);
+		}
+		
+		// display window size for the app layout
+		Rect t_app_rect = new Rect();
+		getActivity().getWindow().getDecorView().getWindowVisibleDisplayFrame(t_app_rect);
+		
+		// keyboard height equals (screen height - (user app height + status))
+		int t_keyboard_height = getContainer().getRootView().getHeight() - (t_app_rect.height() + t_status_bar_height);
+		
+		updateKeyboardVisible(t_keyboard_height > 0);
 		
 		Rect t_rect;
 		t_rect = null;
@@ -1478,14 +1519,14 @@ public class Engine extends View implements EngineApi
         return m_sensor_module.stopTrackingRotationRate();
     }
 
-    public void onAccelerationChanged(float p_x, float p_y, float p_z, float p_timestamp)
+    public void onAccelerationChanged(float p_x, float p_y, float p_z, double p_timestamp)
     {
         doAccelerationChanged(p_x, p_y, p_z, p_timestamp);
         if (m_wake_on_event)
             doProcess(false);
     }
 
-    public void onLocationChanged(double p_latitude, double p_longitude, double p_altitude, float p_timestamp, float p_accuracy, double p_speed, double p_course)
+    public void onLocationChanged(double p_latitude, double p_longitude, double p_altitude, double p_timestamp, float p_accuracy, double p_speed, double p_course)
     {
         // MM-2013-02-21: Added spead and course to location readings.
         doLocationChanged(p_latitude, p_longitude, p_altitude, p_timestamp, p_accuracy, p_speed, p_course);
@@ -1493,7 +1534,7 @@ public class Engine extends View implements EngineApi
             doProcess(false);
     }
 
-    public void onHeadingChanged(double p_heading, double p_magnetic_heading, double p_true_heading, float p_timestamp,
+    public void onHeadingChanged(double p_heading, double p_magnetic_heading, double p_true_heading, double p_timestamp,
                                  float p_x, float p_y, float p_z, float p_accuracy)
     {
         doHeadingChanged(p_heading, p_magnetic_heading, p_true_heading, p_timestamp, p_x, p_y, p_z, p_accuracy);
@@ -1501,7 +1542,7 @@ public class Engine extends View implements EngineApi
             doProcess(false);
     }
 
-    public void onRotationRateChanged(float p_x, float p_y, float p_z, float p_timestamp)
+    public void onRotationRateChanged(float p_x, float p_y, float p_z, double p_timestamp)
     {
         doRotationRateChanged(p_x, p_y, p_z, p_timestamp);
         if (m_wake_on_event)
@@ -1818,8 +1859,11 @@ public class Engine extends View implements EngineApi
 		return new String(t_directions);
 	}
 
-	public void showPhotoPicker(String p_source)
+	public void showPhotoPicker(String p_source, int p_width, int p_height)
 	{
+		m_photo_width = p_width;
+		m_photo_height = p_height;
+
 		if (p_source.equals("camera"))
 			showCamera();
 		else if (p_source.equals("album"))
@@ -1875,12 +1919,15 @@ public class Engine extends View implements EngineApi
 			doPhotoPickerError("error: could not create temporary image file");
 			return;
 		}
-		
 
-		Uri t_tmp_uri = Uri.fromFile(m_temp_image_file);
+		String t_path = m_temp_image_file.getPath();
+
+		Uri t_uri;
+		t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, "image/jpeg", true, ParcelFileDescriptor.MODE_WRITE_ONLY);
 
 		Intent t_image_capture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_tmp_uri);
+		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_uri);
+		t_image_capture.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 		t_activity.startActivityForResult(t_image_capture, IMAGE_RESULT);
 	}
 
@@ -1914,7 +1961,20 @@ public class Engine extends View implements EngineApi
 				{
 					t_out.write(t_buffer, 0, t_readcount);
 				}
-				doPhotoPickerDone(t_out.toByteArray(), t_out.size());
+
+				// HH-2017-01-19: [[ Bug 11313 ]]Support maximum width and height of the image
+				if(m_photo_height > 0 && m_photo_width > 0)
+				{
+					Bitmap bm = BitmapFactory.decodeByteArray(t_out.toByteArray(), 0, t_out.size());
+					Bitmap rBm = Bitmap.createScaledBitmap(bm, m_photo_width, m_photo_height, true);
+					ByteArrayOutputStream stream = new ByteArrayOutputStream();
+					rBm.compress(Bitmap.CompressFormat.PNG, 100, stream);
+					byte[] byteArray = stream.toByteArray();
+					doPhotoPickerDone(byteArray, byteArray.length);
+				}
+				else
+					doPhotoPickerDone(t_out.toByteArray(), t_out.size());
+				
 				t_in.close();
 				t_out.close();
 			}
@@ -1924,7 +1984,7 @@ public class Engine extends View implements EngineApi
 			}
 			if (m_temp_image_file != null)
 			{
-				m_temp_image_file.delete();
+				FileProvider.getProvider(getContext()).removePath(m_temp_image_file.getPath());
 				m_temp_image_file = null;
 			}
 		}
@@ -1955,9 +2015,7 @@ public class Engine extends View implements EngineApi
 
 	public void prepareEmail(String address, String cc, String bcc, String subject, String message_body, boolean is_html)
 	{
-        String t_provider_authority = getContext().getPackageName();
-        t_provider_authority += ".attachmentprovider";
-		m_email = new Email(address, cc, bcc, subject, message_body, t_provider_authority, is_html);
+		m_email = new Email(address, cc, bcc, subject, message_body, is_html);
 	}
 
 	public void addAttachment(String path, String mime_type, String name)
@@ -1979,7 +2037,7 @@ public class Engine extends View implements EngineApi
 
 	private void onEmailResult(int resultCode, Intent data)
 	{
-		m_email.cleanupAttachments(getActivity().getContentResolver());
+		m_email.cleanupAttachments(getContext());
 
 		if (resultCode == Activity.RESULT_CANCELED)
 		{
@@ -2077,63 +2135,108 @@ public class Engine extends View implements EngineApi
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
+    
+    private boolean openGLViewEnabled()
+    {
+        return m_opengl_view != null && m_opengl_view.getParent() != null;
+    }
+    
+    private void ensureBitmapViewVisibility()
+    {
+        if (openGLViewEnabled())
+        {
+            m_bitmap_view.setVisibility(View.INVISIBLE);
+        }
+        else
+        {
+            m_bitmap_view.setVisibility(View.VISIBLE);
+        }
+    }
 
 	public void enableOpenGLView()
 	{
-		// If OpenGL is already enabled, do nothing.
-		if (m_opengl_view != null)
-			return;
-
-		Log.i("revandroid", "enableOpenGLView");
-
-
-		// If we have an old OpenGL view, use it.
-		if (m_old_opengl_view != null)
-		{
-			m_opengl_view = m_old_opengl_view;
-			m_old_opengl_view = null;
-		}
-
-		// Create the OpenGL view, if needed.
-		if (m_opengl_view == null)
-		{
-			m_opengl_view = new OpenGLView(getContext());
+        Log.i("revandroid", "enableOpenGLView");
+        
+        if (m_disabling_opengl)
+        {
+            m_disabling_opengl = false;
+        }
+        
+        if (!m_enabling_opengl)
+        {
+            m_enabling_opengl = true;
             
-			// Add the view to the hierarchy - we add at the bottom and bring to
-			// the front as soon as we've shown the first frame.
-			((ViewGroup)getParent()).addView(m_opengl_view, 0,
-											 new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
-																		  FrameLayout.LayoutParams.MATCH_PARENT));
-		}
+            post(new Runnable() {
+                public void run() {
+                    Log.i("revandroid", "enableOpenGLView callback");
+                    
+                    if (!m_disabling_opengl && m_enabling_opengl)
+                    {
+                        if (!openGLViewEnabled())
+                        {
+                            Log.i("revandroid", "enableOpenGLView adding");
+                            if (m_opengl_view == null)
+                            {
+                                m_opengl_view = new OpenGLView(getContext());
+                            }
+                            
+                            // Add the view to the hierarchy - we add at the bottom and bring to
+                            // the front as soon as we've shown the first frame.
+                            ((ViewGroup)getParent()).addView(m_opengl_view, 0,
+                                                             new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                                                                                          FrameLayout.LayoutParams.MATCH_PARENT));
+                        }
+                        else
+                        {
+                            // We need to call this explicitly here as we must re-enable drawing
+                            m_opengl_view.doSurfaceChanged(m_opengl_view);
+                        }
+                    }
+                    
+                    m_enabling_opengl = false;
+                    ensureBitmapViewVisibility();
+                }
+            });
+        }
 	}
 
 	public void disableOpenGLView()
 	{
-		// If OpenGL is not enabled, do nothing.
-		if (m_opengl_view == null)
-			return;
+        Log.i("revandroid", "disableOpenGLView");
+        
+        if (m_enabling_opengl)
+        {
+            m_enabling_opengl = false;
+        }
+        
+        if (!m_disabling_opengl)
+        {
+            m_disabling_opengl = true;
+            
+            // Before removing the OpenGL mode, make sure we show the bitmap view.
+            m_bitmap_view.setVisibility(View.VISIBLE);
 
-		Log.i("revandroid", "disableOpenGLView");
-
-		// Before removing the OpenGL mode, make sure we show the bitmap view.
-		m_bitmap_view.setVisibility(View.VISIBLE);
-
-		// Move the current opengl view to old.
-		m_old_opengl_view = m_opengl_view;
-		m_opengl_view = null;
-
-		// Post an runnable that removes the OpenGL view. Doing that here will
-		// cause a black screen.
-		post(new Runnable() {
-			public void run() {
-				if (m_old_opengl_view == null)
-					return;
-
-				Log.i("revandroid", "disableOpenGLView callback");
-				((ViewGroup)m_old_opengl_view.getParent()).removeView(m_old_opengl_view);
-				m_old_opengl_view = null;
-		}
-		});
+            // Move the current opengl view to old.
+            // Post an runnable that removes the OpenGL view. Doing that here will
+            // cause a black screen.
+            post(new Runnable() {
+                public void run() {
+                    Log.i("revandroid", "disableOpenGLView callback");
+                    
+                    if (!m_enabling_opengl && m_disabling_opengl)
+                    {
+                       if (openGLViewEnabled())
+                        {
+                            Log.i("revandroid", "disableOpenGLView removing");
+                            ((ViewGroup)m_opengl_view.getParent()).removeView(m_opengl_view);
+                        }
+                    }
+                    
+                    m_disabling_opengl = false;
+                    ensureBitmapViewVisibility();
+                }
+            });
+        }
 	}
     
     // MW-2015-05-06: [[ Bug 15232 ]] Post a runnable to prevent black flash when enabling openGLView
@@ -2141,16 +2244,14 @@ public class Engine extends View implements EngineApi
     {
         post(new Runnable() {
             public void run() {
-                if (m_opengl_view == null)
-                    return;
-                m_bitmap_view.setVisibility(View.INVISIBLE);
+                ensureBitmapViewVisibility();
             }
         });
     }
     
 	public void showBitmapView()
 	{
-		m_bitmap_view.setVisibility(View.VISIBLE);
+		ensureBitmapViewVisibility();
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2739,6 +2840,29 @@ public class Engine extends View implements EngineApi
 
 ////////
 
+	// NFC
+	public boolean isNFCAvailable()
+	{
+		return m_nfc_module.isAvailable();
+	}
+	
+	public boolean isNFCEnabled()
+	{
+		return m_nfc_module.isEnabled();
+	}
+	
+	public void enableNFCDispatch()
+	{
+		m_nfc_module.setDispatchEnabled(true);
+	}
+	
+	public void disableNFCDispatch()
+	{
+		m_nfc_module.setDispatchEnabled(false);
+	}
+	
+////////
+
     // if the app was launched to handle a Uri view intent, return the Uri as a string, else return null
     public String getLaunchUri(Intent intent)
     {
@@ -2940,6 +3064,9 @@ public class Engine extends View implements EngineApi
 		if (m_native_control_module != null)
 			m_native_control_module.onPause();
 		
+		if (m_nfc_module != null)
+			m_nfc_module.onPause();
+		
 		if (m_video_is_playing)
 			m_video_control . suspend();
 
@@ -2962,6 +3089,9 @@ public class Engine extends View implements EngineApi
 		
 		if (m_native_control_module != null)
 			m_native_control_module.onResume();
+		
+		if (m_nfc_module != null)
+			m_nfc_module.onResume();
 
 		if (m_video_is_playing)
 			m_video_control . resume();
@@ -2970,6 +3100,9 @@ public class Engine extends View implements EngineApi
 
 		if (m_new_intent)
 		{
+			if (m_nfc_module != null)
+				m_nfc_module.onNewIntent(((Activity)getContext()).getIntent());
+				
 			doLaunchDataChanged();
 			
 			String t_launch_url;
@@ -3115,15 +3248,24 @@ public class Engine extends View implements EngineApi
         if (resultCode == Activity.RESULT_OK)
 		{
             Uri t_data = data.getData();
-            String t_path = null;
+            String t_path = "";
             if (t_data != null)
             {
-                Cursor t_cursor = ((LiveCodeActivity)getContext()).getContentResolver().query(t_data, null, null, null, null);
+                Cursor t_cursor = null;
+                try
+                {
+                    t_cursor = ((LiveCodeActivity) getContext())
+                        .getContentResolver()
+                        .query(t_data, null, null, null, null);
+                }
+                catch (SecurityException e) {}
+
                 if (t_cursor != null)
                 {
                     t_cursor.moveToFirst();
-                    int t_index = t_cursor.getColumnIndex (MediaStore.Images.ImageColumns.DATA);
-                    t_path = t_cursor.getString(t_index);
+                    int t_index = t_cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+                    if (t_index > 0)
+                        t_path = t_cursor.getString(t_index);
                 }
                 Log.i("revandroid", "onMediaResult picked path: " + t_path);
             }
@@ -3145,6 +3287,14 @@ public class Engine extends View implements EngineApi
     {
         Log.i("revandroid", "compareInternational"); 
         return m_collator.compare(left, right);
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////////
+    
+    public Object createTypefaceFromAsset(String path)
+    {
+        Log.i("revandroid", "createTypefaceFromAsset");
+        return Typeface.createFromAsset(getContext().getAssets(),path);
     }
     
     ////////////////////////////////////////////////////////////////////////////////
@@ -3402,6 +3552,115 @@ public class Engine extends View implements EngineApi
 
     ////////////////////////////////////////////////////////////////////////////////
 
+    public interface ServiceListener
+    {
+        public void onStart(Context context);
+        public void onFinish(Context context);
+    }
+    
+    Context m_service_context = null;
+    ArrayList<ServiceListener> m_running_services = null;
+    ArrayList<ServiceListener> m_pending_services = null;
+    
+    private int serviceListFind(ArrayList<ServiceListener> p_list, ServiceListener p_obj)
+    {
+        for(int i = 0; i < p_list.size(); i++)
+        {
+            if (p_list.get(i) == p_obj)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    public void startService(ServiceListener p_listener)
+    {
+        if (m_running_services == null)
+        {
+            m_pending_services = new ArrayList<ServiceListener>();
+        }
+        
+        m_pending_services.add(p_listener);
+        
+        Intent t_service = new Intent(getContext(), getServiceClass());
+        getContext().startService(t_service);
+    }
+    
+    public void stopService(ServiceListener p_listener)
+    {
+        if (serviceListFind(m_pending_services, p_listener) != -1)
+        {
+            m_pending_services.remove(serviceListFind(m_pending_services, p_listener));
+            return;
+        }
+        
+        if (serviceListFind(m_running_services, p_listener) != -1)
+        {
+            p_listener.onFinish(m_service_context);
+            m_running_services.remove(serviceListFind(m_running_services, p_listener));
+        }
+        
+        if (m_pending_services.isEmpty() &&
+            m_running_services.isEmpty())
+        {
+            Intent t_service = new Intent(getContext(), getServiceClass());
+            getContext().stopService(t_service);
+        }
+    }
+    
+    public int handleStartService(Context p_service_context, Intent p_intent, int p_flags, int p_start_id)
+    {
+        if (m_pending_services == null ||
+            m_pending_services.isEmpty())
+        {
+            if (m_running_services == null ||
+                m_running_services.isEmpty())
+            {
+                Intent t_service = new Intent(getContext(), getServiceClass());
+                getContext().stopService(t_service);
+                return Service.START_NOT_STICKY;
+            }
+            return Service.START_STICKY;
+        }
+        
+        m_service_context = p_service_context;
+        
+        ServiceListener t_listener = m_pending_services.get(0);
+        m_pending_services.remove(0);
+        
+        if (m_running_services == null)
+        {
+            m_running_services = new ArrayList<ServiceListener>();
+        }
+        
+        m_running_services.add(t_listener);
+        t_listener.onStart(p_service_context);
+        
+        return Service.START_STICKY;
+    }
+    
+    public void handleFinishService(Context p_service_context)
+    {
+        m_pending_services = null;
+        
+        while(!m_running_services.isEmpty())
+        {
+            m_running_services.get(0).onFinish(p_service_context);
+            m_running_services.remove(0);
+        }
+        m_running_services = null;
+        
+        m_service_context = null;
+    }
+    
+    public Class getServiceClass()
+    {
+        return ((LiveCodeActivity)getContext()).getServiceClass();
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////////
+    
     // url launch callback
     public static native void doLaunchFromUrl(String url);
 	// intent launch callback
@@ -3452,11 +3711,11 @@ public class Engine extends View implements EngineApi
 	public static native void doWait(double time, boolean dispatch, boolean anyevent);
 	
     // sensor handlers
-    public static native void doLocationChanged(double p_latitude, double p_longitude, double p_altitude, float p_timestamp, float p_accuracy, double p_speed, double p_course);
-    public static native void doHeadingChanged(double p_heading, double p_magnetic_heading, double p_true_heading, float p_timestamp,
+    public static native void doLocationChanged(double p_latitude, double p_longitude, double p_altitude, double p_timestamp, float p_accuracy, double p_speed, double p_course);
+    public static native void doHeadingChanged(double p_heading, double p_magnetic_heading, double p_true_heading, double p_timestamp,
                                                float p_x, float p_y, float p_z, float p_accuracy);
-	public static native void doAccelerationChanged(float x, float y, float z, float timestamp);
-	public static native void doRotationRateChanged(float x, float y, float z, float timestamp);
+	public static native void doAccelerationChanged(float x, float y, float z, double timestamp);
+	public static native void doRotationRateChanged(float x, float y, float z, double timestamp);
 
     // input event handlers
 	public static native void doBackPressed();

@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -45,6 +45,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "stacksecurity.h"
 #include "widget.h"
+
+#include "stackfileformat.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -81,7 +83,7 @@ MCPickleContext *MCObject::startpickling(bool p_include_legacy)
 	t_context = NULL;
 	if (t_success)
 	{
-		t_context = new MCPickleContext;
+		t_context = new (nothrow) MCPickleContext;
 		if (t_context == NULL)
 			t_success = false;
 	}
@@ -230,10 +232,26 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
     // MW-2014-12-17: [[ Widgets ]] If the object is or contains widgets, we can
     //   only produce 8.0 version data.
     uint4 t_chunk_start;
-    if (p_object -> haswidgets())
+	
+	bool t_include_legacy;
+	t_include_legacy = p_context->include_legacy;
+	
+	uint32_t t_min_version;
+	t_min_version = p_object->geteffectiveminimumstackfileversion();
+	
+	// Cut off point for legacy versions
+	if (t_min_version > kMCStackFileFormatVersion_7_0)
+		t_include_legacy = false;
+	
+    if (!t_include_legacy)
     {
+		const char *t_header;
+		uint32_t t_header_size;
+		
+		MCStackFileGetHeaderForVersion(kMCStackFileFormatCurrentVersion, t_header, t_header_size);
+		
         if (t_stat == IO_NORMAL)
-            t_stat = IO_write("REVO8000", 8, 1, t_stream);
+            t_stat = IO_write(t_header, t_header_size, 1, t_stream);
         
         // Write the space for the chunk size field
         if (t_stat == IO_NORMAL)
@@ -244,13 +262,13 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
             t_chunk_start = MCS_tell(t_stream);
         
         if (t_stat == IO_NORMAL)
-            t_stat = pickle_object_to_stream(t_stream, 8000, p_object, p_part);
+            t_stat = pickle_object_to_stream(t_stream, kMCStackFileFormatCurrentVersion, p_object, p_part);
     }
     else
     {
-        // Write the version header - either 2.7 or 5.5 depending on the setting of include_2700.
+		// Legacy - write version header for 2.7
         if (t_stat == IO_NORMAL)
-            t_stat = IO_write(p_context -> include_legacy ? "REVO2700" : "REVO7000", 8, 1, t_stream);
+            t_stat = IO_write(kMCStackFileVersionString_2_7, kMCStackFileVersionStringLength, 1, t_stream);
 
         // Write the space for the chunk size field
         if (t_stat == IO_NORMAL)
@@ -261,16 +279,16 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
             t_chunk_start = MCS_tell(t_stream);
 
         if (t_stat == IO_NORMAL)
-            t_stat = pickle_object_to_stream(t_stream, p_context -> include_legacy ? 2700 : 7000, p_object, p_part);
+            t_stat = pickle_object_to_stream(t_stream, kMCStackFileFormatVersion_2_7, p_object, p_part);
 
         // MW-2012-03-04: [[ UnicodeFileFormat ]] If we are including 2.7, 5.5 and 7.0, now write
         //   out the 5.5 and 7.0 versions.
-        if (t_stat == IO_NORMAL && p_context -> include_legacy)
+        if (t_stat == IO_NORMAL)
         {
-            t_stat = pickle_object_to_stream(t_stream, 5500, p_object, p_part);
+            t_stat = pickle_object_to_stream(t_stream, kMCStackFileFormatVersion_5_5, p_object, p_part);
             
             if (t_stat == IO_NORMAL)
-                pickle_object_to_stream(t_stream, 7000, p_object, p_part);
+                pickle_object_to_stream(t_stream, kMCStackFileFormatVersion_7_0, p_object, p_part);
         }
     }
     
@@ -383,49 +401,49 @@ static bool unpickle_object_from_stream(IO_handle p_stream, uint32_t p_version, 
 			/* UNCHECKED */ MCStackSecurityCreateStack((MCStack*&)t_object);
 		break;
 		case OT_CARD:
-			t_object = new MCCard;
+			t_object = new (nothrow) MCCard;
 		break;
 		case OT_GROUP:
-			t_object = new MCGroup;
+			t_object = new (nothrow) MCGroup;
 		break;
 		case OT_BUTTON:
-			t_object = new MCButton;
+			t_object = new (nothrow) MCButton;
 		break;
 		case OT_FIELD:
-			t_object = new MCField;
+			t_object = new (nothrow) MCField;
 		break;
 		case OT_IMAGE:
-			t_object = new MCImage;
+			t_object = new (nothrow) MCImage;
 		break;
 		case OT_SCROLLBAR:
-			t_object = new MCScrollbar;
+			t_object = new (nothrow) MCScrollbar;
 		break;
 		case OT_GRAPHIC:
-			t_object = new MCGraphic;
+			t_object = new (nothrow) MCGraphic;
 		break;
 		case OT_PLAYER:
-			t_object = new MCPlayer;
+			t_object = new (nothrow) MCPlayer;
 		break;
 		case OT_MCEPS:
-			t_object = new MCEPS;
+			t_object = new (nothrow) MCEPS;
         break;
         case OT_WIDGET:
-            t_object = new MCWidget;
+            t_object = new (nothrow) MCWidget;
         break;
 		case OT_MAGNIFY:
-			t_object = new MCMagnify;
+			t_object = new (nothrow) MCMagnify;
 		break;
 		case OT_COLORS:
-			t_object = new MCColors;
+			t_object = new (nothrow) MCColors;
 		break;
 		case OT_AUDIO_CLIP:
-			t_object = new MCAudioClip;
+			t_object = new (nothrow) MCAudioClip;
 		break;
 		case OT_VIDEO_CLIP:
-			t_object = new MCVideoClip;
+			t_object = new (nothrow) MCVideoClip;
 		break;
 		case OT_STYLED_TEXT:
-			t_object = new MCStyledText;
+			t_object = new (nothrow) MCStyledText;
 		break;
 		default:
 			t_success = false;
@@ -502,33 +520,23 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
 
 	while(t_length > 0 && t_success)
 	{
-		bool t_8000_only;
-		t_8000_only = false;
-		bool t_7000_only;
-		t_7000_only = false;
-        bool t_5500_only;
-		t_5500_only = false;
-		
 		if (t_success)
 			t_success = t_length >= 12;
-
+		
+		uint32_t t_version;
+		t_version = 0;
+		if (t_success)
+			t_success = MCStackFileParseVersionNumber(t_buffer, t_version);
+		
+		// version should be 2.7 or greater
 		if (t_success)
 		{
-            // AL-2014-02-14: [[ UnicodeFileFormat ]] If the header is 7.0, then there
-			//   won't be a 2.7 version before it.
-            if (memcmp(t_buffer, "REVO8000", 8) == 0)
-				t_8000_only = true;
-			else if (memcmp(t_buffer, "REVO7000", 8) == 0)
-				t_7000_only = true;
-            else if (memcmp(t_buffer, "REVO5500", 8) == 0)
-				t_5500_only = true;
-			else if (memcmp(t_buffer, "REVO2700", 8) != 0)
-				t_success = false;
+			t_success = t_version >= kMCStackFileFormatVersion_2_7 && t_version <= kMCStackFileFormatCurrentVersion;
 			
-			t_buffer += 8;
-			t_length -= 8;
+			t_buffer += kMCStackFileVersionStringLength;
+			t_length -= kMCStackFileVersionStringLength;
 		}
-
+		
 		uint4 t_chunk_length;
 		t_chunk_length = 0;
 		if (t_success)
@@ -552,33 +560,26 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
 		}
 
         // AL-2014-02-14: [[ UnicodeFileFormat ]] Unpickle the first version in the chunk.
-		//   If there is no 2.7, then the version will be 7.0; otherwise it is the
+		//   If there is no 2.7, then there will be a single version; otherwise it is the
 		//   2.7 version preceeding the 5.5 and 7.0 ones.
 		MCObject *t_object;
 		t_object = nil;
 		if (t_success)
-        {
-            if (t_8000_only)
-                t_success = unpickle_object_from_stream(t_stream, 8000, p_stack, t_object);
-            else if (t_7000_only)
-                t_success = unpickle_object_from_stream(t_stream, 7000, p_stack, t_object);
-            else
-                t_success = unpickle_object_from_stream(t_stream, t_5500_only ? 5500 : 2700, p_stack, t_object);
-        }
+			t_success = unpickle_object_from_stream(t_stream, t_version, p_stack, t_object);
 			
         // AL-2014-02-14: [[ UnicodeFileFormat ]] If the header was 2.7, then there could
 		//   be 5.5 and 7.0 versions following it. So attempt to unpickle second and third
 		//   versions, and use them if present.
-		if (t_success && !t_8000_only && !t_7000_only && !t_5500_only)
+		if (t_success && t_version == kMCStackFileFormatVersion_2_7)
 		{
 			MCObject *t_5500_object;
-			if (unpickle_object_from_stream(t_stream, 5500, p_stack, t_5500_object))
+			if (unpickle_object_from_stream(t_stream, kMCStackFileFormatVersion_5_5, p_stack, t_5500_object))
 			{
 				delete t_object;
 				t_object = t_5500_object;
 			}
             MCObject *t_7000_object;
-			if (unpickle_object_from_stream(t_stream, 7000, p_stack, t_7000_object))
+			if (unpickle_object_from_stream(t_stream, kMCStackFileFormatVersion_7_0, p_stack, t_7000_object))
 			{
 				delete t_object;
 				t_object = t_7000_object;

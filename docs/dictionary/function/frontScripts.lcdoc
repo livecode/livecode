@@ -6,31 +6,52 @@ Syntax: the frontScripts
 
 Syntax: frontScripts()
 
-Summary: <return|Returns> a list of <object|objects> that have been inserted into the <message path> before the target <object>.
+Summary:
+<return|Returns> a list of <object|objects> that have been inserted into
+the <message path> before the target <object(glossary)>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-the frontScripts
+put the frontScripts
 
 Example:
 if myID is not among the lines of the frontScripts then insertMe
 
-Returns: The <frontScripts> function returns a list of the long ID property of all objects that have been inserted into the front, one ID per line.
+Returns:
+The <frontScripts> function returns a list of the long ID property of
+all objects that have been inserted into the front, one ID per line.
 
 Description:
-Use the <frontScripts> function to find out which scripts receive messages and function calls before the target object.
+Use the <frontScripts> function to find out which <script|scripts> receive
+<message|messages> and function calls before the target <object>.
 
-A script inserted into the front with the <insert script> command receives messages before all objects in the message path.
+A <script> inserted into the front with the <insert script> command
+receives <message|messages> before all objects in the <message path>.
 
-This includes messages sent with the <send> command, so if you send a message to an object, the objects in the <frontScripts> receive that message before the target object does. If the scripts in the <frontScripts> do not use the <pass> control structure to pass on the message to the next object, the target object never receives the message.
+This includes <message|messages> sent with the <send> command, so if you send a
+<message> to an <object>, the objects in the <frontScripts> receive that
+<message> before the target <object> does. If the scripts in the
+<frontScripts> do not use the <pass> control structure to pass on the
+<message> to the next <object>, the target <object> never receives the
+<message>. 
 
-If more than one object is in the <frontScripts>, their order in the message path is the same as their order in the list. For example, the first object in the <frontScripts> receives messages before the second object. This order is the reverse of the order in which the objects were added with the <insert script> command.
+If more than one <object> is in the <frontScripts>, their order in the
+<message path> is the same as their order in the list. For example, the
+first <object> in the <frontScripts> receives <message|messages> before 
+the second <object>. This order is the reverse of the order in which the 
+<object|objects> were added with the <insert script> command.
 
-References: remove script (command), insert script (command), send (command), object (object), message path (glossary), return (glossary), pass (control_st)
+References: backScripts (function), behavior (property), call (command), 
+dispatch (command), frontScript (glossary), insert script (command), 
+message (glossary), message path (glossary), object (glossary), 
+pass (control structure), remove script (command), return (glossary), 
+script (glossary), send (command), stacksInUse (property), 
+start using (command)
 
-Tags: objects
+Tags: objects, messages
+

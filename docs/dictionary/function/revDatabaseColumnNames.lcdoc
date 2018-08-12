@@ -1,20 +1,24 @@
 Name: revDatabaseColumnNames
 
+Synonyms: revdb_columnnames
+
 Type: function
 
 Syntax: revDatabaseColumnNames(<recordSetOrConnectionId> [, <tableName>])
 
-Summary: <return|Returns> the list of <database field> names in a <record set (database cursor)(glossary)> or a database table
+Summary:
+<return|Returns> the list of <database field> names in a <record set
+(database cursor)(glossary)> or a database table
 
-Synonyms: revdb_columnnames
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revDatabaseColumnNames(foundResults)
@@ -26,15 +30,28 @@ Example:
 get revDatabaseColumnNames(tConnectionId, "myTable")
 
 Parameters:
-recordSetOrConnectionId: The recordSetOrConnectionId  is either the number returned by the revQueryDatabase when the record set was created or the number returned by the revOpenDatabase function when the connection was created.
-tableName: The name of a table in the current database. A table name should be specified if the recordSetOrConnectionId parameter is a connection id.
+recordSetOrConnectionId:
+The recordSetOrConnectionId  is either the number returned by the
+revQueryDatabase when the record set was created or the number returned
+by the revOpenDatabase function when the connection was created.
 
-Returns: The <revDatabaseColumnNames> <function> returns a list of <database field> names, separated by commas.
+tableName:
+The name of a table in the current database. A table name should be
+specified if the recordSetOrConnectionId parameter is a connection id.
+
+Returns:
+The <revDatabaseColumnNames> <function> returns a list of <database
+field> names, separated by commas.
 
 Description:
-Use the <revDatabaseColumnNames> <function> to find out what <database field|database fields> are in the <record set (database cursor)|record set> returned by a <SQL query> or what database fields are contained within a certain table.
+Use the <revDatabaseColumnNames> <function> to find out what <database
+field|database fields> are in the <record set (database cursor)|record
+set> returned by a <SQL query> or what database fields are contained
+within a certain table.
 
-There are two forms of the revDatabaseColumnNames function. It can either be used to return the list of column names in a record set, or as of version 2.9, the list of columns in a given table. 
+There are two forms of the revDatabaseColumnNames function. It can
+either be used to return the list of column names in a record set, or as
+of version 2.9, the list of columns in a given table.
 
 To get the list of columns in a record set use a form like this:
 
@@ -44,13 +61,31 @@ To get the list of columns in a given table, use a form like this:
 
 get revDatabaseColumnNames(tConnectionId, "myTable")
 
-If the operation is not successful, the <revDatabaseColumnNames> <function> returns an error message that begins with the <string> "revdberr".
+If the operation is not successful, the <revDatabaseColumnNames>
+<function> returns an error message that begins with the <string>
+"revdberr". 
 
->*Important:*  The <revDatabaseColumnNames> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revDatabaseColumnNames> <function> is part of the 
+> <Database library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
 Changes:
-The ability to obtain the list of fields for a table without obtaining a record set first was added in version 2.9
+The ability to obtain the list of fields for a table without obtaining a
+record set first was added in version 2.9
 
-References: string (keyword), Database library (library), LiveCode custom library (library), revDatabaseColumnCount (function), revDatabaseColumnNamed (function), revDatabaseColumnTypes (function), revDatabaseColumnIsNull (function), database field (glossary), Standalone Application Settings (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), SQL query (glossary), function (control_st)
+References: function (control structure),
+revDatabaseColumnCount (function), revDatabaseColumnNamed (function),
+revDatabaseColumnTypes (function), revDatabaseColumnIsNull (function),
+LiveCode custom library (glossary), database field (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary),
+record set (database cursor) (glossary), return (glossary),
+SQL query (glossary), string (keyword), Database library (library)
 
 Tags: database
+

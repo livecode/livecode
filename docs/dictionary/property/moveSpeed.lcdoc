@@ -2,15 +2,16 @@ Name: moveSpeed
 
 Type: property
 
-Syntax: set the moveSpeed to <pixelsPerSecond> 
+Syntax: set the moveSpeed to <pixelsPerSecond>
 
-Summary: Specifies how fast the <move> <command> moves <object|objects>.
+Summary:
+Specifies how fast the <move> <command> moves <object|objects>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the moveSpeed to 20 -- slow
@@ -20,12 +21,20 @@ The <moveSpeed> is an <integer> between zero and 65535.
 By default, the <moveSpeed> <property> is set to 200.
 
 Description:
-Use the <moveSpeed> <property> to change the speed of animation performed with the <move> <command>.
+Use the <moveSpeed> <property> to change the speed of animation
+performed with the <move> <command>.
 
-A <moveSpeed> of zero moves the <object|objects> directly to their destination, as though you had set the <object|object's> <location> <property> rather than using the <move> <command>.
+A <moveSpeed> of zero moves the <object|objects> directly to their
+destination, as though you had set the <object|object's> <location>
+<property> rather than using the <move> <command>.
 
-The <moveSpeed> <property> has no effect if you include the in time <parameter> in the <move> command. It only <control|controls> the speed of <move> <command|commands> that don't specify a time for the movement.
+The <moveSpeed> <property> has no effect if you include the in time
+<parameter> in the <move> command. It only <control|controls> the speed
+of <move> <command|commands> that don't specify a time for the movement.
 
-References: dragSpeed (property), location (property), integer (keyword), move (command), object (object), control (object), command (glossary), property (glossary), parameter (glossary)
+References: move (command), object (glossary), command (glossary),
+property (glossary), parameter (glossary), integer (keyword),
+control (object), dragSpeed (property), location (property)
 
 Tags: multimedia
+

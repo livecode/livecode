@@ -2,30 +2,48 @@ Name: write to driver
 
 Type: command
 
-Syntax: write <value> to driver <deviceName> 
+Syntax: write <value> to driver <deviceName>
 
-Summary: Sends data to a <peripheral device|device> that has been opened with the <open driver> <command>.
+Summary:
+Sends data to a <peripheral device|device> that has been opened with the
+<open driver> <command>.
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
-Security: disk,process
+Security: disk, process
 
 Example:
 write "test" & return to driver "/dev/cu.modem"
 
 Parameters:
-value (string): 
-deviceName: The name of a device driver that's installed on the system and that you have previously opened with the open driver command.
+value (string):
 
-The result: The device to write to must be opened first with the <open driver> <command>, and the mode the device was opened in must be either write or update. If the device is not open or is open read-only, the <result> <function> is set to "File is not open for write.".
+
+deviceName:
+The name of a device driver that's installed on the system and that you
+have previously opened with the open driver command.
+
+The result:
+The device to write to must be opened first with the <open driver>
+<command>, and the mode the device was opened in must be either write or
+update. If the device is not open or is open read-only, the <result>
+<function> is set to "File is not open for write.".
 
 Description:
-Use the <write to driver> <command> to control a <peripheral device> or send data through it.
+Use the <write to driver> <command> to control a <peripheral device> or
+send data through it.
 
-References: real8 (keyword), int1 (keyword), int4 (keyword), real4 (keyword), int2 (keyword), LPT1: (keyword), printer: (keyword), modem: (keyword), COMn: (keyword), write to file (command), open driver (command), close driver (command), read from driver (command), write to process (command), write to socket (command), driverNames (function), result (function), command (glossary), peripheral device (glossary), function (control_st)
+References: write to file (command), open driver (command),
+close driver (command), read from driver (command),
+write to process (command), write to socket (command),
+function (control structure), driverNames (function), result (function),
+command (glossary), peripheral device (glossary), real8 (keyword),
+int1 (keyword), int4 (keyword), real4 (keyword), int2 (keyword),
+LPT1: (keyword), printer: (keyword), modem: (keyword), COMn: (keyword)
 
 Tags: networking
+

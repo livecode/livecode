@@ -45,9 +45,6 @@ MCWindowShape *MCImage::makewindowshape(const MCGIntegerSize &p_size)
 	t_success = lockbitmap(true, true, &p_size, t_bitmap);
 	
 	if (t_success)
-		t_success = MCImageBitmapHasTransparency(t_bitmap);
-	
-	if (t_success)
 	{
 		t_width = t_bitmap->width;
 		t_height = t_bitmap->height;

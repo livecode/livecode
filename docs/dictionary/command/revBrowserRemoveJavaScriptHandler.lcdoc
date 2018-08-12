@@ -1,31 +1,50 @@
 Name: revBrowserRemoveJavaScriptHandler
 
-Type: function
+Type: command
 
-Syntax: revBrowserRemoveJavaScriptHandler <instanceID>, <handlerName> 
+Syntax: revBrowserRemoveJavaScriptHandler <instanceID>, <handlerName>
 
-Summary: Removes the named handler from the 'LiveCode' object within the currect JavaScript context of the browser.
+Summary:
+Removes the named handler from the 'LiveCode' object within the current
+JavaScript context of the browser.
 
 Introduced: 6.7
 
-OS: mac,windows
+OS: mac, windows
 
 Platforms: desktop
 
 Security: network
 
 Example:
-revBrowserRemoveJavaScriptHander, tBrowserID, "myLiveCodeHandler"
+revBrowserRemoveJavaScriptHandler tBrowserID, "myLiveCodeHandler"
 
 Parameters:
-instanceID: the ID of the browser instance returned by the revOpenBrowser function.
-handlerName: the name of a LiveCode handler previously added with revBrowserAddJavaScriptHandler.
+instanceID:
+the ID of the browser instance returned by the revOpenBrowser function.
+
+handlerName:
+the name of a LiveCode handler previously added with
+revBrowserAddJavaScriptHandler. 
 
 Description:
-The  revBrowserRemoveJavaScriptHandler removes the named handler from the 'liveCode' object within the currect JavaScript context of the browser.
+The <revBrowserRemoveJavaScriptHandler> removes the named handler from
+the 'liveCode' object within the current JavaScript context of the
+browser. 
 
-Calling the <revBrowserRemoveJavaScriptHandler> function will remove the corresponding function from the global JavaScript 'LiveCode' object. JavaScript within the browser will no longer be able to call the named handler.
+Calling the <revBrowserRemoveJavaScriptHandler> function will remove the
+corresponding function from the global JavaScript 'LiveCode' object.
+JavaScript within the browser will no longer be able to call the named
+handler. 
 
-The handler must have previously been registered with the <revBrowserAddJavaScriptHandler> command:
+The handler must have previously been registered with the
+<revBrowserAddJavaScriptHandler> command.
 
-References: revBrowserStop (command), revBrowserPrint (command), revBrowserSet (command), revBrowserMakeTextBigger (command), revBrowserNavigate (command), revBrowserAddJavaScriptHandler (command), revBrowserClose (command), revBrowserOpenCef (function), browserOver (message), browserNewInstance (message), browserNewUrlWindow (message), browserDownloadRequest (message), browserNavigateCompleteFrame (message)
+References: revBrowserStop (command), revBrowserPrint (command),
+revBrowserSet (command), revBrowserMakeTextBigger (command),
+revBrowserNavigate (command), revBrowserAddJavaScriptHandler (command),
+revBrowserClose (command), revBrowserOpenCef (function),
+browserOver (message), browserNewInstance (message),
+browserNewUrlWindow (message), browserDownloadRequest (message),
+browserNavigateCompleteFrame (message)
+

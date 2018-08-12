@@ -1,1 +1,0 @@
-# pageRanges property missing from LiveCode 7.0

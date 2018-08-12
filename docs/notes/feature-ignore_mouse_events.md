@@ -1,1 +1,0 @@
-# New stack property ignoreMouseEventsThe *ignoreMouseEvents* stack property provides a way to make a the mouse events on a window pass through the window to whatever is beneath. The mouse events may go to a stack underneath or another application.

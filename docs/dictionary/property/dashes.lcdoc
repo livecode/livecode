@@ -4,38 +4,73 @@ Type: property
 
 Syntax: set the dashes [of <graphic>] to <pixelsOn> [, <pixelsOff>]
 
-Summary: Specifies the appearance of dashed lines in <graphic|graphics> and paint <image|images>.
+Summary:
+Specifies the appearance of dashed lines in <graphic|graphics> and paint
+<image|images>. 
 
 Associations: graphic
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the dashes to 10,2 -- 10-pixel dashes separated by 2 pixels
 
 Example:
-set the dashes of graphic "Connector" to 1,2,5,2 -- "dit-dot" dashes
+set the dashes of graphic "Connector" to 1,2,5,2 -- "dit-dah" dashes
 
 Example:
 set the dashes of graphic 10 to empty -- makes a solid line
 
 Value:
-A list of numbers which spcecifies a sequence of pixel lengths that alternately represent space and dash lengths. 
-By default, the <dashes> <property> of a newly created <graphic> is set to empty.
+A list of numbers which specifies a sequence of pixel lengths that
+alternately represent space and dash lengths. By default, the <dashes>
+<property> of a newly created <graphic> is set to empty.
 
 Description:
 Use the <dashes> <property> to change the <appearance> of lines.
 
-The odd-numbered items in the <dashes> <property> represent the number of <pixels> in a dash, and the even-numbered <items> represent the number of <pixels> in the blank space after the dash. The list is repeated for the length of the line.   An odd number of pixel lengths will cause the dash and space pixel lengths to alternate between repeats.  For example, if the <dashes> is set to 20,10,5 the line will contain the following: 20 pixel dash, 10 pixel space, 5 pixel dash, 20 pixel space, 10 pixel dash, 5 pixel space etc.
+The odd-numbered items in the <dashes> <property> represent the number
+of <pixel|pixels> in a dash, and the even-numbered <items> represent the
+number of <pixel|pixels> in the blank space after the dash. The list is
+repeated for the length of the line. An odd number of <pixel> lengths
+will cause the dash and space <pixel> lengths to alternate between
+repeats. For example, if the <dashes> is set to 20,10,5 the line will
+contain the following: 20 pixel dash, 10 pixel space, 5 pixel dash, 20
+pixel space, 10 pixel dash, 5 pixel space etc.
 
-If the <dashes> <property> contains a single <integer> the dashes and spaces will both be given this pixel value.  If the dashes property is empty, the line will be solid.
+If the <dashes> <property> contains a single <integer> the dashes and
+spaces will both be given this pixel value. If the dashes property is
+empty, the line will be solid.
 
-The global setting of the <dashes> <property> <control|controls> the <appearance> of lines drawn with the <paint tool|paint tools> in the same way. Once a paint line is drawn however, its <appearance> cannot be changed by changing the <global> <dashes> <property>.
+The global setting of the <dashes> <property> <control|controls> the
+<appearance> of lines drawn with the <paint tool|paint tools> in the
+same way. Once a paint line is drawn however, its <appearance> cannot be
+changed by changing the <global> <dashes> <property>.
 
-References: relativePoints (property), pixels (property), roundEnds (property), foregroundPattern (property), items (keyword), integer (keyword), graphic (keyword), global (command), control (object), image (object), graphic (object), property (glossary), appearance (glossary), paint tool (glossary)
+>*Note:* The <capStyle> <property> of a <graphic> is set to "round" by
+> <default>. The <roundEnds> <property> of a graphic is <true>
+by <default>. Under these conditions, a <dashes> length that is equal to
+or less than the <lineSize> <property> of the <graphic> will make the
+line appear solid. To ensure that the line appears with dashes do one or
+more of the following:
+
+* <set> the odd-numbered items (the dash length) or the even-numbered
+  items (the blank space length) of the <dashes> <property> to a value
+  greater than the <lineSize>;
+* <set> the <roundEnds> of the <graphic> to <false>;
+* <set> the <capStyle> property of the <graphic> to "butt".
+
+
+References: global (command), set (command), true (constant),
+false (constant), pixel (glossary), integer (glossary),
+property (glossary), appearance (glossary), paint tool (glossary),
+default (glossary), items (keyword), control (object), image (object),
+graphic (object), relativePoints (property), roundEnds (property),
+lineSize (property), capStyle (property)
 
 Tags: ui
+

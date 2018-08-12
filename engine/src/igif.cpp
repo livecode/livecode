@@ -70,7 +70,7 @@ void MCImage::setframe(int32_t p_newframe)
 	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 	// MW-2011-11-15: [[ Bug 9863 ]] Only invalidate the whole object if it has an
 	//   owner!
-	if (parent != nil)
+	if (parent)
 		layer_redrawall();
 	}
 
@@ -240,8 +240,8 @@ MCGIFImageLoader::~MCGIFImageLoader()
 {
 	if (m_gif != nil)
 	{
-		if (GIF_OK != DGifCloseFile(m_gif))
-			MCMemoryDeallocate(m_gif);
+		int t_error_code;
+		DGifCloseFile(m_gif, &t_error_code);
 		m_gif = nil;
 	}
 }
@@ -288,7 +288,7 @@ bool MCGIFImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 	// restoration info
 	MCImageBitmap *t_restore_image = nil;
 	int t_disposal_mode = DISPOSAL_UNSPECIFIED;
-	MCRectangle t_disposal_region;
+	MCRectangle t_disposal_region = kMCEmptyRectangle;
 
 	// The list of frames.
 	MCBitmapFrame *t_frames = nil;
@@ -435,7 +435,7 @@ bool MCGIFImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForGIFStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCGIFImageLoader *t_loader;
-	t_loader = new MCGIFImageLoader(p_stream);
+	t_loader = new (nothrow) MCGIFImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -478,8 +478,7 @@ bool MCImageEncodeGIF(MCImageIndexedBitmap *p_indexed, IO_handle p_stream, uinde
 	int t_err = 0;
 	GifFileType *t_gif = nil;
 	ColorMapObject *t_colormap = nil;
-	GifColorType *t_gifcolors = nil;
-
+	
 	MCGIFWriteContext t_context;
 	t_context.stream = p_stream;
 	t_context.byte_count = 0;
@@ -541,11 +540,9 @@ bool MCImageEncodeGIF(MCImageIndexedBitmap *p_indexed, IO_handle p_stream, uinde
 	for (uindex_t y = 0; t_success && y < p_indexed->height; y++)
 		t_success = GIF_OK == EGifPutLine(t_gif, (uint8_t*)p_indexed->data + y * p_indexed->stride, p_indexed->width);
 
-	if (GIF_ERROR == EGifCloseFile(t_gif))
-	{
+	int t_error_code;
+	if (GIF_ERROR == EGifCloseFile(t_gif, &t_error_code))
 		t_success = false;
-		MCMemoryDeallocate(t_gif);
-	}
 
 	GifFreeMapObject(t_colormap);
 

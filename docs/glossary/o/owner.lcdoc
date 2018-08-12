@@ -1,16 +1,25 @@
 Name: owner
 
-Synonyms: owner,owned,owning,own,parent
+Synonyms: owner, owned, owning, own, parent
 
 Type: glossary
 
 Description:
-The <object> that contains another <object>; the next <object> in the <object hierarchy>. A <card control> is owned by the <card> it's on; a <grouped control> is owned by its <group>; a <card> is owned by the <stack> it's in; and <substack|substacks> are owned by their <main stack>. 
- 
-Also, the application that will open a <file> when the <file> is double-clicked. 
- 
+The <object(glossary)> that contains another <object(glossary)>; the
+next <object(glossary)> in the <object hierarchy>. A <card control> is
+owned by the <card> it's on; a <grouped control> is owned by its
+<group>; a <card> is owned by the <stack> it's in; and
+<substack|substacks> are owned by their <main stack>.
+
+Also, the application that will open a <file> when the <file> is
+double-clicked. 
+
 Also, on <OS X> and <Unix|Unix systems>, the user who owns a <file>.
 
-References: card (object), stack (object), object (object), file (glossary), OS X (glossary), main stack (glossary), object hierarchy (glossary), substack (glossary), group (glossary), card control (glossary), Unix (glossary), grouped control (glossary)
+References: card (glossary), stack (glossary), object (glossary),
+file (glossary), OS X (glossary), main stack (glossary),
+object hierarchy (glossary), substack (glossary), group (glossary),
+card control (glossary), Unix (glossary), grouped control (glossary)
 
 Tags: objects
+

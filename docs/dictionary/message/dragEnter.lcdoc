@@ -4,13 +4,17 @@ Type: message
 
 Syntax: dragEnter
 
-Summary: Sent when the <mouse pointer> moves into an <object> during a <drag and drop>.
+Summary:
+Sent when the <mouse pointer> moves into an <object(glossary)> during a
+<drag and drop>.
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+Associations: card, field, button, graphic, scrollbar, player, image
 
-Platforms: desktop,server
+OS: mac, windows, linux
+
+Platforms: desktop, server
 
 Example:
 on dragEnter -- show a green outline around the drop target
@@ -18,14 +22,30 @@ on dragEnter -- show a green outline around the drop target
 end dragEnter
 
 Description:
-Handle the <dragEnter> <message> to perform an action (for example, display a special cursor or set the <acceptDrop> <property>) when the <mouse pointer> enters an <object>.
+Handle the <dragEnter> <message> to perform an action (for example,
+display a special cursor or set the <acceptDrop> <property>) when the
+<mouse pointer> enters an <object(glossary)>.
 
-The <dragEnter> <message> is sent only when a <drag and drop> operation is in progress.
+The <dragEnter> <message> is sent only when a <drag and drop> operation
+is in progress.
 
-If two controls overlap, a <dragEnter> <message> is sent whenever the <mouse pointer> crosses into a visible portion of a <control>. The <control> on the bottom receives a <dragEnter> <message> only when the <mouse pointer> enters part of the <control> that can be seen. A <control> that is completely hidden by another <control> on top of it will never receive a <dragEnter> <message>.
+If two controls overlap, a <dragEnter> <message> is sent whenever the
+<mouse pointer> crosses into a visible portion of a <control>. The
+<control> on the bottom receives a <dragEnter> <message> only when the
+<mouse pointer> enters part of the <control> that can be seen. A
+<control> that is completely hidden by another <control> on top of it
+will never receive a <dragEnter> <message>.
 
->*Tip:*  Use the <mouseLoc> function to determine where the <mouse pointer> is. Use the <target> <function> to determine which <control> the <mouse pointer> has entered.
+>*Tip:*  Use the <mouseLoc> function to determine where the 
+> <mouse pointer> is. Use the <target> <function> to determine which 
+> <control> the <mouse pointer> has entered.
 
-References: allowableDragActions (property), acceptDrop (property), function (control_st), dragMove (message), mouseEnter (message), dragLeave (message), dragStart (message), mouseLoc (function), target (function), property (glossary), control (glossary), mouse pointer (glossary), message (glossary), drag and drop (glossary), object (object)
+References: function (control structure), mouseLoc (function),
+target (function), property (glossary), control (glossary),
+mouse pointer (glossary), message (glossary), drag and drop (glossary),
+object (glossary), dragMove (message), mouseEnter (message),
+dragLeave (message), dragStart (message), allowableDragActions (property),
+acceptDrop (property)
 
 Tags: ui
+

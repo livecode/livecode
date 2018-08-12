@@ -793,7 +793,7 @@ private:
 	
 	bool SetHTMLText(const char *p_utf8_string)
 	{
-		MCAndroidObjectRemoteCall(m_view, "loadHtml", "vss", nil, LIBBROWSER_DUMMY_URL, p_utf8_string);
+		MCAndroidObjectRemoteCall(m_view, "loadHtml", "vst", nil, LIBBROWSER_DUMMY_URL, p_utf8_string);
 		return true;
 	}
 	
@@ -904,7 +904,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doCal
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result)
 {
-	MCLog("doJSExecutionResult", nil);
+	MCLog("doJSExecutionResult");
 	
 	bool t_success;
 	t_success = true;
@@ -1042,7 +1042,7 @@ class MCAndroidWebViewBrowserFactory : public MCBrowserFactory
 	virtual bool CreateBrowser(void *p_display, void *p_parent_view, MCBrowser *&r_browser)
 	{
 		MCAndroidWebViewBrowser *t_browser;
-		t_browser = new MCAndroidWebViewBrowser();
+		t_browser = new (nothrow) MCAndroidWebViewBrowser();
 		
 		if (t_browser == nil)
 			return false;
@@ -1061,7 +1061,7 @@ class MCAndroidWebViewBrowserFactory : public MCBrowserFactory
 
 bool MCAndroidWebViewBrowserFactoryCreate(MCBrowserFactoryRef &r_factory)
 {
-	MCBrowserFactory *t_factory = new MCAndroidWebViewBrowserFactory();
+	MCBrowserFactory *t_factory = new (nothrow) MCAndroidWebViewBrowserFactory();
 	
 	if (t_factory == nil)
 		return false;

@@ -32,4 +32,5 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define MC_BUILD_FILE_SHORT_VERSION MC_BUILD_ENGINE_SHORT_VERSION
 #define MC_BUILD_FILE_LONG_VERSION MC_BUILD_ENGINE_LONG_VERSION
 
+#define MC_BUILD_IDENTIFIER "$BUILD_REVISION$GIT_REVISION"
 #endif

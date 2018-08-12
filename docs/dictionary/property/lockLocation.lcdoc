@@ -1,18 +1,19 @@
 Name: lockLocation
 
+Synonyms: locked, lockloc
+
 Type: property
 
 Syntax: set the lockLocation of <object> to {true | false}
 
-Summary: Specifies whether the user can move a <control>.
-
-Synonyms: locked,lockLoc
+Summary:
+Specifies whether the user can move a <control>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the lockLocation of button "Next" to true
@@ -20,25 +21,59 @@ set the lockLocation of button "Next" to true
 Example:
 set the lockLocation of group ID 4455 to false
 
-Value (bool):The <lockLocation> of a <control> is true or false.
-By default, the <lockLocation> property of a newly created <control> is set to false.
+The result:
+Use the <lockLocation> <property> to protect a <control> from being
+moved by the user, or to change the result of setting the <height> or
+<width> <property>, or to prevent an <image> or <player> from changing
+its size to fit the contents.
 
-The result: Use the <lockLocation> <property> to protect a <control(keyword)> from being moved by the user, or to change the result of setting the <height> or <width> <property>, or to prevent an <image> or <player> from changing its size to fit the contents.
+Value (bool):
+The <lockLocation> of a <control> is true or false.  By
+default, the <lockLocation> property of a newly created <control> is set to false.
 
 Description:
+If the <lockLocation> <property> of an <object(glossary)> is false, the
+user can drag its handles with the <Pointer tool> to move or resize the
+<object(glossary)>. If the <object|object's> <lockLocation> is true, the
+user cannot move it or resize it.
 
-If the <lockLocation> <property> of an <object> is false, the user can drag its handles with the <Pointer tool> to move or resize the <object>. If the <object|object's> <lockLocation> is true, the user cannot move it or resize it.
+If the <lockLocation> of a <player> or <image> that references an
+external <file> is false, the <image> or <player> is resized to fit its
+contents whenever the <card> opens. If the <lockLocation> is true, the
+<image> retains whatever size you set, even if it's not the same size as
+the <object|object's> contents.
 
-If the <lockLocation> of a <player> or <image> that references an external <file> is false, the <image> or <player> is resized to fit its contents whenever the <card> opens. If the <lockLocation> is true, the <image> retains whatever size you set, even if it's not the same size as the <object|object's> contents.
+If the <lockLocation> of a <group(command)> is false, the
+<group(command)> is automatically resized when the <object|objects> in
+it are moved, resized, hidden, or shown. If the <lockLocation> is true,
+this automatic resizing does not occur, and <object|objects> that move
+outside the <group(glossary)|group's> boundaries are not shown. If a
+<group(command)> has a <scrollbar>, set its <lockLocation> to true to
+ensure that the <group(command)> does not automatically resize to fit
+its contents.
 
-If the <lockLocation> of a <group(command)> is false, the <group(command)> is automatically resized when the <object|objects> in it are moved, resized, hidden, or shown. If the <lockLocation> is true, this automatic resizing does not occur, and <object|objects> that move outside the <group(glossary)|group's> boundaries are not shown. If a <group(command)> has a <scrollbar>, set its <lockLocation> to true to ensure that the <group(command)> does not automatically resize to fit its contents.
+If a control's <lockLocation> <property> is false, when you change its
+height, it shrinks or grows from the center: the <control|control's>
+top and bottom edges both shift, while its <location> <property> stays
+the same. If the <control|control's> <lockLocation> <property> is
+true, it shrinks or grows from the top left corner: the
+<control|control's> top edge stays in the same place, and the bottom
+edge moves.
 
-If a control's <lockLocation> <property> is false, when you change its height, it shrinks or grows from the center:  the <control(object)|control's> top and bottom edges both shift, while its <location> <property> stays the same. If the <control(object)|control's> <lockLocation> <property> is true, it shrinks or grows from the top left corner: the <control(object)|control's> top edge stays in the same place, and the bottom edge moves.
+>*Note:* Changing a control's <width> or <height> in the property
+> inspector always preserves its location, regardless of the
+> <lockLocation> setting.
 
->*Note:* Changing a control's <width> or <height> in the property inspector always preserves its location, regardless of the <lockLocation> setting. 
+The setting of the <lockLocation> <property> does not prevent a
+<handler> from moving or resizing an <object(glossary)>.
 
-The setting of the <lockLocation> <property> does not prevent a <handler> from moving or resizing an <object>.
-
-References: height (property), lockCursor (property), lockLocation (property), width (property), location (property), file (keyword), player (keyword), image (keyword), scrollbar (keyword), card (keyword), control (keyword), revChangeWindowSize (command), group (command), object (object), control (object), property (glossary), handler (glossary), Pointer tool (glossary), group (glossary)
+References: revChangeWindowSize (command), group (command),
+object (glossary), property (glossary), handler (glossary),
+Pointer tool (glossary), group (glossary), file (keyword),
+player (keyword), image (keyword), scrollbar (keyword), card (keyword),
+control (glossary), height (property),
+lockCursor (property), lockLocation (property), width (property),
+location (property)
 
 Tags: ui
+

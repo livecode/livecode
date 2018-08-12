@@ -2,17 +2,19 @@ Name: scrollbarDrag
 
 Type: message
 
-Syntax: scrollbarDrag <newPosition> 
+Syntax: scrollbarDrag <pNewPosition>
 
-Summary: Sent to a <field>, <scrollbar>, or <group> when the user drags the <scrollbar thumb> or when a text <selection> causes a <field> to scroll.
+Summary:
+Sent to a <field>, <scrollbar>, or <group> when the user drags the
+<scrollbar thumb> or when a text <selection> causes a <field> to scroll.
 
-Associations: field
+Associations: field, group, scrollbar
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on scrollbarDrag newValue -- display current line number
@@ -20,15 +22,30 @@ on scrollbarDrag newValue -- display current line number
 end scrollbarDrag
 
 Parameters:
-newPosition: The new position of the scrollbar thumb. This parameter is passed only if the object is a scrollbar.
+pNewPosition:
+The new position of the scrollbar thumb. This parameter is passed only
+if the object is a scrollbar.
 
 Description:
-Handle the <scrollbarDrag> <message> if you want to respond to the user dragging the <scrollbar thumb>: for example, to update a counter on the <card>.
+Handle the <scrollbarDrag> <message> if you want to respond to the user
+dragging the <scrollbar thumb>: for example, to update a counter on the
+<card>. 
 
-If the user clicks one of the arrows or the gray region of the scrollbar, and the appropriate message is not handled anywhere in the message path, a <scrollbarDrag> <message> is sent. In other words, you can use a <scrollbarDrag> <handler> to <handle> all <scrollbar> movements.
+If the user clicks one of the arrows or the gray region of the
+scrollbar, and the appropriate message is not handled anywhere in the
+message path, a <scrollbarDrag> <message> is sent. In other words, you
+can use a <scrollbarDrag> <handler> to <handle> all <scrollbar>
+movements. 
 
-If the select <command> is used to <select> text within a scrolling <field>, and this causes the <field> to scroll to bring the <selected> text into view, a <scrollbarDrag> <message> is sent to the <field>.
+If the select <command> is used to <select> text within a scrolling
+<field>, and this causes the <field> to scroll to bring the <selected>
+text into view, a <scrollbarDrag> <message> is sent to the <field>.
 
-References: field (keyword), scrollbar (keyword), selection (keyword), selected (property), scrollbarBeginning (message), select (command), group (command), scrollbar thumb (glossary), handle (glossary), handler (glossary), message (glossary), card (glossary), field (glossary), command (glossary)
+References: select (command), group (command), scrollbar thumb (glossary),
+handle (glossary), handler (glossary), message (glossary),
+card (glossary), field (glossary), command (glossary), field (keyword),
+scrollbar (keyword), selection (keyword), scrollbarBeginning (message),
+selected (property)
 
 Tags: ui
+

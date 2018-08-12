@@ -18,7 +18,6 @@
 			'src/mctheme.h',
 			'src/metacontext.h',
 			'src/packed.h',
-			'src/paint.h',
 			'src/path.h',
 			'src/pathprivate.h',
 			'src/redraw.h',
@@ -40,8 +39,6 @@
 			'src/mctheme.cpp',
 			'src/metacontext.cpp',
 			'src/path.cpp',
-			'src/pathgray.cpp',
-			'src/pathprocess.cpp',
 			'src/printer.cpp',
 			'src/redraw.cpp',
 			'src/region.cpp',
@@ -52,6 +49,8 @@
 			'src/tilecachecg.cpp',
 			'src/tilecachegl.cpp',
 			'src/tilecachesw.cpp',
+			'src/mcsemaphore.h',
+			'src/mctristate.h',
 			
 			# Group "Core - Language"
 			'src/ans.h',
@@ -79,7 +78,6 @@
 			'src/scriptpt.h',
 			'src/statemnt.h',
 			'src/variable.h',
-			'src/variable_impl.h',
 			'src/visual.h',
 			'src/answer.cpp',
 			'src/ask.cpp',
@@ -105,10 +103,12 @@
 			'src/keywords.cpp',
 			'src/literal.cpp',
 			'src/keywords.cpp',
+			'src/mcmessagedigest.cpp',
 			'src/newobj.cpp',
 			'src/operator.cpp',
 			'src/param.cpp',
 			'src/property.cpp',
+			'src/rawarray.h',
 			'src/scriptpt.cpp',
 			'src/statemnt.cpp',
 			'src/variable.cpp',
@@ -127,6 +127,7 @@
 			'src/flst.h',
 			'src/globals.h',
 			'src/license.h',
+            'src/license.cpp',
 			'src/mcerror.h',
 			'src/mcio.h',
 			'src/mcssl.h',
@@ -168,11 +169,21 @@
 			'src/regex.cpp',
 			'src/securemode.cpp',
 			'src/sha1.cpp',			
+			'src/shacommon.h',
+			'src/sha256.h',
+			'src/sha256.cpp',
+			'src/sha512.h',
+			'src/sha512.cpp',
+			'src/sha3.h',
+			'src/sha3.cpp',
+			'src/socket.h',			
 			'src/text.cpp',
 			'src/uidc.cpp',
 			'src/unicode.cpp',
 			'src/util.cpp',
 			'src/uuid.cpp',
+			'src/patternmatcher.h',
+			'src/patternmatcher.cpp',
 			
 			# Group "Core - Objects"
 			'src/aclip.h',
@@ -206,10 +217,12 @@
 			'src/parentscript.h',
 			'src/player.h',
 			'src/player-platform.h',
+			'src/player-interface.h',
 			'src/rtf.h',
 			'src/scrolbar.h',
 			'src/sellst.h',
 			'src/stack.h',
+			'src/stackfileformat.h',
 			'src/stacklst.h',
 			'src/styledtext.h',
 			'src/textbuffer.h',
@@ -257,6 +270,7 @@
 			'src/image_rep_resampled.cpp',
 			'src/imagebitmap.cpp',
 			'src/imageloader.cpp',
+            'src/internal.cpp',
 			'src/ipng.cpp',
 			'src/iquantization.cpp',
 			'src/iquantize_new.cpp',
@@ -269,14 +283,17 @@
 			'src/object.cpp',
 			'src/objectprops.cpp',
 			'src/objectpropsets.cpp',
+			'src/objectpropsets.h',
 			'src/objectstream.cpp',
 			'src/objptr.cpp',
 			'src/paragraf.cpp',
 			'src/paragrafattr.cpp',
 			'src/parentscript.cpp',
 			'src/pickle.cpp',
-			'src/player-platform.cpp',
 			'src/player.cpp',
+			'src/player-legacy.cpp',
+			'src/player-legacy.h',
+			'src/player-platform.cpp',
 			'src/props.cpp',
 			'src/rtf.cpp',
 			'src/rtfsupport.cpp',
@@ -289,6 +306,7 @@
 			'src/stack3.cpp',
 			'src/stackcache.cpp',
 			'src/stacke.cpp',
+			'src/stackfileformat.cpp',
 			'src/stacklst.cpp',
 			'src/stackview.cpp',
 			'src/styledtext.cpp',
@@ -309,6 +327,7 @@
 			# Group "Exec"
 			'src/exec.h',
 			'src/exec-interface.h',
+			'src/exec-context.h',
 			'src/exec-strings.h',
 			'src/exec.cpp',
 			'src/exec-ad.cpp',
@@ -344,6 +363,7 @@
 			'src/exec-interface-vclip.cpp',
 			'src/exec-interface-widget.cpp',
 			'src/exec-keywords.cpp',
+			'src/exec-keywords.h',
 			'src/exec-legacy.cpp',
 			'src/exec-logic.cpp',
 			'src/exec-mail.cpp',
@@ -352,6 +372,7 @@
 			'src/exec-multimedia.cpp',
 			'src/exec-nativecontrol.cpp',
 			'src/exec-network.cpp',
+			'src/exec-nfc.cpp',
 			'src/exec-notification.cpp',
 			'src/exec-orientation.cpp',
 			'src/exec-pasteboard.cpp',
@@ -423,11 +444,13 @@
 			'src/mblandroidinput.cpp',
 			'src/mblandroidio.cpp',
 			'src/mblandroidjava.cpp',
+			'src/mblandroidlcb.cpp',
 			'src/mblandroidmail.cpp',
 			'src/mblandroidmediapick.cpp',
 			'src/mblandroidmisc.cpp',
 			'src/mblandroidmm.cpp',
 			'src/mblandroidnetwork.cpp',
+			'src/mblandroidnfc.cpp',
 			'src/mblandroidnotification.cpp',
 			'src/mblandroidorientation.cpp',
 			'src/mblandroidplayer.cpp',
@@ -470,6 +493,7 @@
 			'src/mbliphonemail.mm',
 			'src/mbliphonemediapick.mm',
 			'src/mbliphonemisc.mm',
+			'src/mbliphonenfc.mm',
 			'src/mbliphonenotification.mm',
 			'src/mbliphoneorientation.mm',
 			'src/mbliphonepick.mm',
@@ -504,6 +528,7 @@
 			'src/sysw32network.cpp',
 			'src/sysw32region.cpp',
 			'src/sysw32registry.cpp',
+			'src/mcmanagedpthread.h',
 			
 			# Group "Text"
 			'src/text.h',
@@ -535,6 +560,10 @@
 			#'src/text-segment.cpp',
 			#'src/text-simplebreakingengine.cpp',
 			
+			# Group "Emscripten"
+			'src/jsobject.h',
+			'src/jsobject.cpp',
+			
 			# Group "Desktop"
 			'src/quicktime.cpp',
 			'src/quicktime.stubs',
@@ -559,10 +588,6 @@
 			'src/mblandroid-theme.cpp',
 			'src/mbliphone-theme.mm',
 			'src/windows-theme.cpp',
-				
-			# Group "Syntax"
-			'src/syntax.h',
-			'src/syntax.cpp',
 			
 			# Other files
 			'src/socket_resolve.cpp',
@@ -612,6 +637,7 @@
 			'src/platform.h',
 			'src/platform.cpp',
 			'src/platform-internal.h',
+			'src/platform-player.cpp',
 			'src/platform-recorder.cpp',
 			'src/platform-surface.cpp',
 			'src/platform-window.cpp',
@@ -650,7 +676,6 @@
 			'src/lnxdclnx.cpp',
 			'src/lnxdcs.cpp',
 			'src/lnxdnd.cpp',
-			'src/lnxflstold.cpp',
 			'src/lnxgtktheme.cpp',
 			'src/lnxgtkthemedrawing.cpp',
 			'src/lnximage.cpp',
@@ -665,7 +690,6 @@
 			
 			# Group "Desktop - Mac"
 			'src/mac-internal.h',
-			'src/mac-player.h',
 			'src/osxflst.h',
 			'src/osxprefix.h',
 			'src/osxprinter.h',
@@ -681,7 +705,6 @@
 			'src/mac-font.mm',
 			'src/mac-menu.mm',
 			'src/mac-pasteboard.mm',
-			'src/mac-player.mm',
 			'src/mac-printer.mm',
 			'src/mac-qt-player.mm',
 			'src/mac-qt-recorder.mm',
@@ -693,12 +716,12 @@
 			'src/osxcisupport.mm',
 			'src/osxcoreimage.cpp',
 			'src/osxfield.cpp',
-			'src/osxfiles.cpp',
 			'src/osximage.cpp',
 			'src/osxmisc.mm',
 			'src/osxprinter.cpp',
 			'src/osxstack.cpp',
 			'src/osxtheme.mm',
+			'src/visualeffect.h',
 			
 			# Group "Desktop - Windows"
 			'src/w32compat.h',
@@ -718,10 +741,12 @@
 			'src/w32dcs.cpp',
 			'src/w32dcw32.cpp',
 			'src/w32dnd.cpp',
+			'src/w32dsk-legacy.h',
 			'src/w32flst.cpp',
 			'src/w32icon.cpp',
 			'src/w32image.cpp',
 			'src/w32misc.cpp',
+			'src/w32-ds-player.cpp',
 			'src/w32prefix.cpp',
 			'src/w32printer.cpp',
 			'src/w32relaunch.cpp',
@@ -731,14 +756,17 @@
 			'src/w32text.cpp',
 			'src/w32textlayout.cpp',
 			'src/w32theme.cpp',
+			'src/w32-core-compat.cpp',
 
 			# Group "Desktop - Emscripten"
 			'src/em-async.h',
 			'src/em-async.js',
-			'src/em-dc-mainloop.h',
+			'src/em-clipboard.h',
+			'src/em-clipboard.cpp',
 			'src/em-dc-mainloop.cpp',
 			'src/em-dc.h',
 			'src/em-dc.cpp',
+			'src/em-dc.js',
 			'src/em-dialog.js',
 			'src/em-event.h',
 			'src/em-event.cpp',
@@ -747,9 +775,17 @@
 			'src/em-filehandle.cpp',
 			'src/em-fontlist.h',
 			'src/em-fontlist.cpp',
+			'src/em-javascript.h',
+			'src/em-javascript.cpp',
+			'src/em-liburl.h',
+			'src/em-liburl.cpp',
+			'src/em-liburl.js',
 			'src/em-main.cpp',
+			'src/em-native-layer.h',
+			'src/em-native-layer.cpp',
 			'src/em-osspec-misc.cpp',
 			'src/em-osspec-network.cpp',
+			'src/em-preamble-overlay.js',
 			'src/em-preamble.js',
 			'src/em-resolution.cpp',
 			'src/em-stack.cpp',
@@ -758,8 +794,10 @@
 			'src/em-standalone.js',
 			'src/em-surface.h',
 			'src/em-surface.cpp',
+			'src/em-surface.js',
 			'src/em-system.h',
 			'src/em-system.cpp',
+			'src/em-system.js',
 			'src/em-theme.cpp',
 			'src/em-url.cpp',
 			'src/em-url.js',
@@ -804,7 +842,6 @@
 			'src/deploy_windows.cpp',
 			'src/deploysecurity.cpp',
 			'src/ide.cpp',
-			'src/internal.cpp',
 			'src/internal_development.cpp',
 			'src/mode_development.cpp',
 		],
@@ -820,7 +857,6 @@
 		'engine_installer_mode_source_files':
 		[
 			'src/bsdiff_apply.cpp',
-			'src/internal.cpp',
 			'src/mode_installer.cpp',
 			'src/mode_installer_lnx.cpp',
 			'src/mode_installer_osx.mm',
@@ -856,6 +892,7 @@
 			'src/srvspec.cpp',
 			'src/srvstack.cpp',
 			'src/native-layer-srv.cpp',
+			'src/player-srv-stubs.cpp',
 		],
 		
 		# Java sources for Android
@@ -863,7 +900,7 @@
 		[
 			'src/java/com/runrev/android/AccelerationChangeListener.java',
 			'src/java/com/runrev/android/Alert.java',
-			'src/java/com/runrev/android/AttachmentProvider.java',
+			'src/java/com/runrev/android/AppProvider.java',
 			'src/java/com/runrev/android/BitmapView.java',
 			'src/java/com/runrev/android/BusyIndicator.java',
 			'src/java/com/runrev/android/CalendarEvents.java',
@@ -874,8 +911,12 @@
 			'src/java/com/runrev/android/Engine.java',
 			'src/java/com/runrev/android/EngineApi.java',
 			'src/java/com/runrev/android/EngineReceiver.java',
+			'src/java/com/runrev/android/FileProvider.java',
+			'src/java/com/runrev/android/LCBInvocationHandler.java',
 			'src/java/com/runrev/android/LiveCodeActivity.java',
+			'src/java/com/runrev/android/LiveCodeService.java',
 			'src/java/com/runrev/android/NetworkModule.java',
+			'src/java/com/runrev/android/NFCModule.java',
 			'src/java/com/runrev/android/NotificationModule.java',
 			'src/java/com/runrev/android/OpenGLView.java',
 			'src/java/com/runrev/android/PushReceiver.java',
@@ -935,6 +976,7 @@
 		'engine_server_exclude_files':
 		[
 			'src/player-platform.cpp',
+			'src/player-legacy.cpp',
 			'src/stacke.cpp',
 		],
 		
@@ -951,6 +993,7 @@
 			'src/module-resources.cpp',
 			
 			'src/module-browser.cpp',
+			'src/module-emscripten.cpp',
 		],
 		
 		# Engine LCB files containing syntax
@@ -960,11 +1003,19 @@
 			'src/engine.lcb',
 			'src/widget.lcb',
 		],
+        
+        # Engine LCB files containing syntax which don't require compiling into
+        # the engine.
+        'engine_syntax_only_lcb_files':
+        [
+            'src/license.lcb',
+        ],
 		
 		# Other engine LCB files
 		'engine_other_lcb_files':
 		[
 			'src/browser.lcb',
+			'src/emscripten.lcb',
 		],
 
 		# Engine cpptest source files
@@ -972,6 +1023,8 @@
 		[
 			'test/test_lextable.cpp',
 			'test/test_new.cpp',
+			'test/test_rgb.cpp',
+            'test/test_path.cpp',
 		],
 	},
 	
@@ -1011,7 +1064,6 @@
 					'sources!':
 					[
 						'src/dskmac.cpp',
-						'src/srvmac.cpp',
 						'src/native-layer-mac.mm',
 					],
 				},
@@ -1099,8 +1151,17 @@
 					'sources!':
 					[
 						'src/fiber.cpp',
-						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
+						'src/player-legacy.cpp',
+						
+						'src/desktop-ans.cpp',
+						'src/desktop-dc.cpp',
+						'src/desktop-image.cpp',
+						'src/desktop-menu.cpp',
+						'src/desktop-stack.cpp',
+						'src/platform-recorder.cpp',
+						'src/platform-surface.cpp',
+						'src/platform-window.cpp',
 					],
 				},
 			],
@@ -1110,29 +1171,11 @@
 				{
 					'sources!':
 					[
-						'src/tilecachegl.cpp',
-						'src/player-platform.cpp',
+						'src/player-legacy.cpp',
+						'src/sysunxdate.cpp',
 						'src/sysunxrandom.cpp',
 						'src/sysunxregion.cpp',
-						'src/sysunxdate.cpp',
-						
-						'src/srvflst.cpp',
-					],
-				},
-				{
-					'sources!':
-					[
-						
-						'src/desktop.cpp',
-						'src/desktop-ans.cpp',
-						'src/desktop-dc.cpp',
-						'src/desktop-image.cpp',
-						'src/desktop-menu.cpp',
-						'src/desktop-stack.cpp',
-						'src/platform.cpp',
-						'src/platform-recorder.cpp',
-						'src/platform-surface.cpp',
-						'src/platform-window.cpp',
+						'src/tilecachegl.cpp',
 					],
 				},
 			],
@@ -1163,7 +1206,18 @@
 					[
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
-					]
+						
+						'src/desktop.cpp',
+						'src/desktop-ans.cpp',
+						'src/desktop-dc.cpp',
+						'src/desktop-image.cpp',
+						'src/desktop-menu.cpp',
+						'src/desktop-stack.cpp',
+						'src/platform.cpp',
+						'src/platform-recorder.cpp',
+						'src/platform-surface.cpp',
+						'src/platform-window.cpp',
+					],
 				},
 			],
 			[
@@ -1173,6 +1227,17 @@
 					[
 						'src/player-platform.cpp',
 						'src/sysunxnetwork.cpp',
+
+						'src/desktop.cpp',
+						'src/desktop-ans.cpp',
+						'src/desktop-dc.cpp',
+						'src/desktop-image.cpp',
+						'src/desktop-menu.cpp',
+						'src/desktop-stack.cpp',
+						'src/platform.cpp',
+						'src/platform-recorder.cpp',
+						'src/platform-surface.cpp',
+						'src/platform-window.cpp',
 					],
 				},
 			],
@@ -1181,12 +1246,24 @@
 				{
 					'sources!':
 					[
+						'src/player-platform.cpp',
 						'src/stacke.cpp',
 						'src/sysunxdate.cpp',
 						'src/sysunxrandom.cpp',
 						
 						'src/mbliphoneembedded.mm',
 						'src/mbliphoneembeddedtest.mm',
+
+						'src/desktop.cpp',
+						'src/desktop-ans.cpp',
+						'src/desktop-dc.cpp',
+						'src/desktop-image.cpp',
+						'src/desktop-menu.cpp',
+						'src/desktop-stack.cpp',
+						'src/platform.cpp',
+						'src/platform-recorder.cpp',
+						'src/platform-surface.cpp',
+						'src/platform-window.cpp',
 					],
 				},
 			],
@@ -1204,9 +1281,20 @@
 				{
 					'sources!':
 					[
-						'src/tilecachegl.cpp',
-						'src/mcssl.cpp',
 						'src/notify.cpp',
+						'src/player-platform.cpp',
+						'src/tilecachegl.cpp',
+						
+						'src/desktop.cpp',
+						'src/desktop-ans.cpp',
+						'src/desktop-dc.cpp',
+						'src/desktop-image.cpp',
+						'src/desktop-menu.cpp',
+						'src/desktop-stack.cpp',
+						'src/platform.cpp',
+						'src/platform-recorder.cpp',
+						'src/platform-surface.cpp',
+						'src/platform-window.cpp',
 					],
 				},
 			],
@@ -1215,9 +1303,16 @@
 				{
 					'sources/':
 					[
-						# Note that this does *not* exclude player.cpp
-						['exclude', '^src/player.+\\.(cpp|mm)$'],
 						['exclude', '^src/dsk.*\\.(cpp|mm)$'],
+					],
+				},
+			],
+			[
+				'mobile == 0',
+				{
+					'sources!':
+					[
+						'src/exec-sensor.cpp',
 					],
 				},
 			],

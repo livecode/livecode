@@ -4,13 +4,18 @@ Type: message
 
 Syntax: preOpenControl
 
-Summary: Sent to a <group> when you go to the <card> that contains it and to a <background group> when going from a card which it is not placed on to one where it is.
+Summary:
+Sent to a <group> when you go to the <card> that contains it and to a
+<background group> when going from a card which it is not placed on to
+one where it is.
+
+Associations: group
 
 Introduced: 3.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on preOpenControl
@@ -19,18 +24,29 @@ on preOpenControl
 end preOpenControl
 
 Description:
-Handle the <preOpenControl> message to update a group's appearance before it appears on screen.
+Handle the <preOpenControl> message to update a group's appearance
+before it appears on screen.
 
 &nbsp;
 
-For groups with their <backgroundBehavior property> set to true, the <preOpenControl> message is sent immediately after the <preOpenBackground message> is sent to the <card(object)> being opened. For non-background groups, it is sent after the <preOpenCard message>.
+For groups with their <backgroundBehavior> <property> set to true, the
+<preOpenControl> message is sent immediately after the
+<preOpenBackground> <message> is sent to the <card(object)> being opened.
+For non-background groups, it is sent after the <preOpenCard> <message>.
 
 &nbsp;
 
-For nested groups, the <preOpenControl> message is sent to the parent group first, if it is passed or not handled by the parent group, then it passes through each child group in reverse layer order (i.e from highest to lowest).
+For nested groups, the <preOpenControl> message is sent to the parent
+group first, if it is passed or not handled by the parent group, then it
+passes through each child group in reverse layer order (i.e from highest
+to lowest).
 
-&nbsp;
+The actual navigation is not triggered by the <preOpenControl>
+<message>, so blocking the <message> and not allowing it to pass does
+not prevent the <card(keyword)> with the <group> from opening.
 
-The actual navigation is not triggered by the <preOpenControl> <message>, so blocking the <message> and not allowing it to pass does not prevent the <card(keyword)> with the <group> from opening.
+References: dispatch (command), group (command), message (glossary),
+card (keyword), preOpenBackground (message),
+openControl (message), preOpenCard (message), card (object),
+background group (property), backgroundBehavior (property), property (glossary)
 
-References: card (keyword), background group (property), backgroundBehavior property (property), preOpenBackground message (message), openControl (message), preOpenCard message (message), dispatch (command), group (command), card (object), message (glossary)

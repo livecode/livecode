@@ -4,31 +4,43 @@ Type: property
 
 Syntax: set the hScrollbar of {<field> | <group>} to {true | false}
 
-Summary: Specifies whether a <field> or <group> has a horizontal scrollbar.
+Summary:
+Specifies whether a <field> or <group> has a horizontal scrollbar.
 
-Associations: field
+Associations: field, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the hScrollbar of group "Main" to true
 
-Value (bool):The <hScrollbar> of a <field(keyword)> or <group(command)> is true or false.
-By default, the <hScrollbar> <property> of newly created <field(object)|fields> or <group(glossary)|groups> is set to false.
+Value (bool):
+The <hScrollbar> of a <field(keyword)> or <group(command)> is true or
+false. By default, the <hScrollbar> <property> of newly created
+<field(object)|fields> or <group(glossary)|groups> is set to false.
 
 Description:
-Use the <hScrollbar> <property> to show or hide the horizontal scrollbar of a <field> or <group>.
+Use the <hScrollbar> <property> to show or hide the horizontal scrollbar
+of a <field> or <group>.
 
-When the <hScrollbar> of a group or <field> is set to true, the scrollbar appears across the bottom of the <group> or <field>.
+When the <hScrollbar> of a group or <field> is set to true, the
+scrollbar appears across the bottom of the <group> or <field>.
 
-Changing the <hScrollbar> does not change the <object|object's> <rectangle> <property>, so if there are <object|objects> near the bottom edge of the <group>, the scrollbar may cover them.
+Changing the <hScrollbar> does not change the <object|object's>
+<rectangle> <property>, so if there are <object|objects> near the bottom
+edge of the <group>, the scrollbar may cover them.
 
-If a field's <dontWrap> <property> is set to true, the <field> does not scroll horizontally; the scrollbar appears but is always disabled.
+If a field's <dontWrap> <property> is set to true, the <field> does not
+scroll horizontally; the scrollbar appears but is always disabled.
 
-References: hScroll (property), dontWrap (property), width (property), vScrollbar (property), field (keyword), rectangle (keyword), group (command), field (object), object (object), property (glossary), group (glossary)
+References: group (command), object (glossary), property (glossary),
+group (glossary), field (keyword), rectangle (keyword), field (object),
+hScroll (property), dontWrap (property), width (property),
+vScrollbar (property)
 
 Tags: ui
+

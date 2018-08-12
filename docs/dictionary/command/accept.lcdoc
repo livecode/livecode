@@ -2,15 +2,17 @@ Name: accept
 
 Type: command
 
-Syntax: accept [datagram] connections on port <portNumber> with message <callbackMessage> 
+Syntax: accept [datagram] connections on port <portNumber> with message <callbackMessage>
 
-Summary: Accepts an internet connection and creates a <socket> for that connection.
+Summary:
+Accepts an internet connection and creates a <socket> for that
+connection. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,iOS,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: network
 
@@ -29,19 +31,48 @@ on connectionMade pIPAddress
    put "Connection made:" && pIPAddress
 end connectionMade
 
+Example:
+accept connections on port 0 with message "connectionMade"
+put it into tPort
+
 Parameters:
-callbackMessage: The name of a message to be sent when a connection is made or a datagram is received.
-portNumber: The TCP port number on which to accept connections.
+callbackMessage:
+The name of a message to be sent when a connection is made or a datagram
+is received.
+
+portNumber:
+The TCP port number on which to accept connections.
+
+The result:
+An error message if the socket could not be opened.
+
+It:
+The actual port that was bound. In the case of accepting connections
+on port 0 the operating system will assign a free port in its ephemeral
+port range.
 
 Description:
-Use the <accept> <command> when running a <server>, to accept <TCP> connections or <UDP> <datagram|datagrams> from other systems (or other <process|processes> on the same system).
-Use the datagram option if you want to accept UDP datagrams.
+Use the <accept> <command> when running a <server>, to accept <TCP>
+connections or <UDP> <datagram|datagrams> from other systems (or other
+<process|processes> on the same system). Use the datagram option if you
+want to accept UDP datagrams.
 
-When a connection is made or a datagram is received, the <accept> <command> creates a new <socket> that can be used to communicate with the other system (or <process>). When using the <close socket>, <read from socket>, or <write to socket> <command|commands>, you can refer to this <socket> with a socket identifier that looks like this:
-host:port[|connectionID]
-where the connectionID is a number assigned by the <accept> <command>. (You only need to specify the connection number if there is more than one <socket> connected to a particular <port> and <host>.)
+When a connection is made or a datagram is received, the <accept>
+<command> creates a new <socket> that can be used to communicate with
+the other system (or <process>). When using the <close socket>, <read
+from socket>, or <write to socket> <command|commands>, you can refer to
+this <socket> with a socket identifier that looks like this:
+host:port[|connectionID] where the connectionID is a number assigned by
+the <accept> <command>. (You only need to specify the connection number
+if there is more than one <socket> connected to a particular <port> and
+<host>.) 
 
-The <callbackMessage> is sent to the <object> whose <script> contains the <accept> <command>. Either one or two <parameter|parameters> are sent with this <message>. The first <parameter> is the <IP address> of the system or <process> making the connection. If a <datagram> is being accepted, the second <parameter> is the contents of the <datagram>.
+The <callbackMessage> is sent to the <object(glossary)> whose <script>
+contains the <accept> <command>. Either one or two
+<parameter|parameters> are sent with this <message>. The first
+<parameter> is the <IP address> of the system or <process> making the
+connection. If a <datagram> is being accepted, the second <parameter> is
+the contents of the <datagram>.
 
 - For technical information about sockets, see [RFC
   147](https://tools.ietf.org/html/rfc147)
@@ -49,9 +80,21 @@ The <callbackMessage> is sent to the <object> whose <script> contains the <accep
   768](https://tools.ietf.org/html/rfc768)
 - For technical information about the numbers used to designate
   standard ports, see the
-  [official IANA list of port assignments](https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml)
+  [official IANA list of port
+  assignments](https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml)
   and [RFC 6335](https://tools.ietf.org/html/rfc6335)
 
-References: HTTPProxy (property), script (property), read from socket (command), write to socket (command), close socket (command), open socket (command), openSockets (function), hostAddressToName (function), hostName (function), hostAddress (function), peerAddress (function), hostNameToAddress (function), datagram (glossary), IP address (glossary), TCP (glossary), port (glossary), command (glossary), socket (glossary), UDP (glossary), host (glossary), server (glossary), message (glossary), parameter (glossary), process (glossary), object (object)
+> **Note:** The <defaultNetworkInterface> <property> can be used to
+specify the interface to accept connections on.
+
+References: read from socket (command), write to socket (command),
+close socket (command), open socket (command), openSockets (function),
+hostAddressToName (function), hostName (function), hostAddress (function),
+peerAddress (function), hostNameToAddress (function), datagram (glossary),
+IP address (glossary), TCP (glossary), port (glossary),
+command (glossary), socket (glossary), UDP (glossary), host (glossary),
+server (glossary), message (glossary), parameter (glossary),
+process (glossary), object (glossary), HTTPProxy (property),
+script (property), defaultNetworkInterface (property)
 
 Tags: networking

@@ -6,13 +6,15 @@ Syntax: the dropChunk
 
 Syntax: dropChunk()
 
-Summary: <return|Returns> a <chunk expression> describing the location in the <field> where data was dropped.
+Summary:
+<return|Returns> a <chunk expression> describing the location in the
+<field> where data was dropped.
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server
+Platforms: desktop, server
 
 Example:
 the dropChunk
@@ -20,15 +22,31 @@ the dropChunk
 Example:
 select the dropChunk
 
-Returns: The <dropChunk> <function> <return|returns> a <chunk expression> of the form char followingChar to precedingChar of field fieldNumber. The followingChar is always one less than the precedingChar.
+Returns:
+The <dropChunk> <function> <return|returns> a <chunk expression> of the
+form char followingChar to precedingChar of field fieldNumber. The
+followingChar is always one less than the precedingChar.
 
 Description:
-Use the <dropChunk> <function> within a <dragDrop> <handler> to find out exactly where text was dropped into a <field>.
+Use the <dropChunk> <function> within a <dragDrop> <handler> to find out
+exactly where text was dropped into a <field>.
 
-The <dropChunk> <function> only <return|returns> a value while a <dragDrop> <handler> is being <execute|executed>: that is, you can use it in a <dragDrop> <handler> or in a <handler> that's called by a <dragDrop> <handler>. If called from another <handler>, the <dropChunk> <function> <return|returns> empty.
+The <dropChunk> <function> only <return|returns> a value while a
+<dragDrop> <handler> is being <execute|executed>: that is, you can use
+it in a <dragDrop> <handler> or in a <handler> that's called by a
+<dragDrop> <handler>. If called from another <handler>, the <dropChunk>
+<function> <return|returns> empty.
 
-The <dropChunk> <function> designates an <insertion point> rather than a run of characters. For example, if you drop text between <characters> 3 and 4 of <field> number 1, the <dropChunk> <function> <return|returns> "char 4 to 3 of field 1".
+The <dropChunk> <function> designates an <insertion point> rather than a
+run of characters. For example, if you drop text between <characters> 3
+and 4 of <field> number 1, the <dropChunk> <function> <return|returns>
+"char 4 to 3 of field 1". 
 
-References: field (keyword), characters (keyword), dragDrop (message), dragDestination (function), mouseChunk (function), clickChunk (function), dropChunk (function), handler (glossary), insertion point (glossary), return (glossary), chunk expression (glossary), execute (glossary), function (control_st)
+References: function (control structure), dragDestination (function),
+mouseChunk (function), clickChunk (function), dropChunk (function),
+handler (glossary), insertion point (glossary), return (glossary),
+chunk expression (glossary), execute (glossary), field (keyword),
+characters (keyword), dragDrop (message)
 
 Tags: text processing
+

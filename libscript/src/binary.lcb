@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*  
+/**
 This library consists of the operations on binary strings provided by the standard library of LiveCode Builder.
 */
 
@@ -27,7 +27,9 @@ public foreign handler MCBinaryExecPutBytesAfter(in Source as Data, inout Target
 
 public foreign handler MCBinaryEvalConcatenateBytes(in Left as Data, in Right as Data, out Result as Data) returns nothing binds to "<builtin>"
 
+/* No implementation
 public foreign handler MCBinaryEvalContainsBytes(in Target as Data, in Needle as Data, out Value as CBool) returns nothing binds to "<builtin>"
+*/
 
 public foreign handler MCBinaryEvalIsEqualTo(in Left as Data, in Right as Data, out Value as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCBinaryEvalIsNotEqualTo(in Left as Data, in Right as Data, out Value as CBool) returns nothing binds to "<builtin>"
@@ -37,7 +39,7 @@ public foreign handler MCBinaryEvalIsGreaterThan(in Left as Data, in Right as Da
 public foreign handler MCDataEvalEmpty(out Value as Data) returns nothing binds to "<builtin>"
 --
 
-/*
+/**
 Summary:            Prepends <Source> bytes to <Target> bytes.
 
 Source: 			An expression which evaluates to binary data.
@@ -55,7 +57,7 @@ begin
     MCBinaryExecPutBytesBefore(Source, Target)
 end syntax
 
-/*
+/**
 Summary:            Appends <Source> bytes to <Target> bytes.
 
 Source: 			An expression which evaluates to binary data.
@@ -77,7 +79,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:            Concatenates <Left> and <Right>.
 
 Left: 				An expression which evaluates to binary data.
@@ -99,7 +101,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Determines whether <Left> and <Right> are equal or not.
 
 Left:       An expression which evaluates to binary data.
@@ -119,7 +121,7 @@ begin
     MCBinaryEvalIsEqualTo(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Left> and <Right> are equal or not.
 
 Left:       An expression which evaluates to binary data.
@@ -139,7 +141,7 @@ begin
     MCBinaryEvalIsNotEqualTo(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Left> is less than <Right> under a byte by byte comparison
 
 Left:       An expression which evaluates to binary data.
@@ -160,7 +162,7 @@ begin
     MCBinaryEvalIsLessThan(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Left> is greater than <Right> under a byte by byte comparison
 
 Left:       An expression which evaluates to binary data.
@@ -183,7 +185,7 @@ end syntax
 
 --
 
-/* 
+/**
 
 Summary: 		Designates data of length 0.
 

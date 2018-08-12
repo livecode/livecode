@@ -1,1 +1,0 @@
-# revdb always put in standalones

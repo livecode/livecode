@@ -262,7 +262,7 @@ public:
 		return ftell(m_stream);
 	}
 	
-	virtual int64_t GetFileSize(void)
+	virtual uint64_t GetFileSize(void)
 	{
 		struct stat t_info;
 		if (fstat(fileno(m_stream), &t_info) != 0)
@@ -346,7 +346,7 @@ public:
 		return 0;
 	}
 	
-	virtual int64_t GetFileSize(void)
+	virtual uint64_t GetFileSize(void)
 	{
         return 0;
 	}
@@ -378,12 +378,17 @@ uint32_t MCIPhoneSystem::GetProcessId(void)
 
 bool MCIPhoneSystem::GetVersion(MCStringRef& r_string)
 {
-	return MCStringCreateWithCFString((CFStringRef)[[UIDevice currentDevice] systemVersion], r_string);
+	return MCStringCreateWithCFStringRef((CFStringRef)[[UIDevice currentDevice] systemVersion], r_string);
 }
 
 bool MCIPhoneSystem::GetMachine(MCStringRef& r_string)
 {
-	return MCStringCreateWithCFString((CFStringRef)[[UIDevice currentDevice] model], r_string);
+    NSString *t_machine = [[UIDevice currentDevice] model];
+#if TARGET_IPHONE_SIMULATOR
+    t_machine = [t_machine stringByAppendingString:@" Simulator"];
+#endif
+    
+    return MCStringCreateWithCFStringRef((CFStringRef)t_machine, r_string);
 }
 
 MCNameRef MCIPhoneSystem::GetProcessor(void)
@@ -671,10 +676,10 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 {
 	MCAutoStringRef t_path;
 	
-	if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(p_type, MCN_temporary))
 	{
         MCAutoStringRef t_temp;
-        MCStringCreateWithCFString((CFStringRef)NSTemporaryDirectory() , &t_temp);
+        MCStringCreateWithCFStringRef((CFStringRef)NSTemporaryDirectory() , &t_temp);
 		
 		// MW-2012-09-18: [[ Bug 10279 ]] Remove trailing slash, if any.
 		// MW-2012-10-04: [[ Bug 10435 ]] Actually use a NUL character, rather than a '0'!
@@ -683,26 +688,26 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
         else
             /* UNCHECKED */ MCStringCopy(*t_temp, &t_path);
 	}
-	else if (MCNameIsEqualTo(p_type, MCN_documents, kMCCompareCaseless))
+	else if (MCNameIsEqualToCaseless(p_type, MCN_documents))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
+        MCStringCreateWithCFStringRef((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
-	else if (MCNameIsEqualTo(p_type, MCN_home, kMCCompareCaseless))
+	else if (MCNameIsEqualToCaseless(p_type, MCN_home))
 	{
-        MCStringCreateWithCFString((CFStringRef)NSHomeDirectory() , &t_path);
+        MCStringCreateWithCFStringRef((CFStringRef)NSHomeDirectory() , &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "cache", kMCCompareCaseless))
+	else if (MCStringIsEqualToCString(MCNameGetString(p_type), "cache", kMCCompareCaseless))
 	{
 		NSArray *t_paths;
         t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-		MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
+		MCStringCreateWithCFStringRef((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
     // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
     //   as the engine folder.
-    else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
-             || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
+    else if (MCNameIsEqualToCaseless(p_type, MCN_engine)
+             || MCNameIsEqualToCaseless(p_type, MCN_resources))
 	{
 		extern MCStringRef MCcmd;
         uindex_t t_index;
@@ -711,11 +716,11 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
         /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_index), &t_path);
                     
 	}
-	else if (MCNameIsEqualToCString(p_type, "library", kMCCompareCaseless))
+	else if (MCStringIsEqualToCString(MCNameGetString(p_type), "library", kMCCompareCaseless))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
-		MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
+		MCStringCreateWithCFStringRef((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 
 	}
     
@@ -724,41 +729,6 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
     
     r_folder = MCValueRetain(*t_path);
     return True;
-}
-
-//////////
-
-MCSysModuleHandle MCIPhoneSystem::LoadModule(MCStringRef p_path)
-{
-    
-	void *t_module;
-    MCAutoPointer<char> t_path;
-    /* UNCHECKED */ MCStringConvertToCString(p_path, &t_path);
-	t_module = load_module(*t_path);
-	if (t_module != NULL)
-		return (MCSysModuleHandle)t_module;
-    
-    t_module = dlopen(*t_path, RTLD_LAZY);
-    
-	return (MCSysModuleHandle)t_module;
-}
-
-MCSysModuleHandle MCIPhoneSystem::ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
-{
-    MCAutoPointer<char> t_symbol;
-    /* UNCHECKED */ MCStringConvertToCString(p_symbol, &t_symbol);
-	if (is_static_module((void*)p_module))
-		return (MCSysModuleHandle)resolve_symbol((void*)p_module, *t_symbol);
-
-	return (MCSysModuleHandle)dlsym(p_module, *t_symbol);
-}
-
-void MCIPhoneSystem::UnloadModule(MCSysModuleHandle p_module)
-{
-	if (is_static_module((void*)p_module))
-		return;
-		
-	dlclose((void*)p_module);
 }
 
 ////
@@ -771,11 +741,6 @@ bool MCIPhoneSystem::LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
 bool MCIPhoneSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path)
 {
 	return MCStringCopy(p_path, r_short_path);
-}
-// ST-2014-12-18: [[ Bug 14259 ]] Not implemented / needed on iOS
-bool MCIPhoneSystem::GetExecutablePath(MCStringRef& r_path)
-{
-    return false;
 }
 
 bool MCIPhoneSystem::PathToNative(MCStringRef p_path, MCStringRef& r_native)
@@ -808,29 +773,6 @@ bool MCIPhoneSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 	else
 		return MCStringCopy(p_path, r_resolved);
 }
-
-// Moved to ResolvePath as the path is always native on MCSystemInterface functions
-//bool MCIPhoneSystem::ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved)
-//{
-//	char *t_absolute_path;
-//	if (MCStringGetCharAtIndex(p_path, 0) != '/')
-//	{
-//		MCAutoStringRef t_folder;
-//		if (!GetCurrentFolder(&t_folder))
-//			return false;
-//
-//		MCAutoStringRef t_resolved;
-//		if (!MCStringMutableCopy(*t_folder, &t_resolved) ||
-//			!MCStringAppendChar(*t_resolved, '/') ||
-//			!MCStringAppend(*t_resolved, p_path))
-//			return false;
-//
-//		return MCStringCopy(*t_resolved, r_resolved);
-//	}
-//	else
-//		return MCStringCopy(p_path, r_resolved);
-//}
-
 
 bool MCIPhoneSystem::ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
@@ -1064,7 +1006,7 @@ void MCIPhoneSystem::Debug(MCStringRef p_string)
     // MM-2012-09-07: [[ Bug 10320 ]] put does not write to console on Mountain Lion
     // AL-2014-03-25: [[ Bug 11985 ]] NSStrings created with stringWithMCStringRef are autoreleased.
     NSString *t_msg;
-    t_msg = [NSString stringWithMCStringRef: p_string];
+    t_msg = MCStringConvertToAutoreleasedNSString(p_string);
     NSLog(@"%@", t_msg);
 }
 
@@ -1205,17 +1147,3 @@ MCSystemInterface *MCMobileCreateIPhoneSystem(void)
 
 //////////////////
 
-extern "C" void *IOS_LoadModule(const char *name);
-extern "C" void *IOS_ResolveSymbol(void *module, const char *name);
-
-// MW-2013-10-08: [[ LibOpenSSL101e ]] This functions are used by the stubs to load
-//   modules / resolve symbols.
-void *IOS_LoadModule(const char *name)
-{
-	return MCsystem -> LoadModule(MCSTR(name));
-}
-
-void *IOS_ResolveSymbol(void *module, const char *name)
-{
-	return MCsystem -> ResolveModuleSymbol((MCSysModuleHandle)module, MCSTR(name));
-}

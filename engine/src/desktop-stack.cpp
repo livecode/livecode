@@ -34,6 +34,7 @@
 #include "resolution.h"
 #include "player.h"
 #include "dispatch.h"
+#include "redraw.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -229,6 +230,11 @@ MCRectangle MCStack::view_platform_getwindowrect() const
 	return t_rect;
 }
 
+bool MCStack::view_platform_dirtyviewonresize() const
+{
+	return false;
+}
+
 // IM-2013-09-23: [[ FullscreenMode ]] Factor out device-specific window sizing
 MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 {
@@ -241,6 +247,9 @@ void MCStack::syncscroll(void)
     // AL-2014-07-22: [[ Bug 12764 ]] Update the stack viewport after applying menu scroll
     view_setstackviewport(rect);
 	// COCOA-TODO: Make sure contained views also scroll (?)
+
+	// IM-2017-05-04: [[ Bug 19327 ]] Notify layers of transform change after scroll sync
+	OnViewTransformChanged();
 }
 
 void MCStack::start_externals()
@@ -253,27 +262,10 @@ void MCStack::stop_externals()
 	Boolean oldlock = MClockmessages;
 	MClockmessages = True;
 	
-	MCPlayer *tptr = MCplayers;
-	
-#ifdef FEATURE_PLATFORM_PLAYER
-    while(tptr != NULL)
-    {
-        if (tptr -> getstack() == this)
-            tptr -> playstop();
-        tptr = tptr -> getnextplayer();
-    }
-#else
-	while (tptr != NULL)
-	{
-		if (tptr->getstack() == this)
-		{
-			if (tptr->playstop())
-				tptr = MCplayers; // was removed, start search over
-		}
-		else
-			tptr = tptr->getnextplayer();
-	}
-#endif
+    MCPlayer::SyncPlayers(this, nil);
+    
+    MCPlayer::StopPlayers(this);
+    
 	destroywindowshape();
 	
 	MClockmessages = oldlock;
@@ -451,16 +443,6 @@ void MCDispatch::wredraw(Window p_window, MCPlatformSurfaceRef p_surface, MCGReg
 		t_stack -> view_surface_redrawwindow(&t_stack_surface, p_update_rgn);
 	else
 		s_update_callback(&t_stack_surface, (MCRegionRef)p_update_rgn, s_update_context);
-}
-
-void MCDispatch::wreshape(Window p_window)
-{
-	MCStack *t_stack;
-	t_stack = findstackd(p_window);
-	if (t_stack == nil)
-		return;
-	
-	t_stack -> view_configure(true);
 }
 
 void MCDispatch::wiconify(Window p_window)

@@ -4,43 +4,61 @@ Type: message
 
 Syntax: idle
 
-Summary: Sent periodically to the <current card> if no other <message> is being sent.
+Summary:
+Sent periodically to the <current card> if no other <message> is being
+sent. 
 
 Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Description:
-Handle the <idle> <message> to check constantly on the status of an <object>, the content of a <variable>, and so forth, or to do periodic tasks.
+Handle the <idle> <message> to check constantly on the status of an
+<object(glossary)>, the content of a <variable>, and so forth, or to do
+periodic tasks.
 
-The period between <idle> <message|messages> is specified by the <idleRate> and <idleTicks> <properties>.
+The period between <idle> <message|messages> is specified by the
+<idleRate> and <idleTicks> <properties>.
 
->*Note:* Usually, it is easier and more efficient to use the send in time form of the send <command> than to use an <idle> <handler>, especially if a task needs to be <execute|executed> at regular intervals. This example shows an <idle> <handler> that updates a clock timer:
+>*Note:* Usually, it is easier and more efficient to use the send in
+> time form of the send <command> than to use an <idle> <handler>,
+> especially if a task needs to be <execute|executed> at regular
+> intervals. This example shows an <idle> <handler> that updates a clock
+> timer: 
 
-  on idle -- avoid if possible
-    global startTime
-    if the seconds &gt; startTime + 60 -- 60 seconds have gone by
-      put the time into field "Clock Face"
-      put the seconds into startTime
-    end if
-    pass idle
-  end idle
+    on idle -- avoid if possible
+        global startTime
+        if the seconds &gt; startTime + 60 then -- 60 seconds have gone by
+            put the time into field "Clock Face"
+            put the seconds into startTime
+        end if
+        pass idle
+    end idle
 
-The following example does the same thing more efficiently, since it only needs to handle a single message every sixty seconds:
+The following example does the same thing more efficiently, since it
+only needs to handle a single message every sixty seconds:
 
-  on updateClock -- a better way
-    put the time into field "Clock Face"
-    send "updateClock" to me in 60 seconds
-  end updateClock
+    on updateClock -- a better way
+        put the time into field "Clock Face"
+        send "updateClock" to me in 60 seconds
+    end updateClock
 
-Executing an <idle> <handler> slows down other LiveCode actions, so <handle> the <idle> <message> only in the rare cases where the <send> <command> cannot be used instead.
+Executing an <idle> <handler> slows down other LiveCode actions, so
+<handle> the <idle> <message> only in the rare cases where the <send>
+<command> cannot be used instead.
 
->*Note:* If there is no <idle> <handler> anywhere in the <message path>, no <idle> <message> is sent.
+>*Note:* If there is no <idle> <handler> anywhere in the <message path>,
+> no <idle> <message> is sent.
 
-References: idleRate (property), idleTicks (property), properties (property), revVideoGrabIdle (command), send (command), wait (command), object (object), current card (glossary), variable (glossary), handler (glossary), handle (glossary), execute (glossary), message (glossary), message path (glossary), command (glossary)
+References: revVideoGrabIdle (command), send (command), wait (command),
+object (glossary), current card (glossary), variable (glossary),
+handler (glossary), handle (glossary), execute (glossary),
+message (glossary), message path (glossary), command (glossary),
+idleRate (property), idleTicks (property), properties (property)
 
 Tags: ui
+

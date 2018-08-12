@@ -2,58 +2,118 @@ Name: borderPattern
 
 Type: property
 
-Syntax: set the borderPattern of <object> to {empty | <patternID> | <imageID>}
+Syntax: set the borderPattern of <object> to {empty | <patternNumber> | <imageID>}
 
-Summary: Specifies the pattern of an <object|object's> border.
+Summary:
+Specifies the pattern of an <object|object's> border.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the borderPattern of group "Nav" to myPattern
 
 Value:
-The <borderPattern> of an <object> is a pattern specifier.
-A patternNumber is a built-in pattern number between 1 and 164. (These patterns correspond to LiveCode's built-in patterns 136 to 300.)
+The <borderPattern> of an <object(glossary)> is a pattern specifier.
+A <patternNumber> is a built-in pattern number between 1 and 164. These
+patterns are provided for compatability with patterns available in
+MetaCard and correspond to LiveCode's built in image id 137 to 300. As
+with MetaCard pattern numbers 105 to 114 and 146 and above are 
+unavailable.
 
-An <imageID> is the ID of an <image> to use for a pattern. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+An <imageID> is the ID of an <image> to use for a pattern. LiveCode
+looks for the specified <image> first in the <current stack>, then in
+other open <stacks>.
 
 By default, the <borderPattern> for all <object|objects> is empty.
 
 Description:
-Use the <borderPattern> <property> to specify the border pattern of a <button(keyword)> or <scrollbar>.
+Use the <borderPattern> <property> to specify the border pattern of a
+<button(keyword)> or <scrollbar>.
 
 Pattern images can be color or black-and-white.
 
->*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less, and both its <height> and <width> must be a power of 2. To be used on <Windows> and <Unix|Unix systems>, <height> and <width> must be divisible by 8. To be used as a fully cross-platform pattern, both an image's dimensions should be one of 8, 16, 32, 64, or 128.
+>*Cross-platform note:*  To be used as a pattern on 
+> <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less,
+> and both its <height> and <width> must be a power of 2. To be used
+> on <Windows> and <Unix|Unix systems>, <height> and <width> must be
+> divisible by 8. To be used as a fully cross-platform pattern, both
+> an image's dimensions should be one of 8, 16, 32, 64, or 128.
 
-The <borderPattern> of <control(object)|controls> is drawn starting at the <control(object)|control's> upper right corner: if the <control(keyword)> is moved, the pattern does not shift.
+The <borderPattern> of <control(glossary)|controls> is drawn starting at
+the <control(glossary)|control's> upper right corner: if the
+<control(keyword)> is moved, the pattern does not shift.
 
-Setting the <borderPattern> of an <object> to empty allows the <borderPattern> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what color is used for the <object>, even if its own <borderPattern> is empty.
+Setting the <borderPattern> of an <object(glossary)> to empty allows the
+<borderPattern> of the <object|object's> <owner> to show through. Use
+the <effective> <keyword> to find out what color is used for the
+<object(glossary)>, even if its own <borderPattern> is empty.
 
-If the object's showBorder <property> is false, the <borderPattern> has no effect.
+If the object's showBorder <property> is false, the <borderPattern> has
+no effect.
 
-The setting of the <borderPattern> <property> has different effects, depending on the <object type>:
+The setting of the <borderPattern> <property> has different effects,
+depending on the <object type>:
 
-* The <borderPattern> of a <stack>, <card>, or <group> determines the <borderPattern> of each <object> in the <stack>, <card>, or <group> that does not have its own <borderPattern>.
+* The <borderPattern> of a <stack>, <card>, or <group> determines the
+  <borderPattern> of each <object(glossary)> in the <stack>, <card>, or
+  <group> that does not have its own <borderPattern>.
 
-* The <borderPattern> of a <button(keyword)> determines the pattern of the border around the <button(keyword)>. If the <button(object)|button's> <style> is checkbox or radioButton, the <borderPattern> has no effect. If the <button(keyword)> is a <button menu>, the <borderPattern> has no effect unless the <button(object)|button's> <menuMode> <property> is set to comboBox or popup. If the button's <threeD> <property> is set to true, the <borderPattern> has no effect regardless of the <button(object)|button's> <style>.
 
-* The <borderPattern> of a <field(keyword)> has no effect, except for the border around a scrolling <field(object)|field's> scrollbar. The <field(object)|field's> <borderPattern> also determines the pattern of the outline around any text in the <field(keyword)> whose <textStyle> is set to "box".
+* The <borderPattern> of a <button(keyword)> determines the pattern of
+  the border around the <button(keyword)>. If the
+  <button(object)|button's> <style> is checkbox or radioButton, the
+  <borderPattern> has no effect. If the <button(keyword)> is a <button
+  menu>, the <borderPattern> has no effect unless the
+  <button(object)|button's> <menuMode> <property> is set to comboBox or
+  popup. If the button's <threeD> <property> is set to true, the
+  <borderPattern> has no effect regardless of the
+  <button(object)|button's> <style>.
 
-* The <borderPattern> of a <scrollbar> determines the pattern of the border surrounding the <scrollbar>.
 
-* The <borderPattern> of a <graphic>, <audio clip>, <video clip>, or <image> has no effect.
+* The <borderPattern> of a <field(keyword)> has no effect, except for
+  the border around a scrolling <field(object)|field's> scrollbar. The
+  <field(object)|field's> <borderPattern> also determines the pattern of
+  the outline around any text in the <field(keyword)> whose <textStyle>
+  is set to "box".
 
-* The <borderPattern> of a <player> or <EPS> <object> determines the pattern of the border around the <object>. If the <object|object's> <threeD> <property> is set to true, the <borderPattern> has no effect.
 
-If an object's <borderPattern> is set, the pattern is shown instead of the color specified by <borderColor>.
+* The <borderPattern> of a <scrollbar> determines the pattern of the
+  border surrounding the <scrollbar>.
 
-References: effective (keyword), field (keyword), image (keyword), button (keyword), player (keyword), graphic (keyword), card (keyword), control (keyword), scrollbar (keyword), textStyle (property), pixels (property), patterns (property), width (property), threeD (property), height (property), style (property), markerFilled (property), borderWidth (property), menuMode (property), foregroundPattern (property), owner (property), shadowPattern (property), borderColor (property), group (command), EPS (object), button (object), field (object), object (object), stack (object), control (object), property (glossary), current stack (glossary), audio clip (glossary), Windows (glossary), object type (glossary), Mac OS (glossary), keyword (glossary), Unix (glossary), button menu (glossary), video clip (glossary), stacks (function)
+
+* The <borderPattern> of a <graphic>, <audio clip>, <video clip>, or
+  <image> has no effect.
+
+
+* The <borderPattern> of a <player> or <EPS> <object(glossary)>
+  determines the pattern of the border around the <object(glossary)>. If
+  the <object|object's> <threeD> <property> is set to true, the
+  <borderPattern> has no effect.
+
+
+If an object's <borderPattern> is set, the pattern is shown instead of
+the color specified by <borderColor>.
+
+References: group (command), stacks (function), audio clip (glossary),
+button menu (glossary), control (glossary), current stack (glossary),
+keyword (glossary), Mac OS (glossary), object (glossary),
+object type (glossary), property (glossary), Unix (glossary),
+video clip (glossary), Windows (glossary), button (keyword),
+card (keyword), control (keyword), effective (keyword), field (keyword),
+graphic (keyword), image (keyword), player (keyword), scrollbar (keyword),
+button (object), EPS (object), field (object), stack (object),
+borderColor (property), borderWidth (property), foregroundPattern (property),
+height (property), markerFilled (property), menuMode (property),
+owner (property), patterns (property), pixels (property),
+shadowPattern (property), style (property), textStyle (property),
+threeD (property), width (property)
 
 Tags: ui
+

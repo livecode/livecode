@@ -1,12 +1,14 @@
 Name: logical
 
-Synonyms: logical,Boolean
+Synonyms: logical, boolean
 
 Type: glossary
 
 Description:
-A type of <operator> whose resulting <value> is either "true" or "false". Also called a Boolean <operator>.
+A type of <operator> whose resulting <value> is either "true" or
+"false". Also called a Boolean <operator>.
 
 References: operator (glossary), value (glossary)
 
 Tags: math
+

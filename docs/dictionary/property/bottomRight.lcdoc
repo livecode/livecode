@@ -1,20 +1,23 @@
 Name: bottomRight
 
+Synonyms: botright
+
 Type: property
 
 Syntax: set the bottomRight of <object> to right,bottom
 
-Summary: Specifies the location of the specified <object|object's> lower right corner.
+Summary:
+Specifies the location of the specified <object|object's> lower right
+corner. 
 
-Synonyms: botRight
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the bottomRight of scrollbar "Master" to 400,200
@@ -23,22 +26,49 @@ Example:
 set the bottomRight of field "Follower" to the mouseLoc
 
 Value:
-The <bottomRight> of an <object> is any expression that <evaluate|evaluates> to a <point> --two <integer|integers> separated by a comma.
-The first item of the <bottomRight> is the distance in <pixels> from the left edge of the screen (for <stacks>) or <card> to the right edge of the <object>. The second <item> is the distance in <pixels> from the top edge of the screen (for <stacks>) or <card> to the bottom edge of the <object>.
+The <bottomRight> of an <object(glossary)> is any expression that
+<evaluate|evaluates> to a <point> --two <integer|integers> separated by
+a comma. The first item of the <bottomRight> is the distance in <pixels>
+from the left edge of the screen (for <stacks>) or <card> to the right
+edge of the <object(glossary)>. The second <item> is the distance in
+<pixels> from the top edge of the screen (for <stacks>) or <card> to the
+bottom edge of the <object(glossary)>.
 
-For cards, the <bottomRight> <property> is <read-only> and cannot be set.
+For cards, the <bottomRight> <property> is <read-only> and cannot be
+set. 
 
 Description:
-Use the <bottomRight> <property> to change the placement of a <control> or window.
+Use the <bottomRight> <property> to change the placement of a <control>
+or window.
 
-The <bottomRight> of a <stack> is in <absolute (screen) coordinates(glossary)>. The first <item> (the <right>) of a <card|card's> <bottomRight> <property> is always the width of the <stack window>; the second <item> (the <bottom>) is always the height of the <stack window>. The <bottomRight> of a <group> or <control> is in <relative (window) coordinates(glossary)>.
+The <bottomRight> of a <stack> is in 
+<absolute coordinates(glossary)|absolute (screen) coordinates>. 
+The first <item> (the <right>) of a
+<card|card's> <bottomRight> <property> is always the width of the 
+<stack window>; the second <item> (the <bottom>) is always the height
+of the <stack window>. The <bottomRight> of a <group> or <control> is
+in <relative coordinates(glossary)|relative (window) coordinates>.
 
-In window coordinates, the point 0,0 is at the top left of the stack window. In screen coordinates, the point 0,0 is at the top left of the screen.
+In window coordinates, the point 0,0 is at the top left of the stack
+window. In screen coordinates, the point 0,0 is at the top left of the
+screen. 
 
-Changing the <bottomRight> of an <object> moves it to the new position without resizing it. To change an <object|object's> size, set its <height>, <width>, or <rectangle> <properties>.
+Changing the <bottomRight> of an <object(glossary)> moves it to the new
+position without resizing it. To change an <object|object's> size, set
+its <height>, <width>, or <rectangle> <properties>.
 
->*Important:*  The order of the bottom and right <parameter|parameters> is reversed compared to the <property> name: right comes first, then bottom.
+>*Important:*  The order of the bottom and right <parameter|parameters>
+> is reversed compared to the <property> name: right comes first, then
+> bottom. 
 
-References: pixels (property), height (property), topRight (property), properties (property), bottom (property), width (property), stacks (function), card (keyword), item (keyword), rectangle (keyword), point (keyword), control (keyword), right (constant), stack (object), object (object), card (object), group (command), property (glossary), stack window (glossary), absolute coordinates (glossary), read-only (glossary), relative coordinates (glossary), parameter (glossary), integer (glossary), evaluate (glossary)
+References: group (command), right (constant), stacks (function),
+object (glossary), property (glossary), stack window (glossary),
+absolute coordinates (glossary), read-only (glossary),
+relative coordinates (glossary), parameter (glossary), integer (glossary),
+evaluate (glossary), card (keyword), item (keyword), rectangle (keyword),
+point (keyword), control (keyword), stack (object), card (object),
+pixels (property), height (property), topRight (property),
+properties (property), bottom (property), width (property)
 
 Tags: ui
+

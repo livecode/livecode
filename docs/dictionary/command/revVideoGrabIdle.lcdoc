@@ -4,15 +4,21 @@ Type: command
 
 Syntax: revVideoGrabIdle
 
-Summary: Gives processing time to <QuickTime> during video previewing and recording.
+Summary:
+Gives processing time to <QuickTime> during video previewing and
+recording.
+
+Associations: video library
 
 Introduced: 2.0
 
-OS: mac,windows
+Deprecated: 9.0
 
-Platforms: desktop
+OS:
 
-Security: disk,privacy
+Platforms:
+
+Security: disk, privacy
 
 Example:
 revVideoGrabIdle
@@ -21,16 +27,34 @@ Example:
 send "revVideoGrabIdle" to me in 10 milliseconds
 
 Description:
-Use the <revVideoGrabIdle> <command> to avoid display problems during <video capture>.
+The <revVideoGrabIdle> <command> is ignored and has no effect.
 
-When using QuickTime for video capture, you need to execute the <revVideoGrabIdle> command periodically in order to let <QuickTime> update the display. (Not doing so may cause the video in the <video grabber> to stutter or display strange screen artifacts.) If you have issued the <revPreviewVideo> or <revRecordVideo> <command>, be sure to call the <revVideoGrabIdle> <command> periodically until you stop previewing or recording video.
+>*Important:*  The <revVideoGrabIdle> <command> is part of the 
+> <Video library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the
+> "Video Grabber" 
+> library checkbox is checked.
 
-There is no specific interval to use between calls to <revVideoGrabIdle>. If you are seeing jittering or strange artifacts in the <video grabber> window, try decreasing the interval and calling <revVideoGrabIdle> more often.
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect.
 
->*Note:* If you specified "VFW" or "directx" as the video method when you executed the <revInitializeVideoGrabber> <command>, you don't need to call <revVideoGrabIdle>. If the <video capture> is using <VFW|Video for Windows>, the <revVideoGrabIdle> <command> is ignored and has no effect. You need to call <revVideoGrabIdle> only if you specified "QT" as the video method.
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
->*Important:*  The <revVideoGrabIdle> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
-
-References: idle (message), revInitializeVideoGrabber (command), revPreviewVideo (command), revRecordVideo (command), video capture (glossary), VFW (glossary), Standalone Application Settings (glossary), QuickTime (glossary), video grabber (glossary), standalone application (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+References: revInitializeVideoGrabber (command),
+revPreviewVideo (command), revRecordVideo (command),
+video capture (glossary), VFW (glossary),
+Standalone Application Settings (glossary), QuickTime (glossary),
+video grabber (glossary), standalone application (glossary),
+command (glossary), LiveCode custom library (glossary),
+Video library (library), idle (message)
 
 Tags: multimedia
+

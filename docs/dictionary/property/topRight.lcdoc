@@ -2,38 +2,68 @@ Name: topRight
 
 Type: property
 
-Syntax: set the topRight of <object> to <right>, <top> 
+Syntax: set the topRight of <object> to <right>, <top>
 
-Summary: Specifies the location of the specified <object|object's> upper right corner.
+Summary:
+Specifies the location of the specified <object|object's> upper right
+corner. 
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the topRight of this stack to 0,20
 
 Value:
-The <topRight> of an <object> is any <expression> that <evaluate|evaluates> to a <point> --two <integer|integers> separated by a comma.
-The first item of the <topRight> is the distance in <pixels> from the left edge of the screen (for stacks) or <card> (for any other <object>) to the right edge of the <object>. The second <item> is the distance in <pixels> from the top edge of the screen (for <stacks>) or <card>  (for any other <object>) to the top edge of the <object>.
+The <topRight> of an <object(glossary)> is any <expression> that
+<evaluate|evaluates> to a <point> --two <integer|integers> separated by
+a comma. The first item of the <topRight> is the distance in <pixels>
+from the left edge of the screen (for stacks) or <card> (for any other
+<object(glossary)>) to the right edge of the <object(glossary)>. The
+second <item> is the distance in <pixels> from the top edge of the
+screen (for <stacks>) or <card> (for any other <object(glossary)>) to
+the top edge of the <object(glossary)>.
 
 For cards, the <topRight> <property> is <read-only> and cannot be set.
 
 Description:
-Use the <topRight> <property> to change the placement of a <control> or window.
+Use the <topRight> <property> to change the placement of a <control> or
+window. 
 
-The <topRight> of a <stack> is in <absolute (screen) coordinates(glossary)>. The first <item> (the <right>) of a <card|card's> <topRight> <property> is always the width of the <stack window>; the second <item> (the <top>) is always zero. The <topRight> of a <group> or <control> is in <relative (window) coordinates(glossary)>.
+The <topRight> of a <stack> is in <absolute (screen)
+coordinates(glossary)>. The first <item> (the <right>) of a
+<card|card's> <topRight> <property> is always the width of the <stack
+window>; the second <item> (the <top>) is always zero. The <topRight> of
+a <group> or <control> is in <relative (window) coordinates(glossary)>.
 
-In window coordinates, the point 0,0 is at the top left of the stack window. In screen coordinates, the point 0,0 is at the top left of the screen.
+In window coordinates, the point 0,0 is at the top left of the stack
+window. In screen coordinates, the point 0,0 is at the top left of the
+screen. 
 
-Changing the <topRight> of an <object> moves it to the new position without resizing it. To change an <object|object's> size, set its <height>, <width>, or <rectangle> <properties>.
+Changing the <topRight> of an <object(glossary)> moves it to the new
+position without resizing it. To change an <object|object's> size, set
+its <height>, <width>, or <rectangle> <properties>.
 
->*Important:*  The order of the <top> and <right> <parameter|parameters> is reversed compared to the <property> name: right comes first, then top.
+>*Important:*  The order of the <top> and <right> <parameter|parameters>
+> is reversed compared to the <property> name: right comes first, then
+> top. 
 
-References: pixels (property), rectangle (property), height (property), bottomLeft (property), bottomRight (property), location (property), width (property), properties (property), topLeft (property), stacks (function), card (keyword), item (keyword), point (keyword), rectangle (keyword), top (keyword), control (keyword), right (constant), stack (object), object (object), card (object), group (command), property (glossary), stack window (glossary), absolute coordinates (glossary), read-only (glossary), expression (glossary), relative coordinates (glossary), parameter (glossary), integer (glossary), evaluate (glossary)
+References: group (command), right (constant), stacks (function),
+object (glossary), property (glossary), stack window (glossary),
+absolute coordinates (glossary), read-only (glossary),
+expression (glossary), relative coordinates (glossary),
+parameter (glossary), integer (glossary), evaluate (glossary),
+card (keyword), item (keyword), point (keyword), rectangle (keyword),
+top (keyword), control (keyword), stack (object), card (object),
+pixels (property), rectangle (property), height (property),
+bottomLeft (property), bottomRight (property), location (property),
+width (property), properties (property), topLeft (property)
 
 Tags: ui
+

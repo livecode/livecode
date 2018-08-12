@@ -4,13 +4,15 @@ Type: keyword
 
 Syntax: back
 
-Summary: Designates a location in the <message path> after an <object|object's> <stack>, or the most <recent cards|recently visited card>.
+Summary:
+Designates a location in the <message path> after an <object|object's>
+<stack>, or the most <recent cards|recently visited card>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 insert the script of card button 9 into back
@@ -19,12 +21,22 @@ Example:
 go back
 
 Description:
-Use the <back> <keyword> to <return(constant)> to the most <recent cards|recently visited card>, or to designate a <backScript>.
+Use the <back> <keyword> to <return(constant)> to the most 
+<recent cards|recently visited card>, or to designate a <backScript>.
 
-When used with the go <command>, the <back> <keyword> designates the <card> the user visited most recently. The <statement> go back <return(glossary)|returns> to that <card>.
+When used with the go <command>, the <back> <keyword> designates the
+<card> the user visited most recently. The <statement> go back
+<return(glossary)|returns> to that <card>.
 
-When used with the insert script or <remove script> <command>, the <back> <keyword> designates a <backScript> which is to be placed in the <message path> after the <stack>.
+When used with the insert script or <remove script> <command>, the
+<back> <keyword> designates a <backScript> which is to be placed in the
+<message path> after the <stack>.
 
-References: card (keyword), front (keyword), return (constant), remove script (command), backScripts (function), return (glossary), message path (glossary), recent cards (glossary), statement (glossary), backScript (glossary), keyword (glossary), command (glossary), stack (object), object (object)
+References: remove script (command), return (constant),
+backScripts (function), return (glossary), message path (glossary),
+recent cards (glossary), statement (glossary), backScript (glossary),
+keyword (glossary), command (glossary), object (glossary), card (keyword),
+front (keyword), stack (object)
 
 Tags: navigation
+

@@ -1,20 +1,22 @@
 Name: milliseconds
 
+Synonyms: millisecond, millisec, millisecs
+
 Type: function
 
 Syntax: the milliseconds
 
 Syntax: milliseconds()
 
-Summary: <return|Returns> the number of <milliseconds> since the start of the <eon>.
-
-Synonyms: millisecond,millisec,millisecs
+Summary:
+<return|Returns> the number of <milliseconds> since the start of the
+<eon>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the milliseconds
@@ -22,15 +24,24 @@ the milliseconds
 Example:
 if the milliseconds - startMilliseconds &lt; 10 then answer "Success!"
 
-Returns: The <milliseconds> function <return|returns> a positive <integer>.
+Returns:
+The <milliseconds> function <return|returns> a positive <integer>.
 
 Description:
-Use the <milliseconds> <function> to time <event|events> that must be checked more often than once per second.
+Use the <milliseconds> <function> to time <event|events> that must be
+checked more often than once per second.
 
-The <milliseconds> <function> <return|returns> the total number of <milliseconds> since midnight GMT, January 1, 1970.
+The <milliseconds> <function> <return|returns> the total number of
+<milliseconds> since midnight GMT, January 1, 1970.
 
-A millisecond is one-thousandth of a second. If you don't need to time events with this much precision, use the <seconds> function or the <ticks> <function>.
+A millisecond is one-thousandth of a second. If you don't need to time
+events with this much precision, use the <seconds> function or the
+<ticks> <function>.
 
-References: integer (keyword), milliseconds (keyword), convert (command), seconds (function), milliseconds (function), date (function), ticks (function), event (glossary), return (glossary), eon (glossary), function (control_st)
+References: convert (command), function (control structure),
+seconds (function), milliseconds (function), date (function),
+ticks (function), event (glossary), return (glossary), eon (glossary),
+integer (keyword), milliseconds (keyword)
 
 Tags: math
+

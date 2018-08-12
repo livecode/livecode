@@ -5,6 +5,11 @@ Synonyms: message handler
 Type: glossary
 
 Description:
-A <handler> you write that either <handle|handles> a <built-in message> (such as <mouseUp>) or defines a <custom command>. Message handlers begin with the <on> <control structure>.
+A <handler> you write that either <handle|handles> a <built-in message>
+(such as <mouseUp>) or defines a <custom command>. Message handlers
+begin with the <on> <control structure>.
 
-References: handler (glossary), custom command (glossary), handle (glossary), built-in message (glossary), control structure (glossary), mouseUp (message), on (control_st)
+References: on (control structure), handler (glossary),
+custom command (glossary), handle (glossary), built-in message (glossary),
+control structure (glossary), mouseUp (message)
+

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 module com.livecode.typeconvert.tests
 
+use com.livecode.__INTERNAL._testlib
+
 public handler TestSplit()
 	-- Bug 15440
 	variable tString
@@ -33,6 +35,25 @@ public handler TestSplitEmpty()
 	put "security.selinux\u{0}user.test\u{0}user.uuid" into tString
 	split tSTring by "" into tList
 	test "split (empty)" when the number of elements in tList is 1
+end handler
+
+private handler TestCombine_NonString()
+	variable tString
+	combine [1, 2, 3] with "," into tString
+end handler
+
+public handler TestCombine()
+	variable tString
+	variable tList
+	put ["a", "b", "c"] into tList
+
+	combine tList with "," into tString
+	test "combine (comma)" when the number of chars in tString is 5
+
+	combine tList with "" into tString
+	test "combine (empty)" when the number of chars in tString is 3
+
+	MCUnitTestHandlerThrows(TestCombine_NonString, "combine non-string")
 end handler
 
 end module

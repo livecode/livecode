@@ -1,20 +1,22 @@
 Name: menuButton
 
+Synonyms: menuobject
+
 Type: function
 
 Syntax: the menuButton
 
 Syntax: menuButton()
 
-Summary: <return|Returns> the name of the <button> that <trigger|triggered> display of a <stack menu>.
-
-Synonyms: menuObject
+Summary:
+<return|Returns> the name of the <button> that <trigger|triggered>
+display of a <stack menu>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 the menuButton
@@ -23,14 +25,30 @@ Example:
 hide the menuButton
 
 Returns:
-The <menuButton> <function> <return|returns> the <name> <property> of the <button>.
-You create a stack menu by laying out the menu items as buttons in a stack window, then setting the menuName <property> of a <button> in another <stack> to the menu stack's name. Clicking the <button> displays the menu stack as a <menu>. If you use the same <stack menu> as the <menuName> of more than one <button>, the <menuButton> tells you which button the user clicked to display the <stack menu>.
+The <menuButton> <function> <return|returns> the <name> <property> of
+the <button>. You create a stack menu by laying out the menu items as
+buttons in a stack window, then setting the menuName <property> of a
+<button> in another <stack> to the menu stack's name. Clicking the
+<button> displays the menu stack as a <menu>. If you use the same 
+<stack menu> as the <menuName> of more than one <button>, the 
+<menuButton> tells you which button the user clicked to display the 
+<stack menu>.
 
-For example, suppose you create a stack menu listing all your mailboxes, and display it when clicking both a "Delete" button and an "Open" button. Checking the <menuButton> from within the <stack menu> lets you respond appropriately to the user's choosing a mailbox, either deleting it or opening it.
+For example, suppose you create a stack menu listing all your mailboxes,
+and display it when clicking both a "Delete" button and an "Open"
+button. Checking the <menuButton> from within the <stack menu> lets you
+respond appropriately to the user's choosing a mailbox, either deleting
+it or opening it.
 
 Description:
-Use the <menuButton> <function> within a <handler> in a <stack menu> to determine which <button> opened the <menu>.
+Use the <menuButton> <function> within a <handler> in a <stack menu> to
+determine which <button> opened the <menu>.
 
-References: me (keyword), menu (keyword), button (keyword), menuHistory (property), menuMouseButton (property), name (property), menuName (property), option (command), function (control_st), handler (glossary), stack menu (glossary), property (glossary), trigger (glossary), return (glossary), stack (object)
+References: option (command), function (control structure),
+handler (glossary), stack menu (glossary), property (glossary),
+trigger (glossary), return (glossary), me (keyword), menu (keyword),
+button (keyword), stack (object), menuHistory (property),
+menuMouseButton (property), name (property), menuName (property)
 
 Tags: menus
+

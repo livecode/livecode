@@ -22,8 +22,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mccontrol.h"
 
-class MCEPS : public MCControl
+class MCEPS;
+typedef MCObjectProxy<MCEPS>::Handle MCEPSHandle;
+
+class MCEPS : public MCControl, public MCMixinObjectHandle<MCEPS>
 {
+public:
+    
+    enum { kObjectType = CT_EPS };
+    using MCMixinObjectHandle<MCEPS>::GetHandle;
+    
+private:
+    
 	uint4 size;
 	char *postscript;
 	char *prolog;
@@ -48,14 +58,12 @@ public:
 	virtual ~MCEPS();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
+    
 	virtual Boolean mdown(uint2 which);
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual void applyrect(const MCRectangle &nrect);
-
-#ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-    virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
 
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);

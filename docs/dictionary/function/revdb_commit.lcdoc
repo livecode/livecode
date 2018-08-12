@@ -4,31 +4,54 @@ Type: function
 
 Syntax: revdb_commit(<databaseID>)
 
-Summary: <execute|Executes> the <revCommitDatabase> <command>.
+Summary:
+<execute|Executes> the <revCommitDatabase> <command>.
+
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 get revdb_commit(currentDB)
 
 Parameters:
-databaseID: The number returned by the revOpenDatabase function when the database was opened.
+databaseID:
+The number returned by the revOpenDatabase function when the database
+was opened.
 
-Returns: The <revdb_commit> <function> returns empty if the changes were successfully saved.
+Returns:
+The <revdb_commit> <function> returns empty if the changes were
+successfully saved.
 
 Description:
 Use the <revdb_commit> <function> to commit changes.
 
-Evaluating the <revdb_commit> <function> has the same effect as <execute|executing> the <revCommitDatabase> <command>. The only difference is that one is a <function call> and the other is a <command>.
+Evaluating the <revdb_commit> <function> has the same effect as
+<execute|executing> the <revCommitDatabase> <command>. The only
+difference is that one is a <function call> and the other is a
+<command>. 
 
->*Important:*  The <revdb_commit> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revdb_commit> <function> is part of the 
+> <Database library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
-References: Database library (library), LiveCode custom library (library), revCommitDatabase (command), revRollBackDatabase (command), revQueryResult (function), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), execute (glossary), function call (glossary), function (control_st)
+References: revCommitDatabase (command), revRollBackDatabase (command),
+function (control structure), revQueryResult (function),
+LiveCode custom library (glossary),
+Standalone Application Settings (glossary), command (glossary),
+standalone application (glossary), execute (glossary),
+function call (glossary), Database library (library)
 
 Tags: database
+

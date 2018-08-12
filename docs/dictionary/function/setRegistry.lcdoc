@@ -4,13 +4,14 @@ Type: function
 
 Syntax: setRegistry(<keyPath>, <value> [, <type>])
 
-Summary: Sets an entry in the <registry|Windows system registry>.
+Summary:
+Sets an entry in the <registry|Windows system registry>.
 
 Introduced: 1.0
 
 OS: windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 setRegistry("HKEY_CLASSES_ROOT\.txt\", "NotePad")
@@ -22,43 +23,71 @@ Example:
 setRegistry(theKey,empty)
 
 Parameters:
-keyPath: The keyPath parameter is the path to a registry entry.
-value: The new setting for the entry specified by the keyPath.
+keyPath:
+The keyPath parameter is the path to a registry entry.
+
+value:
+The new setting for the entry specified by the keyPath.
+
 type (enum):
-- binary:
-- dword:
-- dwordlittleendian:
-- dwordbigendian:
-- expandsz:
-- link:
-- multisz:
-- none:
-- resourcelist:
-- string: (default)
-- sz:
 
-The result: If Windows sends an error message to the application, the result <function> <return|returns> the <error message>.
+-   binary: 
+-   dword: 
+-   dwordlittleendian: 
+-   dwordbigendian: 
+-   expandsz: 
+-   link: 
+-   multisz: 
+-   none: 
+-   resourcelist: 
+-   string: (default)
+-   sz: 
 
-Returns: The <setRegistry> <function> <return|returns> true if the setting was successfully changed, false otherwise.
+
+Returns:
+The <setRegistry> <function> <return|returns> true if the setting was
+successfully changed, false otherwise.
+
+The result:
+If Windows sends an error message to the application, the result
+<function> <return|returns> the <error message>.
 
 Description:
 Use the <setRegistry> <function> to change the <behavior> of <Windows>.
 
-The first part of the <keyPath> should be one of the predefined handle values. If the <keyPath> ends in "\", the new setting becomes the <default> value. For example, if you want <file|files> ending in ".rev" to automatically launch LiveCode, use the following <command> :
+The first part of the <keyPath> should be one of the predefined handle
+values. If the <keyPath> ends in "\", the new setting becomes the
+<default> value. For example, if you want <file|files> ending in ".rev"
+to automatically launch LiveCode, use the following <command> :
 
-  get setRegistry("HKEY_CLASSES_ROOT\.rev\", "LiveCode")
+    get setRegistry("HKEY_CLASSES_ROOT\.rev\", "LiveCode")
 
-If the key doesn't exist, the <setRegistry> <function> creates it in the <registry>.
+
+If the key doesn't exist, the <setRegistry> <function> creates it in the
+<registry>. 
 
 To delete a subkey, set the subkey's <value> to empty.
 
-If the <type> is a <binary> type, make sure the <value> is <binary>. (You can encode a <string> as <binary file|binary data> using the <binaryEncode> <function>.)
+If the <type> is a <binary> type, make sure the <value> is <binary>.
+(You can encode a <string> as <binary file|binary data> using the
+<binaryEncode> <function>.)
 
-On Mac OS and Unix systems, the <setRegistry> <function> <return|returns> "not supported".
+On Mac OS and Unix systems, the <setRegistry> <function>
+<return|returns> "not supported".
 
->*Warning:*  Be careful to use only carefully debugged entries with the <setRegistry> <function>. Changing entries in the <registry|Windows registry> to invalid values can cause the system to behave unexpectedly or stop functioning altogether.
+>*Warning:*  Be careful to use only carefully debugged entries with the
+> <setRegistry> <function>. Changing entries in the <registry|Windows
+> registry> to invalid values can cause the system to behave
+> unexpectedly or stop functioning altogether.
 
 Changes:
-The type parameter was added in version 2.0. In previous versions, the type information could not be set.
+The type parameter was added in version 2.0. In previous versions, the
+type information could not be set.
 
-References: default (keyword), string (keyword), deleteRegistry (function), MCISendString (function), file (glossary), error message (glossary), binaryEncode (glossary), return (glossary), Windows (glossary), binary file (glossary), registry (glossary), binary (glossary), command (glossary), behavior (glossary), function (control_st)
+References: function (control structure), deleteRegistry (function),
+MCISendString (function), file (glossary), error message (glossary),
+binaryEncode (glossary), return (glossary), Windows (glossary),
+binary file (glossary), registry (glossary), binary (glossary),
+command (glossary), behavior (glossary), default (keyword),
+string (keyword)
+

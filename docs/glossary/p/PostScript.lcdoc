@@ -1,14 +1,17 @@
 Name: PostScript
 
-Synonyms: PostScript,PostScript file
+Synonyms: postscript, postscript file
 
 Type: glossary
 
 Description:
-A page description language used to lay out information for printing or screen display. 
- 
-A PostScript file is a <file> containing information in the PostScript language.
+A page description language used to lay out information for printing or
+screen display.
+
+A PostScript file is a <file> containing information in the PostScript
+language. 
 
 References: file (glossary)
 
 Tags: multimedia
+

@@ -1,20 +1,23 @@
 Name: backgroundPattern
 
+Synonyms: backpattern, fillpat
+
 Type: property
 
 Syntax: set the backgroundPattern of <object> to {<patternNumber> | <imageID> | empty}
 
-Summary: The <backgroundPattern> specifies the pattern used to draw an <object|object's> background.
+Summary:
+The <backgroundPattern> specifies the pattern used to draw an
+<object|object's> background.
 
-Synonyms: backPattern,fillPat
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the backgroundPattern of this card to 544
@@ -23,49 +26,133 @@ Example:
 set the backgroundPattern of me to the ID of image "Fill"
 
 Value:
-The <backgroundPattern> of an <object> is a pattern specifier.
-A <patternNumber> is a built-in pattern number between 1 and 164. (These patterns correspond to LiveCode's built-in patterns 136 to 300.)
-An <imageID> is the ID of an <image> to use for a pattern. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+The <backgroundPattern> of an <object(glossary)> is a pattern specifier.
+A <patternNumber> is a built-in pattern number between 1 and 164. These
+patterns are provided for compatability with patterns available in
+MetaCard and correspond to LiveCode's built in image id 137 to 300. As
+with MetaCard pattern numbers 105 to 114 and 146 and above are 
+unavailable.
+
+An <imageID> is the ID of an <image> to use for a pattern. LiveCode
+looks for the specified <image> first in the <current stack>, then in
+other open <stacks>.
 
 By default, the <backgroundPattern> for all <object|objects> is empty.
 
 Description:
-Use the <backgroundPattern> <property> to specify the pattern used for the background on which an <image> appears, or the pattern used to draw an <object>.
+Use the <backgroundPattern> <property> to specify the pattern used for
+the background on which an <image> appears, or the pattern used to draw
+an <object(glossary)>.
 
 Pattern images can be color or black-and-white.
 
->*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less, and both its <height> and <width> must be a power of 2, however, in LiveCode version 2.7, this restriction was partially lifted and the engine will tile rectangular regions correctly with arbitrarily sized background patterns.To be used on <Windows> and <Unix|Unix systems>, <height> and <width> must be divisible by 8. To be used as a fully cross-platform pattern, both an image's dimensions should be one of 8, 16, 32, 64, or 128.
+>*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS systems>,
+> an <image> must be 128x128 <pixels> or less, and both its
+> <height> and <width> must be a power of 2, however, in LiveCode
+> version 2.7, this restriction was partially lifted and the engine will
+> tile rectangular regions correctly with arbitrarily sized background
+> patterns.To be used on <Windows> and <Unix|Unix systems>, <height> and
+> <width> must be divisible by 8. To be used as a fully cross-platform
+> pattern, both an image's dimensions should be one of 8, 16, 32, 64,
+> or 128. 
 
-The <backgroundPattern> of <control(object)|controls> is drawn starting at the <control(object)|control's> upper left corner: if the <control(keyword)> is moved, the pattern does not shift.
+The <backgroundPattern> of <control(object)|controls> is drawn starting
+at the <control(object)|control's> upper left corner: if the
+<control(keyword)> is moved, the pattern does not shift.
 
-Setting the <backgroundPattern> of an <object> to empty allows the <backgroundPattern> of the object's <owner> to show through. Use the <effective> <keyword> to find out what pattern is used for the <object>, even if its own <backgroundPattern> is empty.
+Setting the <backgroundPattern> of an <object(glossary)> to empty allows
+the <backgroundPattern> of the object's <owner> to show through. Use the
+<effective> <keyword> to find out what pattern is used for the
+<object(glossary)>, even if its own <backgroundPattern> is empty.
 
-The setting of the <backgroundPattern> <property> has different effects, depending on the <object type>:
-* The <backgroundPattern> of a <stack> or <card> fills the entire <stack window>, as well as determining the <backgroundPattern> of each <object> in the <stack> or <card> that does not have its own <backgroundPattern>.
+The setting of the <backgroundPattern> <property> has different effects,
+depending on the <object type>:
 
->*Cross-platform note:*  On <Mac OS>, <OS X>, and <Windows|Windows systems>, if the backgroundColor and <backgroundPattern> of all <object|objects> in the <object hierarchy> is empty, the background set by the system is used.
+* The <backgroundPattern> of a <stack> or <card> fills the entire 
+  <stack window>, as well as determining the <backgroundPattern> of each
+  <object(glossary)> in the <stack> or <card> that does not have its own
+  <backgroundPattern>. 
 
-* The <backgroundPattern> of a <group> determines the <backgroundPattern> of each <object> in the <group> that does not have its own <backgroundPattern>.
 
-* The <backgroundPattern> of a <button(keyword)> fills the area inside the <button(object)|button's> outline. If the button's <style> is "checkbox", the <backgroundPattern> fills the checkbox. If the <button(object)|button's> style is "radioButton", the <backgroundPattern> has no effect. If the <button(keyword)> is a <tabbed button>, the <backgroundPattern> fills the tab area and the frontmost tab, but does not affect the other tabs.
+>*Cross-platform note:*  On <Mac OS>, <OS X>, and <Windows|Windows
+> systems>, if the backgroundColor and <backgroundPattern> of all
+> <object|objects> in the <object hierarchy> is empty, the background
+> set by the system is used.
 
->*Cross-platform note:*  If the <lookAndFeel> is set to "Appearance Manager", standard and rectangle <button(object)|buttons> are drawn by the operating system if the <backgroundColor> and <backgroundPattern> of the <button(keyword)> is empty. Otherwise, the <button(keyword)> is drawn by LiveCode. If the <lookAndFeel> is "Appearance Manager", <button menu|button menus> whose <menuMode> is set to "option" or "comboBox" are always drawn by the operating system, and the setting of the <backgroundPattern> does not affect them.
+* The <backgroundPattern> of a <group> determines the
+  <backgroundPattern> of each <object(glossary)> in the <group> that
+  does not have its own <backgroundPattern>.
 
-* The <backgroundPattern> of a <field(keyword)> fills the area inside the <field(object)|field's> outline and (if the <field(keyword)> is a scrolling <field(keyword)>) the arrow boxes at the ends of the scrollbar. If you set the <backgroundPattern> of a <chunk> of a <field(keyword)> (on <Unix> systems), only that <chunk> is affected.
 
-* The <backgroundPattern> of a <scrollbar> fills the arrow boxes at the ends of the <scrollbar>.
+* The <backgroundPattern> of a <button(keyword)> fills the area inside
+  the <button(object)|button's> outline. If the button's <style> is
+  "checkbox", the <backgroundPattern> fills the checkbox. If the
+  <button(object)|button's> style is "radioButton", the
+  <backgroundPattern> has no effect. If the <button(keyword)> is a
+  <tabbed button>, the <backgroundPattern> fills the tab area and the
+  frontmost tab, but does not affect the other tabs.
 
-* The <backgroundPattern> of a <graphic(keyword)> is displayed inside the <graphic(object)|graphic's> border if the <graphic(object)|graphic's> fill <property> is true. If the <graphic(object)|graphic's> fill is false, the setting of the <backgroundPattern> has no effect.
 
-* The <backgroundPattern> of an <EPS|EPS object> fills the <object|object's> rectangle.
+>*Cross-platform note:*  If the <lookAndFeel> is set to
+> "Appearance Manager", standard and rectangle <button(object)|buttons>
+> are drawn by the operating system if the <backgroundColor> and
+> <backgroundPattern> of the <button(keyword)> is empty. Otherwise, the
+> <button(keyword)> is drawn by LiveCode. If the <lookAndFeel> is
+> "Appearance Manager", <button menu|button menus> whose <menuMode> is
+> set to "option" or "comboBox" are always drawn by the operating
+> system, and the setting of the <backgroundPattern> does not affect
+> them. 
 
-* The <backgroundPattern> of an <image>, <audio clip>, <video clip>, or <player> has no effect.
+* The <backgroundPattern> of a <field(keyword)> fills the area inside
+  the <field(object)|field's> outline and (if the <field(keyword)> is a
+  scrolling <field(keyword)>) the arrow boxes at the ends of the
+  scrollbar. If you set the <backgroundPattern> of a <chunk> of a
+  <field(keyword)> (on <Unix> systems), only that <chunk> is affected.
 
-If an object's <backgroundPattern> is set, the pattern is shown instead of the color specified by <backgroundColor>.
+
+* The <backgroundPattern> of a <scrollbar> fills the arrow boxes at the
+  ends of the <scrollbar>.
+
+
+* The <backgroundPattern> of a <graphic(keyword)> is displayed inside
+  the <graphic(object)|graphic's> border if the
+  <graphic(object)|graphic's> fill <property> is true. If the
+  <graphic(object)|graphic's> fill is false, the setting of the
+  <backgroundPattern> has no effect.
+
+
+* The <backgroundPattern> of an <EPS|EPS object> fills the
+  <object|object's> rectangle.
+
+
+* The <backgroundPattern> of an <image>, <audio clip>, <video clip>, or
+  <player> has no effect.
+
+
+If an object's <backgroundPattern> is set, the pattern is shown instead
+of the color specified by <backgroundColor>.
 
 Changes:
-The ability to use the system background pattern was introduced in version 1.1. In previous versions, if the backgroundColor and backgroundPattern of all objects in the object hierarchy was empty, a light gray color was used.
+The ability to use the system background pattern was introduced in
+version 1.1. In previous versions, if the backgroundColor and
+backgroundPattern of all objects in the object hierarchy was empty, a
+light gray color was used.
 
-References: metal (property), pixels (property), opaque (property), patterns (property), width (property), height (property), style (property), backgroundPattern (property), lookAndFeel (property), menuMode (property), foregroundPattern (property), backgroundColor (property), owner (property), shadowPattern (property), effective (keyword), field (keyword), image (keyword), button (keyword), card (keyword), scrollbar (keyword), player (keyword), graphic (keyword), control (keyword), group (command), graphic (object), button (object), field (object), object (object), stack (object), control (object), tabbed button (glossary), property (glossary), stack window (glossary), button menu (glossary), Windows (glossary), video clip (glossary), OS X (glossary), keyword (glossary), audio clip (glossary), chunk (glossary), object hierarchy (glossary), Mac OS (glossary), Unix (glossary), object type (glossary), EPS (glossary), current stack (glossary), stacks (function)
+References: group (command), stacks (function), object (glossary),
+tabbed button (glossary), property (glossary), stack window (glossary),
+button menu (glossary), Windows (glossary), video clip (glossary),
+OS X (glossary), keyword (glossary), audio clip (glossary),
+chunk (glossary), object hierarchy (glossary), Mac OS (glossary),
+Unix (glossary), object type (glossary), EPS (glossary),
+current stack (glossary), effective (keyword), field (keyword),
+image (keyword), button (keyword), card (keyword), scrollbar (keyword),
+player (keyword), graphic (keyword), control (keyword), graphic (object),
+button (object), field (object), stack (object), control (object),
+metal (property), pixels (property), opaque (property),
+patterns (property), width (property), height (property),
+style (property), backgroundPattern (property), lookAndFeel (property),
+menuMode (property), foregroundPattern (property),
+backgroundColor (property), owner (property), shadowPattern (property)
 
 Tags: ui
+

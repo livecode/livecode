@@ -4,13 +4,16 @@ Type: command
 
 Syntax: read from driver <deviceName> [at <start>] {until {<string> | end | EOF | empty} | for <amount> [<chunkType>]} [in <time>]
 
-Summary: Takes incoming data from a <peripheral device|device> that has been opened with the <open driver> <command>, and places the data in the <it> <variable>.
+Summary:
+Takes incoming data from a <peripheral device|device> that has been
+opened with the <open driver> <command>, and places the data in the <it>
+<variable>. 
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 read from driver ".BIn" for 3 lines
@@ -19,25 +22,66 @@ Example:
 read from driver it for 2 chars in 2 seconds
 
 Parameters:
-deviceName: The name of a device driver that's installed on the system and that you have previously opened with the open driver command.
-start: The start specifies the character or byte position in the device's input where you want to begin reading.
-string (string): When LiveCode encounters the string in the data coming in from the device, it stops reading. If the string is not encountered, the read from driver command continues reading as long as there is data to be read.
-amount: A positive integer and specifies how much data to read.
-chunkType: One of chars, characters, words, items, lines, int1, uInt1, int2, uint2, int4, or uint4. The read from driver command reads amount of the specified chunkType. If you don't specify a chunkType, amount characters are read.
-time: The time to wait for the read to be completed, in milliseconds, seconds, or ticks.
+deviceName:
+The name of a device driver that's installed on the system and that you
+have previously opened with the open driver command.
 
-The result: The device to read from must be opened first with the <open driver> <command>, and the mode the device was opened in must be either read or update. If the device is not open or is open write-only, the <result> <function> is set to "File is not open for read.". If you specify a <time> and the read is not completed when that time has elapsed, the <result> <function> is set to "time out". If the read was successful, the result is set to empty.
+start:
+The start specifies the character or byte position in the device's input
+where you want to begin reading.
 
-It: The data is placed in the <it> <variable> after reading. If you specified a <binary file|binary data> <chunkType> (int1, uInt1, int2, uint2, int4, or uint4), the data consists of a comma-separated list of numbers, one for the numerical value of each chunk that was read. Otherwise, the data is placed in the <it> <variable> as it appears in the output.
+string (string):
+When LiveCode encounters the string in the data coming in from the
+device, it stops reading. If the string is not encountered, the read
+from driver command continues reading as long as there is data to be
+read. 
+
+amount:
+A positive integer and specifies how much data to read.
+
+chunkType:
+One of chars, characters, words, items, lines, int1, uInt1, int2, uint2,
+int4, or uint4. The read from driver command reads amount of the
+specified chunkType. If you don't specify a chunkType, amount characters
+are read.
+
+time:
+The time to wait for the read to be completed, in milliseconds, seconds,
+or ticks.
+
+It:
+The data is placed in the <it> <variable> after reading. If you
+specified a <binary file|binary data> <chunkType> (int1, uInt1, int2,
+uint2, int4, or uint4), the data consists of a comma-separated list of
+numbers, one for the numerical value of each chunk that was read.
+Otherwise, the data is placed in the <it> <variable> as it appears in
+the output.
+
+The result:
+The device to read from must be opened first with the <open driver>
+<command>, and the mode the device was opened in must be either read or
+update. If the device is not open or is open write-only, the <result>
+<function> is set to "File is not open for read.". If you specify a
+<time> and the read is not completed when that time has elapsed, the
+<result> <function> is set to "time out". If the read was successful,
+the result is set to empty.
 
 Description:
-Use the <read from driver> <command> to get data from a <peripheral device> such as a modem.
+Use the <read from driver> <command> to get data from a <peripheral
+device> such as a modem.
 
-The until <string> form reads data until the specified string is encountered. The until empty, until end, and until EOF forms read data until there is no more data to be read.
+The until <string> form reads data until the specified string is
+encountered. The until empty, until end, and until EOF forms read data
+until there is no more data to be read.
 
 Changes:
-Support for using serial drivers with OS X systems was added in version 2.0.
+Support for using serial drivers with OS X systems was added in version
+2.0. 
 
-References: it (keyword), open driver (command), write to driver (command), read from process (command), function (control_st), binary file (glossary), variable (glossary), command (glossary), peripheral device (glossary), result (function)
+References: open driver (command), write to driver (command),
+read from process (command), function (control structure),
+result (function), binary file (glossary), variable (glossary),
+command (glossary), peripheral device (glossary), it (keyword)
 
 Tags: networking
+

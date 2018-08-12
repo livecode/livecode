@@ -2,17 +2,18 @@ Name: acos
 
 Type: function
 
-Syntax: the acos of <number> 
+Syntax: the acos of <number>
 
 Syntax: acos(<number>)
 
-Summary: <return|Returns> the arc cosine of a number, in radians.
+Summary:
+<return|Returns> the arc cosine of a number, in radians.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 acos(-1)
@@ -24,21 +25,32 @@ Example:
 acos(field "Opposite" + field "Sine")
 
 Parameters:
-number: A number between -1 and 1, or an expression that evaluates to such a number.
+number:
+A number between -1 and 1, or an expression that evaluates to such a
+number. 
 
-The result: The result of the <acos> function is <return|returned> in radians. To get this result in <degree|degrees>, use the following <function> :.
+Returns:
+The <acos> function <return|returns> a number between zero and pi.
 
-Returns: The <acos> function <return|returns> a number between zero and pi.
+The result:
+The result of the <acos> function is <return|returned> in radians. To
+get this result in <degree|degrees>, use the following <function> :.
 
 Description:
 Use the <acos> <function> to find the arc cosine of a number.
 
-The arc cosine of <number> is an angle whose cosine is equal to <number>. In other words, <acos> is an <inverse> of the <cos> <function>.
+The arc cosine of <number> is an angle whose cosine is equal to
+<number>. In other words, <acos> is an <inverse> of the <cos>
+<function>. 
 
-  function acosInDegrees theMagnitude
+    function acosInDegrees theMagnitude
     return acos(theMagnitude) * 180 / pi
-  end acosInDegrees
 
-References: inverse (keyword), pi (constant), cos (function), return (glossary), degree (glossary), function (control_st)
+    end acosInDegrees
+
+
+References: pi (constant), function (control structure), cos (function),
+return (glossary), degree (glossary), inverse (keyword)
 
 Tags: math
+

@@ -55,11 +55,13 @@
 	<true/>
 	<key>LSArchitecturePriority</key>
 	<array>
-		<string>i386</string>
 		<string>x86_64</string>
+		<string>i386</string>
 	</array>
 	<key>NSAppleScriptEnabled</key>
 	<string>YES</string>
+	<key>OSAScriptingDefinition</key>
+	<string>terminology.sdef</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright 2000-2015, LiveCode Ltd., All Rights Reserved.</string>
 	<key>UTExportedTypeDeclarations</key>

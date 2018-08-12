@@ -4,7 +4,8 @@ Type: command
 
 Syntax: iphoneDisableRemoteControl
 
-Summary: Disables access to the remote control feature on iOS.
+Summary:
+Disables access to the remote control feature on iOS.
 
 Introduced: 6.1
 
@@ -16,10 +17,15 @@ Example:
 iphoneDisableRemoteControl
 
 Description:
-Use the <iphoneDisableRemoteControl> command to start stop remote control events when playing audio.
+Use the <iphoneDisableRemoteControl> command to start stop remote
+control events when playing audio.
 
-Use the <iphoneEnableRemoteControl> command to stop receiving remote control events when playing audio.
+Use the <iphoneEnableRemoteControl> command to stop receiving remote
+control events when playing audio.
 
 >*Note:* This functionality is only available on iOS 5.x and above.
 
-References: iphoneEnableRemoteControl (command), iphoneSetRemoteControlDisplay (command), iphoneSetAudioCategory (command), iphoneRemoteControlEnabled (function), remoteControlReceived (message)
+References: iphoneEnableRemoteControl (command),
+iphoneSetRemoteControlDisplay (command), iphoneSetAudioCategory (command),
+iphoneRemoteControlEnabled (function), remoteControlReceived (message)
+

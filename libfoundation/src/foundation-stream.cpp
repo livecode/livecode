@@ -52,8 +52,7 @@ struct __MCMemoryInputStream
 
 static void __MCMemoryInputStreamDestroy(MCStreamRef p_stream)
 {
-	__MCMemoryInputStream *self;
-	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	/* Do nothing because the memory input stream doesn't own its buffer */
 }
 
 static bool __MCMemoryInputStreamIsFinished(MCStreamRef p_stream, bool& r_finished)
@@ -113,18 +112,14 @@ static bool __MCMemoryInputStreamTell(MCStreamRef p_stream, filepos_t& r_positio
 {
 	__MCMemoryInputStream *self;
 	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
-	r_position = self -> pointer;
-	return true;
+    return MCNarrow(self->pointer, r_position);
 }
 
 static bool __MCMemoryInputStreamSeek(MCStreamRef p_stream, filepos_t p_position)
 {
 	__MCMemoryInputStream *self;
 	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
-	if (p_position < 0 || p_position > self -> length)
-		return false;
-	self -> pointer = (size_t)p_position;
-	return true;
+    return MCNarrow(p_position, self->pointer);
 }
 
 static MCStreamCallbacks kMCMemoryInputStreamCallbacks =
@@ -182,16 +177,12 @@ static void __MCMemoryOutputStreamDestroy(MCStreamRef p_stream)
 
 static bool __MCMemoryOutputStreamIsFinished(MCStreamRef p_stream, bool& r_finished)
 {
-	__MCMemoryOutputStream *self;
-	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
     r_finished = false;
 	return true;
 }
 
 static bool __MCMemoryOutputStreamGetAvailableForWrite(MCStreamRef p_stream, size_t& r_amount)
 {
-	__MCMemoryOutputStream *self;
-	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
 	r_amount = SIZE_MAX;
 	return true;
 }

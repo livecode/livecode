@@ -23,7 +23,7 @@
 #include "parsedef.h"
 #include "objdefs.h"
 
-//#include "execpt.h"
+
 #include "exec.h"
 #include "scriptpt.h"
 #include "mcerror.h"
@@ -98,24 +98,14 @@ Boolean MCScreenDC::open()
 {
 	black_pixel.red = black_pixel.green = black_pixel.blue = 0; //black pixel
 	white_pixel.red = white_pixel.green = white_pixel.blue = 0xFFFF; //white pixel
-	black_pixel.pixel = 0;
-	white_pixel.pixel = 0xFFFFFF;
 	
 	MCzerocolor = MCbrushcolor = white_pixel;
-	alloccolor(MCbrushcolor);
 	MCselectioncolor = MCpencolor = black_pixel;
-	alloccolor(MCselectioncolor);
-	alloccolor(MCpencolor);
 	gray_pixel.red = gray_pixel.green = gray_pixel.blue = 0x8888;
-	alloccolor(gray_pixel);
 	background_pixel.red = background_pixel.green = background_pixel.blue = 0xffff;
-	alloccolor(background_pixel);
 
 	MCPlatformGetSystemProperty(kMCPlatformSystemPropertyHiliteColor, kMCPlatformPropertyTypeColor, &MChilitecolor);
-	alloccolor(MChilitecolor);
-	
 	MCPlatformGetSystemProperty(kMCPlatformSystemPropertyAccentColor, kMCPlatformPropertyTypeColor, &MCaccentcolor);
-	alloccolor(MCaccentcolor);
 	
 	MCPlatformGetSystemProperty(kMCPlatformSystemPropertyDoubleClickInterval, kMCPlatformPropertyTypeUInt16, &MCdoubletime);
 	
@@ -147,7 +137,6 @@ Boolean MCScreenDC::close(Boolean force)
 	MCPlatformReleaseMenu(icon_menu);
 	
 	// COCOA-TODO: Is this still needed?
-	uint2 i;
 	if (ncolors != 0)
 	{
 		int2 i;
@@ -562,8 +551,6 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 	backdrop_pattern = p_pattern;
 	backdrop_colour = p_colour;
 	
-	alloccolor(backdrop_colour);
-	
 	MCPlatformInvalidateWindow(backdrop_window, nil);
     MCPlatformUpdateWindow(backdrop_window);
 }
@@ -589,7 +576,7 @@ void MCScreenDC::redrawbackdrop(MCPlatformSurfaceRef p_surface, MCGRegionRef p_r
 	if (MCPlatformSurfaceLockGraphics(p_surface, t_bounds, t_context, t_raster))
 	{
 		MCGraphicsContext *t_gfxcontext;
-		/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
+		/* UNCHECKED */ t_gfxcontext = new (nothrow) MCGraphicsContext(t_context);
 		t_gfxcontext -> setforeground(backdrop_colour);
 		if (backdrop_pattern != NULL)
 			t_gfxcontext -> setfillstyle(FillTiled, backdrop_pattern, 0, 0);
@@ -682,7 +669,6 @@ void MCScreenDC::beep()
 
 void MCScreenDC::getbeep(uint4 which, int4& r_value)
 {
-	long v;
 	switch (which)
 	{
 		case P_BEEP_LOUDNESS:
@@ -806,7 +792,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	real8 exittime = curtime + duration;
 	
 	Boolean abort = False;
-	Boolean reset = False;
 	Boolean done = False;
 	
 	MCwaitdepth++;
@@ -836,7 +821,7 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		// Handle pending events
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch) ||
-            dispatch && MCEventQueueDispatch())
+            (dispatch && MCEventQueueDispatch()))
 		{
 			if (anyevent)
 				done = True;
@@ -923,16 +908,17 @@ void MCScreenDC::flushevents(uint2 e)
 		t_mask = kMCPlatformEventKeyDown;
 	else if (e == FE_KEYUP)
 		t_mask = kMCPlatformEventKeyUp;
-	
-	if (t_mask != nil)
-		MCPlatformFlushEvents(t_mask);
+    else if (e == FE_ALL)
+        t_mask = kMCPlatformEventMouseDown | kMCPlatformEventMouseUp | kMCPlatformEventKeyDown | kMCPlatformEventKeyUp;
+    
+    MCPlatformFlushEvents(t_mask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::clearIME(Window w)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 		return;
 	
 	MCPlatformResetTextInputInWindow(MCactivefield -> getstack() -> getwindow());
@@ -944,7 +930,7 @@ void MCScreenDC::openIME()
 
 void MCScreenDC::activateIME(Boolean activate)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 		return;
 	
 	MCPlatformConfigureTextInputInWindow(MCactivefield -> getstack() -> getwindow(), activate);

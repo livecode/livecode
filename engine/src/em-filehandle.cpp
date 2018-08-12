@@ -237,7 +237,7 @@ MCEmscriptenFileHandle::Seek(int64_t p_offset,
  * File size
  * ---------------------------------------------------------------- */
 
-int64_t
+uint64_t
 MCEmscriptenFileHandle::GetFileSize()
 {
 	struct stat t_stat;

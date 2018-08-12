@@ -2,13 +2,15 @@ Name: accelerationChanged
 
 Type: message
 
-Syntax: accelerationChanged <x>, <y>, <z> 
+Syntax: accelerationChanged <pXAccel>, <pYAccel>, <pZAccel>
 
-Summary: Sent to the current card of the defaultStack at the interval specified by the mobileEnableAccelerometer command.
+Summary:
+Sent to the current card of the defaultStack at the interval specified
+by the mobileEnableAccelerometer command.
 
 Introduced: 4.5.2
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -19,17 +21,29 @@ on accelerationChanged pXAccel, pYAccel, pZAccel
 end accelerationChanged
 
 Parameters:
-x: the acceleration along the x axis relative to gravity
-y: the acceleration along the y axis relative to gravity
-z: the acceleration along the z axis relative to gravity
+pXAccel:
+the acceleration along the x axis relative to gravity
+
+pYAccel:
+the acceleration along the y axis relative to gravity
+
+pZAccel:
+the acceleration along the z axis relative to gravity
 
 Description:
-Handle the <accelerationChanged> message if you want to perform an action when the acceleration along any axis changes
+Handle the <accelerationChanged> message if you want to perform an
+action when the acceleration along any axis changes
 
-The <accelerationChanged> message is sent to the current card of the defaultStack at the interval specified by the mobileEnableAccelerometer command. 
+The <accelerationChanged> message is sent to the current card of the
+defaultStack at the interval specified by the mobileEnableAccelerometer
+command. 
 
-You can use the difference between the time values in two <accelerationChanged> events to give an indication of how much time passed between the samples.
+You can use the difference between the time values in two
+<accelerationChanged> events to give an indication of how much time
+passed between the samples.
 
-References: mobileStopTrackingSensor (command), mobileStartTrackingSensor (command)
+References: mobileStopTrackingSensor (command),
+mobileStartTrackingSensor (command)
 
 Tags: ui
+

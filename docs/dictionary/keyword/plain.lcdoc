@@ -4,13 +4,16 @@ Type: keyword
 
 Syntax: plain
 
-Summary: Used with the <visual effect> <command> to designate a simple "cut" effect. Also used with the <textStyle> <property> to indicate plain text with no added styling.
+Summary:
+Used with the <visual effect> <command> to designate a simple "cut"
+effect. Also used with the <textStyle> <property> to indicate plain text
+with no added styling.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 hide field 3 with visual effect plain to gray
@@ -19,12 +22,21 @@ Example:
 set the textStyle of field "Alert" to plain
 
 Description:
-Use the <plain> <keyword> to create a visual effect that goes directly to the ending image, or to remove styles from an <object> or a <chunk> of text in a <field>.
+Use the <plain> <keyword> to create a visual effect that goes directly
+to the ending image, or to remove styles from an <object(glossary)> or a
+<chunk> of text in a <field>.
 
-Setting the <textStyle> of an <object> or <chunk> to <plain> removes all styles (such as bold or italic) that have previously been applied to the <object> or <chunk>.
+Setting the <textStyle> of an <object(glossary)> or <chunk> to <plain>
+removes all styles (such as bold or italic) that have previously been
+applied to the <object(glossary)> or <chunk>.
 
-The <plain> visual effect cuts directly to the final <image>, as though a visual effect had not been used at all.
+The <plain> visual effect cuts directly to the final <image>, as though
+a visual effect had not been used at all.
 
-References: box (keyword), image (keyword), field (keyword), italic (keyword), textStyle (property), visual effect (command), object (object), property (glossary), keyword (glossary), command (glossary), chunk (glossary)
+References: visual effect (command), object (glossary),
+property (glossary), keyword (glossary), command (glossary),
+chunk (glossary), box (keyword), image (keyword), field (keyword),
+italic (keyword), textStyle (property)
 
 Tags: ui
+

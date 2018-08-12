@@ -4,13 +4,16 @@ Type: message
 
 Syntax: newGroup
 
-Summary: Sent to a new <group> right after it's created.
+Summary:
+Sent to a new <group> right after it's created.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on newGroup -- automatically set a property of all new groups
@@ -18,14 +21,25 @@ on newGroup -- automatically set a property of all new groups
 end newGroup
 
 Description:
-Handle the <newGroup> <message> if you want to create <object|objects> or do other tasks when a new <group> is created.
+Handle the <newGroup> <message> if you want to create <object|objects>
+or do other tasks when a new <group> is created.
 
-Normally, the <newGroup> <message> is handled at a higher level of the <message path>, since the newly-created <group> does not yet have a <script> unless the <templateGroup> contains one.
+Normally, the <newGroup> <message> is handled at a higher level of the
+<message path>, since the newly-created <group> does not yet have a
+<script> unless the <templateGroup> contains one.
 
-The actual creation is not triggered by the <newGroup> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <group> from being created.
+The actual creation is not triggered by the <newGroup> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <group> from being created.
 
-A <newBackground> message is sent after the <newGroup> <message>. (The <newBackground> message is included for compatibility with <HyperCard>.)
+A <newBackground> message is sent after the <newGroup> <message>. (The
+<newBackground> message is included for compatibility with <HyperCard>.)
 
-References: script (property), newBackground (message), paste (command), group (command), copy (command), clone (command), object (object), trap (glossary), message (glossary), HyperCard (glossary), templateGroup (glossary), message path (glossary), pass (control_st)
+References: paste (command), group (command), copy (command),
+clone (command), pass (control structure), object (glossary),
+trap (glossary), message (glossary), HyperCard (glossary),
+templateGroup (glossary), message path (glossary),
+newBackground (message), script (property)
 
 Tags: objects
+

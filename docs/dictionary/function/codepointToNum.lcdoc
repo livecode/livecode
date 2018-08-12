@@ -4,13 +4,14 @@ Type: function
 
 Syntax: codepointToNum(<unicodeCodepoint>)
 
-Summary: Converts a Unicode codepoint to an integer.
+Summary:
+Converts a Unicode codepoint to an integer.
 
 Introduced: 7.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 get codepointToNum("A")
@@ -22,19 +23,30 @@ Example:
 get codepointToNum(codepoint 1 of field "data")
 
 Parameters:
-unicodeCodepoint: A single Unicode codepoint
+unicodeCodepoint:
+A single Unicode codepoint
 
-Returns (integer): The <codepointToNum> function returns an integer in the range 0x000000 to 0x10FF that identifies the given character.
+Returns (integer):
+The <codepointToNum> function returns an integer in the range 0x000000
+to 0x10FFFD that identifies the given character.
 
 Description:
-Use the <codepointToNum> function to translate a Unicode codepoint to its integer represntation.
+Use the <codepointToNum> function to translate a Unicode codepoint to
+its integer represntation.
 
-The <codepointToNum> function takes a Unicode codepoint and returns its integer vaalue.
+The <codepointToNum> function takes a Unicode codepoint and returns its
+integer value.
 
-The <codepointToNum> function raises an exception if the argument contains multiple codepoints; it should generally be used in the form:
+The <codepointToNum> function raises an exception if the argument
+contains multiple codepoints; it should generally be used in the form:
 
 codepointToNum(codepoint x of string)
 
-Codepoints that are not currently assigned to characters by the latest Unicode standard are not considered to be invalid in order to ensure compatibility with future standards.
+Codepoints that are not currently assigned to characters by the latest
+Unicode standard are not considered to be invalid in order to ensure
+compatibility with future standards.
 
-References: nativeCharToNum (function), codepointProperty (function), numToNativeChar (function), normalizeText (function), numToCodepoint (function)
+References: nativeCharToNum (function), codepointProperty (function),
+numToNativeChar (function), normalizeText (function),
+numToCodepoint (function)
+

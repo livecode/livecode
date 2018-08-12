@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -21,13 +21,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
 
+#ifdef __cplusplus
+#   include <foundation-auto.h>
+#endif
+
 extern "C" {
 
 #include <system-commandline.h>
 #include <system-file.h>
 #include <system-init.h>
+#include <system-library.h>
 #include <system-random.h>
 #include <system-stream.h>
+#include <system-error.h>
 
 }
 

@@ -4,28 +4,43 @@ Type: control structure
 
 Syntax: next repeat
 
-Summary: Skips the rest of the current <iteration> and goes back to the top of the <repeat> <control structure|structure>.
+Summary:
+Skips the rest of the current <iteration> and goes back to the top of
+the <repeat> <control structure|structure>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Description:
-Use the <next repeat> <control structure> to skip part of a <repeat> loop.
+Use the <next repeat> <control structure> to skip part of a <repeat>
+loop. 
 
-Form:
-The <next repeat> <statement> appears on a line by itself, anywhere inside a <repeat> <control structure>.
+**Form:** The <next repeat> <statement> appears on a line by itself,
+anywhere inside a <repeat> <control structure>.
 
-The <next repeat> <control structure> skips the rest of the current <iteration>, and continues to the next <iteration>. The following example performs the loop action only if the <current card|current card's> name contains the letter "e":
+The <next repeat> <control structure> skips the rest of the current
+<iteration>, and continues to the next <iteration>. The following
+example performs the loop action only if the <folder|folder's> name
+does not begin with the character ".":
 
-  repeat for the number of cards of this stack
-    go to next card
-    if "e" is in the short name of this card then next repeat
-    put the short name of this card & return after myCardsList
-  end repeat
+    local tFolders
+    repeat for each line tFolder in folders(tPath)
+        if tFolder begins with "." then
+            next repeat
+        end if
+        put tPath & slash & tFolder & return after tFolders
+    end repeat
 
-Usually, <next repeat> is used within an <if> <control structure>, so that the current <iteration> is skipped if a condition is true and continues if the condition is false.
 
-References: end repeat (keyword), next (keyword), current card (glossary), iteration (glossary), statement (glossary), control structure (glossary), if (control_st), exit repeat (control_st), repeat (control_st)
+Usually, <next repeat> is used within an <if> <control structure>, so
+that the current <iteration> is skipped if a condition is true and
+continues if the condition is false.
+
+References: if (control structure), exit repeat (control structure),
+repeat (control structure), current card (glossary), iteration (glossary),
+statement (glossary), control structure (glossary), end repeat (keyword),
+next (keyword)
+

@@ -1,0 +1,46 @@
+Name: currentCard
+Type: property
+
+Introduced: 2.7.2
+
+Syntax: 
+get the currentCard of <stack>
+set the currentCard of <stack> to <cardName>
+
+Summary:
+The short name of the <current card> of a stack
+
+Associations: stack
+
+OS: mac, windows, linux, ios, android
+Platforms: desktop, server, mobile
+
+Example:
+-- The following results in the same value as
+-- "put the short name of the current card of this stack"
+put the currentCard of this stack
+
+Example:
+-- This property is useful if the stack is invisible, not
+-- in the foreground or offscreen
+set the visible of this stack to false
+put the currentCard of this stack
+
+Example:
+-- The currentCard property can be retrieved or set for a
+-- stack that is not currently an opened file
+set currentCard of stack "~/Desktop/example.livecode" \
+      to "ExampleCardName"
+
+Value: The short name of a card in a stack
+
+Description:
+Use the <currentCard> property to change the <current card> of a stack,
+or find out which card is the <current card> of a stack.
+The target stack does not need to be the frontmost stack or otherwise visible,
+nor does the stack file need not be open (file write access is needed in
+order to set the property).
+
+References: current card (glossary), card (object), stack (object), property (glossary), this (keyword)
+
+Tags: navigation

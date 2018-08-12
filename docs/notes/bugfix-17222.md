@@ -1,0 +1,1 @@
+# Make 'open elevated process' work from a non-admin user account on Windows.

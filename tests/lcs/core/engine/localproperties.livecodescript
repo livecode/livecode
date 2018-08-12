@@ -185,10 +185,9 @@ on TestCaseSensitive
 end TestCaseSensitive
 
 on TestCenturyCutOff
-   __checkLocality kCentCutOff, 80
+   __checkLocality kCentCutOff, 25
    
-   local tCutOff
-   put 80 into tCutOff
+   put 25 into tCutOff
    set the centuryCutOff to tCutOff
    
    local tDate

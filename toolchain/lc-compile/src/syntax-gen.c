@@ -19,9 +19,11 @@
 #include <assert.h>
 #include <string.h>
 
-#include "report.h"
-#include "literal.h"
-#include "position.h"
+#include <allocate.h>
+#include <position.h>
+#include <report.h>
+#include <literal.h>
+#include "outputfile.h"
 
 #define MAX_NODE_DEPTH 32
 
@@ -43,12 +45,12 @@ enum SyntaxNodeKind
 typedef struct SyntaxNode *SyntaxNodeRef;
 struct SyntaxNodeMark
 {
-    long index;
+    intptr_t index;
     SyntaxNodeKind kind;
     int used;
     SyntaxNodeRef value;
-    long lmode;
-    long rmode;
+    intptr_t lmode;
+    intptr_t rmode;
 };
 
 struct SyntaxNode
@@ -74,24 +76,24 @@ struct SyntaxNode
         } keyword;
         struct
         {
-            long index;
+            intptr_t index;
             NameRef rule;
-            long lmode;
-            long rmode;
+            intptr_t lmode;
+            intptr_t rmode;
         } descent;
         struct
         {
-            long index;
-            long value;
+            intptr_t index;
+            intptr_t value;
         } boolean_mark, integer_mark;
         struct
         {
-            long index;
+            intptr_t index;
             double value;
         } real_mark;
         struct
         {
-            long index;
+            intptr_t index;
             NameRef value;
         } string_mark;
     };
@@ -102,8 +104,8 @@ struct SyntaxNode
     int mark_count;
     
     int left_trimmed, right_trimmed;
-    long left_lmode, left_rmode;
-    long right_lmode, right_rmode;
+    intptr_t left_lmode, left_rmode;
+    intptr_t right_lmode, right_rmode;
 };
 
 typedef enum SyntaxMethodType SyntaxMethodType;
@@ -119,8 +121,8 @@ typedef struct SyntaxArgument *SyntaxArgumentRef;
 struct SyntaxArgument
 {
     SyntaxArgumentRef next;
-    long mode;
-    long index;
+    intptr_t mode;
+    intptr_t index;
 };
 
 typedef struct SyntaxMethod *SyntaxMethodRef;
@@ -154,10 +156,10 @@ struct SyntaxRule
     NameRef module;
     NameRef name;
     SyntaxRuleKind kind;
-    long precedence;
+    intptr_t precedence;
     SyntaxNodeRef expr;
     SyntaxMethodRef methods;
-    long *mapping;
+    intptr_t *mapping;
     const char *deprecation_message;
     
     SyntaxMethodRef current_method;
@@ -176,8 +178,11 @@ static SyntaxRuleRef s_rule = NULL;
 static SyntaxNodeRef s_stack[MAX_NODE_DEPTH];
 static unsigned int s_stack_index = 0;
 
-static long *s_invoke_lists = NULL;
-static long s_invoke_list_size = 0;
+static intptr_t *s_invoke_lists = NULL;
+static intptr_t s_invoke_list_size = 0;
+
+static NameRef *s_unreserved_keywords = NULL;
+static unsigned int s_unreserved_keyword_count = 0;
 
 static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right, int p_with_mark_values);
 
@@ -185,27 +190,7 @@ static FILE* s_output;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void *Allocate(size_t p_size)
-{
-    void *t_ptr;
-    t_ptr = calloc(1, p_size);
-    if (t_ptr == NULL)
-        Fatal_OutOfMemory();
-    return t_ptr;
-}
-
-void *Reallocate(void *p_ptr, size_t p_new_size)
-{
-    void *t_new_ptr;
-    t_new_ptr = realloc(p_ptr, p_new_size);
-    if (t_new_ptr == NULL)
-        Fatal_OutOfMemory();
-    return t_new_ptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-static void BeginSyntaxRule(NameRef p_module, NameRef p_name, SyntaxRuleKind p_kind, long p_precedence)
+static void BeginSyntaxRule(NameRef p_module, NameRef p_name, SyntaxRuleKind p_kind, intptr_t p_precedence)
 {
     assert(s_rule == NULL);
     
@@ -241,27 +226,27 @@ void BeginExpressionSyntaxRule(NameRef p_module, NameRef p_name)
     BeginSyntaxRule(p_module, p_name, kSyntaxRuleKindExpression, 0);
 }
 
-void BeginPrefixOperatorSyntaxRule(NameRef p_module, NameRef p_name, long p_precedence)
+void BeginPrefixOperatorSyntaxRule(NameRef p_module, NameRef p_name, intptr_t p_precedence)
 {
     BeginSyntaxRule(p_module, p_name, kSyntaxRuleKindPrefixOperator, p_precedence);
 }
 
-void BeginPostfixOperatorSyntaxRule(NameRef p_module, NameRef p_name, long p_precedence)
+void BeginPostfixOperatorSyntaxRule(NameRef p_module, NameRef p_name, intptr_t p_precedence)
 {
     BeginSyntaxRule(p_module, p_name, kSyntaxRuleKindPostfixOperator, p_precedence);
 }
 
-void BeginLeftBinaryOperatorSyntaxRule(NameRef p_module, NameRef p_name, long p_precedence)
+void BeginLeftBinaryOperatorSyntaxRule(NameRef p_module, NameRef p_name, intptr_t p_precedence)
 {
     BeginSyntaxRule(p_module, p_name, kSyntaxRuleKindLeftBinaryOperator, p_precedence);
 }
 
-void BeginRightBinaryOperatorSyntaxRule(NameRef p_module, NameRef p_name, long p_precedence)
+void BeginRightBinaryOperatorSyntaxRule(NameRef p_module, NameRef p_name, intptr_t p_precedence)
 {
     BeginSyntaxRule(p_module, p_name, kSyntaxRuleKindRightBinaryOperator, p_precedence);
 }
 
-void BeginNeutralBinaryOperatorSyntaxRule(NameRef p_module, NameRef p_name, long p_precedence)
+void BeginNeutralBinaryOperatorSyntaxRule(NameRef p_module, NameRef p_name, intptr_t p_precedence)
 {
     BeginSyntaxRule(p_module, p_name, kSyntaxRuleKindNeutralBinaryOperator, p_precedence);
 }
@@ -403,7 +388,7 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right, int 
             
         case kSyntaxNodeKindConcatenate:
 		{
-            int i;
+            unsigned int i;
 			for(i = 0; 1; i++)
             {
                 SyntaxNodeRef t_left_child, t_right_child;
@@ -438,7 +423,7 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right, int 
 		}
         case kSyntaxNodeKindAlternate:
 		{
-			int i, t_found;
+			unsigned int i, t_found;
             if (p_left -> alternate . operand_count != p_right -> alternate . operand_count)
                 return 0;
             if (p_left -> alternate . is_nullable != p_right -> alternate . is_nullable)
@@ -446,7 +431,7 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right, int 
             t_found = 0;
             for(i = 0; i < p_left -> alternate . operand_count; i++)
             {
-                int j;
+                unsigned int j;
                 for(j = 0; j < p_right -> alternate . operand_count; j++)
                     if (IsSyntaxNodeEqualTo(p_left -> alternate . operands[i], p_right -> alternate . operands[j], p_with_mark_values))
                     {
@@ -502,7 +487,7 @@ static void FreeSyntaxNode(SyntaxNodeRef p_node)
         case kSyntaxNodeKindConcatenate:
         case kSyntaxNodeKindAlternate:
 		{
-            int i;
+            unsigned int i;
 			for(i = 0; i < p_node -> concatenate . operand_count; i++)
                 FreeSyntaxNode(p_node -> concatenate . operands[i]);
             free(p_node -> concatenate . operands);
@@ -575,7 +560,7 @@ static void PrependSyntaxNode(SyntaxNodeRef p_target, SyntaxNodeRef p_node)
 
 static void JoinSyntaxNodes(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
 {
-    int i;
+    unsigned int i;
 
 	assert(p_left -> kind == kSyntaxNodeKindConcatenate || p_left -> kind == kSyntaxNodeKindAlternate);
     assert(p_left -> kind == p_right -> kind);
@@ -591,9 +576,9 @@ static void JoinSyntaxNodes(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
     FreeSyntaxNode(p_right);
 }
 
-static long CountSyntaxNodeMarks(SyntaxNodeRef p_node)
+static intptr_t CountSyntaxNodeMarks(SyntaxNodeRef p_node)
 {
-    long t_index;
+    intptr_t t_index = 0;
     switch(p_node -> kind)
     {
         case kSyntaxNodeKindEmpty:
@@ -616,11 +601,11 @@ static long CountSyntaxNodeMarks(SyntaxNodeRef p_node)
         case kSyntaxNodeKindConcatenate:
         case kSyntaxNodeKindAlternate:
 		{
-            int i;
+            unsigned int i;
 			t_index = 0;
             for(i = 0; i < p_node -> concatenate . operand_count; i++)
             {
-                long t_node_index;
+                intptr_t t_node_index;
                 t_node_index = CountSyntaxNodeMarks(p_node -> concatenate . operands[i]);
                 if (t_node_index > t_index)
                     t_index = t_node_index;
@@ -680,7 +665,7 @@ static void PrintSyntaxNode(SyntaxNodeRef p_node)
         break;
         case kSyntaxNodeKindConcatenate:
 		{
-            int i;
+            unsigned int i;
 			printf("(");
             for(i = 0; i < p_node -> concatenate . operand_count; i++)
             {
@@ -696,7 +681,7 @@ static void PrintSyntaxNode(SyntaxNodeRef p_node)
 		}
         case kSyntaxNodeKindAlternate:
 		{
-			int i;
+			unsigned int i;
             printf(p_node -> alternate . is_nullable ? "[" : "(");
             for(i = 0; i < p_node -> concatenate . operand_count; i++)
             {
@@ -717,17 +702,17 @@ static void PrintSyntaxNode(SyntaxNodeRef p_node)
     }
 }
 
-static void RemoveFirstTermFromSyntaxNode(SyntaxNodeRef p_node, long *r_lmode, long *r_rmode)
+static void RemoveFirstTermFromSyntaxNode(SyntaxNodeRef p_node, intptr_t *r_lmode, intptr_t *r_rmode)
 {
     if (p_node -> kind == kSyntaxNodeKindAlternate)
     {
-        int i;
+        unsigned int i;
 		for(i = 0; i < p_node -> alternate . operand_count; i++)
             RemoveFirstTermFromSyntaxNode(p_node -> alternate . operands[i], r_lmode, r_rmode);
     }
     else if (p_node -> kind == kSyntaxNodeKindConcatenate)
     {
-        int i;
+        unsigned int i;
         if (p_node -> concatenate . operands[0] -> kind != kSyntaxNodeKindAlternate)
         {
             p_node -> left_trimmed = 1;
@@ -745,11 +730,11 @@ static void RemoveFirstTermFromSyntaxNode(SyntaxNodeRef p_node, long *r_lmode, l
         assert(0);
 }
 
-static void RemoveLastTermFromSyntaxNode(SyntaxNodeRef p_node, long *r_lmode, long *r_rmode)
+static void RemoveLastTermFromSyntaxNode(SyntaxNodeRef p_node, intptr_t *r_lmode, intptr_t *r_rmode)
 {
     if (p_node -> kind == kSyntaxNodeKindAlternate)
     {
-        int i;
+        unsigned int i;
 		for(i = 0; i < p_node -> alternate . operand_count; i++)
             RemoveLastTermFromSyntaxNode(p_node -> alternate . operands[i], r_lmode, r_rmode);
     }
@@ -927,7 +912,7 @@ void PushUnreservedKeywordSyntaxGrammar(const char *p_keyword)
     PushSyntaxNode(t_node);
 }
 
-void PushMarkedDescentSyntaxGrammar(long p_mark, NameRef p_rule, long p_lmode, long p_rmode)
+void PushMarkedDescentSyntaxGrammar(intptr_t p_mark, NameRef p_rule, intptr_t p_lmode, intptr_t p_rmode)
 {
     SyntaxNodeRef t_node;
     MakeSyntaxNode(&t_node);
@@ -949,7 +934,7 @@ void PushDescentSyntaxGrammar(NameRef p_rule)
     PushSyntaxNode(t_node);
 }
 
-void PushMarkedTrueSyntaxGrammar(long p_mark)
+void PushMarkedTrueSyntaxGrammar(intptr_t p_mark)
 {
     SyntaxNodeRef t_node;
     MakeSyntaxNode(&t_node);
@@ -959,7 +944,7 @@ void PushMarkedTrueSyntaxGrammar(long p_mark)
     PushSyntaxNode(t_node);
 }
 
-void PushMarkedFalseSyntaxGrammar(long p_mark)
+void PushMarkedFalseSyntaxGrammar(intptr_t p_mark)
 {
     SyntaxNodeRef t_node;
     MakeSyntaxNode(&t_node);
@@ -969,7 +954,7 @@ void PushMarkedFalseSyntaxGrammar(long p_mark)
     PushSyntaxNode(t_node);
 }
 
-void PushMarkedIntegerSyntaxGrammar(long p_mark, long p_value)
+void PushMarkedIntegerSyntaxGrammar(intptr_t p_mark, intptr_t p_value)
 {
     SyntaxNodeRef t_node;
     MakeSyntaxNode(&t_node);
@@ -979,7 +964,7 @@ void PushMarkedIntegerSyntaxGrammar(long p_mark, long p_value)
     PushSyntaxNode(t_node);
 }
 
-void PushMarkedRealSyntaxGrammar(long p_mark, long p_value)
+void PushMarkedRealSyntaxGrammar(intptr_t p_mark, intptr_t p_value)
 {
     SyntaxNodeRef t_node;
     MakeSyntaxNode(&t_node);
@@ -989,7 +974,7 @@ void PushMarkedRealSyntaxGrammar(long p_mark, long p_value)
     PushSyntaxNode(t_node);
 }
 
-void PushMarkedStringSyntaxGrammar(long p_mark, const char *p_value)
+void PushMarkedStringSyntaxGrammar(intptr_t p_mark, const char *p_value)
 {
     NameRef t_name;
 	SyntaxNodeRef t_node;
@@ -1070,7 +1055,7 @@ void PushFalseArgumentSyntaxMapping(void)
 {
 }
 
-void PushIntegerArgumentSyntaxMapping(long p_value)
+void PushIntegerArgumentSyntaxMapping(intptr_t p_value)
 {
 }
 
@@ -1082,7 +1067,7 @@ void PushStringArgumentSyntaxMapping(const char *p_value)
 {
 }
 
-static void PushMarkArgumentSyntaxMapping(long p_mode, long p_index)
+static void PushMarkArgumentSyntaxMapping(intptr_t p_mode, intptr_t p_index)
 {
     SyntaxArgumentRef t_arg;
     t_arg = (SyntaxArgumentRef)Allocate(sizeof(struct SyntaxArgument));
@@ -1100,24 +1085,30 @@ static void PushMarkArgumentSyntaxMapping(long p_mode, long p_index)
     }
 }
 
-void PushInMarkArgumentSyntaxMapping(long p_index)
+void PushInMarkArgumentSyntaxMapping(intptr_t p_index)
 {
     PushMarkArgumentSyntaxMapping(0, p_index);
 }
 
-void PushOutMarkArgumentSyntaxMapping(long p_index)
+void PushOutMarkArgumentSyntaxMapping(intptr_t p_index)
 {
     PushMarkArgumentSyntaxMapping(1, p_index);
 }
 
-void PushInOutMarkArgumentSyntaxMapping(long p_index)
+void PushInOutMarkArgumentSyntaxMapping(intptr_t p_index)
 {
     PushMarkArgumentSyntaxMapping(2, p_index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void ListSyntaxNodeUnreservedKeywords(SyntaxNodeRef p_node, NameRef** x_tokens, long *x_token_count)
+void AddUnreservedSyntaxKeyword(intptr_t p_name)
+{
+    s_unreserved_keywords = Reallocate(s_unreserved_keywords, sizeof(NameRef) * (s_unreserved_keyword_count + 1));
+    s_unreserved_keywords[s_unreserved_keyword_count++] = (NameRef)p_name;
+}
+
+static void ListSyntaxNodeUnreservedKeywords(SyntaxNodeRef p_node, NameRef** x_tokens, intptr_t *x_token_count)
 {
     switch(p_node -> kind)
     {
@@ -1143,7 +1134,7 @@ static void ListSyntaxNodeUnreservedKeywords(SyntaxNodeRef p_node, NameRef** x_t
         case kSyntaxNodeKindConcatenate:
         case kSyntaxNodeKindAlternate:
 		{
-            int i;
+            unsigned int i;
             for(i = 0; i < p_node -> alternate . operand_count; i++)
                 ListSyntaxNodeUnreservedKeywords(p_node -> alternate . operands[i], x_tokens, x_token_count);
             break;
@@ -1156,14 +1147,14 @@ static void ListSyntaxNodeUnreservedKeywords(SyntaxNodeRef p_node, NameRef** x_t
     }
 }
 
-static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, long *x_next_mark, long *x_mapping)
+static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, intptr_t *x_next_mark, intptr_t *x_mapping)
 {
     if (p_node -> kind == kSyntaxNodeKindAlternate)
     {
-        int i;
+        unsigned int i;
 		for(i = 0; i < p_node -> alternate . operand_count; i++)
         {
-            int j;
+            unsigned int j;
 			for(j = 0; j < p_other_node -> alternate . operand_count; j++)
                 if (IsSyntaxNodeEqualTo(p_node -> alternate . operands[i], p_other_node -> alternate . operands[j], 0))
                     MergeSyntaxNodes(p_node -> alternate . operands[i], p_other_node -> alternate . operands[j], x_next_mark, x_mapping);
@@ -1171,7 +1162,7 @@ static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, l
     }
     else if (p_node -> kind == kSyntaxNodeKindConcatenate)
     {
-        int i;
+        unsigned int i;
 		for(i = 0; i < p_other_node -> concatenate . operand_count; i++)
         {
             SyntaxNodeRef t_child, t_other_child;
@@ -1200,20 +1191,20 @@ static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, l
 
 static void MergeSyntaxRule(SyntaxRuleRef p_rule, SyntaxRuleRef p_other_rule)
 {
-    long t_rule_mark_count, t_other_rule_mark_count;
-	long *t_mark_mapping;
+    intptr_t t_rule_mark_count, t_other_rule_mark_count;
+	intptr_t *t_mark_mapping;
 
     t_rule_mark_count = CountSyntaxNodeMarks(p_rule -> expr);
     t_other_rule_mark_count = CountSyntaxNodeMarks(p_other_rule -> expr);
     
-    t_mark_mapping = (long *)Allocate(t_other_rule_mark_count * sizeof(long));
+    t_mark_mapping = (intptr_t *)Allocate(t_other_rule_mark_count * sizeof(intptr_t));
     
     MergeSyntaxNodes(p_rule -> expr, p_other_rule -> expr, &t_rule_mark_count, t_mark_mapping);
     
     p_other_rule -> mapping = t_mark_mapping;
 }
 
-static void SetSyntaxNodeMarkAsUsed(struct SyntaxNodeMark *p_marks, int p_mark_count, long p_index, SyntaxNodeRef p_value)
+static void SetSyntaxNodeMarkAsUsed(struct SyntaxNodeMark *p_marks, int p_mark_count, intptr_t p_index, SyntaxNodeRef p_value)
 {
     int i;
 	for(i = 0; i < p_mark_count; i++)
@@ -1288,7 +1279,7 @@ static void GenerateSyntaxRuleTerm(SyntaxNodeRef p_node, struct SyntaxNodeMark *
     }
 }
 
-static void AddSyntaxNodeMark(struct SyntaxNodeMark **x_marks, int *x_mark_count, long p_index, SyntaxNodeKind p_kind, long p_lmode, long p_rmode)
+static void AddSyntaxNodeMark(struct SyntaxNodeMark **x_marks, int *x_mark_count, intptr_t p_index, SyntaxNodeKind p_kind, intptr_t p_lmode, intptr_t p_rmode)
 {
     int i;
 	for(i = 0; i < *x_mark_count; i++)
@@ -1330,7 +1321,7 @@ static void GenerateSyntaxRuleMarks(SyntaxNodeRef p_node, struct SyntaxNodeMark 
         case kSyntaxNodeKindConcatenate:
         case kSyntaxNodeKindAlternate:
 		{
-            int i;
+            unsigned int i;
 			for(i = 0; i < p_node -> concatenate . operand_count; i++)
                 GenerateSyntaxRuleMarks(p_node -> concatenate . operands[i], x_marks, x_mark_count);
             break;
@@ -1402,7 +1393,7 @@ static void GenerateSyntaxRuleExplicitAndUnusedMarks(SyntaxNodeRef p_node)
                     if (p_node -> marks[i] . value -> integer_mark . value < 0)
                         fprintf(s_output, "EXPRESSION'integer(UndefinedPosition, %ld)", p_node -> marks[i] . value -> integer_mark . value);
                     else
-                        fprintf(s_output, "EXPRESSION'unsignedinteger(UndefinedPosition, %lu)", (unsigned long)p_node -> marks[i] . value -> integer_mark . value);
+                        fprintf(s_output, "EXPRESSION'unsignedinteger(UndefinedPosition, %lu)", (uintptr_t)p_node -> marks[i] . value -> integer_mark . value);
                     break;
                 case kSyntaxNodeKindRealMark:
                     fprintf(s_output, "EXPRESSION'real(UndefinedPosition, Mark%ldValue)", p_node -> marks[i] . index);
@@ -1454,7 +1445,7 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
     
     if (p_node -> kind == kSyntaxNodeKindConcatenate)
     {
-        int i;
+        unsigned int i;
 		for(i = 0; i < p_node -> alternate . operand_count; i++)
             if (p_node -> alternate . operands[i] -> kind == kSyntaxNodeKindAlternate ||
                 p_node -> alternate . operands[i] -> kind == kSyntaxNodeKindRepeat)
@@ -1462,7 +1453,7 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
     }
     else if (p_node -> kind == kSyntaxNodeKindAlternate)
     {
-        int i;
+        unsigned int i;
 		for(i = 0; i < p_node -> alternate . operand_count; i++)
             if (p_node -> alternate . operands[i] -> kind == kSyntaxNodeKindRepeat)
                 GenerateSyntaxRule(x_index, p_node -> alternate . operands[i], kSyntaxRuleKindFragment, NULL);
@@ -1501,7 +1492,7 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
     
     if (p_node -> kind == kSyntaxNodeKindConcatenate)
     {
-        int i;
+        unsigned int i;
 		
 		SetAllSyntaxNodeMarksAsUnused(p_node -> marks, p_node -> mark_count);
         
@@ -1522,7 +1513,7 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
     }
     else if (p_node -> kind == kSyntaxNodeKindAlternate)
     {
-        int i;
+        unsigned int i;
 		for(i = 0; i < p_node -> alternate . operand_count; i++)
         {
             SetAllSyntaxNodeMarksAsUnused(p_node -> marks, p_node -> mark_count);
@@ -1533,7 +1524,7 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
                 GenerateSyntaxRuleTerm(p_node -> alternate . operands[i], p_node -> marks, p_node -> mark_count);
             else
             {
-                int j;
+                unsigned int j;
 				for(j = 0; j < p_node -> alternate . operands[i] -> concatenate . operand_count; j++)
                 {
                     if (j != 0)
@@ -1730,21 +1721,30 @@ static void GenerateInvokeLists(void)
 static void GenerateTokenList(void)
 {
     NameRef *t_tokens;
-    long t_token_count;
+    intptr_t t_token_count;
 	SyntaxRuleGroupRef t_group;
-    int i;
+	intptr_t i;
+	unsigned int j;
+	const char *t_string;
+
     t_tokens = NULL;
     t_token_count = 0;
     for(t_group = s_groups; t_group != NULL; t_group = t_group -> next)
         ListSyntaxNodeUnreservedKeywords(t_group -> rules -> expr, &t_tokens, &t_token_count);
     
     fprintf(s_output, "'nonterm' CustomKeywords(-> STRING)\n");
-    if (t_token_count != 0)
+    if (t_token_count != 0 || s_unreserved_keyword_count != 0)
     {
         for(i = 0; i < t_token_count; i++)
         {
-            const char *t_string;
             GetStringOfNameLiteral(t_tokens[i], &t_string);
+            fprintf(s_output, "  'rule' CustomKeywords(-> String):\n");
+            fprintf(s_output, "    \"%s\"\n", t_string);
+            fprintf(s_output, "    where(\"%s\" -> String)\n", t_string);
+        }
+        for(j = 0; j < s_unreserved_keyword_count; j++)
+        {
+            GetStringOfNameLiteral(s_unreserved_keywords[j], &t_string);
             fprintf(s_output, "  'rule' CustomKeywords(-> String):\n");
             fprintf(s_output, "    \"%s\"\n", t_string);
             fprintf(s_output, "    where(\"%s\" -> String)\n", t_string);
@@ -1758,7 +1758,7 @@ static void GenerateTokenList(void)
     }
 }
 
-void DefineCustomInvokeList(long index, long ptr)
+void DefineCustomInvokeList(intptr_t index, intptr_t ptr)
 {
     if (index >= s_invoke_list_size)
     {
@@ -1769,12 +1769,12 @@ void DefineCustomInvokeList(long index, long ptr)
             s_invoke_list_size *= 2;
         }
     
-        s_invoke_lists = (long *)Reallocate(s_invoke_lists, s_invoke_list_size * sizeof(long));
+        s_invoke_lists = (intptr_t *)Reallocate(s_invoke_lists, s_invoke_list_size * sizeof(intptr_t));
     }
     s_invoke_lists[index] = ptr;
 }
 
-void LookupCustomInvokeList(long index, long *r_ptr)
+void LookupCustomInvokeList(intptr_t index, intptr_t *r_ptr)
 {
     *r_ptr = s_invoke_lists[index];
 }

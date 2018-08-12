@@ -14,6 +14,8 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <Windows.h>
+
 #include "graphics.h"
 #include "graphics-internal.h"
 
@@ -89,6 +91,8 @@ static void w32_draw_text_render_transparent_buffer(HDC p_gdi_context, const uni
 	// The text color is the inverse of what the RGB buffer has been set to.
 	SetTextColor(p_gdi_context, p_nearest_white ? RGB(0xff, 0xff, 0xff) : RGB(0x00, 0x00, 0x00));
 
+	SetTextAlign(p_gdi_context, TA_BASELINE | TA_LEFT | TA_NOUPDATECP);
+
 	// Render the text.
     ExtTextOutW(p_gdi_context, 0, 0, p_rtl ? ETO_RTLREADING : 0, NULL, (LPCWSTR)p_text, p_text_length, NULL);
 
@@ -115,7 +119,7 @@ static bool w32_draw_text_process_transparent_buffer(uint32_t p_fill_color, bool
 			// If the destination pixel is opaque, then set it to transparent black
 			// and flag for opacity. Otherwise; take an average of the three RGB
 			// components and blend with the fill color.
-			if (((*t_context_pxl >> 24) & 0xFF) == 0xFF)
+			if (false && ((*t_context_pxl >> 24) & 0xFF) == 0xFF)
 			{
 				*t_rgb_pxl = 0x00000000;
 				t_has_opaque = true;
@@ -147,6 +151,8 @@ static void w32_draw_text_render_opaque_buffer(HDC p_gdi_context, const unichar_
 
 	// The text color is the fill color.
 	SetTextColor(p_gdi_context, RGB((p_fill_color >> 16) & 0xFF, (p_fill_color >> 8) & 0xFF, (p_fill_color >> 0) & 0xFF));
+
+	SetTextAlign(p_gdi_context, TA_BASELINE | TA_LEFT | TA_NOUPDATECP);
 
 	// Render the text.
 	ExtTextOutW(p_gdi_context, 0, 0, p_rtl ? ETO_RTLREADING : 0, NULL, (LPCWSTR)p_text, p_text_length, NULL);
@@ -245,25 +251,24 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 
 		t_paint . setStyle(SkPaint::kFill_Style);	
 		t_paint . setAntiAlias(p_context -> state -> should_antialias);
+
+		t_paint.setBlendMode(MCGBlendModeToSkBlendMode(p_context->state->blend_mode));		
 		
-		SkXfermode *t_blend_mode;
-		t_blend_mode = MCGBlendModeToSkXfermode(p_context -> state -> blend_mode);
-		t_paint . setXfermode(t_blend_mode);
-		if (t_blend_mode != NULL)
-			t_blend_mode -> unref();		
-		
-		t_bitmap . setConfig(SkBitmap::kARGB_8888_Config, p_bounds . width, p_bounds . height);
-        t_bitmap . setAlphaType(kPremul_SkAlphaType);
+		t_bitmap . setInfo(SkImageInfo::MakeN32Premul(p_bounds.width, p_bounds.height));
 		t_bitmap . setPixels(t_rgb_data);
 
 		SetBkMode(p_gdicontext, TRANSPARENT);
 	}
 
+	// We want all drawing to ignore the transform matrix within this function
+	p_context->layer->canvas->save();
+	p_context->layer->canvas->resetMatrix();
+
 	// Now process depending on the first pixel - if transparent, then first process
 	// transparency then process opacity; otherwise vice-versa.
 	if (t_success)
 	{
-		if ((*t_context_pxls >> 24) != 0xff)
+		if (true || (*t_context_pxls >> 24) != 0xff)
 		{
 			// Render the text for the transparent pixels (white/black text on black/white background).
 			w32_draw_text_render_transparent_buffer(p_gdicontext, p_text, p_length >> 1, t_nearest_white, p_bounds . height, t_rgb_pxls, p_bounds . width, p_rtl);
@@ -276,7 +281,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 
 			// Blend the bitmap into the background (we definitely have transparent pixels).
 			t_bitmap . setAlphaType(kPremul_SkAlphaType);	
-			p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
+			p_context -> layer -> canvas -> drawBitmap(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
 
 			// If there are any opaque pixels, process those.
 			if (t_has_opaque)
@@ -293,7 +298,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 				// Blend the bitmap into the background (we definitely have transparent pixels since
 				// we've set some so!).
 				t_bitmap . setAlphaType(kPremul_SkAlphaType);	
-				p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
+				p_context -> layer -> canvas -> drawBitmap(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
 			}
 		}
 		else
@@ -313,7 +318,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 				t_bitmap . setAlphaType(kPremul_SkAlphaType);
 			else
 				t_bitmap . setAlphaType(kOpaque_SkAlphaType);	
-			p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
+			p_context -> layer -> canvas -> drawBitmap(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
 
 			// If there are any transparent pixels, process those.
 			if (t_has_transparent)
@@ -327,10 +332,13 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 
 				// Blend the bitmap into the background (we definitely have transparent pixels).
 				t_bitmap . setAlphaType(kPremul_SkAlphaType);
-				p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
+				p_context -> layer -> canvas -> drawBitmap(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
 			}
 		}
 	}
+
+	// Restore the canvas' matrix
+	p_context->layer->canvas->restore();
 
 	if (t_rgb_bitmap != NULL)
 	{
@@ -437,7 +445,7 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 		t_xform . eM21 = t_transform . c;
 		t_xform . eM22 = t_transform . d;
 		t_xform . eDx = t_transform . tx - (t_clipped_bounds . x);
-		t_xform . eDy = t_transform . ty - (t_clipped_bounds . y - t_text_bounds . y);
+		t_xform . eDy = t_transform . ty - (t_clipped_bounds . y);
 		t_success = SetWorldTransform(s_draw_dc, &t_xform);
 	}
 
@@ -502,8 +510,8 @@ static bool __MCGContextTracePlatformText(MCGContextRef self, const unichar_t *p
 
 		POINT *t_points;
 		BYTE *t_types;
-		t_points = new POINT[t_count];
-		t_types = new BYTE[t_count];
+		t_points = new (nothrow) POINT[t_count];
+		t_types = new (nothrow) BYTE[t_count];
 		GetPath(t_gdicontext, t_points, t_types, t_count);
 
 		MCGPathCreateMutable(r_path);
@@ -602,8 +610,8 @@ MCGFloat __MCGContextMeasurePlatformTextScreen(MCGContextRef self, const unichar
 	{
 		XFORM t_xform;
 		t_xform . eM11 = p_transform . a;
-		t_xform . eM12 = 0;
-		t_xform . eM21 = 0;
+		t_xform . eM12 = p_transform . b;
+		t_xform . eM21 = p_transform . c;
 		t_xform . eM22 = p_transform . d;
 		t_xform . eDx = 0;
 		t_xform . eDy = 0;
@@ -772,8 +780,8 @@ bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_
 
         POINT *t_points;
         BYTE *t_types;
-        t_points = new POINT[t_count];
-        t_types = new BYTE[t_count];
+        t_points = new (nothrow) POINT[t_count];
+        t_types = new (nothrow) BYTE[t_count];
         GetPath(s_measure_dc, t_points, t_types, t_count);
 
         for(int i = 0; i < t_count;)

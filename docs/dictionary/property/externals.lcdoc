@@ -2,35 +2,53 @@ Name: externals
 
 Type: property
 
-Syntax: set the externals of <stack> to <filePathsList> 
+Syntax: set the externals of <stack> to <filePathsList>
 
-Summary: Specifies a list of <files> containing external code that are to be <loaded into memory> when the <stack> opens.
+Summary:
+Specifies a list of <files> containing external code that are to be
+<loaded into memory> when the <stack> opens.
 
 Associations: stack
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server
+Platforms: desktop, server
 
 Example:
 set the externals of stack "Apps" to field "Executables"
 
-Value: The <externals> of a <stack> reports a list of <file path|file paths>, one per line.
+Value:
+The <externals> of a <stack> reports a list of <file path|file paths>,
+one per line.
 
 Description:
-Use the <externals> <property> to use the <externals> in the specified <files>.
+Use the <externals> <property> to use the <externals> in the specified
+<files>. 
 
-Each line of the <externals> specifies the <file path|name and location> of a <file> containing <external|external commands> and <external|external functions>. If you specify a name but not a location, the <file> is assumed to be in the <defaultFolder>.
+Each line of the <externals> specifies the <file path|name and location>
+of a <file> containing <external|external commands> and
+<external|external functions>. If you specify a name but not a location,
+the <file> is assumed to be in the <defaultFolder>.
 
-The files are executed when the stack is opened, making the externals in them available to handlers in the stack.
+The files are executed when the stack is opened, making the externals in
+them available to handlers in the stack.
 
->*Important:*  When you install a new <external> by setting a <stack|stack's> <externals> <property>, LiveCode cannot use it until you either quit LiveCode and then reopen the <stack>, or close the <stack> (after setting its <destroyWindow> <property> to true) and then reopen it.
-
-<img src="202654"/> Cross-platform caution! It is not possible to load externals written for PowerPC in an application running natively on an Intel Mac. To get around this limitation either use Universal Binary externals, or run the program under Rosetta.
+>*Important:*  When you install a new <external> by setting a
+> <stack|stack's> <externals> <property>, LiveCode cannot use it until
+> you either quit LiveCode and then reopen the <stack>, or close the
+> <stack> (after setting its <destroyWindow> <property> to true) and
+> then reopen it.
 
 Changes:
-Support for using the externals property on OS X systems was added in version 2.0.
+Support for using the externals property on OS X systems was added in
+version 2.0.
 
-References: defaultFolder (property), imagePixmapID (property), externalPackages (property), destroyWindow (property), externals (property), file (keyword), deleteResource (function), files (function), property (glossary), external (glossary), file path (glossary), loaded into memory (glossary), stack (object)
+References: deleteResource (function), files (function),
+property (glossary), external (glossary), file path (glossary),
+loaded into memory (glossary), file (keyword), stack (object),
+defaultFolder (property), imagePixmapID (property),
+externalPackages (property), destroyWindow (property),
+externals (property)
+

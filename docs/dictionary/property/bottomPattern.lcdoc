@@ -2,17 +2,19 @@ Name: bottomPattern
 
 Type: property
 
-Syntax: set the bottomPattern of <object> to {empty | <patternID> | <imageID>}
+Syntax: set the bottomPattern of <object> to {empty | <patternNumber> | <imageID>}
 
-Summary: Specifies the pattern of a three-D <object|object's> lowered edge.
+Summary:
+Specifies the pattern of a three-D <object|object's> lowered edge.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the bottomPattern of scrollbar 2 to 4934
@@ -21,44 +23,105 @@ Example:
 set the bottomPattern of button "OK" to savedPattern
 
 Value:
-The <bottomPattern> of an <object> is a pattern specifier.
-A patternNumber is a built-in pattern number between 1 and 164. (These patterns correspond to LiveCode's built-in patterns 136 to 300.)
+The <bottomPattern> of an <object(glossary)> is a pattern specifier.
+A <patternNumber> is a built-in pattern number between 1 and 164. These
+patterns are provided for compatability with patterns available in
+MetaCard and correspond to LiveCode's built in image id 137 to 300. As
+with MetaCard pattern numbers 105 to 114 and 146 and above are 
+unavailable.
 
-An <imageID> is the ID of an <image> to use for a pattern. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+An <imageID> is the ID of an <image> to use for a pattern. LiveCode
+looks for the specified <image> first in the <current stack>, then in
+other open <stacks>.
 
 By default, the <bottomPattern> for all <object|objects> is empty.
 
 Description:
-Objects whose threeD <property> is set to true appear to stick out of or recede into the screen. Use the <bottomPattern> <property> to specify the color of the shadowed edge of the <object>.
+Objects whose threeD <property> is set to true appear to stick out of or
+recede into the screen. Use the <bottomPattern> <property> to specify
+the color of the shadowed edge of the <object(glossary)>.
 
 Pattern images can be color or black-and-white.
 
->*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less, and both its <height> and <width> must be a power of 2. To be used on <Windows> and <Unix|Unix systems>, <height> and <width> must be divisible by 8. To be used as a fully cross-platform pattern, both an image's dimensions should be one of 8, 16, 32, 64, or 128.
+>*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS systems>,
+> an <image> must be 128x128 <pixels> or less, and both its
+> <height> and <width> must be a power of 2. To be used on <Windows> and
+> <Unix|Unix systems>, <height> and <width> must be divisible by 8. To
+> be used as a fully cross-platform pattern, both an image's dimensions
+> should be one of 8, 16, 32, 64, or 128.
 
-The <bottomPattern> of <control(object)|controls> is drawn starting at the <control(object)|control's> upper right corner: if the <control(keyword)> is moved, the pattern does not shift.
+The <bottomPattern> of <control(glossary)|controls> is drawn starting at
+the <control(glossary)|control's> upper right corner: if the
+<control(keyword)> is moved, the pattern does not shift.
 
-Setting the <bottomPattern> of an <object> to empty allows the <bottomPattern> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what pattern is used for the <object>, even if its own <bottomPattern> is empty.
+Setting the <bottomPattern> of an <object(glossary)> to empty allows the
+<bottomPattern> of the <object|object's> <owner> to show through. Use
+the <effective> <keyword> to find out what pattern is used for the
+<object(glossary)>, even if its own <bottomPattern> is empty.
 
-If the object's showBorder <property> is false, the <bottomPattern> has no effect.
+If the object's showBorder <property> is false, the <bottomPattern> has
+no effect.
 
-The setting of the <bottomPattern> <property> has different effects, depending on the <object type>:
+The setting of the <bottomPattern> <property> has different effects,
+depending on the <object type>:
 
-* The <bottomPattern> of a <stack> determines the <bottomPattern> of each <object> in the <stack> that does not have its own <bottomPattern>.
+* The <bottomPattern> of a <stack> determines the <bottomPattern> of
+  each <object(glossary)> in the <stack> that does not have its own
+  <bottomPattern>. 
 
-* The <bottomPattern> of a <card> or <group> determines the pattern of the border around the <card> or <group>, as well as determining the <bottomPattern> of each <object> in the <card> or <group> that does not have its own <bottomPattern>.
 
-* The <bottomPattern> of a <button> forms a border on the bottom and right edges of the <button>. If the button"s <threeD> <property> is false, the <bottomPattern> has no effect.
+* The <bottomPattern> of a <card> or <group> determines the pattern of
+  the border around the <card> or <group>, as well as determining the
+  <bottomPattern> of each <object(glossary)> in the <card> or <group>
+  that does not have its own <bottomPattern>.
 
-* The <bottomPattern> of a <field(keyword)> forms a border on the top and left edges of the <field(keyword)> and (if the <field(keyword)> is a scrolling <field(keyword)>) the bottom and right edges of the arrow boxes at the ends of the scrollbar and the top and left edges of the scroll area. The <field(object)|field's> <bottomPattern> also determines the pattern of the bottom and right edges of any text in the <field(keyword)> whose <textStyle> is set to "threeDBox". If the <field(object)|field's> <threeD> <property> is false, the <field(keyword)> border is not affected.
 
-* The <bottomPattern> of a <scrollbar> forms a border on the bottom and right edges of the arrow boxes at the ends of the <scrollbar>, and the top and left edges of the scroll area.
+* The <bottomPattern> of a <button> forms a border on the bottom and
+  right edges of the <button>. If the button"s <threeD> <property> is
+  false, the <bottomPattern> has no effect.
 
-* The <bottomPattern> of a <graphic>, <audio clip>, <video clip>, or <image> has no effect.
 
-* The <bottomPattern> of a <player> or <EPS> <object> forms a border on the top and left edges of the <object>. If the <object|object's> <threeD> <property> is false, the <bottomPattern> has no effect.
+* The <bottomPattern> of a <field(keyword)> forms a border on the top
+  and left edges of the <field(keyword)> and (if the <field(keyword)> is
+  a scrolling <field(keyword)>) the bottom and right edges of the arrow
+  boxes at the ends of the scrollbar and the top and left edges of the
+  scroll area. The <field(object)|field's> <bottomPattern> also
+  determines the pattern of the bottom and right edges of any text in
+  the <field(keyword)> whose <textStyle> is set to "threeDBox". If the
+  <field(object)|field's> <threeD> <property> is false, the
+  <field(keyword)> border is not affected.
 
-If an object's <bottomPattern> is set, the pattern is shown instead of the color specified by the <bottomColor>.
 
-References: effective (keyword), field (keyword), image (keyword), button (keyword), card (keyword), scrollbar (keyword), player (keyword), graphic (keyword), control (keyword), textStyle (property), pixels (property), hiliteBorder (property), threeDHilite (property), patterns (property), width (property), topPattern (property), height (property), threeD (property), hilitePattern (property), foregroundPattern (property), owner (property), shadowPattern (property), bottomColor (property), group (command), EPS (object), field (object), object (object), stack (object), control (object), property (glossary), audio clip (glossary), Windows (glossary), object type (glossary), Mac OS (glossary), keyword (glossary), Unix (glossary), video clip (glossary), current stack (glossary), stacks (function)
+* The <bottomPattern> of a <scrollbar> forms a border on the bottom and
+  right edges of the arrow boxes at the ends of the <scrollbar>, and the
+  top and left edges of the scroll area.
+
+
+* The <bottomPattern> of a <graphic>, <audio clip>, <video clip>, or
+  <image> has no effect.
+
+
+* The <bottomPattern> of a <player> or <EPS> <object(glossary)> forms a
+  border on the top and left edges of the <object(glossary)>. If the
+  <object|object's> <threeD> <property> is false, the <bottomPattern>
+  has no effect.
+
+
+If an object's <bottomPattern> is set, the pattern is shown instead of
+the color specified by the <bottomColor>.
+
+References: group (command), stacks (function), audio clip (glossary),
+control (glossary), current stack (glossary), keyword (glossary),
+Mac OS (glossary), object (glossary), object type (glossary),
+property (glossary), Unix (glossary), video clip (glossary),
+Windows (glossary), button (keyword), card (keyword), control (keyword),
+effective (keyword), field (keyword), graphic (keyword), image (keyword),
+player (keyword), scrollbar (keyword), EPS (object), field (object),
+stack (object), bottomColor (property), foregroundPattern (property),
+height (property), hiliteBorder (property), hilitePattern (property),
+owner (property), patterns (property), pixels (property),
+shadowPattern (property), textStyle (property), threeD (property),
+threeDHilite (property), topPattern (property), width (property)
 
 Tags: ui
+

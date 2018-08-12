@@ -4,13 +4,14 @@ Type: property
 
 Syntax: set the cursor to {<cursorName> | <imageID>}
 
-Summary: Specifies the shape of the <cursor>.
+Summary:
+Specifies the shape of the <cursor>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the cursor to watch
@@ -21,62 +22,103 @@ set the cursor to arrow
 Example:
 set the cursor to 21403
 
-Value: The <cursor> is the <ID> of an <image> to use for a <operty).
+Value:
+The <cursor> is the <ID> of an <image> to use for a <operty).
 
 Description:
-Use the <cursor> <property> to signal the status of a <handler> to the user or to indicate what kind of data the <mouse pointer> is over. For example, a watch <cursor(property)> shows the user that a <handler> is <execute|executing>, while an I-beam <cursor(property)> indicates that the text under the <mouse pointer> is editable.
+Use the <cursor> <property> to signal the status of a <handler> to the
+user or to indicate what kind of data the <mouse pointer> is over. For
+example, a watch <cursor(property)> shows the user that a <handler> is
+<execute|executing>, while an I-beam <cursor(property)> indicates that
+the text under the <mouse pointer> is editable.
 
 LiveCode looks for the specified image in the following order:
 
-1) The stack of the current object's behavior (if applicable)
-2) The stack of the owner of the current object's behavior (if applicable)
- ...
-n) The stack of the current object's stack's behavior (if applicable)
-A) The current object's stack
-B) The current object's stack's mainstack (if a substack)
-C) The current object's stack's mainstacks substacks
-D) The list of open stacks, in order they were loaded
+1. The stack of the current object's behavior (if applicable)
+2. The stack of the owner of the current object's behavior (if
+applicable)
+3. The stack of the current object's stack's behavior (if applicable)
+4. The current object's stack
+5. The current object's stack's mainstack (if a substack)
+6. The current object's stack's mainstacks substacks
+7. The list of open stacks, in order they were loaded
 
-LiveCode includes several built-in cursors whose names you can use in place of their image IDs.
+LiveCode includes several built-in cursors whose names you can use in
+place of their image IDs.
 
 The built-in cursors and their recommended uses are:
-        * none: Hides the cursor
-        * busy: Use repeatedly during a long handler
-        * watch: Use during a moderately long handler
-        * arrow: Use for <select|selecting> objects
-        * cross: Use for painting, drawing, or <select|selecting> a <point> or small area
-        * hand: Use for clicking <hypertext> links
-        * iBeam: Use for <select|selecting> text in a field
-        * plus: Use for <select|selecting> <items> such as spreadsheet cells
-        * help: Use for getting online help
 
-The busy cursor is a rotating beach ball. Each time you use the statement set the cursor to busy, the beach ball advances in its rotation. For example, the following statements cause the <cursor(property)> to appear to spin as long as the <repeat> <loop> is running:
+* none: Hides the cursor
+* busy: Use repeatedly during a long handler
+* watch: Use during a moderately long handler
+* arrow: Use for <select|selecting> objects
+* cross: Use for painting, drawing, or <select|selecting> a
+  <point> or small area
+* hand: Use for clicking <hypertext> links
+* iBeam: Use for <select|selecting> text in a field
+* plus: Use for <select|selecting> <items> such as spreadsheet
+  cells 
+* help: Use for getting online help
 
-  repeat until someCondition is true
-    set the cursor to busy -- spins a bit further
-    doSomething -- insert whatever you want the loop to do here
-  end repeat
 
-You can also set the cursor property to the ID of an image. Custom cursor <image|images> must contain three colors: black, white, and a transparent color.
+The busy cursor is a rotating beach ball. Each time you use the
+statement set the cursor to busy, the beach ball advances in its
+rotation. For example, the following statements cause the
+<cursor(property)> to appear to spin as long as the <repeat> <loop> is
+running: 
+
+    repeat until someCondition is true
+        set the cursor to busy -- spins a bit further
+        doSomething -- insert whatever you want the loop to do here
+    end repeat
+
+
+You can also set the cursor property to the ID of an image. Custom
+cursor <image|images> must contain three colors: black, white, and a
+transparent color.
 
 >*Cross-platform note:* 
+
 * Windows XP and above support full alpha-blended cursors up to 64x64
-* More recent Linux distributions support alpha-blended cursors up to a size of 64x64
+* More recent Linux distributions support alpha-blended cursors up to a
+  size of 64x64
 * Mac OS X supports alpha-blended cursors up to 256x256
 
->*Note:* Alpha-blending support depends on the current screen depth on some platforms.
 
-If the <lockCursor> <property> is set to false, LiveCode automatically sets the <cursor(property)> according to its location once the <handler> finishes. (For example, the <cursor(property)> normally turns into an arrow over a menu, an I-beam over an editable text <field>, and so on.) To retain the <cursor> <property> after a <handler> finishes, use the <lock cursor> <command>.
+>*Note:* Alpha-blending support depends on the current screen depth on
+> some platforms.
 
-You can force LiveCode to use the operating system's cursors with the following two statements:
+If the <lockCursor> <property> is set to false, LiveCode automatically
+sets the <cursor(property)> according to its location once the <handler>
+finishes. (For example, the <cursor(property)> normally turns into an
+arrow over a menu, an I-beam over an editable text <field>, and so on.)
+To retain the <cursor> <property> after a <handler> finishes, use the
+<lock cursor> <command>.
 
-  delete stack "revCursors"
-  reset cursors
+You can force LiveCode to use the operating system's cursors with the
+following two statements:
 
-Caution! If you use the <delete stack> command to remove the "revCursors" <stack>, LiveCode's <cursor(glossary)|cursors> are permanently deleted and you will need to <download> a new cursors <stack> to restore them.
+    delete stack "revCursors"
+    reset cursors
 
-If you change the set of built-in LiveCode cursors in the "revCursors" stack, you must either quit and restart the application or use the reset cursors <command> to begin using the new <cursor(property)> shapes.
 
-References: cursor (property), yHot (property), lockCursor (property),  (property), ID (property), image (keyword), field (keyword), items (keyword), point (keyword), lock cursor (command), delete stack (command), repeat (control_st), property (glossary), select (glossary), loop (glossary), handler (glossary), execute (glossary), download (glossary), cursor (glossary), hypertext (glossary), mouse pointer (glossary), command (glossary), stack (object), image (object)
+Caution! If you use the <delete stack> command to remove the
+"revCursors" <stack>, LiveCode's <cursor(glossary)|cursors> are
+permanently deleted and you will need to <download> a new cursors
+<stack> to restore them.
+
+If you change the set of built-in LiveCode cursors in the "revCursors"
+stack, you must either quit and restart the application or use the reset
+cursors <command> to begin using the new <cursor(property)> shapes.
+
+References: lock cursor (command), delete stack (command),
+repeat (control structure), property (glossary), select (glossary),
+loop (glossary), handler (glossary), execute (glossary),
+download (glossary), cursor (glossary), hypertext (glossary),
+mouse pointer (glossary), command (glossary), image (keyword),
+field (keyword), items (keyword), point (keyword), stack (object),
+image (object), cursor (property), yHot (property), lockCursor (property),
+ID (property)
 
 Tags: ui
+

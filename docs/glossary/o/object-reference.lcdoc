@@ -1,12 +1,19 @@
 Name: object reference
 
-Synonyms: descriptor,object descriptor,reference,object reference,stack reference,card reference,field reference,button reference,image reference,player reference,group reference,background reference,control reference
+Synonyms: descriptor, object descriptor, reference, object reference,
+stack reference, card reference, field reference, button reference,
+image reference, player reference, group reference, background reference,
+control reference
 
 Type: glossary
 
 Description:
-Any valid way of describing an <object> that LiveCode can understand. <object|Objects> can be referred to by <name>, <number>, or <ID>.
+Any valid way of describing an <object(glossary)> that LiveCode can
+understand. <object|Objects> can be referred to by <name>, <number>, or
+<ID>. 
 
-References: ID (property), name (property), object (object), number (function)
+References: number (function), object (glossary), ID (property),
+name (property)
 
 Tags: objects
+

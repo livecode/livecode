@@ -4,15 +4,18 @@ Type: property
 
 Syntax: set the liveResizing of <stack> to {true | false}
 
-Summary: Causes a <stack window> to display its contents changing during resizing, instead of redrawing the contents after the window is resized.
+Summary:
+Causes a <stack window> to display its contents changing during
+resizing, instead of redrawing the contents after the window is resized.
 
 Associations: stack
 
 Introduced: 2.1
 
-OS:
+Deprecated:
+8.0
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the liveResizing of stack "Hello World" to false
@@ -20,22 +23,40 @@ set the liveResizing of stack "Hello World" to false
 Example:
 set the liveResizing of me to true
 
-Value (bool): The <liveResizing> <property> of a <stack> is true or false. By <default>, the <liveResizing> of a newly created <stack> is set to false.
+Value (bool):
+The <liveResizing> <property> of a <stack> is true or false. By
+<default>, the <liveResizing> of a newly created <stack> is set to
+false. 
 
 Description:
-**Note:** The <liveResizing> property is deprecated, since it has no effect on any operating system currently supported by LiveCode.  Its value is always treated as true.
+**Note:** The <liveResizing> property is deprecated, since it has no
+effect on any operating system currently supported by LiveCode. Its
+value is always treated as true.
 
-Use the <liveResizing> property to create a smooth visual appearance while resizing.
+Use the <liveResizing> property to create a smooth visual appearance
+while resizing.
 
-When the <liveResizing> <property> is true, the window contents (including the borders) are redrawn continuously as the user resizes, so at any time, the window is displayed as it will look if the user releases the mouse button at that moment.
+When the <liveResizing> <property> is true, the window contents
+(including the borders) are redrawn continuously as the user resizes, so
+at any time, the window is displayed as it will look if the user
+releases the mouse button at that moment.
 
-If the <liveResizing> is false, the window does not change until the user releases the mouse and stops resizing.
+If the <liveResizing> is false, the window does not change until the
+user releases the mouse and stops resizing.
 
-If the <liveResizing> is true, <resizeStack> <message|messages> are sent continually while the window is being resized, allowing your stack to update its appearance during resizing. (If the user pauses during resizing, with the mouse down in the resize box but the pointer not moving, no <resizeStack> <message> is sent until the mouse moves again.)
-
-References: rectangle (property), resizable (property), default (keyword), resizeStack (message), stack (object), property (glossary), message (glossary), stack window (glossary)
-
-Tags: windowing
+If the <liveResizing> is true, <resizeStack> <message|messages> are sent
+continually while the window is being resized, allowing your stack to
+update its appearance during resizing. (If the user pauses during
+resizing, with the mouse down in the resize box but the pointer not
+moving, no <resizeStack> <message> is sent until the mouse moves again.)
 
 Changes:
 Deprecated from version 8.0.0.
+
+
+References: property (glossary), message (glossary),
+stack window (glossary), default (keyword), resizeStack (message),
+stack (object), rectangle (property), resizable (property)
+
+Tags: windowing
+

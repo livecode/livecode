@@ -1,1 +1,0 @@
-# Menus in Script Editor have testSize too small

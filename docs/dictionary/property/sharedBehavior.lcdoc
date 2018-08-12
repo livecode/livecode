@@ -6,13 +6,14 @@ Syntax: set the sharedBehavior of group myGroup to {true | false}
 
 Syntax: get the sharedBehavior of group myGroup
 
-Summary: Specifies whether the group will behave as a shared group.
+Summary:
+Specifies whether the group will behave as a shared group.
 
 Introduced: 4.6.4
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the sharedBehavior of group 1 to true
@@ -26,20 +27,36 @@ put the sharedBehavior of group myGroup into tSharedBehavior
 
 Example:
 set the sharedBehavior of group 1 to true
-place group 1 on card 2 of this stack
+place group 1 onto card 2 of this stack
 
-Value (bool):The <sharedBehavior> of a group is true or false.
-By default, the <sharedBehavior> property of newly created groups is set to false.
+Value (bool):
+The <sharedBehavior> of a group is true or false.
+By default, the <sharedBehavior> property of newly created groups is set
+to false.
 
 Description:
-Use the <sharedBehavior> property to make a group behave as a shared group and <place> it on more than one card.
+Use the <sharedBehavior> property to make a group behave as a shared
+group and <place> it on more than one card.
 
-Only top-level groups may be shared groups; an attempt to set the <sharedBehavior> of a nested group to true will throw an error.
+Only top-level groups may be shared groups; an attempt to set the
+<sharedBehavior> of a nested group to true will throw an error.
 
-A shared group behaves identically to a normal group except that it is not owned by any one card. This means that if a shared group is present on only one card and that card is deleted, the shared group will not be deleted. Instead, the group will become 'unplaced', allowing it to placed onto other cards in the future.
+A shared group behaves identically to a normal group except that it is
+not owned by any one card. This means that if a shared group is present
+on only one card and that card is deleted, the shared group will not be
+deleted. Instead, the group will become 'unplaced', allowing it to
+placed onto other cards in the future.
 
->*Note:* The group can still be explicitly deleted using the <delete> command, in which case it will be removed from all cards on which it is placed. 
+>*Note:* The group can still be explicitly deleted using the <delete>
+> command, in which case it will be removed from all cards on which it
+> is placed.
 
-An attempt to set the <sharedBehavior> of a shared group to false when it is placed on more than one card, or not placed on any cards will through an error. To change a shared group to a normal group, the group must be present on exactly one card.
+An attempt to set the <sharedBehavior> of a shared group to false when
+it is placed on more than one card, or not placed on any cards will
+through an error. To change a shared group to a normal group, the group
+must be present on exactly one card.
 
-References: delete (command), place (command), remove (command), backgroundBehavior (property), sharedGroupIds (property), sharedGroupNames (property)
+References: delete (command), place (command), remove (command),
+backgroundBehavior (property), sharedGroupIds (property),
+sharedGroupNames (property)
+

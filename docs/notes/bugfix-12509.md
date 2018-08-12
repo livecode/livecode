@@ -1,1 +1,0 @@
-# fullscreenMode "showAll" breaks IDE

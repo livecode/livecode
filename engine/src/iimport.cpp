@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "util.h"
 #include "image.h"
 #include "stack.h"
@@ -56,72 +56,41 @@ bool read_all(IO_handle p_stream, uint8_t *&r_data, uindex_t &r_data_size)
 	return t_success;
 }
 
-#define META_HEAD_SIZE 44
-#define EMF_HEAD_SIZE 80
+#define DRAWING_HEAD_SIZE 12
 bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t &r_height)
 {
 	bool t_success = true;
 	bool t_is_meta = false;
 
 	uindex_t t_stream_pos = MCS_tell(p_stream);
-	uint8_t t_head[EMF_HEAD_SIZE];
-	uindex_t t_size = META_HEAD_SIZE;
+	uint8_t t_head[DRAWING_HEAD_SIZE];
+	uindex_t t_size = DRAWING_HEAD_SIZE;
 
 	t_success = IO_NORMAL == MCS_readfixed(t_head, t_size, p_stream) &&
-		t_size == META_HEAD_SIZE;
-
-	if (t_success)
+		t_size == DRAWING_HEAD_SIZE;
+    
+   /* A drawing's header is of the form:
+     *   0: LCD\0
+     *   4: width
+     *   8: height
+     */
+	if (t_success &&
+        memcmp(t_head, "LCD\0", 4) == 0)
 	{
-		// graphics metafile (wmf)
-		if (memcmp(t_head, "\xD7\xCD\xC6\x9A", 4) == 0)
-		{
-			int16_t *t_bounds = (int16_t *)&t_head[6];
-			r_width = ((t_bounds[2] - t_bounds[0]) * 72 + t_bounds[4] - 1) / t_bounds[4];
-			r_height = ((t_bounds[3] - t_bounds[1]) * 72 + t_bounds[4] - 1) / t_bounds[4];
-			t_is_meta = true;
-		}
-		// win32 metafile (emf)
-		else if (memcmp(&t_head[40], "\x20\x45\x4D\x46", 4) == 0)
-		{
-			t_success =
-                IO_NORMAL == MCS_seek_set(p_stream, t_stream_pos) &&
-                IO_NORMAL == MCS_readfixed(t_head, EMF_HEAD_SIZE, p_stream);
-
-			if (t_success)
-			{
-				int32_t *t_bounds;
-				t_bounds = (int32_t*)&t_head[72];
-				r_width = t_bounds[0];
-				r_height = t_bounds[1];
-				t_is_meta = true;
-			}
-		}
-		else
-		{
-			uindex_t t_offset = 0;
-			if (memcmp(t_head, "\0\0\0\0\0\0\0\0", 8) == 0)
-			{
-				t_offset = 512;
-				t_success =
-                    IO_NORMAL == MCS_seek_set(p_stream, t_stream_pos + t_offset) &&
-                    IO_NORMAL == MCS_readfixed(t_head, META_HEAD_SIZE, p_stream);
-			}
-
-			// PICT file
-			if (t_success && memcmp(&t_head[10], "\0\021\002\377", 4) == 0)
-			{
-				uint16_t *t_bounds = (uint16_t *)t_head;
-				r_width = swap_uint2(&t_bounds[4]) - swap_uint2(&t_bounds[2]);
-				r_height = swap_uint2(&t_bounds[3]) - swap_uint2(&t_bounds[1]);
-				t_is_meta = true;
-				t_stream_pos += t_offset;
-			}
-		}
-	}
-
+        float t_width = *(const float *)(t_head + 4);
+        float t_height = *(const float *)(t_head + 8);
+        
+        /* The engine deals with integer bounds on sub-pixel co-ords, so
+         * take the ceiling of the computer (float) width/height. */
+        r_width = (uindex_t)ceilf(t_width);
+        r_height = (uindex_t)ceilf(t_height);
+        
+        t_is_meta = true;
+    }
+    
 	MCS_seek_set(p_stream, t_stream_pos);
-
-	return t_success && t_is_meta;
+    
+    return t_success && t_is_meta;
 }
 
 bool MCImageBitmapApplyMask(MCImageBitmap *p_bitmap, MCImageBitmap *p_mask)
@@ -234,15 +203,15 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 			t_success = MCImageCreateCompressedBitmap(t_compression, r_compressed);
 			if (t_success)
 			{
-				if (t_success)
-					t_success = read_all(p_stream, r_compressed->data, r_compressed->size);
-
 				uint32_t t_width, t_height;
 				t_width = t_height = 0;
 				
 				if (t_success && t_compression == F_PICT)
 					t_success = MCImageGetMetafileGeometry(p_stream, t_width, t_height);
 				
+				if (t_success)
+					t_success = read_all(p_stream, r_compressed->data, r_compressed->size);
+
 				r_compressed->width = t_width;
 				r_compressed->height = t_height;
 			}
@@ -361,7 +330,7 @@ IO_stat MCImage::import(MCStringRef newname, IO_handle stream, IO_handle mstream
             uindex_t t_offset;
             if (MCStringLastIndexOfChar(newname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_offset))
             {
-                /* UNCHECKED */ MCStringCopySubstring(newname, MCRangeMake(t_offset + 1, MCStringGetLength(newname) - t_offset - 1), t_name);
+                /* UNCHECKED */ MCStringCopySubstring(newname, MCRangeMakeMinMax(t_offset + 1, MCStringGetLength(newname)), t_name);
                 /* UNCHECKED */ MCNameCreate(t_name, &t_name_nameref);
             }
             else

@@ -2,36 +2,55 @@ Name: throw
 
 Type: control structure
 
-Syntax: throw <errorString> 
+Syntax: throw <errorString>
 
-Summary: <return|Returns> an error message to a< control structure(keyword)>.
+Summary:
+<return|Returns> an error message to a <control structure>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 open file tFile for text read
 
 Example:
 if the result is not empty then
-  throw "failed_to_open_file"end if
+  throw "failed_to_open_file"
+end if
 
 Parameters:
-errorString (string): The string that is returned to the calling try control structure. The errorString becomes the parameter of the catch lin in the try control structure.
+errorString (string):
+The string that is returned to the calling try control structure. The
+errorString becomes the parameter of the catch lin in the try control
+structure. 
 
 Description:
-Use the <throw> <control structure> in a <handler> <call|called> from within a <try> <control structure>.
+Use the <throw> <control structure> in a <handler> <call|called> from
+within a <try> <control structure>. 
 
-Form:
-The <throw> <statement> appears on a line by itself, anywhere inside a <handler>.
+**Form:** The <throw> <statement> appears on a line by itself, anywhere 
+inside a <handler>.
 
-If LiveCode generates the error (for example, an execution error from a built-in command), it returns a positive number to the <try> <control structure>. To avoid confusion, therefore, a <throw> <control structure> should return a <negative> number, or a non-numeric <string>.
+If LiveCode generates the error (for example, an execution error from a
+built-in command), it returns a positive number to the <try> <control
+structure>. To avoid confusion, therefore, a <throw> <control structure>
+should return a <negative> number, or a non-numeric <string>.
 
-If a <throw> <control structure> is <execute|executed> in a <handler> that was not <call|called> from within a <try> <control structure>, an <errorDialog> <message> is sent to the <object>, and the <errorString> is passed as a <parameter>.
+If a <throw> <control structure> is <execute|executed> in a <handler>
+that was not <call|called> from within a <try> <control structure>, an
+<errorDialog> <message> is sent to the <object(glossary)>, and the
+<errorString> is passed as a <parameter>.
 
->*Note:* The <throw> <control structure> is implemented internally as a <command> and appears in the <commandNames>.
+>*Note:* The <throw> <control structure> is implemented internally as a
+> <command> and appears in the <commandNames>.
 
-References: string (keyword), catch (keyword), commandNames (function), errorDialog (message), return (control_st), try (control_st), return (glossary), call (glossary), handler (glossary), execute (glossary), statement (glossary), message (glossary), negative (glossary), control structure (glossary), parameter (glossary), command (glossary), object (object)
+References: return (control structure), try (control structure),
+commandNames (function), return (glossary), call (glossary),
+handler (glossary), execute (glossary), statement (glossary),
+message (glossary), negative (glossary), control structure (glossary),
+parameter (glossary), command (glossary), object (glossary),
+string (keyword), catch (keyword), errorDialog (message)
+

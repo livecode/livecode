@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "util.h"
 #include "font.h"
 #include "sellst.h"
@@ -37,6 +37,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 
 #include "exec.h"
+
+#include "stackfileformat.h"
 
 real8 MCScrollbar::markpos;
 uint2 MCScrollbar::mode = SM_CLEARED;
@@ -135,6 +137,11 @@ Chunk_term MCScrollbar::gettype() const
 const char *MCScrollbar::gettypestring()
 {
 	return MCscrollbarstring;
+}
+
+bool MCScrollbar::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnScrollbar(this);
 }
 
 void MCScrollbar::open()
@@ -340,7 +347,7 @@ Boolean MCScrollbar::mdown(uint2 which)
 			{
 				getwidgetthemeinfo(winfo);
 				Widget_Part wpart = MCcurtheme->hittest(winfo,mx,my,rect);
-				// scrollbar needs to check first if mouse-down occured in arrows
+				// scrollbar needs to check first if mouse-down occurred in arrows
 				switch (wpart)
 				{
 				case WTHEME_PART_ARROW_DEC:
@@ -360,6 +367,8 @@ Boolean MCScrollbar::mdown(uint2 which)
 					break;
 				case WTHEME_PART_TRACK_INC:
 					mode = SM_PAGEINC;
+					break;
+				default:
 					break;
 				}
 			}
@@ -598,8 +607,8 @@ void MCScrollbar::applyrect(const MCRectangle &nrect)
 
 void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless) ||
-		MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal) ||
+		MCNameIsEqualToCaseless(mptr, MCM_internal2))
 	{
 		// MW-2009-06-16: [[ Bug ]] Previously this was only waiting for one
 		//   one event (anyevent == True) this meant that it was possible for
@@ -621,7 +630,7 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 
 		if (mode != SM_CLEARED)
 		{
-			uint2 delay = MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless) ? MCrepeatdelay : MCrepeatrate;
+			uint2 delay = MCNameIsEqualToCaseless(mptr, MCM_internal) ? MCrepeatdelay : MCrepeatrate;
 			MCscreen->addtimer(this, MCM_internal2, delay);
 			MCRectangle thumb;
 			switch (mode)
@@ -671,12 +680,12 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 			}
 			if (parent->gettype() != CT_CARD)
 			{
-				MCControl *cptr = (MCControl *)parent;
+				MCControl *cptr = parent.GetAs<MCControl>();
 				cptr->readscrollbars();
 			}
 		}
 	}
-	else if (MCNameIsEqualTo(mptr, MCM_internal3, kMCCompareCaseless))
+	else if (MCNameIsEqualToCaseless(mptr, MCM_internal3))
 	{
 #ifdef _MAC_DESKTOP
 		// MW-2012-09-17: [[ Bug 9212 ]] Mac progress bars do not animate.
@@ -693,224 +702,9 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 		MCControl::timer(mptr, params);
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCScrollbar::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
-{
-	switch (which)
-	{
-#ifdef /* MCScrollbar::getprop */ LEGACY_EXEC
-	case P_STYLE:
-		if (flags & F_SCALE)
-			ep.setstaticcstring(MCscalestring);
-		else if (flags & F_PROGRESS)
-			ep.setstaticcstring(MCprogressstring);
-		else
-			ep.setstaticcstring(MCscrollbarstring);
-		break;
-    case P_THUMB_SIZE:
-        ep.setr8(thumbsize, nffw, nftrailing, nfforce);
-        // AL-2013-07-26: [[ Bug 6720 ]] Scrollbar properties not returned in correct format.
-        ep.setsvalue(ep.getsvalue());
-        break;
-    case P_THUMB_POS:
-        ep.setr8(thumbpos, nffw, nftrailing, nfforce);
-        // AL-2013-07-26: [[ Bug 6720 ]] Scrollbar properties not returned in correct format.
-        ep.setsvalue(ep.getsvalue());
-        break;
-    case P_LINE_INC:
-        ep.setr8(lineinc, nffw, nftrailing, nfforce);
-        // AL-2013-07-26: [[ Bug 6720 ]] Scrollbar properties not returned in correct format.
-        ep.setsvalue(ep.getsvalue());
-        break;
-    case P_PAGE_INC:
-        ep.setr8(pageinc, nffw, nftrailing, nfforce);
-        // AL-2013-07-26: [[ Bug 6720 ]] Scrollbar properties not returned in correct format.
-        ep.setsvalue(ep.getsvalue());
-        break;
-	case P_ORIENTATION:
-		ep.setstaticcstring(getstyleint(flags) == F_VERTICAL ? "vertical" : "horizontal");
-		break;
-	case P_NUMBER_FORMAT:
-		MCU_getnumberformat(ep, nffw, nftrailing, nfforce);
-		break;
-	case P_START_VALUE:
-		if (startstring != NULL)
-			ep.setsvalue(startstring);
-		else
-			ep.setuint(0);
-		break;
-	case P_END_VALUE:
-		if (endstring != NULL)
-			ep.setsvalue(endstring);
-		else
-			ep.setuint(65535);
-		break;
-	case P_SHOW_VALUE:
-		ep.setboolean(getflag(F_SHOW_VALUE));
-		break;
-#endif /* MCScrollbar::getprop */
-	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
-	}
-	return ES_NORMAL;
-}
-#endif
-
-#ifdef LEGACY_EXEC
-Exec_stat MCScrollbar::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
-{
-	Boolean dirty = True;
-	real8 newvalue;
-	MCString data = ep.getsvalue();
-
-	switch (p)
-	{
-#ifdef /* MCScrollbar::setprop */ LEGACY_EXEC
-	case P_STYLE:
-		flags &= ~F_SB_STYLE;
-		if (data == MCscalestring)
-			flags |= F_SCALE;
-		else
-			if (data == MCprogressstring)
-				flags |= F_PROGRESS;
-		if (!(flags & F_SCALE))
-			flags &= ~F_SHOW_VALUE;
-		break;
-	case P_THUMB_SIZE:
-		if (!MCU_stor8(data, newvalue))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (newvalue != thumbsize)
-		{
-			thumbsize = newvalue;
-			update(thumbpos, MCM_scrollbar_drag);
-			pageinc = thumbsize;
-			lineinc = thumbsize / 16.0;
-		}
-		break;
-	case P_THUMB_POS:
-		if (!MCU_stor8(data, newvalue))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		update(newvalue, MCM_scrollbar_drag);
-		break;
-	case P_LINE_INC:
-		if (!MCU_stor8(data, lineinc))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (startvalue < endvalue)
-			lineinc = fabs(lineinc);
-		else
-			lineinc = -fabs(lineinc);
-		break;
-	case P_PAGE_INC:
-		if (!MCU_stor8(data, pageinc))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (startvalue < endvalue)
-			pageinc = fabs(pageinc);
-		else
-			pageinc = -fabs(pageinc);
-		break;
-	case P_SHOW_VALUE:
-		if (!MCU_matchflags(data, flags, F_SHOW_VALUE, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (!(flags & F_SCALE))
-			flags &= ~F_SHOW_VALUE;
-		break;
-	case P_START_VALUE:
-		if (data.getlength() == 0)
-			reset();
-		else
-		{
-			if (!MCU_stor8(data, startvalue))
-			{
-				MCeerror->add
-				(EE_OBJECT_NAN, 0, 0, data);
-				return ES_ERROR;
-			}
-			if (startvalue == 0.0 && endvalue == 65535.0)
-				reset();
-			else
-			{
-				flags |= F_HAS_VALUES;
-				if (startstring != NULL)
-					delete startstring;
-				startstring = data.clone();
-			}
-		}
-		update(thumbpos, MCM_scrollbar_drag);
-		break;
-	case P_END_VALUE:
-		if (data.getlength() == 0)
-			reset();
-		else
-		{
-			if (!MCU_stor8(data, endvalue))
-			{
-				MCeerror->add
-				(EE_OBJECT_NAN, 0, 0, data);
-				return ES_ERROR;
-			}
-			if (startvalue == 0.0 && endvalue == 65535.0)
-				reset();
-			else
-			{
-				flags |= F_HAS_VALUES;
-				if (endstring != NULL)
-					delete endstring;
-				endstring = data.clone();
-			}
-		}
-		update(thumbpos, MCM_scrollbar_drag);
-		break;
-	case P_NUMBER_FORMAT:
-		uint2 fw, trailing, force;
-		MCU_setnumberformat(data, fw, trailing, force);
-		if (nffw != fw || nftrailing != trailing || nfforce != force)
-		{
-			flags |= F_HAS_VALUES;
-			nffw = fw;
-			nftrailing = trailing;
-			nfforce = force;
-		}
-		else
-			dirty = False;
-		break;
-#endif /* MCScrollbar::setprop */
-	default:
-		return MCControl::setprop_legacy(parid, p, ep, effective);
-	}
-	flags |= F_SAVE_ATTS;
-	if (dirty && opened)
-	{
-		compute_barsize();
-		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-		redrawall();
-	}
-	return ES_NORMAL;
-}
-#endif
-
 MCControl *MCScrollbar::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCScrollbar *newscrollbar = new MCScrollbar(*this);
+	MCScrollbar *newscrollbar = new (nothrow) MCScrollbar(*this);
 	if (attach)
 		newscrollbar->attach(p, invisible);
 	return newscrollbar;
@@ -1174,7 +968,7 @@ void MCScrollbar::update(real8 newpos, MCNameRef mess)
 		{
 		case ES_NOT_HANDLED:
 		case ES_PASS:
-			if (!MCNameIsEqualTo(mess, MCM_scrollbar_drag, kMCCompareCaseless))
+			if (!MCNameIsEqualToCaseless(mess, MCM_scrollbar_drag))
 				message_with_valueref_args(MCM_scrollbar_drag, *t_data);
 		default:
 			break;
@@ -1269,7 +1063,7 @@ void MCScrollbar::redrawall(void)
 		return;
 	}
 	
-	((MCControl *)parent) -> layer_redrawrect(getrect());
+	parent.GetAs<MCControl>()->layer_redrawrect(getrect());
 }
 
 // MW-2012-09-20: [[ Bug 10395 ]] This method marks the control as embedded
@@ -1323,10 +1117,10 @@ IO_stat MCScrollbar::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint
 		{
             // MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-			if ((stat = IO_write_stringref_new(startstring, stream, p_version >= 7000)) != IO_NORMAL)
+			if ((stat = IO_write_stringref_new(startstring, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 				return stat;
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-            if ((stat = IO_write_stringref_new(endstring, stream, p_version >= 7000)) != IO_NORMAL)
+            if ((stat = IO_write_stringref_new(endstring, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 				return stat;
 			if ((stat = IO_write_uint2(nffw, stream)) != IO_NORMAL)
 				return stat;
@@ -1364,14 +1158,14 @@ IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
 		{
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-			if ((stat = IO_read_stringref_new(startstring, stream, version >= 7000)) != IO_NORMAL)
+			if ((stat = IO_read_stringref_new(startstring, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 				return checkloadstat(stat);
 			if (!MCStringToDouble(startstring, startvalue))
 				startvalue = 0.0;
 			
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-			if ((stat = IO_read_stringref_new(endstring, stream, version >= 7000)) != IO_NORMAL)
+			if ((stat = IO_read_stringref_new(endstring, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 				return checkloadstat(stat);
 			if (!MCStringToDouble(endstring, endvalue))
 				endvalue = 0.0;
@@ -1389,7 +1183,7 @@ IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
 				return checkloadstat(stat);
 		}
 	}
-	if (version <= 2000)
+	if (version <= kMCStackFileFormatVersion_2_0)
 	{
 		if (flags & F_TRAVERSAL_ON)
 			rect = MCU_reduce_rect(rect, MCfocuswidth);

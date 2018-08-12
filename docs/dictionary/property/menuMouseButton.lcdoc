@@ -2,36 +2,51 @@ Name: menuMouseButton
 
 Type: property
 
-Syntax: set the menuMouseButton of <button> to {zero | <buttonNumber>}
+Syntax: set the menuMouseButton of <button> to {zero | <pButtonNumber>}
 
-Summary: Specifies which <mouse button> can be used to access the <menu> associated with a <button>.
+Summary:
+Specifies which <mouse button> can be used to access the <menu>
+associated with a <button>.
 
 Associations: button
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the menuMouseButton to 3
 
 Value:
 The <menuMouseButton> is an <integer> between zero and 3.
-By default, the <menuMouseButton> <property> of newly created <button|buttons> is set to zero.
+By default, the <menuMouseButton> <property> of newly created
+<button|buttons> is set to zero.
 
 Description:
-Use the <menuMouseButton> <property> to limit a <menu> so it can only be accessed with a specific <mouse button>.
+Use the <menuMouseButton> <property> to limit a <menu> so it can only be
+accessed with a specific <mouse button>.
 
-If the <menuMouseButton> is zero, any <mouse button> can be used to open the <menu>. If the <menuMouseButton> is a number from 1 to 3, only that <mouse button> opens the <menu>.
+If the <menuMouseButton> is zero, any <mouse button> can be used to open
+the <menu>. If the <menuMouseButton> is a number from 1 to 3, only that
+<mouse button> opens the <menu>.
 
-The mouseButtonNumber specifies which <mouse button> was pressed:
+Parameters:
 
-* 1 is the mouse button on Mac OS systems and the left button on Windows and Unix systems.
+pButtonNumber (enum):
+The pButtonNumber parameter specifies which <mouse button> was pressed:
+
+* 1 is the mouse button on Mac OS systems and the left button on Windows
+  and Unix systems.
 * 2 is the middle button on Unix systems.
-* 3 is the right button (on Windows and Unix systems) or Control-click (on Mac OS and OS X systems.
+* 3 is the right button (on Windows and Unix systems) or Control-click
+  (on Mac OS and OS X systems.
 
-References: menuName (property), integer (keyword), menu (keyword), button (keyword), pulldown (command), menuButton (function), mouse button (glossary), property (glossary), button (object)
+
+References: pulldown (command), menuButton (function),
+mouse button (glossary), property (glossary), integer (keyword),
+menu (keyword), button (keyword), button (object), menuName (property)
 
 Tags: menus
+

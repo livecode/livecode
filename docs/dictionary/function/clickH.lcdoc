@@ -6,13 +6,14 @@ Syntax: the clickH
 
 Syntax: clickH()
 
-Summary: <return|Returns> the horizontal position of the most recent mouse click.
+Summary:
+<return|Returns> the horizontal position of the most recent mouse click.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,web,mobile
+Platforms: desktop, mobile
 
 Example:
 the clickH
@@ -20,17 +21,26 @@ the clickH
 Example:
 put the clickH div 2 into whichHalf
 
-Returns: The <clickH> <function> <return|returns> a <non-negative> <integer>.
+Returns:
+The <clickH> <function> <return|returns> a <non-negative> <integer>.
 
 Description:
 Use the <clickH> <function> to find out where the user last clicked.
 
-The returned value is the horizontal distance in pixels from the left edge of the clicked stack to the location of the click. (Use the clickStack function to identify which <stack> was clicked.)
+The returned value is the horizontal distance in pixels from the left
+edge of the clicked stack to the location of the click. (Use the
+clickStack function to identify which <stack> was clicked.)
 
-The click location is the position of the mouse pointer when the user pressed the mouse button, not when the user released the button. In particular, inside a mouseDown handler, the clickH returns the position of the mouse as it was when the mouseDown action ocurred.
+The click location is the position of the mouse pointer when the user
+pressed the mouse button, not when the user released the button. In
+particular, inside a mouseDown handler, the clickH returns the position
+of the mouse as it was when the mouseDown action ocurred.
 
 This function is equal to item 1 of the <clickLoc> <function>.
 
-References: function (control_st), integer (keyword), stack (object), clickLoc (function), clickV (function), mouseH (function), return (glossary), non-negative (glossary)
+References: function (control structure), clickLoc (function),
+clickV (function), mouseH (function), return (glossary),
+non-negative (glossary), integer (keyword), stack (object)
 
 Tags: ui
+

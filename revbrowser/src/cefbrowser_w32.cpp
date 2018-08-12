@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "cefbrowser.h"
 
 #include <include/cef_app.h>
-#include <include/cef_url.h>
+#include <include/cef_parser.h>
 
 #include <Windows.h>
 
@@ -104,59 +104,10 @@ const char *MCCefWin32GetExternalPath(void)
 	return s_external_path;
 }
 
-bool MCCefWin32AppendPath(const char *p_base, const char *p_path, char *&r_path)
-{
-	if (p_base == nil)
-		return MCCStringClone(p_path, r_path);
-	else if (MCCStringEndsWith(p_base, "\\"))
-		return MCCStringFormat(r_path, "%s%s", p_base, p_path);
-	else
-		return MCCStringFormat(r_path, "%s\\%s", p_base, p_path);
-}
-
-#ifdef _DEBUG
-#define CEF_PATH_PREFIX ""
-#else
-#define CEF_PATH_PREFIX "CEF\\"
-#endif
-
-// IM-2014-03-25: [[ revBrowserCEF ]] locales located in CEF subfolder relative to revbrowser dll
-const char *MCCefPlatformGetLocalePath(void)
-{
-	static char *s_locale_path = nil;
-
-	if (s_locale_path == nil)
-		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), CEF_PATH_PREFIX"locales", s_locale_path);
-
-	return s_locale_path;
-}
-
-// IM-2014-03-25: [[ revBrowserCEF ]] subprocess executable located in CEF subfolder relative to revbrowser dll
-const char *MCCefPlatformGetSubProcessName(void)
-{
-	static char *s_exe_path = nil;
-
-	if (s_exe_path == nil)
-		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), CEF_PATH_PREFIX"revbrowser-cefprocess.exe", s_exe_path);
-
-	return s_exe_path;
-}
-
-// IM-2014-03-25: [[ revBrowserCEF ]] libcef dll located in CEF subfolder relative to revbrowser dll
-const char *MCCefPlatformGetCefLibraryPath(void)
-{
-	static char *s_lib_path = nil;
-
-	if (s_lib_path == nil)
-		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), CEF_PATH_PREFIX"libcef.dll", s_lib_path);
-
-	return s_lib_path;
-}
-
 bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
 {
 	MCCefWin32Browser *t_browser;
-	t_browser = new MCCefWin32Browser((HWND)p_window_id);
+	t_browser = new (nothrow) MCCefWin32Browser((HWND)p_window_id);
 
 	if (t_browser == nil)
 		return false;
@@ -434,13 +385,13 @@ static bool GetDlgItemTextAsCefString(HWND p_dialog, int p_item, CefString &r_st
 static INT_PTR CALLBACK AuthDialogProc(HWND p_dialog, UINT p_message, WPARAM p_wparam, LPARAM p_lparam)
 {
 	AuthDialogState *t_state;
-	t_state = (AuthDialogState *)GetWindowLongPtrW(p_dialog, DWL_USER);
+	t_state = (AuthDialogState *)GetWindowLongPtrW(p_dialog, DWLP_USER);
 
 	switch(p_message)
 	{
 	case WM_INITDIALOG:
 		{
-			SetWindowLongPtrW(p_dialog, DWL_USER, (LONG)p_lparam);
+			SetWindowLongPtrW(p_dialog, DWLP_USER, (LONG)p_lparam);
 			t_state = (AuthDialogState *)p_lparam;
 
 			SetDlgItemTextWithCString(p_dialog, IDC_AUTH_USERNAME_LABEL, t_state -> strings . username_label);
@@ -514,15 +465,5 @@ bool MCCefWin32Browser::PlatformGetAuthCredentials(bool p_is_proxy, const CefStr
 	return t_success;
 }
 
-const char* MCCefPlatformGetResourcesDirPath()
-{
-    return NULL;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
-
-// AL-2015-02-17: [[ SB Inclusions ]] Work around problems linking to MCU_ functions from CEF
-#include <stdlib.h>
-#include <stdio.h>
-#include <cstring>
 

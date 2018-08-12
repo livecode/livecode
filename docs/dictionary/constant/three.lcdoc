@@ -4,20 +4,22 @@ Type: constant
 
 Syntax: three
 
-Summary: Equivalent to the number 3.
+Summary:
+Equivalent to the number 3.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 repeat three times -- same as "repeat 3 times"
 
 Description:
-Use the <three> <constant> when it is easier to read than the numeral 3<a/>.
+Use the <three> <constant> when it is easier to read than the numeral 3. 
 
 References: constant (command), third (keyword)
 
 Tags: math
+

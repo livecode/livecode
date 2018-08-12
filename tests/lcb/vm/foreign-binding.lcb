@@ -1,0 +1,68 @@
+module __VMTEST.foreign_binding
+
+use com.livecode.foreign
+use com.livecode.java
+use com.livecode.__INTERNAL._testlib
+
+---------
+
+foreign handler SomeCFunctionWhichDoesNotExist() returns nothing binds to "<builtin>"
+foreign handler MCValueCopyDescription(in pValue as any, out rDesc as String) returns CBool binds to "<builtin>"
+
+private handler TestForeignBinding_NonExistentC()
+   unsafe
+      SomeCFunctionWhichDoesNotExist()
+   end unsafe
+end handler
+
+private handler TestForeignBinding_ExistentC()
+   unsafe
+      variable tString as String
+      MCValueCopyDescription("", tString)
+   end unsafe
+end handler
+
+public handler TestForeignBinding_C()
+	MCUnitTestHandlerThrowsNamed(TestForeignBinding_NonExistentC, "livecode.lang.ForeignHandlerBindingError", "Failure to bind to non-existent C function throws error")
+   MCUnitTestHandlerDoesntThrow(TestForeignBinding_ExistentC, "Binding to existent C function does not throw error")
+
+   test "Non-existent C function gives nothing as handler value" when SomeCFunctionWhichDoesNotExist is nothing
+   test "Existent C function gives non-nothing as handler value" when MCValueCopyDescription is not nothing
+end handler
+
+---------
+
+foreign handler CreateJavaObject() returns JObject binds to "java:java.lang.Object>new()"
+foreign handler CreateJavaObjectDoesntExist() returns JObject binds to "java:java.lang.Object>new_doesnt_exist()Ljava/lang/Object;"
+
+private handler TestForeignBinding_NonExistentJava()
+   unsafe
+      CreateJavaObjectDoesntExist()
+   end unsafe
+end handler
+
+private handler TestForeignBinding_ExistentJava()
+   unsafe
+      CreateJavaObject()
+   end unsafe
+end handler
+
+public handler TestForeignBinding_Java()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "(Non)existent java function" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "(Non)existent java function" because "bug 19934"
+		return
+	end if
+	
+   MCUnitTestHandlerThrowsNamed(TestForeignBinding_NonExistentJava, "livecode.lang.ForeignHandlerBindingError", "Failure to bind to non-existent java function throws error")
+   MCUnitTestHandlerDoesntThrow(TestForeignBinding_ExistentJava, "Binding to existent java function does not throw error")
+
+   test "Non-existent java function gives nothing as handler value" when CreateJavaObjectDoesntExist is nothing
+   test "Existent java function gives non-nothing as handler value" when CreateJavaObject is not nothing
+end handler
+
+end module

@@ -19,6 +19,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32sapi5speech.h"
 
+#include <core.h>
+
 #define VOICE_TYPE_STRING 64
 #define PITCH_XML_STRING 30
 
@@ -65,7 +67,7 @@ static char *path_to_native(const char *p_path)
 static wchar_t *utf8tow(const char *p_utf8)
 {
 	wchar_t *t_utf16;
-	t_utf16 = new wchar_t[strlen(p_utf8) + 1];
+	t_utf16 = new (nothrow) wchar_t[strlen(p_utf8) + 1];
 
 	int t_length;
 	t_length = MultiByteToWideChar(CP_UTF8, 0, p_utf8, strlen(p_utf8), t_utf16, strlen(p_utf8));
@@ -78,7 +80,7 @@ static wchar_t *utf8tow(const char *p_utf8)
 static wchar_t *nativetow(const char *p_native)
 {
 	wchar_t *t_utf16;
-	t_utf16 = new wchar_t[strlen(p_native) + 1];
+	t_utf16 = new (nothrow) wchar_t[strlen(p_native) + 1];
 
 	int t_length;
 	t_length = MultiByteToWideChar(1252, MB_PRECOMPOSED, p_native, strlen(p_native), t_utf16, strlen(p_native));
@@ -192,7 +194,7 @@ bool WindowsSAPI5Narrator::Start(const char* p_string, bool p_wants_utf8)
 
 	if(!m_bUseDefaultPitch)
 	{
-		char *pstrTotal = new char[ strlen(p_string) + PITCH_XML_STRING + 10 ];
+		char *pstrTotal = new (nothrow) char[ strlen(p_string) + PITCH_XML_STRING + 10 ];
 		char strXMLtag[PITCH_XML_STRING];
 
 		sprintf( strXMLtag, "<pitch absmiddle = \'%d\'/> ", m_Npitch);
@@ -246,20 +248,20 @@ bool WindowsSAPI5Narrator::SpeakToFile(const char* p_string, const char* p_file)
 
 	if(!m_bUseDefaultPitch)
 	{
-		char *pstrTotal = new char[ strlen(p_string) + PITCH_XML_STRING + 10 ];
+		char *pstrTotal = new (nothrow) char[ strlen(p_string) + PITCH_XML_STRING + 10 ];
 		char strXMLtag[PITCH_XML_STRING];
 
 		sprintf( strXMLtag, "<pitch absmiddle = \'%d\'/> ", m_Npitch);
 		strcpy( pstrTotal, strXMLtag);
 		strcat( pstrTotal, p_string);
-		szWTextString = new WCHAR[ strlen(pstrTotal) + 20 ];	
+		szWTextString = new (nothrow) WCHAR[ strlen(pstrTotal) + 20 ];	
 		wcscpy( szWTextString, A2W(pstrTotal));	
 	}
 	else
 	{
 		int t_length;
 		t_length = strlen(p_string);
-		szWTextString = new WCHAR[ t_length + 1 ];
+		szWTextString = new (nothrow) WCHAR[ t_length + 1 ];
 
 		wcscpy( szWTextString, A2W(p_string));
 	}	
@@ -295,7 +297,7 @@ bool WindowsSAPI5Narrator::SpeakToFile(const char* p_string, const char* p_file)
 
 		if (t_success)
 		{
-			t_file = new WCHAR[strlen(t_native_path) + 1];
+			t_file = new (nothrow) WCHAR[strlen(t_native_path) + 1];
 			wcscpy(t_file, A2W(t_native_path));
 
 			// Bind the output to the stream
@@ -653,14 +655,14 @@ bool WindowsSAPI5Narrator::ListVoices(NarratorGender p_gender, NarratorListVoice
 
 		if ( t_success && 0 != ulNumTokens )
         {
-			ppcDesciptionString = new CSpDynamicString [ulNumTokens];
+			ppcDesciptionString = new (nothrow) CSpDynamicString [ulNumTokens];
             if ( NULL == ppcDesciptionString )
             {
 				/* TODO - CLEANUP */
                 return false;
             }
 
-			ppszTokenIds = new WCHAR* [ulNumTokens];
+			ppszTokenIds = new (nothrow) WCHAR* [ulNumTokens];
             if ( NULL == ppszTokenIds )
             {
 				/* TODO - CLEANUP */

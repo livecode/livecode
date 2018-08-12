@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "dispatch.h"
-//#include "execpt.h"
+
 #include "stack.h"
 #include "card.h"
 #include "tooltip.h"
@@ -61,7 +61,7 @@ void MCTooltip::close(void)
 void MCTooltip::timer(MCNameRef mptr, MCParameter *params)
 {
 #ifndef _MOBILE
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 		opentip();
 	else
 		close();
@@ -75,11 +75,13 @@ void MCTooltip::mousemove(int2 x, int2 y, MCCard *c)
 	my = y;
 	card = c;
 	if (!MCStringIsEmpty(tip))
+    {
 		if (opened)
 			MCscreen->addtimer(this, MCM_internal2, MCtooltime);
 		else
 			if (!(state & CS_NO_FOCUS) && MCtooltipdelay != 0)
 				MCscreen->addtimer(this, MCM_internal, MCtooltipdelay);
+    }
 }
 
 void MCTooltip::clearmatch(MCCard *c)
@@ -160,7 +162,8 @@ void MCTooltip::opentip()
     if (MCPlatformGetControlThemePropColor(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyBackgroundColor, t_bg_color))
     {
         MCExecContext ctxt(this, nil, nil);
-        SetBackPixel(ctxt, &t_bg_color.pixel);
+		uint32_t t_pixel = MCColorGetPixel(t_bg_color);
+        SetBackPixel(ctxt, &t_pixel);
     }
     else
         setsprop(P_BACK_COLOR, MCttbgcolor);
@@ -170,9 +173,9 @@ void MCTooltip::opentip()
     {
         // MW-2012-02-17: [[ LogFonts ]] Convert the tooltip font string to
         //   a name and create the font.
-        MCAutoNameRef t_tt_font;
-        /* UNCHECKED */ MCNameCreate(MCttfont, t_tt_font);
-        /* UNCHECKED */ MCFontCreate(t_tt_font, MCFontStyleFromTextStyle(FA_DEFAULT_STYLE), MCttsize, m_font);
+        MCNewAutoNameRef t_tt_font;
+        /* UNCHECKED */ MCNameCreate(MCttfont, &t_tt_font);
+        /* UNCHECKED */ MCFontCreate(*t_tt_font, MCFontStyleFromTextStyle(FA_DEFAULT_STYLE), MCttsize, m_font);
     }
     
 	rect.width = 0;

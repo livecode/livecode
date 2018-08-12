@@ -1,18 +1,19 @@
 Name: revBrowserBack
 
+Synonyms: xbrowser_back
+
 Type: command
 
-Syntax: revBrowserBack <instanceId> 
+Syntax: revBrowserBack <instanceId>
 
 Syntax: XBrowser_Back [<instanceId>]
 
-Summary: Go back in the specified browser.
-
-Synonyms: XBrowser_Back
+Summary:
+Go back in the specified browser.
 
 Introduced: 2.8.1
 
-OS: mac,windows
+OS: mac, windows
 
 Platforms: desktop
 
@@ -22,13 +23,19 @@ Example:
 revBrowserBack tBrowserId
 
 Parameters:
-instanceId: The integer identifier of a browser object.
+instanceId:
+The integer identifier of a browser object.
 
-The result: The <revBrowserBack> command places empty into the <result>.
+The result:
+The <revBrowserBack> command places empty into the <result>.
 
 Description:
-The <revBrowserBack> command navigates one page backwards in the browser specified by <instanceId>.
+The <revBrowserBack> command navigates one page backwards in the browser
+specified by <instanceId>.
 
->*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+>*Note:* For general information on using the browser library, see the
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserNavigate (command), result (function), revBrowserOpen function (function)
+References: revBrowserNavigate (command), result (function),
+revBrowserOpen (function), function (glossary)
+

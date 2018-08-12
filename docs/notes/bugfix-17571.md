@@ -1,0 +1,1 @@
+# Fix PDF display in CEF-based browser widget (Windows, Linux)

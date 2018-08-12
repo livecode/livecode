@@ -1,1 +1,0 @@
-# Automatic Licensing of marketplace products does not work in 7.0

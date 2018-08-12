@@ -2,11 +2,14 @@ Name: field
 
 Synonyms: field
 
-Type: object
+Type: glossary
 
 Description:
-An <object> that contains text. LiveCode fields can be editable or <lock|locked>, and include rectangular fields, scrolling fields, and clickable <list field|list fields>.
+An <object(glossary)> that contains text. LiveCode fields can be
+editable or <lock|locked>, and include rectangular fields, scrolling
+fields, and clickable <list field|list fields>.
 
-References: lock (glossary), list field (glossary), object (object)
+References: lock (glossary), list field (glossary), object (glossary)
 
 Tags: objects
+

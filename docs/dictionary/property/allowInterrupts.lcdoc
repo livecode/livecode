@@ -4,13 +4,15 @@ Type: property
 
 Syntax: set the allowInterrupts to {true | false}
 
-Summary: Specifies whether the user can halt a <handler> with a <key combination>.
+Summary:
+Specifies whether the user can halt a <handler> with a <key
+combination>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the allowInterrupts to false
@@ -18,20 +20,41 @@ set the allowInterrupts to false
 Example:
 set the allowInterrupts to the hilite of button 1
 
-Value (bool):The <allowInterrupts> property is true or false.
+Value (bool):
+The <allowInterrupts> property is true or false.
 By default, the <allowInterrupts> <property> is true.
 
 Description:
-Use the allowInterrrupts <property> to prevent users from interrupting <handler|handlers> that must run to completion. For example, some <handler|handlers> that change data cannot be interrupted safely, because they will leave data in an inconsistent state if interrupted.
+Use the allowInterrrupts <property> to prevent users from interrupting
+<handler|handlers> that must run to completion. For example, some
+<handler|handlers> that change data cannot be interrupted safely,
+because they will leave data in an inconsistent state if interrupted.
 
-If the <allowInterrupts> <property> is set to true, the user can halt <handler|handlers> by typing Control-period or Control-break (on <Windows> or <Unix>) or Command-period (on <Mac OS>). Setting this <property> to false disables this capability and ensures that the user cannot interrupt a handler.
+If the <allowInterrupts> <property> is set to true, the user can halt
+<handler|handlers> by typing Control-period or Control-break (on
+<Windows> or <Unix>) or Command-period (on <Mac OS>). Setting this
+<property> to false disables this capability and ensures that the user
+cannot interrupt a handler.
 
-If the <allowInterrupts> <property> is set to false and the user attempts to interrupt the <handler>, the <interrupt> function <return|returns> true. To provide a clean <exit>, check this function and do any needed cleanup tasks before <exit|exiting> the <handler>.
+If the <allowInterrupts> <property> is set to false and the user
+attempts to interrupt the <handler>, the <interrupt> function
+<return|returns> true. To provide a clean <exit>, check this function
+and do any needed cleanup tasks before <exit|exiting> the <handler>.
 
-Setting the <allowInterrupts> <property> to false is functionally equivalent to setting the <cantAbort> <property> to true for each open <stack>.
+Setting the <allowInterrupts> <property> to false is functionally
+equivalent to setting the <cantAbort> <property> to true for each open
+<stack>. 
 
->*Warning:*  Before setting the <allowInterrupts> <property> to false, make sure all <handler|handlers> that may be affected have been thoroughly tested. If <allowInterrupts> is set to false, you cannot interrupt a runaway <handler> with the standard <key combination>.
+>*Warning:*  Before setting the <allowInterrupts> <property> to false,
+> make sure all <handler|handlers> that may be affected have been
+> thoroughly tested. If <allowInterrupts> is set to false, you cannot
+> interrupt a runaway <handler> with the standard <key combination>.
 
-References: cantAbort (property), exit (control_st), unlock error dialogs (command), interrupt (function), property (glossary), return (glossary), key combination (glossary), handler (glossary), Windows (glossary), exit (glossary), interrupt (glossary), Mac OS (glossary), Unix (glossary), stack (object)
+References: unlock error dialogs (command), exit (control structure),
+interrupt (function), property (glossary), return (glossary),
+key combination (glossary), handler (glossary), Windows (glossary),
+exit (glossary), interrupt (glossary), Mac OS (glossary), Unix (glossary),
+stack (object), cantAbort (property)
 
 Tags: ui
+

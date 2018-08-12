@@ -4,13 +4,14 @@ Type: keyword
 
 Syntax: fourth
 
-Summary: Designates the fourth member of a set.
+Summary:
+Designates the fourth member of a set.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 select after text of fourth field
@@ -19,12 +20,18 @@ Example:
 put empty into the fourth char of thisName
 
 Description:
-Use the <fourth> <keyword> in an <object reference> or <chunk expression>.
+Use the <fourth> <keyword> in an <object reference> or 
+<chunk expression>. 
 
-The <fourth> <keyword> can be used to specify any <object> whose <number> <property> is 4. It can also be used to designate the fourth <chunk> in a <chunk expression>.
+The <fourth> <keyword> can be used to specify any <object(glossary)>
+whose <number> <property> is 4. It can also be used to designate the
+fourth <chunk> in a <chunk expression>.
 
 The word the is optional when using the <fourth> <keyword>.
 
-References: four (constant), object (object), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
+References: four (constant), number (function), object (glossary),
+keyword (glossary), property (glossary), object reference (glossary),
+chunk expression (glossary), chunk (glossary)
 
 Tags: math
+

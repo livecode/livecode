@@ -4,13 +4,14 @@ Type: message
 
 Syntax: help
 
-Summary: Sent when the user presses the Help or F1 key.
+Summary:
+Sent when the user presses the Help or F1 key.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 on help 
@@ -20,10 +21,14 @@ on help
 end help
 
 Description:
-Handle the <help> <message> in order to substitute custom help for the LiveCode help system, or to provide help in a <standalone application>.
+Handle the <help> <message> in order to substitute custom help for the
+LiveCode help system, or to provide help in a <standalone application>.
 
-The message is sent to the active (focused) control, or to the current card if no control is focused.
+The message is sent to the active (focused) control, or to the current
+card if no control is focused.
 
-References: toolTip (property), functionKey (message), message (glossary), standalone application (glossary)
+References: message (glossary), standalone application (glossary),
+functionKey (message), toolTip (property)
 
 Tags: ui
+

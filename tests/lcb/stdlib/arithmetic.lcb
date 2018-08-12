@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -208,9 +208,17 @@ public handler TestLessThanEqual()
 end handler
 
 public handler TestFormatString()
-	test "format as string (int)" when (-1) formatted as string is "-1"
+	test "formatted as string (int)" when (-1) formatted as string is "-1"
 
-	test "format as string (real)" when (-1.1) formatted as string is "-1.1"
+	test "formatted as string (real)" when (-1.1) formatted as string is "-1.1"
+
+	variable tString as String
+
+	format -1 as string into tString
+	test "format as string (int)" when tString is "-1"
+
+	format -1.1 as string into tString
+	test "format as string (real)" when tString is "-1.1"
 end handler
 
 public handler TestParseString()

@@ -1,14 +1,20 @@
 Name: getProp call
 
-Synonyms: getProp call
+Synonyms: getprop call
 
 Type: glossary
 
 Description:
-A request for the <value> of a <custom property> of an <object>. 
- 
-If the <object> or one of its <owner|owners> has a <getProp> <handler> for that <custom property>, the getProp call causes the <handler> to be <execute|executed>.
+A request for the <value> of a <custom property> of an
+<object(glossary)>. 
 
-References: handler (glossary), custom property (glossary), owner (glossary), value (glossary), execute (glossary), object (object), getProp (control_st)
+If the <object(glossary)> or one of its <owner|owners> has a <getProp>
+<handler> for that <custom property>, the getProp call causes the
+<handler> to be <execute|executed>.
+
+References: getProp (control structure), handler (glossary),
+custom property (glossary), owner (glossary), value (glossary),
+execute (glossary), object (glossary)
 
 Tags: properties
+

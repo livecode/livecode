@@ -1,20 +1,19 @@
 Name: browserNavigateComplete
 
+Synonyms: xbrowser_navigatecomplete
+
 Type: message
 
-Syntax: browserNavigateComplete <instanceId>, <url> 
+Syntax: browserNavigateComplete <pInstanceId>, <pUrl>
 
-Syntax: XBrowser_NavigateComplete <url>, <instanceId> 
+Syntax: XBrowser_NavigateComplete <pUrl>, <pInstanceId>
 
-Summary: Sent when a browser has finished navigating to a url.
-
-Synonyms: XBrowser_NavigateComplete
-
-Associations: card
+Summary:
+Sent when a browser has finished navigating to a url.
 
 Introduced: 2.8.1
 
-OS: mac,windows
+OS: mac, windows
 
 Platforms: desktop
 
@@ -26,14 +25,26 @@ on browserNavigateComplete pInstanceId, pUrl
 end browserNavigateComplete
 
 Parameters:
-instanceId: The integer identifier of the browser object >*Note:* For general information on using the browser library, see the notes in the revBrowserOpen function reference.
-url: The url that the browser finished navigating to
+pInstanceId:
+The integer identifier of the browser object
+
+pUrl:
+The url that the browser finished navigating to
 
 Description:
-The <browserNavigateComplete> message is sent to the current card of a stack containg a browser object when the browser has finishing navigating to a new url and has starting loading the url.
+The <browserNavigateComplete> message is sent to the current card of a
+stack containg a browser object when the browser has finishing
+navigating to a new url and has starting loading the url.
 
-If the target is the main frame of the browser (e.g. the html page containing the "FRAMESET" declaration), then the browserNavigateComplete message is sent. Otherwise the <browserNavigateCompleteFrame message> is sent instead.
+If the target is the main frame of the browser (e.g. the html page
+containing the "FRAMESET" declaration), then the browserNavigateComplete
+message is sent. Otherwise the <browserNavigateCompleteFrame> <message> is
+sent instead.
 
->*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+>*Note:* For general information on using the browser library, see the
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserNavigate (command), browserNavigateCompleteFrame message (message), revBrowserOpen function (function)
+References: revBrowserNavigate (command),
+revBrowserOpen (function), function (glossary),
+browserNavigateCompleteFrame (message), message (glossary)
+

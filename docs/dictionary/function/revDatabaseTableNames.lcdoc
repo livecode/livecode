@@ -1,39 +1,59 @@
 Name: revDatabaseTableNames
 
+Synonyms: revdb_tablenames
+
 Type: function
 
 Syntax: revDatabaseTableNames(<databaseID>)
 
-Summary: Returns a list of the table names in the current database.
+Summary:
+Returns a list of the table names in the current database.
 
-Synonyms: revdb_tablenames
+Associations: database library
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
-if tTableName is among the lines of revDatabaseTableNames(sgDatabaseId) then
+if tTableName is among the lines \
+      of revDatabaseTableNames(sgDatabaseId) then
   insertData tTableName, tData
 end if
 
 Parameters:
-databaseID: The number returned by the revOpenDatabase function when the database was opened.
+databaseID:
+The number returned by the revOpenDatabase function when the database
+was opened.
 
-The result: If an error was encountered, the result will be set to a string beginning with revdberr.
+Returns:
+The <revDatabaseTableNames> function returns a list (one per line) of
+table names. If an error was encountered, the result will be set to a
+string beginning with revdberr.
 
-Returns: The <revDatabaseTableNames> function returns a list (one per line) of table names. If an error was encountered, the result will be set to a string beginning with revdberr.
+The result:
+If an error was encountered, the result will be set to a string
+beginning with revdberr.
 
 Description:
-You can use the <revDatabaseTableNames> function to verify that a user-specified table name is correct or to display a list of tables for the user to choose between.
+You can use the <revDatabaseTableNames> function to verify that a
+user-specified table name is correct or to display a list of tables for
+the user to choose between.
 
->*Important:* The <revDatabaseTableNames> function is part of the Database library. To ensure that the function works in a standalone application, you must include this custom library when you create your standalone. In the Inclusions section of the General screen of the Standalone Application Settings window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:* The <revDatabaseTableNames> function is part of the
+> Database library. To ensure that the function works in a standalone
+> application, you must include this custom library when you create your
+> standalone. In the Inclusions section of the General screen of the
+> Standalone Application Settings window, make sure the
+> "Database Support" checkbox is checked and the database drivers you
+> are using are selected in the list of database drivers.
 
 Changes:
 The revDatabaseTableNames synonym was added in version 2.0.
 
 References: revExecuteSQL (command), revOpenDatabase (function)
+

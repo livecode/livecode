@@ -6,13 +6,14 @@ Syntax: the screenType
 
 Syntax: screenType()
 
-Summary: <return|Returns> the color capability of the screen.
+Summary:
+<return|Returns> the color capability of the screen.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 the screenType
@@ -20,27 +21,50 @@ the screenType
 Example:
 if the screenType is "PseudoColor" then useLineImages else usePhotos
 
-Returns (enum): The <screenType> function <return|returns> one of the following types:
--StaticGray  : a fixed list of shades of gray
--StaticColor  : a fixed list of colors
--GrayScale  : a list of shades of gray, each changeable by the engine
--PseudoColor  : a list of 256 or fewer colors, each changeable by the engine
--TrueColor  : a list of 2^24 (16,777,216) colors
--DirectColor  : an unlimited number of colors
+Returns (enum):
+The <screenType> function <return|returns> one of the following types:
+
+-   StaticGray: a fixed list of shades of gray
+-   StaticColor: a fixed list of colors
+-   GrayScale: a list of shades of gray, each changeable by the engine
+-   PseudoColor: a list of 256 or fewer colors, each changeable by the
+    engine 
+-   TrueColor: a list of 2^24 (16,777,216) colors
+-   DirectColor: an unlimited number of colors
+
 
 Description:
-Use the <screenType> <function> to determine what kind of color or grayscale values the current screen can use.
+Use the <screenType> <function> to determine what kind of color or
+grayscale values the current screen can use.
 
-If the <screenType> is "StaticGray" or "StaticColor", the available colors are predefined in a <color table>. Any colors displayed by LiveCode are changed to the closest available color.
+If the <screenType> is "StaticGray" or "StaticColor", the available
+colors are predefined in a <color table>. Any colors displayed by
+LiveCode are changed to the closest available color.
 
-If the <screenType> is "GrayScale", "PseudoColor", or "TrueColor", a predefined number of color slots is available, and the <engine> can change any of those colors to one of a larger set of available colors. 8- <bit> color displays (256 colors) are usually PseudoColor.
+If the <screenType> is "GrayScale", "PseudoColor", or "TrueColor", a
+predefined number of color slots is available, and the <engine> can
+change any of those colors to one of a larger set of available colors.
+8- <bit> color displays (256 colors) are usually PseudoColor.
 
-If the <screenType> is "DirectColor", any <pixel> on the screen can be set to any color that the screen supports.
+If the <screenType> is "DirectColor", any <pixel> on the screen can be
+set to any color that the screen supports.
 
-On some Unix systems, you can change the <screenType> with the -v <command line|command-line> option. See the "xdpyinfo" command and the <Unix> documentation for more information on visual types and changing the visual type.
+On some Unix systems, you can change the <screenType> with the -v
+<command line|command-line> option. See the "xdpyinfo" command and the
+<Unix> documentation for more information on visual types and changing
+the visual type.
 
-If the system has more than one monitor, the <screenType> function <return|returns> the color capability of the main screen.
+If the system has more than one monitor, the <screenType> function
+<return|returns> the color capability of the main screen.
 
-The value returned by the <screenType> function is updated only when you start up the <application>. If you change the screen settings after starting up the <application>, you must quit and restart to update the <screenType>.
+The value returned by the <screenType> function is updated only when you
+start up the <application>. If you change the screen settings after
+starting up the <application>, you must quit and restart to update the
+<screenType>. 
 
-References: privateColors (property), screenRect (function), screenDepth (function), screenColors (function), return (glossary), engine (glossary), pixel (glossary), bit (glossary), color table (glossary), command line (glossary), Unix (glossary), application (glossary), function (control_st)
+References: function (control structure), screenRect (function),
+screenDepth (function), screenColors (function), return (glossary),
+engine (glossary), pixel (glossary), bit (glossary),
+color table (glossary), command line (glossary), Unix (glossary),
+application (glossary), privateColors (property)
+

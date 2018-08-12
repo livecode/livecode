@@ -11,6 +11,8 @@
 			'target_name': 'libCore',
 			'type': 'static_library',
 
+			'toolsets': ['host', 'target'],
+
 			'variables':
 			{
 				'library_for_module': 1,
@@ -27,13 +29,11 @@
 				'include/atlsubset.h',
 				'include/core.h',
 				'include/filesystem.h',
-				'include/module.h',
 				'include/thread.h',
 				'include/thunk.h',
 				
 				'src/core.cpp',
 				'src/filesystem.cpp',
-				'src/module.cpp',
 				'src/thread.cpp',
 				'src/thunk.cpp',
 			],

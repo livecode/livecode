@@ -4,39 +4,58 @@ Type: keyword
 
 Syntax: short
 
-Summary: Specifies a <format> for the <date> and <time> <function|functions>, the <convert> <command>, and the <name>, <ID>, and <owner> <properties>.
+Summary:
+Specifies a <format> for the <date> and <time> <function|functions>, the
+<convert> <command>, and the <name>, <ID>, and <owner> <properties>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the short name of this card into field "Card Label"
 
 Description:
-Use the <short> <keyword> to obtain a date, time, name, or ID in the most compressed form available.
+Use the <short> <keyword> to obtain a date, time, name, or ID in the
+most compressed form available.
 
-In general, a <short> form is shorter than either the <abbreviated> form or the <long> form.
+In general, a <short> form is shorter than either the <abbreviated> form
+or the <long> form.
 
-If the useSystemDate <property> is set to false, a short <date> looks like this:
-  7/21/00
-If the useSystemDate is true, the short <date> is formatted according to the system settings.
+If the useSystemDate <property> is set to false, a short <date> looks
+like this: 7/21/00
+If the useSystemDate is true, the short <date> is formatted according to
+the system settings.
 
-If the useSystemDate <property> is set to false, a short <time> looks like this:
-  11:22 AM
-If the useSystemDate is true, the short <time> is formatted according to the system settings.
+If the useSystemDate <property> is set to false, a short <time> looks
+like this: 11:22 AM
+If the useSystemDate is true, the short <time> is formatted according to
+the system settings.
 
-A short object <name> is simply its name, with no qualifiers. For example, a short <card> name looks like this: This Card
+A short object <name> is simply its name, with no qualifiers. For
+example, a short <card> name looks like this: This Card
 
 A short object <ID> looks like this: 2238
 
->*Note:* The <short> <keyword> is implemented internally as a <property> and <function>, and appears in the <propertyNames> and the <functionNames>. However, it cannot be used as a <property> in an <expression>, nor with the <set> <command>.
+>*Note:* The <short> <keyword> is implemented internally as a <property>
+> and <function>, and appears in the <propertyNames> and the
+> <functionNames>. However, it cannot be used as a <property> in an
+> <expression>, nor with the <set> <command>.
 
 Changes:
-The form the short owner was introduced in version 2.0. In previous versions, the form of the owner property could not be specified and reported only the abbreviated owner.
+The form the short owner was introduced in version 2.0. In previous
+versions, the form of the owner property could not be specified and
+reported only the abbreviated owner.
 
-References: owner (property), properties (property), name (property), ID (property), card (keyword), long (keyword), abbreviated (keyword), convert (command), set (command), time (function), functionNames (function), dateFormat (function), format (function), date (function), propertyNames (function), keyword (glossary), property (glossary), command (glossary), function (glossary), expression (glossary), function (control_st)
+References: convert (command), set (command),
+function (control structure), time (function), functionNames (function),
+dateFormat (function), format (function), date (function),
+propertyNames (function), keyword (glossary), property (glossary),
+command (glossary), function (glossary), expression (glossary),
+card (keyword), long (keyword), abbreviated (keyword), owner (property),
+properties (property), name (property), ID (property)
 
 Tags: math
+

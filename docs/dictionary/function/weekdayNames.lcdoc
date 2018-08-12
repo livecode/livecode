@@ -2,19 +2,19 @@ Name: weekdayNames
 
 Type: function
 
-Syntax: the [{ long | abbr[ev[iated]] | short }] [{ english | system | internet }] weekdayNames
-
-Syntax: the [internet] [{ english | system }] weekdayNames
+Syntax: the [{ long | abbreviated | short }] [{ english | system }] weekdayNames
 
 Syntax: weekdayNames()
 
-Summary: <return|Returns> a list of names of the days of the week used by the <date function>.
+Summary:
+<return|Returns> a list of names of the days of the week used by the
+<date> <function>.
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the weekdayNames into field "Weekdays"
@@ -23,20 +23,33 @@ Example:
 if it is not among the lines of the system weekdayNames then beep
 
 Returns:
-The <weekdayNames> <function> returns a set of seven day names, one per line.
-The weekdayNames form returns the full name of each day, as used in the long date.
+The <weekdayNames> <function> returns a set of seven day names, one per
+line. The weekdayNames form returns the full name of each day, as used
+in the long date.
 
-The long weekdayNames form returns the same result as the weekdayNames form.
+The long weekdayNames form returns the same result as the weekdayNames
+form. 
 
-The abbreviated weekdayNames form returns the first three letters of the name of each day, as used in the abbreviated date.
+The abbreviated weekdayNames form returns the first three letters of the
+name of each day, as used in the abbreviated date.
 
-The short weekdayNames form returns the number of each day, as used in the short date.
+The short weekdayNames form returns the number of each day, as used in
+the short date.
 
 Description:
-Use the <weekdayNames> <function> to let the user choose from a list of weekday names, or to display a list of days in the language of the user's system preferences.
+Use the <weekdayNames> <function> to let the user choose from a list of
+weekday names, or to display a list of days in the language of the
+user's system preferences.
 
-For each form of the <weekdayNames>, if the <useSystemDate> <property> is set to true, or if you specify the system weekdayNames, the list of names is provided in the language specified by the user's system preferences. If the useSystemDate is false or you specify the english weekdayNames, the list of names is provided in English.
+For each form of the <weekdayNames>, if the <useSystemDate> <property>
+is set to true, or if you specify the system weekdayNames, the list of
+names is provided in the language specified by the user's system
+preferences. If the useSystemDate is false or you specify the english
+weekdayNames, the list of names is provided in English.
 
-References: useSystemDate (property), dateFormat (function), date function (function), property (glossary), return (glossary), function (control_st)
+References: function (control structure), dateFormat (function),
+date (function), function (glossary), property (glossary), return (glossary),
+useSystemDate (property)
 
 Tags: math
+

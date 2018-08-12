@@ -1,12 +1,14 @@
 Name: tool tip
 
-Synonyms: tooltip,tool tip
+Synonyms: tooltip, tool tip
 
 Type: glossary
 
 Description:
-Explanatory text box that pops up when the <mouse pointer> hovers over an item on the screen.
+Explanatory text box that pops up when the <mouse pointer> hovers over
+an item on the screen.
 
 References: mouse pointer (glossary)
 
 Tags: ui
+

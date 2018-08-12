@@ -1,0 +1,371 @@
+/*
+Copyright (C) 2015-2016 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.java.tests
+
+use com.livecode.java
+use com.livecode.foreign
+use com.livecode.__INTERNAL._testlib
+
+foreign handler CreateJavaObject() returns JObject binds to "java:java.lang.Object>new()"
+
+public handler TestCreateJObject()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "java object creation succeeds" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "java object creation succeeds" because "bug 19934"
+		return
+	end if
+	
+	variable tObj as JObject
+	unsafe
+		put CreateJavaObject() into tObj
+	end unsafe
+
+	test "java object creation succeeds" when \
+		GetJavaClassName(tObj) is "java.lang.Object"
+end handler
+
+foreign handler CreateJavaString(in pBytes as JByteArray) returns JString binds to "java:java.lang.String>new([B)"
+
+foreign handler MCDataCreateWithBytes(in pBytes as ZStringNative, in pCount as LCUIndex, out rData as Data) returns CBool binds to "<builtin>"
+
+public handler TestCreateJString()
+   	if not the operating system is in ["mac", "linux"] then
+		skip test "java string creation succeeds" because "not implemented on" && the operating system
+		return
+	end if
+
+	if the operating system is "linux" then
+		skip test "java string creation succeeds" because "bug 19934"
+		return
+	end if
+	
+	plan 1 tests
+	
+	unsafe
+		variable tData as Data
+		if not MCDataCreateWithBytes("lcbstring", 9, tData) then
+		   test diagnostic "failed to create data"
+		   return
+		end if
+		
+		variable tByteArray as JByteArray
+		put DataToJByteArray(tData) into tByteArray
+		
+		variable tJString as JString
+		put CreateJavaString(tByteArray) into tJString
+		
+		variable tString as String
+		put StringFromJString(tJString) into tString
+	
+		test "create java string and convert to lcb string" \
+			when tString is "lcbstring"
+	end unsafe
+end handler
+
+public handler TestRoundTripJString()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "string round trips through java" because "not implemented on" && the operating system
+		return
+	end if
+		
+	if the operating system is "linux" then
+		skip test "string round trips through java" because "bug 19934"
+		return
+	end if
+	
+	variable tString as String
+	put "lcb string" into tString
+	
+	variable tJString as JObject
+	put StringToJString(tString) into tJString
+	
+	variable tNewString as String
+	put StringFromJString(tJString) into tNewString
+	
+	test "string round trips through java" when tNewString is tString
+
+end handler
+
+public handler TestRoundTripJByteArray()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "data round trips through java" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "data round trips through java" because "bug 19934"
+		return
+	end if
+	
+	
+	variable tData as Data
+	put 20 random bytes into tData
+
+	variable tJavaBytes as JByteArray
+	put DataToJByteArray(tData) into tJavaBytes
+	
+	variable tNewData as Data
+	put DataFromJByteArray(tJavaBytes) into tNewData
+	
+	test "data round trips through java" when tNewData is tData
+
+end handler
+
+foreign handler GetJavaPi() returns CDouble binds to "java:java.lang.Math>get.PI()D!static"
+
+public handler TestGetConstant()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "get java class constant" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "get java class constant" because "bug 19934"
+		return
+	end if
+	
+	variable tPiTrunc as Number
+	unsafe
+		put the trunc of GetJavaPi() into tPiTrunc
+	end unsafe
+	test "get java class constant" \
+		when tPiTrunc is 3
+end handler
+
+foreign handler CallJavaAdd(in pLeft as JLong, in pRight as JLong) returns JLong binds to "java:java.lang.Math>addExact(JJ)J!static"
+
+public handler TestCallStaticMethod()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "call java class static method" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "call java class static method" because "bug 19934"
+		return
+	end if
+	
+	variable tLeft as Number
+	variable tRight as Number
+	put 1 into tLeft
+	put 1 into tRight
+	
+	variable tResult as Number
+	unsafe
+		put CallJavaAdd(tLeft, tRight) into tResult
+	end unsafe
+	test "call java class static method" when tResult is 2
+end handler
+
+foreign handler JavaStringIsEmpty(in pString as JString) returns JBoolean binds to "java:java.lang.String>isEmpty()Z"
+
+public handler TestCallInstanceMethod()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "call java class instance method" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "call java class instance method" because "bug 19934"
+		return
+	end if
+	
+	variable tJavaString as JString
+	put StringToJString("nonempty") into tJavaString
+
+	variable tResult as Boolean
+	unsafe
+		put JavaStringIsEmpty(tJavaString) into tResult
+	end unsafe
+	test "call java class instance method" when tResult is false
+end handler
+
+foreign handler JavaGetDefaultLocale() returns JObject binds to "java:java.util.Locale>getDefault()Ljava/util/Locale;!static"
+foreign handler JavaLocaleDisplayName(in pLocale as JObject) returns JObject binds to "java:java.util.Locale>getDisplayName()Ljava/lang/String;"
+
+public handler TestDefaultLocaleDisplayName()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "get locale display name" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "get locale display name" because "bug 19934"
+		return
+	end if
+	
+	variable tDisplay as JString
+	unsafe 
+		variable tLocale as JObject
+		put JavaGetDefaultLocale() into tLocale
+		
+		put JavaLocaleDisplayName(tLocale) into tDisplay
+	end unsafe
+	
+	test "get locale display name" when StringFromJString(tDisplay) is not empty
+end handler
+
+foreign handler CreateJavaCurrencyWithCode(in pString as JString) returns JObject binds to "java:java.util.Currency>getInstance(Ljava/lang/String;)Ljava/util/Currency;!static"
+
+public handler TestCreateCurrencyWithCode()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "currency created" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "currency created" because "bug 19934"
+		return
+	end if
+	
+	-- Create a new Currency object
+	variable tCurrency as JObject
+	unsafe
+		variable tCode as JString
+		put StringToJString("AMD") into tCode
+		
+		put CreateJavaCurrencyWithCode(tCode) into tCurrency
+	end unsafe
+	
+	test "currency created" when GetJavaClassName(tCurrency) is "java.util.Currency"
+	
+	
+end handler
+
+foreign handler JavaCreateEmptyList() returns JObject binds to "java:java.util.LinkedList>new()"
+foreign handler JavaPeekList(in pList as JObject) returns JObject binds to "java:java.util.LinkedList>peek()Ljava/lang/Object;"
+foreign handler JavaAddList(in pList as JObject, in pToAdd as JObject) returns JBoolean binds to "java:java.util.LinkedList>add(Ljava/lang/Object;)Z"
+foreign handler JavaAddListOptional(in pList as JObject, in pToAdd as optional JObject) returns JBoolean binds to "java:java.util.LinkedList>add(Ljava/lang/Object;)Z"
+
+public handler NullIntoOptionalJObject()
+	unsafe
+		variable tList as JObject
+		put JavaCreateEmptyList() into tList
+	
+		variable tElt as optional JObject
+		put JavaPeekList(tList) into tElt
+	end unsafe
+end handler
+
+public handler NullIntoJObject()
+	unsafe
+		variable tList as JObject
+		put JavaCreateEmptyList() into tList
+	
+		variable tElt as JObject
+		put JavaPeekList(tList) into tElt
+	end unsafe
+end handler
+
+public handler TestNullJObjectReturn()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "NULL into optional JObject" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "NULL into optional JObject" because "bug 19934"
+		return
+	end if
+	
+	MCUnitTestHandlerDoesntThrow(NullIntoOptionalJObject, "no error when putting NULL into optional JObject")
+	MCUnitTestHandlerThrows(NullIntoJObject, "type mismatch when putting NULL into non-optional JObject")
+end handler
+
+public handler NullParamOptionalJObject()
+	unsafe
+		variable tList as JObject
+		put JavaCreateEmptyList() into tList
+	
+		JavaAddListOptional(tList, nothing)
+	end unsafe
+end handler
+
+public handler NullParamJObject()
+	unsafe
+		variable tList as JObject
+		put JavaCreateEmptyList() into tList
+	
+		JavaAddList(tList, nothing)
+	end unsafe
+end handler
+
+public handler TestNullJObjectParam()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "NULL passed as optional JObject" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "NULL passed as optional JObject" because "bug 19934"
+		return
+	end if
+	
+	MCUnitTestHandlerDoesntThrow(NullParamOptionalJObject, "no error when passing NULL as optional JObject")
+	MCUnitTestHandlerThrows(NullParamJObject, "type mismatch when passing NULL as non-optional JObject")
+end handler
+
+foreign handler StringCodepointAt(in pSequence as JObject, in pIndex as JInt) returns JInt binds to "java:java.lang.Character>codePointAt(Ljava/lang/CharSequence;I)I!static"
+
+public handler TestNativeTypeAfterObjectType()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "called foreign handler with signature Ljava/lang/CharSequence;I" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "called foreign handler with signature Ljava/lang/CharSequence;I" because "bug 19934"
+		return
+	end if
+	
+	unsafe
+		variable tCodepoint as Integer
+		put StringCodepointAt(StringToJString("a"), 0) into tCodepoint
+	
+		test "called foreign handler with signature Ljava/lang/CharSequence;I" when tCodepoint is 97
+	end unsafe
+end handler
+
+__safe foreign handler RegionMatches(in pString as JString, in pCaseless as JBoolean, in pOffset as JInt, in pOther as JString, in pOtherOffset as JInt, in pLength as JInt) returns JBoolean binds to "java:java.lang.String>regionMatches(ZILjava/lang/String;II)Z"
+
+public handler TestBindingStringObjectTypeInMiddle()
+	if not the operating system is in ["mac", "linux"] then
+		skip test "called foreign handler with signature Ljava/lang/CharSequence;I" because "not implemented on" && the operating system
+		return
+	end if
+	
+	if the operating system is "linux" then
+		skip test "called foreign handler with signature Ljava/lang/CharSequence;I" because "bug 19934"
+		return
+	end if
+	
+	variable tString as JString
+	put StringToJString("something") into tString
+	
+	variable tOther as JString
+	put StringToJString("NOTHING") into tOther
+	
+	test "called foreign handler with signature (ZILjava/lang/String;II)Z" when \
+		RegionMatches(tString, true, 4, tOther, 2, 5)
+end handler 
+
+end module

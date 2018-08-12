@@ -4,31 +4,50 @@ Type: keyword
 
 Syntax: templateStack
 
-Summary: Used with the <set> <command> to set the <properties> of newly created <stacks>.
+Summary:
+Used with the <set> <command> to set the <properties> of newly created
+<stacks>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the ID of the templateStack to 2000
 
 Description:
-Use the <templateStack> <keyword> to set up <default> <properties> to be used for any new <stacks> you create.
+Use the <templateStack> <keyword> to set up <default> <properties> to be
+used for any new <stacks> you create.
 
-The <templateStack> can be thought of as a special, abstract <object>. It is not an actual <stack>, but it has all the <properties> of a <stack>. The <ID> <property> of the <templateStack> is 1001.
+The <templateStack> can be thought of as a special, abstract
+<object(glossary)>. It is not an actual <stack>, but it has all the
+<properties> of a <stack>. The <ID> <property> of the <templateStack> 
+is 1001. 
 
-You can use the <set> <command> to set the <properties> of the <templateStack> before creating a <stack>. The new <stack> has the <properties> of the <templateStack>, by <default>. Changing the <properties> of the <templateStack> does not affect existing <stacks>.
+You can use the <set> <command> to set the <properties> of the
+<templateStack> before creating a <stack>. The new <stack> has the
+<properties> of the <templateStack>, by <default>. Changing the
+<properties> of the <templateStack> does not affect existing <stacks>.
 
-The properties of the <templateStack> can be returned to the default settings using the <reset> command.
+The properties of the <templateStack> can be returned to the default
+settings using the <reset> command.
 
 You can refer to the <templateStack> using any of the following forms:
-        templateStack
-        the templateStack
-        templateStack()
 
->*Note:* The <templateStack> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
+    templateStack
+    the templateStack
+    templateStack()
 
-References: properties (property), ID (property), function (control_st), templateScrollbar (keyword), default (keyword), stack (object), object (object), stacks (function), functionNames (function), create stack (command), reset (command), set (command), keyword (glossary), property (glossary), command (glossary), expression (glossary)
+
+>*Note:* The <templateStack> <keyword> is implemented internally as a
+> <function> and appears in the <functionNames>. However, it cannot be
+> used as a <function> in an <expression>.
+
+References: create stack (command), reset (command), set (command),
+function (control structure), stacks (function), functionNames (function),
+object (glossary), keyword (glossary), property (glossary),
+command (glossary), expression (glossary), templateScrollbar (keyword),
+default (keyword), stack (object), properties (property), ID (property)
+

@@ -2,17 +2,21 @@ Name: revSetVideoGrabberRect
 
 Type: command
 
-Syntax: revSetVideoGrabberRect <left>, <top>, <right>, <bottom> 
+Syntax: revSetVideoGrabberRect <left>, <top>, <right>, <bottom>
 
-Summary: Changes the size and location of the <video grabber|video grabber window>.
+Summary:
+Changes the size and location of the <video grabber|video grabber
+window>. 
+
+Associations: video library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: windows
 
 Platforms: desktop
 
-Security: disk,privacy
+Security: disk, privacy
 
 Example:
 revSetVideoGrabberRect 100,300,100,400
@@ -21,20 +25,49 @@ Example:
 revSetVideoGrabberRect globalRect(the rect of button "Video")
 
 Parameters:
-left: The left, right, top, and bottom are integers.
-top: 
-right: 
-bottom: 
+left:
+The left, right, top, and bottom are integers.
+
+top:
+
+
+right:
+
+
+bottom:
+
 
 Description:
-Use the <revSetVideoGrabberRect> <command> to move or resize the <video grabber|video grabber window>.
+Use the <revSetVideoGrabberRect> <command> to move or resize the <video
+grabber|video grabber window>.
 
-You must use the <revInitializeVideoGrabber> <command> to open the <video grabber> before you can use the <revSetVideoGrabberRect> <command>.
+You must use the <revInitializeVideoGrabber> <command> to open the
+<video grabber> before you can use the <revSetVideoGrabberRect>
+<command>. 
 
-The rectangle specified by the <left>, <top>, <right>, and <bottom> is the rectangle of the <video grabber|video grabber window>: the top, left, bottom, and right edges of the <video grabber>, in <absolute (screen) coordinates(glossary)>.
+The rectangle specified by the <left>, <top>, <right>, and <bottom> is
+the rectangle of the <video grabber|video grabber window>: the top,
+left, bottom, and right edges of the <video grabber>, in <absolute
+(screen) coordinates(glossary)>.
 
->*Important:*  The <revSetVideoGrabberRect> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+>*Important:*  The <revSetVideoGrabberRect> <command> is part of the 
+> <Video library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the
+> "Video Grabber" 
+> library checkbox is checked.
 
-References: revInitializeVideoGrabber (command), globalLoc (function), Standalone Application Settings (glossary), absolute coordinates (glossary), video grabber (glossary), standalone application (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+Changes:
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
+
+References: revInitializeVideoGrabber (command), globalLoc (function),
+Standalone Application Settings (glossary),
+absolute coordinates (glossary), video grabber (glossary),
+standalone application (glossary), command (glossary),
+LiveCode custom library (glossary), Video library (library)
 
 Tags: multimedia
+

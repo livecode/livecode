@@ -2,17 +2,18 @@ Name: value
 
 Type: function
 
-Syntax: the value of <expression> 
+Syntax: the value of <expression>
 
 Syntax: value(<expression> [, <object>])
 
-Summary: <return|Returns> the <value> of an <expression>.
+Summary:
+<return|Returns> the <value> of an <expression>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the value of 22 + 3 -- returns 25
@@ -27,23 +28,49 @@ Example:
 value("the name of me", card 1) -- returns name of card 1
 
 Parameters:
-expression: Any expression.
-object: Any object reference.
+expression:
+Any expression.
 
-The result: The <value> <function> can be used as an instant calculator. Any arithmetic <expression> can be used as the <expression>, and the <value> function <return|returns> the result of the <evaluate|evaluation>:.
+object:
+Any object reference.
 
-Returns: The <value> <function> <return|returns> a <logical>, <numeric>, or <string> <value>, depending on the type of <expression>.
+Returns:
+The <value> <function> <return|returns> a <logical>, <numeric>, or
+<string> <value>, depending on the type of <expression>.
+
+The result:
+The <value> <function> can be used as an instant calculator. Any
+arithmetic <expression> can be used as the <expression>, and the <value>
+function <return|returns> the result of the <evaluate|evaluation>:.
 
 Description:
-Use the <value> <function> to <evaluate> an <expression>, or to force LiveCode to <evaluate> an <expression> within a <statement>.
+Use the <value> <function> to <evaluate> an <expression>, or to force
+LiveCode to <evaluate> an <expression> within a <statement>.
 
-  ask "What do you want to compute?"
-  answer it && "equals" && the value of it
+    ask "What do you want to compute?"
+    answer it && "equals" && the value of it
 
-If you specify an <object>, references to <me> in the <expression> are treated as references to the <object>. However, other <object reference|object references> are treated as though the <handler> were in the current <object|object's> <script>. For example, "button 3" refers to button 3 on the <current card>, not the <card> where the <object> is located.
 
-If the <expression> is a single <string>, then even if it is enclosed in quotes, LiveCode attempts to <evaluate> its contents instead of treating it as a <literal string|string literal>. This means that you must be careful about <literal string|string literals> that contain <operator|operators> such as "and".
+If you specify an <object(glossary)>, references to <me> in the
+<expression> are treated as references to the <object(glossary)>.
+However, other <object reference|object references> are treated as
+though the <handler> were in the current <object|object's> <script>. For
+example, "button 3" refers to button 3 on the <current card>, not the
+<card> where the <object(glossary)> is located.
 
-References: script (property), object (object), () (operator), me (keyword), numeric (keyword), string (keyword), card (keyword), current card (glossary), return (glossary), handler (glossary), operator (glossary), logical (glossary), statement (glossary), literal string (glossary), expression (glossary), evaluate (glossary), object reference (glossary), value (function), merge (function), call (command), function (control_st)
+If the <expression> is a single <string>, then even if it is enclosed in
+quotes, LiveCode attempts to <evaluate> its contents instead of treating
+it as a <literal string|string literal>. This means that you must be
+careful about <literal string|string literals> that contain
+<operator|operators> such as "and".
+
+References: call (command), function (control structure),
+value (function), merge (function), object (glossary),
+current card (glossary), return (glossary), handler (glossary),
+operator (glossary), logical (glossary), statement (glossary),
+literal string (glossary), expression (glossary), evaluate (glossary),
+object reference (glossary), me (keyword), numeric (keyword),
+string (keyword), card (keyword), () (operator), script (property)
 
 Tags: properties
+

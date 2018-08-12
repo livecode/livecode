@@ -1,18 +1,19 @@
 Name: revBrowserStop
 
+Synonyms: xbrowser_stop
+
 Type: command
 
-Syntax: revBrowserStop <instanceId> 
+Syntax: revBrowserStop <instanceId>
 
 Syntax: XBrowser_Stop [ <instanceId>]
 
-Summary: Stops the specified browser.
-
-Synonyms: XBrowser_Stop
+Summary:
+Stops the specified browser.
 
 Introduced: 2.8.1
 
-OS: mac,windows
+OS: mac, windows
 
 Platforms: desktop
 
@@ -22,13 +23,22 @@ Example:
 revBrowserStop tBrowserId
 
 Parameters:
-instanceId: The integer identifier of a browser object
+instanceId:
+The integer identifier of a browser object
 
-The result: The <revBrowserStop> command puts empty into the <result>.
+The result:
+The <revBrowserStop> command puts empty into the <result>.
 
 Description:
-The <revBrowserStop> command stops any page loading operation in progress in the browser specified by the <instanceId>. If no page is currently loading in the specified browser, then the revBrowserStop command has no effect.
+The <revBrowserStop> command stops any page loading operation in
+progress in the browser specified by the <instanceId>. If no page is
+currently loading in the specified browser, then the revBrowserStop
+command has no effect.
 
->*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+>*Note:* For general information on using the browser library, see the
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserRefresh (command), revBrowserClose (command), revBrowserNavigate (command), revBrowserOpen (function), revBrowserOpen function (function), result (function)
+References: revBrowserRefresh (command), revBrowserClose (command),
+revBrowserNavigate (command), revBrowserOpen (function),
+function (glossary), result (function)
+

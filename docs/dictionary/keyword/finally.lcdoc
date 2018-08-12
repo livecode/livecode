@@ -4,24 +4,38 @@ Type: keyword
 
 Syntax: finally
 
-Summary: Used within a <try> <control structure> to contain <statement|statements> that are <execute|executed> whether or not there was an <error>.
+Summary:
+Used within a <try> <control structure> to contain
+<statement|statements> that are <execute|executed> whether or not there
+was an <error>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 finally
 
 Description:
-Use the <finally> <keyword> to designate one or more <statement|statements> that are to be <execute|executed> within a <try> <control structure>.
+Use the <finally> <keyword> to designate one or more
+<statement|statements> that are to be <execute|executed> within a <try>
+<control structure>.
 
-The <finally> <keyword> appears on a line by itself, and is followed by a list of <statement|statements>. The <statement|statements> in the <finally> section are <execute|executed> whether or not there was an <error> while <execute|executing> the <try> <control structure>.
+The <finally> <keyword> appears on a line by itself, and is followed by
+a list of <statement|statements>. The <statement|statements> in the
+<finally> section are <execute|executed> whether or not there was an
+<error> while <execute|executing> the <try> <control structure>.
 
-The <finally> section is always <execute|executed> even if the <try> <control structure> contains an <exit> or <pass> <statement>, so it can be used for final cleanup actions such as deleting <variable|variables>.
+The <finally> section is always <execute|executed> even if the <try>
+<control structure> contains an <exit> or <pass> <statement>, so it can
+be used for final cleanup actions such as deleting <variable|variables>.
 
 The <finally> section is optional in a <try> <control structure>.
 
-References: else (keyword), keyword (glossary), statement (glossary), variable (glossary), error (glossary), execute (glossary), control structure (glossary), pass (control_st), exit (control_st), try (control_st)
+References: pass (control structure), exit (control structure),
+try (control structure), keyword (glossary), statement (glossary),
+variable (glossary), error (glossary), execute (glossary),
+control structure (glossary), else (keyword)
+

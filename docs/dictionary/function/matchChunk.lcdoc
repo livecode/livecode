@@ -4,13 +4,15 @@ Type: function
 
 Syntax: matchChunk(<string>, <regularExpression> [, <positionVarsList>])
 
-Summary: <return|Returns> true if a <regular expression> is found in the specified <string>, false otherwise.
+Summary:
+<return|Returns> true if a <regular expression> is found in the
+specified <string>, false otherwise.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 matchChunk("Hello","Hel") -- returns true
@@ -25,26 +27,69 @@ Example:
 matchChunk(field "Title",myExpr,startMatch,endMatch)
 
 Parameters:
-string (string): 
-regularExpression: Any expression that evaluates to a regular expression.
-positionVarsList: The optional positionVarsList consists of an even number of existing variables, separated by commas.
+string (string):
 
-Returns (bool): The <matchChunk> <function> returns true or false.
+
+regularExpression:
+Any expression that evaluates to a regular expression.
+
+positionVarsList:
+The optional positionVarsList consists of an even number of existing
+variables, separated by commas.
+
+Returns (bool):
+The <matchChunk> <function> returns true or false.
 
 Description:
-Use the <matchChunk> <function(control_st)> to check whether a <string> contains a specified pattern.
+Use the <matchChunk> <function(control structure)> to check whether a
+<string> contains a specified pattern.
 
-If the <regularExpression> includes a pair of parentheses, the position of the substring matching the part of the <regular expression> inside the parentheses is placed in the <variable|variables> in the <positionVarsList>. The number of the first <character> in the matching substring is placed in the first <variable> in the <positionVarsList>, and the number of the last <character> is placed in the second <variable>. Additional starting and ending positions, matching additional parenthetical expressions, are placed in additional pairs of <variable|variables> in the <positionVarsList>. If the <matchChunk> <function(control_st)> returns false, the <value(glossary)|values> of the <variable|variables> in the <positionVarsList> are not changed.
+If the <regularExpression> includes a pair of parentheses, the position
+of the substring matching the part of the <regular expression> inside
+the parentheses is placed in the <variable|variables> in the
+<positionVarsList>. The number of the first <character> in the matching
+substring is placed in the first <variable> in the <positionVarsList>,
+and the number of the last <character> is placed in the second
+<variable>. Additional starting and ending positions, matching
+additional parenthetical expressions, are placed in additional pairs of
+<variable|variables> in the <positionVarsList>. If the <matchChunk>
+<function(control structure)> returns false, the
+<value(glossary)|values> of the <variable|variables> in the
+<positionVarsList> are not changed.
 
-The <string> and <regularExpression> are always <case-sensitive>, regardless of the setting of the <caseSensitive> <property>.  (If you need to make a <case-insensitive> comparison, use "(?i)" at the start of the <regularExpression> to make the match case-insensitive.) 
+The <string> and <regularExpression> are always <case-sensitive>,
+regardless of the setting of the <caseSensitive> <property>. (If you
+need to make a <case-insensitive> comparison, use "(?i)" at the start of
+the <regularExpression> to make the match case-insensitive.)
 
->*Important:*  Variables in the <positionVarsList> must be created before the <matchChunk> <function(control_st)> is <call|called>. The <matchChunk> <function(control_st)>, unlike the <put> <command>, does not create them automatically.
+>*Important:*  Variables in the <positionVarsList> must be created
+> before the <matchChunk> <function(control structure)> is
+> <call|called>. The <matchChunk> <function(control structure)>, unlike
+> the <put> <command>, does not create them automatically.
 
-The <matchChunk> and <matchText> <function(glossary)|functions> <return> the same <value(function)>, given the same <string> and <regularExpression>. The difference between the two is that the <matchChunk> <function(control_st)> records the positions of matched substrings in the optional <positionVarsList> variables, while the <matchText> <function(control_st)> records the substrings themselves.
+The <matchChunk> and <matchText> <function(glossary)|functions> <return>
+the same <value(function)>, given the same <string> and
+<regularExpression>. The difference between the two is that the
+<matchChunk> <function(control structure)> records the positions of
+matched substrings in the optional <positionVarsList> variables, while
+the <matchText> <function(control structure)> records the substrings
+themselves. 
 
->*Tip:*  LiveCode implements <regular expression|regular expressions> compatible with the PCRE library. For detailed information about <regular expression> elements you can use with this <function(control_st)>, see the PCRE manual at http://www.pcre.org/man.txt.
+>*Tip:* LiveCode implements <regular expression|regular expressions>
+> compatible with the PCRE library. For detailed information about
+> <regular expression> elements you can use with this
+> <function(control structure)>, see the PCRE pattern documentation at
+> http://www.pcre.org/original/doc/html/pcrepattern.html.
 
 Changes:
-The regular expression format changed in version 2.0 to use PCRE compatible syntax.
+The regular expression format changed in version 2.0 to use PCRE
+compatible syntax.
 
-References: caseSensitive (property), function (control_st), string (keyword), character (keyword), return (constant), matchText (function), value (function), put (command), filter (command), property (glossary), return (glossary), variable (glossary), value (glossary), call (glossary), regular expression (glossary), case-sensitive (glossary), case-insensitive (glossary), function (glossary), command (glossary)
+References: put (command), filter (command), return (constant),
+function (control structure), matchText (function), value (function),
+property (glossary), return (glossary), variable (glossary),
+value (glossary), call (glossary), regular expression (glossary),
+case-sensitive (glossary), case-insensitive (glossary),
+function (glossary), command (glossary), string (keyword),
+character (keyword), caseSensitive (property)
+

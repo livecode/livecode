@@ -4,13 +4,17 @@ Type: keyword
 
 Syntax: ftp
 
-Summary: Used as a <URL> type with such <command|commands> as <put> and <get> to designate a <file> or <folder|directory> on an FTP <server>.
+Summary:
+Used as a <URL> type with such <command|commands> as <put> and <get> to
+designate a <file> or <folder|directory> on an FTP <server>.
+
+Associations: internet library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: network
 
@@ -26,70 +30,167 @@ put URL "ftp://files.example.org/file.txt" into URL "file:myFile.txt"
 Example:
 put field "Upload" into URL "ftp://me:secret@ftp.example.net/file.txt"
 
-The result: If an error occurs during transfer of the data, the error is placed in the result <function>. The first <word> returned by the <result> <function> is "error", followed (where appropriate) by the text of the error message returned by the FTP <server>, including the server response code. >*Important:*  If a <blocking> operation involving a <URL> (using the <put> <command> to <upload> a <URL>, the <post> <command>, the <delete URL> <command>, or a <statement> that gets an <ftp> or <http> <URL>) is going on, no other <blocking> <URL> operation can start until the previous one is finished. If you attempt to use a <URL> in an <expression>, or put data into a <URL>, while another <blocking> <URL> operation is in progress, the <result> is set to "Error Previous request not completed". Downloading a URL does not prevent other messages from being sent during the download: the current handler is blocked during the download, but other handlers are not. This means that if, for example, your application has a button that downloads a URL, the user might click the button again (or click another <button> that <download|downloads> another <URL>) while the first <URL> is still being <download|downloaded>. In this case, the second <download> is not performed and the <result> is set to "Error Previous request not completed." To avoid this problem, you can set a <flag> while a URL is being <download|downloaded>, and check that <flag> when trying to <download> <URL|URLs> to make sure that there is not already a current <download> in progress.
+The result:
+If an error occurs during transfer of the data, the error is placed in
+the result <function>. The first <word> returned by the <result>
+<function> is "error", followed (where appropriate) by the text of the
+error message returned by the FTP <server>, including the server
+response code. 
+> *Important:* If a <blocking> operation involving a <URL>
+> (using the <put> <command> to <upload> a <URL>, the <post> <command>,
+> the <delete URL> <command>, or a <statement> that gets an <ftp> or
+> <http> <URL>) is going on, no other <blocking> <URL> operation can start
+> until the previous one is finished. If you attempt to use a <URL> in an
+> <expression>, or put data into a <URL>, while another <blocking> <URL>
+> operation is in progress, the <result> is set to
+> "Error Previous request not completed". Downloading a URL does not
+> prevent other messages from being sent during the download: the current
+> handler is blocked during the download, but other handlers are not. This
+> means that if, for example, your application has a button that downloads
+> a URL, the user might click the button again (or click another <button>
+> that <download|downloads> another <URL>) while the first <URL> is still
+> being <download|downloaded>. In this case, the second <download> is not
+> performed and the <result> is set to
+> "Error Previous request not completed." To avoid this problem, you can
+> set a <flag> while a URL is being <download|downloaded>, and check that
+> <flag> when trying to <download> <URL|URLs> to make sure that there is
+> not already a current <download> in progress.
 
 Description:
-Use the <ftp> <keyword> to upload or download <files> to or from an Internet site.
+Use the <ftp> <keyword> to upload or download <files> to or from an
+Internet site.
 
-The URL scheme "ftp" indicates information located on an FTP server. An <ftp> <URL> consists of the following parts:
+The URL scheme "ftp" indicates information located on an FTP server. An
+<ftp> <URL> consists of the following parts:
 
-        1. The string "ftp://"
-        2. An optional user name and password, separated by a colon (:) and followed by "@"
-        3. The name of the server
-        4. An optional port number preceded by a colon (:)
-        5. The name and location of a file or directory, starting with a slash (/)
+1. The string "ftp://"
+2. An optional user name and password, separated by a colon (:)
+   and followed by "@"
+3. The name of the server
+4. An optional port number preceded by a colon (:)
+5. The name and location of a file or directory, starting with a
+   slash (/)
 
-If you don't specify a port number, port 21 is used. (This is the standard port for FTP.)
 
->*Note:* Most public FTP <server|servers> do not require a user name and password. For such <server|servers>, you need not specify any user name or password. If you don't specify a user name or password, LiveCode adds the "anonymous" user name and a dummy password automatically, in accordance with the conventions for public FTP <server|servers>.
+If you don't specify a port number, port 21 is used. (This is the
+standard port for FTP.)
 
->*Important:*  If your user name or password contains any of the characters ":", "@", "/", ".", or "|", use the URLEncode <function> to safely encode the user name or password before putting them into the <URL>. The following example constructs a <URL> for a user whose password contains the "@" character:
+>*Note:* Most public FTP <server|servers> do not require a user name and
+> password. For such <server|servers>, you need not specify any user
+> name or password. If you don't specify a user name or password,
+> LiveCode adds the "anonymous" user name and a dummy password
+> automatically, in accordance with the conventions for public FTP
+> <server|servers>. 
 
-        put "jim" into userName
-        put "jsmith@example.org" into userPassword
-        put "ftp://" & userName & ":" & URLEncode(userPassword) \
-            & "@ftp.example.com/title.txt" into fileURLToGet
-        get URL fileURLToGet
+>*Important:*  If your user name or password contains any of the
+> characters ":", "@", "/", ".", or "|", use the URLEncode <function> to
+> safely encode the user name or password before putting them into the
+> <URL>. The following example constructs a <URL> for a user whose
+> password contains the "@" character:
+
+    put "jim" into userName
+    put "jsmith@example.org" into userPassword
+    put "ftp://" & userName & ":" & URLEncode(userPassword) \
+      & "@ftp.example.com/title.txt" into fileURLToGet
+    get URL fileURLToGet
+
 
 Here are some examples of valid <ftp> <URL|URLs>:
+- ftp://ftp.example.org/directory/ -- list of files and folders in a
+directory 
+- ftp://ftp.example.org/directory/file.exe -- a file on the
+server 
+- ftp://user:password@ftp.example.org/myfile -- a file accessed by
+a password 
+- ftp://ftp.example.com:3992/somefile -- using a nonstandard
+FTP port
 
-        ftp://ftp.example.org/directory/ -- list of files and folders in a directory
-        ftp://ftp.example.org/directory/file.exe -- a file on the server
-        ftp://user:password@ftp.example.org/myfile -- a file accessed by a password
-        ftp://ftp.example.com:3992/somefile -- using a nonstandard FTP port
+An <ftp> <URL> is a <container>, and you can use the <expression> 
+`URL ftpURL` in any statement where any other <container> type is used. 
+When you get the <value> of an <ftp> <URL>, LiveCode <download|downloads> 
+the <URL> from the <server>. (If you have previously <cache|cached> the 
+URL with the <load> <command>, it fetches the <URL> from the <cache>.)
 
-An <ftp> <URL> is a <container>, and you can use the <expression> URL ftpURL in any statement where any other <container> type is used. When you get the <value> of an <ftp> <URL>, LiveCode <download|downloads> the <URL> from the <server>. (If you have previously <cache|cached> the URL with the <load> <command>, it fetches the <URL> from the <cache>.)
+A URL that ends with a slash (/) designates a directory (rather than a
+file). An <ftp> <URL> to a <folder|directory> evaluates to a listing of
+the <folder|directory's> contents. To change the format of
+<folder|directory> listings, use the <libURLSetFTPListCommand> command.
 
-A URL that ends with a slash (/) designates a directory (rather than a file). An <ftp> <URL> to a <folder|directory> evaluates to a listing of the <folder|directory's> contents. To change the format of <folder|directory> listings, use the <libURLSetFTPListCommand> command.
+FTP uploads and downloads that are performed using the <ftp> <keyword>
+are always transferred in binary mode: no character translation is
+performed. If you need to translate characters--for example, if you are
+uploading a <text file> to a different operating system and want to
+translate line endings--you must do so before uploading the <file>,
+since the <put> <command> will not do it for you.
 
-FTP uploads and downloads that are performed using the <ftp> <keyword> are always transferred in binary mode:  no character translation is performed. If you need to translate characters--for example, if you are uploading a <text file> to a different operating system and want to translate line endings--you must do so before uploading the <file>, since the <put> <command> will not do it for you.
+>*Note:* <download|Downloading> a <URL> by using it in an <expression>
+> is a <blocking> operation: that is, the <handler> pauses until
+> LiveCode is finished getting the <URL>. Since contacting a <server>
+> may take some time due to network lag, <URL> operations may take long
+> enough to be noticeable, so you may want to set the cursor to the
+> watch or otherwise indicate a delay to the user.
 
->*Note:* <download|Downloading> a <URL> by using it in an <expression> is a <blocking> operation: that is, the <handler> pauses until LiveCode is finished getting the <URL>. Since contacting a <server> may take some time due to network lag, <URL> operations may take long enough to be noticeable, so you may want to set the cursor to the watch or otherwise indicate a delay to the user.
-
-The following example shows how to set a flag in a global variable to prevent multiple downloads. The variable "downloadInProgress" is set to true while a download is going on, and back to false when the download concludes. If the user clicks the button again while the download is still going on, the handler simply beeps:
+The following example shows how to set a flag in a global variable to
+prevent multiple downloads. The variable "downloadInProgress" is set to
+true while a download is going on, and back to false when the download
+concludes. If the user clicks the button again while the download is
+still going on, the handler simply beeps:
 
     on mouseUp
-       global downloadInProgress
-       if downloadInProgress then
-          beep
-          exit mouseUp
-       end if
-       put true into downloadInProgress -- about to start
-       put URL (field "FTP URL to get") into field "Command Result"
-       put false into downloadInProgress -- finished
+        global downloadInProgress
+        if downloadInProgress then
+           beep
+           exit mouseUp
+        end if
+        put true into downloadInProgress -- about to start
+        put URL (field "FTP URL to get") into field "Command Result"
+        put false into downloadInProgress -- finished
     end mouseUp
 
-To send any FTP command to an FTP server, use the libURLftpCommand <function>.
 
-For technical information about URLs and the <ftp> <URL> scheme, see [RFC 1630](https://tools.ietf.org/html/rfc1630).
+To send any FTP command to an FTP server, use the libURLftpCommand
+<function>. 
 
->*Important:*  The <ftp> <keyword> is part of the <Internet library>. To ensure that the <keyword> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+For technical information about URLs and the <ftp> <URL> scheme, see
+[RFC 1630](https://tools.ietf.org/html/rfc1630).
 
->*Note:* When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <ftp> <keyword> is not yet available. This may affect attempts to use this <keyword> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <ftp> <keyword> can be used in any <handler>.
+>*Important:*  The <ftp> <keyword> is part of the 
+> <Internet library> on desktop platforms. To ensure that the <keyword> 
+> works in a desktop <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
+
+>*Cross-platform note:* On iOS and Android, you can use the <ftp> 
+> <keyword> without the need for the <Internet library>. When
+> specifying 
+> <URL(glossary)|URLs> for iOS and Android, you must use the
+> appropriate 
+> form that conforms to [RFC
+> 1630](https://tools.ietf.org/html/rfc1630). 
 
 Changes:
-The ability to specify a port number was added in version 2.0. In previous versions, port 21 was always used for FTP transactions.
+The ability to specify a port number was added in version 2.0. In
+previous versions, port 21 was always used for FTP transactions.
 
-References: startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), library (library), LiveCode custom library (library), delete URL (library), libURLSetFTPListCommand (library), Internet library (library), URL (keyword), file (keyword), ftp (keyword), button (keyword), http (keyword), flag (glossary), standalone application (glossary), upload (glossary), folder (glossary), command (glossary), main stack (glossary), blocking (glossary), text file (glossary), statement (glossary), message (glossary), cache (glossary), Standalone Application Settings (glossary), container (glossary), URL (glossary), server (glossary), keyword (glossary), application (glossary), handler (glossary), word (glossary), expression (glossary), download (glossary), result (function), files (function), libURLErrorData (function), value (function), libURLSetFTPListCommand (command), libURLSetFTPMode (command), get (command), post (command), put (command), load (command), group (command), delete URL (command), libURLftpUpload (command), libURLDownloadToFile (command), function (control_st)
+References: libURLSetFTPListCommand (command), libURLSetFTPMode (command),
+get (command), post (command), put (command), load (command),
+group (command), delete URL (command), libURLftpUpload (command),
+libURLDownloadToFile (command), function (control structure),
+result (function), files (function), libURLErrorData (function),
+value (function), LiveCode custom library (glossary), flag (glossary),
+standalone application (glossary), upload (glossary), folder (glossary),
+command (glossary), main stack (glossary), blocking (glossary),
+text file (glossary), statement (glossary), message (glossary),
+cache (glossary), Standalone Application Settings (glossary),
+container (glossary), URL (glossary), server (glossary),
+keyword (glossary), application (glossary), handler (glossary),
+word (glossary), expression (glossary), download (glossary),
+URL (keyword), file (keyword), ftp (keyword), button (keyword),
+http (keyword), library (library), Internet library (library),
+startup (message), openBackground (message), preOpenStack (message),
+openStack (message), preOpenCard (message)
 
 Tags: networking
+

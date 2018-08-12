@@ -1,22 +1,23 @@
 Name: borderWidth
 
+Synonyms: linesize
+
 Type: property
 
-Syntax: set the borderWidth of <object> to <pixelWidth> 
+Syntax: set the borderWidth of <object> to <pixelWidth>
 
-Syntax: set the borderWidth of <line> of <field> to <pixelWidth> 
+Syntax: set the borderWidth of <line> of <field> to <pixelWidth>
 
-Summary: Specifies the width of an <object|object's> border.
+Summary:
+Specifies the width of an <object|object's> border.
 
-Synonyms: lineSize
-
-Associations: stack,field
+Associations: stack, field
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the borderWidth of button "Cancel" to 1
@@ -28,18 +29,24 @@ Example:
 set the borderWidth of line 5 of field 1 to 10
 
 Parameters:
-pixelWidth (integer): An integer between zero and 255.
+pixelWidth (integer):
+An integer between zero and 255.
 
 Description:
-Use the <borderWidth> <property> to change the appearance of an <object|object's> border.
+Use the <borderWidth> <property> to change the appearance of an
+<object|object's> border.
 
 By default, the <borderWidth> of newly created <object|objects> is 2.
 By default, the <borderWidth> of a paragraph of text in a field is 0.
 
-If the object's showBorder <property> is false, the <borderWidth> <property> has no effect.
+If the object's showBorder <property> is false, the <borderWidth>
+<property> has no effect.
 
-The border's appearance and color is affected by the setting of the object's threeD <property>.
+The border's appearance and color is affected by the setting of the
+object's threeD <property>.
 
-References: borderPattern (property), object (object), property (glossary)
+References: object (glossary), property (glossary),
+borderPattern (property)
 
 Tags: ui
+

@@ -67,6 +67,7 @@ static const char *s_interface_native_types[] =
 	"boolean",
 	"c-string",
 	"c-data",
+	"lc-array",
 	"utf8-c-string",
 	"utf8-c-data",
     "utf16-c-string",
@@ -179,8 +180,20 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 	case kInterfaceErrorJavaImpliesNonIndirectReturn:
 		fprintf(stderr, "Java mapped methods cannot have indirect return value\n");
 		break;
+	case kInterfaceErrorMethodsCannotHaveVariants:
+		fprintf(stderr, "Java mapped methods cannot have variants\n");
+		break;
+	case kInterfaceErrorMethodsAreAlwaysTail:
+		fprintf(stderr, "Java mapped methods are always tail\n");
+		break;
+	case kInterfaceErrorMethodsMustBeJava:
+		fprintf(stderr, "Java mapped methods must be java\n");
+		break;
+	case kInterfaceErrorNone:
+		MCUnreachableReturn(false);
+		break;
 	}
-
+	
 	self -> invalid = true;
 	
 	return true;
@@ -549,6 +562,7 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	// RULE: default values not supported for c-data, objc-data, objc-dictionary, objc-array types
 	if (p_optional && p_default != nil &&
 		(t_native_type == kNativeTypeCData ||
+         t_native_type == kNativeTypeLCArray ||
          t_native_type == kNativeTypeObjcData ||
          t_native_type == kNativeTypeObjcArray ||
          t_native_type == kNativeTypeObjcDictionary))

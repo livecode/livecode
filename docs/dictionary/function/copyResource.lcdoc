@@ -4,13 +4,16 @@ Type: function
 
 Syntax: copyResource(<file>, <destinationFile>, <resType>,{<resID> | <resName>}[, <newID>])
 
-Summary: Copies a <resource> from one <Mac OS> <file> to another.
+Summary:
+Copies a <resource> from one <Mac OS> <file> to another.
 
 Introduced: 1.0
 
+Deprecated: 8.1
+
 OS: mac
 
-Platforms: desktop,web
+Platforms: desktop
 
 Security: disk
 
@@ -24,22 +27,58 @@ Example:
 get copyResource(field "Source",currentFile,nextResource,200)
 
 Parameters:
-file: The name and location of the file containing the resource. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
-destinationFile: The name and location of the file you want to copy the resource to.
-resType: The 4-character type of the resource you want to move.
-resID (integer): An integer that specifies the resource ID of the resource you want to copy.
-resName: The name of the resource you want to copy.
-newID (integer): An integer that specifies the resource ID for the newly-copied resource.
+file:
+The name and location of the file containing the resource. If you
+specify a name but not a location, LiveCode assumes the file is in the
+defaultFolder. 
 
-The result: If the <file> does not exist, the <result> is set to "can't find file". If the <destinationFile> does not exist, the <copyResource> <function> creates the <file>, but the <result> is set to "can't create resource fork for destination file". If the <destinationFile> exists but has no <resource fork>. the <copyResource> function creates the <resource fork> and copies the <resource> to it. If the <destinationFile> is open, the <result> is set to "Can't open resource fork".
+destinationFile:
+The name and location of the file you want to copy the resource to.
 
-Returns: The <copyResource> <function> always <return|returns> empty.
+resType:
+The 4-character type of the resource you want to move.
+
+resID (integer):
+An integer that specifies the resource ID of the resource you want to
+copy. 
+
+resName:
+The name of the resource you want to copy.
+
+newID (integer):
+An integer that specifies the resource ID for the newly-copied resource.
+
+Returns:
+The <copyResource> <function> always <return|returns> empty.
+
+The result:
+If the <file> does not exist, the <result> is set to "can't find file".
+If the <destinationFile> does not exist, the <copyResource> <function>
+creates the <file>, but the <result> is set to
+"can't create resource fork for destination file". If the
+<destinationFile> exists but has no <resource fork>. the <copyResource>
+function creates the <resource fork> and copies the <resource> to it. If
+the <destinationFile> is open, the <result> is set to
+"Can't open resource fork". 
 
 Description:
-Use the <copyResource> function to copy <resource|resources> (such as icons, externals, and version <resource|resources>) from one <file> to another.
+Use the <copyResource> function to copy <resource|resources> (such as
+icons, externals, and version <resource|resources>) from one <file> to
+another. 
 
-If you don't specify a <newID>, the new <resource> has the same ID as the original <resource>. Specifying a <newID> does not change the resource ID of the original <resource> in the <file>; it only affects the copy in the <destinationFile>.
+If you don't specify a <newID>, the new <resource> has the same ID as
+the original <resource>. Specifying a <newID> does not change the
+resource ID of the original <resource> in the <file>; it only affects
+the copy in the <destinationFile>.
 
-References: file (keyword), copy (command), result (function), setResource (function), resource fork (glossary), resource (glossary), Mac OS (glossary), return (glossary), function (control_st)
+Changes:
+The <copyResource> function was deprecated in LiveCode 8.1, since the
+versions of MacOS supported by LiveCode no longer support resource
+forks.  It should not be used in any new code.
+
+References: copy (command), function (control structure),
+result (function), setResource (function), resource fork (glossary),
+resource (glossary), Mac OS (glossary), return (glossary), file (keyword)
 
 Tags: file system
+

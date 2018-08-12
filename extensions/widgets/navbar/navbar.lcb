@@ -16,11 +16,27 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /**
-This widget is a navigation bar.
+The navigation bar widget is intended for use in mobile apps for
+switching between cards, although there are many other possible uses.
+
+The widget displays a row of navigation items.  Each of these has a
+<itemNames|name>, which identifies it.  Depending on the selected
+<itemStyle>, the items may display a <itemLabels|label>,
+<itemIcons|icon>, or both.  All of the navigation item data is
+available as a single array via the <itemArray> property.
+
+At any time, one of the navigation items may be
+<hilitedItemName|highlighted>.  This is useful, for example, for
+indicating the current card.  When the user clicks one of the
+navigation items, the widget sends a <hiliteChanged> message.
+
+References: hiliteChanged(message), hilitedItemName(property),
+itemArray(property), itemIcons(property), itemLabels(property),
+itemNames(property), itemStyle(property)
 
 Name: hiliteChanged
 Type: message
-Syntax: on hiliteChanged
+Syntax: hiliteChanged
 Summary: Sent when a navigation item is selected
 
 Example:
@@ -29,10 +45,62 @@ on hiliteChanged
 end hiliteChanged
 
 Description:
-Handle the <hiliteChanged> message in the widget's object script to respond to
-a selection made by the user.
+The <hiliteChanged> message is sent when the highlighted navigation
+item changes, either by clicking on the navigation bar or by setting
+the <hilitedItem> or <hilitedItemName> properties.
 
 References: hilitedItem (property), hilitedItemName (property)
+
+Name: hiliteColor
+Type: Property
+Syntax: set the hiliteColor of <widget> to <color>
+Syntax: get the hiliteColor of <widget>
+
+Summary: The color of the highlighted navigation item
+
+Description:
+The <hiliteColor> is used to draw the icon and/or label of the
+navigation item that is <hilitedItemName|currently highlighted>.
+
+Related: hilitedItemName(property)
+
+Name: foreColor
+Type: property
+Syntax: set the foreColor of <widget> to <color>
+Syntax: get the foreColor of <widget>
+
+Summary: The color of the navigation items that are not highlighted
+
+Description:
+The <foreColor> is used to draw the icons and/or labels of the
+navigation items that are not <hilitedItemName|currently highlighted>.
+
+Related: hilitedItemName(property)
+
+Name: backColor
+Type: property
+Syntax: set the backColor of <widget> to <color>
+Syntax: get the backColor of <widget>
+
+Summary: The color of the navigation bar background
+
+Description:
+When the navigation bar has an <opaque> background, it is filled with
+the <backColor>.
+
+Related: opaque(property)
+
+Name: borderColor
+Type: property
+Syntax: set the borderColor of <widget> to <color>
+Syntax: get the borderColor of <widget>
+
+Summary: The color of the navigation bar border
+
+Description:
+The top border of the navigation bar is drawn using the <borderColor>.
+
+Related: showBorder(property)
 */
 
 -- declaring extension as widget, followed by identifier
@@ -43,7 +111,7 @@ widget com.livecode.widget.navbar
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.library.iconSVG
+use com.livecode.library.iconsvg
 use com.livecode.library.widgetutils
 --
 
@@ -54,20 +122,48 @@ metadata title is "Navigation Bar"
 metadata preferredSize is "320,49"
 metadata svgicon is "M0,0v29.5h80.2V0H0z M21.1,21.5c-0.2-0.1-0.4-0.2-0.4-0.2c-0.5-0.2-0.9-0.3-1.4-0.4c-0.7-0.1-0.9-0.4-0.9-1.1c0-0.1-0.1-0.9,0-1c0.4-0.2,0.5-0.9,0.5-1.3c0-0.3,0.2-0.5,0.3-0.7c0.2-0.3,0.2-0.6,0.3-0.9c0.1-0.2,0.2-0.6,0.1-0.8c0-0.2-0.2-0.4-0.2-0.6c0-0.3,0.1-0.6,0.1-0.9c0-0.5,0-0.9,0-1.4c-0.2-1.2-1.4-1.6-2.5-1.9c-1-0.2-2.2,0.3-2.9,1c-0.3,0.3-0.6,0.7-0.7,1.1c-0.1,0.4,0,0.9,0,1.2c0,0.2,0,0.4,0.1,0.6c0,0.2,0.1,0.3,0.1,0.5c0,0.1-0.1,0.2-0.1,0.3c-0.2,0.4,0,1,0.2,1.4c0.1,0.2,0.2,0.4,0.3,0.5c0.2,0.2,0.2,0.3,0.2,0.6c0,0.4,0.1,1.2,0.6,1.4c0.1,0.1,0,0.8-0.1,0.9c0,0.7,0,1-0.6,1.1c-0.5,0.1-0.9,0.2-1.4,0.4c-0.2,0.1-0.4,0.2-0.7,0.3c-2-1.4-3.4-3.8-3.4-6.4c0-4.3,3.5-7.8,7.8-7.8s7.8,3.5,7.8,7.8C24.3,17.8,23,20.1,21.1,21.5z M45.1,22.7l-4.9-3.6v-0.7l0.2,0.2l3.6,2.6L42.6,17l-0.1-0.4l0.3-0.3l3.4-2.5H42h-0.4l-0.1-0.4l-1.4-4.2l-1.4,4.2l-0.1,0.4h-0.4h-4.3l3.4,2.5l0.3,0.3L37.5,17l-1.4,4.2l3.6-2.6l0.2-0.2v0.7L35,22.7l1.9-5.9l-4.9-3.6h6.1l1.9-5.9l1.9,5.9h6.1l-4.9,3.6L45.1,22.7z M71.1,23.1l-4.9-4.9c-1,0.9-2.4,1.4-3.9,1.5V19c3-0.1,5.4-2.5,5.4-5.5c0-3.1-2.5-5.5-5.5-5.5c-3.1,0-5.5,2.5-5.5,5.5c0,3,2.4,5.4,5.4,5.5v0.7c-3.4-0.1-6-2.8-6-6.2c0-3.4,2.8-6.2,6.2-6.2c3.4,0,6.2,2.8,6.2,6.2c0,1.5-0.6,2.9-1.5,4l4.9,4.9L71.1,23.1z"
 
---
+----------------------------------------------------------------
+
+-- Metadata for re-used engine-level control properties
+
+metadata hiliteColor.editor is "com.livecode.pi.color"
+metadata hiliteColor.label is "Selected item color"
+metadata hiliteColor.section is "Colors"
+metadata hiliteColor.default is "10,95,244"
+
+metadata foregroundColor.editor is "com.livecode.pi.color"
+metadata foregroundColor.label is "Item color"
+metadata foregroundColor.section is "Colors"
+metadata foregroundColor.default is "128,128,128"
+
+metadata backgroundColor.editor is "com.livecode.pi.color"
+metadata backgroundColor.label is "Background color"
+metadata backgroundColor.section is "Colors"
+metadata backgroundColor.default is "244,244,244"
+
+metadata borderColor.editor is "com.livecode.pi.color"
+metadata borderColor.label is "Border color"
+metadata borderColor.section is "Colors"
+metadata borderColor.default is "166,166,166"
+
+----------------------------------------------------------------
 
 /**
-Syntax: set the itemArray of <widget> to <pNavArray>
+Syntax: set the itemArray of <widget> to <array>
 Syntax: get the itemArray of <widget>
 
-Summary:  The <itemArray> is all the collective data of the icons and labels of the navbar
+Summary: The full navigation item data.
 
-Parameters:
-pNavArray(array): An array containing all the navigation data:
+Value(array): An array containing all the navigation data.
 
 Description:
-The <itemArray> is a numerically keyed array, each element of which contains
-an array describing the label and icons of the navigation item at that index.
+The <itemArray> is a numerically keyed array.  Each element of the
+array contains an array describing the name, label and icons of the
+navigation item at that index.
+
+The <itemArray> can be used to access and modify all of the navigation
+data at once, rather than setting the <itemNames>, <itemLabels>,
+<itemIcons> and <hilitedItemIcons> individually.
 
 The structure of the <itemArray> is:
 
@@ -90,28 +186,43 @@ Any individual keys ("label", "icon_name", "hilited_icon_name") missing when
 setting the <itemArray> will be added, and set to their defaults - "circle" for
 the icons, and "New Item" for the label.
 
-**Note:** Setting the <navData> to a non-numerically keyed array will cause an
-error to be thrown
+**Note:** When setting the <itemArray>, an error will be thrown if the
+new value is not a numerically-keyed array.
+
+Related: hilitedItemIcons(property), itemIcons(property),
+itemLabels(property), itemNames(property)
+
 */
 property itemArray get getNavData set setNavData
 metadata itemArray.editor is "com.livecode.pi.navbar"
 metadata itemArray.label is "Navigation data"
 
 /**
-Syntax: set the itemNames of <widget> to <pNames>
+Syntax: set the itemNames of <widget> to <names>
 Syntax: get the itemNames of <widget>
 Summary: The names of the navigation items
 
-Parameters:
-pNames(string): A comma delimited list of the navigation item names.
+Value(string): A comma-delimited list of navigation item names.
 
 Description:
-The names of the navigation items of the widget.
+The names of the navigation items of the widget.  These are the names
+used internally to identify each navigation item, rather than the
+<itemLabels> displayed to the user.
 
-Adding an item to the <itemNames> of the navbar causes a new navigation item to
-be created with the default icon and label. Removing an item from the
-<itemNames> causes the corresponding item to be removed from the navigation
-items.
+Setting the <itemNames> can add or remove items to the navigation bar.
+
+If the new value of the <itemNames> has more items than the navigation
+bar, as many new navigation items as necessary are created and added
+to the end of the navigation bar, using the default label and icons.
+
+If the new value of the <itemNames> has fewer items than the
+navigation bar, items are removed from the end of the navigation bar
+as required.
+
+It is not possible to re-order the navigation items by setting the
+<itemNames>.
+
+References: itemLabels(property)
 */
 property itemNames		get getNavNames			set setNavNames
 metadata itemNames.editor is "com.livecode.pi.editorList"
@@ -120,94 +231,111 @@ metadata itemNames.delimiter is ","
 metadata itemNames.label is "Navigation names"
 
 /**
-Syntax: set the itemIcons of <widget> to <pIcons>
+Syntax: set the itemIcons of <widget> to <icons>
 Syntax: get the itemIcons of <widget>
-Summary: The icons for the navigation items when not highlighted
+Summary: The normal-state icons for the navigation items
 
-Parameters:
-pIcons(string): A comma delimited list of icon names.
+Value(string): A comma-delimited list of icon names.
 
 Description:
-The icons of the navigation items of the widget.  Adding an item to the
-<itemIcons> causes a new navigation item to be created with the default label
-and name.
+The names of the icons displayed by the navigation items when not
+highlighted.
 
 Each icon name must be one of the predefined graphics provided by the "IconSVG"
 library.  You can get a list of available predefined path names by running
 `put iconNames()` in the Message Box.
 
-**Note:** Removing an item from the <itemIcons> does not cause the
-corresponding item to be removed from the navigation items, but merely resets
-it to the default icon.
+Setting the <itemIcons> can add items to the navigation bar.  If the
+new value of the <itemIcons> has more items than the navigation bar,
+as many new navigation items as necessary are created and added to the
+end of the navigation bar, using a default <itemNames|name>,
+<itemLabels|label> and <hilitedItemIcons|highlighted icon>.
 
-References: hilitedItemIcons (property)
+If the new value of the <itemIcons> has fewer items than the
+navigation bar, the remaining navigation items have their icons reset
+to the default icon.
+
+References: hilitedItemIcons(property), itemLabels(property),
+itemNames(property)
 
 */
 property itemIcons		get getNavIcons			set setNavIcons
 metadata itemIcons.user_visible is "false"
 
 /**
-Syntax: set the hilitedItemIcons of <widget> to <pIcons>
+Syntax: set the hilitedItemIcons of <widget> to <icons>
 Syntax: get the hilitedItemIcons of <widget>
-Summary: The icons for the navigation items when hilited
+Summary: The highlighted-state icons for the navigation icons
 
-Parameters:
-pIcons(string): A comma delimited list icon names.
+Value(string): A comma-delimited list of icon names.
 
 Description:
-The icons for the navigation items of the widget to be shown when the items are
-highlighted.  Adding an item to the <hilitedItemIcons> causes a new navigation
-item to be created with the default label and name.
-
-The name of an icon must be one of the names returned by the iconNames() function of the com.livecode.library.iconSVG library.
+The names of the icons displayed by the navigation items when
+highlighted.
 
 Each icon name must be one of the predefined graphics provided by the "IconSVG"
 library.  You can get a list of available predefined path names by running
 `put iconNames()` in the Message Box.
 
-**Note:** Removing an item from the <hilitedItemIcons> does not cause the
-corresponding item to be removed from the navigation items, but merely resets
-it to the default icon.
+Setting the <hilitedItemIcons> can add items to the navigation bar.
+If the new value of the <hilitedItemIcons> has more items than the
+navigation bar, as many new navigation items as necessary are created
+and added to the end of the navigation bar, using a default
+<itemNames|name>, <itemLabels|label> and <itemIcons|normal icon>.
 
-References: itemIcons (property)
+If the new value of the <hilitedItemIcons> has fewer items than the
+navigation bar, the remaining navigation items have their
+highlighted-state icons reset to the default icon.
+
+References: itemIcons(property), itemLabels(property), itemNames(property)
 */
 property hilitedItemIcons		get getNavSelectedIcons			set setNavSelectedIcons
 metadata hilitedItemIcons.user_visible is "false"
 
 /**
-Syntax: set the itemLabels of <widget> to <pLabels>
+Syntax: set the itemLabels of <widget> to <labels>
 Syntax: get the itemLabels of <widget>
-Summary: The labels displayed for the navigation items
+Summary: The labels of the navigation items
 
-Parameters:
-pLabels(string): A comma delimited list of labels.
+Value(string): A comma-delimited list of labels.
 
 Description:
-The display labels for navigation items of the widget. Adding an item to the
-<itemLabels> causes a new navigation item to be created with the default icon
-and name.
+The display labels for the navigation items of the widget.
 
-**Note:** Removing an item from the <itemLabels> does not cause the
-corresponding item to be removed from the navigation items, but merely resets
-it to the default label.
+Setting the <itemLabels> can add items to the navigation bar.  If the
+new value of the <itemLabels> has more items than the navigation bar,
+as many new navigation items as necessary are created and added to the
+end of the navigation bar, using a default <itemNames|name>,
+<itemIcons|icon> and <hilitedItemIcons|highlighted icon>.
+
+If the new value of the <itemLabels> has fewer items than the
+navigation bar, the remaining navigation items have their labels reset
+to the default icon.
+
+References: hilitedItemIcons (property), itemIcons (property),
+itemNames(property)
 */
 property itemLabels		get getNavLabels		set setNavLabels
 metadata itemLabels.user_visible is "false"
 
 /**
-Syntax: set the itemStyle of <widget> to <pItemStyle>
+Syntax: set the itemStyle of <widget> to <style>
 Syntax: get the itemStyle of <widget>
 
-Summary: The display style of the widget
+Summary: The style with which navigation items are displayed
 
-Parameters:
-pItemStyle(enum): The display style
--"icons": display icons only
--"text": display names only
--"both": display icons and names
+Value(enum): The display style
+- "icons": display icons only
+- "text": display names only
+- "both": display icons and names
 
 Description:
-Use the <itemStyle> property to control which elements of the navigation items are displayed.
+The <itemStyle> property determines whether navigation items are
+displayed with icons, with labels, or with icons positioned below
+labels.
+
+Related: hilitedItemIcons (property), itemIcons (property),
+itemLabels(property)
 */
 property itemStyle	get mItemStyle	set setItemStyle
 metadata itemStyle.editor is "com.livecode.pi.enum"
@@ -215,84 +343,22 @@ metadata itemStyle.options is "icons,text,both"
 metadata itemStyle.default is "both"
 metadata itemStyle.label is "Display style"
 
-/**
-Syntax: set the hiliteColor of <widget> to <pColor>
-Syntax: get the hiliteColor of <widget>
-
-Summary: Controls the color of navbar icons and text when selected.
-
-Description:
-Use the <hiliteColor> property to control the color used to draw icons and text
-of the currently-selected navbar item.
-*/
-metadata hiliteColor.editor is "com.livecode.pi.color"
-metadata hiliteColor.label is "Selected item color"
-metadata hiliteColor.section is "Colors"
-metadata hiliteColor.default is "10,95,244"
 
 /**
-Name: foreColor
-
-Syntax: set the foreColor of <widget> to <pColor>
-Syntax: get the foreColor of <widget>
-
-Summary: Controls the color of navbar icons and text when not selected.
-
-Description:
-Use the <foreColor> property to control the color used to draw icons and text
-of the navbar items that are not selected.
-*/
-metadata foregroundColor.editor is "com.livecode.pi.color"
-metadata foregroundColor.label is "Item color"
-metadata foregroundColor.section is "Colors"
-metadata foregroundColor.default is "128,128,128"
-
-/**
-Name: backColor
-
-Syntax: set the backColor of <widget> to <pColor>
-Syntax: get the backColor of <widget>
-
-Summary: Controls the background color of the navbar.
-
-Description:
-Use the <backColor> property to control the way the background of the navbar
-is painted.
-*/
-metadata backgroundColor.editor is "com.livecode.pi.color"
-metadata backgroundColor.label is "Background color"
-metadata backgroundColor.section is "Colors"
-metadata backgroundColor.default is "244,244,244"
-
-/**
-Syntax: set the borderColor of <widget> to <pColor>
-Syntax: get the borderColor of <widget>
-
-Summary: Controls the border color of the navbar.
-
-Description:
-Use the <borderColor> property to control the color used to draw the top border
-of the navbar.
-*/
-metadata borderColor.editor is "com.livecode.pi.color"
-metadata borderColor.label is "Border color"
-metadata borderColor.section is "Colors"
-metadata borderColor.default is "166,166,166"
-
-/**
-Syntax: set the hilitedItem of <widget> to <pItemNumber>
+Syntax: set the hilitedItem of <widget> to <itemNumber>
 Syntax: get the hilitedItem of <widget>
 
 Summary: The index of the highlighted navigation item
 
-Parameters:
-pItemNumber(integer): The number of a navigation item.
+Value(integer): The item number of the navigation item that is highlighted.
 
 Description:
 The <hilitedItem> is the item number of the currently-highlighted navigation
-item, starting from 1.
+item, starting from 1.  It can be used as a key into the <itemArray>.
 
-References: hilitedItemName (property)
+Related: hilitedItemName (property)
+
+References: itemArray(property)
 */
 property hilitedItem	get mSelectedItem 	set setNavSelectedItem
 metadata hilitedItem.editor is "com.livecode.pi.integer"
@@ -307,8 +373,7 @@ Syntax: get the hilitedItemName of <widget>
 
 Summary: The name of the highlighted navigation item
 
-Parameters:
-pName(string): The name of a navigation item.
+Value(string): The name of the navigation item that is highlighted.
 
 Description:
 The <hilitedItemName> is the name of the currently-highlighted navigation
@@ -320,14 +385,18 @@ property hilitedItemName	get getNavSelectedItemName	set setNavSelectedItemName
 metadata hilitedItemName.label is "Selected item name"
 
 /**
-Syntax: set the editMode of <widget> to (true | false)
+Syntax: set the editMode of <widget> to {true | false}
 Syntax: get the editMode of <widget>
 
-Summary: Whether the widget is in edit mode or not
+Summary: Whether the widget is in edit mode
 
 Description:
-This is currently an experimental feature of the navigation bar, and allows the icons to
-be changed by clicking on the outlined regions, and new items to be added with the add button.
+**Note:** This feature is currently **experimental** and may change or
+be removed in future versions.
+
+When the <editMode> is enabled, the navigation items' icons can be
+changed by clicking on the outlined regions, and new items can be added
+with the add button.
 */
 property editMode get mEditMode set setEditMode
 metadata editMode.user_visible is "false"
@@ -335,41 +404,52 @@ metadata editMode.user_visible is "false"
 /**
 Syntax: get the desiredHeight of <widget>
 
-Summary: The height that the widget ought to be displayed at
+Summary: The optimal height for the widget
 
 Example:
 create widget as "com.livecode.widget.navbar"
 set the height of it to the desiredHeight of it
 
 Description:
-Returns the height that the widget ought to be displayed at
+**Note:** This feature is currently **experimental** and may change or
+be removed in future versions.
+
+Returns the preferred height for widget, calculated from its current
+state.
 */
 property desiredHeight	get getDesiredHeight
 metadata desiredHeight.user_visible is "false"
 
 /**
-Syntax: set the <showBorder> of <widget> to {true | false}
-Syntax: get the <showBorder> of <widget>
+Syntax: set the showBorder of <widget> to {true | false}
+Syntax: get the showBorder of <widget>
 
-Summary: Whether the dividing line at the top of the navbar is drawn or not
+Summary: Whether there is a dividing line at the top of the widget
 
 Description:
-Use the <showBorder> property to determine whether the dividing line at the top
-of the navbar is drawn or not.
+When the <showBorder> property is `true`, the navigation bar has a
+dividing line along its top edge.
+
+Related: borderColor(property)
 */
 property showBorder get mShowDivide set setShowDivide
 metadata showBorder.default is "true"
 metadata showBorder.label is "Show border"
 
 /**
-Syntax: set the <opaque> of <widget> to {true | false}
-Syntax: get the <opaque> of <widget>
+Name: opaque
 
-Summary: Whether the background of the navbar is opaque
+Syntax: set the opaque of <widget> to {true | false}
+Syntax: get the opaque of <widget>
+
+Summary: Whether the background of the widget is filled
 
 Description:
-If the <opaque> property is `false`, the background of the navbar will be
-transparent.
+If the <opaque> property is `true`, the background of the navigation
+bar is filled with the <backColor>.  If it is `false` the background
+is transparent.
+
+References: backColor(property)
 */
 property "opaque" get mShowBackground set setShowBackground
 metadata opaque.default is "true"
@@ -1178,19 +1258,20 @@ public handler setNavSelectedItem(in pSelectedItem as Integer) returns nothing
 end handler
 
 public handler setNavSelectedItemName(in pName as String) returns nothing
-	variable tCount as Number
+	variable tCount as Integer
 	variable tItem as Array
-
+	
 	-- Find the item index corresponding to pName and set it as the
 	-- currently-highlighted item.
-	put 0 into tCount
-	repeat for each element tItem in mNavData
-		add 1 to tCount
-		if mNavData["name"] is pName then
+	
+	repeat with tCount from 1 up to the number of elements in mNavData
+		put mNavData[tCount] into tItem
+		if tItem["name"] is pName then
 			setNavSelectedItem(tCount)
 			exit repeat
 		end if
 	end repeat
+
 end handler
 
 public handler getNavSelectedItemName() returns String

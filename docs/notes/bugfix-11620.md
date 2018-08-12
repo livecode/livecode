@@ -1,1 +1,0 @@
-# pixelScale global property not documented

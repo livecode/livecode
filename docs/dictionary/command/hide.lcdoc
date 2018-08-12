@@ -4,43 +4,76 @@ Type: command
 
 Syntax: hide <object> [with visual [effect] <effectName> [<speed>] [to <finalImage>]]
 
-Summary: Makes an <object> invisible.
+Summary:
+Makes an <object(glossary)> invisible.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 hide button 14
 
 Example:
-hide field "New" with visual effect dissolve
+hide field "New" with visual effect "dissolve"
 
 Example:
-hide this stack with visual dissolve fast to black
+hide this stack with visual "dissolve" fast to black
 
 Parameters:
-object: Any open stack, or any control in an open stack.
-effectName: The effectName, speed, and finalImage are described in the visual effect command. These three parameters operate the same way as they do in the visual effect command.
-speed: 
-finalImage: 
+object:
+Any open stack, or any control in an open stack.
+
+effectName:
+The effectName, speed, and finalImage are described in the visual effect
+command. These three parameters operate the same way as they do in the
+visual effect command.
+
+speed:
+
+
+finalImage:
+
 
 Description:
-Use the <hide> <command> to hide <object|objects> temporarily or permanently.
+Use the <hide> <command> to hide <object|objects> temporarily or
+permanently. 
 
-Hiding an object sets its visible <property> to false. The <object> itself is still in the <stack> and can be restored with the <show> <command>. You can also set the <showInvisibles> <property> to true to override the <visible> <property> and show all <object|objects>.
+Hiding an object sets its visible <property> to false. The
+<object(glossary)> itself is still in the <stack> and can be restored
+with the <show> <command>. You can also set the <showInvisibles>
+<property> to true to override the <visible> <property> and show all
+<object|objects>. 
 
-Hiding a stack hides its window, but does not close the stack. If the stack is being displayed as a drawer, hiding it slides it back into its parent stack.
+Hiding a stack hides its window, but does not close the stack. If the
+stack is being displayed as a drawer, hiding it slides it back into its
+parent stack.
 
-You can hide a card without causing a script error, but doing so has no effect.
+You can hide a card without causing a script error, but doing so has no
+effect. 
 
 Hiding a group hides all the controls in the group.
 
 Changes:
-The ability to use QuickTime special effects was introduced in version 1.1. In previous versions, only the built-in visual effects listed under the visual effect command were available.
+The ability to use QuickTime special effects was introduced in version
+1.1. In previous versions, only the built-in visual effects listed under
+the visual effect command were available.
 
-References: black (keyword), showPict (property), imageSource (property), visible (property), showInvisibles (property), disable (command), answer effect (command), show (command), hide menubar (command), stack (object), object (object), command (glossary), property (glossary)
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: disable (command), answer effect (command), show (command),
+hide menubar (command), visual effect (command), object (glossary), 
+command (glossary), property (glossary), black (keyword), stack (object), 
+showPict (property), imageSource (property), visible (property), 
+showInvisibles (property)
 
 Tags: ui
+

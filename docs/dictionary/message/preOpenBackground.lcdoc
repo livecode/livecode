@@ -2,17 +2,19 @@ Name: preOpenBackground
 
 Type: message
 
-Syntax: preOpenBackground <backgroundID> 
+Syntax: preOpenBackground <pBackgroundID>
 
-Summary: Sent to the <current card> when you go from a <card> that does not have a <group> to a <card> that does.
+Summary:
+Sent to the <current card> when you go from a <card> that does not have
+a <group> to a <card> that does.
 
-Associations: card
+Associations: card, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on preOpenBackground theGroup -- move the group's position
@@ -21,12 +23,27 @@ on preOpenBackground theGroup -- move the group's position
 end preOpenBackground
 
 Parameters:
-backgroundID: The short ID property of the background being opened.
+pBackgroundID:
+The short ID property of the background being opened.
 
 Description:
-Handle the <preOpenBackground> <message> to update a <background|background's> appearance before the <background> appears on screen.
+Handle the <preOpenBackground> <message> to update a
+<background|background's> appearance before the <background> appears on
+screen. 
 
-The actual navigation is not triggered by the <preOpenBackground> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <card> with the <group> from opening.
-For each <group> on the card that was not on the previously visited card, a <preOpenBackground> <message> (with the group ID) is sent to the current card. If the card does not handle the message, or passes it, the message proceeds through each group in reverse layer order (from highest to lowest). Each <group> which handles the <message> should be careful to check that the ID matches itself to prevent inadvertantly trappng a message intended for a different group.
+The actual navigation is not triggered by the <preOpenBackground>
+<message>, so <trap|trapping> the <message> and not allowing it to
+<pass> does not prevent the <card> with the <group> from opening. For
+each <group> on the card that was not on the previously visited card, a
+<preOpenBackground> <message> (with the group ID) is sent to the current
+card. If the card does not handle the message, or passes it, the message
+proceeds through each group in reverse layer order (from highest to
+lowest). Each <group> which handles the <message> should be careful to
+check that the ID matches itself to prevent inadvertantly trappng a
+message intended for a different group.
 
-References: card (keyword), openControl (message), openBackground (message), closeBackground (message), preOpenCard (message), group (command), pass (control_st), trap (glossary), current card (glossary), message (glossary), background (glossary)
+References: group (command), pass (control structure), trap (glossary),
+current card (glossary), message (glossary), background (glossary),
+card (keyword), openControl (message), openBackground (message),
+closeBackground (message), preOpenCard (message)
+

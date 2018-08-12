@@ -2,17 +2,20 @@ Name: macToISO
 
 Type: function
 
-Syntax: the macToISO of <macString> 
+Syntax: the macToISO of <macString>
 
 Syntax: macToISO(<macString>)
 
-Summary: <return|Returns> the equivalent of a <Mac OS> <character set|character-set> <string>, translated into the Windows Latin 1< character set(glossary)>.
+Summary:
+<return|Returns> the equivalent of a <Mac OS> 
+<character set|character-set> <string>, translated into the Windows 
+Latin 1 <character set(glossary)>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 macToISO("ISO 8859-1")
@@ -21,17 +24,38 @@ Example:
 macToISO("edilla")
 
 Parameters:
-macString (string): Any <string>.
+macString (string):
+Any <string>.
 
-Returns: The <macToISO> <function> <return|returns> the <macString>, with <characters> whose <ASCII|ASCII value> is greater than 127 converted to their equivalent in the Windows Latin 1 <character set>. Characters whose <ASCII|ASCII value> is less than 128 are left unchanged.
+Returns:
+The <macToISO> <function> <return|returns> the <macString>, with
+<characters> whose <ASCII|ASCII value> is greater than 127 converted to
+their equivalent in the Windows Latin 1 <character set>. Characters
+whose <ASCII|ASCII value> is less than 128 are left unchanged.
 
 Description:
-Use the <macToISO> <function> to translate data that was created on a <Mac OS|Mac OS system> to the Windows Latin 1 <character set> used on <Unix> and <Windows|Windows systems>.
+Use the <macToISO> <function> to translate data that was created on a
+<Mac OS|Mac OS system> to the Windows Latin 1 <character set> used on
+<Unix> and <Windows|Windows systems>.
 
-LiveCode automatically translates text in fields and scripts, as well as the names of custom properties, into the appropriate character set when you move a stack from one platform to another. It is therefore not necessary to translate them. However, the contents of custom properties, since they may contain binary data, are not translated automatically and must be translated if they contain characters whose ASCII value is 128 or greater.
+LiveCode automatically translates text in fields and scripts, as well as
+the names of custom properties, into the appropriate character set when
+you move a stack from one platform to another. It is therefore not
+necessary to translate them. However, the contents of custom properties,
+since they may contain binary data, are not translated automatically and
+must be translated if they contain characters whose ASCII value is 128
+or greater.
 
-Characters whose ASCII value is less than 128 are the same in the Mac OS character set and Windows Latin 1, so they are not changed by the <macToISO> <function>. These characters include uppercase and lowercase letters, numbers, and most punctuation.
+Characters whose ASCII value is less than 128 are the same in the Mac OS
+character set and Windows Latin 1, so they are not changed by the
+<macToISO> <function>. These characters include uppercase and lowercase
+letters, numbers, and most punctuation.
 
-References: string (keyword), characters (keyword), numToChar (function), uniDecode (function), URLDecode (function), Unix (glossary), Windows (glossary), Mac OS (glossary), return (glossary), character set (glossary), ASCII (glossary), function (control_st)
+References: function (control structure), numToChar (function),
+uniDecode (function), URLDecode (function), Unix (glossary),
+Windows (glossary), Mac OS (glossary), return (glossary),
+character set (glossary), ASCII (glossary), string (keyword),
+characters (keyword)
 
 Tags: text processing
+

@@ -4,13 +4,14 @@ Type: object
 
 Syntax: player
 
-Summary: A <control> that displays a movie or sound <file>.
+Summary:
+A <control> that displays a movie or sound <file>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 start player "San Antone"
@@ -19,19 +20,37 @@ Example:
 hide player (the selectedText of button "Current Movie")
 
 Description:
-Use the <player> <object type> to display a movie or sound from a separate <file>.
+Use the <player> <object type> to display a movie or sound from a 
+separate <file>.
 
-Unlike an audio clip or video clip, a player does not contain the movie or sound data. Instead, you use the player's filename <property> to indicate the separate <file> that holds the movie or sound. This reduces the memory required by your <stack>, because the movie or sound data is only <loaded into memory> when it's being used, rather than being <loaded into memory> whenever the <stack file> is open. However, it also makes it possible for the movie or sound data to be misplaced during distribution, since the <file> is separate from your <stack file>.
+Unlike an audio clip or video clip, a player does not contain the movie
+or sound data. Instead, you use the player's filename <property> to 
+indicate the separate <file> that holds the movie or sound. This
+reduces the memory required by your <stack>, because the movie or sound
+data is only <loaded into memory> when it's being used, rather than
+being <loaded into memory> whenever the <stack file> is open. However,
+it also makes it possible for the movie or sound data to be misplaced
+during distribution, since the <file> is separate from your <stack
+file>. 
 
-A player is contained in a card, group, or background. Players cannot contain other objects.
+A player is contained in a card, group, or background. Players cannot 
+contain other objects.
 
-The player object has a number of properties and messages associated with it. To see a list of messages that can be sent to a player as a result of user actions or internal LiveCode events, open the "LiveCode Language Dictionary" page of the main Documentation window, ensure that the player column is visible and use sort and filter to bring the relevant entries to the top.
+>*Important:*  Setting a <player|player's> filename does not 
+automatically update its <currentTime> <property>. If you play a 
+<movie|movie file>, then change the <player|player's> <filename> in 
+order to play another, you must reset the <currentTime> to zero in
+order to start from the beginning of the second <movie> :
 
->*Important:*  Setting a <player|player's> filename does not automatically update its <currentTime> <property>. If you play a <movie|movie file>, then change the <player|player's> <filename> in order to play another, you must reset the <currentTime> to zero in order to start from the beginning of the second <movie> :
+    set the filename of player "My Player" to "SecondMovie.mov"
+    set the currentTime of player "My Player" to zero
 
-  set the filename of player "My Player" to "SecondMovie.mov"
-  set the currentTime of player "My Player" to zero
 
-References: templatePlayer (keyword), control (keyword), file (keyword), filename (property), currentTime (property), qtIdleRate (property), stack (object), player (object), property (glossary), stack file (glossary), movie (glossary), loaded into memory (glossary), object type (glossary), movie (function)
+References: movie (function), property (glossary), stack file (glossary),
+movie (glossary), loaded into memory (glossary), object type (glossary),
+templatePlayer (keyword), control (keyword), file (keyword),
+stack (object), player (object), filename (property),
+currentTime (property), qtIdleRate (property)
 
 Tags: objects
+

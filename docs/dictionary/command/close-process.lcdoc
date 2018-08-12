@@ -2,15 +2,16 @@ Name: close process
 
 Type: command
 
-Syntax: close process <processName> 
+Syntax: close process <processName>
 
-Summary: Closes a <process> that was started with the <open process> <command>.
+Summary:
+Closes a <process> that was started with the <open process> <command>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: process
 
@@ -21,19 +22,36 @@ Example:
 close process tOpenProgram
 
 Parameters:
-processName: The file path to the process you opened with the open process command.
+processName:
+The file path to the process you opened with the open process command.
 
 Description:
-Use the <close process> <command> to tell a <process> to <exit> after you've finished using it.
+Use the <close process> <command> to tell a <process> to <exit> after
+you've finished using it.
 
-On Unix and Windows systems, <close process> closes the <process|process's> <standard input>. The <process> then finishes processing whatever data remains, and exits when done. On <Mac OS|Mac OS systems>, the <close process> <command> has no effect; you can use the <kill> <command> instead to quit an application that LiveCode launched.
+On Unix and Windows systems, <close process> closes the
+<process|process's> <standard input>. The <process> then finishes
+processing whatever data remains, and exits when done. On <Mac OS|Mac OS
+systems>, the <close process> <command> has no effect; you can use the
+<kill> <command> instead to quit an application that LiveCode launched.
 
-The process takes a short time to exit after you issue the <close process> <command>. Since two <process|processes> cannot have the same name, you need to wait for a <process> to exit before opening a new <process> with the same name. To reopen the same <process> after closing it, use the <wait> <command> to delay until the <process> has finished exiting:
+The process takes a short time to exit after you issue the 
+<close process> <command>. Since two <process|processes> cannot have the
+same name, you need to wait for a <process> to exit before opening a new
+<process> with the same name. To reopen the same <process> after closing
+it, use the <wait> <command> to delay until the <process> has finished
+exiting: 
 
-  close process myProcess
-  wait until myProcess is not among the lines of the openProcesses
-  open process myProcess
+    close process myProcess
+    wait until myProcess is not among the lines of the openProcesses
+    open process myProcess
 
-If a process was opened with the access mode neither, it exits automatically when it finishes running, and does not need to be closed.
 
-References: wait (command), kill (command), read from process (command), quit (command), open process (command), openProcesses (function), command (glossary), standard input (glossary), Mac OS (glossary), process (glossary), exit (control_st)
+If a process was opened with the access mode neither, it exits
+automatically when it finishes running, and does not need to be closed.
+
+References: wait (command), kill (command), read from process (command),
+quit (command), open process (command), exit (control structure),
+openProcesses (function), command (glossary), standard input (glossary),
+Mac OS (glossary), process (glossary)
+

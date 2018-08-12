@@ -2,15 +2,17 @@ Name: or
 
 Type: operator
 
-Syntax: <value1> or <value2> 
+Syntax: <value1> or <value2>
 
-Summary: Evaluates to true if either <operand> is true, false if both <operand|operands> are false.
+Summary:
+Evaluates to true if either <operand> is true, false if both
+<operand|operands> are false.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 ("a" &gt; "b") or ("b" &gt; "a") -- evaluates to true
@@ -22,18 +24,44 @@ Example:
 wait until the controlKey is up or the commandKey is up
 
 Parameters:
-value1 (bool): The value1 and value2 are true or false, or expressions that evaluate to true or false.
-value2: 
+value1 (bool):
+The value1 and value2 are true or false, or expressions that evaluate to
+true or false.
+
+value2:
+
 
 Description:
-Use the <or> <operator> to combine two or more <logical> (true or false) <value|values>.
+Use the <or> <operator> to combine two or more <logical> (true or false)
+<value|values>. 
 
-If <value1> is true or <value2> is true, or if both <value1> and <value2> are true, then the <or> <operation> <evaluate|evaluates> to true. Only if both <value1> and <value2> are false does the <expression> value1 or value2 <evaluate> to false.
+If <value1> is true or <value2> is true, or if both <value1> and
+<value2> are true, then the <or> <operation> <evaluate|evaluates> to
+true. Only if both <value1> and <value2> are false does the <expression>
+value1 or value2 <evaluate> to false.
 
-You can combine the logical operators <and>, <or>, and <not> in an <expression>.
+You can combine the logical operators <and>, <or>, and <not> in an
+<expression>. 
 
->*Note:* <LiveCode> uses what is known as "short-circuit evaluation" for <logical> <operator|operators>. This means that <value1> is <evaluate|evaluated> first. If <value1> is true, the <expression> value1 or value2 is true regardless of what <value2> is (because the <expression> <evaluate|evaluates> to true as long as at least one of the <value|values> is true). In this case, LiveCode does not <evaluate> <value2>, since doing so is not necessary to determine the value of value1 or value2. For example, evaluating the <expression> asin(2) normally causes an execution error (because 2 is not a legal <argument> for the arc sine function), but <evaluate|evaluating> the <expression> (1 = 1) or (asin(2) = 1) does not cause an error:  since (1 = 1) is always true, the whole statement is always true and LiveCode never tries to <evaluate> the <asin> <function>.
+>*Note:* <LiveCode> uses what is known as "short-circuit evaluation" for
+> <logical> <operator|operators>. This means that <value1> is
+> <evaluate|evaluated> first. If <value1> is true, the <expression>
+> value1 or value2 is true regardless of what <value2> is (because the
+> <expression> <evaluate|evaluates> to true as long as at least one of
+> the <value|values> is true). In this case, LiveCode does not
+> <evaluate> <value2>, since doing so is not necessary to determine the
+> value of value1 or value2. For example, evaluating the <expression>
+> asin(2) normally causes an execution error (because 2 is not a legal
+> <argument> for the arc sine function), but <evaluate|evaluating> the
+> <expression> (1 = 1) or (asin(2) = 1) does not cause an error: since
+> (1 = 1) is always true, the whole statement is always true and
+> LiveCode never tries to <evaluate> the <asin> <function>.
 
-References: not (operator), and (operator), bitOr (operator), bitXor (operator), asin (function), LiveCode (glossary), operand (glossary), value (glossary), operation (glossary), operator (glossary), logical (glossary), expression (glossary), evaluate (glossary), argument (glossary), function (control_st)
+References: function (control structure), asin (function),
+LiveCode (glossary), operand (glossary), value (glossary),
+operation (glossary), operator (glossary), logical (glossary),
+expression (glossary), evaluate (glossary), argument (glossary),
+not (operator), and (operator), bitOr (operator), bitXor (operator)
 
 Tags: math
+

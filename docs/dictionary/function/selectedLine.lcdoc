@@ -1,20 +1,22 @@
 Name: selectedLine
 
+Synonyms: selectedlines
+
 Type: function
 
 Syntax: the selectedLine
 
 Syntax: selectedLine()
 
-Summary: <return|Returns> a <chunk expression> describing the <line> or <lines> in the text <selection>.
-
-Synonyms: selectedLines
+Summary:
+<return|Returns> a <chunk expression> describing the <line> or <lines>
+in the text <selection>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the selectedLine
@@ -23,21 +25,36 @@ Example:
 select the selectedLine
 
 Returns:
-The <selectedLine> <function> <return|returns> a <chunk expression> of the form
-  line lineNumber of field fieldNumber
+The <selectedLine> <function> <return|returns> a <chunk expression> of
+the form line lineNumber of field fieldNumber
 if the text selection is on one line, or
-  line startLine to endLine of field fieldNumber
+
+    line startLine to endLine of field fieldNumber
+
 if the text selection crosses multiple lines.
 
 Description:
-Use the <selectedLine> <function> to determine which <line> the <selection> or text <insertion point> is in.
+Use the <selectedLine> <function> to determine which <line> the
+<selection> or text <insertion point> is in.
 
-A line is defined as a string that's delimited by return characters. A line in a narrow field may wrap around several times, and look like more than one line on screen, but it is still considered a single line.
+A line is defined as a string that's delimited by return characters. A
+line in a narrow field may wrap around several times, and look like more
+than one line on screen, but it is still considered a single line.
 
-If there is no insertion point or text selection, the <selectedLine> <function> <return|returns> empty.
+If there is no insertion point or text selection, the <selectedLine>
+<function> <return|returns> empty.
 
-To get a chunk expression describing the location of the selection, use the <selectedChunk> <function>. To get the <selected> <lines> in a <list field> that allows <contiguous|non-contiguous> selections, use the <hilitedLine> <property>.
+To get a chunk expression describing the location of the selection, use
+the <selectedChunk> <function>. To get the <selected> <lines> in a <list
+field> that allows <contiguous|non-contiguous> selections, use the
+<hilitedLine> <property>.
 
-References: selected (property), hilitedLine (property), selection (keyword), line (keyword), lines (keyword), selectedLoc (function), selectedChunk (function), mouseLine (function), property (glossary), insertion point (glossary), list field (glossary), contiguous (glossary), return (glossary), chunk expression (glossary), function (control_st)
+References: function (control structure), selectedLoc (function),
+selectedChunk (function), mouseLine (function), property (glossary),
+insertion point (glossary), list field (glossary), contiguous (glossary),
+return (glossary), chunk expression (glossary), selection (keyword),
+line (keyword), lines (keyword), selected (property),
+hilitedLine (property)
 
 Tags: ui
+

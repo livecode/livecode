@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*  
+/**
 This library consists of the operations on lists included in the standard library of LiveCode Builder.
 */
 
@@ -84,7 +84,7 @@ public foreign handler MCListEvalOffsetOfListBefore(in IsFirst as CBool, in Need
 
 --
 
-/*
+/**
 Summary:        Returns the first element of <Target>.
 Target:         An expression which evaluates to a list.
 
@@ -117,7 +117,7 @@ begin
     MCListEvalHeadOf(Target, output)
 end syntax
 
-/* 
+/**
 Summary:        Returns the last element of <Target>.
 Target:         An expression which evaluates to a list.
 
@@ -153,7 +153,7 @@ end syntax
 
 --
 
-/* 
+/**
 Summary:        Pushes <Value> onto <Target>.
 Value:          Any expression.
 Target:         An expression which evaluates to a list.
@@ -182,7 +182,7 @@ begin
     MCListExecPushSingleElementOnto(Value, IsFront, Target)
 end syntax
 
-/* 
+/**
 Summary:        Pops the last element from <Source> into <Target>
 Source:         An expression which evaluates to a list.
 Target:         An expression which evaluates to a container.
@@ -217,7 +217,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:        Returns the number of elements in <Target>
 Target:         An expression which evaluates to a list.
 
@@ -243,7 +243,7 @@ end syntax
 
 --
 
-/* 
+/**
 Summary:        Determines if a given element is in <Target>
 Needle:         Any expression.
 Target:         An expression which evaluates to a list.
@@ -269,7 +269,7 @@ begin
     MCListEvalIsAmongTheElementsOf(Needle, Target, output)
 end syntax
 
-/* 
+/**
 Summary:        Determines if <Target> contains <Needle> as a subsequence.
 Needle:         Any expression which evaluates to a list.
 Target:         An expression which evaluates to a list.
@@ -302,7 +302,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:            Determines whether <Source> begins with <Prefix>
 Prefix: 			An expression which evaluates to a list.
 Source: 			An expression which evaluates to a list.
@@ -332,7 +332,7 @@ begin
     MCListEvalBeginsWith(Source, Prefix, output)
 end syntax
 
-/*
+/**
 Summary:            Determines whether <Source> ends with <Suffix>
 Prefix: 			An expression which evaluates to a list.
 Source: 			An expression which evaluates to a list.
@@ -364,7 +364,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Determines whether <Left> and <Right> are equal or not.
 
 Left:       An expression which evaluates to a list.
@@ -394,7 +394,7 @@ begin
     MCListEvalIsEqualTo(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Left> and <Right> are equal or not.
 
 Left:       An expression which evaluates to a list.
@@ -425,8 +425,7 @@ end syntax
 
 --
 
-/*
-
+/**
 Summary:            Designates the element at index <Index> in <Target>.
 Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				An expression which evaluates to a list.
@@ -454,8 +453,7 @@ begin
     MCListStoreElementOf(input, Index, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the element at index <Index> in <Target>.
 Synonym:            SingletonElementOf
 Index: 				An expression which evaluates to a valid integer index of <Target>.
@@ -484,8 +482,7 @@ begin
     MCListStoreIndexOf(input, Target, Index)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the elements between indices <Start> and <Finish> in <Target>.
 
 Start:              An expression which evaluates to a valid integer index of <Target>.
@@ -515,8 +512,7 @@ begin
     MCListStoreElementRangeOf(input, Start, Finish, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the first element in <Target>.
 Target:				An expression which evaluates to a list.
 
@@ -535,8 +531,7 @@ begin
 	MCListStoreFirstElementOf(input, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the last element in <Target>.
 Target:				An expression which evaluates to a list.
 
@@ -557,8 +552,7 @@ end syntax
 
 --
 
-/*
-
+/**
 Summary:            Deletes the element at index <Index> in <Target>.
 Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				A list container.
@@ -577,8 +571,7 @@ begin
 	MCListExecDeleteElementOf(Index, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Deletes the elements between indices <Start> and <Finish> in <Target>.
 
 Start:              An expression which evaluates to a valid integer index of <Target>.
@@ -599,8 +592,7 @@ begin
 	MCListExecDeleteElementRangeOf(Start, Finish, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Deletes the first element of <Target>.
 Target:				A list container.
 
@@ -619,8 +611,7 @@ begin
 end syntax
 
 
-/*
-
+/**
 Summary:            Deletes the last element of <Target>.
 Target:				A list container.
 
@@ -640,8 +631,7 @@ end syntax
 
 --
 
-/*
-
+/**
 Summary:            Removes the elements of <Target> from <Start > to <Finish> and inserts each of the elements of
                     <Source> into <Target> at <Start>.
 Source:             An expression which evaluates to a list.
@@ -684,8 +674,7 @@ begin
     MCListSpliceIntoElementRangeOf(Source, Start, Finish, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Removes the element of <Target> at <Index> and inserts each of the elements of <Source> into
                     <Target> at <Index>.
 Source:             An expression which evaluates to a list.
@@ -725,8 +714,7 @@ begin
     MCListSpliceIntoElementOf(Source, Index, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Inserts each of the elements of <Source> into <Target> before element at index <Index>.
 Source:             An expression which evaluates to a list.
 Index:              An expression which evaluates to a valid integer index of <Target>.
@@ -766,8 +754,7 @@ begin
     MCListSpliceBeforeElementOf(Source, Index, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Inserts each of the elements of <Source> into <Target> after element at index <Index>.
 Source:             An expression which evaluates to a list.
 Index:              An expression which evaluates to a valid integer index of <Target>.
@@ -809,8 +796,7 @@ end syntax
 
 --
 
-/* 
-
+/**
 Summary: 		Designates the list of length zero.
 
 Example:
@@ -832,7 +818,7 @@ begin
 	MCListEvalEmpty(output)
 end syntax
 
-/*
+/**
 Summary:        Repeat over the elements of a list
 Iterand:        Any variable of appropriate type.
 
@@ -865,7 +851,7 @@ end syntax
 
 ----------------------------------------------------------------
 
-/*
+/**
 Summary:	Find the first or last occurrence of <Needle> within <Haystack>
 
 Needle:	An expression which evaluates to any value.
@@ -899,7 +885,7 @@ begin
 	MCListEvalIndexOfElement(IsLast, Needle, Haystack, output)
 end syntax
 
-/*
+/**
 Summary:	Find the first or last occurrence of <Needle> within the tail of <Haystack>
 
 Needle:	An expression which evaluates to any value.
@@ -933,7 +919,7 @@ begin
 	MCListEvalIndexOfElementAfter(IsLast, Needle, After, Haystack, output)
 end syntax
 
-/*
+/**
 Summary:	Find the first or last occurrence of <Needle> within the head of <Haystack>
 
 Needle:	An expression which evaluates to any value.
@@ -970,7 +956,7 @@ end syntax
 
 ----------------------------------------------------------------
 
-/*
+/**
 Summary:	Find the first or last occurrence of <Needle> within <Haystack>
 
 Needle:	An expression which evaluates to a list.
@@ -1005,7 +991,7 @@ begin
 	MCListEvalOffsetOfList(IsLast, Needle, Haystack, output)
 end syntax
 
-/*
+/**
 Summary:	Find the first or last occurrence of <Needle> within the tail of <Haystack>
 
 Needle:	An expression which evaluates to any list.
@@ -1043,7 +1029,7 @@ begin
 	MCListEvalOffsetOfListAfter(IsLast, Needle, After, Haystack, output)
 end syntax
 
-/*
+/**
 Summary:	Find the first or last occurrence of <Needle> within the head of <Haystack>
 
 Needle:	An expression which evaluates to List.
@@ -1078,6 +1064,64 @@ syntax ListOffsetBefore is prefix operator with function chunk precedence
 	"the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalOffsetOfListBefore(IsFirst, Needle, Before, Haystack, output)
+end syntax
+
+----------------------------------------------------------------
+
+public foreign handler MCListEvalConcatenate(in Left as List, \
+		in Right as List, out Result as List) returns nothing \
+		binds to "<builtin>"
+
+/**
+Summary:	Concatenate two lists.
+
+LeftList:	The List to go at the start of the resulting list.
+RightList:	The List to go at the end of the resulting list.
+
+Returns:	A newly created List built from <LeftList> and <RightList>.
+
+Example:
+	variable tVar
+	put ["a", "b"] & ["c", "d"] into tVar
+	-- tVar contains ["a", "b", "c", "d"]
+
+Description:
+Returns a newly-created list consisting of the elements of <LeftList>
+followed by the elements of <RightList>.
+
+Tags: Lists
+*/
+
+syntax ConcatenateLists is left binary operator with concatenation precedence
+    <Left: Expression> "&" <Right: Expression>
+begin
+    MCListEvalConcatenate(Left, Right, output)
+end syntax
+
+----------------------------------------------------------------
+
+public foreign handler MCListExecReverseElementsOf(inout Target as List) \
+		returns nothing binds to "<builtin>"
+
+/**
+Summary:	Reverse a list
+Target:	A list
+
+Example:
+	variable tList
+	put [1, 2, 3] into tList
+	reverse tList
+	expect that tList is [3, 2, 1]
+
+Description:
+Reverses the order of elements in the <Target>.
+
+Tags: Lists
+*/
+syntax ReverseElementsOfList is statement
+	"reverse" <Target: Expression>
+begin
+	MCListExecReverseElementsOf(Target)
 end syntax
 
 end module

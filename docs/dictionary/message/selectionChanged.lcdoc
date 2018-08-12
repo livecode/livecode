@@ -4,30 +4,46 @@ Type: message
 
 Syntax: selectionChanged
 
-Summary: Sent to a <field> or <player> when the <selection> is changed.
+Summary:
+Sent to a <field> or <player> when the <selection> is changed.
 
-Associations: field
+Associations: field, player
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on selectionChanged -- display selected char number
-  put word 2 of the selectedChunk into field Character Number
+  put word 2 of the selectedChunk into field "Character Number"
 end selectionChanged
 
 Description:
-Handle the <selectionChanged> <message> if you want to perform updates or do some action when the user changes the <selected> text of a <field> or the <selected> portion of a <player(keyword)>. 
+Handle the <selectionChanged> <message> if you want to perform updates
+or do some action when the user changes the <selected> text of a <field>
+or the <selected> portion of a <player(keyword)>.
 
-The <selectionChanged> <message> is sent to a <field> whenever the user makes a text <selection> or moves the <insertion point> in the <field>, after the <selection> is changed. 
+The <selectionChanged> <message> is sent to a <field> whenever the user
+makes a text <selection> or moves the <insertion point> in the <field>,
+after the <selection> is changed.
 
-The <selectionChanged> <message> is sent to a <player(keyword)> whenever the user <select|selects> a portion of the sound or movie, or when a <handler> sets the <player(object)|player's> <startTime> or <endTime> <property>. 
+The <selectionChanged> <message> is sent to a <player(keyword)> whenever
+the user <select|selects> a portion of the sound or movie, or when a
+<handler> sets the <player(object)|player's> <startTime> or <endTime>
+<property>. 
 
->*Note:* If an already-selected-item in a list is reselected a <selectionChanged message> will still be sent.
+>*Note:* If an already-selected-item in a list is reselected a
+> <selectionChanged> <message> will still be sent.
 
-References: selected (property), startTime (property), endTime (property), selection (keyword), field (keyword), player (keyword), currentTimeChanged (message), selectionChanged message (message), selectedObjectChanged (message), arrowKey (message), select (command), player (object), handler (glossary), insertion point (glossary), message (glossary), field (glossary), property (glossary), select (glossary)
+References: select (command), handler (glossary),
+insertion point (glossary), message (glossary), field (glossary),
+property (glossary), select (glossary), selection (keyword),
+field (keyword), player (keyword), currentTimeChanged (message),
+selectionChanged (message), selectedObjectChanged (message),
+arrowKey (message), player (object), selected (property),
+startTime (property), endTime (property)
 
 Tags: ui
+

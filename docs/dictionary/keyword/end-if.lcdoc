@@ -4,22 +4,30 @@ Type: keyword
 
 Syntax: end if
 
-Summary: Ends an <if> <control> <control structure|structure>.
+Summary:
+Ends an <if> <control> <control structure|structure>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 end if
 
 Description:
-Use the <end if> <keyword> to mark the end of an <if> <control structure>.
+Use the <end if> <keyword> to mark the end of an <if> <control
+structure>. 
 
-The <end if> <keyword> is used only with certain forms of the <if> <control structure>. If the entire <if> <control structure> is on one line, or if the <else> clause is on one line, the <end if> <keyword> is not used.
+The <end if> <keyword> is used only with certain forms of the <if>
+<control structure>. If the entire <if> <control structure> is on one
+line, or if the <else> clause is on one line, the <end if> <keyword> is
+not used.
 
 The <end if> <keyword> occurs on a line by itself.
 
-References: then (keyword), end (keyword), else (keyword), control (keyword), keyword (glossary), control structure (glossary), if (control_st), break (control_st)
+References: if (control structure), break (control structure),
+keyword (glossary), control structure (glossary), then (keyword),
+end (keyword), else (keyword), control (keyword)
+

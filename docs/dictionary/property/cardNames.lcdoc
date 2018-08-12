@@ -4,13 +4,17 @@ Type: property
 
 Syntax: get the cardNames of {group | stack}
 
-Summary: Lists the short <name> <property> of all the <card|cards> in a <stack>, or all the <card|cards> that contain a specified <group>.
+Summary:
+Lists the short <name> <property> of all the <card|cards> in a <stack>,
+or all the <card|cards> that contain a specified <group>.
+
+Associations: group, stack
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put line 1 of the cardNames of this stack into firstCard
@@ -19,16 +23,26 @@ Example:
 go card (line x of the cardNames of group "Stats")
 
 Value:
-The <cardNames> of a <stack> consists of a list of all the <card|cards> in the <stack>, one per <line>. The <cardNames> of a <group> consists of a list of all the <card|cards> that the <group> is placed on, one per <line>.
-This property is read-only and cannot be set.
+The <cardNames> of a <stack> consists of a list of all the <card|cards>
+in the <stack>, one per <line>. The <cardNames> of a <group> consists of
+a list of all the <card|cards> that the <group> is placed on, one per
+<line>. This property is read-only and cannot be set.
 
 Description:
-Use the <cardNames> <property> to list the <card(object)|cards> in a <stack>.
+Use the <cardNames> <property> to list the <card(object)|cards> in a
+<stack>. 
 
-Each line of the <cardNames> contains the short <name> of a <card(keyword)>.
+Each line of the <cardNames> contains the short <name> of a
+<card(keyword)>. 
 
-The <cardNames> of a <group(command)> only reports card names for top-level <group(glossary)|groups> (that is, <group(glossary)|groups> that are not contained in another <group(command)>). The <cardNames> <property> of a <nest|nested> <group(command)> always reports empty.
+The <cardNames> of a <group(command)> only reports card names for
+top-level <group(glossary)|groups> (that is, <group(glossary)|groups>
+that are not contained in another <group(command)>). The <cardNames>
+<property> of a <nest|nested> <group(command)> always reports empty.
 
-References: name (property), card (keyword), line (keyword), nameChanged (message), group (command), card (object), stack (object), property (glossary), nest (glossary), group (glossary)
+References: group (command), property (glossary), nest (glossary),
+group (glossary), card (keyword), line (keyword), nameChanged (message),
+card (object), stack (object), name (property)
 
 Tags: objects
+

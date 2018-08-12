@@ -189,7 +189,7 @@ private command engineBuilderBuildEnvironment pEdition, pVersion
    local tKeyFile
    put the tempName into tKeyFile
    put tPubKey into URL ("binfile:" & tKeyFile)
-   get shell(builderSystemFolder() & "/public_key_setter -ui" && builderCommercialFolder() & "/src/Environment.rev" && tKeyFile)
+   get shell(builderSystemFolder() & "/public_key_setter -ui" && builderCommercialFolder() & "/src/environment.livecode" && tKeyFile)
    builderLog "message", it
    delete file tKeyFile
    

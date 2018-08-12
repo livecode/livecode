@@ -4,13 +4,15 @@ Type: function
 
 Syntax: atan2(<yCoordinate>, <xCoordinate>)
 
-Summary: <return|Returns> the arc tangent of one number divided by another, using the <sign> of both.
+Summary:
+<return|Returns> the arc tangent of one number divided by another, using
+the <sign> of both.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 atan2(-1,-1) -- returns 4/3 * pi
@@ -19,22 +21,36 @@ Example:
 atan2(thisNumber,thatNumber)
 
 Parameters:
-yCoordinate: A number or an expression that evaluates to a number.
-xCoordinate: A number or an expression that evaluates to a number.
+yCoordinate:
+A number or an expression that evaluates to a number.
 
-The result: The result of the <atan2> <function> is <return|returned> in <radian|radians>. To get this result in <degree|degrees>, use the following <custom function>:.
+xCoordinate:
+A number or an expression that evaluates to a number.
 
-Returns: The <atan2> <function> <return|returns> a number between -pi and pi.
+Returns:
+The <atan2> <function> <return|returns> a number between -pi and pi.
+
+The result:
+The result of the <atan2> <function> is <return|returned> in
+<radian|radians>. To get this result in <degree|degrees>, use the
+following <custom function>:
+
+    function atan2InDegrees pFirstArg,pSecondArg
+        return atan2(pFirstArg,pSecondArg) * 180 / pi
+    end atan2InDegrees
 
 Description:
-Use the <atan2> <function> to find the arc tangent of one number divided by another when <sign> is significant.
+Use the <atan2> <function> to find the arc tangent of one number divided
+by another when <sign> is significant.
 
-In most cases, atan2(y,x) is equal to atan(y/x). However, if both x and y are negative, the sign of x/y is positive. In this case, the atan function <return|returns> an angle in the first quadrant, but the <atan2> <function> <return|returns> an angle in the third quadrant.
+In most cases, atan2(y,x) is equal to atan(y/x). However, if both x and
+y are negative, the sign of x/y is positive. In this case, the atan
+function <return|returns> an angle in the first quadrant, but the
+<atan2> <function> <return|returns> an angle in the third quadrant.
 
-  function atan2InDegrees firstArg,secondArg
-    return atan2(firstArg,secondArg) * 180 / pi
-  end atan2InDegrees
-
-References: pi (constant), sign (glossary), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control_st)
+References: pi (constant), function (control structure), sign (glossary),
+radian (glossary), custom function (glossary), return (glossary),
+degree (glossary)
 
 Tags: math
+

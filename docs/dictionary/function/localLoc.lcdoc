@@ -2,17 +2,20 @@ Name: localLoc
 
 Type: function
 
-Syntax: the localLoc of <globalPoint> 
+Syntax: the localLoc of <globalPoint>
 
 Syntax: localLoc(<globalPoint>)
 
-Summary: <return|Returns> the equivalent, in <relative coordinates|local coordinates>, of a <point> given in <absolute coordinates|global coordinates>.
+Summary:
+<return|Returns> the equivalent, in <relative coordinates|local
+coordinates>, of a <point> given in <absolute coordinates|global
+coordinates>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 localLoc((90,174))
@@ -21,20 +24,35 @@ Example:
 localLoc(the location of field 1)
 
 Parameters:
-globalPoint: 
-point: Any expression that evaluates to a point--a vertical and horizontal distance from the top left of the screen, separated by a comma.
+globalPoint(point):
+Any expression that evaluates to a <point(glossary)>--a vertical and horizontal
+distance from the top left of the screen, separated by a comma.
 
-Returns: The <localLoc> <function> <return|returns> two <integer|integers> separated by a comma.
+Returns(point):
+The <localLoc> <function> <return|returns> two <integer|integers>
+separated by a comma.
 
 Description:
-Use the <localLoc> <function> to translate between screen and <relative coordinates|window coordinates>.
+Use the <localLoc> <function> to translate between screen and <relative
+coordinates|window coordinates>.
 
-In window coordinates, the point 0,0 is at the top left of the stack window. In screen coordinates, the point 0,0 is at the top left of the screen.
+In window coordinates, the <point(glossary)> 0,0 is at the top left of the stack
+window. In screen coordinates, the <point(glossary)> 0,0 is at the top left of
+the screen.
 
-The point returned by the <localLoc> <function> is relative to the top left of the <current stack>.
+The <point(glossary)> returned by the <localLoc> <function> is relative to the top
+left of the <current stack>.
 
-The first item of the returned value is the horizontal distance in pixels from the left edge of the current stack to the location given by <point>.  The second <item> of the <return value|returned value> is the vertical distance from the top edge of the <current stack> to the location given by <point>.
+The first item of the returned value is the horizontal distance in
+pixels from the left edge of the current stack to the location given by
+<globalPoint>. The second <item> of the <return value|returned value> is the
+vertical distance from the top edge of the <current stack> to the
+location given by <globalPoint>.
 
-References: item (keyword), point (keyword), relative (keyword), selectedLoc (function), relative coordinates (glossary), current stack (glossary), absolute coordinates (glossary), return (glossary), return value (glossary), integer (glossary), function (control_st)
+References: function (control structure), selectedLoc (function),
+relative coordinates (glossary), current stack (glossary),
+absolute coordinates (glossary), return (glossary),
+return value (glossary), integer (glossary), item (keyword),
+point (keyword), point (glossary), relative (keyword)
 
 Tags: ui

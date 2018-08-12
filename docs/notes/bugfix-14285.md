@@ -1,1 +1,0 @@
-#    mobileCanMakePurchase() stops in Android

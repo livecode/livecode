@@ -1,18 +1,19 @@
 Name: scrollbar
 
+Synonyms: sb
+
 Type: object
 
 Syntax: scrollbar
 
-Summary: A <control> that indicates a position or setting.
-
-Synonyms: sb
+Summary:
+A <control> that indicates a position or setting.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the style of scrollbar "Progress" to progress
@@ -21,14 +22,20 @@ Example:
 if the thumbPosition of scrollbar "Level" &gt; 400 then doOverflow
 
 Description:
-Use the <scrollbar> <object type> to display the current level or the progress of a task, or to let the user set a level or amount.
+Use the <scrollbar> <object type> to display the current level or the 
+progress of a task, or to let the user set a level or amount.
 
-A scrollbar can be displayed as a standard scroll bar, a progress bar, or a sliding control, depending on the setting of the scrollbar's style <property>. <scrollbar|Scrollbars> can be vertical or horizontal, depending on whether their <height> or <width> is greater.
+A scrollbar can be displayed as a standard scroll bar, a progress bar, 
+or a sliding control, depending on the setting of the scrollbar's
+<style> <property>. <scrollbar|Scrollbars> can be vertical or
+horizontal, depending on whether their <height> or <width> is greater.
 
-A scrollbar is contained in a card, group, or background. Scrollbars cannot contain other objects.
+A scrollbar is contained in a card, group, or background. Scrollbars 
+cannot contain other objects.
 
-The scrollbar object has a number of properties and messages associated with it. To see a list of messages that can be sent to a scrollbar as a result of user actions or internal LiveCode events, open the "LiveCode Language Dictionary" page of the main Documentation window, ensure that the scrollbar column is visible and use sort and filter to bring the relevant entries to the top
-
-References: templateScrollbar (keyword), control (keyword), height (property), width (property), scrollbarDrag (message), scrollbar (object), property (glossary), object type (glossary)
+References: property (glossary), object type (glossary),
+templateScrollbar (keyword), control (keyword), scrollbarDrag (message),
+scrollbar (object), height (property), width (property), style (property)
 
 Tags: objects
+

@@ -4,13 +4,15 @@ Type: function
 
 Syntax: flushEvents(<eventType>)
 
-Summary: Clears pending <event|events> from the event queue so they will not <trigger> <handler|handlers>.
+Summary:
+Clears pending <event|events> from the event queue so they will not
+<trigger> <handler|handlers>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server
+Platforms: desktop, server
 
 Example:
 put flushEvents("activate") into trashVar
@@ -19,25 +21,58 @@ Example:
 get flushEvents("all")
 
 Parameters:
-eventType: One of the following: all: ignore all waiting events mouseDown: ignore mouse presses mouseUp: ignore mouse releases keyDown: ignore keypresses keyUp: ignore key releases autoKey: ignore key repeats disk: ignore disk-related events activate: ignore windows being brought to the front highLevel: ignore Apple Events (on Mac OS and OS X systems) system: ignore operating system events
+eventType (enum):
+-  "all": ignore all waiting events
+-  "mouseDown": ignore mouse presses
+-  "mouseUp": ignore mouse releases
+-  "keyDown": ignore keypresses
+-  "keyUp": ignore key releases
+-  "autoKey": ignore key repeats
+-  "disk": ignore disk-related events
+-  "activate": ignore windows being brought to the front
+-  "highLevel": ignore Apple Events (on Mac OS and OS X systems)
+-  "system": ignore operating system events
 
-Returns: The <flushEvents> <function> always <return|returns> empty.
+Returns:
+The <flushEvents> <function> always <return|returns> empty.
 
 Description:
-Use the <flushEvents> <function> to prevent unwanted <message|messages> from being sent during a <handler|handler's> <execute|execution>.
+Use the <flushEvents> <function> to prevent unwanted <message|messages>
+from being sent during a <handler|handler's> <execute|execution>.
 
-Typically, you use the <flushEvents> <function> in a <handler> to dump user actions that have occurred during the handler. For example, if a button has a <mouseUp> <handler> that takes a few seconds to run, the user might click again during that time. To prevent those extra clicks from causing the <handler> to run again, use the <flushEvents> <function> :
+Typically, you use the <flushEvents> <function> in a <handler> to dump
+user actions that have occurred during the handler. For example, if a
+button has a <mouseUp> <handler> that takes a few seconds to run, the
+user might click again during that time. To prevent those extra clicks
+from causing the <handler> to run again, use the <flushEvents>
+<function> :
 
-  on mouseUp
+    on mouseUp
     -- ...lengthy handler goes here...
     -- get rid of clicks since the handler started:
     put flushEvents("mouseUp") into temp
-  end mouseUp
 
-To clear multiple event types, call the <flushEvents> <function> once for each event type you want to clear.
+    end mouseUp
 
-Although some of the eventTypes have the same names as built-in <LiveCode> <message|messages>, there is a distinction. For example, the mouseDown <event> type is the operating system's response to the user clicking the <mouse button>. When the operating system sends this <event> to the <application>, LiveCode sends a <mouseDown> <message> to the target <object>. The expression flushEvents(mouseDown) prevents the application from responding to any mouseDown <event|events> it has received from the operating system, but has not yet processed.
 
-References: suspendStack (message), appleEvent (message), mouseUp (message), mouseDown (message), resumeStack (message), cancel (command), function (control_st), LiveCode (glossary), event (glossary), return (glossary), handler (glossary), mouse button (glossary), trigger (glossary), execute (glossary), message (glossary), application (glossary), object (object)
+To clear multiple event types, call the <flushEvents> <function> once
+for each event type you want to clear.
+
+Although some of the eventTypes have the same names as built-in
+<LiveCode> <message|messages>, there is a distinction. For example, the
+mouseDown <event> type is the operating system's response to the user
+clicking the <mouse button>. When the operating system sends this
+<event> to the <application>, LiveCode sends a <mouseDown> <message> to
+the target <object(glossary)>. The expression flushEvents(mouseDown)
+prevents the application from responding to any mouseDown <event|events>
+it has received from the operating system, but has not yet processed.
+
+References: cancel (command), function (control structure),
+LiveCode (glossary), event (glossary), return (glossary),
+handler (glossary), mouse button (glossary), trigger (glossary),
+execute (glossary), message (glossary), application (glossary),
+object (glossary), suspendStack (message), appleEvent (message),
+mouseUp (message), mouseDown (message), resumeStack (message)
 
 Tags: ui
+

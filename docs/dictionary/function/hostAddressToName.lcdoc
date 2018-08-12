@@ -2,17 +2,18 @@ Name: hostAddressToName
 
 Type: function
 
-Syntax: the hostAddressToName of <IPAddress> 
+Syntax: the hostAddressToName of <IPAddress>
 
 Syntax: hostAddressToName(<IPAddress>)
 
-Summary: <return|Returns> the <domain name> corresponding to an <IP address>.
+Summary:
+<return|Returns> the <domain name> corresponding to an <IP address>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 hostAddressToName("127.0.0.1")
@@ -21,15 +22,26 @@ Example:
 answer "Connecting to" && hostAddressToName(newAddress) & "..."
 
 Parameters:
-IPAddress: A numeric IP address.
+IPAddress:
+A numeric IP address.
 
-Returns: The <hostAddressToName> <function> <return|returns> the <domain name> corresponding to the <IPAddress>.
+Returns:
+The <hostAddressToName> <function> <return|returns> the <domain name>
+corresponding to the <IPAddress>.
 
 Description:
-Use the <hostAddressToName> function to find the <domain name> of the computer at  a <IP address>.
+Use the <hostAddressToName> function to find the <domain name> of the
+computer at a <IP address>.
 
-The <hostAddressToName> <function> does a reverse <DNS> lookup on the <IP address> in order to find the <domain name>. This means that the computer must be connected to the Internet in order to use this <function>. If a connection to the Internet is not available, the <hostAddressToName> <function> <return|returns> an error message.
+The <hostAddressToName> <function> does a reverse <DNS> lookup on the
+<IP address> in order to find the <domain name>. This means that the
+computer must be connected to the Internet in order to use this
+<function>. If a connection to the Internet is not available, the
+<hostAddressToName> <function> <return|returns> an error message.
 
-References: accept (command), peerAddress (function), hostAddress (function), domain name (glossary), IP address (glossary), return (glossary), DNS (glossary), function (control_st)
+References: accept (command), function (control structure),
+peerAddress (function), hostAddress (function), domain name (glossary),
+IP address (glossary), return (glossary), DNS (glossary)
 
 Tags: networking
+

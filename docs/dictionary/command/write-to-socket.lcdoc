@@ -2,15 +2,16 @@ Name: write to socket
 
 Type: command
 
-Syntax: write <value> to socket <socket> [with message <callbackMessage>]
+Syntax: write <dataString> to socket <socketID> [with message <callbackMessage>]
 
-Summary: Sends data to a <socket>.
+Summary:
+Sends data to a <socket>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: network
 
@@ -22,28 +23,55 @@ write "test" & linefeed to socket "www.google.com:80"
 
 Example:
 on mouseUp
-   open socket "www.google.com:80"
-   write "test" to socket "www.google.com:80" with message "socketFinishedWriting"
+    open socket "www.google.com:80"
+    write "test" \
+        to socket "www.google.com:80" with message "socketFinishedWriting"
 end mouseUp
-      
+
 on socketFinishedWriting pSocketID
    put "Data written to socket" && pSocketID
    close socket "www.google.com:80"
 end socketFinishedWriting
 
 Parameters:
-value (string): 
-socket: 
-callbackMessage: The name of a message to be sent to the current object when the write is successfully completed.
-socketID: The identifier (set when you opened the socket) of the socket you want to send data to. The socket identifier starts with the IP address of the host the socket is connected to, and may optionally include a port number (separated from the IP address by a colon). If there is more than one socket connected to that host and port, you can specify which socket by appending the connection name or number that was assigned when the socket was opened, separated from the port number by a vertical bar (|).
+dataString (string):
+The data to be sent through the socket connection.
+
+socketID (string):
+The identifier (set when you opened the socket with the <open socket>
+command) of the socket you want to send data to.
+The socket identifier starts with the IP address of the
+host the socket is connected to, and may optionally include a port
+number (separated from the IP address by a colon). If there is more than
+one socket connected to that host and port, you can specify which socket
+by appending the connection name or number that was assigned when the
+socket was opened, separated from the port number by a vertical bar (|).
+
+
+callbackMessage (string):
+The name of a message to be sent to the current object when the write is
+successfully completed.
+
 
 Description:
-Use the <write to socket> <command> to send data to another system via a <TCP> <socket>.
+Use the <write to socket> <command> to send data to another system via a
+<TCP> <socket>.
 
-If you specify a <callbackMessage>, as soon as the write is finished, the specified <message> is sent to the <object> whose <script> contains the <write to socket> <command>. The <callbackMessage> is sent with one <parameter>, which is the <socketID>.
+If you specify a <callbackMessage>, as soon as the write is finished,
+the specified <message> is sent to the <object(glossary)> whose <script>
+contains the <write to socket> <command>. The <callbackMessage> is sent
+with one <parameter>, which is the <socketID>.
 
-If you don't specify a <callbackMessage>, the <handler> pauses until the write has been completed, or until the time set in the <socketTimeoutInterval> <property> has passed.
+If you don't specify a <callbackMessage>, the <handler> pauses until the
+write has been completed, or until the time set in the
+<socketTimeoutInterval> <property> has passed.
 
-References: socketTimeoutInterval (property), script (property), socketTimeout (message), accept (command), write to driver (command), post (command), arrayEncode (function), property (glossary), handler (glossary), message (glossary), socket (glossary), parameter (glossary), command (glossary), TCP (glossary), object (object)
+References: accept (command), write to driver (command), post (command),
+open socket (command), read from socket (command),
+arrayEncode (function), property (glossary), handler (glossary),
+message (glossary), socket (glossary), parameter (glossary),
+command (glossary), TCP (glossary), object (glossary),
+socketTimeout (message), socketTimeoutInterval (property),
+script (property)
 
 Tags: networking

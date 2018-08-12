@@ -2,17 +2,18 @@ Name: openBackground
 
 Type: message
 
-Syntax: openBackground <backgroundID> 
+Syntax: openBackground <pBackgroundID>
 
-Summary: Sent to all background groups when a card they are placed on is opened.
+Summary:
+Sent to all background groups when a card they are placed on is opened.
 
-Associations: card
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on openBackground theBackgroundID
@@ -27,19 +28,33 @@ on openBackground theBackgroundID
 end openBackground
 
 Parameters:
-backgroundID: The ID number of the background being opened.
+pBackgroundID:
+The ID number of the background being opened.
 
 Description:
-Handle the <openBackground> message to change a group's objects, or perform other updates, when a card with the group on it is opened.
+Handle the <openBackground> message to change a group's objects, or
+perform other updates, when a card with the group on it is opened.
 
-The <openBackground> <message> is sent to background groups, if there is more than one <group> on the <card>, the <openBackground> <message> is sent to each one.
+The <openBackground> <message> is sent to background groups, if there is
+more than one <group> on the <card>, the <openBackground> <message> is
+sent to each one.
 
-The <openBackground> <message> is sent after the destination <card> is visible. To make changes that take effect before the <card> becomes visible on the screen, use the <preOpenBackground> <message> instead.
+The <openBackground> <message> is sent after the destination <card> is
+visible. To make changes that take effect before the <card> becomes
+visible on the screen, use the <preOpenBackground> <message> instead.
 
-The actual navigation is not triggered by the <openBackground> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <card> with the <group> from opening.
+The actual navigation is not triggered by the <openBackground>
+<message>, so <trap|trapping> the <message> and not allowing it to
+<pass> does not prevent the <card> with the <group> from opening.
 
->*Note:*  A group is only considered a background group if its backgroundBehavior property is set to true.
+>*Note:*  A group is only considered a background group if its
+> <backgroundBehavior> property is set to true.
 
-References: backgroundBehavior (property), card (keyword), preOpenBackground (message), openCard (message), startup (message), newBackground (message), closeBackground (message), openStack (message), group (command), pass (control_st), message (glossary), trap (glossary)
+References: group (command), pass (control structure), message (glossary),
+trap (glossary), card (keyword), preOpenBackground (message),
+openCard (message), startup (message), newBackground (message),
+closeBackground (message), openStack (message),
+backgroundBehavior (property)
 
 Tags: navigation
+

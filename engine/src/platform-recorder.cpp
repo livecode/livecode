@@ -18,8 +18,8 @@
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
+#include "globals.h"
 
-#include "execpt.h"
 #include "player.h"
 #include "util.h"
 #include "osspec.h"
@@ -29,7 +29,6 @@
 #include "platform.h"
 #include "platform-internal.h"
 
-#include "mac-player.h"
 #include "variable.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -99,6 +98,9 @@ void MCPlatformSoundRecorder::SetProperty(MCPlatformSoundRecorderProperty p_prop
 		case kMCPlatformSoundRecorderPropertyCompressionType:
             m_configuration . compression_type = *(unsigned int *)p_value;
 			break;
+		case kMCPlatformSoundRecorderPropertyExtraInfo:
+			MCUnreachable();
+			break;
     }
 }
 
@@ -120,6 +122,9 @@ void MCPlatformSoundRecorder::GetProperty(MCPlatformSoundRecorderProperty p_prop
 			break;
 		case kMCPlatformSoundRecorderPropertyCompressionType:
             *(unsigned int *)r_value = m_configuration . compression_type;
+			break;
+		case kMCPlatformSoundRecorderPropertyExtraInfo:
+			MCUnreachable();
 			break;
     }
 }
@@ -228,6 +233,11 @@ bool MCPlatformSoundRecorderListInputs(MCPlatformSoundRecorderRef p_recorder, MC
 bool MCPlatformSoundRecorderListCompressors(MCPlatformSoundRecorderRef p_recorder, MCPlatformSoundRecorderListCompressorsCallback callback, void *context)
 {
     return p_recorder -> ListCompressors(callback, context);
+}
+
+bool MCPlatformSoundRecorderListFormats(MCPlatformSoundRecorderRef p_recorder, MCPlatformSoundRecorderListFormatsCallback callback, void *context)
+{
+    return p_recorder -> ListFormats(callback, context);
 }
 
 void MCPlatformSoundRecorderGetConfiguration(MCPlatformSoundRecorderRef p_recorder, MCPlatformSoundRecorderConfiguration& r_config)

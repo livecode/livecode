@@ -39,7 +39,7 @@ SetOption_ALERT()
 
 /*----------------------------------------------------------------------------*/
 
-/* --PATCH-- */ extern int ErrorOccured;
+/* --PATCH-- */ extern int ErrorOccurred;
 
 MESSAGE(msg, pos)
    char *msg;
@@ -80,7 +80,7 @@ MESSAGE(msg, pos)
    printpos(pos);
    printf("%s\n", msg);
     /* --PATCH-- */ // exit(1);
-    /* --PATCH-- */ ErrorOccured = 1;
+    /* --PATCH-- */ ErrorOccurred = 1;
     
 #endif
 

@@ -4,13 +4,14 @@ Type: constant
 
 Syntax: left
 
-Summary: Equivalent to the <string> "left".
+Summary:
+Equivalent to the <string> "left".
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 arrowKey left
@@ -19,8 +20,14 @@ Example:
 if theKey is left then go previous card
 
 Description:
-Use the <left> <constant> to indicate the left arrow key in an <arrowKey> <handler>.
+Use the <left> <constant> to indicate the left arrow key in an
+<arrowKey> <handler>.
 
-References: string (keyword), left (constant), up (constant), down (constant), right (constant), arrowKey (message), constant (command), mouse (function), altKey (function), shiftKey (function), optionKey (function), commandKey (function), controlKey (function), handler (glossary)
+References: constant (command), left (constant), up (constant),
+down (constant), right (constant), mouse (function), altKey (function),
+shiftKey (function), optionKey (function), commandKey (function),
+controlKey (function), handler (glossary), string (keyword),
+arrowKey (message)
 
 Tags: ui
+

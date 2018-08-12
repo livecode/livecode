@@ -4,15 +4,17 @@ Type: message
 
 Syntax: suspendStack
 
-Summary: Sent to the <current card> when something makes its <stack> no longer the <active window>.
+Summary:
+Sent to the <current card> when something makes its <stack> no longer
+the <active window>.
 
 Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 on suspendStack -- hide a palette that only applies to this window
@@ -20,12 +22,24 @@ on suspendStack -- hide a palette that only applies to this window
 end suspendStack
 
 Description:
-Handle the <suspendStack> message if you want to perform some action when a <stack window> is made inactive.
+Handle the <suspendStack> message if you want to perform some action
+when a <stack window> is made inactive.
 
-The <suspendStack> <message> is sent whenever a <stack window> is no longer the <active window>: when the <stack window> is closed, when another <stack> is brought to the front, when other LiveCode windows are brought to the front, and when switching to another program.
+The <suspendStack> <message> is sent whenever a <stack window> is no
+longer the <active window>: when the <stack window> is closed, when
+another <stack> is brought to the front, when other LiveCode windows are
+brought to the front, and when switching to another program.
 
-The actual window deactivation process is not triggered by the <suspendStack> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <stack window> from becoming inactive.
+The actual window deactivation process is not triggered by the
+<suspendStack> <message>, so <trap|trapping> the <message> and not
+allowing it to <pass> does not prevent the <stack window> from becoming
+inactive. 
 
-References: pass (control_st), focusOut (message), closeStack (message), iconifyStack (message), suspend (message), resumeStack (message), flushEvents (function), trap (glossary), current card (glossary), active window (glossary), message (glossary), stack window (glossary), stack (object)
+References: pass (control structure), flushEvents (function),
+trap (glossary), current card (glossary), active window (glossary),
+message (glossary), stack window (glossary), focusOut (message),
+closeStack (message), iconifyStack (message), suspend (message),
+resumeStack (message), stack (object)
 
 Tags: windowing
+

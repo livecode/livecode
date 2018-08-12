@@ -1,18 +1,20 @@
 Name: long
 
+Synonyms: detailed
+
 Type: keyword
 
 Syntax: long
 
-Summary: Specifies a format for the date, time, files, and folders functions, the convert command, and the name, ID, and owner properties.
-
-Synonyms: detailed
+Summary:
+Specifies a format for the date, time, files, and folders functions, the
+convert command, and the name, ID, and owner properties.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the long ID of this card
@@ -24,34 +26,54 @@ Example:
 put the long seconds
 
 Example:
-set the defaultfolder to "/"
+set the defaultFolder to "/"
 put the detailed files
 
 Example:
-set the defaultfolder to "/"
+set the defaultFolder to "/"
 put the long folders
 
 Description:
-Use the <long> <keyword> to obtain a date, time, name, ID, or list of <files> or <folders> with the greatest amount of available detail.
+Use the <long> <keyword> to obtain a <date>, <time>, <name>, <ID>, or list of
+<files> or <folders> with the greatest amount of available detail.
 
-In general, a <long> form is longer than either the <short> form or the <abbreviated> form.
+In general, a <long> form is longer than either the <short> form or the
+<abbreviated> form.
 
-If the useSystemDate <property> is set to false, a long <date> looks like this:
-Thursday, June 22, 2000
-If the useSystemDate is true, the long <date> is formatted according to the system settings.
+When used with a <files> or <folders> <function> it has the same effect
+as using the term 'the detailed files' or 'the detailed folders'.
 
-If the useSystemDate <property> is set to false, a long <time> looks like this:
-11:22:47 AM
-If the useSystemDate is true, the long <time> is formatted according to the system settings.
+If the <useSystemDate> <property> is set to false, a long <date> looks
+like this: Thursday, June 22, 2000
+If the <useSystemDate> is true, the long <date> is formatted according to
+the system settings.
 
-A long object name consists of the <object type>, followed by the name in quotes, for the <object> and its <owner> (and the <owner> of that <object>, and so on). For example, a long <card> name looks like this:
+If the <useSystemDate> <property> is set to false, a long <time> looks
+like this: 11:22:47 AM
+If the <useSystemDate> is true, the long <time> is formatted according to
+the system settings.
+
+A long object <name> consists of the <object type>, followed by the name
+in quotes, for the <object(glossary)> and its <owner> (and the <owner>
+of that <object(glossary)>, and so on). For example, a long <card> <name>
+looks like this: card "My Card" of stack "/Drive/Folder/Stack.rev"
+
+A long object <ID> looks like this:
 card "My Card" of stack "/Drive/Folder/Stack.rev"
 
-A long object ID looks like this:
-card "My Card" of stack "/Drive/Folder/Stack.rev"
+>*Note:*  The <long> <keyword> is implemented internally as a <property>
+> and <function>, and appears in the <propertyNames> and the
+> <functionNames>. However, it cannot be used as a <property> in an
+> <expression>, nor with the <set> <command>.
 
->*Note:*  The <long> <keyword> is implemented internally as a <property> and <function>, and appears in the <propertyNames> and the <functionNames>. However, it cannot be used as a <property> in an <expression>, nor with the <set> <command>.
-
-References: owner (property), function (control_st), card (keyword), short (keyword), abbreviated (keyword), keyword (glossary), property (glossary), command (glossary), object type (glossary), expression (glossary), functionNames (function), propertyNames (function), time (function), folders (function), files (function), dateFormat (function), date (function), set (command), libURLSetLogField (command), convert (command), object (object)
+References: set (command), libURLSetLogField (command), convert (command),
+function (control structure), functionNames (function),
+propertyNames (function), time (function), folders (function),
+files (function), dateFormat (function), date (function),
+keyword (glossary), property (glossary), command (glossary),
+object type (glossary), expression (glossary), object (glossary),
+card (keyword), short (keyword), abbreviated (keyword), ID (property)
+name (property), owner (property), useSystemDate (property)
 
 Tags: file system
+

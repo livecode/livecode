@@ -4,11 +4,12 @@ Type: command
 
 Syntax: play <soundFile> [<looping>]
 
-Summary: Plays a sound.
+Summary:
+Plays a sound.
 
 Introduced: 4.5.2
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -19,31 +20,48 @@ Example:
 play empty
 
 Example:
-put specialFolderPath("engine) & "/applause.mp3" into tSoundFile
+put specialFolderPath("engine") & "/applause.mp3" into tSoundFile
 play tSoundFile
 
 Parameters:
-soundFile: The filename of the file to be played.
-looping: Specifies whether the sound should be looped.
+soundFile:
+The filename of the file to be played.
 
-The result: If the sound playback could not be started, the command will return "could not play sound" in the <result>.
+looping:
+Specifies whether the sound should be looped.
+
+The result:
+If the sound playback could not be started, the command will return
+"could not play sound" in the <result>.
 
 Description:
 Use the play file command to play a sound from a file.
 
-The play file command will stop any currently playing sound, and then attempt to load the given sound file. If <looping> is specified the sound will repeat forever or until another sound is played.
+The play file command will stop any currently playing sound, and then
+attempt to load the given sound file. If <looping> is specified the
+sound will repeat forever or until another sound is played.
 
 To stop a sound that is currently playing use the command:
 play empty
 
->*Note:* Only one sound can be played at a time using the play file command.
+>*Note:* Only one sound can be played at a time using the play file
+> command. 
 
-The volume at which a sound is played can be controlled using the <playLoudness> property. The overall volume of sound playback depends on the current volume setting of the device.
+The volume at which a sound is played can be controlled using the
+<playLoudness> property. The overall volume of sound playback depends on
+the current volume setting of the device.
 
-This feature uses the built-in sound playback facilities in the iPhone (AVAudioPlayer) and Android and as such has support for a variety of formats.
+This feature uses the built-in sound playback facilities in the iPhone
+(AVAudioPlayer) and Android and as such has support for a variety of
+formats. 
 
->*Cross-platform note:* This feature works the same way on bith Android and iOS platforms, although the list of supported audio formats will vary between devices.
+>*Cross-platform note:* This feature works the same way on bith Android
+> and iOS platforms, although the list of supported audio formats will
+> vary between devices.
 
-References: play video (command), play (command), result (function), sound (function), playLoudness (property), iphoneSetAudioCategory (command)
+References: play video (command), play (command),
+iphoneSetAudioCategory (command), result (function), sound (function),
+playLoudness (property)
 
 Tags: multimedia
+

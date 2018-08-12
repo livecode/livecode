@@ -1,28 +1,31 @@
 Name: revOpenDatabase
 
+Synonyms: revdb_connect
+
 Type: function
 
-Syntax: revOpenDatabase("mysql", <host> [: <port>], <databaseName>, [<userName>],[<password>],[<useSSL>], [<socket>], [<timeout>], [<autoReconnect>])
+Syntax: revOpenDatabase("mysql", <hostAddress>, <databaseName>, [<userName>],[<passWord>],[<useSSL>], [<socketAddr>], [<rwTimeout>], [<autoReconnect>])
 
-Syntax: revOpenDatabase("odbc", <host> [: <port>], <databaseName>, [<userName>],[<password>],[<cursorType>])
+Syntax: revOpenDatabase("odbc", <hostAddress>, <databaseName>, [<userName>],[<passWord>],[<cursorType>])
 
-Syntax: revOpenDatabase("sqlite",filepath,[<sqliteOptions>])
+Syntax: revOpenDatabase("sqlite",<filePath>,[<sqliteOptions>])
 
-Syntax: revOpenDatabase("postgresql", <host> [: <port>], <databaseName>, [<userName>], [<password>], [<sslOption>],...)
+Syntax: revOpenDatabase("postgresql", <hostAddress>, <databaseName>, [<userName>], [<passWord>] [, <sslOption> ...])
 
-Syntax: revOpenDatabase("oracle", <host> [: <port>], <databaseName>, [<userName>],[<password>])
+Syntax: revOpenDatabase("oracle", <hostAddress>, <databaseName>, [<userName>],[<passWord>])
 
-Summary: Connects to a MySQL, SQLite, PostgreSQL, ODBC or Oracle database.
+Summary:
+Connects to a MySQL, SQLite, PostgreSQL, ODBC or Oracle database.
 
-Synonyms: revdb_connect
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 get revOpenDatabase("mysql", "www.example.com", "RatesDB", myUsr, myPass)
@@ -31,10 +34,14 @@ Example:
 get revOpenDatabase("odbc", "BizFile", , "jenkins" ,the dbPassword of me, "emulated static")
 
 Example:
-put revOpenDatabase("sqlite", "mydb.sqlite") -- open with legacy binary mode and loadable extensions disabled
-put revOpenDatabase("sqlite", "mydb.sqlite", "binary") -- open the connection in the 'new' binary mode
-put revOpenDatabase("sqlite", "mydb.sqlite", "extensions") -- enable loadable extensions for this connection
-put revOpenDatabase("sqlite", "mydb.sqlite", "binary,extensions") -- enable both 'new' binary mode and loadable extensions
+put revOpenDatabase("sqlite", "mydb.sqlite" )
+-- open with legacy binary mode and loadable extensions disabled
+put revOpenDatabase("sqlite", "mydb.sqlite", "binary" )
+-- open the connection in the 'new' binary mode
+put revOpenDatabase("sqlite", "mydb.sqlite", "extensions" )
+-- enable loadable extensions for this connection
+put revOpenDatabase("sqlite", "mydb.sqlite", "binary,extensions" )
+-- enable both 'new' binary mode and loadable extensions
 
 Example:
 get revOpenDatabase("mysql", "localhost", "dbName", myUsr, myPass, false, "/var/mysql.sock", 1, true)
@@ -43,74 +50,183 @@ Example:
 get revOpenDatabase("postgresql", "192.168.1.100", "dbName", myUsr, myPass, "sslmode=require", "sslcompression=0")
 
 Parameters:
-host (string): A string specifying the IP address or domain name of the system hosting the database. For SQLite databases, the host should be the full path to the database file.
-port: A number specifying the port number you want to connect to, and is used only for MySQL and PostgreSQL databases. If no port is specified, MySQL database connections use port 3306 and PostgreSQL database connections use port 5432.
-databaseName (string): A string specifying the the name of the database to connect to. For SQLite databases, the database name should be left empty.
-userName (string): A string specifying your authorized user name for the database (Some databases do not require a user name).
-password (string): A string specifying the authentication password for the userName (Some databases do not require a password).
-useSSL: (MySQL Only) A boolean specifying whether to use SSL to secure the socket connection when connecting to a MySQL database. If you use this feature in a standalone application, remember to select 'SSL  Encryption' from among the available 'script libraries' in the standalone application settings panel.
-socket: (MySQL Only) A string specifying the socket or named pipe the driver should use to connect with.  If empty, the default for the host will be used.
-timeout: (MySQL Only)  A number specifying the database read/write timeout in whole seconds.  Defaults to 20 seconds if empty or not a positive integer. If 0, the connection never times out.
-autoReconnect: (MySQL Only) A boolean specifying if the driver should attempt to automatically reconnect to the database when the connection is lost. A reconnection attempt will be made the next time a command is executed.
-cursorType (enum): (ODBC Only) A string specifying the type of cursor to use.
-- "forward only": This is a cursor that can be scrolled forwards only. All ODBC drivers must support this type of cursor. Forward only cursors are usually faster than scrollable static cursors, but using revMoveToPreviousRecord, revMoveToFirstRecord or revMoveToLastRecord will fail. Forward only is the default cursor type, and is what was used in LiveCode 2.8.1 and earlier.
-- "emulated static": This cursor has the same behavior as a static cursor, except it allows ODBC to emulate the cursor's behavior if the driver does not support it. ODBC can typically emulate static cursor behavior on Windows systems only.
-- "static": This is a scrollable static cursor. Using this cursor it is possible to navigate backwards as well as forwards through record sets, and to move straight to the first or last record. Static cursors operate on an "offline" copy of the data, meaning that any changes to the data will not be detected by the cursor. Not all ODBC drivers support static cursors, for example FileMaker 6 does not.
-sqliteOptions (enum): A comma delimited list contain one or me of the following (Note that the order of the items in the options parameter is not important):
-- "extensions": Enable loadable extensions for the connection.
-- "binary": Places binary data into the database verbatim (without LiveCode encoding).
-databaseType (enum): A string specifying the database type to use. One of the following:
-- "mysql"
-- "oracle"
-- "odbc"
-- "postgresql"
-- "valentina"
-- "sqlite"
-filename: (SQLite Only) A string specifying the path to the SQLite database.
-sslOption (string): (PostgreSQL Only) A string of the form "key=value" specifying the SSL options to use when connecting. The key is the name of the option you want to set, the value is the value you want the option to take. Any number of key value pairs can be specified, each in a new parameter. The set of recognized SSL option and their expected values are as follows:
-- **"sslmode"**: A string specifying the SSL connection mode to use. There are 6 options:
+hostAddress (string):
+A string specifying the IP address or domain name of the system hosting
+the database followed optionally with a number specifying the port number
+you want to connect to, and is used only for MySQL and PostgreSQL databases. 
+If no port is specified, MySQL database connections use port 3306 and 
+PostgreSQL database connections use port 5432. For SQLite databases, the 
+host should be the full path to the database file.
+
+databaseName (string):
+A string specifying the the name of the database to connect to. For
+SQLite databases, the database name should be left empty.
+
+userName (string):
+A string specifying your authorized user name for the database (Some
+databases do not require a user name).
+
+passWord (string):
+A string specifying the authentication password for the userName (Some
+databases do not require a password).
+
+useSSL (bool):
+(MySQL Only) A boolean specifying whether to use SSL to secure the
+socket connection when connecting to a MySQL database. If you use this
+feature in a standalone application, remember to select 'SSL Encryption'
+from among the available 'script libraries' in the standalone
+application settings panel.
+
+socketAddr (string):
+(MySQL Only) A string specifying the socket or named pipe the driver
+should use to connect with. If empty, the default for the host will be
+used.
+
+rwTimeout (integer):
+(MySQL Only)  A number specifying the database read/write timeout in
+whole seconds. Defaults to 20 seconds if empty or not a positive
+integer. If 0, the connection never times out.
+
+autoReconnect (bool):
+(MySQL Only) A boolean specifying if the driver should attempt to
+automatically reconnect to the database when the connection is lost. A
+reconnection attempt will be made the next time a command is executed.
+
+cursorType (enum):
+(ODBC Only) A string specifying the type of cursor to use.
+
+-   "forward only": This is a cursor that can be scrolled forwards only.
+    All ODBC drivers must support this type of cursor. Forward only
+    cursors are usually faster than scrollable static cursors, but using
+    revMoveToPreviousRecord, revMoveToFirstRecord or revMoveToLastRecord
+    will fail. Forward only is the default cursor type, and is what was
+    used in LiveCode 2.8.1 and earlier.
+-   "emulated static": This cursor has the same behavior as a static
+    cursor, except it allows ODBC to emulate the cursor's behavior if
+    the driver does not support it. ODBC can typically emulate static
+    cursor behavior on Windows systems only.
+-   "static": This is a scrollable static cursor. Using this cursor it
+    is possible to navigate backwards as well as forwards through record
+    sets, and to move straight to the first or last record. Static
+    cursors operate on an "offline" copy of the data, meaning that any
+    changes to the data will not be detected by the cursor. Not all ODBC
+    drivers support static cursors, for example FileMaker 6 does not.
+
+
+sqliteOptions (enum):
+A comma delimited list contain one or me of the following (Note that the
+order of the items in the options parameter is not important):
+
+-   "extensions": Enable loadable extensions for the connection.
+-   "binary": Places binary data into the database verbatim (without
+    LiveCode encoding).
+
+
+filePath (string):
+(SQLite Only) A string specifying the path to the SQLite database.
+
+sslOption (string):
+(PostgreSQL Only) A string of the form "key=value" specifying the SSL
+options to use when connecting. The key is the name of the option you
+want to set, the value is the value you want the option to take. Any
+number of key value pairs can be specified, each in a new parameter. The
+set of recognized SSL option and their expected values are as follows:
+
+- **"sslmode"**: A string specifying the SSL connection mode to use.
+  If no SSL mode is specified, the default will be "prefer" if the
+  security library can be loaded, "disable" if not. If you use SSL
+  connections in a standalone application, remember to select
+  'SSL Encryption' from among the available 'script libraries' in the
+  standalone application settings panel. There are 6 options:
   - "disable": Only try a non-SSL connection.
-  - "allow": First try a non-SSL connection; if that fails, try an SSL connection.
-  - "prefer": First try an SSL connection; if that fails, try a non-SSL connection.
-  - "require": Only try an SSL connection. If a root CA file is present, verify the certificate in the same way as if verify-ca was specified.
-  - "verify-ca": Only try an SSL connection, and verify that the server certificate is issued by a trusted certificate authority (CA).
-  - "verify-full": Only try an SSL connection, verify that the server certificate is issued by a trusted CA and that the server host name matches that in the certificate.
+  - "allow": First try a non-SSL connection; if that fails, try an SSL
+    connection.
+  - "prefer": First try an SSL connection; if that fails, try a non-SSL
+    connection.
+  - "require": Only try an SSL connection. If a root CA file is present,
+    verify the certificate in the same way as if verify-ca was
+    specified.
+  - "verify-ca": Only try an SSL connection, and verify that the server
+    certificate is issued by a trusted certificate authority (CA).
+  - "verify-full": Only try an SSL connection, verify that the server
+    certificate is issued by a trusted CA and that the server host name
+    matches that in the certificate.
+- **"sslcompression"**: A string specifying the any SSL compression to
+  use. If set to "1" (default), data sent over SSL connections will be
+  compressed. If set to "0", compression will be disabled. This parameter
+  is ignored if a connection without SSL is made. Compression uses CPU
+  time, but can improve throughput if the network is the bottleneck.
+  Disabling compression can improve response time and throughput if CPU
+  performance is the limiting factor.
+- **"sslcert"**: A string specifying the file name of the client SSL
+  certificate, replacing the default ~/.postgresql/postgresql.crt. This
+  parameter is ignored if an SSL connection is not made.
+- **"sslkey"**: A string specifying the location for the secret key
+  used for the client certificate. This parameter is ignored if an SSL
+  connection is not made.
+- **sslrootcert"**: A string specifying the name of a file containing
+  SSL certificate authority (CA) certificate(s). If the file exists,
+  the server's certificate will be verified \ to be signed by one of
+  these authorities. The default is ~/.postgresql/root.crt.
+- **"sslcrl"**: A string specifying the file name of the SSL
+  certificate revocation list (CRL). Certificates listed in this file,
+  if it exists, will be rejected while attempting \ to authenticate
+  the server's certificate. The default is ~/.postgresql/root.crl.
 
-  If no SSL mode is specified, the default will be "prefer" if the security library can be loaded, "disable" if not. If you use SSL connections in a standalone application, remember to select 'SSL  Encryption' from among the available 'script libraries' in the standalone application settings panel.
-- **"sslcompression"**: A string specifying the any SSL compression to use. If set to "1" (default), data sent over SSL connections will be compressed. If set to "0", compression will be disabled. This parameter is ignored if a connection without SSL is made. Compression uses CPU time, but can improve throughput if the network is the bottleneck. Disabling compression can improve response time and throughput if CPU performance is the limiting factor.
-- **"sslcert"**: A string specifying the file name of the client SSL certificate, replacing the default ~/.postgresql/postgresql.crt. This parameter is ignored if an SSL connection is not made.
-- **"sslkey"**: A string specifying the location for the secret key used for the client certificate.  This parameter is ignored if an SSL connection is not made.
-- **sslrootcert"**: A string specifying the name of a file containing SSL certificate authority (CA) certificate(s). If the file exists, the server's certificate will be verified to be signed by one of these authorities. The default is ~/.postgresql/root.crt.
-- **"sslcrl"**: A string specifying the file name of the SSL certificate revocation list (CRL). Certificates listed in this file, if it exists, will be rejected while attempting to authenticate the server's certificate. The default is ~/.postgresql/root.crl.
 
-Returns:
-The <revOpenDatabase> function returns a database ID which can be used to refer to the database in other Database library commands and functions. The database ID is always an integer.
-If the database is not successfully opened, the <revOpenDatabase> function returns an error message. The error message is never an integer, so you can check whether the connection was successful by checking whether the return value is an integer or not.
+Returns (integer):
+The <revOpenDatabase> function returns a database ID which can be used
+to refer to the database in other Database library commands and
+functions. The database ID is always an integer. If the database is not
+successfully opened, the <revOpenDatabase> function returns an error
+message. The error message is never an integer, so you can check whether
+the connection was successful by checking whether the return value is an
+integer or not.
 
 Description:
 Use the <revOpenDatabase> function to start working with a database.
 
->*Note:*  To use a DSN to identify an ODBC database, use the DSN as the host, and leave the databaseName parameter empty.
+>*Note:*  To use a DSN to identify an ODBC database, use the DSN as the
+> host, and leave the databaseName parameter empty.
 
->*Important:*  The revOpenDatabase function is part of the Database library. To ensure that the function works in a standalone application, you must include this custom library when you create your standalone. In the Inclusions section of the General screen of the Standalone Application Settings window, make sure the Database Support checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The revOpenDatabase function is part of the Database
+> library. To ensure that the function works in a standalone
+> application, you must include this custom library when you create your
+> standalone. In the Inclusions section of the General screen of the
+> Standalone Application Settings window, make sure the Database Support
+> checkbox is checked and the database drivers you are using are
+> selected in the list of database drivers.
 
->*Important:*  If you are using any of the MySQL or PostgreSQL SSL connection options in a standalone application, make sure to select 'SSL  Encryption' from among the available 'script libraries' in the standalone application settings panel.
+>*Important:*  If you are using any of the MySQL or PostgreSQL SSL
+> connection options in a standalone application, make sure to select
+> 'SSL Encryption' from among the available 'script libraries' in the
+> standalone application settings panel.
 
-The version of SQLite has been updated to 3.8.2.
+The version of SQLite has been updated to 3.15.0.
 
-The SQLite RTREE module is now available.
+The SQLite RTREE and FTS5 modules are now available.
 
-SQLite loadable extensions are now supported. To utilize loadable extensions, the 'extensions' option must be passed to the revOpenDatabase() call when creating the database connection.
+SQLite loadable extensions are now supported. To utilize loadable
+extensions, the 'extensions' option must be passed to the
+revOpenDatabase() call when creating the database connection.
 
-Binary data can now be placed into SQLite databases verbatim (without the encoding that used to occur) - this means databases can be made to contain binary data which is compatible with other applications. To utilize this functionality, the 'binary' option must be passed to the revOpenDatabase() call when creating the database connection.
+Binary data can now be placed into SQLite databases verbatim (without
+the encoding that used to occur) - this means databases can be made to
+contain binary data which is compatible with other applications. To
+utilize this functionality, the 'binary' option must be passed to the
+revOpenDatabase() call when creating the database connection.
 
-The SQLite revOpenDatabase() call no longer requires 5 arguments and only requires a minimum of 2.
+The SQLite revOpenDatabase() call no longer requires 5 arguments and
+only requires a minimum of 2.
 
 The version of the PostgreSQL library has been updated to 9.4.5.
 
 Changes:
 LiveCode 6.6
 
-References: revSetDatabaseDriverPath (command), Database library (library), revExecuteSQL (command), revLicenseType (function), revDatabaseID (function), revDatabaseConnectResult (function), revDatabaseTableNames (function), revQueryIsAtStart (function)
+References: revSetDatabaseDriverPath (command), revExecuteSQL (command),
+revLicenseType (function), revDatabaseID (function),
+revDatabaseConnectResult (function), revDatabaseTableNames (function),
+revQueryIsAtStart (function), Database library (library)
 
 Tags: database

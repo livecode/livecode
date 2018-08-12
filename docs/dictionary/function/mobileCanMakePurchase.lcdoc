@@ -4,11 +4,12 @@ Type: function
 
 Syntax: mobileCanMakePurchase()
 
-Summary: Determines if in-app purchasing is available.
+Summary:
+Determines if in-app purchasing is available.
 
 Introduced: 5.0.1
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -20,13 +21,28 @@ if mobileCanMakePurchase() is true then
    showPurchaseOptions
 end if
 
-Returns (enum): Returns a boolean result:
-- true : in:app purchases can be made
-- false : in:app purchases cannot be made
+Returns (enum):
+Returns a boolean result:
+
+-   true: in-app purchases can be made
+-   false: in-app purchases cannot be made
+
 
 Description:
-Use the <mobileCanMakePurchase> function to determine if the in-app purchasing service is available.
+Use the <mobileCanMakePurchase> function to determine if the in-app
+purchasing service is available.
 
-The <mobileCanMakePurchase> function determines if in-app purchases can be made. This depends on whether the service is available, not whether the app itself implements in-app purchases. For example if a device is off-line <mobileCanMakePurchase> returns false.
+The <mobileCanMakePurchase> function determines if in-app purchases can
+be made. This depends on whether the service is available, not whether
+the app itself implements in-app purchases. For example if a device is
+off-line <mobileCanMakePurchase> returns false.
 
-References: mobilePurchaseSet (command), mobileDisablePurchaseUpdates (command), mobilePurchaseVerify (command), mobileRestorePurchases (command), mobilePurchaseSendRequest (command), mobilePurchaseConfirmDelivery (command), mobileEnablePurchaseUpdates (command), mobilePurchaseCreate (command), mobilePurchases (function), mobilePurchaseState (function), mobilePurchaseGet (function), mobilePurchaseError (function), purchaseStateUpdate (message)
+References: mobilePurchaseSet (command),
+mobileDisablePurchaseUpdates (command), mobilePurchaseVerify (command),
+mobileRestorePurchases (command), mobilePurchaseSendRequest (command),
+mobilePurchaseConfirmDelivery (command),
+mobileEnablePurchaseUpdates (command), mobilePurchaseCreate (command),
+mobilePurchases (function), mobilePurchaseState (function),
+mobilePurchaseGet (function), mobilePurchaseError (function),
+purchaseStateUpdate (message)
+

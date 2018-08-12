@@ -4,13 +4,17 @@ Type: command
 
 Syntax: ungroup
 
-Summary: Makes a <group(glossary)|group's> <object|objects> into <card control|card objects>, deleting the <group(command)>.
+Summary:
+Makes a <group(glossary)|group's> <object|objects> into <card
+control|card objects>, deleting the <group(command)>.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 ungroup group 1
@@ -19,12 +23,23 @@ Example:
 if there is a group 1 then ungroup group 1
 
 Description:
-Use the <ungroup> <command> to change the constituents of a <group>, or to turn <grouped control|grouped controls> into <card control|card controls>.
+Use the <ungroup> <command> to change the constituents of a <group>, or
+to turn <grouped control|grouped controls> into <card control|card
+controls>. 
 
-You can change the individual items, then use the <group> <command> or the "Group <Selected>" <menu item> in the Object <menu> to re-group the <object|objects>, if and only if you stay on the same <card> until the <object|objects> are re-grouped.
+You can change the individual items, then use the <group> <command> or
+the "Group <Selected>" <menu item> in the Object <menu> to re-group the
+<object|objects>, if and only if you stay on the same <card> until the
+<object|objects> are re-grouped.
 
-If you go to another card while the objects are ungrouped, the ungrouping becomes permanent and the objects are removed from all other cards the group was on.
+If you go to another card while the objects are ungrouped, the
+ungrouping becomes permanent and the objects are removed from all other
+cards the group was on.
 
-References: selected (property), layer (property), card (keyword), menu (keyword), group (command), delete (command), start editing (command), object (object), grouped control (glossary), card control (glossary), command (glossary), group (glossary), menu item (glossary)
+References: group (command), delete (command), start editing (command),
+object (glossary), grouped control (glossary), card control (glossary),
+command (glossary), group (glossary), menu item (glossary),
+card (keyword), menu (keyword), selected (property), layer (property)
 
 Tags: objects
+

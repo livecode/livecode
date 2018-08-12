@@ -2,17 +2,20 @@ Name: constraints
 
 Type: property
 
-Syntax: get the constraints of <player> 
+Syntax: get the constraints of <player>
 
-Summary: Limits the <pan>, <tilt>, and <zoom> in a <QuickTime VR> movie.
+Summary:
+Limits the <pan>, <tilt>, and <zoom> in a <QuickTime VR> movie.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,ios,android
+Deprecated: 8.1
 
-Platforms: desktop,server,web,mobile
+OS: mac, windows, ios, android
+
+Platforms: desktop, server, mobile
 
 Example:
 get the constraints of player "Arctic"
@@ -20,24 +23,48 @@ get the constraints of player "Arctic"
 Example:
 set the pan of me to item 2 of line 1 of the constraints of me
 
-Value (enum): The <constraints> is a list consisting of three lines:
+Value (enum):
+The <constraints> is a list consisting of three lines:
+
         - The minimum and maximum <pan>, separated by commas.
         - The minimum and maximum <tilt>, separated by commas.
         - The minimum and maximum <zoom>, separated by commas.
 
 Each value is a number.
-
 This property is read:only and cannot be set
 
+
 Description:
-Use the <constraints> <property> to find out where the user is in a <QuickTime VR> movie.
+Use the <constraints> <property> to find out where the user is in a
+<QuickTime VR> movie.
 
-The user can move the view of a QuickTime VR movie using the navigational controls in the player; a handler can change the view by setting the player's <pan> and <tilt> <properties>, and change the view angle by changing the <zoom> <property>.
+The user can move the view of a QuickTime VR movie using the
+navigational controls in the player; a handler can change the view by
+setting the player's <pan> and <tilt> <properties>, and change the view
+angle by changing the <zoom> <property>.
 
-The <zoom>, <pan>, and <tilt> are limited by the <value> of the <player|player's> <constraints> <property>. If you specify a <value> greater than the <range> permitted by the <constraints>, the <property> is set to the highest permitted <value>. If you specify a <value> less than the <range> permitted by the <constraints>, the <property> is set to the lowest permitted <value>.
+The <zoom>, <pan>, and <tilt> are limited by the <value> of the
+<player|player's> <constraints> <property>. If you specify a <value>
+greater than the <range> permitted by the <constraints>, the <property>
+is set to the highest permitted <value>. If you specify a <value> less
+than the <range> permitted by the <constraints>, the <property> is set
+to the lowest permitted <value>.
 
-If the player does not contain a QuickTime VR movie, its <constraints> <property> is empty.
+If the player does not contain a QuickTime VR movie, its <constraints>
+<property> is empty.
 
-References: zoom (property), properties (property), pan (property), tilt (property), constraints (property), value (function), QuickTime VR (glossary), property (glossary), range (glossary), player (object)
+Changes:
+This property was deprecated in version 8.1.0 due to the retirement of
+the QuickTime player implementation. In order to support 64-bit on Mac 
+we have been required to switch to using AVFoundation on Mac, which does 
+not support QTVR. In addition, the Windows player object is now based on 
+DirectShow, as Apple have dropped support for the QuickTime libraries 
+previously used.
+
+References: value (function), QuickTime VR (glossary),
+property (glossary), range (glossary), player (object), zoom (property),
+properties (property), pan (property), tilt (property),
+constraints (property)
 
 Tags: multimedia
+

@@ -2,30 +2,41 @@ Name: yExtent
 
 Type: property
 
-Syntax: set the yExtent of <EPSObject> to <number> 
+Syntax: set the yExtent of <EPSObject> to <number>
 
-Summary: Specifies the height of an <EPS|EPS object's> <PostScript> bounding box.
+Summary:
+Specifies the height of an <EPS|EPS object's> <PostScript> bounding box.
 
 Introduced: 1.0
 
 OS: linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Example:
 set the yExtent of EPS myEPS to 288 -- 4 inches
 
-Value: The <yExtent> of an <EPS|EPS object> is a positive <integer>.
+Value:
+The <yExtent> of an <EPS|EPS object> is a positive <integer>.
 
 Description:
-Use the <yExtent> <property> to control the appearance of an <EPS|EPS object>.
+Use the <yExtent> <property> to control the appearance of an <EPS|EPS
+object>. 
 
-An EPS object's <yExtent> is the height in <points> of the <PostScript> object. This controls the size of the <PostScript> object when it's rendered.
+An EPS object's <yExtent> is the height in <points> of the <PostScript>
+object. This controls the size of the <PostScript> object when it's
+rendered. 
 
-The <yExtent> of an <EPS|EPS object> is equal to the fourth <item> in the <object|object's> <boundingBox> <property>.
+The <yExtent> of an <EPS|EPS object> is equal to the fourth <item> in
+the <object|object's> <boundingBox> <property>.
 
-This property is supported only on Unix systems with Display PostScript installed.
+This property is supported only on Unix systems with Display PostScript
+installed. 
 
-References: boundingBox (property), scaleIndependently (property), points (property), yOffset (property), postScript (property), item (keyword), integer (keyword), object (object), EPS (glossary), property (glossary)
+References: object (glossary), EPS (glossary), property (glossary),
+item (keyword), integer (keyword), boundingBox (property),
+scaleIndependently (property), points (property), yOffset (property),
+postScript (property)
 
 Tags: multimedia
+

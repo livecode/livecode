@@ -4,34 +4,47 @@ Type: message
 
 Syntax: deleteField
 
-Summary: Sent to a <field> just before it is removed from the <stack>.
+Summary:
+Sent to a <field> just before it is removed from the <stack>.
 
 Associations: field
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on deleteField -- first save the contents in a custom property
-  set the (the short name of the target) of this card to target
-  pass deleteField
+   set the uFieldText[the short name of the target] \
+        of this card to the text of the target
+   pass deleteField
 end deleteField
 
 Description:
-Handle the <deleteField> <message> if you want to perform cleanup before a <field> is removed from the <stack>.
+Handle the <deleteField> <message> if you want to perform cleanup before
+a <field> is removed from the <stack>.
 
-The actual deletion is not triggered by the <deleteField> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <field> from being removed.
+The actual deletion is not triggered by the <deleteField> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <field> from being removed.
 
-However, the undo <command> will restore a <field> after it is deleted by the user. For example, the following <handler>, placed in a <card> or stack <script>, effectively prevents a <field> from being deleted by the user:
+However, the undo <command> will restore a <field> after it is deleted
+by the user. For example, the following <handler>, placed in a <card> or
+stack <script>, effectively prevents a <field> from being deleted by 
+the user: 
 
-  on deleteField
-    beep
-    send "undo" to this card in 5 milliseconds
-  end deleteField
+     on deleteField
+        beep
+        send "undo" to this card in 5 milliseconds
+     end deleteField
 
-References: field (keyword), script (property), delete (command), stack (object), handler (glossary), trap (glossary), message (glossary), command (glossary), card (glossary), pass (control_st)
+
+References: delete (command), pass (control structure),
+handler (glossary), trap (glossary), message (glossary),
+command (glossary), card (glossary), field (object), stack (object),
+script (property)
 
 Tags: objects
+

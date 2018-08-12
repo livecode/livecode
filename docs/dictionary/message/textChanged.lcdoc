@@ -4,27 +4,47 @@ Type: message
 
 Syntax: textChanged
 
-Summary: Sent when the content of a field has changed.
+Summary:
+Sent when the content of a field has changed.
 
 Associations: field
 
 Introduced: 5.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,mobile
+Platforms: desktop, mobile
 
 Example:
 on textChanged -- enable the save button when a change is made
    enable button "save"
 end textChanged
 
-Description:
-Is dispatched by the field whenever a user (or simulated user) action causes the content of the field to change.
+Example:
+on textChanged -- resize height of field to fit text
+   lock screen
+   -- lock screen to delay the screen update so that there is no flicker
+   put the rect of me into tRect
+   put item 2 of tRect + the formattedHeight of me into item 4 of tRect
+   set the rect of me to tRect
+end textChanged
 
-Handle the <textChanged> message if you want to perform an action when the content of a field changes.
-The message is sent immediately after the input operation completes, but before a screen update is requested. The corresponding update occurs at the end of the first command in the <textChanged> handler. This means that you can lock the screen at the first line of the handler to delay the screen update (allowing you to modify the content of the field without any flicker).
-To prevent potential for infinite recursion, calls to <textChanged> do not nest. Once a <textChanged> handler is being executed for a given field, another <textChanged> message is not sent to it, should a subsequent one be triggered.
- The <textChanged> message is sent after messages such as keyDown and pasteKey but before messages such as keyUp.
+Description:
+Is dispatched by the field whenever a user (or simulated user) action
+causes the content of the field to change.
+
+Handle the <textChanged> message if you want to perform an action when
+the content of a field changes. The message is sent immediately after
+the input operation completes, but before a screen update is requested.
+The corresponding update occurs at the end of the first command in the
+<textChanged> handler. This means that you can lock the screen at the
+first line of the handler to delay the screen update (allowing you to
+modify the content of the field without any flicker). To prevent
+potential for infinite recursion, calls to <textChanged> do not nest.
+Once a <textChanged> handler is being executed for a given field,
+another <textChanged> message is not sent to it, should a subsequent one
+be triggered. The <textChanged> message is sent after messages such as
+keyDown and pasteKey but before messages such as keyUp.
 
 References: inputTextChanged (message)
+

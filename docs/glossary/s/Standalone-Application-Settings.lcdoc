@@ -1,12 +1,17 @@
 Name: Standalone Application Settings
 
-Synonyms: Distribution Builder,Build Distribution,Standalone Application Settings
+Synonyms: distribution builder, build distribution,
+standalone application settings
 
 Type: glossary
 
 Description:
-Part of the LiveCode <development environment>, the window where you define the settings for creating a <standalone application> . 
- 
-To display the Standalone Application Settings, choose <a> </a>File menu<img src="202656"></img> Standalone Application Settings...>*Important:*
+Part of the LiveCode <development environment>, the window where you
+define the settings for creating a <standalone application> .
 
-References: development environment (glossary), standalone application (glossary)
+To display the Standalone Application Settings, choose File → Standalone
+Application Settings…
+
+References: development environment (glossary),
+standalone application (glossary)
+

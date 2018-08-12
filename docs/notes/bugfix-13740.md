@@ -1,1 +1,0 @@
-# numToByte outputs text rather than data

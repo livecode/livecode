@@ -24,11 +24,7 @@
 #include "player.h"
 #include "exec.h"
 
-#ifdef FEATURE_PLATFORM_PLAYER
-#include "player-platform.cpp"
-#else
-#include "player-legacy.cpp"
-#endif
+#include "globals.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,16 +33,16 @@ MCPropertyInfo MCPlayer::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_FILE_NAME, OptionalString, MCPlayer, FileName)
 	DEFINE_RW_OBJ_PROPERTY(P_DONT_REFRESH, Bool, MCPlayer, DontRefresh)
     // PM-2014-09-15: [[ Bug 13437 ]] Make sure the time-related vars are large enough to hold larger time values
-	DEFINE_RW_OBJ_PROPERTY(P_CURRENT_TIME, UInt32, MCPlayer, CurrentTime)
+	DEFINE_RW_OBJ_PROPERTY(P_CURRENT_TIME, Double, MCPlayer, CurrentTime)
     // PM-2014-11-03: [[ Bug 13920 ]] Make sure the loadedTime property is defined
-    DEFINE_RO_OBJ_PROPERTY(P_MOVIE_LOADED_TIME, UInt32, MCPlayer, LoadedTime)
-	DEFINE_RO_OBJ_PROPERTY(P_DURATION, UInt32, MCPlayer, Duration)
+    DEFINE_RO_OBJ_PROPERTY(P_MOVIE_LOADED_TIME, Double, MCPlayer, LoadedTime)
+	DEFINE_RO_OBJ_PROPERTY(P_DURATION, Double, MCPlayer, Duration)
 	DEFINE_RW_OBJ_PROPERTY(P_LOOPING, Bool, MCPlayer, Looping)
 	DEFINE_RW_OBJ_PROPERTY(P_PAUSED, Bool, MCPlayer, Paused)
 	DEFINE_RW_OBJ_PROPERTY(P_ALWAYS_BUFFER, Bool, MCPlayer, AlwaysBuffer)
 	DEFINE_RW_OBJ_PROPERTY(P_PLAY_RATE, Double, MCPlayer, PlayRate)
-	DEFINE_RW_OBJ_PROPERTY(P_START_TIME, OptionalUInt32, MCPlayer, StartTime)
-	DEFINE_RW_OBJ_PROPERTY(P_END_TIME, OptionalUInt32, MCPlayer, EndTime)
+	DEFINE_RW_OBJ_PROPERTY(P_START_TIME, OptionalDouble, MCPlayer, StartTime)
+	DEFINE_RW_OBJ_PROPERTY(P_END_TIME, OptionalDouble, MCPlayer, EndTime)
 	DEFINE_RW_OBJ_PROPERTY(P_SHOW_BADGE, Bool, MCPlayer, ShowBadge)
 	DEFINE_RW_OBJ_PROPERTY(P_SHOW_CONTROLLER, Bool, MCPlayer, ShowController)
 	DEFINE_RW_OBJ_PROPERTY(P_PLAY_SELECTION, Bool, MCPlayer, PlaySelection)
@@ -66,11 +62,14 @@ MCPropertyInfo MCPlayer::kProperties[] =
     // PM-2015-06-01: [[ Bug 15439 ]] EnabledTracks should be RW
     DEFINE_RW_OBJ_LIST_PROPERTY(P_ENABLED_TRACKS, LinesOfLooseUInt, MCPlayer, EnabledTracks)
     DEFINE_RW_OBJ_PROPERTY(P_PLAY_LOUDNESS, UInt16, MCPlayer, PlayLoudness)
-    DEFINE_RO_OBJ_PROPERTY(P_TIME_SCALE, UInt32, MCPlayer, TimeScale)
+    DEFINE_RO_OBJ_PROPERTY(P_TIME_SCALE, Double, MCPlayer, TimeScale)
     // SN-2014-08-06: [[ Bug 13115 ]] Missing formatted (width|height) in the property table
     DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, Int32, MCPlayer, FormattedHeight)
     DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, Int32, MCPlayer, FormattedWidth)
     DEFINE_RW_OBJ_PROPERTY(P_DONT_USE_QT, Bool, MCPlayer, DontUseQT)
+    DEFINE_RW_OBJ_PROPERTY(P_LEFT_BALANCE, Double, MCPlayer, LeftBalance)
+    DEFINE_RW_OBJ_PROPERTY(P_RIGHT_BALANCE, Double, MCPlayer, RightBalance)
+    DEFINE_RW_OBJ_PROPERTY(P_AUDIO_PAN, Double, MCPlayer, AudioPan)
 #ifdef FEATURE_PLATFORM_PLAYER
     DEFINE_RO_OBJ_ENUM_PROPERTY(P_STATUS, InterfacePlayerStatus, MCPlayer, Status)
     DEFINE_RW_OBJ_PROPERTY(P_MIRRORED, Bool, MCPlayer, Mirrored)
@@ -84,3 +83,147 @@ MCObjectPropertyTable MCPlayer::kPropertyTable =
 	&kProperties[0],
 };
 
+bool MCPlayer::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnPlayer(this);
+}
+
+void MCPlayer::removereferences()
+{
+    // OK-2009-04-30: [[Bug 7517]] - Ensure the player is actually closed before deletion, otherwise dangling references may still exist.
+    while (opened)
+        close();
+    
+    playstop();
+    
+    MCObject::removereferences();
+}
+
+void MCPlayer::removefromplayers()
+{
+    if (MCplayers)
+    {
+        if (MCplayers == this)
+            MCplayers = nextplayer;
+        else
+        {
+            MCPlayer *tptr = MCplayers;
+            while (tptr->nextplayer.IsValid() && tptr->nextplayer != this)
+                tptr = tptr->nextplayer;
+            
+            if (tptr->nextplayer.IsValid() && tptr->nextplayer == this)
+                tptr->nextplayer = nextplayer;
+        }
+     }
+     nextplayer = nullptr;
+}
+
+void MCPlayer::SyncPlayers(MCStack* p_stack, MCContext *p_context)
+{
+    for(MCPlayerHandle t_player = MCplayers;
+        t_player.IsValid();
+        t_player = t_player -> getnextplayer())
+    {
+        if (p_stack == nullptr ||
+            t_player -> getstack() == p_stack)
+            t_player -> syncbuffering(p_context);
+    }
+}
+
+#ifdef FEATURE_PLATFORM_PLAYER
+void MCPlayer::DetachPlayers(MCStack* p_stack)
+{
+    for(MCPlayerHandle t_player = MCplayers;
+        t_player.IsValid();
+        t_player = t_player -> getnextplayer())
+    {
+        if (t_player -> getstack() == p_stack)
+            t_player -> detachplayer();
+    }
+}
+
+void MCPlayer::AttachPlayers(MCStack* p_stack)
+{
+    for(MCPlayerHandle t_player = MCplayers;
+        t_player.IsValid();
+        t_player = t_player -> getnextplayer())
+    {
+        if (t_player -> getstack() == p_stack)
+            t_player -> attachplayer();
+    }
+}
+#endif
+
+void MCPlayer::StopPlayers(MCStack* p_stack)
+{
+    MCPlayerHandle t_player = MCplayers;
+    while(t_player.IsValid())
+    {
+        if (t_player -> getstack() == p_stack)
+        {
+#ifdef FEATURE_PLATFORM_PLAYER
+            t_player->playstop();
+#else
+            if (t_player->playstop())
+            {
+                // player was removed from list, start search over
+                t_player = MCplayers;
+                continue;
+            }
+                
+#endif
+        }
+        t_player = t_player->getnextplayer();
+    }
+}
+
+void MCPlayer::ClosePlayers(MCStack* p_stack)
+{
+    MCPlayerHandle t_player = MCplayers;
+    while(t_player.IsValid())
+    {
+        MCPlayer *oldptr = t_player;
+        t_player = t_player->getnextplayer();
+        if (oldptr->getstack() == p_stack)
+            oldptr->close();
+    }
+}
+
+MCPlayer* MCPlayer::FindPlayerByName(MCNameRef p_name)
+{
+    MCPlayerHandle t_player = MCplayers;
+    while (t_player.IsValid())
+    {
+        if (t_player -> hasname(p_name))
+        {
+            return t_player;
+        }
+        t_player = t_player->getnextplayer();
+    }
+    
+    return nil;
+}
+
+MCPlayer* MCPlayer::FindPlayerById(uint32_t p_id)
+{
+    MCPlayerHandle t_player = MCplayers;
+    while (t_player.IsValid())
+    {
+        if (t_player -> getaltid() == p_id)
+        {
+            return t_player;
+        }
+        t_player = t_player->getnextplayer();
+    }
+    return nil;
+}
+
+void MCPlayer::SetPlayersVolume(uinteger_t p_volume)
+{
+    MCPlayerHandle t_player = MCplayers;
+    while (t_player.IsValid())
+    {
+        t_player -> setvolume(p_volume);
+        t_player = t_player->getnextplayer();
+    }
+}

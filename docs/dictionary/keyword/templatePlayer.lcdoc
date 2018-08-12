@@ -4,31 +4,51 @@ Type: keyword
 
 Syntax: templatePlayer
 
-Summary: Used with the <set> <command> to set the <properties> of newly created <player|players>.
+Summary:
+Used with the <set> <command> to set the <properties> of newly created
+<player|players>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the alwaysBuffer of the templatePlayer to true
 
 Description:
-Use the <templatePlayer> <keyword> to set up <default> <properties> to be used for any new <player(object)|players> you create.
+Use the <templatePlayer> <keyword> to set up <default> <properties> to
+be used for any new <player(object)|players> you create.
 
-The <templatePlayer> can be thought of as a special, abstract <object>. It is not an actual <player(keyword)>, but it has all the <properties> of a <player(keyword)>. The <ID> <property> of the <templatePlayer> is zero.
+The <templatePlayer> can be thought of as a special, abstract
+<object(glossary)>. It is not an actual <player(keyword)>, but it has
+all the <properties> of a <player(keyword)>. The <ID> <property> of the
+<templatePlayer> is zero.
 
-You can use the <set> <command> to set the <properties> of the <templatePlayer> before creating a <player(keyword)>. The new <player(keyword)> has the <properties> of the <templatePlayer>, by <default>. Changing the <properties> of the <templatePlayer> does not affect existing <player(object)|players>.
+You can use the <set> <command> to set the <properties> of the
+<templatePlayer> before creating a <player(keyword)>. The new
+<player(keyword)> has the <properties> of the <templatePlayer>, by
+<default>. Changing the <properties> of the <templatePlayer> does not
+affect existing <player(object)|players>.
 
-The properties of the <templatePlayer> can be returned to the default settings using the <reset> command.
+The properties of the <templatePlayer> can be returned to the default
+settings using the <reset> command.
 
 You can refer to the <templatePlayer> using any of the following forms:
-        templatePlayer
-        the templatePlayer
-        templatePlayer()
 
->*Note:* The <templatePlayer> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
+    templatePlayer
+    the templatePlayer
+    templatePlayer()
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), player (keyword), object (object), player (object), keyword (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+
+>*Note:* The <templatePlayer> <keyword> is implemented internally as a
+> <function> and appears in the <functionNames>. However, it cannot be
+> used as a <function> in an <expression>.
+
+References: reset (command), set (command), function (control structure),
+functionNames (function), object (glossary), keyword (glossary),
+property (glossary), command (glossary), expression (glossary),
+templateScrollbar (keyword), default (keyword), player (keyword),
+player (object), properties (property), ID (property)
+

@@ -1,12 +1,17 @@
 Name: Database library
 
-Synonyms: Database libraries,Database library
+Synonyms: database libraries, database library
 
 Type: library
 
 Description:
-The <LiveCode custom library|LiveCode custom library> that supports connections to MySQL, PostgreSQL, <Open Database Connectivity (ODBC)|ODBC>, Valentina, and Oracle (LiveCode Enterprise only) databases.
+The <LiveCode custom library|LiveCode custom library> that supports
+connections to MySQL, PostgreSQL, <Open Database Connectivity
+(ODBC)|ODBC>, Valentina, and Oracle (LiveCode Enterprise only)
+databases. 
 
-References: Open Database Connectivity (ODBC) (glossary), LiveCode custom library (library)
+References: Open Database Connectivity (ODBC) (glossary),
+LiveCode custom library (glossary)
 
 Tags: database
+

@@ -6,13 +6,15 @@ Syntax: the params
 
 Syntax: params()
 
-Summary: <return|Returns> all the <parameter|parameters> <pass|passed> to the current <handler>.
+Summary:
+<return|Returns> all the <parameter|parameters> <pass|passed> to the
+current <handler>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the params
@@ -21,49 +23,80 @@ Example:
 put char 2 to -2 of word 1 of the params into handlerName
 
 Returns:
-When used in a message handler, the <params> <function> <return|returns> the <handler> name, a space, and a list of <parameter> <value|values>, each enclosed in quotes and separated by commas.
-When used in a function handler, the <params> <function> returns the <handler> name, then the list of <parameter> <value|values> in parentheses. Each parameter value is enclosed in quotes and separated by commas.
+When used in a message handler, the <params> <function> <return|returns>
+the <handler> name, a space, and a list of <parameter> <value|values>,
+each enclosed in quotes and separated by commas. When used in a function
+handler, the <params> <function> returns the <handler> name, then the
+list of <parameter> <value|values> in parentheses. Each parameter value
+is enclosed in quotes and separated by commas.
 
 Description:
-Use the <params> <function> within a <handler> to get the <parameter|parameters> that were <pass|passed> to the <handler>.
+Use the <params> <function> within a <handler> to get the
+<parameter|parameters> that were <pass|passed> to the <handler>.
 
-Usually, you assign names to parameters in the first line of a function handler or message handler. For example, the following handler assigns three parameters:
+Usually, you assign names to parameters in the first line of a function
+handler or message handler. For example, the following handler assigns
+three parameters:
 
-  on myHandler thisParam,thatParam,theOtherParam
+    on myHandler thisParam,thatParam,theOtherParam
     answer thisParam & return & thatParam & return & theOtherParam
-  end myHandler
 
-If you call the above handler with four parameters, the first three parameters are assigned to the names thisParam, thatParam, and theOtherParam, but the fourth parameter is not assigned a name:
+    end myHandler
 
-  myHandler "red","green","blue","yellow"
 
-You can obtain the fourth parameter for use in the handler with the <params> <function> :
+If you call the above handler with four parameters, the first three
+parameters are assigned to the names thisParam, thatParam, and
+theOtherParam, but the fourth parameter is not assigned a name:
 
-  on myHandler thisParam,thatParam,theOtherParam
+    myHandler "red","green","blue","yellow"
+
+
+You can obtain the fourth parameter for use in the handler with the
+<params> <function> :
+
+    on myHandler thisParam,thatParam,theOtherParam
     put item 4 of the params into yetAnotherParam
     answer yetAnotherParam
-  end myHandler
 
-In this case, item 4 of the <params> is "yellow". (To use the value itself, you need to remove the opening and closing quotes.)
+    end myHandler
 
-If the <params> <function> is used in a <function handler>, the parameters are enclosed in parentheses. For example, the following function handler has three parameters:
 
-  function myFunction thisParam,thatParam,theOtherParam
+In this case, item 4 of the <params> is "yellow". (To use the value
+itself, you need to remove the opening and closing quotes.)
+
+If the <params> <function> is used in a <function handler>, the
+parameters are enclosed in parentheses. For example, the following
+function handler has three parameters:
+
+    function myFunction thisParam,thatParam,theOtherParam
     return thisParam & return & thatParam & return & theOtherParam
-  end myFunction
+
+    end myFunction
+
 
 If you call "myFunction" with the following statement:
-  get myFunction("red","green","blue")
+
+    get myFunction("red","green","blue")
+
 the value returned is "myFunction("red","green","blue")".
 
-LiveCode evaluates the parameters before passing them. So if you call myHandler with the following statement:
-  myHandler 1+1,"A","Hello" && "world"
-the value returned by the <params> <function> is
-  myHandler "2","A","Hello world"
+LiveCode evaluates the parameters before passing them. So if you call
+myHandler with the following statement: myHandler 1+1,"A","Hello" &&
+"world" the value returned by the <params> <function> is
+
+    myHandler "2","A","Hello world"
+
 
 Changes:
-The format of the params when used in a function handler was changed in version 2.0. In previous versions, the format for functions was the same as the format for message handlers:  the parameters were not enclosed in parentheses, but instead separated from the handler name by a space.
+The format of the params when used in a function handler was changed in
+version 2.0. In previous versions, the format for functions was the same
+as the format for message handlers: the parameters were not enclosed in
+parentheses, but instead separated from the handler name by a space.
 
-References: call (command), paramCount (function), pass (glossary), handler (glossary), parameter (glossary), function handler (glossary), return (glossary), value (glossary), function (control_st)
+References: call (command), function (control structure),
+paramCount (function), pass (glossary), handler (glossary),
+parameter (glossary), function handler (glossary), return (glossary),
+value (glossary)
 
 Tags: properties
+

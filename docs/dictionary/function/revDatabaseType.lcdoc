@@ -1,20 +1,23 @@
 Name: revDatabaseType
 
+Synonyms: revdb_dbtype
+
 Type: function
 
 Syntax: revDatabaseType(<databaseID>)
 
-Summary: <return|Returns> the type of database associated with a connection.
+Summary:
+<return|Returns> the type of database associated with a connection.
 
-Synonyms: revdb_dbtype
+Associations: database library
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 if revDatabaseType(1) is not "odbc" then
@@ -22,31 +25,56 @@ if revDatabaseType(1) is not "odbc" then
 end if
 
 Example:
-if revDatabaseType(the currentDB of group "Display") is "Valentina" then 
+if revDatabaseType(the currentDB \
+      of group "Display" ) is "Valentina" then
   sendValQuery 
 else
   sendGenericQuery
 end if
 
 Parameters:
-databaseID: The number returned by the revOpenDatabase function when the database was opened.
+databaseID:
+The number returned by the revOpenDatabase function when the database
+was opened.
 
 Returns:
-The <revDatabaseType> <function> returns a string containing up to two items (separated by a comma)
-Item 1 of the string is one of the following values: "MySQL", "ODBC", "Oracle", "PostgresSQL", "SQLite", "Valentina".
+The <revDatabaseType> <function> returns a string containing up to two
+items (separated by a comma) Item 1 of the string is one of the
+following values: "MySQL", "ODBC", "Oracle", "PostgresSQL", "SQLite",
+"Valentina". 
 
-Item 2 of the string is empty for all database types except ODBC. If the database type is ODBC then item 2 of the string contains the name of the database system being accessed by the ODBC driver.
+Item 2 of the string is empty for all database types except ODBC. If the
+database type is ODBC then item 2 of the string contains the name of the
+database system being accessed by the ODBC driver.
 
 Description:
-Use the <revDatabaseType> <function> to send different queries or perform different operations depending on what kind of database is being used.
+Use the <revDatabaseType> <function> to send different queries or
+perform different operations depending on what kind of database is being
+used. 
 
-You can use the <revDatabaseType> <function> to distinguish between different <database> types. For example, you may need to frame a <SQL query> differently depending on what type of <database> you are communicating with.
+You can use the <revDatabaseType> <function> to distinguish between
+different <database> types. For example, you may need to frame a <SQL
+query> differently depending on what type of <database> you are
+communicating with.
 
->*Important:*  The <revDatabaseType> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revDatabaseType> <function> is part of the 
+> <Database library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
 Changes:
 The revDatabaseType synonym was added in version 2.0.
 
-References: function (control_st), revDatabaseColumnTypes (function), revOpenDatabases (function), Database library (library), LiveCode custom library (library), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), return (glossary), SQL query (glossary)
+References: function (control structure),
+revDatabaseColumnTypes (function), revOpenDatabases (function),
+LiveCode custom library (glossary),
+Standalone Application Settings (glossary), database (glossary),
+standalone application (glossary), return (glossary),
+SQL query (glossary), Database library (library)
 
 Tags: database
+

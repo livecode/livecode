@@ -4,13 +4,15 @@ Type: command
 
 Syntax: revPrintReport
 
-Summary: Prints a report from the <report viewer|report viewers> on the <current card>.
+Summary:
+Prints a report from the <report viewer|report viewers> on the <current
+card>. 
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Security: printing
 
@@ -18,22 +20,37 @@ Example:
 revPrintReport
 
 Description:
->*Note:* This stack is no-longer suppoted but can still be used by manually launching the tool.
+Use the <revPrintReport> <command> to print a report that you have set 
+up in the <Report Builder>.
 
-Use the <revPrintReport> <command> to print a report that you have set up in the <Report Builder>.
+>*Note:* The <Report Builder> stack is no-longer supported but can
+> still 
+> be used by manually launching the tool.
 
->*Note:* This stack is no-longer suppoted but can still be used by manually launching the tool.
+When you use the <Report Builder> to create a set of report settings,
+the settings are stored with the card. The <revPrintReport> <command>
+uses the settings specified in the <Report Builder> for the <current
+card> to print the report. If you have never used the <Report Builder>
+with the <current card> (and therefore there are no report settings to
+use), the <revPrintReport> <command> causes a <error|script error>.
 
-Use the <revPrintReport> <command> to print a report that you have set up in the <Report Builder>.
+The <revPrintReport> <command> is equivalent to clicking "Print Report"
+in the <Report Builder>.
 
-When you use the Report Builder to create a set of report settings, the settings are stored with the card. The <revPrintReport> <command> uses the settings specified in the <Report Builder> for the <current card> to print the report. If you have never used the <Report Builder> with the <current card> (and therefore there are no report settings to use), the <revPrintReport> <command> causes a <error|script error>.
+>*Important:*  The <revPrintReport> <command> is part of the 
+> <Printing library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Printing" 
+> library checkbox is checked.
 
-The <revPrintReport> <command> is equivalent to choosing Tools menu<img src="202656"/>Report Builder and clicking "Print Report".
-
->*Important:*  The <revPrintReport> com is part of the Printing library. To ensure that the command works in a standalone application, you must include this custom library when you create your standalone. In the Inclusions section on the General screen of the Standalone Application Settings window, make sure that "Printing" is selected in the list of script libraries.
-
->*Note:* When included in a standalone application, the Printing library is implemented as a hidden group and made available when the group receives its first openBackground message. During the first part of the applicati startup process, before this message is sent, the <revPrintReport> command is not yet available. This may affect attempts to use this command in startup, preOpenStack, openStack, or preOpenCard hand in the main stack. Once the application has finished starting up, the library is available and the <revPrintReport> command can be used in any handler.
-
-References: print (command), revPrintField (command), revPrintText (command), report viewer (glossary), current card (glossary), command (glossary), Report Builder (glossary), error (glossary)
+References: print (command), revPrintField (command),
+revPrintText (command), report viewer (glossary), current card (glossary),
+command (glossary), Report Builder (glossary), error (glossary),
+standalone application (glossary),
+Standalone Application Settings (glossary),
+LiveCode custom library (glossary), Printing library (library)
 
 Tags: printing
+

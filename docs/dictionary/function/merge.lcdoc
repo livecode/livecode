@@ -4,13 +4,16 @@ Type: function
 
 Syntax: merge(<stringToEvaluate>)
 
-Summary: <evaluate|Evaluates> any <expression|expressions> in a <string>, replaces them with their value, and <return|returns> the transformed <string>.
+Summary:
+<evaluate|Evaluates> any <expression|expressions> in a <string>,
+replaces them with their value, and <return|returns> the transformed
+<string>. 
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 merge("1+1 equals [[1+1]]") -- returns "1+1 equals 2"
@@ -19,16 +22,27 @@ Example:
 merge("The current folder is [[the defaultFolder]]")
 
 Parameters:
-stringToEvaluate (string): A string of any length, which may include expressions enclosed in double square brackets ([[expression]]) and return statements enclosed in "<?" and "?>" (<?return expression?>).
+stringToEvaluate (string):
+A string of any length, which may include expressions enclosed in double
+square brackets ([[expression]]) and return statements enclosed in "<?"
+and "?>" (<?return expression?>).
 
-The result: Use the <merge> <function> to combine text with the result of <evaluate|evaluating> <expression|expressions> in a single <string>.
+Returns:
+The <merge> <function> returns a <string>.
 
-Returns: The <merge> <function> returns a <string>.
+The result:
+Use the <merge> <function> to combine text with the result of
+<evaluate|evaluating> <expression|expressions> in a single <string>.
 
 Description:
+The <merge> <function> <evaluate|Evaluates> any <expression|expressions>
+in double square brackets, and replaces them with the
+<expression|expression's> value.
 
-The <merge> <function> <evaluate|Evaluates> any <expression|expressions> in double square brackets, and replaces them with the <expression|expression's> value.
+It also executes any <return> <statement|statements> enclosed in "&lt;?"
+and "?&gt;", and replaces them by the value returned.
 
-It also executes any <return> <statement|statements> enclosed in "&lt;?" and "?&gt;", and replaces them by the value returned.
+References: return (control structure), function (control structure),
+value (function), statement (glossary), evaluate (glossary),
+return (glossary), expression (glossary), string (keyword)
 
-References: string (keyword), value (function), return (control_st), function (control_st), statement (glossary), evaluate (glossary), return (glossary), expression (glossary)

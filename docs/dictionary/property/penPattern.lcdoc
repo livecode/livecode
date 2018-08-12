@@ -1,18 +1,20 @@
 Name: penPattern
 
+Synonyms: penpat
+
 Type: property
 
 Syntax: set the penPattern to {<patternNumber> | <imageID> | empty}
 
-Summary: Specifies the pattern used for painting with the <paint tool|paint tools>.
-
-Synonyms: penPat
+Summary:
+Specifies the pattern used for painting with the <paint tool|paint
+tools>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the penPattern to empty
@@ -22,21 +24,42 @@ set the penPattern to 1013
 
 Value:
 The <penPattern> is a pattern specifier.
-A <patternNumber> is a built-in pattern number between 1 and 164. (These patterns correspond to LiveCode's built-in patterns 136 to 300.)
+A <patternNumber> is a built-in pattern number between 1 and 164. These
+patterns are provided for compatibility with patterns available in
+MetaCard and correspond to LiveCode's built in image id 137 to 300. As
+with MetaCard pattern numbers 105 to 114 and 146 and above are 
+unavailable.
 
-An <imageID> is the ID of an <image> to use for a pattern. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+An <imageID> is the ID of an <image> to use for a pattern. LiveCode
+looks for the specified <image> first in the <current stack>, then in
+other open <stacks>.
 
 By default, the <penPattern> is empty.
 
 Description:
-Use the <penPattern> <property> to change the pattern used with the <pencil>, <line>, and <curve> <paint tool|paint tools>, and for the borders of shapes.
+Use the <penPattern> <property> to change the pattern used with the
+<pencil>, <line>, and <curve> <paint tool|paint tools>, and for the
+borders of shapes.
 
 Pattern images can be color or black-and-white.
 
->*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less, and both its <height> and <width> must be a power of 2. To be used on <Windows> and <Unix|Unix systems>, <height> and <width> must be divisible by 8. To be used as a fully cross-platform pattern, both an image's dimensions should be one of 8, 16, 32, 64, or 128.
+>*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS
+> systems>, an <image> must be 128x128 <pixels> or less, and both its
+> <height> and <width> must be a power of 2. To be used on <Windows> and
+> <Unix|Unix systems>, <height> and <width> must be divisible by 8. To
+> be used as a fully cross-platform pattern, both an image's dimensions
+> should be one of 8, 16, 32, 64, or 128.
 
-If the <penColor> has been set since the last time the <penPattern> was set, the color is used instead of the pattern specified by <penPattern>. In other words, the last-set <property> takes priority.
+If the <penColor> has been set since the last time the <penPattern> was
+set, the color is used instead of the pattern specified by <penPattern>.
+In other words, the last-set <property> takes priority.
 
-References: width (property), height (property), pixels (property), foregroundPattern (property), penColor (property), brushPattern (property), image (keyword), line (keyword), curve (keyword), pencil (keyword), choose (command), stacks (function), property (glossary), Windows (glossary), paint tool (glossary), Mac OS (glossary), Unix (glossary), current stack (glossary)
+References: choose (command), stacks (function), property (glossary),
+Windows (glossary), paint tool (glossary), Mac OS (glossary),
+Unix (glossary), current stack (glossary), image (keyword),
+line (keyword), curve (keyword), pencil (keyword), width (property),
+height (property), pixels (property), foregroundPattern (property),
+penColor (property), brushPattern (property)
 
 Tags: ui
+

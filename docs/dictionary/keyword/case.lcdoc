@@ -2,17 +2,19 @@ Name: case
 
 Type: keyword
 
-Syntax: case <value> 
+Syntax: case <value>
 
-Syntax: case <condition> 
+Syntax: case <condition>
 
-Summary: Used within a <switch> <control structure> to designate one of the possibilities to be handled.
+Summary:
+Used within a <switch> <control structure> to designate one of the
+possibilities to be handled.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 case "A"
@@ -21,30 +23,55 @@ Example:
 case myChar = "A"
 
 Parameters:
-value: 
-condition: 
+value:
+
+
+condition:
+
 
 Description:
-Use the <case> <keyword> to indicate the condition for which a set of <statement|statements> should be <execute|executed>.
+Use the <case> <keyword> to indicate the condition for which a set of
+<statement|statements> should be <execute|executed>.
 
-The <case> <keyword> can be used in two forms. The first form is used when the <switch> <statement> includes an <expression> : the case is <execute|executed> if the <value> after the <word> case is equal to the expression in the <switch> <control structure>. For example, if the <switch> <control structure|structure> starts with this <statement> :
+The <case> <keyword> can be used in two forms. The first form is used
+when the <switch> <statement> includes an <expression> : the case is
+<execute|executed> if the <value> after the <word> case is equal to the
+expression in the <switch> <control structure>. For example, if the
+<switch> <control structure|structure> starts with this <statement> :
 
-  switch thisVariable
+    switch thisVariable
 
-then a <case> <statement> inside the <switch> <control structure|structure> might look like this:
 
-  case 3
+then a <case> <statement> inside the <switch> 
+<control structure|structure> might look like this:
 
-and the lines following the <case> <keyword> are executed if thisVariable = 3. Use this form if you want to test a single value, and do different things depending on what that <value> is equal to.
+    case 3
 
-The second form is used when the <switch> <statement> does not include an <expression> : the case is <execute|executed> if the <condition> after the word case is true. For example, if the <switch> <control structure|structure> starts with this <statement> :
 
-  switch
+and the lines following the <case> <keyword> are executed if
+thisVariable = 3. Use this form if you want to test a single value, and
+do different things depending on what that <value> is equal to.
 
-then a <case> <statement> inside the <switch> <control structure|structure> might look like this:
+The second form is used when the <switch> <statement> does not include
+an <expression> : the case is <execute|executed> if the <condition>
+after the word case is true. For example, if the <switch> 
+<control structure|structure> starts with this <statement> :
 
-  case the short name of this card contains "a"
+    switch
 
-and the statements following the <case> <keyword> are <execute|executed> if the <character> "a" appears in the <current card|current card's> name.
 
-References: word (keyword), character (keyword), switch (control_st), break (control_st), keyword (glossary), current card (glossary), statement (glossary), execute (glossary), control structure (glossary), expression (glossary), value (function)
+then a <case> <statement> inside the <switch> 
+<control structure|structure> might look like this:
+
+    case the short name of this card contains "a"
+
+
+and the statements following the <case> <keyword> are <execute|executed>
+if the <character> "a" appears in the <current card|current card's>
+name. 
+
+References: switch (control structure), break (control structure),
+value (function), keyword (glossary), current card (glossary),
+statement (glossary), execute (glossary), control structure (glossary),
+expression (glossary), word (keyword), character (keyword)
+

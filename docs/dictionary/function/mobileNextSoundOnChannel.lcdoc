@@ -1,16 +1,18 @@
 Name: mobileNextSoundOnChannel
 
+Synonyms: iphonenextsoundonchannel
+
 Type: function
 
 Syntax: mobileNextSoundOnChannel(<channel>)
 
-Summary: Returns the sound that is scheduled to play next (if any) on the given channel.
-
-Synonyms: iphoneNextSoundOnChannel
+Summary:
+Returns the sound that is scheduled to play next (if any) on the given
+channel. 
 
 Introduced: 4.6
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -21,13 +23,24 @@ Example:
 put mobileNextSoundOnChannel("current") into tNextSound
 
 Parameters:
-channel: The name of the channel.
+channel:
+The name of the channel.
 
 Returns:
-The <mobileNextSoundOnChannel> function returns the name of the sound file that is scheduled to play next on the given channel.
-If no sound is scheduled or the channel doesn't exit then empty is returned.
+The <mobileNextSoundOnChannel> function returns the name of the sound
+file that is scheduled to play next on the given channel. If no sound is
+scheduled or the channel doesn't exit then empty is returned.
 
 Description:
-Use the <mobileNextSoundOnChannel> function to find what sound (if any) is scheduled to play next on the current channel.
+Use the <mobileNextSoundOnChannel> function to find what sound (if any)
+is scheduled to play next on the current channel.
 
-References: mobileDeleteSoundChannel (command), mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command), mobilePausePlayingOnChannel (command), mobileStopPlayingOnChannel (command), mobileResumePlayingOnChannel (command), mobileSoundChannelVolume (function), mobileSoundOnChannel (function), mobileSoundChannels (function), mobileSoundChannelStatus (function), soundFinishedOnChannel (message)
+References: mobileDeleteSoundChannel (command),
+mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command),
+mobilePausePlayingOnChannel (command),
+mobileStopPlayingOnChannel (command),
+mobileResumePlayingOnChannel (command),
+mobileSoundChannelVolume (function), mobileSoundOnChannel (function),
+mobileSoundChannels (function), mobileSoundChannelStatus (function),
+soundFinishedOnChannel (message)
+

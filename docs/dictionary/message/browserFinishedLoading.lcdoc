@@ -2,13 +2,14 @@ Name: browserFinishedLoading
 
 Type: message
 
-Syntax: browserFinishedLoading <url> 
+Syntax: browserFinishedLoading <pUrl>
 
-Summary: Sent when the given url has finished loading.
+Summary:
+Sent when the given url has finished loading.
 
 Introduced: 4.5.3
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -19,13 +20,24 @@ on browserFinishedLoading pURL
 end browserFinishedLoading
 
 Parameters:
-url: The URL that has loaded.
+pUrl:
+The URL that has loaded.
 
 Description:
-Handle the <browserFinishedLoading> message to perform an action when a URL has finished loading in a native mobile browser control created using <mobileControlCreate>.
+Handle the <browserFinishedLoading> message to perform an action when a
+URL has finished loading in a native mobile browser control created
+using <mobileControlCreate>.
 
-The <browserFinishedLoading> message is sent to the object containing the script that created the mobile browser control using <mobileControlCreate> when the URL has finished loading.
+The <browserFinishedLoading> message is sent to the object containing
+the script that created the mobile browser control using
+<mobileControlCreate> when the URL has finished loading.
 
->*Note:* The <browserFinishedLoading> message is sent in response to the webViewDidFinishLoad delegate method.
+>*Note:* The <browserFinishedLoading> message is sent in response to the
+> webViewDidFinishLoad delegate method.
 
-References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), browserStartedLoading (message), browserLoadRequest (message), browserLoadFailed (message)
+References: mobileControlCreate (command), mobileControlDelete (command),
+mobileControlSet (command), mobileControlGet (function),
+mobileControlTarget (function), mobileControls (function),
+browserStartedLoading (message), browserLoadRequest (message),
+browserLoadFailed (message)
+

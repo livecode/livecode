@@ -6,13 +6,15 @@ Syntax: the target
 
 Syntax: target()
 
-Summary: <return|Returns> the <object> which received the <message> that started <execute|execution>.
+Summary:
+<return|Returns> the <object(glossary)> which received the <message>
+that started <execute|execution>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the target
@@ -23,15 +25,38 @@ if word 1 of the target is "button" then clickedAButton
 Example:
 set the backgroundColor of the target to "black"
 
-Returns: The <target> <function> <return|returns> the <name> <property> of the <object>.
+Returns:
+The <target> <function> <return|returns> the <name> <property> of the
+<object(glossary)>. 
 
 Description:
-Use the <target> <function> within a message <handler> to determine which <object> originally received the <message>.
+Use the <target> <function> within a message <handler> to determine
+which <object(glossary)> originally received the <message>.
 
-Suppose a card script contains a mouseDown <handler>. If the user clicks a <button(keyword)>, a <mouseDown> <message> is sent to the <button(keyword)>. If the <button(object)|button's> <script> does not contain a <mouseDown> <handler>, the <message> is <pass|passed> to the <card>, and <handle|handled> by the <card(object)|card's> <mouseDown> <handler>.
+Suppose a card script contains a mouseDown <handler>. If the user clicks
+a <button(keyword)>, a <mouseDown> <message> is sent to the
+<button(keyword)>. If the <button(object)|button's> <script> does not
+contain a <mouseDown> <handler>, the <message> is <pass|passed> to the
+<card>, and <handle|handled> by the <card(object)|card's> <mouseDown>
+<handler>. 
 
-The <target> <function> is similar to the <me> <keyword>. In the example described above, within the <card(object)|card's> <handler>, the <target> <function> <return|returns> the <button(object)|button's> name, because the <button(keyword)> is the <object> that first received the <mouseDown> <message>. However, the <me> <keyword> is a <object reference|reference> to the <card>, because the <card> is the <object> whose <script> contains the <mouseDown> <handler> that is <execute|executing>.
+The <target> <function> is similar to the <me> <keyword>. In the example
+described above, within the <card(object)|card's> <handler>, the
+<target> <function> <return|returns> the <button(object)|button's> name,
+because the <button(keyword)> is the <object(glossary)> that first
+received the <mouseDown> <message>. However, the <me> <keyword> is a
+<object reference|reference> to the <card>, because the <card> is the
+<object(glossary)> whose <script> contains the <mouseDown> <handler>
+that is <execute|executing>.
 
-References: script (property), name (property), text (property), mouseDown (message), me (keyword), target (keyword), button (keyword), return (glossary), property (glossary), handle (glossary), handler (glossary), execute (glossary), pass (glossary), message (glossary), card (glossary), keyword (glossary), object reference (glossary), dragSource (function), dragDestination (function), selectedObject (function), card (object), object (object), button (object), function (control_st)
+References: function (control structure), dragSource (function),
+dragDestination (function), selectedObject (function), return (glossary),
+property (glossary), handle (glossary), handler (glossary),
+execute (glossary), pass (glossary), message (glossary), card (glossary),
+keyword (glossary), object reference (glossary), object (glossary),
+me (keyword), target (keyword), button (keyword), mouseDown (message),
+card (object), button (object), script (property), name (property),
+text (property)
 
 Tags: objects
+

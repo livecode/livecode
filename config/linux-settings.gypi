@@ -7,8 +7,8 @@
 		'ext_suffix': '.so',
 		'exe_suffix': '',
 		'debug_info_suffix': '.dbg',
-		
-		'c++_std': '<!(echo ${CXX_STD:-c++03})',
+
+		'c++_std': '<!(echo ${CXX_STD:-c++11})',
 	},
 	
 	'defines':
@@ -67,8 +67,19 @@
 				[
 					'-Wall',
 					'-Wextra',
+					'-Wno-deprecated-register',	# Fix when we move to C++17
 					'-Wno-unused-parameter',	# Just contributes build noise
 					'-Werror=return-type',
+					'-Werror=uninitialized',
+					'-Wno-error=maybe-uninitialized',
+					'-Werror=conversion-null',
+					'-Werror=empty-body',
+				],
+
+				'cflags_cc':
+				[
+					'-Werror=delete-non-virtual-dtor',
+					'-Werror=overloaded-virtual',
 				],
 			},
 			{
@@ -104,7 +115,6 @@
 		'-std=<(c++_std)',
 		'-fno-exceptions',
 		'-fno-rtti',
-		'-fcheck-new',
 	],
 	
 	'configurations':
@@ -115,7 +125,6 @@
 			[
 				'-O0',
 				'-g3',
-				'-Werror=uninitialized',
 			],
 			
 			'defines':
@@ -145,7 +154,6 @@
 			[
 				'-O0',
 				'-g0',
-				'-Werror=uninitialized',
 			],
 			
 			'defines':

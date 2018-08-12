@@ -2,17 +2,20 @@ Name: zoom
 
 Type: property
 
-Syntax: set the zoom of <player> to <degrees> 
+Syntax: set the zoom of <player> to <degrees>
 
-Summary: Specifies the field of view of a <QuickTime VR> movie.
+Summary:
+Specifies the field of view of a <QuickTime VR> movie.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows
+Deprecated: 8.1
 
-Platforms: desktop,web
+OS: mac, windows
+
+Platforms: desktop
 
 Example:
 set the zoom of player "Arctic" to 45 -- medium field of view
@@ -20,19 +23,46 @@ set the zoom of player "Arctic" to 45 -- medium field of view
 Example:
 put the zoom of player myPlayerName into currentField
 
-Value: The <zoom> of a <player> is a number between zero and 90.
+Value:
+The <zoom> of a <player> is a number between zero and 90.
 
 Description:
-Use the <zoom> <property> to find out how much of a <QuickTime VR> movie the user can see at one time.
+Use the <zoom> <property> to find out how much of a <QuickTime VR> movie
+the user can see at one time.
 
-The user can change the field of view of a QuickTime VR movie using the navigational controls in the player; a handler can change the view by setting the player's <zoom> <property>.
+The user can change the field of view of a QuickTime VR movie using the
+navigational controls in the player; a handler can change the view by
+setting the player's <zoom> <property>.
 
-The <zoom> specifies the angle of the viewer's field of view, in <degree|degrees>. (Think of a camera with a zoom lens.) As the <zoom> increases, more of the scene can be seen. As the <zoom> decreases, the edges of the scene are no longer visible, but the center of the scene is shown in greater detail. A <zoom> of zero corresponds to the closest detailed view of a single point; a <zoom> of 90 corresponds to a wide-angle view of the scene.
+The <zoom> specifies the angle of the viewer's field of view, in
+<degree|degrees>. (Think of a camera with a zoom lens.) As the <zoom>
+increases, more of the scene can be seen. As the <zoom> decreases, the
+edges of the scene are no longer visible, but the center of the scene is
+shown in greater detail. A <zoom> of zero corresponds to the closest
+detailed view of a single point; a <zoom> of 90 corresponds to a
+wide-angle view of the scene.
 
-The <zoom> is limited by the <player|player's> <constraints> <property>. If you specify a <zoom> greater than the <range> permitted by the <constraints>, the <zoom> is set to the highest permitted <value>. If you specify a <zoom> less than the <range> permitted by the <constraints>, the <zoom> is set to the lowest permitted <value>.
+The <zoom> is limited by the <player|player's> <constraints> <property>.
+If you specify a <zoom> greater than the <range> permitted by the
+<constraints>, the <zoom> is set to the highest permitted <value>. If
+you specify a <zoom> less than the <range> permitted by the
+<constraints>, the <zoom> is set to the lowest permitted <value>.
 
-If the player does not contain a QuickTime VR movie, its <zoom> <property> is zero.
+If the player does not contain a QuickTime VR movie, its <zoom>
+<property> is zero.
 
-References: constraints (property), tilt (property), player (keyword), player (object), property (glossary), QuickTime VR (glossary), range (glossary), degree (glossary), value (function)
+Changes:
+This property was deprecated in version 8.1.0 due to the retirement of
+the QuickTime player implementation. In order to support 64-bit on Mac 
+we have been required to switch to using AVFoundation on Mac, which does 
+not support QTVR. In addition, the Windows player object is now based on 
+DirectShow, as Apple have dropped support for the QuickTime libraries 
+previously used.
+
+References: value (function), property (glossary),
+QuickTime VR (glossary), range (glossary), degree (glossary),
+player (keyword), player (object), constraints (property),
+tilt (property)
 
 Tags: multimedia
+

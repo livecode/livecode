@@ -75,6 +75,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "widget-events.h"
 
+#include "stackfileformat.h"
+
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
 
@@ -85,12 +87,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifdef _ANDROID_MOBILE
 #include "mblad.h"
 #include "mblcontrol.h"
-#include "mblsensor.h"
-#include "mblsyntax.h"
 #endif
 
-#ifdef _IOS_MOBILE
+#ifdef _MOBILE
 #include "mblsyntax.h"
+#include "mblsensor.h"
 #endif
 
 #include "exec.h"
@@ -103,9 +104,15 @@ Bool MCquitisexplicit;
 int MCidleRate = 200;
 
 Boolean MCaqua;
-MCStringRef MCcmd;
-MCStringRef MCfiletype;
-MCStringRef MCstackfiletype;
+
+/* The path to the base folder which contains the application's code resources.
+ * This is used to resolve references to code resources. This is added as a
+ * prefix to the (relative) paths computed in MCU_library_load. */
+MCStringRef MCappcodepath = nullptr;
+
+MCStringRef MCcmd = nullptr;
+MCStringRef MCfiletype = nullptr;
+MCStringRef MCstackfiletype = nullptr;
 
 
 #ifdef TARGET_PLATFORM_LINUX
@@ -202,23 +209,23 @@ MCPatternRef MCbackdroppattern;
 MCImageList *MCpatternlist;
 MCColor MCaccentcolor;
 MCStringRef MCaccentcolorname;
-MCColor MChilitecolor = { 0, 0, 0, 0x8080, 0, 0 };
+MCColor MChilitecolor = { 0, 0, 0x8080 };
 MCStringRef MChilitecolorname;
 MCColor MCselectioncolor;
 MCStringRef MCselectioncolorname;
-Linkatts MClinkatts = { { 0, 0, 0, 0xEFBE, 0, 0 }, NULL,
-                        { 0, 0xFFFF, 0, 0, 0, 0 }, NULL,
-                        { 0, 0x5144, 0x1861, 0x8038, 0, 0 }, NULL, True };
+Linkatts MClinkatts = { { 0, 0, 0xEFBE }, NULL,
+                        { 0xFFFF, 0, 0 }, NULL,
+                        { 0x5144, 0x1861, 0x8038 }, NULL, True };
 Boolean MCrelayergrouped;
 Boolean MCselectgrouped;
 Boolean MCselectintersect = True;
 MCRectangle MCwbr;
 uint2 MCjpegquality = 100;
 Export_format MCpaintcompression = EX_PBM;
-uint2 MCrecordformat = EX_AIFF;
 uint2 MCrecordchannels = 1;
 uint2 MCrecordsamplesize = 8;
 real8 MCrecordrate = 22.050;
+intenum_t MCrecordformat;
 char MCrecordcompression[5] = "raw ";
 char MCrecordinput[5] = "dflt";
 Boolean MCuselzw;
@@ -252,7 +259,7 @@ MCDragAction MCdragaction;
 MCDragActionSet MCallowabledragactions;
 uint4 MCdragimageid;
 MCPoint MCdragimageoffset;
-MCObject *MCdragtargetptr;
+MCObjectHandle MCdragtargetptr;
 uint2 MCdragdelta = 4;
 
 MCUndolist *MCundos;
@@ -262,23 +269,23 @@ MCStacklist *MCtodestroy;
 MCCardlist *MCrecent;
 MCCardlist *MCcstack;
 MCDispatch *MCdispatcher;
-MCStack *MCtopstackptr;
-MCStack *MCdefaultstackptr;
-MCStack *MCstaticdefaultstackptr;
-MCStack *MCmousestackptr;
-MCStack *MCclickstackptr;
-MCStack *MCfocusedstackptr;
-MCCard *MCdynamiccard;
+MCStackHandle MCtopstackptr;
+MCStackHandle MCdefaultstackptr;
+MCStackHandle MCstaticdefaultstackptr;
+MCStackHandle MCmousestackptr;
+MCStackHandle MCclickstackptr;
+MCStackHandle MCfocusedstackptr;
+MCCardHandle MCdynamiccard;
 Boolean MCdynamicpath;
-MCObject *MCerrorptr;
-MCObject *MCerrorlockptr;
-MCObjectPtr MCtargetptr;
-MCObject *MCmenuobjectptr;
+MCObjectHandle MCerrorptr;
+MCObjectHandle MCerrorlockptr;
+MCObjectPartHandle MCtargetptr;
 MCGroup *MCsavegroupptr;
-MCGroup *MCdefaultmenubar;
-MCGroup *MCmenubar;
-MCPlayer *MCplayers;
-MCAudioClip *MCacptr;
+MCObjectHandle MCmenuobjectptr;
+MCGroupHandle MCdefaultmenubar;
+MCGroupHandle MCmenubar;
+MCPlayerHandle MCplayers;
+MCAudioClipHandle MCacptr;
 
 MCStack *MCtemplatestack;
 MCAudioClip *MCtemplateaudio;
@@ -293,18 +300,18 @@ MCPlayer *MCtemplateplayer;
 MCImage *MCtemplateimage;
 MCField *MCtemplatefield;
 
-MCImage *MCmagimage;
-MCMagnify *MCmagnifier;
-MCObject *MCdragsource;
-MCObject *MCdragdest;
-MCField *MCactivefield;
-MCField *MCclickfield;
-MCField *MCfoundfield;
-MCField *MCdropfield;
+MCImageHandle MCmagimage;
+MCMagnifyHandle MCmagnifier;
+MCObjectHandle MCdragsource;
+MCObjectHandle MCdragdest;
+MCFieldHandle MCactivefield;
+MCFieldHandle MCclickfield;
+MCFieldHandle MCfoundfield;
+MCFieldHandle MCdropfield;
 int4 MCdropchar;
-MCImage *MCactiveimage;
-MCImage *MCeditingimage;
-MCTooltip *MCtooltip;
+MCImageHandle MCactiveimage;
+MCImageHandle MCeditingimage;
+MCTooltipHandle MCtooltip;
 
 MCUIDC *MCscreen;
 MCPrinter *MCprinter;
@@ -374,6 +381,7 @@ MCVariable *MCdialogdata;
 MCStringRef MChcstat;
 
 MCVariable *MCresult;
+MCExecResultMode MCresultmode;
 MCVariable *MCurlresult;
 Boolean MCexitall;
 int4 MCretcode;
@@ -382,8 +390,8 @@ Boolean MCrecording;
 MCPlatformSoundRecorderRef MCrecorder;
 #endif
 
-// AL-2014-18-02: [[ UnicodeFileFormat ]] Make stackfile version 7.0 the default.
-uint4 MCstackfileversion = 8000;
+// AL-2014-18-02: [[ UnicodeFileFormat ]] Make current stackfile version the default.
+uint4 MCstackfileversion = kMCStackFileFormatCurrentVersion;
 uint2 MClook;
 MCStringRef MCttbgcolor;
 MCStringRef MCttfont;
@@ -422,7 +430,6 @@ uint2 MCstartangle = 0;
 uint2 MCarcangle = 360;
 Boolean MCmultiple;
 uint2 MCmultispace = 1;
-uint4 MCpattern = 1;
 uint2 MCpolysides = 4;
 Boolean MCroundends;
 uint2 MCslices = 16;
@@ -465,8 +472,9 @@ Boolean MCcursorcanbecolor = False;
 Boolean MCcursorbwonly = True;
 int32_t MCcursormaxsize = 32;
 
-uint32_t MCstacklimit = 1024 * 1024;
-uint32_t MCpendingstacklimit = 1024 * 1024;
+#define kMCStackLimit 8 * 1024 * 1024
+uint32_t MCstacklimit = kMCStackLimit;
+uint32_t MCpendingstacklimit = kMCStackLimit;
 
 Boolean MCappisactive = False;
 
@@ -504,6 +512,9 @@ MCArrayRef MCcommandarguments;
 
 MCHook *MChooks = nil;
 
+// The main window callback to compute the window to parent root modal dialogs to (if any)
+MCMainWindowCallback MCmainwindowcallback = nullptr;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -528,7 +539,8 @@ void X_clear_globals(void)
 	MCquit = False;
 	MCquitisexplicit = False;
 	MCidleRate = 200;
-	/* FRAGILE */ MCcmd = MCValueRetain(kMCEmptyString);
+	/* FRAGILE */ MCcmd = nullptr;
+    MCappcodepath = nullptr;
 	MCfiletype = MCValueRetain(kMCEmptyString);
 	MCstackfiletype = MCValueRetain(kMCEmptyString);
 	MCstacknames = nil;
@@ -543,6 +555,7 @@ void X_clear_globals(void)
 	MCraisepalettes = True;
 	MCsystemmodals = True;
     MCactivatepalettes = True;
+    MCdontuseQT = True;
     // SN-2014-10-2-: [[ Bug 13684 ]] Bugfix brought in 7.0 initialisation
     // MW-2007-07-05: [[ Bug 2288 ]] Default for hidePalettes is not system-standard
 #ifdef _MACOSX
@@ -551,8 +564,7 @@ void X_clear_globals(void)
     MChidepalettes = False;
 #endif
 	MCdontuseNS = False;
-	MCdontuseQT = False;
-	MCdontuseQTeffects = False;
+	MCdontuseQTeffects = True;
 	MCeventtime = 0;
 	MCbuttonstate = 0;
 	MCmodifierstate = 0;
@@ -609,7 +621,7 @@ void X_clear_globals(void)
 	memset(&MCwbr, 0, sizeof(MCRectangle));
 	MCjpegquality = 100;
 	MCpaintcompression = EX_PBM;
-	MCrecordformat = EX_AIFF;
+	MCrecordformat = 0;
 	MCrecordchannels = 1;
 	MCrecordsamplesize = 8;
 	MCrecordrate = 22.050;
@@ -661,7 +673,7 @@ void X_clear_globals(void)
 	MCdynamicpath = False;
 	MCerrorptr = nil;
 	MCerrorlockptr = nil;
-	memset(&MCtargetptr, 0, sizeof(MCObjectPtr));
+	MCtargetptr = nullptr;
 	MCmenuobjectptr = nil;
 	MCsavegroupptr = nil;
 	MCdefaultmenubar = nil;
@@ -761,8 +773,8 @@ void X_clear_globals(void)
     MCrecorder = nil;
 #endif
     
-	// AL-2014-18-02: [[ UnicodeFileFormat ]] Make 7.0 stackfile version the default.
-	MCstackfileversion = 8000;
+	// AL-2014-18-02: [[ UnicodeFileFormat ]] Make current stackfile version the default.
+	MCstackfileversion = kMCStackFileFormatCurrentVersion;
 
     MClook = LF_MOTIF;
     MCttbgcolor = MCSTR("255,255,207");
@@ -802,7 +814,6 @@ void X_clear_globals(void)
 	MCarcangle = 360;
 	MCmultiple = False;
 	MCmultispace = 1;
-	MCpattern = 1;
 	MCpolysides = 4;
 	MCroundends = False;
 	MCslices = 16;
@@ -845,6 +856,8 @@ void X_clear_globals(void)
     
     MChooks = nil;
 
+    memset(&MClicenseparameters, 0, sizeof(MCLicenseParameters));
+    
 #if defined(MCSSL)
     MCSocketsInitialize();
 #endif
@@ -854,20 +867,22 @@ void X_clear_globals(void)
     MCcommandarguments = NULL;
     MCcommandname = NULL;
 
+#ifdef _MOBILE
+    MCSensorInitialize();
+    MCSystemSoundInitialize();
+#endif
+    
 #ifdef _ANDROID_MOBILE
     extern void MCAndroidMediaPickInitialize();
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
     MCAdInitialize();
     MCNativeControlInitialize();
-    MCSensorInitialize();
     MCAndroidCustomFontsInitialize();
-	MCSystemSoundInitialize();
-    MCAndroidMediaPickInitialize();
+	MCAndroidMediaPickInitialize();
 #endif
 	
 #ifdef _IOS_MOBILE
-	MCSystemSoundInitialize();
-    MCReachabilityEventInitialize();    
+    MCReachabilityEventInitialize();
 #endif
 	
 	MCDateTimeInitialize();
@@ -1041,11 +1056,15 @@ X_open_environment_variables(MCStringRef envp[])
 
 /* ---------------------------------------------------------------- */
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 {
-	MCperror = new MCError();
-	MCeerror = new MCError();
+	MCperror = new (nothrow) MCError();
+	MCeerror = new (nothrow) MCError();
 	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCresult"), MCresult);
+    MCresultmode = kMCExecResultModeReturn;
 
 	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCurlresult"), MCurlresult);
 	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCdialogdata"), MCdialogdata);
@@ -1066,18 +1085,21 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 #ifdef MCSSL
 	InitialiseSSL();
 #endif
-
+    
     ////
     
-#ifdef _MACOSX
+#if defined(_MACOSX) && defined(FEATURE_QUICKTIME)
     // MW-2014-07-21: Make AVFoundation the default on 10.8 and above.
-    if (MCmajorosversion >= 0x1080)
-        MCdontuseQT = True;
+    if (MCmajorosversion < 0x1080)
+    {
+        MCdontuseQT = False;
+        MCdontuseQTeffects = False;
+    }
 #endif
     
     ////
     
-	MCpatternlist = new MCImageList();
+	MCpatternlist = new (nothrow) MCImageList();
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_msg, MCmb);
 	MCmb -> setmsg();
@@ -1129,31 +1151,32 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
     MCDeletedObjectsSetup();
 
 	/* UNCHECKED */ MCStackSecurityCreateStack(MCtemplatestack);
-	MCtemplateaudio = new MCAudioClip;
+	MCtemplateaudio = new (nothrow) MCAudioClip;
 	MCtemplateaudio->init();
-	MCtemplatevideo = new MCVideoClip;
-	MCtemplategroup = new MCGroup;
-	MCtemplatecard = new MCCard;
-	MCtemplatebutton = new MCButton;
-	MCtemplategraphic = new MCGraphic;
-	MCtemplatescrollbar = new MCScrollbar;
-	MCtemplateplayer = new MCPlayer;
-	MCtemplateimage = new MCImage;
-	MCtemplatefield = new MCField;
+	MCtemplatevideo = new (nothrow) MCVideoClip;
+	MCtemplategroup = new (nothrow) MCGroup;
+	MCtemplatecard = new (nothrow) MCCard;
+	MCtemplatebutton = new (nothrow) MCButton;
+	MCtemplategraphic = new (nothrow) MCGraphic;
+	MCtemplatescrollbar = new (nothrow) MCScrollbar;
+	MCtemplateplayer = new (nothrow) MCPlayer;
+	MCtemplateimage = new (nothrow) MCImage;
+	MCtemplatefield = new (nothrow) MCField;
 	
-	MCtooltip = new MCTooltip;
+	MCtooltip = new (nothrow) MCTooltip;
 
     MCclipboard = MCClipboard::CreateSystemClipboard();
     MCdragboard = MCClipboard::CreateSystemDragboard();
     MCselection = MCClipboard::CreateSystemSelectionClipboard();
     MCclipboardlockcount = 0;
 	
-	MCundos = new MCUndolist;
-	MCselected = new MCSellist;
-	MCstacks = new MCStacklist;
-    MCtodestroy = new MCStacklist;
-	MCrecent = new MCCardlist;
-	MCcstack = new MCCardlist;
+	MCundos = new (nothrow) MCUndolist;
+	MCselected = new (nothrow) MCSellist;
+	MCstacks = new (nothrow) MCStacklist(true);
+	// IM-2016-11-22: [[ Bug 18852 ]] Changes to MCtodestroy shouldn't affect MCtopstack
+    MCtodestroy = new (nothrow) MCStacklist(false);
+	MCrecent = new (nothrow) MCCardlist;
+	MCcstack = new (nothrow) MCCardlist;
 
 #ifdef _LINUX_DESKTOP
 	MCValueAssign(MCvcplayer, MCSTR("xanim"));
@@ -1175,7 +1198,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		MCValueAssign(MCstackfiletype, MCSTR("RevoRSTK"));
 	MCValueAssign(MCserialcontrolsettings, MCSTR("baud=9600 parity=N data=8 stop=1"));
 
-	MCdispatcher = new MCDispatch;
+	MCdispatcher = new (nothrow) MCDispatch;
     MCdispatcher -> add_transient_stack(MCtooltip);
 
 	// IM-2014-08-14: [[ Bug 12372 ]] Pixel scale setup needs to happen before the
@@ -1184,17 +1207,13 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCResInitPixelScaling();
 	
 	if (MCnoui)
-		MCscreen = new MCUIDC;
+		MCscreen = new (nothrow) MCUIDC;
 	else
 	{
 		MCscreen = MCCreateScreenDC();
 				
 		if (!MCscreen->open())
 			return false;
-
-		MCscreen->alloccolor(MClinkatts.color);
-		MCscreen->alloccolor(MClinkatts.hilitecolor);
-		MCscreen->alloccolor(MClinkatts.visitedcolor);
 	}
 
     MCExecContext ctxt(nil, nil, nil);
@@ -1207,7 +1226,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCdispatcher -> open();
 
 	// This is here because it relies on MCscreen being initialized.
-	MCtemplateeps = new MCEPS;
+	MCtemplateeps = new (nothrow) MCEPS;
 
 	MCsystemFS = MCscreen -> hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS);
 	MCsystemCS = MCscreen -> hasfeature(PLATFORM_FEATURE_OS_COLOR_DIALOGS);
@@ -1233,7 +1252,14 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();
 	
-    MCwidgeteventmanager = new MCWidgetEventManager;
+    MCwidgeteventmanager = new (nothrow) MCWidgetEventManager;
+    
+    /* Now that the script engine state has been initialized, we can load all
+     * builtin extensions. */
+    if (!MCExtensionInitialize())
+    {
+        return false;
+    }
     
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.
@@ -1246,6 +1272,12 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 
 int X_close(void)
 {
+    // MW-2012-02-23: [[ FontRefs ]] Finalize the font module.
+    MCFontFinalize();
+    
+    /* Finalize all builtin extensions */
+    MCExtensionFinalize();
+
 	// MW-2008-01-18: [[ Bug 5711 ]] Make sure we disable the backdrop here otherwise we
 	//   get crashiness on Windows due to hiding the backdrop calling WindowProc which
 	//   attempts to access stacks that have been deleted...
@@ -1260,7 +1292,8 @@ int X_close(void)
 
 	MCstacks->closeall();
 	MCselected->clear(False);
-
+    MCundos->freestate();
+    
 	MCU_play_stop();
 #ifdef FEATURE_PLATFORM_RECORDER
     if (MCrecorder != nil)
@@ -1285,7 +1318,7 @@ int X_close(void)
 
     MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;
-	MCtooltip = NULL;
+	MCtooltip = nil;
 
 	MCValueRelease(MChttpproxy);
 	MCValueRelease(MCpencolorname);
@@ -1297,9 +1330,9 @@ int X_close(void)
 	while (MCnfiles)
 		IO_closefile(MCfiles[0].name);
 	if (MCfiles != NULL)
-		delete MCfiles;
+		delete[] MCfiles; /* Allocated with new[] */
 	if (MCprocesses != NULL)
-		delete MCprocesses;
+		delete[] MCprocesses; /* Allocated with new[] */
 	if (MCnsockets)
 		while (MCnsockets)
 			delete MCsockets[--MCnsockets];
@@ -1339,6 +1372,8 @@ int X_close(void)
     delete MCtodestroy;
 	delete MCstacks;
     
+    MCModeFinalize();
+    
     MCDeletedObjectsTeardown();
     
     // These card lists must be deleted *after* draining the deleted
@@ -1357,7 +1392,7 @@ int X_close(void)
 	delete MCdialogdata;
 	MCValueRelease(MChcstat);
 
-	delete MCusing;
+	delete[] MCusing; /* Allocated with new[] */
 	MCValueRelease(MChttpheaders);
 	MCValueRelease(MCscriptfont);
 	MCValueRelease(MClinkatts . colorname);
@@ -1460,15 +1495,16 @@ int X_close(void)
 	for(uint4 i = 0; i < MCnstacks; ++i)
 		MCValueRelease(MCstacknames[i]);
 
-	delete MCstacknames;
+	delete[] MCstacknames; /* allocated with new[] */
 
 	// Cleanup the parentscript stuff
 	MCParentScript::Cleanup();
 	
+	// Finalize the event queue
+	MCEventQueueFinalize();
+	
 	// MW-2012-02-23: [[ LogFonts ]] Finalize the font table module.
 	MCLogicalFontTableFinalize();
-	// MW-2012-02-23: [[ FontRefs ]] Finalize the font module.
-	MCFontFinalize();
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
@@ -1497,12 +1533,17 @@ int X_close(void)
 	MCU_finalize_names();
 	
 	if (MCsysencoding != nil)
-		MCMemoryDelete(MCsysencoding);
+		delete[] MCsysencoding; /* Allocated with new[] */
 
     if (kMCSystemLocale != nil)
         MCLocaleRelease(kMCSystemLocale);
     if (kMCBasicLocale != nil)
         MCLocaleRelease(kMCBasicLocale);
+    
+    if (MCappcodepath != nullptr)
+        MCValueRelease(MCappcodepath);
+    if (MCcmd != nullptr)
+        MCValueRelease(MCcmd);
     
 	return MCretcode;
 }

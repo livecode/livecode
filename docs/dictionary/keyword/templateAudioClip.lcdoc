@@ -4,31 +4,51 @@ Type: keyword
 
 Syntax: templateAudioClip
 
-Summary: Used with the <set> <command> to set the <properties> of newly created <audio clip> <object|objects>.
+Summary:
+Used with the <set> <command> to set the <properties> of newly created
+<audio clip> <object|objects>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the playLoudness of the templateAudioClip to 6
 
 Description:
-Use the <templateAudioClip> <keyword> to set up <default> <properties> to be used for any new <audio clip|audio clips> you create.
+Use the <templateAudioClip> <keyword> to set up <default> <properties>
+to be used for any new <audio clip|audio clips> you create.
 
-The <templateAudioClip> can be thought of as a special, abstract <object>. It is not an actual <audio clip>, but it has all the <properties> of an <audio clip>. The <ID> <property> of the <templateAudioClip> is zero.
+The <templateAudioClip> can be thought of as a special, abstract
+<object(glossary)>. It is not an actual <audio clip>, but it has all the
+<properties> of an <audio clip>. The <ID> <property> of the
+<templateAudioClip> is zero.
 
-You can use the <set> <command> to set the <properties> of the <templateAudioClip> before creating an <audio clip>. The new <audio clip> has the <properties> of the <templateAudioClip>, by <default>. Changing the <properties> of the <templateAudioClip> does not affect existing <audio clip|audio clips>.
+You can use the <set> <command> to set the <properties> of the
+<templateAudioClip> before creating an <audio clip>. The new <audio
+clip> has the <properties> of the <templateAudioClip>, by <default>.
+Changing the <properties> of the <templateAudioClip> does not affect
+existing <audio clip|audio clips>.
 
-The properties of the <templateAudioClip> can be returned to the default settings using the <reset> command.
+The properties of the <templateAudioClip> can be returned to the default
+settings using the <reset> command.
 
-You can refer to the <templateAudioClip> using any of the following forms:
-        templateAudioClip
-        the templateAudioClip
-        templateAudioClip()
+You can refer to the <templateAudioClip> using any of the following
+forms: templateAudioClip
 
->*Note:* The <templateAudioClip> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
+    the templateAudioClip
+    templateAudioClip()
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), audioClip (object), object (object), keyword (glossary), audio clip (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+
+>*Note:* The <templateAudioClip> <keyword> is implemented internally as
+> a <function> and appears in the <functionNames>. However, it cannot be
+> used as a <function> in an <expression>.
+
+References: reset (command), set (command), function (control structure),
+functionNames (function), object (glossary), keyword (glossary),
+audio clip (glossary), property (glossary), command (glossary),
+expression (glossary), templateScrollbar (keyword), default (keyword),
+audioClip (object), properties (property), ID (property)
+

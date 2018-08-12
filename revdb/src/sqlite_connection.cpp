@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <assert.h>
 #include <errno.h>
+#include <stdint.h>
 
 #include <sstream>
 
@@ -182,6 +183,10 @@ Bool DBConnection_SQLITE::sqlExecute(char *query, DBString *args, int numargs, u
 		}
 
 		int rv = basicExec(newquery, &affectedrows);
+        
+        if (numargs > 0)
+            free(newquery);
+
 		if(rv != SQLITE_OK)
 		{
 			// MW-2008-07-29: [[ Bug 6639 ]] Executing a query doesn't return meaningful error messages.
@@ -244,7 +249,7 @@ DBCursor *DBConnection_SQLITE::sqlQuery(char *query, DBString *args, int numargs
 	}
 
 	try {
-		ret = new DBCursor_SQLITE(mDB, m_enable_binary);
+		ret = new (nothrow) DBCursor_SQLITE(mDB, m_enable_binary);
 		Dataset *ds = ret->getDataset();
 
 		ds->query(newquery);
@@ -266,7 +271,7 @@ DBCursor *DBConnection_SQLITE::sqlQuery(char *query, DBString *args, int numargs
 	}
 
 	if (numargs)
-		delete newquery;
+		free(newquery);
 
 	return ret;
 }
@@ -439,7 +444,7 @@ bool queryCallback(void *p_context, int p_placeholder, DBBuffer& p_output)
 		else
 		{
 			// According to documentation in sqlitedecode.cpp, this is the required size of output buffer
-			t_escaped_string = malloc(2 + (257 * t_parameter_value . length) / 254);
+			t_escaped_string = malloc(2 + (257 * (int64_t)t_parameter_value . length) / 254);
 			t_escaped_string_length = sqlite_encode_binary((const unsigned char *)t_parameter_value . sptr, t_parameter_value . length, (unsigned char *)t_escaped_string);
 		}
 	}

@@ -2,17 +2,18 @@ Name: revZipCloseArchive
 
 Type: command
 
-Syntax: revZipCloseArchive <archivePath> 
+Syntax: revZipCloseArchive <archivePath>
 
-Summary: Closes a zip archive
+Summary:
+Closes a zip archive
 
 Introduced: 2.7.3
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revZipCloseArchive tArchive
@@ -21,15 +22,25 @@ Example:
 revZipCloseArchive the cArchive of me
 
 Parameters:
-archivePath: The absolute path to the zip archive to close. >*Note:* Any changes you make to an open zip archive will not be applied until you close the archive using this command. If revZipCloseArchive encounters an error, the result is set to an error code beginning with "ziperr", otherwise the result will be empty.
+archivePath:
+The absolute path to the zip archive to close. >*Note:* Any changes you
+make to an open zip archive will not be applied until you close the
+archive using this command. If revZipCloseArchive encounters an error,
+the result is set to an error code beginning with "ziperr", otherwise
+the result will be empty.
 
-The result: If <revZipCloseArchive> encounters an error, the result is set to an error code beginning with "ziperr", otherwise the result will be empty.
+The result:
+If <revZipCloseArchive> encounters an error, the result is set to an
+error code beginning with "ziperr", otherwise the result will be empty.
 
 Description:
-Use the <revZipCloseArchive> command when you have finished processing a zip archive, to remove it from memory and update the file on the disk.
+Use the <revZipCloseArchive> command when you have finished processing a
+zip archive, to remove it from memory and update the file on the disk.
 
->*Note:* Any changes you make to an open zip archive will not be applied until you close the archive using this command.
+>*Note:* Any changes you make to an open zip archive will not be applied
+> until you close the archive using this command.
 
 References: revZipOpenArchive (command), revZipOpenArchives (function)
 
 Tags: text processing
+

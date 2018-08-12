@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "uidc.h"
-//#include "execpt.h"
+
 #include "globals.h"
 
 #import <UIKit/UIKit.h>
@@ -181,7 +181,7 @@ bool MCSystemPickMedia(MCMediaType p_media_type, bool p_multiple, MCStringRef& r
 	}
 	// Call MCIPhonePickMedia to process the media pick selection. 
 	if (MCIPhonePickMedia(p_multiple, t_media_types, r_return_media_types) && r_return_media_types != nil)
-		return MCStringCreateWithCFString((CFStringRef)r_return_media_types, r_result);
+		return MCStringCreateWithCFStringRef((CFStringRef)r_return_media_types, r_result);
 
 	return false;
 }

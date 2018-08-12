@@ -1,1 +1,0 @@
-# The cantSelect property of a graphic can prevent creation of new graphics

@@ -46,7 +46,7 @@ extern "C" {
 
 typedef enum LCError
 {
-	// No errors occured, the operation succeeded.
+	// No errors occurred, the operation succeeded.
 	kLCErrorNone = 0,
 	
 	// Memory ran out while performing the operation.
@@ -426,7 +426,9 @@ enum
 	
 enum
 {
+    kLCLicenseEditionNone = 0,
     kLCLicenseEditionCommunity = 1000,
+    kLCLicenseEditionCommunityPlus = 1500,
     kLCLicenseEditionIndy = 2000,
     kLCLicenseEditionBusiness = 3000,
 };
@@ -470,6 +472,30 @@ LCError LCArrayRemoveKeyWithPath(LCArrayRef array, unsigned int options, const c
 	
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __ANDROID__
+
+// Function:
+//   LCAttachCurrentThread
+// Parameters:
+//   none
+// Errors:
+//   Failed - System was unable to attach the current thread to the Java VM
+//
+LCError LCAttachCurrentThread(void);
+
+// Function:
+//   LCDetachCurrentThread
+// Parameters:
+//   none
+// Errors:
+//   Failed - System was unable to detach the current thread from the Java VM
+//
+LCError LCDetachCurrentThread(void);
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef struct __LCObject *LCObjectRef;
 
 // Parameters:
@@ -480,7 +506,7 @@ typedef struct __LCObject *LCObjectRef;
 // Errors:
 //   OutOfMemory - memory ran out while attempting to perform the operation
 //   NoObjectId - the 'chunk' parameter was nil
-//   MalformedObjectChunk - a parse error occured processing 'chunk'
+//   MalformedObjectChunk - a parse error occurred processing 'chunk'
 //   CouldNotResolveObject - the object referred to by 'chunk' could not be found
 // Context Safety:
 //   Must be called from dispatch context.
@@ -571,17 +597,24 @@ LCError LCObjectRelease(LCObjectRef object);
 //     'i' - the parameter is of 'int' type, converts to a number
 //     'r' - the parameter is of 'double' type, converts to a number
 //     'z' - the parameter is of 'c-string' type, converts to a (text) string
+//     'u' - the parameter is of 'utf8 c-string' type, converts to a (text) string
+//     'w' - the parameter is of 'utf16 c-string' type, converts to a (text) string
 //	   'y' - the parameter is of 'c-data' type, converts to a (binary) string
+//	   'v' - the parameter is of 'utf8 c-data' type, converts to a (text) string
+//	   't' - the parameter is of 'utf16 c-data' type, converts to a (text) string
 //     'c' - the parameter is of 'char' type, converts to a (text) string
 //     'N' - the parameter is of 'NSNumber*' type, converts to a number
 //     'S' - the parameter is of 'NSString*' type, converts to a (text) string
 //     'D' - the parameter is of 'NSData*' type, converts to a (binary) string
+//     'A' - the parameter is of 'NSArray*' type, converts to a sequentially indexed array
+//     'M' - the parameter is of 'NSDictionary*' type, converts to a key/value map array
 //
 //   The parameters appear in the resulting LiveCode message in the same order
 //   that they appear in the signature.
 //
-//   The 'z' type should be passed a 'const char *' (zero-terminated) string.
-//   The 'y' type should be passed a 'const LCBytes *' type.
+//   The 'z' & 'u' types should be passed a 'const char *' (zero-terminated) string.
+//   The 'w' type should be passed a 'const uint16_t *' (zero-terminated) string.
+//   The 'y','v' & 't' types should be passed a 'const LCBytes *' type.
 //
 LCError LCObjectSend(LCObjectRef object, const char *message, const char *signature, ...);
 	

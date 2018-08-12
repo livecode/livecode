@@ -1,0 +1,1 @@
+# Prevent recursion when fetching mouseColor in mouseMove handler

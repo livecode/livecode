@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -96,12 +96,6 @@ public:
 	MCiOSPlayerControl(void);
 	
 	virtual MCNativeControlType GetType(void);
-#ifdef LEGACY_EXEC	
-	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep);
-	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);
-	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
-#endif
-
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 	virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
@@ -160,9 +154,6 @@ public:
     
 	MPMoviePlayerController *GetController(void);
 
-#ifdef LEGACY_EXEC
-	static bool FormatTimeInterval(MCExecPoint& ep, NSTimeInterval interval);
-#endif
 	
 protected:
 	virtual ~MCiOSPlayerControl(void);
@@ -279,30 +270,19 @@ static void content_to_url(MCStringRef p_file, NSURL*& r_url)
 	t_url = nil;
     
 	if (MCStringBeginsWith(p_file, MCSTR("http://"), kMCCompareExact) || MCStringBeginsWith(p_file, MCSTR("https://"), kMCCompareExact))
-		t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: p_file ]];
+		t_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_file )];
 	else if (!MCStringIsEmpty(p_file))
 	{
 		MCAutoStringRef t_path;
 		
         MCS_resolvepath(p_file, &t_path);
-		t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: *t_path ]];
+		t_url = [NSURL fileURLWithPath: MCStringConvertToAutoreleasedNSString(*t_path )];
 	}
 	else
 		t_url = [NSURL URLWithString: @""];
 
 	r_url = t_url;
 }
-
-#ifdef LEGACY_EXEC
-bool MCiOSPlayerControl::FormatTimeInterval(MCExecPoint& ep, NSTimeInterval p_interval)
-{
-	if (p_interval == -1)
-		ep . setnvalue(-1);
-	else
-		ep . setnvalue((int32_t)(p_interval * 1000));
-	return true;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -386,7 +366,7 @@ void MCiOSPlayerControl::GetContent(MCExecContext& ctxt, MCStringRef& r_content)
     }
     if (t_string != nil)
     {
-        if (MCStringCreateWithCFString((CFStringRef)t_string, r_content))
+        if (MCStringCreateWithCFStringRef((CFStringRef)t_string, r_content))
             return;
     }
     else
@@ -465,12 +445,9 @@ void MCiOSPlayerControl::GetStartTime(MCExecContext& ctxt, integer_t& r_time)
     t_time = -1;
     
     if (m_controller != nil)
-        t_time = (integer_t)[m_controller initialPlaybackTime];
+        t_time = (integer_t)([m_controller initialPlaybackTime] * 1000);
     
-    if (t_time == -1)
-        r_time = t_time;
-    else
-        r_time = t_time * 1000;
+    r_time = t_time;
 }
 
 void MCiOSPlayerControl::SetEndTime(MCExecContext& ctxt, integer_t p_time)
@@ -485,12 +462,9 @@ void MCiOSPlayerControl::GetEndTime(MCExecContext& ctxt, integer_t& r_time)
     t_time = -1;
     
     if (m_controller != nil)
-        t_time = (integer_t)[m_controller endPlaybackTime];
+        t_time = (integer_t)([m_controller endPlaybackTime] * 1000);
     
-    if (t_time == -1)
-        r_time = t_time;
-    else
-        r_time = t_time * 1000;
+    r_time = t_time;
 }
 void MCiOSPlayerControl::SetCurrentTime(MCExecContext& ctxt, integer_t p_time)
 {
@@ -508,12 +482,9 @@ void MCiOSPlayerControl::GetCurrentTime(MCExecContext& ctxt, integer_t& r_time)
     t_time = -1;
     
     if (m_controller != nil)
-        t_time = (integer_t)[m_controller currentPlaybackTime];
+        t_time = (integer_t)([m_controller currentPlaybackTime] * 1000);
     
-    if (t_time == -1)
-        r_time = t_time;
-    else
-        r_time = t_time * 1000;
+    r_time = t_time;
 }
 
 void MCiOSPlayerControl::SetShouldAutoplay(MCExecContext& ctxt, bool p_value)
@@ -574,7 +545,7 @@ void MCiOSPlayerControl::GetPlayRate(MCExecContext& ctxt, double& r_rate)
 void MCiOSPlayerControl::GetDuration(MCExecContext& ctxt, integer_t& r_duration)
 {
     if (m_controller != nil)
-        r_duration = [m_controller duration];
+        r_duration = [m_controller duration] * 1000;
     else
         r_duration = 0;
 }
@@ -582,7 +553,7 @@ void MCiOSPlayerControl::GetDuration(MCExecContext& ctxt, integer_t& r_duration)
 void MCiOSPlayerControl::GetPlayableDuration(MCExecContext& ctxt, integer_t& r_duration)
 {
     if (m_controller != nil)
-        r_duration = [m_controller playableDuration];
+        r_duration = [m_controller playableDuration] * 1000;
     else
         r_duration = 0;
 }
@@ -675,261 +646,6 @@ void MCiOSPlayerControl::GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2]
         r_size[1] = 0;
     }
 }
-
-#ifdef /* MCNativePlayerControl::Set */ LEGACY_EXEC
-Exec_stat MCiOSPlayerControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
-{
-	bool t_bool;
-	int32_t t_enum;
-	int32_t t_integer;
-	double t_real;
-	
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyBackgroundColor:
-		{
-			UIColor *t_color;
-			if (ParseColor(ep, t_color) != ES_NORMAL)
-				return ES_ERROR;
-			
-			if (m_controller != nil)
-				[[m_controller backgroundView] setBackgroundColor: t_color];
-		}
-		break;
-		case kMCNativeControlPropertyContent:
-		{
-			NSURL *t_url;
-			MPMovieSourceType t_type;
-			content_to_url(ep . getcstring(), t_url);
-			if (m_controller != nil)
-			{
-				[m_controller setContentURL: t_url];
-				[m_controller prepareToPlay];
-			}
-		}
-		return ES_NORMAL;
-			
-		case kMCNativeControlPropertyFullscreen:
-			if (!ParseBoolean(ep, t_bool))
-				return ES_ERROR;
-			if (m_controller != nil)
-				[m_controller setFullscreen: t_bool];
-			return ES_NORMAL;
-		
-		case kMCNativeControlPropertyPreserveAspect:
-			if (!ParseBoolean(ep, t_bool))
-				return ES_ERROR;
-			if (m_controller != nil)
-				[m_controller setScalingMode: t_bool ? MPMovieScalingModeAspectFit : MPMovieScalingModeFill];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyShowController:
-			if (!ParseBoolean(ep, t_bool))
-				return ES_ERROR;
-			if (m_controller != nil)
-				[m_controller setControlStyle: !t_bool ? MPMovieControlStyleNone : ([m_controller isFullscreen] ? MPMovieControlStyleFullscreen : MPMovieControlStyleEmbedded)];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyUseApplicationAudioSession:
-			if (!ParseBoolean(ep, t_bool))
-				return ES_ERROR;
-			if (m_controller != nil)
-				[m_controller setUseApplicationAudioSession: t_bool];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyStartTime:
-			if (!ParseInteger(ep, t_integer))
-				return ES_ERROR;
-			if (m_controller != nil)
-				[m_controller setInitialPlaybackTime: t_integer / 1000.0];
-			return ES_NORMAL;
-		
-		case kMCNativeControlPropertyEndTime:
-			if (!ParseInteger(ep, t_integer))
-				return ES_ERROR;
-			if (m_controller != nil)
-				[m_controller setEndPlaybackTime: (t_integer / 1000.0)];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyCurrentTime:
-			if (!ParseInteger(ep, t_integer))
-				return ES_ERROR;
-			if (m_controller != nil)
-			{
-				if ([m_controller playbackState] == MPMoviePlaybackStateStopped)
-					[m_controller prepareToPlay];
-				[m_controller setCurrentPlaybackTime: t_integer / 1000.0];
-			}
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyShouldAutoplay:
-			if (!ParseBoolean(ep, t_bool))
-				return ES_ERROR;
-			if (m_controller != nil)
-				[m_controller setShouldAutoplay: t_bool];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyLooping:
-			if (!ParseBoolean(ep, t_bool))
-				return ES_ERROR;
-			if (m_controller != nil)
-				[m_controller setRepeatMode: t_bool ? MPMovieRepeatModeOne : MPMovieRepeatModeNone];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyAllowsAirPlay:
-			if (!ParseBoolean(ep, t_bool))
-				return ES_ERROR;
-			if (m_controller != nil && MCmajorosversion >= 430)
-				[m_controller setAllowsAirPlay: t_bool];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyPlayRate:
-			if (!ParseReal(ep, t_real))
-				return ES_ERROR;
-			if (m_controller != nil)
-				[m_controller setCurrentPlaybackRate: (float)t_real];
-			return ES_NORMAL;
-		
-		default:
-			break;
-	}
-	
-	return MCiOSControl::Set(p_property, ep);
-}
-#endif /* MCNativePlayerControl::Set */
-
-#ifdef /* MCNativePlayerControl::Get */ LEGACY_EXEC
-Exec_stat MCiOSPlayerControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
-{
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyBackgroundColor:
-			if (m_controller != nil)
-				FormatColor(ep, [[m_controller backgroundView] backgroundColor]);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyContent:
-			if (m_controller != nil)
-			{
-				NSURL *t_url;
-				t_url = [m_controller contentURL];
-				if ([t_url isFileURL])
-					FormatString(ep, [t_url path]);
-				else
-					FormatString(ep, [t_url relativeString]);
-			}
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyFullscreen:
-			if (m_controller != nil)
-				FormatBoolean(ep, [m_controller isFullscreen]);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyPreserveAspect:
-			if (m_controller != nil)
-				FormatBoolean(ep, [m_controller scalingMode] != MPMovieScalingModeFill);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyShowController:
-			if (m_controller != nil)
-				FormatBoolean(ep, [m_controller controlStyle] != MPMovieControlStyleNone);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyUseApplicationAudioSession:
-			if (m_controller != nil)
-				FormatBoolean(ep, [m_controller useApplicationAudioSession]);
-			return ES_NORMAL;
-		
-		case kMCNativeControlPropertyShouldAutoplay:
-			if (m_controller != nil)
-				FormatBoolean(ep, [m_controller shouldAutoplay]);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyLooping:
-			if (m_controller != nil)
-				FormatBoolean(ep, [m_controller repeatMode] != MPMovieRepeatModeNone);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyAllowsAirPlay:
-			if (m_controller != nil)
-				FormatBoolean(ep, MCmajorosversion >= 430 ? [m_controller allowsAirPlay] : NO);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyDuration:
-			if (m_controller != nil)
-				FormatTimeInterval(ep, [m_controller duration]);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyPlayableDuration:
-			if (m_controller != nil)
-				FormatTimeInterval(ep, [m_controller playableDuration]);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyCurrentTime:
-			if (m_controller != nil)
-				FormatTimeInterval(ep, [m_controller currentPlaybackTime]);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyStartTime:
-			if (m_controller != nil)
-				FormatTimeInterval(ep, [m_controller initialPlaybackTime]);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyEndTime:
-			if (m_controller != nil)
-				FormatTimeInterval(ep, [m_controller endPlaybackTime]);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyPlayRate:
-			if (m_controller != nil)
-				FormatReal(ep, [m_controller currentPlaybackRate]);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyIsPreparedToPlay:
-			if (m_controller != nil)
-				FormatBoolean(ep, [m_controller isPreparedToPlay]);
-			return ES_NORMAL;
-		
-		// PM-2015-07-09: [[ Bug 9744 ]] Added readyForDisplay (RO) property for native player
-		case kMCNativeControlPropertyReadyForDisplay:
-			if (m_controller != nil)
-			{
-#ifdef __IPHONE_6_0
-				if (MCmajorosversion >= 600)
-					FormatBoolean(ep, [m_controller readyForDisplay]);
-				else
-#endif
-				FormatBoolean(ep, false);
-			}
-			
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyLoadState:
-			if (m_controller != nil)
-				FormatSet(ep, s_loadstate_set, (int32_t)[m_controller loadState]);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyPlaybackState:
-			if (m_controller != nil)
-				FormatEnum(ep, s_playbackstate_enum, (int32_t)[m_controller playbackState]);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyNaturalSize:
-			if (m_controller != nil)
-			{
-				CGSize t_size;
-				t_size = [m_controller naturalSize];
-				ep.setstringf("%d,%d", (int32_t)t_size . width, (int32_t)t_size . height);
-			}
-			return ES_NORMAL;
-			
-		default:
-			break;
-	}
-	
-	return MCiOSControl::Get(p_property, ep);
-}
-#endif /* MCNativePlayerControl::Get */
 
 void MCiOSPlayerControl::Play()
 {

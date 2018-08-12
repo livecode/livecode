@@ -33,81 +33,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "chunk.h"
+#include "mcerror.h"
 
 #include "raw-clipboard.h"
-
-////////////////////////////////////////////////////////////////////////////////
-
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, Clipboard, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, ClipboardKeys, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, RawClipboardKeys, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, RawDragKeys, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, FullClipboardKeys, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, FullDragKeys, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DropChunk, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragDestination, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragSource, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragDropKeys, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheClipboardData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheClipboardData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheRawClipboardData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheRawClipboardData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheFullClipboardData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheFullClipboardData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheDragData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheDragData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheRawDragData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheRawDragData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheFullDragData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheFullDragData, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragSourceAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragDestinationAsObject, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, Paste, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, Copy, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, CopyTextToClipboard, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, CopyObjectsToClipboard, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, Cut, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, CutTextToClipboard, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, CutObjectsToClipboard, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, LockClipboard, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, UnlockClipboard, 0)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, AcceptDrop, 1)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, AcceptDrop, 1)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragAction, 1)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragAction, 1)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragImage, 1)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragImage, 1)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragImageOffset, 1)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragImageOffset, 1)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, AllowableDragActions, 1)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, AllowableDragActions, 1)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawClipboardData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawClipboardData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, FullClipboardData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, FullClipboardData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawDragData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawDragData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, FullDragData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, FullDragData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardOrDragData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardOrDragData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardTextData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardTextData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawClipboardTextData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawClipboardTextData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, FullClipboardTextData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, FullCLipboardTextData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragTextData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragTextData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawDragTextData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawDragTextData, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pasteboard, FullDragTextData, 2)
-MC_EXEC_DEFINE_SET_METHOD(Pasteboard, FullDragTextData, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -178,6 +106,9 @@ enum MCTransferType
     TRANSFER_TYPE_PNG,
     TRANSFER_TYPE_GIF,
     TRANSFER_TYPE_JPEG,
+	TRANSFER_TYPE_BMP,
+	TRANSFER_TYPE_WIN_METAFILE,
+	TRANSFER_TYPE_WIN_ENH_METAFILE,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,7 +210,7 @@ MCTransferType MCPasteboardFindTransferTypeForLegacyClipboard(const MCClipboard*
     // passed that the behaviour can now be corrected but, until then, it is
     // disabled and the "text over images" method is used instead.
     //
-    if (false)
+    if (/* DISABLES CODE */ (false))
     {
         // If we have both an image and text on the clipboard, whichever one comes
         // first determines what we resolve the clipboard type to be.
@@ -366,7 +297,7 @@ bool MCPasteboardCopyAsTypeForLegacyClipboard(const MCClipboard* p_clipboard, MC
         else if (p_as_type == TRANSFER_TYPE_HTML_TEXT)
         {
             // Copy as the round-tripped form of HTML
-            return p_clipboard->CopyAsHTMLText((MCDataRef&)r_value);
+            return p_clipboard->CopyAsHTMLText((MCStringRef&)r_value);
         }
     }
     
@@ -387,50 +318,59 @@ bool MCPasteboardCopyAsTypeForLegacyClipboard(const MCClipboard* p_clipboard, MC
 
 MCTransferType MCPasteboardTransferTypeFromName(MCNameRef p_key, bool p_legacy = false)
 {
-	if (MCNameIsEqualTo(p_key, MCN_text))
+	if (MCNameIsEqualToCaseless(p_key, MCN_text))
 		return TRANSFER_TYPE_TEXT;
 
-	if (MCNameIsEqualTo(p_key, MCN_unicode))
+	if (MCNameIsEqualToCaseless(p_key, MCN_unicode))
 		return TRANSFER_TYPE_UNICODE_TEXT;
 
-	if (MCNameIsEqualTo(p_key, MCN_styles))
+	if (MCNameIsEqualToCaseless(p_key, MCN_styles))
 		return TRANSFER_TYPE_STYLED_TEXT;
 
-    if (MCNameIsEqualTo(p_key, MCN_styledtext))
+    if (MCNameIsEqualToCaseless(p_key, MCN_styledtext))
         return TRANSFER_TYPE_STYLED_TEXT_ARRAY;
     
-	if (MCNameIsEqualTo(p_key, MCN_rtf))
+	if (MCNameIsEqualToCaseless(p_key, MCN_rtf))
         return p_legacy ? TRANSFER_TYPE_RTF_TEXT : TRANSFER_TYPE_RTF;
 
-	if (MCNameIsEqualTo(p_key, MCN_html))
+	if (MCNameIsEqualToCaseless(p_key, MCN_html))
         return p_legacy ? TRANSFER_TYPE_HTML_TEXT : TRANSFER_TYPE_HTML;
 
-	if (MCNameIsEqualTo(p_key, MCN_files))
+	if (MCNameIsEqualToCaseless(p_key, MCN_files))
 		return TRANSFER_TYPE_FILES;
 
-	if (MCNameIsEqualTo(p_key, MCN_private))
+	if (MCNameIsEqualToCaseless(p_key, MCN_private))
 		return TRANSFER_TYPE_PRIVATE;
 
-	if (MCNameIsEqualTo(p_key, MCN_image))
+	if (MCNameIsEqualToCaseless(p_key, MCN_image))
 		return TRANSFER_TYPE_IMAGE;
 
-	if (MCNameIsEqualTo(p_key, MCN_objects))
+	if (MCNameIsEqualToCaseless(p_key, MCN_objects))
 		return TRANSFER_TYPE_OBJECTS;
     
-    if (MCNameIsEqualTo(p_key, MCN_rtftext))
+    if (MCNameIsEqualToCaseless(p_key, MCN_rtftext))
         return TRANSFER_TYPE_RTF_TEXT;
     
-    if (MCNameIsEqualTo(p_key, MCN_htmltext))
+    if (MCNameIsEqualToCaseless(p_key, MCN_htmltext))
         return TRANSFER_TYPE_HTML_TEXT;
     
-    if (MCNameIsEqualTo(p_key, MCN_png))
+    if (MCNameIsEqualToCaseless(p_key, MCN_png))
         return TRANSFER_TYPE_PNG;
     
-    if (MCNameIsEqualTo(p_key, MCN_gif))
+    if (MCNameIsEqualToCaseless(p_key, MCN_gif))
         return TRANSFER_TYPE_GIF;
     
-    if (MCNameIsEqualTo(p_key, MCN_jpeg))
+    if (MCNameIsEqualToCaseless(p_key, MCN_jpeg))
         return TRANSFER_TYPE_JPEG;
+
+	if (MCNameIsEqualToCaseless(p_key, MCN_win_bitmap))
+		return TRANSFER_TYPE_BMP;
+
+	if (MCNameIsEqualToCaseless(p_key, MCN_win_metafile))
+		return TRANSFER_TYPE_WIN_METAFILE;
+
+	if (MCNameIsEqualToCaseless(p_key, MCN_win_enh_metafile))
+		return TRANSFER_TYPE_WIN_ENH_METAFILE;
 
 	return TRANSFER_TYPE_NULL;
 }
@@ -463,6 +403,12 @@ MCNameRef MCPasteboardTransferTypeToName(MCTransferType p_type, bool p_legacy = 
         return MCN_gif;
     case TRANSFER_TYPE_JPEG:
         return MCN_jpeg;
+	case TRANSFER_TYPE_BMP:
+		return MCN_win_bitmap;
+	case TRANSFER_TYPE_WIN_METAFILE:
+		return MCN_win_metafile;
+	case TRANSFER_TYPE_WIN_ENH_METAFILE:
+		return MCN_win_enh_metafile;
 	case TRANSFER_TYPE_FILES:
 		return MCN_files;
 	case TRANSFER_TYPE_PRIVATE:
@@ -612,30 +558,34 @@ void MCPasteboardEvalRawClipboardOrDragKeys(MCExecContext& ctxt, const MCClipboa
     MCAutoRefcounted<const MCRawClipboardItem> t_item = p_clipboard->GetRawClipboard()->GetItemAtIndex(0);
     if (t_item == NULL)
     {
-        r_string = kMCEmptyString;
-        MCValueRetain(kMCEmptyString);
+        r_string = MCValueRetain(kMCEmptyString);
+		return;
     }
-    else
-    {
-        MCAutoListRef t_list;
-        /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
-        
-        uindex_t t_type_count = t_item->GetRepresentationCount();
-        for (uindex_t i = 0; i < t_type_count; i++)
-        {
-            MCAutoStringRef t_type(t_item->FetchRepresentationAtIndex(i)->CopyTypeString());
-            /* UNCHECKED */ MCListAppend(*t_list, *t_type);
-        }
-        
-        /* UNCHECKED */ MCListCopyAsString(*t_list, r_string);
-    }
+	
+	MCAutoListRef t_list;
+	bool t_success = MCListCreateMutable('\n', &t_list);
+	
+	uindex_t t_type_count = t_item->GetRepresentationCount();
+	for (uindex_t i = 0; t_success && i < t_type_count; i++)
+	{
+		MCAutoStringRef t_type(t_item->FetchRepresentationAtIndex(i)->CopyTypeString());
+		t_success = MCListAppend(*t_list, *t_type);
+	}
+	
+	if (t_success)
+		t_success = MCListCopyAsString(*t_list, r_string);
+	
+	if (t_success)
+		return;
+	
+	ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPasteboardEvalDropChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCdropfield == nil)
+	if (!MCdropfield)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -649,7 +599,7 @@ void MCPasteboardEvalDropChunk(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCPasteboardEvalDragDestination(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCdragdest == nil)
+	if (!MCdragdest)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -660,7 +610,7 @@ void MCPasteboardEvalDragDestination(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCPasteboardEvalDragSource(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCdragsource == nil)
+	if (!MCdragsource)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return;
@@ -808,6 +758,12 @@ void MCPasteboardEvalFullClipboardOrDragKeys(MCExecContext& ctxt, const MCClipbo
         t_success = MCListAppend(*t_list, MCN_gif);
     if (t_success && p_clipboard->HasJPEG())
         t_success = MCListAppend(*t_list, MCN_jpeg);
+	if (t_success && p_clipboard->HasBMP())
+		t_success = MCListAppend(*t_list, MCN_win_bitmap);
+	if (t_success && p_clipboard->HasWinMetafile())
+		t_success = MCListAppend(*t_list, MCN_win_metafile);
+	if (t_success && p_clipboard->HasWinEnhMetafile())
+		t_success = MCListAppend(*t_list, MCN_win_enh_metafile);
     
     // Check for specific styled text formats. These are the "true" formats and
     // aren't round-tripped via a LiveCode field.
@@ -911,9 +867,25 @@ void MCPasteboardEvalIsAmongTheKeysOfTheFullClipboardOrDragData(MCExecContext& c
         case TRANSFER_TYPE_JPEG:
             r_result = p_clipboard->HasJPEG();
             break;
+
+		case TRANSFER_TYPE_BMP:
+			r_result = p_clipboard->HasBMP();
+			break;
+
+		case TRANSFER_TYPE_WIN_METAFILE:
+			r_result = p_clipboard->HasWinMetafile();
+			break;
+
+		case TRANSFER_TYPE_WIN_ENH_METAFILE:
+			r_result = p_clipboard->HasWinEnhMetafile();
+			break;
             
         case TRANSFER_TYPE_FILES:
             r_result = p_clipboard->HasFileList();
+            break;
+        
+        case TRANSFER_TYPE_PRIVATE:
+            r_result = p_clipboard->HasPrivateData();
             break;
             
         case TRANSFER_TYPE_NULL:
@@ -1015,13 +987,18 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 		{
 			for(uint4 i = 0; i < p_object_count; ++i)
 			{
-				if (p_targets[i] . object -> del())
+                if (p_targets[i] . object -> del(true))
                 {
                     if (p_targets[i] . object -> gettype() == CT_STACK)
                         MCtodestroy -> remove(static_cast<MCStack *>(p_targets[i] . object));
                     p_targets[i] . object -> scheduledelete();
                 }
-			}
+                else if (!MCeerror -> isempty())
+                {
+                    ctxt . Throw();
+                    return;
+                }
+            }
 		}
 	}
 	else
@@ -1046,12 +1023,12 @@ void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCObjectChunkPtr p_
 
 void MCPasteboardExecCopy(MCExecContext& ctxt)
 {
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 		MCactivefield -> copytext();
-	else if (MCactiveimage != NULL)
+	else if (MCactiveimage)
 		MCactiveimage -> copyimage();
-	else
-		MCselected -> copy();
+	else if (!MCselected -> copy() && !MCeerror->isempty())
+        ctxt . Throw();
 }
 
 void MCPasteboardExecCopyTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target)
@@ -1066,12 +1043,12 @@ void MCPasteboardExecCopyObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_
 
 void MCPasteboardExecCut(MCExecContext& ctxt)
 {
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 		MCactivefield -> cuttext();
-	else if (MCactiveimage != NULL)
+	else if (MCactiveimage)
 		MCactiveimage -> cutimage();
-	else
-		MCselected -> cut();
+    else if (!MCselected -> cut() && !MCeerror->isempty())
+        ctxt . Throw();
 }
 
 void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target)
@@ -1221,7 +1198,7 @@ void MCPasteboardSetClipboardOrDragDataLegacy(MCExecContext& ctxt, MCNameRef p_i
     // clipboard under the appropriate type.
     //
     // If either of these is missing, do nothing but don't throw an error.
-	if (t_type != TRANSFER_TYPE_NULL && p_data != nil)
+	if (t_type != TRANSFER_TYPE_NULL && p_data != nil && !MCValueIsEmpty(p_data))
 	{
 		switch (t_type)
 		{
@@ -1319,20 +1296,17 @@ void MCPasteboardSetClipboardOrDragDataLegacy(MCExecContext& ctxt, MCNameRef p_i
 			{
 				// For backwards compatibility, HTML can be added to the
                 // clipboard as either data or text.
-				if (MCValueGetTypeCode(p_data) == kMCValueTypeCodeData)
-                    t_success = t_clipboard->AddHTML(static_cast<MCDataRef>(p_data));
+				if (MCValueGetTypeCode(p_data) != kMCValueTypeCodeString)
+				{
+					// Legacy behaviour: treat data as native-encoded text
+					MCAutoStringRef t_html;
+					t_success = ctxt.ConvertToString(p_data, &t_html);
+					if (t_success)
+						t_success = t_clipboard->AddHTMLText(*t_html);
+				}
 				else
 				{
-                    // If it is a string, encode it into the native encoding
-                    // then add as data. This probably should be ASCII but we've
-                    // always used the native encoding here...
-                    MCAutoStringRef t_string;
-                    MCAutoDataRef t_data;
-                    t_success = ctxt.ConvertToString(p_data, &t_string);
-                    if (t_success)
-                        t_success = MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
-                    if (t_success)
-                        t_success = t_clipboard->AddHTML(*t_data);
+                        t_success = t_clipboard->AddHTMLText(static_cast<MCStringRef>(p_data));
 				}
 				
 				break;
@@ -1551,7 +1525,7 @@ void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_HTML_TEXT:
-            p_clipboard->CopyAsHTMLText((MCDataRef&)&t_data);
+            p_clipboard->CopyAsHTMLText((MCStringRef&)&t_data);
             break;
             
         case TRANSFER_TYPE_STYLED_TEXT:
@@ -1567,7 +1541,7 @@ void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_HTML:
-            p_clipboard->CopyAsHTML((MCDataRef&)&t_data);
+            p_clipboard->CopyAsHTML((MCStringRef&)&t_data);
             break;
             
         case TRANSFER_TYPE_IMAGE:
@@ -1585,6 +1559,18 @@ void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
         case TRANSFER_TYPE_JPEG:
             p_clipboard->CopyAsJPEG((MCDataRef&)&t_data);
             break;
+
+		case TRANSFER_TYPE_BMP:
+			p_clipboard->CopyAsBMP((MCDataRef&)&t_data);
+			break;
+
+		case TRANSFER_TYPE_WIN_METAFILE:
+			p_clipboard->CopyAsWinMetafile((MCDataRef&)&t_data);
+			break;
+
+		case TRANSFER_TYPE_WIN_ENH_METAFILE:
+			p_clipboard->CopyAsWinEnhMetafile((MCDataRef&)&t_data);
+			break;
             
         case TRANSFER_TYPE_OBJECTS:
             p_clipboard->CopyAsLiveCodeObjects((MCDataRef&)&t_data);
@@ -1640,8 +1626,8 @@ void MCPasteboardSetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_HTML_TEXT:
-            if (ctxt.ConvertToData(p_value, &t_data))
-                t_success = p_clipboard->AddHTMLText(*t_data);
+            if (ctxt.ConvertToString(p_value, &t_string))
+                t_success = p_clipboard->AddHTMLText(*t_string);
             break;
             
         case TRANSFER_TYPE_RTF_TEXT:
@@ -1665,8 +1651,8 @@ void MCPasteboardSetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_HTML:
-            if (ctxt.ConvertToData(p_value, &t_data))
-                t_success = p_clipboard->AddHTML(*t_data);
+            if (ctxt.ConvertToString(p_value, &t_string))
+                t_success = p_clipboard->AddHTML(*t_string);
             break;
             
         case TRANSFER_TYPE_IMAGE:
@@ -1688,6 +1674,21 @@ void MCPasteboardSetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             if (ctxt.ConvertToData(p_value, &t_data))
                 t_success = p_clipboard->AddJPEG(*t_data);
             break;
+
+		case TRANSFER_TYPE_BMP:
+			if (ctxt.ConvertToData(p_value, &t_data))
+				t_success = p_clipboard->AddBMP(*t_data);
+			break;
+
+		case TRANSFER_TYPE_WIN_METAFILE:
+			if (ctxt.ConvertToData(p_value, &t_data))
+				t_success = p_clipboard->AddWinMetafile(*t_data);
+			break;
+
+		case TRANSFER_TYPE_WIN_ENH_METAFILE:
+			if (ctxt.ConvertToData(p_value, &t_data))
+				t_success = p_clipboard->AddWinEnhMetafile(*t_data);
+			break;
             
         case TRANSFER_TYPE_FILES:
             if (ctxt.ConvertToString(p_value, &t_string))
@@ -1866,7 +1867,7 @@ void MCPasteboardSetFullClipboardOrDragTextData(MCExecContext& ctxt, MCClipboard
 
 void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdragsource != nil)
+    if (MCdragsource)
     {
         r_object . object = MCdragsource;
         r_object . part_id = 0;
@@ -1878,9 +1879,21 @@ void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_obje
 
 void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdragdest != nil)
+    if (MCdragdest)
     {
         r_object . object = MCdragdest;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCPasteboardEvalDropChunkAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCdragdest)
+    {
+        r_object . object = MCdropfield;
         r_object . part_id = 0;
         return;
     }

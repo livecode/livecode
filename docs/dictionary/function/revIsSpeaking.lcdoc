@@ -4,13 +4,17 @@ Type: function
 
 Syntax: revIsSpeaking()
 
-Summary: <return|Returns> true or false, depending on whether a phrase is currently being spoken by the <revIsSpeaking> <command>.
+Summary:
+<return|Returns> true or false, depending on whether a phrase is
+currently being spoken by the <revIsSpeaking> <command>.
+
+Associations: speech library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revIsSpeaking()
@@ -18,15 +22,30 @@ revIsSpeaking()
 Example:
 wait until revIsSpeaking() is false
 
-Returns (bool): The <revIsSpeaking> <function> <return|returns> true or false.
+Returns (bool):
+The <revIsSpeaking> <function> <return|returns> true or false.
 
 Description:
-Use the <revIsSpeaking> <function> to avoid interrupting a <text to speech|speech>.
+Use the <revIsSpeaking> <function> to avoid interrupting a <text to
+speech|speech>. 
 
-If you execute the <revSpeak> <command> while the computer is already speaking, the first speech is stopped and the second speech begins immediately. 
+If you execute the <revSpeak> <command> while the computer is already
+speaking, the first speech is stopped and the second speech begins
+immediately. 
 
->*Important:*  The <revIsSpeaking> <function> is part of the <Speech library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+>*Important:*  The <revIsSpeaking> <function> is part of the 
+> <Speech library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Speech" 
+> library checkbox is checked.
 
-References: revStopSpeech (command), revSpeak (command), function (control_st), Standalone Application Settings (glossary), command (glossary), return (glossary), standalone application (glossary), text to speech (glossary), Speech library (library), LiveCode custom library (library)
+References: revStopSpeech (command), revSpeak (command),
+function (control structure), Standalone Application Settings (glossary),
+command (glossary), return (glossary), standalone application (glossary),
+text to speech (glossary), LiveCode custom library (glossary),
+Speech library (library)
 
 Tags: multimedia
+

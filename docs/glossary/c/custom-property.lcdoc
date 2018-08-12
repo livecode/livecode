@@ -1,12 +1,16 @@
 Name: custom property
 
-Synonyms: custom properties,user-defined property,user-defined properties,custom property,user property,user properties,instance variable
+Synonyms: custom properties, user-defined property,
+user-defined properties, custom property, user property, user properties,
+instance variable
 
 Type: glossary
 
 Description:
-An object <property> you define. A custom property can hold any data you want to associate with the <object>.
+An object <property> you define. A custom property can hold any data you
+want to associate with the <object(glossary)>.
 
-References: property (glossary), object (object)
+References: property (glossary), object (glossary)
 
 Tags: properties
+

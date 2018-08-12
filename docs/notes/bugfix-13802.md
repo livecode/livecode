@@ -1,1 +1,0 @@
-# Android standalone big text collapse

@@ -1,0 +1,1 @@
+# Fixed bug causing crash on mouse enter

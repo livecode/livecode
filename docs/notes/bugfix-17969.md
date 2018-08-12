@@ -1,0 +1,1 @@
+# Fixed bug preventing correct rendering of ovals when creating them

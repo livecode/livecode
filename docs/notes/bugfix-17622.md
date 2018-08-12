@@ -1,0 +1,1 @@
+# Fix extra data added on Windows when pasting html data from the clipboard

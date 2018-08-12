@@ -1,20 +1,22 @@
 Name: there is a
 
+Synonyms: there is an
+
 Type: operator
 
 Syntax: there is a {<object> | file <filePath> | folder <folderPath> | process <procName>}
 
-Summary: <evaluate|Evaluates> to  true if the specified <object>, <file>, <folder>, or <process> exists, false otherwise.
-
-Synonyms: there is an
+Summary:
+<evaluate|Evaluates> to  true if the specified <object(glossary)>,
+<file>, <folder>, or <process> exists, false otherwise.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,process
+Security: disk, process
 
 Example:
 there is a card button 1 -- evaluates to true if any card buttons exist
@@ -24,22 +26,47 @@ if there is a card ID 3445 then go card ID 3445
 put (there is a file it) into fileIsThere
 
 Parameters:
-object: Any object reference.
-filePath: The filePath specifies the name and location of a file you want to check. If you specify a name but not a location, LiveCode looks for the file in the defaultFolder.
-folderPath: The folderPath specifies the name and location of a folder you want to check. If you specify a name but not a location, LiveCode looks for the folder in the defaultFolder.
-procName: The name of any process that LiveCode started.
+object:
+Any object reference.
+
+filePath:
+The filePath specifies the name and location of a file you want to
+check. If you specify a name but not a location, LiveCode looks for the
+file in the defaultFolder.
+
+folderPath:
+The folderPath specifies the name and location of a folder you want to
+check. If you specify a name but not a location, LiveCode looks for the
+folder in the defaultFolder.
+
+procName:
+The name of any process that LiveCode started.
 
 Description:
-Use the <there is a> <operator> to make sure an <object> or <file> exists before working with it, or to find out whether there are any objects of a specified type.
+Use the <there is a> <operator> to make sure an <object(glossary)> or
+<file> exists before working with it, or to find out whether there are
+any objects of a specified type.
 
-The <there is a> <operator> is the logical inverse of the <there is no> <operator>. When one is true, the other is false.
+The <there is a> <operator> is the logical inverse of the <there is no>
+<operator>. When one is true, the other is false.
 
-The expression there is a stack stackName <evaluate|evaluates> to true if the <stack> is open, if it is closed but <loaded into memory>, or if it appears in the <stackFiles> <property> of any open <stack>.
+The expression there is a stack stackName <evaluate|evaluates> to true
+if the <stack> is open, if it is closed but <loaded into memory>, or if
+it appears in the <stackFiles> <property> of any open <stack>.
 
->*Tip:*  To find out whether a stack is open, check its <mode> <property>. A <stack> that is <loaded into memory> but is not open has a <mode> of zero.
+>*Tip:*  To find out whether a stack is open, check its <mode>
+> <property>. A <stack> that is <loaded into memory> but is not open has
+> a <mode> of zero.
 
->*Note:* The <there is a> <operator> is implemented internally as a <function>, and therefore has lower <precedence> than other <operator|operators>.
+>*Note:* The <there is a> <operator> is implemented internally as a
+> <function>, and therefore has lower <precedence> than other
+> <operator|operators>. 
 
-References: stackFiles (property), mode (property), there is no (operator), file (keyword), property (glossary), loaded into memory (glossary), operator (glossary), precedence (glossary), folder (glossary), evaluate (glossary), process (glossary), exists (function), stack (object), object (object), function (control_st)
+References: function (control structure), exists (function),
+property (glossary), loaded into memory (glossary), operator (glossary),
+precedence (glossary), folder (glossary), evaluate (glossary),
+process (glossary), object (glossary), file (keyword), stack (object),
+there is no (operator), stackFiles (property), mode (property)
 
 Tags: file system
+

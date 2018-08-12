@@ -111,7 +111,6 @@ bool MCImageCopyBitmapRegion(MCImageBitmap *p_bitmap, MCRectangle &p_region, MCI
 	if (!MCImageBitmapCreate(p_region.width, p_region.height, r_copy))
 		return false;
 
-	MCPoint t_dst_offset = {0, 0};
 	MCImageBitmapCopyRegionToBitmap(p_bitmap, r_copy, p_region.x, p_region.y, 0, 0, p_region.width, p_region.height);
 
 	if (p_bitmap->has_transparency)
@@ -472,7 +471,6 @@ void MCImageBitmapFixPremultiplied(MCImageBitmap *p_bitmap)
 				t_pixel = 0;
 			else if (t_alpha != 255)
 			{
-				uint4 t_brokenbits = 0;
 				if ((t_pixel & 0xFF) > t_alpha)
 					t_pixel = (t_pixel & ~0xFF) | t_alpha;
 				if (((t_pixel >> 8) & 0xFF) > t_alpha)
@@ -580,7 +578,6 @@ bool MCImageIndexedBitmapAddTransparency(MCImageIndexedBitmap *p_bitmap)
 	p_bitmap->palette[p_bitmap->transparent_index].red = 0xFFFF;
 	p_bitmap->palette[p_bitmap->transparent_index].green = 0xFFFF;
 	p_bitmap->palette[p_bitmap->transparent_index].blue = 0xFFFF;
-	p_bitmap->palette[p_bitmap->transparent_index].pixel = MCGPixelPackNative(255, 255, 255, 0);
 
 	return true;
 }
@@ -680,7 +677,6 @@ bool MCImageConvertBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_ignore_transp
 						if (t_success)
 						{
 							hashentry->pixel = t_pixel;
-							t_indexed->palette[t_indexed->palette_size].pixel = t_pixel;
 
 							uint16_t t_component;
 							t_component = t_r;
@@ -775,7 +771,6 @@ bool MCImageForceBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_dither, MCImage
 {
 	bool t_success = true;
 
-	MCImageIndexedBitmap *t_indexed = nil;
 	if (MCImageConvertBitmapToIndexed(p_bitmap, false, r_indexed))
 		return true;
 
@@ -851,6 +846,18 @@ bool MCImageDataIsGIF(MCDataRef p_input)
 		return false;
     
 	return memcmp(t_data, "GIF87a", 6) == 0 || memcmp(t_data, "GIF89a", 6) == 0;
+}
+
+bool MCImageDataIsBMP(MCDataRef p_input)
+{
+	const byte_t* t_data = MCDataGetBytePtr(p_input);
+	uindex_t t_length = MCDataGetLength(p_input);
+
+	// This only recognises Win32-format BMPs (all other formats are obsolete)
+	if (t_length < 2)
+		return false;
+
+	return memcmp(t_data, "BM", 2) == 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

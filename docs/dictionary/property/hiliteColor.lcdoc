@@ -1,18 +1,23 @@
 Name: hiliteColor
 
+Synonyms: markercolor, thirdcolor
+
 Type: property
 
 Syntax: set the hiliteColor [of <object>] to {empty | <colorName> | <RGBColor>}
 
-Summary: Specifies the color of the background when an <object>, or text in an <object>, is <highlight|highlighted>.
+Summary:
+Specifies the color of the background when an <object(glossary)>, or
+text in an <object(glossary)>, is <highlight|highlighted>.
 
-Synonyms: markerColor,thirdColor
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the hiliteColor of field "Comments" to "red"
@@ -24,45 +29,108 @@ Example:
 set the hiliteColor to 255,255,0
 
 Value:
-The <hiliteColor> of an <object> is a <color reference>.
+The <hiliteColor> of an <object(glossary)> is a <color reference>.
 The <colorName> is any standard color name.
 
-The <RGBColor> consists of three comma-separated <integer|integers> between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three <hexadecimal> numbers, one for each of red, green, and blue.
+The <RGBColor> consists of three comma-separated <integer|integers>
+between zero and 255, specifying the level of each of red, green, and
+blue; or an HTML-style color consisting of a hash mark (#) followed by
+three <hexadecimal> numbers, one for each of red, green, and blue.
 
 By default, the <hiliteColor> for all <object|objects> is empty.
 
-By default, the global <hiliteColor> <property> is set to the system highlight color.
+By default, the global <hiliteColor> <property> is set to the system
+highlight color.
 
 Description:
-Use the <hiliteColor> <property> to specify the background color of the <select|selected> text in a <field(keyword)>, or the <highlight|highlighted> color of a clicked <object>.
+Use the <hiliteColor> <property> to specify the background color of the
+<select|selected> text in a <field(keyword)>, or the
+<highlight|highlighted> color of a clicked <object(glossary)>.
 
-Setting the <hiliteColor> of an <object> to empty allows the <hiliteColor> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what color is used for the <object>, even if its own <hiliteColor> is empty.
+Setting the <hiliteColor> of an <object(glossary)> to empty allows the
+<hiliteColor> of the <object|object's> <owner> to show through. Use the
+<effective> <keyword> to find out what color is used for the
+<object(glossary)>, even if its own <hiliteColor> is empty.
 
-The setting of the <hiliteColor> <property> has different effects, depending on the <object type>:
+The setting of the <hiliteColor> <property> has different effects,
+depending on the <object type>:
 
-* The <hiliteColor> of a <stack>, <card>, or <group> determines the <hiliteColor> of any <object> in the <stack>, <card>, or <group> that does not have its own <hiliteColor>.
+* The <hiliteColor> of a <stack>, <card>, or <group> determines the
+  <hiliteColor> of any <object(glossary)> in the <stack>, <card>, or
+  <group> that does not have its own <hiliteColor>.
 
-* The <hiliteColor> of a <button(keyword)> is used for the background of the <button(keyword)> when it is <highlight|highlighted>. If the <button(keyword)> is a <menu>, the <hiliteColor> is used to <highlight> the <button(keyword)>, but not the active menu choice. The <hiliteColor> has no effect if the <button(keyword)> is a <tabbed button>. The <hiliteColor> has no effect until the button is <highlight|highlighted>.
 
->*Cross-platform note:*  If the <lookAndFeel> is set to "Appearance Manager", standard and rectangle <button(object)|buttons> are drawn by the operating system if the <backgroundColor> and <backgroundPattern> of the <button(keyword)> and all of its <owner|owners> is empty. In this case, the <button(object)|button's> <hiliteColor> has no effect. Otherwise, the <button(keyword)> is drawn by LiveCode. If the <lookAndFeel> is "Appearance Manager", <button menu|button menus> whose <menuMode> is set to "option" are always drawn by the operating system, and the setting of the <button(object)|button's> <hiliteColor> does not affect them.
+* The <hiliteColor> of a <button(keyword)> is used for the background of
+  the <button(keyword)> when it is <highlight|highlighted>. If the
+  <button(keyword)> is a <menu>, the <hiliteColor> is used to
+  <highlight> the <button(keyword)>, but not the active menu choice. The
+  <hiliteColor> has no effect if the <button(keyword)> is a <tabbed
+  button>. The <hiliteColor> has no effect until the button is
+  <highlight|highlighted>. 
 
-* The <hiliteColor> of a <field(keyword)> determines the background color of text <selection|selections> in the <field(keyword)>. If the <hiliteColor> of the <field(keyword)> and all its <owner|owners> is empty, the <global> <hiliteColor> <property> is used.
 
-* The <hiliteColor> of a <scrollbar> fills the arrow boxes at the ends of the <scrollbar> when the arrows are clicked. The <hiliteColor> has no effect until the arrows are clicked.
+>*Cross-platform note:*  If the <lookAndFeel> is set to
+> "Appearance Manager", standard and rectangle <button(object)|buttons>
+> are drawn by the operating system if the <backgroundColor> and
+> <backgroundPattern> of the <button(keyword)> and all of its
+> <owner|owners> is empty. In this case, the <button(object)|button's>
+> <hiliteColor> has no effect. Otherwise, the <button(keyword)> is drawn
+> by LiveCode. If the <lookAndFeel> is "Appearance Manager", 
+> <button menu|button menus> whose <menuMode> is set to "option" are 
+> always drawn by the operating system, and the setting of the
+> <button(object)|button's> <hiliteColor> does not affect them.
 
-* The <hiliteColor> of a <graphic(keyword)> outlines its marker shapes. (The <hiliteColor> has no effect unless the <graphic(object)|graphic's> <style> is "curve" or "polygon" and its <markerDrawn> property is true.)
+* The <hiliteColor> of a <field(keyword)> determines the background
+  color of text <selection|selections> in the <field(keyword)>. If the
+  <hiliteColor> of the <field(keyword)> and all its <owner|owners> is
+  empty, the <global> <hiliteColor> <property> is used.
+
+
+* The <hiliteColor> of a <scrollbar> fills the arrow boxes at the ends
+  of the <scrollbar> when the arrows are clicked. The <hiliteColor> has
+  no effect until the arrows are clicked.
+
+
+* The <hiliteColor> of a <graphic(keyword)> outlines its marker shapes.
+  (The <hiliteColor> has no effect unless the
+  <graphic(object)|graphic's> <style> is "curve" or "polygon" and its
+  <markerDrawn> property is true.)
+
 
 * The <hiliteColor> of a <player> or <EPS|EPS object> has no effect.
 
-* The <hiliteColor> of an <image(keyword)> is the third color in the <image(object)|image's> <color palette>.
 
-If the object's hilitePattern is set, the pattern is shown instead of the color specified by <hiliteColor>.
+* The <hiliteColor> of an <image(keyword)> is the third color in the
+  <image(object)|image's> <color palette>.
 
-The global <hiliteColor> <property> specifies the background color of <select|selected> text in <field(object)|fields> whose <hiliteColor> is empty, but does not affect other <highlight|highlighted> <object|objects>.
+
+If the object's hilitePattern is set, the pattern is shown instead of
+the color specified by <hiliteColor>.
+
+The global <hiliteColor> <property> specifies the background color of
+<select|selected> text in <field(object)|fields> whose <hiliteColor> is
+empty, but does not affect other <highlight|highlighted>
+<object|objects>. 
 
 Changes:
-The ability of an object to inherit its hiliteColor from the object's owner was introduced in version 1.1. In previous versions, if an object's hiliteColor was empty, the setting of the global hiliteColor property was used instead.
+The ability of an object to inherit its hiliteColor from the object's
+owner was introduced in version 1.1. In previous versions, if an
+object's hiliteColor was empty, the setting of the global hiliteColor
+property was used instead.
 
-References: hiliteFill (property), topColor (property), armFill (property), markerLineSize (property), effective (keyword), field (keyword), button (keyword), menu (keyword), card (keyword), player (keyword), scrollbar (keyword), graphic (keyword), image (keyword), global (command), group (command), button (object), image (object), field (object), object (object), stack (object), graphic (object), selection (glossary), backgroundPattern (glossary), property (glossary), select (glossary), tabbed button (glossary), highlight (glossary), menuMode (glossary), backgroundColor (glossary), object type (glossary), style (glossary), color reference (glossary), integer (glossary), color palette (glossary), button menu (glossary), keyword (glossary), hexadecimal (glossary), EPS (glossary), owner (glossary), lookAndFeel (glossary), markerDrawn (glossary)
+References: global (command), group (command), object (glossary),
+selection (glossary), backgroundPattern (glossary), property (glossary),
+select (glossary), tabbed button (glossary), highlight (glossary),
+menuMode (glossary), backgroundColor (glossary), object type (glossary),
+style (glossary), color reference (glossary), integer (glossary),
+color palette (glossary), button menu (glossary), keyword (glossary),
+hexadecimal (glossary), EPS (glossary), owner (glossary),
+lookAndFeel (glossary), markerDrawn (glossary), effective (keyword),
+field (keyword), button (keyword), menu (keyword), card (keyword),
+player (keyword), scrollbar (keyword), graphic (keyword), image (keyword),
+button (object), image (object), field (object), stack (object),
+graphic (object), hiliteFill (property), topColor (property),
+armFill (property), markerLineSize (property)
 
 Tags: ui
+

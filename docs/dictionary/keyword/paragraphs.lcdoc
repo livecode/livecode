@@ -1,16 +1,18 @@
-Name: paragraph
+Name: paragraphs
 
 Type: keyword
 
-Syntax: paragraph
+Syntax: paragraphs
 
-Summary: Used with the number function to count the number of paragraph chunks in a container.
+Summary:
+Used with the number function to count the number of paragraph chunks in
+a container.
 
 Introduced: 7.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the number of paragraphs in field 1
@@ -19,12 +21,17 @@ Example:
 get the number of paragraphs in tChapter1
 
 Description:
-Use the paragraphs keyword to count the number of paragraph chunks in a container.
+Use the paragraphs keyword to count the number of paragraph chunks in a
+container. 
 
-A <paragraph> is a chunk delimited by either a return character or the Unicode paragraph separator (0x2029).
+A <paragraph> is a chunk delimited by either a return character or the
+Unicode paragraph separator (0x2029).
 
->*Note:*  The paragraph chunk is identical to the line chunk, except that it is also delimited by the paragraph separator character. This reflects the paragraph breaking exhibited by LiveCode fields.
+>*Note:*  The paragraph chunk is identical to the line chunk, except
+> that it is also delimited by the paragraph separator character. This
+> reflects the paragraph breaking exhibited by LiveCode fields.
 
 References: paragraph (keyword)
 
 Tags: text processing
+

@@ -2,46 +2,76 @@ Name: shell
 
 Type: function
 
-Syntax: the shell of <commandLine> 
+Syntax: the shell of <commandLine>
 
 Syntax: shell(<commandLine>)
 
-Summary: Runs a <shell> command and returns its output.
+Summary:
+Runs a <shell> command and returns its output.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
-
-Example:
-shell("ls -l *.txt") -- returns a listing of the current dir on Unix
+Platforms: desktop, server
 
 Example:
-shell(field "Command")
+local tMyList
+put shell("ls -l *.txt") into tMyList -- returns a listing of the current dir on Unix
 
 Example:
-shell("attrib main.rev +R")
+get shell(field "Command") -- runs the shell command entered into the field labelled "Command"
+
+Example:
+get shell("attrib main.rev +R") -- sets the read-only (+R or +r) attribute of file "main.rev" on MSWindows
+
+Example:
+get shell("say" && "hello world") -- Will say the phrase on MacOS
 
 Parameters:
-commandLine (string): 
+commandLine (string):
 
-The result: The value returned by the <shell> <function> is the result of the <commandLine>, including any <error message|error messages> the <commandLine> generates. (On <Unix|Unix systems>, the <stdout> and <stderr> are combined to create the <return value>.) The current <handler> pauses until the <shell> returns its result. If the command was successful but did not return anything, the <shell> <function> returns empty. The result is set to the shell command's exit code.
 
-Returns: The <shell> <function> <return|returns> a <string>.
+Returns:
+The value returned by the <shell> <function> is the result of the
+<commandLine>, including any <error message|error messages> the
+<commandLine> generates. (On <Unix|Unix systems>, the <stdout> and
+<stderr> are combined to create the <return value>.) The current
+<handler> pauses until the <shell> returns its result. If the command
+was successful but did not return anything, the <shell> <function>
+returns empty. The result is set to the shell command's exit code.
 
 Description:
 Use the <shell> <function> to <execute> a <command line>.
 
-The <commandLine> must be a valid <shell> command on the current operating system. Use the <shellCommand> <property> to set the <shell> you want to use. The command is executed in the current <defaultFolder>.
+The <commandLine> must be a valid <shell> command on the current
+operating system. Use the <shellCommand> <property> to set the <shell>
+you want to use. The command is executed in the current <defaultFolder>.
 
->*Note:* If you use a <file path> in the <shell> command on a Windows system, the <file path> must be in Windows form, not the Unix-style <file path|file paths> that LiveCode uses internally.
+>*Note:* If you use a <file path> in the <shell> command on a Windows
+> system, the <file path> must be in Windows form, not the Unix-style
+> <file path|file paths> that LiveCode uses internally.
 
-To prevent a console window from appearing when the shell command is executed, set the <hideConsoleWindows> property to true.
+To prevent a console window from appearing when the shell command is
+executed, set the <hideConsoleWindows> property to true.
 
->*Tip:*  If you are having problems with the <shell> <function>, try <execute|executing> the <commandLine> at your operating system's <shell> prompt. (For example, on an <OS X|OS X system>, try executing the <commandLine> in the Terminal window.) If a <commandLine> does not work at the <shell> prompt, it won't work with the <shell> <function> either, so trying this can be useful when <debug|debugging>.
+>*Tip:*  If you are having problems with the <shell> <function>, try
+> <execute|executing> the <commandLine> at your operating system's
+> <shell> prompt. (For example, on an <OS X|OS X system>, try executing
+> the <commandLine> in the Terminal window.) If a <commandLine> does not
+> work at the <shell> prompt, it won't work with the <shell> <function>
+> either, so trying this can be useful when <debug|debugging>.
 
 Changes:
-Support for using the shell command on OS X systems was added in version 2.0.
+Support for using the shell command on OS X systems was added in version
+2.0. 
 
-References: hideConsoleWindows (property), defaultFolder (property), shellCommand (property), string (keyword), stderr (keyword), stdout (keyword), launch (command), screenName (function), shell (function), property (glossary), error message (glossary), return value (glossary), handler (glossary), execute (glossary), OS X (glossary), return (glossary), file path (glossary), debug (glossary), Unix (glossary), command line (glossary), function (control_st)
+References: launch (command), function (control structure),
+screenName (function), shell (function), property (glossary),
+error message (glossary), return value (glossary), handler (glossary),
+execute (glossary), OS X (glossary), return (glossary),
+file path (glossary), debug (glossary), Unix (glossary),
+command line (glossary), string (keyword), stderr (keyword),
+stdout (keyword), hideConsoleWindows (property), defaultFolder (property),
+shellCommand (property)
+

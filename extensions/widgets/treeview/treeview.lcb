@@ -18,14 +18,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /**
 A widget to display array data in a tree view
 
-Name: hilitedChanged
+Name: hiliteChanged
 Type: message
-Syntax: hilitedChanged
+Syntax: hiliteChanged
 
 Summary: Sent when an element is hilited
 
 Description:
-The <hilitedChanged> message is sent to the widget's script object when a row of the 
+The <hiliteChanged> message is sent to the widget's script object when a row of the 
 widget's display is clicked on, causing that row to be highlighted. Use the <hilitedElement>
 property to fetch the row's associated array keys.
 
@@ -47,7 +47,7 @@ References: arrayData (property)
 
 Name: actionInspect
 Type: message
-Syntax: actionInspect pPath
+Syntax: actionInspect <pPath>
 
 Summary: Sent when an the inspect icon is clicked in read only mode
 
@@ -62,7 +62,7 @@ element whose icon was clicked.
 
 Name: actionDoubleClick
 Type: message
-Syntax: actionDoubleClick pPath
+Syntax: actionDoubleClick <pPath>
 
 Summary: Sent when a leaf node of the tree view is double-clicked.
 
@@ -74,7 +74,7 @@ The actionDoubleClick message is sent to the widget's script object when a row o
 is double-clicked. The <pPath> parameter contains the path to the element whose row was clicked.
 **/
 
-widget com.livecode.widget.treeView
+widget com.livecode.widget.treeview
 
 use com.livecode.canvas
 use com.livecode.widget
@@ -83,9 +83,10 @@ use com.livecode.library.widgetutils
 use com.livecode.foreign
 
 metadata author is "LiveCode"
-metadata version is "2.0.0"
+metadata version is "2.0.2"
 metadata title is "Tree View"
 metadata svgicon is "M152.4,249.7c-6.4,0-11.8,4.3-13.5,10.1h-10v-26.7h10c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1s-6.3-14.1-14.1-14.1c-6.4,0-11.8,4.3-13.5,10.1h-10v-16.1c8.4-1.8,14.8-9.3,14.8-18.3c0-10.4-8.4-18.8-18.8-18.8s-18.8,8.4-18.8,18.8c0,9,6.3,16.5,14.7,18.3v58.8h18c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1S160.2,249.7,152.4,249.7z M128.7,202h-7.5v-7.5h-7.5V187h7.5v-7.5h7.5v7.5h7.5v7.5h-7.5V202z"
+metadata _ide is "true"
 
 -- property declarations
 /**
@@ -251,6 +252,25 @@ metadata sortType.options is "text,numeric"
 metadata sortType.label is "Sort type"
 
 /**
+Name: pathDelimiter
+
+Type: property
+
+Syntax: set the pathDelimiter of <widget> to <pType>
+Syntax: get the pathDelimiter of <widget>
+
+Summary: Manipulates the separator between the elements of the array viewer
+
+Description:
+Use the <pathDelimiter> property as the separator between the elements describing
+a path in the tree view widget.
+**/
+
+property pathDelimiter		get mPathDelimiter		set mPathDelimiter
+metadata pathDelimiter.label is "Path delimiter"
+metadata pathDelimiter.default is ","
+
+/**
 Syntax: set the alternateRowBackgrounds of <widget> to {true|false}
 Syntax: get the alternateRowBackgrounds of <widget>
 
@@ -400,9 +420,15 @@ private variable mArrayStyle as Boolean
 private variable mSortAscending as Boolean
 private variable mSortNumeric as Boolean
 
+private variable mPathDelimiter as String
+
 private variable mShowSeparator as Boolean
 private variable mSeparatorRatio as Number
 private variable mSeparatorDragging as Boolean
+
+private variable mOldTooltip as optional String
+
+constant kRowBuffer is 1000
 
 constant kItemPadding is 6
 constant kSeparatorWidth is 4
@@ -440,7 +466,7 @@ public handler OnCreate() returns nothing
 	put my width into mViewWidth	
 	
 	put 0 into mHoverRow
-    put "" into mHoverIcon
+	put "" into mHoverIcon
 	put 0 into mViewTopPosition
 	put true into mFrameBorder	
 	initialiseScrollbar()	
@@ -450,6 +476,8 @@ public handler OnCreate() returns nothing
 
     put true into mSortNumeric
     put true into mSortAscending
+
+    put "," into mPathDelimiter
 
 	put true into mRecalculate
 	put true into mUpdateDataList
@@ -503,6 +531,10 @@ public handler OnLoad(in pProperties as Array)
 	setArrayData(pProperties["array"])
 end handler
 
+private handler elementIsProxyForMoreData(in pElement as Array) returns Boolean
+	return "more_data" is among the keys of pElement
+end handler
+
 public handler OnPaint() returns nothing
 	set the font of this canvas to my font
 	if mUpdateDataList then
@@ -519,12 +551,7 @@ public handler OnPaint() returns nothing
 	end if
 
 	variable tTop as Real
-	variable tPath as Path
-	
 	put 0 into tTop
-	
-	variable tDataItem as Array
-	put the empty array into tDataItem
 	
 	variable tX as Integer
 	put 1 into tX
@@ -533,12 +560,22 @@ public handler OnPaint() returns nothing
 	put mViewTopPosition mod mRowHeight into tTopOffset
 	subtract tTopOffset from tTop	
 	
-	// Iterate from the first data item drawing each row until the can't display any more items
-	repeat with tX from mFirstDataItem up to the number of elements in mDataList
+	// Iterate from the first data item drawing each row until 
+	// we can't display any more items	
+	repeat with tX from mFirstDataItem up to mDataCount	
 		if tX is 1 then
 			paintFirstRow(tTop)
 		else
-			paintDataItem(element tX of mDataList, tTop, tX)		
+			variable tElement as Array
+			put element tX of mDataList into tElement
+			if elementIsProxyForMoreData(tElement) then
+				addToListBuffer(tX, tElement, mDataList)
+				updateParameters()
+				updateSeparator()
+				put mDataList[tX] into tElement
+			end if
+			
+			paintDataItem(tElement, tTop, tX)		
 		end if
 		if tTop > mViewHeight then
 			exit repeat
@@ -555,6 +592,7 @@ public handler OnPaint() returns nothing
 	
 	// Draw the frame
 	if mFrameBorder is true then
+		variable tPath as Path
 		put rectangle path of rectangle [0.5,0.5,mViewWidth-0.5,mViewHeight-0.5] into tPath
 		paintBorder(tPath)
 	end if
@@ -581,9 +619,9 @@ end handler
 private handler paintFirstRow(in pTop as Real)
 	// Apply any style to this data item
 	variable tStyle as String
-    put "" into tStyle
-    
-    variable tHover as Boolean
+	put "" into tStyle
+
+	variable tHover as Boolean
 	put mHoverRow is 1 into tHover
 		
 	variable tPath as Path	
@@ -762,6 +800,7 @@ public handler OnMouseMove() returns nothing
                 put tHoverIcon into mHoverIcon
                 put true into tRedraw
             end if
+            setHoverTooltip(tHoverIcon)
         end if
         
         if tRedraw then
@@ -809,12 +848,16 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 end handler
 
 public handler OnClick() returns nothing
+	if mHoverRow < 1 then
+		put yPosToRowNumber(the y of the mouse position) into mHoverRow
+	end if
+
 	// If the first row was clicked then add a new element
 	if mHoverRow is 1 then
 		addBaseLevelElement()
 		return
 	end if
-
+	
 	// Click in the scrollbar region does nothing
 	if the x of the click position > mViewWidth - scrollbarWidth() then
 		return
@@ -834,15 +877,21 @@ public handler OnClick() returns nothing
 	if mHoverRow > the number of elements in mDataList then
 		return
 	end if
-
-	variable tData as Array
-	put the empty array into tData
 	
+	variable tData as Array	
 	put element mHoverRow of mDataList into tData
 	
 	// Check if the delete icon was clicked
 	if mHoverIcon is "delete" then
-		removePath(tData["path"])
+        variable tPrompt as String
+        variable tPath
+        put tData["path"] into tPath
+        combine tPath with "]["
+        put "Really delete array element at path [" & the result & "]?" into tPrompt
+        execute script "answer \q" & tPrompt & "\q with OK and Cancel; return it"
+        if the result is "OK" then
+            removePath(tData["path"])
+        end if
 		return
 	end if
 	
@@ -854,7 +903,7 @@ public handler OnClick() returns nothing
 
     variable tPathString as String
     if mHoverIcon is "inspect" then
-        combine tData["path"] with "," into tPathString
+        combine tData["path"] with mPathDelimiter into tPathString
         post "actionInspect" with [tPathString]
         return
     end if
@@ -891,7 +940,7 @@ public handler OnClick() returns nothing
 
 	if the click count > 1 then
 		if tData["leaf"] then
-            combine tData["path"] with "," into tPathString
+            combine tData["path"] with mPathDelimiter into tPathString
 			post "actionDoubleClick" with [tPathString]
 		else
 		   if tData["folded"] is true then
@@ -962,6 +1011,22 @@ public handler OnGeometryChanged()
 	end if
 end handler
 
+private handler SetHoverTooltip(in pIconString as String) returns nothing
+    if mOldTooltip is nothing then
+        put property "tooltip" of my script object into mOldTooltip
+    end if
+
+    variable tTooltip as String
+    if pIconString is "delete" then
+        put "Delete array key" into tTooltip
+    else if pIconString is "add" then
+        put "Add new array key" into tTooltip
+    else
+        put mOldTooltip into tTooltip
+    end if
+    set property "tooltip" of my script object to tTooltip
+end handler
+
 --------------------------------------------------------------------------------
 --
 --		Display calculations
@@ -995,8 +1060,10 @@ private handler updateFirstDataItem()
     end if  
 end handler
 
---This is called before painting if the private variable mUpdateDataList is true.
--- It replaces the whole data list, and thus should only be called if the underlying array changes.
+-- This is called before painting if the private variable 
+-- mUpdateDataList is true.
+-- It replaces the whole data list, and thus should only be called if 
+-- the underlying array changes.
 private handler updateDataList() returns nothing
 	put convertArrayToList(mData, 0, the empty list) into mDataList
 	
@@ -1020,12 +1087,13 @@ private handler updateDataList() returns nothing
 	put true into mRecalculate
 end handler
 
---This is called before painting if the private variable mUpdateSeparator is true.
--- It calculates the portion of the value string that can be displayed in the available space.
--- If mRecalculateFit is true, all values are recalculated - this should only happen when the
--- separator is moved.
+-- This is called before painting if either the private variable 
+-- mUpdateSeparator or mRecalculateFit is true.
+-- It calculates the portion of the value string that can be displayed 
+-- in the available space.
+-- If mRecalculateFit is true, all values are recalculated - this should 
+-- only happen when the separator is moved.
 private handler updateSeparator() returns nothing
-	variable tElement as Number
 	variable tValueSpace as Real
 	if mShowSeparator then
 		put valueRight() - valueLeft(keyRight()) into tValueSpace
@@ -1036,27 +1104,34 @@ private handler updateSeparator() returns nothing
 	
 	variable tKeySpace as Real
 	variable tTrimmed as Boolean
-	repeat with tElement from 2 up to mDataCount
+	variable tCount as Integer
+	variable tElement as Array
+	repeat with tCount from 2 up to mDataCount
+		put mDataList[tCount] into tElement
+		if elementIsProxyForMoreData(tElement) then
+			-- We're beyond the calculated data
+			next repeat
+		end if
 		variable tKeyLeft as Real
-		put keyLeft(mDataList[tElement]) into tKeyLeft
+		put keyLeft(tElement) into tKeyLeft
 		put keyRight() - tKeyLeft into tKeySpace
 
-		if mRecalculateFit or "key_too_large" is not among the keys of mDataList[tElement] then
+		if mRecalculateFit or "key_too_large" is not among the keys of tElement then
 			variable tKeyDisplay as String
-			put mDataList[tElement]["key"] into tKeyDisplay
+			put tElement["key"] into tKeyDisplay
 			if mArrayStyle then
 				 put "[" & tKeyDisplay & "]" into tKeyDisplay
 			end if
-			put displayWidth(tKeyDisplay, tKeySpace, mDataList[tElement]["display_key"], tTrimmed) into tWidth
-			put tTrimmed into mDataList[tElement]["key_too_large"]
+			put displayWidth(tKeyDisplay, tKeySpace, tElement["display_key"], tTrimmed) into tWidth
+			put tTrimmed into tElement["key_too_large"]
 		else
-			put mDataList[tElement]["key_too_large"] into tTrimmed
+			put tElement["key_too_large"] into tTrimmed
 		end if
 		
 		if not mShowSeparator then
 			if tTrimmed then
-				put true into mDataList[tElement]["value_too_large"]
-				put "" into mDataList[tElement]["display_value"]
+				put true into tElement["value_too_large"]
+				put "" into tElement["display_value"]
 				put 0 into tValueSpace
 			else
 				put valueRight() - valueLeft(tKeyLeft + tWidth) into tValueSpace
@@ -1064,22 +1139,22 @@ private handler updateSeparator() returns nothing
 		end if
 
 		// AL-2015-07-26: [[ Bug 15752 ]] Only draw specified amount of value string
-		if mDataList[tElement]["leaf"] then
+		if tElement["leaf"] then
 			// Only calculate fit if we are forcing recalculation or it hasn't previously been calculated.
-			if mRecalculateFit or "value_too_large" is not among the keys of mDataList[tElement] then
-					put displayWidth(mDataList[tElement]["string_value"], tValueSpace, mDataList[tElement]["display_value"], tTrimmed) into tWidth
-					put tTrimmed into mDataList[tElement]["value_too_large"]
+			if mRecalculateFit or "value_too_large" is not among the keys of tElement then
+					put displayWidth(tElement["string_value"], tValueSpace, tElement["display_value"], tTrimmed) into tWidth
+					put tTrimmed into tElement["value_too_large"]
 			end if	
 		end if
+		put tElement into mDataList[tCount]
 	end repeat
 
 	put false into mRecalculateFit
+	put false into mUpdateSeparator
 end handler
 
---This is called before painting if the private variable mUpdateSeparator is true.
--- It calculates the portion of the value string that can be displayed in the available space.
--- If mRecalculateFit is true, all values are recalculated - this should only happen when the
--- separator is moved or the widget is resized.
+-- This is called before painting if the private variable mRecalculate
+-- is true.
 private handler updateParameters() returns nothing
 	put the number of elements in mDataList into mDataCount
 	if mReadOnly then
@@ -1180,35 +1255,6 @@ private handler paintText(in pText as String, in pAlignment as String, in pRect 
 	restore state of this canvas
 end handler
 
-private handler stringToColor(in pString as String) returns Color
-	variable tRed as Real
-	variable tGreen as Real
-	variable tBlue as Real
-	variable tAlpha as Real
-
-	variable tComponentList as List
-	split pString by "," into tComponentList
-
-	variable tComponentCount
-	put the number of elements in tComponentList into tComponentCount
-	if tComponentCount is not 3 and tComponentCount is not 4 then
-		// Invalid number of components detected
-		throw "Invalid color"
-	end if
-
-	put (element 1 of tComponentList) parsed as number into tRed
-	put (element 2 of tComponentList) parsed as number into tGreen
-	put (element 3 of tComponentList) parsed as number into tBlue
-
-	if tComponentCount is 4 then
-		put (element 4 of tComponentList) parsed as number into tAlpha
-	else
-		put 255 into tAlpha
-	end if
-
-	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
-end handler
-
 --------------------------------------------------------------------------------
 --
 --		Handlers for data management and array/list conversions
@@ -1226,6 +1272,18 @@ private handler setValueOnPath(in pPath as List, in pValue as any, inout xArray 
 			put the empty array into xArray[element 1 of pPath]
 		end if
 		setValueOnPath(element 2 to -1 of pPath, pValue, xArray[element 1 of pPath])
+	end if
+end handler
+
+private handler getValueOnPath(in pPath as List, in pArray as Array) returns any
+	if pPath is the empty list then
+		return pArray
+	else if (element 1 of pPath) is not among the keys of pArray then
+		return the empty array
+	else if the number of elements in pPath is 1 then
+		return pArray[element 1 of pPath]
+	else
+		return getValueOnPath(element 2 to -1 of pPath, pArray[element 1 of pPath])
 	end if
 end handler
 
@@ -1285,51 +1343,67 @@ foreign handler MCStringDecode(in BinaryData as Data, in Encoding as LCUInt, in 
 
 // Temporary wrapper to allow conversion of data to string until it is implemented in the LCB stdlib
 private handler ConvertToString(in pData as Data, out rString as optional String) returns Boolean
-    return MCStringDecode(pData, kUTF8Encoding, false, rString)
+    unsafe
+        return MCStringDecode(pData, kUTF8Encoding, false, rString)
+    end unsafe
 end handler
 
-// Convert an array to a list, as used by this widget. Ignoring the 'folded' ans selected
-//  parameters, mDataList should always be the result of calling this on mData
-private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in pPath as List) returns List
-
-	if pArray is empty then
-		return the empty list
-	end if
-
-	variable tList as List
-	put the empty list into tList
+private handler addToListBuffer(in pAt as Integer, in pElement as Array, inout xList as List)	
+	variable tSorted as List
+	put pElement["more_data"] into tSorted
 	
-	variable tKeys as List
-	put the keys of pArray into tKeys
-	
-	if mSortNumeric then
-		sort tKeys using handler CompareKeysNumeric
+	variable tPath as List
+	if the number of elements in pElement["path"] is 1 then
+		put the empty list into tPath
 	else
-		if mSortAscending then
-			sort tKeys in ascending order
-		else
-			sort tKeys in descending order
-		end if
+		put element 1 to -2 of pElement["path"] into tPath
 	end if
 	
+	variable tArray as Array
+	put getValueOnPath(tPath, mData) into tArray
+	
+	variable tLevel as Integer
+	put pElement["indent"] into tLevel
+	
+	delete element pAt of xList
+	splice calculateMoreElements(kRowBuffer, tLevel, tPath, tSorted, tArray) after element pAt - 1 of xList
+end handler
+
+private handler calculateMoreElements(in pLimit as Integer, in pLevel as Integer, in pPath as List, in pSortedKeys as List, in pArray as Array) returns List
 	variable tKey as String
 	variable tElement as Array
+	variable tCount as Integer
+	variable tKeyCount as Integer
+	put the number of elements in pSortedKeys into tKeyCount
 	
-	repeat for each element tKey in tKeys
-		put the empty array into tElement
-		put tKey into tElement["key"]
-		put pLevel into tElement["indent"]
-		put false into tElement["selected"]
+	put the minimum of tKeyCount and pLimit into pLimit
+	
+	variable tList as List
+	repeat with tCount from 1 up to pLimit
+		variable tKey as String
+		put pSortedKeys[tCount] into tKey
 		
+		variable tElement as Array
+		put the empty array into tElement
+		put pLevel into tElement["indent"]
+	
 		variable tPath as List
 		put pPath into tPath
 		push tKey onto tPath
-		
-		put tPath into tElement["path"]	
+		put tPath into tElement["path"]
+		if tCount is pLimit and pLimit < tKeyCount then
+			-- If we've calculated the max in one go, store the data
+			put element tCount to tKeyCount of pSortedKeys into tElement["more_data"]
+			push tElement onto tList
+			return tList
+		end if
+	
+		put tKey into tElement["key"]
+		put false into tElement["selected"]
+	
 		if pArray[tKey] is an array then
 			put false into tElement["leaf"]
 			put true into tElement["folded"]
-			push tElement onto tList
 		else
 			put true into tElement["leaf"]
 			put pArray[tKey] into tElement["value"]
@@ -1343,19 +1417,43 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 			else if pArray[tKey] is a number then
 				format pArray[tKey] as string into tString
 			else if pArray[tKey] is a data then
-                if not ConvertToString(pArray[tKey], tString) then
-                    put "Can't display value" into tString
-                end if
-            else
-
+				if not ConvertToString(pArray[tKey], tString) then
+					put "Can't display value" into tString
+				end if
+			else
 				put "Can't display value" into tString
 			end if	
 			put tString into tElement["string_value"]
-			push tElement onto tList
-		end if	
+		end if
+		push tElement onto tList
 	end repeat
-	
 	return tList
+end handler
+
+-- Convert an array to a list, as used by this widget. Ignoring the
+-- 'folded' and selected parameters, mDataList should always be the 
+-- result of calling this on mData
+private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in pPath as List) returns List
+
+	if pArray is empty then
+		return the empty list
+	end if
+	
+	variable tKeys as List
+	put the keys of pArray into tKeys
+	
+	if mSortNumeric then
+		sort tKeys using handler CompareKeysNumeric
+	else
+		if mSortAscending then
+			sort tKeys in ascending order
+		else
+			sort tKeys in descending order
+		end if
+	end if
+	variable tViewCount as Integer
+	put the ceiling of (mViewHeight / mRowHeight) into tViewCount
+	return calculateMoreElements(kRowBuffer + tViewCount, pLevel, pPath, tKeys, pArray)
 end handler
 
 // A handler type for passing into 'applyToNode'
@@ -1455,6 +1553,11 @@ end handler
 
 // Delete the array key on the given path and update the display list
 private handler removePath(in pPath as List)
+	// Unselect the existing selection if applicable
+	if mSelectedElement is not nothing and mSelectedElement begins with pPath then
+		applyToNode(unselectKey, mSelectedElement, 0, 1, mDataList, mData)
+	end if
+
 	if applyToNode(removeKey, pPath, 0, 1, mDataList, mData) then
 		post "dataChanged"
 		put true into mRecalculate
@@ -1521,8 +1624,7 @@ end handler
 // We are quite lax with checking here, since this will only be used internally 
 // 	after a delete action happens, and so the element should exist by definition.
 // If the specified path doesn't exist, this returns false
-private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array) returns Boolean
-	
+private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array) returns Boolean	
 	if pStart >= the number of elements in xList then
 		return false
 	end if	
@@ -1534,6 +1636,10 @@ private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in
 	variable tElement as Array
 	repeat with tCount from pStart + 1 up to the number of elements in xList
 		put xList[tCount] into tElement
+		if elementIsProxyForMoreData(tElement) then
+			next repeat
+		end if
+		
 		if tElement["key"] is tKey and pLevel is tElement["indent"] then
 			if the number of elements in pPathToNode is pLevel + 1 then
 				pHandler(tCount, pPathToNode, pLevel, xList, xArray)
@@ -1578,6 +1684,11 @@ private handler applyFoldStateKey(in pKey as String, in pLevel as Integer, in pS
 	// Find the key
 	repeat with tCount from pStart + 1 up to the number of elements in xList
 		put xList[tCount] into tElement
+		
+		if elementIsProxyForMoreData(tElement) then
+			next repeat
+		end if
+		
 		if tElement["key"] is pKey and pLevel is tElement["indent"] then
 			// Either splice in the below elements
 			if pFoldState["folded"] is false then
@@ -1619,80 +1730,9 @@ private handler applyFoldState(in pLevel as Integer, in pStart as Integer, in pF
 
 end handler
 
-// Given a 'path' of array keys as a list, and a value, adjust the mDataList and mData variables
-// 	to reflect the action of putting pValue into mData[element 1 of pPath][element 2 of pPath]...
-private handler setDataOnPath(in pPath as List) returns nothing
-	
-	// pPath having 1 element is an error, as that means mData is just a string rather than an array
-	if the number of elements in pPath is 1 then
-		return
-	end if
-	
-	// The last element of pPath is the actual value, the rest of it is the keys.
-	variable tActualPath as List
-	put element 1 to -2 of pPath into tActualPath
-	
-	variable tValue as String
-	put element -1 of pPath into tValue
-	
-	// Simultaneously adjust the backing list and array to reflect the added value.
-	setDataListOnPath(tActualPath, tValue, 0, mDataList, mData)
-
-end handler
-
 private handler setRowBackgrounds(in pShowAlternateBackgrounds as Boolean) returns nothing
 	put pShowAlternateBackgrounds into mAlternateRowBackgrounds
 	redraw all
-end handler
-
-// Recursive implementation of setting data on a given path. 
-// Acts on a list (in the format used by this widget) and an array simultaneously.
-private handler setDataListOnPath(in pPath as List, in pValue as any, in pLevel as Integer, inout xList as List, inout xArray as Array) returns nothing
-
-	variable tElement as Array
-	variable tCount as Integer
-	variable tNewElement as Array
-	put the empty array into tNewElement
-	
-	repeat with tCount from 1 up to the number of elements in xList
-		put element tCount of xList into tElement
-		
-		// The easy case - just insert the new element
-		if tElement["key"] > element pLevel + 1 of pPath then
-		
-			// update the backing array
-			setValueOnPath(element pLevel + 1 to -1 of pPath, pValue, tNewElement)
-			put tNewElement[element pLevel + 1 of pPath] into xArray[element pLevel + 1 of pPath] 
-			
-			// update the list
-			splice convertArrayToList(tNewElement, pLevel, pPath) before element tCount of xList
-			return
-			
-		// We already have a key for the start of this path
-		else if tElement["key"] is element pLevel + 1 of pPath then
-			// The new element replaces the old one if the new one is just a string...
-			if the number of elements in pPath is pLevel + 1 then
-				put pValue into xArray[element pLevel + 1 of pPath]
-				put pValue into tElement["value"]
-				
-			// ...or if the old one was just as string.
-			else if tElement["leaf"] then
-				setValueOnPath(element pLevel + 2 to -1 of pPath, pValue, tNewElement)
-				put tNewElement into xArray[element pLevel + 1 of pPath]
-				splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList 
-
-			// Otherwise, go one step further into the path and set
-			else
-				setDataListOnPath(pPath, pValue, pLevel + 1, element tCount + 1 to -1 of xList, xArray[element pLevel + 1 of pPath])
-			end if
-			return
-		end if
-	end repeat
-	
-	// If we reached the end of the list then append this to the end
-	setValueOnPath(element pLevel + 1 to -1 of pPath, pValue, tNewElement)
-	put tNewElement[element pLevel + 1 of pPath] into xArray[element pLevel + 1 of pPath] 
-	splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList
 end handler
 
 --------------------------------------------------------------------------------
@@ -1715,16 +1755,16 @@ end handler
 
 private handler setSelectedElement(in pElement as String)
 	variable tPath as List
-	split pElement by "," into tPath
+	split pElement by mPathDelimiter into tPath
 	selectPath(tPath)
 end handler
 
 private handler getSelectedElement() returns String
 	variable tElement as String
 	if mSelectedElement is not nothing then
-		combine mSelectedElement with "," into tElement
+		combine mSelectedElement with mPathDelimiter into tElement
 		// Make sure empty path is recognised as a valid path
-		put "," after tElement
+		put mPathDelimiter after tElement
 	else
 		put the empty string into tElement
 	end if
@@ -1869,7 +1909,7 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 	repeat for each char tChar in pText
 		// Just return where we are so far if we encounter a new line character
 		if tChar is newline then
-			put tCurrentString & "\u{2026}" into rText			
+			put tCurrentString & "\u{2026}" into rText		
 			measure rText on this canvas
 			put the width of the result into tWidth
 			put true into rTrimmed
@@ -1895,7 +1935,7 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 		
 		add 1 to tCount
 	end repeat
-	
+
 	put pText into rText
 	put false into rTrimmed
 	return tWidth

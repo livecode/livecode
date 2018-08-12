@@ -44,6 +44,8 @@ public:
     virtual MCStringRef GetKnownTypeString(MCRawClipboardKnownType p_type) const;
     virtual MCDataRef EncodeFileListForTransfer(MCStringRef p_file_list) const;
     virtual MCStringRef DecodeTransferredFileList(MCDataRef p_data) const;
+	virtual MCDataRef EncodeHTMLFragmentForTransfer(MCDataRef p_html) const;
+	virtual MCDataRef DecodeTransferredHTML(MCDataRef p_html) const;
 };
 
 

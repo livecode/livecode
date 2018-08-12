@@ -2,17 +2,19 @@ Name: shadowOffset
 
 Type: property
 
-Syntax: set the shadowOffset of <object> to <pixels> 
+Syntax: set the shadowOffset of <object> to <pixels>
 
-Summary: Specifies the size and direction of an <object|object's> drop shadow.
+Summary:
+Specifies the size and direction of an <object|object's> drop shadow.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the shadowOffset of button "Prospects" to 2
@@ -21,18 +23,31 @@ Example:
 set the shadowOffset of field "Help" to -6
 
 Value:
-The <shadowOffset> of an <object> is an <integer> between -128 and 127.
-By default, the <shadowOffset> of a newly created <object> is 4.
+The <shadowOffset> of an <object(glossary)> is an <integer> between -128
+and 127. By default, the <shadowOffset> of a newly created
+<object(glossary)> is 4.
 
 Description:
-Use the <shadowOffset> <property> to change the appearance of drop shadows.
+Use the <shadowOffset> <property> to change the appearance of drop
+shadows. 
 
-Because this also changes the position of the imaginary light source that casts the shadow, the <shadowOffset> of all <object|objects> on a <card> should usually be the same.
+Because this also changes the position of the imaginary light source
+that casts the shadow, the <shadowOffset> of all <object|objects> on a
+<card> should usually be the same.
 
-The <shadowOffset> specifies how far the shadow extends from the edge of the <object>. If the <shadowOffset> is positive, the imaginary light source is at the upper left corner of the screen, so the drop shadow falls below and to the right of the <object>. If the <shadowOffset> is <negative>, the direction of the light source is reversed, and the drop shadow falls above and to the left of the <object>.
+The <shadowOffset> specifies how far the shadow extends from the edge of
+the <object(glossary)>. If the <shadowOffset> is positive, the imaginary
+light source is at the upper left corner of the screen, so the drop
+shadow falls below and to the right of the <object(glossary)>. If the
+<shadowOffset> is <negative>, the direction of the light source is
+reversed, and the drop shadow falls above and to the left of the
+<object(glossary)>. 
 
-If the object's <shadow> <property> is false, the <shadowOffset> has no effect.
+If the object's <shadow> <property> is false, the <shadowOffset> has no
+effect. 
 
-References: shadow (property), card (keyword), integer (keyword), object (object), property (glossary), negative (glossary)
+References: object (glossary), property (glossary), negative (glossary),
+card (keyword), integer (keyword), shadow (property)
 
 Tags: ui
+

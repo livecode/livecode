@@ -4,21 +4,23 @@ Type: keyword
 
 Syntax: home
 
-Summary: This keyword exists only to aid compatibility with imported HyperCard stacks.
+Summary:
+This keyword exists only to aid compatibility with imported HyperCard
+stacks. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
-
-Example:
-get the long name of stack home
+Platforms: desktop, server, mobile
 
 Example:
 go home
 
 Description:
-In the development environment, the home stack is the License stack, and the statement go home does not do anything useful.
+In the development environment, the home stack is the License stack, and
+the statement go home does not do anything useful.
 
-References: middle (keyword), last (keyword), two (constant), number (property), seconds (function)
+References: two (constant), seconds (function), middle (keyword),
+last (keyword), number (property)
+

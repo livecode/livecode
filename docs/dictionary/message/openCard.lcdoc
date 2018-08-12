@@ -4,15 +4,16 @@ Type: message
 
 Syntax: openCard
 
-Summary: Sent to a <card> right after you go to the <card>.
+Summary:
+Sent to a <card> right after you go to the <card>.
 
 Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on openCard
@@ -20,12 +21,22 @@ on openCard
 end openCard
 
 Description:
-Handle the <openCard> <message> to change a <card(object)|card's> <object|objects>, or perform other updates, when the <card(keyword)> is visited.
+Handle the <openCard> <message> to change a <card(object)|card's>
+<object|objects>, or perform other updates, when the <card(keyword)> is
+visited. 
 
-The <openCard> <message> is sent after the destination <card(keyword)> is visible. To make changes that take effect before the <card(keyword)> becomes visible on the screen, use the <preOpenCard> <message> instead.
+The <openCard> <message> is sent after the destination <card(keyword)>
+is visible. To make changes that take effect before the <card(keyword)>
+becomes visible on the screen, use the <preOpenCard> <message> instead.
 
-The actual navigation is not triggered by the <openCard> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <card(keyword)> from appearing.
+The actual navigation is not triggered by the <openCard> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <card(keyword)> from appearing.
 
-References: card (keyword), openBackground (message), openControl (message), preOpenCard (message), card (object), object (object), message (glossary), trap (glossary), pass (control_st)
+References: pass (control structure), object (glossary),
+message (glossary), trap (glossary), card (keyword),
+openBackground (message), openControl (message), preOpenCard (message),
+card (object)
 
 Tags: navigation
+

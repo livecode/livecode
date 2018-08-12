@@ -4,13 +4,17 @@ Type: command
 
 Syntax: revSetStackFileProfile <profileName> [, <stackName>]
 
-Summary: Changes the current <property profile|profile> used for all <stacks> in a <stack file> and all their <object|objects>.
+Summary:
+Changes the current <property profile|profile> used for all <stacks> in
+a <stack file> and all their <object|objects>.
+
+Associations: profile library
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web
+Platforms: desktop, server, mobile
 
 Example:
 revSetStackFileProfile "Brights"
@@ -19,20 +23,50 @@ Example:
 revSetStackFileProfile "SmallControls",myStackName
 
 Parameters:
-profileName: The profileName specifies which profile to use.
-stackName: The short name of an open stack. If you don't specify a stack, the stack file that the topStack belongs to is changed. >*Note:* Although the revSetStackFileProfile command changes a stack file, you specify a stack name, not a file name.
+profileName:
+The profileName specifies which profile to use.
+
+stackName:
+The short name of an open stack. If you don't specify a stack, the stack
+file that the topStack belongs to is changed. >*Note:* Although the
+revSetStackFileProfile command changes a stack file, you specify a stack
+name, not a file name.
 
 Description:
-Use the <revSetStackFileProfile> <command> to change <property> settings throughout a <stack file> to a different set of stored settings.
+Use the <revSetStackFileProfile> <command> to change <property> settings
+throughout a <stack file> to a different set of stored settings.
 
->*Note:* Although the <revSetStackFileProfile> <command> changes a <stack file>, you specify a <stack> name, not a <file> name.
+>*Note:* Although the <revSetStackFileProfile> <command> changes a
+> <stack file>, you specify a <stack> name, not a <file> name.
 
-A profile is a set of property settings for an object. You create a profile for an object, and give it a name, using the Property Profiles pane in the object's property inspector. When you change that object to use a profile, the properties you specified in the profile are changed to the settings you specified. This helps you quickly switch the appearance and behavior of the <object> without needing to set its <properties> individually.
+A profile is a set of property settings for an object. You create a
+profile for an object, and give it a name, using the Property Profiles
+pane in the object's property inspector. When you change that object to
+use a profile, the properties you specified in the profile are changed
+to the settings you specified. This helps you quickly switch the
+appearance and behavior of the <object(glossary)> without needing to set
+its <properties> individually.
 
-The <revSetStackFileProfile> <command> changes the current <property profile|profile> of the specified <stack>, all the <stacks> in the same <stack file>, and all the <object|objects> in all these <stacks>. If an <object> does not have a <property profile|profile> with the specified <profileName>, the <object|object's> <properties> are not changed.
+The <revSetStackFileProfile> <command> changes the current <property
+profile|profile> of the specified <stack>, all the <stacks> in the same
+<stack file>, and all the <object|objects> in all these <stacks>. If an
+<object(glossary)> does not have a <property profile|profile> with the
+specified <profileName>, the <object|object's> <properties> are not
+changed. 
 
->*Important:*  The <revSetStackFileProfile> <command> is part of the <Profile library>. To ensure that the <command> works in a <standalone application>, in the Profiles section on the General screen of the <Standalone Application Settings> window, make sure you choose to include profiles in your application.
+>*Important:*  The <revSetStackFileProfile> <command> is part of the
+> <Profile library>. To ensure that the <command> works in a 
+> <standalone application>, in the Profiles section on the General 
+> screen of the <Standalone Application Settings> window, make sure you
+> choose to include profiles in your application.
 
-References: properties (property), revProfile (property), Profile library (library), file (keyword), stack (object), object (object), stacks (function), revSetCardProfile (command), revSetStackProfile (command), property (glossary), stack file (glossary), Standalone Application Settings (glossary), property profile (glossary), command (glossary), standalone application (glossary)
+References: revSetCardProfile (command), revSetStackProfile (command),
+stacks (function), object (glossary), property (glossary),
+stack file (glossary), Standalone Application Settings (glossary),
+property profile (glossary), command (glossary),
+standalone application (glossary), file (keyword),
+Profile library (library), stack (object), properties (property),
+revProfile (property)
 
 Tags: properties
+

@@ -2,17 +2,18 @@ Name: callbacks
 
 Type: property
 
-Syntax: set the callbacks of <player> to <messageList> 
+Syntax: set the callbacks of <player> to <messageList>
 
-Summary: Specifies <message|messages> to be sent during playback of a movie.
+Summary:
+Specifies <message|messages> to be sent during playback of a movie.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop
 
 Example:
 set the callbacks of player "Mist" to myCallbacks
@@ -21,16 +22,28 @@ Example:
 set the callbacks of player "Do It!" to "2500,soundNotes"
 
 Value:
-The <callbacks> of a <player> is a list of callbacks, one per line. Each callback consists of an interval number, a comma, and a <message> name.
-By default, the <callbacks> <property> of newly created <player(object)|players> is set to empty.
+The <callbacks> of a <player> is a list of callbacks, one per line. Each
+callback consists of an interval number, a comma, and a <message> name.
+By default, the <callbacks> <property> of newly created
+<player(object)|players> is set to empty.
 
 Description:
-Use the <callbacks> <property> to send <callback|callback messages> to a <player(keyword)> at certain points in the movie. This <synchronize|synchronizes> the <message|messages> with the playback.
+Use the <callbacks> <property> to send <callback|callback messages> to a
+<player(keyword)> at certain points in the movie. This
+<synchronize|synchronizes> the <message|messages> with the playback.
 
-When an interval number is reached during playback, LiveCode sends the corresponding message to the player.
+When an interval number is reached during playback, LiveCode sends the
+corresponding message to the player.
 
-The number of intervals per second is specified by the player's <timeScale> <property>. The total number of intervals is given in the <player(object)|player's> <duration> <property>.
+The number of intervals per second is specified by the player's
+<timeScale> <property>. The total number of intervals is given in the
+<player(object)|player's> <duration> <property>.
 
-References: timeScale (property), duration (property), currentTime (property), playRate (property), player (keyword), currentTimeChanged (message), send (command), play (command), player (object), property (glossary), synchronize (glossary), message (glossary), callback (glossary), player (glossary)
+References: send (command), play (command), property (glossary),
+synchronize (glossary), message (glossary), callback (glossary),
+player (glossary), player (keyword), currentTimeChanged (message),
+player (object), timeScale (property), duration (property),
+currentTime (property), playRate (property)
 
 Tags: multimedia
+

@@ -1,1 +1,0 @@
-# offset(tosearch,main,numbertoskip) can fail for non-native strings

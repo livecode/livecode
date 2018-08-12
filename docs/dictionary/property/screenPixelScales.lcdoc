@@ -4,19 +4,29 @@ Type: property
 
 Syntax: get the screenPixelScales
 
-Summary: Returns a return-delimited list of the pixel scale of each connected display.
+Summary:
+Returns a return-delimited list of the pixel scale of each connected
+display. 
 
 Introduced: 6.6
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,mobile
+Platforms: desktop, mobile
 
 Example:
 get the screenPixelScales
 
-Value: The <screenPixelScales> property returns a return-delimited list of non-zero real numbers.
+Value:
+The <screenPixelScales> property returns a return-delimited list of
+non-zero real numbers.
 
-References: iphoneUseDeviceResolution (command), usePixelScaling (property), pixelScale (property), systemPixelScale (property), screenPixelScale (property)
+Description:
+Returns a return-delimited list of the pixel scale of each connected
+display. 
+
+References: iphoneUseDeviceResolution (command),
+usePixelScaling (property), pixelScale (property),
+systemPixelScale (property), screenPixelScale (property)
 
 Tags: windowing

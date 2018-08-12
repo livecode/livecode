@@ -6,13 +6,15 @@ Syntax: the tempName
 
 Syntax: tempName()
 
-Summary: <return|Returns> a unique file name in the <folder> the operating system uses for temporary <files>.
+Summary:
+<return|Returns> a unique file name in the <folder> the operating system
+uses for temporary <files>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -22,19 +24,32 @@ the tempName
 Example:
 put the tempName into testDataPath
 
-Returns: The <tempName> <function> <return|returns> an <absolute file path>.
+Returns:
+The <tempName> <function> <return|returns> an <absolute file path>.
 
 Description:
-Use the <tempName> <function> to find an appropriate place to put a temporary <file>.
+Use the <tempName> <function> to find an appropriate place to put a
+temporary <file>.
 
-You can use temporary files to store intermediate data, downloaded URLs, and other material that is more conveniently placed in a file but does not need to be saved permanently.
+You can use temporary files to store intermediate data, downloaded URLs,
+and other material that is more conveniently placed in a file but does
+not need to be saved permanently.
 
-Using the <tempName> <function> does not create the <file>, only gets a suggested file name. Use the <open file> <command> to create the <file>.
+Using the <tempName> <function> does not create the <file>, only gets a
+suggested file name. Use the <open file> <command> to create the <file>.
 
-The file name returned by the <tempName> <function> is one that doesn't exist, so you can use it safely. If you need to create another <file>, use the <tempName> function again to obtain a new <file> name.
+The file name returned by the <tempName> <function> is one that doesn't
+exist, so you can use it safely. If you need to create another <file>,
+use the <tempName> function again to obtain a new <file> name.
 
-The location of the temporary files depends on the operating system. Each operating system provides its own location for temporary files.
+The location of the temporary files depends on the operating system.
+Each operating system provides its own location for temporary files.
 
-References: filename (property), file (keyword), rename (command), open file (command), create folder (command), specialFolderPath (function), files (function), absolute file path (glossary), command (glossary), return (glossary), folder (glossary), function (control_st)
+References: rename (command), open file (command),
+create folder (command), function (control structure),
+specialFolderPath (function), files (function),
+absolute file path (glossary), command (glossary), return (glossary),
+folder (glossary), file (keyword), filename (property)
 
 Tags: file system
+

@@ -154,11 +154,11 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
 bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font)
 {
     // Get the font for the given control type
-    MCNameRef t_font_name = nil;
-    UIFont* t_font = font_for_control(p_type, p_state, &t_font_name);
+	MCNewAutoNameRef t_font_name;
+	UIFont* t_font = font_for_control(p_type, p_state, &(&t_font_name));
     if (t_font == nil)
         return false;
     
     // Ensure the font is registered and return it
-    return MCFontCreateWithHandle((MCSysFontHandle)t_font, t_font_name, r_font);
+    return MCFontCreateWithHandle((MCSysFontHandle)t_font, *t_font_name, r_font);
 }

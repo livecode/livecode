@@ -2,17 +2,18 @@ Name: externalFunctions
 
 Type: property
 
-Syntax: get the externalFunctions of <stack> 
+Syntax: get the externalFunctions of <stack>
 
-Summary: Lists the available <external|external functions> for a <stack>.
+Summary:
+Lists the available <external|external functions> for a <stack>.
 
 Associations: stack
 
 Introduced: 1.0
 
-OS: windows,linux
+OS: windows, linux
 
-Platforms: desktop,server
+Platforms: desktop, server
 
 Example:
 put the externalFunctions of this stack after functionsList
@@ -22,17 +23,22 @@ if "measures" is among the lines of the externalFunctions \
   of this stack then get measures(field 1)
 
 Value:
-The <externalFunctions> of a <stack> reports a list of available <external|external functions>, one per <line>.
-This property is read-only and cannot be set.
+The <externalFunctions> of a <stack> reports a list of available
+<external|external functions>, one per <line>. This property is
+read-only and cannot be set.
 
 Description:
-Use the <externalFunctions> <property> to find out whether a particular <external|external function> is available for use in <handler|handlers>, or to list all the available <external|external functions>.
+Use the <externalFunctions> <property> to find out whether a particular
+<external|external function> is available for use in <handler|handlers>,
+or to list all the available <external|external functions>.
 
-You use an external function in a handler the same way you use one of LiveCode's built-in functions.
-
-<img src="202654"/> Cross-platform caution! It is not possible to load externals written for PowerPC in an application running natively on an Intel Mac. To get around this limitation either use Universal Binary externals, or run the program under Rosetta.
+You use an external function in a handler the same way you use one of
+LiveCode's built-in functions.
 
 Changes:
-Support for using the externalFunctions property on OS X systems was added in version 2.0.
+Support for using the externalFunctions property on OS X systems was
+added in version 2.0.
 
-References: externalPackages (property), line (keyword), stack (object), external (glossary), property (glossary), handler (glossary)
+References: external (glossary), property (glossary), handler (glossary),
+line (keyword), stack (object), externalPackages (property)
+

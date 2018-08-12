@@ -4,37 +4,50 @@ Type: keyword
 
 Syntax: element
 
-Summary: Used with the <repeat> <control structure> to specify that the statements in the repeat loop will be executed once for each <element> in an <array>.
+Summary:
+Used with the <repeat> <control structure> to specify that the
+statements in the repeat loop will be executed once for each <element>
+in an <array>.
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 repeat for each element thisMonth in monthlyReceivables
 
 Description:
-Use the <element> <keyword> to perform an action on all the elements of an <array>.
+Use the <element> <keyword> to perform an action on all the elements of
+an <array>.
 
-The word after the phrase for each element is a variable name. The value of each element is placed in this variable during that iteration of the <repeat> loop.
+The word after the phrase for each element is a variable name. The value
+of each element is placed in this variable during that iteration of the
+<repeat> loop.
 
 The structure
 
-  repeat for each element myElement in myArray
+    repeat for each element myElement in myArray
     ...
-  end repeat
+
+    end repeat
+
 
 is equivalent to
 
-  repeat with x = 1 to the number of lines in the keys of myArray
+    repeat with x = 1 to the number of lines in the keys of myArray
     put myArray[line x of the keys of myArray] into myElement
     ...
-  end repeat
+
+    end repeat
+
 
 However, the first form, using the <element> <keyword>, is much faster.
 
-References: each (keyword), item (keyword), element (keyword), array (glossary), keyword (glossary), control structure (glossary), repeat (control_st)
+References: repeat (control structure), array (glossary),
+keyword (glossary), control structure (glossary), each (keyword),
+item (keyword), element (keyword)
 
 Tags: properties
+

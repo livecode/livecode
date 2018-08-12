@@ -2,17 +2,22 @@ Name: URLStatus
 
 Type: function
 
-Syntax: the URLStatus of <url> 
+Syntax: the URLStatus of <url>
 
 Syntax: URLStatus(<url>)
 
-Summary: <return|Returns> the status of <upload|uploads> and <download|downloads> that were started with the <load>, <libURLDownloadToFile>, <libURLftpUpload>, and <libURLftpUploadFile> <command|commands>.
+Summary:
+<return|Returns> the status of <upload|uploads> and <download|downloads>
+that were started with the <load>, <libURLDownloadToFile>,
+<libURLftpUpload>, and <libURLftpUploadFile> <command|commands>.
+
+Associations: internet library
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux, html5
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
@@ -26,37 +31,80 @@ Example:
 if URLStatus(myFile) is "error" then get libURLErrorData(myFile)
 
 Parameters:
-url: A URL, or an expression that evaluates to a URL.
+url:
+A URL, or an expression that evaluates to a URL.
 
 Returns:
 A string describing the current status of the URL operation.
-- `queued`: on hold until a previous request to the same site is completed
-- `contacted`: the site has been contacted but no data has been sent or received yet
+
+- `queued`: on hold until a previous request to the same site is
+  completed 
+- `contacted`: the site has been contacted but no data has been sent or
+  received yet
 - `requested`: the URL has been requested
-- `loading,<bytesReceived>,<bytesTotal>`: the <URL> data is being received; items 2 and 3 of the return value provide progress information
-- `uploading,<bytesReceived>,<bytesTotal>`: the file is being <upload|uploaded> to the URL; items 2 and 3 of the return value provide progress information
+- `loading,<bytesReceived>,<bytesTotal>`: the <URL> data is being
+  received; items 2 and 3 of the return value provide progress
+  information 
+- `uploading,<bytesReceived>,<bytesTotal>`: the file is being
+  <upload|uploaded> to the URL; items 2 and 3 of the return value
+  provide progress information
 - `cached`: the URL is in the <cache> and the <download> is complete
 - `uploaded`: the application has finished uploading the file to the URL
 - `error`: an error occurred and the URL was not transferred
-- `timeout`: the application timed out when attempting to transfer the URL
+- `timeout`: the application timed out when attempting to transfer the
+  URL 
 - (empty): the URL was not loaded, or has been unloaded
 
+
 Description:
-Use the <URLStatus> <function> to check the progress of an <upload> or <download>.
+Use the <URLStatus> <function> to check the progress of an <upload> or
+<download>. 
 
-You can check the cachedURLs <function> to determine whether a <URL> has already been <download|downloaded>. The <URL> is not placed in the <cachedURLs> until the <download> is complete, however, so you must use the <URLStatus> <function> to check a pending <download> or one that has been started but not finished.
+You can check the cachedURLs <function> to determine whether a <URL> has
+already been <download|downloaded>. The <URL> is not placed in the
+<cachedURLs> until the <download> is complete, however, so you must use
+the <URLStatus> <function> to check a pending <download> or one that has
+been started but not finished.
 
->*Tip:*  To update a progress indicator or perform other tasks during uploads and downloads, use the <libURLSetStatusCallback> <command> to automatically send a <callback|callback message> every time the <URLStatus> <function> is updated. You can then write a <handler> for this <message> that performs whatever tasks are needed.
+>*Tip:*  To update a progress indicator or perform other tasks during
+> uploads and downloads, use the <libURLSetStatusCallback> <command> to
+> automatically send a <callback|callback message> every time the
+> <URLStatus> <function> is updated. You can then write a <handler> for
+> this <message> that performs whatever tasks are needed.
 
-The third item (bytesTotal) in the "loading" or "uploading" status report is empty if it is not possible to determine the total file size. (For example, if an <FTP> <server> does not support the SIZE command, it's not possible to determine the file size when <download|downloading> a file from that <server>.)
+The third item (bytesTotal) in the "loading" or "uploading" status
+report is empty if it is not possible to determine the total file size.
+(For example, if an <FTP> <server> does not support the SIZE command,
+it's not possible to determine the file size when <download|downloading>
+a file from that <server>.)
 
-If an error occurs during downloading, the <URLStatus> <function> returns "error". You can get the error message using the <libURLErrorData> <function>.
+If an error occurs during downloading, the <URLStatus> <function>
+returns "error". You can get the error message using the
+<libURLErrorData> <function>.
 
->*Important:*  The <URLStatus> <function> is part of the <Internet library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:* The <URLStatus> <function> is part of the 
+> <Internet library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
 Changes:
-The URLStatus function became part of the Internet library in version 1.1. In previous versions, it was not a library function.
+The <URLStatus> <function> became part of the <Internet library> in 
+version 1.1. In previous versions, it was not a library function.
 
-References: URL (keyword), function (control_st), post (command), libURLftpUploadFile (command), libURLftpUpload (command), libURLDownloadToFile (command), load (command), libURLSetStatusCallback (command), libURLLastRHHeaders (function), libURLErrorData (function), URLStatus (function), cachedURLs (function), FTP (glossary), return (glossary), standalone application (glossary), cache (glossary), command (glossary), callback (glossary), Standalone Application Settings (glossary), upload (glossary), download (glossary), message (glossary), server (glossary), handler (glossary), Internet library (library), LiveCode custom library (library)
+References: post (command), libURLftpUploadFile (command),
+libURLftpUpload (command), libURLDownloadToFile (command), load (command),
+libURLSetStatusCallback (command), function (control structure),
+libURLLastRHHeaders (function), libURLErrorData (function),
+URLStatus (function), cachedURLs (function), FTP (glossary),
+return (glossary), standalone application (glossary), cache (glossary),
+command (glossary), callback (glossary),
+Standalone Application Settings (glossary), upload (glossary),
+download (glossary), message (glossary), server (glossary),
+handler (glossary), LiveCode custom library (glossary), URL (keyword),
+Internet library (library)
 
 Tags: networking
+

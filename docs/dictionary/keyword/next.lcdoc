@@ -4,22 +4,28 @@ Type: keyword
 
 Syntax: next
 
-Summary: Designates the <card> following the <current card>.
+Summary:
+Designates the <card> following the <current card>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 go next marked card
 
 Description:
-Use the <next> <keyword> to move forward in the <stack> or to <object reference|reference> the <card> after the <current card>.
+Use the <next> <keyword> to move forward in the <stack> or to <object
+reference|reference> the <card> after the <current card>.
 
-If you are already on the last card, the <next> <card> is the first <card> in the <stack>.
+If you are already on the last card, the <next> <card> is the first
+<card> in the <stack>.
 
-References: previous (keyword), card (keyword), next repeat (control_st), keyword (glossary), current card (glossary), object reference (glossary), stack (object)
+References: next repeat (control structure), keyword (glossary),
+current card (glossary), object reference (glossary), previous (keyword),
+card (keyword), stack (object)
 
 Tags: navigation
+

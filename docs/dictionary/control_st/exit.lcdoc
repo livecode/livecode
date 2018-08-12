@@ -2,37 +2,70 @@ Name: exit
 
 Type: control structure
 
-Syntax: exit <handler> 
+Syntax: exit <handler>
 
-Summary: Stops <execute|execution> of a <handler>.
+Summary:
+Stops <execute|execution> of a <handler>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if the seconds &gt; timeLimit then exit mouseUp
 
 Example:
-exit myCustomProperty -- can be used in getProp or setProp handlers
+setProp myCustomProperty pValue
+   -- can be used in getProp or setProp handlers
+   exit myCustomProperty
+end myCustomProperty
 
 Parameters:
-handler: The name of the handler in which the exit control structure appears.
+handler:
+The name of the handler in which the exit control structure appears.
 
 Description:
-Use the <exit> <control structure> to skip the rest of a <handler|handler's> <statement|statements> without <return|returning> a result.
+Use the <exit> <control structure> to skip the rest of a
+<handler|handler's> <statement|statements> without <return|returning> a
+result. 
 
-Form:
-The <exit> <statement> appears on a line by itself, anywhere inside a <handler>.
+**Form:** The <exit> <statement> appears on a line by itself,
+anywhere inside a <handler>.
 
-You can use an <exit> <control structure> in a <message handler>, <function handler>, <getProp handler>, or <setProp handler>. Usually, <exit> is used within an <if> <control structure>, so that the <handler> stops if a condition is true and continues if the condition is false.
+You can use an <exit> <control structure> in a <message handler>,
+<function handler>, <getProp handler>, or <setProp handler>. Usually,
+<exit> is used within an <if> <control structure>, so that the <handler>
+stops if a condition is true and continues if the condition is false.
 
-If the current handler was called from another handler, the calling handler continues executing. The <exit> <statement> only stops the current <handler>, not the <caller|calling handler>. (To stop all pending <handler|handlers>, use the <exit to top> <control structure>.)
+If the current handler was called from another handler, the calling
+handler continues executing. The <exit> <statement> only stops the
+current <handler>, not the <caller|calling handler>. (To stop all
+pending <handler|handlers>, use the <exit to top> <control structure>.)
 
-When a handler executes an <exit> <statement>, the <message>, <trigger>, <function call>, or <getProp call> stops and is not <pass|passed> to the next <object> in the <message path>. To halt the current <handler> and <pass> the <message>, <trigger>, or <call> on through the <message path>, use the <pass> <control structure> instead. To halt the current <handler> and return a result, use the <return> <control structure> instead.
+When a handler executes an <exit> <statement>, the <message>, <trigger>,
+<function call>, or <getProp call> stops and is not <pass|passed> to the
+next <object(glossary)> in the <message path>. To halt the current
+<handler> and <pass> the <message>, <trigger>, or <call> on through the
+<message path>, use the <pass> <control structure> instead. To halt the
+current <handler> and return a result, use the <return> <control
+structure> instead.
 
->*Note:* The <exit> <control structure> is implemented internally as a <command> and appears in the <commandNames>.
+>*Note:* The <exit> <control structure> is implemented internally as a
+> <command> and appears in the <commandNames>.
 
-References: object (object), return (constant), call (command), commandNames (function), function handler (glossary), return (glossary), message handler (glossary), setProp handler (glossary), pass (glossary), execute (glossary), function call (glossary), command (glossary), control structure (glossary), getProp handler (glossary), trigger (glossary), getProp call (glossary), caller (glossary), message path (glossary), message (glossary), statement (glossary), handler (glossary), getProp (control_st), return (control_st), setProp (control_st), if (control_st), pass (control_st), break (control_st), on (control_st), exit to top (control_st), exit repeat (control_st), function (control_st)
+References: call (command), return (constant),
+getProp (control structure), return (control structure),
+setProp (control structure), if (control structure),
+pass (control structure), break (control structure),
+on (control structure), exit to top (control structure),
+exit repeat (control structure), function (control structure),
+commandNames (function), object (glossary), function handler (glossary),
+return (glossary), message handler (glossary), setProp handler (glossary),
+pass (glossary), execute (glossary), function call (glossary),
+command (glossary), control structure (glossary),
+getProp handler (glossary), trigger (glossary), getProp call (glossary),
+caller (glossary), message path (glossary), message (glossary),
+statement (glossary), handler (glossary)
+

@@ -91,6 +91,7 @@ end TestGlobals
 
 
 on TestMachine
+   TestSkipIf "platform", "HTML5"
 if the platform is "win32" then
 TestAssert "Machine is x86", the machine is "x86"
 else if the platform is "iphone" then
@@ -140,6 +141,7 @@ end TestPlatform
 
 
 on TestProcessor
+   TestSkipIf "platform", "HTML5"
 local tProcessors
 
 if the platform is "Win32" then
@@ -148,9 +150,9 @@ else if the platform is "android" then
 put "arm,i386" into tProcessors
 else if the platform is "iphone" then
 put "arm,arm64,i386,x86_64" into tProcessors
-else if the platform is among the items of "Mac OS,Linux" then
+else if the platform is among the items of "MacOS,Linux" then
    // Mac and Linux
-   put line 1 of shell("uname -m") into tProcessors
+   put "x86,x86_64" into tProcessors
 else
    -- Unknown platform for "the processor"
 end if
@@ -287,7 +289,7 @@ end TestVersion
 
 
 on TestCancelPendingMessage
-
+   TestSkipIfNot "wait"
 create button
 
 set the script of button 1 to "on mouseUp;set the ID of the templateStack to 2000;end mouseUp"
@@ -342,6 +344,40 @@ do "set the cDidThis of this stack to 100"
 TestAssert "Do command", the cDidThis of this stack is 100
 end TestDo
 
+local kDoAsMessage_ExecutionError = "execution error"
+on TestDoAsJavaScript
+    if the platform is not "HTML5" then
+		exit TestDoAsJavaScript
+	end if
+	
+	do "1 + '4';" as "javascript"
+	TestAssert "Do as JavaScript", the result is "14"
+	
+	do "undefined;" as "javascript"
+	TestAssert "Undefined values return empty", the result is empty
+	
+	do "function(x) { return x; }" as "javascript"
+	TestAssert "Function return value unsupported", the result is kDoAsMessage_ExecutionError
+	
+	do "{ key1: 'value1', key2: 2 };" as "javascript"
+	TestAssert "Object return value unsupported", the result is kDoAsMessage_ExecutionError
+	
+	do "[ 1, 2, 3, 4 ];" as "javascript"
+	TestAssert "Array return value unsupported", the result is kDoAsMessage_ExecutionError
+	
+	do "6.02e23;" as "javascript"
+	TestAssert "Number return value", the result is a number
+	
+	do "'Hello, World!';" as "javascript"
+	TestAssert "String return value", the result is "Hello, World!"
+	
+end TestDoAsJavaScript
+
+on TestAlternateLanguages
+	if the platform is "HTML5" then
+		TestAssert "JavaScript in HTML5 alternateLanguages", "javascript" is among the lines of the alternateLanguages
+	end if
+end TestAlternateLanguages
 
 on TestFrontScriptBackScriptCall
 create button
@@ -425,6 +461,7 @@ end TestReleaseStackMessage
 
 
 on TestMilliseconds
+   TestSkipIfNot "wait"
 
 local tTime
 
@@ -438,6 +475,7 @@ end TestMilliseconds
 
 
 on TestSeconds
+   TestSkipIfNot "wait"
 
 local tTime
 
@@ -451,6 +489,7 @@ end TestSeconds
 
 
 on TestTicks
+   TestSkipIfNot "wait"
 
 local tTime
 

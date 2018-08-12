@@ -4,31 +4,51 @@ Type: keyword
 
 Syntax: \
 
-Summary: The <character> <\> is used to break a <line> in a <script> for display, while still having it treated as a single <statement>.
+Summary:
+The <character> <\> is used to break a <line> in a <script> for display,
+while still having it treated as a single <statement>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-answer "You've been waiting for"  numberOfMinutes \
+answer "You've been waiting for" & numberOfMinutes & \
     "minutes." with "Keep Waiting" or "Cancel"
 
 Description:
-If a line is too long to fit conveniently in the script window, use the <\> <character> to break it into two (or more) <lines> for viewing.
+If a line is too long to fit conveniently in the script window, use the
+<\> <character> to break it into two (or more) <lines> for viewing.
 
-A line that is split with <\> is shown in the <script editor> as more than one <line>, but when it's <execute|executed>, it is treated as a single <line> of code.
+A line that is split with <\> is shown in the <script editor> as more
+than one <line>, but when it's <execute|executed>, it is treated as a
+single <line> of code.
 
-The script editor automatically indents continued lines, as shown in the example above.
-A <\> character which is used within a <literal string> does not break the line, because the <\> is treated as part of the <quoted> <string> instead of being treated as a line continuation. For example, the following <statement> causes a <compile error> because the <\> <character> is inside the quotes:
-  answer "This is a test. This is only a test. \
-     Had this been an actual life..." with "OK" -- BAD EXAMPLE
-The above bad example can be corrected by using the  <operator> to break up the long <string> :
-  answer "This is a test. This is only a test." \
-      "Had this been an actual life..." with "OK" -- good example
+The script editor automatically indents continued lines, as shown in the
+example above. A <\> character which is used within a <literal string>
+does not break the line, because the <\> is treated as part of the
+<quoted> <string> instead of being treated as a line continuation. For
+example, the following <statement> causes a <compile error> because the
+<\> <character> is inside the quotes: 
 
-The string has been broken into two substrings, so the <\> <character> is no longer within a <literal string>. This second example does not cause an <error>.
+    answer "This is a test. This is only a test. \ 
+        Had this been an actual life..." with "OK" -- BAD EXAMPLE
 
-References: character (keyword), string (keyword), line (keyword), lines (keyword), ; (keyword), && (operator), & (operator), script (property), error (glossary), operator (glossary), script editor (glossary), statement (glossary), literal string (glossary), execute (glossary), quoted (glossary), compile error (glossary)
+The above bad example can be corrected by using
+the <operator> to break up the long <string> : 
+
+    answer "This is a test. This is only a test." \
+        "Had this been an actual life..." with "OK" -- good example
+
+The string has been broken into two substrings, so the <\> <character>
+is no longer within a <literal string>. This second example does not
+cause an <error>.
+
+References: error (glossary), operator (glossary),
+script editor (glossary), statement (glossary), literal string (glossary),
+execute (glossary), quoted (glossary), compile error (glossary),
+character (keyword), string (keyword), line (keyword), lines (keyword),
+; (keyword), && (operator), & (operator), script (property)
+

@@ -2,32 +2,46 @@ Name: socketTimeout
 
 Type: message
 
-Syntax: socketTimeout <socketID> 
+Syntax: socketTimeout <pSocketID>
 
-Summary: Sent when an <open socket>, <read from socket> or <write to socket> <command> halts for the time specified by the <socketTimeoutInterval> <property>.
+Summary:
+Sent when an <open socket>, <read from socket> or <write to socket>
+<command> halts for the time specified by the <socketTimeoutInterval>
+<property>. 
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,iOS,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on socketTimeout theID
   answer error "The connnection is not responding." \
      with "Keep Trying" or "Cancel"
   if it is "Cancel" then close socket theID
-end if
+end socketTimeout
 
 Parameters:
-socketID: The identifier (set when you opened the socket) of the socket which had an error.
-: The identifier (set when you opened the socket) of the socket which had an error.
+pSocketID:
+The identifier (set when you opened the socket) of the socket which had
+an error. : The identifier (set when you opened the socket) of the
+socket which had an error.
 
 Description:
-Handle the <socketTimeout> <message> to take action when a <socket> communication has not completed within the time set by the <socketTimeoutInterval>.  
+Handle the <socketTimeout> <message> to take action when a <socket>
+communication has not completed within the time set by the
+<socketTimeoutInterval>. 
 
-The <socketTimeout> message is sent to the object whose script created the socket.
+The <socketTimeout> message is sent to the object whose script created
+the socket.
 
-References: socketTimeoutInterval (property), socketClosed (message), socketError (message), read from socket (command), write to socket (command), close socket (command), open socket (command), openSockets (function), property (glossary), socket (glossary), message (glossary), command (glossary)
+References: read from socket (command), write to socket (command),
+close socket (command), open socket (command), openSockets (function),
+property (glossary), socket (glossary), message (glossary),
+command (glossary), socketClosed (message), socketError (message),
+socketTimeoutInterval (property)
+

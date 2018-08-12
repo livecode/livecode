@@ -1,1 +1,0 @@
-# in iOS, RGB values of exported images printed to PDF are reversed

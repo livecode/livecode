@@ -2,15 +2,19 @@ Name: hilitedButton
 
 Type: property
 
-Syntax: set the hilitedButton of <group> to <buttonNumber> 
+Syntax: set the hilitedButton of <group> to <buttonNumber>
 
-Summary: Specifies which <button> in a <group> is currently <highlight|highlighted>.
+Summary:
+Specifies which <button> in a <group> is currently
+<highlight|highlighted>. 
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the hilitedButton of group "Options" to 2 -- 2nd button in group
@@ -18,19 +22,44 @@ set the hilitedButton of group "Options" to 2 -- 2nd button in group
 Example:
 set the hilitedButton of group ID 8 to zero -- unhilites all buttons
 
-Value: The <hilitedButton> of a <group> is an <integer> between zero and the number of <button|buttons> in the <group>.
+Value:
+The <hilitedButton> of a <group> is an <integer> between zero and the
+number of <button|buttons> in the <group>.
 
 Description:
-Use the <hilitedButton> <property> to change the current setting in a <radio button|radio-button cluster>.
+Use the <hilitedButton> <property> to change the current setting in a
+<radio button|radio-button cluster>.
 
-The <hilitedButton> specifies which <button(keyword)> in a <group> is currently <highlight|highlighted>. If the <hilitedButton> of a <group> is zero, none of the <button(object)|buttons> in the <group> is currently <highlight|highlighted>. If the <hilitedButton> is 1, the <button(keyword)> with the lowest <layer> in the <group> is currently <highlight|highlighted>; if the <hilitedButton> is 2, the <button(keyword)> with the second-lowest <layer> is currently <highlight|highlighted>; and so forth.
+The <hilitedButton> specifies which <button(keyword)> in a <group> is
+currently <highlight|highlighted>. If the <hilitedButton> of a <group>
+is zero, none of the <button(object)|buttons> in the <group> is
+currently <highlight|highlighted>. If the <hilitedButton> is 1, the
+<button(keyword)> with the lowest <layer> in the <group> is currently
+<highlight|highlighted>; if the <hilitedButton> is 2, the
+<button(keyword)> with the second-lowest <layer> is currently
+<highlight|highlighted>; and so forth.
 
-Setting the <hilitedButton> of a <group> sets the <hilite> <property> of the rest of the <button(object)|buttons> to false.
+Setting the <hilitedButton> of a <group> sets the <hilite> <property> of
+the rest of the <button(object)|buttons> to false.
 
-The <hilitedButton> <property> is most useful in <radio button|radio-button clusters>. In a <radio button|radio-button cluster>, only one <button(keyword)> can be <highlight|highlighted> at once:  clicking another <button(keyword)> unhighlights the first one. The <radioBehavior> <property> of a <group> of <button(object)|buttons> specifies whether they act as a <radio button|radio-button cluster>.
+The <hilitedButton> <property> is most useful in 
+<radio button|radio-button clusters>. In a 
+<radio button|radio-button cluster>, only one <button(keyword)> can be 
+<highlight|highlighted> at once: clicking another <button(keyword)> 
+unhighlights the first one. The <radioBehavior> <property> of a <group> 
+of <button(object)|buttons> specifies whether they act as a 
+<radio button|radio-button cluster>.
 
-The <hilitedButton>, <hilitedButtonName(property)>, and <hilitedButtonID(property)> <property|properties> all refer in different ways to the same <button(object)>. When any of them changes, all of them change.
+The <hilitedButton>, <hilitedButtonName(property)>, and
+<hilitedButtonID(property)> <property|properties> all refer in different
+ways to the same <button(object)>. When any of them changes, all of them
+change. 
 
-References: hilitedButtonName (property), integer (keyword), button (keyword), hilite (command), group (command), selectedButton (function), property (glossary), highlight (glossary), hilitedButtonID (property), hilitedButtonName (glossary), radioBehavior (glossary), radio button (glossary), layer (glossary), button (object)
+References: hilite (command), group (command), selectedButton (function),
+property (glossary), highlight (glossary), hilitedButtonName (property),
+radioBehavior (property), radio button (glossary), layer (glossary),
+integer (keyword), button (keyword), button (object),
+hilitedButtonName (property), hilitedButtonID (property)
 
 Tags: ui
+

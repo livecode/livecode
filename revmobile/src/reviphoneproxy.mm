@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -106,10 +106,40 @@ static id s_SimRuntime_class = nil;
 //   A device type must be choosen when launching the iOS 8 simulator.
 - (id)getSimDeviceSet
 {
-	//NSLog(@"received getSimDeviceSet");
-	if (s_SimDeviceSet_class != nil)
-		return [[s_SimDeviceSet_class defaultSet] availableDevices];
-	return nil;
+    //NSLog(@"received getSimDeviceSet");
+    if (s_SimDeviceSet_class == nil || s_SimRuntime_class == nil)
+        return nil;
+
+    // As of Xcode 8, the default device set is not necessarily the device set used by the current simulator.
+    // This can happen if multiple versions of Xcode is installed.
+    // So for Xcode 8 and later, make sure we fetch the device set used by the current service context.
+    // As of Xcode 8.1, the defaultSet property of the DeviceSet class has been removed,
+    // so use the new defaultDeviceSetWithError method of the SimRuntime class instead.
+    if ([s_SimRuntime_class respondsToSelector: @selector(defaultDeviceSetWithError:)])
+    {
+        NSError* t_error;
+        t_error = nil;
+        id t_dev_set;
+        t_dev_set = [s_SimRuntime_class defaultDeviceSetWithError: &t_error];
+        if (t_error == nil && t_dev_set != nil)
+            return [t_dev_set availableDevices];
+    }
+    else
+    {
+        id t_default_set;
+        t_default_set = [s_SimDeviceSet_class defaultSet];
+        id t_current_dev_set;
+        t_current_dev_set = nil;
+        if (t_default_set != nil && [s_SimDeviceSet_class respondsToSelector: @selector(setForSetPath: serviceContext:)])
+            t_current_dev_set = [s_SimDeviceSet_class setForSetPath: [t_default_set setPath] serviceContext: s_SimRuntime_class];
+
+        if (t_current_dev_set == nil)
+            t_current_dev_set = t_default_set;
+        if (t_current_dev_set != nil)
+            return [t_current_dev_set availableDevices];
+    }
+    
+    return nil;
 }
 
 // MM-2014-10-07: [[ Bug 13584 ]] Return the set of runtimes that the current sim supports.
@@ -131,6 +161,28 @@ static id s_SimRuntime_class = nil;
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
+
+int getXcodeVersion(char *path_to_developer_folder)
+{
+    NSBundle *t_xcode_bundle = nil;
+    NSString *t_xcode_path = [NSString stringWithFormat: @"%s/../../", path_to_developer_folder];
+    
+    t_xcode_bundle = [NSBundle bundleWithPath: t_xcode_path];
+    
+    NSString *t_xcode_version_string = [[t_xcode_bundle infoDictionary] objectForKey:@"CFBundleShortVersionString"];
+    NSArray *t_xcode_version_array = [t_xcode_version_string componentsSeparatedByString:@"."];
+    
+    int t_xcode_version;
+    t_xcode_version = [[t_xcode_version_array objectAtIndex:0] intValue] * 100;
+    t_xcode_version += [[t_xcode_version_array objectAtIndex:1] intValue] * 10;
+    
+    if ([t_xcode_version_array count] == 3)
+    {
+        t_xcode_version += [[t_xcode_version_array objectAtIndex:2] intValue];
+    }
+    
+    return t_xcode_version;
+}
 
 int main(int argc, char *argv[])
 {
@@ -185,22 +237,29 @@ int main(int argc, char *argv[])
 				
 				//NSLog(@"DVTFoundation %d", t_success);
 			}
-			
-			NSBundle *t_dev_tools_bundle;
-			t_dev_tools_bundle = nil;
-			if (t_success)
-			{
-				NSString *t_dev_tools_path;
-				t_dev_tools_path = [NSString stringWithFormat: @"%s/../OtherFrameworks/DevToolsFoundation.framework",  argv[1]];
-				
-				if (![[NSFileManager defaultManager] fileExistsAtPath: t_dev_tools_path])
-					t_dev_tools_path = [NSString stringWithFormat: @"%s/Library/PrivateFrameworks/DevToolsFoundation.framework",  argv[1]];
-				
-				t_dev_tools_bundle = [NSBundle bundleWithPath: t_dev_tools_path];
-				t_success = [t_dev_tools_bundle load];
-								
-				//NSLog(@"DevTools %d", t_success);
-			}
+            
+            int t_xcode_version = getXcodeVersion(argv[1]);
+            
+            // In Xcode 8.3 the Xcode.app/Contents/OtherFrameworks/DevToolsFoundation.framework is no longer present
+            // In fact it is not needed anyway
+            if (t_xcode_version < 830)
+            {
+                NSBundle *t_dev_tools_bundle;
+                t_dev_tools_bundle = nil;
+                if (t_success)
+                {
+                     NSString *t_dev_tools_path;
+                     t_dev_tools_path = [NSString stringWithFormat: @"%s/../OtherFrameworks/DevToolsFoundation.framework",  argv[1]];
+                     
+                     if (![[NSFileManager defaultManager] fileExistsAtPath: t_dev_tools_path])
+                     t_dev_tools_path = [NSString stringWithFormat: @"%s/Library/PrivateFrameworks/DevToolsFoundation.framework",  argv[1]];
+                     
+                     t_dev_tools_bundle = [NSBundle bundleWithPath: t_dev_tools_path];
+                     t_success = [t_dev_tools_bundle load];
+                     
+                     //NSLog(@"DevTools %d", t_success);
+                }
+            }
 			
 			if (t_success)
 			{
@@ -224,7 +283,7 @@ int main(int argc, char *argv[])
 					t_core_sim_bundle = [NSBundle bundleWithPath: t_core_sim_path];
 					t_success = [t_core_sim_bundle load];
 					
-					//NSLog(@"CoreSimBundle %d", t_success);					
+					//NSLog(@"CoreSimBundle %d", t_success);
 				}
 			}
 			
@@ -255,11 +314,28 @@ int main(int argc, char *argv[])
 		
 		// MM-2014-10-07: [[ Bug 13584 ]] Fetch the SimRuntime class, required to return the set of runtime environments the current sim supports.
 		//   e.g. iOS7 sim, iOS 8 sim etc.
-		s_SimRuntime_class = NSClassFromString(@"SimRuntime");
-		
+        // As of Xcode 8, the SimRuntime class no longer returns a valid set of supported runtimes.
+        // Instead, we need to use the SimServiceContext class, making sure we fetch the correct context for the current version of Xcode.
+        id t_service_context;
+        t_service_context = NSClassFromString(@"SimServiceContext");
+		// PM-2016-09-19: [[ Bug 18422] We want to use SimServiceContext class *only* in xcode 8
+        if (t_service_context != nil && [t_service_context respondsToSelector:@selector(sharedServiceContextForDeveloperDir: error:)])
+        {
+            NSString *t_dev_dir;
+            t_dev_dir = [NSString stringWithFormat: @"%s", argv[1]];
+            NSError *t_error;
+            t_error = nil;
+            s_SimRuntime_class = [t_service_context sharedServiceContextForDeveloperDir: t_dev_dir error: t_error];
+            
+            if (t_error != nil)
+                s_SimRuntime_class = nil;
+        }
+        else
+            s_SimRuntime_class = NSClassFromString(@"SimRuntime");
+
 		s_keep_running = YES;
-		while(s_keep_running && 
-			  [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate distantFuture]] ||
+        while((s_keep_running && 
+               [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate distantFuture]]) ||
 			  [NSConnection currentConversation] != nil)
 			;
 		

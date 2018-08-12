@@ -2,31 +2,38 @@ Name: owner
 
 Type: property
 
-Syntax: get the [{ long | abbr[ev[iated]] | short }] owner of <object> 
+Syntax: get the [{ long | abbreviated | short }] owner of <object>
 
-Summary: Reports which <object> is next in the <object hierarchy>.
+Summary:
+Reports which <object(glossary)> is next in the <object hierarchy>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if the owner of me is not the name of card 1 then go to previous card
 
 Value:
-The <owner> of an <object> is a <string>, which is the <name> <property> of the owning <object>.
-The <owner> <property> is <read-only> and cannot be set.
+The <owner> of an <object(glossary)> is a <string>, which is the <name>
+<property> of the owning <object(glossary)>. The <owner> <property> is
+<read-only> and cannot be set.
 
 Description:
-Use the <owner> <property> to find out which <object> another <object> belongs to in the <object hierarchy>.
+Use the <owner> <property> to find out which <object(glossary)> another
+<object(glossary)> belongs to in the <object hierarchy>.
 
-If the owner's name is empty, the <ID> is reported instead of the <name>.
+If the owner's name is empty, the <ID> is reported instead of the
+<name>. 
 
-The long, <abbreviated>, and <short> <owner> formats are described in detail in the entries for the <name> and <ID> <properties>. If you don't specify a format, the abbreviated owner is reported.
+The long, <abbreviated>, and <short> <owner> formats are described in
+detail in the entries for the <name> and <ID> <properties>. If you don't
+specify a format, the abbreviated owner is reported.
 
 The <owner> of a <main stack> is empty.
 
@@ -38,11 +45,21 @@ The <owner> of a <grouped control> is its <group>.
 
 The <owner> of a <card control> is the <card> it resides on.
 
-The <owner> of an <audio clip> or <video clip> is the <stack> it resides in.
+The <owner> of an <audio clip> or <video clip> is the <stack> it resides
+in. 
 
 Changes:
-The ability to specify the long owner, short owner, and abbreviated owner forms was introduced in version 2.0. In previous versions, the abbreviated owner form was always used.
+The ability to specify the long owner, short owner, and abbreviated
+owner forms was introduced in version 2.0. In previous versions, the
+abbreviated owner form was always used.
 
-References: abbreviated (keyword), string (keyword), effective (keyword), short (keyword), card (keyword), properties (property), ID (property), name (property), group (command), exists (function), stack (object), object (object), property (glossary), audio clip (glossary), main stack (glossary), object hierarchy (glossary), substack (glossary), card control (glossary), read-only (glossary), video clip (glossary), grouped control (glossary)
+References: group (command), exists (function), object (glossary),
+property (glossary), audio clip (glossary), main stack (glossary),
+object hierarchy (glossary), substack (glossary), card control (glossary),
+read-only (glossary), video clip (glossary), grouped control (glossary),
+abbreviated (keyword), string (keyword), effective (keyword),
+short (keyword), card (keyword), stack (object), properties (property),
+ID (property), name (property)
 
 Tags: objects
+

@@ -1,12 +1,17 @@
-Name: Open Database Connectivity (ODBC)
+Name: Open Database Connectivity
 
-Synonyms: Open Database Connectivity,Open Data Base Connectivity,ODBC
+Synonyms: open database connectivity, open data base connectivity, odbc
 
 Type: glossary
 
+Deprecated:
+ODBC
+
 Description:
-A system that allows a program to access any type of <database> in a standard way.
+A system that allows a program to access any type of <database> in a
+standard way.
 
 References: database (glossary)
 
 Tags: database
+

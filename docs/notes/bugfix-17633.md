@@ -1,0 +1,1 @@
+# Fix long delay when launching standalone displaying a browser widget

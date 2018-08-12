@@ -37,7 +37,6 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 static bool s_inside_focus_event = false;
 
 //static MCMacPlatformWindow *s_focused_window = nil;
@@ -62,8 +61,20 @@ static bool s_lock_responder_change = false;
         return nil;
     
     m_can_become_key = false;
-    
     return self;
+}
+
+- (NSRect)movingFrame
+{
+    if (MCMacPlatformApplicationWindowIsMoving([(MCWindowDelegate *)[self delegate] platformWindow]))
+        return m_moving_frame;
+    else
+        return [self frame];
+}
+
+- (void)setMovingFrame:(NSRect)p_moving_frame
+{
+    m_moving_frame = p_moving_frame;
 }
 
 - (void)setCanBecomeKeyWindow: (BOOL)p_value
@@ -74,7 +85,7 @@ static bool s_lock_responder_change = false;
 // The default implementation doesn't allow borderless windows to become key.
 - (BOOL)canBecomeKeyWindow
 {
-	if ([NSApp pseudoModalFor] != nil)
+	if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return NO;
     
     return m_can_become_key;
@@ -82,7 +93,7 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
-	if ([NSApp pseudoModalFor] != nil)
+	if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return NO;
     
     NSResponder *t_previous;
@@ -159,6 +170,19 @@ static bool s_lock_responder_change = false;
     return self;
 }
 
+- (NSRect)movingFrame
+{
+    if (MCMacPlatformApplicationWindowIsMoving([(MCWindowDelegate *)[self delegate] platformWindow]))
+        return m_moving_frame;
+    else
+        return [self frame];
+}
+
+- (void)setMovingFrame:(NSRect)p_moving_frame
+{
+    m_moving_frame = p_moving_frame;
+}
+
 - (void)dealloc
 {
     if (m_monitor != nil)
@@ -174,7 +198,7 @@ static bool s_lock_responder_change = false;
 // The default implementation doesn't allow borderless windows to become key.
 - (BOOL)canBecomeKeyWindow
 {
-	if ([NSApp pseudoModalFor] != nil)
+	if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return NO;
     
     return m_can_become_key;
@@ -182,7 +206,7 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
-	if ([NSApp pseudoModalFor] != nil)
+	if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return NO;
     
     NSResponder *t_previous;
@@ -289,9 +313,7 @@ static bool s_lock_responder_change = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation NSWindow (com_runrev_livecode_MCWindowTrackingAdditions)
-
-- (void)com_runrev_livecode_windowMoved: (MCPlatformWindowRef)window
+void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window)
 {
     // The NSWindow's frame isn't updated whilst a window is being moved. However,
     // the window server's bounds *are*. Thus we ask for the updated bounds from
@@ -315,24 +337,17 @@ static bool s_lock_responder_change = false;
         CGRect t_rect;
         CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)t_rect_dict, &t_rect);
         
-        // MW-2014-06-11: [[ Bug ]] Only temporarily update the frame fields otherwise it screws
-        //   up backingstore scale factor changes.
-        NSPoint t_origin;
-        t_origin = _frame . origin;
+        NSScreen * t_screen = [[NSScreen screens] objectAtIndex:0];
+        t_rect . origin . y = [t_screen frame] . size . height - t_rect . origin . y - t_rect . size . height;
         
-        _frame . origin . x = t_rect . origin . x;
-        _frame . origin . y = [[NSScreen mainScreen] frame] . size . height - t_rect . origin . y - t_rect . size . height;
+        [(NSWindow <com_runrev_livecode_MCMovingFrame> *)self setMovingFrame:NSRectFromCGRect(t_rect)];
         
-        ((MCMacPlatformWindow *)window) -> ProcessDidMove();
-    
-        _frame . origin = t_origin;
+        ((MCMacPlatformWindow *)p_window) -> ProcessDidMove();
     }
     
     [t_info_array release];
     CFRelease(t_window_id_array);
 }
-
-@end
 
 @implementation com_runrev_livecode_MCWindowDelegate
 
@@ -400,6 +415,11 @@ static bool s_lock_responder_change = false;
 
 - (void)windowWillMove:(NSNotification *)notification
 {
+    
+    NSWindow * t_window = m_window -> GetHandle();
+    if ([t_window respondsToSelector: @selector(setMovingFrame:)])
+        [((NSWindow <com_runrev_livecode_MCMovingFrame> *)t_window) setMovingFrame:[t_window frame]];
+    
     if (!m_window -> IsSynchronizing())
     {
         // MW-2014-04-23: [[ Bug 12270 ]] The user has started moving the window
@@ -408,19 +428,19 @@ static bool s_lock_responder_change = false;
         
         // MW-2014-08-14: [[ Bug 13016 ]] Ask our NSApp to start sending us windowMoved
         //   messages.
-        [NSApp windowStartedMoving: m_window];
+		MCMacPlatformApplicationWindowStartedMoving(m_window);
     }
 }
 
 - (void)windowMoveFinished
 {
-	// IM-2014-10-29: [[ Bug 13814 ]] Make sure we unset the user reshape flag once dragging is finished.
+    // IM-2014-10-29: [[ Bug 13814 ]] Make sure we unset the user reshape flag once dragging is finished.
 	m_user_reshape = false;
 }
 
 - (void)windowDidMove:(NSNotification *)notification
 {
-	m_window -> ProcessDidMove();
+    m_window -> ProcessDidMove();
 }
 
 - (void)windowWillStartLiveResize:(NSNotification *)notification
@@ -575,7 +595,7 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)canBecomeKeyView
 {
-	if ([NSApp pseudoModalFor] != nil)
+	if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return NO;
     
     return YES;
@@ -583,7 +603,7 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return NO;
     
     // MW-2014-04-23: [[ CocoaBackdrop ]] This method is called after the window has
@@ -594,7 +614,7 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)acceptsFirstResponder
 {
-	if ([NSApp pseudoModalFor] != nil)
+	if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return NO;
     
     return YES;
@@ -602,7 +622,7 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)becomeFirstResponder
 {
-	if ([NSApp pseudoModalFor] != nil)
+	if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return NO;
     
     //MCPlatformCallbackSendViewFocus([(MCWindowDelegate *)[[self window] delegate] platformWindow]);
@@ -631,7 +651,7 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseDown: (NSEvent *)event
 {
-	if ([NSApp pseudoModalFor] != nil)
+	if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     if ([self useTextInput])
@@ -643,7 +663,7 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseUp: (NSEvent *)event
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     if ([self useTextInput])
@@ -655,7 +675,7 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseMoved: (NSEvent *)event
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -663,7 +683,7 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseDragged: (NSEvent *)event
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     if ([self useTextInput])
@@ -675,7 +695,7 @@ static bool s_lock_responder_change = false;
 
 - (void)rightMouseDown: (NSEvent *)event
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
@@ -687,7 +707,7 @@ static bool s_lock_responder_change = false;
 
 - (void)rightMouseUp: (NSEvent *)event
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
     return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
@@ -699,7 +719,7 @@ static bool s_lock_responder_change = false;
 
 - (void)rightMouseMoved: (NSEvent *)event
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -707,7 +727,7 @@ static bool s_lock_responder_change = false;
 
 - (void)rightMouseDragged: (NSEvent *)event
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -715,7 +735,7 @@ static bool s_lock_responder_change = false;
 
 - (void)otherMouseDown: (NSEvent *)event
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
@@ -727,7 +747,7 @@ static bool s_lock_responder_change = false;
 
 - (void)otherMouseUp: (NSEvent *)event
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
@@ -739,7 +759,7 @@ static bool s_lock_responder_change = false;
 
 - (void)otherMouseMoved: (NSEvent *)event
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -747,7 +767,7 @@ static bool s_lock_responder_change = false;
 
 - (void)otherMouseDragged: (NSEvent *)event
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -763,7 +783,7 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseExited: (NSEvent *)event
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     [self handleMouseMove: event];
@@ -1362,7 +1382,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
     // Create a wrapper around the drag board for this operation if the drag
     // source is outside this instance of LiveCode.
     MCAutoRefcounted<MCMacRawClipboard> t_dragboard;
-    if ([sender draggingSource] != nil)
+    if ([sender draggingSource] == nil)
         t_dragboard = new MCMacRawClipboard([sender draggingPasteboard]);
     
 	NSDragOperation t_ns_operation;
@@ -1504,25 +1524,8 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)setFrameSize: (NSSize)size
 {
-	CGFloat t_height_diff = size.height - [self frame].size.height;
-	
 	[super setFrameSize: size];
-	
-	// IM-2014-03-28: [[ Bug 12046 ]] Adjust subviews upward to retain same height from top of view
-	NSArray *t_subviews;
-	t_subviews = [self subviews];
-	for (uint32_t i = 0; i < [t_subviews count]; i++)
-	{
-		NSView *t_subview;
-		t_subview = [t_subviews objectAtIndex:i];
-		
-		NSPoint t_origin;
-		t_origin = [t_subview frame].origin;
-		t_origin.y += t_height_diff;
-		
-		[t_subview setFrameOrigin:t_origin];
-	}
-	
+    
 	if ([self window] == nil)
 		return;
 	
@@ -1629,16 +1632,18 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		NSView *t_subview;
 		t_subview = [t_subviews objectAtIndex:i];
 		
-		// Don't adjust the app view, as it gets resized below.
-		if (t_subview != m_window->GetView())
-		{
+        // Adjust any layers added by externals (revbrowser).
+        if ([t_subview respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
+        {
 			NSPoint t_origin;
 			t_origin = [t_subview frame].origin;
-			t_origin.y += t_height_diff;
+			
+            t_origin.y += t_height_diff;
 			
 			[t_subview setFrameOrigin:t_origin];
 		}
 	}
+    
 	MCMacPlatformWindow *t_window = m_window;
     if (t_window != nil)
         [t_window -> GetView() setFrameSize: size];
@@ -1690,6 +1695,9 @@ MCWindowContainerView *MCMacPlatformWindow::GetContainerView(void)
 
 id MCMacPlatformWindow::GetHandle(void)
 {
+	// IM-2016-06-13: [[ Bug 17815 ]] Ensure the handle has been created before returning.
+	if (m_handle == nil)
+		RealizeAndNotify();
 	return m_handle;
 }
 
@@ -1733,7 +1741,7 @@ void MCMacPlatformWindow::ProcessDidMove(void)
 	
 	// Get the window's new content rect.
 	NSRect t_new_cocoa_content;
-	t_new_cocoa_content = [m_window_handle contentRectForFrameRect: [m_window_handle frame]];
+	t_new_cocoa_content = [m_window_handle contentRectForFrameRect: [(NSWindow <com_runrev_livecode_MCMovingFrame>*)m_window_handle movingFrame]];
 	
 	// Map from cocoa coords.
 	MCRectangle t_content;
@@ -1883,7 +1891,8 @@ void MCMacPlatformWindow::DoRealize(void)
     
     [m_window_handle setFrame: t_cocoa_frame display: YES];
     
-	m_delegate = [[com_runrev_livecode_MCWindowDelegate alloc] initWithPlatformWindow: this];
+    if (m_delegate == nil)
+        m_delegate = [[com_runrev_livecode_MCWindowDelegate alloc] initWithPlatformWindow: this];
 	[m_window_handle setDelegate: m_delegate];
 	
     m_container_view = [[MCWindowContainerView alloc] initWithPlatformWindow: this];
@@ -1965,7 +1974,7 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	}
 	
 	if (m_changes . title_changed)
-		[m_window_handle setTitle: m_title != nil ? [NSString stringWithMCStringRef: m_title] : @""];
+		[m_window_handle setTitle: m_title != nil ? MCStringConvertToAutoreleasedNSString(m_title) : @""];
 	
 	if (m_changes . has_modified_mark_changed)
 		[m_window_handle setDocumentEdited: m_has_modified_mark];
@@ -2018,9 +2027,10 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
 				RealizeAndNotify();
 			*(void**)r_value = m_window_handle;
 			return true;
+		
+		default:
+			return false;
 	}
-	
-	return false;
 }
 
 void MCMacPlatformWindow::DoShow(void)
@@ -2237,7 +2247,7 @@ void MCMacPlatformWindow::UpdateDocumentFilename(void)
     
     if (!MCStringIsEmpty(m_document_filename) && MCS_pathtonative(m_document_filename, t_native_filename))
     {
-        t_represented_filename = [NSString stringWithMCStringRef: t_native_filename];
+        t_represented_filename = MCStringConvertToAutoreleasedNSString(t_native_filename);
     }
     else
         t_represented_filename = @"";

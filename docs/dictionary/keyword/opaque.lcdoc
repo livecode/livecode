@@ -4,24 +4,34 @@ Type: keyword
 
 Syntax: opaque
 
-Summary: Used with the <style> <property> to indicate an opaque <button> or <field>.
+Summary:
+Used with the <style> <property> to indicate an opaque <button> or
+<field>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the style of button "Cancel" to opaque
 
 Description:
-Use the <opaque> <keyword> to create a <control> that blocks the view of any <object> underneath it.   
+Use the <opaque> <keyword> to create a <control> that blocks the view of
+any <object(glossary)> underneath it.
 
-The field or button is filled with its backgroundColor. If the <field> or <button|button's> <backgroundColor> is empty, it is filled with the <backgroundColor> of the <object|object's> <owner>. 
+The field or button is filled with its backgroundColor. If the <field>
+or <button|button's> <backgroundColor> is empty, it is filled with the
+<backgroundColor> of the <object|object's> <owner>.
 
-Setting a control's <style> <property> to "opaque" sets its <opaque> <property> to true.
+Setting a control's <style> <property> to "opaque" sets its <opaque>
+<property> to true.
 
-References: style (property), owner (property), opaque (property), backgroundColor (property), transparent (keyword), button (keyword), field (keyword), opaque (keyword), control (keyword), object (object), button (object), property (glossary), keyword (glossary)
+References: object (glossary), property (glossary), keyword (glossary),
+transparent (keyword), button (keyword), field (keyword),
+opaque (keyword), control (keyword), button (object), style (property),
+owner (property), opaque (property), backgroundColor (property)
 
 Tags: ui
+

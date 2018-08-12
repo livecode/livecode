@@ -2,15 +2,16 @@ Name: union
 
 Type: command
 
-Syntax: union <targetArray> with <templateArray> [recursively]
+Syntax: union <targetArray> with <templateArray> [recursively] [into <destinationArray>]
 
-Summary: Combines two arrays.
+Summary:
+Combines two arrays.
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 local tLeft, tRight
@@ -43,57 +44,81 @@ union tLeft with tRight recursively
 # tRight unchanged
 
 Example:
-function ScriptUnion(pLeft, pRight, pRecursive)
-	repeat for each key tKey in pRight
-		if tKey is not among the keys of pLeft then
-			put pRight[tKey] into pLeft[tKey]
-		else if pRecursive then
-			put ScriptUnion(pLeft[tKey], pRight[tKey], true) into pLeft[tKey]
-		end if
-	end repeat
-	
-	return pLeft
+function ScriptUnion pLeft, pRight, pRecursive
+    repeat for each key tKey in pRight
+        if tKey is not among the keys of pLeft then
+            put pRight[tKey] into pLeft[tKey]
+        else if pRecursive then
+            put ScriptUnion(pLeft[tKey], pRight[tKey], true) into pLeft[tKey]
+        end if
+    end repeat
+
+    return pLeft
 end ScriptUnion
 
-function EngineUnion(pLeft, pRight, pRecursive)
-	if pRecursive then
-		union pLeft with pRight recursively
-	else
-		union pLeft with pRight
-	end if
-	
-	return pLeft
+function EngineUnion pLeft, pRight, pRecursive
+    if pRecursive then
+        union pLeft with pRight recursively
+    else
+        union pLeft with pRight
+    end if
+
+    return pLeft
 end EngineUnion
 
 -- This function should return true for all inputs.
-function CheckUnion(pLeft, pRight, pRecursive)
-	return ScriptUnion(pLeft, pRight, pRecursive) is EngineUnion(pLeft, pRight, pRecursive)
-end CheckIntersect
+function CheckUnion pLeft, pRight, pRecursive
+    return ScriptUnion(pLeft, pRight, pRecursive) is EngineUnion(pLeft, pRight, pRecursive)
+end CheckUnion
 
 Parameters:
-targetArray (array): The value to modify.
-templateArray (array): The array to intersect <array> with.
+targetArray (array):
+The value to modify.
+
+
+templateArray (array):
+The array to intersect <array> with.
+
+destinationArray (optional array):
+A variable to set as the destination instead of mutating <targetArray>
 
 Description:
-Use the <union> <command> to combine two <array|arrays>, eliminating duplicate elements.
+Use the <union> <command> to combine two <array|arrays>, eliminating
+duplicate elements.
 
-The recursively adverb controls whether the intersection recurses through nested arrays or 
-not.
+The recursively adverb controls whether the intersection recurses
+through nested arrays or not.
 
-The <union> <command> combines <targetArray> and <templateArray>. Each <key> of <targetArray> 
-is checked to see whether there is already an <element(keyword)> with that <key> in 
-<templateArray>. If there is, that <element(keyword)> of <targetArray> is unchanged. If not, 
-the corresponding <element(keyword)> of the <templateArray> is placed in <targetArray>.
+The <union> <command> combines <targetArray> and <templateArray>. Each
+<key> of <targetArray> is checked to see whether there is already an
+<element(keyword)> with that <key> in <templateArray>. If there is, that
+<element(keyword)> of <targetArray> is unchanged. If not, the
+corresponding <element(keyword)> of the <templateArray> is placed in
+<targetArray>. 
 
-After the <union> <command> is <execute|executed>, the <keys> of <targetArray> consists of 
-the logical union of the <keys> of the original <targetArray> and the keys of <templateArray>.
+After the <union> <command> is <execute|executed>, the <keys> of
+<targetArray> consists of the logical union of the <keys> of the
+original <targetArray> and the keys of <templateArray>.
 
-The content of individual elements of the <templateArray> does not control the final result. 
-Only which <element(glossary)|elements> exist in the <templateArray>, not their content, 
-controls which <element(glossary)|elements> of the <templateArray> are placed in <targetArray>. 
-If <targetArray> and <templateArray> have the same set of <keys> but different content in 
-each <element(keyword)>, the <union> <command> does not change the value of <targetArray>.
+The content of individual elements of the <templateArray> does not
+control the final result. Only which <element(glossary)|elements> exist
+in the <templateArray>, not their content, controls which
+<element(glossary)|elements> of the <templateArray> are placed in
+<targetArray>. If <targetArray> and <templateArray> have the same set of
+<keys> but different content in each <element(keyword)>, the <union>
+<command> does not change the value of <targetArray>.
 
-References: element (keyword), + (operator), add (command), intersect (command), keys (function), element (glossary), key (glossary), command (glossary), array (glossary), execute (glossary)
+If the into clause is used the operation of the commands is the same as
+the non-into form except that <targetArray> does not have to be a
+variable, and the result of the operation is placed into
+<destinationArray> rather than mutating <targetArray>.
+
+Changes:
+The `into` clause was added in LiveCode 9.
+
+References: add (command), intersect (command), keys (function),
+element (glossary), key (glossary), command (glossary), array (glossary),
+execute (glossary), element (keyword), + (operator),
+difference (command), symmetric difference (command)
 
 Tags: properties

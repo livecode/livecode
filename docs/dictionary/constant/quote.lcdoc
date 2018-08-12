@@ -4,25 +4,31 @@ Type: constant
 
 Syntax: quote
 
-Summary: Equivalent to the double quote character " (ASCII 34).
+Summary:
+Equivalent to the double quote character " (ASCII 34).
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if last char of it is quote then delete last char of it
 
 Example:
-put quote & field 2 & quote into responseToPost
+local tResponseToPost
+put quote & field 2 & quote into tResponseToPost
 
 Description:
-Use the <quote> <constant> to embed quotes in a string, and to refer to quotes in a script. 
+Use the <quote> <constant> to embed quotes in a string, and to refer to
+quotes in a script.
 
-You must use this constant because if you use the quote character itself, it is treated as the beginning or end of a literal string and causes an execution error.
+You must use this constant because if you use the quote character
+itself, it is treated as the beginning or end of a literal string and
+causes an execution error.
 
 References: constant (command)
 
 Tags: properties
+

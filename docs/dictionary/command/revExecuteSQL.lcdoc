@@ -4,15 +4,18 @@ Type: command
 
 Syntax: revExecuteSQL <databaseID>, <SQLStatement> [,{<variablesList> | <arrayName>}]
 
-Summary: Executes a <SQL> statement on a <database>.
+Summary:
+Executes a <SQL> statement on a <database>.
+
+Associations: database library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revExecuteSQL myDatabaseID, the text of field "Query", "*bMyVar"
@@ -21,46 +24,107 @@ Example:
 revExecuteSQL 12, builtQuery, "someArray"
 
 Parameters:
-databaseID: The number returned by the revOpenDatabase function when the database was opened.
-SQLStatement (string): A string in Structured Query Language. (Do not include a semicolon at the end of the SQLStatement.) >*Note:* Some database systems, such as Oracle, are capable of handling a multiple-line SQL statement.
-variablesList: The variablesList consists of one or more variable names (or expressions that evaluate to variable names), separated by commas. Each variable name may also be the name of an array element, for example "tInputData[id]".
-arrayName (array): The name of a single array variable whose keys are sequential numbers.>*Note:* The variable names or arrayName must be enclosed in quotes; otherwise, the variable's value rather than its name is passed to the revExecuteSQL command.
+databaseID:
+The number returned by the revOpenDatabase function when the database
+was opened.
+
+SQLStatement (string):
+A string in Structured Query Language. (Do not include a semicolon at
+the end of the SQLStatement.) >*Note:* Some database systems, such as
+Oracle, are capable of handling a multiple-line SQL statement.
+
+variablesList:
+The variablesList consists of one or more variable names (or expressions
+that evaluate to variable names), separated by commas. Each variable
+name may also be the name of an array element, for example
+"tInputData[id]". 
+
+arrayName (array):
+The name of a single array variable whose keys are sequential
+numbers.>*Note:* The variable names or arrayName must be enclosed in
+quotes; otherwise, the variable's value rather than its name is passed
+to the revExecuteSQL command.
+
 
 The result:
-The <revExecuteSQL> command places a return value into the <result>, to indicate the outcome of the query.
-For successful queries, the <revExecuteSQL> command returns the number of rows affected for INSERT, UPDATE and DELETE statements. For all other statements, 0 is returned.
+The <revExecuteSQL> command places a return value into the <result>, to
+indicate the outcome of the query. For successful queries, the
+<revExecuteSQL> command returns the number of rows affected for INSERT,
+UPDATE and DELETE statements. For all other statements, 0 is returned.
 
-For unsuccessful queries, an error string is returned, describing the problem.
+For unsuccessful queries, an error string is returned, describing the
+problem. 
 
 Description:
-Use the <revExecuteSQL> <command> to execute a <SQL query> without selecting <record|records>.
+Use the <revExecuteSQL> <command> to execute a <SQL query> without
+selecting <record|records>.
 
-The <SQLStatement> may contain one or more placeholders, which are sequential numbers <prepend|prepended> by a colon. The <revExecuteSQL> <command> substitutes the corresponding item in the <variablesList> for each of these placeholders. For example, if you have two <variable|variables> called "valueX" and "valueY", you can use a <SQLStatement> that includes placeholders as follows:
+The <SQLStatement> may contain one or more placeholders, which are
+sequential numbers <prepend|prepended> by a colon. The <revExecuteSQL>
+<command> substitutes the corresponding item in the <variablesList> for
+each of these placeholders. For example, if you have two
+<variable|variables> called "valueX" and "valueY", you can use a
+<SQLStatement> that includes placeholders as follows:
 
-revExecuteSQL myID, "insert into mytable values(:1,:2,:1)", "valueX","valueY"
+revExecuteSQL myID, "insert into mytable values(:1,:2,:1)", "valueX"
+,"valueY" 
 
-The content of the variable valueX is substituted for the ":1" in the SQLQuery (in both places where ":1" appears), and the content of valueY is substituted for ":2".
+The content of the variable valueX is substituted for the ":1" in the
+SQLQuery (in both places where ":1" appears), and the content of valueY
+is substituted for ":2".
 
->*Note:* Placeholders can currently only represent data values in the query. The following line for example is incorrect and will cause a syntax error to be returned by the database because a placeholder is being used to represent a column name (:1).
+>*Note:* Placeholders can currently only represent data values in the
+> query. The following line for example is incorrect and will cause a
+> syntax error to be returned by the database because a placeholder is
+> being used to represent a column name (:1).
 
 -- Invalid, will cause SQL syntax error
-revExecuteSQL myID, "insert into mytable(:1, name, date) values (:2, :3, :2)", "tColumnName", "tValueX", "tValueY"
+revExecuteSQL myID,
+"insert into mytable(:1, name, date) values (:2, :3, :2)",
+"tColumnName", "tValueX", "tValueY"
 
-If you specify an <arrayName> rather than a list of ordinary <variable|variables>, the <revExecuteSQL> <command> substitutes the corresponding <element> of the <array> for each of the placeholders in the query:
+If you specify an <arrayName> rather than a list of ordinary
+<variable|variables>, the <revExecuteSQL> <command> substitutes the
+corresponding <element> of the <array> for each of the placeholders in
+the query:
 
 revExecuteSQL myID,"insert into mytable values(:1,:2,:1)","myArray"
 
-The content of the element myArray[1] is substituted for the ":1" in the SQLQuery (in both places where ":1" appears), and the content of myArray[2] is substituted for ":2".
+The content of the element myArray[1] is substituted for the ":1" in the
+SQLQuery (in both places where ":1" appears), and the content of
+myArray[2] is substituted for ":2".
 
-To pass binary data in a variable in the <variablesList>, <prepend> "*b" to the variable name. The <revExecuteSQL> <command> strips the binary marker "*b" and passes it to the database as <binary file|binary data>, rather than text data.
+To pass binary data in a variable in the <variablesList>, <prepend> "*b"
+to the variable name. The <revExecuteSQL> <command> strips the binary
+marker "*b" and passes it to the database as <binary file|binary data>,
+rather than text data.
 
-To pass binary data in an array element, prepend "*b" to the element's key.
+To pass binary data in an array element, prepend "*b" to the element's
+key. 
 
->*Important:*  The <revExecuteSQL> <command> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revExecuteSQL> <command> is part of the 
+> <Database library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
-Changes to LiveCode
-The ability to specify array elements in the <variablesList> was added in 2.9
+Changes:
+The ability to specify array elements in the <variablesList> was added
+in 2.9
 
-References: element (keyword), Database library (library), LiveCode custom library (library), revDatabaseTableNames (function), revOpenDatabase (function), result (function), revQueryDatabase (function), revDataFromQuery (function), revdb_execute (function), prepend (glossary), binary file (glossary), variable (glossary), database (glossary), SQL (glossary), Standalone Application Settings (glossary), record (glossary), standalone application (glossary), array (glossary), SQL query (glossary), command (glossary), function (control_st)
+References: function (control structure),
+revDatabaseTableNames (function), revOpenDatabase (function),
+result (function), revQueryDatabase (function),
+revDataFromQuery (function), revdb_execute (function),
+LiveCode custom library (glossary), prepend (glossary),
+binary file (glossary), variable (glossary), database (glossary),
+SQL (glossary), Standalone Application Settings (glossary),
+record (glossary), standalone application (glossary), array (glossary),
+SQL query (glossary), command (glossary), element (keyword),
+Database library (library)
 
 Tags: database
+

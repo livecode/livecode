@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -77,11 +77,6 @@ public:
 	MCiOSBrowserControl(void);
 	
 	virtual MCNativeControlType GetType(void);
-#ifdef LEGACY_EXEC	
-	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep);
-	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);	
-	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);	
-#endif
     
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
@@ -204,7 +199,7 @@ void MCiOSBrowserControl::SetUrl(MCExecContext& ctxt, MCStringRef p_url)
     if (t_view != nil)
     {
         [m_delegate setPendingRequest: true];
-        [t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithMCStringRef: p_url]]]];
+        [t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_url)]]];
     }
 }
 
@@ -283,9 +278,9 @@ void MCiOSBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
 {
 	UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
-	if (t_view != nil)
+	if (t_view != nil && [[t_view request] URL] != nil)
     {
-        /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[[[t_view request] URL] absoluteString], r_url);
+        /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[[[t_view request] URL] absoluteString], r_url);
         return;
     }
 	
@@ -390,222 +385,6 @@ void MCiOSBrowserControl::GetScrollingEnabled(MCExecContext& ctxt, bool& r_value
     r_value = (t_view != nil ? [GetScrollView() isScrollEnabled] == YES : NO);
 }
 
-#ifdef /* MCNativeBrowserControl::Set */ LEGACY_EXEC
-Exec_stat MCiOSBrowserControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
-{
-	UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyUrl:
-		{
-			if (t_view != nil)
-			{
-                [m_delegate setPendingRequest: true];
-				[t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithCString: ep . getcstring() encoding: NSMacOSRomanStringEncoding]]]];
-			}
-			
-		}
-		return ES_NORMAL;
-		
-		case kMCNativeControlPropertyAutoFit:
-			if (t_view != nil)
-				[t_view setScalesPageToFit: ep . getsvalue() == MCtruemcstring ? YES : NO];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyDelayRequests:
-			m_delay_requests = ep . getsvalue() == MCtruemcstring;
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyDataDetectorTypes:
-			UIDataDetectorTypes t_data_types;
-			t_data_types = UIDataDetectorTypeNone;
-			if (ep.isempty() || ep.getsvalue() == "none")
-				t_data_types = UIDataDetectorTypeNone;
-			else if (ep.getsvalue() == "all")
-				t_data_types = UIDataDetectorTypeAll;
-			else
-			{
-				if (!datadetectortypes_from_string(ep.getcstring(), t_data_types))
-				{
-					MCeerror->add(EE_UNDEFINED, 0, 0, ep.getsvalue());
-					return ES_ERROR;
-				}
-			}
-			
-			[t_view setDataDetectorTypes: t_data_types];
-
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyAllowsInlineMediaPlayback:
-			if (t_view != nil)
-				[t_view setAllowsInlineMediaPlayback: ep.getsvalue() == MCtruemcstring ? YES : NO];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyMediaPlaybackRequiresUserAction:
-			if (t_view != nil)
-				[t_view setMediaPlaybackRequiresUserAction: ep.getsvalue() == MCtruemcstring ? YES : NO];
-			return ES_NORMAL;
-            
-		// MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
-		//   the UIWebView.
-		case kMCNativeControlPropertyCanBounce:
-			if (t_view != nil)
-				[GetScrollView() setBounces: ep . getsvalue() == MCtruemcstring ? YES : NO];
-			return ES_NORMAL;
-		case kMCNativeControlPropertyScrollingEnabled:
-			if (t_view != nil)
-				[GetScrollView() setScrollEnabled: ep . getsvalue() == MCtruemcstring ? YES : NO];
-			return ES_NORMAL;
-            
-        default:
-            break;
-	}
-	
-	return MCiOSControl::Set(p_property, ep);
-}
-#endif /* MCNativeBrowserControl::Set */
-
-#ifdef /* MCNativeBrowserControl::Get */ LEGACY_EXEC
-Exec_stat MCiOSBrowserControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
-{
-	UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyUrl:
-			ep . copysvalue(GetUrl());
-			return ES_NORMAL;
-		case kMCNativeControlPropertyCanAdvance:
-			ep . setsvalue(MCU_btos(t_view != nil ? [t_view canGoForward] == YES : NO));
-			return ES_NORMAL;
-		case kMCNativeControlPropertyCanRetreat:
-			ep . setsvalue(MCU_btos(t_view != nil ? [t_view canGoBack] == YES : NO));
-			return ES_NORMAL;
-		case kMCNativeControlPropertyAutoFit:
-			ep . setsvalue(MCU_btos(t_view != nil ? [t_view  scalesPageToFit] == YES : NO));
-			return ES_NORMAL;
-		case kMCNativeControlPropertyDelayRequests:
-			ep . setsvalue(MCU_btos(m_delay_requests ? True : False));
-			return ES_NORMAL;
-		case kMCNativeControlPropertyDataDetectorTypes:
-		{
-			char *t_type_list = nil;
-			if (!datadetectortypes_to_string([t_view dataDetectorTypes], t_type_list))
-			{
-				MCeerror->add(EE_UNDEFINED, 0, 0);
-				return ES_ERROR;
-			}
-			ep.grabbuffer(t_type_list, MCCStringLength(t_type_list));
-			return ES_NORMAL;
-		}
-		case kMCNativeControlPropertyAllowsInlineMediaPlayback:
-			ep.setsvalue(MCU_btos(t_view != nil ? [t_view allowsInlineMediaPlayback] == YES : NO));
-			return ES_NORMAL;
-		case kMCNativeControlPropertyMediaPlaybackRequiresUserAction:
-			ep.setsvalue(MCU_btos(t_view != nil ? [t_view mediaPlaybackRequiresUserAction] == YES : NO));
-			return ES_NORMAL;
-		
-		// MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
-		//   the UIWebView.
-		case kMCNativeControlPropertyCanBounce:
-			ep.setsvalue(MCU_btos(t_view != nil ? [GetScrollView() bounces] == YES : NO));
-			return ES_NORMAL;
-		case kMCNativeControlPropertyScrollingEnabled:
-			ep.setsvalue(MCU_btos(t_view != nil ? [GetScrollView() isScrollEnabled] == YES : NO));
-			return ES_NORMAL;
-                    
-        default:
-            break;
-	}
-	
-	return MCiOSControl::Get(p_property, ep);
-}
-#endif /* MCNativeBrowserControl::Get */
-
-#ifdef /* MCiOSBrowserControl::Do */ LEGACY_EXEC
-Exec_stat MCiOSBrowserControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-	UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-	
-	switch(p_action)
-	{
-		case kMCNativeControlActionAdvance:
-			if (t_view != nil)
-				[t_view goForward];
-			return ES_NORMAL;
-		case kMCNativeControlActionRetreat:
-			if (t_view != nil)
-				[t_view goBack];
-			return ES_NORMAL;
-		case kMCNativeControlActionReload:
-			if (t_view != nil)
-				[t_view reload];
-			return ES_NORMAL;
-		case kMCNativeControlActionStop:
-			if (t_view != nil)
-				[t_view stopLoading];
-			return ES_NORMAL;
-		case kMCNativeControlActionLoad:
-		{
-			bool t_success;
-			t_success = true;
-			
-			char *t_url, *t_html;
-			t_url = nil;
-			t_html = nil;
-			if (t_success)
-				t_success = MCParseParameters(p_parameters, "ss", &t_url, &t_html);
-			
-			// MW-2010-12-08: [[ Bug 9221 ]] Passed the wrong object type to baseURL!
-			if (t_success)
-            {
-                // MW-2012-10-01: [[ Bug 10422 ]] Make sure we mark a pending request so the
-                //   HTML loading doesn't divert through a loadRequested message.
-                [m_delegate setPendingRequest: true];
-				[t_view loadHTMLString: [NSString stringWithCString: t_html encoding: NSMacOSRomanStringEncoding] baseURL: [NSURL URLWithString: [NSString stringWithCString: t_url encoding: NSMacOSRomanStringEncoding]]];
-            }
-                
-			delete t_url;
-			delete t_html;
-		}
-		return ES_NORMAL;
-			
-			
-		case kMCNativeControlActionExecute:
-		{
-			bool t_success;
-			t_success = true;
-			
-			char *t_script;
-			t_script = nil;
-			if (t_success)
-				t_success = MCParseParameters(p_parameters, "s", &t_script);
-			
-			if (t_success)
-			{
-				NSString *t_result;
-				t_result = [t_view stringByEvaluatingJavaScriptFromString: [NSString stringWithCString: t_script encoding: NSMacOSRomanStringEncoding]];
-				
-				if (t_result != nil)
-					MCresult -> copysvalue(MCString([t_result cStringUsingEncoding: NSMacOSRomanStringEncoding]));
-				else
-					MCresult -> sets("error");
-			}
-			
-			delete t_script;
-		}
-		return ES_NORMAL;
-            
-        default:
-            break;
-	}
-	
-	return MCiOSControl::Do(p_action, p_parameters);
-}
-#endif /* MCiOSBrowserControl::Do */
-
 // Browser-specific actions
 
 void MCiOSBrowserControl::ExecStop(MCExecContext& ctxt)
@@ -656,7 +435,7 @@ void MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
 	t_view = (UIWebView *)GetView();
     
     NSString *t_result;
-    t_result = [t_view stringByEvaluatingJavaScriptFromString: [NSString stringWithMCStringRef: p_script]];
+    t_result = [t_view stringByEvaluatingJavaScriptFromString: MCStringConvertToAutoreleasedNSString(p_script)];
     
     if (t_result == nil)
     {
@@ -664,7 +443,7 @@ void MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
         return;
     }
     MCAutoStringRef t_result_string;
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_result, &t_result_string);
+    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_result, &t_result_string);
     ctxt.SetTheResultToValue(*t_result_string);
 }
 
@@ -679,7 +458,7 @@ void MCiOSBrowserControl::ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStr
     // MW-2012-10-01: [[ Bug 10422 ]] Make sure we mark a pending request so the
     //   HTML loading doesn't divert through a loadRequested message.
     [m_delegate setPendingRequest: true];
-    [t_view loadHTMLString: [NSString stringWithMCStringRef: p_html] baseURL: [NSURL URLWithString: [NSString stringWithMCStringRef: p_url]]];
+    [t_view loadHTMLString: MCStringConvertToAutoreleasedNSString(p_html) baseURL: [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_url)]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -852,7 +631,7 @@ bool MCiOSBrowserControl::HandleLoadRequest(NSURLRequest *p_request, UIWebViewNa
 	// Whether we send loadRequest or loadRequested depends on 'notify'.
 	Exec_stat t_stat;
     MCAutoStringRef t_url, t_type;
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[[p_request URL] absoluteString], &t_url);
+    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[[p_request URL] absoluteString], &t_url);
     /* UNCHECKED */ MCStringCreateWithCString(s_types[p_type], &t_type);
 	t_stat = t_target -> message_with_valueref_args(p_notify ? MCM_browser_load_requested : MCM_browser_load_request, *t_url, *t_type);
 	
@@ -883,7 +662,7 @@ void MCiOSBrowserControl::HandleLoadFailed(NSError *p_error)
         MCAutoStringRef t_url, t_description;
         MCExecContext ctxt(nil, nil, nil);
         GetUrl(ctxt, &t_url);
-        /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[p_error localizedDescription], &t_description);
+        /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[p_error localizedDescription], &t_description);
         MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
 		t_target -> message_with_valueref_args(MCM_browser_load_failed, *t_url, *t_description);
@@ -969,7 +748,7 @@ public:
 	
 	void Dispatch(void)
 	{
-		// MW-2011-11-03: [[ LoadRequested ]] If a load occured, then post a load requested
+		// MW-2011-11-03: [[ LoadRequested ]] If a load occurred, then post a load requested
 		//   event.
 		if (m_target -> HandleLoadRequest(m_request, m_type, m_notify))
 			MCEventQueuePostCustom(new MCNativeBrowserLoadRequestEvent(m_target, m_request, m_type, true));

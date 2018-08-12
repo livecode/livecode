@@ -2,15 +2,16 @@ Name: compact
 
 Type: command
 
-Syntax: compact <stack> 
+Syntax: compact <stack>
 
-Summary: Reclaims unused space within a <stack|stack's> <file> structure.
+Summary:
+Reclaims unused space within a <stack|stack's> <file> structure.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 compact this stack
@@ -19,15 +20,23 @@ Example:
 compact stack "Project 1"
 
 Parameters:
-stack: Any stack reference.
+stack:
+Any stack reference.
 
 Description:
-When you cut or delete a card, some free space is left within the stack. This empty space is reclaimed when you choose File menu. Use the <compact> <command> to reclaim this empty space without having to save the <stack>.
+When you cut or delete a card, some free space is left within the stack.
+This empty space is reclaimed when you choose File menu. Use the
+<compact> <command> to reclaim this empty space without having to save
+the <stack>.
 
-This command is especially useful when a handler performs multiple rearrangements of cards without saving the stack.
+This command is especially useful when a handler performs multiple
+rearrangements of cards without saving the stack.
 
-The "Save" menu item in the File menu automatically compacts the stack. However, the save <command> does not do so.
+The "Save" menu item in the File menu automatically compacts the stack.
+However, the save <command> does not do so.
 
-References: file (keyword), delete (command), stack (object), command (glossary)
+References: delete (command), command (glossary), file (keyword),
+stack (object)
 
 Tags: file system
+

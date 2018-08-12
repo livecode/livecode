@@ -4,33 +4,62 @@ Type: property
 
 Syntax: set the constantMask of <image> to {true | false}
 
-Summary: Specifies whether <animated GIF|animated GIFs> ignore changes in the <mask> data when displaying the <GIF>.
+Summary:
+Specifies whether <animated GIF|animated GIFs> ignore changes in the
+<mask> data when displaying the <GIF>.
 
 Associations: image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the constantMask of image "Demo" to true
 
-Value (bool):The <constantMask> of an <image(keyword)> is true or false.
-By default, the <constantMask> <property> of newly created <image(object)|images> is set to false.
+Value (bool):
+The <constantMask> of an <image(keyword)> is true or false.
+By default, the <constantMask> <property> of newly created
+<image(object)|images> is set to false.
 
 Description:
-Use the <constantMask> <property> to enable display of certain <animated GIF> <image(object)|images>.
+Use the <constantMask> <property> to enable display of certain <animated
+GIF> <image(object)|images>.
 
-Some animated GIF images use an optimization technique in which the mask data is used to hold information about differences between successive frames. When played, these GIFs can have display problems because the mask data is being used in a non-standard way. Set the <constantMask> to true to correct the problem with these <GIF|GIFs>.
+Some animated GIF images use an optimization technique in which the mask
+data is used to hold information about differences between successive
+frames. When played, these GIFs can have display problems because the
+mask data is being used in a non-standard way. Set the <constantMask> to
+true to correct the problem with these <GIF|GIFs>.
 
-Setting the <constantMask> to true may have some undesirable side effects--the <image(object)|image's> appearance may be incorrect if you move it while the animation is playing, or if there is an <object> underneath it--so use this <property> only when necessary.
+Setting the <constantMask> to true may have some undesirable side
+effects--the <image(object)|image's> appearance may be incorrect if you
+move it while the animation is playing, or if there is an
+<object(glossary)> underneath it--so use this <property> only when
+necessary. 
 
->*Note:* If the <constantMask> is set to true, clicking a transparent portion of a <frame> may unexpectedly send <message|messages> such as <mouseUp> to the <image(keyword)>, instead of the <object> underneath the <image(keyword)>. This is because when deciding whether the user has clicked a transparent <pixel>, LiveCode uses the <mask|masks> for all the <frame|frames>, rather than for the current <frame>, if the <constantMask> is true.
+>*Note:* If the <constantMask> is set to true, clicking a transparent
+> portion of a <frame> may unexpectedly send <message|messages> such as
+> <mouseUp> to the <image(keyword)>, instead of the <object(glossary)>
+> underneath the <image(keyword)>. This is because when deciding whether
+> the user has clicked a transparent <pixel>, LiveCode uses the
+> <mask|masks> for all the <frame|frames>, rather than for the current
+> <frame>, if the <constantMask> is true.
 
->*Important:*  Setting an <image(object)|image's> <constantMask> <property> to true can cause problems with the <image(object)|image's> appearance if you move it under <script> control while the animation is playing, or if there's an <object> underneath it. Avoid setting the <constantMask> <property> to true unless necessary.
+>*Important:*  Setting an <image(object)|image's> <constantMask>
+> <property> to true can cause problems with the <image(object)|image's>
+> appearance if you move it under <script> control while the animation
+> is playing, or if there's an <object(glossary)> underneath it. Avoid
+> setting the <constantMask> <property> to true unless necessary.
 
-References: filename (property), script (property), imagePixmapID (property), alwaysBuffer (property), constantMask (property), image (keyword), mouseUp (message), image (object), object (object), property (glossary), animated GIF (glossary), frame (glossary), GIF (glossary), pixel (glossary), mask (glossary), message (glossary)
+References: object (glossary), property (glossary),
+animated GIF (glossary), frame (glossary), GIF (glossary),
+pixel (glossary), mask (glossary), message (glossary), image (keyword),
+mouseUp (message), image (object), filename (property), script (property),
+imagePixmapID (property), alwaysBuffer (property),
+constantMask (property)
 
 Tags: multimedia
+

@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -55,7 +55,7 @@ MCNativeLayer::MCNativeLayer() :
 	m_visible(false),
 	m_show_for_tool(false),
 	m_can_render_to_context(true),
-	m_defer_geometry_changes(false)
+	m_defer_geometry_changes(true)
 {
 	m_rect = m_viewport_rect = m_deferred_rect = m_deferred_viewport_rect =
 		MCRectangleMake(0, 0, 0, 0);
@@ -82,7 +82,22 @@ void MCNativeLayer::OnDetach()
 
 bool MCNativeLayer::OnPaint(MCGContextRef p_context)
 {
+    /* We must make sure that any geometry changes are in sync if we are
+     * rendering to context, but are not visible */
+    if (m_can_render_to_context && m_defer_geometry_changes)
+    {
+        doSetViewportGeometry(m_deferred_viewport_rect);
+        doSetGeometry(m_deferred_rect);
+        m_viewport_rect = m_deferred_viewport_rect;
+        m_rect = m_deferred_rect;
+		m_defer_geometry_changes = false;
+    }
 	return doPaint(p_context);
+}
+
+void MCNativeLayer::OnViewTransformChanged()
+{
+	doSetGeometry(m_rect);
 }
 
 void MCNativeLayer::OnGeometryChanged(const MCRectangle &p_new_rect)
@@ -144,6 +159,8 @@ void MCNativeLayer::UpdateVisibility()
 		{
 			doSetViewportGeometry(m_deferred_viewport_rect);
 			doSetGeometry(m_deferred_rect);
+			m_viewport_rect = m_deferred_viewport_rect;
+			m_rect = m_deferred_rect;
 		}
 		m_defer_geometry_changes = false;
 	}

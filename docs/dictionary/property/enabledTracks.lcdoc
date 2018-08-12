@@ -2,28 +2,42 @@ Name: enabledTracks
 
 Type: property
 
-Syntax: set the enabledTracks of <player> to <tracksList> 
+Syntax: set the enabledTracks of <player> to <tracksList>
 
-Summary: Specifies which tracks in a <QuickTime> movie are available to be played.
+Summary:
+Specifies which tracks in a <QuickTime> movie are available to be
+played. 
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the enabledTracks of player "Arctic" to 3 & return & 2
 
-Value: The <enabledTracks> is a list of tracks, one per line. Each track is a track ID (a positive <integer>).
+Value:
+The <enabledTracks> is a list of tracks, one per line. Each track is a
+track ID (a positive <integer>).
 
 Description:
-Use the <enabledTracks> <property> to control the user's ability to play a <QuickTime> movie.
+Use the <enabledTracks> <property> to control the user's ability to play
+a <QuickTime> movie.
 
-A movie can contain multiple tracks intended to be played at the same time (for example, an audio and a video track), or tracks that are separate (for example, an alternative audio track). You can list the tracks in a movie using the tracks <property>.
+A movie can contain multiple tracks intended to be played at the same
+time (for example, an audio and a video track), or tracks that are
+separate (for example, an alternative audio track). You can list the
+tracks in a movie using the tracks <property>.
 
-References: trackCount (property), QuickTime (glossary), property (glossary), integer (keyword)
+Changes:
+This property was removed from the Windows platform in version 8.1.0,
+due to the change of player implementation from QuickTime to DirectShow.
+
+References: QuickTime (glossary), property (glossary), integer (keyword),
+trackCount (property)
 
 Tags: multimedia
+

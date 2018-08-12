@@ -2,17 +2,19 @@ Name: hotspotClicked
 
 Type: message
 
-Syntax: hotspotClicked <hotspotID> 
+Syntax: hotspotClicked <pHotspotID>
 
-Summary: Sent to a player containing a <QuickTime VR> movie when the user clicks one of the movie's hot spots.
+Summary:
+Sent to a player containing a <QuickTime VR> movie when the user clicks
+one of the movie's hot spots.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows
+OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop
 
 Example:
 on hotSpotClicked theNode -- show a text description
@@ -22,15 +24,34 @@ on hotSpotClicked theNode -- show a text description
 end hotspotClicked
 
 Parameters:
-hotspotID: The ID of the QuickTime VR hot spot that was clicked.
+pHotspotID:
+The ID of the QuickTime VR hot spot that was clicked.
 
 Description:
-Handle the <hotspotClicked> <message> if you want to perform some additional action when the user clicks a hot spot in a <QuickTime VR> movie.
+Handle the <hotspotClicked> <message> if you want to perform some
+additional action when the user clicks a hot spot in a <QuickTime VR>
+movie. 
 
-Each hot spot of a QuickTime VR movie is a clickable link, usually from one node to another. The movie author sets the hot spots during development of the movie. The user clicks a hot spot in the player to activate the link.
+Each hot spot of a QuickTime VR movie is a clickable link, usually from
+one node to another. The movie author sets the hot spots during
+development of the movie. The user clicks a hot spot in the player to
+activate the link.
 
-If the user navigates to another node by clicking a hot spot in the QuickTime VR movie, a <nodeChanged> <message> is sent after the <hotspotClicked> <message>.
+If the user navigates to another node by clicking a hot spot in the
+QuickTime VR movie, a <nodeChanged> <message> is sent after the
+<hotspotClicked> <message>.
 
-References: hotspots (property), nodeChanged (message), QTDebugStr (message), QuickTime VR (glossary), message (glossary)
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: QuickTime VR (glossary), message (glossary),
+nodeChanged (message), QTDebugStr (message), hotspots (property)
 
 Tags: multimedia
+

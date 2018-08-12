@@ -5,8 +5,9 @@ Synonyms: timestamp
 Type: glossary
 
 Description:
-A date and time attached to an <object> or <file>.
+A date and time attached to an <object(glossary)> or <file>.
 
-References: file (glossary), object (object)
+References: file (glossary), object (glossary)
 
 Tags: file system
+

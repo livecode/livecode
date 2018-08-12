@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "globals.h"
 #include "stack.h"
 #include "card.h"
@@ -227,10 +227,6 @@ bool MCSystemSetReachabilityTarget(MCStringRef p_hostname)
 
 bool MCSystemGetReachabilityTarget(MCStringRef& r_reach_target)
 {
-#ifdef /* MCHandleReachabilityTarget */ LEGACY_EXEC
-	MCresult -> copysvalue(MCReachabilityGetTarget());
-	return ES_NORMAL;
-#endif /* MCHandleReachabilityTarget */
     r_reach_target = MCValueRetain(s_reach_target);
     
 	return true;

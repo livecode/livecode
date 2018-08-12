@@ -2,13 +2,15 @@ Name: rotationRateChanged
 
 Type: message
 
-Syntax: rotationRateChanged <x>, <y>, <z> 
+Syntax: rotationRateChanged <pXRate>, <pYRate>, <pZRate>
 
-Summary: Sent to the current card of the default stack when the rotation of the device changes.
+Summary:
+Sent to the current card of the default stack when the rotation of the
+device changes.
 
 Introduced: 5.5
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -19,15 +21,24 @@ on rotationRateChanged pXRate, pYRate, pZRate
 end rotationRateChanged
 
 Parameters:
-x: the rate of acceleration around the x axis, in radians/second
-y: the rate of acceleration around the y axis, in radians/second
-z: the rate of acceleration around the x axis, in radians/second
+pXRate:
+the rate of acceleration around the x axis, in radians/second
+
+pYRate:
+the rate of acceleration around the y axis, in radians/second
+
+pZRate:
+the rate of acceleration around the x axis, in radians/second
 
 Description:
-Handle the <rotationRateChanged> message if you want to perform an action when the rate of acceleration along any axis changes.
+Handle the <rotationRateChanged> message if you want to perform an
+action when the rate of acceleration along any axis changes.
 
-The <rotationRateChanged> message is sent to the current card of the default stack when the rate of rotation of the device changes.
+The <rotationRateChanged> message is sent to the current card of the
+default stack when the rate of rotation of the device changes.
 
-References: mobileStopTrackingSensor (command), mobileStartTrackingSensor (command), trackingError (message)
+References: mobileStopTrackingSensor (command),
+mobileStartTrackingSensor (command), trackingError (message)
 
 Tags: ui
+

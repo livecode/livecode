@@ -1,18 +1,20 @@
 Name: create alias
 
+Synonyms: new alias
+
 Type: command
 
-Syntax: create alias <aliasPath> to {file <originalFilePath> | folder <orginalFolderPath>}
+Syntax: create alias <aliasPath> to {file | folder} <originalPath>
 
-Summary: Makes a new <alias>, <symbolic link>, or <shortcut> to the specified <file> or folder.
-
-Synonyms: new alias
+Summary:
+Makes a new <alias>, <symbolic link>, or <shortcut> to the specified
+<file> or folder.
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -26,20 +28,35 @@ Example:
 create alias "Photographs" to folder "Pictures"
 
 Parameters:
-aliasPath: The aliasPath specifies the name and location of the alias to be created. If you specify a name but not a location, the alias is created in the defaultFolder.
-originalFilePath: 
-orginalFolderPath: 
-originalFilePath/originalFolderPath: The name and location of the file/folder you want to make an alias to. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
+aliasPath:
+The aliasPath specifies the name and location of the alias to be
+created. If you specify a name but not a location, the alias is created
+in the defaultFolder.
+
+originalPath:
+The name and location of the
+file/folder you want to make an alias to. If you specify a name but not
+a location, LiveCode assumes the file is in the defaultFolder.
 
 Description:
-Use the <create alias> <command> to create a second icon for a <file> or folder, in a location that is handier for the user.
+Use the <create alias> <command> to create a second icon for a <file> or
+folder, in a location that is handier for the user.
 
 You cannot create an alias to a disk volume.
 
-To find out which file an alias refers to, use the <aliasReference> <function>.
+To find out which file an alias refers to, use the <aliasReference>
+<function>. 
 
->*Important:*  When creating an <alias> on <Windows|Windows systems>, make sure the <alias|alias's> name ends with the <extension> ".lnk" to ensure that it behaves properly when the user double-clicks it.
+>*Important:*  When creating an <alias> on <Windows|Windows systems>,
+> make sure the <alias|alias's> name ends with the <extension> ".lnk" to
+> ensure that it behaves properly when the user double-clicks it.
 
-References: defaultFolder (property), file (keyword), revCopyFolder (command), create folder (command), revCopyFile (command), rename (command), revMoveFolder (command), aliasReference (function), symbolic link (glossary), shortcut (glossary), Windows (glossary), command (glossary), alias (glossary), extension (glossary), function (control_st)
+References: revCopyFolder (command), create folder (command),
+revCopyFile (command), rename (command), revMoveFolder (command),
+function (control structure), aliasReference (function),
+symbolic link (glossary), shortcut (glossary), Windows (glossary),
+command (glossary), alias (glossary), extension (glossary),
+file (keyword), defaultFolder (property)
 
 Tags: file system
+

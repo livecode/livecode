@@ -1,20 +1,21 @@
 Name: toLower
 
+Synonyms: lower
+
 Type: function
 
-Syntax: the toLower of <stringToConvert> 
+Syntax: the toLower of <stringToConvert>
 
 Syntax: toLower(<stringToConvert>)
 
-Summary: <return|Returns> a <string> converted to all lowercase letters.
-
-Synonyms: lower
+Summary:
+<return|Returns> a <string> converted to all lowercase letters.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 toLower("This is a 30 test.") -- returns "this is a 30 test."
@@ -23,15 +24,24 @@ Example:
 toLower("NO, MAANA!") -- returns "no, maana!"
 
 Parameters:
-stringToConvert (string): Any string or expression that evaluates to a string.
+stringToConvert (string):
+Any string or expression that evaluates to a string.
 
-Returns: The <toLower> <function> <return|returns> a <string> the same length as the <stringToConvert>.
+Returns:
+The <toLower> <function> <return|returns> a <string> the same length as
+the <stringToConvert>.
 
 Description:
 Use the <toLower> <function> to change the case of a <string>.
 
-Uppercase letters, including special characters with diacritical marks, are converted to the lowercase equivalents. All other characters, including lowercase letters, numbers, punctuation, and special characters with no upper or lower case, are left unchanged by the <toLower> <function>.
+Uppercase letters, including special characters with diacritical marks,
+are converted to the lowercase equivalents. All other characters,
+including lowercase letters, numbers, punctuation, and special
+characters with no upper or lower case, are left unchanged by the
+<toLower> <function>.
 
-References: string (keyword), numToChar (function), toUpper (function), return (glossary), function (control_st)
+References: function (control structure), numToChar (function),
+toUpper (function), return (glossary), string (keyword)
 
 Tags: text processing
+

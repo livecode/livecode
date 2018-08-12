@@ -2,15 +2,19 @@ Name: libURLSetStatusCallback
 
 Type: command
 
-Syntax: libURLSetStatusCallback [<messageName>, <objectLongID>]
+Syntax: libURLSetStatusCallback [<messageName>[, <objectLongID>]]
 
-Summary: Sets up a <callback|callback message> to be sent periodically during <upload|uploads> and <download|downloads>.
+Summary:
+Sets up a <callback|callback message> to be sent periodically during
+<upload|uploads> and <download|downloads>.
+
+Associations: internet library
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux, html5
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
@@ -21,62 +25,136 @@ Example:
 libURLSetStatusCallback myAction,the long ID of button "Upload"
 
 Example:
+libURLSetStatusCallback "putPercentage" -- sends message to url library. Handle the message in a frontscript, backscript, or stack in use.
+
+Example:
 libURLSetStatusCallback -- turns off status callback messages
 
 Parameters:
-messageName: The name of a message to be sent whenever the URLStatus function is updated.
-objectLongID: The long ID of the object to send the message to.
+messageName:
+The name of a message to be sent whenever the URLStatus function is
+updated. 
+
+objectLongID:
+The long ID of the object to send the message to. If <messageName> is 
+not empty and <objectLongID> is not specified then the message will be sent to
+the revLibURL library stack. The message can be handled in a frontscript,
+backscript, or library stack.
 
 Description:
-Use the <libURLSetStatusCallback> <command> if you want to do periodic tasks (such as updating a progress bar) during a data transfer.
+Use the <libURLSetStatusCallback> <command> if you want to do periodic
+tasks (such as updating a progress bar) during a data transfer.
 
-The Internet library periodically updates the URLStatus <function> during <upload|uploads> and <download|downloads> made with the <libURLDownloadToFile>, <libURLftpUpload>, <libURLftpUploadFile>, <put>, and <load> commands, as well as <download|downloads> triggered by <evaluate|evaluating> an <ftp> or <http> <URL(keyword)>. Whenever the <Internet library> updates the <URLStatus> <function>, it also sends any <callback|callback message> you've set up with the <libURLSetStatusCallback> <command>.
+The Internet library periodically updates the URLStatus <function>
+during <upload|uploads> and <download|downloads> made with the
+<libURLDownloadToFile>, <libURLftpUpload>, <libURLftpUploadFile>, <put>,
+and <load> commands, as well as <download|downloads> triggered by
+<evaluate|evaluating> an <ftp> or <http> <URL(keyword)>. Whenever the
+<Internet library> updates the <URLStatus> <function>, it also sends any
+<callback|callback message> you've set up with the
+<libURLSetStatusCallback> <command>.
 
-Callback messages are sent even during blocking uploads and downloads (such as a download started with the put <command>), so you can use this method to monitor progress for all file transfers.
+Callback messages are sent even during blocking uploads and downloads
+(such as a download started with the put <command>), so you can use this
+method to monitor progress for all file transfers.
 
-The callback message is sent with two parameters: the URL and the URL's current status. For example, suppose you execute the following statement to set up a callback message:
+The callback message is sent with two parameters: the URL and the URL's
+current status. For example, suppose you execute the following statement
+to set up a callback message:
 
-  libURLSetStatusCallback "myProgress",the long ID of button "Monitor"
+    libURLSetStatusCallback "myProgress",the long ID of button "Monitor"
+
 
 Then suppose you begin an upload with the following command:
 
-  put field "Data" into URL "ftp://me:mypass@ftp.example.org/myfile"
+    put field "Data" into URL "ftp://me:mypass@ftp.example.org/myfile"
 
-Periodically while the text of the field is being uploaded to the file, a "myProgress" message is sent to button "Monitor". The first parameter sent with "myProgress" is the URL (in this case, the URL is "ftp://me:mypass@ftp.example.org/myfile"), and the second parameter is the current status of that URL. The "myProgress" handler might look like this:
 
-  on myProgress theURL,theStatus
-    put theStatus into field theURL of stack "Status Monitor"
-  end myProgress
+Periodically while the text of the field is being uploaded to the file,
+a "myProgress" message is sent to button "Monitor". The first parameter
+sent with "myProgress" is the URL (in this case, the URL is
+"ftp://me:mypass@ftp.example.org/myfile"), and the second parameter is
+the current status of that URL. The "myProgress" handler might look like
+this: 
 
-The URL status parameter is similar to the status returned by the URLStatus <function>, and is one of the following:
+    on myProgress pURL, pStatus
+        put pStatus into field pURL of stack "Status Monitor"
+    end myProgress
 
-"queued": on hold until a previous request to the same site is completed
-"contacted": the site has been contacted but no data has been sent or received yet
-"requested": the URL has been requested
-"loading,bytesReceived,bytesTotal": the <URL(keyword)> data is being received
-"uploading,bytesReceived,bytesTotal": the file is being <upload|uploaded> to the URL
-"downloaded": the application has finished downloading the URL
-"uploaded": the application has finished uploading the file to the URL
-"error": an error occurred and the <URL(keyword)> was not transferred
-"timeout": the application timed out when attempting to transfer the URL
-empty: the URL was not loaded, or has been unloaded
 
->*Note:* The third <item> (bytesTotal) in the "loading" or "uploading" status report is empty if it is not possible to determine the total file size. (For example, if an <ftp> <server> does not support the SIZE command, it's not possible to determine the file size when <download|downloading> a file from that <server>.)
+The URL status parameter is similar to the status returned by the
+URLStatus <function>, and is one of the following:
 
-If multiple file transfers are occurring at the same time, a separate callback message is sent for each URL. If you want your callback handler to treat URLs differently (for example, if you want to display separate progress bars for different URLs, or do one thing with <http> <URL(glossary)|URLs> and something else with <ftp> <URL(glossary)|URLs>), use a <switch> <control structure> in the <handler>.
+* "queued": on hold until a previous request to the same site is completed
+* "contacted": the site has been contacted but no data has been sent or
+received yet
+* "requested": the URL has been requested
+* "loading,bytesReceived,bytesTotal": the <URL(keyword)> data is being
+received
+* "uploading,bytesReceived,bytesTotal": the file is being
+<upload|uploaded> to the URL 
+* "downloaded": the application has finished
+downloading the URL
+* "uploaded": the application has finished uploading
+the file to the URL
+* "error": an error occurred and the <URL(keyword)>
+was not transferred
+* "timeout": the application timed out when attempting
+to transfer the URL
+* empty: the URL was not loaded, or has been unloaded
 
-You cannot have two callback messages set up at the same time for uploads and downloads. If you use the <libURLSetStatusCallback> <command> to set up a <callback|callback message>, the <Internet library> forgets any <callback|callback message> you previously set up with the <command>.
+>*Note:* The third <item> (bytesTotal) in the "loading" or "uploading"
+> status report is empty if it is not possible to determine the total
+> file size. (For example, if an <ftp> <server> does not support the
+> SIZE command, it's not possible to determine the file size when
+> <download|downloading> a file from that <server>.)
+
+If multiple file transfers are occurring at the same time, a separate
+callback message is sent for each URL. If you want your callback handler
+to treat URLs differently (for example, if you want to display separate
+progress bars for different URLs, or do one thing with <http>
+<URL(glossary)|URLs> and something else with <ftp>
+<URL(glossary)|URLs>), use a <switch> <control structure> in the
+<handler>. 
+
+You cannot have two callback messages set up at the same time for
+uploads and downloads. If you use the <libURLSetStatusCallback>
+<command> to set up a <callback|callback message>, the <Internet
+library> forgets any <callback|callback message> you previously set up
+with the <command>.
 
 To turn off the callback message, use the following statement:
 
-  libURLSetStatusCallback -- no parameters: turns off the message
+    libURLSetStatusCallback -- no parameters: turns off the message
 
-If you don't include the <messageName> and <objectLongID> parameters, the <libURLSetStatusCallback> <command> turns off the <callback|callback messages> so that updating the <URLStatus> <function> does not send any <message|messages>.
 
->*Important:*  The <libURLSetStatusCallback> <command> is part of the <Internet library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+If you don't include the <messageName> and <objectLongID> parameters,
+the <libURLSetStatusCallback> <command> turns off the <callback|callback
+messages> so that updating the <URLStatus> <function> does not send any
+<message|messages>. 
 
->*Note:* When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <libURLSetStatusCallback> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <libURLSetStatusCallback> <command> can be used in any <handler>.
+>*Important:* The <libURLSetStatusCallback> <command> is part of the 
+> <Internet library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
-References: startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), LiveCode custom library (library), libURLftpUpload (library), libURLDownloadToFile (library), library (library), Internet library (library), URL (keyword), ftp (keyword), item (keyword), http (keyword), function (control_st), switch (control_st), application (glossary), standalone application (glossary), evaluate (glossary), message (glossary), URL (glossary), callback (glossary), command (glossary), control structure (glossary), main stack (glossary), Standalone Application Settings (glossary), upload (glossary), download (glossary), server (glossary), HTTP (glossary), handler (glossary), libURLSetStatusCallback (command), put (command), load (command), group (command), libURLftpUploadFile (command), libURLftpUpload (command), libURLDownloadToFile (command), URLStatus (function)
+References: libURLSetStatusCallback (command), put (command),
+load (command), group (command), libURLftpUploadFile (command),
+libURLftpUpload (command), libURLDownloadToFile (command),
+function (control structure), switch (control structure),
+URLStatus (function), LiveCode custom library (glossary),
+application (glossary), standalone application (glossary),
+evaluate (glossary), message (glossary), URL (glossary),
+callback (glossary), command (glossary), control structure (glossary),
+main stack (glossary), Standalone Application Settings (glossary),
+upload (glossary), download (glossary), server (glossary),
+HTTP (glossary), handler (glossary), URL (keyword), ftp (keyword),
+item (keyword), http (keyword), library (library), 
+Internet library (library), startup (message), openBackground (message),
+preOpenStack (message), openStack (message), preOpenCard (message)
 
 Tags: networking
+

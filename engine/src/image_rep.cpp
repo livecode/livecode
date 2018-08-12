@@ -24,6 +24,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "image_rep.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCImageRep::MCImageRep()
@@ -48,6 +50,11 @@ void MCImageRep::Release()
     m_reference_count -= 1;
     if (m_reference_count == 0)
         delete this;
+}
+
+bool MCImageRep::IsLocked() const
+{
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -720,7 +727,7 @@ bool MCImageRepCreateReferencedWithSearchKey(MCStringRef p_filename, MCStringRef
 	t_rep = nil;
 	
 	if (t_success)
-		t_success = nil != (t_rep = new MCReferencedImageRep(p_filename, p_searchkey));
+		t_success = nil != (t_rep = new (nothrow) MCReferencedImageRep(p_filename, p_searchkey));
 	
 	if (t_success)
 	{
@@ -733,8 +740,6 @@ bool MCImageRepCreateReferencedWithSearchKey(MCStringRef p_filename, MCStringRef
 
 bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
 {
-	bool t_success = true;
-	
 	MCCachedImageRep *t_rep = nil;
 	
 	if (MCCachedImageRep::FindWithKey(p_filename, t_rep))
@@ -752,7 +757,7 @@ bool MCImageRepGetResident(const void *p_data, uindex_t p_size, MCImageRep *&r_r
 {
 	bool t_success = true;
 	
-	MCCachedImageRep *t_rep = new MCResidentImageRep(p_data, p_size);
+	MCCachedImageRep *t_rep = new (nothrow) MCResidentImageRep(p_data, p_size);
 	
 	t_success = t_rep != nil;
 	if (t_success)
@@ -764,11 +769,11 @@ bool MCImageRepGetResident(const void *p_data, uindex_t p_size, MCImageRep *&r_r
 	return t_success;
 }
 
-bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep)
+bool MCImageRepGetVector(const void *p_data, uindex_t p_size, MCImageRep *&r_rep)
 {
 	bool t_success = true;
 	
-	MCCachedImageRep *t_rep = new MCVectorImageRep(p_data, p_size);
+	MCCachedImageRep *t_rep = new (nothrow) MCVectorImageRep(p_data, p_size);
 	
 	t_success = t_rep != nil;
 	if (t_success)
@@ -784,7 +789,7 @@ bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *
 {
 	bool t_success = true;
 	
-	MCCachedImageRep *t_rep = new MCCompressedImageRep(p_compressed);
+	MCCachedImageRep *t_rep = new (nothrow) MCCompressedImageRep(p_compressed);
 	
 	t_success = t_rep != nil;
 	if (t_success)
@@ -803,7 +808,7 @@ bool MCImageRepGetResampled(uint32_t p_width, uint32_t p_height, bool p_flip_hor
 {
 	bool t_success = true;
 	
-	MCCachedImageRep *t_rep = new MCResampledImageRep(p_width, p_height, p_flip_horizontal, p_flip_vertical, p_source);
+	MCCachedImageRep *t_rep = new (nothrow) MCResampledImageRep(p_width, p_height, p_flip_horizontal, p_flip_vertical, p_source);
 	
 	t_success = t_rep != nil;
 	if (t_success)
@@ -822,7 +827,7 @@ bool MCImageRepGetPixelRep(MCDataRef p_pixel_data, uint32_t p_width, uint32_t p_
 	t_success = true;
 	
 	MCPixelDataImageRep *t_rep;
-	t_rep = new MCPixelDataImageRep(p_pixel_data, p_width, p_height, p_format, p_premultiplied);
+	t_rep = new (nothrow) MCPixelDataImageRep(p_pixel_data, p_width, p_height, p_format, p_premultiplied);
 	
 	t_success = t_rep != nil;
 	if (t_success)
@@ -861,6 +866,12 @@ bool MCImageRepCreateWithPath(MCStringRef p_path, MCImageRep *&r_image_rep)
 
 bool MCImageRepCreateWithData(MCDataRef p_data, MCImageRep *&r_image_rep)
 {
+    if (MCDataGetLength(p_data) >= 3 &&
+        memcmp(MCDataGetBytePtr(p_data), "LCD", 3) == 0)
+    {
+        return MCImageRepGetVector(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), r_image_rep);
+    }
+    
 	return MCImageRepGetResident(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), r_image_rep);
 }
 
@@ -902,6 +913,37 @@ void MCImageRepUnlockRaster(MCImageRep *p_image_rep, uint32_t p_index, MCImageBi
 	p_image_rep->UnlockBitmap(p_index, p_raster);
 }
 
+void MCImageRepRender(MCImageRep *p_image_rep, MCGContextRef p_gcontext, uint32_t p_index, MCGRectangle p_src_rect, MCGRectangle p_dst_rect, MCGImageFilter p_filter)
+{
+    if (p_image_rep->GetType() == kMCImageRepVector)
+    {
+        auto t_vector_rep = static_cast<MCVectorImageRep *>(p_image_rep);
+        
+        void* t_data;
+        uindex_t t_data_size;
+        t_vector_rep->GetData(t_data, t_data_size);
+        
+        MCGContextPlaybackRectOfDrawing(p_gcontext, MCMakeSpan((const byte_t*)t_data, t_data_size), p_src_rect, p_dst_rect);
+    }
+    else
+    {
+        MCGFloat t_scale;
+        t_scale = MCGAffineTransformGetEffectiveScale(MCGContextGetDeviceTransform(p_gcontext));
+        
+        MCGImageFrame t_frame;
+        if (MCImageRepLock(p_image_rep, p_index, t_scale, t_frame))
+        {
+            MCGAffineTransform t_transform;
+            t_transform = MCGAffineTransformMakeScale(1.0 / t_frame.x_scale, 1.0 / t_frame.y_scale);
+            
+            MCGRectangle t_src_rect;
+            t_src_rect = MCGRectangleScale(p_src_rect, t_frame.x_scale, t_frame.y_scale);
+            
+            MCGContextDrawRectOfImage(p_gcontext, t_frame.image, t_src_rect, p_dst_rect, p_filter);
+            
+            MCImageRepUnlock(p_image_rep, 0, t_frame);
+        }
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-

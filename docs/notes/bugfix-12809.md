@@ -1,1 +1,0 @@
-# [[ Player ]] put the tracks of player 1 does not work properly

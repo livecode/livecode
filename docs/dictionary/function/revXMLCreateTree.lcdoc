@@ -4,13 +4,16 @@ Type: function
 
 Syntax: revXMLCreateTree(<XMLText>, <dontParseBadData>, <createTree>, <sendMessages>)
 
-Summary: Creates an <XML tree> structure from <XML> text data.
+Summary:
+Creates an <XML tree> structure from <XML> text data.
+
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -21,28 +24,67 @@ Example:
 put revXMLCreateTree(theData,false,true,false) into theError
 
 Parameters:
-XMLText (string): 
-dontparseBadData (bool): 
-createTree (bool): 
-sendMessages (bool): 
+XMLText (string):
+
+
+dontparseBadData (bool):
+
+
+createTree (bool):
+
+
+sendMessages (bool):
+
 
 Returns:
-The <revXMLCreateTree> <function(control_st)> returns a tree ID which can be used to refer to the tree in other <XML library> <command|commands> and <function(glossary)|functions>. The tree ID is always a positive <integer>. (If the <createTree> is false, the <function(control_st)> <return|returns> zero.)
-If the function encounters an error while parsing the data, it returns an error message beginning with "xmlerr".
+The <revXMLCreateTree> <function(control structure)> returns a tree ID
+which can be used to refer to the tree in other <XML library>
+<command|commands> and <function(glossary)|functions>. The tree ID is
+always a positive <integer>. (If the <createTree> is false, the
+<function(control structure)> <return|returns> zero.) If the function
+encounters an error while parsing the data, it returns an error message
+beginning with "xmlerr".
 
 Description:
-Use the <revXMLCreateTree> <function(control_st)> to make <XML> text into an <XML tree> that you can use with other <XML library> <command|commands> and <function(glossary)|functions>.
+Use the <revXMLCreateTree> <function(control structure)> to make <XML>
+text into an <XML tree> that you can use with other <XML library>
+<command|commands> and <function(glossary)|functions>.
 
-If the <dontparseBadData> is false, the <revXMLCreateTree> <function(control_st)> tries to parse <XML> data even if it is not well-formed. Otherwise, the <function(control_st)> stops executing as soon as it encounters data that is not well-formed <XML>.
+If the <dontparseBadData> is false, the <revXMLCreateTree>
+<function(control structure)> tries to parse <XML> data even if it is
+not well-formed. Otherwise, the <function(control structure)> stops
+executing as soon as it encounters data that is not well-formed <XML>.
 
-If the <createTree> is true, the <function(control_st)> creates a tree structure in memory. Otherwise, the <function(control_st)> simply parses the <XML> data without creating an <XML tree>.
+If the <createTree> is true, the <function(control structure)> creates a
+tree structure in memory. Otherwise, the <function(control structure)>
+simply parses the <XML> data without creating an <XML tree>.
 
-If the <sendMessages> is true, the <revXMLStartTree>, <revStartXMLNode>, <revStartXMLData>, <revEndXMLNode>, and <revXMLEndTree> <message|messages> are sent while the <XML> data is being parsed. Otherwise, these <message|messages> are not sent.
+If the <sendMessages> is true, the <revXMLStartTree>, <revStartXMLNode>,
+<revStartXMLData>, <revEndXMLNode>, and <revXMLEndTree>
+<message|messages> are sent while the <XML> data is being parsed.
+Otherwise, these <message|messages> are not sent.
 
-If the <revXMLCreateTree> <function(control_st)> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLCreateTree> <function(control structure)> encounters an
+error, it <return|returns> an error message starting with "xmlerr".
 
->*Important:*  The <revXMLCreateTree> <function(control_st)> is part of the <XML library>. To ensure that the <function(control_st)> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLCreateTree> <function> is part of the 
+> <XML library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "XML" 
+> checkbox is checked.
 
-References: revStartXMLData (message), revStartXMLNode (message), revEndXMLNode (message), revXMLStartTree (message), revXMLEndTree (message), XML library (library), LiveCode custom library (library), return (glossary), XML tree (glossary), Standalone Application Settings (glossary), message (glossary), standalone application (glossary), XML (glossary), function (glossary), command (glossary), function (control_st), revXMLValidateDTD (function), revXMLTrees (function), revXMLDeleteAllTrees (command), revXMLMoveNode (command), revXMLAppend (command), integer (keyword)
+References: revXMLDeleteAllTrees (command), revXMLMoveNode (command),
+revXMLAppend (command), function (control structure),
+revXMLValidateDTD (function), revXMLTrees (function),
+LiveCode custom library (glossary), return (glossary),
+XML tree (glossary), Standalone Application Settings (glossary),
+message (glossary), standalone application (glossary), XML (glossary),
+function (glossary), command (glossary), integer (keyword),
+XML library (library), revStartXMLData (message),
+revStartXMLNode (message), revEndXMLNode (message),
+revXMLStartTree (message), revXMLEndTree (message)
 
 Tags: text processing
+

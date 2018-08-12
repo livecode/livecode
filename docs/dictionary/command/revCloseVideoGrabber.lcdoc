@@ -4,34 +4,66 @@ Type: command
 
 Syntax: revCloseVideoGrabber
 
-Summary: Closes the <video grabber|video grabber window> and frees any memory used.
+Summary:
+Closes the <video grabber|video grabber window> and frees any memory
+used. 
+
+Associations: video library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: windows
 
-Platforms: desktop,web
+Platforms: desktop
 
-Security: disk,privacy
+Security: disk, privacy
 
 Example:
 revCloseVideoGrabber
 
 Example:
 if there is no stack "Video Control" then
-  revCloseVideoGrabberend if
+  revCloseVideoGrabber
+end if
 
 Description:
-Use the <revCloseVideoGrabber> <command> to free up memory when you're done using the <Video library>.
+Use the <revCloseVideoGrabber> <command> to free up memory when you're
+done using the <Video library>.
 
-The Video library loads the operating system's video capture software into memory when you use the <revInitializeVideoGrabber> <command>. The <revCloseVideoGrabber> <command> unloads this software, freeing up the memory it uses, when you're done.
+The Video library loads the operating system's video capture software
+into memory when you use the <revInitializeVideoGrabber> <command>. The
+<revCloseVideoGrabber> <command> unloads this software, freeing up the
+memory it uses, when you're done.
 
-If your application uses video capture, you should execute the <revCloseVideoGrabber> <command> either when your application is finished using <video capture>, when the <stack> that uses <video capture> is closed (in a <closeStack> <handler>), or when your application quits (in a <shutdown> <handler>).
+If your application uses video capture, you should execute the
+<revCloseVideoGrabber> <command> either when your application is
+finished using <video capture>, when the <stack> that uses <video
+capture> is closed (in a <closeStack> <handler>), or when your
+application quits (in a <shutdown> <handler>).
 
-If the video grabber was already recording video to a file, the <revCloseVideoGrabber> <command> stops the recording.
+If the video grabber was already recording video to a file, the
+<revCloseVideoGrabber> <command> stops the recording.
 
->*Important:*  The <revCloseVideoGrabber> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+>*Important:*  The <revCloseVideoGrabber> <command> is part of the 
+> <Video library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the
+> "Video Grabber" 
+> library checkbox is checked.
 
-References: closeStack (message), shutdown (message), revInitializeVideoGrabber (command), close (command), stack (object), video capture (glossary), handler (glossary), Standalone Application Settings (glossary), standalone application (glossary), video grabber (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+References: revInitializeVideoGrabber (command), close (command),
+video capture (glossary), handler (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), video grabber (glossary),
+command (glossary), LiveCode custom library (glossary),
+Video library (library), closeStack (message), shutdown (message),
+stack (object)
+
+Changes:
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
 Tags: multimedia
+

@@ -85,6 +85,10 @@ public:
 	// MCBlock functions
 	void copy(MCBlock *bptr);
 	
+	// IM-2016-07-06: [[ Bug 17690 ]] Test if block sizes or offsets require 32bit
+	//   values to store (stack file format v8.1).
+	uint32_t getminimumstackfileversion(void);
+	
 	// MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then this block has
 	//   an extension style attribute section.
 	IO_stat load(IO_handle stream, uint32_t version, bool is_ext);
@@ -148,9 +152,6 @@ public:
 	// MW-2012-03-04: [[ StackFile5500 ]] Measure the size of the serialized attributes.
 	uint32_t measureattrs(uint32_t p_version);
 
-#ifdef LEGACY_EXEC
-	void setatts(Properties which, void *value);
-#endif
 	Boolean getshift(int2 &out);
 	void setshift(int2 in);
 	Boolean getcolor(const MCColor *&color);
@@ -380,6 +381,12 @@ public:
 	{
 		return flags & F_HAS_UNICODE;
 	}
+    
+    // Returns true if the block has a trailing tab character.
+    bool HasTrailingTab(void) const
+    {
+        return m_size != 0 && GetCodepointAtIndex(m_size - 1) == '\t';
+    }
     
     //////////
 

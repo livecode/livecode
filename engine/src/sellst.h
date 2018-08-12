@@ -21,60 +21,30 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	SELLIST_H
 
 #include "dllst.h"
-
-class MCSelnode : public MCDLlist
-{
-public:
-	MCObject *ref;
-	MCSelnode(MCObject *object);
-	~MCSelnode();
-	MCSelnode *next()
-	{
-		return (MCSelnode *)MCDLlist::next();
-	}
-	MCSelnode *prev()
-	{
-		return (MCSelnode *)MCDLlist::prev();
-	}
-	void totop(MCSelnode *&list)
-	{
-		MCDLlist::totop((MCDLlist *&)list);
-	}
-	void insertto(MCSelnode *&list)
-	{
-		MCDLlist::insertto((MCDLlist *&)list);
-	}
-	void appendto(MCSelnode *&list)
-	{
-		MCDLlist::appendto((MCDLlist *&)list);
-	}
-	void append(MCSelnode *node)
-	{
-		MCDLlist::append((MCDLlist *)node);
-	}
-	void splitat(MCSelnode *node)
-	{
-		MCDLlist::splitat((MCDLlist *)node) ;
-	}
-	MCSelnode *remove(MCSelnode *&list)
-	{
-		return (MCSelnode *)MCDLlist::remove((MCDLlist *&)list);
-	}
-};
+#include "stack.h"
 
 class MCSellist
 {
-	MCStack *owner;
+private:
+    
+    class MCSelnode;
+    
+	MCStackHandle m_owner;
 	MCSelnode *objects;
 	MCSelnode *curobject;
 	int2 startx, starty;
 	int2 lastx, lasty;
 	Boolean locked;
 	Boolean dropclone;
+    
+    void Clean();
+    bool IsDeletable();
+    
 public:
+    
 	MCSellist();
 	~MCSellist();
-	MCObject *getfirst();
+	MCObjectHandle getfirst();
 	bool getids(MCListRef& r_list);
 	void clear(Boolean message);
 	void top(MCObject *objptr);
@@ -84,10 +54,13 @@ public:
 	void sort();
 	uint32_t count();
 	MCControl *clone(MCObject *target);
-	Exec_stat group(uint2 line = 0, uint2 pos = 0);
+	Exec_stat group(uint2 line, uint2 pos, MCGroup*& r_group);
 	Boolean copy();
 	Boolean cut();
 	Boolean del();
+    Boolean usercopy();
+    Boolean usercut();
+    Boolean userdel();
 	void startmove(int2 x, int2 y, Boolean canclone);
 	void continuemove(int2 x, int2 y);
 	Boolean endmove();

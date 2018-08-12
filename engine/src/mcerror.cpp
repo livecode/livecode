@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "scriptpt.h"
-//#include "execpt.h"
+
 #include "mcerror.h"
 #include "util.h"
 
@@ -68,15 +68,6 @@ void MCError::add(uint2 id, uint2 line, uint2 pos, MCValueRef n)
 	}
 }
 
-#ifdef LLEGACY_EXEC
-void MCError::add(uint2 id, uint2 line, uint2 pos, const MCString &token)
-{
-	if (MCerrorlock || thrown)
-		return;
-	doadd(id, line, pos, token);
-}
-#endif
-
 void MCError::doadd(uint2 id, uint2 line, uint2 pos, MCStringRef p_token)
 {
 	if (line != 0 && errorline == 0)
@@ -102,48 +93,41 @@ void MCError::doadd(uint2 id, uint2 line, uint2 pos, MCStringRef p_token)
         
         MCValueRelease(t_line);
 	}
-    if (!MCStringIsEmpty(buffer))
-        MCStringAppendChar(buffer, '\n');
+    if (!MCStringIsEmpty(*buffer))
+        /* UNCHECKED */ MCStringAppendChar(*buffer, '\n');
     
-	MCStringAppend(buffer, *newerror);
+	/* UNCHECKED */ MCStringAppend(*buffer, *newerror);
 	depth += 1;
 }
 
 void MCError::append(MCError& p_other)
 {
-	MCStringAppendFormat(buffer, MCStringIsEmpty(buffer) ? "%@" : "\n%@", p_other . buffer);
+	/* UNCHECKED */ MCStringAppendFormat(*buffer,
+                                         MCStringIsEmpty(*buffer) ? "%@" : "\n%@",
+                                         *p_other.buffer);
 }
-
-#ifdef LEGACY_EXEC
-const MCString &MCError::getsvalue()
-{
-    if (!thrown)
-        svalue.set(buffer, strlen(buffer));
-    return svalue;
-}
-#endif
 
 void MCError::copystringref(MCStringRef s, Boolean t)
 {
-	MCValueRelease(buffer);
-    MCStringMutableCopy(s, buffer);
+    buffer.Reset();
+    /* UNCHECKED */ MCStringMutableCopy(s, &buffer);
 	thrown = t;
 }
 
 bool MCError::copyasstringref(MCStringRef &r_string)
 {
-	return MCStringCopy(buffer, r_string);
+	return MCStringCopy(*buffer, r_string);
 }
 
 void MCError::clear()
 {
-	MCValueRelease(buffer);
 	errorline = errorpos = 0;
 	depth = 0;
-    MCStringCreateMutable(0, buffer);
+    buffer.Reset();
+    /* UNCHECKED */ MCStringCreateMutable(0, &buffer);
 	thrown = False;
 	if (this == MCeerror)
-		MCerrorptr = NULL;
+		MCerrorptr = nil;
 }
 
 void MCError::geterrorloc(uint2 &line, uint2 &pos)

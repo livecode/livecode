@@ -1,12 +1,16 @@
 Name: video clip
 
-Synonyms: videoclip,video clip
+Synonyms: videoclip, video clip
 
 Type: glossary
 
 Description:
-An <object> that contains movie data. Video clips are imported into a <stack>, instead of being stored in separate <file|files> like a <player>.
+An <object(glossary)> that contains movie data. Video clips are imported
+into a <stack>, instead of being stored in separate <file|files> like a
+<player>. 
 
-References: stack (object), object (object), player (object), file (glossary)
+References: stack (glossary), object (glossary), player (glossary),
+file (glossary)
 
 Tags: multimedia
+

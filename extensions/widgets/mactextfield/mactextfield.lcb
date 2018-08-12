@@ -1,0 +1,337 @@
+/*
+Copyright (C) 2017 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This widget wraps the native NSTextField on Mac. Since this is
+a single-line field, the return key does not enter a new line,
+instead it triggers the returnKey action and the contents of
+the field is selected.
+
+Name: enabled
+
+Type: property
+
+Syntax:
+set the enabled of <widget> to {true | false}
+get the enabled of <widget>
+
+Summary: The enabled state of the text field
+
+Description:
+Use the <enabled> property to enable or disable the native field. When
+disabled, the text has a greyed out appearance and the field contents
+cannot be edited.
+
+Name: returnKey
+
+Syntax: on returnKey
+
+Type: message
+
+Summary: Sent when the user presses the return key
+
+Example:
+on returnKey
+    -- ensure the user has entered a number
+    if the text of the target is not a number then
+      beep
+      answer "Invalid number entered!"
+    end if
+end returnKey
+
+Description:
+Use the <returnKey> message to respond to the user pressing the return
+key whilst the field is focused.
+*/
+widget com.livecode.widget.native.mac.textfield
+
+use com.livecode.foreign
+use com.livecode.objc
+use com.livecode.widget
+use com.livecode.canvas
+use com.livecode.engine
+use com.livecode.library.widgetutils
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "Mac Native Single-line Field"
+metadata svgicon is "m 0.4112036,8.147941 c -0.331,0 -0.5996094,0.2676561 -0.5996094,0.5976561 0,0.331 0.2686093,0.599609 0.5996094,0.599609 0.33,10e-7 0.5986093,-0.268609 0.5996093,-0.599609 1e-7,-0.33 -0.2696093,-0.5976561 -0.5996093,-0.5976561 z M 1.3623728,1.3471597 c 0.202,0.008 0.7707688,0.080281 1.1347656,0.6132813 -0.028,0.019 -0.6779219,0.3956406 -0.6699219,1.1816406 0.009,0.938 0.8220313,1.2508594 0.8320313,1.2558594 -0.008,0.021 -0.1296882,0.4448126 -0.4296876,0.8828125 -0.2579999,0.3770001 -0.5262187,0.7537187 -0.9492187,0.7617187 -0.415,0.008 -0.5474375,-0.2460937 -1.0234375,-0.2460937 -0.475,0 -0.6245782,0.2379062 -1.0175781,0.2539062 -0.4080001,0.015 -0.7185154,-0.4081561 -0.9785159,-0.7851562 -0.533,-0.7709999 -0.941531,-2.1769532 -0.394531,-3.1269532 0.272,-0.471 0.7581563,-0.7693437 1.2851562,-0.7773437 0.4,-0.007 0.7794376,0.2695313 1.0234376,0.2695313 0.246,0 0.7054999,-0.3322032 1.1875,-0.2832032 z m 0.00586,-1.50195311 c 0.04,0.364 -0.1062656,0.7291875 -0.3222656,0.9921875 -0.217,0.26200001 -0.5709219,0.46450001 -0.9199219,0.43750001 -0.047,-0.35600001 0.128125,-0.72598441 0.328125,-0.95898441 0.225,-0.262 0.6020625,-0.4577031 0.9140625,-0.4707031 z m -7.8105468,-1.12890629 0,9.1074219 13.7070312,0 0,-9.1074219 z m -0.07617,-1.1425781 13.8593751,0 c 0.588,0 1.0664531,0.4812187 1.0644531,1.0742188 l 0,9.8437501 c 0,0.594 -0.4764531,1.074219 -1.0644531,1.074219 l -5.3203125,0 c 0,0 0.5936093,2.1484369 3.2246093,2.1484369 l 0,0.537109 -3.4921874,0 -4.5683598,0 -1.8789057,0 0,-0.537109 c 2.5589997,0 3.4921873,-2.1484369 3.4921873,-2.1484369 l -5.3164063,0 c -0.589,0 -1.066406,-0.480219 -1.066406,-1.074219 l 0,-9.8437501 c 0,-0.593 0.477406,-1.0742188 1.066406,-1.0742188 z M -19.375,-4.8105469 c -1.108001,0 -2,0.892 -2,2 l 0,15.4453129 c 0,1.108 0.891999,2 2,2 l 27.5722656,0 c 1.108,0 2.0000004,-0.892 2.0000004,-2 l 0,-15.4453129 c 0,-1.108 -0.8920004,-2 -2.0000004,-2 l -27.5722656,0 z m 0.753906,2.5605469 4.570313,0 0,1.5 -1.570313,0 0,11 1.570313,0 0,1.5 -4.570313,0 0,-1.5 1.53125,0 0,-11 -1.53125,0 0,-1.5 z"
+
+private variable mTextFieldView as optional ObjcObject
+private variable mTextFieldProxy as optional ObjcObject
+
+/**
+Syntax: 
+set the text of <widget> to <pText>
+get the text of <widget>
+
+Summary: The text displayed by the widget
+
+Value (string): The text of the widget
+
+Example:
+local sEntered
+on returnKey
+    -- store the entered text and clear the field
+    put the text of the target into sEntered
+    set the text of the target to empty
+end returnKey
+
+Description:
+Use the <text> property to get or set the text displayed
+by the field widget.
+*/
+property "text" get GetText set SetText
+metadata text.label is "Text"
+metadata text.default is ""
+private variable mText as String
+
+/**
+Syntax: 
+set the showBorder of <widget> to { true | false }
+get the showBorder of <widget>
+
+Summary: Whether the text field has a border or not
+
+Description:
+Use the <showBorder> property to control whether the field
+widget has a border or not.
+*/
+property "showBorder" get mShowBorder set SetShowBorder
+metadata showBorder.label is "Show border"
+metadata showBorder.default is "true"
+private variable mShowBorder as Boolean
+
+/**
+Syntax: 
+set the showFocusBorder of <widget> to { true | false }
+get the showFocusBorder of <widget>
+
+Summary: Whether the text field has a focus border or not
+
+Description:
+Use the <showFocusBorder> property to control whether the field
+widget displays a blue border when focused or not.
+*/
+property "showFocusBorder" get GetShowFocusBorder set SetShowFocusBorder
+metadata showFocusBorder.label is "Show focus border"
+metadata showFocusBorder.default is "true"
+private variable mFocusRingType as Integer
+
+private handler IsMac() returns Boolean
+    return the operating system is "mac"
+end handler
+
+/**/
+
+public handler OnCreate()
+    put "" into mText
+    SetShowBorder(true)
+    SetShowFocusBorder(true)
+end handler
+
+public handler OnDestroy()
+    put nothing into mTextFieldView
+end handler
+
+/**/
+
+public handler OnOpen()
+    if IsMac() then
+        unsafe
+            CreateTextFieldView()
+        end unsafe
+    end if
+end handler
+
+public handler OnClose()
+    if IsMac() then
+        unsafe
+            DestroyTextFieldView()
+        end unsafe
+    end if
+end handler
+
+public handler OnPaint()
+    if IsMac() then
+        return
+    end if
+
+    paintPlaceholderImage(this canvas, my bounds, placeholderIcon("mac"), \
+        my name, my font, nothing)
+end handler
+
+/**/
+
+public handler OnSave(out rProperties as Array)
+    unsafe
+      UpdateTextFromTextField()
+    end unsafe
+    put mText into rProperties["text"]
+end handler
+
+public handler OnLoad(in pProperties as Array)
+    put pProperties["text"] into mText
+end handler
+
+/**/
+
+public handler OnParentPropertyChanged()
+    unsafe
+        UpdateTextFieldView()
+    end unsafe
+end handler
+
+/**/
+
+private handler SetText(in pText as String) returns nothing
+    put pText into mText
+    unsafe
+        UpdateTextFieldProperties()
+    end unsafe
+    redraw all
+end handler
+
+private handler GetText() returns String
+    unsafe
+      UpdateTextFromTextField()
+    end unsafe
+    return mText
+end handler
+
+private handler SetShowBorder(in pShow as Boolean) returns nothing
+    put pShow into mShowBorder
+    unsafe
+        UpdateTextFieldProperties()
+    end unsafe
+    redraw all
+end handler
+
+constant kFocusRingTypes is { \
+    "default": 0, \
+    "none": 1, \
+    "exterior": 2 \
+}
+private handler SetShowFocusBorder(in pShow as Boolean) returns nothing
+    variable tFocusRingType as Integer
+    if pShow then
+      put kFocusRingTypes["exterior"] into tFocusRingType
+    else
+      put kFocusRingTypes["none"] into tFocusRingType
+    end if
+    put tFocusRingType into mFocusRingType
+    unsafe
+        UpdateTextFieldProperties()
+    end unsafe
+    redraw all
+end handler
+
+private handler GetShowFocusBorder() returns Boolean
+    if mFocusRingType is kFocusRingTypes["exterior"] then
+      return true
+    else
+      return false
+    end if
+end handler
+
+/****/
+
+private handler TextFieldActionCallback(in pSender as ObjcObject, in pContext as optional any) returns nothing
+    post "returnKey"
+end handler
+
+/****/
+
+private type NSUInteger is CULong
+private foreign handler ObjC_NSTextFieldAlloc() returns ObjcRetainedId binds to "objc:NSTextField.+alloc"
+private foreign handler ObjC_NSTextFieldInit(in pObj as ObjcId) returns ObjcId binds to "objc:NSTextField.-init"
+private foreign handler ObjC_NSTextFieldSetEnabled(in pObj as ObjcId, in pEnabled as CBool) returns nothing binds to "objc:NSTextField.-setEnabled:"
+private foreign handler ObjC_NSTextFieldSetFont(in pObj as ObjcId, in pFont as ObjcId) returns nothing binds to "objc:NSTextField.-setFont:"
+private foreign handler ObjC_NSTextFieldSetBezelStyle(in pObj as ObjcId, in pStyle as NSUInteger) returns nothing binds to "objc:NSTextField.-setBezelStyle:"
+private foreign handler ObjC_NSTextFieldSetBordered(in pObj as ObjcId, in pBordered as CBool) returns nothing binds to "objc:NSTextField.-setBordered:"
+private foreign handler ObjC_NSTextFieldSetFocusRingType(in pObj as ObjcId, in pType as NSUInteger) returns nothing binds to "objc:NSTextField.-setFocusRingType:"
+private foreign handler ObjC_NSTextFieldSetTarget(in pObj as ObjcId, in pTarget as ObjcId) returns nothing binds to "objc:NSTextField.-setTarget:"
+private foreign handler ObjC_NSTextFieldSetAction(in pObj as ObjcId, in pAction as UIntPtr) returns nothing binds to "objc:NSTextField.-setAction:"
+
+private foreign handler ObjC_NSTextFieldSetStringValue(in pObj as ObjcId, in pText as ObjcId) returns nothing binds to "objc:NSTextField.-setStringValue:"
+private foreign handler ObjC_NSTextFieldGetStringValue(in pObj as ObjcId) returns ObjcId binds to "objc:NSTextField.-stringValue"
+
+private foreign handler MCCanvasFontGetHandle(in pFont as Font, out rHandle as ObjcId) returns nothing binds to "<builtin>"
+
+constant kNSTextFieldBezelStyleSquare is 0
+private unsafe handler CreateTextFieldView()
+    variable tTextFieldView as ObjcObject
+    put ObjC_NSTextFieldAlloc() into tTextFieldView
+    put ObjC_NSTextFieldInit(tTextFieldView) into tTextFieldView
+
+    set my native layer to PointerFromObjcObject(tTextFieldView)
+    put tTextFieldView into mTextFieldView
+
+    put ObjcProxyGetTarget(TextFieldActionCallback, nothing) into mTextFieldProxy
+    ObjC_NSTextFieldSetTarget(mTextFieldView, mTextFieldProxy)
+    ObjC_NSTextFieldSetAction(mTextFieldView, ObjcProxyGetAction())
+
+    ObjC_NSTextFieldSetBezelStyle(mTextFieldView, kNSTextFieldBezelStyleSquare)
+
+    UpdateTextFieldView()
+    UpdateTextFieldProperties()
+end handler
+
+private unsafe handler DestroyTextFieldView()
+    UpdateTextFromTextField()
+    set my native layer to nothing
+    put nothing into mTextFieldView
+    put nothing into mTextFieldProxy
+end handler
+
+private unsafe handler UpdateTextFieldView()
+    if mTextFieldView is nothing then
+        return
+    end if
+
+    /* Set the enabled state of the TextField to the host property. */
+    ObjC_NSTextFieldSetEnabled(mTextFieldView, my enabled)
+
+    /* Set the font of the TextField to the host property. */
+    variable tFontToUse as ObjcObject
+    MCCanvasFontGetHandle(my font, tFontToUse)
+    ObjC_NSTextFieldSetFont(mTextFieldView, tFontToUse)
+end handler
+
+private unsafe handler UpdateTextFieldProperties()
+    if mTextFieldView is nothing then
+        return
+    end if
+
+    ObjC_NSTextFieldSetBordered(mTextFieldView, mShowBorder)
+    ObjC_NSTextFieldSetFocusRingType(mTextFieldView, mFocusRingType)
+
+    ObjC_NSTextFieldSetStringValue(mTextFieldView, \
+      StringToNSString(mText))
+end handler
+
+private unsafe handler UpdateTextFromTextField()
+    if mTextFieldView is nothing then
+      return
+    end if
+    put StringFromNSString(ObjC_NSTextFieldGetStringValue( \
+      mTextFieldView)) into mText
+end handler
+
+/**/
+
+end widget

@@ -4,33 +4,60 @@ Type: property
 
 Syntax: set the tabGroupBehavior of <group> to {true | false}
 
-Summary: Specifies whether the arrow keys navigate within a <group> and whether the Tab key skips to the next <group>.
+Summary:
+Specifies whether the arrow keys navigate within a <group> and whether
+the Tab key skips to the next <group>.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the tabGroupBehavior of group "Navigation" to true
 
-Value (bool):The <tabGroupBehavior> of a <group> is true or false.
-By default, the <tabGroupBehavior> <property> of a newly created <group> is set to false.
+Value (bool):
+The <tabGroupBehavior> of a <group> is true or false.
+By default, the <tabGroupBehavior> <property> of a newly created <group>
+is set to false.
 
 Description:
-Use the <tabGroupBehavior> <property> to enable using the arrow keys to tab through a <group(glossary)|group's> <control(object)|controls>.
+Use the <tabGroupBehavior> <property> to enable using the arrow keys to
+tab through a <group(glossary)|group's> <control(object)|controls>.
 
-If a group's <tabGroupBehavior> <property> is set to true, pressing the Tab key moves to the first <unlock|unlocked> <field(keyword)> in the <group(command)>, and pressing it again skips the rest of the <control(object)|controls> in the <group(command)> and moves the selection out of the <group(command)>.
+If a group's <tabGroupBehavior> <property> is set to true, pressing the
+Tab key moves to the first <unlock|unlocked> <field(keyword)> in the
+<group(command)>, and pressing it again skips the rest of the
+<control(object)|controls> in the <group(command)> and moves the
+selection out of the <group(command)>.
 
-If the <tabGroupBehavior> is false, pressing the Tab key moves through the <field(object)|fields> and other <control(object)|controls> in the <group(command)> in order, without skipping.
+If the <tabGroupBehavior> is false, pressing the Tab key moves through
+the <field(object)|fields> and other <control(object)|controls> in the
+<group(command)> in order, without skipping.
 
-If the <tabGroupBehavior> is true, the user can press the arrow keys to move from <control(keyword)> to <control(keyword)> within the <group(command)>.
+If the <tabGroupBehavior> is true, the user can press the arrow keys to
+move from <control(keyword)> to <control(keyword)> within the
+<group(command)>. 
 
-If a group's <tabGroupBehavior> is true, you cannot press the Tab key to go to the next tab stop (as set in the <tabStops> <property>) in any of the <field(object)|fields> in the <group(command)>. Pressing the Tab key moves to the next <control(keyword)> in the <group(command)> instead.
+If a group's <tabGroupBehavior> is true, you cannot press the Tab key to
+go to the next tab stop (as set in the <tabStops> <property>) in any of
+the <field(object)|fields> in the <group(command)>. Pressing the Tab key
+moves to the next <control(keyword)> in the <group(command)> instead.
 
-Similarly, if a group's <tabGroupBehavior> is true, you cannot press the arrow keys to move around in any of the <field(object)|fields> in the <group(command)>, regardless of the setting of the <textArrows> <property>. Pressing an arrow key moves from <control(keyword)> to <control(keyword)> instead.
+Similarly, if a group's <tabGroupBehavior> is true, you cannot press the
+arrow keys to move around in any of the <field(object)|fields> in the
+<group(command)>, regardless of the setting of the <textArrows>
+<property>. Pressing an arrow key moves from <control(keyword)> to
+<control(keyword)> instead.
 
-References: tabStops (property), textArrows (property), traversalOn (property), radioBehavior (property), layer (property), field (keyword), control (keyword), tabKey (message), group (command), field (object), control (object), property (glossary), unlock (glossary), group (glossary)
+References: group (command), property (glossary), unlock (glossary),
+group (glossary), field (keyword), control (keyword), tabKey (message),
+field (object), control (object), tabStops (property),
+textArrows (property), traversalOn (property), radioBehavior (property),
+layer (property)
 
 Tags: ui
+

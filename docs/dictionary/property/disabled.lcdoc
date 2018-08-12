@@ -4,13 +4,17 @@ Type: property
 
 Syntax: set the disabled of <object> to {true | false}
 
-Summary: Specifies that an <object> is dimmed and does not respond to user action.
+Summary:
+Specifies that an <object(glossary)> is dimmed and does not respond to
+user action.
+
+Associations: field, button, graphic, scrollbar, player, image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the disabled of button "Destroy Everything" to true
@@ -18,22 +22,42 @@ set the disabled of button "Destroy Everything" to true
 Example:
 set the disabled of menu "View" to true
 
-Value (bool):The <disabled> of a <control(keyword)> is true or false.
-By default, the <disabled> <property> of newly created <control(object)|controls> is false.
+Value (bool):
+The <disabled> of a <control(keyword)> is true or false.
+By default, the <disabled> <property> of newly created
+<control(object)|controls> is false.
 
 Description:
-Use the <disabled> <property> to find out whether a <control> can respond to mouse clicks or keyboard presses.
+Use the <disabled> <property> to find out whether a <control> can
+respond to mouse clicks or keyboard presses.
 
-Disabled buttons are drawn with gray borders and text to indicate that they cannot be clicked. Controls whose <disabled> <property> is true do not <trigger> <message|messages> such as <mouseUp> or <mouseEnter>, but they can respond to <message|messages> sent with the <send> <command>. If a disabled <control> is on top of an enabled <control>, the disabled <control> is transparent to clicks, and clicking sends the appropriate <message|messages> to the enabled <control> underneath.
+Disabled buttons are drawn with gray borders and text to indicate that
+they cannot be clicked. Controls whose <disabled> <property> is true do
+not <trigger> <message|messages> such as <mouseUp> or <mouseEnter>, but
+they can respond to <message|messages> sent with the <send> <command>.
+If a disabled <control> is on top of an enabled <control>, the disabled
+<control> is transparent to clicks, and clicking sends the appropriate
+<message|messages> to the enabled <control> underneath.
 
 A disabled control cannot receive the focus.
 
-Setting a group's <disabled> <property> sets the <disabled> of each <control> in the <group>.
+Setting a group's <disabled> <property> sets the <disabled> of each
+<control> in the <group>.
 
-You can set the <disabled> <property> of a <menu(keyword)> by specifying the <menu(glossary)|menu's> name or number. <menu item|Menu items> in disabled <menus> are drawn in gray text and cannot be chosen.
+You can set the <disabled> <property> of a <menu(keyword)> by specifying
+the <menu(glossary)|menu's> name or number. <menu item|Menu items> in
+disabled <menus> are drawn in gray text and cannot be chosen.
 
-The <disabled> <property> of an <object> is the logical inverse of that <object|object's> <enabled> <property>. When the <enabled> is true, the disabled is false, and vice versa.
+The <disabled> <property> of an <object(glossary)> is the logical
+inverse of that <object|object's> <enabled> <property>. When the
+<enabled> is true, the disabled is false, and vice versa.
 
-References: enabled (property), mouseUp (message), mouseEnter (message), control (keyword), menu (keyword), object (object), control (object), property (glossary), message (glossary), trigger (glossary), command (glossary), menu item (glossary), menu (glossary), disable (command), group (command), enable menu (command), send (command), menus (function)
+References: disable (command), group (command), enable menu (command),
+send (command), menus (function), object (glossary), property (glossary),
+message (glossary), trigger (glossary), command (glossary),
+menu item (glossary), menu (glossary), control (keyword), menu (keyword),
+mouseUp (message), mouseEnter (message), control (object),
+enabled (property)
 
 Tags: ui
+

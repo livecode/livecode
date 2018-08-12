@@ -1,12 +1,15 @@
 Name: graphic
 
-Synonyms: graphic,graphic object,vector graphic
+Synonyms: graphic, graphic object, vector graphic
 
-Type: object
+Type: glossary
 
 Description:
-An <object> that consists of a shape that can be altered, scaled up or down, rotated, or transformed in other ways. Unlike an <image>, a graphic is a defined shape rather than a <bitmap>.
+An <object(glossary)> that consists of a shape that can be altered,
+scaled up or down, rotated, or transformed in other ways. Unlike an
+<image>, a graphic is a defined shape rather than a <bitmap>.
 
-References: image (object), object (object), bitmap (glossary)
+References: image (glossary), object (glossary), bitmap (glossary)
 
 Tags: objects
+

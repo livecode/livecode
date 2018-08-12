@@ -6,13 +6,14 @@ Syntax: the foundText
 
 Syntax: foundText()
 
-Summary: <return|Returns> the text located by the most recent <find> <command>.
+Summary:
+<return|Returns> the text located by the most recent <find> <command>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the foundText
@@ -20,19 +21,34 @@ the foundText
 Example:
 put the foundText into whichWord
 
-Returns: The <foundText> <function> <return|returns> the text that was found.
+Returns:
+The <foundText> <function> <return|returns> the text that was found.
 
 Description:
-Use the <foundText> <function> to determine which <word> in the search <string> was found, and whether it matches a whole <word> or a portion of a <word>.
+Use the <foundText> <function> to determine which <word> in the search
+<string> was found, and whether it matches a whole <word> or a portion
+of a <word>.
 
-Depending on what form of the <find> <command> you used, the text found may be different from the text you searched for. For example, the command
-  find "hurl"
-can find any word that starts with the string "hurl", such as "hurling" or "hurler". In this case, the entire <word> --not just the portion specified in the <find> <command> --is surrounded by a box, and the <foundText> <return|returns> the entire <word>.
+Depending on what form of the <find> <command> you used, the text found
+may be different from the text you searched for. For example, the
+command find "hurl" can find any word that starts with the string
+"hurl", such as "hurling" or "hurler". In this case, the entire <word>
+--not just the portion specified in the <find> <command> --is surrounded
+by a box, and the <foundText> <return|returns> the entire <word>.
 
-The <foundText> <function> is cleared when the text <selection> moves into the <foundField> or when the <current card> is closed. At the same time, the box the <find> <command> draws around the found text disappears. If there is no box, the <foundText> function <return|returns> empty.
+The <foundText> <function> is cleared when the text <selection> moves
+into the <foundField> or when the <current card> is closed. At the same
+time, the box the <find> <command> draws around the found text
+disappears. If there is no box, the <foundText> function
+<return|returns> empty.
 
-To get the location of the text that was found, use the foundChunk <function>.
+To get the location of the text that was found, use the foundChunk
+<function>. 
 
-References: word (keyword), string (keyword), selection (keyword), find (command), clickText (function), foundField (function), command (glossary), return (glossary), current card (glossary), function (control_st)
+References: find (command), function (control structure),
+clickText (function), foundField (function), command (glossary),
+return (glossary), current card (glossary), word (keyword),
+string (keyword), selection (keyword)
 
 Tags: database
+

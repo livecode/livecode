@@ -2,31 +2,41 @@ Name: childControlIDs
 
 Type: property
 
-Syntax: get the childControlIDs of <group> 
+Syntax: get the childControlIDs of <group>
 
-Summary: Reports the IDs of all the children of a group.
+Summary:
+Reports the IDs of all the children of a group.
+
+Associations: group
 
 Introduced: 6.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the childControlIDs of group "list"
 
 Parameters:
-group: A reference to a group
+group:
+A reference to a group
 
 Value:
-The <childControlIDs> of a group reports a list of the short id properties of the direct children of a group.
-This property is read-only and cannot be set.
+The <childControlIDs> of a group reports a list of the short id
+properties of the direct children of a group. This property is read-only
+and cannot be set.
 
 Description:
-Use the <childControlIDs> property to get a list of the short ids of all the direct children of a group
+Use the <childControlIDs> property to get a list of the short ids of all
+the direct children of a group
 
-Each line of the <childControlIDs> is the short id of a control which is a direct child of the group, the property does not recurse into subgroups.
+Each line of the <childControlIDs> is the short id of a control which is
+a direct child of the group, the property does not recurse into
+subgroups. 
 
-References: childControlNames (property), ID (property), groupIDs (property)
+References: childControlNames (property), ID (property),
+groupIDs (property)
 
 Tags: objects
+

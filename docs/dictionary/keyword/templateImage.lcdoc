@@ -4,31 +4,51 @@ Type: keyword
 
 Syntax: templateImage
 
-Summary: Used with the <set> <command> to set the <properties> of newly created <image|images>.
+Summary:
+Used with the <set> <command> to set the <properties> of newly created
+<image|images>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the dontDither of the templateImage to true
 
 Description:
-Use the <templateImage> <keyword> to set up <default> <properties> to be used for any new <image(object)|images> <object|objects> you create.
+Use the <templateImage> <keyword> to set up <default> <properties> to be
+used for any new <image(object)|images> <object|objects> you create.
 
-The <templateImage> can be thought of as a special, abstract <object>. It is not an actual <image(keyword)>, but it has all the <properties> of an <image(keyword)>. The <ID> <property> of the <templateImage> is zero.
+The <templateImage> can be thought of as a special, abstract
+<object(glossary)>. It is not an actual <image(keyword)>, but it has all
+the <properties> of an <image(keyword)>. The <ID> <property> of the
+<templateImage> is zero.
 
-You can use the <set> <command> to set the <properties> of the <templateImage> before creating an <image(keyword)>. The new <image(keyword)> has the <properties> of the <templateImage>, by <default>. Changing the <properties> of the <templateImage> does not affect existing <image(object)|images>.
+You can use the <set> <command> to set the <properties> of the
+<templateImage> before creating an <image(keyword)>. The new
+<image(keyword)> has the <properties> of the <templateImage>, by
+<default>. Changing the <properties> of the <templateImage> does not
+affect existing <image(object)|images>.
 
-The properties of the <templateImage> can be returned to the default settings using the <reset> command.
+The properties of the <templateImage> can be returned to the default
+settings using the <reset> command.
 
 You can refer to the <templateImage> using any of the following forms:
-        templateImage
-        the templateImage
-        templateImage()
 
->*Note:* The <templateImage> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
+    templateImage
+    the templateImage
+    templateImage()
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), image (keyword), image (object), object (object), keyword (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+
+>*Note:* The <templateImage> <keyword> is implemented internally as a
+> <function> and appears in the <functionNames>. However, it cannot be
+> used as a <function> in an <expression>.
+
+References: reset (command), set (command), function (control structure),
+functionNames (function), object (glossary), keyword (glossary),
+property (glossary), command (glossary), expression (glossary),
+templateScrollbar (keyword), default (keyword), image (keyword),
+image (object), properties (property), ID (property)
+

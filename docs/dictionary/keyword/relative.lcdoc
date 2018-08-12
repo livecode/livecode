@@ -1,34 +1,52 @@
 Name: relative
 
+Synonyms: rel
+
 Type: keyword
 
 Syntax: relative
 
-Summary: Used with the <seek> and <move> <command> to start the action at the current position.
-
-Synonyms: rel
+Summary:
+Used with the <seek> and <move> <command> to start the action at the
+current position.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-seek to relative -20 in file "Input Date"
+seek relative -20 in file "Input Date"
 
 Example:
 move image "Butterfly" relative 10,-10 - 10 pixels right and up
 
 Description:
-Use the <relative> <keyword> with the <read from file> and <write to file> <command|commands> to move within a <file>, or with the <move> <command> to move a <control> relative to its current location.
+Use the <relative> <keyword> with the <read from file> and <write to
+file> <command|commands> to move within a <file>, or with the <move>
+<command> to move a <control> relative to its current location.
 
-When used with the <seek> <command>, the <relative> <keyword> indicates how far to move the current position. If the number is positive, the <seek> <command> moves the current position by the specified number of <characters> forward in the <file>. If the number is <negative>, the current position is moved backward in the <file>.
+When used with the <seek> <command>, the <relative> <keyword> indicates
+how far to move the current position. If the number is positive, the
+<seek> <command> moves the current position by the specified number of
+<characters> forward in the <file>. If the number is <negative>, the
+current position is moved backward in the <file>.
 
-(The current position in a file is set by the most recent read from file, write to file, or <seek> <command>. If none of these <command|commands> has been used on the <file> since it was opened, the current position is zero. The next <read from file> or <write to file> <command> starts from the new current position.)
+(The current position in a file is set by the most recent read from
+file, write to file, or <seek> <command>. If none of these
+<command|commands> has been used on the <file> since it was opened, the
+current position is zero. The next <read from file> or <write to file>
+<command> starts from the new current position.)
 
-When used with the <move> <command>, the <relative> <keyword> indicates how many <pixels> to the right and down to move the <control>.
+When used with the <move> <command>, the <relative> <keyword> indicates
+how many <pixels> to the right and down to move the <control>.
 
-References: characters (keyword), file (keyword), control (keyword), pixels (property), write to file (command), seek (command), move (command), read from file (command), localLoc (function), globalLoc (function), command (glossary), keyword (glossary), negative (glossary)
+References: write to file (command), seek (command), move (command),
+read from file (command), localLoc (function), globalLoc (function),
+command (glossary), keyword (glossary), negative (glossary),
+characters (keyword), file (keyword), control (keyword),
+pixels (property)
 
 Tags: file system
+

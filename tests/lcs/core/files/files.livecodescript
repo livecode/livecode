@@ -16,49 +16,6 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-on TestFolderInListing
-   set the defaultFolder to specialFolderPath("temporary")
-   
-   local tTestFolder
-   put "evalThereIsAFolderTest" into tTestFolder
-   create folder tTestFolder
-   
-   TestAssert merge("[[tTestFolder]] is in the folder listing"), tTestFolder is among the lines of the directories
-   
-   delete folder tTestFolder
-   
-   repeat for each line tLine in the directories
-      TestAssert merge("Folder [[tLine]] is a folder"), there is a folder tLine
-      TestAssert merge("Folder [[tLine]] is not a file"), there is not a file tLine
-   end repeat
-   
-end TestFolderInListing
-
-on TestBugfix12039
-   // 12039
-   local tOldCwd, tTestFile
-   put the defaultFolder into tOldCwd
-   set the defaultFolder to specialFolderPath("temporary")
-   
-   put "evalfilestest.txt" into tTestfile
-   put "some text" into url ("binfile:" & tTestfile)
-   TestAssert merge("[[tTestFile]] is amongs the files"), tTestfile is among the lines of the files
-   
-   delete file tTestfile
-   TestAssert merge("[[tTestFile]] is not amongst the files after deletion"), tTestfile is not among the lines of the files
-   
-   set the defaultFolder to tOldCwd
-   
-   repeat for each line tLine in the files
-      if char -4 to -1 of tLine is not "sock" then
-         TestDiagnostic tLine
-         TestAssert "files are files", there is a file tLine
-         TestAssert "files are not folders", there is not a folder tLine
-      end if
-   end repeat
-   
-end TestBugfix12039
-
 on TestRegistryKeys
    // set up test keys & values
    if the platform is "Win32" then
@@ -170,8 +127,7 @@ on TestSpecialFolderPath
    put specialFolderPath("resources") into tResources
    if the platform is "macos" and the environment is "standalone" then
       // Standalone on Mac have their non-executable resource in a specific folder
-      set the itemDelimiter to slash
-      TestAssert "Resources folder on standalone Mac app in is  Resources/_MacOS", item -2 to -1 of tResources is "Resources/_MacOS"
+      TestAssert "Resources folder on standalone Mac app in is  Resources/_MacOS", tResources ends with "Resources/_MacOS"
    else if the environment is "mobile" then
       testAssert "Resources and Engine specialfolderPaths are the same on mobile", tResources is tEngine
    else
@@ -255,6 +211,7 @@ end TestSpecialFolderPath
 
 
 on TestTempName
+   TestSkipIf "platform", "HTML5"
    local tPath
    put tempname() into tPath
    
@@ -366,10 +323,7 @@ end TestLaunch
 
 
 on TestLaunchWith
-   if the platform is "HTML5" then
-      TestSkip "launch subprocess with", "HTML5 platform does not support subprocesses"
-      exit TestLaunchWith
-   end if
+   TestSkipIf "platform", "HTML5,iPhone,Android"
 
    set the defaultFolder to specialFolderPath("Desktop")
    
@@ -448,12 +402,12 @@ on TestReadFromProcess
    else if the platform is "macos" or the platform contains "linux" then
       put "/bin/sh" into tProcess
       
-      open process tProcess for update
+      open process tProcess for binary update
       
       write "echo " & quote & "foo" & quote & LF to process tProcess
       
-      read from process tProcess for  1 line
-      put char 1 to 3 of  it into tOutput
+      read from process tProcess for 3 bytes
+      put it into tOutput
       
       TestAssert "Reading from process", tOutput is "foo"
       
@@ -477,32 +431,3 @@ on TestRenameFile
    
    delete file "Test2.tmp"
 end TestRenameFile
-
-
-on TestFoldersFirstLine
-   // ".." must be the first folder listed
-   local tFolders
-   put the folders into tFolders
-   
-   TestAssert "Fist line of the folders is always  '..'", first line of tFolders is ".."
-end TestFoldersFirstLine
-
-on TestFoldersInEmptyFolder
-   // Bug 16223: if no folder is listed by 'the folders', there should still
-   // be ".." at the head of the list
-   local tFolders, tNewFolder, tOldCwd
-   
-   // Create a new, empty folder
-   put "files__TestFoldersInEmptyFolder" into tNewFolder
-   create folder tNewFolder
-   
-   put the defaultFolder into tOldCwd
-   set the defaultFolder to tNewFolder
-   
-   put the folders into tFolders
-   
-   TestAssert "'..' is the only folder in an empty folder", the folders is ".."
-   
-   delete folder tNewFolder
-   set the defaultFolder to tOldCwd
-end TestFoldersInEmptyFolder

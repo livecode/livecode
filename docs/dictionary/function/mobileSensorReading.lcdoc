@@ -4,11 +4,12 @@ Type: function
 
 Syntax: mobileSensorReading(<sensor>, <detailed>)
 
-Summary: Returns the reading from the named sensor.
+Summary:
+Returns the reading from the named sensor.
 
 Introduced: 5.5
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -19,24 +20,49 @@ Example:
 put mobileSensorReading("location",true) into tDeviceLocation
 
 Parameters:
-sensor (enum): The name of the sensor you wish to start using
-- "location": the location of the device
-- "heading": the heading of the device
-- "acceleration": the acceleration of the device
-- "rotation rate": the rotation of the device
-detailed (enum): How detailed the readings from sensors should be. The default value is false
-- "false": basic readings will be provided.
-- "true": additional readings will be provided.
+sensor (enum):
+The name of the sensor you wish to start using
+
+-   "location": the location of the device
+-   "heading": the heading of the device
+-   "acceleration": the acceleration of the device
+-   "rotation rate": the rotation of the device
+
+
+detailed (enum):
+How detailed the readings from sensors should be. The default value is
+false 
+
+-   "false": basic readings will be provided.
+-   "true": additional readings will be provided.
+
 
 Returns:
-Location -  a comma separated list of the latitude, longitude and altitude of the device. If <detailed> is true an array containing the keys latitude, longitude, altitude, timestamp, horizontal accuracy and vertical accuracy is returned.
-Heading - the heading of the device in degrees. If <detailed> is true an array containing the keys heading, magnetic heading, true heading, timestamp, x, y, z and accuracy is returned.
-Acceleration - a comma separated list of the acceleration in the x, y and z axes. If <detailed> is true an array containing the keys x, y, z and timestamp is returned.
-Rotation Rate - a comma separated list of the rate of rotation around the x, y and z axes. If <detailed> is true an array containin the keys x, y, z and timestamp is returned.
+Location -  a comma separated list of the latitude, longitude and
+altitude of the device. If any of these readings are not available, an
+empty item will be returned in its place. If <detailed> is true an array
+containing the keys latitude, longitude, altitude, timestamp, horizontal
+accuracy and vertical accuracy is returned. Heading - the heading of the
+device in degrees. If <detailed> is true an array containing the keys
+heading, magnetic heading, true heading, timestamp, x, y, z and accuracy
+is returned. Acceleration - a comma separated list of the acceleration
+in the x, y and z axes. If <detailed> is true an array containing the
+keys x, y, z and timestamp is returned. Rotation Rate - a comma
+separated list of the rate of rotation around the x, y and z axes. If
+<detailed> is true an array containin the keys x, y, z and timestamp is
+returned. 
 
 Description:
-Use the <mobileSensorReading> function to fetch a reading from the named device sensor.
+Use the <mobileSensorReading> function to fetch a reading from the named
+device sensor.
 
-The <mobileSensorReading> function returns a reading from the named sensor.
+The <mobileSensorReading> function returns a reading from the named
+sensor. 
 
-References: mobileStopTrackingSensor (command), mobileStartTrackingSensor (command), mobileCanTrackHeading (function), mobileCanTrackLocation (function), mobileCurrentHeading (function), mobileCurrentLocation (function), headingChanged (message), accelerationChanged (message), locationChanged (message), rotationRateChanged (message), trackingError (message)
+References: mobileStopTrackingSensor (command),
+mobileStartTrackingSensor (command), mobileCanTrackHeading (function),
+mobileCanTrackLocation (function), mobileCurrentHeading (function),
+mobileCurrentLocation (function), headingChanged (message),
+accelerationChanged (message), locationChanged (message),
+rotationRateChanged (message), trackingError (message)
+

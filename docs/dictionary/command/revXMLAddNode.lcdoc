@@ -4,13 +4,16 @@ Type: command
 
 Syntax: revXMLAddNode <treeID>, <parentNode>, <nodeName>, <nodeContents>, [<location>]
 
-Summary: Adds a <child node> to the specified parent <node> in an <XML tree>.
+Summary:
+Adds a <child node> to the specified parent <node> in an <XML tree>.
+
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -21,19 +24,45 @@ Example:
 revXMLAddNode myTree,theNode,the short name of me,field "Contents"
 
 Parameters:
-treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
-parentNode: The node whose child the node being created will be.
-nodeName: The name of the new node.
-nodeContents: The text to place in the new node.
-location: An optional argument. If it is not present or if it is equal to "after", the node will be added as the last child of parentNode. If location is "before" then the node will be added as the first child of parentNode.
+treeID:
+The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+function when you created the XML tree.
 
-The result: If the <revXMLAddNode> <command> encounters an error, the <result> is set to an error message beginning with "xmlerr".
+parentNode:
+The node whose child the node being created will be.
+
+nodeName:
+The name of the new node.
+
+nodeContents:
+The text to place in the new node.
+
+location:
+An optional argument. If it is not present or if it is equal to "after",
+the node will be added as the last child of parentNode. If location is
+"before" then the node will be added as the first child of parentNode.
+
+The result:
+If the <revXMLAddNode> <command> encounters an error, the <result> is
+set to an error message beginning with "xmlerr".
 
 Description:
 Use the <revXMLAddNode> <command> to add a <node> to an <XML tree>.
 
->*Important:*  The <revXMLAddNode> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLAddNode> <command> is part of the 
+> <XML library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "XML" 
+> checkbox is checked.
 
-References: revXMLMoveNode (command), revXMLDeleteNode (command), revXMLAppend (command), result (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), child node (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLMoveNode (command), revXMLDeleteNode (command),
+revXMLAppend (command), result (function), node (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), XML tree (glossary),
+command (glossary), child node (glossary),
+LiveCode custom library (glossary), XML library (library)
 
 Tags: text processing
+

@@ -1,0 +1,1 @@
+# Fixed bug that overrides previous matches in matchText

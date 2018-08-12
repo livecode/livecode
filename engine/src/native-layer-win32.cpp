@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -59,8 +59,12 @@ MCNativeLayerWin32::MCNativeLayerWin32(MCObject *p_object, HWND p_view) :
 
 MCNativeLayerWin32::~MCNativeLayerWin32()
 {
-	if (m_hwnd != NULL)
-		DestroyWindow(m_hwnd);
+	if (m_viewport_hwnd != NULL)
+	{
+		if (m_hwnd != nil)
+			doDetach();
+		DestroyWindow(m_viewport_hwnd);
+	}
 	if (m_cached != NULL)
 		DeleteObject(m_cached);
 }
@@ -74,7 +78,7 @@ void MCNativeLayerWin32::doAttach()
 	t_parent = getStackWindow();
 
 	if (m_viewport_hwnd == nil)
-		/* UNCHECKED */ CreateNativeContainer((void*&)m_viewport_hwnd);
+		/* UNCHECKED */ CreateNativeContainer(m_object, (void*&)m_viewport_hwnd);
 
 	// Set the parent to the stack
 	SetParent(m_viewport_hwnd, t_parent);
@@ -83,12 +87,6 @@ void MCNativeLayerWin32::doAttach()
 
 	// Restore the state of the widget (in case it changed due to a
 	// tool change while on another card - we don't get a message then)
-	m_rect = m_object->getrect();
-	if (m_object->getparent()->gettype() == CT_GROUP)
-		m_viewport_rect = ((MCGroup*)m_object->getparent())->getviewportgeometry();
-	else
-		m_viewport_rect = m_rect;
-
 	doSetViewportGeometry(m_viewport_rect);
 	doSetGeometry(m_rect);
 	doSetVisible(ShouldShowLayer());
@@ -105,7 +103,7 @@ void MCNativeLayerWin32::doDetach()
 bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 {
 	MCRectangle t_rect;
-	t_rect = m_object->getrect();
+	t_rect = m_rect;
 
 	bool t_success;
 	t_success = true;
@@ -148,7 +146,7 @@ bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 		SendMessage(m_hwnd, WM_PRINT, (WPARAM)t_hdc, PRF_CHILDREN|PRF_CLIENT);
 
 		// Get the information we need to turn this into a bitmap the engine can use
-		GetObject(m_cached, sizeof(BITMAP), &t_bitmap);
+		GetObjectW(m_cached, sizeof(BITMAP), &t_bitmap);
 
 		// Allocate some memory for capturing the bits from the bitmap
 		t_success = MCMemoryAllocate(t_bitmap.bmWidth * t_bitmap.bmHeight * 4, t_bits);
@@ -200,7 +198,7 @@ bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 	if (t_success)
 	{
 		// At last - we can draw it!
-		MCGRectangle rect = {{0, 0}, {t_rect.width, t_rect.height}};
+		MCGRectangle rect = {{0, 0}, {MCGFloat(t_rect.width), MCGFloat(t_rect.height)}};
 		MCGContextDrawImage(p_context, t_gimage, rect, kMCGImageFilterNone);
 	}
 
@@ -219,36 +217,20 @@ bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 	return t_success;
 }
 
-void MCNativeLayerWin32::updateViewportGeometry()
+void MCNativeLayerWin32::updateViewGeometry()
 {
 	m_intersect_rect = MCU_intersect_rect(m_viewport_rect, m_rect);
 
 	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
-	MCRectangle t_rect;
-	t_rect = MCRectangleGetTransformedBounds(m_intersect_rect, m_object->getstack()->getdevicetransform());
+	MCRectangle t_intersect_rect;
+	t_intersect_rect = MCRectangleGetTransformedBounds(m_intersect_rect, m_object->getstack()->getdevicetransform());
 
 	// Move the window. Only trigger a repaint if not in edit mode
-	MoveWindow(m_viewport_hwnd, t_rect.x, t_rect.y, t_rect.width, t_rect.height, ShouldShowLayer());
-}
-
-void MCNativeLayerWin32::doSetViewportGeometry(const MCRectangle &p_rect)
-{
-	m_viewport_rect = p_rect;
-	updateViewportGeometry();
-}
-
-void MCNativeLayerWin32::doSetGeometry(const MCRectangle& p_rect)
-{
-	m_rect = p_rect;
-	updateViewportGeometry();
+	MoveWindow(m_viewport_hwnd, t_intersect_rect.x, t_intersect_rect.y, t_intersect_rect.width, t_intersect_rect.height, ShouldShowLayer());
 
 	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
 	MCRectangle t_rect;
 	t_rect = MCRectangleGetTransformedBounds(m_rect, m_object->getstack()->getdevicetransform());
-
-	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
-	MCRectangle t_intersect_rect;
-	t_intersect_rect = MCRectangleGetTransformedBounds(m_intersect_rect, m_object->getstack()->getdevicetransform());
 
 	t_rect.x -= t_intersect_rect.x;
 	t_rect.y -= t_intersect_rect.y;
@@ -259,6 +241,18 @@ void MCNativeLayerWin32::doSetGeometry(const MCRectangle& p_rect)
 	// We need to delete the bitmap that we've been caching
 	DeleteObject(m_cached);
 	m_cached = NULL;
+}
+
+void MCNativeLayerWin32::doSetViewportGeometry(const MCRectangle &p_rect)
+{
+	m_viewport_rect = p_rect;
+	updateViewGeometry();
+}
+
+void MCNativeLayerWin32::doSetGeometry(const MCRectangle& p_rect)
+{
+	m_rect = p_rect;
+	updateViewGeometry();
 }
 
 void MCNativeLayerWin32::doSetVisible(bool p_visible)
@@ -314,9 +308,9 @@ MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view
 extern HINSTANCE MChInst;
 bool getcontainerclass(ATOM &r_class)
 {
-	static ATOM s_container_class = nil;
+	static ATOM s_container_class = 0;
 
-	if (s_container_class == nil)
+	if (s_container_class == 0)
 	{
 		WNDCLASSEX t_class;
 		MCMemoryClear(t_class);
@@ -331,7 +325,7 @@ bool getcontainerclass(ATOM &r_class)
 		DWORD t_err;
 		t_err = GetLastError();
 
-		if (s_container_class == nil)
+		if (s_container_class == 0)
 			return false;
 	}
 
@@ -340,14 +334,14 @@ bool getcontainerclass(ATOM &r_class)
 	return true;
 }
 
-bool MCNativeLayer::CreateNativeContainer(void *&r_container)
+bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_container)
 {
 	ATOM t_class;
 	if (!getcontainerclass(t_class))
 		return false;
 
 	HWND t_container;
-	t_container = CreateWindow((LPCSTR)t_class, "Container", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, (HWND)MCdefaultstackptr->getrealwindow(), nil, MChInst, nil);
+	t_container = CreateWindow((LPCSTR)t_class, "Container", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, (HWND)p_object->getstack()->getrealwindow(), nil, MChInst, nil);
 
 	DWORD t_err;
 	t_err = GetLastError();

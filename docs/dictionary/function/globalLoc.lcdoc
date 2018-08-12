@@ -2,38 +2,60 @@ Name: globalLoc
 
 Type: function
 
-Syntax: the globalLoc of <point> 
+Syntax: the globalLoc of <point>
 
 Syntax: globalLoc(<point>)
 
-Summary: <return|Returns> the equivalent, in <absolute coordinates|global coordinates>, of a <point> given in <relative coordinates|local coordinates>.
+Summary:
+<return|Returns> the equivalent, in <absolute coordinates|global
+coordinates>, of a <point> given in <relative coordinates|local
+coordinates>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 globalLoc("22,173")
 
 Example:
-put globalLoc(the mouseLoc) into screenLoc
+put globalLoc(the mouseLoc) into tScreenLoc
 
 Parameters:
-point: Any expression that evaluates to a point--a vertical and horizontal distance from the top left of the current stack, separated by a comma.
+point:
+Any expression that evaluates to a point--a vertical and horizontal
+distance from the top left of the current stack, separated by a comma.
 
-Returns: The <globalLoc> <function> <return|returns> two <integer|integers> separated by a comma.
+Returns:
+The <globalLoc> <function> <return|returns> two <integer|integers>
+separated by a comma.
 
 Description:
-Use the <globalLoc> <function> to translate between <absolute coordinates|screen coordinates> and <relative coordinates|window coordinates>.
+Use the <globalLoc> <function> to translate between <absolute
+coordinates|screen coordinates> and <relative coordinates|window
+coordinates>. 
 
-In window coordinates, the point 0,0 is at the top left of the stack window. In screen coordinates, the point 0,0 is at the top left of the screen.
+In window coordinates, the point 0,0 is at the top left of the stack
+window. In screen coordinates, the point 0,0 is at the top left of the
+screen. 
 
-The point returned by the <globalLoc> function is relative to the top left of the screen. If the system has more than one monitor, the <globalLoc> function <return|returns> a <point> relative to the top left of the main screen.
+The point returned by the <globalLoc> function is relative to the top
+left of the screen. If the system has more than one monitor, the
+<globalLoc> function <return|returns> a <point> relative to the top left
+of the main screen.
 
-The first item of the return value is the horizontal distance in pixels from the left edge of the screen to the location given by <point>.  The second <item> of the <return value> is the vertical distance from the top edge of the screen to the location given by <point>.
+The first item of the return value is the horizontal distance in pixels
+from the left edge of the screen to the location given by <point>. The
+second <item> of the <return value> is the vertical distance from the
+top edge of the screen to the location given by <point>.
 
-References: item (keyword), point (keyword), relative (keyword), revSetVideoGrabberRect (command), function (control_st), relative coordinates (glossary), integer (glossary), absolute coordinates (glossary), return (glossary), return value (glossary)
+References: revSetVideoGrabberRect (command),
+function (control structure), relative coordinates (glossary),
+integer (glossary), absolute coordinates (glossary), return (glossary),
+return value (glossary), item (keyword), point (keyword),
+relative (keyword)
 
 Tags: ui
+

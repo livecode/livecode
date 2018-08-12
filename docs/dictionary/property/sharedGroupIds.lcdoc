@@ -4,15 +4,16 @@ Type: property
 
 Syntax: get the sharedGroupIds of {<card> | <stack>}
 
-Summary: Reports the ids of all the shared groups of the card or stack
+Summary:
+Reports the ids of all the shared groups of the card or stack
 
-Associations: stack,card
+Associations: stack, card
 
 Introduced: 4.6.4
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 get the sharedGroupIds of stack myStack
@@ -26,14 +27,21 @@ put it into tGroupIds
 
 Example:
 repeat for each line tGroupId in the sharedGroupIds of this card
-   remove group tGroupId of this card
+   remove group id tGroupId from this card
 end repeat
 
 Value:
-The <sharedGroupIds> of a stack returns a list of ids, one per line, of all groups owned by the stack which have <sharedBehavior> set to true regardless of which cards they may be placed on.
-The <sharedGroupIds> of a card returns a list of ids, one per line, of all groups which are placed onto the card which have <sharedBehavior> set to true.
+The <sharedGroupIds> of a stack returns a list of ids, one per line, of
+all groups owned by the stack which have <sharedBehavior> set to true
+regardless of which cards they may be placed on. The <sharedGroupIds> of
+a card returns a list of ids, one per line, of all groups which are
+placed onto the card which have <sharedBehavior> set to true.
 
 Description:
-Use the <sharedGroupIds> property to get a list of all the ids of the shared groups on the card or stack.
+Use the <sharedGroupIds> property to get a list of all the ids of the
+shared groups on the card or stack.
 
-References: delete (command), place (command), remove (command), backgroundBehavior (property), sharedBehavior (property), sharedGroupNames (property)
+References: delete (command), place (command), remove (command),
+backgroundBehavior (property), sharedBehavior (property),
+sharedGroupNames (property)
+

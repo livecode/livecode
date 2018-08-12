@@ -2,17 +2,18 @@ Name: scrollbarEnd
 
 Type: message
 
-Syntax: scrollbarEnd <end> 
+Syntax: scrollbarEnd <pEnd>
 
-Summary: Sent to a <scrollbar> when the user Shift-clicks its increase arrow.
+Summary:
+Sent to a <scrollbar> when the user Shift-clicks its increase arrow.
 
 Associations: scrollbar
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on scrollbarEnd -- use a scroll bar to navigate among cards
@@ -21,15 +22,24 @@ on scrollbarEnd -- use a scroll bar to navigate among cards
 end scrollbarEnd
 
 Parameters:
-end: The new position of the scrollbar thumb. This is the same as the scrollbar's endValue property.
+pEnd:
+The new position of the scrollbar thumb. This is the same as the
+scrollbar's <endValue> property.
 
 Description:
-Handle the <scrollbarEnd> <message> if you want to respond to the use of Shift-click to move the <scrollbar thumb> directly to the end (the bottom or right) of the <scrollbar>.
+Handle the <scrollbarEnd> <message> if you want to respond to the use of
+Shift-click to move the <scrollbar thumb> directly to the end (the
+bottom or right) of the <scrollbar>.
 
-Dragging the scrollbar thumb to the end position, or otherwise moving it to the end, does not send a <scrollbarEnd> <message>.
+Dragging the scrollbar thumb to the end position, or otherwise moving it
+to the end, does not send a <scrollbarEnd> <message>.
 
-If the <scrollbarEnd> <message> is not handled, a <scrollbarDrag> <message> is sent in addition.
+If the <scrollbarEnd> <message> is not handled, a <scrollbarDrag>
+<message> is sent in addition.
 
-References: scrollbar (keyword), scrollbarDrag (message), scrollbarLineInc (message), scrollbarBeginning (message), scrollbar thumb (glossary), message (glossary)
+References: scrollbar thumb (glossary), message (glossary),
+scrollbar (keyword), scrollbarDrag (message), scrollbarLineInc (message),
+scrollbarBeginning (message)
 
 Tags: ui
+

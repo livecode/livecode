@@ -1,14 +1,22 @@
 Name: object hierarchy
 
-Synonyms: object hierarchy,object hierarchies
+Synonyms: object hierarchy, object hierarchies
 
 Type: glossary
 
 Description:
-The chain of ownership in which one <object> is <owner|owned> by another. A <card control> is <owner|owned> by the <card> it's on; a <grouped control> are <owner|owned> by its <group>; a <card> is owned by the <stack> it's in; and <substack|substacks> are <owner|owned> by their <main stack>. 
- 
-Also, the chain of all the <object|objects> above a specific <object> in the hierarchy.
+The chain of ownership in which one <object(glossary)> is <owner|owned>
+by another. A <card control> is <owner|owned> by the <card> it's on; a
+<grouped control> are <owner|owned> by its <group>; a <card> is owned by
+the <stack> it's in; and <substack|substacks> are <owner|owned> by their
+<main stack>.
 
-References: card (object), stack (object), object (object), grouped control (glossary), substack (glossary), owner (glossary), card control (glossary), group (glossary), main stack (glossary)
+Also, the chain of all the <object|objects> above a specific
+<object(glossary)> in the hierarchy.
+
+References: card (glossary), stack (glossary), object (glossary),
+grouped control (glossary), substack (glossary), owner (glossary),
+card control (glossary), group (glossary), main stack (glossary)
 
 Tags: objects
+

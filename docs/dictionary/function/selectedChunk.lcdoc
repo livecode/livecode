@@ -6,13 +6,15 @@ Syntax: the selectedChunk
 
 Syntax: selectedChunk
 
-Summary: <return|Returns> a <chunk expression> describing the location of the text <selection> or <insertion point>.
+Summary:
+<return|Returns> a <chunk expression> describing the location of the
+text <selection> or <insertion point>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the selectedChunk
@@ -21,20 +23,32 @@ Example:
 put the selectedChunk into storedChunk
 
 Returns:
-The <selectedChunk> <function> <return|returns> a <chunk expression> of the form
-  char startChar to endChar of field fieldNumber.
+The <selectedChunk> <function> <return|returns> a <chunk expression> of
+the form char startChar to endChar of field fieldNumber.
 
 Description:
-Use the <selectedChunk> <function> to determine which text is <selected>.
+Use the <selectedChunk> <function> to determine which text is
+<selected>. 
 
-The return value reports the selected text: the startChar is the first <character> of the selection, and the endChar is the last <character>.
+The return value reports the selected text: the startChar is the first
+<character> of the selection, and the endChar is the last <character>.
 
-If no text is selected but the text insertion point is in a field, the startChar is the <character> after the <insertion point>, and the endChar is the <character> before the <insertion point>. In this case, the endChar is one less than the startChar.
+If no text is selected but the text insertion point is in a field, the
+startChar is the <character> after the <insertion point>, and the
+endChar is the <character> before the <insertion point>. In this case,
+the endChar is one less than the startChar.
 
-If there is no insertion point or text selection, the <selectedChunk> <function> <return|returns> empty.
+If there is no insertion point or text selection, the <selectedChunk>
+<function> <return|returns> empty.
 
 To get actual text that is selected, use the selectedText <function>.
 
-References: selection (keyword), character (keyword), selected (property), select (command), selectedField (function), selectedLine (function), selectedLoc (function), foundChunk (function), clickChunk (function), mouseChunk (function), chunk expression (glossary), insertion point (glossary), return (glossary), function (control_st)
+References: select (command), function (control structure),
+selectedField (function), selectedLine (function), selectedLoc (function),
+foundChunk (function), clickChunk (function), mouseChunk (function),
+chunk expression (glossary), insertion point (glossary),
+return (glossary), selection (keyword), character (keyword),
+selected (property)
 
 Tags: ui
+

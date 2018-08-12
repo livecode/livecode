@@ -4,15 +4,17 @@ Type: property
 
 Syntax: set the showFocusBorder of <control> to {true | false}
 
-Summary: Displays a border around the <active control>.
+Summary:
+Displays a border around the <active control>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.1
 
-OS: mac,linux,ios,android
+OS: mac, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the showFocusBorder of field "Answer" to false
@@ -20,22 +22,40 @@ set the showFocusBorder of field "Answer" to false
 Example:
 set the showFocusBorder of myControl to (the platform is not "MacOS")
 
-Value (bool):The <showFocusBorder> of an <object> is true or false.
-By default, the <showFocusBorder> <property> of newly created <object|objects> is set to true.
+Value (bool):
+The <showFocusBorder> of an <object(glossary)> is true or false.
+By default, the <showFocusBorder> <property> of newly created
+<object|objects> is set to true.
 
 Description:
-Use the <showFocusBorder> <property> to turn off the standard (for <Unix|Unix systems>) focus border around the <active control>, or to show which <field(keyword)> has the <insertion point> in a <dialog box>.
+Use the <showFocusBorder> <property> to turn off the standard (for
+<Unix|Unix systems>) focus border around the <active control>, or to
+show which <field(keyword)> has the <insertion point> in a <dialog box>.
 
-The appearance of the focus border is set by the focusColor and <focusPattern> <properties>.
+The appearance of the focus border is set by the focusColor and
+<focusPattern> <properties>.
 
-If the lookAndFeel <property> is set to "Macintosh" or "Appearance Manager", the setting of the <showFocusBorder> <property> affects only <field(object)|fields>, <image|images>, and <EPS|EPS objects>. (To comply with user interface guidelines, this <property> should be set to true for fields in <modal> and <modeless> <dialog box|dialog boxes>.)
+If the lookAndFeel <property> is set to "Macintosh" or
+"Appearance Manager", the setting of the <showFocusBorder> <property>
+affects only <field(object)|fields>, <image|images>, and <EPS|EPS
+objects>. (To comply with user interface guidelines, this <property>
+should be set to true for fields in <modal> and <modeless> <dialog
+box|dialog boxes>.)
 
-If the lookAndFeel is set to "Motif", the <showFocusBorder> <property> affects all <control|controls>.
+If the lookAndFeel is set to "Motif", the <showFocusBorder> <property>
+affects all <control|controls>.
 
-If the lookAndFeel is set to "Windows 95", the <showFocusBorder> <property> has no effect.
+If the lookAndFeel is set to "Windows 95", the <showFocusBorder>
+<property> has no effect.
 
 The focusBorder of <card|cards> and <stacks> has no effect.
 
-References: field (keyword), focusPattern (property), properties (property), modeless (command), focus (command), modal (command), card (object), image (object), field (object), object (object), control (object), property (glossary), EPS (glossary), insertion point (glossary), dialog box (glossary), Unix (glossary), active control (glossary), stacks (function)
+References: modeless (command), focus (command), modal (command),
+stacks (function), object (glossary), property (glossary), EPS (glossary),
+insertion point (glossary), dialog box (glossary), Unix (glossary),
+active control (glossary), field (keyword), card (object), image (object),
+field (object), control (object), focusPattern (property),
+properties (property)
 
 Tags: ui
+

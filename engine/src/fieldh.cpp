@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "paragraf.h"
 #include "cdata.h"
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "util.h"
 #include "MCBlock.h"
 #include "line.h"
@@ -167,6 +167,8 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 		t_inherited_paragraph_style . first_indent = indent;
 		t_inherited_paragraph_style . tab_count = ntabs;
 		t_inherited_paragraph_style . tabs = tabs;
+		t_inherited_paragraph_style . tab_alignment_count = nalignments;
+		t_inherited_paragraph_style . tab_alignments = alignments;
 		t_inherited_paragraph_style . border_color = getcoloraspixel(DI_BORDER);
 	}
 
@@ -607,27 +609,6 @@ static bool export_formatted_text(void *p_context, MCFieldExportEventType p_even
 // MW-2012-02-20: [[ FieldExport ]] This method exports the content of the
 //   field as either native or unicode.
 
-#ifdef LEGACY_EXEC
-void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
-{
-	MCAutoStringRef t_string;
-	if (exportastext(p_part_id, p_start_index, p_finish_index, &t_string))
-	{
-		if (p_as_unicode)
-		{
-			MCAutoDataRef t_data;
-			/* UNCHECKED */ MCStringEncode(*t_string, kMCStringEncodingUTF16, false, &t_data);
-			/* UNCHECKED */
-			ep . setvalueref(*t_data);
-		}
-		else
-			/* UNCHECKED */ ep . setvalueref(*t_string);
-	}
-	else
-		ep . clear();
-}
-#endif
-
 /* UNSAFE */ bool MCField::exportastext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
 	uint32_t t_char_count;
@@ -645,32 +626,6 @@ void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_
 
 // MW-2012-02-20: [[ FieldExport ]] This method exports the content of the
 //   field as either native or unicode including any list indices.
-
-#ifdef LEGACY_EXEC
-void MCField::exportasplaintext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
-{
-	MCAutoStringRef t_string;
-	if (exportasplaintext(p_paragraphs, p_start_index, p_finish_index, &t_string))
-	{
-		if (p_as_unicode)
-		{
-			MCAutoDataRef t_data;
-			/* UNCHECKED */ MCStringEncode(*t_string, kMCStringEncodingUTF16, false, &t_data);
-			/* UNCHECKED */
-			ep . setvalueref(*t_data);
-		}
-		else
-			/* UNCHECKED */ ep . setvalueref(*t_string);
-	}
-	else
-		ep . clear();
-}
-
-void MCField::exportasplaintext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
-{
-	exportasplaintext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_as_unicode);
-}
-#endif
 
 bool MCField::exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
@@ -695,27 +650,6 @@ bool MCField::exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32
 // MW-2012-02-21: [[ FieldExport ]] This method exports the content of the
 //   field as either native or unicode, including any list indices and implicit
 //   line breaks.
-#ifdef LEGACY_EXEC
-void MCField::exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
-{
-	MCAutoStringRef t_string;
-	if (exportasformattedtext(p_part_id, p_start_index, p_finish_index, &t_string))
-	{
-		if (p_as_unicode)
-		{
-			MCAutoDataRef t_data;
-			/* UNCHECKED */ MCStringEncode(*t_string, kMCStringEncodingUTF16, false, &t_data);
-			/* UNCHECKED */
-			ep . setvalueref(*t_data);
-		}
-		else
-			/* UNCHECKED */ ep . setvalueref(*t_string);
-	}
-	else
-		ep . clear();
-}
-#endif
-
 bool MCField::exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string)
 {
 	uint32_t t_char_count;
@@ -738,7 +672,7 @@ bool MCField::exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, i
 bool MCField::importparagraph(MCParagraph*& x_paragraphs, const MCFieldParagraphStyle *p_style)
 {
 	MCParagraph *t_new_paragraph;
-	t_new_paragraph = new MCParagraph;
+	t_new_paragraph = new (nothrow) MCParagraph;
     
     // SN-2014-04-25 [[ Bug 12177 ]] Importing HTML was creating parent-less paragraphs,
     // thus sometimes causing crashing when the parent was accessed - mainly when getfontattrs() was needed
@@ -804,20 +738,6 @@ Exec_stat MCField::setrtf(uint4 parid, MCStringRef data)
 	return ES_NORMAL;
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCField::setstyledtext(uint4 parid, MCExecPoint &ep)
-{
-	state |= CS_NO_FILE; // prevent interactions while downloading images
-	MCParagraph *stpgptr = styledtexttoparagraphs(ep);
-	if (stpgptr == nil)
-		setpartialtext(parid, MCnullmcstring, false);
-	else
-		setparagraphs(stpgptr, parid);
-	state &= ~CS_NO_FILE;
-	return ES_NORMAL;
-}
-#endif
-
 void MCField::setstyledtext(uint32_t part_id, MCArrayRef p_text)
 {
 	state |= CS_NO_FILE; // prevent interactions while downloading images
@@ -843,7 +763,7 @@ MCParagraph *MCField::texttoparagraphs(MCStringRef p_text)
 {
     // Create a new list of paragraphs
     MCParagraph *t_paragraphs;
-	t_paragraphs = new MCParagraph;
+	t_paragraphs = new (nothrow) MCParagraph;
 	t_paragraphs -> setparent(this);
 	t_paragraphs -> inittext();
 
@@ -910,7 +830,7 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 		t_paragraph -> defrag();
 
 		MCParagraph *t_new_paragraph;
-		t_new_paragraph = new MCParagraph;
+		t_new_paragraph = new (nothrow) MCParagraph;
 		t_new_paragraph -> setparent(t_paragraph -> getparent());
 		t_new_paragraph -> inittext();
 
@@ -979,24 +899,18 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 		if (p_block -> foreground_color != 0xffffffff)
 		{
 			MCColor t_color;
-			t_color . pixel = 0;
 			t_color . red = ((p_block -> foreground_color & 0xff) << 8) | (p_block -> foreground_color & 0xff);
 			t_color . green = (p_block -> foreground_color & 0xff00) | ((p_block -> foreground_color & 0xff00) >> 8);
 			t_color . blue = ((p_block -> foreground_color & 0xff0000) >> 8) | ((p_block -> foreground_color & 0xff0000) >> 16);
-			t_color . flags = 0xff;
-			t_color . pad = 0;
 			t_block -> setcolor(&t_color);
 		}
 
 		if (p_block -> background_color != 0xffffffff)
 		{
 			MCColor t_color;
-			t_color . pixel = 0;
 			t_color . red = ((p_block -> background_color & 0xff) << 8) | (p_block -> background_color & 0xff);
 			t_color . green = (p_block -> background_color & 0xff00) | ((p_block -> background_color & 0xff00) >> 8);
 			t_color . blue = ((p_block -> background_color & 0xff0000) >> 8) | ((p_block -> background_color & 0xff0000) >> 16);
-			t_color . flags = 0xff;
-			t_color . pad = 0;
 			t_block -> setbackcolor(&t_color);
 		}
 
@@ -1014,14 +928,17 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 		const char *t_font_name;
 		t_font_name = p_block -> font_name == NULL ? "" : p_block -> font_name;
         
-#if defined _MACOSX
+#if defined _MAC_DESKTOP
         
 		// MW-2011-03-13: [[ Bug ]] Try different variants of font searching to ensure we don't
 		//   get strange choices. (e.g. Helvetica -> Helvetica Light Oblique).
 		char t_derived_font_name[256];
-		if (macmatchfontname(t_font_name, t_derived_font_name))
+		if (*t_font_name != '\0' &&
+            macmatchfontname(t_font_name, t_derived_font_name))
+        {
 			t_font_name = t_derived_font_name;
-		
+        }
+        
 #endif
         
         MCAutoStringRef t_font_name_ref;
@@ -1052,7 +969,7 @@ extern bool RTFRead(const char *p_rtf, uint4 p_length, MCTextConvertCallback p_w
 MCParagraph *MCField::rtftoparagraphs(MCStringRef p_data)
 {
 	MCParagraph *t_paragraphs;
-	t_paragraphs = new MCParagraph;
+	t_paragraphs = new (nothrow) MCParagraph;
 	t_paragraphs -> setparent(this);
 	t_paragraphs -> inittext();
 

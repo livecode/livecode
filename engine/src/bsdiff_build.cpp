@@ -56,9 +56,6 @@ bool MCBsDiffBuild(MCBsDiffInputStream *p_old_stream, MCBsDiffInputStream *p_new
 
 #define MIN(x,y) (((x)<(y)) ? (x) : (y))
 
-#if !defined(__LINUX__) && !defined(_OFF_T)
-typedef int32_t off_t;
-#endif
 typedef uint8_t u_char;
 
 static void split(off_t *I,off_t *V,off_t start,off_t len,off_t h)
@@ -244,9 +241,9 @@ static bool bsdiffmain(MCBsDiffInputStream *p_old_file, MCBsDiffInputStream *p_n
 		(close(fd)==-1)) err(1,"%s",argv[1]);*/
 	if (t_success)
 	{
-		uint32_t s;
-		t_success = p_old_file -> Measure(s);
-		oldsize = (signed)s;
+		uint32_t t_size;
+		t_success = p_old_file -> Measure(t_size);
+		oldsize = (signed)t_size;
 	}
 	if (t_success)
 		t_success = MCMemoryNewArray(oldsize + 1, old);
@@ -276,9 +273,9 @@ static bool bsdiffmain(MCBsDiffInputStream *p_old_file, MCBsDiffInputStream *p_n
 		(close(fd)==-1)) err(1,"%s",argv[2]);*/
 	if (t_success)
 	{
-		uint32_t s;
-		t_success = p_new_file -> Measure(s);
-		newsize = (signed)s;
+		uint32_t t_size;
+		t_success = p_new_file -> Measure(t_size);
+		newsize = (signed)t_size;
 	}
 	if (t_success)
 		t_success = MCMemoryNewArray(newsize + 1, newp);

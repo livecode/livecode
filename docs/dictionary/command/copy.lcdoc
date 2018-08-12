@@ -2,15 +2,17 @@ Name: copy
 
 Type: command
 
-Syntax: copy [<object> [to {<card> | group | stack} ]] | [<chunk> of <field>]
+Syntax: copy {[<object> [to {<card> | group | stack} ]] | [<chunk> of <field>]}
 
-Summary: Copies <selected> text or an <object> to the <clipboard> or to a <card>, <group>, or <stack>.
+Summary:
+Copies <selected> text or an <object(glossary)> to the <clipboard> or to
+a <card>, <group>, or <stack>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 copy
@@ -25,26 +27,59 @@ Example:
 copy word -3 to -1 of field "output"
 
 Parameters:
-object: Any available object. If no object or chunk is specified, the copy command copies whatever is currently selected.
-card: If a card, group, or stack is specified, the object is placed there instead of being placed in the clipboard, and the clipboard is left unchanged.
-chunk: 
-field: 
+object:
+Any available object. If no object or chunk is specified, the copy
+command copies whatever is currently selected.
 
-It: If a destination <card>, group, or stack is specified, the <copy> <command> places the <ID> <property> of the newly created <object> in the <it> <variable>, and the appropriate <message> is sent.
+card:
+If a card, group, or stack is specified, the object is placed there
+instead of being placed in the clipboard, and the clipboard is left
+unchanged. 
+
+chunk:
+Expression to define a range of the field
+
+field:
+The object from which the text chunk will be derived
+
+It:
+If a destination <card>, group, or stack is specified, the <copy>
+<command> places the <ID> <property> of the newly created
+<object(glossary)> in the <it> <variable>, and the appropriate <message>
+is sent.
 
 Description:
-Use the <copy> <command> to place <object|objects> or text on the <clipboard>, or to make a copy of an <object> without changing the contents of the <clipboard>.
+Use the <copy> <command> to place <object|objects> or text on the
+<clipboard>, or to make a copy of an <object(glossary)> without changing
+the contents of the <clipboard>.
 
-If a <card> is specified, the copied <object> must be a <control> or <group>.
+If a <card> is specified, the copied <object(glossary)> must be a
+<control> or <group>.
 
-If a group is specified, the copied <object> must be a <control>.
+If a group is specified, the copied <object(glossary)> must be a
+<control>. 
 
-If a stack is specified, the copied <object> must be a <card>.
+If a stack is specified, the copied <object(glossary)> must be a <card>.
 
-If a <chunk> of a <field> is specified, the specified text is copied to the <clipboard> (including text styles).
+If a <chunk> of a <field> is specified, the specified text is copied to
+the <clipboard> (including text styles).
 
->*Note:* When copying from a <list field>, only entire lines can be copied. If you specify a <chunk> that's smaller than a <line> or that crosses <line> boundaries, the <copy> <command> copies the entire <line> or <line|lines> containing the <chunk>.
+>*Note:* When copying from a <list field>, only entire lines can be
+> copied. If you specify a <chunk> that's smaller than a <line> or that
+> crosses <line> boundaries, the <copy> <command> copies the entire
+> <line> or <line|lines> containing the <chunk>.
 
-References: clipboardData (property), selected (property), ID (property), newButton (message), copyKey (message), newPlayer (message), newBackground (message), newGraphic (message), newField (message), newScrollbar (message), newEPS (message), newImage (message), card (keyword), control (keyword), it (keyword), stack (object), object (object), clipboard (function), copyResource (function), select (command), doMenu (command), undo (command), cut (command), paste (command), clone (command), group (command), place (command), property (glossary), variable (glossary), message (glossary), line (glossary), card (glossary), command (glossary), list field (glossary)
+References: select (command), doMenu (command), undo (command),
+cut (command), paste (command), clone (command), group (command),
+place (command), clipboard (function), copyResource (function),
+object (glossary), property (glossary), variable (glossary),
+message (glossary), line (glossary), card (glossary), command (glossary),
+list field (glossary), card (keyword), control (keyword), it (keyword),
+newAudioclip (message), newButton (message), copyKey (message),
+newPlayer (message), newBackground (message), newGraphic (message),
+newField (message), newScrollbar (message), newEPS (message),
+newImage (message), newVideoclip (message), stack (object),
+clipboardData (property), selected (property), ID (property)
 
 Tags: ui
+

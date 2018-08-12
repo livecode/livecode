@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "object.h"
 #include "context.h"
 #include "globals.h"
-//#include "execpt.h"
+
 #include "stack.h"
 #include "region.h"
 #include "osspec.h"
@@ -68,7 +68,7 @@ char *getdefaultprinter(void)
     MCAutoStringRef t_string;
     char *t_cstring;
 
-	MCdefaultstackptr->domess(MCSTR(DEFAULT_PRINTER_SCRIPT));
+    MCtemplatestack->domess(MCSTR(DEFAULT_PRINTER_SCRIPT));
 
     /* UNCHECKED */ MCresult->eval(ctxt, &t_value);
     /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
@@ -100,9 +100,10 @@ void MCPSPrinter::DoInitialize(void)
 void MCPSPrinter::DoFinalize(void)
 {
     delete m_pdf_printer;
-    
-	if ( m_printersettings . printername != NULL ) 
-		delete m_printersettings . printername ;
+
+    /* Allocated by MCStringConvertToCString() */
+	if ( m_printersettings . printername != NULL )
+		MCMemoryDeleteArray(m_printersettings . printername);
 
 	if ( m_printersettings . outputfilename != NULL ) 
 		delete (m_printersettings . outputfilename -7);	// Need to subtract 7 here as we added 7 to skip the "file://" part
@@ -150,21 +151,12 @@ bool MCPSPrinter::DoResetSettings(MCDataRef p_settings)
 
 void MCPSPrinter::DoFetchSettings(void*& r_buffer, uint4& r_length)
 {
-	bool t_success;
-	t_success = true;
-
 	MCDictionary t_dictionary;
 	
 	if ( m_printersettings . printername != NULL ) 
 		t_dictionary . Set('NMEA', MCString(m_printersettings . printername , strlen(m_printersettings . printername ) + 1 ) );
 
-	if (t_success)
-		t_dictionary . Pickle(r_buffer, r_length);
-	else
-	{
-		r_buffer = NULL;
-		r_length = 0;
-	}
+	t_dictionary . Pickle(r_buffer, r_length);
 }
 
 const char *MCPSPrinter::DoFetchName(void)
@@ -262,7 +254,7 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevic
     // Now attempt to create a PDF printer - creation of the custom printer
     // copies all the existing printer state into itself, so we basically get
     // a custom printer configured just like we are.
-    if (MCCustomPrinterCreate(MCSTR("pdf"), *t_path, kMCEmptyArray, m_pdf_printer) != ES_NORMAL)
+    if (!MCCustomPrinterCreate(MCSTR("pdf"), *t_path, kMCEmptyArray, m_pdf_printer))
         return PRINTER_RESULT_ERROR;
 	
     // Now all we need to do is get the PDF printer to begin!

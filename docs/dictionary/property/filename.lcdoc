@@ -4,15 +4,16 @@ Type: property
 
 Syntax: set the filename of {<image> | <player>} to {<filePath> | <URL>}
 
-Summary: Specifies the file associated with a player or image.
+Summary:
+Specifies the file associated with a player or image.
 
-Associations: player,image
+Associations: player, image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the filename of image "Animation" to "/HD/Projects/blipvert.gif"
@@ -20,29 +21,70 @@ set the filename of image "Animation" to "/HD/Projects/blipvert.gif"
 Example:
 set the filename of last player to "http://www.example.com/myMovie.mov"
 
-Value:
-The <filename> of an image or player specifies either a file path or a URL. A file path specifies the name and location of the file. If you specify a name but not a location, LiveCode assumes the file or relative paths are from the defaultFolder or the folder the stack is saved in. A URL specifies the name and location of a file on your system or anywhere on the Internet. 
-By default, the <filename> property of newly created images and players is set to empty.
+The result:
+If the filename of a player is set to an invalid file/URL, or to a
+corrupted file, then an error message of
+"could not create movie reference" is returned in the result. Otherwise,
+empty is returned in the result. A useful rule of thumb is for images to
+have natural width and height values that are multiples of four, this
+way all the supported densities result in integer pixel sizes for each
+version of the image, and the resulting image has the same logical point
+size as all display densities.
 
-The result: If the filename of a player is set to an invalid file/URL, or to a corrupted file, then an error message of "could not create movie reference" is returned in the result. Otherwise, empty is returned in the result. A useful rule of thumb is for images to have natural width and height values that are multiples of four, this way all the supported densities result in integer pixel sizes for each version of the image, and the resulting image has the same logical point size as all display densities.
+Value:
+The <filename> of an image or player specifies either a file path or a
+URL. A file path specifies the name and location of the file. If you
+specify a name but not a location, LiveCode assumes the file or relative
+paths are from the defaultFolder or the folder the stack is saved in. A
+URL specifies the name and location of a file on your system or anywhere
+on the Internet. By default, the <filename> property of newly created
+images and players is set to empty.
 
 Description:
-Use the <filename> property to reference a separate file that holds the data for an image or player that's a referenced control. 
+Use the <filename> property to reference a separate file that holds the
+data for an image or player that's a referenced control.
 
-The contents of an image can reside either in the stack or in a separate file. If an image's <filename> is empty, the image uses its own data, which resides in the stack, instead of loading a separate file. (You can import an image with the import command, or paint an image with the paint tools. ) Setting an image's filename property to the name and location of a file deletes the previous contents of the image. 
+The contents of an image can reside either in the stack or in a separate
+file. If an image's <filename> is empty, the image uses its own data,
+which resides in the stack, instead of loading a separate file. (You can
+import an image with the import command, or paint an image with the
+paint tools. ) Setting an image's filename property to the name and
+location of a file deletes the previous contents of the image.
 
-Using an image from a separate file reduces memory use, since the image does not need to be loaded into memory unless it is in use. But it increases the time it takes to go to a card containing the image, since the file must be loaded from the disk it's on or from the Internet. 
+Using an image from a separate file reduces memory use, since the image
+does not need to be loaded into memory unless it is in use. But it
+increases the time it takes to go to a card containing the image, since
+the file must be loaded from the disk it's on or from the Internet.
 
-The contents of a player must reside in a separate file that is specified in the player's <filename> property. If a player's filename is empty, the player does not display any data. The file specified by the filePath or URL must be in a format supported by QuickTime. 
+The contents of a player must reside in a separate file that is
+specified in the player's <filename> property. If a player's filename is
+empty, the player does not display any data. The file specified by the
+filePath or URL must be in a format supported by AVFoundation on Mac and
+DirectShow on Windows.
 
- set the filename of player "My Player" to "SecondMovie. mov"
- set the currentTime of player "My Player" to zero
+    set the filename of player "My Player" to "SecondMovie. mov"
+    set the currentTime of player "My Player" to zero
 
-If you specify a URL for a streaming QuickTime movie file, LiveCode displays the movie sequentially as it downloads. Otherwise, LiveCode must download the entire file before you can play it. To pre-fetch a file from the Internet in order to speed up access to it, use the load command before visiting the card that holds the player or image that references the file's URL. 
 
-You can use the "New Referenced Control" submenu in the File menu to create a new image or player which references the contents of a file you specify. You can also set the filename to an absolute path or relative path by changing the Source field in the image's or player's property inspector.
+If you specify a URL for a streaming a movie file, LiveCode displays the
+movie sequentially as it downloads. Otherwise, LiveCode must download
+the entire file before you can play it. To pre-fetch a file from the
+Internet in order to speed up access to it, use the load command before
+visiting the card that holds the player or image that references the
+file's URL.
 
-To take full advantage of Hi-DPI, images must be provided at appropriate sizes for different densities. This can be done by having multiple image files in the same location named appropriately (with the image object referencing the image file at the natural density). The naming convention is as follows:
+You can use the "New Referenced Control" submenu in the File menu to
+create a new image or player which references the contents of a file you
+specify. You can also set the filename to an absolute path or relative
+path by changing the Source field in the image's or player's property
+inspector. 
+
+To take full advantage of Hi-DPI, images must be provided at appropriate
+sizes for different densities. This can be done by having multiple image
+files in the same location named appropriately (with the image object
+referencing the image file at the natural density). The naming
+convention is as follows:
+
 - @ultra-low.
 - @ultra-low. - 0.25x
 - @extra-low. - 0.5x
@@ -51,14 +93,42 @@ To take full advantage of Hi-DPI, images must be provided at appropriate sizes f
 - @high. - 1.5x
 - @extra-high. / @2x - 2x
 - @ultra-high. - 4x
-When an image is required, the current scale factor is rounded up to the nearest standard density (one of 0.25, 0.5, 0.75, 1, 1.5, 2 and 4). The image with the lowest scale factor that is greater or equal to the nearest standard density is then selected. For example, if the scale factor is 1.75 and there is an extra-high image available, then that is used.
-Images should be created at appropriately scaled pixel size. If the natural size of an image is x points wide and y points high, the scaled versions should be x scale pixels wide and y scale pixels high in order to have the same natural size. You should take care that the natural size of the image scales to integer pixel sizes, as the logical point size of the image is rounded up to the nearest integer. If this is not practical for a given image, you may need to design your apps to handle slightly different resulting image sizes.
+
+When an image is required, the current scale factor is rounded up to the
+nearest standard density (one of 0.25, 0.5, 0.75, 1, 1.5, 2 and 4). The
+image with the lowest scale factor that is greater or equal to the
+nearest standard density is then selected. For example, if the scale
+factor is 1.75 and there is an extra-high image available, then that is
+used. Images should be created at appropriately scaled pixel size. If
+the natural size of an image is x points wide and y points high, the
+scaled versions should be x scale pixels wide and y scale pixels high in
+order to have the same natural size. You should take care that the
+natural size of the image scales to integer pixel sizes, as the logical
+point size of the image is rounded up to the nearest integer. If this is
+not practical for a given image, you may need to design your apps to
+handle slightly different resulting image sizes.
 
 Changes:
-The URL option was introduced in version 1.1. In previous versions, the filename of an image or player always specified a file path on the local system, and files on the Internet could not be used. 
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
 
-Support for Density Mapped Images was introduced in version 6. In previous versions, the filename of an image would only be able to use that particular image for display. Images with differing resolution are now supported, allowing applications to take full advantage of Hi-DPI.
+Support for Density Mapped Images was introduced in version 6. In
+previous versions, the filename of an image would only be able to use
+that particular image for display. Images with differing resolution are
+now supported, allowing applications to take full advantage of Hi-DPI.
 
-References: fileType (property), constantMask (property), saveStackRequest (message), import (command), tempName (function), shortFilePath (function)
+The URL option was introduced in version 1.1. In previous versions, the
+filename of an image or player always specified a file path on the local
+system, and files on the Internet could not be used.
+
+References: import (command), tempName (function),
+shortFilePath (function), saveStackRequest (message), fileType (property),
+constantMask (property)
 
 Tags: file system
+

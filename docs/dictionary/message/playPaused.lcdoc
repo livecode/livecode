@@ -4,15 +4,16 @@ Type: message
 
 Syntax: playPaused
 
-Summary: Sent to a <player> when the user pauses it.
+Summary:
+Sent to a <player> when the user pauses it.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 on playPaused -- start a "paused" animation
@@ -20,10 +21,15 @@ on playPaused -- start a "paused" animation
 end playPaused
 
 Description:
-Handle the <playPaused> <message> if you want to perform an update when a player is paused.
+Handle the <playPaused> <message> if you want to perform an update when
+a player is paused.
 
-A <playPaused> <message> is also sent when the user clicks within a <player(object)|player's> rectangle and the <player> is already paused.
+A <playPaused> <message> is also sent when the user clicks within a
+<player(object)|player's> rectangle and the <player> is already paused.
 
-References: currentTime (property), player (keyword), playStarted (message), currentTimeChanged (message), player (object), message (glossary), player (glossary)
+References: message (glossary), player (glossary), player (keyword),
+playStarted (message), currentTimeChanged (message), player (object),
+currentTime (property)
 
 Tags: multimedia
+

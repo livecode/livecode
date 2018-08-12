@@ -4,13 +4,14 @@ Type: constant
 
 Syntax: right
 
-Summary: Equivalent to the <string> "right".
+Summary:
+Equivalent to the <string> "right".
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 arrowKey right
@@ -19,8 +20,11 @@ Example:
 if theKey is right then go next card
 
 Description:
-Use the <right> <constant> to indicate the right arrow key in an <arrowKey> <handler>.
+Use the <right> <constant> to indicate the right arrow key in an
+<arrowKey> <handler>.
 
-References: string (keyword), left (constant), arrowKey (message), constant (command), handler (glossary)
+References: constant (command), left (constant), handler (glossary),
+string (keyword), arrowKey (message)
 
 Tags: ui
+

@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -162,9 +162,18 @@ void MCStack::setmodalhints()
 {
 	if (mode == WM_MODAL || mode == WM_SHEET)
 	{
+		Window t_window = nullptr;
 		if (mode == WM_SHEET)
-            gdk_window_set_transient_for(window, (mode == WM_SHEET) ? getparentwindow() : NULL);
-        gdk_window_set_modal_hint(window, TRUE);
+		{
+			t_window = getparentwindow();
+		}
+		
+		if (nullptr == t_window && MCtopstackptr.IsValid()) 
+		{
+			t_window = MCtopstackptr->getwindow();
+		}
+		gdk_window_set_transient_for(window, t_window);
+		gdk_window_set_modal_hint(window, TRUE);
 	}
 }
 
@@ -267,7 +276,7 @@ void MCStack::sethints()
     
     gdk_window_set_type_hint(window, t_type_hint);
     
-    if ((mode >= WM_PULLDOWN && mode <= WM_LICENSE) || getextendedstate(ECS_FULLSCREEN))
+    if ((mode >= WM_PULLDOWN && mode <= WM_LICENSE))
     {
         gdk_window_set_override_redirect(window, TRUE);
     }
@@ -295,31 +304,16 @@ void MCStack::sethints()
 		|| t_env == kMCModeEnvironmentTypeInstaller
 		|| t_env == kMCModeEnvironmentTypeServer)
 	{
-		const char *t_edition_name;
-		switch (MClicenseparameters.license_class)
-		{
-		case kMCLicenseClassProfessionalEvaluation:
-		case kMCLicenseClassProfessional:
-			t_edition_name = "business";
-				break;
-		case kMCLicenseClassEvaluation:
-		case kMCLicenseClassCommercial:
-			t_edition_name = "indy";
-			break;
-		case kMCLicenseClassNone:
-		case kMCLicenseClassCommunity:
-		default:
-			t_edition_name = "community";
-			break;
-		}
-
-		if (MCStringCreateMutable(0, &t_app_name))
+        
+        MCAutoStringRef t_edition_name;
+        if (MCStringCreateMutable(0, &t_app_name) &&
+            MCEditionStringFromLicenseClass(MClicenseparameters.license_class, &t_edition_name))
 		{
 			bool t_success = true;
 			if (t_env == kMCModeEnvironmentTypeEditor)
-				t_success = MCStringAppendFormat(*t_app_name, "%s%s_%s", MCapplicationstring, t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
+				t_success = MCStringAppendFormat(*t_app_name, "%s%@_%s", MCapplicationstring, *t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
 			else
-				t_success = MCStringAppendFormat(*t_app_name, "%s%s_%@_%s", MCapplicationstring, t_edition_name, MCModeGetEnvironment(), MC_BUILD_ENGINE_SHORT_VERSION);
+				t_success = MCStringAppendFormat(*t_app_name, "%s%@_%@_%s", MCapplicationstring, *t_edition_name, MCModeGetEnvironment(), MC_BUILD_ENGINE_SHORT_VERSION);
 				
 			if (t_success)
 			{
@@ -454,6 +448,8 @@ void MCStack::sethints()
 	{
 		gdk_window_set_keep_above(window, TRUE);
 	}
+	
+	MCstacks->restack(this);
 }
 
 void MCStack::destroywindowshape()
@@ -476,6 +472,11 @@ void MCStack::destroywindowshape()
 
 	delete m_window_shape;
 	m_window_shape = nil;
+}
+
+bool MCStack::view_platform_dirtyviewonresize() const
+{
+	return false;
 }
 
 // IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
@@ -572,7 +573,7 @@ MCRectangle MCStack::view_device_setgeom(const MCRectangle &p_rect,
 
 void MCStack::setgeom()
 {
-	if (MCnoui || !opened)
+	if (!opened)
 		return;
 	
 	if (window == DNULL)

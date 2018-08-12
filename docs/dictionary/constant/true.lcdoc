@@ -4,26 +4,33 @@ Type: constant
 
 Syntax: true
 
-Summary: Equivalent to the <string> "true".
+Summary:
+Equivalent to the <string> "true".
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the cantDelete of this stack to true
 if (a and b) or (c and d) is true
 
 Description:
-Use the <true> <constant> to indicate that a <property> is turned on or that a <logical> <expression> evaluates to true.
+Use the <true> <constant> to indicate that a <property> is turned on or
+that a <logical> <expression> evaluates to true.
 
-In many cases, the <true> <constant> can be omitted without changing the meaning of the <statement>. For example,
-  if the lockText of field 1 is true
-is equivalent to
-  if the lockText of field 1
+In many cases, the <true> <constant> can be omitted without changing the
+meaning of the <statement>. For example, the following two <if> 
+<statement|statements> are equivalent:
 
-References: string (keyword), false (constant), constant (command), property (glossary), logical (glossary), statement (glossary), expression (glossary)
+    if the lockText of field 1 is true then ...
+    if the lockText of field 1 then ...
+
+References: constant (command), false (constant), property (glossary),
+logical (glossary), statement (glossary), expression (glossary),
+string (keyword), if (control structure)
 
 Tags: math
+

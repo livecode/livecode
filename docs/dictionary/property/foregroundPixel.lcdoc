@@ -1,35 +1,48 @@
 Name: foregroundPixel
 
+Synonyms: forepixel, firstpixel
+
 Type: property
 
-Syntax: set the foregroundPixel of <object> to <colorNumber> 
+Syntax: set the foregroundPixel of <object> to <colorNumber>
 
-Summary: Specifies which entry in the <color table> is used for an <object|object's> text and borders.
+Summary:
+Specifies which entry in the <color table> is used for an
+<object|object's> text and borders.
 
-Synonyms: forePixel,firstPixel
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the foregroundPixel of this stack to 0
 
 Value:
-The <foregroundPixel> of an <object> is an <integer> between zero and (the screenColors - 1). It designates an entry in the current color table.
-By default, the <foregroundPixel> for all <object|objects> is empty.
+The <foregroundPixel> of an <object(glossary)> is an <integer> between
+zero and (the screenColors - 1). It designates an entry in the current
+color table. By default, the <foregroundPixel> for all <object|objects>
+is empty.
 
 Description:
-Use the <foregroundPixel> <property> to change the foreground color of an <object> when the <bit depth> of the screen is 8 <bit|bits> (256 colors) or less.
+Use the <foregroundPixel> <property> to change the foreground color of
+an <object(glossary)> when the <bit depth> of the screen is 8 <bit|bits>
+(256 colors) or less.
 
-The <foregroundPixel> <property> specifies which entry in the <color table> is used for an <object|object's> foreground color. It is similar to the <foregroundColor> <property>, but is specified as an entry in the current <color table>, rather than as a <color reference>.
+The <foregroundPixel> <property> specifies which entry in the <color
+table> is used for an <object|object's> foreground color. It is similar
+to the <foregroundColor> <property>, but is specified as an entry in the
+current <color table>, rather than as a <color reference>.
 
 The color table can be set by changing the colorMap <property>.
 
-References: borderPixel (property), foregroundColor (property), integer (keyword), object (object), property (glossary), bit depth (glossary), bit (glossary), color reference (glossary), color table (glossary)
+References: object (glossary), property (glossary), bit depth (glossary),
+bit (glossary), color reference (glossary), color table (glossary),
+integer (keyword), borderPixel (property), foregroundColor (property)
 
 Tags: ui
+

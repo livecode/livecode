@@ -2,33 +2,71 @@ Name: revMoveFolder
 
 Type: command
 
-Syntax: revMoveFolder <folderToMove>, <destinationFolder> 
+Syntax: revMoveFolder <folderToMove>, <destinationFolder>
 
-Summary: Moves a <folder> with all its contents to another location.
+Summary:
+Moves a <folder> with all its contents to another location.
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revMoveFolder "Backup Folder","/Disk/Backups/"
 
 Example:
-revMoveFolder "My App Prefs",specialFolderPath(Preferences)
+revMoveFolder "My App Prefs",specialFolderPath("Preferences")
 
 Parameters:
-folderToMove: The folderToMove specifies the name and location of the folder. If you specify a name but not a location, LiveCode assumes the folder is in the defaultFolder.
-destinationFolder: The destinationFolder specifies the name and location of the folder where the folder should be placed. If you specify a name but not a location, LiveCode assumes the destination folder is in the defaultFolder.
+folderToMove:
+The folderToMove specifies the name and location of the folder. If you
+specify a name but not a location, LiveCode assumes the folder is in the
+defaultFolder. 
 
-The result: The <revMoveFolder> <command> uses system services on each <platform> to perform the move. On <Mac OS> and <OS X|OS X systems>, it uses <AppleScript>; on <Windows> and <Unix> systems, it uses the <shell> <function>. Any errors encountered are <return|returned> in the <result> <function>.
+destinationFolder:
+The destinationFolder specifies the name and location of the folder
+where the folder should be placed. If you specify a name but not a
+location, LiveCode assumes the destination folder is in the
+defaultFolder. 
+
+The result:
+The <revMoveFolder> <command> uses system services on each <platform> to
+perform the move. On <Mac OS> and <OS X|OS X systems>, it uses
+<AppleScript>; on <Windows> and <Unix> systems, it uses the <shell>
+<function>. Any errors encountered are <return|returned> in the <result>
+<function>. 
 
 Description:
-Use the <revMoveFolder> <function> to move a <folder> into another <folder>.
+Use the <revMoveFolder> <function> to move a <folder> into another
+<folder>. 
 
-The <revMoveFolder> <command> moves the entire <folder>, including all <file|files>, <subfolder|subfolders>, and their contents. The <folder> is removed from its original location and apppears only in the new location.
+The <revMoveFolder> <command> moves the entire <folder>, including all
+<file|files>, <subfolder|subfolders>, and their contents. The <folder>
+is removed from its original location and apppears only in the new
+location. 
 
->*Note:* When included in a <standalone application>, the <Common library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <revMoveFolder> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <revMoveFolder> <command> can be used in any <handler>.
+>*Note:* When included in a <standalone application>, the <Common
+> library> is implemented as a hidden <group> and made available when
+> the <group> receives its first <openBackground> message. During the
+> first part of the <application|application's> startup process, before
+> this <message> is sent, the <revMoveFolder> <command> is not yet
+> available. This may affect attempts to use this <command> in
+> <startup>, <preOpenStack>, <openStack>, or <preOpenCard>
+> <handler|handlers> in the <main stack>. Once the <application> has
+> finished starting up, the <library> is available and the
+> <revMoveFolder> <command> can be used in any <handler>.
 
-References: startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), create alias (command), delete folder (command), revDeleteFolder (command), function (control_st), application (glossary), return (glossary), standalone application (glossary), file (glossary), shell (glossary), subfolder (glossary), platform (glossary), command (glossary), Windows (glossary), main stack (glossary), OS X (glossary), AppleScript (glossary), group (glossary), result (glossary), Unix (glossary), message (glossary), folder (glossary), Mac OS (glossary), handler (glossary), Common library (library), library (library)
+References: create alias (command), delete folder (command),
+revDeleteFolder (command), function (control structure),
+application (glossary), return (glossary),
+standalone application (glossary), file (glossary), shell (glossary),
+subfolder (glossary), platform (glossary), command (glossary),
+Windows (glossary), main stack (glossary), OS X (glossary),
+AppleScript (glossary), group (glossary), result (glossary),
+Unix (glossary), message (glossary), folder (glossary), Mac OS (glossary),
+handler (glossary), Common library (library), library (library),
+startup (message), openBackground (message), preOpenStack (message),
+openStack (message), preOpenCard (message)
+

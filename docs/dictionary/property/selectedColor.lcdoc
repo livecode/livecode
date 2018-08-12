@@ -4,12 +4,17 @@ Type: property
 
 Syntax: selectedColor
 
-Summary: The <selectedColor> <property> is <reserved word|reserved> for internal use.
+Summary:
+The <selectedColor> <property> is <reserved word|reserved> for internal
+use.
 
 Introduced: 1.0
 
-OS: ios,android
+OS: ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
+
+Description:
+<reserved word|Reserved> for internal use.
 
 References: property (glossary), reserved word (glossary)

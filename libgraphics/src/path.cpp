@@ -53,7 +53,7 @@ bool MCGPathCreateMutable(MCGPathRef& r_path)
 	
 	if (t_success)
 	{
-		t_path -> path = new SkPath();
+		t_path -> path = new (nothrow) SkPath();
 		t_success = t_path -> path != NULL;
 	}
 	
@@ -154,7 +154,6 @@ void MCGPathCopyAndRelease(MCGPathRef self, MCGPathRef& r_new_path)
 	}
 	else
 	{
-		MCGPathRef t_new_path;
 		MCGPathCopy(self, r_new_path);
 		if (MCGPathIsValid(r_new_path))
 			MCGPathRelease(self);
@@ -489,7 +488,7 @@ void MCGPathAddArc(MCGPathRef self, MCGPoint p_center, MCGSize p_radii, MCGFloat
 			// Use Skia implementation
 			SkRect t_bounds;
 			t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - p_radii . width), MCGCoordToSkCoord(p_center . y - p_radii . height),
-			                            MCGFloatToSkScalar(p_radii . width * 2), MCGFloatToSkScalar(p_radii . height * 2));
+			                            MCGFloatToSkScalar(p_radii . width * 2.0), MCGFloatToSkScalar(p_radii . height * 2.0));
 			self -> path -> addArc(t_bounds, MCGFloatToSkScalar(p_start_angle), MCGFloatToSkScalar(p_finish_angle - p_start_angle));
 		}
 	}
@@ -1084,32 +1083,6 @@ void MCGPathCloseSubpath(MCGPathRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGPathThicken(MCGPathRef self, const MCGStrokeAttr& p_attr, MCGPathRef& r_thick_path)
-{
-	if (!MCGPathIsValid(self))
-		return;
-	
-	// TODO: Implement
-}
-
-void MCGPathFlatten(MCGPathRef self, MCGFloat p_flatness, MCGPathRef& r_flat_path)
-{
-	if (!MCGPathIsValid(self))
-		return;
-	
-	// TODO: Implement
-}
-
-void MCGPathSimplify(MCGPathRef self, MCGPathRef& r_simple_path)
-{
-	if (!MCGPathIsValid(self))
-		return;
-	
-	// TODO: Implement
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCGPathGetBoundingBox(MCGPathRef self, MCGRectangle &r_bounds)
 {
 	if (!MCGPathIsValid(self))
@@ -1132,7 +1105,6 @@ bool MCGPathGetCurrentPoint(MCGPathRef self, MCGPoint &r_current)
 
 bool MCGPathGetPreviousPoint(MCGPathRef self, MCGPoint &r_last)
 {
-	SkPoint t_point;
 	int t_count;
 	t_count = self->path->countPoints();
 	if (t_count < 2)
@@ -1165,13 +1137,10 @@ bool MCGPathIterate(MCGPathRef self, MCGPathIterateCallback p_callback, void *p_
 {
 	if (!MCGPathIsValid(self))
 		return false;
-	
-	bool t_success;
-	t_success = true;
-	
+
 	MCGPoint t_points[3];
-	uint32_t t_point_count;
-	MCGPathCommand t_command;
+	uint32_t t_point_count = 0;
+	MCGPathCommand t_command = kMCGPathCommandEnd;
 	
 	SkPath::Iter t_iter(*self->path, false);
 	SkPath::Verb t_verb;
@@ -1179,8 +1148,9 @@ bool MCGPathIterate(MCGPathRef self, MCGPathIterateCallback p_callback, void *p_
 	
 	// IM-2015-03-20: [[ Bug 15035 ]] The first point returned by SkPath::Iter::next() is
 	//  always the last moveTo point; the points for the current verb start at index 1.
-	while (t_success && (t_verb = t_iter.next(t_sk_points)) != SkPath::kDone_Verb)
+	while ((t_verb = t_iter.next(t_sk_points)) != SkPath::kDone_Verb)
 	{
+
 		switch(t_verb)
 		{
 			case SkPath::kMove_Verb:
@@ -1221,15 +1191,11 @@ bool MCGPathIterate(MCGPathRef self, MCGPathIterateCallback p_callback, void *p_
 				
 			default:
 				// Unknown path instruction
-				t_success = false;
-				break;
+				return false;
 		}
-		
-		t_success = p_callback(p_context, t_command, t_points, t_point_count);
+		if (!p_callback(p_context, t_command, t_points, t_point_count))
+			return false;
 	}
 	
-	if (t_success)
-		t_success = p_callback(p_context, kMCGPathCommandEnd, nil, 0);
-	
-	return t_success;
+	return p_callback(p_context, kMCGPathCommandEnd, nil, 0);
 }

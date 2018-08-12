@@ -6,13 +6,15 @@ Syntax: the diskSpace
 
 Syntax: diskSpace()
 
-Summary: <return|Returns> the amount of free space on the disk that holds the <defaultFolder>.
+Summary:
+<return|Returns> the amount of free space on the disk that holds the
+<defaultFolder>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: disk
 
@@ -25,29 +27,40 @@ put the diskSpace div (1024^2) into megabytesAvailable
 Example:
 if the diskSpace &lt; spaceNeeded then exit mouseUp
 
-Returns: The <diskSpace> <function> <return|returns> an <integer>.
+Returns:
+The <diskSpace> <function> <return|returns> an <integer>.
 
 Description:
-Use the <diskSpace> <function> to determine whether there is enough free space to complete an action (such as <download|downloading> data).
+Use the <diskSpace> <function> to determine whether there is enough free
+space to complete an action (such as <download|downloading> data).
 
-The value returned by the <diskSpace> <function> is in <byte|bytes>. To convert to kilobytes (K), divide the <return value> by 1024. To convert to megabytes (M), divide by 1024^2. To convert to gigabytes (G), divide by 1024^3:
+The value returned by the <diskSpace> <function> is in <byte|bytes>. To
+convert to kilobytes (K), divide the <return value> by 1024. To convert
+to megabytes (M), divide by 1024^2. To convert to gigabytes (G), divide
+by 1024^3:
 
-  function humanReadableDiskSpace theUnits
-    set the caseSensitive to false
-    switch char 1 of theUnits
-    case "k"
-      return the diskSpace div 1024
-      break
-    case "m"
-      return the diskSpace div (1024^2)
-      break
-    case "g"
-      return the diskSpace div (1024^3)
-      break
-    default
-      return the diskSpace
-      break
-    end switch
-  end humanReadableDiskSpace
+    function humanReadableDiskSpace theUnits
+        set the caseSensitive to false
+        switch char 1 of theUnits
+            case "k"
+    	        return the diskSpace div 1024
+    	        break
+            case "m"
+                return the diskSpace div (1024^2)
+                break
+            case "g"
+                return the diskSpace div (1024^3)
+                break
+            default
+                return the diskSpace
+                break
+        end switch
+    end humanReadableDiskSpace
 
-References: freeSize (property), size (property), defaultFolder (property), integer (keyword), hasMemory (function), volumes (function), stackSpace (function), download (glossary), return value (glossary), return (glossary), byte (glossary), function (control_st)
+
+References: function (control structure), hasMemory (function),
+volumes (function), stackSpace (function), download (glossary),
+return value (glossary), return (glossary), byte (glossary),
+integer (keyword), freeSize (property), size (property),
+defaultFolder (property)
+

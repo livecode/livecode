@@ -4,29 +4,48 @@ Type: property
 
 Syntax: set the radioBehavior of <group> to {true | false}
 
-Summary: Specifies that only one <radio button> in a <group> can be <highlight|highlighted> at a time.
+Summary:
+Specifies that only one <radio button> in a <group> can be
+<highlight|highlighted> at a time.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the radioBehavior of last group to true
 
-Value (bool):The <radioBehavior> of a <group(command)> is true or false.
-By default, the <radioBehavior> <property> of newly created <group(glossary)|groups> is set to true.
+Value (bool):
+The <radioBehavior> of a <group(command)> is true or false.
+By default, the <radioBehavior> <property> of newly created
+<group(glossary)|groups> is set to true.
 
 Description:
-Use the <radioBehavior> <property> to create a <radio button|radio-button cluster>.
+Use the <radioBehavior> <property> to create a <radio
+button|radio-button cluster>.
 
-If a group's <radioBehavior> <property> is set to true, <highlight|highlighting> any radio <button(keyword)> in the <group> unhighlights any other radio buttons--that is, the <button(object)|buttons> in the <group> behave like a <radio button|radio-button cluster>, with the options being mutually exclusive.
+If a group's <radioBehavior> <property> is set to true,
+<highlight|highlighting> any radio <button(keyword)> in the <group>
+unhighlights any other radio buttons--that is, the
+<button(object)|buttons> in the <group> behave like a <radio
+button|radio-button cluster>, with the options being mutually exclusive.
 
-If the <radioBehavior> is false, <highlight|highlighting> a button does not affect the <hilite> <property> of other <button(object)|buttons> in the <group>.
+If the <radioBehavior> is false, <highlight|highlighting> a button does
+not affect the <hilite> <property> of other <button(object)|buttons> in
+the <group>.
 
-The <radioBehavior> <property> does not affect <button(object)|buttons> whose <style> is not set to radioButton<a/>.
+The <radioBehavior> <property> does not affect <button(object)|buttons>
+whose <style> is not set to radioButton<a/>.
 
-References: hilitedButtonName (property), tabGroupBehavior (property), style (property), button (keyword), hilite (command), group (command), selectedButton (function), property (glossary), highlight (glossary), radio button (glossary), group (glossary), button (object)
+References: hilite (command), group (command), selectedButton (function),
+property (glossary), highlight (glossary), radio button (glossary),
+group (glossary), button (keyword), button (object),
+hilitedButtonName (property), tabGroupBehavior (property),
+style (property)
 
 Tags: ui
+

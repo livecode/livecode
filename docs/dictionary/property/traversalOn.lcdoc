@@ -4,13 +4,17 @@ Type: property
 
 Syntax: set the traversalOn of <object> to {true | false}
 
-Summary: Specifies whether a <control> can become the <active (focused) control(glossary)>.
+Summary:
+Specifies whether a <control> can become the <active (focused)
+control(glossary)>. 
+
+Associations: field, button, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the traversalOn of group "Arrows" to true
@@ -18,21 +22,55 @@ set the traversalOn of group "Arrows" to true
 Example:
 set the traversalOn of button "Help" to false
 
-Value (bool): A control's <traversalOn> <property> is true or false.
+Value (bool):
+A control's <traversalOn> <property> is true or false.
 
 Description:
-Use the <traversalOn> <property> to control whether the user can tab or click into a <control>.
+Use the <traversalOn> <property> to control whether the user can tab or
+click into a <control>.
 
-Setting a field's <traversalOn> to true enables the user to tab into or click in the <field> for editing (if the <field(object)|field's> <lockText> <property> is false). If a <field(object)|field's> traversalOn and <lockText> <properties> are both set to true, the user can <select> text, but not change it, and can scroll within the <field> using the keyboard. If the <traversalOn> is true and the <lockText> is false, the <field> can be edited. If the <lockText> is true and the <traversalOn> is false, the user can neither <select> nor edit the <field(object)|field's> text.
+Setting a field's <traversalOn> to true enables the user to tab into or
+click in the <field> for editing (if the <field(object)|field's>
+<lockText> <property> is false). If a <field(object)|field's>
+traversalOn and <lockText> <properties> are both set to true, the user
+can <select> text, but not change it, and can scroll within the <field>
+using the keyboard. If the <traversalOn> is true and the <lockText> is
+false, the <field> can be edited. If the <lockText> is true and the
+<traversalOn> is false, the user can neither <select> nor edit the
+<field(object)|field's> text.
 
-If the <object> is a <group>, setting its <traversalOn> to true causes tabbing into the <group> to set the <focus> to the first <control> in the <group>.
+If the <object(glossary)> is a <group>, setting its <traversalOn> to
+true causes tabbing into the <group> to set the <focus> to the first
+<control> in the <group>.
 
-If the <object> is a <control> other than a <group> or <field>, if its <traversalOn> is true, and if the <lookAndFeel> is set to "Motif" or "Windows 95", the user can tab to the <control>, then press Return or Enter to send a <mouseUp> <message> to the <object>.
+If the <object(glossary)> is a <control> other than a <group> or
+<field>, if its <traversalOn> is true, and if the <lookAndFeel> is set
+to "Motif" or "Windows 95", the user can tab to the <control>, then
+press Return or Enter to send a <mouseUp> <message> to the
+<object(glossary)>. 
 
-If the lookAndFeel is set to "Motif", "Macintosh", or "Appearance Manager", the <active (focused) control(glossary)> is outlined, and the <control> receives any keystrokes and the <message|messages> associated with them. (The outline can be turned off by setting the <field(object)|field's> <showFocusBorder> <property> to false.) If the <lookAndFeel> is set to "Windows 95", the <appearance> of a <focus|focused> <field> does not change, but it receives keystroke <message|messages>.
+If the lookAndFeel is set to "Motif", "Macintosh", or
+"Appearance Manager", the <active (focused) control(glossary)> is
+outlined, and the <control> receives any keystrokes and the
+<message|messages> associated with them. (The outline can be turned off
+by setting the <field(object)|field's> <showFocusBorder> <property> to
+false.) If the <lookAndFeel> is set to "Windows 95", the <appearance> of
+a <focus|focused> <field> does not change, but it receives keystroke
+<message|messages>. 
 
->*Important:*  If an <object|object's> <script> uses the text <selection>, make sure to set the <object|object's> <traversalOn> <property> to false, since clicking an <object> whose <traversalOn> is true deselects any text <selection>.
+>*Important:*  If an <object|object's> <script> uses the text
+> <selection>, make sure to set the <object|object's> <traversalOn>
+> <property> to false, since clicking an <object(glossary)> whose
+> <traversalOn> is true deselects any text <selection>.
 
-References: tabGroupBehavior (property), showFocusBorder (property), script (property), allowInlineInput (property), lockText (property), properties (property), lookAndFeel (property), selection (keyword), control (keyword), mouseUp (message), select (command), focus (command), disable (command), group (command), field (object), object (object), property (glossary), focus (glossary), message (glossary), appearance (glossary), control (glossary), active control (glossary), field (glossary)
+References: select (command), focus (command), disable (command),
+group (command), object (glossary), property (glossary), focus (glossary),
+message (glossary), appearance (glossary), control (glossary),
+active control (glossary), field (glossary), selection (keyword),
+control (keyword), mouseUp (message), field (object),
+tabGroupBehavior (property), showFocusBorder (property),
+script (property), allowInlineInput (property), lockText (property),
+properties (property), lookAndFeel (property)
 
 Tags: ui
+

@@ -2,28 +2,40 @@ Name: customPropertySets
 
 Type: property
 
-Syntax: get the customPropertySets of <object> 
+Syntax: get the customPropertySets of <object>
 
-Summary: Lists all the <custom property> sets that can apply to an <object>.
+Summary:
+Lists all the <custom property> sets that can apply to an
+<object(glossary)>. 
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-if it is among the lines of the customPropertySets then doItOver
+if it is among the lines of the customPropertySets of me then doItOver
 
-Value: The <customPropertySets> of an <object> is a list of all the <custom property> sets belonging to the specified <object>, one per line.
+Value:
+The <customPropertySets> of an <object(glossary)> is a list of all the
+<custom property> sets belonging to the specified <object(glossary)>,
+one per line.
 
 Description:
-Use the <customPropertySets> <property> to find out what <property> sets are defined for an <object>.
+Use the <customPropertySets> <property> to find out what <property> sets
+are defined for an <object(glossary)>.
 
-You can delete an object's custom property sets by setting the object's <customPropertySets> to empty.
+You can delete an object's custom property sets by setting the object's
+<customPropertySets> to empty.
 
-References: customPropertySet (property), revProfile (property), customKeys (property), set (command), getProp (control_st), setProp (control_st), custom property (glossary), property (glossary), object (object)
+References: set (command), getProp (control structure),
+setProp (control structure), custom property (glossary),
+property (glossary), object (glossary), customPropertySet (property),
+revProfile (property), customKeys (property)
 
 Tags: properties
+

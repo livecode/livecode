@@ -4,13 +4,17 @@ Type: function
 
 Syntax: revXMLMatchingNode(<treeID>, <startNode>, <childName>, <attributeName>, <attributeValue>, <depth> [, <caseSensitive>])
 
-Summary: Finds the <node> in an <XML tree> where the specified attribute of the <node> has the specified value.
+Summary:
+Finds the <node> in an <XML tree> where the specified attribute of the
+<node> has the specified value.
+
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -21,23 +25,62 @@ Example:
 put revXMLMatchingNode(thisTree,it,field "Category",thisAttr,"Yes",4) after tFoundNodePaths
 
 Parameters:
-treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
-startNode: The path to the node where you want to start.
-childName (string): A string specifying which child nodes to scan. If it is empty, all child nodes are scanned. Otherwise, only child nodes whose name matches the childName are scanned.
-attributeName: The name of the attribute you want to examine.
-attributeValue: The value that the attributeName must have to be found.
-depth: The depth specifies how many generations to scan. If you specify 1, the parentNode's child nodes are scanned, but not their child nodes. To scan all generations, specify -1 as the depth.
-caseSensitive (bool): True or false and determines whether the attributeValue should be compared in a case-sensitive manner or not. If caseSensitive is not specified, then case is ignored when comparing attribute values (i.e. defaults to false).
+treeID:
+The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+function when you created the XML tree.
 
-Returns: The <revXMLMatchingNode> <function> returns a string consisting of the path to the first node containing the specified attribute with the specified value.
+startNode:
+The path to the node where you want to start.
+
+childName (string):
+A string specifying which child nodes to scan. If it is empty, all child
+nodes are scanned. Otherwise, only child nodes whose name matches the
+childName are scanned.
+
+attributeName:
+The name of the attribute you want to examine.
+
+attributeValue:
+The value that the attributeName must have to be found.
+
+depth:
+The depth specifies how many generations to scan. If you specify 1, the
+parentNode's child nodes are scanned, but not their child nodes. To scan
+all generations, specify -1 as the depth.
+
+caseSensitive (bool):
+True or false and determines whether the attributeValue should be
+compared in a case-sensitive manner or not. If caseSensitive is not
+specified, then case is ignored when comparing attribute values (i.e.
+defaults to false).
+
+Returns:
+The <revXMLMatchingNode> <function> returns a string consisting of the
+path to the first node containing the specified attribute with the
+specified value.
 
 Description:
-Use the <revXMLMatchingNode> function to search for a <node> by its <attribute|attributes>.
+Use the <revXMLMatchingNode> function to search for a <node> by its
+<attribute|attributes>. 
 
-If the <revXMLMatchingNode> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLMatchingNode> <function> encounters an error, it
+<return|returns> an error message starting with "xmlerr".
 
->*Important:*  The <revXMLMatchingNode> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLMatchingNode> <function> is part of the 
+> <XML library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "XML" 
+> checkbox is checked.
 
-References: function (control_st), revXMLAttributeValues (function), revXMLChildNames (function), revXMLTree (function), revXMLAttributes (function), XML library (library), LiveCode custom library (library), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), attribute (glossary)
+References: function (control structure),
+revXMLAttributeValues (function), revXMLChildNames (function),
+revXMLTree (function), revXMLAttributes (function),
+LiveCode custom library (glossary), node (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), XML tree (glossary), return (glossary),
+attribute (glossary), XML library (library)
 
 Tags: text processing
+

@@ -1,6 +1,6 @@
 Name: export
 
-Synonyms: exporting,exported,export
+Synonyms: exporting, exported, export
 
 Type: glossary
 
@@ -10,3 +10,4 @@ To place data in a <file> that can be read by other applications.
 References: file (glossary)
 
 Tags: file system
+

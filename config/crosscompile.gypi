@@ -81,10 +81,11 @@
 								{
 									'toolset_os': '<(host_os)',
 									'toolset_arch': '<(host_arch)',
+                                    
 								},
 								{
 									'toolset_os': '<(OS)',
-									'toolset_arch': '<(target_arch)',
+                                    'toolset_arch': '<(target_arch)',
 								},
 							],
 						],
@@ -99,6 +100,24 @@
 		
 		'target_conditions':
 		[
+            [
+                '_toolset == "host"',
+                {
+                    'defines':
+                    [
+                        'CROSS_COMPILE_HOST',
+                    ],
+                },
+            ],
+            [
+                '_toolset == "target"',
+                {
+                    'defines':
+                    [
+                        'CROSS_COMPILE_TARGET',
+                    ],
+                },
+            ],
 			[
 				'host_and_target != 0',
 				{

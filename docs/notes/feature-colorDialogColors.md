@@ -1,1 +1,0 @@
-# New global property colorDialogColorsThe *colorDialogColors* provides a way to get and set the custom colors a user defined in the color dialog or provide a default set of colors for the user to pick from. The property currently only has an effect on Windows. 

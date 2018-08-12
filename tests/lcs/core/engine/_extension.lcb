@@ -1,0 +1,37 @@
+library com.livecode.lcs_tests.core.extension
+
+use com.livecode.engine
+use com.livecode.lcs_tests.core.extension.support
+
+public handler TestExtensionBridgeNames_ExecuteScript()
+	execute script "return the version"
+	return the result is a string
+end handler
+
+public handler TestExtensionBridgeNumbers_ExecuteScript()
+	execute script "return 5+0"
+	return the result is a number
+end handler
+
+public handler TestExtensionBridgeNames_Send()
+	variable tScriptObject
+	resolve script object "stack \qCoreEngineExtensions\q"
+	put the result into tScriptObject
+	test diagnostic tScriptObject
+
+	send function "TestExtensionBridgeNames_Version" to tScriptObject
+	return the result is a string
+end handler
+
+public handler TestExtensionBridgeArrays_EmptyToEmptyList(in pList as List) returns Boolean
+	return pList is the empty list
+end handler
+
+public handler TestExtensionLibraryHandler(in pValue as Number)
+end handler
+
+public handler TestExtensionSupportModule_Handler()
+	return SupportHandler() is "support handler"
+end handler
+
+end library

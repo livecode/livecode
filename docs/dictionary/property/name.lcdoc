@@ -2,19 +2,21 @@ Name: name
 
 Type: property
 
-Syntax: set the [{ long | abbr[ev[iated]] | short }] name of <object> to <string> 
+Syntax: set the [{ long | abbreviated | short }] name of <object> to <string>
 
 Syntax: get the name
 
-Summary: Specifies the name of an <object(object)>.
+Summary:
+Specifies the name of an <object(object)>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the name of the target to it
@@ -22,51 +24,138 @@ set the name of the target to it
 Example:
 set the name of last card button to "Bing!"
 
-Value: The <name> of an <object(object)> is a <string>.
+Value:
+The <name> of an <object(object)> is a <string>.
 
 Description:
 Use an object's <name> <property> to refer to the <object(object)>.
 
-The short name of an object is simply the name that the object has been assigned. When you set an object's <name> <property> or type it into the <object(object)|object's> <property inspector>, the short name is what you provide.
+The short name of an object is simply the name that the object has been
+assigned. When you set an object's <name> <property> or type it into the
+<object(object)|object's> <property inspector>, the short name is what
+you provide.
 
-The abbreviated name of an object is the <object(object)|object's> type followed by the <object(object)|object's> short name in quotes. For example, if a <player|player's> short name is Heaven, its abbreviated name is player "Heaven". If you don't specify a modifier for the <name> <property>, the abbreviated name is what you get.
+The abbreviated name of an object is the <object(object)|object's> type
+followed by the <object(object)|object's> short name in quotes. For
+example, if a <player|player's> short name is Heaven, its abbreviated
+name is player "Heaven". If you don't specify a modifier for the <name>
+<property>, the abbreviated name is what you get.
 
-The long name of an object includes information about its <owner> (and about the <owner> of that <object(object)>, and so forth). For example, suppose a <stack> named "My <stack>" contains a <card> named "My Card". This <card> has a <group> named "My Group" which contains a <button> named "My Button". The <card> also has a <card control|card field> named "My Field". If "My Stack" is a <main stack> and it's in a <file> whose <file path|path> is "/Drive/Folder/Stack.rev", the long names of these <objects(object)> look like this:
+The <long> name of an object includes information about its <owner> (and
+about the <owner> of that <object(object)>, and so forth). For example,
+suppose a <stack> named "My <stack>" contains a <card> named "My Card".
+This <card> has a <group> named "My Group" which contains a <button>
+named "My Button". The <card> also has a <card control|card field> named
+"My Field". If "My Stack" is a <main stack> and it's in a <file> whose
+<file path|path> is "/Drive/Folder/Stack.rev", the <long> names of these
+<objects(object)> look like this:
 
 * The stack:
-   stack "/Drive/Folder/Stack.rev"
+
+    stack "/Drive/Folder/Stack.rev"
 * The group:
-   group "My Group" of stack "/Drive/Folder/Stack.rev"
+
+    group "My Group" of stack "/Drive/Folder/Stack.rev"
 * The card:
-   card "My Card" of stack "/Drive/Folder/Stack.rev"
+
+    card "My Card" of stack "/Drive/Folder/Stack.rev"
 * The grouped button:
-   button "My Button" of group "My Group" of card "My Card" of stack "/Drive/Folder/Stack.rev"
+
+    button "My Button" of group "My Group" of card "My Card" of stack
+    "/Drive/Folder/Stack.rev" 
 * The card field:
-   field "My Field" of card "My Card" of stack "/Drive/Folder/Stack.rev"
 
->*Important:*  On <OS X|OS X systems>, <standalone application|standalone applications> are stored as <application bundle|application bundles>. A <application bundle|bundle> behaves like a <file> but is actually a <folder>, and the <main stack> of a <standalone application> is inside this <folder>. The long name of a stack in an application is the location of the application inside the <application bundle|bundle>, not the <application bundle|bundle's> location. For example, if the <bundle'sfile path> is "/Volumes/Disk/MyApp.app/", the long name of the application's main stack might be "/Volumes/Disk/MyApp.app/Contents/MacOS/MyApp".
+    field "My Field" of card "My Card" of stack
+    "/Drive/Folder/Stack.rev" 
 
-If the stack is a substack, its name is included in the long names of its objects, before the path of the main stack:
-  stack "My Substack" of stack "/Drive/Folder/Stack.rev"
 
-The long <name> of a <group> includes the name of the <current card>. If the <group> does not appear on the <current card>, requesting its <name> results in an <execution error>. If you need to get the name of a <group> that is not on the <current card>, use the "<background>" terminology instead.
+>*Important:*  On <OS X|OS X systems>, <standalone
+> application|standalone applications> are stored as <application
+> bundle|application bundles>. A <application bundle|bundle> behaves
+> like a <file> but is actually a <folder>, and the <main stack> of a
+> <standalone application> is inside this <folder>. The <long> name of a
+> stack in an application is the location of the application inside the
+> <application bundle|bundle>, not the <application bundle|bundle's>
+> location. For example, if the <bundle'sfile path> is
+> "/Volumes/Disk/MyApp.app/", the <long> name of the application's main
+> stack might be "/Volumes/Disk/MyApp.app/Contents/MacOS/MyApp".
 
-The long <name> of a <background> includes the name of the <current card>, if the <background> appears on the <current card>. If not, the long name of the <background> includes the name of the first <card> the <background> appears on.
+If the stack is a substack, its name is included in the <long> names of
+its objects, before the path of the main stack: stack "My Substack" of
+stack "/Drive/Folder/Stack.rev"
 
-You can use an object's <name> to refer to the <object(object)> in a <statement>. However, the <name> need not be seen on screen, even if the <object(object)> is one that normally has a visible name (such as a <button>). If a <stack> or <control(object)|control's> <label> <property> is not empty, the <label> <property> is used when a visible label is displayed. If a <stack|stack's> <label> <property> is empty, its <name> is used as the window title. Likewise, if a <control(object)|control's> <label> <property> is empty, its <name> is used as the label. This means that you can use any <string> you want for the <name> without worrying about the user-interface impact on your application: if the <name> is not user-friendly, set the <label> to something that is.
+The <long> <name> of a <group> includes the name of the <current card>. If
+the <group> does not appear on the <current card>, requesting its <name>
+results in an <execution error>. If you need to get the name of a
+<group> that is not on the <current card>, use the "<background>"
+terminology instead.
 
-A stack's <name> cannot be empty. (Other <objects(object)> can have empty names.) Attempting to set a <stack|stack's> <name> to empty does not rename it.
+The <long> <name> of a <background> includes the name of the <current
+card>, if the <background> appears on the <current card>. If not, the
+<long> name of the <background> includes the name of the first <card> the
+<background> appears on.
 
-If an object's <name> is empty, getting its <name> yields its <ID> <property> instead. In this case, the abbreviated ID form is always reported, regardless of what form of the <name> <property> you request.
+You can use an object's <name> to refer to the <object(object)> in a
+<statement>. However, the <name> need not be seen on screen, even if the
+<object(object)> is one that normally has a visible name (such as a
+<button>). If a <stack> or <control(object)|control's> <label>
+<property> is not empty, the <label> <property> is used when a visible
+label is displayed. If a <stack|stack's> <label> <property> is empty,
+its <name> is used as the window title. Likewise, if a
+<control(object)|control's> <label> <property> is empty, its <name> is
+used as the label. This means that you can use any <string> you want for
+the <name> without worrying about the user-interface impact on your
+application: if the <name> is not user-friendly, set the <label> to
+something that is.
 
->*Warning:*  Avoid naming an <object(object)> with a number. Doing so may cause LiveCode to become confused by <object reference|object references> that specify that number, since they might be referring to the <object(object)> by name or to a different <object(object)> by number.
+A stack's <name> cannot be empty. (Other <objects(object)> can have
+empty names.) Attempting to set a <stack|stack's> <name> to empty does
+not rename it.
 
->*Warning:*  Avoid giving two <control(object)|controls> in the same <stack> the same name. Doing so may cause problems if you use the Geometry <pane> in the <property inspector> or the Animation Builder.
+If an object's <name> is empty, getting its <name> yields its <ID>
+<property> instead. In this case, the abbreviated ID form is always
+reported, regardless of what form of the <name> <property> you request.
 
->*Warning:*  Avoid using "rev" as the first three <characters> of a <stack's (object)> <name>. These <characters> are reserved for <stacks> that are part of the LiveCode <development environment>, and giving a non-LiveCode <stack> such a name may cause menus or buttons to be inappropriately disabled, or other problems. You can use the <characters> "rev" anywhere in a <stack> <name> except the beginning. If you want a name beginning with "rev" to appear in a stack's title bar, set the stacks' <label property> instead.
+>*Warning:*  Avoid naming an <object(object)> with a number. Doing so
+> may cause LiveCode to become confused by <object reference|object
+> references> that specify that number, since they might be referring to
+> the <object(object)> by name or to a different <object(object)> by
+> number. 
 
->*Note:* If a stack's <HCAddressing property> is set to true, the <long> or <abbreviated> <name> of a <control(keyword)> in that <stack> begins with the word "background" if the <control(keyword)> is part of a <group>, and with the word "card" if not.
+>*Warning:*  Avoid giving two <control(object)|controls> in the same
+> <stack> the same name. Doing so may cause problems if you use the
+> Geometry <pane> in the <property inspector> or the Animation Builder.
 
-References: HCAddressing property (property), name (property), owner (property), ID (property), hilitedButtonName (property), label (property), label property (property), titleWidth (property), nameChanged (message), file (keyword), characters (keyword), long (keyword), button (keyword), string (keyword), abbreviated (keyword), card (keyword), control (keyword), player (object), object (object), stack (object), control (object), clickStack (function), stacks (function), mainStacks (function), libURLSetLogField (command), group (command), statement (glossary), standalone application (glossary), file path (glossary), property (glossary), folder (glossary), development environment (glossary), object reference (glossary), application bundle (glossary), execution error (glossary), main stack (glossary), OS X (glossary), bundle'sfile path (glossary), pane (glossary), property inspector (glossary), current card (glossary), background (glossary), card control (glossary), object (glossary)
+>*Warning:*  Avoid using "rev" as the first three <characters> of a
+> <stack's (object)> <name>. These <characters> are reserved for
+> <stacks> that are part of the LiveCode <development environment>, and
+> giving a non-LiveCode <stack> such a name may cause menus or buttons
+> to be inappropriately disabled, or other problems. You can use the
+> <characters> "rev" anywhere in a <stack> <name> except the beginning.
+> If you want a name beginning with "rev" to appear in a stack's title
+> bar, set the stacks' <label> <property> instead.
+
+>*Note:* If a stack's <HCAddressing> <property> is set to true, the <long>
+> or <abbreviated> <name> of a <control(keyword)> in that <stack> begins
+> with the word "background" if the <control(keyword)> is part of a
+> <group>, and with the word "card" if not.
+
+References: libURLSetLogField (command), group (command),
+clickStack (function), stacks (function), mainStacks (function),
+object (glossary), statement (glossary),
+standalone application (glossary), file path (glossary),
+property (glossary), folder (glossary),
+development environment (glossary), object reference (glossary),
+application bundle (glossary), execution error (glossary),
+main stack (glossary), OS X (glossary), bundle'sfile path (glossary),
+pane (glossary), property inspector (glossary), current card (glossary),
+background (glossary), card control (glossary), object (glossary),
+file (keyword), characters (keyword), long (keyword), button (keyword),
+string (keyword), abbreviated (keyword), card (keyword),
+control (keyword), nameChanged (message), player (object), stack (object),
+control (object), HCAddressing (property), name (property),
+owner (property), ID (property), hilitedButtonName (property),
+label (property), titleWidth (property)
 
 Tags: objects
+

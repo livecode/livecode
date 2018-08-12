@@ -2,17 +2,18 @@ Name: ln
 
 Type: function
 
-Syntax: the ln of <number> 
+Syntax: the ln of <number>
 
 Syntax: ln(<number>)
 
-Summary: <return|Returns> the natural logarithm of a number.
+Summary:
+<return|Returns> the natural logarithm of a number.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 ln(1) -- returns zero
@@ -24,23 +25,30 @@ Example:
 ln(10) -- returns 2.302585
 
 Parameters:
-number: A positive number, or an expression that evaluates to a positive number.
+number:
+A positive number, or an expression that evaluates to a positive number.
 
-Returns: The <ln> <function> <return|returns> a number.
+Returns:
+The <ln> <function> <return|returns> a number.
 
 Description:
 Use the <ln> function to obtain a base e logarithm.
 
-The natural logarithm of a <number> is the power to which e must be raised to obtain the <number>.
+The natural logarithm of a <number> is the power to which e must be
+raised to obtain the <number>.
 
 The transcendental number e appears in many mathematical formulas.
 
-To find the logarithm of a number in any base, use the following function:
+To find the logarithm of a number in any base, use the following
+function: 
 
-  function logarithm theBase,theNumber
-    return ln(theNumber)/ln(theBase)
-  end logarithm
+    function logarithm theBase,theNumber
+        return ln(theNumber)/ln(theBase)
+    end logarithm
 
-References: function (control_st), ln1 (function), exp (function), return (glossary)
+
+References: function (control structure), ln1 (function), exp (function),
+return (glossary)
 
 Tags: math
+

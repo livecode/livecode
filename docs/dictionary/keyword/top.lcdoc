@@ -1,25 +1,33 @@
 Name: top
 
+Synonyms: metacard, hypercard, supercard
+
 Type: keyword
 
 Syntax: top
 
-Summary: Used in the <exit to top> <control structure> to specify the top level of <execute|execution>.
-
-Synonyms: metacard,hypercard,supercard
+Summary:
+Used in the <exit to top> <control structure> to specify the top level
+of <execute|execution>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 exit to top
 
 Description:
-Use the <top> <keyword> to stop <execute|executing> the current <handler> and all pending <handler|handlers>.
+Use the <top> <keyword> to stop <execute|executing> the current
+<handler> and all pending <handler|handlers>.
 
-The synonyms metacard, hypercard, and supercard are included for compatibility with imported <MetaCard> stacks, <HyperCard> stacks, and <SuperCard> projects.
+The synonyms metacard, hypercard, and supercard are included for
+compatibility with imported <MetaCard> stacks, <HyperCard> stacks, and
+<SuperCard> projects.
 
-References: handler (glossary), execute (glossary), MetaCard (glossary), HyperCard (glossary), keyword (glossary), SuperCard (glossary), control structure (glossary), exit to top (control_st)
+References: exit to top (control structure), handler (glossary),
+execute (glossary), MetaCard (glossary), HyperCard (glossary),
+keyword (glossary), SuperCard (glossary), control structure (glossary)
+

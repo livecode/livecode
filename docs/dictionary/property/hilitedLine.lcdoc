@@ -1,20 +1,21 @@
 Name: hilitedLine
 
+Synonyms: hilitedlines
+
 Type: property
 
-Syntax: set the hilitedLine of <field> to <listOfLines> 
+Syntax: set the hilitedLine of <field> to <listOfLines>
 
-Summary: Specifies the numbers of the <selected> <lines> in a <list field>.
-
-Synonyms: hilitedLines
+Summary:
+Specifies the numbers of the <selected> <lines> in a <list field>.
 
 Associations: field
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the hilitedLine of field "Options List" to 1
@@ -22,15 +23,30 @@ set the hilitedLine of field "Options List" to 1
 Example:
 repeat with x = 1 to the number of items in the hilitedLines of me
 
-Value: The <hilitedLine> of a <field> is a list of one or more <integer|integers>, separated by commas.
+Value:
+The <hilitedLine> of a <field> is a list of one or more
+<integer|integers>, separated by commas.
 
 Description:
-Use the <hilitedLine> <property> to check which <lines> in a <list field> are selected, or to <select> a <line>.
+Use the <hilitedLine> <property> to check which <lines> in a 
+<list field> are selected, or to <select> a <line>.
 
-Each item of the <hilitedLine> <property> is a line number. For example, if the first and fourth <lines> of the <field> are selected, the <hilitedLine> is 1,4. You can retrieve the text of the selected lines either by using the line numbers in a <chunk expression> or by using the <selectedText> <function>.
+Each item of the <hilitedLine> <property> is a line number. For example,
+if the first and fourth <lines> of the <field> are selected, the
+<hilitedLine> is 1,4. You can retrieve the text of the selected lines
+either by using the line numbers in a <chunk expression> or by using the
+<selectedText> <function>.
 
-If the field's <listBehavior> <property> is false, this <property> has no effect.
+If the field's <listBehavior> <property> is false, this <property> has
+no effect.
 
-References: selected (property), listBehavior (property), toggleHilites (property), threeDHilite (property), noncontiguousHilites (property), multipleLines (property), field (keyword), line (keyword), lines (keyword), select (command), selectedText (function), selectedLine (function), property (glossary), integer (glossary), list field (glossary), chunk expression (glossary), function (control_st)
+References: select (command), function (control structure),
+selectedText (function), selectedLine (function), property (glossary),
+integer (glossary), list field (glossary), chunk expression (glossary),
+field (keyword), line (keyword), lines (keyword), selected (property),
+listBehavior (property), toggleHilites (property),
+threeDHilite (property), noncontiguousHilites (property),
+multipleLines (property)
 
 Tags: ui
+

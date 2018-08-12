@@ -2,17 +2,18 @@ Name: cos
 
 Type: function
 
-Syntax: the cos of <angle> 
+Syntax: the cos of <angle>
 
 Syntax: cos(<angle>)
 
-Summary: <return|Returns> the cosine of an angle (in <radian|radians>).
+Summary:
+<return|Returns> the cosine of an angle (in <radian|radians>).
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 cos(pi)
@@ -24,21 +25,32 @@ Example:
 put cos(the startAngle of graphic 3) into field "Cosine"
 
 Parameters:
-angle: A positive or negative number, or an expression that evaluates to a number.
+angle:
+A positive or negative number, or an expression that evaluates to a
+number. 
 
-Returns: The <cos> <function> <return|returns> a number between -1 and 1.
+Returns:
+The <cos> <function> <return|returns> a number between -1 and 1.
 
 Description:
 Use the <cos> <function> to find the cosine of an angle.
 
-The <cos> <function> repeats every 2*pi <radian|radians>: cos(x) = cos(x + 2 * pi), for any value of x.
+The <cos> <function> repeats every `2 * pi`  <radian|radians>: 
+`cos(x) = cos(x + 2 * pi)`, for any value of `x`.
 
-The <cos> <function> requires its input to be in <radian|radians>. To provide an angle in <degree|degrees>, use the following <custom function>:
 
-  function cosInDegrees angleInDegrees
-    return cos(angleInDegrees * pi / 180)
-  end cosInDegrees
+The <cos> <function> requires its input to be in <radian|radians>. To
+provide an angle in <degree|degrees>, use the following 
+<custom function>: 
 
-References: pi (constant), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control_st)
+    function cosInDegrees angleInDegrees
+    	return cos(angleInDegrees * pi / 180)
+    end cosInDegrees
+
+
+References: pi (constant), function (control structure),
+radian (glossary), custom function (glossary), return (glossary),
+degree (glossary)
 
 Tags: math
+

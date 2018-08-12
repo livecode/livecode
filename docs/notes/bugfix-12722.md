@@ -1,1 +1,0 @@
-# Unable to use edit mode when video is playing with new player object 

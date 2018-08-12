@@ -1,2 +1,0 @@
-# The cardIds of group
-A new property **the cardIds** of groups has been added. This returns a list of card ids corresponding to the cards the group is currently placed on. This has the same functionality as the cardNames of group, except it returns ids, not names.

@@ -2,15 +2,19 @@ Name: before
 
 Type: control structure
 
-Syntax: before <messageName> [<parametersList>] <statementList> end <messageName> 
+Syntax:
+before <messageName> [<parametersList>]
+   <statementList>
+end <messageName>
 
-Summary: Defines a <message handler>.
+Summary:
+Defines a <message handler>.
 
 Introduced: 6.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 before mouseUp
@@ -18,23 +22,38 @@ before mouseUp
 end mouseUp
 
 Parameters:
-messageName: 
-parametersList: 
-statementList: 
+messageName:
+
+
+parametersList:
+
+
+statementList:
+
 
 Description:
-The <before> handler is exclusive to behavior scripts and is sent to a behavior script before all messages.
+The <before> handler is exclusive to behavior scripts and is sent to a
+behavior script before all messages.
 
-For example, consider a mouseDown message moving through the message path. It gets to an object with a behavior script:
+For example, consider a mouseDown message moving through the message
+path. It gets to an object with a behavior script:
 
-1. The engine looks at the behavior script of the target object - If a <before> mouseDown handler is present, it executes it.
+1. The engine looks at the behavior script of the target object - If a
+   <before> mouseDown handler is present, it executes it.
+2. The engine next looks at the object script - If an on mouseDown
+   handler is present, it executes it.
+3. The engine now looks at the behavior script - If an after mouseDown
+   handler is present, it executes it.
+4. The engine finally looks at the object script - If a pass mouseDown
+   or no mouseDown handler is present, it moves on to the parent object.
 
-2. The engine next looks at the object script - If an on mouseDown handler is present, it executes it.
 
-3. The engine now looks at the behavior script - If an after mouseDown handler is present, it executes it.
+A <before> handler allows developers to produce behavior scripts which
+can handle messages sent to a control without having any effect on the
+message path, unlike front and back scripts.
 
-4. The engine finally looks at the object script - If a pass mouseDown or no mouseDown handler is present, it moves on to the parent object.
+References: dispatch (command), after (control structure),
+on (control structure), exit (control structure), result (function),
+commandNames (function), paramCount (function),
+message handler (glossary), end (keyword), private (keyword)
 
-A <before> handler allows developers to produce behavior scripts which can handle messages sent to a control without having any effect on the message path, unlike front and back scripts.
-
-References: end (keyword), private (keyword), dispatch (command), result (function), commandNames (function), paramCount (function), after (control_st), on (control_st), exit (control_st), message handler (glossary)

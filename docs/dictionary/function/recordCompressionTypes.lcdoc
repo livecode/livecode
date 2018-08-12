@@ -6,13 +6,15 @@ Syntax: the recordCompressionTypes
 
 Syntax: recordCompressionTypes()
 
-Summary: <return|Returns> a list of audio <codec|codecs> supported by the currently installed version of <QuickTime>.
+Summary:
+<return|Returns> a list of audio <codec|codecs> supported by the
+currently installed version of <QuickTime>.
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop
 
 Example:
 the recordCompressionTypes
@@ -21,19 +23,53 @@ Example:
 if storedType is not among the lines of the recordCompressionTypes \
    then answer record
 
-Returns (enum): The <recordCompressionTypes> <function> <return|returns> a list of available audio <codec|codecs>, one per <line>. Each <line> consists of two <items> :
+Returns (enum):
+The <recordCompressionTypes> <function> <return|returns> a list of
+available audio <codec|codecs>, one per <line>. Each <line> consists of
+two <items> :
+
         - the codec's name
-        - the codec's four:character identifier
+
+
+-   the codec's four: character identifier
+
 
 Description:
-Use the <recordCompressionTypes> <function> to find out which formats you can use to record sound with the <record sound> <command>.
+Use the <recordCompressionTypes> <function> to find out which formats
+you can use to record sound with the <record sound> <command>.
 
-You specify a codec by setting the <recordCompression> <property> to one of the four- <character> identifiers returned by the <recordCompressionTypes>. The <record sound> <command> then uses that <codec> to <compress> recorded sounds. Each <codec> supports a different type of <compress|compression>.
+You specify a codec by setting the <recordCompression> <property> to one
+of the four- <character> identifiers returned by the
+<recordCompressionTypes>. The <record sound> <command> then uses that
+<codec> to <compress> recorded sounds. Each <codec> supports a different
+type of <compress|compression>.
 
-The <recordCompressionTypes> <function> requires <QuickTime> to be installed. If <QuickTime> is not installed, the recordFormats <function> returns empty.
+The <recordCompressionTypes> <function> requires <QuickTime> to be
+installed. If <QuickTime> is not installed, the recordFormats <function>
+returns empty.
 
->*Tip:*  It can take LiveCode a second or two to load the code needed to use <QuickTime>, depending on the machine speed. Since this code is only <loaded into memory> once per session, you can speed up the first occurrence of a QuickTime-related action by calling the <QTVersion> <function> during otherwise dead time--for example, during startup of your application--to preload the code.
+>*Tip:*  It can take LiveCode a second or two to load the code needed to
+> use <QuickTime>, depending on the machine speed. Since this code is
+> only <loaded into memory> once per session, you can speed up the first
+> occurrence of a QuickTime-related action by calling the <QTVersion>
+> <function> during otherwise dead time--for example, during startup of
+> your application--to preload the code.
 
-References: dontUseQT (property), recordCompression (property), items (keyword), character (keyword), line (keyword), answer record (command), record sound (command), function (control_st), property (glossary), loaded into memory (glossary), return (glossary), compress (glossary), QuickTime (glossary), command (glossary), codec (glossary), compress (function), qtVersion (function)
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: answer record (command), record sound (command),
+function (control structure), compress (function), qtVersion (function),
+property (glossary), loaded into memory (glossary), return (glossary),
+compress (glossary), QuickTime (glossary), command (glossary),
+codec (glossary), items (keyword), character (keyword), line (keyword),
+dontUseQT (property), recordCompression (property)
 
 Tags: multimedia
+

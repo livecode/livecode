@@ -4,7 +4,8 @@ Type: message
 
 Syntax: scrollerEndDecelerate
 
-Summary: Sent when scrolling has finished decelerating.
+Summary:
+Sent when scrolling has finished decelerating.
 
 Introduced: 4.5.3
 
@@ -18,10 +19,20 @@ on scrollerEndDecelerate
 end scrollerEndDecelerate
 
 Description:
-The <scrollerEndDecelerate> message is sent when a UIScrollView scroller control has finished decelerating.
+The <scrollerEndDecelerate> message is sent when a UIScrollView scroller
+control has finished decelerating.
 
-Handle the <scrollerEndDecelerate> message if you want to move LiveCode controls, make changes to the interface or set the appropriate scroll properties of groups and fields to get a native scrolling effect.
+Handle the <scrollerEndDecelerate> message if you want to move LiveCode
+controls, make changes to the interface or set the appropriate scroll
+properties of groups and fields to get a native scrolling effect.
 
-The <scrollerEndDecelerate> message is sent to the object containing the script that created the UIScrollView scroller control.
+The <scrollerEndDecelerate> message is sent to the object containing the
+script that created the UIScrollView scroller control.
 
-References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), scrollerBeginDecelerate (message), scrollerEndDrag (message), scrollerBeginDrag (message), scrollerDidScroll (message), scrollerScrollToTop (message)
+References: mobileControlCreate (command), mobileControlDelete (command),
+mobileControlSet (command), mobileControlGet (function),
+mobileControlTarget (function), mobileControls (function),
+scrollerBeginDecelerate (message), scrollerEndDrag (message),
+scrollerBeginDrag (message), scrollerDidScroll (message),
+scrollerScrollToTop (message)
+

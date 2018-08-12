@@ -6,13 +6,15 @@ Syntax: the foundField
 
 Syntax: foundField
 
-Summary: <return|Returns> the <field> in which text was located by the most recent <find> <command>.
+Summary:
+<return|Returns> the <field> in which text was located by the most
+recent <find> <command>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the foundField
@@ -23,13 +25,23 @@ if word 2 of the foundField is the number of field 1 then findItAgain
 Example:
 select the text of the foundField
 
-Returns: The <foundField> function <return|returns> the <number> <property> of the <field>.
+Returns:
+The <foundField> function <return|returns> the <number> <property> of
+the <field>.
 
 Description:
-Use the <foundField> <function> after a <find> command to determine where the text was found.
+Use the <foundField> <function> after a <find> command to determine
+where the text was found.
 
-The <foundField> <function> is cleared when the text <selection> moves into the <foundField> or when the <current card> is closed. At the same time, the box the <find> command draws around the found text disappears. If there is no box, the <foundField> <function> <return|returns> empty.
+The <foundField> <function> is cleared when the text <selection> moves
+into the <foundField> or when the <current card> is closed. At the same
+time, the box the <find> command draws around the found text disappears.
+If there is no box, the <foundField> <function> <return|returns> empty.
 
-References: field (keyword), selection (keyword), find (command), function (control_st), property (glossary), current card (glossary), command (glossary), return (glossary), number (function)
+References: find (command), function (control structure),
+number (function), property (glossary), current card (glossary),
+command (glossary), return (glossary), field (keyword),
+selection (keyword)
 
 Tags: database
+

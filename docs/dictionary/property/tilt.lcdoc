@@ -2,37 +2,69 @@ Name: tilt
 
 Type: property
 
-Syntax: set the tilt of <player> to <degrees> 
+Syntax: set the tilt of <player> to <degrees>
 
-Summary: Specifies the current vertical view angle of a <QuickTime VR> movie.
+Summary:
+Specifies the current vertical view angle of a <QuickTime VR> movie.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows
+Deprecated: 8.1
 
-Platforms: desktop,server,web
+OS: mac, windows
+
+Platforms: desktop, server
 
 Example:
 set the tilt of player "Arctic" to -30
 put (the tilt of me) / 2 into halfwayPoint
 
-Value: The <tilt> is a number between -90 and 90.
+Value:
+The <tilt> is a number between -90 and 90.
 
 Description:
-Use the <tilt> <property> to find out where the user is in a <QuickTime VR> movie.
+Use the <tilt> <property> to find out where the user is in a <QuickTime
+VR> movie.
 
-The user can move the view of a QuickTime VR movie using the navigational controls in the player; a handler can change the view by setting the player's <pan> and <tilt> <properties>.
+The user can move the view of a QuickTime VR movie using the
+navigational controls in the player; a handler can change the view by
+setting the player's <pan> and <tilt> <properties>.
 
-The <tilt> specifies the amount of rotation in the vertical plane, in <degree|degrees>. (Think of a person standing in the middle of a scene and tilting his or her head up and down. The point where the person is standing is the <currentNode>, and the amount the person's head is tilted is the <tilt>.)
+The <tilt> specifies the amount of rotation in the vertical plane, in
+<degree|degrees>. (Think of a person standing in the middle of a scene
+and tilting his or her head up and down. The point where the person is
+standing is the <currentNode>, and the amount the person's head is
+tilted is the <tilt>.)
 
-A <tilt> of zero corresponds to the default view of the scene, with the viewer looking straight ahead. As the viewer's head tilts up, the <tilt> increases: when the <tilt> is 90, the viewer is looking straight up. As the viewer's head tilts down, the <tilt> decreases: when the <tilt> is -90, the viewer is looking straight down.
+A <tilt> of zero corresponds to the default view of the scene, with the
+viewer looking straight ahead. As the viewer's head tilts up, the <tilt>
+increases: when the <tilt> is 90, the viewer is looking straight up. As
+the viewer's head tilts down, the <tilt> decreases: when the <tilt> is
+-90, the viewer is looking straight down.
 
-The <tilt> is limited by the <player|player's> <constraints> <property>. If you specify a <tilt> greater than the <range> permitted by the <constraints>, the <tilt> is set to the highest permitted <value>. If you specify a <tilt> less than the <range> permitted by the <constraints>, the <tilt> is set to the lowest permitted <value>.
+The <tilt> is limited by the <player|player's> <constraints> <property>.
+If you specify a <tilt> greater than the <range> permitted by the
+<constraints>, the <tilt> is set to the highest permitted <value>. If
+you specify a <tilt> less than the <range> permitted by the
+<constraints>, the <tilt> is set to the lowest permitted <value>.
 
-If the player does not contain a QuickTime VR movie, its <tilt> <property> is zero.
+If the player does not contain a QuickTime VR movie, its <tilt>
+<property> is zero.
 
-References: zoom (property), properties (property), pan (property), nodes (property), constraints (property), currentNode (property), player (object), property (glossary), QuickTime VR (glossary), range (glossary), degree (glossary), value (function)
+Changes:
+This property was deprecated in version 8.1.0 due to the retirement of
+the QuickTime player implementation. In order to support 64-bit on Mac 
+we have been required to switch to using AVFoundation on Mac, which does 
+not support QTVR. In addition, the Windows player object is now based on 
+DirectShow, as Apple have dropped support for the QuickTime libraries 
+previously used.
+
+References: value (function), property (glossary),
+QuickTime VR (glossary), range (glossary), degree (glossary),
+player (object), zoom (property), properties (property), pan (property),
+nodes (property), constraints (property), currentNode (property)
 
 Tags: multimedia
+

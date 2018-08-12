@@ -2,15 +2,14 @@ Name: adExpandStart
 
 Type: message
 
-Syntax: adExpandStart <adName> 
+Syntax: adExpandStart <pAdName>
 
-Summary: Sent whan an ad is about to expand.
-
-Associations: stack
+Summary:
+Sent whan an ad is about to expand.
 
 Introduced: 6.0
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -20,11 +19,17 @@ on adExpandStart pAdName
 end adExpandStart
 
 Parameters:
-adName: The name of ad that has been expanded (as specified in mobileAdCreate)
+pAdName:
+The name of ad that has been expanded (as specified in <mobileAdCreate>)
 
 Description:
-Handle the <adExpandStart> message if you want to perform an action when an ad is about to expand.
+Handle the <adExpandStart> message if you want to perform an action when
+an ad is about to expand.
 
-The <adExpandStart> messge is sent to the current card when an ad is about to expand.
+The <adExpandStart> message is sent to the current card when an ad is
+about to expand.
 
-References: mobileAdCreate (command), mobileAdRegister (command), mobileAdDelete (command), adLoaded (message), adLoadFailed (message), adExpandEnd (message)
+References: mobileAdCreate (command), mobileAdRegister (command),
+mobileAdDelete (command), adLoaded (message), adLoadFailed (message),
+adExpandEnd (message)
+

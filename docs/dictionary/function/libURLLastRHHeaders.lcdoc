@@ -4,28 +4,49 @@ Type: function
 
 Syntax: libURLLastRHHeaders()
 
-Summary: <return|Returns> the headers sent by the remote host in the most recent HTTP transaction.
+Summary:
+<return|Returns> the headers sent by the remote host in the most recent
+HTTP transaction.
+
+Associations: internet library
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux, html5
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
 Example:
 if libURLLastRHHeaders() is mostRecentSet then exit to top
 
-Returns: The <libURLLastRHHeaders> <function> <return|returns> a string.
+Returns:
+The <libURLLastRHHeaders> <function> <return|returns> a string.
 
 Description:
-Use the <libURLLastRHHeaders> <function> to respond to custom header information that the <Internet library> does not handle.
+Use the <libURLLastRHHeaders> <function> to respond to custom header
+information that the <Internet library> does not handle.
 
-Whenever another system sends data via HTTP to your system, the remote system sends an HTTP header along with the data. This header generally consists of several lines and may include the request type, the HTTP protocol version being used, and other information.
+Whenever another system sends data via HTTP to your system, the remote
+system sends an HTTP header along with the data. This header generally
+consists of several lines and may include the request type, the HTTP
+protocol version being used, and other information.
 
->*Important:*  The <libURLLastRHHeaders> <function> is part of the <Internet library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:* The <libURLLastRHHeaders> <function> is part of the 
+> <Internet library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
-References: httpHeaders (property), Internet library (library), LiveCode custom library (library), http (keyword), Standalone Application Settings (glossary), return (glossary), standalone application (glossary), libURLLastHTTPHeaders (function), URLStatus (function), load (command), function (control_st)
+References: load (command), function (control structure),
+libURLLastHTTPHeaders (function), URLStatus (function),
+LiveCode custom library (glossary),
+Standalone Application Settings (glossary), return (glossary),
+standalone application (glossary), http (keyword),
+Internet library (library), httpHeaders (property)
 
 Tags: networking
+

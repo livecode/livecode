@@ -6,13 +6,14 @@ Syntax: the mouseLoc
 
 Syntax: mouseLoc()
 
-Summary: <return|Returns> the location of the <mouse pointer>.
+Summary:
+<return|Returns> the location of the <mouse pointer>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the mouseLoc
@@ -20,19 +21,37 @@ the mouseLoc
 Example:
 click at the mouseLoc
 
-Returns: The <mouseLoc> <function> <return|returns> two <integer|integers> separated by a comma.
+Returns:
+The <mouseLoc> <function> <return|returns> two <integer|integers>
+separated by a comma.
 
 Description:
 Use the <mouseLoc> <function> to find out where the mouse is. 
 
-The first item of the return value is the horizontal distance in pixels from the left edge of the current stack to the location of the mouse. The second item of the return value is the vertical distance from the top edge of the current stack to the location of the mouse. (Use the defaultStack <property> to identify the current <stack>.)
+The first item of the return value is the horizontal distance in pixels
+from the left edge of the current stack to the location of the mouse.
+The second item of the return value is the vertical distance from the
+top edge of the current stack to the location of the mouse. (Use the
+defaultStack <property> to identify the current <stack>.)
 
-The first item of the <mouseLoc> is equal to the <mouseH>. The second <item> is equal to the <mouseV>. 
+The first item of the <mouseLoc> is equal to the <mouseH>. The second
+<item> is equal to the <mouseV>.
 
->*Note:* When in a mouseDown handler, you can use the <clickLoc> function to get the position of the mouse as it was when the mouseDown action ocurred.
+>*Note:* When in a mouseDown handler, you can use the <clickLoc>
+> function to get the position of the mouse as it was when the mouseDown
+> action ocurred.
 
->*Tip:* The <mouseMove> <message> sends the current mouse position as a <parameter>. This means that in a <mouseMove> <handler>, normally it's not necessary to use the <mouseLoc> <function>.
+>*Tip:* The <mouseMove> <message> sends the current mouse position as a
+> <parameter>. This means that in a <mouseMove> <handler>, normally it's
+> not necessary to use the <mouseLoc> <function>.
 
-References: function (control_st), dragEnter (message), mouseMove (message), item (keyword), property (glossary), return (glossary), handler (glossary), message (glossary), integer (glossary), parameter (glossary), mouse pointer (glossary), mouseV (function), mouseColor (function), mouseClick (function), mouseH (function), clickLoc (function), mouseLoc (function), selectedLoc (function), mouseCharChunk (function), grab (command), stack (object)
+References: grab (command), function (control structure),
+mouseV (function), mouseColor (function), mouseClick (function),
+mouseH (function), clickLoc (function), mouseLoc (function),
+selectedLoc (function), mouseCharChunk (function), property (glossary),
+return (glossary), handler (glossary), message (glossary),
+integer (glossary), parameter (glossary), mouse pointer (glossary),
+item (keyword), dragEnter (message), mouseMove (message), stack (object)
 
 Tags: ui
+

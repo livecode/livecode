@@ -2,17 +2,18 @@ Name: record sound
 
 Type: command
 
-Syntax: record sound file <filePath> 
+Syntax: record sound file <filePath>
 
-Summary: Starts recording from the system's audio input to a <file>.
+Summary:
+Starts recording from the system's audio input to a <file>.
 
 Introduced: 1.1
 
-OS: mac,windows
+OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop
 
-Security: disk,privacy
+Security: disk, privacy
 
 Example:
 record sound file "Testing"
@@ -21,24 +22,62 @@ Example:
 record sound file it
 
 Parameters:
-filePath: The name and location of the file that will hold the recorded sound data.
+filePath:
+The name and location of the file that will hold the recorded sound
+data. 
 
-The result: >*Important:*  If the <recordFormat> is set to "movie", the resulting <file> is in the <QuickTime> file format. <QuickTime> files cannot be played as <audio clip|audio clips>. To play such a sound, either create a <player> and set its <filenameproperty> to the <file path|path> of the <file> you recorded, or use the play videoclip form of the play <command>.
+The result:
+>*Important:*  If the <recordFormat> is set to "movie", the resulting
+> <file> is in the <QuickTime> file format. <QuickTime> files cannot be
+> played as <audio clip|audio clips>. To play such a sound, either
+> create a <player> and set its <filename> <property> to the <file
+> path|path> of the <file> you recorded, or use the play videoclip form
+> of the play <command>.
 
 Description:
-Use the <record sound> <command> to record the user's speech, import sound data from a CD into an audio file, or record music from an external microphone.
+Use the <record sound> <command> to record the user's speech, import
+sound data from a CD into an audio file, or record music from an
+external microphone.
 
 The <record sound> <command> uses <QuickTime> to record.
 
-While recording is going on, the recording <property> is set to true. To stop recording, use the <stop recording> <command> or set the <recording> to false.
+While recording is going on, the recording <property> is set to true. To
+stop recording, use the <stop recording> <command> or set the
+<recording> to false.
 
-The technical specifications of the recording are determined by the settings of the <recordCompression>, <recordChannels>, <recordRate>, and <recordSampleSize> <properties>. The file <format> is determined by the <recordFormat> <property>.
+The technical specifications of the recording are determined by the
+settings of the <recordCompression>, <recordChannels>, <recordRate>, and
+<recordSampleSize> <properties>. The file <format> is determined by the
+<recordFormat> <property>.
 
->*Note:* If you choose to record to a file that already exists, the record sound command will overwrite the existing file, it will not append the new recording to the end.
+>*Note:* If you choose to record to a file that already exists, the
+> record sound command will overwrite the existing file, it will not
+> append the new recording to the end.
 
 Changes:
-The syntax of the record sound command was simplified in version 2.0. In previous versions, specification of sample rate, compression format, and whether to display a settings dialog box was included in the syntax for the record sound command. These capabilities are now available using the answer record command and the recordRate and recordCompression properties.
+The syntax of the record sound command was simplified in version 2.0. In
+previous versions, specification of sample rate, compression format, and
+whether to display a settings dialog box was included in the syntax for
+the record sound command. These capabilities are now available using the
+answer record command and the recordRate and recordCompression
+properties. 
 
-References: filenameproperty (property), properties (property), recording (property), recordCompression (property), recordSampleSize (property), recordChannels (property), recordFormat (property), recordInput (property), recordRate (property), file (keyword), player (keyword), stop recording (command), recordLoudness (function), format (function), recordCompressionTypes (function), property (glossary), audio clip (glossary), file path (glossary), command (glossary), QuickTime (glossary)
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: stop recording (command), recordLoudness (function),
+format (function), recordCompressionTypes (function), property (glossary),
+audio clip (glossary), file path (glossary), command (glossary),
+QuickTime (glossary), file (keyword), player (keyword),
+filename (property), properties (property), recording (property),
+recordCompression (property), recordSampleSize (property),
+recordChannels (property), recordFormat (property),
+recordInput (property), recordRate (property)
 
 Tags: multimedia
+

@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
-//#include "execpt.h"
+
 #include "exec.h"
 #include "stack.h"
 #include "card.h"
@@ -77,8 +77,8 @@ extern void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_
 // SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
 extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true, bool p_utf8_string = false);
 extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
-extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
-extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_invert, CGImageRef &r_image);
+extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -189,7 +189,7 @@ bool MCMacOSXPrinter::DoResetSettings(MCDataRef p_settings)
 	t_page_format = NULL;
 	if (t_success)
 	{
-        CFDataRef t_data = CFDataCreate(NULL, (const UInt8*)t_settings_data.getstring(), t_settings_data.getlength());
+        CFDataRef t_data = CFDataCreate(NULL, (const UInt8*)t_page_format_data.getstring(), t_page_format_data.getlength());
         if (t_data == nil || noErr != PMPageFormatCreateWithDataRepresentation(t_data, &t_page_format))
             t_success = false;
         CFRelease(t_data);
@@ -303,7 +303,7 @@ MCPrinterResult MCMacOSXPrinter::DoBeginPrint(MCStringRef p_document_name, MCPri
 	GetProperties(true);
 
 	MCMacOSXPrinterDevice *t_device;
-	t_device = new MCMacOSXPrinterDevice;
+	t_device = new (nothrow) MCMacOSXPrinterDevice;
 
 	MCPrinterResult t_result;
 	t_result = t_device -> Start(m_session, m_settings, m_page_format, GetJobColor());
@@ -357,7 +357,6 @@ bool MCMacOSXPrinter::Reset(MCStringRef p_name, PMPrintSettings p_settings, PMPa
 	t_printer = NULL;
 	if (t_success)
 	{
-		OSErr t_err;
 		for(CFIndex i = 0; i < CFArrayGetCount(t_printers); ++i)
 		{
 			PMPrinter t_printer_to_test;
@@ -653,7 +652,6 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 		else if (t_type == kPMDestinationFile && (t_output_format == NULL || CFStringCompare(t_output_format, kPMDocumentFormatPDF, 0) == 0))
 		{
 			PDEBUG(stderr, "SetProperties: Output location is file\n");
-			CFStringRef t_output_format;
 			t_output_type = PRINTER_OUTPUT_FILE;
             // SN-2014-12-22: [[ Bug 14278 ]] Get a UTF-8-encoded filename
 			t_output_location = osx_cfstring_to_cstring(CFURLCopyFileSystemPath(t_output_location_url, kCFURLPOSIXPathStyle), true, true);
@@ -710,7 +708,9 @@ void MCMacOSXPrinter::SetDerivedProperties(void)
 {
 	PMRect t_pm_page_rect, t_pm_paper_rect;
 	PDEBUG(stderr, "SetProperties: PMGetAdjustedPaperRect\n");
-	if (PMGetAdjustedPaperRect(m_page_format, &t_pm_paper_rect) == noErr && PMGetAdjustedPageRect(m_page_format, &t_pm_page_rect) == noErr)
+	if (m_page_format != nullptr &&
+        PMGetAdjustedPaperRect(m_page_format, &t_pm_paper_rect) == noErr &&
+        PMGetAdjustedPageRect(m_page_format, &t_pm_page_rect) == noErr)
 	{
 		int4 t_left;
 		t_left = (int4)floor(t_pm_page_rect . left - t_pm_paper_rect . left);
@@ -735,7 +735,8 @@ void MCMacOSXPrinter::SetDerivedProperties(void)
 	
 	PDEBUG(stderr, "SetProperties: PMPrinterGetDescriptionURL\n");
     CFURLRef t_ppd_url = NULL;
-	if (PMPrinterCopyDescriptionURL(m_printer, kPMPPDDescriptionType, &t_ppd_url) == noErr)
+	if (m_printer != nullptr &&
+        PMPrinterCopyDescriptionURL(m_printer, kPMPPDDescriptionType, &t_ppd_url) == noErr)
 	{
 		char *t_ppd_file;
 		t_ppd_file = osx_cfstring_to_cstring(CFURLCopyFileSystemPath(t_ppd_url, kCFURLPOSIXPathStyle), true);
@@ -889,7 +890,12 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 			CFRelease(t_output_file);
 			t_output_type = kPMDestinationFile;
 		}
-		break;
+			break;
+		case PRINTER_OUTPUT_WORKFLOW:
+		case PRINTER_OUTPUT_SYSTEM:
+			MCUnreachable();
+			break;
+				
 		}
 
 		t_err = PMSessionSetDestination(m_session, m_settings, t_output_type, kPMDocumentFormatPDF, t_output_url);
@@ -1033,7 +1039,7 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
         
         if (t_result == kMCPlatformPrintDialogResultError)
         {
-            PDEBUG(stderr, "DoDialog: Error occured\n");
+            PDEBUG(stderr, "DoDialog: Error occurred\n");
             t_err = PRINTER_DIALOG_RESULT_ERROR;
         }
         else if (t_result == kMCPlatformPrintDialogResultSuccess)
@@ -1113,25 +1119,16 @@ static void FreeData(void *info, const void *data, size_t size)
 	free(info);
 }
 
-static CGColorSpaceRef OSX_CGColorSpaceCreateWithProfile(const char *p_profile_path)
+static CGColorSpaceRef OSX_CGColorSpaceCreateWithProfile(CFStringRef p_name)
 {
-	OSStatus t_err;
-	t_err = noErr;
-
-	CMProfileLocation t_location;
-	t_location . locType = cmPathBasedProfile;
-	strcpy(t_location . u . pathLoc . path, p_profile_path);
-	
-	CMProfileRef t_profile;
-	t_profile = NULL;
-	
-	t_err = CMOpenProfile(&t_profile, &t_location);
-	if (t_err == noErr)
+	ColorSyncProfileRef t_profile =
+		ColorSyncProfileCreateWithName(p_name);
+	if (t_profile != nil)
 	{
 		CGColorSpaceRef t_colorspace;
 		t_colorspace = CGColorSpaceCreateWithPlatformColorSpace(t_profile);
 		
-		CMCloseProfile(t_profile);
+		CFRelease(t_profile);
 		
 		return t_colorspace;
 	}
@@ -1144,7 +1141,7 @@ static CGColorSpaceRef OSX_CGColorSpaceCreateGenericGray(void)
 	static CGColorSpaceRef s_colorspace = NULL;
 	if (s_colorspace == NULL)
 	{
-		s_colorspace = OSX_CGColorSpaceCreateWithProfile("/System/Library/ColorSync/Profiles/Generic Gray Profile.icc");
+		s_colorspace = OSX_CGColorSpaceCreateWithProfile(kColorSyncGenericGrayProfile);
 		if (s_colorspace == NULL)
 			s_colorspace = CGColorSpaceCreateDeviceGray();
 	}
@@ -1159,7 +1156,7 @@ CGColorSpaceRef OSX_CGColorSpaceCreateGenericRGB(void)
 	static CGColorSpaceRef s_colorspace = NULL;
 	if (s_colorspace == NULL)
 	{
-		s_colorspace = OSX_CGColorSpaceCreateWithProfile("/System/Library/ColorSync/Profiles/Generic RGB Profile.icc");
+		s_colorspace = OSX_CGColorSpaceCreateWithProfile(kColorSyncGenericRGBProfile);
 		if (s_colorspace == NULL)
 			s_colorspace = CGColorSpaceCreateDeviceRGB();
 	}
@@ -1178,9 +1175,9 @@ bool MCGImageToCGImage(MCGImageRef p_src, CGImageRef &r_image)
 	if (t_success)
 		t_success = nil != (t_colorspace = OSX_CGColorSpaceCreateGenericRGB());
 	
-	MCGRectangle t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(p_src), MCGImageGetHeight(p_src));
+	MCGIntegerRectangle t_src_rect = MCGIntegerRectangleMake(0, 0, MCGImageGetWidth(p_src), MCGImageGetHeight(p_src));
 	if (t_success)
-		t_success = MCGImageToCGImage(p_src, t_src_rect, t_colorspace, true, true, r_image);
+		t_success = MCGImageToCGImage(p_src, t_src_rect, t_colorspace, true, r_image);
 	
 	if (t_colorspace != nil)
 		CGColorSpaceRelease(t_colorspace);
@@ -1525,7 +1522,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 		
 		if (p_mark -> stroke -> dash . length > 1)
 		{
-			CGFloat *t_lengths = new CGFloat[p_mark -> stroke -> dash . length];
+			CGFloat *t_lengths = new (nothrow) CGFloat[p_mark -> stroke -> dash . length];
 			for(uint4 i = 0; i < p_mark -> stroke -> dash . length; i++)
 				t_lengths[i] = p_mark -> stroke -> dash . data[i];
 			CGContextSetLineDash(m_context, p_mark -> stroke -> dash . offset, t_lengths, p_mark -> stroke -> dash . length);
@@ -1708,9 +1705,35 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
             {
                 CFStringRef t_string;
                 /* UNCHECKED */ MCStringConvertToCFStringRef(*t_text, t_string);
-                
+				
+				// Attributed strings, by default, assume a black text color (if no color
+				// attribute is present) and this overrides the current foreground color
+				// in the CGContext. To ensure that the CGContext's current foreground is
+				// used, the kCTForegroundColorFromContextAttributeName attribute must be
+				// set to true for the string.
+				
+				CFStringRef t_attr_names[2] =
+				{
+					kCTFontAttributeName,
+					kCTForegroundColorFromContextAttributeName,
+				};
+				
+				void *t_attr_values[2] =
+				{
+					(void *)t_font,			/* kCTFontAttributeName */
+					(void *)kCFBooleanTrue, /* kCTForegroundColorFromContextAttributeName */
+				};
+				
+				MCStaticAssert(sizeof(t_attr_names) / sizeof(t_attr_names[0]) ==
+							   sizeof(t_attr_values) / sizeof(t_attr_values[0]));
+				
                 CFDictionaryRef t_attributes;
-                t_attributes = CFDictionaryCreate(NULL, (const void**)&kCTFontAttributeName, (const void**)&t_font, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+                t_attributes = CFDictionaryCreate(NULL,
+												  (const void **)t_attr_names,
+												  (const void **)t_attr_values,
+												  sizeof(t_attr_names) / sizeof(t_attr_names[0]),
+												  &kCFTypeDictionaryKeyCallBacks,
+												  &kCFTypeDictionaryValueCallBacks);
                 
                 CFAttributedStringRef t_attributed_string;
                 t_attributed_string = CFAttributedStringCreate(NULL, t_string, t_attributes);
@@ -1735,6 +1758,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
             // with a reversed y-axis, we need to apply a scale, too.
             CGContextConcatCTM(m_context, CGAffineTransformMake(1, 0, 0, -1, 0, m_page_height));
             CGContextSetTextPosition(m_context, x, m_page_height - y);
+			CGContextSetTextDrawingMode(m_context, kCGTextFill);
             CTLineDraw(t_line, m_context);
             
             CFRelease(t_line);
@@ -1814,7 +1838,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			
 			// MW-2013-10-01: [[ ImprovedPrint ]] If we didn't manage to use the input data, use the bitmap instead.
 			if (t_image == nil)
-				/* UNCHECKED */ MCGImageToCGImage(p_mark->image.descriptor.image, MCGRectangleMake(0, 0, t_dst_width, t_dst_height), false, false, t_image);
+				/* UNCHECKED */ MCGImageToCGImage(p_mark->image.descriptor.image, MCGIntegerRectangleMake(0, 0, t_dst_width, t_dst_height), false, t_image);
 
 			CGContextClipToRect(m_context, CGRectMake(p_mark -> image . dx, p_mark -> image . dy, p_mark -> image . sw, p_mark -> image . sh));
 			
@@ -1861,6 +1885,9 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				executegroup(p_mark);
 		}
 		break;
+			
+		default:
+			break;
 	}
 	
 	CGContextRestoreGState(m_context);
@@ -1913,7 +1940,7 @@ void MCQuartzMetaContext::endcomposite(MCRegionRef p_clip_region)
 	m_composite_context = nil;
 	
 	CGImageRef t_cgimage = nil;
-	/* UNCHECKED */ MCGImageToCGImage(t_image, MCGRectangleMake(0, 0, MCGImageGetWidth(t_image), MCGImageGetHeight(t_image)), false, true, t_cgimage);
+	/* UNCHECKED */ MCGImageToCGImage(t_image, MCGIntegerRectangleMake(0, 0, MCGImageGetWidth(t_image), MCGImageGetHeight(t_image)), true, t_cgimage);
 	
 	CGContextDrawImage(m_context, CGRectMake(m_composite_rect . x, m_composite_rect . y, m_composite_rect . width, m_composite_rect . height), t_cgimage);
 	CGImageRelease(t_cgimage);
@@ -2067,7 +2094,7 @@ MCPrinterResult MCMacOSXPrinterDevice::Begin(const MCPrinterRectangle& p_src_rec
 	t_page_height = ceil(t_paper_rect . bottom - t_paper_rect . top);
 	
 	MCQuartzMetaContext *t_context;
-	t_context = new MCQuartzMetaContext(t_src_rect_hull, t_page_width, t_page_height);
+	t_context = new (nothrow) MCQuartzMetaContext(t_src_rect_hull, t_page_width, t_page_height);
 	r_context = t_context;
 
 	m_src_rect = p_src_rect;
@@ -2383,7 +2410,7 @@ bool MCListSystemPrinters(MCStringRef &r_names)
     for(CFIndex i = 0; i < CFArrayGetCount(t_printers) && t_success; ++i)
 	{
         MCAutoStringRef t_name;
-        t_success = MCStringCreateWithCFString(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), &t_name)
+        t_success = MCStringCreateWithCFStringRef(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), &t_name)
                         && MCListAppend(*t_names, *t_name);
 	}
 

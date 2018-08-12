@@ -129,7 +129,7 @@ struct MCTileCacheFrontier
 
 struct MCTileCache
 {
-	// If false, an error has occured while processing an operation on the
+	// If false, an error has occurred while processing an operation on the
 	// tilecache. It must be flushed before it can be used again.
 	bool valid : 1;
 	
@@ -1487,8 +1487,8 @@ void MCTileCacheEndFrame(MCTileCacheRef self)
 
 	// Some statistics
 #ifdef _DEBUG
-    //MCLog("Frame - %d sprite tiles, %d scenery tiles, %d active tiles, %d instructions, %d bytes",
-    //			self -> sprite_render_list . length, self -> scenery_render_list . length, self -> active_tile_count, self -> display_list_frontier, self -> cache_size);
+    MCLog("Frame - %d sprite tiles, %d scenery tiles, %d active tiles, %d instructions, %d bytes",
+    			self -> sprite_render_list . length, self -> scenery_render_list . length, self -> active_tile_count, self -> display_list_frontier, self -> cache_size);
 #endif
 }
 
@@ -2575,7 +2575,6 @@ bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle p_area, MCGImageRef& r
 	if (t_success)
 		t_success = self -> compositor . end_snapshot(self -> compositor . context, p_area, t_raster);
 	
-	MCGImageRef t_image = nil;
 	if (t_success)
 	{
 		t_success = MCGImageCreateWithRasterAndRelease(t_raster, r_image);

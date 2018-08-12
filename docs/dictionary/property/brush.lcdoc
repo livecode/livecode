@@ -4,13 +4,14 @@ Type: property
 
 Syntax: set the brush to {<brushID> | <imageID>}
 
-Summary: Specifies the shape used for painting with the Brush <tool>.
+Summary:
+Specifies the shape used for painting with the Brush <tool>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the brush to 13
@@ -20,29 +21,56 @@ set the brush to the short ID of image "My Custom Brush"
 
 Value:
 The <brush> is a brush specifier.
-A <brushID> is a built-in brush number between 1 and 35. (These brushes correspond to LiveCode's built-in patterns 101 to 135.)
+A <brushID> is a built-in brush number between 1 and 36. (These brushes
+correspond to LiveCode's built-in patterns 101 to 136.)
 
-An <imageID> is the ID of an <image> to use for painting with the brush. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+An <imageID> is the ID of an <image> to use for painting with the brush.
+LiveCode looks for the specified <image> first in the <current stack>,
+then in other open <stacks>.
 
 By default, the <brush> is set to 8 (a round brush).
 
 Description:
-Use the <brush> <property> to specify which shape is painted by the Brush <tool>.
+Use the <brush> <property> to specify which shape is painted by the
+Brush <tool>.
 
-The entire area of the brush cursor is used as the brush shape. The shape painted by the brush is drawn in the brushColor, regardless of what colors might be in the <image(keyword)> used for the brush shape.
+The entire area of the brush cursor is used as the brush shape. The
+shape painted by the brush is drawn in the brushColor, regardless of
+what colors might be in the <image(keyword)> used for the brush shape.
 
-When the Brush tool is in use, the cursor is the same as the brush shape. You can use any size image as a brush, but the cursor may appear distorted on some systems if the image is not 16x16 pixels.
+When the Brush tool is in use, the cursor is the same as the brush
+shape. You can use any size image as a brush, but the cursor may appear
+distorted on some systems if the image is not 16x16 pixels.
 
->*Note:* In order to use a brush, you must choose the Brush <tool> using either the Paint Tools palette or the <choose> <command>.
+>*Note:* In order to use a brush, you must choose the Brush <tool> using
+> either the Paint Tools palette or the <choose> <command>.
 
-If you want to change the <brush> <property> in a <standalone application>--for example, to let the user paint in <image(object)|images>--you must copy the <stack> "revCompatibilityBrushes1" into your application before you build the <standalone application|standalone>. (This <stack> includes the cursors used for the brush <tool>.) To copy the stack, enter the following into the <message box> or a <handler> :
+If you want to change the <brush> <property> in a <standalone
+application>--for example, to let the user paint in
+<image(object)|images>--you must copy the <stack>
+"revCompatibilityBrushes1" into your application before you build the
+<standalone application|standalone>. (This <stack> includes the cursors
+used for the brush <tool>.) To copy the stack, enter the following into
+the <message box> or a <handler> :
 
-  clone stack "revCompatibilityBrushes1"
-  set the mainStack of this stack to "My Main Stack"
-  -- (substitute your application's main stack name
+    clone stack "revCompatibilityBrushes1"
+    set the mainStack of this stack to "My Main Stack"
+    -- (substitute your application's main stack name
 
-A copy of "revCompatibilityBrushes1" is now a substack of your main stack, and will be saved in the stack file the next time you save the main stack.
 
->*Tip:*  If you want to create your own brush cursors, clone the "revCompatibilityBrushes1" <stack> and change the <image(object)|images> in it to the desired shapes. Make sure to include the <stack> when you build the <standalone application|standalone>.
+A copy of "revCompatibilityBrushes1" is now a substack of your main
+stack, and will be saved in the stack file the next time you save the
+main stack.
 
-References: spray (property), eraser (property), brush (keyword), message box (keyword), image (keyword), choose (command), tool (function), stacks (function), property (glossary), handler (glossary), current stack (glossary), standalone application (glossary), command (glossary), stack (object), image (object)
+>*Tip:*  If you want to create your own brush cursors, clone the
+> "revCompatibilityBrushes1" <stack> and change the
+> <image(object)|images> in it to the desired shapes. Make sure to
+> include the <stack> when you build the <standalone
+> application|standalone>. 
+
+References: choose (command), tool (function), stacks (function),
+property (glossary), handler (glossary), current stack (glossary),
+standalone application (glossary), command (glossary), brush (keyword),
+message box (keyword), image (keyword), stack (object), image (object),
+spray (property), eraser (property)
+

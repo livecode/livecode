@@ -1,35 +1,49 @@
 Name: backgroundPixel
 
+Synonyms: backpixel, secondpixel
+
 Type: property
 
-Syntax: set the backgroundPixel of <object> to <colorNumber> 
+Syntax: set the backgroundPixel of <object> to <colorNumber>
 
-Summary: Specifies which entry in the <color table> is used for an <object|object's> background color.
+Summary:
+Specifies which entry in the <color table> is used for an
+<object|object's> background color.
 
-Synonyms: backPixel,secondPixel
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the backgroundPixel of button 3 to field "Selected Color"
 
 Value:
-The <backgroundPixel> of an <object> is an <integer> between zero and (the screenColors - 1). It designates an entry in the current color table.
-By default, the <backgroundPixel> for all <object|objects> is empty.
+The <backgroundPixel> of an <object(glossary)> is an <integer> between
+zero and (the screenColors - 1). It designates an entry in the current
+color table. By default, the <backgroundPixel> for all <object|objects>
+is empty.
 
 Description:
-Use the <backgroundPixel> <property> to change the background color of an <object> when the <bit depth> of the screen is 8 <bit|bits> (256 colors) or less.
+Use the <backgroundPixel> <property> to change the background color of
+an <object(glossary)> when the <bit depth> of the screen is 8 <bit|bits>
+(256 colors) or less.
 
-The <backgroundPixel> <property> specifies which entry in the <color table> is used for an object's background color. It is similar to the <backgroundColor> <property>, but is specified as an entry in the current <color table>, rather than as a <color reference>.
+The <backgroundPixel> <property> specifies which entry in the <color
+table> is used for an object's background color. It is similar to the
+<backgroundColor> <property>, but is specified as an entry in the
+current <color table>, rather than as a <color reference>.
 
 The color table can be set by changing the colorMap <property>.
 
-References: borderPixel (property), pixels (property), backgroundColor (property), integer (keyword), object (object), property (glossary), bit depth (glossary), bit (glossary), color reference (glossary), color table (glossary)
+References: object (glossary), property (glossary), bit depth (glossary),
+bit (glossary), color reference (glossary), color table (glossary),
+integer (keyword), borderPixel (property), pixels (property),
+backgroundColor (property)
 
 Tags: ui
+

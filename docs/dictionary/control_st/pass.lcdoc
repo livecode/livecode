@@ -4,43 +4,94 @@ Type: control structure
 
 Syntax: pass <messageName> [to top]
 
-Summary: Stops the current <handler> and <pass|passes> the <message> to the next <object> in the <message path>.
+Summary:
+Stops the current <handler> and <pass|passes> the <message> to the next
+<object(glossary)> in the <message path>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Parameters:
-messageName: The name of the handler in which the pass control structure appears.
+messageName:
+The name of the handler in which the pass control structure appears.
 
 Description:
-Use the <pass> <control structure> to end a <handler> while letting the <message> continue along the <message path>.
+Use the <pass> <control structure> to end a <handler> while letting the
+<message> continue along the <message path>. 
 
-Form:
-The <pass> <statement> appears on a line by itself, anywhere inside a <handler>.
+**Form:** The <pass> <statement> appears on a line by itself, anywhere
+inside a <handler>.
 
-When the <pass> <control structure> is <execute|executed>, any remaining <statement|statements> in the <handler> are skipped. Hence, the <pass> <control structure> is usually used either at the end of a <handler> or within an <if> <control structure>.
+When the <pass> <control structure> is <execute|executed>, any remaining
+<statement|statements> in the <handler> are skipped. Hence, the <pass>
+<control structure> is usually used either at the end of a <handler> or
+within an <if> <control structure>.
 
-Use the <pass> <control structure> at the end of a <handler> to make sure that <object|objects> further up the <message path>, or LiveCode itself, receive the <message>. For example, if a <stack|stack's> <script> contains a <closeCard> <handler> that does housekeeping tasks, and a particular <card(keyword)> needs to perform additional tasks if the <stack> is closed when on that <card(keyword)>, the <card(object)|card's> <closeCard> <handler> can perform those additional tasks, and then use the <pass> <control structure> to let the <closeCard> <handler> in the <stack|stack's> <script> receive the message and be <execute|executed>. The following example demonstrates the idea:
+Use the <pass> <control structure> at the end of a <handler> to make
+sure that <object|objects> further up the <message path>, or LiveCode
+itself, receive the <message>. For example, if a <stack|stack's>
+<script> contains a <closeCard> <handler> that does housekeeping tasks,
+and a particular <card(keyword)> needs to perform additional tasks if
+the <stack> is closed when on that <card(keyword)>, the
+<card(object)|card's> <closeCard> <handler> can perform those additional
+tasks, and then use the <pass> <control structure> to let the
+<closeCard> <handler> in the <stack|stack's> <script> receive the
+message and be <execute|executed>. The following example demonstrates
+the idea:
 
-  on closeCard -- in card script
-    put empty into field "Search"
-    pass closeCard -- give stack script a crack at it
-  end closeCard
+    on closeCard -- in card script
+        put empty into field "Search"
+        pass closeCard -- give stack script a crack at it
+    end closeCard
 
-Built-in messages that perform a task, such as keyDown and <closeStackRequest>, must be received by the <engine> or the task will not be performed. For example, LiveCode enters a typed character into a <field> when it receives the <keyDown> <message>, and starts closing a <stack> when it receives the <closeStackRequest> <message>. For this reason, if you create a <handler> for a <built-in message> that performs a task, make sure to use the <pass> <control structure> to ensure that the <engine> receives the <message> after the <handler> is finished with it.
 
-Similarly, if you set a custom property, the setProp <trigger> must be received by the <engine>, or the <custom property> will not be set. This means that if you create a <setProp> <handler> to intercept requests to set a <custom property>, the <property> is not set unless you include a <pass> <control structure> in the <setProp> <handler>.
+Built-in messages that perform a task, such as keyDown and
+<closeStackRequest>, must be received by the <engine> or the task will
+not be performed. For example, LiveCode enters a typed character into a
+<field> when it receives the <keyDown> <message>, and starts closing a
+<stack> when it receives the <closeStackRequest> <message>. For this
+reason, if you create a <handler> for a <built-in message> that performs
+a task, make sure to use the <pass> <control structure> to ensure that
+the <engine> receives the <message> after the <handler> is finished with
+it. 
 
-When a handler executes a <pass> <statement>, the <message> is <pass|passed> to the next <object> in the <message path>. If you use the pass...to top form of the <pass> <control structure>, the <message> is <pass|passed> directly to the <engine>, without being <pass|passed> through any other <object> in the <message path>.
+Similarly, if you set a custom property, the setProp <trigger> must be
+received by the <engine>, or the <custom property> will not be set. This
+means that if you create a <setProp> <handler> to intercept requests to
+set a <custom property>, the <property> is not set unless you include a
+<pass> <control structure> in the <setProp> <handler>.
 
-To halt the current handler without passing the message on through the message path, use the <exit> <control structure> instead. To halt the current <handler> and return a result, use the <return> <control structure> instead.
+When a handler executes a <pass> <statement>, the <message> is
+<pass|passed> to the next <object(glossary)> in the <message path>. If
+you use the pass...to top form of the <pass> <control structure>, the
+<message> is <pass|passed> directly to the <engine>, without being
+<pass|passed> through any other <object(glossary)> in the <message
+path>. 
 
->*Important:*  You cannot use the <pass> <command> to pass a <message> that was originally sent with the <send> <command>.
+To halt the current handler without passing the message on through the
+message path, use the <exit> <control structure> instead. To halt the
+current <handler> and return a result, use the <return> <control
+structure> instead.
+
+>*Important:*  You cannot use the <pass> <command> to pass a <message>
+> that was originally sent with the <send> <command>.
 
 Changes:
 The pass...to top form was added in version 2.1.
 
-References: dynamicPaths (property), backgroundBehavior (property), return (constant), closeCard (message), closeStackRequest (message), keyDown (message), end (keyword), card (keyword), pass (control_st), exit (control_st), setProp (control_st), if (control_st), pass (glossary), engine (glossary), built-in message (glossary), property (glossary), statement (glossary), execute (glossary), command (glossary), control structure (glossary), trigger (glossary), custom property (glossary), message path (glossary), field (glossary), message (glossary), script (glossary), handler (glossary), call (command), send (command), stack (object), object (object), card (object)
+References: call (command), send (command), return (constant),
+pass (control structure), exit (control structure),
+setProp (control structure), if (control structure), pass (glossary),
+engine (glossary), built-in message (glossary), property (glossary),
+statement (glossary), execute (glossary), command (glossary),
+control structure (glossary), trigger (glossary),
+custom property (glossary), message path (glossary), field (glossary),
+message (glossary), script (glossary), handler (glossary),
+object (glossary), end (keyword), card (keyword), closeCard (message),
+closeStackRequest (message), keyDown (message), stack (object),
+card (object), dynamicPaths (property), backgroundBehavior (property)
+
+Tags: messages

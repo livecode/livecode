@@ -2,15 +2,16 @@ Name: blendLevel
 
 Type: property
 
-Syntax: set the blendLevel of <control> to <levelNumber> 
+Syntax: set the blendLevel of <control> to <levelNumber>
 
-Summary: Specifies the degree of transparency of an object
+Summary:
+Specifies the degree of transparency of an object
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the blendLevel of image 3 to 100
@@ -20,19 +21,39 @@ set the blendLevel of field "Test" to the blendLevel of field "Test" - 1
 
 Value:
 The <blendLevel> of an object is an <integer> between zero and 100.
-By default, the <blendLevel> <property> of newly created <object|objects> is set to 0.
+By default, the <blendLevel> <property> of newly created
+<object|objects> is set to 0.
 
 Description:
-Use the <blendLevel> <property> to allow <object|objects> underneath an object to show through partially or completely.
+Use the <blendLevel> <property> to allow <object|objects> underneath an
+object to show through partially or completely.
 
-If an object's <blendLevel> is zero, the object is fully opaque. If the <blendLevel> is 100, the object is fully transparent. Values between zero and 100 indicate levels of partial translucency.
+If an object's <blendLevel> is zero, the object is fully opaque. If the
+<blendLevel> is 100, the object is fully transparent. Values between
+zero and 100 indicate levels of partial translucency.
 
->*Tip:*  The blendLevel setting of a stack obeys lock and unlock screen. In particular, if the screen is unlocked with a visual effect, the blendlevel of the stack will be interpolated between its new and old values during the action of the lifetime of the effect.
+>*Tip:*  The blendLevel setting of a stack obeys lock and unlock screen.
+> In particular, if the screen is unlocked with a visual effect, the
+> blendlevel of the stack will be interpolated between its new and old
+> values during the action of the lifetime of the effect.
 
->*Note:* In previous versions of LiveCode setting the blendLevel of an image would automatically set the ink to blend. This no longer happens and the blendLevel applies regardless of the setting of the ink. For backwards compatibility, when a pre-2.7 stackfile is imported, all images with the blendLevel set and ink set to blend will be converted to have the ink 'blendSrcOver' and the same blendLevel setting.
+>*Note:* In previous versions of LiveCode setting the blendLevel of an
+> image would automatically set the ink to blend. This no longer happens
+> and the blendLevel applies regardless of the setting of the ink. For
+> backwards compatibility, when a pre-2.7 stackfile is imported, all
+> images with the blendLevel set and ink set to blend will be converted
+> to have the ink 'blendSrcOver' and the same blendLevel setting.
 
->*Important:*  Setting the <blendLevel> of a stack is only supported on systems which support alpha-blended windows. This is currently MacOS X, Windows 2000 or later and Linux (with a composite window manager (such as Beryl))
+>*Important:*  Setting the <blendLevel> of a stack is only supported on
+> systems which support alpha-blended windows. This is currently MacOS
+> X, Windows 2000 or later and Linux (with a composite window manager
+> (such as Beryl))
 
-References: integer (keyword), blend (keyword), transparent (keyword), colorOverlay (property), innerGlow (property), ink (property), opaque (property), innerShadow (property), outerGlow (property), alphaData (property), dropShadow (property), object (object), property (glossary)
+References: object (glossary), property (glossary), integer (keyword),
+blend (keyword), transparent (keyword), colorOverlay (property),
+innerGlow (property), ink (property), opaque (property),
+innerShadow (property), outerGlow (property), alphaData (property),
+dropShadow (property)
 
 Tags: multimedia
+

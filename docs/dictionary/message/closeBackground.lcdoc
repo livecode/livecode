@@ -2,17 +2,19 @@ Name: closeBackground
 
 Type: message
 
-Syntax: closeBackground <backgroundID> 
+Syntax: closeBackground <pBackgroundID>
 
-Summary: Sent to the <current card> when the user is leaving a <card> that has a <group> to go to one that doesn't have the <group>.
+Summary:
+Sent to the <current card> when the user is leaving a <card> that has a
+<group> to go to one that doesn't have the <group>.
 
 Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on closeBackground theClosedGroupID
@@ -22,17 +24,30 @@ on closeBackground theClosedGroupID
 end closeBackground
 
 Parameters:
-backgroundID: The ID number of the background being exited.
+pBackgroundID:
+The ID number of the background being exited.
 
 Description:
-Handle the <closeBackground> <message> if you want to perform cleanup or do other tasks when the user leaves a <background>.
+Handle the <closeBackground> <message> if you want to perform cleanup or
+do other tasks when the user leaves a <background>.
 
-A background is closed when the user either goes to a card that doesn't have the group on it, or closes the stack.
+A background is closed when the user either goes to a card that doesn't
+have the group on it, or closes the stack.
 
-The <closeBackground> <message> is sent only if the <group(glossary)|group's> <backgroundBehavior> <property> is set to true. If the <group(glossary)|group's> <backgroundBehavior> is false, no <closeBackground> <message> is sent, even if the <group(command)> is placed on multiple <card|cards>.
+The <closeBackground> <message> is sent only if the
+<group(glossary)|group's> <backgroundBehavior> <property> is set to
+true. If the <group(glossary)|group's> <backgroundBehavior> is false, no
+<closeBackground> <message> is sent, even if the <group(command)> is
+placed on multiple <card|cards>.
 
-A separate <closeBackground> <message> is sent for each <background> that is being closed.
+A separate <closeBackground> <message> is sent for each <background>
+that is being closed.
 
-References: card (keyword), backgroundBehavior (property), preOpenBackground (message), closeStack (message), shutdown (message), openBackground (message), closeCard (message), closeBackground (message), group (command), card (object), property (glossary), current card (glossary), message (glossary), background (glossary), group (glossary)
+References: group (command), property (glossary), current card (glossary),
+message (glossary), background (glossary), group (glossary),
+card (keyword), preOpenBackground (message), closeStack (message),
+shutdown (message), openBackground (message), closeCard (message),
+closeBackground (message), card (object), backgroundBehavior (property)
 
 Tags: navigation
+

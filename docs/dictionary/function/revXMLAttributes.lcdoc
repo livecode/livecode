@@ -4,13 +4,17 @@ Type: function
 
 Syntax: revXMLAttributes(<treeID>, <node>, <valueDelim>, <attributeDelim>)
 
-Summary: <return|Returns> a list of all <attribute|attributes> and their values for the specified <node>.
+Summary:
+<return|Returns> a list of all <attribute|attributes> and their values
+for the specified <node>.
+
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -24,20 +28,45 @@ Example:
 repeat for each line thisLine in revXMLAttributes(1,"/",tab,return)
 
 Parameters:
-treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
-node: The path to the node whose attributes you want to list.
-valueDelim (string): A string that separates an attribute's value from its name.
-attributeDelim (string): A string that separates attribute name/value pairs from each other.
+treeID:
+The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+function when you created the XML tree.
 
-Returns: The <revXMLAttributes> <function> returns a <string>.
+node:
+The path to the node whose attributes you want to list.
+
+valueDelim (string):
+A string that separates an attribute's value from its name.
+
+attributeDelim (string):
+A string that separates attribute name/value pairs from each other.
+
+Returns:
+The <revXMLAttributes> <function> returns a <string>.
 
 Description:
-Use the <revXMLAttributes> <function> to display a <node|node's> <attribute|attributes> or to scan each <attribute> in a <repeat> <loop>.
+Use the <revXMLAttributes> <function> to display a <node|node's>
+<attribute|attributes> or to scan each <attribute> in a <repeat> <loop>.
 
-If the <revXMLAttributes> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLAttributes> <function> encounters an error, it
+<return|returns> an error message starting with "xmlerr".
 
->*Important:*  The <revXMLAttributes> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLAttributes> <function> is part of the 
+> <XML library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "XML" 
+> checkbox is checked.
 
-References: function (control_st), repeat (control_st), string (keyword), revXMLSetAttribute (command), revXMLAttributeValues (function), revXMLText (function), revXMLAttribute (function), revXMLMatchingNode (function), revXMLChildContents (function), node (glossary), Standalone Application Settings (glossary), loop (glossary), attribute (glossary), return (glossary), standalone application (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLSetAttribute (command), function (control structure),
+repeat (control structure), revXMLAttributeValues (function),
+revXMLText (function), revXMLAttribute (function),
+revXMLMatchingNode (function), revXMLChildContents (function),
+node (glossary), Standalone Application Settings (glossary),
+loop (glossary), attribute (glossary), return (glossary),
+standalone application (glossary), LiveCode custom library (glossary),
+string (keyword), XML library (library)
 
 Tags: text processing
+

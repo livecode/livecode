@@ -114,6 +114,7 @@ enum MCNativeControlProperty
 	
 	// TextField-specific properties
 	kMCNativeControlPropertyMinimumFontSize,
+    kMCNativeControlPropertyMaximumTextLength,
 	kMCNativeControlPropertyAutoClear,
 	kMCNativeControlPropertyClearButtonMode,
 	kMCNativeControlPropertyBorderStyle,
@@ -457,13 +458,6 @@ public:
 	
 	// Set the owning object of the instance
 	void SetOwner(MCObject *owner);
-#ifdef LEGACY_EXEC	
-	// Set property/get property/do verb.
-	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep) = 0;
-	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep) = 0;	
-    virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters) = 0;
-#endif
-
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
@@ -495,34 +489,6 @@ public:
 
 
 	// Various helper functions
-#ifdef LEGACY_EXEC
-	static bool ParseColor(MCExecPoint& ep, uint16_t &r_red, uint16_t &r_green, uint16_t &r_blue, uint16_t &r_alpha);
-	static bool FormatColor(MCExecPoint& ep, uint16_t p_red, uint16_t p_green, uint16_t p_blue, uint16_t p_alpha);
-    
-	static bool ParseBoolean(MCExecPoint& ep, bool& r_value);
-	static bool FormatBoolean(MCExecPoint& ep, bool value);
-	
-	static bool ParseInteger(MCExecPoint& ep, int32_t& r_value);
-	static bool FormatInteger(MCExecPoint& ep, int32_t value);
-	
-	static bool ParseUnsignedInteger(MCExecPoint& ep, uint32_t& r_value);
-	static bool FormatUnsignedInteger(MCExecPoint& ep, uint32_t value);
-	
-	static bool ParseReal(MCExecPoint& ep, double& r_real);
-	static bool FormatReal(MCExecPoint& ep, double real);
-	
-    static bool ParseEnum(MCExecPoint& ep, MCNativeControlEnumEntry *p_entries, int32_t& r_value);
-    static bool FormatEnum(MCExecPoint& ep, MCNativeControlEnumEntry *p_entries, int32_t p_value);
-
-	static bool ParseSet(MCExecPoint& ep, MCNativeControlEnumEntry *entries, int32_t& r_value);
-	static bool FormatSet(MCExecPoint& ep, MCNativeControlEnumEntry *entries, int32_t value);
-	
-	static bool ParseRectangle(MCExecPoint& ep, MCRectangle& r_rect);
-	static bool ParseRectangle32(MCExecPoint& ep, MCRectangle32& r_rect);
-    
-    static bool ParseRange(MCExecPoint &ep, uint32_t &r_start, uint32_t &r_length);
-    static bool FormatRange(MCExecPoint &ep, uint32_t p_start, uint32_t p_length);
-#endif
     // MM-2012-02-22: Clean up all controls
     static void Finalize(void);
 
@@ -545,15 +511,11 @@ private:
 	// The name of the instance
 	MCStringRef m_name;
 	// The instance's owning object (handle)
-	MCObjectHandle *m_object;    
+	MCObjectHandle m_object;
 };
 
 void MCNativeControlInitialize(void);
 void MCNativeControlFinalize(void);
-
-#ifdef LEGACY_EXEC
-bool MCExecPointSetRect(MCExecPoint &ep, int2 p_left, int2 p_top, int2 p_right, int2 p_bottom);
-#endif
 
 // MM-2013-11-26: [[ Bug 11485 ]] Added functions for converting between user and device space.
 MCGAffineTransform MCNativeControlUserToDeviceTransform();

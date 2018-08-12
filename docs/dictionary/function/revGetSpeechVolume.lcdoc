@@ -4,26 +4,39 @@ Type: function
 
 Syntax: revGetSpeechVolume()
 
-Summary: Returns the current speech volume
+Summary:
+Returns the current speech volume
+
+Associations: speech library
 
 Introduced: 2.8.1
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 put revGetSpeechVolume() into tVolume
 
 Returns:
 The <revGetSpeechVolume> function returns a number between 0 and 100.
-The default volume is 100 on both Windows and Mac OS X.
-
-<img src="202653"/> >*Important:* The revGetSpeechVolume  <function> is part of the <Speech library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries..
 
 Description:
-Use the <revGetSpeechVolume> function to find out what the current volume that LiveCode will speak at is.
+Use the <revGetSpeechVolume> function to find out what the current
+volume that LiveCode will speak at is.
 
->*Important:*  The revGetSpeechVolume  <function> is part of the <Speech library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+The default volume is 100 on both Windows and Mac OS X.
 
-References: revSetSpeechSpeed (command), revSetSpeechVolume (command), function (control_st), Standalone Application Settings (glossary), standalone application (glossary), Speech library (library), LiveCode custom library (library)
+>*Important:*  The <revGetSpeechVolume> <function> is part of the 
+> <Speech library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Speech" 
+> library checkbox is checked.
+
+References: revSetSpeechSpeed (command), revSetSpeechVolume (command),
+function (control structure), Standalone Application Settings (glossary),
+standalone application (glossary), LiveCode custom library (glossary),
+Speech library (library)
+

@@ -2,15 +2,16 @@ Name: dialogData
 
 Type: property
 
-Syntax: set the dialogData to <string> 
+Syntax: set the dialogData to <string>
 
-Summary: Specifies data to be <pass|passed> to a <dialog box>.
+Summary:
+Specifies data to be <pass|passed> to a <dialog box>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the dialogData to "OK"
@@ -18,20 +19,49 @@ set the dialogData to "OK"
 Example:
 put last item of the dialogData into buttonReceived
 
-Value: The <dialogData> is a <string>.
+Value:
+The <dialogData> is a <string>.
 
 Description:
-Use the <dialogData> <property> to <pass> data between a <dialog box> and the <stack> that opens the <dialog box>.
+Use the <dialogData> <property> to <pass> data between a <dialog box>
+and the <stack> that opens the <dialog box>.
 
-The <dialogData> can be used for any data you wish to place in it. For example, you can use it within a <modal dialog box|modal dialog> <stack> to hold the name of the <button> the user clicked, the state of other options that are set in the <dialog box>, the contents of text <field|fields> the user filled in, and any other information. The <handler> that showed the <dialog box> can then use the information in the <dialogData>. The <caller|calling handler> can also place information--for example, <default> settings--into the <dialogData> <property>, and the <modal dialog box|modal dialog> <stack> can use that information to set up the <dialog box> when it opens.
+The <dialogData> can be used for any data you wish to place in it. For
+example, you can use it within a <modal dialog box|modal dialog> <stack>
+to hold the name of the <button> the user clicked, the state of other
+options that are set in the <dialog box>, the contents of text
+<field|fields> the user filled in, and any other information. The
+<handler> that showed the <dialog box> can then use the information in
+the <dialogData>. The <caller|calling handler> can also place
+information--for example, <default> settings--into the <dialogData>
+<property>, and the <modal dialog box|modal dialog> <stack> can use that
+information to set up the <dialog box> when it opens.
 
-Since the <dialogData> <property> is <global> and can be set or accessed by any <stack>, this method generally creates simpler code than the alternatives (such as using <global> <variable|variables>, or <pass|passing> <parameter|parameters> between <stacks>).
+Since the <dialogData> <property> is <global> and can be set or accessed
+by any <stack>, this method generally creates simpler code than the
+alternatives (such as using <global> <variable|variables>, or
+<pass|passing> <parameter|parameters> between <stacks>).
 
->*Tip:*  The built-in "Answer Dialog" and "Ask Dialog" stacks, which are used by the <ask> and <answer> <command|commands>, use the <dialogData> <property> to <pass> data between the <development environment> and the <dialog box>. To see the <script|scripts> used for these <stacks>, enter one of the following <statement|statements> into the <message box>:
+>*Tip:*  The built-in "Answer Dialog" and "Ask Dialog" stacks, which are
+> used by the <ask> and <answer> <command|commands>, use the
+> <dialogData> <property> to <pass> data between the <development
+> environment> and the <dialog box>. To see the <script|scripts> used
+> for these <stacks>, enter one of the following <statement|statements>
+> into the <message box>:
 
     edit the script of card 1 of stack "Answer Dialog"
     edit the script of card 1 of stack "Ask Dialog"
 
-References: default (property), stack (object), field (object), default (keyword), button (keyword), string (keyword), message box (keyword), pass (control_st), script (glossary), variable (glossary), handler (glossary), property (glossary), dialog box (glossary), development environment (glossary), modal dialog box (glossary), command (glossary), caller (glossary), parameter (glossary), statement (glossary), pass (glossary), answer (command), ask (command), modeless (command), global (command), stacks (function)
+
+References: answer (command), ask (command), modeless (command),
+global (command), pass (control structure), stacks (function),
+script (glossary), variable (glossary), handler (glossary),
+property (glossary), dialog box (glossary),
+development environment (glossary), modal dialog box (glossary),
+command (glossary), caller (glossary), parameter (glossary),
+statement (glossary), pass (glossary), default (keyword),
+button (keyword), string (keyword), message box (keyword), stack (object),
+field (object), default (property)
 
 Tags: windowing
+

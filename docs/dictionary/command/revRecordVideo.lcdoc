@@ -2,17 +2,20 @@ Name: revRecordVideo
 
 Type: command
 
-Syntax: revRecordVideo <filePath> 
+Syntax: revRecordVideo <filePath>
 
-Summary: Records video from a video camera to a file.
+Summary:
+Records video from a video camera to a file.
+
+Associations: video library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: windows
 
 Platforms: desktop
 
-Security: disk,privacy
+Security: disk, privacy
 
 Example:
 revRecordVideo "/Disk/Folder/file.mov"
@@ -24,23 +27,52 @@ Example:
 revRecordVideo theFileName
 
 Parameters:
-filePath: The name and location of the file that will hold the recorded video data. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
+filePath:
+The name and location of the file that will hold the recorded video
+data. If you specify a name but not a location, LiveCode assumes the
+file is in the defaultFolder.
 
 Description:
 Use the <revRecordVideo> <command> to record a <movie> file.
 
-You must use the <revInitializeVideoGrabber> <command> to open the <video grabber> before you can use the <revRecordVideo> <command>.
+You must use the <revInitializeVideoGrabber> <command> to open the
+<video grabber> before you can use the <revRecordVideo> <command>.
 
-If you specified "QT" as the video method when you executed the <revInitializeVideoGrabber> <command>, the recorded video is stored in <QuickTime> <format>. If you specified "VFW", the recorded video is stored in <AVI> <format>.
+The recorded video is stored in <AVI> <format>.
 
-If the video grabber was already recording video to a file, executing the <revRecordVideo> <command> again stops that recording and starts a new one.
+If the video grabber was already recording video to a file, executing
+the <revRecordVideo> <command> again stops that recording and starts a
+new one.
+To stop recording the video input, use the <revStopRecordingVideo>
+<command>. 
 
->*Important:*  If you are using <QuickTime> for video capture, <execute> the <revVideoGrabIdle> <command> periodically while previewing or recording video. Not doing so may cause the video in the <video grabber> to stutter or display strange screen artifacts
+>*Important:*  The <revRecordVideo> <command> is part of the 
+> <Video library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the
+> "Video Grabber" 
+> library checkbox is checked.
 
-To stop recording the video input, use the <revStopRecordingVideo> <command>.
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect.
 
->*Important:*  The <revRecordVideo> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
-References: revVideoGrabIdle (command), revPreviewVideo (command), revInitializeVideoGrabber (command), revStopRecordingVideo (command), revVideoFrameImage (command), format (function), movie (function), execute (glossary), AVI (glossary), Standalone Application Settings (glossary), QuickTime (glossary), standalone application (glossary), video grabber (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+References: revVideoGrabIdle (command), revPreviewVideo (command),
+revInitializeVideoGrabber (command), revStopRecordingVideo (command),
+revVideoFrameImage (command), format (function), movie (function),
+execute (glossary), AVI (glossary),
+Standalone Application Settings (glossary), QuickTime (glossary),
+standalone application (glossary), video grabber (glossary),
+command (glossary), LiveCode custom library (glossary),
+Video library (library)
 
 Tags: multimedia
+

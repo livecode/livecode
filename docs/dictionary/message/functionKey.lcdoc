@@ -2,15 +2,18 @@ Name: functionKey
 
 Type: message
 
-Syntax: functionKey <keyNumber> 
+Syntax: functionKey <pKeyNumber>
 
-Summary: Sent when the user presses a function key.
+Summary:
+Sent when the user presses a function key.
+
+Associations: card, field
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 on functionKey theKey
@@ -19,15 +22,21 @@ on functionKey theKey
 end functionKey
 
 Parameters:
-keyNumber: The number of the function key.
+pKeyNumber:
+The number of the function key.
 
 Description:
-Handle the <functionKey> <message> to let the user perform some action with a function key.
+Handle the <functionKey> <message> to let the user perform some action
+with a function key.
 
-The message is sent to the active (focused) control, or to the current card if no control is focused.
+The message is sent to the active (focused) control, or to the current
+card if no control is focused.
 
-Keyboards typically have twelve function keys, so you can use numbers from 1 to 12 to implement custom actions.
+Keyboards typically have twelve function keys, so you can use numbers
+from 1 to 12 to implement custom actions.
 
-References: commandKeyDown (message), keyDown (message), help (message), arrowKey (message), message (glossary)
+References: message (glossary), commandKeyDown (message),
+keyDown (message), help (message), arrowKey (message)
 
 Tags: ui
+

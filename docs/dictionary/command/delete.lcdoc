@@ -1,18 +1,20 @@
 Name: delete
 
+Synonyms: clear
+
 Type: command
 
 Syntax: delete [<object>]
 
-Summary: Removes the <selected> text, or the <selected> section of an <image>, or an <object>.
-
-Synonyms: clear
+Summary:
+Removes the <selected> text, or the <selected> section of an <image>, or
+an <object(glossary)>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 delete
@@ -24,17 +26,37 @@ Example:
 delete button 1
 
 Parameters:
-object: Any available object. If no object is specified, the delete command removes whatever is currently selected.
+object:
+Any available object. If no object is specified, the delete command
+removes whatever is currently selected.
 
 Description:
-Use the <delete> <command> to remove <object|objects> or text from the <stack>.
+Use the <delete> <command> to remove <object|objects> or text from the
+<stack>. 
 
-If no <object> is specified, the <delete> <command> is equivalent to pressing the Delete key. It removes the <selection>.
+If no <object(glossary)> is specified, the <delete> <command> is
+equivalent to pressing the Delete key. It removes the <selection>.
 
-Use the <delete> <command> to remove a <control>, <card>, or <group> permanently. To remove an <object> and place it on the <clipboard> for pasting elsewhere, use the <cut> <command> instead. To temporarily hide a <control>, use the <hide> <command> instead.
+Use the <delete> <command> to remove a <control>, <card>, or <group>
+permanently. To remove an <object(glossary)> and place it on the
+<clipboard> for pasting elsewhere, use the <cut> <command> instead. To
+temporarily hide a <control>, use the <hide> <command> instead.
 
->*Important:*  You cannot delete the <object> whose <script> holds a currently <execute|executing> <handler>.
+>*Important:*  You cannot delete the <object(glossary)> whose <script>
+> holds a currently <execute|executing> <handler>.
 
-References: script (property), cantDelete (property), selected (property), deleteEPS (message), deleteButton (message), deletePlayer (message), deleteBackground (message), deleteImage (message), deleteCard (message), deleteGroup (message), deleteGraphic (message), deleteField (message), selection (keyword), card (keyword), image (keyword), control (keyword), stack (object), object (object), deleteResource (function), clipboard (function), delete chunk (command), cut (command), undo (command), delete stack (command), compact (command), remove (command), group (command), delete variable (command), hide (command), ungroup (command), delete file (command), command (glossary), handler (glossary), execute (glossary)
+References: delete chunk (command), cut (command), undo (command),
+delete stack (command), compact (command), remove (command),
+group (command), delete variable (command), hide (command),
+ungroup (command), delete file (command), deleteResource (function),
+clipboard (function), object (glossary), command (glossary),
+handler (glossary), execute (glossary), selection (keyword),
+card (keyword), image (keyword), control (keyword), deleteEPS (message),
+deletAudioclip (message), deleteButton (message), deletePlayer (message),
+deleteBackground (message), deleteImage (message), deleteCard (message),
+deleteGroup (message), deleteGraphic (message), deleteField (message),
+deleteVideoclip (message), stack (object), script (property),
+cantDelete (property), selected (property)
 
 Tags: ui
+

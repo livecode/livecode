@@ -194,8 +194,8 @@ These, however, are not valid chunk expressions:
 
 The full hierarchy is as follows:
 
-	paragraph > sentence > trueWord > line > item > 
-		segment > token > character > codepoint > codeunit > byte
+	paragraph > sentence > line > item > segment >
+		trueWord > token > character > codepoint > codeunit > byte
 
 ### Using Parentheses in Chunk Expressions
 
@@ -333,8 +333,8 @@ or not a match should be case sensitive). To make a comparison case
 sensitive, set the **caseSensitive** property to true. For more details,
 see the *caseSensitive* property in the *LiveCode Dictionary*.
 
-### Checking if text is True, False, a Number, an Integer, a Point, a 
-Rectangle, a Date or a Color
+### Checking if text is True, False, a Number, an Integer, a Point, 
+### a Rectangle, a Date or a Color
 
 Use the **is a** operator for checking whether the user has entered data
 correctly and for validating parameters before sending them to a
@@ -369,7 +369,7 @@ operator. When one is true, the other is false.
 > following script
 
 	on keyDown pKey
-		if pKey is a number then pass keyDown`
+		if pKey is a number then pass keyDown
 	end keyDown
 
 The **keyDown** message will only be passed if the key the user pressed
@@ -412,13 +412,18 @@ To delete text using replace, replace a string with the empty constant.
 
 	replace return with empty in field 1 -- runs lines together
 
-For more details, see the *replace command* in the 
+To preserve styling when replacing one string with another in a field, use the `preserving styles` clause.
+        replace "foo" with "bar" in field "myStyledField" preserving styles
+        -- replaces instances of "foo" with "bar" in the given field,
+        --   "bar" will retain the styling of instances of "foo"
+        
+For more details, see the *replace command* and the *replace in field command* in the 
 *LiveCode Dictionary*.
 
 ### Retrieving the Position of a Matching Chunk
 
-The **offset**, **itemOffset**, **tokenOffset**, **segmentOffset**,
-**lineOffset**, **trueWordOffset**, **sentenceOffset** and
+The **offset**, **itemOffset**, **tokenOffset**, **trueWordOffset**,
+**segmentOffset**, **lineOffset**, **sentenceOffset** and
 **paragraphOffset** functions can be used to locate the position chunks
 within a larger container. For example, this expression returns the
 character number where the letter "C" was found:
@@ -434,7 +439,7 @@ A chunk expression describes the location of a piece of text in a longer
 string.
 
 Chunk expressions can describe **characters**, **items**, **tokens**, 
-**segments**, **lines**, **trueWords**, **sentences** and **paragraphs**
+**trueWords**, **segments**, **lines**, **sentences** and **paragraphs**
 of text.
 
 To count backward from the end of a string, use negative numbers. For
@@ -533,7 +538,7 @@ For more details, see the *replaceText* function in the
 | **`*`**                 | matches zero or more occurrences of the preceding character or pattern                                                                 | ZA\*B matches "ZB" or "ZAB" or "ZAAB", but not "ZXA" or "AB" <br><br> [A-D]\*G matches "AG" or "G" or "CAG", but not "AB"             |
 | **+**                   | matches one or more occurrences of the preceding character or pattern                                                                  | ZA+B matches "ZAB" or "ZAAB", but not "ZB" <br><br>[A-D]+G matches "AG" or "CAG", but not "G" or "AB"              |
 | **?**                   | matches zero or one occurrences of the preceding character or pattern                                                                  | ZA?B matches "ZB" or "ZAB", but not "ZAAB"<br><br>[A-D]?G matches "AG" or "CAGZ", but not "G" or "AB"             |
-| **|**                   | matches either the pattern before or the pattern after the |.                                                                          | A|B matches "A" or "B" <br><br>[ABC]|[XYZ] matches "AY" or "CX", but not "AA" or "ZB".         |
+| **\|**                   | matches either the pattern before or the pattern after the \|.                                                                          | A\|B matches "A" or "B" <br><br>[ABC]\|[XYZ] matches "AY" or "CX", but not "AA" or "ZB".         |
 | **\\**                  | Causes the following character to be matched literally, even if it has special meaning in a regular expression                         | A\\.C matches "A.C", but not "A\\.C" or "ABC"\\\\ matches "\\" |
 | **any other character** | matches itself                                                                                                                         | ABC matches "ABC"                                              |
 
@@ -1661,9 +1666,8 @@ present in a list:
 |--------------------|-----------------------|                 
 | F54.mov | tMinimumInteger is 3 |                                
 | M27.mov | tMaximumInteger is 54  |                               
-| M7.mov |                                
-| F3.mov |      
-| |                 
+| M7.mov |      |                       
+| F3.mov |      |                 
 
 Figure 57 – Results of sort command using sort key
 
@@ -1695,7 +1699,7 @@ criteria and work up to the most important or significant. For example:
 | Elanor,6.34        | Oliver,1.54 |                             
 | Oliver,8.99        | Oliver,8.99 |                             
 | Tim,3.44           | Tim,3.44    |       
-| |                                   
+
 Figure 58 – Results of sorting multiple items
 
 > **Tip:** If you have a large data set and want to improve performance

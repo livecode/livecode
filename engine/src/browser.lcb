@@ -62,10 +62,10 @@ public foreign handler type MCBrowserBreakWaitFunction() returns nothing
 
 public foreign handler MCBrowserLibrarySetWaitFunction(in pWait as MCBrowserWaitFunction) returns nothing binds to "<builtin>"
 public foreign handler MCBrowserLibrarySetBreakWaitFunction(in pBreakWait as MCBrowserBreakWaitFunction) returns nothing binds to "<builtin>"
-public foreign handler MCBrowserLibraryGetRunloopCallback(out rCallback as Pointer, out rContext as Pointer) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserLibraryGetRunloopCallback(out rCallback as Pointer, out rContext as optional Pointer) returns CBool binds to "<builtin>"
 
 public foreign handler MCBrowserFactoryGet(in pFactoryId as ZStringUTF8, out rFactory as MCBrowserFactoryRef) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, in pDisplay as Pointer, in pParentView as Pointer, out rBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, in pDisplay as optional Pointer, in pParentView as Pointer, out rBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
 
 public foreign handler MCBrowserRetain(in pBrowser as MCBrowserRef) returns MCBrowserRef binds to "<builtin>"
 public foreign handler MCBrowserRelease(in pBrowser as MCBrowserRef) returns nothing binds to "<builtin>"
@@ -168,55 +168,69 @@ constant kBoolProps is [0, 1, 2, 3]
 public handler browserListToLCBList(in pBrowserList as MCBrowserListRef, out rList as List) returns Boolean
 	variable tList as List
 	put the empty list into tList
-	
+
 	variable tCount as CUInt
-	if not MCBrowserListGetSize(pBrowserList, tCount) then
-		log "couldn't get size"
-		return false
-	end if
-	
+	unsafe
+		if not MCBrowserListGetSize(pBrowserList, tCount) then
+			log "couldn't get size"
+			return false
+		end if
+	end unsafe
+
 	variable tIndex
 	repeat with tIndex from 0 up to tCount - 1
 		variable tType as MCBrowserValueType
-		if not MCBrowserListGetType(pBrowserList, tIndex, tType) then
-			log "couldn't get type of %@" with [tIndex]
-			return false
-		end if
-		
-		if tType is kMCBrowserValueTypeBoolean then
-			variable tBoolean as CBool
-			if not MCBrowserListGetBoolean(pBrowserList, tIndex, tBoolean) then
-				log "couldn't get boolean %@" with [tIndex]
+		unsafe
+			if not MCBrowserListGetType(pBrowserList, tIndex, tType) then
+				log "couldn't get type of %@" with [tIndex]
 				return false
 			end if
+		end unsafe
+
+		if tType is kMCBrowserValueTypeBoolean then
+			variable tBoolean as CBool
+			unsafe
+				if not MCBrowserListGetBoolean(pBrowserList, tIndex, tBoolean) then
+					log "couldn't get boolean %@" with [tIndex]
+					return false
+				end if
+			end unsafe
 			push tBoolean onto tList
 		else if tType is kMCBrowserValueTypeInteger then
 			variable tInteger as CInt
-			if not MCBrowserListGetInteger(pBrowserList, tIndex, tInteger) then
-				log "couldn't get integer %@" with [tIndex]
-				return false
-			end if
+			unsafe
+				if not MCBrowserListGetInteger(pBrowserList, tIndex, tInteger) then
+					log "couldn't get integer %@" with [tIndex]
+					return false
+				end if
+			end unsafe
 			push tInteger onto tList
 		else if tType is kMCBrowserValueTypeDouble then
 			variable tDouble as CDouble
-			if not MCBrowserListGetDouble(pBrowserList, tIndex, tDouble) then
-				log "couldn't get double %@" with [tIndex]
-				return false
-			end if
+			unsafe
+				if not MCBrowserListGetDouble(pBrowserList, tIndex, tDouble) then
+					log "couldn't get double %@" with [tIndex]
+					return false
+				end if
+			end unsafe
 			push tDouble onto tList
 		else if tType is kMCBrowserValueTypeUTF8String then
 			variable tUTF8String as ZStringNative
-			if not MCBrowserListGetUTF8String(pBrowserList, tIndex, tUTF8String) then
-				log "couldn't get string %@" with [tIndex]
-				return false
-			end if
+			unsafe
+				if not MCBrowserListGetUTF8String(pBrowserList, tIndex, tUTF8String) then
+					log "couldn't get string %@" with [tIndex]
+					return false
+				end if
+			end unsafe
 			push tUTF8String onto tList
 		else if tType is kMCBrowserValueTypeList then
 			variable tBrowserList as MCBrowserListRef
-			if not MCBrowserListGetList(pBrowserList, tIndex, tBrowserList) then
-				log "couldn't get list %@" with [tIndex]
-				return false
-			end if
+			unsafe
+				if not MCBrowserListGetList(pBrowserList, tIndex, tBrowserList) then
+					log "couldn't get list %@" with [tIndex]
+					return false
+				end if
+			end unsafe
 			variable tConvertedList as List
 			if not browserListToLCBList(tBrowserList, tConvertedList) then
 				log "couldn't convert list %@" with [tIndex]
@@ -225,12 +239,14 @@ public handler browserListToLCBList(in pBrowserList as MCBrowserListRef, out rLi
 			push tConvertedList onto tList
 		else if tType is kMCBrowserValueTypeDictionary then
 			variable tBrowserDict as MCBrowserDictionaryRef
-			if not MCBrowserListGetDictionary(pBrowserList, tIndex, tBrowserDict) then
-				log "couldn't get dictionary %@" with [tIndex]
-				return false
-			end if
+			unsafe
+				if not MCBrowserListGetDictionary(pBrowserList, tIndex, tBrowserDict) then
+					log "couldn't get dictionary %@" with [tIndex]
+					return false
+				end if
+			end unsafe
 			variable tConvertedDict as Array
-			if not browserDictionaryToLCBArray(tBrowserDict, tConvertedDict) then 
+			if not browserDictionaryToLCBArray(tBrowserDict, tConvertedDict) then
 				log "couldn't convert dictionary %@" with [tIndex]
 				return false
 			end if
@@ -240,70 +256,86 @@ public handler browserListToLCBList(in pBrowserList as MCBrowserListRef, out rLi
 			return false
 		end if
 	end repeat
-	
+
 	put tList into rList
-	
+
 	return true
 end handler
 
 public handler browserDictionaryToLCBArray(in pBrowserDict as MCBrowserDictionaryRef, out rArray as Array) returns Boolean
 	variable tArray as Array
 	put the empty array into tArray
-	
+
 	variable tCount as CUInt
-	if not MCBrowserDictionaryGetKeyCount(pBrowserDict, tCount) then
-		log "couldn't get size"
-		return false
-	end if
-	
+	unsafe
+		if not MCBrowserDictionaryGetKeyCount(pBrowserDict, tCount) then
+			log "couldn't get size"
+			return false
+		end if
+	end unsafe
+
 	variable tIndex
 	repeat with tIndex from 0 up to tCount - 1
 		variable tKey as String
-		if not MCBrowserDictionaryGetKey(pBrowserDict, tIndex, tKey) then
-			log "couldn't get key of %@" with [tIndex]
-			return false
-		end if
-		
-		variable tType as MCBrowserValueType
-		if not MCBrowserDictionaryGetType(pBrowserDict, tKey, tType) then
-			log "couldn't get type of %@" with [tIndex]
-			return false
-		end if
-		
-		if tType is kMCBrowserValueTypeBoolean then
-			variable tBoolean as CBool
-			if not MCBrowserDictionaryGetBoolean(pBrowserDict, tKey, tBoolean) then
-				log "couldn't get boolean %@" with [tIndex]
+		unsafe
+			if not MCBrowserDictionaryGetKey(pBrowserDict, tIndex, tKey) then
+				log "couldn't get key of %@" with [tIndex]
 				return false
 			end if
+		end unsafe
+
+		variable tType as MCBrowserValueType
+		unsafe
+			if not MCBrowserDictionaryGetType(pBrowserDict, tKey, tType) then
+				log "couldn't get type of %@" with [tIndex]
+				return false
+			end if
+		end unsafe
+
+		if tType is kMCBrowserValueTypeBoolean then
+			variable tBoolean as CBool
+			unsafe
+				if not MCBrowserDictionaryGetBoolean(pBrowserDict, tKey, tBoolean) then
+					log "couldn't get boolean %@" with [tIndex]
+					return false
+				end if
+			end unsafe
 			put tBoolean into tArray[tKey]
 		else if tType is kMCBrowserValueTypeInteger then
 			variable tInteger as CInt
-			if not MCBrowserDictionaryGetInteger(pBrowserDict, tKey, tInteger) then
-				log "couldn't get integer %@" with [tIndex]
-				return false
-			end if
+			unsafe
+				if not MCBrowserDictionaryGetInteger(pBrowserDict, tKey, tInteger) then
+					log "couldn't get integer %@" with [tIndex]
+					return false
+				end if
+			end unsafe
 			put tInteger into tArray[tKey]
 		else if tType is kMCBrowserValueTypeDouble then
 			variable tDouble as CDouble
-			if not MCBrowserDictionaryGetDouble(pBrowserDict, tKey, tDouble) then
-				log "couldn't get double %@" with [tIndex]
-				return false
-			end if
+			unsafe
+				if not MCBrowserDictionaryGetDouble(pBrowserDict, tKey, tDouble) then
+					log "couldn't get double %@" with [tIndex]
+					return false
+				end if
+			end unsafe
 			put tDouble into tArray[tKey]
 		else if tType is kMCBrowserValueTypeUTF8String then
 			variable tUTF8String as ZStringNative
-			if not MCBrowserDictionaryGetUTF8String(pBrowserDict, tKey, tUTF8String) then
-				log "couldn't get string %@" with [tIndex]
-				return false
-			end if
+			unsafe
+				if not MCBrowserDictionaryGetUTF8String(pBrowserDict, tKey, tUTF8String) then
+					log "couldn't get string %@" with [tIndex]
+					return false
+				end if
+			end unsafe
 			put tUTF8String into tArray[tKey]
 		else if tType is kMCBrowserValueTypeList then
 			variable tBrowserList as MCBrowserListRef
-			if not MCBrowserDictionaryGetList(pBrowserDict, tKey, tBrowserList) then
-				log "couldn't get list %@" with [tIndex]
-				return false
-			end if
+			unsafe
+				if not MCBrowserDictionaryGetList(pBrowserDict, tKey, tBrowserList) then
+					log "couldn't get list %@" with [tIndex]
+					return false
+				end if
+			end unsafe
 			variable tConvertedList as List
 			if not browserListToLCBList(tBrowserList, tConvertedList) then
 				log "couldn't convert list %@" with [tIndex]
@@ -312,12 +344,14 @@ public handler browserDictionaryToLCBArray(in pBrowserDict as MCBrowserDictionar
 			put tConvertedList into tArray[tKey]
 		else if tType is kMCBrowserValueTypeDictionary then
 			variable tBrowserDict as MCBrowserDictionaryRef
-			if not MCBrowserDictionaryGetDictionary(pBrowserDict, tKey, tBrowserDict) then
-				log "couldn't get dictionary %@" with [tIndex]
-				return false
-			end if
+			unsafe
+				if not MCBrowserDictionaryGetDictionary(pBrowserDict, tKey, tBrowserDict) then
+					log "couldn't get dictionary %@" with [tIndex]
+					return false
+				end if
+			end unsafe
 			variable tConvertedDict as Array
-			if not browserDictionaryToLCBArray(tBrowserDict, tConvertedDict) then 
+			if not browserDictionaryToLCBArray(tBrowserDict, tConvertedDict) then
 				log "couldn't convert dictionary %@" with [tIndex]
 				return false
 			end if
@@ -327,9 +361,9 @@ public handler browserDictionaryToLCBArray(in pBrowserDict as MCBrowserDictionar
 			return false
 		end if
 	end repeat
-	
+
 	put tArray into rArray
-	
+
 	return true
 end handler
 
@@ -338,23 +372,25 @@ end handler
 private handler browserLookupProperty(in pProp as String) returns MCBrowserProperty
 	variable tIndex as optional Integer
 	put the index of pProp in kMCBrowserPropertyMap into tIndex
-	
+
 	if tIndex is 0 then
 		throw "Unknown property: " & pProp
 	end if
-	
+
 	return tIndex - 1
 end handler
 
 ----------
 
 public handler browserGetEnumProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, out rValue as optional any) returns Boolean
-	if pProperty is in kStringProps then
-		return MCBrowserGetStringProperty(pBrowser, pProperty, rValue)
-	else if pProperty is in kBoolProps then
-		return MCBrowserGetBoolProperty(pBrowser, pProperty, rValue)
-	end if
-	
+	unsafe
+		if pProperty is in kStringProps then
+			return MCBrowserGetStringProperty(pBrowser, pProperty, rValue)
+		else if pProperty is in kBoolProps then
+			return MCBrowserGetBoolProperty(pBrowser, pProperty, rValue)
+		end if
+	end unsafe
+
 	return false
 end handler
 
@@ -363,20 +399,22 @@ public handler browserGetProperty(in pBrowser as MCBrowserRef, in pProperty as S
 	if not browserGetEnumProperty(pBrowser, browserLookupProperty(pProperty), tValue) then
 		throw "Error retrieving browser property: " & pProperty
 	end if
-	
+
 	return tValue
 end handler
 
 public handler browserSetEnumProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, in pValue as any) returns Boolean
-	if pProperty is in kStringProps then
-		return MCBrowserSetStringProperty(pBrowser, pProperty, pValue)
-	else if pProperty is in kBoolProps then
-		return MCBrowserSetBoolProperty(pBrowser, pProperty, pValue)
-	end if
-	
+	unsafe
+		if pProperty is in kStringProps then
+			return MCBrowserSetStringProperty(pBrowser, pProperty, pValue)
+		else if pProperty is in kBoolProps then
+			return MCBrowserSetBoolProperty(pBrowser, pProperty, pValue)
+		end if
+	end unsafe
+
 	return false
 end handler
-	
+
 public handler browserSetProperty(in pBrowser as MCBrowserRef, in pProperty as String, in pValue as any)
 	variable tValue as any
 	if not browserSetEnumProperty(pBrowser, browserLookupProperty(pProperty), pValue) then
@@ -392,12 +430,12 @@ private variable mRunloopAction as MCRunloopActionRef
 private variable mWaitHandler
 
 /* TODO - need to provide a wrapper handler here as we can't (yet) get a pointer to a foreign native handler */
-private handler doWait() returns CBool
+private unsafe handler doWait() returns CBool
 	MCEngineRunloopWait()
 	return true
 end handler
 
-private handler doBreakWait() returns nothing
+private unsafe handler doBreakWait() returns nothing
 	MCEngineRunloopBreakWait()
 end handler
 
@@ -405,20 +443,22 @@ public handler libbrowserInit() returns nothing
 	if mInitialized is not nothing then
 		return
 	end if
-	
-	if not MCBrowserLibraryInitialize() then
-		return
-	end if
 
-	MCBrowserLibrarySetWaitFunction(doWait)
-	MCBrowserLibrarySetBreakWaitFunction(doBreakWait)
+	unsafe
+		if not MCBrowserLibraryInitialize() then
+			return
+		end if
 
-	variable tCallback as MCRunloopActionCallback
-	variable tContext as Pointer
-	if MCBrowserLibraryGetRunloopCallback(tCallback, tContext) then
-		MCEngineAddRunloopAction(tCallback, tContext, mRunloopAction)
-	end if
-	
+		MCBrowserLibrarySetWaitFunction(doWait)
+		MCBrowserLibrarySetBreakWaitFunction(doBreakWait)
+
+		variable tCallback as MCRunloopActionCallback
+		variable tContext as optional Pointer
+		if MCBrowserLibraryGetRunloopCallback(tCallback, tContext) then
+			MCEngineAddRunloopAction(tCallback, tContext, mRunloopAction)
+		end if
+	end unsafe
+
 	put true into mInitialized
 end handler
 

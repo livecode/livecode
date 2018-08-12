@@ -1,20 +1,22 @@
 Name: hilite
 
+Synonyms: highlight, highlite, hilight, highlighted, highlited, hilighted,
+hilited
+
 Type: property
 
 Syntax: set the hilite of <button> to {true | false}
 
-Summary: Determines whether a <button> is <highlight|highlighted>.
-
-Synonyms: highlight,highlite,hilight,highlighted,highlited,hilighted,hilited
+Summary:
+Determines whether a <button> is <highlight|highlighted>.
 
 Associations: button
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the hilite of button "Option 1" to true
@@ -22,20 +24,40 @@ set the hilite of button "Option 1" to true
 Example:
 set the hilite of me to not the hilite of me
 
-Value (bool):The <hilite> of a <button> is true or false.
-By default, the <hilite> <property> of a newly created <button> is set to false.
+Value (bool):
+The <hilite> of a <button> is true or false.
+By default, the <hilite> <property> of a newly created <button> is set
+to false.
 
 Description:
-Use the <hilite> <property> to provide visual feedback when a <button(keyword)> is pressed, or to reflect the state of a setting.
+Use the <hilite> <property> to provide visual feedback when a
+<button(keyword)> is pressed, or to reflect the state of a setting.
 
-The effect of the <hilite> <property> on a <button(keyword)> depends on the <style>, <threeD>, and <hiliteBorder> of the <button(keyword)>.
+The effect of the <hilite> <property> on a <button(keyword)> depends on
+the <style>, <threeD>, and <hiliteBorder> of the <button(keyword)>.
 
-If the button's <hiliteBorder> and <threeD> <property|properties> are true, the <topColor> and <bottomColor> (or <topPattern> and <bottomPattern>) are reversed when the <button(keyword)> is <highlight|highlighted>.
+If the button's <hiliteBorder> and <threeD> <property|properties> are
+true, the <topColor> and <bottomColor> (or <topPattern> and
+<bottomPattern>) are reversed when the <button(keyword)> is
+<highlight|highlighted>. 
 
-If a radio button's or checkbox's <hilite> is true, the <radio button> or <checkbox> option is selected. If the <hilite> is false, the option is not selected.
+If a radio button's or checkbox's <hilite> is true, the <radio button>
+or <checkbox> option is selected. If the <hilite> is false, the option
+is not selected.
 
-For buttons of any other style, if the <hilite> is true, the <button(object)|button's> background is drawn in the <hiliteColor> (or the <hilitePattern>, if the <button(object)|button's> <hiliteFill> <property> is true).
+For buttons of any other style, if the <hilite> is true, the
+<button(object)|button's> background is drawn in the <hiliteColor> (or
+the <hilitePattern>, if the <button(object)|button's> <hiliteFill>
+<property> is true).
 
-References: showHilite (property), hilitedIcon (property), hiliteFill (property), hilitedButtonName (property), hiliteColor (property), hiliteBorder (property), bottomPattern (property), button (keyword), hilite (command), button (object), property (glossary), hiliteBorder (glossary), highlight (glossary), topPattern (glossary), style (glossary), threeD (glossary), checkbox (glossary), hilitePattern (glossary), hiliteFill (glossary), topColor (glossary), radio button (glossary), bottomColor (glossary)
+References: hilite (command), property (glossary),
+hiliteBorder (glossary), highlight (glossary), topPattern (glossary),
+style (glossary), threeD (glossary), checkbox (glossary),
+hilitePattern (glossary), hiliteFill (glossary), topColor (glossary),
+radio button (glossary), bottomColor (glossary), button (keyword),
+button (object), showHilite (property), hilitedIcon (property),
+hiliteFill (property), hilitedButtonName (property),
+hiliteColor (property), hiliteBorder (property), bottomPattern (property)
 
 Tags: ui
+

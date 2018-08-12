@@ -1,0 +1,1 @@
+﻿# Prevent redraw recursion when going to stack twice in no ui mode

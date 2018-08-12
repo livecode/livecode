@@ -9,17 +9,14 @@ group: intermediate
 With the LiveCode Database library, your application can communicate
 with external SQL databases. You can get data from single-user and multi-user
 databases, update data in them, get information about the database
-structure, and display data from the database in your stack. And with
-the Database Query Builder, you can automate the process of querying a
-database and populating fields with the data, with no scripting
-required. For a discussion of when it is appropriate to use an external
-database with LiveCode, see the topic When to Use a Database in the
-*LiveCode Script* guide.
+structure, and display data from the database in your stack. For a 
+discussion of when it is appropriate to use an external database with 
+LiveCode, see the topic When to Use a Database in the *LiveCode Script* 
+guide.
 
 This guide discusses how to install necessary software to communicate
-with databases, how to set up automatic database queries using the
-Database Query Builder, and how to use the Database library to
-communicate between LiveCode and a database.
+with databases, and how to use the Database library to communicate 
+between LiveCode and a database.
 
 This topic does not include discussion of how to set up and create a SQL
 database, which is beyond the scope of the LiveCode documentation.
@@ -59,9 +56,8 @@ LiveCode's database access is fully-featured. You can send any SQL
 statement to a database. You can open multiple databases (or multiple
 connections to the same database), maintain multiple record sets
 (database cursors) per connection, and send and receive binary data as
-well as text. You can do all this using the *Database Query Builder*, or
-in scripts that use the commands and functions in the *Database
-library*.
+well as text. You can do all this using the commands and functions in 
+the *Database library*.
 
 To see a list of LiveCode terms in the Database library, open the
 *Dictionary*, and type "*database*" into the search filter field.
@@ -100,8 +96,8 @@ particular customer. Here's an example:
 |--------|-------------------|---------------|-------------|
 | 123    | Jane Jones        | 234 E. Street | U.K.        | 
 | 836    | Acme Corporation  | PO Box 23788  | USA         | 
-| 823    | CanCo, Inc.   	 | 1 CanCo Blvd. | Japan       |
-| 
+| 823    | CanCo, Inc.       | 1 CanCo Blvd. | Japan       |
+
 Figure 59 – Example Database Grid
 
 There are three rows in this grid (each is the record for a particular
@@ -167,11 +163,6 @@ you first open a database with the **revOpenDatabase** function, you
 specify the type as one of the parameters so LiveCode knows what type of
 database it's dealing with. The Database library handles the details of
 each type behind the scenes for you.
-
-When you use the *Database Query Builder*, you simply select the
-database type you want to use. Like the Database library, the *Database
-Query Builder* handles the details for you. You can easily switch
-between database types.
 
 ## Reasons to Choose a Database Type
 
@@ -299,9 +290,6 @@ You use the DSN to connect to the database via ODBC. The following
 example opens a connection to a database whose DSN is named "myDB":
 
 	get revOpenDatabase("ODBC","myDB",,"jones","pass")
-
-To connect to a database using the Database Query Builder, you enter the
-DSN's name in the Database Query Builder window.
 
 One of the advantages of setting up a DSN is that if you wish to change
 the location of the database, you only have to edit the DSN settings,

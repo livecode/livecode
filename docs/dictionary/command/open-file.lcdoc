@@ -2,15 +2,16 @@ Name: open file
 
 Type: command
 
-Syntax: open file <filePath> [for [ [<encoding>] text | binary] {update | read | write | append}]
+Syntax: open file <filePath> [for [ {[<encoding>] text | binary}] {update | read | write | append}]
 
-Summary: Opens a <file> so its contents can be accessed or modified.
+Summary:
+Opens a <file> so its contents can be accessed or modified.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -21,47 +22,142 @@ Example:
 open file "/etc/Glossary" for write
 
 Example:
-open file (myFilePath  "/"  myFileName) for binary read
+open file (myFilePath & "/" & myFileName) for binary read
 
 Parameters:
-filePath: Specifies the name and location of the file you want to open or create. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder. If the file you specify doesn't exist, LiveCode creates it.
-encoding: 
+filePath:
+Specifies the name and location of the file you want to open or create.
+If you specify a name but not a location, LiveCode assumes the file is
+in the defaultFolder. If the file you specify doesn't exist, LiveCode
+creates it.
 
-The result: Use the for read form to open the file for reading. If the <file(keyword)> is opened for reading, you can use the <read from file> <command> to examine its contents, but you cannot modify it. If you use the for read form and the file does not exist, LiveCode does not create it, and the <result> <function> <return(glossary)|returns> "Can't open that file.". Use this form for files on CD-ROM and other read-only media.
+encoding (enum):
+The encoding to be used.
+
+- "ASCII"
+- "UTF-16"
+- "UTF-16BE"
+- "UTF-16LE"
+- "UTF-32"
+- "UTF-32BE"
+- "UTF-32LE"
+- "UTF-8"
+- "CP1252"
+- "ISO-8859-1": Linux only
+- "MacRoman": OS X only
+- "Native": ISO-8859-1 on Linux, MacRoman on OS X, CP1252 on Windows
+
+The result:
+Use the for read form to open the file for reading. If the
+<file(keyword)> is opened for reading, you can use the <read from file>
+<command> to examine its contents, but you cannot modify it. If you use
+the for read form and the file does not exist, LiveCode does not create
+it, and the <result> <function> <return(glossary)|returns>
+"Can't open that file.". Use this form for files on CD-ROM and other
+read-only media.
 
 Description:
-Use the <open file> <command> to create a <file(keyword)> or prepare an existing <file(keyword)> for use by the <read from file> or <write to file> <command|commands>.
+Use the <open file> <command> to create a <file(keyword)> or prepare an
+existing <file(keyword)> for use by the <read from file> or <write to
+file> <command|commands>.
 
-You can optionally specify either text or binary mode. If you specify text mode, when you use the write to file <command> to put data in the <file(keyword)>, any line feed and return <characters> are translated to the appropriate end-of-line marker for the current operating system before being written to the file. The end-of-line marker on <Mac OS> and <OS X|OS X systems> is a return character; on <Unix>, a line feed; on <Windows>, a CRLF. When you use the <read from file> <command> to get data from the <file(keyword)>, end-of-line markers are translated to the <return(constant)> <constant>, and any <null|null characters> are translated to spaces (<ASCII> 32). If you specify binary mode, null characters and end-of-line markers are not translated. If you do not specify a mode, the <file(keyword)> is opened in text mode.
+You can optionally specify either text or binary mode. If you specify
+text mode, when you use the write to file <command> to put data in the
+<file(keyword)>, any line feed and return <characters> are translated to
+the appropriate end-of-line marker for the current operating system
+before being written to the file. The end-of-line marker on <Mac OS> and
+<OS X|OS X systems> is a return character; on <Unix>, a line feed; on
+<Windows>, a CRLF. When you use the <read from file> <command> to get
+data from the <file(keyword)>, end-of-line markers are translated to the
+<return(constant)> <constant>, and any <null|null characters> are
+translated to spaces (<ASCII> 32). If you specify binary mode, null
+characters and end-of-line markers are not translated. If you do not
+specify a mode, the <file(keyword)> is opened in text mode.
 
-Use the for write form to open the file for writing. If the file is opened for writing, the write to file <command> replaces the <file(glossary)|file's> contents from the starting point to the end of the file. 
+Use the for write form to open the file for writing. If the file is
+opened for writing, the write to file <command> replaces the
+<file(glossary)|file's> contents from the starting point to the end of
+the file.
 
->*Important:* : Before opening any file for writing, remember to back up the file contents as LiveCode will erase them even if you do not write to the file after opening it.
+>*Important:* : Before opening any file for writing, remember to back up
+> the file contents as LiveCode will erase them even if you do not write
+> to the file after opening it.
 
-Use the for update form to open the file for both reading and writing. If the file is opened for update, you can use both the read from file and <write to file> <command|commands> to examine or change it, and writing to the file places the data at the specified position without replacing other characters beyond the written data.
+Use the for update form to open the file for both reading and writing.
+If the file is opened for update, you can use both the read from file
+and <write to file> <command|commands> to examine or change it, and
+writing to the file places the data at the specified position without
+replacing other characters beyond the written data.
 
-Use the for append form to open the file for writing. If the file is opened for append, the write to file <command> adds its data to the end of the <file(keyword)> without replacing its current contents.
+Use the for append form to open the file for writing. If the file is
+opened for append, the write to file <command> adds its data to the end
+of the <file(keyword)> without replacing its current contents.
 
 If you do not specify a form, the file is opened for update.
 
-On Mac OS and OS X systems, if the file does not already exist (so that the <open file> <command> creates it), the new <file(glossary)|file's> <creator signature> and <type signature|file type> are set to the values in the <fileType> <property>.
+On Mac OS and OS X systems, if the file does not already exist (so that
+the <open file> <command> creates it), the new <file(glossary)|file's>
+<creator signature> and <type signature|file type> are set to the values
+in the <fileType> <property>.
 
-Any files you have opened are closed automatically when you quit the application.
+Any files you have opened are closed automatically when you quit the
+application. 
 
-You can use the <open file> <command> to open a serial <port> on <Mac OS> or <Windows|Windows systems>. On <Mac OS|Mac OS systems>, specify either "printer:" or "modem:". On Windows systems, specify either "COM1:", "COM2:", or up to "COM9:". Set the serialControlString <property> before opening the <port> to specify the baud rate and other settings.
+You can use the <open file> <command> to open a serial <port> on <Mac
+OS> or <Windows|Windows systems>. On <Mac OS|Mac OS systems>, specify
+either "printer:" or "modem:". On Windows systems, specify either
+"COM1:", "COM2:", or up to "COM9:". Set the serialControlString
+<property> before opening the <port> to specify the baud rate and other
+settings. 
 
->*Note:* On windows, it is imperative not to name a file with one of the reserved device names: CON, PRN, AUX, NUL, COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9, LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8 and LPT9. Also do not use these names followed by an extension, for example, NUL.tx7.
+>*Note:* On windows, it is imperative not to name a file with one of the
+> reserved device names: CON, PRN, AUX, NUL, COM1, COM2, COM3, COM4,
+> COM5, COM6, COM7, COM8, COM9, LPT1, LPT2, LPT3, LPT4, LPT5, LPT6,
+> LPT7, LPT8 and LPT9. Also do not use these names followed by an
+> extension, for example, NUL.tx7.
 
->*Note:* If you specify the name of a serial port on Mac OS or Windows systems, LiveCode opens the specified port. The names of serial ports end in a colon (:).
+>*Note:* If you specify the name of a serial port on Mac OS or Windows
+> systems, LiveCode opens the specified port. The names of serial ports
+> end in a colon (:).
 
->*Tip:* As an alternative to the <open file>, <read from file>, and <write to file commands(command)>, you can also use the <URL keyword> with <get>, <put>, and other <command|commands> to access the contents of a <file(keyword)>.
+>*Tip:* As an alternative to the <open file>, <read from file>, and
+> <write to file commands(command)>, you can also use the <URL keyword>
+> with <get>, <put>, and other <command|commands> to access the contents
+> of a <file(keyword)>.
 
->*Note:* iOS imposes strict controls over what you can and cannot access. Each application in iOS is stored in its own 'sandbox' folder (referred to as the home folder). An application is free to read and write files within this folder and its descendants, but it is not allowed to access anything outside of the 'sandbox'.
+>*Note:* iOS imposes strict controls over what you can and cannot
+> access. Each application in iOS is stored in its own 'sandbox' folder
+> (referred to as the home folder). An application is free to read and
+> write files within this folder and its descendants, but it is not
+> allowed to access anything outside of the 'sandbox'.
 
->*Note:* An Android application is installed on the phone in the form of its zip package. This means that any assets that are included are not available as discrete files in the native filesystem. In order to manage this the engine essentially 'virtualizes' the asset files you include, allowing (read-only) manipulation with all the standard LiveCode file and folder handling syntax.
+>*Note:* An Android application is installed on the phone in the form of
+> its zip package. This means that any assets that are included are not
+> available as discrete files in the native filesystem. In order to
+> manage this the engine essentially 'virtualizes' the asset files you
+> include, allowing (read-only) manipulation with all the standard
+> LiveCode file and folder handling syntax.
 
-From 7.0, it's possible to specify an encoding for the file being opened. By doing so, you can straight read or write to a file without having to call <textEncode> or <textDecode>; the encoding supported by open file are the same as these text encoding functions. If no encoding is provided, then <open file> tries to read a Byte Order Mark exists at the beginning of the file. In success, the encoding is adapted and the BOM is ignored.
+Changes:
+From 7.0, it's possible to specify an encoding for the file being
+opened. By doing so, you can straight read or write to a file without
+having to call <textEncode> or <textDecode>; the encoding supported by
+open file are the same as these text encoding functions. If no encoding
+is provided, then <open file> tries to read a Byte Order Mark (BOM) exists 
+at the beginning of the file. In success, the encoding is adapted and the
+BOM is ignored.
 
-References: fileType (property), umask (property), return (glossary), null (glossary), property (glossary), file (glossary), port (glossary), command (glossary), Windows (glossary), textDecode (glossary), OS X (glossary), type signature (glossary), creator signature (glossary), result (glossary), textEncode (glossary), Mac OS (glossary), Unix (glossary), ASCII (glossary), characters (keyword), file (keyword), URL keyword (keyword), return (constant), tempName (function), write to file (command), open file (command), put (command), constant (command), read from file (command), get (command), close file (command), answer file (command), function (control_st)
+
+References: write to file (command), open file (command), put (command),
+constant (command), read from file (command), get (command),
+close file (command), answer file (command), return (constant),
+function (control structure), tempName (function), return (glossary),
+null (glossary), property (glossary), file (glossary), port (glossary),
+command (glossary), Windows (glossary), textDecode (glossary),
+OS X (glossary), type signature (glossary), creator signature (glossary),
+result (glossary), textEncode (glossary), Mac OS (glossary),
+Unix (glossary), ASCII (glossary), characters (keyword), file (keyword),
+URL keyword (keyword), fileType (property), umask (property)
 
 Tags: file system
+

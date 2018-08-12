@@ -40,68 +40,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_GET_METHOD(Misc, DeviceToken, 0)
-MC_EXEC_DEFINE_GET_METHOD(Misc, LaunchUrl, 0)
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, LaunchData, 0);
-
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, Beep, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, Vibrate, 1)
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, DeviceResolution, 1)
-MC_EXEC_DEFINE_SET_METHOD(Misc, UseDeviceResolution, 1)
-MC_EXEC_DEFINE_GET_METHOD(Misc, DeviceScale, 1)
-MC_EXEC_DEFINE_GET_METHOD(Misc, PixelDensity, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, ShowStatusBar, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, HideStatusBar, 0)
-MC_EXEC_DEFINE_SET_METHOD(Misc, StatusBarStyle, 1)
-
-MC_EXEC_DEFINE_SET_METHOD(Misc, KeyboardType, 1)
-MC_EXEC_DEFINE_SET_METHOD(Misc, KeyboardReturnKey, 1);
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, PreferredLanguages, 1)
-MC_EXEC_DEFINE_GET_METHOD(Misc, CurrentLocale, 1)
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, SystemIdentifier, 1)
-MC_EXEC_DEFINE_GET_METHOD(Misc, ApplicationIdentifier, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, ClearTouches, 0)
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, ReachabilityTarget, 1)
-MC_EXEC_DEFINE_SET_METHOD(Misc, ReachabilityTarget, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, ExportImageToAlbum, 2)
-
-MC_EXEC_DEFINE_SET_METHOD(Misc, RedrawInterval, 1)
-MC_EXEC_DEFINE_SET_METHOD(Misc, AnimateAutorotation, 1)
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, DoNotBackupFile, 2)
-MC_EXEC_DEFINE_SET_METHOD(Misc, DoNotBackupFile, 2)
-MC_EXEC_DEFINE_GET_METHOD(Misc, FileDateProtection, 2)
-MC_EXEC_DEFINE_SET_METHOD(Misc, FileDateProtection, 2)
-
-MC_EXEC_DEFINE_GET_METHOD(Misc, BuildInfo, 2)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, LibUrlDownloadToFile, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, LibUrlSetSSLVerification, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, EnableRemoteControl, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Misc, DisableRemoteControl, 0)
-MC_EXEC_DEFINE_GET_METHOD(Misc, RemoteControlEnabled, 1)
-MC_EXEC_DEFINE_SET_METHOD(Misc, RemoteControlDisplayProperties, 1)
-
-// SN-2014-12-11: [[ Merge-6.7.2-rc-4 ]]
-MC_EXEC_DEFINE_GET_METHOD(Misc, IsVoiceOverRunning, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCMiscStatusBarStyleElementInfo[] =
 {
-    { "default", kMCMiscStatusBarStyleDefault},
-    { "translucent", kMCMiscStatusBarStyleTranslucent},
-    { "opaque", kMCMiscStatusBarStyleOpaque},
-    { "solid", kMCMiscStatusBarStyleSolid}
+    { "default", kMCMiscStatusBarStyleDefault, false},
+    { "translucent", kMCMiscStatusBarStyleTranslucent, false},
+    { "opaque", kMCMiscStatusBarStyleOpaque, false},
+    { "solid", kMCMiscStatusBarStyleSolid, false}
 };
 
 static MCExecEnumTypeInfo _kMCMiscStatusBarStyleTypeInfo =
@@ -115,15 +59,15 @@ MCExecEnumTypeInfo* kMCMiscStatusBarStyleTypeInfo = &_kMCMiscStatusBarStyleTypeI
 
 static MCExecEnumTypeElementInfo _kMCMiscKeyboardTypeElementInfo[] =
 {
-    { "default", kMCMiscKeyboardTypeDefault},
-    { "alphabet", kMCMiscKeyboardTypeAlphabet},
-    { "numeric", kMCMiscKeyboardTypeNumeric},
-    { "decimal", kMCMiscKeyboardTypeDecimal},
-    { "number", kMCMiscKeyboardTypeNumber},
-    { "phone", kMCMiscKeyboardTypePhone},
-    { "email", kMCMiscKeyboardTypeEmail},
-    { "url", kMCMiscKeyboardTypeUrl},
-    { "contact", kMCMiscKeyboardTypeContact}
+    { "default", kMCMiscKeyboardTypeDefault, false},
+    { "alphabet", kMCMiscKeyboardTypeAlphabet, false},
+    { "numeric", kMCMiscKeyboardTypeNumeric, false},
+    { "decimal", kMCMiscKeyboardTypeDecimal, false},
+    { "number", kMCMiscKeyboardTypeNumber, false},
+    { "phone", kMCMiscKeyboardTypePhone, false},
+    { "email", kMCMiscKeyboardTypeEmail, false},
+    { "url", kMCMiscKeyboardTypeUrl, false},
+    { "contact", kMCMiscKeyboardTypeContact, false}
 };
 
 static MCExecEnumTypeInfo _kMCMiscKeyboardTypeTypeInfo =
@@ -137,17 +81,17 @@ MCExecEnumTypeInfo* kMCMiscKeyboardTypeTypeInfo = &_kMCMiscKeyboardTypeTypeInfo;
 
 static MCExecEnumTypeElementInfo _kMCMiscKeyboardReturnKeyElementInfo[] =
 {
-    { "default", kMCMiscKeyboardReturnKeyDefault},
-    { "go", kMCMiscKeyboardReturnKeyGo},
-    { "google", kMCMiscKeyboardReturnKeyGoogle},
-    { "join", kMCMiscKeyboardReturnKeyJoin},
-    { "next", kMCMiscKeyboardReturnKeyNext},
-    { "route", kMCMiscKeyboardReturnKeyRoute},
-    { "search", kMCMiscKeyboardReturnKeySearch},
-    { "send", kMCMiscKeyboardReturnKeySend},
-    { "yahoo", kMCMiscKeyboardReturnKeyYahoo},
-    { "done", kMCMiscKeyboardReturnKeyDone},
-    { "emergency call", kMCMiscKeyboardReturnKeyEmergencyCall}
+    { "default", kMCMiscKeyboardReturnKeyDefault, false},
+    { "go", kMCMiscKeyboardReturnKeyGo, false},
+    { "google", kMCMiscKeyboardReturnKeyGoogle, false},
+    { "join", kMCMiscKeyboardReturnKeyJoin, false},
+    { "next", kMCMiscKeyboardReturnKeyNext, false},
+    { "route", kMCMiscKeyboardReturnKeyRoute, false},
+    { "search", kMCMiscKeyboardReturnKeySearch, false},
+    { "send", kMCMiscKeyboardReturnKeySend, false},
+    { "yahoo", kMCMiscKeyboardReturnKeyYahoo, false},
+    { "done", kMCMiscKeyboardReturnKeyDone, false},
+    { "emergency call", kMCMiscKeyboardReturnKeyEmergencyCall, false}
 };
 
 static MCExecEnumTypeInfo _kMCMiscKeyboardReturnKeyTypeInfo =
@@ -163,15 +107,6 @@ MCExecEnumTypeInfo* kMCMiscKeyboardReturnKeyTypeInfo = &_kMCMiscKeyboardReturnKe
 
 void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token)
 {
-#ifdef /* MCGetDeviceTokenExec */ LEGACY_EXEC
-    char *r_device_token = nil;
-    bool t_success;
-    t_success = MCSystemGetDeviceToken (r_device_token);
-    if (t_success)
-        p_ctxt.GiveCStringToResult(r_device_token);
-    else
-        p_ctxt.SetTheResultToEmpty();
-#endif /* MCGetDeviceTokenExec */
     if(MCSystemGetDeviceToken(r_token))
         return;
     
@@ -180,15 +115,6 @@ void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token)
 
 void MCMiscGetLaunchUrl(MCExecContext& ctxt, MCStringRef& r_url)
 {
-#ifdef /* MCGetLaunchUrlExec */ LEGACY_EXEC
-    char *t_launch_url = nil;
-    bool t_success;
-    t_success = MCSystemGetLaunchUrl (t_launch_url);
-    if (t_success)
-        p_ctxt.GiveCStringToResult(t_launch_url);
-    else
-        p_ctxt.SetTheResultToEmpty();
-#endif /* MCGetLaunchUrlExec */
     if(MCSystemGetLaunchUrl(r_url))
         return;
     
@@ -325,8 +251,8 @@ void MCMiscExecClearTouches(MCExecContext& ctxt)
     MCEventQueueClearTouches();
 
     // PM-2015-03-16: [[ Bug 14333 ]] Make sure the object that triggered a mouse down msg is not focused, as this stops later mouse downs from working
-    if (MCtargetptr . object != nil)
-        MCtargetptr . object -> munfocus();
+    if (MCtargetptr)
+        MCtargetptr -> munfocus();
 }
 
 void MCMiscGetSystemIdentifier(MCExecContext& ctxt, MCStringRef& r_identifier)
@@ -372,7 +298,7 @@ void MCMiscGetReachabilityTarget(MCExecContext& ctxt, MCStringRef& r_hostname)
 
 void MCMiscExecLibUrlDownloadToFile(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_filename)
 {
-    MCS_downloadurl(MCtargetptr . object, p_url, p_filename);
+    MCS_downloadurl(MCtargetptr, p_url, p_filename);
 }
 
 void MCMiscExecLibUrlSetSSLVerification(MCExecContext& ctxt, bool p_enabled)
@@ -443,16 +369,16 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id,
     
     if (!t_extension_found)
     {
-        MCLog("Type not found", nil);
+        MCLog("Type not found");
 		uint4 parid;
 		MCObject *objptr;
-		MCChunk *tchunk = new MCChunk(False);
+		MCChunk *tchunk = new (nothrow) MCChunk(False);
         MCerrorlock++;
 		MCScriptPoint sp(p_data_or_id);
 		Parse_stat stat = tchunk->parse(sp, False);
         if (stat != PS_NORMAL || !tchunk->getobj(ctxt, objptr, parid, True))
 		{
-            MCLog("could not find image", nil);
+            MCLog("could not find image");
 			ctxt.SetTheResultToStaticCString("could not find image");
 			MCerrorlock--;
 			delete tchunk;
@@ -461,7 +387,7 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id,
 		
 		if (objptr -> gettype() != CT_IMAGE)
 		{
-            MCLog("not an image", nil);
+            MCLog("not an image");
 			ctxt.SetTheResultToStaticCString("not an image");
             return;
 		}
@@ -482,7 +408,7 @@ void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data_or_id,
         }
         else
         {
-            MCLog("not a supported image", nil);
+            MCLog("not a supported image");
             ctxt.SetTheResultToStaticCString("not a supported format");
 			return;
 		}

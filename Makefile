@@ -25,8 +25,9 @@ EMMAKE ?= emmake
 
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
-IPHONEOS_VERSIONS ?= 8.2 9.2 9.3
-IPHONESIMULATOR_VERSIONS ?= 6.1 7.1 8.2 9.2 9.3
+IPHONEOS_VERSIONS ?= 9.2 10.2 11.2 11.4
+IPHONESIMULATOR_VERSIONS ?= 8.2 9.2 10.2 11.2 11.4
+SKIP_IPHONESIMULATOR_VERSIONS ?= 6.1 7.1
 
 IOS_SDKS ?= \
 	$(addprefix iphoneos,$(IPHONEOS_VERSIONS)) \
@@ -34,15 +35,6 @@ IOS_SDKS ?= \
 
 # Choose the correct build type
 MODE ?= debug
-ifeq ($(MODE),debug)
-  export BUILDTYPE ?= Debug
-else ifeq ($(MODE),release)
-  export BUILDTYPE ?= Release
-else ifeq ($(MODE),fast)
-  export BUILDTYPE ?= Fast
-else
-  $(error "Mode must be 'debug' or 'release'")
-endif
 
 # Where to run the build command depends on community vs commercial
 ifeq ($(BUILD_EDITION),commercial)
@@ -53,47 +45,83 @@ else
   BUILD_PROJECT := livecode
 endif
 
+# Prettifying output for CI builds
+XCODEBUILD_FILTER ?=
+
+include Makefile.common
+
 ################################################################
 
 .DEFAULT: all
 
-guess_platform_script := \
-	case `uname -s` in \
-		Linux) echo linux ;; \
-		Darwin) echo mac ;; \
-	esac
-guess_platform := $(shell $(guess_platform_script))
-
 all: all-$(guess_platform)
 check: check-$(guess_platform)
 
-check-common-%:
-	$(MAKE) -C tests bin_dir=../$*-bin
-	$(MAKE) -C ide/tests bin_dir=../../$*-bin
-	$(MAKE) -C extensions bin_dir=../$*-bin
+# [[ MDW-2017-05-09 ]] feature_clean_target
+clean-linux:
+	rm -rf linux-*-bin
+	rm -rf build-linux-*
+	rm -rf prebuilt/fetched
+	rm -rf prebuilt/include
+	rm -rf prebuilt/lib
+	find . -name \*.lcb | xargs touch
 
+check-common-%:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:testengine"
+	@echo "TEST Engine"
+endif
+	$(MAKE) -C tests bin_dir=../$*-bin
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:testengine"
+	@echo "travis_fold:start:testide"
+	@echo "TEST IDE"
+endif
+	$(MAKE) -C ide/tests bin_dir=../../$*-bin
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:testide"
+	@echo "travis_fold:start:testextensions"
+	@echo "TEST Extensions"
+endif
+	$(MAKE) -C extensions bin_dir=../$*-bin
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:testextensions"
+endif
 ################################################################
 # Linux rules
 ################################################################
 
-LINUX_ARCHS = x86_64 x86
-
-guess_linux_arch_script := \
-	case `uname -p` in \
-		x86_64) echo x86_64 ;; \
-		x86|i*86) echo x86 ;; \
-	esac
-
-guess_linux_arch := $(shell $(guess_linux_arch_script))
+LINUX_ARCHS = x86_64 x86 armv6hf armv7
 
 config-linux-%:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:config"
+	@echo "CONFIGURE"
+endif
 	./config.sh --platform linux-$*
-
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:config"
+endif
+	
 compile-linux-%:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:compile"
+	@echo "COMPILE"
+endif
 	$(MAKE) -C build-linux-$*/livecode default
-
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:compile"
+endif
+	
 check-linux-%:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:testcpp"
+	@echo "TEST C++"
+endif
 	$(MAKE) -C build-linux-$*/livecode check
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:testcpp"
+endif
 	$(MAKE) check-common-linux-$*
 
 all-linux-%:
@@ -106,7 +134,7 @@ $(addsuffix -linux,all config compile check): %: %-$(guess_linux_arch)
 # Android rules
 ################################################################
 
-ANDROID_ARCHS = armv6
+ANDROID_ARCHS = armv6 armv7 arm64 x86 x86_64
 
 config-android-%:
 	./config.sh --platform android-$*
@@ -128,13 +156,36 @@ $(addsuffix -android,all config compile check): %: %-armv6
 ################################################################
 
 config-mac:
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:config"
+	@echo "CONFIGURE"
+endif
 	./config.sh --platform mac
-
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:config"
+endif
+	
 compile-mac:
-	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target default
-
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:compile"
+	@echo "COMPILE"
+endif
+	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target default \
+	  $(XCODEBUILD_FILTER)
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:compile"
+endif
+	  
 check-mac:
-	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:start:testcpp"
+	@echo "TEST C++"
+endif
+	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check \
+	  $(XCODEBUILD_FILTER)
+ifneq ($(TRAVIS),undefined)
+	@echo "travis_fold:end:testcpp"
+endif
 	$(MAKE) check-common-mac
 
 
@@ -159,13 +210,13 @@ compile-ios-%:
 check-ios-%:
 	$(XCODEBUILD) -project "build-ios-$*$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check
 
-# Dummy targets to prevent our build system from building iOS 5.1 simulator
-config-ios-iphonesimulator5.1:
-	@echo "Skipping iOS simulator 5.1 (no longer supported)"
-compile-ios-iphonesimulator5.1:
-	@echo "Skipping iOS simulator 5.1 (no longer supported)"
-check-ios-iphonesimulator5.1:
-	@echo "Skipping iOS simulator 5.1 (no longer supported)"
+# Dummy targets to prevent our build system from building old iOS simulators
+$(addprefix config-ios-iphonesimulator,$(SKIP_IPHONESIMULATOR_VERSIONS)):
+	@echo "Skipping $@ (no longer supported)"
+$(addprefix compile-ios-iphonesimulator,$(SKIP_IPHONESIMULATOR_VERSIONS)):
+	@echo "Skipping $@ (no longer supported)"
+$(addprefix check-ios-iphonesimulator,$(SKIP_IPHONESIMULATOR_VERSIONS)):
+	@echo "Skipping $@ (no longer supported)"
 
 # Provide some synonyms for "latest iOS SDK"
 $(addsuffix -ios-iphoneos,all config compile check): %: %$(lastword $(IPHONEOS_VERSIONS))
@@ -201,6 +252,16 @@ all-win-%:
 	$(MAKE) compile-win-$*
 
 $(addsuffix -win,all config compile): %: %-x86
+
+# Dummy rules for Windows x86-64 builds
+# TODO Replace with real rules
+config-win-x86_64:
+	mkdir -p build-win-x86_64
+compile-win-x86_64:
+	mkdir -p win-x86_64-bin
+all-win-x86_64:
+	$(MAKE) config-win-x86_64
+	$(MAKE) compile-win-x86_64
 
 ################################################################
 # Emscripten rules

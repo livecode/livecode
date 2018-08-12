@@ -276,7 +276,7 @@ private handler OnGeometryChanged()
 
 end handler
 
-private handler drawLineChart() as undefined
+private handler drawLineChart() returns nothing
 	
 	set the antialias of this canvas to true
 	
@@ -317,7 +317,7 @@ private handler drawLineChart() as undefined
 	set the antialias of this canvas to false 
 end handler
 
-private handler drawScatterChart() as undefined
+private handler drawScatterChart() returns nothing
 	
 	set the antialias of this canvas to true
 	
@@ -347,11 +347,11 @@ private handler drawScatterChart() as undefined
 	set the antialias of this canvas to false
 end handler
 
-private handler drawColumnChart() as undefined
+private handler drawColumnChart() returns nothing
 
 end handler
 
-private handler drawHistogram() as undefined
+private handler drawHistogram() returns nothing
 	
 	put false into mShowVGrid
 	
@@ -391,7 +391,7 @@ private handler drawHistogram() as undefined
 
 end handler
 
-private handler getPath(in pObject as String) as Path
+private handler getPath(in pObject as String) returns Path
 	if pObject is "x axis" then
 		return line path from point [kLeft, mBottom] to point [mRight, mBottom]
 	else if pObject is "y axis" then
@@ -401,7 +401,7 @@ private handler getPath(in pObject as String) as Path
 	end if
 end handler
 
-private handler getRect(in pObject as String, in pIncNum as Integer) as Rectangle
+private handler getRect(in pObject as String, in pIncNum as Integer) returns Rectangle
 	
 	if pObject is "x-increment label" then
 		return rectangle [kLeft+pIncNum*mXInc-2, mBottom+10, kLeft+pIncNum*mXInc+2, mBottom+20]
@@ -412,7 +412,7 @@ private handler getRect(in pObject as String, in pIncNum as Integer) as Rectangl
 	end if
 end handler
 
-private handler getGridLine(in pPlane as String, in pIncNum as Integer) as Path
+private handler getGridLine(in pPlane as String, in pIncNum as Integer) returns Path
 	
 	if pPlane is "V" then
 		return line path from point [kLeft+pIncNum*mXInc, mBottom] to point [kLeft+pIncNum*mXInc, kTop]
@@ -423,7 +423,7 @@ private handler getGridLine(in pPlane as String, in pIncNum as Integer) as Path
 	end if
 end handler
 
-private handler getPaint(in pObject as String) as Paint
+private handler getPaint(in pObject as String) returns Paint
 	if pObject is "axes" then
 		return solid paint with color [0,0,0]
 	else if pObject is "grid lines" then
@@ -433,13 +433,13 @@ private handler getPaint(in pObject as String) as Paint
 	end if 
 end handler
 
-private handler getFont(in pObject as String) as Font
+private handler getFont(in pObject as String) returns Font
 	if pObject is "increment labels" then
 		return font "Helvetica Neue" at size 8
 	end if 
 end handler
 
-private handler initialiseProperties() as undefined
+private handler initialiseProperties() returns nothing
 	put [[0,10,20,30,40,50],[0,34,56,54,32,60],[10,20,30,40,50,60],[5,15,25,35,45,55]] into mChartData
 	put "scatter" into mChartType
 	put 60 into mXMax
@@ -451,21 +451,21 @@ private handler initialiseProperties() as undefined
 	put [[1,0,0],[0,1,0],[0,0,1]] into mChartColors
 end handler
 
-private handler initialiseVariables() as undefined
+private handler initialiseVariables() returns nothing
 	put my width - kLeft into mRight
 	put my height - 20 into mBottom
 	put (mRight - kLeft)*(mXIncrements/mXMax) into mXInc
 	put (my height - 20)*(mYIncrements/mYMax) into mYInc
 end handler
 
-private handler updateVariables() as undefined
+private handler updateVariables() returns nothing
 	put my width - kLeft into mRight
 	put my height - 20 into mBottom
 	put (mRight - kLeft)*(mXIncrements/mXMax) into mXInc
 	put (my height - 20)*(mYIncrements/mYMax) into mYInc
 end handler
 
-public handler setChartData(in pData as String) as undefined
+public handler setChartData(in pData as String) returns nothing
 	
 	variable tPointsList as List
 	split pData by newline into tPointsList
@@ -510,42 +510,42 @@ public handler setChartData(in pData as String) as undefined
 	redraw all
 end handler
 
-public handler setChartType(in pType as String) as undefined
+public handler setChartType(in pType as String) returns nothing
 	put pType into mChartType
 	redraw all
 end handler
 
-public handler setXMax(in pValue as Number) as undefined
+public handler setXMax(in pValue as Number) returns nothing
 	put pValue into mXMax
 	redraw all
 end handler
 
-public handler setYMax(in pValue as Number) as undefined
+public handler setYMax(in pValue as Number) returns nothing
 	put pValue into mYMax
 	redraw all
 end handler
 
-public handler setXIncrements(in pValue as Number) as undefined
+public handler setXIncrements(in pValue as Number) returns nothing
     put pValue into mXIncrements
     redraw all
 end handler
 
-public handler setYIncrements(in pValue as Number) as undefined
+public handler setYIncrements(in pValue as Number) returns nothing
 	put pValue into mYIncrements
 	redraw all
 end handler
 
-public handler setShowHGrid(in pIsVisible as Boolean) as undefined
+public handler setShowHGrid(in pIsVisible as Boolean) returns nothing
 	put pIsVisible into mShowHGrid
 	redraw all
 end handler
 
-public handler setShowVGrid(in pIsVisible as Boolean) as undefined
+public handler setShowVGrid(in pIsVisible as Boolean) returns nothing
 	put pIsVisible into mShowVGrid
 	redraw all
 end handler
 
-public handler setChartColors(in pColors as String) as undefined
+public handler setChartColors(in pColors as String) returns nothing
 	variable tColorList
 	split pColors by newline into tColorList
 	
@@ -564,7 +564,7 @@ public handler setChartColors(in pColors as String) as undefined
 	redraw all
 end handler
 
-private handler getChartData() as String
+private handler getChartData() returns String
 		
 	variable tNumPoints as Integer
 	variable tNumLines as Integer
@@ -600,7 +600,7 @@ private handler getChartData() as String
 	return tOutputString
 end handler
 
-private handler getChartColors() as String
+private handler getChartColors() returns String
 	
 	variable tElement
 	variable tChartColor as String

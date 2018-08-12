@@ -1,18 +1,20 @@
 Name: exists
 
+Synonyms: existence
+
 Type: function
 
 Syntax: exists(<object>)
 
-Summary: <return|Returns> true if the specified <object> exists, false if it does not.
-
-Synonyms: existence
+Summary:
+<return|Returns> true if the specified <object(glossary)> exists, false
+if it does not.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 exists(card field 1)
@@ -21,19 +23,32 @@ Example:
 exists(button "OK" of card "Preferences")
 
 Parameters:
-object: Any object reference.
+object:
+Any object reference.
 
-Returns (bool): The <exists> function <return|returns> true or false.
+Returns (bool):
+The <exists> function <return|returns> true or false.
 
 Description:
-Use the <exists> function to make sure an <object> exists before you try to perform an action on it, or to determine whether to create an <object>.
+Use the <exists> function to make sure an <object(glossary)> exists
+before you try to perform an action on it, or to determine whether to
+create an <object(glossary)>.
 
-To find out whether any of a certain type of object exist, use the <exists> <function> with the number 1. For example, exists(image 1) <return|returns> true if there are any <image|images> on the <current card>, and false otherwise.
+To find out whether any of a certain type of object exist, use the
+<exists> <function> with the number 1. For example, exists(image 1)
+<return|returns> true if there are any <image|images> on the <current
+card>, and false otherwise.
 
-You can also specify a chunk of a container, but in this case the <exists> <function> always <return|returns> true.
+You can also specify a chunk of a container, but in this case the
+<exists> <function> always <return|returns> true.
 
->*Tip:*  To find out whether a <file> or <folder> exists, or whether a <process> is running, use the <there is a operator>.
+>*Tip:*  To find out whether a <file> or <folder> exists, or whether a
+> <process> is running, use the <there is a> operator.
 
-References: owner (property), there is a operator (operator), there is a (operator), there is no (operator), file (keyword), folder (glossary), current card (glossary), return (glossary), process (glossary), isNumber (function), object (object), image (object), function (control_st)
+References: function (control structure), isNumber (function),
+folder (glossary), current card (glossary), return (glossary),
+process (glossary), object (glossary), file (keyword), image (object),
+there is a (operator), there is no (operator), owner (property)
 
 Tags: objects
+

@@ -1,1 +1,0 @@
-# Basic table field with multiple tabStops stops inspector from working.

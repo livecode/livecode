@@ -4,20 +4,22 @@ Type: constant
 
 Syntax: five
 
-Summary: Equivalent to the number 5.
+Summary:
+Equivalent to the number 5.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 multiply field "Raw Score" by five
 
 Description:
-Use the <five> <constant> when it is easier to read than the numeral 5<a/>.
+Use the <five> <constant> when it is easier to read than the numeral 5. 
 
 References: constant (command), fifth (keyword)
 
 Tags: math
+

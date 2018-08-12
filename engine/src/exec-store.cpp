@@ -30,46 +30,23 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_GET_METHOD(Store, CanMakePurchase, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, EnablePurchaseUpdates, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, DisablePurchaseUpdates, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, RestorePurchases, 0)
-MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseList, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, CreatePurchase, 1)
-MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseState, 2)
-MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseError, 2)
-MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseProperty, 2)
-MC_EXEC_DEFINE_SET_METHOD(Store, PurchaseProperty, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, SendPurchaseRequest, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, ConfirmPurchaseDelivery, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, RequestProductDetails, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, ReceiveProductDetails, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, ConsumePurchase, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, PurchaseVerify, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, MakePurchase, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, ConfirmPurchase, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Store, ProductSetType, 1)
-
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCStorePurchasePropertyElementInfo[] =
 {
-    { "product identifier", P_PRODUCT_IDENTIFIER},
-    { "quantity", P_PURCHASE_QUANTITY},
-    { "developer payload", P_DEVELOPER_PAYLOAD},
-    { "localized title", P_LOCALIZED_TITLE},
-    { "localized description", P_LOCALIZED_DESCRIPTION},
-    { "localized price", P_LOCALIZED_PRICE},
-    { "purchase date", P_PURCHASE_DATE},
-    { "transaction identifier", P_TRANSACTION_IDENTIFIER},
-    { "receipt", P_RECEIPT},
-    { "original transaction identifier", P_ORIGINAL_TRANSACTION_IDENTIFIER},
-    { "original purchase date", P_ORIGINAL_PURCHASE_DATE},
-    { "original receipt", P_ORIGINAL_RECEIPT},
-    { "signed data", P_SIGNED_DATA},
-    { "signature", P_SIGNATURE},
-    { "unknown", P_UNDEFINED}
+    { "product identifier", P_PRODUCT_IDENTIFIER, false},
+    { "quantity", P_PURCHASE_QUANTITY, false},
+    { "developer payload", P_DEVELOPER_PAYLOAD, false},
+    { "localized title", P_LOCALIZED_TITLE, false},
+    { "localized description", P_LOCALIZED_DESCRIPTION, false},
+    { "localized price", P_LOCALIZED_PRICE, false},
+    { "purchase date", P_PURCHASE_DATE, false},
+    { "transaction identifier", P_TRANSACTION_IDENTIFIER, false},
+    { "receipt", P_RECEIPT, false},
+    { "original transaction identifier", P_ORIGINAL_TRANSACTION_IDENTIFIER, false},
+    { "original purchase date", P_ORIGINAL_PURCHASE_DATE, false},
+    { "original receipt", P_ORIGINAL_RECEIPT, false},
+    { "signed data", P_SIGNED_DATA, false},
+    { "signature", P_SIGNATURE, false},
+    { "unknown", P_UNDEFINED, false}
 };
 
 static MCExecEnumTypeInfo _kMCStorePurchasePropertyTypeInfo =
@@ -242,7 +219,6 @@ void MCStoreExecSendPurchaseRequest(MCExecContext& ctxt, uint32_t p_id)
 
 void MCStoreExecMakePurchase(MCExecContext& ctxt, MCStringRef p_product_id, MCStringRef p_quantity, MCStringRef p_payload)
 {
-    MCPurchase *t_purchase = nil;
     bool t_success;
 	t_success = true;
     
@@ -282,7 +258,7 @@ void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id)
     t_success = MCPurchaseFindById(p_id, t_purchase);
     
     if (t_success)
-        t_success = (!(t_purchase->state == kMCPurchaseStatePaymentReceived || t_purchase->state == kMCPurchaseStateRefunded || t_purchase->state == kMCPurchaseStateRestored));
+        t_success = (t_purchase->state == kMCPurchaseStatePaymentReceived || t_purchase->state == kMCPurchaseStateRefunded || t_purchase->state == kMCPurchaseStateRestored);
 	
 	if (t_success)
 		t_success = MCPurchaseConfirmDelivery(t_purchase);

@@ -1,10 +1,12 @@
 Name: IP address
 
-Synonyms: IP address,network address,Internet address,TCP/IP address
+Synonyms: ip address, network address, internet address, tcp/ip address
 
 Type: glossary
 
 Description:
-The numeric address of a computer system, expressed in the form X.X.X.X where each X is a number with between 1 and 3 digits.
+The numeric address of a computer system, expressed in the form X.X.X.X
+where each X is a number with between 1 and 3 digits.
 
 Tags: networking
+

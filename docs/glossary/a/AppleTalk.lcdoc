@@ -1,6 +1,6 @@
 Name: AppleTalk
 
-Synonyms: AppleTalk,AppleTalk network
+Synonyms: appletalk, appletalk network
 
 Type: glossary
 
@@ -10,3 +10,4 @@ Network <protocol> for local area networks developed by Apple Computer.
 References: protocol (glossary)
 
 Tags: networking
+

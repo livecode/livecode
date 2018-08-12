@@ -4,13 +4,16 @@ Type: keyword
 
 Syntax: front
 
-Summary: Used with the <insert script> and <remove script> <command|commands> to designate a location in the <message path> before the target <object>.
+Summary:
+Used with the <insert script> and <remove script> <command|commands> to
+designate a location in the <message path> before the target
+<object(glossary)>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 remove the script of stack "Math Routines" from front
@@ -18,8 +21,13 @@ remove the script of stack "Math Routines" from front
 Description:
 Use the <front> <keyword> to designate a <frontScript>.
 
-When used with the <insert script> or <remove script> <command>, the <front> <keyword> designates a <frontScript> which is to be placed in the <message path> before the target <object>.
+When used with the <insert script> or <remove script> <command>, the
+<front> <keyword> designates a <frontScript> which is to be placed in
+the <message path> before the target <object(glossary)>.
 
-References: back (keyword), remove script (command), insert script (command), object (object), keyword (glossary), frontScript (glossary), command (glossary), message path (glossary)
+References: remove script (command), insert script (command),
+object (glossary), keyword (glossary), frontScript (glossary),
+command (glossary), message path (glossary), back (keyword)
 
 Tags: objects
+

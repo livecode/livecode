@@ -4,37 +4,60 @@ Type: function
 
 Syntax: deleteResource(<file>, <resourceType>,{<resourceID> | <resourceName>})
 
-Summary: Removes a <resource> from the <resource fork> of a <Mac OS> <file>.
+Summary:
+Removes a <resource> from the <resource fork> of a <Mac OS> <file>.
 
 Introduced: 1.0
 
 OS: mac
 
-Platforms: desktop,web
+Platforms: desktop
 
 Security: disk
 
 Example:
-get deleteResource("New Build",ICN#,129)
+get deleteResource("New Build","ICN#",129)
 
 Example:
-put deleteResource(line x of theFiles,XFCN,"Colorize") into temp
+put deleteResource(line x of theFiles,"XFCN","Colorize") into temp
 
 Parameters:
-file: The name and location of the file containing the resource. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
-resourceType: The 4-character type of the resource you want to delete.
-resourceID (integer): An integer that specifies the resource ID of the resource you want to delete.
-resourceName: The name of the resource you want to delete.
+file:
+The name and location of the file containing the resource. If you
+specify a name but not a location, LiveCode assumes the file is in the
+defaultFolder. 
 
-The result: If the <file> does not exist, the <result> is set to "can't find file". If the <file> exists but has no <resource fork>, the <result> is set to "can't open resource fork". If the <file> exists but does not contain the specified <resource>, the <result> is set to "can't find the resource specified". If the <file> is already open, the <result> is set to "Can't open resource fork<a/>".
+resourceType:
+The 4-character type of the resource you want to delete.
 
-Returns: The <deleteResource> <function> always <return|returns> empty.
+resourceID (integer):
+An integer that specifies the resource ID of the resource you want to
+delete. 
+
+resourceName:
+The name of the resource you want to delete.
+
+Returns:
+The <deleteResource> <function> always <return|returns> empty.
+
+The result:
+If the <file> does not exist, the <result> is set to "can't find file".
+If the <file> exists but has no <resource fork>, the <result> is set to
+"can't open resource fork". If the <file> exists but does not contain
+the specified <resource>, the <result> is set to
+"can't find the resource specified". If the <file> is already open, the
+<result> is set to "Can't open resource fork<a/>".
 
 Description:
 Use the <deleteResource> <function> to delete a <resource> from a file.
 
-The <deleteResource> <function> deletes individual <resource|resources> within the <file>, but does not delete the <resource fork>.
+The <deleteResource> <function> deletes individual <resource|resources>
+within the <file>, but does not delete the <resource fork>.
 
-References: externals (property), file (keyword), delete (command), result (function), setResource (function), resource fork (glossary), resource (glossary), Mac OS (glossary), return (glossary), function (control_st)
+References: delete (command), function (control structure),
+result (function), setResource (function), resource fork (glossary),
+resource (glossary), Mac OS (glossary), return (glossary), file (keyword),
+externals (property)
 
 Tags: file system
+

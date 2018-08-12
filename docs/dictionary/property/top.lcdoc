@@ -2,41 +2,63 @@ Name: top
 
 Type: property
 
-Syntax: set the top of <object> to <numberOfPixels> 
+Syntax: set the top of <object> to <numberOfPixels>
 
-Summary: Specifies how far an <object|object's> top edge is from the top of the window or screen.
+Summary:
+Specifies how far an <object|object's> top edge is from the top of the
+window or screen.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the top of card button 1 to 100
 
 Example:
-set the top of message window to (the bottom of this stack + 2)
+set the top of stack "message window" to (the bottom of this stack + 2)
 
 Value:
-The <top> of an <object> is an <integer>. A <negative> <integer> indicates that the position is above the top of the screen or <card> (and therefore cannot be seen).
-A stack's <top> is the distance in <pixels> from the top edge of the screen to the top edge of the window's content area.
+The <top> of an <object(glossary)> is an <integer>. A <negative>
+<integer> indicates that the position is above the top of the screen or
+<card> (and therefore cannot be seen). A stack's <top> is the distance
+in <pixels> from the top edge of the screen to the top edge of the
+window's content area.
 
-A card's or control's <top> is the distance in <pixels> from the top edge of the <card> to the top edge of the <card> or <control>.
+A card's or control's <top> is the distance in <pixels> from the top
+edge of the <card> to the top edge of the <card> or <control>.
 
 Description:
-Use the <top> <property> to change the vertical placement of a <control> or window.
+Use the <top> <property> to change the vertical placement of a <control>
+or window.
 
-The <top> of a <stack> is in <absolute (screen) coordinates(glossary)>. The <top> of a <card> is always zero; setting the <top> of a <card> does not cause a <script> <error>, but it has no effect. The <top> of a <group> or <control> is in <relative (window) coordinates(glossary)>.
+The <top> of a <stack> is in <absolute (screen) coordinates(glossary)>.
+The <top> of a <card> is always zero; setting the <top> of a <card> does
+not cause a <script> <error>, but it has no effect. The <top> of a
+<group> or <control> is in <relative (window) coordinates(glossary)>.
 
-Changing the <top> of an <object> shifts it to the new position without resizing it. To change an <object|object's> height, set its height or <rectangle> <property>.
+Changing the <top> of an <object(glossary)> shifts it to the new
+position without resizing it. To change an <object|object's> height, set
+its height or <rectangle> <property>.
 
-The height <property> of an <object> is equal to its <bottom> minus its <top>.
+The height <property> of an <object(glossary)> is equal to its <bottom>
+minus its <top>.
 
->*Cross-platform note:*  When setting the <top> of a window on a <Mac OS> or <OS X|OS X system>, be sure to allow 20 <pixels> at the top of the screen for the <Mac OS> <menu bar>.
+>*Cross-platform note:*  When setting the <top> of a window on a <Mac
+> OS> or <OS X|OS X system>, be sure to allow 20 <pixels> at the top of
+> the screen for the <Mac OS> <menu bar>.
 
-References: script (property), pixels (property), yOffset (property), bottom (property), control (keyword), integer (keyword), rectangle (keyword), card (keyword), group (command), stack (object), object (object), property (glossary), OS X (glossary), error (glossary), absolute coordinates (glossary), menu bar (glossary), Mac OS (glossary), relative coordinates (glossary), negative (glossary)
+References: group (command), object (glossary), property (glossary),
+OS X (glossary), error (glossary), absolute coordinates (glossary),
+menu bar (glossary), Mac OS (glossary), relative coordinates (glossary),
+negative (glossary), control (keyword), integer (keyword),
+rectangle (keyword), card (keyword), stack (object), script (property),
+pixels (property), yOffset (property), bottom (property)
 
 Tags: ui
+

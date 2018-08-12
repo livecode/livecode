@@ -4,15 +4,16 @@ Type: message
 
 Syntax: openStack
 
-Summary: Sent to the destination <card> right after you open a <stack>.
+Summary:
+Sent to the destination <card> right after you open a <stack>.
 
 Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on openStack
@@ -20,14 +21,21 @@ on openStack
 end openStack
 
 Description:
-Handle the <openStack> <message> to change a <stack|stack's> <object|objects>, or perform other updates, when the <stack> is opened.
+Handle the <openStack> <message> to change a <stack|stack's>
+<object|objects>, or perform other updates, when the <stack> is opened.
 
 The <openStack> <message> is sent after the <stack> is visible.
 
-To make changes that take effect before the stack becomes visible on the screen, use a preOpenStack <handler> instead of <openStack>.
+To make changes that take effect before the stack becomes visible on the
+screen, use a preOpenStack <handler> instead of <openStack>.
 
-The actual opening is not triggered by the <openStack> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <stack> from opening.
+The actual opening is not triggered by the <openStack> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <stack> from opening.
 
-References: card (keyword), openBackground (message), resume (message), stack (object), object (object), trap (glossary), handler (glossary), message (glossary), pass (control_st)
+References: pass (control structure), object (glossary), trap (glossary),
+handler (glossary), message (glossary), card (keyword),
+openBackground (message), resume (message), stack (object)
 
 Tags: navigation
+

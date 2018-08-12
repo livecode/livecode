@@ -5,6 +5,12 @@ Synonyms: handler
 Type: glossary
 
 Description:
-A group of <LiveCode> <statement|statements> that begin with an <on>, <function>, <setProp>, or <getProp> <statement> and end with an <end> <statement>. The basic unit of the <LiveCode|LiveCode> language.
+A group of <LiveCode> <statement|statements> that begin with an <on>,
+<function>, <setProp>, or <getProp> <statement> and end with an <end>
+<statement>. The basic unit of the <LiveCode|LiveCode> language.
 
-References: end (keyword), statement (glossary), LiveCode (glossary), function (glossary), on (control_st), setProp (control_st), getProp (control_st)
+References: on (control structure), setProp (control structure),
+getProp (control structure), statement (glossary), LiveCode (glossary),
+function (glossary), end (keyword)
+
+Tags: messages

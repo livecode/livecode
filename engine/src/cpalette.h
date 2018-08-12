@@ -22,9 +22,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mccontrol.h"
 
-class MCColors : public MCControl
+class MCColors;
+typedef MCObjectProxy<MCColors>::Handle MCColorsHandle;
+
+class MCColors : public MCControl, public MCMixinObjectHandle<MCColors>
 {
+public:
+    
+    enum { kObjectType = CT_COLOR_PALETTE };
+    using MCMixinObjectHandle<MCColors>::GetHandle;
+    
+private:
+    
 	uint4 selectedcolor;
+    
 public:
 	MCColors();
 	MCColors(const MCColors &cref);
@@ -32,14 +43,12 @@ public:
 	virtual ~MCColors();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
+    
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual Boolean mdown(uint2 which);
 	virtual Boolean mup(uint2 which, bool p_release);
-
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
 
 	virtual Boolean count(Chunk_term type, MCObject *stop, uint2 &num);
 	// virtual functions from MCControl

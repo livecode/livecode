@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
+   TestSkipIfNot "docs"
+   
    -- Only run these tests on desktop platforms
    if the platform is not among the items of "MacOS,Windows,Linux" then
       return "SKIP Tests are not runnable on" && the platform
@@ -38,12 +40,31 @@ on TestBug16323
    put return & "Syntax: OnClose" after tDoc
    put return & "*/" after tDoc
    put return & "module com.livecode.widget" after tDoc
+   put return & "end module" after tDoc
 
    local tParsed
    put revDocsGenerateDocsFileFromText(tDoc, "") into tParsed
 
    local tArray
-   put revDocsParseDocTextToLibraryArray("", tVar, "", "") into tArray
+   put revDocsParseDocTextToLibraryArray("", tParsed, "", "") into tArray
 
    TestAssert "unwanted syntax element accumulation", tArray["doc"][2]["Syntax"][2] is empty
 end TestBug16323
+
+on TestBug17523
+   local tModule
+   put "widget com.livecode.testdocs" into tModule
+   put return & "/**" after tModule
+   put return & "Summary: Test" after tModule
+   put return & "*/" after tModule
+   put return & "property" && quote & "testProp" & quote && "get mTest" after tModule
+   put return & "end widget" after tModule
+   
+   local tParsed
+   put revDocsGenerateDocsFileFromText(tModule, "") into tParsed
+   
+   local tArray
+   put revDocsParseDocTextToLibraryArray("", tParsed, "", "") into tArray
+   
+   TestAssert "property name has quotes stripped", tArray["doc"][1]["display name"] is "testProp"
+end TestBug17523

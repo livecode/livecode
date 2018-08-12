@@ -51,6 +51,12 @@
         -- compatible value expressions
         CheckLiterals(Module)
 
+        -- Check that safe / unsafe boundaries are respected
+        CheckSafety(Module)
+
+        -- Check that variadic parameters only appear in foreign handlers
+        CheckVariadic(Module)
+
 --------------------------------------------------------------------------------
 
 -- At this point all identifiers either have a defined meaning, or are defined
@@ -133,6 +139,11 @@
 
     --
 
+    'rule' CheckBindings(BYTECODE'opcode(Position, Opcode, Arguments)):
+        CheckOpcode(Position, Opcode, Arguments)
+
+    --
+
     'rule' CheckBindings(EXPRESSION'slot(_, Name)):
         /* BE1 */ CheckBindingIsConstantOrVariableOrHandlerId(Name)
 
@@ -180,7 +191,7 @@
         QueryKindOfSymbolId(Id -> type)
         
     'rule' CheckBindingIsTypeId(Id):
-        Id'Name -> Name
+		GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAType(Position, Name)
         -- Mark this id as being in error.
@@ -196,7 +207,7 @@
         QueryKindOfSymbolId(Id -> handler)
         
     'rule' CheckBindingIsHandlerId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAHandler(Position, Name)
         -- Mark this id as being in error.
@@ -221,7 +232,7 @@
         QueryKindOfSymbolId(Id -> context)
 
     'rule' CheckBindingIsVariableId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAVariable(Position, Name)
         -- Mark this id as being in error.
@@ -249,7 +260,7 @@
         QueryKindOfSymbolId(Id -> handler)
 
     'rule' CheckBindingIsVariableOrHandlerId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAVariableOrHandler(Position, Name)
         -- Mark this id as being in error.
@@ -280,7 +291,7 @@
         QueryKindOfSymbolId(Id -> handler)
 
     'rule' CheckBindingIsConstantOrVariableOrHandlerId(Id):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         Id'Position -> Position
         Error_NotBoundToAConstantOrVariableOrHandler(Position, Name)
         -- Mark this id as being in error.
@@ -327,14 +338,14 @@
             where(Signature -> signature(nil, ReturnType))
             (|
                 where(ReturnType -> undefined(_))
-                Id'Name -> Name
+                GetQualifiedName(Id -> Name)
                 Id'Position -> Position
                 Error_HandlerNotSuitableForPropertyGetter(Position, Name)
             ||
                 -- all non-void return values are fine
             |)
         ||
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             Id'Position -> Position
             Error_HandlerNotSuitableForPropertyGetter(Position, Name)
         |)
@@ -351,7 +362,7 @@
         (|
             where(Signature -> signature(parameterlist(parameter(_, in, _, _), nil), _))
         ||
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             Id'Position -> Position
             Error_HandlerNotSuitableForPropertySetter(Position, Name)
         |)
@@ -1011,7 +1022,7 @@
             where(Type -> boolean(_))
         ||
             where(Type -> named(_, Id))
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             IsNameEqualToString(Name, "CBool")
         ||
             Error_IterateSyntaxMethodMustReturnBoolean(Position)
@@ -1450,6 +1461,14 @@
     'rule' CheckCallArguments(_, nil, nil):
         -- done!
 
+    -- variadic parameter 'sticks' and matches the rest of the argument list
+    'rule' CheckCallArguments(Position, ParamRest:parameterlist(parameter(_, variadic, _, _), _), expressionlist(Argument, ArgRest)):
+        CheckExpressionIsExplicitlyTypedVariable(Argument)
+        CheckCallArguments(Position, ParamRest, ArgRest)
+
+    'rule' CheckCallArguments(Position, parameterlist(parameter(_, variadic, _, _), _), nil):
+        -- done!
+
     'rule' CheckCallArguments(Position, parameterlist(parameter(_, Mode, _, _), ParamRest), expressionlist(Argument, ArgRest)):
         [|
             ne(Mode, out)
@@ -1488,6 +1507,33 @@
         |]
         CheckInvokeArguments(Position, SigTail, Arguments)
 
+'action' CheckExpressionIsExplicitlyTypedVariable(EXPRESSION)
+
+    'rule' CheckExpressionIsExplicitlyTypedVariable(slot(Position, Id)):
+        -- Only expressions binding to a slot which has a specified type are
+        -- 'explicitly typed'
+        QueryKindOfSymbolId(Id -> Kind)
+
+        -- Expression must be a variable of some kind, i.e. one of:
+        (|
+            -- A local variable
+            eq(Kind, local)
+        ||
+            -- A parameter variable
+            eq(Kind, parameter)
+        ||
+            -- A module local variable
+            eq(Kind, variable)
+        |)
+
+        QuerySymbolId(Id -> Info)
+        Info'Type -> Type
+        ne(Type, unspecified)
+
+    'rule' CheckExpressionIsExplicitlyTypedVariable(Expr):
+        GetExpressionPosition(Expr -> Position)
+        Error_VariadicArgumentNotExplicitlyTyped(Position)
+
 'action' CheckExpressionIsEvaluatable(EXPRESSION)
 
     'rule' CheckExpressionIsEvaluatable(invoke(Position, Info, Arguments)):
@@ -1524,11 +1570,11 @@
     'rule' CheckExpressionIsAssignable(slot(Position, Id)):
         (|
             QueryKindOfSymbolId(Id -> handler)
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             Error_CannotAssignToHandlerId(Position, Name)
         ||
             QueryKindOfSymbolId(Id -> constant)
-            Id'Name -> Name
+            GetQualifiedName(Id -> Name)
             Error_CannotAssignToConstantId(Position, Name)
         ||
         |)
@@ -1613,14 +1659,6 @@
         ||
             --Error_VariableMustHaveHighLevelType(Position)
         |)
-        
-    'rule' CheckDeclaredTypes(DEFINITION'contextvariable(Position, _, _, Type, _)):
-        -- Variable types must be high-level
-        (|
-            IsHighLevelType(Type)
-        ||
-            --Error_VariableMustHaveHighLevelType(Position)
-        |)
 
     'rule' CheckDeclaredTypes(DEFINITION'foreignhandler(Position, _, _, signature(Parameters, ReturnType), _)):
         -- Foreign handlers must be fully typed.
@@ -1647,13 +1685,17 @@
         
 'action' CheckForeignHandlerParameterTypes(PARAMETERLIST)
 
+    'rule' CheckForeignHandlerParameterTypes(parameterlist(parameter(_, variadic, _, _), Rest)):
+        CheckForeignHandlerParameterTypes(Rest)
+
     'rule' CheckForeignHandlerParameterTypes(parameterlist(parameter(Position, _, _, Type), Rest)):
         [|
             where(Type -> unspecified)
             Error_NoTypeSpecifiedForForeignHandlerParameter(Position)
         |]
         CheckForeignHandlerParameterTypes(Rest)
-        
+
+
     'rule' CheckForeignHandlerParameterTypes(nil):
         -- do nothing
 
@@ -1674,7 +1716,7 @@
     'rule' IsHighLevelType(optional(_, Type)):
         IsHighLevelType(Type)
     'rule' IsHighLevelType(handler(_, _, _)):
-    'rule' IsHighLevelType(record(_, _, _)):
+    'rule' IsHighLevelType(record(_, _)):
     'rule' IsHighLevelType(boolean(_)):
     'rule' IsHighLevelType(integer(_)):
     'rule' IsHighLevelType(real(_)):
@@ -1700,7 +1742,7 @@
 'sweep' CheckIdentifiers(ANY)
 
     'rule' CheckIdentifiers(MODULE'module(_, _, Id, Definitions)):
-        CheckIdIsSuitableForDefinition(Id)
+        CheckIdIsSuitableForNamespace(Id)
         CheckIdentifiers(Definitions)
 
     --
@@ -1716,11 +1758,7 @@
     'rule' CheckIdentifiers(DEFINITION'variable(_, _, Id, _)):
         CheckIdIsSuitableForDefinition(Id)
 
-    'rule' CheckIdentifiers(DEFINITION'contextvariable(_, _, Id, Type, _)):
-        CheckIdIsSuitableForDefinition(Id)
-        CheckIdentifiers(Type)
-
-    'rule' CheckIdentifiers(DEFINITION'handler(_, _, Id, _, Signature, Definitions, Body)):
+    'rule' CheckIdentifiers(DEFINITION'handler(_, _, Id, Signature, Definitions, Body)):
         CheckIdIsSuitableForDefinition(Id)
         CheckIdentifiers(Signature)
         CheckIdentifiers(Definitions)
@@ -1751,11 +1789,34 @@
     'rule' CheckIdentifiers(STATEMENT'variable(_, Id, _)):
         CheckIdIsSuitableForDefinition(Id)
 
+'action' CheckIdIsSuitableForNamespace(ID)
+
+    'rule' CheckIdIsSuitableForNamespace(Id):
+        Id'Name -> Name
+        Id'Position -> Position
+        Id'Namespace -> Namespace
+        (|
+            IsNameValidForNamespace(Name)
+
+            (|
+                IsNameSuitableForNamespace(Name)
+            ||
+                Warning_UnsuitableNameForNamespace(Position, Name)
+            |)
+        ||
+            Error_InvalidNameForNamespace(Position, Name)
+        |)
+        [|
+            where(Namespace -> id(NextId))
+            CheckIdIsSuitableForNamespace(NextId)
+        |]
+
 'action' CheckIdIsSuitableForDefinition(ID)
 
     'rule' CheckIdIsSuitableForDefinition(Id):
         Id'Name -> Name
         Id'Position -> Position
+		Id'Namespace -> Namespace
         (|
             IsNameSuitableForDefinition(Name)
         ||
@@ -1803,6 +1864,168 @@
 
 --------------------------------------------------------------------------------
 
+'action' CheckOpcode(POS, NAME, EXPRESSIONLIST)
+
+    'rule' CheckOpcode(Position, Name, Arguments):
+        (|
+            GetStringOfNameLiteral(Name -> String)
+            BytecodeLookup(String -> Opcode)
+            (|
+                QueryExpressionListLength(Arguments -> Length)
+                BytecodeIsValidArgumentCount(Opcode, Length)
+                CheckOpcodeArguments(Position, Opcode, Arguments, 0)
+            ||
+                Error_IllegalNumberOfArgumentsForOpcode(Position)
+            |)
+
+        ||
+            Error_UnknownOpcode(Position, Name)
+        |)
+
+
+'action' CheckOpcodeArguments(POS, INT, EXPRESSIONLIST, INT)
+
+    'rule' CheckOpcodeArguments(Position, Opcode, expressionlist(Head, Tail), Index)
+        BytecodeDescribeParameter(Opcode, Index -> ParamType)
+        CheckOpcodeArgument(Position, ParamType, Head)
+        CheckOpcodeArguments(Position, Opcode, Tail, Index + 1)
+
+    'rule' CheckOpcodeArguments(Position, Opcode, nil, Index):
+        -- do nothing
+
+
+'action' CheckOpcodeArgument(POS, INT, EXPRESSION)
+
+    'rule' CheckOpcodeArgument(Position, Index, Argument):
+        eq(Index, 1)
+        CheckOpcodeArgIsLabel(Position, Argument)
+
+    'rule' CheckOpcodeArgument(Position, Index, Argument):
+        eq(Index, 2)
+        CheckOpcodeArgIsRegister(Position, Argument)
+
+    'rule' CheckOpcodeArgument(Position, Index, Argument):
+        eq(Index, 3)
+        CheckOpcodeArgIsConstant(Position, Argument)
+
+    'rule' CheckOpcodeArgument(Position, Index, Argument):
+        eq(Index, 4)
+        CheckOpcodeArgIsDefinition(Position, Argument)
+
+    'rule' CheckOpcodeArgument(Position, Index, Argument):
+        eq(Index, 5)
+        CheckOpcodeArgIsVariable(Position, Argument)
+
+    'rule' CheckOpcodeArgument(Position, Index, Argument):
+        eq(Index, 6)
+        CheckOpcodeArgIsHandler(Position, Argument)
+
+
+'action' CheckOpcodeArgIsLabel(POS, EXPRESSION)
+
+    'rule' CheckOpcodeArgIsLabel(_, Head):
+        (|
+            where(Head -> slot(Position, Id))
+            QuerySymbolId(Id -> Symbol)
+            Symbol'Kind -> label
+        ||
+            GetExpressionPosition(Head -> Position)
+            Error_OpcodeArgumentMustBeLabel(Position)
+        |)
+
+
+'action' CheckOpcodeArgIsRegister(POS, EXPRESSION)
+
+    'rule' CheckOpcodeArgIsRegister(_, Head):
+        (|
+            where(Head -> slot(Position, Id))
+            (|
+                QuerySymbolId(Id -> Symbol)
+                (|
+                    Symbol'Kind -> local
+                ||
+                    Symbol'Kind -> parameter
+                |)
+            ||
+                QueryId(Id -> error)
+            |)
+        ||
+            GetExpressionPosition(Head -> Position)
+            Error_OpcodeArgumentMustBeRegister(Position)
+        |)
+
+
+'action' CheckOpcodeArgIsConstant(POS, EXPRESSION)
+
+    'rule' CheckOpcodeArgIsConstant(_, Head):
+        (|
+            IsExpressionSimpleConstant(Head)
+        ||
+            GetExpressionPosition(Head -> Position)
+            Error_OpcodeArgumentMustBeConstant(Position)
+        |)
+
+
+'action' CheckOpcodeArgIsHandler(POS, EXPRESSION)
+
+    'rule' CheckOpcodeArgIsHandler(_, Head):
+        (|
+            where(Head -> slot(Position, Id))
+            (|
+                QuerySymbolId(Id -> Symbol)
+                Symbol'Kind -> handler
+            ||
+                QueryId(Id -> error)
+            |)
+        ||
+            GetExpressionPosition(Head -> Position)
+            Error_OpcodeArgumentMustBeHandler(Position)
+        |)
+
+
+
+'action' CheckOpcodeArgIsVariable(POS, EXPRESSION)
+
+    'rule' CheckOpcodeArgIsVariable(_, Head):
+        (|
+            where(Head -> slot(Position, Id))
+            (|
+                QuerySymbolId(Id -> Symbol)
+                Symbol'Kind -> variable
+            ||
+                QueryId(Id -> error)
+            |)
+        ||
+            GetExpressionPosition(Head -> Position)
+            Error_OpcodeArgumentMustBeVariable(Position)
+        |)
+
+
+'action' CheckOpcodeArgIsDefinition(POS, EXPRESSION)
+
+    'rule' CheckOpcodeArgIsDefinition(_, Head):
+        (|
+            where(Head -> slot(Position, Id))
+            (|
+                QuerySymbolId(Id -> Symbol)
+                (|
+                    Symbol'Kind -> variable
+                ||
+                    Symbol'Kind -> handler
+                ||
+                    Symbol'Kind -> constant
+                |)
+            ||
+                QueryId(Id -> error)
+            |)
+        ||
+            GetExpressionPosition(Head -> Position)
+            Error_OpcodeArgumentMustBeDefinition(Position)
+        |)
+
+
+--------------------------------------------------------------------------------
+
 'sweep' CheckLiterals(ANY)
 
     'rule' CheckLiterals(EXPRESSION'list(Position, Elements)):
@@ -1841,6 +2064,86 @@
             CheckLiterals(Key)
         |)
         CheckLiterals(Value)
+
+--------------------------------------------------------------------------------
+
+'action' CheckSafety(MODULE)
+
+    'rule' CheckSafety(Module):
+        CheckSafety_(Module, safe)
+
+'sweep' CheckSafety_(ANY, SYMBOLSAFETY)
+
+    'rule' CheckSafety_(DEFINITION'handler(Position, _, Name, _, _, Body), _):
+        [|
+            QuerySymbolId(Name -> Symbol)
+            Symbol'Safety -> Safety
+            CheckSafety_(Body, Safety)
+        |]
+
+    'rule' CheckSafety_(STATEMENT'unsafe(Position, Block), _):
+        CheckSafety_(Block, unsafe)
+
+    'rule' CheckSafety_(STATEMENT'bytecode(Position, Block), Safety):
+        (|
+            where(Safety -> unsafe)
+            -- It is fine for bytecode to appear in unsafe context
+        ||
+            where(Safety -> safe)
+            Error_BytecodeNotAllowedInSafeContext(Position)
+        |)
+
+    'rule' CheckSafety_(STATEMENT'call(Position, Handler, Arguments), Safety):
+        CheckHandlerSafety(Position, Handler, Safety)
+        CheckSafety_(Arguments, Safety)
+
+    'rule' CheckSafety_(EXPRESSION'call(Position, Handler, Arguments), Safety):
+        CheckHandlerSafety(Position, Handler, Safety)
+        CheckSafety_(Arguments, Safety)
+
+'action' CheckHandlerSafety(POS, ID, SYMBOLSAFETY)
+
+    'rule' CheckHandlerSafety(Position, Handler, Safety):
+        [|
+            QuerySymbolId(Handler -> Symbol)
+            Symbol'Safety -> HandlerSafety
+            (|
+                -- Safe handlers can be called from any context
+                where(HandlerSafety -> safe)
+            ||
+                -- Unsafe handlers can be called from unsafe context
+                (|
+                    where(Safety -> unsafe)
+                ||
+                    GetQualifiedName(Handler -> Name)
+                    Error_UnsafeHandlerCallNotAllowedInSafeContext(Position, Name)
+                |)
+            |)
+        |]
+
+--------------------------------------------------------------------------------
+
+'sweep' CheckVariadic(ANY)
+
+    'rule' CheckVariadic(DEFINITION'handler(_, _, Name, signature(Parameters, _), _, _)):
+        [|
+            ParameterListContainsVariadic(Parameters -> Position)
+            Error_VariadicParametersOnlyAllowedInForeignHandlers(Position)
+        |]
+
+    'rule' CheckVariadic(PARAMETERLIST'parameterlist(parameter(Position, variadic, _, _), Tail)):
+        [|
+            ne(Tail, nil)
+            Error_VariadicParameterMustBeLast(Position)
+        |]
+
+'condition' ParameterListContainsVariadic(PARAMETERLIST -> POS)
+
+    'rule' ParameterListContainsVariadic(parameterlist(parameter(Position, variadic, _, _), _) -> Position):
+        --
+
+    'rule' ParameterListContainsVariadic(parameterlist(_, Tail) -> Position):
+        ParameterListContainsVariadic(Tail -> Position)
 
 --------------------------------------------------------------------------------
 
@@ -1908,15 +2211,6 @@
         Id'Meaning -> Meaning
         
 'condition' QuerySymbolId(ID -> SYMBOLINFO)
-
---------------------------------------------------------------------------------
-
-'action' QueryExpressionListLength(EXPRESSIONLIST -> INT)
-
-    'rule' QueryExpressionListLength(expressionlist(_, Tail) -> TailCount + 1)
-        QueryExpressionListLength(Tail -> TailCount)
-
-    'rule' QueryExpressionListLength(nil -> 0)
-        -- nothing
+'action' GetQualifiedName(ID -> NAME)
 
 --------------------------------------------------------------------------------

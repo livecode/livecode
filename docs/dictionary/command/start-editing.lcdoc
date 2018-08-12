@@ -4,30 +4,59 @@ Type: command
 
 Syntax: start editing <group> [of <stack>]
 
-Summary: Puts a <stack> into group-editing mode.
+Summary:
+Puts a <stack> into group-editing mode.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 start editing group "container"
 
 Parameters:
-group: A reference to a group you want to edit.
-stack: A reference to the stack that contains the group you want to edit.
+group:
+A reference to a group you want to edit.
+
+stack:
+A reference to the stack that contains the group you want to edit.
 
 Description:
-Use the <start editing> <command> to add <object|objects> to a <group(command)> or change the <object|objects> in a <group(command)>.
+Use the <start editing> <command> to add <object|objects> to a
+<group(command)> or change the <object|objects> in a <group(command)>.
 
-If you don't specify a <stack>, the specified <group(command)> in the <current stack> is put into group-editing mode.
+If you don't specify a <stack>, the specified <group(command)> in the
+<current stack> is put into group-editing mode.
 
 Any objects created while in group-editing mode are added to that group.
 
-When a group is in group-editing mode, font and color properties for the group (though not for objects in the group) are disregarded. This means that if properties such as textFont, <foregroundColor>, and so on are set for the <group(command)>, it displays differently when in group-editing mode, using the fonts and colors of the <stack> the <group(command)> is in. As soon as you exit group-editing mode with the <stop editing> <command>, the <group(glossary)|group's> correct appearance is restored.
+When a group is in group-editing mode, font and color properties for the
+group (though not for objects in the group) are disregarded. This means
+that if properties such as textFont, <foregroundColor>, and so on are
+set for the <group(command)>, it displays differently when in
+group-editing mode, using the fonts and colors of the <stack> the
+<group(command)> is in. As soon as you exit group-editing mode with the
+<stop editing> <command>, the <group(glossary)|group's> correct
+appearance is restored.
 
->*Note:* The <start editing> <command> temporarily modifies the <object hierarchy>, displaying only the <object|objects> that belong to the <group(command)> being edited. <inheritance|Inherited> font and color <properties> may not appear correctly while the <group(command)> is being edited, but will be restored whhen you exit group-editing mode. Also, if the <start editing> <command> is included in a <handler>, using the <debugger> to step through that <handler> may cause unexpected results because of the change in object context.
+>*Note:* The <start editing> <command> temporarily modifies the <object
+> hierarchy>, displaying only the <object|objects> that belong to the
+> <group(command)> being edited. <inheritance|Inherited> font and color
+> <properties> may not appear correctly while the <group(command)> is
+> being edited, but will be restored whhen you exit group-editing mode.
+> Also, if the <start editing> <command> is included in a <handler>,
+> using the <debugger> to step through that <handler> may cause
+> unexpected results because of the change in object context.
 
-References: foregroundColor (property), properties (property), editBackground (property), relayerGroupedControls (property), remove (command), start editing (command), place (command), group (command), stop editing (command), ungroup (command), stack (object), object (object), inheritance (glossary), handler (glossary), object hierarchy (glossary), group (glossary), debugger (glossary), command (glossary), current stack (glossary)
+References: remove (command), start editing (command), place (command),
+group (command), stop editing (command), ungroup (command),
+object (glossary), inheritance (glossary), handler (glossary),
+object hierarchy (glossary), group (glossary), debugger (glossary),
+command (glossary), current stack (glossary), stack (object),
+foregroundColor (property), properties (property),
+editBackground (property), relayerGroupedControls (property)
+

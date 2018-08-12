@@ -17,21 +17,24 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on revLoadLibrary
+   if the target is not me then
+      pass revLoadLibrary
+   end if
    insert the script of me into back
 end revLoadLibrary
 
 local sTestStrings, sTestNumbers, sTestConversionStrings, sTestFilePaths, sArrayData
 local sInitialised
 
-private function __testFilesFolder
+function TestGetInputFilesFolder
    set the itemDelimiter to slash
    return item 1 to -2 of the filename of me & slash & "lcs-input-files"
-end __testFilesFolder
+end TestGetInputFilesFolder
 
 private function getTestFile pTestFile
    local tContent, tFilePath
    
-   put __testFilesFolder() & slash & pTestFile into tFilePath
+   put TestGetInputFilesFolder() & slash & pTestFile into tFilePath
    
    // test files are written without BOM
    open file tFilePath for "utf8" text read
@@ -159,3 +162,7 @@ function testArrayData pKey
    setupValues
    return sArrayData[pKey]
 end testArrayData
+
+function TestGetInputFile pFilename
+    return TestGetInputFilesFolder() & slash & pFilename
+end TestGetInputFile

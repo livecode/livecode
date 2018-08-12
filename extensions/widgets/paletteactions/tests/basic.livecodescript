@@ -18,12 +18,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
 	TestLoadExtension "com.livecode.library.widgetutils"
-	TestLoadExtension "com.livecode.library.iconSVG"
-	TestLoadExtension "com.livecode.widget.paletteActions"
+	TestLoadExtension "com.livecode.library.iconsvg"
+	TestLoadExtension "com.livecode.widget.paletteactions"
 end TestSetup
 
 on TestSortOrder
-	create widget "Actions" as "com.livecode.widget.paletteActions"
+	create widget "Actions" as "com.livecode.widget.paletteactions"
 	
 	local tArray
 	repeat with x = 1 to 10

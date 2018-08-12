@@ -1,16 +1,17 @@
 Name: mobileSoundChannelVolume
 
+Synonyms: iphonesoundchannelvolume
+
 Type: function
 
 Syntax: mobileSoundChannelVolume(<channel>)
 
-Summary: Returns the current volume of the given channel.
-
-Synonyms: iphoneSoundChannelVolume
+Summary:
+Returns the current volume of the given channel.
 
 Introduced: 4.6
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -21,13 +22,25 @@ Example:
 put mobileSoundChannelVolume("current") into tVolume
 
 Parameters:
-channel: The name of the channel.
+channel:
+The name of the channel.
 
-Returns (integer): The <mobileSoundChannelVolume> function returns an integer between 0 and 100 where 0 is no volume and 100 is full volume.
+Returns (integer):
+The <mobileSoundChannelVolume> function returns an integer between 0 and
+100 where 0 is no volume and 100 is full volume.
 
 Description:
-Use the <mobileSoundChannelVolume> function to find the current volume of the given channel.
+Use the <mobileSoundChannelVolume> function to find the current volume
+of the given channel.
 
-If you attempt to get the volume of a non-existent channel empty will be returned.
+If you attempt to get the volume of a non-existent channel empty will be
+returned. 
 
-References: mobileDeleteSoundChannel (command), mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command), mobilePausePlayingOnChannel (command), mobileStopPlayingOnChannel (command), mobileResumePlayingOnChannel (command), mobileSoundOnChannel (function), mobileNextSoundOnChannel (function), mobileSoundChannels (function), mobileSoundChannelStatus (function), soundFinishedOnChannel (message)
+References: mobileDeleteSoundChannel (command),
+mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command),
+mobilePausePlayingOnChannel (command),
+mobileStopPlayingOnChannel (command),
+mobileResumePlayingOnChannel (command), mobileSoundOnChannel (function),
+mobileNextSoundOnChannel (function), mobileSoundChannels (function),
+mobileSoundChannelStatus (function), soundFinishedOnChannel (message)
+

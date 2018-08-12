@@ -1,4 +1,4 @@
-script "InstallerUtilities"
+﻿script "InstallerUtilities"
 # This is the back-end installer, updater and uninstaller code. 
 # This code doesn't know anything about the product it is installing, and should be capable
 # of being re-used for products other than LiveCode. It reads a "manifest" file, which contains
@@ -13,6 +13,10 @@ constant kRunOnce = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersio
 local sIsFaceless
 local sFacelessLog
 
+private function isInstallerEnvironment
+   return (the environment begins with "installer")
+end isInstallerEnvironment
+
 ################################################################################
 #
 #   FRONT-END FUNCTIONS
@@ -24,7 +28,7 @@ local sInstallerError
 
 command installerRun pPath, pRecord, pOptions, pWithoutElevation
    local tCommand
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       put the effective filename of stack "Installer" into tCommand
    else
       put specialFolderPath("Desktop") & "/installbackend.exe" into tCommand
@@ -73,7 +77,7 @@ end installerRun
 
 command installerRunUninstall pPath, pRecord, pWithoutElevation
    local tCommand
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       put the effective filename of stack "Installer" into tCommand
    else
       put "C:/Users/Mark/Desktop/installbackend.exe" into tCommand
@@ -711,7 +715,7 @@ private command installCopyUninstaller pTarget
       installCopyUninstallerFolder item 1 to - 4 of the effective filename of stack "Installer", pTarget
       if the result is not empty then
          log "CopyUninstaller:    copying failed -" && the result
-         reportError "Unable to installer uninstaller at '" & pTarget & "'."
+         reportError "Unable to copy uninstaller to '" & pTarget & "'."
       end if
       set the itemDel to comma
    else
@@ -719,7 +723,7 @@ private command installCopyUninstaller pTarget
       
       if the result is not empty then
          log "CopyUninstaller:    copying failed -" && the result
-         reportError "Unable to installer uninstaller at '" & pTarget & "'."
+         reportError "Unable to copy uninstaller to '" & pTarget & "'."
       end if
       
       // SN-2014-10-28: [[ Bug 16410 ]] The uninstaller needs the execution permission
@@ -729,7 +733,7 @@ private command installCopyUninstaller pTarget
          get shell("chmod +x " & quote & installShortenPath(pTarget) & quote)
          if it is not empty then
             log "CopyUninstaller:    setting executable permission failed - " & it
-            reportError "Unable to install uninstaller at '" & pTarget * "'."
+            reportError "Unable to copy uninstaller to '" & pTarget & "'."
          end if
       end if
    end if
@@ -883,6 +887,10 @@ private command installDesktopIcon pRecord, pName, pSource, pAllUsers
    
    payloadExtractItemToFile pSource, empty, tTargetPath & slash & pName & ".png"
    get shell("touch" && tTargetPath)
+   
+   -- Regenerate the icon cache
+   -- Errors are ignored as the utility may not be present
+   get shell("gtk-update-icon-cache" && xdgDataPath(pAllUsers) & "/icons/hicolor")
    
    installRecord pRecord, "file", tTargetPath & slash & pName & ".png"
 end installDesktopIcon
@@ -1339,7 +1347,7 @@ end uninstallCanRemoveRegistryKey
 local sPayloadArchive
 
 private command payloadOpen pArchive
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       if the platform is "MacOS" then
          local tPayload
          set the itemDel to slash
@@ -1360,7 +1368,7 @@ private command payloadOpen pArchive
 end payloadOpen
 
 private command payloadClose
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       do "_internal payload close"
    else
       revZipCloseArchive sPayloadArchive
@@ -1371,7 +1379,7 @@ end payloadClose
 
 private function payloadDescribeItem pItem
    local it
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       do "_internal payload describe pItem"
       if the result is not empty then
          get the result
@@ -1387,7 +1395,7 @@ private function payloadDescribeItem pItem
 end payloadDescribeItem
 
 private command payloadExtractItemToVariable pItem, @rData
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       do "_internal payload extract pItem; put it into rData"
    else
       revZipExtractItemToVariable sPayloadArchive, pItem, "rData"
@@ -1402,7 +1410,7 @@ end payloadExtractItemToVariable
 private command payloadExtractItemToFile pItem, pBaseItem, pFile
    local tShortFile
    put installShortenPath(pFile) into tShortFile
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       if pBaseItem is empty then
          log "Payload: Extracting item '" & pItem & "' to file '" & pFile & "'"
          do "_internal payload extract pItem to tShortFile"
@@ -1430,7 +1438,7 @@ private command reportCheckCancel
       exit reportCheckCancel
    end if
    
-   if the environment is "installer" then
+   if isInstallerEnvironment() then
       -- Attempt to read 1 line from the parent
       read from stdin for 1 line in 0 millisecs
       
@@ -1458,7 +1466,7 @@ end reportCheckCancel
 
 private command reportPhase pPhase
    if not sIsFaceless then
-      if the environment is "installer" then
+      if isInstallerEnvironment() then
          write "phase" & tab & pPhase & return to stdout
       else
          log "Phase Changed to -" && pPhase
@@ -1470,7 +1478,7 @@ end reportPhase
 
 private command reportProgress pProgress, pMessage
    if not sIsFaceless then
-      if the environment is "installer" then
+      if isInstallerEnvironment() then
          replace "\" with "\\" in pMessage
          replace return with "\n" in pMessage
          write "progress" & tab & pProgress & tab & pMessage & return to stdout
@@ -1482,7 +1490,7 @@ end reportProgress
 
 private command reportFinished pIsUninstall
    if not sIsFaceless then
-      if the environment is "installer" then
+      if isInstallerEnvironment() then
          log "Done"
          write "done" & return to stdout
       end if
@@ -1497,7 +1505,7 @@ end reportFinished
 
 private command reportError pMessage
    if not sIsFaceless then
-      if the environment is "installer" then
+      if isInstallerEnvironment() then
          replace "\" with "\\" in pMessage
          replace return with "\n" in pMessage
          write "error" & tab & pMessage & return to stdout
@@ -1522,7 +1530,12 @@ command log pMessage
       local tFile
       switch the platform
          case "linux"
-            put $HOME & "/.runrev/logs/" & toLower(the uProduct of stack "Installer") & "_installer_log.txt" into tFile
+            if $EUID is zero then
+               put "~root/.runrev/logs" into tFile
+            else
+               put $HOME & "/.runrev/logs" into tFile
+            end if
+            put "/" & toLower(the uProduct of stack "Installer") & "_installer_log.txt" after tFile
             break
          case "macos"
             put specialFolderPath("cusr") & "/Library/Logs/RunRev/" & the uProduct of stack "Installer" & "InstallerLog.txt"  into tFile
@@ -1552,6 +1565,8 @@ command log pMessage
          write "[" && the internet date && "]" && ":" && pMessage & return to file sFacelessLog
          close file sFacelessLog
       end if
+   else
+      write "[" && the internet date && "]" && ":" && pMessage & return to stdout
    end if
 end log
 

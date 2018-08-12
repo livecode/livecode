@@ -4,22 +4,35 @@ Type: keyword
 
 Syntax: else
 
-Summary: Used within an <if> <control structure> to contain <statement|statements> to be performed if the condition is not true.
+Summary:
+Used within an <if> <control structure> to contain
+<statement|statements> to be performed if the condition is not true.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if it is the date then insertDate else removeDate
 
 Description:
-Use the <else> <keyword> to perform an alternative action within an <if> <control structure>.
+Use the <else> <keyword> to perform an alternative action within an <if>
+<control structure>.
 
-If the condition on the first line of the <if> <control structure> is false, the <statement> or <statement> list after the <else> <keyword> is <execute|executed> instead of the <statement|statements> in the main portion of the <if> <control structure>. The <else> section is optional in an <if> <control structure>.
+If the condition on the first line of the <if> <control structure> is
+false, the <statement> or <statement> list after the <else> <keyword> is
+<execute|executed> instead of the <statement|statements> in the main
+portion of the <if> <control structure>. The <else> section is optional
+in an <if> <control structure>.
 
-Depending on the exact form of the <if> <control structure> being used, the <else> <keyword> may be on the same line as the rest of the <if> structure, on the same line as the <statement> to be <execute|executed>, or on a line by itself.
+Depending on the exact form of the <if> <control structure> being used,
+the <else> <keyword> may be on the same line as the rest of the <if>
+structure, on the same line as the <statement> to be <execute|executed>,
+or on a line by itself.
 
-References: then (keyword), finally (keyword), keyword (glossary), statement (glossary), control structure (glossary), execute (glossary), if (control_st)
+References: if (control structure), keyword (glossary),
+statement (glossary), control structure (glossary), execute (glossary),
+then (keyword), finally (keyword)
+

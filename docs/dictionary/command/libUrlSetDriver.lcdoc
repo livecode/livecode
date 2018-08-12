@@ -1,0 +1,48 @@
+Name: libURLSetDriver
+
+Type: command
+
+Syntax: libURLSetDriver <driver>
+
+Summary:
+Sets the driver to be used by the libURL library for network
+transfers.
+
+Associations: internet library
+
+Introduced: 8.1
+
+OS: mac, windows, linux, ios, android, html5
+
+Platforms: desktop, server, mobile
+
+Security: network
+
+Parameters:
+driver:
+The long id of the stack that provides the external driver that
+the <Internet library> should use for network transfers. Set this to
+empty to use the internal driver.
+
+The result:
+The <libURLSetDriver> command puts empty into the result if
+successful. Otherwise an error string is put into the result
+
+Description:
+This command causes the libUrl library to call an external library for
+all network transfer functions. It requires an external libUrl library
+to be present in the system. More documentation will be available soon.
+
+>*Important:* The <libURLSetDriver> <command> is part of the 
+> <Internet library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
+
+References: Standalone Application Settings (glossary),
+standalone application (glossary), command (glossary),
+application (glossary), LiveCode custom library (glossary),
+Internet library (library), library (library)
+

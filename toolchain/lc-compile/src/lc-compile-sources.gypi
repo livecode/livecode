@@ -10,6 +10,7 @@
 		'all_syntax_files':
 		[
 			'<@(engine_syntax_lcb_files)',
+            '<@(engine_syntax_only_lcb_files)',
 			'<@(stdscript_syntax_lcb_files)',
 		],
 		
@@ -49,11 +50,10 @@
 		
 		'lc-compile_source_files':
 		[
-			'literal.c',
 			'main.c',
 			'operator.c',
-			'position.c',
-			'report.c',
+			'outputfile.c',
+            'outputfile.h',
 			'set.c',
 			'syntax-gen.c',
 			'emit.cpp',

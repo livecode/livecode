@@ -2,15 +2,22 @@ Name: clipboardData
 
 Type: property
 
-Syntax: set the clipboardData to <clipboardArray> 
+Syntax: set the clipboardData to <data>
 
-Summary: Specifies what data and of what type is on the <clipboard>.
+Syntax: set the clipboardData[<key>] to <data>
+
+Syntax: get the clipboardData
+
+Syntax: get the clipboardData[<key>]
+
+Summary:
+Specifies what data and of what type is on the <clipboard(glossary)>.
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Example:
 set the clipboardData["text"] to "привет"
@@ -28,45 +35,91 @@ set the clipboardData["image"] to image 1
 Example:
 set the clipboardData["styledText"] to the styledText of field 4
 
-Parameters:
-text: plain text
-unicode: plain text encoded as utf-16 in host byte order
-styledText: styled text in LiveCode styledText array format (the same as the styledText property of a field)
-styles: styled text in LiveCode internal styled-text format
-html: styled text in LiveCode HTML format
-rtf: styled text in LiveCode RTF format
-image: the 'text' of an image object, i.e. binary data in PNG, GIF or JPEG format
-files: a return-delimited list of filenames in LiveCode format
-objects: one or more LiveCode objects serialized into an internal format
-private: an arbitrary application-defined string. This format will only be visible within the same LiveCode process
-
 Value:
-The <clipboardData> pseudo-array provides access to the data to be transferred through a drag-drop operation.
-If the clipboard contains data compatible with the specified type, it is converted to the requested type; otherwise the array element for that type is empty. For example, if the clipboard contains text "hello", clipboardData["image"] is empty, whereas the clipboardData["html"] returns "<p>hello</p>"
+The <clipboardData> pseudo-array provides access to the data to be 
+transferred through a drag-drop operation. 
 
 Description:
-Use the <clipboardData> property to put data in the clipboard in a specified format, or to get the contents of the clipboard, without copying or pasting.
+Use the <clipboardData> property to put data in the 
+<clipboard(glossary)> in a specified format, or to get the contents of 
+the <clipboard(glossary)>, without copying or pasting. The keys for the
+<clipboardData> are the following:
 
-The <clipboardData> property is populated automatically when the clipboard content is changed, either by using the cut or copy command, or by cutting or copying in another application.
+  - "text": plain text
+  - "unicode": plain text encoded as utf-16 in host byte order
+  - "rtf": LiveCode rich text format data
+  - "htmltext": LiveCode HTML text
+  - "styles": styled text in LiveCode internal styled-text format
+  - "styledtext": array of LiveCode styled text
+  - "image": the <text> of an image object, i.e. binary data in PNG, GIF
+    or JPEG format
+  - "rtf": styled text in LiveCode RTF format
+  - "html": styled text in LiveCode HTML format
+  - "styles": LiveCode styled text data
+  - "objects": one or more LiveCode objects serialized into an internal
+    format 
+  - "files": a return-delimited list of filenames in LiveCode format
+  - "private": an arbitrary application-defined string. This format will
+    only be visible within the same LiveCode process
 
-You can query the keys of the <clipboardData> to determine what types of data are on the clipboard. For example, if the clipboard contains styled text, you can put that text (in htmlText format) in a variable with the following statement:
 
-	put the clipboardData["html"] into tHTML
+The <clipboardData> property is populated automatically when the 
+<clipboard(glossary)> content is changed, either by using the cut or 
+copy command, or by cutting or copying in another application.
 
-To change the contents of the clipboard, you can set the <clipboardData> property directly. For example, the following statement places the text "Hello World" on the clipboard:
+If the <clipboard(glossary)> contains data compatible with the
+specified type, it is converted to the requested type; otherwise the
+array element for that type is empty. For example, if the
+<clipboard(glossary)> contains text "hello", `the
+clipboardData["image"]` is empty, whereas `the clipboardData["html"]`
+returns "&lt;p&gt;hello&lt;/p&gt;"
 
-	set the clipboardData["text"] to "Hello World"
+You can query the keys of the <clipboardData> to determine what types 
+of data are on the <clipboard(glossary)>. For example, if the 
+<clipboard(glossary)> contains styled text, you can put that text (in 
+<htmlText> format) in a variable with the following statement:
 
-The above statement is equivalent to selecting the text "Hello World" in a field and choosing Edit menu, or to using the <copy> command. The data you place on the clipboard is accessible to your application using the <paste> command, and to other applications (that support pasting text) using the application's Paste menu item.
+    put the clipboardData["html"] into tHTML
 
->*Tip:*  To quickly find out what kind of data is on the clipboard, use the <clipboard> function.
 
->*Tip:*  The "objects" type can be used to capture the binary form of a LiveCode object that was placed on the clipboard. This binary data can be passed to another instance of LiveCode or saved to a file and re-loaded at a later time.
+To change the contents of the <clipboard(glossary)>, you can set the 
+<clipboardData> property directly. For example, the following statement 
+places the text "Hello World" on the <clipboard(glossary)>:
 
->*Tip:*  If you require low-level access to the clipboard contents, use the <rawClipboardData> property instead.
+    set the clipboardData["text"] to "Hello World"
 
->*Tip:*  To prevent the clipboard from being changed by other apps while you are accessing it, use the <lock clipboard> and <unlock clipboard> commands.
+The above statement will only place plain text on the clipboard, similar
+to using the copy command from a text only editor.
 
-References: copy (command), dragData (property), clipboard (function), paste (command), lock clipboard (command), unlock clipboard (command), fullClipboardData (property), rawClipboardData (property)
+    set the clipboardData["html"] to "&lt;p&gt;Hello World&lt;/p&gt;"
+
+The above statement is equivalent to selecting the text "Hello World"
+in a field and choosing Copy Text from the Edit menu, or to using the 
+<copy> command (chunk of field syntax) since styled text is placed on 
+the clipboard by default. The data you place on the 
+<clipboard(glossary)> is accessible to your application using the 
+<paste> command, and to other applications (that support pasting text) 
+using the application's Paste menu item.
+
+>*Tip:*  To quickly find out what kind of data is on the clipboard, use 
+the <clipboard> function.
+
+>*Tip:*  The "objects" type can be used to capture the binary form of a 
+LiveCode object that was placed on the <clipboard(glossary)>. This 
+binary data can be passed to another instance of LiveCode or saved to a 
+file and re-loaded at a later time.
+
+>*Tip:*  If you require low-level access to the <clipboard(glossary)> 
+contents, use the <rawClipboardData> property instead.
+
+>*Tip:*  To prevent the <clipboard(glossary)> from being changed by 
+other apps while you are accessing it, use the <lock clipboard> and 
+<unlock clipboard> commands.
+
+References: copy (command), paste (command), lock clipboard (command),
+unlock clipboard (command), clipboard (function), clipboard (glossary),
+dragData (property), fullClipboardData (property),
+rawClipboardData (property), text (property)
 
 Tags: ui, clipboard
+

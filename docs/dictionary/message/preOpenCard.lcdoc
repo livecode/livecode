@@ -4,15 +4,16 @@ Type: message
 
 Syntax: preOpenCard
 
-Summary: Sent to a <card> when you go to the <card>.
+Summary:
+Sent to a <card> when you go to the <card>.
 
 Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on preOpenCard -- highlight the "go to this card" button in a set
@@ -21,12 +22,25 @@ on preOpenCard -- highlight the "go to this card" button in a set
 end preOpenCard
 
 Description:
-Handle the <preOpenCard> <message> to update a <card(object)|card's> appearance before the <card(keyword)> appears on screen.
+Handle the <preOpenCard> <message> to update a <card(object)|card's>
+appearance before the <card(keyword)> appears on screen.
 
-The <preOpenCard> <message> is sent before the <openCard> <message>. Unlike <openCard>, <preOpenCard> <handler|handlers> are <execute|executed> before the <card(keyword)> appears. Because of this, the <preOpenCard> <handler> is a good place to put code that adjusts the size, position, and appearance of <object|objects>; the changes are made before the <card(keyword)> appears.
+The <preOpenCard> <message> is sent before the <openCard> <message>.
+Unlike <openCard>, <preOpenCard> <handler|handlers> are
+<execute|executed> before the <card(keyword)> appears. Because of this,
+the <preOpenCard> <handler> is a good place to put code that adjusts the
+size, position, and appearance of <object|objects>; the changes are made
+before the <card(keyword)> appears.
 
-The actual navigation is not triggered by the <preOpenCard> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <card(keyword)> from opening.
+The actual navigation is not triggered by the <preOpenCard> <message>,
+so <trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <card(keyword)> from opening.
 
-References: card (keyword), openCard (message), preOpenBackground (message), closeCard (message), preOpenStack (message), card (object), object (object), handler (glossary), trap (glossary), message (glossary), execute (glossary), pass (control_st)
+References: pass (control structure), object (glossary),
+handler (glossary), trap (glossary), message (glossary),
+execute (glossary), card (keyword), openCard (message),
+preOpenBackground (message), closeCard (message), preOpenStack (message),
+card (object)
 
 Tags: navigation
+

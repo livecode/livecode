@@ -2,50 +2,95 @@ Name: stackFiles
 
 Type: property
 
-Syntax: set the stackFiles of <stack> to <stackFileList> 
+Syntax: set the stackFiles of <stack> to <stackFileList>
 
-Summary: Specifies a list of <stacks> and their file names, to be used when a <stack> that's not open is referenced in a <handler>.
+Summary:
+Specifies a list of <stacks> and their file names, to be used when a
+<stack> that's not open is referenced in a <handler>.
 
 Associations: stack
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-set the stackFiles of this stack to "My Dialog,Custom Dialogs.rev"
+set the stackFiles of this stack to "My Dialog,Custom Dialogs.livecode"
 
-Value: The <stackFiles> of a <stack> is a list of stack references, one per <line>.
+Value:
+The <stackFiles> of a <stack> is a list of stack references, one per
+<line>. 
 
 Description:
-Use the <stackFiles> <property> to make one or more <stacks> accessible to <handler|handlers>, even if the <stack> is not already open or in memory.
+Use the <stackFiles> <property> to make one or more <stacks> accessible
+to <handler|handlers>, even if the <stack> is not already open or in
+memory. 
 
-Each stack reference consists of the short name of a stack, a comma, and the name of the file that contains that stack. (Do not put a space after the comma, unless the file name starts with a space.)
+Each stack reference consists of the short name of a stack, a comma, and
+the name of the file that contains that stack. (Do not put a space after
+the comma, unless the file name starts with a space.)
 
-By default, the stackFiles property of newly created stacks is set to empty.
+By default, the stackFiles property of newly created stacks is set to
+empty. 
 
-When a handler or object refers to an object in a stack other than the current stack, LiveCode checks all stacks that are loaded into memory (and their substacks) to find the referenced stack. If the stack cannot be found, LiveCode checks the current stack's <stackFiles> <property> to locate the <stack> being referenced, and <loaded into memory|loads it into memory> so that its <properties> and the <object|objects> in it can be used.
+When a handler or object refers to an object in a stack other than the
+current stack, LiveCode checks all stacks that are loaded into memory
+(and their substacks) to find the referenced stack. If the stack cannot
+be found, LiveCode checks the current stack's <stackFiles> <property> to
+locate the <stack> being referenced, and <loaded into memory|loads it
+into memory> so that its <properties> and the <object|objects> in it can
+be used.
 
-For example, if your stack contains a statement like this, the stack "Customers" must either be loaded into memory, or be listed in the <stackFiles>, in order for LiveCode to know where it is:
+For example, if your stack contains a statement like this, the stack
+"Customers" must either be loaded into memory, or be listed in the
+<stackFiles>, in order for LiveCode to know where it is:
 
-```get the width of field "Text" of card "Data" of stack "Customers"```
+    get the width of field "Text" of card "Data" of stack "Customers" 
 
 
-In this example, if the "Customers" stack is not open and isn't in the <stackFiles>, the <statement> must refer to it by its full <long> <name>, including its <file path>:
+In this example, if the "Customers" stack is not open and isn't in the
+<stackFiles>, the <statement> must refer to it by its full <long>
+<name>, including its <file path>:
 
-``` get the width of field "Text" of card "Data" of stack "Customers" \
-	of stack "/Volumes/Data/Business.rev" ```
+    get the width of field "Text" of card "Data" of stack "Customers" \
+       of stack "/Volumes/Data/Business.livecode" 
 
-Using the <stackFiles> lets you simply specify the <stack|stack's> name, instead of including its <file path> everywhere you refer to an <object> in the <stack>.
 
-The <stackFiles> of a <main stack> is inherited by its <substacks> : if a <handler> in a <substack> refers to a <stack> that's not <load|loaded>, LiveCode checks the <stackFiles> of both the <substack> and its <main stack>.
+Using the <stackFiles> lets you simply specify the <stack|stack's> name,
+instead of including its <file path> everywhere you refer to an
+<object(glossary)> in the <stack>.
 
->*Important:*  <relative file path|Relative file paths> in the <stackFiles> start from the <folder> that the <stack> is in, rather than starting from the <defaultFolder> as with other <relative file path|relative paths> in <LiveCode>.
+The <stackFiles> of a <main stack> is inherited by its <substacks>: if
+a <handler> in a <substack> refers to a <stack> that's not
+<load|loaded>, LiveCode checks the <stackFiles> of both the <substack>
+and its <main stack>.
 
-Placing a stack in the <stackFiles> lets <handler|handlers> in your <stack> refer to <object|objects> in the referenced <stack>, but does not automatically allow <handler|handlers> in your <stack> to <call> <handler|handlers> in the referenced <stack|stack's> <script|scripts>. To use a <stack> as a <library>, allowing your <handler|handlers> to call the <stack|stack's> <handler|handlers>, use the <start using> or <insert script> <command>.
+>*Important:*  <relative file path|Relative file paths> in the
+> <stackFiles> start from the <folder> that the <stack> is in, rather
+> than starting from the <defaultFolder> as with other 
+> <relative file path|relative paths> in <LiveCode>.
 
-References: substacks (property), properties (property), mainStack (property), defaultFolder (property), name (property), filename of stack (property), long (keyword), line (keyword), insert script (library), library (library), stacks (function), mainStacks (function), stack (object), object (object), substack (glossary), start using (glossary), call (glossary), property (glossary), loaded into memory (glossary), load (glossary), file path (glossary), command (glossary), statement (glossary), LiveCode (glossary), main stack (glossary), relative file path (glossary), folder (glossary), script (glossary), handler (glossary)
+Placing a stack in the <stackFiles> lets <handler|handlers> in your
+<stack> refer to <object|objects> in the referenced <stack>, but does
+not automatically allow <handler|handlers> in your <stack> to <call>
+<handler|handlers> in the referenced <stack|stack's> <script|scripts>.
+To use a <stack> as a <library>, allowing your <handler|handlers> to
+call the <stack|stack's> <handler|handlers>, use the <start using> or
+<insert script> <command>.
+
+References: call (glossary), command (glossary), 
+defaultFolder (property), file path (glossary), 
+filename of stack (property), folder (glossary), handler (glossary), 
+insert script (command), library (library), line (keyword), 
+LiveCode (glossary), load (glossary), loaded into memory (glossary), 
+long (keyword), main stack (glossary), mainStack (property), 
+mainStacks (function), name (property), object (glossary), 
+properties (property), property (glossary), 
+relative file path (glossary), script (glossary), stack (object), 
+stacks (function), start using (command), statement (glossary), 
+substack (glossary), substacks (property)
 
 Tags: file system
+

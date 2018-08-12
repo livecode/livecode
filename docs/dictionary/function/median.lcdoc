@@ -4,13 +4,14 @@ Type: function
 
 Syntax: median(<numbersList>)
 
-Summary: <return|Returns> the median (middle number) of a list of numbers.
+Summary:
+<return|Returns> the median (middle number) of a list of numbers.
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 median(6,22,8) -- returns 8
@@ -19,17 +20,28 @@ Example:
 put median(incomeLevels) into field "2001 Median Income"
 
 Parameters:
-numbersList: A comma-separated list of numbers, or an expression that evaluates to such a list, or an array containing only numbers.
+numbersList:
+A comma-separated list of numbers, or an expression that evaluates to
+such a list, or an array containing only numbers.
 
-Returns: The <median> function <return|returns> a number.
+Returns:
+The <median> function <return|returns> a number.
 
 Description:
-Use the <median> <function> to find the <value(function)> that best represents a group of <value(glossary)|values>.
+Use the <median> <function> to find the <value(function)> that best
+represents a group of <value(glossary)|values>.
 
-If the number of items in the <numbersList> is odd, the <median> <function> returns the middle value of the list when it is sorted in numeric order. If the number of items is even, the <median> <function> takes the two middle values and averages them to produce the median.
+If the number of items in the <numbersList> is odd, the <median>
+<function> returns the middle value of the list when it is sorted in
+numeric order. If the number of items is even, the <median> <function>
+takes the two middle values and averages them to produce the median.
 
-If the list consists of fewer than three numbers, or if the numbers are evenly distributed, the <median> is equal to the <average>.
+If the list consists of fewer than three numbers, or if the numbers are
+evenly distributed, the <median> is equal to the <average>.
 
-References: function (control_st), average (function), standardDeviation (function), value (function), return (glossary), value (glossary)
+References: function (control structure), average (function),
+standardDeviation (function), value (function), return (glossary),
+value (glossary)
 
 Tags: math
+

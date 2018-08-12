@@ -24,7 +24,7 @@
 
 #include "param.h"
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "util.h"
 #include "object.h"
 #include "socket.h"
@@ -60,12 +60,6 @@ extern uint32_t MCSystemPerformTextConversion(const char *string, uint32_t strin
 ////////////////////////////////////////////////////////////////////////////////
 
 MCSystemInterface *MCsystem;
-
-#ifdef TARGET_SUBPLATFORM_ANDROID
-static volatile int *s_mainthread_errno;
-#else
-static int *s_mainthread_errno;
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -234,23 +228,11 @@ static MCHookNativeControlsDescriptor s_native_control_desc =
 #endif
 
 void MCS_common_init(void)
-{	
+{
 	MCsystem -> Initialize();    
     MCsystem -> SetErrno(errno);
 	
 	MCinfinity = HUGE_VAL;
-
-	// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
-	//   we use a fixed locale which isn't available on all systems.
-#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER) && !defined(__EMSCRIPTEN__)
-	MCuppercasingtable = new uint1[256];
-	for(uint4 i = 0; i < 256; ++i)
-		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
-	
-	MClowercasingtable = new uint1[256];
-	for(uint4 i = 0; i < 256; ++i)
-		MClowercasingtable[i] = (uint1)tolower((uint1)i);
-#endif
     
 #if defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
     MCHookRegister(kMCHookGlobalHandlers, &s_global_handlers_desc);
@@ -260,7 +242,7 @@ void MCS_common_init(void)
 	MCStackSecurityInit();
 }
 
-void MCS_init(void)
+void MCS_preinit()
 {
 #if defined(_WINDOWS_SERVER)
 	MCsystem = MCDesktopCreateWindowsSystem();
@@ -283,7 +265,14 @@ void MCS_init(void)
 #else
 #error Unknown server platform.
 #endif
+}
 
+void MCS_init()
+{
+    // Do the pre-init if not already complete
+    if (MCsystem == nil)
+        MCS_preinit();
+    
 #ifdef _SERVER
 #ifndef _WINDOWS_SERVER
 	signal(SIGUSR1, handle_signal);
@@ -454,13 +443,11 @@ void MCS_utf8tonative(const char *p_utf8, uint4 p_utf8_length, char *&r_native, 
 
 void MCS_seterrno(int value)
 {
-//	*s_mainthread_errno = value;
     MCsystem -> SetErrno(value);
 }
 
 int MCS_geterrno(void)
 {
-//	return *s_mainthread_errno;
     return MCsystem -> GetErrno();
 }
 
@@ -496,28 +483,6 @@ bool MCS_query_registry(MCStringRef p_key, MCValueRef& r_value, MCStringRef& r_t
     
 	return MCStringCreateWithCString("not supported", r_error);
 }
-
-#ifdef LEGACY_EXEC
-/* LEGACY */
-void MCS_query_registry(MCExecPoint &dest)
-{
-	MCAutoStringRef t_key;
-	/* UNCHECKED */ dest.copyasstringref(&t_key);
-	MCAutoStringRef t_type, t_error;
-	MCAutoValueRef t_value;
-	/* UNCHECKED */ MCS_query_registry(*t_key, &t_value, &t_type, &t_error);
-	if (*t_error != nil)
-	{
-		dest.clear();
-		/* UNCHECKED */ MCresult->setvalueref(*t_error);
-	}
-	else
-	{
-		dest.setvalueref(*t_value);
-		MCresult->clear();
-	}
-}
-#endif
 
 bool MCS_set_registry(MCStringRef p_key, MCValueRef p_value, MCSRegistryValueType p_type, MCStringRef& r_error)
 {
@@ -952,8 +917,9 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
     // We never list '..', if the OS / filesystem lets us get it
     if (MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
         return true;
-    
-    if (!t_state -> files != p_entry -> is_folder)
+	
+	// If we're looking for files and entry is a folder (or vice versa) then skip to next entry.
+    if (t_state -> files == p_entry -> is_folder)
         return true;
 	
 	if (t_state -> details)
@@ -1027,10 +993,21 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	return true;
 }
 
-bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
-{    
+bool MCS_getentries(MCStringRef p_folder,
+                    bool p_files,
+                    bool p_detailed,
+                    MCListRef& r_list)
+{
+	MCAutoStringRef t_resolved_folder;
+	MCAutoStringRef t_native_folder;
+	if (p_folder != nil)
+	{
+		if (!(MCS_resolvepath(p_folder, &t_resolved_folder) &&
+			  MCS_pathtonative(*t_resolved_folder, &t_native_folder)))
+			return false;
+	}
+	
 	MCAutoListRef t_list;
-    
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
@@ -1047,7 +1024,7 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 			return false;
 	}
     
-	if (!MCsystem -> ListFolderEntries(nil, MCS_getentries_callback, (void*)&t_state))
+	if (!MCsystem -> ListFolderEntries(*t_native_folder, MCS_getentries_callback, (void*)&t_state))
 		return false;
     
 	if (!MCListCopy(*t_list, r_list))
@@ -1160,14 +1137,14 @@ bool MCS_pathfromnative(MCStringRef p_native_path, MCStringRef& r_livecode_path)
 IO_handle MCS_fakeopen(const void *p_data, uindex_t p_size)
 {
 	MCMemoryFileHandle *t_handle;
-    t_handle = new MCMemoryFileHandle(p_data, p_size);
+    t_handle = new (nothrow) MCMemoryFileHandle(p_data, p_size);
 	return t_handle;
 }
 
 IO_handle MCS_fakeopenwrite(void)
 {
 	MCMemoryFileHandle *t_handle;
-	t_handle = new MCMemoryFileHandle();
+	t_handle = new (nothrow) MCMemoryFileHandle();
 	return t_handle;
 }
 
@@ -1235,47 +1212,11 @@ bool MCS_tmpnam(MCStringRef& r_path)
 IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 {
 	MCSystemFileHandle *t_handle;
-	t_handle = new MCCustomFileHandle(p_callbacks, p_state);
+	t_handle = new (nothrow) MCCustomFileHandle(p_callbacks, p_state);
 	return t_handle;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/* LEGACY */
-#if 0
-IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolean p_driver, uint4 p_offset)
-{
-    char *t_resolved_path;
-    t_resolved_path = MCS_resolvepath(p_path);
-    
-    uint32_t t_mode;
-    if (strequal(p_mode, IO_READ_MODE))
-        t_mode = kMCOpenFileModeRead;
-    else if (strequal(p_mode, IO_WRITE_MODE))
-        t_mode = kMCOpenFileModeWrite;
-    else if (strequal(p_mode, IO_UPDATE_MODE))
-        t_mode = kMCOpenFileModeUpdate;
-    else if (strequal(p_mode, IO_APPEND_MODE))
-        t_mode = kMCOpenFileModeAppend;
-    
-    MCSystemFileHandle *t_handle;
-    if (!p_driver)
-        t_handle = MCsystem -> OpenFile(t_resolved_path, t_mode, p_map && MCmmap);
-    else
-        t_handle = MCsystem -> OpenDevice(t_resolved_path, t_mode, MCserialcontrolsettings);
-    
-    // MW-2011-06-12: Fix memory leak - make sure we delete the resolved path.
-    delete t_resolved_path;
-    
-    if (t_handle == NULL)
-        return NULL;
-    
-    if (p_offset != 0)
-        t_handle -> Seek(p_offset, kMCSystemFileSeekSet);
-    
-    return new IO_header(t_handle, 0);;
-}
-#endif 
 
 IO_handle MCS_deploy_open(MCStringRef path, intenum_t p_mode)
 {
@@ -1305,10 +1246,6 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 
 	if (t_handle == NULL)
 		return NULL;
-#ifdef OLD_IO_HANDLE
-    if (p_mode == kMCOpenFileModeAppend)
-        t_handle -> flags |= IO_SEEKED;
-#endif
 
     if (p_mode == kMCOpenFileModeAppend)
         t_handle -> Seek(0, kMCSystemFileSeekEnd);
@@ -1323,65 +1260,78 @@ void MCS_close(IO_handle &x_stream)
 	x_stream -> Close();
 }
 
-// Inspects the BOM of a text file to retrieve its encoding
-MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream)
+MCFileEncodingType MCS_resolve_BOM_from_bytes(byte_t *p_bytes, uindex_t p_size, uint32_t &r_size)
 {
-    uint1 t_BOM[4];
-    int64_t t_size;
-    uint32_t t_size_read;
-    uint32_t t_position;
-    MCFileEncodingType t_encoding;
-    t_encoding = kMCFileEncodingNative;
-
-    t_size = x_stream -> GetFileSize();
-
-    t_position = x_stream -> Tell();
-    x_stream -> Seek(0, 1);    
+    if (p_size > 3)
+    {
+        if (p_bytes[0] == 0xFF
+            && p_bytes[1] == 0xFE
+            && p_bytes[2] == 0x0
+            && p_bytes[3] == 0x0)
+        {
+            r_size = 4;
+            return kMCFileEncodingUTF32LE;
+        }
+        else if (p_bytes[0] == 0x0
+                 && p_bytes[1] == 0x0
+                 && p_bytes[2] == 0xFE
+                 && p_bytes[3] == 0xFF)
+        {
+            r_size = 4;
+            return kMCFileEncodingUTF32BE;
+        }
+    }
     
-    // Reading to find a UTF-32 BOM
-    if (t_size > 3)
+    if (p_size > 1)
     {
-        if (x_stream -> Read(t_BOM, 4, t_size_read))
+        if (p_bytes[0] == 0xFE && p_bytes[1] == 0xFF)
         {
-            if (t_BOM[0] == 0xFF
-                    && t_BOM[1] == 0xFE
-                    && t_BOM[2] == 0x0
-                    && t_BOM[3] == 0x0)
-                t_encoding = kMCFileEncodingUTF32LE;
-            else if (t_BOM[0] == 0x0
-                     && t_BOM[1] == 0x0
-                     && t_BOM[2] == 0xFE
-                     && t_BOM[3] == 0xFF)
-                t_encoding = kMCFileEncodingUTF32BE;
-            else
-                x_stream -> Seek(0,1);
+            r_size = 2;
+            return kMCFileEncodingUTF16BE;
+        }
+        else if (p_bytes[0] == 0xFF && p_bytes[1] == 0xFE)
+        {
+            r_size = 2;
+            return kMCFileEncodingUTF16LE;
         }
     }
-
-    if (t_encoding == kMCFileEncodingNative && t_size > 1)
+    
+    if (p_size > 2)
     {
-        if (x_stream -> Read(t_BOM, 2, t_size_read))
+        if (p_bytes[0] == 0xEF
+            && p_bytes[1] == 0xBB
+            && p_bytes[2] == 0xBF)
         {
-            if (t_BOM[0] == 0xFE && t_BOM[1] == 0xFF)
-                t_encoding = kMCFileEncodingUTF16BE;
-            else if (t_BOM[0] == 0xFF && t_BOM[1] == 0xFE)
-                t_encoding = kMCFileEncodingUTF16LE;
-            else
-                x_stream -> Seek(0, 1);
+            r_size = 3;
+            return kMCFileEncodingUTF8;
         }
     }
+    
+    r_size = 0;
+    return kMCFileEncodingNative;
+}
 
-    if (t_encoding == kMCFileEncodingNative && t_size > 2)
-    {
-        if (x_stream -> Read(t_BOM, 3, t_size_read)
-                && t_size_read == 3
-                && t_BOM[0] == 0xEF
-                && t_BOM[1] == 0xBB
-                && t_BOM[2] == 0xBF)
-            t_encoding = kMCFileEncodingUTF8;
-    }
+// Inspects the BOM of a text file to retrieve its encoding
+MCFileEncodingType MCS_resolve_BOM(IO_handle &x_stream, uint32_t &r_size)
+{
+    byte_t t_BOM[4];
+    int64_t t_size = x_stream -> GetFileSize();
+    uint32_t t_size_read;
+    uint32_t t_bom_size = 0;
+    uint32_t t_position = static_cast<uint32_t>(x_stream -> Tell());
 
+
+    x_stream -> Seek(0, 1);
+    
+    uint32_t t_to_read = MCMin(4, t_size);
+    x_stream -> Read(t_BOM, t_to_read, t_size_read);
+    
+    MCFileEncodingType t_encoding =
+        MCS_resolve_BOM_from_bytes(t_BOM, t_size_read, t_bom_size);
+    
     x_stream -> Seek(t_position, 1);
+    
+    r_size = t_bom_size;
     return t_encoding;
 }
 
@@ -1450,25 +1400,22 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
     {
         MCFileEncodingType t_file_encoding;
         MCAutoStringRef t_text;
-        uindex_t t_bom_size;
 
-        t_bom_size = 0;
         t_buffer . Shrink(t_size);
 
-        t_file_encoding = MCS_resolve_BOM(t_file);
+        uindex_t t_bom_size;
+        t_file_encoding = MCS_resolve_BOM(t_file, t_bom_size);
         
-        if (t_file_encoding == kMCFileEncodingUTF16
-                || t_file_encoding == kMCFileEncodingUTF16BE
-                || t_file_encoding == kMCFileEncodingUTF16LE)
-            t_bom_size = 2;
-        else if (t_file_encoding == kMCFileEncodingUTF8)
-            t_bom_size = 3;
-
         if (t_success)
             t_success =  MCStringCreateWithBytes((byte_t*)t_buffer.Chars() + t_bom_size, t_buffer.CharCount() - t_bom_size, MCS_file_to_string_encoding(t_file_encoding), false, &t_text);
         
         if (t_success)
-            t_success = MCStringConvertLineEndingsToLiveCode(*t_text, r_text);
+            t_success = MCStringNormalizeLineEndings(*t_text, 
+                                                     kMCStringLineEndingStyleLF, 
+                                                     kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                                     kMCStringLineEndingOptionNormalizeLSToVT, 
+                                                     r_text, 
+                                                     nullptr);
         
         MCresult -> clear();
     }
@@ -1570,7 +1517,11 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
     // convert the line endings before writing
     MCAutoStringRef t_converted;
     if (t_success)
-        t_success = MCStringConvertLineEndingsFromLiveCode(p_string, &t_converted);
+        t_success = MCStringNormalizeLineEndings(p_string, 
+                                                 kMCStringLineEndingStyleLegacyNative, 
+                                                 false, 
+                                                 &t_converted, 
+                                                 nullptr);
     
     // Need to convert the string to a binary string
     MCAutoDataRef t_data;
@@ -1795,8 +1746,15 @@ IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
         // SN-2014-10-14: [[ Bug 13658 ]] Get the behaviour back to what it was in 6.x:
         //  line-ending conversion for servers and Windows only
 #if defined(_SERVER) || defined(_WINDOWS)
-        if (!MCStringConvertLineEndingsToLiveCode(*t_data_string, r_output))
+        if (!MCStringNormalizeLineEndings(*t_data_string, 
+                                           kMCStringLineEndingStyleLF, 
+                                           kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                           kMCStringLineEndingOptionNormalizeLSToVT, 
+                                           r_output, 
+                                           nullptr))
+        {
             r_output = MCValueRetain(kMCEmptyString);
+        }
 #else
         r_output = MCValueRetain(*t_data_string);
 #endif
@@ -1866,42 +1824,6 @@ bool MCS_isnan(double p_number)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
-{
-    MCAutoStringRef t_resolved_path;
-    MCAutoStringRef t_native_path;
-
-    // SN-2015-06-08: [[ ResolvePath ]] Loading system libraries (such as
-    //  libpango-1.0.so.6, from linuxstubs.cpp) will fail if we turn the library
-    //  name into an invalid absolute name constructed from the current folder.
-    //  We consider any leaf path as a system library.
-    if (MCStringContains(p_filename, MCSTR("/"), kMCStringOptionCompareExact))
-    {
-        if (!MCS_resolvepath(p_filename, &t_resolved_path))
-            return NULL;
-    }
-    else
-    {
-        t_resolved_path = p_filename;
-    }
-
-    if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
-        return NULL;
-
-    return MCsystem -> LoadModule(*t_native_path);
-}
-
-MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
-{
-
-	return MCsystem -> ResolveModuleSymbol(p_module, p_symbol);
-}
-
-void MCS_unloadmodule(MCSysModuleHandle p_module)
-{
-	MCsystem -> UnloadModule(p_module);
-}
 
 // TODO: move somewhere better
 #if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)

@@ -14,14 +14,14 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "exec.h"
 #include "dispatch.h"
 #include "stack.h"
@@ -37,7 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 
 #include "w32dc.h"
-#include "w32context.h"
 #include "resource.h"
 #include "meta.h"
 #include "mode.h"
@@ -62,14 +61,22 @@ uint4 MCScreenDC::image_inks[] =
 
 static MCColor vgapalette[16] =
     {
-        {0, 0x0000, 0x0000, 0x0000, 0, 0}, {1, 0x8080, 0x0000, 0x0000, 0, 0},
-        {2, 0x0000, 0x8080, 0x0000, 0, 0}, {3, 0x0000, 0x0000, 0x8080, 0, 0},
-        {4, 0x8080, 0x8080, 0x0000, 0, 0}, {5, 0x8080, 0x0000, 0x8080, 0, 0},
-        {6, 0x0000, 0x8080, 0x8080, 0, 0}, {7, 0x8080, 0x8080, 0x8080, 0, 0},
-        {8, 0xC0C0, 0xC0C0, 0xC0C0, 0, 0}, {9, 0xFFFF, 0x0000, 0x0000, 0, 0},
-        {10, 0x0000, 0xFFFF, 0x0000, 0, 0}, {11, 0x0000, 0x0000, 0xFFFF, 0, 0},
-        {12, 0xFFFF, 0xFFFF, 0x0000, 0, 0}, {13, 0xFFFF, 0x0000, 0xFFFF, 0, 0},
-        {14, 0x0000, 0xFFFF, 0xFFFF, 0, 0}, {15, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0},
+        {0x0000, 0x0000, 0x0000},
+		{0x8080, 0x0000, 0x0000},
+        {0x0000, 0x8080, 0x0000},
+		{0x0000, 0x0000, 0x8080},
+        {0x8080, 0x8080, 0x0000},
+		{0x8080, 0x0000, 0x8080},
+        {0x0000, 0x8080, 0x8080},
+		{0x8080, 0x8080, 0x8080},
+        {0xC0C0, 0xC0C0, 0xC0C0},
+		{0xFFFF, 0x0000, 0x0000},
+        {0x0000, 0xFFFF, 0x0000},
+		{0x0000, 0x0000, 0xFFFF},
+        {0xFFFF, 0xFFFF, 0x0000},
+		{0xFFFF, 0x0000, 0xFFFF},
+        {0x0000, 0xFFFF, 0xFFFF},
+		{0xFFFF, 0xFFFF, 0xFFFF},
     };
 
 void MCScreenDC::setstatus(MCStringRef status)
@@ -136,12 +143,6 @@ Boolean MCScreenDC::open()
 	if (RegisterClassA(&wc) == 0)
 		return FALSE;
 
-	// Define the QT VIDEO CLIP window
-	wc.style         = 0/*CS_OWNDC | CS_VREDRAW | CS_HREDRAW*/;
-	wc.lpfnWndProc   = (WNDPROC)MCQTPlayerWindowProc;
-	wc.lpszClassName = MC_QTVIDEO_WIN_CLASS_NAME;  //video class
-	if (RegisterClassA(&wc) == 0)
-		return FALSE;
 
 	// Define Snapshot window. Has its own window proc
 	wc.style         = CS_DBLCLKS | CS_CLASSDC;
@@ -160,7 +161,7 @@ Boolean MCScreenDC::open()
 	f_src_dc = CreateCompatibleDC(NULL);
 	f_dst_dc = CreateCompatibleDC(NULL);
 
-	vis = new MCVisualInfo;
+	vis = new (nothrow) MCVisualInfo;
 
 	ncolors = 0;
 			redbits = greenbits = bluebits = 8;
@@ -173,18 +174,12 @@ Boolean MCScreenDC::open()
 
 	black_pixel.red = black_pixel.green = black_pixel.blue = 0;
 	white_pixel.red = white_pixel.green = white_pixel.blue = 0xFFFF;
-		black_pixel.pixel = 0;
-		white_pixel.pixel = 0xFFFFFF;
 
 	MCselectioncolor = MCpencolor = black_pixel;
-	alloccolor(MCselectioncolor);
-	alloccolor(MCpencolor);
 	
 	MConecolor = MCbrushcolor = white_pixel;
-	alloccolor(MCbrushcolor);
 	
 	gray_pixel.red = gray_pixel.green = gray_pixel.blue = 0x8080;
-	alloccolor(gray_pixel);
 	
 	MChilitecolor.red = MChilitecolor.green = 0x0000;
 	MChilitecolor.blue = 0x8080;
@@ -205,10 +200,8 @@ Boolean MCScreenDC::open()
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
 		/* UNCHECKED */ parsecolor(*t_string_mutable, MChilitecolor);
 	}
-	alloccolor(MChilitecolor);
 	
 	MCaccentcolor = MChilitecolor;
-	alloccolor(MCaccentcolor);
 	
 	background_pixel.red = background_pixel.green = background_pixel.blue = 0xC0C0;
     MCStringRef t_key2;
@@ -231,14 +224,13 @@ Boolean MCScreenDC::open()
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
 		/* UNCHECKED */ parsecolor(*t_string_mutable, background_pixel);
 	}
-	alloccolor(background_pixel);
 
 	SetBkMode(f_dst_dc, OPAQUE);
-	SetBkColor(f_dst_dc, black_pixel . pixel);
-	SetTextColor(f_dst_dc, white_pixel . pixel);
+	SetBkColor(f_dst_dc, MCColorGetPixel(black_pixel));
+	SetTextColor(f_dst_dc, MCColorGetPixel(white_pixel));
 	SetBkMode(f_src_dc, OPAQUE);
-	SetBkColor(f_src_dc, black_pixel . pixel);
-	SetTextColor(f_src_dc, white_pixel . pixel);
+	SetBkColor(f_src_dc, MCColorGetPixel(black_pixel));
+	SetTextColor(f_src_dc, MCColorGetPixel(white_pixel));
 
 	mousetimer = 0;
 	grabbed = False;
@@ -319,6 +311,9 @@ Boolean MCScreenDC::close(Boolean force)
 			timeKillEvent(mousetimer);
 	timeEndPeriod(1);
 	opened = 0;
+
+	DestroyWindow(invisiblehwnd);
+	invisiblehwnd = NULL;
 
 	return True;
 }
@@ -419,6 +414,19 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(w);
 
+    // If there is a mainwindow callback then disable the mainwindow.
+    if (MCmainwindowcallback != NULL && !IsWindowVisible((HWND)w->handle.window))
+    {
+        MCAssert(m_main_window_depth < INT_MAX - 1);
+        m_main_window_depth += 1;
+        if (m_main_window_depth == 1)
+        {
+            m_main_window_current = (HWND)MCmainwindowcallback();
+            EnableWindow(m_main_window_current, False);
+        }
+        SetWindowLongPtr((HWND)w->handle.window, GWLP_HWNDPARENT, (LONG_PTR)m_main_window_current);
+    }
+
 	if (override)
 		ShowWindow((HWND)w->handle.window, SW_SHOWNA);
 	else
@@ -446,6 +454,20 @@ void MCScreenDC::closewindow(Window w)
 
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(w);
+
+    // If there is a mainwindow callback then re-enable the mainwindow if at
+    // depth 1.
+    if (MCmainwindowcallback != nullptr && IsWindowVisible((HWND)w->handle.window))
+    {
+        MCAssert(m_main_window_depth > 0);
+        m_main_window_depth -= 1;
+        if (m_main_window_depth == 0 &&
+            m_main_window_current != nullptr)
+        {
+            EnableWindow(m_main_window_current, True);
+            m_main_window_current = nullptr;
+        }
+    }
 
 	// If we are a sheet or a modal dialog we need to ensure we enable the right windows
 	// and activate the next obvious window.
@@ -731,7 +753,7 @@ uintptr_t MCScreenDC::dtouint(Drawable d)
 
 Boolean MCScreenDC::uinttowindow(uintptr_t id, Window &w)
 {
-	w = new _Drawable;
+	w = new (nothrow) _Drawable;
 	w->type = DC_WINDOW;
 	w->handle.window = (MCSysWindowHandle)id;
 	return True;
@@ -788,7 +810,7 @@ Window MCScreenDC::getroot()
 {
 	static Meta::static_ptr_t<_Drawable> mydrawable;
 	if (mydrawable == DNULL)
-		mydrawable = new _Drawable;
+		mydrawable = new (nothrow) _Drawable;
 	mydrawable->type = DC_WINDOW;
 	mydrawable->handle.window = (MCSysWindowHandle)GetDesktopWindow();
 	return mydrawable;
@@ -1089,10 +1111,11 @@ void MCScreenDC::settaskbarstate(bool p_visible)
 		}
 	}
 
-	processdesktopchanged(false);
+	// Don't notify or update fonts when changing titlebar visibility
+	processdesktopchanged(false, false);
 }
 
-void MCScreenDC::processdesktopchanged(bool p_notify)
+void MCScreenDC::processdesktopchanged(bool p_notify, bool p_update_fonts)
 {
 	// IM-2014-01-28: [[ HiDPI ]] Use updatedisplayinfo() method to update & compare display details
 	bool t_changed;
@@ -1110,7 +1133,8 @@ void MCScreenDC::processdesktopchanged(bool p_notify)
 	}
 
     // Force a recompute of fonts as they may have changed
-    MCdispatcher->recomputefonts(NULL, true);
+	if (p_update_fonts)
+	    MCdispatcher->recomputefonts(NULL, true);
     //MCRedrawDirtyScreen();
     
 	if (p_notify && t_changed)
@@ -1326,8 +1350,6 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 		backdrop_pattern = p_pattern;
 		backdrop_colour = p_colour;
 	
-		alloccolor(backdrop_colour);
-	
 		if (backdrop_active || backdrop_hard)
 			InvalidateRect(backdrop_window, NULL, TRUE);
 	}
@@ -1429,7 +1451,7 @@ void MCScreenDC::redrawbackdrop(void)
 		if (backdrop_badge != NULL && backdrop_hard)
 		{
 			MCContext *t_gfxcontext = nil;
-			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
+			t_success = nil != (t_gfxcontext = new (nothrow) MCGraphicsContext(t_context));
 
 			if (t_success)
 			{

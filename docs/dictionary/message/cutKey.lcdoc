@@ -4,15 +4,17 @@ Type: message
 
 Syntax: cutKey
 
-Summary: Sent when the user presses the <key combination> equivalent to the Cut <menu item>.
+Summary:
+Sent when the user presses the <key combination> equivalent to the Cut
+<menu item>.
 
-Associations: field
+Associations: card, field
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 on cutKey
@@ -22,14 +24,28 @@ on cutKey
 end cutKey
 
 Description:
-Handle the <cutKey> <message> if you want to change the normal cut process, or prevent use of the Cut <keyboard equivalent> without changing the menu.
+Handle the <cutKey> <message> if you want to change the normal cut
+process, or prevent use of the Cut <keyboard equivalent> without
+changing the menu.
 
-The LiveCode development environment traps the <cutKey> <message>. This means that the <cutKey> <message> is not received by a <stack> if it's running in the <development environment>, To test a <cutKey> <handler>, choose Development menu<img src="202656"/>Suspend Development Tools<important/>.
+The LiveCode development environment traps the <cutKey> <message>. This
+means that the <cutKey> <message> is not received by a <stack> if it's
+running in the <development environment>, To test a <cutKey> <handler>,
+choose Development → Suspend Development Tools from the menubar.
 
-<cutKey> <message> is sent when the user presses Command-X (on <Mac OS|Mac OS systems>), Control-X (on <Windows|Windows systems>), Shift-Delete (on <Unix|Unix systems>), or the keyboard Cut key.
+<cutKey> <message> is sent when the user presses Command-X (on 
+<Mac OS|Mac OS systems>), Control-X (on <Windows|Windows systems>),
+Shift-Delete (on <Unix|Unix systems>), or the keyboard Cut key.
 
-The message is sent to the active (focused) control, or to the current card if no control is focused.
+The message is sent to the active (focused) control, or to the current
+card if no control is focused.
 
-References: pasteKey (message), backspaceKey (message), deleteKey (message), undoKey (message), copyKey (message), delete (command), cut (command), stack (object), menu item (glossary), key combination (glossary), handler (glossary), Windows (glossary), development environment (glossary), message (glossary), Mac OS (glossary), Unix (glossary), keyboard equivalent (glossary)
+References: delete (command), cut (command), menu item (glossary),
+key combination (glossary), handler (glossary), Windows (glossary),
+development environment (glossary), message (glossary), Mac OS (glossary),
+Unix (glossary), keyboard equivalent (glossary), pasteKey (message),
+backspaceKey (message), deleteKey (message), undoKey (message),
+copyKey (message), stack (object)
 
 Tags: ui
+

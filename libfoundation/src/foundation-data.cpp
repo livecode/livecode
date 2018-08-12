@@ -175,7 +175,6 @@ bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data)
     // AL-2014-12-12: [[ Bug 14208 ]] Implement MCDataConvertStringToData reduce the overhead in
     //  converting from non-native string to data.
     
-    uindex_t t_native_length;
     MCStringRef t_native_copy;
     t_native_copy = nil;
     if (!MCStringNativeCopy(string, t_native_copy))
@@ -695,6 +694,20 @@ bool MCDataPad(MCDataRef self, byte_t p_byte, uindex_t p_count)
 }
 
 MC_DLLEXPORT_DEF
+bool MCDataReverse(MCDataRef self)
+{
+    MCAssert(MCDataIsMutable(self));
+
+    // Ensure the data ref is not indirect
+    if (__MCDataIsIndirect(self))
+        if (!__MCDataResolveIndirect(self))
+            return false;
+
+    MCInplaceReverse(self->bytes, self->byte_count);
+    return true;
+}
+
+MC_DLLEXPORT_DEF
 compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right)
 {
 	__MCAssertIsData(p_left);
@@ -775,16 +788,21 @@ bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle)
 }
 
 MC_DLLEXPORT_DEF
-bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index)
+bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange p_range, uindex_t& r_index)
 {
 	__MCAssertIsData(p_data);
 	__MCAssertIsData(p_chunk);
-
-    __MCDataClampRange(p_data, t_range);
+	
+	__MCDataClampRange(p_data, p_range);
+	
+	if (p_range.length == 0)
+		return false;
     
     uindex_t t_limit, t_chunk_byte_count;
     t_chunk_byte_count = MCDataGetLength(p_chunk);
-    t_limit = t_range . offset + t_range . length - t_chunk_byte_count + 1;
+	if (t_chunk_byte_count == 0)
+		return false;
+    t_limit = p_range . offset + p_range . length - t_chunk_byte_count + 1;
     
     const byte_t *t_bytes = MCDataGetBytePtr(p_data);
     const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
@@ -795,10 +813,10 @@ bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, ui
     bool t_found;
     t_found = false;
     
-    for (t_offset = t_range . offset; t_offset < t_limit; t_offset++)
+    for (t_offset = p_range . offset; t_offset < t_limit; t_offset++)
         if (MCMemoryCompare(t_bytes + t_offset, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
         {
-            t_result = t_offset - t_range . offset;
+            t_result = t_offset - p_range . offset;
             t_found = true;
             break;
         }
@@ -828,7 +846,6 @@ MCDataLastIndexOf (MCDataRef self,
 		return false;
 
 	const byte_t *t_haystack = MCDataGetBytePtr (self);
-	uindex_t t_haystack_len = MCDataGetLength (self);
 
 	for (uindex_t t_roffset = t_needle_len - 1;
 	     t_roffset < p_range.length;
@@ -849,20 +866,6 @@ MCDataLastIndexOf (MCDataRef self,
 	}
 	return false;
 }
-
-#if defined(__MAC__) || defined (__IOS__)
-MC_DLLEXPORT_DEF
-bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata)
-{
-	__MCAssertIsData(p_data);
-
-    if (__MCDataIsIndirect(p_data))
-        p_data = p_data -> contents;
-    
-    r_cfdata = CFDataCreate(nil, MCDataGetBytePtr(p_data), MCDataGetLength(p_data));
-    return r_cfdata != nil;
-}
-#endif
 
 static void __MCDataClampRange(MCDataRef p_data, MCRange& x_range)
 {

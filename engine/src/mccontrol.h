@@ -45,8 +45,14 @@ enum MCLayerModeHint
 struct MCInterfaceMargins;
 union MCBitmapEffect;
 
-class MCControl : public MCObject
+typedef MCObjectProxy<MCControl>::Handle MCControlHandle;
+
+class MCControl : public MCObject, public MCMixinObjectHandle<MCControl>
 {
+public:
+    
+    using MCMixinObjectHandle<MCControl>::GetHandle;
+    
 protected:
 	int2 mx;
 	int2 my;
@@ -88,7 +94,7 @@ protected:
 	static int2 defaultmargin;
 	static int2 xoffset;
 	static int2 yoffset;
-	static MCControl *focused;
+	static MCControlHandle focused;
 	static double aspect;
 
 	static MCPropertyInfo kProperties[];
@@ -113,18 +119,9 @@ public:
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
-#ifdef LEGACY_EXEC
-	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
-#endif
-
-
 	virtual void select();
 	virtual void deselect();
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 
 	virtual void undo(Ustruct *us);
@@ -165,8 +162,13 @@ public:
 
 	void redraw(MCDC *dc, const MCRectangle &dirty);
 
-	void sizerects(MCRectangle *rects);
-	void drawselected(MCDC *dc);
+	// IM-2016-09-26: [[ Bug 17247 ]] Return rect of selection handles for the given object rect
+	static void sizerects(const MCRectangle &p_object_rect, MCRectangle rects[8]);
+	
+    /* The drawselection method should render any selection / edit related
+     * decorations the control currently has. */
+	virtual void drawselection(MCDC *dc, const MCRectangle& p_dirty);
+    
 	void drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
 	               Arrow_direction dir, Boolean border, Boolean hilite);
 	void continuesize(int2 x, int2 y);
@@ -266,20 +268,24 @@ public:
 
 	static MCControl *getfocused()
 	{
-		return focused;
+        if (focused.IsValid())
+        {
+            return focused;
+        }
+        return nullptr;
 	}
 
-	uint2 getstyle()
+	uint32_t getstyle()
 	{
 		return getstyleint(flags);
 	}
 
-	uint2 getleftmargin() const
+	int16_t getleftmargin() const
 	{
 		return leftmargin;
 	}
 
-	uint2 getrightmargin() const
+	int16_t getrightmargin() const
 	{
 		return rightmargin;
 	}
@@ -375,4 +381,18 @@ public:
     void SetColorOverlayProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
 
 };
+
+
+// MCControl has lots of derived classes so this (fragile!) specialisation is
+// needed to account for them. It depends on the correctness of the CT_x_CONTROL
+// enum values (i.e everything within that range must derive from MCControl).
+template <>
+inline MCControl* MCObjectCast<MCControl>(MCObject* p_object)
+{
+    Chunk_term t_type = p_object->gettype();
+    MCAssert(t_type >= CT_FIRST_CONTROL && t_type <= CT_LAST_CONTROL);
+    return static_cast<MCControl*> (p_object);
+}
+
+
 #endif

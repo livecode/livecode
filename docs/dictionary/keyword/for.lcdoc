@@ -4,13 +4,15 @@ Type: keyword
 
 Syntax: for
 
-Summary: Used in a <repeat> <control structure> to specify the number of times the <loop> should repeat.
+Summary:
+Used in a <repeat> <control structure> to specify the number of times
+the <loop> should repeat.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 repeat for 10 times
@@ -19,12 +21,27 @@ Example:
 repeat for (the number of buttons)
 
 Description:
-Use the <for> <keyword> to specify a fixed number of <iteration|iterations> of a <loop>.
+Use the <for> <keyword> to specify a fixed number of
+<iteration|iterations> of a <loop>.
 
-The number may be a literal number, or an expression that evaluates to a number. (If the number is not an integer, it is rounded to the nearest integer.) Either way, the number is evaluated when the <repeat> <control structure> is entered, and is not re-<evaluate|evaluated> as a result of <statement|statements> in the <loop>. For example, if the <repeat> <control structure> begins with the line
+The number may be a literal number, or an expression that evaluates to a
+number. (If the number is not an integer, it is rounded to the nearest
+integer.) Either way, the number is evaluated when the <repeat> 
+<control structure> is entered, and is not re-<evaluate|evaluated> as a 
+result of <statement|statements> in the <loop>. For example, if the 
+<repeat> <control structure> begins with the line
 
-  repeat for the number of cards
+    repeat for the number of cards
 
-then this number is evaluated as of the start of the loop, and the number does not change even if the statements in the loop create or delete cards. For this reason, use caution when using the <for> <keyword> with an <expression> : do not assume the <expression> will have its current <value> when the <statement|statements> inside the <loop> are <execute|executing>.
 
-References: until (keyword), while (keyword), repeat (control_st), loop (glossary), iteration (glossary), execute (glossary), statement (glossary), keyword (glossary), control structure (glossary), evaluate (glossary), expression (glossary), value (function)
+then this number is evaluated as of the start of the loop, and the
+number does not change even if the statements in the loop create or
+delete cards. For this reason, use caution when using the <for>
+<keyword> with an <expression> : do not assume the <expression> will
+have its current <value> when the <statement|statements> inside the
+<loop> are <execute|executing>.
+
+References: repeat (control structure), value (function), loop (glossary),
+iteration (glossary), execute (glossary), statement (glossary),
+keyword (glossary), control structure (glossary), evaluate (glossary),
+expression (glossary), until (keyword), while (keyword)

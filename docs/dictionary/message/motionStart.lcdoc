@@ -2,13 +2,14 @@ Name: motionStart
 
 Type: message
 
-Syntax: motionStart <motion> 
+Syntax: motionStart <pMotion>
 
-Summary: Sent to the current card of the defaultStack when a motion starts
+Summary:
+Sent to the current card of the defaultStack when a motion starts
 
 Introduced: 4.5.2
 
-OS: ios,android
+OS: ios, android
 
 Platforms: desktop
 
@@ -18,15 +19,21 @@ on motionStart theMotion
 end motionStart
 
 Parameters:
-motion: The type of motion detected by the device.
+pMotion:
+The type of motion detected by the device.
 
 Description:
-Handle the <motionStart> message to perform an action when the start of a motion is detected by the device.
+Handle the <motionStart> message to perform an action when the start of
+a motion is detected by the device.
 
-The <motionStart> message is set to the current card of the <defaultStack> when the start of a motion is detected by the device.
+The <motionStart> message is set to the current card of the
+<defaultStack> when the start of a motion is detected by the device.
 
->*Note:* As of iPhoneOS 3.0 the only motion that is generated is "shake".
+>*Note:* As of iPhoneOS 3.0 the only motion that is generated is
+> "shake". 
 
-References: defaultStack (property), motionEnd (message), motionRelease (message)
+References: motionEnd (message), motionRelease (message),
+defaultStack (property)
 
 Tags: ui
+

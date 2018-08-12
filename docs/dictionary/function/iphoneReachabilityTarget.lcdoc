@@ -1,10 +1,11 @@
 Name: iphoneReachabilityTarget
 
-Type: command
+Type: function
 
 Syntax: iphoneReachabilityTarget
 
-Summary: Returns the server currently being monitored
+Summary:
+Returns the server currently being monitored
 
 Associations: stack
 
@@ -17,11 +18,18 @@ Platforms: mobile
 Example:
 get iphoneReachabilityTarget()
 
-Returns: The server currently being monitored, empty if no server is currently being monitored.
+Returns:
+The server currently being monitored, empty if no server is currently
+being monitored.
 
 Description:
-Use the iphoneReachabilityTarget function to determine the server currently being monitored for network connectivity.
+Use the iphoneReachabilityTarget function to determine the server
+currently being monitored for network connectivity.
 
-The iphoneReachabilityTarget function returns the server currently being monitored for network connectivity. If there is no server being monitored the function returns empty.
+The iphoneReachabilityTarget function returns the server currently being
+monitored for network connectivity. If there is no server being
+monitored the function returns empty.
 
-References: iphoneSetReachabilityTarget (command), reachabilityChanged (message)
+References: iphoneSetReachabilityTarget (command),
+reachabilityChanged (message)
+

@@ -1,0 +1,1 @@
+# Stackfiles under the mainstack path preserve folder structure in standalone

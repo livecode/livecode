@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-widget com.livecode.extensions.beaumont.pinkCircle
+widget com.livecode.extensions.beaumont.pinkcircle
 
 use com.livecode.canvas
 
@@ -41,7 +41,7 @@ public handler OnPaint()
    fill tCirclePath on this canvas
 end handler
 
-public handler setMargin(in pMargin as Real) as undefined
+public handler setMargin(in pMargin as Real)
 	put pMargin into mMargin
 	redraw all
 end handler

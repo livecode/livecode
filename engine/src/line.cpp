@@ -414,7 +414,7 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
         do
         {
             bptr = bptr->next();
-            
+
             // SN-2014-08-14: [[ Bug 13106 ]] We want the outside left edge
             coord_t origin = bptr->getorigin() + sgptr->GetLeft();
 
@@ -562,7 +562,14 @@ void MCLine::SegmentLine()
             // There was previously a comment here saying that creating the
             // empty block was a good thing. I have no idea why I wrote that...
             // Removed that behaviour as it breaks some things.
-            if ((t_offset + 1) < bptr->GetOffset() + bptr->GetLength())
+            // MW-2017-08-07: [[ Bug 17098 ]]
+            // If the block has a trailing tab *and is the last block* we need
+            // to make sure there is an empty block, otherwise we don't get a
+            // segment for a trailing tab which means caret alignment / placement
+            // doesn't work. This strategy seems to fix 17098 and not reintroduce
+            // bug 13887.
+            if ((t_offset + 1) < bptr->GetOffset() + bptr->GetLength() ||
+                (bptr == lastblock && bptr->HasTrailingTab()))
             {
                 bptr->split(t_offset + 1);
                 if (bptr == lastblock)
@@ -570,7 +577,7 @@ void MCLine::SegmentLine()
             }
             
             // Create a segment covering the text up to this tab character
-            MCSegment *new_segment = new MCSegment(this);
+            MCSegment *new_segment = new (nothrow) MCSegment(this);
             new_segment->AddBlockRange(segment_start, bptr);
             if (firstsegment == NULL)
             {
@@ -600,7 +607,7 @@ void MCLine::SegmentLine()
     // Create a segment covering the remaining text
     if (t_segment_length > 0)
     {
-        MCSegment *new_segment = new MCSegment(this);
+        MCSegment *new_segment = new (nothrow) MCSegment(this);
         new_segment->AddBlockRange(segment_start, lastblock);
         if (firstsegment == NULL)
         {
@@ -778,8 +785,10 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         
         // The last segment of the line should be no larger than its contents
         // (because it doesn't contain the whitespace of another tab) unless it
-        // is to be right aligned in LTR text or left-aligned in RTL text
-        if (!t_fixed_tabs && sgptr == lastsegment
+        // is to be right aligned in LTR text or left-aligned in RTL text or it
+        // terminates with a tab character.
+        if (!t_fixed_tabs
+            && (sgptr == lastsegment && !sgptr->GetLastBlock()->HasTrailingTab())
             && ((parent->getbasetextdirection() != kMCTextDirectionRTL && sgptr->GetHorizontalAlignment() != kMCSegmentTextHAlignRight)
             ||  (parent->getbasetextdirection() == kMCTextDirectionRTL && sgptr->GetHorizontalAlignment() != kMCSegmentTextHAlignLeft)))
         {

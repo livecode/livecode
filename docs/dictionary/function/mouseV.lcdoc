@@ -6,13 +6,15 @@ Syntax: the mouseV
 
 Syntax: mouseV()
 
-Summary: The <mouseV> <property> <return|returns> the vertical position of the <pointer>.
+Summary:
+The <mouseV> <property> <return|returns> the vertical position of the
+<pointer>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the mouseV
@@ -20,21 +22,36 @@ the mouseV
 Example:
 put the mouseV into savedLocation
 
-Returns: The <mouseV> <function> <return|returns> an <integer>.
+Returns:
+The <mouseV> <function> <return|returns> an <integer>.
 
 Description:
 Use the <mouseV> <function> to find out where the <mouse pointer> is.
 
-The returned value is the vertical distance in pixels from the top edge of the current stack to the location of the mouse pointer. (Use the defaultStack <property> to identify the <current stack>.)
+The returned value is the vertical distance in pixels from the top edge
+of the current stack to the location of the mouse pointer. (Use the
+defaultStack <property> to identify the <current stack>.)
 
-If the <mouseV> is positive, the <pointer> is below the top of the <stack window>. If the number is <negative>, the <pointer> is above the <stack window>.
+If the <mouseV> is positive, the <pointer> is below the top of the
+<stack window>. If the number is <negative>, the <pointer> is above the
+<stack window>.
 
 This function is equal to item 2 of the <mouseLoc> <function>.
 
->*Note:* When in a mouseDown handler, you can use the <clickV> function to get the position of the mouse as it was when the mouseDown action occurred.
+>*Note:* When in a mouseDown handler, you can use the <clickV> function
+> to get the position of the mouse as it was when the mouseDown action
+> occurred. 
 
->*Tip:*  The <mouseMove> message sends the mouse's vertical position as a <parameter>. This means that in a <mouseMove> <handler>, normally it's not necessary to use the <mouseV> <function>.
+>*Tip:*  The <mouseMove> message sends the mouse's vertical position as
+> a <parameter>. This means that in a <mouseMove> <handler>, normally
+> it's not necessary to use the <mouseV> <function>.
 
-References: screenMouseLoc (property), integer (keyword), pointer (keyword), mouseMove (message), mouseStack (function), mouseLoc (function), clickV (function), mouseH (function), property (glossary), return (glossary), stack window (glossary), handler (glossary), negative (glossary), parameter (glossary), mouse pointer (glossary), current stack (glossary), function (control_st)
+References: function (control structure), mouseStack (function),
+mouseLoc (function), clickV (function), mouseH (function),
+property (glossary), return (glossary), stack window (glossary),
+handler (glossary), negative (glossary), parameter (glossary),
+mouse pointer (glossary), current stack (glossary), integer (keyword),
+pointer (keyword), mouseMove (message), screenMouseLoc (property)
 
 Tags: ui
+

@@ -55,9 +55,9 @@ Tags: Unit tests
 
 module com.livecode.unittest
 
-public foreign handler MCUnitPlan(in pCount as Number) returns nothing binds to "lcb:com.livecode.unittest.__IMPL.MCUnitPlan"
-public foreign handler MCUnitDiagnostic(in pMessage as String) returns nothing binds to "lcb:com.livecode.unittest.__IMPL.MCUnitDiagnostic"
-foreign handler MCUnitOutputTest(in pCondition as Boolean, in pDescription as String, in pDirective as String, in pReason as String) returns nothing binds to "lcb:com.livecode.unittest.__IMPL.MCUnitOutputTest"
+public foreign handler MCUnitPlan(in pCount as Number) returns nothing binds to "lcb:com.livecode.unittest.__impl.MCUnitPlan"
+public foreign handler MCUnitDiagnostic(in pMessage as String) returns nothing binds to "lcb:com.livecode.unittest.__impl.MCUnitDiagnostic"
+foreign handler MCUnitOutputTest(in pCondition as Boolean, in pDescription as String, in pDirective as String, in pReason as String) returns nothing binds to "lcb:com.livecode.unittest.__impl.MCUnitOutputTest"
 
 ----------------------------------------------------------------
 -- Test syntax
@@ -137,7 +137,9 @@ begin
 end syntax
 
 public handler MCUnitTest(in pCondition as Boolean)
-	MCUnitOutputTest(pCondition, "", "", "")
+	unsafe
+		MCUnitOutputTest(pCondition, "", "", "")
+	end unsafe
 end handler
 
 /**
@@ -164,7 +166,9 @@ begin
 end syntax
 
 public handler MCUnitTestDescription(in pDescription as String, in pCondition as Boolean)
-	MCUnitOutputTest(pCondition, pDescription, "", "")
+	unsafe
+		MCUnitOutputTest(pCondition, pDescription, "", "")
+	end unsafe
 end handler
 
 ----------------------------------------------------------------
@@ -187,7 +191,9 @@ begin
 end syntax
 
 public handler MCUnitTestSkip()
-	MCUnitOutputTest(true, "", "SKIP", "")
+	unsafe
+		MCUnitOutputTest(true, "", "SKIP", "")
+	end unsafe
 end handler
 
 /**
@@ -212,7 +218,9 @@ begin
 end syntax
 
 public handler MCUnitTestSkipDescription(in pDescription as String)
-	MCUnitOutputTest(true, pDescription, "SKIP", "")
+	unsafe
+		MCUnitOutputTest(true, pDescription, "SKIP", "")
+	end unsafe
 end handler
 
 /**
@@ -237,7 +245,9 @@ begin
 end syntax
 
 public handler MCUnitTestSkipReason(in pReason as String)
-	MCUnitOutputTest(true, "", "SKIP", pReason)
+	unsafe
+		MCUnitOutputTest(true, "", "SKIP", pReason)
+	end unsafe
 end handler
 
 /**
@@ -265,7 +275,9 @@ begin
 end syntax
 
 public handler MCUnitTestSkipDescriptionAndReason(in pDescription as String, in pReason as String)
-	MCUnitOutputTest(true, pDescription, "SKIP", pReason)
+	unsafe
+		MCUnitOutputTest(true, pDescription, "SKIP", pReason)
+	end unsafe
 end handler
 
 ----------------------------------------------------------------
@@ -295,7 +307,9 @@ begin
 end syntax
 
 public handler MCUnitTestFails(in pCondition as Boolean)
-	MCUnitOutputTest(pCondition, "", "TODO", "")
+	unsafe
+		MCUnitOutputTest(pCondition, "", "TODO", "")
+	end unsafe
 end handler
 
 /**
@@ -326,7 +340,9 @@ begin
 end syntax
 
 public handler MCUnitTestFailsDescription(in pDescription as String, in pCondition as Boolean)
-	MCUnitOutputTest(pCondition, pDescription, "TODO", "")
+	unsafe
+		MCUnitOutputTest(pCondition, pDescription, "TODO", "")
+	end unsafe
 end handler
 
 /**
@@ -358,7 +374,9 @@ begin
 end syntax
 
 public handler MCUnitTestFailsReason(in pCondition as Boolean, in pReason as String)
-	MCUnitOutputTest(pCondition, "", "TODO", pReason)
+	unsafe
+		MCUnitOutputTest(pCondition, "", "TODO", pReason)
+	end unsafe
 end handler
 
 /**
@@ -391,7 +409,9 @@ begin
 end syntax
 
 public handler MCUnitTestFailsDescriptionAndReason(in pDescription as String, in pCondition as Boolean, in pReason as String)
-	MCUnitOutputTest(pCondition, pDescription, "TODO", pReason)
+	unsafe
+		MCUnitOutputTest(pCondition, pDescription, "TODO", pReason)
+	end unsafe
 end handler
 
 end module

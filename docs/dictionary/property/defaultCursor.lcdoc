@@ -2,44 +2,60 @@ Name: defaultCursor
 
 Type: property
 
-Syntax: set the defaultCursor to <imageID> 
+Syntax: set the defaultCursor to <imageID>
 
-Summary: Specifies the <default> shape of the <cursor>.
+Summary:
+Specifies the <default> shape of the <cursor>.
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the defaultCursor to arrow
 
 Value:
-The <defaultCursor> is the <ID> of an <image> to use for a <cursor(property)>. 
-LiveCode looks for the specified image in the following order:
+The <defaultCursor> is the <ID> of an <image> to use for a
+<cursor(property)>. LiveCode looks for the specified image in the
+following order:
 
-1) The stack of the current object's <behavior> (if applicable)
-2) The stack of the owner of the current object's <behavior> (if applicable)
- ...
-n) The stack of the current object's stack's <behavior> (if applicable)
-A) The current object's stack
-B) The current object's stack's mainstack (if a substack)
-C) The current object's stack's mainstacks substacks
-D) The list of open stacks, in order they were loaded
-
-<img src="202651"/> >*Tip:* LiveCode includes several built-in <cursor(glossary)|cursors> whose names you can use in place of their image IDs. The built-in cursors are described in the entry for the <cursor(property)> <property>.
+1. The stack of the current object's <behavior> (if applicable)
+2. The stack of the owner of the current object's <behavior> (if
+applicable)
+3. The stack of the current object's stack's <behavior> (if applicable)
+4. The current object's stack
+5. The current object's stack's mainstack (if a substack)
+6. The current object's stack's mainstacks substacks
+7. The list of open stacks, in order they were loaded
 
 Description:
-Use the <defaultCursor> <property> to change the <cursor(property)> used when the <Browse tool> is being used from a hand to some other <cursor(property)> shape.
+Use the <defaultCursor> <property> to change the <cursor(property)> used
+when the <Browse tool> is being used from a hand to some other
+<cursor(property)> shape.
 
->*Tip:*  LiveCode includes several built-in <cursor(glossary)|cursors> whose names you can use in place of their image IDs. The built-in cursors are described in the entry for the <cursor(property)> <property>.
+>*Tip:*  LiveCode includes several built-in <cursor(glossary)|cursors>
+> whose names you can use in place of their image IDs. The built-in
+> cursors are described in the entry for the <cursor(property)>
+> <property>. 
 
-If the <lockCursor> <property> is set to false, the <cursor(property)> changes shape automatically as the mouse moves. (For example, the <cursor(property)> normally turns into an arrow over a <menu>, an I-beam over an editable <field>, and so on.) The <defaultCursor> is the shape used automatically when the <mouse pointer> is in a stack window, but not in an editable <field>.
+If the <lockCursor> <property> is set to false, the <cursor(property)>
+changes shape automatically as the mouse moves. (For example, the
+<cursor(property)> normally turns into an arrow over a <menu>, an I-beam
+over an editable <field>, and so on.) The <defaultCursor> is the shape
+used automatically when the <mouse pointer> is in a stack window, but
+not in an editable <field>.
 
 Changes:
-The order in which LiveCode searches for cursors was changed in version 3.5. Previously, the current stack was searched first, followed by the list of open stacks.
+The order in which LiveCode searches for cursors was changed in version
+3.5. Previously, the current stack was searched first, followed by the
+list of open stacks.
 
-References: cursor (property), lockCursor (property), behavior (property), ID (property), default (keyword), image (keyword), field (keyword), menu (keyword), property (glossary), Browse tool (glossary), mouse pointer (glossary), cursor (glossary)
+References: property (glossary), Browse tool (glossary),
+mouse pointer (glossary), cursor (glossary), default (keyword),
+image (keyword), field (keyword), menu (keyword), cursor (property),
+lockCursor (property), behavior (property), ID (property)
 
 Tags: ui
+

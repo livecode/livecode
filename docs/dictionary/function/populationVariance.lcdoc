@@ -1,18 +1,19 @@
 Name: populationVariance
 
+Synonyms: popvariance
+
 Type: function
 
 Syntax: populationVariance(<numbersList>)
 
-Summary: <return|Returns> the population variance of a list of numbers.
-
-Synonyms: popVariance
+Summary:
+<return|Returns> the population variance of a list of numbers.
 
 Introduced: 6.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 populationVariance(8,10,12) -- returns 2.666667
@@ -21,15 +22,24 @@ Example:
 put populationVariance(studentScores) into field "Population Variance"
 
 Parameters:
-numbersList: A comma-separated list of numbers, or an expression that evaluates to such a list, or an array containing only numbers.
+numbersList:
+A comma-separated list of numbers, or an expression that evaluates to
+such a list, or an array containing only numbers.
 
-Returns: The <populationVariance> function <return|returns> a number.
+Returns:
+The <populationVariance> function <return|returns> a number.
 
 Description:
-Use the <populationVariance> <function> to analyze the amount of spread in a list of numbers.
+Use the <populationVariance> <function> to analyze the amount of spread
+in a list of numbers.
 
-The population variance is a measure of how widely distributed the numbers in the <numbersList> are.
+The population variance is a measure of how widely distributed the
+numbers in the <numbersList> are.
 
-References: function (control_st), populationVariance (function), averageDeviation (function), variance (function), average (function), median (function), populationStandardDeviation (function), sum (function), standardDeviation (function), return (glossary)
+References: function (control structure), populationVariance (function),
+averageDeviation (function), variance (function), average (function),
+median (function), populationStandardDeviation (function), sum (function),
+standardDeviation (function), return (glossary)
 
 Tags: math
+

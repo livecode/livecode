@@ -1,1 +1,0 @@
-# revBrowserSnapshot not working on Windows with IE9+

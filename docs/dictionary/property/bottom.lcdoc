@@ -2,17 +2,20 @@ Name: bottom
 
 Type: property
 
-Syntax: set the bottom of <object> to <number> 
+Syntax: set the bottom of <object> to <number>
 
-Summary: Specifies how far an <object|object's> bottom edge is from the top of the window or screen.
+Summary:
+Specifies how far an <object|object's> bottom edge is from the top of
+the window or screen.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if the bottom of this stack &gt; 600 then changeStackPlacement
@@ -21,20 +24,40 @@ Example:
 set the bottom of card field 1 to the height of this stack
 
 Value:
-The <bottom> of an <object> is an integer. A <negative> <integer> indicates that the position is above the top of the screen or <card> (and therefore cannot be seen).
-A stack's <bottom> is the distance in <pixels> from the top edge of the screen.
+The <bottom> of an <object(glossary)> is an integer. A <negative>
+<integer> indicates that the position is above the top of the screen or
+<card> (and therefore cannot be seen). A stack's <bottom> is the
+distance in <pixels> from the top edge of the screen.
 
-A card's or control's <bottom> is the distance in <pixels> from the top edge of the <card> to the bottom edge of the <card> or <control>.
+A card's or control's <bottom> is the distance in <pixels> from the top
+edge of the <card> to the bottom edge of the <card> or <control>.
 
 Description:
-Use the <bottom> <property> to change the vertical placement of a <control> or window.
+Use the <bottom> <property> to change the vertical placement of a
+<control> or window.
 
-The <bottom> of a <stack> is in <absolute (screen) coordinates(glossary)>. The <bottom> of a <card> is always equal to the height of the <stack window>; setting the <bottom> of a <card> does not cause a <error|script error>, but it has no effect. The <bottom> of a <group> or <control> is in <relative (window) coordinates(glossary)>.
+The <bottom> of a <stack> is in 
+<absolute coordinates(glossary)|absolute (screen) coordinates>. 
+The <bottom> of a <card> is always equal to the
+height of the <stack window>; setting the <bottom> of a <card> does not
+cause a <error|script error>, but it has no effect. The <bottom> of a
+<group> or <control> is in 
+<relative coordinates(glossary)|relative (window) coordinates>.
 
-Changing the <bottom> of an <object> shifts it to the new position without resizing it. To change an <object|object's> height, set its height or <rectangle> <property>.
+Changing the <bottom> of an <object(glossary)> shifts it to the new
+position without resizing it. To change an <object|object's> height, set
+its height or <rectangle> <property>.
 
-The <height> <property> of an <object> is equal to its <bottom> minus its <top>.
+The <height> <property> of an <object(glossary)> is equal to its
+<bottom> minus its <top>.
 
-References: pixels (property), rectangle (property), bottomMargin (property), bottomRight (property), bottomLeft (property), height (property), top (property), card (keyword), integer (keyword), top (keyword), rectangle (keyword), control (keyword), group (command), stack (object), object (object), property (glossary), relative coordinates (glossary), absolute coordinates (glossary), stack window (glossary), error (glossary), negative (glossary)
+References: group (command), object (glossary), property (glossary),
+relative coordinates (glossary), absolute coordinates (glossary),
+stack window (glossary), error (glossary), negative (glossary),
+card (keyword), integer (keyword), top (keyword), rectangle (keyword),
+control (keyword), stack (object), pixels (property),
+rectangle (property), bottomMargin (property), bottomRight (property),
+bottomLeft (property), height (property), top (property)
 
 Tags: ui
+

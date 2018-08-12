@@ -1,1 +1,0 @@
-# Behaviour for 'there is a url...' in LiveCode 7.0 inconsistent with previous versions

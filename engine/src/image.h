@@ -253,6 +253,11 @@ public:
     
     // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
     bool GetMetadata(MCImageMetadata& r_metadata);
+    
+    void Lock();
+    void Unlock();
+    
+    bool IsLocked() const;
 
 private:
 	MCImage *m_owner;
@@ -260,7 +265,6 @@ private:
 	MCImageBitmap *m_locked_bitmap;
 
 	MCImageBitmap *m_bitmap;
-	MCImageBitmap *m_unpre_bitmap;
 	MCImageBitmap *m_selection_image;
 	MCImageBitmap *m_undo_image;
 	MCImageBitmap *m_rub_image;
@@ -283,6 +287,8 @@ private:
 	static MCPoint *points;
 	static uint2 npoints;
 	static uint2 polypoints;
+    
+    bool m_is_locked;
 };
 
 class MCImageNeed
@@ -298,13 +304,22 @@ public:
 	MCImageNeed *GetNext();
 
 private:
-	MCObjectHandle *m_object;
+	MCObjectHandle m_object;
 	MCImageNeed *m_prev;
 	MCImageNeed *m_next;
 };
 
-class MCImage : public MCControl
+typedef MCObjectProxy<MCImage>::Handle MCImageHandle;
+
+class MCImage : public MCControl, public MCMixinObjectHandle<MCImage>
 {
+public:
+    
+    enum { kObjectType = CT_IMAGE };
+    using MCMixinObjectHandle<MCImage>::GetHandle;
+
+private:
+    
 	friend class MCHcbmap;
 	
 	MCImageRep *m_rep;
@@ -397,7 +412,9 @@ public:
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
+    
 	virtual void open();
 	virtual void close();
 	virtual Boolean mfocus(int2 x, int2 y);
@@ -407,11 +424,6 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual void applyrect(const MCRectangle &nrect);
-
-#ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-    virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
 
 	virtual void select();
 	virtual void deselect();
@@ -506,7 +518,7 @@ public:
 	// in idraw.cc
 	void drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh);
 	void drawcentered(MCDC *dc, int2 x, int2 y, Boolean reverse);
-    void drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh);
+    void drawnodata(MCDC *dc, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh);
 
     void drawwithgravity(MCDC *dc, MCRectangle rect, MCGravity gravity);
 
@@ -663,7 +675,7 @@ public:
 	void GetText(MCExecContext& ctxt, MCDataRef& r_text);
 	void SetText(MCExecContext& ctxt, MCDataRef p_text);
 	void GetImageData(MCExecContext& ctxt, MCDataRef& r_data);
-	void SetImageData(MCExecContext& ctxt, MCDataRef p_data);
+    void SetImageData(MCExecContext& ctxt, MCDataRef p_data);
 	void GetMaskData(MCExecContext& ctxt, MCDataRef& r_data);
 	void SetMaskData(MCExecContext& ctxt, MCDataRef p_data);
 	void GetAlphaData(MCExecContext& ctxt, MCDataRef& r_data);

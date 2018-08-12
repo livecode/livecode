@@ -1,22 +1,26 @@
 Name: number
 
-Type: property
-
-Syntax: set the number of <card> to <number> 
-
-Syntax: get the number of <object> 
-
-Summary: Specifies an <object|object's> position within a <file>, a <card(object)|card's> position within a <stack>, or a <control|control's> <layer> on a <card(keyword)>.
-
 Synonyms: num
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Type: property
+
+Syntax: set the number of <card> to <number>
+
+Syntax: get the number of <object>
+
+Summary:
+Specifies an <object|object's> position within a <file>, a
+<card(object)|card's> position within a <stack>, or a
+<control|control's> <layer> on a <card(keyword)>.
+
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the number of this card to 1
@@ -28,20 +32,41 @@ Example:
 put the number of the last button into numberOfButtons
 
 Value:
-The <number> of an <object> is a non-negative <integer>.   
-For all objects except cards, the <number> <property> is read-only and cannot be set.
+The <number> of an <object(glossary)> is a non-negative <integer>.   
+For all objects except cards, the <number> <property> is read-only and
+cannot be set.
 
 Description:
-Use the <number> <property> to find out what <layer> a <card(keyword)> is on, to find or change a <card(object)|card's> position, or to refer to an <object>.  
+Use the <number> <property> to find out what <layer> a <card(keyword)>
+is on, to find or change a <card(object)|card's> position, or to refer
+to an <object(glossary)>.
 
-The <number> of a <control(keyword)> is its <layer> on the <card(keyword)>. Lower numbers are further back; higher numbers are farther forward. If you create several <control(object)|controls> and don't change their <layer> order, the first <control(keyword)> you created has the <number> 1 and the rest of the <control(object)|controls> are numbered in the order of creation. 
+The <number> of a <control(keyword)> is its <layer> on the
+<card(keyword)>. Lower numbers are further back; higher numbers are
+farther forward. If you create several <control(object)|controls> and
+don't change their <layer> order, the first <control(keyword)> you
+created has the <number> 1 and the rest of the
+<control(object)|controls> are numbered in the order of creation.
 
-The <number> of a <card(keyword)> specifies its position in the <stack>. When you open a <stack> without specifying a <card(keyword)>, the <card(keyword)> whose <number> is one appears first. Setting the <number> of a <card(keyword)> moves it to the specified position in the <stack>. (Cards are the only <object|objects> whose <number> <property> can be set. )
+The <number> of a <card(keyword)> specifies its position in the <stack>.
+When you open a <stack> without specifying a <card(keyword)>, the
+<card(keyword)> whose <number> is one appears first. Setting the
+<number> of a <card(keyword)> moves it to the specified position in the
+<stack>. (Cards are the only <object|objects> whose <number> <property>
+can be set. )
 
-The <number> of a <main stack> is always zero. The <number> of a <substack> is its creation order in the <file>, from 1 to the number of <substacks>. 
+The <number> of a <main stack> is always zero. The <number> of a
+<substack> is its creation order in the <file>, from 1 to the number of
+<substacks>. 
 
 You can refer to any object by specifying its <number>.
 
-References: substacks (property), layer (property), nameChanged (message), file (keyword), ninth (keyword), seconds (keyword), card (keyword), control (keyword), integer (keyword), home (keyword), control (object), object (object), stack (object), card (object), length (function), move (command), property (glossary), substack (glossary), main stack (glossary)
+References: move (command), length (function), object (glossary),
+property (glossary), substack (glossary), main stack (glossary),
+file (keyword), ninth (keyword), seconds (keyword), card (keyword),
+control (keyword), integer (keyword), home (keyword),
+nameChanged (message), control (object), stack (object), card (object),
+substacks (property), layer (property)
 
 Tags: ui
+

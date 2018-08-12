@@ -4,13 +4,18 @@ Type: keyword
 
 Syntax: each
 
-Summary: Used with the <sort container> <command> to specify that the <sort key> consists of the specified <chunk> of each <line> or <item>. Also used with the <for> <keyword> in a <repeat> <control structure> to specify that the <loop|repeat loop> should be executed for each <chunk> of the specified <string> or each <element> of the specified <array>.
+Summary:
+Used with the <sort container> <command> to specify that the <sort key>
+consists of the specified <chunk> of each <line> or <item>. Also used
+with the <for> <keyword> in a <repeat> <control structure> to specify
+that the <loop|repeat loop> should be executed for each <chunk> of the
+specified <string> or each <element> of the specified <array>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 sort lines of field "Address" by word 2 of each
@@ -19,15 +24,31 @@ Example:
 repeat for each character thisChar in field "Input"
 
 Description:
-Use the <each> <keyword> to <sort> a <container> by a portion of each <item> or <line>, rather than by the whole <item> or <line>, or to <iteration|iterate> over each <chunk> in a <string> or each <element> in an <array>.
+Use the <each> <keyword> to <sort> a <container> by a portion of each
+<item> or <line>, rather than by the whole <item> or <line>, or to
+<iteration|iterate> over each <chunk> in a <string> or each <element> in
+an <array>.
 
-In a <sort container> <command>, the expression before "of each" must be a chunk expression. The <chunk expression> describes a portion of each <item> or <line> in the <container> to be <sort|sorted>.
+In a <sort container> <command>, the expression before "of each" must be
+a chunk expression. The <chunk expression> describes a portion of each
+<item> or <line> in the <container> to be <sort|sorted>.
 
-If a chunk is nonexistent for a particular line or item--for example, if "by char 5 of each" is specified and some lines only have four characters--the chunk is treated as though it were empty.
+If a chunk is nonexistent for a particular line or item--for example, if
+"by char 5 of each" is specified and some lines only have four
+characters--the chunk is treated as though it were empty.
 
 Changes:
-The ability to specify each element of an array in a repeat control structure was introduced in version 1.1. In previous versions, you could use the each keyword to iterate over all chunks in a string, but not over all elements in an array.
+The ability to specify each element of an array in a repeat control
+structure was introduced in version 1.1. In previous versions, you could
+use the each keyword to iterate over all chunks in a string, but not
+over all elements in an array.
 
-References: item (keyword), element (keyword), for (keyword), line (keyword), string (keyword), sort (command), sort container (command), repeat (control_st), sort (glossary), loop (glossary), chunk expression (glossary), iteration (glossary), container (glossary), chunk (glossary), keyword (glossary), control structure (glossary), array (glossary), command (glossary), sort key (glossary)
+References: sort (command), sort container (command),
+repeat (control structure), sort (glossary), loop (glossary),
+chunk expression (glossary), iteration (glossary), container (glossary),
+chunk (glossary), keyword (glossary), control structure (glossary),
+array (glossary), command (glossary), sort key (glossary), item (keyword),
+element (keyword), for (keyword), line (keyword), string (keyword)
 
 Tags: text processing
+

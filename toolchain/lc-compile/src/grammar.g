@@ -51,7 +51,7 @@
 'action' Depend_GenerateMapping(MODULELIST)
 
     'rule' Depend_GenerateMapping(modulelist(module(Position, Kind, Name, _), Rest)):
-        Name'Name -> ModuleName
+    	GetQualifiedName(Name -> ModuleName)
         GetFilenameOfPosition(Position -> Filename)
         DependDefineMapping(ModuleName, Filename)
         Depend_GenerateMapping(Rest)
@@ -62,7 +62,7 @@
 'action' Depend_GenerateDependencies(MODULELIST)
 
     'rule' Depend_GenerateDependencies(modulelist(module(_, _, Name, Definitions), Rest)):
-        Name'Name -> ModuleName
+    	GetQualifiedName(Name -> ModuleName)
         Depend_GenerateDependenciesForModule(ModuleName, Definitions)
         Depend_GenerateDependencies(Rest)
 
@@ -76,7 +76,7 @@
         Depend_GenerateDependenciesForModule(ModuleName, Right)
 
     'rule' Depend_GenerateDependenciesForModule(ModuleName, import(_, Name)):
-        Name'Name -> DependencyName
+        GetQualifiedName(Name -> DependencyName)
         DependDefineDependency(ModuleName, DependencyName)
 
     'rule' Depend_GenerateDependenciesForModule(ModuleName, _):
@@ -98,6 +98,7 @@
             ||
                 (|
                     IsBootstrapCompile()
+                    InitializeSyntax
                     GenerateSyntaxForModules(Modules)
                     (|
                         ErrorsDidOccur()
@@ -106,8 +107,7 @@
                         GenerateModules(Modules)
                     |)
                 ||
-                    where(Modules -> modulelist(Head, _))
-                    Generate(Head)
+					GenerateModules(Modules)
                 |)
             |)
         |)
@@ -141,8 +141,6 @@
 'action' GenerateSyntaxForModules(MODULELIST)
 
     'rule' GenerateSyntaxForModules(modulelist(Head, Tail)):
-        InitializeSyntax
-        
         (|
             Head'Kind -> import
         ||
@@ -178,28 +176,31 @@
 
     'rule' Module(-> module(Position, module, Name, Definitions)):
         OptionalSeparator
-        "module" @(-> Position) Identifier(-> Name) Separator
+        "module" @(-> Position) QualifiedId(-> Name) Separator
         Definitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
+		GetQualifiedName(Name -> NameName)
+        GetStringOfNameLiteral(NameName -> NameString)
+		AddImportedModuleName(NameString)
 
     'rule' Module(-> module(Position, widget, Name, Definitions)):
         OptionalSeparator
-        "widget" @(-> Position) Identifier(-> Name) Separator
+        "widget" @(-> Position) QualifiedId(-> Name) Separator
         Definitions(-> Definitions)
         "end" "widget" OptionalSeparator
         END_OF_UNIT
 
     'rule' Module(-> module(Position, library, Name, Definitions)):
         OptionalSeparator
-        "library" @(-> Position) Identifier(-> Name) Separator
+        "library" @(-> Position) QualifiedId(-> Name) Separator
         Definitions(-> Definitions)
         "end" "library" OptionalSeparator
         END_OF_UNIT
 
     'rule' Module(-> module(Position, import, Name, Definitions)):
         OptionalSeparator
-        "import" "module" @(-> Position) Identifier(-> Name) Separator
+        "import" "module" @(-> Position) QualifiedId(-> Name) Separator
         ImportDefinitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
@@ -226,7 +227,12 @@
 
     'rule' ImportDefinition(-> type(Position, public, Id, handler(Position, foreign, Signature))):
         "foreign" @(-> Position) "handler" "type" Identifier(-> Id) Signature(-> Signature)
-        
+
+    'rule' ImportDefinition(-> type(Position, public, Id, record(Position, Fields))):
+        "record" @(-> Position) "type" Identifier(-> Id) Separator
+            RecordFields(-> Fields)
+        "end" "type"
+
     'rule' ImportDefinition(-> type(Position, public, Id, Type)):
         "type" @(-> Position) Identifier(-> Id) "is" Type(-> Type)
 
@@ -236,8 +242,11 @@
     'rule' ImportDefinition(-> variable(Position, public, Id, Type)):
         "variable" @(-> Position) Identifier(-> Id) "as" Type(-> Type)
 
-    'rule' ImportDefinition(-> handler(Position, public, Id, normal, Signature, nil, nil)):
+    'rule' ImportDefinition(-> handler(Position, public, Id, Signature, nil, nil)):
         "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
+
+    'rule' ImportDefinition(-> unsafe(Position, handler(Position, public, Id, Signature, nil, nil))):
+        "unsafe" "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
 
     'rule' ImportDefinition(-> foreignhandler(Position, public, Id, Signature, "")):
         "foreign" "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
@@ -249,7 +258,7 @@
 'nonterm' Metadata(-> DEFINITION)
 
     'rule' Metadata(-> metadata(Position, Key, Value)):
-        "metadata" @(-> Position) StringOrNameLiteral(-> Key) "is" STRING_LITERAL(-> Value)
+        "metadata" @(-> Position) StringOrNameLiteral(-> Key) "is" StringLiteral(-> Value)
         
 --------------------------------------------------------------------------------
 -- Import Syntax
@@ -263,13 +272,13 @@
 'action' ExpandImports(POS, IDLIST -> DEFINITION)
 
     'rule' ExpandImports(Position, idlist(Id, nil) -> import(Position, Id)):
-        Id'Name -> Name
+    	GetQualifiedName(Id -> Name)
         GetStringOfNameLiteral(Name -> NameString)
         (|
             (|
                 -- In bootstrap mode, all modules have to be listed on command line.
                 IsBootstrapCompile()
-            ||
+			||
                 AddImportedModuleFile(NameString)
             |)
         ||
@@ -352,9 +361,6 @@
 
     'rule' VariableDefinition(-> variable(Position, Access, Name, Type)):
         Access(-> Access) "variable" @(-> Position) Identifier(-> Name) OptionalTypeClause(-> Type)
-
-    'rule' VariableDefinition(-> contextvariable(Position, Access, Name, Type, Default)):
-        Access(-> Access) "context" @(-> Position) "variable" Identifier(-> Name) OptionalTypeClause(-> Type) "default" Expression(-> Default)
         
 'nonterm' OptionalTypeClause(-> TYPE)
 
@@ -372,10 +378,10 @@
         Access(-> Access) "type" @(-> Position) Identifier(-> Name) "is" Type(-> Type)
     
     'rule' TypeDefinition(-> type(Position, Access, Name, foreign(Position, Binding))):
-        Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" STRING_LITERAL(-> Binding)
+        Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" StringLiteral(-> Binding)
         
-    'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Base, Fields))):
-        Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
+    'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Fields))):
+        Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) Separator
             RecordFields(-> Fields)
         "end" "type"
         
@@ -455,24 +461,21 @@
 
 'nonterm' HandlerDefinition(-> DEFINITION)
 
-    'rule' HandlerDefinition(-> handler(Position, Access, Name, normal, Signature, nil, Body)):
+    'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
         Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
             Statements(-> Body)
         "end" "handler"
-        
-    'rule' HandlerDefinition(-> handler(Position, Access, Name, context, Signature, nil, Body)):
-        Access(-> Access) "context" @(-> Position) "handler" Identifier(-> Name) Signature(-> Signature) Separator
+
+    'rule' HandlerDefinition(-> unsafe(Position, handler(Position, Access, Name, Signature, nil, Body))):
+        Access(-> Access) "unsafe" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
             Statements(-> Body)
         "end" "handler"
-            --'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
-    --    Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
-    --        Definitions(-> Definitions)
-    --    "begin"
-    --        Statements(-> Body)
-    --    "end" "handler"
-        
-    'rule' HandlerDefinition(-> foreignhandler(Position, Access, Name, Signature, Binding)):
-        Access(-> Access) "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" STRING_LITERAL(-> Binding)
+
+	'rule' HandlerDefinition(-> foreignhandler(Position, Access, Name, Signature, Binding)):
+		Access(-> Access) "__safe" "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" StringLiteral(-> Binding)
+
+    'rule' HandlerDefinition(-> unsafe(Position, foreignhandler(Position, Access, Name, Signature, Binding))):
+        Access(-> Access) "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" StringLiteral(-> Binding)
 
 'nonterm' Signature(-> SIGNATURE)
 
@@ -510,6 +513,11 @@
 
     'rule' Parameter(-> parameter(Position, in, Name, Type)):
         Identifier(-> Name) @(-> Position) OptionalTypeClause(-> Type)
+
+    'rule' Parameter(-> parameter(Position, variadic, Name, unspecified)):
+        "..." @(-> Position)
+        MakeNameLiteral("" -> Identifier)
+		AssignId(Position, Identifier, nil -> Name)
         
 'nonterm' Mode(-> MODE)
 
@@ -693,7 +701,7 @@
 'nonterm' Type(-> TYPE)
 
     'rule' Type(-> named(Position, Name)):
-        Identifier(-> Name) @(-> Position)
+        QualifiedId(-> Name) @(-> Position)
         
     'rule' Type(-> optional(Position, Base)):
         "optional" @(-> Position) Type(-> Base)
@@ -724,10 +732,6 @@
 
     'rule' Type(-> list(Position, ElementType)):
         "List" @(-> Position) OptionalElementType(-> ElementType)
-
-    'rule' Type(-> undefined(Position)):
-        "undefined" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "nothing")
 
     'rule' Type(-> undefined(Position)):
         "nothing" @(-> Position)
@@ -831,7 +835,17 @@
         "get" @(-> Position) Expression(-> Value)
 
     'rule' Statement(-> call(Position, Handler, Arguments)):
-        Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
+        QualifiedId(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
+
+    'rule' Statement(-> bytecode(Position, Opcodes)):
+        "bytecode" @(-> Position) Separator
+            Bytecodes(-> Opcodes)
+        "end" "bytecode"
+
+    'rule' Statement(-> unsafe(Position, Body)):
+        "unsafe" @(-> Position) Separator
+            Statements(-> Body)
+        "end" "unsafe"
 
     'rule' Statement(-> postfixinto(Position, Statement, Target)):
         CustomStatements(-> Statement) "into" @(-> Position) Expression(-> Target)
@@ -866,6 +880,34 @@
     'rule' TryStatementCatches(-> catch(Position, Type, Body)):
         "catch" Type(-> Type) Separator
             Statements(-> Body)*/
+
+--------------------------------------------------------------------------------
+-- Bytecode Syntax
+--------------------------------------------------------------------------------
+
+'nonterm' Bytecodes(-> BYTECODE)
+
+    'rule' Bytecodes(-> sequence(Left, Right)):
+        Bytecode(-> Left) Separator
+        Bytecodes(-> Right)
+
+    'rule' Bytecodes(-> nil):
+        -- empty
+
+'nonterm' Bytecode(-> BYTECODE)
+
+    'rule' Bytecode(-> label(Position, Name)):
+        Identifier(-> Name) @(-> Position) ":"
+
+    'rule' Bytecode(-> register(Position, Name, Type)):
+        "register" @(-> Position) Identifier(-> Name) OptionalTypeClause(-> Type)
+
+    'rule' Bytecode(-> opcode(Position, Opcode, Arguments)):
+        NAME_LITERAL(-> Opcode) @(-> Position) OptionalExpressionList(-> Arguments)
+
+    'rule' Bytecode(-> opcode(Position, Opcode, Arguments)):
+        CustomKeywords(-> OpcodeString) @(-> Position) OptionalExpressionList(-> Arguments)
+        MakeNameLiteral(OpcodeString -> Opcode)
 
 --------------------------------------------------------------------------------
 -- Expression Syntax
@@ -983,7 +1025,7 @@
         ConstantTermExpression(-> Constant)
 
     'rule' TermExpression(-> slot(Position, Name)):
-        Identifier(-> Name) @(-> Position)
+        QualifiedId(-> Name) @(-> Position)
         
     'rule' TermExpression(-> result(Position)):
         "the" @(-> Position) "result"
@@ -992,7 +1034,7 @@
     --    TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
 
     'rule' TermExpression(-> call(Position, Handler, Arguments)):
-        Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
+        QualifiedId(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
 
     'rule' TermExpression(-> list(Position, List)):
         "[" @(-> Position) OptionalExpressionList(-> List) "]"
@@ -1013,10 +1055,6 @@
 
 'nonterm' ConstantTermExpression(-> EXPRESSION)
 
-    'rule' ConstantTermExpression(-> undefined(Position)):
-        "undefined" @(-> Position)
-        Warning_UndefinedConstantDeprecated(Position)
-        
     'rule' ConstantTermExpression(-> undefined(Position)):
         "nothing" @(-> Position)
 
@@ -1124,10 +1162,10 @@
         "[" @(-> Position) Syntax(-> Operand) "]"
         
     'rule' AtomicSyntax(-> keyword(Position, Value)):
-        STRING_LITERAL(-> Value) @(-> Position)
+        StringLiteral(-> Value) @(-> Position)
 
     'rule' AtomicSyntax(-> unreservedkeyword(Position, Value)):
-        STRING_LITERAL(-> Value) @(-> Position) "!"
+        StringLiteral(-> Value) @(-> Position) "!"
         
     'rule' AtomicSyntax(-> rule(Position, Name)):
         "<" @(-> Position) Identifier(-> Name) ">"
@@ -1160,7 +1198,7 @@
 'nonterm' Constant(-> SYNTAXCONSTANT)
 
     'rule' Constant(-> undefined(Position)):
-        "undefined" @(-> Position)
+        "nothing" @(-> Position)
         
     'rule' Constant(-> true(Position)):
         "true" @(-> Position)
@@ -1200,18 +1238,12 @@
     'rule' Constant(-> variable(Position, Value)):
         "output" @(-> Position)
         MakeNameLiteral("output" -> Identifier)
-        Value::ID
-        Value'Position <- Position
-        Value'Name <- Identifier
-        Value'Meaning <- nil
+		AssignId(Position, Identifier, nil -> Value)
 
     'rule' Constant(-> variable(Position, Value)):
         "input" @(-> Position)
         MakeNameLiteral("input" -> Identifier)
-        Value::ID
-        Value'Position <- Position
-        Value'Name <- Identifier
-        Value'Meaning <- nil
+        AssignId(Position, Identifier, nil -> Value)
 
 --------------------------------------------------------------------------------
 -- Identifier Syntax
@@ -1221,42 +1253,89 @@
 
     'rule' Identifier(-> Id):
         NAME_LITERAL(-> Identifier) @(-> Position)
-        Id::ID
-        Id'Position <- Position
-        Id'Name <- Identifier
-        Id'Meaning <- nil
-        
+		AssignId(Position, Identifier, nil -> Id)
+
     'rule' Identifier(-> Id):
         "iterator" @(-> Position)
         MakeNameLiteral("iterator" -> Identifier)
-        Id::ID
-        Id'Position <- Position
-        Id'Name <- Identifier
+		AssignId(Position, Identifier, nil -> Id)
         
     'rule' Identifier(-> Id):
         CustomKeywords(-> String) @(-> Position)
         MakeNameLiteral(String -> Identifier)
-        Id::ID
-        Id'Position <- Position
-        Id'Name <- Identifier
+		AssignId(Position, Identifier, nil -> Id)
 
 'nonterm' StringyIdentifier(-> ID)
 
     'rule' StringyIdentifier(-> Id):
         StringLiteral(-> String) @(-> Position)
         MakeNameLiteral(String -> Identifier)
-        Id::ID
-        Id'Position <- Position
-        Id'Name <- Identifier
-        Id'Meaning <- nil
+		AssignId(Position, Identifier, nil -> Id)
 
 'nonterm' IdentifierList(-> IDLIST)
 
     'rule' IdentifierList(-> idlist(Head, Tail)):
-        Identifier(-> Head) "," IdentifierList(-> Tail)
+        QualifiedId(-> Head) "," IdentifierList(-> Tail)
         
     'rule' IdentifierList(-> idlist(Id, nil)):
-        Identifier(-> Id)
+        QualifiedId(-> Id)
+
+'nonterm' QualifiedId(-> ID)
+
+	'rule' QualifiedId(-> Id):
+		NAME_LITERAL(-> Identifier) @(-> Position)
+		QualifiedNameToId(Position, Identifier -> Id)
+		
+'action' QualifiedNameToId(POS, NAME -> ID)
+
+	'rule' QualifiedNameToId(Position, Name -> Id):		
+		ContainsNamespaceOperator(Name)
+		SplitNamespace(Name -> Namespace, Identifier)
+		QualifiedNameToOptionalId(Position, Namespace -> NamespaceId)
+		AssignId(Position, Identifier, NamespaceId -> Id)
+
+	'rule' QualifiedNameToId(Position, Name -> Id)
+		AssignId(Position, Name, nil -> Id)
+
+'action' QualifiedNameToOptionalId(POS, NAME -> OPTIONALID)
+
+	'rule' QualifiedNameToOptionalId(Position, Name -> id(Id))
+		QualifiedNameToId(Position, Name -> Id)
+
+'action' AssignId(POS, NAME, OPTIONALID -> ID)
+	
+	'rule' AssignId(Position, Identifier, Namespace -> Id)
+		Id::ID
+        Id'Position <- Position
+        Id'Name <- Identifier
+        Id'Meaning <- nil
+        Id'Namespace <- Namespace
+        (|
+        	ContainsNamespaceOperator(Identifier)
+        	Error_IllegalNamespaceOperator(Position)
+		||
+        |)
+        
+'action' GetQualifiedName(ID -> NAME)
+
+	'rule' GetQualifiedName(Id -> Name):
+		Id'Namespace -> Namespace
+		ResolveIdInNamespace(Namespace, Id -> Name)
+
+'action' ResolveIdInNamespace(OPTIONALID, ID -> NAME)
+
+	'rule' ResolveIdInNamespace(id(NamespaceId), Id -> Name):
+		Id'Name -> UnqualifiedName
+		GetQualifiedName(NamespaceId -> Namespace)
+		ConcatenateNameParts(Namespace, UnqualifiedName -> Name)
+
+	'rule' ResolveIdInNamespace(nil, Id -> Name):
+		Id'Name -> Name
+
+'condition' ResolveNamespace(OPTIONALID -> NAME)
+
+	'rule' ResolveNamespace(id(NamespaceId) -> Name):
+		GetQualifiedName(NamespaceId -> Name)
 
 --------------------------------------------------------------------------------
 -- Separator

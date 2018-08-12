@@ -6,13 +6,15 @@ Syntax: the mouseChunk
 
 Syntax: mouseChunk()
 
-Summary: <return|Returns> a <chunk expression> describing the location of the <word> or <grouped text|text group> under the <mouse pointer>.
+Summary:
+<return|Returns> a <chunk expression> describing the location of the
+<word> or <grouped text|text group> under the <mouse pointer>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the mouseChunk
@@ -20,19 +22,38 @@ the mouseChunk
 Example:
 if the shiftKey is down then select the mouseChunk
 
-Returns: The <mouseChunk> <function> <return|returns> a <chunk expression> of the form char startChar to endChar of field fieldNumber.
+Returns:
+The <mouseChunk> <function> <return|returns> a <chunk expression> of the
+form char startChar to endChar of field fieldNumber.
 
 Description:
-Use the <mouseChunk> <function> within a <handler> to determine which <word> or <grouped text|text group>  the mouse is hovering over, in order to take some action based on the current <character>.
+Use the <mouseChunk> <function> within a <handler> to determine which
+<word> or <grouped text|text group> the mouse is hovering over, in order
+to take some action based on the current <character>.
 
-The <mouseChunk> <function> only <return|returns> locations in a <field>. If the <mouse pointer> is not over a <field>, the <mouseChunk> <function> <return|returns> empty.
+The <mouseChunk> <function> only <return|returns> locations in a
+<field>. If the <mouse pointer> is not over a <field>, the <mouseChunk>
+<function> <return|returns> empty.
 
-The return value reports the word the mouse is over. The startChar is the first <character> of the <word>, and the endChar is the last <character>. If the <textStyle> of the text is "link", the <return value> specifies the entire <grouped text|text group>.
+The return value reports the word the mouse is over. The startChar is
+the first <character> of the <word>, and the endChar is the last
+<character>. If the <textStyle> of the text is "link", the <return
+value> specifies the entire <grouped text|text group>.
 
 To get the text of the word or text group, use the mouseText <function>.
 
->*Important:*  Words are defined a little differently by the <mouseChunk> <function> than the way they are used in <chunk expression|chunk expressions>. A word, for purposes of the <mouseChunk>, is any text delimited by spaces, tabs, returns, or punctuation. If the mouse pointer is over a punctuation <character>, only that <character> is returned.
+>*Important:*  Words are defined a little differently by the
+> <mouseChunk> <function> than the way they are used in <chunk
+> expression|chunk expressions>. A word, for purposes of the
+> <mouseChunk>, is any text delimited by spaces, tabs, returns, or
+> punctuation. If the mouse pointer is over a punctuation <character>,
+> only that <character> is returned.
 
-References: word (keyword), character (keyword), field (keyword), textStyle (property), dropChunk (function), selectedChunk (function), mouseCharChunk (function), handler (glossary), grouped text (glossary), mouse pointer (glossary), return (glossary), chunk expression (glossary), return value (glossary), function (control_st)
+References: function (control structure), dropChunk (function),
+selectedChunk (function), mouseCharChunk (function), handler (glossary),
+grouped text (glossary), mouse pointer (glossary), return (glossary),
+chunk expression (glossary), return value (glossary), word (keyword),
+character (keyword), field (keyword), textStyle (property)
 
 Tags: ui
+

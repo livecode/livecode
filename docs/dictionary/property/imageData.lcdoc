@@ -2,17 +2,19 @@ Name: imageData
 
 Type: property
 
-Syntax: set the imageData of <image> to <binaryData> 
+Syntax: set the imageData of <image> to <binaryData>
 
-Summary: Specifies the <binary file|binary data> that makes up the picture in an <image> object.
+Summary:
+Specifies the <binary file|binary data> that makes up the picture in an
+<image> object.
 
 Associations: image
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the imageData of image ID 3577 into dateToAnalyze
@@ -20,29 +22,81 @@ put the imageData of image ID 3577 into dateToAnalyze
 Example:
 set the imageData of the mouseControl to the personalImage of this card
 
-Value: The <imageData> of an <image> consists of a sequence of <binary> values.
+Value:
+The <imageData> of an <image> consists of a sequence of <binary> values.
 
 Description:
-Use the <imageData> <property> to process an <image> and display the processed version.
+Use the <imageData> <property> to process an <image> and display the
+processed version.
 
-The <imageData> consists of the picture data presented in a standard form. The form of the <imageData> <property>, unlike the content, does not depend on what <format> the <image> is recorded in; it's always in the same form, which specifies the color of each <pixel> in the <image>, four <byte|bytes> per <pixel>.
+The <imageData> consists of the picture data presented in a standard
+form. The form of the <imageData> <property>, unlike the content, does
+not depend on what <format> the <image> is recorded in; it's always in
+the same form, which specifies the color of each <pixel> in the <image>,
+four <byte|bytes> per <pixel>.
 
-Each pixel is represented by 32 bits (4 bytes) of image data, with pixels numbered from the top left corner of the image, left to right, then top to bottom. The first byte consists of zeroes, and the last three bytes encode the amount of red, green, and blue respectively.
+Each pixel is represented by 32 bits (4 bytes) of image data, with
+pixels numbered from the top left corner of the image, left to right,
+then top to bottom. The first byte consists of zeroes, and the last
+three bytes encode the amount of red, green, and blue respectively.
 
-Since each pixel is represented by 4 bytes (4 characters), you can obtain the numeric value of any of the color channels for a given pixel using the charToNum <function>. For example, the numeric value of the red <channel> for the tenth <pixel> is given by the expression charToNum(char ((4 * 9) + 2) of the imageData of <image>). The numeric value of the green channel is charToNum(char (4 * 9) + 3 of the imageData of <image>); and the numeric value of the blue channel is charToNum(char (4 * 9) + 4 of the imageData of <image>).
+Since each pixel is represented by 4 bytes, you can obtain the numeric
+value of any of the color channels for a given pixel using the
+<byteToNum> <function>. For example, this is how you might extract the
+color <channel> values from the 10th <pixel> of an image:
 
->*Important:*  When changing the <imageData> property, make sure the new data is the correct size: 4 bytes per pixel in the image. If you set an image's <imageData> property to data whose total length is incorrect, the image appearance will be distorted.
+```
+local tRed, tGreen, tBlue, tOffset, tData
+put the imageData of image 1 into tData
+put 10 - 1 into tOffset -- Pixel positions start at 0
 
-The <imageData> <property> is related to the content of the <image> --changing either one changes what's displayed in the <image> --but they're not identical: the <imageData> <property> and the <image> content are in different forms, have different sizes, and include overlapping but not identical information about the picture.
+put byteToNum(byte ((4 * tOffset) + 2) of tData) into tRed
+put byteToNum(byte ((4 * tOffset) + 3) of tData) into tGreen
+put byteToNum(byte ((4 * tOffset) + 4) of tData) into tBlue
+```
 
-The <imageData>, unlike the contents of the <image> <container>, is based on the picture as it's presented on the screen, not stored in the <image> <object>. This means that if you resize an <image>, the content of the <image> does not change, but its <imageData> does. If you create an <image> and then reduce its size, its <imageData> reflects the scaled-down, displayed <image>, not the original full-scale <image>. If you create a second <image> and set its <imageData> <property> to the <imageData> of the original <image>, resizing the first <image> back to the original dimensions displays the original <image> at full resolution, but resizing the second <image> does not, because setting its <imageData> transferred only the scaled-down version of the original.
+>*Important:*  When changing the <imageData> property, make sure the new
+> data is the correct size: 4 bytes per pixel in the image. If you set
+> an image's <imageData> property to data whose total length is
+> incorrect, the image appearance will be distorted.
 
->*Tip:*  To copy the information in an <image> at full resolution, regardless of whether its <height> and <width> have been changed, use a <statement> like the following:
+The <imageData> <property> is related to the content of the <image>
+--changing either one changes what's displayed in the <image> --but
+they're not identical: the <imageData> <property> and the <image>
+content are in different forms, have different sizes, and include
+overlapping but not identical information about the picture.
 
-  put image "Full Resolution" into image "Copied Image"
+The <imageData>, unlike the contents of the <image> <container>, is
+based on the picture as it's presented on the screen, not stored in the
+<image> <object(glossary)>. This means that if you resize an <image>,
+the content of the <image> does not change, but its <imageData> does. If
+you create an <image> and then reduce its size, its <imageData> reflects
+the scaled-down, displayed <image>, not the original full-scale <image>.
+If you create a second <image> and set its <imageData> <property> to the
+<imageData> of the original <image>, resizing the first <image> back to
+the original dimensions displays the original <image> at full
+resolution, but resizing the second <image> does not, because setting
+its <imageData> transferred only the scaled-down version of the
+original. 
 
->*Important:*  Since the <imageData> of an <image> is <binary file|binary data> rather than text, trying to display the data in a <field> may cause unexpected behavior.
+>*Tip:*  To copy the information in an <image> at full resolution,
+> regardless of whether its <height> and <width> have been changed, use
+> a <statement> like the following:
 
-References: alphaData (property), height (property), width (property), imageData (property), format (function), field (keyword), image (keyword), image (object), object (object), property (glossary), binary file (glossary), pixel (glossary), statement (glossary), container (glossary), binary (glossary), byte (glossary), channel (glossary), crop (command), revVideoFrameImage (command), function (control_st)
+    put image "Full Resolution" into image "Copied Image"
+
+
+>*Important:*  Since the <imageData> of an <image> is <binary
+> file|binary data> rather than text, trying to display the data in a
+> <field> may cause unexpected behavior.
+
+References: crop (command), revVideoFrameImage (command),
+function (control structure), format (function), object (glossary),
+property (glossary), binary file (glossary), pixel (glossary),
+statement (glossary), container (glossary), binary (glossary),
+byte (glossary), channel (glossary), field (keyword), image (keyword),
+image (object), alphaData (property), height (property), width (property),
+imageData (property), byteToNum (function)
 
 Tags: multimedia
+

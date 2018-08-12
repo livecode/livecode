@@ -1,18 +1,19 @@
 Name: card
 
+Synonyms: cd
+
 Type: object
 
 Syntax: card
 
-Summary: An <object type> that is a single page of a <stack>.
-
-Synonyms: cd
+Summary:
+An <object type> that is a single page of a <stack>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 go to first card
@@ -21,14 +22,16 @@ Example:
 set the marked of this card to true
 
 Description:
-Use the <card> <object type> to display different sets of <control|controls> in the same <stack window>.
+Use the <card> <object type> to display different sets of 
+<control|controls> in the same <stack window>.
 
-A card corresponds to a single page of a stack: one card of each stack can be seen at a time. Each stack contains one or more cards.
+A card corresponds to a single page of a stack: one card of each stack 
+can be seen at a time. Each stack contains one or more cards.
 
 Cards are contained in stacks, and may contain any kind of control.
 
-The card object has a number of properties and messages associated with it. To see a list of messages that can be sent to a card as a result of user actions or internal LiveCode events, open the "LiveCode Language Dictionary" page of the main Documentation window, and choose "Card Messages" from the Show menu at the top. To see a list of all the properties a card can have, choose "Card Properties" from the Show menu.
-
-References: templateCard (keyword), stack window (glossary), object type (glossary), stack (object), control (object)
+References: stack window (glossary), object type (glossary),
+templateCard (keyword), stack (object), control (object)
 
 Tags: objects
+

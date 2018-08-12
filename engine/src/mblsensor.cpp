@@ -37,9 +37,112 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// This implements a simple singly-linked list with constant time pop front
+// and push back. The list is bounded by a maximum length, elements are popped
+// if the limit is exceeded until it reduces to the limit.
+template<class T>
+class MCBoundedLinkedList
+{
+public:
+    MCBoundedLinkedList(void)
+        : m_head(nil), m_tail(nil), m_count(0), m_limit(0)
+    {
+    }
+    
+    ~MCBoundedLinkedList(void)
+    {
+        while(!IsEmpty())
+        {
+            T *t_top = Pop();
+            delete t_top;
+        }
+    }
+    
+    bool IsEmpty(void) const
+    {
+        return m_head == nil;
+    }
+    
+    size_t GetLength(void) const
+    {
+        return m_count;
+    }
+    
+    size_t GetLimit(void) const
+    {
+        return m_limit;
+    }
+    
+    void SetLimit(size_t p_limit)
+    {
+        m_limit = p_limit;
+        
+        Fit();
+    }
+    
+    T *First(void) const
+    {
+        return m_head;
+    }
+    
+    T *Last(void) const
+    {
+        return m_tail;
+    }
+    
+    T *Pop(void)
+    {
+        if (IsEmpty())
+            return nil;
+        
+        T *t_element;
+        t_element = m_head;
+        
+        m_head = m_head -> next;
+        if (m_head == nil)
+            m_tail = nil;
+        
+        m_count -= 1;
+        
+        return t_element;
+    }
+    
+    void Push(T *p_element)
+    {
+        if (m_tail != nil)
+            m_tail -> next = p_element;
+        else
+            m_head = p_element;
+        m_tail = p_element;
+        m_count += 1;
+        
+        Fit();
+    }
+    
+private:
+    void Fit(void)
+    {
+        if (m_limit == 0)
+            return;
+        
+        while(GetLength() > m_limit)
+        {
+            delete Pop();
+        }
+    }
+    
+    T *m_head;
+    T *m_tail;
+    size_t m_count;
+    size_t m_limit;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 static bool s_sensor_message_pending[] = {false, false, false, false, false};
 
-static MCSensorLocationReading *s_last_location_reading = nil;
+static MCBoundedLinkedList<MCSensorLocationReading> s_location_readings;
+
 static MCSensorHeadingReading *s_last_heading_reading = nil;
 static MCSensorAccelerationReading *s_last_acceleration_reading = nil;
 static MCSensorRotationRateReading *s_last_rotation_rate_reading = nil;
@@ -49,21 +152,23 @@ static MCSensorRotationRateReading *s_last_rotation_rate_reading = nil;
 // MM-2012-03-13: Added intialize and finalize calls to sensor module.
 void MCSensorInitialize(void)
 {
-    s_last_location_reading = nil;
+    s_location_readings.SetLimit(1);
+    
     s_last_heading_reading = nil;
     s_last_acceleration_reading = nil;
     s_last_rotation_rate_reading = nil;
+    
     s_sensor_message_pending[kMCSensorTypeUnknown] = false;
     s_sensor_message_pending[kMCSensorTypeLocation] = false;
     s_sensor_message_pending[kMCSensorTypeHeading] = false;
     s_sensor_message_pending[kMCSensorTypeAcceleration] = false;
     s_sensor_message_pending[kMCSensorTypeRotationRate] = false;
+    
     MCSystemSensorInitialize();
 }
 
 void MCSensorFinalize(void)
 {
-    /* UNCHECKED */ MCMemoryDelete(s_last_location_reading);
     /* UNCHECKED */ MCMemoryDelete(s_last_heading_reading);
     /* UNCHECKED */ MCMemoryDelete(s_last_acceleration_reading);
     /* UNCHECKED */ MCMemoryDelete(s_last_rotation_rate_reading);
@@ -101,7 +206,7 @@ MCStringRef MCSensorTypeToStringRef(MCSensorType p_sensor)
         default:
 			return MCSTR("unknown");
     }
-    return false;
+    return NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -195,24 +300,15 @@ public:
             {
                 MCSensorLocationReading t_reading;
                 if (MCSystemGetLocationReading(t_reading, false))
-				{                    
-                    if (s_last_location_reading == nil ||
-                        location_reading_changed(t_reading, *s_last_location_reading, MCSystemGetSensorDispatchThreshold(m_sensor)))
-                    {
-                        MCParameter p1, p2, p3;
-                        p1.setn_argument(t_reading.latitude);
-                        p1.setnext(&p2);
-                        p2.setn_argument(t_reading.longitude);
-                        p2.setnext(&p3);
-                        p3.setn_argument(t_reading.altitude);
-                        
-                        MCdefaultstackptr->getcurcard()->message(MCM_location_changed, &p1);
-                        
-                        if (s_last_location_reading == nil)
-                            /* UNCHECKED */ MCMemoryNew(s_last_location_reading);
-                        
-                        *s_last_location_reading = t_reading;
-                    }         
+				{
+                    MCParameter p1, p2, p3;
+                    p1.setn_argument(t_reading.latitude);
+                    p1.setnext(&p2);
+                    p2.setn_argument(t_reading.longitude);
+                    p2.setnext(&p3);
+                    p3.setn_argument(t_reading.altitude);
+                    
+                    MCdefaultstackptr->getcurcard()->message(MCM_location_changed, &p1);
 				}
                 break;
             }                
@@ -302,9 +398,52 @@ static MCSensorUpdateEvent * FetchSensorEvent(MCSensorType p_sensor)
     if (!s_sensor_message_pending[p_sensor])
     {
         s_sensor_message_pending[p_sensor] = true;
-        t_event = new MCSensorUpdateEvent(p_sensor);
+        t_event = new (nothrow) MCSensorUpdateEvent(p_sensor);
     }
     return t_event;        
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCSensorAddLocationSample(const MCSensorLocationReading& p_reading)
+{
+    if (!s_location_readings.IsEmpty())
+    {
+        if (!location_reading_changed(p_reading,
+                                      *(s_location_readings.Last()),
+                                      MCSystemGetSensorDispatchThreshold(kMCSensorTypeLocation)))
+        {
+            return;
+        }
+    }
+    
+    MCSensorLocationReading *t_reading;
+    t_reading = new (nothrow) MCSensorLocationReading(p_reading);
+    if (t_reading == nil)
+        return;
+    
+    s_location_readings.Push(t_reading);
+}
+
+bool MCSensorPopLocationSample(MCSensorLocationReading& r_reading)
+{
+    MCSensorLocationReading *t_sample;
+    t_sample = s_location_readings.Pop();
+    if (t_sample == nil)
+        return false;
+    
+    r_reading = *t_sample;
+    return true;
+}
+
+size_t MCSensorGetLocationSampleLimit(void)
+{
+    return s_location_readings.GetLimit();
+}
+
+void MCSensorSetLocationSampleLimit(size_t p_limit)
+{
+    s_location_readings.SetLimit(p_limit);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -320,7 +459,7 @@ void MCSensorPostChangeMessage(MCSensorType p_sensor)
 void MCSensorPostErrorMessage(MCSensorType p_sensor, MCStringRef p_error)
 {
     MCCustomEvent *t_event = nil;
-	t_event = new MCSensorErrorEvent(p_sensor, p_error);
+	t_event = new (nothrow) MCSensorErrorEvent(p_sensor, p_error);
 	MCEventQueuePostCustom(t_event);
 }
 

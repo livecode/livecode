@@ -1,1 +1,0 @@
-# Image with no filename is not blank

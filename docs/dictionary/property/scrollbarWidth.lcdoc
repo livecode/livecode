@@ -2,32 +2,49 @@ Name: scrollbarWidth
 
 Type: property
 
-Syntax: set the scrollbarWidth of {<field> | <group>} to <pixels> 
+Syntax: set the scrollbarWidth of {<field> | <group>} to <pixels>
 
-Summary: Specifies the width of the scrollbar associated with a scrolling <field> or <group>.
+Summary:
+Specifies the width of the scrollbar associated with a scrolling <field>
+or <group>.
 
-Associations: field
+Associations: field, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the scrollbarWidth of the last field to 20
 
-Value: The <scrollbarWidth> of a <field> or <group> is an <integer> between 1 and the <object|object's> <width>.
+Value:
+The <scrollbarWidth> of a <field> or <group> is an <integer> between 1
+and the <object|object's> <width>.
 
 Description:
-Use the <scrollbarWidth> <property> to specify how much of a scrolling <field|field's> or <group|group's> <width> is taken up by the vertical scrollbar.
+Use the <scrollbarWidth> <property> to specify how much of a scrolling
+<field|field's> or <group|group's> <width> is taken up by the vertical
+scrollbar. 
 
-Setting a field's or group's vScrollbar or <hScrollbar> <property> to true changes its <scrollbarWidth> to 16 on <Mac OS|Mac OS systems>, and to 20 on <Unix> and <Windows|Windows systems>.
+Setting a field's or group's <vScrollbar> or <hScrollbar> <property> to
+true changes its <scrollbarWidth> to 16 on <Mac OS|Mac OS systems>, and
+to 20 on <Unix> and <Windows|Windows systems>.
 
-If a field's vScrollbar is false and its <style> is not scrolling, its <scrollbarWidth> <property> has no effect. If a <group|group's> <vScrollbar> is false, its <scrollbarWidth> has no effect.
+If a field's <vScrollbar> is false and its <style> is not scrolling, its
+<scrollbarWidth> <property> has no effect. If a <group|group's>
+<vScrollbar> is false, its <scrollbarWidth> has no effect.
 
->*Cross-platform note:* On Mac OS systems with the native theme enabled, scrollbars can only be rendered at certain widths and will be padded to with the background color to achieve the chosen width.
+>*Cross-platform note:* On Mac OS systems with the native theme enabled,
+> scrollbars can only be rendered at certain widths and will be padded
+> with the background color to achieve the chosen width.
 
-References: hScrollbar (property), style (property), vScroll (property), width (property), vScrollbar (property), field (keyword), integer (keyword), group (command), field (object), object (object), property (glossary), Unix (glossary), Windows (glossary), Mac OS (glossary), group (glossary)
+References: group (command), object (glossary), property (glossary),
+Unix (glossary), Windows (glossary), Mac OS (glossary), group (glossary),
+field (keyword), integer (keyword), field (object), hScrollbar (property),
+style (property), vScroll (property), width (property),
+vScrollbar (property)
 
 Tags: ui
+

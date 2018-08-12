@@ -35,8 +35,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define MAC_SCALE_THUMB_SIZE 15 //fixed thumb width for Mac's Scale
 #define FIXED_THUMB_SIZE 17
 
-class MCScrollbar : public MCControl
+typedef MCObjectProxy<MCScrollbar>::Handle MCScrollbarHandle;
+
+class MCScrollbar : public MCControl, public MCMixinObjectHandle<MCScrollbar>
 {
+public:
+    
+    enum { kObjectType = CT_SCROLLBAR };
+    using MCMixinObjectHandle<MCScrollbar>::GetHandle;
+    
+private:
+    
 	real8 thumbpos;
 	real8 thumbsize;
 	real8 lineinc;
@@ -75,7 +84,9 @@ public:
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
+    
 	virtual void open();
 	virtual Boolean kdown(MCStringRef p_string, KeySym key);
 	virtual Boolean mfocus(int2 x, int2 y);
@@ -86,11 +97,6 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void applyrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
-
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
 
 	// MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);

@@ -34,102 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Files, Directories, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, Files, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, DiskSpace, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, DriverNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, Drives, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, OpenFiles, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, TempName, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, SpecialFolderPath, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, LongFilePath, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ShortFilePath, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, OpenProcesses, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, OpenProcessesIds, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ProcessId, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, DeleteRegistry, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ListRegistry, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, QueryRegistry, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, QueryRegistryWithType, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, SetRegistry, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, SetRegistryWithType, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, CopyResourceWithNewId, 6)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, CopyResource, 5)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, DeleteResource, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, GetResource, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, GetResourcesWithType, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, GetResources, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, SetResource, 7)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, AliasReference, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ThereIsAFile, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ThereIsNotAFile, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ThereIsAFolder, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ThereIsNotAFolder, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ThereIsAProcess, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, ThereIsNotAProcess, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Files, Shell, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, DeleteFile, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, CloseFile, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, CloseDriver, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, CloseProcess, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, LaunchUrl, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, LaunchDocument, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, LaunchApp, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, OpenFile, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, OpenDriver, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, OpenProcess, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, OpenElevatedProcess, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, Rename, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromStdinFor, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromStdinUntil, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverFor, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverUntil, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverAtFor, 7)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverAtUntil, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverAtEndFor, 7)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverAtEndUntil, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverAtEndForLegacy, 7)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromFileOrDriverAtEndUntilLegacy, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromProcessFor, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, ReadFromProcessUntil, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToStdout, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToStderr, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToFileOrDriver, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToFileOrDriverAt, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToFileOrDriverAtEnd, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToFileOrDriverAtEndLegacy, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, WriteToProcess, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, SeekToEofInFile, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, SeekToEofInFileLegacy, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, SeekAbsoluteInFile, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, SeekRelativeInFile, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, CreateFolder, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, CreateAlias, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Files, KillProcess, 2)
-MC_EXEC_DEFINE_GET_METHOD(Files, UMask, 1)
-MC_EXEC_DEFINE_SET_METHOD(Files, UMask, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, FileType, 1)
-MC_EXEC_DEFINE_SET_METHOD(Files, FileType, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, SerialControlString, 1)
-MC_EXEC_DEFINE_SET_METHOD(Files, SerialControlString, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, HideConsoleWindows, 1)
-MC_EXEC_DEFINE_SET_METHOD(Files, HideConsoleWindows, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, ShellCommand, 1)
-MC_EXEC_DEFINE_SET_METHOD(Files, ShellCommand, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, CurrentFolder, 1)
-MC_EXEC_DEFINE_SET_METHOD(Files, CurrentFolder, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, EngineFolder, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, HomeFolder, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, DocumentsFolder, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, DesktopFolder, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, TemporaryFolder, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, Files, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, DetailedFiles, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, Folders, 1)
-MC_EXEC_DEFINE_GET_METHOD(Files, DetailedFolders, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCFilesEofEnumElementInfo[] =
 {
 	{ "\004", 0, false },
@@ -149,7 +53,12 @@ MCExecEnumTypeInfo *kMCFilesEofEnumTypeInfo = &_kMCFilesEofEnumTypeInfo;
 
 //////////
 
-void MCFilesEvalDirectories(MCExecContext& ctxt, MCStringRef& r_string)
+void
+MCFilesEvalFileItemsOfDirectory(MCExecContext& ctxt,
+                                MCStringRef p_directory,
+                                bool p_files,
+                                bool p_detailed,
+                                MCStringRef& r_string)
 {
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
@@ -157,26 +66,14 @@ void MCFilesEvalDirectories(MCExecContext& ctxt, MCStringRef& r_string)
 		return;
 	}
 	MCAutoListRef t_list;
-	if (MCS_getentries(false, false, &t_list) && MCListCopyAsString(*t_list, r_string))
-		return;
-
-    // SN-2014-10-07: [[ Bug 13619 ]] 'the folders' should return empty, in case of an error
-    r_string = MCValueRetain(kMCEmptyString);
-}
-
-void MCFilesEvalFiles(MCExecContext& ctxt, MCStringRef& r_string)
-{
-	if (MCsecuremode & MC_SECUREMODE_DISK)
+	if (MCS_getentries(p_directory, p_files, p_detailed, &t_list))
 	{
-		ctxt . LegacyThrow(EE_DISK_NOPERM);
-		return;
+		MCListCopyAsString(*t_list, r_string);
 	}
-	MCAutoListRef t_list;
-	if (MCS_getentries(true, false, &t_list) && MCListCopyAsString(*t_list, r_string))
-		return;
-
-    // SN-2014-10-07: [[ Bug 13619 ]] 'the files' should return empty, in case of an error
-    r_string = MCValueRetain(kMCEmptyString);
+	else
+	{
+		MCStringCopy(kMCEmptyString, r_string);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -261,7 +158,7 @@ void MCFilesEvalSpecialFolderPath(MCExecContext& ctxt, MCStringRef p_folder, MCS
     t_error = false;
     MCNameCreate(p_folder, &t_path);
     // We have a special, mode-specific resource folder
-    if (MCNameIsEqualTo(*t_path, MCN_resources, kMCStringOptionCompareCaseless))
+    if (MCNameIsEqualToCaseless(*t_path, MCN_resources))
         MCModeGetResourcesFolder(r_path);
     else if (!MCS_getspecialfolder(*t_path, r_path))
         t_error = true;
@@ -803,7 +700,13 @@ void MCFilesExecLaunchUrl(MCExecContext& ctxt, MCStringRef p_url)
         t_new_url = p_url;
 
     if (ctxt . EnsureProcessIsAllowed())
+	{
+		// MCS_launch_url will set the result on failure, so we clear here to
+		// make sure it is empty if it succeeds.
+		ctxt.SetTheResultToEmpty();
+		
         MCS_launch_url(*t_new_url);
+	}
     else
         ctxt . LegacyThrow(EE_PROCESS_NOPERM);
 }
@@ -891,7 +794,8 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, i
         IO_handle t_BOM_stream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeRead, True, p_is_driver, 0);
 		if (t_BOM_stream != NULL)
 		{
-			t_encoding = (Encoding_type)MCS_resolve_BOM(t_BOM_stream);
+            uint32_t t_bom_size;
+            t_encoding = (Encoding_type)MCS_resolve_BOM(t_BOM_stream, t_bom_size);
 			MCS_close(t_BOM_stream);
 		}
 		else
@@ -1284,10 +1188,11 @@ void MCFilesExecPerformReadFixedFor(MCExecContext& ctxt, IO_handle p_stream, int
         t_success = MCStringCopyAndRelease(t_buffer, (MCStringRef&)r_output);
     else
         MCValueRelease(t_buffer);
-    
-    if (t_success)
-        r_stat = IO_NORMAL;
-    else
+	
+	// If creating the buffer from the read data failed, then treat it as an IO error.
+	// Otherwise leave 'stat' as it is - as it could be EOF (which isn't stricly a
+	// failure).
+    if (!t_success)
         r_stat = IO_ERROR;
 }
 
@@ -1720,8 +1625,8 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
                     doingspace = True;
                 }
         }
-        else
-        {            
+        else if (!MCStringIsEmpty(*t_norm_sent))
+        {
             // Normalise the character read and append it to the normalised buffer
             unichar_t *t_norm_chunk;
             uint4 t_norm_chunk_size;
@@ -1921,8 +1826,20 @@ static void MCFilesReadComplete(MCExecContext& ctxt, MCValueRef p_output, IO_sta
         if (t_textmode)
         {
             MCAutoStringRef t_output;
-            /* UNCHECKED*/ MCStringConvertLineEndingsToLiveCode((MCStringRef)p_output, &t_output);
-            ctxt . SetItToValue(*t_output);
+            if (!MCStringNormalizeLineEndings((MCStringRef)p_output, 
+                                              kMCStringLineEndingStyleLF, 
+                                              kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                              kMCStringLineEndingOptionNormalizeLSToVT, 
+                                              &t_output, 
+                                              nullptr))
+            {
+                ctxt . SetItToEmpty();
+                ctxt . SetTheResultToStaticCString("error normalizing line endings");
+            }
+            else
+            {
+                ctxt . SetItToValue(*t_output);
+            }
         }
         else
         {
@@ -2178,9 +2095,6 @@ void MCFilesExecReadFromProcess(MCExecContext& ctxt, MCNameRef p_process, MCStri
     intenum_t t_encoding;
 	IO_stat t_stat = IO_NORMAL;
 	t_stream = MCprocesses[t_index].ihandle;
-#ifdef OLD_IO_HANDLE
-	MCshellfd = t_stream->gefd();
-#endif // OLD_IO_HANDLE
     t_encoding = MCprocesses[t_index].encoding;
 	MCAutoValueRef t_output;
 
@@ -2292,7 +2206,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 					len = 0;
 				}
 				MCAutoStringRef s;
-				/* UNCHECKED */ MCStringCopySubstring(p_data, MCRangeMake(t_start_pos, t_data_pos - t_start_pos), &s); 
+				/* UNCHECKED */ MCStringCopySubstring(p_data, MCRangeMakeMinMax(t_start_pos, t_data_pos), &s); 
 				real8 n;
 				if (!MCTypeConvertStringToReal(*s, n))
 				{
@@ -2415,12 +2329,19 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 	}
 
     if (t_encoding != kMCFileEncodingBinary)
-	{
-		MCAutoStringRef t_text_data;
-		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, &t_text_data);
+    {
+        MCAutoStringRef t_text_data;
+        if (!MCStringNormalizeLineEndings(p_data, 
+                                          kMCStringLineEndingStyleLegacyNative, 
+                                          false, 
+                                          &t_text_data, 
+                                          nullptr))
+        {
+            return;
+        }
         MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_encoding, t_stat);
-	}
-	else
+    }
+    else
         MCFilesExecWriteToStream(ctxt, t_stream, p_data, p_unit_type, t_encoding, t_stat);
 
 	if (t_stat != IO_NORMAL)
@@ -2429,9 +2350,6 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 		return;
 	}
 	ctxt . SetTheResultToEmpty();
-#ifdef OLD_IO_HANDLE
-	t_stream->flags |= IO_WRITTEN;
-#endif
 
 #if !defined _WIN32 && !defined _MACOSX
 	MCS_flush(t_stream);
@@ -2478,7 +2396,14 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
     if (MCprocesses[t_index].encoding != EN_BINARY)
 	{
 		MCStringRef t_text_data;
-		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, t_text_data);
+        if (!MCStringNormalizeLineEndings(p_data, 
+                                          kMCStringLineEndingStyleLegacyNative,
+                                          false, 
+                                          t_text_data, 
+                                          nullptr))
+        {
+            return;
+        }
 		// MW-2004-11-17: EOD should only happen when writing to processes in text-mode
 		if (MCStringFirstIndexOfChar(t_text_data, '\004', 0, kMCCompareExact, t_offset))
 		{
@@ -2540,10 +2465,6 @@ void MCFilesExecSeekInFile(MCExecContext& ctxt, MCNameRef p_file, bool is_end, b
 		t_stat = MCS_seek_cur(t_stream, p_at);
 	else
 		t_stat = MCS_seek_set(t_stream, p_at);
-
-#ifdef OLD_IO_HANDLE
-	t_stream->flags |= IO_SEEKED;
-#endif
 
 	if (t_stat != IO_NORMAL)
 		ctxt . LegacyThrow(EE_SEEK_BADWHERE);
@@ -2795,7 +2716,7 @@ void MCFilesGetFiles(MCExecContext& ctxt, MCStringRef& r_value)
 	if (ctxt . EnsureDiskAccessIsAllowed())
 	{
 		MCAutoListRef t_list;
-		if (MCS_getentries(true, false, &t_list) && MCListCopyAsString(*t_list, r_value))
+		if (MCS_getentries(nil, true, false, &t_list) && MCListCopyAsString(*t_list, r_value))
 			return;
 
 		ctxt . Throw();
@@ -2807,7 +2728,7 @@ void MCFilesGetDetailedFiles(MCExecContext& ctxt, MCStringRef& r_value)
 	if (ctxt . EnsureDiskAccessIsAllowed())
 	{
 		MCAutoListRef t_list;
-		if (MCS_getentries(true, true, &t_list) && MCListCopyAsString(*t_list, r_value))
+		if (MCS_getentries(nil, true, true, &t_list) && MCListCopyAsString(*t_list, r_value))
 			return;
 
 		ctxt . Throw();
@@ -2819,7 +2740,7 @@ void MCFilesGetFolders(MCExecContext& ctxt, MCStringRef& r_value)
 	if (ctxt . EnsureDiskAccessIsAllowed())
 	{
 		MCAutoListRef t_list;
-		if (MCS_getentries(false, false, &t_list) && MCListCopyAsString(*t_list, r_value))
+		if (MCS_getentries(nil, false, false, &t_list) && MCListCopyAsString(*t_list, r_value))
 			return;
 
 		ctxt . Throw();
@@ -2831,7 +2752,7 @@ void MCFilesGetDetailedFolders(MCExecContext& ctxt, MCStringRef& r_value)
 	if (ctxt . EnsureDiskAccessIsAllowed())
 	{
 		MCAutoListRef t_list;
-		if (MCS_getentries(false, true, &t_list) && MCListCopyAsString(*t_list, r_value))
+		if (MCS_getentries(nil, false, true, &t_list) && MCListCopyAsString(*t_list, r_value))
 			return;
 
 		ctxt . Throw();

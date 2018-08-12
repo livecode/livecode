@@ -6,7 +6,7 @@
           ${INSTALL_LOCATION}>
 ${PUSH_PERMISSIONS}
 ${USES_PERMISSION}${USES_FEATURE}
-  <uses-sdk android:minSdkVersion="${MIN_SDK_VERSION}" android:targetSdkVersion="${MIN_SDK_VERSION}"/>
+  <uses-sdk android:minSdkVersion="${MIN_SDK_VERSION}" android:targetSdkVersion="26"/>
   <supports-screens
       android:largeScreens="true"
       android:normalScreens="true"
@@ -24,6 +24,7 @@ ${USES_PERMISSION}${USES_FEATURE}
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
+      ${NFC_FILTER}
       ${CUSTOM_URL_FILTER}
     </activity>
     ${PROVIDER}

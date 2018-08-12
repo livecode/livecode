@@ -1,12 +1,16 @@
 Name: keyboard equivalent
 
-Synonyms: key shortcut,keyboard shortcut,key equivalent,keyboard equivalent
+Synonyms: key shortcut, keyboard shortcut, key equivalent,
+keyboard equivalent
 
 Type: glossary
 
 Description:
-A key (or <key combination>) that acts as a shortcut to choose a <menu item> or <button>.
+A key (or <key combination>) that acts as a shortcut to choose a 
+<menu item> or <button>.
 
-References: button (object), menu item (glossary), key combination (glossary)
+References: button (glossary), menu item (glossary),
+key combination (glossary)
 
 Tags: ui
+

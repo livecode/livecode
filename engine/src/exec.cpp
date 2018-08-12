@@ -84,35 +84,16 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
         return MCListCopyAsString((MCListRef)p_value, r_string);
     case kMCValueTypeCodeNumber:
     {
-        if (MCNumberIsInteger((MCNumberRef)p_value))
+	    MCNumberRef t_number = reinterpret_cast<MCNumberRef>(p_value);
+	    if (MCNumberIsInteger(t_number))
             // SN-2014-04-28 [[ StonCache ]]
             // Stores the numeric value in the string
-            return MCStringFormat(r_string, "%d", MCNumberFetchAsInteger((MCNumberRef)p_value)) && MCStringSetNumericValue(r_string, MCNumberFetchAsReal((MCNumberRef)p_value));
-
-        char *t_buffer;
-        uint32_t t_buffer_size;
-        t_buffer = nil;
-        t_buffer_size = 0;
-
-        uint32_t t_length;
-        t_length = MCU_r8tos(t_buffer, t_buffer_size, MCNumberFetchAsReal((MCNumberRef)p_value), m_nffw, m_nftrailing, m_nfforce);
-
-        if (!MCStringCreateWithNativeCharBufferAndRelease((char_t *)t_buffer,
-                                                          t_length,
-                                                          t_buffer_size,
-                                                          r_string))
-        {
-	        delete[] t_buffer;
-	        return false;
-        }
-
-        if (!MCStringSetNumericValue(r_string,
-                                     MCNumberFetchAsReal((MCNumberRef)p_value)))
-        {
-	        return false;
-        }
-
-        return true;
+		    return
+			    MCStringFormat(r_string, "%d", MCNumberFetchAsInteger(t_number)) &&
+			    MCStringSetNumericValue(r_string, MCNumberFetchAsReal(t_number));
+	    else
+		    return MCU_r8tos(MCNumberFetchAsReal(t_number),
+		                     m_nffw, m_nftrailing, m_nfforce, r_string);
     }
     break;
     default:
@@ -172,11 +153,12 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
         }
     case kMCValueTypeCodeData:
         {
-            MCAutoStringRef t_string;
-            if (MCStringDecode((MCDataRef)p_value, kMCStringEncodingNative, false, &t_string))
-                return ConvertToNumber((MCValueRef)*t_string, r_number);
-            else
+            double t_number;
+            t_number = 0.0;
+            if (!MCTypeConvertDataToReal((MCDataRef)p_value, t_number, m_convertoctals))
                 break;
+            
+            return MCNumberCreateWithReal(t_number, r_number);
         }
     default:
         break;
@@ -474,7 +456,7 @@ bool MCExecContext::FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_v
 
 bool MCExecContext::FormatLegacyColor(MCColor p_color, MCStringRef& r_value)
 {
-	return MCStringFormat(r_value, "%d,%d,%d", p_color . red >> 8, p_color . green >> 8, p_color . blue >> 8);
+    return MCU_format_color(p_color, r_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -769,25 +751,6 @@ bool MCExecContext::EvaluateExpression(MCExpression *p_expr, Exec_errors p_error
 	return false;
 }
 
-#ifdef LEGACY_EXEC
-bool MCExecContext::EvaluateExpression(MCExpression *p_expr, MCValueRef& r_result)
-{
-	if (p_expr -> eval(m_ep) != ES_NORMAL)
-	{
-		LegacyThrow(EE_EXPR_EVALERROR);
-		return false;
-	}
-
-	if (!m_ep . copyasvalueref(r_result))
-	{
-		Throw();
-		return false;
-	}
-
-	return true;
-}
-#endif
-
 bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result)
 {
     MCAssert(p_expr != nil);
@@ -892,7 +855,6 @@ bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uin
 bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr, uint2 line, uint2 pos, Exec_errors p_error, bool& r_value)
 {
     MCAssert(p_expr != nil);
-    MCExecValue t_value;
     
     bool t_failure, t_can_debug;
     t_can_debug = true;
@@ -1236,10 +1198,10 @@ void MCExecContext::UserThrow(MCStringRef p_error)
 	m_stat = ES_ERROR;
 }
 
-MCObjectHandle *MCExecContext::GetObjectHandle(void) const
+MCObjectHandle MCExecContext::GetObjectHandle(void) const
 {
     extern MCExecContext *MCECptr;
-	return MCECptr->GetObject()->gethandle();
+	return MCECptr->GetObject()->GetHandle();
 }
 
 Exec_stat MCExecContext::Catch(uint2 p_line, uint2 p_pos)
@@ -1250,36 +1212,55 @@ Exec_stat MCExecContext::Catch(uint2 p_line, uint2 p_pos)
 void MCExecContext::SetTheResultToEmpty(void)
 {
 	MCresult -> clear();
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToValue(MCValueRef p_value)
 {
-	MCresult -> setvalueref(p_value);
+    MCresult -> setvalueref(p_value);
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToStaticCString(const char *p_cstring)
 {
-	MCresult -> sets(p_cstring);
+    MCresult -> sets(p_cstring);
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToNumber(real64_t p_value)
 {
     MCresult -> setnvalue(p_value);
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::GiveCStringToResult(char *p_cstring)
 {
     MCresult -> grab(p_cstring, MCCStringLength(p_cstring));
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToCString(const char *p_string)
 {
     MCresult -> copysvalue(p_string);
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToBool(bool p_bool)
 {
     MCresult -> sets(MCU_btos(p_bool));
+    MCresultmode = kMCExecResultModeReturn;
+}
+
+void MCExecContext::SetTheReturnError(MCValueRef p_value)
+{
+    MCresult -> setvalueref(p_value);
+    MCresultmode = kMCExecResultModeReturnError;
+}
+
+void MCExecContext::SetTheReturnValue(MCValueRef p_value)
+{
+    MCresult -> setvalueref(p_value);
+    MCresultmode = kMCExecResultModeReturnValue;
 }
 
 // SN-2015-06-03: [[ Bug 11277 ]] Refactor MCExecPoint update
@@ -1347,7 +1328,7 @@ void MCExecContext::doscript(MCExecContext &ctxt, MCStringRef p_script, uinteger
         case PS_NORMAL:
             if (type == ST_ID)
                 if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
-                    newstatement = new MCComref(sp.gettoken_nameref());
+                    newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
                 else
                 {
                     if (te->type != TT_STATEMENT)
@@ -1413,7 +1394,7 @@ void MCExecContext::doscript(MCExecContext &ctxt, MCStringRef p_script, uinteger
     while (statements != NULL)
     {
         statements->exec_ctxt(ctxt2);
-        Exec_stat stat = ctxt2 . GetExecStat();
+        stat = ctxt2 . GetExecStat();
         if (stat == ES_ERROR)
         {
             deletestatements(statements);
@@ -1446,110 +1427,64 @@ void MCExecContext::doscript(MCExecContext &ctxt, MCStringRef p_script, uinteger
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCPropertyFormatUIntList(uinteger_t *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
+template<typename Formatter, typename Element>
+static bool MCPropertyFormatList(Formatter p_format,
+                                 Element *p_list,
+                                 uindex_t p_count,
+                                 char_t p_delimiter,
+                                 MCStringRef &r_string)
 {
     if (p_count == 0)
-    {
-        r_string = MCValueRetain(kMCEmptyString);
-        return true;
-    }
-    
-	MCAutoStringRef t_list;
-	bool t_success;
-	t_success = MCStringCreateMutable(0, &t_list);
-	
-	for (uindex_t i = 0; i < p_count && t_success; i++)
+        return MCStringCopy(kMCEmptyString, r_string);
+
+    MCAutoListRef t_list;
+    if (!MCListCreateMutable(p_delimiter, &t_list))
+        return false;
+
+	for (uindex_t i = 0; i < p_count; ++i)
 	{
-		if (t_success && i != 0)
-			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
-        
-		t_success = MCStringAppendFormat(*t_list, "%d", p_list[i]);
+		MCAutoStringRef t_formatted;
+		if (!p_format(p_list[i], &t_formatted))
+			return false;
+		if (!MCListAppend(*t_list, *t_formatted))
+			return false;
 	}
-	
-	if (t_success)
-		return MCStringCopy(*t_list, r_string);
-	
-	return false;
+
+    return MCListCopyAsString(*t_list, r_string);
+}
+
+static bool MCPropertyFormatUIntList(uinteger_t *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
+{
+    auto t_format =
+        [](uinteger_t& x, MCStringRef& s) { return MCStringFormat(s, "%d", x); };
+    return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, r_string);
 }
 
 static bool MCPropertyFormatDoubleList(double *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
-    if (p_count == 0)
-    {
-        r_string = MCValueRetain(kMCEmptyString);
-        return true;
-    }
-    
-	MCAutoStringRef t_list;
-	bool t_success;
-	t_success = MCStringCreateMutable(0, &t_list);
-	
-	for (uindex_t i = 0; i < p_count && t_success; i++)
-	{
-		if (t_success && i != 0)
-			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
-        
-		t_success = MCStringAppendFormat(*t_list, "%f", p_list[i]);
-	}
-	
-	if (t_success)
-		return MCStringCopy(*t_list, r_string);
-	
-	return false;
+    auto t_format =
+        [](double& x, MCStringRef& s) { return MCStringFormat(s, "%f", x); };
+    return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, r_string);
 }
 
 static bool MCPropertyFormatStringList(MCStringRef *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
-    if (p_count == 0)
-    {
-        r_string = MCValueRetain(kMCEmptyString);
-        return true;
-    }
-    
-	MCAutoStringRef t_list;
-	bool t_success;
-	t_success = MCStringCreateMutable(0, &t_list);
-	
-	for (uindex_t i = 0; i < p_count && t_success; i++)
-	{
-        if (t_success && i != 0)
-			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
-        
-		t_success = MCStringAppend(*t_list, p_list[i]);
-	}
-	
-	if (t_success)
-		return MCStringCopy(*t_list, r_string);
-	
-	return false;
+    return MCPropertyFormatList(MCStringCopy, p_list, p_count, p_delimiter, r_string);
 }
 
 static bool MCPropertyFormatPointList(MCPoint *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
-    if (p_count == 0)
-    {
-        r_string = MCValueRetain(kMCEmptyString);
-        return true;
-    }
-    
-	MCAutoStringRef t_list;
-	bool t_success;
-	t_success = MCStringCreateMutable(0, &t_list);
-	
-	for (uindex_t i = 0; i < p_count && t_success; i++)
+	auto t_format = [](MCPoint& p, MCStringRef& s)
 	{
-        if (t_success && i != 0)
-			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
-        
-        // AL-2014-05-19: [[ Bug 12428 ]] Only add one empty line for non-linked vertices.
-        if (p_list[i].x != MININT2 && p_list[i].y != MININT2)
-            t_success = MCStringAppendFormat(*t_list, "%d,%d", p_list[i].x, p_list[i].y);
-	}
-	
-	if (t_success)
-		return MCStringCopy(*t_list, r_string);
-	
-	return false;
+		if  (p.x == MININT2 && p.y == MININT2)
+		{
+			s = MCValueRetain(kMCEmptyString);
+			return s != nullptr;
+		}
+		else
+			return MCStringFormat(s, "%d,%d", p.x, p.y);
+	};
+    return MCPropertyFormatList(t_format, p_list, p_count, p_delimiter, r_string);
 }
 
 static bool MCPropertyParseLooseUIntList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, uinteger_t*& r_list)
@@ -1592,7 +1527,7 @@ static bool MCPropertyParseLooseUIntList(MCStringRef p_input, char_t p_delimiter
 			uinteger_t t_d;
         
 			if (t_success)
-				t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_uint_string);
+				t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_uint_string);
 			
 			if (t_success)
 				t_success = MCU_stoui4(*t_uint_string, t_d);
@@ -1650,7 +1585,7 @@ static bool MCPropertyParseLooseDoubleList(MCStringRef p_input, char_t p_delimit
 			double t_d;
 			
             if (t_success)
-                t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_double_string);
+                t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_double_string);
             
             if (t_success)
                 t_success = MCTypeConvertStringToReal(*t_double_string, t_d);
@@ -1698,7 +1633,7 @@ static bool MCPropertyParseStringList(MCStringRef p_input, char_t p_delimiter, u
 			t_new_offset = t_length;
         
 		if (t_success)
-            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), t_string);
+            t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), t_string);
 		
 		if (t_success)
 			t_success = t_list . Push(t_string);
@@ -1757,7 +1692,7 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
         else
         {
             if (t_success)
-                t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_point_string);
+                t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_point_string);
             
             if (t_success)
                 MCU_stoi2x2(*t_point_string, t_point . x, t_point . y);
@@ -1777,6 +1712,8 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
 
 void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCExecValue& r_value)
 {
+    MCAssert(prop -> getter != nil);
+    
     switch(prop -> type)
     {
         case kMCPropertyTypeAny:
@@ -1802,7 +1739,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeInt16:
         case kMCPropertyTypeInt32:
         {
-            integer_t t_value;
             ((void(*)(MCExecContext&, void *, integer_t&))prop -> getter)(ctxt, mark, r_value . int_value);
             if (!ctxt . HasError())
             {
@@ -1815,7 +1751,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeUInt16:
         case kMCPropertyTypeUInt32:
         {
-            uinteger_t t_value;
             ((void(*)(MCExecContext&, void *, uinteger_t&))prop -> getter)(ctxt, mark, r_value . uint_value);
             if (!ctxt . HasError())
             {
@@ -1826,7 +1761,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeDouble:
         {
-            double t_value;
             ((void(*)(MCExecContext&, void *, double&))prop -> getter)(ctxt, mark, r_value . double_value);
             if (!ctxt . HasError())
             {
@@ -1837,7 +1771,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeChar:
         {
-            char_t t_value;
             ((void(*)(MCExecContext&, void *, char_t&))prop -> getter)(ctxt, mark, r_value . char_value);
             if (!ctxt . HasError())
             {
@@ -1870,7 +1803,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeName:
         {
-            MCNewAutoNameRef t_value;
             ((void(*)(MCExecContext&, void *, MCNameRef&))prop->getter)(ctxt, mark, r_value . nameref_value);
             if (!ctxt.HasError())
             {
@@ -1881,7 +1813,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeColor:
         {
-            MCColor t_value;
             ((void(*)(MCExecContext&, void *, MCColor&))prop -> getter)(ctxt, mark, r_value . color_value);
             if (!ctxt . HasError())
             {
@@ -1892,7 +1823,6 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeRectangle:
         {
-            MCRectangle t_value;
             ((void(*)(MCExecContext&, void *, MCRectangle&))prop -> getter)(ctxt, mark, r_value . rectangle_value);
             if (!ctxt . HasError())
             {
@@ -1900,10 +1830,30 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             }
         }
             break;
+        
+        case kMCPropertyTypeRectangle32:
+        {
+            MCRectangle32 t_value;
+            ((void(*)(MCExecContext&, void *, MCRectangle32&))prop -> getter)(ctxt, mark, t_value);
+            
+            MCAutoStringRef t_string;
+            if (!ctxt . HasError())
+            {
+                if (MCStringFormat(&t_string, "%d,%d,%d,%d", t_value.x, t_value.y, t_value.x + t_value.width, t_value.y + t_value.height))
+                {
+                    r_value . stringref_value = t_string.Take();
+                    r_value . type = kMCExecValueTypeStringRef;
+                }
+                else
+                {
+                    ctxt.Throw();
+                }
+            }
+        }
+        break;
             
         case kMCPropertyTypePoint:
         {
-            MCPoint t_value;
             ((void(*)(MCExecContext&, void *, MCPoint&))prop -> getter)(ctxt, mark, r_value . point_value);
             if (!ctxt . HasError())
             {
@@ -2102,6 +2052,29 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+		case kMCPropertyTypeOptionalDouble:
+		{
+			double t_value;
+			double *t_value_ptr;
+			t_value_ptr = &t_value;
+			((void(*)(MCExecContext&, void *, double *&))prop -> getter)(ctxt, mark, t_value_ptr);
+			if (!ctxt . HasError())
+			{
+				if (t_value_ptr != nil)
+				{
+					r_value . double_value = t_value;
+					r_value . type = kMCExecValueTypeDouble;
+				}
+				else
+				{
+					r_value . stringref_value = MCValueRetain(kMCEmptyString);
+					r_value . type = kMCExecValueTypeStringRef;
+				}
+			}
+
+		}
+			break;
+
         case kMCPropertyTypeOptionalString:
         {
             MCAutoStringRef t_value;
@@ -2306,6 +2279,28 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 {
                     r_value . uint_value = t_value;
                     r_value . type = kMCExecValueTypeUInt;
+                }
+            }
+        }
+            break;
+		
+		// PM-2016-05-18: [[ Bug 17666 ]] Handle case of kMCPropertyTypeMixedInt16
+		case kMCPropertyTypeMixedInt16:
+        {
+            bool t_mixed;
+            integer_t t_value;
+            ((void(*)(MCExecContext&, void *, bool&, integer_t&))prop -> getter)(ctxt, mark, t_mixed, t_value);
+            if (!ctxt . HasError())
+            {
+                if (t_mixed)
+                {
+                    r_value . stringref_value = MCSTR(MCmixedstring);
+                    r_value . type = kMCExecValueTypeStringRef;
+                }
+                else
+                {
+                    r_value . int_value = t_value;
+                    r_value . type = kMCExecValueTypeInt;
                 }
             }
         }
@@ -2596,6 +2591,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
 
 void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCExecValue p_value)
 {
+    MCAssert(prop -> setter != nil);
+    
     switch(prop -> type)
     {
         case kMCPropertyTypeAny:
@@ -2721,6 +2718,25 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+        case kMCPropertyTypeRectangle32:
+        {
+            int4 a, b, c, d;
+            MCAutoStringRef t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value));
+            if (!MCU_stoi4x4(*t_value, a, b, c, d))
+                ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
+            if (!ctxt . HasError())
+            {
+                MCRectangle32 t_rect;
+                t_rect.x = a;
+                t_rect.y = b;
+                t_rect.width = c - a;
+                t_rect.height = d - b;
+                ((void(*)(MCExecContext&, void *, MCRectangle32))prop -> setter)(ctxt, mark, t_rect);
+            }
+        }
+        break;
+            
         case kMCPropertyTypePoint:
         {
             MCPoint t_value;
@@ -2739,10 +2755,10 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 ctxt . LegacyThrow(EE_PROPERTY_NOTAINTPAIR);
             if (!ctxt . HasError())
             {
-                integer_t t_value[2];
-                t_value[0] = a;
-                t_value[1] = b;
-                ((void(*)(MCExecContext&, void *, integer_t[2]))prop -> setter)(ctxt, mark, t_value);
+                integer_t t_int_value[2];
+                t_int_value[0] = a;
+                t_int_value[1] = b;
+                ((void(*)(MCExecContext&, void *, integer_t[2]))prop -> setter)(ctxt, mark, t_int_value);
             }
         }
             break;
@@ -2756,12 +2772,12 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
             if (!ctxt . HasError())
             {
-                integer_t t_value[4];
-                t_value[0] = a;
-                t_value[1] = b;
-                t_value[2] = c;
-                t_value[3] = d;
-                ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> setter)(ctxt, mark, t_value);
+                integer_t t_int_value[4];
+                t_int_value[0] = a;
+                t_int_value[1] = b;
+                t_int_value[2] = c;
+                t_int_value[3] = d;
+                ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> setter)(ctxt, mark, t_int_value);
             }
         }
             break;
@@ -2775,12 +2791,12 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
             if (!ctxt . HasError())
             {
-                integer_t t_value[4];
-                t_value[0] = a;
-                t_value[1] = b;
-                t_value[2] = c;
-                t_value[3] = d;
-                ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> setter)(ctxt, mark, t_value);
+                integer_t t_int_value[4];
+                t_int_value[0] = a;
+                t_int_value[1] = b;
+                t_int_value[2] = c;
+                t_int_value[3] = d;
+                ((void(*)(MCExecContext&, void *, integer_t[4]))prop -> setter)(ctxt, mark, t_int_value);
             }
         }
             break;
@@ -2956,6 +2972,23 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+		case kMCPropertyTypeOptionalDouble:
+		{
+			double t_value;
+			double *t_value_ptr;
+			if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
+				t_value_ptr = nil;
+			else
+			{
+				t_value_ptr = &t_value;
+				MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeDouble, &t_value);
+			}
+
+			if (!ctxt . HasError())
+				((void(*)(MCExecContext&, void *, double*))prop -> setter)(ctxt, mark, t_value_ptr);
+		}
+			break;
+
         case kMCPropertyTypeMixedOptionalString:
         case kMCPropertyTypeOptionalString:
         {
@@ -3182,7 +3215,7 @@ void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCExecValu
 			break;
             
         case kMCExecValueTypeColor:
-            if(!MCStringFormat((MCStringRef&)r_value, "%u,%u,%u", (((MCColor *)p_from_value) -> red >> 8) & 0xff, (((MCColor *)p_from_value) -> green >> 8) & 0xff, (((MCColor *)p_from_value) -> blue >> 8) & 0xff))
+            if (!MCU_format_color(*(MCColor *)p_from_value, (MCStringRef &)r_value))
                 ctxt . Throw();
 			break;
 			

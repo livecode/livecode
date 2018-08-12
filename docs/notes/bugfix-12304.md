@@ -1,1 +1,0 @@
-# Pasting LiveCode controls from other copies of LiveCode doesn't work

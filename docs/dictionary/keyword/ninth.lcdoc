@@ -4,13 +4,14 @@ Type: keyword
 
 Syntax: ninth
 
-Summary: Designates the ninth member of a set.
+Summary:
+Designates the ninth member of a set.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the script of the ninth group to empty
@@ -19,12 +20,19 @@ Example:
 get first item of ninth line of field "Expressions"
 
 Description:
-Use the <ninth> <keyword> in an <object reference> or <chunk expression>.
+Use the <ninth> <keyword> in an <object reference> or <chunk
+expression>. 
 
-The <ninth> <keyword> can be used to specify any <object> whose <number> <property> is 9. It can also be used to designate the ninth <chunk> in a <chunk expression>.
+The <ninth> <keyword> can be used to specify any <object(glossary)>
+whose <number> <property> is 9. It can also be used to designate the
+ninth <chunk> in a <chunk expression>.
 
 The word the is optional when using the <ninth> <keyword>.
 
-References: middle (keyword), ninth (keyword), last (keyword), number (property), object (object), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
+References: number (function), object (glossary), keyword (glossary),
+property (glossary), object reference (glossary),
+chunk expression (glossary), chunk (glossary), middle (keyword),
+ninth (keyword), last (keyword), number (property)
 
 Tags: math
+

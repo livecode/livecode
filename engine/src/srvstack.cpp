@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -119,6 +119,11 @@ void MCStack::sethints(void)
 
 void MCStack::destroywindowshape(void)
 {
+}
+
+bool MCStack::view_platform_dirtyviewonresize() const
+{
+	return false;
 }
 
 MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)

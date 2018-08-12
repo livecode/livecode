@@ -1,20 +1,21 @@
 Name: seconds
 
+Synonyms: sec, secs
+
 Type: function
 
-Syntax: the [long] seconds 
+Syntax: the [long] seconds
 
 Syntax: seconds()
 
-Summary: <return|Returns> the number of seconds since the start of the <eon>.
-
-Synonyms: sec,secs
+Summary:
+<return|Returns> the number of seconds since the start of the <eon>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the seconds -- might return 961694002
@@ -24,15 +25,23 @@ the long seconds -- might return 961694002.834503
 
 Returns:
 The <seconds> <function> <return|returns> a positive integer.
-If the long seconds form is used, the <seconds> <function> <return|returns> a positive number with up to six digits after the <decimal point>.
+If the long seconds form is used, the <seconds> <function>
+<return|returns> a positive number with up to six digits after the
+<decimal point>.
 
 Description:
 Use the <seconds> <function> to time <event|events>. 
 
-The <seconds> <function> <return|returns> the total number of seconds since midnight, January 1, 1970 GMT.
+The <seconds> <function> <return|returns> the total number of seconds
+since midnight, January 1, 1970 GMT.
 
-The long seconds form returns a value with a precision to a millionth of a second. However, this value is not normally accurate past the third decimal place because of processor delays.
+The long seconds form returns a value with a precision to a millionth of
+a second. However, this value is not normally accurate past the third
+decimal place because of processor delays.
 
-References: wait (command), milliseconds (function), event (glossary), eon (glossary), return (glossary), decimal point (glossary), function (control_st)
+References: wait (command), function (control structure),
+milliseconds (function), event (glossary), eon (glossary),
+return (glossary), decimal point (glossary)
 
 Tags: math
+

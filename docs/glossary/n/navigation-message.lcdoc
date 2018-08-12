@@ -5,8 +5,14 @@ Synonyms: navigation message
 Type: glossary
 
 Description:
-One of the <built-in message|built-in messages> LiveCode sends automatically when going from <card> to <card> or <stack> to <stack>. Navigation messages include <openCard>, <closeBackground>, <preOpenCard>, and similar <message|messages>.
+One of the <built-in message|built-in messages> LiveCode sends
+automatically when going from <card> to <card> or <stack> to <stack>.
+Navigation messages include <openCard>, <closeBackground>,
+<preOpenCard>, and similar <message|messages>.
 
-References: card (object), stack (object), openCard (message), closeBackground (message), preOpenCard (message), message (glossary), built-in message (glossary)
+References: card (glossary), stack (glossary), message (glossary),
+built-in message (glossary), openCard (message),
+closeBackground (message), preOpenCard (message)
 
 Tags: navigation
+

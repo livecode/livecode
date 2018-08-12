@@ -1,0 +1,181 @@
+/*
+Copyright (C) 2015-2016 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This widget is a spinner or activity indicator. Spinners provide visual
+feedback to users use when performing an activity for an unknown
+duration such as processing a large amount of data or presenting a
+complex user interface.
+*/
+
+-- declaring extension as widget, followed by identifier
+widget com.livecode.widget.spinner
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.math
+--
+
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata title is "Spinner"
+metadata author is "LiveCode"
+metadata version is "0.0.0"
+metadata preferredSize is "36,36"
+metadata svgicon is "M496 1408Q496 1468 453.5 1510 411 1552 352 1552 292 1552 250 1510 208 1468 208 1408 208 1348 250 1306 292 1264 352 1264 411 1264 453.5 1306 496 1348 496 1408ZM928 1600Q928 1653 890.5 1690.5 853 1728 800 1728 747 1728 709.5 1690.5 672 1653 672 1600 672 1547 709.5 1509.5 747 1472 800 1472 853 1472 890.5 1509.5 928 1547 928 1600ZM320 960Q320 1026 273 1073 226 1120 160 1120 94 1120 47 1073 0 1026 0 960 0 894 47 847 94 800 160 800 226 800 273 847 320 894 320 960ZM1360 1408Q1360 1454 1327 1487 1294 1520 1248 1520 1202 1520 1169 1487 1136 1454 1136 1408 1136 1362 1169 1329 1202 1296 1248 1296 1294 1296 1327 1329 1360 1362 1360 1408ZM528 512Q528 585 476.5 636.5 425 688 352 688 279 688 227.5 636.5 176 585 176 512 176 439 227.5 387.5 279 336 352 336 425 336 476.5 387.5 528 439 528 512ZM992 320Q992 400 936 456 880 512 800 512 720 512 664 456 608 400 608 320 608 240 664 184 720 128 800 128 880 128 936 184 992 240 992 320ZM1536 960Q1536 1000 1508 1028 1480 1056 1440 1056 1400 1056 1372 1028 1344 1000 1344 960 1344 920 1372 892 1400 864 1440 864 1480 864 1508 892 1536 920 1536 960ZM1328 512Q1328 545 1304.5 568.5 1281 592 1248 592 1215 592 1191.5 568.5 1168 545 1168 512 1168 479 1191.5 455.5 1215 432 1248 432 1281 432 1304.5 455.5 1328 479 1328 512Z"
+metadata _ide is "true"
+
+metadata foregroundColor.label is "Marker color"
+
+/**
+Summary: Whether to scale the markers to or maintain a constant size
+
+Syntax:
+set the scaleMarkers of <widget> to { true | false }
+get the scaleMarkers of <widget>
+
+Value (boolean): True if markers should be scaled; false otherwise
+
+Description:
+If true, the markers will be scaled as in addition to changing
+transparency. The default value is true.
+
+*/
+property scaleMarkers get mScaleMarkers set setScaleMarkers
+metadata scaleMarkers.default is "true"
+metadata scaleMarkers.label is "Scale markers"
+private variable mScaleMarkers as Boolean
+
+/**
+Summary: The number of markers to display in the spinner
+
+Syntax:
+set the markerCount of <widget> to <markers>
+get the markerCount of <widget>
+
+Value (integer): The number of markers to display around the circle
+
+Description:
+The markerCount is an integer greater than 4. The default value is 8.
+
+*/
+property markerCount get mMarkerCount set setMarkerCount
+metadata markerCount.editor is "com.livecode.pi.integer"
+metadata markerCount.default is "8"
+metadata markerCount.step is "1"
+metadata markerCount.min is "5"
+metadata markerCount.label is "Marker count"
+private variable mMarkerCount as Integer
+
+private variable mBigMarkerOffset as Integer
+
+constant kUpdate is 0.3
+
+public handler onSave(out rProperties as Array)
+	put { "scaleMarkers": mScaleMarkers, \
+         "markerCount" : mMarkerCount } into rProperties
+end handler
+
+public handler onLoad(in pProperties as Array)
+	put pProperties["scaleMarkers"] into mScaleMarkers
+	put pProperties["markerCount"] into mMarkerCount
+end handler
+
+-- called when widget is created
+public handler onCreate()
+	put true into mScaleMarkers
+	put 8 into mMarkerCount
+end handler
+
+public handler onOpen()
+	put 0 into mBigMarkerOffset
+	schedule timer in kUpdate seconds
+end handler
+
+-- called whenever LiveCode needs to redraw the widget
+public handler onPaint()
+	variable tRadius as Number
+	put (the minimum of my width and my height) / 2 into tRadius
+  	
+	variable tBigMarkerSize as Number
+	put tRadius / mMarkerCount * 2 into tBigMarkerSize
+	
+	variable tPaint as Paint
+	put my foreground paint into tPaint
+
+	translate this canvas by [my width / 2, my height / 2] 
+
+   variable tMarker as Integer
+
+	repeat with tMarker from 1 up to mMarkerCount
+		variable tAngle as Number
+		variable tX as Number
+		variable tY as Number
+
+		put ((mBigMarkerOffset + tMarker)/mMarkerCount * 360) * pi / 180 into tAngle
+		
+		put -cos(tAngle) * (tRadius - tBigMarkerSize) into tY
+		put sin(tAngle) * (tRadius - tBigMarkerSize) into tX
+		
+		variable tScale as Number
+		put 0.3 + 0.7 * tMarker/mMarkerCount into tScale
+		
+		variable tSize as Number
+		if mScaleMarkers then
+			put tBigMarkerSize * tScale into tSize
+		else
+			put tBigMarkerSize * 0.8 into tSize
+		end if
+		
+		set the opacity of this canvas to tScale
+		
+		variable tPath as Path
+		put circle path centered at point [tX, tY] with radius tSize into tPath
+
+		set the paint of this canvas to tPaint
+		fill tPath on this canvas
+	end repeat
+end handler
+
+public handler onTimer()
+	redraw all
+	if mBigMarkerOffset is mMarkerCount -1 then
+		put 0 into mBigMarkerOffset
+	else
+		add 1 to mBigMarkerOffset
+	end if
+	schedule timer in kUpdate seconds
+end handler
+
+public handler setScaleMarkers(in pScaleMarkers as Boolean)
+	put pScaleMarkers into mScaleMarkers
+	redraw all
+end handler
+
+public handler setMarkerCount(in pMarkerCount as Integer)
+	if pMarkerCount < 5 then
+		throw "Invalid marker count: " & pMarkerCount
+		return
+	end if
+	
+	put pMarkerCount into mMarkerCount
+	redraw all
+end handler
+
+end widget

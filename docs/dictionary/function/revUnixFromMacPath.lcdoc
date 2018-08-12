@@ -4,13 +4,15 @@ Type: function
 
 Syntax: revUnixFromMacPath(<macPathname> [, <convertOSX>])
 
-Summary: Converts a <Mac OS>-style <file path|pathname> to a <Unix> -style <file path|pathname>.
+Summary:
+Converts a <Mac OS>-style <file path|pathname> to a <Unix> -style <file
+path|pathname>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revUnixFromMacPath("Disk:Folder:") -- returns "/Disk/Folder/"
@@ -22,29 +24,79 @@ Example:
 put revUnixFromMacPath(myValue,true)
 
 Parameters:
-macPathname: A file or folder pathname in the format used by the Mac OS for file paths.
-convertOSX: 
+macPathname:
+A file or folder pathname in the format used by the Mac OS for file
+paths. 
+
+convertOSX:
+
 
 Returns:
-The <revUnixFromMacPath> <function> returns a <string> with the <file path> in the format expected by the <Mac OS>.
-The <convertOSX> is true or false. If you don't specify the <convertOSX>, if <OS X> is running, LiveCode assumes the <macPathname> is an <OS X>-style path to a <Mac OS>-style path; otherwise, it assumes the <macPathname> is a <Mac OS>-style path.
+The <revUnixFromMacPath> <function> returns a <string> with the <file
+path> in the format expected by the <Mac OS>. The <convertOSX> is true
+or false. If you don't specify the <convertOSX>, if <OS X> is running,
+LiveCode assumes the <macPathname> is an <OS X>-style path to a <Mac
+OS>-style path; otherwise, it assumes the <macPathname> is a <Mac
+OS>-style path.
 
 Description:
-Use the <revUnixFromMacPath> <function> to convert a <Mac OS>-style file path to the LiveCode <file path> format (for example, to convert a <file path|pathname> returned by an XFCN).
+Use the <revUnixFromMacPath> <function> to convert a <Mac OS>-style file
+path to the LiveCode <file path> format (for example, to convert a <file
+path|pathname> returned by an XFCN).
 
-The <revUnixFromMacPath> <function> converts colons (:) to slashes (/), the folder-level <delimiter> for <Unix> <file path|pathnames>. It also adjusts <relative file path|relative paths> and <absolute file path|absolute paths> to be in <Unix> standard form.
+The <revUnixFromMacPath> <function> converts colons (:) to slashes (/),
+the folder-level <delimiter> for <Unix> <file path|pathnames>. It also
+adjusts <relative file path|relative paths> and <absolute file
+path|absolute paths> to be in <Unix> standard form.
 
-On Mac OS systems, absolute paths always begin with the name of the disk that the file or folder is on. On OS X systems, the startup disk's name does not appear in absolute file paths. Instead, if a file or folder is on the startup disk, the first part of the file path is the top-level folder that the file is in. If a file or folder is on a disk other than the startup disk, its absolute path starts with "Volumes", followed by the disk name.
+On Mac OS systems, absolute paths always begin with the name of the disk
+that the file or folder is on. On OS X systems, the startup disk's name
+does not appear in absolute file paths. Instead, if a file or folder is
+on the startup disk, the first part of the file path is the top-level
+folder that the file is in. If a file or folder is on a disk other than
+the startup disk, its absolute path starts with "Volumes", followed by
+the disk name.
 
-The OS X path convention is used by LiveCode, but the old Mac OS-style path convention is used by certain applications (such as AppleScript), even on OS X systems. If the <convertOSX> is true (or if you don't specify the <convertOSX> and the application is running under <OS X>), the <revUnixFromMacPath> <function> assumes that <absolute file path|absolute paths> are using the <OS X> convention. If the <convertOSX> is false, the <revUnixFromMacPath> <function> assumes that absolute paths use the <Mac OS> convention.
+The OS X path convention is used by LiveCode, but the old Mac OS-style
+path convention is used by certain applications (such as AppleScript),
+even on OS X systems. If the <convertOSX> is true (or if you don't
+specify the <convertOSX> and the application is running under <OS X>),
+the <revUnixFromMacPath> <function> assumes that <absolute file
+path|absolute paths> are using the <OS X> convention. If the
+<convertOSX> is false, the <revUnixFromMacPath> <function> assumes that
+absolute paths use the <Mac OS> convention.
 
-LiveCode always uses the Unix pathname standard for cross-platform compatibility. You need to convert the pathname only if you are passing it to another program or external. If you are using only LiveCode commands and functions, you do not need to convert the pathname, since LiveCode does it for you.
+LiveCode always uses the Unix pathname standard for cross-platform
+compatibility. You need to convert the pathname only if you are passing
+it to another program or external. If you are using only LiveCode
+commands and functions, you do not need to convert the pathname, since
+LiveCode does it for you.
 
->*Note:* When included in a <standalone application>, the <Common library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <revUnixFromMacPath> <function> is not yet available. This may affect attempts to use this <function> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <revUnixFromMacPath> <function> can be used in any <handler>.
+>*Note:* When included in a <standalone application>, the <Common
+> library> is implemented as a hidden <group> and made available when
+> the <group> receives its first <openBackground> message. During the
+> first part of the <application|application's> startup process, before
+> this <message> is sent, the <revUnixFromMacPath> <function> is not yet
+> available. This may affect attempts to use this <function> in
+> <startup>, <preOpenStack>, <openStack>, or <preOpenCard>
+> <handler|handlers> in the <main stack>. Once the <application> has
+> finished starting up, the <library> is available and the
+> <revUnixFromMacPath> <function> can be used in any <handler>.
 
 Changes:
-The convertOSX parameter was introduced in version 2.1.1. In previous versions, the revUnixFromMacPath function did not attempt to convert between the Mac OS and OS X conventions described above.
+The convertOSX parameter was introduced in version 2.1.1. In previous
+versions, the revUnixFromMacPath function did not attempt to convert
+between the Mac OS and OS X conventions described above.
 
-References: string (keyword), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), answer file (command), function (control_st), application (glossary), standalone application (glossary), file path (glossary), main stack (glossary), OS X (glossary), relative file path (glossary), group (glossary), absolute file path (glossary), Mac OS (glossary), message (glossary), Unix (glossary), delimiter (glossary), handler (glossary), Common library (library), library (library)
+References: answer file (command), function (control structure),
+application (glossary), standalone application (glossary),
+file path (glossary), main stack (glossary), OS X (glossary),
+relative file path (glossary), group (glossary),
+absolute file path (glossary), Mac OS (glossary), message (glossary),
+Unix (glossary), delimiter (glossary), handler (glossary),
+string (keyword), Common library (library), library (library),
+startup (message), openBackground (message), preOpenStack (message),
+openStack (message), preOpenCard (message)
 
 Tags: file system
+

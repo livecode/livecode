@@ -1,1 +1,0 @@
-#   [Player] Playback is locked when alwaysBuffer is true and video is playing

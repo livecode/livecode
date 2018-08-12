@@ -4,15 +4,16 @@ Type: message
 
 Syntax: deleteImage
 
-Summary: Sent to an <image> just before it is removed from the <stack>.
+Summary:
+Sent to an <image> just before it is removed from the <stack>.
 
 Associations: image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on deleteImage
@@ -21,17 +22,28 @@ on deleteImage
 end deleteImage
 
 Description:
-Handle the <deleteImage> message if you want to perform cleanup before an <image> is removed from the <stack>.
+Handle the <deleteImage> message if you want to perform cleanup before
+an <image> is removed from the <stack>.
 
-The actual deletion is not triggered by the <deleteImage> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <image> from being removed.
+The actual deletion is not triggered by the <deleteImage> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <image> from being removed.
 
-However, the undo <command> will restore an <image> after it is deleted by the user. For example, the following <handler>, placed in a <card> or stack <script>, effectively prevents an <image> from being deleted by the user:
+However, the undo <command> will restore an <image> after it is deleted
+by the user. For example, the following <handler>, placed in a <card> or
+stack <script>, effectively prevents an <image> from being deleted by
+the user:
 
-  on deleteImage
-    beep
-    send "undo" to this card in 5 milliseconds
-  end deleteImage
+    on deleteImage
+        beep
+        send "undo" to this card in 5 milliseconds
+    end deleteImage
 
-References: card (keyword), image (keyword), script (property), delete (command), stack (object), handler (glossary), trap (glossary), message (glossary), command (glossary), pass (control_st)
+
+References: delete (command), pass (control structure),
+handler (glossary), trap (glossary), message (glossary),
+command (glossary), card (keyword), image (keyword), stack (object),
+script (property)
 
 Tags: objects
+

@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "exec.h"
 #include "player.h"
 #include "osspec.h"
@@ -34,26 +34,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stacksecurity.h"
 
-#if !defined(_MOBILE) && !defined(_SERVER)
-#if 0
-void IO_set_stream(IO_handle stream, char *newptr)
-{
-	if (newptr < stream->buffer)
-		stream->ioptr = stream->buffer;
-	else
-		if (newptr > stream->buffer + stream->len)
-			stream->ioptr = stream->buffer + stream->len;
-		else
-			stream->ioptr = newptr;
-}
-#endif // 0
-#endif
-
 bool IO_findstream(Streamnode *p_nodes, uindex_t p_node_count, MCNameRef p_name, uindex_t& r_index)
 {
 	while (p_node_count-- > 0)
 	{
-		if (MCNameIsEqualTo(p_name, p_nodes[p_node_count].name, kMCCompareExact))
+		if (MCNameIsEqualTo(p_name, p_nodes[p_node_count].name, kMCStringOptionCompareExact))
 		{
 			r_index = p_node_count;
 			return true;
@@ -76,11 +61,6 @@ Boolean IO_closefile(MCNameRef name)
 			MCS_close(MCfiles[index].ihandle);
 		else
 		{
-#ifdef OLD_IO_HANDLE
-			if (MCfiles[index].ohandle->flags & IO_WRITTEN
-			        && !(MCfiles[index].ohandle->flags & IO_SEEKED))
-				MCS_trunc(MCfiles[index].ohandle);
-#endif
 			MCS_close(MCfiles[index].ohandle);
 		}
 		MCValueRelease(MCfiles[index].name);
@@ -111,15 +91,17 @@ void IO_cleanprocesses()
 #ifdef X11
 			if (MCprocesses[i].mode == OM_VCLIP)
 			{
-				MCPlayer *tptr = MCplayers;
-				while (tptr != NULL)
+				MCPlayerHandle t_player = MCplayers;
+				while (t_player.IsValid())
 				{
-					if (MCNameIsEqualToCString(MCprocesses[i].name, tptr->getcommand(), kMCCompareExact))
+					if (MCStringIsEqualToCString(MCNameGetString(MCprocesses[i].name),
+                                                 t_player->getcommand(),
+                                                 kMCCompareExact))
 					{
-						tptr->playstop(); // removes from linked list
+						t_player->playstop(); // removes from linked list
 						break;
 					}
-					tptr = tptr->getnextplayer();
+					t_player = t_player->getnextplayer();
 				}
 			}
 #endif
@@ -159,7 +141,9 @@ real8 IO_cleansockets(real8 ctime)
 					s->revents->timeout = ctime + MCsockettimeout;
 				if (s->wevents != NULL)
 					s->wevents->timeout = ctime + MCsockettimeout;
-				MCscreen->delaymessage(s->object, MCM_socket_timeout, MCNameGetString(s->name));
+                
+                if (s->object.IsValid())
+                    MCscreen->delaymessage(s->object, MCM_socket_timeout, MCNameGetString(s->name));
 			}
 			if (s->wevents != NULL && s->wevents->timeout < etime)
 				etime = s->wevents->timeout;
@@ -173,7 +157,7 @@ bool IO_findsocket(MCNameRef p_name, uindex_t& r_index)
 {
 	IO_cleansockets(MCS_time());
 	for (r_index = 0 ; r_index < MCnsockets ; r_index++)
-		if (MCNameIsEqualTo(p_name, MCsockets[r_index]->name))
+		if (MCNameIsEqualToCaseless(p_name, MCsockets[r_index]->name))
 			return true;
 	return false;
 }
@@ -185,7 +169,8 @@ void IO_freeobject(MCObject *o)
 	while (i < MCnsockets)
 #if 1
 	{
-		if (MCsockets[i]->object == o)
+		if (!MCsockets[i]->object.IsValid() ||
+            MCsockets[i]->object == o)
 			MCsockets[i]->doclose();
 		i++;
 	}
@@ -386,18 +371,6 @@ IO_stat IO_read_string_no_translate(char*& string, IO_handle stream, uint1 size)
 {
 	uint32_t t_length;
 	return IO_read_string_legacy_full(string, t_length, stream, size, true, false);
-#if 0
-	Boolean t_old_translatechars;
-	t_old_translatechars = MCtranslatechars;
-	MCtranslatechars = False;
-	
-	IO_stat t_stat;
-	t_stat = IO_read_string(string, stream, size);
-	
-	MCtranslatechars = t_old_translatechars;
-	
-	return t_stat;
-#endif
 }
 
 IO_stat IO_read_string_legacy_full(char *&r_string, uint32_t &r_length, IO_handle p_stream, uint8_t p_size, bool p_includes_null, bool p_translate)
@@ -435,32 +408,31 @@ IO_stat IO_read_string_legacy_full(char *&r_string, uint32_t &r_length, IO_handl
 		}
 	}
 	
-	char *t_string = nil;
+	MCAutoCustomPointer<char,MCMemoryDeallocate> t_string;
 	if (t_bytes != 0)
 	{
 		t_length = p_includes_null ? t_bytes - 1 : t_bytes;
-		/* UNCHECKED */ t_string = new char[t_bytes];
-		stat = MCStackSecurityRead(t_string, t_length, p_stream);
+		if (!MCMemoryAllocate(t_bytes, &t_string))
+			return IO_ERROR;
+		stat = MCStackSecurityRead(*t_string, t_length, p_stream);
 		if (stat == IO_NORMAL && p_includes_null)
-			stat = IO_read_uint1((uint1*)t_string + t_length, p_stream);
+			stat = IO_read_uint1(reinterpret_cast<uint1*>(*t_string) + t_length,
+                                 p_stream);
 		if (stat != IO_NORMAL)
-		{
-			delete t_string;
 			return stat;
-		}
 
 		if (MCtranslatechars && p_translate)
 		{
 #ifdef __MACROMAN__
-			IO_iso_to_mac(t_string, t_length);
+			IO_iso_to_mac(*t_string, t_length);
 #else
-			IO_mac_to_iso(t_string, t_length);
+			IO_mac_to_iso(*t_string, t_length);
 #endif
 			
 		}
 	}
 	
-	r_string = t_string;
+	r_string = t_string.Release();
 	r_length = t_length;
 	
 	return IO_NORMAL;
@@ -472,32 +444,14 @@ IO_stat IO_read_cstring_legacy(char *&r_string, IO_handle stream, uint1 size)
 	return IO_read_string_legacy_full(r_string, t_length, stream, size, true, true);
 }
 
-#if 0
-IO_stat IO_read_string(char *&string, uint4 &outlen, IO_handle stream,
-                       bool isunicode, uint1 size)
+IO_stat IO_discard_cstring_legacy(IO_handle stream, uint1 size)
 {
-	IO_stat stat;
-	
-	char *t_string = nil;
-	uint32_t t_length = 0;
-	
-	if ((stat = IO_read_string(t_string, t_length, stream, size, true, !isunicode)) != IO_NORMAL)
-		return stat;
-
-	if (isunicode)
-	{
-		uint2 *dptr = (uint2 *)t_string;
-		uint4 len = t_length >> 1;
-		while (len--)
-			swap_uint2(dptr++);
-	}
-
-	string = t_string;
-	outlen = t_length;
-	
-	return IO_NORMAL;
+    /* TODO[2017-02-06] Refactor so that this doesn't allocate any
+     * memory, rather than inefficiently allocating a buffer and then
+     * immediately freeing it. */
+	MCAutoCustomPointer<char,MCMemoryDeallocate> t_discarded;
+	return IO_read_cstring_legacy(&t_discarded, stream, size);
 }
-#endif
 
 IO_stat IO_write_string_legacy_full(const MCString &p_string, IO_handle p_stream, uint8_t p_size, bool p_write_null)
 {
@@ -542,31 +496,6 @@ IO_stat IO_write_cstring_legacy(const char *string, IO_handle stream, uint1 size
 {
 	return IO_write_string_legacy_full(MCString(string), stream, size, true);
 }
-
-#if 0
-IO_stat IO_write_string(const char *string, uint4 outlen, IO_handle stream,
-                        Boolean isunicode, uint1 size)
-{
-	IO_stat stat = IO_NORMAL;
-	if (isunicode)
-	{
-		uint16_t *t_uniptr = (uint16_t*)string;
-		uint32_t t_len = outlen / 2;
-		while (t_len--)
-			swap_uint2(t_uniptr++);
-	}
-	stat = IO_write_string(MCString(string, outlen), stream, size, true);
-	if (isunicode)
-	{
-		uint16_t *t_uniptr = (uint16_t*)string;
-		uint32_t t_len = outlen / 2;
-		while (t_len--)
-			swap_uint2(t_uniptr++);
-	}
-	
-	return stat;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -674,7 +603,7 @@ IO_stat IO_read_stringref_legacy(MCStringRef& r_string, IO_handle p_stream, bool
 	
 	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, t_encoding, false, r_string))
 	{
-		delete t_bytes;
+		MCMemoryDeallocate(t_bytes);
 		return IO_ERROR;
 	}
 	
@@ -692,14 +621,15 @@ IO_stat IO_read_stringref_new(MCStringRef& r_string, IO_handle p_stream, bool p_
 	if (IO_read_uint2or4(&t_length, p_stream) != IO_NORMAL)
 		return IO_ERROR;
 	
-	MCAutoPointer<char> t_utf8_string;
-	if (!MCMemoryNewArray(t_length, &t_utf8_string))
+	MCAutoArray<byte_t> t_utf8_string;
+	if (!t_utf8_string.New(t_length))
 		return IO_ERROR;
 	
-	if (MCStackSecurityRead(*t_utf8_string, t_length, p_stream) != IO_NORMAL)
+	if (MCStackSecurityRead(reinterpret_cast<char *>(t_utf8_string.Ptr()),
+	                        t_length, p_stream) != IO_NORMAL)
 		return IO_ERROR;
 	
-	if (!MCStringCreateWithBytes((byte_t *)*t_utf8_string, t_length, kMCStringEncodingUTF8, false, r_string))
+	if (!MCStringCreateWithBytes(t_utf8_string.Ptr(), t_length, kMCStringEncodingUTF8, false, r_string))
 		return IO_ERROR;
 	
 	return IO_NORMAL;
@@ -726,15 +656,14 @@ IO_stat IO_write_stringref_new(MCStringRef p_string, IO_handle p_stream, bool p_
 	if (!p_supports_unicode)
 		return IO_write_stringref_legacy(p_string, p_stream, false, p_size);
 	
-	MCAutoPointer<char> t_utf8_string;
-	uindex_t t_utf8_string_length;
-	if (!MCStringConvertToUTF8(p_string, &t_utf8_string, t_utf8_string_length))
+	MCAutoStringRefAsUTF8String t_utf8_string;
+	if (!t_utf8_string.Lock(p_string))
 		return IO_ERROR;
 	
-	if (IO_write_uint2or4(t_utf8_string_length, p_stream) != IO_NORMAL)
+	if (IO_write_uint2or4(t_utf8_string.Size(), p_stream) != IO_NORMAL)
 		return IO_ERROR;
 	
-	if (MCStackSecurityWrite(*t_utf8_string, t_utf8_string_length, p_stream) != IO_NORMAL)
+	if (MCStackSecurityWrite(*t_utf8_string, t_utf8_string.Size(), p_stream) != IO_NORMAL)
 		return IO_ERROR;
 		
 	return IO_NORMAL;
@@ -786,7 +715,7 @@ IO_stat IO_read_stringref_legacy_utf8(MCStringRef& r_string, IO_handle stream, u
 		return stat;
 	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_bytes != nil ? strlen(t_bytes) : 0, kMCStringEncodingUTF8, false, r_string))
 	{
-		delete[] t_bytes;
+		MCMemoryDeallocate (t_bytes);
 		return IO_ERROR;
 	}
 	
@@ -1141,196 +1070,5 @@ IO_stat IO_read_valueref_new(MCValueRef& r_value, IO_handle p_stream)
 	
 	return t_stat;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-#if 0
-IO_stat IO_read_nameref(MCNameRef& r_name, IO_handle stream, uint1 size)
-{
-	IO_stat t_stat;
-	t_stat = IO_NORMAL;
-
-	char *t_string;
-	t_string = nil;
-	if (t_stat == IO_NORMAL)
-		t_stat = IO_read_string(t_string, stream, size);
-
-	if (t_stat == IO_NORMAL &&
-		!MCNameCreateWithCString(t_string != nil ? t_string : MCnullstring, r_name))
-		t_stat = IO_ERROR;
-
-	delete t_string;
-
-	return t_stat;
-}
-
-IO_stat IO_write_nameref(MCNameRef p_name, IO_handle stream, uint1 size)
-{
-	// MW-2011-10-21: [[ Bug 9826 ]] If the name is empty, write out nil string.
-	return IO_write_stringref(MCNameGetString(p_name), stream, size);
-}
-
-// MW-2012-05-03: [[ Values* ]] Read a StringRef from a stream. For now we assume
-//   native (as the fileformat only supports this). **UNICODE**
-IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, uint1 size)
-{
-	IO_stat t_stat;
-	t_stat = IO_NORMAL;
-
-	char *t_string;
-	uint4 t_length;
-	t_string = nil;
-	if (t_stat == IO_NORMAL)
-		t_stat = IO_read_string(t_string, t_length, stream, size);
-
-	if (t_stat == IO_NORMAL &&
-		!MCStringCreateWithNativeChars((const char_t *)t_string, t_length, r_string))
-		t_stat = IO_ERROR;
-
-	delete t_string;
-
-	return t_stat;
-}
-
-// MW-2012-05-03: [[ Values* ]] Write a StringRef to a stream. For now we assume
-//   native (as the fileformat only supports this). **UNICODE**
-IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, uint1 size)
-{
-    if (p_string == nil)
-        return IO_write_string(nil, 0, stream, false, size);
-	// If the string is empty, then we out a nil string (matches MCNameRef behavior).
-    uindex_t t_length;
-	MCAutoPointer<char_t> t_string;
-    /* UNCHECKED */ MCStringConvertToNative(p_string, &t_string, t_length);
-    return IO_write_string(t_length != nil ? (char *)*t_string : nil, t_length, stream, false, size);
-}
-
-IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size)
-{
-	IO_stat stat = IO_NORMAL;
-	MCStringEncoding t_encoding = as_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative;
-	
-	uint4 t_length;
-	char *t_bytes;
-	if ((stat = IO_read_string_legacy_full(t_bytes, t_length, stream, size, true, false)) != IO_NORMAL)
-		return stat;
-		
-	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, t_encoding, false, r_string))
-	{
-		delete t_bytes;
-		return IO_ERROR;
-	}
-		
-	return IO_NORMAL;
-}
-
-IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, bool as_unicode, uint1 size)
-{	
-	IO_stat stat = IO_NORMAL;
-	MCStringEncoding t_encoding = as_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative;
-	
-	MCAutoDataRef t_data;
-	if (!MCStringEncode(p_string, t_encoding, false, &t_data))
-		return IO_ERROR;
-	
-	uindex_t t_length = MCDataGetLength(*t_data);
-	const char *t_bytes = (const char *)MCDataGetBytePtr(*t_data);
-	stat = IO_write_string(t_bytes, t_length, stream, as_unicode, size);
-	return stat;
-}
-
-IO_stat IO_read_stringref_utf8(MCStringRef& r_string, IO_handle stream, uint1 size)
-{
-	// Read in the UTF-8 string and create a StringRef
-	IO_stat stat = IO_NORMAL;
-	char *t_bytes = nil;
-	uint4 t_length = 0;
-	if ((stat = IO_read_string_no_translate(t_bytes, stream, size)) != IO_NORMAL)
-		return stat;
-	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_bytes != nil ? strlen(t_bytes) : 0, kMCStringEncodingUTF8, false, r_string))
-	{
-		delete[] t_bytes;
-		return IO_ERROR;
-	}
-	
-	return IO_NORMAL;
-}
-
-IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 size)
-{
-	// Convert the string to UTF-8 encoding before writing it out
-	IO_stat stat;
-	char *t_bytes = nil;
-	uindex_t t_length = 0;
-	if (!MCStringConvertToUTF8(p_string, t_bytes, t_length))
-		return IO_ERROR;
-	stat = IO_write_string(t_bytes, stream, size);
-	MCMemoryDeleteArray(t_bytes);
-	return stat;
-}
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-
-#if OLD_SYSTEM
-int64_t MCS_fake_fsize(IO_handle stream)
-{
-	return 0;
-}
-
-int64_t MCS_fake_tell(IO_handle stream)
-{
-	MCFakeOpenCallbacks *t_callbacks;
-	t_callbacks = (MCFakeOpenCallbacks *)stream -> len;
-	if (t_callbacks -> tell == NULL)
-		return IO_ERROR;
-	return t_callbacks -> tell(stream -> buffer);
-}
-
-IO_stat MCS_fake_seek_cur(IO_handle stream, int64_t offset)
-{
-	MCFakeOpenCallbacks *t_callbacks;
-	t_callbacks = (MCFakeOpenCallbacks *)stream -> len;
-	if (t_callbacks -> seek_cur == NULL)
-		return IO_ERROR;
-	return t_callbacks -> seek_cur(stream -> buffer, (int32_t)offset);
-}
-
-IO_stat MCS_fake_seek_set(IO_handle stream, int64_t offset)
-{
-	MCFakeOpenCallbacks *t_callbacks;
-	t_callbacks = (MCFakeOpenCallbacks *)stream -> len;
-	if (t_callbacks -> seek_set == NULL)
-		return IO_ERROR;
-	return t_callbacks -> seek_set(stream -> buffer, (int32_t)offset);
-}
-
-IO_stat MCS_fake_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
-{
-	uint32_t t_amount;
-	t_amount = size * n;
-
-	MCFakeOpenCallbacks *t_callbacks;
-	t_callbacks = (MCFakeOpenCallbacks *)stream -> len;
-	if (t_callbacks -> read == NULL)
-		return IO_ERROR;
-
-	uint32_t t_amount_read;
-	IO_stat t_stat;
-	t_stat = t_callbacks -> read(stream -> buffer, ptr, t_amount, t_amount_read);
-
-	if (t_amount_read < t_amount)
-	{
-		stream -> flags |= IO_ATEOF;
-		t_stat = IO_EOF;
-	}
-	else
-		stream -> flags &= ~IO_ATEOF;
-
-	n = t_amount / size;
-
-	return t_stat;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////

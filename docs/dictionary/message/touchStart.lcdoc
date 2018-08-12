@@ -2,35 +2,54 @@ Name: touchStart
 
 Type: message
 
-Syntax: touchStart <touchID> 
+Syntax: touchStart <pTouchID>
 
-Summary: Sent when a user touches a control in a mobile application
+Summary:
+Sent when a user touches a control in a mobile application
 
 Introduced: 4.5.2
 
-OS: ios,android
+OS: ios, android
 
-Platforms: desktop
+Platforms: mobile
 
 Example:
-on touchStart tID <a name="code tag=">-- show popup menu when the control is touched</a>
+on touchStart tID -- show popup menu when the control is touched
   popup button "Configure"
 end touchStart
 
 Parameters:
-touchID: A number which uniquely identifies a sequence of touch messages corresponding to an individual, physical touch action
+pTouchID:
+A number which uniquely identifies a sequence of touch messages
+corresponding to an individual, physical touch action
 
 Description:
-Handle the <touchStart> message to perform an action when the user touches the screen, before the touch is released.
+Handle the <touchStart> message to perform an action when the user
+touches the screen, before the touch is released.
 
-The <touchStart> message is sent to the control that was touched, or to the card if no control was under the touch point.
+The <touchStart> message is sent to the control that was touched, or to
+the card if no control was under the touch point.
 
-The <touchID> parameter is a number which uniquely identifies a sequence of touch messages corresponding to an individual, physical touch action. All such sequences start with a touchStart message, have one or more <touchMove> messages and finish with either a <touchEnd> or a <touchRelease> message.
+The <pTouchID> parameter is a number which uniquely identifies a sequence
+of touch messages corresponding to an individual, physical touch action.
+All such sequences start with a touchStart message, have one or more
+<touchMove> messages and finish with either a <touchEnd> or a
+<touchRelease> message.
 
-No two touch sequences will have the same <touchID>, and it is possible to have multiple (interleaving) such sequences occurring at once. This allows handling of more than one physical touch at once and, for example, allows you to track two fingers moving on the iPhone's screen.
+No two touch sequences will have the same <pTouchID>, and it is possible
+to have multiple (interleaving) such sequences occurring at once. This
+allows handling of more than one physical touch at once and, for
+example, allows you to track two fingers moving on the iPhone's screen.
 
-The sequence of touch messages is tied to the control in which the touch started, in much the same way mouse messages are tied to the object a mouse down starts in. The test used to determine what object a touch starts in is identical to that used to determine whether the pointer is inside a control. In particular, invisible and disabled controls are not considered viable candidates.
+The sequence of touch messages is tied to the control in which the touch
+started, in much the same way mouse messages are tied to the object a
+mouse down starts in. The test used to determine what object a touch
+starts in is identical to that used to determine whether the pointer is
+inside a control. In particular, invisible and disabled controls are not
+considered viable candidates.
 
-References: touchMove (message), touchRelease (message), touchEnd (message)
+References: touchMove (message), touchRelease (message),
+touchEnd (message)
 
 Tags: ui
+

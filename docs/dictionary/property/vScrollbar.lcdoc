@@ -4,31 +4,44 @@ Type: property
 
 Syntax: set the vScrollbar of {<field> | <group>} to {true | false}
 
-Summary: Specifies whether a <field> or <group> has a vertical <scrollbar>.
+Summary:
+Specifies whether a <field> or <group> has a vertical <scrollbar>.
 
-Associations: field
+Associations: field, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the vScrollbar of field "More Info" to true
 
-Value (bool):The <vScrollbar> of a <field(keyword)> or <group(command)> is true or false.
-By default, the <vScrollbar> <property> of newly created <field(object)|fields> or <group(glossary)|groups> is set to false. The <vScrollbar> of newly created scrolling <field(object)|fields> is true.
+Value (bool):
+The <vScrollbar> of a <field(keyword)> or <group(command)> is true or
+false. By default, the <vScrollbar> <property> of newly created
+<field(object)|fields> or <group(glossary)|groups> is set to false. The
+<vScrollbar> of newly created scrolling <field(object)|fields> is true.
 
 Description:
-Use the <vScrollbar> <property> to show or hide the vertical scrollbar of a <field> or <group>.
+Use the <vScrollbar> <property> to show or hide the vertical scrollbar
+of a <field> or <group>.
 
-When the <vScrollbar> of a <group> or <field> is set to true, the scrollbar appears along the right edge of the group or <field>.
+When the <vScrollbar> of a <group> or <field> is set to true, the
+scrollbar appears along the right edge of the group or <field>.
 
-Changing the <vScrollbar> does not change the <object|object's> <rectangle> <property>, so if there are <object|objects> near the right edge of the group, the scrollbar may cover them.
+Changing the <vScrollbar> does not change the <object|object's>
+<rectangle> <property>, so if there are <object|objects> near the right
+edge of the group, the scrollbar may cover them.
 
-Setting the <vScrollbar> of a <field> to true is equivalent to setting the <style> <property> of the <field> to "scrolling".
+Setting the <vScrollbar> of a <field> to true is equivalent to setting
+the <style> <property> of the <field> to "scrolling".
 
-References: hScrollbar (property), style (property), field (keyword), scrollbar (keyword), rectangle (keyword), group (command), field (object), object (object), property (glossary), group (glossary)
+References: group (command), object (glossary), property (glossary),
+group (glossary), field (keyword), scrollbar (keyword),
+rectangle (keyword), field (object), hScrollbar (property),
+style (property)
 
 Tags: ui
+

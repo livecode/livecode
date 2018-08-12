@@ -4,15 +4,16 @@ Type: message
 
 Syntax: newPlayer
 
-Summary: Sent to a new <player> right after it's created.
+Summary:
+Sent to a new <player> right after it's created.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on newPlayer -- assign a file
@@ -20,17 +21,30 @@ on newPlayer -- assign a file
     answer file "Please choose a file to play:"
     set the filename of the target to it
   end if
-end newImage
+end newPlayer
 
-It: The newly-created player's long ID <property> is placed in the <it> <variable>.
+It:
+The newly-created player's long ID <property> is placed in the <it>
+<variable>. 
 
 Description:
-Handle the <newPlayer> <message> if you want to create additional <object|objects>, switch <tool|tools>, or do other tasks when a new <player> is created.
+Handle the <newPlayer> <message> if you want to create additional
+<object|objects>, switch <tool|tools>, or do other tasks when a new
+<player> is created.
 
-Normally, the <newPlayer> <message> is handled at a higher level of the <message path>, since the newly-created player does not yet have a <script> unless the <templatePlayer> contains one.
+Normally, the <newPlayer> <message> is handled at a higher level of the
+<message path>, since the newly-created player does not yet have a
+<script> unless the <templatePlayer> contains one.
 
-The actual creation is not triggered by the <newPlayer> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <player> from being created.
+The actual creation is not triggered by the <newPlayer> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <player> from being created.
 
-References: player (keyword), script (property), copy (command), clone (command), paste (command), object (object), property (glossary), templatePlayer (glossary), variable (glossary), message path (glossary), message (glossary), tool (glossary), it (glossary), trap (glossary), pass (control_st)
+References: copy (command), clone (command), paste (command),
+pass (control structure), object (glossary), property (glossary),
+templatePlayer (glossary), variable (glossary), message path (glossary),
+message (glossary), tool (glossary), it (glossary), trap (glossary),
+player (keyword), script (property)
 
 Tags: objects
+

@@ -19,10 +19,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "object.h"
 
-class MCCard : public MCObject
+typedef MCObjectProxy<MCCard>::Handle MCCardHandle;
+
+class MCCard : public MCObject, public MCMixinObjectHandle<MCCard>
 {
-	friend class MCHccard;
+public:
+    
+    enum { kObjectType = CT_CARD };
+    using MCMixinObjectHandle<MCCard>::GetHandle;
+	
 protected:
+    
+    friend class MCHccard;
 	MCObjptr *objptrs;
 	MCObjptr *kfocused;
 	MCObjptr *oldkfocused;
@@ -83,19 +91,19 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 
-#ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-    virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
-
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
 	virtual void recompute();
 	
     virtual void toolchanged(Tool p_new_tool);
+	
+	virtual void OnAttach();
+	virtual void OnDetach();
     
+	virtual void OnViewTransformChanged();
+	
 	// MW-2011-09-20: [[ Collision ]] Compute shape of card.
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);
@@ -108,9 +116,13 @@ public:
 	virtual void relayercontrol_remove(MCControl *control);
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
+	virtual void geometrychanged(const MCRectangle &p_rect);
+
     virtual void scheduledelete(bool p_is_child);
     
-	void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated);
+    virtual bool isdeletable(bool p_check_flag);
+    
+    void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated);
 
 	MCObject *hittest(int32_t x, int32_t y);
 	
@@ -124,7 +136,7 @@ public:
 	IO_stat loadobjects(IO_handle stream, uint32_t version);
 
 	void kfocusset(MCControl *target);
-	MCCard *clone(Boolean attach, Boolean controls);
+	MCCard *clone(Boolean attach, Boolean controls, MCStack *p_parent = nullptr);
 	void clonedata(MCCard *source);
 	void replacedata(MCStack *source);
 	Exec_stat relayer(MCControl *optr, uint2 newlayer);
@@ -135,9 +147,6 @@ public:
 	              uint2 &n, Boolean dohc);
 	MCControl *getnumberedchild(integer_t p_number, Chunk_term p_obj_type, Chunk_term p_parent_type);
 	MCControl *getchild(Chunk_term e, MCStringRef p_expression, Chunk_term o, Chunk_term p);
-#ifdef OLD_EXEC
-	MCControl *getchild(Chunk_term e, const MCString &, Chunk_term o, Chunk_term p);
-#endif
     
     MCControl *getchildbyordinal(Chunk_term p_ordinal, Chunk_term o, Chunk_term p);
     MCControl *getchildbyid(uinteger_t p_id, Chunk_term o, Chunk_term p);
@@ -207,10 +216,14 @@ public:
 	
 	// IM-2013-09-13: [[ RefactorGraphics ]] render the card background
 	void drawbackground(MCContext *p_context, const MCRectangle &p_dirty);
-	// IM-2013-09-13: [[ RefactorGraphics ]] render the card selection rect
-	void drawselectionrect(MCContext *);
-    void drawselectedchildren(MCDC *dc);
-    bool updatechildselectedrect(MCRectangle& x_rect);
+    
+    /* The drawselection method renders the 'selection layer' - i.e. all the
+     * selection decorations for all controls on the card. */
+    void drawselection(MCContext *p_context, const MCRectangle& p_dirty);
+    
+	// IM-2016-09-26: [[ Bug 17247 ]] request redraw of the area occupied by
+	//      selection marquee + handles
+	void dirtyselection(const MCRectangle &p_rect);
     
 	Exec_stat openbackgrounds(bool p_is_preopen, MCCard *p_other);
 	Exec_stat closebackgrounds(MCCard *p_other);
@@ -226,8 +239,6 @@ public:
 	void layer_removed(MCControl *control, MCObjptr *previous, MCObjptr *next);
 	// MW-2011-08-19: [[ Layers ]] The viewport displayed in the stack has changed.
 	void layer_setviewport(int32_t x, int32_t y, int32_t width, int32_t height);
-	// MW-2011-09-23: [[ Layers ]] The selected rectangle has changed.
-	void layer_selectedrectchanged(const MCRectangle& old_rect, const MCRectangle& new_rect);
 
 	// MW-2011-08-26: [[ TileCache ]] Render all layers into the stack's tilecache.
 	void render(void);
@@ -276,7 +287,6 @@ public:
 	{
 		return (MCCard *)MCDLlist::remove((MCDLlist *&)list);
 	}
-
 
 	////////// PROPERTY SUPPORT METHODS
 

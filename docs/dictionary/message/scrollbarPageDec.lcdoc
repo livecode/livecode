@@ -2,17 +2,19 @@ Name: scrollbarPageDec
 
 Type: message
 
-Syntax: scrollbarPageDec <newPosition> 
+Syntax: scrollbarPageDec <pNewPosition>
 
-Summary: Sent to a <scrollbar> when the user clicks above or left of the <scrollbar thumb>, scrolling backward one screenful.
+Summary:
+Sent to a <scrollbar> when the user clicks above or left of the
+<scrollbar thumb>, scrolling backward one screenful.
 
 Associations: scrollbar
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on scrollbarPageDec
@@ -20,15 +22,23 @@ on scrollbarPageDec
 end scrollbarPageDec
 
 Parameters:
-newPosition: The new position of the scrollbar thumb.
+pNewPosition:
+The new position of the scrollbar thumb.
 
 Description:
-Handle the <scrollbarPageDec> <message> if you want to respond to the user clicking in the gray region above or to the left of the <scrollbar thumb>.
+Handle the <scrollbarPageDec> <message> if you want to respond to the
+user clicking in the gray region above or to the left of the <scrollbar
+thumb>. 
 
-Dragging the scrollbar thumb does not send a <scrollbarPageDec> <message>.
+Dragging the scrollbar thumb does not send a <scrollbarPageDec>
+<message>. 
 
-If the <scrollbarPageDec> <message> is not <handle|handled>, a <scrollbarDrag> <message> is sent in addition.
+If the <scrollbarPageDec> <message> is not <handle|handled>, a
+<scrollbarDrag> <message> is sent in addition.
 
-References: pageIncrement (property), scrollbar (keyword), scrollbarDrag (message), scrollbarBeginning (message), scrollbar thumb (glossary), message (glossary), handle (glossary)
+References: scrollbar thumb (glossary), message (glossary),
+handle (glossary), scrollbar (keyword), scrollbarDrag (message),
+scrollbarBeginning (message), pageIncrement (property)
 
 Tags: ui
+

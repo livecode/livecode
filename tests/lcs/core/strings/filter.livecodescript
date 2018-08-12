@@ -119,6 +119,7 @@ on __testFilterWildcard pIsNative, pString
 	put any char of pString into tChar
 		
 	put tChar into tSource
+	filter tSource with tPattern
 	TestAssert "filter single char wildcard matches single char" && tTestType, tSource is tChar
 	
 	put tChar & tChar into tSource
@@ -128,6 +129,7 @@ on __testFilterWildcard pIsNative, pString
 	put pString into tPattern
 	put "?" into any char of tPattern
 	put pString into tSource
+	filter tSource with tPattern
 	TestAssert "filter single char wildcard matches in string" && tTestType, tSource is pString
 
 	# Asterisk
@@ -214,3 +216,10 @@ on TestBug16584
 	__testBug16584 true, "apple"
 	__testBug16584 false, "뤻뤼뤼뤾룜"	
 end TestBug16584
+
+on TestBug15443
+	local tTest
+	put "NÖJE" into tTest
+	filter tTest with "nöje"
+	TestAssert "filter macroman native bug 15443", tTest is not empty
+end TestBug15443

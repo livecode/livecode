@@ -2,17 +2,18 @@ Name: rawKeyDown
 
 Type: message
 
-Syntax: rawKeyDown <keyCode> 
+Syntax: rawKeyDown <pKeyCode>
 
-Summary: Sent when the user presses any key.
+Summary:
+Sent when the user presses any key.
 
 Associations: field
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on rawKeyDown theKeyNumber
@@ -22,21 +23,46 @@ on rawKeyDown theKeyNumber
 end rawKeyDown
 
 Parameters:
-keyCode: The raw keycode of the pressed key.
+pKeyCode:
+The raw keycode of the pressed key.
 
-The result: If the <rawKeyDown> <message> is sent as the result of a keypress, the <message> is sent to the <active (focused) control(glossary)>, or to the <current card> if no <control> is <focus|focused>.
+The result:
+If the <rawKeyDown> <message> is sent as the result of a keypress, the
+<message> is sent to the <active (focused) control(glossary)>, or to the
+<current card> if no <control> is <focus|focused>.
 
 Description:
-Handle the <rawKeyDown> <message> if you want to intercept raw <event|events> from the keyboard, or from a mouse wheel, or if you want to handle keys that aren't mapped to any <character>.
+Handle the <rawKeyDown> <message> if you want to intercept raw
+<event|events> from the keyboard, or from a mouse wheel, or if you want
+to handle keys that aren't mapped to any <character>.
 
-If the <rawKeyDown> <handler> does not <pass> the <message> or send it to a further <object> in the <message path>, the keypress has no effect. <pass|Passing> the <message> allows the keypress to have its normal effect.
+If the <rawKeyDown> <handler> does not <pass> the <message> or send it
+to a further <object(glossary)> in the <message path>, the keypress has
+no effect. <pass|Passing> the <message> allows the keypress to have its
+normal effect.
 
-A <rawKeyDown> <message> is also sent when the user moves the mouse wheel on a scrolling mouse; in this case, the <message> is sent to the <control> under the <mouse pointer>.
+A <rawKeyDown> <message> is also sent when the user moves the mouse
+wheel on a scrolling mouse; in this case, the <message> is sent to the
+<control> under the <mouse pointer>.
 
-If the insertion point is in a field, the entry of typed characters is triggered by the <rawKeyDown> <message>. This means that <trap|trapping> the <rawKeyDown> <message> and not <pass|Passing> it prevents typing from being entered in the <field>.
+If the insertion point is in a field, the entry of typed characters is
+triggered by the <rawKeyDown> <message>. This means that <trap|trapping>
+the <rawKeyDown> <message> and not <pass|Passing> it prevents typing
+from being entered in the <field>.
 
->*Cross-platform note:*  On <Mac OS|Mac OS systems>, no <message> is sent when a <modifier key> (Shift, Option, Control, or Command) is pressed, unless another key is pressed along with the <modifier key>. Mouse wheels do not send a <rawKeyDown> <message> on <Mac OS|Mac OS systems>.
+>*Cross-platform note:*  On <Mac OS|Mac OS systems>, no <message> is
+> sent when a <modifier key> (Shift, Option, Control, or Command) is
+> pressed, unless another key is pressed along with the <modifier key>.
+> Mouse wheels do not send a <rawKeyDown> <message> on <Mac OS|Mac OS
+> systems>. 
 
-References: character (keyword), object (object), optionKeyDown (message), keysDown (function), pass (control_st), pass (glossary), control (glossary), focus (glossary), active control (glossary), event (glossary), mouse pointer (glossary), field (glossary), message path (glossary), trap (glossary), Mac OS (glossary), current card (glossary), message (glossary), modifier key (glossary), handler (glossary)
+References: pass (control structure), keysDown (function),
+object (glossary), pass (glossary), control (glossary), focus (glossary),
+active control (glossary), event (glossary), mouse pointer (glossary),
+field (glossary), message path (glossary), trap (glossary),
+Mac OS (glossary), current card (glossary), message (glossary),
+modifier key (glossary), handler (glossary), character (keyword),
+optionKeyDown (message)
 
 Tags: ui
+

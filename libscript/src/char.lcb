@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This library consists of the operations on chars included in the standard library of LiveCode Builder.
 */
 
@@ -31,8 +31,10 @@ public foreign handler MCCharEvalNumberOfCharsIn(in Target as String, out Count 
 
 public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as String, in Target as String, out Value as CBool) returns nothing binds to "<builtin>"
 
+/* No implementation
 public foreign handler MCCharStoreBeforeCharOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
 public foreign handler MCCharStoreAfterCharOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+*/
 
 public foreign handler MCCharEvalOffsetOfChars(in IsLast as CBool, in Needle as String, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
 public foreign handler MCCharEvalOffsetOfCharsBefore(in IsLast as CBool, in Needle as String, in Before as LCIndex, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
@@ -63,7 +65,7 @@ public foreign handler MCStringEvalCharWithCode(in pCode as LCUInt, out pChar as
 
 --
 
-/*
+/**
 Summary:            Counts the number of chars in <Target>.
 
 Target: 			An expression which evaluates to a string.
@@ -99,8 +101,7 @@ end syntax
 
 --
 
-/*
-
+/**
 Summary:            Designates the char at index <Index> in <Target>.
 Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				An expression which evaluates to a string.           
@@ -123,8 +124,7 @@ begin
 	MCCharStoreCharOf(input, Index, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the chars between indices <Start> and <Finish> in <Target>.
 
 Start:              An expression which evaluates to a valid integer index of <Target>.
@@ -149,8 +149,7 @@ begin
 	MCCharStoreCharRangeOf(input, Start, Finish, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the first char in <Target>.
 Target:				An expression which evaluates to a string.
 
@@ -176,8 +175,7 @@ begin
 	MCCharStoreFirstCharOf(input, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the last char in <Target>.
 Target:				An expression which evaluates to a string.
 
@@ -205,8 +203,7 @@ end syntax
 
 --
 
-/*
-
+/**
 Summary:            Deletes the char at index <Index> in <Target>.
 Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				A string container.
@@ -230,8 +227,7 @@ begin
 	MCCharExecDeleteCharOf(Index, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Deletes the chars between indices <Start> and <Finish> in <Target>.
 
 Start:              An expression which evaluates to a valid integer index of <Target>.
@@ -257,8 +253,7 @@ begin
 	MCCharExecDeleteCharRangeOf(Start, Finish, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Deletes the first char in <Target>.
 Target:				A string container.
 
@@ -281,8 +276,7 @@ begin
 	MCCharExecDeleteFirstCharOf(Target)
 end syntax
 
-/*
-
+/**
 Summary:            Deletes the last char in <Target>.
 Target:				A string container.
 
@@ -307,7 +301,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:            Determines whether <Needle> is in <Target>.
 Needle: 			An expression which evaluates to a char.
 Target: 			An expression which evaluates to a string.
@@ -328,8 +322,7 @@ end syntax
 
 --
 
-/*
-
+/**
 Summary:            Finds the first or last occurrence of <Needle> within <Target>
 
 Needle: 			An expression which evaluates to a string.
@@ -367,8 +360,7 @@ begin
     MCCharEvalOffsetOfChars(IsLast, Needle, Target, output)
 end syntax
 
-/*
-
+/**
 Summary:            Finds the first or last occurrence of <Needle> after a specified index in <Target>
 
 Needle: 			An expression which evaluates to a string.
@@ -397,8 +389,7 @@ begin
     MCCharEvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
 end syntax
 
-/*
-
+/**
 Summary:            Finds the first or last occurrence of <Needle> before a specified index in <Target>.
 
 Needle: 			An expression which evaluates to a string.
@@ -434,7 +425,7 @@ begin
     MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
 end syntax
 
-/*
+/**
 Summary:            Determines whether <Source> contains <Needle>.
 Needle: 			An expression which evaluates to a string.
 Source: 			An expression which evaluates to a string.
@@ -457,7 +448,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:            Determines whether <Source> begins with <Prefix>
 Prefix: 			An expression which evaluates to a string.
 Source: 			An expression which evaluates to a string.
@@ -486,7 +477,7 @@ begin
     MCCharEvalBeginsWith(Source, Prefix, output)
 end syntax
 
-/*
+/**
 Summary:            Determines whether <Source> ends with <Suffix>
 Suffix: 			An expression which evaluates to a string.
 Source: 			An expression which evaluates to a string.
@@ -517,7 +508,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:			The new line character
 
 Example:
@@ -541,22 +532,20 @@ begin
     MCCharEvalNewlineCharacter(output)
 end syntax
 
-/*
+/**
 Summary:        Repeat over the chars of a string
 Iterand:        A string container.
 
 Example:
-	variable tString as String
-	put "stressed" into tString
-	
-	variable tReversed as String
 	variable tChar as String
-	put "" into tReversed
-	repeat for each char tChar in tString
-		put tChar before tReversed
+	variable tSpaceCount as Number
+	repeat for each char tChar in \
+			"the quick brown fox jumps over the lazy dog"
+		if tChar is " " then
+			add 1 to tSpaceCount
+		end if
 	end repeat
-
-    // tReversed is "desserts"
+	expect that tSpaceCount is 8
 
 Description:
 Use repeat for each to perform an operation on each char of a string. On each iteration, the <Iterand> will contain the next char of the string being iterated over.
@@ -570,9 +559,35 @@ begin
     MCCharRepeatForEachChar(iterator, Iterand, container)
 end syntax
 
+--
+
+public foreign handler MCStringExecReverseCharsOf(inout Target as String) \
+		returns nothing binds to "<builtin>"
+
+/**
+Summary:	Reverse a string
+Target:	A string
+
+Example:
+	variable tString
+	put "abcdef" into tString
+	reverse tString
+	expect that tString is "fedcba"
+
+Description:
+Reverses the order of characters in the <Target>.
+
+Tags: Strings
+*/
+syntax ReverseCharsOf is statement
+	"reverse" <Target: Expression>
+begin
+	MCStringExecReverseCharsOf(Target)
+end syntax
+
 ----------------------------------------------------------------
 
-/*
+/**
 Summary:	Get the numeric value of a single char
 
 Target:	A string containing one character
@@ -589,7 +604,7 @@ begin
     MCStringEvalCodeOfChar(Target, output)
 end syntax
 
-/*
+/**
 Summary:	Create a 1-char string from a number
 
 Value:		A Unicode codepoint index

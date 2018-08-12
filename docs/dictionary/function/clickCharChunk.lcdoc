@@ -6,13 +6,15 @@ Syntax: the clickCharChunk
 
 Syntax: clickCharChunk()
 
-Summary: <return|Returns> the position of the <character> the user last clicked in a <field>.
+Summary:
+<return|Returns> the position of the <character> the user last clicked
+in a <field>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,web,mobile
+Platforms: desktop, mobile
 
 Example:
 the clickCharChunk
@@ -20,25 +22,55 @@ the clickCharChunk
 Example:
 if word 2 of the clickCharChunk &lt; 100 then put the clickChar into me
 
-Returns: The <clickCharChunk> <function> <return|returns> a <chunk expression> of the form char charNumber to charNumber of field fieldNumber.
+Returns:
+The <clickCharChunk> <function> <return|returns> a <chunk expression> of
+the form char charNumber to charNumber of field fieldNumber.
 
 Description:
-Use the <clickCharChunk> <function> within a <mouseDown>, <mouseUp>, or <selectionChanged> <handler> to determine where in the text the user clicked, in order to provide <hypertext> (clickable text) or take some action based on the click.
+Use the <clickCharChunk> <function> within a <mouseDown>, <mouseUp>, or
+<selectionChanged> <handler> to determine where in the text the user
+clicked, in order to provide <hypertext> (clickable text) or take some
+action based on the click.
 
-The <clickCharChunk> <function> is cleared at the next mouse click, as as after some editing actions such as deleting text. If the last click was not in a <field>, the <clickCharChunk> <function> <return|returns> empty.
+The <clickCharChunk> <function> is cleared at the next mouse click, as
+as after some editing actions such as deleting text. If the last click
+was not in a <field>, the <clickCharChunk> <function> <return|returns>
+empty. 
 
-The charNum is the <character> the <mouse pointer> was over when the mouse was clicked. Moving the mouse before the <mouse button> is released does not affect the <value> <return|returned> by the <clickCharChunk>.
+The charNum is the <character> the <mouse pointer> was over when the
+mouse was clicked. Moving the mouse before the <mouse button> is
+released does not affect the <value> <return|returned> by the
+<clickCharChunk>. 
 
-The first and second character numbers in the return value are always identical, unless the click was on a field but there was no text under it. In this case, the <clickCharChunk> <return|returns> a <chunk expression> of the form
-  char charNumber to charNumber - 1 of field fieldNumber
-indicating the start of the clickLine. For example, if the mouse is over an empty <field>, the <clickCharChunk> <return|returns> char 1 to 0 of field fieldNumber.
+The first and second character numbers in the return value are always
+identical, unless the click was on a field but there was no text under
+it. In this case, the <clickCharChunk> <return|returns> a <chunk
+expression> of the form char charNumber to charNumber - 1 of field
+fieldNumber indicating the start of the clickLine. For example, if the
+mouse is over an empty <field>, the <clickCharChunk> <return|returns>
+char 1 to 0 of field fieldNumber.
 
-If the field is locked, the <clickCharChunk> <function> is most useful within a <handler> (such as <mouseDown> or <mouseUp>) that is <trigger|triggered> by the mouse click.
+If the field is locked, the <clickCharChunk> <function> is most useful
+within a <handler> (such as <mouseDown> or <mouseUp>) that is
+<trigger|triggered> by the mouse click.
 
-If the field is unlocked, mouseDown and <mouseUp> <message|messages> are not sent when the user clicks in the <field> (unless the user right-clicks or holds down the Control key while clicking). Use the <clickCharChunk> function within a <selectionChanged> <handler> to determine what <characters> the user is editing in an <unlock|unlocked> <field>.
+If the field is unlocked, mouseDown and <mouseUp> <message|messages> are
+not sent when the user clicks in the <field> (unless the user
+right-clicks or holds down the Control key while clicking). Use the
+<clickCharChunk> function within a <selectionChanged> <handler> to
+determine what <characters> the user is editing in an <unlock|unlocked>
+<field>. 
 
 To get the actual character clicked, use the <clickChar> <function>.
 
-References: field (keyword), character (keyword), characters (keyword), mouseDown (message), mouseUp (message), selectionChanged (message), value (function), mouseCharChunk (function), clickText (function), clickStack (function), clickChar (function), return (glossary), chunk expression (glossary), handler (glossary), mouse button (glossary), trigger (glossary), message (glossary), unlock (glossary), hypertext (glossary), mouse pointer (glossary), function (control_st)
+References: function (control structure), value (function),
+mouseCharChunk (function), clickText (function), clickStack (function),
+clickChar (function), return (glossary), chunk expression (glossary),
+handler (glossary), mouse button (glossary), trigger (glossary),
+message (glossary), unlock (glossary), hypertext (glossary),
+mouse pointer (glossary), field (keyword), character (keyword),
+characters (keyword), mouseDown (message), mouseUp (message),
+selectionChanged (message)
 
 Tags: ui
+

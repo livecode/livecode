@@ -1,35 +1,47 @@
 Name: bottomPixel
 
+Synonyms: sixthpixel
+
 Type: property
 
-Syntax: set the bottomPixel of <object> to <colorNumber> 
+Syntax: set the bottomPixel of <object> to <colorNumber>
 
-Summary: Specifies which entry in the <color table> is used for the color of a three-D <object|object's> lowered edge.
+Summary:
+Specifies which entry in the <color table> is used for the color of a
+three-D <object|object's> lowered edge.
 
-Synonyms: sixthPixel
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the bottomPixel of field "Status" to 14
 
 Value:
-The <bottomPixel> of an <object> is an <integer> between zero and (the screenColors - 1). It designates an entry in the current color table.
-By default, the <bottomPixel> for all <object|objects> is empty.
+The <bottomPixel> of an <object(glossary)> is an <integer> between zero
+and (the screenColors - 1). It designates an entry in the current color
+table. By default, the <bottomPixel> for all <object|objects> is empty.
 
 Description:
-Use the <bottomPixel> <property> to change the bottom color of an <object> when the <bit depth> of the screen is 8 <bit|bits> (256 colors) or less.
+Use the <bottomPixel> <property> to change the bottom color of an
+<object(glossary)> when the <bit depth> of the screen is 8 <bit|bits>
+(256 colors) or less.
 
-The <bottomPixel> <property> specifies which entry in the <color table> is used for an <object|object's> bottom color. It is similar to the <bottomColor> <property>, but is specified as an entry in the current <color table>, rather than as a <color reference>.
+The <bottomPixel> <property> specifies which entry in the <color table>
+is used for an <object|object's> bottom color. It is similar to the
+<bottomColor> <property>, but is specified as an entry in the current
+<color table>, rather than as a <color reference>.
 
 The color table can be set by changing the colorMap <property>.
 
-References: borderPixel (property), bottomColor (property), integer (keyword), object (object), property (glossary), bit depth (glossary), bit (glossary), color reference (glossary), color table (glossary)
+References: object (glossary), property (glossary), bit depth (glossary),
+bit (glossary), color reference (glossary), color table (glossary),
+integer (keyword), borderPixel (property), bottomColor (property)
 
 Tags: ui
+

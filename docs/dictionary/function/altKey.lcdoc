@@ -6,13 +6,14 @@ Syntax: the altKey
 
 Syntax: altKey()
 
-Summary: <return|Returns> the state of the <Alt key>.
+Summary:
+<return|Returns> the state of the <Alt key>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 put the altKey into keyState
@@ -23,14 +24,26 @@ if the altKey is down then exit mouseUp
 Example:
 repeat until altKey() = up
 
-Returns: The <altKey> <function> <return|returns> down if the key is pressed and up if it's not.
+Returns:
+The <altKey> <function> <return|returns> down if the key is pressed and
+up if it's not.
 
 Description:
-Use the <altKey> <function(control_st)> to check whether the <Alt key>, <Meta key>, or Option key is being pressed. You can use <altKey> to add alternative capabilities to user actions such as clicking.
+Use the <altKey> <function(control structure)> to check whether the 
+<Alt key>, <Meta key>, or <Option key> is being pressed. You can use 
+<altKey> to add alternative capabilities to user actions such as 
+clicking.
 
-The <altKey>, <optionKey>, and metaKey <function(glossary)|functions> all <return> the same <value>. Which one to use is a matter of preference.
-The terminology varies depending on platform. Users of different operating systems may know this key as the Option key (Mac OS systems), Meta key (Unix systems), or Alt key (Windows systems).
+The <altKey>, <optionKey>, and <metaKey> <function(glossary)|functions>
+all <return> the same <value>. Which one to use is a matter of
+preference. The terminology varies depending on platform. Users of
+different operating systems may know this key as the Option key (Mac OS
+systems), Meta key (Unix systems), or Alt key (Windows systems).
 
-References: return (constant), optionKeyDown (message), optionKey (function), value (function), keysDown (function), Meta key (glossary), return (glossary), function (glossary), Alt key (glossary), function (control_st)
+References: return (constant), function (control structure),
+optionKey (function), value (function), keysDown (function),
+Meta key (glossary), return (glossary), function (glossary),
+Alt key (glossary), optionKeyDown (message)
 
 Tags: ui
+

@@ -6,5 +6,9 @@ Type: glossary
 
 Description:
 Any program that is currently running. 
- 
-A process can be an application that interacts with the user, or a system service that operates "behind the scenes" and is normally invisible to the user.
+
+A process can be an application that interacts with the user, or a
+system service that operates "behind the scenes" and is normally
+invisible to the user.
+
+

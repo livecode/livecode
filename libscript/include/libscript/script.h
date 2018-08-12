@@ -20,7 +20,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifndef __MC_FOUNDATION__
-#include "foundation.h"
+#include <foundation.h>
+#endif
+
+#ifndef __MC_FOUNDATION_SYSTEM__
+#include <foundation-system.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,14 +39,23 @@ typedef MCScriptInstance *MCScriptInstanceRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef bool (*MCScriptResolveSharedLibraryCallback)(MCScriptModuleRef module, MCStringRef name, MCStringRef& r_path);
+typedef bool (*MCScriptForEachBuiltinModuleCallback)(void *p_context, MCScriptModuleRef p_module);
+
+typedef bool (*MCScriptLoadLibraryCallback)(MCScriptModuleRef module, MCStringRef name, MCSLibraryRef& r_library);
+
+typedef void *(*MCScriptWidgetEnterCallback)(MCScriptInstanceRef instance, void *host_ptr);
+typedef void (*MCScriptWidgetLeaveCallback)(MCScriptInstanceRef instance, void *host_ptr, void* p_cookie);
 
 bool MCScriptInitialize(void);
 void MCScriptFinalize(void);
 
-void MCScriptSetResolveSharedLibraryCallback(MCScriptResolveSharedLibraryCallback callback);
+bool MCScriptForEachBuiltinModule(MCScriptForEachBuiltinModuleCallback p_callback, void *p_context);
 
-bool MCScriptResolveSharedLibrary(MCScriptModuleRef module, MCStringRef name, MCStringRef& r_path);
+void MCScriptSetLoadLibraryCallback(MCScriptLoadLibraryCallback callback);
+
+MCSLibraryRef MCScriptGetLibrary(void);
+
+void MCScriptSetWidgetBarrierCallbacks(MCScriptWidgetEnterCallback entry_callback, MCScriptWidgetLeaveCallback leave_callback);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -165,6 +178,9 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
 // Load a module from a blob
 MC_DLLEXPORT bool MCScriptCreateModuleFromData(MCDataRef data, MCScriptModuleRef & r_module);
 
+// Set initializer / finalizer / builtins
+void MCScriptConfigureBuiltinModule(MCScriptModuleRef module, bool (*initializer)(void), void (*finalizer)(void), void **builtins);
+
 // Lookup the module with the given name. Returns false if no such module exists.
 bool MCScriptLookupModule(MCNameRef name, MCScriptModuleRef& r_module);
 
@@ -181,26 +197,42 @@ bool MCScriptIsModuleALibrary(MCScriptModuleRef module);
 bool MCScriptIsModuleAWidget(MCScriptModuleRef module);
 
 // List the module's direct dependencies.
-bool MCScriptCopyDependenciesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_module_names);
+bool MCScriptListDependencyNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_module_names);
+
+// Returns a list of the constants defined by the module.
+bool MCScriptListConstantNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_constant_names);
+
+// Queries the value of the given constant. If the constant doesn't exist, or
+// module is not usable, false is returned.
+bool MCScriptQueryConstantOfModule(MCScriptModuleRef module, MCNameRef name, /* get */ MCValueRef& r_constant_value);
 
 // Returns a list of properties implemented by the module.
-bool MCScriptCopyPropertiesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_property_names);
+bool MCScriptListPropertyNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_property_names);
 
-// Queries the type of the given property. If the setting type is nil, then the property
-// is read-only.
+// Queries the type of the given property. If the setting type is nil, then the
+// property is read-only. If the property doesn't exist, or  module is not
+// usable, false is returned.
 bool MCScriptQueryPropertyOfModule(MCScriptModuleRef module, MCNameRef property, /* get */ MCTypeInfoRef& r_getter, /* get */ MCTypeInfoRef& r_setter);
 
 // Returns a list of the events declared by the module.
-bool MCScriptCopyEventsOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_event_names);
+bool MCScriptListEventNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_event_names);
 
-// Query the signature of the given event.
+// Query the signature of the given event. If the event doesn't exist, or
+// module is not usable, false is returned.
 bool MCScriptQueryEventOfModule(MCScriptModuleRef module, MCNameRef event, /* get */ MCTypeInfoRef& r_signature);
 
 // Returns a list of the handlers declared by the module.
-bool MCScriptCopyHandlersOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_handler_names);
+bool MCScriptListHandlerNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_handler_names);
 
-// Query the signature of the given handler.
-bool MCScriptQueryHandlerOfModule(MCScriptModuleRef module, MCNameRef handler, /* get */ MCTypeInfoRef& r_signature);
+// Query the signature of the given handler. If the handler doesn't exist, or
+// module is not usable, false is returned.
+bool MCScriptQueryHandlerSignatureOfModule(MCScriptModuleRef module, MCNameRef handler, /* get */ MCTypeInfoRef& r_signature);
+
+// Copy the names of the parameters in the signature of the given handler.
+// Note: If the module has had debugging info stripped, the list will be all
+// empty names. If the handler doesn't exist, or module is not usable, false is
+// returned.
+bool MCScriptListHandlerParameterNamesOfModule(MCScriptModuleRef module, MCNameRef handler, /* copy */ MCProperListRef& r_names);
 
 // Emit an interface definition for the module.
 bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef module, MCStreamRef stream);
@@ -217,6 +249,12 @@ uint32_t MCScriptGetRetainCountOfModule(MCScriptModuleRef module);
 // Gets the module ptr for the most recent LCB stack frame on the current thread's stack.
 MCScriptModuleRef MCScriptGetCurrentModule(void);
 
+// Sets the licensed state of a module
+void MCScriptSetModuleLicensed(MCScriptModuleRef self, bool p_licensed);
+
+// Gets the licensed state of a module
+bool MCScriptIsModuleLicensed(MCScriptModuleRef self);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Create an instance of the given module. If the module is single-instance it
@@ -231,19 +269,55 @@ MCScriptInstanceRef MCScriptRetainInstance(MCScriptInstanceRef instance);
 // Release a instance.
 void MCScriptReleaseInstance(MCScriptInstanceRef instance);
 
+// Sets a private pointer unused by libscript, but passed to the entry/exit
+// callbacks.
+void MCScriptSetInstanceHostPtr(MCScriptInstanceRef instance, void *state_ptr);
+
+// Gets the host ptr.
+void *MCScriptGetInstanceHostPtr(MCScriptInstanceRef instance);
+
 // Get the module of an instance.
 MCScriptModuleRef MCScriptGetModuleOfInstance(MCScriptInstanceRef instance);
 
 // Get a property of an instance.
-bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef& r_value);
+bool MCScriptGetPropertyInInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef& r_value);
 // Set a property of an instance.
-bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef value);
+bool MCScriptSetPropertyInInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef value);
 
 // Call a handler of an instance.
-bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+bool MCScriptCallHandlerInInstance(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 
 // Call a handler of an instance if found, it doesn't throw an error if not.
-bool MCScriptCallHandlerOfInstanceIfFound(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+bool MCScriptCallHandlerInInstanceIfFound(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+
+// Create a handler-ref for the given handler in the instance.
+bool MCScriptEvaluateHandlerBindingInInstance(MCScriptInstanceRef instance, MCNameRef handler, /* copy */ MCHandlerRef& r_handler);
+
+////////////////////////////////////////////////////////////////////////////////
+
+enum MCScriptBytecodeParameterType
+{
+    // Invalid index was passed to describe
+    kMCScriptBytecodeParameterTypeUnknown,
+    // The parameter should be a label index
+    kMCScriptBytecodeParameterTypeLabel,
+    // The parameter should be a register
+    kMCScriptBytecodeParameterTypeRegister,
+    // The parameter should be a constant pool index
+    kMCScriptBytecodeParameterTypeConstant,
+    // The parameter should be a fetchable definition (variable, constant, handler)
+    kMCScriptBytecodeParameterTypeDefinition,
+    // The parameter should be a variable definition
+    kMCScriptBytecodeParameterTypeVariable,
+    // The parameter should be a handler definition
+    kMCScriptBytecodeParameterTypeHandler,
+};
+
+bool MCScriptCopyBytecodeNames(MCProperListRef& r_proper_list);
+bool MCScriptLookupBytecode(const char *opname, uindex_t& r_opcode);
+const char *MCScriptDescribeBytecode(uindex_t opcode);
+MCScriptBytecodeParameterType MCScriptDescribeBytecodeParameter(uindex_t opcode, uindex_t index);
+bool MCScriptCheckBytecodeParameterCount(uindex_t opcode, uindex_t proposed_count);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -272,7 +346,6 @@ enum MCScriptDefinitionKind
 	kMCScriptDefinitionKindEvent,
     kMCScriptDefinitionKindSyntax,
     kMCScriptDefinitionKindDefinitionGroup,
-	kMCScriptDefinitionKindContextVariable,
     
 	kMCScriptDefinitionKind__Last,
 };
@@ -282,18 +355,17 @@ enum MCScriptHandlerTypeParameterMode
     kMCScriptHandlerTypeParameterModeIn,
     kMCScriptHandlerTypeParameterModeOut,
     kMCScriptHandlerTypeParameterModeInOut,
+    kMCScriptHandlerTypeParameterModeVariadic,
     
     kMCScriptHandlerTypeParameterMode__Last
 };
 
-enum MCScriptHandlerScope
+enum MCScriptHandlerAttributes
 {
-    kMCScriptHandlerScopeNormal,
-    kMCScriptHandlerScopeContext,
-    
-	kMCScriptHandlerScope__Last,
+    kMCScriptHandlerAttributeSafe = 0 << 0,
+    kMCScriptHandlerAttributeUnsafe = 1 << 0,
 };
-
+    
 void MCScriptBeginModule(MCScriptModuleKind kind, MCNameRef name, MCScriptModuleBuilderRef& r_builder);
 bool MCScriptEndModule(MCScriptModuleBuilderRef builder, MCStreamRef stream);
 
@@ -318,18 +390,17 @@ void MCScriptBeginHandlerTypeInModule(MCScriptModuleBuilderRef builder, uindex_t
 void MCScriptBeginForeignHandlerTypeInModule(MCScriptModuleBuilderRef builder, uindex_t return_type);
 void MCScriptContinueHandlerTypeInModule(MCScriptModuleBuilderRef builder, MCScriptHandlerTypeParameterMode mode, MCNameRef name, uindex_t type);
 void MCScriptEndHandlerTypeInModule(MCScriptModuleBuilderRef builder, uindex_t& r_new_type);
-void MCScriptBeginRecordTypeInModule(MCScriptModuleBuilderRef builder, uindex_t base_type);
+void MCScriptBeginRecordTypeInModule(MCScriptModuleBuilderRef builder);
 void MCScriptContinueRecordTypeInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type);
 void MCScriptEndRecordTypeInModule(MCScriptModuleBuilderRef builder, uindex_t& r_new_type);
 
-void MCScriptAddDefinitionToModule(MCScriptModuleBuilderRef builder, uindex_t& r_index);
+void MCScriptAddDefinitionToModule(MCScriptModuleBuilderRef builder, MCScriptDefinitionKind kind, uindex_t& r_index);
 
 void MCScriptAddTypeToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t index);
 void MCScriptAddConstantToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t const_idx, uindex_t index);
 void MCScriptAddVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t index);
-void MCScriptAddContextVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t index, uindex_t def_index);
 
-void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCScriptHandlerScope scope, MCNameRef name, uindex_t signature, uindex_t index);
+void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t signature, MCScriptHandlerAttributes attributes, uindex_t index);
 void MCScriptAddParameterToHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t& r_index);
 void MCScriptAddVariableToHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t& r_index);
 void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef builder);
@@ -355,29 +426,60 @@ void MCScriptAddEventToModule(MCScriptModuleBuilderRef builder, MCNameRef name, 
 
 void MCScriptDeferLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uindex_t& r_label);
 void MCScriptResolveLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uindex_t label);
-void MCScriptEmitJumpInModule(MCScriptModuleBuilderRef builder, uindex_t target_label);
-void MCScriptEmitJumpIfUndefinedInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
-void MCScriptEmitJumpIfDefinedInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
-void MCScriptEmitJumpIfFalseInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
-void MCScriptEmitJumpIfTrueInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
-void MCScriptEmitAssignConstantInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t const_idx);
-void MCScriptEmitAssignInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t src_reg);
-void MCScriptEmitBeginAssignListInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
-void MCScriptEmitContinueAssignListInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
-void MCScriptEmitEndAssignListInModule(MCScriptModuleBuilderRef builder);
-void MCScriptEmitBeginAssignArrayInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
-void MCScriptEmitContinueAssignArrayInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
-void MCScriptEmitEndAssignArrayInModule(MCScriptModuleBuilderRef builder);
-void MCScriptEmitReturnInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
-void MCScriptEmitReturnUndefinedInModule(MCScriptModuleBuilderRef builder);
-void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index, uindex_t result_reg);
-void MCScriptBeginInvokeIndirectInModule(MCScriptModuleBuilderRef builder, uindex_t handler_reg, uindex_t result_reg);
-void MCScriptContinueInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t arg_reg);
-void MCScriptEndInvokeInModule(MCScriptModuleBuilderRef builder);
-void MCScriptEmitFetchInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t index, uindex_t level);
-void MCScriptEmitStoreInModule(MCScriptModuleBuilderRef builder, uindex_t src_reg, uindex_t index, uindex_t level);
 
-void MCScriptEmitPositionInModule(MCScriptModuleBuilderRef builder, MCNameRef file, uindex_t line);
+void MCScriptEmitBytecodeInModule(MCScriptModuleBuilderRef builder, uindex_t opcode, ...);
+void MCScriptEmitBytecodeInModuleV(MCScriptModuleBuilderRef builder, uindex_t opcode, va_list args);
+void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef builder, uindex_t opcode, uindex_t *arguments, uindex_t argument_count);
+
+void MCScriptEmitPositionForBytecodeInModule(MCScriptModuleBuilderRef builder, MCNameRef file, uindex_t line);
+
+/* These methods are used to build shims for builtin foreign handlers. They
+   allow lc-compiles 'emit' module to get the details of a handler type. The
+   types returned are the raw types of the arguments after taking into account
+   mode which means we only (currently) need void, pointer, bool and the number
+   types (both fixed and C). We need to enumerate them all separately, as some
+   int types change depending on the architecture. */
+
+enum MCScriptForeignPrimitiveType
+{
+    kMCScriptForeignPrimitiveTypeUnknown,
+    kMCScriptForeignPrimitiveTypeVoid,
+    kMCScriptForeignPrimitiveTypePointer,
+    kMCScriptForeignPrimitiveTypeSInt8,
+    kMCScriptForeignPrimitiveTypeUInt8,
+    kMCScriptForeignPrimitiveTypeSInt16,
+    kMCScriptForeignPrimitiveTypeUInt16,
+    kMCScriptForeignPrimitiveTypeSInt32,
+    kMCScriptForeignPrimitiveTypeUInt32,
+    kMCScriptForeignPrimitiveTypeSInt64,
+    kMCScriptForeignPrimitiveTypeUInt64,
+    kMCScriptForeignPrimitiveTypeSIntSize,
+    kMCScriptForeignPrimitiveTypeUIntSize,
+    kMCScriptForeignPrimitiveTypeSIntPtr,
+    kMCScriptForeignPrimitiveTypeUIntPtr,
+    kMCScriptForeignPrimitiveTypeFloat32,
+    kMCScriptForeignPrimitiveTypeFloat64,
+    kMCScriptForeignPrimitiveTypeCBool,
+    kMCScriptForeignPrimitiveTypeCChar,
+    kMCScriptForeignPrimitiveTypeCSChar,
+    kMCScriptForeignPrimitiveTypeCUChar,
+    kMCScriptForeignPrimitiveTypeCSShort,
+    kMCScriptForeignPrimitiveTypeCUShort,
+    kMCScriptForeignPrimitiveTypeCSInt,
+    kMCScriptForeignPrimitiveTypeCUInt,
+    kMCScriptForeignPrimitiveTypeCSLong,
+    kMCScriptForeignPrimitiveTypeCULong,
+    kMCScriptForeignPrimitiveTypeCSLongLong,
+    kMCScriptForeignPrimitiveTypeCULongLong,
+    kMCScriptForeignPrimitiveTypeCFloat,
+    kMCScriptForeignPrimitiveTypeCDouble,
+    kMCScriptForeignPrimitiveTypeSInt,
+    kMCScriptForeignPrimitiveTypeUInt,
+};
+
+MCScriptForeignPrimitiveType MCScriptQueryForeignHandlerReturnTypeInModule(MCScriptModuleBuilderRef build, uindex_t type_index);
+uindex_t MCScriptQueryForeignHandlerParameterCountInModule(MCScriptModuleBuilderRef build, uindex_t type_index);
+MCScriptForeignPrimitiveType MCScriptQueryForeignHandlerParameterTypeInModule(MCScriptModuleBuilderRef build, uindex_t type_index, uindex_t arg_index);
 
 ////////////////////////////////////////////////////////////////////////////////
 

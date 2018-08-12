@@ -30,8 +30,6 @@
 #include "stack.h"
 #include "font.h"
 
-#include <windows.h>
-
 
 static bool logfont_for_control(MCPlatformControlType p_type, LOGFONTW& r_lf)
 {
@@ -196,7 +194,6 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
                     case kMCPlatformControlTypeOptionMenu:
                         // Doesn't seem to have a colour index - use white
                         r_color.red = r_color.green = r_color.blue = 65535;
-                        MCscreen->alloccolor(r_color);
                         return true;
                         
                     case kMCPlatformControlTypeMenuItem:
@@ -248,8 +245,6 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
         r_color.red = 257*GetRValue(t_colorref);
         r_color.green = 257*GetGValue(t_colorref);
         r_color.blue = 257*GetBValue(t_colorref);
-        
-        MCscreen->alloccolor(r_color);
     }
     
     return t_found;

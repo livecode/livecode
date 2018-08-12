@@ -4,29 +4,40 @@ Type: keyword
 
 Syntax: last
 
-Summary: Specifies the last member of a set of <object|objects> or the last <chunk> of a <string>.
+Summary:
+Specifies the last member of a set of <object|objects> or the last
+<chunk> of a <string>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-put the ID of last card into stoppingPoint
+put the ID of last card into tStoppingPoint
 
 Example:
 put the last line of it after field "Answers"
 
 Description:
-The <last> <keyword> can be used to specify any <object> whose <number> <property> is equal to the number of <object|objects> of that type. It can also be used to designate the last <chunk> in a <chunk expression>.
+The <last> <keyword> can be used to specify any <object(glossary)> whose
+<number> <property> is equal to the number of <object|objects> of that
+type. It can also be used to designate the last <chunk> in a 
+<chunk expression>. 
 
-The last control is the topmost control on a card. The last button is the topmost button, and similarly for other types of controls.
+The last control is the topmost control on a card. The last button is
+the topmost button, and similarly for other types of controls.
 
 The word the is optional when using the <last> <keyword>.
 
-A reference to the <last> of a <string>, with no <chunk> type specified, yields the entire <string>.
+A reference to the <last> of a <string>, with no <chunk> type specified,
+yields the entire <string>.
 
-References: seventh (keyword), previous (keyword), home (keyword), ninth (keyword), string (keyword), object (object), keyword (glossary), property (glossary), chunk expression (glossary), chunk (glossary), number (function)
+References: number (function), object (glossary), keyword (glossary),
+property (glossary), chunk expression (glossary), chunk (glossary),
+seventh (keyword), previous (keyword), home (keyword), ninth (keyword),
+string (keyword)
 
 Tags: text processing
+

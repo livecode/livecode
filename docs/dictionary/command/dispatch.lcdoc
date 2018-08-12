@@ -4,37 +4,87 @@ Type: command
 
 Syntax: dispatch <message> [ to <target> ][ with <argumentList> ]
 
-Summary: Sends a message to an object via the normal message path.
+Summary:
+Sends a message to an object via the normal message path.
 
 Introduced: 3.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 dispatch "updateWidget"
 
 Example:
-dispatch "setList" with tNewList
+on mouseUp
+  local tWidth, tHeight
+   
+  put 200 into tWidth
+  put 100 into tHeight
+  dispatch "setSize" with tWidth, tHeight
+end mouseUp
+
+on setSize pWidth, pHeight
+  set the width of graphic "myRectangle" to pWidth
+  set the height of graphic "myRectangle" to pHeight
+end setSize
+
+Example:
+# An example of using an array as an argument
+
+on mouseUp
+  local tDataArray
+  
+  put "Mickey" into tDataArray["firstName"]
+  put "Mouse" into tDataArray["lastName"]
+  
+  dispatch "updateUI" to card "myCard" with "Hello World", tDataArray
+end mouseUp
+
+on updateUI pTitle, @pArray
+  put pTitle into field "Title"
+  put pArray["firstName"] into field "First Name"
+  put pArray["lastName"] into field "Last Name"
+end updateUI
 
 Parameters:
-message: Is an expression that evaluates to the name of a handler.
-target: A reference to any LiveCode object.
-argumentList: A comma separated list of expressions containing the arguments to send.
+message:
+Is an expression that evaluates to the name of a handler.
 
-It (enum): Set by <dispatch> to indicate how the message was processed.
-- handled : the message was handled and not passed
-- unhandled : no matching handlers were found
-- passed : the message was handled but passed by all handlers
+target:
+A reference to any LiveCode object.
+
+argumentList:
+A comma separated list of expressions containing the arguments to send.
+Arrays are expressions and are valid to send as arguments.
+
+It (enum):
+Set by <dispatch> to indicate how the message was processed.
+
+-   handled: the message was handled and not passed
+-   unhandled: no matching handlers were found
+-   passed: the message was handled but passed by all handlers
+
 
 Description:
-Use the <dispatch> command to send a mesage to an object, via the message path and find out whether it was handled or not.
+Use the <dispatch> command to send a message to an object, via the
+message path and find out whether it was handled or not.
 
-The <dispatch> command is most useful when using <behavior|behaviors>, as it allows a <behavior> script to send an 'event' to one of its child objects and then perform an action depending on the outcome.
+The <dispatch> command is most useful when using <behavior|behaviors>,
+as it allows a <behavior> script to send an 'event' to one of its child
+objects and then perform an action depending on the outcome.
 
-Executing a <dispatch> command causes the <message> to be sent to the target object with the given argument list. This message passes through the message path in the normal way.
+Executing a <dispatch> command causes the <message> to be sent to the
+target object with the given argument list. This message passes through
+the message path in the normal way.
 
-If no <target> is specified, the <message> is sent to ' <me> '. In the context of a <behavior>, this is typically the child that is executing rather than the <behavior> object itself.
+If no <target> is specified, the <message> is sent to ' <me> '. In the
+context of a <behavior>, this is typically the child that is executing
+rather than the <behavior> object itself.
 
-References: behavior (property), me (keyword), it (keyword), closeControl (message), preOpenControl (message), send (command), on (control_st)
+References: send (command), on (control structure), me (keyword),
+it (keyword), closeControl (message), preOpenControl (message),
+behavior (property)
+
+Tags: messages 

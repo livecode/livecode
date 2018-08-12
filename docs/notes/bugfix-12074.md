@@ -1,1 +1,0 @@
-# Answer dialog messages should be aligned to the right

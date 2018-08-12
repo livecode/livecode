@@ -58,7 +58,7 @@ Bool DBConnection_MYSQL::connect(char **args, int numargs)
 	if (t_delimiter != NULL)
 	{
 		t_port_string = (t_delimiter + (1 * sizeof(char)));
-		*t_delimiter = NULL;
+		*t_delimiter = '\0';
 	}
 
 	int t_port;
@@ -153,55 +153,62 @@ Output: False on error
 */
 Bool DBConnection_MYSQL::sqlExecute(char *p_query, DBString *p_arguments, int p_argument_count, unsigned int &p_affected_rows)
 {
-	int t_affected_rows;
-	t_affected_rows = 0;
-
-	Bool t_result;
-	t_result = False;
-
 	if (!ExecuteQuery(p_query, p_arguments, p_argument_count) || mysql_errno(getMySQL()))
 	{
 		// OK-2007-09-10 : Bug 5360
 		errorMessageSet(mysql_error(getMySQL()));
-		return t_result;
+		return False;
 	}
 
-	// First we need to establish if the query returned a result set. This will be the case if it was 
-	// a select query. If there is a result set, we need to store it temporarily and free it to avoid
-	// errors ocurring in subsequent queries.
-	unsigned int t_field_count;
-	t_field_count = mysql_field_count(getMySQL());
-
-	MYSQL_RES *t_result_set;
-	t_result_set = NULL;
-	if (t_field_count != 0)
-	{
-		t_result_set = mysql_store_result(getMySQL());
-		if (t_result_set == NULL)
-			return False;
-
-		t_affected_rows = 0;
-	}
-	else
-		t_affected_rows = (int)mysql_affected_rows(&mysql);
-
-	if (t_affected_rows != -1)
-		t_result = True;
+	bool t_success = true;
+	bool t_first = true;
 	
-	if (t_result_set != NULL)
+	// we need to iterate through all result sets to avoid errors
+	int t_status = 0;
+	
+	while (t_success && (t_status == 0))
 	{
-		mysql_free_result(t_result_set);
-	}
+		MYSQL_RES *t_result_set;
+		t_result_set = NULL;
 
-	p_affected_rows = t_affected_rows;
+		int t_affected_rows;
+		t_affected_rows = 0;
+
+		// First we need to establish if the query returned a result set. This will be the case if it was 
+		// a select query. If there is a result set, we need to store it temporarily and free it to avoid
+		// errors ocurring in subsequent queries.
+		t_result_set = mysql_store_result(getMySQL());
+		t_success = (t_result_set != NULL) || (mysql_field_count(getMySQL()) == 0);
+		
+		if (t_success && (t_result_set == NULL))
+		{
+			t_affected_rows = mysql_affected_rows(getMySQL());
+			t_success = -1 != t_affected_rows;
+		}
+
+		if (t_result_set != NULL)
+			mysql_free_result(t_result_set);
+
+		if (t_success && t_first)
+		{
+			p_affected_rows = t_affected_rows;
+			t_first = false;
+		}
+		
+		if (t_success)
+		{
+			t_status = mysql_next_result(getMySQL());
+			t_success = t_status <= 0;
+		}
+	}
 
 	// OK-2007-09-10 : Bug 5360
-	if (t_result)
+	if (t_success)
 		errorMessageSet(NULL);
 	else
 		errorMessageSet(mysql_error(getMySQL()));
 
-	return t_result;
+	return t_success;
 }
 
 
@@ -216,20 +223,50 @@ DBCursor *DBConnection_MYSQL::sqlQuery(char *p_query, DBString *p_arguments, int
 	DBCursor_MYSQL *t_cursor;
 	t_cursor = NULL;
 
-	if (ExecuteQuery(p_query, p_arguments, p_argument_count))
+	bool t_success = true;
+	
+	if (t_success)
+		t_success = ExecuteQuery(p_query, p_arguments, p_argument_count);
+		
+	int t_status = 0;
+	while (t_success && (t_status == 0))
 	{
-		t_cursor = new DBCursor_MYSQL();
-		if (!t_cursor -> open((DBConnection *)this))
+		if (t_cursor == NULL)
+		{
+			t_cursor = new (nothrow) DBCursor_MYSQL();
+			t_success = (t_cursor != NULL) && t_cursor->open((DBConnection*)this);
+		}
+		else
+		{
+			// we need to fetch all available result sets, even if we do nothing with them.
+			MYSQL_RES *t_result_set;
+			t_result_set = mysql_store_result(getMySQL());
+			
+			t_success = (t_result_set != NULL) || (mysql_field_count(getMySQL()) == 0);
+			if (t_result_set != NULL)
+				mysql_free_result(t_result_set);
+		}
+		
+		if (t_success)
+		{
+			t_status = mysql_next_result(getMySQL());
+			t_success = t_status <= 0;
+		}
+	}
+	
+	if (t_cursor != NULL)
+	{
+		if (t_success)
+			addCursor(t_cursor);
+		else
 		{
 			delete t_cursor;
 			t_cursor = NULL;
 		}
-		else
-			addCursor(t_cursor); 
 	}
 
 	// OK-2007-09-10 : Bug 5360
-	if (t_cursor != NULL)
+	if (t_success)
 		errorMessageSet(NULL);
 	else
 		errorMessageSet(mysql_error(getMySQL()));
@@ -310,7 +347,7 @@ bool DBConnection_MYSQL::ExecuteQuery(char *p_query, DBString *p_arguments, int 
 	int t_error_code;
 	if (t_success)
 	{
-		if (t_error_code = mysql_real_query(getMySQL(), t_parsed_query, t_query_length))
+		if ((t_error_code = mysql_real_query(getMySQL(), t_parsed_query, t_query_length)))
 			t_success = false;
 	}
 
@@ -379,38 +416,38 @@ bool DBConnection_MYSQL::BindVariables(MYSQL_STMT *p_statement, DBString *p_argu
 
 void DBConnection_MYSQL::getTables(char *buffer, int *bufsize)
 {
-	int rowseplen = 1;
-	char rowsep[] = "\n";
 	if (!buffer) {
-		*bufsize = 2500;
+        if (!m_internal_buffer)
+        {
+            m_internal_buffer = new large_buffer_t;
+            
+        }
+        long buffersize = 0;
+        char tsql[] = "SHOW tables";
+        DBCursor *newcursor = sqlQuery(tsql, NULL, 0, 0);
+        if (newcursor) {
+            if (!newcursor->getEOF()){
+                while (True){
+                    unsigned int colsize;
+                    char *coldata = newcursor->getFieldDataBinary(1,colsize);
+                    colsize = strlen(coldata);
+                    m_internal_buffer->append(coldata, colsize);
+                    m_internal_buffer->append('\n');
+                    buffersize += colsize + 1;
+                    newcursor->next();
+                    if (newcursor->getEOF()) break;
+                }
+            }
+            deleteCursor(newcursor->GetID());
+            *bufsize = buffersize+1;
+            m_internal_buffer->append('\0');
+            fprintf(stderr, "\n%d\n", *bufsize);
+        }
 		return;
 	}
-	char tsql[] = "SHOW tables";
-	DBCursor *newcursor = sqlQuery(tsql, NULL, 0, 0);
-	if (newcursor) {
-		char *result = buffer;
-		char *resultptr = result;
-		if (!newcursor->getEOF()){
-			while (True){
-				unsigned int colsize;
-				char *coldata = newcursor->getFieldDataBinary(1,colsize);
-				colsize = strlen(coldata);
-				if (((resultptr-result) + colsize + rowseplen + 16 ) 
-					> *bufsize)
-					break;
-				memcpy(resultptr,coldata,colsize);
-				resultptr+=colsize;
-				newcursor->next();
-				if (newcursor->getEOF()) break;
-				memcpy(resultptr,rowsep,rowseplen);
-				resultptr+=rowseplen;
-			}
-		}
-		deleteCursor(newcursor->GetID());
-		*resultptr++ = '\0';
-		*bufsize = resultptr-result;
-	}
-	newcursor = NULL;
+    memcpy((void *) buffer, m_internal_buffer->ptr(), m_internal_buffer->length());
+    delete m_internal_buffer;
+    m_internal_buffer = nullptr;
 }
 
 /*MYSQL doesn't support transactions so leave blank for now*/

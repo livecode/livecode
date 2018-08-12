@@ -1,0 +1,1 @@
+# Allow check for private among the keys of the fullDragData

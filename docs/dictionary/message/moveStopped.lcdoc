@@ -4,13 +4,15 @@ Type: message
 
 Syntax: moveStopped
 
-Summary: Sent to an <object> that has just been moved by the <move> <command>.
+Summary:
+Sent to an <object(glossary)> that has just been moved by the <move>
+<command>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on moveStopped -- play a sound
@@ -18,10 +20,15 @@ on moveStopped -- play a sound
 end moveStopped
 
 Description:
-Handle the <moveStopped> <message> to coordinate an action with the end of a <move> <command>.
+Handle the <moveStopped> <message> to coordinate an action with the end
+of a <move> <command>.
 
-The <moveStopped> <message> is sent when the actions of the <move> <command> end, or when a movement is ended by the <stop moving> <command>.
+The <moveStopped> <message> is sent when the actions of the <move>
+<command> end, or when a movement is ended by the <stop moving>
+<command>. 
 
-References: stop moving (command), move (command), object (object), command (glossary), message (glossary)
+References: stop moving (command), move (command), object (glossary),
+command (glossary), message (glossary)
 
 Tags: multimedia
+

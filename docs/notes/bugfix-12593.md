@@ -1,1 +1,0 @@
-# setting effective rect to working screenrect fails 

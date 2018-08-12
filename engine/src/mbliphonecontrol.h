@@ -33,11 +33,6 @@ public:
     // overridden methods
     virtual bool Create(void);
     virtual void Delete(void);
-#ifdef LEGACY_EXEC
-    virtual Exec_stat Set(MCNativeControlProperty p_property, MCExecPoint &ep);
-    virtual Exec_stat Get(MCNativeControlProperty p_property, MCExecPoint &ep);
-    virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters);
-#endif
     
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
@@ -63,22 +58,9 @@ public:
 
 	
 	// Various helper functions
-#ifdef LEGACY_EXEC
-	static Exec_stat ParseColor(MCExecPoint& ep, UIColor*& r_color);
-	static Exec_stat FormatColor(MCExecPoint& ep, UIColor *color);
-#endif
     
     static bool ParseColor(const MCNativeControlColor& p_color, UIColor*& r_color);
 	static bool FormatColor(const UIColor* p_color, MCNativeControlColor& r_color);
-#ifdef LEGACY_EXEC
-	static bool ParseString(MCExecPoint& ep, NSString*& r_string);
-	static bool FormatString(MCExecPoint& ep, NSString *string);
-	static bool ParseUnicodeString(MCExecPoint& ep, NSString*& r_string);
-	static bool FormatUnicodeString(MCExecPoint& ep, NSString *string);
-    static bool ParseRange(MCExecPoint &ep, NSRange &r_range);
-    static bool FormatRange(MCExecPoint &ep, NSRange r_range);
-#endif
-
 protected:
 	// Called by the base-class when it needs the view created
 	virtual UIView *CreateView(void) = 0;

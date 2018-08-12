@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -58,12 +58,6 @@ public:
     MCAndroidBrowserControl(void);
     
 	virtual MCNativeControlType GetType(void);
-#ifdef LEGACY_EXEC
-    virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
-    virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
-    virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
-#endif
-
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
@@ -249,201 +243,6 @@ void MCAndroidBrowserControl::GetScrollingEnabled(MCExecContext& ctxt, bool& r_v
     
     r_value = t_scroll_enabled;
 }
-
-#ifdef /* MCAndroidBrowserControl::Set */ LEGACY_EXEC
-Exec_stat MCAndroidBrowserControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
-{
-    jobject t_view;
-    t_view = GetView();
-
-    switch (p_property)
-    {
-        case kMCNativeControlPropertyUrl:
-            if (t_view != nil)
-			{
-				MCAutoStringRef t_value;
-				/* UNCHECKED */ ep . copyasstringref(&t_value);
-                MCAndroidObjectRemoteCall(t_view, "setUrl", "vx", nil, *t_value);
-			}
-            return ES_NORMAL;
-            
-			// MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
-			//   the WebView.
-		case kMCNativeControlPropertyCanBounce:
-			if (t_view != nil)
-				MCAndroidObjectRemoteCall(t_view, "setCanBounce", "vb", nil, ep . getsvalue() == MCtruemcstring);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyScrollingEnabled:
-			if (t_view != nil)
-				MCAndroidObjectRemoteCall(t_view, "setScrollingEnabled", "vb", nil, ep . getsvalue() == MCtruemcstring);
-			return ES_NORMAL;
-			
-        default:
-            break;
-    }
-    
-    return MCAndroidControl::Set(p_property, ep);
-}
-#endif /* MCAndroidBrowserControl::Set */
-
-#ifdef /* MCAndroidBrowserControl::Get */ LEGACY_EXEC
-Exec_stat MCAndroidBrowserControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
-{
-    jobject t_view;
-    t_view = GetView();
-    
-    switch (p_property)
-    {
-        case kMCNativeControlPropertyUrl:
-        {
-            MCAutoStringRef t_url;
-            if (t_view != nil)
-            {
-                MCAndroidObjectRemoteCall(t_view, "getUrl", "x", &t_url);
-                /* UNCHECKED */ ep.setvalueref(*t_url);
-            }
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyCanRetreat:
-        {
-            bool t_can_retreat = false;
-            if (t_view != nil)
-                MCAndroidObjectRemoteCall(t_view, "canGoBack", "b", &t_can_retreat);
-            ep.setsvalue(MCU_btos(t_can_retreat));
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyCanAdvance:
-        {
-            bool t_can_retreat = false;
-            if (t_view != nil)
-                MCAndroidObjectRemoteCall(t_view, "canGoForward", "b", &t_can_retreat);
-            ep.setsvalue(MCU_btos(t_can_retreat));
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyCanBounce:
-        {
-            bool t_can_bounce = false;
-            if (t_view != nil)
-                MCAndroidObjectRemoteCall(t_view, "getCanBounce", "b", &t_can_bounce);
-            ep.setsvalue(MCU_btos(t_can_bounce));
-            return ES_NORMAL;
-        }
-			
-        case kMCNativeControlPropertyScrollingEnabled:
-        {
-            bool t_scroll_enabled = false;
-            if (t_view != nil)
-                MCAndroidObjectRemoteCall(t_view, "getScrollingEnabled", "b", &t_scroll_enabled);
-            ep.setsvalue(MCU_btos(t_scroll_enabled));
-            return ES_NORMAL;
-        }
-			
-        default:
-            break;
-    }
-    
-    return MCAndroidControl::Get(p_property, ep);
-}
-#endif /* MCAndroidBrowserControl::Get */
-
-#ifdef /* MCAndroidBrowserControl::Do */ LEGACY_EXEC
-Exec_stat MCAndroidBrowserControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-    jobject t_view;
-    t_view = GetView();
-    
-    switch (p_action)
-    {
-        case kMCNativeControlActionAdvance:
-        {
-            bool t_success = true;
-            
-            int32_t t_steps = 1;
-            if (p_parameters != nil)
-                t_success = MCParseParameters(p_parameters, "i", &t_steps);
-            
-            if (t_success && t_view != nil)
-                MCAndroidObjectRemoteCall(t_view, "goForward", "vi", nil, t_steps);
-            
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlActionRetreat:
-        {
-            bool t_success = true;
-            
-            int32_t t_steps = 1;
-            if (p_parameters != nil)
-                t_success = MCParseParameters(p_parameters, "i", &t_steps);
-            
-            if (t_success && t_view != nil)
-                MCAndroidObjectRemoteCall(t_view, "goBack", "vi", nil, t_steps);
-            
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlActionReload:
-            if (t_view != nil)
-                MCAndroidObjectRemoteCall(t_view, "reload", "v", nil);
-            return ES_NORMAL;
-            
-        case kMCNativeControlActionStop:
-            if (t_view != nil)
-                MCAndroidObjectRemoteCall(t_view, "stop", "v", nil);
-            return ES_NORMAL;
-            
-        case kMCNativeControlActionLoad:
-        {
-            bool t_success = true;
-            
-            char *t_url, *t_html;
-            t_url = nil;
-            t_html = nil;
-            if (t_success)
-                t_success = MCParseParameters(p_parameters, "ss", &t_url, &t_html);
-            
-            if (t_success)
-                MCAndroidObjectRemoteCall(t_view, "loadData", "vss", nil, t_url, t_html);
-            
-            delete t_url;
-            delete t_html;
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlActionExecute:
-        {
-            bool t_success = true;
-            
-            char *t_script = nil;
-            char *t_result = nil;
-            
-            if (t_success)
-                t_success = MCParseParameters(p_parameters, "s", &t_script);
-            
-            if (t_success)
-            {
-                t_result = ExecuteJavaScript(t_script);
-                
-                if (t_result != nil)
-                    MCresult->grab(t_result, MCCStringLength(t_result));
-                else
-                    MCresult->sets("error");
-            }
-            
-            delete t_script;
-            return ES_NORMAL;
-        }
-            
-        default:
-            break;
-    }
-    
-    return MCAndroidControl::Do(p_action, p_parameters);
-}
-#endif /* MCAndroidBrowserControl::Do */
 
 // Browser-specific actions
 void MCAndroidBrowserControl::ExecAdvance(MCExecContext& ctxt, integer_t *p_steps)
@@ -693,7 +492,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doSt
     
     if (MCAndroidControl::FindByView(object, t_control) && MCJavaStringToNative(env, url, t_url))
     {
-        t_event = new MCAndroidBrowserStartFinishEvent((MCAndroidBrowserControl*)t_control, t_url, false);
+        t_event = new (nothrow) MCAndroidBrowserStartFinishEvent((MCAndroidBrowserControl*)t_control, t_url, false);
         MCEventQueuePostCustom(t_event);
     }
     
@@ -709,7 +508,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doFi
     
     if (MCAndroidControl::FindByView(object, t_control) && MCJavaStringToNative(env, url, t_url))
     {
-        t_event = new MCAndroidBrowserStartFinishEvent((MCAndroidBrowserControl*)t_control, t_url, true);
+        t_event = new (nothrow) MCAndroidBrowserStartFinishEvent((MCAndroidBrowserControl*)t_control, t_url, true);
         MCEventQueuePostCustom(t_event);
     }
     
@@ -728,7 +527,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doLo
         MCJavaStringToNative(env, url, t_url) &&
         MCJavaStringToNative(env, error, t_error))
     {
-        t_event = new MCAndroidBrowserLoadFailedEvent((MCAndroidBrowserControl*)t_control, t_url, t_error);
+        t_event = new (nothrow) MCAndroidBrowserLoadFailedEvent((MCAndroidBrowserControl*)t_control, t_url, t_error);
         MCEventQueuePostCustom(t_event);
     }
     
@@ -757,7 +556,7 @@ void MCAndroidBrowserControl::DeleteView(jobject p_view)
 
 bool MCNativeBrowserControlCreate(MCNativeControl *&r_control)
 {
-    r_control = new MCAndroidBrowserControl();
+    r_control = new (nothrow) MCAndroidBrowserControl();
     return true;
 }
 

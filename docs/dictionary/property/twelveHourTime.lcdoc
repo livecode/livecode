@@ -4,28 +4,41 @@ Type: property
 
 Syntax: set the twelveHourTime to {true | false}
 
-Summary: Specifies whether the <time> <function> uses a 12-hour clock or a 24-hour clock.
+Summary:
+Specifies whether the <time> <function> uses a 12-hour clock or a
+24-hour clock.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the twelveHourTime to false
 set the twelveHourTime to (the hilite of button "12 Hours")
 
-Value (bool):The <twelveHourTime> is true or false.
+Value (bool):
+The <twelveHourTime> is true or false.
 By default, the <twelveHourTime> is true.
 
 Description:
-Use the <twelveHourTime> <property> to operate with military-style 24-hour time.
+Use the <twelveHourTime> <property> to operate with military-style
+24-hour time.
 
-The setting of the <twelveHourTime> <property> affects the <format> in which the <time> <property> reports a time. It also affects the <format> of the <convert> command when a time specifier is used.
+The setting of the <twelveHourTime> <property> affects the <format> in
+which the <time> <property> reports a time. It also affects the <format>
+of the <convert> command when a time specifier is used.
 
-If the <twelveHourTime> is true, the time function <return|returns> a value including AM or PM. If the <twelveHourTime> is false, AM or PM is not included; instead, the hour is not reset to 1 after noon. For example, the time 2:35 PM <a/>in 12-hour time is equivalent to 14:35 in 24-hour time.
+If the <twelveHourTime> is true, the time function <return|returns> a
+value including AM or PM. If the <twelveHourTime> is false, AM or PM is
+not included; instead, the hour is not reset to 1 after noon. For
+example, the time 2:35 PM <a/>in 12-hour time is equivalent to 14:35 in
+24-hour time.
 
-References: convert (command), format (function), time (function), function (control_st), property (glossary), return (glossary)
+References: convert (command), function (control structure),
+format (function), time (function), property (glossary),
+return (glossary)
 
 Tags: math
+

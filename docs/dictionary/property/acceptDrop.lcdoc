@@ -4,11 +4,15 @@ Type: property
 
 Syntax: set the acceptDrop to {true | false}
 
-Summary: Specifies whether a drop will be accepted during a <drag and drop>. Deprecated
+Summary:
+Specifies whether a drop will be accepted during a <drag and drop>.
+Deprecated 
 
 Introduced: 2.0
 
-Platforms: desktop,web
+Deprecated: 2.9
+
+Platforms: desktop
 
 Example:
 set the acceptDrop to true
@@ -17,10 +21,14 @@ Example:
 if word 1 of the target is "button" then set the acceptDrop to false
 
 Description:
-The <acceptDrop> property is deprecated as of version 2.9. Setting the <acceptDrop> to true is equivalent to setting the dragAction to "copy".
+The <acceptDrop> property is deprecated as of version 2.9. Setting the
+<acceptDrop> to true is equivalent to setting the dragAction to "copy".
 
-In previous versions, setting the <acceptDrop> <property> in an <object|object's> <dragEnter> <handler> allowed it to accept drops.
+In previous versions, setting the <acceptDrop> <property> in an
+<object|object's> <dragEnter> <handler> allowed it to accept drops.
 
-References: object (object), dragEnter (message), dragEnd (message), property (glossary), handler (glossary), drag and drop (glossary)
+References: object (glossary), property (glossary), handler (glossary),
+drag and drop (glossary), dragEnter (message), dragEnd (message)
 
 Tags: ui
+

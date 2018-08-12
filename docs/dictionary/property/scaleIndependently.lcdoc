@@ -4,28 +4,42 @@ Type: property
 
 Syntax: set the scaleIndependently of <EPSObject> to {true | false}
 
-Summary: Specifies whether an <EPS|EPS object's> vertical and horizontal dimensions are sized independently or proportionally.
+Summary:
+Specifies whether an <EPS|EPS object's> vertical and horizontal
+dimensions are sized independently or proportionally.
 
 Introduced: 1.0
 
-OS: linux,ios,android
+OS: linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the scaleIndependently of EPS 2 to false
 
-Value (bool): The <scaleIndependently> of an <EPS|EPS object> is true or false.
+Value (bool):
+The <scaleIndependently> of an <EPS|EPS object> is true or false.
 
 Description:
-Use the <scaleIndependently> <property> to control the screen appearance of an <EPS> <object>.
+Use the <scaleIndependently> <property> to control the screen appearance
+of an <EPS> <object(glossary)>.
 
-If the <scaleIndependently> is true, the <PostScript> image is scaled vertically to fit the full height of the <EPS|EPS object> and horizontally to fit the full width, even if this causes the image to be distorted.
+If the <scaleIndependently> is true, the <PostScript> image is scaled
+vertically to fit the full height of the <EPS|EPS object> and
+horizontally to fit the full width, even if this causes the image to be
+distorted. 
 
-If the <scaleIndependently> is false, the <PostScript> image is scaled proportionally to fit at least one dimension, even if the other dimension does not completely fill the <EPS|EPS object's> rectangle.
+If the <scaleIndependently> is false, the <PostScript> image is scaled
+proportionally to fit at least one dimension, even if the other
+dimension does not completely fill the <EPS|EPS object's> rectangle.
 
-This property is supported only on Unix systems with Display PostScript installed.
+This property is supported only on Unix systems with Display PostScript
+installed. 
 
-References: postScript (property), yExtent (property), yScale (property), xExtent (property), xScale (property), scale (property), boundingBox (property), EPS (glossary), property (glossary), EPS (object), object (object)
+References: EPS (glossary), property (glossary), object (glossary),
+EPS (object), postScript (property), yExtent (property),
+yScale (property), xExtent (property), xScale (property),
+scale (property), boundingBox (property)
 
 Tags: multimedia
+

@@ -2,53 +2,92 @@ Name: colors
 
 Type: property
 
-Syntax: set the colors of <object> to <colorsList> 
+Syntax: set the colors of <object> to <colorsList>
 
-Summary: Specifies all the colors of an <object>, in shorthand form.
+Summary:
+Specifies all the colors of an <object(glossary)>, in shorthand form.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the colors of this stack into field "Colors"
 
 Example:
-set the colors of last button to field "Colors"
+put "blue" & return & \
+  "#EE98AA" & return & \
+  line 5 of the colorNames & return & \
+  220,180,200 & return & \
+  "yellow" & return & \
+  200,200,60 & return & \
+  "#334433" & return & \
+  "pink" into field "colors"
+set the colors of button "mybtn" to field "colors"
 
 Example:
 set the colors of this stack to the colors of stack "Home"
 
 Value:
-The <colors> of an <object> is a list of <color reference|color references>, one per line.
-A color reference is any standard color name; or three comma-separated integers between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three hexadecimal numbers, one for each of red, green, and blue.
+The <colors> of an <object(glossary)> is a list of 
+<color reference|color references>, one per line. A color reference is 
+any standard color name; or three comma-separated integers between zero 
+and 255, specifying the level of each of red, green, and blue; or an
+HTML-style color consisting of a hash mark (#) followed by three
+hexadecimal numbers, one for each of red, green, and blue.
 
-The <colors> of an <image> contains as many lines as there are colors used in the <image>. The <colors> of all other <object|objects> contains eight lines, some of which may be empty.
+The <colors> of an <image(glossary)> contains as many lines as there are
+colors used in the <image(glossary)>. The <colors> of all other
+<object(glossary)|objects> consists of eight lines, some of which may be
+empty. 
 
 Description:
-Use the <colors> <property> to get all eight basic color <properties> at once, or to set the colors of one <object> to be the same as the colors of another <object>.
+Use the <colors> <property> to get all eight basic color <properties> at
+once, or to set the colors of one <object(glossary)> to be the same as
+the colors of another <object(glossary)>.
 
-For objects other than images, you can set all these colors individually; the <colors> <property> simply provides a shorter method of dealing with all of them at once. Each <line> of the <colors> corresponds to one of the following color <properties> :
+For <object(glossary)|objects> other than <image(glossary)|images>, you
+can set all these colors individually; the <colors> <property> simply
+provides a shorter method of dealing with all of them at once. Each
+<line> of the <colors> corresponds to one of the following color
+<properties> :
 
-        Line 1: the foregroundColor
-        Line 2: the backgroundColor
-        Line 3: the hiliteColor
-        Line 4: the borderColor
-        Line 5: the <topColor> 
-        Line 6: the bottomColor
-        Line 7: the shadowColor
-        Line 8: the focusColor
+* Line 1: the <foregroundColor>
+* Line 2: the <backgroundColor>
+* Line 3: the <hiliteColor>
+* Line 4: the <borderColor>
+* Line 5: the <topColor> 
+* Line 6: the <bottomColor>
+* Line 7: the <shadowColor>
+* Line 8: the <focusColor>
 
-If you leave a line blank when setting the <colors>, the color <property> corresponding to that <line> is left unchanged.
 
-If the <colors> <property> of an <object> reports a blank line, that color is not set for the individual <object>, but is <inheritance|inherited> from the <object|object's> <owner>. Use the form the effective colors of <object> to obtain the colors used for the object, whether set for the <object> or <inheritance|inherited>.
+If you leave a line blank when setting the <colors>, the color
+<property> corresponding to that <line> is left unchanged.
 
-If a pattern is set for an object, that pattern is used instead of the corresponding color for that object.
+If the <colors> <property> of an <object(glossary)> reports a blank
+line, that color is not set for the individual <object(glossary)>, but
+is <inheritance|inherited> from the <object(glossary)|object's> <owner>.
+Use the form the effective colors of <object(glossary)> to obtain the
+colors used for the object, whether set for the <object(glossary)> or
+<inheritance|inherited>. 
 
-References: line (keyword), image (keyword), colorPalette (keyword), linkHiliteColor (property), topColor (property), linkColor (property), properties (property), owner (property), answer color (command), mouseColor (function), object (object), property (glossary), color reference (glossary), inheritance (glossary)
+If a pattern is set for an <object(glossary)>, that pattern is used
+instead of the corresponding color for that <object(glossary)>.
+
+References: answer color (command), mouseColor (function),
+color reference (glossary), image (glossary), inheritance (glossary),
+object (glossary), property (glossary), colorPalette (keyword),
+line (keyword), foregroundColor (property), backgroundColor (property),
+hiliteColor (property), borderColor (property), topColor (property),
+bottomColor (property), shadowColor (property), focusColor (property),
+linkColor (property), linkHiliteColor (property), owner (property),
+patterns (property), properties (property)
 
 Tags: ui
+

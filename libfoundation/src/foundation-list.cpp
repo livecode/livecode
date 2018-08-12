@@ -99,7 +99,7 @@ bool MCListCopy(MCListRef self, MCListRef& r_list)
 	__MCAssertIsList(self);
     
     // If we are immutable, just bump the reference count
-    if (!self -> flags & kMCListFlagIsMutable)
+	if (!(self -> flags & kMCListFlagIsMutable))
     {
         r_list = MCValueRetain(self);
         return true;

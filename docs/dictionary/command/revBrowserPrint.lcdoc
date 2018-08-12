@@ -1,18 +1,19 @@
 Name: revBrowserPrint
 
+Synonyms: xbrowser_print
+
 Type: command
 
-Syntax: revBrowserPrint <instanceId> 
+Syntax: revBrowserPrint <instanceId>
 
 Syntax: XBrowser_Print [<instanceId>]
 
-Summary: Prints the current page of the specified browser.
-
-Synonyms: XBrowser_Print
+Summary:
+Prints the current page of the specified browser.
 
 Introduced: 2.8.1
 
-OS: mac,windows
+OS: mac, windows
 
 Platforms: desktop
 
@@ -22,15 +23,24 @@ Example:
 revBrowserPrint tBrowserId
 
 Parameters:
-instanceId: The integer identifier of a browser object
+instanceId:
+The integer identifier of a browser object
 
 The result:
 The <revBrowserPrint> command puts empty into the <result> 
-The <revBrowserPrint> command does not require the printing library to be included.
+The <revBrowserPrint> command does not require the printing library to
+be included.
 
 Description:
-The <revBrowserPrint> command prints the current page of the browser specified by the <instanceId>. On issuing this command, the standard operating system print dialog will appear, allowing the user to choose printer options and confirm that the page should be printed.
+The <revBrowserPrint> command prints the current page of the browser
+specified by the <instanceId>. On issuing this command, the standard
+operating system print dialog will appear, allowing the user to choose
+printer options and confirm that the page should be printed.
 
->*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+>*Note:* For general information on using the browser library, see the
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserSnapshot (command), print (command), open printing (command), revBrowserOpen (function), revBrowserOpen function (function), result (function)
+References: revBrowserSnapshot (command), print (command),
+open printing (command), revBrowserOpen (function),
+function (glossary), result (function)
+

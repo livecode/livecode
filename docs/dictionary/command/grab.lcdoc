@@ -2,15 +2,16 @@ Name: grab
 
 Type: command
 
-Syntax: grab <object> 
+Syntax: grab <object>
 
-Summary: Causes an <object> to follow the movements of the mouse.
+Summary:
+Causes an <object(glossary)> to follow the movements of the mouse.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 grab graphic 1
@@ -22,17 +23,33 @@ Example:
 grab me
 
 Parameters:
-object: Any control on the current card.
+object:
+Any control on the current card.
 
 Description:
-Use the <grab> <command> within a <mouseDown> <handler> to drag an <object> around the <stack window> without <select|selecting> it.
+Use the <grab> <command> within a <mouseDown> <handler> to drag an
+<object(glossary)> around the <stack window> without <select|selecting>
+it. 
 
-You can only grab a control when the mouse pointer is within the control's rectangle at the time the mouse is clicked. If the <mouse pointer> is outside the <control> when the <grab> <command> is <execute|executed>, nothing happens.
+You can only grab a control when the mouse pointer is within the
+control's rectangle at the time the mouse is clicked. If the <mouse
+pointer> is outside the <control> when the <grab> <command> is
+<execute|executed>, nothing happens.
 
-Although the <grab> <command> returns to the calling handler immediately, the target control will remain grabbed until the user releases the mouse button, at which point the control will receive a mouseUp message.
+Although the <grab> <command> returns to the calling handler
+immediately, the target control will remain grabbed until the user
+releases the mouse button, at which point the control will receive a
+mouseUp message.
 
-If a subsequent script action deletes the control, or if the control becoms invisible, the grab will be automatically cancelled and in this case no message will be sent to the control.
+If a subsequent script action deletes the control, or if the control
+becoms invisible, the grab will be automatically cancelled and in this
+case no message will be sent to the control.
 
-References: control (keyword), mouseDown (message), moveStack (message), mouseMove (message), click (command), drag (command), move (command), mouseLoc (function), object (object), handler (glossary), select (glossary), mouse pointer (glossary), command (glossary), stack window (glossary), execute (glossary)
+References: click (command), drag (command), move (command),
+mouseLoc (function), object (glossary), handler (glossary),
+select (glossary), mouse pointer (glossary), command (glossary),
+stack window (glossary), execute (glossary), control (keyword),
+mouseDown (message), moveStack (message), mouseMove (message)
 
 Tags: ui
+

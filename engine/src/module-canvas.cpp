@@ -19,6 +19,7 @@
 #include "prefix.h"
 
 #include "image.h"
+#include "stack.h"
 #include "widget.h"
 
 #include "module-canvas.h"
@@ -36,8 +37,6 @@ enum MCSVGPathCommand
 {
 	kMCSVGPathMoveTo,
 	kMCSVGPathRelativeMoveTo,
-	kMCSVGPathClose,
-	kMCSVGPathRelativeClose,
 	kMCSVGPathLineTo,
 	kMCSVGPathRelativeLineTo,
 	kMCSVGPathHorizontalLineTo,
@@ -54,9 +53,8 @@ enum MCSVGPathCommand
 	kMCSVGPathRelativeShorthandQuadraticCurveTo,
 	kMCSVGPathEllipticalCurveTo,
 	kMCSVGPathRelativeEllipticalCurveTo,
+    kMCSVGPathClose,
 };
-
-#define kMCSVGPathCommandCount (kMCSVGPathRelativeEllipticalCurveTo + 1)
 
 typedef bool (*MCSVGParseCallback)(void *p_context, MCSVGPathCommand p_command, float32_t *p_args, uint32_t p_arg_count);
 
@@ -206,7 +204,7 @@ bool MCArrayFetchCanvasColor(MCArrayRef p_array, MCNameRef p_key, MCCanvasColorR
 
 //////////
 
-bool MCProperListFetchNumberAtIndex(MCProperListRef p_list, uindex_t p_index, MCNumberRef &r_number)
+bool MCProperListGetNumberAtIndex(MCProperListRef p_list, uindex_t p_index, MCNumberRef &r_number)
 {
 	if (p_index >= MCProperListGetLength(p_list))
 		return false;
@@ -216,21 +214,40 @@ bool MCProperListFetchNumberAtIndex(MCProperListRef p_list, uindex_t p_index, MC
 	if (t_value == nil)
 		return false;
 	
-	if (MCValueGetTypeInfo(t_value) != kMCNumberTypeInfo)
-		return false;
+    // Is the value already a (boxed) number?
+    MCTypeInfoRef t_typeinfo = MCValueGetTypeInfo(t_value);
+	if (t_typeinfo == kMCNumberTypeInfo)
+    {
+        r_number = MCValueRetain((MCNumberRef)t_value);
+        return true;
+    }
 	
-	r_number = (MCNumberRef)t_value;
-	
-	return true;
+    // Is the value something that can be bridged to a number?
+    if (MCTypeInfoConforms(t_typeinfo, kMCNumberTypeInfo))
+    {
+        // Get the underlying type
+        if (MCTypeInfoIsNamed(t_typeinfo))
+            t_typeinfo = MCNamedTypeInfoGetBoundTypeInfo(t_typeinfo);
+        
+        if (MCTypeInfoIsForeign(t_typeinfo))
+        {
+            const MCForeignTypeDescriptor* t_desc = MCForeignTypeInfoGetDescriptor(t_typeinfo);
+            if (t_desc->doimport(t_desc, MCForeignValueGetContentsPtr(t_value), false, (MCValueRef&)r_number))
+                return true;
+        }
+    }
+    
+    // If we get here, we didn't know how to handle the type
+    return false;
 }
 
 bool MCProperListFetchRealAtIndex(MCProperListRef p_list, uindex_t p_index, real64_t &r_real)
 {
-	MCNumberRef t_number;
-	if (!MCProperListFetchNumberAtIndex(p_list, p_index, t_number))
+	MCAutoNumberRef t_number;
+	if (!MCProperListGetNumberAtIndex(p_list, p_index, &t_number))
 		return false;
 	
-	r_real = MCNumberFetchAsReal(t_number);
+	r_real = MCNumberFetchAsReal(*t_number);
 	
 	return true;
 }
@@ -241,17 +258,17 @@ inline bool MCProperListFetchFloatAtIndex(MCProperListRef p_list, uindex_t p_ind
 	if (!MCProperListFetchRealAtIndex(p_list, p_index, t_real))
 		return false;
 	
-	r_float = t_real;
+	r_float = float32_t(t_real);
 	return true;
 }
 
 bool MCProperListFetchIntegerAtIndex(MCProperListRef p_list, uindex_t p_index, integer_t &r_integer)
 {
-	MCNumberRef t_number;
-	if (!MCProperListFetchNumberAtIndex(p_list, p_index, t_number))
+	MCAutoNumberRef t_number;
+	if (!MCProperListGetNumberAtIndex(p_list, p_index, &t_number))
 		return false;
 
-	r_integer = MCNumberFetchAsInteger(t_number);
+	r_integer = MCNumberFetchAsInteger(*t_number);
 	
 	return true;
 }
@@ -361,7 +378,7 @@ inline MCGFloat MCGAffineTransformGetEffectiveScale(const MCGAffineTransform &p_
 bool MCGPointParse(MCStringRef p_string, MCGPoint &r_point)
 {
 	bool t_success;
-	t_success = nil;
+	t_success = false;
 	
 	MCProperListRef t_items;
 	t_items = nil;
@@ -1749,6 +1766,7 @@ void MCCanvasTransformSkewWithList(MCCanvasTransformRef &x_transform, MCProperLi
 	MCCanvasTransformSkew(x_transform, t_skew.x, t_skew.y);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformMultiply(MCCanvasTransformRef p_left, MCCanvasTransformRef p_right, MCCanvasTransformRef &r_transform)
 {
 	MCGAffineTransform t_transform;
@@ -1889,13 +1907,20 @@ void MCCanvasImageMakeWithData(MCDataRef p_data, MCCanvasImageRef &r_image)
 }
 
 // Input should be unpremultiplied ARGB pixels
+
 MC_DLLEXPORT_DEF
 void MCCanvasImageMakeWithPixels(integer_t p_width, integer_t p_height, MCDataRef p_pixels, MCCanvasImageRef &r_image)
+{
+    MCCanvasImageMakeWithPixelsInFormat(p_width, p_height, p_pixels, kMCGPixelFormatARGB, r_image);
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasImageMakeWithPixelsInFormat(integer_t p_width, integer_t p_height, MCDataRef p_pixels, MCGPixelFormat p_format, MCCanvasImageRef &r_image)
 {
 	MCImageRep *t_image_rep;
 	t_image_rep = nil;
 	
-	if (!MCImageRepCreateWithPixels(p_pixels, p_width, p_height, kMCGPixelFormatARGB, false, t_image_rep))
+	if (!MCImageRepCreateWithPixels(p_pixels, p_width, p_height, p_format, false, t_image_rep))
 	{
 		MCCanvasThrowError(kMCCanvasImageRepPixelsErrorTypeInfo);
 		return;
@@ -1967,9 +1992,9 @@ void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MCDataRef &r_pixels)
 	t_buffer_size = t_raster->height * t_raster->stride;
 	
 	/* UNCHECKED */ MCMemoryAllocate(t_buffer_size, t_buffer);
-	
+    uint32_t *t_buffer_ptr = (uint32_t *)t_buffer;
 	uint8_t *t_pixel_row;
-	t_pixel_row = t_buffer;
+	t_pixel_row = (uint8_t*)t_raster->data;
 	
 	for (uint32_t y = 0; y < t_raster->height; y++)
 	{
@@ -1978,7 +2003,7 @@ void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MCDataRef &r_pixels)
 		
 		for (uint32_t x = 0; x < t_raster->width; x++)
 		{
-			*t_pixel_ptr = MCGPixelFromNative(kMCGPixelFormatARGB, *t_pixel_ptr);
+			*t_buffer_ptr++ = MCGPixelFromNative(kMCGPixelFormatARGB, *t_pixel_ptr);
 			t_pixel_ptr++;
 		}
 		
@@ -3171,7 +3196,6 @@ bool MCCanvasPathSVGParseCallback(void *p_context, MCSVGPathCommand p_command, f
 		}
 			
 		case kMCSVGPathClose:
-		case kMCSVGPathRelativeClose:
 			MCGPathCloseSubpath(t_context->path);
 			t_context->last_point = t_context->first_point;
 			break;
@@ -4781,6 +4805,12 @@ void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font)
 	MCCanvasFontSetProps(x_font, t_name, t_style, p_size);
 }
 
+MC_DLLEXPORT_DEF
+void MCCanvasFontGetHandle(MCCanvasFontRef p_font, void*& r_handle)
+{
+    r_handle = MCFontGetHandle(MCCanvasFontGetMCFont(p_font));
+}
+
 // Operations
 
 MCCanvasRectangleRef MCCanvasFontMeasureTextTypographicBoundsWithTransform(MCStringRef p_text, MCCanvasFontRef p_font, const MCGAffineTransform &p_transform)
@@ -5335,7 +5365,6 @@ void MCCanvasGetClipBounds(MCCanvasRef p_canvas, MCCanvasRectangleRef &r_bounds)
 void MCCanvasApplySolidPaint(__MCCanvasImpl &x_canvas, MCCanvasSolidPaintRef p_paint)
 {
 	__MCCanvasColorImpl *t_color;
-	MCCanvasFloat t_red, t_green, t_blue, t_alpha;
 	t_color = MCCanvasColorGet(MCCanvasSolidPaintGet(p_paint)->color);
 	
 	MCGContextSetFillRGBAColor(x_canvas.context, t_color->red, t_color->green, t_color->blue, t_color->alpha);
@@ -5773,23 +5802,7 @@ void MCCanvasDrawRectOfImage(MCCanvasRef p_canvas, MCCanvasImageRef p_image, con
 	
 	MCCanvasApplyChanges(*t_canvas);
 
-	MCGImageFrame t_frame;
-	
-	MCGFloat t_scale;
-	t_scale = MCGAffineTransformGetEffectiveScale(MCGContextGetDeviceTransform(t_canvas->context));
-	
-	if (MCImageRepLock(t_image, 0, t_scale, t_frame))
-	{
-		MCGAffineTransform t_transform;
-		t_transform = MCGAffineTransformMakeScale(1.0 / t_frame.x_scale, 1.0 / t_frame.y_scale);
-		
-		MCGRectangle t_src_rect;
-		t_src_rect = MCGRectangleScale(p_src_rect, t_frame.x_scale, t_frame.y_scale);
-		
-		MCGContextDrawRectOfImage(t_canvas->context, t_frame.image, t_src_rect, p_dst_rect, t_canvas->props().image_filter);
-		
-		MCImageRepUnlock(t_image, 0, t_frame);
-	}
+    MCImageRepRender(t_image, t_canvas->context, 0, p_src_rect, p_dst_rect, t_canvas->props().image_filter);
 }
 
 MC_DLLEXPORT_DEF
@@ -6028,7 +6041,7 @@ extern "C" MC_DLLEXPORT_DEF void MCCanvasGetPixelDataOfCanvas(MCCanvasRef p_canv
     t_pixel_count = t_width * t_height;
     
     uint32_t *t_my_pixels, *t_data_ptr;
-    t_my_pixels = new uint32_t[t_pixel_count];
+    t_my_pixels = new (nothrow) uint32_t[t_pixel_count];
     memcpy(t_my_pixels, t_pixels, t_pixel_count * sizeof(uint32_t));
     
     t_data_ptr = t_my_pixels;
@@ -6056,7 +6069,7 @@ extern "C" MC_DLLEXPORT_DEF void MCCanvasGetPixelHeightOfCanvas(MCCanvasRef p_ca
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
-    r_height = MCGContextGetWidth(t_canvas -> context);
+    r_height = MCGContextGetHeight(t_canvas -> context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6069,6 +6082,8 @@ static MCValueCustomCallbacks kMCCanvasRectangleCustomValueCallbacks =
 	__MCCanvasRectangleEqual,
 	__MCCanvasRectangleHash,
 	__MCCanvasRectangleDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasPointCustomValueCallbacks =
@@ -6079,6 +6094,8 @@ static MCValueCustomCallbacks kMCCanvasPointCustomValueCallbacks =
 	__MCCanvasPointEqual,
 	__MCCanvasPointHash,
 	__MCCanvasPointDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasColorCustomValueCallbacks =
@@ -6089,6 +6106,8 @@ static MCValueCustomCallbacks kMCCanvasColorCustomValueCallbacks =
 	__MCCanvasColorEqual,
 	__MCCanvasColorHash,
 	__MCCanvasColorDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasTransformCustomValueCallbacks =
@@ -6099,6 +6118,8 @@ static MCValueCustomCallbacks kMCCanvasTransformCustomValueCallbacks =
 	__MCCanvasTransformEqual,
 	__MCCanvasTransformHash,
 	__MCCanvasTransformDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasImageCustomValueCallbacks =
@@ -6109,6 +6130,8 @@ static MCValueCustomCallbacks kMCCanvasImageCustomValueCallbacks =
 	__MCCanvasImageEqual,
 	__MCCanvasImageHash,
 	__MCCanvasImageDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasPaintCustomValueCallbacks =
@@ -6119,6 +6142,8 @@ static MCValueCustomCallbacks kMCCanvasPaintCustomValueCallbacks =
 	nil,
 	nil,
 	nil,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasSolidPaintCustomValueCallbacks =
@@ -6129,6 +6154,8 @@ static MCValueCustomCallbacks kMCCanvasSolidPaintCustomValueCallbacks =
 	__MCCanvasSolidPaintEqual,
 	__MCCanvasSolidPaintHash,
 	__MCCanvasSolidPaintDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasPatternCustomValueCallbacks =
@@ -6139,6 +6166,8 @@ static MCValueCustomCallbacks kMCCanvasPatternCustomValueCallbacks =
 	__MCCanvasPatternEqual,
 	__MCCanvasPatternHash,
 	__MCCanvasPatternDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasGradientCustomValueCallbacks =
@@ -6149,6 +6178,8 @@ static MCValueCustomCallbacks kMCCanvasGradientCustomValueCallbacks =
 	__MCCanvasGradientEqual,
 	__MCCanvasGradientHash,
 	__MCCanvasGradientDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasGradientStopCustomValueCallbacks =
@@ -6159,6 +6190,8 @@ static MCValueCustomCallbacks kMCCanvasGradientStopCustomValueCallbacks =
 	__MCCanvasGradientStopEqual,
 	__MCCanvasGradientStopHash,
 	__MCCanvasGradientStopDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasPathCustomValueCallbacks =
@@ -6169,6 +6202,8 @@ static MCValueCustomCallbacks kMCCanvasPathCustomValueCallbacks =
 	__MCCanvasPathEqual,
 	__MCCanvasPathHash,
 	__MCCanvasPathDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasEffectCustomValueCallbacks =
@@ -6179,6 +6214,8 @@ static MCValueCustomCallbacks kMCCanvasEffectCustomValueCallbacks =
 	__MCCanvasEffectEqual,
 	__MCCanvasEffectHash,
 	__MCCanvasEffectDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasFontCustumValueCallbacks =
@@ -6189,6 +6226,8 @@ static MCValueCustomCallbacks kMCCanvasFontCustumValueCallbacks =
 	__MCCanvasFontEqual,
 	__MCCanvasFontHash,
 	__MCCanvasFontDescribe,
+    nil,
+    nil,
 };
 
 static MCValueCustomCallbacks kMCCanvasCustomValueCallbacks =
@@ -6199,6 +6238,8 @@ static MCValueCustomCallbacks kMCCanvasCustomValueCallbacks =
 	__MCCanvasEqual,
 	__MCCanvasHash,
 	__MCCanvasDescribe,
+    nil,
+    nil,
 };
 
 bool MCCanvasTypesInitialize()
@@ -6700,7 +6741,7 @@ static MCSVGPathCommandMap s_svg_command_map[] = {
 	{'M', kMCSVGPathMoveTo},
 	{'m', kMCSVGPathRelativeMoveTo},
 	{'Z', kMCSVGPathClose},
-	{'z', kMCSVGPathRelativeClose},
+	{'z', kMCSVGPathClose},
 	{'L', kMCSVGPathLineTo},
 	{'l', kMCSVGPathRelativeLineTo},
 	{'H', kMCSVGPathHorizontalLineTo},
@@ -6721,7 +6762,7 @@ static MCSVGPathCommandMap s_svg_command_map[] = {
 
 bool MCSVGLookupPathCommand(char p_char, MCSVGPathCommand &r_command)
 {
-	for (uint32_t i = 0; i < kMCSVGPathCommandCount; i++)
+	for (uint32_t i = 0; i < sizeof(s_svg_command_map) / sizeof(s_svg_command_map[0]); i++)
 		if (p_char == s_svg_command_map[i].letter)
 		{
 			r_command = s_svg_command_map[i].command;
@@ -6769,7 +6810,6 @@ bool MCSVGTryToParseRangeAsReal(const char *p_string, const MCRange &p_range, MC
 
 bool MCSVGParseReal(const char *p_string, MCRange &x_range, real64_t &r_real)
 {
-	real64_t t_real;
 	MCRange t_used;
 	
 	if (!MCSVGTryToParseRangeAsReal(p_string, x_range, &t_used, r_real))
@@ -6826,7 +6866,6 @@ bool MCSVGParseParams(const char *p_string, MCRange &x_range, MCSVGPathCommand p
 			break;
 			
 		case kMCSVGPathClose:
-		case kMCSVGPathRelativeClose:
 			t_param_count = 0;
 			break;
 			
@@ -6958,6 +6997,10 @@ bool MCSVGParse(MCStringRef p_string, MCSVGParseCallback p_callback, void *p_con
 		
 		if (!p_callback(p_context, t_command, t_params, t_param_count))
 			return false;
+        
+        // Skip any trailing whitespace in the string
+        MCSVGSkipWhitespace(*t_native_string, t_range);
+        
 	}
 	
 	return true;

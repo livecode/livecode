@@ -2,17 +2,19 @@ Name: base64Decode
 
 Type: function
 
-Syntax: the base64Decode of <encodedData> 
+Syntax: the base64Decode of <encodedData>
 
 Syntax: base64Decode(<encodedData>)
 
-Summary: <return|Returns> the original data from a base 64-<encode|encoded> <string>.
+Summary:
+<return|Returns> the original data from a base 64-<encode|encoded>
+<string>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put base64Decode(receivedData) into URL "file:download.mov"
@@ -21,21 +23,36 @@ Example:
 base64Decode(base64Encode(myData))
 
 Parameters:
-encodedData (string): A string of of any length. Valid base 64-encoded data can include uppercase and lowercase letters, digits, +, /, and =. Other characters are ignored.
+encodedData (string):
+A string of of any length. Valid base 64-encoded data can include
+uppercase and lowercase letters, digits, +, /, and =. Other characters
+are ignored.
 
-Returns: The <base64Decode> <function> <return|returns> the original <binary file|binary data>.
+Returns:
+The <base64Decode> <function> <return|returns> the original <binary
+file|binary data>.
 
 Description:
-Use the <base64Decode> <function> to take a base 64-<encode|encoded> <string> and transform it back into the original <binary file|binary data>.
+Use the <base64Decode> <function> to take a base 64-<encode|encoded>
+<string> and transform it back into the original <binary file|binary
+data>. 
 
-The <base64Decode> <function> is the <inverse> of the <base64Encode> <function>.
+The <base64Decode> <function> is the <inverse> of the <base64Encode>
+<function>. 
 
 The decoded result is generally smaller than the encoded data.
 
-Base 64-encoded data does not necessarily contain any = signs. If a run of one or more = signs is present, it indicates the end of the data.
+Base 64-encoded data does not necessarily contain any = signs. If a run
+of one or more = signs is present, it indicates the end of the data.
 
-The base 64 encoding scheme is often used to encode binary data for MIME mail and HTTP transfers.
+The base 64 encoding scheme is often used to encode binary data for MIME
+mail and HTTP transfers.
 
-For technical information about base 64 encoding, see [RFC 2045, section 6.8](https://tools.ietf.org/html/rfc2045#section-6.8).
+For technical information about base 64 encoding, see [RFC 2045, section
+6.8](https://tools.ietf.org/html/rfc2045#section-6.8). 
 
-References: string (keyword), inverse (keyword), md5Digest (function), base64Encode (function), decompress (function), encode (glossary), return (glossary), binary file (glossary), function (control_st)
+References: function (control structure), md5Digest (function),
+base64Encode (function), decompress (function), encode (glossary),
+return (glossary), binary file (glossary), string (keyword),
+inverse (keyword)
+

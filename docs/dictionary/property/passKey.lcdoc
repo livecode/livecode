@@ -2,28 +2,53 @@ Name: passKey
 
 Type: property
 
-Syntax: set the passKey of <stack> to <passwordString> 
+Syntax: set the passKey of <stack> to <passwordString>
 
-Summary: Enters a <password> for a locked <stack>, letting the user modify the <stack>.
+Summary:
+Enters a <password> for a locked <stack>, letting the user modify the
+<stack>. 
 
 Associations: stack
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+Edition: indy
 
-Platforms: desktop,server,web,mobile
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
 
 Example:
 set the passKey of this stack to field "Challenge"
 
 Value:
 The <passKey> of a <stack> is a <string>.
-By default, the <passKey> <property> of newly created <stacks> is set to empty.
+By default, the <passKey> <property> of newly created <stacks> is set to
+empty. 
 
 Description:
 Use the <passKey> <property> to unlock a <password> -protected <stack>.
 
-If a stack has been locked against modification with a password, you can set the <passKey> <property> of the stack to the correct <password> to <unlock> the <stack>. Setting the <passKey> <property> is the <script> equivalent of typing the <password> into LiveCode's <password> <dialog box>. Use this <property> if you want to perform <password> authentication in a <handler>.
+If a stack has been locked against modification with a password, you can
+set the <passKey> <property> of the stack to the correct <password> to
+<unlock> the <stack>. Setting the <passKey> <property> is the <script>
+equivalent of typing the <password> into LiveCode's <password> <dialog
+box>. Use this <property> if you want to perform <password>
+authentication in a <handler>.
 
-References: password (property), script (property), string (keyword), stack (object), property (glossary), unlock (glossary), dialog box (glossary), handler (glossary), stacks (function)
+>*Note:* Script only stacks are unable to be password protected. In
+> order to password protect a script only stack use the following
+> commands. 
+
+    set the scriptOnly of stack "Secrets" to false
+    set the password of stack "Secrets" to field "Password"
+
+>**Note:** Setting the <passKey> of a <stack> is only supported in 
+> *LiveCode Indy* and *LiveCode Business*. In *LiveCode Community* and
+> *LiveCode Community Plus* setting the <passKey> of a <stack> will
+> result in an execution error, however, *LiveCode Community Plus* does
+> support using <password> protected <stack|stacks>.
+    
+References: stacks (function), property (glossary), unlock (glossary),
+dialog box (glossary), handler (glossary), string (keyword),
+stack (object), password (property), script (property)

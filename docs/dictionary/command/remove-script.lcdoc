@@ -4,13 +4,15 @@ Type: command
 
 Syntax: remove [the] script of <object> from {front | back}
 
-Summary: Takes an <object> out of the <message path> that was placed in the <message path> with the <insert script> <command>.
+Summary:
+Takes an <object(glossary)> out of the <message path> that was placed in
+the <message path> with the <insert script> <command>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 remove the script of button ID 2 from front
@@ -19,13 +21,23 @@ Example:
 remove the script of this card from back
 
 Parameters:
-object: Any object in an open stack.
+object:
+Any object in an open stack.
 
 Description:
-Use the <remove script> <command> to remove an <object> from the <message path>.
+Use the <remove script> <command> to remove an <object(glossary)> from
+the <message path>.
 
-You can remove a script only if it has previously been inserted in the message path with the <insert script> <command>. The <remove script> <command> does not affect <object|objects> that are normally in the <message path> or <script|scripts> that were placed in the <message path> with the <start using> <command>.
+You can remove a script only if it has previously been inserted in the
+message path with the <insert script> <command>. The <remove script>
+<command> does not affect <object|objects> that are normally in the
+<message path> or <script|scripts> that were placed in the <message
+path> with the <start using> <command>.
 
-References: script (property), front (keyword), start using (command), stop using (command), insert script (command), backScripts (function), frontScripts (function), object (object), command (glossary), message path (glossary), script (glossary)
+References: start using (command), stop using (command),
+insert script (command), backScripts (function), frontScripts (function),
+object (glossary), command (glossary), message path (glossary),
+script (glossary), front (keyword), script (property)
 
 Tags: objects
+

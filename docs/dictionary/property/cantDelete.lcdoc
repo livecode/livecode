@@ -4,27 +4,46 @@ Type: property
 
 Syntax: set the cantDelete of {<card> | <group> | <stack>} to {true | false}
 
-Summary: Specifies whether an <object> can be deleted.
+Summary:
+Specifies whether an <object(glossary)> can be deleted.
+
+Associations: card, group, stack
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the cantDelete of this card to true
 
-Value (bool):The <cantDelete> of a <card>, <background>, or <stack> is true or false.
-By default, the <cantDelete> <property> of newly created <objects> is set to false.
+Value (bool):
+The <cantDelete> of a <card>, <background>, or <stack> is true or false.
+By default, the <cantDelete> <property> of newly created <objects> is
+set to false.
 
 Description:
-Use the <cantDelete> <property> to protect a <stack> or part of a <stack> against accidental deletion.
+Use the <cantDelete> <property> to protect a <stack> or part of a
+<stack> against accidental deletion.
 
-If an object's <cantDelete> <property> is set to true, the <object> cannot be deleted either by user action or by a <handler>. If you want to delete the <object>, you must first set its <cantDelete> to false.
+If an object's <cantDelete> <property> is set to true, the
+<object(glossary)> cannot be deleted either by user action or by a
+<handler>. If you want to delete the <object(glossary)>, you must first
+set its <cantDelete> to false.
 
-Deleting a card, background, or substack removes it permanently if the stack is saved after the deletion. Deleting a main stack removes it from memory, but does not remove its file from the user's system.
+Deleting a card, background, or substack removes it permanently if the
+stack is saved after the deletion. Deleting a main stack removes it from
+memory, but does not remove its file from the user's system.
 
-Setting a stack's <cantDelete> <property> to true does not prevent the user from deleting the <file> containing the stack by putting it in the Trash or Recycle Bin, or deleting it with a <shell> command or system script.
+Setting a stack's <cantDelete> <property> to true does not prevent the
+user from deleting the <file> containing the stack by putting it in the
+Trash or Recycle Bin, or deleting it with a <shell> command or system
+script. 
 
-References: cantModify (property), deleteCard (message), deleteStack (message), deleteGroup (message), card (keyword), file (keyword), stack (object), object (object), property (glossary), handler (glossary), background (glossary), object (glossary), delete (command), delete stack (command), shell (function)
+References: delete (command), delete stack (command), shell (function),
+object (glossary), property (glossary), handler (glossary),
+background (glossary), object (glossary), card (keyword), file (keyword),
+deleteCard (message), deleteStack (message), deleteGroup (message),
+stack (object), cantModify (property)
+

@@ -2,48 +2,77 @@ Name: patterns
 
 Type: property
 
-Syntax: set the patterns of <object> to <patternsList> 
+Syntax: set the patterns of <object> to <patternsList>
 
-Summary: Specifies all the patterns of an <object>, in shorthand form.
+Summary:
+Specifies all the patterns of an <object(glossary)>, in shorthand form.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the patterns of button 1 to the patterns of card "Template"
 
-Example:
+Example
+local storedPatternsList
 set the patterns of me to storedPatternsList
 
 Value:
-The <patterns> of an <object> is a list of pattern specifiers, one per <line>.  A pattern specifier is a built-in pattern number between 1 and 164 (corresponding to LiveCode's built-in patterns 136 to 300), or the <ID> of an <image> to use for a pattern. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
-The <patterns> of an <object> contains eight <lines>, some of which may be empty.
+The <patterns> of an <object(glossary)> is a list of pattern specifiers,
+one per <line>. A pattern specifier is a built-in pattern number between
+1 and 164 (corresponding to LiveCode's built-in patterns 136 to 300), or
+the <ID> of an <image> to use for a pattern. LiveCode looks for the
+specified <image> first in the <current stack>, then in other open
+<stacks>. The <patterns> of an <object(glossary)> consists of eight
+<lines>, some of which may be empty.
 
 Description:
-Use the <patterns> <property> to get all eight basic pattern <properties> at once, or to set the patterns of one <object> to be the same as the patterns of another <object>.
+Use the <patterns> <property> to get all eight basic pattern
+<properties> at once, or to set the patterns of one <object(glossary)>
+to be the same as the patterns of another <object(glossary)>.
 
-You can set all these patterns individually; the <patterns> <property> simply provides a shorter method of dealing with all of them at once. Each <line> of the <patterns> corresponds to one of the following pattern <properties> :
+You can set all these patterns individually; the <patterns> <property>
+simply provides a shorter method of dealing with all of them at once.
+Each <line> of the <patterns> corresponds to one of the following
+pattern <properties> :
 
-        * Line 1: the foregroundPattern
-        * Line 2: the <backgroundPattern> 
-        * Line 3: the hilitePattern
-        * Line 4: the <borderPattern> 
-        * Line 5: the topPattern
-        * Line 6: the <bottomPattern> 
-        * Line 7: the shadowPattern
-        * Line 8: the focusPattern
+* Line 1: the <foregroundPattern>
+* Line 2: the <backgroundPattern>
+* Line 3: the <hilitePattern>
+* Line 4: the <borderPattern>
+* Line 5: the <topPattern> 
+* Line 6: the <bottomPattern>
+* Line 7: the <shadowPattern>
+* Line 8: the <focusPattern>
 
-If you leave a line blank when setting the <patterns>, the pattern <property> corresponding to that <line> is left unchanged.
 
-If the <patterns> <property> of an <object> reports a blank <line>, the corresponding pattern is not set for the individual <object>, but is <inheritance|inherited> from the <object|object's> <owner>. Use the form the effective patterns of <object> to obtain the patterns used for the object, whether set for the <object> or <inheritance|inherited>.
+If you leave a line blank when setting the <patterns>, the pattern
+<property> corresponding to that <line> is left unchanged.
 
-If a pattern is set for an object, that pattern is used instead of the corresponding color for that object.
+If the <patterns> <property> of an <object(glossary)> reports a blank
+<line>, the corresponding pattern is not set for the individual
+<object(glossary)>, but is <inheritance|inherited> from the
+<object(glossary)|object's> <owner>. Use the form the effective patterns
+of <object(glossary)> to obtain the patterns used for the
+<object(glossary)>, whether set for the <object(glossary)> or
+<inheritance|inherited>. 
 
-References: borderPattern (property), bottomPattern (property), properties (property), owner (property), backgroundPattern (property), ID (property), lines (keyword), image (keyword), line (keyword), object (object), property (glossary), current stack (glossary), inheritance (glossary), stacks (function)
+If a pattern is set for an <object(glossary)>, that pattern is used
+instead of the corresponding color for that <object(glossary)>.
+
+References: stacks (function), object (glossary), property (glossary),
+current stack (glossary), inheritance (glossary), lines (keyword),
+image (keyword), line (keyword), foregroundPattern (property),
+backgroundPattern (property), hilitePattern (property),
+borderPattern (property), topPattern (property), bottomPattern (property),
+shadowPattern (property), focusPattern (property), colors (property),
+properties (property), owner (property), ID (property)
 
 Tags: ui
+

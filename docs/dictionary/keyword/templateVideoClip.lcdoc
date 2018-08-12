@@ -4,31 +4,52 @@ Type: keyword
 
 Syntax: templateVideoClip
 
-Summary: Used with the <set> <command> to set the <properties> of newly created <video clip|video clips>.
+Summary:
+Used with the <set> <command> to set the <properties> of newly created
+<video clip|video clips>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the scale of the templateVideoClip to 2.0 -- double size
 
 Description:
-Use the <templateVideoClip> <keyword> to set up <default> <properties> to be used for any new <video clip|video clips> you create.
+Use the <templateVideoClip> <keyword> to set up <default> <properties>
+to be used for any new <video clip|video clips> you create.
 
-The <templateVideoClip> can be thought of as a special, abstract <object>. It is not a actual <video clip>, but it has all the <properties> of a <video clip>. The <ID> <property> of the <templateVideoClip> is zero.
+The <templateVideoClip> can be thought of as a special, abstract
+<object(glossary)>. It is not a actual <video clip>, but it has all the
+<properties> of a <video clip>. The <ID> <property> of the
+<templateVideoClip> is zero.
 
-You can use the <set> command to set the <properties> of the <templateVideoClip> before creating a <video clip>. The new <video clip> has the <properties> of the <templateVideoClip>, by <default>. Changing the <properties> of the <templateVideoClip> does not affect existing <video clip|video clips>.
+You can use the <set> command to set the <properties> of the
+<templateVideoClip> before creating a <video clip>. The new <video clip>
+has the <properties> of the <templateVideoClip>, by <default>. Changing
+the <properties> of the <templateVideoClip> does not affect existing
+<video clip|video clips>.
 
-The properties of the <templateVideoClip> can be returned to the default settings using the <reset> command.
+The properties of the <templateVideoClip> can be returned to the default
+settings using the <reset> command.
 
-You can refer to the <templateVideoClip> using any of the following forms:
-        templateVideoClip
-        the templateVideoClip
-        templateVideoClip()
+You can refer to the <templateVideoClip> using any of the following
+forms: templateVideoClip
 
->*Note:* The <templateVideoClip> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
+    the templateVideoClip
+    templateVideoClip()
 
-References: properties (property), ID (property), dontRefresh (property), functionNames (function), templateScrollbar (keyword), default (keyword), videoClip (object), object (object), keyword (glossary), property (glossary), command (glossary), video clip (glossary), expression (glossary), reset (command), set (command), function (control_st)
+
+>*Note:* The <templateVideoClip> <keyword> is implemented internally as
+> a <function> and appears in the <functionNames>. However, it cannot be
+> used as a <function> in an <expression>.
+
+References: reset (command), set (command), function (control structure),
+functionNames (function), object (glossary), keyword (glossary),
+property (glossary), command (glossary), video clip (glossary),
+expression (glossary), templateScrollbar (keyword), default (keyword),
+videoClip (object), properties (property), ID (property),
+dontRefresh (property)
+

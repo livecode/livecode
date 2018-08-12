@@ -2,27 +2,46 @@ Name: catch
 
 Type: keyword
 
-Syntax: catch <errorParameter> 
+Syntax: catch <errorParameter>
 
-Summary: Used within a <try> <control structure> to <handle> <error|errors>.
+Summary:
+Used within a <try> <control structure> to <handle> <error|errors>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 catch myError
 
 Parameters:
-errorParameter: 
+errorParameter:
+
 
 Description:
-Use the <catch> <keyword> to <handle> <error|errors> <return|returned> by a <handler> with the <throw> <control structure>.
+Use the <catch> <keyword> to <handle> <error|errors> <return|returned>
+by a <handler> with the <throw> <control structure>.
 
-When one of the statements in a <try> <control structure> causes an <execution error>, the errorParameter is set to the error string, and the <statement|statements> after the <catch> <keyword> are <execute|executed>. If LiveCode generates the error (for example, an <execution error> from a built-in <command>), the <errorParameter> is a positive number. An error string can also be returned from a <handler> by the <throw> <keyword>.
+When one of the statements in a <try> <control structure> causes an
+<execution error>, the errorParameter is set to the error string, and
+the <statement|statements> after the <catch> <keyword> are
+<execute|executed>. If LiveCode generates the error (for example, an
+<execution error> from a built-in <command>), the <errorParameter> is a
+positive number. An error string can also be returned from a <handler>
+by the <throw> <keyword>.
 
-The statements after the <catch> <keyword> are only <execute|executed> if there is an <error>. These <statement|statements> can refer to the <value> of the <errorParameter>. For example, the <catch> section might contain an <if> or <switch> <control structure>, which does different things depending on the value of the <errorParameter>.
+The statements after the <catch> <keyword> are only <execute|executed>
+if there is an <error>. These <statement|statements> can refer to the
+<value> of the <errorParameter>. For example, the <catch> section might
+contain an <if> or <switch> <control structure>, which does different
+things depending on the value of the <errorParameter>.
 
-References: return (glossary), handle (glossary), handler (glossary), execute (glossary), error (glossary), statement (glossary), execution error (glossary), keyword (glossary), control structure (glossary), command (glossary), result (function), value (function), if (control_st), switch (control_st), try (control_st), throw (control_st)
+References: if (control structure), switch (control structure),
+try (control structure), throw (control structure), result (function),
+value (function), return (glossary), handle (glossary),
+handler (glossary), execute (glossary), error (glossary),
+statement (glossary), execution error (glossary), keyword (glossary),
+control structure (glossary), command (glossary)
+

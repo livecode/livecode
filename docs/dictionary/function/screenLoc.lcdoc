@@ -6,13 +6,14 @@ Syntax: the screenLoc
 
 Syntax: screenLoc()
 
-Summary: <return|Returns> the location of the screen's center.
+Summary:
+<return|Returns> the location of the screen's center.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the screenLoc
@@ -20,13 +21,24 @@ the screenLoc
 Example:
 set the loc of window "Dialog" to the screenLoc
 
-Returns: The <screenLoc> <function> <return|returns> two integers separated by a comma.
+Returns:
+The <screenLoc> <function> <return|returns> two integers separated by a
+comma. 
 
 Description:
-Use the <screenLoc> <function> to determine the height and width of the screen, or to compute the location of windows relative to the center of the screen.
+Use the <screenLoc> <function> to determine the height and width of the
+screen, or to compute the location of windows relative to the center of
+the screen.
 
-The first item in the value returned by the <screenLoc> is the distance from the left edge to the center of the screen, in <pixels>. The second <item> is the distance from the top edge to the center of the screen, in <pixels>.
+The first item in the value returned by the <screenLoc> is the distance
+from the left edge to the center of the screen, in <pixels>. The second
+<item> is the distance from the top edge to the center of the screen, in
+<pixels>. 
 
-If the system has more than one monitor, the <screenLoc> <function> <return|returns> the <rectangle> of the main screen.
+If the system has more than one monitor, the <screenLoc> <function>
+<return|returns> the <rectangle> of the main screen.
 
-References: pixels (property), location (property), item (keyword), rectangle (keyword), screenRect (function), return (glossary), function (control_st)
+References: function (control structure), screenRect (function),
+return (glossary), item (keyword), rectangle (keyword), pixels (property),
+location (property)
+

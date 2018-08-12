@@ -29,6 +29,7 @@ public:
     virtual void OnDetach();
 	virtual bool OnPaint(MCGContextRef p_context);
     virtual void OnGeometryChanged(const MCRectangle& p_new_rect);
+	virtual void OnViewTransformChanged();
 	virtual void OnViewportGeometryChanged(const MCRectangle &p_rect);
     virtual void OnVisibilityChanged(bool p_visible);
     virtual void OnToolChanged(Tool p_new_tool);
@@ -43,7 +44,7 @@ public:
 	
 	// Implemented by the platform-specific native layers: creates a new layer
 	static MCNativeLayer *CreateNativeLayer(MCObject *p_object, void *p_native_view);
-	static bool CreateNativeContainer(void *&r_view);
+	static bool CreateNativeContainer(MCObject *p_object, void *&r_view);
 	static void ReleaseNativeView(void *p_view);
 
 	void SetCanRenderToContext(bool p_can_render);

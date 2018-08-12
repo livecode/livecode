@@ -6,13 +6,15 @@ Syntax: the openFiles
 
 Syntax: openFiles()
 
-Summary: <return|Returns> a list of <files> that have been opened with the <open file> <command>, but not yet closed with the <close file> <command>.
+Summary:
+<return|Returns> a list of <files> that have been opened with the <open
+file> <command>, but not yet closed with the <close file> <command>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -25,15 +27,23 @@ if it is not among the lines of the openFiles then open file it
 Example:
 repeat until the openFiles is empty
 
-Returns: The <openFiles> <function> <return|returns> a list of <file path|file paths>, one <file> per line.
+Returns:
+The <openFiles> <function> <return|returns> a list of <file path|file
+paths>, one <file> per line.
 
 Description:
-Use the <openFiles> <function> to find out which <files> need to be closed, or to check whether a <file> is already open before reading from it or writing to it.
+Use the <openFiles> <function> to find out which <files> need to be
+closed, or to check whether a <file> is already open before reading from
+it or writing to it.
 
 The list of file paths is in the same order that the files were opened.
 
-Open files that were not opened by LiveCode are not included in the list returned by the <openFiles> <function>.
+Open files that were not opened by LiveCode are not included in the list
+returned by the <openFiles> <function>.
 
-References: file (keyword), close file (command), open file (command), files (function), command (glossary), return (glossary), file path (glossary), function (control_st)
+References: close file (command), open file (command),
+function (control structure), files (function), command (glossary),
+return (glossary), file path (glossary), file (keyword)
 
 Tags: file system
+

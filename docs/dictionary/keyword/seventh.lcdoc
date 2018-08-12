@@ -4,27 +4,35 @@ Type: keyword
 
 Syntax: seventh
 
-Summary: Designates the seventh member of a set.
+Summary:
+Designates the seventh member of a set.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-set the textFont of seventh button to nextFont
+set the textFont of seventh button to tNextFont
 
 Example:
 put "Hello!" into seventh line of field "Greetings"
 
 Description:
-Use the <seventh> <keyword> in an <object reference> or <chunk expression>.
+Use the <seventh> <keyword> in an <object reference> or <chunk
+expression>. 
 
-The <seventh> <keyword> can be used to specify any <object> whose <number> <property> is 7. It can also be used to designate the seventh <chunk> in a <chunk expression>.
+The <seventh> <keyword> can be used to specify any <object(glossary)>
+whose <number> <property> is 7. It can also be used to designate the
+seventh <chunk> in a <chunk expression>.
 
 The word the is optional when using the <seventh> <keyword>.
 
-References: last (keyword), first (keyword), middle (keyword), seven (constant), object (object), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
+References: seven (constant), number (function), object (glossary),
+keyword (glossary), property (glossary), object reference (glossary),
+chunk expression (glossary), chunk (glossary), last (keyword),
+first (keyword), middle (keyword)
 
 Tags: math
+

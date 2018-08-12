@@ -2,21 +2,30 @@ Name: undefine
 
 Type: command
 
-Syntax: undefine <propertyName> of <object> 
+Syntax: undefine <propertyName> of <object>
 
-Summary: Has no effect and is included in <LiveCode> for compatibility with <import|imported> <Oracle Media Objects> and <SuperCard> projects.
+Summary:
+Has no effect and is included in <LiveCode> for compatibility with
+<import|imported> <Oracle Media Objects> and <SuperCard> projects.
 
 Introduced: 1.0
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Parameters:
-propertyName: 
-object: 
+propertyName:
+
+
+object:
+
 
 Description:
-In SuperCard and Oracle Media Objects, the <undefine> command is used to release a previously-declared <custom property>.
+In SuperCard and Oracle Media Objects, the <undefine> command is used to
+release a previously-declared <custom property>.
 
 In LiveCode, you can use a custom property without creating it first.
 
-References: customKeys (property), define (command), custom property (glossary), SuperCard (glossary), import (glossary), Oracle Media Objects (glossary), LiveCode (glossary)
+References: define (command), custom property (glossary),
+SuperCard (glossary), import (glossary), Oracle Media Objects (glossary),
+LiveCode (glossary), customKeys (property)
+

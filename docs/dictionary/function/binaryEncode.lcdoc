@@ -4,13 +4,14 @@ Type: function
 
 Syntax: binaryEncode(<formatsList>, <dataStringList>)
 
-Summary: <encode|Encodes> a set of <value|values> into a single <binaryvalue>.
+Summary:
+<encode|Encodes> a set of <value|values> into a set of <binary|binary> values.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 binaryEncode("a","Q") -- returns "Q"
@@ -25,24 +26,75 @@ Example:
 charToNum(binaryEncode("B*","01111111")) -- returns 127
 
 Parameters:
-formatsList: The formatsList consists of one or more dataTypes, each followed optionally by an amount. A dataType is one of the following single letters: x: output amount null characters
-dataStringList (string): A comma-separated list of dataStrings. Each dataString is a string, or an expression that evaluates to a string.
-amount (enum): a: encode amount characters as characters, padding with nullsA: encode amount characters as characters, padding with spacesb: encode amount groups of 4 1s and 0s as bitsB: encode amount groups of 4 1s and 0s as bits, starting at the high end of each byteh: encode amount groups of 2 characters as hexadecimal numbersH: encode amount groups of 2 characters as hexadecimal, starting at the high end of each bytec: encode amount numbers as signed 1-byte integersC: encode amount numbers as unsigned 1-byte integerss: encode amount numbers as signed 2-byte integers in host byte orderS: encode amount numbers as unsigned 2-byte integers in host byte orderi: encode amount numbers as signed 4-byte integers in host byte orderI: encode amount numbers as unsigned 4-byte integers in host byte ordern: encode amount numbers as signed 2-byte integers in network byte orderN: encode amount numbers as signed 4-byte integers in network byte orderm: encode amount numbers as unsigned 2-byte integers in network byte orderM: encode amount numbers as unsigned 4-byte integers in network byte orderf: encode amount numbers as single-precision floating-point numbersd: encode amount numbers as double-precision floating-point numbersThe amount corresponding to each dataType is an integer or the * character:
--  If the dataType is a, A, b, B, h, or H, the amount specifies the number of characters or groups of the dataString to use; extra characters are ignored. The * character Encodes the rest of the data in the current dataString. If no amount is specified, the dataType is used for one character.
--  If the dataType is c, C, s, S, i, I, n, N, m, M,  f, or d, the amount specifies the number of dataStrings to encode. The * character Encodes the rest of the dataStrings. If no amount is specified, the dataType is used for one dataString.
--  If the dataType is x, the amount specifies how many nulls to place in the returned value.
+formatsList:
+The <formatsList> consists of one or more dataTypes, each followed
+optionally by an amount.
 
-The result: Although the x dataType places <null|nulls> in the resulting <string> regardless of the contents of its corresponding dataString, you still must provide a dataString for instances of x that appear in the <formatsList>. The <binaryEncode> <function> disregards the contents of the dataString used for the dataType x, so you can use any value.
+A dataType is one of the following letters:
 
-Returns: The <binaryEncode> <function> <return|returns> the binary string representation of the dataStrings.
+-    c: encode amount numbers as signed 1-byte integers
+-    C: encode amount numbers as unsigned 1-byte integers
+-    s: encode amount numbers as signed 2-byte integers in host byte order
+-    S: encode amount numbers as unsigned 2-byte integers in host byte order
+-    i: encode amount numbers as signed 4-byte integers in host byte order
+-    I: encode amount numbers as unsigned 4-byte integers in host byte order
+-    n: encode amount numbers as signed 2-byte integers in network byte order
+-    N: encode amount numbers as signed 4-byte integers in network byte order
+-    m: encode amount numbers as unsigned 2-byte integers in network byte order
+-    M: encode amount numbers as unsigned 4-byte integers in network byte order
+-    f: encode amount numbers as single-precision floating-point numbers
+-    d: encode amount numbers as double-precision floating-point numbers
+-    x: encode amount null characters
+
+The amount is an integer or * and specifies the encoding in the
+following way:
+
+-  If the dataType is a, A, b, B, h, or H, the amount specifies the
+   number of characters or groups of the dataString to use; extra
+   characters are ignored. The * character Encodes the rest of the data
+   in the current dataString. If no amount is specified, the dataType is
+   used for one character.
+-  If the dataType is c, C, s, S, i, I, n, N, m, M,  f, or d, the amount
+   specifies the number of dataStrings to encode. The * character
+   Encodes the rest of the dataStrings. If no amount is specified, the
+   dataType is used for one dataString.
+-  If the dataType is x, the amount specifies how many nulls to place in
+   the returned value.
+
+dataStringList (string):
+A comma-separated list of dataStrings. Each dataString is a string, or
+an expression that evaluates to a string.
+
+Returns:
+The <binaryEncode> <function> <return|returns> the binary string
+representation of the dataStrings.
+
+The result:
+Although the x dataType places <null|nulls> in the resulting <string>
+regardless of the contents of its corresponding dataString, you still
+must provide a dataString for instances of x that appear in the
+<formatsList>. The <binaryEncode> <function> disregards the contents of
+the dataString used for the dataType x, so you can use any value.
 
 Description:
-Use the <binaryEncode> function to <encode> one or more <value|values> as <binary file|binary data>.
+Use the <binaryEncode> function to <encode> one or more <value|values>
+as <binary file|binary data>.
 
-The binary data format produced by <binaryEncode> is similar to the <format> produced by the "pack()" function of the Perl programming language.
+The binary data format produced by <binaryEncode> is similar to the
+<format> produced by the "pack()" function of the Perl programming
+language. 
 
-If you don't specify a number with the a, A, b, B, h, or H dataTypes, one <character> is <encode|encoded>. If the dataType normally takes more than one <character>, trailing zeroes are added to make up the required number of <characters>. For example, H requires two characters, so binaryEncode("H","3") <encode|Encodes> the <hexadecimal> number 30, adding a zero to the end to make the dataString two <characters> long.
+If you don't specify a number with the a, A, b, B, h, or H dataTypes,
+one <character> is <encode|encoded>. If the dataType normally takes more
+than one <character>, trailing zeroes are added to make up the required
+number of <characters>. For example, H requires two characters, so
+binaryEncode("H","3") <encode|Encodes> the <hexadecimal> number 30,
+adding a zero to the end to make the dataString two <characters> long.
 
-References: string (keyword), character (keyword), characters (keyword), numToChar (function), format (function), return (glossary), binary file (glossary), value (glossary), null (glossary), encode (glossary), binaryvalue (glossary), hexadecimal (glossary), function (control_st)
+References: function (control structure), numToChar (function),
+format (function), return (glossary), binary file (glossary),
+value (glossary), null (glossary), encode (glossary),
+binary data (glossary), hexadecimal (glossary), string (keyword),
+character (keyword), characters (keyword)
 
 Tags: text processing

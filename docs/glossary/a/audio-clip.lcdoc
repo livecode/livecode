@@ -1,12 +1,14 @@
 Name: audio clip
 
-Synonyms: audioclip,audio clip
+Synonyms: audioclip, audio clip
 
 Type: glossary
 
 Description:
-An <object> that holds sound data. Audio clips are stored in a <stack>, instead of being stored in separate <file|files>.
+An <object(glossary)> that holds sound data. Audio clips are stored in a
+<stack>, instead of being stored in separate <file|files>.
 
-References: stack (object), object (object), file (glossary)
+References: stack (glossary), object (glossary), file (glossary)
 
 Tags: multimedia
+

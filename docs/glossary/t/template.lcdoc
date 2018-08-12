@@ -5,8 +5,10 @@ Synonyms: template
 Type: glossary
 
 Description:
-An <object> that serves as a model for newly created <object|objects> of the same type.
+An <object(glossary)> that serves as a model for newly created
+<object|objects> of the same type.
 
-References: object (object)
+References: object (glossary)
 
 Tags: objects
+

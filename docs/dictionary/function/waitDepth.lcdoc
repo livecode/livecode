@@ -6,13 +6,15 @@ Syntax: the waitDepth
 
 Syntax: waitDepth()
 
-Summary: <return|Returns> the number of nested <wait commands(command)> currently pending.
+Summary:
+<return|Returns> the number of nested <wait commands(command)> currently
+pending. 
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the waitDepth
@@ -20,13 +22,24 @@ the waitDepth
 Example:
 if the waitDepth &gt; 10 then beep
 
-Returns: The <waitDepth> <function> <return|returns> a positive <integer>.
+Returns:
+The <waitDepth> <function> <return|returns> a positive <integer>.
 
 Description:
-Use the <waitDepth> <function> to determine how many <wait> <command|commands> are currently awaiting completion.
+Use the <waitDepth> <function> to determine how many <wait>
+<command|commands> are currently awaiting completion.
 
-The wait with messages form of the <wait command>, when used in a <handler>, pauses that handler while allowing LiveCode to <execute> other <handler|handlers> while waiting. The <waitDepth> <function> indicates how many such <statement|statements> are currently <execute|executing>--that is, how many <handler|handlers> are currently paused by a wait with messages <statement>.
+The wait with messages form of the <wait> <command>, when used in a
+<handler>, pauses that handler while allowing LiveCode to <execute>
+other <handler|handlers> while waiting. The <waitDepth> <function>
+indicates how many such <statement|statements> are currently
+<execute|executing>--that is, how many <handler|handlers> are currently
+paused by a wait with messages <statement>.
 
 If there are no paused handlers, the <waitDepth> <function> returns 1.
 
-References: integer (keyword), wait command (command), wait (command), function (control_st), handler (glossary), statement (glossary), command (glossary), return (glossary), execute (glossary)
+References: wait (command),
+function (control structure), handler (glossary), statement (glossary),
+command (glossary), return (glossary), execute (glossary),
+integer (keyword)
+

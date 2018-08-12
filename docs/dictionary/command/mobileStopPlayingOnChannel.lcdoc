@@ -1,16 +1,18 @@
 Name: mobileStopPlayingOnChannel
 
+Synonyms: iphonestopplayingonchannel
+
 Type: command
 
-Syntax: mobileStopPlayingOnChannel <channel> 
+Syntax: mobileStopPlayingOnChannel <channel>
 
-Summary: Stops the currently playing sound and clears any scheduled sound on the given channel
-
-Synonyms: iphoneStopPlayingOnChannel
+Summary:
+Stops the currently playing sound and clears any scheduled sound on the
+given channel
 
 Introduced: 4.6
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -21,11 +23,22 @@ Example:
 mobileStopPlayingOnChannel "queued"
 
 Parameters:
-channel: The name of the channel.
+channel:
+The name of the channel.
 
 Description:
-Use the <mobileStopPlayingOnChannel> command to stop playing a sound on a channel.
+Use the <mobileStopPlayingOnChannel> command to stop playing a sound on
+a channel.
 
-The <mobileStopPlayingOnChannel> command stops the currently playing sound, and clears any scheduled sound, on the given channel.
+The <mobileStopPlayingOnChannel> command stops the currently playing
+sound, and clears any scheduled sound, on the given channel.
 
-References: mobileDeleteSoundChannel (command), mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command), mobilePausePlayingOnChannel (command), mobileStopPlayingOnChannel (command), mobileResumePlayingOnChannel (command), mobileSoundChannelVolume (function), mobileSoundOnChannel (function), mobileNextSoundOnChannel (function), mobileSoundChannels (function), mobileSoundChannelStatus (function), soundFinishedOnChannel (message)
+References: mobileDeleteSoundChannel (command),
+mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command),
+mobilePausePlayingOnChannel (command),
+mobileStopPlayingOnChannel (command),
+mobileResumePlayingOnChannel (command),
+mobileSoundChannelVolume (function), mobileSoundOnChannel (function),
+mobileNextSoundOnChannel (function), mobileSoundChannels (function),
+mobileSoundChannelStatus (function), soundFinishedOnChannel (message)
+

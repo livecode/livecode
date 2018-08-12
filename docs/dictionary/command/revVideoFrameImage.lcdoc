@@ -2,17 +2,20 @@ Name: revVideoFrameImage
 
 Type: command
 
-Syntax: revVideoFrameImage <frameWidth>, <frameHeight>, <dataVariable> 
+Syntax: revVideoFrameImage <frameWidth>, <frameHeight>, <dataVariable>
 
-Summary: Puts the current <frame> in the <video grabber> into a <variable>.
+Summary:
+Puts the current <frame> in the <video grabber> into a <variable>.
+
+Associations: video library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: windows
 
 Platforms: desktop
 
-Security: disk,privacy
+Security: disk, privacy
 
 Example:
 revVideoFrameImage 400,300,"myData"
@@ -22,23 +25,62 @@ revVideoFrameImage the width of image "Snapshot",\
    the height of image "Snapshot","thisFrame"
 
 Parameters:
-frameWidth: A positive integer.
-frameHeight: A positive integer.
-dataVariable: The name of an existing variable.
+frameWidth:
+A positive integer.
+
+frameHeight:
+A positive integer.
+
+dataVariable:
+The name of an existing variable.
 
 Description:
-Use the <revVideoFrameImage> <command> to capture a single <frame> of video.
+Use the <revVideoFrameImage> <command> to capture a single <frame> of
+video. 
 
-The <revVideoFrameImage> <command> <return|returns> <binary file|binary data> in the same <format> as the <imageData> <property> of <image(object)|images>, placing it in the <dataVariable>. To show the captured frame in an image, set the <image(object)|image's> <imageData> <property> to the <value> placed in the <dataVariable>, as in the following example:
+The <revVideoFrameImage> <command> <return|returns> <binary file|binary
+data> in the same <format> as the <imageData> <property> of
+<image(object)|images>, placing it in the <dataVariable>. To show the
+captured frame in an image, set the <image(object)|image's> <imageData>
+<property> to the <value> placed in the <dataVariable>, as in the
+following example:
 
-  put empty into frameContainer
-  revVideoFrameImage 400,300,"frameContainer"
-  set the imageData of image "Picture" to frameContainer
+    put empty into frameContainer
+    revVideoFrameImage 400,300,"frameContainer"
+    set the imageData of image "Picture" to frameContainer
 
-If the <frameWidth> and <frameHeight> are not the same as the width and height of the <video grabber|video grabber window>, the frame is scaled before being returned by the <revVideoFrameImage> <function>. The data <return|returned> by the <command> always uses the <frameWidth> and <frameHeight>, even if this means the video must be stretched or shrunk to fit. For example, if the <video grabber|video grabber window> is 100 x 100 <pixels>, but you specify 200 as the <frameWidth> and 100 as the <frameHeight>, the <return|returned> data fits an <image(keyword)> 200 x 100 <pixels>, with the horizontal dimension stretched to fit.
 
->*Important:*  The <revVideoFrameImage> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+If the <frameWidth> and <frameHeight> are not the same as the width and
+height of the <video grabber|video grabber window>, the frame is scaled
+before being returned by the <revVideoFrameImage> <function>. The data
+<return|returned> by the <command> always uses the <frameWidth> and
+<frameHeight>, even if this means the video must be stretched or shrunk
+to fit. For example, if the <video grabber|video grabber window> is 100
+x 100 <pixels>, but you specify 200 as the <frameWidth> and 100 as the
+<frameHeight>, the <return|returned> data fits an <image(keyword)> 200 x
+100 <pixels>, with the horizontal dimension stretched to fit.
 
-References: pixels (property), imageData (property), image (object), Video library (library), LiveCode custom library (library), image (keyword), function (control_st), property (glossary), binary file (glossary), variable (glossary), frame (glossary), return (glossary), Standalone Application Settings (glossary), video grabber (glossary), standalone application (glossary), command (glossary), revPreviewVideo (command), revRecordVideo (command), format (function), value (function)
+>*Important:*  The <revVideoFrameImage> <command> is part of the 
+> <Video library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the
+> "Video Grabber" 
+> library checkbox is checked.
+
+Changes:
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
+
+References: revPreviewVideo (command), revRecordVideo (command),
+function (control structure), format (function), value (function),
+LiveCode custom library (glossary), property (glossary),
+binary file (glossary), variable (glossary), frame (glossary),
+return (glossary), Standalone Application Settings (glossary),
+video grabber (glossary), standalone application (glossary),
+command (glossary), image (keyword), Video library (library),
+image (object), pixels (property), imageData (property)
 
 Tags: multimedia
+

@@ -4,13 +4,14 @@ Type: function
 
 Syntax: geometricMean(<numbersList>)
 
-Summary: <return|Returns> the geometric mean of a list of numbers.
+Summary:
+<return|Returns> the geometric mean of a list of numbers.
 
 Introduced: 6.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 geometricMean(4,36,45,50,75) -- returns 30
@@ -19,17 +20,30 @@ Example:
 put geometricMean(importedList) into field "Geometric Mean"
 
 Parameters:
-numbersList: A comma-separated list of numbers, or an expression that evaluates to such a list, or an array containing only numbers.
+numbersList:
+A comma-separated list of numbers, or an expression that evaluates to
+such a list, or an array containing only numbers.
 
-Returns: The <geometricMean> function <return|returns> a number.
+Returns:
+The <geometricMean> function <return|returns> a number.
 
 Description:
-Use the <geometricMean> <function> to find the <value(function)> that best represents a group of <value(glossary)|values> for sets of positive numbers that are interpreted according to their product and not their sum.
+Use the <geometricMean> <function> to find the <value(function)> that
+best represents a group of <value(glossary)|values> for sets of positive
+numbers that are interpreted according to their product and not their
+sum. 
 
-The <geometricMean> <function> was added in version 6.1 to complement the <average> <function>.
+The <geometricMean> <function> was added in version 6.1 to complement
+the <average> <function>.
 
-If the <numbersList> is empty, the <geometricMean> <function> returns zero.
+If the <numbersList> is empty, the <geometricMean> <function> returns
+zero. 
 
-References: function (control_st), min (function), statRound (function), round (function), harmonicMean (function), variance (function), average (function), value (function), max (function), median (function), standardDeviation (function), return (glossary), value (glossary)
+References: function (control structure), min (function),
+statRound (function), round (function), harmonicMean (function),
+variance (function), average (function), value (function), max (function),
+median (function), standardDeviation (function), return (glossary),
+value (glossary)
 
 Tags: math
+

@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "stack.h"
 #include "tooltip.h"
@@ -56,10 +56,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 #include "scriptpt.h"
 #include "widget-events.h"
+#include "parentscript.h"
 
 #include "exec.h"
 #include "exec-interface.h"
 #include "graphics_util.h"
+
+#include "stackfileformat.h"
 
 #define UNLICENSED_TIME 6.0
 #ifdef _DEBUG_MALLOC_INC
@@ -69,20 +72,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 MCImage *MCDispatch::imagecache;
-
-#define VERSION_OFFSET 11
-
-#define HEADERSIZE 255
-static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The following is not ASCII text,\n# so now would be a good time to q out of more\f\nexec mc $0 \"$@\"\n";
-
-#define NEWHEADERSIZE 8
-#define HEADERPREFIXSIZE 4
-static const char *newheader = "REVO2700";
-static const char *newheader5500 = "REVO5500";
-static const char *newheader7000 = "REVO7000";
-static const char *newheader8000 = "REVO8000";
-
-#define MAX_STACKFILE_VERSION 8000
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -178,12 +167,17 @@ MCDispatch::~MCDispatch()
 	}
 	delete fonts;
 	
-	delete startdir;
-	delete enginedir;
+	MCMemoryDeleteArray(startdir); /* Allocated by MCStringConvertToCString() */
+	MCMemoryDeleteArray(enginedir); /* Allocated by MCStringConvertToCString() */
 	
 	delete m_externals;
     // AL-2015-02-10: [[ Standalone Inclusions ]] Delete library mapping
     MCValueRelease(m_library_mapping);
+}
+
+bool MCDispatch::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnObject(this);
 }
 
 bool MCDispatch::isdragsource(void)
@@ -195,81 +189,6 @@ bool MCDispatch::isdragtarget(void)
 {
 	return m_drag_target;
 }
-
-#ifdef LEGACY_EXEC
-Exec_stat MCDispatch::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
-{
-	switch (which)
-	{
-#ifdef /* MCDispatch::getprop */ LEGACY_EXEC
-	case P_BACK_PIXEL:
-        //ep.setint(MCscreen->background_pixel.pixel & 0xFFFFFF);
-        return ES_NOT_HANDLED;
-	case P_TOP_PIXEL:
-        //ep.setint(MCscreen->white_pixel.pixel & 0xFFFFFF);
-        return ES_NOT_HANDLED;
-	case P_HILITE_PIXEL:
-	case P_FORE_PIXEL:
-	case P_BORDER_PIXEL:
-	case P_BOTTOM_PIXEL:
-	case P_SHADOW_PIXEL:
-	case P_FOCUS_PIXEL:
-        //ep.setint(MCscreen->black_pixel.pixel & 0xFFFFFF);
-        return ES_NOT_HANDLED;
-	case P_BACK_COLOR:
-	case P_HILITE_COLOR:
-        //ep.setstaticcstring("white");
-        return ES_NOT_HANDLED;
-	case P_FORE_COLOR:
-	case P_BORDER_COLOR:
-	case P_TOP_COLOR:
-	case P_BOTTOM_COLOR:
-	case P_SHADOW_COLOR:
-	case P_FOCUS_COLOR:
-        //ep.setstaticcstring("black");
-        return ES_NOT_HANDLED;
-	case P_FORE_PATTERN:
-	case P_BACK_PATTERN:
-	case P_HILITE_PATTERN:
-	case P_BORDER_PATTERN:
-	case P_TOP_PATTERN:
-	case P_BOTTOM_PATTERN:
-	case P_SHADOW_PATTERN:
-	case P_FOCUS_PATTERN:
-		ep.clear();
-		return ES_NORMAL;
-	case P_TEXT_ALIGN:
-		ep.setstaticcstring(MCleftstring);
-		return ES_NORMAL;
-	case P_TEXT_FONT:
-        //ep.setstaticcstring(DEFAULT_TEXT_FONT);
-		return ES_NOT_HANDLED;
-	case P_TEXT_HEIGHT:
-        //ep.setint(heightfromsize(DEFAULT_TEXT_SIZE));
-		return ES_NOT_HANDLED;
-	case P_TEXT_SIZE:
-        //ep.setint(DEFAULT_TEXT_SIZE);
-		return ES_NOT_HANDLED;
-	case P_TEXT_STYLE:
-		ep.setstaticcstring(MCplainstring);
-		return ES_NORMAL;
-#endif /* MCDispatch::getprop */ 
-	default:
-		MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
-		return ES_ERROR;
-	}
-}
-#endif
-
-#ifdef LEGACY_EXEC
-Exec_stat MCDispatch::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
-{
-#ifdef /* MCDispatch::setprop */ LEGACY_EXEC
-	return ES_NORMAL;
-#endif /* MCDispatch::setprop */
-    return ES_NORMAL;
-}
-#endif
 
 // bogus "cut" call actually checks license
 Boolean MCDispatch::cut(Boolean home)
@@ -333,6 +252,10 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 
 	if ((stat == ES_NOT_HANDLED || stat == ES_PASS) && m_externals != nil)
 	{
+        // TODO[19681]: This can be removed when all engine messages are sent with
+        // target.
+        bool t_target_was_valid = MCtargetptr.IsValid();
+    
 		Exec_stat oldstat = stat;
 		stat = m_externals -> Handle(this, htype, mess, params);
 
@@ -343,6 +266,15 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 
 		if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
 			stat = ES_PASS;
+        
+        if (stat == ES_PASS || stat == ES_NOT_HANDLED)
+        {
+            if (t_target_was_valid && !MCtargetptr.IsValid())
+            {
+                stat = ES_NORMAL;
+                t_has_passed = false;
+            }
+        }
 	}
 
 //#ifdef TARGET_SUBPLATFORM_IPHONE
@@ -370,12 +302,25 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 
     if ((stat == ES_NOT_HANDLED || stat == ES_PASS))
     {
+        // TODO[19681]: This can be removed when all engine messages are sent with
+        // target.
+        bool t_target_was_valid = MCtargetptr.IsValid();
+        
         extern Exec_stat MCEngineHandleLibraryMessage(MCNameRef name, MCParameter *params);
         stat = MCEngineHandleLibraryMessage(mess, params);
+        
+        if (stat == ES_PASS || stat == ES_NOT_HANDLED)
+        {
+            if (t_target_was_valid && !MCtargetptr.IsValid())
+            {
+                stat = ES_NORMAL;
+                t_has_passed = false;
+            }
+        }
     }
     
-	if (MCmessagemessages && stat != ES_PASS)
-		MCtargetptr . object -> sendmessage(htype, mess, False);
+	if (MCmessagemessages && stat != ES_PASS && MCtargetptr)
+		MCtargetptr -> sendmessage(htype, mess, False);
 		
 	if (t_has_passed)
 		return ES_PASS;
@@ -423,12 +368,20 @@ void MCDispatch::removestack(MCStack *sptr)
 void MCDispatch::destroystack(MCStack *sptr, Boolean needremove)
 {
 	if (needremove)
-		removestack(sptr);
+    {
+        MCStack *t_substacks = sptr -> getsubstacks();
+        while (t_substacks)
+        {
+            t_substacks -> dodel();
+            t_substacks = sptr -> getsubstacks();
+        }
+        sptr -> dodel();
+    }
 	if (sptr == MCstaticdefaultstackptr)
 		MCstaticdefaultstackptr = stacks;
 	if (sptr == MCdefaultstackptr)
 		MCdefaultstackptr = MCstaticdefaultstackptr;
-	if (MCacptr != NULL && MCacptr->getmessagestack() == sptr)
+	if (MCacptr && MCacptr->getmessagestack() == sptr)
 		MCacptr->setmessagestack(NULL);
 	Boolean oldstate = MClockmessages;
 	MClockmessages = True;
@@ -504,67 +457,41 @@ Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
 
 IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 {
-	char tnewheader[NEWHEADERSIZE];
-	if (IO_read(tnewheader, NEWHEADERSIZE, stream) == IO_NORMAL)
+	char tnewheader[kMCStackFileVersionStringLength + 1];
+	if (IO_read(tnewheader, kMCStackFileVersionStringLength, stream) != IO_NORMAL)
+		return IO_ERROR;
+	tnewheader[kMCStackFileVersionStringLength] = '\0'; /* nul-terminate */
+	
+	// AL-2014-10-27: [[ Bug 12558 ]] Check for valid header prefix
+	if (!MCStackFileParseVersionNumber(tnewheader, r_version))
 	{
-        // AL-2014-10-27: [[ Bug 12558 ]] Check for valid header prefix
-		if (strncmp(tnewheader, "REVO", HEADERPREFIXSIZE) == 0)
+		char theader[kMCStackFileMetaCardVersionStringLength + 1];
+		theader[kMCStackFileMetaCardVersionStringLength] = '\0';
+		uint4 offset;
+		strncpy(theader, tnewheader, kMCStackFileVersionStringLength);
+		if (IO_read(theader + kMCStackFileVersionStringLength, kMCStackFileMetaCardVersionStringLength - kMCStackFileVersionStringLength, stream) == IO_NORMAL
+			&& MCU_offset(kMCStackFileMetaCardSignature, theader, offset))
 		{
-            // The header version can now consist of any alphanumeric characters
-            // They map to numbers as follows:
-            // 0-9 -> 0-9
-            // A-Z -> 10-35
-            // a-z -> 36-61
-            uint1 versionnum[4];
-            for (uint1 i = 0; i < 4; i++)
-            {
-                char t_char = tnewheader[i + 4];
-                if ('0' <= t_char && t_char <= '9')
-                    versionnum[i] = (uint1)(t_char - '0');
-                else if ('A' <= t_char && t_char <= 'Z')
-                    versionnum[i] = (uint1)(t_char - 'A' + 10);
-                else if ('a' <= t_char && t_char <= 'z')
-                    versionnum[i] = (uint1)(t_char - 'a' + 36);
-                else
-                    return IO_ERROR;
-            }
+			if (theader[offset - 1] != '\n' || theader[offset - 2] == '\r')
+			{
+				MCresult->sets("stack was corrupted by a non-binary file transfer");
+				return IO_ERROR;
+			}
 
-            // Future file format versions will always still compare greater than MAX_STACKFILE_VERSION,
-            // so it is ok that r_version does not accurately reflect future version values.
-            // TODO: change this, and comparisons for version >= 7000 / 5500, etc 
-			r_version = versionnum[0] * 1000;
-			r_version += versionnum[1] * 100;
-			r_version += versionnum[2] * 10;
-            r_version += versionnum[3];
+			r_version = (theader[offset + kMCStackFileMetaCardSignatureLength] - '0') * 1000;
+			r_version += (theader[offset + kMCStackFileMetaCardSignatureLength + 2] - '0') * 100;
 		}
 		else
-		{
-			char theader[HEADERSIZE + 1];
-			theader[HEADERSIZE] = '\0';
-			uint4 offset;
-			strncpy(theader, tnewheader, NEWHEADERSIZE);
-			if (IO_read(theader + NEWHEADERSIZE, HEADERSIZE - NEWHEADERSIZE, stream) == IO_NORMAL
-		        && MCU_offset(SIGNATURE, theader, offset))
-			{
-				if (theader[offset - 1] != '\n' || theader[offset - 2] == '\r')
-				{
-					MCresult->sets("stack was corrupted by a non-binary file transfer");
-					return IO_ERROR;
-				}
-
-				r_version = (theader[offset + VERSION_OFFSET] - '0') * 1000;
-				r_version += (theader[offset + VERSION_OFFSET + 2] - '0') * 100;
-			}
-			else
-				return IO_ERROR;
-		}
+			return IO_ERROR;
 	}
-    else
-    {
-        // Could not read header
-        return IO_ERROR;
-    }
+
 	return IO_NORMAL;
+}
+
+bool MCDispatch::streamstackisscriptonly(IO_handle stream)
+{
+    uint32_t t_version;
+    return readheader(stream, t_version) != IO_NORMAL;
 }
 
 // This method reads a stack from the given stream. The stack is set to
@@ -572,73 +499,71 @@ IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 // for embedded stacks/deployed stacks/revlet stacks.
 IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 {
-	uint32_t version;
-	uint1 charset, type;
-	char *newsf;
-	
-	// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
-	if (readheader(stream, version) != IO_NORMAL
-	        || IO_read_uint1(&charset, stream) != IO_NORMAL
-	        || IO_read_uint1(&type, stream) != IO_NORMAL
-	        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
-		return IO_ERROR;
-
-	// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
-	//   parentscript resolution is required to false.
-	s_loaded_parent_script_reference = false;
-
-	MCtranslatechars = charset != CHARSET;
-	delete newsf; // stackfiles is obsolete
-
-	MCStack *t_stack = nil;
-	/* UNCHECKED */ MCStackSecurityCreateStack(t_stack);
-
-	t_stack -> setparent(this);
-	
+    MCAutoStringRef t_filename;
 	// MM-2013-10-30: [[ Bug 11333 ]] Set the filename of android mainstack to apk/mainstack (previously was just apk).
 	//   This solves relative file path referencing issues.
 #ifdef TARGET_SUBPLATFORM_ANDROID
-    MCAutoStringRef t_filename;
     /* UNCHECKED */ MCStringFormat(&t_filename, "%@/mainstack", MCcmd);
-	t_stack -> setfilename(*t_filename);
 #else
-   	t_stack -> setfilename(MCcmd);
+   	t_filename = MCcmd;
 #endif
 
-	if (IO_read_uint1(&type, stream) != IO_NORMAL
-	    || (type != OT_STACK && type != OT_ENCRYPT_STACK)
-	        || t_stack->load(stream, version, type) != IO_NORMAL)
-	{
-		delete t_stack;
-		return IO_ERROR;
-	}
-
-	if (t_stack->load_substacks(stream, version) != IO_NORMAL
-	        || IO_read_uint1(&type, stream) != IO_NORMAL
-	        || type != OT_END)
-	{
-		delete t_stack;
-		return IO_ERROR;
-	}
-
-	// We are reading the startup stack, so this becomes the root of the
-	// stack list.
-	stacks = t_stack;
-
-	r_stack = t_stack;
-
-#ifndef _MOBILE
-	// Make sure parent script references are up to date.
-	if (s_loaded_parent_script_reference)
-		t_stack -> resolveparentscripts();
-#else
+    const char* t_result = nullptr;
+    MCStack* t_stack = nullptr;
+    if (trytoreadbinarystack(*t_filename, kMCEmptyString, stream, this,
+                             t_stack, t_result) != IO_NORMAL ||
+        t_stack == nullptr)
+    {
+        return IO_ERROR;
+    }
+    
+    // We are reading the startup stack, so this becomes the root of the
+    // stack list. This must happen prior to resolving parent scripts
+    // because otherwise there are no mainstacks, which can cause a
+    // crash when searching substacks.
+    stacks = t_stack;
+    
 	// Mark the stack as needed parentscript resolution. This is done after
 	// aux stacks have been loaded.
 	if (s_loaded_parent_script_reference)
 		t_stack -> setextendedstate(True, ECS_USES_PARENTSCRIPTS);
-#endif
-
+    
+    r_stack = t_stack;
 	return IO_NORMAL;
+}
+
+IO_stat MCDispatch::readscriptonlystartupstack(IO_handle stream, uindex_t p_length, MCStack*& r_stack)
+{
+    MCAutoStringRef t_filename;
+    // MM-2013-10-30: [[ Bug 11333 ]] Set the filename of android mainstack to apk/mainstack (previously was just apk).
+    //   This solves relative file path referencing issues.
+#ifdef TARGET_SUBPLATFORM_ANDROID
+    /* UNCHECKED */ MCStringFormat(&t_filename, "%@/mainstack", MCcmd);
+#else
+   	t_filename = MCcmd;
+#endif
+    
+    const char* t_result = nullptr;
+    MCStack* t_stack = nullptr;
+    
+    // Read a script-only stack from the stream
+    if (trytoreadscriptonlystackofsize(*t_filename, stream,
+                                       p_length, this,
+                                       t_stack, t_result) != IO_NORMAL
+        || t_stack == nullptr)
+        return IO_ERROR;
+
+    // We are reading the startup stack, so this becomes the root of the
+    // stack list.
+    stacks = t_stack;
+    
+    // Mark the stack as needed parentscript resolution. This is done after
+    // aux stacks have been loaded.
+    if (s_loaded_parent_script_reference)
+        t_stack -> setextendedstate(True, ECS_USES_PARENTSCRIPTS);
+    
+    r_stack = t_stack;
+    return IO_NORMAL;
 }
 
 // MW-2012-02-17: [[ LogFonts ]] Load a stack file, ensuring we clear up any
@@ -659,276 +584,390 @@ IO_stat MCDispatch::readfile(MCStringRef p_openpath, MCStringRef p_name, IO_hand
 	return stat;
 }
 
-// MW-2012-02-17: [[ LogFonts ]] Actually load the stack file (wrapped by readfile
-//   to handle font table cleanup).
-IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack *&sptr)
+IO_stat MCDispatch::trytoreadbinarystack(MCStringRef p_openpath,
+                                         MCStringRef p_name,
+                                         IO_handle &x_stream,
+                                         MCObject* p_parent,
+                                         MCStack* &r_stack,
+                                         const char* &r_result)
 {
-	uint32_t version;
-
-    sptr = NULL;
-    
-    // MW-2014-09-30: [[ ScriptOnlyStack ]] First see if it is a binary stack.
-	if (readheader(stream, version) == IO_NORMAL)
-	{
-		if (version > MAX_STACKFILE_VERSION)
-		{
-			MCresult->sets("stack was produced by a newer version");
-			return checkloadstat(IO_ERROR);
-		}
-        
-		// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
-		//   parentscript resolution is required to false.
-		s_loaded_parent_script_reference = false;
-		
-		// MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
-		uint1 charset, type;
-		char *newsf;
-		if (IO_read_uint1(&charset, stream) != IO_NORMAL
-		        || IO_read_uint1(&type, stream) != IO_NORMAL
-		        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
-		{
-			MCresult->sets("stack is corrupted, check for ~ backup file");
-			return checkloadstat(IO_ERROR);
-		}
-		delete newsf; // stackfiles is obsolete
-		MCtranslatechars = charset != CHARSET;
-		sptr = nil;
-		/* UNCHECKED */ MCStackSecurityCreateStack(sptr);
-		if (stacks == NULL)
-			sptr->setparent(this);
-		else
-			sptr->setparent(stacks);
-			
-		sptr->setfilename(p_openpath);
-
-		if (MCModeCanLoadHome() && type == OT_HOME)
-		{
-			// MW-2013-11-19: [[ UnicodeFileFormat ]] These strings are never written out, so
-			//   legacy.
-			char *lstring = NULL;
-			char *cstring = NULL;
-			IO_read_cstring_legacy(lstring, stream, 2);
-			IO_read_cstring_legacy(cstring, stream, 2);
-			delete lstring;
-			delete cstring;
-		}
-
-		MCresult -> clear();
-
-		if (IO_read_uint1(&type, stream) != IO_NORMAL
-		    || (type != OT_STACK && type != OT_ENCRYPT_STACK)
-		    || sptr->load(stream, version, type) != IO_NORMAL)
-		{
-			if (MCresult -> isclear())
-				MCresult->sets("stack is corrupted, check for ~ backup file");
-			destroystack(sptr, False);
-			sptr = NULL;
-			return checkloadstat(IO_ERROR);
-		}
-		
-		// MW-2011-08-09: [[ Groups ]] Make sure F_GROUP_SHARED is set
-		//   appropriately.
-		sptr -> checksharedgroups();
-		
-		if (sptr->load_substacks(stream, version) != IO_NORMAL
-		        || IO_read_uint1(&type, stream) != IO_NORMAL
-		        || type != OT_END)
-		{
-			if (MCresult -> isclear())
-				MCresult->sets("stack is corrupted, check for ~ backup file");
-			destroystack(sptr, False);
-			sptr = NULL;
-			return checkloadstat(IO_ERROR);
-		}
+    uint32_t t_version;
+    if (readheader(x_stream, t_version) != IO_NORMAL)
+    {
+        return IO_NORMAL;
     }
     
-    // MW-2014-09-30: [[ ScriptOnlyStack ]] If we failed to load a stack from that step
-    //   then check to see if it is a script file stack.
-    if (sptr == NULL)
+    if (t_version > kMCStackFileFormatCurrentVersion)
     {
-        // Clear the error return.
-        MCresult -> clear();
-        
-        // Reset to position 0.
-        MCS_seek_set(stream, 0);
-        
-        // Load the file into memory - we need to process a byteorder mark and any
-        // line endings.
-        int64_t t_size;
-        t_size = MCS_fsize(stream);
-        
-        uint8_t *t_script;
-        /* UNCHECKED */ MCMemoryAllocate(t_size, t_script);
+        r_result = "stack was produced by a newer version";
+        return checkloadstat(IO_ERROR);
+    }
+    
+    // MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
+    //   parentscript resolution is required to false.
+    s_loaded_parent_script_reference = false;
+    
+    // MW-2013-11-19: [[ UnicodeFileFormat ]] newsf is no longer used.
+    uint1 charset, type;
+    if (IO_read_uint1(&charset, x_stream) != IO_NORMAL
+        || IO_read_uint1(&type, x_stream) != IO_NORMAL
+        || IO_discard_cstring_legacy(x_stream, 2) != IO_NORMAL)
+    {
+        r_result = "stack is corrupted, check for ~ backup file";
+        return checkloadstat(IO_ERROR);
+    }
 
-        if (IO_read(t_script, t_size, stream) == IO_ERROR)
+    MCtranslatechars = charset != CHARSET;
+
+    MCStack *t_stack;
+    if (!MCStackSecurityCreateStack(t_stack))
+    {
+        r_result = "couldn't create stack";
+        return checkloadstat(IO_ERROR);
+    }
+    
+    if (p_parent != nullptr)
+        t_stack -> setparent(p_parent);
+    else if (stacks != nullptr)
+        t_stack->setparent(stacks);
+    else
+        t_stack->setparent(this);
+
+    t_stack->setfilename(p_openpath);
+    
+    if (MCModeCanLoadHome() && type == OT_HOME)
+    {
+        // MW-2013-11-19: [[ UnicodeFileFormat ]] These strings are never written out, so
+        //   legacy.
+        if (IO_discard_cstring_legacy(x_stream, 2) != IO_NORMAL
+            || IO_discard_cstring_legacy(x_stream, 2) != IO_NORMAL)
         {
-            MCresult -> sets("unable to read file");
+            r_result = "stack is corrupted, check for ~ backup file";
             return checkloadstat(IO_ERROR);
         }
+    }
+    
+    if (IO_read_uint1(&type, x_stream) != IO_NORMAL
+        || (type != OT_STACK && type != OT_ENCRYPT_STACK)
+        || t_stack->load(x_stream, t_version, type) != IO_NORMAL)
+    {
+        r_result = "stack is corrupted, check for ~ backup file";
+        destroystack(t_stack, False);
+        return checkloadstat(IO_ERROR);
+    }
+    
+    // MW-2011-08-09: [[ Groups ]] Make sure F_GROUP_SHARED is set
+    //   appropriately.
+    t_stack -> checksharedgroups();
+    
+    if (t_stack->load_substacks(x_stream, t_version) != IO_NORMAL
+        || IO_read_uint1(&type, x_stream) != IO_NORMAL
+        || type != OT_END)
+    {
+        r_result = "stack is corrupted, check for ~ backup file";
+        destroystack(t_stack, False);
+        return checkloadstat(IO_ERROR);
+    }
+    
+    r_stack = t_stack;
+    return IO_NORMAL;
+}
 
-        // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
-        MCFileEncodingType t_file_encoding = MCS_resolve_BOM(stream);
-        MCStringEncoding t_string_encoding;
-        MCAutoStringRef t_raw_script_string, t_LC_script_string;
-
-        uint32_t t_BOM_offset;
-        switch (t_file_encoding)
+static MCStack* script_only_stack_from_bytes(uint8_t *p_bytes,
+                                             uindex_t p_size,
+                                             MCStringEncoding p_encoding)
+{
+    MCAutoStringRef t_raw_script_string, t_lc_script_string;
+    MCStringLineEndingStyle t_line_encoding_style;
+    
+    if (!MCStringCreateWithBytes(p_bytes, p_size, p_encoding, false,
+                                 &t_raw_script_string) ||
+        !MCStringNormalizeLineEndings(*t_raw_script_string,
+                                      kMCStringLineEndingStyleLF, 
+                                      kMCStringLineEndingOptionNormalizePSToLineEnding |
+                                      kMCStringLineEndingOptionNormalizeLSToVT,
+                                      &t_lc_script_string,
+                                      &t_line_encoding_style))
+    {
+        return nullptr;
+    }
+    
+    // Now attempt to parse the header line:
+    //   'script' <string>
+    MCScriptPoint sp(*t_lc_script_string);
+    
+    // Parse 'script' token.
+    if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) != PS_NORMAL)
+    {
+        return nullptr;
+    }
+    
+    // Parse <string> token.
+    Symbol_type t_type;
+    if (sp . next(t_type) != PS_NORMAL || t_type != ST_LIT)
+    {
+        return nullptr;
+    }
+    
+    MCNewAutoNameRef t_script_name = sp.gettoken_nameref();
+    
+    // If 'with' is next then parse the behavior reference.
+    MCNewAutoNameRef t_behavior_name;
+    if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+    {
+        // Ensure 'behavior' is next 
+        if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_PARENT_SCRIPT) != PS_NORMAL)
         {
+            return nullptr;
+        }
+        
+        // Read the behavior name
+        if (sp.next(t_type) != PS_NORMAL || t_type != ST_LIT)
+        {
+            return nullptr;
+        }
+        
+        t_behavior_name = sp.gettoken_nameref();
+    }
+
+    // Parse end of line.
+    Parse_stat t_stat;
+    t_stat = sp . next(t_type);
+    if (t_stat != PS_EOL && t_stat != PS_EOF)
+        return nullptr;
+    
+    // MW-2014-10-23: [[ Bug ]] Make sure we trim the correct number of lines.
+    // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
+    // Now trim the ep down to the remainder of the script.
+    // Trim the header.
+    uint32_t t_lines = sp.getline();
+    uint32_t t_index = 0;
+    
+    // Jump over the possible lines before the string token
+    while (MCStringFirstIndexOfChar(*t_lc_script_string, '\n', t_index,
+                                    kMCStringOptionCompareExact, t_index)
+           && t_lines > 0)
+    {
+        t_lines -= 1;
+    }
+    
+    // Add one to the index so we include the LF
+    t_index += 1;
+    
+    // t_line now has the last LineFeed of the token
+    MCAutoStringRef t_lc_script_body;
+    
+    // We copy the body of the stack script
+    if (!MCStringCopySubstring(*t_lc_script_string,
+                               MCRangeMake(t_index,
+                                           MCStringGetLength(*t_lc_script_string)
+                                           - t_index), &t_lc_script_body))
+    {
+        return nullptr;
+    }
+    
+    // Create a stack.
+    MCStack *t_stack;
+    if (!MCStackSecurityCreateStack(t_stack))
+        return nullptr;
+    
+    // Set it up as script only.
+    t_stack -> setasscriptonly(*t_lc_script_body);
+    
+    // Set its name.
+    t_stack -> setname(*t_script_name);
+    
+    // Save line endings from raw script string to restore when saving file.
+    t_stack -> setlineencodingstyle(t_line_encoding_style);
+
+    // If we parsed a behavior reference, then set it.
+    if (*t_behavior_name != nullptr)
+    {
+        t_stack->setparentscript_onload(0, *t_behavior_name);
+    }
+    
+    return t_stack;
+}
+
+IO_stat MCDispatch::trytoreadscriptonlystackofsize(MCStringRef p_openpath,
+                                                   IO_handle &x_stream,
+                                                   uindex_t p_size,
+                                                   MCObject* p_parent,
+                                                   MCStack* &r_stack,
+                                                   const char* &r_result)
+{
+    MCAutoPointer<byte_t> t_bytes = new byte_t[p_size];
+    if (IO_read(*t_bytes, p_size, x_stream) == IO_ERROR)
+    {
+        return checkloadstat(IO_ERROR);
+    }
+    
+    uindex_t t_bom_size = 0;
+    MCFileEncodingType t_file_encoding =
+        MCS_resolve_BOM_from_bytes(*t_bytes, p_size, t_bom_size);
+    
+    MCStringEncoding t_string_encoding;
+    switch (t_file_encoding)
+    {
         case kMCFileEncodingUTF8:
-            t_BOM_offset = 3;
             t_string_encoding = kMCStringEncodingUTF8;
             break;
         case kMCFileEncodingUTF16:
             t_string_encoding = kMCStringEncodingUTF16;
-            t_BOM_offset = 2;
             break;
         case kMCFileEncodingUTF16BE:
             t_string_encoding = kMCStringEncodingUTF16BE;
-            t_BOM_offset = 2;
             break;
         case kMCFileEncodingUTF16LE:
             t_string_encoding = kMCStringEncodingUTF16LE;
-            t_BOM_offset = 2;
             break;
         default:
             // Assume native
             t_string_encoding = kMCStringEncodingNative;
-            t_BOM_offset = 0;
             break;
-        }
+    }
+    
+    MCStack *t_stack = script_only_stack_from_bytes(*t_bytes + t_bom_size,
+                                                    p_size - t_bom_size,
+                                                    t_string_encoding);
+    if (t_stack == nullptr)
+        return IO_NORMAL;
+    
+    // Set its parent.
+    if (p_parent != nullptr)
+        t_stack -> setparent(p_parent);
+    else if (stacks != nullptr)
+        t_stack->setparent(stacks);
+    else
+        t_stack->setparent(this);
+    
+    // Set its filename.
+    t_stack->setfilename(p_openpath);
+    
+    // Make it invisible
+    t_stack -> setflag(False, F_VISIBLE);
+    
+    r_stack = t_stack;
+    return IO_NORMAL;
+}
 
-        /* UNCHECKED */ MCStringCreateWithBytes(t_script + t_BOM_offset, t_size - t_BOM_offset, t_string_encoding, false, &t_raw_script_string);
-        /* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_raw_script_string, &t_LC_script_string);
+IO_stat MCDispatch::trytoreadscriptonlystack(MCStringRef p_openpath,
+                                             IO_handle &x_stream,
+                                             MCObject* p_parent,
+                                             MCStack* &r_stack,
+                                             const char* &r_result)
+{
+    // Load the file into memory - we need to process a byteorder mark and any
+    // line endings.
+    uindex_t t_size = static_cast<uindex_t>(MCS_fsize(x_stream));
+    
+    if (trytoreadscriptonlystackofsize(p_openpath, x_stream, t_size,
+                                       p_parent, r_stack, r_result)
+        != IO_NORMAL)
+    {
+        r_result = "failed to load script only stack";
+        return checkloadstat(IO_ERROR);
+    }
+    
+    return IO_NORMAL;
+}
 
-        MCMemoryDeallocate(t_script);
-        
-        // Now attempt to parse the header line:
-        //   'script' <string>
-        MCScriptPoint sp(*t_LC_script_string);
-        
-        // Parse 'script' token.
-        if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) == PS_NORMAL)
+void MCDispatch::processstack(MCStringRef p_openpath, MCStack* &x_stack)
+{
+    if (stacks != NULL)
+    {
+        MCStack *tstk = stacks;
+        do
         {
-            // Parse <string> token.
-            Symbol_type t_type;
-            if (sp . next(t_type) == PS_NORMAL &&
-                t_type == ST_LIT)
+            if (x_stack->hasname(tstk->getname()))
             {
-                MCNewAutoNameRef t_script_name;
-                MCNameClone(sp . gettoken_nameref(), &t_script_name);
+                MCNewAutoNameRef t_stack_name = x_stack->getname();
                 
-                // Parse end of line.
-                Parse_stat t_stat;
-                t_stat = sp . next(t_type);
-                if (t_stat == PS_EOL || t_stat == PS_EOF)
+                delete x_stack;
+                x_stack = nullptr;
+                
+                
+                if (MCStringIsEqualTo(tstk -> getfilename(), p_openpath, kMCStringOptionCompareCaseless))
+                    x_stack = tstk;
+                else
                 {
-                    // MW-2014-10-23: [[ Bug ]] Make sure we trim the correct number of lines.
-                    // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
-                    // Now trim the ep down to the remainder of the script.
-                    // Trim the header.
-                    uint32_t t_lines = sp.getline();
-                    uint32_t t_index = 0;
-
-                    // Jump over the possible lines before the string token
-                    while (MCStringFirstIndexOfChar(*t_LC_script_string, '\n', t_index, kMCStringOptionCompareExact, t_index) &&
-                           t_lines > 0)
-                        t_lines -= 1;
-                    
-                    // Add one to the index so we include the LF
-                    t_index += 1;
-
-                    // t_line now has the last LineFeed of the token
-                    MCAutoStringRef t_LC_script_body;
-
-                    // We copy the body of the stack script
-                    MCStringCopySubstring(*t_LC_script_string, MCRangeMake(t_index, MCStringGetLength(*t_LC_script_string) - t_index), &t_LC_script_body);
-                    
-                    // Create a stack.
-                    /* UNCHECKED */ MCStackSecurityCreateStack(sptr);
-                    
-                    // Set its parent.
-                    if (stacks == NULL)
-                        sptr->setparent(this);
-                    else
-                        sptr->setparent(stacks);
-                    
-                    // Set its filename.
-                    sptr->setfilename(p_openpath);
-                    
-                    // Set its name.
-                    sptr -> setname(*t_script_name);
-                    
-                    // Make it invisible
-                    sptr -> setflag(False, F_VISIBLE);
-                    
-                    // Set it up as script only.
-                    sptr -> setasscriptonly(*t_LC_script_body);
+                    MCdefaultstackptr->getcard()->message_with_valueref_args(MCM_reload_stack, tstk->getname(), p_openpath);
+                    tstk = stacks;
+                    do
+                    {
+                        if (MCNameIsEqualToCaseless(*t_stack_name, tstk->getname()))
+                        {
+                            x_stack = tstk;
+                            break;
+                        }
+                        tstk = (MCStack *)tstk->next();
+                    }
+                    while (tstk != stacks);
                 }
+                return;
             }
+            tstk = (MCStack *)tstk->next();
         }
-        
+        while (tstk != stacks);
+    }
+    
+    appendstack(x_stack);
+    
+    x_stack->extraopen(false);
+    
+    // MW-2008-10-28: [[ ParentScript ]]
+    // We just loaded a stackfile, so check to see if parentScript resolution
+    // is required and if so do it.
+    // MW-2009-01-28: [[ Inherited parentScripts ]]
+    // Resolving parentScripts may allocate memory, so 'resolveparentscripts'
+    // will return false if it fails to allocate what it needs. At some point
+    // this needs to be dealt with by deleting the stack and returning an error,
+    // *However* at the time of writing, 'readfile' isn't designed to handle
+    // this - so we just ignore the result for now (note that all the 'load'
+    // methods *fail* to check for no-memory errors!).
+    if (s_loaded_parent_script_reference)
+    {
+        x_stack -> resolveparentscripts();
+        x_stack -> setextendedstate(True, ECS_USES_PARENTSCRIPTS);
+    }
+}
+
+// MW-2012-02-17: [[ LogFonts ]] Actually load the stack file (wrapped by readfile
+//   to handle font table cleanup).
+IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack* &r_stack)
+{
+    MCresult -> clear();
+    
+    const char* t_result = nullptr;
+    MCStack *t_stack = nullptr;
+    
+	if (trytoreadbinarystack(p_openpath, p_name, stream, nullptr,
+                             t_stack, t_result) != IO_NORMAL)
+    {
+        /* UNCHECKED */ MCresult -> setvalueref(MCSTR(t_result));
+        return IO_ERROR;
+    }
+    
+    // If there was no IO error but it wasn't a binary stack then try as script-only
+    if (t_stack == nullptr)
+    {
+        // Reset to position 0.
+        MCS_seek_set(stream, 0);
+    
+        if (trytoreadscriptonlystack(p_openpath, stream, nullptr,
+                                     t_stack, t_result) != IO_NORMAL)
+        {
+            /* UNCHECKED */ MCresult -> setvalueref(MCSTR(t_result));
+            return IO_ERROR;
+        }
     }
     
     // MW-2014-09-30: [[ ScriptOnlyStack ]] If we managed to load a stack as either binary
     //   or script, then do the normal processing.
-    if (sptr != NULL)
+    if (t_stack != nullptr)
     {
-		if (stacks != NULL)
-		{
-			MCStack *tstk = stacks;
-			do
-			{
-				if (sptr->hasname(tstk->getname()))
-				{
-					MCAutoNameRef t_stack_name;
-					/* UNCHECKED */ t_stack_name . Clone(sptr -> getname());
-
-					delete sptr;
-					sptr = NULL;
-					
-					
-					if (MCStringIsEqualTo(tstk -> getfilename(), p_openpath, kMCStringOptionCompareCaseless))
-						sptr = tstk;
-					else
-					{
-						MCdefaultstackptr->getcard()->message_with_valueref_args(MCM_reload_stack, tstk->getname(), p_openpath);
-						tstk = stacks;
-						do
-						{
-							if (MCNameIsEqualTo(t_stack_name, tstk->getname(), kMCCompareCaseless))
-							{
-								sptr = tstk;
-								break;
-							}
-							tstk = (MCStack *)tstk->next();
-						}
-						while (tstk != stacks);
-					}
-
-					return IO_NORMAL;
-				}
-				tstk = (MCStack *)tstk->next();
-			}
-			while (tstk != stacks);
-		}
-		
-		appendstack(sptr);
-		
-		sptr->extraopen(false);
-
-		// MW-2008-10-28: [[ ParentScript ]]
-		// We just loaded a stackfile, so check to see if parentScript resolution
-		// is required and if so do it.
-		// MW-2009-01-28: [[ Inherited parentScripts ]]
-		// Resolving parentScripts may allocate memory, so 'resolveparentscripts'
-		// will return false if it fails to allocate what it needs. At some point
-		// this needs to be dealt with by deleting the stack and returning an error,
-		// *However* at the time of writing, 'readfile' isn't designed to handle
-		// this - so we just ignore the result for now (note that all the 'load'
-		// methods *fail* to check for no-memory errors!).
-		if (s_loaded_parent_script_reference)
-            sptr -> resolveparentscripts();
-        
+        processstack(p_openpath, t_stack);
+        r_stack = t_stack;
         return IO_NORMAL;
     }
     
@@ -938,16 +977,15 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
     if (stacks == NULL)
     {
         MCnoui = True;
-        MCscreen = new MCUIDC;
+        MCscreen = new (nothrow) MCUIDC;
         /* UNCHECKED */ MCStackSecurityCreateStack(stacks);
         MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
         stacks->setparent(this);
         stacks->setname_cstring("revScript");
         uint4 size = (uint4)MCS_fsize(stream);
-        MCAutoPointer<char> script;
-        script = new char[size + 2];
-        (*script)[size] = '\n';
-        (*script)[size + 1] = '\0';
+        /* UNCHECKED */ MCAutoPointer<char[]> script = new (nothrow) char[size + 2];
+        script[size] = '\n';
+        script[size + 1] = '\0';
         if (IO_read(*script, size, stream) != IO_NORMAL)
             return IO_ERROR;
         MCAutoStringRef t_script_str;
@@ -958,11 +996,12 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
     else
     {
         // MW-2008-06-12: [[ Bug 6476 ]] Media won't open HC stacks
-        if (!MCdispatcher->cut(True) || hc_import(p_name, stream, sptr) != IO_NORMAL)
+        if (!MCdispatcher->cut(True) || hc_import(p_name, stream, t_stack) != IO_NORMAL)
         {
             MCresult->sets("file is not a stack");
             return IO_ERROR;
         }
+        r_stack = t_stack;
 	}
     
 	return IO_NORMAL;
@@ -995,7 +1034,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
         MCAutoStringRef t_leaf_name;
 		uindex_t t_leaf_index;
 		if (MCStringLastIndexOfChar(p_name, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
-			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMake(t_leaf_index + 1, MCStringGetLength(p_name) - (t_leaf_index + 1)), &t_leaf_name);
+			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMakeMinMax(t_leaf_index + 1, MCStringGetLength(p_name)), &t_leaf_name);
 		else
 			t_leaf_name = p_name;
 		if ((stream = MCS_open(*t_leaf_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
@@ -1068,18 +1107,15 @@ IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname, uint32_t
     }
     else
     {
-		/* If no version was specified, assume that 8.0 format was requested */
+		/* If no version was specified, assume that current format was requested */
 		if (UINT32_MAX == p_version)
 		{
-			p_version = 8000;
+			p_version = kMCStackFileFormatCurrentVersion;
 		}
 
-		/* If the stack doesn't contain widgets, and 8.0 format was requested,
-		 * use 7.0 format. */
-		if (8000 == p_version && !sptr->haswidgets())
-		{
-			p_version = 7000;
-		}
+		/* If the stack doesn't contain any features requiring a more recent version, use 7.0 format. */
+		if (p_version > kMCStackFileFormatVersion_7_0 && sptr->geteffectiveminimumstackfileversion() <= kMCStackFileFormatVersion_7_0)
+			p_version = kMCStackFileFormatVersion_7_0;
 
         stat = dosavestack(sptr, p_fname, p_version);
         
@@ -1127,15 +1163,31 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
 	{
 		MCAutoStringRef t_script_body;
 
-		// Write out the standard script stack header, and then the script itself
-		MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+        // Ensure script isn't encrypted if a password was removed in session
+        sptr -> unsecurescript(sptr);
+        
+        // Write out the standard script stack header with behavior reference 
+        // (if applicable) and then the script itself
+        MCParentScript *t_parent_script = sptr->getparentscript();
+        if (t_parent_script != nullptr &&
+            t_parent_script->GetObjectId() == 0)
+        {
+            MCStringFormat(&t_script_body,
+                           "script \"%@\" with behavior \"%@\"\n%@",
+                           sptr->getname(),
+                           t_parent_script->GetObjectStack(),
+                           sptr->_getscript());
+        }
+        else
+        {
+            MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+        }
 
-		// Convert line endings - but only if the native line ending isn't CR!
-#ifndef __CR__
-		MCStringConvertLineEndingsToLiveCode(*t_script_body, &t_converted);
-#else
-		t_converted = *t_script_body;
-#endif
+        MCStringNormalizeLineEndings(*t_script_body, 
+                                     sptr -> getlineencodingstyle(), 
+                                     false,
+                                     &t_converted, 
+                                     nullptr);
 	}
     
     // Open the output stream.
@@ -1221,16 +1273,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname, uint32
 	// MW-2012-03-04: [[ StackFile5500 ]] Work out what header to emit, and the size.
 	const char *t_header;
 	uint32_t t_header_size;
-    if (p_version >= 8000)
-		t_header = newheader8000, t_header_size = 8;
-	else if (p_version >= 7000)
-		t_header = newheader7000, t_header_size = 8;
-	else if (p_version >= 5500)
-		t_header = newheader5500, t_header_size = 8;
-	else if (p_version >= 2700)
-		t_header = newheader, t_header_size = 8;
-	else
-		t_header = header, t_header_size = HEADERSIZE;
+	MCStackFileGetHeaderForVersion(p_version, t_header, t_header_size);
 	
 	if (IO_write(t_header, sizeof(char), t_header_size, stream) != IO_NORMAL
 	        || IO_write_uint1(CHARSET, stream) != IO_NORMAL)
@@ -1305,6 +1348,9 @@ void send_relaunch(void)
 #endif
 }
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 void send_startup_message(bool p_do_relaunch = true)
 {
 	if (p_do_relaunch)
@@ -1443,7 +1489,7 @@ void MCDispatch::wmdrag(Window w)
 
 	// Did an object indicate that it is draggable (by setting itself as the
     // drag object) and by putting some data on the drag board?
-	if (!MCdragboard->IsEmpty() && MCdragtargetptr != NULL)
+	if (!MCdragboard->IsEmpty() && MCdragtargetptr)
 	{
 		m_drag_source = true;
 		m_drag_end_sent = false;
@@ -1453,7 +1499,7 @@ void MCDispatch::wmdrag(Window w)
 		MCImage *t_image;
 		t_image = NULL;
 		if (MCdragimageid != 0)
-			t_image = MCdragtargetptr != NULL ? MCdragtargetptr -> resolveimageid(MCdragimageid) : resolveimageid(MCdragimageid);
+			t_image = MCdragtargetptr ? MCdragtargetptr -> resolveimageid(MCdragimageid) : resolveimageid(MCdragimageid);
 		
 		MCdragsource = MCdragtargetptr;
 
@@ -1463,9 +1509,16 @@ void MCDispatch::wmdrag(Window w)
 		//   correct from the point of view of the field.
 		if (MCdragtargetptr->gettype() > CT_CARD)
 		{
-			MCControl *cptr = (MCControl *)MCdragtargetptr;
-			cptr->munfocus();
-			cptr->getcard()->ungrab();
+			/* FIXME This is horrible */
+			if (MCdragtargetptr->gettype() != CT_WIDGET)
+			{
+				MCdragtargetptr.GetAs<MCControl>()->munfocus();
+			}
+			else
+			{
+				MCwidgeteventmanager->event_munfocus(MCdragtargetptr.GetAs<MCWidget>());
+			}
+			MCdragtargetptr->getcard()->ungrab();
 		}
 		MCdragtargetptr->getstack()->resetcursor(True);
 		MCdragtargetptr -> getstack() -> munfocus();
@@ -1485,10 +1538,10 @@ void MCDispatch::wmdrag(Window w)
         MCdragboard->Clear();
         MCdragboard->PushUpdates(true);
 
-		MCdragsource = NULL;
-		MCdragdest = NULL;
-		MCdropfield = NULL;
-		MCdragtargetptr = NULL;
+		MCdragsource = nil;
+		MCdragdest = nil;
+		MCdropfield = nil;
+		MCdragtargetptr = nil;
 		m_drag_source = false;
 	}
 	else
@@ -1497,10 +1550,10 @@ void MCDispatch::wmdrag(Window w)
         // removed (this might happen, for example, if a script encountered
         // an error after placing some of the drag data).
         MCdragboard->Clear();
-		MCdragsource = NULL;
-		MCdragdest = NULL;
-		MCdropfield = NULL;
-		MCdragtargetptr = NULL;
+		MCdragsource = nil;
+		MCdragdest = nil;
+		MCdropfield = nil;
+		MCdragtargetptr = nil;
 		m_drag_source = false;
 	}
 }
@@ -1594,7 +1647,7 @@ void MCDispatch::wmdragenter(Window w)
     MCdragboard->PullUpdates();
 
     // Change the mouse focus to the stack that has had the drag enter it
-	if (MCmousestackptr != NULL && target != MCmousestackptr)
+	if (MCmousestackptr && !MCmousestackptr.IsBoundTo(target))
 		MCmousestackptr -> munfocus();
 
 	MCmousestackptr = target;
@@ -1628,10 +1681,10 @@ void MCDispatch::wmdragleave(Window w)
 {
     // No stacks have mouse focus now
     MCStack *target = findstackd(w);
-	if (target != NULL && target == MCmousestackptr)
+	if (target != nullptr && MCmousestackptr.IsBoundTo(target))
 	{
 		MCmousestackptr -> munfocus();
-		MCmousestackptr = NULL;
+		MCmousestackptr = nil;
 	}
     
     // We are no longer the drop target and no longer care about the drag data.
@@ -1652,7 +1705,7 @@ MCDragAction MCDispatch::wmdragdrop(Window w)
 		dodrop(false);
 
     // The drag operation has ended. Remove the drag board contents.
-	MCmousestackptr = NULL;
+	MCmousestackptr = nil;
     MCdragboard->Clear();
 	m_drag_target = false;
 
@@ -1663,11 +1716,25 @@ void MCDispatch::property(Window w, Atom atom)
 {
 }
 
-void MCDispatch::configure(Window w)
+void MCDispatch::wreshape(Window p_window)
 {
-	MCStack *target = findstackd(w);
-	if (target != NULL)
-		target->view_configure(true);
+	MCStack *t_stack;
+	t_stack = findstackd(p_window);
+	if (t_stack == nil)
+		return;
+	
+	t_stack -> view_configure(true);
+	
+	// The wreshape() invocation occurs as a direct result of a system resize window
+	// request. These can occur whilst nested inside a system modal loop thus the normal
+	// force unlock which occurs at the root loop does not happen. Therefore we
+	// do that here to ensure that a 'lock screen' inside a resizeStack does not cause
+	// subsequent resize requests (in the same user resizing action) to not have an
+	// effect.
+	MCRedrawForceUnlockScreen();
+
+	// Now make sure we force an update screen.
+	MCRedrawUpdateScreen();
 }
 
 void MCDispatch::enter(Window w)
@@ -1720,7 +1787,7 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 		fonts = MCFontlistCreateNew();
 #else
 	if (fonts == nil)
-		fonts = new MCFontlist;
+		fonts = new (nothrow) MCFontlist;
 #endif
 	return fonts->getfont(fname, size, style, printer);
 }
@@ -1729,7 +1796,7 @@ MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle, MCNameRef
 {
 #if defined(_MACOSX) || defined (_MAC_SERVER) || defined (TARGET_SUBPLATFORM_IPHONE)
     if (fonts == nil)
-        fonts = new MCFontlist;
+        fonts = new (nothrow) MCFontlist;
     return fonts->getfontbyhandle(p_handle, p_name);
 #else
     return NULL;
@@ -2008,7 +2075,7 @@ check:
                     }
                 }
                 
-				iptr = new MCImage;
+				iptr = new (nothrow) MCImage;
                 iptr->appendto(imagecache);
                 iptr->SetText(*ctxt, *t_data);
 				iptr->setname(*t_image_name);
@@ -2055,7 +2122,17 @@ void MCDispatch::removemenu()
 void MCDispatch::closemenus()
 {
 	if (menu != NULL)
+	{
+		MCObject *t_menu = menu;
 		menu->closemenu(True, True);
+		
+		// Ensure the menuobjectptr is set to nil. We can't do this in
+		// closemenu itself, as elsewhere menuPick is sent *after*
+		// calling closemenu and there is likely to be code that relies
+		// on 'the menuButton' during handling of menuPick
+		if (MCmenuobjectptr == t_menu)
+			MCmenuobjectptr = nil;
+	}
 }
 
 void MCDispatch::appendpanel(MCStack *sptr)
@@ -2097,7 +2174,7 @@ void MCDispatch::remove_transient_stack(MCStack *sptr)
 
 void MCDispatch::timer(MCNameRef p_message, MCParameter *p_parameters)
 {
-	if (MCNameIsEqualTo(p_message, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(p_message, MCM_internal))
 	{
 		MCStackSecurityExecutionTimeout();
 	}
@@ -2120,7 +2197,7 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
     
 	if (MCStringLastIndexOfChar(p_external, '/', t_ext_length, kMCStringOptionCompareExact, t_slash_index))
     {
-		if (!MCStringCopySubstring(p_external, MCRangeMake(t_slash_index + 1, t_ext_length - t_slash_index - 1), t_external_leaf))
+		if (!MCStringCopySubstring(p_external, MCRangeMakeMinMax(t_slash_index + 1, t_ext_length), t_external_leaf))
             return false;
     }
     else
@@ -2147,7 +2224,7 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
 #endif
 	
 	if (m_externals == nil)
-		m_externals = new MCExternalHandlerList;
+		m_externals = new (nothrow) MCExternalHandlerList;
 	
 	bool t_loaded;
 	t_loaded = m_externals -> Load(t_filename);
@@ -2176,7 +2253,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
     // We haven't created a new object as the result of this paste (yet...)
     r_objptr = NULL;
 
-	if (MCactivefield != NULL)
+	if (MCactivefield)
 	{
         // There is an active field so paste the clipboard into it.
         MCParagraph *t_paragraphs;
@@ -2202,7 +2279,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		}
 	}
 	
-	if (MCactiveimage != NULL && MCclipboard->HasImage())
+	if (MCactiveimage && MCclipboard->HasImage())
 	{
         // There is a selected image object and there is an image on the
         // clipboard so paste the image into it.
@@ -2212,7 +2289,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
             MCExecContext ctxt(nil, nil, nil);
 
 			MCImage *t_image;
-			t_image = new MCImage;
+			t_image = new (nothrow) MCImage;
 			t_image -> open();
 			t_image -> openimage();
 			t_image -> SetText(ctxt, *t_data);
@@ -2227,7 +2304,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		return false;
 	}
 	
-	if (MCdefaultstackptr != NULL && (p_explicit || MCdefaultstackptr -> gettool(MCdefaultstackptr) == T_POINTER))
+	if (MCdefaultstackptr && (p_explicit || MCdefaultstackptr -> gettool(MCdefaultstackptr) == T_POINTER))
 	{
 		MCObject *t_objects;
 		t_objects = NULL;
@@ -2253,7 +2330,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
             {
                 MCExecContext ctxt(nil, nil, nil);
 				
-				t_objects = new MCImage(*MCtemplateimage);
+				t_objects = new (nothrow) MCImage(*MCtemplateimage);
 				t_objects -> open();
 				static_cast<MCImage *>(t_objects) -> SetText(ctxt, *t_data);
 				t_objects -> close();
@@ -2294,7 +2371,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 
 void MCDispatch::dodrop(bool p_source)
 {
-	if (!m_drag_end_sent && MCdragsource != NULL && (MCdragdest == NULL || MCdragaction == DRAG_ACTION_NONE))
+	if (!m_drag_end_sent && MCdragsource && (!MCdragdest || MCdragaction == DRAG_ACTION_NONE))
 	{
 		// We are only the source
 		m_drag_end_sent = true;
@@ -2313,10 +2390,9 @@ void MCDispatch::dodrop(bool p_source)
 		//   when the drag is over. Note that we have to check that the source was a field in this case since we don't
 		//   need to do anything if it is not!
 		// IM-2014-02-28: [[ Bug 11715 ]] dragsource may have changed or unset after sending message so check for valid ptr
-		if (MCdragsource != nil && MCdragsource -> gettype() == CT_FIELD)
+		if (MCdragsource && MCdragsource -> gettype() == CT_FIELD)
 		{
-			MCField *t_field;
-			t_field = static_cast<MCField *>(MCdragsource);
+			MCField *t_field = MCdragsource.GetAs<MCField>();
 			t_field -> setstate(False, CS_DRAG_TEXT);
 			t_field -> computedrag();
 			t_field -> getstack() -> resetcursor(True);
@@ -2329,14 +2405,14 @@ void MCDispatch::dodrop(bool p_source)
 		return;
 
 	// Setup global variables for a field drop
-	MCdropfield = NULL;
+	MCdropfield = nil;
 	MCdropchar = 0;
 
 	findex_t t_start_index, t_end_index;
 	t_start_index = t_end_index = 0;
-	if (MCdragdest != NULL && MCdragdest -> gettype() == CT_FIELD)
+	if (MCdragdest && MCdragdest -> gettype() == CT_FIELD)
 	{
-		MCdropfield = static_cast<MCField *>(MCdragdest);
+		MCdropfield = MCdragdest.GetAs<MCField>();
 		if (MCdragdest -> getstate(CS_DRAG_TEXT))
 		{
 			MCdropfield -> locmark(False, False, False, False, True, t_start_index, t_end_index);
@@ -2346,19 +2422,18 @@ void MCDispatch::dodrop(bool p_source)
 
 	// If source is a field and the engine handled the start of the drag operation
 	bool t_auto_source;
-	t_auto_source = MCdragsource != NULL && MCdragsource -> gettype() == CT_FIELD && MCdragsource -> getstate(CS_SOURCE_TEXT);
+	t_auto_source = MCdragsource && MCdragsource -> gettype() == CT_FIELD && MCdragsource -> getstate(CS_SOURCE_TEXT);
 
 	// If dest is a field and the engine handled the accepting of the operation
 	bool t_auto_dest;
-	t_auto_dest = MCdragdest != NULL && MCdragdest -> gettype() == CT_FIELD && MCdragdest -> getstate(CS_DRAG_TEXT);
+	t_auto_dest = MCdragdest && MCdragdest -> gettype() == CT_FIELD && MCdragdest -> getstate(CS_DRAG_TEXT);
 
     // Is the engine handling this drag internally AND the same field is both
     // the source and destination for the drag?
 	if (t_auto_source && t_auto_dest && MCdragsource == MCdragdest)
 	{
 		// Source and target are the same field
-		MCField *t_field;
-		t_field = static_cast<MCField *>(MCdragsource);
+		MCField *t_field = MCdragsource.GetAs<MCField>();
 
 		findex_t t_from_start_index, t_from_end_index;
 		t_field -> selectedmark(False, t_from_start_index, t_from_end_index, False);
@@ -2421,10 +2496,9 @@ void MCDispatch::dodrop(bool p_source)
 	findex_t t_src_start, t_src_end;
 	t_src_start = t_src_end = 0;
 	if (t_auto_source)
-		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False);
+		MCdragsource.GetAs<MCField>()->selectedmark(False, t_src_start, t_src_end, False);
 
-	bool t_auto_drop;
-    t_auto_drop = MCdragdest != NULL;
+	bool t_auto_drop = MCdragdest.IsValid();
     if (t_auto_drop)
     {
 #ifdef WIDGETS_HANDLE_DND
@@ -2445,7 +2519,7 @@ void MCDispatch::dodrop(bool p_source)
     //
     // There is a case above for if they are the same field so getting here
     // implies that the source and destination are different fields.
-	if (t_auto_dest && t_auto_drop && MCdragboard != NULL && MCdropfield != NULL)
+	if (t_auto_dest && t_auto_drop && MCdragboard != NULL && MCdropfield)
 	{
 		// MW-2012-02-16: [[ Bug ]] Bracket any actions that result in
 		//   textChanged message by a lock screen pair.
@@ -2474,7 +2548,7 @@ void MCDispatch::dodrop(bool p_source)
 		//   was called as a result of a user action (drop from different field).
 		MCactivefield -> textchanged();
 	}
-	else if (MCdropfield != NULL)
+	else if (MCdropfield)
 	{
 		MCdropfield->setstate(False, CS_DRAG_TEXT);
 		MCdropfield->computedrag();
@@ -2482,7 +2556,7 @@ void MCDispatch::dodrop(bool p_source)
 	}
 
 	bool t_auto_end;
-	if (MCdragsource != NULL)
+	if (MCdragsource)
 	{
 		m_drag_end_sent = true;
 #ifdef WIDGETS_HANDLE_DND
@@ -2500,12 +2574,12 @@ void MCDispatch::dodrop(bool p_source)
 	else
 		t_auto_end = false;
 
-	if (t_auto_source && t_auto_end && MCdragsource != NULL && MCdragaction == DRAG_ACTION_MOVE)
+	if (t_auto_source && t_auto_end && MCdragsource && MCdragaction == DRAG_ACTION_MOVE)
 	{
 		// MW-2012-02-16: [[ Bug ]] Bracket any actions that result in
 		//   textChanged message by a lock screen pair.
 		MCRedrawLockScreen();
-		static_cast<MCField *>(MCdragsource) -> deletetext(t_src_start, t_src_end);
+		MCdragsource.GetAs<MCField>()->deletetext(t_src_start, t_src_end);
 		MCRedrawUnlockScreen();
 
 		// MW-2012-02-08: [[ TextChanged ]] Invoke textChanged as this method
@@ -2625,17 +2699,17 @@ void MCDispatch::GetDefaultTextHeight(MCExecContext& ctxt, uinteger_t& r_height)
 
 void MCDispatch::GetDefaultForePixel(MCExecContext& ctxt, uinteger_t& r_pixel)
 {
-    r_pixel = MCscreen->black_pixel.pixel & 0xFFFFFF;
+    r_pixel = MCColorGetPixel(MCscreen->black_pixel) & 0xFFFFFF;
 }
 
 void MCDispatch::GetDefaultBackPixel(MCExecContext& ctxt, uinteger_t& r_pixel)
 {
-    r_pixel = MCscreen->background_pixel.pixel & 0xFFFFFF;
+    r_pixel = MCColorGetPixel(MCscreen->background_pixel) & 0xFFFFFF;
 }
 
 void MCDispatch::GetDefaultTopPixel(MCExecContext& ctxt, uinteger_t& r_pixel)
 {
-    r_pixel = MCscreen->white_pixel.pixel & 0xFFFFFF;
+    r_pixel = MCColorGetPixel(MCscreen->white_pixel) & 0xFFFFFF;
 }
 
 void MCDispatch::GetDefaultForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
@@ -2695,6 +2769,12 @@ bool MCDispatch::fetchlibrarymapping(MCStringRef p_name, MCStringRef& r_path)
     return true;
 }
 
+bool MCDispatch::haslibrarymapping(MCStringRef p_name)
+{
+    MCAutoStringRef t_mapping;
+    return fetchlibrarymapping(p_name, &t_mapping);
+}
+
 bool MCDispatch::recomputefonts(MCFontRef, bool p_force)
 {
     // Call the general recompute function first
@@ -2711,3 +2791,22 @@ bool MCDispatch::recomputefonts(MCFontRef, bool p_force)
     
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCDispatch::resolveparentscripts()
+{
+    if (stacks != NULL)
+    {
+        MCStack* t_stack = stacks;
+        do
+        {
+            if (t_stack -> getextendedstate(ECS_USES_PARENTSCRIPTS))
+                t_stack -> resolveparentscripts();
+            
+            t_stack = t_stack->next();
+        }
+        while(t_stack != stacks);
+    }
+}
+

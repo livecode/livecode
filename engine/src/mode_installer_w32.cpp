@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"

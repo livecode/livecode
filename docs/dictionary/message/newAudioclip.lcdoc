@@ -1,0 +1,42 @@
+Name: newAudioclip
+
+Type: message
+
+Syntax: newAudioclip
+
+Summary:
+Sent to a new audio clip right after it's created.
+
+Associations: audioclip
+
+Introduced: 8.1
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Example:
+on newAudioclip -- play a new audio clip as soon as it is created
+   play the target
+end newAudioclip
+
+Description:
+Handle the <newAudioclip> <message> if you want to create additional
+<object|objects>, switch <tool|tools>, or do other tasks when a new
+<audioclip(object)> is created.
+
+Normally, the <newAudioclip> <message> is handled at a higher level of
+the <message path>, since the newly created <audioclip(object)> does not
+yet have a <script> unless the <templateAudioclip> contains one.
+
+The actual creation is not triggered by the <newAudioclip> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <audioclip(object)> from being created.
+
+References: copy (command), clone (command), paste (command),
+pass (control structure), object (glossary), trap (glossary),
+message (glossary), tool (glossary), message path (glossary),
+templateAudioclip (keyword), audioclip (object), script (property)
+
+Tags: objects
+

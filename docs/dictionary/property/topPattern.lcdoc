@@ -4,15 +4,18 @@ Type: property
 
 Syntax: set the topPattern of <object> to {<patternNumber> | <imageID> | empty}
 
-Summary: Specifies the pattern used to draw a three-D <object|object's> raised edge.
+Summary:
+Specifies the pattern used to draw a three-D <object|object's> raised
+edge. 
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the topPattern of the mouseControl to 22
@@ -21,46 +24,110 @@ Example:
 set the topPattern of field "List" to the topPattern of me
 
 Value:
-The <topPattern> of an <object> is a pattern specifier.
-A <patternNumber> is a built-in pattern number between 1 and 164. (These patterns correspond to LiveCode's built-in patterns 136 to 300.)
+The <topPattern> of an <object(glossary)> is a pattern specifier.
+A <patternNumber> is a built-in pattern number between 1 and 164. These
+patterns are provided for compatibility with patterns available in
+MetaCard and correspond to LiveCode's built in image id 137 to 300. As
+with MetaCard pattern numbers 105 to 114 and 146 and above are 
+unavailable.
 
-An <imageID> is the ID of an <image> to use for a pattern. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+An <imageID> is the ID of an <image> to use for a pattern. LiveCode
+looks for the specified <image> first in the <current stack>, then in
+other open <stacks>.
 
 By default, the <topPattern> for all <object|objects> is empty.
 
 Description:
-Objects whose threeD <property> is set to true appear to stick out of or recede into the screen. Use the <topPattern> <property> to specify the pattern used to draw the raised edge of the <object>.
+Objects whose threeD <property> is set to true appear to stick out of or
+recede into the screen. Use the <topPattern> <property> to specify the
+pattern used to draw the raised edge of the <object(glossary)>.
 
 Pattern images can be color or black-and-white.
 
->*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less, and both its <height> and <width> must be a power of 2. To be used on <Windows> and <Unix|Unix systems>, <height> and <width> must be divisible by 8. To be used as a fully cross-platform pattern, both an image's dimensions should be one of 8, 16, 32, 64, or 128.
+>*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS
+> systems>, an <image> must be 128x128 <pixels> or less, and both its
+> <height> and <width> must be a power of 2. To be used on <Windows> and
+> <Unix|Unix systems>, <height> and <width> must be divisible by 8. To
+> be used as a fully cross-platform pattern, both an image's dimensions
+> should be one of 8, 16, 32, 64, or 128.
 
-The <topPattern> of <control(object)|controls> is drawn starting at the <control(object)|control's> upper right corner: if the <control(keyword)> is moved, the pattern does not shift.
+The <topPattern> of <control(object)|controls> is drawn starting at the
+<control(object)|control's> upper right corner: if the
+<control(keyword)> is moved, the pattern does not shift.
 
-Setting the <topPattern> of an <object> to empty allows the <topPattern> of the object's <owner> to show through. Use the <effective> <keyword> to find out what pattern is used for the <object>, even if its own <topPattern> is empty.
+Setting the <topPattern> of an <object(glossary)> to empty allows the
+<topPattern> of the object's <owner> to show through. Use the
+<effective> <keyword> to find out what pattern is used for the
+<object(glossary)>, even if its own <topPattern> is empty.
 
-If the object's showBorder <property> is false, the <topPattern> has no effect.
+If the object's showBorder <property> is false, the <topPattern> has no
+effect. 
 
-The setting of the <topPattern> <property> has different effects, depending on the <object type>:
+The setting of the <topPattern> <property> has different effects,
+depending on the <object type>:
 
-* The <topPattern> of a <stack> determines the <topPattern> of each <object> in the <stack> that does not have its own <topPattern>.
+* The <topPattern> of a <stack> determines the <topPattern> of each
+  <object(glossary)> in the <stack> that does not have its own
+  <topPattern>. 
 
-* The <topPattern> of a <card> determines the pattern of the border on the top and left edges of the <card>, as well as determining the <topPattern> of each <object> on the <card> that does not have its own <topPattern>.
 
-* The <topPattern> of a <group> determines the pattern of the border on the <bottom> and right edges of the <group>, as well as determining the <topPattern> of each <object> in the <group> that does not have its own <topPattern>.
+* The <topPattern> of a <card> determines the pattern of the border on
+  the top and left edges of the <card>, as well as determining the
+  <topPattern> of each <object(glossary)> on the <card> that does not
+  have its own <topPattern>.
 
-* The <topPattern> of a <button(keyword)> forms a border on the top and left edges of the <button(keyword)>. If the <button(object)|button's> <threeD> <property> is false, the <topPattern> has no effect.
 
-* The <topPattern> of a <field(keyword)> forms a border on the bottom and right edges of the <field(keyword)> and (if the <field(keyword)> is a scrolling <field(keyword)>) the top and left edges of the arrow boxes at the ends of the scrollbar and the bottom and right edges of the scroll area. The <field(object)|field's> <topPattern> also determines the pattern of the top and left edges of any text in the <field(keyword)> whose <textStyle> is set to "threeDBox". If the <field(object)|field's> <threeD> <property> is false, the <field(keyword)> border is not affected.
+* The <topPattern> of a <group> determines the pattern of the border on
+  the <bottom> and right edges of the <group>, as well as determining
+  the <topPattern> of each <object(glossary)> in the <group> that does
+  not have its own <topPattern>.
 
-* The <topPattern> of a <scrollbar> forms a border on the top and left edges of the arrow boxes at the ends of the <scrollbar>, and the bottom and right edges of the scroll area.
 
-* The <topPattern> of a <graphic>, <image>, <audio clip>, or <video clip> has no effect.
+* The <topPattern> of a <button(keyword)> forms a border on the top and
+  left edges of the <button(keyword)>. If the <button(object)|button's>
+  <threeD> <property> is false, the <topPattern> has no effect.
 
-* The <topPattern> of a <player> or <EPS|EPS object> forms a border on the bottom and right edges of the <object>. If the object's <threeD> <property> is false, the <topPattern> has no effect.
 
-If an object's <topPattern> is set, the pattern is shown instead of the color specified by the <topColor>.
+* The <topPattern> of a <field(keyword)> forms a border on the bottom
+  and right edges of the <field(keyword)> and (if the <field(keyword)>
+  is a scrolling <field(keyword)>) the top and left edges of the arrow
+  boxes at the ends of the scrollbar and the bottom and right edges of
+  the scroll area. The <field(object)|field's> <topPattern> also
+  determines the pattern of the top and left edges of any text in the
+  <field(keyword)> whose <textStyle> is set to "threeDBox". If the
+  <field(object)|field's> <threeD> <property> is false, the
+  <field(keyword)> border is not affected.
 
-References: pixels (property), textStyle (property), owner (property), height (property), width (property), topColor (property), bottom (property), hiliteBorder (property), bottomPattern (property), threeDHilite (property), threeD (property), effective (keyword), field (keyword), image (keyword), button (keyword), card (keyword), scrollbar (keyword), player (keyword), graphic (keyword), control (keyword), group (command), button (object), field (object), object (object), stack (object), control (object), property (glossary), EPS (glossary), audio clip (glossary), Windows (glossary), object type (glossary), Mac OS (glossary), keyword (glossary), Unix (glossary), video clip (glossary), current stack (glossary), stacks (function)
+
+* The <topPattern> of a <scrollbar> forms a border on the top and left
+  edges of the arrow boxes at the ends of the <scrollbar>, and the
+  bottom and right edges of the scroll area.
+
+
+* The <topPattern> of a <graphic>, <image>, <audio clip>, or <video
+  clip> has no effect.
+
+
+* The <topPattern> of a <player> or <EPS|EPS object> forms a border on
+  the bottom and right edges of the <object(glossary)>. If the object's
+  <threeD> <property> is false, the <topPattern> has no effect.
+
+
+If an object's <topPattern> is set, the pattern is shown instead of the
+color specified by the <topColor>.
+
+References: group (command), stacks (function), object (glossary),
+property (glossary), EPS (glossary), audio clip (glossary),
+Windows (glossary), object type (glossary), Mac OS (glossary),
+keyword (glossary), Unix (glossary), video clip (glossary),
+current stack (glossary), effective (keyword), field (keyword),
+image (keyword), button (keyword), card (keyword), scrollbar (keyword),
+player (keyword), graphic (keyword), control (keyword), button (object),
+field (object), stack (object), control (object), pixels (property),
+textStyle (property), owner (property), height (property),
+width (property), topColor (property), bottom (property),
+hiliteBorder (property), bottomPattern (property),
+threeDHilite (property), threeD (property)
 
 Tags: ui
+

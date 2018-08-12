@@ -2,17 +2,20 @@ Name: revCloseCursor
 
 Type: command
 
-Syntax: revCloseCursor <recordSetID> 
+Syntax: revCloseCursor <recordSetID>
 
-Summary: Closes a <record set (database cursor)(glossary)>.
+Summary:
+Closes a <record set (database cursor)(glossary)>.
+
+Associations: database library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revCloseCursor 3
@@ -21,17 +24,37 @@ Example:
 revCloseCursor finalResults
 
 Parameters:
-recordSetID: The number returned by the revQueryDatabase function when the record set was created.
+recordSetID:
+The number returned by the revQueryDatabase function when the record set
+was created.
 
-The result: If the closure is not successful, the result is set to an error message.
+The result:
+If the closure is not successful, the result is set to an error message.
 
 Description:
-Use the <revCloseCursor> <command> to clean up after using a <record set (database cursor)|record set> in a <database>.
+Use the <revCloseCursor> <command> to clean up after using a <record set
+(database cursor)|record set> in a <database>.
 
-All open record sets are closed automatically when the database they are associated with is closed. However, it is recommended practice to explicitly close record sets when your stack is finished with them.
+All open record sets are closed automatically when the database they are
+associated with is closed. However, it is recommended practice to
+explicitly close record sets when your stack is finished with them.
 
->*Important:*  The revCloseCursor  <command> is part of the <Database library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revCloseCursor> <command> is part of the 
+> <Database library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
-References: revCloseDatabase (command), revDatabaseCursors (function), revdb_disconnect (function), revQueryDatabase (function), revDataFromQuery (function), revdb_closecursor (function), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), record set (database cursor) (glossary), command (glossary), Database library (library), LiveCode custom library (library)
+References: revCloseDatabase (command), revDatabaseCursors (function),
+revdb_disconnect (function), revQueryDatabase (function),
+revDataFromQuery (function), revdb_closecursor (function),
+Standalone Application Settings (glossary), database (glossary),
+standalone application (glossary),
+record set (database cursor) (glossary), command (glossary),
+LiveCode custom library (glossary), Database library (library)
 
 Tags: database
+

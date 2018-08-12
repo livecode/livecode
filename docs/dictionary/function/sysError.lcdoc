@@ -6,13 +6,14 @@ Syntax: the sysError
 
 Syntax: sysError()
 
-Summary: <return|Returns> the operating system's error status.
+Summary:
+<return|Returns> the operating system's error status.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 the sysError
@@ -20,15 +21,34 @@ the sysError
 Example:
 if the sysError is zero then answer "Success!"
 
-The result: Most operating system requests have to do with actions on files. For example, when you open a file or copy a resource, LiveCode requests the operating system to complete the action. If the action fails, the <result> is set to an error message, and the <sysError> <function> contains the <error message> the operating system reported to LiveCode. >*Note:* When using the <sysError> <function> to check whether a <command> succeeded, be sure to check the <result> first. The <sysError> reports the operating system's error report, and some operating-system commands may report a value (and therefore set the <sysError>) even if the command succeeded. Only if the <result> is not empty does the <sysError> indicate that the command failed.
+Returns:
+The <sysError> <function> <return|returns> an <integer>.
 
-Returns: The <sysError> <function> <return|returns> an <integer>.
+The result:
+Most operating system requests have to do with actions on files. For
+example, when you open a file or copy a resource, LiveCode requests the
+operating system to complete the action. If the action fails, the
+<result> is set to an error message, and the <sysError> <function>
+contains the <error message> the operating system reported to LiveCode.
+>*Note:* When using the <sysError> <function> to check whether a
+> <command> succeeded, be sure to check the <result> first. The
+> <sysError> reports the operating system's error report, and some
+> operating-system commands may report a value (and therefore set the
+> <sysError>) even if the command succeeded. Only if the <result> is not
+> empty does the <sysError> indicate that the command failed.
 
 Description:
-Use the <sysError> <function> to obtain the reason a <command> that makes an operating-system request failed.
+Use the <sysError> <function> to obtain the reason a <command> that
+makes an operating-system request failed.
 
-On Unix systems, the <sysError> function <return|returns> the <value> of the "errno" <variable>.
+On Unix systems, the <sysError> function <return|returns> the <value> of
+the "errno" <variable>.
 
-On Windows systems, the <sysError> function <return|returns> the <value> returned by the "GetLastError()" <function>.
+On Windows systems, the <sysError> function <return|returns> the <value>
+returned by the "GetLastError()" <function>.
 
-References: integer (keyword), close file (command), kill (command), result (function), sysError (function), value (function), error message (glossary), command (glossary), return (glossary), variable (glossary), function (control_st)
+References: close file (command), kill (command),
+function (control structure), result (function), sysError (function),
+value (function), error message (glossary), command (glossary),
+return (glossary), variable (glossary), integer (keyword)
+

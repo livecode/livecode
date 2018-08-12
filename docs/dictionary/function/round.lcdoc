@@ -2,17 +2,18 @@ Name: round
 
 Type: function
 
-Syntax: the round of <number> 
+Syntax: the round of <number>
 
 Syntax: round(<number>, <precision>)
 
-Summary: Rounds off a number to the nearest <integer>.
+Summary:
+Rounds off a number to the nearest <integer>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the round of 26.2 -- yields 26
@@ -27,20 +28,40 @@ Example:
 round(9734.22,-3) -- yields 10000
 
 Parameters:
-number: Any number or expression that evaluates to a number.
-precision (integer): An integer giving the decimal place to round off to.
+number:
+Any number or expression that evaluates to a number.
 
-Returns: The <round> <function> <return|returns> a number.
+precision (integer):
+An integer giving the decimal place to round off to.
+
+Returns:
+The <round> <function> <return|returns> a number.
 
 Description:
-Use the <round> <function> to round off numbers and eliminate insignificant digits for financial applications.
+Use the <round> <function> to round off numbers and eliminate
+insignificant digits for financial applications.
 
-The <round> <function> performs financial-style rounding. If the <number> is exactly halfway between two numbers, <round> always rounds the <number> up if positive, down if <negative>. (To round off numbers without introducing any statistical upward bias, use the <statRound> <function> instead.)
+The <round> <function> performs financial-style rounding. If the
+<number> is exactly halfway between two numbers, <round> always rounds
+the <number> up if positive, down if <negative>. (To round off numbers
+without introducing any statistical upward bias, use the <statRound>
+<function> instead.)
 
-A positive <precision> indicates a place to the right of the <decimal point>, and a <negative> <precision> indicates a place to the left. For example, 1 rounds off to the nearest tenth, 2 rounds off to the nearest hundredth, -1 rounds off by ten, and so on. If you don't specify a <precision>, zero is used, meaning that the <number> is rounded off to a whole number.
+A positive <precision> indicates a place to the right of the <decimal
+point>, and a <negative> <precision> indicates a place to the left. For
+example, 1 rounds off to the nearest tenth, 2 rounds off to the nearest
+hundredth, -1 rounds off by ten, and so on. If you don't specify a
+<precision>, zero is used, meaning that the <number> is rounded off to a
+whole number.
 
->*Note:* The <statRound> <function> is equivalent to <HyperCard|HyperTalk's> "round" <function>.
+>*Note:* The <statRound> <function> is equivalent to
+> <HyperCard|HyperTalk's> "round" <function>.
 
-References: integer (keyword), compound (function), statRound (function), random (function), abs (function), extents (function), average (function), negative (glossary), HyperCard (glossary), return (glossary), decimal point (glossary), function (control_st)
+References: function (control structure), compound (function),
+statRound (function), random (function), abs (function),
+extents (function), average (function), negative (glossary),
+HyperCard (glossary), return (glossary), decimal point (glossary),
+integer (keyword)
 
 Tags: math
+

@@ -1,1 +1,0 @@
-# mobileGetContactData Unreliable

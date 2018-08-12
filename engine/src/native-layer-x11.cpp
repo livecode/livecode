@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -222,6 +222,8 @@ void MCNativeLayerX11::doSetVisible(bool p_visible)
 
 	if (p_visible)
 		doSetGeometry(m_object->getrect());
+		
+	updateInputShape();
 }
 
 void MCNativeLayerX11::doRelayer()
@@ -280,7 +282,7 @@ MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_nati
     return new MCNativeLayerX11(p_object, (x11::Window)p_native_view);
 }
 
-bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_view)
 {
 	return false;
 }

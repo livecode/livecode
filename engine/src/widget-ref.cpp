@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -83,6 +83,8 @@ bool MCWidgetBase::Create(MCNameRef p_kind)
     
     if (!MCScriptCreateInstanceOfModule(t_module, m_instance))
         return false;
+    
+    MCScriptSetInstanceHostPtr(m_instance, AsWidget());
     
     if (!DispatchRestricted(MCNAME("OnCreate")))
     {
@@ -148,51 +150,17 @@ bool MCWidgetBase::HasProperty(MCNameRef p_property)
 bool MCWidgetBase::HasHandler(MCNameRef p_handler)
 {
     MCTypeInfoRef t_signature;
-    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), p_handler, t_signature);
+    return MCScriptQueryHandlerSignatureOfModule(MCScriptGetModuleOfInstance(m_instance), p_handler, t_signature);
 }
 
 bool MCWidgetBase::SetProperty(MCNameRef p_property, MCValueRef p_value)
 {
-    MCWidgetRef t_old_widget;
-    t_old_widget = MCcurrentwidget;
-    MCcurrentwidget = AsWidget();
-	
-	MCWidget *t_host;
-	t_host = GetHost();
-	if (t_host != nil)
-		t_host -> lockforexecution();
-	
-    bool t_success;
-    t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
-	
-	if (t_host != nil)
-		t_host -> unlockforexecution();
-	
-    MCcurrentwidget = t_old_widget;
-    
-    return t_success;
+    return MCScriptSetPropertyInInstance(m_instance, p_property, p_value);
 }
 
 bool MCWidgetBase::GetProperty(MCNameRef p_property, MCValueRef& r_value)
 {
-    MCWidgetRef t_old_widget;
-    t_old_widget = MCcurrentwidget;
-    MCcurrentwidget = AsWidget();
-	
-	MCWidget *t_host;
-	t_host = GetHost();
-	if (t_host != nil)
-		t_host -> lockforexecution();
-	
-    bool t_success;
-    t_success = MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
-	
-	if (t_host != nil)
-		t_host -> unlockforexecution();
-	
-    MCcurrentwidget = t_old_widget;
-    
-    return t_success;
+    return MCScriptGetPropertyInInstance(m_instance, p_property, r_value);
 }
 
 static bool chunk_property_handler(MCNameRef p_property, MCNameRef p_chunk_name, bool p_is_get_operation, MCNameRef& r_handler)
@@ -223,7 +191,7 @@ bool MCWidgetBase::QueryPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_
         return false;
     
     MCTypeInfoRef t_handler_typeinfo;
-    if (!MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), *t_handler, t_handler_typeinfo))
+    if (!MCScriptQueryHandlerSignatureOfModule(MCScriptGetModuleOfInstance(m_instance), *t_handler, t_handler_typeinfo))
         return false;
 
     if (p_is_getter)
@@ -516,6 +484,45 @@ bool MCWidgetBase::OnMouseScroll(coord_t p_delta_x, coord_t p_delta_y, bool& r_b
     return DispatchBubbly(MCNAME("OnMouseScroll"), t_args . Ptr(), t_args . Count(), r_bubble);
 }
 
+bool MCWidgetBase::HandlesTouchEvents(void)
+{
+    if (HasHandler(MCNAME("OnTouchStart")) ||
+        HasHandler(MCNAME("OnTouchMove")) ||
+        HasHandler(MCNAME("OnTouchFinish")) ||
+        HasHandler(MCNAME("OnTouchCancel")))
+    {
+        return true;
+    }
+    
+    MCWidgetRef t_owner = GetOwner();
+    if (t_owner != nullptr)
+    {
+        return MCWidgetHandlesTouchEvents(t_owner);
+    }
+    
+    return false;
+}
+
+bool MCWidgetBase::OnTouchStart(bool& r_bubble)
+{
+    return DispatchBubbly(MCNAME("OnTouchStart"), nil, 0, r_bubble);
+}
+
+bool MCWidgetBase::OnTouchMove(bool& r_bubble)
+{
+    return DispatchBubbly(MCNAME("OnTouchMove"), nil, 0, r_bubble);
+}
+
+bool MCWidgetBase::OnTouchFinish(bool& r_bubble)
+{
+    return DispatchBubbly(MCNAME("OnTouchFinish"), nil, 0, r_bubble);
+}
+
+bool MCWidgetBase::OnTouchCancel(bool& r_bubble)
+{
+    return DispatchBubbly(MCNAME("OnTouchCancel"), nil, 0, r_bubble);
+}
+
 bool MCWidgetBase::OnGeometryChanged(void)
 {
     return Dispatch(MCNAME("OnGeometryChanged"));
@@ -686,6 +693,22 @@ void MCWidgetBase::RedrawRect(MCGRectangle *p_area)
     MCWidgetAsBase(t_owner) -> RedrawRect(p_area);
 }
 
+void MCWidgetBase::TriggerAll()
+{
+    if (IsRoot())
+    {
+        GetHost() -> signallisteners(P_CUSTOM);
+        return;
+    }
+    
+    MCWidgetRef t_owner;
+    t_owner = GetOwner();
+    if (t_owner == nil)
+        return;
+    
+    MCWidgetAsBase(t_owner) -> TriggerAll();
+}
+
 bool MCWidgetBase::CopyChildren(MCProperListRef& r_children)
 {
     if (m_children == nil)
@@ -848,25 +871,9 @@ MCGRectangle MCWidgetBase::MapRectFromGlobal(MCGRectangle rect)
 
 bool MCWidgetBase::DoDispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
-	MCWidgetRef t_old_widget_object;
-	t_old_widget_object = MCcurrentwidget;
-	MCcurrentwidget = AsWidget();
-
-	// Make sure the host object's 'scriptdepth' is incremented and
-	// decremented appropriately. This prevents script from deleting
-	// a widget which has its LCB code on the stack (just as it would if
-	// it had its LCS code on the stack).
-	MCWidget *t_host;
-	t_host = GetHost();
-	if (t_host != nil)
-		t_host -> lockforexecution();
-	
 	bool t_success;
 	MCAutoValueRef t_retval;
-	t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, &t_retval);
-	
-	if (t_host != nil)
-		t_host -> unlockforexecution();
+	t_success = MCScriptCallHandlerInInstanceIfFound(m_instance, p_event, x_args, p_arg_count, &t_retval);
 	
 	if (t_success)
 	{
@@ -874,30 +881,27 @@ bool MCWidgetBase::DoDispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_
 			*r_result = t_retval . Take();
 	}
 	
-	MCcurrentwidget = t_old_widget_object;
-	
 	return t_success;
 	
 }
 
 bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
-	MCStack *t_old_default_stack, *t_this_stack;
-	t_old_default_stack = MCdefaultstackptr;
+	MCStack *t_this_stack;
+	MCStackHandle t_old_defaultstack = MCdefaultstackptr;
 	
 	// Preserve the host ptr we get across the dispatch so that
 	// we definitely return things to the way they were.
 	MCWidget *t_host;
 	t_host = GetHost();
 	
-    MCObjectPtr t_old_target;
+    MCObjectPartHandle t_old_target;
     if (t_host)
     {
-        t_old_target = MCtargetptr;
-        
-        MCtargetptr . object = t_host;
-        MCtargetptr . part_id = 0;
-        t_this_stack = MCtargetptr . object -> getstack();
+        swap(t_old_target, MCtargetptr);
+        MCtargetptr = MCObjectPartHandle(t_host);
+
+        t_this_stack = MCtargetptr -> getstack();
         MCdefaultstackptr = t_this_stack;
     }
     else
@@ -909,9 +913,9 @@ bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_ar
 	
 	if (t_host != nil)
 	{
-		MCtargetptr = t_old_target;
-		if (MCdefaultstackptr == t_this_stack)
-			MCdefaultstackptr = t_old_default_stack;
+        swap(MCtargetptr, t_old_target);
+        if (MCdefaultstackptr == t_this_stack && t_old_defaultstack.IsValid())
+            MCdefaultstackptr = t_old_defaultstack;
 	}
 	else
 		MCEngineScriptObjectAllowAccess();
@@ -1055,6 +1059,11 @@ bool MCWidgetRoot::IsRoot(void) const
 
 MCWidget *MCWidgetRoot::GetHost(void) const
 {
+	if (!m_host.IsValid())
+	{
+		return nullptr;
+	}
+
     return m_host;
 }
 
@@ -1375,6 +1384,33 @@ bool MCWidgetOnMouseScroll(MCWidgetRef self, real32_t p_delta_x, real32_t p_delt
     return MCWidgetAsBase(self) -> OnMouseScroll(p_delta_x, p_delta_y, r_bubble);
 }
 
+/* TOUCH MESSAGE METHODS */
+
+bool MCWidgetHandlesTouchEvents(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self)->HandlesTouchEvents();
+}
+
+bool MCWidgetOnTouchStart(MCWidgetRef self, bool& r_bubble)
+{
+    return MCWidgetAsBase(self)->OnTouchStart(r_bubble);
+}
+
+bool MCWidgetOnTouchMove(MCWidgetRef self, bool& r_bubble)
+{
+    return MCWidgetAsBase(self)->OnTouchMove(r_bubble);
+}
+
+bool MCWidgetOnTouchFinish(MCWidgetRef self, bool& r_bubble)
+{
+    return MCWidgetAsBase(self)->OnTouchFinish(r_bubble);
+}
+
+bool MCWidgetOnTouchCancel(MCWidgetRef self, bool& r_bubble)
+{
+    return MCWidgetAsBase(self)->OnTouchCancel(r_bubble);
+}
+
 bool MCWidgetOnGeometryChanged(MCWidgetRef self)
 {
     return MCWidgetAsBase(self) -> OnGeometryChanged();
@@ -1413,6 +1449,11 @@ bool MCWidgetSetAnnotation(MCWidgetRef self, MCNameRef p_annotation, MCValueRef 
 void MCWidgetRedrawAll(MCWidgetRef self)
 {
     return MCWidgetAsBase(self) -> RedrawRect(nil);
+}
+
+void MCWidgetTriggerAll(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> TriggerAll();
 }
 
 bool MCWidgetPost(MCWidgetRef self, MCNameRef p_event, MCProperListRef p_args)
@@ -1499,6 +1540,40 @@ MCWidgetRoot *MCWidgetAsRoot(MCWidgetRef self)
     t_base = (MCWidgetBase *)MCValueGetExtraBytesPtr(self);
     MCAssert(t_base -> IsRoot());
     return static_cast<MCWidgetRoot *>(t_base);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void *MCWidgetEnter(MCScriptInstanceRef p_instance, void *p_host_ptr)
+{
+    void *t_cookie = MCcurrentwidget;
+    
+    auto t_widget = static_cast<MCWidgetRef>(p_host_ptr);
+    
+	// Make sure the host object's 'scriptdepth' is incremented and
+	// decremented appropriately. This prevents script from deleting
+	// a widget which has its LCB code on the stack (just as it would if
+	// it had its LCS code on the stack).
+    MCWidget *t_host = MCWidgetAsBase(t_widget)->GetHost();
+    if (t_host != nullptr)
+        t_host->lockforexecution();
+    
+    // Update the current widget context
+    MCcurrentwidget = t_widget;
+    
+    return t_cookie;
+}
+
+void MCWidgetLeave(MCScriptInstanceRef p_instance, void *p_host_ptr, void *p_cookie)
+{
+    auto t_old_widget = static_cast<MCWidgetRef>(p_cookie);
+    MCcurrentwidget = t_old_widget;
+
+    auto t_widget = static_cast<MCWidgetRef>(p_host_ptr);
+    
+    MCWidget *t_host = MCWidgetAsBase(t_widget)->GetHost();
+    if (t_host != nullptr)
+        t_host->unlockforexecution();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

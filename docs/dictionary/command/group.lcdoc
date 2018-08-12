@@ -4,13 +4,16 @@ Type: command
 
 Syntax: group [<objectList>]
 
-Summary: Creates a new <group> and adds the <selected> <object|objects> to it.
+Summary:
+Creates a new <group> and adds the <selected> <object|objects> to it.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 group
@@ -22,20 +25,36 @@ Example:
 group field "Help" and image "Help Icon" and graphic "Outline"
 
 Parameters:
-objectList: A list of object references, separated by the word "and".
+objectList:
+A list of object references, separated by the word "and".
+
+It:
+The <group> command places the ID property of the newly created
+object in the it variable.
 
 Description:
-Use the <group> <command> after <select|selecting> <object|objects> to make a <group> out of them.
+Use the <group> <command> after <select|selecting> <object|objects> to
+make a <group> out of them.
 
-If you specify an <objectList>, the specified <object|objects> are placed in the new <group>. Otherwise, the <selected> <object> or <object|objects> are placed in the <group>.
+If you specify an <objectList>, the specified <object|objects> are
+placed in the new <group>. Otherwise, the <selected> <object(glossary)>
+or <object|objects> are placed in the <group>.
 
-As with any group on a card, you can use the place <command> to make the newly-created <group> appear on other <card|cards>.
+As with any group on a card, you can use the place <command> to make the
+newly-created <group> appear on other <card|cards>.
 
->*Tip:*  To refer to the newly-created <group>, use the <last> <keyword> :
+>*Tip:*  To refer to the newly-created <group>, use the it variable immediately
+> after the 'group' command
+> :
 
-  group button "Yes" and button "No"
-  set the name of last group to "Do It"
+    group button "Yes" and button "No"
+    set the name of it to "Do It"
 
-References: selected (property), relayerGroupedControls (property), layer (property), newGroup (message), last (keyword), card (object), object (object), selectedObject (function), group (command), start editing (command), command (glossary), keyword (glossary), select (glossary)
+
+References: group (command), start editing (command),
+selectedObject (function), object (glossary), command (glossary),
+keyword (glossary), select (glossary), last (keyword), newGroup (message),
+card (object), selected (property), relayerGroupedControls (property),
+layer (property)
 
 Tags: objects

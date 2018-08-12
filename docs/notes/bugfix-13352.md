@@ -1,1 +1,0 @@
-# Crash when sorting lines of a field

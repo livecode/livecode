@@ -2,47 +2,94 @@ Name: revInitializeVideoGrabber
 
 Type: command
 
-Syntax: revInitializeVideoGrabber <parentStack>, <videoMethod>, <grabberRect> 
+Syntax: revInitializeVideoGrabber <parentStack>, <videoMethod>, <grabberRect>
 
-Summary: Opens the <video grabber> window.
+Summary:
+Opens the <video grabber> window.
+
+Associations: video library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: windows
 
-Platforms: desktop,web
+Platforms: desktop
 
-Security: disk,privacy
-
-Example:
-revInitializeVideoGrabber the short name of this stack, "QT","100,100,200,200"
+Security: disk, privacy
 
 Example:
 revInitializeVideoGrabber the short name of this stack, "VFW",the rect of this stack
 
 Parameters:
-parentStack: The short name of the stack that the video-grabber should attach itself to.
-videoMethod: Either "QT" or "VFW".
-grabberRect: The rectangle of the video grabber window, and consists of four integers separated by commas: the left, top, right, and bottom edges of the video grabber, in absolute (screen) coordinates.
+parentStack:
+The short name of the stack that the video-grabber should attach itself
+to. 
+
+videoMethod:
+Must be "VFW".
+
+grabberRect:
+The rectangle of the video grabber window, and consists of four integers
+separated by commas: the left, top, right, and bottom edges of the video
+grabber, in absolute (screen) coordinates.
 
 Description:
-Use the <revInitializeVideoGrabber> <command> to start up <video capture> capability.
+Use the <revInitializeVideoGrabber> <command> to start up <video
+capture> capability.
 
-You must use the <revInitializeVideoGrabber> <command> before using any of the other <command|commands> and <function|functions> in the <Video library>. The <command> does two things:
+You must use the <revInitializeVideoGrabber> <command> before using any
+of the other <command|commands> and <function|functions> in the <Video
+library>. The <command> does two things:
 
 * Loads the code necessary for video capture into memory.
 * Opens the video grabber window.
 
->*Note:* The <video grabber> is not a <stack window>, so you can't set its <properties>. To change the size and location of the <video grabber>, use the <revSetVideoGrabberRect> <command>.
 
-Once the video grabber is open, you can use the revVideoGrabDialog <command> to specify where the video camera (or other video source) is connected. Use the <revRecordVideo> <command> to record video from the camera to a <file>, or use the <revPreviewVideo> command to display video without saving it.
+>*Note:* The <video grabber> is not a <stack window>, so you can't set
+> its <properties>. To change the size and location of the <video
+> grabber>, use the <revSetVideoGrabberRect> <command>.
 
-To use QuickTime for video capture (on Mac OS, OS X, or Windows systems), specify "QT" as the <videoMethod>. To use <VFW|Video for Windows> (on <Windows|Windows systems>), specify "VFW".
+Once the video grabber is open, you can use the revVideoGrabDialog
+<command> to specify where the video camera (or other video source) is
+connected. Use the <revRecordVideo> <command> to record video from the
+camera to a <file>, or use the <revPreviewVideo> command to display
+video without saving it.
 
-To close the window and unload the video capture code, you should use the <revCloseVideoGrabber> <command> when you're done with <video capture>.
+To use <VFW|Video for Windows> (on <Windows|Windows systems>), specify
+"VFW".
 
->*Important:*  The <revInitializeVideoGrabber> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+To close the window and unload the video capture code, you should use
+the <revCloseVideoGrabber> <command> when you're done with <video
+capture>. 
 
-References: properties (property), file (keyword), revCloseVideoGrabber (command), revSetVideoGrabberRect (command), revRecordVideo (command), revPreviewVideo (command), revVideoGrabIdle (command), revStopPreviewingVideo (command), stack window (glossary), video capture (glossary), Windows (glossary), VFW (glossary), Standalone Application Settings (glossary), video grabber (glossary), standalone application (glossary), function (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+>*Important:*  The <revInitializeVideoGrabber> <command> is part of the 
+> <Video library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the
+> "Video Grabber" 
+> library checkbox is checked.
+
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect.
+
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
+
+References: revCloseVideoGrabber (command),
+revSetVideoGrabberRect (command), revRecordVideo (command),
+revPreviewVideo (command), revVideoGrabIdle (command),
+revStopPreviewingVideo (command), stack window (glossary),
+video capture (glossary), Windows (glossary), VFW (glossary),
+Standalone Application Settings (glossary), video grabber (glossary),
+standalone application (glossary), function (glossary),
+command (glossary), LiveCode custom library (glossary), file (keyword),
+Video library (library), properties (property)
 
 Tags: multimedia
+

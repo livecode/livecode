@@ -2,30 +2,41 @@ Name: scale
 
 Type: property
 
-Syntax: set the scale of {<EPSObject> | <videoClip>} to <ratio> 
+Syntax: set the scale of {<EPSObject> | <videoClip>} to <ratio>
 
-Summary: Specifies the size at which an <EPS|EPS object> or <video clip> is displayed.
+Summary:
+Specifies the size at which an <EPS|EPS object> or <video clip> is
+displayed. 
 
 Introduced: 1.0
 
-OS: linux,ios,android
+OS: linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the scale of videoClip "Splash" to 0.5 -- half size
 
 Value:
 The <scale> of an <EPS|EPS object> or <video clip> is a positive number.
-By default, the <scale> <property> of newly created <object|objects> is set to 1.
+By default, the <scale> <property> of newly created <object|objects> is
+set to 1.
 
 Description:
-Use the <scale> <property> to change the appearance of <EPS|EPS objects> or <video clip|video clips>.
+Use the <scale> <property> to change the appearance of <EPS|EPS objects>
+or <video clip|video clips>.
 
-The <scale> is the natural size of the <object|object's> content divided by the size of the rectangle the content is placed in. For example, if the <ratio> is 1, a <video clip> plays at the movie's normal size; if the <ratio> is 2, the <video clip> is blown up by a <factor> of 2.
+The <scale> is the natural size of the <object|object's> content divided
+by the size of the rectangle the content is placed in. For example, if
+the <ratio> is 1, a <video clip> plays at the movie's normal size; if
+the <ratio> is 2, the <video clip> is blown up by a <factor> of 2.
 
-For EPS objects, this property is supported only on Unix systems with Display PostScript installed.
+For EPS objects, this property is supported only on Unix systems with
+Display PostScript installed.
 
-References: scaleIndependently (property), height (property), property (glossary), EPS (glossary), factor (glossary), video clip (glossary), object (object)
+References: property (glossary), EPS (glossary), factor (glossary),
+video clip (glossary), object (glossary), scaleIndependently (property),
+height (property)
 
 Tags: multimedia
+

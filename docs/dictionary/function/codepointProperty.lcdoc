@@ -2,15 +2,17 @@ Name: codepointProperty
 
 Type: function
 
-Syntax: codepointToNum(<unicodeCodepoint>, <propertyName>)
+Syntax: codepointProperty(<unicodeCodepoint>, <propertyName>)
 
-Summary: Retrieves a Unicode Character Database (UCD )character property of a Unicode codepoint.
+Summary:
+Retrieves a Unicode Character Database (UCD )character property of a
+Unicode codepoint.
 
 Introduced: 7.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 get codepointProperty("A","Script") -- returns "Latin"
@@ -19,23 +21,44 @@ Example:
 put codePointProperty(codepoint 1 of tString, "Name")
 
 Parameters:
-unicodeCodepoint: A Unicode codepoint, or an expression which evaulates to a Unicode codepoint.
-propertyName (enum): The name of a supported UCD codepoint property Examples of supported properties, for a full list see http://www.unicode.org/versions/Unicode6.2.0/ch04.pdf
-- "Name": Unique name for the codepoint
-- "Numeric_Value": Numerical value, e.g. 4 for 4
-- "Quotation_Mark": True if the codepoint is a quotation mark
-- "Uppercase_Mapping": Uppercase equivalent of the codepoint
-- "Lowercase": True if the codepoint is lower-case
+unicodeCodepoint(string):
+A Unicode codepoint, or an expression which evaulates to a Unicode
+codepoint.
 
-Returns: The codepointProperty returns the value of the UCD property for the specified Unicode codepoint.
+propertyName (enum):
+The name of a supported UCD codepoint property. Examples of supported
+properties, for a full list see http://www.unicode.org/versions/Unicode6.2.0/ch04.pdf
+
+-   "Name": Unique name for the codepoint
+-   "Numeric_Value": Numerical value, e.g. 4 for 4
+-   "Quotation_Mark": True if the codepoint is a quotation mark
+-   "Uppercase_Mapping": Uppercase equivalent of the codepoint
+-   "Lowercase": True if the codepoint is lower-case
+
+
+Returns(string):
+The codepointProperty returns the value of the UCD property for the
+specified Unicode codepoint.
 
 Description:
-Use the <codepointProperty> function to retrieve a UCD property of a Unicode codepoint.
+Use the <codepointProperty> function to retrieve a UCD property of a
+Unicode codepoint.
 
-The Unicode standard and the associated Unicode Character Database (UCD) define a series of properties for each codepoint in the Unicode standard. A number of these properties are used internally by the engine during text processing but it is also possible to query these properties directly using this function.
+The Unicode standard and the associated Unicode Character Database (UCD)
+define a series of properties for each codepoint in the Unicode
+standard. A number of these properties are used internally by the engine
+during text processing but it is also possible to query these properties
+directly using this function.
 
-There are many properties available; please see the version 6.3.0 of the Unicode standard, Chapter 4 and Section 5 of Unicode Technical Report (TR)#44 for details on the names and values of properties. Property names may be specified with either spaces or underscores and are not case-sensitive.
+There are many properties available; please see the version 6.3.0 of the
+Unicode standard, Chapter 4 and Section 5 of Unicode Technical Report
+(TR)#44 for details on the names and values of properties. Property
+names may be specified with either spaces or underscores and are not
+case-sensitive.
 
->*Note:*  This function is not intended for general-purpose use; please use functions such as <toUpper> or the is operators instead.
+>*Note:*  This function is not intended for general-purpose use; please
+> use functions such as <toUpper> or the <is|equals> operators instead.
 
-References: codepoint (keyword), codepoints (keyword), nativeCharToNum (function), numToNativeChar (function), toUpper (function), numToCodepoint (function)
+References: nativeCharToNum (function), numToNativeChar (function),
+toUpper (function), numToCodepoint (function), codepoint (keyword),
+codepoints (keyword), equals (operator)

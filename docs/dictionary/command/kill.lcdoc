@@ -2,15 +2,16 @@ Name: kill
 
 Type: command
 
-Syntax: kill [<signalNumber> | <signalName>] process <processName> 
+Syntax: kill [{<signalNumber> | <signalName>}] process <processName>
 
-Summary: Signals or quits another <process> or application on the same system.
+Summary:
+Signals or quits another <process> or application on the same system.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: process
 
@@ -24,17 +25,40 @@ Example:
 kill QUIT process it
 
 Parameters:
-signalNumber: The number of the Unix signal to send to the process. The signalName is the name of a Unix signal, minus the leading "SIG". (For example, to send SIGHUP to a process, use HUP as the signalName.)  (The signalNumber or signalName parameter is ignored on Mac OS and Windows systems.)
-signalName: 
-processName: The name of a currently executing process.
+signalNumber:
+The number of the Unix signal to send to the process. 
+>*Note:* The <signalNumber> parameter is ignored on Mac OS and Windows systems.
+
+signalName:
+The name of a Unix signal, minus the leading "SIG". (For example, to
+send SIGHUP to a process, use HUP as the <signalName>.)
+>*Note:* The <signalName> parameter is ignored on Mac OS and Windows systems.
+
+processName:
+The name of a currently executing process.
 
 Description:
-Use the <kill> command to send a signal to a <process> (on <Unix|Unix systems>), or to terminate a <process> with extreme prejudice.
+Use the <kill> command to send a signal to a <process> (on <Unix|Unix
+systems>), or to terminate a <process> with extreme prejudice.
 
-On Mac OS systems, the <kill> <command> sends a "Quit Application" <Apple event> to the specified application.
+On Mac OS systems, the <kill> <command> sends a "Quit Application"
+<Apple event> to the specified application.
 
-On Unix systems, the <kill> command sends the specified signal to the <process>. If no signal is specified, the <kill> command sends SIGTERM. Check the <Unix> documentation for information about available signals. The <file> /usr/include/sys/signal.h lists signals and their corresponding signal numbers.
+On Unix systems, the <kill> command sends the specified signal to the
+<process>. If no signal is specified, the <kill> command sends SIGTERM.
+Check the <Unix> documentation for information about available signals.
+The <file> /usr/include/sys/signal.h lists signals and their
+corresponding signal numbers.
 
-If possible, use the <close process> command instead of the <kill> <command> to terminate a <process>. The <kill> <command> causes an immediate <exit>, and may prevent the <process> from removing temporary <files> or doing other cleanup tasks.
+If possible, use the <close process> command instead of the <kill>
+<command> to terminate a <process>. The <kill> <command> causes an
+immediate <exit>, and may prevent the <process> from removing temporary
+<files> or doing other cleanup tasks.
 
-References: file (keyword), signal (message), open process (command), quit (command), close process (command), launch (command), openProcessIDs (function), sysError (function), files (function), processID (function), openProcesses (function), Unix (glossary), Apple Event (glossary), command (glossary), process (glossary), exit (control_st)
+References: open process (command), quit (command),
+close process (command), launch (command), exit (control structure),
+openProcessIDs (function), sysError (function), files (function),
+processID (function), openProcesses (function), Unix (glossary),
+Apple Event (glossary), command (glossary), process (glossary),
+file (keyword), signal (message)
+

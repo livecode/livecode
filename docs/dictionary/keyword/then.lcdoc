@@ -4,32 +4,45 @@ Type: keyword
 
 Syntax: then
 
-Summary: Used in an <if> <control structure> to separate the condition from the <statement|statements> that are <execute|executed> if the condition is true.
+Summary:
+Used in an <if> <control structure> to separate the condition from the
+<statement|statements> that are <execute|executed> if the condition is
+true. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if a is true then beep
 
 Description:
-Use the <then> <keyword> before the <statement|statements> you want to <execute> if a condition is true.
+Use the <then> <keyword> before the <statement|statements> you want to
+<execute> if a condition is true.
 
-If you want to execute a single statement, place the <then> <keyword> before the <statement> on the same line, as in these examples:
+If you want to execute a single statement, place the <then> <keyword>
+before the <statement> on the same line, as in these examples:
 
-  if 1+1 = 2 then doSomethingTrite
+    if 1+1 = 2 then doSomethingTrite
+    
+or
 
-  if someConditionObtains()
-  then performAnAction
+    if someConditionObtains()
+    then performAnAction
 
-If you want to execute multiple statements, place the <then> <keyword> on the line before the list of <statement|statements>, as in this example:
+If you want to execute multiple statements, place the <then> <keyword>
+on the line before the list of <statement|statements>, 
+as in this example: 
 
-  if the backgroundColor of this stack is white then
-    doFirstAction
-    doAnotherAction
-  end if
+    if the backgroundColor of this stack is white then
+        doFirstAction
+        doAnotherAction
+    end if
 
-References: else (keyword), end if (keyword), keyword (glossary), statement (glossary), execute (glossary), control structure (glossary), if (control_st)
+
+References: if (control structure), keyword (glossary),
+statement (glossary), execute (glossary), control structure (glossary),
+else (keyword), end if (keyword)
+

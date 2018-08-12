@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -56,14 +56,23 @@ struct MCPlayerCallback
 {
     MCNameRef message;
     MCNameRef parameter;
-    uint32_t time;
+    MCPlayerDuration time;
 };
+
+typedef MCObjectProxy<MCPlayer>::Handle MCPlayerHandle;
 
 // SN-2014-07-23: [[ Bug 12893 ]] MCControl must be the first class inherited
 //  since we use &MCControl::kPropertyTable
-class MCPlayer : public MCControl, public MCPlayerInterface
+class MCPlayer : public MCControl, public MCMixinObjectHandle<MCPlayer>, public MCPlayerInterface
 {
-    MCPlayer *nextplayer;
+public:
+    
+    enum { kObjectType = CT_PLAYER };
+    using MCMixinObjectHandle<MCPlayer>::GetHandle;
+
+private:
+    
+    MCPlayerHandle nextplayer;
     
 	MCPlatformPlayerRef m_platform_player;
     MCPlayerCallback *m_callbacks;
@@ -77,11 +86,6 @@ class MCPlayer : public MCControl, public MCPlayerInterface
     bool m_scrub_forward_is_pressed : 1;
     bool m_modify_selection_while_playing : 1;
 
-    bool m_is_attached : 1;
-    bool m_should_attach : 1;
-
-    bool m_should_recreate : 1;
-
 	static MCPropertyInfo kProperties[];
     static MCObjectPropertyTable kPropertyTable;
 
@@ -90,13 +94,15 @@ public:
 	MCPlayer(const MCPlayer &sref);
 	virtual ~MCPlayer();
     
-    MCPlayer *getnextplayer()
+    MCPlayerHandle getnextplayer()
     {
-        return (MCPlayer*)nextplayer;
+        return nextplayer;
     }
     
 	// virtual functions from MCObject    
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
     
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
@@ -111,13 +117,13 @@ public:
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
-	virtual void applyrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
+	// IM-2016-06-01: [[ Bug 17700 ]] Override toolchanged to pause player when editing
+    virtual void toolchanged(Tool p_new_tool);
+
+	virtual MCRectangle GetNativeViewRect(const MCRectangle &p_object_rect);
+	
     
 	// MW-2011-09-23: [[ Bug ]] Implement buffer / unbuffer at the point of
 	//   selection to stop redraw issues.
@@ -126,6 +132,9 @@ public:
     
 	// MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);
+    
+    virtual void removereferences(void);
+    void removefromplayers(void);
     
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);
@@ -145,10 +154,10 @@ public:
     //
 	virtual bool getversion(MCStringRef& r_string);
 	virtual void freetmp();
-	virtual uint4 getduration();    //get movie duration/length
-	virtual uint4 gettimescale();  //get movie time scale
-	virtual uint4 getmoviecurtime();//get movie current time
-	virtual void setcurtime(uint4 curtime, bool notify);
+	virtual MCPlayerDuration getduration();    //get movie duration/length
+	virtual MCPlayerDuration gettimescale();  //get movie time scale
+	virtual MCPlayerDuration getmoviecurtime();//get movie current time
+	virtual void setcurtime(MCPlayerDuration curtime, bool notify);
 	virtual void setselection(bool notify);                  //set movie selection
 	virtual void setlooping(Boolean loop);        //to loop or not to loop a movie
 	virtual void setplayrate();                   //set the movie playing rate
@@ -165,6 +174,12 @@ public:
 	virtual uint2 getloudness();
     virtual void updateloudness(int2 newloudness);
 	virtual void setloudness();
+	virtual double getleftbalance();
+	virtual void setleftbalance(double p_left_balance);
+	virtual double getrightbalance();
+	virtual void setrightbalance(double p_right_balance);
+	virtual double getaudiopan();
+	virtual void setaudiopan(double p_pan);
 
     virtual Boolean prepare(MCStringRef options);
     virtual Boolean playstart(MCStringRef options);
@@ -175,7 +190,7 @@ public:
     virtual void setvolume(uint2 tloudness);
     virtual void setfilename(MCStringRef vcname, MCStringRef fname, Boolean istmp);
     
-	virtual void setstarttime(uint4 stime)
+	virtual void setstarttime(MCPlayerDuration stime)
 	{
         if (stime <= 0)
             starttime = 0;
@@ -185,49 +200,44 @@ public:
             starttime = stime;
         
         if (hasfilename())
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypePlayerDuration, &starttime);
         layer_redrawrect(getcontrollerrect());
 	}
     
-	virtual void setendtime(uint4 etime)
+	virtual void setendtime(MCPlayerDuration etime)
     {
         if (hasfilename())
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypePlayerDuration, &endtime);
         layer_redrawrect(getcontrollerrect());
 	}
 	
     real8 getplayrate();
     void updateplayrate(real8 p_rate);
-    uint4 getmovieloadedtime();
+    MCPlayerDuration getmovieloadedtime();
 	
     Boolean isdisposable()
 	{
 		return disposable;
 	}
-	void setscale(real8 &s)
-	{
-		scale = s;
-    }
 
-	void scale_native_rect(void);
     //void playfast(Boolean forward);
     //void playfastforward();
     //void playfastback();
 	
-	uint4 getstarttime()
+	MCPlayerDuration getstarttime()
 	{
 		return starttime;
 	}
-	uint4 getendtime()
+	MCPlayerDuration getendtime()
 	{
 		return endtime;
 	}
-	int4 getlasttime()
+	MCPlayerDuration getlasttime()
 	{
 		return lasttime;
 	}
 
-	virtual void setlasttime(int4 ltime)
+	virtual void setlasttime(MCPlayerDuration ltime)
 	{
 		lasttime = ltime;
 	}
@@ -279,11 +289,11 @@ public:
 	virtual void SetFileName(MCExecContext& ctxt, MCStringRef p_name);
 	virtual void GetDontRefresh(MCExecContext& ctxt, bool& r_setting);
 	virtual void SetDontRefresh(MCExecContext& ctxt, bool setting);
-	virtual void GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time);
-	virtual void SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time);
-	virtual void GetDuration(MCExecContext& ctxt, uinteger_t& r_duration);
+	virtual void GetCurrentTime(MCExecContext& ctxt, double& r_time);
+	virtual void SetCurrentTime(MCExecContext& ctxt, double p_time);
+	virtual void GetDuration(MCExecContext& ctxt, double& r_duration);
     // PM-2014-11-03: [[ Bug 13920 ]] Make sure we support loadedTime property
-    virtual void GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_loaded_time);
+    virtual void GetLoadedTime(MCExecContext& ctxt, double& r_loaded_time);
 	virtual void GetLooping(MCExecContext& ctxt, bool& r_setting);
 	virtual void SetLooping(MCExecContext& ctxt, bool setting);
 	virtual void GetPaused(MCExecContext& ctxt, bool& r_setting);
@@ -292,10 +302,10 @@ public:
 	virtual void SetAlwaysBuffer(MCExecContext& ctxt, bool setting);
 	virtual void GetPlayRate(MCExecContext& ctxt, double& r_rate);
 	virtual void SetPlayRate(MCExecContext& ctxt, double p_rate);
-	virtual void GetStartTime(MCExecContext& ctxt, uinteger_t*& r_time);
-	virtual void SetStartTime(MCExecContext& ctxt, uinteger_t* p_time);
-	virtual void GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time);
-	virtual void SetEndTime(MCExecContext& ctxt, uinteger_t* p_time);
+	virtual void GetStartTime(MCExecContext& ctxt, double*& r_time);
+	virtual void SetStartTime(MCExecContext& ctxt, double* p_time);
+	virtual void GetEndTime(MCExecContext& ctxt, double*& r_time);
+	virtual void SetEndTime(MCExecContext& ctxt, double* p_time);
 	virtual void GetShowBadge(MCExecContext& ctxt, bool& r_setting);
 	virtual void SetShowBadge(MCExecContext& ctxt, bool setting);
 	virtual void GetShowController(MCExecContext& ctxt, bool& r_setting);
@@ -306,7 +316,7 @@ public:
 	virtual void SetShowSelection(MCExecContext& ctxt, bool setting);
 	virtual void GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks);
 	virtual void SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks);
-	virtual void GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale);
+	virtual void GetTimeScale(MCExecContext& ctxt, double& r_scale);
 	virtual void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height);
 	virtual void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width);
 	virtual void GetMovieControllerId(MCExecContext& ctxt, integer_t& r_id);
@@ -323,7 +333,13 @@ public:
 	virtual void SetTilt(MCExecContext& ctxt, double p_tilt);
 	virtual void GetZoom(MCExecContext& ctxt, double& r_zoom);
 	virtual void SetZoom(MCExecContext& ctxt, double p_zoom);
-    
+	virtual void GetLeftBalance(MCExecContext& ctxt, double &r_left_balance);
+	virtual void SetLeftBalance(MCExecContext& ctxt, double p_left_balance);
+	virtual void GetRightBalance(MCExecContext& ctxt, double &r_right_balance);
+	virtual void SetRightBalance(MCExecContext& ctxt, double p_right_balance);
+	virtual void GetAudioPan(MCExecContext& ctxt, double &r_pan);
+	virtual void SetAudioPan(MCExecContext& ctxt, double p_pan);
+
 	virtual void GetTracks(MCExecContext& ctxt, MCStringRef& r_tracks);
     
 	virtual void GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& r_constraints);
@@ -379,11 +395,16 @@ public:
         return t_has_invalid_filename;
     }
     
-    void markerchanged(uint32_t p_time);
+    void markerchanged(MCPlatformPlayerDuration p_time);
     void selectionchanged(void);
     void currenttimechanged(void);
 	void moviefinished(void);
     
+	// IM-2016-04-22: [[ WindowsPlayer ]] Returns the area in which the video will display for a player with the given rect.
+	MCRectangle getvideorect(const MCRectangle &p_player_rect);
+	// IM-2016-04-22: [[ WindowsPlayer ]] Returns the player rect required to display video content in the given area.
+	MCRectangle getplayerrectforvideorect(const MCRectangle &p_video_rect);
+	
     MCRectangle getcontrollerrect(void);
     MCRectangle getcontrollerpartrect(const MCRectangle& total_rect, int part);
 
@@ -422,6 +443,17 @@ public:
     void detachplayer(void);
     
     void setmirrored(bool p_mirrored);
+    
+    // MCplayers handling
+    static void StopPlayers(MCStack* p_stack);
+    static void SyncPlayers(MCStack* p_stack, MCContext* p_context);
+    static void ClosePlayers(MCStack* p_stack);
+    static void AttachPlayers(MCStack* p_stack);
+    static void DetachPlayers(MCStack* p_stack);
+    static void SetPlayersVolume(uinteger_t p_volume);
+    
+    static MCPlayer* FindPlayerByName(MCNameRef p_name);
+    static MCPlayer* FindPlayerById(uint32_t p_id);
 };
 #endif
 

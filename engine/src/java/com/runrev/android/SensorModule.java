@@ -219,6 +219,9 @@ class SensorModule
         boolean m_use_gps;
         boolean m_gps_available;
         
+        // Offset (in seconds) between GPS monotonic timestamps and wall-clock time
+        double m_timestamp_offset;
+        
         Location m_last_location;
         
         LocationManager m_location_manager;
@@ -228,6 +231,20 @@ class SensorModule
         
         public LocationTracker()
         {
+            // Get the number of seconds since the device was booted
+            double t_seconds_since_boot;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
+                t_seconds_since_boot = SystemClock.elapsedRealtimeNanos() / 1.0e9;
+            else
+                t_seconds_since_boot = SystemClock.elapsedRealtime() / 1.0e3;
+            
+            // Get the current wall-clock time in seconds since the Unix epoch
+            double t_seconds_since_epoch = System.currentTimeMillis() / 1000.0;
+            
+            // Calculate the offset between the since-boot monotonic clock and
+            // the current wall-clock time
+            m_timestamp_offset = t_seconds_since_epoch - t_seconds_since_boot;
+            
             m_location_manager = (LocationManager)m_engine.getContext().getSystemService(Context.LOCATION_SERVICE);
             m_network_location_listener = new LocationListener()
             {
@@ -345,8 +362,22 @@ class SensorModule
                 else
                     t_course = -1.0f;
 
+                // Get an approximate wall-clock time of the fix. This can drift
+                // over time if the wall-clock time is adjusted (forwards or
+                // backwards) but for location-tracking purposes, a monotonic
+                // timestamp is more important than one that matches the wall-
+                // clock time.
+                //
+                // For devices before Jelly Bean, this isn't possible and so the
+                // normal wall-clock time has to be used instead.
+                double t_timestamp;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
+                    t_timestamp = (location.getElapsedRealtimeNanos() / 1.0e9) + m_timestamp_offset;
+                else
+                    t_timestamp = location.getTime() / 1000.0;
+                
                 m_engine.onLocationChanged(location.getLatitude(), location.getLongitude(), location.getAltitude(),
-                                           location.getTime() / 1.0e3f, location.getAccuracy(), t_speed, t_course);
+                                           t_timestamp, location.getAccuracy(), t_speed, t_course);
             }
         }
         

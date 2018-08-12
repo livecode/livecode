@@ -4,44 +4,80 @@ Type: property
 
 Syntax: set the lookAndFeel to {"Appearance Manager"|Macintosh|Motif|"Windows 95"}
 
-Summary: Specifies which <platform> the <user interface|user-interface> <control|controls> resemble.
+Summary:
+Specifies which <platform> the <user interface|user-interface>
+<control|controls> resemble.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-set the lookAndFeel to "Motif
+set the lookAndFeel to "Motif"
 
 Example:
 set the lookAndFeel to the selectedLine of field "Appearance"
 
 Value (enum):
--Appearance Manager  : standard Windows XP, Mac OS and OS X look and feel
--Macintosh  : emulated Mac OS Platinum appearance, used regardless of current theme
--Motif  : standard Motif look and feel for Unix systems
--Windows 95  : standard Windows look and feel
+
+-   Appearance Manager: standard Windows XP, Mac OS and OS X look and
+    feel 
+-   Macintosh: emulated Mac OS Platinum appearance, used regardless of
+    current theme
+-   Motif: standard Motif look and feel for Unix systems
+-   Windows 95: standard Windows look and feel
+
 
 Description:
-Use the <lookAndFeel> <property> to preview the <appearance> of <stacks> on a <platform> other than the one you're developing on.
+Use the <lookAndFeel> <property> to preview the <appearance> of <stacks>
+on a <platform> other than the one you're developing on.
 
-The <lookAndFeel> <property> determines the <appearance> and <behavior> of <scrollbar|scrollbars>, <object> borders, <checkbox|checkboxes> and <radio button|radio buttons>, and <button menu|button menus>. It also changes the <appearance> of the <active (focused) control(glossary)>.
+The <lookAndFeel> <property> determines the <appearance> and <behavior>
+of <scrollbar|scrollbars>, <object(glossary)> borders,
+<checkbox|checkboxes> and <radio button|radio buttons>, and 
+<button menu|button menus>. It also changes the <appearance> of the 
+<active control|active (focused) control>.
 
-However, changing this property does not provide an exact representation of the appearance and behavior of the stack on the target platform. For example, cursors do not change, and neither do the placement of the menu bar or the way window dragging and resizing works. Only the appearance of controls is affected.
+However, changing this property does not provide an exact representation
+of the appearance and behavior of the stack on the target platform. For
+example, cursors do not change, and neither do the placement of the menu
+bar or the way window dragging and resizing works. Only the appearance
+of controls is affected.
 
-By default, the <lookAndFeel> is set to the <platform> the <stack> is being used on. On Windows XP, <Mac OS> and <OS X|OS X systems>, the <lookAndFeel> is set to "Appearance Manager" by <default>.
+By default, the <lookAndFeel> is set to the <platform> the <stack> is
+being used on. On Windows XP, <Mac OS> and <OS X|OS X systems>, the
+<lookAndFeel> is set to "Appearance Manager" by <default>.
 
-The "Appearance Manager" option can be used only on Windows XP, Mac OS and OS X systems. If you set the <lookAndFeel> to "Appearance Manager" on a <Unix>  <system>, it is reset to "Motif". Similarly, tf you set the <lookAndFeel> to "Appearance Manager" on a pre-Windows XP <system>, it is reset to "Wondows 95".
+The "Appearance Manager" option can be used only on Windows XP, Mac OS
+and OS X systems. If you set the <lookAndFeel> to "Appearance Manager"
+on a <Unix> <system>, it is reset to "Motif". Similarly, tf you set the
+<lookAndFeel> to "Appearance Manager" on a pre-Windows XP <system>, it
+is reset to "Wondows 95".
 
-On Mac OS systems, the native Appearance Manager drawing routines are much slower than the emulated Platinum routines. Setting the <lookAndFeel> to "Macintosh" rather than "Appearance Manager" will speed up drawing of <control|controls>.
+On Mac OS systems, the native Appearance Manager drawing routines are
+much slower than the emulated Platinum routines. Setting the
+<lookAndFeel> to "Macintosh" rather than "Appearance Manager" will speed
+up drawing of <control|controls>.
 
->*Note:* The phrases "Appearance Manager" and "Windows 95" must be enclosed in quotes because they consist of more than one <word>.
+>*Note:* The phrases "Appearance Manager" and "Windows 95" must be
+> enclosed in quotes because they consist of more than one <word>.
 
 Changes:
-The "Appearance Manager" option was introduced in version 1.1. In previous versions, LiveCode applications always used the Platinum appearance on Mac OS systems, regardless of which theme was selected on the user's system.
+The "Appearance Manager" option was introduced in version 1.1. In
+previous versions, LiveCode applications always used the Platinum
+appearance on Mac OS systems, regardless of which theme was selected on
+the user's system.
 
-References: emacsKeyBindings (property), activatePalettes (property), hiliteBorder (property), word (keyword), default (keyword), system (keyword), focus (command), stacks (function), platform (function), property (glossary), checkbox (glossary), behavior (glossary), Mac OS (glossary), user interface (glossary), OS X (glossary), appearance (glossary), Unix (glossary), radio button (glossary), active control (glossary), button menu (glossary), scrollbar (object), object (object), stack (object), control (object)
+References: focus (command), stacks (function), platform (function),
+property (glossary), checkbox (glossary), behavior (glossary),
+Mac OS (glossary), user interface (glossary), OS X (glossary),
+appearance (glossary), Unix (glossary), radio button (glossary),
+active control (glossary), button menu (glossary), object (glossary),
+control (glossary), word (keyword), default (keyword), system (keyword), 
+scrollbar (object), stack (object), emacsKeyBindings (property),
+activatePalettes (property), hiliteBorder (property)
 
 Tags: ui
+

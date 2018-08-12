@@ -1,12 +1,16 @@
 Name: handle
 
-Synonyms: handle,handled,handling
+Synonyms: handle, handled, handling
 
 Type: glossary
 
 Description:
-To intercept a <message> or <function call>. An <object> handles a <message> or <function call> if the <object|object's> <script> contains a <handler> for it.
+To intercept a <message> or <function call>. An <object(glossary)>
+handles a <message> or <function call> if the <object|object's> <script>
+contains a <handler> for it.
 
-References: handler (glossary), script (glossary), message (glossary), function call (glossary), object (object)
+References: handler (glossary), script (glossary), message (glossary),
+function call (glossary), object (glossary)
 
 Tags: objects
+

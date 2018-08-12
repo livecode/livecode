@@ -1,0 +1,1 @@
+# Prevent hang when parsing invalid SVG data after 'z'

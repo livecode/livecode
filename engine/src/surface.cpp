@@ -17,11 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "prefix.h"
 #include "typedefs.h"
 
-#pragma optimize("ags", on)
-
 ////
 
 #ifdef __VISUALC__
+#pragma optimize("ags", on)
 #define INLINE __forceinline
 #else
 #define INLINE inline

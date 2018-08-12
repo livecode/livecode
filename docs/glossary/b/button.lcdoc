@@ -2,13 +2,18 @@ Name: button
 
 Synonyms: button
 
-Type: object
+Type: glossary
 
 Description:
-An <object> you click to control some aspect of <behavior>. 
- 
-LiveCode <button|buttons> include push buttons, <radio button|radio buttons>, <checkbox|checkboxes>, <menu item|menu items>, and <menu|menus>.
+An <object(glossary)> you click to control some aspect of <behavior>. 
 
-References: checkbox (glossary), radio button (glossary), behavior (glossary), menu item (glossary), menu (glossary), object (object), button (object)
+LiveCode <button|buttons> include push buttons, <radio button|radio
+buttons>, <checkbox|checkboxes>, <menu item|menu items>, and
+<menu|menus>. 
+
+References: checkbox (glossary), radio button (glossary),
+behavior (glossary), menu item (glossary), menu (glossary),
+object (glossary), button (glossary)
 
 Tags: objects
+

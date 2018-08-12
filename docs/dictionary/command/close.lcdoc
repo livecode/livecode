@@ -2,15 +2,16 @@ Name: close
 
 Type: command
 
-Syntax: close <stack> 
+Syntax: close <stack>
 
-Summary: Closes a <stack window>.
+Summary:
+Closes a <stack window>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 close stack "Zoom Window"
@@ -19,17 +20,31 @@ Example:
 close this stack
 
 Parameters:
-stack: Any open stack.
+stack:
+Any open stack.
 
 Description:
 Use the <close> <command> to close a <stack> without user intervention.
 
-The <close> <command> closes the <stack window> immediately, but it does not necessarily remove the <stack> from memory. A <stack> that is closed but in memory still takes up space in RAM and its <object|objects> are still accessible to <script|scripts>.
+The <close> <command> closes the <stack window> immediately, but it does
+not necessarily remove the <stack> from memory. A <stack> that is closed
+but in memory still takes up space in RAM and its <object|objects> are
+still accessible to <script|scripts>.
 
-If the stack's <destroyStack> <property> is set to false, or there are other <stacks> in the same file that are still open, closing the <stack> does not purge the stack from memory.
+If the stack's <destroyStack> <property> is set to false, or there are
+other <stacks> in the same file that are still open, closing the <stack>
+does not purge the stack from memory.
 
-If the handler that closes the stack is in the script of the stack (or in the script of an object in the stack) and the stack's <destroyStack> <property> is true, the <stack window> is closed immediately, but the stack is not removed from memory until after the <handler> completes.
+If the handler that closes the stack is in the script of the stack (or
+in the script of an object in the stack) and the stack's <destroyStack>
+<property> is true, the <stack window> is closed immediately, but the
+stack is not removed from memory until after the <handler> completes.
 
-References: destroyStack (property), closeStackRequest (message), close file (command), close printing (command), revCloseVideoGrabber (command), stack (object), object (object), property (glossary), handler (glossary), script (glossary), command (glossary), stack window (glossary), stacks (function)
+References: close file (command), close printing (command),
+revCloseVideoGrabber (command), stacks (function), object (glossary),
+property (glossary), handler (glossary), script (glossary),
+command (glossary), stack window (glossary), closeStackRequest (message),
+stack (object), destroyStack (property)
 
 Tags: windowing
+

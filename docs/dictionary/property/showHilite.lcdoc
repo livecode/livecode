@@ -4,27 +4,40 @@ Type: property
 
 Syntax: set the showHilite of <button> to {true | false}
 
-Summary: Specifies whether the box or circle belonging to <checkbox|checkboxes> and <radio button|radio buttons> is shown.
+Summary:
+Specifies whether the box or circle belonging to <checkbox|checkboxes>
+and <radio button|radio buttons> is shown.
 
 Associations: button
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the showHilite of button 7 to true
 
-Value (bool):The <showHilite> of a button is true or false.
-By default, the <showHilite> <property> of newly created <button|buttons> is set to false.
+Value (bool):
+The <showHilite> of a button is true or false.
+By default, the <showHilite> <property> of newly created
+<button|buttons> is set to false.
 
 Description:
-Use the <showHilite> <property> for <radio button|radio buttons> and checkboxes in menus.
+Use the <showHilite> <property> for <radio button|radio buttons> and
+checkboxes in menus.
 
-If the <showHilite> of a <radio button> or <checkbox> <button(keyword)> is true, the circle or square is displayed only if the <button(object)|button's> <hilite> is true. If the <showHilite> of a <button(keyword)> which is a <menu item> in a <stack menu> is true, the box or circle is never shown.
+If the <showHilite> of a <radio button> or <checkbox> <button(keyword)>
+is true, the circle or square is displayed only if the
+<button(object)|button's> <hilite> is true. If the <showHilite> of a
+<button(keyword)> which is a <menu item> in a <stack menu> is true, the
+box or circle is never shown.
 
-References: hilite (property), autoArm (property), autoHilite (property), showBorder (property), button (keyword), hilite (command), button (object), property (glossary), stack menu (glossary), radio button (glossary), menu item (glossary), checkbox (glossary)
+References: hilite (command), property (glossary), stack menu (glossary),
+radio button (glossary), menu item (glossary), checkbox (glossary),
+button (keyword), button (object), hilite (property), autoArm (property),
+autoHilite (property), showBorder (property)
 
 Tags: ui
+

@@ -1,22 +1,24 @@
 Name: borderColor
 
+Synonyms: fourthcolor, markerfillcolor
+
 Type: property
 
 Syntax: set the borderColor of <object> to {empty | <colorName> | <RGBColor>}
 
 Syntax: set the borderColor of <line> of <field> to {empty | <colorName> | <RGBColor>}
 
-Summary: Specifies the color of an <object|object's> border.
+Summary:
+Specifies the color of an <object|object's> border.
 
-Synonyms: fourthColor,markerFillColor
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the borderColor of field "Alert" to "red"
@@ -31,43 +33,107 @@ Example:
 set the borderColor of line 1 of field 1 to "255,0,0"
 
 Parameters:
-colorName: Any standard color name.
-RGBColor: Consists of three comma-separated integers between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three hexadecimal numbers, one for each of red, green, and blue.
+colorName:
+Any standard color name.
+
+RGBColor:
+Consists of three comma-separated integers between zero and 255,
+specifying the level of each of red, green, and blue; or an HTML-style
+color consisting of a hash mark (#) followed by three hexadecimal
+numbers, one for each of red, green, and blue.
 
 Description:
-Use the <borderColor> <property> to specify the border color of an object or paragraph of text in a field.
+Use the <borderColor> <property> to specify the border color of an
+object or paragraph of text in a field.
 
 By default, the <borderColor> for all <object|objects> is empty.
 
-Setting the <borderColor> of an <object> to empty allows the <borderColor> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what color is used for the <object>, even if its own <borderColor> is empty.
+Setting the <borderColor> of an <object(glossary)> to empty allows the
+<borderColor> of the <object|object's> <owner> to show through. Use the
+<effective> <keyword> to find out what color is used for the
+<object(glossary)>, even if its own <borderColor> is empty.
 
-If the object's showBorder <property> is false, the <borderColor> has no effect. If the <object|object's> <threeD> <property> is true, the <topColor> and <bottomColor> are used to draw the border, rather than the <borderColor>.
+If the object's showBorder <property> is false, the <borderColor> has no
+effect. If the <object|object's> <threeD> <property> is true, the
+<topColor> and <bottomColor> are used to draw the border, rather than
+the <borderColor>.
 
-The setting of the <borderColor> <property> has different effects, depending on the <object type>:
+The setting of the <borderColor> <property> has different effects,
+depending on the <object type>:
 
-* The <borderColor> of a <stack> determines the <borderColor> of each <object> in the <stack> that does not have its own <borderColor>.
+* The <borderColor> of a <stack> determines the <borderColor> of each
+  <object(glossary)> in the <stack> that does not have its own
+  <borderColor>. 
 
-* The <borderColor> of a <card> or <group> determines the color of the border around the <card> or <group>, as well as determining the <borderColor> of each <object> in the <card> or <group> that does not have its own <borderColor>.
 
-* The <borderColor> of a <button(keyword)> determines the color of the border around the <button(keyword)>. If the <button(object)|button's> <style> is "checkbox" or "radioButton", the <borderColor> has no effect. If the button is a <button menu>, the <borderColor> has no effect unless the <button(object)|button's> <menuMode> <property> is set to "comboBox" or "popup". If the <button(object)|button's> <threeD> <property> is set to true, the <borderColor> has no effect regardless of the <button(object)|button's> <style>.
+* The <borderColor> of a <card> or <group> determines the color of the
+  border around the <card> or <group>, as well as determining the
+  <borderColor> of each <object(glossary)> in the <card> or <group> that
+  does not have its own <borderColor>.
 
-* The <borderColor> of a <field(keyword)> determines the color of the border around a scrolling <field(object)|field's> scrollbar, the color of the grid lines if the <field(object)|field's> <hGrid> or <vGrid> <property> is true, and the color of the outline around any text in the <field(keyword)> whose <textStyle> is set to "box".
 
-* The <borderColor> of a <scrollbar> is the color of the border surrounding the <scrollbar>.
+* The <borderColor> of a <button(keyword)> determines the color of the
+  border around the <button(keyword)>. If the <button(object)|button's>
+  <style> is "checkbox" or "radioButton", the <borderColor> has no
+  effect. If the button is a <button menu>, the <borderColor> has no
+  effect unless the <button(object)|button's> <menuMode> <property> is
+  set to "comboBox" or "popup". If the <button(object)|button's>
+  <threeD> <property> is set to true, the <borderColor> has no effect
+  regardless of the <button(object)|button's> <style>.
 
-* The <borderColor> of a <graphic(keyword)> is used to fill the marker shapes at the <graphic(object)|graphic's> <vertex|vertexes>, if the <graphic(object)|graphic's> <style> isorand its markerDrawn is true. It is also used to draw a border around it if the <graphic(object)|graphic's> <showBorder> and threeD properties are both set to true.
+
+* The <borderColor> of a <field(keyword)> determines the color of the
+  border around a scrolling <field(object)|field's> scrollbar, the color
+  of the grid lines if the <field(object)|field's> <hGrid> or <vGrid>
+  <property> is true, and the color of the outline around any text in
+  the <field(keyword)> whose <textStyle> is set to "box".
+
+
+* The <borderColor> of a <scrollbar> is the color of the border
+  surrounding the <scrollbar>.
+
+
+* The <borderColor> of a <graphic(keyword)> is used to fill the marker
+  shapes at the <graphic(object)|graphic's> <vertex|vertexes>, if the
+  <graphic(object)|graphic's> <style> isorand its markerDrawn is true.
+  It is also used to draw a border around it if the
+  <graphic(object)|graphic's> <showBorder> and threeD properties are
+  both set to true.
+
 
 * The <borderColor> of an <audio clip> or <video clip> has no effect.
 
-* The <borderColor> of a <player> or <EPS|EPS object> is the color of the border around the <object>. If the <object|object's> <threeD> <property> is set to true, the <borderColor> has no effect.
 
->*Tip:* To set the color of an <image(object)|image's> border, set the <borderColor> of the <card>, <stack>, or <group> that <owner|owns> the <image(keyword)>.
+* The <borderColor> of a <player> or <EPS|EPS object> is the color of
+  the border around the <object(glossary)>. If the <object|object's>
+  <threeD> <property> is set to true, the <borderColor> has no effect.
 
-If an object's <borderPattern> is set, the pattern is shown instead of the color specified by <borderColor>.
+
+>*Tip:* To set the color of an <image(object)|image's> border, set the
+> <borderColor> of the <card>, <stack>, or <group> that <owner|owns> the
+> <image(keyword)>. 
+
+If an object's <borderPattern> is set, the pattern is shown instead of
+the color specified by <borderColor>.
 
 Changes:
-The <borderColor> 's effect on grid lines in <field|fields> was introduced in version 2.0. In previous versions, the color of the grid lines was determined by the <field|field's> <hiliteColor> <property>.
+The <borderColor> 's effect on grid lines in <field|fields> was
+introduced in version 2.0. In previous versions, the color of the grid
+lines was determined by the <field|field's> <hiliteColor> <property>.
 
-References: bottomColor (property), borderPattern (property), textStyle (property), borderColor (property), showBorder (property), borderPixel (property), hGrid (property), penBack (property), vGrid (property), hiliteColor (property), markerFilled (property), style (property), threeD (property), menuMode (property), owner (property), topColor (property), selectionHandleColor (property), effective (keyword), box (keyword), field (keyword), button (keyword), player (keyword), graphic (keyword), scrollbar (keyword), card (keyword), image (keyword), group (command), button (object), image (object), field (object), object (object), stack (object), graphic (object), property (glossary), EPS (glossary), audio clip (glossary), owner (glossary), vertex (glossary), object type (glossary), keyword (glossary), button menu (glossary), video clip (glossary)
+References: group (command), object (glossary), property (glossary),
+EPS (glossary), audio clip (glossary), owner (glossary),
+vertex (glossary), object type (glossary), keyword (glossary),
+button menu (glossary), video clip (glossary), effective (keyword),
+box (keyword), field (keyword), button (keyword), player (keyword),
+graphic (keyword), scrollbar (keyword), card (keyword), image (keyword),
+button (object), image (object), field (object), stack (object),
+graphic (object), bottomColor (property), borderPattern (property),
+textStyle (property), borderColor (property), showBorder (property),
+borderPixel (property), hGrid (property), penBack (property),
+vGrid (property), hiliteColor (property), markerFilled (property),
+style (property), threeD (property), menuMode (property),
+owner (property), topColor (property), selectionHandleColor (property)
 
 Tags: ui
+

@@ -2,15 +2,18 @@ Name: revXMLMoveNode
 
 Type: command
 
-Syntax: revXMLMoveNode treeID, <sourceNode>, <destinationNode> [, <location>] [, <relationship>]
+Syntax: revXMLMoveNode <treeID>, <sourceNode>, <destinationNode> [, <location>] [, <relationship>]
 
-Summary: Moves a node in an XML tree to the specified position
+Summary:
+Moves a node in an XML tree to the specified position
+
+Associations: xml library
 
 Introduced: 2.9
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -21,17 +24,47 @@ Example:
 revXMLMoveNode tTreeId, tTargetNode, tDestinationNode, "before", "child"
 
 Parameters:
-sourceNode: The path of the node to be moved
-destinationNode: The path of the node that the sourceNode will be moved either into or alongside.
-location: Either "before" or "after" and determines whether the moved node should be placed before or after its new sibling node. If no location is specified, the default is "after"
-relationship: Either "sibling" or "child". This specifies the relationship that the sourceNode should have to the destinationNode. "sibling" means that the sourceNode will be placed alongside the destinationNode. "child" means that the sourceNode will be placed below the destinationNode (i.e. as a child of it). If no relationship is specified the default is "child"
-treeId: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
+treeId:
+The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+function when you created the XML tree.
 
-The result: If the <revXMLMoveNode> command encounters an error, the result is set to an error message beginning with "xmlerr".
+sourceNode:
+The path of the node to be moved
+
+destinationNode:
+The path of the node that the sourceNode will be moved either into or
+alongside. 
+
+location:
+Either "before" or "after" and determines whether the moved node should
+be placed before or after its new sibling node. If no location is
+specified, the default is "after"
+
+relationship:
+Either "sibling" or "child". This specifies the relationship that the
+sourceNode should have to the destinationNode. "sibling" means that the
+sourceNode will be placed alongside the destinationNode. "child" means
+that the sourceNode will be placed below the destinationNode (i.e. as a
+child of it). If no relationship is specified the default is "child"
+
+
+The result:
+If the <revXMLMoveNode> command encounters an error, the result is set
+to an error message beginning with "xmlerr".
 
 Description:
 Use the <revXMLMoveNode> command to move a node in an XML tree. 
 
->*Important:*  The <revXMLMoveNode> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLMoveNode> <command> is part of the 
+> <XML library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "XML" 
+> checkbox is checked.
 
-References: revXMLAddNode (command), revXMLCopyNode (command), revXMLCreateTree (function), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLAddNode (command), revXMLCopyNode (command),
+revXMLCreateTree (function), Standalone Application Settings (glossary),
+standalone application (glossary), command (glossary),
+LiveCode custom library (glossary), XML library (library)
+

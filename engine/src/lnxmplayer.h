@@ -18,6 +18,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef MPLAYER_H
 #define MPLAYER_H
 
+enum MCPlayerPropertyType
+{
+	kMCPlayerPropertyTypeBool,
+	kMCPlayerPropertyTypeUInt,
+	kMCPlayerPropertyTypeDouble,
+};
+
 class MPlayer
 {
 	public:
@@ -74,15 +81,13 @@ class MPlayer
 		uint32_t m_loudness ;
 
 	
-		bool launch_player(void) ;
-		void write_command (const char * p_cmd) ;
-		char * read_command(const char * p_ans ) ;
-		char * get_property (const char * p_prop) ;
-		void set_property (const char * p_prop, const char * p_value) ;
-
-
+		bool launch_player(void);
+		void write_command(MCStringRef p_cmd);
+		bool read_command(MCStringRef p_ans, MCStringRef& r_ret);
+		bool get_property(const char *p_prop, MCPlayerPropertyType p_type, void *r_value);
+		void set_property(const char *p_prop, MCPlayerPropertyType p_type, void *p_value);
+		
 } ;
-
 
 
 #endif

@@ -1,20 +1,22 @@
 Name: bottomColor
 
+Synonyms: sixthcolor
+
 Type: property
 
 Syntax: set the bottomColor of <object> to {empty | <colorName> | <RGBColor>}
 
-Summary: Specifies the color of a three-D <object|object's> lowered edge.
+Summary:
+Specifies the color of a three-D <object|object's> lowered edge.
 
-Synonyms: sixthColor
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the bottomColor of scrollbar 1 to "purple"
@@ -23,38 +25,88 @@ Example:
 set the bottomColor of field 1 to the topColor of me
 
 Value:
-The <bottomColor> of an <object> is a <color reference>.
+The <bottomColor> of an <object(glossary)> is a <color reference>.
 The <colorName> is any standard color name.
 
-The <RGBColor> consists of three comma-separated <integer|integers> between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three <hexadecimal> numbers, one for each of red, green, and blue.
+The <RGBColor> consists of three comma-separated <integer|integers>
+between zero and 255, specifying the level of each of red, green, and
+blue; or an HTML-style color consisting of a hash mark (#) followed by
+three <hexadecimal> numbers, one for each of red, green, and blue.
 
 By default, the <bottomColor> for all <object|objects> is empty.
 
 Description:
-Objects whose threeD <property> is set to true appear to stick out of or recede into the screen. Use the <bottomColor> <property> to specify the color of the shadowed edge of the <object>.
+Objects whose threeD <property> is set to true appear to stick out of or
+recede into the screen. Use the <bottomColor> <property> to specify the
+color of the shadowed edge of the <object(glossary)>.
 
-Setting the <bottomColor> of an <object> to empty allows the <bottomColor> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what color is used for the <object>, even if its own <bottomColor> is empty.
+Setting the <bottomColor> of an <object(glossary)> to empty allows the
+<bottomColor> of the <object|object's> <owner> to show through. Use the
+<effective> <keyword> to find out what color is used for the
+<object(glossary)>, even if its own <bottomColor> is empty.
 
-If the object's showBorder <property> is false, the <bottomColor> has no effect.
+If the object's showBorder <property> is false, the <bottomColor> has no
+effect. 
 
-The setting of the <bottomColor> <property> has different effects, depending on the <object type>:
+The setting of the <bottomColor> <property> has different effects,
+depending on the <object type>:
 
-* The <bottomColor> of a <stack> determines the <bottomColor> of each <object> in the <stack> that does not have its own <bottomColor>.
+* The <bottomColor> of a <stack> determines the <bottomColor> of each
+  <object(glossary)> in the <stack> that does not have its own
+  <bottomColor>. 
 
-* The <bottomColor> of a <card> or <group> determines the color of the border around the <card> or <group>, as well as determining the <bottomColor> of each <object> in the <card> or <group> that does not have its own <bottomColor>.
 
-* The <bottomColor> of a <button>, <player>, <EPS|EPS object>, or <graphic> forms a border on the bottom and right edges of the <object>. If the <object|object's> <threeD> <property> is false, the <bottomColor> has no effect.
+* The <bottomColor> of a <card> or <group> determines the color of the
+  border around the <card> or <group>, as well as determining the
+  <bottomColor> of each <object(glossary)> in the <card> or <group> that
+  does not have its own <bottomColor>.
 
-* The <bottomColor> of a <field(keyword)> forms a border on the top and left edges of the <field(keyword)> and (if the <field(keyword)> is a scrolling <field(keyword)>) the bottom and right edges of the arrow boxes at the ends of the scrollbar and the top and left edges of the scroll area. The <field(object)|field's> <bottomColor> also determines the color of the bottom and right edges of any text in the <field(keyword)> whose <textStyle> is set to "threeDBox". If the <field(object)|field's> <threeD> <property> is false, the <field(keyword)> border is not affected.
 
-* The <bottomColor> of a <scrollbar> forms a border on the bottom and right edges of the arrow boxes at the ends of the <scrollbar>, and the top and left edges of the scroll area.
+* The <bottomColor> of a <button>, <player>, <EPS|EPS object>, or
+  <graphic> forms a border on the bottom and right edges of the
+  <object(glossary)>. If the <object|object's> <threeD> <property> is
+  false, the <bottomColor> has no effect.
+
+
+* The <bottomColor> of a <field(keyword)> forms a border on the top and
+  left edges of the <field(keyword)> and (if the <field(keyword)> is a
+  scrolling <field(keyword)>) the bottom and right edges of the arrow
+  boxes at the ends of the scrollbar and the top and left edges of the
+  scroll area. The <field(object)|field's> <bottomColor> also determines
+  the color of the bottom and right edges of any text in the
+  <field(keyword)> whose <textStyle> is set to "threeDBox". If the
+  <field(object)|field's> <threeD> <property> is false, the
+  <field(keyword)> border is not affected.
+
+
+* The <bottomColor> of a <scrollbar> forms a border on the bottom and
+  right edges of the arrow boxes at the ends of the <scrollbar>, and the
+  top and left edges of the scroll area.
+
 
 * The <bottomColor> of an <audio clip> or <video clip> has no effect.
 
-* The <bottomColor> of an <image(keyword)> is the sixth color in the <image(object)|image's> <color palette>. (To set the color of the lowered edge of an <image(object)|image's> border, set the <bottomColor> of the <card>, <stack>, or <group> that <owner|owns> the <image(keyword)>.)
 
-If an object's bottomPattern is set, the pattern is shown instead of the color specified by the <bottomColor>.
+* The <bottomColor> of an <image(keyword)> is the sixth color in the
+  <image(object)|image's> <color palette>. (To set the color of the
+  lowered edge of an <image(object)|image's> border, set the
+  <bottomColor> of the <card>, <stack>, or <group> that <owner|owns> the
+  <image(keyword)>.) 
 
-References: owner (property), bottomColor (property), topColor (property), hiliteBorder (property), threeDHilite (property), threeD (property), textStyle (property), effective (keyword), threeDBox (keyword), field (keyword), button (keyword), scrollbar (keyword), graphic (keyword), player (keyword), card (keyword), image (keyword), group (command), image (object), field (object), object (object), stack (object), property (glossary), EPS (glossary), audio clip (glossary), owner (glossary), object type (glossary), color palette (glossary), keyword (glossary), integer (glossary), video clip (glossary), hexadecimal (glossary), color reference (glossary)
+
+If an object's bottomPattern is set, the pattern is shown instead of the
+color specified by the <bottomColor>.
+
+References: group (command), object (glossary), property (glossary),
+EPS (glossary), audio clip (glossary), owner (glossary),
+object type (glossary), color palette (glossary), keyword (glossary),
+integer (glossary), video clip (glossary), hexadecimal (glossary),
+color reference (glossary), effective (keyword), threeDBox (keyword),
+field (keyword), button (keyword), scrollbar (keyword), graphic (keyword),
+player (keyword), card (keyword), image (keyword), image (object),
+field (object), stack (object), owner (property), bottomColor (property),
+topColor (property), hiliteBorder (property), threeDHilite (property),
+threeD (property), textStyle (property)
 
 Tags: ui
+

@@ -4,15 +4,17 @@ Type: message
 
 Syntax: resumeStack
 
-Summary: Sent to the <current card> when a <stack window> is brought to the front.
+Summary:
+Sent to the <current card> when a <stack window> is brought to the
+front. 
 
 Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 on resumeStack -- show a palette that only applies to this window
@@ -20,12 +22,21 @@ on resumeStack -- show a palette that only applies to this window
 end resumeStack
 
 Description:
-Handle the <resumeStack> <message> if you want to perform some action when a <stack window> is made active.
+Handle the <resumeStack> <message> if you want to perform some action
+when a <stack window> is made active.
 
-The <resumeStack> <message> is sent whenever a <stack> window becomes the <active window>.
+The <resumeStack> <message> is sent whenever a <stack> window becomes
+the <active window>.
 
-The actual window activation process is not triggered by the <resumeStack> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <stack window> from becoming the <active window>.
+The actual window activation process is not triggered by the
+<resumeStack> <message>, so <trap|trapping> the <message> and not
+allowing it to <pass> does not prevent the <stack window> from becoming
+the <active window>.
 
-References: pass (control_st), resume (message), unIconifyStack (message), suspendStack (message), flushEvents (function), trap (glossary), current card (glossary), message (glossary), active window (glossary), stack window (glossary), stack (object)
+References: pass (control structure), flushEvents (function),
+trap (glossary), current card (glossary), message (glossary),
+active window (glossary), stack window (glossary), resume (message),
+unIconifyStack (message), suspendStack (message), stack (object)
 
 Tags: windowing
+

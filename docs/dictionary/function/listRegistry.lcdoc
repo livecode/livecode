@@ -4,25 +4,35 @@ Type: function
 
 Syntax: listRegistry(<parentKey>)
 
-Summary: Lists the sub-keys of the specified key in the <registry|Windows system registry>.
+Summary:
+Lists the sub-keys of the specified key in the <registry|Windows system
+registry>. 
 
 Introduced: 4.5
 
 OS: windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 listRegistry("HKEY_CLASSES_ROOT")
 
 Parameters:
-parentKey: A key in the Windows registry
+parentKey:
+A key in the Windows registry
 
-Returns: A return-delimited list of sub-keys.
+Returns:
+A return-delimited list of sub-keys.
 
 Description:
-Use the <listRegistry> <function> to lists the sub-keys of a key in the <registry|Windows system registry>.
+Use the <listRegistry> <function> to lists the sub-keys of a key in the
+<registry|Windows system registry>.
 
-The <listRegistry> function returns a return-delimited list of sub-keys, i.e. those keys which are direct children of the given parentKey. The specified key should be in the same format as the other registry functions.
+The <listRegistry> function returns a return-delimited list of sub-keys,
+i.e. those keys which are direct children of the given parentKey. The
+specified key should be in the same format as the other registry
+functions. 
 
-References: function (control_st), deleteRegistry (function), MCISendString (function), setRegistry (function), registry (glossary)
+References: function (control structure), deleteRegistry (function),
+MCISendString (function), setRegistry (function), registry (glossary)
+

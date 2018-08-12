@@ -4,25 +4,34 @@ Type: property
 
 Syntax: set the showInvisibles to {true | false}
 
-Summary: Specifies whether invisible <object|objects> are shown anyway.
+Summary:
+Specifies whether invisible <object|objects> are shown anyway.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the showInvisibles to true
 
-Value (bool):The <showInvisibles> is true or false.
+Value (bool):
+The <showInvisibles> is true or false.
 By default, the <showInvisibles> <property> is set to false.
 
 Description:
-Use the <showInvisibles> <property> to override the <visible> <property> of <object|objects> and see all the <object|objects> on a <card>.
+Use the <showInvisibles> <property> to override the <visible> <property>
+of <object|objects> and see all the <object|objects> on a <card>.
 
-Showing all invisible objects can make it easier to find a lost control, but can also make a layout confusing.
+Showing all invisible objects can make it easier to find a lost control,
+but can also make a layout confusing.
 
-Invisible objects that are temporarily shown with the <showInvisibles> <property> respond to mouse clicks and key presses as though they were visible.
+Invisible objects that are temporarily shown with the <showInvisibles>
+<property> respond to mouse clicks and key presses as though they were
+visible. 
 
-References: visible (property), invisible (property), card (keyword), show (command), hide (command), object (object), property (glossary)
+References: show (command), hide (command), object (glossary),
+property (glossary), card (keyword), visible (property),
+invisible (property)
+

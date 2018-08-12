@@ -2,15 +2,17 @@ Name: stop moving
 
 Type: command
 
-Syntax: stop moving <object> 
+Syntax: stop moving <object>
 
-Summary: Stops an <object> that was set in motion by the <move> <command>.
+Summary:
+Stops an <object(glossary)> that was set in motion by the <move>
+<command>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 stop moving card button 2
@@ -19,17 +21,28 @@ Example:
 stop moving the defaultStack
 
 Parameters:
-object: Any window or control being moved with the move command.
+object:
+Any window or control being moved with the move command.
 
 Description:
-Use the <stop moving> <command> to halt an <object> before the <move> <command> completes.
+Use the <stop moving> <command> to halt an <object(glossary)> before the
+<move> <command> completes.
 
-You can <stop moving> an <object> that is not in motion without causing an <error>, but doing so has no effect.
+You can <stop moving> an <object(glossary)> that is not in motion
+without causing an <error>, but doing so has no effect.
 
-If you issue another <move> <command> while a previous <move> <command> for the same <object> is still <execute|executing>, the previous <move> <command> is halted, and the second <move> <command> starts up at the <object|object's> current location.
+If you issue another <move> <command> while a previous <move> <command>
+for the same <object(glossary)> is still <execute|executing>, the
+previous <move> <command> is halted, and the second <move> <command>
+starts up at the <object|object's> current location.
 
-To move multiple objects at the same time, set the lockMoves <property> to true before issuing the <move> <command|commands>. When you set the <lockMoves> back to false, all the pending moves begin at once.
+To move multiple objects at the same time, set the lockMoves <property>
+to true before issuing the <move> <command|commands>. When you set the
+<lockMoves> back to false, all the pending moves begin at once.
 
-References: lockMoves (property), move (command), object (object), property (glossary), command (glossary), error (glossary), execute (glossary)
+References: move (command), object (glossary), property (glossary),
+command (glossary), error (glossary), execute (glossary),
+lockMoves (property)
 
 Tags: multimedia
+

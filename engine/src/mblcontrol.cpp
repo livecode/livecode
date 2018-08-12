@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -92,24 +92,18 @@ void MCNativeControlFinalize(void)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-MCNativeControl::MCNativeControl(void)
+MCNativeControl::MCNativeControl(void) :
+  m_references(1),
+  m_id(++s_last_native_control_id),
+  m_name(MCValueRetain(kMCEmptyString)),
+  m_object(nil),
+  m_next(nil),
+  m_deleted(false)
 {
-	m_references = 1;
-	m_id = ++s_last_native_control_id;
-	m_name = MCValueRetain(kMCEmptyString);
-	m_object = nil;
-	m_next = nil;
-    m_deleted = false;
 }
 
 MCNativeControl::~MCNativeControl(void)
 {
-	if (m_object != nil)
-	{
-		m_object -> Release();
-		m_object = nil;
-	}
-	
 	if (!MCStringIsEmpty(m_name))
 	{
 		MCValueRelease(m_name);
@@ -156,14 +150,12 @@ void MCNativeControl::GetName(MCStringRef &r_name)
 
 MCObject *MCNativeControl::GetOwner(void)
 {
-	return m_object != nil ? m_object -> Get() : nil;
+	return m_object.IsValid() ? m_object.Get() : nil;
 }
 
 void MCNativeControl::SetOwner(MCObject *p_owner)
 {
-	if (m_object != nil)
-		m_object -> Release();
-	m_object = p_owner -> gethandle();
+	m_object = p_owner->GetHandle();
 }
 
 bool MCNativeControl::SetName(MCStringRef p_name)
@@ -195,7 +187,7 @@ MCNativeControl *MCNativeControl::CurrentTarget(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct {const char *name; MCNativeControlType type;} s_native_control_types[] =
+static const struct {const char *name; MCNativeControlType type;} s_native_control_types[] =
 {
 	{"browser", kMCNativeControlTypeBrowser},
 	{"scroller", kMCNativeControlTypeScroller},
@@ -205,7 +197,7 @@ static struct {const char *name; MCNativeControlType type;} s_native_control_typ
 	{nil, kMCNativeControlTypeUnknown}
 };
 
-static struct {const char *name; Properties property;} s_native_control_properties[] =
+static const struct {const char *name; Properties property;} s_native_control_properties[] =
 {
 	{"id", P_ID},
 	{"name", P_NAME},
@@ -284,6 +276,8 @@ static struct {const char *name; Properties property;} s_native_control_properti
 	{"editing", P_EDITING},
     
 	{"minimumfontsize", P_MINIMUM_FONT_SIZE},
+    {"maximumtextlength", P_MAXIMUM_TEXT_LENGTH},
+
 	{"autoclear", P_AUTO_CLEAR},
 	{"clearbuttonmode", P_CLEAR_BUTTON_MODE},
 	{"borderstyle", P_BORDER_STYLE},
@@ -305,7 +299,7 @@ static struct {const char *name; Properties property;} s_native_control_properti
 	{nil, P_UNDEFINED}
 };
 
-static struct {const char *name; MCNativeControlAction action;} s_native_control_actions[] =
+static const struct {const char *name; MCNativeControlAction action;} s_native_control_actions[] =
 {
 	{"advance", kMCNativeControlActionAdvance},
 	{"retreat", kMCNativeControlActionRetreat},
@@ -515,308 +509,6 @@ bool MCNativeControl::CreateWithType(MCNativeControlType p_type, MCNativeControl
     
 	return t_success;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef LEGACY_EXEC
-bool MCExecPointSetRect(MCExecPoint &ep, int2 p_left, int2 p_top, int2 p_right, int2 p_bottom)
-{
-	char *t_buffer = nil;
-	if (!MCCStringFormat(t_buffer, "%d,%d,%d,%d", p_left, p_top, p_right, p_bottom))
-		return false;
-	
-	ep.grabbuffer(t_buffer, MCCStringLength(t_buffer));
-	return true;
-}
-
-static bool MCParseRGBA(MCStringRef p_data, bool p_require_alpha, uint1 &r_red, uint1 &r_green, uint1 &r_blue, uint1 &r_alpha)
-{
-	bool t_success = true;
-	Boolean t_parsed;
-	uint2 r, g, b, a;
-   
-    MCAutoPointer<char> temp;
-    /* UNCHECKED */ MCStringConvertToCString(p_data, &temp);
-	const char *t_data = *temp;
-	uint32_t l = MCStringGetLength(p_data);
-	if (t_success)
-	{
-		r = MCU_max(0, MCU_min(255, MCU_strtol(t_data, l, ',', t_parsed)));
-		t_success = t_parsed;
-	}
-	if (t_success)
-	{
-		g = MCU_max(0, MCU_min(255, MCU_strtol(t_data, l, ',', t_parsed)));
-		t_success = t_parsed;
-	}
-	if (t_success)
-	{
-		b = MCU_max(0, MCU_min(255, MCU_strtol(t_data, l, ',', t_parsed)));
-		t_success = t_parsed;
-	}
-	if (t_success)
-	{
-		a = MCU_max(0, MCU_min(255, MCU_strtol(t_data, l, ',', t_parsed)));
-		if (!t_parsed)
-		{
-			if (p_require_alpha)
-				t_success = false;
-			else
-				a = 255;
-		}
-	}
-	
-	if (t_success)
-	{
-		r_red = r;
-		r_green = g;
-		r_blue = b;
-		r_alpha = a;
-	}
-	return t_success;
-}
-
-bool MCNativeControl::ParseColor(MCExecPoint &ep, uint16_t &r_red, uint16_t &r_green, uint16_t &r_blue, uint16_t &r_alpha)
-{
-    uint8_t t_r8, t_g8, t_b8, t_a8;
-    MCColor t_color;
-
-    char *t_name = nil;
-    MCAutoStringRef t_value;
-    ep . copyasstringref(&t_value);
-    if (MCParseRGBA(*t_value, false, t_r8, t_g8, t_b8, t_a8))
-    {
-        r_red = (t_r8 << 8) | t_r8;
-        r_green = (t_g8 << 8) | t_g8;
-        r_blue = (t_b8 << 8) | t_b8;
-        r_alpha = (t_a8 << 8) | t_a8;
-        return true;
-    }
-    else if (MCscreen->parsecolor(*t_value, t_color, NULL))
-    {
-        r_red = t_color.red;
-        r_green = t_color.green;
-        r_blue = t_color.blue;
-        r_alpha = 0xFFFF;
-        return true;
-    }
-    else
-        return false;
-}
-
-bool MCNativeControl::FormatColor(MCExecPoint& ep, uint16_t p_red, uint16_t p_green, uint16_t p_blue, uint16_t p_alpha)
-{
-    char *t_colorstring = nil;
-
-    p_red >>= 8;
-    p_green >>= 8;
-    p_blue >>= 8;
-    p_alpha >>= 8;
-    
-    if (p_alpha != 255)
-        MCCStringFormat(t_colorstring, "%u,%u,%u,%u", p_red, p_green, p_blue, p_alpha);
-    else
-        MCCStringFormat(t_colorstring, "%u,%u,%u", p_red, p_green, p_blue);
-    ep.grabbuffer(t_colorstring, MCCStringLength(t_colorstring));
-	
-	return true;
-}
-
-bool MCNativeControl::ParseBoolean(MCExecPoint& ep, bool& r_value)
-{
-	Boolean t_bool;
-	if (!MCU_stob(ep.getsvalue(), t_bool))
-	{
-		MCeerror->add(EE_OBJECT_NAB, 0, 0, ep.getsvalue());
-		return false;
-	}
-	r_value = t_bool == True;
-	return true;
-}
-
-bool MCNativeControl::FormatBoolean(MCExecPoint& ep, bool p_value)
-{
-	ep . setsvalue(MCU_btos(p_value));
-	return true;
-}
-
-bool MCNativeControl::ParseInteger(MCExecPoint& ep, int32_t& r_value)
-{
-	if (!MCU_stoi4(ep . getsvalue(), r_value))
-	{
-		MCeerror->add(EE_OBJECT_NAN, 0, 0, ep.getsvalue());
-		return false;
-	}
-	return true;
-}
-
-bool MCNativeControl::FormatInteger(MCExecPoint& ep, int32_t p_value)
-{
-	ep . setnvalue(p_value);
-	return true;
-}
-
-bool MCNativeControl::ParseUnsignedInteger(MCExecPoint& ep, uint32_t& r_value)
-{
-	if (!MCU_stoui4(ep . getsvalue(), r_value))
-	{
-		MCeerror->add(EE_OBJECT_NAN, 0, 0, ep.getsvalue());
-		return false;
-	}
-	return true;
-}
-
-bool MCNativeControl::ParseReal(MCExecPoint& ep, double& r_value)
-{
-	if (!MCU_stor8(ep . getsvalue(), r_value))
-	{
-		MCeerror->add(EE_OBJECT_NAN, 0, 0, ep.getsvalue());
-		return false;
-	}
-	return true;
-}
-
-bool MCNativeControl::FormatReal(MCExecPoint& ep, double p_value)
-{
-	ep . setnvalue(p_value);
-	return true;
-}
-
-bool MCNativeControl::ParseEnum(MCExecPoint& ep, MCNativeControlEnumEntry *p_entries, int32_t& r_value)
-{
-	for(uint32_t i = 0; p_entries[i] . key != nil; i++)
-		if (MCCStringEqualCaseless(p_entries[i] . key, ep . getcstring()))
-		{
-			r_value = p_entries[i] . value;
-			return true;
-		}
-	
-	MCeerror->add(EE_OBJECT_BADSTYLE, 0, 0, ep.getsvalue());
-	return false;
-}
-
-bool MCNativeControl::FormatEnum(MCExecPoint& ep, MCNativeControlEnumEntry *p_entries, int32_t p_value)
-{
-	for(uint32_t i = 0; p_entries[i] . key != nil; i++)
-		if (p_entries[i] . value == p_value)
-		{
-			ep . setsvalue(p_entries[i] . key);
-			return true;
-		}
-	
-	ep . clear();
-	return true;
-}
-
-bool MCNativeControl::ParseSet(MCExecPoint& ep, MCNativeControlEnumEntry *p_entries, int32_t& r_value)
-{
-    bool t_success = true;
-    
-	char **t_members_array;
-	uint32_t t_members_count;
-	t_members_array = nil;
-	t_members_count = 0;
-	if (t_success)
-		t_success = MCCStringSplit(ep.getcstring(), ',', t_members_array, t_members_count);
-	
-	int32_t t_members_set;
-	t_members_set = 0;
-	if (t_success)
-		for(uint32_t i = 0; t_success && i < t_members_count; i++)
-        {
-            bool t_found = false;
-			for(uint32_t j = 0; !t_found && p_entries[j].key != nil; j++)
-            {
-				if (MCCStringEqualCaseless(t_members_array[i], p_entries[j].key))
-                {
-					t_members_set |= p_entries[j].value;
-                    t_found = true;
-                }
-            }
-            if (!t_found)
-                t_success = false;
-        }
-	
-	for(uint32_t i = 0; i < t_members_count; i++)
-		MCCStringFree(t_members_array[i]);
-	MCMemoryDeleteArray(t_members_array);
-    
-    if (t_success)
-        r_value = t_members_set;
-    
-	return t_success;
-}
-
-bool MCNativeControl::FormatSet(MCExecPoint& ep, MCNativeControlEnumEntry *p_entries, int32_t p_value)
-{
-	bool t_first;
-	t_first = true;
-	
-	ep . clear();
-	
-	for(uint32_t i = 0; p_entries[i] . key != nil; i++)
-		if ((p_value & p_entries[i] . value) != 0)
-		{
-			ep . concatcstring(p_entries[i] . key, EC_COMMA, t_first);
-			t_first = false;
-		}
-	
-	return true;
-}
-
-bool MCNativeControl::ParseRectangle(MCExecPoint& ep, MCRectangle& r_rect)
-{
-	int16_t t_left, t_top, t_right, t_bottom;
-	if (!MCU_stoi2x4(ep . getsvalue(), t_left, t_top, t_right, t_bottom))
-	{
-		MCeerror->add(EE_OBJECT_NAR, 0, 0, ep.getsvalue());
-		return false;
-	}
-	
-	MCU_set_rect(r_rect, t_left, t_top, t_right - t_left, t_bottom - t_top);
-	return true;
-}
-
-bool MCNativeControl::ParseRectangle32(MCExecPoint& ep, MCRectangle32& r_rect)
-{
-	int32_t t_left, t_top, t_right, t_bottom;
-	if (!MCU_stoi4x4(ep . getsvalue(), t_left, t_top, t_right, t_bottom))
-	{
-		MCeerror->add(EE_OBJECT_NAR, 0, 0, ep.getsvalue());
-		return false;
-	}
-	
-	MCU_set_rect(r_rect, t_left, t_top, t_right - t_left, t_bottom - t_top);
-	return true;
-}
-
-bool MCNativeControl::ParseRange(MCExecPoint &ep, uint32_t &r_start, uint32_t &r_length)
-{
-	const char *sptr = ep.getsvalue().getstring();
-	uint4 l = ep.getsvalue().getlength();
-	uint32_t d1, d2;
-	Boolean done;
-	d1 = MCU_strtol(sptr, l, ',', done, True, False);
-	if (!done || l == 0)
-		return false;
-	d2 = MCU_strtol(sptr, l, '\0', done, True, False);
-	if (!done || l != 0)
-		return false;
-    
-    r_start = d1;
-    r_length = d2;
-    
-    return true;
-}
-
-bool MCNativeControl::FormatRange(MCExecPoint &ep, uint32_t p_start, uint32_t p_length)
-{
-    ep.setnvalue(p_start);
-	ep.concatint(p_length, EC_COMMA, false);
-    
-    return true;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

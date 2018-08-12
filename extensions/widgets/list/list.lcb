@@ -54,7 +54,7 @@ private variable mDragStartLoc as Point
 --
 
 
-public handler OnCreate() as undefined
+public handler OnCreate() returns nothing
 	variable tArray as Array
 	put the empty array into tArray
 	put the empty list into mListData
@@ -87,7 +87,7 @@ public handler OnCreate() as undefined
 	setupConstants()
 end handler
 
-public handler OnPaint() as undefined
+public handler OnPaint() returns nothing
 	variable tTop as Real
 	variable tPath as Path
 	variable tLeft as Real
@@ -118,8 +118,8 @@ public handler OnPaint() as undefined
 	variable tListItem as Array
 	put the empty array into tListItem
 	
-	variable tx as Integer
-	put 1 into tx
+	variable tX as Integer
+	put 1 into tX
 	
 	put the floor of mViewTopPosition / mRowHeight into mFirstListItem
 	if mFirstListItem < 1 then
@@ -131,8 +131,8 @@ public handler OnPaint() as undefined
 	subtract tTopOffset from tTop
 	
 	//log "Start Index: %@ | top offset: %@" with [mFirstListItem,tTopOffset]
-	repeat with tx from mFirstListItem up to the number of elements in mListData
-		put element tx of mListData into tListItem
+	repeat with tX from mFirstListItem up to the number of elements in mListData
+		put element tX of mListData into tListItem
 		put mMargin into tLeft
 		// Draw the background
 		
@@ -188,7 +188,7 @@ public handler OnPaint() as undefined
 	fill tPath on this canvas	
 end handler
 
-public handler OnMouseDown() as undefined
+public handler OnMouseDown() returns nothing
 	put the mouse position into mDragStartLoc
 	
 	if mDragStartLoc is within scrollbarRect() then
@@ -197,7 +197,7 @@ public handler OnMouseDown() as undefined
 	end if
 end handler
 
-public handler onMouseMove() as undefined
+public handler onMouseMove() returns nothing
 	if mDragging is true then
 		// Get the scrollbar ratio
 		variable tScrollbarRatio as Real
@@ -244,21 +244,21 @@ public handler onMouseMove() as undefined
 	end if
 end handler
 
-public handler OnMouseUp() as undefined
+public handler OnMouseUp() returns nothing
 	if mDragging is true then
 		redraw all
 	end if
 	put false into mDragging
 end handler
 
-public handler OnMouseCancel() as undefined
+public handler OnMouseCancel() returns nothing
 	if mDragging is true then
 		redraw all
 	end if
 	put false into mDragging
 end handler
 
-public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) as undefined
+public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns nothing
 	if pDeltaY < 0 then
 		subtract mRowHeight from mViewTopPosition
 	else
@@ -270,12 +270,12 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) as undefine
 	redraw all
 end handler
 
-private handler setListData(in pListData as Array) as undefined
+private handler setListData(in pListData as Array) returns nothing
 	put pListData into mListData
 	redraw all
 end handler
 
-public handler getPaint(pLocation, pType) as Paint
+public handler getPaint(pLocation, pType) returns Paint
 	if pLocation is "background" then
 		if pType is "fill" then
 			return solid paint with stringToColor("248,248,248")
@@ -307,17 +307,17 @@ public handler getPaint(pLocation, pType) as Paint
 	return solid paint with stringToColor("255,100,200")
 end handler
 
-private handler getFontName() as String
+private handler getFontName() returns String
 	return "Helvetica Neue"
 	
 	return the name of the font of this canvas
 end handler
 
-private handler getFontSize() as Number
+private handler getFontSize() returns Number
 	return 11
 end handler
 
-private handler setupConstants() as undefined
+private handler setupConstants() returns nothing
 	put the number of elements in mListData into mListCount
 	put 40 into mRowHeight
 	put mRowHeight * mListCount into mlistHeight
@@ -336,7 +336,7 @@ private handler setupConstants() as undefined
 	put false into mDragging
 end handler
 
-private handler scrollbarRect() as Rectangle
+private handler scrollbarRect() returns Rectangle
 	variable tScrollbarRatio as Real
 	put mViewHeight / mlistHeight into tScrollbarRatio
 	if tScrollbarRatio > 1 then
@@ -360,7 +360,7 @@ private handler scrollbarRect() as Rectangle
 	return rectangle [mViewWidth-10,tScrollbarY,mViewWidth-5,tScrollbarY+tScrollbarHeight]
 end handler
 
-private handler scrollbarHeight() as Real
+private handler scrollbarHeight() returns Real
 	variable tScrollbarHeight as Real
 	variable tScrollbarRatio as Real
 
@@ -379,7 +379,7 @@ private handler scrollbarHeight() as Real
 	end if
 end handler
 
-//public handler OnDragStart() as Boolean
+//public handler OnDragStart() returns Boolean
 	//put the mouse position into sDragLastPosition
 	
 	//if sDragLastPosition is within scrollbarRect() then
@@ -389,11 +389,11 @@ end handler
 	//return true
 //end handler
 
-//public handler onDragDrop() as undefined
+//public handler onDragDrop() returns nothing
 //	log "Drag ended: %@" with [the mouse position]
 //end handler
 
-//public handler onDragMove(in pX as Real, in pY as Real) as undefined
+//public handler onDragMove(in pX as Real, in pY as Real) returns nothing
 //	log "Drag move: %@" with [pY]
 //	if element 2 of sDragLastPosition is not pY then
 //		add element 2 of sDragLastPosition - pY to mViewTopPosition
@@ -401,7 +401,7 @@ end handler
 //	end if
 //end handler
 
-private handler stringToColor(in pString as String) as Color
+private handler stringToColor(in pString as String) returns Color
 	variable tRed as Real
 	variable tGreen as Real
 	variable tBlue as Real

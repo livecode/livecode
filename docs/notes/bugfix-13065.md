@@ -1,1 +1,0 @@
-#  [[Player]] making selection with shift + click player thumb inconsistent results

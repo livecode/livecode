@@ -2,15 +2,18 @@ Name: revSetSpeechSpeed
 
 Type: command
 
-Syntax: revSetSpeechSpeed <wordsPerMinute> 
+Syntax: revSetSpeechSpeed <wordsPerMinute>
 
-Summary: Sets the speed at which the <revSpeak> <command> speaks.
+Summary:
+Sets the speed at which the <revSpeak> <command> speaks.
+
+Associations: speech library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revSetSpeechSpeed 30
@@ -19,19 +22,41 @@ Example:
 revSetSpeechSpeed field "WPM"
 
 Parameters:
-wordsPerMinute (integer): An integer between 1 and 300.
+wordsPerMinute (integer):
+An integer between 1 and 300.
 
-The result: If text to speech is not available on the current system, the <revSetSpeechSpeed> <command> sets the <result> <function> to an error message.
+The result:
+If text to speech is not available on the current system, the
+<revSetSpeechSpeed> <command> sets the <result> <function> to an error
+message. 
 
 Description:
-Use the <revSetSpeechSpeed> <command> to speed up or slow down <text to speech|speech>.
+Use the <revSetSpeechSpeed> <command> to speed up or slow down <text to
+speech|speech>. 
 
-The greater the <wordsPerMinute>, the faster the speech. (A normal speech rate for English is approximately 150 words per minute.)
+The greater the <wordsPerMinute>, the faster the speech. (A normal
+speech rate for English is approximately 150 words per minute.)
 
-The speed specified by the <revSetSpeechSpeed> <command> is used for all speeches following the <command> during the current session. If the computer is already speaking when you <execute> the <command>, the new speed affects the current speech.
+The speed specified by the <revSetSpeechSpeed> <command> is used for all
+speeches following the <command> during the current session. If the
+computer is already speaking when you <execute> the <command>, the new
+speed affects the current speech.
 
->*Important:*  The <revSetSpeechSpeed> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+>*Important:*  The <revSetSpeechSpeed> <command> is part of the 
+> <Speech library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Speech" 
+> library checkbox is checked.
 
-References: function (control_st), revSetSpeechPitch (command), revSetSpeechVoice (command), revSpeak (command), revSetSpeechProvider (command), revGetSpeechVolume (function), result (function), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), execute (glossary), text to speech (glossary), Speech library (library), LiveCode custom library (library)
+References: revSetSpeechPitch (command), revSetSpeechVoice (command),
+revSpeak (command), revSetSpeechProvider (command),
+function (control structure), revGetSpeechVolume (function),
+result (function), Standalone Application Settings (glossary),
+command (glossary), standalone application (glossary), execute (glossary),
+text to speech (glossary), LiveCode custom library (glossary),
+Speech library (library)
 
 Tags: multimedia
+

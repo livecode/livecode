@@ -23,8 +23,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 #include "context.h"
 #include "securemode.h"
+#include "globals.h"
 
-//#include "execpt.h"
 #include "exec.h"
 #include "util.h"
 #include "stack.h"
@@ -132,10 +132,9 @@ bool MCEncodedImageRep::LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32
     
     if (t_success)
     {
-        t_success = m_loader->GetMetadata(m_metadata);
-    }
-	else
+		t_success = m_loader->GetMetadata(m_metadata);
 		ClearImageLoader();
+    }
 	
 	return t_success;
 }
@@ -272,12 +271,6 @@ MCVectorImageRep::MCVectorImageRep(const void *p_data, uindex_t p_size)
 MCVectorImageRep::~MCVectorImageRep()
 {
 	MCMemoryDeallocate(m_data);
-}
-
-bool MCVectorImageRep::Render(MCDC *p_context, bool p_embed, MCRectangle &p_image_rect, MCRectangle &p_clip_rect)
-{
-	p_context->drawpict((uint8_t*)m_data, m_size, p_embed, p_image_rect, p_clip_rect);
-	return true;
 }
 
 bool MCVectorImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)

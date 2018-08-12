@@ -2,19 +2,20 @@ Name: date
 
 Type: function
 
-Syntax: the [{ long | abbr[ev[iated]] | short }] [{ english | system | internet }] date
+Syntax: the [{ long | abbreviated | short }] [{ english | system }] date
 
-Syntax: the [internet] [{ english | system }] date
+Syntax: the internet date
 
 Syntax: date()
 
-Summary: <return|Returns> the current date.
+Summary:
+<return|Returns> the current date.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 answer the date
@@ -26,33 +27,56 @@ Example:
 put the long system date into field "Today's Date"
 
 Returns:
-If the useSystemDate <property> is set to true or if you specify the <system> date, the times returned by the <date> <function> are <format|formatted> according to the user's system preferences. In general, the <short> date is briefer than the <abbreviated> date, which is briefer than the <long> date.
-If the useSystemDate is false or if you specify the <english> time, the short, abbreviated, and long forms of the date are in the <format> described below:
+If the useSystemDate <property> is set to true or if you specify the
+<system> date, the times returned by the <date> <function> are
+<format|formatted> according to the user's system preferences. In
+general, the <short> date is briefer than the <abbreviated> date, which
+is briefer than the <long> date. If the useSystemDate is false or if you
+specify the <english> time, the short, abbreviated, and long forms of
+the date are in the <format> described below:
 
-The date form returns the month number, the day of the month, and the last two digits of the year, separated by slashes (/).
+The date form returns the month number, the day of the month, and the
+last two digits of the year, separated by slashes (/).
 
 The short date form returns the same value as the date form.
 
-The abbreviated date form returns the first three letters of the day of the week, a comma, the first three letters of the month, a space, the day of the month, a comma, and the year.
+The abbreviated date form returns the first three letters of the day of
+the week, a comma, the first three letters of the month, a space, the
+day of the month, a comma, and the year.
 
-The long date form returns the day of the week, a comma, the name of the month, a space, the day of the month, a comma, and the year.
+The <long> date form returns the day of the week, a comma, the name of the
+month, a space, the day of the month, a comma, and the year.
 
 The internet date form returns the following parts, separated by spaces:
+
         * the day of the week followed by a comma
         * the day of the month
         * the three-letter abbreviation for the month name
         * the four-digit year
-        * the time in 24-hour format, including seconds, delimited by colons
+        * the time in 24-hour format, including seconds, delimited by
+          colons 
         * the four-digit time zone relative to UTC (Greenwich) time.
 
-Description:
-Use the <date> <function> to display the current date to the user, or to store the date for later use.
 
-The format of the system date forms is set by the Date & Time control panel (on Mac OS systems), the Date control panel (on Windows systems), or the LANG environment variable (on Unix systems).
+Description:
+Use the <date> <function> to display the current date to the user, or to
+store the date for later use.
+
+The format of the system date forms is set by the Date & Time control
+panel (on Mac OS systems), the Date control panel (on Windows systems),
+or the LANG environment variable (on Unix systems).
 
 Changes:
-The ability to use the date format preferred by the user was introduced in version 1.1. In previous versions, the date function, along with the time function, consistently used the standard U.S. format, even if the operating system's settings specified another language or date format.
+The ability to use the date format preferred by the user was introduced
+in version 1.1. In previous versions, the date function, along with the
+time function, consistently used the standard U.S. format, even if the
+operating system's settings specified another language or date format.
 
-References: centuryCutoff (property), long (keyword), english (keyword), short (keyword), system (keyword), abbreviated (keyword), convert (command), dateFormat (function), milliseconds (function), format (function), ticks (function), property (glossary), return (glossary), format (glossary), function (control_st)
+References: convert (command), function (control structure),
+dateFormat (function), milliseconds (function), format (function),
+ticks (function), property (glossary), return (glossary),
+format (glossary), long (keyword), english (keyword), short (keyword),
+system (keyword), abbreviated (keyword), centuryCutoff (property)
 
 Tags: math
+

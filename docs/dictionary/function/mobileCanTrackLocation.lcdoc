@@ -4,11 +4,13 @@ Type: function
 
 Syntax: mobileCanTrackLocation()
 
-Summary: Returns true if the device can track the location using GPS, false otherwise.
+Summary:
+Returns true if the device can track the location using GPS, false
+otherwise. 
 
 Introduced: 4.6.1
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -20,9 +22,16 @@ if mobileCanTrackLocation() is "true" then
   answer "The location can be tracked"
 end if
 
-Returns: The <mobileCanTrackLocation> function returns true if the device can track the location and false otherwise.
+Returns:
+The <mobileCanTrackLocation> function returns true if the device can
+track the location and false otherwise.
 
 Description:
-Use the <mobileCanTrackLocation> function to check whether the device has the necessary hardware support for tracking the location using GPS.
+Use the <mobileCanTrackLocation> function to check whether the device
+has the necessary hardware support for tracking the location using GPS.
 
-References: mobileStopTrackingSensor (command), mobileStartTrackingSensor (command), mobileSensorReading (function), mobileCurrentLocation (function), trackingError (message), locationChanged (message)
+References: mobileStopTrackingSensor (command),
+mobileStartTrackingSensor (command), mobileSensorReading (function),
+mobileCurrentLocation (function), trackingError (message),
+locationChanged (message)
+

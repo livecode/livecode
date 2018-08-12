@@ -4,15 +4,16 @@ Type: command
 
 Syntax: put <value> [{before | into | after} <container>]
 
-Syntax: put <value> into URL <destinationURL> 
+Syntax: put <value> into URL <destinationURL>
 
-Summary: Places a <value> into a <container>.
+Summary:
+Places a <value> into a <container>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android, html5
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -23,7 +24,7 @@ Example:
 put 3 + 12 into myVariable
 
 Example:
-put return  someGlobalVar after field "Accumulations"
+put return & someGlobalVar after field "Accumulations"
 
 Example:
 put tData into URL "ftp://ftp.myftpserver.com"
@@ -32,51 +33,118 @@ Example:
 put homegrownMP3Data into URL "binfile:My file.MP3"
 
 Parameters:
-value (string): 
-container: The container into which the <value> should be placed.  This usually an <object reference> or a <variable> name.
-destinationURL: 
+value (string):
 
-The result: >*Important:* If writing to a url container fails, an error is returned in the result. For example:. <put> the result into  tResult. >*Note:* Unlike its use with the <file> and <binfile URL> types, the <put> <command>, when used with a <resfileURL>, does not create the <file> if it doesn't exist. Instead, an error message is returned in the <result>. To create the file, first use a <statement> like the following:. * When used with an ftp <URL>, <upload|uploads> the <value> to an <FTP> <server>. If an error occurs during uploading, the error is placed in the <result> <function>. The first <word> returned by the <result> <function> is error, followed (where appropriate) by the text of the error message returned by the <FTP> <server>, including the <server> response code. >*Important:* If a <blocking> operation involving a <URL> (using the <put command> to <upload> a <URL>, the <post command>, the <delete URL command>, or a <statement> that gets an <FTP> or <httpURL>) is going on, no other <blocking URL> operation can start until the previous one is finished. If you attempt to use a <URL> in an <expression>, or put data into a <URL>, while another <blocking URL> operation is in progress, the <result> is set to Error Previous request not completed.
+
+container:
+The container into which the <value> should be placed.  This usually an
+<object reference> or a <variable> name.
+
+destinationURL:
+
+
+The result:
+>*Important:* If writing to a url container fails, an error is returned
+> in the result. For example:. <put> the result into tResult. *Note:*
+> Unlike its use with the <file> and <binfile URL> types, the <put>
+> <command>, when used with a <resfileURL>, does not create the <file>
+> if it doesn't exist. Instead, an error message is returned in the
+> <result>. To create the file, first use a <statement> like the
+> following:. * When used with an ftp <URL>, <upload|uploads> the
+> <value> to an <FTP> <server>. If an error occurs during uploading, the
+> error is placed in the <result> <function>. The first <word> returned
+> by the <result> <function> is error, followed (where appropriate) by
+> the text of the error message returned by the <FTP> <server>,
+> including the <server> response code. *Important:* If a <blocking>
+> operation involving a <URL> (using the <put> <command> to <upload> a
+> <URL>, the <post> <command>, the <delete URL> <command>, or a <statement>
+> that gets an <FTP> or <httpURL>) is going on, no other <blocking URL>
+> operation can start until the previous one is finished. If you attempt
+> to use a <URL> in an <expression>, or put data into a <URL>, while
+> another <blocking URL> operation is in progress, the <result> is set
+> to Error Previous request not completed.
 
 Description:
-Use the <put> <command> to set the value of a <variable>, put text into a <field>, put data into a <file>, display text in the <message box>, or upload a file to a server.
+Use the <put> <command> to set the value of a <variable>, put text into
+a <field>, put data into a <file>, display text in the <message box>, or
+upload a file to a server.
 
-If you use the put into form, the <value> replaces anything that was previously in the <container>.
-The put before and put after forms place the <value> before or after the current contents of the <container>.
-If you do not specify a <container>, the <put> <command> puts the value into the <message box>.
+If you use the put into form, the <value> replaces anything that was
+previously in the <container>. The put before and put after forms place
+the <value> before or after the current contents of the <container>. If
+you do not specify a <container>, the <put> <command> puts the value
+into the <message box>.
 
-If you put a <value> into a nonexistent <container>, LiveCode assumes it is a <variable> name, and initializes the <container> as a <local variable>. This is the most common way to create a local <variable>. You can also explicitly <declare> <local variable|local variables> with the <local> command. If the <explicitVariables> <property> is set to true, you must <declare> <local variable|local variables> before using them, and using the <put> <command> with a nonexistent variable causes an <error> instead of creating the <variable>.
+If you put a <value> into a nonexistent <container>, LiveCode assumes it
+is a <variable> name, and initializes the <container> as a <local
+variable>. This is the most common way to create a local <variable>. You
+can also explicitly <declare> <local variable|local variables> with the
+<local> command. If the <explicitVariables> <property> is set to true,
+you must <declare> <local variable|local variables> before using them,
+and using the <put> <command> with a nonexistent variable causes an
+<error> instead of creating the <variable>.
 
-The action of the put...into URL form varies depending on the type of URL:
+The action of the put...into URL form varies depending on the type of
+URL: 
 
-* When used with a file or <binfile> <URL>, places the <value> in the specified <file>. If the <file> does not exist, the <put> <command> creates it. Use the <file> <URL> type for text data and the <binfile> <URL> type for <binary file|binary data>.
+* When used with a file or <binfile> <URL>, places the <value> in the
+  specified <file>. If the <file> does not exist, the <put> <command>
+  creates it. Use the <file> <URL> type for text data and the <binfile>
+  <URL> type for <binary file|binary data>.
+
 
 local tResult
 <put> tData into url (file:  tFilePath)
 if tResult is not empty then
-  # Handle error here
+
+    # Handle error here
+
 else
-  # Continue execution
+
+    # Continue execution
+
 end if
 
-* When used with a resfile <URL>, sets the <resource fork> of the specified <file> to the <value>. Because <resource fork|resource forks> have a specific format, in general you should use <put> with a <resfile> <URL> only when the <value> is also a <resfile> <URL>. The following example copies the entire <resource fork> of one <file> to another:
+* When used with a resfile <URL>, sets the <resource fork> of the
+  specified <file> to the <value>. Because <resource fork|resource
+  forks> have a specific format, in general you should use <put> with a
+  <resfile> <URL> only when the <value> is also a <resfile> <URL>. The
+  following example copies the entire <resource fork> of one <file> to
+  another: 
 
-  put URL resfile:My Source into URL resfile:Destination
 
-  put empty into URL file:filePath
+    put URL resfile:My Source into URL resfile:Destination
 
-Then you can use the <put> <command> with a <resfile> <URL> type to create the <resource fork>.
+
+    put empty into URL file:filePath
+
+
+Then you can use the <put> <command> with a <resfile> <URL> type to
+create the <resource fork>.
 
 >*Important:* The syntax for file URLs with LiveCode's <URL(keyword)>
 >does not conform to [RFC 1738](https://tools.ietf.org/html/rfc1738).
 >To ensure proper operation on all platforms make sure you use
 >`file:path` rather than `file://path`.
 
-* When used with an http <URL>, uses the <HTTP> PUT method to <upload> the <value> to the <server>. However, since most <HTTP> <server|servers> don't implement the PUT method, you usually will use an <FTP> <URL> instead to <upload> files to an <HTTP> <server>.
+* When used with an http <URL>, uses the <HTTP> PUT method to <upload>
+  the <value> to the <server>. However, since most <HTTP>
+  <server|servers> don't implement the PUT method, you usually will use
+  an <FTP> <URL> instead to <upload> files to an <HTTP> <server>.
 
->*Note:* <upload|Uploading> a <URL> by putting a <value> into it is a <blocking> operation: that is, the <handler> pauses until LiveCode is finished <upload|Uploading> the <value>. Since contacting a <server> may take some time due to network lag, <URL> operations may take long enough to be noticeable to the user. To <upload> without <blocking>, use the <libURLftpUploadcommand> instead.
 
->*Note:* On windows, it is imperative not to name a file with one of the reserved device names: CON, PRN, AUX, NUL, COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9, LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8 and LPT9. Also do not use these names followed by an extension, for example, NUL.tx7.
+>*Note:* <upload|Uploading> a <URL> by putting a <value> into it is a
+> <blocking> operation: that is, the <handler> pauses until LiveCode is
+> finished <upload|Uploading> the <value>. Since contacting a <server>
+> may take some time due to network lag, <URL> operations may take long
+> enough to be noticeable to the user. To <upload> without <blocking>,
+> use the <libURLftpUpload> <command> instead.
+
+>*Note:* On windows, it is imperative not to name a file with one of the
+> reserved device names: CON, PRN, AUX, NUL, COM1, COM2, COM3, COM4,
+> COM5, COM6, COM7, COM8, COM9, LPT1, LPT2, LPT3, LPT4, LPT5, LPT6,
+> LPT7, LPT8 and LPT9. Also do not use these names followed by an
+> extension, for example, NUL.tx7.
 
 > *Note:* The Android and iOS engines do not support 'libUrl' but do
 > allow you to use <put> in the background. When specifying URLs for
@@ -85,6 +153,29 @@ Then you can use the <put> <command> with a <resfile> <URL> type to create the <
 > <URLEncode> any username and password fields appropriately for FTP
 > URLs.
 
-References: explicitVariables (property), urlProgress (message), binfile URL (keyword), ftp (keyword), message box (keyword), file (keyword), resfileURL (keyword), binfile (keyword), URL (keyword), resfile (keyword), httpURL (keyword), after (keyword), field (keyword), before (keyword), http (keyword), word (keyword), handler (glossary), variable (glossary), property (glossary), blocking (glossary), binary file (glossary), command (glossary), declare (glossary), resource fork (glossary), blocking URL (glossary), error (glossary), expression (glossary), local variable (glossary), upload (glossary), server (glossary), statement (glossary), container (glossary), result (function), value (function), URLEncode (function), delete URL command (command), libURLftpUploadcommand (command), put (command), local (command), put command (command), post command (command), libURLftpUpload (command), libURLDownloadToFile (command), function (control_st)
+> *Cross-platform note:* The HTML5 engine only supports HTTP and HTTPs
+> protocols.
+
+> *Cross-platform note:* URLs fetched by the HTML5 engine from a domain
+> other than that of the hosting the page may be blocked by web browsers,
+> unless the server hosting the URL sets the "Access-Control-Origin" header
+> appropriately.
+
+References: delete URL (command),
+put (command), local (command),
+post (command), libURLftpUpload (command),
+libURLDownloadToFile (command), function (control structure),
+result (function), value (function), URLEncode (function),
+handler (glossary), variable (glossary), property (glossary),
+blocking (glossary), binary file (glossary), command (glossary),
+declare (glossary), resource fork (glossary), blocking URL (glossary),
+error (glossary), expression (glossary), local variable (glossary),
+upload (glossary), server (glossary), statement (glossary),
+container (glossary), binfile URL (keyword), ftp (keyword),
+message box (keyword), file (keyword), resfileURL (keyword),
+binfile (keyword), URL (keyword), resfile (keyword), httpURL (keyword),
+after (keyword), field (keyword), before (keyword), http (keyword),
+word (keyword), urlProgress (message), explicitVariables (property)
 
 Tags: text processing
+

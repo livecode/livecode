@@ -1,20 +1,22 @@
 Name: visible
 
+Synonyms: vis
+
 Type: property
 
 Syntax: set the [effective] visible of <object> to {true | false}
 
-Summary: Specifies whether an <object> can be seen or is hidden.
+Summary:
+Specifies whether an <object(glossary)> can be seen or is hidden.
 
-Synonyms: vis
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the visible of stack "Palette" to false
@@ -25,23 +27,42 @@ set the visible of me to (not the visible of me)
 Example:
 put the effective visible of button "save"
 
-Value (bool): The <visible> of an <object> is true or false.
+Value (bool):
+The <visible> of an <object(glossary)> is true or false.
 
 Description:
-Use the <visible> <property> to determine whether an <object> is hidden or not, or to hide or show an <object>.
+Use the <visible> <property> to determine whether an <object(glossary)>
+is hidden or not, or to hide or show an <object(glossary)>.
 
-A hidden object is still present and still takes up memory, and a handler can access its properties and contents, but the user cannot see or or interact with it. 
+A hidden object is still present and still takes up memory, and a
+handler can access its properties and contents, but the user cannot see
+or or interact with it.
 
-An object that cannot be seen only because it's behind another object is still visible, in the sense that its <visible> <property> is still true. 
+An object that cannot be seen only because it's behind another object is
+still visible, in the sense that its <visible> <property> is still true.
 
-The <visible> <property> of <grouped control|grouped controls> is independent of the <visible> <property> of the <group(command)>. Setting a <group(glossary)|group's> <visible> <property> to false doesn't change the <visible> <property> of its <control|controls>; their <visible> <property> is still true, even though the <control|controls> cannot be seen because the <group(command)> is invisible. 
+The <visible> <property> of <grouped control|grouped controls> is
+independent of the <visible> <property> of the <group(command)>. Setting
+a <group(glossary)|group's> <visible> <property> to false doesn't change
+the <visible> <property> of its <control|controls>; their <visible>
+<property> is still true, even though the <control|controls> cannot be
+seen because the <group(command)> is invisible.
 
-If you specify the effective keyword the visible property of a control returns true if, and only if, the control and all it's parent groups are visible.
+If you specify the effective keyword the visible property of a control
+returns true if, and only if, the control and all it's parent groups are
+visible. 
 
-You can set the <visible> <property> of a <card(keyword)>, but doing so has no effect. <card(object)|Cards> cannot be made invisible. 
+You can set the <visible> <property> of a <card(keyword)>, but doing so
+has no effect. <card(object)|Cards> cannot be made invisible.
 
-The <visible> <property> is the logical inverse of the <invisible> <property>. When an <object|object's> <visible> is true, its <invisible> is false, and vice versa.
+The <visible> <property> is the logical inverse of the <invisible>
+<property>. When an <object|object's> <visible> is true, its <invisible>
+is false, and vice versa.
 
-References: showInvisibles (property), invisible (property), card (keyword), show (command), group (command), hide (command), card (object), object (object), control (object), property (glossary), grouped control (glossary), group (glossary)
+References: show (command), group (command), hide (command),
+object (glossary), property (glossary), grouped control (glossary),
+group (glossary), card (keyword), card (object), control (object),
+showInvisibles (property), invisible (property)
 
 Tags: ui
+

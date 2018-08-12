@@ -6,24 +6,35 @@ Syntax: the hostName
 
 Syntax: hostName()
 
-Summary: <return|Returns> the <domain name> of the local system.
+Summary:
+<return|Returns> the <domain name> of the local system.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if the hostName is "localhost.example.org" then return empty
 
-Returns: The <hostName> <function> <return|returns> the <domain name> of the computer.
+Returns:
+The <hostName> <function> <return|returns> the <domain name> of the
+computer. 
 
 Description:
-Use the <hostName> <function> to find the <domain name> of the computer that LiveCode is running on.
+Use the <hostName> <function> to find the <domain name> of the computer
+that LiveCode is running on.
 
-The <hostName> <function> does a reverse <DNS> lookup on the <hostAddress> in order to find the <domain name>. This means that the computer must be connected to the Internet in order to use this <function>. If a connection to the Internet is not available, the <hostName> <function> <return|returns> an <error message>.
+The <hostName> <function> does a reverse <DNS> lookup on the
+<hostAddress> in order to find the <domain name>. This means that the
+computer must be connected to the Internet in order to use this
+<function>. If a connection to the Internet is not available, the
+<hostName> <function> <return|returns> an <error message>.
 
-References: accept (command), hostAddress (function), DNSServers (function), domain name (glossary), error message (glossary), return (glossary), DNS (glossary), function (control_st)
+References: accept (command), function (control structure),
+hostAddress (function), DNSServers (function), domain name (glossary),
+error message (glossary), return (glossary), DNS (glossary)
 
 Tags: networking
+

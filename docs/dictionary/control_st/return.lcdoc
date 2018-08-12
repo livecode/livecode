@@ -2,38 +2,146 @@ Name: return
 
 Type: control structure
 
-Syntax: return <value> 
+Syntax: return <value> [ for { value | error } ]
 
-Summary: Stops the current <handler> and <return|returns> a <value> to the <handler> that <call|called> the current <handler>. Sets the result to the value as well
+Summary:
+Stops the current <handler> and <return|returns> a <value> to the
+<handler> that <call|called> the current <handler>.
 
 Introduced: 1.0
+Changed:8.1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
+
+Example:
+    function simpleFunction
+       return 1
+    end simpleFunction
+    on testSimpleFunction
+       local tVar
+       put simpleFunction() into tVar
+       -- tVar contains 1, the result contains 1
+    end testSimpleFunction
+
+Example:
+    function simpleFunction
+       return 1 for value
+    end simpleFunction
+    on testSimpleFunction
+       local tVar
+       put simpleFunction() into tVar
+       -- tVar contains 1, the result contains empty
+    end testSimpleFunction
+
+Example:
+    function simpleFunction
+       return 1 for error
+    end simpleFunction
+    on testSimpleFunction
+       local tVar
+       put simpleFunction() into tVar
+       -- tVar contains empty, the result contains 1
+    end testSimpleFunction
+
+Example:
+    command simpleCommand
+       return 1
+    end simpleCommand
+    on testSimpleCommand
+       simpleCommand
+       -- the result contains 1
+    end testSimpleCommand
+
+Example:
+    command simpleCommand
+       return 1 for value
+    end simpleCommand
+    on testSimpleCommand
+       simpleCommand
+       -- it contains 1, the result contains empty
+    end testSimpleCommand
+
+Example:
+    command simpleCommand
+       return 1 for error
+    end simpleCommand
+    on testSimpleCommand
+       simpleCommand
+       -- it contains empty, the result contains 1
+    end testSimpleCommand
 
 Parameters:
-value: 
-handler: The name of the handler in which the return control structure appears.
-
-The result: The <return> control structure set <the result> to the value being returned. If the <return> <control structure> is within an <on> or <setProp> <control structure>, the <value> can be retrieved by checking the <result> <function> in the <caller|calling handler>. Usually, when the <return> <control structure> is used within an <on> or <setProp> <control structure>, it <return(glossary)|returns> an error message. (If you want a <handler> to compute a <value> as its main reason for existence, you should implement it as a custom function rather than a custom command.). >*Note:* As well as the <return> <control structure> returns the value to the caller, it sets <the result> to the value.
+value:
+The value to return to the calling handler.
 
 Description:
-Use the <return> <control structure> to <return(constant)> a <value> from a custom function or <getProp> <handler>, or to <return(constant)> an error message from a <message handler> or <setProp> <handler>.
+Use the <return> <control structure> to <return(constant)> a <value>
+from a custom function or <getProp> <handler>, or to <return(constant)>
+an error message from a <message handler> or <setProp> <handler>.
 
-Form:
-The <return> <statement> appears on a line by itself, anywhere inside a <handler>.
+**Form:** The <return> <statement> appears on a line by itself, anywhere
+inside a <handler>.
 
-When the <return> <control structure> is <execute|executed>, any remaining <statement|statements> in the <handler> are skipped. Hence, the <return> <control structure> is usually used either at the end of a <handler> or within an <if> <control structure>.
+When the <return> <control structure> is <execute|executed>, any
+remaining <statement|statements> in the <handler> are skipped. Hence,
+the <return> <control structure> is usually used either at the end of a
+<handler> or within an <if> <control structure>.
 
-If the <return> <control structure> is within a <function> or <getProp> <control structure>, the <value> is returned to the <caller|calling handler> as the <function> <value> or <property> setting. For example, if you have the following <function> <handler> :
+The plain form of the <return> <control structure> always sets
+<the result> to <value>. Additionally, if it is used within a <function>
+or <getProp> <handler> then <value> is passed to the calling handler as
+the return value of the <function>, or value of the property.
 
-which is called in the following statement:
+The value form of the <return> <control structure> always sets
+<the result> to empty. If it is used within a <command> or <message>
+handler then the <it> variable in the calling handler will be set to
+<value>. If it is used within a <function> handler, then <value> is
+passed to the calling handler as the return value of the <function>,
+or value of the property. 
 
-then 1, the value returned by "simpleFunction", is placed in the field.
+The error form of the <return> <control structure> sets <the result> to
+<value>. If it is used within a <command> or <message> handler, then the
+<it> variable in the calling handler will be set to empty. If it is used
+within a <function> handler, then the return value of the <function> or
+the value of the property is returned as empty.
 
-When a message handler executes a <return> <statement>, the <message> stops and is not <pass|passed> to the next <object> in the <message path>. To halt the current <message handler> and <pass> the <message> on through the <message path>, use the <pass> <control structure> instead. To halt the current <handler> without returning a result, use the <exit> <control structure> instead.
+*Note:* The value and error forms can only be used within message,
+command and function handlers - not getProp or setProp handlers.
 
->*Note:* The <return> <control structure> is implemented internally as a <command> and appears in the <commandNames>.
+When a message handler executes a <return> <statement>, the <message>
+stops and is not <pass|passed> to the next <object(glossary)> in the
+<message path>. To halt the current <message handler> and <pass> the
+<message> on through the <message path>, use the <pass> 
+<control structure> instead. To halt the current <handler> without
+returning a value, use the <exit> <control structure> instead.
 
-References: object (object), return (constant), result (function), commandNames (function), value (function), merge (function), the result (function), message handler (glossary), return (glossary), call (glossary), property (glossary), pass (glossary), execute (glossary), command (glossary), control structure (glossary), message path (glossary), caller (glossary), message (glossary), statement (glossary), handler (glossary), setProp (control_st), getProp (control_st), throw (control_st), if (control_st), pass (control_st), exit (control_st), on (control_st), function (control_st)
+The value and error forms of the <return> command allow much easier
+scripting of the distinction between a return value of a handler call,
+and an error return value of a handler call. If a command or function
+<handler> succeeds, then the 'return for value' form should be used to
+return the result of the execution to the calling <handler>. If a
+command or function <handler> fails, then the 'return for error' form
+should be used to return an error status to the calling <handler>.
+
+Any callers of handlers using the new error and value forms of the
+<return> command can uniformly check <the result> is empty to determine
+if the operation succeeded, and if it did then either <it> or the return
+value can be processed to continue operation.
+
+>*Note:* The <return> <control structure> is implemented internally as a
+<command> and appears in the <commandNames>.
+
+References: return (constant), setProp (control structure),
+getProp (control structure), throw (control structure),
+if (control structure), pass (control structure),
+exit (control structure), on (control structure),
+function (control structure), result (function), commandNames (function),
+value (function), merge (function), the result (function),
+object (glossary), message handler (glossary), return (glossary),
+call (glossary), property (glossary), pass (glossary), execute (glossary),
+command (glossary), control structure (glossary), message path (glossary),
+caller (glossary), message (glossary), statement (glossary),
+handler (glossary)
+

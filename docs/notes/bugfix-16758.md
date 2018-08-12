@@ -1,0 +1,1 @@
+# Fixed bug causing crash when setting 65535 points to a graphic

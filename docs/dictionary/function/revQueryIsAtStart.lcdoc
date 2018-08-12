@@ -1,20 +1,21 @@
 Name: revQueryIsAtStart
 
+Synonyms: revdb_isbof
+
 Type: function
 
 Syntax: revQueryIsAtStart(<recordSetID>)
 
-Summary: Returns whether the beginning of a record set has been reached or not.
-
-Synonyms: revdb_isbof
+Summary:
+Returns whether the beginning of a record set has been reached or not.
 
 Introduced: 2.9
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 repeat until revQueryIsAtStart(tCursor)
@@ -23,13 +24,25 @@ repeat until revQueryIsAtStart(tCursor)
 end repeat
 
 Parameters:
-recordSetID: The number returned by the revQueryDatabase function when the record set was created.
+recordSetID:
+The number returned by the revQueryDatabase function when the record set
+was created.
 
-Returns: The <revQueryIsAtStart> function returns true if the <revMoveToPreviousRecord command> has been called with the cursor pointing to the first record.
+Returns:
+The <revQueryIsAtStart> function returns true if the
+<revMoveToPreviousRecord> <command> has been called with the cursor
+pointing to the first record.
 
 Description:
-Use the <revQueryIsAtStart> function to stop when you reach the start of a record set.
+Use the <revQueryIsAtStart> function to stop when you reach the start of
+a record set.
 
-If the operation is not successful, the <revQueryIsAtStart> function returns an error message that begins with the <string> "revdberr".
+If the operation is not successful, the <revQueryIsAtStart> function
+returns an error message that begins with the <string> "revdberr".
 
-References: revMoveToPreviousRecord (command), revMoveToPreviousRecord command (command), revOpenDatabase (function), revCurrentRecord (function), revQueryDatabase (function), revCurrentRecordIsFirst (function), revQueryIsAtEnd (function), string (keyword)
+References: revMoveToPreviousRecord (command),
+command (glossary), revOpenDatabase (function),
+revCurrentRecord (function), revQueryDatabase (function),
+revCurrentRecordIsFirst (function), revQueryIsAtEnd (function),
+string (keyword)
+

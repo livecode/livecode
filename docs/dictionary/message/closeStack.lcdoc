@@ -4,15 +4,16 @@ Type: message
 
 Syntax: closeStack
 
-Summary: Sent to the <current card> when the <stack> closes.
+Summary:
+Sent to the <current card> when the <stack> closes.
 
 Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on closeStack -- automatically save changes
@@ -21,12 +22,22 @@ on closeStack -- automatically save changes
 end closeStack
 
 Description:
-Handle the <closeStack> <message> if you want to perform cleanup or do other tasks when the user closes a window.
+Handle the <closeStack> <message> if you want to perform cleanup or do
+other tasks when the user closes a window.
 
 A stack is closed when the user or a handler closes the stack window.
 
-The actual closing is not triggered by the <closeStack> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <stack> from closing. To prevent a <stack> from closing, <trap> the <closeStackRequest> <message>.
+The actual closing is not triggered by the <closeStack> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <stack> from closing. To prevent a <stack> from closing,
+<trap> the <closeStackRequest> <message>.
 
-References: closeBox (property), closeStackRequest (message), unIconifyStack (message), closeBackground (message), preOpenStack (message), shutdown (message), suspendStack (message), saveStackRequest (message), closeCard (message), stack (object), trap (glossary), current card (glossary), message (glossary), pass (control_st)
+References: pass (control structure), trap (glossary),
+current card (glossary), message (glossary), closeStackRequest (message),
+unIconifyStack (message), closeBackground (message),
+preOpenStack (message), shutdown (message), suspendStack (message),
+saveStackRequest (message), closeCard (message), stack (object),
+closeBox (property)
 
 Tags: ui
+

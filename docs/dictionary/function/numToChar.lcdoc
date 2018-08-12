@@ -2,17 +2,21 @@ Name: numToChar
 
 Type: function
 
-Syntax: the numToChar of <ASCIIValue> 
+Syntax: the numToChar of <ASCIIValue>
 
 Syntax: numToChar(<ASCIIValue>)
 
-Summary: <return|Returns> the <character> corresponding to an <ASCII|ASCII value>.
+Summary:
+<return|Returns> the <character> corresponding to an <ASCII|ASCII
+value>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+Deprecated: 7.0
 
-Platforms: desktop,server,web,mobile
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
 
 Example:
 numToChar(65)
@@ -21,25 +25,59 @@ Example:
 numToChar(0)
 
 Parameters:
-ASCIIValue: an integer between zero and 255, or an expression that evaluates to such an integer. If the useUnicode property is set to true, the ASCIIValue is an integer between zero and 65535.
+ASCIIValue:
+an integer between zero and 255, or an expression that evaluates to such
+an integer. If the useUnicode property is set to true, the ASCIIValue is
+an integer between zero and 65535.
 
-Returns: The <numToChar> function <return|returns> a single <character>.
+Returns:
+The <numToChar> function <return|returns> a single <character>.
 
 Description:
-Use the <numToChar> function to translate numbers into their <character> equivalents, or to interpret a <character> (such as a control character) that can't be displayed.
+Use the <numToChar> function to translate numbers into their <character>
+equivalents, or to interpret a <character> (such as a control character)
+that can't be displayed.
 
 >*Important:* 
-As of version 7.0 the numToChar and charToNum functions have been deprecated. They will continue to work as in previous versions but should not be used with Unicode text as unexpected results may occur. If working with Unicode text use the <numToCodepoint> and <codepointToNum> functions, for native text use <numToNativeChar> and <nativeCharToNum> functions. If working with binary data use the <numToByte> and <byteToNum> functions.
+As of version 7.0 the numToChar and charToNum functions have been
+deprecated. They will continue to work as in previous versions but
+should not be used with Unicode text as unexpected results may occur. If
+working with Unicode text use the <numToCodepoint> and <codepointToNum>
+functions, for native text use <numToNativeChar> and <nativeCharToNum>
+functions. If working with binary data use the <numToByte> and
+<byteToNum> functions.
 
 The <numToChar> function is the <inverse> of the <charToNum> <function>.
 
-If the <ASCIIValue> is between 127 and 255, the <character> <return|returned> by the <numToChar> <function> depends on the <character set> currently in use. On <Mac OS|Mac OS systems> this is usually the <Mac OS|Macintosh> <character set>; on <Unix> systems, this is usually <ISO 8859>; on <Windows|Windows systems>, this is usually Code Page 1252, a variant of <ISO 8859>.
+If the <ASCIIValue> is between 127 and 255, the <character>
+<return|returned> by the <numToChar> <function> depends on the
+<character set> currently in use. On <Mac OS|Mac OS systems> this is
+usually the <Mac OS|Macintosh> <character set>; on <Unix> systems, this
+is usually <ISO 8859>; on <Windows|Windows systems>, this is usually
+Code Page 1252, a variant of <ISO 8859>.
 
-If the <useUnicode> <property> is set to true, the <numToChar> <function> <return|returns> a double-byte character. If the <useUnicode> is false and you specify an <ASCIIValue> greater than 255, the <numToChar> <function> <return|returns> the <character> corresponding to the <ASCIIValue> <mod> 256.
+If the <useUnicode> <property> is set to true, the <numToChar>
+<function> <return|returns> a double-byte character. If the <useUnicode>
+is false and you specify an <ASCIIValue> greater than 255, the
+<numToChar> <function> <return|returns> the <character> corresponding to
+the <ASCIIValue> <mod> 256.
 
 Changes:
-The ability to handle Unicode characters was introduced in version 2.0. In previous versions, it was not possible for the <numToChar> function to return a <Unicode> <character>.
+The ability to handle Unicode characters was introduced in version 2.0.
+In previous versions, it was not possible for the <numToChar> function
+to return a <Unicode> <character>.
 
-References: extendKey (property), charSet (property), HTMLText (property), useUnicode (property), inverse (keyword), character (keyword), mod (operator), uniEncode (function), nativeCharToNum (function), binaryEncode (function), numToCodepoint (function), macToISO (function), byteToNum (function), numToByte (function), binaryDecode (function), charToNum (function), numToNativeChar (function), toUpper (function), base64Encode (function), ISOToMac (function), toLower (function), codepointToNum (function), property (glossary), ASCII (glossary), return (glossary), Windows (glossary), character set (glossary), ISO 8859 (glossary), Unix (glossary), Mac OS (glossary), Unicode (glossary), function (control_st)
+References: function (control structure), uniEncode (function),
+nativeCharToNum (function), binaryEncode (function),
+numToCodepoint (function), macToISO (function), byteToNum (function),
+numToByte (function), binaryDecode (function), charToNum (function),
+numToNativeChar (function), toUpper (function), base64Encode (function),
+ISOToMac (function), toLower (function), codepointToNum (function),
+property (glossary), ASCII (glossary), return (glossary),
+Windows (glossary), character set (glossary), ISO 8859 (glossary),
+Unix (glossary), Mac OS (glossary), Unicode (glossary), inverse (keyword),
+character (keyword), mod (operator), extendKey (property),
+charSet (property), HTMLText (property), useUnicode (property)
 
 Tags: text processing
+

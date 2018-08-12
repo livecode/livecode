@@ -4,36 +4,47 @@ Type: function
 
 Syntax: sum(<numbersList>)
 
-Summary: <return|Returns> the sum of a list of numbers.
+Summary:
+<return|Returns> the sum of a list of numbers.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-sum(1,5,2,3) -- returns 11
+put sum(1,5,2,3) -- returns 11
 
 Parameters:
-numbersList: 
-numberList: * a sequence of parameters, each a number or evaluating to a number or  * a single parameter which is or evaluates to  * a comma-separated list of numbers or  * an array containing only numbers
+numbersList(numbers):
+* a sequence of parameters, each a number or evaluating to a number or
+* a single parameter which is or evaluates to
+    * a comma-separated list of numbers or
+    * an array containing only numbers
 
-Returns: The <sum> <function> <return|returns> a number.
+Returns(number):
+The <sum> <function> <return|returns> a number.
 
 Description:
 Use the <sum> function to add a <group> of <value|values> together.
 
-The <sum> <function> is equivalent to the following <statement|statements>:
+The <sum> <function> is equivalent to the following
+<statement|statements>:
 
-  repeat with x = 1 to the number of items of numbersList
-    add item x of numbersList to sumValue
-  end repeat
-  return sumValue
+    repeat with x = 1 to the number of items of numbersList
+        add item x of numbersList to sumValue
+    end repeat
+    return sumValue
+
 
 If the <numbersList> is empty, the <sum> <function> returns zero.
 
 Changes:
-The ability to use an array was introduced in version 1.1. In previous versions, only lists of numbers could be used with the sum function.
+The ability to use an array was introduced in version 1.1. In previous
+versions, only lists of numbers could be used with the sum function.
 
-References: + (operator), add (command), group (command), standardDeviation (function), min (function), max (function), extents (function), statement (glossary), return (glossary), value (glossary), function (control_st)
+References: add (command), group (command), function (control structure),
+standardDeviation (function), min (function), max (function),
+extents (function), statement (glossary), return (glossary),
+value (glossary), + (operator)

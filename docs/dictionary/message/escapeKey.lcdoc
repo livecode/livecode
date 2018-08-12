@@ -4,13 +4,16 @@ Type: message
 
 Syntax: escapeKey
 
-Summary: Sent when the user presses the <Escape key>.
+Summary:
+Sent when the user presses the <Escape key>.
+
+Associations: card, field
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 on escapeKey -- return to the last card visited
@@ -18,10 +21,13 @@ on escapeKey -- return to the last card visited
 end escapeKey
 
 Description:
-Handle the <escapeKey> <message> if you want to perform some action when the user presses <Escape key|Escape>.
+Handle the <escapeKey> <message> if you want to perform some action when
+the user presses <Escape key|Escape>.
 
-The message is sent to the active (focused) control, or to the current card if no control is focused.
+The message is sent to the active (focused) control, or to the current
+card if no control is focused.
 
-References: keyDown (message), Escape key (glossary), message (glossary)
+References: Escape key (glossary), message (glossary), keyDown (message)
 
 Tags: ui
+

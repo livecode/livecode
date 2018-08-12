@@ -4,13 +4,15 @@ Type: command
 
 Syntax: unlock menus
 
-Summary: Sets the <lockMenus> <property> to false, so the <menu bar> is updated when the menus are changed.
+Summary:
+Sets the <lockMenus> <property> to false, so the <menu bar> is updated
+when the menus are changed.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Example:
 unlock menus
@@ -19,12 +21,19 @@ Example:
 if the lockScreen is false then unlock menus
 
 Description:
-Use the <unlock menus> <command> to show changes in the <menu bar> to the user.
+Use the <unlock menus> <command> to show changes in the <menu bar> to
+the user.
 
 The <unlock menus> <command> sets the <lockMenus> <property> to true.
 
-When all pending handlers are finished executing, the <lockMenus> <property> is set to false, <undo|undoing> the <lock menus> <command|command's> action. Any changes made to the <menus> become visible to the user.
+When all pending handlers are finished executing, the <lockMenus>
+<property> is set to false, <undo|undoing> the <lock menus>
+<command|command's> action. Any changes made to the <menus> become
+visible to the user.
 
-References: lockMenus (property), lock menus (command), menus (function), property (glossary), undo (glossary), menu bar (glossary), command (glossary)
+References: lock menus (command), menus (function), property (glossary),
+undo (glossary), menu bar (glossary), command (glossary),
+lockMenus (property)
 
 Tags: menus
+

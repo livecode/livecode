@@ -4,25 +4,41 @@ Type: keyword
 
 Syntax: effective
 
-Summary: Used with <inheritance|inherited> <properties> to specify the <object|object's> own setting or the setting <inheritance|inherited> from the <object|object's> <owner>, whichever is actually displayed.
+Summary:
+Used with <inheritance|inherited> <properties> to specify the
+<object|object's> own setting or the setting <inheritance|inherited>
+from the <object|object's> <owner>, whichever is actually displayed.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the effective textColor of me into myColor
 
 Description:
-Use the <effective> <keyword> to get the displayed color or <font> of an <object>, regardless of whether the <object> itself has that <property> set. The <effective> <keyword> can also be used to get the <filename> of a <substack> or the current <rectangle> of an <object>.
+Use the <effective> <keyword> to get the displayed color or <font> of an
+<object(glossary)>, regardless of whether the <object(glossary)> itself
+has that <property> set. The <effective> <keyword> can also be used to
+get the <filename> of a <substack> or the current <rectangle> of an
+<object(glossary)>. 
 
-If one of an object's text, color, or pattern properties is set to empty, the owner's setting is used instead. (If the owner's setting is empty, the setting of that object's <owner> is used.)
+If one of an object's text, color, or pattern properties is set to
+empty, the owner's setting is used instead. (If the owner's setting is
+empty, the setting of that object's <owner> is used.)
 
-For example, if a card button's backgroundColor <property> is empty, the <backgroundColor> of the <card> is used as the <button(object)|button's> <backgroundColor>. You use the <effective> <keyword> to get the color that is actually used. If the <button(object)|button's> <backgroundColor> is not set to empty, the <effective> <keyword> gets the setting for the <button(keyword)>, since that setting is what the <button(keyword)> displays as its background color.
+For example, if a card button's backgroundColor <property> is empty, the
+<backgroundColor> of the <card> is used as the <button(object)|button's>
+<backgroundColor>. You use the <effective> <keyword> to get the color
+that is actually used. If the <button(object)|button's>
+<backgroundColor> is not set to empty, the <effective> <keyword> gets
+the setting for the <button(keyword)>, since that setting is what the
+<button(keyword)> displays as its background color.
 
-The <effective> <keyword> can be used with the following inherited <properties> :
+The <effective> <keyword> can be used with the following inherited
+<properties> :
 
 * backgroundColor property
 * backgroundPattern property
@@ -46,18 +62,33 @@ The <effective> <keyword> can be used with the following inherited <properties> 
 * shadowPattern property
 * shadowPixel property
 
+
 * textFont property
 * textHeight property
 * textSize property
 * textStyle property
 
+
 * filename of stack property
 * rectangle property
 
-* <layerMode> < property(property)>
 
->*Note:* The <effective> keyword is implemented internally as a property and appears in the propertyNames. However, it cannot be used as a prop in an expression, nor with the set com.
+* <layerMode> property
 
-References: borderPattern (property), foregroundColor (property), threeDHilite (property), bottomPattern (property), focusColor (property), properties (property), focusPattern (property), filename (property), label (property), backgroundColor (property), owner (property), layerMode (property), topColor (property), card (keyword), rectangle (keyword), button (keyword), object (object), button (object), property (glossary), keyword (glossary), substack (glossary), layerMode (glossary), font (glossary), inheritance (glossary)
+
+>*Note:* The <effective> keyword is implemented internally as a property
+> and appears in the propertyNames. However, it cannot be used as a prop
+> in an expression, nor with the set com.
+
+References: object (glossary), property (glossary), keyword (glossary),
+substack (glossary), font (glossary),
+inheritance (glossary), card (keyword), rectangle (keyword),
+button (keyword), button (object), borderPattern (property),
+foregroundColor (property), threeDHilite (property),
+bottomPattern (property), focusColor (property), properties (property),
+focusPattern (property), filename (property), label (property),
+backgroundColor (property), owner (property), layerMode (property),
+topColor (property)
 
 Tags: file system
+

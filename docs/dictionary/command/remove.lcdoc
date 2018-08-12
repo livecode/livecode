@@ -2,15 +2,18 @@ Name: remove
 
 Type: command
 
-Syntax: remove <group> from <card> 
+Syntax: remove <group> from <card>
 
-Summary: Deletes a group from a specified card.
+Summary:
+Deletes a group from a specified card.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 remove group 1 from this card
@@ -22,18 +25,26 @@ Example:
 remove group thisGroup from card "Overview"
 
 Parameters:
-group: The group is a reference to any group that is on the specified card.
-card: The card is any card reference.
+group:
+The group is a reference to any group that is on the specified card.
+
+card:
+The card is any card reference.
 
 Description:
-Use the <remove> command to remove a group from a card without removing it from the stack.
+Use the <remove> command to remove a group from a card without removing
+it from the stack.
 
 The <remove> command removes a group from a card, without deleting it.
 
-Only top-level groups may be removed from cards; an attempt to remove a nested group from a card throws an error.
+Only top-level groups may be removed from cards; an attempt to remove a
+nested group from a card throws an error.
 
-Removing a group from a card automatically sets the <sharedBehavior> property of the group to true.
+Removing a group from a card automatically sets the <sharedBehavior>
+property of the group to true.
 
-References: delete (command), start editing (command), onto (keyword), sharedBehavior (property)
+References: delete (command), place (command), start editing (command), onto (keyword),
+sharedBehavior (property)
 
 Tags: objects
+

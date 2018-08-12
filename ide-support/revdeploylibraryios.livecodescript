@@ -1,4 +1,4 @@
-script "revDeployLibraryIOS"
+﻿script "revDeployLibraryIOS"
 ////////////////////////////////////////////////////////////////////////////////
 
 local sDeploySimulators
@@ -18,13 +18,13 @@ local sDeviceSDKs
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
 function deployUsableIosSdk
-   return "6.1,7.1,8.2,9.2,9.3"
+   return "8.2,9.2,10.2,11.2,11.4"
 end deployUsableIosSdk
 
-// SN-2015-05-01: [[ Xcode 6.4 ]] Return the pair iOS SDK / Xcode for the current MacOS version
+// SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
 function deployGetIphoneOSes
    local tList, tMacVersion
-   put deploySanatizeSystemVersion() into tMacVersion
+   put deploySanitizeSystemVersion() into tMacVersion
    if tMacVersion < 100800 then
       put "6.1,4.6" into tList[1]
    else if tMacVersion < 100900 then
@@ -33,20 +33,30 @@ function deployGetIphoneOSes
       put "8.2,6.2" into tList[1]
    else if tMacVersion < 101100 then
       put "8.2,6.2" into tList[1]
-      // Xcode 7.0 can be installed from Mac OSX 10.10.4 onwards
-      if tMacVersion >= 101004 then
+      // Xcode 7.2 can be installed from Mac OSX 10.10.5 onwards
+      if tMacVersion >= 101005 then
          put "9.2,7.2" into tList[2]
       end if
+   else if tMacVersion < 101200 then
+      put "10.2,8.2" into tList[1]
+   else if tMacVersion < 101206 then
+      put empty into tList[1]
+      answer error "To use Xcode 9.2, you need to upgrade your Mac to MacOS Sierra 10.12.6"
+   else if tMacVersion < 101300 then
+      put "11.2,9.2" into tList[1]
+   else if tMacVersion < 101302 then
+      put empty into tList[1]
+      answer error "To use Xcode 9.4, you need to upgrade your Mac to MacOS High Sierra 10.13.2"
    else
-   	  // Xcode 7.3 requires a Mac running OS X 10.11 or later
-      put "9.3,7.3" into tList[1]
+      // Xcode 9.4 requires a Mac running Mac OS 10.13.2 or later
+      put "11.4,9.4" into tList[1]
    end if
    
    return tList
 end deployGetIphoneOSes
 
 function deployGetIosMinimumVersions
-   return "5.1.1,6.0,6.1,7.0,7.1,8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3"
+   return "8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0,10.1,10.2,10.3,11.0,11.1,11.2,11.3,11.4"
 end deployGetIosMinimumVersions
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,9 +111,12 @@ end deployListTargets
 
 -- Invoked when the Deploy/Simulate button is clicked on the menubar
 command deployDo pTargetStack, pSimulator, pAppBundle
-   -- The error that occured (if any)
+   -- The error that occurred (if any)
    local tError, tRunningTest
    put empty into tError
+   
+   local tSettings
+   put revSBGetSettings(pTargetStack, true) into tSettings
    
    put revTestEnvironment() into tRunningTest
    
@@ -124,15 +137,15 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       put word 1 of pSimulator into tFamily
       
       -- First make sure the minimum version is adhered to
-      if tVersion < the cRevStandaloneSettings["ios,minimum version"] of stack pTargetStack then
-         put the cRevStandaloneSettings["ios,minimum version"] of stack pTargetStack into tVersion
+      if tVersion < tSettings["ios,minimum version"] then
+         put tSettings["ios,minimum version"] into tVersion
          if tFamily is not among the lines of deployGetSimulatorFamilies(tVersion) then
             put line 1 of deployGetSimulatorFamilies(tVersion) into tFamily
          end if
       end if
       
       -- If the app is only for iPad, then force to iPad family
-      if the cRevStandaloneSettings["ios,device family"] of stack pTargetStack is 2 then
+      if tSettings["ios,device family"] is 2 then
          put "iPad" into tFamily
          if tFamily is not among the lines of deployGetSimulatorFamilies(tVersion) then
             put empty into tVersion
@@ -151,7 +164,7 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       end if
       
       -- Finally check we have a suitable minimum version
-      if tVersion < the cRevStandaloneSettings["ios,minimum version"] of stack pTargetStack then
+      if tVersion < tSettings["ios,minimum version"] then
          put "No simulators matching specified family or minimum version are installed." into tError
       end if
    end if
@@ -159,10 +172,10 @@ command deployDo pTargetStack, pSimulator, pAppBundle
    local tTempAppBundle
    if tError is empty then
       if pAppBundle is empty then
-         put tTempFolder & slash & the cREVStandaloneSettings["name"] of stack pTargetStack & ".app" into tTempAppBundle
+         put tTempFolder & slash & tSettings["name"] & ".app" into tTempAppBundle
          try
             dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
-                  pTargetStack, tTempAppBundle, "Simulator" && tVersion
+                  pTargetStack, tTempAppBundle, "Simulator" && tVersion, tSettings
          catch tException
             put "Unable to build app for simulation:" && tException into tError
          end try
@@ -387,7 +400,7 @@ function deployGetInvalidityMessage pIosXcodePairs
    //  pairs to list (as for now, 2 for Yosemite)
    repeat for each element tIosXcodePair in pIosXcodePairs
       if tIosToInstall is not empty then put " or " before tIosToInstall
-      if tIosList is not empy then put LF before tIosList
+      if tIosList is not empty then put LF before tIosList
       
       put item 1 of tIosXcodePair before tIosToInstall
       put "  - iOS" && item 1 of tIosXcodePair && "comes with Xcode" && item 2 of tIosXcodePair before tIosList
@@ -428,7 +441,6 @@ function deployCheckLatestSDKIsInstalled @rTooltip, @rAvailableSDKs
    end if
    
    put it into rAvailableSDKs
-   put tSDKStatus into rSDKStatus
    
    return tValid
 end deployCheckLatestSDKIsInstalled
@@ -532,7 +544,7 @@ function deployIsValidSDK pSDK
       return false
    end if
    
-   local tOldFolder, tSDKVersion, tValidSDK
+   local tOldFolder, tSDKVersion, tValidSDK, tSDKList
    put the defaultfolder into tOldFolder
    set the defaultfolder to pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs"
    
@@ -543,7 +555,7 @@ function deployIsValidSDK pSDK
    // SN-2015-03-24: [[ Bug 15037 ]] We accept any SDK having a simulator for
    //  which we provide an engine.
    repeat for each line tSDK in tSDKList
-      if matchtext(tSDK, "iPhoneSimulator([0-9]\.[0-9]).sdk", tSDKVersion) and \
+      if matchtext(tSDK, "iPhoneSimulator([0-9]+\.[0-9]+).sdk", tSDKVersion) and \
             tSDKVersion is among the items of deployUsableIosSdk() then
          put true into tValidSDK
          exit repeat
@@ -559,7 +571,7 @@ end deployIsValidSDK
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function deploySanatizeSystemVersion
+function deploySanitizeSystemVersion
    set the itemDel to "."
    get the systemVersion   
    if the length of item 2 of it is 0 then
@@ -574,6 +586,6 @@ function deploySanatizeSystemVersion
    end if   
    replace "." with empty in it
    return it
-end deploySanatizeSystemVersion
+end deploySanitizeSystemVersion
 
 ////////////////////////////////////////////////////////////////////////////////

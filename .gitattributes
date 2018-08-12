@@ -29,6 +29,9 @@
 *.sh text eol=lf
 *.inc text eol=lf
 
+# These files are processed by cygwin+bash so make sure they don't end with CRLF
+prebuilt/versions/* text eol=lf
+
 # Denote all files that are truly binary and should not be modified.
 *.png binary
 *.jpg binary

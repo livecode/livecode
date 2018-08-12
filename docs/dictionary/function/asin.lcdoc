@@ -2,17 +2,18 @@ Name: asin
 
 Type: function
 
-Syntax: the asin of <number> 
+Syntax: the asin of <number>
 
 Syntax: asin(<number>)
 
-Summary: <return|Returns> the arc sine of a number in <radian|radians>.
+Summary:
+<return|Returns> the arc sine of a number in <radian|radians>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the asin of .225
@@ -24,21 +25,32 @@ Example:
 asin(pi/4 - sin(myAngle))
 
 Parameters:
-number: A number between -1 and 1, or an expression that evaluates to such a number.
+number:
+A number between -1 and 1, or an expression that evaluates to such a
+number. 
 
-The result: The result of the <asin> <function> is <return|returned> in <radian|radians>. To get this result in <degree|degrees>, use the following <custom function>:.
+Returns:
+The <asin> <function> <return|returns> a number between -pi/2 and pi/2.
 
-Returns: The <asin> <function> <return|returns> a number between -pi/2 and pi/2.
+The result:
+The result of the <asin> <function> is <return|returned> in
+<radian|radians>. To get this result in <degree|degrees>, use the
+following <custom function>:
+
+    function asinInDegrees pMagnitude
+        return asin(pMagnitude) * 180 / pi
+    end asinInDegrees
 
 Description:
 Use the <asin> <function> to find the arc sine of a number.
 
-The arc sine of <number> is an angle whose sine is equal to <number>. In other words, <asin> is an <inverse> of the <sin> <function>.
+The arc sine of <number> is an angle whose sine is equal to <number>. In
+other words, <asin> is an <inverse> of the <sin> <function>.
 
-  function asinInDegrees theMagnitude
-    return asin(theMagnitude) * 180 / pi
-  end asinInDegrees
 
-References: inverse (keyword), pi (constant), sin (function), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control_st)
+References: pi (constant), function (control structure), sin (function),
+radian (glossary), custom function (glossary), return (glossary),
+degree (glossary), inverse (keyword)
 
 Tags: math
+

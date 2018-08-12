@@ -2,15 +2,14 @@ Name: adClicked
 
 Type: message
 
-Syntax: adClicked <adName> 
+Syntax: adClicked <pAdName>
 
-Summary: Sent when the user clicks on an ad.
-
-Associations: stack
+Summary:
+Sent when the user clicks on an ad.
 
 Introduced: 5.5
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -20,11 +19,18 @@ on adClicked pAdName
 end adClicked
 
 Parameters:
-adName: The name of ad that has been clicked (as specified in mobileAdCreate)
+pAdName:
+The name of ad that has been clicked (as specified in <mobileAdCreate>)
 
 Description:
-Handle the <adClicked> message if you want to perform an action when a user clicks on an ad.
+Handle the <adClicked> message if you want to perform an action when a
+user clicks on an ad.
 
-The <adClicked> messge is sent to the object that created the ad when the user clicks on ad.
+The <adClicked> message is sent to the object that created the ad when
+the user clicks on ad.
 
-References: mobileAdCreate (command), mobileAdDelete (command), mobileAdSetVisible (command), mobileAdSetTopLeft (command), mobileAdRegister (command), mobileAdGetTopLeft (function), mobileAdGetVisible (function), adLoaded (message), adLoadFailed (message)
+References: mobileAdCreate (command), mobileAdDelete (command),
+mobileAdSetVisible (command), mobileAdSetTopLeft (command),
+mobileAdRegister (command), mobileAdGetTopLeft (function),
+mobileAdGetVisible (function), adLoaded (message), adLoadFailed (message)
+

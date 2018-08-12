@@ -1,39 +1,64 @@
 Name: brushPattern
 
+Synonyms: pattern
+
 Type: property
 
 Syntax: set the brushPattern to {<patternNumber> | <imageID>}
 
-Summary: Specifies the pattern used to paint with the Brush <tool> and to fill shapes in an <image>.
-
-Synonyms: pattern
+Summary:
+Specifies the pattern used to paint with the Brush <tool> and to fill
+shapes in an <image>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the brushPattern to 204
 
 Value:
 The <brushPattern> is a pattern specifier.
-A <patternNumber> is a built-in pattern number between 1 and 164. (These patterns correspond to LiveCode's built-in patterns 136 to 300.)
+A <patternNumber> is a built-in pattern number between 1 and 164. These
+patterns are provided for compatability with patterns available in
+MetaCard and correspond to LiveCode's built in image id 137 to 300. As
+with MetaCard pattern numbers 105 to 114 and 146 and above are 
+unavailable.
 
-An <imageID> is the ID of an <image> to use for a pattern. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+An <imageID> is the ID of an <image> to use for a pattern. LiveCode
+looks for the specified <image> first in the <current stack>, then in
+other open <stacks>.
 
 By default, the <brushPattern> is empty.
 
 Description:
-Use the <brushPattern> <property> to change the pattern used with the <bucket>, <spray can>, and <brush> <paint tool|paint tools>, and for the interior of filled shapes.
+Use the <brushPattern> <property> to change the pattern used with the
+<bucket>, <spray can>, and <brush> <paint tool|paint tools>, and for the
+interior of filled shapes.
 
 Pattern images can be color or black-and-white.
 
->*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less, and both its <height> and <width> must be a power of 2. To be used on <Windows> and <Unix|Unix systems>, <height> and <width> must be divisible by 8. To be used as a fully cross-platform pattern, both an image's dimensions should be one of 8, 16, 32, 64, or 128.
+>*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS
+> systems>, an <image> must be 128x128 <pixels> or less, and both its
+> <height> and <width> must be a power of 2. To be used on <Windows> and
+> <Unix|Unix systems>, <height> and <width> must be divisible by 8. To
+> be used as a fully cross-platform pattern, both an image's dimensions
+> should be one of 8, 16, 32, 64, or 128.
 
-If the <brushPattern> has been set since the last time the <brushColor> was set, the pattern is used instead of the color specified by <brushColor>. In other words, the last-set <property> takes priority.
+If the <brushPattern> has been set since the last time the <brushColor>
+was set, the pattern is used instead of the color specified by
+<brushColor>. In other words, the last-set <property> takes priority.
 
-References: brushColor (property), height (property), penPattern (property), pixels (property), width (property), image (keyword), rectangle (keyword), roundRect (keyword), polygon (keyword), spray can (keyword), bucket (keyword), brush (keyword), oval (keyword), regular (keyword), choose (command), tool (function), stacks (function), property (glossary), Windows (glossary), paint tool (glossary), Mac OS (glossary), Unix (glossary), current stack (glossary)
+References: choose (command), tool (function), stacks (function),
+property (glossary), Windows (glossary), paint tool (glossary),
+Mac OS (glossary), Unix (glossary), current stack (glossary),
+image (keyword), rectangle (keyword), roundRect (keyword),
+polygon (keyword), spray can (keyword), bucket (keyword), brush (keyword),
+oval (keyword), regular (keyword), brushColor (property),
+height (property), penPattern (property), pixels (property),
+width (property)
 
 Tags: ui
+

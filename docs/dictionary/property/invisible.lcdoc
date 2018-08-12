@@ -1,22 +1,24 @@
 Name: invisible
 
+Synonyms: inv
+
 Type: property
 
 Syntax: set the invisible of <object> to {true | false}
 
-Syntax: get the [effective] invisible of <object> 
+Syntax: get the [effective] invisible of <object>
 
-Summary: Specifies whether an <object> is hidden.
+Summary:
+Specifies whether an <object(glossary)> is hidden.
 
-Synonyms: inv
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the invisible of player "Splash Screen" to false
@@ -27,23 +29,40 @@ set the invisible of the mouseControl to true
 Example:
 get the effective invisible of button "go"
 
-Value (bool): The <invisible> of an object is true or false.
+Value (bool):
+The <invisible> of an object is true or false.
 
 Description:
-Use the <invisible> property to determine whether an object is hidden or not.
+Use the <invisible> property to determine whether an object is hidden or
+not. 
 
-A hidden object is still present and still takes up memory, and a handler can access its properties and contents, but the user cannot see or or interact with it.
+A hidden object is still present and still takes up memory, and a
+handler can access its properties and contents, but the user cannot see
+or or interact with it.
 
-An object that cannot be seen only because it's behind another object is still visible, in the sense that its <invisible> property is still false.
+An object that cannot be seen only because it's behind another object is
+still visible, in the sense that its <invisible> property is still
+false. 
 
-The <invisible> property of grouped controls is independent of the invisible property of the group. Setting a group's <invisible> property to true doesn't change the <invisible> property of its controls; their <invisible> property is still false, even though the controls cannot be seen because the group is <invisible>.
+The <invisible> property of grouped controls is independent of the
+invisible property of the group. Setting a group's <invisible> property
+to true doesn't change the <invisible> property of its controls; their
+<invisible> property is still false, even though the controls cannot be
+seen because the group is <invisible>.
 
-If you specify the effective keyword the <invisible> property of a control returns true if the control or any parent group of the control is invisible.
+If you specify the effective keyword the <invisible> property of a
+control returns true if the control or any parent group of the control
+is invisible.
 
-You can set the <invisible> property of a card, but doing so has no effect. Cards cannot be made invisible.
+You can set the <invisible> property of a card, but doing so has no
+effect. Cards cannot be made invisible.
 
-The <invisible> property is the logical inverse of the visible property. When an object's invisible is true, its visible is false, and vice versa.
+The <invisible> property is the logical inverse of the visible property.
+When an object's invisible is true, its visible is false, and vice
+versa. 
 
-References: show (command), hide (command), showInvisibles (property), visible (property), object (object)
+References: show (command), hide (command), object (glossary),
+showInvisibles (property), visible (property)
 
 Tags: ui
+

@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "objdefs.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "stack.h"
 #include "button.h"
@@ -44,20 +44,22 @@ MCStack *MCStacknode::getstack()
 	return stackptr;
 }
 
-MCStacklist::MCStacklist()
+MCStacklist::MCStacklist(bool p_manage_topstack)
+    : restart(False)
 {
 	stacks = NULL;
 	menus = NULL;
 	nmenus = 0;
 	accelerators = NULL;
 	naccelerators = 0;
-	locktop = False;
 #ifdef _MACOSX
 	active = False;
 #else
 	active = True;
 #endif
 	dirty = false;
+	
+	m_manage_topstack = p_manage_topstack;
 }
 
 MCStacklist::~MCStacklist()
@@ -71,15 +73,14 @@ MCStacklist::~MCStacklist()
 	if (menus != NULL)
 		delete menus;
 	if (accelerators != NULL)
-		delete accelerators;
+		delete[] accelerators; /* Allocated with new[] */
 }
 
 void MCStacklist::add(MCStack *sptr)
 {
-	MCStacknode *tptr = new MCStacknode(sptr);
+	MCStacknode *tptr = new (nothrow) MCStacknode(sptr);
 	tptr->appendto(stacks);
-	if (this == MCstacks) // should be done with subclass
-		top(sptr);
+	top(sptr);
 }
 
 void MCStacklist::remove(MCStack *sptr)
@@ -109,12 +110,16 @@ void MCStacklist::destroy()
 	{
 		Boolean oldstate = MClockmessages;
 		MClockmessages = True;
-		while (stacks != NULL)
+        MCerrorlock++;
+        while (stacks != NULL)
 		{
 			MCStacknode *tptr = stacks->remove(stacks);
-			MCdispatcher->destroystack(tptr->getstack(), True);
+			if (tptr -> getstack() -> del(false))
+                tptr->getstack()->scheduledelete();
 			delete tptr;
 		}
+        MCerrorlock--;
+        
 		MClockmessages = oldstate;
 	}
 }
@@ -152,7 +157,7 @@ static bool stack_is_above(MCStack *p_stack_a, MCStack *p_stack_b)
 
 void MCStacklist::top(MCStack *sptr)
 {
-	if (stacks == NULL || locktop)
+	if (stacks == NULL || !m_manage_topstack)
 		return;
 
 	MCStacknode *tptr = stacks;
@@ -206,13 +211,14 @@ void MCStacklist::top(MCStack *sptr)
 	}
 
 	uint2 pass = WM_TOP_LEVEL;
-	MCtopstackptr = NULL;
+	MCtopstackptr = nil;
 	do
 	{
 		tptr = stacks;
 		do
 		{
-			if (tptr->getstack()->getmode() == pass)
+			if (tptr->getstack()->getmode() == pass &&
+                !tptr->getstack()->getstate(CS_DELETE_STACK))
 			{
 				MCtopstackptr = tptr->getstack();
 				return;
@@ -328,7 +334,7 @@ Boolean MCStacklist::doaccelerator(KeySym p_key)
 	// We fix these issues here...
 
 	MCGroup *t_menubar;
-	if (MCmenubar != NULL)
+	if (MCmenubar)
 		t_menubar = MCmenubar;
 	else
 		t_menubar = MCdefaultmenubar;
@@ -353,15 +359,15 @@ Boolean MCStacklist::doaccelerator(KeySym p_key)
 				t_menubar -> message_with_valueref_args(MCM_mouse_down, kMCEmptyString);
 
 				// We now need to re-search for the accelerator, since it could have gone/been deleted in the mouseDown
-				for(uint2 i = 0; i < naccelerators; i++)
+				for(uint2 t_accelerator = 0; t_accelerator < naccelerators; t_accelerator++)
 				{
-					if (t_lowersym == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
+					if (t_lowersym == accelerators[t_accelerator] . key && (MCmodifierstate & t_mod_mask) == (accelerators[t_accelerator].mods & t_mod_mask) && accelerators[t_accelerator] . button -> getparent() == t_menubar)
 					{
                         MCmodifierstate &= t_mod_mask;
                         // TKD-2014-09-26: [[ Bug 13560 ]] Unlock the screen prior to triggering menu item. If code outside of
                         //   the engine updates the window size the window isn't redrawn (e.g. [NSWindow toggleFullScreen:nil]).
                         MCRedrawUnlockScreen();
-                        accelerators[i] . button -> activate(True, t_lowersym);
+                        accelerators[t_accelerator] . button -> activate(True, t_lowersym);
 						return True;
 					}
 				}

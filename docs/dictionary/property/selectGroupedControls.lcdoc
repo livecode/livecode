@@ -6,24 +6,40 @@ Syntax: set the selectGroupedControls to {true | false}
 
 Syntax: set the selectGroupedControls of group <groupname> to {true | false}
 
-Summary: Specifies whether clicking an <object> in a <group> <select|selects> the <object> or the entire <group>.
+Summary:
+Specifies whether clicking an <object(glossary)> in a <group>
+<select|selects> the <object(glossary)> or the entire <group>.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the selectGroupedControls to (not the selectGroupedControls)
 
 Description:
-Use the <selectGroupedControls> <property> to control what happens when you click a <grouped control>.
+Use the <selectGroupedControls> <property> to control what happens when
+you click a <grouped control>.
 
-If the <selectGroupedControls> <property> is set to false, clicking an <object> in a <group> with the <Pointer tool> <select(glossary)|selects> the entire <group>. You must set the <editBackground> <property> to true to in order <select(command)>, move, resize, and change individual <object|objects> in the <group>.
+If the <selectGroupedControls> <property> is set to false, clicking an
+<object(glossary)> in a <group> with the <Pointer tool>
+<select(glossary)|selects> the entire <group>. You must set the
+<editBackground> <property> to true to in order <select(command)>, move,
+resize, and change individual <object|objects> in the <group>.
 
-If the <selectGroupedControls> is true, clicking an <object> in a <group> <select(glossary)|selects> only that <object>, even if the <editBackground> is false.
+If the <selectGroupedControls> is true, clicking an <object(glossary)>
+in a <group> <select(glossary)|selects> only that <object(glossary)>,
+even if the <editBackground> is false.
 
-You can change the <selectGroupedControls> <property> by choosing <a/>Edit menu<img src="202656"/>Select Grouped Controls<important/>.
+You can change the <selectGroupedControls> <property> by choosing Edit →
+Select Grouped Controls from the menubar.
 
-References: selection (keyword), editBackground (property), selectionMode (property), select (command), group (command), selectedObject (function), object (object), property (glossary), select (glossary), grouped control (glossary), Pointer tool (glossary)
+References: select (command), group (command), selectedObject (function),
+object (glossary), property (glossary), select (glossary),
+grouped control (glossary), Pointer tool (glossary), selection (keyword),
+editBackground (property), selectionMode (property)
+

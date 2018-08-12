@@ -2,38 +2,53 @@ Name: numToNativeChar
 
 Type: function
 
-Syntax: the numToNativeChar of <ASCIIValue> 
+Syntax: the numToNativeChar of <ASCIIValue>
 
 Syntax: numToNativeChar(<ASCIIValue>)
 
-Summary: Returns the native character corresponding to an ASCII value.
+Summary:
+Returns the native character corresponding to an ASCII value.
 
 Introduced: 7.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
-
-Example:
-put numToNativeChar(65) <a name="code tag=">-- returns A</a>
+Platforms: desktop, server, mobile
 
 Example:
-put numToNativeChar(0) <a name="code tag=">-- returns the null character, ASCII zero</a>
+put numToNativeChar(65) -- returns A
+
+Example:
+put numToNativeChar(0) -- returns the null character, ASCII zero
 
 Parameters:
-ASCIIValue (integer): An integer between 0 and 255, representing a character in the native character set.
+ASCIIValue (integer):
+An integer between 0 and 255, representing a character in the native
+character set.
 
-Returns: The <numToNativeChar> function returns a single native character.
+Returns:
+The <numToNativeChar> function returns a single native character.
 
 Description:
-Use the <numToNativeChar> function to translate numbers into their native character equivalents.
+Use the <numToNativeChar> function to translate numbers into their
+native character equivalents.
 
-The <numToNativeChar> function is the inverse of the <nativeCharToNum> function.
+The <numToNativeChar> function is the inverse of the <nativeCharToNum>
+function. 
 
-These functions convert between text and native characters and are replacements for the deprecated <numToChar> and <charToNum> functions.
+These functions convert between text and native characters and are
+replacements for the deprecated <numToChar> and <charToNum> functions.
 
-As the &ldquo;native&rdquo; character sets for each platform have a limited and different repertoire, these functions should not be used when preservation of Unicode text is desired. Any characters that cannot be mapped to the native character set are replaced with a question mark character (&lsquo;?&rsquo;).
+As the &ldquo;native&rdquo; character sets for each platform have a
+limited and different repertoire, these functions should not be used
+when preservation of Unicode text is desired. Any characters that cannot
+be mapped to the native character set are replaced with a question mark
+character (&lsquo;?&rsquo;).
 
-Unless needed for compatibility reasons, it is recommended that you use the <numToCodepoint> and <codepointToNum> functions instead.
+Unless needed for compatibility reasons, it is recommended that you use
+the <numToCodepoint> and <codepointToNum> functions instead.
 
-References: nativeCharToNum (function), numToChar (function), charToNum (function), codepointToNum (function), numToCodepoint (function)
+References: nativeCharToNum (function), numToChar (function),
+charToNum (function), codepointToNum (function),
+numToCodepoint (function)
+

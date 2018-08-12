@@ -6,13 +6,14 @@ Syntax: the environment
 
 Syntax: environment()
 
-Summary: Returns the type of running environment the stack is in.
+Summary:
+Returns the type of running environment the stack is in.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the environment
@@ -20,15 +21,22 @@ the environment
 Example:
 if the environment is "development" then showDevelopOptions
 
-Returns (enum): The <environment> function returns one of:
--"development" : The stack is running under the development environment.
--"standalone application" : The stack is running as a standalone application.
--"helper application" : LiveCode is running as a standalone with secureMode set to true.
--"browser" : The stack is running as a LiveCode applet.
--"mobile" : The stack is running on a mobile device.
--"command line" : The stack was launched from the command line with :ui
+Returns (enum):
+The <environment> function returns one of:
+
+-   "development": The stack is running under the development environment.
+-   "development command line": The stack is running in the development environment with the "-ui" command line option.
+-   "standalone application": The stack is running as a standalone application.
+-   "helper application": LiveCode is running as a standalone with the secureMode property set to true.
+-   "command line": The stack is running as a standalone application with the "-ui" command line option.
+-   "server": The stack is running in LiveCode server.
+-   "browser": The stack is running as a LiveCode applet.
+-   "mobile": The stack is running on a mobile device.
 
 Description:
-Use the <environment> function to change a stack's behavior depending on how the stack was opened.
+Use the <environment> function to change a stack's behavior depending on
+how the stack was opened.
 
-References: version (function), revLicenseType (function), buildNumber (function), systemVersion (function)
+References: version (function), revLicenseType (function),
+buildNumber (function), systemVersion (function), secureMode (property)
+

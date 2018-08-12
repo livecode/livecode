@@ -2,15 +2,17 @@ Name: doubleClickDelta
 
 Type: property
 
-Syntax: set the doubleClickDelta to <numberOfPixels> 
+Syntax: set the doubleClickDelta to <numberOfPixels>
 
-Summary: Specifies the distance the mouse can move between clicks during a <double-click|double click>.
+Summary:
+Specifies the distance the mouse can move between clicks during a
+<double-click|double click>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the doubleClickDelta to 10
@@ -20,10 +22,18 @@ The <doubleClickDelta> is an <integer> between zero and 32767.
 By default, the <doubleClickDelta> is set to 4 pixels.
 
 Description:
-Use the <doubleClickDelta> <property> to fine-tune <double-click|double-clicking>.
+Use the <doubleClickDelta> <property> to fine-tune
+<double-click|double-clicking>. 
 
-If the mouse moves more than the specified number of pixels in any direction between the first and second click, no <mouseDoubleDown> or <mouseDoubleUp> <message> is sent to the clicked <object>. If the <doubleClickDelta> is set to zero, the mouse may not move at all during a <double-click|double click>.
+If the mouse moves more than the specified number of pixels in any
+direction between the first and second click, no <mouseDoubleDown> or
+<mouseDoubleUp> <message> is sent to the clicked <object(glossary)>. If
+the <doubleClickDelta> is set to zero, the mouse may not move at all
+during a <double-click|double click>.
 
-References: integer (keyword), mouseDoubleUp (message), mouseDoubleDown (message), object (object), property (glossary), double-click (glossary), message (glossary)
+References: object (glossary), property (glossary),
+double-click (glossary), message (glossary), integer (keyword),
+mouseDoubleUp (message), mouseDoubleDown (message)
 
 Tags: ui
+

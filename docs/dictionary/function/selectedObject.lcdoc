@@ -1,20 +1,22 @@
 Name: selectedObject
 
+Synonyms: selectedobjects, selobj, selobjs, selectedgraphic
+
 Type: function
 
 Syntax: the selectedObject
 
 Syntax: selectedObject()
 
-Summary: <return|Returns> the name of the <selected> <object> or <object|objects>.
-
-Synonyms: selectedObjects,selObj,selObjs,selectedGraphic
+Summary:
+<return|Returns> the name of the <selected> <object(glossary)> or
+<object|objects>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the selectedObject
@@ -25,9 +27,16 @@ set the lockText of the selectedObject to true
 Example:
 repeat with x = 1 to the number of lines of the selectedObjects
 
-Returns: The <selectedObject> <function> <return|returns> a list with the long <ID> <property> of each <operty)d.
+Returns:
+The <selectedObject> <function> <return|returns> a list with the long
+<ID> <property> of each <operty)d.
 
 Description:
-Use the <selectedObject> <function> to perform an action on all the <selected> <object|objects>.
+Use the <selectedObject> <function> to perform an action on all the
+<selected> <object|objects>.
 
-References: ID (property), selectGroupedControls (property),  (property), selected (property), function (control_st), group (command), target (function), property (glossary), return (glossary), object (object)
+References: group (command), function (control structure),
+target (function), property (glossary), return (glossary),
+object (glossary), ID (property), selectGroupedControls (property),
+ (property), selected (property)
+

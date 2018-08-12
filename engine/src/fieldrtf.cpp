@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "paragraf.h"
 #include "text.h"
 #include "osspec.h"
-//#include "execpt.h"
+
 #include "mcstring.h"
 #include "uidc.h"
 
@@ -479,9 +479,12 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
                 // SN-2015-11-19: [[ Bug 16451 ]] MCscreen knows better than
                 // us how to unpack a colour pixel.
                 MCColor t_color;
-                t_color . pixel = ctxt . colors[i];
-                MCscreen -> querycolor(t_color);
-                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\red%d\\green%d\\blue%d;", t_color . red, t_color . green, t_color . blue);
+				MCColorSetPixel(t_color, ctxt . colors[i]);
+                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text,
+                                                     "\\red%d\\green%d\\blue%d;",
+                                                     MCClamp(t_color.red >> 8, 0, 255),
+                                                     MCClamp(t_color.green >> 8, 0, 255),
+                                                     MCClamp(t_color.blue >> 8, 0, 255));
             }
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}\n");
 		}
@@ -785,7 +788,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 
 			// A temporary buffer to store any native converted text in.
 			uint8_t *t_native_text;
-			t_native_text = new uint8_t[t_char_count];
+			t_native_text = new (nothrow) uint8_t[t_char_count];
 
 			// Loop until we are done.
 			while(t_char_count > 0)
@@ -821,25 +824,6 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 }
 
 // MW-2012-02-29: [[ FieldExport ]] New RTF export method.
-#ifdef LEGACY_EXEC
-void MCField::exportasrtftext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index)
-{
-	MCAutoStringRef t_string;
-
-	if (exportasrtftext(p_paragraphs, p_start_index, p_finish_index, &t_string))
-		/* UNCHECKED */ ep . setvalueref(*t_string);
-	else
-		ep . clear();
-}
-#endif
-
-#ifdef LEGACY_EXEC
-void MCField::exportasrtftext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index)
-{
-	exportasrtftext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index);
-}
-#endif
-
 bool MCField::exportasrtftext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef &r_string)
 {
 	return exportasrtftext(resolveparagraphs(p_part_id), p_start_index, p_finish_index, r_string);

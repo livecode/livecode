@@ -16,60 +16,28 @@
 
 # This file contains rules used by the LiveCode Buildbot installation at
 # <https://vulcan.livecode.com/>
+#
+# Tasks that may be run on Windows workers must be implemented in the
+# buildbot.py script.
 
 # Load version information
 include version
 
+GIT_HASH_HEXIT_COUNT=10
+
 # Get git commit information
 ifeq ($(BUILD_EDITION),commercial)
-GIT_VERSION=g$(shell git --git-dir=../.git rev-parse --short HEAD)
+GIT_VERSION=g$(shell git --git-dir=../.git rev-parse --short=$(GIT_HASH_HEXIT_COUNT) HEAD)
 else
-GIT_VERSION=g$(shell git rev-parse --short HEAD)
+GIT_VERSION=g$(shell git rev-parse --short=$(GIT_HASH_HEXIT_COUNT) HEAD)
 endif
 
 ################################################################
-# Configure with gyp
+# Extract built binaries
 ################################################################
-
-# Buildbot must set the variables PLATFORM and SUBPLATFORM
-
-ifeq ($(BUILD_SUBPLATFORM),)
-CONFIG_TARGET = config-$(BUILD_PLATFORM)
-else
-CONFIG_TARGET = config-$(BUILD_PLATFORM)-$(BUILD_SUBPLATFORM)
-endif
-
-config:
-	$(MAKE) $(CONFIG_TARGET)
-
-.PHONY: config
-
-################################################################
-# Compile
-################################################################
-
-# Buildbot must set the variables PLATFORM and SUBPLATFORM
-
-ifeq ($(BUILD_SUBPLATFORM),)
-COMPILE_TARGET = compile-$(BUILD_PLATFORM)
-else
-COMPILE_TARGET = compile-$(BUILD_PLATFORM)-$(BUILD_SUBPLATFORM)
-endif
-
-compile:
-	$(MAKE) $(COMPILE_TARGET)
-
-.PHONY: compile
-
-################################################################
-# Archive / extract built binaries
-################################################################
-
-bin-archive:
-	tar -Jcvf $(BUILD_PLATFORM)-bin.tar.xz $(BUILD_PLATFORM)-bin
 
 bin-extract:
-	find . -maxdepth 1 -name '*-bin.tar.xz' -print0 | xargs -0 -n1 tar -xvf
+	find . -maxdepth 1 -name '*-bin.tar.*' -exec tar -xvf '{}' ';'
 
 ################################################################
 # Installer generation
@@ -114,7 +82,11 @@ else ifeq ($(BUILD_PLATFORM),linux-x86_64)
   LIVECODE = $(bin_dir)/LiveCode-Community
   buildtool_platform = linux
   UPLOAD_ENABLE_CHECKSUM ?= yes
+ifeq ($(BUILD_EDITION),commercial)
   UPLOAD_RELEASE_NOTES ?= yes
+else
+  UPLOAD_RELEASE_NOTES ?= no
+endif
 endif
 
 # FIXME add --warn-as-error
@@ -130,52 +102,26 @@ UPLOAD_SERVER ?= meg.on-rev.com
 UPLOAD_PATH = staging/$(BUILD_LONG_VERSION)/$(GIT_VERSION)
 UPLOAD_MAX_RETRIES = 50
 
-ifeq ($(BUILD_EDITION),commercial)
-  dist-docs: dist-docs-commercial
-  dist-docs: dist-guide-commercial
-endif
+dist-docs: dist-docs-api dist-docs-guide
 
-dist-docs: dist-docs-community
-dist-docs: dist-guide-community
-
-dist-docs-community:
+dist-docs-api:
 	mkdir -p $(docs_build_dir)
 	$(buildtool_command) --platform $(buildtool_platform) --stage docs \
-	  --edition community \
-	  --built-docs-dir $(docs_build_dir)/cooked-community
+	  --built-docs-dir $(docs_build_dir)
 	  
-dist-docs-commercial:
-	mkdir -p $(docs_build_dir)
-	$(buildtool_command) --platform $(buildtool_platform) \
-	  --stage docs --edition indy \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
-	$(buildtool_command) --platform $(buildtool_platform) \
-	  --stage docs --edition business \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
-
 dist-notes:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) \
-	    --stage notes --warn-as-error
-	    
-dist-guide-community:
+	  --stage notes --warn-as-error \
+	  --built-docs-dir $(docs_build_dir)
+
+dist-docs-guide:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) \
-		--edition community \
-	    --stage guide --warn-as-error
-	    
-dist-guide-commercial:
-	WKHTMLTOPDF=$(WKHTMLTOPDF) \
-	$(buildtool_command) --platform $(buildtool_platform) \
-		--edition indy \
-	    --stage guide --warn-as-error
-	WKHTMLTOPDF=$(WKHTMLTOPDF) \
-	$(buildtool_command) --platform $(buildtool_platform) \
-		--edition business \
-	    --stage guide --warn-as-error
+		--stage guide --warn-as-error
 
 ifeq ($(BUILD_EDITION),commercial)
-dist-server: dist-server-commercial
+dist-server: dist-server-communityplus dist-server-indy dist-server-business
 endif
 
 dist-server: dist-server-community
@@ -184,29 +130,56 @@ dist-server-community:
 	$(buildtool_command) --platform mac --platform win --platform linux \
 	    --stage server --edition community --warn-as-error
 
-dist-server-commercial:
+dist-server-communityplus:
 	$(buildtool_command) --platform mac --platform win --platform linux \
-	    --stage server --edition commercial --warn-as-error
+	    --stage server --edition communityplus --warn-as-error
 
+dist-server-indy:
+	$(buildtool_command) --platform mac --platform win --platform linux \
+	    --stage server --edition indy --warn-as-error
+
+dist-server-business:
+	$(buildtool_command) --platform mac --platform win --platform linux \
+		--stage server --edition business --warn-as-error
+		
 ifeq ($(BUILD_EDITION),commercial)
 dist-tools: dist-tools-commercial
-distmac-disk: distmac-disk-indy distmac-disk-business
+distmac-disk: distmac-disk-communityplus distmac-disk-indy distmac-disk-business
 endif
 
-dist-tools: dist-tools-community
+dist-tools: dist-tools-community dist-tools-version-check
 distmac-disk: distmac-disk-community
 
 dist-tools-community:
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition community \
-	  --built-docs-dir $(docs_build_dir)/cooked-community
+	  --built-docs-dir $(docs_build_dir)
 dist-tools-commercial:
+	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition communityplus \
+	  --built-docs-dir $(docs_build_dir)
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition indy \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
+	  --built-docs-dir $(docs_build_dir)
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition business \
-	  --built-docs-dir $(docs_build_dir)/cooked-commercial
+  	  --built-docs-dir $(docs_build_dir)
+# Ensure that the version for which we're trying to build installers
+# hasn't already been tagged.
+dist-tools-version-check:
+	@git tag -l | xargs git tag -d ;\
+	git fetch --tags ;\
+	if git rev-parse refs/tags/$(BUILD_SHORT_VERSION) \
+	        >/dev/null 2>&1 ; then \
+	  echo; \
+	  echo "$(BUILD_SHORT_VERSION) has already been released."; \
+	  echo "You probably need to update the 'version' file."; \
+	  echo; \
+	  exit 1; \
+	fi
+
+.PHONY: dist-tools-version-check
 
 distmac-bundle-community:
 	$(buildtool_command) --platform mac --stage bundle --edition community
+distmac-bundle-communityplus:
+	$(buildtool_command) --platform mac --stage bundle --edition communityplus
 distmac-bundle-indy:
 	$(buildtool_command) --platform mac --stage bundle --edition indy
 distmac-bundle-business:
@@ -225,12 +198,28 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name 'LiveCode*Server-*-Windows.zip' \
 	                -o -name 'LiveCode*Docs-*.zip' \
 	                -o -name '*-bin.tar.xz' \
-	  > dist-upload-files.txt; \
+	                -o -name '*-bin.tar.bz2' \
+	                -o -name 'LiveCodeForFM-Mac-Solution.zip' \
+	                -o -name 'LiveCodeForFM-Mac-Plugin.zip' \
+	                -o -name 'LiveCodeForFM-Win-x86-Solution.zip' \
+	                -o -name 'LiveCodeForFM-Win-x86-Plugin.zip' \
+	                -o -name 'LiveCodeForFM-Win-x86_64-Solution.zip' \
+	                -o -name 'LiveCodeForFM-Win-x86_64-Plugin.zip' \
+	                -o -name 'LiveCodeForFM-All-Solutions.zip' \
+	                -o -name 'LiveCodeForFM-All-Plugins.zip' \
+	                -o -name 'LiveCodeForFM-Solution.zip' \
+						 -o -name 'LiveCodeForFM.zip' \
+ 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
 		find . -maxdepth 1 -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
+		find . -maxdepth 1 -name 'LiveCodeNotes*.html' >> dist-upload-files.txt; \
+		find . -maxdepth 1 -name 'LiveCodeUpdates*.md' >> dist-upload-files.txt; \
+		find . -maxdepth 1 -name 'LiveCodeUpdates*.html' >> dist-upload-files.txt; \
+		find . -maxdepth 1 -name 'LiveCodeUserGuide*.html' >> dist-upload-files.txt; \
+		find . -maxdepth 1 -name 'LiveCodeUserGuide*.pdf' >> dist-upload-files.txt; \
 	fi; \
 	if test "$(UPLOAD_ENABLE_CHECKSUM)" = "yes"; then \
-	  $(SHA1SUM) < dist-upload-files.txt > sha1sum.txt; \
+	  xargs --arg-file=dist-upload-files.txt $(SHA1SUM) > sha1sum.txt; \
 	  echo sha1sum.txt >> dist-upload-files.txt; \
 	else \
 	  touch sha1sum.txt; \
@@ -263,11 +252,50 @@ dist-upload: dist-upload-files.txt dist-upload-mkdir
 # resulting archive gets transferred to a Mac for signing and
 # conversion to a DMG.
 distmac-archive:
+	set -e; \
 	find . -maxdepth 1 -name 'LiveCode*Installer-*-Mac.app' -print0 \
-	    | xargs -0 tar -Jcvf mac-installer.tar.xz
+	    | xargs -0 tar -cvf mac-installer.tar; \
+	cd mac-bin; \
+	find . -maxdepth 1 -name 'livecodeforfm-*.fmplugin' -print0 \
+	    | xargs -0 tar --append --file=../mac-installer.tar; \
+	cd ..; \
+	cd win-x86-bin; \
+	find . -maxdepth 1 -name 'livecodeforfm-*.fmx' -print0 \
+	    | xargs -0 tar --append --file=../mac-installer.tar; \
+	cd ..; \
+	cd win-x86_64-bin; \
+	find . -maxdepth 1 -name 'livecodeforfm-*.fmx64' -print0 \
+	    | xargs -0 tar --append --file=../mac-installer.tar; \
+	cd ..; \
+	bzip2 -c mac-installer.tar > mac-installer.tar.xz
 
 distmac-extract:
-	tar -xvf mac-installer.tar.xz
+	set -e; \
+	tar -xvf mac-installer.tar.xz; \
+	cp -r ${private_dir}/filemaker/solutions/LiveCodeForFM.fmp12 . ; \
+	$(buildtool_command) --platform mac --stage fmpackage --debug; \
+	$(buildtool_command) --platform win-x86 --stage fmpackage --debug; \
+	$(buildtool_command) --platform win-x86_64 --stage fmpackage --debug; \
+	$(buildtool_command) --platform universal --stage fmpackage --debug; \
+	find . -maxdepth 1 -name 'LiveCodeForFM-Mac-*.fmp12' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Mac-Solution.zip; \
+	find . -maxdepth 1 -name 'LiveCodeForFM-Win-x86-*.fmp12' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86-Solution.zip; \
+	find . -maxdepth 1 -name 'LiveCodeForFM-Win-x86_64-*.fmp12' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86_64-Solution.zip; \
+	find . -maxdepth 1 -name 'LiveCodeForFM-[1-9]*.fmp12' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM.zip; \
+	find . -maxdepth 1 -name 'livecodeforfm-*.*' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-All-Plugins.zip; \
+	find . -maxdepth 1 -name 'livecodeforfm-*.fmplugin' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Mac-Plugin.zip; \
+	find . -maxdepth 1 -name 'livecodeforfm-*.fmx' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86-Plugin.zip; \
+	find . -maxdepth 1 -name 'livecodeforfm-*.fmx64' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Win-x86_64-Plugin.zip; \
+	find . -maxdepth 1 -name 'LiveCodeForFM.fmp12' -print0 \
+	    | xargs -0 zip -r LiveCodeForFM-Solution.zip
+
 
 # Final installer creation for Mac
 distmac-disk-%: distmac-bundle-%

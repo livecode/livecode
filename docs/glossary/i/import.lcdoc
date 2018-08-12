@@ -1,6 +1,6 @@
 Name: import
 
-Synonyms: imported,importing,import
+Synonyms: imported, importing, import
 
 Type: glossary
 
@@ -10,3 +10,4 @@ To bring data into a <file> from another <file>.
 References: file (glossary)
 
 Tags: file system
+

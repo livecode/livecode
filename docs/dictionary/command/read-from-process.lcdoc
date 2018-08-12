@@ -2,15 +2,17 @@ Name: read from process
 
 Type: command
 
-Syntax: read from process <processName> [at <start>] {until {<strin> g | empty | end | EOF} | for <amoun> t [<chunkType>]} [in <time>]
+Syntax: read from process <processName> [at <start>] {until {<string> | empty | end | EOF} | for <amount> [<chunkType>]} [in <time>]
 
-Summary: Accepts the output of a <process> that was opened with the <open process> <command>, placing the data in the <it> <variable>.
+Summary:
+Accepts the output of a <process> that was opened with the <open
+process> <command>, placing the data in the <it> <variable>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: process
 
@@ -24,37 +26,81 @@ Example:
 read from process myProcess for 10 int4s in 250 milliseconds
 
 Parameters:
-processName: The processName specifies the name and location of the process you want to read from. It must be the same as the path you used with the open process  command.>*Important:* The processName is case-sensitive, even on platforms where file names are not case-sensitive. It must be exactly the same--including the case of characters--as the name you used with the open processcommand.
-start: The start specifies the character or byte position in the process output where you want to begin reading.
-strin: 
-amoun: 
-chunkType: One of chars, characters, words, items, lines, int1, uInt1, int2, uint2, int4, or uint4. The read from process command reads amount of the specified chunkType. If you don't specify a chunkType, amount characters are read.
-time: The time to wait for the read to be completed, in milliseconds, seconds, or ticks.
-string (string): When LiveCode encounters the string in the process output, it stops reading. If the string is not encountered, the read from process command continues reading as long as there is data to be read.
-amount: A positive integer and specifies how much data to read.
+processName (string):
+The processName specifies the name and location of the process you want
+to read from. It must be the same as the path you used with the open
+process command.
+>*Important:*  The <processName> is <case-sensitive>, even on
+> <platform|platforms> where file names are not <case-sensitive>. It
+> must be exactly the same--including the case of characters--as the
+> name you used with the <open process> <command>.
 
-The result: The process to read from must be opened first with the open process <command>, and the mode the <process> was opened in must be read or update. If the process is not running or is write-only, the <result> <function> is set to "Process is not open for read.". If the <read from process> <command> encounters the end of the data output, the <result> <function> is set to "eof". If you specify a <time> and the read is not completed when that time has elapsed, the <result> <function> is set to "time out". If the read was successful, the result is set to empty.
 
-It: The data is placed in the <it variable> after reading. If you specified a <binary file|binary data> <chunkType> (int1, uInt1, int2, uint2, int4, or uint4), the data consists of a comma-separated list of numbers, one for the numerical value of each chunk that was read. Otherwise, the data is placed in the <it> <variable> as it appears in the output.
+start (string):
+The <start> specifies the <character> or <byte> position in the
+<process> output where you want to begin reading.
 
-Description:
-Use the <read from process> <command> to get the output data from another program.
+chunkType:
+The <chunkType> is one of chars, characters, words, items, lines, int1,
+uInt1, int2, uint2, int4, or uint4. The <read from process> <command>
+reads <amount> of the specified <chunkType>. If you don't specify a
+<chunkType>, <amount> <characters> are read.
 
->*Important:*  The <processName> is <case-sensitive>, even on <platform|platforms> where file names are not <case-sensitive>. It must be exactly the same--including the case of characters--as the name you used with the <open processcommand>.
+time:
+The <time> is the time to wait for the read to be completed, in
+<milliseconds>, seconds, or <ticks>.
 
-The <start> specifies the <character> or <byte> position in the <process> output where you want to begin reading.
+string (string):
+The <string> is any <expression> that <evaluate|evaluates> to a
+<string>. When LiveCode encounters the <string> in the <process> output,
+it stops reading. If the <string> is not encountered, the <read from
+process> <command> continues reading as long as there is data to be
+read. 
 
-The <string> is any <expression> that <evaluate|evaluates> to a <string>. When LiveCode encounters the <string> in the <process> output, it stops reading. If the <string> is not encountered, the <read from process> <command> continues reading as long as there is data to be read.
-
+amount (integer):
 The <amount> is a positive <integer> and specifies how much data to read.
 
-The <chunkType> is one of chars, characters, words, items, lines, int1, uInt1, int2, uint2, int4, or uint4. The <read from process> <command> reads <amount> of the specified <chunkType>. If you don't specify a <chunkType>, <amount> <characters> are read.
+It:
+The data is placed in the <it variable> after reading. If you specified
+a <binary file|binary data> <chunkType> (int1, uInt1, int2, uint2, int4,
+or uint4), the data consists of a comma-separated list of numbers, one
+for the numerical value of each chunk that was read. Otherwise, the data
+is placed in the <it> <variable> as it appears in the output.
 
-The <time> is the time to wait for the read to be completed, in <milliseconds>, seconds, or <ticks>.
+The result:
+The process to read from must be opened first with the <open process>
+<command>, and the mode the <process> was opened in must be read or
+update. If the process is not running or is write-only, the <result>
+<function> is set to "Process is not open for read.". If the <read from
+process> <command> encounters the end of the data output, the <result>
+<function> is set to "eof". If you specify a <time> and the read is not
+completed when that time has elapsed, the <result> <function> is set to
+"time out". If the read was successful, the result is set to empty.
 
-The until <string> form reads data until the specified string is encountered.  The until end and until eof  forms read data until the process specifies it is finished.  When until empty is used the data is read in at specified time intervals.  If, when checked, the data is empty the <openProcesses function> is used to check whether the process has finished.
+Description:
+Use the <read from process> <command> to get the output data from
+another program.
+
+The **until** form reads data until the specified string is
+encountered. 
+The until end and until eof forms read data until the
+process specifies it is finished. 
+When until empty is used the data is read in at specified time intervals.
+If, when checked, the data is empty, the <openProcesses> <function> is used 
+to check whether the process has finished. 
 
 Changes:
-Support for using the read from process command on OS X systems was added in version 2.0.
+Support for using the read from process command on OS X systems was
+added in version 2.0.
 
-References: uInt2 (keyword), string (keyword), int1 (keyword), characters (keyword), int4 (keyword), integer (keyword), int2 (keyword), real4 (keyword), uInt4 (keyword), stdin (keyword), it (keyword), uInt1 (keyword), character (keyword), real8 (keyword), EOF (constant), open process (command), close process (command), write to process (command), read from driver (command), open processcommand (command), ticks (function), result (function), openProcesses function (function), milliseconds (function), openProcesses (function), platform (glossary), binary file (glossary), variable (glossary), byte (glossary), case-sensitive (glossary), expression (glossary), it variable (glossary), evaluate (glossary), command (glossary), process (glossary), function (control_st)
+References: open process (command), close process (command),
+write to process (command), read from driver (command), EOF (constant),
+function (control structure), openProcesses (function), ticks (function),
+result (function), milliseconds (function), platform (glossary),
+binary file (glossary), variable (glossary), byte (glossary), 
+case-sensitive (glossary), expression (glossary), it variable (glossary),
+evaluate (glossary), command (glossary), process (glossary), uInt2 (keyword),
+string (keyword), int1 (keyword), characters (keyword), int4 (keyword),
+integer (keyword), int2 (keyword), real4 (keyword), uInt4 (keyword),
+stdin (keyword), it (keyword), uInt1 (keyword), character (keyword),
+real8 (keyword)

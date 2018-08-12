@@ -1,1 +1,0 @@
-# [[Player]] loop goes to beginning of movie not selection start time when playSelection is true

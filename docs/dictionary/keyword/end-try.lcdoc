@@ -4,20 +4,24 @@ Type: keyword
 
 Syntax: end try
 
-Summary: Ends a <try> <control> <control structure|structure>.
+Summary:
+Ends a <try> <control> <control structure|structure>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 end try
 
 Description:
-Use the <end try> <keyword> to mark the end of a <try> <control structure>.
+Use the <end try> <keyword> to mark the end of a <try> 
+<control structure>. 
 
 The <end try> <keyword> occurs on a line by itself.
 
-References: end (keyword), control (keyword), keyword (glossary), control structure (glossary), try (control_st)
+References: try (control structure), keyword (glossary),
+control structure (glossary), end (keyword), control (keyword)
+

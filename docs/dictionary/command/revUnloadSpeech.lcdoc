@@ -4,13 +4,17 @@ Type: command
 
 Syntax: revUnloadSpeech
 
-Summary: Removes the operating system's <text to speech|text-to-speech> software from memory.
+Summary:
+Removes the operating system's <text to speech|text-to-speech> software
+from memory.
+
+Associations: speech library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revUnloadSpeech
@@ -19,12 +23,35 @@ Example:
 if field "Speak Next" is empty then revUnloadSpeech
 
 Description:
-Use the <revUnloadSpeech> <command> to free up memory when you're done using the <Speech library>.
+Use the <revUnloadSpeech> <command> to free up memory when you're done
+using the <Speech library>.
 
-The operating system loads its text-to-speech software into memory when it's needed by any of the commands and functions in the Speech library. The <revUnloadSpeech> <command> lets you unload this software, freeing up the memory it uses, when you're done.
+The operating system loads its text-to-speech software into memory when
+it's needed by any of the commands and functions in the Speech library.
+The <revUnloadSpeech> <command> lets you unload this software, freeing
+up the memory it uses, when you're done.
 
-If your application uses text to speech, you should execute the <revUnloadSpeech> <command> either when your application is finished using <text to speech>, when the <stack> that uses <text to speech|speech> is closed (in a <closeStack> <handler>), or when your application quits (in a <shutdown> <handler>). The <revUnloadSpeech> command must be executed at shutdown if not before in order for the application to close.
+If your application uses text to speech, you should execute the
+<revUnloadSpeech> <command> either when your application is finished
+using <text to speech>, when the <stack> that uses <text to
+speech|speech> is closed (in a <closeStack> <handler>), or when your
+application quits (in a <shutdown> <handler>). The <revUnloadSpeech>
+command must be executed at shutdown if not before in order for the
+application to close.
 
->*Important:*  The <revUnloadSpeech> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+>*Important:*  The <revUnloadSpeech> <command> is part of the 
+> <Speech library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Speech" 
+> library checkbox is checked.
 
-References: Speech library (library), LiveCode custom library (library), closeStack (message), shutdown (message), unload (command), revLoadSpeech (command), revSpeak (command), revStopSpeech (command), revSetSpeechProvider (command), hasMemory (function), handler (glossary), Standalone Application Settings (glossary), standalone application (glossary), text to speech (glossary), command (glossary), stack (object)
+References: unload (command), revLoadSpeech (command), revSpeak (command),
+revStopSpeech (command), revSetSpeechProvider (command),
+hasMemory (function), LiveCode custom library (glossary),
+handler (glossary), Standalone Application Settings (glossary),
+standalone application (glossary), text to speech (glossary),
+command (glossary), Speech library (library), closeStack (message),
+shutdown (message), stack (object)
+

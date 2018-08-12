@@ -104,6 +104,31 @@ __MCSFileThrowInvalidPathError (MCStringRef p_path)
 }
 
 /* ================================================================
+ * Path manipulation
+ * ================================================================ */
+
+MC_DLLEXPORT_DEF bool
+MCSFileGetCurrentDirectory (MCStringRef & r_path)
+{
+	MCAutoStringRef t_native_path;
+
+	if (!__MCSFileGetCurrentDirectory (&t_native_path))
+		return false;
+
+	if (!__MCSFilePathFromNative(*t_native_path, r_path))
+		return false;
+
+	return true;
+}
+
+MC_DLLEXPORT_DEF bool
+MCSFilePathIsAbsolute (MCStringRef p_path)
+{
+	MCS_FILE_CONVERT_PATH(p_path, t_native_path);
+	return __MCSFilePathIsAbsolute (t_native_path);
+}
+
+/* ================================================================
  * Whole-file IO
  * ================================================================ */
 

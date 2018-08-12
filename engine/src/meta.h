@@ -56,7 +56,7 @@ public:
 class simple_string
 {
 	const char *f_data;
-	unsigned int f_length;
+	size_t f_length;
 
 public:
 	simple_string(void)
@@ -79,7 +79,7 @@ public:
 	{
 	}
 
-	simple_string(const char *p_string, unsigned int p_length)
+	simple_string(const char *p_string, size_t p_length)
 		: f_data(p_string), f_length(p_length)
 	{
 	}
@@ -107,7 +107,7 @@ public:
 		return f_length == p_other . f_length && strncmp(f_data, p_other . f_data, f_length) == 0;
 	}
 
-	unsigned int length(void) const
+	size_t length(void) const
 	{
 		return f_length;
 	}
@@ -119,11 +119,11 @@ public:
 
 	operator MCString(void) const
 	{
-		return MCString(f_data, f_length);
+		return MCString(f_data, uint4(f_length));
 	}
 
 private:
-	void assign(const char *p_data, unsigned int p_length)
+	void assign(const char *p_data, size_t p_length)
 	{
 		f_data = p_data;
 		f_length = p_length;
@@ -237,7 +237,7 @@ public:
 	}
 
 private:
-	void initialise(const char *p_string, unsigned int p_length, char p_delimiter, bool p_quoted)
+	void initialise(const char *p_string, size_t p_length, char p_delimiter, bool p_quoted)
 	{
 		unsigned int t_count;
 		unsigned int *t_items;
@@ -261,7 +261,7 @@ private:
 
 		if (t_items != NULL)
 		{
-			f_items = new simple_string[t_count];
+			f_items = new (nothrow) simple_string[t_count];
 			if (f_items != NULL)
 			{
 				f_count = t_count;
@@ -276,7 +276,7 @@ private:
 		}
 		else
 		{
-			f_items = new simple_string[1];
+			f_items = new (nothrow) simple_string[1];
 			if (f_items != NULL)
 			{
 				f_count = 1;
@@ -285,145 +285,6 @@ private:
 		}
 	}
 };
-
-#ifdef LEGACY_EXEC
-class cstring_value
-{
-	char *f_string;
-
-public:
-	cstring_value(void)
-		: f_string(NULL)
-	{
-		f_string = NULL ;
-	}
-
-	~cstring_value(void)
-	{
-		delete[] f_string;
-	}
-
-	cstring_value& operator = (MCExecPoint& p_context)
-	{
-		f_string = p_context . getsvalue() . clone();
-		return *this;
-	}
-
-	operator char *(void)
-	{
-		return f_string;
-	}
-
-	char *operator *(void)
-	{
-		return f_string;
-	}
-};
-//#endif
-
-template<class T1>
-Exec_errors evaluate(MCExecPoint& p_context, MCExpression *p_expr_1, T1& r_value_1, Exec_errors r_result_1)
-{
-	if (p_expr_1 != NULL)
-	{
-		if (p_expr_1 -> eval(p_context) != ES_NORMAL)
-			return r_result_1;
-		r_value_1 = p_context;
-	}
-		
-	return EE_UNDEFINED;
-}
-
-template<class T1, class T2> 
-Exec_errors evaluate(MCExecPoint& p_context,
-										 MCExpression *p_expr_1, T1& r_value_1, Exec_errors r_result_1,
-										 MCExpression *p_expr_2, T2& r_value_2, Exec_errors r_result_2)
-{
-	if (p_expr_1 != NULL)
-	{
-		if (p_expr_1 -> eval(p_context) != ES_NORMAL)
-			return r_result_1;
-		r_value_1 = p_context;
-	}
-
-	if (p_expr_2 != NULL)
-	{
-		if (p_expr_2 -> eval(p_context) != ES_NORMAL)
-			return r_result_2;
-		r_value_2 = p_context;
-	}
-
-	return EE_UNDEFINED;
-}
-
-template<class T1, class T2, class T3>
-Exec_errors evaluate(MCExecPoint& p_context,
-										 MCExpression *p_expr_1, T1& r_value_1, Exec_errors r_result_1,
-										 MCExpression *p_expr_2, T2& r_value_2, Exec_errors r_result_2,
-										 MCExpression *p_expr_3, T3& r_value_3, Exec_errors r_result_3)
-{
-	if (p_expr_1 != NULL)
-	{
-		if (p_expr_1 -> eval(p_context) != ES_NORMAL)
-			return r_result_1;
-		r_value_1 = p_context;
-	}
-
-	if (p_expr_2 != NULL)
-	{
-		if (p_expr_2 -> eval(p_context) != ES_NORMAL)
-			return r_result_2;
-		r_value_2 = p_context;
-	}
-
-	if (p_expr_3 != NULL)
-	{
-		if (p_expr_3 -> eval(p_context) != ES_NORMAL)
-			return r_result_3;
-		r_value_3 = p_context;
-	}
-
-	return EE_UNDEFINED;
-}
-
-template<class T1, class T2, class T3, class T4>
-Exec_errors evaluate(MCExecPoint& p_context,
-										 MCExpression *p_expr_1, T1& r_value_1, Exec_errors r_result_1,
-										 MCExpression *p_expr_2, T2& r_value_2, Exec_errors r_result_2,
-										 MCExpression *p_expr_3, T3& r_value_3, Exec_errors r_result_3,
-										 MCExpression *p_expr_4, T4& r_value_4, Exec_errors r_result_4)
-{
-	if (p_expr_1 != NULL)
-	{
-		if (p_expr_1 -> eval(p_context) != ES_NORMAL)
-			return r_result_1;
-		r_value_1 = p_context;
-	}
-
-	if (p_expr_2 != NULL)
-	{
-		if (p_expr_2 -> eval(p_context) != ES_NORMAL)
-			return r_result_2;
-		r_value_2 = p_context;
-	}
-
-	if (p_expr_3 != NULL)
-	{
-		if (p_expr_3 -> eval(p_context) != ES_NORMAL)
-			return r_result_3;
-		r_value_3 = p_context;
-	}
-
-	if (p_expr_4 != NULL)
-	{
-		if (p_expr_4 -> eval(p_context) != ES_NORMAL)
-			return r_result_4;
-		r_value_4 = p_context;
-	}
-
-	return EE_UNDEFINED;
-}
-#endif
 
 };
 

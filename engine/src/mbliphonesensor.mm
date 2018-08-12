@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "globals.h"
 
 #include "exec.h"
@@ -42,14 +42,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCSensorLocationReading *s_location_reading = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+
 // MM-2012-03-13: Added intialize and finalize calls to sensor module.
 //  Only really needed for Android.
 void MCSystemSensorInitialize(void)
 {
+    s_location_reading = nil;
 }
 
 void MCSystemSensorFinalize(void)
 {
+    MCMemoryDelete(s_location_reading);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,21 +148,57 @@ static int32_t s_location_calibration_timeout = 0;
 	if (s_location_enabled)
 	{
 		MCAutoStringRef t_error;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[error localizedDescription], &t_error);
 		MCSensorPostErrorMessage(kMCSensorTypeLocation, *t_error);
 	}
 	else if (s_heading_enabled)
 	{
         MCAutoStringRef t_error;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[error localizedDescription], &t_error);
 		MCSensorPostErrorMessage(kMCSensorTypeHeading, *t_error);
 	}
 }
 
 - (void)locationManager: (CLLocationManager *)manager didUpdateToLocation: (CLLocation *)newLocation fromLocation: (CLLocation *)oldLocation
 {
-    if (s_location_enabled)
-        MCSensorPostChangeMessage(kMCSensorTypeLocation);
+    if (!s_location_enabled)
+        return;
+    
+    if (s_location_reading == nil)
+        if (!MCMemoryNew(s_location_reading))
+            return;
+    
+    CLLocation *t_location = newLocation;
+    
+    if ([t_location horizontalAccuracy] >= 0.0)
+    {
+        s_location_reading->latitude = [t_location coordinate].latitude;
+        s_location_reading->longitude = [t_location coordinate].longitude;
+        s_location_reading->horizontal_accuracy = [t_location horizontalAccuracy];
+    }
+    else
+    {
+        s_location_reading->latitude = s_location_reading->longitude = NAN;
+    }
+    
+    if ([t_location verticalAccuracy] >= 0.0)
+    {
+        s_location_reading->altitude = [t_location altitude];
+        s_location_reading->vertical_accuracy = [t_location verticalAccuracy];
+    }
+    else
+    {
+        s_location_reading->altitude = NAN;
+    }
+    
+    // MM-2013-02-21: Added speed and course to the detailed readings.
+    s_location_reading->timestamp = [[t_location timestamp] timeIntervalSince1970];
+    s_location_reading->speed = [t_location speed];
+    s_location_reading->course = [t_location course];
+    
+    MCSensorAddLocationSample(*s_location_reading);
+    
+    MCSensorPostChangeMessage(kMCSensorTypeLocation);
 }
 
 - (void)locationManager: (CLLocationManager *)manager didUpdateHeading: (CLHeading *)newHeading
@@ -394,39 +436,11 @@ bool MCSystemStopTrackingLocation()
 
 bool MCSystemGetLocationReading(MCSensorLocationReading &r_reading, bool p_detailed)
 {
-	if (s_location_enabled)
-	{
-		CLLocation *t_location;
-		t_location = [s_location_manager location];        
-        if(t_location == nil)
-            return false;
-		
-		if ([t_location horizontalAccuracy] >= 0.0)
-		{
-            r_reading.latitude = [t_location coordinate].latitude;
-            r_reading.longitude = [t_location coordinate].longitude;            
-            if (p_detailed)
-                r_reading.horizontal_accuracy = [t_location horizontalAccuracy];
-		}
-		
-		if ([t_location verticalAccuracy] >= 0.0)
-		{
-            r_reading.altitude = [t_location altitude];
-            if (p_detailed)
-                r_reading.vertical_accuracy = [t_location verticalAccuracy];
-		}
-		
-        // MM-2013-02-21: Added speed and course to the detailed readings.
-        if (p_detailed)
-        {
-            r_reading.timestamp = [[t_location timestamp] timeIntervalSince1970];
-            r_reading.speed = [t_location speed];
-            r_reading.course = [t_location course];
-        }
-        
-        return true;
-	}
-    return false;
+    if (s_location_reading == nil)
+        return false;
+    
+    MCMemoryCopy(&r_reading, s_location_reading, sizeof(MCSensorLocationReading));
+    return true;
 }
 
 // MM-2012-02-11: Added iPhoneGet/SetCalibrationTimeout
@@ -524,7 +538,7 @@ static void (^acceleration_update)(CMAccelerometerData *, NSError *) = ^(CMAccel
 		else
 		{
 			MCAutoStringRef t_error;
-			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+			/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[error localizedDescription], &t_error);
 			MCSensorPostErrorMessage(kMCSensorTypeAcceleration, *t_error);
 		}
 	}
@@ -590,7 +604,7 @@ static void (^rotation_rate_update)(CMGyroData *, NSError *) = ^(CMGyroData *gyr
 		else
 		{
 			MCAutoStringRef t_error;
-			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+			/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[error localizedDescription], &t_error);
 			MCSensorPostErrorMessage(kMCSensorTypeRotationRate, *t_error);
 		}
 	}

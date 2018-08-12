@@ -6,13 +6,15 @@ Syntax: the mouseColor
 
 Syntax: mouseColor()
 
-Summary: <return|Returns> the color of the <pixel> that the <mouse pointer> is over.
+Summary:
+<return|Returns> the color of the <pixel> that the <mouse pointer> is
+over. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the mouseColor
@@ -20,15 +22,31 @@ the mouseColor
 Example:
 set the foregroundColor of graphic 1 to the mouseColor
 
-Returns: The <mouseColor> <function> <return|returns> a <color reference> consisting of three <integer|integers> between zero and 255, separated by commas.
+Returns:
+The <mouseColor> <function> <return|returns> a <color reference>
+consisting of three <integer|integers> between zero and 255, separated
+by commas.
 
 Description:
-Use the <mouseColor> <function> to find out what color the mouse is over or to <select> a color from the screen.
+Use the <mouseColor> <function> to find out what color the mouse is over
+or to <select> a color from the screen.
 
-The <mouseColor> is the color of the single <pixel> under the <mouse pointer|mouse pointer's> hot spot. The hot spot is the active <point> of the <cursor>. For example, the arrow cursor's hot spot is at its tip, and to <select> an <object>, you must click it with the arrow tip.
+The <mouseColor> is the color of the single <pixel> under the <mouse
+pointer|mouse pointer's> hot spot. The hot spot is the active <point> of
+the <cursor>. For example, the arrow cursor's hot spot is at its tip,
+and to <select> an <object(glossary)>, you must click it with the arrow
+tip. 
 
-The value returned by the <mouseColor> consists of three comma-separated numbers between zero and 255, specifying the level of each of red, green, and blue.
+The value returned by the <mouseColor> consists of three comma-separated
+numbers between zero and 255, specifying the level of each of red,
+green, and blue.
 
-References: hotSpot (property), colors (property), cursor (property), foregroundColor (property), object (object), selection (keyword), point (keyword), pixel (glossary), mouse pointer (glossary), integer (glossary), return (glossary), color reference (glossary), mouseLoc (function), mouseStack (function), select (command), function (control_st)
+References: select (command), function (control structure),
+mouseLoc (function), mouseStack (function), object (glossary),
+pixel (glossary), mouse pointer (glossary), integer (glossary),
+return (glossary), color reference (glossary), selection (keyword),
+point (keyword), hotSpot (property), colors (property), cursor (property),
+foregroundColor (property)
 
 Tags: ui
+

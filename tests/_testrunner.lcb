@@ -45,7 +45,10 @@ foreign handler __system(in Command as ZStringNative) returns CInt binds to "sys
 
 handler System(in pCommand as String) returns Number
 	variable tExitStatus as Number
-	put __system(pCommand) into tExitStatus
+
+	unsafe
+		put __system(pCommand) into tExitStatus
+	end unsafe
 
 	if tExitStatus is in [0, -1] then
 		return tExitStatus
@@ -71,13 +74,17 @@ foreign handler MCStringDecode(in Encoded as Data, in Encoding as CInt, in IsExt
 
 handler EncodeUTF8(in pString as String) returns Data
 	variable tEncoded as Data
-	MCStringEncode(pString, 4 /* UTF-8 */, false, tEncoded)
+	unsafe
+		MCStringEncode(pString, 4 /* UTF-8 */, false, tEncoded)
+	end unsafe
 	return tEncoded
 end handler
 
 handler DecodeUTF8(in pData as Data) returns String
 	variable tString as String
-	MCStringDecode(pData, 4 /* UTF-8 */, false, tString)
+	unsafe
+		MCStringDecode(pData, 4 /* UTF-8 */, false, tString)
+	end unsafe
 	return tString
 end handler
 
@@ -285,11 +292,11 @@ end handler
 ----------------------------------------------------------------
 -- Check whether a handler should be considered as a test
 handler IsTestHandler(in pHandlerName as String) returns Boolean
-	if 1 is the first offset of "Test" in pHandlerName then
-		return true
-	else
+	if the number of chars in pHandlerName < 4 then
 		return false
 	end if
+
+	return "test" is the lower of char 1 to 4 of pHandlerName
 end handler
 
 ----------------------------------------------------------------
@@ -383,8 +390,8 @@ end handler
 --
 -- Must be called like this:
 --
---     lc-run --handler RunModuleTests -- \
---         _testrunner.lcm --lc-run /path/to/lc-run /path/to/foo.lcm
+--	 lc-run --handler RunModuleTests -- \
+--		 _testrunner.lcm --lc-run /path/to/lc-run /path/to/foo.lcm
 --
 -- RunModuleTests() will run a handler from the target module if all
 -- of the following conditions are met:
@@ -508,8 +515,8 @@ end handler
 --
 -- Must be called like this:
 --
---     lc-run --handler SummarizeTests -- \
---         _testrunner.lcm --summary-log /path/to/summary [LOGFILE ...]
+--	 lc-run --handler SummarizeTests -- \
+--		 _testrunner.lcm --summary-log /path/to/summary [LOGFILE ...]
 --
 public handler SummarizeTests()
 

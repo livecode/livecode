@@ -1,12 +1,14 @@
 Name: Display PostScript
 
-Synonyms: Display PostScript
+Synonyms: display postscript
 
 Type: glossary
 
 Description:
-An implementation of the <PostScript> page display language specialized for screen display.
+An implementation of the <PostScript> page display language specialized
+for screen display.
 
 References: PostScript (glossary)
 
 Tags: multimedia
+

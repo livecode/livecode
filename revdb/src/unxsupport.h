@@ -47,27 +47,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "revdb.h"
 
-struct DATABASEREC
-{
-	char dbname[255];
-	idcounterrefptr idcounterptr;
-	new_connectionrefptr  newconnectionptr;
-	release_connectionrefptr releaseconnectionptr;
-    set_callbacksrefptr setcallbacksptr;
-	void *driverref;
-};
-
-
-// Implimented by TS.
-const char *GetExternalFolder(void);
-const char *GetApplicationFolder(void);
-DATABASEREC *DoLoadDatabaseDriver(const char *p_path);
-
-
-void FreeDatabaseDriver( DATABASEREC *tdatabaserec);
-DATABASEREC *DoLoadDatabaseDriver(const char *p_path);
-const char *GetExternalFolder(void);
-const char *GetApplicationFolder(void);
 void MCU_path2std(char *p_path);
 void MCU_path2native(char *p_path);
 void MCU_fix_path(char *cstr);

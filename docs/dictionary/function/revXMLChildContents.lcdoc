@@ -4,13 +4,17 @@ Type: function
 
 Syntax: revXMLChildContents(<treeID>, <startNode>, <tagDelim>, <nodeDelim>, <includePathDetails>, <depth>)
 
-Summary: <return|Returns> a list of the <tag|tags> and text contents of the specified <nodes>.
+Summary:
+<return|Returns> a list of the <tag|tags> and text contents of the
+specified <nodes>.
+
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -24,28 +28,68 @@ Example:
 put revXMLChildContents(tTreeId, "root", tab, return, "full", -1) into tChildPaths
 
 Parameters:
-treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
-startNode: The path to the node where you want to start.
-tagDelim (string): A string that separates each tag name in a child node from the rest.
-nodeDelim (string): A string that separates each child node from the rest.
-includePathDetails: The includePathDetails can take the following values:   - "false" : just the name of each node is returned (default)   - "true" : includes which child number each node is in brackets after its name   - "full" : the full path of each node is returned including child numbers in brackets where required  - "relative" : a path relative to startNode is included with child numbers in brackets where required
-depth: The depth specifies how many generations of the XML tree to show. If you specify zero, only the startNode is shown; if you specify 1, the startNode and its child nodes are shown, but not their child nodes; and so on. To show all generations, specify -1 as the depth.
+treeID:
+The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+function when you created the XML tree.
 
-Returns: The <revXMLChildContents> <function> returns a <string>.
+startNode:
+The path to the node where you want to start.
+
+tagDelim (string):
+A string that separates each tag name in a child node from the rest.
+
+nodeDelim (string):
+A string that separates each child node from the rest.
+
+includePathDetails:
+The includePathDetails can take the following values:   - "false" : just
+the name of each node is returned (default) - "true" : includes which
+child number each node is in brackets after its name - "full" : the full
+path of each node is returned including child numbers in brackets where
+required - "relative" : a path relative to startNode is included with
+child numbers in brackets where required
+
+depth:
+The depth specifies how many generations of the XML tree to show. If you
+specify zero, only the startNode is shown; if you specify 1, the
+startNode and its child nodes are shown, but not their child nodes; and
+so on. To show all generations, specify -1 as the depth.
+
+Returns:
+The <revXMLChildContents> <function> returns a <string>.
 
 Description:
-Use the <revXMLChildContents> <function> to get information about a section of an <XML tree>.
+Use the <revXMLChildContents> <function> to get information about a
+section of an <XML tree>.
 
-If the <revXMLChildContents> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLChildContents> <function> encounters an error, it
+<return|returns> an error message starting with "xmlerr".
 
-The <revXMLChildContents> function returns the text content of a node. This is defined as the first piece of text not contained within a child node. For example:
+The <revXMLChildContents> function returns the text content of a node.
+This is defined as the first piece of text not contained within a child
+node. For example:
 
-&lt;root&gt;&lt;child&gt;Text&lt;subchild&gt;Child Text&lt;/subchild&gt;Text 2&lt;/child&gt;&lt;/root&gt;
+&lt;root&gt;&lt;child&gt;Text&lt;subchild&gt;Child
+Text&lt;/subchild&gt;Text 2&lt;/child&gt;&lt;/root&gt;
 
-In the preceeding XML document, <revXMLChildContents> will return the string "Text" when called with "root" as the <startNode> and 1 as the <depth>.
+In the preceeding XML document, <revXMLChildContents> will return the
+string "Text" when called with "root" as the <startNode> and 1 as the
+<depth>. 
 
->*Important:*  The <revXMLChildContents> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLChildContents> <function> is part of the 
+> <XML library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "XML" 
+> checkbox is checked.
 
-References: nodes (property), XML library (library), LiveCode custom library (library), function (control_st), Standalone Application Settings (glossary), tag (glossary), standalone application (glossary), return (glossary), XML tree (glossary), revXMLAttributes (function), revXMLNumberOfChildren (function), revXMLAppend (command), string (keyword)
+References: revXMLAppend (command), function (control structure),
+revXMLAttributes (function), revXMLNumberOfChildren (function),
+LiveCode custom library (glossary),
+Standalone Application Settings (glossary), tag (glossary),
+standalone application (glossary), return (glossary), XML tree (glossary),
+string (keyword), XML library (library), nodes (property)
 
 Tags: text processing
+

@@ -2,20 +2,22 @@ Name: subtract
 
 Type: command
 
-Syntax: subtract <number> from [<chunk> of] <container> 
+Syntax: subtract <number> from [<chunk> of] <container>
 
-Syntax: subtract {<number> | <array>} from <arrayContainer> 
+Syntax: subtract {<number> | <array>} from <arrayContainer>
 
-Summary: Subtracts a number from a <container> and places the resulting <value> in the <container>.
+Summary:
+Subtracts a number from a <container> and places the resulting <value>
+in the <container>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-subtract 5 from 10
+subtract 5 from tSize
 
 Example:
 put "10,10" into tPoint
@@ -34,23 +36,48 @@ subtract 5 from tArray -- subtracts 5 from both width and height
 # tArray["width"] = 5
 
 Parameters:
-number: Any expression that evaluates to a number.
-chunk: A chunk expression specifying a portion of the container.
-container: A field, button, or variable, or the message box.
-array (array): 
-arrayContainer (array): An array variable each of whose elements is a number.
+number:
+Any expression that evaluates to a number.
+
+chunk:
+A chunk expression specifying a portion of the container.
+
+container:
+A field, button, or variable, or the message box.
+
+array (array):
+
+
+arrayContainer (array):
+An array variable each of whose elements is a number.
+
 
 Description:
-Use the <subtract> <command> to subtract a number from a <container> or a portion of a <container>, or to subtract two <array|arrays> containing numbers.
+Use the <subtract> <command> to subtract a number from a <container> or
+a portion of a <container>, or to subtract two <array|arrays> containing
+numbers. 
 
-The contents of the <container> (or the <chunk> of the <container>) must be a number or an <expression> that <evaluate|evaluates> to a number.
+The contents of the <container> (or the <chunk> of the <container>) must
+be a number or an <expression> that <evaluate|evaluates> to a number.
 
-If a <number> is subtracted from an <arrayContainer>, the <number> is subtracted from each <element(keyword)>. If an <array> is subtracted from an <arrayContainer>, both <array|arrays> must have the same number of <element(glossary)|elements> and the same dimension, and each <element(keyword)> in the <array> is subtracted from the corresponding <element(keyword)> of the <arrayContainer>.
+If a <number> is subtracted from an <arrayContainer>, the <number> is
+subtracted from each <element(keyword)>. If an <array> is subtracted
+from an <arrayContainer>, both <array|arrays> must have the same number
+of <element(glossary)|elements> and the same dimension, and each
+<element(keyword)> in the <array> is subtracted from the corresponding
+<element(keyword)> of the <arrayContainer>.
 
-If the <container> or an <element(keyword)> of the <arrayContainer> is empty, the <subtract> <command> treats its contents as zero.
+If the <container> or an <element(keyword)> of the <arrayContainer> is
+empty, the <subtract> <command> treats its contents as zero.
 
-If <container> is a <field> or <button>, the <format> of the sum is determined by the <numberFormat> <property>.
+If <container> is a <field> or <button>, the <format> of the sum is
+determined by the <numberFormat> <property>.
 
-References: field (keyword), element (keyword), button (keyword), - (operator), numberFormat (property), multiply (command), format (function), value (function), property (glossary), element (glossary), container (glossary), expression (glossary), array (glossary), evaluate (glossary), command (glossary)
+References: multiply (command), format (function), value (function),
+property (glossary), element (glossary), container (glossary),
+expression (glossary), array (glossary), evaluate (glossary),
+command (glossary), field (keyword), element (keyword), button (keyword),
+- (operator), numberFormat (property)
 
 Tags: math
+

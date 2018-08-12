@@ -4,15 +4,16 @@ Type: message
 
 Syntax: deleteGraphic
 
-Summary: Sent to a <graphic> just before it is removed from the <stack>.
+Summary:
+Sent to a <graphic> just before it is removed from the <stack>.
 
 Associations: graphic
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on deleteGraphic -- announce deletion to user
@@ -21,17 +22,28 @@ on deleteGraphic -- announce deletion to user
 end deleteGraphic
 
 Description:
-Handle the <deleteGraphic> <message> if you want to perform cleanup before a <graphic> is removed from the <stack>.
+Handle the <deleteGraphic> <message> if you want to perform cleanup
+before a <graphic> is removed from the <stack>.
 
-The actual deletion is not triggered by the <deleteGraphic> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <graphic> from being removed.
+The actual deletion is not triggered by the <deleteGraphic> <message>,
+so <trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <graphic> from being removed.
 
-However, the undo <command> will restore a <graphic> after it is deleted by the user. For example, the following <handler>, placed in a <card> or stack <script>, effectively prevents a <graphic> from being deleted by the user:
+However, the undo <command> will restore a <graphic> after it is deleted
+by the user. For example, the following <handler>, placed in a <card> or
+stack <script>, effectively prevents a <graphic> from being deleted by
+the user:
 
-  on deleteGraphic
-    beep
-    send "undo" to this card in 5 milliseconds
-  end deleteGraphic
+    on deleteGraphic
+        beep
+        send "undo" to this card in 5 milliseconds
+    end deleteGraphic
 
-References: card (keyword), graphic (keyword), script (property), delete (command), stack (object), handler (glossary), trap (glossary), message (glossary), command (glossary), graphic (glossary), pass (control_st)
+
+References: delete (command), pass (control structure),
+handler (glossary), trap (glossary), message (glossary),
+command (glossary), graphic (glossary), card (keyword), graphic (keyword),
+stack (object), script (property)
 
 Tags: objects
+

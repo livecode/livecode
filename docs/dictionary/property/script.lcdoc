@@ -2,35 +2,46 @@ Name: script
 
 Type: property
 
-Syntax: set the script of <object> to <string> 
+Syntax: set the script of <object> to <string>
 
-Summary: Specifies the contents of an <object|object's> <script>.
+Summary:
+Specifies the contents of an <object|object's> <script>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-set the script of button 2 to empty <a name="code tag=">-- clear out the script</a>
+set the script of button 2 to empty -- clear out the script
 
 Example:
 set the script of field "Get It" to field "Get It Script"
 
 Value:
-The <script> of an object is a string consisting of handlers and comments.
-By default, the <script> of a newly created object is empty.
+The <script> of an object is a string consisting of handlers and
+comments. By default, the <script> of a newly created object is empty.
 
 Description:
-Use the <script> property to examine or change an object's script from inside a LiveCode statement, instead of using the script editor.
+Use the <script> property to examine or change an object's script from
+inside a LiveCode statement, instead of using the script editor.
 
-An object's <script> is the code that controls that object. All of an object's handlers are part of its <script> property.
+An object's <script> is the code that controls that object. All of an
+object's handlers are part of its <script> property.
 
-You can view and change a script directly by selecting the object and choosing Object menu. Use the <script> property within a handler to check the contents of a script, or change the script.
+You can view and change a script directly by selecting the object and
+choosing Object menu. Use the <script> property within a handler to
+check the contents of a script, or change the script.
 
-LiveCode compiles the script immediately after it is set. This means that it is not possible to write a self-modifying handler, because the currently-executing handler would have to be changed and re-compiled while it was running.
+LiveCode compiles the script immediately after it is set. This means
+that it is not possible to write a self-modifying handler, because the
+currently-executing handler would have to be changed and re-compiled
+while it was running.
 
-References: remove script (command), edit (command), script (property), object (object)
+References: remove script (command), edit (command), object (glossary),
+script (property)
+

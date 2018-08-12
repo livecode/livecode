@@ -1,12 +1,14 @@
 Name: Speech library
 
-Synonyms: Speech library,Speech libraries
+Synonyms: speech library, speech libraries
 
 Type: library
 
 Description:
-The <LiveCode custom library|LiveCode custom library> that supports <text to speech>.
+The <LiveCode custom library|LiveCode custom library> that supports
+<text to speech>.
 
-References: text to speech (glossary), LiveCode custom library (library)
+References: text to speech (glossary), LiveCode custom library (glossary)
 
 Tags: multimedia
+

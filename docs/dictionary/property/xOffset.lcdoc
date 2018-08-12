@@ -2,30 +2,41 @@ Name: xOffset
 
 Type: property
 
-Syntax: set the xOffset of <EPSObject> to <number> 
+Syntax: set the xOffset of <EPSObject> to <number>
 
-Summary: Specifies the location of the left edge of an <EPS|EPS object's> <PostScript> code.
+Summary:
+Specifies the location of the left edge of an <EPS|EPS object's>
+<PostScript> code.
 
 Introduced: 1.0
 
 OS: linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Example:
 set the xOffset of EPS thisObject to 144 -- 2 inches
 
-Value: The <xOffset> of an <EPS|EPS object> is an <integer>.
+Value:
+The <xOffset> of an <EPS|EPS object> is an <integer>.
 
 Description:
-Use the <xOffset> <property> to control the placement of an <EPS|EPS object> on the paper when it's printed.
+Use the <xOffset> <property> to control the placement of an <EPS|EPS
+object> on the paper when it's printed.
 
-The <xOffset> is the distance in <points> from the left edge of the paper to the left edge of the <PostScript> object. This controls the placement of the <PostScript> object when it's rendered.
+The <xOffset> is the distance in <points> from the left edge of the
+paper to the left edge of the <PostScript> object. This controls the
+placement of the <PostScript> object when it's rendered.
 
-The <xOffset> of an <EPS|EPS object> is equal to the first <item> in the <object|object's> <boundingBox> <property>.
+The <xOffset> of an <EPS|EPS object> is equal to the first <item> in the
+<object|object's> <boundingBox> <property>.
 
-This property is supported only on Unix systems with Display PostScript installed.
+This property is supported only on Unix systems with Display PostScript
+installed. 
 
-References: left (property), points (property), boundingBox (property), postScript (property), yOffset (property), item (keyword), integer (keyword), object (object), EPS (glossary), property (glossary)
+References: object (glossary), EPS (glossary), property (glossary),
+item (keyword), integer (keyword), left (property), points (property),
+boundingBox (property), postScript (property), yOffset (property)
 
 Tags: multimedia
+

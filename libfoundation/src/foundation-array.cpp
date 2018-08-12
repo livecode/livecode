@@ -94,42 +94,6 @@ bool MCArrayCreate(bool p_case_sensitive, const MCNameRef *p_keys, const MCValue
 }
 
 MC_DLLEXPORT_DEF
-bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, const MCNameRef *p_keys, const MCValueRef *p_values, uindex_t p_length, MCArrayRef& r_array)
-{
-	if (p_length == 0)
-	{
-		if (nil != kMCEmptyArray)
-		{
-			r_array = MCValueRetain(kMCEmptyArray);
-			return true;
-		}
-	}
-	else
-	{
-		MCAssert(nil != p_keys);
-		MCAssert(nil != p_values);
-	}
-
-	bool t_success;
-	t_success = true;
-    
-	MCArrayRef t_array;
-	t_array = nil;
-	if (t_success)
-		t_success = MCArrayCreateMutableWithOptions(t_array, p_case_sensitive, p_form_sensitive);
-    
-	if (t_success)
-		for(uindex_t i = 0; i < p_length && t_success; i++)
-			t_success = MCArrayStoreValue(t_array, p_case_sensitive, p_keys[i], p_values[i]);
-    
-	if (t_success)
-		return MCArrayCopyAndRelease(t_array, r_array);
-    
-	MCValueRelease(t_array);
-	return false;
-}
-
-MC_DLLEXPORT_DEF
 bool MCArrayCreateMutable(MCArrayRef& r_array)
 {
 	if (!__MCValueCreate(kMCValueTypeCodeArray, r_array))
@@ -139,23 +103,6 @@ bool MCArrayCreateMutable(MCArrayRef& r_array)
 
 	return true;
 }	
-
-MC_DLLEXPORT_DEF
-bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive, bool p_form_sensitive)
-{
-	if (!__MCValueCreate(kMCValueTypeCodeArray, r_array))
-		return false;
-    
-    r_array -> flags |= kMCArrayFlagIsMutable;
-    
-    if (p_case_sensitive)
-        r_array -> flags |= kMCArrayFlagIsCaseSensitive;
-
-    if (p_form_sensitive)
-        r_array -> flags |= kMCArrayFlagIsFormSensitive;
-    
-	return true;
-}
 
 MC_DLLEXPORT_DEF
 bool MCArrayCopy(MCArrayRef self, MCArrayRef& r_new_array)
@@ -370,22 +317,6 @@ uindex_t MCArrayGetCount(MCArrayRef self)
 	return self -> contents -> key_value_count;
 }
 
-MC_DLLEXPORT_DEF
-bool MCArrayIsCaseSensitive(MCArrayRef self)
-{
-	__MCAssertIsArray(self);
-
-    return (self -> flags & kMCArrayFlagIsCaseSensitive) != 0;
-}
-
-MC_DLLEXPORT_DEF
-bool MCArrayIsFormSensitive(MCArrayRef self)
-{
-	__MCAssertIsArray(self);
-
-    return (self -> flags & kMCArrayFlagIsFormSensitive) != 0;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF
@@ -431,6 +362,16 @@ bool MCArrayFetchValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 
 	// Otherwise, look up the next step in the path.
 	return MCArrayFetchValueOnPath((MCArrayRef)t_value, p_case_sensitive, p_path + 1, p_path_length - 1, r_value);
+}
+
+bool MCArrayFetchValueOnPath(MCArrayRef array,
+                             bool case_sensitive,
+                             const MCSpan<MCNameRef> path,
+                             MCValueRef& value)
+{
+    return MCArrayFetchValueOnPath(array, case_sensitive,
+                                   path.data(), path.size(),
+                                   value);
 }
 
 //////////////////////
@@ -537,6 +478,16 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 	return true;
 }
 
+bool MCArrayStoreValueOnPath(MCArrayRef array,
+                             bool case_sensitive,
+                             const MCSpan<MCNameRef> path,
+                             MCValueRef value)
+{
+    return MCArrayStoreValueOnPath(array, case_sensitive,
+                                   path.data(), path.size(),
+                                   value);
+}
+
 //////////////////////
 
 MC_DLLEXPORT_DEF
@@ -605,6 +556,14 @@ bool MCArrayRemoveValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNa
 	return true;
 }
 
+bool MCArrayRemoveValueOnPath(MCArrayRef array,
+                              bool case_sensitive,
+                              MCSpan<MCNameRef> path)
+{
+    return MCArrayRemoveValueOnPath(array, case_sensitive,
+                                    path.data(), path.size());
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF
@@ -656,6 +615,42 @@ MC_DLLEXPORT_DEF
 bool MCArrayIsEmpty(MCArrayRef self)
 {
 	return MCArrayGetCount(self) == 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_DLLEXPORT_DEF
+bool MCArrayConvertToProperList(MCArrayRef p_array, MCProperListRef& r_list)
+{
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+    {
+        return false;
+    }
+    
+    for(uindex_t t_index = 1; t_index <= MCArrayGetCount(p_array); t_index++)
+    {
+        MCValueRef t_value;
+        if (!MCArrayFetchValueAtIndex(p_array, t_index, t_value))
+        {
+            r_list = nullptr;
+            return true;
+        }
+        
+        if (!MCProperListPushElementOntoBack(*t_list, t_value))
+        {
+            return false;
+        }
+    }
+    
+    if (!t_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_list = t_list.Take();
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -791,7 +786,7 @@ static bool __MCArrayCreateIndirect(__MCArray *p_contents, __MCArray*& r_array)
 
 	r_array = self;
 	return true;
-};
+}
 
 static uindex_t __MCArrayGetTableSizeIndex(__MCArray *self)
 {
@@ -971,7 +966,7 @@ static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool p_case_sensitive, MC
 		}
 		else
 		{
-            if (MCNameIsEqualTo(t_entry -> key, p_key, p_case_sensitive, MCArrayIsFormSensitive(self)))
+            if (MCNameIsEqualTo(t_entry -> key, p_key, !p_case_sensitive ? kMCStringOptionCompareCaseless : kMCStringOptionCompareExact))
 			{
 				r_slot = t_probe;
 				return true;
@@ -1065,12 +1060,12 @@ void __MCArrayDump(MCArrayRef array)
 		t_contents = array -> contents;
 
 	uindex_t t_size;
-	t_size = __MCArrayGetTableSize(array);
+	t_size = __MCArrayGetTableSize(t_contents);
 
 	for(uindex_t i = 0; i < t_size; i++)
 	{
 		__MCArrayKeyValue *t_entry;
-		t_entry = &array -> key_values[i];
+		t_entry = &t_contents -> key_values[i];
 
 		if (t_entry -> value != UINTPTR_MIN && t_entry -> value != UINTPTR_MAX)
 		{

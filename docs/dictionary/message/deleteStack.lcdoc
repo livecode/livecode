@@ -4,33 +4,43 @@ Type: message
 
 Syntax: deleteStack
 
-Summary: Sent to the <current card> of a <stack> that's about to be deleted.
+Summary:
+Sent to the <current card> of a <stack> that's about to be deleted.
 
 Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on deleteStack -- warn the user
-  if the mainStack of the owner of the target \
-     is not the owner of the target then -- it's a substack
-    answer "This stack will be permanently deleted the" && \
-       "next time you save the file."
-  end if
-  pass deleteStack
+    if the mainStack of the owner of the target \
+      is not the owner of the target then -- it's a substack
+        answer "This stack will be permanently deleted the" && \
+          "next time you save the file."
+    end if
+    pass deleteStack
 end deleteStack
 
 Description:
-Handle the <deleteStack> <message> if you want to perform cleanup before a <stack> is deleted from its <stack file>.
+Handle the <deleteStack> <message> if you want to perform cleanup before
+a <stack> is deleted from its <stack file>.
 
-The actual deletion is not triggered by the <deleteStack> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <stack> from being removed.
+The actual deletion is not triggered by the <deleteStack> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <stack> from being removed.
 
-If a stack's file is deleted with the delete file <command> (or by the user), and the stack itself is not open, no <deleteStack> <message> is sent.
+If a stack's file is deleted with the delete file <command> (or by the
+user), and the stack itself is not open, no <deleteStack> <message> is
+sent. 
 
-References: destroyWindow (property), cantDelete (property), newStack (message), delete stack (command), stack (object), trap (glossary), stack file (glossary), current card (glossary), message (glossary), command (glossary), pass (control_st)
+References: delete stack (command), pass (control structure),
+trap (glossary), stack file (glossary), current card (glossary),
+message (glossary), command (glossary), newStack (message),
+stack (object), destroyWindow (property), cantDelete (property)
 
 Tags: objects
+

@@ -1,14 +1,20 @@
 Name: variable
 
-Synonyms: variable,var,var'
+Synonyms: var
 
 Type: glossary
 
 Description:
-A <container> in memory. You can put data of any kind into a variable, and read its contents. 
- 
-Unlike other <container|containers>, variables are not permanent. A <local variable|local variable's> existence ends when the <handler> stops; a <global|global variable's> existence ends when you quit the <application>.
+A <container> in memory. You can put data of any kind into a variable,
+and read its contents.
 
-References: handler (glossary), application (glossary), container (glossary), global (glossary), local variable (glossary)
+Unlike other <container|containers>, variables are not permanent. A
+<local variable|local variable's> existence ends when the <handler>
+stops; a <global|global variable's> existence ends when you quit the
+<application>. 
+
+References: handler (glossary), application (glossary),
+container (glossary), global (glossary), local variable (glossary)
 
 Tags: properties
+

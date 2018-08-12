@@ -1,0 +1,45 @@
+Name: eventShiftKey
+
+Type: function
+
+Syntax: the eventShiftKey
+
+Syntax: eventShiftKey()
+
+Summary:
+<return|Returns> the state of the Shift key.
+
+Introduced: 8.1
+
+OS: mac, windows, linux
+
+Platforms: desktop, server
+
+Example:
+if eventShiftKey() is down then beep
+
+Example:
+set the locked of me to (the eventShiftKey is up)
+
+Returns:
+The <eventShiftKey> <function> <return|returns> down if the key is
+pressed and up if it's not.
+
+Description:
+Use the <eventAltKey> <function(control structure)> to check whether the
+<Shift key> was pressed at the time the current event was dispatched.
+
+If you want to check the state of the <Shift key> at the current time,
+rather than when the event was dispatched, use the <shiftKey>
+<function>. 
+
+> **Warning**: the value of this function is undefined after performing
+> a wait operation; it may no longer be the same as the value when the
+> event was dispatched.
+
+
+References: left (constant), function (control structure),
+keysDown (function), return (glossary), scrollbarBeginning (message)
+
+Tags: ui
+

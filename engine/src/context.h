@@ -215,6 +215,9 @@ public:
 	virtual bool lockgcontext(MCGContextRef& r_ctxt) = 0;
 	virtual void unlockgcontext(MCGContextRef ctxt) = 0;
 	
+	// IM-2016-04-22: [[ WindowsPlayer ]] Returns the transform from user-space to the underlying device surface
+	virtual MCGAffineTransform getdevicetransform(void) = 0;
+	
 	virtual MCRegionRef computemaskregion(void) = 0;
 	virtual void clear(const MCRectangle* rect) = 0;
 

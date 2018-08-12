@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -246,7 +246,7 @@ MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view
     return new MCNativeLayerAndroid(p_object, (jobject)p_view);
 }
 
-bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_view)
 {
 	jobject t_view;
 	t_view = nil;

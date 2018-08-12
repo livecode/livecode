@@ -2,15 +2,17 @@ Name: toolTipDelay
 
 Type: property
 
-Syntax: set the toolTipDelay to <milliseconds> 
+Syntax: set the toolTipDelay to <milliseconds>
 
-Summary: Specifies how long the user must <point> to an <object> with the <mouse pointer> before its <tool tip> appears.
+Summary:
+Specifies how long the user must <point> to an <object(glossary)> with
+the <mouse pointer> before its <tool tip> appears.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Example:
 set the toolTipDelay to 200 -- faster-than-default tooltip
@@ -23,14 +25,24 @@ The <toolTipDelay> is a <non-negative> <integer>.
 By default, the <toolTipDelay> is 500 (half a second).
 
 Description:
-Use the <toolTipDelay> <property> to control the responsiveness of <tool tip|tool tips>.
+Use the <toolTipDelay> <property> to control the responsiveness of <tool
+tip|tool tips>.
 
-A tool tip is a small box containing a line or two of text, which pops up on the screen when the mouse pointer hovers over a control. Use the <toolTip> <property> to set the contents of the <tool tip>.
+A tool tip is a small box containing a line or two of text, which pops
+up on the screen when the mouse pointer hovers over a control. Use the
+<toolTip> <property> to set the contents of the <tool tip>.
 
-The mouse must be still for the <toolTipDelay> time or the <tool tip> will not appear. If the mouse remains within a <control>, but is constantly moving, the <toolTipDelay> time does not start until the mouse stops moving.
+The mouse must be still for the <toolTipDelay> time or the <tool tip>
+will not appear. If the mouse remains within a <control>, but is
+constantly moving, the <toolTipDelay> time does not start until the
+mouse stops moving.
 
-If the <toolTipDelay> is zero, the <tool tip> is disabled and does not appear.
+If the <toolTipDelay> is zero, the <tool tip> is disabled and does not
+appear. 
 
-References: toolTip (property), integer (keyword), point (keyword), control (keyword), object (object), property (glossary), tool tip (glossary), mouse pointer (glossary), non-negative (glossary)
+References: object (glossary), property (glossary), tool tip (glossary),
+mouse pointer (glossary), non-negative (glossary), integer (keyword),
+point (keyword), control (keyword), toolTip (property)
 
 Tags: ui
+

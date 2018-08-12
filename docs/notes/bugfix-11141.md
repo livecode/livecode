@@ -1,1 +1,0 @@
-#Gradient ramp rounding error

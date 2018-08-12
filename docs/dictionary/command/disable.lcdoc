@@ -2,15 +2,16 @@ Name: disable
 
 Type: command
 
-Syntax: disable <object> 
+Syntax: disable <object>
 
-Summary: Dims a <control> so that it no longer responds to user actions.
+Summary:
+Dims a <control> so that it no longer responds to user actions.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 disable field 1
@@ -19,13 +20,21 @@ Example:
 disable button 2 of card 7 of stack "Overall Controls"
 
 Parameters:
-object: Any control in an open stack.
+object:
+Any control in an open stack.
 
 Description:
-Use the <disable> <command> to prevent an <object> from responding to mouse clicks or keyboard presses.
+Use the <disable> <command> to prevent an <object(glossary)> from
+responding to mouse clicks or keyboard presses.
 
-The <disable> <command> is equivalent to setting the <object|object's> <disabled> <property> to true.
+The <disable> <command> is equivalent to setting the <object|object's>
+<disabled> <property> to true.
 
-References: cantSelect (property), visible (property), disabledIcon (property), enabled (property), lockText (property), disabled (property), invisible (property), traversalOn (property), control (keyword), enable (command), disable menu (command), hide (command), object (object), command (glossary), property (glossary)
+References: enable (command), disable menu (command), hide (command),
+object (glossary), command (glossary), property (glossary),
+control (keyword), cantSelect (property), visible (property),
+disabledIcon (property), enabled (property), lockText (property),
+disabled (property), invisible (property), traversalOn (property)
 
 Tags: ui
+

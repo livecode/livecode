@@ -2,44 +2,77 @@ Name: constant
 
 Type: command
 
-Syntax: constant <constantsList> 
+Syntax: constant <constantsList>
 
-Summary: Declares one or more labels to assign to <constant> <value|values>.
+Summary:
+Declares one or more labels to assign to <constant> <value|values>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
-
-Example:
-constant defaultName="Jones"
+Platforms: desktop, server, mobile
 
 Example:
-constant entryA="EF9993333WX786",entryB="GJ773281YX342"
+constant kDefaultName="Jones"
+
+Example:
+constant kEntryA="EF9993333WX786",kEntryB="GJ773281YX342"
 
 Parameters:
-constantsList (enum): The constantsList consists of one or more name=value pairs, separated by commas:
--  The name is any string.
--  The value is any literal string.
+constantsList:
+The constantsList consists of one or more 'name=value' pairs, 
+separated by commas: 
+
+-  The 'name' is any string.
+-  The 'value' is any literal string.
+
 
 Description:
-Use the <constant> <command> to assign an unchanging value to a <keyword>.
+Use the <constant> <command> to assign an unchanging value to a
+<keyword>. 
 
 Constants can be numbers, characters, logical values, or strings.
 
 A constant cannot be defined as an array, only as a single value.
 
->*Note:*  Choose easy-to-understand names for <constant(glossary)|constants> to improve the readability of your code. Use <constant(glossary)|constants> as substitutes for long or convoluted <string|strings>.
+>*Note:*  Choose easy-to-understand names for
+> <constant(glossary)|constants> to improve the readability of your
+> code. Use <constant(glossary)|constants> as substitutes for long or
+> convoluted <string|strings>. Use the prefix letter k for your constant
+> names to follow convention and make it easy to recognise. See the
+> Tips For Writing Good Code in the Livecode Script Guide.
 
-If you place the <constant> <statement> in a <handler>, you can use the <constant(command)> anywhere in the <handler>. If you place the <constant> <statement> in a <script> outside any <handler>, you can use the <constant(command)> anywhere in the <handler|handlers> of that <script>.
+If you place the <constant> <statement> in a <handler>, you can use the
+<constant(command)> anywhere in the <handler>. If you place the
+<constant> <statement> in a <script> outside any <handler>, you can use
+the <constant(command)> anywhere in the <handler|handlers> of that
+<script>. 
 
-Once you have defined a constant, you cannot redefine it in the same handler; doing so causes an execution error.
+Once you have defined a constant, you cannot redefine it in the same
+handler; doing so causes an execution error.
 
-You can use the <constant> <command> to redefine <LiveCode|LiveCode's> built-in <constant(glossary)|constants> within a <script> or <handler>, but doing so makes your code harder to read and maintain. To find out whether a word is already defined as a built-in <constant(command)>, use the <constantNames> <function>.
+You can use the <constant> <command> to redefine <LiveCode|LiveCode's>
+built-in <constant(glossary)|constants> within a <script> or <handler>,
+but doing so makes your code harder to read and maintain. To find out
+whether a word is already defined as a built-in <constant(command)>, use
+the <constantNames> <function>.
 
->*Tip:*  To see a list of built-in constants, open the Documentation window, click LiveCode Dictionary, and choose "Constants" from the menu at the top of the window.
+>*Tip:*  To see a list of built-in constants, open the Documentation
+> window, click LiveCode Dictionary, and choose "Constants" from the
+> menu at the top of the window.
 
-References: script (property), watch (constant), false (constant), slash (constant), comma (constant), plus (constant), null (constant), pi (constant), iBeam (constant), colon (constant), three (constant), formfeed (constant), help (constant), five (constant), zero (constant), seven (constant), eight (constant), CRLF (constant), quote (constant), empty (constant), space (constant), arrow (constant), six (constant), ten (constant), four (constant), two (constant), constant (command), local (command), constantNames (function), LiveCode (glossary), value (glossary), handler (glossary), string (glossary), statement (glossary), constant (glossary), keyword (glossary), command (glossary), function (control_st)
+References: constant (command), local (command), watch (constant),
+false (constant), slash (constant), comma (constant), plus (constant),
+null (constant), pi (constant), iBeam (constant), colon (constant),
+three (constant), formfeed (constant), help (constant), five (constant),
+zero (constant), seven (constant), eight (constant), CRLF (constant),
+quote (constant), empty (constant), space (constant), arrow (constant),
+six (constant), ten (constant), four (constant), two (constant),
+function (control structure), constantNames (function),
+LiveCode (glossary), value (glossary), handler (glossary),
+string (glossary), statement (glossary), constant (glossary),
+keyword (glossary), command (glossary), script (property)
 
 Tags: properties
+

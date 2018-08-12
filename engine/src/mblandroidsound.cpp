@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "globals.h"
 #include "stack.h"
 #include "system.h"
@@ -99,7 +99,7 @@ void MCSystemGetPlayingSound(MCStringRef &r_sound)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSoundChannelPlayType p_type, MCObjectHandle *p_object)
+bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSoundChannelPlayType p_type, MCObjectHandle p_object)
 {
     bool t_success;
     t_success = true;
@@ -109,12 +109,15 @@ bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSou
     if (t_success)
         t_success = MCS_resolvepath(p_file, &t_resolved);
     
+    // Retain a reference to the object on behalf of the Java code
+    MCObjectProxy<>* t_proxy = p_object.ExternalRetain();
+    
     MCAutoStringRef t_apk_file;
     if (t_success)
         if (path_to_apk_path(*t_resolved, &t_apk_file))
-            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxxxibj", &t_success, p_channel, *t_apk_file, p_file, (int32_t) p_type, true, (long) p_object);
+            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxxxibj", &t_success, p_channel, *t_apk_file, p_file, (int32_t) p_type, true, long(t_proxy));
         else
-            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxxxibj", &t_success, p_channel, *t_resolved, p_file, (int32_t) p_type, false, (long) p_object);
+            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxxxibj", &t_success, p_channel, *t_resolved, p_file, (int32_t) p_type, false, long(t_proxy));
     
     return t_success;
 }
@@ -221,26 +224,33 @@ bool MCSystemSetAudioCategory(intenum_t p_category)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern void MCSoundPostSoundFinishedOnChannelMessage(MCStringRef p_channel, MCStringRef p_sound, MCObjectHandle *p_object);
+extern void MCSoundPostSoundFinishedOnChannelMessage(MCStringRef p_channel, MCStringRef p_sound, MCObjectHandle p_object);
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundFinishedOnChannel(JNIEnv *env, jobject object, jstring channel, jstring sound, jlong object_handle) __attribute__((visibility("default")));
 
-JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundFinishedOnChannel(JNIEnv *env, jobject object, jstring channel, jstring sound, jlong object_handle)
+JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundFinishedOnChannel(JNIEnv *env, jobject object, jstring channel, jstring sound, jlong object_proxy)
 {
 	MCAutoStringRef t_channel;
 	MCAutoStringRef t_sound;
 	/* UNCHECKED */ MCJavaStringToStringRef(env, channel, &t_channel);
 	/* UNCHECKED */ MCJavaStringToStringRef(env, sound, &t_sound);
 	
-    MCSoundPostSoundFinishedOnChannelMessage(*t_channel, *t_sound, (MCObjectHandle*) object_handle);
+	// Notify the callback object that the sound has finished playing.
+	// Don't release the handle here, as it is released via
+	// doSoundReleaseCallbackHandle when the player is subsequently
+	// reset.
+    MCObjectHandle t_object_handle = reinterpret_cast<MCObjectProxy<>*> (object_proxy);
+    MCSoundPostSoundFinishedOnChannelMessage(*t_channel, *t_sound, t_object_handle);
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundReleaseCallbackHandle(JNIEnv *env, jobject object, jlong object_handle) __attribute__((visibility("default")));
 
-JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundReleaseCallbackHandle(JNIEnv *env, jobject object, jlong object_handle)
+JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundReleaseCallbackHandle(JNIEnv *env, jobject object, jlong object_proxy)
 {    
-    MCObjectHandle* t_object = (MCObjectHandle*) object_handle;
-    t_object->Release();
+	// Convert to an object handle and release the reference that was retained
+	// on behalf of the Java world.
+	MCObjectHandle t_object = reinterpret_cast<MCObjectProxy<>*> (object_proxy);
+    t_object.ExternalRelease();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

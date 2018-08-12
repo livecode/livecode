@@ -1,33 +1,48 @@
 Name: mobileOrientation
 
+Synonyms: iphoneorientation
+
 Type: function
 
 Syntax: mobileOrientation()
 
-Summary: Returns the current interface orientation.
-
-Synonyms: iphoneOrientation
+Summary:
+Returns the current interface orientation.
 
 Introduced: 4.5.2
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
 Example:
 put mobileOrientation() into theInterfaceOrientation
 
-Returns (enum): The <mobileDeviceOrientation> function returns one of
-- portrait : the device is being held upward with the home button at the bottom
-- portrait upside down : the device is being held upward with the home button at the top
-- landscape left : the device is being held upward with the home button on the left
-- landscape right : the device is being held upward with the home button on the right
+Returns (enum):
+The <mobileDeviceOrientation> function returns one of
+
+-   portrait: the device is being held upward with the home button at
+    the bottom
+-   portrait upside down: the device is being held upward with the home
+    button at the top
+-   landscape left: the device is being held upward with the home button
+    on the left
+-   landscape right: the device is being held upward with the home
+    button on the right
+
 
 Description:
-Use the <mobileOrientation> function to find the current interface orientation.
+Use the <mobileOrientation> function to find the current interface
+orientation. 
 
-The <mobileOrientation> function returns the current orientation of the interface.
+The <mobileOrientation> function returns the current orientation of the
+interface. 
 
->*Note:* Due to the limitation of the Android operating system, landscape left and portrait upside-down are only supported on Android 2.3 and later.
+>*Note:* Due to the limitation of the Android operating system,
+> landscape left and portrait upside-down are only supported on Android
+> 2.3 and later.
 
-References: mobileSetAllowedOrientations (command), mobileLockOrientation (command), mobileUnlockOrientation (command), mobileDeviceOrientation (function), mobileAllowedOrientations (function), orientationChanged (message)
+References: mobileSetAllowedOrientations (command),
+mobileLockOrientation (command), mobileUnlockOrientation (command),
+mobileDeviceOrientation (function), mobileAllowedOrientations (function),
+orientationChanged (message), mobileSetFullScreenRectForOrientations (command)

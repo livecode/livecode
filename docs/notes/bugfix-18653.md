@@ -1,0 +1,1 @@
+# Encode bundle display name as utf-8 in ios app plist

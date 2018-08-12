@@ -4,15 +4,16 @@ Type: message
 
 Syntax: newField
 
-Summary: Sent to a new <field> right after it's created.
+Summary:
+Sent to a new <field> right after it's created.
 
 Associations: field
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on newField -- create a label field
@@ -27,12 +28,22 @@ on newField -- create a label field
 end newField
 
 Description:
-Handle the <newField> <message> if you want to create additional <object|objects>, switch <tool|tools>, or do other tasks when a new <field> is created.
+Handle the <newField> <message> if you want to create additional
+<object|objects>, switch <tool|tools>, or do other tasks when a new
+<field> is created.
 
-Normally, the <newField> <message> is handled at a higher level of the <message path>, since the newly-created <field> does not yet have a <script> unless the <templateField> contains one.
+Normally, the <newField> <message> is handled at a higher level of the
+<message path>, since the newly-created <field> does not yet have a
+<script> unless the <templateField> contains one.
 
-The actual creation is not triggered by the <newField> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <field> from being created.
+The actual creation is not triggered by the <newField> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <field> from being created.
 
-References: field (keyword), script (property), copy (command), clone (command), paste (command), object (object), trap (glossary), templateField (glossary), message (glossary), tool (glossary), message path (glossary), pass (control_st)
+References: copy (command), clone (command), paste (command),
+pass (control structure), object (glossary), trap (glossary),
+templateField (glossary), message (glossary), tool (glossary),
+message path (glossary), field (keyword), script (property)
 
 Tags: objects
+

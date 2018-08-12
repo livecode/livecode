@@ -4,27 +4,47 @@ Type: property
 
 Syntax: set the lockErrorDialogs to {true | false}
 
-Summary: Specifies whether <execution error|execution errors> cause an <errorDialog> <message> to be sent, or display the error window.
+Summary:
+Specifies whether <execution error|execution errors> cause an
+<errorDialog> <message> to be sent, or display the error window.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the lockErrorDialogs to true
 
-Value (bool):The <lockErrorDialogs> is true or false.
-By default, the <lockErrorDialogs> <property> is set to false. It is <reset> to false when all pending <handler|handlers> are finished <execute|executing>.
+Value (bool):
+The <lockErrorDialogs> is true or false.
+By default, the <lockErrorDialogs> <property> is set to false. It is
+<reset> to false when all pending <handler|handlers> are finished
+<execute|executing>. 
 
 Description:
-Use the <lockErrorDialogs> <property> to <handle> <execution error|execution errors> in a custom handler, rather than allowing LiveCode to display the standard error window.
+Use the <lockErrorDialogs> <property> to <handle> <execution
+error|execution errors> in a custom handler, rather than allowing
+LiveCode to display the standard error window.
 
-If an execution error occurs while the <lockErrorDialogs> <property> is set to false, the error window appears. This is the <default> <behavior>.
+If an execution error occurs while the <lockErrorDialogs> <property> is
+set to false, the error window appears. This is the <default>
+<behavior>. 
 
-If an execution error occurs while the <lockErrorDialogs> <property> is set to true, an <errorDialog> <message> is sent to the <object> whose <handler> set the <lockErrorDialogs> to true.
+If an execution error occurs while the <lockErrorDialogs> <property> is
+set to true, an <errorDialog> <message> is sent to the
+<object(glossary)> whose <handler> set the <lockErrorDialogs> to true.
 
-If you set the <lockErrorDialogs> to true, you should provide an <errorDialog> <handler> to notify the user of the <error> and perform any necessary cleanup.
+If you set the <lockErrorDialogs> to true, you should provide an
+<errorDialog> <handler> to notify the user of the <error> and perform
+any necessary cleanup.
 
-References: lockErrorDialogs (property), errorDialog (message), scriptParsingError (message), default (keyword), property (glossary), handle (glossary), handler (glossary), error (glossary), execute (glossary), message (glossary), execution error (glossary), behavior (glossary), interrupt (function), errorObject (function), reset (command), unlock error dialogs (command), object (object)
+References: reset (command), unlock error dialogs (command),
+interrupt (function), errorObject (function), property (glossary),
+handle (glossary), handler (glossary), error (glossary),
+execute (glossary), message (glossary), execution error (glossary),
+behavior (glossary), object (glossary), default (keyword),
+errorDialog (message), scriptParsingError (message),
+lockErrorDialogs (property)
+

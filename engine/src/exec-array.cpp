@@ -31,32 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "exec-interface.h"
 
-////////////////////////////////////////////////////////////////////////////////
-
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, Keys, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, Extents, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Combine, 4)
-// SN-2014-09-01: [[ Bug 13297 ]] Combining by column deserves its own function as it is too
-// different from combining by row
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineByRow, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineByColumn, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineAsSet, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Split, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitByRow, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitByColumn, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitAsSet, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Union, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Intersect, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, UnionRecursive, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, IntersectRecursive, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, ArrayEncode, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, ArrayDecode, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, MatrixMultiply, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, TransposeMatrix, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, IsAnArray, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, IsNotAnArray, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, IsAmongTheKeysOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Arrays, IsNotAmongTheKeysOf, 3)
+#include "stackfileformat.h"
+#include "patternmatcher.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -210,19 +186,26 @@ void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_
 void MCArraysExecCombineByRow(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef &r_string)
 {
     MCAutoListRef t_list;
-    MCListCreateMutable(ctxt . GetRowDelimiter(), &t_list);
+    bool t_success = MCListCreateMutable(ctxt . GetRowDelimiter(), &t_list);
 
     uindex_t t_count = MCArrayGetCount(p_array);
     combine_array_t t_lisctxt;
-    bool t_success;
-
-    t_lisctxt . elements = nil;
-    t_lisctxt . index = 0;
-    t_success = MCMemoryNewArray(t_count, t_lisctxt . elements);
-
+	
+	MCAutoArray<array_element_t> t_elements;
+	if (t_success)
+		t_success = t_elements . New(t_count);
+	
+	if (t_success)
+	{
+		t_lisctxt . elements = t_elements.Ptr();
+		t_lisctxt . index = 0;
+	}
+	
     if (t_success)
-    {
-        MCArrayApply(p_array, list_array_elements, &t_lisctxt);
+        t_success = MCArrayApply(p_array, list_array_elements, &t_lisctxt);
+	
+	if (t_success)
+	{
         qsort(t_lisctxt . elements, t_count, sizeof(array_element_t), compare_array_element);
 
         for (uindex_t i = 0; i < t_count && t_success; ++i)
@@ -233,8 +216,6 @@ void MCArraysExecCombineByRow(MCExecContext& ctxt, MCArrayRef p_array, MCStringR
             else
                 t_success = false;
         }
-
-        MCMemoryDeleteArray(t_lisctxt . elements);
     }
 
     if (t_success && MCListCopyAsString(*t_list, r_string))
@@ -252,119 +233,118 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
     t_col_delimiter = ctxt . GetColumnDelimiter();
     
     MCAutoListRef t_list;
-    MCListCreateMutable(t_row_delimiter, &t_list);
+	bool t_success = MCListCreateMutable(t_row_delimiter, &t_list);
     
     uindex_t t_count = MCArrayGetCount(p_array);
     combine_int_indexed_array_t t_lisctxt;
-    bool t_success;
-    
-    t_lisctxt . elements = nil;
-    t_lisctxt . index = 0;
-    t_lisctxt . converter = &ctxt;
-    t_success = MCMemoryNewArray(t_count, t_lisctxt . elements);
-    
+	
+	MCAutoArray<array_int_indexed_element_t> t_elements;
+	if (t_success)
+		t_success = t_elements . New(t_count);
+	
+	if (t_success)
+	{
+		t_lisctxt . elements = t_elements.Ptr();
+		t_lisctxt . index = 0;
+		t_lisctxt . converter = &ctxt;
+	}
+	
+	if (t_success)
+		t_success = MCArrayApply(p_array, list_int_indexed_array_elements, &t_lisctxt);
+	
     if (t_success)
     {
-        if (MCArrayApply(p_array, list_int_indexed_array_elements, &t_lisctxt))
-        {
-            bool t_valid_keys;
-            
-            qsort(t_lisctxt . elements, t_count, sizeof(array_element_t), compare_int_indexed_elements);
-            
-            // Combine by row/column is only valid if all the indices are consecutive numbers
-            // Otherwise, an empty string is returned - no error
-            index_t t_last_index;
-            t_valid_keys = true;
-            t_last_index = 0;
-            for (uindex_t i = 0; i < t_count && t_valid_keys; ++i)
-            {
-                if (!t_last_index)
-                    t_last_index = t_lisctxt . elements[i] . key;
-                else
-                    t_valid_keys = ++t_last_index == t_lisctxt . elements[i] . key;
-            }
-            
-            if (t_valid_keys)
-            {
-                // SN-2014-09-01: [[ Bug 13297 ]]
-                // We need to store the converted strings in a array, to be able to iterate through the elements by one row-delimitated
-                //  at a time
-                MCStringRef* t_strings;
-                uindex_t *t_next_row_indices;
-                
-                t_strings = NULL;
-                t_next_row_indices = NULL;
-                
-                /* UNCHECKED */ MCMemoryNewArray(t_count, t_strings);
-                // MCMemoryNewArray initialises all t_next_row_indices elements to 0.
-                /* UNCHECKED */ MCMemoryNewArray(t_count, t_next_row_indices);
-                
-                for (uindex_t i = 0; i < t_count && t_success; ++i)
-                {
-                    if (t_lisctxt . elements[i] . key == 0) // The index 0 is ignored
-                        continue;
-                    
-                    t_success = ctxt . ConvertToString(t_lisctxt . elements[i] . value, t_strings[i]);
-                }
-                
-                // SN-2014-09-01: [[ Bug 13297 ]] Added a missed part in column-combining:
-                // only combining row-by-row the array elements.
-                if (t_success)
-                {
-                    uindex_t t_elements_over;
-                    t_elements_over = 0;
-                    
-                    // We iterate as long as one element still has uncombined rows
-                    while (t_success && t_elements_over != t_count)
-                    {
-                        MCAutoListRef t_row;
-                        
-                        t_success = MCListCreateMutable(t_col_delimiter, &t_row);
-                        t_elements_over = 0;
-                        
-                        // Iterate through all the elements of the array
-                        for (uindex_t i = 0; i < t_count && t_success; ++i)
-                        {
-                            // Only consider this element if it has any uncombined rows remaining
-                            if (t_next_row_indices[i] < MCStringGetLength(t_strings[i]))
-                            {
-                                MCRange t_cell_range;
-                                if (MCStringFind(t_strings[i], MCRangeMake(t_next_row_indices[i], UINDEX_MAX), t_row_delimiter, ctxt.GetStringComparisonType(), &t_cell_range))
-                                {
-                                    // We found a row delimiter, so we stop the copy range before it and update the next index from which to look
-                                    t_success = MCListAppendSubstring(*t_row, t_strings[i], MCRangeMake(t_next_row_indices[i], t_cell_range . offset - t_next_row_indices[i]));
-                                    t_next_row_indices[i] = t_cell_range . offset + t_cell_range . length;
-                                }
-                                else
-                                {
-                                    // No row delimiter: we copy the remaining part of the string and mark the element
-                                    // as wholly combined by setting the next index to the length of the element
-                                    t_success = MCListAppendSubstring(*t_row, t_strings[i], MCRangeMake(t_next_row_indices[i], UINDEX_MAX));
-                                    t_next_row_indices[i] = MCStringGetLength(t_strings[i]);
-                                }
-                            }
-                            else
-                            {
-                                // Everything has been combined in this element
-                                t_elements_over++;
-                                MCListAppend(*t_row, kMCEmptyString);
-                            }
-                        }
-                        
-                        // One more row has been combined - doing it anyway mimics the previous behaviour of having an empty row
-                        // added in the end when combining by columns
-                        if (t_elements_over != t_count)
-                            MCListAppend(*t_list, *t_row);
-                    }
-                }
-                
-                MCMemoryDeleteArray(t_next_row_indices);
-                MCMemoryDeleteArray(t_strings);
-            }
-        }
-        MCMemoryDeleteArray(t_lisctxt . elements);
-    }
-    
+		qsort(t_lisctxt . elements, t_count, sizeof(array_element_t), compare_int_indexed_elements);
+		
+		// Combine by row/column is only valid if all the indices are consecutive numbers
+		// Otherwise, an empty string is returned - no error
+		index_t t_last_index;
+		t_last_index = 0;
+		for (uindex_t i = 0; i < t_count; ++i)
+		{
+			if (!t_last_index)
+			{
+				t_last_index = t_lisctxt . elements[i] . key;
+				continue;
+			}
+			
+			if (++t_last_index != t_lisctxt . elements[i] . key)
+			{
+				r_string = MCValueRetain(kMCEmptyString);
+				return;
+			}
+		}
+
+		// SN-2014-09-01: [[ Bug 13297 ]]
+		// We need to store the converted strings in a array, to be able to iterate through the elements by one row-delimitated
+		//  at a time
+		MCAutoStringRefArray t_strings;
+		t_success = t_strings . New(t_count);
+		
+		MCAutoArray<uindex_t> t_next_row_indices;
+		if (t_success)
+			t_next_row_indices . New(t_count);
+		
+		for (uindex_t i = 0; i < t_count && t_success; ++i)
+		{
+			if (t_lisctxt . elements[i] . key == 0) // The index 0 is ignored
+				continue;
+			
+			t_success = ctxt . ConvertToString(t_lisctxt . elements[i] . value, t_strings[i]);
+		}
+		
+		// SN-2014-09-01: [[ Bug 13297 ]] Added a missed part in column-combining:
+		// only combining row-by-row the array elements.
+		if (t_success)
+		{
+			uindex_t t_elements_over;
+			t_elements_over = 0;
+			
+			// We iterate as long as one element still has uncombined rows
+			while (t_success && t_elements_over != t_count)
+			{
+				MCAutoListRef t_row;
+				
+				t_success = MCListCreateMutable(t_col_delimiter, &t_row);
+				t_elements_over = 0;
+				
+				// Iterate through all the elements of the array
+				for (uindex_t i = 0; i < t_count && t_success; ++i)
+				{
+					// Only consider this element if it has any uncombined rows remaining
+					if (t_next_row_indices[i] < MCStringGetLength(t_strings[i]))
+					{
+						MCRange t_cell_range;
+						if (MCStringFind(t_strings[i], MCRangeMake(t_next_row_indices[i], UINDEX_MAX), t_row_delimiter, ctxt.GetStringComparisonType(), &t_cell_range))
+						{
+							// We found a row delimiter, so we stop the copy range before it and update the next index from which to look
+							t_success = MCListAppendSubstring(*t_row, t_strings[i], MCRangeMakeMinMax(t_next_row_indices[i], t_cell_range . offset));
+							t_next_row_indices[i] = t_cell_range . offset + t_cell_range . length;
+						}
+						else
+						{
+							// No row delimiter: we copy the remaining part of the string and mark the element
+							// as wholly combined by setting the next index to the length of the element
+							t_success = MCListAppendSubstring(*t_row, t_strings[i], MCRangeMake(t_next_row_indices[i], UINDEX_MAX));
+							t_next_row_indices[i] = MCStringGetLength(t_strings[i]);
+						}
+					}
+					else
+					{
+						// Everything has been combined in this element
+						t_elements_over++;
+						t_success = MCListAppend(*t_row, kMCEmptyString);
+					}
+				}
+				
+				// One more row has been combined - doing it anyway mimics the previous behaviour of having an empty row
+				// added in the end when combining by columns
+				if (t_success && t_elements_over != t_count)
+					t_success = MCListAppend(*t_list, *t_row);
+			}
+		}
+	}
+	
     if (t_success && MCListCopyAsString(*t_list, r_string))
         return;
     
@@ -471,7 +451,7 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
             
             // Check that a string has been created to store this column
             MCRange t_range;
-            t_range = MCRangeMake(t_cell_offset, t_cell_found . offset - t_cell_offset);
+            t_range = MCRangeMakeMinMax(t_cell_offset, t_cell_found . offset);
             if (t_temp_array[t_column_index] == nil)
             {
                 t_success = MCStringCreateMutable(0, t_temp_array[t_column_index]);
@@ -573,8 +553,31 @@ void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringR
 //    end if
 // end repeat
 //
+// if right is not an array then no-op
+// else if left is not an array then left = right
+//
+// Semantics of 'symmetric difference tLeft with tRight'
+// 
+// repeat for each key tKey in tRight
+//    if tKey is among the keys of tLeft then
+//        delete tLeft[tKey]
+//    else if tKey is not among the keys of tLeft then
+//        put tRight[tKey] into tLeft[tKey]
+//    end if
+// end repeat
+//
+// if right is not an array then no-op
+// else if left is not an array then left = right
+//
 
-void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, MCValueRef& r_result)
+enum MCArrayDoUnionOp
+{
+    kMCArrayDoUnionOpUnion,
+    kMCArrayDoUnionOpUnionRecursively,
+    kMCArrayDoUnionOpSymmetricDifference,
+};
+
+static void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCArrayDoUnionOp p_op, MCValueRef& r_result)
 {
     if (!MCValueIsArray(p_src))
     {
@@ -609,27 +612,35 @@ void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bo
 	{
         bool t_key_exists;
         t_key_exists = MCArrayFetchValue(t_dst_array, ctxt . GetCaseSensitive(), t_key, t_dst_value);
-        
-        if (t_key_exists && !p_recursive)
-            continue;
-        
-        MCAutoValueRef t_recursive_result;
+
         if (!t_key_exists)
         {
-            t_recursive_result = t_src_value;
+            if (!MCArrayStoreValue(*t_result, ctxt . GetCaseSensitive(), t_key, t_src_value))
+            {
+                ctxt . Throw();
+                return;
+            }
         }
-        else if (p_recursive)
+        else if (p_op == kMCArrayDoUnionOpUnionRecursively)
         {
-            MCArraysDoUnion(ctxt, t_dst_value, t_src_value, true, &t_recursive_result);
-            
+            MCAutoValueRef t_recursive_result;
+            MCArraysDoUnion(ctxt, t_dst_value, t_src_value, p_op, &t_recursive_result);
             if (ctxt . HasError())
                 return;
+            
+            if (!MCArrayStoreValue(*t_result, ctxt . GetCaseSensitive(), t_key, *t_recursive_result))
+            {
+                ctxt . Throw();
+                return;
+            }
         }
-        
-        if (!MCArrayStoreValue(*t_result, ctxt . GetCaseSensitive(), t_key, *t_recursive_result))
+        else if (p_op == kMCArrayDoUnionOpSymmetricDifference)
         {
-            ctxt . Throw();
-            return;
+            if (!MCArrayRemoveValue(*t_result, ctxt.GetCaseSensitive(), t_key))
+            {
+                ctxt.Throw();
+                return;
+            }
         }
 	}
     
@@ -647,8 +658,28 @@ void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bo
 //    end if
 // end repeat
 //
+// if left is not an array then no-op
+// else if right is not an array then left = empty
+//
+// Semantics of 'difference tLeft with tRight'
+// 
+// repeat for each key tKey in tLeft
+//    if tKey is among the keys of tRight then
+//        delete variable tLeft[tKey]
+//    end if
+// end repeat
+//
+// if left is not an array then no-op
+// else if right is not an array then no-op
 
-void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, MCValueRef& r_result)
+enum MCArrayDoIntersectOp
+{
+    kMCArrayDoIntersectOpIntersect,
+    kMCArrayDoIntersectOpIntersectRecursively,
+    kMCArrayDoIntersectOpDifference,
+};
+
+static void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCArrayDoIntersectOp p_op, MCValueRef& r_result)
 {
     if (!MCValueIsArray(p_dst))
     {
@@ -656,10 +687,17 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
         return;
         
     }
-    
+
     if (!MCValueIsArray(p_src))
     {
-        r_result = MCValueRetain(kMCEmptyString);
+        if (p_op != kMCArrayDoIntersectOpDifference)
+        {
+            r_result = MCValueRetain(kMCEmptyString);
+        }
+        else
+        {
+            r_result = MCValueRetain(p_dst);
+        }
         return;
     }
     
@@ -683,11 +721,8 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
     {
         bool t_key_exists;
         t_key_exists = MCArrayFetchValue(t_src_array, ctxt . GetCaseSensitive(), t_key, t_src_value);
-        
-        if (t_key_exists && !p_recursive)
-            continue;
-        
-        if (!t_key_exists)
+
+        if (t_key_exists == (p_op == kMCArrayDoIntersectOpDifference))
         {
             if (!MCArrayRemoveValue(*t_result, ctxt . GetCaseSensitive(), t_key))
             {
@@ -695,10 +730,10 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
                 return;
             }
         }
-        else if (p_recursive)
+        else if (p_op == kMCArrayDoIntersectOpIntersectRecursively)
         {
             MCAutoValueRef t_recursive_result;
-            MCArraysDoIntersect(ctxt, t_dst_value, t_src_value, true, &t_recursive_result);
+            MCArraysDoIntersect(ctxt, t_dst_value, t_src_value, p_op, &t_recursive_result);
             
             if (ctxt . HasError())
                 return;
@@ -713,23 +748,34 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
 
 void MCArraysExecUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoUnion(ctxt, p_dst, p_src, false, r_result);
+    MCArraysDoUnion(ctxt, p_dst, p_src, kMCArrayDoUnionOpUnion, r_result);
+}
+
+void MCArraysExecUnionRecursively(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
+{
+    MCArraysDoUnion(ctxt, p_dst, p_src, kMCArrayDoUnionOpUnionRecursively, r_result);
+}
+
+void MCArraysExecSymmetricDifference(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
+{
+    MCArraysDoUnion(ctxt, p_dst, p_src, kMCArrayDoUnionOpSymmetricDifference, r_result);
 }
 
 void MCArraysExecIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoIntersect(ctxt, p_dst, p_src, false, r_result);
+    MCArraysDoIntersect(ctxt, p_dst, p_src, kMCArrayDoIntersectOpIntersect, r_result);
 }
 
-void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
+void MCArraysExecIntersectRecursively(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoUnion(ctxt, p_dst, p_src, true, r_result);
+    MCArraysDoIntersect(ctxt, p_dst, p_src, kMCArrayDoIntersectOpIntersectRecursively, r_result);
 }
 
-void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
+void MCArraysExecDifference(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoIntersect(ctxt, p_dst, p_src, true, r_result);
+    MCArraysDoIntersect(ctxt, p_dst, p_src, kMCArrayDoIntersectOpDifference, r_result);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -755,7 +801,7 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
     
     // AL-2014-05-22: [[ Bug 12547 ]] Make arrayEncode encode in 7.0 format by default.
     bool t_legacy;
-    t_legacy = p_version != nil && t_version . version < 7000;
+    t_legacy = p_version != nil && t_version . version < kMCStackFileFormatVersion_7_0;
     
     if (t_legacy)
     {
@@ -763,7 +809,7 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
         t_stream = nil;
         if (t_success)
         {
-            t_stream = new MCObjectOutputStream(t_stream_handle);
+            t_stream = new (nothrow) MCObjectOutputStream(t_stream_handle);
             if (t_stream == nil)
                 t_success = false;
         }
@@ -859,7 +905,7 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
         t_stream = nil;
         if (t_success)
         {
-            t_stream = new MCObjectInputStream(t_stream_handle, MCDataGetLength(p_encoding), false);
+            t_stream = new (nothrow) MCObjectInputStream(t_stream_handle, MCDataGetLength(p_encoding), false);
             if (t_stream == nil)
                 t_success = false;
         }
@@ -898,14 +944,16 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
 
 bool MCArraysSplitIndexes(MCNameRef p_key, integer_t*& r_indexes, uindex_t& r_count, bool& r_all_integers)
 {
-	r_indexes = nil;
-	r_count = 0;
-
 	MCStringRef t_string = MCNameGetString(p_key);
 	uindex_t t_string_len = MCStringGetLength(t_string);
 	if (t_string_len == 0)
+	{
+		r_indexes = nil;
+		r_count = 0;
 		return true;
-
+	}
+	
+	MCAutoArray<integer_t> t_indexes;
 	r_all_integers = true;
     
     uindex_t t_start, t_finish;    
@@ -916,29 +964,31 @@ bool MCArraysSplitIndexes(MCNameRef p_key, integer_t*& r_indexes, uindex_t& r_co
 	{
         if (!MCStringFirstIndexOfChar(t_string, ',', t_start, kMCCompareExact, t_finish))
             t_finish = t_string_len;
-        		
-		if (!MCMemoryResizeArray(r_count + 1, r_indexes, r_count))
-			return false;
-        
+		
         MCAutoStringRef t_substring;
+        if (!MCStringCopySubstring(t_string, MCRangeMakeMinMax(t_start, t_finish), &t_substring))
+			return false;
+		
         MCAutoNumberRef t_number;
-        MCStringCopySubstring(t_string, MCRangeMake(t_start, t_finish - t_start), &t_substring);
-        
         if (!MCNumberParse(*t_substring, &t_number))
         {
-            r_indexes[r_count - 1] = 0;
+            if (!t_indexes . Push(0))
+				return false;
+			
             r_all_integers = false;
             break;
         }
-        else
-            r_indexes[r_count - 1] = MCNumberFetchAsInteger(*t_number);
 
+        if (!t_indexes . Push(MCNumberFetchAsInteger(*t_number)))
+			return false;
+			
 		if (t_finish >= t_string_len)
 			break;
 
 		t_start = t_finish + 1;
 	}
-
+	
+	t_indexes . Take(r_indexes, r_count);
 	return true;
 }
 
@@ -960,7 +1010,7 @@ bool MCArraysCopyExtents(MCArrayRef self, array_extent_t*& r_extents, uindex_t& 
 
 	while (MCArrayIterate(self, t_index, t_key, t_value))
 	{
-		MCAutoPointer<index_t> t_indexes;
+		MCAutoCustomPointer<index_t,MCMemoryDeleteArray> t_indexes;
 		uindex_t t_index_count;
 		bool t_all_integers;
 		if (!MCArraysSplitIndexes(t_key, &t_indexes, t_index_count, t_all_integers))
@@ -1197,6 +1247,31 @@ void MCArraysEvalMatrixMultiply(MCExecContext& ctxt, MCArrayRef p_left, MCArrayR
 	ctxt.Throw();
 }
 
+void MCArraysEvalVectorDotProduct(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, double& r_result)
+{
+    double t_sum = 0.0;
+    
+    MCNameRef t_key;
+    MCValueRef t_value;
+    uintptr_t t_index = 0;
+    while (MCArrayIterate(p_left, t_index, t_key, t_value))
+    {
+        MCValueRef t_other_value;
+        double t_number, t_other_number;
+        if (!ctxt . ConvertToReal(t_value, t_number) ||
+            !MCArrayFetchValue(p_right, ctxt.GetCaseSensitive(), t_key, t_other_value) ||
+            !ctxt . ConvertToReal(t_other_value, t_other_number))
+        {
+            ctxt . LegacyThrow(EE_VECTORDOT_MISMATCH);
+            return;
+        }
+
+        t_sum += t_number * t_other_number;
+    }
+    
+    r_result = t_sum;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCArraysCopyTransposed(MCArrayRef self, MCArrayRef& r_transposed)
@@ -1275,6 +1350,89 @@ void MCArraysEvalIsNotAmongTheKeysOf(MCExecContext& ctxt, MCNameRef p_key, MCArr
 {
 	MCArraysEvalIsAmongTheKeysOf(ctxt, p_key, p_array, r_result);
 	r_result = !r_result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCArraysExecFilter(MCExecContext& ctxt, MCArrayRef p_source, bool p_without, MCPatternMatcher *p_matcher, bool p_match_key, MCArrayRef &r_result)
+{
+    MCAutoArrayRef t_result;
+    if (!MCArrayMutableCopy(p_source, &t_result))
+        return;
+    
+    MCNameRef t_key;
+    MCValueRef t_value;
+    uintptr_t t_iterator;
+    t_iterator = 0;
+    
+    while(MCArrayIterate(p_source, t_iterator, t_key, t_value))
+    {
+        bool t_match = p_matcher -> match(ctxt, t_key, p_match_key);
+        
+        if ((t_match && p_without) || (!t_match && !p_without))
+        {
+            if (!MCArrayRemoveValue(*t_result, ctxt . GetCaseSensitive(), t_key))
+            {
+                ctxt . Throw();
+                return;
+            }
+
+        }
+    }
+    
+    r_result = MCValueRetain(*t_result);
+}
+
+void MCArraysExecFilterWildcard(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys, MCArrayRef &r_result)
+{
+    // Create the pattern matcher
+    MCPatternMatcher *t_matcher;
+    t_matcher = new (nothrow) MCWildcardMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
+    
+    MCArraysExecFilter(ctxt, p_source, p_without, t_matcher, p_match_keys, r_result);
+    
+    delete t_matcher;
+}
+
+void MCArraysExecFilterRegex(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys, MCArrayRef &r_result)
+{
+    // Create the pattern matcher
+    MCPatternMatcher *t_matcher;
+    t_matcher = new (nothrow) MCRegexMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
+    
+    MCAutoStringRef t_regex_error;
+    if (!t_matcher -> compile(&t_regex_error))
+    {
+        delete t_matcher;
+        ctxt . LegacyThrow(EE_MATCH_BADPATTERN);
+        return;
+    }
+    
+    MCArraysExecFilter(ctxt, p_source, p_without, t_matcher, p_match_keys, r_result);
+    
+    delete t_matcher;
+}
+
+void MCArraysExecFilterWildcardIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys)
+{
+    MCAutoArrayRef t_result;
+    MCArraysExecFilterWildcard(ctxt, p_source, p_pattern, p_without, p_match_keys, &t_result);
+    
+    if (*t_result != nil)
+        ctxt . SetItToValue(*t_result);
+    else
+        ctxt . SetItToEmpty();
+}
+
+void MCArraysExecFilterRegexIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys)
+{
+    MCAutoArrayRef t_result;
+    MCArraysExecFilterRegex(ctxt, p_source, p_pattern, p_without, p_match_keys, &t_result);
+    
+    if (*t_result != nil)
+        ctxt . SetItToValue(*t_result);
+    else
+        ctxt . SetItToEmpty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

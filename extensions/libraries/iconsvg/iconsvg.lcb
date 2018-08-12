@@ -15,32 +15,36 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This is an SVG icon path library.
 */
 
-library com.livecode.library.iconSVG
+library com.livecode.library.iconsvg
 
 use com.livecode.engine
 
-metadata version is "1.1.0"
+metadata version is "1.2.0"
 metadata author is "LiveCode"
 metadata title is "Icon SVG Library"
+metadata _ide is "true"
 
 private variable sFontArray as Array
 private variable sNamesArray as Array
 private variable sInitialised as optional Boolean
+private variable sCurrentFamily as String
 
 private constant kDefaultFamily is "fontawesome"
+private constant kDefaultUserFamily is "custom"
 
 private handler ensureInitialised()
 	if sInitialised is nothing then
 		initialiseIcons()
 		put true into sInitialised
+		put kDefaultFamily into sCurrentFamily
 	end if
 end handler
 
-private handler initialiseIconsFontAwesome() returns Array
+private handler initialiseIconsFontAwesome1() returns Array
 	variable tArray as Array
 	put {} into tArray
 
@@ -545,6 +549,14 @@ private handler initialiseIconsFontAwesome() returns Array
 	put the empty array into tArray["hand down"]
 	put "M1408 1216Q1408 1132 1376 1033 1344 934 1312 839 1280 744 1280 672L1280 640 640 640 640 672Q640 707 628 739.5 616 772 591 802 566 832 545 852 524 872 491 901 482 909 477 913 396 985 332 1025 310 1039 264 1063 261 1064 241.5 1073.5 222 1083 205.5 1092 189 1101 170 1112 151 1123 139.5 1133.5 128 1144 128 1152 128 1223 158.5 1267.5 189 1312 256 1312 299 1312 340.5 1297 382 1282 408.5 1264 435 1246 463.5 1231 492 1216 512 1216L512 1792Q512 1842 550.5 1881 589 1920 640 1920 692 1920 730 1882 768 1844 768 1792L768 1461Q814 1496 871 1496 940 1496 990 1443 1022 1461 1059 1461 1096 1461 1132.5 1443.5 1169 1426 1185 1396 1209 1400 1241 1400 1326 1400 1367 1351.5 1408 1303 1408 1216ZM1280 448Q1280 422 1261 403 1242 384 1216 384 1190 384 1171 403 1152 422 1152 448 1152 474 1171 493 1190 512 1216 512 1242 512 1261 493 1280 474 1280 448ZM1536 1212Q1536 1354 1458.5 1442 1381 1530 1241 1529L1236 1528Q1160 1589 1058 1589 1036 1589 1015 1586 961 1616 896 1623L896 1792Q896 1897 820 1972.5 744 2048 639 2048 536 2048 460 1972 384 1896 384 1792L384 1418Q330 1440 256 1440 135 1440 67.5 1358.5 0 1277 0 1152 0 1114 17.5 1082.5 35 1051 67 1027.5 99 1004 130 987 161 970 202 950 243 930 264 917 319 882 393 817 396 815 410 803 424 791 431.5 784 439 777 453 763.5 467 750 475.5 739.5 484 729 493.5 717 503 705 507.5 693.5 512 682 512 672L512 384Q512 331 549.5 293.5 587 256 640 256L1280 256Q1333 256 1370.5 293.5 1408 331 1408 384L1408 672Q1408 731 1467 895 1536 1085 1536 1212Z" into tArray["hand down"]["svg"]
 	put "f0a7" into tArray["hand down"]["codepoint"]
+
+    return tArray
+end handler
+
+private handler initialiseIconsFontAwesome2() returns Array
+	variable tArray as Array
+	put {} into tArray
+
 	put the empty array into tArray["hand left"]
 	put "M1376 1408L1408 1408 1408 768 1376 768Q1341 768 1308.5 756 1276 744 1246 719 1216 694 1196 673 1176 652 1147 619 1145 616 1143.5 614.5 1142 613 1139.5 610 1137 607 1135 605 1063 524 1023 460 1009 438 985 392 984 389 974.5 369.5 965 350 956 333.5 947 317 936 298 925 279 914.5 267.5 904 256 896 256 825 256 780.5 286.5 736 317 736 384 736 427 751 468.5 766 510 784 536.5 802 563 817 591.5 832 620 832 640L256 640Q206 640 167 678.5 128 717 128 768 128 820 166 858 204 896 256 896L587 896Q572 913 562 943.5 552 974 552 999 552 1068 605 1118 587 1150 587 1187 587 1224 604.5 1260.5 622 1297 652 1313 648 1337 648 1369 648 1454 696.5 1495 745 1536 832 1536 916 1536 1015 1504 1114 1472 1209 1440 1304 1408 1376 1408ZM1664 1344Q1664 1318 1645 1299 1626 1280 1600 1280 1574 1280 1555 1299 1536 1318 1536 1344 1536 1370 1555 1389 1574 1408 1600 1408 1626 1408 1645 1389 1664 1370 1664 1344ZM1792 768L1792 1408Q1792 1461 1754.5 1498.5 1717 1536 1664 1536L1376 1536Q1317 1536 1153 1595 963 1664 836 1664 694 1664 606 1586.5 518 1509 519 1369L520 1364Q459 1288 459 1186 459 1164 462 1143 429 1086 425 1024L256 1024Q151 1024 75.5 948 0 872 0 767 0 664 76 588 152 512 256 512L630 512Q608 452 608 384 608 262 689.5 195 771 128 896 128 934 128 965.5 145.5 997 163 1020.5 195 1044 227 1061 258 1078 289 1098 330 1118 371 1131 392 1166 447 1231 521 1233 524 1245 538 1257 552 1264 559.5 1271 567 1284.5 581 1298 595 1308.5 603.5 1319 612 1331 621.5 1343 631 1354.5 635.5 1366 640 1376 640L1664 640Q1717 640 1754.5 677.5 1792 715 1792 768Z" into tArray["hand left"]["svg"]
 	put "f0a5" into tArray["hand left"]["codepoint"]
@@ -1142,7 +1154,15 @@ private handler initialiseIconsFontAwesome() returns Array
 	put the empty array into tArray["zoom out"]
 	put "M1024 928L1024 992Q1024 1005 1014.5 1014.5 1005 1024 992 1024L416 1024Q403 1024 393.5 1014.5 384 1005 384 992L384 928Q384 915 393.5 905.5 403 896 416 896L992 896Q1005 896 1014.5 905.5 1024 915 1024 928ZM1152 960Q1152 775 1020.5 643.5 889 512 704 512 519 512 387.5 643.5 256 775 256 960 256 1145 387.5 1276.5 519 1408 704 1408 889 1408 1020.5 1276.5 1152 1145 1152 960ZM1664 1792Q1664 1845 1626.5 1882.5 1589 1920 1536 1920 1482 1920 1446 1882L1103 1540Q924 1664 704 1664 561 1664 430.5 1608.5 300 1553 205.5 1458.5 111 1364 55.5 1233.5 0 1103 0 960 0 817 55.5 686.5 111 556 205.5 461.5 300 367 430.5 311.5 561 256 704 256 847 256 977.5 311.5 1108 367 1202.5 461.5 1297 556 1352.5 686.5 1408 817 1408 960 1408 1180 1284 1359L1627 1702Q1664 1739 1664 1792Z" into tArray["zoom out"]["svg"]
 	put "f010" into tArray["zoom out"]["codepoint"]
-
+	put the empty array into tArray["clock"]
+	put "M1024 544v448q0 14-9 23t-23 9h-320q-14 0-23-9t-9-23v-64q0-14 9-23t23-9h224v-352q0-14 9-23t23-9h64q14 0 23 9t9 23zm416 352q0-148-73-273t-198-198-273-73-273 73-198 198-73 273 73 273 198 198 273 73 273-73 198-198 73-273zm224 0q0 209-103 385.5t-279.5 279.5-385.5 103-385.5-103-279.5-279.5-103-385.5 103-385.5 279.5-279.5 385.5-103 385.5 103 279.5 279.5 103 385.5z" into tArray["clock"]["svg"]
+	put "f017" into tArray["clock"]["codepoint"]
+	put the empty array into tArray["hourglass"]
+	put "M1536 128q0 261-106.5 461.5t-266.5 306.5q160 106 266.5 306.5t106.5 461.5h96q14 0 23 9t9 23v64q0 14-9 23t-23 9h-1472q-14 0-23-9t-9-23v-64q0-14 9-23t23-9h96q0-261 106.5-461.5t266.5-306.5q-160-106-266.5-306.5t-106.5-461.5h-96q-14 0-23-9t-9-23v-64q0-14 9-23t23-9h1472q14 0 23 9t9 23v64q0 14-9 23t-23 9h-96zm-128 0h-1024q0 206 85 384h854q85-178 85-384zm-57 1216q-54-141-145.5-241.5t-194.5-142.5h-230q-103 42-194.5 142.5t-145.5 241.5h910z" into tArray["hourglass"]["svg"]
+	put "f252" into tArray["hourglass"]["codepoint"]
+	put the empty array into tArray["stop circle"]
+	put "M896 128q209 0 385.5 103t279.5 279.5 103 385.5-103 385.5-279.5 279.5-385.5 103-385.5-103-279.5-279.5-103-385.5 103-385.5 279.5-279.5 385.5-103zm0 1312q148 0 273-73t198-198 73-273-73-273-198-198-273-73-273 73-198 198-73 273 73 273 198 198 273 73zm-288-224q-14 0-23-9t-9-23v-576q0-14 9-23t23-9h576q14 0 23 9t9 23v576q0 14-9 23t-23 9h-576z" into tArray["stop circle"]["svg"]
+	put "f28d" into tArray["stop circle"]["codepoint"]
 	return tArray
 end handler
 
@@ -1344,16 +1364,45 @@ private handler initialiseIconsIDE() returns Array
     put "M 8.5,16.6 8,16.7 C 7.1,16.9 6.1,16.4 5.8,15.4 L 5.4,14 C 5.2,13.1 5.7,12.1 6.7,11.8 l 0.5,-0.1 1.3,4.9 z m 4.9,-1.4 2.6,-3 c 0.1,-0.2 0.1,-0.3 -0.1,-0.4 l -3.8,-1.3 c -0.1,0 -0.2,0 -0.2,0 l 0,0 c 0,0 0,0 0,0 l -4.4,1.2 0.3,1 3.9,-1 c 0.2,0 0.3,0.1 0.4,0.2 l 0.1,0.2 c 0,0.2 -0.1,0.3 -0.2,0.4 l -3.9,1 0.3,1 4,-1 c 0.1,0 0.3,0 0.3,0.2 l 0.1,0.3 c 0,0.1 0,0.3 -0.2,0.3 l -4,1 0.3,1.1 4.2,-1.1 c 0,0 0.2,0 0.3,-0.1 z m -0.2,-0.8 -0.8,-3.1 c 0,-0.2 0.2,-0.4 0.5,-0.3 l 2,0.7 c 0,0 0,0.1 0,0.1 l 0.2,0.9 c 0,0 0,0 0,0 l -1.4,1.6 c -0.1,0.3 -0.4,0.3 -0.5,0.1 z m 6.6,-1.9 -0.1,-0.2 c -0.2,-0.6 -0.6,-1.5 -0.6,-2 0,-0.5 0.1,-1 0.3,-1.6 C 19.5,8.3 19.7,8 19.7,8 l 0.7,-1.4 -9.6,0 -0.3,0.6 C 10.3,7.6 9.9,8.6 9.8,9.7 l 1.3,-0.3 c 0.1,-0.7 0.3,-1.2 0.5,-1.6 l 6.9,0 0,0.1 0,0 c 0,0.1 -0.1,0.2 -0.1,0.4 -0.2,0.5 -0.4,1.2 -0.4,1.9 0,0.7 0.3,1.6 0.7,2.5 l 0.1,0.1 c 0.3,0.7 0.6,1.5 0.6,2.1 0,1 -0.4,2 -0.6,2.5 l -6.9,0 c 0.1,-0.1 0.1,-0.3 0.2,-0.5 0,-0.1 0.1,-0.3 0.1,-0.4 L 10.7,17 c -0.1,0.2 -0.2,0.4 -0.2,0.4 l -0.7,1.4 9.6,0 0.3,-0.5 c 0.2,-0.4 0.8,-1.7 0.8,-3.1 0,-0.9 -0.4,-1.8 -0.7,-2.7 z" into tArray["lc-edit-script"]["svg"]
 	put "0" into tArray["lc-edit-script"]["codepoint"]
 
+	put the empty array into tArray["lc-hello-world"]	
+     put "M21.83,8.45c0-.1,0-.18,0-.28.07-.86-.29-.95-.56-1.32a.82.82,0,0,0-.82-.41A2.78,2.78,0,0,0,18.57,8a3.75,3.75,0,0,0-.5,1.48c-.48.81-1.21,1.5-1.72,1.45s-.41-1,.07-2.22a6.93,6.93,0,0,0,2.78-3.61,1.23,1.23,0,0,0-.28-1.32c-.17-.16-.34-.13-.52.06a12.52,12.52,0,0,0-3,5.51c-.48.86-1.25,1.63-1.79,1.58s-.41-1,.07-2.22a6.93,6.93,0,0,0,2.78-3.61,1.23,1.23,0,0,0-.28-1.32c-.17-.16-.34-.13-.52.06a12.53,12.53,0,0,0-3,5.47c-.52.78-1.37,1.69-2.34,1.64-.64,0-.92-.79-.54-1.89A1.46,1.46,0,0,0,12,8.73a1.55,1.55,0,0,0,.38-1.63,2.22,2.22,0,0,0-.71-.62c-.6-.35-1.82.28-2.6,1.82a3.18,3.18,0,0,0-.34,1.2c-.38.71-1,1.44-1.42,1.46s-.5-.54-.2-1.24.85-1.5,1.12-2a.84.84,0,0,0-.47-1.26,2.55,2.55,0,0,0-1.44.84C6.81,6.47,7.45,5.5,7.73,5a1.94,1.94,0,0,0,.34-1.7c-.06-.14-.18-.16-.29,0A42,42,0,0,0,3.9,9.94c-.25.72-.14,1.06,0,1.27s.16.06.2,0A15.73,15.73,0,0,1,5.31,8.88,4.26,4.26,0,0,1,7.48,7c.19.11-.85,1.36-1.25,2.52s-.11,1.77.9,1.77a2.14,2.14,0,0,0,1.65-1.09,1.46,1.46,0,0,0,1.54,1.09,3,3,0,0,0,2.22-1.14,1,1,0,0,0,1.07,1.11,2.42,2.42,0,0,0,1.71-.92,1,1,0,0,0,1.05.92,2.49,2.49,0,0,0,1.79-1,1.48,1.48,0,0,0,.22.43,1.32,1.32,0,0,0,1.51.53,3.71,3.71,0,0,0,1.9-2.53.49.49,0,0,0,.32-.16c0-.06,0-.12,0-.12Zm-4.91-.82c.83-1.54,1.71-2.87,1.87-2.77s-.52,2-2.16,3.35C16.72,8,16.82,7.83,16.93,7.63Zm-2.76,0C15,6.1,15.88,4.77,16,4.86s-.52,2-2.16,3.35C14,8,14.06,7.83,14.17,7.63ZM10,8.61c.56-1.14,1.56-1.86,1.81-1.66s-.1.76-.48,1.26-.84,1-1.43.6Zm10.62.9c-.59,1.1-1.32,1.52-1.65,1.25s-.13-1.37.37-2.28a4.2,4.2,0,0,1,.92-1.13,1.49,1.49,0,0,0,.55,1.06.91.91,0,0,0,.23.14A6.31,6.31,0,0,1,20.58,9.51Zm.5-1.28a1,1,0,0,1-.26-.85c.06-.35.3-.42.36,0A2.3,2.3,0,0,1,21.08,8.22ZM19.52,0H7C3.13,0,0,3.53,0,7.88s3.13,7.88,7,7.88H8.63l-.14,2.5a.5.5,0,0,0,.27.47.5.5,0,0,0,.54,0l3.81-2.93h6.42c3.85,0,7-3.53,7-7.87S23.37,0,19.52,0Zm0,14.75H12.93a.5.5,0,0,0-.3.1L9.54,17.22l.11-1.94a.5.5,0,0,0-.5-.53H7c-3.3,0-6-3.08-6-6.87S3.68,1,7,1H19.52c3.3,0,6,3.08,6,6.88S22.82,14.75,19.52,14.75Z" into tArray["lc-hello-world"]["svg"]
+	put "0" into tArray["lc-hello-world"]["codepoint"]
+
+	put the empty array into tArray["lc-hello-world-filled"]	
+     put "M9.88,8.25,10,8c.56-1.14,1.56-1.86,1.81-1.66s-.1.76-.48,1.26S10.46,8.62,9.88,8.25ZM20.23,6.79a4.2,4.2,0,0,0-.92,1.13c-.5.91-.68,2-.37,2.28S20,10,20.59,8.95A6.31,6.31,0,0,0,21,8a.91.91,0,0,1-.23-.14A1.49,1.49,0,0,1,20.23,6.79ZM18.81,4.3c-.16-.1-1,1.24-1.87,2.77-.11.19-.2.38-.29.58C18.3,6.32,19,4.4,18.81,4.3Zm-2.76,0c-.16-.1-1,1.24-1.87,2.77-.11.19-.2.38-.29.58C15.54,6.32,16.21,4.4,16.05,4.3ZM25.5,7.38c0,4.07-2.9,7.38-6.48,7.38H12.43l-3.94,3,.17-3H6.48C2.9,14.75,0,11.45,0,7.38S2.9,0,6.48,0H19C22.6,0,25.5,3.3,25.5,7.38Zm-3.41.49-.24,0c0-.1,0-.18,0-.28.07-.86-.29-.95-.56-1.32a.82.82,0,0,0-.82-.41,2.78,2.78,0,0,0-1.91,1.56,3.75,3.75,0,0,0-.5,1.48c-.48.81-1.21,1.5-1.72,1.45s-.41-1,.07-2.22a6.93,6.93,0,0,0,2.78-3.61,1.23,1.23,0,0,0-.28-1.32c-.17-.16-.34-.13-.52.06a12.52,12.52,0,0,0-3,5.51c-.48.86-1.25,1.63-1.79,1.58s-.41-1,.07-2.22a6.93,6.93,0,0,0,2.78-3.61,1.23,1.23,0,0,0-.28-1.32c-.17-.16-.34-.13-.52.06a12.53,12.53,0,0,0-3,5.47c-.52.78-1.37,1.69-2.34,1.64-.64,0-.92-.79-.54-1.89A1.46,1.46,0,0,0,12,8.17a1.55,1.55,0,0,0,.38-1.63,2.22,2.22,0,0,0-.71-.62c-.6-.35-1.82.28-2.6,1.82a3.18,3.18,0,0,0-.34,1.2c-.38.71-1,1.44-1.42,1.46s-.5-.54-.2-1.24.85-1.5,1.12-2a.84.84,0,0,0-.47-1.26,2.55,2.55,0,0,0-1.44.84c.52-.8,1.15-1.78,1.44-2.25a1.94,1.94,0,0,0,.34-1.7c-.06-.14-.18-.16-.29,0A42,42,0,0,0,3.91,9.38c-.25.72-.14,1.06,0,1.27s.16.06.2,0A15.73,15.73,0,0,1,5.33,8.32,4.26,4.26,0,0,1,7.5,6.46c.19.11-.85,1.36-1.25,2.52s-.11,1.77.9,1.77A2.14,2.14,0,0,0,8.8,9.66a1.46,1.46,0,0,0,1.54,1.09,3,3,0,0,0,2.22-1.14,1,1,0,0,0,1.07,1.11,2.42,2.42,0,0,0,1.71-.92,1,1,0,0,0,1.05.92,2.49,2.49,0,0,0,1.79-1,1.48,1.48,0,0,0,.22.43,1.32,1.32,0,0,0,1.51.53,3.71,3.71,0,0,0,1.9-2.53A.49.49,0,0,0,22.13,8C22.17,7.93,22.17,7.87,22.09,7.87ZM20.83,6.81a1,1,0,0,0,.26.85,2.3,2.3,0,0,0,.1-.89C21.13,6.39,20.89,6.46,20.83,6.81Z" into tArray["lc-hello-world-filled"]["svg"]
+	put "0" into tArray["lc-hello-world-filled"]["codepoint"]
+
+	put the empty array into tArray["lc-todo-list"]	
+     put "M12.24,10.36A.5.5,0,0,1,12,11c-1.85.76-4.07,5.33-4.77,7a.5.5,0,0,1-.46.31h0A.5.5,0,0,1,6.26,18h0s-.39-.76-2.69-2.29a.5.5,0,1,1,.55-.83,14.73,14.73,0,0,1,2.49,2c.81-1.8,2.86-5.91,5-6.78A.5.5,0,0,1,12.24,10.36Zm3.39-5.91V21.7a.5.5,0,0,1-.5.5H.5a.5.5,0,0,1-.5-.5V4.45a.5.5,0,0,1,.5-.5h3V3.69A1.42,1.42,0,0,1,4.93,2.27h.16a2.77,2.77,0,0,1,5.46,0h.16a1.42,1.42,0,0,1,1.42,1.42v.26h3A.5.5,0,0,1,15.63,4.45ZM4.51,5.78h6.62V3.69a.42.42,0,0,0-.42-.42h-.62a.5.5,0,0,1-.5-.5A1.77,1.77,0,1,0,6,2.77a.5.5,0,0,1-.5.5H4.93a.42.42,0,0,0-.42.42V5.78Zm10.13-.83H12.13V6.28a.5.5,0,0,1-.5.5H4a.5.5,0,0,1-.5-.5V4.95H1V21.2H14.63Z" into tArray["lc-todo-list"]["svg"]
+	put "0" into tArray["lc-todo-list"]["codepoint"]
+	
+	put the empty array into tArray["lc-todo-list-filled"]
+     put "M11.13,3.95V3a.69.69,0,0,0-.69-.69H9.59A2.27,2.27,0,1,0,5,2.27H4.2A.69.69,0,0,0,3.51,3v1h-3A.52.52,0,0,0,0,4.46V20.68a.52.52,0,0,0,.52.52h13.6a.52.52,0,0,0,.52-.52V4.46a.52.52,0,0,0-.52-.52Zm.35,6.57c-1.85.76-4.07,5.33-4.77,7a.5.5,0,0,1-.46.31h0a.5.5,0,0,1-.46-.33h0s-.39-.76-2.69-2.29a.5.5,0,1,1,.55-.83,14.73,14.73,0,0,1,2.49,2c.81-1.8,2.86-5.91,5-6.78a.5.5,0,1,1,.38.92Z" into tArray["lc-todo-list-filled"]["svg"]
+	put "0" into tArray["lc-todo-list-filled"]["codepoint"]
+
+	put the empty array into tArray["lc-bmi-calculator"]	
+    put "M19,2.18H16.72A9.91,9.91,0,0,0,10.44,0,10.27,10.27,0,0,0,4.16,2.18H1.92A1.9,1.9,0,0,0,0,4.1v17A1.9,1.9,0,0,0,1.92,23H19a1.9,1.9,0,0,0,1.92-1.92V4.1A1.9,1.9,0,0,0,19,2.18Zm.92,19A.9.9,0,0,1,19,22h-17A.9.9,0,0,1,1,21.13V4.1a.9.9,0,0,1,.92-.92H4.33a.5.5,0,0,0,.31-.11A9.27,9.27,0,0,1,10.44,1a8.92,8.92,0,0,1,5.78,2.06.5.5,0,0,0,.32.12H19a.9.9,0,0,1,.92.92ZM10.39,2.37A8.15,8.15,0,0,0,3.73,5.79a.5.5,0,0,0,.1.68L6.91,8.89A.5.5,0,0,0,7.22,9h0l6.34-.09a.5.5,0,0,0,.31-.11l3-2.46A.5.5,0,0,0,17,5.64,8.28,8.28,0,0,0,10.39,2.37Zm3,5.54-2,0s0,0,0-.05a1,1,0,0,0-.5-.83.48.48,0,0,0,0-.12V4.57a.5.5,0,1,0-1,0V6.93A.48.48,0,0,0,10,7a1,1,0,0,0-.5.83s0,.05,0,.08L7.39,8,4.84,6a7.16,7.16,0,0,1,5.55-2.63,7.26,7.26,0,0,1,5.49,2.5Z" into tArray["lc-bmi-calculator"]["svg"]
+	put "0" into tArray["lc-bmi-calculator"]["codepoint"]
+
+	put the empty array into tArray["lc-bmi-calculator-filled"]	
+     put "M18.45,2.18H16A9.45,9.45,0,0,0,9.94,0a9.81,9.81,0,0,0-6.1,2.18H1.42A1.39,1.39,0,0,0,0,3.6v17A1.39,1.39,0,0,0,1.42,22h17a1.39,1.39,0,0,0,1.42-1.42V3.6A1.39,1.39,0,0,0,18.45,2.18ZM13.06,7.9l-2.35,0a1,1,0,0,0,.2-.56,1,1,0,0,0-.5-.83.48.48,0,0,0,0-.12V4.07a.5.5,0,1,0-1,0V6.43a.48.48,0,0,0,0,.12,1,1,0,0,0-.5.83A1,1,0,0,0,9.17,8L6.72,8,3.64,5.58A7.68,7.68,0,0,1,9.89,2.37a7.8,7.8,0,0,1,6.2,3.08Z" into tArray["lc-bmi-calculator-filled"]["svg"]
+	put "0" into tArray["lc-bmi-calculator-filled"]["codepoint"]
+
 	return tArray
 end handler
 
 private handler initialiseIcons() returns nothing
 	variable tFamily
 	variable tName
+	variable tTempArray as Array
 
 	put {} into sFontArray
-	put initialiseIconsFontAwesome() into sFontArray["fontawesome"]
 	put initialiseIconsIDE() into sFontArray["ide"]
+	put initialiseIconsFontAwesome1() into sFontArray["fontawesome"]
+	put initialiseIconsFontAwesome2() into tTempArray
+	repeat for each key tName in tTempArray
+		put tTempArray[tName] into sFontArray["fontawesome"][tName]
+	end repeat
 
 	put {} into sNamesArray
 	repeat for each key tFamily in sFontArray
@@ -1369,32 +1418,126 @@ private handler initialiseIcons() returns nothing
 	end repeat
 end handler
 
-/*
-Returns the available icons in the default icon family.
+/**
+Summary: Returns the available icons in the current icon family.
 
-Returns: The names of the icons for which SVG paths are available, one per line.
+Returns(String): The icon names for which SVG paths are available, 
+one per line.
 
 Description:
-The <iconNames> function returns the names of the icons in the library's
-default icon family.
+The <iconNames> handler returns the names of the icons in the library's
+current icon family.
 
 Call <iconSVGPathFromName> or <iconCodepointFromName> to retrieve either the
 SVG path string or codepoint corresponding to the icon with this name.
 
-Related: iconSVGPathFromName(function),iconCodepointFromName(function)
+References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
+	iconFamilies(handler), iconList(handler), iconListForFamily(handler),
+	iconNamesForFamily(handler)
 */
 public handler iconNames() returns String
 	ensureInitialised()
 
 	variable tNames as String
-	combine sNamesArray[kDefaultFamily] with newline into tNames
+	combine sNamesArray[sCurrentFamily] with newline into tNames
 
 	return tNames
 end handler
 
+/**
+Summary: Return the available icons in the current icon family.
+
+Returns(List): The icon names for which SVG paths are available.
+
+Description:
+Return an LCB list of the icon names in the iconsvg library's current
+icon family.
+
+For each icon name, the SVG path string can be obtained with
+<iconSVGPathFromName> or its corresponding codepoint with
+<iconCodepointFromName>.
+
+References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
+	iconFamilies(handler), iconListForFamily(handler), iconNames(handler),
+	iconNamesForFamily(handler)
+*/
 public handler iconList() returns List
 	ensureInitialised()
-	return sNamesArray[kDefaultFamily]
+	return sNamesArray[sCurrentFamily]
+end handler
+
+/**
+Summary: Returns the available icons families.
+
+Returns(String): The icon family names for which SVG paths are available, one per line.
+
+Description:
+The <iconFamilies> handler returns the names of the families in the icon library.
+
+References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
+	iconList(handler), iconListForFamily(handler),
+	iconNames(handler), iconNamesForFamily(handler)
+*/
+public handler iconFamilies() returns String
+	ensureInitialised()
+
+	variable tFamilies as String
+	combine the keys of sFontArray with newline into tFamilies
+
+	return tFamilies
+end handler
+
+/**
+Summary: Returns the available icons in the specified icon family.
+
+pFamily: The name of the icon family
+Returns(String): The icon names for which SVG paths are available, one per line.
+
+Description:
+The <iconNamesForFamily> handler returns the names of the icons in the 
+library of the specified icon family.
+
+Call <iconSVGPathFromName> or <iconCodepointFromName> to retrieve either the
+SVG path string or codepoint corresponding to the icon with this name.
+
+References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
+	iconFamilies(handler), iconList(handler), iconListForFamily(handler)
+*/
+public handler iconNamesForFamily(in pFamily as String) returns String
+	ensureInitialised()
+	if pFamily is not among the keys of sFontArray then
+		return ""
+	else
+		variable tNames as String
+		combine sNamesArray[pFamily] with newline into tNames
+		return tNames
+	end if
+end handler
+
+/**
+Summary: Return the available icons in the specified icon family.
+
+pFamily: The name of the icon family
+Returns(List): The icon names for which SVG paths are available.
+
+Description:
+Return an LCB list of the icon names of the specified family in the 
+iconsvg library.
+
+For each icon name, the SVG path string can be obtained with
+<iconSVGPathFromName> or its corresponding codepoint with
+<iconCodepointFromName>.
+
+References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
+	iconFamilies(handler), iconNames(handler), iconNamesForFamily(handler)
+*/
+public handler iconListForFamily(in pFamily as String) returns List
+	ensureInitialised()
+	if pFamily is not among the keys of sFontArray then
+		return the empty list
+	else
+		return sNamesArray[pFamily]
+	end if
 end handler
 
 private handler resolveIconName(in pName as String) returns optional List
@@ -1419,12 +1562,12 @@ private handler resolveIconName(in pName as String) returns optional List
 		end if
 	end if
 
-	-- If there's no family part, search for the name in the default family,
+	-- If there's no family part, search for the name in the current family,
 	-- followed by all other available families
 	if tFamily is nothing then
 		put pName into tName
-		if pName is among the keys of sFontArray[kDefaultFamily] then
-			put kDefaultFamily into tFamily
+		if pName is among the keys of sFontArray[sCurrentFamily] then
+			put sCurrentFamily into tFamily
 		else
 			repeat for each key tKey in sFontArray
 				if pName is among the keys of sFontArray[tKey] then
@@ -1450,16 +1593,22 @@ private handler resolveIconName(in pName as String) returns optional List
 	return [tFamily, tName]
 end handler
 
-/*
+/**
 Returns the SVG path for the given icon.
 
 pName: The name of the icon
 Returns: The SVG path to draw the icon with name <pName>
 
 Description:
-Returns the SVG path for the icon with name <pName>. Use the <iconNames> function to obtain the names of the icons for which this library is able to access SVG paths.
+Returns the SVG path for the icon with name <pName>. Use the 
+<iconNames> handler to obtain the names of the icons for which this 
+library is able to access SVG paths.
 
-Related: iconNames(function)
+>Note:  The icon name is accepted in the form "name" or "family/name".  
+If no family is specified, then the current family is searched first.  
+If not found, other families are searched for the provided name.
+
+Related: iconNames(handler), iconNamesForFamily(handler)
 */
 public handler iconSVGPathFromName(in pName as String) returns String
 	ensureInitialised()
@@ -1474,17 +1623,22 @@ public handler iconSVGPathFromName(in pName as String) returns String
 	return sFontArray[tResolved[1]][tResolved[2]]["svg"]
 end handler
 
-/*
-Returns the codepoint corresponding to the given icon in the fontawesome font.
+/**
+Returns the codepoint corresponding to the given icon in the current font.
 
 pName: The name of the icon
 Returns: The codepoint of the icon with name <pName>
 
 Description:
-Returns the codepoint corresponding to the icon with name <pName> in the fontawesome font.
-Use the <iconNames> function to obtain the names of the icons for which this library is able to access SVG paths.
+Returns the codepoint corresponding to the icon with name <pName> in the 
+current font.  Use the <iconNames> handler to obtain the names of the 
+icons for which this library is able to access SVG paths.
 
-Related: iconNames(function)
+>Note:  The icon name is accepted in the form "name" or "family/name".  
+If no family is specified, then the current family is searched first.  
+If not found, other families are searched for the provided name.
+
+Related: iconNames(handler), iconNamesForFamily(handler)
 */
 public handler iconCodepointFromName(in pName as String) returns String
 	ensureInitialised()
@@ -1498,16 +1652,77 @@ public handler iconCodepointFromName(in pName as String) returns String
 	return sFontArray[tResolved[1]][tResolved[2]]["codepoint"]
 end handler
 
-/*
--- FIXME must be updated to cope with multi-family implementation
+/**
+Summary: Return the available icons in all icon families that match the 
+search string.
+
+pSearch: The string used to search icon names.
+Returns(Array): Each key is a family that contained icon matches to the 
+search string.  Each value is a list of the icon matches.
+
+Description:
+Returns an array of families with icon names matching the search string.
+Each value is a list of the icon matches.
+
+For each icon name, the SVG path string can be obtained with
+<iconSVGPathFromName> or its corresponding codepoint with
+<iconCodepointFromName>.
+
+References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
+	iconList(handler), iconListForFamily(handler)
+*/
+public handler iconArrayMatchingInAllFamilies(in pSearch as String) returns Array
+	ensureInitialised()
+
+	variable tMatches as Array
+	put the empty array into tMatches
+	
+	variable tList as List
+	put the empty list into tList
+
+	variable tFamily as String
+	repeat for each key tFamily in sFontArray
+		put _iconListMatching(pSearch, tFamily) into tList
+		if tList is not the empty list then
+			put the empty list into tMatches[tFamily]
+			put tList into tMatches[tFamily]
+		end if
+	end repeat
+
+	return tMatches
+end handler
+
+/**
+Summary: Return the available icons in the current icon family that match the 
+search string.
+
+pSearch: The string used to search icon names.
+Returns(List): The icon names for which SVG paths are available matching 
+the search string.
+
+Description:
+Return an LCB list of the icon names in the current icon family that match 
+the search string.
+
+For each icon name, the SVG path string can be obtained with
+<iconSVGPathFromName> or its corresponding codepoint with
+<iconCodepointFromName>.
+
+References: iconSVGPathFromName(handler), iconCodepointFromName(handler),
+	iconList(handler), iconListForFamily(handler)
+*/
 public handler iconListMatching(in pSearch as String) returns List
 	ensureInitialised()
 
+	return _iconListMatching(pSearch, sCurrentFamily)
+end handler
+
+private handler _iconListMatching(in pSearch as String, in pFamily as String) returns List
 	variable tMatches as List
 	put the empty list into tMatches
 
 	variable tName as String
-	repeat for each element tName in sNamesList
+	repeat for each element tName in sNamesArray[pFamily]
 		if tName contains pSearch then
 			push tName onto tMatches
 		end if
@@ -1516,12 +1731,201 @@ public handler iconListMatching(in pSearch as String) returns List
 	return tMatches
 end handler
 
--- FIXME must be updated to cope with multi-family implementation
-public handler iconData() returns Array
-    ensureInitialised()
+/**
+Summary: Return the available icon data in the current icon family.
 
-	return sFontArray
-end handler
+Returns(Array): The current icon family's data (name, SVG path, codepoint).
+
+Description:
+Return an LCB array of the icon data in the iconsvg library's current
+icon family.
+
+References: iconList(handler), iconNames(handler)
 */
+public handler iconData() returns Array
+	ensureInitialised()
+	return sFontArray[sCurrentFamily]
+end handler
+
+/**
+Summary: Return the available icon data in the specified icon family.
+
+pFamily: The name of the icon family
+Returns(Array): The specified icon family's data (name, SVG path, codepoint).
+
+Description:
+Return an LCB array of the icon data in the iconsvg library's specified
+icon family.
+
+References: addIconFamily(handler), deleteIconFamily(handler), 
+iconFamilies(handler), iconListForFamily(handler), 
+iconNamesForFamily(handler)
+*/
+public handler iconDataForFamily(in pFamily as String) returns Array
+	ensureInitialised()
+	if pFamily is not among the keys of sFontArray then
+		return {}
+	else
+		return sFontArray[pFamily]
+	end if
+end handler
+
+/**
+Summary: Add an icon to the iconsvg library.
+
+pName: The name of the icon.  By default, new icons are added to the 
+"custom" family.  The family may be specified by including the family 
+name and a "/" before the icon name (`bootstrap/adjust`).
+pSVG: The SVG path for the icon.
+pCodepoint: The codepoint for the icon.
+
+Description:
+Add an icon to the iconsvg library.  By default, new icons are added to
+the "custom" family.  The family may be specified by including the 
+family name and a "/" before the icon name (`bootstrap/adjust`).
+
+References: addIconFamily(handler), iconFamilies(handler), 
+iconList(handler), iconListForFamily(handler), 
+iconNames(handler), iconNamesForFamily(handler)
+*/
+public handler addIcon(in pName as String, in pSVG as String, \
+							  in pCodepoint as String) returns nothing
+	ensureInitialised()
+
+	variable tSlashOffset as Number
+	variable tFamily as optional String
+	variable tName as String
+
+	put the last index of "/" in pName into tSlashOffset
+
+	-- If there's a family part, extract it
+	if tSlashOffset is not 0 then
+		if tSlashOffset < the number of chars in pName then
+			put char tSlashOffset + 1 to -1 of pName into tName
+		else
+			put "" into tName
+		end if
+		if tSlashOffset - 1 is not 0 then
+			put char 1 to tSlashOffset - 1 of pName into tFamily
+		else
+			put "" into tFamily
+		end if
+		if tName is "" or tFamily is "" then
+			throw "Icon name invalid (slash separates family and name): '" & pName & "'"
+		end if
+	end if
+
+	if tFamily is nothing then
+		put kDefaultUserFamily into tFamily
+		put pName into tName
+	end if
+
+	if tFamily is not among the keys of sFontArray then
+		put the empty array into sFontArray[tFamily]
+	end if
+
+	put the empty array into sFontArray[tFamily][tName]
+	put pSVG into sFontArray[tFamily][tName]["svg"]
+	put pCodepoint into sFontArray[tFamily][tName]["codepoint"]
+
+	put the keys of sFontArray[tFamily] into sNamesArray[tFamily]
+	sort sNamesArray[tFamily] in ascending order
+end handler
+
+/**
+Summary: Add an icon family to the iconsvg library.
+
+pFamily: The family for the icons.
+pIconData: The icon data.  Each key is an icon name with
+a key for the SVG data and a key for the codepoint.
+
+Description:
+Add icons to the iconsvg library.
+
+> Note:  If the family already exists, then the data will be merged.
+Icons with matching names will be replaced.
+To replace a family, use <deleteIconFamily> first.
+
+References: addIcon(handler), deleteIconFamily(handler), 
+iconFamilies(handler), iconList(handler), iconListForFamily(handler), 
+iconNames(handler), iconNamesForFamily(handler)
+*/
+public handler addIconFamily(in pFamily as String, in pIconData as Array) returns nothing
+	ensureInitialised()
+
+	if pFamily is not among the keys of sFontArray then
+		put the empty array into sFontArray[pFamily]
+	end if
+
+	variable tName
+	repeat for each key tName in pIconData
+		put pIconData[tName] into sFontArray[pFamily][tName]
+	end repeat
+	
+	put the keys of sFontArray[pFamily] into sNamesArray[pFamily]
+	sort sNamesArray[pFamily] in ascending order
+end handler
+
+/**
+Summary: Return the current icon family.
+
+Returns(String): The current icon family.
+
+Description:
+Returns the iconsvg library's current icon family.  Handlers that do not specify
+an icon family will use the current icon family.  "fontawesome" is the
+current family when the library is first initialized.
+
+References: addIconFamily(handler), iconData(handler), 
+iconFamilies(handler), iconList(handler), iconNames(handler)
+*/
+public handler getCurrentIconFamily() returns String
+	return sCurrentFamily
+end handler
+
+/**
+Summary: Set the current icon family.
+
+pFamily: The icon family.
+
+Description:
+Sets the iconsvg library's current icon family.  Handlers that do not specify
+an icon family will use the current icon family.
+
+References: addIconFamily(handler), iconData(handler), 
+iconFamilies(handler), iconList(handler), iconNames(handler)
+*/
+public handler setCurrentIconFamily(in pFamily as String) returns nothing
+	if pFamily is not among the keys of sFontArray then
+		throw "Icon family '" & pFamily & "' does not exist."
+	end if
+	
+	put pFamily into sCurrentFamily
+end handler
+
+/**
+Summary: Delete an icon family from the iconsvg library.
+
+pFamily: The family to delete.
+
+Description:
+Delete an icon family from the iconsvg library.
+
+> Note:  The current icon family may not be deleted.
+
+References: addIconFamily(handler), iconFamilies(handler), 
+iconListForFamily(handler), iconNamesForFamily(handler)
+*/
+public handler deleteIconFamily(in pFamily as String) returns nothing
+	if pFamily is not among the keys of sFontArray then
+		throw "Icon family '" & pFamily & "' does not exist."
+	end if
+	if pFamily is sCurrentFamily then
+		throw "Cannot delete the current icon family:  '" & pFamily & "'."
+	end if
+
+	delete sFontArray[pFamily]
+	delete sNamesArray[pFamily]
+end handler
 
 end library

@@ -4,13 +4,16 @@ Type: command
 
 Syntax: revStopSpeech
 
-Summary: Halts a speech that was started with the <revSpeak> <command>.
+Summary:
+Halts a speech that was started with the <revSpeak> <command>.
+
+Associations: speech library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revStopSpeech
@@ -19,12 +22,25 @@ Example:
 if userCanHaltSpeech then revStopSpeech
 
 Description:
-Use the <revStopSpeech> <command> to let the user interrupt a lengthy speech, or to stop a speech before it's finished. 
+Use the <revStopSpeech> <command> to let the user interrupt a lengthy
+speech, or to stop a speech before it's finished.
 
-You can use the <revIsSpeaking> <function> to determine whether there's currently a speech in progress.
+You can use the <revIsSpeaking> <function> to determine whether there's
+currently a speech in progress.
 
->*Important:*  The <revStopSpeech> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+>*Important:*  The <revStopSpeech> <command> is part of the 
+> <Speech library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Speech" 
+> library checkbox is checked.
 
-References: function (control_st), revUnloadSpeech (command), revSpeak (command), revIsSpeaking (function), command (glossary), Standalone Application Settings (glossary), standalone application (glossary), Speech library (library), LiveCode custom library (library)
+References: revUnloadSpeech (command), revSpeak (command),
+function (control structure), revIsSpeaking (function),
+command (glossary), Standalone Application Settings (glossary),
+standalone application (glossary), LiveCode custom library (glossary),
+Speech library (library)
 
 Tags: multimedia
+

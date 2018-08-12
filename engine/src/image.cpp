@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "util.h"
 #include "undolst.h"
 #include "sellst.h"
@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include "resolution.h"
+
+#include "stackfileformat.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -163,8 +165,10 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_locked_image = nil;
 	m_locked_bitmap = nil;
 	m_needs = nil;
-
-	if (iref.isediting())
+    
+    filename = MCValueRetain(iref.filename);
+	
+    if (iref.isediting())
 	{
 		MCImageBitmap *t_bitmap = nil;
 		/* UNCHECKED */static_cast<MCMutableImageRep*>(iref.m_rep)->copy_selection(t_bitmap);
@@ -183,9 +187,6 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 		if (iref . m_rep != nil)
 			m_rep = iref . m_rep->Retain();
 	}
-
-	
-	filename = MCValueRetain(iref.filename);
 
 	angle = iref.angle;
 	currentframe = 0;
@@ -229,6 +230,11 @@ Chunk_term MCImage::gettype() const
 const char *MCImage::gettypestring()
 {
 	return MCimagestring;
+}
+
+bool MCImage::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnImage(this);
 }
 
 void MCImage::open()
@@ -413,6 +419,8 @@ Boolean MCImage::mdown(uint2 which)
 
 							return True;
 						}
+					default:
+						break;
 					}
 
 					if (isediting() &&
@@ -523,7 +531,7 @@ Boolean MCImage::doubleup(uint2 which)
 
 void MCImage::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
 		if (state & CS_OWN_SELECTION)
 		{
@@ -554,7 +562,7 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 				}
 			}
 	}
-	else if (MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
+	else if (MCNameIsEqualToCaseless(mptr, MCM_internal2))
 		{
 			if (state & CS_MAGNIFY)
 			{
@@ -657,752 +665,6 @@ void MCImageSetMask(MCImageBitmap *p_bitmap, uint8_t *p_mask_data, uindex_t p_ma
 	MCImageBitmapCheckTransparency(p_bitmap);
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
-{
-	uint2 i;
-	uint4 size = 0;
-
-	switch (which)
-	{
-#ifdef /* MCImage::getprop */ LEGACY_EXEC
-	case P_XHOT:
-		ep.setint(xhot);
-		break;
-	case P_YHOT:
-		ep.setint(yhot);
-		break;
-	case P_HOT_SPOT:
-		ep.setpoint(xhot, yhot);
-		break;
-	case P_FILE_NAME:
-		if (getflag(F_HAS_FILENAME))
-			ep.setcstring(filename);
-		else
-			ep.clear();
-		break;
-	case P_ALWAYS_BUFFER:
-		ep.setboolean(getflag(F_I_ALWAYS_BUFFER));
-		break;
-	case P_IMAGE_PIXMAP_ID:
-		ep.clear();
-	case P_MASK_PIXMAP_ID:
-		ep.clear();
-		break;
-	case P_DONT_DITHER:
-		ep.setboolean(getflag(F_DONT_DITHER));
-		break;
-	case P_MAGNIFY:
-		ep.setboolean(getstate(CS_MAGNIFY));
-		break;
-	case P_SIZE:
-		{
-			void *t_data = nil;
-			uindex_t t_size = 0;
-			MCImageCompressedBitmap *t_compressed = nil;
-
-			if (m_rep != nil)
-			{
-				if (m_rep->GetType() == kMCImageRepResident)
-					static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
-				else if (m_rep->GetType() == kMCImageRepVector)
-					static_cast<MCVectorImageRep*>(m_rep)->GetData(t_data, t_size);
-				else if (m_rep->GetType() == kMCImageRepCompressed)
-				{
-					t_compressed = static_cast<MCCompressedImageRep*>(m_rep)->GetCompressed();
-					if (t_compressed->size != 0)
-						t_size = t_compressed->size;
-					else
-					{
-						i = t_compressed->color_count;
-						while (i--)
-							t_size += t_compressed->plane_sizes[i];
-					}
-				}
-			}
-
-			ep.setuint(t_size);
-		}
-		break;
-	case P_CURRENT_FRAME:
-		ep.setint(currentframe + 1);
-		break;
-	case P_FRAME_COUNT:
-		if (m_rep == nil || m_rep->GetFrameCount() <= 1)
-			ep.setuint(0);
-		else
-			ep.setuint(m_rep->GetFrameCount());
-		break;
-	case P_PALINDROME_FRAMES:
-		ep.setboolean(getflag(F_PALINDROME_FRAMES));
-		break;
-	case P_CONSTANT_MASK:
-		ep.setboolean(getflag(F_CONSTANT_MASK));
-		break;
-	case P_REPEAT_COUNT:
-		ep.setint(repeatcount);
-		break;
-	case P_FORMATTED_HEIGHT:
-		{
-			uindex_t t_width = 0, t_height = 0;
-			/* UNCHECKED */ getsourcegeometry(t_width, t_height);
-
-			ep.setint(t_height);
-		}
-		break;
-	case P_FORMATTED_WIDTH:
-		{
-			uindex_t t_width = 0, t_height = 0;
-			/* UNCHECKED */ getsourcegeometry(t_width, t_height);
-
-			ep.setint(t_width);
-		}
-		break;
-	case P_TEXT:
-		recompress();
-		if (m_rep == nil || getflag(F_HAS_FILENAME))
-			ep.clear();
-		else
-		{
-			void *t_data = nil;
-			uindex_t t_size = 0;
-			if (m_rep->GetType() == kMCImageRepResident)
-				static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
-			else if (m_rep->GetType() == kMCImageRepVector)
-				static_cast<MCVectorImageRep*>(m_rep)->GetData(t_data, t_size);
-			else if (m_rep->GetType() == kMCImageRepCompressed)
-			{
-				MCImageCompressedBitmap *t_compressed = nil;
-				t_compressed = static_cast<MCCompressedImageRep*>(m_rep)->GetCompressed();
-				if (t_compressed->data != nil)
-				{
-					t_data = t_compressed->data;
-					t_size = t_compressed->size;
-				}
-				else
-				{
-					t_data = t_compressed->planes[0];
-					t_size = t_compressed->plane_sizes[0];
-				}
-			}
-			ep.copysvalue((char*)t_data, t_size);
-		}
-		break;
-	case P_IMAGE_DATA:
-		{
-			// IM-2013-02-07: image data must return a block of data, even if the image is empty.
-			// image data should always be for an image the size of the rect.
-			uint32_t t_pixel_count = rect.width * rect.height;
-			uint32_t t_data_size = t_pixel_count * sizeof(uint32_t);
-			
-			bool t_success = true;
-			
-			uint32_t *t_data_ptr = nil;
-			t_success = nil != (t_data_ptr = (uint32_t*)ep.getbuffer(t_data_size));
-			
-			if (t_success)
-			{
-				if (m_rep == nil)
-					MCMemoryClear(t_data_ptr, t_data_size);
-				else
-				{
-                    // SN-2014-01-31: [[ Bug 11462 ]] Opening an image to get its data should not
-                    // reset its size: F_LOCK_LOCATION ensures the size - and the location, which
-                    // doesn't matter here - are read as they are stored.
-                    bool t_tmp_locked;
-                    t_tmp_locked = false;
-                    
-                    if (!getflag(F_LOCK_LOCATION))
-                    {
-                        setflag(true, F_LOCK_LOCATION);
-                        t_tmp_locked = true;
-                    }
-                    
-					openimage();
-					
-					MCImageBitmap *t_bitmap = nil;
-					
-					// IM-2014-09-02: [[ Bug 13295 ]] Call lockbitmap() insted of copybitmap() to avoid unnecessary copy
-					t_success = lockbitmap(t_bitmap, false);
-					if (t_success)
-					{
-						MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
-						// IM-2013-09-16: [[ RefactorGraphics ]] [[ Bug 11185 ]] Use correct pixel format (xrgb) for imagedata
-#if (kMCGPixelFormatNative != kMCGPixelFormatARGB)
-						while (t_pixel_count--)
-						{
-							uint8_t t_r, t_g, t_b, t_a;
-							MCGPixelUnpackNative(*t_data_ptr, t_r, t_g, t_b, t_a);
-							*t_data_ptr++ = MCGPixelPack(kMCGPixelFormatARGB, t_r, t_g, t_b, t_a);
-						}
-#endif
-						unlockbitmap(t_bitmap);
-					}
-					
-                    if (t_tmp_locked)
-                        setflag(false, F_LOCK_LOCATION);
-                    
-					closeimage();
-				}
-			}
-			if (t_success)
-				ep.setlength(t_data_size);
-		}
-		break;
-	case P_MASK_DATA:
-	case P_ALPHA_DATA:
-		{
-			uint32_t t_pixel_count = rect.width * rect.height;
-			uint32_t t_data_size = t_pixel_count;
-			
-			bool t_success = true;
-			
-			uint8_t *t_data_ptr = nil;
-			t_success = nil != (t_data_ptr = (uint8_t*)ep.getbuffer(t_data_size));
-			
-			if (t_success)
-			{
-				if (m_rep == nil)
-					MCMemoryClear(t_data_ptr, t_data_size);
-				else
-				{
-					// IM-2014-06-18: [[ Bug 12646 ]] Apply Seb's fix here too.
-                    // SN-2014-01-31: [[ Bug 11462 ]] Opening an image to get its data should not
-                    // reset its size: F_LOCK_LOCATION ensures the size - and the location, which
-                    // doesn't matter here - are read as they are stored.
-                    bool t_tmp_locked;
-                    t_tmp_locked = false;
-                    
-                    if (!getflag(F_LOCK_LOCATION))
-                    {
-                        setflag(true, F_LOCK_LOCATION);
-                        t_tmp_locked = true;
-                    }
-                    
-					openimage();
-					
-					MCImageBitmap *t_bitmap = nil;
-					
-					// IM-2014-09-02: [[ Bug 13295 ]] Call lockbitmap() insted of copybitmap() to avoid unnecessary copy
-					t_success = lockbitmap(t_bitmap, true);
-					if (t_success)
-					{
-						uint8_t *t_src_ptr = (uint8_t*)t_bitmap->data;
-						for (uindex_t y = 0; y < t_bitmap->height; y++)
-						{
-							uint32_t *t_src_row = (uint32_t*)t_src_ptr;
-							for (uindex_t x = 0; x < t_bitmap->width; x++)
-							{
-								uint8_t t_alpha;
-								t_alpha = MCGPixelGetNativeAlpha(*t_src_row++);
-								if (which == P_MASK_DATA && t_alpha > 0)
-									*t_data_ptr++ = 0xFF;
-								else
-									*t_data_ptr++ = t_alpha;
-							}
-							t_src_ptr += t_bitmap->stride;
-						}
-						unlockbitmap(t_bitmap);
-					}
-					
-                    if (t_tmp_locked)
-                        setflag(false, F_LOCK_LOCATION);
-
-					closeimage();
-				}
-			}
-			if (t_success)
-				ep.setlength(t_data_size);
-		}
-		break;
-	case P_RESIZE_QUALITY:
-		if (resizequality == INTERPOLATION_BOX)
-			ep.setstaticcstring("normal");
-		else if (resizequality == INTERPOLATION_BILINEAR)
-			ep.setstaticcstring("good");
-		else if (resizequality == INTERPOLATION_BICUBIC)
-			ep.setstaticcstring("best");
-		break;
-	case P_PAINT_COMPRESSION:
-		switch (getcompression())
-		{
-		case F_PNG:
-			ep.setstaticcstring("png");
-			break;
-		case F_JPEG:
-			ep.setstaticcstring("jpeg");
-			break;
-		case F_GIF:
-			ep.setstaticcstring("gif");
-			break;
-		case F_PICT:
-			ep.setstaticcstring("pict");
-			break;
-		default:
-			ep.setstaticcstring("rle");
-			break;
-		}
-		break;
-	case P_ANGLE:
-		ep.setint(angle);
-		break;
-        // MW-2014-06-20: [[ ImageCenterRect ]] Getter for centerRect property.
-        case P_CENTER_RECTANGLE:
-            if (m_center_rect . x != INT16_MIN)
-                ep . setrectangle(m_center_rect);
-            else
-                ep . clear();
-        break;
-        // MERG-2014-09-18: [[ ImageMetadata ]] return the image metadata as an array
-    case P_METADATA:
-        if (m_rep != nil)
-        {
-            MCImageMetadata t_metadata;
-            m_rep->GetMetadata(t_metadata);
-            MCImageGetMetadata(ep, t_metadata);
-        }
-        else
-            ep . clear();
-        break;
-#endif /* MCImage::getprop */
-	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
-	}
-	return ES_NORMAL;
-}
-#endif
-
-#ifdef LEGACY_EXEC
-Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
-{
-	Boolean dirty = False;
-	uint2 i;
-	MCString data = ep.getsvalue();
-	uint4 newstate = state;
-
-	switch (p)
-	{
-#ifdef /* MCImage::setprop */ LEGACY_EXEC
-	case P_INVISIBLE:
-	case P_VISIBLE:
-		{
-			Boolean wasvisible = isvisible();
-			Exec_stat stat = MCControl::setprop(parid, p, ep, effective);
-			if (!(MCbufferimages || flags & F_I_ALWAYS_BUFFER)
-			        && !isvisible() && m_rep != nil)
-				closeimage();
-			if (state & CS_IMAGE_PM && opened > 0)
-			{
-				// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-				layer_redrawall();
-			}
-			if (isvisible() && !wasvisible && m_rep != nil && m_rep->GetFrameCount() > 1)
-			{
-				MCGImageFrame t_frame;
-				if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
-				{
-					MCscreen->addtimer(this, MCM_internal, t_frame.duration);
-					m_rep->UnlockImageFrame(currentframe, t_frame);
-				}
-			}
-			return stat;
-		}
-	case P_XHOT:
-		{
-			if (!MCU_stoi2(data, xhot))
-			{
-				MCeerror->add(EE_IMAGE_XHOTNAN, 0, 0, data);
-				return ES_ERROR;
-			}
-			uint32_t t_pixwidth, t_pixheight;
-			getgeometry(t_pixwidth, t_pixheight);
-			xhot = MCMax(1, MCMin(xhot, (int32_t)t_pixwidth));
-		}
-		break;
-	case P_YHOT:
-		{
-			if (!MCU_stoi2(data, yhot))
-			{
-				MCeerror->add(EE_IMAGE_YHOTNAN, 0, 0, data);
-				return ES_ERROR;
-			}
-			uint32_t t_pixwidth, t_pixheight;
-			getgeometry(t_pixwidth, t_pixheight);
-			yhot = MCMax(1, MCMin(yhot, (int32_t)t_pixheight));
-		}
-		break;
-	case P_HOT_SPOT:
-		{
-			if (!MCU_stoi2x2(data, xhot, yhot))
-			{
-				MCeerror->add(EE_IMAGE_HOTNAP, 0, 0, data);
-				return ES_ERROR;
-			}
-			uint32_t t_pixwidth, t_pixheight;
-			getgeometry(t_pixwidth, t_pixheight);
-			xhot = MCMax(1, MCMin(xhot, (int32_t)t_pixwidth));
-			yhot = MCMax(1, MCMin(yhot, (int32_t)t_pixheight));
-		}
-		break;
-	case P_FILE_NAME:
-		// MW-2013-06-24: [[ Bug 10977 ]] If we are setting the filename to
-		//   empty, and the filename is already empty, do nothing.
-		if ((m_rep != nil && getflag(F_HAS_FILENAME) && data == MCnullmcstring) ||
-			data != filename)
-		{
-			char *t_filename = nil;
-			if (data != MCnullmcstring)
-				/* UNCHECKED */ t_filename = data.clone();
-
-			setfilename(t_filename);
-                
-			MCCStringFree(t_filename);
-
-			resetimage();
-
-			// MW-2013-06-25: [[ Bug 10980 ]] Only set the result to an error if we were
-			//   attempting to set a non-empty filename.
-			if (m_rep != nil || data == MCnullmcstring)
-				MCresult->clear(False);
-			else
-				MCresult->sets("could not open image");
-		}
-		break;
-	case P_ALWAYS_BUFFER:
-		if (!MCU_matchflags(data, flags, F_I_ALWAYS_BUFFER, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_IMAGE_PIXMAP_ID:
-		break;
-	case P_MASK_PIXMAP_ID:
-		break;
-	case P_DONT_DITHER:
-		if (!MCU_matchflags(data, flags, F_DONT_DITHER, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (dirty)
-			dirty = False;
-		break;
-	case P_MAGNIFY:
-		if (!MCU_matchflags(data, newstate, CS_MAGNIFY, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (dirty)
-		{
-			if (newstate & CS_MAGNIFY)
-				startmag(rect.width >> 1, rect.height >> 1);
-			else
-				endmag(True);
-		}
-		break;
-	case P_CURRENT_FRAME:
-		if (!MCU_stoui2(data, i))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		setframe(i - 1);
-		break;
-	case P_PALINDROME_FRAMES:
-		if (!MCU_matchflags(data, flags, F_PALINDROME_FRAMES, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_CONSTANT_MASK:
-		if (!MCU_matchflags(data, flags, F_CONSTANT_MASK, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_REPEAT_COUNT:
-		{
-			int2 rc;
-			if (!MCU_stoi2(data, rc))
-			{
-				MCeerror->add
-				(EE_OBJECT_NAN, 0, 0, data);
-				return ES_ERROR;
-			}
-			if (rc < 0)
-				flags &= ~F_REPEAT_COUNT;
-			else
-				flags |= F_REPEAT_COUNT;
-			irepeatcount = repeatcount = rc;
-			if (opened && m_rep != nil && m_rep->GetFrameCount() > 1 && repeatcount != 0)
-			{
-				setframe(currentframe == m_rep->GetFrameCount() - 1 ? 0 : currentframe + 1);
-				MCGImageFrame t_frame;
-				if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
-				{
-					MCscreen->addtimer(this, MCM_internal, t_frame.duration);
-					m_rep->UnlockImageFrame(currentframe, t_frame);
-				}
-			}
-		}
-		break;
-	case P_TEXT:
-		{
-			bool t_success = true;
-
-			MCImageBitmap *t_bitmap = nil;
-			MCImageCompressedBitmap *t_compressed = nil;
-			MCPoint t_hotspot;
-			char *t_name = nil;
-			IO_handle t_stream = nil;
-            
-			if (data.getlength() == 0)
-			{
-				// MERG-2013-06-24: [[ Bug 10977 ]] If we have a filename then setting the
-				//   text to empty shouldn't have an effect; otherwise we are unsetting the
-				//   current text.
-                if (!getflag(F_HAS_FILENAME))
-                {
-                    // empty text - unset flags & set rep to nil;
-                    flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
-                    setrep(nil);
-                }
-			}
-			else
-			{
-				if (t_success)
-					t_success = nil != (t_stream = MCS_fakeopen(data));
-				if (t_success)
-					t_success = MCImageImport(t_stream, nil, t_hotspot, t_name, t_compressed, t_bitmap);
-				if (t_success)
-				{
-					if (t_compressed != nil)
-						t_success = setcompressedbitmap(t_compressed);
-					else if (t_bitmap != nil)
-						t_success = setbitmap(t_bitmap, 1.0);
-                }
-
-				MCImageFreeBitmap(t_bitmap);
-				MCImageFreeCompressedBitmap(t_compressed);
-				MCCStringFree(t_name);
-				if (t_stream != nil)
-					MCS_close(t_stream);
-			}
-
-			if (t_success)
-			{
-				resetimage();
-				dirty = False;
-			}
-		}
-		break;
-	case P_IMAGE_DATA:
-		if (data.getlength())
-		{
-			bool t_success = true;
-
-			MCImageBitmap *t_copy = nil;
-			if (m_rep != nil)
-			{
-				t_success = copybitmap(false, t_copy);
-			}
-			else
-			{
-				t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
-				if (t_success)
-					MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
-			}
-
-			if (t_success)
-			{
-				uint32_t t_stride = MCMin(data.getlength() / t_copy->height, t_copy->width * 4);
-				uint32_t t_width = t_stride / 4;
-
-				uint8_t *t_src_ptr = (uint8_t*)data.getstring();
-				uint8_t *t_dst_ptr = (uint8_t*)t_copy->data;
-				for (uindex_t y = 0; y < t_copy->height; y++)
-				{
-					uint32_t *t_src_row = (uint32_t*)t_src_ptr;
-					uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
-					for (uindex_t x = 0; x < t_width; x++)
-					{
-						uint8_t a, r, g, b;
-						MCGPixelUnpack(kMCGPixelFormatARGB, *t_src_row++, r, g, b, a);
-
-						// IM-2013-10-25: [[ Bug 11314 ]] Preserve current alpha values when setting the imagedata
-						*t_dst_row = MCGPixelPackNative(r, g, b, MCGPixelGetNativeAlpha(*t_dst_row));
-						t_dst_row++;
-					}
-					t_src_ptr += t_stride;
-					t_dst_ptr += t_copy->stride;
-				}
-
-				setbitmap(t_copy, 1.0);
-            }
-
-			MCImageFreeBitmap(t_copy);
-
-			resetimage();
-			dirty = False;
-		}
-		break;
-	case P_MASK_DATA:
-		if (data.getlength())
-		{
-			bool t_success = true;
-
-			MCImageBitmap *t_copy = nil;
-			if (m_rep != nil)
-			{
-				t_success = copybitmap(false, t_copy);
-			}
-			else
-			{
-				t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
-				if (t_success)
-					MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
-			}
-
-			if (t_success)
-			{
-				MCImageSetMask(t_copy, (uint8_t*)data.getstring(), data.getlength(), false);
-				setbitmap(t_copy, 1.0);
-			}
-
-			MCImageFreeBitmap(t_copy);
-
-			resetimage();
-			dirty = False;
-		}
-		break;
-	case P_ALPHA_DATA:
-		if (data.getlength())
-		{
-			bool t_success = true;
-
-			MCImageBitmap *t_copy = nil;
-			if (m_rep != nil)
-			{
-                // PM-2015-02-09: [[ Bug 14483 ]] Reverted patch for bugfix 13938
-                t_success = copybitmap(false, t_copy);
-			}
-			else
-			{
-				t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
-				if (t_success)
-					MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
-			}
-            
-			if (t_success)
-			{
-				MCImageSetMask(t_copy, (uint8_t*)data.getstring(), data.getlength(), true);
-                // PM-2015-02-09: [[ Bug 14483 ]] Reverted patch for bugfix 14347
-				setbitmap(t_copy, 1.0);
-            }
-
-			MCImageFreeBitmap(t_copy);
-
-			resetimage();
-			dirty = True;
-		}
-		break;
-    case P_RESIZE_QUALITY:
-		if (data == "best")
-			resizequality = INTERPOLATION_BICUBIC;
-		else if (data == "good")
-			resizequality = INTERPOLATION_BILINEAR;
-		else if (data == "normal")
-			resizequality = INTERPOLATION_BOX;
-		break;
-	case P_ANGLE:
-		{
-			int2 i1;
-			if (!MCU_stoi2(data, i1))
-			{
-				MCeerror->add(EE_GRAPHIC_NAN, 0, 0, data);
-				return ES_ERROR;
-			}
-			while (i1 < 0)
-				i1 += 360;
-			i1 %= 360;
-
-			if (i1 != angle)
-			{
-				// MW-2010-11-25: [[ Bug 9195 ]] Make sure we have some image data to rotate, otherwise
-				//   odd things happen with the rect.
-				MCRectangle oldrect = rect;
-				rotate_transform(i1);
-
-				angle = i1;
-
-				if (angle)
-					flags |= F_ANGLE;
-				else
-					flags &= ~F_ANGLE;
-
-				// MW-2011-08-18: [[ Layers ]] Notify of rect changed and invalidate.
-				layer_rectchanged(oldrect, true);
-				dirty = False;
-
-				notifyneeds(false);
-			}
-		}
-		break;
-	case P_INK:
-	case P_BLEND_LEVEL:
-		{
-			Exec_stat t_stat = MCControl::setprop(parid, p, ep, effective);
-			if (t_stat == ES_NORMAL)
-				notifyneeds(false);
-			return t_stat;
-		}
-		break;
-    case P_CENTER_RECTANGLE:
-        {
-            if (data == MCnullmcstring)
-                m_center_rect = MCRectangleMake(INT16_MIN, INT16_MIN, UINT16_MAX, UINT16_MAX);
-            else
-            {
-                int2 i1, i2, i3, i4;
-                if (!MCU_stoi2x4(data, i1, i2, i3, i4))
-                {
-                    MCeerror->add(EE_OBJECT_NAR, 0, 0, data);
-                    return ES_ERROR;
-                }
-                m_center_rect . x = MCU_max(i1, 0);
-                m_center_rect . y = MCU_max(i2, 0);
-                m_center_rect . width = MCU_max(i3 - i1, 0);
-                m_center_rect . height = MCU_max(i4 - i2, 0);
-            }
-            
-            notifyneeds(false);
-            
-            dirty = True;
-        }
-        break;
-#endif /* MCImage::setprop */
-	default:
-		return MCControl::setprop_legacy(parid, p, ep, effective);
-	}
-	if (dirty && opened)
-	{
-		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-		layer_redrawall();
-	}
-	return ES_NORMAL;
-}
-#endif
-
 void MCImage::select()
 {
 	MCControl::select();
@@ -1446,7 +708,7 @@ void MCImage::freeundo(Ustruct *us)
 MCControl *MCImage::clone(Boolean attach, Object_pos p, bool invisible)
 {
 	recompress();
-	MCImage *newiptr = new MCImage(*this);
+	MCImage *newiptr = new (nothrow) MCImage(*this);
 	if (attach)
 		newiptr->attach(p, invisible);
 	return newiptr;
@@ -1587,7 +849,7 @@ void MCImage::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		}
 	}
 
-	bool t_need_group;
+	bool t_need_group = false;
 	if (!p_isolated)
 	{
 		// MW-2009-06-10: [[ Bitmap Effects ]]
@@ -1691,11 +953,11 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint
                 // FG-2014-10-17: [[ Bugfix 13706 ]]
                 // Calculate the correct size for 7.0+ style strings
                 // SN-2014-10-27: [[ Bug 13554 ]] String length calculation refactored
-                t_length += p_stream . MeasureStringRefNew(s_control_color_names[i], p_version >= 7000);
+                t_length += p_stream . MeasureStringRefNew(s_control_color_names[i], p_version >= kMCStackFileFormatVersion_7_0);
             }
 			else
                 // AL-2014-11-07: [[ Bug 13851 ]] Measure empty string if the color name is nil
-                t_length += p_stream . MeasureStringRefNew(kMCEmptyString, p_version >= 7000);
+                t_length += p_stream . MeasureStringRefNew(kMCEmptyString, p_version >= kMCStackFileFormatVersion_7_0);
 	
 		t_length += sizeof(uint16_t);
 		t_length += s_control_pixmap_count * sizeof(uint4);
@@ -1720,7 +982,7 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint
 			t_stat = p_stream . WriteColor(s_control_colors[i]);
 		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
-			t_stat = p_stream . WriteStringRefNew(s_control_color_names[i] != nil ? s_control_color_names[i] : kMCEmptyString, p_version >= 7000);
+			t_stat = p_stream . WriteStringRefNew(s_control_color_names[i] != nil ? s_control_color_names[i] : kMCEmptyString, p_version >= kMCStackFileFormatVersion_7_0);
 		
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . WriteU16(s_control_pixmap_count);
@@ -1778,8 +1040,10 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 
             if (t_stat == IO_NORMAL)
 			{
-				/* UNCHECKED */ MCMemoryNewArray(s_control_color_count, s_control_colors);
-				/* UNCHECKED */ MCMemoryNewArray(s_control_color_count, s_control_color_names);
+				s_control_colors = new (nothrow) MCColor[s_control_color_count];
+				s_control_color_names = new (nothrow) MCStringRef[s_control_color_count];
+				if (nil == s_control_colors || nil == s_control_color_names)
+					t_stat = checkloadstat(IO_ERROR);
 			}
 
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
@@ -1787,7 +1051,7 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 			{
 				// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-				t_stat = checkloadstat(p_stream . ReadStringRefNew(s_control_color_names[i], p_version >= 7000));
+				t_stat = checkloadstat(p_stream . ReadStringRefNew(s_control_color_names[i], p_version >= kMCStackFileFormatVersion_7_0));
 				if (t_stat == IO_NORMAL && MCStringIsEmpty(s_control_color_names[i]))
 				{
 					MCValueRelease(s_control_color_names[i]);
@@ -1824,6 +1088,12 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 
 	if (t_stat == IO_NORMAL)
 		t_stat = MCObject::extendedload(p_stream, p_version, p_remaining);
+
+	if (t_stat != IO_NORMAL)
+	{
+		delete[] s_control_colors;
+		delete[] s_control_color_names;
+	}
 
 	return t_stat;
 }
@@ -1891,7 +1161,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 	uint1 t_old_ink = ink;
 
 //--- pre-2.7 Conversion
-	if (p_version < 2700)
+	if (p_version < kMCStackFileFormatVersion_2_7)
 	{
 		if (ink == GXblendSrcOver)
 		{
@@ -1949,7 +1219,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 	if (flags & F_HAS_FILENAME)
     {
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-        if ((stat = IO_write_stringref_new(filename, stream, p_version >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(filename, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 	}
 	else
@@ -2032,7 +1302,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 
 IO_stat MCImage::load(IO_handle stream, uint32_t version)
 {
-	IO_stat stat;
+	IO_stat stat = IO_NORMAL;
 
 	resizequality = INTERPOLATION_BOX;
 	
@@ -2052,7 +1322,7 @@ IO_stat MCImage::load(IO_handle stream, uint32_t version)
 		return stat;
 
 //---- Conversion from pre-2.7 behaviour to new behaviour
-	if ((ink & 0x80) != 0 && version < 2700)
+	if ((ink & 0x80) != 0 && version < kMCStackFileFormatVersion_2_7)
 	{
 		blendlevel = 100 - (ink & 0x7F);
 		ink = GXblendSrcOver;
@@ -2062,7 +1332,7 @@ IO_stat MCImage::load(IO_handle stream, uint32_t version)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		MCAutoStringRef t_filename;
-		if ((stat = IO_read_stringref_new(&t_filename, stream, version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(&t_filename, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 
 		/* UNCHECKED */ setfilename(*t_filename);
@@ -2071,95 +1341,123 @@ IO_stat MCImage::load(IO_handle stream, uint32_t version)
 		if (ncolors || flags & F_COMPRESSION || flags & F_TRUE_COLOR)
 		{
 			MCImageCompressedBitmap *t_compressed = nil;
-			/* UNCHECKED */ MCImageCreateCompressedBitmap(flags & F_COMPRESSION, t_compressed);
+			if (!MCImageCreateCompressedBitmap(flags & F_COMPRESSION, t_compressed))
+				return IO_ERROR;
+			
 			if (ncolors > MAX_PLANES || flags & F_COMPRESSION
 			        || flags & F_TRUE_COLOR)
 			{
-				// IM-2013-04-12: [[ BZ 10843 ]] Initialize to -1 to indicate no repeat count has been set
-				repeatcount = -1;
-				if (flags & F_REPEAT_COUNT)
-					if ((stat = IO_read_int2(&repeatcount, stream)) != IO_NORMAL)
-						return stat;
-
-				if ((stat = IO_read_uint4(&t_compressed->size, stream)) != IO_NORMAL)
-					return stat;
-				/* UNCHECKED */ MCMemoryAllocate(t_compressed->size, t_compressed->data);
-				if (IO_read(t_compressed->data, t_compressed->size, stream) != IO_NORMAL)
-					return IO_ERROR;
-				if (version == 1400)
+				if (IO_NORMAL == stat)
 				{
-					if ((ncolors == 16 || ncolors == 256) && noblack())
-						flags |= F_NEED_FIXING;
-					MCU_realloc((char **)&colors, ncolors, ncolors + 1, sizeof(MCColor));
-					colors[ncolors].pixel = 0;
+					// IM-2013-04-12: [[ BZ 10843 ]] Initialize to -1 to indicate no repeat count has been set
+					repeatcount = -1;
+					if (flags & F_REPEAT_COUNT)
+						stat = IO_read_int2(&repeatcount, stream);
+				}
+				
+				if (IO_NORMAL == stat)
+					stat = IO_read_uint4(&t_compressed->size, stream);
+					 
+				if (IO_NORMAL == stat)
+				{
+					 if (!MCMemoryAllocate(t_compressed->size, t_compressed->data))
+						stat = IO_ERROR;
+				}
+				
+				if (IO_NORMAL == stat)
+					stat = IO_read(t_compressed->data, t_compressed->size, stream);
+				
+				if (IO_NORMAL == stat)
+				{
+					if (version == kMCStackFileFormatVersion_1_4)
+					{
+						if ((ncolors == 16 || ncolors == 256) && noblack())
+							flags |= F_NEED_FIXING;
+						if (MCMemoryReallocate(colors, sizeof(MCColor) * (ncolors + 1), colors))
+							MCColorSetPixel(colors[ncolors], 0);
+					}
 				}
 			}
 			else
 			{
-				t_compressed->color_count = ncolors;
-				if (!MCMemoryNewArray(ncolors, t_compressed->planes) ||
-					!MCMemoryNewArray(ncolors, t_compressed->plane_sizes))
+				if (IO_NORMAL == stat)
 				{
-					MCImageFreeCompressedBitmap(t_compressed);
-					return IO_ERROR;
+					t_compressed->color_count = ncolors;
+					if (!MCMemoryNewArray(ncolors, t_compressed->planes) ||
+						!MCMemoryNewArray(ncolors, t_compressed->plane_sizes))
+						stat = IO_ERROR;
 				}
 
-				uint2 i;
-				for (i = 0 ; i < ncolors ; i++)
+				if (IO_NORMAL == stat)
 				{
-					if ((stat = IO_read_uint4(&t_compressed->plane_sizes[i], stream)) != IO_NORMAL)
+					uint2 i;
+					for (i = 0 ; i < ncolors ; i++)
 					{
-						MCImageFreeCompressedBitmap(t_compressed);
-						return stat;
-					}
-					if (t_compressed->plane_sizes[i] != 0)
-					{
-						if (!MCMemoryAllocate(t_compressed->plane_sizes[i], t_compressed->planes[i]) ||
-							IO_read(t_compressed->planes[i], t_compressed->plane_sizes[i], stream) != IO_NORMAL)
+						if (IO_NORMAL == stat)
+							stat = IO_read_uint4(&t_compressed->plane_sizes[i], stream);
+						
+						
+						if (IO_NORMAL == stat && t_compressed->plane_sizes[i] != 0)
 						{
-							MCImageFreeCompressedBitmap(t_compressed);
-							return IO_ERROR;
+							if (!MCMemoryAllocate(t_compressed->plane_sizes[i], t_compressed->planes[i]))
+								stat = IO_ERROR;
+							
+							if (IO_NORMAL == stat)
+								stat = IO_read(t_compressed->planes[i], t_compressed->plane_sizes[i], stream);
 						}
+						
+						if (IO_NORMAL != stat)
+							break;
 					}
 				}
 			}
-			if (t_compressed->compression == F_RLE && ncolors != 0 && (flags & F_TRUE_COLOR) == 0)
+			if (IO_NORMAL == stat && t_compressed->compression == F_RLE && ncolors != 0 && (flags & F_TRUE_COLOR) == 0)
 			{
 				t_compressed->color_count = ncolors;
 				if (!MCMemoryAllocateCopy(colors, sizeof(MCColor) * ncolors, t_compressed->colors))
+					stat = IO_ERROR;
+			}
+
+			if (IO_NORMAL == stat)
+				stat = IO_read_uint4(&t_compressed->mask_size, stream);
+			
+			if (IO_NORMAL == stat && t_compressed->mask_size != 0)
+			{
+				if (!MCMemoryAllocate(t_compressed->mask_size, t_compressed->mask))
+					stat = IO_ERROR;
+					
+				if (IO_NORMAL == stat)
+					stat = IO_read(t_compressed->mask, t_compressed->mask_size, stream);
+			}
+
+			if (IO_NORMAL == stat)
+			{
+				uint16_t t_pixwidth, t_pixheight;
+				t_pixwidth = rect.width;
+				t_pixheight = rect.height;
+			
+				if (flags & F_SAVE_SIZE)
 				{
-					MCImageFreeCompressedBitmap(t_compressed);
-					return IO_ERROR;
+					stat = IO_read_uint2(&t_pixwidth, stream);
+					
+					if (IO_NORMAL == stat)
+						stat = IO_read_uint2(&t_pixheight, stream);
+				}
+				
+				if (IO_NORMAL == stat)
+				{
+					t_compressed->width = t_pixwidth;
+					t_compressed->height = t_pixheight;
 				}
 			}
-
-			if ((stat = IO_read_uint4(&t_compressed->mask_size, stream)) != IO_NORMAL)
-				return stat;
-			if (t_compressed->mask_size != 0)
-			{
-				if (!MCMemoryAllocate(t_compressed->mask_size, t_compressed->mask) ||
-					IO_read(t_compressed->mask, t_compressed->mask_size, stream) != IO_NORMAL)
-				{
-					MCImageFreeCompressedBitmap(t_compressed);
-					return IO_ERROR;
-				}
-			}
-
-			uint16_t t_pixwidth, t_pixheight;
-			t_pixwidth = rect.width;
-			t_pixheight = rect.height;
-			if (flags & F_SAVE_SIZE)
-			{
-				if ((stat = IO_read_uint2(&t_pixwidth, stream)) != IO_NORMAL)
-					return stat;
-				if ((stat = IO_read_uint2(&t_pixheight, stream)) != IO_NORMAL)
-					return stat;
-			}
-			t_compressed->width = t_pixwidth;
-			t_compressed->height = t_pixheight;
-
-			/* UNCHECKED */ setcompressedbitmap(t_compressed);
+			
+			if (IO_NORMAL == stat && !setcompressedbitmap(t_compressed))
+				stat = IO_ERROR;
+			
 			MCImageFreeCompressedBitmap(t_compressed);
+			
+			if (IO_NORMAL != stat)
+				return stat;
 		}
 	if ((stat = IO_read_int2(&xhot, stream)) != IO_NORMAL)
 		return stat;
@@ -2172,10 +1470,10 @@ IO_stat MCImage::load(IO_handle stream, uint32_t version)
 	// MW-2013-09-05: [[ Bug 11127 ]] At this point the color/pixmap fields in the object
 	//   will pertain to the image colors. This isn't what we want anymore, so free them
 	//   (an RLE compressed rep will already have extracted the info it needs).
-	MCMemoryDeleteArray(colors);
+	delete[] colors; /* Allocated with new[] */
 	for (uint32_t i = 0; i < ncolors; i++)
 		MCValueRelease(colornames[i]);
-	MCMemoryDeleteArray(colornames);
+	delete[] colornames; /* Allocated with new[] */
 	MCMemoryDeleteArray(patterns);
 	ncolors = 0;
 	npatterns = 0;
@@ -2335,7 +1633,7 @@ bool MCImage::convert_to_mutable()
 	{
 		t_success = lockbitmap(t_bitmap, true);
 		if (t_success)
-			t_success = nil != (t_rep = new MCMutableImageRep(this, t_bitmap));
+			t_success = nil != (t_rep = new (nothrow) MCMutableImageRep(this, t_bitmap));
 		unlockbitmap(t_bitmap);
 	}
 	else
@@ -2344,7 +1642,7 @@ bool MCImage::convert_to_mutable()
 		if (t_success)
 		{
 			MCImageBitmapClear(t_bitmap);
-			t_success = nil != (t_rep = new MCMutableImageRep(this, t_bitmap));
+			t_success = nil != (t_rep = new (nothrow) MCMutableImageRep(this, t_bitmap));
 		}
 		MCImageFreeBitmap(t_bitmap);
 	}
@@ -2679,6 +1977,63 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, const MC
 	else
 		t_size = *p_size;
 
+    /* Special case vector image reps - as they don't have pixels! */
+    if (t_success &&
+        t_rep->GetType() == kMCImageRepVector)
+    {
+        /* Start with the identity transform, if none */
+		if (!t_has_transform)
+			t_transform = MCGAffineTransformMakeIdentity();
+        
+        /* Scale from the rect size to the requested size. */
+		MCGFloat t_x_scale, t_y_scale;
+		t_x_scale = (MCGFloat)t_size.width / (MCGFloat)rect.width;
+		t_y_scale = (MCGFloat)t_size.height / (MCGFloat)rect.height;
+		t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeScale(t_x_scale, t_y_scale), t_transform);
+        
+        MCImageBitmap *t_bitmap = nullptr;
+        t_success = MCImageBitmapCreate(t_size.width, t_size.height, t_bitmap);
+        
+        MCGContextRef t_context = nullptr;
+        if (t_success)
+        {
+            MCImageBitmapClear(t_bitmap);
+            t_success = MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_context);
+        }
+        
+        if (t_success)
+        {
+            MCGContextConcatCTM(t_context, t_transform);
+            
+            auto t_vector_rep = static_cast<MCVectorImageRep *>(t_rep);
+            
+            void* t_data;
+            uindex_t t_data_size;
+            t_vector_rep->GetData(t_data, t_data_size);
+            
+            MCGContextPlaybackRectOfDrawing(t_context, MCMakeSpan((const byte_t*)t_data, t_data_size), MCGRectangleMake(0, 0, t_width, t_height), MCGRectangleMake(0, 0, t_size.width, t_size.height));
+        }
+        
+        MCGContextRelease(t_context);
+        
+        if (t_success)
+        {
+            MCImageBitmapCheckTransparency(t_bitmap);
+            if (!p_premultiplied)
+            {
+                MCImageBitmapUnpremultiply(t_bitmap);
+            }
+            
+            r_bitmap = t_bitmap;
+        }
+        else
+        {
+            MCImageFreeBitmap(t_bitmap);
+        }
+        
+        return t_success;
+    }
+
 	if (t_success)
 	{
 		if (!t_has_transform)
@@ -2688,7 +2043,6 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, const MC
 		MCGFloat t_x_scale, t_y_scale;
 		t_x_scale = (MCGFloat)t_size.width / (MCGFloat)rect.width;
 		t_y_scale = (MCGFloat)t_size.height / (MCGFloat)rect.height;
-
 		t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeScale(t_x_scale, t_y_scale), t_transform);
 		
 		t_transform_scale = MCGAffineTransformGetEffectiveScale(t_transform);
@@ -2830,34 +2184,6 @@ uint32_t MCImage::getcompression()
 	return t_compression;
 }
 
-#ifdef LEGACY_EXEC
-MCString MCImage::getrawdata()
-{
-	if (m_rep == nil || m_rep->GetType() != kMCImageRepResident)
-		return MCString(nil, 0);
-
-	void *t_data;
-	uindex_t t_size;
-    static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
-
-    return MCString((char*)t_data, t_size);
-}
-
-// PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
-MCString MCImage::getimagefilename(void)
-{
-    if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced)
-		return MCString(nil, 0);
-    
-    const char *t_filename;
-    t_filename = static_cast<MCReferencedImageRep*>(m_rep)->GetSearchKey();
-    
-    return MCString(t_filename);
-
-    
-}
-#endif 
-
 void MCImage::getrawdata(MCDataRef& r_data)
 {
  	if (m_rep == nil || m_rep->GetType() != kMCImageRepResident)
@@ -2915,7 +2241,7 @@ void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 
 MCGFloat MCImage::getdevicescale(void)
 {
-	if (getstack() == nil)
+	if (!getstack())
 		return 1.0;
 	else
 		return getstack()->getdevicescale();

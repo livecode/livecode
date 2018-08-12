@@ -2,17 +2,18 @@ Name: timeScale
 
 Type: property
 
-Syntax: get the timeScale of <player> 
+Syntax: get the timeScale of <player>
 
-Summary: Reports the number of intervals per second of a movie or sound.
+Summary:
+Reports the number of intervals per second of a movie or sound.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 put the timeScale of last player into intervalsPerSecond
@@ -25,10 +26,19 @@ The <timeScale> of a <player> is a positive <integer>.
 This property is read-only and cannot be set.
 
 Description:
-Use the <timeScale> <property> to convert internal movie or sound times into seconds.
+Use the <timeScale> <property> to convert internal movie or sound times
+into seconds.
 
-The <timeScale> is the number of intervals per second of a movie or sound. These intervals are used for the <player|player's> <startTime>, <endTime>, <duration>, and <currentTime> <properties>, and you can use the <timeScale> <property> to convert from the time scale used by the movie or sound to seconds.
+The <timeScale> is the number of intervals per second of a movie or
+sound. These intervals are used for the <player|player's> <startTime>,
+<endTime>, <duration>, and <currentTime> <properties>, and you can use
+the <timeScale> <property> to convert from the time scale used by the
+movie or sound to seconds.
 
-References: endTime (property), currentTime (property), properties (property), callbacks (property), duration (property), startTime (property), integer (keyword), player (keyword), player (object), property (glossary)
+References: property (glossary), integer (keyword), player (keyword),
+player (object), endTime (property), currentTime (property),
+properties (property), callbacks (property), duration (property),
+startTime (property)
 
 Tags: multimedia
+

@@ -2,17 +2,18 @@ Name: textHeightSum
 
 Type: function
 
-Syntax: the textHeightSum of <object> 
+Syntax: the textHeightSum of <object>
 
 Syntax: textHeightSum(<object>)
 
-Summary: <return|Returns> the total height of the text in a <field> or <button>.
+Summary:
+<return|Returns> the total height of the text in a <field> or <button>.
 
 Introduced: 1.0
 
-OS: ios,android
+OS: ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the textHeightSum of field "Comments"
@@ -21,17 +22,33 @@ Example:
 if the textHeightSum of group 1 &gt; the height of this card then expandCd
 
 Parameters:
-object: A field, button, card, or group.
+object:
+A field, button, card, or group.
 
-Returns: The <textHeightSum> <return|returns> a positive <integer>.
+Returns:
+The <textHeightSum> <return|returns> a positive <integer>.
 
 Description:
-Use the <textHeightSum> <function> to determine how much vertical space a <field(object)|field's> or <button(object)|button's> text requires.
+Use the <textHeightSum> <function> to determine how much vertical space
+a <field(object)|field's> or <button(object)|button's> text requires.
 
-This function exists for compatibility with imported SuperCard projects. You can use the <formattedHeight> <property> to find the height of the text in a <field(keyword)> or <button(keyword)>.
+This function exists for compatibility with imported SuperCard projects.
+You can use the <formattedHeight> <property> to find the height of the
+text in a <field(keyword)> or <button(keyword)>.
 
-If the <object> is a <button(keyword)> or <field(keyword)>, the <textHeightSum> <return|returns> the number of vertical <pixels> needed to display all the text at the <field(object)|field's> current width. If the <object> is a <card> or <group>, the <textHeightSum> <return|returns> the number of vertical <pixels> needed to display all the <object|objects> in the <card> or <group>.
+If the <object(glossary)> is a <button(keyword)> or <field(keyword)>,
+the <textHeightSum> <return|returns> the number of vertical <pixels>
+needed to display all the text at the <field(object)|field's> current
+width. If the <object(glossary)> is a <card> or <group>, the
+<textHeightSum> <return|returns> the number of vertical <pixels> needed
+to display all the <object|objects> in the <card> or <group>.
 
-References: formattedWidth (property), textHeight (property), formattedHeight (property), pixels (property), pageHeights (property), button (keyword), integer (keyword), field (keyword), card (keyword), group (command), field (object), object (object), button (object), property (glossary), return (glossary), function (control_st)
+References: group (command), function (control structure),
+object (glossary), property (glossary), return (glossary),
+button (keyword), integer (keyword), field (keyword), card (keyword),
+field (object), button (object), formattedWidth (property),
+textHeight (property), formattedHeight (property), pixels (property),
+pageHeights (property)
 
 Tags: ui
+

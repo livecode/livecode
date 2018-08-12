@@ -2,17 +2,18 @@ Name: atan
 
 Type: function
 
-Syntax: the atan of <number> 
+Syntax: the atan of <number>
 
 Syntax: atan(<number>)
 
-Summary: <return|Returns> the arc tangent of a number in <radian|radians>.
+Summary:
+<return|Returns> the arc tangent of a number in <radian|radians>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 atan(0)
@@ -22,21 +23,32 @@ Example:
 the atan of vectorMagnitude
 
 Parameters:
-number: A positive or negative number, or an expression that evaluates to a number.
+number:
+A positive or negative number, or an expression that evaluates to a
+number. 
 
-The result: The result of the <atan> function is <return|returned> in <radian|radians>. To get this result in <degree|degrees>, use the following <custom function>:.
+Returns:
+The <atan> <function> <return|returns> a number between -pi/2 and pi/2.
 
-Returns: The <atan> <function> <return|returns> a number between -pi/2 and pi/2.
+The result:
+The result of the <atan> function is <return|returned> in
+<radian|radians>. To get this result in <degree|degrees>, use the
+following <custom function>:
+
+    function atanInDegrees pMagnitude
+        return atan(pMagnitude) * 180 / pi
+    end atanInDegrees
 
 Description:
 Use the <atan> <function> to find the arc tangent of a number.
 
-The arc tangent of <number> is an angle whose tangent is equal to <number>. In other words, <atan> is an <inverse> of the <tan> <function>.
+The arc tangent of <number> is an angle whose tangent is equal to
+<number>. In other words, <atan> is an <inverse> of the <tan>
+<function>. 
 
-  function atanInDegrees theMagnitude
-    return atan(theMagnitude) * 180 / pi
-  end atanInDegrees
-
-References: inverse (keyword), pi (constant), tan (function), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control_st)
+References: pi (constant), function (control structure), tan (function),
+radian (glossary), custom function (glossary), return (glossary),
+degree (glossary), inverse (keyword)
 
 Tags: math
+

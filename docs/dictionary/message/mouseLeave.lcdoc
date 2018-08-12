@@ -4,13 +4,17 @@ Type: message
 
 Syntax: mouseLeave
 
-Summary: Sent when the <mouse pointer> moves out of an <object>.
+Summary:
+Sent when the <mouse pointer> moves out of an <object(glossary)>.
+
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on mouseLeave -- hide another object
@@ -18,16 +22,32 @@ on mouseLeave -- hide another object
 end mouseLeave
 
 Description:
-Handle the <mouseLeave> <message> to update a <control> when the <mouse pointer> moves outside it.
+Handle the <mouseLeave> <message> to update a <control> when the <mouse
+pointer> moves outside it.
 
-The <mouseLeave> <message> is sent only when the <Browse tool> is being used.
+The <mouseLeave> <message> is sent only when the <Browse tool> is being
+used. 
 
-If two controls overlap, a <mouseLeave> <message> is sent whenever the <mouse pointer> crosses outside a visible portion of a <control>. The <control> on the bottom receives a <mouseLeave> <message> only when the <mouse pointer> leaves part of the <control> that can be seen. A <control> that is completely hidden by another <control> on top of it will never receive a <mouseLeave> <message>.
+If two controls overlap, a <mouseLeave> <message> is sent whenever the
+<mouse pointer> crosses outside a visible portion of a <control>. The
+<control> on the bottom receives a <mouseLeave> <message> only when the
+<mouse pointer> leaves part of the <control> that can be seen. A
+<control> that is completely hidden by another <control> on top of it
+will never receive a <mouseLeave> <message>.
 
-If the mouse button is down when the mouse pointer leaves the control, the <mouseLeave> <message> is not sent until the mouse button is released.
+If the mouse button is down when the mouse pointer leaves the control,
+the <mouseLeave> <message> is not sent until the mouse button is
+released. 
 
-If a control is hidden (by changing its visible <property> to false or using the <hide> <command>), and the <mouse pointer> is over the <control> when it is hidden, LiveCode sends a <mouseLeave> <message> to the <control>.
+If a control is hidden (by changing its visible <property> to false or
+using the <hide> <command>), and the <mouse pointer> is over the
+<control> when it is hidden, LiveCode sends a <mouseLeave> <message> to
+the <control>.
 
-References: mouseWithin (message), focus (command), hide (command), mouseControl (function), property (glossary), Browse tool (glossary), mouse pointer (glossary), message (glossary), command (glossary), control (glossary), object (object)
+References: focus (command), hide (command), mouseControl (function),
+property (glossary), Browse tool (glossary), mouse pointer (glossary),
+message (glossary), command (glossary), control (glossary),
+object (glossary), mouseWithin (message)
 
 Tags: ui
+

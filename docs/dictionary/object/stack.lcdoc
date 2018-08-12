@@ -1,18 +1,19 @@
 Name: stack
 
+Synonyms: window, wd
+
 Type: object
 
 Syntax: stack
 
-Summary: The basic LiveCode <object> : a window.
-
-Synonyms: window,wd
+Summary:
+The basic LiveCode <object(glossary)>: a window.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 go to stack "Help"
@@ -21,16 +22,27 @@ Example:
 put the short name of stack 3 after field "Stacks List"
 
 Description:
-Use the <stack> <object type> to display a window, <palette>, or <dialog box>.
+Use the <stack> <object type> to display a window, <palette>, or 
+<dialog box>.
 
-A stack corresponds to a single window. Each LiveCode file contains one or more stacks. The first stack in a stack file is called the main stack; any other stacks in the stack file are called substacks of the main stack.
+A stack corresponds to a single window. Each LiveCode file contains one 
+or more stacks. The first stack in a stack file is called the main 
+stack; any other stacks in the stack file are called substacks of the 
+main stack.
 
-Stacks contain one or more cards, and may optionally contain backgrounds.
+Stacks contain one or more cards, and may optionally contain 
+backgrounds.
 
->*Note:* The type of window a <stack> is displayed in depends on the <stack|stack's> <style> <property> and whether the <stack> was opened with the <go>, <topLevel>, <palette>, <modal>, or <modeless> <command>.
+>*Note:* The type of window a <stack> is displayed in depends on the 
+<stack|stack's> <style> <property> and whether the <stack> was opened 
+with the <go>, <topLevel>, <palette>, <modal>, or <modeless> <command>.
 
-The stack object has a number of properties and messages associated with it. To see a list of messages that can be sent to a stack as a result of user actions or internal LiveCode events, open the "LiveCode Language Dictionary" page of the main Documentation window, ensure that the stack column is visible and use sort and filter to bring the relevant entries to the top
-
-References: templateStack (keyword), mode (property), stack version (glossary), defaultStack (property), style (property), topLevel (command), go (command), modal (command), palette (command), modeless (command), revLoadedStacks (function), mouseStack (function), stack (object), object (object), property (glossary), dialog box (glossary), command (glossary), object type (glossary)
+References: topLevel (command), go (command), modal (command),
+palette (command), modeless (command), revLoadedStacks (function),
+mouseStack (function), stack version (glossary), object (glossary),
+property (glossary), dialog box (glossary), command (glossary),
+object type (glossary), templateStack (keyword), stack (object),
+mode (property), defaultStack (property), style (property)
 
 Tags: objects
+

@@ -1,0 +1,140 @@
+/*
+Copyright (C) 2017 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+A library for displaying toasts on mobile
+
+Platforms: android
+
+Description:
+A toast is a non-modal temporary notification displayed to the user. 
+*/
+library com.livecode.library.toast
+
+use com.livecode.foreign
+use com.livecode.java
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "Toast Notification Library"
+
+--==============================================================================
+-- Foreign handlers
+--==============================================================================
+
+__safe foreign handler _JNI_GetAndroidEngine() returns JObject \
+	binds to "java:com.runrev.android.Engine>getEngine()Lcom/runrev/android/Engine;!static"
+__safe foreign handler _JNI_GetEngineContext(in pEngine as JObject) returns JObject \
+	binds to "java:android.view.View>getContext()Landroid/content/Context;"
+
+__safe foreign handler _JNI_ToastMakeText(in pContext as JObject, in pText as JString, in pDuration as JInt) returns JObject binds to "java:android.widget.Toast>makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;!static?ui"
+__safe foreign handler _JNI_ToastShow(in pToast as JObject) returns nothing binds to "java:android.widget.Toast>show()V?ui"
+__safe foreign handler _JNI_ToastCancel(in pToast as JObject) returns nothing binds to "java:android.widget.Toast>cancel()V?ui"
+
+--==============================================================================
+-- Private state and handlers
+--==============================================================================
+
+private variable mToast as optional JObject
+
+private handler ParseDuration(in pDuration as any) returns Integer
+    variable tNumericDuration as optional Number
+	if pDuration is a string then
+		put pDuration parsed as number into tNumericDuration
+		if tNumericDuration is nothing then
+			if the lower of pDuration is "short" then
+				return 0
+			else if the lower of pDuration is "long" then
+				return 1
+			end if
+		else if tNumericDuration > 0 then
+			return the maximum of (the floor of (tNumericDuration * 1000)) and 2
+		end if
+	else if pDuration is a number and pDuration > 0 then
+		return the maximum of (the floor of (pDuration * 1000)) and 2
+	end if
+	throw "duration must be a positive number or 'short' or 'long'"
+end handler
+
+--==============================================================================
+-- Public handlers
+--==============================================================================
+
+/**
+Display a toast notification
+
+Platforms: android
+
+Example:
+mobileToast "Hello, I am a toast!", "short"
+
+Parameters:
+pMessage: The message to display
+pDuration: 
+The duration of the notification. Either a positive integer, the string
+"long" or the string "short".
+
+Description:
+Use the <mobileToast> handler to display a temporary non-modal 
+notification with a specified message, for the given duration.
+*/
+public handler mobileToast(in pMessage as String, in pDuration as any) returns nothing
+	mobileToastWithOptions(pMessage, pDuration, the empty array)
+end handler
+
+/*
+Options array does not do anything at the moment.
+*/
+handler mobileToastWithOptions(in pMessage as String, in pDuration as any, in pOptions as Array) returns nothing
+	if the operating system is not "android" then
+		throw "not available on this platform"
+	end if
+
+	variable tDuration as Number
+	put ParseDuration(pDuration) into tDuration
+
+	mobileToastCancel()
+
+	put _JNI_ToastMakeText(_JNI_GetEngineContext(_JNI_GetAndroidEngine()), \
+	                       StringToJString(pMessage), \
+	                       tDuration) into mToast
+
+	_JNI_ToastShow(mToast)
+end handler
+
+/**
+Cancel the current toast
+
+Platforms: android
+
+Description:
+Use <mobileToastCancel> to cancel the currently displayed toast.
+*/
+public handler mobileToastCancel()
+	if the operating system is not "android" then
+		throw "not available on this platform"
+	end if
+	
+	if mToast is nothing then
+		return
+	end if
+
+	_JNI_ToastCancel(mToast)
+	put nothing into mToast
+end handler
+
+end library

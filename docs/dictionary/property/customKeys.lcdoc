@@ -1,20 +1,23 @@
 Name: customKeys
 
+Synonyms: userproperties
+
 Type: property
 
 Syntax: set the customKeys of <object> to {<propertiesList> | empty}
 
-Summary: Lists the names of all the <custom property|custom properties> of an <object>.
+Summary:
+Lists the names of all the <custom property|custom properties> of an
+<object(glossary)>. 
 
-Synonyms: userProperties
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the customKeys of stack "Preferences" to empty
@@ -22,25 +25,47 @@ set the customKeys of stack "Preferences" to empty
 Example:
 set the customKeys of last button to the customKeys of button 1
 
-Value: The <customKeys> of an <object> is a list of that <object|object's> <custom property> names, one per <line>.
+Value:
+The <customKeys> of an <object(glossary)> is a list of that
+<object|object's> <custom property> names, one per <line>.
 
 Description:
-Use the <customKeys> <property> to find out what <custom property|custom properties> an <object> has, and to create or delete <custom property|custom properties>.
+Use the <customKeys> <property> to find out what <custom property|custom
+properties> an <object(glossary)> has, and to create or delete 
+<custom property|custom properties>.
 
-The <customKeys> lists the names of <property|properties> in the <object|object's> current <customPropertySet>. If the <object> has more than one <custom property set>, you must switch to the desired property set before checking the <customKeys>. The following example displays the <custom property|custom properties> in a <custom property set> called "Francois":
+The <customKeys> lists the names of <property|properties> in the
+<object|object's> current <customPropertySet>. If the <object(glossary)>
+has more than one <custom property set>, you must switch to the desired
+property set before checking the <customKeys>. The following example
+displays the <custom property|custom properties> in a 
+<custom property set> called "Francois" :
 
-  set the customPropertySet of button "My Button" to "Francois"
-  answer the customKeys of button "My Button" -- in "Francois" set
+    set the customPropertySet of button "My Button" to "Francois"
+    answer the customKeys of button "My Button" -- in "Francois" set
+
 
 Alternatively, the custom property set can be accessed using:
 
-  answer the customKeys["Francois"] of button "My Button"
+    answer the customKeys["Francois"] of button "My Button"
 
-If you set the <customKeys> of an <object>, and the <propertiesList> contains a <custom property> that the <object> doesn't have, a <custom property> with that name is created. 
-(A property name can be up to 255 characters long. The number of property names is limited only by LiveCode's total memory space.) The value of a newly-created custom property is empty.
 
-If you set the <customKeys> of an <object> and do not include the name of an existing <custom property>, that <custom property> is deleted. Setting the <customKeys> to empty deletes all <custom property|custom properties> in the current custom property set.
+If you set the <customKeys> of an <object(glossary)>, and the
+<propertiesList> contains a <custom property> that the
+<object(glossary)> doesn't have, a <custom property> with that name is
+created. (A property name can be up to 255 characters long. The number
+of property names is limited only by LiveCode's total memory space.) The
+value of a newly-created custom property is empty.
 
-References: customPropertySets (property), line (keyword), undefine (command), object (object), property (glossary), custom property (glossary), customPropertySet (glossary), custom property set (glossary)
+If you set the <customKeys> of an <object(glossary)> and do not include
+the name of an existing <custom property>, that <custom property> is
+deleted. Setting the <customKeys> to empty deletes all 
+<custom property|custom properties> in the current custom property set.
+
+References: undefine (command), object (glossary), property (glossary),
+custom property (glossary), customPropertySet (glossary),
+custom property set (glossary), line (keyword),
+customPropertySets (property)
 
 Tags: properties
+

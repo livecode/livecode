@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "objdefs.h"
 
-//#include "execpt.h"
+
 #include "font.h"
 #include "util.h"
 #include "globals.h"
@@ -45,34 +45,43 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	reqstyle = style;
     
 #if defined(TARGET_SUBPLATFORM_IPHONE)
-	font = new MCFontStruct;
+	font = new (nothrow) MCFontStruct;
 	font -> size = size;
 	
 	uindex_t t_comma;
 	MCAutoStringRef reqname_str;
 	reqname_str = MCNameGetString(*reqname);
-	Boolean t_success;
-	t_success = MCStringFirstIndexOfChar(*reqname_str, ',', 0, kMCCompareExact, t_comma);
-
     MCAutoStringRef t_before_comma;
-    /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
+	if (MCStringFirstIndexOfChar(*reqname_str, ',', 0, kMCCompareExact, t_comma))
+    {
+        /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
+    }
+    else
+    {
+        t_before_comma = *reqname_str;
+    }
 
     font -> fid = (MCSysFontHandle)iphone_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	
 	iphone_font_get_metrics(font -> fid,  font->m_ascent, font->m_descent, font->m_leading, font->m_xheight);
     
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-	font = new MCFontStruct;
+	font = new (nothrow) MCFontStruct;
 	font -> size = size;
 	
 	uindex_t t_comma;
 	MCAutoStringRef reqname_str;
 	reqname_str = MCNameGetString(*reqname);
-	Boolean t_success;
-	t_success = MCStringFirstIndexOfChar(*reqname_str, ',', 0, kMCCompareExact, t_comma);
-
     MCAutoStringRef t_before_comma;
-    /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
+    if (MCStringFirstIndexOfChar(*reqname_str, ',', 0, kMCCompareExact, t_comma))
+    {
+        /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
+    }
+    else
+    {
+        t_before_comma = *reqname_str;
+    }
+    
     font -> fid = (MCSysFontHandle)android_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	
 	android_font_get_metrics(font -> fid,  font->m_ascent, font->m_descent, font->m_leading, font->m_xheight);
@@ -94,7 +103,7 @@ MCFontnode::MCFontnode(MCSysFontHandle p_handle, MCNameRef p_name)
     reqsize = coretext_get_font_size(p_handle);
     reqstyle = FA_DEFAULT_STYLE | FA_SYSTEM_FONT;
     
-    font = new MCFontStruct;
+    font = new (nothrow) MCFontStruct;
     font->size = reqsize;
     
     font->fid = p_handle;
@@ -115,7 +124,7 @@ MCFontnode::~MCFontnode(void)
 
 MCFontStruct *MCFontnode::getfont(MCNameRef fname, uint2 size, uint2 style)
 {
-	if (!MCNameIsEqualTo(fname, *reqname))
+	if (!MCNameIsEqualToCaseless(fname, *reqname))
 		return NULL;
 	if (size == 0)
 		return font;
@@ -151,7 +160,7 @@ MCFontStruct *MCFontlist::getfont(MCNameRef fname, uint2 &size, uint2 style, Boo
 			tmp = tmp->next();
 		}
 		while (tmp != fonts);
-	tmp = new MCFontnode(fname, size, style);
+	tmp = new (nothrow) MCFontnode(fname, size, style);
 	tmp->appendto(fonts);
 	return tmp->getfont(fname, size, style);
 }
@@ -171,7 +180,7 @@ MCFontStruct *MCFontlist::getfontbyhandle(MCSysFontHandle p_fid, MCNameRef p_nam
     while (tmp != fonts);
     
     // Font has not yet been added to the list
-    tmp = new MCFontnode(p_fid, p_name);
+    tmp = new (nothrow) MCFontnode(p_fid, p_name);
     tmp->appendto(fonts);
     return tmp->getfontstruct();
 }

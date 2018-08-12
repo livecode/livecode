@@ -6,13 +6,14 @@ Syntax: the mouseH
 
 Syntax: mouseH()
 
-Summary: <return|Returns> the horizontal position of the <mouse pointer>.
+Summary:
+<return|Returns> the horizontal position of the <mouse pointer>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the mouseH
@@ -20,21 +21,35 @@ the mouseH
 Example:
 add the mouseH to totalWidth
 
-Returns: The <mouseH> <function> <return|returns> an <integer>.
+Returns:
+The <mouseH> <function> <return|returns> an <integer>.
 
 Description:
 Use the <mouseH> <function> to find out where the <mouse pointer> is.
 
-The returned value is the horizontal distance in pixels from the left edge of the current stack to the location of the mouse pointer. (Use the defaultStack <property> to identify the current <stack>.)
+The returned value is the horizontal distance in pixels from the left
+edge of the current stack to the location of the mouse pointer. (Use the
+defaultStack <property> to identify the current <stack>.)
 
-If the <mouseH> is positive, the <pointer> is to the right of the leftmost edge of the <stack window>. If the number is <negative>, the <pointer> is to the left of the <stack window>.
+If the <mouseH> is positive, the <pointer> is to the right of the
+leftmost edge of the <stack window>. If the number is <negative>, the
+<pointer> is to the left of the <stack window>.
 
 This function is equal to item 1 of the mouseLoc <function>.
 
->*Note:* When in a mouseDown handler, you can use the <clickH> function to get the position of the mouse as it was when the mouseDown actiion occurred.
+>*Note:* When in a mouseDown handler, you can use the <clickH> function
+> to get the position of the mouse as it was when the mouseDown actiion
+> occurred. 
 
->*Tip:*  The <mouseMove> message sends the mouse's horizontal position as a <parameter>. This means that in a <mouseMove> <handler>, normally it's not necessary to use the <mouseH> <function>.
+>*Tip:*  The <mouseMove> message sends the mouse's horizontal position
+> as a <parameter>. This means that in a <mouseMove> <handler>, normally
+> it's not necessary to use the <mouseH> <function>.
 
-References: integer (keyword), pointer (keyword), stack (object), mouseMove (message), mouseV (function), clickH (function), property (glossary), return (glossary), stack window (glossary), handler (glossary), negative (glossary), parameter (glossary), mouse pointer (glossary), function (control_st)
+References: function (control structure), mouseV (function),
+clickH (function), property (glossary), return (glossary),
+stack window (glossary), handler (glossary), negative (glossary),
+parameter (glossary), mouse pointer (glossary), integer (keyword),
+pointer (keyword), mouseMove (message), stack (object)
 
 Tags: ui
+

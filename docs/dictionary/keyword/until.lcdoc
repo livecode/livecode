@@ -4,22 +4,34 @@ Type: keyword
 
 Syntax: until
 
-Summary: Used with the <repeat> <control structure> to specify that the <loop> is to repeat until the specified conndition becomes true.
+Summary:
+Used with the <repeat> <control structure> to specify that the <loop> is
+to repeat until the specified conndition becomes true.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-repeat until the seconds &gt;= timeToStop
+repeat until the seconds &gt;= tTimeToStop
 
 Description:
-Use the <until> <keyword> to repeat a sequence of <statement|statements> until a condition becomes true.
+Use the <until> <keyword> to repeat a sequence of <statement|statements>
+until a condition becomes true.
 
-LiveCode evaluates the condition each time the loop repeats, at the top of the loop (before the statements in the <repeat> <control structure|structure> are <execute|executed>). If the condition is true, the <loop> is skipped and <execute|execution> resumes with the <statement> after the <end repeat> statement.
+LiveCode evaluates the condition each time the loop repeats, at the top
+of the loop (before the statements in the <repeat> <control
+structure|structure> are <execute|executed>). If the condition is true,
+the <loop> is skipped and <execute|execution> resumes with the
+<statement> after the <end repeat> statement.
 
-If the condition is already true when LiveCode reaches the <repeat> <statement>, the <loop> is not <execute|executed> at all.
+If the condition is already true when LiveCode reaches the <repeat>
+<statement>, the <loop> is not <execute|executed> at all.
 
-References: forever (keyword), for (keyword), end repeat (keyword), keyword (glossary), statement (glossary), loop (glossary), control structure (glossary), execute (glossary), repeat (control_st)
+References: repeat (control structure), keyword (glossary),
+statement (glossary), loop (glossary), control structure (glossary),
+execute (glossary), forever (keyword), for (keyword),
+end repeat (keyword)
+

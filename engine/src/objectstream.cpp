@@ -40,7 +40,7 @@ MCObjectInputStream::MCObjectInputStream(IO_handle p_stream, uint32_t p_remainin
 
 MCObjectInputStream::~MCObjectInputStream(void)
 {
-	delete (char *)m_buffer;
+	delete[] (char *)m_buffer; /* Allocated with new[] */
 }
 
 // Flushing reads and discards the rest of the stream
@@ -219,8 +219,8 @@ IO_stat MCObjectInputStream::ReadStringRefNew(MCStringRef &r_value, bool p_suppo
 {
 	if (!p_supports_unicode)
 	{
-		MCStringRef t_string;
-		if (!MCStringCreateMutable(0, t_string))
+        MCAutoStringRef t_string;
+        if (!MCStringCreateMutable(0, &t_string))
 			return IO_ERROR;
 		
 		bool t_finished;
@@ -244,7 +244,7 @@ IO_stat MCObjectInputStream::ReadStringRefNew(MCStringRef &r_value, bool p_suppo
 					break;
 				}
 
-			if(!MCStringAppendNativeChars(t_string, (const byte_t*)m_buffer + m_frontier, t_offset))
+            if(!MCStringAppendNativeChars(*t_string, (const byte_t*)m_buffer + m_frontier, t_offset))
 				return IO_ERROR;
 
 			m_frontier += t_offset;
@@ -252,12 +252,12 @@ IO_stat MCObjectInputStream::ReadStringRefNew(MCStringRef &r_value, bool p_suppo
 		
 		m_frontier += 1;
 
-		if (!MCStringCopyAndRelease(t_string, r_value))
-		{
-			MCValueRelease(t_string);
-			return IO_ERROR;
-		}
+        if (!t_string.MakeImmutable())
+        {
+            return IO_ERROR;
+        }
 
+        r_value = t_string.Take();
 		return IO_NORMAL;
 	}
 	
@@ -265,14 +265,14 @@ IO_stat MCObjectInputStream::ReadStringRefNew(MCStringRef &r_value, bool p_suppo
 	if (ReadU32(t_length) != IO_NORMAL)
 		return IO_ERROR;
 	
-	MCAutoPointer<char> t_bytes;
-	if (!MCMemoryNewArray(t_length, &t_bytes))
+	MCAutoArray<char> t_bytes;
+	if (!t_bytes.New(t_length))
 		return IO_ERROR;
 	
-	if (Read(*t_bytes, t_length) != IO_NORMAL)
+	if (Read(t_bytes.Ptr(), t_length) != IO_NORMAL)
 		return IO_ERROR;
 	
-	if (!MCStringCreateWithBytes((const uint8_t *)*t_bytes, t_length, kMCStringEncodingUTF8, false, r_value))
+	if (!MCStringCreateWithBytes((const uint8_t *)t_bytes.Ptr(), t_length, kMCStringEncodingUTF8, false, r_value))
 		return IO_ERROR;
 	
 	return IO_NORMAL;
@@ -322,7 +322,6 @@ IO_stat MCObjectInputStream::ReadTranslatedStringRef(MCStringRef &r_value)
 #endif
         
         // Conversion complete
-        uindex_t t_length = MCStringGetLength(t_read);
         MCValueRelease(t_read);
         if (!MCStringCreateWithNativeCharsAndRelease(t_chars, t_char_count, t_read))
         {
@@ -388,7 +387,7 @@ IO_stat MCObjectInputStream::Fill(void)
 	IO_stat t_stat;
 
 	if (m_buffer == nil)
-		m_buffer = new char[16384];
+		m_buffer = new (nothrow) char[16384];
 	
 	if (m_buffer == nil)
 		return IO_ERROR;
@@ -423,14 +422,14 @@ MCObjectOutputStream::MCObjectOutputStream(IO_handle p_stream)
 {
 	m_stream = p_stream;
 
-	m_buffer = new char[16384];
+	m_buffer = new (nothrow) char[16384];
 	m_frontier = 0;
 	m_mark = 0;
 }
 
 MCObjectOutputStream::~MCObjectOutputStream(void)
 {
-	delete (char *)m_buffer;
+	delete[] (char *)m_buffer; /* Allocated with new[] */
 }
 
 IO_stat MCObjectOutputStream::WriteTag(uint32_t p_flags, uint32_t p_length)

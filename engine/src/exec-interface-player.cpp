@@ -327,15 +327,9 @@ void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 		if (p_name != nil)
             filename = MCValueRetain(p_name);
 		prepare(kMCEmptyString);
+
 #ifdef FEATURE_PLATFORM_PLAYER
-        // PM-2014-10-24: [[ Bug 13776 ]] Make sure we attach the player after prepare()
-        // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
-        if (m_platform_player != nil && !m_is_attached && m_should_attach)
-        {
-            MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-            m_is_attached = true;
-            m_should_attach = false;
-        }
+		attachplayer();
 #endif
 
 		Redraw();
@@ -359,12 +353,12 @@ void MCPlayer::SetDontRefresh(MCExecContext& ctxt, bool setting)
 		Redraw();
 }
 
-void MCPlayer::GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time)
+void MCPlayer::GetCurrentTime(MCExecContext& ctxt, double& r_time)
 {
 	r_time = getmoviecurtime();
 }
 
-void MCPlayer::SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time)
+void MCPlayer::SetCurrentTime(MCExecContext& ctxt, double p_time)
 {
 	setcurtime(p_time, false);
 	if (isbuffering())
@@ -376,13 +370,13 @@ void MCPlayer::SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time)
 #endif
 }
 
-void MCPlayer::GetDuration(MCExecContext& ctxt, uinteger_t& r_duration)
+void MCPlayer::GetDuration(MCExecContext& ctxt, double& r_duration)
 {
 	r_duration = getduration();
 }
 
 // PM-2014-11-03: [[ Bug 13920 ]] Make sure we support loadedTime property
-void MCPlayer::GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_loaded_time)
+void MCPlayer::GetLoadedTime(MCExecContext& ctxt, double& r_loaded_time)
 {
 #ifdef FEATURE_PLATFORM_PLAYER
 	r_loaded_time = getmovieloadedtime();
@@ -441,7 +435,7 @@ void MCPlayer::SetPlayRate(MCExecContext& ctxt, double p_rate)
 	setplayrate();
 }
 
-void MCPlayer::GetStartTime(MCExecContext& ctxt, uinteger_t*& r_time)
+void MCPlayer::GetStartTime(MCExecContext& ctxt, double*& r_time)
 {
 	if (starttime == MAXUINT4)
 		r_time = nil;
@@ -449,7 +443,7 @@ void MCPlayer::GetStartTime(MCExecContext& ctxt, uinteger_t*& r_time)
 		*r_time = starttime; //for QT, this is the selection start time
 }
 
-void MCPlayer::SetStartTime(MCExecContext& ctxt, uinteger_t* p_time)
+void MCPlayer::SetStartTime(MCExecContext& ctxt, double* p_time)
 {
 	//for QT, this is the selection start time
 	if (p_time == nil)
@@ -468,7 +462,7 @@ void MCPlayer::SetStartTime(MCExecContext& ctxt, uinteger_t* p_time)
 	setselection(false);
 }
 
-void MCPlayer::GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time)
+void MCPlayer::GetEndTime(MCExecContext& ctxt, double*& r_time)
 {
 	if (endtime == MAXUINT4)
 		r_time = nil;
@@ -476,14 +470,15 @@ void MCPlayer::GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time)
 		*r_time = endtime; //for QT, this is the selection's end time
 }
 
-void MCPlayer::SetEndTime(MCExecContext& ctxt, uinteger_t* p_time)
+void MCPlayer::SetEndTime(MCExecContext& ctxt, double* p_time)
 {
 	//for QT, this is the selection end time
 	if (p_time == nil)
 		starttime = endtime = MAXUINT4;
+    
 	else
 	{
-		endtime = *p_time;
+        endtime = *p_time >= getduration() ? getduration() : *p_time;
 #ifndef _MOBILE
 		if (starttime == MAXUINT4)
 			starttime = 0;
@@ -561,7 +556,7 @@ void MCPlayer::SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks)
     setcallbacks(p_callbacks);
 }
 
-void MCPlayer::GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale)
+void MCPlayer::GetTimeScale(MCExecContext& ctxt, double& r_scale)
 {
 	r_scale = gettimescale();
 }
@@ -597,6 +592,36 @@ void MCPlayer::SetPlayLoudness(MCExecContext& ctxt, uinteger_t p_loudness)
 {
 	loudness = MCU_min(p_loudness, (uint4)100);
 	setloudness();
+}
+
+void MCPlayer::GetLeftBalance(MCExecContext &ctxt, double &r_left_balance)
+{
+	r_left_balance = getleftbalance();
+}
+
+void MCPlayer::SetLeftBalance(MCExecContext &ctxt, double p_left_balance)
+{
+	setleftbalance(MCMin(p_left_balance, 100.0));
+}
+
+void MCPlayer::GetRightBalance(MCExecContext &ctxt, double &r_right_balance)
+{
+	r_right_balance = getrightbalance();
+}
+
+void MCPlayer::SetRightBalance(MCExecContext &ctxt, double p_right_balance)
+{
+	setrightbalance(MCMin(p_right_balance, 100.0));
+}
+
+void MCPlayer::GetAudioPan(MCExecContext &ctxt, double &r_pan)
+{
+	r_pan = getaudiopan();
+}
+
+void MCPlayer::SetAudioPan(MCExecContext &ctxt, double p_pan)
+{
+	setaudiopan(MCClamp(p_pan, -100.0, 100.0));
 }
 
 void MCPlayer::GetTrackCount(MCExecContext& ctxt, uinteger_t& r_count)
@@ -699,7 +724,9 @@ void MCPlayer::SetBorderWidth(MCExecContext& ctxt, uinteger_t width)
 
 void MCPlayer::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 {
+#ifndef FEATURE_PLATFORM_PLAYER
     uint4 oldflags = flags;
+#endif
 	MCControl::SetVisible(ctxt, part, setting);
     
     // PM-2015-07-01: [[ Bug 15191 ]] Keep the LC 6.7 behaviour in non-platform player, to make the video layer to hide 

@@ -1,14 +1,21 @@
 Name: variable watcher
 
-Synonyms: variable watcher,variable window
+Synonyms: variable watcher, variable window
 
 Type: glossary
 
 Description:
-Part of the LiveCode <development environment>, a window that displays the current values of <variable|variables> during script <execute|execution>. 
- 
-To display the variable watcher, in the <debugger>, choose Debug<img src="202656"/>Variable Watcher. To display the variable watcher from the Menubar, choose Development<img src="202656"/>Variable Watcher, if you are not debugging a script, this will allow you to watch global variables.
+Part of the LiveCode <development environment>, a pane that displays the
+current values of <variable|variables> during script
+<execute|execution>. 
 
-References: debugger (glossary), variable (glossary), execute (glossary), development environment (glossary)
+To display the variable watcher, click the variables pane in the <script
+editor>. To display the variable watcher from the Menubar, choose Debug
+→ Variables. If you are not debugging a script, this will allow you to
+watch global variables.
+
+References: debugger (glossary), variable (glossary), execute (glossary),
+development environment (glossary)
 
 Tags: properties
+

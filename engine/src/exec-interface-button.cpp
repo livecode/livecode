@@ -49,10 +49,10 @@ void MCButton::UpdateIconAndMenus(void)
 	reseticon();
 	freemenu(False);
 	findmenu(true);
-	if (parent != NULL && parent->gettype() == CT_GROUP)
+	if (parent && parent->gettype() == CT_GROUP)
 	{
 		parent->setstate(True, CS_NEED_UPDATE);
-		if ((parent == MCmenubar || parent == MCdefaultmenubar) && !MClockmenus)
+		if ((parent.GetAs<MCGroup>() == MCmenubar || parent.GetAs<MCGroup>() == MCdefaultmenubar) && !MClockmenus)
 			MCscreen->updatemenubar(True);
 	}
 	Redraw();
@@ -452,7 +452,7 @@ void MCButton::DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterf
     
 	if (icons == NULL)
 	{
-		icons = new iconlist;
+		icons = new (nothrow) iconlist;
 		memset(icons, 0, sizeof(iconlist));
 	}
     
@@ -807,7 +807,7 @@ void MCButton::SetMenuName(MCExecContext& ctxt, MCNameRef p_name)
 
 	if (opened)
 	{
-		if (findmenu(true) && menu != nil)
+		if (findmenu(true) && menu.IsValid())
 			menu->installaccels(getstack());
 	}
 }
@@ -924,23 +924,39 @@ void MCButton::SetMnemonic(MCExecContext& ctxt, uinteger_t p_mnemonic)
 
 void MCButton::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 {
-	// MW-2012-02-16: [[ FontRefs ]] As 'formatted' properties require
+    // MW-2012-02-16: [[ FontRefs ]] As 'formatted' properties require
 	//   access to the font, we must be open before we can compute them.
 	if (opened)
 	{
-		// MW-2007-07-05: [[ Bug 2328 ]] - Formatted width of tab buttons incorrect.
+        // MW-2007-07-05: [[ Bug 2328 ]] - Formatted width of tab buttons incorrect.
 		if (getstyleint(flags) == F_MENU && menumode == WM_TOP_LEVEL)
 			r_width = (uinteger_t)formattedtabwidth();
 		else
 		{
 			uint2 fwidth;
 			
-			MCStringRef t_label = getlabeltext();
+			MCStringRef const t_label = getlabeltext();
 			if (MCStringIsEmpty(t_label))
 				fwidth = 0;
-			else 
-                fwidth = leftmargin + rightmargin + MCFontMeasureText(m_font, t_label, getstack() -> getdevicetransform());
-			
+			else
+            {
+                MCArrayRef lines;
+                MCStringSplit(t_label, MCSTR("\n"), nil, kMCCompareExact, lines);
+                uindex_t line_count = MCArrayGetCount(lines);
+                int32_t max_length = 0;
+                
+                for (uindex_t i = 0; i < line_count; ++i)
+                {
+                    MCValueRef line = nil;
+                    MCArrayFetchValueAtIndex(lines, i + 1, line);
+                    MCStringRef const string_line = static_cast<MCStringRef const>(line);
+                    
+                    int32_t string_line_length = MCFontMeasureText(m_font, string_line, getstack() -> getdevicetransform());
+                    
+                    max_length = MCMax<int32_t>(max_length, string_line_length);
+                }
+                fwidth = leftmargin + rightmargin + max_length;
+            }
 			if (flags & F_SHOW_ICON && icons != NULL)
 			{
 				reseticon();
@@ -1131,10 +1147,10 @@ void MCButton::SetText(MCExecContext& ctxt, MCStringRef p_text)
     
     bool t_dirty = (resetlabel() || menumode == WM_TOP_LEVEL);
     
-	if (parent != NULL && parent->gettype() == CT_GROUP)
+	if (parent && parent->gettype() == CT_GROUP)
 	{
 		parent->setstate(True, CS_NEED_UPDATE);
-		if ((parent == MCmenubar || parent == MCdefaultmenubar) && !MClockmenus)
+		if ((parent.GetAs<MCGroup>() == MCmenubar || parent.GetAs<MCGroup>() == MCdefaultmenubar) && !MClockmenus)
 			MCscreen->updatemenubar(True);
 	}
 	if (t_dirty)
@@ -1183,36 +1199,19 @@ void MCButton::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margi
 
 void MCButton::GetHilite(MCExecContext& ctxt, uint32_t p_part, MCInterfaceTriState& r_hilite)
 {
-    uint2 t_hilite;
-    t_hilite = gethilite(p_part);
-    
-    if (t_hilite == Mixed)
-    {
-        r_hilite . type = kMCInterfaceTriStateMixed;
-        r_hilite . mixed = t_hilite;
-        return;
-    }
-
-    r_hilite . type = kMCInterfaceTriStateBoolean;
-    r_hilite . state = (Boolean)t_hilite == True;
+    r_hilite.value = gethilite(p_part);
 }
 
 void MCButton::SetHilite(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceTriState& p_hilite)
 {
-    Boolean t_new_state;
-    if (p_hilite . type == kMCInterfaceTriStateMixed)
-        t_new_state = p_hilite . mixed;
-    else
-        t_new_state = (Boolean)p_hilite . state;
-    
-    if (sethilite(p_part, t_new_state))
+    if (sethilite(p_part, p_hilite.value))
     {
         if (state & CS_HILITED)
         {
             // MH-2007-03-20: [[ Bug 4035 ]] If the hilite of a radio button is set programmatically, other radio buttons were not unhilited if the radiobehavior of the group is set.
             if (getstyleint(flags) == F_RADIO && parent -> gettype() == CT_GROUP)
             {
-                MCGroup *gptr = (MCGroup *)parent;
+                MCGroup *gptr = parent.GetAs<MCGroup>();
                 gptr->radio(p_part, this);
             }
             radio();

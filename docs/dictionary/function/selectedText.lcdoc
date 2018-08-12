@@ -1,20 +1,21 @@
 Name: selectedText
 
+Synonyms: hilitedtext
+
 Type: function
 
 Syntax: the selectedText [of { <field> | <button> }]
 
 Syntax: selectedText([{ <field> | <button> }])
 
-Summary: <return|Returns> the contents of the text <selection>.
-
-Synonyms: hilitedText
+Summary:
+<return|Returns> the contents of the text <selection>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the selectedText of field "Chapter Titles"
@@ -23,24 +24,43 @@ Example:
 put the selectedText into thisSelection
 
 Parameters:
-field: Any valid field reference.
-button: Any valid button reference.
+field:
+Any valid field reference.
 
-Returns: The <selectedText> <function> <return|returns> a <string>.
+button:
+Any valid button reference.
+
+Returns:
+The <selectedText> <function> <return|returns> a <string>.
 
 Description:
 Use the <selectedText> <function> to find out what text is <selected>.
 
-If a <field> is specified, the <selectedText> <function> <return|returns> the <selected> text in that <field(keyword)>. If the <field(object)|field's> <listBehavior> <property> is set to true, the <selectedText> includes any <selected> <lines> in the <field(keyword)>.
+If a <field> is specified, the <selectedText> <function>
+<return|returns> the <selected> text in that <field(keyword)>. If the
+<field(object)|field's> <listBehavior> <property> is set to true, the
+<selectedText> includes any <selected> <lines> in the <field(keyword)>.
 
-If a <button> is specified, the <selectedText> <function> <return|returns> the currently <selected> <menu item> associated with the <button>. If the <button> does not have a <menu> associated with it, the <selectedText> <function> <return|returns> empty.
+If a <button> is specified, the <selectedText> <function>
+<return|returns> the currently <selected> <menu item> associated with
+the <button>. If the <button> does not have a <menu> associated with it,
+the <selectedText> <function> <return|returns> empty.
 
-If there is no insertion point or text selection and no <field> or <button> is specified, the <selectedText> <function> <return|returns> empty.
+If there is no insertion point or text selection and no <field> or
+<button> is specified, the <selectedText> <function> <return|returns>
+empty. 
 
-To get the location of the selected text, use the selectedChunk <function>.
+To get the location of the selected text, use the selectedChunk
+<function>. 
 
 To change the contents of the selection, use the <selection> <keyword>.
 
-References: hilitedLine (property), listBehavior (property), menuHistory (property), selected (property), selection (keyword), field (keyword), lines (keyword), string (keyword), menu (keyword), field (object), selectedLoc (function), clickText (function), property (glossary), keyword (glossary), return (glossary), menu item (glossary), function (control_st)
+References: function (control structure), selectedLoc (function),
+clickText (function), property (glossary), keyword (glossary),
+return (glossary), menu item (glossary), selection (keyword),
+field (keyword), lines (keyword), string (keyword), menu (keyword),
+field (object), hilitedLine (property), listBehavior (property),
+menuHistory (property), selected (property)
 
 Tags: ui
+

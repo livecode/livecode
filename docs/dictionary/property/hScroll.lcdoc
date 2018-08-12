@@ -2,32 +2,44 @@ Name: hScroll
 
 Type: property
 
-Syntax: set the hScroll of {<field> | <group>} to <pixels> 
+Syntax: set the hScroll of {<field> | <group>} to <pixels>
 
-Summary: Specifies the horizontal scroll of a <field> or <group>.
+Summary:
+Specifies the horizontal scroll of a <field> or <group>.
 
-Associations: field
+Associations: field, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the hScroll of field "Wasps" to the width of field "Wasp"
 
 Value:
-The <hScroll> of a <field(keyword)>, <group(command)>, or <stack> is an <integer> between zero and the <field(object)|field's> or <group(glossary)|group's> <formattedWidth>.
-By default, the <hScroll> <property> of newly created <object|objects> is set to zero.
+The <hScroll> of a <field(keyword)>, <group(command)>, or <stack> is an
+<integer> between zero and the <field(object)|field's> or
+<group(glossary)|group's> <formattedWidth>. By default, the <hScroll>
+<property> of newly created <object|objects> is set to zero.
 
 Description:
-Use the <hScroll> <property> to scroll a <field> or <group> horizontally, or to check how far it's been scrolled.
+Use the <hScroll> <property> to scroll a <field> or <group>
+horizontally, or to check how far it's been scrolled.
 
-The <hScroll> is the amount in <pixels> the <object> has been scrolled to the right. If the <hScroll> is zero, the <object> has not been scrolled.
+The <hScroll> is the amount in <pixels> the <object(glossary)> has been
+scrolled to the right. If the <hScroll> is zero, the <object(glossary)>
+has not been scrolled.
 
-Setting the <hScroll> of a <field> or <group> causes a <scrollbarDrag> <message> to be sent.
+Setting the <hScroll> of a <field> or <group> causes a <scrollbarDrag>
+<message> to be sent.
 
-References: hScrollbar (property), pixels (property), formattedWidth (property), scrollbarDrag (message), scrollbarFactor (constant), field (keyword), integer (keyword), stack (object), object (object), field (object), group (command), property (glossary), message (glossary), group (glossary)
+References: group (command), scrollbarFactor (constant),
+object (glossary), property (glossary), message (glossary),
+group (glossary), field (keyword), integer (keyword),
+scrollbarDrag (message), stack (object), field (object),
+hScrollbar (property), pixels (property), formattedWidth (property)
 
 Tags: ui
+

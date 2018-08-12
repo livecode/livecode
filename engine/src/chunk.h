@@ -71,7 +71,7 @@ class MCChunk : public MCExpression
 	MCObject *destobj;
 	Dest_type desttype;
 	Functions function;
-	Boolean marked : 1;
+	bool marked : 1;
     
     // MW-2014-05-28: [[ Bug 11928 ]] This is set to true after 'destvar' has been evaluated
     //   as a chunk. This stops stale chunk information being used in MCChunk::del.
@@ -85,16 +85,7 @@ public:
     //Exec_stat eval(MCExecPoint &);
     void eval_ctxt(MCExecContext &ctxt, MCExecValue& r_value);
 
-#ifdef LEGACY_EXEC
-    Exec_stat eval_legacy(MCExecPoint &ep);
-#endif
 	MCVarref *getrootvarref(void);
-	
-	void compile(MCSyntaxFactoryRef factory);
-	void compile_in(MCSyntaxFactoryRef factory);
-	void compile_out(MCSyntaxFactoryRef factory);
-	void compile_inout(MCSyntaxFactoryRef factory);	
-	void compile_object_ptr(MCSyntaxFactoryRef factory);
 
 	Chunk_term getlastchunktype(void);
 
@@ -106,14 +97,8 @@ public:
 	void take_components(MCChunk *tchunk);
 
     // getobj calls getoptionalobj and throws in case nothing is returned.
-#ifdef LEGACY_EXEC
-    /* WRAPPER */ Exec_stat getobj(MCExecPoint &, MCObject *&, uint4 &parid, Boolean recurse);
-#endif
     bool getobj(MCExecContext &ctxt, MCObject *& objptr, uint4 &parid, Boolean recurse);
 
-#ifdef LEGACY_EXEC
-    /* WRAPPER */ Exec_stat getobj(MCExecPoint&, MCObjectPtr&, Boolean recurse);
-#endif
     bool getobj(MCExecContext &ctxt,MCObjectPtr&, Boolean recurse);
 
     // Added for MCChunk::count:
@@ -122,63 +107,14 @@ public:
     void getoptionalobj(MCExecContext& ctxt, MCObject *&r_object, uint4& r_parid, Boolean p_recurse);
     void getoptionalobj(MCExecContext &ctxt, MCObjectPtr &r_object, Boolean p_recurse);
 
-#ifdef LEGACY_EXEC    
-    Exec_stat getobj_legacy(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Boolean recurse);
     
-	Exec_stat extents(MCCRef *ref, int4 &start, int4 &number,
-	                  MCExecPoint &ep, const char *sptr, const char *eptr,
-	                  int4 (*count)(MCExecPoint &ep, const char *sptr,
-	                                const char *eptr));
-#endif
-    
-#ifdef LEGACY_EXEC
-    /* WRAPPER */ Exec_stat mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& r_mark, bool includechars = true);
-#endif
     void mark(MCExecContext &ctxt, bool set, bool wholechunk, MCMarkedText& x_mark, bool includechars = true);
     void mark_for_eval(MCExecContext& ctxt, MCMarkedText& x_mark);
-#ifdef LEGACY_EXEC
-	Exec_stat mark_legacy(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
-
-	// MW-2012-02-23: [[ CharChunk ]] Compute the start and end field indices corresponding
-	//   to the field char chunk in 'field'.
-	Exec_stat markcharactersinfield(uint32_t part_id, MCExecPoint& ep, int32_t& start, int32_t& end, MCField *field);
-
-	Exec_stat gets(MCExecPoint &);
-	Exec_stat set(MCExecPoint &, Preposition_type ptype);
-
-#endif
-
-#ifdef LEGACY_EXEC
-    Exec_stat set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_text, bool p_unicode = false);
-#endif
     bool set(MCExecContext& ctxt, Preposition_type p_type, MCValueRef p_value, bool p_unicode = false);
     bool set(MCExecContext& ctxt, Preposition_type p_type, MCExecValue p_value, bool p_unicode = false);
 
-#ifdef LEGACY_EXEC 
-	Exec_stat gets(MCExecPoint &);
-	Exec_stat set_legacy(MCExecPoint &, Preposition_type ptype);
-       
-	// MW-2012-02-23: [[ PutUnicode ]] Set the chunk to the UTF-16 encoded text in ep.
-	Exec_stat setunicode(MCExecPoint& ep, Preposition_type ptype);
-#endif
     
-#ifdef LEGACY_EXEC
-    /* WRAPPER */ Exec_stat count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &);
-#endif
     void count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, uinteger_t &r_count);
-#ifdef LEGACY_EXEC	
-	Exec_stat fmark(MCField *fptr, int4 &start, int4 &end, Boolean wholechunk);
-
-	// MW-2012-01-27: [[ UnicodeChunks ]] Added the 'keeptext' parameter, if True then on exit the
-	//   ep will contain the actual content of the field.
-	Exec_stat fieldmark(MCExecPoint &, MCField *fptr, uint4 parid, int4 &start, int4 &end, Boolean wholechunk, Boolean force, Boolean keeptext = False);
-    
-	// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
-	Exec_stat getprop(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
-
-	Exec_stat setprop(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
-#endif
-
     // SN-2015-02-13: [[ Bug 14467 ]] [[ Bug 14053 ]] Refactored object properties
     //  lookup, to ensure it is done the same way in MCChunk::getprop / setprop
     bool getsetprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, bool p_is_get_operation, MCExecValue& r_value);
@@ -191,20 +127,8 @@ public:
     bool getcustomprop(MCExecContext& ctxt, MCNameRef p_prop_name, MCNameRef p_index_name, MCExecValue& r_value);
     bool setcustomprop(MCExecContext& ctxt, MCNameRef p_prop_name, MCNameRef p_index_name, MCExecValue p_value);
     
-#ifdef LEGACY_EXEC
-	Exec_stat getprop_legacy(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
-	Exec_stat setprop_legacy(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
-	Exec_stat getobjforprop(MCExecPoint& ep, MCObject*& r_object, uint4& r_parid);
-#endif
     bool getobjforprop(MCExecContext& ctxt, MCObject*& r_object, uint4& r_parid);
 	// REMOVE: Exec_stat select(MCExecPoint &, Preposition_type where, Boolean text, Boolean first);
-#ifdef LEGACY_EXEC
-	Exec_stat cut(MCExecPoint &);
-	Exec_stat copy(MCExecPoint &);
-
-	// REMOVE: Exec_stat del(MCExecPoint &);
-	Exec_stat changeprop(MCExecPoint &ep, Properties prop, Boolean value);
-#endif
 	// Returns true if this chunk is of text type
 	bool istextchunk(void) const;
 
@@ -237,10 +161,6 @@ public:
     {
         return (element != nil);
     }
-#ifdef LEGACY_EXEC
-	// Returns the field, part and range of the text chunk
-	Exec_stat marktextchunk(MCExecPoint& ep, MCField*& r_field, uint4& r_part, uint4& r_start, uint4& r_end);
-#endif
 	MCObject *getdestobj()
 	{
 		return destobj;
@@ -264,7 +184,8 @@ public:
 };
 
 MCChunkType MCChunkTypeFromChunkTerm(Chunk_term p_chunk_term);
-bool MCChunkTermIsNestable(Chunk_term p_chunk_term);
-bool MCChunkTermHasRange(Chunk_term p_chunk_term);
-
+inline bool MCChunkTermIsControl(Chunk_term p_chunk_term)
+{
+	return p_chunk_term >= CT_FIRST_CONTROL && p_chunk_term <= CT_LAST_CONTROL;
+}
 #endif

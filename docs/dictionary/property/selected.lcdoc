@@ -4,26 +4,34 @@ Type: property
 
 Syntax: set the selected of <object> to {true | false}
 
-Summary: Specifies whether an <object> is <selected>.
+Summary:
+Specifies whether an <object(glossary)> is <selected>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if the selected of button "Group" then select button "Ahhh"
 
-Value (bool): The <selected> of an <object> is true or false.
+Value (bool):
+The <selected> of an <object(glossary)> is true or false.
 
 Description:
-Use the <selected> <property> to <select> an <object> or find out whether the user has <selected> it with the <Pointer tool>.
+Use the <selected> <property> to <select> an <object(glossary)> or find
+out whether the user has <selected> it with the <Pointer tool>.
 
-You can select an object by setting its <selected> <property> to true, and deselect it by setting its <selected> to false.
+You can select an object by setting its <selected> <property> to true,
+and deselect it by setting its <selected> to false.
 
-References: selected (property), select (command), focus (command), choose (command), selectedImage (function), object (object), property (glossary), Pointer tool (glossary)
+References: select (command), focus (command), choose (command),
+selectedImage (function), object (glossary), property (glossary),
+Pointer tool (glossary), selected (property)
 
 Tags: ui
+

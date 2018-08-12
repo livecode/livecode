@@ -2,17 +2,19 @@ Name: alphaData
 
 Type: property
 
-Syntax: set the alphaData of <image> to <binaryData> 
+Syntax: set the alphaData of <image> to <binaryData>
 
-Summary: Specifies the <binary file|binary data> that makes up the <alpha channel> of the picture in an <image> object.
+Summary:
+Specifies the <binary file|binary data> that makes up the 
+<alpha channel> of the picture in an <image> object.
 
 Associations: image
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the alphaData of image "Hellacious" to savedAlphaChannel
@@ -20,21 +22,41 @@ set the alphaData of image "Hellacious" to savedAlphaChannel
 Example:
 if charToNum(char x of the alphaData of image 1) is 255 then next repeat
 
-Value: The <alphaData> of an <image> consists of a sequence of <binary> values.
+Value:
+The <alphaData> of an <image> consists of a sequence of <binary> values.
 
 Description:
-Use the <alphaData> <property> to control the transparency of the <pixels> in an <image>.
+Use the <alphaData> <property> to control the transparency of the
+<pixels> in an <image>.
 
-Each pixel is represented by 8 bits (1 byte) of alpha channel data, with pixels numbered from the top left corner of the image, left to right, then top to bottom.
+Each pixel is represented by 8 bits (1 byte) of alpha channel data, with
+pixels numbered from the top left corner of the image, left to right,
+then top to bottom.
 
-A value of zero means the pixel is fully transparent; a value of 255 is fully opaque; and values in between indicate a level of partial translucency.
+A value of zero means the pixel is fully transparent; a value of 255 is
+fully opaque; and values in between indicate a level of partial
+translucency. 
 
->*Important:*  Since the <alphaData> of an <image> is <binary file|binary data> rather than text, trying to display the data in a <field> may cause unexpected behavior.
+>*Important:*  Since the <alphaData> of an <image> is 
+> <binary file|binary data> rather than text, trying to display the data
+> in a <field> may cause unexpected behavior.
 
-Since each pixel is represented by 8 bits (1 byte or 1 character), you can obtain the numeric value for a given pixel using the charToNum <function>. For example, the numeric value of the <alphaData> for the tenth <pixel> is given by the <expression> charToNum(char 10 of the alphaData of <image>).
+Since each pixel is represented by 8 bits (1 byte or 1 character), you
+can obtain the numeric value for a given pixel using the charToNum
+<function>. For example, the numeric value of the <alphaData> for the
+tenth <pixel> is given by the <expression> charToNum(char 10 of the
+alphaData of <image>).
 
->*Important:*  When changing the <alphaData> property, make sure the new data is the correct size: 1 byte per pixel in the image. If you set an image's <alphaData> property to data whose total length is incorrect, the <a/>image appearance may be distorted.
+>*Important:*  When changing the <alphaData> property, make sure the new
+> data is the correct size: 1 byte per pixel in the <image>. If you set an
+> <image|image's> <alphaData> property to data whose total length is
+> incorrect, the <image|image's> appearance may be distorted.
 
-References: maskData (property), blendLevel (property), pixels (property), imageData (property), field (keyword), image (keyword), function (control_st), property (glossary), binary file (glossary), pixel (glossary), expression (glossary), binary (glossary), alpha channel (glossary)
+References: function (control structure), property (glossary),
+binary file (glossary), pixel (glossary), expression (glossary),
+binary (glossary), alpha channel (glossary), field (keyword),
+image (keyword), maskData (property), blendLevel (property),
+pixels (property), imageData (property)
 
 Tags: multimedia
+

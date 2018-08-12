@@ -1,1 +1,0 @@
-# Development -> Plugins opens the wrong plugin

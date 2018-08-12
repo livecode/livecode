@@ -1,1 +1,0 @@
-# Change in cantSelect behavior makes it possible to create graphics on IDE stacks

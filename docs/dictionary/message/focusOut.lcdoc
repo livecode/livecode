@@ -4,13 +4,16 @@ Type: message
 
 Syntax: focusOut
 
-Summary: Sent to a <button> or <field> when it becomes inactive (loses <focus>).
+Summary:
+Sent to a <button> or <field> when it becomes inactive (loses <focus>).
+
+Associations: button, field
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on focusOut
@@ -20,12 +23,16 @@ set the textStyle of the target to empty
 end focusOut
 
 Description:
-Handle the <focusOut> <message> if you want to perform preparation or do other tasks when a <control> loses the <focus|keyboard focus>.
+Handle the <focusOut> <message> if you want to perform preparation or do
+other tasks when a <control> loses the <focus|keyboard focus>.
 
-&nbsp;
+If the control is an unlocked field or a button whose menuMode is
+"comboBox", the <closeField> or <exitField> <message> is sent to it
+instead of the <focusOut> <message>.
 
-If the control is an unlocked field or a button whose menuMode is "comboBox", the <closeField> or <exitField> <message> is sent to it instead of the <focusOut> <message>.
-
-References: field (keyword), button (object), exitField (message), suspendStack (message), closeField (message), focus (command), message (glossary), control (glossary), focus (glossary)
+References: focus (command), message (glossary), control (glossary),
+focus (glossary), field (keyword), exitField (message),
+suspendStack (message), closeField (message), button (object)
 
 Tags: ui
+

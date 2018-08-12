@@ -1,18 +1,19 @@
 Name: previous
 
+Synonyms: prev
+
 Type: keyword
 
 Syntax: previous
 
-Summary: Indicates the <card> that comes before the <current card>.
-
-Synonyms: prev
+Summary:
+Indicates the <card> that comes before the <current card>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 go previous card
@@ -21,10 +22,15 @@ Example:
 get the short name of previous card
 
 Description:
-Use the <previous> <keyword> to move backward in the <stack> or to <object reference|reference> the <card> before the <current card>.
+Use the <previous> <keyword> to move backward in the <stack> or to
+<object reference|reference> the <card> before the <current card>.
 
-If you are already on the first card, the <previous> <card> is the last <card> in the <stack>.
+If you are already on the first card, the <previous> <card> is the last
+<card> in the <stack>.
 
-References: first (keyword), next (keyword), last (keyword), card (keyword), go (command), stack (object), keyword (glossary), current card (glossary), object reference (glossary)
+References: go (command), keyword (glossary), current card (glossary),
+object reference (glossary), first (keyword), next (keyword),
+last (keyword), card (keyword), stack (object)
 
 Tags: navigation
+

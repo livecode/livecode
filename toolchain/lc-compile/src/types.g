@@ -21,7 +21,7 @@
 
 'export'
     MODULE MODULELIST MODULEKIND
-    DEFINITION SIGNATURE ACCESS SCOPE
+    DEFINITION SIGNATURE ACCESS
     TYPE FIELD FIELDLIST LANGUAGE
     PARAMETER MODE PARAMETERLIST
     STATEMENT
@@ -33,11 +33,13 @@
     NAMELIST
     MEANING
     MODULEINFO
-    SYMBOLINFO SYMBOLKIND
+    SYMBOLINFO SYMBOLKIND SYMBOLSAFETY
     SYNTAXINFO
     SYNTAXMARKINFO SYNTAXMARKTYPE
     NAME DOUBLE
     SYNTAXPRECEDENCE
+    BYTECODE
+    QueryExpressionListLength
 
 --------------------------------------------------------------------------------
 
@@ -55,10 +57,6 @@
 'type' MODULE
     module(Position: POS, Kind: MODULEKIND, Name: ID, Definitions: DEFINITION)
 
-'type' SCOPE
-    normal
-    context
-
 'type' DEFINITION
     sequence(Left: DEFINITION, Right: DEFINITION)
     metadata(Position: POS, Key: STRING, Value: STRING)
@@ -66,12 +64,12 @@
     type(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
     constant(Position: POS, Access: ACCESS, Name: ID, Value: EXPRESSION)
     variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
-    contextvariable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE, Default: EXPRESSION)
-    handler(Position: POS, Access: ACCESS, Name: ID, Scope: SCOPE, Signature: SIGNATURE, Definitions: DEFINITION, Body: STATEMENT)
+    handler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Definitions: DEFINITION, Body: STATEMENT)
     foreignhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
     property(Position: POS, Access: ACCESS, Name: ID, Getter: ID, Setter: OPTIONALID)
     event(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE)
     syntax(Position: POS, Access: ACCESS, Name: ID, Class: SYNTAXCLASS, Warnings: SYNTAXWARNING, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST)
+    unsafe(Position: POS, Definition: DEFINITION)
     nil
 
 'type' SIGNATURE
@@ -89,7 +87,7 @@
     named(Position: POS, Name: ID)
     foreign(Position: POS, Binding: STRING)
     optional(Position: POS, Type: TYPE)
-    record(Position: POS, Base: TYPE, Fields: FIELDLIST)
+    record(Position: POS, Fields: FIELDLIST)
     enum(Position: POS, Base: TYPE, Fields: FIELDLIST)
     handler(Position: POS, Language: LANGUAGE, Signature: SIGNATURE)
     boolean(Position: POS)
@@ -129,6 +127,14 @@
     in
     out
     inout
+    variadic
+
+'type' BYTECODE
+    sequence(Left: BYTECODE, Right: BYTECODE)
+    label(Position: POS, Name: ID)
+    register(Position: POS, Name: ID, Type: TYPE)
+    opcode(Position: POS, Opcode: NAME, Arguments: EXPRESSIONLIST)
+    nil
 
 'type' STATEMENT
     sequence(Left: STATEMENT, Right: STATEMENT)
@@ -150,6 +156,8 @@
     invoke(Position: POS, Info: INVOKELIST, Arguments: EXPRESSIONLIST)
     throw(Position: POS, Error: EXPRESSION)
     postfixinto(Position: POS, Command: STATEMENT, Target: EXPRESSION)
+    bytecode(Position: POS, Block: BYTECODE)
+    unsafe(Position: POS, Block: STATEMENT)
     nil
     
 'type' EXPRESSIONLIST
@@ -285,6 +293,11 @@
     parameter
     local
     context
+    label
+
+'type' SYMBOLSAFETY
+    safe
+    unsafe
 
 'type' INTLIST
     intlist(Head: INT, Tail: INTLIST)
@@ -308,10 +321,10 @@
     id(Id: ID)
     nil
 
-'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
+'table' ID(Position: POS, Name: NAME, Meaning: MEANING, Namespace: OPTIONALID)
 
 'table' MODULEINFO(Index: INT, Generator: INT)
-'table' SYMBOLINFO(Index: INT, Generator: INT, Parent: ID, Access: ACCESS, Kind: SYMBOLKIND, Type: TYPE)
+'table' SYMBOLINFO(Index: INT, Generator: INT, Parent: ID, Access: ACCESS, Safety: SYMBOLSAFETY, Kind: SYMBOLKIND, Type: TYPE)
 'table' SYNTAXINFO(Index: INT, Parent: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
 'table' SYNTAXMARKINFO(Index: INT, RMode: MODE, LMode: MODE, Type: SYNTAXMARKTYPE)
 'table' INVOKEINFO(Index: INT, ModuleIndex: INT, Name: STRING, ModuleName: STRING, Methods: INVOKEMETHODLIST)
@@ -364,5 +377,15 @@
 
 'type' NAME
 'type' DOUBLE
+
+--------------------------------------------------------------------------------
+
+'action' QueryExpressionListLength(EXPRESSIONLIST -> INT)
+
+    'rule' QueryExpressionListLength(expressionlist(_, Tail) -> TailCount + 1)
+        QueryExpressionListLength(Tail -> TailCount)
+
+    'rule' QueryExpressionListLength(nil -> 0)
+        -- nothing
 
 --------------------------------------------------------------------------------

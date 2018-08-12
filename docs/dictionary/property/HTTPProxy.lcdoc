@@ -2,28 +2,49 @@ Name: HTTPProxy
 
 Type: property
 
-Syntax: set the HTTPProxy to <host> : <portNumber> 
+Syntax: set the HTTPProxy to <host> : <portNumber>
 
-Summary: Specifies a <proxy server> to be used for <HTTP> requests.
+Summary:
+Specifies a <proxy server> to be used for <HTTP> requests.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android, html5
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the HTTPProxy to "127.0.0.0:80"
 
-Value: The <HTTPProxy> consists of a <host> and <port> number, separated by a colon. The <host> is the <IP address> of the <proxy server|proxy> <server>. The <portNumber> is the network <port> to send requests to. (Generally, <port> 80 is used for <HTTP> requests.).
+Value:
+The <HTTPProxy> consists of a <host> and <port> number, separated by a
+colon. The <host> is the <IP address> of the <proxy server|proxy>
+<server>. The <portNumber> is the network <port> to send requests to.
+(Generally, <port> 80 is used for <HTTP> requests.).
 
 Description:
-Use the <HTTPProxy> <property> to use <HTTP> <server|servers> from behind a <firewall>.
+Use the <HTTPProxy> <property> to use <HTTP> <server|servers> from
+behind a <firewall>.
 
-Normally, when an application requests a web document, the request goes directly to the HTTP server that hosts the document. If your computer is behind a network firewall or if the HTTP server is blocked in some other way, the request must be sent to a proxy server, which fetches the document from the host and then pass it back to your system.
+Normally, when an application requests a web document, the request goes
+directly to the HTTP server that hosts the document. If your computer is
+behind a network firewall or if the HTTP server is blocked in some other
+way, the request must be sent to a proxy server, which fetches the
+document from the host and then pass it back to your system.
 
-If the <HTTPProxy> <property> is empty, requests are sent directly to the <host> <server> and no <proxy server|proxy> is used. This is the <default> setting. (On Windows systems, if a <proxy server> is set in the <registry>, that setting is used as the <default>.)
+If the <HTTPProxy> <property> is empty, requests are sent directly to
+the <host> <server> and no <proxy server|proxy> is used. This is the
+<default> setting. (On Windows systems, if a <proxy server> is set in
+the <registry>, that setting is used as the <default>.)
 
-References: ftpProxy (property), default (keyword), http (keyword), accept (command), post (command), property (glossary), host (glossary), proxy server (glossary), IP address (glossary), port (glossary), registry (glossary), server (glossary), firewall (glossary)
+> *Cross-platform note:* This setting will be ignored by the HTML5 engine,
+> with platform configured proxy being used instead.
+
+References: accept (command), post (command), property (glossary),
+host (glossary), proxy server (glossary), IP address (glossary),
+port (glossary), registry (glossary), server (glossary),
+firewall (glossary), default (keyword), http (keyword),
+ftpProxy (property)
 
 Tags: networking
+

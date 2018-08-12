@@ -2,32 +2,58 @@ Name: hilitedButtonName
 
 Type: property
 
-Syntax: set the hilitedButtonName of <group> to <buttonName> 
+Syntax: set the hilitedButtonName of <group> to <buttonName>
 
-Summary: Specifies which <button> in a <group> is currently <highlight|highlighted>.
+Summary:
+Specifies which <button> in a <group> is currently
+<highlight|highlighted>. 
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the hilitedButtonName of group "Options" to "Help"
 
-Value: The <hilitedButtonName> of a <group> is the short <name> <property> of a <button>.
+Value:
+The <hilitedButtonName> of a <group> is the short <name> <property> of a
+<button>. 
 
 Description:
-Use the <hilitedButtonName> <property> to change the current setting in a <radio button|radio-button cluster>.
+Use the <hilitedButtonName> <property> to change the current setting in
+a <radio button|radio-button cluster>.
 
-The <hilitedButtonName> specifies which <button(keyword)> in a <group> is currently <highlight|highlighted>. If the <hilitedButtonName> of a <group> is empty, none of the <button(object)|buttons> in the <group> is currently <highlight|highlighted>.
+The <hilitedButtonName> specifies which <button(keyword)> in a <group>
+is currently <highlight|highlighted>. If the <hilitedButtonName> of a
+<group> is empty, none of the <button(object)|buttons> in the <group> is
+currently <highlight|highlighted>.
 
-Setting the <hilitedButtonName> of a <group> sets the <hilite> <property> of the rest of the <button(object)|buttons> to false.
+Setting the <hilitedButtonName> of a <group> sets the <hilite>
+<property> of the rest of the <button(object)|buttons> to false.
 
-The <hilitedButtonName> <property> is most useful in <radio button|radio-button clusters>. In a <radio button|radio-button cluster>, only one <button(object)> can be <highlight|highlighted> at once:  clicking another <button(object)> unhighlights the first one. The <radioBehavior(property)> <property> of a <group> of <button(object)|buttons> specifies whether they act as a <radio button|radio-button cluster>.
+The <hilitedButtonName> <property> is most useful in <radio
+button|radio-button clusters>. In a <radio button|radio-button cluster>,
+only one <button(object)> can be <highlight|highlighted> at once:
+clicking another <button(object)> unhighlights the first one. The
+<radioBehavior(property)> <property> of a <group> of
+<button(object)|buttons> specifies whether they act as a <radio
+button|radio-button cluster>.
 
-The <hilitedButton(property)>, <hilitedButtonName>, and <hilitedButtonID(property)> <property|properties> all refer in different ways to the same <button(object)>. When any of them changes, all of them change.
+The <hilitedButton(property)>, <hilitedButtonName>, and
+<hilitedButtonID(property)> <property|properties> all refer in different
+ways to the same <button(object)>. When any of them changes, all of them
+change. 
 
-References: family (property), hilite (property), hilitedButtonID (property), name (property), hilitedButton (property), autoHilite (property), radioBehavior (property), button (keyword), hilite (command), group (command), button (object), property (glossary), highlight (glossary), hilitedButtonID (glossary), radio button (glossary), radioBehavior (glossary)
+References: hilite (command), group (command), property (glossary),
+highlight (glossary), hilitedButtonID (glossary), radio button (glossary),
+radioBehavior (glossary), button (keyword), button (object),
+family (property), hilite (property), hilitedButtonID (property),
+name (property), hilitedButton (property), autoHilite (property),
+radioBehavior (property)
 
 Tags: ui
+

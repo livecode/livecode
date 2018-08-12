@@ -4,31 +4,56 @@ Type: keyword
 
 Syntax: templateScrollbar
 
-Summary: Used with the <set> <command> to set the <properties> of newly created <scrollbar|scrollbars>.
+Summary:
+Used with the <set> <command> to set the <properties> of newly created
+<scrollbar|scrollbars>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the style of the templateScrollbar to scale
 
 Description:
-Use the <templateScrollbar> <keyword> to set up <default> <properties> to be used for any new <scrollbar(object)|scrollbars> you create.
+Use the <templateScrollbar> <keyword> to set up <default> <properties>
+to be used for any new <scrollbar(object)|scrollbars> you create.
 
-The <templateScrollbar> can be thought of as a special, abstract <object>. It is not an actual <scrollbar(keyword)>, but it has all the <properties> of a <scrollbar(keyword)>. The <ID> <property> of the <templateScrollbar> is zero.
+The <templateScrollbar> can be thought of as a special, abstract
+<object(glossary)>. It is not an actual <scrollbar(keyword)>, but it has
+all the <properties> of a <scrollbar(keyword)>. The <ID> <property> of
+the <templateScrollbar> is zero.
 
-You can use the <set> command to set the <properties> of the <templateScrollbar> before creating a scrollbar. The new <scrollbar(keyword)> has the <properties> of the <templateScrollbar>, by <default>. Changing the <properties> of the <templateScrollbar> does not affect existing <scrollbar(object)|scrollbars>.
+You can use the <set> command to set the <properties> of the
+<templateScrollbar> before creating a scrollbar. The new
+<scrollbar(keyword)> has the <properties> of the <templateScrollbar>, by
+<default>. Changing the <properties> of the <templateScrollbar> does not
+affect existing <scrollbar(object)|scrollbars>.
 
-The properties of the <templateScrollbar> can be returned to the default settings using the <reset> command.
+The properties of the <templateScrollbar> can be returned to the default
+settings using the <reset> command.
 
-You can refer to the <templateScrollbar> using any of the following forms:
-        templateScrollbar
-        the templateScrollbar
-        templateScrollbar()
+You can refer to the <templateScrollbar> using any of the following
+forms: templateScrollbar
 
->*Note:* The <templateScrollbar> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
+    the templateScrollbar
+    templateScrollbar()
 
-References: properties (property), ID (property), functionNames (function), newScrollbar (message), templateField (keyword), templateGroup (keyword), templateVideoClip (keyword), templateEPS (keyword), scrollbar (keyword), templatePlayer (keyword), templateImage (keyword), templateStack (keyword), templateGraphic (keyword), default (keyword), templateAudioClip (keyword), templateButton (keyword), templateCard (keyword), scrollbar (object), object (object), keyword (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+
+>*Note:* The <templateScrollbar> <keyword> is implemented internally as
+> a <function> and appears in the <functionNames>. However, it cannot be
+> used as a <function> in an <expression>.
+
+References: reset (command), set (command), function (control structure),
+functionNames (function), object (glossary), keyword (glossary),
+property (glossary), command (glossary), expression (glossary),
+templateField (keyword), templateGroup (keyword),
+templateVideoClip (keyword), templateEPS (keyword), scrollbar (keyword),
+templatePlayer (keyword), templateImage (keyword),
+templateStack (keyword), templateGraphic (keyword), default (keyword),
+templateAudioClip (keyword), templateButton (keyword),
+templateCard (keyword), newScrollbar (message), scrollbar (object),
+properties (property), ID (property)
+

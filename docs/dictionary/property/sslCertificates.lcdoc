@@ -2,47 +2,84 @@ Name: sslCertificates
 
 Type: property
 
-Syntax: set the sslCertificates to <certificatesList> 
+Syntax: set the sslCertificates to <certificatesList>
 
 Syntax: get the sslCertificates
 
-Summary: Specifies a list of files and folders which are searched for SSL certificates to authenticate secure socket connections.
+Summary:
+Specifies a list of files and folders which are searched for SSL
+certificates to authenticate secure socket connections.
+
+Associations: ssl & encryption
 
 Introduced: 2.5
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
 Example:
 set the sslCertificates to "/Users/guest/Certificates"
 
-Value:
-The <sslCertificates> property is a list of files and folders, one per line.
-By default, the <sslCertificates> property is empty.
+The result:
+put the result & return & it.
 
-The result: put the result & return & it.
+Value:
+The <sslCertificates> property is a list of files and folders, one per
+line. By default, the <sslCertificates> property is empty.
 
 Description:
-Use the <sslCertificates> to determine the SSL certificate that secure sockets should use to authenticate.
+Use the <sslCertificates> to determine the SSL certificate that secure
+sockets should use to authenticate.
 
-When a secure socket connection needs to authenticate it will look through the <sslCertificates> line by line.  If a line is a path to a folder, each file in that folder will be searched for SSL certificates.  If a line is a file, that file will be searched for SSL certificates.
->*Important:* If you specify relative paths in the <sslCertificates> property they will be interpreted relative to the defaultFolder at the time a certificate is searched for.
->*Important:* The <sslCertificates> property is part of the SSL & Encryption library. To ensure that the function works in a standalone application, you must include this custom library when you create your standalone. In the Inclusions section on the General screen of the Standalone Application Settings window, make sure "SSL & Encryption" is selected in the list of script libraries.
+When a secure socket connection needs to authenticate it will look
+through the <sslCertificates> line by line. If a line is a path to a
+folder, each file in that folder will be searched for SSL certificates.
+If a line is a file, that file will be searched for SSL certificates.
 
-This uses the standard root certificate keychain on Mac, the standard root certificate store on Windows and uses a number of heuristics to locate this information on Linux.
+>*Important:* If you specify relative paths in the <sslCertificates>
+> property they will be interpreted relative to the defaultFolder at the
+> time a certificate is searched for.
 
-You can easily find out if the system-installed root certificates are being found by running the following command in the message box:
+>*Important:*  The <sslCertificates> <property> is part of the 
+> <SSL & Encryption library>. To ensure that the <property> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the
+> "SSL & Encryption" 
+> library checkbox is checked.
 
-get url "https://www.google.com"
+This uses the standard root certificate keychain on Mac, the standard
+root certificate store on Windows and uses a number of heuristics to
+locate this information on Linux.
 
-If this results in an error about verification failure then it is likely that root certificates have not been found.  Please let us know (particularly on Linux) if you find this simple test fails, making sure you give us full details of your system (e.g. Linux distribution and version).
+You can easily find out if the system-installed root certificates are
+being found by running the following command in the message box:
 
->*Note:* Unfortunately this feature does not currently work correctly on Mac 10.6.x. For now, we advise including an appropriate root certificates collection with your application, as was previously necessary, and setting the sslCertificates property appropriately.
+    get url "https://www.google.com"
+
+
+If this results in an error about verification failure then it is likely
+that root certificates have not been found. Please let us know
+(particularly on Linux) if you find this simple test fails, making sure
+you give us full details of your system (e.g. Linux distribution and
+version). 
+
+>*Note:* Unfortunately this feature does not currently work correctly on
+> Mac 10.6.x. For now, we advise including an appropriate root
+> certificates collection with your application, as was previously
+> necessary, and setting the sslCertificates property appropriately.
 
 Changes:
-Before version 4.5 it was necessary to set the sslCertificates property to the root certificates that HTTPS connections should be verified against. Support has now been added to locate and load the root certificates installed (and kept up to date) as part of the OS.
+Before version 4.5 it was necessary to set the <sslCertificates>
+property to the root certificates that HTTPS connections should be
+verified against. Support has now been added to locate and load the root
+certificates installed (and kept up to date) as part of the OS.
 
-References: encrypt (command)
+References: encrypt (command), Standalone Application Settings (glossary),
+property (glossary), LiveCode custom library (glossary),
+SSL & Encryption library (library)
+

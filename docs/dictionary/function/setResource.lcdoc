@@ -4,13 +4,14 @@ Type: function
 
 Syntax: setResource(<destinationFile>, <resourceType>,[<resID>],[<resName>], <flagsList>, <data>)
 
-Summary: Places data in a specified resource in a <Mac OS> <file>.
+Summary:
+Places data in a specified resource in a <Mac OS> <file>.
 
 Introduced: 1.1
 
 OS: mac
 
-Platforms: desktop,web
+Platforms: desktop
 
 Security: disk
 
@@ -21,30 +22,74 @@ Example:
 setResource(it,"ICON",128,,,getResource(it,"ICON",130))
 
 Parameters:
-destinationFile: The location and name of the file that contains the resource you want to set. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
-resourceType: The 4-character type of the resources you want to change.
-resID (integer): 
-resName (string): 
-flagsList: A list that can contain one or more flag characters. The possible resource flags are as follows: S        System heap U        Purgeable L        Locked P        Protected R        Preload C        Compressed resourceThe flags may be listed in any order. If a character is included, its corresponding resource flag is set to true. If the character is not included in the flagsList, its corresponding resource flag is set to false. If the flagsList is empty, all the flags are set to false.
-data: Text or binary data, formatted appropriately for the resource type.
+destinationFile:
+The location and name of the file that contains the resource you want to
+set. If you specify a name but not a location, LiveCode assumes the file
+is in the defaultFolder.
 
-The result: If the <destinationFile> is open, the <result> is set to "Can't open resource fork".
+resourceType:
+The 4-character type of the resources you want to change.
 
-Returns: The <setResource> <function> <return|returns> empty.
+resID (integer):
+
+
+resName (string):
+
+
+flagsList:
+A list that can contain one or more flag characters. The possible
+resource flags are as follows: S System heap U Purgeable L Locked P
+Protected R Preload C Compressed resourceThe flags may be listed in any
+order. If a character is included, its corresponding resource flag is
+set to true. If the character is not included in the flagsList, its
+corresponding resource flag is set to false. If the flagsList is empty,
+all the flags are set to false.
+
+data:
+Text or binary data, formatted appropriately for the resource type.
+
+Returns:
+The <setResource> <function> <return|returns> empty.
+
+The result:
+If the <destinationFile> is open, the <result> is set to
+"Can't open resource fork". 
 
 Description:
-Use the <setResource> <function> to create a <resource> or change its data.
+Use the <setResource> <function> to create a <resource> or change its
+data. 
 
-If the <destinationFile> does not exist, the <setResource> <function> creates the <file>. If the <destinationFile> exists but has no <resource fork>, the <setResource> function creates the <resource fork> and copies the <resource> to it.
+If the <destinationFile> does not exist, the <setResource> <function>
+creates the <file>. If the <destinationFile> exists but has no <resource
+fork>, the <setResource> function creates the <resource fork> and copies
+the <resource> to it.
 
-If the specified resource already exists, the <setResource> <function> replaces the data in the <resource> with the <data>. Otherwise, the <setResource> <function> creates the <resource>.
+If the specified resource already exists, the <setResource> <function>
+replaces the data in the <resource> with the <data>. Otherwise, the
+<setResource> <function> creates the <resource>.
 
-You must specify either a <resID> or <resName> or both. If you specify one but not the other, the <setResource> <function> looks for an existing <resource> with the specified name or ID, and replaces its contents without changing the existing ID or name.
+You must specify either a <resID> or <resName> or both. If you specify
+one but not the other, the <setResource> <function> looks for an
+existing <resource> with the specified name or ID, and replaces its
+contents without changing the existing ID or name.
 
-The <setResource> <function> is most useful when used with the <getResource> <function>. Use the <getResource> <function> to obtain resource data, process it as desired, then use the <setResource> <function> to change the <resource>.
+The <setResource> <function> is most useful when used with the
+<getResource> <function>. Use the <getResource> <function> to obtain
+resource data, process it as desired, then use the <setResource>
+<function> to change the <resource>.
 
->*Warning:*  Resource data must be in the specific format appropriate to the resource type. If you set a <resource> to data that is incompatible with its resource type, you may damage the <resource> or the entire <resource fork> of the file. For information on the format of standard resource types, see Apple Computer's technical documentation, Inside Macintosh, located at http://developer.apple.com/techpubs/macos8/mac8.html.
+>*Warning:*  Resource data must be in the specific format appropriate to
+> the resource type. If you set a <resource> to data that is
+> incompatible with its resource type, you may damage the <resource> or
+> the entire <resource fork> of the file. For information on the format
+> of standard resource types, see Apple Computer's technical
+> documentation, Inside Macintosh, located at
+> http://developer.apple.com/techpubs/macos8/mac8.html. 
 
-References: resfile (keyword), file (keyword), copyResource (function), getResource (function), getResources (function), result (function), deleteResource (function), resource fork (glossary), resource (glossary), Mac OS (glossary), return (glossary), function (control_st)
+References: function (control structure), copyResource (function),
+getResource (function), getResources (function), result (function),
+deleteResource (function), resource fork (glossary), resource (glossary),
+Mac OS (glossary), return (glossary), resfile (keyword), file (keyword)
 
 Tags: file system
+

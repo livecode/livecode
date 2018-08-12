@@ -29,11 +29,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "util.h"
 
-MCObjptr::MCObjptr()
+MCObjptr::MCObjptr() :
+  m_id(0),
+  m_objptr(nullptr),
+  m_parent(nullptr)
 {
-	id = 0;
-	parent = NULL;
-	objptr = NULL;
 }
 
 MCObjptr::~MCObjptr()
@@ -42,12 +42,16 @@ MCObjptr::~MCObjptr()
 
 bool MCObjptr::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
-	return getref() -> visit(p_options, p_part, p_visitor);
+    // Skip this node if the reference has been broken
+    if (!Get().IsValid())
+        return true;
+    
+    return Get()->visit(p_options, p_part, p_visitor);
 }
 
 IO_stat MCObjptr::load(IO_handle stream)
 {
-	return checkloadstat(IO_read_uint4(&id, stream));
+	return checkloadstat(IO_read_uint4(&m_id, stream));
 }
 
 IO_stat MCObjptr::save(IO_handle stream, uint4 p_part)
@@ -55,40 +59,74 @@ IO_stat MCObjptr::save(IO_handle stream, uint4 p_part)
 	IO_stat stat;
 	if ((stat = IO_write_uint1(OT_PTR, stream)) != IO_NORMAL)
 		return stat;
-	return IO_write_uint4(id, stream);
+	return IO_write_uint4(m_id, stream);
 }
 
 void MCObjptr::setparent(MCObject *newparent)
 {
-	parent = newparent;
+    // Assumption: the new parent is a valid object pointer
+    MCAssert(newparent != nullptr);
+    
+    // Assumption: this pointer is still valid given the new parent
+    // (i.e the re-parenting isn't to a completely unrelated object)
+    //
+    // This is a relatively expensive assertion to check so should only be
+    // enabled in debug builds.
+    MCAssert(!m_objptr.IsBound() || newparent->getstack()->getcontrolid(CT_LAYER, m_id) == m_objptr);
+    
+    m_parent = newparent;
 }
 
-MCControl *MCObjptr::getref()
+MCObjectHandle MCObjptr::Get()
 {
-	if (objptr == NULL)
-		return (objptr = (parent->getstack())->getcontrolid(CT_LAYER, id));
-	else
-		return objptr;
+    // If the object pointer hasn't yet been bound, resolve it using the ID
+    if (!m_objptr.IsBound() && m_parent . IsValid())
+    {
+        // Note that this may return null if the control doesn't exist
+        m_objptr = m_parent->getstack()->getcontrolid(CT_LAYER, m_id);
+    }
+    
+    return m_objptr;
+}
+
+MCControl* MCObjptr::getref()
+{
+    // A number of callers expect this method to return null when not valid
+    MCObjectHandle t_handle = Get();
+    if (!Get().IsValid())
+        return nullptr;
+    
+    return t_handle.GetAs<MCControl>();
 }
 
 void MCObjptr::setref(MCControl *optr)
 {
-	objptr = optr;
-	id = objptr->getid();
+    // Assumption: the new control is a valid control pointer
+    MCAssert(optr != nullptr);
+    
+    // Store a handle to the control so we don't have a dangling pointer should
+    // the referent be deleted (shared background groups can cause this to
+    // happen as the group isn't "really" a child of each card it is on)
+    m_objptr = optr;
+    
+    // Store the ID too as it is what is stored when serialising this pointer
+    m_id = m_objptr->getid();
 }
 
 void MCObjptr::clearref()
 {
-	objptr = NULL;
+    // Note that this doesn't reset the ID
+    m_objptr = nullptr;
 }
 
 uint4 MCObjptr::getid()
 {
-	return id;
+	return m_id;
 }
 
 void MCObjptr::setid(uint4 newid)
 {
-	id = newid;
-	objptr = NULL;
+    // Update the stored ID. The object pointer will only be bound when needed.
+    m_objptr = nullptr;
+    m_id = newid;
 }

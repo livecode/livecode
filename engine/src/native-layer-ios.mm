@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -216,7 +216,7 @@ MCNativeLayer *MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_nati
 
 @end
 
-bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_view)
 {
 	UIView *t_view;
 	t_view = [[[MCContainerView alloc] init] autorelease];
@@ -225,7 +225,8 @@ bool MCNativeLayer::CreateNativeContainer(void *&r_view)
 		return false;
 	
 	[t_view setAutoresizesSubviews:NO];
-	
+    [t_view setClipsToBounds:YES];
+    
 	r_view = t_view;
 	
 	return true;

@@ -1,0 +1,35 @@
+Name: deleteAudioclip
+
+Type: message
+
+Syntax: deleteAudioclip
+
+Summary:
+Sent to an <audioclip(object)> just before it is removed from the
+<stack>. 
+
+Associations: audioclip
+
+Introduced: 8.1
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Description:
+Handle the <deleteAudioclip> message if you want to perform cleanup
+before an <audioclip(object)> is removed from the <stack>.
+
+The actual deletion is not triggered by the <deleteAudioclip> <message>,
+so <trap|trapping> the <message> and not allowing it to <pass> does
+not prevent the <audioclip(object)> from being removed.
+
+However, the undo <command> will restore an <audioclip(object)> after
+it is deleted by the user.
+
+References: delete (command), pass (control structure), trap (glossary),
+button (glossary), message (glossary), command (glossary),
+audioclip (object), stack (object)
+
+Tags: objects
+

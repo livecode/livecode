@@ -1,4 +1,10 @@
 {
+	'variables':
+	{
+		'c++_std': '<!(echo ${CXX_STD:-c++11})',
+		'android_lib_path%': '<!(echo ${ANDROID_LIB_PATH:+-L${ANDROID_LIB_PATH}})',
+	},
+
 	'cflags':
 	[
 		'-fstrict-aliasing',
@@ -13,13 +19,29 @@
 	
 	'cflags_cc':
 	[
-		'-std=c++03',
+		'-std=<(c++_std)',
 		'-fno-exceptions',
 		'-fno-rtti',
 	],
 	
+	'ldflags':
+	[
+		'-fuse-ld=bfd',
+	],
+	
 	'target_conditions':
 	[
+		[
+			'_type == "loadable_module"',
+			{
+				'ldflags':
+				[
+					'<(android_lib_path)',
+					'-lstdc++',
+				],
+
+			},
+		],
 		[
 			'silence_warnings == 0',
 			{
@@ -28,12 +50,19 @@
 					'-Wall',
 					'-Wextra',
 					'-Wno-unused-parameter',	# Just contributes build noise
+					'-Werror=conversion-null',
 				],
 				
 				'cflags_c':
 				[
 					'-Werror=declaration-after-statement',	# Ensure compliance with C89
 				],
+
+				'cflags_cc':
+				[
+					'-Werror=delete-non-virtual-dtor',
+					'-Werror=overloaded-virtual',
+				]
 			},
 			{
 				'cflags':

@@ -2,17 +2,18 @@ Name: log10
 
 Type: function
 
-Syntax: the log10 of <number> 
+Syntax: the log10 of <number>
 
 Syntax: log10(<number>)
 
-Summary: <return|Returns> the base-10 logarithm of a number.
+Summary:
+<return|Returns> the base-10 logarithm of a number.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 log10(1000) -- returns 3, because 10^3 = 1000
@@ -24,15 +25,20 @@ Example:
 log10(163)
 
 Parameters:
-number: A positive number, or an expression that evaluates to a positive number.
+number:
+A positive number, or an expression that evaluates to a positive number.
 
-Returns: The <log10> <function> <return|returns> a number.
+Returns:
+The <log10> <function> <return|returns> a number.
 
 Description:
 Use the <log10> <function> to obtain a logarithm.
 
-The logarithm of a <number> is the power to which 10 must be raised to obtain the <number> : 10^log10(<number>) is equal to number.
+The logarithm of a <number> is the power to which 10 must be raised to
+obtain the <number> : 10^log10(<number>) is equal to number.
 
-References: function (control_st), ln1 (function), return (glossary)
+References: function (control structure), ln1 (function),
+return (glossary)
 
 Tags: math
+

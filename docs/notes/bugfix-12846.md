@@ -1,1 +1,0 @@
-# Property Inspector updates too often when moving a control

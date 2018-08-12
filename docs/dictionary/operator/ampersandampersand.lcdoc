@@ -2,15 +2,17 @@ Name: &&
 
 Type: operator
 
-Syntax: <string1> && <string2> 
+Syntax: <string1> && <string2>
 
-Summary: <concatenate|Concatenates> two <string|strings> and inserts a space between them.
+Summary:
+<concatenate|Concatenates> two <string|strings> and inserts a 
+<space> between them.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android, html5
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put "my" && "house" -- evaluates to "my house"
@@ -19,17 +21,30 @@ Example:
 put field "First" && field "Last" into field "Name"
 
 Example:
-find it && "Card"
+ask "Enter a name for this card."
+set the name of this card to it && "Card"
 
 Parameters:
-string1 (string): And <string2> are <literal string|literal strings> of characters (<delimit|delimited> with <double quote|double quotes>), or <expression|expressions> that <evaluate> to <string|strings>.
-string2 (string): 
+string1 (string):
+A <literal string> of <character|characters> (<delimit|delimited> with 
+<double quote|double quotes>), or <expression|expressions> that evaluate 
+to <string|strings>. 
 
-The result: The result of the  <operator> is a <string(keyword)> consisting of <string1>, a space, and <string2>.
+string2 (string):
+A <literal string> of <character|characters> (<delimit|delimited> with 
+<double quote|double quotes>), or <expression|expressions> that evaluate 
+to <string|strings>. 
 
 Description:
-Use the && <operator> to combine two <string(glossary)|strings> with a space between them, for example, to combine two words or phrases. 
+Use the && <operator> to combine two <string(glossary)|strings> with a
+<space> between them, for example, to combine two words or phrases. That is, 
+<string1> && <string2> results in a <string(keyword)> consisting of
+<string1>, a <space>, and <string2>.
 
-References: split (command), \ (keyword), string (keyword), string (glossary), concatenate (glossary), operator (glossary)
+References: ask (command), character (glossary), concatenate (glossary), 
+delimit (glossary), double quote (glossary), evaluate (glossary), 
+expression (glossary), it (keyword), literal string (glossary), 
+operator (glossary), set (command), space (constant), string (glossary)
 
 Tags: text processing
+

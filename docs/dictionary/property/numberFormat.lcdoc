@@ -2,15 +2,17 @@ Name: numberFormat
 
 Type: property
 
-Syntax: set the numberFormat [of <scrollbar>] to <formatExpression> 
+Syntax: set the numberFormat [of <scrollbar>] to <formatExpression>
 
-Summary: Specifies how many digits before and after the <decimal point> a computed number should have.
+Summary:
+Specifies how many digits before and after the <decimal point> a
+computed number should have.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the numberFormat to "#.00" -- dollar format
@@ -18,28 +20,77 @@ set the numberFormat to "#.00" -- dollar format
 Example:
 set the numberFormat of scrollbar "Progress" to "0.0"
 
-Value:
-The <numberFormat> consists of any combination of a string of zeros and a string of hash marks (#), separated by a <decimal point>. (If the <numberFormat> contains hash marks, it must be surrounded by quotes; otherwise the first hash mark is interpreted as the start of a <comment>.)
-By default, the <numberFormat> <property> is set to 0.######. The <numberFormat> of newly created <scrollbar|scrollbars> is set to empty.
+The result:
+Use the <numberFormat> <property> to specify the results of <numeric>
+calculations, or the display of numbers in
+<scrollbar(object)|scrollbars> whose <showValue> <property> is set to
+true. The number of zeros or hash marks before the decimal point
+indicates how many digits are shown before the decimal point. If the
+result of a calculation has fewer digits before the decimal point than
+there are zeros or hash marks in the <numberFormat>, leading zeros are
+added. If the calculated result has more digits before the <decimal
+point> than there are zeros or hash marks, all the digits are displayed.
+The default <numberFormat> is 0.######, meaning that the results of
+calculations are reported with at least one digit before the decimal
+point, and up to 6 digits after the <decimal point>.
 
-The result: Use the <numberFormat> <property> to specify the results of <numeric> calculations, or the display of numbers in <scrollbar(object)|scrollbars> whose <showValue> <property> is set to true. The number of zeros or hash marks before the decimal point indicates how many digits are shown before the decimal point. If the result of a calculation has fewer digits before the decimal point than there are zeros or hash marks in the <numberFormat>, leading zeros are added. If the calculated result has more digits before the <decimal point> than there are zeros or hash marks, all the digits are displayed. The default <numberFormat> is 0.######, meaning that the results of calculations are reported with at least one digit before the decimal point, and up to 6 digits after the <decimal point>.
+Value:
+The <numberFormat> consists of any combination of a string of zeros and
+a string of hash marks (#), separated by a <decimal point>. (If the
+<numberFormat> contains hash marks, it must be surrounded by quotes;
+otherwise the first hash mark is interpreted as the start of a
+<comment>.) By default, the <numberFormat> <property> is set to
+0.######. The <numberFormat> of newly created <scrollbar|scrollbars> is
+set to empty.
 
 Description:
+If there are zeros after the decimal point, the number of zeros
+indicates the number of digits after the decimal point in a calculated
+number. If there are more digits after the decimal point, the number is
+truncated. If there are fewer digits, trailing zeros are added.
 
-If there are zeros after the decimal point, the number of zeros indicates the number of digits after the decimal point in a calculated number. If there are more digits after the decimal point, the number is truncated. If there are fewer digits, trailing zeros are added.
+If there are hash marks after the decimal point, the number of hash
+marks indicates the maximum number of digits after the decimal point. If
+there are more digits, the number is truncated, but if there are fewer
+digits, no trailing zeroes are added.
 
-If there are hash marks after the decimal point, the number of hash marks indicates the maximum number of digits after the decimal point. If there are more digits, the number is truncated, but if there are fewer digits, no trailing zeroes are added.
+>*Important:*  Changing the <numberFormat> does not automatically change
+> the <format> of a number that's already in a <container>. It affects
+> numbers only when they are calculated and then displayed or used as
+> <string|strings>. Otherwise, the number retains its full <numeric>
+> <precision>. 
 
->*Important:*  Changing the <numberFormat> does not automatically change the <format> of a number that's already in a <container>. It affects numbers only when they are calculated and then displayed or used as <string|strings>. Otherwise, the number retains its full <numeric> <precision>.
+Since the <numberFormat> is a <local property>, its value is <reset> to
+0.###### when the current handler finishes <execute|executing>. It
+retains its <value> only for the current <handler>, and setting it in
+one <handler> does not affect its value in other <handler|handlers> it
+<call|calls>. (The <numberFormat> of a <scrollbar(keyword)> is not
+<reset> in this way.)
 
-Since the <numberFormat> is a <local property>, its value is <reset> to 0.###### when the current handler finishes <execute|executing>. It retains its <value> only for the current <handler>, and setting it in one <handler> does not affect its value in other <handler|handlers> it <call|calls>. (The <numberFormat> of a <scrollbar(keyword)> is not <reset> in this way.)
+>*Note:* Since LiveCode does not use decimal numbers for its internal
+> calculations (for reasons of speed), the decimal representation of a
+> number is sometimes slightly off the correct number. For example,
+> 10^-1 is equal to 0.1, but is calculated (to eighteen decimal places)
+> as 0.100000000000000006. Because of this, setting the <numberFormat>
+> to specify many decimal places after the decimal point may produce
+> unexpected results in a <statement> that tests for an exact number. To
+> prevent this, either avoid setting the <numberFormat> to a value more
+> precise than you need, or use the <abs> <function> instead of the <=>
+> <operator> to test equality:
 
->*Note:* Since LiveCode does not use decimal numbers for its internal calculations (for reasons of speed), the decimal representation of a number is sometimes slightly off the correct number. For example, 10^-1 is equal to 0.1, but is calculated (to eighteen decimal places) as 0.100000000000000006. Because of this, setting the <numberFormat> to specify many decimal places after the decimal point may produce unexpected results in a <statement> that tests for an exact number. To prevent this, either avoid setting the <numberFormat> to a value more precise than you need, or use the <abs> <function> instead of the <=> <operator> to test equality:
+    set the numberformat to ".##################"
+    put 10^-1 = 0.1 -- reports false because of the decimal error
+    put abs((10^-1) - 0.1) = zero -- reports true
 
-  set the numberformat to ".##################"
-  put 10^-1 = 0.1 -- reports false because of the decimal error
-  put abs((10^-1) - 0.1) = zero -- reports true
 
-References: showValue (property), scrollbar (object), = (operator), scrollbar (keyword), numeric (keyword), container (glossary), precision (glossary), string (glossary), property (glossary), call (glossary), comment (glossary), operator (glossary), execute (glossary), decimal point (glossary), local property (glossary), statement (glossary), handler (glossary), format (function), value (function), abs (function), reset (command), multiply (command), function (control_st)
+References: reset (command), multiply (command),
+function (control structure), format (function), value (function),
+abs (function), container (glossary), precision (glossary),
+string (glossary), property (glossary), call (glossary),
+comment (glossary), operator (glossary), execute (glossary),
+decimal point (glossary), local property (glossary), statement (glossary),
+handler (glossary), scrollbar (keyword), numeric (keyword),
+scrollbar (object), = (operator), showValue (property)
 
 Tags: math
+

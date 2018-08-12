@@ -1,1 +1,0 @@
-# setting tabstops to 2 equal numbers and then turning vGrid on hangs LC

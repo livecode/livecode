@@ -4,11 +4,12 @@ Type: function
 
 Syntax: mobilePurchaseError(<purchaseID>)
 
-Summary: Returns detailed information about errors in a purchase.
+Summary:
+Returns detailed information about errors in a purchase.
 
 Introduced: 5.0.1
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -21,13 +22,26 @@ if mobilePurchaseError(15) is empty then
 end if
 
 Parameters:
-purchaseID: a numeric purchase identifier
+purchaseID:
+a numeric purchase identifier
 
-Returns: Returns the error information for the in-app purchase, purchaseID, if no error occurred empty is returned.
+Returns:
+Returns the error information for the in-app purchase, purchaseID, if no
+error occurred empty is returned.
 
 Description:
-Use the <mobilePurchaseError> function to retrieve detailed information about errors in a purchase.
+Use the <mobilePurchaseError> function to retrieve detailed information
+about errors in a purchase.
 
-The <mobilePurchaseError> function returns a string containing detailed error information related to the specified purchase.
+The <mobilePurchaseError> function returns a string containing detailed
+error information related to the specified purchase.
 
-References: mobilePurchaseSet (command), mobileDisablePurchaseUpdates (command), mobilePurchaseVerify (command), mobileRestorePurchases (command), mobilePurchaseSendRequest (command), mobilePurchaseConfirmDelivery (command), mobileEnablePurchaseUpdates (command), mobilePurchaseCreate (command), mobilePurchaseState (function), mobilePurchaseGet (function), mobileCanMakePurchase (function), mobilePurchases (function), purchaseStateUpdate (message)
+References: mobilePurchaseSet (command),
+mobileDisablePurchaseUpdates (command), mobilePurchaseVerify (command),
+mobileRestorePurchases (command), mobilePurchaseSendRequest (command),
+mobilePurchaseConfirmDelivery (command),
+mobileEnablePurchaseUpdates (command), mobilePurchaseCreate (command),
+mobilePurchaseState (function), mobilePurchaseGet (function),
+mobileCanMakePurchase (function), mobilePurchases (function),
+purchaseStateUpdate (message)
+

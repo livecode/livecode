@@ -4,23 +4,27 @@ Type: property
 
 Syntax: set the scriptOnly of <stack> to { true | false }
 
-Summary: Specifies whether the stack should be saved as script only which does not retain any objects or custom properties
+Summary:
+Specifies whether the stack should be saved as script only which does
+not retain any objects or custom properties
 
 Associations: stack
 
-Introduced: 8.0.0
+Introduced: 8.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,mobile,server
+Platforms: desktop, mobile, server
 
 Example:
 -- git blame on a script only stack
-if the scriptOnly of stack theStack and the filename of stack theStack is not empty then
+if the scriptOnly \
+      of stack theStack and the filename of stack theStack is not empty then
   put the folder into theOldFolder
   set the itemDelimiter to slash
   set the folder to item 1 to -2 of the filename of stack theStack
-  put shell("git blame" && the last item of the filename of stack theStack) into field "blame"
+  put shell("git blame" && the last item \
+        of the filename of stack theStack) into field "blame"
   set the folder to theOldFolder
 end if
 
@@ -40,15 +44,33 @@ if the scriptOnly of stack theStack then
 end if
 
 Parameters:
-Stack: The name or ID of the stack.
+Stack:
+The name or ID of the stack.
 
 Description:
-A <scriptOnly> stack will save just the script with a single header line declaring the stack name. Any other objects or properties of the stack will not be written to disk.
+A <scriptOnly> stack will save just the script with a single header line
+declaring the stack name. If the stack has a <stack> <behavior>, the 
+name of the behavior stack is also saved to the header line. Any other 
+objects or properties of the stack will not be written to disk.
 
-The <scriptOnly> property has been added to enable scripts to detect and set the file format of the stack. Without this property it is not possible to detect the file format the stack is being saved in without examining the file itself.
+The <scriptOnly> property has been added to enable scripts to detect and
+set the file format of the stack. Without this property it is not
+possible to detect the file format the stack is being saved in without
+examining the file itself.
 
->*Warning:* <scriptOnly> stacks only save the stack name and script. Any property changes and objects created while the stack is open will not exist the next time the stack is opened.
+>*Warning:* <scriptOnly> stacks only save the stack name, script and 
+> stack behavior. Any other type of behavior, or property changes and 
+> objects created while the stack is open will not exist the next time
+> the stack is opened.
 
-Refereneces: create stack (command), stack (object)
+>*Note:* Script only stacks are unable to be password protected. In
+> order to password protect a script only stack use the following
+> commands. 
+
+    set the scriptOnly of stack "Secrets" to false
+    set the password of stack "Secrets" to field "Password"
+
+References:create stack (command), stack (object), behavior (property)
 
 Tags: objects
+

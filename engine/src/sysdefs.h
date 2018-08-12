@@ -36,9 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
+#define FEATURE_PLATFORM_PLAYER
 #define FEATURE_RELAUNCH_SUPPORT
-#define FEATURE_QUICKTIME
-#define FEATURE_QUICKTIME_EFFECTS
 #define FEATURE_NOTIFY 1
 
 #elif defined(_MAC_DESKTOP)
@@ -47,7 +46,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
+#define FEATURE_PLATFORM_APPLICATION
 #define FEATURE_PLATFORM_PLAYER
+#define FEATURE_PLATFORM_WINDOW
 #define FEATURE_PLATFORM_RECORDER
 #define FEATURE_PLATFORM_AUDIO
 #define FEATURE_NOTIFY 1
@@ -118,6 +119,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //////////////////////////////////////////////////////////////////////
 //
+//  FOUNDATION TYPES
+//
+
+#include <foundation.h>
+#include <foundation-auto.h>
+#include <foundation-unicode.h>
+#include <foundation-bidi.h>
+
+#ifdef __OBJC__
+#include <foundation-objc.h>
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//
+//  FOUNDATION SYSTEM LIBRARY
+//
+
+#include <foundation-system.h>
+
+//////////////////////////////////////////////////////////////////////
+//
 //  COMPILER AND CODE GENERATION DEFINES
 //
 
@@ -137,26 +159,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #error Unknown compiler being used.
 #endif
 
-//////////////////////////////////////////////////////////////////////
-//
-//  FOUNDATION TYPES
-//
-
-#include <foundation.h>
-#include <foundation-auto.h>
-#include <foundation-unicode.h>
-#include <foundation-bidi.h>
-
-#ifdef __OBJC__
-#include <foundation-objc.h>
-#endif
-
-//////////////////////////////////////////////////////////////////////
-//
-//  FOUNDATION SYSTEM LIBRARY
-//
-
-#include <foundation-system.h>
+// The engine is implemented assuming that 'bool' is at most one byte in size
+static_assert(sizeof(bool) <= 1, "Bool size is not at most 1 byte");
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -263,7 +267,7 @@ inline uint1 MCS_toupper(uint1 p_char) {return _toupper_l(p_char, NULL);}
 class CDropTarget;
 
 #define fixmaskrop(a) ((a == GXand || a == GXor)?(a == GXand?GXor:GXand):(a == GXandInverted?GXorInverted:GXandInverted))//DEBUG
-#define fixmaskcolor(a) (a.pixel == 0 ? MConecolor:MCzerocolor)//DEBUG
+#define fixmaskcolor(a) (MCColorGetPixel(a) == 0 ? MConecolor:MCzerocolor)//DEBUG
 
 typedef uintptr_t MCSocketHandle;
 
@@ -278,10 +282,10 @@ typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
 #define _DEBUG_MEMORY
 
-inline void *operator new(size_t size, const char *fnm, int line) {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
-inline void *operator new[](size_t size, const char *fnm, int line) {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
+inline void *operator new(size_t size, std::nothrow_t, const char *fnm, int line) throw () {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
+inline void *operator new[](size_t size, std::nothrow_t, const char *fnm, int line) throw () {return _malloc_dbg(size, _NORMAL_BLOCK, fnm, line);}
 
-inline void *operator new(size_t, void *p, const char *, int)
+inline void *operator new(size_t, void *p, const char *, long)
 {
 	return p;
 }
@@ -552,21 +556,6 @@ struct MCFontStruct
 
 //////////////////////////////////////////////////////////////////////
 //
-//  NEW / DELETE REDEFINTIONS
-//
-
-#include <new>
-
-// MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
-// SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
-//  as they won't let iOS Simulator 6.3 engine compile.
-#if (!defined __VISUALC__) && (!TARGET_IPHONE_SIMULATOR)
-void *operator new (size_t size) throw();
-void *operator new[] (size_t size) throw();
-#endif
-
-//////////////////////////////////////////////////////////////////////
-//
 //  INTERVAL DEFINITIONS
 //
 
@@ -611,10 +600,7 @@ void *operator new[] (size_t size) throw();
 
 struct MCColor
 {
-	uint4 pixel;
 	uint2 red, green, blue;
-	uint1 flags;
-	uint1 pad;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -637,6 +623,8 @@ struct MCRectangle
 	int2 x, y;
 	uint2 width, height;
 };
+
+const MCRectangle kMCEmptyRectangle = {0, 0, 0, 0};
 
 struct MCPoint32
 {
@@ -1193,7 +1181,6 @@ class MCPlayer;
 class MCImage;
 class MCField;
 class MCObject;
-class MCObjectHandle;
 class MCObjectList;
 class MCMagnify;
 class MCPrinter;
@@ -1246,10 +1233,7 @@ class MCVariable;
 class MCExpression;
 class MCContainer;
 struct MCPickleContext;
-/*
-class MCVariableValue;
-class MCVariableArray;
-*/
+
 class MCExternal;
 class MCExternalHandlerList;
 
@@ -1330,7 +1314,10 @@ enum Chunk_term {
     CT_POPUP,
     CT_OPTION,
 
+	// The name table used for MCU_matchname *must* be updated if any
+	// chunk terms are added between CT_STACK and CT_LAST_CONTROL here
     CT_STACK,
+    CT_TOOLTIP,
     CT_AUDIO_CLIP,
     CT_VIDEO_CLIP,
     CT_BACKGROUND,
@@ -1351,13 +1338,14 @@ enum Chunk_term {
     CT_WIDGET,
     CT_FIELD,
 	CT_LAST_CONTROL = CT_FIELD,
+	
     CT_FIRST_TEXT_CHUNK = CT_FIELD,
     CT_LINE,
     CT_PARAGRAPH,
     CT_SENTENCE,
     CT_ITEM,
-    CT_TRUEWORD,
     CT_WORD,
+    CT_TRUEWORD,
     CT_TOKEN,
     CT_CHARACTER,
     // AL-2013-01-08 [[ CharChunks ]] Add 'codepoint, codeunit and byte' to chunk types
@@ -1372,9 +1360,18 @@ enum Chunk_term {
 
 struct MCObjectPtr
 {
+    /* TODO[C++11] MCObject *object = nullptr; */
+    /* TODO[C++11] uint32_t part_id = 0; */
 	MCObject *object;
 	uint32_t part_id;
-    
+
+    /* TODO[C++11] constexpr MCObjectPtr() = default; */
+    MCObjectPtr() : object(nullptr), part_id(0) {}
+    /* TODO[C++11] constexpr */
+    MCObjectPtr(MCObject *p_object, uint32_t p_part_id)
+        : object(p_object), part_id(p_part_id)
+    {}
+
     MCObjectPtr& operator = (const MCObjectPtr& p_obj_ptr)
     {
         object = p_obj_ptr . object;

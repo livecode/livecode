@@ -4,62 +4,128 @@ Type: function
 
 Syntax: the [{ detailed | long }] folders
 
-Syntax: folders()
+Syntax: folders([<targetFolder>[, <outputKind>]])
 
-Summary: Returns a list of the <folders> in the current <defaultFolder>.
-
-Synonyms: directories
+Summary:
+List the subfolders in a folder.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android, html5
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
 Example:
-set the defaultFolder to line x of the folders
+put folders(specialFolderPath("documents")) into \
+      field "Available Folders"
+filter lines of field "Available Folders" without ".."
+sort lines of field "Available Folders" international
 
 Example:
-put the detailed folders into folderList
+local tDiskContents
+put the files & return & the folders into \
+      tDiskContents["the defaultFolder"]
+filter tDiskContents["the defaultFolder"] without ".."
 
-Returns:
-The <folders> <function> returns a list of <folder> names, one per <line>. 
-The detailed <folders> form returns a list of folders, one file per line. Each line contains the following attributes, separated by commas. (Several attributes are used only for compatibility with the <files> <function> and do not have any meaning for <folders>.)
-* The folder's name
-* The folder's size in bytes (always zero)
-* The folder's resource fork size in bytes (always zero)
-* The folder's creation date in seconds (Mac OS, OS X, and Windows systems only)
-* The folder's modification date in seconds
-* The folder's last-accessed date in seconds (Unix and Windows systems only)
-* The folder's last-backup date in seconds (Mac OS and OS X systems only)
-* The folder's owner (Unix systems only)
-* The folder's group owner (Unix systems only)
-* The folder's access permissions
-* The folder's creator and file type (always "????????") (Mac OS and OS X only)
-Any attribute that is not supported on the current system is reported as "0" (zero).
+Parameters:
+targetFolder (String):
+The folder path to search.
+
+outputKind (enum):
+- empty: Use the short form
+- "detailed": Use the long/detailed form
+
+Returns (String):
+A list of folder names or folder information, with
+one file per line.
 
 Description:
-Use the <folders> <function> to obtain a list of <folders> to display for the user, or to perform an action on each <folder> in the <current folder>.
+<Return(glossary)> a list of <folder(glossary)|folders> in the
+<targetFolder>, with one file per line.  If no <targetFolder> is
+specified, list the files in the <current folder>.
 
-Files in the <defaultFolder> are not included. To get a list of <folders>, use the <files> <function>. 
+The list only includes folders at the top level of the <target folder>.
+The <folders> <function> does not recursively enter and examine
+folders deeper in the filesystem.  To examine the contents of a
+<subfolder|subfolders>, either pass its path as the <targetFolder>, or
+temporarily set the <defaultFolder>.
 
-The names of aliases (on Mac OS systems), symbolic links (on Unix systems), and shortcuts (on Windows systems) are included in the value returned by the <folders> if they link to a <folder>. If they link to a <file>, they are not included. 
+<file(glossary)|Files> are not included in the list.  To get a list of
+files, use the <files> function.
 
-This function lists only the folders on the top level of the <defaultFolder>.  To get a list of <subfolder|subfolders> within a <folder>, set the <defaultFolder> to that <folder> and then use the <folders> <function> again.
+<alias|Aliases> (on OS X systems), <symbolic links|symbolic links> (on
+Linux systems) and <shortcut|shortcuts> (on Windows systems) are
+included in the list only if they refer to a <folder>.
 
-When listed in the detailed <folders> form, each folder's name is URL-encoded. To obtain the name in plain text, use the <URLDecode> <function>. If the detailed modifier is not used, the folder name is not encoded.
+> *Important:* The list returned by the <folders> contain a ".." entry
+> representing the link to the parent folder. Care must be taken to
+> filter this entry out to prevent infinite loops and security
+> vulnerabilities.
 
-The access permissions returned in the detailed <files> form consist of three octal digits. The form is the same as that used for the <umask> <command>.
+> *Note:* The order that folders are listed is platform-dependent.
+> The order may vary between <platform|platforms>, between
+> filesystems, and even between consecutive calls to the <folders>
+> function.  If you need a sorted list, use the <sort> command.
 
->*Important:* The list returned by the <folders> contain a ".." entry representing the link to the parent folder. Care must be taken to filter this entry out when performing recursive operations to prevent infinite loops.
+### Short form
 
->*Note:* For efficiency reasons, the <folders> function returns a list in the order provided by the operating system which can differ between platforms and even file systems. If you require an ordered list use the sort command explicitly afterwards.
+When the <folders> is called as a <function>, or without the `long` or
+`detailed` modifiers, it <return(glossary)|returns> only the <folder>
+names as a string with one file name per line.
+
+> *Note:* On some <platform|platforms>, folder names are permitted to
+> include the <return(constant)|linefeed> character.  Such a folder
+> name would be split across more than one line of the string returned
+> by the <folders> <function>.
+
+### Long form
+
+`the long folders` and `the detailed folders` are synonyms.  When 
+the <folders> <function> is called in this form, the <return(glossary)>
+value is a list of folders with detailed file attributes.  Several of
+the attributes are provided only for compatibility with the <files>
+<function> and do not have any meaning for a <folder>.
+
+Each line in the return value is a comma-separated list of file
+attributes, as follows:
+
+1. **Name**.  The folder name is URL-encoded.  To obtain the name as
+   plain text, use the <URLDecode> function.
+2. **Size**, in bytes.  This is always 0.
+3. **Resource fork size**, in bytes.  This is always 0.
+4. **Creation date**, in seconds.  (OS X and Windows only).
+5. **Last modification date**, in seconds.
+6. **Last access date**, in seconds.
+7. **Last backup date**, in seconds.
+8. **User owner**.  (Linux and OS X only).
+9. **Group owner**.  (Linux and OS X only).
+10. **Permissions**. (Linux and OS X only; see note).
+11. **Creator and <fileType|file type>**.  (OS X only).
+
+
+Any attribute that is not relevant to the current <platform> is left
+empty.
+
+The access permissions consist of three octal digits, in the same form
+used for the <umask> property.
+
+> *Note:* On Windows, the permissions are always reported as "777".
+
+The creator and file type are always "????????".
 
 Changes:
-The detailed <folders> form was introduced in version 1.1. In previous versions, the <folders> <function> provided only a list of <folder> names.
+The <long> form was introduced in version 1.1.
+The optional <targetFolder> argument for the function call form was
+introduced in version 8.1.
 
-References: defaultFolder (property), umask (property), file (keyword), line (keyword), revDeleteFolder (command), folders (function), files (function), volumes (function), URLDecode (function), subfolder (glossary), command (glossary), current folder (glossary), folder (glossary), function (control_st)
+References: sort (command), return (constant), folders (function),
+specialFolderPath (function), alias (glossary), current folder (glossary),
+data fork (glossary), folder (glossary), function (glossary),
+platform (glossary), return (glossary), resource fork (glossary),
+shortcut (glossary), subfolder (glossary), symbolic link (glossary),
+defaultFolder (property), umask (property), long (keyword)
 
 Tags: file system
+

@@ -2,31 +2,41 @@ Name: fontSizes
 
 Type: function
 
-Syntax: the fontSizes of <fontName> 
+Syntax: the fontSizes of <fontName>
 
 Syntax: fontSizes(<fontName>)
 
-Summary: <return|Returns> a list of the font sizes available for a specified <font>.
+Summary:
+<return|Returns> a list of the font sizes available for a specified
+<font>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the fontSizes of "Arial"
 
 Parameters:
-fontName: The name of a font that is installed on the system.
+fontName:
+The name of a font that is installed on the system.
 
-Returns: The <fontSizes> <function> <return|returns> a list of numbers that represent point sizes, one per <line>.
+Returns:
+The <fontSizes> <function> <return|returns> a list of numbers that
+represent point sizes, one per <line>.
 
 Description:
-Use the <fontSizes> <function> to determine which font sizes can be displayed or printed without creating "jaggies".
+Use the <fontSizes> <function> to determine which font sizes can be
+displayed or printed without creating "jaggies".
 
-If zero appears in the list returned by the <fontSizes> <function>, the <font> is scalable, meaning that it can be displayed at any size supported by the operating system.
+If zero appears in the list returned by the <fontSizes> <function>, the
+<font> is scalable, meaning that it can be displayed at any size
+supported by the operating system.
 
-References: line (keyword), function (control_st), fontStyles (function), font (glossary), return (glossary)
+References: function (control structure), fontStyles (function),
+font (glossary), return (glossary), line (keyword)
 
 Tags: ui
+

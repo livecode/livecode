@@ -238,7 +238,7 @@ static gboolean reload_theme(void)
 		// We have changed themes, so remove the image cache and replace with new one
 		if ( MCimagecache != NULL)
 			delete MCimagecache ;
-		MCimagecache = new MCXImageCache ;
+		MCimagecache = new (nothrow) MCXImageCache ;
 
 		MCcurtheme->unload();
 		MCcurtheme->load();
@@ -306,13 +306,11 @@ Boolean MCNativeTheme::load()
 		MCColor tbackcolor;
 		moz_gtk_get_widget_color(GTK_STATE_NORMAL,
 		                         tbackcolor.red,tbackcolor.green,tbackcolor.blue) ;
-		MCscreen->alloccolor(tbackcolor);
 		MCscreen->background_pixel = tbackcolor;//tcolor = zcolor;
 		
 		// MW-2012-01-27: [[ Bug 9511 ]] Set the hilite color based on the current GTK theme.
 		MCColor thilitecolor;
 		moz_gtk_get_widget_color(GTK_STATE_SELECTED, thilitecolor.red, thilitecolor.green, thilitecolor.blue);
-		MCscreen -> alloccolor(thilitecolor);
 		MChilitecolor = thilitecolor;
 	}
 
@@ -815,17 +813,16 @@ Widget_Part MCNativeTheme::hittestcombobutton(const MCWidgetInfo &winfo,
         int2 mx, int2 my, const MCRectangle &drect)
 {
 	Widget_Part wpart = WTHEME_PART_UNDEFINED;
-	const int btnWidth = getmetric(WTHEME_METRIC_COMBOSIZE);
-
-
-	MCRectangle btnRect = {	drect.x + (drect.width - btnWidth),
-	                        drect.y,
-	                        btnWidth,
-	                        drect.height };
-	MCRectangle txtRect = { drect.x,
-	                        drect.y,
-	                        drect.width - btnWidth,
-	                        drect.height };
+	const uint2 btnWidth = MCClamp(getmetric(WTHEME_METRIC_COMBOSIZE),
+								   0, drect.width);
+	
+	uint2 t_text_width = drect.width - btnWidth;
+	int2 t_btn_left = drect.x + t_text_width;
+	
+	MCRectangle btnRect = {	t_btn_left, drect.y,
+							btnWidth, drect.height };
+	MCRectangle txtRect = { drect.x, drect.y,
+		                    t_text_width, drect.height };
 
 	if(MCU_point_in_rect(btnRect, mx, my))
 		wpart = WTHEME_PART_COMBOBUTTON;
@@ -1614,6 +1611,9 @@ static GdkPixbuf* drawtheme_calc_alpha (MCThemeDrawInfo &p_info)
 	
 	// We need to attach a colourmap to the Drawables in GDK
 	best_vis = gdk_visual_get_best_with_depth(t_screen_depth);
+    if (best_vis == NULL)
+        return NULL;
+    
 	cm = gdk_colormap_new(best_vis, FALSE) ;
 	gdk_drawable_set_colormap(t_black, cm);
 	gdk_drawable_set_colormap(t_white, cm);
@@ -1635,9 +1635,20 @@ static GdkPixbuf* drawtheme_calc_alpha (MCThemeDrawInfo &p_info)
     // Convert the server-side pixmaps into client-side pixbufs. The black
     // pixbuf will need to have an alpha channel so that we can fill it in.
     t_pb_black = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, t_w, t_h);
+    if (t_pb_black == NULL)
+        return NULL;
+        
     t_pb_white = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, t_w, t_h);
+    if (t_pb_white == NULL)
+        return NULL;
+    
     t_pb_black = gdk_pixbuf_get_from_drawable(t_pb_black, t_black, NULL, 0, 0, 0, 0, t_w, t_h);
+    if (t_pb_black == NULL)
+        return NULL;
+    
     t_pb_white = gdk_pixbuf_get_from_drawable(t_pb_white, t_white, NULL, 0, 0, 0, 0, t_w, t_h);
+    if (t_pb_white == NULL)
+        return NULL;
     
 	// Calculate the alpha from these two bitmaps --- the t_bm_black image now has full ARGB
     // Note that this also frees the t_pb_white pixbuf
@@ -1664,15 +1675,17 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	{
 		t_argb_image = MCimagecache -> get_from_cache( cache_node ) ;
 		t_cached = true ;
-	}
+    }
 	else
 	{
 		// Calculate the alpha for the rendered widget, by rendering against white & black.
 		t_argb_image = drawtheme_calc_alpha (*p_info) ;
-		t_cached = MCimagecache -> add_to_cache (t_argb_image, *p_info) ;
-	}
+        if (t_argb_image == NULL)
+            return false;
+        t_cached = MCimagecache -> add_to_cache (t_argb_image, *p_info) ;
+    }
 
-	MCGRaster t_raster;
+    MCGRaster t_raster;
 	t_raster.width = gdk_pixbuf_get_width(t_argb_image);
 	t_raster.height = gdk_pixbuf_get_height(t_argb_image);
 	t_raster.stride = gdk_pixbuf_get_rowstride(t_argb_image);

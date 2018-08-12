@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "libbrowser_cef.h"
 
 #include <include/cef_app.h>
-#include <include/cef_url.h>
+#include <include/cef_parser.h>
 
 #include <Windows.h>
 
@@ -51,7 +51,6 @@ public:
 	bool GetHWND(HWND &r_hwnd);
 
 	virtual void PlatformConfigureWindow(CefWindowInfo &r_info);
-	virtual void PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser);
 
 	virtual bool PlatformGetNativeLayer(void *&r_layer);	
 
@@ -75,106 +74,10 @@ private:
 	HWND m_message_window;
 };
 
-// IM-2014-03-25: [[ revBrowserCEF ]] Return path containing the revbrowser dll
-const char *MCCefWin32GetExternalPath(void)
-{
-	static char *s_external_path = nil;
-
-	if (s_external_path == nil)
-	{
-		bool t_success;
-		t_success = true;
-
-		HMODULE t_hm;
-		t_hm = nil;
-
-		t_success = 0 != GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR) &MCCefWin32GetExternalPath, &t_hm);
-
-		int32_t t_buffer_size, t_name_size;
-		t_buffer_size = 32;
-
-		char *t_buffer;
-		t_buffer = nil;
-
-		do
-		{
-			t_buffer_size *= 2;
-			t_success = MCBrowserMemoryReallocate(t_buffer, t_buffer_size, t_buffer);
-
-			if (t_success)
-				t_success = 0 != (t_name_size = GetModuleFileNameA(t_hm, t_buffer, t_buffer_size));
-		} while (t_success && t_name_size == t_buffer_size);
-
-		if (t_success)
-		{
-			// remove dll component from path
-			uint32_t t_index;
-			if (MCCStringLastIndexOf(t_buffer, '\\', t_index))
-				t_buffer[t_index] = '\0';
-		}
-
-		if (t_success)
-			s_external_path = t_buffer;
-		else if (t_buffer != nil)
-			MCBrowserMemoryDeallocate(t_buffer);
-	}
-
-	return s_external_path;
-}
-
-bool MCCefWin32AppendPath(const char *p_base, const char *p_path, char *&r_path)
-{
-	if (p_base == nil)
-		return MCCStringClone(p_path, r_path);
-	else if (MCCStringEndsWith(p_base, "\\"))
-		return MCCStringFormat(r_path, "%s%s", p_base, p_path);
-	else
-		return MCCStringFormat(r_path, "%s\\%s", p_base, p_path);
-}
-
-//#ifdef _DEBUG
-//#define CEF_PATH_PREFIX ""
-//#else
-#define CEF_PATH_PREFIX "Externals\\CEF\\"
-//#endif
-
-// IM-2014-03-25: [[ revBrowserCEF ]] locales located in CEF subfolder relative to revbrowser dll
-const char *MCCefPlatformGetLocalePath(void)
-{
-	static char *s_locale_path = nil;
-
-	if (s_locale_path == nil)
-		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), CEF_PATH_PREFIX"locales", s_locale_path);
-
-	return s_locale_path;
-}
-
-// IM-2014-03-25: [[ revBrowserCEF ]] subprocess executable located in CEF subfolder relative to revbrowser dll
-const char *MCCefPlatformGetSubProcessName(void)
-{
-	static char *s_exe_path = nil;
-
-	if (s_exe_path == nil)
-		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), CEF_PATH_PREFIX"libbrowser-cefprocess.exe", s_exe_path);
-
-	return s_exe_path;
-}
-
-// IM-2014-03-25: [[ revBrowserCEF ]] libcef dll located in CEF subfolder relative to revbrowser dll
-const char *MCCefPlatformGetCefLibraryPath(void)
-{
-	static char *s_lib_path = nil;
-
-	if (s_lib_path == nil)
-		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), CEF_PATH_PREFIX"libcef.dll", s_lib_path);
-
-	return s_lib_path;
-}
-
 bool MCCefPlatformCreateBrowser(void *p_display, void *p_parent_view, MCCefBrowserBase *&r_browser)
 {
 	MCCefWin32Browser *t_browser;
-	t_browser = new MCCefWin32Browser((HWND)p_parent_view);
+	t_browser = new (nothrow) MCCefWin32Browser((HWND)p_parent_view);
 
 	if (t_browser == nil)
 		return false;
@@ -194,16 +97,6 @@ void MCCefWin32Browser::PlatformConfigureWindow(CefWindowInfo &r_info)
 	::SetRect(&t_rect, 0, 0, 1, 1);
 
 	r_info.SetAsChild(m_parent_window, t_rect);
-}
-
-void MCCefWin32Browser::PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser)
-{
-	HWND t_win;
-	t_win = p_browser->GetHost()->GetWindowHandle();
-
-	//SetParent(t_win, HWND_MESSAGE);
-	//CloseWindow(t_win);
-	DestroyWindow(t_win);
 }
 
 bool MCCefWin32Browser::PlatformGetNativeLayer(void *&r_layer)
@@ -495,7 +388,7 @@ bool MCCefWin32Browser::PostBrowserEvent(MCBrowserRequestType p_type, MCBrowserR
 	if (!MCCefBrowserRequestEventCreate(p_type, p_state, p_frame, p_url, p_error, t_event))
 		return false;
 
-	if (!PostMessage(m_message_window, MCCEFWIN32_MESSAGE_BROWSER_REQUEST, (WPARAM)t_event, nil))
+	if (!PostMessage(m_message_window, MCCEFWIN32_MESSAGE_BROWSER_REQUEST, (WPARAM)t_event, 0))
 	{
 		MCCefBrowserRequestEventDestroy(t_event);
 		return false;
@@ -511,7 +404,7 @@ bool MCCefWin32Browser::PostJavaScriptCall(const char *p_handler, MCBrowserListR
 	if (!MCCefBrowserJavaScriptCallEventCreate(p_handler, p_params, t_event))
 		return false;
 
-	if (!PostMessage(m_message_window, MCCEFWIN32_MESSAGE_JAVASCRIPT_CALL, (WPARAM)t_event, nil))
+	if (!PostMessage(m_message_window, MCCEFWIN32_MESSAGE_JAVASCRIPT_CALL, (WPARAM)t_event, 0))
 	{
 		MCCefBrowserJavaScriptCallEventDestroy(t_event);
 		return false;
@@ -605,6 +498,38 @@ LRESULT CALLBACK MCCefWin32MessageWndProc(HWND p_hwnd, UINT p_message, WPARAM p_
 	}
 
 	return DefWindowProc(p_hwnd, p_message, p_wparam, p_lparam);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-28: [[ HiDPI ]] Weak-linked IsProcessDPIAware function
+typedef BOOL (WINAPI *IsProcessDPIAwarePtr)(VOID);
+bool MCCefWin32IsProcessDPIAware(BOOL &r_result)
+{
+	static IsProcessDPIAwarePtr s_IsProcessDPIAware = NULL;
+	static bool s_init = true;
+
+	if (s_init)
+	{
+		s_IsProcessDPIAware = (IsProcessDPIAwarePtr)GetProcAddress(GetModuleHandleA("user32.dll"), "IsProcessDPIAware");
+		s_init = false;
+	}
+
+	if (s_IsProcessDPIAware == NULL)
+		return false;
+
+	r_result = s_IsProcessDPIAware();
+
+	return true;
+}
+
+bool MCCefPlatformGetHiDPIEnabled()
+{
+	BOOL t_result;
+	if (!MCCefWin32IsProcessDPIAware(t_result))
+		return false;
+
+	return t_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -769,13 +694,13 @@ static bool GetDlgItemTextAsCefString(HWND p_dialog, int p_item, CefString &r_st
 static INT_PTR CALLBACK AuthDialogProc(HWND p_dialog, UINT p_message, WPARAM p_wparam, LPARAM p_lparam)
 {
 	AuthDialogState *t_state;
-	t_state = (AuthDialogState *)GetWindowLongPtrW(p_dialog, DWL_USER);
+	t_state = (AuthDialogState *)GetWindowLongPtrW(p_dialog, DWLP_USER);
 
 	switch(p_message)
 	{
 	case WM_INITDIALOG:
 		{
-			SetWindowLongPtrW(p_dialog, DWL_USER, (LONG)p_lparam);
+			SetWindowLongPtrW(p_dialog, DWLP_USER, (LONG)p_lparam);
 			t_state = (AuthDialogState *)p_lparam;
 
 			SetDlgItemTextWithCString(p_dialog, IDC_AUTH_USERNAME_LABEL, t_state -> strings . username_label);
@@ -847,11 +772,6 @@ bool MCCefWin32Browser::PlatformGetAuthCredentials(bool p_is_proxy, const CefStr
 	MCBrowserAuthDialogFreeStrings(t_state.strings);
 
 	return t_success;
-}
-
-const char* MCCefPlatformGetResourcesDirPath()
-{
-    return NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

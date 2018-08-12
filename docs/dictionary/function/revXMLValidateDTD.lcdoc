@@ -4,13 +4,16 @@ Type: function
 
 Syntax: revXMLValidateDTD(<treeID>, <DTDText>)
 
-Summary: Checks whether the syntax of an <XML tree> conforms to a <DTD>.
+Summary:
+Checks whether the syntax of an <XML tree> conforms to a <DTD>.
+
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -21,18 +24,38 @@ Example:
 put revXMLValidateDTD(field "Tree",myDTD) into field "Errors"
 
 Parameters:
-treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
-DTDText: A Document Type Definition.
+treeID:
+The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+function when you created the XML tree.
 
-Returns: The <revXMLValidateDTD> <function> <return|returns> empty if the <XML tree> validates against the DTD.
+DTDText:
+A Document Type Definition.
+
+Returns:
+The <revXMLValidateDTD> <function> <return|returns> empty if the <XML
+tree> validates against the DTD.
 
 Description:
-Use the <revXMLValidateDTD> <function> to <validate> an <XML tree> against a <DTD>.
+Use the <revXMLValidateDTD> <function> to <validate> an <XML tree>
+against a <DTD>.
 
-If the <revXMLValidateDTD> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLValidateDTD> <function> encounters an error, it
+<return|returns> an error message starting with "xmlerr".
 
->*Important:*  The <revXMLValidateDTD> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLValidateDTD> <function> is part of the 
+> <XML library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "XML" 
+> checkbox is checked.
 
-References: function (control_st), revXMLAddDTD (command), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), Standalone Application Settings (glossary), validate (glossary), standalone application (glossary), XML tree (glossary), DTD (glossary), return (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLAddDTD (command), function (control structure),
+revXMLCreateTreeFromFile (function), revXMLCreateTree (function),
+Standalone Application Settings (glossary), validate (glossary),
+standalone application (glossary), XML tree (glossary), DTD (glossary),
+return (glossary), LiveCode custom library (glossary),
+XML library (library)
 
 Tags: text processing
+

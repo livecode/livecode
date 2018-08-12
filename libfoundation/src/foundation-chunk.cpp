@@ -77,41 +77,7 @@ uinteger_t MCChunkCountElementChunkCallback(void *context, MCRange *p_range)
     return t_range . offset + t_range . length > t_length ? t_length - t_range . offset : t_range . length;
 }
 
-struct MCChunkCountContext
-{
-    MCStringRef string;
-    MCStringRef delimiter;
-    MCStringOptions options;
-};
-
-static bool count_chunks(void *context, MCStringRef p_string, MCRange p_range)
-{
-    uindex_t count;
-    count = *(uindex_t *)context;
-    count++;
-    
-    return true;
-}
-
-uinteger_t MCChunkCountChunkChunkCallback(void *context, MCRange *p_range)
-{
-    MCChunkCountContext *t_state;
-    t_state = (MCChunkCountContext *)context;
-    
-    return MCChunkCountChunkChunksInRange(t_state -> string, t_state -> delimiter, t_state -> options, p_range);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
-
-uindex_t MCChunkCountChunkChunksInRange(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, MCRange *p_range)
-{
-    uindex_t t_count;
-    t_count = 0;
-    
-    MCChunkApplyInRange(p_string, p_range, p_delimiter, p_options, count_chunks, &t_count);
-    
-    return t_count;
-}
 
 // AL-2015-02-10: [[ Bug 14532 ]] Allow chunk extents to be counted in a
 // given range, to prevent substring copying in text chunk resolution.
@@ -122,17 +88,25 @@ uindex_t MCChunkCountChunkChunksInRange(MCStringRef p_string, MCStringRef p_deli
 bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, MCRange *p_range, uindex_t& r_first, uindex_t& r_chunk_count)
 {
     int32_t t_chunk_count;
-    uinteger_t t_count;
-    bool t_counted;
-    t_counted = false;
-    
+
+    /* Helper closure for making sure that the chunk counting callback
+     * is called exactly once. */
+    int32_t t_count = 0;
+    bool t_counted = false;
+    auto t_get_count = [&] {
+        if (!t_counted)
+        {
+            t_count = MCMin<uinteger_t>(INT32_MAX, p_callback(p_context, p_range));
+            t_counted = true;
+        }
+        return t_count;
+    };
+
     // If the first index is negative, count chunks and adjust accordingly.
     // Resolved index should be the index *before* the target first chunk.
     if (p_first < 0)
     {
-        t_count = p_callback(p_context, p_range);
-        t_counted = true;
-        p_first += t_count;
+        p_first += t_get_count();
     }
     else
         p_first--;
@@ -141,13 +115,7 @@ bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool 
     // Resolved index should be the index of the target last chunk.
     if (p_last < 0)
     {
-        if (!t_counted)
-        {
-            t_count = p_callback(p_context, p_range);
-            t_counted = true;
-        }
-        
-        p_last += t_count + 1;
+        p_last += t_get_count() + 1;
     }
     
     t_chunk_count = p_last - p_first;
@@ -166,12 +134,10 @@ bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool 
         if (t_chunk_count == 0)
             return false;
         
-        if (!t_counted)
-            t_count = p_callback(p_context, p_range);
-        
         // If the range extends beyond the number of chunks, the end index is out of range unless we are
         // looking for an end boundary, in which case it can exceed the end index by 1.
-        if (p_first + t_chunk_count > t_count + 1 || (!p_boundary_end && p_first + t_chunk_count == t_count + 1))
+        if (p_first + t_chunk_count > t_get_count() + 1 ||
+            (!p_boundary_end && p_first + t_chunk_count == t_get_count() + 1))
             return false;
     }
     
@@ -275,26 +241,6 @@ bool MCChunkGetExtentsOfElementChunkByExpressionInRange(MCProperListRef p_list, 
     return MCChunkGetExtentsByExpressionInRange(p_strict, p_boundary_start, p_boundary_end, p_first, MCChunkCountElementChunkCallback, &p_list, p_range, r_first, r_chunk_count);
 }
 
-bool MCChunkGetExtentsOfChunkChunkByRangeInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count)
-{
-    MCChunkCountContext t_state;
-    t_state . string = p_string;
-    t_state . delimiter = p_delimiter;
-    t_state . options = p_options;
-    
-    return MCChunkGetExtentsByRangeInRange(p_strict, p_boundary_start, p_boundary_end, p_first, p_last, MCChunkCountChunkChunkCallback, &t_state, p_range, r_first, r_chunk_count);
-}
-
-bool MCChunkGetExtentsOfChunkChunkByExpressionInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, integer_t p_first, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count)
-{
-    MCChunkCountContext t_ctxt;
-    t_ctxt . string = p_string;
-    t_ctxt . delimiter = p_delimiter;
-    t_ctxt . options = p_options;
-    
-    return MCChunkGetExtentsByExpressionInRange(p_strict, p_boundary_start, p_boundary_end, p_first, MCChunkCountChunkChunkCallback, &t_ctxt, p_range, r_first, r_chunk_count);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCChunkIsAmongTheChunksOfRange(MCStringRef p_chunk, MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, MCRange p_range)
@@ -340,51 +286,8 @@ bool MCChunkOffsetOfChunkInRange(MCStringRef p_string, MCStringRef p_needle, MCS
     return true;
 }
 
-bool MCChunkApplyInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, MCChunkApplyCallback p_callback, void *context)
-{
-    MCRange t_range;
-    t_range = MCRangeMake(p_range != nil ? p_range -> offset : 0, 0);
-    
-    bool t_first;
-    t_first = true;
-    
-    while (MCChunkIterate(t_range, p_string, p_delimiter, p_options, t_first))
-    {
-        t_first = false;
-        if (p_range != nil && t_range . offset + t_range . length > p_range -> offset + p_range -> length)
-            t_range . length = p_range -> length - t_range . offset;
-        
-        if (!p_callback(context, p_string, t_range))
-            return false;
-    }
-    
-    return true;
-}
-
-bool MCChunkIterate(MCRange& x_range, MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, bool p_first)
-{
-    // Currently assumes delimiter is 1 char long.
-    // Reimplement with MCTextChunkIterator_Delimited to accommodate arbitrary delimiters.
-    uindex_t t_delimiter_offset;
-    
-    if (!p_first)
-        x_range . offset = x_range . offset + x_range . length + 1;
-
-    if (x_range . offset >= MCStringGetLength(p_string))
-        return false;
-    
-        
-    if (!MCStringFirstIndexOfChar(p_string, MCStringGetCodepointAtIndex(p_delimiter, 0), x_range . offset, p_options, t_delimiter_offset))
-        t_delimiter_offset = MCStringGetLength(p_string);
-
-    x_range . length = t_delimiter_offset - x_range . offset;
-    
-    return true;
-}
-
 void MCChunkSkipWord(MCStringRef p_string, MCStringRef p_line_delimiter, MCStringOptions p_options, bool p_skip_spaces, uindex_t& x_offset)
 {
-    uindex_t t_space_offset;
     uindex_t t_length = MCStringGetLength(p_string);
     uindex_t t_end_quote_offset = t_length;
     uindex_t t_end_line_offset = t_length;
@@ -591,7 +494,7 @@ uindex_t MCTextChunkIterator_Codeunit::ChunkOffset(MCStringRef p_needle, uindex_
     if (MCStringFind(m_text, t_in_range, p_needle, m_options, &t_range))
     {
         if (!p_whole_matches || t_range . length == 1)
-            return t_range . offset;
+            return t_range . offset + 1;
     }
     
     return 0;
@@ -639,7 +542,7 @@ bool MCTextChunkIterator_Delimited::Next()
     MCRange t_found_range;
     // calculate the length of the line / item
     // AL-2015-02-10: [[ Bug 14532 ]] Use restricted range for delimiter search
-    if (!MCStringFind(m_text, MCRangeMake(t_offset, m_length - t_offset), m_delimiter, m_options, &t_found_range))
+    if (!MCStringFind(m_text, MCRangeMakeMinMax(t_offset, m_length), m_delimiter, m_options, &t_found_range))
     {
         m_range . length = m_length - m_range . offset;
         m_exhausted = true;
@@ -666,7 +569,7 @@ bool MCTextChunkIterator_Delimited::IsAmong(MCStringRef p_needle)
         // Otherwise we need to find p_needle and check to see if there is a delimiter either side.
         // This is because of the case where the delimiter is within p_needle - e.g.
         // "a,b" is among the items of "a,b,c,d" should return true.
-        return MCChunkIsAmongTheChunksOfRange(p_needle, m_text, m_delimiter, m_options, MCRangeMake(m_range . offset, m_length - m_range . offset));
+        return MCChunkIsAmongTheChunksOfRange(p_needle, m_text, m_delimiter, m_options, MCRangeMakeMinMax(m_range . offset, m_length));
     }
     
     while (Next())
@@ -711,12 +614,12 @@ uindex_t MCTextChunkIterator_Delimited::ChunkOffset(MCStringRef p_needle, uindex
     if (!MCStringIsEmpty(p_needle))
     {
         uindex_t t_found_offset;
-        if (!MCChunkOffsetOfChunkInRange(m_text, p_needle, m_delimiter, p_whole_matches, m_options, MCRangeMake(m_range . offset, m_length - m_range . offset), t_found_offset))
+        if (!MCChunkOffsetOfChunkInRange(m_text, p_needle, m_delimiter, p_whole_matches, m_options, MCRangeMakeMinMax(m_range . offset, m_length), t_found_offset))
             return 0;
         
         // Count the number of delimiters between the start of the first chunk
         // and the start of the found string.
-        t_chunk_offset += MCStringCount(m_text, MCRangeMake(m_range . offset, t_found_offset - m_range . offset), m_delimiter, m_options);
+        t_chunk_offset += MCStringCount(m_text, MCRangeMakeMinMax(m_range . offset, t_found_offset), m_delimiter, m_options);
         
         // AL-2015-07-20: [[ Bug 15618 ]] If the chunk found is outside the specified range, return 0 (not found)
         if (p_end_offset != nil && t_chunk_offset > *p_end_offset)
@@ -734,12 +637,12 @@ uindex_t MCTextChunkIterator_Delimited::ChunkOffset(MCStringRef p_needle, uindex
         
         if (p_whole_matches)
         {
-            if (MCStringSubstringIsEqualTo(m_text, MCRangeMake(m_range . offset, m_length - m_range . offset), p_needle, m_options))
+            if (MCStringSubstringIsEqualTo(m_text, MCRangeMakeMinMax(m_range . offset, m_length), p_needle, m_options))
                 return t_chunk_offset;
         }
         else
         {
-            if (MCStringSubstringContains(m_text, MCRangeMake(m_range . offset, m_length - m_range . offset), p_needle, m_options))
+            if (MCStringSubstringContains(m_text, MCRangeMakeMinMax(m_range . offset, m_length), p_needle, m_options))
                 return t_chunk_offset;
         }
         t_chunk_offset++;
@@ -934,9 +837,9 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange 
         case kMCChunkTypeSentence:
         case kMCChunkTypeTrueWord:
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_ICU(p_text, p_chunk_type, *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_ICU(p_text, p_chunk_type, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_ICU(p_text, p_chunk_type);
+                t_iterator = new (nothrow) MCTextChunkIterator_ICU(p_text, p_chunk_type);
             break;
         case kMCChunkTypeLine:
         case kMCChunkTypeItem:
@@ -947,44 +850,43 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange 
                 t_delimiter = p_item_delimiter;
  
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, t_delimiter, *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_Delimited(p_text, p_chunk_type, t_delimiter, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, t_delimiter);
+                t_iterator = new (nothrow) MCTextChunkIterator_Delimited(p_text, p_chunk_type, t_delimiter);
             break;
-
-            break;
+            
         case kMCChunkTypeParagraph:
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"), *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"), *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"));
+                t_iterator = new (nothrow) MCTextChunkIterator_Delimited(p_text, p_chunk_type, MCSTR("\n"));
             break;
-            break;
+            
         case kMCChunkTypeWord:
             // AL-2015-10-08: [[ Bug 16161 ]] Word chunk needs to be passed line delimiter
             //  as words are also delimited by line breaks.
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_line_delimiter, *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_Word(p_text, p_chunk_type, p_line_delimiter, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_line_delimiter);
+                t_iterator = new (nothrow) MCTextChunkIterator_Word(p_text, p_chunk_type, p_line_delimiter);
             break;
         case kMCChunkTypeCharacter:
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Grapheme(p_text, p_chunk_type, *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_Grapheme(p_text, p_chunk_type, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Grapheme(p_text, p_chunk_type);
+                t_iterator = new (nothrow) MCTextChunkIterator_Grapheme(p_text, p_chunk_type);
             break;
         case kMCChunkTypeCodepoint:
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Codepoint(p_text, p_chunk_type, *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_Codepoint(p_text, p_chunk_type, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Codepoint(p_text, p_chunk_type);
+                t_iterator = new (nothrow) MCTextChunkIterator_Codepoint(p_text, p_chunk_type);
             break;
         case kMCChunkTypeCodeunit:
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Codeunit(p_text, p_chunk_type, *p_range);
+                t_iterator = new (nothrow) MCTextChunkIterator_Codeunit(p_text, p_chunk_type, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Codeunit(p_text, p_chunk_type);
+                t_iterator = new (nothrow) MCTextChunkIterator_Codeunit(p_text, p_chunk_type);
             break;
         default:
             MCAssert(false);

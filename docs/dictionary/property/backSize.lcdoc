@@ -2,30 +2,41 @@ Name: backSize
 
 Type: property
 
-Syntax: set the backSize of <group> to <width>, <height> 
+Syntax: set the backSize of <group> to <width>, <height>
 
-Summary: Specifies the width and height of the specified <background>.
+Summary:
+Specifies the width and height of the specified <background>.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the backSize of group "Nav Bar" to 160,20
 
-Value: The <backSize> of a <group> consists of two positive integers separated by a comma.
+Value:
+The <backSize> of a <group> consists of two positive integers separated
+by a comma.
 
 Description:
 Use the <backSize> <property> to hide members of a <group> from view.
 
-The first item of the <backSize> is the width of the group in pixels. The second <item> is the height of the group in pixels.
+The first item of the <backSize> is the width of the group in pixels.
+The second <item> is the height of the group in pixels.
 
-If you change the <backSize> of a group, the position of its top left corner remains unchanged.
+If you change the <backSize> of a group, the position of its top left
+corner remains unchanged.
 
-This property is included in LiveCode for compatibility with imported SuperCard projects.
+This property is included in LiveCode for compatibility with imported
+SuperCard projects.
 
-References: height (property), formattedRect (property), rectangle (property), width (property), item (keyword), group (command), property (glossary), background (glossary)
+References: group (command), property (glossary), background (glossary),
+item (keyword), height (property), formattedRect (property),
+rectangle (property), width (property)
 
 Tags: ui
+

@@ -1,0 +1,1 @@
+# Fix script editor window getting moved to large negative coordinates when minimized.

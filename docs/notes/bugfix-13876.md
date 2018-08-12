@@ -1,1 +1,0 @@
-# The format() can not format the Unicode string correctly.

@@ -2,19 +2,28 @@ Name: printTextFont
 
 Type: property
 
-Syntax: set the printTextFont to <fontName> 
+Syntax: set the printTextFont to <fontName>
 
-Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> <stacks>.
+Summary:
+Has no effect and is included in <LiveCode> for compatibility with
+imported <HyperCard> <stacks>.
 
 Introduced: 1.0
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: printing
 
 Description:
-In HyperCard, the <printTextFont> <property> specifies the <font|font face> of printed text. In LiveCode, only <card(object)|cards> can be printed, and the font of text on the <card(keyword)> is determined by the <textFont> <property> of the <object|objects> containing text.
+In HyperCard, the <printTextFont> <property> specifies the <font|font
+face> of printed text. In LiveCode, only <card(object)|cards> can be
+printed, and the font of text on the <card(keyword)> is determined by
+the <textFont> <property> of the <object|objects> containing text.
 
 A handler can set the property, but the new setting has no effect.
 
-References: textFont (property), scriptTextFont (property), card (keyword), print (command), stacks (function), property (glossary), LiveCode (glossary), HyperCard (glossary), font (glossary), card (object), object (object)
+References: print (command), stacks (function), property (glossary),
+LiveCode (glossary), HyperCard (glossary), font (glossary),
+object (glossary), card (keyword), card (object), textFont (property),
+scriptTextFont (property)
+

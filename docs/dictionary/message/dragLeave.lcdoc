@@ -4,13 +4,17 @@ Type: message
 
 Syntax: dragLeave
 
-Summary: Sent when the <mouse pointer> moves out of an <object> during a <drag and drop>.
+Summary:
+Sent when the <mouse pointer> moves out of an <object(glossary)> during
+a <drag and drop>.
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+Associations: card, field, button, graphic, scrollbar, player, image
 
-Platforms: desktop,server
+OS: mac, windows, linux
+
+Platforms: desktop, server
 
 Example:
 on dragLeave -- remove any outline around the drop no-longer-target
@@ -18,22 +22,37 @@ on dragLeave -- remove any outline around the drop no-longer-target
 end dragLeave
 
 Description:
-Handle the <dragLeave> <message> to update a <control> when the <mouse pointer> moves outside it during drag and drop.
+Handle the <dragLeave> <message> to update a <control> when the 
+<mouse pointer> moves outside it during drag and drop.
 
-The <dragLeave> <message> is sent only when a <drag and drop> operation is in progress.
+The <dragLeave> <message> is sent only when a <drag and drop> operation
+is in progress.
 
-If two controls overlap, a <dragLeave> <message> is sent whenever the <mouse pointer> crosses outside a visible portion of a <control>. The <control> on the bottom receives a <dragLeave> <message> only when the <mouse pointer> leaves part of the <control> that can be seen. A <control> that is completely hidden by another <control> on top of it will never receive a <dragLeave> <message>.
+If two controls overlap, a <dragLeave> <message> is sent whenever the
+<mouse pointer> crosses outside a visible portion of a <control>. The
+<control> on the bottom receives a <dragLeave> <message> only when the
+<mouse pointer> leaves part of the <control> that can be seen. A
+<control> that is completely hidden by another <control> on top of it
+will never receive a <dragLeave> <message>.
 
-You can use the <dragEnter> and <dragLeave> <message|messages> to display a visual cue that shows which <control> will receive the drop if the user releases the mouse button. For example, the following <handler|handlers> turn the border of a "droppable" object green while the mouse is over it:
+You can use the <dragEnter> and <dragLeave> <message|messages> to
+display a visual cue that shows which <control> will receive the drop if
+the user releases the mouse button. For example, the following
+<handler|handlers> turn the border of a "droppable" object green while
+the mouse is over it:
 
-  on dragEnter
-    set the borderColor of the target to "green"
-  end dragEnter
+    on dragEnter
+        set the borderColor of the target to "green"
+    end dragEnter
 
-  on dragLeave
-    set the borderColor of the target to empty
-  end dragLeave
+    on dragLeave
+        set the borderColor of the target to empty
+    end dragLeave
 
-References: object (object), dragEnter (message), handler (glossary), control (glossary), mouse pointer (glossary), message (glossary), drag and drop (glossary)
+
+References: object (glossary), handler (glossary), control (glossary),
+mouse pointer (glossary), message (glossary), drag and drop (glossary),
+dragEnter (message)
 
 Tags: ui
+

@@ -1,35 +1,51 @@
 Name: borderPixel
 
+Synonyms: fourthpixel
+
 Type: property
 
-Syntax: set the fourthPixel of <object> to <colorNumber> 
+Syntax: set the borderPixel of <object> to <colorNumber>
 
-Summary: Specifies which entry in the <color table> is used for the color of an <object|object's> border.
+Summary:
+Specifies which entry in the <color table> is used for the color of an
+<object|object's> border.
 
-Synonyms: fourthPixel
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-set the fourthPixel of group 1 to 200
+set the borderPixel of group 1 to 200
 
 Value:
-The <borderPixel> of an <object> is an <integer> between zero and (the screenColors - 1). It designates an entry in the current color table.
-By default, the <borderPixel> for all <object|objects> is empty.
+The <borderPixel> of an <object(glossary)> is an <integer> between zero
+and (the screenColors - 1). It designates an entry in the current color
+table. By default, the <borderPixel> for all <object|objects> is empty.
 
 Description:
-Use the <borderPixel> <property> to change the border color of an <object> when the <bit depth> of the screen is 8 <bit|bits> (256 colors) or less.
+Use the <borderPixel> <property> to change the border color of an
+<object(glossary)> when the <bit depth> of the screen is 8 <bit|bits>
+(256 colors) or less.
 
-The <borderPixel> <property> specifies which entry in the <color table> is used for an <object|object's> border color. It is similar to the <borderColor> <property>, but is specified as an entry in the current <color table>, rather than as a <color reference>.
+The <borderPixel> <property> specifies which entry in the <color table>
+is used for an <object|object's> border color. It is similar to the
+<borderColor> <property>, but is specified as an entry in the current
+<color table>, rather than as a <color reference>.
 
 The color table can be set by changing the <colorMap> <property>.
 
-References: bottomPixel (property), focusPixel (property), pixels (property), backgroundPixel (property), foregroundPixel (property), hilitePixel (property), shadowPixel (property), colorMap (property), borderColor (property), topPixel (property), integer (keyword), screenColors (function), property (glossary), bit depth (glossary), bit (glossary), color reference (glossary), color table (glossary), object (object)
+References: screenColors (function), property (glossary),
+bit depth (glossary), bit (glossary), color reference (glossary),
+color table (glossary), object (glossary), integer (keyword),
+bottomPixel (property), focusPixel (property), pixels (property),
+backgroundPixel (property), foregroundPixel (property),
+hilitePixel (property), shadowPixel (property), colorMap (property),
+borderColor (property), topPixel (property)
 
 Tags: ui
+

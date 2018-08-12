@@ -6,13 +6,15 @@ Syntax: the foundLine
 
 Syntax: foundLine()
 
-Summary: <return|Returns> a <chunk expression> describing the <line> in which text was located by the most recent <find> <command>.
+Summary:
+<return|Returns> a <chunk expression> describing the <line> in which
+text was located by the most recent <find> <command>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the foundLine
@@ -20,15 +22,26 @@ the foundLine
 Example:
 if value(the foundLine) contains "*" then answer value(the foundLine)
 
-Returns: The <foundLine> <function> <return|returns> a <chunk expression> of the form line lineNumber of field fieldNumber.
+Returns:
+The <foundLine> <function> <return|returns> a <chunk expression> of the
+form line lineNumber of field fieldNumber.
 
 Description:
-Use the <foundLine> <function> after a <find> command to determine where the text was found.
+Use the <foundLine> <function> after a <find> command to determine where
+the text was found.
 
-The <foundLine> <function> is cleared when the text <selection> moves into the <foundField> or when the <current card> is closed. At the same time, the box the <find> command draws around the found text disappears. If there is no box, the <foundLine> function <return|returns> empty.
+The <foundLine> <function> is cleared when the text <selection> moves
+into the <foundField> or when the <current card> is closed. At the same
+time, the box the <find> command draws around the found text disappears.
+If there is no box, the <foundLine> function <return|returns> empty.
 
-To get  a chunk expression describing the word or string that was found, use the foundChunk <function>.
+To get  a chunk expression describing the word or string that was found,
+use the foundChunk <function>.
 
-References: selection (keyword), line (keyword), find (command), foundField (function), mouseLine (function), current card (glossary), command (glossary), return (glossary), chunk expression (glossary), function (control_st)
+References: find (command), function (control structure),
+foundField (function), mouseLine (function), current card (glossary),
+command (glossary), return (glossary), chunk expression (glossary),
+selection (keyword), line (keyword)
 
 Tags: database
+

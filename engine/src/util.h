@@ -57,7 +57,7 @@ struct MCSortnode
 	const void *data;
 	
 	MCSortnode()
-	: svalue(nil) {}
+	: svalue(nil), data(nullptr) {}
 	
 	~MCSortnode()
 	{
@@ -82,9 +82,6 @@ extern void MCU_resetprops(Boolean update);
 extern void MCU_saveprops(MCSaveprops &sp);
 extern void MCU_restoreprops(MCSaveprops &sp);
 extern int4 MCU_any(int4 max);
-#ifdef LEGACY_EXEC
-extern void MCU_getnumberformat(MCExecPoint &, uint2, uint2, uint2);
-#endif
 extern bool MCU_getnumberformat(uint2 fw, uint2 trail, uint2 force, MCStringRef& r_string);
 extern void MCU_setnumberformat(MCStringRef p_input, uint2 &fw, uint2 &trailing, uint2 &force);
 extern real8 MCU_stoIEEE(const char *bytes);
@@ -132,10 +129,6 @@ extern void MCU_lower(char *sptr, const MCString& s);
 extern int4 MCU_strncasecmp(const char *one, const char *two, size_t n);
 extern Boolean MCU_offset(const MCString &p, const MCString &w,
 	                          uint4 &offset, Boolean casesensitive = False);
-#ifdef LEGACY_EXEC
-void MCU_chunk_offset(MCExecPoint &ep, MCString &w,
-                      Boolean whole, Chunk_term delimiter);
-#endif
 extern void MCU_additem(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_addline(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
@@ -148,11 +141,8 @@ extern bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name);
 extern void MCU_snap(int2 &p);
 
 // MDW-2014-07-06: [[ oval_points ]]
-extern void MCU_roundrect(MCPoint *&points, uint2 &npoints,
+extern bool MCU_roundrect(MCPoint *&r_points, uindex_t &r_point_count,
                    const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle, uint2 flags);
-#ifdef LEGACY_EXEC
-extern void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &);
-#endif
 extern Boolean MCU_parsepoints(MCPoint *&oldpoints, uindex_t &n, MCStringRef p_data);
 extern Boolean MCU_parsepoint(MCPoint &r_point, MCStringRef);
 extern void MCU_querymouse(int2 &x, int2 &y);
@@ -183,10 +173,6 @@ extern MCRectangle MCU_offset_rect(const MCRectangle& r, int2 ox, int2 oy);
 extern MCRectangle MCU_recttoroot(MCStack *sptr, const MCRectangle &o);
 extern void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask);
 extern void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_string, Tool p_tool);
-#ifdef LEGACY_EXEC
-extern Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool,
-	                                 uint2 line, uint2 pos);
-#endif
 extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCParameter *params);
 //extern bool MCU_path2std(MCStringRef p_path, MCStringRef& r_std_path);
 //extern void MCU_path2std(char *dptr);
@@ -199,27 +185,14 @@ extern void MCU_urldecode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_
 extern bool MCU_urlencode(MCStringRef p_url, bool p_use_utf8, MCStringRef &r_encoded);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
-//extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
-#ifdef LEGACY_EXEC
-extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, uint2 line, uint2 pos);
-#endif
 //extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
-#ifdef LEGACY_EXEC
-extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);
-#endif
 extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCValueRef &r_output);
 extern void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
 	                       real8 tn, real8 oldn, MCSortnode *titems);
 // MW-2013-07-01: [[ Bug 10975 ]] This method returns true if the given string could be a url
 //   (as used by MCU_geturl, to determine whether to try and fetch via libUrl).
-extern bool MCU_couldbeurl(const MCString& potential_url);
-#ifdef LEGACY_EXEC
-extern void MCU_geturl(MCExecPoint &ep);
-#endif
+extern bool MCU_couldbeurl(MCStringRef potential_url);
 extern void MCU_puturl(MCExecContext& ctxt, MCStringRef p_target, MCValueRef p_data);
-#ifdef LEGACY_EXEC
-extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);
-#endif
 extern uint1 MCU_unicodetocharset(uint2 uchar);
 extern uint1 MCU_languagetocharset(MCNameRef langname);
 extern MCNameRef MCU_charsettolanguage(uint1 charset);
@@ -236,19 +209,7 @@ extern void MCU_unicodetomultibyte(const char *s, uint4 len, char *d,
 	                                   uint4 destbufferlength, uint4 &destlen,
 	                                   uint1 charset);
 
-#ifdef LEGACY_EXEC
-extern bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char *p_b, bool p_b_isunicode);
-#endif
 extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey, int4 x, int4 y);
-
-// AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading
-// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
-//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
-// SN-2015-04-07: [[ Bug 15164 ]] Added StringRef version of MCU_loadmodule
-extern "C" void* MCU_loadmodule(const char *p_module);
-extern "C" void* MCU_loadmodule_stringref(MCStringRef p_module);
-extern "C" void MCU_unloadmodule(void* p_module);
-extern "C" void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol);
 
 // 
 
@@ -291,5 +252,76 @@ inline MCRectangle MCU_make_rect(int2 x, int2 y, uint2 w, uint2 h)
 
 // Test whether p_string is a valid LiveCode script token
 extern bool MCU_is_token(MCStringRef p_string);
+
+// Load a library. If loading succeeds, then a non-nullptr value is returned;
+// otherwise nullptr is returned.
+//
+// If the library parameter does not have an extension, then:
+//    - mac/ios: tries framework, bundle or dylib
+//    - linux/android: uses so
+//    - windows: uses dll
+//
+// If the library parameter is absolute, then that exact location is used.
+//
+// If the library parameter has the prefix './', then the mapped location
+// relative to the engine is used.
+//
+// Otherwise, the path is passed through to the system to use its search
+// order.
+//
+MCSLibraryRef
+MCU_library_load(MCStringRef p_library);
+
+void
+MCU_library_unload(MCSLibraryRef handle);
+
+void*
+MCU_library_lookup(MCSLibraryRef handle,
+                   MCStringRef p_symbol);
+
+extern "C" void *MCSupportLibraryLoad(const char *name);
+extern "C" void MCSupportLibraryUnload(void *handle);
+extern "C" char *MCSupportLibraryCopyNativePath(void *handle);
+extern "C" void *MCSupportLibraryLookupSymbol(void *handle,
+                                              const char *symbol);
+
+/* Split a LiveCode path into dirname and basename, using the current platform's
+ * rules. Any unnecessary trailing slashes will be trimmed from dir. */
+bool
+MCU_path_split(MCStringRef p_path,
+               MCStringRef* r_dir,
+               MCStringRef* r_base);
+
+/* Split a LiveCode path into dirname and basename, using unix rules.
+ * In this case, the string is split at the last '/' into prefix and suffix.
+ * If the prefix is '/', then dir is '/' and base is the rest of the path;
+ * Otherwise, dir is prefix and base is suffix - in this case dir will not end
+ * with '/'. */
+bool
+MCU_path_split_unix(MCStringRef p_path,
+                    MCStringRef* r_dir,
+                    MCStringRef* r_base);
+
+/* Split a LiveCode path into dirname and basename, using win32 rules.
+ * Win32 paths can have the following forms in addition to unix forms.
+ *   //[Share]/[Folder][/Base]
+ *   Drive:[Folder]/[Base]
+ * In the first case, dir is //Share/Folder and base is Base
+ * In the second case, if Folder is not present then
+ *   dir is Drive:/
+ *   base is Base
+ * If Folder is present then
+ *   dir is Drive:Folder
+ *   base is Base
+ * The addition of a trailing '/' in the case of Folder not being present is
+ * necessary to distinguish between drive relative and drive absolute paths.
+ */
+bool
+MCU_path_split_win32(MCStringRef p_path,
+                     MCStringRef* r_dir,
+                     MCStringRef* r_base);
+
+// Format color as string
+extern bool MCU_format_color(const MCColor p_color, MCStringRef& r_string);
 
 #endif

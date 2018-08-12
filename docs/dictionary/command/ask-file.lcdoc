@@ -4,13 +4,15 @@ Type: command
 
 Syntax: ask file <prompt> [with <defaultFilePath>] [with filter <types>] [as sheet]
 
-Summary: Displays a standard Save <dialog box|dialog> for the user to enter a <file> name and specify a location.
+Summary:
+Displays a standard Save <dialog box|dialog> for the user to enter a
+<file> name and specify a location.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Security: disk
 
@@ -27,33 +29,85 @@ Example:
 ask file "Export picture as:" with filter "JPEG file,*.jpg"
 
 Parameters:
-prompt (string): If you specify empty, no prompt appears.
-defaultFilePath: The defaultFilePath consists of a folder path, or a suggested file name, or both. The filename is the portion of the path after the last slash character (/). If a folder path is provided in the defaultFilePath, the dialog box shows the contents of that folder. Otherwise, it shows the contents of the last folder you used with a file dialog box. If a suggested file name is provided in the defaultFilePath, it appears in the file name box.
-types: The  types parameter specifies which extensions are available at the bottom of the dialog box. A file type consists of an optional description, a line feed or comma, and a file extension specification:   [description],*.extension You can include more than one file type by separating the file types with commas.>*Cross-platform note:* The types parameter applies only to Windows systems. On Mac OS and Unix systems, this parameter has no effect.
+prompt (string):
+If you specify empty, no prompt appears.
 
-The result: If the user cancels the <dialog box|dialog>, the <it> <variable> is set to empty, and the <result> <function> <return|returns> cancel.
+defaultFilePath:
+The defaultFilePath consists of a folder path, or a suggested file name,
+or both. The filename is the portion of the path after the last slash
+character (/). If a folder path is provided in the defaultFilePath, the
+dialog box shows the contents of that folder. Otherwise, it shows the
+contents of the last folder you used with a file dialog box. If a
+suggested file name is provided in the defaultFilePath, it appears in
+the file name box.
 
-It: The absolute file path of the file the user chose is placed in the it <variable>.
+types:
+The types parameter specifies which extensions are available at the
+bottom of the dialog box. A file type consists of an optional
+description, a line feed or comma, and a file extension specification:
+
+  [description],*.extension 
+
+You can include more than one file type by separating the file types 
+with commas.
+
+>*Cross-platform note:*  The <types> <parameter> applies only to
+> <Windows|Windows systems>. On <Mac OS> and <Unix|Unix systems>, this
+> <parameter> has no effect.
+
+
+It:
+The absolute file path of the file the user chose is placed in the it
+<variable>. 
+
+The result:
+If the user cancels the <dialog box|dialog>, the <it> <variable> is set
+to empty, and the <result> <function> <return|returns> cancel.
 
 Description:
-Use the <ask file> <command> to let the user provide the <file path|name and location> of a new <file>.
+Use the <ask file> <command> to let the user provide the 
+<file path|name and location> of a new <file>.
 
->*Cross-platform note:*  The <types> <parameter> applies only to <Windows|Windows systems>. On <Mac OS> and <Unix|Unix systems>, this <parameter> has no effect.
+The dialog box is the same one most applications use for the "Save"
+command in the File menu. (If the systemFileSelector <property> is set
+to true on <Mac OS> and <Windows|Windows systems>, and always on
+<Unix|Unix systems>, the <application> displays its own built-in 
+<dialog box>, instead of the one provided by the operating system.)
 
-The dialog box is the same one most applications use for the "Save" command in the File menu. (If the systemFileSelector <property> is set to true on <Mac OS> and <Windows|Windows systems>, and always on <Unix|Unix systems>, the <application> displays its own built-in <dialog box>, instead of the one provided by the operating system.)
+>*Important:*  The ask file command does not create the file. It only
+> displays the dialog box and retrieves the path to the file the user
+> specifies. 
 
->*Important:*  The ask file command does not create the file. It only displays the dialog box and retrieves the path to the file the user specifies.
+>*Note:* On Windows, it is imperative not to name a file with one of the
+> reserved device names: CON, PRN, AUX, NUL, COM1, COM2, COM3, COM4,
+> COM5, COM6, COM7, COM8, COM9, LPT1, LPT2, LPT3, LPT4, LPT5, LPT6,
+> LPT7, LPT8 and LPT9. Also do not use these names followed by an
+> extension, for example, NUL.tx7.
+If the as sheet form is used, the dialog box appears as a sheet on OS X
+systems. On other systems, the as sheet form has no effect and the
+dialog box appears normally. Attempting to open a sheet from within
+another sheet displays the second stack as a <modal dialog box> instead.
 
->*Note:* On Windows, it is imperative not to name a file with one of the reserved device names: CON, PRN, AUX, NUL, COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9, LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8 and LPT9. Also do not use these names followed by an extension, for example, NUL.tx7.
-If the as sheet form is used, the dialog box appears as a sheet on OS X systems. On other systems, the as sheet form has no effect and the dialog box appears normally. Attempting to open a sheet from within another sheet displays the second stack as a <modal dialog box> instead.
+If the systemFileSelector <property> is set to false, LiveCode's
+built-in <dialog box> is used instead of the operating system's 
+<file dialog box|standard file dialog>.
 
-If the systemFileSelector <property> is set to false, LiveCode's built-in <dialog box> is used instead of the operating system's <file dialog box|standard file dialog>.
-
->*Cross-platform note:*  On <Mac OS|Mac OS systems> where Navigation Services is in use, if you don't specify a default file name, the file name box contains "untitled". On Unix and Windows systems, the file name box is empty when the <dialog box> appears. Unix systems currently use LiveCode's built-in dialog box.
+>*Cross-platform note:*  On <Mac OS|Mac OS systems> where Navigation
+> Services is in use, if you don't specify a default file name, the file
+> name box contains "untitled". On Unix and Windows systems, the file
+> name box is empty when the <dialog box> appears. Unix systems
+> currently use LiveCode's built-in dialog box.
 
 Changes:
 The ask file...as sheet form was introduced in version 2.0.
 
-References: file (keyword), it (keyword), answer file (command), ask (command), result (function), application (glossary), return (glossary), variable (glossary), property (glossary), file path (glossary), modal dialog box (glossary), dialog box (glossary), command (glossary), Windows (glossary), file dialog box (glossary), Mac OS (glossary), Unix (glossary), parameter (glossary), function (control_st)
+References: answer file (command), ask (command),
+function (control structure), result (function), application (glossary),
+return (glossary), variable (glossary), property (glossary),
+file path (glossary), modal dialog box (glossary), dialog box (glossary),
+command (glossary), Windows (glossary), file dialog box (glossary),
+Mac OS (glossary), Unix (glossary), parameter (glossary), file (keyword),
+it (keyword)
 
 Tags: file system
+

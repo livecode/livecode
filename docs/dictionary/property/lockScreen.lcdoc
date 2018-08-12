@@ -4,50 +4,82 @@ Type: property
 
 Syntax: set the lockScreen to {true | false}
 
-Summary: Specifies whether changes to a <stack> appear on the screen.
+Summary:
+Specifies whether changes to a <stack> appear on the screen.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the lockScreen to (not the lockScreen)
 
-Value (bool):The <lockScreen> is true or false.
-By default, the <lockScreen> <property> is set to false. It is <reset> to false when no <handler|handlers> are <execute|executing>.
+Value (bool):
+The <lockScreen> is true or false.
+By default, the <lockScreen> <property> is set to false. It is <reset>
+to false when no <handler|handlers> are <execute|executing>.
 
 Description:
-Use the <lockScreen> <property> to control when changes to the appearance of <object|objects> appear to the user, or to speed up actions that change several <object|objects>.
+Use the <lockScreen> <property> to control when changes to the
+appearance of <object|objects> appear to the user, or to speed up
+actions that change several <object|objects>.
 
-If the <lockScreen> <property> is set to true, <statement|statements> that affect the appearance of the <stack window|stack windows>--such as opening or closing a <stack>, going to another <card(keyword)>, or changing <properties> of an <object> --are not shown on the screen until the <lockScreen> is set back to false.
+If the <lockScreen> <property> is set to true, <statement|statements>
+that affect the appearance of the <stack window|stack windows>--such as
+opening or closing a <stack>, going to another <card(keyword)>, or
+changing <properties> of an <object(glossary)> --are not shown on the
+screen until the <lockScreen> is set back to false.
 
 If the <lockScreen> is false, all changes are displayed immediately.
 
-Setting the <lockScreen> to true also speeds up <handler|handlers> that affect the screen appearance. Since LiveCode does not need to take time <redraw|redrawing> its windows when the <lockScreen> is true, a <handler> that visits several <card(object)|cards> in a row or changes several <object|objects> runs faster if the <lockScreen> <property> is set to true while the changes are made.
+Setting the <lockScreen> to true also speeds up <handler|handlers> that
+affect the screen appearance. Since LiveCode does not need to take time
+<redraw|redrawing> its windows when the <lockScreen> is true, a
+<handler> that visits several <card(object)|cards> in a row or changes
+several <object|objects> runs faster if the <lockScreen> <property> is
+set to true while the changes are made.
 
-The <lockScreen> <property> is automatically set to false when a <palette>, <modeless>, or <modal> <stack> is opened, even if a <handler> is still running.
+The <lockScreen> <property> is automatically set to false when a
+<palette>, <modeless>, or <modal> <stack> is opened, even if a <handler>
+is still running.
 
->*Important:*  Open <stacks> cannot be brought to the front (using the <go> or <topLevel> <command>) while the <lockScreen> is true.
+>*Important:*  Open <stacks> cannot be brought to the front (using the
+> <go> or <topLevel> <command>) while the <lockScreen> is true.
 
-LiveCode keeps count of how many times the screen has been locked. You must balance each unlock with a lock; if you lock the screen twice and then unlock it once, the screen remains locked. For example, the following pair of handlers draws everything while the display is still locked:
+LiveCode keeps count of how many times the screen has been locked. You
+must balance each unlock with a lock; if you lock the screen twice and
+then unlock it once, the screen remains locked. For example, the
+following pair of handlers draws everything while the display is still
+locked: 
 
-  on mouseUp
-    lock screen    -- first lock
-    drawStuff      -- gets locked again and unlocked in drawStuff
-    show image "Sprite"
-    unlock screen  -- now unlocked - 2 locks balanced by 2 unlocks
-  end mouseUp
+    on mouseUp
+        lock screen    -- first lock
+        drawStuff      -- gets locked again and unlocked in drawStuff
+        show image "Sprite"
+        unlock screen  -- now unlocked - 2 locks balanced by 2 unlocks
+    end mouseUp
 
-  on drawStuff
-    lock screen    -- screen now locked twice
-    show field "Notify"
-    unlock screen  -- not unlocked yet - locked twice, unlocked once
-  end drawStuff
 
->*Note:* When using <script debug mode>, the screen cannot be locked and the setting of the <lockScreen> <property> has no effect.
+    on drawStuff
+        lock screen    -- screen now locked twice
+        show field "Notify"
+        unlock screen  -- not unlocked yet - locked twice, unlocked once
+    end drawStuff
 
-References: properties (property), lockCursor (property), card (keyword), unlock screen (command), topLevel (command), palette (command), modal (command), reset (command), go (command), show cards (command), modeless (command), stack (object), object (object), card (object), property (glossary), stack window (glossary), handler (glossary), execute (glossary), statement (glossary), redraw (glossary), script debug mode (glossary), command (glossary), stacks (function)
+
+>*Note:* When using <script debug mode>, the screen cannot be locked and
+> the setting of the <lockScreen> <property> has no effect.
+
+References: unlock screen (command), topLevel (command),
+palette (command), modal (command), reset (command), go (command),
+show cards (command), modeless (command), stacks (function),
+object (glossary), property (glossary), stack window (glossary),
+handler (glossary), execute (glossary), statement (glossary),
+redraw (glossary), script debug mode (glossary), command (glossary),
+card (keyword), stack (object), card (object), properties (property),
+lockCursor (property)
 
 Tags: ui
+

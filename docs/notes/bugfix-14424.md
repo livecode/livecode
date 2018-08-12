@@ -1,1 +1,0 @@
-# Getting 'the fontfilesinuse' can cause a crash.

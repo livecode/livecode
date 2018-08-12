@@ -97,8 +97,8 @@ private:
 	// Lifetime is managed entirely by the parent MCWin32RawClipboard
 	friend class MCWin32RawClipboardCommon;
 	friend class MCWin32RawClipboard;
-	MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_parent);
 	MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_parent, IDataObject* p_external_data);
+	MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_parent);
 	~MCWin32RawClipboardItem();
 
 	// Ensures that the representations have been loaded if the data is from
@@ -128,7 +128,11 @@ public:
     virtual MCStringRef GetKnownTypeString(MCRawClipboardKnownType p_type) const;
     virtual MCDataRef EncodeFileListForTransfer(MCStringRef p_file_list) const;
 	virtual MCStringRef DecodeTransferredFileList(MCDataRef p_data) const;
-    
+	virtual MCDataRef EncodeHTMLFragmentForTransfer(MCDataRef p_html) const;
+	virtual MCDataRef DecodeTransferredHTML(MCDataRef p_html) const;
+	virtual MCDataRef EncodeBMPForTransfer(MCDataRef p_bmp) const;
+	virtual MCDataRef DecodeTransferredBMP(MCDataRef p_bmp) const;
+
 	// Sets the clipboard as being dirty
 	void SetDirty();
 

@@ -2,15 +2,16 @@ Name: send to program
 
 Type: command
 
-Syntax: send <message> to {program | application} <programAddress> \  [with <classID>] [{with | without} reply]
+Syntax: send <message> to {program | application} <programAddress> [with <classID>] [{with | without} reply]
 
-Summary: Sends an <Apple event> to a program.
+Summary:
+Sends an <Apple event> to a program.
 
 Introduced: 1.0
 
 OS: mac
 
-Platforms: desktop,server
+Platforms: desktop, server
 
 Example:
 send "message" to program "Corporate Zone:Other Mac:LiveCode"
@@ -22,23 +23,52 @@ Example:
 send "message" to program "Chrome" with "GURLGURL"
 
 Parameters:
-message: The message you want the other application to execute (the data attached to the Apple event you are sending). Its exact format and meaning depends on the other application.
-programAddress: The AppleTalk address of the other program. The AppleTalk address consists of three parts, separated by colons: the zone the other computer is in, the name of the computer, and the name of the target program. If the other computer is in the same zone as yours, you can omit the zone. If the other program is running on the same computer, you can omit both the zone and the computer name.
-classID (string): A string consisting of the 4-character Apple event class and the 4-character event ID. If you don't specify a classID, LiveCode uses "": theclass and the event.
+message:
+The message you want the other application to execute (the data attached
+to the Apple event you are sending). Its exact format and meaning
+depends on the other application.
 
-The result: If the program supports the Apple event, it performs the command. If the program sends back a response, it is placed in the result <function>.
+programAddress:
+The AppleTalk address of the other program. The AppleTalk address
+consists of three parts, separated by colons: the zone the other
+computer is in, the name of the computer, and the name of the target
+program. If the other computer is in the same zone as yours, you can
+omit the zone. If the other program is running on the same computer, you
+can omit both the zone and the computer name.
+
+classID (string):
+A string consisting of the 4-character Apple event class and the
+4-character event ID. If you don't specify a classID, LiveCode uses "" :
+theclass and the event.
+
+The result:
+If the program supports the Apple event, it performs the command. If the
+program sends back a response, it is placed in the result <function>.
 
 Description:
-Use the <send to program> <command> to cause another application to take some action via the  <Apple event> or another <Apple event> you specify.
+Use the <send to program> <command> to cause another application to take
+some action via the <Apple event> or another <Apple event> you specify.
 
 Theandforms are synonyms.
 
-If you specify theform, the handler pauses until the application sends back a response. If you specify theform, the handler continues immediately without waiting. If you don't specify either form, theform is used.
+If you specify theform, the handler pauses until the application sends
+back a response. If you specify theform, the handler continues
+immediately without waiting. If you don't specify either form, theform
+is used.
 
->*Tip:* To display the process browser <dialog box> and allow the user to choose a running program, use the following <statement> :
+>*Tip:* To display the process browser <dialog box> and allow the user
+> to choose a running program, use the following <statement> :
 
-For more information about Apple events, see Apple Computer's technical documentation, Inside Macintosh: Interapplication Communication, located at <a href="http://developer.apple.com/techpubs/mac/IAC/IAC-2.html">http://developer.apple.com/techpubs/mac/IAC/IAC-2.html</a>.
+For more information about Apple events, see Apple Computer's technical
+documentation, Inside Macintosh: Interapplication Communication, located
+at <a
+href="http://developer.apple.com/techpubs/mac/IAC/IAC-2.html">http://developer.apple.com/techpubs/mac/IAC/IAC-2.html</a>. 
 
-References: address (property), without (keyword), appleEvent (message), request (command), reply (command), request appleEvent (command), function (control_st), dialog box (glossary), Apple Event (glossary), statement (glossary), command (glossary)
+References: request (command), reply (command),
+request appleEvent (command), function (control structure),
+dialog box (glossary), Apple Event (glossary), statement (glossary),
+command (glossary), without (keyword), appleEvent (message),
+address (property)
 
 Tags: networking
+

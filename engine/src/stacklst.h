@@ -91,15 +91,17 @@ class MCStacklist
 	uint2 nmenus;
 	Accelerator *accelerators;
 	uint2 naccelerators;
-	Boolean locktop;
 	Boolean restart;
 	Boolean active;
 
 	// MW-2011-08-17: [[ Redraw ]] This is true if something needs updating.
 	bool dirty;
+	
+	// IM-2016-11-22: [[ Bug 18852 ]] true if this stacklist should set the topstack when its contents change
+	bool m_manage_topstack;
 
 public:
-	MCStacklist();
+	MCStacklist(bool p_manage_topstack);
 	~MCStacklist();
 	void add(MCStack *sptr);
 	void remove(MCStack *sptr);

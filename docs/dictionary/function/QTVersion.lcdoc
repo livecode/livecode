@@ -6,13 +6,14 @@ Syntax: the qtVersion
 
 Syntax: qtVersion()
 
-Summary: <return|Returns> the version of <QuickTime> installed on the system.
+Summary:
+<return|Returns> the version of <QuickTime> installed on the system.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop
 
 Example:
 the qtVersion
@@ -20,17 +21,41 @@ the qtVersion
 Example:
 if the qtVersion &lt; 3 then answer "You need QuickTime 3.0 or later."
 
-Returns: The <qtVersion> function returns a positive number.
+Returns:
+The <qtVersion> function returns a positive number.
 
 Description:
-Use the <qtVersion> function to make sure the version of QuickTime that's installed is recent enough to handle any version-dependent features in movies you want to play.
+Use the <qtVersion> function to make sure the version of QuickTime
+that's installed is recent enough to handle any version-dependent
+features in movies you want to play.
 
 On Unix systems, the <qtVersion> function always <return|returns> 2.0.
 
-On Mac OS and Windows systems, if <QuickTime> is not installed, the <qtVersion> function <return|returns> 0.0. Otherwise, it returns the <QuickTime> version number.
+On Mac OS and Windows systems, if <QuickTime> is not installed, the
+<qtVersion> function <return|returns> 0.0. Otherwise, it returns the
+<QuickTime> version number.
 
->*Tip:* It can take LiveCode a second or two to load the code needed to use <QuickTime>, depending on the machine speed. Since this code is only <loaded into memory> once per session, you can speed up the first occurrence of a QuickTime-related action by calling the <qtVersion> function during otherwise dead time--for example, during startup of your application--to preload the code.
+>*Tip:* It can take LiveCode a second or two to load the code needed to
+> use <QuickTime>, depending on the machine speed. Since this code is
+> only <loaded into memory> once per session, you can speed up the first
+> occurrence of a QuickTime-related action by calling the <qtVersion>
+> function during otherwise dead time--for example, during startup of
+> your application--to preload the code.
 
-References: videoClipPlayer (property), qtIdleRate (property), dontUseQT (property), dontUseQTEffects (property), play (command), qtVersion (function), buildNumber (function), recordFormats (function), systemVersion (function), qtEffects (function), QuickTime (glossary), return (glossary), loaded into memory (glossary)
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: play (command), qtVersion (function), buildNumber (function),
+recordFormats (function), systemVersion (function), qtEffects (function),
+QuickTime (glossary), return (glossary), loaded into memory (glossary),
+videoClipPlayer (property), qtIdleRate (property), dontUseQT (property),
+dontUseQTEffects (property)
 
 Tags: multimedia
+

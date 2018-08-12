@@ -4,11 +4,13 @@ Type: function
 
 Syntax: mobileCanTrackHeading()
 
-Summary: Returns true if the device can track the heading using a digital compass, false otherwise.
+Summary:
+Returns true if the device can track the heading using a digital
+compass, false otherwise.
 
 Introduced: 4.6.1
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -20,9 +22,16 @@ if mobileCanTrackHeading() is "true" then
   answer "The heading can be tracked"
 end if
 
-Returns: The <mobileCanTrackHeading> function returns true if the device can track the heading and false otherwise.
+Returns:
+The <mobileCanTrackHeading> function returns true if the device can
+track the heading and false otherwise.
 
 Description:
-Use the <mobileCanTrackHeading> function to check whether the device has the necessary hardware support for tracking the heading using a digital compass.
+Use the <mobileCanTrackHeading> function to check whether the device has
+the necessary hardware support for tracking the heading using a digital
+compass. 
 
-References: mobileStopTrackingSensor (command), mobileStartTrackingSensor (command), mobileSensorReading (function), trackingError (message), headingChanged (message)
+References: mobileStopTrackingSensor (command),
+mobileStartTrackingSensor (command), mobileSensorReading (function),
+trackingError (message), headingChanged (message)
+

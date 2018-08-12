@@ -2,17 +2,20 @@ Name: right
 
 Type: property
 
-Syntax: set the right of <object> to <pixels> 
+Syntax: set the right of <object> to <pixels>
 
-Summary: Specifies how far an <object|object's> right edge is from the left edge of the window or screen.
+Summary:
+Specifies how far an <object|object's> right edge is from the left edge
+of the window or screen.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the right of last field to 22
@@ -21,20 +24,37 @@ Example:
 set the right of me to item 1 of the clickLoc
 
 Value:
-The <right> of an <object> is an integer. A <negative> <integer> indicates that the position is to the left of the left edge of the screen or <card> (and therefore cannot be seen).
-A stack's <right> is the distance in <pixels> from the left edge of the screen to the right edge of the <stack window>.
+The <right> of an <object(glossary)> is an integer. A <negative>
+<integer> indicates that the position is to the left of the left edge of
+the screen or <card> (and therefore cannot be seen). A stack's <right>
+is the distance in <pixels> from the left edge of the screen to the
+right edge of the <stack window>.
 
-A card's or control's <right> is the distance in <pixels> from the left edge of the <card> to the right edge of the <card> or <control>.
+A card's or control's <right> is the distance in <pixels> from the left
+edge of the <card> to the right edge of the <card> or <control>.
 
 Description:
-Use the <right> <property> to change the horizontal placement of a <control> or window.
+Use the <right> <property> to change the horizontal placement of a
+<control> or window.
 
-The <right> of a <stack> is in <absolute (screen) coordinates(glossary)>. The <right> of a <card> is always the width of the <stack window>; setting the <right> of a <card> does not cause a <error|script error>, but it has no effect. The <right> of a <group> or <control> is in <relative (window) coordinates(glossary)>.
+The <right> of a <stack> is in <absolute (screen)
+coordinates(glossary)>. The <right> of a <card> is always the width of
+the <stack window>; setting the <right> of a <card> does not cause a
+<error|script error>, but it has no effect. The <right> of a <group> or
+<control> is in <relative (window) coordinates(glossary)>.
 
-Changing the <right> of an <object> shifts it to the new position without resizing it. To change an <object|object's> width, set its width or rectangle <property>.
+Changing the <right> of an <object(glossary)> shifts it to the new
+position without resizing it. To change an <object|object's> width, set
+its width or rectangle <property>.
 
-The width <property> of an <object> is equal to its <right> minus its <left>.
+The width <property> of an <object(glossary)> is equal to its <right>
+minus its <left>.
 
-References: pixels (property), left (property), card (keyword), control (keyword), integer (keyword), left (constant), group (command), stack (object), object (object), property (glossary), relative coordinates (glossary), absolute coordinates (glossary), stack window (glossary), error (glossary), negative (glossary)
+References: group (command), left (constant), object (glossary),
+property (glossary), relative coordinates (glossary),
+absolute coordinates (glossary), stack window (glossary),
+error (glossary), negative (glossary), card (keyword), control (keyword),
+integer (keyword), stack (object), pixels (property), left (property)
 
 Tags: ui
+

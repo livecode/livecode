@@ -2,15 +2,17 @@ Name: is in
 
 Type: operator
 
-Syntax: <subString> is in <string> 
+Syntax: <subString> is in <string>
 
-Summary: Compares two <string|strings> and <evaluate|evaluates> to true if the second contains the first, false if not.
+Summary:
+Compares two <string|strings> and <evaluate|evaluates> to true if the
+second contains the first, false if not.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 "A" is in "ABC" -- evaluates to true
@@ -19,19 +21,32 @@ Example:
 "123" is in "13" -- evaluates to false
 
 Parameters:
-substring (string): The substring and string are both strings, or expressions that evaluate to strings.
-string (string): 
+substring (string):
+The substring and string are both strings, or expressions that evaluate
+to strings.
+
+string (string):
+
 
 Description:
-Use the <is in> <operator> to find out whether a <string> contains a substring.
+Use the <is in> <operator> to find out whether a <string> contains a
+substring. 
 
 The expression
-firstString is in secondString
+
+    firstString is in secondString
+
 is equivalent to
-  secondString contains firstString
 
-The <is in> <operator> is the logical inverse of the <is not in> <operator>. When one is true, the other is false.
+    secondString contains firstString
 
-References: is not in (operator), contains (operator), is among (operator), evaluate (glossary), string (glossary), operator (glossary), string (keyword)
+
+The <is in> <operator> is the logical inverse of the <is not in>
+<operator>. When one is true, the other is false.
+
+References: evaluate (glossary), string (glossary), operator (glossary),
+string (keyword), is not in (operator), contains (operator),
+is among (operator)
 
 Tags: text processing
+

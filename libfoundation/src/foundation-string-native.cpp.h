@@ -17,6 +17,7 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 #include <foundation-unicode.h>
+#include <foundation-string-hash.h>
 
 #include "foundation-private.h"
 
@@ -449,47 +450,10 @@ static inline hash_t
 __MCNativeStr_Hash(const char_t *p_chars,
                    size_t p_char_count)
 {
-#ifdef __LARGE__
-    // 64-bit variant
-    const uint64_t kPrime = 1099511628211ULL;
-    const uint64_t kOffset = 14695981039346656037ULL;
-    uint64_t t_hash = kOffset;
-    
+    MCHashCharsContext t_context;
     while (p_char_count--)
-    {
-        uint16_t t_char;
-        t_char = (uint16_t)MCUnicodeCharMapFromNative(CharFold(*p_chars++));
-        
-        // Hash the byte
-        t_hash ^= t_char & 0xFF;
-        t_hash *= kPrime;
-        
-        // Hash the second byte of the unichar
-        t_hash ^= t_char >> 8;
-        t_hash *= kPrime;
-    }
-    return t_hash;
-#else
-    // 32-bit variant
-    const uint32_t kPrime = 16777619UL;
-    const uint32_t kOffset = 2166136261UL;
-    uint32_t t_hash = kOffset;
-    
-    while (p_char_count--)
-    {
-        uint16_t t_char;
-        t_char = (uint16_t)MCUnicodeCharMapFromNative(CharFold(*p_chars++));
-        
-        // Hash the byte
-        t_hash ^= t_char & 0xFF;
-        t_hash *= kPrime;
-        
-        // Hash the second byte of the unichar
-        t_hash ^= t_char >> 8;
-        t_hash *= kPrime;
-    }
-    return t_hash;
-#endif
+        t_context.consume(MCUnicodeCharMapFromNative(CharFold(*p_chars++)));
+    return t_context;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -523,7 +487,7 @@ struct __MCNativeStr_Forward
         size_t t_char_offset;
         t_char_offset = 0;
         
-        size_t t_offset;
+        size_t t_offset = 0;
         while(t_char_offset < p_haystack_length)
         {
             if (CharEqual(p_haystack_chars[t_char_offset], p_needle_char))
@@ -563,7 +527,7 @@ struct __MCNativeStr_Forward
         size_t t_char_offset;
         t_char_offset = 0;
         
-        size_t t_offset;
+        size_t t_offset = 0;
         while(t_char_offset <= p_haystack_length)
         {
             if (__MCNativeStr_Equal<CharEqual>(p_haystack_chars + t_char_offset,
@@ -606,7 +570,7 @@ struct __MCNativeStr_Reverse
         size_t t_char_offset;
         t_char_offset = p_haystack_length;
         
-        size_t t_offset;
+        size_t t_offset = 0;
         while(t_char_offset > 0)
         {
             if (CharEqual(p_haystack_chars[t_char_offset - 1], p_needle_char))
@@ -646,7 +610,7 @@ struct __MCNativeStr_Reverse
         size_t t_char_offset;
         t_char_offset = p_haystack_length;
         
-        size_t t_offset;
+        size_t t_offset = 0;
         while(t_char_offset > 0)
         {
             if (__MCNativeStr_Equal<CharEqual>(p_haystack_chars + t_char_offset - 1,
@@ -1017,7 +981,7 @@ static bool __MCNativeOp_ForwardCharDelimitedOffset_Core(const char_t *p_haystac
     size_t t_index;
     t_index = 0;
     
-    size_t t_offset;
+    size_t t_offset = 0;
     t_offset = 0;
     
     size_t t_end_before;

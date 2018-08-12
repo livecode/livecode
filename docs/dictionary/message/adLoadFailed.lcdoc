@@ -2,15 +2,14 @@ Name: adLoadFailed
 
 Type: message
 
-Syntax: adLoadFailed <adName> 
+Syntax: adLoadFailed <adName>
 
-Summary: Sent when there is an error loading an ad.
-
-Associations: stack
+Summary:
+Sent when there is an error loading an ad.
 
 Introduced: 5.5
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -20,11 +19,18 @@ on adLoadFailed pAdName
 end adLoadFailed
 
 Parameters:
-adName: The name of ad that failed to load
+adName:
+The name of ad that failed to load
 
 Description:
-Handle the <adLoadFailed> message if you want to handle errors when loading ads.
+Handle the <adLoadFailed> message if you want to handle errors when
+loading ads.
 
-The <adLoadFailed> messge is sent to the object that created the ad when there is an error loading the ad.
+The <adLoadFailed> messge is sent to the object that created the ad when
+there is an error loading the ad.
 
-References: mobileAdCreate (command), mobileAdDelete (command), mobileAdSetVisible (command), mobileAdSetTopLeft (command), mobileAdRegister (command), mobileAdGetTopLeft (function), mobileAdGetVisible (function), adLoaded (message), adClicked (message)
+References: mobileAdCreate (command), mobileAdDelete (command),
+mobileAdSetVisible (command), mobileAdSetTopLeft (command),
+mobileAdRegister (command), mobileAdGetTopLeft (function),
+mobileAdGetVisible (function), adLoaded (message), adClicked (message)
+

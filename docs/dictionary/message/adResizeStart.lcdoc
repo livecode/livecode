@@ -2,15 +2,14 @@ Name: adResizeStart
 
 Type: message
 
-Syntax: adResizeStart <adName> 
+Syntax: adResizeStart <pAdName>
 
-Summary: Sent whan an ad is about to resize.
-
-Associations: stack
+Summary:
+Sent whan an ad is about to resize.
 
 Introduced: 6.0
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -20,11 +19,17 @@ on adResizeStart pAdName
 end adResizeStart
 
 Parameters:
-adName: The name of ad that has been expanded (as specified in mobileAdCreate)
+pAdName:
+The name of ad that has been expanded (as specified in <mobileAdCreate>)
 
 Description:
-Handle the <adResizeStart> message if you want to perform an action when an ad is about to resize.
+Handle the <adResizeStart> message if you want to perform an action when
+an ad is about to resize.
 
-The <adResizeStart> messge is sent to the current card when an ad is about to resize.
+The <adResizeStart> message is sent to the current card when an ad is
+about to resize.
 
-References: mobileAdCreate (command), mobileAdRegister (command), mobileAdDelete (command), adLoaded (message), adLoadFailed (message), adResizeEnd (message)
+References: mobileAdCreate (command), mobileAdRegister (command),
+mobileAdDelete (command), adLoaded (message), adLoadFailed (message),
+adResizeEnd (message)
+

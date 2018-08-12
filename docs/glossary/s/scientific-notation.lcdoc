@@ -1,12 +1,15 @@
 Name: scientific notation
 
-Synonyms: scientific notation,exponent notation,exponential notation
+Synonyms: scientific notation, exponent notation, exponential notation
 
 Type: glossary
 
 Description:
-A way of <format|formatting> numbers where the number is represented as a <value> between one and ten, multiplied by the appropriate power of ten.
+A way of <format|formatting> numbers where the number is represented as
+a <value> between one and ten, multiplied by the appropriate power of
+ten. 
 
 References: format (glossary), value (glossary)
 
 Tags: math
+

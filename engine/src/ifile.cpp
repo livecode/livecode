@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "stack.h"
 #include "sellst.h"
-//#include "execpt.h"
+
 
 #include "globals.h"
 #include "osspec.h"
@@ -55,25 +55,6 @@ bool MCImageParseMetadata(MCExecContext& ctxt, MCArrayRef p_array, MCImageMetada
     
     return true;
 }
-
-#ifdef LEGACY_EXEC
-// MERG-2014-09-18: [[ ImageMetadata ]] Convert image metadata scruct to array
-bool MCImageGetMetadata(MCExecPoint& ep, MCImageMetadata& p_metadata)
-{
-    MCVariableValue *v = new MCVariableValue;
-	v -> assign_new_array(1);
-    
-    if (p_metadata.has_density)
-    {
-        ep . setnvalue(p_metadata.density);
-        v -> store_element(ep, "density");
-    }
-    
-	ep.setarray(v, True);
-    
-    return true;
-}
-#endif
 
 //////////////////////////////////////////////////////////////////////
 
@@ -192,9 +173,6 @@ void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density)
 
 void MCImage::prepareimage()
 {
-	MCStack *t_stack;
-	t_stack = getstack();
-	
 	MCImagePrepareRepForDisplayAtDensity(m_rep, getdevicescale());
 }
 
@@ -205,7 +183,6 @@ void MCImage::openimage()
 	{
 		// MW-2013-06-21: [[ Valgrind ]] Initialize width/height to defaults in
 		//   case GetGeometry fails.
-		uindex_t t_width, t_height;
 		t_width = rect . width;
 		t_height = rect . height;
 		
@@ -235,7 +212,7 @@ void MCImage::openimage()
 		// MW-2011-09-12: [[ Redraw ]] If the rect has changed then notify the layer.
 		//   (note we have to check 'parent' as at the moment MCImage is used for
 		//    the rb* icons which are unowned!).
-		if (parent != nil && !MCU_equal_rect(t_old_rect, rect))
+		if (parent && !MCU_equal_rect(t_old_rect, rect))
 			layer_rectchanged(t_old_rect, false);
 
 		if (m_rep->GetFrameCount() > 1)
@@ -369,7 +346,7 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 		return;
 	uint4 oldstate = state & (CS_NO_MESSAGES | CS_SELECTED
 	                          | CS_MFOCUSED | CS_KFOCUSED);
-	MCControl *oldfocused = focused;
+	MCControlHandle oldfocused = focused;
 
 	state &= ~CS_SELECTED;
 	uint2 opencount = opened;
@@ -402,13 +379,13 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 
 	state |= oldstate;
 
-	if (oldfocused == this)
+	if (oldfocused.IsBoundTo(this))
 		focused = this;
 
 	// MW-2011-08-17: [[ Layers ]] Notify of the change in rect and invalidate.
 	// MW-2012-04-02: [[ Bug 10144 ]] Crash when pasting into an image - methods called on
 	//   image with no parent, so check parent != nil.
-	if (parent != nil && !resizeparent())
+	if (parent && !resizeparent())
 		layer_rectchanged(orect, true);
 }
 

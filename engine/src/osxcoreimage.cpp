@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "util.h"
 #include "param.h"
-//#include "execpt.h"
+
 #include "debug.h"
 #include "globals.h"
 #include "visual.h"
@@ -157,7 +157,7 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 					if (!MCStringFirstIndexOfChar(t_argument -> value, ',', t_pos, kMCCompareExact, t_comma))
 						t_comma = t_length;
 					MCAutoStringRef t_substring;
-					if (!MCStringCopySubstring(t_argument -> value, MCRangeMake(t_pos, t_comma - t_pos), &t_substring))
+					if (!MCStringCopySubstring(t_argument -> value, MCRangeMakeMinMax(t_pos, t_comma), &t_substring))
 						t_success = false;
 
 					if (!MCStringToDouble(*t_substring, t_vector[t_count]))
@@ -186,7 +186,7 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 				if (MCStringBeginsWith(t_argument -> value, MCSTR("id "), kMCStringOptionCompareCaseless))
                 {
                     MCAutoStringRef t_id;
-                    /* UNCHECKED */ MCStringCopySubstring(t_argument -> value, MCRangeMake(3, MCStringGetLength(t_argument -> value) - 3), &t_id); 
+                    /* UNCHECKED */ MCStringCopySubstring(t_argument -> value, MCRangeMakeMinMax(3, MCStringGetLength(t_argument -> value)), &t_id); 
                     integer_t t_int;
                     /* UNCHECKED */ MCStringToInteger(*t_id, t_int);
 					t_image = (MCImage *)(MCdefaultstackptr -> getobjid(CT_IMAGE, t_int));
@@ -199,22 +199,22 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
                 }
 				if (t_image != NULL)
 				{
-					MCRectangle t_rect;
-					t_rect = t_image -> getrect();
+					MCRectangle t_image_rect;
+					t_image_rect = t_image -> getrect();
 					
 					rei_uint32_t *t_data;
-					t_data = (rei_uint32_t *)malloc(t_rect . width * t_rect . height * 4);
+					t_data = (rei_uint32_t *)malloc(t_image_rect . width * t_image_rect . height * 4);
 					if (t_data != NULL)
 					{
 						MCImageBitmap *t_bitmap = nil;
 						if (t_image->lockbitmap(t_bitmap, true))
-							MCImageBitmapPremultiplyRegion(t_bitmap, 0, 0, t_bitmap->width, t_bitmap->height, t_rect.width * sizeof(uint32_t), t_data);
+							MCImageBitmapPremultiplyRegion(t_bitmap, 0, 0, t_bitmap->width, t_bitmap->height, t_image_rect.width * sizeof(uint32_t), t_data);
 						else
-							MCMemoryClear(t_data, t_rect.width * sizeof(uint32_t) * t_rect.height);
+							MCMemoryClear(t_data, t_image_rect.width * sizeof(uint32_t) * t_image_rect.height);
 						t_image->unlockbitmap(t_bitmap);
 						
-						t_parameters -> entries[t_index] . value . image . width = t_rect . width;
-						t_parameters -> entries[t_index] . value . image . height = t_rect . height;
+						t_parameters -> entries[t_index] . value . image . width = t_image_rect . width;
+						t_parameters -> entries[t_index] . value . image . height = t_image_rect . height;
 						t_parameters -> entries[t_index] . value . image . data = t_data;
 					}
 					else

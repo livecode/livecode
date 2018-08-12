@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 
 #include "dispatch.h"
 #include "image.h"
@@ -56,9 +56,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 static Boolean pserror;
 Bool debugtest = False;
 
-extern "C" int initialise_weak_link_Xinerama(void);
-extern "C" int initialise_weak_link_fontconfig(void);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCGFloat MCResGetSystemScale(void)
@@ -71,28 +68,7 @@ MCGFloat MCResGetSystemScale(void)
 
 MCScreenDC::MCScreenDC()
 {
-	ncolors = 0;
-	ownselection = False;
-	pendingevents = NULL;
-	backdrop = DNULL;
-	backdropcolor.pixel = 0;
-
-	m_backdrop_pixmap = nil;
-	
-	//Xinerama_available = false ;
-	//getdisplays_init = false ;
-
 	m_application_has_focus = true ; // The application start's up having focus, one assumes.
-	
-	backdrop_hard = false;
-	backdrop_active = false;
-    
-    m_has_native_theme = false;
-    m_has_native_color_dialogs = false;
-    m_has_native_file_dialogs = false;
-    m_has_native_print_dialogs = false;
-
-	m_im_context = NULL;
 }
 
 MCScreenDC::~MCScreenDC()
@@ -111,8 +87,6 @@ MCScreenDC::~MCScreenDC()
 		delete colornames;
 		delete allocs;
 	}
-	
-    MCNameDelete(vendorname);
 	
 	while (pendingevents != NULL)
 	{
@@ -502,23 +476,6 @@ bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_f
     if (p_globally)
         return false;
     
-    // If it has already been determined that the weak link to the fontconfig library
-    //  cannot be resolved then just return false, as we cannot load a font otherwise.
-    if (!s_can_use_fontconfig)
-        return false;
-    
-    // Try to resolve the weak link
-    if (!s_fontconfig_resolved)
-    {
-        if (initialise_weak_link_fontconfig() == 0)
-        {
-            s_can_use_fontconfig = false;
-            return false;
-        }
-        
-        s_fontconfig_resolved = true;
-    }
-    
     if (!FcInit())
         return false;
     
@@ -531,13 +488,13 @@ bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_f
     MCAutoStringRefAsSysString t_font_file;
     t_font_file . Lock(p_path);
     
-    if (!FcConfigAppFontAddFile(t_config, (FcChar8*)*t_font_file) == FcTrue)
+    if (FcFalse == FcConfigAppFontAddFile(t_config, (FcChar8*)*t_font_file))
         return false;
     
-    if (!FcConfigSetCurrent(t_config))
+    if (FcFalse == FcConfigSetCurrent(t_config))
         return false;
     
-    if (!FcConfigBuildFonts(t_config))
+    if (FcFalse == FcConfigBuildFonts(t_config))
         return false;
     
     // We don't actually do anything with the loaded font handle at the moment.

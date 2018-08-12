@@ -6,13 +6,14 @@ Syntax: the clipboard
 
 Syntax: clipboard()
 
-Summary: <return|Returns> the type of information on the <clipboard>.
+Summary:
+<return|Returns> the type of information on the <clipboard>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Example:
 if the clipboard is "text" then paste
@@ -20,20 +21,36 @@ if the clipboard is "text" then paste
 Example:
 if the clipboard is empty then answer "Nothing to paste!"
 
-Returns: The <clipboard> <function> <return|returns> text, image, objects, or empty.
+Returns:
+The <clipboard> <function> <return|returns> text, image, objects, or
+empty. 
 
 Description:
-Check the <clipboard> <function> before using the <paste> <command>, to ensure that you're pasting the right kind of data.
+Check the <clipboard> <function> before using the <paste> <command>, to
+ensure that you're pasting the right kind of data.
 
-The value of the <clipboard> <function> is a <string> describing what kind of data is on the <clipboard>. LiveCode can paste text that has been cut or copied, or picture content from an image, one or more <object|objects> that have been cut or copied.
+The value of the <clipboard> <function> is a <string> describing what
+kind of data is on the <clipboard>. LiveCode can paste text that has
+been cut or copied, or picture content from an image, one or more
+<object|objects> that have been cut or copied.
 
-If the clipboard has nothing in it, or the contents of the clipboard is a type of data that is not text, image data, or objects, the <clipboard> <function> <return|returns> empty.
+If the clipboard has nothing in it, or the contents of the clipboard is
+a type of data that is not text, image data, or objects, the <clipboard>
+<function> <return|returns> empty.
 
->*Tip:*  To get or change the data on the <clipboard>, use the <clipboardData> <property>.
+>*Tip:*  To get or change the data on the <clipboard>, use the
+> <clipboardData> <property>.
 
 Changes:
-The ability to sense image data on the clipboard was added in version 2.0.
+The ability to sense image data on the clipboard was added in version
+2.0. 
 
-References: clipboardData (property), object (object), string (keyword), command (glossary), return (glossary), property (glossary), clipboard (function), copy (command), cut (command), paste (command), function (control_st), lock clipboard (command), unlock clipboard (command), rawClipboardData (property), fullClipboardData (property)
+References: copy (command), cut (command), paste (command),
+lock clipboard (command), unlock clipboard (command),
+function (control structure), clipboard (function), object (glossary),
+command (glossary), return (glossary), property (glossary),
+string (keyword), clipboardData (property), rawClipboardData (property),
+fullClipboardData (property)
 
 Tags: ui, clipboard
+

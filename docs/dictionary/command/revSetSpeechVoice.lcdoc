@@ -2,15 +2,18 @@ Name: revSetSpeechVoice
 
 Type: command
 
-Syntax: revSetSpeechVoice <voiceName> 
+Syntax: revSetSpeechVoice <voiceName>
 
-Summary: Specifies which voice to use with the <revSpeak> <command>.
+Summary:
+Specifies which voice to use with the <revSpeak> <command>.
+
+Associations: speech library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revSetSpeechVoice "Victoria"
@@ -22,23 +25,46 @@ Example:
 revSetSpeechVoice any line of revSpeechVoices()
 
 Parameters:
-voiceName: The name of a voice installed on the system.
+voiceName:
+The name of a voice installed on the system.
 
-The result: If text to speech is not available on the current system, the <revSetSpeechVoice> <command> sets the <result> <function> to an error message.
+The result:
+If text to speech is not available on the current system, the
+<revSetSpeechVoice> <command> sets the <result> <function> to an error
+message. 
 
 Description:
-Use the <revSetSpeechVoice> <command> to change the way <text to speech|speech> sounds.
+Use the <revSetSpeechVoice> <command> to change the way <text to
+speech|speech> sounds.
 
-To get a list of voices installed on the current system, use the <revSpeechVoices> <function>.
+To get a list of voices installed on the current system, use the
+<revSpeechVoices> <function>.
 
-If the <voiceName> you specify is not installed, the <revSetSpeechVoice> <command> sets the voice to the default voice set by the system.
+If the <voiceName> you specify is not installed, the <revSetSpeechVoice>
+<command> sets the voice to the default voice set by the system.
 
-The voice specified by the <revSetSpeechVoice> <command> is used for all speeches following the <command> during the current session, but if the computer is already speaking when you <execute> the <command>, the new voice does not affect the current speech.
+The voice specified by the <revSetSpeechVoice> <command> is used for all
+speeches following the <command> during the current session, but if the
+computer is already speaking when you <execute> the <command>, the new
+voice does not affect the current speech.
 
-If the <revSetSpeechVoice> <command> is <execute|executed> while a speech is being spoken, the current speech is halted.
+If the <revSetSpeechVoice> <command> is <execute|executed> while a
+speech is being spoken, the current speech is halted.
 
->*Important:*  The <revSetSpeechVoice> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+>*Important:*  The <revSetSpeechVoice> <command> is part of the 
+> <Speech library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Speech" 
+> library checkbox is checked.
 
-References: function (control_st), revSetSpeechSpeed (command), revSpeak (command), result (function), revSpeechVoices (function), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), execute (glossary), text to speech (glossary), Speech library (library), LiveCode custom library (library)
+References: revSetSpeechSpeed (command), revSpeak (command),
+function (control structure), result (function),
+revSpeechVoices (function), Standalone Application Settings (glossary),
+command (glossary), standalone application (glossary), execute (glossary),
+text to speech (glossary), LiveCode custom library (glossary),
+Speech library (library)
 
 Tags: multimedia
+

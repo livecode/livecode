@@ -1,12 +1,13 @@
 Name: highlight
 
-Synonyms: hilite, hilited, hiliting, highlite, highlited, highliting, hilight, hilighted, hilighting, highlight, highlighted, highlighting, unhilite, unhilited, unhiliting, unhighlite, unhighlited, unhighliting, unhilight, unhilighted, unhilighting, unhighlight, unhighlighted, unhighlighting
-
 Type: glossary
 
 Description:
-To change the appearance of a <button> or other object when it's clicked, in order to make it stand out on the screen.
+To "highlight" a <button> or other object is to change its appearance
+in order to make it stand out on the screen in some way.  For example,
+a checkbox <button> is highlighted when it is checked.
 
-References: button (object)
+References: button (glossary), hilite (property)
 
 Tags: ui
+

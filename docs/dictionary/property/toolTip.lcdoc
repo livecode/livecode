@@ -2,15 +2,17 @@ Name: toolTip
 
 Type: property
 
-Syntax: set the toolTip of <object> to <string> 
+Syntax: set the toolTip of <object> to <string>
 
-Summary: Specifies the explanatory text that pops up in a small box when the user <points> to an <object>.
+Summary:
+Specifies the explanatory text that pops up in a small box when the user
+<points> to an <object(glossary)>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the toolTip of button "OK" to "Click to accept the result"
@@ -21,21 +23,34 @@ set the toolTip of me to field "Explanation"
 Example:
 set the toolTip of me to "Hello" & return & "World!"
 
-Value: The <toolTip> of a <control> is a string.
+Value:
+The <toolTip> of a <control> is a string.
 
 Description:
-Use the <toolTip> <property> to provide online help that explains what a <control> is for.
+Use the <toolTip> <property> to provide online help that explains what a
+<control> is for.
 
-A tool tip is a small box containing some text, which pops up on the screen when the mouse pointer hovers over a control. The text briefly explains the purpose and use of the control.
+A tool tip is a small box containing some text, which pops up on the
+screen when the mouse pointer hovers over a control. The text briefly
+explains the purpose and use of the control.
 
-The tool tip appears when the mouse pointer is within the control's rectangle and when the mouse has not moved for the time specified by the <toolTipDelay> <property>. If the mouse is moving, the <tool tip> does not appear.
+The tool tip appears when the mouse pointer is within the control's
+rectangle and when the mouse has not moved for the time specified by the
+<toolTipDelay> <property>. If the mouse is moving, the <tool tip> does
+not appear.
 
-Tool tips should be short and should not attempt to explain the entire action of the control. They are best used as a short reminder or clue about what a control does.
+Tool tips should be short and should not attempt to explain the entire
+action of the control. They are best used as a short reminder or clue
+about what a control does.
 
 Tool tips appear only when the Browse tool is selected.
 
->*Note:* As of LiveCode version 2.7.4 toolTips can be multiline strings. Previous version restrict tooltips to single lines.
+>*Note:* As of LiveCode version 2.7.4 toolTips can be multiline strings.
+> Previous version restrict tooltips to single lines.
 
-References: points (property), toolTipDelay (property), control (keyword), help (message), show (command), popup (command), object (object), property (glossary), tool tip (glossary)
+References: show (command), popup (command), object (glossary),
+property (glossary), tool tip (glossary), control (keyword),
+help (message), points (property), toolTipDelay (property)
 
 Tags: ui
+

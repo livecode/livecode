@@ -2,21 +2,22 @@ Name: print
 
 Type: command
 
-Syntax: print <card> [from <topLeft> to <rightBottom>] [into <pageRect>]
+Syntax: print <card> [from <topLeft> to <bottomRight>] [into <pageRect>]
 
 Syntax: print {<stack> | <card> |{marked| <number> |all} cards} [into <pageRect>]
 
-Syntax: print {<stack> | <card> |{marked| <number> |all} cards} [from <leftTop> to <rightBottom>]
+Syntax: print {<stack> | <card> |{marked| <number> |all} cards} [from <topLeft> to <bottomRight>]
 
 Syntax: print break&gt;
 
-Summary: Prints one or more <card|cards>.
+Summary:
+Prints one or more <card|cards>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios
+OS: mac, windows, linux, ios
 
-Platforms: desktop,web,mobile
+Platforms: desktop, mobile
 
 Security: printing
 
@@ -40,33 +41,97 @@ end repeat
 close printing
 
 Parameters:
-card: Any card reference. If you specify a card, that single card is printed.
-topLeft: 
-rightBottom: The points specifying the portion of the card to be printed. Each point consists of two integers separated by a comma:the horizontal distance in pixels from the left edge of the card window to the point, the vertical distance from the top edge to the point. '0,0'. If you don't specify a leftTop and rightBottom, the entire visible portion of the card is printed.
-pageRect: The rectangle into which the card is printed, and consists of four integers separated by commas: the left, top, right, and bottom edges of the printed card, in points. (There are 72 points to an inch.) The card is scaled to fit the specified pageRect. If you don't specify a pageRect, the card's size depends on the printScale property.
-stack: Any open stack. If you specify a stack, all the cards of that stack are printed. (You can print a stack even if its window isn't visible).
-number: The number of cards to print, starting with the current card.
-leftTop: The points specifying the portion of the card to be printed. Each point consists of two integers separated by a comma: the horizontal distance in pixels from the left edge of the card window to the point, the vertical distance from the top edge to the point. '0,0'. If you don't specify a leftTop and rightBottom, the entire visible portion of the card is printed.
+card:
+Any card reference. If you specify a card, that single card is printed.
+
+topLeft:
+The point specifying the topLeft of the area of the card to be printed.
+The point consists of two integers separated by a comma: the horizontal 
+distance in pixels from the left edge of the card window to the left edge 
+of the area to be printed, the vertical distance from the top edge of the
+card window to the top edge of the area to be printed. (Coodinates are in
+left,top - x,y order.) If you don't specify a topLeft and bottomRight, the
+entire visible portion of the card is printed.
+
+bottomRight:
+The point specifying the bottomRight of the area of the card to be printed.
+The point consists of two integers separated by a comma: the horizontal
+distance in pixels from the left edge of the card window to the right edge of
+the area to be printed, the vertical distance from the top edge of the card
+window to the bottom edge of the area to be printed. (Coodinates are in
+right,bottom - x,y order.) If you don't specify a topLeft and bottomRight,
+the entire visible portion of the card is printed.
+
+pageRect:
+The rectangle into which the card is printed, and consists of four
+integers separated by commas: the left, top, right, and bottom edges of
+the printed card, in points. (There are 72 points to an inch.) The card
+is scaled to fit the specified pageRect. If you don't specify a
+pageRect, the card's size depends on the printScale property.
+
+stack: 
+Any open stack. If you specify a stack, all the cards of that stack are
+printed. (You can print a stack even if its window isn't visible).
+
+number:
+The number of cards to print, starting with the current card.
 
 Description:
-Use the <print> <command> to print out a <card(keyword)>, a set of <card(object)|cards>, or all the <card(object)|cards> of a <stack>.
+Use the <print> <command> to print out a <card(keyword)>, a set of
+<card(object)|cards>, or all the <card(object)|cards> of a <stack>.
 
-The <print> <command> prints only the area of a <card(keyword)> that is visible in the stack window. To print an area of a <card(keyword)> whose <object|objects> extend beyond the window boundaries, either set the <stack|stack's> <rectangle> so it's large enough to hold all the <object|objects> to print, or use the print...from form of the <print> <command>.
+The <print> <command> prints only the area of a <card(keyword)> that is
+visible in the stack window. To print an area of a <card(keyword)> whose
+<object|objects> extend beyond the window boundaries, either set the
+<stack|stack's> <rectangle> so it's large enough to hold all the
+<object|objects> to print, or use the print...from form of the <print>
+<command>. 
 
-To print multiple cards selected one at a time, start with the <open printing> <command>, issue any <print> <command|commands> you want, then use the <close printing> <command> to print all the <card(object)|cards> you specified in the <print> <command|commands> as a single batch.
+To print multiple cards selected one at a time, start with the <open
+printing> <command>, issue any <print> <command|commands> you want, then
+use the <close printing> <command> to print all the <card(object)|cards>
+you specified in the <print> <command|commands> as a single batch.
 
-If you specify a form that includes more than one card (such as print stack), the cards may be printed more than one to a page, depending on the size of the cards and on whether you specify a <pageRect>.
+If you specify a form that includes more than one card (such as print
+stack), the cards may be printed more than one to a page, depending on
+the size of the cards and on whether you specify a <pageRect>.
 
-The print <marked> cards form prints all the cards in the current stack whose <mark> <property> is set to true.
+The print <marked> cards form prints all the cards in the current stack
+whose <mark> <property> is set to true.
 
 The print all cards form is equivalent to print this stack.
 
 The print break form forces a page break.
 
->*Note:* If a <card(keyword)> is larger than a full page, the <print command> prints only the first page of the <card(keyword)>, starting at the top left corner. To print the entire <card(keyword)>, use the <print>...into pageRect form to scale the card to the page.
+>*Note:* If a <card(keyword)> is larger than a full page, the <print
+> command> prints only the first page of the <card(keyword)>, starting
+> at the top left corner. To print the entire <card(keyword)>, use the
+> <print>...into pageRect form to scale the card to the page.
 
-LiveCode visits each card as it's printed, returning to the original card when the printing is done, but it doesn't send any system messages such as <openCard> while moving from <card(keyword)> to <card(keyword)> during printing. If you don't want the user to see these card changes, set the <lockScreen> <property> to true before you print.
+LiveCode visits each card as it's printed, returning to the original
+card when the printing is done, but it doesn't send any system messages
+such as <openCard> while moving from <card(keyword)> to <card(keyword)>
+during printing. If you don't want the user to see these card changes,
+set the <lockScreen> <property> to true before you print.
 
->*Cross-platform note:* On <Mac OS> and <Windows|Windows systems>, the <print> <command> uses the current printer. On <Unix|Unix systems>, the <print> <command> creates a <PostScript|PostScript file> and runs the program specified in the <printCommand property>, with the <file> as input.
+>*Cross-platform note:* On <Mac OS> and <Windows|Windows systems>, the
+> <print> <command> uses the current printer. On <Unix|Unix systems>,
+> the <print> <command> creates a <PostScript|PostScript file> and runs
+> the program specified in the <printCommand> <property>, with the <file>
+> as input.
 
-References: printRectangle (property), printGutters (property), printFontTable (property), printPageNumber (property), printCommand (property), printCommand property (property), printRowsFirst (property), printDuplex (property), lockScreen (property), printTitle (property), printCollate (property), file (keyword), marked (keyword), rectangle (keyword), card (keyword), openCard (message), revPrintReport (command), answer page setup (command), mark (command), cancel printing (command), revBrowserPrint (command), open printing (command), print command (command), close printing (command), answer printer (command), reset printing (command), card (object), stack (object), object (object), property (glossary), Windows (glossary), Unix (glossary), command (glossary), PostScript (glossary), Mac OS (glossary)
+References: revPrintReport (command), answer page setup (command),
+mark (command), cancel printing (command), revBrowserPrint (command),
+open printing (command), print command (command),
+close printing (command), answer printer (command),
+reset printing (command), object (glossary), property (glossary),
+Windows (glossary), Unix (glossary), command (glossary),
+PostScript (glossary), Mac OS (glossary), file (keyword),
+marked (keyword), rectangle (keyword), card (keyword), openCard (message),
+card (object), stack (object), printRectangle (property),
+printGutters (property), printFontTable (property),
+printPageNumber (property), printCommand (property),
+printRowsFirst (property),
+printDuplex (property), lockScreen (property), printTitle (property),
+printCollate (property)
+

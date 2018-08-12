@@ -1,1 +1,0 @@
-# charIndex property missing

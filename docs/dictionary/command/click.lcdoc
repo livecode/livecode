@@ -4,13 +4,14 @@ Type: command
 
 Syntax: click [button <mouseButtonNumber>] at <point> [with <key> [, <key> [, <key>]]]
 
-Summary: Simulates a mouse click.
+Summary:
+Simulates a mouse click.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,web
+Platforms: desktop
 
 Example:
 click at "100,200"
@@ -25,22 +26,51 @@ Example:
 click button 2 at the loc of button "Start"
 
 Parameters:
-mouseButtonNumber (enum): The number of a mouse button:If you don't specify a mouseButtonNumber, button 1 is used.
--  1 is the mouse button on Mac OS systems and the left button on Windows and Unix systems.
+mouseButtonNumber (enum):
+The number of a mouse button:If you don't specify a mouseButtonNumber,
+button 1 is used.
+
+-  1 is the mouse button on Mac OS systems and the left button on
+   Windows and Unix systems.
 -  2 is the middle button on Unix systems.
--  3 is the right button on Windows and Unix systems, or Control-click on Mac OS systems.
-point: Any expression that evaluates to a point--a vertical and horizontal distance from the top left of the current stack, separated by a comma.
-key: One of,,, or. You can specify up to three keys, separated by commas. (On Windows and Unix,indicates the Control key.)
+-  3 is the right button on Windows and Unix systems, or Control-click
+   on Mac OS systems.
+
+
+point:
+Any expression that evaluates to a point--a vertical and horizontal
+distance from the top left of the current stack, separated by a comma.
+
+key:
+One of,,, or. You can specify up to three keys, separated by commas. (On
+Windows and Unix,indicates the Control key.)
 
 Description:
-Use the <click> <command> to simulate the action of a click, instead of sending a <mouseDown> or <mouseUp> message--for example, to create a <graphic> or <image> with a <handler>.
+Use the <click> <command> to simulate the action of a click, instead of
+sending a <mouseDown> or <mouseUp> message--for example, to create a
+<graphic> or <image> with a <handler>.
 
-The <click> <command> sends a <mouseDown> and <mouseUp> <message> to the <object> at the clicked location. If two <object|objects> both occupy the clicked location--one overlapping the other--the <message|messages> are sent to the <object> on top.
+The <click> <command> sends a <mouseDown> and <mouseUp> <message> to the
+<object(glossary)> at the clicked location. If two <object|objects> both
+occupy the clicked location--one overlapping the other--the
+<message|messages> are sent to the <object(glossary)> on top.
 
-If the object under the <point> is a <button> whose <autoHilite> is true, the <click> <command> causes the <button> to <highlight> and unhighlight, just as though the user had clicked.
+If the object under the <point> is a <button> whose <autoHilite> is
+true, the <click> <command> causes the <button> to <highlight> and
+unhighlight, just as though the user had clicked.
 
-If the <point> is not within one of the <application|application's> windows, the <click> <command> has no effect. This means that you cannot use the <click> <command> to switch to another application.
+If the <point> is not within one of the <application|application's>
+windows, the <click> <command> has no effect. This means that you cannot
+use the <click> <command> to switch to another application.
 
-References: autoHilite (property), dragSpeed (property), linkClicked (message), mouseUp (message), mouseDown (message), mouseStillDown (message), mouseDoubleUp (message), dragStart (message), button (keyword), object (object), clickLoc (function), mouseClick (function), grab (command), choose (command), type (command), highlight (glossary), application (glossary), handler (glossary), message (glossary), graphic (glossary), command (glossary), image (glossary)
+References: grab (command), choose (command), type (command),
+clickLoc (function), mouseClick (function), object (glossary),
+highlight (glossary), application (glossary), handler (glossary),
+message (glossary), graphic (glossary), command (glossary),
+image (glossary), button (keyword), linkClicked (message),
+mouseUp (message), mouseDown (message), mouseStillDown (message),
+mouseDoubleUp (message), dragStart (message), autoHilite (property),
+dragSpeed (property)
 
 Tags: ui
+

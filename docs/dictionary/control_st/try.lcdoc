@@ -2,40 +2,92 @@ Name: try
 
 Type: control structure
 
-Syntax: try  <statementList> catch <errorVariable> <errorStatementsList> [finally  <cleanupStatementsList>]end try
+Syntax:
+try
+   <statementList>
+[ catch <errorVariable>
+   <errorStatementsList> ]
+[ finally
+   <cleanupStatementsList> ]
+end try
 
-Summary: <execute|Executes> a list of <statement|statements>, sending any <error|errors> to the <try> <control structure|structure> to be handled.
+Summary:
+<execute|Executes> a list of <statement|statements>, sending any
+<error|errors> to the <try> <control structure|structure> to be handled.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Parameters:
-statementList: The statementList, errorStatementsList, and cleanupStatementsList each consist of one or more valid LiveCode statements.
-errorVariable: A valid variable name.
-errorStatementsList: 
-cleanupStatementsList: 
+statementList:
+The statementList, errorStatementsList, and cleanupStatementsList each
+consist of one or more valid LiveCode statements.
+
+errorVariable:
+A valid variable name.
+
+errorStatementsList:
+
+
+cleanupStatementsList:
+
 
 Description:
-Use the <try> <control structure> to execute a series of <statement|statements> and handle any <error message|error messages> in the <catch> section, instead of letting LiveCode display the error window.
+Use the <try> <control structure> to execute a series of
+<statement|statements> and handle any <error message|error messages> in
+the <catch> section, instead of letting LiveCode display the error
+window. 
 
-Form:
-The <try> <control structure> begins with the word try on a single line, followed by a list of LiveCode <statement|statements>.
+**Form:** The <try> <control structure> begins with the word try on a
+single line, followed by a list of LiveCode <statement|statements>.
 
-The catch section begins with the <catch> <keyword>, followed by a <parameter> name. If any <error|errors> occur during <execute|execution> of the <statementList>, the <error message> is placed in the <errorVariable> <parameter>, and the <errorStatementsList> is <execute|executed>. <statement|statements> in the <errorStatementsList> can refer to the <value> of the errorReport.
+The catch section begins with the <catch> <keyword>, followed by a
+<parameter> name. If any <error|errors> occur during <execute|execution>
+of the <statementList>, the <error message> is placed in the
+<errorVariable> <parameter>, and the <errorStatementsList> is
+<execute|executed>. <statement|statements> in the <errorStatementsList>
+can refer to the <value> of the errorReport.
 
-The catch section may be followed by an optional <finally> section. The <cleanupStatementsList> is <execute|executed> normally, even if LiveCode encountered an <exit> or <pass> statement in the <statementList>.
+The catch section may be followed by an optional <finally> section. The
+<cleanupStatementsList> is <execute|executed> normally, even if LiveCode
+encountered an <exit> or <pass> statement in the <statementList>.
 
-The <try> <control structure|structure> ends with an <end try> <statement>.
+The <try> <control structure|structure> ends with an <end try>
+<statement>. 
 
-Each of the statements in the <statementList> is <execute|executed> normally, just as though the <statementList> were not in a <try> <control structure|structure>, except that any <error|errors> that would normally display an error window instead trigger the <catch> section. This happens even if the <error> is in another <handler> that's <call|called> from within the <try> <control structure|structure>.
+Each of the statements in the <statementList> is <execute|executed>
+normally, just as though the <statementList> were not in a <try>
+<control structure|structure>, except that any <error|errors> that would
+normally display an error window instead trigger the <catch> section.
+This happens even if the <error> is in another <handler> that's
+<call|called> from within the <try> <control structure|structure>.
 
-The statements in the catch section are <execute|executed> only if an <error> occurs. Only <error|errors> that would normally display the error window are handled by the <catch> section. If the <error> would not normally display the error window--for example, errors when opening a <file> with the <open file> <command> --it doesn't <trigger> the <catch> section.
+The statements in the catch section are <execute|executed> only if an
+<error> occurs. Only <error|errors> that would normally display the
+error window are handled by the <catch> section. If the <error> would
+not normally display the error window--for example, errors when opening
+a <file> with the <open file> <command> --it doesn't <trigger> the
+<catch> section.
 
-The statements in the <finally> section are <execute|executed> whether or not there is an <error>. Since the <finally> section is always <execute|executed> even if the <statementList> contains an <exit> or <pass> <statement>, it can be used for final cleanup actions such as deleting <variable|variables>. The <finally> section is an optional part of the <try> <control structure|structure>.
+The statements in the <finally> section are <execute|executed> whether
+or not there is an <error>. Since the <finally> section is always
+<execute|executed> even if the <statementList> contains an <exit> or
+<pass> <statement>, it can be used for final cleanup actions such as
+deleting <variable|variables>. The <finally> section is an optional part
+of the <try> <control structure|structure>.
 
->*Note:* The <try> <control structure> is implemented internally as a <command> and appears in the <commandNames>.
+>*Note:* The <try> <control structure> is implemented internally as a
+> <command> and appears in the <commandNames>.
 
-References: file (keyword), end try (keyword), finally (keyword), catch (keyword), open file (command), pass (control_st), exit (control_st), try (control_st), throw (control_st), error message (glossary), variable (glossary), call (glossary), execute (glossary), command (glossary), control structure (glossary), error (glossary), trigger (glossary), keyword (glossary), parameter (glossary), statement (glossary), handler (glossary), value (function), commandNames (function)
+References: open file (command), pass (control structure),
+exit (control structure), try (control structure),
+throw (control structure), value (function), commandNames (function),
+error message (glossary), variable (glossary), call (glossary),
+execute (glossary), command (glossary), control structure (glossary),
+error (glossary), trigger (glossary), keyword (glossary),
+parameter (glossary), statement (glossary), handler (glossary),
+file (keyword), end try (keyword), finally (keyword), catch (keyword)
+

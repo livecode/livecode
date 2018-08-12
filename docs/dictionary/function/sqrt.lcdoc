@@ -2,17 +2,18 @@ Name: sqrt
 
 Type: function
 
-Syntax: the sqrt of <number> 
+Syntax: the sqrt of <number>
 
 Syntax: sqrt(<number>)
 
-Summary: <return|Returns> the square root of a number.
+Summary:
+<return|Returns> the square root of a number.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 sqrt(9) -- returns 3
@@ -21,15 +22,22 @@ Example:
 put sqrt(sideA^2 + sideB^2) into hypotenuseLength
 
 Parameters:
-number: Any non-negative number, or an expression that evaluates to such a number.
+number:
+Any non-negative number, or an expression that evaluates to such a
+number. 
 
-Returns: The <sqrt> <function> <return|returns> a <non-negative> <number>.
+Returns:
+The <sqrt> <function> <return|returns> a <non-negative> <number>.
 
 Description:
 Use the <sqrt> <function> to find the square root of a number.
 
-The square root of a <number> is the number which must be squared to obtain <number> : sqrt(<number>)^2 is equal to <number>.
+The square root of a <number> is the number which must be squared to
+obtain <number> : sqrt(<number>)^2 is equal to <number>.
 
-References: ^ (operator), exp (function), number (function), return (glossary), non-negative (glossary), function (control_st)
+References: function (control structure), exp (function),
+number (function), return (glossary), non-negative (glossary),
+^ (operator)
 
 Tags: math
+

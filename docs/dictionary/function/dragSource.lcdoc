@@ -6,13 +6,15 @@ Syntax: the dragSource
 
 Syntax: dragSource()
 
-Summary: <return|Returns> the long ID of the <object> that dragged data was dragged from.
+Summary:
+<return|Returns> the long ID of the <object(glossary)> that dragged data
+was dragged from.
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server
+Platforms: desktop, server
 
 Example:
 the dragSource
@@ -21,14 +23,23 @@ Example:
 if the short name of the dragSource is empty then beep
 
 Returns:
-The <dragSource> <function> <return|returns> the long <ID> <property> of the <object>.
-If the drag came from another application, the <dragSource> returns an application identifier, or empty if the source cannot be determined.
+The <dragSource> <function> <return|returns> the long <ID> <property> of
+the <object(glossary)>. If the drag came from another application, the
+<dragSource> returns an application identifier, or empty if the source
+cannot be determined.
 
 Description:
-Use the <dragSource> <function> to find out which <object>, and which <object type>, is being dragged from.
+Use the <dragSource> <function> to find out which <object(glossary)>,
+and which <object type>, is being dragged from.
 
-The <dragSource> <function> only <return|returns> a value while a <drag and drop> is in progress. Otherwise, the <dragSource> <function> <return|returns> empty.
+The <dragSource> <function> only <return|returns> a value while a 
+<drag and drop> is in progress. Otherwise, the <dragSource> <function>
+<return|returns> empty.
 
-References: function (control_st), ID (property), dragEnd (message), dragDrop (message), target (function), property (glossary), return (glossary), object type (glossary), drag and drop (glossary), object (object)
+References: function (control structure), target (function),
+property (glossary), return (glossary), object type (glossary),
+drag and drop (glossary), object (glossary), dragEnd (message),
+dragDrop (message), ID (property)
 
 Tags: ui
+

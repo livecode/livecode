@@ -18,9 +18,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
    TestLoadExtension "com.livecode.library.widgetutils"
-   TestLoadExtension "com.livecode.library.iconSVG"
-   TestLoadExtension "com.livecode.widget.headerBar"
-   create widget "testHeader" as "com.livecode.widget.headerBar"
+   TestLoadExtension "com.livecode.library.iconsvg"
+   TestLoadExtension "com.livecode.widget.headerbar"
+   create widget "testHeader" as "com.livecode.widget.headerbar"
 end TestSetup
 
 on TestTeardown

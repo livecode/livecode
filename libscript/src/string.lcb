@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This library consists of the operations on strings included in the standard library of LiveCode Builder.
 */
 
@@ -34,6 +34,7 @@ public foreign handler MCStringEvalConcatenateWithSpace(in Left as String, in Ri
 public foreign handler MCStringEvalLowercaseOf(in Source as String, out Result as String) returns nothing binds to "<builtin>"
 public foreign handler MCStringEvalUppercaseOf(in Source as String, out Result as String) returns nothing binds to "<builtin>"
 
+/* No implementation
 // The following all need some notion of context 
 public foreign handler MCStringEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCStringEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) returns nothing binds to "<builtin>"
@@ -45,6 +46,7 @@ public foreign handler MCStringEvalLastOffset(in Needle as String, in Source as 
 public foreign handler MCStringEvalLastOffsetBefore(in Needle as String, in Before as LCIndex, in Source as String, out Result as LCIndex) returns nothing binds to "<builtin>"
 
 public foreign handler MCStringEvalContainsChars(in Source as String, in Needle as String, out Result as CBool) returns nothing binds to "<builtin>"
+*/
 
 public foreign handler MCStringEvalIsEqualTo(in Left as String, in Right as String, out Value as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCStringEvalIsNotEqualTo(in Left as String, in Right as String, out Value as CBool) returns nothing binds to "<builtin>"
@@ -55,7 +57,7 @@ public foreign handler MCStringEvalEmpty(out Value as String) returns nothing bi
 
 --
 
-/*
+/**
 Summary:            Prepends <Source> to <Target>.
 
 Source: 			An expression which evaluates to a string.
@@ -80,7 +82,7 @@ begin
     MCStringExecPutStringBefore(Source, Target)
 end syntax
 
-/*
+/**
 Summary:            Appends <Source> to <Target>.
 
 Source: 			An expression which evaluates to a string.
@@ -106,7 +108,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:            Replaces occurrences of <Pattern> within <Target> in <Replacement>
 
 Source: 			An expression which evaluates to a string.
@@ -132,7 +134,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:            Concatenates <Left> and <Right>.
 
 Left: 				An expression which evaluates to a string.
@@ -156,7 +158,7 @@ begin
     MCStringEvalConcatenate(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:            Concatenates <Left> and <Right> with a space between.
 
 Left: 				An expression which evaluates to a string.
@@ -182,7 +184,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:            Uppercases <Source>.
 Source: 			An expression which evaluates to a string.
 
@@ -201,7 +203,7 @@ begin
     MCStringEvalUppercaseOf(Source, output)
 end syntax
 
-/*
+/**
 Summary:            Lowercases <Source>.
 Source: 			An expression which evaluates to a string.
 
@@ -222,7 +224,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Determines whether <Left> and <Right> are equal or not.
 
 Left:       An expression which evaluates to a string.
@@ -243,7 +245,7 @@ begin
     MCStringEvalIsEqualTo(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Left> and <Right> are equal or not.
 
 Left:       An expression which evaluates to a string.
@@ -264,7 +266,7 @@ begin
     MCStringEvalIsNotEqualTo(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Left> is less than <Right> under a char by char comparison
 
 Left:       An expression which evaluates to a string.
@@ -285,7 +287,7 @@ begin
     MCStringEvalIsLessThan(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Left> is greater than <Right> under a char by char comparison
 
 Left:       An expression which evaluates to a string.
@@ -307,8 +309,7 @@ end syntax
 
 --
 
-/* 
-
+/**
 Summary: 		Designates the string of length zero.
 
 Example:

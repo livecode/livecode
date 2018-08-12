@@ -2,32 +2,49 @@ Name: topMargin
 
 Type: property
 
-Syntax: set the topMargin of {<button> | <field> | <group>} to <pixels> 
+Syntax: set the topMargin of {<button> | <field> | <group>} to <pixels>
 
-Summary: Specifies how close text within an <object> can come to the <object|object's> upper edge, and how close <object|objects> in a <group(command)> can come to the <group(glossary)|group's> upper edge.
+Summary:
+Specifies how close text within an <object(glossary)> can come to the
+<object|object's> upper edge, and how close <object|objects> in a
+<group(command)> can come to the <group(glossary)|group's> upper edge.
 
-Associations: button
+Associations: button, field, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the topMargin of button "OK" to 10
 
 Value:
 The <topMargin> is a <non-negative> <integer>.
-By default, the <topMargin> of a newly created <field(keyword)> is 8. If the <field(object)|field's> <wideMargins> <property> is true, the <field(object)|field's> <topMargin> is set to 14. The <default> <topMargin> setting for a <button> or <group> is 4.
+By default, the <topMargin> of a newly created <field(keyword)> is 8. If
+the <field(object)|field's> <wideMargins> <property> is true, the
+<field(object)|field's> <topMargin> is set to 14. The <default>
+<topMargin> setting for a <button> or <group> is 4.
 
 Description:
-Use the <topMargin> <property> to change the amount of blank space between an <object|object's> top edge and its contents.
+Use the <topMargin> <property> to change the amount of blank space
+between an <object|object's> top edge and its contents.
 
-The <topMargin> <property> of a <field> specifies how many blank <pixels> are left between the <object|object's> top edge and its contents. The <topMargin> of a <group(command)> specifies how far the <group(glossary)|group's> top edge extends below its uppermost <object>.
+The <topMargin> <property> of a <field> specifies how many blank
+<pixels> are left between the <object|object's> top edge and its
+contents. The <topMargin> of a <group(command)> specifies how far the
+<group(glossary)|group's> top edge extends below its uppermost
+<object(glossary)>. 
 
-An object's <topMargin> <property> is equal to <item> 2 of its <margins> <property>.
+An object's <topMargin> <property> is equal to <item> 2 of its <margins>
+<property>. 
 
-References: pixels (property), wideMargins (property), margins (property), default (keyword), item (keyword), integer (keyword), field (keyword), button (keyword), group (command), field (object), object (object), property (glossary), non-negative (glossary), group (glossary)
+References: group (command), object (glossary), property (glossary),
+non-negative (glossary), group (glossary), default (keyword),
+item (keyword), integer (keyword), field (keyword), button (keyword),
+field (object), pixels (property), wideMargins (property),
+margins (property)
 
 Tags: ui
+

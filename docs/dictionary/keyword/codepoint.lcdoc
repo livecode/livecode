@@ -4,13 +4,15 @@ Type: keyword
 
 Syntax: codepoint
 
-Summary: Designates the integer identifier(s) associated with a Unicode character.
+Summary:
+Designates the integer identifier(s) associated with a Unicode
+character. 
 
 Introduced: 7.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 get codepoint 1 of tString
@@ -19,12 +21,14 @@ Example:
 get the first codepoint of tString
 
 Example:
-repeat for each codepoint tCodepoint of tString
+repeat for each codepoint tCodepoint in tString
 
 Description:
-Use the codepoint <keyword> to refer to the integer identifier(s) associated with Unicode character
+Use the codepoint <keyword> to refer to the integer identifier(s)
+associated with Unicode character
 
-A codepoint is an integer identifier associted witha a Unicode character. A single character is composed of one or more codepoints.
+A codepoint is an integer identifier associted witha a Unicode
+character. A single character is composed of one or more codepoints.
 
 The hierarchy of the new and altered chunk types is as follows:
 
@@ -32,4 +36,8 @@ byte w of codeunit x of codepoint y of char z of word ...
 
 >*Note:*  This chunk type is not of general utility.
 
-References: characters (keyword), codeunits (keyword), character (keyword), codepoints (keyword), codeunit (keyword), bytes (keyword), byte (keyword), codepointToNum (function), numToCodepoint (function), keyword (glossary)
+References: codepointToNum (function), numToCodepoint (function),
+keyword (glossary), characters (keyword), codeunits (keyword),
+character (keyword), codepoints (keyword), codeunit (keyword),
+bytes (keyword), byte (keyword)
+

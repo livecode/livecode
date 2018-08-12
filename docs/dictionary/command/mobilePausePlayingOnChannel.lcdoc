@@ -1,16 +1,17 @@
 Name: mobilePausePlayingOnChannel
 
+Synonyms: iphonepauseplayingonchannel
+
 Type: command
 
-Syntax: mobilePausePlayingOnChannel <channel> 
+Syntax: mobilePausePlayingOnChannel <channel>
 
-Summary: Pauses the sound currently playing on the given channel.
-
-Synonyms: iphonePausePlayingOnChannel
+Summary:
+Pauses the sound currently playing on the given channel.
 
 Introduced: 4.6
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -21,11 +22,20 @@ Example:
 mobilePausePlayingOnChannel "current"
 
 Parameters:
-channel: The name of the channel the sound is playing on.
+channel:
+The name of the channel the sound is playing on.
 
 Description:
 Use the <mobilePausePlayingOnChannel> command to pause a sound.
 
-The <mobilePausePlayingOnChannel> command pauses the sound that is currently playing on the given channel.
+The <mobilePausePlayingOnChannel> command pauses the sound that is
+currently playing on the given channel.
 
-References: mobileDeleteSoundChannel (command), mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command), mobileResumePlayingOnChannel (command), mobileStopPlayingOnChannel (command), mobileSoundChannelVolume (function), mobileSoundOnChannel (function), mobileNextSoundOnChannel (function), mobileSoundChannels (function), mobileSoundChannelStatus (function), soundFinishedOnChannel (message)
+References: mobileDeleteSoundChannel (command),
+mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command),
+mobileResumePlayingOnChannel (command),
+mobileStopPlayingOnChannel (command), mobileSoundChannelVolume (function),
+mobileSoundOnChannel (function), mobileNextSoundOnChannel (function),
+mobileSoundChannels (function), mobileSoundChannelStatus (function),
+soundFinishedOnChannel (message)
+

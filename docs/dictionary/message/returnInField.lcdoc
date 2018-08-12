@@ -4,15 +4,17 @@ Type: message
 
 Syntax: returnInField
 
-Summary: Sent to a <field> when the <selection> is in the <field> and the user presses the Return key.
+Summary:
+Sent to a <field> when the <selection> is in the <field> and the user
+presses the Return key.
 
 Associations: field
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on returnInField -- automatically re-sort a field when a line is added
@@ -20,16 +22,31 @@ on returnInField -- automatically re-sort a field when a line is added
 end returnInField
 
 Description:
-Handle the <returnInField> <message> when you want to perform an action (such as adding a column of figures) when the user presses Return in a <field>.
+Handle the <returnInField> <message> when you want to perform an action
+(such as adding a column of figures) when the user presses Return in a
+<field>. 
 
-The Return key (confusingly labeled "Enter" on some keyboards) is usually located above the right-hand Shift key. It is the key you press to go to a new line.
+The Return key (confusingly labeled "Enter" on some keyboards) is
+usually located above the right-hand Shift key. It is the key you press
+to go to a new line.
 
-If the <returnInField> <handler> does not <pass> the <message> or send it to a further <object> in the <message path>, the keypress has no effect. <pass|Passing> the <message> allows the keypress to have its normal effect.
+If the <returnInField> <handler> does not <pass> the <message> or send
+it to a further <object(glossary)> in the <message path>, the keypress
+has no effect. <pass|Passing> the <message> allows the keypress to have
+its normal effect.
 
-The <returnInField> <message> is sent to <button|buttons> whose <menuMode> is "comboBox", since the type-in box in a <combo box> behaves like a <field>.
+The <returnInField> <message> is sent to <button|buttons> whose
+<menuMode> is "comboBox", since the type-in box in a <combo box> behaves
+like a <field>.
 
-If there is no selection or insertion point in any field and the user presses Return, the returnKey <message> is sent instead of <returnInField>.
+If there is no selection or insertion point in any field and the user
+presses Return, the returnKey <message> is sent instead of
+<returnInField>. 
 
-References: field (keyword), selection (keyword), menuMode (property), enterInField (message), pass (control_st), handler (glossary), pass (glossary), message (glossary), combo box (glossary), message path (glossary), object (object), button (object)
+References: pass (control structure), handler (glossary), pass (glossary),
+message (glossary), combo box (glossary), message path (glossary),
+object (glossary), field (keyword), selection (keyword),
+enterInField (message), button (object), menuMode (property)
 
 Tags: ui
+

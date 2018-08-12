@@ -78,6 +78,10 @@ enum MCEventType
 	kMCEventTypeCustom,
 };
 
+// Pointers to objects inside this structure shouldn't really be a raw
+// MCObjectProxy* but we can't embed the MCObjectHandle RAII class here as it
+// cannot be placed inside a union (without some C++11 magic).
+// [[ C++11 ]] Refactor this to store the handles directly
 struct MCEvent
 {
 	MCEvent *next;
@@ -92,13 +96,14 @@ struct MCEvent
 
 		struct
 		{
-			MCStack *stack;
+			MCObjectProxy<MCStack>* stack;
 			MCGFloat scale;
 		} window;
 		
 		struct
 		{
-			MCObjectHandle *target;
+            
+            MCObjectProxy<>* target;
 			union 
 			{
 				struct
@@ -112,7 +117,7 @@ struct MCEvent
 		struct
 		{
 			uint32_t time;
-			MCStack *stack;
+			MCObjectProxy<MCStack>* stack;
 			union
 			{
 				struct
@@ -140,7 +145,7 @@ struct MCEvent
 
 		struct
 		{
-			MCStack *stack;
+			MCObjectProxy<MCStack>* stack;
 			union
 			{
 				struct
@@ -158,7 +163,7 @@ struct MCEvent
 
 		struct
 		{
-			MCStack *stack;
+			MCObjectProxy<MCStack>* stack;
 			union
 			{
 				struct
@@ -173,7 +178,7 @@ struct MCEvent
 		
 		struct
 		{
-			MCStack *stack;
+			MCObjectProxy<MCStack>* stack;
 			MCEventTouchPhase phase;
 			uint32_t id;
 			uint32_t taps;
@@ -183,7 +188,7 @@ struct MCEvent
 		
 		struct
 		{
-			MCStack *stack;
+			MCObjectProxy<MCStack>* stack;
 			MCEventMotionType type;
 		} motion;
 		
@@ -250,6 +255,9 @@ void MCEventQueueFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 static void MCEventQueueDispatchEvent(MCEvent *p_event)
 {
 	MCEvent *t_event;
@@ -273,7 +281,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 				MCdefaultstackptr->getcard()->message(MCM_shut_down);
 				MCquit = True;
 				MCexitall = True;
-				MCtracestackptr = NULL;
+				MCtracestackptr = nil;
 				MCtraceabort = True;
 				MCtracereturn = True;
 				break;
@@ -293,28 +301,31 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			
 	case kMCEventTypeUpdateMenu:
 	{
-		MCObject *t_target;
-		t_target = t_event -> menu . target -> Get();
-		if (t_target != nil)
+		MCObjectHandle t_target = t_event->menu.target;
+		if (t_target.IsValid())
 			t_target->message_with_valueref_args(MCM_mouse_down, kMCEmptyString);
 	}
 	break;
 
 	case kMCEventTypeMenuPick:
 	{
-		MCObject *t_target;
-		t_target = t_event -> menu . target -> Get();
-		if (t_target != nil)
+		MCObjectHandle t_target = t_event->menu.target;
+		if (t_target.IsValid())
             // SN-2014-06-23: pick updated to StringRef
 			t_target->message_with_valueref_args(MCM_menu_pick, t_event -> menu . pick . string);
 	}
 	break;
 			
 	case kMCEventTypeWindowReshape:
-		// IM-2014-02-14: [[ HiDPI ]] update view backing scale
-		t_event -> window . stack -> view_setbackingscale(t_event->window.scale);
-		t_event -> window . stack -> view_configure(true);
+    {
+		MCStackHandle t_stack = t_event->window.stack;
+        if (t_stack.IsValid())
+        {
+            t_stack->view_setbackingscale(t_event->window.scale);
+            t_stack->view_configure(true);
+        }
 		break;
+    }
 			
 	case kMCEventTypeMouseFocus:
 		if (t_event -> mouse . focus . inside)
@@ -353,14 +364,15 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 					s_click_count += 1;
 				else
 					s_click_count = 0;
+                
+                MCclicklocx = MCmousex;
+                MCclicklocy = MCmousey;
 			}
 			else
 				s_click_time = t_event -> mouse . time;
 
 			MCeventtime = t_event -> mouse . time;
 			MCmodifierstate = t_event -> mouse . press . modifiers;
-			MCclicklocx = MCmousex;
-			MCclicklocy = MCmousey;
 			MCclickstackptr = MCmousestackptr;
 
 			MCObject *t_target;
@@ -462,16 +474,24 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		break;
 
 	case kMCEventTypeKeyFocus:
-		if (t_event -> key . focus . owner)
-			t_event -> key . stack -> kfocus();
-		else
-			t_event -> key . stack -> kunfocus();
+    {
+		MCStackHandle t_stack = t_event->key.stack;
+		
+		if (t_stack.IsValid())
+		{
+			if (t_event -> key . focus . owner)
+				t_stack->kfocus();
+			else
+				t_stack->kunfocus();
+		}
 		break;
+    }
 
 	case kMCEventTypeKeyPress:
 		{
-			MCObject *t_target;
-			t_target = t_menu != nil ? t_menu : t_event -> key . stack;
+			MCStackHandle t_stack = t_event->key.stack;
+            
+            MCObject *t_target = t_menu != nil ? t_menu : t_stack;
 
 			MCmodifierstate = t_event -> key . press . modifiers;
 
@@ -485,13 +505,15 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			}
 
 			// Otherwise 'char_code' is the unicode codepoint, so first map to
-			// UTF-16 (not done properly yet...)
-			unichar_t t_unichar;
-			t_unichar = (unichar_t)t_event -> key . press . char_code;
+			// UTF-16 codeunits
+			unichar_t t_unichars[2];
+            uindex_t t_length = 1;
+            if (MCUnicodeCodepointToSurrogates(t_event->key.press.char_code, t_unichars[0], t_unichars[1]))
+                t_length = 2;
 
 			// Now the string is created with the appropriate unicode-capable function
 			MCAutoStringRef t_buffer;
-            MCStringCreateWithChars(&t_unichar, 1, &t_buffer);
+            MCStringCreateWithChars(t_unichars, t_length, &t_buffer);
 			t_target -> kdown(*t_buffer, t_event -> key . press . key_code);
 			t_target -> kup(*t_buffer, t_event -> key . press . key_code);
 		}
@@ -528,12 +550,21 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
         t_event -> custom . event -> Dispatch();
         break;
 		
-#ifdef _MOBILE
 	case kMCEventTypeTouch:
-		handle_touch(t_event -> touch . stack, t_event -> touch . phase, t_event -> touch . id, t_event -> touch . taps, t_event -> touch . x, t_event -> touch . y);
+
+	{
+#ifdef _MOBILE
+		MCStackHandle t_stack(t_event->touch.stack);
+		handle_touch(t_stack, t_event->touch.phase, t_event->touch.id, t_event->touch.taps, t_event->touch.x, t_event->touch.y);
+#else
+        MCUnreachable();
+#endif
+
 		break;
+	}
 		
 	case kMCEventTypeMotion:
+#ifdef _MOBILE
 		{
 			MCNameRef t_message;
 			MCStringRef t_motion;
@@ -555,28 +586,46 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			
 			MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(t_message, t_motion);
 		}
+#else
+		MCUnreachable();
+#endif
 		break;
 		
 	case kMCEventTypeAcceleration:
+#ifdef _MOBILE
 		{
 			MCAutoStringRef t_value;
             /* UNCHECKED */ MCStringFormat(&t_value, "%.6f,%.6f,%.6f,%f", t_event -> acceleration . x, t_event -> acceleration . y, t_event -> acceleration . z, t_event -> acceleration . t);
 			MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(MCM_acceleration_changed, *t_value);
 		}
+#else
+		MCUnreachable();
+#endif
 		break;
 		
 	case kMCEventTypeOrientation:
+#ifdef _MOBILE
 		MCdefaultstackptr -> getcurcard() -> message(MCM_orientation_changed);
+#else
+		MCUnreachable();
+#endif
 		break;
 		
 	case kMCEventTypeLocation:
+#ifdef _MOBILE
 		MCdefaultstackptr -> getcurcard() -> message(t_event -> location . error == nil ? MCM_location_changed : MCM_location_error);
+#else
+		MCUnreachable();
+#endif
 		break;
 		
 	case kMCEventTypeHeading:
+#ifdef _MOBILE
 		MCdefaultstackptr -> getcurcard() -> message(t_event -> location . error == nil ? MCM_heading_changed : MCM_heading_error);
-		break;
+#else
+		MCUnreachable();
 #endif
+		break;
 	}
 }
 
@@ -599,29 +648,7 @@ static void MCEventQueueRemoveEvent(MCEvent *p_event)
 	}
 }
 
-static void MCEventQueueDestroyEvent(MCEvent *p_event)
-{
-	if (p_event -> type == kMCEventTypeImeCompose)
-		MCMemoryDeleteArray(p_event -> ime . compose . chars);
-	else if (p_event -> type == kMCEventTypeUpdateMenu)
-	{
-		p_event -> menu . target -> Release();
-	}
-	else if (p_event -> type == kMCEventTypeMenuPick)
-	{
-		p_event -> menu . target -> Release();
-        // SN-2014-06-23: pick updated to StringRef
-		MCValueRelease(p_event -> menu . pick . string);
-	}
-#ifdef _MOBILE
-	else if (p_event -> type == kMCEventTypeCustom)
-		p_event -> custom . event -> Destroy();
-#endif
-	
-	MCMemoryDelete(p_event);
-}
-
-static MCStack *MCEventQueueGetEventStack(MCEvent *p_event)
+static MCObjectProxy<MCStack>* MCEventQueueGetEventStack(MCEvent *p_event)
 {
 	switch(p_event -> type)
 	{
@@ -646,6 +673,31 @@ static MCStack *MCEventQueueGetEventStack(MCEvent *p_event)
 	}
 	
 	return nil;
+}
+
+static void MCEventQueueDestroyEvent(MCEvent *p_event)
+{
+    if (p_event -> type == kMCEventTypeImeCompose)
+        MCMemoryDeleteArray(p_event -> ime . compose . chars);
+    else if (p_event -> type == kMCEventTypeUpdateMenu)
+    {
+		MCObjectHandle(p_event->menu.target).ExternalRelease();
+    }
+    else if (p_event -> type == kMCEventTypeMenuPick)
+    {
+		MCObjectHandle(p_event->menu.target).ExternalRelease();
+        MCValueRelease(p_event -> menu . pick . string);
+    }
+    else if (MCEventQueueGetEventStack(p_event) != nil)
+    {
+        MCStackHandle(MCEventQueueGetEventStack(p_event)).ExternalRelease();
+    }
+#ifdef _MOBILE
+    else if (p_event -> type == kMCEventTypeCustom)
+        p_event -> custom . event -> Destroy();
+#endif
+    
+    MCMemoryDelete(p_event);
 }
 
 bool MCEventQueueDispatch(void)
@@ -674,13 +726,18 @@ void MCEventQueueFlush(MCStack *p_stack)
 	{
 		t_changed = false;
 		for(MCEvent *t_event = s_first_event; t_event != nil; t_event = t_event -> next)
-			if (MCEventQueueGetEventStack(t_event) == p_stack)
+        {
+			MCStackHandle t_stack = MCEventQueueGetEventStack(t_event);
+            
+            // Remove events referencing this stack or any dead stack
+            if (t_stack.IsBound() && (!t_stack.IsValid() || t_stack.UnsafeGet() == p_stack))
 			{
 				MCEventQueueRemoveEvent(t_event);
 				MCEventQueueDestroyEvent(t_event);
 				t_changed = true;
 				break;
 			}
+        }
 	}
 	while(t_changed);
 }
@@ -883,6 +940,7 @@ bool MCEventQueuePostNotify(MCEventQueueNotifyCallback p_callback, void *p_state
 //////////
 
 // IM-2014-02-14: [[ HiDPI ]] Post backing scale changes with window reshape message
+MC_DLLEXPORT_DEF
 bool MCEventQueuePostWindowReshape(MCStack *p_stack, MCGFloat p_backing_scale)
 {
 	// We look through the current event queue, looking for the last window
@@ -890,9 +948,17 @@ bool MCEventQueuePostWindowReshape(MCStack *p_stack, MCGFloat p_backing_scale)
 	MCEvent *t_event;
 	t_event = nil;
 	for(MCEvent *t_new_event = s_first_event; t_new_event != nil; t_new_event = t_new_event -> next)
-		if (t_new_event -> type == kMCEventTypeWindowReshape &&
-			t_new_event -> window . stack == p_stack)
-			t_event = t_new_event;
+    {
+        MCStackHandle t_stack = t_new_event->window.stack;
+        if (t_stack.IsValid())
+        {
+            if (t_new_event -> type == kMCEventTypeWindowReshape
+                && t_stack == p_stack)
+            {
+                t_event = t_new_event;
+            }
+        }
+    }
 
 	// If we found an event, remove it since we are about to replace it
 	// with a more recent mouse position event.
@@ -905,7 +971,7 @@ bool MCEventQueuePostWindowReshape(MCStack *p_stack, MCGFloat p_backing_scale)
 	if (!MCEventQueuePost(kMCEventTypeWindowReshape, t_event))
 		return false;
 	
-	t_event -> window . stack = p_stack;
+	t_event -> window . stack = p_stack->GetHandle().ExternalRetain();
 	t_event -> window . scale = p_backing_scale;
 	
 	return true;
@@ -918,7 +984,7 @@ static bool MCEventQueuePostMouse(MCEventType p_type, MCStack *p_stack, uint32_t
 	if (!MCEventQueuePost(p_type, r_event))
 		return false;
 
-	r_event -> mouse . stack = p_stack;
+	r_event -> mouse . stack = p_stack->GetHandle().ExternalRetain();
 	r_event -> mouse . time = p_time;
 
 	return true;
@@ -977,7 +1043,7 @@ bool MCEventQueuePostMousePosition(MCStack *p_stack, uint32_t p_time, uint32_t p
 	t_event = nil;
 	for(MCEvent *t_new_event = s_first_event; t_new_event != nil; t_new_event = t_new_event -> next)
 		if (MCEventQueueEventIsMouse(t_new_event) &&
-			t_new_event -> mouse . stack == p_stack)
+			MCStackHandle(t_new_event->mouse.stack) == p_stack)
 		{
 			if (t_new_event -> type == kMCEventTypeMousePosition)
 				t_event = t_new_event;
@@ -1012,7 +1078,7 @@ bool MCEventQueuePostKeyFocus(MCStack *p_stack, bool p_owner)
 	if (!MCEventQueuePost(kMCEventTypeKeyFocus, t_event))
 		return false;
 
-	t_event -> key . stack = p_stack;
+	t_event -> key . stack = p_stack->GetHandle().ExternalRetain();
 	t_event -> key . focus . owner = p_owner;
 
 	return true;
@@ -1025,7 +1091,7 @@ bool MCEventQueuePostKeyPress(MCStack *p_stack, uint32_t p_modifiers, uint32_t p
 	if (!MCEventQueuePost(kMCEventTypeKeyPress, t_event))
 		return false;
 
-	t_event -> key . stack = p_stack;
+	t_event -> key . stack = p_stack->GetHandle().ExternalRetain();
 	t_event -> key . press . modifiers = p_modifiers;
 	t_event -> key . press . char_code = p_char_code;
 	t_event -> key . press . key_code = p_key_code;
@@ -1047,7 +1113,7 @@ bool MCEventQueuePostImeCompose(MCStack *p_stack, bool p_enabled, uint32_t p_off
 		return false;
 	}
 
-	t_event -> ime . stack = p_stack;
+	t_event -> ime . stack = p_stack->GetHandle().ExternalRetain();
 	t_event -> ime . compose . enabled = p_enabled;
 	t_event -> ime . compose . offset = p_offset;
 	t_event -> ime . compose . chars = t_new_chars;
@@ -1076,23 +1142,25 @@ bool MCEventQueuePostResumeApp(void)
 	return MCEventQueuePost(kMCEventTypeResumeApp, t_event);
 }
 
-bool MCEventQueuePostUpdateMenu(MCObjectHandle *p_target)
+bool MCEventQueuePostUpdateMenu(MCObjectHandle p_target)
 {
 	MCEvent *t_event;
 	if (!MCEventQueuePost(kMCEventTypeUpdateMenu, t_event))
 		return false;
-	p_target -> Retain();
-	t_event -> menu . target = p_target;
+    
+	t_event -> menu . target = p_target.ExternalRetain();
+    
 	return true;
 }
 
-bool MCEventQueuePostMenuPick(MCObjectHandle *p_target, MCStringRef p_string)
+bool MCEventQueuePostMenuPick(MCObjectHandle p_target, MCStringRef p_string)
 {
 	MCEvent *t_event;
 	if (!MCEventQueuePost(kMCEventTypeMenuPick, t_event))
 		return false;
-	p_target -> Retain();
-	t_event -> menu . target = p_target;
+
+	t_event -> menu . target = p_target.ExternalRetain();
+    
     // SN-2014-06-23: pick updated to StringRef
 	return MCStringCopy(p_string, t_event -> menu . pick . string);
 }
@@ -1138,13 +1206,24 @@ struct MCTouch
 	MCTouch *next;
 	uint32_t id;
 	int32_t x, y;
-	MCObjectHandle *target;
+	MCObjectHandle target;
 };
 
 static MCTouch *s_touches = nil;
+static bool s_touches_for_widget = false;
 
 static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p_id, uint32_t p_taps, int32_t x, int32_t y)
 {
+    /* Touch messages might flow to a widget, or to a control.
+     *
+     * If a widget handles the first touch in a sequence, then the sequence is
+     * considered grabbed by the widget event manager and should receive all
+     * subsequent touch events in the sequence.
+     *
+     * If a widget does not handle the first touch in a sequence, then the
+     * sequence is considered not grabbed by the widget event manager and no
+     * touch events should flow into the widget event manager. */
+
 	MCTouch *t_previous_touch;
 	t_previous_touch = nil;
 	
@@ -1157,71 +1236,106 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 	// IM-2013-09-30: [[ FullscreenMode ]] Translate touch location to stack coords
 	MCPoint t_touch_loc;
 	t_touch_loc = p_stack->view_viewtostackloc(MCPointMake(x, y));
-	
-	if (p_phase != kMCEventTouchPhaseBegan)
-	{
-		for(t_touch = s_touches; t_touch != nil; t_previous_touch = t_touch, t_touch = t_touch -> next)
-			if (t_touch -> id == p_id)
-				break;
-		
-		if (t_touch != nil)
-		{
-			t_target = t_touch -> target -> Get();
-				
-			// MW-2011-09-05: [[ Bug 9683 ]] Make sure we remove (and delete the touch) here if
-			//   it is 'end' or 'cancelled' so that a cleartouches inside an invoked handler
-			//   doesn't cause a crash.			
-			if (p_phase == kMCEventTouchPhaseEnded || p_phase == kMCEventTouchPhaseCancelled)
-			{
-				if (t_previous_touch == nil)
-					s_touches = t_touch -> next;
-				else
-					t_previous_touch -> next = t_touch -> next;
-				
-				// MW-2011-01-28: Looks like a leak to me - make sure we release the object handle!
-				t_touch -> target -> Release();
-				
-				delete t_touch;
-			}
-		}
-	}
-	else
-	{
-		t_touch = new MCTouch;
-		t_touch -> next = s_touches;
-		t_touch -> id = p_id;
-		
-		t_target = p_stack -> getcurcard() -> hittest(t_touch_loc.x, t_touch_loc.y);
-		t_touch -> target = t_target -> gethandle();
-		
-		s_touches = t_touch;
-	}
 
-	if (t_target != nil)
-	{
-        // Touches on widgets are handled differently
-        if (t_target->gettype() == CT_WIDGET)
+    /* If true, then the event should be passed to the widget event manager
+     * first. If the touches are already grabbed by a widget then the event
+     * must be passed to the widget event manager. */
+    bool t_widget_first = s_touches_for_widget;
+
+    if (p_phase != kMCEventTouchPhaseBegan)
+    {
+        for(t_touch = s_touches; t_touch != nil; t_previous_touch = t_touch, t_touch = t_touch -> next)
+            if (t_touch -> id == p_id)
+                break;
+        
+        /* If there is a touch, fetch the target and delete the touch record if it
+         * is ending or cancelling a touch. */
+        if (t_touch != nil)
         {
-            MCwidgeteventmanager->event_touch(reinterpret_cast<MCWidget*>(t_target),
-                                              p_id, p_phase, t_touch_loc.x, t_touch_loc.y);
+            t_target = t_touch -> target;
+            
+            // MW-2011-09-05: [[ Bug 9683 ]] Make sure we remove (and delete the touch) here if
+            //   it is 'end' or 'cancelled' so that a cleartouches inside an invoked handler
+            //   doesn't cause a crash.			
+            if (p_phase == kMCEventTouchPhaseEnded || p_phase == kMCEventTouchPhaseCancelled)
+            {
+                if (t_previous_touch == nil)
+                    s_touches = t_touch -> next;
+                else
+                    t_previous_touch -> next = t_touch -> next;
+                
+                delete t_touch;
+            }
+        }
+    }
+    else
+    {
+        t_touch = new (nothrow) MCTouch;
+        t_touch -> next = s_touches;
+        t_touch -> id = p_id;
+
+        /* If the touch sequence isn't for widgets, then we must find a control
+         * to send the event to. In this case, if this is the first touch in 
+         * a sequence *and* the target is a widget, we must allow the widget
+         * event manager to have a look at it. */
+        if (!s_touches_for_widget)
+        {
+            t_target = p_stack -> getcurcard() -> hittest(t_touch_loc.x, t_touch_loc.y);
+            if (t_target != nullptr)
+            {
+                if (t_touch->next == nullptr &&
+                    t_target->gettype() == CT_WIDGET)
+                {
+                    t_widget_first = true;
+                }
+            
+                t_touch -> target = t_target -> GetHandle();
+            }
         }
         else
         {
-            switch(p_phase)
+            t_target = s_touches -> target;
+            t_touch -> target = t_target -> GetHandle();
+        }
+        
+        s_touches = t_touch;
+    }
+    
+	if (t_target != nil)
+	{
+        /* If the touch must be passed to the widget event manager then do that
+         * first. */
+        if (t_widget_first)
+        {
+            /* If the widget handled the touch, or a widget has grabbed all
+             * touches in a sequence (s_touches_for_widget == true), then
+             * make sure all future touches are handled by the widget em and
+             * don't fall through to the engine. */
+            if (MCwidgeteventmanager->event_touch(MCObjectCast<MCWidget>(t_target),
+                                                  p_id, p_phase, t_touch_loc.x, t_touch_loc.y) ||
+                s_touches_for_widget)
             {
-                case kMCEventTouchPhaseBegan:
-                    t_target -> message_with_args(MCM_touch_start, p_id);
-                    break;
-                case kMCEventTouchPhaseMoved:
-                    t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
-                    break;
-                case kMCEventTouchPhaseEnded:
-                    t_target -> message_with_args(MCM_touch_end, p_id);
-                    break;
-                case kMCEventTouchPhaseCancelled:
-                    t_target -> message_with_args(MCM_touch_release, p_id);
-                    break;
+                /* If this was touch event caused the sequence to end, then
+                 * make sure future touch events reconsider the target. */
+                s_touches_for_widget = s_touches != nullptr;
+                return;
             }
+        }
+        
+        switch(p_phase)
+        {
+            case kMCEventTouchPhaseBegan:
+                t_target -> message_with_args(MCM_touch_start, p_id);
+                break;
+            case kMCEventTouchPhaseMoved:
+                t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
+                break;
+            case kMCEventTouchPhaseEnded:
+                t_target -> message_with_args(MCM_touch_end, p_id);
+                break;
+            case kMCEventTouchPhaseCancelled:
+                t_target -> message_with_args(MCM_touch_release, p_id);
+                break;
         }
 	}
 }
@@ -1235,29 +1349,42 @@ static void clear_touches(void)
 		t_touch = s_touches;
 		s_touches = s_touches -> next;
 		
-		t_touch -> target -> Release();
-		
 		delete t_touch;
 	}
 }
 
 bool MCEventQueuePostTouch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p_id, uint32_t p_taps, int32_t p_x, int32_t p_y)
 {
-	MCEvent *t_event;
-	t_event = nil;
-	if (p_phase == kMCEventTouchPhaseMoved)
-		for(MCEvent *t_new_event = s_first_event; t_new_event != nil; t_new_event = t_new_event -> next)
-			if (t_new_event -> type == kMCEventTypeTouch &&
-				t_new_event -> touch . stack == p_stack &&
-				t_new_event -> touch . id == p_id &&
-				t_new_event -> touch . phase == p_phase)
-				t_event = t_new_event;
+	MCEvent *t_event = nil;
 	
+	// If there is an existing unhandled touch move event in the queue, this new
+	// one can be coalesced with it.
+	bool t_existing = false;
+	if (p_phase == kMCEventTouchPhaseMoved)
+	{
+		for(MCEvent *t_new_event = s_first_event; t_new_event != nil; t_new_event = t_new_event->next)
+		{
+			if (t_new_event -> type == kMCEventTypeTouch &&
+				MCStackHandle(t_new_event->touch.stack) == p_stack &&
+				t_new_event->touch.id == p_id &&
+				t_new_event->touch.phase == p_phase)
+			{
+				t_event = t_new_event;
+				t_existing = true;
+			}
+		}
+	}
+	
+	// If there was no existing event, create and add a new one
 	if (t_event == nil &&
 		!MCEventQueuePost(kMCEventTypeTouch, t_event))
 		return false;
 	
-	t_event -> touch . stack = p_stack;
+	// Store a reference to the stack if this is a newly-created event
+	if (!t_existing)
+		t_event->touch.stack = p_stack->GetHandle().ExternalRetain();
+	
+	// Set the touch event parameters
 	t_event -> touch . phase = p_phase;
 	t_event -> touch . id = p_id;
 	t_event -> touch . taps = p_taps;
@@ -1273,7 +1400,7 @@ bool MCEventQueuePostMotion(MCStack *p_stack, MCEventMotionType p_type, uint32_t
 	if (!MCEventQueuePost(kMCEventTypeMotion, t_event))
 		return false;
 	
-	t_event -> motion . stack = p_stack;
+	t_event -> motion . stack = p_stack->GetHandle().ExternalRetain();
 	t_event -> motion . type = p_type;
 	
 	return true;	

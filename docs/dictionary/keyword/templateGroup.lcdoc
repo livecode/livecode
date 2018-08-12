@@ -4,31 +4,51 @@ Type: keyword
 
 Syntax: templateGroup
 
-Summary: Used with the <set> <command> to set the <properties> of newly created <group|groups>.
+Summary:
+Used with the <set> <command> to set the <properties> of newly created
+<group|groups>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the lockLoc of the templateGroup to true
 
 Description:
-Use the <templateGroup> <keyword> to set up <default> <properties> to be used for any new <group(glossary)|groups> you create.
+Use the <templateGroup> <keyword> to set up <default> <properties> to be
+used for any new <group(glossary)|groups> you create.
 
-The <templateGroup> can be thought of as a special, abstract <object>. It is not an actual <group(command)>, but it has all the <properties> of a <group(command)>. The <ID> <property> of the <templateGroup> is zero.
+The <templateGroup> can be thought of as a special, abstract
+<object(glossary)>. It is not an actual <group(command)>, but it has all
+the <properties> of a <group(command)>. The <ID> <property> of the
+<templateGroup> is zero.
 
-You can use the <set> <command> to set the <properties> of the <templateGroup> before creating a <group(command)>. The new <group(command)> has the <properties> of the <templateGroup>, by <default>. Changing the <properties> of the <templateGroup> does not affect existing <group(glossary)|groups>.
+You can use the <set> <command> to set the <properties> of the
+<templateGroup> before creating a <group(command)>. The new
+<group(command)> has the <properties> of the <templateGroup>, by
+<default>. Changing the <properties> of the <templateGroup> does not
+affect existing <group(glossary)|groups>.
 
-The properties of the <templateGroup> can be returned to the default settings using the <reset> command.
+The properties of the <templateGroup> can be returned to the default
+settings using the <reset> command.
 
 You can refer to the <templateGroup> using any of the following forms:
-        templateGroup
-        the templateGroup
-        templateGroup()
 
->*Note:* The <templateGroup> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
+    templateGroup
+    the templateGroup
+    templateGroup()
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), object (object), group (object), keyword (glossary), property (glossary), command (glossary), group (glossary), expression (glossary), group (command), reset (command), set (command), function (control_st)
+
+>*Note:* The <templateGroup> <keyword> is implemented internally as a
+> <function> and appears in the <functionNames>. However, it cannot be
+> used as a <function> in an <expression>.
+
+References: group (command), reset (command), set (command),
+function (control structure), functionNames (function), object (glossary),
+keyword (glossary), property (glossary), command (glossary),
+group (glossary), expression (glossary), templateScrollbar (keyword),
+default (keyword), group (object), properties (property), ID (property)
+

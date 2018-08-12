@@ -1,0 +1,1 @@
+# Prevent lock up of PI when not selecting choice from font menu

@@ -4,13 +4,17 @@ Type: function
 
 Syntax: revXMLNodeContents(<treeID>, <node>)
 
-Summary: <return|Returns> the text contained in the specified <node> in an <XML tree>.
+Summary:
+<return|Returns> the text contained in the specified <node> in an <XML
+tree>. 
+
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -21,24 +25,46 @@ Example:
 put revXMLNodeContents(thisDoc,mySection) into field "Current Section"
 
 Parameters:
-treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
-node: The path to the node whose contents you want to get.
+treeID:
+The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+function when you created the XML tree.
 
-Returns: The <revXMLNodeContents> <function> returns a <string>.
+node:
+The path to the node whose contents you want to get.
+
+Returns:
+The <revXMLNodeContents> <function> returns a <string>.
 
 Description:
-Use the <revXMLNodeContents> <function> to get the text contents of a <node>.
+Use the <revXMLNodeContents> <function> to get the text contents of a
+<node>. 
 
-If the <revXMLNodeContents> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLNodeContents> <function> encounters an error, it
+<return|returns> an error message starting with "xmlerr".
 
-The <revXMLNodeContents> function returns the text content of a node. This is defined as the first piece of text not contained within a child node. For example:
+The <revXMLNodeContents> function returns the text content of a node.
+This is defined as the first piece of text not contained within a child
+node. For example:
 
 &lt;root&gt;Text&lt;child&gt;Child Text&lt;/child&gt;Text 2&lt;/root&gt;
 
-In the preceeding XML document, <revXMLNodeContents> will return the string "Text" when called with "root" as the <node>.
+In the preceeding XML document, <revXMLNodeContents> will return the
+string "Text" when called with "root" as the <node>.
 
->*Important:*  The <revXMLNodeContents> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLNodeContents> <function> is part of the 
+> <XML library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "XML" 
+> checkbox is checked.
 
-References: function (control_st), string (keyword), revXMLDeleteNode (command), revXMLAppend (command), revXMLAttribute (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLDeleteNode (command), revXMLAppend (command),
+function (control structure), revXMLAttribute (function), node (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), XML tree (glossary), return (glossary),
+LiveCode custom library (glossary), string (keyword),
+XML library (library)
 
 Tags: text processing
+

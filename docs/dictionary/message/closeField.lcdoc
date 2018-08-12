@@ -4,15 +4,17 @@ Type: message
 
 Syntax: closeField
 
-Summary: Sent to a <field(keyword)> when the <focus> is being removed from that <field(keyword)> and the <field(object)|field's> content has changed.
+Summary:
+Sent to a <field(keyword)> when the <focus> is being removed from that
+<field(keyword)> and the <field(object)|field's> content has changed.
 
 Associations: field
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on closeField -- make sure the user has entered a valid date
@@ -24,18 +26,38 @@ on closeField -- make sure the user has entered a valid date
 end closeField
 
 Description:
-Handle the <closeField> <message> if you want to make sure a <field(object)|field's> content is correct after it has been changed.
+Handle the <closeField> <message> if you want to make sure a
+<field(object)|field's> content is correct after it has been changed.
 
-The selection is removed from a field (and the field loses focus) when another window is brought to the front, when the user clicks in another field, or when the user tabs out of the field. The field also loses focus when the select <command> is used to <select> text in another <field>. However, the <closeField> <message> is not sent when the user clicks in the same <field>.
+The selection is removed from a field (and the field loses focus) when
+another window is brought to the front, when the user clicks in another
+field, or when the user tabs out of the field. The field also loses
+focus when the select <command> is used to <select> text in another
+<field>. However, the <closeField> <message> is not sent when the user
+clicks in the same <field>.
 
-The <closeField> <message> is not sent when a <handler> changes the field's contents using the <put> <command>.
+The <closeField> <message> is not sent when a <handler> changes the
+field's contents using the <put> <command>.
 
-If the lookAndFeel <property> is set to "Macintosh", the <closeField> <message> is generally not sent when another control (such as a <button(keyword)>) is clicked. This is because clicked buttons do not receive the <focus> on <Mac OS|Mac OS systems>, and therefore the <selection> remains active.
+If the lookAndFeel <property> is set to "Macintosh", the <closeField>
+<message> is generally not sent when another control (such as a
+<button(keyword)>) is clicked. This is because clicked buttons do not
+receive the <focus> on <Mac OS|Mac OS systems>, and therefore the
+<selection> remains active.
 
-The <closeField> <message> is also sent to <button(object)|buttons> whose <menuMode> is "comboBox", since the type-in box in a <combo box> behaves like a <field>.
+The <closeField> <message> is also sent to <button(object)|buttons>
+whose <menuMode> is "comboBox", since the type-in box in a <combo box>
+behaves like a <field>.
 
-If a field is closing and its contents have not changed, the <exitField> <message> is sent instead of <closeField>.
+If a field is closing and its contents have not changed, the <exitField>
+<message> is sent instead of <closeField>.
 
-References: field (keyword), selection (keyword), button (keyword), menuMode (property), openField (message), exitField (message), focusOut (message), put (command), focus (command), select (command), field (object), button (object), property (glossary), field (glossary), handler (glossary), message (glossary), Mac OS (glossary), command (glossary), combo box (glossary)
+References: put (command), focus (command), select (command),
+property (glossary), field (glossary), handler (glossary),
+message (glossary), Mac OS (glossary), command (glossary),
+combo box (glossary), field (keyword), selection (keyword),
+button (keyword), openField (message), exitField (message),
+focusOut (message), field (object), button (object), menuMode (property)
 
 Tags: ui
+

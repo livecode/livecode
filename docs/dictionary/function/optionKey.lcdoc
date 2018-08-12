@@ -6,13 +6,14 @@ Syntax: the optionKey
 
 Syntax: optionKey()
 
-Summary: <return|Returns> the state of the <Option key>.
+Summary:
+<return|Returns> the state of the <Option key>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 wait until the optionKey is down
@@ -20,15 +21,28 @@ wait until the optionKey is down
 Example:
 put the optionKey into item 2 of keyState
 
-Returns: The <optionKey> <function> <return|returns> down if the key is pressed and up if it's not.
+Returns:
+The <optionKey> <function> <return|returns> down if the key is pressed
+and up if it's not.
 
 Description:
-Use the <optionKey> <function(control_st)> to check whether the <Option key>, <Meta key>, or <Alt key> is being pressed. You can use <optionKey> to add alternative capabilities to user actions such as clicking.
+Use the <optionKey> <function(control structure)> to check whether the
+<Option key>, <Meta key>, or <Alt key> is being pressed. You can use
+<optionKey> to add alternative capabilities to user actions such as
+clicking. 
 
-The altKey, optionKey, and <metaKey> <function(glossary)|functions> all <return> the same <value>. Which one to use is a matter of preference.
+The altKey, optionKey, and <metaKey> <function(glossary)|functions> all
+<return> the same <value>. Which one to use is a matter of preference.
 
-The terminology varies depending on platform. Users of different operating systems may know this key as the Option key (Mac OS systems), Meta key (Unix systems), or Alt key (Windows systems).
+The terminology varies depending on platform. Users of different
+operating systems may know this key as the Option key (Mac OS systems),
+Meta key (Unix systems), or Alt key (Windows systems).
 
-References: left (constant), return (constant), optionKeyDown (message), value (function), keysDown (function), Alt key (glossary), Meta key (glossary), Option key (glossary), return (glossary), metaKey (glossary), function (glossary), function (control_st)
+References: left (constant), return (constant),
+function (control structure), value (function), keysDown (function),
+Alt key (glossary), Meta key (glossary), Option key (glossary),
+return (glossary), metaKey (glossary), function (glossary),
+optionKeyDown (message)
 
 Tags: ui
+

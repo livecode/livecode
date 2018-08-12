@@ -4,13 +4,17 @@ Type: command
 
 Syntax: load [URL] <url> [with message <callbackMessage>]
 
-Summary: <download|Downloads> the <file> specified by a <URL> to a <cache> where it can be used by another <handler>.
+Summary:
+<download|Downloads> the <file> specified by a <URL> to a <cache> where
+it can be used by another <handler>.
+
+Associations: internet library
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android, html5
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: network
 
@@ -29,27 +33,64 @@ on myUrlDownloadFinished
 end myUrlDownloadFinished
 
 Parameters:
-url: Any valid http or ftp URL.
-callbackMessage: The name of a message to send after the URL is loaded.
+url:
+Any valid http or ftp URL.
+
+callbackMessage:
+The name of a message to send after the URL is loaded.
 
 Description:
-Use the <load> <command> to pre-fetch a <file> from the Internet in order to speed up access when using it in an <expression> with the <URL> <keyword>.
+Use the <load> <command> to pre-fetch a <file> from the Internet in 
+order to speed up access when using it in an <expression> with the 
+<URL> <keyword>.
 
-To use a file that has been downloaded by the <load> <command>, refer to it using the <URL> <keyword> as usual. When you request the original <URL>, LiveCode uses the <cache|cached> <file> automatically.
+To use a file that has been downloaded by the <load> <command>, refer
+to it using the <URL> <keyword> as usual. When you request the 
+original <URL>, LiveCode uses the <cache|cached> <file> automatically.
 
-The <callbackMessage> is sent to the <object> whose <script> contains the <load> <command>, after the <URL> is <load|loaded>, so you can handle the <callbackMessage> to perform any tasks you want to delay until the URL has been <cache|cached>. Two <parameter|parameters> are sent with the <message> : the <URL> and the <URLStatus> of the <file>.
+The <callbackMessage> is sent to the <object(glossary)> whose <script> 
+contains the <load> <command>, after the <URL> is <load|loaded>, so you 
+can handle the <callbackMessage> to perform any tasks you want to delay 
+until the URL has been <cache|cached>. On iOS, Android and HTML5, four
+<parameter|parameters> are sent with the <message> : the <URL>, the
+<URLStatus> of the <file>, the contents of the <URL> or an error string
+and the total size of the <URL> in bytes. On all other platforms, two
+<parameter|parameters> are sent with the <message> : the <URL> and the
+<URLStatus> of the <file>.
 
-The <load> <command> is non-blocking, so it does not stop the current <handler> while the <download> is completed. The <handler> continues while the <load> <command> downloads the <URL> in the background. You can monitor the download by checking the <URLStatus> <function> periodically.
+The <load> <command> is non-blocking, so it does not stop the current 
+<handler> while the <download> is completed. The <handler> continues 
+while the <load> <command> downloads the <URL> in the background. You 
+can monitor the download by checking the <URLStatus> <function> 
+periodically.
 
-  load URL myURL
-  wait until the URLStatus of myURL is cached -- DON'T DO THIS
+    load URL myURL
+    wait until the URLStatus of myURL is cached -- DON'T DO THIS
 
-The file is downloaded into a local cache. It does not remain available after the application quits; the purpose of the cache is to speed up access to the specified URL, not to store it permanently. You can use a URL even if it is not in the cache, so use of the <load> <command> is optional.
 
->*Note:* Cached <files> consume memory. To release this memory after you are finished with a <URL>, use the <unload (command)> <command> to remove it from the <cache>.
+The file is downloaded into a local cache. It does not remain available 
+after the application quits; the purpose of the cache is to speed up 
+access to the specified URL, not to store it permanently. You can use a 
+URL even if it is not in the cache, so use of the <load> <command> is 
+optional.
 
->*Important:*  The <load> <command> is part of the <Internet library on desktop platforms(library)>. To ensure that the <command> works in a <standalone desktop application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure Internet Library is selected in the list of script libraries. The iOS and Android engines do not support 'libUrl' but allows you to use <load> in the background.
+>*Note:* Cached <files> consume memory. To release this memory after
+> you are finished with a <URL>, use the <unload (command)> <command> to 
+remove it from the <cache>.
 
+>*Important:*  The <load> <command> is part of the 
+> <Internet library> on desktop platforms. To ensure that the <command> 
+> works in a desktop <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
+
+>*Cross-platform note:* On iOS, Android and HTML5, the <load> <command>
+> is implemented in the engine. Therefore the <Internet library> is not 
+> needed to ensure the <command> works in a <standalone application>. If
+> included, the <Internet library> implementation will be used instead of
+> the engine implementation.
 
 > *Note:* When specifying URLs for iOS or Android, you must use the
 > appropriate form that conforms to [RFC
@@ -57,8 +98,28 @@ The file is downloaded into a local cache. It does not remain available after th
 > <URLEncode> any username and password fields appropriately for FTP
 > URLs.
 
->*Note:*  When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <load> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <load> <command> can be used in any <handler>.
+> *Cross-platform note:* The HTML5 engine only supports HTTP and HTTPs
+> protocols.
 
-References: script (property), object (object), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), Internet library (library), library (library), LiveCode custom library (library), url (keyword), file (keyword), application (glossary), standalone application (glossary), load (glossary), cache (glossary), command (glossary), standalone desktop application (glossary), main stack (glossary), expression (glossary), keyword (glossary), Standalone Application Settings (glossary), download (glossary), message (glossary), parameter (glossary), handler (glossary), libURLLastRHHeaders (function), URLEncode (function), files (function), libURLErrorData (function), URLStatus (function), cachedURLs (function), unload (command), libURLftpUpload (command), libURLDownloadToFile (command), get (command), load (command), group (command), function (control_st)
+> *Cross-platform note:* URLs fetched by the HTML5 engine from a domain
+> other than that of the hosting the page may be blocked by web browsers,
+> unless the server hosting the URL sets the "Access-Control-Origin" header
+> appropriately.
+
+References: unload (command), libURLftpUpload (command),
+libURLDownloadToFile (command), get (command),
+group (command), function (control structure),
+libURLLastRHHeaders (function), URLEncode (function), files (function),
+libURLErrorData (function), URLStatus (function), cachedURLs (function),
+object (glossary), LiveCode custom library (glossary),
+application (glossary), standalone application (glossary),
+load (glossary), cache (glossary), command (glossary),
+main stack (glossary), expression (glossary), keyword (glossary), 
+download (glossary), message (glossary), parameter (glossary), 
+handler (glossary), URL (keyword), file (keyword), 
+Internet library (library), library (library), startup (message), 
+openBackground (message), preOpenStack (message), openStack (message), 
+preOpenCard (message), script (property)
 
 Tags: networking
+

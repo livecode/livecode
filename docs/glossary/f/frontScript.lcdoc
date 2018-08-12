@@ -1,12 +1,16 @@
 Name: frontScript
 
-Synonyms: frontScript
+Synonyms: frontscript
 
 Type: glossary
 
 Description:
-A <script> that has been inserted into the <message path> before all other <object|objects>, and receives all <message|messages> before any other <object|objects> in the <message path>.
+A <script> that has been inserted into the <message path> before all
+other <object|objects>, and receives all <message|messages> before any
+other <object|objects> in the <message path>.
 
-References: message path (glossary), message (glossary), script (glossary), object (object)
+References: message path (glossary), message (glossary),
+script (glossary), object (glossary)
 
 Tags: objects
+

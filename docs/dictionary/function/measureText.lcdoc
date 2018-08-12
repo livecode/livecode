@@ -2,33 +2,66 @@ Name: measureText
 
 Type: function
 
-Syntax: measureText(<text>,<object reference>,[<mode>])
+Syntax: measureText(<text>,<objectReference>,[<mode>])
 
-Summary: <return|Returns> the width, size or bounds of the text drawn with the effective font attribute of the given object.
+Summary:
+<return|Returns> the width, size or bounds of the text drawn with the
+effective font attribute of the given object.
 
 Introduced: 6.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
-
-Example:
-put measureText(theText,me) into theTextWidth
+Platforms: desktop, server, mobile
 
 Example:
-put measureText(theText,me,"size") into theTextSize
+local tText, tTextWidth
+put "Hello world" into tText
+put measureText(tText,field "myField") into tTextWidth
 
 Example:
-put measureText(theText,me,"bounds") into theTextBounds
+local tText, tTextSize
+put "Hello world" into field "someField"
+put field "someField" into tText
+put measureText(tText,field "someField","size") into tTextSize
+
+Example:
+# handler in a field
+on textChanged
+  local tTextBounds
+  put measureText("foo",me,"bounds") into tTextBounds
+  put "The text in this field has these bounds: " & tTextBounds
+end textChanged
 
 Parameters:
-text: Any native string. For unicode strings use measureUnicodeText.
-mode: One of: 	 width - (default if not specified) - returns the width of the text size - returns the width,height of the text bounds - returns a rectangle identifying the bounds of the text in the form 0,-ascent,width,descent where ascent and descent are relative to a 0 baseline the text is drawn on.
-object reference: An expression that evaluates to an object reference.
+text(string):
+Any text string, or an <expression> that <evaluate|evaluates> to 
+a string.
+
+objectReference(string):
+An expression that <evaluate|evaluates> to an object reference.
+
+mode(enum):
+-   "width": (default if not specified)
+-   "size":
+-   "bounds":
+
+Returns:
+-   width (number): the width of the text
+-   size (int,int): the width and height of the text as a 
+comma-separated list; e.g. width,height
+-   bounds (rect): a rectangle identifying the bounds of the text in the
+form `0,-ascent,width,descent` where ascent and descent are relative to
+a 0 baseline the text is drawn on.
+
 
 Description:
-Use the <measureText> <function> to find the dimensions of text drawn with the effective font attributes of an object.
+Use the <measureText> <function> to find the dimensions of the given 
+text if drawn using the effective font attributes of the object 
+specified in the <objectReference> parameter.
 
-References: formattedWidth (property), formattedHeight (property), measureUnicodeText (function), return (glossary), function (control_st)
+References: function (control structure), return (glossary), 
+formattedWidth (property), formattedHeight (property), 
+textChanged (message), expression (glossary), evaluate (glossary)
 
-Tags: ui
+Tags: ui, text processing

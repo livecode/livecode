@@ -1,20 +1,21 @@
 Name: openStacks
 
+Synonyms: windows
+
 Type: function
 
 Syntax: the openStacks
 
 Syntax: openStacks()
 
-Summary: <return|Returns> a list of the names of all open <stacks>.
-
-Synonyms: windows
+Summary:
+<return|Returns> a list of the names of all open <stacks>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the openStacks
@@ -22,17 +23,25 @@ the openStacks
 Example:
 if it is not among the lines of the openStacks then open stack it
 
-Returns: The <openStacks> <function> <return|returns> a list with the short <name> <property> of each open <stack>, one per <line>.
+Returns:
+The <openStacks> <function> <return|returns> a list with the short
+<name> <property> of each open <stack>, one per <line>.
 
 Description:
 Use the <openStacks> <function> to determine which <stacks> are open.
 
-The list includes stacks that are part of the LiveCode development environment (such as the message box and menu bar).
+The list includes stacks that are part of the LiveCode development
+environment (such as the message box and menu bar).
 
-The list also includes open stacks that cannot be seen because their visible <property> is set to false.
+The list also includes open stacks that cannot be seen because their
+visible <property> is set to false.
 
-The order of the list is determined by the order of the windows on the screen. The frontmost window is first.
+The order of the list is determined by the order of the windows on the
+screen. The frontmost window is first.
 
-References: name (property), line (keyword), stack (object), function (control_st), stacks (function), mainStacks (function), property (glossary), return (glossary)
+References: function (control structure), stacks (function),
+mainStacks (function), property (glossary), return (glossary),
+line (keyword), stack (object), name (property)
 
 Tags: windowing
+

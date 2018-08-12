@@ -6,13 +6,15 @@ Syntax: the openProcesses
 
 Syntax: openProcesses()
 
-Summary: <return|Returns> the names of <process|processes> that have been opened with the <open process> <command>, but have not yet <exit|exited>.
+Summary:
+<return|Returns> the names of <process|processes> that have been opened
+with the <open process> <command>, but have not yet <exit|exited>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: process
 
@@ -22,13 +24,24 @@ the openProcesses
 Example:
 put the openProcesses into processesToClose
 
-Returns: The <openProcesses> <function> <return|returns> a list of <process> names, one per line.
+Returns:
+The <openProcesses> <function> <return|returns> a list of <process>
+names, one per line.
 
 Description:
-Use the <openProcesses> <function> to find out which <process|processes> need to be closed, or to check whether a <process> is already running before communicating with it.
+Use the <openProcesses> <function> to find out which <process|processes>
+need to be closed, or to check whether a <process> is already running
+before communicating with it.
 
-The list of process names is in the same order used by openProcessIDs <function>, which is the same order that the <process|processes> were opened.
+The list of process names is in the same order used by openProcessIDs
+<function>, which is the same order that the <process|processes> were
+opened. 
 
-Programs that were not started by LiveCode are not included in the list returned by the <openProcesses> <function>.
+Programs that were not started by LiveCode are not included in the list
+returned by the <openProcesses> <function>.
 
-References: there is no (operator), open process (command), kill (command), read from process (command), function (control_st), exit (glossary), command (glossary), return (glossary), process (glossary)
+References: open process (command), kill (command),
+read from process (command), function (control structure),
+exit (glossary), command (glossary), return (glossary),
+process (glossary), there is no (operator)
+

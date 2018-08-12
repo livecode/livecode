@@ -2,15 +2,16 @@ Name: revDeleteFolder
 
 Type: command
 
-Syntax: revDeleteFolder <folderToDelete> 
+Syntax: revDeleteFolder <folderToDelete>
 
-Summary: Removes a <folder> and all its contents.
+Summary:
+Removes a <folder> and all its contents.
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revDeleteFolder "/data/Backup Folder"
@@ -19,19 +20,53 @@ Example:
 revDeleteFolder myTempFolder
 
 Parameters:
-folderToDelete: The folderToDelete specifies the name and location of the folder. If you specify a name but not a location, LiveCode assumes the folder is in the defaultFolder.
+folderToDelete:
+The folderToDelete specifies the name and location of the folder. If you
+specify a name but not a location, LiveCode assumes the folder is in the
+defaultFolder. 
 
-The result: The <revDeleteFolder> <command> uses system services on each <platform> to perform the move. On <Mac OS> and <OS X|OS X systems>, it uses <AppleScript>; on <Windows> and <Unix> systems, it uses the <shell> <function>. Any errors encountered are <return|returned> in the <result> <function>.
+The result:
+The <revDeleteFolder> <command> uses system services on each <platform>
+to perform the move. On <Mac OS> and <OS X|OS X systems>, it uses
+<AppleScript>; on <Windows> and <Unix> systems, it uses the <shell>
+<function>. Any errors encountered are <return|returned> in the <result>
+<function>. 
 
 Description:
 Use the <revDeleteFolder> <function> to remove a <folder> from the disk.
 
-The <revDeleteFolder> <command> removes the entire <folder>, including all <file|files>, <subfolder|subfolders>, and their contents.
+The <revDeleteFolder> <command> removes the entire <folder>, including
+all <file|files>, <subfolder|subfolders>, and their contents.
 
-On Mac OS and OS X systems, the <revDeleteFolder> <command> places the <folder> in the Trash.
+On Mac OS and OS X systems, the <revDeleteFolder> <command> places the
+<folder> in the Trash.
 
->*Warning:*  This <command> can be used to rename or move <file|files> and <folder|folders> your stack did not create. Of course, a <stack> should not rename or move <file|files> and <folder|folders> it didn't create without obtaining explicit confirmation from the user.
+>*Warning:*  This <command> can be used to rename or move <file|files>
+> and <folder|folders> your stack did not create. Of course, a <stack>
+> should not rename or move <file|files> and <folder|folders> it didn't
+> create without obtaining explicit confirmation from the user.
 
->*Note:* When included in a <standalone application>, the <Common library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <revDeleteFolder> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <revDeleteFolder> <command> can be used in any <handler>.
+>*Note:* When included in a <standalone application>, the <Common
+> library> is implemented as a hidden <group> and made available when
+> the <group> receives its first <openBackground> message. During the
+> first part of the <application|application's> startup process, before
+> this <message> is sent, the <revDeleteFolder> <command> is not yet
+> available. This may affect attempts to use this <command> in
+> <startup>, <preOpenStack>, <openStack>, or <preOpenCard>
+> <handler|handlers> in the <main stack>. Once the <application> has
+> finished starting up, the <library> is available and the
+> <revDeleteFolder> <command> can be used in any <handler>.
 
-References: startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), Common library (library), library (library), function (control_st), application (glossary), return (glossary), standalone application (glossary), file (glossary), shell (glossary), subfolder (glossary), platform (glossary), command (glossary), Windows (glossary), main stack (glossary), OS X (glossary), AppleScript (glossary), group (glossary), result (glossary), Unix (glossary), Mac OS (glossary), folder (glossary), message (glossary), handler (glossary), folders (function), revCopyFolder (command), create folder (command), answer folder (command), delete file (command), revMoveFolder (command), stack (object)
+References: revCopyFolder (command), create folder (command),
+answer folder (command), delete file (command), revMoveFolder (command),
+function (control structure), folders (function), application (glossary),
+return (glossary), standalone application (glossary), file (glossary),
+shell (glossary), subfolder (glossary), platform (glossary),
+command (glossary), Windows (glossary), main stack (glossary),
+OS X (glossary), AppleScript (glossary), group (glossary),
+result (glossary), Unix (glossary), Mac OS (glossary), folder (glossary),
+message (glossary), handler (glossary), Common library (library),
+library (library), startup (message), openBackground (message),
+preOpenStack (message), openStack (message), preOpenCard (message),
+stack (object)
+

@@ -1,18 +1,19 @@
 Name: field
 
+Synonyms: fld
+
 Type: object
 
 Syntax: field
 
-Summary: A <control> that contains text.
-
-Synonyms: fld
+Summary:
+A <control> that contains text.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the backgroundColor of field "Warnings" to "red"
@@ -21,14 +22,19 @@ Example:
 put it into line 3 of field "Help"
 
 Description:
-Use the <field> <object type> to hold text or to provide a place for the user to enter text.
+Use the <field> <object type> to hold text or to provide a place for
+the user to enter text.
 
-Fields can contain styled text (with different fonts, sizes, styles, and colors for different parts of the text they contain). A field can be displayed with or without horizontal and vertical scrollbars, and can be unlocked (allowing the user to enter text) or locked.
+Fields can contain styled text (with different fonts, sizes, styles,
+and colors for different parts of the text they contain). A field can be
+displayed with or without horizontal and vertical scrollbars, and can
+be unlocked (allowing the user to enter text) or locked.
 
-A field is contained in a card, group, or background. Fields cannot contain other objects.
+A field is contained in a card, group, or background. Fields cannot 
+contain other objects.
 
-The field object has a number of properties and messages associated with it. To see a list of messages that can be sent to a field as a result of user actions or internal LiveCode events, open the "LiveCode Language Dictionary" page of the main Documentation window, ensure that the field column is visible and use sort and filter to bring the relevant entries to the top
-
-References: templateField (keyword), control (keyword), object type (glossary)
+References: object type (glossary), templateField (keyword),
+control (keyword)
 
 Tags: objects
+

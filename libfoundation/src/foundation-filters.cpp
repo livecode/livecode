@@ -41,7 +41,7 @@ bool MCFiltersBase64Decode(MCStringRef p_src, MCDataRef& r_dst)
     
     uint32_t l;
     MCAutoStringRefAsNativeChars t_native;
-    char_t *s = nil;
+    const char_t *s = nil;
     byte_t *p = nil;
     
     if (!t_native . Lock(p_src, s, l))
@@ -300,8 +300,8 @@ bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result)
 	zstrm.avail_out = size;
 	int err;
 	if (inflateInit2(&zstrm, -MAX_WBITS) != Z_OK
-        || (err = inflate(&zstrm, Z_FINISH)) != Z_STREAM_END
-        && err != Z_OK && err != Z_BUF_ERROR // bug on OS X returns this error
+	    || ((err = inflate(&zstrm, Z_FINISH)) != Z_STREAM_END
+	        && err != Z_OK && err != Z_BUF_ERROR) // bug on OS X returns this error
         || inflateEnd(&zstrm) != Z_OK)
 		return false;
     
@@ -310,7 +310,7 @@ bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static const char *url_table[256] =
+static const char * const url_table[256] =
 {
     "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07", "%08", "%09",
     "%0D%0A", "%0B", "%0C", "%0D", "%0E", "%0F", "%10", "%11", "%12",

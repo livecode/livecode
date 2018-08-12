@@ -4,13 +4,17 @@ Type: message
 
 Syntax: dragEnd
 
-Summary: Sent to the <object> a <drag and drop> started from, when the data is dropped.
+Summary:
+Sent to the <object(glossary)> a <drag and drop> started from, when the
+data is dropped.
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+Associations: field, button, graphic, scrollbar, player, image
 
-Platforms: desktop,server
+OS: mac, windows, linux
+
+Platforms: desktop, server
 
 Example:
 on dragEnd -- remove data being dragged
@@ -18,27 +22,56 @@ on dragEnd -- remove data being dragged
 end dragEnd
 
 Description:
-Handle the <dragEnd> <message> to perform an action when the user drops data, or <trap> the <message> to prevent text from being deleted from a <field(keyword)> when it's dragged to another <field(keyword)>.
+Handle the <dragEnd> <message> to perform an action when the user drops
+data, or <trap> the <message> to prevent text from being deleted from a
+<field(keyword)> when it's dragged to another <field(keyword)>.
 
-The <dragEnd> <message> is sent to the <control> that the drag started from. If the data is not dropped onto a <control> that accepts it, the <dragEnd> <message> is still sent.
+The <dragEnd> <message> is sent to the <control> that the drag started
+from. If the data is not dropped onto a <control> that accepts it, the
+<dragEnd> <message> is still sent.
 
-LiveCode automatically handles the mechanics of dragging and dropping text between and within unlocked fields. To support this type of drag and drop operation, you don't need to do any scripting: the text is deleted from the source field automatically when LiveCode receives the <dragEnd> <message>.
+LiveCode automatically handles the mechanics of dragging and dropping
+text between and within unlocked fields. To support this type of drag
+and drop operation, you don't need to do any scripting: the text is
+deleted from the source field automatically when LiveCode receives the
+<dragEnd> <message>.
 
-To prevent the dragged text from being automatically deleted from the source field when it's dropped onto another unlocked field, trap the <dragEnd> <message>. If you don't want text from a particular <field(keyword)> to be deleted after dragging, place a <dragEnd> <handler> in the <field(keyword)> that does not contain a <pass> <control structure>:
+To prevent the dragged text from being automatically deleted from the
+source field when it's dropped onto another unlocked field, trap the
+<dragEnd> <message>. If you don't want text from a particular
+<field(keyword)> to be deleted after dragging, place a <dragEnd>
+<handler> in the <field(keyword)> that does not contain a <pass>
+<control structure>:
 
-  on dragEnd -- in script of field or one of its owners
--- do nothing, but trap the message
-  end dragEnd
+    on dragEnd -- in script of field or one of its owners
+        -- do nothing, but trap the message
+    end dragEnd
 
-On the other hand, if you want to perform some action when text is dragged from an unlocked field and then dropped, you need to pass the <dragEnd> <message> once you're done with it in order to allow the deletion to take place:
+On the other hand, if you want to perform some action when text is
+dragged from an unlocked field and then dropped, you need to pass the
+<dragEnd> <message> once you're done with it in order to allow the
+deletion to take place:
 
-  on dragEnd
-    set the textColor of me to "gray"
-    pass dragEnd -- needed for text removal to occur
-  end dragEnd
+    on dragEnd
+        set the textColor of me to "gray"
+        pass dragEnd -- needed for text removal to occur
+    end dragEnd
 
-To make changes to the original data in a locked field or a control other than a field when a drop is completed, handle the <dragEnd> message. For these objects, if you want the dragged data to be removed (or changed), your <dragEnd> <handler> must delete the dragged text from the source <object> (or perform whatever action you want to do on a drop); the behavior is not automated as it is for <unlock|unlocked> <field(object)|fields>.
+To make changes to the original data in a locked field or a control
+other than a field when a drop is completed, handle the <dragEnd>
+message. For these objects, if you want the dragged data to be removed
+(or changed), your <dragEnd> <handler> must delete the dragged text from
+the source <object(glossary)> (or perform whatever action you want to do
+on a drop); the behavior is not automated as it is for <unlock|unlocked>
+<field(object)|fields>. 
 
-References: dragImage (property), acceptDrop (property), dragEnd (message), dragDrop (message), mouseRelease (message), field (keyword), field (object), object (object), dragSource (function), dragDestination (function), handler (glossary), message (glossary), unlock (glossary), control structure (glossary), drag and drop (glossary), control (glossary), trap (glossary), pass (control_st)
+References: pass (control structure), dragSource (function),
+dragDestination (function), object (glossary), handler (glossary),
+message (glossary), unlock (glossary), control structure (glossary),
+drag and drop (glossary), control (glossary), trap (glossary),
+field (keyword), dragEnd (message), dragDrop (message),
+mouseRelease (message), field (object), dragImage (property),
+acceptDrop (property)
 
 Tags: ui
+

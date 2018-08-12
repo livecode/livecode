@@ -22,8 +22,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mccontrol.h"
 
-class MCVideoClip : public MCObject
+typedef MCObjectProxy<MCVideoClip>::Handle MCVideoClipHandle;
+
+class MCVideoClip : public MCObject, public MCMixinObjectHandle<MCVideoClip>
 {
+public:
+    
+    enum { kObjectType = CT_VIDEO_CLIP };
+    using MCMixinObjectHandle<MCVideoClip>::GetHandle;
+    
+private:
+    
 	real8 scale;
 	uint2 framerate;
 	uint1 *frames;
@@ -39,16 +48,13 @@ public:
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
 
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
-
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
+    
 	MCVideoClip *clone();
 	bool getfile(MCStringRef& r_file);
 	real8 getscale()

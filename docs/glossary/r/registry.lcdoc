@@ -1,10 +1,15 @@
 Name: registry
 
-Synonyms: registries,registry,system registry,system registries,Windows system registry,Windows system registries,Windows registry,Windows registries
+Synonyms: registries, registry, system registry, system registries,
+windows system registry, windows system registries, windows registry,
+windows registries
 
 Type: glossary
 
 Description:
-A database of configuraton information, used on <Windows|Windows systems> to associate files with the applications they belong to and to hold various system settings.
+A database of configuraton information, used on <Windows|Windows
+systems> to associate files with the applications they belong to and to
+hold various system settings.
 
 References: Windows (glossary)
+

@@ -2,20 +2,22 @@ Name: is among the keys of
 
 Type: operator
 
-Syntax: <valueToFind> is among the keys of <arrayToSearch> 
+Syntax: <valueToFind> is among the keys of <arrayToSearch>
 
-Summary: Evaluates to true if the <valueToFind> is an element name in the <arrayToSearch>.
+Summary:
+Evaluates to true if the <valueToFind> is an element name in the
+<arrayToSearch>. 
 
 Introduced: 2.9
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 local tArray
 put "World" into tArray["Hello"] 
-"Hello" is among the keys of tArray -- evaluates to true
+get "Hello" is among the keys of tArray -- evaluates to true
 
 Example:
 if "text" is among the keys of the dragData then
@@ -23,10 +25,16 @@ if "text" is among the keys of the dragData then
 end if
 
 Parameters:
-valueToFind (string): 
-arrayToSearch (array): 
+valueToFind (string):
+
+
+arrayToSearch (array):
+
 
 Description:
-<Is among the keys of> should be used to check whether an array contains an element of a specified name.
+<is among the keys of> should be used to check whether an array contains
+an element of a specified name.
 
-References: is not among (operator), is not among the keys of (operator), is among (operator), keys (function)
+References: keys (function), is not among (operator),
+is not among the keys of (operator), is among (operator)
+

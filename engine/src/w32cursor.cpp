@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -138,7 +138,7 @@ static LPCSTR kMCStandardWindowsCursors[] =
 static MCCursorRef create_standard_cursor(LPCSTR p_cursor)
 {
 	MCCursorRef t_cursor;
-	t_cursor = new MCCursor;
+	t_cursor = new (nothrow) MCCursor;
 	// IM-2013-07-17: [[ bug 9836 ]] set up the nil string as the empty 'none' cursor
 	if (p_cursor == nil)
 		t_cursor -> kind = kMCCursorNone;
@@ -151,7 +151,7 @@ static MCCursorRef create_standard_cursor(LPCSTR p_cursor)
 static MCCursorRef create_custom_cursor(HCURSOR p_cursor)
 {
 	MCCursorRef t_cursor;
-	t_cursor = new MCCursor;
+	t_cursor = new (nothrow) MCCursor;
 	t_cursor -> kind = kMCCursorCustom;
 	t_cursor -> custom = p_cursor;
 	return t_cursor;

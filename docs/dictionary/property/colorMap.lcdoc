@@ -2,15 +2,16 @@ Name: colorMap
 
 Type: property
 
-Syntax: set the colorMap to <colorsList> 
+Syntax: set the colorMap to <colorsList>
 
-Summary: Lists the colors in the current <color table>.
+Summary:
+Lists the colors in the current <color table>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the colorMap to myMap
@@ -19,24 +20,43 @@ Example:
 if the colorMap is fixed then usePhotoIcons
 
 Value:
-The <colorMap> is a list of <color reference|color references>, one per line.
-A color reference is any standard color name; or three comma-separated integers between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three hexadecimal numbers, one for each of red, green, and blue.
+The <colorMap> is a list of <color reference|color references>, one per
+line. A color reference is any standard color name; or three
+comma-separated integers between zero and 255, specifying the level of
+each of red, green, and blue; or an HTML-style color consisting of a
+hash mark (#) followed by three hexadecimal numbers, one for each of
+red, green, and blue.
 
-The <colorMap> <property> contains the number of lines <return|returned> by the <screenColors> <function>.
+The <colorMap> <property> contains the number of lines <return|returned>
+by the <screenColors> <function>.
 
 Description:
-Use the <colorMap> <property> to specify what colors LiveCode uses to draw its windows when the <bit depth> of the screen is 8 <bit|bits> or less.
+Use the <colorMap> <property> to specify what colors LiveCode uses to
+draw its windows when the <bit depth> of the screen is 8 <bit|bits> or
+less. 
 
-If the bit depth is greater than 8 bits, the <colorMap> <property> always reports "fixed".
+If the bit depth is greater than 8 bits, the <colorMap> <property>
+always reports "fixed".
 
-The number of lines in the <colorMap> <property> is set when the <application> starts up, and does not change if you change color depths while running the <application>.
+The number of lines in the <colorMap> <property> is set when the
+<application> starts up, and does not change if you change color depths
+while running the <application>.
 
-If you leave a line blank when setting the <colorMap>, the color corresponding to that <line> is left unchanged.
+If you leave a line blank when setting the <colorMap>, the color
+corresponding to that <line> is left unchanged.
 
->*Cross-platform note:*  On <Windows|Windows systems>, colors 110 and 246256 cannot be changed.
+>*Cross-platform note:*  On <Windows|Windows systems>, colors 110 and
+> 246256 cannot be changed.
 
-On Unix systems, setting the <colorMap> <property> sets the <privateColors> <property> to true.
+On Unix systems, setting the <colorMap> <property> sets the
+<privateColors> <property> to true.
 
-References: colorWorld (property), borderPixel (property), dontDither (property), privateColors (property), remapColor (property), line (keyword), screenColors (function), property (glossary), application (glossary), return (glossary), color reference (glossary), Windows (glossary), bit (glossary), color table (glossary), bit depth (glossary), function (control_st)
+References: function (control structure), screenColors (function),
+property (glossary), application (glossary), return (glossary),
+color reference (glossary), Windows (glossary), bit (glossary),
+color table (glossary), bit depth (glossary), line (keyword),
+colorWorld (property), borderPixel (property), dontDither (property),
+privateColors (property), remapColor (property)
 
 Tags: ui
+

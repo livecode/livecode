@@ -2,15 +2,19 @@ Name: libURLFormData
 
 Type: function
 
-Syntax: libURLFormData(<key_1>, <value_1>, ..., <key_n>, <value_n>)
+Syntax: libURLFormData(<key1>, <value1> [, <key2>, <value2> ...])
 
-Summary: <libURLFormData> formats data in the standard format suitable for sending to form processing CGIs and other processes on a web server.
+Summary:
+<libURLFormData> formats data in the standard format suitable for
+sending to form processing CGIs and other processes on a web server.
+
+Associations: internet library
 
 Introduced: 2.5
 
-OS: mac,windows,linux
+OS: mac, windows, linux, html5
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
@@ -19,22 +23,41 @@ put "John" into tName
 put "Hello" into tMessage
 get libURLFormData("name", tName,"message", tMessage)
 post it to url "http://www.someserver.com/cgi-bin/form.pl"
-
-In this case, the data posted to the url will look like this: name=John&message=Hello
+-- In this case, the data posted to the url will look like this: name=John&message=Hello
 
 Parameters:
-key_1: 
-value_1: 
-key_n: 
-value_n: 
+key1:
+value1:
+key2:
+value2:
+
 
 Description:
-The function accepts variable numbers of parameters and treats them as key-value pairs. The first parameter is the name of the first form part, the second the value of the first part, the third is the name of the second part, and so on. 
+The function accepts variable numbers of parameters and treats them as
+key-value pairs. The first parameter is the name of the first form part,
+the second the value of the first part, the third is the name of the
+second part, and so on.
 
->*Note:* The Content-Type header is set to "Content-Type: application/x-www-form-urlencoded" by default when using post. There is no need to set the httpHeaders unless you have previously set the Content-Type header to something else. 
+>*Note:* The Content-Type header is set to
+> "Content-Type: application/x-www-form-urlencoded" by default when
+> using post. There is no need to set the httpHeaders unless you have
+> previously set the Content-Type header to something else.
 
->*Important:* The <libURLFormData> <function> is part of the <Internet library>. To ensure that the <keyword> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:* The <libURLFormData> <function> is part of the 
+> <Internet library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
->*Note:* When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the http <keyword> is not yet available. This may affect attempts to use this <keyword> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the http <keyword> can be used in any <handler>.
+References: post (command), libURLSetExpect100 (command),
+libURLMultipartFormAddPart (function), libURLMultipartFormData (function),
+application (glossary), standalone application (glossary),
+openBackground (glossary), function (glossary), openStack (glossary),
+main stack (glossary), keyword (glossary), group (glossary),
+startup (glossary), Standalone Application Settings (glossary),
+preOpenStack (glossary), message (glossary), preOpenCard (glossary),
+handler (glossary), LiveCode custom library (glossary),
+Internet library (library), library (library)
 
-References: post (command), libURLSetExpect100 (command), libURLMultipartFormAddPart (function), libURLMultipartFormData (function), application (glossary), standalone application (glossary), openBackground (glossary), function (glossary), openStack (glossary), main stack (glossary), keyword (glossary), group (glossary), startup (glossary), Standalone Application Settings (glossary), preOpenStack (glossary), message (glossary), preOpenCard (glossary), handler (glossary), Internet library (library), LiveCode custom library (library), library (library)

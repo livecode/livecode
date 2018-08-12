@@ -4,23 +4,26 @@ Type: constant
 
 Syntax: comma
 
-Summary: Equivalent to the , <character> (ASCII 44).
+Summary:
+Equivalent to the , <character> (ASCII 44).
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-put "3" & comma & "287" into dollarAmount
+put "3" & comma & "287" into tDollarAmount
 
 Example:
 if char 3 of it is comma then get field "Circus"
 
 Description:
-Use the <comma> <constant> as an easier-to-read replacement for ","<a/>.
+Use the <comma> <constant> as an easier-to-read replacement for ",".
 
-References: itemDelimiter (property), , (operator), character (keyword), constant (command)
+References: constant (command), character (keyword), &#44; (operator),
+itemDelimiter (property)
 
 Tags: text processing
+

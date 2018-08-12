@@ -4,22 +4,33 @@ Type: keyword
 
 Syntax: button
 
-Summary: Designates the Button <tool>, which is used to create new <button|buttons>.
+Summary:
+Designates the Button <tool>, which is used to create new
+<button|buttons>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-if the tool is not button then beep
+if the tool is not "button" then beep
 
 Description:
 Use the <button> <keyword> to create buttons.
 
-When using the Button tool, the cursor is a crosshairs. This tool is used for creating buttons by clicking at one corner of the button and dragging to the opposite corner.
+When using the Button tool, the cursor is a crosshairs. This tool is
+used for creating buttons by clicking at one corner of the button and
+dragging to the opposite corner.
 
-You can set the style of the <templateButton> to the <button> type you want, then draw the <button> with the Button <tool>. The button icons on the Tools <palette> work this way: each one sets the <style> of the <templateButton>, then chooses the Button <tool> so you can create the <button>.
+You can set the style of the <templateButton> to the <button> type you
+want, then draw the <button> with the Button <tool>. The button icons on
+the Tools <palette> work this way: each one sets the <style> of the
+<templateButton>, then chooses the Button <tool> so you can create the
+<button>. 
 
-References: templateButton (keyword), button (keyword), style (property), palette (command), choose (command), tool (function), button (object), keyword (glossary)
+References: palette (command), choose (command), tool (function),
+keyword (glossary), templateButton (keyword), button (keyword),
+button (object), style (property)
+

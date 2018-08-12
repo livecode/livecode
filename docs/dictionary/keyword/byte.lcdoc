@@ -4,13 +4,14 @@ Type: keyword
 
 Syntax: byte
 
-Summary: Designates a single byte as part of a <chunk expression>.
+Summary:
+Designates a single byte as part of a <chunk expression>.
 
 Introduced: 4.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 get byte 1 of tString
@@ -19,13 +20,14 @@ Example:
 put byte 12 to 14 of it into tAnswer
 
 Example:
-get the first byte to tString
+get the first byte of tString
 
 Example:
-repeat for each byte tByte of tString
+repeat for each byte tByte in tString
 
 Description:
-Use the byte <keyword> to refer to a specific byte or bytes in a <container>.
+Use the byte <keyword> to refer to a specific byte or bytes in a
+<container>. 
 
 A byte is an 8-bit unit and can only be reliably used with binary data.
 
@@ -33,8 +35,16 @@ The hierarchy of the new and altered chunk types is as follows:
 
 byte w of codeunit x of codepoint y of char z of word ...
 
->*Note:*  In versions prior to 7.0 the byte chunk was identical in functionality to the character chunk. For backwards compatibility the byte chunk returns the corresponding native character from Unicode text, or a "?" if nor reperesentable, but this behavior is deprecated and should not be used in new code.
+>*Note:*  In versions prior to 7.0 the byte chunk was identical in
+> functionality to the character chunk. For backwards compatibility the
+> byte chunk returns the corresponding native character from Unicode
+> text, or a "?" if nor reperesentable, but this behavior is deprecated
+> and should not be used in new code.
 
-References: characters (keyword), codepoint (keyword), codeunits (keyword), character (keyword), codepoints (keyword), codeunit (keyword), bytes (keyword), chunk expression (glossary), keyword (glossary), container (glossary)
+References: chunk expression (glossary), keyword (glossary),
+container (glossary), characters (keyword), codepoint (keyword),
+codeunits (keyword), character (keyword), codepoints (keyword),
+codeunit (keyword), bytes (keyword)
 
 Tags: text processing
+

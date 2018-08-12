@@ -4,24 +4,39 @@ Type: keyword
 
 Syntax: lines
 
-Summary: Used with the <sort> <command>, <number> <function>, and <is among> and <is not among> <properties> to designate the return-<delimit|delimited> portions of a <string>.
+Summary:
+Used with the <sort> <command>, <number> <function>, and <is among> and
+<is not among> <properties> to designate the return-<delimit|delimited>
+portions of a <string>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-put the number of lines of the result into linesToCheck
+put the number of lines of the result into tLinesToCheck
 
 Description:
 Use the <lines> <keyword>  to <sort> or <select> individual <lines>.
 
-By default, a line is delimited by return (ASCII 10). However, you can set the <lineDelimiter> <property> to any <character> in order to directly address <chunk|chunks> <delimit|delimited> by that character.
+By default, a line is delimited by return (ASCII 10). However, you can
+set the <lineDelimiter> <property> to any <character> in order to
+directly address <chunk|chunks> <delimit|delimited> by that character.
 
-A line is a string of characters delimited by a single return character (or a single one of the <lineDelimiter> <character>). A single <line> can contain multiple <characters>, multiple <words>, and multiple <items>.
+A line is a string of characters delimited by a single return character
+(or a single one of the <lineDelimiter> <character>). A single <line>
+can contain multiple <characters>, multiple <words>, and multiple
+<items>. 
 
-References: properties (property), lineDelimiter (property), is among (operator), is not among (operator), characters (keyword), string (keyword), character (keyword), lines (keyword), line (keyword), words (keyword), items (keyword), function (control_st), keyword (glossary), property (glossary), command (glossary), delimit (glossary), chunk (glossary), number (function), sort (command), select (command)
+References: sort (command), select (command),
+function (control structure), number (function), keyword (glossary),
+property (glossary), command (glossary), delimit (glossary),
+chunk (glossary), characters (keyword), string (keyword),
+character (keyword), lines (keyword), line (keyword), words (keyword),
+items (keyword), is among (operator), is not among (operator),
+properties (property), lineDelimiter (property)
 
 Tags: text processing
+

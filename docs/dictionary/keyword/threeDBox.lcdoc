@@ -4,26 +4,40 @@ Type: keyword
 
 Syntax: threeDBox
 
-Summary: Used with the <textStyle> <property> to specify that a <chunk> of text in a <field> has a three-dimensional box drawn around it.
+Summary:
+Used with the <textStyle> <property> to specify that a <chunk> of text
+in a <field> has a three-dimensional box drawn around it.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the textStyle of line 1 to 3 of field "Table" to threeDBox
 
 Description:
-Use the <threeDBox> <keyword> to emphasize text by drawing a box around it.
+Use the <threeDBox> <keyword> to emphasize text by drawing a box around
+it. 
 
-The top and left edges of the box are drawn in the object's <bottomColor> and <bottomPattern>. The bottom and right edges of the box are drawn in the <object|object's> <topColor> and <topPattern>.
+The top and left edges of the box are drawn in the object's
+<bottomColor> and <bottomPattern>. The bottom and right edges of the box
+are drawn in the <object|object's> <topColor> and <topPattern>.
 
-If the text crosses more than one screen line, a box is drawn around each line of the text. If the text has mixed styles, a separate box is drawn around each style run. For example, if three words are boxed and the last is also boldfaced, a box is drawn around the first two words, and another box is drawn around the boldfaced word.
+If the text crosses more than one screen line, a box is drawn around
+each line of the text. If the text has mixed styles, a separate box is
+drawn around each style run. For example, if three words are boxed and
+the last is also boldfaced, a box is drawn around the first two words,
+and another box is drawn around the boldfaced word.
 
-An object or chunk of a field may have the style <box> or <threeDBox>, but not both at once.
+An object or chunk of a field may have the style <box> or <threeDBox>,
+but not both at once.
 
-References: field (keyword), box (keyword), bottomColor (property), bottomPattern (property), textStyle (property), topColor (property), topPattern (property), object (object), property (glossary), chunk (glossary), keyword (glossary)
+References: object (glossary), property (glossary), chunk (glossary),
+keyword (glossary), field (keyword), box (keyword),
+bottomColor (property), bottomPattern (property), textStyle (property),
+topColor (property), topPattern (property)
 
 Tags: ui
+

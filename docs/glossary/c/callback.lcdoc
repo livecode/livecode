@@ -1,14 +1,21 @@
 Name: callback
 
-Synonyms: callback,callback message
+Synonyms: callback, callback message
 
 Type: glossary
 
 Description:
-A <message> that is sent at a specific point in a process. Callbacks are usually used to notify an <object> about the progress of a process that the <object> started. 
- 
-For example, a <player> might send a callback message when the <movie> reaches a certain frame. Or the <Internet library> might send a callback to the <object> whose <script> started a file transfer when the transfer is completed.
+A <message> that is sent at a specific point in a process. Callbacks are
+usually used to notify an <object(glossary)> about the progress of a
+process that the <object(glossary)> started.
 
-References: Internet library (library), object (object), player (object), movie (glossary), message (glossary), script (glossary)
+For example, a <player> might send a callback message when the <movie>
+reaches a certain frame. Or the <Internet library> might send a callback
+to the <object(glossary)> whose <script> started a file transfer when
+the transfer is completed.
+
+References: object (glossary), player (glossary), movie (glossary),
+message (glossary), script (glossary), Internet library (library)
 
 Tags: objects
+

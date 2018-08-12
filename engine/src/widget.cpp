@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -56,6 +56,8 @@
 #include "graphics_util.h"
 
 #include "native-layer.h"
+
+#include "stackfileformat.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -109,6 +111,10 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
     bool t_success;
     t_success = true;
     
+    // Make sure we set the widget barrier callbacks - this should be done in
+    // module init for 'extension' when we have such a mechanism.
+    MCScriptSetWidgetBarrierCallbacks(MCWidgetEnter, MCWidgetLeave);
+    
     // Create a new root widget.
     if (t_success)
         t_success = MCWidgetCreateRoot(this, p_kind, m_widget);
@@ -127,6 +133,11 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
     // If we failed then store the rep and destroy the imp.
     if (!t_success)
     {
+        // Make sure we swallow the error so that it doesn't affect
+        // future execution.
+        MCAutoErrorRef t_error;
+        MCErrorCatch(&t_error);
+        
         MCValueRelease(m_widget);
         m_widget = nil;
         
@@ -342,12 +353,12 @@ void MCWidget::recompute(void)
 
 static void lookup_name_for_prop(Properties p_which, MCNameRef& r_name)
 {
-    extern LT factor_table[];
+    extern const LT factor_table[];
     extern const uint4 factor_table_size;
     for(uindex_t i = 0; i < factor_table_size; i++)
         if (factor_table[i] . type == TT_PROPERTY && factor_table[i] . which == p_which)
         {
-            /* UNCHECKED */ MCNameCreateWithCString(factor_table[i] . token, r_name);
+            r_name = MCNAME(factor_table[i] . token);
             return;
         }
 	
@@ -712,6 +723,24 @@ void MCWidget::geometrychanged(const MCRectangle &p_rect)
 		MCwidgeteventmanager -> event_setrect(this, p_rect);
 }
 
+Boolean MCWidget::del(bool p_check_flag)
+{
+    // MCControl::del will check deletable
+    if (!MCControl::del(p_check_flag))
+        return False;
+
+    // Make sure we release the widget ref here. Otherwise its
+    // module cannot be released until the pending object pools
+    // are drained.
+    if (m_widget != nil)
+    {
+        MCValueRelease(m_widget);
+        m_widget = nil;
+    }
+    
+    return True;
+}
+
 void MCWidget::OnOpen()
 {
 	if (m_widget != nil)
@@ -731,6 +760,11 @@ void MCWidget::OnClose()
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)
 {
 	return MCControl::handle(p_type, p_method, p_parameters, p_passing_object);
+}
+
+uint32_t MCWidget::getminimumstackfileversion(void)
+{
+	return kMCStackFileFormatVersion_8_0;
 }
 
 IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
@@ -768,21 +802,24 @@ IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
 IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	/* If the file format doesn't support widgets, skip the widget */
-	if (p_version < 8000)
+	if (p_version < kMCStackFileFormatVersion_8_0)
 	{
 		return IO_NORMAL;
 	}
 
     // Make the widget generate a rep.
-    MCAutoValueRef t_rep;
-    if (m_widget != nil)
-        MCWidgetOnSave(m_widget, &t_rep);
-    
-    // If the rep is nil, then an error must have been thrown, so we still
-    // save, but without any state for this widget.
-    if (*t_rep == nil)
-        t_rep = MCValueRetain(kMCNull);
-    
+	MCAutoValueRef t_rep;
+	if (m_widget != nil)
+		MCWidgetOnSave(m_widget, &t_rep);
+	else if (m_rep != nil)
+		t_rep = m_rep;
+	else
+	{
+		// If the rep is nil, then an error must have been thrown, so we still
+		// save, but without any state for this widget.
+		t_rep = kMCNull;
+	}
+	
     // The state of the IO.
     IO_stat t_stat;
     
@@ -812,7 +849,7 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint3
 MCControl *MCWidget::clone(Boolean p_attach, Object_pos p_position, bool invisible)
 {
 	MCWidget *t_new_widget;
-	t_new_widget = new MCWidget(*this);
+	t_new_widget = new (nothrow) MCWidget(*this);
 	if (p_attach)
 		t_new_widget -> attach(p_position, invisible);
     
@@ -936,6 +973,18 @@ Boolean MCWidget::maskrect(const MCRectangle& p_rect)
 	return drect.width != 0 && drect.height != 0;
 }
 
+void MCWidget::SetName(MCExecContext& ctxt, MCStringRef p_name)
+{
+    MCNewAutoNameRef t_old_name = getname();
+
+    MCControl::SetName(ctxt, p_name);
+    
+    if (!MCNameIsEqualTo(*t_old_name, getname(), kMCStringOptionCompareExact))
+    {
+        recompute();
+    }
+}
+
 void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
 {
     bool t_is_disabled;
@@ -956,7 +1005,7 @@ void MCWidget::SendError(void)
 {
     MCExecContext ctxt(this, nil, nil);
     MCExtensionCatchError(ctxt);
-    if (MCerrorptr == NULL)
+    if (!MCerrorptr)
         MCerrorptr = this;
     senderror();
 }
@@ -976,12 +1025,30 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 void MCWidget::GetState(MCExecContext& ctxt, MCArrayRef& r_state)
 {
     MCAutoValueRef t_value;
-    MCWidgetOnSave(m_widget, &t_value);
+    if (!m_widget && m_rep)
+    {
+        if (!MCValueCopy(m_rep, &t_value))
+        {
+            r_state = MCValueRetain(kMCEmptyArray);
+            return;
+        }
+    }
+    else
+    {
+        if (!MCWidgetOnSave(m_widget,
+                            &t_value))
+        {
+            r_state = MCValueRetain(kMCEmptyArray);
+            return;
+        }
+    }
+    
     if (!MCExtensionConvertToScriptType(ctxt, InOut(t_value)))
     {
         CatchError(ctxt);
         return;
     }
+    
     r_state = (MCArrayRef)t_value . Take();
 }
 
@@ -999,8 +1066,8 @@ void MCWidget::SetFocused(bool p_setting)
 {
     if (p_setting)
         focused = this;
-    else
-        focused = nil;
+    else if (focused.IsBoundTo(this))
+        focused = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

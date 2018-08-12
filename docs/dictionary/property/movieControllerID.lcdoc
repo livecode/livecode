@@ -2,17 +2,20 @@ Name: movieControllerID
 
 Type: property
 
-Syntax: get the movieControllerID of <player> 
+Syntax: get the movieControllerID of <player>
 
-Summary: Reports a pointer to a movie's controller.
+Summary:
+Reports a pointer to a movie's controller.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+Deprecated: 8.1
 
-Platforms: desktop,server,web
+OS: mac, windows, linux
+
+Platforms: desktop, server
 
 Example:
 put the movieControllerID of player "Intro" into field "IDs"
@@ -25,12 +28,26 @@ The <movieControllerID> of a <stack> is an <integer>.
 The <movieControllerID> <property> is <read-only> and cannot be set.
 
 Description:
-Use the <movieControllerID> <property> to pass to an <external> that needs to manipulate the <player>.
+Use the <movieControllerID> <property> to pass to an <external> that
+needs to manipulate the <player>.
 
 The controller ID is provided by the operating system.
 
-Some externals need to manipulate the QuickTime movie directly, and do so by referencing the ID. Such externals require you to pass the ID when you use the external.
+Some externals need to manipulate the QuickTime movie directly, and do
+so by referencing the ID. Such externals require you to pass the ID when
+you use the external.
 
-References: windowID (property), showController (property), integer (keyword), player (keyword), play (command), stack (object), property (glossary), external (glossary), read-only (glossary)
+Changes:
+This property was deprecated in version 8.1.0 due to the retirement of
+the QuickTime player implementation. In order to support 64-bit on Mac 
+we have been required to switch to using AVFoundation on Mac, which does 
+not support QTVR. In addition, the Windows player object is now based on 
+DirectShow, as Apple have dropped support for the QuickTime libraries 
+previously used.
+
+References: play (command), property (glossary), external (glossary),
+read-only (glossary), integer (keyword), player (keyword), stack (object),
+windowID (property), showController (property)
 
 Tags: multimedia
+

@@ -42,19 +42,19 @@ on TestHighlightedButtonID
 	TestAssert "button 1 of group 1 is unhilited", not the hilite of button 1
 	hilite button 1
 	TestAssert "hilitedbuttonid is button 1 of group 1", the hilitedbuttonid of group 1 is the short id of button 1
-	TestAssertBroken "hilitedbuttonname is button 1 of group 1", the hilitedbuttonname of group 1 is the short name of button 1, "bug 16551"
+	TestAssert "hilitedbuttonname is button 1 of group 1", the hilitedbuttonname of group 1 is the short name of button 1
 
 	unhilite button 1
 	TestAssert "button 1 of group 1 is unhilited", not the hilite of button 1
 	hilite button 2
 	TestAssert "hilitedbuttonid is button 2 of group 1", the hilitedbuttonid of group 1 is the short id of button 2
-	TestAssertBroken "hilitedbuttonname is button 2 of group 1", the hilitedbuttonname of group 1 is the short name of button 2, "bug 16551"
+	TestAssert "hilitedbuttonname is button 2 of group 1", the hilitedbuttonname of group 1 is the short name of button 2
 
 	dehilite button 2
 	TestAssert "button 2 of group 1 is unhilited", not the hilite of button 2
 	set the hilitedbuttonid of group 1 to the short id of button 1
 	TestAssert "hilitedbuttonid is button 1 of group 1", the hilitedbuttonid of group 1 is the short id of button 1
-	TestAssertBroken "hilitedbuttonname is button 1 of group 1", the hilitedbuttonname of group 1 is the short name of button 1, "bug 16551"
+	TestAssert "hilitedbuttonname is button 1 of group 1", the hilitedbuttonname of group 1 is the short name of button 1
 end TestHighlightedButtonID
 
 on TestHighlightBorder
@@ -135,18 +135,8 @@ on TestHighlightColors
 
 #	set the hilitecolor of button 1 to 1234
 #	TestAssert "hilitecolor set to 1234", the hilitecolor of button 1 is "1234"
+	delete button 1
 end TestHighlightColors
-
-on TestLinkHighlightColors
-	set the linkhilitecolor to "blue"
-	TestAssert "linkhilitecolor set to blue", the linkhilitecolor is "blue"
-
-	set the linkhilitecolor to "255,255,0"
-	TestAssert "linkhilitecolor set to RGB value", the linkhilitecolor is "255,255,0"
-
-	set the linkhilitecolor to "#336633"
-	TestAssert "linkhilitecolor set to hex value", the linkhilitecolor is "#336633"
-end TestLinkHighlightColors
 
 on TestHighlighted
 	create button

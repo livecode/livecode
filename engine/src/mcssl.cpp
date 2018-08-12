@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "param.h"
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "util.h"
 #include "object.h"
 #include "mode.h"
@@ -38,8 +38,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
+#include <openssl/rsa.h>
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
+#endif
+
+#ifdef _WIN32
+#  include <WinCrypt.h>
 #endif
 
 #ifdef _MACOSX
@@ -63,10 +68,12 @@ extern "C" void finalise_weak_link_ssl(void);
 
 static Boolean cryptinited = False;
 
+#ifdef MCSSL
 // IM-2014-07-28: [[ Bug 12822 ]] OS-specified root certificates
 static STACK_OF(X509) *s_ssl_system_root_certs;
 // IM-2014-07-28: [[ Bug 12822 ]] OS-specified CRLs
 static STACK_OF(X509_CRL) *s_ssl_system_crls;
+#endif
 
 Boolean load_crypto_symbols()
 {
@@ -99,8 +106,8 @@ Boolean InitSSLCrypt()
 			return False;
 
 #ifdef MCSSL
-		ERR_load_crypto_strings();
-		OpenSSL_add_all_ciphers();
+        OPENSSL_init_ssl(0, NULL);
+        
 		RAND_seed(&MCrandomseed,I4L);
 		cryptinited = True;
 		
@@ -155,8 +162,7 @@ unsigned long SSLError(MCStringRef& errbuf)
     //  errbuf won't be nil, but will always be empty though.
     if (ecode)
     {
-        MCAutoPointer<char> t_errbuf;
-        t_errbuf = new char[256];
+        /* UNCHECKED */ MCAutoPointer<char[]> t_errbuf = new (nothrow) char[256];
         ERR_error_string_n(ecode,&t_errbuf,255);
         /* UNCHECKED */ MCStringCreateWithCString(*t_errbuf, errbuf);
     }
@@ -172,11 +178,12 @@ unsigned long SSLError(MCStringRef& errbuf)
 }
 
 #ifdef MCSSL
-bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, const char *p_passphrase, EVP_PKEY *&r_key)
+bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, const char *p_passphrase, RSA *&r_rsa)
 {
 	bool t_success = true;
 	BIO *t_data = NULL;
 	EVP_PKEY *t_key = NULL;
+    RSA *t_rsa = NULL;
 	t_data = BIO_new_mem_buf((void*)p_data, p_length);
 	t_success = t_data != NULL;
 	char t_empty_pass[] = "";
@@ -187,8 +194,19 @@ bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, con
 		switch (p_type)
 		{
 		case RSAKEY_PUBKEY:
-			t_key = PEM_read_bio_PUBKEY(t_data, NULL, NULL, t_passphrase);
-			t_success = (t_key != NULL);
+            {
+                if (!PEM_read_bio_PUBKEY(t_data, &t_key, NULL, t_passphrase))
+                {
+                    // There is no way to reset the BIO so create a new one to check
+                    // for a PKCS#1 format key
+                    BIO *t_rsa_data = BIO_new_mem_buf((void*)p_data, p_length);
+                    if (t_rsa_data != NULL)
+                    {
+                        t_success = PEM_read_bio_RSAPublicKey(t_rsa_data, &t_rsa, NULL, t_passphrase);
+                        BIO_free(t_rsa_data);
+                    }
+                }
+            }
 			break;
 		case RSAKEY_PRIVKEY:
 			t_key = PEM_read_bio_PrivateKey(t_data, NULL, NULL, t_passphrase);
@@ -215,8 +233,18 @@ bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, con
 
 	if (t_data != NULL)
 		BIO_free(t_data);
-	if (t_success)
-		r_key = t_key;
+	if (t_success && t_key != NULL)
+    {
+        if (t_rsa == NULL)
+            t_rsa = EVP_PKEY_get1_RSA(t_key);
+        
+        t_success = t_rsa != NULL;
+        
+        EVP_PKEY_free(t_key);
+    }
+    
+    if (t_success)
+        r_rsa = t_rsa;
 
 	return t_success;
 }
@@ -242,35 +270,24 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 			const char *p_key, uint32_t p_key_length, const char *p_passphrase,
 			char *&r_message_out, uint32_t &r_message_out_length, char *&r_result, uint32_t &r_error)
 {
-	bool t_success = true;
-	EVP_PKEY *t_key = NULL;
+    if (!InitSSLCrypt())
+    {
+        MCCStringClone("error: ssl library initialization failed", r_result);
+        return false;
+    }
+    
+    bool t_success = true;
 	RSA *t_rsa = NULL;
 	int32_t t_rsa_size;
 	uint8_t *t_output_buffer = NULL;
 	int32_t t_output_length;
 
-	if (!InitSSLCrypt())
-	{
-		t_success = false;
-		MCCStringClone("error: ssl library initialization failed", r_result);
-	}
-
 	if (t_success)
 	{
-		if (!load_pem_key(p_key, p_key_length, p_key_type, p_passphrase, t_key))
+		if (!load_pem_key(p_key, p_key_length, p_key_type, p_passphrase, t_rsa))
 		{
 			t_success = false;
 			MCCStringClone("error: invalid key", r_result);
-		}
-	}
-
-	if (t_success)
-	{
-		t_rsa = EVP_PKEY_get1_RSA(t_key);
-		if (t_rsa == NULL)
-		{
-			t_success = false;
-			MCCStringClone("error: not an RSA key", r_result);
 		}
 	}
 
@@ -323,9 +340,7 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 
 	if (t_rsa != NULL)
 		RSA_free(t_rsa);
-	if (t_key != NULL)
-		EVP_PKEY_free(t_key);
-
+	
 	if (t_success)
 	{
 		r_message_out = (char*)t_output_buffer;
@@ -447,20 +462,19 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 
 	static const char magic[]="Salted__";
 
-	int4 res = 0;
-
 	//set up cipher context
-	EVP_CIPHER_CTX ctx;
-	EVP_CIPHER_CTX_init(&ctx);
+    MCAutoCustomPointer<EVP_CIPHER_CTX, EVP_CIPHER_CTX_free> ctx = EVP_CIPHER_CTX_new();
+	EVP_CIPHER_CTX_reset(*ctx);
+	
 	//init context with cipher and specify operation
-	if (EVP_CipherInit(&ctx, cipher,NULL, NULL, operation) == 0)
+	if (EVP_CipherInit(*ctx, cipher,NULL, NULL, operation) == 0)
 		return NULL;
 
 	//try setting keylength if specified. This will fail for some ciphers.
-	if (keylen && EVP_CIPHER_CTX_set_key_length(&ctx, keylen/8) == 0)
+	if (keylen && EVP_CIPHER_CTX_set_key_length(*ctx, keylen/8) == 0)
 		return NULL;
 	//get new keylength in bytes
-	int4 curkeylength = EVP_CIPHER_CTX_key_length(&ctx);
+	int4 curkeylength = EVP_CIPHER_CTX_key_length(*ctx);
 	//zero key and iv
 	memset(key,0,EVP_MAX_KEY_LENGTH);
 	memset(iv,0,EVP_MAX_IV_LENGTH);
@@ -512,19 +526,25 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 		memcpy(iv,ivstr,MCU_min(ivlen,EVP_MAX_IV_LENGTH));
 	}
 
-	if (EVP_CipherInit(&ctx, NULL, key, iv, operation) == 0)
+	
+	// Re-initialise the cipher
+	EVP_CIPHER_CTX_reset(*ctx);
+	if (EVP_CipherInit(*ctx, cipher, key, iv, operation) == 0)
 		return NULL;
+	if (keylen && EVP_CIPHER_CTX_set_key_length(*ctx, keylen/8) == 0)
+		return NULL;
+	
 	int4 tmp, ol;
 	ol = 0;
 
 	//allocate memory to hold encrypted/decrypted data + an extra block + null terminator for block ciphers.
-	unsigned char *outdata = (unsigned char *)malloc(inlen + EVP_CIPHER_CTX_block_size(&ctx) + 1 + sizeof(magic) + sizeof(saltbuf));
-	//do encryption/decryption
-	if (outdata == NULL)
+	unsigned char *outdata = nil;
+	if (!MCMemoryAllocate(inlen + EVP_CIPHER_CTX_block_size(*ctx) + 1 + sizeof(magic) + sizeof(saltbuf), outdata))
 	{
 		outlen = 791;
 		return NULL;
 	}
+	//do encryption/decryption
 
 	// MW-2004-12-02: Only prepend the salt if we generated the key (i.e. password mode)
 	if (!isdecrypt && ispassword)
@@ -539,24 +559,24 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 	// MW-2007-02-13: [[Bug 4258]] - SSL now fails an assertion if datalen == 0
 	if (tend - data > 0)
 	{
-		if (EVP_CipherUpdate(&ctx,&outdata[ol],&tmp,(unsigned char *)data,tend-data) == 0)
+		if (EVP_CipherUpdate(*ctx, &outdata[ol], &tmp, (unsigned char *)data, tend-data) == 0)
 		{
-			delete outdata;
+			MCMemoryDeallocate(outdata);
 			return NULL;
 		}
 		ol += tmp;
 	}
 
 	//for padding
-	if (EVP_CipherFinal(&ctx,&outdata[ol],&tmp) == 0)
+	if (EVP_CipherFinal(*ctx, &outdata[ol], &tmp) == 0)
 	{
-		delete outdata;
+		MCMemoryDeallocate(outdata);
 		return NULL;
 	}
 	outlen = ol + tmp;
 
 	//cleam up context and return data
-	EVP_CIPHER_CTX_cleanup(&ctx);
+	EVP_CIPHER_CTX_reset(*ctx);
 	outdata[outlen] = 0; //null terminate data
 
 	return (char *)outdata;
@@ -649,9 +669,6 @@ void ShutdownSSL()
 #ifdef MCSSL
 	if (cryptinited)
 	{
-		
-		EVP_cleanup();
-		ERR_free_strings();
 #if !defined(_SERVER)
 		finalise_weak_link_crypto();
 		finalise_weak_link_ssl();
@@ -667,12 +684,15 @@ void shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // IM-2014-07-28: [[ Bug 12822 ]] Common certificate loading code refactored from opensslsocket.cpp
 
+#ifdef MCSSL
 bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path);
 bool load_ssl_ctx_certs_from_file(SSL_CTX *p_ssl_ctx, const char *p_path);
 bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx);
+#endif
 
 bool MCSSLContextLoadCertificates(SSL_CTX *p_ssl_ctx, MCStringRef *r_error)
 {
+#ifdef MCSSL
 	bool t_success;
 	t_success = true;
 	
@@ -725,10 +745,13 @@ bool MCSSLContextLoadCertificates(SSL_CTX *p_ssl_ctx, MCStringRef *r_error)
 	}
 	
 	return t_success;
+#endif
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef MCSSL
 struct cert_folder_load_context_t
 {
 	const char *path;
@@ -906,7 +929,6 @@ bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx)
 #ifdef TARGET_PLATFORM_MACOS_X
 bool export_system_root_cert_stack(STACK_OF(X509) *&r_x509_stack)
 {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6
 	bool t_success = true;
 	
 	CFArrayRef t_anchors = NULL;
@@ -947,9 +969,6 @@ bool export_system_root_cert_stack(STACK_OF(X509) *&r_x509_stack)
 		free_x509_stack(t_stack);
 
 	return t_success;
-#else
-    return false;
-#endif
 }
 
 bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
@@ -1060,13 +1079,16 @@ bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
 
 #endif
 
+#endif /* MCSSL */
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 
-#include <Security/Security.h>
+#ifdef MCSSL
 
+#include <Security/Security.h>
 static SecCertificateRef x509_to_SecCertificateRef(X509 *p_cert)
 {
     bool t_success;
@@ -1107,6 +1129,7 @@ static SecCertificateRef x509_to_SecCertificateRef(X509 *p_cert)
     else
         return NULL;
 }
+#endif /* MCSSL */
 
 // MM-2015-06-04: [[ MobileSockets ]] Return true if we should trust the
 //   certificates in the given SSL connection, false otherwise.

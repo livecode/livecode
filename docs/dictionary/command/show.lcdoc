@@ -4,35 +4,68 @@ Type: command
 
 Syntax: show <object> [with visual [effect] <effectName> [<speed>] [to <finalImage>]]
 
-Summary: Makes an <object> visible.
+Summary:
+Makes an <object(glossary)> visible.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 show stack "project1"
 
 Example:
-show image "picture" with visual effect barn door open
+show image "picture" with visual effect "barn door open"
 
 Parameters:
-object: Any open stack, or any control in an open stack.
-effectName: The effectName, speed, and finalImage are described in the visual effect command. These three parameters operate the same way as they do with the visual effect command.
-speed: 
-finalImage: 
+object:
+Any open stack, or any control in an open stack.
+
+effectName:
+The effectName, speed, and finalImage are described in the visual effect
+command. These three parameters operate the same way as they do with the
+visual effect command.
+
+speed:
+
+
+finalImage:
+
 
 Description:
 Use the <show> <command> to show invisible <object|objects>.
 
-Showing an object sets its visible <property> to true. You can also set the <showInvisibles> <property> to true to override the <visible> <property> and show all <object|objects>.
+Showing an object sets its visible <property> to true. You can also set
+the <showInvisibles> <property> to true to override the <visible>
+<property> and show all <object|objects>.
 
-You can show a card without causing a script error, but doing so has no effect.
+You can show a card without causing a script error, but doing so has no
+effect. 
 
-Showing a group shows all the controls in the group whose visible <property> is true.
+Showing a group shows all the controls in the group whose visible
+<property> is true.
 
-References: showPict (property), toolTip (property), imageSource (property), showInvisibles (property), visible (property), black (keyword), hide (command), answer effect (command), show groups (command), show cards (command), show taskbar (command), object (object), command (glossary), property (glossary)
+Changes:
+The ability to use QuickTime special effects was introduced in version
+1.1. In previous versions, only the built-in visual effects listed under
+the visual effect command were available.
+
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: hide (command), answer effect (command),
+show groups (command), show cards (command), show taskbar (command),
+visual effect (command), object (glossary), command (glossary), 
+property (glossary), black (keyword), showPict (property), 
+toolTip (property), imageSource (property), showInvisibles (property), 
+visible (property)
 
 Tags: ui
+

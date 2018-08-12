@@ -2,15 +2,16 @@ Name: fullscreenmode
 
 Type: property
 
-Syntax: set the fullscreenmode of <stack> to {<empty> |"exactFit"|"letterbox"|"noBorder"|"noScale"|"showAll"}
+Syntax: set the fullscreenmode of <stack> to {empty|"exactFit"|"letterbox"|"noBorder"|"noScale"|"showAll"}
 
-Summary: Sets the full screen scaling mode of a stack.
+Summary:
+Sets the full screen scaling mode of a stack.
 
 Introduced: 6.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the fullscreenmode of this stack to empty
@@ -18,25 +19,58 @@ set the fullscreenmode of this stack to empty
 Example:
 set the fullscreenmode of this stack to "noScale"
 
-Parameters:
-empty: The stack is resized (not scaled) to fit the screen. (default) This is the existing behavior.
-"exactFit": Scale the stack to fill the screen. This stretches the stack if the aspect ratio of the screen does not match that of the stack.
-"letterbox": Scale the stack, preserving the aspect ratio, so all content is visible. Some blank space may remain if the screen and stack aspect ratios do not match.
-"noBorder": Scale the stack to fill the screen, preserving the aspect ratio. If the stack and screen aspect ratios do not match, the left / right or top / bottom extremes of the stack are not visible.
-"noScale": The stack is not scaled, but is centered on the screen instead.
-"showAll": Scale the stack preserving aspect ratio so all content within the stack rect is visible. Portions of the stack outside the stack rect will be visible if the scaled stack does not fit the screen exactly.
+Example:
+# In a mobile app the fullscreenmode is often set as the stack opens:
+on preOpenStack
+  set the fullscreenmode of this stack to "letterbox"
+end preOpenStack
 
-Value: The <fullscreenmode> returns the mode to which this property is set.
+Example:
+-- In a desktop application the fullscreenmode should be set before going to fullscreen:
+on mouseUp
+  set the fullscreenmode of this stack to "showAll"
+  set the fullscreen of this stack to true
+end mouseUp
+
+Value:
+The <fullscreenmode> returns the mode to which this property is set.
+
+- empty - The stack is resized (not scaled) to fit the screen. (default)
+ This is the legacy behavior.
+- "exactFit" - Scale the stack to fill the screen. This stretches the
+stack if the aspect ratio of the screen does not match that of the
+stack.
+- "letterbox" - Scale the stack, preserving the aspect ratio, so all
+content is visible. Some blank space may remain if the screen and stack
+aspect ratios do not match.
+- "noBorder" - Scale the stack to fill the screen, preserving the aspect
+ratio. If the stack and screen aspect ratios do not match, the left /
+right or top / bottom extremes of the stack are not visible.
+- "noScale" - The stack is not scaled, but is centered on the screen
+instead.
+- "showAll" - Scale the stack preserving aspect ratio so all content
+within the stack rect is visible. Portions of the stack outside the
+stack rect will be visible if the scaled stack does not fit the screen
+exactly.
 
 Description:
-Use the <fullscreenmode> property to choose the most appropriate full screen scaling mode for the application.
+Use the <fullscreenmode> property to choose the most appropriate full
+screen scaling mode for the application.
 
-There are multiple ways in which a stack can be resized or scaled to take full advantage of the available screen space. <fullscreenmode> allows the developer to choose the most appropriate for their application.
+There are multiple ways in which a stack can be resized or scaled to
+take full advantage of the available screen space. <fullscreenmode>
+allows the developer to choose the most appropriate resizing or scaling
+for their application.
 
->*Note:* The fullscreenmode only takes affect when a stack is full screen. This is the case on mobile platforms where stacks are always full screen, or on the desktop when the <fullscreen> property of the stack is set to true.
+>*Note:* The fullscreenmode only takes affect when a stack is full
+> screen. This is the case on mobile platforms where
+stacks are always full screen, or on the desktop when the <fullscreen>
+property of the stack is set to true.
 
-The full screen scaling mode is available on all desktop and mobile platforms and operates independently from Hi-DPI support.
+The full screen scaling mode is available on all desktop and mobile
+platforms and operates independently from Hi-DPI support.
 
-References: fullscreen (property)
+References: empty (constant), fullscreen (property)
 
 Tags: ui
+

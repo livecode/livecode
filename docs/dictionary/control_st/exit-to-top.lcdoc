@@ -1,34 +1,58 @@
 Name: exit to top
 
+Synonyms: exit to metacard, exit to supercard, exit to hypercard
+
 Type: control structure
 
 Syntax: exit to top
 
-Summary: Halts the current <handler> and all pending <handler|handlers>.
-
-Synonyms: exit to MetaCard,exit to SuperCard,exit to HyperCard
+Summary:
+Halts the current <handler> and all pending <handler|handlers>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if the result is not empty then exit to top -- stop everything
 
 Description:
-Use the <exit to top> <control structure> to stop <execute|executing> the current <handler> and suppress pending <message|messages>.
+Use the <exit to top> <control structure> to stop <execute|executing>
+the current <handler> and suppress pending <message|messages>. 
 
-Form:
-The <exit to top> <statement> appears on a line by itself, anywhere inside a <handler>.
+**Form:** The <exit to top> <statement> appears on a line by itself, 
+anywhere inside a <handler>. 
 
-Usually, <exit to top> is used within an <if> <control structure>, so that <execute|execution> stops if a condition is true and continues if the condition is false.
+Usually, <exit to top> is used within an <if> <control structure>, so
+that <execute|execution> stops if a condition is true and continues if
+the condition is false.
 
-You can use an <exit to top> <statement> in a <message handler>, <function handler>, <getProp handler>, or <setProp handler>.
+You can use an <exit to top> <statement> in a <message handler>,
+<function handler>, <getProp handler>, or <setProp handler>.
 
-If the current handler was called from another handler, the calling handler is also halted. Other messages that depend on the same action are also suppressed: for example, if an <exit to top> <control structure> is executed in a <closeCard> <handler>, the corresponding <openCard> <message> is not sent to the destination <card>.
+If the current handler was called from another handler, the calling
+handler is also halted. Other messages that depend on the same action
+are also suppressed: for example, if an <exit to top> <control
+structure> is executed in a <closeCard> <handler>, the corresponding
+<openCard> <message> is not sent to the destination <card>.
 
->*Important:*  When a <handler> <execute|executes> an <exit to top> <statement>, the <message>, setProp <trigger>, <function call>, or <getProp call> is not <pass|passed> to the next <object> in the <message path>. To halt the current <handler> and <pass> the <message>, <trigger>, or <call> to the next <object> in the <message path>, use the <pass> <control structure> instead of <exit> or <exit to top>.
+>*Important:*  When a <handler> <execute|executes> an <exit to top>
+> <statement>, the <message>, setProp <trigger>, <function call>, or
+> <getProp call> is not <pass|passed> to the next <object(glossary)> in
+> the <message path>. To halt the current <handler> and <pass> the
+> <message>, <trigger>, or <call> to the next <object(glossary)> in the
+> <message path>, use the <pass> <control structure> instead of <exit>
+> or <exit to top>.
 
-References: card (keyword), top (keyword), closeCard (message), openCard (message), call (command), pass (control_st), exit (control_st), if (control_st), function handler (glossary), message handler (glossary), pass (glossary), setProp handler (glossary), execute (glossary), function call (glossary), control structure (glossary), getProp handler (glossary), trigger (glossary), getProp call (glossary), message path (glossary), message (glossary), statement (glossary), handler (glossary), object (object)
+References: call (command), pass (control structure),
+exit (control structure), if (control structure),
+function handler (glossary), message handler (glossary), pass (glossary),
+setProp handler (glossary), execute (glossary), function call (glossary),
+control structure (glossary), getProp handler (glossary),
+trigger (glossary), getProp call (glossary), message path (glossary),
+message (glossary), statement (glossary), handler (glossary),
+object (glossary), card (keyword), top (keyword), closeCard (message),
+openCard (message)
+

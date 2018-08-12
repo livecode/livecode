@@ -4,13 +4,15 @@ Type: function
 
 Syntax: lineOffset(<lineToFind>, <stringToSearch> [, <linesToSkip>])
 
-Summary: <return|Returns> the number of <lines> between the beginning of a <value> and an occurrence of a specified <string>.
+Summary:
+<return|Returns> the number of <lines> between the beginning of a
+<value> and an occurrence of a specified <string>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 lineOffset("cheese",foodsList)
@@ -19,19 +21,39 @@ Example:
 put subbedData into line (lineOffset(it,receivedData)) of receivedData
 
 Parameters:
-lineToFind (string): 
-stringToSearch (string): 
-linesToSkip: A non-negative integer. If you don't specify how many linesToSkip, the lineOffset function does not skip any lines.
+lineToFind (string):
 
-Returns: The <lineOffset> <function> <return|returns> a <non-negative> <integer>.
+
+stringToSearch (string):
+
+
+linesToSkip:
+A non-negative integer. If you don't specify how many linesToSkip, the
+lineOffset function does not skip any lines.
+
+Returns:
+The <lineOffset> <function> <return|returns> a <non-negative> <integer>.
 
 Description:
-Use the <lineOffset> <function> to find which <line> a <string> occurs in.
+Use the <lineOffset> <function> to find which <line> a <string> occurs
+in. 
 
-The value returned by the <lineOffset> <function> is the number of the <line> where <lineToFind> appears in <stringToSearch>. If the <lineToFind> is not in <stringToSearch>, the <lineOffset> <function> <return|returns> zero. If the <lineToFind> is more than one <line>, the <lineOffset> <function> always <return|returns> zero, even if the <lineToFind> appears in the <stringToSearch>.
+The value returned by the <lineOffset> <function> is the number of the
+<line> where <lineToFind> first appears in <stringToSearch>. If the
+<lineToFind> is not in <stringToSearch>, the <lineOffset> <function>
+<return|returns> zero. If the <lineToFind> spans more than one <line>, the
+<lineOffset> <function> always <return|returns> zero, even if the
+<lineToFind> appears in the <stringToSearch>.
 
-If you specify how many <linesToSkip>, the <lineOffset> <function> skips the specified number of <lines> in the <stringToSearch>. The <value> <return|returned> is relative to this starting point instead of the beginning of the <stringToSearch>.
+If you specify how many <linesToSkip>, the <lineOffset> <function> skips
+the specified number of <lines> in the <stringToSearch>. The <value>
+<return|returned> is relative to this starting point instead of the
+beginning of the <stringToSearch>.
 
-References: wholeMatches (property), integer (keyword), line (keyword), string (keyword), lines (keyword), wordOffset (function), offset (function), value (function), return (glossary), non-negative (glossary), function (control_st)
+References: function (control structure), wordOffset (function),
+offset (function), value (function), return (glossary),
+non-negative (glossary), integer (keyword), line (keyword),
+string (keyword), lines (keyword), wholeMatches (property)
 
 Tags: text processing
+

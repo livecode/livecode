@@ -1,1 +1,0 @@
-# [[ Player ]] Selection not created when clicking shift and dragging player thumb

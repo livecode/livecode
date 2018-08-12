@@ -1,12 +1,14 @@
 Name: unlock
 
-Synonyms: unlocked,unlocking,unlock
+Synonyms: unlocked, unlocking, unlock
 
 Type: glossary
 
 Description:
-To set something up so that it can be changed by the user. For example, an unlocked <field|field's> text can be changed.
+To set something up so that it can be changed by the user. For example,
+an unlocked <field|field's> text can be changed.
 
-References: field (object)
+References: field (glossary)
 
 Tags: ui
+

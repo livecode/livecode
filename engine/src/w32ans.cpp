@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "parsedef.h"
@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "mcerror.h"
 #include "ans.h"
 #include "stack.h"
@@ -284,7 +284,7 @@ static void measure_filter(MCStringRef p_filter, uint4& r_length, uint4& r_count
 
 static void filter_to_spec(const wchar_t *p_filter, uint4 p_filter_count, COMDLG_FILTERSPEC*& r_types)
 {
-	r_types = new COMDLG_FILTERSPEC[p_filter_count];
+	r_types = new (nothrow) COMDLG_FILTERSPEC[p_filter_count];
 	memset(r_types, 0, sizeof(COMDLG_FILTERSPEC) * p_filter_count);
 
 	uint4 t_count;
@@ -366,7 +366,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 			else
 			{
 				if (t_last_slash < MCStringGetLength(*t_fixed_path) - 1)
-					/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMake(t_last_slash + 1, MCStringGetLength(*t_fixed_path) - (t_last_slash + 1)), &t_initial_file);
+					/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMakeMinMax(t_last_slash + 1, MCStringGetLength(*t_fixed_path)), &t_initial_file);
 
 				MCAutoStringRef t_folder_split;
 				// SN-2014-10-29: [[ Bug 13850 ]] The length is t_last_slash, not t_last_slash - 1
@@ -698,7 +698,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 			t_end = UINDEX_MAX;
 			/* UNCHECKED */ MCStringFirstIndexOfChar(p_filter, '\0', t_offset, kMCStringOptionCompareExact, t_end);
             
-			/* UNCHECKED */ MCStringCopySubstring(p_filter, MCRangeMake(t_offset, t_end-t_offset), r_result);
+			/* UNCHECKED */ MCStringCopySubstring(p_filter, MCRangeMakeMinMax(t_offset, t_end), r_result);
 		}
 
 		t_result = 0;
@@ -1007,66 +1007,10 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	return t_success;
 }
 
-#ifdef /* MCA_setdialogcolors */ LEGACY_EXEC
-void MCA_setcolordialogcolors(MCExecPoint& p_ep)
-{
-	const char * t_color_list;
-	t_color_list = p_ep.getcstring();
-    
-	if (t_color_list != NULL)
-	{
-		MCColor t_colors[16];
-		char *t_colornames[16];
-		int i;
-        
-		for (i = 0 ; i < 16 ; i++)
-			t_colornames[i] = NULL;
-        
-		MCscreen->parsecolors(t_color_list, t_colors, t_colornames, 16);
-        
-		for(i=0;i < 16;i++)
-		{
-			if (t_colors[i] . flags != 0)
-				s_colordialogcolors[i] = RGB(t_colors[i].red >> 8, t_colors[i].green >> 8,
-                                             t_colors[i].blue >> 8);
-			else
-				s_colordialogcolors[i] = NULL;
-            
-            delete t_colornames[i];
-		}
-        
-	}
-}
-#endif /* MCA_setdialogcolors */
-
-#ifdef /* MCA_getdialogcolors */ LEGACY_EXEC
-void MCA_getcolordialogcolors(MCExecPoint& p_ep)
-{
-	p_ep.clear();
-	MCExecPoint t_ep(p_ep);
-    
-	for(int i=0;i < 16;i++)
-	{
-		if (s_colordialogcolors[i] != 0)
-			t_ep.setcolor(GetRValue(s_colordialogcolors[i]), GetGValue(s_colordialogcolors[i]), GetBValue(s_colordialogcolors[i]));
-		else
-			t_ep.clear();
-        
-		p_ep.concatmcstring(t_ep.getsvalue(), EC_RETURN, i==0);
-	}
-}
-#endif /* MCA_getdialogcolors */
-
 void MCA_setcolordialogcolors(MCColor* p_colors, uindex_t p_count)
 {
     for(int i = 0; i < 16; i++)
-    {
-        if (p_colors[i] . flags != 0)
-            s_colordialogcolors[i] = RGB(p_colors[i] . red >> 8, p_colors[i] . green >> 8,
-                                             p_colors[i] . blue >> 8);
-        else
-            s_colordialogcolors[i] = NULL;
-	}
+		s_colordialogcolors[i] = RGB(p_colors[i] . red >> 8, p_colors[i] . green >> 8, p_colors[i] . blue >> 8);
 }
 
 void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
@@ -1075,20 +1019,11 @@ void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
     
 	for(int i = 0; i < 16; i++)
 	{
-        MCColor t_color;
-        if (s_colordialogcolors[i] != 0)
-        {
-            t_color . red = GetRValue(s_colordialogcolors[i]);
-            t_color . green = GetGValue(s_colordialogcolors[i]);
-            t_color . blue = GetBValue(s_colordialogcolors[i]);
-            t_color . flags = DoRed | DoGreen | DoBlue;
-            t_list . Push(t_color);
-        }
-		else
-        {
-            t_color . flags = 0;
-			t_list . Push(t_color);
-        }
+		MCColor t_color;
+		t_color . red = GetRValue(s_colordialogcolors[i]);
+		t_color . green = GetGValue(s_colordialogcolors[i]);
+		t_color . blue = GetBValue(s_colordialogcolors[i]);
+		t_list . Push(t_color);
 	}
     
     t_list . Take(r_colors, r_count);

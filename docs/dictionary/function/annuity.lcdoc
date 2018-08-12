@@ -4,13 +4,15 @@ Type: function
 
 Syntax: annuity(<interestRate>, <numberOfPeriods>)
 
-Summary: Computes the <value> of an annuity given an interest rate and a number of payments.
+Summary:
+Computes the <value> of an annuity given an interest rate and a number
+of payments.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 annuity(.08,10)
@@ -19,26 +21,42 @@ Example:
 annuity(currentAnnualRate/12,monthsOfLoan)
 
 Parameters:
-interestRate: A positive number. The interestRate is expressed as a fraction of 1 so, for example, an 8% rate is written .08.
-numberOfPeriods: A positive number.
+interestRate:
+A positive number. The interestRate is expressed as a fraction of 1 so,
+for example, an 8% rate is written .08.
 
-Returns: The <annuity> <function> <return|returns> a positive number.
+numberOfPeriods:
+A positive number.
+
+Returns:
+The <annuity> <function> <return|returns> a positive number.
 
 Description:
-Use the <annuity> <function> to calculate the present or future value of an annuity or to calculate loan payments.
+Use the <annuity> <function> to calculate the present or future value of
+an annuity or to calculate loan payments.
 
 The formula for the value of an ordinary annuity is
-   (1 - (1 + <interestRate>)^(- <numberOfPeriods>))/ <interestRate> 
+
+    (1 - (1 + <interestRate>)^(- <numberOfPeriods>))/ <interestRate> 
+
 The <annuity> <function> calculates this <value>.
 
-The <numberOfPeriods> and the <interestRate> must use the same unit of time. For example, if the periods are months, the interest rate is the interest per month.
+The <numberOfPeriods> and the <interestRate> must use the same unit of
+time. For example, if the periods are months, the interest rate is the
+interest per month.
 
-You can use the <annuity> <function> to calculate the amount of loan payments as follows:
+You can use the <annuity> <function> to calculate the amount of loan
+payments as follows:
 
-  paymentAmount = totalAmount/annuity(rate,periods)
+    paymentAmount = totalAmount/annuity(rate,periods)
 
-For example, if the loan is for $2500 at an interest rate of 2% per month and is to be repaid in a year, the monthly payment is 2500/annuity(.02,12) or $236.40.
 
-References: return (glossary), compound (function), value (function), function (control_st)
+For example, if the loan is for $2500 at an interest rate of 2% per
+month and is to be repaid in a year, the monthly payment is
+2500/annuity(.02,12) or $236.40.
+
+References: function (control structure), compound (function),
+value (function), return (glossary)
 
 Tags: math
+

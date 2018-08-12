@@ -1,18 +1,19 @@
 Name: variance
 
+Synonyms: sampvariance
+
 Type: function
 
 Syntax: variance(<numbersList>)
 
-Summary: <return|Returns> the sample variance of a list of numbers.
-
-Synonyms: sampVariance
+Summary:
+<return|Returns> the sample variance of a list of numbers.
 
 Introduced: 6.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 variance(8,10,12) -- returns 4
@@ -21,16 +22,25 @@ Example:
 put variance(studentScores) into field "Sample Variance"
 
 Parameters:
-numbersList: A comma-separated list of numbers, or an expression that evaluates to such a list, or an array containing only numbers.
+numbersList:
+A comma-separated list of numbers, or an expression that evaluates to
+such a list, or an array containing only numbers.
 
-Returns: The <variance> function <return|returns> a number.
+Returns:
+The <variance> function <return|returns> a number.
 
 Description:
-Use the <variance> <function> to analyze the amount of spread in a list of numbers.
+Use the <variance> <function> to analyze the amount of spread in a list
+of numbers.
 
-The <variance> <function> was added in version 6.1 to complement the <standardDeviation> <function>.
-The variance is a measure of how widely distributed the numbers in the <numbersList> are.
+The <variance> <function> was added in version 6.1 to complement the
+<standardDeviation> <function>. The variance is a measure of how widely
+distributed the numbers in the <numbersList> are.
 
-References: function (control_st), populationVariance (function), averageDeviation (function), variance (function), average (function), median (function), populationStandardDeviation (function), sum (function), standardDeviation (function), return (glossary)
+References: function (control structure), populationVariance (function),
+averageDeviation (function), variance (function), average (function),
+median (function), populationStandardDeviation (function), sum (function),
+standardDeviation (function), return (glossary)
 
 Tags: math
+

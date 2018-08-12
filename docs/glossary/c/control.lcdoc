@@ -1,12 +1,26 @@
 Name: control
 
-Synonyms: control,widget
+Synonyms: control, widget
 
-Type: object
+Type: glossary
 
 Description:
-An <object> that can be placed on a <card>. Controls include <button|buttons>, <field|fields>, <image|images>, <graphic|graphics>, <player|players>, <EPS|EPS objects>, <scrollbar|scrollbars>, and <group|groups>.
+An <object(glossary)> that can be placed on a <card>. Controls include:
 
-References: graphic (object), image (object), button (object), scrollbar (object), player (object), object (object), field (object), card (object), EPS (glossary), group (glossary)
+-  <button|buttons> 
+-  <field|fields>
+-  <image|images>
+-  <graphic|graphics>
+-  <player|players>
+-  <EPS|EPS objects>
+-  <scrollbar|scrollbars>
+-  <group|groups>
+-  <widget|widgets>
+
+References: graphic (glossary), image (glossary), button (glossary),
+scrollbar (glossary), player (glossary), object (glossary),
+field (glossary), card (glossary), EPS (glossary), group (glossary),
+widget (object)
 
 Tags: objects
+

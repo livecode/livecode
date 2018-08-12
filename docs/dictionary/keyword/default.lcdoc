@@ -4,24 +4,48 @@ Type: keyword
 
 Syntax: default
 
-Summary: Used with the <decorations> <property> to specify the standard appearance for a window type. When used within a <switch> <control structure>, specifies a section of <statement|statements> to be <execute|executed> in all cases.
+Summary:
+Used with the <decorations> <property> to specify the standard
+appearance for a window type. When used within a <switch> <control
+structure>, specifies a section of <statement|statements> to be
+<execute|executed> in all cases.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the decorations of stack "Main" to default
 
 Description:
-Use the <default> <keyword> to set a <stack window> to a normal window appearance.
+Use the <default> <keyword> to set a <stack window> to a normal window
+appearance. 
 
-An editable window whose <decorations> <property> is set to default has a title bar, <close box>, <zoom box>, and <collapse box> (on <Mac OS|Mac OS systems>), or a <title bar>, <minimize button>, <maximize button>, and <menu bar> (on <Unix> and <Windows|Windows systems>). A <palette>, <modal>, or <modeless> window whose <decorations> is set to default has a title bar.
+An editable window whose <decorations> <property> is set to default has
+a title bar, <close box>, <zoom box>, and <collapse box> (on <Mac OS|Mac
+OS systems>), or a <title bar>, <minimize button>, <maximize button>,
+and <menu bar> (on <Unix> and <Windows|Windows systems>). A <palette>,
+<modal>, or <modeless> window whose <decorations> is set to default has
+a title bar.
 
-If a <switch> <control structure> has a <default> section, the <statement|statements> in the <default> section are <execute|executed> if no break <statement> has been encountered yet in the <switch> <control structure>. (Usually, there is a <break> <statement> within each <case> section, so the <default> section is <execute|executed> only if none of the <case> conditions is true.)
+If a <switch> <control structure> has a <default> section, the
+<statement|statements> in the <default> section are <execute|executed>
+if no break <statement> has been encountered yet in the <switch>
+<control structure>. (Usually, there is a <break> <statement> within
+each <case> section, so the <default> section is <execute|executed> only
+if none of the <case> conditions is true.)
 
-References: default (property), decorations (property), case (keyword), modeless (command), palette (command), modal (command), switch (control_st), break (control_st), property (glossary), menu bar (glossary), execute (glossary), stack window (glossary), Windows (glossary), control structure (glossary), collapse box (glossary), keyword (glossary), close box (glossary), title bar (glossary), zoom box (glossary), Mac OS (glossary), minimize button (glossary), Unix (glossary), statement (glossary), maximize button (glossary)
+References: modeless (command), palette (command), modal (command),
+switch (control structure), break (control structure),
+property (glossary), menu bar (glossary), execute (glossary),
+stack window (glossary), Windows (glossary), control structure (glossary),
+collapse box (glossary), keyword (glossary), close box (glossary),
+title bar (glossary), zoom box (glossary), Mac OS (glossary),
+minimize button (glossary), Unix (glossary), statement (glossary),
+maximize button (glossary), case (keyword), default (property),
+decorations (property)
 
 Tags: windowing
+

@@ -2,15 +2,19 @@ Name: place
 
 Type: command
 
-Syntax: place <group> onto <card> 
+Syntax: place <group> onto <card>
 
-Summary: Adds an existing group of objects to a card and sets the sharedBehavior property to true.
+Summary:
+Adds an existing group of objects to a card and sets the sharedBehavior
+property to true.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 place group "Navigation" onto card "Navy" -- group is on current card
@@ -19,22 +23,41 @@ Example:
 place background 1 onto this card -- group may be on any card
 
 Parameters:
-group: The group is any group in the current stack that is not contained (nested) in another group.
-card: The card is any card in the current stack.
+group:
+The group is any group in the current stack that is not contained
+(nested) in another group.
+
+card:
+The card is any card in the current stack.
 
 Description:
 Use the <place> command to add an existing group to a card.
 
-Only top-level groups may be placed onto multiple cards; an attempt to <place> a nested group onto another card throws an error.
+Only top-level groups may be placed onto multiple cards; an attempt to
+<place> a nested group onto another card throws an error.
 
-Placing a group onto another card automatically sets the <sharedBehavior> property of the group to true.
+Placing a group onto another card automatically sets the
+<sharedBehavior> property of the group to true.
 
->*Warning:* If the group did not previously have the <sharedBehavior> property set to true, placing a group will (in addition) set its <backgroundBehavior> property to true. This is legacy behavior and will be removed in version 5.0. Scripts that rely on <place> setting <backgroundBehavior> to true for new groups should be updated to explicitly do so after the <place> command.
+>*Warning:* If the group did not previously have the <sharedBehavior>
+> property set to true, placing a group will (in addition) set its
+> <backgroundBehavior> property to true. This is legacy behavior and
+> will be removed in version 5.0. Scripts that rely on <place> setting
+> <backgroundBehavior> to true for new groups should be updated to
+> explicitly do so after the <place> command.
 
->*Important:* The words "group" and "background" are not always interchangeable. A group reference with the word "group" refers to a group on the current card. To refer to a group that's not on the current card, you must use the "background" form.
+>*Important:* The words "group" and "background" are not always
+> interchangeable. A group reference with the word "group" refers to a
+> group on the current card. To refer to a group that's not on the
+> current card, you must use the "background" form.
 
->*Tip:* To have a group automatically placed on newly created cards, leave its <backgroundBehavior> property as true.
+>*Tip:* To have a group automatically placed on newly created cards,
+> leave its <backgroundBehavior> property as true.
 
-References: create card (command), start editing (command), copy (command), insert script (command), groupNames (property), sharedBehavior (property), backgroundBehavior (property), onto (keyword)
+References: create card (command), start editing (command),
+copy (command), insert script (command), remove (command), onto (keyword),
+groupNames (property), sharedBehavior (property),
+backgroundBehavior (property)
 
 Tags: objects
+

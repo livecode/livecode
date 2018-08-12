@@ -4,32 +4,54 @@ Type: function
 
 Syntax: matrixMultiply(<firstArray>, <secondArray>)
 
-Summary: <return|Returns> the matrix product of two <array|arrays>.
+Summary:
+<return|Returns> the matrix product of two <array|arrays>.
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put matrixMultiply(currentLevels,levelAdjustments)
 
 Parameters:
-firstArray (array): The firstArray and secondArray are both two-dimensional array variables whose elements are numbers, and whose keys are sequential numbers.
-secondArray (array): 
+firstArray (array):
+The firstArray and secondArray are both two-dimensional array variables
+whose elements are numbers, and whose keys are sequential numbers.
 
-The result: The matrix product of two arrays is itself an array. Each element myArray[M,N] of the product is obtained by multiplying each element of the Mth row by the corresponding <element> of the Nth column. The resulting numbers are added together to obtain the <element> in the Mth row and Nth column.
 
-Returns: The <matrixMultiply> <function> <return|returns> an array of numbers.
+secondArray (array):
+
+
+Returns:
+The <matrixMultiply> <function> <return|returns> an array of numbers.
+
+The result:
+The matrix product of two arrays is itself an array. Each element
+myArray[M,N] of the product is obtained by multiplying each element of
+the Mth row by the corresponding <element> of the Nth column. The
+resulting numbers are added together to obtain the <element> in the Mth
+row and Nth column.
 
 Description:
 Use the <matrixMultiply> <function> to perform matrix multiplication.
 
-A two-dimensional array is an array whose elements have a two-part key to describe them. You can visualize such an array as a set of rows and columns: the first part of each element's key is the row number, and the second part is the column number. For example, the expression myArray[3,2] describes the element of myArray which is in the third row, second column.
+A two-dimensional array is an array whose elements have a two-part key
+to describe them. You can visualize such an array as a set of rows and
+columns: the first part of each element's key is the row number, and the
+second part is the column number. For example, the expression
+myArray[3,2] describes the element of myArray which is in the third row,
+second column.
 
-The number of rows in the <firstArray> must be the same as the number of columns in the <secondArray>, and the number of rows in the <secondArray> must match the number of columns in the <firstArray>. However, the number of rows in the <firstArray> and <secondArray> need not be the same.
+The number of columns in the <firstArray> must be the same as the number
+of rows in the <secondArray>. There are no other constraints in order for
+the multiplication to succeed.
 
-References: element (keyword), multiply (command), extents (function), transpose (function), array (glossary), return (glossary), function (control_st)
+References: multiply (command), function (control structure),
+extents (function), transpose (function), array (glossary),
+return (glossary), element (keyword)
 
 Tags: math
+

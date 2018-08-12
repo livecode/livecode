@@ -4,13 +4,14 @@ Type: command
 
 Syntax: answer color [with <startingColor>]
 
-Summary: Displays the operating system's standard color-selection <dialog box>.
+Summary:
+Displays the operating system's standard color-selection <dialog box>.
 
 Introduced: 1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Example:
 answer color
@@ -25,27 +26,46 @@ Example:
 answer color with "AliceBlue"
 
 Parameters:
-startingColor: A <color reference> in one of the following forms:
+startingColor:
+A <color reference> in one of the following forms:
+
 -  a standard color name
--  three comma-separated integers between zero and 255, specifying the level of each of red, green, and blue
--  an HTML-style color consisting of a hash mark (#) followed by three hexadecimal numbers, one for each of red, green, and blue.
+-  three comma-separated integers between zero and 255, specifying the
+   level of each of red, green, and blue
+-  an HTML-style color consisting of a hash mark (#) followed by three
+   hexadecimal numbers, one for each of red, green, and blue.
 
-The result: If the user cancels the <dialog box|dialog>, the <it> <variable> is set to empty, and the <result> <function> <return|returns> "Cancel".
 
-It: The color the user chooses is placed in the <it> <variable>.
+It:
+The color the user chooses is placed in the <it> <variable>.
+
+The result:
+If the user cancels the <dialog box|dialog>, the <it> <variable> is set
+to empty, and the <result> <function> <return|returns> "Cancel".
 
 Description:
 Use the <answer color> <command> to select a custom color.
 
-The <answer color> <command> displays a <dialog box> where the user can select a color. (This dialog box is displayed by the operating system, not by LiveCode.)
+The <answer color> <command> displays a <dialog box> where the user can
+select a color. (This <dialog box> is displayed by the operating system,
+not by LiveCode.)
 
-If you specify a <startingColor>, the dialog box displays that color by default.
+If you specify a <startingColor>, the <dialog box> displays that color by
+default. 
 
-The color is returned in the form of three comma-separated integers between zero and 255, specifying the level of each of red, green, and blue. This format can be used directly to set any color property.
+The color is returned in the form of three comma-separated integers
+between zero and 255, specifying the level of each of red, green, and
+blue. This format can be used directly to set any color property.
 
 Changes:
-The option to specify a startingColor was introduced in version 1.1.1. In previous versions, the dialog box displayed white by default.
+The option to specify a startingColor was introduced in version 1.1.1.
+In previous versions, the dialog box displayed white by default.
 
-References: systemColorSelector (property), backgroundColor (property), colors (property), foregroundColor (property), it (keyword), answer (command), result (function), colorNames (function), dialog box (glossary), variable (glossary), command (glossary), return (glossary), function (control_st), color reference (glossary)
+References: answer (command), function (control structure),
+result (function), colorNames (function), dialog box (glossary),
+variable (glossary), command (glossary), return (glossary),
+color reference (glossary), it (keyword), systemColorSelector (property),
+backgroundColor (property), colors (property), foregroundColor (property)
 
 Tags: ui
+

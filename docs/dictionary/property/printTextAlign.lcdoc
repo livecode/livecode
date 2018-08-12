@@ -4,17 +4,26 @@ Type: property
 
 Syntax: set the printTextAlign to {left | center | right}
 
-Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary:
+Has no effect and is included in <LiveCode> for compatibility with
+imported <HyperCard> stacks.
 
 Introduced: 1.0
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: printing
 
 Description:
-In HyperCard, the <printTextAlign> <property> specifies the alignment of printed text. In LiveCode, only <card(object)|cards> can be printed, and the alignment of text on the <card(keyword)> is determined by the <card(keyword)> layout and the <properties> of its <object|objects>.
+In HyperCard, the <printTextAlign> <property> specifies the alignment of
+printed text. In LiveCode, only <card(object)|cards> can be printed, and
+the alignment of text on the <card(keyword)> is determined by the
+<card(keyword)> layout and the <properties> of its <object|objects>.
 
-By default, the value of <printTextAlign> is center. A handler can set the <property>, but the new setting has no effect.
+By default, the value of <printTextAlign> is center. A handler can set
+the <property>, but the new setting has no effect.
 
-References: properties (property), textAlign (property), card (keyword), print (command), card (object), object (object), property (glossary), LiveCode (glossary), HyperCard (glossary)
+References: print (command), object (glossary), property (glossary),
+LiveCode (glossary), HyperCard (glossary), card (keyword), card (object),
+properties (property), textAlign (property)
+

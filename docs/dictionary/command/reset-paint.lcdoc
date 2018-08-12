@@ -4,13 +4,15 @@ Type: command
 
 Syntax: reset paint
 
-Summary: Restores the <default> settings of the <global|global properties> that apply to painting.
+Summary:
+Restores the <default> settings of the <global|global properties> that
+apply to painting.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 reset paint
@@ -19,23 +21,31 @@ Example:
 if the mouse is down then reset paint
 
 Description:
-Use the <reset paint> <command> as a shortcut to clean up paint <properties> by <reset|resetting> them to their <default> settings.
+Use the <reset paint> <command> as a shortcut to clean up paint
+<properties> by <reset|resetting> them to their <default> settings.
 
-The <reset paint> <command> assigns the following <property> <value|values>:
+The <reset paint> <command> assigns the following <property>
+<value|values>: 
 
 * The brush <property> is set to 8.
 * The brushColor <property> is set to white.
+* The brushPattern <property> is set to empty.
 * The centered <property> is set to false.
 * The eraser <property> is set to 2.
 * The filled <property> is set to false.
 * The grid <property> is set to false.
 * The gridSize <property> is set to 8.
 * The lineSize <property> is set to 1.
-* The pattern <property> is set to 1.
 * The penColor <property> is set to black.
+* The penPattern <property> is set to empty.
 * The polySides <property> is set to 4.
 * The roundEnds <property> is set to false.
 * The slices <property> is set to 16.
 * The spray <property> is set to 31<a/>.
 
-References: default (keyword), properties (property), reset cursors (command), reset (command), revert (command), property (glossary), command (glossary), value (glossary), global (glossary), reset (glossary)
+
+References: reset cursors (command), reset (command), revert (command),
+property (glossary), command (glossary), value (glossary),
+global (glossary), reset (glossary), default (keyword),
+properties (property)
+

@@ -5,8 +5,12 @@ Synonyms: message
 Type: glossary
 
 Description:
-An instruction sent to an <object>. If the <object|object's> <script> contains a <message handler> with the same name as the message, that <message handler> is <execute|executed>.
+An instruction sent to an <object(glossary)>. If the <object|object's>
+<script> contains a <message handler> with the same name as the message,
+that <message handler> is <execute|executed>.
 
-References: execute (glossary), message handler (glossary), script (glossary), object (object)
+References: execute (glossary), message handler (glossary),
+script (glossary), object (glossary)
 
-Tags: objects
+Tags: objects, messages
+

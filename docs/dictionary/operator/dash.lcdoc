@@ -2,56 +2,106 @@ Name: -
 
 Type: operator
 
-Syntax: <firstNumber> - <secondNumber> 
+Syntax: <firstNumber> - <secondNumber>
 
-Syntax: <numberArray> - {<number> | <array>}
+Syntax: <numberArray> - {<number> | <numberArray>}
 
-Syntax: <-negativeNumber>
+Syntax: -<number>
 
-Summary: Subtracts one number from another, or designates a number as <negative>.
+Summary:
+Subtracts one number from another, or designates a number as <negative>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
+local myContainer
 put -24 into myContainer
 
 Example:
+local theRight, theLeft, theWidth
 put theRight - theLeft into theWidth
 
 Example:
+local myArray, adjustedValues
 put myArray - 17 into adjustedValues
 
+Example:
+# Assume a card with three fields as named below, and a button.
+# Fields "tNumList1" and "tNumList2" each contain return-delimited
+#  lists of numbers. The button script contains this handler:
+on mouseUp
+    local tNumList1, tNumList2
+    put fld "list1" into tNumList1
+    put fld "list2" into tNumList2
+    split tNumList1 by return
+    split tNumList2 by return
+    put tNumList2 - tNumList1 into tNumList1
+    combine tNumList1 by row
+    put tNumList1 into fld "subtracted"
+end mouseUp
+
 Parameters:
-firstNumber: The operands firstNumber and secondNumber are numbers, or expressions that evaluate to numbers, or arrays containing numbers.
-secondNumber: 
-numberArray (array): 
-number: 
-array (array): 
+firstNumber:
+A number or an expression that evaluates to a number.
+
+secondNumber:
+A number or an expression that evaluates to a number.
+
+numberArray (array):
+An array whose elements contain numbers.
+
+
+number:
+A number or an expression that evaluates to a number.
 
 Description:
-The <-> (minus) <operator> serves two purposes. When it has a single <operand> (<unary> minus), it negates that number. When it has two <operand|operands> (<binary> minus), it subtracts the second number from the first number.
+The <-> (minus) <operator> serves two purposes. When it has a single 
+<operand> (<unary> minus), it negates that number. When it has two 
+<operand|operands> (<binary> minus), it subtracts the second number 
+from the first number.
 
-To subtract a number from the contents of a container, use the <subtract> <command>.
+To subtract a number from the contents of a container, use the 
+<subtract> <command>.
 
 You cannot use the unary minus twice in a row. The expression
-  - - someNumber
+
+    - - someNumber
+
 causes an error, and the expression
-  -- someNumber
-is interpreted as a comment because it starts with the comment keyword <-->.
 
-If <firstNumber> or <secondNumber> is an <array>, each of the <array> <element(glossary)|elements> must be a number. If a number is subtracted from an <array>, the number is subtracted from each <element(keyword)>. If an <array> is subtracted from an <array>, both <array|arrays> must have the same number of <element(glossary)|elements> and the same dimension, and each <element(keyword)> in one <array> is subtracted from the corresponding <element(keyword)> of the other <array>.
+    -- someNumber
 
-If an element of an array is empty, the <-> <operator> treats its contents as zero.
+is interpreted as a comment because it starts with the comment keyword
+<-->. 
 
-The unary minus cannot be used with an array.
+If <firstNumber> or <secondNumber> is an <array>, each of the <array> 
+<element(glossary)|elements> must be a number. If a number is
+subtracted from an <array>, the number is subtracted from each
+<element(glossary)>. If an <array> is subtracted from an <array>, both
+<array|arrays> must have the same number of <element(glossary)|elements>
+and the same dimension, and each <element(glossary)> in one <array> is
+subtracted from the corresponding <element(glossary)> of the other
+<array>. 
+
+If an element of an array is empty, the <-> <operator> treats its
+contents as zero.
+
+The <unary> minus cannot be used with an array.
 
 Changes:
-The option to subtract arrays was introduced in version 1.1. In previous versions, only single numbers could be used with the - operator.
+The option to subtract arrays was introduced in version 1.1. 
+In previous versions, only single numbers could be used with the -
+operator. 
 
-References: -- (keyword), element (keyword), () (operator), + (operator), subtract (command), operand (glossary), operator (glossary), element (glossary), negative (glossary), binary (glossary), array (glossary), command (glossary), unary (glossary)
+References: subtract (command), split (command), combine (command),
+operand (glossary), operator (glossary), element (glossary),
+negative (glossary), binary (glossary), array (glossary),
+command (glossary), unary (glossary), -- (keyword), element (keyword),
+() (operator), + (operator)
 
 Tags: math
+

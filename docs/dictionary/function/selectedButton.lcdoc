@@ -2,15 +2,17 @@ Name: selectedButton
 
 Type: function
 
-Syntax: the selectedButton of [card | background] family <familyNumber> 
+Syntax: the selectedButton of [{card | background}] family <familyNumber>
 
-Summary: <return|Returns> the name of the currently <highlight|highlighted> <button> in a family.
+Summary:
+<return|Returns> the name of the currently <highlight|highlighted>
+<button> in a family.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the selectedButton of family 3
@@ -19,15 +21,27 @@ Example:
 put the selectedButton of family myFamily into thisButton
 
 Parameters:
-familyNumber: A positive integer.
+familyNumber (integer):
+A positive integer.
 
-Returns: The <selectedButton> <function> <return|returns> a <string> of the formdomain button buttonNumber, wheredomainis either card or background.
+Returns (string):
+The <selectedButton> <function> <return|returns> a <string> of the
+form '*domain* button *buttonNumber*', where *domain* is either card or background.
 
 Description:
-Use the <selectedButton> function to find out the current setting of a <radio button|radio-button cluster> controlled by the <family> <property>.
+Use the <selectedButton> function to find out the current setting of a
+<radio button|radio-button cluster> controlled by the <family>
+<property>.
 
-This function exists for compatibility with imported HyperCard stacks. You can use the <radioBehavior> <property> to cause a <group> consisting of <button(object)|buttons> to behave as a <radio button|radio cluster>, and use the <hilitedButton> <property> to find out which <button(keyword)> in the <group> is <highlight|highlighted>.
+This function exists for compatibility with imported HyperCard stacks.
+You can use the <radioBehavior> <property> to cause a <group> consisting
+of <button(object)|buttons> to behave as a <radio button|radio cluster>,
+and use the <hilitedButton> <property> to find out which
+<button(keyword)> in the <group> is <highlight|highlighted>.
 
-References: family (property), hilitedButton (property), radioBehavior (property), string (keyword), button (keyword), group (command), button (object), property (glossary), highlight (glossary), radio button (glossary), return (glossary), function (control_st)
+References: group (command), function (control structure),
+property (glossary), highlight (glossary), radio button (glossary),
+return (glossary), string (keyword), button (keyword), button (object),
+family (property), hilitedButton (property), radioBehavior (property)
 
 Tags: ui

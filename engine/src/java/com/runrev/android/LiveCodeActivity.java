@@ -41,6 +41,11 @@ public class LiveCodeActivity extends Activity
 	{
 	}
 
+    public Class getServiceClass()
+    {
+        return LiveCodeService.class;
+    }
+
 	//////////
 
 	@Override

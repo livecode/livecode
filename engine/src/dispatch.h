@@ -70,10 +70,7 @@ public:
     
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective. bool recursive = false);
-    virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
 	
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	
@@ -96,6 +93,7 @@ public:
 	// MW-2009-06-25: This method should be used to read stacks used from startup.
 	//   Specifically, embedded stacks and ones contained in deployed project info.
 	IO_stat readstartupstack(IO_handle stream, MCStack*& r_stack);
+    IO_stat readscriptonlystartupstack(IO_handle stream, uindex_t p_length, MCStack*& r_stack);
 	
 	// Load the given external from within the app bundle
 	bool loadexternal(MCStringRef p_external);
@@ -174,7 +172,6 @@ public:
 
 	void kfocusset(Window w);
 	void property(Window w, Atom atom);
-	void configure(Window w);
 	void enter(Window w);
     void redraw(Window w, MCRegionRef dirty_region);
 	MCFontlist *getfontlist();
@@ -262,9 +259,53 @@ public:
     //  in the resource mapping array of MCdispatcher.
     void addlibrarymapping(MCStringRef p_mapping);
     bool fetchlibrarymapping(MCStringRef p_name, MCStringRef &r_path);
+    MCArrayRef getlibrarymappings(void)
+    {
+        return m_library_mapping;
+    }
+    bool haslibrarymapping(MCStringRef p_name);
     
     virtual bool recomputefonts(MCFontRef parent_font, bool force);
     
+    // Try to read a binary stack from the stream. If the return value is
+    // IO_ERROR, a reason is returned in r_result. If the return value is
+    // IO_NORMAL, there was no error but the stream did not contain a binary
+    // stack
+    IO_stat trytoreadbinarystack(MCStringRef p_openpath,
+                                 MCStringRef p_name,
+                                 IO_handle &x_stream,
+                                 MCObject* p_parent, MCStack* &r_stack,
+                                 const char* &r_result);
+    
+    // Try to read a script-only stack from the stream. If the return value is
+    // IO_ERROR, a reason is returned in r_result. If the return value is
+    // IO_NORMAL, there was no error but the stream did not contain a
+    // script-only stack
+    IO_stat trytoreadscriptonlystack(MCStringRef p_openpath,
+                                     IO_handle &x_stream,
+                                     MCObject* p_parent,
+                                     MCStack* &r_stack,
+                                     const char* &r_result);
+    
+    // Read a script-only stack from p_size bytes of the stream. If the
+    // return value is IO_ERROR, a reason is returned in r_result. If
+    // the return value is IO_NORMAL, there was no error but the stream
+    // did not contain a script-only stack
+    IO_stat trytoreadscriptonlystackofsize(MCStringRef p_openpath,
+                                           IO_handle &x_stream,
+                                           uindex_t p_size,
+                                           MCObject* p_parent,
+                                           MCStack* &r_stack,
+                                           const char* &r_result);
+    
+    // Determine if the stream contains a script-only stack
+    bool streamstackisscriptonly(IO_handle stream);
+    
+    // Integrate a loaded stack into the environemnt, sending reloadStack
+    // if required.
+    void processstack(MCStringRef p_openpath, MCStack* &x_stack);
+    
+    void resolveparentscripts(void);
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.

@@ -6,13 +6,14 @@ Syntax: find [<form>] <textToFind> [in <field>]
 
 Syntax: find empty
 
-Summary: Searches the <field|fields> of the <current stack>.
+Summary:
+Searches the <field|fields> of the <current stack>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 find "heart"
@@ -21,46 +22,126 @@ Example:
 find string "beat must go on" in field "Quotes"
 
 Parameters:
-form (enum): If no <form> is specified, the normal form is used.
--  normal : Find each word in textToFind, at start of the field's words
--  characters, character, chars, char : Find each word in textToFind, anywhere in the field's words
--  words, word : Find each word in textToFind, as complete words
--  whole : Find the whole of textToFind, as a sequence of complete words
--  string : Find the whole of textToFind, anywhere
-textToFind (string): 
-field: Any expression that evaluates to a field reference. If the field is not specified, the find command searches all the fields in the current stack (except fields whose dontSearch property is set to true).
+form (enum):
+If no <form> is specified, the normal form is used.
 
-The result: When the search is successful, the card containing the text appears and a box is drawn around the found text. If the text is not found in the stack, the result <function(control_st)> <return(glossary)|returns> "Not found".
+-   normal: Find each word in textToFind, at start of the field's words
+-   characters, character, chars, char: Find each word in textToFind,
+    anywhere in the field's words
+-   words, word: Find each word in textToFind, as complete words
+-   whole: Find the whole of textToFind, as a sequence of complete words
+-   string: Find the whole of textToFind, anywhere
+
+
+textToFind (string):
+
+
+field:
+Any expression that evaluates to a field reference. If the field is not
+specified, the find command searches all the fields in the current stack
+(except fields whose dontSearch property is set to true).
+
+The result:
+When the search is successful, the card containing the text appears and
+a box is drawn around the found text. If the text is not found in the
+stack, the result <function(control structure)>
+<return(glossary)|returns> "Not found".
 
 Description:
 Use the <find> <command> to search for text.
 
-The <find> <command> starts searching after the previously-found text (if there was a previous <find> <command>) or at the beginning of the first <field(keyword)> on the <current card> (if not).
+The <find> <command> starts searching after the previously-found text
+(if there was a previous <find> <command>) or at the beginning of the
+first <field(keyword)> on the <current card> (if not).
 
-The six forms of the <find> command search in different ways. The find normal, find chars, and find words forms search for each word in the <textToFind>, but the <words> don't have to be together to be found; they only have to all appear on the same <card(keyword)>. <The> find words and find wholeforms look for complete words only. The find string and find whole forms search for the <textToFind> as a unit.
+The six forms of the <find> command search in different ways. The find
+normal, find chars, and find words forms search for each word in the
+<textToFind>, but the <words> don't have to be together to be found;
+they only have to all appear on the same <card(keyword)>. <The> find
+words and find wholeforms look for complete words only. The find string
+and find whole forms search for the <textToFind> as a unit.
 
-The find normal form looks for each word in the <textToFind> at the beginning of a <word>. For example, find "ring bell" finds "ringing" and "belltower", but not "bring" or "Campbell". All the words you specify must be in <field(object)|fields> on the <card(keyword)>, but they don't need to be in the same order, or even in the same <field(keyword)>.
+The find normal form looks for each word in the <textToFind> at the
+beginning of a <word>. For example, find "ring bell" finds "ringing" and
+"belltower", but not "bring" or "Campbell". All the words you specify
+must be in <field(object)|fields> on the <card(keyword)>, but they don't
+need to be in the same order, or even in the same <field(keyword)>.
 
-The find chars form looks for each word in the <textToFind>, in any part of a <word>. Unlike the find normal form, the find chars form doesn't require that the words in the <textToFind> be found at the start of a <word> on the <card(keyword)>. For example, find chars "ring bell" finds "bring", "ringing", "belltower", and "Campbell". As with the find normal form, all the words must be somewhere on the <card(keyword)>, but they don't need to be in the same order, or in the same <field(keyword)>.
+The find chars form looks for each word in the <textToFind>, in any part
+of a <word>. Unlike the find normal form, the find chars form doesn't
+require that the words in the <textToFind> be found at the start of a
+<word> on the <card(keyword)>. For example, find chars "ring bell" finds
+"bring", "ringing", "belltower", and "Campbell". As with the find normal
+form, all the words must be somewhere on the <card(keyword)>, but they
+don't need to be in the same order, or in the same <field(keyword)>.
 
-The find words form looks for each word in the <textToFind>. All the <words> must be complete <words>, not parts of <words>. For example, find words "ring bell" finds "ring" and "bell", but not "ringing", "bring", "belltower", or "Campbell". As with the find normal and find chars forms, all the words must be somewhere on the <card(keyword)>, but they don't need to be in the same order, or in the same <field(keyword)>.
+The find words form looks for each word in the <textToFind>. All the
+<words> must be complete <words>, not parts of <words>. For example,
+find words "ring bell" finds "ring" and "bell", but not "ringing",
+"bring", "belltower", or "Campbell". As with the find normal and find
+chars forms, all the words must be somewhere on the <card(keyword)>, but
+they don't need to be in the same order, or in the same
+<field(keyword)>. 
 
-The find string form looks for the entire <textToFind> as a unit. Unlike the find normal, find chars, and  find words  forms, the find string form requires that the <textToFind> be found exactly: the <words> must be in the same order and in the same <field(keyword)>, and not separated by other <words>. For example, find string "ring bell" finds "ring bell" and "bring belltower", but not "ring the bell" (extra word between "ring" and "bell"), "Ringbell Street" (no space between "ring" and "bell"), or "bell ringer" (words are in the wrong order).
+The find string form looks for the entire <textToFind> as a unit. Unlike
+the find normal, find chars, and find words forms, the find string form
+requires that the <textToFind> be found exactly: the <words> must be in
+the same order and in the same <field(keyword)>, and not separated by
+other <words>. For example, find string "ring bell" finds "ring bell"
+and "bring belltower", but not "ring the bell" (extra word between
+"ring" and "bell" ), "Ringbell Street" (no space between "ring" and
+"bell" ), or "bell ringer" (words are in the wrong order).
 
-The find whole form looks for the entire <textToFind> as a unit. Like the find words form (and unlike the find string form), the find whole form requires that each word in the <textToFind> be found as a whole <word>, not part of a <word>. For example, find whole "ring bell" finds "ring bell", but not "bring belltower" (the "ring" and "bell" are parts of <words>, not whole <words>), "ring the bell" (extra word between "ring" and "bell"), "Ringbell Street" (no space between "ring" and "bell"), or "bell ringer" (words are in the wrong order).
+The find whole form looks for the entire <textToFind> as a unit. Like
+the find words form (and unlike the find string form), the find whole
+form requires that each word in the <textToFind> be found as a whole
+<word>, not part of a <word>. For example, find whole "ring bell" finds
+"ring bell", but not "bring belltower" (the "ring" and "bell" are parts
+of <words>, not whole <words>), "ring the bell" (extra word between
+"ring" and "bell" ), "Ringbell Street" (no space between "ring" and
+"bell" ), or "bell ringer" (words are in the wrong order).
 
->*Note:* Because the find normal, find words, and find whole forms search for words or portions of <words>, they cannot find a <string> containing a space. The find string form can find a string containing a space, but cannot find a <string> that contains a <return(constant)> <character>.
+>*Note:* Because the find normal, find words, and find whole forms
+> search for words or portions of <words>, they cannot find a <string>
+> containing a space. The find string form can find a string containing
+> a space, but cannot find a <string> that contains a <return(constant)>
+> <character>. 
 
-The find empty form of the <find> <command> removes the box from the last <word> found and <reset|resets> the <find> <command>, so that the next search starts from the beginning of the <current card>, rather than the location of the next find. Going to another <card(keyword)> also <reset|resets> the <find> <command>.
+The find empty form of the <find> <command> removes the box from the
+last <word> found and <reset|resets> the <find> <command>, so that the
+next search starts from the beginning of the <current card>, rather than
+the location of the next find. Going to another <card(keyword)> also
+<reset|resets> the <find> <command>.
 
-The setting of the <caseSensitive> <property> determines whether the search considers uppercase and lowercase characters to be equivalent.
+The setting of the <caseSensitive> <property> determines whether the
+search considers uppercase and lowercase characters to be equivalent.
 
->*Note:* The search does not consider characters that differ by a diacritical mark to be equivalent. For example, find "mére" will not find the word "mere".
+>*Note:* The search does not consider characters that differ by a
+> diacritical mark to be equivalent. For example, find "mére" will not
+> find the word "mere".
 
-Usually, the <offset> and <matchText> <function(glossary)|functions> are faster than the <find> <command>. But unlike these <function(glossary)|functions>, the <find> <command> can search all the <field(object)|fields> of a <stack> at once, instead of one <container> at a time.
+Usually, the <offset> and <matchText> <function(glossary)|functions> are
+faster than the <find> <command>. But unlike these
+<function(glossary)|functions>, the <find> <command> can search all the
+<field(object)|fields> of a <stack> at once, instead of one <container>
+at a time.
 
->*Tip:*  To perform a batch search, set the <mark> <property> of all <card(object)|cards> where a match is found by using the mark cards by finding form of the <mark> <command>.
+>*Tip:*  To perform a batch search, set the <mark> <property> of all
+> <card(object)|cards> where a match is found by using the mark cards by
+> finding form of the <mark> <command>.
 
-References: caseSensitive (property), dontSearch (property), mark (property), return (constant), function (control_st), normal (keyword), whole (keyword), characters (keyword), string (keyword), character (keyword), the (keyword), words (keyword), word (keyword), card (keyword), field (keyword), field (object), stack (object), card (object), foundChunk (function), foundField (function), offset (function), matchText (function), foundText (function), foundLine (function), foundLoc (function), replace (command), unmark (command), sort (command), mark (command), property (glossary), current card (glossary), reset (glossary), return (glossary), container (glossary), function (glossary), command (glossary), current stack (glossary)
+References: replace (command), unmark (command), sort (command),
+mark (command), return (constant), function (control structure),
+foundChunk (function), foundField (function), offset (function),
+matchText (function), foundText (function), foundLine (function),
+foundLoc (function), property (glossary), current card (glossary),
+reset (glossary), return (glossary), container (glossary),
+function (glossary), command (glossary), current stack (glossary),
+normal (keyword), whole (keyword), characters (keyword), string (keyword),
+character (keyword), the (keyword), words (keyword), word (keyword),
+card (keyword), field (keyword), field (object), stack (object),
+card (object), caseSensitive (property), dontSearch (property),
+mark (property)
 
 Tags: database
+

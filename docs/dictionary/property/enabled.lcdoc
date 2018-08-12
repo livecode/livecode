@@ -4,13 +4,17 @@ Type: property
 
 Syntax: set the enabled of <object> to {true | false}
 
-Summary: Specifies that an <object> is active and responds to user action.
+Summary:
+Specifies that an <object(glossary)> is active and responds to user
+action. 
+
+Associations: field, button, graphic, scrollbar, player, image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the enabled of card button "Work Miracles" to true
@@ -18,20 +22,33 @@ set the enabled of card button "Work Miracles" to true
 Example:
 set the enabled of menu "Window" to false
 
-Value (bool):The <enabled> of a <control> is true or false.
-By default, the <enabled> <property> of a newly created <control> is true.
+Value (bool):
+The <enabled> of a <control> is true or false.
+By default, the <enabled> <property> of a newly created <control> is
+true. 
 
 Description:
-Use the <enabled> <property> to find out whether a control can respond to mouse clicks or keyboard presses.
+Use the <enabled> <property> to find out whether a control can respond
+to mouse clicks or keyboard presses.
 
-The <enabled> <property> of an <object> is the logical inverse of that <object|object's> <disabled> <property>. When the <enabled> is true, the disabled is false, and vice versa.
+The <enabled> <property> of an <object(glossary)> is the logical inverse
+of that <object|object's> <disabled> <property>. When the <enabled> is
+true, the disabled is false, and vice versa.
 
 An enabled control can receive the focus.
 
-Setting a group's <enabled> <property> sets the <enabled> of each <control> in the <group>.
+Setting a group's <enabled> <property> sets the <enabled> of each
+<control> in the <group>.
 
-You can set the <enabled> <property> of a <menu(keyword)> by specifying the <menu(glossary)|menu's> name or number. An enabled <menu(keyword)> can be displayed, and <menu item|menu items> can be individually enabled or disabled using the <enable> and <disable> <command|commands>.
+You can set the <enabled> <property> of a <menu(keyword)> by specifying
+the <menu(glossary)|menu's> name or number. An enabled <menu(keyword)>
+can be displayed, and <menu item|menu items> can be individually enabled
+or disabled using the <enable> and <disable> <command|commands>.
 
-References: disabled (property), control (keyword), menu (keyword), enable (command), disable (command), enable menu (command), group (command), object (object), property (glossary), command (glossary), menu item (glossary), menu (glossary)
+References: enable (command), disable (command), enable menu (command),
+group (command), object (glossary), property (glossary),
+command (glossary), menu item (glossary), menu (glossary),
+control (keyword), menu (keyword), disabled (property)
 
 Tags: ui
+

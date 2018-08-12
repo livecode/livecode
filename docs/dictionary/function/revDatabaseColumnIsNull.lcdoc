@@ -1,20 +1,24 @@
 Name: revDatabaseColumnIsNull
 
+Synonyms: revdb_columnisnull
+
 Type: function
 
 Syntax: revDatabaseColumnIsNull(<recordSetID>, <columnNumber>)
 
-Summary: <return|Returns> true if the specified <database field> has a null value, false otherwise.
+Summary:
+<return|Returns> true if the specified <database field> has a null
+value, false otherwise.
 
-Synonyms: revdb_columnisnull
+Associations: database library
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revDatabaseColumnIsNull(currentResults,the number of items in myString)
@@ -23,25 +27,53 @@ Example:
 repeat while revDatabaseColumnIsNull(12,3) -- is field 3 null?
 
 Parameters:
-recordSetID: The number returned by the revQueryDatabase function when the record set (database cursor) was created.
-columnNumber: The number of the column.
+recordSetID:
+The number returned by the revQueryDatabase function when the record set
+(database cursor) was created.
 
-Returns (bool): The <revDatabaseColumnIsNull> function returns true or false.
+columnNumber:
+The number of the column.
+
+Returns (bool):
+The <revDatabaseColumnIsNull> function returns true or false.
 
 Description:
-Use the <revDatabaseColumnIsNull> <function> to find out whether one of the <database field|database fields> in the current <record> is set to a value.
+Use the <revDatabaseColumnIsNull> <function> to find out whether one of
+the <database field|database fields> in the current <record> is set to a
+value. 
 
-A null value in a SQL database refers to a value that is unknown or not applicable. For example, if the price of an item in a product database has not yet been determined, its "Price" field is typically set to null. The null value is not zero: the item's price is not zero, but undetermined.
+A null value in a SQL database refers to a value that is unknown or not
+applicable. For example, if the price of an item in a product database
+has not yet been determined, its "Price" field is typically set to null.
+The null value is not zero: the item's price is not zero, but
+undetermined. 
 
-The special null value allows the database to differentiate between an unknown value deliberately inserted, and a value of zero or a blank field. 
+The special null value allows the database to differentiate between an
+unknown value deliberately inserted, and a value of zero or a blank
+field. 
 
-This means that if the data value of the database field is empty or zero, the <revDatabaseColumnIsNull> <function> returns false. It only returns true if the field's value is not set at all.
+This means that if the data value of the database field is empty or
+zero, the <revDatabaseColumnIsNull> <function> returns false. It only
+returns true if the field's value is not set at all.
 
->*Important:*  The <revDatabaseColumnIsNull> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revDatabaseColumnIsNull> <function> is part of the 
+> <Database library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
 Changes:
 The revDatabaseColumnIsNull synonym was added in version 2.0.
 
-References: function (control_st), revDatabaseColumnNames (function), revDatabaseColumnLengths (function), revDatabaseColumnNumbered (function), Database library (library), LiveCode custom library (library), Standalone Application Settings (glossary), database field (glossary), record (glossary), return (glossary), standalone application (glossary)
+References: function (control structure),
+revDatabaseColumnNames (function), revDatabaseColumnLengths (function),
+revDatabaseColumnNumbered (function), LiveCode custom library (glossary),
+Standalone Application Settings (glossary), database field (glossary),
+record (glossary), return (glossary), standalone application (glossary),
+Database library (library)
 
 Tags: database
+

@@ -2,17 +2,19 @@ Name: scrollbarPageInc
 
 Type: message
 
-Syntax: scrollbarPageInc <newPosition> 
+Syntax: scrollbarPageInc <pNewPosition>
 
-Summary: Sent to a <scrollbar> when the user clicks below or right of the <scrollbar thumb>, scrolling forward one screenful.
+Summary:
+Sent to a <scrollbar> when the user clicks below or right of the
+<scrollbar thumb>, scrolling forward one screenful.
 
 Associations: scrollbar
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on scrollbarPageInc theMovieNumber
@@ -21,15 +23,23 @@ on scrollbarPageInc theMovieNumber
 end scrollbarPageInc
 
 Parameters:
-newPosition: The new position of the scrollbar thumb.
+pNewPosition:
+The new position of the scrollbar thumb.
 
 Description:
-Handle the <scrollbarPageInc> <message> if you want to respond to the user clicking in the gray region below or to the right of the <scrollbar thumb>.
+Handle the <scrollbarPageInc> <message> if you want to respond to the
+user clicking in the gray region below or to the right of the <scrollbar
+thumb>. 
 
-Dragging the scrollbar thumb does not send a <scrollbarPageInc> <message>.
+Dragging the scrollbar thumb does not send a <scrollbarPageInc>
+<message>. 
 
-If the <scrollbarPageInc> <message> is not <handle|handled>, a <scrollbarDrag> <message> is sent in addition.
+If the <scrollbarPageInc> <message> is not <handle|handled>, a
+<scrollbarDrag> <message> is sent in addition.
 
-References: pageIncrement (property), scrollbar (keyword), scrollbarLineInc (message), scrollbarDrag (message), scrollbar thumb (glossary), message (glossary), handle (glossary)
+References: scrollbar thumb (glossary), message (glossary),
+handle (glossary), scrollbar (keyword), scrollbarLineInc (message),
+scrollbarDrag (message), pageIncrement (property)
 
 Tags: ui
+

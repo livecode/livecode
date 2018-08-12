@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This library consists of the foundational mathematical operations included in the standard library of LiveCode Builder.
 */
 
@@ -38,7 +38,7 @@ public foreign handler MCMathFoundationEvalPi(out Value as CDouble) returns noth
 
 //public constant pi = 3.14159265358979323846
 
-/*
+/**
 Summary: The constant pi
 
 Example:
@@ -59,7 +59,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Rounds <Target> to the nearest integer.
 Target:     An expression that evaluates to a numeric container.
 
@@ -80,7 +80,7 @@ begin
     MCMathFoundationExecRoundNumberToNearest(Target)
 end syntax
 
-/*
+/**
 Summary:    Rounds <Target> to the nearest integer.
 Target:     An expression that evaluates to a number.
 
@@ -106,7 +106,7 @@ end syntax
 
 --
 
-/* 
+/**
 Summary:    Returns the floor of <Target>.
 Target:     An expression that evaluates to a number.
 
@@ -131,7 +131,7 @@ begin
     MCMathFoundationEvalFloorNumber(Target, output)
 end syntax
 
-/* 
+/**
 Summary:    Returns the ceiling of <Target>.
 Target:     An expression that evaluates to a number.
 

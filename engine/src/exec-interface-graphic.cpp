@@ -157,9 +157,19 @@ void MCGraphic::Redraw(MCRectangle drect)
 {
 	if (rect.x != drect.x || rect.y != drect.y || 
 		rect.width != drect.width || rect.height != drect.height)
-			if (resizeparent())
-				return;
-
+    {
+        /* If the rect has changed, then notify the change to the selection
+         * layer. */
+        if (opened && (getselected() || m_edit_tool != nullptr))
+        {
+            getcard()->dirtyselection(drect);
+            getcard()->dirtyselection(rect);
+        }
+        
+        if (resizeparent())
+            return;
+    }
+    
 	if (!opened)
 		return;
 
@@ -222,11 +232,11 @@ void MCGraphic::SetEditMode(MCExecContext& ctxt, intenum_t mode)
 
 	if (t_old_mode != t_new_mode)
 	{
-		MCRectangle t_old_effective_rect;
-		t_old_effective_rect = geteffectiverect();
-
 		if (m_edit_tool != NULL)
 		{
+            /* Dirty the previous edit tool's rect. */
+            getcard()->dirtyselection(m_edit_tool->drawrect());
+        
 			delete m_edit_tool;
 			m_edit_tool = NULL;
 		}
@@ -236,22 +246,26 @@ void MCGraphic::SetEditMode(MCExecContext& ctxt, intenum_t mode)
 		{
 		case kMCEditModeFillGradient:
 			if (m_fill_gradient != NULL)
-				t_new_tool = new MCGradientEditTool(this, m_fill_gradient, t_new_mode);
+				t_new_tool = new (nothrow) MCGradientEditTool(this, m_fill_gradient, t_new_mode);
 			break;
 		case kMCEditModeStrokeGradient:
 			if (m_stroke_gradient != NULL)
-				t_new_tool = new MCGradientEditTool(this, m_stroke_gradient, t_new_mode);
+				t_new_tool = new (nothrow) MCGradientEditTool(this, m_stroke_gradient, t_new_mode);
 			break;
 		case kMCEditModePolygon:
-			t_new_tool = new MCPolygonEditTool(this);
+			t_new_tool = new (nothrow) MCPolygonEditTool(this);
+			break;
+		case kMCEditModeNone:
 			break;
 		}
 		m_edit_tool = t_new_tool;
 
-		layer_effectiverectchangedandredrawall(t_old_effective_rect);
+        if (m_edit_tool != nullptr)
+        {
+            /* Dirty the new edit tool's rect. */
+            getcard()->dirtyselection(m_edit_tool->drawrect());
+        }
 	}
-
-	Redraw();
 }
 
 void MCGraphic::GetCapStyle(MCExecContext& ctxt, intenum_t& r_style)
@@ -267,10 +281,10 @@ void MCGraphic::SetCapStyle(MCExecContext& ctxt, intenum_t style)
 	t_new_style = (uint2)style;
 	if (t_new_style != getcapstyle())
 	{
-		MCRectangle oldrect = rect;
+		MCRectangle t_oldrect = rect;
 		setcapstyle(t_new_style);
 		compute_minrect();
-		Redraw(oldrect);
+		Redraw(t_oldrect);
 	}
 }
 
@@ -287,10 +301,10 @@ void MCGraphic::SetJoinStyle(MCExecContext& ctxt, intenum_t style)
 	t_new_style = (uint2)style;
 	if (t_new_style != getjoinstyle())
 	{
-		MCRectangle oldrect = rect;
+		MCRectangle t_oldrect = rect;
 		setjoinstyle(t_new_style);
 		compute_minrect();
-		Redraw(oldrect);
+		Redraw(t_oldrect);
 	}
 }
 
@@ -305,10 +319,10 @@ void MCGraphic::SetMiterLimit(MCExecContext& ctxt, double limit)
 	t_new_limit = MCU_fmax(1, limit);
 	if (m_stroke_miter_limit != t_new_limit)
 	{
-		MCRectangle oldrect = rect;
+		MCRectangle t_oldrect = rect;
 		m_stroke_miter_limit = (real4)t_new_limit;
 		compute_minrect();
-		Redraw(oldrect);
+		Redraw(t_oldrect);
 	}
 }
 
@@ -319,11 +333,11 @@ void MCGraphic::GetLineSize(MCExecContext& ctxt, integer_t& r_size)
 
 void MCGraphic::SetLineSize(MCExecContext& ctxt, integer_t size)
 {
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 	linesize = size;
 	compute_minrect();
 	delpoints();
-	Redraw(oldrect);
+	Redraw(t_oldrect);
 }
 
 void MCGraphic::GetPolySides(MCExecContext& ctxt, integer_t& r_sides)
@@ -402,10 +416,10 @@ void MCGraphic::GetArrowSize(MCExecContext& ctxt, integer_t& r_size)
 
 void MCGraphic::SetArrowSize(MCExecContext& ctxt, integer_t p_size)
 {
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 	arrowsize = p_size;
 	compute_minrect();
-	Redraw(oldrect);
+	Redraw(t_oldrect);
 }
 
 void MCGraphic::GetStartArrow(MCExecContext& ctxt, bool& r_setting)
@@ -418,10 +432,10 @@ void MCGraphic::SetStartArrow(MCExecContext& ctxt, bool setting)
 	bool t_dirty;
 	t_dirty = changeflag(setting, F_START_ARROW);
 
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 	compute_minrect();
 	if (t_dirty)
-		Redraw(oldrect);
+		Redraw(t_oldrect);
 }
 
 void MCGraphic::GetEndArrow(MCExecContext& ctxt, bool& r_setting)
@@ -434,10 +448,10 @@ void MCGraphic::SetEndArrow(MCExecContext& ctxt, bool setting)
 	bool t_dirty;
 	t_dirty = changeflag(setting, F_END_ARROW);
 
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 	compute_minrect();
 	if (t_dirty)
-		Redraw(oldrect);
+		Redraw(t_oldrect);
 }
 
 void MCGraphic::GetMarkerLineSize(MCExecContext& ctxt, integer_t& r_size)
@@ -447,10 +461,10 @@ void MCGraphic::GetMarkerLineSize(MCExecContext& ctxt, integer_t& r_size)
 
 void MCGraphic::SetMarkerLineSize(MCExecContext& ctxt, integer_t size)
 {
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 	markerlsize = size;
 	compute_minrect();
-	Redraw(oldrect);
+	Redraw(t_oldrect);
 }
 
 void MCGraphic::GetMarkerDrawn(MCExecContext& ctxt, bool& r_setting)
@@ -463,10 +477,10 @@ void MCGraphic::SetMarkerDrawn(MCExecContext& ctxt, bool setting)
 	bool t_dirty;
 	t_dirty = changeflag(setting, F_MARKER_DRAWN);
 
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 	compute_minrect();
 	if (t_dirty)
-		Redraw(oldrect);
+		Redraw(t_oldrect);
 }
 
 void MCGraphic::GetMarkerOpaque(MCExecContext& ctxt, bool& r_setting)
@@ -476,10 +490,17 @@ void MCGraphic::GetMarkerOpaque(MCExecContext& ctxt, bool& r_setting)
 
 void MCGraphic::SetMarkerOpaque(MCExecContext& ctxt, bool setting)
 {
+    if (!getflag(F_MARKER_OPAQUE) && setting)
+    {
+        bool t_succ = closepolygon(markerpoints, nmarkerpoints);
+        if (!t_succ)
+        {
+            ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+            return;
+        }
+    }
 	if (changeflag(setting, F_MARKER_OPAQUE))
 	{
-		if (flags & F_MARKER_OPAQUE)
-			closepolygon(markerpoints, nmarkerpoints);
 		Redraw();
 	}
 }
@@ -520,7 +541,7 @@ void MCGraphic::GetStyle(MCExecContext& ctxt, intenum_t& r_style)
 void MCGraphic::SetStyle(MCExecContext& ctxt, intenum_t p_style)
 {
 	flags &= ~F_STYLE;
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 
 	if (p_style == kMCGraphicStyleText)
 	{
@@ -547,7 +568,7 @@ void MCGraphic::SetStyle(MCExecContext& ctxt, intenum_t p_style)
 		}
 	}
 	delpoints();
-	Redraw(oldrect);
+	Redraw(t_oldrect);
 }
 
 void MCGraphic::GetShowName(MCExecContext& ctxt, bool& r_setting)
@@ -621,10 +642,17 @@ void MCGraphic::GetFilled(MCExecContext& ctxt, bool& r_setting)
 
 void MCGraphic::SetFilled(MCExecContext& ctxt, bool setting)
 {
+    if (!getflag(F_OPAQUE) && setting)
+    {
+        bool t_succ = closepolygon(realpoints, nrealpoints);
+        if (!t_succ)
+        {
+            ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+            return;
+        }
+    }
 	if (changeflag(setting, F_OPAQUE))
 	{
-		if (flags & F_OPAQUE)
-			closepolygon(realpoints, nrealpoints);
 		Redraw();
 	}
 }
@@ -677,7 +705,22 @@ void MCGraphic::GetGradientFillProperty(MCExecContext& ctxt, MCNameRef p_prop, M
 
 void MCGraphic::SetGradientFillProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue p_value)
 {
+    /* If the editMode is the fill gradient we must ensure we update the selection
+     * layer. */
+    bool t_is_editing =
+            opened && m_edit_tool != nullptr && m_edit_tool->type() == kMCEditModeFillGradient;
+    
+    if (t_is_editing)
+    {
+        getcard()->dirtyselection(m_edit_tool->drawrect());
+    }
+    
     DoSetGradientFill(ctxt, m_fill_gradient, DI_BACK, p_prop, p_value);
+    
+    if (t_is_editing)
+    {
+        getcard()->dirtyselection(m_edit_tool->drawrect());
+    }
 }
 
 void MCGraphic::GetGradientStrokeProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value)
@@ -687,11 +730,32 @@ void MCGraphic::GetGradientStrokeProperty(MCExecContext& ctxt, MCNameRef p_prop,
 
 void MCGraphic::SetGradientStrokeProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue p_value)
 {
+    /* If the editMode is the fill gradient we must ensure we update the selection
+     * layer. */
+    bool t_is_editing =
+            opened && m_edit_tool != nullptr && m_edit_tool->type() == kMCEditModeStrokeGradient;
+    
+    if (t_is_editing)
+    {
+        getcard()->dirtyselection(m_edit_tool->drawrect());
+    }
+    
     DoSetGradientFill(ctxt, m_stroke_gradient, DI_FORE, p_prop, p_value);
+    
+    if (t_is_editing)
+    {
+        getcard()->dirtyselection(m_edit_tool->drawrect());
+    }
 }
 
 void MCGraphic::DoCopyPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points, uindex_t& r_count, MCPoint*& r_points)
 {
+    if (p_count > 65535)
+    {
+        ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+        return;
+    }
+    
     MCAutoArray<MCPoint> t_points;
     
     for (uindex_t i = 0; i < p_count; i++)
@@ -707,24 +771,46 @@ void MCGraphic::GetMarkerPoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*
 
 void MCGraphic::SetMarkerPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points)
 {
+    if (p_count > 65535)
+    {
+        ctxt.LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+        return;
+    }
+    
     if (p_count == 0)
+    {
         flags &= ~F_MARKER_DRAWN;
+        delete[] markerpoints;
+		markerpoints = NULL;
+        nmarkerpoints = 0;
+    }
     else
     {
-        uindex_t t_new_count;
-        DoCopyPoints(ctxt, p_count, p_points, t_new_count, markerpoints);
-        nmarkerpoints = (uint2)t_new_count;
+        MCPoint *t_closed_points;
+        uindex_t t_r_count;
+        uint2 t_newcount;
+        DoCopyPoints(ctxt, p_count, p_points, t_r_count, t_closed_points);
+        t_newcount = uint2(t_r_count);
+        if (flags & F_MARKER_OPAQUE)
+        {
+            if (!closepolygon(t_closed_points, t_newcount))
+            {
+                delete[] t_closed_points;
+                ctxt.LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+                return;
+            }
+        }
+        delete[] markerpoints;
+        markerpoints = t_closed_points;
+        nmarkerpoints = t_newcount;
         flags |= F_MARKER_DRAWN;
     }
     
-    if (flags & F_MARKER_DRAWN && flags & F_MARKER_OPAQUE)
-        closepolygon(markerpoints, nmarkerpoints);
-    
     // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
     // Ensure that the functions which might change the size of the graphic redraw the former rectangle
-    MCRectangle oldrect = rect;
+    MCRectangle t_oldrect = rect;
     compute_minrect();
-    Redraw(oldrect);
+    Redraw(t_oldrect);
 }
 
 void MCGraphic::GetDashes(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_dashes)
@@ -814,23 +900,7 @@ void MCGraphic::GetPoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_po
 
 void MCGraphic::SetPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points)
 {
-    if (oldpoints != nil)
-    {
-        delete oldpoints;
-        oldpoints = nil;
-    }
-    uindex_t t_new_count;
-    DoCopyPoints(ctxt, p_count, p_points, t_new_count, realpoints);
-    nrealpoints = (uint2)t_new_count;
-    
-    if (flags & F_OPAQUE)
-        closepolygon(realpoints, nrealpoints);
-    
-    // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
-    // The rectangle might change, we need to redraw what was the previous size.
-    MCRectangle oldrect = rect;
-    compute_minrect();
-    Redraw(oldrect);
+    SetPointsCommon(ctxt, p_count, p_points, false);
 }
 
 void MCGraphic::GetRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points)
@@ -858,75 +928,134 @@ void MCGraphic::GetRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoin
 
 void MCGraphic::SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points)
 {
+    if (p_count > 65535)
+    {
+        ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+        return;
+    }
+        
+    
     if (oldpoints != nil)
     {
         delete oldpoints;
         oldpoints = nil;
     }
+    
     MCRectangle trect = reduce_minrect(rect);
-    MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
     
-    uindex_t t_new_count;
-    DoCopyPoints(ctxt, p_count, p_points, t_new_count, realpoints);
-    nrealpoints = (uint2)t_new_count;
-    
-    MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
-    
+    MCPoint *t_closed_points;
+    uindex_t t_r_count;
+    uint2 t_newcount;
+    DoCopyPoints(ctxt, p_count, p_points, t_r_count, t_closed_points);
+    t_newcount = uint2(t_r_count);
+    MCU_offset_points(t_closed_points, t_newcount, trect.x, trect.y);
     if (flags & F_OPAQUE)
-        closepolygon(realpoints, nrealpoints);
+    {
+        if (!closepolygon(t_closed_points, t_newcount))
+        {
+            delete[] t_closed_points;
+            ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+            return;
+        }
+    }
+    delete[] realpoints;
+    realpoints = t_closed_points;
+    nrealpoints = t_newcount;
     
     // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
     // Ensure that the functions which might change the size of the graphic redraw the former rectangle
-    MCRectangle oldrect = rect;
+    MCRectangle t_oldrect = rect;
     compute_minrect();
-    Redraw(oldrect);
+    Redraw(t_oldrect);
+}
+
+void MCGraphic::SetPointsCommon(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points, bool p_is_relative)
+{
+    if (p_count > 65535)
+    {
+        ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+        return;
+    }
+    
+    if (oldpoints != nil)
+    {
+        delete oldpoints;
+        oldpoints = nil;
+    }
+    
+    MCPoint *t_closed_points;
+    uindex_t t_r_count;
+    uint2 t_newcount;
+    DoCopyPoints(ctxt, p_count, p_points, t_r_count, t_closed_points);
+    t_newcount = uint2(t_r_count);
+    
+    if (p_is_relative)
+    {
+        MCRectangle trect = reduce_minrect(rect);
+        MCU_offset_points(t_closed_points, t_newcount, trect.x, trect.y);
+    }
+    
+    if (flags & F_OPAQUE)
+    {
+        if (!closepolygon(t_closed_points, t_newcount))
+        {
+            delete[] t_closed_points;
+            ctxt . LegacyThrow(EE_GRAPHIC_TOOMANYPOINTS);
+            return;
+        }
+    }
+    
+    /* If we are editing the points, then we must update the edit tool's
+     * part of the selection layer. */
+    bool t_is_editing =
+            m_edit_tool != nullptr && m_edit_tool->type() == kMCEditModePolygon;
+    
+    if (t_is_editing)
+    {
+        getcard()->dirtyselection(m_edit_tool->drawrect());
+    }
+    
+    delete[] realpoints;
+    realpoints = t_closed_points;
+    nrealpoints = t_newcount;
+    
+    if (t_is_editing)
+    {
+        getcard()->dirtyselection(m_edit_tool->drawrect());
+    }
+    
+    // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
+    // The rectangle might change, we need to redraw what was the previous size.
+    MCRectangle t_oldrect = rect;
+    compute_minrect();
+    Redraw(t_oldrect);
 }
 
 // SN-2014-06-25: [[ MERGE-6.7 ]] Effective points getter udpated
 // MDW-2014-06-18: [[ rect_points ]] allow effective points as read-only
 void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoint *&r_points)
 {
-    MCPoint* fakepoints;
-    uint2 nfakepoints;
-    
     switch (getstyleint(flags))
     {
         case F_ROUNDRECT:
         {
-            fakepoints = NULL;
-            nfakepoints = 0;
-            get_points_for_roundrect(fakepoints, nfakepoints);
-            DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            
-            delete[] fakepoints;
+            /* UNCHECKED */ get_points_for_roundrect(r_points, r_count);
             break;
         }
         case F_G_RECTANGLE:
         {
-            nfakepoints = 4;
-            fakepoints = new MCPoint[nfakepoints];
-            get_points_for_rect(fakepoints, nfakepoints);
-            DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete[] fakepoints;
+            /* UNCHECKED */ get_points_for_rect(r_points, r_count);
             break;
         }
         case F_REGULAR:
         {
-            nfakepoints = nsides;
-            fakepoints = new MCPoint[nsides];
-            get_points_for_regular_polygon(fakepoints, nfakepoints);
-            DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete[] fakepoints;
+			/* UNCHECKED */ get_points_for_regular_polygon(r_points, r_count);
             break;
         }
         // MDW-2014-06-21: [[ oval_points ]] allow effective points for ovals
         case F_OVAL:
         {
-            fakepoints = NULL;
-            nfakepoints = 0;
-            get_points_for_oval(fakepoints, nfakepoints);
-            DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete[] fakepoints;
+            /* UNCHECKED */ get_points_for_oval(r_points, r_count);
             break;
         }
         default:
@@ -940,59 +1069,39 @@ void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoi
 void MCGraphic::GetEffectiveRelativePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoint *&r_points)
 {
     MCRectangle trect;
-    MCPoint* fakepoints;
-    uint2 nfakepoints;
-    
     trect = reduce_minrect(rect);
     
     switch (getstyleint(flags))
     {
         case F_ROUNDRECT:
         {
-            fakepoints = NULL;
-            nfakepoints = 0;
-            get_points_for_roundrect(fakepoints, nfakepoints);
-            MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
-            DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete[] fakepoints;
+            /* UNCHECKED */ get_points_for_roundrect(r_points, r_count);
+            MCU_offset_points(r_points, r_count, -trect.x, -trect.y);
             break;
         }
         case F_G_RECTANGLE:
         {
-            nfakepoints = 4;
-            fakepoints = new MCPoint[nfakepoints];
-            get_points_for_rect(fakepoints, nfakepoints);
-            MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
-            DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete[] fakepoints;
+            /* UNCHECKED */ get_points_for_rect(r_points, r_count);
+            MCU_offset_points(r_points, r_count, -trect.x, -trect.y);
             break;
         }
         case F_REGULAR:
         {
-            nfakepoints = nsides;
-            fakepoints = new MCPoint[nsides];
-            get_points_for_regular_polygon(fakepoints, nfakepoints);
-            MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
-            DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete[] fakepoints;
+			/* UNCHECKED */ get_points_for_regular_polygon(r_points, r_count);
+            MCU_offset_points(r_points, r_count, -trect.x, -trect.y);
             break;
         }
         // MDW-2014-06-21: [[ oval_points ]] allow effective points for ovals
         case F_OVAL:
         {
-            fakepoints = NULL;
-            nfakepoints = 0;
-            get_points_for_oval(fakepoints, nfakepoints);
-            MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
-            DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete[] fakepoints;
+            /* UNCHECKED */ get_points_for_oval(r_points, r_count);
+            MCU_offset_points(r_points, r_count, -trect.x, -trect.y);
             break;
         }
         default:
         {
-            MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
             DoCopyPoints(ctxt, nrealpoints, realpoints, r_count, r_points);
-            MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
+			MCU_offset_points(r_points, r_count, -trect.x, -trect.y);
         }
     }
 }

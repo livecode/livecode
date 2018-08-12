@@ -8,6 +8,9 @@
 			'java_sdk_path%': '<!(echo ${JAVA_SDK})',
 			'android_sdk_path%': '<!(echo ${ANDROID_SDK})',
 			'android_ndk_path%': '<!(echo ${ANDROID_NDK})',
+			'android_api_version%': '<!(echo ${ANDROID_API_VERSION})',
+			'android_ndk_platform_version%': '<!(echo ${ANDROID_NDK_PLATFORM_VERSION})',
+			'android_ndk_version%': '<!(echo ${ANDROID_NDK_VERSION})',
 			'android_platform%': '<!(echo ${ANDROID_PLATFORM})',
 			'android_build_tools%': '<!(echo ${ANDROID_BUILD_TOOLS})',
 		},
@@ -27,6 +30,9 @@
 		'objcopy': '<!(echo ${OBJCOPY:-objcopy})',
 		'objdump': '<!(echo ${OBJDUMP:-objdump})',
 		'strip':   '<!(echo ${STRIP:-strip})',
+
+		'android_ndk_path%': '<(android_ndk_path)',
+		'android_subplatform%': 'sdk<(android_api_version)_ndk<(android_ndk_platform_version)<(android_ndk_version)',
 	},
 	
 	'target_defaults':

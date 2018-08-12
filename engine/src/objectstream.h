@@ -96,17 +96,27 @@ public:
 
 	IO_stat WriteS8(int8_t p_value)
 	{
-		return WriteU8((unsigned)p_value);
+		return WriteU8(p_value);
 	}
 
 	IO_stat WriteS16(int16_t p_value)
 	{
-		return WriteU16((unsigned)p_value);
+		return WriteU16(p_value);
 	}
+
+    IO_stat WritePoint(MCPoint p_point)
+    {
+        IO_stat t_stat = IO_NORMAL;
+        if (t_stat == IO_NORMAL)
+            t_stat = WriteS16(p_point.x);
+        if (t_stat == IO_NORMAL)
+            t_stat = WriteS16(p_point.y);
+        return t_stat;
+    }
 
 	IO_stat WriteS32(int32_t p_value)
 	{
-		return WriteU32((unsigned)p_value);
+		return WriteU32(p_value);
 	}
 
 	IO_stat Write(const void *p_buffer, uint32_t p_amount);

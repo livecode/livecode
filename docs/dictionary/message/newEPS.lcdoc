@@ -4,13 +4,14 @@ Type: message
 
 Syntax: newEPS
 
-Summary: Sent to a new <EPS|EPS object> right after it's created.
+Summary:
+Sent to a new <EPS|EPS object> right after it's created.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on newEPS -- warn the user if not supported
@@ -20,12 +21,22 @@ on newEPS -- warn the user if not supported
 end newEPS
 
 Description:
-Handle the <newEPS> <message> if you want to create additional <object|objects>, switch <tool|tools>, or do other tasks when a new <EPS|EPS object> is created.
+Handle the <newEPS> <message> if you want to create additional
+<object|objects>, switch <tool|tools>, or do other tasks when a new
+<EPS|EPS object> is created.
 
-Normally, the <newEPS> <message> is handled at a higher level of the <message path>, since the newly-created <EPS|EPS object> does not yet have a <script> unless the <templateEPS(keyword)> contains one.
+Normally, the <newEPS> <message> is handled at a higher level of the
+<message path>, since the newly-created <EPS|EPS object> does not yet
+have a <script> unless the <templateEPS(keyword)> contains one.
 
-The actual creation is not triggered by the <newEPS> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <EPS|EPS object> from being created.
+The actual creation is not triggered by the <newEPS> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <EPS|EPS object> from being created.
 
-References: script (property), copy (command), clone (command), paste (command), object (object), trap (glossary), EPS (glossary), message (glossary), tool (glossary), message path (glossary), pass (control_st)
+References: copy (command), clone (command), paste (command),
+pass (control structure), object (glossary), trap (glossary),
+EPS (glossary), message (glossary), tool (glossary),
+message path (glossary), script (property)
 
 Tags: objects
+

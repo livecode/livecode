@@ -2,15 +2,17 @@ Name: request
 
 Type: command
 
-Syntax: request <expression> {of | from} {program | application} <programAddress> 
+Syntax: request <expression> {of | from} {program | application} <programAddress>
 
-Summary: The <request> data gets information from another application via <Apple Event|Apple events>.
+Summary:
+The <request> data gets information from another application via <Apple
+Event|Apple events>.
 
 Introduced: 1.0
 
 OS: mac
 
-Platforms: desktop,server
+Platforms: desktop, server
 
 Example:
 request "the hilite of button 3" from program "HyperCard"
@@ -19,18 +21,44 @@ Example:
 request field "Appname" from program "Ozone:Geek Paradise:FileMaker"
 
 Parameters:
-expression: The string you're asking the other application to evaluate. Its exact format and meaning depends on the other application.
-programAddress: The AppleTalk address of the other program. The AppleTalk address consists of three parts, separated by colons: the zone the other computer is in, the name of the computer, and the name of the target program. If the other computer is in the same zone as yours, you can omit the zone. If the other program is running on the same computer, you can omit both the zone and the computer name.
+expression:
+The string you're asking the other application to evaluate. Its exact
+format and meaning depends on the other application.
 
-The result: If the program supports this <Apple event>, it evaluates the expression and sends the result back to LiveCode, which places it in the <it> <variable>. If the program sends back an error message, it is placed in the result <function>.
+programAddress:
+The AppleTalk address of the other program. The AppleTalk address
+consists of three parts, separated by colons: the zone the other
+computer is in, the name of the computer, and the name of the target
+program. If the other computer is in the same zone as yours, you can
+omit the zone. If the other program is running on the same computer, you
+can omit both the zone and the computer name.
 
-It: If the program supports this <Apple event>, it evaluates the expression and sends the result back to LiveCode, which places it in the <it> <variable>. The <request> <command> sends aneval <Apple event> to the <programAddress>. If the program supports this <Apple event>, it evaluates the expression and sends the result back to LiveCode, which places it in the <it> <variable>.
+It:
+If the program supports this <Apple event>, it evaluates the expression
+and sends the result back to LiveCode, which places it in the <it>
+<variable>. The <request> <command> sends aneval <Apple event> to the
+<programAddress>. If the program supports this <Apple event>, it
+evaluates the expression and sends the result back to LiveCode, which
+places it in the <it> <variable>.
+
+The result:
+If the program supports this <Apple event>, it evaluates the expression
+and sends the result back to LiveCode, which places it in the <it>
+<variable>. If the program sends back an error message, it is placed in
+the result <function>.
 
 Description:
-Use the <request> <command> to obtain data from another application via the eval <Apple event>.
+Use the <request> <command> to obtain data from another application via
+the eval <Apple event>.
 
-For more information about Apple events, see Apple Computer's technical documentation, Inside Macintosh: Interapplication Communication, located at <a href="http://developer.apple.com/techpubs/mac/IAC/IAC-2.html">http://developer.apple.com/techpubs/mac/IAC/IAC-2.html</a>.
+For more information about Apple events, see Apple Computer's technical
+documentation, Inside Macintosh: Interapplication Communication, located
+at <a
+href="http://developer.apple.com/techpubs/mac/IAC/IAC-2.html">http://developer.apple.com/techpubs/mac/IAC/IAC-2.html</a>. 
 
-References: it (keyword), send to program (command), function (control_st), command (glossary), variable (glossary), Apple Event (glossary)
+References: send to program (command), function (control structure),
+command (glossary), variable (glossary), Apple Event (glossary),
+it (keyword)
 
 Tags: networking
+

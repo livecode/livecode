@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This library consists of the operations on widgets provided by LiveCode Builder.
 
 Tags: Widget
@@ -62,7 +62,7 @@ Summary: Sent when the widget is to be drawn.
 Example:
 	public handler OnPaint()
 		variable tCirclePath as Path
-   		put circle path centered at point [the width of my bounds/2,the height of my bounds/2] with radius (the width of my bounds/2) into tFacePath
+		put circle path centered at point [the width of my bounds/2,the height of my bounds/2] with radius (the width of my bounds/2) into tFacePath
 		set the paint of this canvas to solid paint with color [1, 0, 1]
 		fill tFacePath on this canvas
 	end handler
@@ -281,7 +281,28 @@ Summary: Sent when the mouse pointer continues to hover outside of the widget's 
 Name: OnTouchStart
 Type: message
 Syntax: OnTouchStart
-Summary: Sent when a touch event begins within the widget's rect.
+Summary: Sent when the widget is the target for touch events and a touch is started.
+
+Description:
+The widget becomes the target for touch events when the first touch is
+within its rect. The widget remains the target for touch events until
+all touches end or are cancelled.
+
+Name: OnTouchMove
+Type: message
+Syntax: OnTouchMove
+Summary: Sent to the target for touch events when a touch moves.
+
+Name: OnTouchFinish
+Type: message
+Syntax: OnTouchFinish
+Summary: Sent to the target for touch events when a touch event ends.
+
+Name: OnTouchCancel
+Type: message
+Syntax: OnTouchCancel
+Summary: Sent to the target for touch events when a touch event is cancelled.
+
 
 Name: OnFocusEnter
 Type: message
@@ -379,12 +400,9 @@ public foreign handler MCWidgetExecRedrawAll() returns nothing binds to "<builti
 public foreign handler MCWidgetExecScheduleTimerIn(in pTime as CDouble) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecCancelTimer() returns nothing binds to "<builtin>"
 public foreign handler MCWidgetEvalInEditMode(out rInEditMode as CBool) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetExecSend(in pIsFunction as CBool, in pMessage as String) returns any binds to "<builtin>"
-public foreign handler MCWidgetExecSendWithArguments(in pIsFunction as CBool, in pMessage as String, in pArguments as optional List) returns any binds to "<builtin>"
-public foreign handler MCWidgetExecPost(in pMessage as String) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetExecPostWithArguments(in pMessage as String, in pArguments as optional List) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecTriggerAll() returns nothing binds to "<builtin>"
 
-/* 
+/**
 Summary:	Redraws the widget.
 
 Example:
@@ -413,7 +431,7 @@ begin
   MCWidgetExecRedrawAll()
 end syntax
 
-/* 
+/**
 Summary:	Schedules a timer.
 Time:		An expression which evaluates to a number.
 
@@ -436,7 +454,7 @@ begin
   MCWidgetExecScheduleTimerIn(Time)
 end syntax
 
-/* 
+/**
 Summary:	Cancels a timer.
 
 Example:
@@ -457,7 +475,7 @@ begin
   MCWidgetExecCancelTimer()
 end syntax
 
-/* 
+/**
 Summary:	Determines whether the IDE is in edit mode.
 */	
 
@@ -468,27 +486,27 @@ begin
   MCWidgetEvalInEditMode(output)
 end syntax
 
-/* 
-Summary:	Sends a message to the widget script object.
-*/	
+/**
+Summary:	Causes all of a widget's property triggers to be fired.
 
-syntax Send is statement
-    "send" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> [ "with" <Arguments: Expression> ]
+Example:
+	handler TextChangedCallback()
+        UpdateTextProperty()
+        trigger all
+	end handler
+
+Description:
+Use trigger all to cause all triggers for all a widget's properties to 
+be fired, for example when user action causes a native widget's 
+properties to change, to signal the property change to the IDE.
+*/
+
+syntax TriggerAll is statement
+  "trigger" "all"
 begin
-    MCWidgetExecSend(IsFunction, Message)
-    MCWidgetExecSendWithArguments(IsFunction, Message, Arguments)
+  MCWidgetExecTriggerAll()
 end syntax
 
-/* 
-Summary:	Posts a message to the widget script object.
-*/	
-
-syntax Post is statement
-    "post" <Message: Expression> [ "with" <Arguments: Expression> ]
-begin
-    MCWidgetExecPost(Message)
-    MCWidgetExecPostWithArguments(Message, Arguments)
-end syntax
 
 // ---------- External properties of widgets ---------- //
 
@@ -502,8 +520,9 @@ public foreign handler MCWidgetGetMyFont(out rFont as Font) returns nothing bind
 public foreign handler MCWidgetGetMyEnabled(out rEnabled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyDisabled(out rDisabled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyPaint(in pPaintType as CUInt, out rPaint as Paint) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyPixelScale(out rPixelScale as CanvasFloat) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	Returns the widget script object.
 
 Returns:	The widget script object.
@@ -515,7 +534,7 @@ begin
     MCWidgetGetMyScriptObject(output)
 end syntax
 
-/*
+/**
 Summary:	Returns the name of the widget's script object
 
 Returns:	The name of the widget's script object
@@ -527,7 +546,7 @@ begin
 	MCWidgetGetMyName(output)
 end syntax
 
-/*
+/**
 Summary:	Returns the rectangle of the widget in the parent
 
 Returns:	The rectangle of the widget in the parent
@@ -539,7 +558,7 @@ begin
     MCWidgetGetMyRectangle(output)
 end syntax
 
-/* 
+/**
 Summary:	Returns the bounds of the widget.
 
 Returns:	The bounds of the widget.
@@ -551,7 +570,7 @@ begin
     MCWidgetGetMyBounds(output)
 end syntax
 
-/*
+/**
 Summary:	Returns the width of the widget.
 
 Returns:	The width of the widget.
@@ -563,7 +582,7 @@ begin
     MCWidgetGetMyWidth(output)
 end syntax
 
-/*
+/**
 Summary:	Returns the height of the widget.
 
 Returns:	The height of the widget.
@@ -575,7 +594,7 @@ begin
     MCWidgetGetMyHeight(output)
 end syntax
 
-/*
+/**
 Summary:    Returns the font of the widget.
 
 Returns:    The font of the widget
@@ -590,7 +609,7 @@ begin
     MCWidgetGetMyFont(output)
 end syntax
 
-/*
+/**
 Summary:    Returns the enabled state of the widget.
 
 Returns:    The enabled state of the widget.
@@ -601,7 +620,7 @@ begin
     MCWidgetGetMyEnabled(output)
 end syntax
 
-/*
+/**
 Summary:    Returns the disabled state of the widget.
 
 Returns:    The disabled state of the widget.
@@ -612,7 +631,7 @@ begin
     MCWidgetGetMyDisabled(output)
 end syntax
 
-/*
+/**
 Summary:    Returns a particular paint of the widget.
 
 Returns:    The current setting of the specified paint of the widget.
@@ -636,6 +655,24 @@ begin
     MCWidgetGetMyPaint(mPaintType, output)
 end syntax
 
+/**
+Summary:    Returns the scaling factor of pixels for the widget
+
+Description:
+Use the widget's pixel scale to calculate the size of an image to draw. For example,
+when drawing an image to `my bounds` create an image sized using
+`my width * my pixel scale, my height * my pixel scale` otherwise the image will be
+stretched to match the pixel scale. The pixel scale is a per-window/screen property
+so may change if the user moves a window to a new screen.
+
+Returns:    The current scaling factor of pixels for the widget
+*/
+syntax MyPixelScale is expression
+    "my" "pixel" "scale"
+begin
+    MCWidgetGetMyPixelScale(output)
+end syntax
+
 // ---------- Synchronous and asynchronous ("current") event information ---------- //
 
 //foreign type PressedState binds to "MCPressedState"
@@ -645,10 +682,16 @@ public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocat
 public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton as CUInt) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetClickCount(in pCurrent as CBool, out rCount as CUInt) returns nothing binds to "<builtin>"
 
---public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetTouchId(out rId as optional Integer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetTouchPosition(out rLocation as optional Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetNumberOfTouches(out rCount as CUInt) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetPositionOfTouch(in pId as Integer, out rLocation as optional Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetTouchIDs(out tIDs as optional List) returns nothing binds to "<builtin>"
 
-/* 
+--public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) returns nothing binds to "<builtin>"
+--public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
+
+/**
 Summary:		Determines the location of the mouse pointer relative to the widget.
 
 Returns:		The location of the mouse pointer.
@@ -674,7 +717,7 @@ begin
     MCWidgetGetMousePosition(IsCurrent, output)
 end syntax
 
-/*
+/**
 Summary:		Determines the location of a mouse click.
 
 Returns:		The location of the mouse pointer when it was clicked.
@@ -700,7 +743,7 @@ begin
     MCWidgetGetClickPosition(IsCurrent, output)
 end syntax
 
-/*
+/**
 Summary:        Determines the mouse button which started the mouse click.
 
 Returns:        The index of the mouse button which started the mouse click.
@@ -721,10 +764,10 @@ begin
     MCWidgetGetClickButton(IsCurrent, output)
 end syntax
 
-/*
+/**
 Summary:        Determines the number of successive clicks within the click distance.
 
-Returns:        The number of clicks which have occured since the initial click within the standard 'click distance' from the original point.
+Returns:        The number of clicks which have occurred since the initial click within the standard 'click distance' from the original point.
 
 Example:
     variable tClickCount as integer
@@ -753,12 +796,112 @@ begin
     MCWidgetGetMouseButtonState(Index, output)
 end syntax*/
 
+/**
+Summary: The id of the current touch
+
+Returns: An integer id for the current touch
+
+Example:
+   variable tID as Number
+   put the touch id into tID
+
+   variable tPosition as Point
+   put the position of touch tID into tPosition
+*/
+
+syntax TheTouchId is expression
+    "the" "touch" "id"
+begin
+    MCWidgetGetTouchId(output)
+end syntax
+
+/**
+Summary: The location of the current touch
+
+Returns: The position of the current touch relative to the widget
+
+Example:
+   variable tPosition as Point
+   put the touch position into tPosition
+
+   variable tRect as Rectangle
+   put my bounds into tRect
+
+   if tPosition is within tRect then
+      // touch position is within the widget bounds
+   end if
+
+*/
+syntax TheTouchLocation is expression
+    "the" "touch" "position"
+begin
+    MCWidgetGetTouchPosition(output)
+end syntax
+
+/**
+Summary: The number of touches
+
+Returns: The number of currently active touches
+
+Example:
+   if the number of touches is 2 then
+      // pinch gesture
+   end if
+
+*/
+syntax TheNumberOfTouches is expression
+    "the" "number" "of" "touches"
+begin
+    MCWidgetGetNumberOfTouches(output)
+end syntax
+
+/**
+Summary: The location of a specific touch
+
+Returns: The positon of a specific touch id relative to the widget
+
+Example:
+   variable tID as Number
+   put the touch id into tID
+
+   variable tPosition as Point
+   put the position of touch tID into tPosition
+
+*/
+syntax TheLocationOfTouch is prefix operator with property precedence
+    "the" "position" "of" "touch" <Id: Expression>
+begin
+    MCWidgetGetPositionOfTouch(Id, output)
+end syntax
+
+/**
+Summary: The touch IDs
+
+Returns: The a list of currently active touch IDs
+
+Example:
+variable tIDs as optional List
+put the touch ids into tIDs
+if tIDs is not nothing then
+    variable tPosition as Point
+    put the position of touch tIDs[1] into tPosition
+end if
+
+*/
+syntax TheTouchIDs is expression
+    "the" "touch" "ids"
+begin
+    MCWidgetGetTouchIDs(output)
+end syntax
+
+-- FIXME not actually implemented
+/*
 syntax TheModifierKeys is expression
   "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "modifier" "keys"
 begin
     MCWidgetGetModifierKeys(IsCurrent, output)
 end syntax
-
+*/
 
 // ---------- Syntactic sugar for "is [not] [currently] pressed" ---------- //
 
@@ -783,7 +926,7 @@ end syntax*/
 public foreign handler MCWidgetEvalIsPointWithinRect(in pPoint as Point, in pRect as Rectangle, out rWithin as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetEvalIsPointNotWithinRect(in pPoint as Point, in pRect as Rectangle, out rNotWithin as CBool) returns nothing binds to "<builtin>"
 
-/* 
+/**
 Summary:	Determines whether a point is within a rectangle.
 Point:		An expression that evaluates to a Point.
 Rect: 		An expression that evaluates to a Rectangle.
@@ -806,7 +949,7 @@ begin
     MCWidgetEvalIsPointWithinRect(Point, Rect, output)
 end syntax
 
-/* 
+/**
 Summary:	Determines whether a point is within a rectangle.
 Point:		An expression that evaluates to a Point.
 Rect: 		An expression that evaluates to a Rectangle.
@@ -838,7 +981,7 @@ public foreign handler MCWidgetExecClosePopup() returns nothing binds to "<built
 public foreign handler MCWidgetExecClosePopupWithResult(in pResult as any) returns nothing binds to "<builtin>"
 
 
-/*
+/**
 Summary:	Displays a popup menu.
 Menu:		An expression that evaluates to a string, which describes the menu items.
 Location:	An expression that evaluates to a <Point> relative to the current widget. The topleft corner of the popup window will be placed here.
@@ -872,7 +1015,7 @@ begin
 end syntax
 
 
-/*
+/**
 Summary:	Opens a widget within a popup window.
 Kind:		The unique identifier of the widget to use for the popup.
 Location:	An expression that evaluates to a <Point> relative to the current widget. The topleft corner of the popup window will be placed here.
@@ -915,7 +1058,7 @@ begin
 end syntax
 
 
-/*
+/**
 Summary:	Tests if the current widget is in a popup window.
 Resturns:	True if the current widget is in a popup window, False otherwise.
 
@@ -959,7 +1102,7 @@ begin
 end syntax
 
 
-/*
+/**
 Summary:	Closes the current widget popup.
 Result:		An expression that evaluates to any type. The result of popping up this widget.
 
@@ -1031,8 +1174,8 @@ public foreign handler MCWidgetExecPlaceWidget(in pChild as Widget) returns noth
 public foreign handler MCWidgetExecPlaceWidgetAt(in pChild as Widget, in pAtBottom as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecPlaceWidgetRelative(in pChild as Widget, in pIsBelow as CBool, in pOtherChild as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecUnplaceWidget(in pChild as Widget) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetSnapshotWidget(in pChild as Widget) returns Image binds to "<builtin>"
-public foreign handler MCWidgetSnapshotWidgetAtSizeAsList(in pChild as Widget, in pSize as List) returns Image binds to "<builtin>"
+--public foreign handler MCWidgetSnapshotWidget(in pChild as Widget) returns Image binds to "<builtin>"
+--public foreign handler MCWidgetSnapshotWidgetAtSizeAsList(in pChild as Widget, in pSize as List) returns Image binds to "<builtin>"
 
 public foreign handler MCWidgetGetPropertyOfWidget(in pName as String, in pWidget as Widget, out rValue as optional any) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetPropertyOfWidget(in pValue as optional any, in pName as String, in pWidget as Widget) returns nothing binds to "<builtin>"
@@ -1040,23 +1183,27 @@ public foreign handler MCWidgetGetRectangleOfWidget(in pWidget as Widget, out rR
 public foreign handler MCWidgetSetRectangleOfWidget(in pRect as Rectangle, in pWidget as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetWidthOfWidget(in pWidget as Widget, out rWidth as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetWidthOfWidget(in pWidth as CanvasFloat, in pWidget as Widget) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetHeightOfWidget(in pWidget as Widget, out rHeight as Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetHeightOfWidget(in pWidget as Widget, out rHeight as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetHeightOfWidget(in pHeight as CanvasFloat, in pWidget as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetLocationOfWidget(in pWidget as Widget, out rHeight as Point) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetSetLocationOfWidget(in pHeight as CanvasFloat, in pWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetLocationOfWidget(in pLocation as Point, in pWidget as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetEnabledOfWidget(in pWidget as Widget, out rEnabled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetEnabledOfWidget(in pEnabled as CBool, in pWidget as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetDisabledOfWidget(in pWidget as Widget, out rDisabled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetDisabledOfWidget(in pDisabled as CBool, in pWidget as Widget) returns nothing binds to "<builtin>"
+
+/*
+No implementation
 public foreign handler MCWidgetGetFontOfWidget(in pWidget as Widget, out rFont as optional Font) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetFontOfWidget(in pFont as optional Font, in pWidget as Widget) returns nothing binds to "<builtin>"
+*/
 
 public foreign handler MCWidgetGetAnnotationOfWidget(in pName as String, in pWidget as Widget, out rValue as optional any) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetAnnotationOfWidget(in pValue as optional any, in pName as String, in pWidget as Widget) returns nothing binds to "<builtin>"
 
 //
 
-/*
+/**
 Summary: The child widget that started the current execution.
 Returns: A widget object.
 
@@ -1113,7 +1260,7 @@ end syntax
 
 //
 
-/*
+/**
 Summary: The currently placed child widgets of this widget.
 Returns: A list of the child widgets of this widget.
 
@@ -1149,7 +1296,7 @@ begin
     MCWidgetEvalMyChildren(output)
 end syntax
 
-/*
+/**
 Summary: Create a widget object of the specified kind
 
 Returns: A widget object.
@@ -1170,7 +1317,7 @@ begin
     MCWidgetEvalANewWidget(mKind, output)
 end syntax
 
-/*
+/**
 Summary: Add a child widget to the parent.
 
 mWidget: The child widget object.
@@ -1191,7 +1338,7 @@ begin
     MCWidgetExecPlaceWidget(mWidget)
 end syntax
 
-/*
+/**
 Summary: Add a child widget to the parent on the top or bottom layer
 
 mWidget: The child widget object.
@@ -1212,7 +1359,7 @@ begin
     MCWidgetExecPlaceWidgetAt(mWidget, mAtBottom)
 end syntax
 
-/*
+/**
 Summary: Add a child widget to the parent on a layer relative to that of a previously placed child.
 
 mWidget: The child widget object.
@@ -1239,7 +1386,7 @@ begin
     MCWidgetExecPlaceWidgetRelative(mWidget, mIsBelow, mOtherWidget)
 end syntax
 
-/*
+/**
 Summary: Remove a child widget from the parent.
 
 mWidget: The child widget object.
@@ -1267,16 +1414,37 @@ end syntax
 
 //
 
+/*
+Summary:	Take a snapshot of an widget into an image
+
+Parameters:
+Widget(Widget):	The widget to capture
+Size(List):	A list containing a width and height for the snapshot
+
+Returns(Image):	A snapshot of the widget
+
+Description:
+Return a new canvas image containing a snapshot of the current
+appearance of <Widget>.
+
+The <Size> is a list of two numbers, specifying the desired width and height
+of the snapshot image in pixels.
+
+Tags: Widget
+*/
+-- FIXME not implemented
+/*
 syntax SnapshotWidget is statement
-    "snapshot" <mWidget: Expression> [ "at" "size" <mSize: Expression> ]
+    "snapshot" <Widget: Expression> [ "at" "size" <Size: Expression> ]
 begin
-    MCWidgetSnapshotWidget(mWidget)
-    MCWidgetSnapshotWidgetAtSizeAsList(mWidget, mSize)
+    MCWidgetSnapshotWidget(Widget)
+    MCWidgetSnapshotWidgetAtSizeAsList(Widget, Size)
 end syntax
+*/
 
 //
 
-/*
+/**
 Summary: Manipulates a property implemented by a child widget.
 
 mName: The name of a property declared by <mWidget>
@@ -1303,7 +1471,7 @@ begin
 	MCWidgetSetPropertyOfWidget(input, mName, mWidget)
 end syntax
 
-/*
+/**
 Summary: Manipulates the rectangle property of a child widget
 
 mWidget: The child widget object
@@ -1334,7 +1502,7 @@ begin
 	MCWidgetSetRectangleOfWidget(input, mWidget)
 end syntax
 
-/*
+/**
 Summary: Manipulates the height property of a child widget
 
 mWidget: The child widget object
@@ -1365,7 +1533,7 @@ begin
 	MCWidgetSetWidthOfWidget(input, mWidget)
 end syntax
 
-/*
+/**
 Summary: Manipulates the height property of a child widget
 
 mWidget: The child widget object
@@ -1396,7 +1564,7 @@ begin
 	MCWidgetSetHeightOfWidget(input, mWidget)
 end syntax
 
-/*
+/**
 Summary: Manipulates the location property of a child widget
 
 mWidget: The child widget object
@@ -1427,7 +1595,7 @@ begin
 	MCWidgetSetLocationOfWidget(input, mWidget)
 end syntax
 
-/*
+/**
 Summary: Manipulates the enabled property of a child widget
 
 mWidget: The child widget object
@@ -1458,7 +1626,7 @@ begin
 	MCWidgetSetEnabledOfWidget(input, mWidget)
 end syntax
 
-/*
+/**
 Summary: Manipulates the disabled property of a child widget
 
 mWidget: The child widget object
@@ -1489,16 +1657,32 @@ begin
 	MCWidgetSetDisabledOfWidget(input, mWidget)
 end syntax
 
+/**
+Summary:    The font of a widget
+
+Parameters:
+Widget (Widget):	The widget to examine
+
+Returns (Font):	A font handle for the widget's effective font
+
+Description:
+Return a font which reflects the current (effective) settings of
+<Widget>'s LiveCode `textFont`, `textSize` and `textStyle` properties.
+
+References: MyFont (expression)
+*/
+/* No implementation
 syntax WidgetFontProperty is prefix operator with property precedence
-	"the" "font" "of" <mWidget: Expression>
+	"the" "font" "of" <Widget: Expression>
 begin
-	MCWidgetGetFontOfWidget(mWidget, output)
-	MCWidgetSetFontOfWidget(input, mWidget)
+	MCWidgetGetFontOfWidget(Widget, output)
+	MCWidgetSetFontOfWidget(input, Widget)
 end syntax
+*/
 
 //
 
-/*
+/**
 Summary: Manipulates an annotation of a child widget
 
 Example:
@@ -1539,24 +1723,42 @@ end syntax
 
 public foreign handler MCWidgetGetNativeLayerOfWidget(in pWidget as Widget, out rNativeLayer as Pointer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetNativeLayerOfWidget(in pNativeLayer as optional Pointer, in pWidget as Widget) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetStackNativeViewOfWidget(in pWidget as Widget, out rNativeView as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetStackNativeViewOfWidget(in pWidget as Widget, out rNativeView as optional Pointer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetStackNativeDisplayOfWidget(in pWidget as Widget, out rDisplay as Pointer) returns nothing binds to "<builtin>"
 
-/*
-TODO - docs
+/**
+Summary: Get a widget's native layer pointer
+
+Parameters:
+Widget (Widget): The widget to examine
+
+Returns (Pointer): A platform-specific native layer pointer
+
+References: MyNativeLayer (expression)
+
+Tags: Native layer
 */
 syntax NativeLayerOfWidget is prefix operator with property precedence
-	"native" "layer" "of" <mWidget: Expression>
+	"native" "layer" "of" <Widget: Expression>
 begin
-	MCWidgetGetNativeLayerOfWidget(mWidget, output)
-	MCWidgetSetNativeLayerOfWidget(input, mWidget)
+	MCWidgetGetNativeLayerOfWidget(Widget, output)
+	MCWidgetSetNativeLayerOfWidget(input, Widget)
 end syntax
 
 public foreign handler MCWidgetGetMyNativeLayer(out rNativeLayer as Pointer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetMyNativeLayer(in pNativeLayer as optional Pointer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyStackNativeView(out rNativeView as Pointer) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetMyStackNativeDisplay(out rDisplay as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyStackNativeDisplay(out rDisplay as optional Pointer) returns nothing binds to "<builtin>"
 
+/**
+Summary: Get the current widget's native layer pointer
+
+Returns (Pointer): A platform-specific native layer pointer
+
+References: NativeLayerOfWidget (operator)
+
+Tags: Native layer
+*/
 syntax MyNativeLayer is expression
 	"my" "native" "layer"
 begin

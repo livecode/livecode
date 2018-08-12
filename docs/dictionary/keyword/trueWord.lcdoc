@@ -4,13 +4,15 @@ Type: keyword
 
 Syntax: trueWord
 
-Summary: Designates a string as part of a chunk expression, delimited by Unicode word breaks, as determined by the ICU Library.
+Summary:
+Designates a string as part of a chunk expression, delimited by Unicode
+word breaks, as determined by the ICU Library.
 
 Introduced: 7.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put "外国語の学習と教授" & return into tText
@@ -25,13 +27,20 @@ put "Изучение и обучение иностранных языков" a
 put trueWord 3 of line 3 of tText -- returns "обучение"
 
 Example:
-get trueWord 4 of ("The programme output:" && quote & "Hello World!"  quote) -- yields Hello
+get trueWord 4 of ("The programme output:" && quote & "Hello World!" & quote) -- yields Hello
 
 Description:
-Use the <trueWord> keyword to refer to one or more words, delimited by Unicode word breaks.
+Use the <trueWord> keyword to refer to one or more words, delimited by
+Unicode word breaks.
 
-A <trueWord> is a word chunk, delimited by Unicode word breaks, as determined by the ICU Library. When there are no alphabetic or numeric characters between two word breaks, that string is not considered by LiveCode to be a trueWord.
+A <trueWord> is a word chunk, delimited by Unicode word breaks, as
+determined by the ICU Library. When there are no alphabetic or numeric
+characters between two word breaks, that string is not considered by
+LiveCode to be a trueWord.
 
-References: item (keyword), character (keyword), segment (keyword), sentence (keyword), line (keyword), word (keyword), paragraph (keyword), token (keyword)
+References: item (keyword), character (keyword), segment (keyword),
+sentence (keyword), line (keyword), word (keyword), paragraph (keyword),
+token (keyword)
 
 Tags: text processing
+

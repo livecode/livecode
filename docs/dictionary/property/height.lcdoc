@@ -2,17 +2,20 @@ Name: height
 
 Type: property
 
-Syntax: set the height of <object> to <numberOfPixels> 
+Syntax: set the height of <object> to <numberOfPixels>
 
-Summary: Specifies the distance from an <object|object's> top edge to its bottom edge.
+Summary:
+Specifies the distance from an <object|object's> top edge to its bottom
+edge. 
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the height of button 1 + the height of button 2 into requiredHeight
@@ -20,23 +23,53 @@ put the height of button 1 + the height of button 2 into requiredHeight
 Example:
 set the height of field thisField to the textHeight of thisField
 
-Value: The <height> of an <object> is a positive integer.
+Value:
+The <height> of an <object(glossary)> is a positive integer.
 
 Description:
-Use the <height> <property> to determine how much vertical space an <object> needs, or to make it taller or shorter.
+Use the <height> <property> to determine how much vertical space an
+<object(glossary)> needs, or to make it taller or shorter.
 
-If an object's lockLocation <property> is false, when you change its <height>, it shrinks or grows from the center. The <object|object's> top and bottom edges both shift, while the <object|object's> <location> <property> stays the same. If the object's <lockLocation> <property> is true, it shrinks or grows from the top left corner: the <object|object's> top edge stays in the same place, and the bottom edge moves.
+If an object's lockLocation <property> is false, when you change its
+<height>, it shrinks or grows from the center. The <object|object's> top
+and bottom edges both shift, while the <object|object's> <location>
+<property> stays the same. If the object's <lockLocation> <property> is
+true, it shrinks or grows from the top left corner: the
+<object|object's> top edge stays in the same place, and the bottom edge
+moves. 
 
-If you reduce the <height> of a <stack>, some <object|objects> may end up outside the <stack> window. These <object|objects> are not shown; however, they are still there, and will be displayed if you make the window tall enough.
+If you reduce the <height> of a <stack>, some <object|objects> may end
+up outside the <stack> window. These <object|objects> are not shown;
+however, they are still there, and will be displayed if you make the
+window tall enough.
 
-The <height> of an object cannot be set to zero. Attempting to do so will set the <height> to 1 instead.
+The <height> of an object cannot be set to zero. Attempting to do so
+will set the <height> to 1 instead.
 
->*Cross-platform note:*  On <Mac OS> and <OS X|OS X systems>, the <menu bar> normally appears at the top of the screen, rather than inside the <stack window>. If a <stack> contains a <menu bar> and the <stack|stack's> <editMenus> <property> is set to false, the <stack window> is automatically resized so that the <menu bar> <group> is not visible in the window. In this case, the <height> of the <stack> is the current height of the <stack window>., but the height of the card is the height of the total content area of the <stack> (including the hidden <menu bar> <group>). This is equal to the <height> of the <stack> plus its <vScroll>.
+>*Cross-platform note:*  On <Mac OS> and <OS X|OS X systems>, the 
+> <menu bar> normally appears at the top of the screen, rather than 
+> inside the <stack window>. If a <stack> contains a <menu bar> and the
+> <stack|stack's> <editMenus> <property> is set to false, the 
+> <stack window> is automatically resized so that the <menu bar> 
+> <group> is not visible in the window. In this case, the <height> of 
+> the <stack> is the current height of the <stack window>, but the height 
+> of the card is the height of the total content area of the <stack> 
+> (including the hidden <menu bar> <group>). This is equal to the 
+> <height> of the <stack> plus its <vScroll>.
 
-You can set the <height> of a <card(keyword)>, but doing so has no effect and doesn't change the <card(object)|card's> <height> <property>.
+You can set the <height> of a <card(keyword)>, but doing so has no
+effect and doesn't change the <card(object)|card's> <height> <property>.
 
->*Note:* The current architecture uses 16-bit signed integers for all co-ordinates, which means that the value range is -32768 to 32767.
+>*Note:* The current architecture uses 16-bit signed integers for all
+> co-ordinates, which means that the value range is -32768 to 32767.
 
-References: backSize (property), location (property), orientation (property), fixedLineHeight (property), minHeight (property), scale (property), bottom (property), editMenus (property), lockLocation (property), vScroll (property), card (keyword), revChangeWindowSize (command), group (command), stack (object), object (object), card (object), property (glossary), Mac OS (glossary), menu bar (glossary), stack window (glossary), OS X (glossary)
+References: revChangeWindowSize (command), group (command),
+object (glossary), property (glossary), Mac OS (glossary),
+menu bar (glossary), stack window (glossary), OS X (glossary),
+card (keyword), stack (object), card (object), backSize (property),
+location (property), orientation (property), fixedLineHeight (property),
+minHeight (property), scale (property), bottom (property),
+editMenus (property), lockLocation (property), vScroll (property)
 
 Tags: ui
+

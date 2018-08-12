@@ -6,25 +6,39 @@ Syntax: the functionNames
 
 Syntax: functionNames()
 
-Summary: <return|Returns> a list of all built-in <function|functions> in <LiveCode>.
+Summary:
+<return|Returns> a list of all built-in <function|functions> in
+<LiveCode>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the functionNames
 
 Example:
-if myHandlerName is in the functions then answer "Choose another name."
+if myHandlerName is in the functionNames then answer "Choose another name."
 
-Returns: The <functionNames> function <return|returns> one <function> name per <line>.
+Returns:
+The <functionNames> function <return|returns> one <function> name per
+<line>. 
 
 Description:
-Use the <functionNames> <function(control_st)> to check whether a particular <function(control_st)> already exists in <LiveCode>, to avoid using a <reserved word> for your own <custom function> <handler|handlers>.
+Use the <functionNames> <function(control structure)> to check whether a
+particular <function(control structure)> already exists in <LiveCode>,
+to avoid using a <reserved word> for your own <custom function>
+<handler|handlers>. 
 
-The <functionNames> <function(control_st)> <return|returns> all the built-in <function(glossary)|functions> that can be used in <LiveCode>, including synonyms.
+The <functionNames> <function(control structure)> <return|returns> all
+the built-in <function(glossary)|functions> that can be used in
+<LiveCode>, including synonyms.
 
-References: line (keyword), constantNames (function), propertyNames (function), commandNames (function), variableNames (function), colorNames (function), handler (glossary), LiveCode (glossary), custom function (glossary), function (glossary), return (glossary), reserved word (glossary), function (control_st)
+References: function (control structure), constantNames (function),
+propertyNames (function), commandNames (function),
+variableNames (function), colorNames (function), handler (glossary),
+LiveCode (glossary), custom function (glossary), function (glossary),
+return (glossary), reserved word (glossary), line (keyword)
+

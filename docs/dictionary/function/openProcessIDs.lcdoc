@@ -6,13 +6,16 @@ Syntax: the openProcessIDs
 
 Syntax: openProcessIDs()
 
-Summary: <return|Returns> the <process> IDs of <process|processes> that have been opened with the <open process> <command>, but have not yet <exit|exited>.
+Summary:
+<return|Returns> the <process> IDs of <process|processes> that have been
+opened with the <open process> <command>, but have not yet
+<exit|exited>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: process
 
@@ -22,20 +25,39 @@ the openProcessIDs
 Example:
 put last line of the openProcessIDs into previousProcessID
 
-Returns: The <openProcessIDs> <function> <return|returns> a list of <integer|integers>, one per <line>.
+Returns:
+The <openProcessIDs> <function> <return|returns> a list of
+<integer|integers>, one per <line>.
 
 Description:
-Use the <openProcessIDs> <function> to communicate with <process|processes> you have opened with the <open process> <command>.
+Use the <openProcessIDs> <function> to communicate with
+<process|processes> you have opened with the <open process> <command>.
 
-Certain Unix commands such as "kill" require a process ID. You can use these commands to act on processes you opened by using the shell <command> :
+Certain Unix commands such as "kill" require a process ID. You can use
+these commands to act on processes you opened by using the shell
+<command> :
 
-  put "kill -9" && line 1 of the openProcessIDs into whatToExecute
-  get shell(whatToExecute)
+    put "kill -9" && line 1 of the openProcessIDs into whatToExecute
+    get shell(whatToExecute)
 
-On Mac OS and OS X systems, there is no process ID. Instead, the <openProcessIDs> function <return|returns> a list of <integer|integers>. The first application started up (with the <open process> or <launch> <command>) during a session is assigned the number 1, the second is assigned the number 2, and so on. After an application quits, its <process> number is not re-used, so you can use the <openProcessIDs> <function> to determine how many times LiveCode has started up an application during the current session.
 
-The list of process IDs is in the same order used by openProcesses <function>, which is the same order that the <process|processes> were opened.
+On Mac OS and OS X systems, there is no process ID. Instead, the
+<openProcessIDs> function <return|returns> a list of <integer|integers>.
+The first application started up (with the <open process> or <launch>
+<command>) during a session is assigned the number 1, the second is
+assigned the number 2, and so on. After an application quits, its
+<process> number is not re-used, so you can use the <openProcessIDs>
+<function> to determine how many times LiveCode has started up an
+application during the current session.
 
-Programs that were not started by LiveCode are not included in the list returned by the <openProcessIDs> <function>.
+The list of process IDs is in the same order used by openProcesses
+<function>, which is the same order that the <process|processes> were
+opened. 
 
-References: line (keyword), launch (command), kill (command), open process (command), function (control_st), exit (glossary), integer (glossary), command (glossary), return (glossary), process (glossary)
+Programs that were not started by LiveCode are not included in the list
+returned by the <openProcessIDs> <function>.
+
+References: launch (command), kill (command), open process (command),
+function (control structure), exit (glossary), integer (glossary),
+command (glossary), return (glossary), process (glossary), line (keyword)
+

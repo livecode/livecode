@@ -1,0 +1,52 @@
+Name: LiveCode Builder language
+
+Synonyms: livecode builder language, lcb, lcb language, livecode builder
+
+Type: glossary
+
+Description:
+**LiveCode Builder** is a variant of the current <LiveCode|LiveCode
+scripting language> which has been designed for 'systems' building. It is
+statically compiled with optional static typing and direct foreign code
+interconnect (allowing easy access to APIs written in other languages).
+The compiled bytecode can then be packaged together with any required
+resources (icons, documentation, images, etc) into a .lce extension
+package. 
+
+Unlike most languages, **LiveCode Builder** has been designed around the
+idea of extensible syntax. Indeed, the core language is very small -
+comprising declarations and control structures - with the majority of
+the language syntax and functionality being defined in modules.
+
+The syntax will be familiar to anyone who has coded with
+<LiveCode|LiveCode Script>, however **LiveCode Builder** is a great deal
+more strict - the reason being it is intended that it will eventually be
+compilable to machine code with the performance and efficiency you'd
+expect from any 'traditional' programming language. Indeed, over time we
+hope to move the majority of implementation of the whole LiveCode system
+over to being written in **LiveCode Builder**.
+
+There are two types of extensions which can be written in LCB:
+<widget|widgets> and <library extension|libraries>. All installed
+<LiveCode Builder extension|extensions> appear in the new Extension
+Manager stack, which can be opened from the Tools menu.
+
+An <library extension|LCB library> is a new way of adding functions to
+the <LiveCode> <message path>. Public handlers in loaded 
+<library extension|LCB libraries> are available to call from 
+<LiveCode|LiveCode Script>.
+
+A <widget> is a new type of custom <control> which, once compiled and
+packaged, can be loaded into the <IDE>. Using the <widget> is no
+different from any of the classic LiveCode controls you've been used
+to. Simply drag it onto a <stack> and start interacting with it as you
+would any another <control>.
+
+For detailed information about using LCB, please consult the Extending
+LiveCode guide, and explore the LCB API by selecting 
+**LiveCode Builder** from the API dropdown menu.
+
+References: LiveCode (glossary), LiveCode Builder extension (glossary), 
+library extension (glossary), control (glossary), stack (glossary), 
+IDE (glossary), message path (glossary), widget (object)
+

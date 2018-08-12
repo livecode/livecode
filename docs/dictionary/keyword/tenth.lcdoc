@@ -4,27 +4,34 @@ Type: keyword
 
 Syntax: tenth
 
-Summary: Designates the tenth member of a set.
+Summary:
+Designates the tenth member of a set.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the ID of tenth card into myID
 
 Example:
-multiply the tenth word of currentAmounts by ten
+multiply the tenth word of tCurrentAmounts by ten
 
 Description:
-Use the <tenth> <keyword> in an <object reference> or <chunk expression>.
+Use the <tenth> <keyword> in an <object reference> or <chunk
+expression>. 
 
-The <tenth> <keyword> can be used to specify any <object> whose <number> <property> is 10. It can also be used to designate the tenth <chunk> in a <chunk expression>.
+The <tenth> <keyword> can be used to specify any <object(glossary)>
+whose <number> <property> is 10. It can also be used to designate the
+tenth <chunk> in a <chunk expression>.
 
 The word the is optional when using the <tenth> <keyword>.
 
-References: ten (constant), object (object), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
+References: ten (constant), number (function), object (glossary),
+keyword (glossary), property (glossary), object reference (glossary),
+chunk expression (glossary), chunk (glossary)
 
 Tags: math
+

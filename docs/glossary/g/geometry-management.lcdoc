@@ -1,14 +1,21 @@
 Name: geometry management
 
-Synonyms: geometry management,geometry manager,manage geometry,managing geometry,manages geometry,managed geometry
+Synonyms: geometry management, geometry manager, manage geometry,
+managing geometry, manages geometry, managed geometry
 
 Type: glossary
 
 Description:
-The process of moving and resizing <control|controls> in a <stack window> when the window size is changed. 
- 
-You can perform geometry management in a <resizeStack> handler, or use the Geometry pane in each <object|object's> <property inspector> to specify geometry management settings.
+The process of moving and resizing <control|controls> in a <stack
+window> when the window size is changed.
 
-References: resizeStack (message), control (object), object (object), stack window (glossary), property inspector (glossary)
+You can perform geometry management in a <resizeStack> handler, or use
+the Geometry pane in each <object|object's> <property inspector> to
+specify geometry management settings.
+
+References: control (glossary), object (glossary),
+stack window (glossary), property inspector (glossary),
+resizeStack (message)
 
 Tags: ui
+

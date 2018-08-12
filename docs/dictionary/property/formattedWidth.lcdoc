@@ -2,40 +2,68 @@ Name: formattedWidth
 
 Type: property
 
-Syntax: get the formattedWidth of <object> 
+Syntax: get the formattedWidth of <object>
 
-Syntax: get the formattedWidth of [<chunk> of] <field> 
+Syntax: get the formattedWidth of [<chunk> of] <field>
 
-Summary: Reports the width needed by an <object> to display its full contents without scrolling.
+Summary:
+Reports the width needed by an <object(glossary)> to display its full
+contents without scrolling.
 
-Associations: button
+Associations: card, field, button, player, image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if the formattedWidth of this card &gt; the width of this card then beep
 
 Value:
-The <formattedWidth> of an <object> is a positive <integer>. The <object> must be on the <current card> of an open <stack>.
+The <formattedWidth> of an <object(glossary)> is a positive <integer>.
+The <object(glossary)> must be on the <current card> of an open <stack>.
 This property is read-only and cannot be set.
 
 Description:
-Use the <formattedWidth> <property> to adjust an <object|object's> size according to the space needed to display its contents.
+Use the <formattedWidth> <property> to adjust an <object|object's> size
+according to the space needed to display its contents.
 
-If you specify a card or group, the <formattedWidth> reports the width of a rectangle that includes all <object|objects> in that <card> or <group> whose <visible> <property> is true.
+If you specify a card or group, the <formattedWidth> reports the width
+of a rectangle that includes all <object|objects> in that <card> or
+<group> whose <visible> <property> is true.
 
-If you specify an image or player, the <formattedWidth> <property> reports the original un-scaled width of the <image> or movie.
+If you specify an image or player, the <formattedWidth> <property>
+reports the original un-scaled width of the <image> or movie.
 
-If you specify a field, the <formattedWidth> reports the width required by the <field(object)|field's> text. If the <field(object)|field's> <dontWrap> <property> is set to true, the <formattedWidth> reports the total width of the text in the <field(keyword)>. If the <dontWrap> is false, the <formattedWidth> reports the minimum width required to keep the current line breaks.
+If you specify a field, the <formattedWidth> reports the width required
+by the <field(object)|field's> text. If the <field(object)|field's>
+<dontWrap> <property> is set to true, the <formattedWidth> reports the
+total width of the text in the <field(keyword)>. If the <dontWrap> is
+false, the <formattedWidth> reports the minimum width required to keep
+the current line breaks.
 
-If you specify an object in a group, the value reported is the <formattedWidth> that <object> requires for the <current card>, so if you want to get the <formattedWidth> of a <field(object)|field's> text on a certain <card>, you must go to that <card> first.
+If you specify an object in a group, the value reported is the
+<formattedWidth> that <object(glossary)> requires for the 
+<current card>, so if you want to get the <formattedWidth> of a
+<field(object)|field's> text on a certain <card>, you must go to that
+<card> first.
 
-The <formattedWidth> of a <chunk> in a <field(keyword)> is the amount of horizontal space that portion of the <field(object)|field's> text requires, taking line breaks into account.
+The <formattedWidth> of a <field(keyword)> is the amount of horizontal
+space the <field(object)|field's> text requires, taking line breaks into
+account and including left and right margins.
 
-References: dontWrap (property), visible (property), thumbSize (property), margins (property), integer (keyword), image (keyword), field (keyword), card (keyword), revChangeWindowSize (command), group (command), textHeightSum (function), field (object), object (object), stack (object), property (glossary), current card (glossary), chunk (glossary)
+The <formattedWidth> of a <chunk> in a <field(keyword)> is the amount of
+horizontal space that portion of the <field(object)|field's> text
+requires, taking line breaks into account but disregarding margins.
+
+References: revChangeWindowSize (command), group (command),
+textHeightSum (function), object (glossary), property (glossary),
+current card (glossary), chunk (glossary), integer (keyword),
+image (keyword), field (keyword), card (keyword), field (object),
+stack (object), dontWrap (property), visible (property),
+thumbSize (property), margins (property)
 
 Tags: ui
+

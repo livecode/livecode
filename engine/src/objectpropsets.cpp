@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2017 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -23,11 +23,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "object.h"
-//#include "execpt.h"
+
 #include "objectstream.h"
 #include "variable.h"
 
 #include "objectpropsets.h"
+
+#include "stackfileformat.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,32 +37,25 @@ extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_delimiter, MCStri
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCObjectPropertySet::clone(MCObjectPropertySet*& r_set)
+bool MCObjectPropertySet::clone(MCObjectPropertySet*& r_set) const
 {
-	MCObjectPropertySet *t_new_set;
-	if (createwithname(m_name, t_new_set))
-	{
-		MCValueRelease(t_new_set -> m_props);
-		if (MCArrayMutableCopy(m_props, t_new_set -> m_props))
-		{
-			r_set = t_new_set;
-			return true;
-		}
-
-		delete t_new_set;
-	}
-
-	return false;
+    MCAutoPointer<MCObjectPropertySet> t_new_set;
+    if (!createwithname(*m_name, &t_new_set))
+        return false;
+    if (!t_new_set->store(fetch_nocopy()))
+        return false;
+    r_set = t_new_set.Release();
+    return true;
 }
 
 bool MCObjectPropertySet::createwithname_nocopy(MCNameRef p_name, MCObjectPropertySet*& r_set)
 {
 	MCObjectPropertySet *t_new_set;
-	t_new_set = new MCObjectPropertySet;
+	t_new_set = new (nothrow) MCObjectPropertySet;
 	if (t_new_set == nil)
 		return false;
 
-	t_new_set -> m_name = p_name;
+	t_new_set->m_name.Give(p_name);
 
 	r_set = t_new_set;
 
@@ -69,14 +64,12 @@ bool MCObjectPropertySet::createwithname_nocopy(MCNameRef p_name, MCObjectProper
 
 bool MCObjectPropertySet::createwithname(MCNameRef p_name, MCObjectPropertySet*& r_set)
 {
-	MCNameRef t_new_name;
-	if (!MCNameClone(p_name, t_new_name))
-		return false;
+	MCNameRef t_new_name = MCValueRetain(p_name);
 
 	MCObjectPropertySet *t_new_set;
 	if (!createwithname_nocopy(t_new_name, t_new_set))
 	{
-		MCNameDelete(t_new_name);
+		MCValueRelease(t_new_name);
 		return false;
 	}
 
@@ -87,79 +80,55 @@ bool MCObjectPropertySet::createwithname(MCNameRef p_name, MCObjectPropertySet*&
 
 //////////
 
-#ifdef LEGACY_EXEC
-bool MCObjectPropertySet::list(MCExecPoint& ep)
+MCArrayRef MCObjectPropertySet::fetch_nocopy() const
 {
-	return ep . listarraykeys(m_props, '\n');
+    return m_props.IsSet() ? *m_props : kMCEmptyArray;
 }
-#endif
 
-bool MCObjectPropertySet::list(MCStringRef& r_keys)
+MCAutoArrayRef MCObjectPropertySet::fetch_ensure()
 {
-    if (MCArrayListKeys(m_props, '\n', r_keys))
-		return true;
-    
-	return false;
+    if (!m_props.IsSet())
+        MCArrayCreateMutable(&m_props);
+    return m_props;
+}
+
+bool MCObjectPropertySet::list(MCStringRef& r_keys) const
+{
+    return MCArrayListKeys(fetch_nocopy(), '\n', r_keys);
 }
 
 bool MCObjectPropertySet::clear(void)
 {
-	MCValueRelease(m_props);
-	return MCArrayCreateMutable(m_props);
+    m_props.Reset();
+    return true;
 }
 
-#ifdef LEGACY_EXEC
-bool MCObjectPropertySet::fetch(MCExecPoint& ep)
+bool MCObjectPropertySet::fetch(MCArrayRef& r_array) const
 {
-	return ep . setvalueref(m_props);
+    return MCArrayCopy(fetch_nocopy(), r_array);
 }
-#endif
-
-bool MCObjectPropertySet::fetch(MCArrayRef& r_array)
-{
-    return MCArrayCopy(m_props, r_array);
-}
-
-#ifdef LEGACY_EXEC
-bool MCObjectPropertySet::store(MCExecPoint& ep)
-{
-	MCArrayRef t_new_props;
-	if (!ep . copyasarrayref(t_new_props))
-		return false;
-	MCValueRelease(m_props);
-	m_props = t_new_props;
-	return true;
-}
-#endif
 
 bool MCObjectPropertySet::store(MCArrayRef p_array)
 {
-	MCValueRelease(m_props);
-    return MCArrayMutableCopy(p_array, m_props);
+    MCAutoArrayRef t_mutable;
+    if (!MCArrayMutableCopy(p_array, &t_mutable))
+        return false;
+    m_props.Give(t_mutable.Take());
+    return true;
 }
 
-#ifdef LEGACY_EXEC
-bool MCObjectPropertySet::fetchelement(MCExecPoint& ep, MCNameRef p_name)
+bool MCObjectPropertySet::fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value) const
 {
-	return ep . fetcharrayelement(m_props, p_name);
-}
-#endif
-
-#ifdef LEGACY_EXEC
-bool MCObjectPropertySet::storeelement(MCExecPoint& ep, MCNameRef p_name)
-{
-	return ep . storearrayelement(m_props, p_name);
-}
-#endif
-
-bool MCObjectPropertySet::fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value)
-{
-	return MCArrayFetchValue(m_props, ctxt . GetCaseSensitive(), p_name, r_value);
+    return MCArrayFetchValue(fetch_nocopy(), ctxt . GetCaseSensitive(),
+                             p_name, r_value);
 }
 
 bool MCObjectPropertySet::storeelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef p_value)
 {
-	return MCArrayStoreValue(m_props, ctxt . GetCaseSensitive(), p_name, p_value);
+    MCAutoArrayRef t_props = fetch_ensure();
+    if (!t_props.IsSet())
+        return false;
+    return MCArrayStoreValue(*t_props, ctxt . GetCaseSensitive(), p_name, p_value);
 }
 
 bool MCObjectPropertySet::restrict(MCStringRef p_string)
@@ -169,7 +138,8 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
     MCAutoStringRefArray t_split;
     if (!MCStringsSplit(p_string, '\n', t_split . PtrRef(), t_split . CountRef()))
         return false;
-    
+
+    MCAutoArrayRef t_old_props(fetch_nocopy());
     MCAutoArrayRef t_new_props;
     MCArrayCreateMutable(&t_new_props);
     uinteger_t t_size;
@@ -180,12 +150,12 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
         if (t_success)
             t_success = MCNameCreate(t_split[i], &t_key_name);
         MCValueRef t_value;
-        if (!MCArrayFetchValue(m_props, false, *t_key_name, t_value))
+        if (!MCArrayFetchValue(*t_old_props, false, *t_key_name, t_value))
             t_value = kMCEmptyString;
         if (t_success)
             t_success = MCArrayStoreValue(*t_new_props, false, *t_key_name, t_value);
     }
-    MCValueAssign(m_props, *t_new_props);
+    m_props.Give(t_new_props.Take());
     return t_success;
 }
 
@@ -193,53 +163,62 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
 
 IO_stat MCObjectPropertySet::loadprops_new(IO_handle p_stream)
 {
-    MCArrayRef t_new_props;
+    MCAutoArrayRef t_new_props;
 
     if (IO_read_valueref_new((MCValueRef&)t_new_props, p_stream) != IO_NORMAL)
 		return IO_ERROR;
-    if (!MCArrayMutableCopyAndRelease(t_new_props, t_new_props))
-		return IO_ERROR;
+    if (!t_new_props.MakeMutable())
+        return IO_ERROR;
+    m_props.Give(t_new_props.Take());
 
-    MCValueAssign(m_props, t_new_props);
-    MCValueRelease(t_new_props);
 	return IO_NORMAL;
 }
 
-IO_stat MCObjectPropertySet::saveprops_new(IO_handle p_stream)
+IO_stat MCObjectPropertySet::saveprops_new(IO_handle p_stream) const
 {
-	return IO_write_valueref_new(m_props, p_stream);
+	return IO_write_valueref_new(fetch_nocopy(), p_stream);
 }
 
 //////////
 
-uint32_t MCObjectPropertySet::measure_legacy(bool p_nested_only)
+uint32_t MCObjectPropertySet::measure_legacy(bool p_nested_only) const
 {
-	return MCArrayMeasureForStreamLegacy(m_props, p_nested_only);
+	return MCArrayMeasureForStreamLegacy(fetch_nocopy(), p_nested_only);
 }
 
 bool MCObjectPropertySet::isnested_legacy(void) const
 {
-	return MCArrayIsNestedLegacy(m_props);
+	return MCArrayIsNestedLegacy(fetch_nocopy());
 }
 
 IO_stat MCObjectPropertySet::loadprops_legacy(IO_handle p_stream)
 {
-	return MCArrayLoadFromHandleLegacy(m_props, p_stream);
+    MCAutoArrayRef t_props = fetch_ensure();
+    if (!t_props.IsSet())
+        return IO_ERROR;
+
+    IO_stat t_status = MCArrayLoadFromHandleLegacy(*t_props, p_stream);
+    return t_status;
 }
 
 IO_stat MCObjectPropertySet::loadarrayprops_legacy(MCObjectInputStream& p_stream)
 {
-	return MCArrayLoadFromStreamLegacy(m_props, p_stream);
+    MCAutoArrayRef t_props = fetch_ensure();
+    if (!t_props.IsSet())
+        return IO_ERROR;
+
+    IO_stat t_status = MCArrayLoadFromStreamLegacy(*t_props, p_stream);
+    return t_status;
 }
 
-IO_stat MCObjectPropertySet::saveprops_legacy(IO_handle p_stream)
+IO_stat MCObjectPropertySet::saveprops_legacy(IO_handle p_stream) const
 {
-	return MCArraySaveToHandleLegacy(m_props, p_stream);
+	return MCArraySaveToHandleLegacy(fetch_nocopy(), p_stream);
 }
 
-IO_stat MCObjectPropertySet::savearrayprops_legacy(MCObjectOutputStream& p_stream)
+IO_stat MCObjectPropertySet::savearrayprops_legacy(MCObjectOutputStream& p_stream) const
 {
-	return MCArraySaveToStreamLegacy(m_props, true, p_stream);
+	return MCArraySaveToStreamLegacy(fetch_nocopy(), true, p_stream);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -292,120 +271,6 @@ bool MCObject::ensurepropset(MCNameRef p_name, bool p_empty_is_default, MCObject
 	return true;
 }
 
-#ifdef OLD_EXEC
-bool MCObject::setpropset(MCNameRef p_name)
-{
-	if (props == nil)
-		if (!MCObjectPropertySet::createwithname(kMCEmptyName, props))
-			return false;
-
-	if (props -> hasname(p_name))
-		return true;
-
-	MCObjectPropertySet *t_set;
-	t_set = props;
-	while(t_set -> getnext() != nil && !t_set -> getnext() -> hasname(p_name))
-		t_set = t_set -> getnext();
-
-	if (t_set -> getnext() == nil)
-	{
-		if (!MCObjectPropertySet::createwithname(p_name, t_set))
-			return false;
-
-		t_set -> setnext(props);
-		props = t_set;
-	}
-	else
-	{
-		MCObjectPropertySet *t_next_set;
-		t_next_set = t_set -> getnext();
-		t_set -> setnext(t_next_set -> getnext());
-		t_next_set -> setnext(props);
-		props = t_next_set;
-	}
-
-	return true;
-}
-
-void MCObject::listpropsets(MCExecPoint& ep)
-{
-	ep.clear();
-
-	MCObjectPropertySet *p = props;
-	uint2 j = 0;
-	while (p != NULL)
-	{
-		if (!p->hasname(kMCEmptyName))
-			ep.concatnameref(p->getname(), EC_RETURN, j++ == 0);
-		p = p->getnext();
-	}
-}
-
-bool MCObject::changepropsets(MCExecPoint& ep)
-{
-	if (ep.getsvalue().getlength() && ep.getsvalue().getstring()[ep.getsvalue().getlength() - 1] != '\n')
-		ep.appendnewline();
-	ep.appendnewline();
-	char *string = ep.getsvalue().clone();
-	char *eptr = string;
-	MCObjectPropertySet *newprops = NULL;
-	MCObjectPropertySet *newp = NULL;
-	while ((eptr = strtok(eptr, "\n")) != NULL)
-	{
-		MCAutoNameRef t_name;
-		/* UNCHECKED */ t_name . CreateWithCString(eptr);
-
-		MCObjectPropertySet *lp = NULL;
-		MCObjectPropertySet *p = props;
-		while (p != NULL && !p->hasname(t_name))
-		{
-			lp = p;
-			p = p->getnext();
-		}
-		if (p == NULL)
-			/* UNCHECKED */ MCObjectPropertySet::createwithname(t_name, p);
-		else
-		{
-			if (p == props)
-				props = props->getnext();
-			else
-				lp->setnext(p->getnext());
-			p->setnext(NULL);
-		}
-		if (newprops == NULL)
-			newprops = p;
-		else
-			newp->setnext(p);
-		newp = p;
-		eptr = NULL;
-	}
-	Boolean gotdefault = False;
-	while (props != NULL)
-	{
-		MCObjectPropertySet *sp = props->getnext();
-		if (props->hasname(kMCEmptyName))
-		{
-			props->setnext(newprops);
-			newprops = props;
-			gotdefault = True;
-		}
-		else
-			delete props;
-		props = sp;
-	}
-	if (!gotdefault && newprops != NULL)
-	{
-		/* UNCHECKED */ MCObjectPropertySet::createwithname(kMCEmptyName, props);
-		props->setnext(newprops);
-	}
-	else
-		props = newprops;
-	delete string;
-
-	return true;
-}
-#endif
-
 bool MCObject::clonepropsets(MCObjectPropertySet*& r_new_props) const
 {
 	MCObjectPropertySet *t_new_props, *t_set, *t_new_props_tail;
@@ -445,7 +310,7 @@ void MCObject::deletepropsets(void)
 
 IO_stat MCObject::savepropsets(IO_handle stream, uint32_t p_version)
 {
-	if (p_version < 7000)
+	if (p_version < kMCStackFileFormatVersion_7_0)
 		return savepropsets_legacy(stream);
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] Emit all the propsets in
@@ -468,7 +333,7 @@ IO_stat MCObject::savepropsets(IO_handle stream, uint32_t p_version)
 
 IO_stat MCObject::loadpropsets(IO_handle stream, uint32_t version)
 {
-	if (version < 7000)
+	if (version < kMCStackFileFormatVersion_7_0)
 		return loadpropsets_legacy(stream);
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] Read all the propsets in

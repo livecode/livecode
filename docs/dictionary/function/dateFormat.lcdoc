@@ -2,37 +2,47 @@ Name: dateFormat
 
 Type: function
 
-Syntax: the [{ long | abbr[ev[iated]] | short }] [{ english | system }] dateFormat
+Syntax: the [{ long | abbreviated | short }] [{ english | system }] dateFormat
 
-Summary: <return|Returns> a <string> describing a given date format using the syntax described below.
+Summary:
+<return|Returns> a <string> describing a given date format using the
+syntax described below.
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the long dateFormat into stringToParse
 
-Returns: The <dateFormat> <function> <return|returns> a string.
+Returns:
+The <dateFormat> <function> <return|returns> a string.
 
 Description:
-Use the <dateFormat> <function> to obtain the general format of the date for further processing.
+Use the <dateFormat> <function> to obtain the general format of the date
+for further processing.
 
-The <dateFormat> <function> returns a <string> containing one or more formatting incantations, each of which describes a part of the requested date <format>. The possible incantations are as follows:
+The <dateFormat> <function> returns a <string> containing one or more
+formatting incantations, each of which describes a part of the requested
+date <format>. The possible incantations are as follows:
 
 %a
-Abbreviated weekday name:  the abbreviated day of the week, as reported by the <weekdayNames> function
+Abbreviated weekday name:  the abbreviated day of the week, as reported
+by the <weekdayNames> function
 
 %A
-Full weekday name:  the full day of the week, as reported by the weekdayNames function
+Full weekday name:  the full day of the week, as reported by the
+weekdayNames function
 
 %b
-Abbreviated month name:  the abbreviated month name, as reported by the monthNames function
+Abbreviated month name:  the abbreviated month name, as reported by the
+monthNames function
 
 %B
-Full month name:  the full month name, as reported by the monthNames function
+Full month name:  the full month name, as reported by the monthNames
+function 
 
 %d
 Day of the month:  the day of the month as a number
@@ -44,13 +54,21 @@ Month number:  the number of the month
 Two-digit year:  the year as a two-digit number
 
 %Y
-Four-digit year:  This incantation indicates the year as a four-digit number (including the century)
+Four-digit year:  This incantation indicates the year as a four-digit
+number (including the century)
 
 %w
 Day of the week:  A number between 1 and 7
 
->*Note:* The <dateFormat> differs from other date/time functionality in that the default is to return information relative to the system locale. i.e. the dateFormat is equivalent to the system dateFormat
+>*Note:* The <dateFormat> differs from other date/time functionality in
+> that the default is to return information relative to the system
+> locale. i.e. the dateFormat is equivalent to the system dateFormat
 
-References: string (keyword), long (keyword), english (keyword), short (keyword), system (keyword), abbreviated (keyword), useSystemDate (property), convert (command), monthNames (function), format (function), date (function), weekdayNames (function), return (glossary), function (control_st)
+References: convert (command), function (control structure),
+monthNames (function), format (function), date (function),
+weekdayNames (function), return (glossary), string (keyword),
+long (keyword), english (keyword), short (keyword), system (keyword),
+abbreviated (keyword), useSystemDate (property)
 
 Tags: math
+

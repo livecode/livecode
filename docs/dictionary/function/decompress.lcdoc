@@ -4,18 +4,19 @@ Type: function
 
 Syntax: decompress(<gzippedString>)
 
-Syntax: the decompress of <gzippedString> 
+Syntax: the decompress of <gzippedString>
 
-Summary: <return|Returns> the plain text of a gzip-encoded <string>.
+Summary:
+<return|Returns> the plain text of a gzip-encoded <string>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-decompress(receivedString)
+decompress(tReceivedString)
 
 Example:
 put decompress(it) into URL "file:data.txt"
@@ -24,20 +25,31 @@ Example:
 go stack decompress(URL "binfile:newstuff.gz")
 
 Parameters:
-gzippedString (string): 
-data (string): A string of compressed binary data.
+gzippedString (string):
+A string of compressed binary data.
 
-Returns: The <decompress> <function> <return|returns> a <string>.
+Returns(string):
+The <decompress> <function> <return|returns> a <string>.
 
 Description:
-Use the <decompress> <function(control_st)> to regain the original data that was <compress|compressed>.
+Use the <decompress> <function(control structure)> to regain the
+original data that was <compress|compressed>.
 
-The decompress <function(control_st)> is the <inverse> of the <compress> <function(control_st)>.
+The decompress <function(control structure)> is the <inverse> of the
+<compress> <function(control structure)>.
 
-The uncompressed result is typically about half again the size of the compressed data, although different results may be obtained depending on the amount of data.
+The uncompressed result is typically about half again the size of the
+compressed data, although different results may be obtained depending on
+the amount of data.
 
-For technical information about the format used by the <compress> and <decompress> <function(glossary)|functions>, see [RFC 1952](https://tools.ietf.org/html/rfc1952). The <decompress> <function(control_st)> uses the zlib compression library.
+For technical information about the format used by the <compress> and
+<decompress> <function(glossary)|functions>, see [RFC
+1952](https://tools.ietf.org/html/rfc1952). The <decompress>
+<function(control structure)> uses the zlib compression library.
 
-References: string (keyword), inverse (keyword), base64Decode (function), compress (function), URLDecode (function), compress (glossary), return (glossary), function (glossary), function (control_st)
+References: function (control structure), base64Decode (function),
+compress (function), URLDecode (function), compress (glossary),
+return (glossary), function (glossary), string (keyword),
+inverse (keyword)
 
 Tags: text processing

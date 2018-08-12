@@ -1,18 +1,19 @@
 Name: image
 
+Synonyms: img
+
 Type: object
 
 Syntax: image
 
-Summary: A <control> that contains a <bitmap|bitmapped> picture.
-
-Synonyms: img
+Summary:
+A <control> that contains a <bitmap|bitmapped> picture.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 hide image "Blinking Star"
@@ -21,16 +22,24 @@ Example:
 export image ID 9234 to file "Test Image.jpg"
 
 Description:
-Use the <image> <object type> to hold photographs, icons, and decorative elements, and to allow the user to paint.
+Use the <image> <object type> to hold photographs, icons, and
+decorative elements, and to allow the user to paint.
 
-Each image contains a bitmapped picture, which can either be imported with the import <command> or created using the <paint tool|paint tools>. An <image(keyword)> can display either its own data, or a <file> specified by the <image(object)|image's> <filename> <property>.
+Each image contains a bitmapped picture, which can either be imported 
+with the import <command> or created using the <paint tool|paint
+tools>. An <image(keyword)> can display either its own data, or a <file>
+specified by the <image(object)|image's> <filename> <property>.
 
-An image is contained in a card, group, or background. Images cannot contain other objects.
-
-The image object has a number of properties and messages associated with it. To see a list of messages that can be sent to an image as a result of user actions or internal LiveCode events, open the "LiveCode Language Dictionary" page of the main Documentation window, ensure that the image column is visible and use sort and filter to bring the relevant entries to the top
+An image is contained in a card, group, or background. Images cannot 
+contain other objects.
 
 >*Note:* Animated GIFs cannot be resized in LiveCode.
 
-References: filename (property), imageData (property), resizeQuality (property), templateImage (keyword), file (keyword), image (keyword), control (keyword), image (object), graphic (object), property (glossary), paint tool (glossary), bitmap (glossary), command (glossary), object type (glossary)
+References: property (glossary), paint tool (glossary), bitmap (glossary),
+command (glossary), object type (glossary), templateImage (keyword),
+file (keyword), image (keyword), control (keyword), image (object),
+graphic (object), filename (property), imageData (property),
+resizeQuality (property)
 
 Tags: objects
+

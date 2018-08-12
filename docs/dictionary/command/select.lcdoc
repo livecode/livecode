@@ -2,19 +2,22 @@ Name: select
 
 Type: command
 
-Syntax: select [before | after] {text | <chunk>} of <field> 
+Syntax: select [{before | after}] {text | <chunk>} of <field>
 
 Syntax: select empty
 
-Syntax: select <objectList> 
+Syntax: select <objectList>
 
-Summary: <select|Selects> part of the text of a <field>, or places the <insertion point> in a <field>, or removes the <insertion point>, or <select|Selects> one or more <object|objects>.
+Summary:
+<select|Selects> part of the text of a <field>, or places the <insertion
+point> in a <field>, or removes the <insertion point>, or
+<select|Selects> one or more <object|objects>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 select text of field "output"
@@ -32,25 +35,45 @@ Example:
 select scrollbar "progress" and graphic "background" and field "output"
 
 Parameters:
-chunk: A chunk expression specifying a portion of the field.
-field: A field reference.
-objectList: The objectList consists of one or more object references, separated by the word and.
+chunk:
+A chunk expression specifying a portion of the field.
+
+field:
+A field reference.
+
+objectList:
+The objectList consists of one or more object references, separated by
+the word and.
 
 Description:
-Use the <select> <command> to <select> <object|objects> or text in order to change them, or to deselect all <object|objects> and text.
+Use the <select> <command> to <select> <object|objects> or text in order
+to change them, or to deselect all <object|objects> and text.
 
-If you select text in a field, the field scrolls (if necessary) to show the selected chunk.
+If you select text in a field, the field scrolls (if necessary) to show
+the selected chunk.
 
-Use the select before or select after form to position the insertion point at a particular location in a field.
+Use the select before or select after form to position the insertion
+point at a particular location in a field.
 
-Use the select empty form to deselect all objects and text. To select an object without deselecting any objects that are already selected, use the selected <property> instead of the <select> <command>.
+Use the select empty form to deselect all objects and text. To select an
+object without deselecting any objects that are already selected, use
+the selected <property> instead of the <select> <command>.
 
-To select lines in a list field, set the field's hilitedLine <property> instead of using the <select> <command>.
+To select lines in a list field, set the field's hilitedLine <property>
+instead of using the <select> <command>.
 
-To change the selection in an option menu or combo box use the  property instead of the  command.
+To change the selection in an option menu or combo box use the  property
+instead of the command.
 
-To select text in a field, the field's traversalOn <property> must be set to true.
+To select text in a field, the field's traversalOn <property> must be
+set to true.
 
-References: selectGroupedControls (property), openField (message), selectionChanged (message), intersect (keyword), field (keyword), select (glossary), insertion point (glossary), property (glossary), command (glossary), selectedLoc (function), selectedChunk (function), hilite (command), focus (command), select (command), delete (command), copy (command), object (object)
+References: hilite (command), focus (command), select (command),
+delete (command), copy (command), selectedLoc (function),
+selectedChunk (function), select (glossary), insertion point (glossary),
+property (glossary), command (glossary), object (glossary),
+intersect (keyword), field (keyword), openField (message),
+selectionChanged (message), selectGroupedControls (property)
 
 Tags: ui
+

@@ -4,33 +4,57 @@ Type: property
 
 Syntax: set the cantModify of <stack> to { true | false }
 
-Summary: Specifies whether the user can make changes to a <stack>.
+Summary:
+Specifies whether the user can make changes to a <stack>.
 
 Associations: stack
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the cantModify of stack "Help" to true
 
-Value (bool):The <cantModify> of a stack is true or false.
-By default, the <cantModify> <property> of newly created <stacks> is set to false.
+Value (bool):
+The <cantModify> of a stack is true or false.
+By default, the <cantModify> <property> of newly created <stacks> is set
+to false.
 
 Description:
-Use the <cantModify> <property> to protect the <object|objects> in a <stack> from changes.
+Use the <cantModify> <property> to protect the <object|objects> in a
+<stack> from changes.
 
-If a stack's <cantModify> <property> is set to true, the user cannot choose any <tool> except the <Browse tool>. This prevents the user from moving, resizing, creating, or deleting <object|objects>.
+If a stack's <cantModify> <property> is set to true, the user cannot
+choose any <tool> except the <Browse tool>. This prevents the user from
+moving, resizing, creating, or deleting <object|objects>.
 
-If a stack's <cantModify> is false and its <label> <property> is empty, an asterisk (*) appears in the <stack|stack's> <title bar>, indicating that the <stack> can be modified.
+If a stack's <cantModify> is false and its <label> <property> is empty,
+an asterisk (*) appears in the <stack|stack's> <title bar>, indicating
+that the <stack> can be modified.
 
-The <cantModify> <property> restricts user actions, but does not affect actions performed by a <handler>. To prevent either user action or a <handler> from deleting a <card>, <group>, or <stack>, use the <cantDelete> <property>.
+The <cantModify> <property> restricts user actions, but does not affect
+actions performed by a <handler>. To prevent either user action or a
+<handler> from deleting a <card>, <group>, or <stack>, use the
+<cantDelete> <property>.
 
->*Important:*  If a modifiable <stack> is open in an <editable window>, the modifiable <stack> takes precedence over any non-modifiable stacks, because its <modeproperty> is lower. This means that menu items (such as Object menu<img src="202656"/>Stack Properties) that act on the current s may not be able to operate correctly with a stack whose cantModify is set to true as long as another, modifiable stack is open.
+>*Important:*  If a modifiable <stack> is open in an <editable window>,
+> the modifiable <stack> takes precedence over any non-modifiable
+> stacks, because its <mode> <property> is lower. This means that menu
+> items (such as Object → Stack Properties) that act on the current
+> stack may not be able to operate correctly with a stack whose
+> cantModify is set to true as long as another, modifiable stack is
+> open. 
 
-References: modeproperty (property), cantDelete (property), userLevel (property), lockText (property), label (property), userModify (property), mode (property), card (keyword), topLevel (command), group (command), stack (object), object (object), tool (function), stacks (function), property (glossary), Browse tool (glossary), title bar (glossary), handler (glossary), editable window (glossary)
+References: topLevel (command), group (command), tool (function),
+stacks (function), object (glossary), property (glossary),
+Browse tool (glossary), title bar (glossary), handler (glossary),
+editable window (glossary), card (keyword), stack (object),
+cantDelete (property), userLevel (property),
+lockText (property), label (property), userModify (property),
+mode (property)
 
 Tags: ui
+

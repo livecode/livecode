@@ -14,6 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "foundation.h"
 #include "osxprefix.h"
 
 #include "globdefs.h"
@@ -61,17 +62,23 @@ bool MCSystemCanDeleteFile(MCStringRef p_file)
 	MCAutoStringRef t_resolved_file_str;
 	MCS_resolvepath(p_file, &t_resolved_file_str);
     
-    MCAutoStringRefAsUTF8String t_resolved_file;
-    /* UNCHECKED */ t_resolved_file.Lock(*t_resolved_file_str);
-	
-	// Now get the folder.
-	if (strrchr(*t_resolved_file, '/') == nil)
-		return false;
-	
-	strrchr(*t_resolved_file, '/')[0] = '\0';
-	
+    uindex_t t_last_slash;
+    if (!MCStringLastIndexOfChar(*t_resolved_file_str, '/',
+                                    UINDEX_MAX,
+                                    kMCStringOptionCompareExact,
+                                    t_last_slash))
+        return false;
+    
+    MCAutoStringRef t_folder;
+    if (!MCStringCopySubstring(*t_resolved_file_str,
+                               MCRangeMake(0, t_last_slash), &t_folder))
+        return false;
+    
+    MCAutoStringRefAsUTF8String t_folder_cstring;
+    /* UNCHECKED */ t_folder_cstring.Lock(*t_folder);
+    
 	struct stat t_stat;
-	if (stat(*t_resolved_file, &t_stat) != 0)
+	if (stat(*t_folder_cstring, &t_stat) != 0)
 		return false;
 	
 	// Check for user 'write' bit.

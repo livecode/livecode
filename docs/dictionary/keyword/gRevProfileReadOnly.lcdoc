@@ -4,35 +4,50 @@ Type: keyword
 
 Syntax: gRevProfileReadOnly
 
-Summary: A special <global|global variable> that specifies whether to save changes to the current <property profile|profile> when you switch <property profile|profiles>.
+Summary:
+A special <global|global variable> that specifies whether to save
+changes to the current <property profile|profile> when you switch
+<property profile|profiles>.
+
+Associations: profile library
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web
+Platforms: desktop, server, mobile
 
 Example:
 global gRevProfileReadOnly
-
-Example:
 if gRevProfileReadOnly is false then switchToLargeFonts
 
 Description:
-Set the <gRevProfileReadOnly> <variable> to false when configuring a <property profile|profile>, so that changes you make to an <object|object's> <properties> are saved in the current <property profile|profile>.
+Set the <gRevProfileReadOnly> <variable> to false when configuring a
+<property profile|profile>, so that changes you make to an
+<object|object's> <properties> are saved in the current <property
+profile|profile>. 
 
-Each object can have one or more profiles, which include settings for each property in the object's properties <property>. The <gRevProfileReadOnly> <variable> controls what happens when you set an <object|object's> <property profile|profile>, make changes to its <properties>, then switch to a different <property profile|profile>.
+Each object can have one or more profiles, which include settings for
+each property in the object's properties <property>. The
+<gRevProfileReadOnly> <variable> controls what happens when you set an
+<object|object's> <property profile|profile>, make changes to its
+<properties>, then switch to a different <property profile|profile>.
 
-If this global variable is false, the profile is re-saved when you switch profiles, and any property changes you've made are saved in the profile. If it's true, the profile isn't saved when you switch to another profile.
+If this global variable is false, the profile is re-saved when you
+switch profiles, and any property changes you've made are saved in the
+profile. If it's true, the profile isn't saved when you switch to
+another profile.
 
-The <gRevProfileReadOnly> <global|global variable> can also be changed in the Preferences dialog box:
+The <gRevProfileReadOnly> <global|global variable> can also be changed
+in the Preferences dialog box:
 
-1. Choose <a/>Edit menu<img src="202656"/>Preferences<important/>.
-
+1. Choose LiveCode → Preferences from the menubar.
 2. Choose "Property Profiles" from the menu at the top.
+3. Click "Don't save settings when switching profiles".
 
-3. Click "Don't save changes in profile".
 
-References: properties (property), answer (command), ask (command), object (object), property (glossary), variable (glossary), property profile (glossary), global (glossary)
+References: answer (command), ask (command), object (glossary),
+property (glossary), variable (glossary), property profile (glossary),
+global (glossary), properties (property), Profile library (library)
 
 Tags: windowing

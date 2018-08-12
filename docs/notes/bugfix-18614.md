@@ -1,0 +1,1 @@
+# Fix Linux player crash when accessing properties

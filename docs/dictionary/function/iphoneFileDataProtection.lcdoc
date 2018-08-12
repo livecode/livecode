@@ -2,9 +2,10 @@ Name: iphoneFileDataProtection
 
 Type: function
 
-Syntax: iphoneFileDataProtection <filename> 
+Syntax: iphoneFileDataProtection (<filename>)
 
-Summary: Retrieves the data protection level of a file.
+Summary:
+Retrieves the data protection level of a file.
 
 Introduced: 5.5.1
 
@@ -13,22 +14,33 @@ OS: ios
 Platforms: mobile
 
 Example:
-if iphoneFileDataProtection() is "none" then
+if iphoneFileDataProtection(tFile) is "none" then
    iphoneSetFileDataProtection tFile, "complete"
 end if
 
 Parameters:
-filename (string): A string containing the path to the file.
+filename (string):
+A string containing the path to the file.
 
 Returns (enum):
-- none:
-- complete:
-- complete unless open: (iOS 5 and later only)
-- complete until first user authentication: (iOS 5 and later only)
+
+- "empty": The file was not accessible or argument not specified.
+- "none": No protection.
+- "complete": The file is not accessible, for read or write, while the device is locked.
+- "complete unless open": The file is fully protected when the device is locked, unless it was already open.
+- "complete until first user authentication": The file is fully protected until the user unlocks the device for this first time.
+
 
 Description:
-Use the <iphoneFileDataProtection> function to query the current level of protection of a particular file set using the command <iphoneSetFileDataProtection>.
+Use the <iphoneFileDataProtection> function to query the current level
+of protection of a particular file set using the command
+<iphoneSetFileDataProtection>. 
 
-References: iphoneSetFileDataProtection (command), iphoneSetDoNotBackupFile (command), iphoneFileDataProtection (function), iphoneDoNotBackupFile (function), protectedDataWillBecomeUnavailable (message), protectedDataDidBecomeAvailable (message)
+References: iphoneSetFileDataProtection (command),
+iphoneSetDoNotBackupFile (command), iphoneFileDataProtection (function),
+iphoneDoNotBackupFile (function),
+protectedDataWillBecomeUnavailable (message),
+protectedDataDidBecomeAvailable (message)
 
 Tags: ui
+

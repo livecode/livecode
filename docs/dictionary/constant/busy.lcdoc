@@ -4,36 +4,59 @@ Type: constant
 
 Syntax: busy
 
-Summary: Equivalent to the number 6.
+Summary:
+Equivalent to the number 6.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the cursor to busy
 
 Description:
-Use the <busy> <constant> to set the <cursor(property)> to a rotating beachball shape, suitable for showing the progress of lengthy operations.
+Use the <busy> <constant> to set the <cursor(property)> to a rotating
+beachball shape, suitable for showing the progress of lengthy
+operations. 
 
-The <busy> <cursor(property)> is a rotating beach ball. Each time you use the statement set the cursor to busy, the beach ball advances in its rotation. For example, the following statements cause the <cursor(property)> to appear to spin as long as the <repeat> <loop> is running:
+The <busy> <cursor(property)> is a rotating beach ball. Each time you
+use the statement set the cursor to busy, the beach ball advances in its
+rotation. For example, the following statements cause the
+<cursor(property)> to appear to spin as long as the <repeat> <loop>
+is running:
 
-  repeat until someCondition is true
-    set the cursor to busy -- spins a bit further
-    doSomething -- insert whatever you want the loop to do here
-  end repeat
+    repeat until someCondition is true
+        set the cursor to busy -- spins a bit further
+        doSomething -- insert whatever you want the loop to do here
+    end repeat
+
 
 The following two statements are equivalent:
 
-  set the cursor to busy
-  set the cursor to 6
+    set the cursor to busy
+    set the cursor to 6
+
 
 However, the first is easier to read and understand in LiveCode.
 
->*Important:*  If you use the <busy> <cursor(property)> or other standard <cursor(glossary)|cursors> in your application, you must include it when you create your <standalone application|standalone>. Make sure the "Cursors" option on the Inclusions section on the General screen of the <Standalone Application Settings> window is checked.
+>*Important:*  If you use the <busy> <cursor(property)> or other
+> standard <cursor(glossary)|cursors> in your application, you must
+> include it when you create your <standalone application|standalone>.
+> Make sure the "Cursors" option on the Inclusions section on the
+> General screen of the <Standalone Application Settings> window is
+> checked.
 
-References: cursor (property), watch (constant), six (constant), constant (command), repeat (control_st), Standalone Application Settings (glossary), cursor (glossary), standalone application (glossary), loop (glossary)
+>*Note:*  This does not bring up the busy symbol on mobile devices.
+> To bring up the busy indicator on Android or iOS use
+> the <mobileBusyIndicatorStart> command.
+
+References: constant (command), mobileBusyIndicatorStart (command),
+watch (constant), six (constant),
+repeat (control structure), Standalone Application Settings (glossary),
+cursor (glossary), standalone application (glossary), loop (glossary),
+cursor (property)
 
 Tags: ui
+

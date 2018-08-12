@@ -7,6 +7,7 @@ Type: glossary
 Description:
 The set of all colors used in an <image>.
 
-References: image (object)
+References: image (glossary)
 
 Tags: ui
+

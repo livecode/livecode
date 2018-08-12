@@ -93,7 +93,7 @@ struct MCSystemFileHandle
 	virtual int64_t Tell(void) = 0;
 	
 	virtual void *GetFilePointer(void) = 0;
-	virtual int64_t GetFileSize(void) = 0;
+	virtual uint64_t GetFileSize(void) = 0;
     
     virtual bool TakeBuffer(void*& r_buffer, size_t& r_length) = 0;
 
@@ -188,7 +188,7 @@ public:
 		// If there isn't enough room, extend
 		if (m_pointer + p_length > m_capacity)
 		{
-			uint32_t t_new_capacity;
+			size_t t_new_capacity;
 			t_new_capacity = (m_pointer + p_length + 4096) & ~4095;
 			
 			void *t_new_buffer;
@@ -249,7 +249,7 @@ public:
 		return m_pointer;
 	}
 	
-	int64_t GetFileSize(void)
+	uint64_t GetFileSize(void)
 	{
 		return m_length;
 	}
@@ -394,7 +394,7 @@ public:
 		return m_callbacks -> tell(m_state);
 	}
 	
-	int64_t GetFileSize(void)
+	uint64_t GetFileSize(void)
 	{
 		return 0;
 	}
@@ -536,14 +536,9 @@ struct MCSystemInterface
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
 	virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name) = 0;
 	
-	virtual MCSysModuleHandle LoadModule(MCStringRef p_path) = 0;
-	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol) = 0;
-	virtual void UnloadModule(MCSysModuleHandle p_module) = 0;
-	
 	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context) = 0;
     
     // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
-	virtual bool GetExecutablePath(MCStringRef& r_path) = 0;
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native) = 0;
 	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path) = 0;
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;

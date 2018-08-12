@@ -1,6 +1,6 @@
 Name: EOF
 
-Synonyms: end-of-file,end of file,EOF
+Synonyms: end-of-file, end of file, eof
 
 Type: glossary
 
@@ -10,3 +10,4 @@ End of file. The last <character> in a <file>.
 References: character (glossary), file (glossary)
 
 Tags: file system
+

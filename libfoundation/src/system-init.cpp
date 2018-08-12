@@ -23,12 +23,14 @@ MCSInitialize(void)
 	return
 		__MCSCommandLineInitialize() &&
 		__MCSFileInitialize() &&
-		__MCSStreamInitialize();
+		__MCSStreamInitialize() &&
+        __MCSLibraryInitialize();
 }
 
 MC_DLLEXPORT_DEF void
 MCSFinalize(void)
 {
+    __MCSLibraryFinalize();
 	__MCSStreamFinalize();
 	__MCSFileFinalize();
 	__MCSCommandLineFinalize();

@@ -4,13 +4,15 @@ Type: function
 
 Syntax: within(<object>, <point>)
 
-Summary: <return|Returns> true if a <point> is within an <object>, false if not.
+Summary:
+<return|Returns> true if a <point> is within an <object(glossary)>,
+false if not.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,web,mobile
+Platforms: desktop, mobile
 
 Example:
 within(scrollbar ID 3,"33,40")
@@ -19,30 +21,63 @@ Example:
 within(field "News Items",the clickLoc)
 
 Parameters:
-object: Any object reference.
-point: Any expression that evaluates to a point--a vertical and horizontal distance from the top left of the current stack, separated by a comma. (If the object is a stack, the distance is from the top left of the screen.)
+object:
+Any object reference.
 
-Returns: The <within> <function> <return|returns> true or false.
+point:
+Any expression that evaluates to a point--a vertical and horizontal
+distance from the top left of the current stack, separated by a comma.
+(If the object is a stack, the distance is from the top left of the
+screen.) 
+
+Returns:
+The <within> <function> <return|returns> true or false.
 
 Description:
-Use the <within> function to determine whether a <point> is inside the specified <object>.
+Use the <within> function to determine whether a <point> is inside the
+specified <object(glossary)>.
 
-If the <point> is within the clickable area of the <object>, the <within> <function> <return|returns> true, even if another <object> is layered on top of the <object>.
+If the <point> is within the clickable area of the <object(glossary)>,
+the <within> <function> <return|returns> true, even if another
+<object(glossary)> is layered on top of the <object(glossary)>.
 
-If the <object> is a <graphic(keyword)>, its interior is considered to be within the <graphic(keyword)> only if the <graphic(object)|graphic's> <filled> <property> is true or the <graphic(keyword)> is <selected>.
+If the <object(glossary)> is a <graphic(keyword)>, its interior is
+considered to be within the <graphic(keyword)> only if the
+<graphic(object)|graphic's> <filled> <property> is true or the
+<graphic(keyword)> is <selected>.
 
-If the <object> is an <image(keyword)>, only <pixels> that contain paint are considered to be within the <image(keyword)>. Transparent parts of the <image(keyword)> are not within the <image(keyword)>, although they are within the <image(object)|image's> <rectangle>.
+If the <object(glossary)> is an <image(keyword)>, only <pixels> that
+contain paint are considered to be within the <image(keyword)>.
+Transparent parts of the <image(keyword)> are not within the
+<image(keyword)>, although they are within the <image(object)|image's>
+<rectangle>. 
 
-If the <object> is a <button(keyword)> whose <menuMode> is "tabbed", only the tabs are considered to be within the button. The area below the tabs is not within the <button(keyword)>, although it is within the <button(object)|button's> <rectangle>.
+If the <object(glossary)> is a <button(keyword)> whose <menuMode> is
+"tabbed", only the tabs are considered to be within the button. The area
+below the tabs is not within the <button(keyword)>, although it is
+within the <button(object)|button's> <rectangle>.
 
-If the <object> is a <stack>, the <within> <function> <return|returns> true if the <point> is in the <stack|stack's> content area, and false if the <point> is in the <stack|stack's> <title bar> or borders.
+If the <object(glossary)> is a <stack>, the <within> <function>
+<return|returns> true if the <point> is in the <stack|stack's> content
+area, and false if the <point> is in the <stack|stack's> <title bar> or
+borders. 
 
 The expression
-<point> is within the rect of <object> 
+<point> is within the rect of <object(glossary)> 
 is equivalent to
-  within(<object>, <point>)
-unless the <object> <a/> is a graphic or image, or a tabbed button.
 
-References: filled (property), menuMode (property), pixels (property), selected (property), is not within (operator), is within (operator), button (keyword), image (keyword), rectangle (keyword), point (keyword), graphic (keyword), property (glossary), return (glossary), title bar (glossary), intersect (function), mouseControl (function), button (object), image (object), object (object), stack (object), graphic (object), function (control_st)
+    within(<object(glossary)>, <point>)
+
+unless the <object(glossary)> <a/> is a graphic or image, or a tabbed
+button. 
+
+References: function (control structure), intersect (function),
+mouseControl (function), property (glossary), return (glossary),
+title bar (glossary), object (glossary), button (keyword),
+image (keyword), rectangle (keyword), point (keyword), graphic (keyword),
+button (object), image (object), stack (object), graphic (object),
+is not within (operator), is within (operator), filled (property),
+menuMode (property), pixels (property), selected (property)
 
 Tags: ui
+

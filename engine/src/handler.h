@@ -46,7 +46,6 @@ class MCHandler
 	MCVariable **vars;
 	MCVariable **globals;
 	MCContainer **params;
-	MCParameter *paramlist;
 	MCHandlerVarInfo *vinfo;
 	MCHandlerParamInfo *pinfo;
 	MCHandlerConstantInfo *cinfo;
@@ -82,24 +81,13 @@ public:
 		return name;
 	}
 	
-	const char *getname_cstring(void)
-	{
-        char *t_name;
-        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(name), t_name);
-		return t_name;
-	}
-	
 	bool hasname(MCNameRef other_name)
 	{
-		return MCNameIsEqualTo(name, other_name, kMCCompareCaseless);
+		return MCNameIsEqualToCaseless(name, other_name);
 	}
 
 	Parse_stat parse(MCScriptPoint &sp, Boolean isprop);
-#ifdef LEGACY_EXEC
-	Exec_stat exec(MCExecPoint &, MCParameter *);
-#endif
     Exec_stat exec(MCExecContext &, MCParameter *);
-	void compile(MCSyntaxFactoryRef factory);
 	
     MCVariable *getvar(uint2 index, Boolean isparam);
     MCContainer *getcontainer(uint2 index, Boolean isparam);
@@ -112,13 +100,14 @@ public:
 	Parse_stat newconstant(MCNameRef name, MCValueRef value);
 	void newglobal(MCNameRef name);
 	bool getparamnames(MCListRef& r_list);
+	bool getparamnames_as_properlist(MCProperListRef& r_list);
 	bool getvariablenames(MCListRef& r_list);
-	bool getglobalnames(MCListRef& r_list);
-	bool getvarnames(bool p_all, MCListRef& r_list);
-#ifdef LEGACY_EXEC
-	Exec_stat getvarnames(MCExecPoint &, Boolean all);
-#endif
-	//Exec_stat eval(MCExecPoint &);
+    bool getvariablenames_as_properlist(MCProperListRef& r_list);
+    bool getglobalnames(MCListRef& r_list);
+    bool getglobalnames_as_properlist(MCProperListRef& r_list);
+    bool getvarnames(bool p_all, MCListRef& r_list);
+    bool getconstantnames_as_properlist(MCProperListRef& r_list);
+    //Exec_stat eval(MCExecPoint &);
     uint4 linecount();
 
 	// Used by the externals API, this method returns the current incarnation of
@@ -162,12 +151,6 @@ public:
 	{
 		r_vars = vars;
 		r_var_count = nvnames;
-	}
-	
-	void getparamlist(MCContainer**& r_vars, uint32_t& r_param_count)
-	{
-		r_vars = params;
-		r_param_count = npnames;
 	}
 	
 	void getgloballist(MCVariable**& r_vars, uint32_t& r_var_count)

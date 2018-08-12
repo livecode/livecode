@@ -2,17 +2,18 @@ Name: byteToNum
 
 Type: function
 
-Syntax: the byteToNum of <byte> 
+Syntax: the byteToNum of <byte>
 
 Syntax: byteToNum(<byte>)
 
-Summary: Returns the numeric value of a byte.
+Summary:
+Returns the numeric value of a byte.
 
 Introduced: 4.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 byteToNum(byte 1 of tString)
@@ -21,18 +22,24 @@ Example:
 if byteToNum(nextByte) = 0 then next repeat
 
 Example:
-numToByte(byteToNum("Z")) <a name="code tag=">-- returns Z</a>
+numToByte(byteToNum("Z")) -- returns Z
 
 Parameters:
-byte: Any <expression> that evaluates to a byte. If you specify a <string> containing more than one byte, all bytes but the first are ignored.
+byte:
+Any <expression> that evaluates to a byte. If you specify a <string>
+containing more than one byte, all bytes but the first are ignored.
 
-Returns: The <byteToNum> <function> returns an <integer> between zero and 255.
+Returns:
+The <byteToNum> <function> returns an <integer> between zero and 255.
 
 Description:
 Converts a single byte to a numeric value in the range 0-255
 
 The <byteToNum> function is the inverse of the <numToByte> function.
 
-References: integer (keyword), md5Digest (function), charToNum (function), numToByte (function), numToChar (function), function (control_st)
+References: function (control structure), md5Digest (function),
+charToNum (function), numToByte (function), numToChar (function),
+integer (keyword)
 
 Tags: text processing
+

@@ -1,18 +1,18 @@
 Name: group
 
+Synonyms: grp, background, bkgnd, bg
+
 Type: object
 
 Syntax: group
 
-Summary: A <control(keyword)> that contains other <control(object)|controls>.
-
-Synonyms: grp,background,bkgnd,bg
-
+Summary:
+A <control(keyword)> that contains other <control(glossary)|controls>.
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the showBorder of last group to true
@@ -21,16 +21,28 @@ Example:
 create group "Options"
 
 Description:
-Use the <group> <object type> to hold sets of <control|controls>, <radio button|radio-button clusters>, <menu bar|menu bars>, and <control|controls> to be displayed on more than one <card>.
+Use the <group> <object type> to hold sets of <control|controls>, 
+<radio button|radio-button clusters>, <menu bar|menu bars>, and 
+<control|controls> to be displayed on more than one <card>.
 
-A group is a set of controls that has been made into a single control. You can select, move, resize, or copy the group, and all the controls in it come with the group. You can show a border around the group (using its border <property>), a label (using the <showName> <property>), or <scrollbar|scrollbars>.
+A group is a set of controls that has been made into a single control. 
+You can select, move, resize, or copy the group, and all the controls
+in it come with the group. You can show a border around the group (using
+its border <property>), a label (using the <showName> <property>), or 
+<scrollbar|scrollbars>.
 
 Groups can contain any type of control (including other nested groups).
 
-When referring to a group using the synonyms background, bkgnd, or bg, the reference is to one among the groups in a stack, rather than to one among the groups on a card. For example, the object reference background 1 indicates the first group in the current stack, not the lowest-layered group on the current card.
+When referring to a group using the synonyms background, bkgnd, or bg, 
+the reference is to one among the groups in a stack, rather than to one 
+among the groups on a card. For example, the object reference
+background 1 indicates the first group in the current stack, not the
+lowest-layered group on the current card.
 
-The group object has a number of properties and messages associated with it. To see a list of messages that can be sent to a group as a result of user actions or internal LiveCode events, open the "LiveCode Language Dictionary" page of the main Documentation window, ensure that the group column is visible and use sort and filter to bring the relevant entries to the top
-
-References: card (keyword), control (keyword), templateGroup (keyword), showName (property), scrollbar (object), control (object), property (glossary), radio button (glossary), menu bar (glossary), object type (glossary)
+References: property (glossary), radio button (glossary),
+menu bar (glossary), object type (glossary), card (keyword),
+control (glossary), templateGroup (keyword), scrollbar (object),
+control (object), showName (property)
 
 Tags: objects
+

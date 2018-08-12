@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "hndlrlst.h"
 #include "handler.h"
 #include "scriptpt.h"
@@ -149,9 +149,9 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	while (tptr != NULL)
 	{
         // AL-2014-08-20: [[ ArrayElementRefParams ]] Use containers for potential reference parameters
-        MCContainer *t_container;
-        if (tptr -> evalcontainer(ctxt, t_container))
-            tptr -> set_argument_container(t_container);
+        MCAutoPointer<MCContainer> t_container = new (nothrow) MCContainer;
+        if (tptr -> evalcontainer(ctxt, **t_container))
+            tptr -> set_argument_container(t_container.Release());
         else
         {
             tptr -> clear_argument();
@@ -176,19 +176,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 		added = True;
 	}
     
-    if (global_handler)
-    {
-        if (!MCRunGlobalHandler(name, params, stat))
-            stat = ES_NOT_HANDLED;
-		
-		// AL-2014-03-14: Currently no mobile handler's execution is halted when ES_ERROR
-		//  is returned. Error info is returned via the result.
-#ifdef _MOBILE
-		if (stat != ES_NOT_HANDLED)
-			stat = ES_NORMAL;
-#endif
-    }
-	else if (handler != nil)
+    if (handler != nil)
 	{
         // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
         //   parent, then use a special method.
@@ -202,7 +190,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
             case ES_ERROR:
             case ES_PASS:
                 MCeerror->add(is_function ? EE_FUNCTION_BADFUNCTION : EE_STATEMENT_BADCOMMAND, line, pos, handler -> getname());
-                if (MCerrorptr == NULL)
+                if (!MCerrorptr)
                     MCerrorptr = p;
                 stat = ES_ERROR;
                 break;
@@ -219,7 +207,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	{
 		stat = MCU_dofrontscripts(is_function ? HT_FUNCTION : HT_MESSAGE, name, params);
 		Boolean olddynamic = MCdynamicpath;
-		MCdynamicpath = MCdynamiccard != NULL;
+		MCdynamicpath = MCdynamiccard.IsValid();
 		if (stat == ES_PASS || stat == ES_NOT_HANDLED)
         {
             if (is_function)
@@ -238,8 +226,11 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
                     case ES_NOT_FOUND:
                     case ES_NOT_HANDLED:
                     case ES_PASS:
-                        MCeerror->add(EE_STATEMENT_BADCOMMAND, line, pos, name);
-                        stat = ES_ERROR;
+                        if (!global_handler)
+                        {
+                            MCeerror->add(EE_STATEMENT_BADCOMMAND, line, pos, name);
+                            stat = ES_ERROR;
+                        }
                         break;
                     case ES_EXIT_HANDLER:
                         stat = ES_NORMAL;
@@ -247,6 +238,19 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
                     default:
                         break;
                 }
+            }
+            
+            if (global_handler && (stat == ES_NOT_FOUND || stat == ES_NOT_HANDLED))
+            {
+                if (!MCRunGlobalHandler(name, params, stat))
+                    stat = ES_NOT_HANDLED;
+                
+                // AL-2014-03-14: Currently no mobile handler's execution is halted when ES_ERROR
+                //  is returned. Error info is returned via the result.
+#ifdef _MOBILE
+                if (stat != ES_NOT_HANDLED)
+                    stat = ES_NORMAL;
+#endif
             }
         }
 		
@@ -737,8 +741,11 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                 
                 if (tspr == NULL && state != TS_FINALLY)
                 {
-                    if (state == TS_CATCH)
-                        MCeerror->clear();
+                    // Everything has executed normally but there may have been an
+                    // error added on another event. The trylock needs refactoring to
+                    // ensure a trylock on one event can't cause issues in another
+                    // event.
+                    MCeerror->clear();
                     
                     tspr = finallystatements;
                     state = TS_FINALLY;
@@ -774,7 +781,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                             {
                                 MCAutoStringRef t_error;
                                 MCeerror -> copyasstringref(&t_error);
-                                errorvar->evalvar(ctxt)->setvalueref(*t_error);
+                                errorvar->set(ctxt, *t_error);
                             }
                             
                             // MW-2007-09-04: At this point we need to clear the execution error
@@ -804,13 +811,16 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
             case ES_PASS:
                 if (state == TS_CATCH)
                 {
+                    MCAutoValueRef t_value;
                     MCAutoStringRef t_string;
-                    if (ctxt . ConvertToString(errorvar->evalvar(ctxt)->getvalueref(), &t_string))
+                    if ((errorvar->eval(ctxt, &t_value), !ctxt.HasError()) &&
+                        ctxt . ConvertToString(*t_value, &t_string))
                     {
                         MCeerror->copystringref(*t_string, False);
-                        MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
-                        stat = ES_ERROR;
                     }
+                    
+                    MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
+                    stat = ES_ERROR;
                 }
             default:
                 if (state == TS_FINALLY)

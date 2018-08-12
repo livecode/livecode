@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -56,6 +56,7 @@ class MCiOSInputControl;
 	MCiOSInputControl *m_instance;
 	bool m_didchange_pending;
 	bool m_return_pressed;
+    NSUInteger m_max_text_length;
 }
 
 - (id)initWithInstance:(MCiOSInputControl*)instance view:(UIView *)view;
@@ -67,6 +68,9 @@ class MCiOSInputControl;
 
 - (BOOL)isDidChangePending;
 - (void)setDidChangePending: (BOOL)pending;
+
+- (NSUInteger)getMaxTextLength;
+- (void)setMaxTextLength: (NSUInteger)p_length;
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string;
 - (BOOL)textFieldShouldReturn: (UITextField *)p_field;
@@ -106,11 +110,6 @@ protected:
     
 public:
 	MCiOSInputControl(void);
-#ifdef LEGACY_EXEC
-	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep);
-	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);	
-    virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
-#endif	
     
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
@@ -170,25 +169,23 @@ protected:
     
 public:
 	virtual MCNativeControlType GetType(void);
-#ifdef LEGACY_EXEC	
-	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep);
-	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);
-#endif
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetAutoFit(MCExecContext& ctxt, bool p_value);
     void SetMinimumFontSize(MCExecContext& ctxt, integer_t p_size);
+    void SetMaximumTextLength(MCExecContext& ctxt, uinteger_t p_length);
     void SetAutoClear(MCExecContext& ctxt, bool p_value);
     void SetClearButtonMode(MCExecContext& ctxt, MCNativeControlClearButtonMode p_mode);
     void SetBorderStyle(MCExecContext& ctxt, MCNativeControlBorderStyle p_style);
     
     void GetAutoFit(MCExecContext& ctxt, bool& r_value);
     void GetMinimumFontSize(MCExecContext& ctxt, integer_t& r_size);
+    void GetMaximumTextLength(MCExecContext& ctxt, uinteger_t& r_length);
     void GetAutoClear(MCExecContext& ctxt, bool& r_value);
     void GetClearButtonMode(MCExecContext& ctxt, MCNativeControlClearButtonMode& r_mode);
     void GetBorderStyle(MCExecContext& ctxt, MCNativeControlBorderStyle& r_style);
-	
+    
 protected:
 	virtual UIView *CreateView(void);
 	virtual void DeleteView(UIView *view);
@@ -214,12 +211,6 @@ public:
 	}
 	
 	virtual MCNativeControlType GetType(void);
-#ifdef LEGACY_EXEC	
-	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep);
-	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);
-	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
-#endif
-
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 	virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
@@ -366,9 +357,9 @@ static MCNativeControlEnumEntry s_contenttype_enum[] =
 
 static MCNativeControlEnumEntry s_textalign_enum[] =
 { 
-	{"left", UITextAlignmentLeft},
-	{"right", UITextAlignmentRight},
-	{"center", UITextAlignmentCenter},
+	{"left", NSTextAlignmentLeft},
+	{"right", NSTextAlignmentRight},
+	{"center", NSTextAlignmentCenter},
 	{nil, 0}
 };
 
@@ -456,6 +447,7 @@ MCPropertyInfo MCiOSInputFieldControl::kProperties[] =
 {
     DEFINE_RW_CTRL_PROPERTY(P_AUTO_FIT, Bool, MCiOSInputFieldControl, AutoFit)
     DEFINE_RW_CTRL_PROPERTY(P_MINIMUM_FONT_SIZE, Int32, MCiOSInputFieldControl, MinimumFontSize)
+    DEFINE_RW_CTRL_PROPERTY(P_MAXIMUM_TEXT_LENGTH, UInt32, MCiOSInputFieldControl, MaximumTextLength)
     DEFINE_RW_CTRL_PROPERTY(P_AUTO_CLEAR, Bool, MCiOSInputFieldControl, AutoClear)
     DEFINE_RW_CTRL_ENUM_PROPERTY(P_CLEAR_BUTTON_MODE, NativeControlClearButtonMode, MCiOSInputFieldControl, ClearButtonMode)
     DEFINE_RW_CTRL_ENUM_PROPERTY(P_BORDER_STYLE, NativeControlBorderStyle, MCiOSInputFieldControl, BorderStyle)
@@ -569,9 +561,16 @@ void MCiOSInputControl::SetText(MCExecContext& ctxt, MCStringRef p_string)
     
     if (t_field)
     {
+        NSUInteger t_max_length;
+        t_max_length =  m_delegate.getMaxTextLength;
+        
         NSString *t_string;
-        t_string = [NSString stringWithMCStringRef: p_string];
-        [t_field setText: t_string];
+        t_string = MCStringConvertToAutoreleasedNSString(p_string);
+        
+        if (t_string.length > t_max_length)
+            [t_field setText: [t_string substringToIndex:t_max_length]];
+        else
+            [t_field setText: t_string];
     }
 }
 
@@ -596,7 +595,7 @@ void MCiOSInputControl::SetFontName(MCExecContext& ctxt, MCStringRef p_font)
     if (t_field)
     {
         NSString *t_string;
-        t_string = [NSString stringWithMCStringRef: p_font];
+        t_string = MCStringConvertToAutoreleasedNSString(p_font);
         [t_field setFont: [UIFont fontWithName: t_string size: [[t_field font] pointSize]]];
     }
 }
@@ -629,18 +628,18 @@ void MCiOSInputControl::SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTe
     
     if (t_field)
     {
-        UITextAlignment t_align;
+        NSTextAlignment t_align;
         
         switch (p_align)
         {
             case kMCNativeControlInputTextAlignCenter:
-                t_align = UITextAlignmentCenter;
+                t_align = NSTextAlignmentCenter;
                 break;
             case kMCNativeControlInputTextAlignLeft:
-                t_align = UITextAlignmentLeft;
+                t_align = NSTextAlignmentLeft;
                 break;
             case kMCNativeControlInputTextAlignRight:
-                t_align = UITextAlignmentRight;
+                t_align = NSTextAlignmentRight;
                 break; 
         }
         [t_field setTextAlignment: t_align];
@@ -848,7 +847,7 @@ void MCiOSInputControl::GetText(MCExecContext& ctxt, MCStringRef& r_string)
     
     if (t_field)
     {
-        if (MCStringCreateWithCFString((CFStringRef)[t_field text], r_string))
+        if (MCStringCreateWithCFStringRef((CFStringRef)[t_field text], r_string))
             return;
     }
     else
@@ -873,7 +872,7 @@ void MCiOSInputControl::GetFontName(MCExecContext& ctxt, MCStringRef& r_font)
     
     if (t_field)
     {
-        if (MCStringCreateWithCFString((CFStringRef)[[t_field font] fontName], r_font))
+        if (MCStringCreateWithCFStringRef((CFStringRef)[[t_field font] fontName], r_font))
             return;
     }
     else
@@ -904,13 +903,13 @@ void MCiOSInputControl::GetTextAlign(MCExecContext& ctxt, MCNativeControlInputTe
     {
         switch ([t_field textAlignment])
         {
-            case UITextAlignmentCenter:
+            case NSTextAlignmentCenter:
                 r_align = kMCNativeControlInputTextAlignCenter;
                 return;
-            case UITextAlignmentLeft:
+            case NSTextAlignmentLeft:
                 r_align = kMCNativeControlInputTextAlignLeft;
                 return;
-            case UITextAlignmentRight:
+            case NSTextAlignmentRight:
                 r_align = kMCNativeControlInputTextAlignRight;
                 return;
         }
@@ -1088,226 +1087,6 @@ void MCiOSInputControl::GetContentType(MCExecContext& ctxt, MCNativeControlInput
         r_type = kMCNativeControlInputContentTypePassword;
 }
 
-#ifdef /* MCNativeInputControl::Set */ LEGACY_EXEC
-Exec_stat MCiOSInputControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
-{
-	UITextField *t_field;
-	t_field = (UITextField *)GetView();
-	if (t_field == nil)
-		return MCiOSControl::Set(p_property, ep);
-	
-	bool t_bool;
-	NSString *t_string;
-	int32_t t_integer;
-	int32_t t_enum;
-	UIColor *t_color;
-	
-	switch(p_property)
-	{	
-		case kMCNativeControlPropertyEnabled:
-			if (!ParseBoolean(ep, t_bool))
-				return ES_ERROR;
-			[t_field setEnabled: t_bool];
-			return ES_NORMAL;
-
-		case kMCNativeControlPropertyOpaque:
-			if (MCiOSControl::Set(p_property, ep) != ES_NORMAL)
-				return ES_ERROR;
-			[t_field setNeedsDisplay];
-			return ES_NORMAL;
-			 
-		case kMCNativeControlPropertyText:
-			if (!ParseString(ep, t_string))
-				return ES_ERROR;
-			[t_field setText: t_string];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyUnicodeText:
-			if (!ParseUnicodeString(ep, t_string))
-				return ES_ERROR;
-			[t_field setText: t_string];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyTextColor:
-			if (!ParseColor(ep, t_color))
-				return ES_ERROR;
-			[t_field setTextColor: t_color];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyFontName:
-			if (!ParseString(ep, t_string))
-				return ES_ERROR;
-			[t_field setFont: [UIFont fontWithName: t_string size: [[t_field font] pointSize]]];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyFontSize:
-        {
-			if (!ParseInteger(ep, t_integer))
-				return ES_ERROR;
-            
-            // FG-2013-11-06 [[ Bugfix 11285 ]]
-            // On iOS7 devices, UITextView controls were having their font size
-            // properties ignored because [t_field font] was returning nil when
-            // no text had been added to the control yet.
-            UIFont* t_font = [t_field font];
-            if (t_font == nil)
-                t_font = [UIFont systemFontOfSize: t_integer];
-            else
-                t_font = [t_font fontWithSize: t_integer];
-            
-			[t_field setFont: t_font];
-			return ES_NORMAL;
-        }
-			
-		case kMCNativeControlPropertyTextAlign:
-			if (!ParseEnum(ep, s_textalign_enum, t_enum))
-				return ES_ERROR;
-			[t_field setTextAlignment: (UITextAlignment)t_enum];
-			return ES_NORMAL;
-			
-		/////////
-			
-		case kMCNativeControlPropertyAutoCapitalizationType:
-			if (!ParseEnum(ep, s_autocapitalizationtype_enum, t_enum))
-				return ES_ERROR;
-			[t_field setAutocapitalizationType: (UITextAutocapitalizationType)t_enum];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyAutoCorrectionType:
-			if (!ParseEnum(ep, s_autocorrectiontype_enum, t_enum))
-				return ES_ERROR;
-			[t_field setAutocorrectionType: (UITextAutocorrectionType)t_enum];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyManageReturnKey:
-			if (!ParseBoolean(ep, t_bool))
-				return ES_ERROR;
-			[t_field setEnablesReturnKeyAutomatically: t_bool];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyKeyboardStyle:
-			if (!ParseEnum(ep, s_keyboardstyle_enum, t_enum))
-				return ES_ERROR;
-			[t_field setKeyboardAppearance: (UIKeyboardAppearance)t_enum];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyKeyboardType:
-			if (!ParseEnum(ep, s_keyboardtype_enum, t_enum))
-				return ES_ERROR;
-			[t_field setKeyboardType: (UIKeyboardType)t_enum];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyReturnKeyType:
-			if (!ParseEnum(ep, s_returnkeytype_enum, t_enum))
-				return ES_ERROR;
-			[t_field setReturnKeyType: (UIReturnKeyType)t_enum];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyContentType:
-			if (!ParseEnum(ep, s_contenttype_enum, t_enum))
-				return ES_ERROR;
-			if (t_enum == kMCTextContentTypePassword)
-				[t_field setSecureTextEntry: YES];
-			else
-				[t_field setSecureTextEntry: NO];
-			return ES_NORMAL;
-			
-		default:
-			break;
-	}
-	
-	return MCiOSControl::Set(p_property, ep);
-}
-#endif /* MCNativeInputControl::Set */
-
-#ifdef /* MCNativeInputControl::Get */ LEGACY_EXEC
-Exec_stat MCiOSInputControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
-{
-	UITextField *t_field;
-	t_field = (UITextField *)GetView();
-	if (t_field == nil)
-		return MCiOSControl::Get(p_property, ep);
-	
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyEnabled:
-			FormatBoolean(ep, [t_field isEnabled]);
-			return ES_NORMAL;
-            
-		case kMCNativeControlPropertyText:
-			FormatString(ep, [t_field text]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyUnicodeText:
-			FormatUnicodeString(ep, [t_field text]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyTextColor:
-			FormatColor(ep, [t_field textColor]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyFontName:
-			FormatString(ep, [[t_field font] fontName]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyFontSize:
-			FormatInteger(ep, (int32_t)[[t_field font] pointSize]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyTextAlign:
-			FormatEnum(ep, s_textalign_enum, [t_field textAlignment]);
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyAutoCapitalizationType:
-			FormatEnum(ep, s_autocapitalizationtype_enum, [t_field autocapitalizationType]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyAutoCorrectionType:
-			FormatEnum(ep, s_autocorrectiontype_enum, [t_field autocorrectionType]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyManageReturnKey:
-			FormatBoolean(ep, [t_field enablesReturnKeyAutomatically]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyKeyboardStyle:
-			FormatEnum(ep, s_keyboardstyle_enum, [t_field keyboardAppearance]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyKeyboardType:
-			FormatEnum(ep, s_keyboardtype_enum, [t_field keyboardType]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyReturnKeyType:
-			FormatEnum(ep, s_returnkeytype_enum, [t_field returnKeyType]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyContentType:
-			if ([t_field isSecureTextEntry])
-				ep.setsvalue("password");
-			else
-				ep.setsvalue("plain");
-			return ES_NORMAL;
-			
-		default:
-			break;
-	}
-	
-	return MCiOSControl::Get(p_property, ep);
-}
-#endif /* MCNativeInputControl::Get */
-
-#ifdef /* MCiOSInputControl::Do */ LEGACY_EXEC
-Exec_stat MCiOSInputControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-	UITextField *t_field;
-	t_field = (UITextField *)GetView();
-	if (t_field == nil)
-		return MCiOSControl::Do(p_action, p_parameters);
-	
-	switch(p_action)
-	{
-		case kMCNativeControlActionFocus:
-			[t_field becomeFirstResponder];
-			return ES_NORMAL;
-			
-		default:
-			break;
-	}
-	
-	return MCiOSControl::Do(p_action, p_parameters);
-}
-#endif /* MCiOSInputControl::Do */
-
 void MCiOSInputControl::ExecFocus(MCExecContext &ctxt)
 {
 	UITextField *t_field;
@@ -1362,6 +1141,27 @@ void MCiOSInputFieldControl::SetMinimumFontSize(MCExecContext& ctxt, integer_t p
 	if (t_field)
         [t_field setMinimumFontSize: p_size];
 }
+
+void MCiOSInputFieldControl::SetMaximumTextLength(MCExecContext& ctxt, uinteger_t p_length)
+{
+    if (m_delegate != nil)
+    {
+       	com_runrev_livecode_MCiOSInputDelegate *t_delegate;
+        t_delegate = (com_runrev_livecode_MCiOSInputDelegate*)m_delegate;
+        
+        [t_delegate setMaxTextLength: p_length];
+        
+        UITextField *t_field;
+        t_field = (UITextField *)GetView();
+        
+        // Truncate the text is it exceeds the maximum length
+        if (t_field && t_field.text.length > p_length)
+        {
+            t_field.text = [t_field.text substringToIndex:p_length];
+        }
+    }
+}
+
 
 void MCiOSInputFieldControl::SetAutoClear(MCExecContext& ctxt, bool p_value)
 {
@@ -1450,6 +1250,19 @@ void MCiOSInputFieldControl::GetMinimumFontSize(MCExecContext& ctxt, integer_t& 
         r_size = 0;
 }
 
+void MCiOSInputFieldControl::GetMaximumTextLength(MCExecContext& ctxt, uinteger_t& r_length)
+{
+    if (m_delegate != nil)
+    {
+       	com_runrev_livecode_MCiOSInputDelegate *t_delegate;
+        t_delegate = (com_runrev_livecode_MCiOSInputDelegate*)m_delegate;
+        
+        r_length = [t_delegate getMaxTextLength];
+    }
+    else
+        r_length = 0;
+}
+
 void MCiOSInputFieldControl::GetAutoClear(MCExecContext& ctxt, bool& r_value)
 {
 	UITextField *t_field;
@@ -1511,99 +1324,6 @@ void MCiOSInputFieldControl::GetBorderStyle(MCExecContext& ctxt, MCNativeControl
     }
 }
 
-#ifdef /* MCNativeInputFieldControl::Set */ LEGACY_EXEC
-Exec_stat MCiOSInputFieldControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
-{
-	UITextField *t_field;
-	t_field = (UITextField *)GetView();
-	if (t_field == nil)
-		return MCiOSControl::Set(p_property, ep);
-	
-	bool t_bool;
-	NSString *t_string;
-	int32_t t_integer;
-	int32_t t_enum;
-	UIColor *t_color;
-	
-	switch(p_property)
-	{	
-		case kMCNativeControlPropertyAutoFit:
-			if (!ParseBoolean(ep, t_bool))
-				return ES_ERROR;
-			[t_field setAdjustsFontSizeToFitWidth: t_bool];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyMinimumFontSize:
-			if (!ParseInteger(ep, t_integer))
-				return ES_ERROR;
-			[t_field setMinimumFontSize: t_integer];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyAutoClear:
-			if (!ParseBoolean(ep, t_bool))
-				return ES_ERROR;
-			[t_field setClearsOnBeginEditing: t_bool];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyClearButtonMode:
-			if (!ParseEnum(ep, s_clearbuttonmode_enum, t_enum))
-				return ES_ERROR;
-			[t_field setClearButtonMode: (UITextFieldViewMode)t_enum];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertyBorderStyle:
-			if (!ParseEnum(ep, s_borderstyle_enum, t_enum))
-				return ES_ERROR;
-			[t_field setBorderStyle: (UITextBorderStyle)t_enum];
-			return ES_NORMAL;
-			
-			/////////
-			
-		default:
-			break;
-	}
-	
-	return MCiOSInputControl::Set(p_property, ep);
-}
-#endif /* MCNativeInputFieldControl::Set */
-
-#ifdef /* MCNativeInputFieldControl::Get */ LEGACY_EXEC
-Exec_stat MCiOSInputFieldControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
-{
-	UITextField *t_field;
-	t_field = (UITextField *)GetView();
-	if (t_field == nil)
-		return MCiOSControl::Get(p_property, ep);
-	
-	switch(p_property)
-	{	
-		case kMCNativeControlPropertyAutoFit:
-			FormatBoolean(ep, [t_field adjustsFontSizeToFitWidth]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyMinimumFontSize:
-			FormatInteger(ep, [t_field minimumFontSize]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyAutoClear:
-			FormatBoolean(ep, [t_field clearsOnBeginEditing]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyClearButtonMode:
-			FormatEnum(ep, s_clearbuttonmode_enum, [t_field clearButtonMode]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyBorderStyle:
-			FormatEnum(ep, s_borderstyle_enum, [t_field borderStyle]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyEditing:
-			FormatBoolean(ep, [t_field isEditing]);
-			return ES_NORMAL;
-			
-		default:
-			break;
-	}
-	
-	return MCiOSInputControl::Get(p_property, ep);
-}
-#endif /* MCNativeInputFieldControl::Get */
-
 UIView *MCiOSInputFieldControl::CreateView(void)
 {
 	UITextField *t_view;
@@ -1640,11 +1360,6 @@ MCNativeControlType MCiOSMultiLineControl::GetType(void)
 
 bool datadetectortypes_from_string(const char *p_list, UIDataDetectorTypes &r_types);
 bool datadetectortypes_to_string(UIDataDetectorTypes p_types, char *&r_list);
-
-#ifdef LEGACY_EXEC
-Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_rect, MCNativeControlProperty p_property, MCExecPoint&ep);
-Exec_stat scroller_get_property(UIScrollView *p_view, const MCRectangle32 &p_content_rect, MCNativeControlProperty p_property, MCExecPoint &ep);
-#endif
 
 void MCiOSMultiLineControl::SetEditable(MCExecContext& ctxt, bool p_value)
 {
@@ -2194,167 +1909,6 @@ void MCiOSMultiLineControl::GetDecelerating(MCExecContext& ctxt, bool& r_value)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifdef /* MCNativeMultiLineControl::Set */ LEGACY_EXEC
-Exec_stat MCiOSMultiLineControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
-{
-	UITextView *t_view;
-	t_view = (UITextView *)GetView();
-	if (t_view == nil)
-		return MCiOSControl::Set(p_property, ep);
-	
-	com_runrev_livecode_MCiOSMultiLineDelegate *t_delegate;
-	t_delegate = (com_runrev_livecode_MCiOSMultiLineDelegate*)m_delegate;
-	
-	bool t_bool;
-	NSString *t_string;
-	int32_t t_integer;
-	int32_t t_enum;
-	UIColor *t_color;
-	NSRange t_range;
-	
-	switch(p_property)
-	{	
-		case kMCNativeControlPropertyEditable:
-			if (!ParseBoolean(ep, t_bool))
-				return ES_ERROR;
-			[t_view setEditable: t_bool];
-			return ES_NORMAL;
-			
-		case kMCNativeControlPropertySelectedRange:
-			if (!ParseRange(ep, t_range))
-				return ES_ERROR;
-			[t_view setSelectedRange: t_range];
-			return ES_NORMAL;
-			
-			/////////
-			
-		case kMCNativeControlPropertyDataDetectorTypes:
-			UIDataDetectorTypes t_data_types;
-			t_data_types = UIDataDetectorTypeNone;
-			if (ep.isempty() || ep.getsvalue() == "none")
-				t_data_types = UIDataDetectorTypeNone;
-			else if (ep.getsvalue() == "all")
-				t_data_types = UIDataDetectorTypeAll;
-			else
-			{
-				if (!datadetectortypes_from_string(ep.getcstring(), t_data_types))
-				{
-					MCeerror->add(EE_UNDEFINED, 0, 0, ep.getsvalue());
-					return ES_ERROR;
-				}
-			}
-			
-			[t_view setDataDetectorTypes: t_data_types];
-			
-			return ES_NORMAL;
-
-		case kMCNativeControlPropertyVerticalTextAlign:
-			if (!ParseEnum(ep, s_verticaltextalign_enum, t_enum))
-				return ES_ERROR;
-			[t_delegate setVerticalTextAlign:t_enum];
-			return ES_NORMAL;
-			
-			// setting the contentRect is not supported for multiline text fields
-		case kMCNativeControlPropertyContentRectangle:
-			return ES_NOT_HANDLED;
-
-		default:
-			break;
-	}
-	
-	UpdateContentRect();
-	
-	Exec_stat t_state;
-	t_state = scroller_set_property(t_view, m_content_rect, p_property, ep);
-	if (t_state == ES_NOT_HANDLED)
-		return MCiOSInputControl::Set(p_property, ep);
-	else
-		return t_state;
-}
-#endif /* MCNativeMultiLineControl::Set */
-
-#ifdef /* MCNativeMultiLineControl::Get */ LEGACY_EXEC
-Exec_stat MCiOSMultiLineControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
-{
-	UITextView *t_view;
-	t_view = (UITextView *)GetView();
-	if (t_view == nil)
-		return MCiOSControl::Get(p_property, ep);
-	
-	com_runrev_livecode_MCiOSMultiLineDelegate *t_delegate;
-	t_delegate = (com_runrev_livecode_MCiOSMultiLineDelegate*)m_delegate;
-	
-	switch(p_property)
-	{	
-		case kMCNativeControlPropertyEditable:
-			FormatBoolean(ep, [t_view isEditable]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertySelectedRange:
-			FormatRange(ep, [t_view selectedRange]);
-			return ES_NORMAL;
-		case kMCNativeControlPropertyDataDetectorTypes:
-		{
-			char *t_type_list = nil;
-			if (!datadetectortypes_to_string([t_view dataDetectorTypes], t_type_list))
-			{
-				MCeerror->add(EE_UNDEFINED, 0, 0);
-				return ES_ERROR;
-			}
-			ep.grabbuffer(t_type_list, MCCStringLength(t_type_list));
-			return ES_NORMAL;
-		}
-		
-		case kMCNativeControlPropertyVerticalTextAlign:
-			FormatEnum(ep, s_verticaltextalign_enum, [t_delegate getVerticalTextAlign]);
-			return ES_NORMAL;
-			
-			// the contentRect of a multiline text field is read-only & auto-set by the UITextView
-			// when its content changes
-		default:
-			break;
-	}
-	
-	UpdateContentRect();
-
-	Exec_stat t_state;
-	t_state = scroller_get_property(t_view, m_content_rect, p_property, ep);
-	if (t_state == ES_NOT_HANDLED)
-		return MCiOSInputControl::Get(p_property, ep);
-	else
-		return t_state;
-}
-#endif /* MCNativeMultiLineControl::Get */
-
-#ifdef /* MCiOSMultiLineControl::Do */ LEGACY_EXEC
-Exec_stat MCiOSMultiLineControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-	UITextView *t_view;
-	t_view = (UITextView *)GetView();
-	if (t_view == nil)
-		return MCiOSControl::Do(p_action, p_parameters);
-	
-	int32_t t_integer1, t_integer2;
-	NSRange t_range;
-	switch(p_action)
-	{
-		case kMCNativeControlActionScrollRangeToVisible:
-			if (!MCParseParameters(p_parameters, "ii", &t_integer1, &t_integer2))
-			{
-				MCeerror->add(EE_UNDEFINED, 0, 0);
-				return ES_ERROR;
-			}
-			t_range = NSMakeRange(t_integer1, t_integer2);
-			[t_view scrollRangeToVisible: t_range];
-			return ES_NORMAL;
-			
-		default:
-			break;
-	}
-	
-	return MCiOSInputControl::Do(p_action, p_parameters);
-}
-#endif /* MCiOSMultiLineControl::Do */
-
 void MCiOSMultiLineControl::ExecScrollRangeToVisible(MCExecContext& ctxt, integer_t p_integer1, integer_t p_integer2)
 {
 	UITextView *t_view;
@@ -2536,6 +2090,7 @@ static struct { NSString *name; SEL selector; } s_input_notifications[] =
 	m_instance = instance;
 	m_didchange_pending = false;
 	m_return_pressed = false;
+    m_max_text_length = NSUIntegerMax;
 	
 	for(uint32_t i = 0; s_input_notifications[i] . name != nil; i++)
 		[[NSNotificationCenter defaultCenter] addObserver: self
@@ -2586,9 +2141,36 @@ static struct { NSString *name; SEL selector; } s_input_notifications[] =
 	m_didchange_pending = p_pending;
 }
 
+- (NSUInteger)getMaxTextLength;
+{
+    return m_max_text_length;
+}
+
+- (void)setMaxTextLength: (NSUInteger)p_length;
+{
+    m_max_text_length = p_length;
+}
+
+
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
 {
-	return YES;
+    NSUInteger t_old_length = [textField.text length];
+    NSUInteger t_replacement_length = [string length];
+    NSUInteger t_range_length = range.length;
+    
+    NSUInteger t_new_length = t_old_length - t_range_length + t_replacement_length;
+    
+    BOOL t_return_key = [string rangeOfString: @"\n"].location != NSNotFound;
+    
+    if (t_new_length > m_max_text_length && !t_return_key)
+    {
+        // Truncate the text if it exceeds maximum allowed length
+        // This also covers the case of pasted text
+        textField.text = [[textField.text stringByReplacingCharactersInRange:range withString:string] substringToIndex:m_max_text_length];
+        return NO;
+    }
+    
+    return YES;
 }
 
 - (BOOL)textFieldShouldReturn: (UITextField *)p_field

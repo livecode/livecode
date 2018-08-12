@@ -2,17 +2,19 @@ Name: param
 
 Type: function
 
-Syntax: the param of <parameterNumber> 
+Syntax: the param of <parameterNumber>
 
 Syntax: param(<parameterNumber>)
 
-Summary: <return|Returns> the specified <parameter> <pass|passed> to the current <handler>.
+Summary:
+<return|Returns> the specified <parameter> <pass|passed> to the current
+<handler>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 param(3) -- returns the third parameter
@@ -21,33 +23,55 @@ Example:
 param(0) -- returns the handler name
 
 Parameters:
-parameterNumber: A non-negative integer.
+parameterNumber:
+A non-negative integer.
 
-Returns: The <param> <function> <return|returns> the <parameter> value specified by the <parameterNumber>. If the <parameterNumber> is zero, the <param> <function> <return|returns> the <handler> name.
+Returns:
+The <param> <function> <return|returns> the <parameter> value specified
+by the <parameterNumber>. If the <parameterNumber> is zero, the <param>
+<function> <return|returns> the <handler> name.
 
 Description:
-Use the <param> <function> within a <handler> to get the value of a <parameter> when you don't know in advance how many <parameter|parameters> will be <pass|passed> to the <handler>.
+Use the <param> <function> within a <handler> to get the value of a
+<parameter> when you don't know in advance how many
+<parameter|parameters> will be <pass|passed> to the <handler>.
 
-Usually, you assign names to parameters in the first line of a function handler or message handler. For example, the following function assigns three parameters, which are multiplied together:
+Usually, you assign names to parameters in the first line of a function
+handler or message handler. For example, the following function assigns
+three parameters, which are multiplied together:
 
-  function product firstFactor,secondFactor,thirdFactor
+    function product firstFactor,secondFactor,thirdFactor
     return firstFactor * secondFactor * thirdFactor
-  end product
 
-But if you want to multiply all the numbers passed to the function handler together, you don't know ahead of time how many parameters will be passed, so you can't assign a parameter name (such as firstFactor) to each one in the first line of the function handler. In this case, you can use the <param> <function> to use each <parameter> without needing to assign it a name:
+    end product
 
-  function product
+
+But if you want to multiply all the numbers passed to the function
+handler together, you don't know ahead of time how many parameters will
+be passed, so you can't assign a parameter name (such as firstFactor) to
+each one in the first line of the function handler. In this case, you
+can use the <param> <function> to use each <parameter> without needing
+to assign it a name:
+
+    function product
     put 1 into total
     repeat with nextFactor = 1 to the paramCount
-      multiply total by param(nextFactor)
+
+    multiply total by param(nextFactor)
     end repeat
     return total
-  end product
 
-LiveCode evaluates the parameters before passing them. So if you call myHandler with the following statement:
-  myHandler 1+1,"A","Hello" && "world"
-the parameters returned by the <param> <function> are 2<a/>, A, and "Hello World".
+    end product
 
-References: pass (glossary), handler (glossary), parameter (glossary), return (glossary), paramCount (function), function (control_st)
+
+LiveCode evaluates the parameters before passing them. So if you call
+myHandler with the following statement: myHandler 1+1,"A","Hello" &&
+"world" the parameters returned by the <param> <function> are 2<a/>, A,
+and "Hello World".
+
+References: function (control structure), paramCount (function),
+pass (glossary), handler (glossary), parameter (glossary),
+return (glossary)
 
 Tags: properties
+

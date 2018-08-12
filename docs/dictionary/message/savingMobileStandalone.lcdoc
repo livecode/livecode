@@ -2,17 +2,19 @@ Name: savingMobileStandalone
 
 Type: message
 
-Syntax: savingMobileStandalone <targetType>, <appBundle> 
+Syntax: savingMobileStandalone <pTargetType>, <pAppBundle>
 
-Summary: Sent to the mainstack when a mobile standalone application is being saved or the simulation is started.
+Summary:
+Sent to the mainstack when a mobile standalone application is being
+saved or the simulation is started.
 
 Associations: stack
 
 Introduced: 5.5.3
 
-OS: ios,android
+OS: ios, android
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 on savingMobileStandalone pTarget, pFolder
@@ -26,12 +28,28 @@ on savingMobileStandalone pTarget, pFolder
 end savingMobileStandalone
 
 Parameters:
-targetType: targetType is either "simulator" or "device", depending on the type of build.
-appBundle: appBundle is a string variable containing the folder that the mobile standalone application was saved in.           >*Note:* Modifications made when you handle this message are not saved in the original stack file. They are only seen in the standalone application. If you make changes to the stack in savingMobileStandalone that you want to appear in the built application, you must save the stack before returning from the handler. The mobile standalone builder uses the stack file as it is on disk after return from the message to build the app.
+pTargetType (enum):
+- "simulator":
+- "device":
+
+pAppBundle:
+A string variable containing the folder that the mobile standalone 
+application was saved in.
 
 Description:
-When a mobile stack is saved as a standalone application it is removed from memory then reopened. This message is sent to the stack after it is reopened and therefore offers the opportunity to do a last modification of the stack before saving the mobile standalone. 
+When a mobile stack is saved as a standalone application it is removed
+from memory then reopened. This message is sent to the stack after it is
+reopened and therefore offers the opportunity to do a last modification
+of the stack before saving the mobile standalone.
 
->*Note:* Modifications made when you handle this message are not saved in the original stack file. They are only seen in the standalone application. If you make changes to the stack in <savingMobileStandalone> that you want to appear in the built application, you must save the stack before returning from the handler. The mobile standalone builder uses the stack file as it is on disk after return from the message to build the app.
+>*Note:* Modifications made when you handle this message are not saved
+> in the original stack file. They are only seen in the standalone
+> application. If you make changes to the stack in
+> <savingMobileStandalone> that you want to appear in the built
+> application, you must save the stack before returning from the
+> handler. The mobile standalone builder uses the stack file as it is on
+> disk after return from the message to build the app.
 
-References: mobileStandaloneSaved (message), savingStandalone (message), standaloneSaved (message)
+References: mobileStandaloneSaved (message), savingStandalone (message),
+standaloneSaved (message)
+

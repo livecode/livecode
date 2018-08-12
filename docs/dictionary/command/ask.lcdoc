@@ -2,15 +2,17 @@ Name: ask
 
 Type: command
 
-Syntax: ask [<iconType>] <question> [with <defaultResponse>] [titled <windowTitle>] [as sheet]
+Syntax: ask [<iconType>] <prompt> [with <defaultResponse>] [titled <windowTitle>] [as sheet]
 
-Summary: Displays a <dialog box> with a question, a text box for the user to enter a response, and OK and Cancel buttons.
+Summary:
+Displays a <dialog box> with a prompt, a text box for the user to enter
+a response, and OK and Cancel buttons.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,web,mobile
+Platforms: desktop, mobile
 
 Example:
 ask "What is your name?"
@@ -27,33 +29,82 @@ ask myPrompt as sheet
 Example:
 ask "Please say hello:" with "DEFAULT" titled "Hello World"
 
+Example:
+ask information "Please enter your user name." 
+
+Example:
+# formatted prompt text
+put "Enter your &lt;font color='red'&gt;&lt;b&gt;last name only&lt;/b&gt;&lt;/font&gt;." into tPromptText
+ask tPromptText
+
 Parameters:
-iconType (enum): The icon that is displayed on the left side of the dialog box. If you do not specify an icon, none is displayed. iOS and Android do not support <iconType>.
-- information : Non-critical notification
-- question : Request for information from the user
-- error : Notification of error or failure condition
-- warning : Notification of unexpected or abnormal condition
-question (string): A string of formatted (or unformated) text.
-defaultResponse (string): A string, and is placed in the text box when the dialog box appears. If no defaultResponse is specified, the text box is empty when the dialog box appears.
-windowTitle: Appears in the title bar of the dialog box. If no windowTitle is given, the title bar is blank.
+iconType (enum):
+The icon that is displayed on the left side of the dialog box. If you do
+not specify an icon, none is displayed. iOS and Android do not support
+<iconType>. 
 
-The result: If the user cancels the <dialog box|dialog>, the <it> <variable> is set to empty and the <result> <function> <return|returns> "cancel".
+-   information: Non-critical notification
+-   question: Request for information from the user
+-   error: Notification of error or failure condition
+-   warning: Notification of unexpected or abnormal condition
 
-It: The contents of the text box is placed in the it <variable>.
+
+prompt (string):
+A string of formatted (or unformatted) text.
+
+defaultResponse (string):
+A string, and is placed in the text box when the dialog box appears. If
+no defaultResponse is specified, the text box is empty when the dialog
+box appears.
+
+windowTitle:
+Appears in the title bar of the dialog box. If no windowTitle is given,
+the title bar is blank.
+
+It:
+The contents of the text box is placed in the it <variable>.
+
+The result:
+If the user cancels the <dialog box|dialog>, the <it> <variable> is set
+to empty and the <result> <function> <return|returns> "cancel".
 
 Description:
-Use the <ask> <command> when a <handler> needs to get information from the user before continuing.
+Use the <ask> <command> when a <handler> needs to get information from
+the user before continuing.
 
-If the ask...as sheet form is used, the dialog box appears as a sheet on OS X systems. On other systems, the as sheet form has no effect and the dialog box appears normally. Attempting to open a sheet from within another sheet displays the second stack as a <modal dialog box> instead.
+If the ask...as sheet form is used, the dialog box appears as a sheet on
+OS X systems. On other systems, the as sheet form has no effect and the
+dialog box appears normally. Attempting to open a sheet from within
+another sheet displays the second stack as a <modal dialog box> instead.
 
->*Cross-platform note:* On <OS X|OS X systems>, there is no image for the question icon. Therefore, the information icon appears instead. In addition, the image specified by the <gRevAppIcon keyword> appears if you do not specify an <iconType>. If you specify an iconType, the image specified by the <gRevSmallAppIcon keyword> appears instead, along with the standard icon specified by the <iconType>. 
+You can format the prompt text using <HTML>-style tags as described in
+the <HTMLText> property.
 
->*Cross-platform note:* Mobile does not support <iconType> and 'as sheet'.
+>*Cross-platform note:* On <OS X|OS X systems>, there is no image for
+> the question icon.
+Therefore, the information icon appears instead. In addition, the image
+specified by the <gRevAppIcon> appears if you do not specify an
+<iconType>. If you specify an iconType, the image specified by the
+<gRevSmallAppIcon> appears instead, along with the standard icon
+specified by the <iconType>.
+
+>*Cross-platform note:* Mobile does not support <iconType> and 'as
+> sheet'. 
 
 The ask...as sheet form was introduced in version 2.0.
-The ability to provide formatted text for the prompt was introduced in version 2.0.
+The ability to provide formatted text for the prompt was introduced in
+version 2.0.
 
 Changes:
-The ability to specify an <iconType> was added in version 2.0. In previous versions, no icon was displayed.
+The ability to specify an <iconType> was added in version 2.0. In
+previous versions, no icon was displayed.
 
-References: dialogData (property), gRevAppIcon (keyword), it (keyword), gRevProfileReadOnly (keyword), gRevSmallAppIcon (keyword), gRevAppIcon keyword (keyword), gRevSmallAppIcon keyword (keyword), answer (command), ask file (command), ask password (command), modal (command), sheet (command), ask file with type (command), result (function), return (glossary), OS X (glossary), variable (glossary), handler (glossary), modal dialog box (glossary), dialog box (glossary), command (glossary), function (control_st)
+References: answer (command), ask file (command), ask password (command),
+modal (command), sheet (command), ask file with type (command),
+function (control structure), result (function), return (glossary),
+OS X (glossary), variable (glossary), handler (glossary),
+modal dialog box (glossary), dialog box (glossary), command (glossary),
+HTML (glossary), gRevAppIcon (keyword), it (keyword),
+gRevProfileReadOnly (keyword), gRevSmallAppIcon (keyword),
+dialogData (property), HTMLText (property)
+

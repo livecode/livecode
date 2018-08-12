@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-//#include "execpt.h"
+
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
@@ -316,6 +316,9 @@ const char *MCDeployErrorToString(MCDeployError p_error)
 		
 		case kMCDeployErrorTrialBannerError:
 			return "could not create trial banner";
+            
+        case kMCDeployErrorInvalidUuid:
+            return "invalid uuid";
 
 		case kMCDeployErrorNoCertificate:
 			return "could not load certificate";

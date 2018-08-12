@@ -1,18 +1,20 @@
 Name: is a
 
+Synonyms: is an
+
 Type: operator
 
 Syntax: <value> is a[n] {array | boolean | color | date | integer | number | point | rect | ASCII string }
 
-Summary: <evaluate|Evaluates> to true if a <value> is of the specified type, false otherwise.
-
-Synonyms: is an
+Summary:
+<evaluate|Evaluates> to true if a <value> is of the specified type,
+false otherwise.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 "1/16/98" is a date -- evaluates to true
@@ -35,42 +37,63 @@ Example:
 numToChar(128) is an ASCII string -- evaluates to false
 
 Parameters:
-value: Any source of value.
+value:
+Any source of <value>.
 
 Description:
-Use the <is a> <operator> to <validate> data to make sure it's the right type.
+Use the <is a> <operator> to <validate> data to make sure it's the right
+type. 
 
-This operator is useful for checking whether the user has entered data correctly, and for checking parameters before sending them to a handler to avoid a script error caused by feeding data of one type to an operator or function that requires a different type.
+This operator is useful for checking whether the user has entered data
+correctly, and for checking parameters before sending them to a handler
+to avoid a script error caused by feeding data of one type to an
+operator or function that requires a different type.
 
 A <value> is a(n):
-        * array if it's <keys function> is not empty.
 
-        * boolean or logical if it is one of the two constants true or false
+* <array(keyword)> if its <keys> function is not empty.
+* <boolean> or <logical> if it is one of the two constants true or false
+* color if it is a valid <color reference>
+* date if it is in one of the formats produced by the <date> or <time>
+  functions 
+* <integer(keyword)> if it consists of digits (with an optional leading
+  minus sign), or an hexadecimal number (such as 0x0F9B)
+* number if it consists of digits, optional leading minus sign, optional
+  decimal point, and optional "E" or "e" (scientific notation), or an
+  optional leading minus sign and infinity or inf
+* <point> if it consists of two numbers separated by a comma
+* <rectangle|rect> if it consists of four numbers separated by commas
+* <ASCII> string if it does not contain any characters greater than
+  charToNum(127) 
 
-        * color if it is a valid color reference
 
-        * date if it is in one of the formats produced by the date or <time> functions
+All the types other than boolean can also include leading or trailing
+white space characters.
 
-        * integer if it consists of digits (with an optional leading minus sign), or an hexadecimal number (such as 0x0F9B)
+>*Note:* To ensure compatibility with SuperCard stacks, the is a color
+> operator returns true for any integer, although integers
+are not valid colors in LiveCode. If you need to strictly verify a color
+then you can write a wrapper function to do so that checks that the
+color is not an integer.
 
-        * number if it consists of digits, optional leading minus sign, optional decimal point, and optional "E" or       "e" (scientific notation), or an optional leading minus sign and infinity or inf
+>*Note:* The range of dates that LiveCode can handle is limited by the
+> operating system's date routines. In particular, Windows
+systems are limited to dates after 1/1/1970. This means that the is a
+date operator will return false for dates before 1/1/1970 on Windows.
 
-        * point if it consists of two numbers separated by a comma
-
-        * rect if it consists of four numbers separated by commas
-        * ASCII string if it does not contain any characters greater than charToNum(127)
-
-All the types other than boolean can also include leading or trailing white space characters.
-
->*Note:* To ensure compatibility with SuperCard stacks, the is a color operator returns true for any integer, although integers are not valid colors in LiveCode. If you need to strictly verify a color then you can write a wrapper function to do so that checks that the color is not an integer.
-
->*Note:* The range of dates that LiveCode can handle is limited by the operating system's date routines. In particular, Windows systems are limited to dates after 1/1/1970. This means that the is a date operator will return false for dates before 1/1/1970 on Windows.
-
-The <is a> <operator> is the logical inverse of the <is not a> <operator>. When one is true, the other is false.
+The <is a> <operator> is the <logical> <inverse> of the <is not a>
+<operator>. When one is true, the other is false.
 
 Changes:
-The is an array form was added in version 2.9
+The <is an> <array(keyword)> form was added in version 2.9
 
-References: point (keyword), integer (keyword), is not a (operator), convert (command), keys function (function), time (function), isNumber (function), value (function), colorNames (function), evaluate (glossary), operator (glossary), validate (glossary)
+References: convert (command), colorNames (function), date (function),
+isNumber (function), keys (function), time (function), array (glossary),
+ASCII (glossary), boolean (glossary), color reference (glossary),
+evaluate (glossary), integer (glossary), inverse (glossary),
+logical (glossary), operator (glossary), string (glossary),
+validate (glossary), value (glossary), array (keyword), integer (keyword),
+point (keyword), rectangle (keyword), is not a (operator)
 
 Tags: math
+

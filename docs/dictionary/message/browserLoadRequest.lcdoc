@@ -2,9 +2,10 @@ Name: browserLoadRequest
 
 Type: message
 
-Syntax: browserLoadRequest <url>, <type> 
+Syntax: browserLoadRequest <pUrl>, <pType>
 
-Summary: Sent when a URL has been requested.
+Summary:
+Sent when a URL has been requested.
 
 Introduced: 4.5.3
 
@@ -23,8 +24,10 @@ on browserLoadRequest pURL, pType
 end browserLoadRequest
 
 Parameters:
-url: The URL that has started to load.
-type (enum): The reason for the request. One of:
+pUrl:
+The URL that has started to load.
+
+pType (enum): The reason for the request.
 - "click"
 - "submit"
 - "navigate"
@@ -32,17 +35,29 @@ type (enum): The reason for the request. One of:
 - "resubmit"
 - "other"
 
-Description:
-Handle the <browserLoadRequest> message to perform an action when a URL has been requested.
 
-The <browserLoadRequest> message is sent to the object containing the script that created the UIWebView browser control after a url has been requested.
+Description:
+Handle the <browserLoadRequest> message to perform an action when a URL
+has been requested.
+
+The <browserLoadRequest> message is sent to the object containing the
+script that created the UIWebView browser control after a url has been
+requested. 
 
 Not passing the message causes the load request to not go ahead.
 
-The browserLoadRequest is only sent if <delayRequests(command)> has been set to true. 
+The browserLoadRequest is only sent if <delayRequests(command)> has been
+set to true.
 
->*Note:* Delaying requests can cause web pages that load pages into sub-documents to not work correctly.
+>*Note:* Delaying requests can cause web pages that load pages into
+> sub-documents to not work correctly.
 
->*Note:* The <browserLoadRequest> message is sent in response to the webView:shouldStartLoadWithRequest: delegate method.
+>*Note:* The <browserLoadRequest> message is sent in response to the
+> webView:shouldStartLoadWithRequest: delegate method.
 
-References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), browserStartedLoading (message), browserLoadFailed (message), browserFinishedLoading (message)
+References: mobileControlCreate (command), mobileControlDelete (command),
+mobileControlSet (command), mobileControlGet (function),
+mobileControlTarget (function), mobileControls (function),
+browserStartedLoading (message), browserLoadFailed (message),
+browserFinishedLoading (message)
+

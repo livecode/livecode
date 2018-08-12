@@ -2,15 +2,19 @@ Name: revXMLSetAttribute
 
 Type: command
 
-Syntax: revXMLSetAttribute <treeID>, <node>, <attributeName>, <newValue> 
+Syntax: revXMLSetAttribute <treeID>, <node>, <attributeName>, <newValue>
 
-Summary: Creates an <attribute> of a <node>, or sets the value of an existing <attribute>.
+Summary:
+Creates an <attribute> of a <node>, or sets the value of an existing
+<attribute>. 
+
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -21,27 +25,54 @@ Example:
 revXMLSetAttribute thisTree,currNode,myString,field "Data"
 
 Parameters:
-treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
-node: The path to the node whose attribute will be set.
-attributeName (string): 
-newValue (string): 
+treeID:
+The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+function when you created the XML tree.
 
-The result: If the <revXMLSetAttribute> <command> encounters an error, the <result> is set to an error message beginning with "xmlerr".
+node:
+The path to the node whose attribute will be set.
+
+attributeName (string):
+
+
+newValue (string):
+
+
+The result:
+If the <revXMLSetAttribute> <command> encounters an error, the <result>
+is set to an error message beginning with "xmlerr".
 
 Description:
-Use the <revXMLSetAttribute> <command> to create and change <attribute|attributes>.
+Use the <revXMLSetAttribute> <command> to create and change
+<attribute|attributes>. 
 
-If the <attributeName> is not already an <attribute> of the <node>, a new <attribute> with the specified name and value is created.
+If the <attributeName> is not already an <attribute> of the <node>, a
+new <attribute> with the specified name and value is created.
 
 If the attribute already exists, its value is set to the <newValue>.
 
->*Tip:*  To put <Unicode> text into an <attribute>, first use the <uniDecode> function to encode the text as UTF-8:
+>*Tip:*  To put <Unicode> text into an <attribute>, first use the
+> <uniDecode> function to encode the text as UTF-8:
 
-  revXMLSetAttribute myTree,the nodeName of me, \
-     uniDecode(the unicodeText of it,"UTF8")
+    revXMLSetAttribute myTree,the nodeName of me, \
 
->*Important:*  The <revXMLSetAttribute> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on hte General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+    uniDecode(the unicodeText of it,"UTF8")
 
-References: revXMLAppend (command), revXMLAttributes (function), result (function), uniDecode (function), Unicode (glossary), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), attribute (glossary), command (glossary), XML library (library), LiveCode custom library (library)
+
+>*Important:*  The <revXMLSetAttribute> <command> is part of the 
+> <XML library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "XML" 
+> checkbox is checked.
+
+References: revXMLAppend (command), revXMLAttributes (function),
+result (function), uniDecode (function), Unicode (glossary),
+node (glossary), Standalone Application Settings (glossary),
+standalone application (glossary), attribute (glossary),
+command (glossary), LiveCode custom library (glossary),
+XML library (library)
 
 Tags: text processing
+

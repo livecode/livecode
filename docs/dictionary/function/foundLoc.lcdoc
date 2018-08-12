@@ -6,13 +6,15 @@ Syntax: the foundLoc
 
 Syntax: foundLoc()
 
-Summary: <return|Returns> the location of the top left corner of the box that surrounds text found by the <find> <command>.
+Summary:
+<return|Returns> the location of the top left corner of the box that
+surrounds text found by the <find> <command>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the foundLoc
@@ -20,15 +22,31 @@ the foundLoc
 Example:
 drag from the foundLoc to the bottomLeft of this card
 
-Returns: The <foundLoc> <function> <return|returns> two positive <integer|integers> separated by a comma.
+Returns:
+The <foundLoc> <function> <return|returns> two positive
+<integer|integers> separated by a comma.
 
 Description:
-Use the <foundLoc> <function> to determine the location in the <stack window> where the found text is shown.
+Use the <foundLoc> <function> to determine the location in the <stack
+window> where the found text is shown.
 
-When the <find> command finds text, it surrounds the text with a box. The first <item> of the <return value> is the horizontal distance in <pixels> from the left edge of the <stack> to the left edge of this box. The second <item> of the <return value|returned value> is the vertical distance from the top edge of the <stack window> to the top of the box.
+When the <find> command finds text, it surrounds the text with a box.
+The first <item> of the <return value> is the horizontal distance in
+<pixels> from the left edge of the <stack> to the left edge of this box.
+The second <item> of the <return value|returned value> is the vertical
+distance from the top edge of the <stack window> to the top of the box.
 
-The <foundLoc> <function> is cleared when the text <selection> moves into the <foundField> or when the <current card> is closed. At the same time, the box the <find> <command> draws around the found text disappears. If there is no box, the <foundLoc> <function> <return|returns> empty.
+The <foundLoc> <function> is cleared when the text <selection> moves
+into the <foundField> or when the <current card> is closed. At the same
+time, the box the <find> <command> draws around the found text
+disappears. If there is no box, the <foundLoc> <function>
+<return|returns> empty.
 
-References: pixels (property), function (control_st), item (keyword), selection (keyword), current card (glossary), integer (glossary), command (glossary), return (glossary), return value (glossary), stack window (glossary), selectedLoc (function), foundField (function), find (command), stack (object)
+References: find (command), function (control structure),
+selectedLoc (function), foundField (function), current card (glossary),
+integer (glossary), command (glossary), return (glossary),
+return value (glossary), stack window (glossary), item (keyword),
+selection (keyword), stack (object), pixels (property)
 
 Tags: database
+

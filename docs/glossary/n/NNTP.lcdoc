@@ -1,12 +1,14 @@
 Name: NNTP
 
-Synonyms: NNTP
+Synonyms: nntp
 
 Type: glossary
 
 Description:
-Network News Transfer Protocol. The <protocol> used to transmit posts on Usenet newsgroups.
+Network News Transfer Protocol. The <protocol> used to transmit posts on
+Usenet newsgroups.
 
 References: protocol (glossary)
 
 Tags: networking
+

@@ -2,48 +2,84 @@ Name: libURLMultipartFormAddPart
 
 Type: function
 
-Syntax: libURLMultipartFormAddPart(<form data>,<part name>, <value> [,<MIME type>, <encoding>])
+Syntax: libURLMultipartFormAddPart(<formData>,<partName>, <value> [,<MIMEtype>, <encoding>])
 
-Summary: This function lets you add parts to a multipart form one at a time. It also lets you optionally specify the mime type and transfer encoding for each part. This can be useful where the mime type or transfer encoding has to be specified.
+Summary:
+This function lets you add parts to a multipart form one at a time. It
+also lets you optionally specify the mime type and transfer encoding for
+each part. This can be useful where the mime type or transfer encoding
+has to be specified.
+
+Associations: internet library
 
 Introduced: 2.5
 
-OS: mac,windows,linux
+OS: mac, windows, linux, html5
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
 Example:
-put empty into tForm
-put "dave" into tName
-put "hello" into tMessage
-if libURLMultipartFormData (tForm, "name", tName, "message", tMessage)\
-     is not empty then
-   ##handle error and exit
-end if
-set the httpHeaders to line 1 of tForm
-delete line 1 of tForm
-put "&lt;file&gt;" & "C:/myfile.gif" into tFile
-put "image/gif" into tType
-put "binary" into tEnc
-if libURLMultipartFormAddPart(tForm,"file", tFile, tType, tEnc)\
-      empty then
-   ##handle error and exit
-else
-   post  tForm to url 
-   set the httpHeaders to empty
-end if
+command UploadFileToServer pName, pMessage, pFilename
+  local tOrigHeaders, tForm, tError, tFile, tType, tEnc, tURL
+  put the httpHeaders into tOrigHeaders
+  put empty into tForm
+  put libURLMultipartFormData (tForm, "name", pName, "message", pMessage) into tError
+
+  if tError is empty then
+    set the httpHeaders to line 1 of tForm
+    delete line 1 of tForm
+    put "&lt;file&gt;" & pFilename into tFile
+    put "image/gif" into tType
+    put "binary" into tEnc
+    put libURLMultipartFormAddPart(tForm,"file", tFile, tType, tEnc) into tError
+  end if
+
+  if tError is empty then
+    post tForm to url tURL
+    put the result into tError
+  end if
+
+  set the httpHeaders to tOrigHeaders
+
+  if tError is not empty then
+    return tError for error
+  else
+    return empty for value
+  end if
+end UploadFileToServer
 
 Parameters:
-value: 
-encoding: 
+formData(string): A variable, which will be filled with the form data.
+
+partName(string): The name of the new part to add to the <formData>.
+
+value(string): The value to be associated with the <partName> of the <formData>.
+
+MIMEtype(enum): The MIME type to use for the <value>.
+
+encoding(enum): The encoding type to use for the <value>.
+
 
 Description:
-This function is mainly used if you have called the <libURLMultipartFormData> with no arguments except the form data. This will return an "empty" form which can be added to using this function.
+This function is mainly used if you have called the
+<libURLMultipartFormData> with no arguments except the form data. This
+will return an "empty" form which can be added to using this function.
 
->*Important:*  The <libURLMultipartFormAddPart> <function> is part of the <Internet library>. To ensure that the <keyword> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:* The <libURLMultipartFormAddPart> <function> is part of the
+> <Internet library>. To ensure that the <function> works in a
+> <standalone application>, you must include this
+> <LiveCode custom library|custom library> when you create your
+> <standalone application|standalone>. In the Inclusions pane of the
+> <Standalone Application Settings> window, make sure the "Internet"
+> script library is selected.
 
->*Note:* When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the http <keyword> is not yet available. This may affect attempts to use this <keyword> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the http <keyword> can be used in any <handler>.
-
-References: startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), post (command), libURLMultipartFormData (function), libURLFormData (function), Internet library (library), LiveCode custom library (library), library (library), main stack (glossary), handler (glossary), Standalone Application Settings (glossary), message (glossary), group (glossary), standalone application (glossary), keyword (glossary), function (glossary), application (glossary)
+References: post (command), libURLMultipartFormData (function),
+libURLFormData (function), LiveCode custom library (glossary),
+main stack (glossary), handler (glossary),
+Standalone Application Settings (glossary), message (glossary),
+group (glossary), standalone application (glossary), keyword (glossary),
+function (glossary), application (glossary), Internet library (library),
+library (library), startup (message), openBackground (message),
+preOpenStack (message), openStack (message), preOpenCard (message)

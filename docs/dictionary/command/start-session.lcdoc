@@ -4,11 +4,12 @@ Type: command
 
 Syntax: start session
 
-Summary: Begins a server session.
+Summary:
+Begins a server session.
 
 Introduced: 5.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
 Platforms: server
 
@@ -20,22 +21,33 @@ start session
 put "jack" into $_SESSION['user']
 
 Example:
-set the sessionLifeTime 360 -- 10 minutes
+set the sessionLifeTime to 360 -- 10 minutes
 start session
 
 Description:
-Use the <start session> command to begin a server session. The contents of the $_SESSION array is restored if available.
+Use the <start session> command to begin a server session. The contents
+of the $_SESSION array is restored if available.
 
-If no session identifier is specified by the <sessionId property> or contained within the session cookie, then a new session will be created with a unique identifier, and the contents of the session cookie set to that identifier.
+If no session identifier is specified by the <sessionId> <property> or
+contained within the session cookie, then a new session will be created
+with a unique identifier, and the contents of the session cookie set to
+that identifier.
 
-The location where the <$_SESSION(keyword)> array is stored on the server is configured using the <sessionSavePath property>.
+The location where the <$_SESSION(keyword)> array is stored on the
+server is configured using the <sessionSavePath> <property>.
 
-A session is stored until it expires or is deleted using the <delete session command>. The maximum age of a session is configured using the <sessionLifetime property>.
+A session is stored until it expires or is deleted using the <delete
+session command>. The maximum age of a session is configured using the
+<sessionLifetime> <property>.
 
->*Note:* You do not need to alter any of the session properties in order to start and use sessions. They provide a way for advanced users to configure the way session work.
+>*Note:* You do not need to alter any of the session properties in order
+> to start and use sessions. They provide a way for advanced users to
+> configure the way session work.
 
->*Warning:* Session properties cannot be changed once a session has been created.
+>*Warning:* Session properties cannot be changed once a session has been
+> created. 
 
-References: stop session (command), delete session command (command), delete session (command), sessionSavePath (property), sessionLifetime (property), sessionName (property), sessionLifetime property (property), sessionId (property), sessionSavePath property (property), sessionId property (property), $_SESSION (keyword)
-
-Tags: multimedia
+References: stop session (command), delete session (command), 
+$_SESSION (keyword), sessionSavePath (property),
+sessionLifetime (property), sessionName (property),
+sessionId (property), property (glossary)

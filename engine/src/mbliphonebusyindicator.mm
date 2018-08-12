@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "uidc.h"
-//#include "execpt.h"
+
 #include "globals.h"
 
 #include "exec.h"
@@ -115,7 +115,7 @@ static com_runrev_livecode_MCBusyIndicator *s_busy_indicator = nil;
     // Create the text
     m_label = [[UILabel alloc] initWithFrame:CGRectMake (10, t_busy_size.height - 85, t_busy_size.width - 20, 70)];
     m_label.textColor = [UIColor whiteColor];
-    m_label.textAlignment = UITextAlignmentCenter;
+    m_label.textAlignment = NSTextAlignmentCenter;
     
     // PM-2015-03-16: [[ Bug 14946 ]] Allow up to 3 lines for the text
     m_label.numberOfLines = 3;
@@ -184,7 +184,7 @@ bool MCSystemBusyIndicatorStart (intenum_t p_indicator, MCStringRef p_label, int
                 [s_busy_indicator showBusy:@"" withOpacity:p_opacity];
             else
                 // TODO - update for unicode. Change false to the appropriate value.
-                [s_busy_indicator showBusy:[NSString stringWithMCStringRef: p_label] withOpacity:p_opacity];
+                [s_busy_indicator showBusy:MCStringConvertToAutoreleasedNSString(p_label) withOpacity:p_opacity];
                 
             return true;
         }

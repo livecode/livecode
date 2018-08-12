@@ -4,13 +4,14 @@ Type: function
 
 Syntax: min(<numbersList>)
 
-Summary: <return|Returns> the smallest number of a list of numbers.
+Summary:
+<return|Returns> the smallest number of a list of numbers.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 min(12,3,8,7) -- returns 3
@@ -19,22 +20,36 @@ Example:
 min(0,8,-436) -- returns -436
 
 Parameters:
-numbersList: A comma-separated list of numbers, or an expression that evaluates to such a list, or an array containing only numbers.
+numbersList:
+A comma-separated list of numbers, or an expression that evaluates to
+such a list, or an array containing only numbers.
 
-Returns: The <min> <function> <return|returns> a number.
+Returns:
+The <min> <function> <return|returns> a number.
 
 Description:
-Use the <min> <function(control_st)> to find the lowest <value(function)> in a <group> of <value(glossary)|values>.
+Use the <min> <function(control structure)> to find the lowest
+<value(function)> in a <group> of <value(glossary)|values>.
 
-You can use the <min> and <max> <function(glossary)|functions> together to limit a <value(function)> to a certain <range>. For example, the expression
-  min(1,max(myValue,0))
-yields a number between zero and 1. If myValue is within the limits, the <expression> is equal to myValue; if it is greater than 1, the <expression> <evaluate|evaluates> to 1; and if it is less than zero, the <expression> <evaluate|evaluates> to zero.
+You can use the <min> and <max> <function(glossary)|functions> together
+to limit a <value(function)> to a certain <range>. For example, the
+expression min(1,max(myValue,0)) yields a number between zero and 1. If
+myValue is within the limits, the <expression> is equal to myValue; if
+it is greater than 1, the <expression> <evaluate|evaluates> to 1; and if
+it is less than zero, the <expression> <evaluate|evaluates> to zero.
 
-If the <numbersList> is empty, the <min> <function(control_st)> returns zero.
+If the <numbersList> is empty, the <min> <function(control structure)>
+returns zero.
 
 Changes:
-The ability to use an array was introduced in version 1.1. In previous versions, only lists of numbers could be used with the min function.
+The ability to use an array was introduced in version 1.1. In previous
+versions, only lists of numbers could be used with the min function.
 
-References: &lt;= (operator), &lt; (operator), group (command), max (function), extents (function), sum (function), value (function), average (function), evaluate (glossary), range (glossary), expression (glossary), function (glossary), return (glossary), value (glossary), function (control_st)
+References: group (command), function (control structure), max (function),
+extents (function), sum (function), value (function), average (function),
+evaluate (glossary), range (glossary), expression (glossary),
+function (glossary), return (glossary), value (glossary),
+&lt;= (operator), &lt; (operator)
 
 Tags: math
+

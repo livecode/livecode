@@ -1,37 +1,59 @@
 Name: showBorder
 
+Synonyms: showpen
+
 Type: property
 
 Syntax: set the showBorder of <object> to {true | false}
 
-Summary: Specifies whether an outline is drawn around an <object>.
+Summary:
+Specifies whether an outline is drawn around an <object(glossary)>.
 
-Synonyms: showPen
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the showborder of group "Status" to true
 
-Value (bool): The <showBorder> of an <object> is true or false.
+Value (bool):
+The <showBorder> of an <object(glossary)> is true or false.
 
 Description:
-Use the <showBorder> <property> to draw an outline around an <object>, or to make the <object> borderless.
+Use the <showBorder> <property> to draw an outline around an
+<object(glossary)>, or to make the <object(glossary)> borderless.
 
-The appearance of the border depends on the object's threeD and <borderWidth> <properties>, and on the <object type>.
+The appearance of the border depends on the object's threeD and
+<borderWidth> <properties>, and on the <object type>.
 
-If the object's threeD <property> is set to false, the border is drawn using the <borderColor> <property> (or the <borderPattern> <property>, if it is not empty). If the object's threeD is true, the raised edges are drawn using the <topColor> or <topPattern> <property>, and the sunken edges are drawn using the <bottomColor> or <bottomPattern>.
+If the object's threeD <property> is set to false, the border is drawn
+using the <borderColor> <property> (or the <borderPattern> <property>,
+if it is not empty). If the object's threeD is true, the raised edges
+are drawn using the <topColor> or <topPattern> <property>, and the
+sunken edges are drawn using the <bottomColor> or <bottomPattern>.
 
-If the object's <showBorder> <property> is set to false, and its <backgroundColor> is empty, its interior is drawn with the <backgroundColor> or <backgroundPattern> of its <owner>.
+If the object's <showBorder> <property> is set to false, and its
+<backgroundColor> is empty, its interior is drawn with the
+<backgroundColor> or <backgroundPattern> of its <owner>.
 
-The borders of controls and groups follow the object's rectangle <property>. The border of a <card> is an outline just inside the boundary of the <stack window>. You can set the <showBorder> of a <stack>, but the setting has no effect.
+The borders of controls and groups follow the object's rectangle
+<property>. The border of a <card> is an outline just inside the
+boundary of the <stack window>. You can set the <showBorder> of a
+<stack>, but the setting has no effect.
 
-References: bottomColor (property), borderPattern (property), bottomPattern (property), properties (property), showHilite (property), topPattern (property), backgroundPattern (property), borderWidth (property), printCardBorders (property), backgroundColor (property), owner (property), topColor (property), borderColor (property), card (keyword), stack (object), object (object), property (glossary), object type (glossary), stack window (glossary)
+References: object (glossary), property (glossary),
+object type (glossary), stack window (glossary), card (keyword),
+stack (object), bottomColor (property), borderPattern (property),
+bottomPattern (property), properties (property), showHilite (property),
+topPattern (property), backgroundPattern (property),
+borderWidth (property), printCardBorders (property),
+backgroundColor (property), owner (property), topColor (property),
+borderColor (property)
 
 Tags: ui
+

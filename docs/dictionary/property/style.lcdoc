@@ -2,49 +2,65 @@ Name: style
 
 Type: property
 
-Syntax: set the style of <object> to <style> 
+Syntax: set the style of <object> to <styleName>
 
-Summary: Specifies the general <appearance> and <behavior> of an <object(object)>.
+Summary:
+Specifies the general appearance and behavior of an <object(object)>.
 
 Associations: button
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the style of card button 3 to rectangle
 
-Value: The <style> of an <object> is a string.
+Value:
+The <style> of an <object(glossary)> is a string.
 
 Description:
 Use the <style> <property> to set an object's specific type.
 
-The possible settings of an object's <style> <property> depend on the kind of <object>.
+The possible settings of an object's <style> <property> depend on the 
+kind of <object(glossary)>.
 
 The <style> of a <button(object)> is one of the following:
+
 * "standard" : the standard button for the current <lookAndFeel> setting
-* "transparent": no border; name is displayed but background is transparent
+* "transparent": no border; name is displayed but background is
+  transparent 
 * "opaque" : <background> is the opaque <backgroundColor> of the button
-* "rectangle": opaque rectangular or square <button(object)> with a border
-* "roundRect": opaque rectangular or square <button(object)> with rounded corners
-* "shadow" : opaque rectangular or square <button(object)> with a drop shadow
+* "rectangle": opaque rectangular or square <button(object)> with a
+  border 
+* "roundRect": opaque rectangular or square <button(object)> with
+  rounded corners
+* "shadow" : opaque rectangular or square <button(object)> with a drop
+  shadow 
 * "menu": a menu whose <appearance> is set by the <menuMode> property
 * "checkbox": a <checkbox> option button
 * "radioButton": a radio button
 
-The <style> of a <button(object)> interacts with certain other <properties>. For example, setting the <opaque> of a standard <button(object)> to false sets its <style> to "transparent".
+
+The <style> of a <button(object)> interacts with certain other 
+<properties>. For example, setting the <opaque> of a standard 
+<button(object)> to false sets its <style> to "transparent".
 
 The <style> of a <field> is one of the following:
-* "transparent": no border; text is displayed but background is transparent
+
+* "transparent": no border; text is displayed but background is
+  transparent 
 * "opaque" : <background> is the opaque <backgroundColor> of the field
 * "rectangle": opaque <field> with a border
 * "shadow" : opaque <field> with a drop shadow
 * "scrolling": opaque field with a vertical scrollbar
 
-The <style> of a <graphic> determines its shape and is one of the following:
+
+The <style> of a <graphic> determines its shape and is one of the
+following: 
+
 * "curve": a curved line
 * "line": a straight line
 * "oval": an oval or circle shape
@@ -53,19 +69,39 @@ The <style> of a <graphic> determines its shape and is one of the following:
 * "regular": a <regular polygon> shape
 * "roundRect": a rectangle or square shape with rounded corners
 
+
 The <style> of a <scrollbar> is one of the following:
+
 * "scrollbar": a standard scrollbar
 * "scale": a "bead on a wire" slider control
 * "progress": a sliding progress bar display
 
-Vertical scale and progress scrollbars always reflect the current lookAndFeel setting. Horizontal scale and progress <scrollbars> use the <Motif> look and feel, unless the <lookAndFeel> is set to "Appearance Manager".
 
-The <style> of a <stack> determines its behavior and is one of the following:
+Vertical scale and progress scrollbars always reflect the current 
+<lookAndFeel> setting. Horizontal scale and progress <scrollbars> use 
+the <Motif> look and feel, unless the <lookAndFeel> is set to 
+"Appearance Manager".
+
+The <style> of a <stack> determines its behavior and is one of the
+following: 
+
 * "topLevel": editable window
-* "modeless": modeless dialog box, cannot be edited, can use only Browse tool
+* "modeless": modeless dialog box, cannot be edited, can use only Browse
+  tool 
 * "modal": modal dialog box, can use only Browse tool
-* "palette": palette window, cannot be resized or edited, can use only Browse tool
+* "palette": palette window, cannot be resized or edited, can use only
+  Browse tool
 
-References: standard (keyword), opaque (keyword), popup (keyword), shadow (keyword), roundEnds (property), properties (property), shadow (property), dontResize (property), style (property), windowShape (property), menuMode (property), threeD (property), backgroundColor (property), lookAndFeel (property), modeless (command), pulldown (command), object (object), scrollbar (object), property (glossary), behavior (glossary), opaque (glossary), graphic (object), regular polygon (glossary), checkbox (glossary), Motif (glossary), field (object), appearance (glossary), background (glossary), stack (object)
+
+References: modeless (command), pulldown (command), object (glossary),
+property (glossary), behavior (glossary), opaque (glossary),
+regular polygon (glossary), checkbox (glossary), Motif (glossary),
+appearance (glossary), background (glossary), standard (keyword),
+opaque (keyword), popup (keyword), shadow (keyword), scrollbar (object),
+graphic (object), field (object), stack (object), roundEnds (property),
+properties (property), shadow (property), dontResize (property),
+style (property), windowShape (property), menuMode (property),
+threeD (property), backgroundColor (property), lookAndFeel (property)
 
 Tags: ui
+

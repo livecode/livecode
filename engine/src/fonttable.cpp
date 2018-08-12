@@ -32,6 +32,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "mcstring.h"
 
+#include "stackfileformat.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCLogicalFontTableEntry
@@ -90,7 +92,7 @@ static uint32_t MCLogicalFontTableLookupEntry(MCNameRef p_textfont, uint2 p_text
 			/* UNCHECKED */ MCMemoryResizeArray(s_logical_font_table_capacity > 0 ? s_logical_font_table_capacity * 2 : 32, s_logical_font_table, s_logical_font_table_capacity);
 		
 		s_logical_font_table[s_logical_font_table_size++] = t_entry;
-		MCNameClone(t_entry . textfont, t_entry . textfont);
+        MCValueRetain(t_entry.textfont);
 	}
 
 	return s_logical_font_table_size - 1;
@@ -208,7 +210,7 @@ void MCLogicalFontTableFinish(void)
 		uint2 t_textsize;
 		bool t_unicode;
 		MCLogicalFontTableGetEntry(i, t_textfont, t_textstyle, t_textsize, t_unicode);
-		MCNameDelete(t_textfont);
+		MCValueRelease(t_textfont);
 	}
 	MCMemoryDeleteArray(s_logical_font_table);
 
@@ -254,7 +256,7 @@ IO_stat MCLogicalFontTableLoad(IO_handle p_stream, uint32_t p_version)
 			
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 			if (t_stat == IO_NORMAL)
-				t_stat = IO_read_stringref_new(&t_textfont_string, p_stream, p_version >= 7000);
+				t_stat = IO_read_stringref_new(&t_textfont_string, p_stream, p_version >= kMCStackFileFormatVersion_7_0);
 
 			// Now convert the textFont string into a name, splitting off the
 			// lang tag (if any).
@@ -331,7 +333,7 @@ IO_stat MCLogicalFontTableSave(IO_handle p_stream, uint32_t p_version)
 			
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
             if (t_stat == IO_NORMAL)
-                t_stat = IO_write_stringref_new(*t_unicode_textfont, p_stream, p_version >= 7000);
+                t_stat = IO_write_stringref_new(*t_unicode_textfont, p_stream, p_version >= kMCStackFileFormatVersion_7_0);
 		}
 
 	return t_stat;

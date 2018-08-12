@@ -66,8 +66,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // __LITTLE_ENDIAN__ will be defined if the target processor uses BE byte-order.
 #undef __BIG_ENDIAN__
 
-// __I386__ will be defined if the target processor is i386.
-#undef __I386__
+// __i386__ will be defined if the target processor is i386.
+#undef __i386__
 // __X86_64__ will be defined if the target processor is x86-64.
 #undef __X86_64__
 // __PPC__ will be defined if the target processor is PowerPC.
@@ -104,6 +104,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // __LF__ will be defined if the native line ending is LF.
 #undef __LF__
 
+// __LP64__ will be defined if longs and pointers are 64 bits.
+#undef __LP64__
+
 // __HAS_CORE_FOUNDATION__ will be defined if the platform has the CF libraries.
 #undef __HAS_CORE_FOUNDATION__
 
@@ -124,7 +127,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(_M_IX86)
 #define __32_BIT__ 1 
 #define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
+#define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(_M_X64)
@@ -162,7 +165,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__i386)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
+#define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__ppc__)
@@ -186,7 +189,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __CR__ 1
 
 // Presence of CoreFoundation
-#define __HAS_CORE_FOUNDATION__
+#define __HAS_CORE_FOUNDATION__ (1)
 
 #endif
 
@@ -207,7 +210,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__i386)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
+#define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__
 #elif defined(__x86_64__)
@@ -222,6 +225,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __ARM__ 1
 #define __LP32__ 1
 #define __SMALL__ 1
+#elif defined(__aarch64__)
+#define __64_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __ARM64__ 1
+#define __LP64__ 1
+#define __MEDIUM__ 1
 #endif
 
 // Native char set
@@ -249,7 +258,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__i386)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
-#define __I386__ 1
+#define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__ppc__)
@@ -285,7 +294,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __CR__ 1
 
 // Presence of CoreFoundation
-#define __HAS_CORE_FOUNDATION__
+#define __HAS_CORE_FOUNDATION__ (1)
 
 #endif
 
@@ -297,37 +306,43 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__GNUC__) && !defined(__APPLE__) && defined(__PLATFORM_IS_ANDROID__)
 
 // Compiler
-#define __GCC__
+#define __GCC__ (1)
 
 // Platform
-#define __ANDROID__
+#define __ANDROID__ (1)
 
 // Architecture
 #if defined(__i386)
-#define __32_BIT__
-#define __LITTLE_ENDIAN__
-#define __I386__
-#define __LP32__ 1
-#define __SMALL__
+#define __32_BIT__ (1)
+#define __LITTLE_ENDIAN__ (1)
+#define __i386__ (1)
+#define __LP32__ (1)
+#define __SMALL__ (1)
 #elif defined(__x86_64__)
-#define __64_BIT__
-#define __LITTLE_ENDIAN__
-#define __X86_64__
+#define __64_BIT__ (1)
+#define __LITTLE_ENDIAN__ (1)
+#define __X86_64__ (1)
+#define __LP64__ (1)
+#define __MEDIUM__ (1)
+#elif defined(__arm__)
+#define __32_BIT__ (1)
+#define __LITTLE_ENDIAN__ (1)
+#define __ARM__ (1)
+#define __LP32__ (1)
+#define __SMALL__ (1)
+#elif defined(__aarch64__)
+#define __64_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __ARM64__ 1
 #define __LP64__ 1
 #define __MEDIUM__ 1
-#elif defined(__arm__)
-#define __32_BIT__
-#define __LITTLE_ENDIAN__
-#define __ARM__
-#define __LP32__ 1
-#define __SMALL__
 #endif
 
 // Native char set
-#define __ISO_8859_1__
+#define __ISO_8859_1__ (1)
 
 // Native line endings
-#define __LF__
+#define __LF__ (1)
 
 #endif
 
@@ -341,18 +356,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LITTLE_ENDIAN__ 1
 
 // Compiler
-#define __GCC__
+#define __GCC__ (1)
 
 // Architecture
-#define __32_BIT__
-#define __LP32__
-#define __SMALL__
+#define __32_BIT__ (1)
+#define __LP32__ (1)
+#define __SMALL__ (1)
 
 // Native char set
-#define __ISO_8859_1__
+#define __ISO_8859_1__ (1)
 
 // Native line endings
-#define __LF__
+#define __LF__ (1)
 
 #endif
 
@@ -415,71 +430,73 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  C++ COMPATIBILITY
+//
+
+#ifndef __has_feature
+#  define __has_feature(x)	0
+#endif
+#ifndef __has_extension
+#  define __has_extension(x) __has_feature(x)
+#endif
+
+// Ensure we have alignof(...) available
+#if defined(__cplusplus) && !__has_feature(cxx_alignof)
+// Testing __cplusplus isn't sufficient as some compilers changed the value before being fully-conforming
+#  if defined(__clang__)
+     // No need for a version check; Clang supports __has_feature as a built-in
+     // so if we get here, it isn't supported
+#    define alignof(x)      __alignof__(x)
+#  elif defined(__GNUC__)
+     // GCC added C++11 alignof(x) in GCC 4.8
+#    if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8)
+#      define alignof(x)    __alignof__(x)
+#    endif
+#  elif defined(_MSC_VER)
+     // MSVC added C++11 alignof(x) in Visual Studio 2012 (compiler version 11.0, _MSC_VER 1700)
+#    if (_MSC_VER < 1700)
+#      define alignof(x)    __alignof(x)
+#    endif
+#  else
+#    error Do not know how to get alignof(x) on this compiler
+#  endif
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
 //  FIXED WIDTH INTEGER TYPES
 //
 
-#if !defined(__VISUALC__)
-#	define __HAVE_STDDEF_H__
-#	include <stddef.h>
-#	define __HAVE_STDINT_H__
-#	define __STDC_LIMIT_MACROS
-#	include <stdint.h>
-#   include <stddef.h>
-#   include <limits.h>
+#if !defined(__STDC_LIMIT_MACROS)
+#	define __STDC_LIMIT_MACROS 1
 #endif
+#include <stddef.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <limits.h>
 
-#if !defined(__HAVE_STDINT_H__)
-typedef unsigned char uint8_t;
-typedef signed char int8_t;
-typedef unsigned short uint16_t;
-typedef signed short int16_t;
-typedef unsigned int uint32_t;
-typedef signed int int32_t;
-
-// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
-#if !defined(uint64_t)
-#define _UINT64_T
-#ifndef __LP64__
-typedef unsigned long long int uint64_t;
-#else
-typedef unsigned long int uint64_t;
-#endif
-#endif
-#if !defined(int64_t)
-#define _INT64_T
-#ifndef __LP64__
-typedef signed long long int int64_t;
-#else
-typedef signed long int int64_t;
-#endif
-#endif
-
-#define UINT8_MAX (255U)
-#define INT8_MIN (-128)
-#define INT8_MAX (127)
-
-#define UINT16_MAX (65535U)
-#define INT16_MIN (-32768)
-#define INT16_MAX (32767)
-
-#define UINT32_MAX (4294967295U)
-#define INT32_MIN (-2147483647 - 1L)
-#define INT32_MAX (2147483647)
-
-#define UINT64_MAX (18446744073709551615ULL)
-#define INT64_MIN (-9223372036854775808LL)
-#define INT64_MAX (9223372036854775807LL)
-#endif /* !__HAVE_STDINT_H__ */
-
+#ifndef UINT8_MIN
 #define UINT8_MIN (0U)
+#endif
+#ifndef UINT16_MIN
 #define UINT16_MIN (0U)
+#endif
+#ifndef UINT32_MIN
 #define UINT32_MIN (0U)
+#endif
+#ifndef UINT64_MIN
 #define UINT64_MIN (0ULL)
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  DERIVED INTEGER TYPES
 //
+
+#undef __HAVE_SSIZE_T__
+#if !defined(__VISUALC__)
+#	define __HAVE_SSIZE_T__ 1
+#endif /* !__VISUALC__ */
 
 #ifdef __32_BIT__
 
@@ -489,44 +506,12 @@ typedef uint32_t uinteger_t;
 typedef int32_t intenum_t;
 typedef uint32_t intset_t;
 
-#if !defined(__HAVE_STDDEF_H__)
-#	if defined(__WINDOWS__)
-typedef unsigned int size_t;
-#	elif defined(__LINUX__) || defined(__ANDROID__)
-typedef unsigned int size_t;
-#	else
-typedef unsigned long size_t;
-#   endif
-#endif /* !__HAVE_STDDEF_H__ */
-
-#if !defined(__HAVE_STDINT_H__)
-#	if defined(__WINDOWS__)
-typedef signed int intptr_t;
-typedef unsigned int uintptr_t;
-#	elif defined(__LINUX__)
-typedef signed int intptr_t;
-typedef unsigned int uintptr_t;
-#	elif defined(__ANDROID__)
-typedef signed int intptr_t;
-typedef unsigned int uintptr_t;
-#	else
-typedef long signed int intptr_t;
-typedef long unsigned int uintptr_t;
-#	endif
-#endif /* !__HAVE_STDINT_H__ */
-
 #define INTEGER_MIN INT32_MIN
 #define INTEGER_MAX INT32_MAX
 #define UINTEGER_MIN UINT32_MIN
 #define UINTEGER_MAX UINT32_MAX
 
 #define UINTPTR_MIN UINT32_MIN
-
-#if !defined(__HAVE_STDINT_H__)
-#define INTPTR_MIN INT32_MIN
-#define INTPTR_MAX INT32_MAX
-#define UINTPTR_MAX UINT32_MAX
-#endif /* !__HAVE_STDINT_H__ */
 
 #else /* !__32_BIT__ */
 
@@ -536,38 +521,12 @@ typedef uint32_t uinteger_t;
 typedef int32_t intenum_t;
 typedef uint32_t intset_t;
 
-#if !defined(__HAVE_STDINT_H__)
-#	ifndef _UINTPTR_T
-#		define _UINTPTR_T
-#		ifdef __LP64__
-typedef uint64_t uintptr_t;
-#		else
-typedef uint32_t uintptr_t;
-#		endif
-#	endif
-
-#	ifndef _INTPTR_T
-#		define _INTPTR_T
-#		ifdef __LP64__
-typedef int64_t intptr_t;
-#		else
-typedef int32_t intptr_t;
-#		endif
-#	endif
-#endif /* !__HAVE_STDINT_H__ */
-
 #define INTEGER_MIN INT32_MIN
 #define INTEGER_MAX INT32_MAX
 #define UINTEGER_MIN UINT32_MIN
 #define UINTEGER_MAX UINT32_MAX
 
 #define UINTPTR_MIN UINT64_MIN
-
-#if !defined(__HAVE_STDINT_H__)
-#define INTPTR_MIN INT64_MIN
-#define INTPTR_MAX INT64_MAX
-#define UINTPTR_MAX UINT64_MAX
-#endif /* !__HAVE_STDINT_H__ */
 
 #endif /* !__32_BIT__ */
 
@@ -605,13 +564,11 @@ typedef int64_t compare_t;
 
 #endif
 
-#if !defined(__HAVE_STDINT_H__)
-typedef uintptr_t size_t;
+#if !defined(__HAVE_SSIZE_T__)
 typedef intptr_t ssize_t;
 
-#	define SIZE_MAX UINTPTR_MAX
 #	define SSIZE_MAX INTPTR_MAX
-#endif /* !__HAVE_STDINT_H__ */
+#endif
 
 #define SIZE_MIN UINTPTR_MIN
 #define SSIZE_MIN INTPTR_MIN
@@ -646,12 +603,18 @@ typedef float32_t coord_t;
 // The 'char_t' type is used to hold a native encoded char.
 typedef unsigned char char_t;
 
-// The 'byte_t' type is used to hold a char in a binary string (native).
-typedef uint8_t byte_t;
+// The 'byte_t' type is used to hold a char in a binary string
+// (native).  This cannot be anything other than to be "unsigned char"
+// because we require the "sizeof" C++ operator to return sizes in
+// units of byte_t, and because we require it to be valid to cast to a
+// "byte_t*" in order to examine the object representation of a value.
+typedef unsigned char byte_t;
 
 // Constants used to represent the minimum and maximum values of a byte_t.
-#define BYTE_MIN UINT8_MIN
-#define BYTE_MAX UINT8_MAX
+// We require bytes to be 8 bits in size.
+static_assert(CHAR_BIT == 8, "Byte size is not 8 bits");
+#define BYTE_MIN (0)
+#define BYTE_MAX (255)
 
 // The 'codepoint_t' type is used to hold a single Unicode codepoint (20-bit
 // value).
@@ -680,10 +643,14 @@ typedef uint16_t unichar_t;
 typedef wchar_t *BSTR;
 #endif
 
-#if defined(__MAC__) || defined(__IOS__)
+#if defined(__HAS_CORE_FOUNDATION__)
+typedef const void *CFTypeRef;
+typedef const struct __CFBoolean *CFBooleanRef;
 typedef const struct __CFNumber *CFNumberRef;
 typedef const struct __CFString *CFStringRef;
 typedef const struct __CFData *CFDataRef;
+typedef const struct __CFArray *CFArrayRef;
+typedef const struct __CFDictionary *CFDictionaryRef;
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -692,11 +659,7 @@ typedef const struct __CFData *CFDataRef;
 //
 
 #if defined(__cplusplus) /* C++ */
-#	if defined(__GCC__)
-#		define nil __null
-#	else
-#		define nil uintptr_t(0)
-#	endif
+#   define nil nullptr
 
 #else /* C */
 #	if defined(__GCC__)
@@ -740,6 +703,8 @@ typedef struct __MCError *MCErrorRef;
 typedef struct __MCStream *MCStreamRef;
 typedef struct __MCProperList *MCProperListRef;
 typedef struct __MCForeignValue *MCForeignValueRef;
+typedef struct __MCJavaObject *MCJavaObjectRef;
+typedef struct __MCObjcObject *MCObjcObjectRef;
 
 // Forward declaration
 typedef struct __MCLocale* MCLocaleRef;
@@ -760,17 +725,66 @@ typedef struct __MCLocale* MCLocaleRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  NEW AND DELETE OPERATORS
+//
+
+#ifdef __cplusplus
+# include <new>
+using std::nothrow;
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  NARROWING CONVERSIONS
+//
+
+#include <utility>
+#include <type_traits>
+
+/* A searchable way to do narrowing casts of numeric values (e.g. from
+ * uint32_t to uint8_t or from uindex_t to std::ptrdiff_t).  Use in
+ * preference to a C-style cast or a raw static_cast.  Should be used
+ * when you're totally certain that overflow/underflow has been
+ * logically ruled out elsewhere. */
+template <typename To, typename From>
+inline constexpr To MCNarrowCast(From p_from) noexcept
+{
+    return static_cast<To>(std::forward<From>(p_from));
+}
+
+/* Checked narrowing conversion of numeric values.  Use when there's a
+ * possibility that the input value might not fit into the output
+ * type, and you want to check.  Note that this is safe to use in
+ * generic/template code; if To can represent all values of From, it
+ * optimises to nothing.*/
+template <typename To, typename From>
+inline bool MCNarrow(From p_from, To& r_result)
+{
+    To t_to = static_cast<To>(p_from);
+    if (static_cast<From>(t_to) != p_from)
+        return false;
+    if ((std::is_signed<From>::value != std::is_signed<To>::value) &&
+        ((t_to < To{}) != (p_from < From{})))
+        return false;
+    r_result = t_to;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
 //  MINIMUM FUNCTIONS
 //
 
-template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : b; }
+// TODO: re-write when we adopt C++11
+template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : T(b); }
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  MAXIMUM FUNCTIONS
 //
 
-template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : b; }
+// TODO: re-write when we adopt C++11
+template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : T(b); }
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -820,84 +834,87 @@ enum MCByteOrder
 	kMCByteOrderBigEndian,
 };
 
-inline MCByteOrder MCByteOrderGetCurrent(void)
-{
 #ifdef __LITTLE_ENDIAN__
-	return kMCByteOrderLittleEndian;
+const MCByteOrder kMCByteOrderHost = kMCByteOrderLittleEndian;
 #else
-	return kMCByteOrderBigEndian;
+const MCByteOrder kMCByteOrderHost = kMCByteOrderBigEndian;
 #endif
+
+constexpr MCByteOrder MCByteOrderGetCurrent(void)
+{
+	return kMCByteOrderHost;
 }
 
-inline uint16_t MCSwapInt16(uint16_t x)
+constexpr uint8_t MCSwapInt(uint8_t x) { return x; }
+constexpr int8_t MCSwapInt(int8_t x) { return x; }
+
+constexpr uint16_t MCSwapInt(uint16_t x)
 {
 	return (uint16_t)(x >> 8) | (uint16_t)(x << 8);
 }
+constexpr int16_t MCSwapInt(int16_t x) { return int16_t(MCSwapInt(uint16_t(x))); }
 
-inline uint32_t MCSwapInt32(uint32_t x)
+constexpr uint32_t MCSwapInt(uint32_t x)
 {
 	return (x >> 24) | ((x >> 8) & 0xff00) | ((x & 0xff00) << 8) | (x << 24);
 }
+constexpr int32_t MCSwapInt(int32_t x) { return int32_t(MCSwapInt(uint32_t(x))); }
 
-inline uint64_t MCSwapInt64(uint64_t x)
+constexpr uint64_t MCSwapInt(uint64_t x)
 {
 	return (x >> 56) | ((x >> 40) & 0xff00) | ((x >> 24) & 0xff0000) | ((x >> 8) & 0xff000000) |
 			((x & 0xff000000) << 8) | ((x & 0xff0000) << 24) | ((x & 0xff00) << 40) | (x << 56);
 }
+constexpr int64_t MCSwapInt(int64_t x) { return int16_t(MCSwapInt(uint64_t(x))); }
 
-#ifdef __LITTLE_ENDIAN__
+constexpr uint16_t MCSwapInt16(uint16_t x) { return MCSwapInt(x); }
+constexpr uint32_t MCSwapInt32(uint32_t x) { return MCSwapInt(x); }
+constexpr uint64_t MCSwapInt64(uint64_t x) { return MCSwapInt(x); }
 
-inline uint16_t MCSwapInt16BigToHost(uint16_t x) {return MCSwapInt16(x);}
-inline uint32_t MCSwapInt32BigToHost(uint32_t x) {return MCSwapInt32(x);}
-inline uint64_t MCSwapInt64BigToHost(uint64_t x) {return MCSwapInt64(x);}
+template <typename T>
+constexpr T MCSwapIntBigToHost(T x)
+{
+	return (kMCByteOrderHost == kMCByteOrderBigEndian) ? x : MCSwapInt(x);
+}
+template <typename T>
+constexpr T MCSwapIntHostToBig(T x) { return MCSwapIntBigToHost(x); }
 
-inline uint16_t MCSwapInt16HostToBig(uint16_t x) {return MCSwapInt16(x);}
-inline uint32_t MCSwapInt32HostToBig(uint32_t x) {return MCSwapInt32(x);}
-inline uint64_t MCSwapInt64HostToBig(uint64_t x) {return MCSwapInt64(x);}
+template <typename T>
+constexpr T MCSwapIntNetworkToHost(T x) { return MCSwapIntBigToHost(x); }
+template <typename T>
+constexpr T MCSwapIntHostToNetwork(T x) { return MCSwapIntHostToBig(x); }
 
-inline uint16_t MCSwapInt16LittleToHost(uint16_t x) {return x;}
-inline uint32_t MCSwapInt32LittleToHost(uint32_t x) {return x;}
-inline uint64_t MCSwapInt64LittleToHost(uint64_t x) {return x;}
+template <typename T>
+constexpr T MCSwapIntLittleToHost(T x)
+{
+	return (kMCByteOrderHost == kMCByteOrderLittleEndian) ? x : MCSwapInt(x);
+}
+template <typename T>
+constexpr T MCSwapIntHostToLittle(T x) { return MCSwapIntLittleToHost(x); }
 
-inline uint16_t MCSwapInt16HostToLittle(uint16_t x) {return x;}
-inline uint32_t MCSwapInt32HostToLittle(uint32_t x) {return x;}
-inline uint64_t MCSwapInt64HostToLittle(uint64_t x) {return x;}
+constexpr uint16_t MCSwapInt16BigToHost(uint16_t x) {return MCSwapIntBigToHost(x);}
+constexpr uint32_t MCSwapInt32BigToHost(uint32_t x) {return MCSwapIntBigToHost(x);}
+constexpr uint64_t MCSwapInt64BigToHost(uint64_t x) {return MCSwapIntBigToHost(x);}
 
-inline uint16_t MCSwapInt16NetworkToHost(uint16_t x) {return MCSwapInt16(x);}
-inline uint32_t MCSwapInt32NetworkToHost(uint32_t x) {return MCSwapInt32(x);}
-inline uint64_t MCSwapInt64NetworkToHost(uint64_t x) {return MCSwapInt64(x);}
+constexpr uint16_t MCSwapInt16HostToBig(uint16_t x) {return MCSwapIntHostToBig(x);}
+constexpr uint32_t MCSwapInt32HostToBig(uint32_t x) {return MCSwapIntHostToBig(x);}
+constexpr uint64_t MCSwapInt64HostToBig(uint64_t x) {return MCSwapIntHostToBig(x);}
 
-inline uint16_t MCSwapInt16HostToNetwork(uint16_t x) {return MCSwapInt16(x);}
-inline uint32_t MCSwapInt32HostToNetwork(uint32_t x) {return MCSwapInt32(x);}
-inline uint64_t MCSwapInt64HostToNetwork(uint64_t x) {return MCSwapInt64(x);}
+constexpr uint16_t MCSwapInt16LittleToHost(uint16_t x) {return MCSwapIntLittleToHost(x);}
+constexpr uint32_t MCSwapInt32LittleToHost(uint32_t x) {return MCSwapIntLittleToHost(x);}
+constexpr uint64_t MCSwapInt64LittleToHost(uint64_t x) {return MCSwapIntLittleToHost(x);}
 
-#else
+constexpr uint16_t MCSwapInt16HostToLittle(uint16_t x) {return MCSwapIntHostToLittle(x);}
+constexpr uint32_t MCSwapInt32HostToLittle(uint32_t x) {return MCSwapIntHostToLittle(x);}
+constexpr uint64_t MCSwapInt64HostToLittle(uint64_t x) {return MCSwapIntHostToLittle(x);}
 
-inline uint16_t MCSwapInt16BigToHost(uint16_t x) {return x;}
-inline uint32_t MCSwapInt32BigToHost(uint32_t x) {return x;}
-inline uint64_t MCSwapInt64BigToHost(uint64_t x) {return x;}
+constexpr uint16_t MCSwapInt16NetworkToHost(uint16_t x) {return MCSwapIntNetworkToHost(x);}
+constexpr uint32_t MCSwapInt32NetworkToHost(uint32_t x) {return MCSwapIntNetworkToHost(x);}
+constexpr uint64_t MCSwapInt64NetworkToHost(uint64_t x) {return MCSwapIntNetworkToHost(x);}
 
-inline uint16_t MCSwapInt16HostToBig(uint16_t x) {return x;}
-inline uint32_t MCSwapInt32HostToBig(uint32_t x) {return x;}
-inline uint64_t MCSwapInt64HostToBig(uint64_t x) {return x;}
-
-inline uint16_t MCSwapInt16LittleToHost(uint16_t x) {return MCSwapInt16(x);}
-inline uint32_t MCSwapInt32LittleToHost(uint32_t x) {return MCSwapInt32(x);}
-inline uint64_t MCSwapInt64LittleToHost(uint64_t x) {return MCSwapInt64(x);}
-
-inline uint16_t MCSwapInt16HostToLittle(uint16_t x) {return MCSwapInt16(x);}
-inline uint32_t MCSwapInt32HostToLittle(uint32_t x) {return MCSwapInt32(x);}
-inline uint64_t MCSwapInt64HostToLittle(uint64_t x) {return MCSwapInt64(x);}
-
-inline uint16_t MCSwapInt16NetworkToHost(uint16_t x) {return x;}
-inline uint32_t MCSwapInt32NetworkToHost(uint32_t x) {return x;}
-inline uint64_t MCSwapInt64NetworkToHost(uint64_t x) {return x;}
-
-inline uint16_t MCSwapInt16HostToNetwork(uint16_t x) {return x;}
-inline uint32_t MCSwapInt32HostToNetwork(uint32_t x) {return x;}
-inline uint64_t MCSwapInt64HostToNetwork(uint64_t x) {return x;}
-
-#endif
+constexpr uint16_t MCSwapInt16HostToNetwork(uint16_t x) {return MCSwapIntHostToNetwork(x);}
+constexpr uint32_t MCSwapInt32HostToNetwork(uint32_t x) {return MCSwapIntHostToNetwork(x);}
+constexpr uint64_t MCSwapInt64HostToNetwork(uint64_t x) {return MCSwapIntHostToNetwork(x);}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1003,11 +1020,11 @@ extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 
 #else
 
-#define MCAssert(expr)
+#define MCAssert(expr) (void) (expr)
 
-#define MCLog(m_format, ...) 
+#define MCLog(...) (void) (__VA_ARGS__)
 
-#define MCLogWithTrace(m_format, ...)
+#define MCLogWithTrace(...) (void) (__VA_ARGS__)
 
 #if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >  4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 5)))
 
@@ -1033,7 +1050,6 @@ template<> struct __MCStaticAssert<true> { };
 enum { MC_CONCAT(__MCSA_,__LINE__) = sizeof(__MCStaticAssert<expr>) }
 #endif
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1046,6 +1062,11 @@ extern "C" {
 
 // Clear the given block of memory to all 0's.
 inline void MCMemoryClear(void *dst, size_t size) { memset(dst, 0, size); }
+
+// Clear the given block of memory to all 0's, ensuring that the
+// compiler never optimises it out.  Use this when clearing sensitive
+// data from memory.
+MC_DLLEXPORT void MCMemoryClearSecure(byte_t* dst, size_t size);
 
 // Fill the given block of memory with the given (byte) value.
 inline void MCMemoryFill(void *dst, size_t size, uint8_t value) { memset(dst, value, size); }
@@ -1072,6 +1093,22 @@ inline compare_t MCMemoryCompare(const void *left, const void *right, size_t siz
 template <typename T> void inline MCMemoryClear(T&p_struct)
 {
 	MCMemoryClear(&p_struct, sizeof(T));
+}
+
+// Securely clear the memory of the given structure to all 0's
+template <typename T>
+void inline MCMemoryClearSecure(T& p_struct)
+{
+    MCMemoryClearSecure(reinterpret_cast<byte_t*>(&p_struct),
+                        sizeof(p_struct));
+}
+
+// Re-initialise an object to its default-constructed state
+template <typename T> void inline MCMemoryReinit(T& p_object)
+{
+    // Run the destructor then default constructor
+    p_object.~T();
+    new (&p_object) T();
 }
 
 extern "C" {
@@ -1137,6 +1174,10 @@ template<typename T> bool MCMemoryReallocate(T *p_block, size_t p_new_size, T*& 
 	return false;
 }
 
+template<typename T> void MCMemoryDeallocate(T* p_block) {
+    MCMemoryDeallocate (static_cast<void*>(p_block));
+}
+
 extern "C" {
     
 ////////////////////////////////////////////////////////////////////////////////
@@ -1161,24 +1202,12 @@ MC_DLLEXPORT void MCMemoryDelete(void *p_record);
 
 }
 
-#ifdef _DEBUG
-#ifdef new
-#undef new
-#define redef_new
-#endif
-#endif
-
-inline void *operator new (size_t, void *p_block, bool)
-{
-	return p_block;
-}
-
 template<typename T> bool MCMemoryNew(T*& r_record)
 {
 	void *t_record;
 	if (MCMemoryNew(sizeof(T), t_record))
 	{
-        r_record = new(t_record, true) T;
+        r_record = new (t_record) T;
 		return true;
 	}
 	return false;
@@ -1187,6 +1216,29 @@ template<typename T> bool MCMemoryNew(T*& r_record)
 template<typename T> void MCMemoryDelete(T* p_record)
 {
 	MCMemoryDelete(static_cast<void *>(p_record));
+}
+
+// Allocates a block of memory for an object and default-constructs it
+// (basically, ::operator new)
+template <typename T>
+bool MCMemoryCreate(T*& r_object)
+{
+    // Allocate the memory then default-construct
+    if (!MCMemoryNew(r_object))
+        return false;
+    
+    new (r_object) T();
+    return true;
+}
+
+// De-allocates a block of memory after running the object's destructor
+// (basically, ::operator delete).
+template <typename T>
+void MCMemoryDestroy(T* p_object)
+{
+    // Run the object's destructor then delete it
+    p_object->~T();
+    MCMemoryDelete(p_object);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1230,6 +1282,29 @@ template<typename T> bool MCMemoryNewArray(uindex_t p_count, T*& r_array)
 	return false;
 }
 
+// Array allocator that default-constructs all elements
+template <typename T>
+bool MCMemoryNewArrayInit(uindex_t p_count, T*& r_array, uindex_t& r_count)
+{
+    if (MCMemoryNewArray(p_count, r_array, r_count))
+    {
+        // Default-construct all elements in the array
+        for (uindex_t i = 0; i < r_count; i++)
+            new (&r_array[i]) T();
+        return true;
+    }
+    
+    return false;
+}
+
+// Array allocator that default-constructs all elements
+template <typename T>
+bool MCMemoryNewArrayInit(uindex_t p_count, T*& r_array)
+{
+    uindex_t t_alloc_count;
+    return MCMemoryNewArrayInit(p_count, r_array, t_alloc_count);
+}
+
 template<typename T> inline bool MCMemoryResizeArray(uindex_t p_new_count, T*& x_array, uindex_t& x_count)
 {
 	void *t_array;
@@ -1242,9 +1317,37 @@ template<typename T> inline bool MCMemoryResizeArray(uindex_t p_new_count, T*& x
 	return false;
 }
 
+template <typename T>
+bool MCMemoryResizeArrayInit(uindex_t p_new_count, T*& x_array, uindex_t& x_count)
+{
+    // Capture the current count before resizing
+    uindex_t t_current_count = x_count;
+    if (MCMemoryResizeArray(p_new_count, x_array, x_count))
+    {
+        // Default construct any new elements that were allocated
+        for (uindex_t i = t_current_count; i < p_new_count; i++)
+            new (&x_array[i]) T();
+        return true;
+    }
+    
+    return false;
+}
+
 template<typename T> void MCMemoryDeleteArray(T* p_array)
 {
 	MCMemoryDeleteArray(static_cast<void *>(p_array));
+}
+
+// Array deleter that runs the destructor for each element
+template <typename T>
+void MCMemoryDeleteArray(T* p_array, uindex_t N)
+{
+    // Run the destructor for each of the elements
+    for (size_t i = 0; i < N; i++)
+        p_array[i].~T();
+    
+    // Destroy the array
+    MCMemoryDeleteArray(p_array);
 }
 
 extern "C" {
@@ -1261,18 +1364,23 @@ extern "C" {
 //   the same from version to version. In particular, never serialize a hash
 //   value - recompute on unserialization of the object.
 
+// Return a hash for the given bool.
+MC_DLLEXPORT hash_t MCHashBool(bool);
+
 // Return a hash for the given integer.
 MC_DLLEXPORT hash_t MCHashInteger(integer_t);
 MC_DLLEXPORT hash_t MCHashUInteger(uinteger_t);
 MC_DLLEXPORT hash_t MCHashSize(ssize_t);
 MC_DLLEXPORT hash_t MCHashUSize(size_t);
+MC_DLLEXPORT hash_t MCHashInt64(int64_t);
+MC_DLLEXPORT hash_t MCHashUInt64(uint64_t);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
 // an integer stored as a double will be the same as hashing the integer.
 MC_DLLEXPORT hash_t MCHashDouble(double d);
 
 // Returns a hash value for the given pointer.
-MC_DLLEXPORT hash_t MCHashPointer(void *p);
+MC_DLLEXPORT hash_t MCHashPointer(const void *p);
 
 // Returns a hash value for the given sequence of bytes.
 MC_DLLEXPORT hash_t MCHashBytes(const void *bytes, size_t byte_count);
@@ -1280,6 +1388,16 @@ MC_DLLEXPORT hash_t MCHashBytes(const void *bytes, size_t byte_count);
 // Returns a hash value for the given sequence of bytes, continuing a previous
 // hashing sequence (byte_count should be a multiple of 4).
 MC_DLLEXPORT hash_t MCHashBytesStream(hash_t previous, const void *bytes, size_t byte_count);
+
+// Returns a hash value for the given sequence of native chars. The chars are
+// folded before being processed.
+MC_DLLEXPORT hash_t MCHashNativeChars(const char_t *chars,
+                                      size_t char_count);
+
+// Returns a hash value for the given sequence of code units. The chars are
+// normalized and folded before being processed.
+MC_DLLEXPORT hash_t MCHashChars(const unichar_t *chars,
+                                size_t char_count);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1417,6 +1535,16 @@ MC_DLLEXPORT bool MCValueInterAndRelease(MCValueRef value, MCValueRef& r_unique_
 // Fetch the 'extra bytes' field for the given custom value.
 inline void *MCValueGetExtraBytesPtr(MCValueRef value) { return ((uint8_t *)value) + kMCValueCustomHeaderSize; }
 
+#if defined(_DEBUG)
+// Emit a debug log message containing the description of the value
+MC_DLLEXPORT void MCValueLog(MCValueRef);
+#endif
+    
+#if defined(__HAS_CORE_FOUNDATION__)
+MC_DLLEXPORT bool MCValueCreateWithCFTypeRef(CFTypeRef p_cf_value, bool p_use_lists, MCValueRef& r_cf_value);
+MC_DLLEXPORT bool MCValueConvertToCFTypeRef(MCValueRef p_value, bool p_use_lists, CFTypeRef& r_cf_value);
+#endif
+    
 //////////
 
 }
@@ -1429,9 +1557,9 @@ template<typename T> inline T MCValueRetain(T value)
 // Utility function for assigning to MCValueRef vars.
 template<typename T> inline void MCValueAssign(T& dst, T src)
 {
-    if (src == dst)
-        return;
-    
+	if (src == dst)
+		return;
+
 	MCValueRetain(src);
 	MCValueRelease(dst);
 	dst = src;
@@ -1440,9 +1568,9 @@ template<typename T> inline void MCValueAssign(T& dst, T src)
 // Utility function for assigning to MCValueRef vars.
 template<typename T> inline void MCValueAssignAndRelease(T& dst, T src)
 {
-    if (src == dst)
-        return;
-    
+	if (src == dst)
+		return;
+
 	MCValueRelease(dst);
 	dst = src;
 }
@@ -1511,24 +1639,80 @@ MC_DLLEXPORT MCTypeInfoRef MCListTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCProperListTypeInfo(void) ATTRIBUTE_PURE;
 
 MC_DLLEXPORT extern MCTypeInfoRef kMCBoolTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCIntTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignBoolTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCUInt8TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSInt8TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUInt16TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSInt16TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUInt32TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSInt32TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUInt64TypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSInt64TypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUInt8TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSInt8TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUInt16TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSInt16TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUInt32TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSInt32TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUInt64TypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSInt64TypeInfo(void) ATTRIBUTE_PURE;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
-
-MC_DLLEXPORT MCTypeInfoRef MCForeignBoolTypeInfo(void) ATTRIBUTE_PURE;
-MC_DLLEXPORT MCTypeInfoRef MCForeignUIntTypeInfo(void) ATTRIBUTE_PURE;
-MC_DLLEXPORT MCTypeInfoRef MCForeignIntTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCForeignFloatTypeInfo(void) ATTRIBUTE_PURE;
 MC_DLLEXPORT MCTypeInfoRef MCForeignDoubleTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef MCForeignPointerTypeInfo(void) ATTRIBUTE_PURE;
 
-MC_DLLEXPORT extern MCTypeInfoRef kMCSizeTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCSSizeTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUIntSizeTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSIntSizeTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUIntSizeTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSIntSizeTypeInfo(void) ATTRIBUTE_PURE;
 
-MC_DLLEXPORT MCTypeInfoRef MCForeignSizeTypeInfo(void) ATTRIBUTE_PURE;
-MC_DLLEXPORT MCTypeInfoRef MCForeignSSizeTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUIntPtrTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSIntPtrTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUIntPtrTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSIntPtrTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCNaturalUIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCNaturalSIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCNaturalFloatTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignNaturalUIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignNaturalSIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignNaturalFloatTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCCBoolTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCBoolTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCCCharTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCUCharTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCSCharTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCUShortTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCSShortTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCUIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCSIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCULongTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCSLongTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCULongLongTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCCSLongLongTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCCharTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCUCharTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCSCharTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCUShortTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCSShortTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCUIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCSIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCULongTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCSLongTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCULongLongTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignCSLongLongTypeInfo(void) ATTRIBUTE_PURE;
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSIntTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSIntTypeInfo(void) ATTRIBUTE_PURE;
 
 //////////
 
@@ -1556,6 +1740,9 @@ MC_DLLEXPORT bool MCTypeInfoIsForeign(MCTypeInfoRef typeinfo);
 // Returns true if the typeinfo is of custom type.
 MC_DLLEXPORT bool MCTypeInfoIsCustom(MCTypeInfoRef typeinfo);
 
+// Returns the default value for the given type if it has one, otherwise nil.
+MC_DLLEXPORT MCValueRef MCTypeInfoGetDefault(MCTypeInfoRef typeinfo);
+    
 // Typeinfo's form a chain with elements in the chain potentially providing critical
 // information about the specified type. This structure describes the represented
 // type, after a typeinfo chain has been suitably processed.
@@ -1595,7 +1782,7 @@ MC_DLLEXPORT bool MCBuiltinTypeInfoCreate(MCValueTypeCode typecode, MCTypeInfoRe
 
 //////////
 
-enum MCForeignPrimitiveType
+enum MCForeignPrimitiveType : uint8_t
 {
     kMCForeignPrimitiveTypeVoid,
     kMCForeignPrimitiveTypeBool,
@@ -1622,13 +1809,21 @@ struct MCForeignTypeDescriptor
     bool (*initialize)(void *contents);
     void (*finalize)(void *contents);
     bool (*defined)(void *contents);
-    bool (*move)(void *source, void *target);
-    bool (*copy)(void *source, void *target);
-    bool (*equal)(void *left, void *right, bool& r_equal);
-    bool (*hash)(void *contents, hash_t& r_hash);
-    bool (*doimport)(void *contents, bool release, MCValueRef& r_value);
-    bool (*doexport)(MCValueRef value, bool release, void *contents);
-	bool (*describe)(void *contents, MCStringRef & r_desc);
+    bool (*move)(const MCForeignTypeDescriptor* desc, void *source, void *target);
+    bool (*copy)(const MCForeignTypeDescriptor* desc, void *source, void *target);
+    bool (*equal)(const MCForeignTypeDescriptor* desc, void *left, void *right, bool& r_equal);
+    bool (*hash)(const MCForeignTypeDescriptor* desc, void *contents, hash_t& r_hash);
+    bool (*doimport)(const MCForeignTypeDescriptor* desc, void *contents, bool release, MCValueRef& r_value);
+    bool (*doexport)(const MCForeignTypeDescriptor* desc, MCValueRef value, bool release, void *contents);
+	bool (*describe)(const MCForeignTypeDescriptor* desc, void *contents, MCStringRef & r_desc);
+    
+    /* The promotedtype typeinfo is the type to which this type must be promoted
+     * when passed through variadic parameters. The 'promote' method does the
+     * promotion. */
+    MCTypeInfoRef promotedtype;
+    /* Promote the value in contents as necessary. The slot ptr must be big enough
+     * to hold the promotedtype. */
+    void (*promote)(void *contents);
 };
 
 MC_DLLEXPORT bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *descriptor, MCTypeInfoRef& r_typeinfo);
@@ -1699,10 +1894,7 @@ struct MCRecordTypeFieldInfo
 };
 
 // Create a description of a record with the given fields.
-MC_DLLEXPORT bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef base_type, MCTypeInfoRef& r_typeinfo);
-
-// Return the base type of the record.
-MC_DLLEXPORT MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef& r_typeinfo);
 
 // Return the number of fields in the record.
 MC_DLLEXPORT uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef typeinfo);
@@ -1713,9 +1905,6 @@ MC_DLLEXPORT MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef typeinfo, uind
 // Return the type of the field at the given index.
 MC_DLLEXPORT MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef typeinfo, uindex_t index);
 
-// Return true if typeinfo is derived from p_base_typeinfo.
-MC_DLLEXPORT bool MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef typeinfo, MCTypeInfoRef p_base_typeinfo);
-
 //////////
 
 // Handler types describe the signature of a function.
@@ -1725,6 +1914,7 @@ enum MCHandlerTypeFieldMode
 	kMCHandlerTypeFieldModeIn,
 	kMCHandlerTypeFieldModeOut,
 	kMCHandlerTypeFieldModeInOut,
+    kMCHandlerTypeFieldModeVariadic,
 };
 
 struct MCHandlerTypeFieldInfo
@@ -1749,12 +1939,16 @@ MC_DLLEXPORT bool MCForeignHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *f
 
 // Returns true if the handler is of foreign type.
 MC_DLLEXPORT bool MCHandlerTypeInfoIsForeign(MCTypeInfoRef typeinfo);
+
+// Returns true if the handler is variadic.
+MC_DLLEXPORT bool MCHandlerTypeInfoIsVariadic(MCTypeInfoRef typeinfo);
     
 // Get the return type of the handler. A return-type of kMCNullTypeInfo means no
 // value is returned.
 MC_DLLEXPORT MCTypeInfoRef MCHandlerTypeInfoGetReturnType(MCTypeInfoRef typeinfo);
 
-// Get the number of parameters the handler takes.
+// Get the number of parameters the handler takes. If the handler is variadic,
+// this returns the number of fixed parameters.
 MC_DLLEXPORT uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef typeinfo);
 
 // Return the mode of the index'th parameter.
@@ -1783,7 +1977,38 @@ MC_DLLEXPORT bool MCNamedCustomTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef ba
 	
 // Create a named typeinfo bound to a foreign typeinfo.
 MC_DLLEXPORT bool MCNamedForeignTypeInfoCreate(MCNameRef p_name, const MCForeignTypeDescriptor *p_descriptor, MCTypeInfoRef& r_typeinfo);
-	
+
+//////////
+    
+MC_DLLEXPORT bool MCJavaVMInitialize();
+MC_DLLEXPORT void MCJavaVMFinalize();
+
+MC_DLLEXPORT MCTypeInfoRef MCJavaGetObjectTypeInfo();
+MC_DLLEXPORT bool MCJavaCreateJavaObjectTypeInfo();
+    
+MC_DLLEXPORT bool MCJavaObjectCreate(void *value, MCJavaObjectRef& r_obj);
+MC_DLLEXPORT void *MCJavaObjectGetObject(const MCJavaObjectRef p_obj);
+
+// Check that a Java param string is compatible with a handler signature typeinfo
+MC_DLLEXPORT bool MCJavaCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_params, MCStringRef p_return, int p_call_type);
+
+// Call a Java method using the JNI
+MC_DLLEXPORT bool MCJavaCallJNIMethod(MCNameRef p_class, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count);
+
+// Get a Java method pointer for a given method in a class
+MC_DLLEXPORT void *MCJavaGetMethodId(MCNameRef p_class_name, MCStringRef p_method_name, MCStringRef p_arguments, MCStringRef p_return, int p_call_type);
+
+// Get the name of a Java class from an instance of that class
+MC_DLLEXPORT bool MCJavaGetJObjectClassName(MCJavaObjectRef p_object, MCStringRef &r_name);
+// Convert a Java object wrapping a jstring to a String Ref
+MC_DLLEXPORT bool MCJavaConvertJStringToStringRef(MCJavaObjectRef p_object, MCStringRef &r_string);
+// Convert a String Ref to a Java object wrapping a jstring
+MC_DLLEXPORT bool MCJavaConvertStringRefToJString(MCStringRef p_string, MCJavaObjectRef &r_object);
+// Convert a Java object wrapping a jByteArray to a Data Ref
+MC_DLLEXPORT bool MCJavaConvertJByteArrayToDataRef(MCJavaObjectRef p_object, MCDataRef &r_data);
+// Convert a Data Ref to a Java object wrapping a jByteArray
+MC_DLLEXPORT bool MCJavaConvertDataRefToJByteArray(MCDataRef p_data, MCJavaObjectRef &r_object);
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  BOOLEAN DEFINITIONS
@@ -1800,7 +2025,12 @@ MC_DLLEXPORT extern MCBooleanRef kMCFalse;
 MC_DLLEXPORT extern MCBooleanRef kMCTrue;
 
 MC_DLLEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
-
+    
+#if defined(__HAS_CORE_FOUNDATION__)
+MC_DLLEXPORT bool MCBooleanCreateWithCFBooleanRef(CFBooleanRef p_cf_number, MCBooleanRef& r_number);
+MC_DLLEXPORT bool MCBooleanConvertToCFBooleanRef(MCBooleanRef p_number, CFBooleanRef& r_cf_number);
+#endif
+    
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  NUMBER DEFINITIONS
@@ -1809,6 +2039,8 @@ MC_DLLEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
 MC_DLLEXPORT bool MCNumberCreateWithInteger(integer_t value, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberCreateWithUnsignedInteger(uinteger_t value, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberCreateWithReal(real64_t value, MCNumberRef& r_number);
+
+MC_DLLEXPORT compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self);
 
 MC_DLLEXPORT bool MCNumberIsInteger(MCNumberRef number);
 MC_DLLEXPORT bool MCNumberIsReal(MCNumberRef number);
@@ -1823,61 +2055,17 @@ MC_DLLEXPORT bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uin
 MC_DLLEXPORT bool MCNumberParse(MCStringRef string, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberParseUnicodeChars(const unichar_t *chars, uindex_t char_count, MCNumberRef& r_number);
     
-#if defined(__MAC__) || defined (__IOS__)
-// Convert the given array to a CFArrayRef if it is a sequence.
-MC_DLLEXPORT bool MCNumberConvertToCFNumberRef(MCArrayRef self, CFNumberRef& r_array);
+#if defined(__HAS_CORE_FOUNDATION__)
+MC_DLLEXPORT bool MCNumberCreateWithCFNumberRef(CFNumberRef p_cf_number, MCNumberRef& r_number);
+MC_DLLEXPORT bool MCNumberConvertToCFNumberRef(MCNumberRef p_number, CFNumberRef& r_cf_number);
 #endif
     
 MC_DLLEXPORT extern MCNumberRef kMCZero;
 MC_DLLEXPORT extern MCNumberRef kMCOne;
 MC_DLLEXPORT extern MCNumberRef kMCMinusOne;
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  NAME DEFINITIONS
-//
-
-// Like MCSTR but for NameRefs
-MC_DLLEXPORT MCNameRef MCNAME(const char *);
-
-// Create a name using the given string.
-MC_DLLEXPORT bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
-// Create a name using chars.
-MC_DLLEXPORT bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
-// Create a name using native chars.
-MC_DLLEXPORT bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
-
-// Create a name using the given string, releasing the original.
-MC_DLLEXPORT bool MCNameCreateAndRelease(MCStringRef string, MCNameRef& r_name);
-
-// Looks for an existing name matching the given string.
-MC_DLLEXPORT MCNameRef MCNameLookup(MCStringRef string);
-
-// Returns a unsigned integer which can be used to order a table for a binary
-// search.
-MC_DLLEXPORT uintptr_t MCNameGetCaselessSearchKey(MCNameRef name);
-
-// Returns the string content of the name.
-MC_DLLEXPORT MCStringRef MCNameGetString(MCNameRef name);
-
-// Returns true if the given name is the empty name.
-MC_DLLEXPORT bool MCNameIsEmpty(MCNameRef name);
-
-}
-
-// Returns true if the names are equal (caselessly). Note that MCNameIsEqualTo
-// is *not* the same as MCValueIsEqualTo as it is a comparison up to case (of
-// the name's string) rather than exact.
-bool MCNameIsEqualTo(MCNameRef left, MCNameRef right);
-bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensitive, bool p_form_sensitive);
-
-extern "C" {
-
-// The empty name object;
-MC_DLLEXPORT extern MCNameRef kMCEmptyName;
-
-MC_DLLEXPORT extern MCNameRef kMCTrueName;
-MC_DLLEXPORT extern MCNameRef kMCFalseName;
+#define DBL_INT_MAX     (1LL << DBL_MANT_DIG)   /* the maximum integer faithfully representable by a double */
+#define DBL_INT_MIN     (-DBL_INT_MAX)          /* the minimum integer faithfully representable by a double */
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1966,6 +2154,9 @@ MC_DLLEXPORT extern MCStringRef kMCLineEndString;
 // The default string for '\t'.
 MC_DLLEXPORT extern MCStringRef kMCTabString;
 
+// The default string for '\0'.
+MC_DLLEXPORT extern MCStringRef kMCNulString;
+
 /////////
 
 // Creates an MCStringRef wrapping the given constant c-string. Note that
@@ -1974,7 +2165,8 @@ MC_DLLEXPORT MCStringRef MCSTR(const char *string);
 
 MC_DLLEXPORT const char *MCStringGetCString(MCStringRef p_string);
 MC_DLLEXPORT bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
-
+MC_DLLEXPORT bool MCStringSubstringIsEqualToCString(MCStringRef string, MCRange p_range, const char *cstring, MCStringOptions options);
+    
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
 MC_DLLEXPORT bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
@@ -1995,12 +2187,11 @@ MC_DLLEXPORT bool MCStringCreateWithNativeCharBufferAndRelease(char_t* buffer, u
 
 // Create an immutable string from the given (native) c-string.
 MC_DLLEXPORT bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
-MC_DLLEXPORT bool MCStringCreateWithCStringAndRelease(char *cstring, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithCStringAndRelease(char *cstring /*delete[]*/, MCStringRef& r_string);
 
 #ifdef __HAS_CORE_FOUNDATION__
 // Create a string from a CoreFoundation string object.
-MC_DLLEXPORT bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string);
-MC_DLLEXPORT bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithCFStringRef(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
 // Create a string from a Pascal-style (counted) string. This always uses the MacRoman encoding.
@@ -2009,6 +2200,11 @@ MC_DLLEXPORT bool MCStringCreateWithPascalString(const unsigned char* pascal_str
 #if !defined(__WINDOWS__)
 // Create a string from a C string in the system encoding
 MC_DLLEXPORT bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
+#endif
+
+#if defined(__WINDOWS__)
+// Create a string from a Windows BSTR
+MC_DLLEXPORT bool MCStringCreateWithBSTR(const BSTR p_bstr, MCStringRef& r_string);
 #endif
 
 // Creates a string from existing strings. The first variant exists to provide
@@ -2077,6 +2273,11 @@ MC_DLLEXPORT bool MCStringMutableCopySubstringAndRelease(MCStringRef string, MCR
 
 /////////
 
+// Copy a string, reversing its contents
+MC_DLLEXPORT bool MCStringCopyReversed(MCStringRef string, MCStringRef& r_reversed);
+
+/////////
+
 // Returns true if the string is mutable
 MC_DLLEXPORT bool MCStringIsMutable(const MCStringRef string);
 
@@ -2122,7 +2323,7 @@ MC_DLLEXPORT const char_t *MCStringGetNativeCharPtr(MCStringRef string);
 // The native length may be different from the string char count.
 MC_DLLEXPORT const char_t *MCStringGetNativeCharPtrAndLength(MCStringRef self, uindex_t& r_native_length);
 
-// Returns the Unicode codepoint at the given codepoint index
+// Returns the Unicode codepoint at the given index
 MC_DLLEXPORT codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
 
 // Returns the char at the given index.
@@ -2149,6 +2350,9 @@ MC_DLLEXPORT void MCStringNativize(MCStringRef string);
 
 // Create a native copy of p_string
 MC_DLLEXPORT bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy);
+
+// Create a Unicode copy of p_string
+MC_DLLEXPORT bool MCStringUnicodeCopy(MCStringRef p_string, MCStringRef& r_copy);
 
 // Maps from a codepoint (character) range to a code unit (StringRef) range
 MC_DLLEXPORT bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange& r_string_range);
@@ -2244,7 +2448,7 @@ MC_DLLEXPORT bool MCStringConvertToWString(MCStringRef string, unichar_t*& r_wst
 // Converts the content to unicode_t*
 MC_DLLEXPORT bool MCStringConvertToUTF8String(MCStringRef string, char*& r_utf8string);
 
-#if defined(__MAC__) || defined (__IOS__)
+#ifdef __HAS_CORE_FOUNDATION__
 // Converts the content to CFStringRef
 MC_DLLEXPORT bool MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring);
 #endif
@@ -2269,6 +2473,7 @@ MC_DLLEXPORT hash_t MCStringHash(MCStringRef string, MCStringOptions options);
 // to options.
 MC_DLLEXPORT bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options);
 MC_DLLEXPORT bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
+MC_DLLEXPORT bool MCStringSubstringIsEqualToNativeChars(MCStringRef self, MCRange p_range, const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options);
 
 // Returns true if the substring is equal to the other, according to options
 MC_DLLEXPORT bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange range, MCStringRef p_other, MCStringOptions p_options);
@@ -2516,6 +2721,85 @@ MC_DLLEXPORT bool MCStringNormalizedCopyNFKD(MCStringRef, MCStringRef&);
 MC_DLLEXPORT bool MCStringSetNumericValue(MCStringRef self, double p_value);
 MC_DLLEXPORT bool MCStringGetNumericValue(MCStringRef self, double &r_value);
 
+enum MCStringLineEndingStyle
+{
+    kMCStringLineEndingStyleLF,
+    kMCStringLineEndingStyleCR,
+    kMCStringLineEndingStyleCRLF,
+#if defined(__CRLF__)
+    kMCStringLineEndingStyleLegacyNative = kMCStringLineEndingStyleCRLF,
+#elif defined(__CR__)
+    kMCStringLineEndingStyleLegacyNative = kMCStringLineEndingStyleCR,
+#elif defined(__LF__)
+    kMCStringLineEndingStyleLegacyNative = kMCStringLineEndingStyleLF,
+#else
+#error Unknown default line ending style (no __CRLF__, __CR__, __LF__ definition)
+#endif
+};
+
+typedef uint32_t MCStringLineEndingOptions;
+enum
+{
+  /* Normalize any occurrence of PS (paragraph separator) to the specified line-ending style */
+  kMCStringLineEndingOptionNormalizePSToLineEnding = 1 << 0,
+  /* Normalize any occurrence of LS (line separator) to VT (vertical tab) */
+  kMCStringLineEndingOptionNormalizeLSToVT = 1 << 1,
+};
+
+// Converts LF, CR, CRLF line endings in p_input to p_to_style line endings and
+// places the result into r_output. PS to p_to_style and LS to VTAB conversions
+// are performed if the appropriate flags are set in p_options. Detected line
+// endings of p_input are returned in r_original_style.
+MC_DLLEXPORT bool
+MCStringNormalizeLineEndings(MCStringRef p_input, 
+                             MCStringLineEndingStyle p_to_style, 
+                             MCStringLineEndingOptions p_options,
+                             MCStringRef& r_output, 
+                             MCStringLineEndingStyle* r_original_style);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  NAME DEFINITIONS
+//
+
+// Like MCSTR but for NameRefs
+MC_DLLEXPORT MCNameRef MCNAME(const char *);
+
+// Create a name using the given string.
+MC_DLLEXPORT bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
+// Create a name using chars.
+MC_DLLEXPORT bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
+// Create a name using native chars.
+MC_DLLEXPORT bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
+
+// Create a name using the given string, releasing the original.
+MC_DLLEXPORT bool MCNameCreateAndRelease(MCStringRef string, MCNameRef& r_name);
+
+// Looks for an existing name matching the given string.
+MC_DLLEXPORT MCNameRef MCNameLookupCaseless(MCStringRef string);
+
+// Returns a unsigned integer which can be used to order a table for a binary
+// search.
+MC_DLLEXPORT uintptr_t MCNameGetCaselessSearchKey(MCNameRef name);
+
+// Returns the string content of the name.
+MC_DLLEXPORT MCStringRef MCNameGetString(MCNameRef name);
+
+// Returns true if the given name is the empty name.
+MC_DLLEXPORT bool MCNameIsEmpty(MCNameRef name);
+
+// Returns true if the names are equal under the options specified by options.
+MC_DLLEXPORT bool MCNameIsEqualTo(MCNameRef left, MCNameRef right, MCStringOptions p_options);
+
+// Returns true if the names are equal caselessly.
+MC_DLLEXPORT bool MCNameIsEqualToCaseless(MCNameRef left, MCNameRef right);
+
+// The empty name object;
+MC_DLLEXPORT extern MCNameRef kMCEmptyName;
+
+MC_DLLEXPORT extern MCNameRef kMCTrueName;
+MC_DLLEXPORT extern MCNameRef kMCFalseName;
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  DATA DEFINITIONS
@@ -2580,6 +2864,8 @@ MC_DLLEXPORT bool MCDataRemove(MCDataRef r_data, MCRange p_range);
 MC_DLLEXPORT bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
 MC_DLLEXPORT bool MCDataReplaceBytes(MCDataRef r_data, MCRange p_range, const byte_t *p_new_data, uindex_t p_byte_count);
 
+MC_DLLEXPORT bool MCDataReverse(MCDataRef);
+
 MC_DLLEXPORT bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
 MC_DLLEXPORT bool MCDataContains(MCDataRef p_data, MCDataRef p_needle);
@@ -2589,9 +2875,9 @@ MC_DLLEXPORT bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle);
 MC_DLLEXPORT bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index);
 MC_DLLEXPORT bool MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index);
 
-// convert the given data to CFDataRef
-#if defined(__MAC__) || defined (__IOS__)
-MC_DLLEXPORT bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata);
+#if defined(__HAS_CORE_FOUNDATION__)
+MC_DLLEXPORT bool MCDataCreateWithCFDataRef(CFDataRef p_cf_data, MCDataRef& r_data);
+MC_DLLEXPORT bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cf_data);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2603,13 +2889,9 @@ MC_DLLEXPORT extern MCArrayRef kMCEmptyArray;
 
 // Create an immutable array containing the given keys and values.
 MC_DLLEXPORT bool MCArrayCreate(bool case_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
-// Create an immutable array containing the given keys and values with the requested string comparison options.
-MC_DLLEXPORT bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
 
 // Create an empty mutable array.
 MC_DLLEXPORT bool MCArrayCreateMutable(MCArrayRef& r_array);
-// Create an empty mutable array with the requested string comparison options.
-MC_DLLEXPORT bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive, bool p_form_sensitive);
 
 // Make an immutable copy of the given array. If the 'copy and release' form is
 // used then the original array is released (has its reference count reduced by
@@ -2628,11 +2910,6 @@ MC_DLLEXPORT bool MCArrayIsMutable(MCArrayRef array);
 
 // Returns the number of elements in the array.
 MC_DLLEXPORT uindex_t MCArrayGetCount(MCArrayRef array);
-
-// Returns whether the keys of the array have been predesignated case sensitive or not.
-MC_DLLEXPORT bool MCArrayIsCaseSensitive(MCArrayRef array);
-// Returns whether the keys of the array have been predesignated form sensitive or not.
-MC_DLLEXPORT bool MCArrayIsFormSensitive(MCArrayRef array);
 
 // Fetch the value from the array with the given key. The returned value is
 // not retained. If being stored elsewhere ValueCopy should be used to make an
@@ -2677,6 +2954,22 @@ MC_DLLEXPORT bool MCArrayIterate(MCArrayRef array, uintptr_t& iterator, MCNameRe
 
 // Returns true if the given array is the empty array.
 MC_DLLEXPORT bool MCArrayIsEmpty(MCArrayRef self);
+    
+#if defined(__HAS_CORE_FOUNDATION__)
+// If p_use_lists is true, then any arrays which look like sequences will be
+// converted to MCProperListRef / CFArrayRef (depending on direction).
+    
+MC_DLLEXPORT bool MCArrayCreateWithCFDictionaryRef(CFDictionaryRef p_cf_dictionary, bool p_use_lists, MCArrayRef& r_array);
+MC_DLLEXPORT bool MCArrayConvertToCFDictionaryRef(MCArrayRef p_value, bool p_use_lists, CFDictionaryRef& r_cf_value); 
+MC_DLLEXPORT bool MCArrayCreateWithCFArrayRef(CFArrayRef p_cf_array, bool p_use_lists, MCArrayRef& r_array);
+// Attempt to convert the array to a CFArrayRef. If the array cannot be
+// converted, r_cf_value is set to nullptr and true is returned.
+MC_DLLEXPORT bool MCArrayConvertToCFArrayRef(MCArrayRef p_value, bool p_use_lists, CFArrayRef& r_cf_value);
+#endif
+
+// Attempt to convert the array to a properlist. If the array cannot be
+// converted to a list, r_list is set to nullptr and true is returned.
+MC_DLLEXPORT bool MCArrayConvertToProperList(MCArrayRef p_array, MCProperListRef& r_list);
     
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2777,12 +3070,6 @@ MC_DLLEXPORT bool MCRecordCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_
 MC_DLLEXPORT bool MCRecordMutableCopy(MCRecordRef record, MCRecordRef& r_new_record);
 MC_DLLEXPORT bool MCRecordMutableCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
 
-MC_DLLEXPORT bool MCRecordCopyAsBaseType(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
-MC_DLLEXPORT bool MCRecordCopyAsBaseTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
-
-MC_DLLEXPORT bool MCRecordCopyAsDerivedType(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
-MC_DLLEXPORT bool MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
-
 MC_DLLEXPORT bool MCRecordIsMutable(MCRecordRef self);
 
 MC_DLLEXPORT bool MCRecordFetchValue(MCRecordRef record, MCNameRef field, MCValueRef& r_value);
@@ -2798,12 +3085,19 @@ MC_DLLEXPORT bool MCRecordIterate(MCRecordRef record, uintptr_t& x_iterator, MCN
 //  HANDLER DEFINITIONS
 //
 
+enum MCHandlerQueryType
+{
+    kMCHandlerQueryTypeNone,
+    kMCHandlerQueryTypeObjcSelector,
+};
+    
 struct MCHandlerCallbacks
 {
     size_t size;
     void (*release)(void *context);
     bool (*invoke)(void *context, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 	bool (*describe)(void *context, MCStringRef& r_desc);
+    bool (*query)(void *context, MCHandlerQueryType type, void *r_info);
 };
 
 MC_DLLEXPORT bool MCHandlerCreate(MCTypeInfoRef typeinfo, const MCHandlerCallbacks *callbacks, void *context, MCHandlerRef& r_handler);
@@ -2811,8 +3105,19 @@ MC_DLLEXPORT bool MCHandlerCreate(MCTypeInfoRef typeinfo, const MCHandlerCallbac
 MC_DLLEXPORT void *MCHandlerGetContext(MCHandlerRef handler);
 MC_DLLEXPORT const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef handler);
     
+/* Invoke the given handler with the specified arguments. If an error is thrown
+ * then false is returned.
+ * Note: The normal version must be called from the engine thread. Use
+ *       ExternalInvoke if the current thread is unknown. */
 MC_DLLEXPORT bool MCHandlerInvoke(MCHandlerRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+MC_DLLEXPORT bool MCHandlerExternalInvoke(MCHandlerRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+
+/* Invoke the given handler with the specified arguments. If an error is thrown
+ * then the error object is returned.
+ * Note: The normal version must be called from the engine thread. Use
+ *       ExternalInvoke if the current thread is unknown. */
 MC_DLLEXPORT /*copy*/ MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef handler, MCProperListRef& x_arguments, MCValueRef& r_value);
+MC_DLLEXPORT /*copy*/ MCErrorRef MCHandlerTryToExternalInvokeWithList(MCHandlerRef handler, MCProperListRef& x_arguments, MCValueRef& r_value);
     
 MC_DLLEXPORT bool MCHandlerGetFunctionPtr(MCHandlerRef handler, void*& r_func_ptr);
 
@@ -2827,9 +3132,23 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCUnboundTypeErrorTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCUnimplementedErrorTypeInfo;
 
 MC_DLLEXPORT bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
+MC_DLLEXPORT bool MCErrorCreateS(MCErrorRef& r_error,
+								 MCTypeInfoRef typeinfo,
+								 ...);
+MC_DLLEXPORT bool MCErrorCreateV(MCErrorRef& r_error,
+								 MCTypeInfoRef typeinfo,
+								 va_list args);
 
 MC_DLLEXPORT bool MCErrorCreateWithMessage(MCTypeInfoRef typeinfo, MCStringRef message, MCArrayRef info, MCErrorRef & r_error);
-
+MC_DLLEXPORT bool MCErrorCreateWithMessageS(MCErrorRef& r_error,
+											MCTypeInfoRef typeinfo,
+											MCStringRef message,
+											...);
+MC_DLLEXPORT bool MCErrorCreateWithMessageV(MCErrorRef& r_error,
+											MCTypeInfoRef typeinfo,
+											MCStringRef message,
+											va_list args);
+	
 MC_DLLEXPORT bool MCErrorUnwind(MCErrorRef error, MCValueRef target, uindex_t row, uindex_t column);
 
 MC_DLLEXPORT MCNameRef MCErrorGetDomain(MCErrorRef error);
@@ -2854,11 +3173,17 @@ MC_DLLEXPORT bool MCErrorThrow(MCErrorRef error);
 // Catch the current error code (on the current thread) if any and clear it.
 MC_DLLEXPORT bool MCErrorCatch(MCErrorRef& r_error);
 
+// Resets the error state on the current thread. This call is equivalent to:
+//     MCAutoErrorRef t_error;
+//     MCErrorCatach(&t_error);
+MC_DLLEXPORT void MCErrorReset(void);
+
 // Returns true if there is an error pending on the current thread.
 MC_DLLEXPORT bool MCErrorIsPending(void);
 
 // Returns any pending error (on the current thread) without clearing it.
 MC_DLLEXPORT MCErrorRef MCErrorPeek(void);
+
 
 // Throw an out of memory error.
 MC_DLLEXPORT bool MCErrorThrowOutOfMemory(void);
@@ -2880,6 +3205,9 @@ MC_DLLEXPORT bool MCErrorThrowGenericWithMessage(MCStringRef message, ...);
 //
 //  FOREIGN DEFINITIONS
 //
+
+MC_DLLEXPORT extern MCTypeInfoRef kMCForeignImportErrorTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCForeignExportErrorTypeInfo;
 
 MC_DLLEXPORT bool MCForeignValueCreate(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
 MC_DLLEXPORT bool MCForeignValueCreateAndRelease(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
@@ -3089,6 +3417,18 @@ MC_DLLEXPORT extern MCProperListRef kMCEmptyProperList;
 // Create an immutable list containing the given values.
 MC_DLLEXPORT bool MCProperListCreate(const MCValueRef *values, uindex_t length, MCProperListRef& r_list);
 
+// Create an immutable list containing valuerefs built from a sequence of
+// raw values. The raw values should be sequential in memory, size(type) apart.
+// If the foreign type does not bridge (has no import method), then a boxed
+// foreign value is created (MCForeignValueRef).
+MC_DLLEXPORT bool MCProperListCreateWithForeignValues(MCTypeInfoRef type, const void *values, uindex_t value_count, MCProperListRef& r_list);
+
+// Create a c-array of foreign values from the given list. The original list is
+// not released. Ownership of the foreign value array is passed to the caller.
+// p_typeinfo must be a foreign typeinfo. If any value in the list is not of the
+// given type, or cannot be exported as that type, this returns false.
+MC_DLLEXPORT bool MCProperListConvertToForeignValues(MCProperListRef list, MCTypeInfoRef p_typeinfo, void*& r_values_ptr, uindex_t& r_values_count);
+    
 // Create an empty mutable list.
 MC_DLLEXPORT bool MCProperListCreateMutable(MCProperListRef& r_list);
 
@@ -3130,11 +3470,13 @@ typedef bool (*MCProperListMapCallback)(void *context, MCValueRef element, MCVal
 MC_DLLEXPORT bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list, void *context);
 
 // Sort list by comparing elements using the provided callback.
-typedef compare_t (*MCProperListQuickSortCallback)(const MCValueRef left, const MCValueRef right);
+typedef compare_t (*MCProperListQuickSortCallback)(const MCValueRef *left, const MCValueRef *right);
 MC_DLLEXPORT bool MCProperListSort(MCProperListRef list, bool p_reverse, MCProperListQuickSortCallback p_callback);
 
 typedef compare_t (*MCProperListCompareElementCallback)(void *context, const MCValueRef left, const MCValueRef right);
 MC_DLLEXPORT bool MCProperListStableSort(MCProperListRef list, bool p_reverse, MCProperListCompareElementCallback p_callback, void *context);
+
+MC_DLLEXPORT bool MCProperListReverse(MCProperListRef list);
 
 // Fetch the first element of the list. The returned value is not retained.
 MC_DLLEXPORT MCValueRef MCProperListFetchHead(MCProperListRef list);
@@ -3181,6 +3523,83 @@ MC_DLLEXPORT bool MCProperListEndsWithList(MCProperListRef list, MCProperListRef
 
 MC_DLLEXPORT bool MCProperListIsListOfType(MCProperListRef list, MCValueTypeCode p_type);
 MC_DLLEXPORT bool MCProperListIsHomogeneous(MCProperListRef list, MCValueTypeCode& r_type);
+    
+#if defined(__HAS_CORE_FOUNDATION__)
+MC_DLLEXPORT bool MCProperListCreateWithCFArrayRef(CFArrayRef p_cf_dictionary, bool p_use_lists, MCProperListRef& r_list);
+MC_DLLEXPORT bool MCProperListConvertToCFArrayRef(MCProperListRef p_list, bool p_use_lists, CFArrayRef& r_list);
+#endif
+    
+MC_DLLEXPORT bool MCProperListConvertToArray(MCProperListRef p_list, MCArrayRef& r_array);
+    
+////////////////////////////////////////////////////////////////////////////////
+//
+//  OBJC DEFINITIONS
+//
+
+/* The ObjcObject type manages the lifetime of the obj-c object it contains.
+ * Specifcally, it sends 'release' to the object when the ObjcObject is dropped */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcObjectTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcObjectTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcId type describes an id which is passed into, or out of an obj-c
+ * method with no implicit action on its reference count. */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcIdTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcIdTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcRetainedId type describes an id which is passed into, or out of an
+ * obj-c method and is expected to already have been retained. (i.e. the
+ * caller or callee expects to receive it with +1 ref count). */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcRetainedIdTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcRetainedIdTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcAutoreleasedId type describes an id which has been placed in the
+ * innermost autorelease pool before being returned to the caller. */
+MC_DLLEXPORT extern MCTypeInfoRef kMCObjcAutoreleasedIdTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef MCObjcAutoreleasedIdTypeInfo(void) ATTRIBUTE_PURE;
+
+/* The ObjcObjectCreateWithId function creates an ObjcObject out of a raw id
+ * value, retaining it to make sure it owns a reference to it. */
+MC_DLLEXPORT bool MCObjcObjectCreateWithId(void *value, MCObjcObjectRef& r_obj);
+
+/* The ObjcObjectCreateWithId function creates an ObjcObject out of a raw id
+ * value, taking a +1 reference count from it (i.e. it assumes the value has
+ * already been retained before being called). */
+MC_DLLEXPORT bool MCObjcObjectCreateWithRetainedId(void *value, MCObjcObjectRef& r_obj);
+
+/* The ObjcObjectCreateWithAutoreleasedId function creates an ObjcObject out of
+ * a raw id value which is in the innermost autorelease pool. Currently this
+ * means that it retains it. */
+MC_DLLEXPORT bool MCObjcObjectCreateWithAutoreleasedId(void *value, MCObjcObjectRef& r_obj);
+
+/* The ObjcObjectGetId function returns the raw id value contained within
+ * an ObjcObject. The retain count of the id remains unchanged. */
+MC_DLLEXPORT void *MCObjcObjectGetId(MCObjcObjectRef obj);
+
+/* The ObjcObjectGetRetainedId function returns the raw id value contained within
+ * an ObjcObject. The id is retained before being returned. */
+MC_DLLEXPORT void *MCObjcObjectGetRetainedId(MCObjcObjectRef obj);
+
+/* The ObjcObjectGetAutoreleasedId function returns the raw id value contained within
+ * an ObjcObject. The id is autoreleased before being returned. */
+MC_DLLEXPORT void *MCObjcObjectGetAutoreleasedId(MCObjcObjectRef obj);
+
+/* Create an ObjcObject containing an instance of the com_livecode_MCObjcFormalDelegate class,
+ * mapping protocol methods to MCHandlerRefs, with
+ * a context parameter. */
+MC_DLLEXPORT bool MCObjcCreateDelegateWithContext(MCStringRef p_protocol_name, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object);
+
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcFormalDelegate class,
+ * mapping protocol methods to MCHandlerRefs. */
+MC_DLLEXPORT bool MCObjcCreateDelegate(MCStringRef p_protocol_name, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object);
+
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcInformalDelegate class,
+ * mapping informal protocol methods specified as a list of foreign handler to MCHandlerRefs, with
+ * a context parameter. */
+MC_DLLEXPORT bool MCObjcCreateInformalDelegateWithContext(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCValueRef p_context, MCObjcObjectRef& r_object);
+    
+/* Create an ObjcObject containing an instance of  the com_livecode_MCObjcInformalDelegate class,
+ * mapping informal protocol methods specified as a list of foreign handler to MCHandlerRefs. */
+MC_DLLEXPORT bool MCObjcCreateInformalDelegate(MCProperListRef p_foreign_handlers, MCArrayRef p_handler_mapping, MCObjcObjectRef& r_object);
     
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3278,6 +3697,7 @@ struct MCPickleVariantInfo
 #define MC_PICKLE_TYPEINFOREF(Field) MC_PICKLE_FIELD(TypeInfoRef, Field, 0)
 
 #define MC_PICKLE_INTENUM(EType, EField) MC_PICKLE_FIELD(IntEnum, EField, k##EType##__Last)
+#define MC_PICKLE_INTSET(SType, SField) MC_PICKLE_FIELD(IntEnum, SField, 0)
 
 #define MC_PICKLE_ARRAY_OF_BYTE(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfByte, Field, CountField, 0)
 #define MC_PICKLE_ARRAY_OF_UINDEX(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfUIndex, Field, CountField, 0)
@@ -3305,6 +3725,7 @@ MC_DLLEXPORT void MCPickleRelease(MCPickleRecordInfo *info, void *record);
 MC_DLLEXPORT bool MCTypeConvertStringToLongInteger(MCStringRef p_string, integer_t& r_converted);
 MC_DLLEXPORT bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool p_convert_octals = false);
 MC_DLLEXPORT bool MCTypeConvertStringToBool(MCStringRef p_string, bool& r_converted);
+MC_DLLEXPORT bool MCTypeConvertDataToReal(MCDataRef p_data, real64_t& r_converted, bool p_convert_octals = false);
 
 }
     

@@ -6,13 +6,14 @@ Syntax: the clickLoc
 
 Syntax: clickLoc()
 
-Summary: <return|Returns> the position of the most recent mouse click.
+Summary:
+<return|Returns> the position of the most recent mouse click.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,web,mobile
+Platforms: desktop, mobile
 
 Example:
 the clickLoc
@@ -20,17 +21,36 @@ the clickLoc
 Example:
 if the clickLoc is the mouseLoc then send mouseUp to me
 
-Returns: The <clickLoc> <function> <return|returns> two <integer|integers> separated by a comma.
+Returns:
+The <clickLoc> <function> <return|returns> two <integer|integers>
+separated by a comma.
 
 Description:
-Use the <clickLoc> <function> to determine where a user clicked, or to determine whether the <mouse pointer> has moved since the last click.
+Use the <clickLoc> <function> to determine where a user clicked, or to
+determine whether the <mouse pointer> has moved since the last click.
 
-The first item of the returned value is the horizontal distance in pixels from the left edge of the clicked stack to the location of the click. (Use the <clickStack> function to identify which <stack> was clicked.) The second <item> of the <return value|returned value> is the vertical distance from the top edge of the clicked <stack> to the location of the click.
+The first item of the returned value is the horizontal distance in
+pixels from the left edge of the clicked stack to the location of the
+click. (Use the <clickStack> function to identify which <stack> was
+clicked.) The second <item> of the <return value|returned value> is the
+vertical distance from the top edge of the clicked <stack> to the
+location of the click.
 
-The click location is the position of the mouse pointer when the user pressed the mouse button, not when the user released the button. In particular, inside a mouseDown handler, the clickLoc returns the position of the mouse as it was when the mouse down action occurred.
+The click location is the position of the mouse pointer when the user
+pressed the mouse button, not when the user released the button. In
+particular, inside a mouseDown handler, the clickLoc returns the
+position of the mouse as it was when the mouse down action occurred.
 
-The first item of the <clickLoc> is equal to the <clickH>. The second <item> is equal to the <clickV>.
+The first item of the <clickLoc> is equal to the <clickH>. The second
+<item> is equal to the <clickV>.
 
-References: stack (object), linkClicked (message), mouseDoubleUp (message), mouseStillDown (message), item (keyword), integer (glossary), mouse pointer (glossary), return value (glossary), return (glossary), mouseClick (function), selectedLoc (function), clickH (function), clickV (function), clickStack (function), popup (command), click (command), function (control_st)
+References: popup (command), click (command),
+function (control structure), mouseClick (function),
+selectedLoc (function), clickH (function), clickV (function),
+clickStack (function), integer (glossary), mouse pointer (glossary),
+return value (glossary), return (glossary), item (keyword),
+linkClicked (message), mouseDoubleUp (message), mouseStillDown (message),
+stack (object)
 
 Tags: ui
+

@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
-extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,8 +46,6 @@ extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p
 
 #define OBJC_LEAVE \
 	[__t_pool release];
-
-static bool s_coreimage_present = false;
 
 typedef struct __coreimage_visualeffect_t coreimage_visualeffect_t;
 typedef coreimage_visualeffect_t *coreimage_visualeffect_ref_t;
@@ -249,7 +247,7 @@ bool MCGImageToCIImage(MCGImageRef p_image, CIImage *&r_image)
 {
 	CGImageRef t_cg_image = nil;
 	CIImage *t_ci_image = nil;
-	if (!MCGImageToCGImage(p_image, MCGRectangleMake(0, 0, MCGImageGetWidth(p_image), MCGImageGetHeight(p_image)), false, false, t_cg_image))
+	if (!MCGImageToCGImage(p_image, MCGIntegerRectangleMake(0, 0, MCGImageGetWidth(p_image), MCGImageGetHeight(p_image)), false, t_cg_image))
 		return false;
 	
 	bool t_success = true;
@@ -405,7 +403,6 @@ rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time
 	{
 		CIContext *t_context = nil;
 		rei_boolean_t t_result = true;
-		Rect t_rect;
 		
 		OBJC_ENTER(false)
 		

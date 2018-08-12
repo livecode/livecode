@@ -4,27 +4,39 @@ Type: property
 
 Syntax: set the showName of {<button> | <graphic> | <group>} to {true | false}
 
-Summary: Specifies whether an <object|object's> name is displayed within it.
+Summary:
+Specifies whether an <object|object's> name is displayed within it.
 
-Associations: button
+Associations: button, graphic, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the showName of button "Oops!" to true
 
-Value (bool):The <showName> of a <button(keyword)>, <graphic(keyword)>, or <group(command)> is true or false.
-By default, the <showName> <property> of newly created <button(object)|buttons> is set to true. The <showName> of newly created <graphic(object)|graphics> and <group(glossary)|groups> is set to false.
+Value (bool):
+The <showName> of a <button(keyword)>, <graphic(keyword)>, or
+<group(command)> is true or false. By default, the <showName> <property>
+of newly created <button(object)|buttons> is set to true. The <showName>
+of newly created <graphic(object)|graphics> and <group(glossary)|groups>
+is set to false.
 
 Description:
-Use the <showName> <property> to display a text label for an <object>.
+Use the <showName> <property> to display a text label for an
+<object(glossary)>. 
 
-If an object's <showName> <property> is set to true, its <name> is displayed inside its rectangle. If the <object> has a label <property>, the <label> is displayed instead of the name.
+If an object's <showName> <property> is set to true, its <name> is
+displayed inside its rectangle. If the <object(glossary)> has a label
+<property>, the <label> is displayed instead of the name.
 
-References: name (property), label (property), button (keyword), graphic (keyword), nameChanged (message), group (command), button (object), object (object), graphic (object), property (glossary), group (glossary)
+References: group (command), object (glossary), property (glossary),
+group (glossary), button (keyword), graphic (keyword),
+nameChanged (message), button (object), graphic (object), name (property),
+label (property)
 
 Tags: ui
+

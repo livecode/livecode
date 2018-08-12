@@ -2,13 +2,14 @@ Name: scrollerEndDrag
 
 Type: message
 
-Syntax: scrollerEndDrag <didDecelerate> 
+Syntax: scrollerEndDrag <pDidDecelerate>
 
-Summary: Sent when a scroll initiating drag is finished.
+Summary:
+Sent when a scroll initiating drag is finished.
 
 Introduced: 4.5.3
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -18,14 +19,25 @@ on scrollerEndDrag
 end scrollerEndDrag
 
 Parameters:
-didDecelerate: 
-didDecelerate (iOS Only): Either 'true' or 'false' specifying whether the scroll decelerated or not.
+pDidDecelerate: Either 'true' or 'false' depending on whether
+the scroll decelerated or not (iOS Only)
 
 Description:
-The <scrollerEndDrag> message is sent when a scroll that was initiated by dragging on a scroller control created using the <mobileControlCreate> command finishes.
+The <scrollerEndDrag> message is sent when a scroll that was initiated
+by dragging on a scroller control created using the
+<mobileControlCreate> command finishes.
 
-Handle the <scrollerEndDrag> message if you want to move LiveCode controls, make changes to the interface or set the appropriate scroll properties of groups and fields to get a native scrolling effect.
+Handle the <scrollerEndDrag> message if you want to move LiveCode
+controls, make changes to the interface or set the appropriate scroll
+properties of groups and fields to get a native scrolling effect.
 
-The <scrollerEndDrag> message is sent to the object containing the script that created the scroller control.
+The <scrollerEndDrag> message is sent to the object containing the
+script that created the scroller control.
 
-References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), scrollerEndDecelerate (message), scrollerBeginDecelerate (message), scrollerBeginDrag (message), scrollerDidScroll (message), scrollerScrollToTop (message)
+References: mobileControlCreate (command), mobileControlDelete (command),
+mobileControlSet (command), mobileControlGet (function),
+mobileControlTarget (function), mobileControls (function),
+scrollerEndDecelerate (message), scrollerBeginDecelerate (message),
+scrollerBeginDrag (message), scrollerDidScroll (message),
+scrollerScrollToTop (message)
+

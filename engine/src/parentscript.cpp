@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "field.h"
 #include "handler.h"
 #include "hndlrlst.h"
-//#include "execpt.h"
+
 #include "scriptpt.h"
 #include "mcerror.h"
 #include "util.h"
@@ -122,7 +122,7 @@ MCVariable *MCParentScriptUse::GetVariable(uint32_t i)
 
 	// Allocate the array of variables needed
 	m_local_count = t_handlers -> getnvars();
-	m_locals = new MCVariable *[m_local_count];
+	m_locals = new (nothrow) MCVariable *[m_local_count];
 
 	// Loop through initializing the variables as appropriate
 	for(uint32_t j = 0; j < m_local_count; ++j, t_vars = t_vars -> getnext())
@@ -154,7 +154,7 @@ void MCParentScriptUse::ClearVars(void)
 		delete m_locals[i];
 
 	// Finally delete the locals array
-	delete m_locals;
+	delete[] m_locals; /* Allocated with new[] */
 	
 	m_locals = NULL;
 	m_local_count = 0;
@@ -169,7 +169,7 @@ void MCParentScriptUse::PreserveVars(uint32_t *p_map, MCValueRef *p_new_var_init
 
 	// We have some vars so we need to do some remapping. First allocate a new array
 	MCVariable **t_new_locals;
-	t_new_locals = new MCVariable *[p_new_var_count];
+	t_new_locals = new (nothrow) MCVariable *[p_new_var_count];
 	
 	// Initialize it to NULL
 	memset(t_new_locals, 0, sizeof(MCVariable *) * p_new_var_count);
@@ -212,7 +212,7 @@ MCParentScriptUse *MCParentScriptUse::Clone(MCObject *p_new_referrer)
 {
 	// First allocate a new instance
 	MCParentScriptUse *t_new_use;
-	t_new_use = new MCParentScriptUse(m_parent, p_new_referrer);
+	t_new_use = new (nothrow) MCParentScriptUse(m_parent, p_new_referrer);
 	if (t_new_use == NULL)
 		return NULL;
 
@@ -272,7 +272,7 @@ bool MCParentScriptUse::Inherit(void)
 
 	// Create a new use of the super-object's parentScript
 	MCParentScriptUse *t_super_use;
-	t_super_use = new MCParentScriptUse(t_super_parentscript, m_referrer);
+	t_super_use = new (nothrow) MCParentScriptUse(t_super_parentscript, m_referrer);
 	if (t_super_use == NULL)
 		return false;
 
@@ -329,7 +329,7 @@ MCParentScript::MCParentScript(void)
 
 MCParentScript::~MCParentScript(void)
 {
-	MCNameDelete(m_object_stack);
+	MCValueRelease(m_object_stack);
 }
 
 ////
@@ -398,6 +398,31 @@ void MCParentScript::Flush(void)
 		t_use -> ClearVars();
 }
 
+bool MCParentScript::CopyUses(MCArrayRef& r_use)
+{
+    MCAutoArrayRef t_use_list;
+    if (!MCArrayCreateMutable(&t_use_list))
+        return false;
+    
+    index_t t_index = 1;
+    for(MCParentScriptUse *t_use = m_first_use; t_use != NULL; t_use = t_use -> m_next_use)
+    {
+        MCAutoValueRef t_object_id;
+        if (!(t_use -> GetReferrer() -> names(P_LONG_ID, &t_object_id)) ||
+            !MCArrayStoreValueAtIndex(*t_use_list, t_index++, *t_object_id))
+            return false;
+    }
+    
+    if (!t_use_list.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_use = t_use_list.Take();
+    
+    return true;
+}
+
 // MW-2013-05-30: [[ InheritedPscripts ]] Loop through all uses of this parentScript
 //   and ensure the super-use chains are correct.
 bool MCParentScript::Reinherit(void)
@@ -443,7 +468,7 @@ MCParentScriptUse *MCParentScript::Acquire(MCObject *p_referrer, uint32_t p_id, 
 	for(t_parent = s_table[t_index]; t_parent != NULL; t_parent = t_parent -> m_chain)
 		if (t_parent -> m_hash == t_hash &&
 			t_parent -> m_object_id == p_id &&
-			MCNameIsEqualTo(t_parent -> m_object_stack, p_stack, kMCCompareCaseless))
+			MCNameIsEqualToCaseless(t_parent -> m_object_stack, p_stack))
 			break;
 
 	// At this point we start a success variable since we are about to have to
@@ -458,16 +483,13 @@ MCParentScriptUse *MCParentScript::Acquire(MCObject *p_referrer, uint32_t p_id, 
 		// Note that the default constructor for the parent script object just
 		// zeros out the fields - we need to track the cloning of the stack
 		// and mainstack strings in case they error out.
-		t_parent = new MCParentScript;
+		t_parent = new (nothrow) MCParentScript;
 		if (t_parent == NULL)
 			t_success = false;
 
-		// Clone the stack string
-		if (t_success)
-			t_success = MCNameClone(p_stack, t_parent -> m_object_stack);
-
 		if (t_success)
 		{
+            t_parent->m_object_stack = MCValueRetain(p_stack);
 			t_parent -> m_hash = t_hash;
 			t_parent -> m_object_id = p_id;
 		}
@@ -479,7 +501,7 @@ MCParentScriptUse *MCParentScript::Acquire(MCObject *p_referrer, uint32_t p_id, 
 	t_use = NULL;
 	if (t_success)
 	{
-		t_use = new MCParentScriptUse(t_parent, p_referrer);
+		t_use = new (nothrow) MCParentScriptUse(t_parent, p_referrer);
 		if (t_use == NULL)
 			t_success = false;
 	}

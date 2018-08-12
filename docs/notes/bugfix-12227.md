@@ -1,1 +1,0 @@
-# When Windows screen display is set to 125% popups sometimes break

@@ -4,29 +4,41 @@ Type: keyword
 
 Syntax: COMn:
 
-Summary: Used with the <open file>, <read from file>, <write to file>, and <close file> <command|commands>, to specify a COM <port> on <Windows|Windows systems>.
+Summary:
+Used with the <open file>, <read from file>, <write to file>, and 
+<close file> <command|commands>, to specify a COM <port> on 
+<Windows|Windows systems>. 
 
 Introduced: 1.0
 
 OS: windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
-read from file COM1: until end
+read from file "COM1:" until end
 
 Example:
-read from file COM5: until end
+read from file "COM5:" until end
 
 Description:
 Use the COM <keyword> to communicate through a COM serial <port>.
 
-To set the port parameters (such as baud rate, handshaking, and parity), set the <serialControlString> <property> before opening the <port> with the <open file> <command>. 
+To set the port parameters (such as baud rate, handshaking, and parity),
+set the <serialControlString> <property> before opening the <port> with
+the <open file> <command>.
 
-To read data from the COM1: port, use the <read from file> <command>, specifying the keyword COM1: as the file to read from.  
+To read data from the COM1: port, use the <read from file> <command>,
+specifying the keyword COM1: as the file to read from.
 
 To write data to the COM1: port, use the <write to file> <command>. 
 
->*Tip:* You can access any COM port available on the system by using the appropriate index, e.g. COM5:, COM10: etc.
+>*Tip:* You can access any COM port available on the system by using the
+> appropriate index, e.g. COM5:, COM10: etc.
 
-References: serialControlString (property), LPT1: (keyword), write to file (command), close file (command), open file (command), write to driver (command), read from file (command), keyword (glossary), Windows (glossary), property (glossary), command (glossary), port (glossary)
+References: write to file (command), close file (command),
+open file (command), write to driver (command), read from file (command),
+keyword (glossary), Windows (glossary), property (glossary),
+command (glossary), port (glossary), LPT1: (keyword),
+serialControlString (property)
+

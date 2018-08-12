@@ -2,17 +2,20 @@ Name: charToNum
 
 Type: function
 
-Syntax: the charToNum of <character> 
+Syntax: the charToNum of <character>
 
 Syntax: charToNum(<character>)
 
-Summary: <return|Returns> the <ASCII|ASCII value> of a <character>.
+Summary:
+<return|Returns> the <ASCII|ASCII value> of a <character>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+Deprecated: 7.0
 
-Platforms: desktop,server,web,mobile
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
 
 Example:
 charToNum("A")
@@ -27,25 +30,60 @@ Example:
 numToChar(charToNum("Z"))
 
 Parameters:
-character: The character is any character or expression that evaluates to a character. If you specify a string containing more than one character, all characters but the first are ignored.
+character:
+The character is any character or expression that evaluates to a
+character. If you specify a string containing more than one character,
+all characters but the first are ignored.
 
-Returns: The <charToNum> <function> <return|returns> an <integer> between zero and 255. If the <useUnicode> <property> is set to true, the <charToNum> <function> <return|returns> an <integer> between zero and 65535.
+Returns:
+The <charToNum> <function> <return|returns> an <integer> between zero
+and 255. If the <useUnicode> <property> is set to true, the <charToNum>
+<function> <return|returns> an <integer> between zero and 65535.
 
 Description:
-Use the <charToNum> function to rank characters in their <numeric|numerical> order.
+Use the <charToNum> function to rank characters in their
+<numeric|numerical> order.
 
 >*Important:* 
-As of version 7.0 the numToChar and charToNum functions have been deprecated. They will continue to work as in previous versions but should not be used with Unicode text as unexpected results may occur. If working with Unicode text use the <numToCodepoint> and <codepointToNum> functions, for native text use <numToNativeChar> and <nativeCharToNum> functions. If working with binary data use the <numToByte> and <byteToNum> functions.
+As of version 7.0 the numToChar and charToNum functions have been
+deprecated. They will continue to work as in previous versions but
+should not be used with Unicode text as unexpected results may occur. If
+working with Unicode text use the <numToCodepoint> and <codepointToNum>
+functions, for native text use <numToNativeChar> and <nativeCharToNum>
+functions. If working with binary data use the <numToByte> and
+<byteToNum> functions.
 
-The <charToNum> <function> is the <inverse> of the <numToChar> <function>.
+The <charToNum> <function> is the <inverse> of the <numToChar>
+<function>. 
 
-For special characters (those typed using the Option key or Alt key), the value returned by the <charToNum> <function> depends on the <character set> currently in use. On <Mac OS|Mac OS systems> this is normally the <Mac OS|Macintosh> <character set>; on <Unix|Unix systems>, this is normally <ISO 8859>; on <Windows|Windows systems>, this is usually Code Page 1252, a variant of <ISO 8859>.
+For special characters (those typed using the Option key or Alt key),
+the value returned by the <charToNum> <function> depends on the
+<character set> currently in use. On <Mac OS|Mac OS systems> this is
+normally the <Mac OS|Macintosh> <character set>; on <Unix|Unix systems>,
+this is normally <ISO 8859>; on <Windows|Windows systems>, this is
+usually Code Page 1252, a variant of <ISO 8859>.
 
-If the useUnicode <property> is set to true, you can specify a double-byte <character>. If the <useUnicode> is false and you specify a double-byte character, the <charToNum> <function> <return|returns> the numeric value of the <character> <div> 256.
+If the useUnicode <property> is set to true, you can specify a
+double-byte <character>. If the <useUnicode> is false and you specify a
+double-byte character, the <charToNum> <function> <return|returns> the
+numeric value of the <character> <div> 256.
 
 Changes:
-The ability to handle Unicode characters was introduced in version 2.0. In previous versions, it was not possible to pass a Unicode character to the <charToNum> <function>.
+The ability to handle Unicode characters was introduced in version 2.0.
+In previous versions, it was not possible to pass a Unicode character to
+the <charToNum> <function>.
 
-References: extendKey (property), RTFText (property), HTMLText (property), unicodeText (property), useUnicode (property), inverse (keyword), character (keyword), integer (keyword), div (operator), nativeCharToNum (function), numToCodepoint (function), numToChar (function), uniDecode (function), byteToNum (function), numToByte (function), mouseCharChunk (function), numToNativeChar (function), md5Digest (function), clickChar (function), format (function), URLDecode (function), codepointToNum (function), property (glossary), numeric (glossary), ASCII (glossary), return (glossary), Windows (glossary), character set (glossary), Mac OS (glossary), ISO 8859 (glossary), Unix (glossary), function (control_st)
+References: function (control structure), nativeCharToNum (function),
+numToCodepoint (function), numToChar (function), uniDecode (function),
+byteToNum (function), numToByte (function), mouseCharChunk (function),
+numToNativeChar (function), md5Digest (function), clickChar (function),
+format (function), URLDecode (function), codepointToNum (function),
+property (glossary), numeric (glossary), ASCII (glossary),
+return (glossary), Windows (glossary), character set (glossary),
+Mac OS (glossary), ISO 8859 (glossary), Unix (glossary),
+inverse (keyword), character (keyword), integer (keyword), div (operator),
+extendKey (property), RTFText (property), HTMLText (property),
+unicodeText (property), useUnicode (property)
 
 Tags: text processing
+

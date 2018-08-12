@@ -2,35 +2,39 @@ Name: controlAtLoc
 
 Type: function
 
-Syntax: controlAtLoc(loc)
+Syntax: controlAtLoc(<coordinates>)
 
-Summary: 
+Summary:
+Returns the control at the specified location.
 
 Introduced: 6.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-put controlAtLoc(10,10)
+put controlAtLoc((10,10))
 
 Example:
 get the name of (controlAtLoc(the mouseLoc))
 
 Parameters:
-location: A location, relative to the current stack
+coordinates(point):
+A location, relative to the current stack
 
-Returns: The control at the given location, in the form: control control_number.
+Returns(string):
+The control at the given location, in the form: control control_number.
 
 Description:
-Returns the control at the specified location.
+The <controlAtLoc> function returns the control at the given location.
+The function returns the number of the control, below are examples of
+getting the name or long id of the control
 
-The <controlAtLoc> function returns the control at the given location. The function returns the number of the control, below are examples of getting the name or long id of the control
+  get the name of (controlAtLoc(<coordinates>))
+  get the long ID of (controlAtLoc(<coordinates>))
 
-get the name of (contolAtLoc(<location>))
-get the long id of (contolAtLoc(<location>))
-
-References: location (property), mouseLoc (function), controlAtScreenLoc (function), control (keyword)
+References: mouseLoc (function), controlAtScreenLoc (function),
+control (keyword), location (property)
 
 Tags: ui

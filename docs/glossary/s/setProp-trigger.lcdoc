@@ -1,14 +1,19 @@
 Name: setProp trigger
 
-Synonyms: setProp trigger
+Synonyms: setprop trigger
 
 Type: glossary
 
 Description:
-A request to set a <custom property> of an <object>. 
- 
-If the <object> or one of its <owner|owners> has a <setProp> <handler> for that <custom property>, the setProp trigger causes the <handler> to be <execute|executed>.
+A request to set a <custom property> of an <object(glossary)>. 
 
-References: setProp (control_st), object (object), handler (glossary), custom property (glossary), owner (glossary), execute (glossary)
+If the <object(glossary)> or one of its <owner|owners> has a <setProp>
+<handler> for that <custom property>, the setProp trigger causes the
+<handler> to be <execute|executed>.
+
+References: setProp (control structure), object (glossary),
+handler (glossary), custom property (glossary), owner (glossary),
+execute (glossary)
 
 Tags: properties
+

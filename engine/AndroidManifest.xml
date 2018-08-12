@@ -41,8 +41,8 @@
     </activity>
     <provider
         android:name="com.runrev.android.AppProvider"
-        android:authorities="com.runrev.android.attachmentprovider"
-        android:exported="true"
+        android:authorities="com.runrev.android.fileprovider"
+        android:exported="false"
         android:grantUriPermissions="true">
     </provider>
       

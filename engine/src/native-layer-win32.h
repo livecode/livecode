@@ -50,7 +50,7 @@ private:
 	virtual void doSetViewportGeometry(const MCRectangle &p_rect);
 	virtual void doSetVisible(bool p_visible);
 	
-	void updateViewportGeometry();
+	void updateViewGeometry();
 
 	// Performs a relayering operation
 	virtual void doRelayer();

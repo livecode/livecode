@@ -4,13 +4,15 @@ Type: message
 
 Syntax: deleteEPS
 
-Summary: Sent to an <EPS> <object> just before it is removed from the <stack>.
+Summary:
+Sent to an <EPS> <object(glossary)> just before it is removed from the
+<stack>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on deleteEPS -- prevent the deletion by immediately undoing it
@@ -19,12 +21,19 @@ on deleteEPS -- prevent the deletion by immediately undoing it
 end deleteEPS
 
 Description:
-Handle the <deleteEPS> <message> if you want to perform cleanup before an <EPS|EPS object> is removed from the <stack>.
+Handle the <deleteEPS> <message> if you want to perform cleanup before
+an <EPS|EPS object> is removed from the <stack>.
 
-The actual deletion is not triggered by the <deleteEPS> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <EPS|EPS object> from being removed.
+The actual deletion is not triggered by the <deleteEPS> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <EPS|EPS object> from being removed.
 
-However, the undo <command> will restore an <EPS|EPS object> after it is deleted by the user.
+However, the undo <command> will restore an <EPS|EPS object> after it is
+deleted by the user.
 
-References: delete (command), EPS (object), object (object), stack (object), trap (glossary), EPS (glossary), message (glossary), command (glossary), pass (control_st)
+References: delete (command), pass (control structure), object (glossary),
+trap (glossary), EPS (glossary), message (glossary), command (glossary),
+EPS (object), stack (object)
 
 Tags: objects
+

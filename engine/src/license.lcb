@@ -1,0 +1,101 @@
+/* Copyright (C) 2017 LiveCode Ltd.
+
+ This file is part of LiveCode.
+
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This library provides license entitlement related operations for LiveCode Builder (commercial only).
+
+Tags: License
+*/
+
+module com.livecode.commercial.license
+
+use com.livecode.foreign
+
+public foreign handler MCLicenseCheckEdition(in pEdition as String, out rLicensed as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCLicenseCheckExtension(in pExtension as String, out rLicensed as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCLicenseCheckExtensionFeature(in pExtension as String, in pFeature as String, out rLicensed as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCLicenseEnsureExtension(in pExtension as String) returns nothing binds to "<builtin>"
+public foreign handler MCLicenseEnsureExtensionFeature(in pExtension as String, in pFeature as String) returns nothing binds to "<builtin>"
+public foreign handler MCLicenseEnsureExtensionFeatureOrEdition(in pExtension as String, in pFeature as String, in pEdition as String) returns nothing binds to "<builtin>"
+public foreign handler MCLicenseEnsureExtensionOrEdition(in pExtension as String, in pEdition as String) returns nothing binds to "<builtin>"
+
+/**
+Summary:    Throws if license is not satisfied
+
+Example:
+ensure license for edition "indy"
+
+Example:
+ensure license for extension "com.foo.bar" or edition "indy"
+
+Example:
+ensure license for feature "baz" of extension "com.foo.bar" or edition "indy"
+
+Description:
+Causes an error to be thrown if the license requirement is not satisfied. All
+further calls to the module will then also cause an error to be thrown.
+
+Tags: License
+*/
+syntax EnsureLicense is statement
+    "ensure" "license" "for" [ "feature" <Feature: Expression> "of" ] "extension" <Extension: Expression> [ "or" "edition" <Edition: Expression> ]
+begin
+    MCLicenseEnsureExtension(Extension)
+    MCLicenseEnsureExtensionFeature(Feature, Extension)
+    MCLicenseEnsureExtensionFeatureOrEdition(Feature, Extension, Edition)
+    MCLicenseEnsureExtensionOrEdition(Extension, Edition)
+end syntax
+
+/**
+Summary:    Returns true if licensed
+
+Example:
+variable tLicensed as Boolean
+put licensed for extension "com.foo.bar" into tLicensed
+put licensed for feature "baz" of extension "com.foo.bar" into tLicensed
+
+Description:
+Returns true if the license includes the named extension or extension
+and feature.
+
+Tags: License
+*/
+syntax LicensedExtension is prefix operator with function chunk precedence
+    "licensed" "for" [ "feature" <Feature: Expression> "of" ] "extension" <Extension: Expression>
+begin
+    MCLicenseCheckExtension(Extension, output)
+    MCLicenseCheckExtensionFeature(Feature, Extension, output)
+end syntax
+
+/**
+Summary:    Returns true if licensed
+
+Example:
+variable tLicensed as Boolean
+put licensed for edition "business" into tLicensed
+
+Description:
+Returns true if the license is for the named editon or greater.
+
+Tags: License
+*/
+syntax LicensedEdition is prefix operator with function chunk precedence
+    "licensed" "for" "edition" <Edition: Expression>
+begin
+    MCLicenseCheckEdition(Edition, output)
+end syntax
+
+end module

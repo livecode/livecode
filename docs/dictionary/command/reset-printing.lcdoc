@@ -4,13 +4,14 @@ Type: command
 
 Syntax: reset printing
 
-Summary: Resets the current printer and settings to the system defaults.
+Summary:
+Resets the current printer and settings to the system defaults.
 
 Introduced: 2.9
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Security: printing
 
@@ -18,11 +19,17 @@ Example:
 on mouseUp
   if the short name of the target is "Reset" then
     reset printing
-  end ifend mouseUp
+  end if
+end mouseUp
 
 Description:
-Use the <reset printing> command to restore the default system printer and settings. As well as changing the <printerName> back to the system default, any currently open printing loop will be closed without printing.
+Use the <reset printing> command to restore the default system printer
+and settings. As well as changing the <printerName> back to the system
+default, any currently open printing loop will be closed without
+printing. 
 
-References: answer page setup (command), print (command), answer printer (command), printerName (property)
+References: answer page setup (command), print (command),
+answer printer (command), printerName (property)
 
 Tags: printing
+

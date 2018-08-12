@@ -1,0 +1,1 @@
+# Ensure external code blobs are included in standalones

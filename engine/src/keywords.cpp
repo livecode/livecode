@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "scriptpt.h"
-//#include "execpt.h"
+
 #include "exec.h"
 #include "debug.h"
 #include "hndlrlst.h"
@@ -135,26 +135,25 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 
-		MCAutoNameRef t_token_name;
-		/* UNCHECKED */ t_token_name . Clone(sp . gettoken_nameref());
+		MCNewAutoNameRef t_token_name = sp . gettoken_nameref();
 
 		// MW-2013-11-08: [[ RefactorIt ]] The 'it' variable is always present now,
 		//   so there's no need to 'local it'. However, scripts do contain this so
 		//   don't do a check for an existing var in this case.
-		if (!MCNameIsEqualTo(t_token_name, MCN_it, kMCCompareCaseless))
+		if (!MCNameIsEqualToCaseless(*t_token_name, MCN_it))
 		{
 			MCExpression *e = NULL;
 			MCVarref *v = NULL;
 			if (sp.gethandler() == NULL)
 				if (constant)
-					sp.gethlist()->findconstant(t_token_name, &e);
+					sp.gethlist()->findconstant(*t_token_name, &e);
 				else
-					sp.gethlist()->findvar(t_token_name, false, &v);
+					sp.gethlist()->findvar(*t_token_name, false, &v);
 			else
 				if (constant)
-					sp.gethandler()->findconstant(t_token_name, &e);
+					sp.gethandler()->findconstant(*t_token_name, &e);
 				else
-					sp.gethandler()->findvar(t_token_name, &v);
+					sp.gethandler()->findvar(*t_token_name, &v);
 			if (e != NULL || v != NULL)
 			{
 				MCperror->add(PE_LOCAL_SHADOW, sp);
@@ -245,8 +244,8 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 		if (sp.gethandler() == NULL)
 		{
 			if (constant)
-				sp.gethlist()->newconstant(t_token_name, *t_init_value);
-			else if (sp.gethlist()->newvar(t_token_name, *t_init_value, &tvar, initialised) != PS_NORMAL)
+				sp.gethlist()->newconstant(*t_token_name, *t_init_value);
+			else if (sp.gethlist()->newvar(*t_token_name, *t_init_value, &tvar, initialised) != PS_NORMAL)
 				{
 					MCperror->add(PE_LOCAL_BADNAME, sp);
 					return PS_ERROR;
@@ -254,8 +253,8 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 
 		}
 		else if (constant)
-			sp.gethandler()->newconstant(t_token_name, *t_init_value);
-		else if (sp.gethandler()->newvar(t_token_name, *t_init_value, &tvar) != PS_NORMAL)
+			sp.gethandler()->newconstant(*t_token_name, *t_init_value);
+		else if (sp.gethandler()->newvar(*t_token_name, *t_init_value, &tvar) != PS_NORMAL)
 				{
 					MCperror->add(PE_LOCAL_BADNAME, sp);
 					return PS_ERROR;
@@ -318,9 +317,9 @@ Parse_stat MCIf::parse(MCScriptPoint &sp)
 				if (needstatement)
 				{
 					if (type == ST_ID)
-						newstatement = new MCComref(sp.gettoken_nameref());
+						newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 					else if (type == ST_DATA)
-						newstatement = new MCEcho;
+						newstatement = new (nothrow) MCEcho;
 					else
 					{
 						MCperror->add(PE_IF_NOTCOMMAND, sp);
@@ -477,77 +476,6 @@ Parse_stat MCIf::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
-
-#ifdef /* MCIf::exec */ LEGACY_EXEC
-Exec_stat MCIf::exec(MCExecPoint &ep)
-{
-	MCExecContext ctxt(ep);
-	Exec_stat stat;
-	while ((stat = cond->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints)
-	        && !MCtrylock && !MClockerrors)
-		if (!MCB_error(ep, getline(), getpos(), EE_IF_BADCOND))
-			break;
-	if (stat != ES_NORMAL)
-	{
-		MCeerror->add
-		(EE_IF_BADCOND, line, pos);
-		return ES_ERROR;
-	}
-
-	Boolean then = ep.getsvalue() == MCtruemcstring;
-	MCStatement *tspr;
-	if (then)
-		tspr = thenstatements;
-	else
-		tspr = elsestatements;
-
-	while (tspr != NULL)
-	{
-		if (MCtrace || MCnbreakpoints)
-		{
-			MCB_trace(ctxt, tspr->getline(), tspr->getpos());
-			if (MCexitall)
-				break;
-		}
-		ep.setline(tspr->getline());
-		
-		stat = tspr->exec(ep);
-		
-        MCActionsRunAll();
-
-		switch(stat)
-		{
-		case ES_NORMAL:
-			if (MCexitall)
-				return ES_NORMAL;
-			tspr = tspr->getnext();
-			break;
-		case ES_ERROR:
-			if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				do
-				{
-					if (!MCB_error(ep, tspr->getline(), tspr->getpos(), EE_IF_BADSTATEMENT))
-						break;
-				}
-				while (MCtrace && (stat = tspr->exec(ep)) != ES_NORMAL);
-			if (stat == ES_ERROR)
-				if (MCexitall)
-					return ES_NORMAL;
-				else
-				{
-					MCeerror->add(EE_IF_BADSTATEMENT, line, pos);
-					return ES_ERROR;
-				}
-			else
-				tspr = tspr->getnext();
-			break;
-		default:
-			return stat;
-		}
-	}
-	return ES_NORMAL;
-}
-#endif /* MCIf::exec */
 
 void MCIf::exec_ctxt(MCExecContext &ctxt)
 {
@@ -810,11 +738,11 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 		{
 		case PS_NORMAL:
 			if (type == ST_DATA)
-				newstatement = new MCEcho;
+				newstatement = new (nothrow) MCEcho;
 			else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 			{
 				if (type == ST_ID)
-					newstatement = new MCComref(sp.gettoken_nameref());
+					newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 				else
 				{
 					MCperror->add
@@ -874,453 +802,6 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
-
-#ifdef /* MCRepeat::exec */ LEGACY_EXEC
-Exec_stat MCRepeat::exec(MCExecPoint &ep)
-{
-	real8 endn = 0.0;
-	int4 count = 0;
-	MCExecPoint ep2(ep);
-	MCScriptPoint *sp = NULL;
-	Parse_stat ps;
-	const char *sptr;
-	Boolean donumeric = False;
-	Exec_stat stat;
-	MCExecContext ctxt(ep);
-	MCAutoArrayRef t_array;
-	MCNameRef t_key;
-	MCValueRef t_value;
-	uintptr_t t_iterator;
-	uint4 l;
-
-	switch (form)
-	{
-	case RF_FOR:
-		if (loopvar != NULL)
-		{
-			MCExecContext ctxt2(ep2);
-			while ((stat = endcond->eval(ep2)) != ES_NORMAL
-			        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				if (!MCB_error(ep2, getline(), getpos(), EE_REPEAT_BADFORCOND))
-					break;
-			if (stat != ES_NORMAL)
-			{
-				MCeerror->add(EE_REPEAT_BADFORCOND, line, pos);
-				return ES_ERROR;
-			}
-			if (each == FU_ELEMENT)
-			{
-				ep2 . copyasarrayref(&t_array);
-				t_iterator = 0;
-
-				if (MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-					l = 1;
-				else
-					l = 0;
-
-			}
-			else if (each == FU_KEY)
-			{
-				ep2 . copyasarrayref(&t_array);
-				t_iterator = 0;
-
-				if (MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-					l = 1;
-				else
-					l = 0;
-			}
-			else
-			{
-				sptr = ep2.getsvalue().getstring();
-				l = ep2.getsvalue().getlength();
-				if (each == FU_WORD)
-					MCU_skip_spaces(sptr, l);
-				else
-					if (each == FU_TOKEN)
-					{
-						sp = new MCScriptPoint(ep2);
-						ps = sp->nexttoken();
-						if (ps == PS_ERROR || ps == PS_EOF)
-							l = 0;
-					}
-			}
-		}
-		else
-		{
-			while (((stat = endcond->eval(ep)) != ES_NORMAL
-			        || (stat = ep.ton()) != ES_NORMAL) && (MCtrace || MCnbreakpoints)
-			        && !MCtrylock && !MClockerrors)
-				if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADFORCOND))
-					break;
-			if (stat != ES_NORMAL)
-			{
-				MCeerror->add
-				(EE_REPEAT_BADFORCOND, line, pos);
-				return ES_ERROR;
-			}
-			count = MCU_max(ep.getint4(), 0);
-		}
-		break;
-	case RF_WITH:
-		if (step != NULL)
-		{
-			while (((stat = step->eval(ep)) != ES_NORMAL
-			        || (stat = ep.ton()) != ES_NORMAL) && (MCtrace || MCnbreakpoints)
-			        && !MCtrylock && !MClockerrors)
-				if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHSTEP))
-					break;
-			stepval = ep.getnvalue();
-			if (stat != ES_NORMAL || stepval == 0.0)
-			{
-				MCeerror->add
-				(EE_REPEAT_BADWITHSTEP, line, pos);
-				return ES_ERROR;
-			}
-		}
-		while (((stat = startcond->eval(ep)) != ES_NORMAL
-		        || (stat = ep.ton()) != ES_NORMAL) && (MCtrace || MCnbreakpoints)
-		        && !MCtrylock && !MClockerrors)
-			if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHSTART))
-				break;
-		if (stat != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_REPEAT_BADWITHSTART, line, pos);
-			return ES_ERROR;
-		}
-		ep.setnvalue(ep.getnvalue() - stepval);
-		while ((stat = loopvar->set
-		               (ep)) != ES_NORMAL
-		        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-			if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHVAR))
-				break;
-		if (stat != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_REPEAT_BADWITHVAR, line, pos);
-			return ES_ERROR;
-		}
-		while (((stat = endcond->eval(ep)) != ES_NORMAL
-		        || (stat = ep.ton()) != ES_NORMAL)
-		        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-			if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHEND))
-				break;
-		if (stat != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_REPEAT_BADWITHEND, line, pos);
-			return ES_ERROR;
-		}
-		endn = ep.getnvalue();
-		break;
-	default:
-		break;
-	}
-
-	MCString s;
-	Boolean done = False;
-	bool t_first;
-	t_first = false;
-	while (True)
-	{
-		switch (form)
-		{
-		case RF_FOREVER:
-			break;
-		case RF_FOR:
-			if (loopvar != NULL)
-			{
-				if (l == 0)
-				{
-					done = True;
-					// OK-2007-12-05 : Bug 5605. If there has been at least one iteration, set the loop variable to 
-					// whatever the value was in the last iteration. 
-					if (!t_first)
-					{
-						// MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
-						//   'element'.
-						if (each != FU_ELEMENT && each != FU_KEY)
-						{
-							ep.setsvalue(s);
-							loopvar->set(ep);
-						}
-					}
-				}
-				else
-				{
-					const char *startptr; // = sptr;
-					switch (each)
-					{
-					case FU_KEY:
-						// MW-2010-12-15: [[ Bug 9218 ]] Make a copy of the key so that it can't be mutated
-						//   accidentally.
-						ep . setvalueref(t_key);
-						loopvar -> set(ep);
-						if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-							l = 0;
-						break;
-					case FU_ELEMENT:
-						ep . setvalueref(t_value);
-						loopvar -> set(ep);
-						if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-							l = 0;
-						break;
-					case FU_LINE:
-						startptr = sptr;
-						if (!MCU_strchr(sptr, l, ep.getlinedel()))
-						{
-							sptr += l;
-							l = 0;
-						}
-						s.set(startptr, sptr - startptr);
-						MCU_skip_char(sptr, l);
-						break;
-					case FU_ITEM:
-						startptr = sptr;
-						if (!MCU_strchr(sptr, l, ep.getitemdel()))
-						{
-							sptr += l;
-							l = 0;
-						}
-						s.set(startptr, sptr - startptr);
-						MCU_skip_char(sptr, l);
-						break;
-					case FU_WORD:
-						startptr = sptr;
-						if (*sptr == '\"')
-						{
-							MCU_skip_char(sptr, l);
-							while (l && *sptr != '\"' && *sptr != '\n')
-								MCU_skip_char(sptr, l);
-							MCU_skip_char(sptr, l);
-						}
-						else
-							while (l && !isspace((uint1)*sptr))
-								MCU_skip_char(sptr, l);
-						s.set(startptr, sptr - startptr);
-						MCU_skip_spaces(sptr, l);
-						break;
-					case FU_TOKEN:
-						s = sp->gettoken_oldstring();
-						ps = sp->nexttoken();
-						if (ps == PS_ERROR || ps == PS_EOF)
-							l = 0;
-						break;
-					case FU_CHARACTER:
-					default:
-						startptr = sptr;
-						s.set(startptr, 1);
-						MCU_skip_char(sptr, l);
-					}
-					// MW-2010-12-15: [[ Bug 9218 ]] Added KEY to the type of repeat that already
-					//   copies the value.
-					if (each != FU_ELEMENT && each != FU_KEY)
-					{
-						if (MCtrace)
-						{
-							ep.setsvalue(s);
-							loopvar->set(ep);
-						}
-						else
-							loopvar->sets(s);
-					}
-				}
-			}
-			else
-				done = count-- == 0;
-			break;
-		case RF_UNTIL:
-			while ((stat = endcond->eval(ep)) != ES_NORMAL
-			        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADUNTILCOND))
-					break;
-			if (stat != ES_NORMAL)
-			{
-				MCeerror->add
-				(EE_REPEAT_BADUNTILCOND, line, pos);
-				return ES_ERROR;
-			}
-			done = ep.getsvalue() == MCtruemcstring;
-			break;
-		case RF_WHILE:
-			while ((stat = endcond->eval(ep)) != ES_NORMAL
-			        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWHILECOND))
-					break;
-			if (stat != ES_NORMAL)
-			{
-				MCeerror->add
-				(EE_REPEAT_BADWHILECOND, line, pos);
-				return ES_ERROR;
-			}
-			done = ep.getsvalue() != MCtruemcstring;
-			break;
-		case RF_WITH:
-			while (((stat = loopvar->eval(ep)) != ES_NORMAL
-			        || (stat = ep.ton()) != ES_NORMAL)
-			        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHVAR))
-					break;
-			if (stat != ES_NORMAL)
-			{
-				MCeerror->add
-				(EE_REPEAT_BADWITHVAR, line, pos);
-				return ES_ERROR;
-			}
-			if (stepval < 0)
-			{
-				if (ep.getnvalue() <= endn)
-					done = True;
-			}
-			else
-				if (ep.getnvalue() >= endn)
-					done = True;
-			if (!done)
-			{
-				ep.setnvalue(ep.getnvalue() + stepval);
-				while ((stat = loopvar->set
-				               (ep)) != ES_NORMAL
-				        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-					if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHVAR))
-						break;
-				if (stat != ES_NORMAL)
-				{
-					MCeerror->add
-					(EE_REPEAT_BADWITHVAR, line, pos);
-					return ES_ERROR;
-				}
-			}
-			break;
-		default:
-			break;
-		}
-		if (done)
-			break;
-
-		Exec_stat stat;
-		MCStatement *tspr = statements;
-		while (tspr != NULL)
-		{
-			if (MCtrace || MCnbreakpoints)
-			{
-				MCB_trace(ctxt, tspr->getline(), tspr->getpos());
-				if (MCexitall)
-					break;
-			}
-			ep.setline(tspr->getline());
-
-			stat = tspr->exec(ep);
-            
-            MCActionsRunAll();
-			
-			switch(stat)
-			{
-			case ES_NORMAL:
-				if (MCexitall)
-				{
-					// OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
-					//   in the last iteration.
-					// MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
-					//   'element'.
-					if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
-					{
-						ep.setsvalue(s);
-						loopvar->set(ep);
-					}
-					delete sp;
-					return ES_NORMAL;
-				}
-				tspr = tspr->getnext();
-				break;
-			case ES_NEXT_REPEAT:
-				tspr = NULL;
-				break;
-			case ES_EXIT_REPEAT:
-				// OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
-				//   in the last iteration.
-				// MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
-				//   'element'.
-				if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
-				{
-					ep.setsvalue(s);
-					loopvar->set(ep);
-				}
-				delete sp;
-				return ES_NORMAL;
-			case ES_ERROR:
-				if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-					do
-					{
-						if (!MCB_error(ep, tspr->getline(), tspr->getpos(),
-						          EE_REPEAT_BADSTATEMENT))
-							break;
-					}
-					while (MCtrace && (stat = tspr->exec(ep)) != ES_NORMAL);
-				if (stat == ES_ERROR)
-				{
-					// OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
-					//   in the last iteration.
-					// MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
-					//   'element'.
-					if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
-					{
-						ep.setsvalue(s);
-						loopvar->set(ep);
-					}
-					delete sp;
-					if (MCexitall)
-						return ES_NORMAL;
-					else
-					{
-						MCeerror->add(EE_REPEAT_BADSTATEMENT, line, pos);
-						return ES_ERROR;
-					}
-				}
-				else
-					tspr = tspr->getnext();
-				break;
-			default:
-				// OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
-				//   in the last iteration.
-				// MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
-				//   'element'.
-				if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
-				{
-					ep.setsvalue(s);
-					loopvar->set(ep);
-				}
-				delete sp;
-				return stat;
-			}
-		}
-		if (MCscreen->abortkey())
-		{
-			// OK-2007-12-05 : Bug 5605 : If exiting loop, set the loop variable to the value it had
-			//   in the last iteration.
-			// MW-2011-02-08: [[ Bug ]] Make sure we don't use 's' if the repeat type is 'key' or
-			//   'element'.
-			if (form == RF_FOR && loopvar != NULL && each != FU_ELEMENT && each != FU_KEY)
-			{
-				ep.setsvalue(s);
-				loopvar->set(ep);
-			}
-			delete sp;
-			MCeerror->add(EE_REPEAT_ABORT, line, pos);
-			return ES_ERROR;
-		}
-		if (MCtrace || MCnbreakpoints)
-		{
-			MCB_trace(ctxt, getline(), getpos());
-			if (MCexitall)
-				break;
-		}
-
-		t_first = false;
-	}
-	delete sp;
-	return ES_NORMAL;
-}
-#endif /* MCRepeat::exec */
 
 void MCRepeat::exec_ctxt(MCExecContext& ctxt)
 {
@@ -1402,18 +883,6 @@ Parse_stat MCExit::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-#ifdef /* MCExit::exec */ LEGACY_EXEC
-Exec_stat MCExit::exec(MCExecPoint &ep)
-{
-	if (exit == ES_EXIT_ALL)
-	{
-		MCexitall = True;
-		return ES_NORMAL;
-	}
-	return exit;
-}
-#endif /* MCExit::exec */
-
 void MCExit::exec_ctxt(MCExecContext& ctxt)
 {
     MCKeywordsExecExit(ctxt, exit);
@@ -1445,13 +914,6 @@ Parse_stat MCNext::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-
-#ifdef /* MCNext::exec */ LEGACY_EXEC
-Exec_stat MCNext::exec(MCExecPoint &ep)
-{
-	return ES_NEXT_REPEAT;
-}
-#endif /* MCNext::exec */
 
 void MCNext::exec_ctxt(MCExecContext& ctxt)
 {
@@ -1491,16 +953,6 @@ Parse_stat MCPass::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-#ifdef /* MCPass::exec */ LEGACY_EXEC
-Exec_stat MCPass::exec(MCExecPoint &ep)
-{
-	if (all)
-		return ES_PASS_ALL;
-	else
-		return ES_PASS;
-}
-#endif /* MCPass::exec */
-
 uint4 MCPass::linecount()
 {
 	return 0;
@@ -1513,13 +965,6 @@ void MCPass::exec_ctxt(MCExecContext& ctxt)
 	else
 		MCKeywordsExecPass(ctxt);
 }
-
-#if /* MCBreak::exec */ LEGACY_EXEC
-Exec_stat MCBreak::exec(MCExecPoint &ep)
-{
-	return ES_EXIT_SWITCH;
-}
-#endif /* MCBreak::exec */
 
 void MCBreak::exec_ctxt(MCExecContext& ctxt)
 {
@@ -1536,9 +981,9 @@ MCSwitch::~MCSwitch()
 	delete cond;
 	while (ncases--)
 		delete cases[ncases];
-	delete cases;
+	delete[] cases; /* Allocated with new[] */
 	deletestatements(statements);
-	delete caseoffsets;
+	delete[] caseoffsets; /* Allocated with new[] */
 }
 
 Parse_stat MCSwitch::parse(MCScriptPoint &sp)
@@ -1573,11 +1018,11 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 		{
 		case PS_NORMAL:
 			if (type == ST_DATA)
-				newstatement = new MCEcho;
+				newstatement = new (nothrow) MCEcho;
 			else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 			{
 				if (type == ST_ID)
-					newstatement = new MCComref(sp.gettoken_nameref());
+					newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 				else
 				{
 					MCperror->add
@@ -1662,114 +1107,6 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-#if /* MCSwitch::exec */ LEGACY_EXEC
-Exec_stat MCSwitch::exec(MCExecPoint &ep)
-{
-	MCExecPoint ep2(ep);
-	MCExecContext ctxt(ep);
-	MCExecContext ctxt2(ep2);
-	Exec_stat stat;
-	if (cond != NULL)
-	{
-		while ((stat = cond->eval(ep2)) != ES_NORMAL
-		        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-			if (!MCB_error(ep2, getline(), getpos(), EE_SWITCH_BADCOND))
-				break;
-		if (stat != ES_NORMAL)
-		{
-			MCeerror->add(EE_SWITCH_BADCOND, line, pos);
-			return ES_ERROR;
-		}
-	}
-	else
-		ep2.setboolean(true);
-	int2 match = defaultcase;
-	uint2 i;
-	for (i = 0 ; i < ncases ; i++)
-	{
-		while ((stat = cases[i]->eval(ep)) != ES_NORMAL
-		        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-			if (!MCB_error(ep2, getline(), getpos(), EE_SWITCH_BADCASE))
-				break;
-		if (stat != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_SWITCH_BADCASE, line, pos);
-			return ES_ERROR;
-		}
-		uint4 l1 = ep.getsvalue().getlength();
-		uint4 l2 = ep2.getsvalue().getlength();
-		if (l1 == l2)
-		{
-			const char *s1 = ep.getsvalue().getstring();
-			const char *s2 = ep2.getsvalue().getstring();
-			if (ep.getcasesensitive() && !strncmp(s1, s2, l1)
-			        || !ep.getcasesensitive() && !MCU_strncasecmp(s1, s2, l1))
-			{
-				match = caseoffsets[i];
-				break;
-			}
-		}
-	}
-	if (match >= 0)
-	{
-		MCStatement *tspr = statements;
-		while (match--)
-			tspr = tspr->getnext();
-		Exec_stat stat;
-		while (tspr != NULL)
-		{
-			if (MCtrace || MCnbreakpoints)
-			{
-				MCB_trace(ctxt, tspr->getline(), tspr->getpos());
-				if (MCexitall)
-					break;
-			}
-			ep.setline(tspr->getline());
-			
-			stat = tspr->exec(ep);
-			
-            MCActionsRunAll();
-
-			switch(stat)
-			{
-			case ES_NORMAL:
-				if (MCexitall)
-					return ES_NORMAL;
-				tspr = tspr->getnext();
-				break;
-			case ES_ERROR:
-				if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-					do
-					{
-						if (!MCB_error(ep, tspr->getline(), tspr->getpos(),
-						          EE_SWITCH_BADSTATEMENT))
-							break;
-					}
-					while (MCtrace && (stat = tspr->exec(ep)) != ES_NORMAL);
-				if (stat == ES_ERROR)
-					if (MCexitall)
-						return ES_NORMAL;
-					else
-					{
-						MCeerror->add
-						(EE_SWITCH_BADSTATEMENT, line, pos);
-						return ES_ERROR;
-					}
-				else
-					tspr = tspr->getnext();
-				break;
-			case ES_EXIT_SWITCH:
-				return ES_NORMAL;
-			default:
-				return stat;
-			}
-		}
-	}
-	return ES_NORMAL;
-}
-#endif /* MCSwitch::exec */
-
 void MCSwitch::exec_ctxt(MCExecContext& ctxt)
 {
     MCKeywordsExecSwitch(ctxt, cond, cases, ncases, defaultcase, caseoffsets, statements, getline(), getpos());
@@ -1796,22 +1133,6 @@ Parse_stat MCThrowKeyword::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
-
-#if /* MCThrowKeyword::exec */ LEGACY_EXEC
-Exec_stat MCThrowKeyword::exec(MCExecPoint &ep)
-{
-	if (error->eval(ep) != ES_NORMAL)
-		MCeerror->add
-		(EE_THROW_BADERROR, line, pos);
-	else
-    {
-        MCAutoStringRef t_value;
-        ep . copyasstringref(&t_value);
-		MCeerror->copystringref(*t_value, True);
-    }
-	return ES_ERROR;
-}
-#endif /* MCThrowKeyword::exec */
 
 void MCThrowKeyword::exec_ctxt(MCExecContext& ctxt)
 {
@@ -1855,11 +1176,11 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 		{
 		case PS_NORMAL:
 			if (type == ST_DATA)
-				newstatement = new MCEcho;
+				newstatement = new (nothrow) MCEcho;
 			else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 			{
 				if (type == ST_ID)
-					newstatement = new MCComref(sp.gettoken_nameref());
+					newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 				else
 				{
 					MCperror->add
@@ -1890,12 +1211,10 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 						return PS_ERROR;
 					}
 					continue;
-					break;
 				case TT_FINALLY:
 					state = TS_FINALLY;
 					curstatement = NULL;
 					continue;
-					break;
 				case TT_END:
 					if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_TRY) != PS_NORMAL)
 					{
@@ -1954,132 +1273,6 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
-
-#ifdef /* MCTry::exec */ LEGACY_EXEC
-Exec_stat MCTry::exec(MCExecPoint &ep)
-{
-	MCExecContext ctxt(ep);
-	Try_state state = TS_TRY;
-	MCStatement *tspr = trystatements;
-	Exec_stat stat;
-	Exec_stat retcode = ES_NORMAL;
-	MCtrylock++;
-	while (tspr != NULL)
-	{
-		if (MCtrace || MCnbreakpoints)
-		{
-			MCB_trace(ctxt, tspr->getline(), tspr->getpos());
-			if (MCexitall)
-				break;
-		}
-		ep.setline(tspr->getline());
-
-		stat = tspr->exec(ep);
-        
-        MCActionsRunAll();
-
-		switch(stat)
-		{
-		case ES_NORMAL:
-			tspr = tspr->getnext();
-			if (MCexitall)
-			{
-				retcode = ES_NORMAL;
-				tspr = NULL;
-			}
-
-			if (tspr == NULL && state != TS_FINALLY)
-			{
-				if (state == TS_CATCH)
-					MCeerror->clear();
-
-				tspr = finallystatements;
-				state = TS_FINALLY;
-			}
-			break;
-		case ES_ERROR:
-			if ((MCtrace || MCnbreakpoints) && state != TS_TRY)
-				do
-				{
-					if (!MCB_error(ep, tspr->getline(), tspr->getpos(), EE_TRY_BADSTATEMENT))
-						break;
-				}
-				while(MCtrace && (stat = tspr->exec(ep)) != ES_NORMAL);
-
-			if (stat == ES_ERROR)
-			{
-				if (MCexitall)
-				{
-					retcode = ES_NORMAL;
-					tspr = NULL;
-				}
-				else
-					if (state != TS_TRY)
-					{
-						MCtrylock--;
-						MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
-						return ES_ERROR;
-					}
-					else
-					{
-						if (errorvar != NULL)
-							errorvar->evalvar(ep)->copysvalue(MCeerror->getsvalue());
-
-						// MW-2007-09-04: At this point we need to clear the execution error
-						//   stack so that errors inside the catch statements are reported
-						//   correctly.
-						MCeerror->clear();
-						MCperror->clear();
-
-
-						tspr = catchstatements;
-						state = TS_CATCH;
-
-						// MW-2007-07-03: [[ Bug 3029 ]] - If there is no catch clause
-						//   we end up skipping the finally as the loop terminates
-						//   before a state transition is made, thus we force it here.
-						if (catchstatements == NULL)
-						{
-							MCeerror -> clear();
-							tspr = finallystatements;
-							state = TS_FINALLY;
-						}
-					}
-			}
-			else
-				tspr = tspr->getnext();
-			break;
-		case ES_PASS:
-			if (state == TS_CATCH)
-			{
-				errorvar->evalvar(ep)->eval(ep);
-                MCAutoStringRef t_value;
-                ep . copyasstringref(&t_value);
-				MCeerror->copystringref(*t_value, False);
-				MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
-				stat = ES_ERROR;
-			}
-		default:
-			if (state == TS_FINALLY)
-			{
-				MCeerror->clear();
-				retcode = ES_NORMAL;
-				tspr = NULL;
-			}
-			else
-			{
-				retcode = stat;
-				tspr = finallystatements;
-				state = TS_FINALLY;
-			}
-		}
-	}
-	if (state == TS_CATCH)
-		MCeerror->clear();
-	MCtrylock--;
-	return retcode;
-}
-#endif /* MCTry::exec */ 
 
 void MCTry::exec_ctxt(MCExecContext& ctxt)
 {

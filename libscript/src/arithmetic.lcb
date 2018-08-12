@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*  
+/**
 This library consists of the basic arithmetic operations of standard library of LiveCode Builder.
 */
 
@@ -94,7 +94,7 @@ public foreign handler MCArithmeticExecParseListOfStringAsListOfNumber(in Target
 
 --
 
-/*
+/**
 Summary:    Adds <Value> to <Target>.
 Target:     An expression that evaluates to a numeric container.
 Value:      An expression that evaluates to a number.   
@@ -119,7 +119,7 @@ begin
 end syntax
 
 
-/*
+/**
 Summary:    Subtracts <Value> from <Target>.
 Target:     An expression that evaluates to a numeric variable.
 Value:      An expression that evaluates to a number.   
@@ -143,7 +143,7 @@ begin
     MCArithmeticExecSubtractNumberFromNumber(Value, Target)
 end syntax
 
-/*
+/**
 Summary:    Multiplies <Target> by <Value>.
 Target:     An expression that evaluates to a numeric variable.
 Value:      An expression that evaluates to a number.   
@@ -167,7 +167,7 @@ begin
     MCArithmeticExecMultiplyNumberByNumber(Target, Value)
 end syntax
 
-/*
+/**
 Summary:    Divides <Target> by <Value>.
 Target:     An expression that evaluates to a numeric variable.
 Value:      An expression that evaluates to a number.   
@@ -193,7 +193,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Unary plus operator.
 Operand:    An expression that evaluates to a number.
 
@@ -215,7 +215,7 @@ begin
     MCArithmeticEvalPlusNumber(Operand, output)
 end syntax
 
-/*
+/**
 Summary:    Unary minus operator.
 Operand:    An expression that evaluates to a number.
 
@@ -236,7 +236,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Binary plus operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -256,7 +256,7 @@ begin
     MCArithmeticEvalNumberPlusNumber(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Binary minus operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -276,7 +276,7 @@ begin
     MCArithmeticEvalNumberMinusNumber(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Binary multiplication operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -297,7 +297,7 @@ begin
     MCArithmeticEvalNumberTimesNumber(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Binary division operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -319,7 +319,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Mod operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -341,7 +341,7 @@ begin
     MCArithmeticEvalNumberModNumber(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Wrap operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -371,7 +371,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Greater than relation.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -385,7 +385,7 @@ begin
     MCArithmeticEvalNumberIsGreaterThanNumber(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Greater than or equal to relation.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -399,7 +399,7 @@ begin
     MCArithmeticEvalNumberIsGreaterThanOrEqualToNumber(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Less than relation.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -417,7 +417,7 @@ begin
     MCArithmeticEvalNumberIsLessThanNumber(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Less than or equal to relation.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -438,7 +438,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Equal to relation.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -456,7 +456,7 @@ begin
     MCArithmeticEvalEqualToNumber(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines if <Left> is <Right>.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -477,7 +477,7 @@ begin
     MCArithmeticEvalEqualToNumber(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines if <Left> is not <Right>.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -500,7 +500,7 @@ begin
 end syntax
 
 
-/*
+/**
 Summary:	Formats a numeric value as a string
 
 Operand:	An expression that evaluates to a number.
@@ -523,7 +523,7 @@ begin
     MCArithmeticEvalNumberFormattedAsString(Operand, output)
 end syntax
 
-/*
+/**
 Summary:	Formats a numeric value as a string
 
 Operand:	An expression that evaluates to a number.
@@ -532,8 +532,10 @@ The result:	<Operand> formatted as a string.
 
 Example:
 	variable tNum as Number
+	variable tString as String
 	put 5 into tNum
-	format tNum as string -- the result contains "5"
+	format tNum as string into tString
+	-- tString contains "5"
 
 Description:
 Use <FormatNumberAsString> when you want to manipulate a numeric value as text.
@@ -545,7 +547,7 @@ begin
     MCArithmeticExecFormatNumberAsString(Operand)
 end syntax
 
-/*
+/**
 Summary:	Parses a string as an number
 
 Operand:	An expression that evaluates to a string.
@@ -578,7 +580,7 @@ begin
     MCArithmeticEvalStringParsedAsNumber(Operand, output)
 end syntax
 
-/*
+/**
 Summary:	Parses a string as an number
 
 Operand:	An expression that evaluates to a string.
@@ -591,11 +593,12 @@ Example:
 	parse tString as number -- the result is 5.6
 
 Example:
-	variable tResult as String
+	variable tResult as optional String
 	variable tNum as optional Number
-	parse "aaaa" as number
+  
+	parse "aaaa" as number into tNum
 	
-	if the result is nothing then
+	if tNum is nothing then
 		put "unable to parse string" into tResult
 	end if
 
@@ -609,7 +612,7 @@ begin
     MCArithmeticExecParseStringAsNumber(Operand)
 end syntax
 
-/*
+/**
 Summary:	Parses a list of strings as a list of numbers
 
 Operand:	An expression that evaluates to a list of strings.
@@ -647,7 +650,7 @@ begin
     MCArithmeticEvalListOfStringParsedAsListOfNumber(Operand, output)
 end syntax
 
-/*
+/**
 Summary:	Parses a list of strings as a list of numbers
 
 Operand:	An expression that evaluates to a list of strings.
@@ -658,7 +661,8 @@ Example:
 	variable tListOfString as List
 	variable tListOfNum as List
 	split "1,2,3,4" by "," into tListOfString
-	parse tListOfString as list of number -- the result contains [ 1, 2, 3, 4 ]
+	parse tListOfString as list of number into tListOfNum
+	-- tListOfNum contains [ 1, 2, 3, 4 ]
 
 Description:
 Use <ParseListOfStringAsListOfNumber> when you want to interpret pieces of text numerically. If the input list contains elements which cannot be parsed as numbers, the corresponding element will be nothing.

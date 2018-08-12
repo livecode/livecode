@@ -20,6 +20,7 @@
 
 
 #include "foundation.h"
+#include "foundation-auto.h"
 #include "mixin-refcounted.h"
 #include "raw-clipboard.h"
 
@@ -100,12 +101,15 @@ public:
     bool AddLiveCodeStyledText(MCDataRef p_picked_text);
     bool AddLiveCodeStyledTextArray(MCArrayRef p_styled_text);
     bool AddRTFText(MCDataRef p_rtf_data);
-    bool AddHTMLText(MCDataRef p_html_data);
+    bool AddHTMLText(MCStringRef p_html_string);
     bool AddRTF(MCDataRef p_rtf_data);
-    bool AddHTML(MCDataRef p_html_data);
+    bool AddHTML(MCStringRef p_html_string);
     bool AddPNG(MCDataRef p_png);
     bool AddGIF(MCDataRef p_gif);
     bool AddJPEG(MCDataRef p_jpeg);
+	bool AddBMP(MCDataRef p_bmp);
+	bool AddWinMetafile(MCDataRef p_wmf);
+	bool AddWinEnhMetafile(MCDataRef p_emf);
     
     // Utility method for adding images - given the binary data for a PNG, GIF
     // or JPEG-encoded image, the image is added to the clipboard tagged with
@@ -122,7 +126,10 @@ public:
     bool HasPNG() const;
     bool HasGIF() const;
     bool HasJPEG() const;
-    bool HasImage() const;  // Any of PNG, GIF or JPEG
+	bool HasBMP() const;
+	bool HasWinMetafile() const;
+	bool HasWinEnhMetafile() const;
+    bool HasImage() const;  // Any of PNG, GIF, JPEG or BMP
     
     // Utility methods that indicate whether the clipboard contains data of that
     // type or something that can be auto-converted to that type.
@@ -136,16 +143,19 @@ public:
     bool CopyAsLiveCodeObjects(MCDataRef& r_objects) const;
     bool CopyAsLiveCodeStyledText(MCDataRef& r_pickled_text) const;
     bool CopyAsLiveCodeStyledTextArray(MCArrayRef& r_style_array) const;
-    bool CopyAsRTFText(MCDataRef& r_rtf_data) const;    // Round-tripped via a field object
-    bool CopyAsHTMLText(MCDataRef& r_html_data) const;  // Round-tripped via a field object
+    bool CopyAsRTFText(MCDataRef& r_rtf_data) const;        // Round-tripped via a field object
+    bool CopyAsHTMLText(MCStringRef& r_html_string) const;  // Round-tripped via a field object
     bool CopyAsRTF(MCDataRef& r_rtf_data) const;
-    bool CopyAsHTML(MCDataRef& r_html_data) const;
+    bool CopyAsHTML(MCStringRef& r_html_string) const;
     bool CopyAsPNG(MCDataRef& r_png_data) const;
     bool CopyAsGIF(MCDataRef& r_gif_data) const;
     bool CopyAsJPEG(MCDataRef& r_jpeg_data) const;
+	bool CopyAsBMP(MCDataRef& r_bmp_data) const;
+	bool CopyAsWinMetafile(MCDataRef& r_wmf_data) const;
+	bool CopyAsWinEnhMetafile(MCDataRef& r_emf_data) const;
     
     // Utility method for copying images - it tries to copy as any image format
-    // that is supported by LiveCode (PNG, JPEG or GIF, in that order).
+    // that is supported by LiveCode (PNG, JPEG, GIF or BMP, in that order).
     bool CopyAsImage(MCDataRef& r_image_data) const;
     
     // Utility method for pasting into fields -- converts the clipboard contents
@@ -159,6 +169,7 @@ public:
     bool AddPrivateData(MCDataRef p_private);
     bool HasPrivateData() const;
     bool CopyAsPrivateData(MCDataRef& r_private) const;
+	void ClearPrivateData();
     
     // Utility method for assisting with legacy clipboard support - returns a
     // positive value if an image is found before a text type, negative if a
@@ -172,7 +183,7 @@ public:
     static MCClipboard* CreateSystemSelectionClipboard();
     static MCClipboard* CreateSystemDragboard();
     
-    
+	bool IsDragboard() const;
 private:
     
     // The raw clipboard that is being wrapped
@@ -182,7 +193,7 @@ private:
     mutable uindex_t m_lock_count;
     
     // Private data (if any) added to this clipboard
-    MCDataRef m_private_data;
+    MCAutoDataRef m_private_data;
     
     // Set whenever a modification is made to the clipboard. No updates are
     // pushed if no modifications have been made.
@@ -192,7 +203,6 @@ private:
     // Constructor and destructor
     friend class MCMixinRefcounted<MCClipboard>;
     MCClipboard(MCRawClipboard* t_underlying_clipboard);
-    ~MCClipboard();
     
     
     // Returns the first item on the clipboard, creating a new one if required
@@ -203,10 +213,10 @@ private:
     // Various utility functions for format conversion
     static MCStringRef ConvertStyledTextToText(MCDataRef p_pickled_text);
     static MCDataRef ConvertStyledTextToRTF(MCDataRef p_pickled_text);
-    static MCDataRef ConvertStyledTextToHTML(MCDataRef p_pickled_text);
+    static MCStringRef ConvertStyledTextToHTML(MCDataRef p_pickled_text);
     static MCArrayRef ConvertStyledTextToStyledTextArray(MCDataRef p_pickled_text);
     static MCDataRef ConvertRTFToStyledText(MCDataRef p_rtf_data);
-    static MCDataRef ConvertHTMLToStyledText(MCDataRef p_html_data);
+    static MCDataRef ConvertHTMLToStyledText(MCStringRef p_html_string);
     static MCDataRef ConvertStyledTextArrayToStyledText(MCArrayRef p_styles);
     static MCDataRef ConvertTextToStyledText(MCStringRef p_text);
     
@@ -216,6 +226,10 @@ private:
     
     // Utility function for adding text representations
     bool AddTextToItem(MCRawClipboardItem* p_item, MCStringRef p_string);
+	
+	// Utility function that examines an HTML fragment to guess its encoding
+	// Defaults to UTF-8 if it can't be automatically determined
+	static MCStringEncoding GuessHTMLEncoding(MCDataRef p_html_data);
     
     // Private utility class for clipboard locking
     class AutoLock;

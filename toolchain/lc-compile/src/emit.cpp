@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -19,10 +19,15 @@
 #include "libscript/script.h"
 #include "libscript/script-auto.h"
 
-#include "report.h"
-#include "literal.h"
-#include "position.h"
+#include <output.h>
+#include <allocate.h>
+#include <position.h>
+#include <report.h>
+#include <literal.h>
+#include "outputfile.h"
 
+#include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -32,38 +37,39 @@
 
 extern "C" int OutputFileAsC;
 int OutputFileAsC = 0;
+extern "C" int OutputFileAsAuxC;
+int OutputFileAsAuxC = 0;
 extern "C" int OutputFileAsBytecode;
 int OutputFileAsBytecode = 0;
 
 extern "C" void EmitStart(void);
 extern "C" void EmitFinish(void);
 
-extern "C" void EmitBeginModule(NameRef name, long& r_index);
-extern "C" void EmitBeginWidgetModule(NameRef name, long& r_index);
-extern "C" void EmitBeginLibraryModule(NameRef name, long& r_index);
+extern "C" void EmitBeginModule(NameRef name, intptr_t& r_index);
+extern "C" void EmitBeginWidgetModule(NameRef name, intptr_t& r_index);
+extern "C" void EmitBeginLibraryModule(NameRef name, intptr_t& r_index);
 extern "C" void EmitEndModule(void);
-extern "C" void EmitModuleDependency(NameRef name, long& r_index);
-extern "C" void EmitImportedType(long module_index, NameRef name, long type_index, long& r_index);
-extern "C" void EmitImportedConstant(long module_index, NameRef name, long type_index, long& r_index);
-extern "C" void EmitImportedVariable(long module_index, NameRef name, long type_index, long& r_index);
-extern "C" void EmitImportedHandler(long module_index, NameRef name, long type_index, long& r_index);
-extern "C" void EmitImportedSyntax(long p_module_index, NameRef p_name, long p_type_index, long& r_index);
-extern "C" void EmitExportedDefinition(long index);
-extern "C" void EmitDefinitionIndex(long& r_index);
-extern "C" void EmitTypeDefinition(long index, PositionRef position, NameRef name, long type_index);
-extern "C" void EmitConstantDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_const_index);
-extern "C" void EmitVariableDefinition(long index, PositionRef position, NameRef name, long type_index);
-extern "C" void EmitContextVariableDefinition(long index, PositionRef position, NameRef name, long type_index, long default_index);
-extern "C" void EmitBeginHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
-extern "C" void EmitBeginContextHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
+extern "C" void EmitModuleDependency(NameRef name, intptr_t& r_index);
+extern "C" void EmitImportedType(intptr_t module_index, NameRef name, intptr_t type_index, intptr_t& r_index);
+extern "C" void EmitImportedConstant(intptr_t module_index, NameRef name, intptr_t type_index, intptr_t& r_index);
+extern "C" void EmitImportedVariable(intptr_t module_index, NameRef name, intptr_t type_index, intptr_t& r_index);
+extern "C" void EmitImportedHandler(intptr_t module_index, NameRef name, intptr_t type_index, intptr_t& r_index);
+extern "C" void EmitImportedSyntax(intptr_t p_module_index, NameRef p_name, intptr_t p_type_index, intptr_t& r_index);
+extern "C" void EmitExportedDefinition(intptr_t index);
+extern "C" void EmitDefinitionIndex(const char *type, intptr_t& r_index);
+extern "C" void EmitTypeDefinition(intptr_t index, PositionRef position, NameRef name, intptr_t type_index);
+extern "C" void EmitConstantDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_const_index);
+extern "C" void EmitVariableDefinition(intptr_t index, PositionRef position, NameRef name, intptr_t type_index);
+extern "C" void EmitBeginHandlerDefinition(intptr_t index, PositionRef position, NameRef name, intptr_t type_index);
+extern "C" void EmitBeginUnsafeHandlerDefinition(intptr_t index, PositionRef position, NameRef name, intptr_t type_index);
 extern "C" void EmitEndHandlerDefinition(void);
-extern "C" void EmitForeignHandlerDefinition(long index, PositionRef position, NameRef name, long type_index, long binding);
-extern "C" void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index);
-extern "C" void EmitPropertyDefinition(long p_index, PositionRef p_position, NameRef p_name, long setter, long getter);
+extern "C" void EmitForeignHandlerDefinition(intptr_t index, PositionRef position, NameRef name, intptr_t type_index, intptr_t binding);
+extern "C" void EmitEventDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_type_index);
+extern "C" void EmitPropertyDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t setter, intptr_t getter);
 
-extern "C" void EmitBeginSyntaxDefinition(long p_index, PositionRef p_position, NameRef p_name);
+extern "C" void EmitBeginSyntaxDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name);
 extern "C" void EmitEndSyntaxDefinition(void);
-extern "C" void EmitBeginSyntaxMethod(long p_handler_index);
+extern "C" void EmitBeginSyntaxMethod(intptr_t p_handler_index);
 extern "C" void EmitEndSyntaxMethod(void);
 extern "C" void EmitUndefinedSyntaxMethodArgument(void);
 extern "C" void EmitTrueSyntaxMethodArgument(void);
@@ -73,119 +79,123 @@ extern "C" void EmitOutputSyntaxMethodArgument(void);
 extern "C" void EmitContextSyntaxMethodArgument(void);
 extern "C" void EmitIteratorSyntaxMethodArgument(void);
 extern "C" void EmitContainerSyntaxMethodArgument(void);
-extern "C" void EmitIntegerSyntaxMethodArgument(long p_int);
-extern "C" void EmitRealSyntaxMethodArgument(long p_double);
-extern "C" void EmitStringSyntaxMethodArgument(long p_string);
-extern "C" void EmitVariableSyntaxMethodArgument(long p_index);
-extern "C" void EmitIndexedVariableSyntaxMethodArgument(long p_var_index, long p_element_index);
+extern "C" void EmitIntegerSyntaxMethodArgument(intptr_t p_int);
+extern "C" void EmitRealSyntaxMethodArgument(intptr_t p_double);
+extern "C" void EmitStringSyntaxMethodArgument(intptr_t p_string);
+extern "C" void EmitVariableSyntaxMethodArgument(intptr_t p_index);
+extern "C" void EmitIndexedVariableSyntaxMethodArgument(intptr_t p_var_index, intptr_t p_element_index);
 
 extern "C" void EmitBeginDefinitionGroup(void);
-extern "C" void EmitContinueDefinitionGroup(long index);
-extern "C" void EmitEndDefinitionGroup(long *r_index);
+extern "C" void EmitContinueDefinitionGroup(intptr_t index);
+extern "C" void EmitEndDefinitionGroup(intptr_t *r_index);
 
-extern "C" void EmitDefinedType(long index, long& r_type_index);
-extern "C" void EmitForeignType(long binding, long& r_type_index);
-extern "C" void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index);
-extern "C" void EmitAliasType(NameRef name, long typeindex, long& r_new_index);
-extern "C" void EmitOptionalType(long index, long& r_new_index);
-extern "C" void EmitPointerType(long& r_new_index);
-extern "C" void EmitBoolType(long& r_new_index);
-extern "C" void EmitIntType(long& r_new_index);
-extern "C" void EmitUIntType(long& r_new_index);
-extern "C" void EmitFloatType(long& r_new_index);
-extern "C" void EmitDoubleType(long& r_new_index);
-extern "C" void EmitAnyType(long& r_new_index);
-extern "C" void EmitBooleanType(long& r_new_index);
-extern "C" void EmitIntegerType(long& r_new_index);
-extern "C" void EmitRealType(long& r_new_index);
-extern "C" void EmitNumberType(long& r_new_index);
-extern "C" void EmitStringType(long& r_new_index);
-extern "C" void EmitDataType(long& r_new_index);
-extern "C" void EmitArrayType(long& r_new_index);
-extern "C" void EmitListType(long& r_new_index);
-extern "C" void EmitUndefinedType(long& r_new_index);
-extern "C" void EmitBeginRecordType(long base_type_index);
-extern "C" void EmitRecordTypeField(NameRef name, long type_index);
-extern "C" void EmitEndRecordType(long& r_type_index);
-extern "C" void EmitBeginHandlerType(long return_type_index);
-extern "C" void EmitBeginForeignHandlerType(long return_type_index);
-extern "C" void EmitHandlerTypeInParameter(NameRef name, long type_index);
-extern "C" void EmitHandlerTypeOutParameter(NameRef name, long type_index);
-extern "C" void EmitHandlerTypeInOutParameter(NameRef name, long type_index);
-extern "C" void EmitEndHandlerType(long& r_index);
-extern "C" void EmitHandlerParameter(NameRef name, long type_index, long& r_index);
-extern "C" void EmitHandlerVariable(NameRef name, long type_index, long& r_index);
-extern "C" void EmitDeferLabel(long& r_label);
-extern "C" void EmitResolveLabel(long label);
-extern "C" void EmitCreateRegister(long& r_regindex);
-extern "C" void EmitDestroyRegister(long regindex);
-extern "C" void EmitJump(long label);
-extern "C" void EmitJumpIfTrue(long reg, long label);
-extern "C" void EmitJumpIfFalse(long reg, long label);
-extern "C" void EmitPushRepeatLabels(long next, long exit);
+extern "C" void EmitDefinedType(intptr_t index, intptr_t& r_type_index);
+extern "C" void EmitForeignType(intptr_t binding, intptr_t& r_type_index);
+extern "C" void EmitNamedType(NameRef module_name, NameRef name, intptr_t& r_new_index);
+extern "C" void EmitAliasType(NameRef name, intptr_t typeindex, intptr_t& r_new_index);
+extern "C" void EmitOptionalType(intptr_t index, intptr_t& r_new_index);
+extern "C" void EmitAnyType(intptr_t& r_new_index);
+extern "C" void EmitBooleanType(intptr_t& r_new_index);
+extern "C" void EmitIntegerType(intptr_t& r_new_index);
+extern "C" void EmitRealType(intptr_t& r_new_index);
+extern "C" void EmitNumberType(intptr_t& r_new_index);
+extern "C" void EmitStringType(intptr_t& r_new_index);
+extern "C" void EmitDataType(intptr_t& r_new_index);
+extern "C" void EmitArrayType(intptr_t& r_new_index);
+extern "C" void EmitListType(intptr_t& r_new_index);
+extern "C" void EmitUndefinedType(intptr_t& r_new_index);
+extern "C" void EmitBeginRecordType(void);
+extern "C" void EmitRecordTypeField(NameRef name, intptr_t type_index);
+extern "C" void EmitEndRecordType(intptr_t& r_type_index);
+extern "C" void EmitBeginHandlerType(intptr_t return_type_index);
+extern "C" void EmitBeginForeignHandlerType(intptr_t return_type_index);
+extern "C" void EmitHandlerTypeInParameter(NameRef name, intptr_t type_index);
+extern "C" void EmitHandlerTypeOutParameter(NameRef name, intptr_t type_index);
+extern "C" void EmitHandlerTypeInOutParameter(NameRef name, intptr_t type_index);
+extern "C" void EmitHandlerTypeVariadicParameter(NameRef name);
+extern "C" void EmitEndHandlerType(intptr_t& r_index);
+extern "C" void EmitHandlerParameter(NameRef name, intptr_t type_index, intptr_t& r_index);
+extern "C" void EmitHandlerVariable(NameRef name, intptr_t type_index, intptr_t& r_index);
+extern "C" void EmitDeferLabel(intptr_t& r_label);
+extern "C" void EmitResolveLabel(intptr_t label);
+extern "C" void EmitCreateRegister(intptr_t& r_regindex);
+extern "C" void EmitDestroyRegister(intptr_t regindex);
+extern "C" void EmitBeginOpcode(intptr_t opcode);
+extern "C" void EmitContinueOpcode(intptr_t argument);
+extern "C" void EmitEndOpcode(void);
+extern "C" void EmitJump(intptr_t label);
+extern "C" void EmitJumpIfTrue(intptr_t reg, intptr_t label);
+extern "C" void EmitJumpIfFalse(intptr_t reg, intptr_t label);
+extern "C" void EmitPushRepeatLabels(intptr_t next, intptr_t exit);
 extern "C" void EmitPopRepeatLabels(void);
-extern "C" void EmitCurrentRepeatLabels(long& r_next, long& r_exit);
-extern "C" void EmitBeginCall(long index, long resultreg);
-extern "C" void EmitBeginIndirectCall(long reg, long resultreg);
-extern "C" void EmitContinueCall(long reg);
+extern "C" void EmitCurrentRepeatLabels(intptr_t& r_next, intptr_t& r_exit);
+extern "C" void EmitBeginCall(intptr_t index, intptr_t resultreg);
+extern "C" void EmitBeginIndirectCall(intptr_t reg, intptr_t resultreg);
+extern "C" void EmitContinueCall(intptr_t reg);
 extern "C" void EmitEndCall(void);
-extern "C" void EmitBeginInvoke(long index, long contextreg, long resultreg);
-extern "C" void EmitBeginIndirectInvoke(long handlerreg, long contextreg, long resultreg);
-extern "C" void EmitContinueInvoke(long reg);
+extern "C" void EmitBeginInvoke(intptr_t index, intptr_t contextreg, intptr_t resultreg);
+extern "C" void EmitBeginIndirectInvoke(intptr_t handlerreg, intptr_t contextreg, intptr_t resultreg);
+extern "C" void EmitContinueInvoke(intptr_t reg);
 extern "C" void EmitEndInvoke(void);
-extern "C" void EmitAssign(long dst, long src);
-extern "C" void EmitAssignConstant(long dst, long constidx);
-extern "C" void EmitUndefinedConstant(long *idx);
-extern "C" void EmitTrueConstant(long *idx);
-extern "C" void EmitFalseConstant(long *idx);
-extern "C" void EmitIntegerConstant(long value, long *idx);
-extern "C" void EmitUnsignedIntegerConstant(unsigned long value, long *idx);
-extern "C" void EmitRealConstant(long value, long *idx);
-extern "C" void EmitStringConstant(long value, long *idx);
+extern "C" void EmitAssign(intptr_t dst, intptr_t src);
+extern "C" void EmitAssignConstant(intptr_t dst, intptr_t constidx);
+extern "C" void EmitUndefinedConstant(intptr_t *idx);
+extern "C" void EmitTrueConstant(intptr_t *idx);
+extern "C" void EmitFalseConstant(intptr_t *idx);
+extern "C" void EmitIntegerConstant(intptr_t value, intptr_t *idx);
+extern "C" void EmitUnsignedIntegerConstant(uintptr_t value, intptr_t *idx);
+extern "C" void EmitRealConstant(intptr_t value, intptr_t *idx);
+extern "C" void EmitStringConstant(intptr_t value, intptr_t *idx);
 extern "C" void EmitBeginListConstant(void);
-extern "C" void EmitContinueListConstant(long idx);
-extern "C" void EmitEndListConstant(long *idx);
+extern "C" void EmitContinueListConstant(intptr_t idx);
+extern "C" void EmitEndListConstant(intptr_t *idx);
 extern "C" void EmitBeginArrayConstant(void);
-extern "C" void EmitContinueArrayConstant(long key_idx, long value_idx);
-extern "C" void EmitEndArrayConstant(long *idx);
-extern "C" void EmitBeginAssignList(long reg);
-extern "C" void EmitContinueAssignList(long reg);
+extern "C" void EmitContinueArrayConstant(intptr_t key_idx, intptr_t value_idx);
+extern "C" void EmitEndArrayConstant(intptr_t *idx);
+extern "C" void EmitBeginAssignList(intptr_t reg);
+extern "C" void EmitContinueAssignList(intptr_t reg);
 extern "C" void EmitEndAssignList(void);
-extern "C" void EmitBeginAssignArray(long reg);
-extern "C" void EmitContinueAssignArray(long reg);
+extern "C" void EmitBeginAssignArray(intptr_t reg);
+extern "C" void EmitContinueAssignArray(intptr_t reg);
 extern "C" void EmitEndAssignArray(void);
-extern "C" void EmitFetch(long reg, long var, long level);
-extern "C" void EmitStore(long reg, long var, long level);
-extern "C" void EmitReturn(long reg);
+extern "C" void EmitFetch(intptr_t reg, intptr_t var, intptr_t level);
+extern "C" void EmitStore(intptr_t reg, intptr_t var, intptr_t level);
+extern "C" void EmitReturn(intptr_t reg);
 extern "C" void EmitReturnNothing(void);
-extern "C" void EmitAttachRegisterToExpression(long reg, long expr);
-extern "C" void EmitDetachRegisterFromExpression(long expr);
-extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
+extern "C" void EmitReset(intptr_t reg);
+extern "C" void EmitAttachRegisterToExpression(intptr_t reg, intptr_t expr);
+extern "C" void EmitDetachRegisterFromExpression(intptr_t expr);
+extern "C" int EmitGetRegisterAttachedToExpression(intptr_t expr, intptr_t *reg);
 extern "C" void EmitPosition(PositionRef position);
 
 extern "C" void OutputBeginManifest(void);
-extern "C" void OutputEnd(void);
-extern "C" void OutputWrite(const char *msg);
-extern "C" void OutputWriteI(const char *left, NameRef name, const char *right);
-extern "C" void OutputWriteS(const char *left, const char *string, const char *right);
 
 extern "C" int IsBootstrapCompile(void);
+extern "C" int IsNotBytecodeOutput(void);
 
 extern "C" void DependStart(void);
 extern "C" void DependFinish(void);
 extern "C" void DependDefineMapping(NameRef module_name, const char *source_file);
 extern "C" void DependDefineDependency(NameRef module_name, NameRef dependency_name);
 
+extern "C" int BytecodeEnumerate(intptr_t index, intptr_t *r_name);
+extern "C" int BytecodeLookup(intptr_t name, intptr_t *r_opcode);
+extern "C" void BytecodeDescribe(intptr_t opcode, intptr_t *r_name);
+extern "C" int BytecodeIsValidArgumentCount(intptr_t opcode, intptr_t count);
+extern "C" void BytecodeDescribeParameter(intptr_t opcode, intptr_t index, intptr_t *r_type);
+
 //////////
 
 struct AttachedReg
 {
     AttachedReg *next;
-    long expr;
-    long reg;
+    intptr_t expr;
+    intptr_t reg;
 };
 
 static AttachedReg *s_attached_regs = nil;
+
+void EmitCheckNoRegisters(void);
 
 //////////
 
@@ -196,9 +206,14 @@ static MCNameRef to_mcnameref(NameRef p_name)
 {
     const char *t_cstring;
     GetStringOfNameLiteral(p_name, &t_cstring);
-    
+
+    /* Names _may_ contain non-ASCII characters.  Therefore interpret
+     * them as UTF-8.  This is particularly important for properties,
+     * for example, which generate a name but via a string literal. */
     MCAutoStringRef t_string;
-    MCStringCreateWithCString(t_cstring, &t_string);
+    MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(t_cstring),
+                            (uindex_t)strlen(t_cstring), kMCStringEncodingUTF8,
+                            false, &t_string);
     
     MCNameRef t_name;
     MCNameCreate(*t_string, t_name);
@@ -214,13 +229,23 @@ cstring_from_nameref(NameRef p_name)
 	return t_cstring;
 }
 
-static MCStringRef to_mcstringref(long p_string)
+static NameRef
+nameref_from_cstring(const char *p_cstring)
+{
+    NameRef t_name;
+    MakeNameLiteral(p_cstring, &t_name);
+    return t_name;
+}
+
+static MCStringRef to_mcstringref(intptr_t p_string)
 {
     MCAutoStringRef t_string;
-    MCStringCreateWithCString((const char *)p_string, &t_string);
-    MCStringRef t_uniq_string;
-    MCValueInter(*t_string, t_uniq_string);
-    return t_uniq_string;
+    MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(p_string),
+                            (uindex_t)strlen(reinterpret_cast<const char *>(p_string)),
+                            kMCStringEncodingUTF8, false, &t_string);
+    MCAutoStringRef t_uniq_string;
+    MCValueInter(*t_string, &t_uniq_string);
+    return t_uniq_string.Take();
 }
 
 static NameRef nameref_from_mcstringref(MCStringRef p_string)
@@ -236,9 +261,6 @@ static NameRef nameref_from_mcstringref(MCStringRef p_string)
 
 //////////
 
-extern "C" void *Allocate(size_t p_size);
-extern "C" void *Reallocate(void *p_ptr, size_t p_new_size);
-
 static MCScriptModuleBuilderRef s_builder;
 static NameRef s_module_name;
 
@@ -247,6 +269,20 @@ static unsigned int s_ordered_module_count;
 
 static FILE *s_output_code_file = NULL;
 static const char *s_output_code_filename = NULL;
+
+//////////
+
+struct CompiledModule
+{
+    CompiledModule *next;
+    NameRef name;
+    byte_t *bytecode;
+    size_t bytecode_len;
+};
+
+static CompiledModule *s_compiled_modules = NULL;
+
+//////////
 
 struct EmittedModule
 {
@@ -257,18 +293,320 @@ struct EmittedModule
 };
 static EmittedModule *s_emitted_modules = NULL;
 
+static void EmittedModuleAdd(NameRef p_module_name, char *p_modified_name)
+{
+    EmittedModule *t_mod;
+    t_mod = (EmittedModule *)Allocate(sizeof(EmittedModule));
+    t_mod -> next = s_emitted_modules;
+    t_mod -> name = p_module_name;
+    t_mod -> modified_name = p_modified_name;
+    s_emitted_modules = t_mod;
+}
+
+static bool EmitEmittedModules(void)
+{
+    if (!OutputFileAsC)
+    {
+        return true;
+    }
+
+	FILE *t_file = s_output_code_file;
+	if (nullptr == t_file)
+    {
+		return false;
+    }
+    
+    for(EmittedModule *t_module = s_emitted_modules; t_module != nullptr; t_module = t_module->next)
+    {
+        const char *t_modified_name = t_module->modified_name;
+    
+        if (0 > fprintf(t_file,
+                        "static __builtin_module_info __%s_module_info =\n{\n    0,\n    0,\n    %s_module_data,\n    sizeof(%s_module_data),\n    %s_Initialize,\n    %s_Finalize,\n    __builtin_ordinal_map\n};\n",
+                        t_modified_name,
+                        t_modified_name,
+                        t_modified_name,
+                        t_modified_name,
+                        t_modified_name))
+            return false;
+        
+        if (0 > fprintf(t_file, "__builtin_module_loader __%s_loader(&__%s_module_info);\n\n",
+                        t_modified_name,
+                        t_modified_name))
+            return false;
+    }
+    
+    return true;
+}
+
 //////////
 
-// String used for output as C sources
-#define MC_AS_C_PREFIX "\n" \
-    "#ifdef _MSC_VER \n" \
-    "#  pragma section(\"__modules\") \n" \
-    "#  define MODULE_SECTION __declspec(allocate(\"__modules\")) \n" \
-    "#elif defined __APPLE__ \n" \
-    "#  define MODULE_SECTION __attribute__((section(\"__MODULES,__modules\"))) __attribute__((used)) \n" \
-    "#else \n" \
-    "#  define MODULE_SECTION __attribute__((section(\"__modules\"))) __attribute__((used)) \n" \
-    "#endif \n"
+struct EmittedBuiltin
+{
+    EmittedBuiltin *next;
+    NameRef name;
+    uindex_t ordinal;
+    MCStringRef ordinal_stringref;
+    
+    MCScriptForeignPrimitiveType return_type;
+    uindex_t parameter_count;
+    MCScriptForeignPrimitiveType *parameter_types;
+};
+
+static EmittedBuiltin *s_emitted_builtins = nullptr;
+static uindex_t s_emitted_builtin_count = 0;
+
+static MCStringRef EmittedBuiltinAdd(NameRef p_symbol_name, uindex_t p_type_index)
+{
+    if (!OutputFileAsC || OutputFileAsAuxC)
+    {
+        return MCNameGetString(to_mcnameref(p_symbol_name));
+    }
+    
+    for(EmittedBuiltin *t_builtin = s_emitted_builtins; t_builtin != nullptr; t_builtin = t_builtin->next)
+    {
+        if (t_builtin->name == p_symbol_name)
+        {
+            return t_builtin->ordinal_stringref;
+        }
+    }
+    
+    EmittedBuiltin *t_builtin;
+    t_builtin = (EmittedBuiltin *)Allocate(sizeof(EmittedBuiltin));
+    t_builtin -> next = s_emitted_builtins;
+    t_builtin -> name = p_symbol_name;
+    t_builtin -> ordinal = s_emitted_builtin_count;
+    
+    if (p_type_index != UINDEX_MAX)
+    {
+        t_builtin->return_type = MCScriptQueryForeignHandlerReturnTypeInModule(s_builder, p_type_index);
+        t_builtin->parameter_count = MCScriptQueryForeignHandlerParameterCountInModule(s_builder, p_type_index);
+        t_builtin->parameter_types = new MCScriptForeignPrimitiveType[t_builtin->parameter_count];
+        for(uindex_t i = 0; i < t_builtin->parameter_count; i++)
+        {
+            t_builtin->parameter_types[i] = MCScriptQueryForeignHandlerParameterTypeInModule(s_builder, p_type_index, i);
+        }
+    }
+    else
+    {
+        t_builtin->return_type = kMCScriptForeignPrimitiveTypePointer;
+        t_builtin->parameter_count = 0;
+        t_builtin->parameter_types = nullptr;
+    }
+    
+    char t_ordinal_str[32];
+    sprintf(t_ordinal_str, "%u", t_builtin->ordinal);
+    t_builtin->ordinal_stringref = to_mcstringref((intptr_t)t_ordinal_str);
+    
+    s_emitted_builtins = t_builtin;
+    s_emitted_builtin_count++;
+    
+    return t_builtin->ordinal_stringref;
+};
+
+#define DEFINE_PRIMITIVE_TYPE_MAPPING(PType, CType) \
+    { kMCScriptForeignPrimitiveType##PType, #CType },
+
+static struct { MCScriptForeignPrimitiveType type; const char *ctype; } s_primitive_type_map[] =
+{
+    DEFINE_PRIMITIVE_TYPE_MAPPING(Unknown, void)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(Void, void)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(Pointer, void*)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SInt8, int8_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UInt8, uint8_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SInt16, int16_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UInt16, uint16_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SInt32, int32_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UInt32, uint32_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SInt64, int64_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UInt64, uint64_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SIntSize, ssize_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UIntSize, size_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SIntPtr, intptr_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UIntPtr, uintptr_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(Float32, float)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(Float64, double)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CBool, bool)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CChar, char)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CSChar, signed char)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CUChar, unsigned char)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CSShort, signed short)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CUShort, unsigned short)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CSInt, signed int)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CUInt, unsigned int)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CSLong, signed long)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CULong, unsigned long)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CSLongLong, signed long long)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CULongLong, unsigned long long)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CFloat, float)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(CDouble, double)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(SInt, int32_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(UInt, uint32_t)
+};
+
+#undef DEFINE_PRIMITIVE_TYPE_MAPPING
+
+static const char *CTypeFromPrimitiveType(MCScriptForeignPrimitiveType p_type)
+{
+    if (p_type == kMCScriptForeignPrimitiveTypeUnknown)
+    {
+        Fatal_InternalInconsistency("type bound in foreign handler unknown");
+        return nullptr;
+    }
+
+    if (s_primitive_type_map[p_type].type != p_type)
+    {
+        Fatal_InternalInconsistency("s_primitive_type_map out of order");
+        return nullptr;
+    }
+    
+    return s_primitive_type_map[p_type].ctype;
+}
+
+static bool EmitEmittedBuiltins(void)
+{
+    if (!OutputFileAsC)
+    {
+        return true;
+    }
+    
+	FILE *t_file = s_output_code_file;
+	if (nullptr == t_file)
+    {
+		return false;
+    }
+    
+    MCAutoArray<EmittedBuiltin*> t_builtins;
+    if (!t_builtins.Resize(s_emitted_builtin_count))
+    {
+        return false;
+    }
+    
+    for(EmittedBuiltin *t_builtin = s_emitted_builtins; t_builtin != nullptr; t_builtin = t_builtin->next)
+    {
+        t_builtins[t_builtin->ordinal] = t_builtin;
+    }
+    
+    // Emit builtin symbol external references
+    if (0 > fprintf(t_file, "\n"))
+    {
+        return false;
+    }
+    
+    for(uindex_t i = 0; i < s_emitted_builtin_count; i++)
+    {
+        /* Generate extern for original function */
+        if (0 > fprintf(t_file,
+                        "extern \"C\" %s %s(",
+                        CTypeFromPrimitiveType(t_builtins[i]->return_type),
+                        cstring_from_nameref(t_builtins[i]->name)))
+        {
+            return false;
+        }
+        for(uindex_t t_arg_index = 0; t_arg_index < t_builtins[i]->parameter_count; t_arg_index++)
+        {
+            if (0 > fprintf(t_file,
+                            "%s%s",
+                            t_arg_index > 0 ? ", " : "",
+                            CTypeFromPrimitiveType(t_builtins[i]->parameter_types[t_arg_index])))
+            {
+                return false;
+            }
+        }
+        if (0 > fprintf(t_file,
+                        ");\n"))
+        {
+            return false;
+        }
+        
+        /* Generate shim around original function */
+        if (0 > fprintf(t_file,
+                        "static void shim__%s(void *rv, void **av)\n{\n",
+                        cstring_from_nameref(t_builtins[i]->name)))
+        {
+            return false;
+        }
+        
+        if (t_builtins[i]->return_type != kMCScriptForeignPrimitiveTypeVoid)
+        {
+            if (0 > fprintf(t_file,
+                            "\t*(%s *)rv =",
+                            CTypeFromPrimitiveType(t_builtins[i]->return_type)))
+            {
+                return false;
+            }
+        }
+            
+        if (0 > fprintf(t_file,
+                        "%s(",
+                        cstring_from_nameref(t_builtins[i]->name)))
+        {
+            return false;
+        }
+        for(uindex_t t_arg_index = 0; t_arg_index < t_builtins[i]->parameter_count; t_arg_index++)
+        {
+            if (0 > fprintf(t_file,
+                            "%s*(%s *)av[%d]",
+                            t_arg_index > 0 ? ", " : "",
+                            CTypeFromPrimitiveType(t_builtins[i]->parameter_types[t_arg_index]),
+                            t_arg_index))
+            {
+                return false;
+            }
+        }
+        if (0 > fprintf(t_file,
+                        ");\n}\n\n"))
+        {
+            return false;
+        }
+    }
+    
+    // Emit builtin ordinal mapping array
+    if (0 > fprintf(t_file, "static __builtin_shim_type __builtin_ordinal_map[] =\n{\n"))
+    {
+        return false;
+    }
+    for(uindex_t i = 0; i < s_emitted_builtin_count; i++)
+    {
+        if (0 > fprintf(t_file, "\tshim__%s,\n", cstring_from_nameref(t_builtins[i]->name)))
+        {
+            return false;
+        }
+    }
+    if (0 > fprintf(t_file, "\tnullptr\n};\n\n"))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+//////////
+
+static const char *kOutputCDefinitions =
+    "#include <stdint.h>\n"
+    "#include <stddef.h>\n"
+    "typedef void (*__builtin_shim_type)(void*, void**);\n"
+    "struct __builtin_module_info\n"
+    "{\n"
+    "    void *next;\n"
+    "    void *handle;\n"
+    "    unsigned char *data;\n"
+    "    unsigned long length;\n"
+    "    bool (*initializer)();\n"
+    "    void (*finalizer)();\n"
+    "    __builtin_shim_type *builtins;\n"
+    "};\n"
+    "extern \"C\" void MCScriptRegisterBuiltinModule(__builtin_module_info *desc);\n"
+    "class __builtin_module_loader\n"
+    "{\n"
+    "public:\n"
+    "    __builtin_module_loader(__builtin_module_info *p_desc)\n"
+    "    {\n"
+    "        MCScriptRegisterBuiltinModule(p_desc);\n"
+    "    }\n"
+    "};\n\n";
+
+static void BuildBuiltinModule(void);
 
 void EmitStart(void)
 {
@@ -279,10 +617,12 @@ void EmitStart(void)
     
     if (s_output_code_file != NULL)
     {
-        if (fprintf(s_output_code_file, MC_AS_C_PREFIX) < 0)
+        if (fprintf(s_output_code_file, "%s", kOutputCDefinitions) < 0)
             goto error_cleanup;
-        if (fprintf(s_output_code_file, "typedef struct { const char *name; unsigned char *data; unsigned long length; } builtin_module_descriptor;\n\n") < 0)
-            goto error_cleanup;
+        
+        if (OutputFileAsC &&
+            !OutputFileAsAuxC)
+            BuildBuiltinModule();
     }
     
     return;
@@ -306,94 +646,56 @@ static void __EmitModuleOrder(NameRef p_name)
     s_ordered_modules[s_ordered_module_count++] = p_name;
 }
 
-static bool __FindEmittedModule(NameRef p_name, EmittedModule*& r_module)
+static bool
+EmitCompiledModules (void)
 {
-    for(EmittedModule *t_module = s_emitted_modules; t_module != NULL; t_module = t_module -> next)
-        if (IsNameEqualToName(p_name, t_module -> name))
-        {
-            r_module = t_module;
-            return true;
-        }
+    const char *t_filename = nil;
+    FILE *t_file = OpenOutputBytecodeFile (&t_filename);
     
+    if (nil == t_file)
+        goto error_cleanup;
+    
+    while(s_compiled_modules != nullptr)
+    {
+        size_t t_written;
+        t_written = fwrite (s_compiled_modules->bytecode, sizeof(byte_t), s_compiled_modules->bytecode_len, t_file);
+    
+        if (t_written != s_compiled_modules->bytecode_len)
+            goto error_cleanup;
+        
+        s_compiled_modules = s_compiled_modules->next;
+    }
+    
+    fflush (t_file);
+    fclose (t_file);
+    
+    return true;
+    
+error_cleanup:
+    if (nil != t_file)
+        fclose (t_file);
+    Error_CouldNotWriteOutputFile (t_filename);
     return false;
 }
 
 void EmitFinish(void)
 {
-    if (s_output_code_file != NULL && IsBootstrapCompile())
+    if (s_compiled_modules != NULL &&
+        !EmitCompiledModules())
     {
-        if (fprintf(s_output_code_file, "builtin_module_descriptor* g_builtin_modules[] =\n{\n") < 0)
-            goto error_cleanup;
-        
-        for(unsigned int i = 0; i < s_ordered_module_count; i++)
-        {
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i], t_module))
-                if (fprintf(s_output_code_file, "    &__%s_module_info,\n", t_module -> modified_name) < 0)
-                    goto error_cleanup;
-        }
-        
-        if (fprintf(s_output_code_file, "};\n\n") < 0)
-            goto error_cleanup;
-        
-        if (fprintf(s_output_code_file, "unsigned int g_builtin_module_count = sizeof(g_builtin_modules) / sizeof(builtin_module_descriptor*);\n\n") < 0)
-            goto error_cleanup;
-		for(unsigned int i = 0; i < s_ordered_module_count; i++)
-		{
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i], t_module))
-            {
-                if (fprintf(s_output_code_file,
-                            "extern int %s_Initialize(void);\n",
-                            t_module -> modified_name) < 0)
-                    goto error_cleanup;
-            }
-		}
-        if (fprintf(s_output_code_file, "int MCModulesInitialize(void)\n{\n") < 0)
-            goto error_cleanup;
-		for(unsigned int i = 0; i < s_ordered_module_count; i++)
-        {
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i], t_module))
-            {
-                if (fprintf(s_output_code_file,
-                            "    if (!%s_Initialize())\n"
-                            "        return 0;\n",
-                            t_module -> modified_name) < 0)
-                    goto error_cleanup;
-            }
-        }
-        if (fprintf(s_output_code_file, "    return 1;\n}\n\n") < 0)
-            goto error_cleanup;
-		for(unsigned int i = 0; i < s_ordered_module_count; i++)
-		{
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i], t_module))
-            {
-                if (fprintf(s_output_code_file,
-                            "extern void %s_Finalize(void);\n",
-                            t_module -> modified_name) < 0)
-                    goto error_cleanup;
-            }
-		}
-        if (fprintf(s_output_code_file, "void MCModulesFinalize(void)\n{\n") < 0)
-            goto error_cleanup;
-        for(unsigned int i = s_ordered_module_count; i > 0; i--)
-        {
-            EmittedModule *t_module;
-            if (__FindEmittedModule(s_ordered_modules[i - 1], t_module))
-            {
-                if (fprintf(s_output_code_file,
-                            "    %s_Finalize();\n",
-                            t_module -> modified_name) < 0)
-                    goto error_cleanup;
-            }
-        }
-        
-        if (fprintf(s_output_code_file, "}\n\n") < 0)
-            goto error_cleanup;
+        goto error_cleanup;
     }
     
+    if (!EmitEmittedBuiltins())
+    {
+        goto error_cleanup;
+    }
+
+    if (!EmitEmittedModules())
+    {
+        goto error_cleanup;
+    }
+
 	if (nil != s_output_code_file)
     {
 		fclose (s_output_code_file);
@@ -411,7 +713,7 @@ error_cleanup:
     Error_CouldNotWriteOutputFile (s_output_code_filename);
 }
 
-void EmitBeginModule(NameRef p_name, long& r_index)
+void EmitBeginModule(NameRef p_name, intptr_t& r_index)
 {
     MCInitialize();
 
@@ -423,7 +725,7 @@ void EmitBeginModule(NameRef p_name, long& r_index)
     r_index = 0;
 }
 
-void EmitBeginWidgetModule(NameRef p_name, long& r_index)
+void EmitBeginWidgetModule(NameRef p_name, intptr_t& r_index)
 {
     MCInitialize();
 
@@ -435,7 +737,7 @@ void EmitBeginWidgetModule(NameRef p_name, long& r_index)
     r_index = 0;
 }
 
-void EmitBeginLibraryModule(NameRef p_name, long& r_index)
+void EmitBeginLibraryModule(NameRef p_name, intptr_t& r_index)
 {
     MCInitialize();
 
@@ -448,7 +750,7 @@ void EmitBeginLibraryModule(NameRef p_name, long& r_index)
 }
 
 static bool
-EmitEndModuleGetByteCodeBuffer (MCAutoByteArray & r_bytecode)
+EmitEndModuleGetByteCodeBuffer (byte_t*& r_bytecode, size_t& r_bytecode_len)
 {
 	MCAutoValueRefBase<MCStreamRef> t_stream;
 	MCMemoryOutputStreamCreate (&t_stream);
@@ -463,40 +765,13 @@ EmitEndModuleGetByteCodeBuffer (MCAutoByteArray & r_bytecode)
 	                            t_bytecode_len);
 
 	MCAssert (t_bytecode_len <= UINDEX_MAX);
-	r_bytecode.Give ((byte_t *) t_bytecode, t_bytecode_len);
+    r_bytecode = (byte_t*)t_bytecode;
+    r_bytecode_len = t_bytecode_len;
 
 	return true;
 
  error_cleanup:
 	Error_CouldNotGenerateBytecode();
-	return false;
-}
-
-static bool
-EmitEndModuleOutputBytecode (const byte_t *p_bytecode,
-                             size_t p_bytecode_len)
-{
-	const char *t_filename = nil;
-	FILE *t_file = OpenOutputBytecodeFile (&t_filename);
-
-	if (nil == t_file)
-		goto error_cleanup;
-
-	size_t t_written;
-	t_written = fwrite (p_bytecode, sizeof(byte_t), p_bytecode_len, t_file);
-
-	if (t_written != p_bytecode_len)
-		goto error_cleanup;
-
-	fflush (t_file);
-	fclose (t_file);
-
-	return true;
-
- error_cleanup:
-	if (nil != t_file)
-		fclose (t_file);
-	Error_CouldNotWriteOutputFile (t_filename);
 	return false;
 }
 
@@ -521,6 +796,18 @@ EmitEndModuleOutputC (NameRef p_module_name,
 		if (t_modified_name[i] == '.')
 			t_modified_name[i] = '_';
     
+    // Emit the initializer reference.
+    if (0 > fprintf(s_output_code_file,
+                    "extern \"C\" bool %s_Initialize(void);\n",
+                    t_modified_name))
+        goto error_cleanup;
+    
+    // Emit the finalizer reference.
+    if (0 > fprintf(s_output_code_file,
+                    "extern \"C\" void %s_Finalize(void);\n",
+                    t_modified_name))
+        goto error_cleanup;
+    
 	if (0 > fprintf(t_file, "static unsigned char %s_module_data[] = {", t_modified_name))
 		goto error_cleanup;
 
@@ -533,18 +820,10 @@ EmitEndModuleOutputC (NameRef p_module_name,
 		if (0 > fprintf(t_file, "0x%02x, ", ((unsigned char *)p_bytecode)[i]))
 			goto error_cleanup;
 	}
-	if (0 > fprintf(t_file, "};\n\n"))
-		goto error_cleanup;
+	if (0 > fprintf(t_file, "};\n"))
+        goto error_cleanup;
 
-	if (0 > fprintf(t_file, "builtin_module_descriptor __%s_module_info = { \"%s\", %s_module_data, sizeof(%s_module_data) };\n\n", t_modified_name, p_module_name_string, t_modified_name, t_modified_name))
-		goto error_cleanup;
-
-    EmittedModule *t_mod;
-    t_mod = (EmittedModule *)Allocate(sizeof(EmittedModule));
-    t_mod -> next = s_emitted_modules;
-    t_mod -> name = p_module_name;
-    t_mod -> modified_name = t_modified_name;
-    s_emitted_modules = t_mod;
+    EmittedModuleAdd(p_module_name, t_modified_name);
     
 	fflush (t_file);
 	return true;
@@ -589,7 +868,7 @@ EmitEndModuleGetInterfaceBuffer (const byte_t *p_bytecode,
 		goto error_cleanup;
 
 	MCAssert (t_interface_len <= UINDEX_MAX);
-	r_interface.Give ((byte_t *) t_interface, t_interface_len);
+	r_interface.Give ((byte_t *) t_interface, (uindex_t)t_interface_len);
 
 	return true;
 
@@ -633,8 +912,7 @@ EmitEndModule (void)
 {
 	const char *t_module_string = nil;
 
-	MCAutoByteArray t_bytecode;
-	const byte_t *t_bytecode_buf = nil;
+    byte_t *t_bytecode_buf = nil;
 	size_t t_bytecode_len = 0;
 
 	MCAutoByteArray t_interface;
@@ -650,11 +928,8 @@ EmitEndModule (void)
 
 	/* ---------- 1. Get bytecode */
 
-	if (!EmitEndModuleGetByteCodeBuffer (t_bytecode))
+	if (!EmitEndModuleGetByteCodeBuffer (t_bytecode_buf, t_bytecode_len))
 		goto cleanup;
-
-	t_bytecode_buf = t_bytecode.Bytes();
-	t_bytecode_len = t_bytecode.ByteCount();
 
 	/* ---------- 2. Output module contents */
 	if (OutputFileAsC)
@@ -665,9 +940,13 @@ EmitEndModule (void)
 	}
 	else if (OutputFileAsBytecode)
 	{
-		if (!EmitEndModuleOutputBytecode (t_bytecode_buf, t_bytecode_len))
-			goto cleanup;
-	}
+        CompiledModule *t_cmodule = (CompiledModule*)Allocate(sizeof(CompiledModule));
+        t_cmodule->next = s_compiled_modules;
+        t_cmodule->name = s_module_name;
+        t_cmodule->bytecode = t_bytecode_buf;
+        t_cmodule->bytecode_len = t_bytecode_len;
+        s_compiled_modules = t_cmodule;
+    }
 
 	/* ---------- 3. Output module interface */
 	if (!EmitEndModuleGetInterfaceBuffer (t_bytecode_buf, t_bytecode_len,
@@ -685,7 +964,7 @@ cleanup:
     return;
 }
 
-void EmitModuleDependency(NameRef p_name, long& r_index)
+void EmitModuleDependency(NameRef p_name, intptr_t& r_index)
 {
     __EmitModuleOrder(p_name);
     
@@ -696,114 +975,136 @@ void EmitModuleDependency(NameRef p_name, long& r_index)
     Debug_Emit("ModuleDependency(%s -> %d)", cstring_from_nameref(p_name), t_index + 1);
 }
 
-void EmitImportedType(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
+void EmitImportedType(intptr_t p_module_index, NameRef p_name, intptr_t p_type_index, intptr_t& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindType, p_type_index, t_index);
+    MCScriptAddImportToModule(s_builder, (uindex_t)p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindType, (uindex_t)p_type_index, t_index);
     r_index = t_index;
 
     Debug_Emit("ImportedType(%ld, %s, %ld -> %d)", p_module_index,
                cstring_from_nameref(p_name), p_type_index, t_index);
 }
 
-void EmitImportedConstant(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
+void EmitImportedConstant(intptr_t p_module_index, NameRef p_name, intptr_t p_type_index, intptr_t& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindConstant, p_type_index, t_index);
+    MCScriptAddImportToModule(s_builder, (uindex_t)p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindConstant, (uindex_t)p_type_index, t_index);
     r_index = t_index;
 
     Debug_Emit("ImportedConstant(%ld, %s, %ld -> %d)", p_module_index,
                cstring_from_nameref(p_name), p_type_index, t_index);
 }
 
-void EmitImportedVariable(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
+void EmitImportedVariable(intptr_t p_module_index, NameRef p_name, intptr_t p_type_index, intptr_t& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindVariable, p_type_index, t_index);
+    MCScriptAddImportToModule(s_builder, (uindex_t)p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindVariable, (uindex_t)p_type_index, t_index);
     r_index = t_index;
 
     Debug_Emit("ImportedVariable(%ld, %s, %ld -> %d)", p_module_index,
                cstring_from_nameref(p_name), p_type_index, t_index);
 }
 
-void EmitImportedHandler(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
+void EmitImportedHandler(intptr_t p_module_index, NameRef p_name, intptr_t p_type_index, intptr_t& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindHandler, p_type_index, t_index);
+    MCScriptAddImportToModule(s_builder, (uindex_t)p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindHandler, (uindex_t)p_type_index, t_index);
     r_index = t_index;
 
     Debug_Emit("ImportedHandler(%ld, %s, %ld -> %d)", p_module_index,
                cstring_from_nameref(p_name), p_type_index, t_index);
 }
 
-void EmitImportedSyntax(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
+void EmitImportedSyntax(intptr_t p_module_index, NameRef p_name, intptr_t p_type_index, intptr_t& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindSyntax, p_type_index, t_index);
+    MCScriptAddImportToModule(s_builder, (uindex_t)p_module_index - 1, to_mcnameref(p_name), kMCScriptDefinitionKindSyntax, (uindex_t)p_type_index, t_index);
     r_index = t_index;
 
     Debug_Emit("ImportedSyntax(%ld, %s, %ld -> %d)", p_module_index,
                cstring_from_nameref(p_name), p_type_index, t_index);
 }
 
-void EmitExportedDefinition(long p_index)
+void EmitExportedDefinition(intptr_t p_index)
 {
-    MCScriptAddExportToModule(s_builder, p_index);
+    MCScriptAddExportToModule(s_builder, (uindex_t)p_index);
 
     Debug_Emit("ExportedDefinition(%ld)", p_index);
 }
 
-void EmitDefinitionIndex(long& r_index)
+void EmitDefinitionIndex(const char *p_type, intptr_t& r_index)
 {
+    static const struct { const char *name; MCScriptDefinitionKind kind; } kTypeMap[] =
+    {
+        { "external", kMCScriptDefinitionKindExternal },
+        { "type", kMCScriptDefinitionKindType },
+        { "constant", kMCScriptDefinitionKindConstant },
+        { "variable", kMCScriptDefinitionKindVariable },
+        { "handler", kMCScriptDefinitionKindHandler },
+        { "foreignhandler", kMCScriptDefinitionKindForeignHandler },
+        { "property", kMCScriptDefinitionKindProperty },
+        { "event", kMCScriptDefinitionKindEvent },
+        { "syntax", kMCScriptDefinitionKindSyntax },
+        { "definitiongroup", kMCScriptDefinitionKindDefinitionGroup },
+    };
+    static const int kTypeMapLength = sizeof(kTypeMap) / sizeof(kTypeMap[0]);
+    
+    int t_kind_index = -1;
+    for(int i = 0; i < kTypeMapLength; i++)
+    {
+        if (strcmp(kTypeMap[i].name, p_type) == 0)
+        {
+            t_kind_index = i;
+            break;
+        }
+    }
+    
+    if (t_kind_index == -1)
+        Fatal_InternalInconsistency("unknown definition kind");
+    
     uindex_t t_index;
-    MCScriptAddDefinitionToModule(s_builder, t_index);
+    MCScriptAddDefinitionToModule(s_builder, kTypeMap[t_kind_index] . kind, t_index);
     r_index = t_index;
 
-    Debug_Emit("DefinitionIndex(-> %u)", t_index);
+    Debug_Emit("DefinitionIndex(%s -> %u)", p_type, t_index);
 }
 
-void EmitTypeDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
+void EmitTypeDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_type_index)
 {
-    MCScriptAddTypeToModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
+    MCScriptAddTypeToModule(s_builder, to_mcnameref(p_name), (uindex_t)p_type_index, (uindex_t)p_index);
 
     Debug_Emit("TypeDefinition(%ld, %s, %ld)", p_index,
                cstring_from_nameref(p_name), p_type_index);
 }
 
-void EmitConstantDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_const_index)
+void EmitConstantDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_const_index)
 {
-    MCScriptAddConstantToModule(s_builder, to_mcnameref(p_name), p_const_index, p_index);
+    MCScriptAddConstantToModule(s_builder, to_mcnameref(p_name), (uindex_t)p_const_index, (uindex_t)p_index);
 
     Debug_Emit("ConstantDefinition(%ld, %s, %ld)", p_index,
                cstring_from_nameref(p_name), p_const_index);
 }
 
-void EmitVariableDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
+void EmitVariableDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_type_index)
 {
-    MCScriptAddVariableToModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
+    MCScriptAddVariableToModule(s_builder, to_mcnameref(p_name), (uindex_t)p_type_index, (uindex_t)p_index);
 
     Debug_Emit("VariableDefinition(%ld, %s, %ld)", p_index,
                cstring_from_nameref(p_name), p_type_index);
 }
 
-void EmitContextVariableDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index, long p_default_index)
-{
-    MCScriptAddContextVariableToModule(s_builder, to_mcnameref(p_name), p_type_index, p_default_index, p_index);
-
-    Debug_Emit("ContextVariableDefinition(%ld, %s, %ld, %ld)", p_index,
-               cstring_from_nameref(p_name), p_type_index, p_default_index);
-}
-
-void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index, long p_binding)
+static void EmitForeignHandlerDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_type_index, intptr_t p_binding, bool p_force_builtin)
 {
     MCAutoStringRef t_binding_str;
-    if (strcmp((const char *)p_binding, "<builtin>") == 0)
-        t_binding_str = MCNameGetString(to_mcnameref(p_name));
+    if (strcmp((const char *)p_binding, "<builtin>") == 0 || p_force_builtin)
+    {
+        t_binding_str = EmittedBuiltinAdd(p_force_builtin ? nameref_from_cstring((const char *)p_binding) : p_name, p_type_index);
+    }
     else
         t_binding_str = to_mcstringref(p_binding);
     
     if (!MCStringBeginsWithCString(*t_binding_str, (const char_t *)"lcb:", kMCStringOptionCompareExact))
-        MCScriptAddForeignHandlerToModule(s_builder, to_mcnameref(p_name), p_type_index, *t_binding_str, p_index);
+        MCScriptAddForeignHandlerToModule(s_builder, to_mcnameref(p_name), (uindex_t)p_type_index, *t_binding_str, (uindex_t)p_index);
     else
     {
         // The string should be of the form:
@@ -819,7 +1120,7 @@ void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef 
         else
             t_handler = *t_module_dot_handler;
 
-        long t_module_dep;
+        intptr_t t_module_dep;
         if (*t_module == nil)
             EmitModuleDependency(s_module_name, t_module_dep);
         else
@@ -828,7 +1129,7 @@ void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef 
         MCNewAutoNameRef t_hand_name;
         MCNameCreate(*t_handler, &t_hand_name);
         
-        MCScriptAddImportToModuleWithIndex(s_builder, t_module_dep - 1, *t_hand_name, kMCScriptDefinitionKindHandler, p_type_index, p_index);
+        MCScriptAddImportToModuleWithIndex(s_builder, (uindex_t)t_module_dep - 1, *t_hand_name, kMCScriptDefinitionKindHandler, (uindex_t)p_type_index, (uindex_t)p_index);
     }
 
     Debug_Emit("ForeignHandlerDefinition(%ld, %s, %ld, %s)", p_index,
@@ -836,40 +1137,48 @@ void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef 
                (const char *) p_binding);
 }
 
-void EmitPropertyDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_getter, long p_setter)
+void EmitForeignHandlerDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_type_index, intptr_t p_binding)
 {
-    MCScriptAddPropertyToModule(s_builder, to_mcnameref(p_name), p_getter, p_setter, p_index);
+    EmitForeignHandlerDefinition(p_index, p_position, p_name, p_type_index, p_binding, false);
+}
+
+void EmitPropertyDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_getter, intptr_t p_setter)
+{
+    MCScriptAddPropertyToModule(s_builder, to_mcnameref(p_name), (uindex_t)p_getter, (uindex_t)p_setter, (uindex_t)p_index);
 
     Debug_Emit("PropertyDefinition(%ld, %s, %ld, %ld)", p_index,
                cstring_from_nameref(p_name), p_getter, p_setter);
 }
 
-void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
+void EmitEventDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_type_index)
 {
-    MCScriptAddEventToModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
+    MCScriptAddEventToModule(s_builder, to_mcnameref(p_name), (uindex_t)p_type_index, (uindex_t)p_index);
 
     Debug_Emit("EmitEvent(%ld, %s, %ld)", p_index, cstring_from_nameref(p_name),
                p_type_index);
 }
 
-void EmitBeginHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
+void EmitBeginHandlerDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_type_index)
 {
-    MCScriptBeginHandlerInModule(s_builder, kMCScriptHandlerScopeNormal, to_mcnameref(p_name), p_type_index, p_index);
+    MCScriptBeginHandlerInModule(s_builder, to_mcnameref(p_name), (uindex_t)p_type_index, kMCScriptHandlerAttributeSafe, (uindex_t)p_index);
 
     Debug_Emit("BeginHandlerDefinition(%ld, %s, %ld)", p_index,
                cstring_from_nameref(p_name), p_type_index);
 }
 
-void EmitBeginContextHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
+void EmitBeginUnsafeHandlerDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name, intptr_t p_type_index)
 {
-    MCScriptBeginHandlerInModule(s_builder, kMCScriptHandlerScopeContext, to_mcnameref(p_name), p_type_index, p_index);
-
-    Debug_Emit("BeginContextHandlerDefinition(%ld, %s, %ld)", p_index,
+    MCScriptBeginHandlerInModule(s_builder, to_mcnameref(p_name), (uindex_t)p_type_index, kMCScriptHandlerAttributeUnsafe, (uindex_t)p_index);
+    
+    Debug_Emit("BeginUnsafeHandlerDefinition(%ld, %s, %ld)", p_index,
                cstring_from_nameref(p_name), p_type_index);
 }
 
 void EmitEndHandlerDefinition(void)
 {
+    /* Check that registers have all been destroyed */
+    EmitCheckNoRegisters();
+    
     if (s_attached_regs != nil)
     {
         for(AttachedReg *t_reg = s_attached_regs; t_reg != NULL; t_reg = t_reg -> next)
@@ -882,9 +1191,9 @@ void EmitEndHandlerDefinition(void)
     Debug_Emit("EndHandlerDefinition()");
 }
 
-void EmitBeginSyntaxDefinition(long p_index, PositionRef p_position, NameRef p_name)
+void EmitBeginSyntaxDefinition(intptr_t p_index, PositionRef p_position, NameRef p_name)
 {
-    MCScriptBeginSyntaxInModule(s_builder, to_mcnameref(p_name), p_index);
+    MCScriptBeginSyntaxInModule(s_builder, to_mcnameref(p_name), (uindex_t)p_index);
 
     Debug_Emit("BeginSyntaxDefinition(%ld, %s)", p_index,
                cstring_from_nameref(p_name));
@@ -897,9 +1206,9 @@ void EmitEndSyntaxDefinition(void)
     Debug_Emit("EndSyntaxDefinition()");
 }
 
-void EmitBeginSyntaxMethod(long p_handler_index)
+void EmitBeginSyntaxMethod(intptr_t p_handler_index)
 {
-    MCScriptBeginSyntaxMethodInModule(s_builder, p_handler_index);
+    MCScriptBeginSyntaxMethodInModule(s_builder, (uindex_t)p_handler_index);
 
     Debug_Emit("BeginSyntaxMethod(%ld)", p_handler_index);
 }
@@ -970,43 +1279,42 @@ void EmitFalseSyntaxMethodArgument(void)
     Debug_Emit("FalseSyntaxMethodArgument()");
 }
 
-void EmitIntegerSyntaxMethodArgument(long p_int)
+void EmitIntegerSyntaxMethodArgument(intptr_t p_int)
 {
     MCAutoNumberRef t_number;
-    MCNumberCreateWithInteger(p_int, &t_number);
+    MCNumberCreateWithInteger((uindex_t)p_int, &t_number);
     MCScriptAddConstantArgumentToSyntaxMethodInModule(s_builder, *t_number);
 
     Debug_Emit("IntegerSyntaxMethodArgument(%ld)", p_int);
 }
 
-void EmitRealSyntaxMethodArgument(long p_double)
+void EmitRealSyntaxMethodArgument(intptr_t p_double)
 {
     MCAutoNumberRef t_number;
-    MCNumberCreateWithInteger(p_double, &t_number);
+    MCNumberCreateWithInteger((uindex_t)p_double, &t_number);
     MCScriptAddConstantArgumentToSyntaxMethodInModule(s_builder, *t_number);
 
     Debug_Emit("RealSyntaxMethodArgument(%lf)", *(double *)p_double);
 }
 
-void EmitStringSyntaxMethodArgument(long p_string)
+void EmitStringSyntaxMethodArgument(intptr_t p_string)
 {
-    MCAutoStringRef t_string;
-    MCStringCreateWithCString((const char *)p_string, &t_string);
+	MCAutoStringRef t_string(to_mcstringref(p_string));
     MCScriptAddConstantArgumentToSyntaxMethodInModule(s_builder, *t_string);
 
     Debug_Emit("RealSyntaxMethodArgument(\"%s\")", (const char *)p_string);
 }
 
-void EmitVariableSyntaxMethodArgument(long p_index)
+void EmitVariableSyntaxMethodArgument(intptr_t p_index)
 {
-    MCScriptAddVariableArgumentToSyntaxMethodInModule(s_builder, p_index);
+    MCScriptAddVariableArgumentToSyntaxMethodInModule(s_builder, (uindex_t)p_index);
 
     Debug_Emit("VariableSyntaxMethodArgument(%ld)", p_index);
 }
 
-void EmitIndexedVariableSyntaxMethodArgument(long p_var_index, long p_element_index)
+void EmitIndexedVariableSyntaxMethodArgument(intptr_t p_var_index, intptr_t p_element_index)
 {
-    MCScriptAddIndexedVariableArgumentToSyntaxMethodInModule(s_builder, p_var_index, p_element_index);
+    MCScriptAddIndexedVariableArgumentToSyntaxMethodInModule(s_builder, (uindex_t)p_var_index, (uindex_t)p_element_index);
 
     Debug_Emit("IndexedVariableSyntaxMethodArgument(%ld, %ld)", p_var_index,
                p_element_index);
@@ -1019,14 +1327,14 @@ void EmitBeginDefinitionGroup(void)
     Debug_Emit("BeginDefinitionGroup()");
 }
 
-void EmitContinueDefinitionGroup(long p_index)
+void EmitContinueDefinitionGroup(intptr_t p_index)
 {
-    MCScriptAddHandlerToDefinitionGroupInModule(s_builder, p_index);
+    MCScriptAddHandlerToDefinitionGroupInModule(s_builder, (uindex_t)p_index);
 
     Debug_Emit("ContinueDefinitionGroup(%ld)", p_index);
 }
 
-void EmitEndDefinitionGroup(long *r_index)
+void EmitEndDefinitionGroup(intptr_t *r_index)
 {
     uindex_t t_index;
     MCScriptEndDefinitionGroupInModule(s_builder, t_index);
@@ -1037,7 +1345,7 @@ void EmitEndDefinitionGroup(long *r_index)
 
 /////////
 
-static bool define_builtin_typeinfo(const char *name, long& r_new_index)
+static bool define_builtin_typeinfo(const char *name, intptr_t& r_new_index)
 {
     uindex_t t_mod_index;
     MCScriptAddDependencyToModule(s_builder, MCNAME("__builtin__"), t_mod_index);
@@ -1053,109 +1361,38 @@ static bool define_builtin_typeinfo(const char *name, long& r_new_index)
     return true;
 }
 
-#if 0
-void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index)
-{
-    MCAutoStringRef t_string;
-    MCStringFormat(&t_string, "%@.%@", to_mcnameref(module_name), to_mcnameref(name));
-    MCNewAutoNameRef t_name;
-    MCNameCreate(*t_string, &t_name);
-    MCAutoTypeInfoRef t_type;
-    MCNamedTypeInfoCreate(*t_name, &t_type);
-    if (!define_typeinfo(*t_type, r_new_index))
-        return;
-
-    Debug_Emit("NamedType(%s, %s -> %ld)", cstring_from_nameref(module_name),
-               cstring_from_nameref(name), r_new_index);
-}
-
-void EmitAliasType(NameRef name, long target_index, long& r_new_index)
-{
-    MCAutoTypeInfoRef t_type;
-    MCAliasTypeInfoCreate(to_mcnameref(name), to_mctypeinforef(target_index), &t_type);
-    if (!define_typeinfo(*t_type, r_new_index))
-        return;
-
-    Debug_Emit("AliasType(%s, %ld -> %ld)", to_mcnameref(name), target_index, r_new_index);
-}
-#endif
-
-void EmitDefinedType(long index, long& r_type_index)
+void EmitDefinedType(intptr_t index, intptr_t& r_type_index)
 {
     uindex_t t_type_index;
-    MCScriptAddDefinedTypeToModule(s_builder, index, t_type_index);
+    MCScriptAddDefinedTypeToModule(s_builder, (uindex_t)index, t_type_index);
     r_type_index = t_type_index;
 
     Debug_Emit("DefinedType(%ld -> %ld)", index, r_type_index);
 }
 
-void EmitForeignType(long p_binding, long& r_type_index)
+void EmitForeignType(intptr_t p_binding, intptr_t& r_type_index)
 {
     uindex_t t_type_index;
-    MCScriptAddForeignTypeToModule(s_builder, to_mcstringref(p_binding), t_type_index);
+    MCStringRef t_binding_str = 
+            EmittedBuiltinAdd(nameref_from_mcstringref(to_mcstringref(p_binding)), UINDEX_MAX);
+    
+    MCScriptAddForeignTypeToModule(s_builder, t_binding_str, t_type_index);
     r_type_index = t_type_index;
+
 
     Debug_Emit("ForeignType(%s -> %ld)", (const char *)p_binding, r_type_index);
 }
 
-void EmitOptionalType(long base_index, long& r_new_index)
+void EmitOptionalType(intptr_t base_index, intptr_t& r_new_index)
 {
     uindex_t t_index;
-    MCScriptAddOptionalTypeToModule(s_builder, base_index, t_index);
+    MCScriptAddOptionalTypeToModule(s_builder, (uindex_t)base_index, t_index);
     r_new_index = t_index;
 
     Debug_Emit("OptionalType(%ld -> %ld)", base_index, r_new_index);
 }
 
-void EmitPointerType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("Pointer", r_new_index))
-        return;
-
-    Debug_Emit("PointerType(-> %ld)", r_new_index);
-}
-
-void EmitBoolType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CBool", r_new_index))
-        return;
-
-    Debug_Emit("BoolType(-> %ld)", r_new_index);
-}
-
-void EmitIntType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CInt", r_new_index))
-        return;
-
-    Debug_Emit("IntType(-> %ld)", r_new_index);
-}
-
-void EmitUIntType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CUint", r_new_index))
-        return;
-
-    Debug_Emit("UIntType(-> %ld)", r_new_index);
-}
-
-void EmitFloatType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CFloat", r_new_index))
-        return;
-
-    Debug_Emit("FloatType(-> %ld)", r_new_index);
-}
-
-void EmitDoubleType(long& r_new_index)
-{
-    if (!define_builtin_typeinfo("CDouble", r_new_index))
-        return;
-
-    Debug_Emit("DoubleType(-> %ld)", r_new_index);
-}
-
-void EmitAnyType(long& r_new_index)
+void EmitAnyType(intptr_t& r_new_index)
 {
     if (!define_builtin_typeinfo("any", r_new_index))
         return;
@@ -1163,7 +1400,7 @@ void EmitAnyType(long& r_new_index)
     Debug_Emit("AnyType(-> %ld)", r_new_index);
 }
 
-void EmitBooleanType(long& r_new_index)
+void EmitBooleanType(intptr_t& r_new_index)
 {
     if (!define_builtin_typeinfo("Boolean", r_new_index))
         return;
@@ -1171,7 +1408,7 @@ void EmitBooleanType(long& r_new_index)
     Debug_Emit("BooleanType(-> %ld)", r_new_index);
 }
 
-void EmitIntegerType(long& r_new_index)
+void EmitIntegerType(intptr_t& r_new_index)
 {
     if (!define_builtin_typeinfo("Number", r_new_index))
         return;
@@ -1179,7 +1416,7 @@ void EmitIntegerType(long& r_new_index)
     Debug_Emit("IntegerType(-> %ld)", r_new_index);
 }
 
-void EmitRealType(long& r_new_index)
+void EmitRealType(intptr_t& r_new_index)
 {
     // TODO: Real / Integer types.
     if (!define_builtin_typeinfo("Number", r_new_index))
@@ -1188,7 +1425,7 @@ void EmitRealType(long& r_new_index)
     Debug_Emit("RealType(-> %ld)", r_new_index);
 }
 
-void EmitNumberType(long& r_new_index)
+void EmitNumberType(intptr_t& r_new_index)
 {
     if (!define_builtin_typeinfo("Number", r_new_index))
         return;
@@ -1196,7 +1433,7 @@ void EmitNumberType(long& r_new_index)
     Debug_Emit("NumberType(-> %ld)", r_new_index);
 }
 
-void EmitStringType(long& r_new_index)
+void EmitStringType(intptr_t& r_new_index)
 {
     if (!define_builtin_typeinfo("String", r_new_index))
         return;
@@ -1204,7 +1441,7 @@ void EmitStringType(long& r_new_index)
     Debug_Emit("StringType(-> %ld)", r_new_index);
 }
 
-void EmitDataType(long& r_new_index)
+void EmitDataType(intptr_t& r_new_index)
 {
     if (!define_builtin_typeinfo("Data", r_new_index))
         return;
@@ -1212,7 +1449,7 @@ void EmitDataType(long& r_new_index)
     Debug_Emit("DataType(-> %ld)", r_new_index);
 }
 
-void EmitArrayType(long& r_new_index)
+void EmitArrayType(intptr_t& r_new_index)
 {
     if (!define_builtin_typeinfo("Array", r_new_index))
         return;
@@ -1220,7 +1457,7 @@ void EmitArrayType(long& r_new_index)
     Debug_Emit("ArrayType(-> %ld)", r_new_index);
 }
 
-void EmitListType(long& r_new_index)
+void EmitListType(intptr_t& r_new_index)
 {
     if (!define_builtin_typeinfo("List", r_new_index))
         return;
@@ -1228,7 +1465,7 @@ void EmitListType(long& r_new_index)
     Debug_Emit("ListType(-> %ld)", r_new_index);
 }
 
-void EmitUndefinedType(long& r_new_index)
+void EmitUndefinedType(intptr_t& r_new_index)
 {
     if (!define_builtin_typeinfo("undefined", r_new_index))
         return;
@@ -1238,25 +1475,21 @@ void EmitUndefinedType(long& r_new_index)
 
 //////////
 
-static MCTypeInfoRef s_current_record_basetype = nil;
-static MCRecordTypeFieldInfo *s_current_record_fields = nil;
-static uindex_t s_current_record_field_count = 0;
-
-void EmitBeginRecordType(long p_base_type_index)
+void EmitBeginRecordType()
 {
-    MCScriptBeginRecordTypeInModule(s_builder, p_base_type_index);
+    MCScriptBeginRecordTypeInModule(s_builder);
 
-    Debug_Emit("BeginRecordType(%ld)", p_base_type_index);
+    Debug_Emit("BeginRecordType()");
 }
 
-void EmitRecordTypeField(NameRef name, long type_index)
+void EmitRecordTypeField(NameRef name, intptr_t type_index)
 {
-    MCScriptContinueRecordTypeInModule(s_builder, to_mcnameref(name), type_index);
+    MCScriptContinueRecordTypeInModule(s_builder, to_mcnameref(name), (uindex_t)type_index);
     Debug_Emit("RecordTypeField(%s, %ld)", cstring_from_nameref(name),
                type_index);
 }
 
-void EmitEndRecordType(long& r_type_index)
+void EmitEndRecordType(intptr_t& r_type_index)
 {
     uindex_t t_index;
     MCScriptEndRecordTypeInModule(s_builder, t_index);
@@ -1267,48 +1500,51 @@ void EmitEndRecordType(long& r_type_index)
 
 //////////
 
-static MCTypeInfoRef s_current_handler_returntype = nil;
-static MCHandlerTypeFieldInfo *s_current_handler_fields = nil;
-static uindex_t s_current_handler_field_count = 0;
-
-void EmitBeginHandlerType(long return_type_index)
+void EmitBeginHandlerType(intptr_t return_type_index)
 {
-    MCScriptBeginHandlerTypeInModule(s_builder, return_type_index);
+    MCScriptBeginHandlerTypeInModule(s_builder, (uindex_t)return_type_index);
 
     Debug_Emit("BeginHandlerType(%ld)", return_type_index);
 }
 
-void EmitBeginForeignHandlerType(long return_type_index)
+void EmitBeginForeignHandlerType(intptr_t return_type_index)
 {
-    MCScriptBeginForeignHandlerTypeInModule(s_builder, return_type_index);
+    MCScriptBeginForeignHandlerTypeInModule(s_builder, (uindex_t)return_type_index);
     
     Debug_Emit("BeginForeignHandlerType(%ld)", return_type_index);
 }
 
-static void EmitHandlerTypeParameter(MCHandlerTypeFieldMode mode, NameRef name, long type_index)
+static void EmitHandlerTypeParameter(MCHandlerTypeFieldMode mode, NameRef name, intptr_t type_index)
 {
-    MCScriptContinueHandlerTypeInModule(s_builder, (MCScriptHandlerTypeParameterMode)mode, to_mcnameref(name), type_index);
+    MCScriptContinueHandlerTypeInModule(s_builder, (MCScriptHandlerTypeParameterMode)mode, to_mcnameref(name), (uindex_t)type_index);
 
     Debug_Emit("HandlerTypeParameter(%d, %s, %ld)", mode,
                cstring_from_nameref(name), type_index);
 }
 
-void EmitHandlerTypeInParameter(NameRef name, long type_index)
+void EmitHandlerTypeInParameter(NameRef name, intptr_t type_index)
 {
     EmitHandlerTypeParameter(kMCHandlerTypeFieldModeIn, name, type_index);
 }
 
-void EmitHandlerTypeOutParameter(NameRef name, long type_index)
+void EmitHandlerTypeOutParameter(NameRef name, intptr_t type_index)
 {
     EmitHandlerTypeParameter(kMCHandlerTypeFieldModeOut, name, type_index);
 }
 
-void EmitHandlerTypeInOutParameter(NameRef name, long type_index)
+void EmitHandlerTypeInOutParameter(NameRef name, intptr_t type_index)
 {
     EmitHandlerTypeParameter(kMCHandlerTypeFieldModeInOut, name, type_index);
 }
 
-void EmitEndHandlerType(long& r_type_index)
+void EmitHandlerTypeVariadicParameter(NameRef name)
+{
+    intptr_t type_index;
+    EmitListType(type_index);
+    EmitHandlerTypeParameter(kMCHandlerTypeFieldModeVariadic, name, type_index);
+}
+
+void EmitEndHandlerType(intptr_t& r_type_index)
 {
     uindex_t t_index;
     MCScriptEndHandlerTypeInModule(s_builder, t_index);
@@ -1319,27 +1555,27 @@ void EmitEndHandlerType(long& r_type_index)
 
 ///////////
 
-void EmitHandlerParameter(NameRef name, long type_index, long& r_index)
+void EmitHandlerParameter(NameRef name, intptr_t type_index, intptr_t& r_index)
 {
     uindex_t t_index;
-    MCScriptAddParameterToHandlerInModule(s_builder, to_mcnameref(name), type_index, t_index);
+    MCScriptAddParameterToHandlerInModule(s_builder, to_mcnameref(name), (uindex_t)type_index, t_index);
     r_index = t_index;
 
     Debug_Emit("HandlerParameter(%s, %ld -> %ld)", cstring_from_nameref(name),
                type_index, r_index);
 }
 
-void EmitHandlerVariable(NameRef name, long type_index, long& r_index)
+void EmitHandlerVariable(NameRef name, intptr_t type_index, intptr_t& r_index)
 {
     uindex_t t_index;
-    MCScriptAddVariableToHandlerInModule(s_builder, to_mcnameref(name), type_index, t_index);
+    MCScriptAddVariableToHandlerInModule(s_builder, to_mcnameref(name), (uindex_t)type_index, t_index);
     r_index = t_index;
 
     Debug_Emit("HandlerVariable(%s, %ld -> %ld)", cstring_from_nameref(name),
                type_index, r_index);
 }
 
-void EmitDeferLabel(long& r_label)
+void EmitDeferLabel(intptr_t& r_label)
 {
     uindex_t t_index;
     MCScriptDeferLabelForBytecodeInModule(s_builder, t_index);
@@ -1348,9 +1584,9 @@ void EmitDeferLabel(long& r_label)
     Debug_Emit("DeferLabel(-> %ld)", r_label);
 }
 
-void EmitResolveLabel(long label)
+void EmitResolveLabel(intptr_t label)
 {
-    MCScriptResolveLabelForBytecodeInModule(s_builder, label);
+    MCScriptResolveLabelForBytecodeInModule(s_builder, (uindex_t)label);
 
     Debug_Emit("ResolveLabel(%ld)", label);
 }
@@ -1360,9 +1596,9 @@ void EmitResolveLabel(long label)
 static uint8_t *s_registers = nil;
 static uindex_t s_register_count = 0;
 
-void EmitCreateRegister(long& r_regindex)
+void EmitCreateRegister(intptr_t& r_regindex)
 {
-    long t_reg;
+    intptr_t t_reg;
     t_reg = -1;
     for(uindex_t i = 0; i < s_register_count; i++)
         if (s_registers[i] == 0)
@@ -1384,34 +1620,30 @@ void EmitCreateRegister(long& r_regindex)
     Debug_Emit("CreateRegister(-> %ld)", r_regindex);
 }
 
-void EmitDestroyRegister(long regindex)
+void EmitDestroyRegister(intptr_t regindex)
 {
     s_registers[regindex] = 0;
 
     Debug_Emit("DestroyRegister(%ld)", regindex);
 }
 
-//////////
-
-void EmitJump(long label)
+void EmitCheckNoRegisters(void)
 {
-    MCScriptEmitJumpInModule(s_builder, label);
-
-    Debug_Emit("Jump(%ld)", label);
-}
-
-void EmitJumpIfTrue(long reg, long label)
-{
-    MCScriptEmitJumpIfTrueInModule(s_builder, reg, label);
-
-    Debug_Emit("JumpIfTrue(%ld, %ld)", label);
-}
-
-void EmitJumpIfFalse(long reg, long label)
-{
-    MCScriptEmitJumpIfFalseInModule(s_builder, reg, label);
-
-    Debug_Emit("JumpIfFalse(%ld, %ld)", reg, label);
+    bool t_all_destroyed = true;
+    if (s_register_count > 0)
+    {
+        for(uindex_t i = 0; i < s_register_count; i++)
+            if (s_registers[i] != 0)
+            {
+                t_all_destroyed = false;
+                Debug_Emit("Register %d not destroyed", i);
+            }
+    }
+    
+    if (!t_all_destroyed)
+    {
+        Fatal_InternalInconsistency("handler generation finished without destroying all registers");
+    }
 }
 
 //////////
@@ -1419,16 +1651,16 @@ void EmitJumpIfFalse(long reg, long label)
 struct RepeatLabels
 {
     RepeatLabels *next;
-    long head;
-    long tail;
+    intptr_t head;
+    intptr_t tail;
 };
 
 static RepeatLabels *s_repeat_labels = nil;
 
-void EmitPushRepeatLabels(long next, long exit)
+void EmitPushRepeatLabels(intptr_t next, intptr_t exit)
 {
-    RepeatLabels *t_labels;
-    MCMemoryNew(t_labels);
+    RepeatLabels *t_labels = nullptr;
+    /* UNCHECKED */ MCMemoryNew(t_labels);
     t_labels -> head = next;
     t_labels -> tail = exit;
     t_labels -> next = s_repeat_labels;
@@ -1442,7 +1674,7 @@ void EmitPopRepeatLabels(void)
     s_repeat_labels = t_labels -> next;
 }
 
-void EmitCurrentRepeatLabels(long& r_next, long& r_exit)
+void EmitCurrentRepeatLabels(intptr_t& r_next, intptr_t& r_exit)
 {
     r_next = s_repeat_labels -> head;
     r_exit = s_repeat_labels -> tail;
@@ -1450,225 +1682,356 @@ void EmitCurrentRepeatLabels(long& r_next, long& r_exit)
 
 //////////
 
-void EmitBeginInvoke(long index, long contextreg, long resultreg)
+void EmitUndefinedConstant(intptr_t *idx)
 {
-    MCScriptBeginInvokeInModule(s_builder, index, resultreg);
-
-    Debug_Emit("BeginExecuteInvoke(%ld, %ld, %ld)",
-               index, contextreg, resultreg);
-}
-
-void EmitBeginIndirectInvoke(long handlerreg, long contextreg, long resultreg)
-{
-    MCScriptBeginInvokeIndirectInModule(s_builder, handlerreg, resultreg);
-    Debug_Emit("BeginExecuteIndirectInvoke(%ld, %ld, %ld)",
-               handlerreg, contextreg, resultreg);
-}
-
-void EmitContinueInvoke(long reg)
-{
-    MCScriptContinueInvokeInModule(s_builder, reg);
-
-    Debug_Emit("ContinueInvoke(%ld)", reg);
-}
-
-void EmitEndInvoke(void)
-{
-    MCScriptEndInvokeInModule(s_builder);
-
-    Debug_Emit("EndInvoke()", 0);
-}
-
-//////////
-
-void EmitUndefinedConstant(long *idx)
-{
-    MCScriptAddValueToModule(s_builder, kMCNull, (uindex_t&)*idx);
-
+    uindex_t t_index;
+    MCScriptAddValueToModule(s_builder, kMCNull, t_index);
+    *idx = t_index;
+    
     Debug_Emit("UndefinedConstant(-> %ld)", *idx);
 }
 
-void EmitTrueConstant(long *idx)
+void EmitTrueConstant(intptr_t *idx)
 {
-    MCScriptAddValueToModule(s_builder, kMCTrue, (uindex_t&)*idx);
-
+    uindex_t t_index;
+    MCScriptAddValueToModule(s_builder, kMCTrue, t_index);
+    *idx = t_index;
+    
     Debug_Emit("TrueConstant(-> %ld)", *idx);
 }
 
-void EmitFalseConstant(long *idx)
+void EmitFalseConstant(intptr_t *idx)
 {
-    MCScriptAddValueToModule(s_builder, kMCFalse, (uindex_t&)*idx);
-
+    uindex_t t_index;
+    MCScriptAddValueToModule(s_builder, kMCFalse, t_index);
+    *idx = t_index;
+    
     Debug_Emit("FalseConstant(%ld)", *idx);
 }
 
-void EmitIntegerConstant(long value, long *idx)
+void EmitIntegerConstant(intptr_t value, intptr_t *idx)
 {
     MCAutoNumberRef t_number;
-    MCNumberCreateWithInteger(value, &t_number);
-    MCScriptAddValueToModule(s_builder, *t_number, (uindex_t&)*idx);
-
+    uindex_t t_index;
+    MCNumberCreateWithInteger((integer_t)value, &t_number);
+    MCScriptAddValueToModule(s_builder, *t_number, t_index);
+    *idx = t_index;
+    
     Debug_Emit("IntegerConstant(%ld -> %ld)", value, *idx);
 }
 
-void EmitUnsignedIntegerConstant(unsigned long value, long *idx)
+void EmitUnsignedIntegerConstant(uintptr_t value, intptr_t *idx)
 {
     MCAutoNumberRef t_number;
-    MCNumberCreateWithUnsignedInteger(value, &t_number);
-    MCScriptAddValueToModule(s_builder, *t_number, (uindex_t&)*idx);
-
+    uindex_t t_index;
+    MCNumberCreateWithUnsignedInteger((uinteger_t)value, &t_number);
+    MCScriptAddValueToModule(s_builder, *t_number, t_index);
+    *idx = t_index;
+    
     Debug_Emit("UnsignedIntegerConstant(%lu -> %ld)", value, *idx);
 }
 
-void EmitRealConstant(long value, long *idx)
+void EmitRealConstant(intptr_t value, intptr_t *idx)
 {
     MCAutoNumberRef t_number;
+    uindex_t t_index;
     MCNumberCreateWithReal(*(double *)value, &t_number);
-    MCScriptAddValueToModule(s_builder, *t_number, (uindex_t&)*idx);
-
+    MCScriptAddValueToModule(s_builder, *t_number, t_index);
+    *idx = t_index;
+    
     Debug_Emit("RealConstant(%lf -> %ld)", *(double *)value, *idx);
 }
 
-void EmitStringConstant(long value, long *idx)
+void EmitStringConstant(intptr_t value, intptr_t *idx)
 {
     MCAutoStringRef t_string;
-    MCStringCreateWithBytes((const byte_t *)value, strlen((const char *)value), kMCStringEncodingUTF8, false, &t_string);
-    MCScriptAddValueToModule(s_builder, *t_string, (uindex_t&)*idx);
-
+    uindex_t t_index;
+    MCStringCreateWithBytes((const byte_t *)value, (uindex_t)strlen((const char *)value), kMCStringEncodingUTF8, false, &t_string);
+    MCScriptAddValueToModule(s_builder, *t_string, t_index);
+    *idx = t_index;
+    
     Debug_Emit("StringConstant(\"%s\" -> %ld)", (const char *)value, *idx);
 }
 
 void EmitBeginListConstant(void)
 {
     MCScriptBeginListValueInModule(s_builder);
-
+    
     Debug_Emit("BeginListConstant()", 0);
 }
 
-void EmitContinueListConstant(long idx)
+void EmitContinueListConstant(intptr_t idx)
 {
-    MCScriptContinueListValueInModule(s_builder, idx);
-
+    MCScriptContinueListValueInModule(s_builder, (uindex_t)idx);
+    
     Debug_Emit("ContinueListConstant(%ld)", idx);
 }
 
-void EmitEndListConstant(long *idx)
+void EmitEndListConstant(intptr_t *idx)
 {
     MCScriptEndListValueInModule(s_builder, (uindex_t&)*idx);
-
+    
     Debug_Emit("EndListConstant(-> %ld)", *idx);
 }
 
 void EmitBeginArrayConstant(void)
 {
     MCScriptBeginArrayValueInModule(s_builder);
-
+    
     Debug_Emit("BeginArrayConstant()", 0);
 }
 
-void EmitContinueArrayConstant(long key_idx, long value_idx)
+void EmitContinueArrayConstant(intptr_t key_idx, intptr_t value_idx)
 {
-	MCScriptContinueArrayValueInModule(s_builder, key_idx, value_idx);
-
-	Debug_Emit("ContinueArrayConstant(%ld, %ld)", key_idx, value_idx);
+    MCScriptContinueArrayValueInModule(s_builder, (uindex_t)key_idx, (uindex_t)value_idx);
+    
+    Debug_Emit("ContinueArrayConstant(%ld, %ld)", key_idx, value_idx);
 }
 
-void EmitEndArrayConstant(long *idx)
+void EmitEndArrayConstant(intptr_t *idx)
 {
-    MCScriptEndArrayValueInModule(s_builder, (uindex_t&)*idx);
-
+    uindex_t t_index;
+    MCScriptEndArrayValueInModule(s_builder, t_index);
+    *idx = t_index;
+    
     Debug_Emit("EndArrayConstant(-> %ld)", *idx);
 }
 
-void EmitBeginAssignList(long reg)
-{
-    MCScriptEmitBeginAssignListInModule(s_builder, reg);
+//////////
 
-    Debug_Emit("BeginAssignList(%ld)", reg);
+class __opcode_index
+{
+public:
+    __opcode_index(const char *p_name) : m_index(0)
+    {
+        if (!MCScriptLookupBytecode(p_name, m_index))
+        {
+            Fatal_InternalInconsistency(p_name /*"unknown bytecode op"*/);
+            return;
+        }
+    }
+    
+    operator uindex_t (void) const
+    {
+        return m_index;
+    }
+    
+private:
+    uindex_t m_index;
+};
+
+static uindex_t s_opcode;
+static uindex_t *s_arguments = nil;
+static uindex_t s_argument_count = 0;
+
+static void push_argument(intptr_t arg)
+{
+    s_arguments = (uindex_t *)Reallocate(s_arguments, sizeof(uindex_t) * (s_argument_count + 1));
+    s_arguments[s_argument_count] = (uindex_t)arg;
+    s_argument_count += 1;
 }
 
-void EmitContinueAssignList(long reg)
+static void log_instruction(void)
 {
-    MCScriptEmitContinueAssignListInModule(s_builder, reg);
+    MCAutoStringRef t_string;
+    MCStringCreateMutable(0, &t_string);
+    MCStringAppendFormat(*t_string, "%s(", MCScriptDescribeBytecode(s_opcode));
+    for(uindex_t i = 0; i < s_argument_count; i++)
+    {
+        if (i != 0)
+            MCStringAppendFormat(*t_string, ", ");
+        MCStringAppendFormat(*t_string, "%ld", s_arguments[i]);
+    }
+    MCStringAppendFormat(*t_string, ")");
+    
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring.Lock(*t_string);
+    Debug_Emit("%s", *t_cstring);
+}
 
-    Debug_Emit("ContinueAssignList(%ld)", reg);
+void EmitBeginOpcode(intptr_t name)
+{
+    __opcode_index t_opcode((const char *)name);
+    s_opcode = t_opcode;
+}
+
+void EmitContinueOpcode(intptr_t param)
+{
+    push_argument(param);
+}
+
+void EmitEndOpcode(void)
+{
+    MCScriptEmitBytecodeInModuleA(s_builder, s_opcode, s_arguments, s_argument_count);
+    
+    log_instruction();
+    
+    s_argument_count = 0;
+}
+
+void EmitJump(intptr_t label)
+{
+    static const __opcode_index kJumpOpcodeIndex("jump");
+    MCScriptEmitBytecodeInModule(s_builder, kJumpOpcodeIndex, label, UINDEX_MAX);
+    
+    Debug_Emit("Jump(%ld)", label);
+}
+
+void EmitJumpIfTrue(intptr_t reg, intptr_t label)
+{
+    static const __opcode_index kJumpIfTrueOpcodeIndex("jump_if_true");
+    MCScriptEmitBytecodeInModule(s_builder, kJumpIfTrueOpcodeIndex, reg, label, UINDEX_MAX);
+    
+    Debug_Emit("JumpIfTrue(%ld, %ld)", label);
+}
+
+void EmitJumpIfFalse(intptr_t reg, intptr_t label)
+{
+    static const __opcode_index kJumpIfFalseOpcodeIndex("jump_if_false");
+    MCScriptEmitBytecodeInModule(s_builder, kJumpIfFalseOpcodeIndex, reg, label, UINDEX_MAX);
+    
+    Debug_Emit("JumpIfFalse(%ld, %ld)", reg, label);
+}
+
+void EmitBeginInvoke(intptr_t index, intptr_t contextreg, intptr_t resultreg)
+{
+    static const __opcode_index kInvokeOpcodeIndex("invoke");
+    
+    s_opcode = kInvokeOpcodeIndex;
+    push_argument(index);
+    push_argument(resultreg);
+}
+
+void EmitBeginIndirectInvoke(intptr_t handlerreg, intptr_t contextreg, intptr_t resultreg)
+{
+    static const __opcode_index kInvokeIndirectOpcodeIndex("invoke_indirect");
+    
+    s_opcode = kInvokeIndirectOpcodeIndex;
+    push_argument(handlerreg);
+    push_argument(resultreg);
+}
+
+void EmitContinueInvoke(intptr_t reg)
+{
+    push_argument(reg);
+}
+
+void EmitEndInvoke(void)
+{
+    MCScriptEmitBytecodeInModuleA(s_builder, s_opcode, s_arguments, s_argument_count);
+
+    log_instruction();
+    
+    s_argument_count = 0;
+}
+
+//////////
+
+void EmitBeginAssignList(intptr_t reg)
+{
+    static const __opcode_index kAssignListOpcodeIndex("assign_list");
+    
+    s_opcode = kAssignListOpcodeIndex;
+    push_argument(reg);
+}
+
+void EmitContinueAssignList(intptr_t reg)
+{
+    push_argument(reg);
 }
 
 void EmitEndAssignList(void)
 {
-    MCScriptEmitEndAssignListInModule(s_builder);
-
-    Debug_Emit("EndAssignList()", 0);
+    MCScriptEmitBytecodeInModuleA(s_builder, s_opcode, s_arguments, s_argument_count);
+    
+    log_instruction();
+    
+    s_argument_count = 0;
 }
 
-void EmitBeginAssignArray(long reg)
+void EmitBeginAssignArray(intptr_t reg)
 {
-    MCScriptEmitBeginAssignArrayInModule(s_builder, reg);
-
-    Debug_Emit("BeginAssignArray(%ld)", reg);
+    static const __opcode_index kAssignArrayOpcodeIndex("assign_array");
+    
+    s_opcode = kAssignArrayOpcodeIndex;
+    push_argument(reg);
 }
 
-void EmitContinueAssignArray(long reg)
+void EmitContinueAssignArray(intptr_t reg)
 {
-    MCScriptEmitContinueAssignArrayInModule(s_builder, reg);
-
-    Debug_Emit("ContinueAssignArray(%ld)", reg);
+    push_argument(reg);
 }
 
 void EmitEndAssignArray(void)
 {
-    MCScriptEmitEndAssignArrayInModule(s_builder);
-
-    Debug_Emit("EndAssignArray()", 0);
+    MCScriptEmitBytecodeInModuleA(s_builder, s_opcode, s_arguments, s_argument_count);
+    
+    log_instruction();
+    
+    s_argument_count = 0;
 }
 
-void EmitAssign(long dst, long src)
+void EmitAssign(intptr_t dst, intptr_t src)
 {
-    MCScriptEmitAssignInModule(s_builder, dst, src);
-
+    static const __opcode_index kAssignOpcodeIndex("assign");
+    MCScriptEmitBytecodeInModule(s_builder, kAssignOpcodeIndex, dst, src, UINDEX_MAX);
+    
     Debug_Emit("Assign(%ld, %ld)", dst, src);
 }
 
-void EmitAssignConstant(long dst, long idx)
+void EmitAssignConstant(intptr_t dst, intptr_t idx)
 {
-    MCScriptEmitAssignConstantInModule(s_builder, dst, idx);
+    static const __opcode_index kAssignConstantOpcodeIndex("assign_constant");
+    MCScriptEmitBytecodeInModule(s_builder, kAssignConstantOpcodeIndex, dst, idx, UINDEX_MAX);
 
     Debug_Emit("AssignConstant(%ld, %ld)", dst, idx);
 }
 
 /////////
 
-void EmitFetch(long reg, long var, long level)
+void EmitFetch(intptr_t reg, intptr_t var, intptr_t level)
 {
-    MCScriptEmitFetchInModule(s_builder, reg, var, level);
+    static const __opcode_index kFetchOpcodeIndex("fetch");
+    MCScriptEmitBytecodeInModule(s_builder, kFetchOpcodeIndex, reg, var, UINDEX_MAX);
 
-    Debug_Emit("Fetch(%ld, %ld, %ld)", reg, var, level);
+    Debug_Emit("Fetch(%ld, %ld)", reg, var);
 }
 
-void EmitStore(long reg, long var, long level)
+void EmitStore(intptr_t reg, intptr_t var, intptr_t level)
 {
-    MCScriptEmitStoreInModule(s_builder, reg, var, level);
+    static const __opcode_index kStoreOpcodeIndex("store");
+    MCScriptEmitBytecodeInModule(s_builder, kStoreOpcodeIndex, reg, var, UINDEX_MAX);
 
-    Debug_Emit("Store(%ld, %ld, %ld)", reg, var, level);
+    Debug_Emit("Store(%ld, %ld)", reg, var);
 }
 
-void EmitReturn(long reg)
+void EmitReturn(intptr_t reg)
 {
-    MCScriptEmitReturnInModule(s_builder, reg);
+    static const __opcode_index kReturnOpcodeIndex("return");
+    MCScriptEmitBytecodeInModule(s_builder, kReturnOpcodeIndex, reg, UINDEX_MAX);
 
     Debug_Emit("Return(%ld)", reg);
 }
 
 void EmitReturnNothing(void)
 {
-    MCScriptEmitReturnUndefinedInModule(s_builder);
+    static const __opcode_index kReturnOpcodeIndex("return");
+    MCScriptEmitBytecodeInModule(s_builder, kReturnOpcodeIndex, UINDEX_MAX);
 
     Debug_Emit("ReturnUndefined()", 0);
 }
 
+void EmitReset(intptr_t reg)
+{
+    static const __opcode_index kResetOpcodeIndex("reset");
+    MCScriptEmitBytecodeInModule(s_builder, kResetOpcodeIndex, reg, UINDEX_MAX);
+    
+    Debug_Emit("Reset(%ld)", reg);
+}
+
 ////////
 
-static bool FindAttachedReg(long expr, AttachedReg*& r_attach)
+static bool FindAttachedReg(intptr_t expr, AttachedReg*& r_attach)
 {
     for(AttachedReg *t_reg = s_attached_regs; t_reg != nil; t_reg = t_reg -> next)
         if (t_reg-> expr == expr)
@@ -1680,13 +2043,13 @@ static bool FindAttachedReg(long expr, AttachedReg*& r_attach)
     return false;
 }
 
-void EmitAttachRegisterToExpression(long reg, long expr)
+void EmitAttachRegisterToExpression(intptr_t reg, intptr_t expr)
 {
-    AttachedReg *t_attach;
+    AttachedReg *t_attach = nullptr;
     if (FindAttachedReg(expr, t_attach))
         Fatal_InternalInconsistency("Register attached to expression which is already attached");
     
-    MCMemoryNew(t_attach);
+    /* UNCHECKED */ MCMemoryNew(t_attach);
     t_attach -> next = s_attached_regs;
     t_attach -> expr = expr;
     t_attach -> reg = reg;
@@ -1695,7 +2058,7 @@ void EmitAttachRegisterToExpression(long reg, long expr)
     Debug_Emit("AttachRegister(%d, %p)", reg, expr);
 }
 
-void EmitDetachRegisterFromExpression(long expr)
+void EmitDetachRegisterFromExpression(intptr_t expr)
 {
     if (s_attached_regs == nil)
         return;
@@ -1725,13 +2088,13 @@ void EmitDetachRegisterFromExpression(long expr)
     MCMemoryDelete(t_remove);
 }
 
-int EmitIsRegisterAttachedToExpression(long expr)
+int EmitIsRegisterAttachedToExpression(intptr_t expr)
 {
     AttachedReg *t_attach;
     return FindAttachedReg(expr, t_attach);
 }
 
-int EmitGetRegisterAttachedToExpression(long expr, long *reg)
+int EmitGetRegisterAttachedToExpression(intptr_t expr, intptr_t *reg)
 {
     AttachedReg *t_attach;
     if (!FindAttachedReg(expr, t_attach))
@@ -1750,54 +2113,18 @@ void EmitPosition(PositionRef p_position)
     GetFileName(t_file, &t_filename);
     NameRef t_filename_name;
     MakeNameLiteral(t_filename, &t_filename_name);
-    long t_line;
+    intptr_t t_line;
     GetRowOfPosition(p_position, &t_line);
-    MCScriptEmitPositionInModule(s_builder, to_mcnameref(t_filename_name), t_line);
+    MCScriptEmitPositionForBytecodeInModule(s_builder, to_mcnameref(t_filename_name), (uindex_t)t_line);
 
     Debug_Emit("Position('%s', %ld)", t_filename, t_line);
 }
 
 //////////
 
-static FILE *s_output = NULL;
-
 void OutputBeginManifest(void)
 {
-    s_output = OpenManifestOutputFile();
-}
-
-void OutputWrite(const char *p_string)
-{
-    if (s_output == NULL)
-        return;
-    
-    fprintf(s_output, "%s", p_string);
-}
-
-void OutputWriteS(const char *p_left, const char *p_string, const char *p_right)
-{
-    if (s_output == NULL)
-        return;
-    
-    fprintf(s_output, "%s%s%s", p_left, p_string, p_right);
-}
-
-void OutputWriteI(const char *p_left, NameRef p_name, const char *p_right)
-{
-    if (s_output == NULL)
-        return;
-    
-    const char *t_name_string;
-    GetStringOfNameLiteral(p_name, &t_name_string);
-    OutputWriteS(p_left, t_name_string, p_right);
-}
-
-void OutputEnd(void)
-{
-    if (s_output == NULL)
-        return;
-    
-    fclose(s_output);
+	OutputFileBegin(OpenManifestOutputFile());
 }
 
 //////////
@@ -2036,3 +2363,181 @@ void DependDefineDependency(NameRef p_module_name, NameRef p_dependency_name)
     s_depend_deps[s_depend_dep_count - 1] . dependency = p_dependency_name;
 }
 
+//////////
+
+static MCProperListRef s_bytecode_names = nil;
+
+int BytecodeEnumerate(intptr_t index, intptr_t *r_name)
+{
+    if (s_bytecode_names == nil)
+        MCScriptCopyBytecodeNames(s_bytecode_names);
+    
+    if (index >= MCProperListGetLength(s_bytecode_names))
+    {
+        MCValueRelease(s_bytecode_names);
+        s_bytecode_names = nil;
+        return 0;
+    }
+    
+    MCStringRef t_name;
+    t_name = (MCStringRef)MCProperListFetchElementAtIndex(s_bytecode_names, (uindex_t)index);
+    *r_name = (intptr_t)nameref_from_mcstringref(t_name);
+    
+    return 1;
+}
+
+int BytecodeLookup(intptr_t name, intptr_t *r_opcode)
+{
+    uindex_t t_opcode;
+    if (!MCScriptLookupBytecode((const char *)name, t_opcode))
+        return 0;
+    
+    *r_opcode = t_opcode;
+    return 1;
+}
+
+void BytecodeDescribe(intptr_t opcode, intptr_t *r_name)
+{
+    *r_name = (intptr_t)MCScriptDescribeBytecode((uindex_t)opcode);
+}
+
+int BytecodeIsValidArgumentCount(intptr_t opcode, intptr_t count)
+{
+    return MCScriptCheckBytecodeParameterCount((uindex_t)opcode, (uindex_t)count) ? 1 : 0;
+}
+
+void BytecodeDescribeParameter(intptr_t opcode, intptr_t index, intptr_t *r_type)
+{
+    *r_type = (intptr_t)MCScriptDescribeBytecodeParameter((uindex_t)opcode, (uindex_t)index);
+}
+
+//////////
+
+static void BuildBuiltinModule_ForeignType(const char *p_name, const char *p_foreign_name, intptr_t* r_type_index = nullptr)
+{
+    intptr_t t_def_index = -1;
+    EmitDefinitionIndex("type", t_def_index);
+    intptr_t t_type_index = -1;
+    EmitForeignType((intptr_t)p_foreign_name, t_type_index);
+    EmitTypeDefinition(t_def_index, 0, nameref_from_cstring(p_name), t_type_index);
+    EmitExportedDefinition(t_def_index);
+    if (r_type_index != nullptr)
+        EmitDefinedType(t_def_index, *r_type_index);
+}
+
+static void BuildBuiltinModule_ForeignHandler1(intptr_t p_return_type, MCHandlerTypeFieldMode p_arg_mode_0, const char *p_arg_name_0, intptr_t p_arg_type_0, const char *p_name, const char *p_foreign_name)
+{
+    intptr_t t_handler_type_index = -1;
+    EmitBeginForeignHandlerType(p_return_type);
+    EmitHandlerTypeParameter(p_arg_mode_0, nameref_from_cstring(p_arg_name_0), p_arg_type_0);
+    EmitEndHandlerType(t_handler_type_index);
+    
+    intptr_t t_handler_def = -1;
+    EmitDefinitionIndex("foreignhandler", t_handler_def);
+    EmitForeignHandlerDefinition(t_handler_def, 0, nameref_from_cstring(p_name), t_handler_type_index, (intptr_t)p_foreign_name, true);
+    EmitExportedDefinition(t_handler_def);
+}
+
+static void BuildBuiltinModule_ForeignHandler2(intptr_t p_return_type,
+                                               MCHandlerTypeFieldMode p_arg_mode_0, const char *p_arg_name_0, intptr_t p_arg_type_0,
+                                               MCHandlerTypeFieldMode p_arg_mode_1, const char *p_arg_name_1, intptr_t p_arg_type_1,
+                                               const char *p_name, const char *p_foreign_name)
+{
+    intptr_t t_handler_type_index = -1;
+    EmitBeginForeignHandlerType(p_return_type);
+    EmitHandlerTypeParameter(p_arg_mode_0, nameref_from_cstring(p_arg_name_0), p_arg_type_0);
+    EmitHandlerTypeParameter(p_arg_mode_1, nameref_from_cstring(p_arg_name_1), p_arg_type_1);
+    EmitEndHandlerType(t_handler_type_index);
+    
+    intptr_t t_handler_def = -1;
+    EmitDefinitionIndex("foreignhandler", t_handler_def);
+    EmitForeignHandlerDefinition(t_handler_def, 0, nameref_from_cstring(p_name), t_handler_type_index, (intptr_t)p_foreign_name, true);
+    EmitExportedDefinition(t_handler_def);
+}
+
+void BuildBuiltinModule(void)
+{
+    intptr_t t_mod_index;
+    EmitBeginModule(nameref_from_cstring("__builtin__"), t_mod_index);
+    
+    intptr_t t_null_type_def, t_bool_type_def, t_double_type_def, t_uint_type_def, t_string_type_def;
+    BuildBuiltinModule_ForeignType("any", "MCAnyTypeInfo");
+    BuildBuiltinModule_ForeignType("undefined", "MCNullTypeInfo", &t_null_type_def);
+    BuildBuiltinModule_ForeignType("boolean", "MCBooleanTypeInfo");
+    BuildBuiltinModule_ForeignType("number", "MCNumberTypeInfo");
+    BuildBuiltinModule_ForeignType("string", "MCStringTypeInfo", &t_string_type_def);
+    BuildBuiltinModule_ForeignType("data", "MCDataTypeInfo");
+    BuildBuiltinModule_ForeignType("array", "MCArrayTypeInfo");
+    BuildBuiltinModule_ForeignType("list", "MCProperListTypeInfo");
+    BuildBuiltinModule_ForeignType("bool", "MCForeignBoolTypeInfo", &t_bool_type_def);
+    BuildBuiltinModule_ForeignType("sint", "MCForeignSIntTypeInfo");
+    BuildBuiltinModule_ForeignType("uint", "MCForeignUIntTypeInfo", &t_uint_type_def);
+    BuildBuiltinModule_ForeignType("float", "MCForeignFloatTypeInfo");
+    BuildBuiltinModule_ForeignType("double", "MCForeignDoubleTypeInfo", &t_double_type_def);
+    BuildBuiltinModule_ForeignType("pointer", "MCForeignPointerTypeInfo");
+    
+    BuildBuiltinModule_ForeignHandler1(t_bool_type_def,
+                                       kMCHandlerTypeFieldModeInOut,
+                                       "count",
+                                       t_uint_type_def,
+                                       "RepeatCounted",
+                                       "MCScriptBuiltinRepeatCounted");
+    
+    BuildBuiltinModule_ForeignHandler2(t_bool_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "counter",
+                                       t_double_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "limit",
+                                       t_double_type_def,
+                                       "RepeatUpToCondition",
+                                       "MCScriptBuiltinRepeatUpToCondition");
+                                       
+    BuildBuiltinModule_ForeignHandler2(t_double_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "counter",
+                                       t_double_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "step",
+                                       t_double_type_def,
+                                       "RepeatUpToIterate",
+                                       "MCScriptBuiltinRepeatUpToIterate");
+                                       
+    BuildBuiltinModule_ForeignHandler2(t_bool_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "counter",
+                                       t_double_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "step",
+                                       t_double_type_def,
+                                       "RepeatDownToCondition",
+                                       "MCScriptBuiltinRepeatDownToCondition");
+    
+    BuildBuiltinModule_ForeignHandler2(t_double_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "counter",
+                                       t_double_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "step",
+                                       t_double_type_def,
+                                       "RepeatDownToIterate",
+                                       "MCScriptBuiltinRepeatDownToIterate");
+                                       
+    BuildBuiltinModule_ForeignHandler1(t_null_type_def,
+                                       kMCHandlerTypeFieldModeIn,
+                                       "reason",
+                                       t_string_type_def,
+                                       "Throw",
+                                       "MCScriptBuiltinThrow");
+    
+    EmitEndModule();
+}
+
+//////////
+
+extern "C" void InitializeFoundation(void);
+void InitializeFoundation(void)
+{
+    if (!MCInitialize())
+        Fatal_InternalInconsistency("unable to initialize foundation");
+}

@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "stack.h"
 #include "tooltip.h"
@@ -52,6 +52,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "deploy.h"
 #include "capsule.h"
 #include "player.h"
+#include "internal.h"
 
 #include "srvscript.h"
 
@@ -118,7 +119,7 @@ MCPropertyTable MCProperty::kModePropertyTable =
 
 IO_stat MCDispatch::startup(void)
 {
-	stacks = new MCServerScript;
+	stacks = new (nothrow) MCServerScript;
 	stacks -> setname_cstring("Home");
 	stacks -> setparent(this);
 
@@ -133,18 +134,6 @@ IO_stat MCDispatch::startup(void)
 //
 //  Implementation of MCStack::mode* hooks for SERVER mode.
 //
-
-#ifdef LEGACY_EXEC
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
 
 #ifdef _WINDOWS_SERVER
 MCSysWindowHandle MCStack::getrealwindow(void)
@@ -203,33 +192,6 @@ void MCStack::mode_closeasmenu(void)
 void MCStack::mode_constrain(MCRectangle& rect)
 {
 }
-
-#ifdef LEGACY_EXEC
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Implementation of MCObject::mode_get/setprop for SERVER mode.
-//
-
-Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Implementation of MCProperty::mode_eval/mode_set for SERVER mode.
-//
-
-Exec_stat MCProperty::mode_set(MCExecPoint& ep)
-{
-	return ES_NOT_HANDLED;
-}
-
-Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -322,12 +284,6 @@ bool MCModeShouldCheckCantStandalone(void)
 	return true;
 }
 
-// The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt)
-{
-	return false;
-}
-
 // The standalone mode causes a relaunch message.
 bool MCModeHandleRelaunch(MCStringRef & r_id)
 {
@@ -353,10 +309,6 @@ MCStatement *MCModeNewCommand(int2 which)
 MCExpression *MCModeNewFunction(int2 which)
 {
 	return NULL;
-}
-
-void MCModeObjectDestroyed(MCObject *object)
-{
 }
 
 bool MCModeShouldQueueOpeningStacks(void)
@@ -427,10 +379,21 @@ bool MCModeHasHomeStack(void)
 	return true;
 }
 
+// Pixel scaling is disabled on the server.
+bool MCModeCanEnablePixelScaling()
+{
+	return false;
+}
+
 // IM-2014-08-08: [[ Bug 12372 ]] Pixel scaling is disabled on the server.
 bool MCModeGetPixelScalingEnabled(void)
 {
 	return false;
+}
+
+void MCModeFinalize(void)
+{
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -473,3 +436,14 @@ void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
 }
 
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of internal verbs
+//
+
+// The internal verb table used by the '_internal' command
+MCInternalVerbInfo MCinternalverbs[] =
+{
+	{ nil, nil, nil }
+};

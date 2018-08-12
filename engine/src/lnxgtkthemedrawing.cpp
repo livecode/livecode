@@ -151,10 +151,14 @@ static gint setup_widget_prototype(GtkWidget * widget)
 			screendepth = ((MCScreenDC*)MCscreen)->getdepth();
 		else 
 			screendepth = 24;
-		
-		gtk_widget_set_colormap ( GTK_WIDGET(gProtoWindow), gdk_colormap_new ( gdk_visual_get_best_with_depth (screendepth), False ) );
-		gtk_widget_set_colormap ( GTK_WIDGET(widget), gdk_colormap_new ( gdk_visual_get_best_with_depth (screendepth), False ) );
-		
+        
+        GdkVisual * t_vis = gdk_visual_get_best_with_depth (screendepth);
+		if (t_vis != NULL)
+        {
+            gtk_widget_set_colormap ( GTK_WIDGET(gProtoWindow), gdk_colormap_new (t_vis, False ));
+            gtk_widget_set_colormap ( GTK_WIDGET(widget), gdk_colormap_new (t_vis, False ));
+        }
+                                 
         gtk_widget_realize(gProtoWindow);
 		gtk_widget_set_name(widget, "MozillaGtkWidget");
 

@@ -4,46 +4,89 @@ Type: function
 
 Syntax: libURLftpCommand(<ftpCommandLine>, <host> [: <port>][, <username> [, <password>]])
 
-Summary: Sends an <FTP> command to an <FTP> <server>.
+Summary:
+Sends an <FTP> command to an <FTP> <server>.
+
+Associations: internet library
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
 Example:
-put libURLftpCommand("PWD",ftp.example.org) into field "Directory"
+put libURLftpCommand("PWD","ftp.example.org") into field "Directory"
 
 Example:
-get libURLftpCommand("SITE HELP",example.net:75,"root",field "password")
+get libURLftpCommand("SITE HELP","example.net:75","root",field "password")
 
 Parameters:
-ftpCommandLine (string): A string consisting of any valid FTP command and any parameters it requires.
-host: The IP address or domain name of the FTP server.
-port: The port number you want to connect to. If you don't specify a port, port 21 is used. (On most systems, port 21 is the FTP port.)
-username: The account name on the server. If you don't specify a username or password, the libURLftpCommand function uses the "anonymous" user name and a dummy password automatically, in accordance with the conventions for public FTP servers.
-password: The password to the username account.
+ftpCommandLine (string):
+A string consisting of any valid FTP command and any parameters it
+requires. 
 
-The result: The <libURLftpCommand> <function> <return|returns> a <string> with the result of the FTP command (if the <server> sends back a result) or an error message. An <FTP> <server> always begins its response with a three-digit code, followed by any other relevant information.
+host:
+The IP address or domain name of the FTP server.
+
+port:
+The port number you want to connect to. If you don't specify a port,
+port 21 is used. (On most systems, port 21 is the FTP port.)
+
+username:
+The account name on the server. If you don't specify a username or
+password, the libURLftpCommand function uses the "anonymous" user name
+and a dummy password automatically, in accordance with the conventions
+for public FTP servers.
+
+password:
+The password to the username account.
+
+The result:
+The <libURLftpCommand> <function> <return|returns> a <string> with the
+result of the FTP command (if the <server> sends back a result) or an
+error message. An <FTP> <server> always begins its response with a
+three-digit code, followed by any other relevant information.
 
 Description:
-Use the <libURLftpCommand> <function> to communicate with an <FTP> <server> and perform tasks that are not implemented in the <Internet library>.
+Use the <libURLftpCommand> <function> to communicate with an <FTP>
+<server> and perform tasks that are not implemented in the 
+<Internet library>. 
 
-The ability to send any FTP command to an FTP server is a powerful function that can enable you to provide full support for all FTP functionality in your application. To use it effectively, you must be familiar with FTP commands and responses and be able to properly construct an FTP command line.
+The ability to send any FTP command to an FTP server is a powerful
+function that can enable you to provide full support for all FTP
+functionality in your application. To use it effectively, you must be
+familiar with FTP commands and responses and be able to properly
+construct an FTP command line.
 
->*Tip:*  To get general information about an <FTP> <server>, issue the FTP "HELP" command:
+>*Tip:*  To get general information about an <FTP> <server>, issue the
+> FTP "HELP" command:
 
-  answer libURLftpCommand("HELP",ftp.example.net)
+    answer libURLftpCommand("HELP",ftp.example.net)
 
-For technical information about FTP server commands, see [RFC 959, section 4.1.3](https://tools.ietf.org/html/rfc959).
 
->*Important:*  The <libURLftpCommand> <function> is part of the <Internet library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+For technical information about FTP server commands, see [RFC 959,
+section 4.1.3](https://tools.ietf.org/html/rfc959).
 
->*Note:* When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <libURLftpCommand> <function> is not yet available. This may affect attempts to use this <function> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <libURLftpCommand> <function> can be used in any <handler>.
+>*Important:* The <libURLftpCommand> <function> is part of the 
+> <Internet library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
-References: string (keyword), ftp (keyword), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), libURLSetFTPListCommand (command), function (control_st), return (glossary), main stack (glossary), handler (glossary), Standalone Application Settings (glossary), message (glossary), standalone application (glossary), group (glossary), server (glossary), application (glossary), Internet library (library), LiveCode custom library (library), library (library)
+References: libURLSetFTPListCommand (command),
+function (control structure), return (glossary), main stack (glossary),
+handler (glossary), Standalone Application Settings (glossary),
+message (glossary), standalone application (glossary), group (glossary),
+server (glossary), application (glossary),
+LiveCode custom library (glossary), string (keyword), ftp (keyword),
+Internet library (library), library (library), startup (message),
+openBackground (message), preOpenStack (message), openStack (message),
+preOpenCard (message)
 
 Tags: networking
+

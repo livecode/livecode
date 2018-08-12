@@ -61,290 +61,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "objptr.h"
 
+#include "stackfileformat.h"
+
 #include "exec-interface.h"
 #include "resolution.h"
 
-////////////////////////////////////////////////////////////////////////////////
-
-MC_EXEC_DEFINE_GET_METHOD(Interface, DialogData, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DialogData, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LookAndFeel, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LookAndFeel, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenMouseLoc, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ScreenMouseLoc, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Backdrop, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Backdrop, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BufferImages, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BufferImages, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SystemFileSelector, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SystemFileSelector, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SystemColorSelector, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SystemColorSelector, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SystemPrintSelector, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SystemPrintSelector, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, PaintCompression, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PaintCompression, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BrushBackColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BrushBackColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, PenBackColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PenBackColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BrushColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BrushColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, PenColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PenColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BrushPattern, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BrushPattern, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, PenPattern, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PenPattern, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Filled, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Filled, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, PolySides, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PolySides, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LineSize, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LineSize, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RoundRadius, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RoundRadius, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, StartAngle, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, StartAngle, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ArcAngle, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ArcAngle, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RoundEnds, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RoundEnds, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Dashes, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Dashes, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RecentCards, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RecentNames, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, EditBackground, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, EditBackground, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockScreen, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockScreen, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, AccentColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, AccentColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, HiliteColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, HiliteColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LinkColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LinkColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LinkHiliteColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LinkHiliteColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LinkVisitedColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LinkVisitedColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, UnderlineLinks, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, UnderlineLinks, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SelectGroupedControls, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SelectGroupedControls, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Icon, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Icon, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, AllowInlineInput, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, AllowInlineInput, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DragDelta, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DragDelta, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, StackFileType, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, StackFileType, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, StackFileVersion, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, StackFileVersion, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, IconMenu, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, IconMenu, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, StatusIcon, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, StatusIcon, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, StatusIconToolTip, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, StatusIconToolTip, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, StatusIconMenu, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, StatusIconMenu, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ProcessType, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ProcessType, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ShowInvisibles, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ShowInvisibles, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Cursor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Cursor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DefaultCursor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DefaultCursor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DefaultStack, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DefaultStack, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DefaultMenubar, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DefaultMenubar, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DragSpeed, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DragSpeed, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, MoveSpeed, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, MoveSpeed, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockCursor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockCursor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockErrors, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockErrors, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockMenus, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockMenus, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockMessages, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockMessages, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockMoves, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockMoves, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockRecent, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockRecent, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, IdleRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, IdleRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, IdleTicks, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, IdleTicks, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BlinkRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BlinkRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RepeatRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RepeatRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RepeatDelay, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RepeatDelay, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, TypeRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, TypeRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SyncRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SyncRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, EffectRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, EffectRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DoubleDelta, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DoubleDelta, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DoubleTime, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DoubleTime, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, TooltipDelay, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, TooltipDelay, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, NavigationArrows, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, NavigationArrows, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ExtendKey, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ExtendKey, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, PointerFocus, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PointerFocus, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, EmacsKeyBindings, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, EmacsKeyBindings, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RaiseMenus, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RaiseMenus, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ActivatePalettes, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ActivatePalettes, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, HidePalettes, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, HidePalettes, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RaisePalettes, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RaisePalettes, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RaiseWindows, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RaiseWindows, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, HideBackdrop, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, HideBackdrop, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DontUseNavigationServices, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DontUseNavigationServices, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ProportionalThumbs, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ProportionalThumbs, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SharedMemory, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SharedMemory, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenGamma, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ScreenGamma, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SelectionMode, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SelectionMode, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SelectionHandleColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SelectionHandleColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, WindowBoundingRect, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, WindowBoundingRect, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, JpegQuality, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, JpegQuality, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RelayerGroupedControls, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RelayerGroupedControls, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Brush, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Brush, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Eraser, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Eraser, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Spray, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Spray, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Centered, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Centered, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Grid, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Grid, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, GridSize, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, GridSize, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Slices, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Slices, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BeepLoudness, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BeepLoudness, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BeepPitch, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BeepPitch, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BeepDuration, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BeepDuration, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BeepSound, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BeepSound, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Tool, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Tool, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenRect, 3)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenRects, 3)
-
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, HomeStackAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, HelpStackAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SelectedObjectAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, TopStackAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ClickStackAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, MouseStackAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ClickFieldAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SelectedFieldAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SelectedImageAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, FoundFieldAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, MouseControlAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, FocusedObjectAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, BinaryStackAsObject, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, DefaultStackAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, AudioClipOfStackByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, AudioClipOfStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, AudioClipOfStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, VideoClipOfStackByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, VideoClipOfStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, VideoClipOfStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, BackgroundOfStackByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, BackgroundOfStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, BackgroundOfStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfStackByOrdinal, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfStackById, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfStackByName, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ThisCardOfStack, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfBackgroundByOrdinal, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfBackgroundById, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfBackgroundByName, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfCardByOrdinal, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfCardById, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfCardByName, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfCardOrStackById, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfGroupByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfGroupById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfGroupByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, MenubarAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfGroupByOrdinal, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfGroupById, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfGroupByName, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardByOrdinal, 5)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardById, 5)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardByName, 5)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardOrStackById, 5)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackByValue, 2)
-
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, HomeStackAsOptionalObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, HelpStackAsOptionalObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, DefaultStackAsOptionalObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfOptionalStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfOptionalStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfOptionalStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfOptionalStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionalStackWithBackgroundByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionalStackWithBackgroundById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionalStackWithBackgroundByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackByOrdinal, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackById, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackByName, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ThisCardOfOptionalStack, 2)
-
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, TextOfContainer, 2)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, Relayer, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, RelayerRelativeToControl, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResolveImageByName, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResolveImageById, 2)
-
-MC_EXEC_DEFINE_GET_METHOD(Interface, PixelScale, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PixelScale, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SystemPixelScale, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, UsePixelScaling, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, UsePixelScaling, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenPixelScale, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenPixelScales, 1)
+#include "scriptpt.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -366,7 +88,6 @@ void MCInterfaceNamedColorParse(MCExecContext& ctxt, MCStringRef p_input, MCInte
 	}
 	
 	r_output . color = t_color;
-    r_output . color . flags = DoRed | DoGreen | DoBlue;
 	r_output . name = t_color_name;
 }
 
@@ -466,7 +187,12 @@ static void MCInterfaceBackdropParse(MCExecContext& ctxt, MCStringRef p_input, M
 		if (r_backdrop . pattern == 0)
 			r_backdrop . type = kMCInterfaceBackdropTypeNone;
 		else
+        {
 			r_backdrop . type = kMCInterfaceBackdropTypePattern;
+            
+            if (r_backdrop . pattern <= PI_END - PI_PATTERNS)
+                r_backdrop . pattern += PI_PATTERNS;
+        }
 
 		return;
 	}
@@ -493,7 +219,13 @@ static void MCInterfaceBackdropFormat(MCExecContext& ctxt, const MCInterfaceBack
 		MCInterfaceNamedColorFormat(ctxt, p_backdrop . named_color, r_output);
 		return;
 	case kMCInterfaceBackdropTypePattern:
-		if (ctxt . FormatUnsignedInteger(p_backdrop . pattern, r_output))
+        uinteger_t t_backdrop;
+        t_backdrop = p_backdrop . pattern;
+        
+        if (t_backdrop <= PI_END && t_backdrop >= PI_PATTERNS)
+            t_backdrop -= PI_PATTERNS;
+        
+		if (ctxt . FormatUnsignedInteger(t_backdrop, r_output))
 			return;
 		break;
 	}
@@ -554,14 +286,14 @@ void MCInterfaceStackFileVersionParse(MCExecContext& ctxt, MCStringRef p_input, 
 	char *t_version;
 	/* UNCHECKED */ MCStringConvertToCString(p_input, t_version);
     count = sscanf(t_version, "%d.%d.%d", &major, &minor, &revision);
-	delete t_version;
+    MCMemoryDeleteArray(t_version);
 	
 	version = major * 1000 + minor * 100 + revision * 10;
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] Allow versions up to 5500 to be set.
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] Allow versions up to 7000 to be set.
     // MW-2014-12-17: [[ Widgets ]] Allow versions up to 8000 to be set.
-	if (count < 2 || version < 2400 || version > 8000)
+	if (count < 2 || version < kMCStackFileFormatMinimumExportVersion || version > kMCStackFileFormatCurrentVersion)
 	{
 		ctxt . LegacyThrow(EE_PROPERTY_STACKFILEBADVERSION);
 		return;
@@ -657,10 +389,10 @@ static MCExecEnumTypeInfo _kMCInterfaceLookAndFeelTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfacePaintCompressionElementInfo[] =
 {
-	{ "png", EX_PNG },
-	{ "jpeg", EX_JPEG },
-	{ "gif", EX_GIF },
-	{ "rle", EX_PBM },
+	{ "png", EX_PNG, false },
+	{ "jpeg", EX_JPEG, false },
+	{ "gif", EX_GIF, false },
+	{ "rle", EX_PBM, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfacePaintCompressionTypeInfo =
@@ -674,8 +406,8 @@ static MCExecEnumTypeInfo _kMCInterfacePaintCompressionTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceProcessTypeElementInfo[] =
 {
-	{ "background", 0 },
-	{ "foreground", 1 },
+	{ "background", 0, false },
+	{ "foreground", 1, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceProcessTypeTypeInfo =
@@ -689,8 +421,8 @@ static MCExecEnumTypeInfo _kMCInterfaceProcessTypeTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceSelectionModeElementInfo[] =
 {
-	{ "surround", 0 },
-	{ "intersect", 1 },
+	{ "surround", 0, false },
+	{ "intersect", 1, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceSelectionModeTypeInfo =
@@ -762,7 +494,6 @@ void MCInterfaceGetLookAndFeel(MCExecContext& ctxt, intenum_t& r_value)
 
 void MCInterfaceSetLookAndFeel(MCExecContext& ctxt, intenum_t p_value)
 {
-	MCTheme *newtheme = NULL;
 	MCField *oldactive = MCactivefield;
 	if (oldactive != NULL)
 		oldactive->kunfocus();
@@ -975,7 +706,6 @@ void MCInterfaceSetBrushColor(MCExecContext& ctxt, const MCInterfaceNamedColor& 
 	MCeditingimage = nil;
 	MCpatternlist->freepat(MCbrushpattern);
 	set_interface_color(MCbrushcolor, MCbrushcolorname, p_color);
-	MCscreen -> alloccolor(MCbrushcolor);
 }
 
 void MCInterfaceGetPenColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
@@ -988,53 +718,79 @@ void MCInterfaceSetPenColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_
 	MCeditingimage = nil;
 	MCpatternlist->freepat(MCpenpattern);
 	set_interface_color(MCpencolor, MCpencolorname, p_color);
-	MCscreen -> alloccolor(MCpencolor);
 }
 
-void MCInterfaceGetBrushPattern(MCExecContext& ctxt, uinteger_t& r_pattern)
+void MCInterfaceGetBrushPattern(MCExecContext& ctxt, uinteger_t*& r_pattern)
 {
-	if (MCbrushpmid < PI_END && MCbrushpmid > PI_PATTERNS)
-		r_pattern = MCbrushpmid - PI_PATTERNS;
-	else
-		
-		r_pattern = MCbrushpmid;
+    // PI_PATTERNS should return empty
+    if (MCbrushpmid == PI_PATTERNS)
+        r_pattern = nil;
+    else if (MCbrushpmid <= PI_END && MCbrushpmid > PI_PATTERNS)
+        *r_pattern = MCbrushpmid - PI_PATTERNS;
+    else
+        *r_pattern = MCbrushpmid;
 }
 
-void MCInterfaceSetBrushPattern(MCExecContext& ctxt, uinteger_t pattern)
+void MCInterfaceSetBrushPattern(MCExecContext& ctxt, uinteger_t* pattern)
 {
-	MCPatternRef newpm;
-	if (MCbrushpmid < PI_END)
-		MCbrushpmid += PI_PATTERNS;
-	newpm = MCpatternlist->allocpat(MCbrushpmid, ctxt . GetObject());
-	if (newpm == None)
-	{
-		ctxt . LegacyThrow(EE_PROPERTY_BRUSHPATNOIMAGE);
-		return;
-	}
+    MCPatternRef newpm;
+    newpm = nil;
+    
+    // Setting to 0 should clear
+    if (pattern != nil && *pattern != 0)
+    {
+        if (*pattern <= PI_END - PI_PATTERNS)
+            *pattern += PI_PATTERNS;
+        
+        newpm = MCpatternlist->allocpat(*pattern, ctxt . GetObject());
+        if (newpm == None)
+        {
+            ctxt . LegacyThrow(EE_PROPERTY_BRUSHPATNOIMAGE);
+            return;
+        }
+        MCbrushpmid = *pattern;
+    }
+    else
+        MCbrushpmid = PI_PATTERNS;
+    
 	MCeditingimage = nil;
 	MCpatternlist->freepat(MCbrushpattern);
 	MCbrushpattern = newpm;
 }
 
-void MCInterfaceGetPenPattern(MCExecContext& ctxt, uinteger_t& r_pattern)
+void MCInterfaceGetPenPattern(MCExecContext& ctxt, uinteger_t*& r_pattern)
 {
-	if (MCpenpmid < PI_END && MCpenpmid > PI_PATTERNS)
-		r_pattern = MCpenpmid - PI_PATTERNS;
-	else
-		r_pattern = MCpenpmid;
+    // PI_PATTERNS should return empty
+    if (MCpenpmid == PI_PATTERNS)
+        r_pattern = nil;
+    else if (MCpenpmid <= PI_END && MCpenpmid > PI_PATTERNS)
+        *r_pattern = MCpenpmid - PI_PATTERNS;
+    else
+        *r_pattern = MCpenpmid;
 }
 
-void MCInterfaceSetPenPattern(MCExecContext& ctxt, uinteger_t pattern)
+void MCInterfaceSetPenPattern(MCExecContext& ctxt, uinteger_t* pattern)
 {
-	MCPatternRef newpm;
-	if (MCpenpmid < PI_END)
-		MCpenpmid += PI_PATTERNS;
-	newpm = MCpatternlist->allocpat(MCpenpmid, ctxt . GetObject());
-	if (newpm == nil)
-	{
-		ctxt . LegacyThrow(EE_PROPERTY_PENPATNOIMAGE);
-		return;
-	}
+    MCPatternRef newpm;
+    newpm = nil;
+    
+    // Setting to 0 should clear
+    if (pattern != nil && *pattern != 0)
+    {
+        if (*pattern <= PI_END - PI_PATTERNS)
+            *pattern += PI_PATTERNS;
+        
+        newpm = MCpatternlist->allocpat(*pattern, ctxt . GetObject());
+        if (newpm == nil)
+        {
+            ctxt . LegacyThrow(EE_PROPERTY_PENPATNOIMAGE);
+            return;
+        }
+        MCpenpmid = *pattern;
+    }
+    else
+        MCpenpmid = PI_PATTERNS;
+    
 	MCeditingimage = nil;
 	MCpatternlist->freepat(MCpenpattern);
 	MCpenpattern = newpm;
@@ -1485,7 +1241,7 @@ void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t* p_value)
 	{
 		MCcursor = t_cursor;
         MCcursorid = t_cursor_id;
-		if (MCmousestackptr != NULL)
+		if (MCmousestackptr)
 			MCmousestackptr->resetcursor(True);
 		else
 			MCdefaultstackptr->resetcursor(True);
@@ -1505,7 +1261,7 @@ void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value)
     // PM-2015-06-17: [[ Bug 15200 ]] Default cursor should reset when set to empty, thus t_cursor *can* be nil
     MCdefaultcursor = t_cursor;
     MCdefaultcursorid = p_value;
-    if (MCmousestackptr != NULL)
+    if (MCmousestackptr)
         MCmousestackptr->resetcursor(True);
     else
         MCdefaultstackptr->resetcursor(True);
@@ -1539,7 +1295,7 @@ void MCInterfaceSetDefaultStack(MCExecContext& ctxt, MCStringRef p_value)
 
 void MCInterfaceGetDefaultMenubar(MCExecContext& ctxt, MCNameRef& r_value)
 {	
-	if (MCdefaultmenubar == nil)
+	if (!MCdefaultmenubar)
 	{
 		r_value = MCValueRetain(kMCEmptyName);
 		return;
@@ -1845,7 +1601,7 @@ void MCInterfaceSetHidePalettes(MCExecContext& ctxt, bool p_value)
 {
 	MChidepalettes = p_value ? True : False;
     // MW-2014-04-23: [[ Bug 12080 ]] Make sure we update the hidesOnSuspend of all palettes.
-#ifdef _MACOSX
+#ifdef _MAC_DESKTOP
     MCstacks->hidepaletteschanged();
 #endif
 }
@@ -1991,7 +1747,7 @@ void MCInterfaceSetRelayerGroupedControls(MCExecContext& ctxt, bool p_value)
 void MCInterfaceSetBrush(MCExecContext& ctxt, Properties p_which, uinteger_t p_value)
 {
 	uint4 t_newbrush = p_value;
-	if (t_newbrush < PI_PATTERNS)
+	if (t_newbrush <= (PI_PATTERNS-PI_BRUSHES))
 		t_newbrush += PI_BRUSHES;
 
 	// MW-2009-02-02: [[ Improved image search ]]
@@ -2028,7 +1784,7 @@ void MCInterfaceSetBrush(MCExecContext& ctxt, Properties p_which, uinteger_t p_v
 
 void MCInterfaceGetBrush(MCExecContext& ctxt, uinteger_t& r_value)
 {
-	r_value = MCbrush < PI_PATTERNS ? MCbrush - PI_BRUSHES : MCbrush;
+	r_value = MCbrush > PI_BRUSHES && MCbrush <= PI_PATTERNS ? MCbrush - PI_BRUSHES : MCbrush;
 }
 
 void MCInterfaceSetBrush(MCExecContext& ctxt, uinteger_t p_value)
@@ -2038,7 +1794,7 @@ void MCInterfaceSetBrush(MCExecContext& ctxt, uinteger_t p_value)
 
 void MCInterfaceGetEraser(MCExecContext& ctxt, uinteger_t& r_value)
 {
-	r_value = MCeraser < PI_PATTERNS ? MCeraser - PI_BRUSHES : MCeraser;
+	r_value = MCeraser > PI_BRUSHES && MCeraser <= PI_PATTERNS ? MCeraser - PI_BRUSHES : MCeraser;
 }
 
 void MCInterfaceSetEraser(MCExecContext& ctxt, uinteger_t p_value)
@@ -2048,7 +1804,7 @@ void MCInterfaceSetEraser(MCExecContext& ctxt, uinteger_t p_value)
 
 void MCInterfaceGetSpray(MCExecContext& ctxt, uinteger_t& r_value)
 {
-	r_value = MCspray < PI_PATTERNS ? MCspray - PI_BRUSHES : MCspray;
+	r_value = MCspray > PI_BRUSHES && MCspray <= PI_PATTERNS ? MCspray - PI_BRUSHES : MCspray;
 }
 
 void MCInterfaceSetSpray(MCExecContext& ctxt, uinteger_t p_value)
@@ -2248,7 +2004,7 @@ void MCInterfaceEvalSelectedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_o
 
 void MCInterfaceEvalTopStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCtopstackptr != nil)
+    if (MCtopstackptr)
     {
         r_object . object = MCtopstackptr;
         r_object . part_id = 0;
@@ -2260,7 +2016,7 @@ void MCInterfaceEvalTopStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCInterfaceEvalClickStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCclickstackptr != nil)
+    if (MCclickstackptr)
     {
         r_object . object = MCclickstackptr;
         r_object . part_id = 0;
@@ -2272,7 +2028,7 @@ void MCInterfaceEvalClickStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 
 void MCInterfaceEvalMouseStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCmousestackptr != nil)
+    if (MCmousestackptr)
     {
         r_object . object = MCmousestackptr;
         r_object . part_id = 0;
@@ -2284,7 +2040,7 @@ void MCInterfaceEvalMouseStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 
 void MCInterfaceEvalClickFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCclickfield != nil)
+    if (MCclickfield)
     {
         r_object . object = MCclickfield;
         r_object . part_id = 0;
@@ -2296,7 +2052,7 @@ void MCInterfaceEvalClickFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 
 void MCInterfaceEvalSelectedFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCactivefield != nil)
+    if (MCactivefield)
     {
         r_object . object = MCactivefield;
         r_object . part_id = 0;
@@ -2307,7 +2063,7 @@ void MCInterfaceEvalSelectedFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
 }
 void MCInterfaceEvalSelectedImageAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCactiveimage != nil)
+    if (MCactiveimage)
     {
         r_object . object = MCactiveimage;
         r_object . part_id = 0;
@@ -2318,7 +2074,7 @@ void MCInterfaceEvalSelectedImageAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
 }
 void MCInterfaceEvalFoundFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCfoundfield != nil)
+    if (MCfoundfield)
     {
         r_object . object = MCfoundfield;
         r_object . part_id = 0;
@@ -2331,7 +2087,7 @@ void MCInterfaceEvalFoundFieldAsObject(MCExecContext& ctxt, MCObjectPtr& r_objec
 void MCInterfaceEvalMouseControlAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
     // OK-2009-01-19: Refactored to ensure behaviour is the same as the mouseControl.
-    if (MCmousestackptr != nil)
+    if (MCmousestackptr)
     {
         r_object . object = MCmousestackptr->getcard()->getmousecontrol();
         r_object . part_id = 0;
@@ -2359,36 +2115,26 @@ void MCInterfaceEvalFocusedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
 
-static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_binary_fail)
+MCStack *MCInterfaceTryToEvalStackFromString(MCStringRef p_data)
 {
-    uint4 offset;
-    MCStack *t_stack;
-    bool t_binary_fail;
+    MCAutoStringRefAsNativeChars t_native_string;
+    const char_t* t_string = nullptr;
+    uindex_t t_length = 0;
+    if (!t_native_string.Lock(p_data, t_string, t_length))
+        return nullptr;
+ 
+    MCStack *t_stack = nullptr;
+    IO_handle stream = MCS_fakeopen(t_string, t_length);
+    /* UNCHECKED */ MCdispatcher->readfile(nullptr, nullptr, stream, t_stack);
+    MCS_close(stream);
     
-    t_stack = nil;
-    t_binary_fail = false;
-    
-    if (MCStringFirstIndexOf(p_data, MCSTR(SIGNATURE), 0, kMCCompareExact, offset) && (MCStringGetLength(p_data) > 8 && MCStringBeginsWithCString(p_data, (const char_t *)"REVO", kMCCompareExact)))
-    {
-        char_t* t_string;
-        uindex_t t_length;
-        /* UNCHECKED */ MCStringConvertToNative(p_data, t_string, t_length);
-        IO_handle stream = MCS_fakeopen(t_string, t_length);
-        /* UNCHECKED */ MCdispatcher->readfile(NULL, NULL, stream, t_stack);
-        MCS_close(stream);
-        t_binary_fail = t_stack == nil;
-    }
-
-    r_binary_fail = t_binary_fail;
     return t_stack;
 }
                                            
 void MCInterfaceEvalBinaryStackAsObject(MCExecContext& ctxt, MCStringRef p_data, MCObjectPtr& r_object)
 {
     MCStack *t_stack;
-    bool t_binary_fail;
-    
-    t_stack = MCInterfaceTryToEvalBinaryStack(p_data, t_binary_fail);
+    t_stack = MCInterfaceTryToEvalStackFromString(p_data);
     
     if (t_stack != nil)
     {
@@ -2402,7 +2148,7 @@ void MCInterfaceEvalBinaryStackAsObject(MCExecContext& ctxt, MCStringRef p_data,
 
 void MCInterfaceEvalDefaultStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCdefaultstackptr != nil)
+    if (MCdefaultstackptr)
     {
         r_object . object = MCdefaultstackptr;
         r_object . part_id = 0;
@@ -2441,11 +2187,47 @@ void MCInterfaceEvalStackOfStackById(MCExecContext& ctxt, MCObjectPtr p_parent, 
     ctxt . LegacyThrow(EE_CHUNK_NOSTACK);
 }
 
+bool MCInterfaceStringCouldBeStack(MCStringRef p_string)
+{
+    // Check if it could be a binary stack
+    uindex_t t_offset;
+    if (MCStringFirstIndexOf(p_string,
+                             MCSTR(kMCStackFileMetaCardSignature), 0,
+                             kMCCompareExact, t_offset) ||
+        (MCStringGetLength(p_string) > 8 &&
+         MCStringBeginsWithCString(p_string, (const char_t *)"REVO",
+                                  kMCCompareExact)))
+        return true;
+
+    //Here we check whether it is very likely that the string is a UTF-8
+    //encoded script-only stack and not a name. Any UTF-8 encoded script-only
+    //stack with BOM will start with 'BOMscript "'. - i.e. have the 3 byte
+    //BOM prefix and then 'script "'.
+    const char_t k_utf8bom[] = { 0xEF, 0xBB, 0xBF, 's', 'c', 'r', 'i', 'p',
+                                 't', ' ', '"', 0x00 };
+    if (MCStringGetLength(p_string) > 12 &&
+        MCStringBeginsWithCString(p_string, k_utf8bom, kMCCompareExact))
+        return true;
+
+    // Check if it could be a script-only stack without BOM
+    MCScriptPoint sp(p_string);
+    // Parse 'script' token.
+    if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) != PS_NORMAL)
+        return false;
+    
+    // Parse <string> token.
+    Symbol_type t_type;
+    if (sp . next(t_type) != PS_NORMAL || t_type != ST_LIT)
+        return false;
+            
+    // Parse end of line.
+    Parse_stat t_stat = sp . next(t_type);
+    return (t_stat == PS_EOL || t_stat == PS_EOF);
+}
+
 void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_stack)
 {
-    uint4 offset;
-   
-    if (MCStringFirstIndexOf((MCStringRef)p_value, MCSTR(SIGNATURE), 0, kMCCompareExact, offset) && MCStringGetLength((MCStringRef)p_value) > 8 && MCStringBeginsWithCString((MCStringRef)p_value, (const char_t *)"REVO", kMCCompareExact))
+    if (MCInterfaceStringCouldBeStack((MCStringRef)p_value))
     {
         MCInterfaceEvalBinaryStackAsObject(ctxt, (MCStringRef)p_value, r_stack);
         return;
@@ -2550,7 +2332,7 @@ void MCInterfaceEvalAudioClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_st
     t_clip = nil;
     
     if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_AUDIO_CLIP, p_name, t_clip) &&
-        (MCacptr != NULL && MCacptr -> hasname(p_name)))
+        (MCacptr && MCacptr -> hasname(p_name)))
             t_clip = MCacptr;
     
     if (t_clip != nil)
@@ -2609,16 +2391,7 @@ void MCInterfaceEvalVideoClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_st
     if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_VIDEO_CLIP, p_name, t_clip))
     {
         IO_cleanprocesses();
-        MCPlayer *tptr = MCplayers;
-        while (tptr != NULL)
-        {
-            if (tptr -> hasname(p_name))
-            {
-                t_clip = tptr;
-                break;
-            }
-            tptr = tptr->getnextplayer();
-        }
+        t_clip = MCPlayer::FindPlayerByName(p_name);
     }
     
     if (t_clip != nil)
@@ -3004,14 +2777,14 @@ void MCInterfaceEvalGroupOfGroupByName(MCExecContext& ctxt, MCObjectPtr p_group,
 
 void MCInterfaceEvalMenubarAsObject(MCExecContext& ctxt, MCObjectPtr& r_menubar)
 {
-    if (MCmenubar != nil)
+    if (MCmenubar)
     {
         r_menubar . object = MCmenubar;
         r_menubar . part_id = 0;
         return;
     }
     
-    if (MCdefaultmenubar != nil)
+    if (MCdefaultmenubar)
     {
         r_menubar . object = MCdefaultmenubar;
         r_menubar . part_id = 0;
@@ -3234,51 +3007,6 @@ void MCInterfaceEvalStackOfOptionalStackById(MCExecContext& ctxt, MCObjectPtr p_
     r_stack . part_id = p_parent . part_id;
 }
 
-void MCInterfaceEvalOptionalStackOrCardByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)
-{
-    ctxt . SetTheResultToEmpty();
-    
-    MCStack *t_stack;
-    bool t_binary_fail;
-    
-    t_stack = MCInterfaceTryToEvalBinaryStack((MCStringRef)p_value, t_binary_fail);
-    
-    if (t_binary_fail)
-    {
-        ctxt . SetTheResultToStaticCString("can't build stack from string");
-        r_object . object = nil;
-        r_object . part_id = 0;
-        return;
-    }
-    
-    if (t_stack == nil)
-    {
-        integer_t t_id;
-        if (MCU_stoi4((MCStringRef)p_value, t_id))
-            t_stack = MCdefaultstackptr -> findstackid(t_id);
-    }
-    
-    if (t_stack == nil)
-        t_stack = MCdefaultstackptr -> findstackname((MCNameRef)p_value);
-    
-    if (t_stack != nil)
-    {
-        r_object . object = t_stack;
-        r_object . part_id = 0;
-        return;
-    }
-    
-    bool t_parse_error;
-    
-    if (!MCEngineEvalValueAsObject(p_value, false, r_object, t_parse_error))
-    {
-        if (t_parse_error)
-            ctxt . SetTheResultToStaticCString("no such card");
-        r_object . object = nil;
-        r_object . part_id = 0;
-    }
-}
-
 void MCInterfaceEvalSubstackOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p_parent, MCNameRef p_name, MCObjectPtr& r_stack)
 {
     MCStack *t_stack;
@@ -3422,13 +3150,16 @@ void MCInterfaceEvalCardOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p
         
         if (p_marked)
             t_stack -> setmark();
-        r_card . object = t_stack -> getchildbyname(p_name);
+        t_card = t_stack -> getchildbyname(p_name);
         t_stack -> clearmark();
         t_stack -> clearbackground();
     }
 
     r_card . object = t_card;
-    r_card . part_id = t_card != nil ? t_card -> getid() : p_stack . part_id;
+	if (t_card != nil)
+		r_card . part_id = t_card -> getid();
+	else
+		r_card . part_id = p_stack . part_id;
 }
 
 void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wholechunk, MCMarkedText& r_mark)
@@ -3528,6 +3259,9 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
         case F_MOUSE_LINE:
             if (!t_field->locmark(wholeline, wholeword, False, True, p_whole_chunk, start, end))
                 start = end = 0;
+            break;
+        case F_DROP_CHUNK:
+            start = end = MCdropchar;
             break;
         default:
             start = 0;
@@ -3729,11 +3463,11 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 	{
 		// As we call handlers that might invoke messages, we need to take
 		// object handles here.
-		MCObjectHandle *t_source_handle, *t_new_owner_handle, *t_new_target_handle;
-		t_source_handle = p_source . object -> gethandle();
-		t_new_owner_handle = t_new_owner -> gethandle();
-		t_new_target_handle = t_new_target != nil ? t_new_target -> gethandle() : nil;
-        
+		MCObjectHandle t_source_handle, t_new_owner_handle, t_new_target_handle;
+		t_source_handle = p_source . object -> GetHandle();
+		t_new_owner_handle = t_new_owner -> GetHandle();
+		t_new_target_handle = t_new_target != nil ? t_new_target : nil;
+
 		// Make sure we remove focus from the control.
 		bool t_was_mfocused, t_was_kfocused;
 		t_was_mfocused = t_card -> getstate(CS_MFOCUSED) == True;
@@ -3745,10 +3479,10 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
         
 		// Check the source and new owner objects exist, and if we have a target object
 		// that that exists and is still a child of new owner.
-		if (t_source_handle -> Exists() &&
-			t_new_owner_handle -> Exists() &&
+		if (t_source_handle.IsValid() &&
+			t_new_owner_handle.IsValid() &&
 		    (t_new_target == nil ||
-		     (t_new_target_handle -> Exists() &&
+		     (t_new_target_handle.IsValid() &&
 		      t_new_target -> getparent() == t_new_owner)))
 		{
 			p_source . object -> getparent() -> relayercontrol_remove(static_cast<MCControl *>(p_source . object));
@@ -3768,11 +3502,6 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 			t_card -> kfocus();
 		if (t_was_mfocused)
 			t_card -> mfocus(MCmousex, MCmousey);
-        
-		t_source_handle -> Release();
-		t_new_owner_handle -> Release();
-		if (t_new_target != nil)
-			t_new_target_handle -> Release();
 	}
     
 	if (t_success)

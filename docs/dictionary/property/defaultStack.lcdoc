@@ -2,15 +2,17 @@ Name: defaultStack
 
 Type: property
 
-Syntax: set the defaultStack to <stackName> 
+Syntax: set the defaultStack to <stackName>
 
-Summary: Specifies which <stack> the <expression> this stack <evaluate|evaluates> to, if no <stack> is specified in a <statement>.
+Summary:
+Specifies which <stack> the <expression> this stack <evaluate|evaluates>
+to, if no <stack> is specified in a <statement>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the defaultStack to "Help"
@@ -18,28 +20,54 @@ set the defaultStack to "Help"
 Example:
 set the defaultStack to the topStack
 
-Value: The <defaultStack> is the <name> of an open <stack>.
+Value:
+The <defaultStack> is the <name> of an open <stack>.
 
 Description:
-Use the <defaultStack> <property> to ensure that actions are performed on the correct <stack>.
+Use the <defaultStack> <property> to ensure that actions are performed
+on the correct <stack>.
 
-If no stack is specified in a statement that applies to a stack, LiveCode assumes the <defaultStack> is the <stack> meant. For example, the following <statement> causes the <defaultStack> to move to its next <card> :
+If no stack is specified in a statement that applies to a stack,
+LiveCode assumes the <defaultStack> is the <stack> meant. For example,
+the following <statement> causes the <defaultStack> to move to its next
+<card> :
 
-  go next card -- of the current defaultStack
+    go next card -- of the current defaultStack
 
-The expression this card refers to the current card of the <defaultStack>.
 
->*Important:*  You cannot use a <object reference|stack reference>, only a <stack> <name> or an <expression> that <evaluate|evaluates> to a <stack> <name>. For example, the following <statement> causes an <error> :
+The expression this card refers to the current card of the
+<defaultStack>. 
 
-  set the defaultStack to stack "Hmm" -- WON'T WORK
+>*Important:*  You cannot use a <object reference|stack reference>, only
+> a <stack> <name> or an <expression> that <evaluate|evaluates> to a
+> <stack> <name>. For example, the following <statement> causes an
+> <error> :
+
+    set the defaultStack to stack "Hmm" -- WON'T WORK
+
 
 but the following statements are correct:
 
-  set the defaultStack to "Hmm"
-  set the defaultStack to ("stack" && quote & "Hmm" & quote)
+    set the defaultStack to "Hmm"
+    set the defaultStack to ("stack" && quote & "Hmm" & quote)
 
-The <defaultStack> <property> is particularly useful in <stacks> opened in a mode other than an <editable window> (such as <stacks> that are being used as <dialog box|dialog boxes>, <palette|palettes>, or <menus>). LiveCode's <message box> and editing <palette|palettes> set the <defaultStack> <property> to the <value> <return|returned> by the <topStack> <function> before performing a stack action.
 
-References: name (property), function (control_st), shutdown (message), card (keyword), message box (keyword), stack (object), topStack (function), stacks (function), menus (function), value (function), clickStack (function), mainStacks (function), call (command), import (command), property (glossary), palette (glossary), error (glossary), return (glossary), editable window (glossary), statement (glossary), expression (glossary), evaluate (glossary), object reference (glossary), dialog box (glossary)
+The <defaultStack> <property> is particularly useful in <stacks> opened
+in a mode other than an <editable window> (such as <stacks> that are
+being used as <dialog box|dialog boxes>, <palette|palettes>, or
+<menus>). LiveCode's <message box> and editing <palette|palettes> set
+the <defaultStack> <property> to the <value> <return|returned> by the
+<topStack> <function> before performing a stack action.
+
+References: call (command), import (command),
+function (control structure), topStack (function), stacks (function),
+menus (function), value (function), clickStack (function),
+mainStacks (function), property (glossary), palette (glossary),
+error (glossary), return (glossary), editable window (glossary),
+statement (glossary), expression (glossary), evaluate (glossary),
+object reference (glossary), dialog box (glossary), card (keyword),
+message box (keyword), shutdown (message), stack (object),
+name (property)
 
 Tags: objects
+

@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "util.h"
-//#include "execpt.h"
+
 #include "debug.h"
 #include "param.h"
 
@@ -210,7 +210,7 @@ static char *concatenate(char *p_first, bool p_free_first, char *p_last, bool p_
 bool message_send_with_data(message_t *p_message, unsigned int *r_reply)
 {
 	COPYDATASTRUCT t_data;
-	DWORD t_result;
+	DWORD_PTR t_result;
 
 	t_data . dwData = CWM_RELAUNCH;
 	t_data . cbData = p_message -> data_length;
@@ -450,7 +450,7 @@ bool relaunch_startup(MCStringRef p_stack_name)
 	{
 		for(unsigned int t_instance = 0; t_instance < t_existing_instance_count; ++t_instance)
 		{
-			MCAutoStringRefAsWString t_cmdline_wstr;
+			MCAutoStringRefAsLPWSTR t_cmdline_wstr;
 			/* UNCHECKED */ t_cmdline_wstr.Lock(MCcmdline);
 			
 			message_t t_message;

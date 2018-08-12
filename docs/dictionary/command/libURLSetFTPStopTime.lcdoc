@@ -2,15 +2,18 @@ Name: libURLSetFTPStopTime
 
 Type: command
 
-Syntax: libURLSetFTPStopTime <timeoutInSeconds> 
+Syntax: libURLSetFTPStopTime <timeoutInSeconds>
 
-Summary: Sets the <timeout> value for <FTP> transfers.
+Summary:
+Sets the <timeout> value for <FTP> transfers.
+
+Associations: internet library
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
@@ -21,21 +24,47 @@ Example:
 libURLSetFTPStopTime field "Timeout Value"
 
 Parameters:
-timeoutInSeconds: A non-negative integer, or an expression that evaluates to a non-negative integer.
+timeoutInSeconds:
+A non-negative integer, or an expression that evaluates to a
+non-negative integer.
 
 Description:
-Use the <libURLSetFTPStopTime> <command> to increase the efficiency of multiple FTP transfers.
+Use the <libURLSetFTPStopTime> <command> to increase the efficiency of
+multiple FTP transfers.
 
-When LiveCode opens a socket to a host in order to upload or download a file via <ftp>, or to delete a file, it leaves the connection open for a time after the transaction completes. If another <file> is requested from the same FTP <server> during that time, LiveCode uses the same <socket> instead of opening another one. This saves time if you are transferring multiple files with the same <server>, since the <socket> does not need to be set up again for each file.
+When LiveCode opens a socket to a host in order to upload or download a
+file via <ftp>, or to delete a file, it leaves the connection open for a
+time after the transaction completes. If another <file> is requested
+from the same FTP <server> during that time, LiveCode uses the same
+<socket> instead of opening another one. This saves time if you are
+transferring multiple files with the same <server>, since the <socket>
+does not need to be set up again for each file.
 
 By default, the timeout value is 15 seconds.
 
->*Note:* If the <server> closes the connection, LiveCode does not attempt to keep it open. The <timeout> set by <libURLSetFTPStopTime> controls when LiveCode closes the connection from its end, but if the <server> closes the connection, a longer <timeout> has no effect.
+>*Note:* If the <server> closes the connection, LiveCode does not
+> attempt to keep it open. The <timeout> set by <libURLSetFTPStopTime>
+> controls when LiveCode closes the connection from its end, but if the
+> <server> closes the connection, a longer <timeout> has no effect.
 
->*Important:*  The <libURLSetFTPStopTime> <command> is part of the <Internet library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:* The <libURLSetFTPStopTime> <command> is part of the 
+> <Internet library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
->*Note:* When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <libURLSetFTPStopTime> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <libURLSetFTPStopTime> <command> can be used in any <handler>.
-
-References: ftp (keyword), file (keyword), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), delete URL (command), libURLftpUpload (command), libURLDownloadToFile (command), get (command), libURLSetFTPMode (command), timeout (glossary), application (glossary), main stack (glossary), handler (glossary), group (glossary), socket (glossary), standalone application (glossary), Standalone Application Settings (glossary), message (glossary), server (glossary), command (glossary), Internet library (library), LiveCode custom library (library), library (library)
+References: delete URL (command), libURLftpUpload (command),
+libURLDownloadToFile (command), get (command), libURLSetFTPMode (command),
+timeout (glossary), application (glossary), main stack (glossary),
+handler (glossary), group (glossary), socket (glossary),
+standalone application (glossary),
+Standalone Application Settings (glossary), message (glossary),
+server (glossary), command (glossary), LiveCode custom library (glossary),
+ftp (keyword), file (keyword), Internet library (library),
+library (library), startup (message), openBackground (message),
+preOpenStack (message), openStack (message), preOpenCard (message)
 
 Tags: networking
+

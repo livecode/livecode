@@ -14,7 +14,8 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
+#include <AclAPI.h>
 
 #ifdef DeleteFile
 #undef DeleteFile
@@ -30,7 +31,7 @@
 #include "mcio.h"
 #include "system.h"
 
-//#include "execpt.h"
+
 #include "exec.h"
 #include "globals.h"
 #include "system.h"
@@ -113,7 +114,7 @@ static void legacy_path_to_nt_path(MCStringRef p_legacy, MCStringRef &r_nt)
 		MCStringRef t_temp;
 		/* UNCHECKED */ MCStringCreateMutable(0, t_temp);
 		/* UNCHECKED */ MCStringAppend(t_temp, MCSTR("\\\\?\\UNC\\"));
-		/* UNCHECKED */ MCStringAppendSubstring(t_temp, p_legacy, MCRangeMake(2, MCStringGetLength(p_legacy) - 2));
+		/* UNCHECKED */ MCStringAppendSubstring(t_temp, p_legacy, MCRangeMakeMinMax(2, MCStringGetLength(p_legacy)));
 		/* UNCHECKED */ MCStringCopyAndRelease(t_temp, r_nt);
 	}
 	else
@@ -130,13 +131,13 @@ static void nt_path_to_legacy_path(MCStringRef p_nt, MCStringRef &r_legacy)
 	if (MCStringBeginsWithCString(p_nt, (const char_t*)"\\\\?\\UNC\\", kMCStringOptionCompareCaseless))
 	{
 		MCStringRef t_temp;
-		/* UNCHECKED */ MCStringMutableCopySubstring(p_nt, MCRangeMake(8, MCStringGetLength(p_nt) - 8), t_temp);
+		/* UNCHECKED */ MCStringMutableCopySubstring(p_nt, MCRangeMakeMinMax(8, MCStringGetLength(p_nt)), t_temp);
 		/* UNCHECKED */ MCStringPrepend(t_temp, MCSTR("\\\\"));
 		/* UNCHECKED */ MCStringCopyAndRelease(t_temp, r_legacy);
 	}
 	else if (MCStringBeginsWithCString(p_nt, (const char_t*)"\\\\?\\", kMCStringOptionCompareCaseless))
 	{
-		/* UNCHECKED */ MCStringCopySubstring(p_nt, MCRangeMake(4, MCStringGetLength(p_nt) - 4), r_legacy);
+		/* UNCHECKED */ MCStringCopySubstring(p_nt, MCRangeMakeMinMax(4, MCStringGetLength(p_nt)), r_legacy);
 	}
 	else
 	{
@@ -337,9 +338,9 @@ bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef
 		if (MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_path_offset))
 		{
 			if (t_value_offset > t_path_offset)
-				t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_path_offset + 1, t_value_offset - t_path_offset - 1), r_key);
+				t_success = t_success && MCStringCopySubstring(p_path, MCRangeMakeMinMax(t_path_offset + 1, t_value_offset), r_key);
 		}
-		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_value_offset + 1, t_length - t_value_offset - 1), r_value);
+		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMakeMinMax(t_value_offset + 1, t_length), r_value);
 	}
 	return t_success && MCStringCopySubstring(p_path, MCRangeMake(0, t_path_offset), r_root);
 }
@@ -441,7 +442,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 static MMRESULT tid;
 
-void CALLBACK MCS_tp(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
+void CALLBACK MCS_tp(UINT id, UINT msg, DWORD_PTR user, DWORD_PTR dw1, DWORD_PTR dw2)
 {
 	MCalarm = True;
 }
@@ -478,7 +479,7 @@ bool MCS_specialfolder_to_csidl(MCNameRef p_folder, MCNumberRef& r_csidl)
 {
 	for (uindex_t i = 0 ; i < ELEMENTS(sysfolderlist) ; i++)
 	{
-		if (MCNameIsEqualTo(p_folder, *(sysfolderlist[i].token)))
+		if (MCNameIsEqualToCaseless(p_folder, *(sysfolderlist[i].token)))
 		{
 			return MCNumberCreateWithUnsignedInteger(sysfolderlist[i].winfolder, r_csidl);
 		}
@@ -501,7 +502,7 @@ static DWORD readThread(Streamnode *process)
 {
 	DWORD nread;
 	uint32_t t_bufsize = READ_PIPE_SIZE;
-	char* t_buffer = new char[t_bufsize];
+	char* t_buffer = new (nothrow) char[t_bufsize];
 
 	while (process -> ihandle != NULL)
 	{
@@ -567,45 +568,6 @@ bool MCS_native_path_exists(MCStringRef p_path, bool p_is_file)
 
 bool MCS_path_exists(MCStringRef p_path, bool p_is_file)
 {
-#ifdef /* MCS_exists_dsk_w32 */ LEGACY_SYSTEM
-	char *newpath = MCS_resolvepath(path);
-	//MS's stat() fails if there is a trailing '\\'. Workaround is to delete it
-	// MW-2004-04-20: [[ Purify ]] If *newpath == 0 then we should return False
-	if (*newpath == '\0')
-	{
-		delete newpath;
-		return False;
-	}
-	
-	// MW-2008-01-15: [[ Bug 4981 ]] - It seems that stat will fail for checking
-	//   a folder 'C:' and requires that it be 'C:\'
-	if (strlen(newpath) == 2 && newpath[1] == ':')
-	{
-		// newpath is of form "<driveletter>:"
-		char *t_modified_path;
-		t_modified_path = new char[strlen(newpath) + 2];
-		strcpy(t_modified_path, newpath);
-		strcat(t_modified_path, "\\");
-		delete newpath;
-		newpath = t_modified_path;
-		// newpath is of form "<driverletter>:\"
-	}
-    
-	// OK-2007-12-05 : Bug 5555, modified to allow paths with trailing backslashes on Windows.
-	if ((newpath[strlen(newpath) - 1] == '\\' || newpath[strlen(newpath) - 1] == '/')
-        && (strlen(newpath) != 3 || newpath[1] != ':'))
-		newpath[strlen(newpath) - 1] = '\0';
-    
-	// MW-2010-10-22: [[ Bug 8259 ]] Use a proper Win32 API function - otherwise network shares don't work.
-	DWORD t_attrs;
-	t_attrs = GetFileAttributesA(newpath);
-	delete newpath;
-    
-	if (t_attrs == INVALID_FILE_ATTRIBUTES)
-		return False;
-    
-	return file == ((t_attrs & FILE_ATTRIBUTE_DIRECTORY) == 0);
-#endif /* MCS_exists_dsk_w32 */
     // MW-2004-04-20: [[ Purify ]] If *newpath == 0 then we should return False
     if (MCStringGetLength(p_path) == 0)
         return False;
@@ -740,7 +702,7 @@ bool dns_servers_from_registry(MCListRef& r_list)
 		if (t_chars[i] == ' ' || t_chars[i] == ',' || t_chars[i] == '\n')
 		{
 			MCAutoStringRef t_substring;
-			if (!MCStringCopySubstring(t_string, MCRangeMake(t_start, i - t_start), &t_substring) || 
+			if (!MCStringCopySubstring(t_string, MCRangeMakeMinMax(t_start, i), &t_substring) || 
 					!MCListAppend(*t_list, *t_substring))
 				return false;
 			t_start = i + 1;
@@ -749,7 +711,7 @@ bool dns_servers_from_registry(MCListRef& r_list)
 	if (t_start < t_char_count)
 	{
 		MCAutoStringRef t_final_string;
-		if (!MCStringCopySubstring(t_string, MCRangeMake(t_start, MCStringGetLength(t_string) - t_start), &t_final_string) ||
+		if (!MCStringCopySubstring(t_string, MCRangeMakeMinMax(t_start, MCStringGetLength(t_string)), &t_final_string) ||
 			!MCListAppend(*t_list, *t_final_string))
 			return false;
 	}
@@ -1196,21 +1158,6 @@ struct MCMemoryMappedFileHandle: public MCMemoryFileHandle
 
 	virtual void Close()
 	{
-#ifdef /* MCS_close_dsk_w32 */ LEGACY_SYSTEM
-	if (stream->buffer != NULL)
-	{ //memory map file
-		if (stream->mhandle != NULL)
-		{
-			UnmapViewOfFile(stream->buffer);
-			CloseHandle(stream->mhandle);
-		}
-	}
-	if (!(stream->flags & IO_FAKE))
-		CloseHandle(stream->fhandle);
-	delete stream;
-	stream = NULL;
-    return IO_NORMAL;
-#endif /* MCS_close_dsk_w32 */
 		/* UNCHECKED */ UnmapViewOfFile(m_buffer);
 		CloseHandle((HANDLE)m_handle);
 		MCMemoryFileHandle::Close();
@@ -1244,157 +1191,6 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	
 	virtual bool Read(void *p_buffer, uint32_t p_byte_size, uint32_t& r_read)
 	{
-#ifdef /* MCS_read_dsk_w32 */ LEGACY_SYSTEM
-	if (MCabortscript || ptr == NULL || stream == NULL)
-		return IO_ERROR;
-
-	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
-		return IO_ERROR;
-
-	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
-	// MW-2009-06-30: Refactored to common (platform-independent) implementation
-	//   in mcio.cpp
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_read(ptr, size, n, stream);
-
-	LPVOID sptr = ptr;
-	DWORD nread;
-	Boolean result = False;
-	IO_stat istat = IO_NORMAL;
-
-	if (stream->buffer != NULL)
-	{ //memory map file or process with a thread
-		uint4 nread = size * n;     //into the IO_handle's buffer
-		if (nread > stream->len - (stream->ioptr - stream->buffer))
-		{
-			n = (stream->len - (stream->ioptr - stream->buffer)) / size;
-			nread = size * n;
-			istat = IO_EOF;
-		}
-		if (nread == 1)
-		{
-			char *tptr = (char *)ptr;
-			*tptr = *stream->ioptr++;
-		}
-		else
-		{
-			memcpy(ptr, stream->ioptr, nread);
-			stream->ioptr += nread;
-		}
-		return istat;
-	}
-	
-	if (stream -> fhandle == 0)
-	{
-		MCS_seterrno(GetLastError());
-		n = 0;
-		return IO_ERROR;
-	}
-	
-	// If this is named pipe, handle things differently -- we first peek to see how
-	// much is available to read.
-	// MW-2012-09-10: [[ Bug 10230 ]] If this stream is a pipe then handle that case.
-	if (stream -> is_pipe)
-	{
-		// See how much data is available - if this fails then return eof or an error
-		// depending on 'GetLastError()'.
-		uint32_t t_available;
-		if (!PeekNamedPipe(stream -> fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
-		{
-			n = 0;
-
-			DWORD t_error;
-			t_error = GetLastError();
-			if (t_error == ERROR_HANDLE_EOF || t_error == ERROR_BROKEN_PIPE)
-			{
-				stream -> flags |= IO_ATEOF;
-				return IO_EOF;
-			}
-
-			MCS_seterrno(GetLastError());
-			return IO_ERROR;
-		}
-
-		// Adjust for putback
-		int32_t t_adjust;
-		t_adjust = 0;
-		if (stream -> putback != -1)
-			t_adjust = 1;
-
-		// Calculate how many elements we can read, and how much we need to read
-		// to make them.
-		uint32_t t_count, t_byte_count;
-		t_count = MCU_min((t_available + t_adjust) / size, n);
-		t_byte_count = t_count * size;
-
-		// Copy in the putback char if any
-		uint1 *t_dst_ptr;
-		t_dst_ptr = (uint1*)sptr;
-		if (stream -> putback != -1)
-		{
-			*t_dst_ptr++ = (uint1)stream -> putback;
-			stream -> putback = -1;
-		}
-
-		// Now read all the data we can - here we check for EOF also.
-		uint32_t t_amount_read;
-		IO_stat t_stat;
-		t_stat = IO_NORMAL;
-		t_amount_read = 0;
-		if (t_byte_count - t_adjust > 0)
-			if (!ReadFile(stream -> fhandle, (LPVOID)t_dst_ptr, t_byte_count - t_adjust, (DWORD *)&t_amount_read, NULL))
-			{
-				if (GetLastError() == ERROR_HANDLE_EOF)
-				{
-					stream -> flags |= IO_ATEOF;
-					t_stat = IO_EOF;
-				}
-				else
-				{
-					MCS_seterrno(GetLastError());
-					t_stat = IO_ERROR;
-				}
-			}
-
-		// Return the number of objects of 'size' bytes that were read.
-		n = (t_amount_read + t_adjust) / size;
-
-		return t_stat;
-	}
-
-	if (stream -> putback != -1)
-	{
-		*((uint1 *)sptr) = (uint1)stream -> putback;
-		stream -> putback = -1;
-		
-		if (!ReadFile(stream -> fhandle, (LPVOID)((char *)sptr + 1), (DWORD)size * n - 1, &nread, NULL))
-		{
-			MCS_seterrno(GetLastError());
-			n = (nread + 1) / size;
-			return IO_ERROR;
-		}
-		
-		nread += 1;
-	}
-	else if (!ReadFile(stream->fhandle, (LPVOID)sptr, (DWORD)size * n, &nread, NULL))
-	{
-		MCS_seterrno(GetLastError());
-		n = nread / size;
-		return IO_ERROR;
-	}
-
-	if (nread < size * n)
-	{
-		stream->flags |= IO_ATEOF;
-		n = nread / size;
-		return IO_EOF;
-	}
-	else
-		stream->flags &= ~IO_ATEOF;
-
-	n = nread / size;
-	return IO_NORMAL;
-#endif /* MCS_read_dsk_w32 */
 		LPVOID sptr = p_buffer;
 		DWORD nread;
 		Boolean result = False;
@@ -1559,30 +1355,6 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 
 	virtual bool Write(const void *p_buffer, uint32_t p_length)
 	{
-#ifdef /* MCS_write_dsk_w32 */ LEGACY_SYSTEM
-	if (stream == IO_stdin)
-		return IO_NORMAL;
-
-	if (stream == NULL)
-		return IO_ERROR;
-
-	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
-		return MCU_dofakewrite(stream -> buffer, stream -> len, ptr, size, n);
-
-	if (stream -> fhandle == 0)
-		return IO_ERROR;
-
-	DWORD nwrote;
-	if (!WriteFile(stream->fhandle, (LPVOID)ptr, (DWORD)size * n,
-	               &nwrote, NULL))
-	{
-		MCS_seterrno(GetLastError());
-		return IO_ERROR;
-	}
-	if (nwrote != size * n)
-		return IO_ERROR;
-	return IO_NORMAL;
-#endif /* MCS_write_dsk_w32 */
 		uint32_t t_written;
 		if (this == IO_stdin)
 			return true; // Shouldn't it return false???
@@ -1604,50 +1376,6 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 
 	virtual bool Seek(int64_t p_offset, int p_dir)
 	{
-#ifdef /* MCS_seek_cur_dsk_w32 */ LEGACY_SYSTEM
-	IO_stat is = IO_NORMAL;
-
-	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
-	// MW-2009-06-30: Refactored to common implementation in mcio.cpp.
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_seek_cur(stream, offset);
-
-	if (stream->buffer != NULL)
-		IO_set_stream(stream, stream->ioptr + offset);
-	else
-		is = MCS_seek_do(stream -> fhandle, offset, FILE_CURRENT);
-	return is;
-#endif /* MCS_seek_cur_dsk_w32 */
-#ifdef /* MCS_seek_set_dsk_w32 */ LEGACY_SYSTEM
-	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_seek_set(stream, offset);
-
-	IO_stat is = IO_NORMAL;
-	if (stream->buffer != NULL)
-		IO_set_stream(stream, stream->buffer + offset);
-	else
-		is = MCS_seek_do(stream -> fhandle, offset, FILE_BEGIN);
-	return is;
-#endif /* MCS_seek_set_dsk_w32 */
-#ifdef /* MCS_seek_end_dsk_w32 */ LEGACY_SYSTEM
-	IO_stat is = IO_NORMAL;
-	if (stream->buffer != NULL)
-		IO_set_stream(stream, stream->buffer + stream->len + offset);
-	else
-		is = MCS_seek_do(stream -> fhandle, offset, FILE_END);
-	return is;
-#endif /* MCS_seek_end_dsk_w32 */
-#ifdef /* MCS_seek_do_dsk_w32 */ LEGACY_SYSTEM
-	LONG high_offset;
-	high_offset = (LONG)(p_offset >> 32);
-	DWORD fp;
-	fp = SetFilePointer(p_file, (LONG)(p_offset & 0xFFFFFFFF),
-	                   &high_offset, p_type);
-	if (fp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-		return IO_ERROR;
-	return IO_NORMAL;
-#endif /* MCS_seek_do_dsk_w32 */
 		LONG high_offset;
 		high_offset = (LONG)(p_offset >> 32);
 		DWORD fp;
@@ -1663,12 +1391,6 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	
 	virtual bool Truncate(void)
 	{
-#ifdef /* MCS_trunc_dsk_w32 */ LEGACY_SYSTEM
-	if (SetEndOfFile(stream->fhandle))
-		return IO_NORMAL;
-	else
-		return IO_ERROR;
-#endif /* MCS_trunc_dsk_w32 */
 		if (!SetEndOfFile(m_handle))
 			return false;
 
@@ -1677,19 +1399,6 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 
 	virtual bool Sync(void)
 	{
-#ifdef /* MCS_sync_dsk_w32 */ LEGACY_SYSTEM
-	//get the current file position pointer
-	LONG fph;
-	fph = 0;
-	DWORD fp = SetFilePointer(stream->fhandle, 0, &fph, FILE_CURRENT);
-	if (fp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-		return IO_ERROR;
-	DWORD nfp = SetFilePointer(stream->fhandle, fp, &fph, FILE_BEGIN);
-	if (nfp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-		return IO_ERROR;
-	else
-		return IO_NORMAL;
-#endif /* MCS_sync_dsk_w32 */
 		//get the current file position pointer
 		LONG fph;
 		fph = 0;
@@ -1705,12 +1414,6 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 
 	virtual bool Flush(void)
 	{
-#ifdef /* MCS_flush_dsk_w32 */ LEGACY_SYSTEM 
-	//flush output buffer
-	if (FlushFileBuffers(stream->fhandle) != NO_ERROR)
-		return IO_ERROR;
-	return IO_NORMAL;
-#endif /* MCS_flush_dsk_w32 */ //flush output buffer
 		// SN-2014-06-16 
 		// FileFlushBuffer returns non-zero on success
 		// (which is the opposite of NO_ERROR
@@ -1722,17 +1425,6 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	
 	virtual bool PutBack(char p_char)
 	{
-#ifdef /* MCS_putback_dsk_w32 */ LEGACY_SYSTEM
-	if (stream -> buffer != NULL)
-		return MCS_seek_cur(stream, -1);
-
-	if (stream -> putback != -1)
-		return IO_ERROR;
-		
-	stream -> putback = c;
-	
-	return IO_NORMAL;
-#endif /* MCS_putback_dsk_w32 */
 		if (m_putback != -1)
 			return false;
 			
@@ -1743,20 +1435,6 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	
 	virtual int64_t Tell(void)
 	{
-#ifdef /* MCS_tell_dsk_w32 */ LEGACY_SYSTEM
-	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_tell(stream);
-
-	if (stream->buffer != NULL)
-		return stream->ioptr - stream->buffer;
-
-	DWORD low;
-	LONG high;
-	high = 0;
-	low = SetFilePointer(stream -> fhandle, 0, &high, FILE_CURRENT);
-	return low | ((int64_t)high << 32);
-#endif /* MCS_tell_dsk_w32 */
 		DWORD low;
 		LONG high;
 		high = 0;
@@ -1769,23 +1447,8 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		return m_handle;
 	}
 
-	virtual int64_t GetFileSize(void)
+	virtual uint64_t GetFileSize(void)
 	{
-#ifdef /* MCS_fsize_dsk_w32 */ LEGACY_SYSTEM
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_fsize(stream);
-
-	if (stream->flags & IO_FAKE)
-		return stream->len;
-	else
-	{
-		DWORD t_high_word, t_low_word;
-		t_low_word = GetFileSize(stream -> fhandle, &t_high_word);
-		if (t_low_word != INVALID_FILE_SIZE || GetLastError() == NO_ERROR)
-			return (int64_t)t_low_word | (int64_t)t_high_word << 32;
-	}
-	return 0;
-#endif /* MCS_fsize_dsk_w32 */
 		DWORD t_high_word, t_low_word;
 		t_low_word = ::GetFileSize(m_handle, &t_high_word);
 		if (t_low_word != INVALID_FILE_SIZE || GetLastError() == NO_ERROR)
@@ -1823,85 +1486,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual bool Initialize(void)
 	{
-#ifdef /* MCS_init_dsk_w32 */ LEGACY_SYSTEM
-        IO_stdin = new IO_header((MCWinSysHandle)GetStdHandle(STD_INPUT_HANDLE), NULL, 0, 0);
-        IO_stdin -> is_pipe = handle_is_pipe(IO_stdin -> fhandle);
-        IO_stdout = new IO_header((MCWinSysHandle)GetStdHandle(STD_OUTPUT_HANDLE), NULL, 0, 0);
-        IO_stdout -> is_pipe = handle_is_pipe(IO_stdout -> fhandle);
-        IO_stderr = new IO_header((MCWinSysHandle)GetStdHandle(STD_ERROR_HANDLE), NULL, 0, 0);
-        IO_stderr -> is_pipe = handle_is_pipe(IO_stderr -> fhandle);
-        
-        setlocale(LC_CTYPE, MCnullstring);
-        setlocale(LC_COLLATE, MCnullstring);
-        
-        // MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
-        ((unsigned short *)_pctype)[160] &= ~_SPACE;
-        
-        MCinfinity = HUGE_VAL;
-        MCS_time(); // force init
-        if (timeBeginPeriod(1) == TIMERR_NOERROR)
-            MCS_reset_time();
-        else
-            MClowrestimers = True;
-        MCExecPoint ep;
-        ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyEnable");
-        MCS_query_registry(ep, NULL);
-        if (ep.getsvalue().getlength() && ep.getsvalue().getstring()[0])
-        {
-            ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
-            MCS_query_registry(ep, NULL);
-            if (ep.getsvalue().getlength())
-                MChttpproxy = ep . getsvalue() . clone();
-        }
-        else
-        {
-            ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
-            MCS_query_registry(ep, NULL);
-            if (ep.getsvalue().getlength())
-            {
-                char *t_host;
-                int4 t_port;
-                t_host = ep.getsvalue().clone();
-                ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
-                MCS_query_registry(ep, NULL);
-                ep.ston();
-                t_port = ep.getint4();
-                ep.setstringf("%s:%d", t_host, t_port);
-                ep . setstrlen();
-                MChttpproxy = ep . getsvalue() . clone();
-                delete t_host;
-            }
-        }
-        
-        // On NT systems 'cmd.exe' is the command processor
-        MCshellcmd = strclone("cmd.exe");
-        
-        // MW-2005-05-26: Store a global variable containing major OS version...
-        OSVERSIONINFOA osv;
-        memset(&osv, 0, sizeof(OSVERSIONINFOA));
-        osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
-        GetVersionExA(&osv);
-        MCmajorosversion = osv . dwMajorVersion << 8 | osv . dwMinorVersion;
-        
-        // MW-2012-09-19: [[ Bug ]] Adjustment to tooltip metrics for Windows.
-        if (MCmajorosversion >= 0x0500)
-        {
-            MCttsize = 11;
-            MCttfont = "Tahoma";
-        }
-        else if (MCmajorosversion >= 0x0600)
-        {
-            MCttsize = 11;
-            MCttfont = "Segoe UI";
-        }
-        
-        OleInitialize(NULL); //for drag & drop
-        
-        // MW-2004-11-28: Install a signal handler for FP exceptions - these should be masked
-        //   so it *should* be unnecessary but Win9x plays with the FP control word.
-        signal(SIGFPE, handle_fp_exception);
-
-#endif /* MCS_init_dsk_w32 */
 		IO_stdin = MCsystem -> OpenFd(STD_INPUT_HANDLE, kMCOpenFileModeRead);
 		IO_stdout = MCsystem -> OpenFd(STD_OUTPUT_HANDLE, kMCOpenFileModeWrite);
 		IO_stderr = MCsystem -> OpenFd(STD_ERROR_HANDLE, kMCOpenFileModeWrite);
@@ -1913,8 +1497,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		WORD request = MAKEWORD(1, 1);
 		WSADATA t_data;
 		WSAStartup(request, &t_data);
-
-		return true;
 #endif // _WINDOWS_SERVER
 
 		// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
@@ -1933,7 +1515,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         MCAutoStringRef t_type, t_error;
         MCAutoValueRef t_value;
         MCS_query_registry(t_key, &t_value, &t_type, &t_error);
-		if (*t_value != nil && !MCValueIsEmpty(*t_value))
+        
+        MCAutoNumberRef t_enabled;
+        if (*t_value != nil && ctxt.ConvertToNumber(*t_value, &t_enabled) && MCNumberFetchAsInteger(*t_enabled) == 1)
 		{
             MCStringRef t_key2;
             t_key2 = MCSTR("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
@@ -1949,31 +1533,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				MCValueAssign(MChttpproxy, *t_http_proxy);
 			}
 		}
-		else
-		{
-            MCStringRef t_key3;
-            t_key3 = MCSTR("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
-            MCAutoStringRef t_type3, t_error3;
-            MCAutoValueRef t_value3;
-            MCS_query_registry(t_key3, &t_value3, &t_type3, &t_error3);
-            
-            if (*t_value3 != nil && !MCValueIsEmpty(*t_value3))
-			{
-				MCAutoStringRef t_host;
-                /* UNCHECKED */ ctxt . ConvertToString(*t_value3, &t_host);
-                MCStringRef t_key4;
-                t_key4 = MCSTR("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
-                MCAutoStringRef t_type4, t_error4;
-                MCAutoValueRef t_value4;
-                MCS_query_registry(t_key4, &t_value4, &t_type4, &t_error4);
-				MCAutoNumberRef t_port;
-                /* UNCHECKED */ ctxt . ConvertToNumber(*t_value4, &t_port);
-				MCAutoStringRef t_http_proxy;
-                /* UNCHECKED */ MCStringFormat(&t_http_proxy, "%@:%@", *t_host, *t_port);
-				MCValueAssign(MChttpproxy, *t_http_proxy);
-            }
-		}
-        
 
 		// On NT systems 'cmd.exe' is the command processor
 		MCValueAssign(MCshellcmd, MCSTR("cmd.exe"));
@@ -2008,35 +1567,18 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 	virtual void Finalize(void)
     {
-#ifdef /* MCS_shutdown_dsk_w32 */ LEGACY_SYSTEM
-	OleUninitialize();
-#endif /* MCS_shutdown_dsk_w32 */
         OleUninitialize();
     }
 	
 	virtual void Debug(MCStringRef p_string)
 	{
+		MCAutoStringRefAsWString t_string;
+		if (t_string.Lock(p_string))
+			OutputDebugStringW(*t_string);
 	}
 
 	virtual real64_t GetCurrentTime()
     {
-#ifdef /* MCS_time_dsk_w32 */ LEGACY_SYSTEM
-	if (startcount)
-	{
-		DWORD newcount = timeGetTime();
-		if (newcount < startcount)
-			startcount = newcount;
-		else
-		{
-			curtime = starttime + (newcount - startcount) / 1000.0;
-			return curtime;
-		}
-	}
-	struct _timeb timebuffer;
-	_ftime(&timebuffer);
-	starttime = timebuffer.time + timebuffer.millitm / 1000.0;
-	return starttime;
-#endif /* MCS_time_dsk_w32 */
         if (startcount)
         {
             DWORD newcount = timeGetTime();
@@ -2056,14 +1598,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
     virtual void ResetTime(void)
     {
-#ifdef /* MCS_reset_time_dsk_w32 */ LEGACY_SYSTEM
-	if (!MClowrestimers)
-	{
-		startcount = 0;
-		MCS_time();
-		startcount = timeGetTime();
-	}
-#endif /* MCS_reset_time_dsk_w32 */
         if (!MClowrestimers)
         {
             startcount = 0;
@@ -2074,53 +1608,35 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual bool GetVersion(MCStringRef& r_string)
     {
-#ifdef /* MCS_getsystemversion_dsk_w32 */ LEGACY_SYSTEM
-        static Meta::static_ptr_t<char> buffer;
-        if (buffer == NULL)
-            buffer = new char[9 + 2 * I4L];
-        sprintf(buffer, "NT %d.%d", (MCmajorosversion >> 8) & 0xFF, MCmajorosversion & 0xFF);
-        return buffer;
-#endif /* MCS_getsystemversion_dsk_w32 */
         return MCStringFormat(r_string, "NT %d.%d", (MCmajorosversion >> 8) & 0xFF, MCmajorosversion & 0xFF);
     }
     
 	virtual bool GetMachine(MCStringRef& r_string)
     {
-#ifdef /* MCS_getmachine_dsk_w32 */ LEGACY_SYSTEM
-	return "x86";
-#endif /* MCS_getmachine_dsk_w32 */
-		r_string = MCValueRetain(MCNameGetString(MCN_x86));
+		r_string = MCValueRetain(MCNameGetString(GetProcessor()));
 		return true;
     }
     
 	virtual MCNameRef GetProcessor(void)
     {
-#ifdef /* MCS_getprocessor_dsk_w32 */ LEGACY_SYSTEM
-	return "x86";
-#endif /* MCS_getprocessor_dsk_w32 */
+#if defined _M_IX86
         return MCN_x86;
+#elif defined _M_AMD64
+		return MCN_x86_64;
+#else
+#  error Unknown processor
+#endif
     }
     
 	virtual bool GetAddress(MCStringRef& r_address)
     {
-#ifdef /* MCS_getaddress_dsk_w32 */ LEGACY_SYSTEM
-        static char *buffer;
-        if (!wsainit())
-            return "unknown";
-        if (buffer == NULL)
-            buffer = new char[MAXHOSTNAMELEN + strlen(MCcmd) + 2];
-        gethostname(buffer, MAXHOSTNAMELEN);
-        strcat(buffer, ":");
-        strcat(buffer, MCcmd);
-        return buffer;
-#endif /* MCS_getaddress_dsk_w32 */
         if (!wsainit())
 		{
 			r_address = MCSTR("unknown");
 			return true;
 		}
         
-        char *buffer = new char[MAXHOSTNAMELEN + 1];
+        char *buffer = new (nothrow) char[MAXHOSTNAMELEN + 1];
         gethostname(buffer, MAXHOSTNAMELEN);
 		buffer[MAXHOSTNAMELEN] = '\0';
         return MCStringFormat(r_address, "%s:%@", buffer, MCcmd);
@@ -2128,30 +1644,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual uint32_t GetProcessId(void)
     {
-#ifdef /* MCS_getpid_dsk_w32 */ LEGACY_SYSTEM
-	return _getpid();
-#endif /* MCS_getpid_dsk_w32 */
         return _getpid();
     }
 	
 	virtual void Alarm(real64_t p_when)
     {
-#ifdef /* MCS_alarm_dsk_w32 */ LEGACY_SYSTEM
-    //no action
-	if (!MCnoui)
-		if (secs == 0)
-		{
-			if (tid != 0)
-			{
-				timeKillEvent(tid);
-				tid = 0;
-			}
-		}
-		else
-			if (tid == 0)
-				tid = timeSetEvent((UINT)(secs * 1000.0), 100, MCS_tp,
-				                   0, TIME_PERIODIC);
-#endif /* MCS_alarm_dsk_w32 */
         //no action
         if (!MCnoui)
             if (p_when == 0)
@@ -2170,30 +1667,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual void Sleep(real64_t p_when)
     {
-#ifdef /* MCS_sleep_dsk_w32 */ LEGACY_SYSTEM
-	Sleep((DWORD)(delay * 1000.0));  //takes milliseconds as parameter
-#endif /* MCS_sleep_dsk_w32 */
         SleepEx((DWORD)(p_when * 1000.0), False);  //takes milliseconds as parameter
     }
 	
 	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value)
     {
-#ifdef /* MCS_setenv_dsk_w32 */ LEGACY_SYSTEM
-	char *dptr = new char[strlen(name) + strlen(value) + 2];
-	sprintf(dptr, "%s=%s", name, value);
-	_putenv(dptr);
-
-	// MW-2005-10-29: Memory leak
-	delete[] dptr;
-#endif /* MCS_setenv_dsk_w32 */
-#ifdef /* MCS_unsetenv_dsk_w32 */ LEGACY_SYSTEM
-	char *dptr = new char[strlen(name) + 2];
-	sprintf(dptr, "%s=", name);
-	_putenv(dptr);
-
-	// MW-2005-10-29: Memory leak
-	delete[] dptr;
-#endif /* MCS_unsetenv_dsk_w32 */
 		MCAutoStringRefAsWString t_name_wstr, t_value_wstr;
 		/* UNCHECKED */ t_name_wstr.Lock(p_name);
 		/* UNCHECKED */ t_value_wstr.Lock(p_value);
@@ -2203,9 +1681,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 
 	virtual bool GetEnv(MCStringRef p_name, MCStringRef& r_value)
     {
-#ifdef /* MCS_getenv_dsk_w32 */ LEGACY_SYSTEM
-	return getenv(name);
-#endif /* MCS_getenv_dsk_w32 */
 	MCAutoStringRefAsWString t_name_wstr;
 	/* UNCHECKED */ t_name_wstr.Lock(p_name);
 	
@@ -2248,14 +1723,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
 	virtual Boolean CreateFolder(MCStringRef p_path)
     {
-#ifdef /* MCS_mkdir_dsk_w32 */ LEGACY_SYSTEM
-	Boolean result = False;
-	char *tpath = MCS_resolvepath(path);
-	if (CreateDirectoryA(tpath, NULL))
-		result = True;
-	delete tpath;
-	return result;
-#endif /* MCS_mkdir_dsk_w32 */
 		MCAutoStringRefAsWString t_path_wstr;
 		/* UNCHECKED */ t_path_wstr.Lock(p_path);
 	
@@ -2267,14 +1734,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual Boolean DeleteFolder(MCStringRef p_path)
     {
-#ifdef /* MCS_rmdir_dsk_w32 */ LEGACY_SYSTEM
-	Boolean result = False;
-	char *tpath = MCS_resolvepath(path);
-	if (RemoveDirectoryA(tpath))
-		result = True;
-	delete tpath;
-	return result;
-#endif /* MCS_rmdir_dsk_w32 */
 		MCAutoStringRefAsWString t_path_wstr;
 		/* UNCHECKED */ t_path_wstr.Lock(p_path);
 
@@ -2303,23 +1762,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual Boolean DeleteFile(MCStringRef p_path)
     {
-#ifdef /* MCS_unlink_dsk_w32 */ LEGACY_SYSTEM
-        char *p = MCS_resolvepath(path);
-        Boolean done = remove(p) == 0;
-        if (!done)
-        { // bug in NT serving: can't delete full path from current dir
-            char dir[PATH_MAX];
-            GetCurrentDirectoryA(PATH_MAX, dir);
-            if (p[0] == '\\' && p[1] == '\\' && dir[0] == '\\' && dir[1] == '\\')
-            {
-                SetCurrentDirectoryA("C:\\");
-                done = remove(p) == 0;
-                SetCurrentDirectoryA(dir);
-            }
-        }
-        delete p;
-        return done;
-#endif /* MCS_unlink_dsk_w32 */
 		MCAutoStringRefAsWString t_path_wstr;
 		/* UNCHECKED */ t_path_wstr.Lock(p_path);
 
@@ -2328,14 +1770,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
 	virtual Boolean RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)
     {
-#ifdef /* MCS_rename_dsk_w32 */ LEGACY_SYSTEM
-	char *op = MCS_resolvepath(oldname);
-	char *np = MCS_resolvepath(newname);
-	Boolean done = rename(op, np) == 0;
-	delete op;
-	delete np;
-	return done;
-#endif /* MCS_rename_dsk_w32 */
 		MCAutoStringRefAsWString t_old_wstr, t_new_wstr;
 		/* UNCHECKED */ t_old_wstr.Lock(p_old_name);
 		/* UNCHECKED */ t_new_wstr.Lock(p_new_name);
@@ -2347,64 +1781,16 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
 	virtual Boolean BackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
     {
-#ifdef /* MCS_backup_dsk_w32 */ LEGACY_SYSTEM
-	return MCS_rename(oname, nname);
-#endif /* MCS_backup_dsk_w32 */
         return RenameFileOrFolder(p_old_name, p_new_name);
     }
     
 	virtual Boolean UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
     {
-#ifdef /* MCS_unbackup_dsk_w32 */ LEGACY_SYSTEM
-	return MCS_rename(oname, nname);
-#endif /* MCS_unbackup_dsk_w32 */
         return MCS_rename(p_old_name, p_new_name);
     }
 	
 	virtual Boolean CreateAlias(MCStringRef p_target, MCStringRef p_alias)
     {
-#ifdef /* MCS_createalias_dsk_w32 */ LEGACY_SYSTEM
-	HRESULT err;
-	char *source = MCS_resolvepath(srcpath);
-	char *dest = MCS_resolvepath(dstpath);
-	IShellLinkA *ISHLNKvar1;
-	err = CoCreateInstance(CLSID_ShellLink, NULL,
-	                       CLSCTX_INPROC_SERVER, IID_IShellLinkA,
-	                       (void **)&ISHLNKvar1);
-	if (SUCCEEDED(err))
-	{
-		IPersistFile *IPFILEvar1;
-		if (source[1] != ':' && source[0] != '/')
-		{
-			char *tpath = MCS_getcurdir(); //prepend the current dir
-			strcat(tpath, "/");
-			strcat(tpath, source);
-			delete source;
-			MCU_path2native(tpath);
-			source = tpath;
-		}
-		ISHLNKvar1->SetPath(source);
-		char *buffer = strrchr( source, '\\' );
-		if (buffer != NULL)
-		{
-			*(buffer+1) = '\0';
-			ISHLNKvar1->SetWorkingDirectory(source);
-		}
-		err = ISHLNKvar1->QueryInterface(IID_IPersistFile, (void **)&IPFILEvar1);
-		if (SUCCEEDED(err))
-		{
-			WORD DWbuffer[PATH_MAX];
-			MultiByteToWideChar(CP_ACP, 0, dest, -1,
-			                    (LPWSTR)DWbuffer, PATH_MAX);
-			err = IPFILEvar1->Save((LPCOLESTR)DWbuffer, TRUE);
-			IPFILEvar1->Release();
-		}
-		ISHLNKvar1->Release();
-	}
-	delete source;
-	delete dest;
-	return SUCCEEDED(err);
-#endif /* MCS_createalias_dsk_w32 */
         HRESULT err;
         IShellLinkW *ISHLNKvar1;
         err = CoCreateInstance(CLSID_ShellLink, NULL,
@@ -2449,54 +1835,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	// NOTE: 'ResolveAlias' returns a standard (not native) path.
 	virtual Boolean ResolveAlias(MCStringRef p_target, MCStringRef& r_dest)
     {
-#ifdef /* MCS_resolvealias_dsk_w32 */ LEGACY_SYSTEM
-        char *tpath = ep.getsvalue().clone();
-        char *source = MCS_resolvepath(tpath);
-        delete tpath;
-        char *dest = ep.getbuffer(PATH_MAX);
-        HRESULT hres;
-        IShellLinkA* psl;
-        char szGotPath[PATH_MAX];
-        WIN32_FIND_DATA wfd;
-        *dest = 0;
-        hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-                                IID_IShellLinkA, (LPVOID *) &psl);
-        if (SUCCEEDED(hres))
-        {
-            IPersistFile* ppf;
-            hres = psl->QueryInterface(IID_IPersistFile, (void **)&ppf);
-            if (SUCCEEDED(hres))
-            {
-                WORD wsz[PATH_MAX];
-                MultiByteToWideChar(CP_ACP, 0, source, -1, (LPWSTR)wsz, PATH_MAX);
-                hres = ppf->Load((LPCOLESTR)wsz, STGM_READ);
-                if (SUCCEEDED(hres))
-                {
-                    hres = psl->Resolve(HWND_DESKTOP, SLR_ANY_MATCH|SLR_NO_UI|SLR_UPDATE);
-                    if (SUCCEEDED(hres))
-                    {
-                        hres = psl->GetPath(szGotPath, PATH_MAX, (WIN32_FIND_DATAA *)&wfd,
-                                            SLGP_SHORTPATH);
-                        lstrcpyA(dest, szGotPath);
-                    }
-                }
-                ppf->Release();
-            }
-            psl->Release();
-        }
-        delete source;
-        if (SUCCEEDED(hres))
-        {
-            MCU_path2std(ep.getbuffer(0));
-            ep.setstrlen();
-        }
-        else
-        {
-            MCresult->sets("can't get");
-            MCS_seterrno(GetLastError());
-            ep.clear();
-        }
-#endif /* MCS_resolvealias_dsk_w32 */
         MCAutoStringRef t_resolved_path;
         
         // Can't do anything if the shortcut doesn't exist
@@ -2562,23 +1900,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
 	virtual bool GetCurrentFolder(MCStringRef& r_path)
     {
-#ifdef /* MCS_getcurdir_dsk_w32 */ LEGACY_SYSTEM
-        char *dptr = new char[PATH_MAX + 2];
-        GetCurrentDirectoryA(PATH_MAX +1, (LPSTR)dptr);
-        MCU_path2std(dptr);
-        return dptr;
-#endif /* MCS_getcurdir_dsk_w32 */
         return MCS_getcurdir_native(r_path);
     }
     
 	virtual Boolean SetCurrentFolder(MCStringRef p_path)
     {
-#ifdef /* MCS_setcurdir_dsk_w32 */ LEGACY_SYSTEM
-        char *newpath = MCS_resolvepath(path);
-        BOOL done = SetCurrentDirectoryA((LPCSTR)newpath);
-        delete newpath;
-        return done;
-#endif /* MCS_setcurdir_dsk_w32 */
 		MCAutoStringRefAsWString t_path_wstr;
 		if (!t_path_wstr.Lock(p_path))
 			return false;
@@ -2589,97 +1915,13 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         return True;
     }
 	
-	// NOTE: 'GetStandardFolder' returns a standard (not native) path.
+	// NOTE: 'GetStandardFolder' returns a native path.
 	virtual Boolean GetStandardFolder(MCNameRef p_type, MCStringRef& r_folder)
     {
-#ifdef /* MCS_getspecialfolder_dsk_w32 */ LEGACY_SYSTEM
-        Boolean wasfound = False;
-        uint4 specialfolder = 0;
-        if (ep.getsvalue() == "temporary")
-        {
-            if (GetTempPathA(PATH_MAX, ep.getbuffer(PATH_MAX)))
-            {
-                char *sptr = strrchr(ep.getbuffer(0), '\\');
-                if (sptr != NULL)
-                    *sptr = '\0';
-                
-                wasfound = True;
-            }
-        }
-        else
-            if (ep.getsvalue() == "system")
-            {
-                if (GetWindowsDirectoryA(ep.getbuffer(PATH_MAX), PATH_MAX))
-                    wasfound = True;
-            }
-            else
-            {
-                if (ep.ton() == ES_NORMAL)
-                {
-                    specialfolder = ep.getuint4();
-                    wasfound = True;
-                }
-                else
-                {
-                    uint1 i;
-                    for (i = 0 ; i < ELEMENTS(sysfolderlist) ; i++)
-                        if (ep.getsvalue() == sysfolderlist[i].token)
-                        {
-                            specialfolder = sysfolderlist[i].winfolder;
-                            wasfound = True;
-                            break;
-                        }
-                }
-                if (wasfound)
-                {
-                    LPITEMIDLIST lpiil;
-                    LPMALLOC lpm;
-                    SHGetMalloc(&lpm);
-                    wasfound = False;
-                    if (SHGetSpecialFolderLocation(HWND_DESKTOP, specialfolder,
-                                                   &lpiil) == 0
-				        && SHGetPathFromIDListA(lpiil, ep.getbuffer(PATH_MAX)))
-                        wasfound = True;
-                    lpm->Free(lpiil);
-                    lpm->Release();
-                }
-            }
-        if (wasfound)
-        {
-            // TS-2008-06-16: [[ Bug 6403 ]] - specialFolderPath() returns 8.3 paths
-            // First we need to swap to standard path seperator
-            MCU_path2std(ep.getbuffer(0));
-            // Next copy ep.buffer into ep.svalue
-            ep.setsvalue(ep.getbuffer(0));
-            
-            // OK-2009-01-28: [[Bug 7452]]
-            // And call the function to expand the path - if cannot convert to a longfile path,
-            // we should return what we already had!
-            char *t_long_path;
-            uint4 t_path_length;
-            MCS_getlongfilepath(ep, t_long_path, t_path_length);
-            
-            // MW-2010-10-22: [[ Bug 7988 ]] Make sure the result is empty regardless of outcome of prevous call.
-            MCresult -> clear();
-            
-            char *t_old_buffer;
-            t_old_buffer = ep . getbuffer(0);
-            ep . clear();
-            delete t_old_buffer;
-            
-            ep . setbuffer(t_long_path, t_path_length);
-            ep.setstrlen();
-        }
-        else
-        {
-            ep.clear();
-            MCresult->sets("folder not found");
-        }
-#endif /* MCS_getspecialfolder_dsk_w32 */
         bool t_wasfound = false;
         MCAutoNumberRef t_special_folder;
         MCAutoStringRef t_native_path;
-        if (MCNameIsEqualTo(p_type, MCN_temporary))
+        if (MCNameIsEqualToCaseless(p_type, MCN_temporary))
         {
             MCAutoArray<unichar_t> t_buffer;
             uindex_t t_length;
@@ -2698,28 +1940,24 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 }
             }
         }
-        //else if (MCStringIsEqualTo(p_special, MCNameGetString(MCN_system), kMCStringOptionCompareCaseless))
-        //{
-		//char *buf;
-		//ep.reserve(PATH_MAX, buf);
-		//if (GetWindowsDirectoryA(buf, PATH_MAX))
-		//{
-		//	wasfound = True;
-		//	ep.commit(strlen(buf));
-		//}
-        //}
-        // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
-                 // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
-                 // so the resources folder is the engine folder.
-                 || MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        else if (MCNameIsEqualToCaseless(p_type, MCN_engine)
+                 || MCNameIsEqualToCaseless(p_type, MCN_resources))
         {
+            MCAutoStringRef t_engine_folder;
             uindex_t t_last_slash;
             
             if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
                 t_last_slash = MCStringGetLength(MCcmd);
             
-            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+            MCAutoStringRef t_livecode_path;
+            if (!MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_livecode_path))
+                return False;
+
+            if (!PathToNative(*t_livecode_path, &t_native_path))
+                return False;
+            
+            t_wasfound = true;
+            
         }
         else
         {
@@ -2770,11 +2008,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
     virtual real8 GetFreeDiskSpace()
 	{
-#ifdef /* MCS_getfreediskspace_dsk_w32 */ LEGACY_SYSTEM
-	DWORD sc, bs, fc, tc;
-	GetDiskFreeSpace(NULL, &sc, &bs, &fc, &tc);
-	return ((real8)bs * (real8)sc * (real8)fc);
-#endif /* MCS_getfreediskspace_dsk_w32 */
 		DWORD sc, bs, fc, tc;
 		GetDiskFreeSpace(NULL, &sc, &bs, &fc, &tc);
 		return ((real8)bs * (real8)sc * (real8)fc);
@@ -2783,10 +2016,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
     virtual Boolean GetDevices(MCStringRef& r_devices)
 	{
-#ifdef /* MCS_getdevices_dsk_w32 */ LEGACY_SYSTEM
-        ep.clear();
-        return True;
-#endif /* MCS_getdevices_dsk_w32 */
 		r_devices = MCValueRetain(kMCEmptyString);
 		return true;
 	}
@@ -2794,28 +2023,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
     virtual Boolean GetDrives(MCStringRef& r_drives)
 	{
-#ifdef /* MCS_getdrives_dsk_w32 */ LEGACY_SYSTEM
-        DWORD maxsize = GetLogicalDriveStringsA(0, NULL);
-        char *sptr = ep.getbuffer(maxsize);
-        char *dptr = sptr;
-        GetLogicalDriveStringsA(maxsize, sptr);
-        while (True)
-        {
-            if (*sptr == '\\')
-                sptr++;
-            else
-            {
-                *dptr = *sptr++;
-                if (*dptr++ == '\0')
-                    if (*sptr == '\0')
-                        break;
-                    else
-                        *(dptr - 1) = '\n';
-            }
-        }
-        ep.setstrlen();
-        return True;
-#endif /* MCS_getdrives_dsk_w32 */
 		MCAutoListRef t_list;
 		MCAutoBlock<char_t> t_buffer;
 		DWORD maxsize = GetLogicalDriveStringsA(0, NULL);
@@ -2855,16 +2062,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual Boolean FileNotAccessible(MCStringRef p_path)
     {
-#ifdef /* MCS_noperm_dsk_w32 */ LEGACY_SYSTEM
-	struct stat buf;
-	if (stat(path, &buf))
-		return False;
-	if (buf.st_mode & S_IFDIR)
-		return True;
-	if (!(buf.st_mode & _S_IWRITE))
-		return True;
-	return False;
-#endif /* MCS_noperm_dsk_w32 */
         MCAutoStringRefAsWString t_path_wstr;
 		if (!t_path_wstr.Lock(p_path))
 			return False;
@@ -2887,11 +2084,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
 	virtual Boolean ChangePermissions(MCStringRef p_path, uint2 p_mask)
     {
-#ifdef /* MCS_chmod_dsk_w32 */ LEGACY_SYSTEM
-	if (_chmod(path, mask) != 0)
-		return IO_ERROR;
-	return IO_NORMAL;
-#endif /* MCS_chmod_dsk_w32 */
 		MCAutoStringRefAsWString t_path_wstr;
 		if (!t_path_wstr.Lock(p_path))
 			return False;
@@ -2926,142 +2118,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
 	virtual uint2 UMask(uint2 p_mask)
     {
-#ifdef /* MCS_umask_dsk_w32 */ LEGACY_SYSTEM
-	return _umask(mask);
-#endif /* MCS_umask_dsk_w32 */
         return _umask(p_mask);
     }
     
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
     {
-#ifdef /* MCS_open_dsk_w32 */ LEGACY_SYSTEM
-	Boolean appendmode = False;
-	DWORD omode = 0;		//file open mode
-	DWORD createmode = OPEN_ALWAYS;
-	DWORD fa = FILE_ATTRIBUTE_NORMAL; //file flags & attribute
-	char *newpath = MCS_resolvepath(path);
-	HANDLE hf = NULL;
-	IO_handle handle;
-
-	bool t_device = false;
-	bool t_serial_device = false;
-
-	// MW-2008-08-18: [[ Bug 6941 ]] Update device logic.
-	//   To open COM<n> for <n> > 9 we need to use '\\.\COM<n>'.
-	uint4 t_path_len;
-	t_path_len = strlen(newpath);
-	if (*newpath != '\0' && newpath[t_path_len - 1] == ':')
-	{
-		if (MCU_strncasecmp(newpath, "COM", 3) == 0)
-		{
-			// If the path length > 4 then it means it must have double digits so rewrite
-			if (t_path_len > 4)
-			{
-				char *t_rewritten_path;
-				t_rewritten_path = new char[t_path_len + 4 + 1];
-				sprintf(t_rewritten_path, "\\\\.\\%s", newpath);
-				delete newpath;
-				newpath = t_rewritten_path;
-				t_path_len += 4;
-			}
-			
-			// Strictly speaking, we don't need the ':' at the end of the path, so we remove it.
-			newpath[t_path_len - 1] = '\0';
-
-			t_serial_device = true;
-		}
-		
-		t_device = true;
-	}
-
-	if (strequal(mode, IO_READ_MODE))
-	{
-		omode = GENERIC_READ;
-		createmode = OPEN_EXISTING;
-	}
-	if (strequal(mode, IO_WRITE_MODE))
-	{
-		omode = GENERIC_WRITE;
-		createmode = CREATE_ALWAYS;
-	}
-	if (strequal(mode, IO_UPDATE_MODE))
-		omode = GENERIC_WRITE | GENERIC_READ;
-	if (strequal(mode, IO_APPEND_MODE))
-	{
-		omode = GENERIC_WRITE;
-		appendmode = True;
-	}
-
-	DWORD sharemode;
-	if (t_device)
-	{
-		createmode = OPEN_EXISTING;
-		sharemode = 0;
-	}
-	else
-		sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-	if ((hf = CreateFileA(newpath, omode, sharemode, NULL,
-	                     createmode, fa, NULL)) == INVALID_HANDLE_VALUE)
-	{
-		delete newpath;
-		return NULL;
-	}
-	delete newpath;
-
-	if (t_serial_device)
-	{
-		DCB dcb;
-		dcb . DCBlength = sizeof(DCB);
-		if (!GetCommState(hf, &dcb) || !BuildCommDCBA(MCserialcontrolsettings, &dcb)
-		        || !SetCommState(hf, &dcb))
-		{
-			MCS_seterrno(GetLastError());
-			CloseHandle(hf);
-			MCresult->sets("SetCommState error");
-			return NULL;
-		}
-		COMMTIMEOUTS timeout;         //set timeout to prevent blocking
-		memset(&timeout, 0, sizeof(COMMTIMEOUTS));
-		timeout.ReadIntervalTimeout = MAXDWORD;
-		timeout.WriteTotalTimeoutConstant = 2000;
-		if (!SetCommTimeouts(hf, (LPCOMMTIMEOUTS)&timeout))
-		{
-			MCS_seterrno(GetLastError());
-			CloseHandle(hf);
-			MCresult->sets("SetCommTimeouts error");
-			return NULL;
-		}
-		map = False;
-	}
-
-	handle = new IO_header((MCWinSysHandle)hf, NULL, 0, 0);
-
-	if (appendmode) //if append mode, move file ptr to the end of file
-		SetFilePointer(hf, 0, NULL, FILE_END);
-
-	if (map && MCmmap && (omode == GENERIC_READ) //if memory map file
-	        && (handle->mhandle = (MCWinSysHandle)CreateFileMappingA(hf, NULL, PAGE_READONLY,
-	                                                0, 0, NULL)) != NULL)
-	{
-		handle->len = GetFileSize(hf, NULL);
-		handle->buffer = (char*)MapViewOfFile(handle->mhandle,
-		                                      FILE_MAP_READ, 0, 0, 0);
-		handle->ioptr = handle->buffer;
-		if (handle->buffer == NULL)
-		{
-			CloseHandle(handle->mhandle);
-			if (offset != 0) //move file ptr to the offset position
-				SetFilePointer(hf, offset, NULL, FILE_BEGIN);
-		}
-		else
-			handle->ioptr += offset;
-	}
-	else
-		if (offset != 0) //move file ptr to the offset position
-			SetFilePointer(hf, offset, NULL, FILE_BEGIN);
-
-	return handle;
-#endif /* MCS_open_dsk_w32 */
 		Boolean appendmode = False;
 		DWORD omode = 0;		//file open mode
 		DWORD createmode = OPEN_ALWAYS;
@@ -3182,12 +2243,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				if (t_buffer == NULL)
 				{
 					CloseHandle(t_file_mapped_handle);
-					t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+					t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
                     t_close_file_handler = t_handle == NULL;
 				}
 				else
 				{
-					t_handle = new MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
+					t_handle = new (nothrow) MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
                     // SN-2015-04-13: [[ Bug 14696 ]] We don't want to leave a
                     //  file handler open in case the memory mapped file could
                     //  not be allocated. We always close the normal file handle
@@ -3200,13 +2261,13 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			// (for empty files for instance).
 			else
             {
-				t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+				t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
                 t_close_file_handler = t_handle == NULL;
             }
 		}
 		else
         {
-			t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+			t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
             t_close_file_handler = t_handle == NULL;
         }
 
@@ -3231,7 +2292,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			return nil;
 
 		// Since we can only have an STD fd, we know we have a pipe.
-		t_stdio_handle = new MCStdioFileHandle((MCWinSysHandle)t_handle, true);
+		t_stdio_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_handle, true);
 
 		return t_stdio_handle;
 	}
@@ -3249,39 +2310,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	// NOTE: 'GetTemporaryFileName' returns a non-native path.
 	virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name)
     {
-#ifdef /* MCS_tmpnam_dsk_w32 */ LEGACY_SYSTEM
-        MCExecPoint ep(NULL, NULL, NULL);
-        
-        // MW-2008-06-19: Make sure fname is stored in a static to keep the (rather
-        //   unplesant) current semantics of the call.
-        static char *fname;
-        if (fname != NULL)
-            delete fname;
-        
-        // TS-2008-06-18: [[ Bug 6403 ]] - specialFolderPath() returns 8.3 paths
-        fname = _tempnam("\\tmp", "tmp");
-        
-        char *t_ptr = (char*)strrchr(fname, '\\');
-        if (t_ptr != NULL)
-            *t_ptr = 0 ;
-        
-        MCU_path2std(fname);
-        ep.setsvalue(fname);
-        MCS_longfilepath(ep);
-        
-        if (t_ptr != NULL)
-            ep.appendstringf("/%s", ++t_ptr);
-        
-        // MW-2008-06-19: Make sure we delete this version of fname, since we don't
-        //   need it anymore.
-        delete fname;
-        
-        // MW-2008-06-19: Use ep . getsvalue() . clone() to make sure we get a copy
-        //   of the ExecPoint's string as a NUL-terminated (C-string) string.
-        fname = ep . getsvalue() . clone();
-        
-        return fname;
-#endif /* MCS_tmpnam_dsk_w32 */
         MCAutoStringRef t_path;
         MCAutoStringRef t_stdpath;
         MCAutoStringRef t_long_path;
@@ -3319,56 +2347,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		return true;
     }
 	
-	virtual MCSysModuleHandle LoadModule(MCStringRef p_path)
-    {
-#ifdef /* MCS_loadmodule_dsk_w32 */ LEGACY_SYSTEM
-	char *t_native_filename;
-	t_native_filename = MCS_resolvepath(p_filename);
-	if (t_native_filename == NULL)
-		return NULL;
-
-	// MW-2011-02-28: [[ Bug 9410 ]] Use the Ex form of LoadLibrary and ask it to try
-	//   to resolve dependent DLLs from the folder containing the DLL first.
-	HMODULE t_handle;
-	t_handle = LoadLibraryExA(t_native_filename, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
-	if (t_handle == NULL)
-	{
-		delete t_native_filename;
-		return NULL;
-	}
-
-	delete t_native_filename;
-
-	return (MCSysModuleHandle)t_handle;
-#endif /* MCS_loadmodule_dsk_w32 */        
-		MCAutoStringRefAsWString t_path_wstr;
-		if (!t_path_wstr.Lock(p_path))
-			return NULL;
-	
-		// MW-2011-02-28: [[ Bug 9410 ]] Use the Ex form of LoadLibrary and ask it to try
-        //   to resolve dependent DLLs from the folder containing the DLL first.
-        HMODULE t_handle;
-        t_handle = LoadLibraryExW(*t_path_wstr, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
-        
-        return (MCSysModuleHandle)t_handle;
-    }
-    
-	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
-    {
-#ifdef /* MCS_resolvemodulesymbol_dsk_w32 */ LEGACY_SYSTEM
-	return GetProcAddress((HMODULE)p_module, p_symbol);
-#endif /* MCS_resolvemodulesymbol_dsk_w32 */
-        // NOTE: symbol addresses are never Unicode and only an ANSI call exists
-		return (MCSysModuleHandle)GetProcAddress((HMODULE)p_module, MCStringGetCString(p_symbol));
-    }
-	virtual void UnloadModule(MCSysModuleHandle p_module)
-    {
-#ifdef /* MCS_unloadmodule_dsk_w32 */ LEGACY_SYSTEM
-	FreeLibrary((HMODULE)p_module);
-#endif /* MCS_unloadmodule_dsk_w32 */
-        FreeLibrary((HMODULE)p_module);
-    }
-	
 	// Utility function: converts FILETIME to a Unix time
 	static uint32_t FiletimeToUnix(const FILETIME& ft)
 	{
@@ -3389,66 +2367,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
-#ifdef /* MCS_getentries_dsk_w32 */ LEGACY_SYSTEM
-        p_context . clear();
-        
-        WIN32_FIND_DATAA data;
-        HANDLE ffh;            //find file handle
-        uint4 t_entry_count;
-        t_entry_count = 0;
-        Boolean ok = False;
-        char *tpath = MCS_getcurdir();
-        MCU_path2native(tpath);
-        char *spath = new char [strlen(tpath) + 5];//path to be searched
-        strcpy(spath, tpath);
-        if (tpath[strlen(tpath) - 1] != '\\')
-            strcat(spath, "\\");
-        strcat(spath, "*.*");
-        delete tpath;
-        /*
-         * Now open the directory for reading and iterate over the contents.
-         */
-        ffh = FindFirstFileA(spath, &data);
-        if (ffh == INVALID_HANDLE_VALUE)
-        {
-            delete spath;
-            return;
-        }
-        MCExecPoint ep(NULL, NULL, NULL);
-        do
-        {
-            if (strequal(data.cFileName, "."))
-                continue;
-            if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !p_files
-		        || !(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && p_files)
-            {
-                char tbuf[PATH_MAX * 3 + U4L * 4 + 22];
-                if (p_detailed)
-                {
-                    ep.copysvalue(data.cFileName, strlen(data.cFileName));
-                    MCU_urlencode(ep);
-                    struct _stati64 buf;
-                    _stati64(data.cFileName, &buf);
-                    // MW-2007-02-26: [[ Bug 4474 ]] - Fix issue with detailed files not working on windows due to time field lengths
-                    // MW-2007-12-10: [[ Bug 606 ]] - Make unsupported fields appear as empty
-                    sprintf(tbuf, "%*.*s,%I64d,,%ld,%ld,%ld,,,,%03o,",
-                            (int)ep.getsvalue().getlength(), (int)ep.getsvalue().getlength(),
-                            ep.getsvalue().getstring(), buf.st_size, (long)buf.st_ctime,
-                            (long)buf.st_mtime, (long)buf.st_atime, buf.st_mode & 0777);
-                }
-                
-                if (p_detailed)
-                    p_context . concatcstring(tbuf, EC_RETURN, t_entry_count == 0);
-                else
-                    p_context . concatcstring(data.cFileName, EC_RETURN, t_entry_count == 0);
-                
-                t_entry_count += 1;
-            }
-        }
-        while (FindNextFileA(ffh, &data));
-        FindClose(ffh);
-        delete spath;
-#endif /* MCS_getentries_dsk_w32 */        
         WIN32_FIND_DATAW data;
         HANDLE ffh;            //find file handle
 
@@ -3522,34 +2440,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 		return true;
     }
-    
-    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
-	virtual bool GetExecutablePath(MCStringRef& r_path)
-	{
-		WCHAR* wcFileNameBuf = new WCHAR[MAX_PATH+1];
-		DWORD dwFileNameLen = GetModuleFileNameW(NULL, wcFileNameBuf, MAX_PATH+1);
-		
-		MCAutoStringRef t_path;
-		MCStringCreateWithWStringAndRelease((unichar_t*)wcFileNameBuf, &t_path);
-		return PathFromNative(*t_path, r_path); 
-	}
 
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
 	{
-#ifdef /* MCU_path2native */ LEGACY_SYSTEM
-	if (dptr == NULL || !*dptr)
-		return;
-#if defined _WIN32
-	do
-	{
-		if (*dptr == '/')
-			*dptr = '\\';
-		else if (*dptr == '\\')
-			*dptr = '/';
-	}
-	while (*++dptr);
-#endif
-#endif /* MCU_path2native */
 		if (MCStringIsEmpty(p_path))
 		{
 			r_native = MCValueRetain(kMCEmptyString);
@@ -3581,27 +2474,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_livecode_path)
 	{
-#ifdef /* MCU_path2std */ LEGACY_SYSTEM
-        if (dptr == NULL || !*dptr)
-            return;
-        do
-        {
-#ifdef _MACOSX
-            if (*dptr == '/')
-                *dptr = ':';
-            else
-                if (*dptr == ':')
-#else
-                    if (*dptr == '/')
-                        *dptr = '\\';
-                    else
-                        if (*dptr == '\\')
-#endif
-                            
-                            *dptr = '/';
-        }
-        while (*++dptr);
-#endif /* MCU_path2std */
 		if (MCStringIsEmpty(p_native))
 		{
 			r_livecode_path = MCValueRetain(kMCEmptyString);
@@ -3633,17 +2505,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path)
 	{
-#ifdef /* MCS_resolvepath_dsk_w32 */ LEGACY_SYSTEM
-        if (path == NULL)
-        {
-            char *tpath = MCS_getcurdir();
-            MCU_path2native(tpath);
-            return tpath;
-        }
-        char *cstr = strclone(path);
-        MCU_path2native(cstr);
-        return cstr;
-#endif /* MCS_resolvepath_dsk_w32 */
 		// Parameters for MCSystemInterface functions are always native paths
 		return ResolveNativePath(p_path, r_resolved_path);
 	}
@@ -3783,76 +2644,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
     {
-#ifdef /* MCS_longfilepath_dsk_w32 */ LEGACY_SYSTEM
-        char *tpath = ep.getsvalue().clone();
-        char *shortpath = MCS_resolvepath(tpath);
-        delete tpath;
-        char *longpath = ep.getbuffer(PATH_MAX);
-        char *p, *pStart;
-        char buff[PATH_MAX];
-        WIN32_FIND_DATAA wfd;
-        HANDLE handle;
-        int i;
-        
-        // Keep strings null-terminated
-        *buff = '\0';
-        *longpath = '\0';
-        //
-        p = shortpath;
-        while (p != NULL)
-        {
-            // Find next
-            p = strchr(pStart = p, PATH_DELIMITER);
-            // See if a token was found
-            if (p != pStart)
-            {
-                i = strlen(buff);
-                // Append token to temp buffer
-                if (p == NULL)
-                {
-                    strcpy(buff + i, pStart);
-                }
-                else
-                {
-                    *p = '\0';
-                    strcpy(buff + i, pStart);
-                    *p = PATH_DELIMITER;
-                }
-                // Copy token unmodified if drive specifier
-                if (strchr(buff + i, ':') != NULL)
-                    strcat(longpath, buff + i);
-                else
-                {
-                    // Convert token to long name
-                    handle = FindFirstFileA(buff, &wfd);
-                    if (handle == INVALID_HANDLE_VALUE)
-                    {
-                        MCresult->sets("can't get");
-                        MCS_seterrno(GetLastError());
-                        ep.clear();
-                        delete shortpath;
-                        return;
-                    }
-                    strcat(longpath, wfd.cFileName);
-                    FindClose(handle);
-                }
-            }
-            // Copy terminator
-            if (p != NULL)
-            {
-                buff[i = strlen(buff)] = *p;
-                buff[i + 1] = '\0';
-                longpath[i = strlen(longpath)] = *p;
-                longpath[i + 1] = '\0';
-            }
-            // Bump pointer
-            if (p)
-                p++;
-        }
-        MCU_path2std(ep.getbuffer(0));
-        ep.setstrlen();
-        delete shortpath;
-#endif /* MCS_longfilepath_dsk_w32 */
 		// The path given to longfilepath can't be already resolved - as it remains the same
 		// for UNIX-based OS, resolving it's not done in the MCS_* function like usual
 		MCAutoStringRef t_resolved_path;
@@ -3897,23 +2688,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path)
     {
-#ifdef /* MCS_shortfilepath_dsk_w32 */ LEGACY_SYSTEM
-        char *tpath = ep.getsvalue().clone();
-        char *newpath = MCS_resolvepath(tpath);
-        delete tpath;
-        if (!GetShortPathNameA(newpath, ep.getbuffer(PATH_MAX), PATH_MAX))
-        {
-            MCresult->sets("can't get");
-            MCS_seterrno(GetLastError());
-            ep.clear();
-        }
-        else
-        {
-            MCU_path2std(ep.getbuffer(0));
-            ep.setstrlen();
-        }
-        delete newpath;
-#endif /* MCS_shortfilepath_dsk_w32 */
 		// The path given to shortfilepath can't be already resolved - as it remains the same
 		// for UNIX-based OS, resolving it's not done in the MCS_* function like usual
 		MCAutoStringRef t_resolved_path;
@@ -3952,138 +2726,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual bool Shell(MCStringRef p_command, MCDataRef& r_data, int& r_retcode)
 	{
-#ifdef /* MCS_runcmd_dsk_w32 */ LEGACY_SYSTEM
-        IO_cleanprocesses();
-        SECURITY_ATTRIBUTES saAttr;
-        /* Set the bInheritHandle flag so pipe handles are inherited. */
-        saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
-        saAttr.bInheritHandle = TRUE;
-        saAttr.lpSecurityDescriptor = NULL;
-        
-        Boolean created = True;
-        HANDLE hChildStdinRd = NULL;
-        HANDLE hChildStdinWr = NULL;
-        HANDLE hChildStdoutRd = NULL;
-        HANDLE hChildStdoutWr = NULL;
-        HANDLE hChildStderrWr = NULL;
-        if (!CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &saAttr, 0)
-	        || !CreatePipe(&hChildStdinRd, &hChildStdinWr, &saAttr, 0))
-            created = False;
-        
-        // MW-2012-08-06: [[ Bug 10161 ]] Make sure our ends of the pipes are not inherited
-        //   into the child.
-        if (!SetHandleInformation(hChildStdoutRd, HANDLE_FLAG_INHERIT, 0) ||
-            !SetHandleInformation(hChildStdinWr, HANDLE_FLAG_INHERIT, 0))
-            created = False;
-        
-        PROCESS_INFORMATION piProcInfo;
-        STARTUPINFOA siStartInfo;
-        memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
-        siStartInfo.cb = sizeof(STARTUPINFOA);
-        siStartInfo.dwFlags = STARTF_USESTDHANDLES;
-        siStartInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-        if (MChidewindows)
-            siStartInfo.wShowWindow = SW_HIDE;
-        else
-            siStartInfo.wShowWindow = SW_SHOW;
-        siStartInfo.hStdInput = hChildStdinRd;
-        siStartInfo.hStdOutput = hChildStdoutWr;
-        
-        ep.insert(" /C ", 0, 0);
-        ep.insert(MCshellcmd, 0, 0);
-        char *pname = ep.getsvalue().clone();
-        MCU_realloc((char **)&MCprocesses, MCnprocesses,
-                    MCnprocesses + 1, sizeof(Streamnode));
-        uint4 index = MCnprocesses;
-        MCprocesses[index].name = strclone("shell");
-        MCprocesses[index].mode = OM_NEITHER;
-        MCprocesses[index].ohandle = NULL;
-        MCprocesses[index].ihandle = new IO_header((MCWinSysHandle)hChildStdoutRd, NULL, 0, 0);
-        // MW-2012-09-10: [[ Bug 10230 ]] Make sure we mark this IO handle as a pipe.
-        MCprocesses[index].ihandle -> is_pipe = true;
-        if (created)
-        {
-            HANDLE phandle = GetCurrentProcess();
-            DuplicateHandle(phandle, hChildStdoutWr, phandle, &hChildStderrWr,
-                            0, TRUE, DUPLICATE_SAME_ACCESS);
-            siStartInfo.hStdError = hChildStderrWr;
-            DWORD threadID = 0;
-            if (CreateProcessA(NULL, pname, NULL, NULL, TRUE, CREATE_NEW_CONSOLE,
-                               NULL, NULL, &siStartInfo, &piProcInfo))
-            {
-                MCprocesses[MCnprocesses].pid = piProcInfo.dwProcessId;
-                MCprocesses[MCnprocesses++].phandle = (MCWinSysHandle)piProcInfo.hProcess;
-                MCprocesses[index].thandle = (MCWinSysHandle)CreateThread(NULL, 0,	(LPTHREAD_START_ROUTINE)readThread, &MCprocesses[index], 0, &threadID);
-                if (MCprocesses[index].thandle == NULL)
-                    created = False;
-                else
-                    SetThreadPriority(MCprocesses[index].thandle, THREAD_PRIORITY_HIGHEST);
-            }
-            else
-            {
-                MCS_seterrno(GetLastError());
-                created = False;
-            }
-        }
-        BOOL isclosed = CloseHandle(hChildStdinRd);
-        isclosed = CloseHandle(hChildStdinWr);
-        isclosed = CloseHandle(hChildStdoutWr);
-        isclosed = CloseHandle(hChildStderrWr);
-        if (!created)
-        {
-            CloseHandle(hChildStdoutRd);
-            Sleep(0);
-            MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, pname);
-            delete pname;
-            return IO_ERROR;
-        }
-        
-        s_finished_reading = false;
-        
-        do
-        {
-            if (MCscreen->wait(READ_INTERVAL, False, False))
-            {
-                MCeerror->add(EE_SHELL_ABORT, 0, 0, pname);
-                if (MCprocesses[index].pid != 0)
-                {
-                    TerminateProcess(MCprocesses[index].phandle, 0);
-                    MCprocesses[index].pid = 0;
-                    TerminateThread(MCprocesses[index].thandle, 0);
-                    CloseHandle(piProcInfo.hProcess);
-                    CloseHandle(piProcInfo.hThread);
-                }
-                MCS_close(MCprocesses[index].ihandle);
-                IO_cleanprocesses();
-                delete pname;
-                return IO_ERROR;
-            }
-        }
-        while(!s_finished_reading);
-        MCS_checkprocesses();
-        if (MCprocesses[index].pid == 0)
-        {
-            Sleep(0);
-            TerminateThread(MCprocesses[index].thandle, 0);
-            CloseHandle(piProcInfo.hProcess);
-            CloseHandle(piProcInfo.hThread);
-        }
-        if (MCprocesses[index].retcode)
-        {
-            MCExecPoint ep2(ep);
-            ep2.setint(MCprocesses[index].retcode);
-            MCresult->store(ep2, False);
-        }
-        else
-            MCresult->clear(False);
-        ep.copysvalue(MCprocesses[index].ihandle->buffer, MCprocesses[index].ihandle->len);
-        delete MCprocesses[index].ihandle->buffer;
-        MCS_close(MCprocesses[index].ihandle);
-        IO_cleanprocesses();
-        delete pname;
-        ep.texttobinary();
-        return IO_NORMAL;
-#endif /* MCS_runcmd_dsk_w32 */
         IO_cleanprocesses();
         SECURITY_ATTRIBUTES saAttr;
         /* Set the bInheritHandle flag so pipe handles are inherited. */
@@ -4124,15 +2766,15 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         // SN-2014-06-16 [[ Bug 12648 ]] Shell command does not accept spaces despite being quoted (Windows)
         // Fix for 7
 		/* UNCHECKED */ MCStringFormat(t_cmd, "%@ /C \"%@\"", MCshellcmd, p_command);
-		MCAutoStringRefAsWString t_wcmd;
+		MCAutoStringRefAsLPWSTR t_wcmd;
 		t_wcmd . Lock(t_cmd);
         MCU_realloc((char **)&MCprocesses, MCnprocesses,
                     MCnprocesses + 1, sizeof(Streamnode));
         uint4 index = MCnprocesses;
         MCprocesses[index].name = (MCNameRef)MCValueRetain(MCM_shell);
         MCprocesses[index].mode = OM_NEITHER;
-        MCprocesses[index].ohandle = new MCMemoryFileHandle;
-		MCprocesses[index].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
+        MCprocesses[index].ohandle = new (nothrow) MCMemoryFileHandle;
+		MCprocesses[index].ihandle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
         if (created)
         {
             HANDLE phandle = GetCurrentProcess();
@@ -4223,26 +2865,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)
 	{
-#ifdef /* MCS_multibytetounicode_dsk_w32 */ LEGACY_SYSTEM
-	char szLocaleData[6];
-	uint2 codepage = 0;
-	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT) ,
-	               LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
-	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
-	uint4 dsize = MultiByteToWideChar( codepage, 0, s, len, (LPWSTR)d,
-	                                   destbufferlength >> 1);
-	destlen = dsize << 1;
-#endif /* MCS_multibytetounicode_dsk_w32 */
-#ifdef /* MCS_unicodetomultibyte_dsk_w32 */ LEGACY_SYSTEM
-	char szLocaleData[6];
-	uint2 codepage = 0;
-	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT)
-	               , LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
-	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
-	uint4 dsize = WideCharToMultiByte( codepage, 0, (LPCWSTR)s, len >> 1,
-	                                   d, destbufferlength, NULL, NULL);
-	destlen = dsize;
-#endif /* MCS_unicodetomultibyte_dsk_w32 */
 		char szLocaleData[6];
 		uint2 codepage = 0;
 		GetLocaleInfoA(MAKELCID(MCS_charsettolangid(p_to_charset), SORT_DEFAULT)
@@ -4267,41 +2889,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used)
 	{
-#ifdef /* MCSTextConvertToUnicode_dsk_w32 */ LEGACY_SYSTEM
-	if (p_input_length == 0)
-	{
-		r_used = 0;
-		return true;
-	}
-
-	UINT t_codepage;
-	if (p_input_encoding >= kMCTextEncodingWindowsNative)
-		t_codepage = p_input_encoding - kMCTextEncodingWindowsNative;
-	else if (p_input_encoding >= kMCTextEncodingMacNative)
-		t_codepage = 10000 + p_input_encoding - kMCTextEncodingMacNative;
-	else
-	{
-		r_used = 0;
-		return true;
-	}
-
-	// MW-2009-08-27: It is possible for t_codepage == 65001 which means UTF-8. In this case we can't
-	//   use the precomposed flag...
-
-	int t_required_size;
-	t_required_size = MultiByteToWideChar(t_codepage, t_codepage == 65001 ? 0 : MB_PRECOMPOSED, (LPCSTR)p_input, p_input_length, NULL, 0);
-	if (t_required_size > (int)p_output_length / 2)
-	{
-		r_used = t_required_size * 2;
-		return false;
-	}
-
-	int t_used;
-	t_used = MultiByteToWideChar(t_codepage, t_codepage == 65001 ? 0 : MB_PRECOMPOSED, (LPCSTR)p_input, p_input_length, (LPWSTR)p_output, p_output_length);
-	r_used = t_used * 2;
-
-	return true; 
-#endif /* MCSTextConvertToUnicode_dsk_w32 */
 		if (p_input_length == 0)
 		{
 			r_used = 0;
@@ -4339,41 +2926,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
     virtual void CheckProcesses(void)
     {
-#ifdef /* MCS_checkprocesses_dsk_w32 */ LEGACY_SYSTEM
-	uint2 i;
-	for (i = 0 ; i < MCnprocesses ; i++)
-		if (MCprocesses[i].phandle != NULL)
-		{
-			DWORD err = WaitForSingleObject(MCprocesses[i].phandle, 0);
-			if (err == WAIT_OBJECT_0 || err == WAIT_FAILED)
-			{
-				// MW-2010-05-17: Make sure we keep the process around long enough to
-				//   read in all its data.
-				uint32_t t_available;
-				if (MCprocesses[i].ihandle == NULL || !PeekNamedPipe(MCprocesses[i].ihandle->fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
-					t_available = 0;
-				if (t_available != 0)
-					return;
-
-				// MW-2010-10-25: [[ Bug 9134 ]] Make sure the we mark the stream as 'ATEOF'
-				if (MCprocesses[i] . ihandle != nil)
-					MCprocesses[i] . ihandle -> flags |= IO_ATEOF;
-
-				DWORD retcode;
-				GetExitCodeProcess(MCprocesses[i].phandle, &retcode);
-				MCprocesses[i].retcode = retcode;
-				MCprocesses[i].pid = 0;
-				MCprocesses[i].phandle = NULL;
-				Sleep(0);
-				if (MCprocesses[i].thandle != NULL)
-				{
-					TerminateThread(MCprocesses[i].thandle, 0);
-					MCprocesses[i].thandle = NULL;
-				}
-			}
-		}
-#endif /* MCS_checkprocesses_dsk_w32 */
-
     uint2 i;
     for (i = 0 ; i < MCnprocesses ; i++)
         if (MCprocesses[i].phandle != NULL)
@@ -4412,9 +2964,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual uint32_t GetSystemError(void)
 	{
-#ifdef /* MCS_getsyserror_dsk_w32 */ LEGACY_SYSTEM
-	return GetLastError();
-#endif /* MCS_getsyserror_dsk_w32 */
 		return GetLastError();
 	}
     
@@ -4422,226 +2971,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     //   at increased privilege level.
     virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
     {
-#ifdef /* MCS_startprocess_dsk_w32 */ LEGACY_SYSTEM
-        Boolean reading = mode == OM_READ || mode == OM_UPDATE;
-        Boolean writing = mode == OM_APPEND || mode == OM_WRITE || mode == OM_UPDATE;
-        MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1,
-                    sizeof(Streamnode));
-        MCprocesses[MCnprocesses].name = name;
-        MCprocesses[MCnprocesses].mode = mode;
-        MCprocesses[MCnprocesses].ihandle = NULL;
-        MCprocesses[MCnprocesses].ohandle = NULL;
-        MCprocesses[MCnprocesses].phandle = NULL; //process handle
-        MCprocesses[MCnprocesses].thandle = NULL; //child thread handle
-        
-        SECURITY_ATTRIBUTES saAttr;
-        saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
-        saAttr.bInheritHandle = TRUE;
-        saAttr.lpSecurityDescriptor = NULL;
-        
-        Boolean created = True;
-        HANDLE t_process_handle = NULL;
-        DWORD t_process_id = 0;
-        HANDLE hChildStdinWr = NULL;
-        HANDLE hChildStdoutRd = NULL;
-        const char *t_error;
-        t_error = nil;
-        if (created)
-        {
-            char *cmdline = name;
-            if (doc != NULL && *doc != '\0')
-            {
-                cmdline = new char[strlen(name) + strlen(doc) + 4];
-                sprintf(cmdline, "%s \"%s\"", name, doc);
-            }
-            
-            // There's no such thing as Elevation before Vista (majorversion 6)
-            if (!elevated || MCmajorosversion < 0x0600)
-            {
-                HANDLE hChildStdinRd = NULL;
-                HANDLE hChildStdoutWr = NULL;
-                HANDLE hChildStderrWr = NULL;
-                if (!CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &saAttr, 0)
-					|| !CreatePipe(&hChildStdinRd, &hChildStdinWr, &saAttr, 0))
-                    created = False;
-                else
-                {
-                    // Make sure we turn off inheritence for the read side of stdout and write side of stdin
-                    SetHandleInformation(hChildStdoutRd, HANDLE_FLAG_INHERIT, 0);
-                    SetHandleInformation(hChildStdinWr, HANDLE_FLAG_INHERIT, 0);
-                    
-                    // Clone the write handle to be stderr too
-                    HANDLE phandle = GetCurrentProcess();
-                    DuplicateHandle(phandle, hChildStdoutWr, phandle, &hChildStderrWr, 0, TRUE, DUPLICATE_SAME_ACCESS);
-                }
-                
-                if (created)
-                {
-                    PROCESS_INFORMATION piProcInfo;
-                    STARTUPINFOA siStartInfo;
-                    memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
-                    siStartInfo.cb = sizeof(STARTUPINFOA);
-                    siStartInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-                    if (MChidewindows)
-                        siStartInfo.wShowWindow = SW_HIDE;
-                    else
-                        siStartInfo.wShowWindow = SW_SHOW;
-                    siStartInfo.hStdInput = hChildStdinRd;
-                    siStartInfo.hStdOutput = hChildStdoutWr;
-                    siStartInfo.hStdError = hChildStderrWr;
-                    if (CreateProcessA(NULL, cmdline, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &siStartInfo, &piProcInfo))
-                    {
-                        t_process_handle = piProcInfo . hProcess;
-                        t_process_id = piProcInfo . dwProcessId;
-                        CloseHandle(piProcInfo . hThread);
-                    }
-                    else
-                        created = False;
-                }
-                
-                CloseHandle(hChildStdinRd);
-                CloseHandle(hChildStdoutWr);
-                CloseHandle(hChildStderrWr);
-            }
-            else
-            {
-                // Unfortunately, one cannot use any 'CreateProcess' type calls to
-                // elevate a process - one must use ShellExecuteEx. This unfortunately
-                // means we have no way of *directly* passing things like env vars and
-                // std handles to it. Instead, we do the following:
-                //   1) Launch ourselves with the parameter '-elevated-slave'
-                //   2) Wait until either the target process vanishes, or we get
-                //      a thread message posted to us with a pair of pipe handles.
-                //   3) Write the command line and env strings to the pipe
-                //   4) Wait for a further message with process handle and id
-                //   5) Carry on with the handles we were given to start with
-                // If the launched process vanished before (4) it is treated as failure.
-                
-                char t_parameters[64];
-                sprintf(t_parameters, "-elevated-slave%08x", GetCurrentThreadId());
-                
-                SHELLEXECUTEINFOA t_info;
-                memset(&t_info, 0, sizeof(SHELLEXECUTEINFO));
-                t_info . cbSize = sizeof(SHELLEXECUTEINFO);
-                t_info . fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI | SEE_MASK_NO_CONSOLE ;
-                t_info . hwnd = (HWND)MCdefaultstackptr -> getrealwindow();
-                t_info . lpVerb = "runas";
-                t_info . lpFile = MCcmd;
-                t_info . lpParameters = t_parameters;
-                t_info . nShow = SW_HIDE;
-                if (ShellExecuteExA(&t_info) && (uintptr_t)t_info . hInstApp > 32)
-                {
-                    MSG t_msg;
-                    t_msg . message = WM_QUIT;
-                    while(!PeekMessageA(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
-                        if (MsgWaitForMultipleObjects(1, &t_info . hProcess, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
-                        {
-                            created = False;
-                            break;
-                        }
-                    
-                    if (created && t_msg . message == WM_USER + 10)
-                    {
-                        HANDLE t_output_pipe, t_input_pipe;
-                        t_input_pipe = (HANDLE)t_msg . wParam;
-                        t_output_pipe = (HANDLE)t_msg . lParam;
-                        
-                        // Get the environment strings to send across
-                        char *t_env_strings;
-                        uint32_t t_env_length;
-#undef GetEnvironmentStrings
-                        t_env_strings = GetEnvironmentStrings();
-                        if (t_env_strings != nil)
-                        {
-                            t_env_length = 0;
-                            while(t_env_strings[t_env_length] != '\0' || t_env_strings[t_env_length + 1] != '\0')
-                                t_env_length += 1;
-                            t_env_length += 2;
-                        }
-                        
-                        // Write out the cmd line and env strings
-                        if (write_blob_to_pipe(t_output_pipe, strlen(cmdline) + 1, cmdline) &&
-                            write_blob_to_pipe(t_output_pipe, t_env_length, t_env_strings))
-                        {
-                            // Now we should have a process id and handle waiting for us.
-                            MSG t_msg;
-                            t_msg . message = WM_QUIT;
-                            while(!PeekMessageA(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
-                                if (MsgWaitForMultipleObjects(1, &t_info . hProcess, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
-                                {
-                                    created = False;
-                                    break;
-                                }
-                            
-                            if (created && t_msg . message == WM_USER + 10 && t_msg . lParam != NULL)
-                            {
-                                t_process_id = (DWORD)t_msg . wParam;
-                                t_process_handle = (HANDLE)t_msg . lParam;
-                            }
-                            else
-                                created = False;
-                        }
-                        else
-                            created = False;
-                        
-                        FreeEnvironmentStringsA(t_env_strings);
-                        
-                        hChildStdinWr = t_output_pipe;
-                        hChildStdoutRd = t_input_pipe;
-                    }
-                    else
-                        created = False;
-                    
-                    CloseHandle(t_info . hProcess);
-                }
-                else
-                {
-                    if ((uintptr_t)t_info . hInstApp == SE_ERR_ACCESSDENIED)
-                        t_error = "access denied";
-                    created = False;
-                }
-            }
-            
-            if (doc != NULL)
-            {
-                if (*doc != '\0')
-                    delete cmdline;
-                delete doc;
-            }
-        }
-        if (created)
-        {
-            if (writing)
-            {
-                MCprocesses[MCnprocesses].ohandle = new IO_header((MCWinSysHandle)hChildStdinWr, NULL, 0, 0);
-                // MW-2012-09-10: [[ Bug 10230 ]] Make sure we mark this IO handle as a pipe.
-                MCprocesses[MCnprocesses].ohandle -> is_pipe = true;
-            }
-            else
-                CloseHandle(hChildStdinWr);
-            if (reading)
-            {
-                MCprocesses[MCnprocesses].ihandle = new IO_header((MCWinSysHandle)hChildStdoutRd, NULL, 0, 0);
-                // MW-2012-09-10: [[ Bug 10230 ]] Make sure we mark this IO handle as a pipe.
-                MCprocesses[MCnprocesses].ihandle -> is_pipe = true;
-            }
-            else
-                CloseHandle(hChildStdoutRd);
-        }
-        if (!created)
-        {
-            MCresult->sets(t_error == nil ? "not opened" : t_error);
-            MCS_seterrno(GetLastError());
-            CloseHandle(hChildStdinWr);
-            CloseHandle(hChildStdoutRd);
-        }
-        else
-        {
-            MCresult->clear(False);
-            MCprocesses[MCnprocesses].pid = t_process_id;
-            MCprocesses[MCnprocesses++].phandle = (MCWinSysHandle)t_process_handle;
-        }
-#endif /* MCS_startprocess_dsk_w32 */
         Boolean reading = p_mode == OM_READ || p_mode == OM_UPDATE;
         Boolean writing = p_mode == OM_APPEND || p_mode == OM_WRITE || p_mode == OM_UPDATE;
         MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1,
@@ -4708,7 +3037,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                     siStartInfo.hStdOutput = hChildStdoutWr;
                     siStartInfo.hStdError = hChildStderrWr;
 
-					MCAutoStringRefAsWString t_cmdline_wstr;
+					MCAutoStringRefAsLPWSTR t_cmdline_wstr;
 					/* UNCHECKED */ t_cmdline_wstr.Lock(*t_cmdline);
 
                     if (CreateProcessW(NULL, *t_cmdline_wstr, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &siStartInfo, &piProcInfo))
@@ -4727,117 +3056,22 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             }
             else
             {
-                // Unfortunately, one cannot use any 'CreateProcess' type calls to
-                // elevate a process - one must use ShellExecuteEx. This unfortunately
-                // means we have no way of *directly* passing things like env vars and
-                // std handles to it. Instead, we do the following:
-                //   1) Launch ourselves with the parameter '-elevated-slave'
-                //   2) Wait until either the target process vanishes, or we get
-                //      a thread message posted to us with a pair of pipe handles.
-                //   3) Write the command line and env strings to the pipe
-                //   4) Wait for a further message with process handle and id
-                //   5) Carry on with the handles we were given to start with
-                // If the launched process vanished before (4) it is treated as failure.
-                
-                unichar_t t_parameters[64];
-                wsprintfW(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
-                
-				MCAutoStringRefAsWString t_cmd_wstr;
-				/* UNCHECKED */ t_cmd_wstr.Lock(MCcmd);
-
-                SHELLEXECUTEINFOW t_info;
-                memset(&t_info, 0, sizeof(SHELLEXECUTEINFOW));
-                t_info . cbSize = sizeof(SHELLEXECUTEINFOW);
-                t_info . fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI | SEE_MASK_NO_CONSOLE ;
-                t_info . hwnd = (HWND)MCdefaultstackptr -> getrealwindow();
-                t_info . lpVerb = L"runas";
-                t_info . lpFile = *t_cmd_wstr;
-                t_info . lpParameters = t_parameters;
-                t_info . nShow = SW_HIDE;
-                if (ShellExecuteExW(&t_info) && (uintptr_t)t_info . hInstApp > 32)
-                {
-                    MSG t_msg;
-                    t_msg . message = WM_QUIT;
-                    while(!PeekMessageW(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
-                        if (MsgWaitForMultipleObjects(1, &t_info . hProcess, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
-                        {
-                            created = False;
-                            break;
-                        }
-                    
-                    if (created && t_msg . message == WM_USER + 10)
-                    {
-                        HANDLE t_output_pipe, t_input_pipe;
-                        t_input_pipe = (HANDLE)t_msg . wParam;
-                        t_output_pipe = (HANDLE)t_msg . lParam;
-                        
-                        // Get the environment strings to send across
-						LPWCH lpEnvStrings;
-						lpEnvStrings = GetEnvironmentStringsW();
-						size_t t_env_length = 0;
-                        if (lpEnvStrings != nil)
-						{
-							// The environment block is terminated with a double-null                           
-							t_env_length = 0;
-                            while(lpEnvStrings[t_env_length] != '\0' || lpEnvStrings[t_env_length + 1] != '\0')
-                                t_env_length += 1;
-                            t_env_length += 2;
-                        }
-                        
-                        // Write out the cmd line and env strings
-                        MCAutoStringRefAsWString t_cmdline_wstr;
-                        t_cmdline_wstr.Lock(*t_cmdline);
-                        if (write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * (MCStringGetLength(*t_cmdline) + 1), *t_cmdline_wstr) &&
-                            write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * t_env_length, lpEnvStrings))
-                        {
-                            // Now we should have a process id and handle waiting for us.
-                            MSG t_msg;
-                            t_msg . message = WM_QUIT;
-                            while(!PeekMessageA(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
-                                if (MsgWaitForMultipleObjects(1, &t_info . hProcess, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
-                                {
-                                    created = False;
-                                    break;
-                                }
-                            
-                            if (created && t_msg . message == WM_USER + 10 && t_msg . lParam != NULL)
-                            {
-                                t_process_id = (DWORD)t_msg . wParam;
-                                t_process_handle = (HANDLE)t_msg . lParam;
-                            }
-                            else
-                                created = False;
-                        }
-                        else
-                            created = False;
-                        
-                        FreeEnvironmentStringsW(lpEnvStrings);
-                        
-                        hChildStdinWr = t_output_pipe;
-                        hChildStdoutRd = t_input_pipe;
-                    }
-                    else
-                        created = False;
-                    
-                    CloseHandle(t_info . hProcess);
-                }
-                else
-                {
-                    if ((uintptr_t)t_info . hInstApp == SE_ERR_ACCESSDENIED)
-                        t_error = "access denied";
-                    created = False;
-                }
-            }
+				bool t_access_denied = false;
+				created = StartElevatedProcess(*t_cmdline, hChildStdinWr, hChildStdoutRd, t_process_handle, t_process_id, t_access_denied);
+				if (!created &&
+					t_access_denied)
+					t_error = "access denied";
+			}
         }
         if (created)
         {
             if (writing)
-				MCprocesses[MCnprocesses].ohandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdinWr, true);
+				MCprocesses[MCnprocesses].ohandle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)hChildStdinWr, true);
             else
                 CloseHandle(hChildStdinWr);
 
             if (reading)
-				MCprocesses[MCnprocesses].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
+				MCprocesses[MCnprocesses].ihandle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
             else
                 CloseHandle(hChildStdoutRd);
         }
@@ -4860,27 +3094,310 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 		return True;
     }
+
+	BOOL StartElevatedProcess(MCStringRef p_cmd_line, HANDLE& r_child_stdin_wr, HANDLE& r_child_stdout_rd, HANDLE& r_child_process, DWORD& r_child_id, bool& r_access_denied)
+	{
+		// Unfortunately, one cannot use any 'CreateProcess' type calls to
+        // elevate a process - one must use ShellExecuteEx. This unfortunately
+        // means we have no way of *directly* passing things like env vars and
+        // std handles to it. Instead, we do the following:
+        //   1) Launch ourselves with the parameter '-elevated-slave'
+        //   2) Wait until either the target process vanishes, or we get
+        //      a thread message posted to us with a pair of pipe handles.
+        //   3) Write the command line and env strings to the pipe
+        //   4) Wait for a further message with process handle and id
+        //   5) Carry on with the handles we were given to start with
+        // If the launched process vanished before (4) it is treated as failure.
+
+		// This is true if the slave died at some point during the transaction.
+		// Generally meaning that an error occurred which means it can't launch
+		// the process we want.
+		BOOL t_slave_died = FALSE;
+		BOOL t_slave_deaf = FALSE;
+
+		// The slave (mediating) process we run has a specific command-line
+		// which encodes the current thread id of this process.
+        unichar_t t_parameters[64];
+        wsprintfW(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
+
+		// We need the command line of the running engine as a wstring.
+		MCAutoStringRefAsWString t_slave_wstr;
+		// We need the command line of the requested process as a wstring.
+		MCAutoStringRefAsWString t_cmd_line_wstr;
+		if (!t_slave_wstr.Lock(MCcmd) ||
+			!t_cmd_line_wstr.Lock(p_cmd_line))
+		{
+			t_slave_died = TRUE;
+			goto cleanup;
+		}
+
+		// This records the Win32 error code if one of the API calls fails.
+		DWORD t_error = ERROR_SUCCESS;
+		// This is the handle of the slave process used to launch the requested process.
+		HANDLE t_slave_process = NULL;
+		// This is the thread id of the main thread in the slave process.
+		DWORD t_slave_thread_id = 0;
+		// This is the slave's security descriptor containing it's sid.
+		PSECURITY_DESCRIPTOR t_slave_security_descriptor = NULL;
+		PSID t_slave_sid = NULL;
+		// This is our security descriptor containing our original DACL.
+		PSECURITY_DESCRIPTOR t_master_security_descriptor = NULL;
+		PACL t_master_dacl = NULL;
+		// This is our augmented DACL.
+		PACL t_augmented_master_dacl = NULL;
+		// These are the pipes used to communicate first with the slave, and then
+		// with the requested process.
+		HANDLE t_output_pipe = NULL;
+		HANDLE t_input_pipe = NULL;
+		// These are our environment strings.
+		LPWCH t_env_strings = NULL;
+		size_t t_env_length = 0;
+		// These are the requested process handle and id.
+		HANDLE t_process_handle = NULL;
+		DWORD t_process_id = 0;
+
+		// First we run the engine itself as administrator, passing to it our
+		// thread-id as part of the command-line arguments.
+        SHELLEXECUTEINFOW t_info;
+        memset(&t_info, 0, sizeof(SHELLEXECUTEINFOW));
+        t_info . cbSize = sizeof(SHELLEXECUTEINFOW);
+        t_info . fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI | SEE_MASK_NO_CONSOLE ;
+        t_info . hwnd = (HWND)MCdefaultstackptr -> getrealwindow();
+        t_info . lpVerb = L"runas";
+        t_info . lpFile = *t_slave_wstr;
+        t_info . lpParameters = t_parameters;
+        t_info . nShow = SW_HIDE;
+        if (!ShellExecuteExW(&t_info) ||
+			(uintptr_t)t_info . hInstApp < 32)
+        {
+            if ((uintptr_t)t_info . hInstApp == SE_ERR_ACCESSDENIED)
+				r_access_denied = true;
+
+			t_error = GetLastError();
+			t_slave_died = TRUE;
+			goto cleanup;
+		}
+
+		t_slave_process = t_info.hProcess;
+
+		// We now have a process handle, but we need a thread id so that
+		// we can notify the slave when to continue. The slave sends us
+		// the thread id immediately after launch as a thread message.
+        MSG t_msg;
+        t_msg . message = WM_QUIT;
+        while(!PeekMessageW(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
+            if (MsgWaitForMultipleObjects(1, &t_slave_process, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
+            {
+				t_slave_died = TRUE;
+                goto cleanup;
+            }
+			
+		if (t_msg.message != WM_USER + 10)
+		{
+			t_slave_deaf = TRUE;
+			goto cleanup;
+		}
+
+		t_slave_thread_id = t_msg.wParam;
+
+		// Now we have a process handle, we must allow that process's user to
+		// open our process handle with PROCESS_DUP_HANDLE right. This is a
+		// multi-step process:
+		//   1) First we get the SID of the slave process.
+		//   2) Get the current DACL of this process.
+		//   3) Add an explicit access right to PROCESS_DUP_HANDLE for the SID
+		//      of the slave process to the fetched DACL
+		//   4) Set the DACL of our process to the augmented one.
+
+		// Step 1
+		if (ERROR_SUCCESS != GetSecurityInfo(
+								t_info.hProcess,
+								SE_KERNEL_OBJECT,
+								OWNER_SECURITY_INFORMATION,
+								&t_slave_sid,
+								NULL,
+								NULL,
+								NULL,
+								&t_slave_security_descriptor))
+		{
+			t_error = GetLastError();
+			goto cleanup;
+		}
+		
+		// Step 2
+		if (ERROR_SUCCESS != GetSecurityInfo(
+								GetCurrentProcess(),
+								SE_KERNEL_OBJECT,
+								DACL_SECURITY_INFORMATION,
+								NULL,
+								NULL,
+								&t_master_dacl,
+								NULL,
+								&t_master_security_descriptor))
+		{
+			t_error = GetLastError();
+			goto cleanup;
+		}
+
+		// Step 3
+		EXPLICIT_ACCESS t_explicit_access;
+		ZeroMemory(&t_explicit_access, sizeof(EXPLICIT_ACCESS));
+		t_explicit_access.grfAccessPermissions = PROCESS_DUP_HANDLE;
+		t_explicit_access.grfAccessMode = GRANT_ACCESS;
+		t_explicit_access.grfInheritance = NO_INHERITANCE;
+		t_explicit_access.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+		t_explicit_access.Trustee.TrusteeType = TRUSTEE_IS_UNKNOWN;
+		t_explicit_access.Trustee.ptstrName = (LPSTR)t_slave_sid;
+		if (ERROR_SUCCESS != SetEntriesInAcl(
+								1,
+								&t_explicit_access,
+								t_master_dacl, &t_augmented_master_dacl))
+		{
+			t_error = GetLastError();
+			goto cleanup;
+		}
+
+		// Step 4
+		if (ERROR_SUCCESS != SetSecurityInfo(
+								GetCurrentProcess(),
+								SE_KERNEL_OBJECT,
+								DACL_SECURITY_INFORMATION,
+								NULL,
+								NULL,
+								t_augmented_master_dacl,
+								NULL))
+		{
+			t_error = GetLastError();
+			goto cleanup;
+		}
+
+		// It should now be possible for the slave process to open our process
+		// with DUP_HANDLE privilege so we notify it to continue to do so.
+		if (!PostThreadMessageA(t_slave_thread_id, WM_NULL, 0, 0))
+		{
+			t_error = GetLastError();
+			goto cleanup;
+		}
+
+		// Once the slave has opened us, it will send us some pipe handles which
+		// we use (initially) to send the actual command line and environment
+		// variables across so the slave can do the appropriate CreateProcess call.
+        t_msg . message = WM_QUIT;
+        while(!PeekMessageW(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
+            if (MsgWaitForMultipleObjects(1, &t_info . hProcess, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
+            {
+                t_slave_died = TRUE;
+                goto cleanup;
+            }
+
+		if (t_msg.message != WM_USER + 10)
+		{
+			t_slave_deaf = TRUE;
+			goto cleanup;
+		}
+
+        t_input_pipe = (HANDLE)t_msg . wParam;
+        t_output_pipe = (HANDLE)t_msg . lParam;
+
+		// At this point, the next thing to do is to fetch the environment var
+		// strings and then pipe them to the slave.
+		t_env_strings = GetEnvironmentStringsW();
+        if (t_env_strings != nil)
+		{
+			// The environment block is terminated with a double-null                           
+			t_env_length = 0;
+            while(t_env_strings[t_env_length] != '\0' || t_env_strings[t_env_length + 1] != '\0')
+                t_env_length += 1;
+            t_env_length += 2;
+        }
+
+		// We write the requested command line and the current env vars
+		// to the slave process next.
+		if (!write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * (MCStringGetLength(p_cmd_line) + 1), *t_cmd_line_wstr) ||
+            !write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * t_env_length, t_env_strings))
+		{
+			t_slave_deaf = TRUE;
+			goto cleanup;
+		}
+
+		// Now we wait again for the slave to tell us whether it succeeded
+		// in opening the requested process or not.
+		t_msg . message = WM_QUIT;
+		while(!PeekMessageA(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
+			if (MsgWaitForMultipleObjects(1, &t_info . hProcess, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
+			{
+				t_slave_died = TRUE;
+				break;
+			}
+
+		if (t_msg.message != WM_USER + 10)
+		{
+			t_slave_deaf = TRUE;
+			goto cleanup;
+		}
+
+		t_process_id = (DWORD)t_msg.wParam;
+		t_process_handle = (HANDLE)t_msg.lParam;
+
+cleanup:
+		// If we have an augmented dacl, make sure we reset our dcl to the
+		// original.
+		if (t_augmented_master_dacl != NULL)
+		{
+			SetSecurityInfo(GetCurrentProcess(),
+							SE_KERNEL_OBJECT,
+							DACL_SECURITY_INFORMATION,
+							NULL,
+							NULL,
+							t_master_dacl,
+							NULL);
+			LocalFree(t_augmented_master_dacl);
+		}
+
+		if (t_slave_security_descriptor != NULL)
+		{
+			LocalFree(t_slave_security_descriptor);
+		}
+		
+		if (t_master_security_descriptor != NULL)
+		{
+			LocalFree(t_master_security_descriptor);
+		}
+
+		// If we have env vars, free them
+		if (t_env_strings != NULL)
+		{
+			FreeEnvironmentStringsW(t_env_strings);
+		}
+
+		// If there was an error but the slave did not die we must
+		// get it to terminate.
+		if (!t_slave_died)
+		{
+			if (t_error != ERROR_SUCCESS || t_slave_deaf)
+			{
+				PostThreadMessage(t_slave_thread_id, WM_NULL, 1, 0);
+			}
+			CloseHandle(t_slave_process);
+		}
+
+		if (t_slave_died ||
+			t_error != ERROR_SUCCESS ||
+			t_slave_deaf)
+		{
+			return FALSE;
+		}
+
+		r_child_stdin_wr = t_output_pipe;
+		r_child_stdout_rd = t_input_pipe;
+		r_child_process = t_process_handle;
+		r_child_id = t_process_id;
+
+		return TRUE;
+	}
     
     virtual void CloseProcess(uint2 p_index)
     {
-#ifdef /* MCS_closeprocess_dsk_w32 */ LEGACY_SYSTEM
-	if (MCprocesses[index].thandle  != NULL)
-	{
-		TerminateThread(MCprocesses[index].thandle, 0);
-		MCprocesses[index].thandle = NULL;
-	}
-	if (MCprocesses[index].ihandle != NULL)
-	{
-		MCS_close(MCprocesses[index].ihandle);
-		MCprocesses[index].ihandle = NULL;
-	}
-	if (MCprocesses[index].ohandle != NULL)
-	{
-		MCS_close(MCprocesses[index].ohandle);
-		MCprocesses[index].ohandle = NULL;
-	}
-	MCprocesses[index].mode = OM_NEITHER;
-#endif /* MCS_closeprocess_dsk_w32 */
         if (MCprocesses[p_index].thandle  != NULL)
         {
             TerminateThread(MCprocesses[p_index].thandle, 0);
@@ -4901,24 +3418,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
     virtual void Kill(int4 p_pid, int4 p_sig)
     {
-#ifdef /* MCS_kill_dsk_w32 */ LEGACY_SYSTEM
-	uint2 i;
-	for (i = 0 ; i < MCnprocesses ; i++)
-	{
-		if (pid == MCprocesses[i].pid)
-		{
-			if (MCprocesses[i].thandle  != NULL)
-			{
-				TerminateThread(MCprocesses[i].thandle, 0);
-				MCprocesses[i].thandle = NULL;
-			}
-			TerminateProcess(MCprocesses[i].phandle, 0);
-			MCprocesses[i].phandle = NULL;
-			MCprocesses[i].pid = 0;
-			break;
-		}
-	}
-#endif /* MCS_kill_dsk_w32 */
         uint2 i;
         for (i = 0 ; i < MCnprocesses ; i++)
         {
@@ -4939,16 +3438,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
     virtual void KillAll(void)
     {
-#ifdef /* MCS_killall_dsk_w32 */ LEGACY_SYSTEM
-	uint2 i;
-	for (i = 0 ; i < MCnprocesses ; i++)
-	{
-		//kill MCprocesses[i] here
-		if (MCprocesses[i].ihandle != NULL || MCprocesses[i].ohandle != NULL)
-			TerminateProcess(MCprocesses[i].phandle, 0);
-		MCprocesses[i].phandle = NULL;
-	}
-#endif /* MCS_killall_dsk_w32 */
         uint2 i;
         for (i = 0 ; i < MCnprocesses ; i++)
         {
@@ -4961,71 +3450,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 	virtual Boolean Poll(real8 p_delay, int p_fd)
 	{
-#ifdef /* MCS_poll_dsk_w32 */ LEGACY_SYSTEM
-	Boolean handled = False;
-	int4 n;
-	uint2 i;
-	fd_set rmaskfd, wmaskfd, emaskfd;
-	FD_ZERO(&rmaskfd);
-	FD_ZERO(&wmaskfd);
-	FD_ZERO(&emaskfd);
-	uint4 maxfd = 0;
-	if (!MCnoui)
-	{
-		FD_SET(fd, &rmaskfd);
-		maxfd = fd;
-	}
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (MCsockets[i]->doread)
-		{
-			MCsockets[i]->readsome();
-			i = 0;
-		}
-	}
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (MCsockets[i]->connected && !MCsockets[i]->closing
-		        && !MCsockets[i]->shared || MCsockets[i]->accepting)
-			FD_SET(MCsockets[i]->fd, &rmaskfd);
-		if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-			FD_SET(MCsockets[i]->fd, &wmaskfd);
-		FD_SET(MCsockets[i]->fd, &emaskfd);
-		if (MCsockets[i]->fd > maxfd)
-			maxfd = MCsockets[i]->fd;
-		if (MCsockets[i]->added)
-		{
-			delay = 0.0;
-			MCsockets[i]->added = False;
-			handled = True;
-		}
-	}
-	struct timeval timeoutval;
-	timeoutval.tv_sec = (long)delay;
-	timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
-	n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
-	if (n <= 0)
-		return handled;
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
-		{
-			if (!MCsockets[i]->waiting)
-			{
-				MCsockets[i]->error = strclone("select error");
-				MCsockets[i]->doclose();
-			}
-		}
-		else
-		{
-			if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
-				MCsockets[i]->writesome();
-			if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
-				MCsockets[i]->readsome();
-		}
-	}
-	return n != 0;
-#endif /* MCS_poll_dsk_w32 */
 		Boolean handled = False;
 		int4 n;
 		uint2 i;
@@ -5070,9 +3494,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
     virtual int GetErrno(void)
     {
-#ifdef /* MCS_geterrno_dsk_w32 */ LEGACY_SYSTEM
-	return *g_mainthread_errno;
-#endif /* MCS_geterrno_dsk_w32 */
         return *g_mainthread_errno;
     }
     
@@ -5080,90 +3501,34 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     //   we access errno directly to stop us having to do a thread-local-data lookup.
     virtual void SetErrno(int p_errno)
     {
-#ifdef /* MCS_seterrno_dsk_w32 */ LEGACY_SYSTEM
-	*g_mainthread_errno = value;
-#endif /* MCS_seterrno_dsk_w32 */
         *g_mainthread_errno = p_errno;
     }
     
     virtual void LaunchDocument(MCStringRef p_document)
 	{
-#ifdef /* MCS_launch_document_dsk_w32 */ LEGACY_SYSTEM
-        char *t_native_document;
-        
-        t_native_document = MCS_resolvepath(p_document);
-        delete p_document;
-        
-        // MW-2007-12-13: [[ Bug 5680 ]] Might help if we actually passed the correct
-        //   pointer to do_launch!
-        MCS_do_launch(t_native_document);
-        
-        delete t_native_document;
-#endif /* MCS_launch_document_dsk_w32 */
 		MCS_do_launch(p_document);
 	}
 
     virtual void LaunchUrl(MCStringRef p_document)
 	{
-#ifdef /* MCS_launch_url_dsk_w32 */ LEGACY_SYSTEM
-        MCS_do_launch(p_document);
-        
-        // MW-2007-12-13: <p_document> is owned by the callee
-        delete p_document;
-#endif /* MCS_launch_url_dsk_w32 */
 		MCS_do_launch(p_document);
 	}
     
     virtual void DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language)
 	{
-#ifdef /* MCS_doalternatelanguage_dsk_w32 */ LEGACY_SYSTEM
-        MCScriptEnvironment *t_environment;
-        t_environment = MCscreen -> createscriptenvironment(langname);
-        if (t_environment == NULL)
-            MCresult -> sets("alternate language not found");
-        else
-        {
-            MCExecPoint ep(NULL, NULL, NULL);
-            ep . setsvalue(s);
-            ep . nativetoutf8();
-            
-            char *t_result;
-            t_result = t_environment -> Run(ep . getcstring());
-            t_environment -> Release();
-            
-            if (t_result != NULL)
-            {
-                ep . setsvalue(t_result);
-                ep . utf8tonative();
-                MCresult -> copysvalue(ep . getsvalue());
-            }
-            else
-                MCresult -> sets("execution error");
-        }
-#endif /* MCS_doalternatelanguage_dsk_w32 */
 		MCScriptEnvironment *t_environment;
 		t_environment = MCscreen -> createscriptenvironment(p_language);
 		if (t_environment == NULL)
 			MCresult -> sets("alternate language not found");
 		else
 		{
-			MCAutoStringRefAsUTF8String t_utf8;
-			/* UNCHECKED */ t_utf8.Lock(p_script);
-			
 			MCAutoStringRef t_result;
-			MCAutoStringRef t_string;
-			/* UNCHECKED */ MCStringCreateWithCString(*t_utf8, &t_string);
-			t_environment -> Run(*t_string, &t_result);
+			t_environment -> Run(p_script, &t_result);
 			t_environment -> Release();
 
 			if (*t_result != nil)
 			{
-				MCAutoDataRef t_data;
-				MCAutoStringRef t_native;
-				MCDataCreateWithBytes((const byte_t*)MCStringGetCString(*t_result), MCStringGetLength(*t_result), &t_data);
-
-				MCStringDecode(*t_data, kMCStringEncodingUTF8, false, &t_native);
-				MCresult -> setvalueref(*t_native);
+				MCresult -> setvalueref(*t_result);
 			}
 			else
 				MCresult -> sets("execution error");
@@ -5172,50 +3537,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
     virtual bool AlternateLanguages(MCListRef& r_list)
 	{
-#ifdef /* MCS_alternatelanguages_dsk_w32 */ LEGACY_SYSTEM
-        ep.clear();
-        
-        HRESULT t_result;
-        t_result = S_OK;
-        
-        ICatInformation *t_cat_info;
-        t_cat_info = NULL;
-        if (t_result == S_OK)
-            t_result = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (void **)&t_cat_info);
-        
-        IEnumCLSID *t_cls_enum;
-        t_cls_enum = NULL;
-        if (t_result == S_OK)
-            t_result = t_cat_info -> EnumClassesOfCategories(1, &CATID_ActiveScriptParse, (ULONG)-1, NULL, &t_cls_enum);
-        
-        if (t_result == S_OK)
-        {
-            GUID t_cls_uuid;
-            unsigned int t_index;
-            t_index = 0;
-            
-            while(t_cls_enum -> Next(1, &t_cls_uuid, NULL) == S_OK)
-            {
-                LPOLESTR t_prog_id;
-                if (ProgIDFromCLSID(t_cls_uuid, &t_prog_id) == S_OK)
-                {
-                    MCExecPoint t_unicode_ep(NULL, NULL, NULL);
-                    t_unicode_ep . setsvalue(MCString((char *)t_prog_id, wcslen(t_prog_id) * 2));
-                    t_unicode_ep . utf16tonative();
-                    ep . concatmcstring(t_unicode_ep . getsvalue(), EC_RETURN, t_index == 0);
-                    t_index += 1;
-                    
-                    CoTaskMemFree(t_prog_id);
-                }
-            }
-        }
-        
-        if (t_cls_enum != NULL)
-            t_cls_enum -> Release();
-        
-        if (t_cat_info != NULL)
-            t_cat_info -> Release();
-#endif /* MCS_alternatelanguages_dsk_w32 */
 		MCAutoListRef t_list;
 		
 		if (!MCListCreateMutable('\n', &t_list))
@@ -5263,44 +3584,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
     virtual bool GetDNSservers(MCListRef& r_list)
     {
-#ifdef /* MCS_getDNSservers_dsk_w32 */ LEGACY_SYSTEM
-        ep.clear();
-        
-        ULONG bl = sizeof(FIXED_INFO);
-        FIXED_INFO *fi = (FIXED_INFO *)new char[bl];
-        memset(fi, 0, bl);
-        if ((errno = GetNetworkParams(fi, &bl)) == ERROR_BUFFER_OVERFLOW)
-        {
-            delete fi;
-            fi = (FIXED_INFO *)new char[bl];
-            memset(fi, 0, bl);
-            errno = GetNetworkParams(fi, &bl);
-        }
-        IP_ADDR_STRING *pIPAddr = &fi->DnsServerList;
-        if (errno == ERROR_SUCCESS && *pIPAddr->IpAddress.String)
-        {
-            uint2 i = 0;
-            do
-            {
-                ep.concatcstring(pIPAddr->IpAddress.String, EC_RETURN, i++ == 0);
-                pIPAddr = pIPAddr->Next;
-            }
-            while (pIPAddr != NULL);
-        }
-        delete fi;
-        
-        if (ep.getsvalue().getlength() == 0)
-        {
-            MCScreenDC *pms = (MCScreenDC *)MCscreen;
-            ep.setstaticcstring("HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\Tcpip\\Parameters\\NameServer");
-            MCS_query_registry(ep, NULL);
-            char *sptr = ep.getbuffer(0);
-            uint4 l = ep.getsvalue().getlength();
-            while (l--)
-                if (sptr[l] == ' ' || sptr[l] == ',')
-                    sptr[l] = '\n';
-        }
-#endif /* MCS_getDNSservers_dsk_w32 */
         MCAutoListRef t_list;
         if (!dns_servers_from_network_params(&t_list))
             return false;
@@ -5343,6 +3626,13 @@ int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevIns
 			t_success = false;
 	}
 
+	// Post our thread id back to the master.
+	if (t_success)
+	{
+		if (!PostThreadMessageA(t_parent_thread_id, WM_USER + 10, GetCurrentThreadId(), 0))
+			t_success = false;
+	}
+
 	// Open the parent's thread
 	HANDLE t_parent_thread;
 	t_parent_thread = nil;
@@ -5352,8 +3642,27 @@ int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevIns
 		if (t_parent_thread == nil)
 			t_success = false;
 	}
+	
+	// Now we have the thread handle, we wait for a message from the master
+	// to tell us to continue after it has allowed this process to open the
+	// master process.
+    MSG t_msg;
+    t_msg . message = WM_QUIT;
+    while(!PeekMessageW(&t_msg, (HWND)-1, WM_NULL, WM_NULL, PM_REMOVE))
+        if (MsgWaitForMultipleObjects(1, &t_parent_thread, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
+        {
+			t_success = false;
+			break;
+        }
 
-	// Open the parent's process
+	// If we didn't get a WM_NULL message or get one with wParam == 1
+	// then we failed.
+	if (t_msg.message != WM_NULL ||
+		t_msg.wParam == 1)
+		t_success = false;
+
+	// Open the parent's process - this should now be allowed with PROCESS_DUP_HANDLE
+	// right due to the fettling in the master process which occurred previously.
 	HANDLE t_parent_process;
 	t_parent_process = nil;
 	if (t_success)
@@ -5567,23 +3876,12 @@ uint2 MCS_charsettolangid(uint1 charset)
 	return 0;
 }
 
-bool MCS_generate_uuid(char p_buffer[128])
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCS_get_browsers(MCStringRef &r_browsers)
 {
-	GUID t_guid;
-	if (CoCreateGuid(&t_guid) == S_OK)
-	{
-		unsigned char __RPC_FAR *t_guid_string;
-		if (UuidToStringA(&t_guid, &t_guid_string) == RPC_S_OK)
-		{
-			strcpy(p_buffer, (char *)t_guid_string);
-			RpcStringFreeA(&t_guid_string);
-		}
-        
-		return true;
-	}
-    
-	return false;
+    r_browsers = nullptr;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-

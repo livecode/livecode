@@ -4,13 +4,16 @@ Type: message
 
 Syntax: deleteGroup
 
-Summary: Sent to a <group> just before it is removed from the <stack>.
+Summary:
+Sent to a <group> just before it is removed from the <stack>.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on deleteGroup -- remove the group being deleted from a list
@@ -20,16 +23,24 @@ on deleteGroup -- remove the group being deleted from a list
 end deleteGroup
 
 Description:
-Handle the <deleteGroup> message if you want to perform cleanup before a <group> is removed from the <stack>.
+Handle the <deleteGroup> message if you want to perform cleanup before a
+<group> is removed from the <stack>.
 
-The actual deletion is not triggered by the <deleteGroup> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <group> from being removed.
+The actual deletion is not triggered by the <deleteGroup> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <group> from being removed.
 
-Deleting the last card on which a group appears does not remove the group from the stack, so it does not cause a <deleteGroup> <message> to be sent.
+Deleting the last card on which a group appears does not remove the
+group from the stack, so it does not cause a <deleteGroup> <message> to
+be sent.
 
 Ungrouping a group does not cause a <deleteGroup> <message> to be sent.
 
 A deleteBackground <message> is sent after the <deleteGroup> <message>.
 
-References: cantDelete (property), delete (command), group (command), stack (object), message (glossary), trap (glossary), pass (control_st)
+References: delete (command), group (command), pass (control structure),
+message (glossary), trap (glossary), stack (object),
+cantDelete (property)
 
 Tags: objects
+

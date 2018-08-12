@@ -1,20 +1,21 @@
 Name: length
 
+Synonyms: len
+
 Type: function
 
-Syntax: the length of <string> 
+Syntax: the length of <string>
 
 Syntax: length(<string>)
 
-Summary: <return|Returns> the number of <characters> in a <string>.
-
-Synonyms: len
+Summary:
+<return|Returns> the number of <characters> in a <string>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the length of "ABC" -- returns 3
@@ -26,20 +27,30 @@ Example:
 put char (length(it) - 3) to (length(it)) of it into myExtension
 
 Parameters:
-string (string): 
+string (string):
 
-Returns: The <length> <function> <return|returns> a <non-negative> <integer>.
+
+Returns:
+The <length> <function> <return|returns> a <non-negative> <integer>.
 
 Description:
-Use the <length> <function> to find out how many <characters> are in a <string>, in order to process each <character>.
+Use the <length> <function> to find out how many <characters> are in a
+<string>, in order to process each <character>.
 
-The <length> of a <string> is the number of <characters> in the <string>. The expression
-  the length of <string> 
+The <length> of a <string> is the number of <characters> in the
+<string>. The expression the length of <string>
 is equivalent to
-  the number of chars in <string> 
+
+    the number of chars in <string> 
+
 
 If the <string> is empty, its <length> is zero.
 
-References: number (property), begins with (operator), ends with (operator), character (keyword), characters (keyword), integer (keyword), string (keyword), offset (function), number (function), return (glossary), non-negative (glossary), function (control_st)
+References: function (control structure), offset (function),
+number (function), return (glossary), non-negative (glossary),
+character (keyword), characters (keyword), integer (keyword),
+string (keyword), begins with (operator), ends with (operator),
+number (property)
 
 Tags: text processing
+

@@ -6,13 +6,14 @@ Syntax: the qtEffects
 
 Syntax: qtEffects()
 
-Summary: <return|Returns> a list of <QuickTime> special effects.
+Summary:
+<return|Returns> a list of <QuickTime> special effects.
 
 Introduced: 1.1
 
-OS: mac,windows
+OS: mac
 
-Platforms: desktop,server
+Platforms: desktop
 
 Example:
 the qtEffects
@@ -20,13 +21,32 @@ the qtEffects
 Example:
 if field "Effect" is not among the lines of the qtEffects then beep
 
-Returns: The <qtEffects> <function> <return|returns> a list of installed effect names, one per line.
+Returns:
+The <qtEffects> <function> <return|returns> a list of installed effect
+names, one per line.
 
 Description:
-Use the <qtEffects> function to find out which <QuickTime> special effects are currently installed, and can therefore be used with the <visual effect> command.
+Use the <qtEffects> function to find out which <QuickTime> special
+effects are currently installed, and can therefore be used with the
+<visual effect> command.
 
-The effects returned by the <qtEffects> <function> can be used as visual effects with the <visual effect>, <unlock screen>, <show> and <hide> commands.
+The effects returned by the <qtEffects> <function> can be used as visual
+effects with the <visual effect>, <unlock screen>, <show> and <hide>
+commands. 
 
-References: visual effect (command), answer effect (command), show (command), unlock screen (command), hide (command), qtVersion (function), QuickTime (glossary), return (glossary), function (glossary)
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: visual effect (command), answer effect (command),
+show (command), unlock screen (command), hide (command),
+qtVersion (function), QuickTime (glossary), return (glossary),
+function (glossary), dontUseQT (property), dontUseQTEffects (property)
 
 Tags: multimedia
+

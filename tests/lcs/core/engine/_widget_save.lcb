@@ -1,0 +1,17 @@
+widget com.livecode.lcs_tests.core.widget_save
+
+private variable mInfo as String
+
+property savedInfo get mInfo set mInfo
+
+public handler OnSave(out rProperties as Array)
+   put mInfo into rProperties["info"]
+end handler
+
+public handler OnLoad(in pProperties as Array)
+   if "info" is among the keys of pProperties then
+      put pProperties["info"] into mInfo
+   end if
+end handler
+
+end widget

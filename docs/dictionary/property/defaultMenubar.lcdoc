@@ -2,31 +2,45 @@ Name: defaultMenubar
 
 Type: property
 
-Syntax: set the defaultMenubar to <group> 
+Syntax: set the defaultMenubar to <group>
 
-Summary: Specifies which <menu bar> is displayed on <Mac OS> systems when the <active window|active window's> <menubar> <property> is empty.
+Summary:
+Specifies which <menu bar> is displayed on <Mac OS> systems when the
+<active window|active window's> <menubar> <property> is empty.
+
+Associations: group
 
 Introduced: 1.0
 
 OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the defaultMenubar to the long ID of group 1 of stack "Menubars"
 
 Parameters:
-group: A group reference or an expression that evaluates to a group reference.
+group:
+A group reference or an expression that evaluates to a group reference.
 
-Value: The <defaultMenubar> property returns the long ID of the group.
+Value:
+The <defaultMenubar> property returns the long ID of the group.
 
 Description:
-Use the <defaultMenubar> property to change the menus used by stacks that don't have their own custom menu bar.
+Use the <defaultMenubar> property to change the menus used by stacks
+that don't have their own custom menu bar.
 
-The <defaultMenuBar> specifies a group of buttons. Each button in the group becomes a menu in the menu bar.
+The <defaultMenuBar> specifies a group of buttons. Each button in the
+group becomes a menu in the menu bar.
 
-The setting of the <defaultMenubar> property has no effect on Unix and Windows systems, except that references to menus are taken as referring to the <defaultMenubar> if the stack in the active window has no menu bar of its own.
+The setting of the <defaultMenubar> property has no effect on Unix and
+Windows systems, except that references to menus are taken as referring
+to the <defaultMenubar> if the stack in the active window has no menu
+bar of its own.
 
-References: editMenus (property), menubar (property), menus (function), property (glossary), active window (glossary), Mac OS (glossary), menu bar (glossary)
+References: menus (function), property (glossary),
+active window (glossary), Mac OS (glossary), menu bar (glossary),
+editMenus (property), menubar (property)
 
 Tags: menus
+

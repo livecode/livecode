@@ -37,6 +37,24 @@ template<typename T> struct array_t
     uindex_t count;
 };
 
+template <typename T>
+inline void MCPlatformArrayClear(array_t<T> &p_array)
+{
+	MCMemoryDeleteArray(p_array.ptr);
+	p_array.count = 0;
+	p_array.ptr = nil;
+}
+
+template <typename T>
+inline bool MCPlatformArrayCopy(const array_t<T> &p_src, array_t<T> &p_dst)
+{
+	if (!MCMemoryAllocateCopy(p_src.ptr, p_src.count * sizeof(T), p_dst.ptr))
+		return false;
+
+	p_dst.count = p_src.count;
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPlatformCallbackType
@@ -100,6 +118,8 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeUInt16,
 	kMCPlatformPropertyTypeInt32,
 	kMCPlatformPropertyTypeUInt32,
+	kMCPlatformPropertyTypeInt64,
+	kMCPlatformPropertyTypeUInt64,
 	kMCPlatformPropertyTypeFloat,
 	kMCPlatformPropertyTypeDouble,
 	kMCPlatformPropertyTypeRectangle,
@@ -123,6 +143,7 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeCursorRef,
     
     kMCPlatformPropertyTypeUInt32Array,
+	kMCPlatformPropertyTypeUInt64Array,
 	
 	kMCPlatformPropertyTypePointer,
     
@@ -317,6 +338,7 @@ enum
 	
 	kMCPlatformKeyCodeGrave			= 0x0060,
 	
+	kMCPlatformKeyCodeISOSection	= 0x00A7,
 	
 	kMCPlatformKeyCodeBackspace		= 0xff08,
 	kMCPlatformKeyCodeTab			= 0xff09,
@@ -434,7 +456,6 @@ enum
 	kMCPlatformKeyCodeVolumeUp		= 0xfffe,
 	kMCPlatformKeyCodeVolumeDown	= 0xfffe,
 	kMCPlatformKeyCodeMute			= 0xfffe,
-	kMCPlatformKeyCodeISOSection	= 0xfffe,
 	kMCPlatformKeyCodeJISYen		= 0xfffe,
 	kMCPlatformKeyCodeJISUnderscore	= 0xfffe,
 	kMCPlatformKeyCodeJISKeypadComma= 0xfffe,
@@ -473,6 +494,12 @@ void MCPlatformSetSystemProperty(MCPlatformSystemProperty property, MCPlatformPr
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef bool (*MCPlatformPreWaitForEventCallback)(double duration, bool blocking);
+typedef bool (*MCPlatformPostWaitForEventCallback)(bool found_event);
+
+// Set the callbacks to call before and after waitforevent has been executed.
+void MCPlatformSetWaitForEventCallbacks(MCPlatformPreWaitForEventCallback p_pre, MCPlatformPostWaitForEventCallback p_post);
+
 // Break the current WaitForEvent which is progress.
 void MCPlatformBreakWait(void);
 
@@ -480,6 +507,12 @@ void MCPlatformBreakWait(void);
 // no events which cause a dispatch should be processed. If an event is processed
 // during duration, true is returned; otherwise false is.
 bool MCPlatformWaitForEvent(double duration, bool blocking);
+
+// Disables abort key checks
+void MCPlatformDisableAbortKey(void);
+
+// Enables abort key checks
+void MCPlatformEnableAbortKey(void);
 
 // Return true if the abort key has been pressed since the last check.
 bool MCPlatformGetAbortKeyPressed(void);
@@ -918,13 +951,13 @@ enum MCPlatformFileDialogKind
 	kMCPlatformFileDialogKindSave,
 	kMCPlatformFileDialogKindOpen,
 	kMCPlatformFileDialogKindOpenMultiple,
+    kMCPlatformFileDialogKindFolder,
 };
 
-void MCPlatformBeginFolderDialog(MCPlatformWindowRef owner, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial);
+void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef *p_types = nullptr, uint4 p_type_count = 0);
 MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef & r_selected_folder);
 
 
-void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt,  MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial);
 MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef& r_paths, MCStringRef& r_type);
 
 void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color);
@@ -955,6 +988,10 @@ enum MCPlatformPlayerProperty
 	kMCPlatformPlayerPropertyVolume,
     kMCPlatformPlayerPropertyMarkers,
     kMCPlatformPlayerPropertyLoadedTime,
+	
+    kMCPlatformPlayerPropertyLeftBalance,
+    kMCPlatformPlayerPropertyRightBalance,
+    kMCPlatformPlayerPropertyPan,
     
     kMCPlatformPlayerPropertyShowSelection,
 	kMCPlatformPlayerPropertyOnlyPlaySelection,
@@ -973,12 +1010,19 @@ enum MCPlatformPlayerProperty
 typedef uint32_t MCPlatformPlayerMediaTypes;
 enum MCPlatformPlayerMediaType
 {
-	kMCPlatformPlayerMediaTypeVideo,
-	kMCPlatformPlayerMediaTypeAudio,
-	kMCPlatformPlayerMediaTypeText,
-	kMCPlatformPlayerMediaTypeQTVR,
-	kMCPlatformPlayerMediaTypeSprite,
-	kMCPlatformPlayerMediaTypeFlash,
+	kMCPlatformPlayerMediaTypeVideoBit,
+	kMCPlatformPlayerMediaTypeAudioBit,
+	kMCPlatformPlayerMediaTypeTextBit,
+	kMCPlatformPlayerMediaTypeQTVRBit,
+	kMCPlatformPlayerMediaTypeSpriteBit,
+	kMCPlatformPlayerMediaTypeFlashBit,
+
+	kMCPlatformPlayerMediaTypeVideo = 1 << kMCPlatformPlayerMediaTypeVideoBit,
+	kMCPlatformPlayerMediaTypeAudio = 1 << kMCPlatformPlayerMediaTypeAudioBit,
+	kMCPlatformPlayerMediaTypeText = 1 << kMCPlatformPlayerMediaTypeTextBit,
+	kMCPlatformPlayerMediaTypeQTVR = 1 << kMCPlatformPlayerMediaTypeQTVRBit,
+	kMCPlatformPlayerMediaTypeSprite = 1 << kMCPlatformPlayerMediaTypeSpriteBit,
+	kMCPlatformPlayerMediaTypeFlash = 1 << kMCPlatformPlayerMediaTypeFlashBit,
 };
 
 enum MCPlatformPlayerTrackProperty
@@ -1007,13 +1051,19 @@ struct MCPlatformPlayerQTVRConstraints
 	double z_min, z_max;
 };
 
+typedef uint64_t MCPlatformPlayerDuration;
+typedef array_t<MCPlatformPlayerDuration> MCPlatformPlayerDurationArray;
+#define kMCPlatformPropertyTypePlayerDuration kMCPlatformPropertyTypeUInt64
+#define kMCPlatformPropertyTypePlayerDurationArray kMCPlatformPropertyTypeUInt64Array
+#define MCPlatformPlayerDurationMax UINT64_MAX
+
 void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player);
 
 void MCPlatformPlayerRetain(MCPlatformPlayerRef player);
 void MCPlatformPlayerRelease(MCPlatformPlayerRef player);
 
-void MCPlatformAttachPlayer(MCPlatformPlayerRef player, MCPlatformWindowRef window);
-void MCPlatformDetachPlayer(MCPlatformPlayerRef player);
+void *MCPlatformPlayerGetNativeView(MCPlatformPlayerRef player);
+bool MCPlatformPlayerSetNativeParentView(MCPlatformPlayerRef p_player, void *p_parent_view);
 
 bool MCPlatformPlayerIsPlaying(MCPlatformPlayerRef player);
 
@@ -1024,7 +1074,7 @@ void MCPlatformStartPlayer(MCPlatformPlayerRef player, double rate);
 //void MCPlatformFastBackPlayer(MCPlatformPlayerRef player);
 void MCPlatformStopPlayer(MCPlatformPlayerRef player);
 
-void MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, MCImageBitmap*& r_bitmap);
+bool MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, const MCGIntegerSize &p_size, MCImageBitmap*& r_bitmap);
 void MCPlatformUnlockPlayerBitmap(MCPlatformPlayerRef player, MCImageBitmap *bitmap);
 
 void MCPlatformSetPlayerProperty(MCPlatformPlayerRef player, MCPlatformPlayerProperty property, MCPlatformPropertyType type, void *value);
@@ -1145,6 +1195,7 @@ struct MCPlatformSoundRecorderConfiguration
 
 typedef bool (*MCPlatformSoundRecorderListInputsCallback)(void *context, unsigned int input_id, const char *label);
 typedef bool (*MCPlatformSoundRecorderListCompressorsCallback)(void *context, unsigned int compressor_id, const char *label);
+typedef bool (*MCPlatformSoundRecorderListFormatsCallback)(void *context, intenum_t format_id, MCStringRef label);
 
 void MCPlatformSoundRecorderCreate(MCPlatformSoundRecorderRef& r_recorder);
 
@@ -1172,6 +1223,9 @@ bool MCPlatformSoundRecorderListInputs(MCPlatformSoundRecorderRef recorder, MCPl
 // Call callback for each possible compressor available - if the callback returns 'false' at any point
 // enumeration is cancelled, and the false will be returned.
 bool MCPlatformSoundRecorderListCompressors(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderListCompressorsCallback callback, void *context);
+// Call callback for each possible output format available - if the callback returns 'false' at any point
+// enumeration is cancelled, and the false will be returned.
+bool MCPlatformSoundRecorderListFormats(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderListFormatsCallback callback, void *context);
 
 // Get the current sound recording configuration. The caller is responsible for freeing 'extra_info'.
 void MCPlatformSoundRecorderGetConfiguration(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderConfiguration& r_config);

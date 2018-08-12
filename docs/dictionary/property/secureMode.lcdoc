@@ -4,31 +4,56 @@ Type: property
 
 Syntax: set the secureMode to true
 
-Summary: Disables the <application|application's> ability to access <files> and run programs.
+Summary:
+Disables the <application|application's> ability to access <files> and
+run programs.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the secureMode to true
 
-Value (bool):The <secureMode> is true or false.
+Value (bool):
+The <secureMode> is true or false.
 By default, the <secureMode> <property> is set to false.
 
 Description:
-Use the <secureMode> <property> to lock down <file> access in situations where security is required:  for example, for a kiosk application or <web server>.
+Use the <secureMode> <property> to lock down <file> access in situations
+where security is required: for example, for a kiosk application or <web
+server>. 
 
-If the <secureMode> <property> is set to true, the <application> cannot use the <get>, <put>, <open file>, <read from file>, or <write to file> <command|commands> to gain access to local <files>. The <application> cannot run programs with the <shell> <function(control_st)>, the <open process> <command>, or the  <launch> <command>. On <Windows|Windows systems>, it cannot use the <deleteRegistry>, <queryRegistry>, or <setRegistry> <function(glossary)|functions> to access the <registry|Windows system registry>.
+If the <secureMode> <property> is set to true, the <application> cannot
+use the <get>, <put>, <open file>, <read from file>, or <write to file>
+<command|commands> to gain access to local <files>. The <application>
+cannot run programs with the <shell> <function(control structure)>, the
+<open process> <command>, or the <launch> <command>. On <Windows|Windows
+systems>, it cannot use the <deleteRegistry>, <queryRegistry>, or
+<setRegistry> <function(glossary)|functions> to access the
+<registry|Windows system registry>.
 
-The application cannot access remote files with the URL <keyword>. The <application> can  open (but not save) <stack file|stack files>.
+The application cannot access remote files with the URL <keyword>. The
+<application> can open (but not save) <stack file|stack files>.
 
-If the application is started from a Unix or Windows command line, this property can be set to true on startup by using the -f option.
+If the application is started from a Unix or Windows command line, this
+property can be set to true on startup by using the -f option.
 
->*Important:*  Once the <secureMode> <property> is set to true, it cannot be set back to false. To change it back to true, you must quit and restart the <application>.
+>*Important:*  Once the <secureMode> <property> is set to true, it
+> cannot be set back to false. To change it back to true, you must quit
+> and restart the <application>.
 
-References: securityPermissions (property), securityCategories (property), file (keyword), write to file (command), open file (command), put (command), launch (command), open process (command), read from file (command), get (command), shell (function), files (function), deleteRegistry (function), setRegistry (function), queryRegistry (function), property (glossary), stack file (glossary), Windows (glossary), web server (glossary), keyword (glossary), registry (glossary), function (glossary), command (glossary), application (glossary), function (control_st)
+References: write to file (command), open file (command), put (command),
+launch (command), open process (command), read from file (command),
+get (command), function (control structure), shell (function),
+files (function), deleteRegistry (function), setRegistry (function),
+queryRegistry (function), property (glossary), stack file (glossary),
+Windows (glossary), web server (glossary), keyword (glossary),
+registry (glossary), function (glossary), command (glossary),
+application (glossary), file (keyword), securityPermissions (property),
+securityCategories (property)
 
 Tags: file system
+

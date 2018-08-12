@@ -129,10 +129,6 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
             return s_system_font;
         }
     }
-    
-    if (r_name)
-        *r_name = nil;
-    return nil;
 }
 
 
@@ -373,21 +369,17 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
         r_color.blue = [t_color blueComponent] * 65535;
     }
     
-    // Ensure the colour structure is set up correctly
-    if (t_found)
-        MCscreen->alloccolor(r_color);
-    
     return t_found;
 }
 
 bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font)
 {
     // Get the font for the given control type
-    MCNameRef t_font_name = nil;
-    NSFont* t_font = font_for_control(p_type, p_state, &t_font_name);
+	MCNewAutoNameRef t_font_name;
+    NSFont* t_font = font_for_control(p_type, p_state, &(&t_font_name));
     if (t_font == nil)
         return false;
     
     // Ensure the font is registered and return it
-    return MCFontCreateWithHandle((MCSysFontHandle)t_font, t_font_name, r_font);
+    return MCFontCreateWithHandle((MCSysFontHandle)t_font, *t_font_name, r_font);
 }

@@ -1,2 +1,0 @@
-# Better quality printing on Mac
-When printing on Mac, two things have been improved. The first is that semi-transparent groups (with default ink - copy / srcOver) will render directly rather than being rasterized first. The second is that PNG and JPEG images will pass their data directly through to the printer driver. The end result is that scaled images will print at higher resolution than they did before in many more cases.

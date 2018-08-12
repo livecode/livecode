@@ -2,36 +2,68 @@ Name: fileType
 
 Type: property
 
-Syntax: set the fileType to <creator> & <type> 
+Syntax: set the fileType to <creator> & <type>
 
-Summary: Specifies the <creator signature|creator> and <type signature|file type> for any non- <stack> <files> a <handler> creates on a <Mac OS> or <OS X|OS X system>.
+Summary:
+Specifies the <creator signature|creator> and <type signature|file type>
+for any non- <stack> <files> a <handler> creates on a <Mac OS> or 
+<OS X|OS X system>.
 
 Introduced: 1.0
 
-OS: mac,ios
+OS: mac, ios
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the fileType to "ttxtTEXT" -- text file owned by SimpleText app
 
 Value:
-The <fileType> is an eight- <character> <string>. The first four <characters> are the <creator signature>, and the last four are the <type signature|file type>.
-<img src="202653"/> >*Important:* The <type signature|file type> and <creator signature> are <case-sensitive>.
+The <fileType> is an eight- <character> <string>. The first four
+<characters> are the <creator signature>, and the last four are the
+<type signature|file type>.
 
 Description:
-Use the <fileType> <property> to ensure that <files> that a <standalone application> creates are recognized by the operating system as belonging to the <standalone application|standalone>.
+Use the <fileType> <property> to ensure that <files> that a 
+<standalone application> creates are recognized by the operating system 
+as belonging to the <standalone application|standalone>.
 
->*Important:*  The <type signature|file type> and <creator signature> are <case-sensitive>.
+>*Important:*  The <type signature|file type> and <creator signature>
+> are <case-sensitive>.
 
-When a file is saved on a Mac OS or OS X system, a 4-character file type and 4-character creator signature are saved with it. The creator signature specifies which application owns the file. The application determines the file format from the file type; the type is also used  to determine which applications (other than the owner) can work with the file.
+When a file is saved on a Mac OS or OS X system, a 4-character file type
+and 4-character creator signature are saved with it. The creator
+signature specifies which application owns the file. The application
+determines the file format from the file type; the type is also used to
+determine which applications (other than the owner) can work with the
+file. 
 
-The <fileType> <property> is used to set the <type signature|file type> and <creator signature|creator> of <files> created by the <open file> <command> and of <files> created putting data into a <file>, <binfile>, or <resfile> <URL> that doesn't yet exist. (To specify the <type signature|file type> and <creator signature|creator> for <stack file|stack files> your application creates with the <save> <command>, use the <stackFileType> <property> instead.)
+The <fileType> <property> is used to set the <type signature|file type>
+and <creator signature|creator> of <files> created by the <open file>
+<command> and of <files> created putting data into a <file>, <binfile>,
+or <resfile> <URL> that doesn't yet exist. (To specify the <type
+signature|file type> and <creator signature|creator> for <stack
+file|stack files> your application creates with the <save> <command>,
+use the <stackFileType> <property> instead.)
 
 This property has no effect on Unix and Windows systems.
 
->*Important:*  To avoid conflicts with other applications, register any new <creator signature|creator signatures> with Apple Computer if you plan to distribute a <stack> or <standalone application> that uses this property. Apple maintains a registry of <creator signature|creator signatures> on its web site at http://developer.apple.com/dev/cftype/.
+>*Important:*  To avoid conflicts with other applications, register any
+> new <creator signature|creator signatures> with Apple Computer if you
+> plan to distribute a <stack> or <standalone application> that uses
+> this property. Apple maintains a registry of <creator
+> signature|creator signatures> on its web site at
+> http://developer.apple.com/dev/cftype/. 
 
-References: filename (property), stackFileType (property), file (keyword), characters (keyword), string (keyword), character (keyword), binfile (keyword), URL (keyword), resfile (keyword), rename (command), save (command), open file (command), files (function), property (glossary), OS X (glossary), handler (glossary), type signature (glossary), stack file (glossary), case-sensitive (glossary), Mac OS (glossary), standalone application (glossary), creator signature (glossary), command (glossary), stack (object)
+References: rename (command), save (command), open file (command),
+files (function), property (glossary), OS X (glossary),
+handler (glossary), type signature (glossary), stack file (glossary),
+case-sensitive (glossary), Mac OS (glossary),
+standalone application (glossary), creator signature (glossary),
+command (glossary), file (keyword), characters (keyword),
+string (keyword), character (keyword), binfile (keyword), URL (keyword),
+resfile (keyword), stack (object), filename (property),
+stackFileType (property)
 
 Tags: file system
+

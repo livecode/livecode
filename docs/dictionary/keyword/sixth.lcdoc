@@ -4,13 +4,14 @@ Type: keyword
 
 Syntax: sixth
 
-Summary: Designates the sixth member of a set.
+Summary:
+Designates the sixth member of a set.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 copy the sixth image
@@ -19,12 +20,18 @@ Example:
 subtract sixth line of me from first line of me
 
 Description:
-Use the <sixth> <keyword> in an <object reference> or <chunk expression>.
+Use the <sixth> <keyword> in an <object reference> or <chunk
+expression>. 
 
-The <sixth> <keyword> can be used to specify any <object> whose <number> <property> is 6. It can also be used to designate the sixth <chunk> in a <chunk expression>.
+The <sixth> <keyword> can be used to specify any <object(glossary)>
+whose <number> <property> is 6. It can also be used to designate the
+sixth <chunk> in a <chunk expression>.
 
 The word the is optional when using the <sixth> <keyword>.
 
-References: six (constant), object (object), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
+References: six (constant), number (function), object (glossary),
+keyword (glossary), property (glossary), object reference (glossary),
+chunk expression (glossary), chunk (glossary)
 
 Tags: math
+

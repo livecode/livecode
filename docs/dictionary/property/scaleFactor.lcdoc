@@ -2,13 +2,14 @@ Name: scaleFactor
 
 Type: property
 
-Syntax: set the scaleFactor of <stack> to <scale> 
+Syntax: set the scaleFactor of <stack> to <scale>
 
-Summary: Determines the custom scale factor for a stack.
+Summary:
+Determines the custom scale factor for a stack.
 
 Introduced: 6.6
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
 Platforms: desktop
 
@@ -17,20 +18,30 @@ Example:
 set the scaleFactor of stack "myLargeStack" to 0.5
 
 Example:
-&mdash; Preview the stack appearance on a high-density display
+-- Preview the stack appearance on a high-density display
 set the scaleFactor of stack "myApp" to 1.5
 
 Parameters:
-stack: A reference to a stack or an expression that evaluates to a stack.
-scale: A non-zero real number value which represents the scale multiplier.
+stack:
+A reference to a stack or an expression that evaluates to a stack.
 
-Value: The <scaleFactor> property returns a a non-zero real number or empty.
+scale:
+A non-zero real number value which represents the scale multiplier.
+
+Value:
+The <scaleFactor> property returns a a non-zero real number or empty.
 
 Description:
-Use the <scaleFactor> property when developing to scale down stacks that are larger than the available screen space.
+Use the <scaleFactor> property when developing to scale down stacks that
+are larger than the available screen space.
 
-We do not recommend setting the <scaleFactor> property above 2. The higher the value, the more pixels must be rendered. For example, setting the <scaleFactor> property to 10 will cause 100 times the number of pixels to be rendered causing the IDE to run slowly.
+We do not recommend setting the <scaleFactor> property above 2. The
+higher the value, the more pixels must be rendered. For example, setting
+the <scaleFactor> property to 10 will cause 100 times the number of
+pixels to be rendered causing the IDE to run slowly.
 
-References: iphoneUseDeviceResolution (command), usePixelScaling (property), systemPixelScale (property)
+References: iphoneUseDeviceResolution (command),
+usePixelScaling (property), systemPixelScale (property)
 
 Tags: windowing
+

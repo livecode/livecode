@@ -4,11 +4,12 @@ Type: keyword
 
 Syntax: $_GET_RAW
 
-Summary: <$_GET_RAW> is the QUERY_STRING component of a URL.
+Summary:
+<$_GET_RAW> is the QUERY_STRING component of a URL.
 
 Introduced: 4.6.3
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
 Platforms: server
 
@@ -27,11 +28,13 @@ end repeat
 
 Description:
 Use the <$_GET_RAW> keyword to get the QUERY_STRING component of a url. 
-
 http://www.website.com?variable1=value1&variable2=value2
 
 $_GET_RAW is only available when running in CGI mode (Server).
 
->*Note:* The <$_GET_RAW> keyword is useful as it provides a means to get the QUERY_STRING data in order.
+>*Note:* The <$_GET_RAW> keyword is useful as it provides a means to get
+> the QUERY_STRING data in order.
 
-References: $_POST (keyword), $_SERVER (keyword), $_GET_BINARY (keyword), $_GET (keyword)
+References: $_POST (keyword), $_SERVER (keyword), $_GET_BINARY (keyword),
+$_GET (keyword)
+

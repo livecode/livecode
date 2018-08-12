@@ -32,6 +32,7 @@ enum
 	kMCModeEnvironmentTypePlayer,
 	kMCModeEnvironmentTypeServer,
 	kMCModeEnvironmentTypeMobile,
+    kMCModeEnvironmentTypeEmbedded,
 };
 
 
@@ -126,13 +127,6 @@ bool MCModeShouldCheckCantStandalone(void);
 //
 uint4 MCModeComputeObjectOrigin(uint4 extraflags);
 
-// This hook is used to implement message box redirection. If it
-// returns 'false' the default message box behavior is observed.
-//
-// This hook is called by MCB_setmsg.
-//
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string);
-
 // This hook is used to work out the parameters for the 'relaunch'
 // feature.
 //
@@ -164,13 +158,6 @@ void MCModeSetupCrashReporting(void);
 //
 MCStatement *MCModeNewCommand(int2 which);
 MCExpression *MCModeNewFunction(int2 which);
-
-// This hook is called at the end of the MCObject destructor. It
-// allows the mode to remove any references it has to the object.
-//
-// It is called by MCObject::~MCObject.
-//
-void MCModeObjectDestroyed(MCObject *object);
 
 // This hook is used to determine whether to queue stacks that are wanting to
 // be opened (e.g. via an AppleEvent OpenDoc event).
@@ -219,10 +206,6 @@ bool MCModeMakeLocalWindows(void);
 void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, MCStringRef text_font, MCStringRef message);
 void MCModeHideToolTip(void);
 
-#ifdef _MACOSX
-uint32_t MCModePopUpMenu(MCMacSysMenuHandle p_menu, int32_t p_x, int32_t p_y, uint32_t p_index, MCStack *p_stack);
-#endif
-
 // This hook is used to handle the reset cursors action.
 void MCModeResetCursors(void);
 
@@ -238,22 +221,20 @@ bool MCModeHasHomeStack(void);
 // Property getters & setters
 
 #ifdef MODE_DEVELOPMENT
-void MCModeGetRevMessageBoxLastObject(MCExecContext& ctxt, MCStringRef& r_object);
-void MCModeGetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef& r_id);
-void MCModeSetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef p_target);
-void MCModeGetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef& r_limits);
-void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings);
 void MCModeGetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef& r_settings);
 void MCModeSetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef p_settings);
-void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info);
-void MCModeGetRevLicenseInfoByKey(MCExecContext& ctxt, MCNameRef p_key, MCArrayRef& r_info);
 void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_listeners);
 void MCModeGetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t& r_time);
 void MCModeSetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t p_time);
-
 #endif
 
 // IM-2014-08-08: [[ Bug 12372 ]] Check if pixel scaling should be enabled.
 bool MCModeGetPixelScalingEnabled(void);
+
+// Check if this mode is allowed to change the pixel scaling settings.
+bool MCModeCanEnablePixelScaling(void);
+
+// Hook called in X_close for any mode-specific finalization.
+void MCModeFinalize(void);
 
 #endif

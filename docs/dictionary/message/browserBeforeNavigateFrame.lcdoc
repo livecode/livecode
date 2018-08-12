@@ -1,20 +1,19 @@
 Name: browserBeforeNavigateFrame
 
+Synonyms: xbrowser_beforenavigateframe
+
 Type: message
 
-Syntax: browserBeforeNavigateFrame <instanceId>, <url> 
+Syntax: browserBeforeNavigateFrame <pInstanceId>, <pUrl>
 
-Syntax: XBrowser_BeforeNavigateFrame <url>, <instanceId> 
+Syntax: XBrowser_BeforeNavigateFrame <pUrl>, <pInstanceId>
 
-Summary: Sent when a browser is about to navigate to a new url in a frame
-
-Synonyms: XBrowser_BeforeNavigateFrame
-
-Associations: card
+Summary:
+Sent when a browser is about to navigate to a new url in a frame
 
 Introduced: 2.8.1
 
-OS: mac,windows
+OS: mac, windows
 
 Platforms: desktop
 
@@ -29,16 +28,28 @@ on browserBeforeNavigateFrame pInstanceId, pUrl
 end browserBeforeNavigateFrame
 
 Parameters:
-instanceId: The integer identifier of the browser object >*Note:* For general information on using the browser library, see the notes in the revBrowserOpen function reference.
-url: The new url that is about to be navigated to in the frame
+pInstanceID:
+The integer identifier of the browser object
+
+pUrl:
+The new url that is about to be navigated to in the frame
 
 Description:
-The <browserBeforeNavigateFrame> message is sent to the current card of a stack containg a browser object when the browser object is about to navigate to a new url in a frame. i.e. a change in the url in the target browser has been requested but not yet actioned.
+The <browserBeforeNavigateFrame> message is sent to the current card of
+a stack containg a browser object when the browser object is about to
+navigate to a new url in a frame. i.e. a change in the url in the target
+browser has been requested but not yet actioned.
 
-If the target is the main frame of the browser then the <browserBeforeNavigate message> is sent instead.
+If the target is the main frame of the browser then the
+<browserBeforeNavigate> <message> is sent instead.
 
-To prevent the navigation occuring, set the global variable <browserCancel> to true
+To prevent the navigation occuring, set the global variable
+<browserCancel> to true
 
->*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+>*Note:* For general information on using the browser library, see the
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserOpen function (function), browserBeforeNavigate message (message), browserBeforeNavigate (message), browserDownloadRequest (message), browserNavigateCompleteFrame (message), browserCancel (glossary)
+References: revBrowserOpen (function), function (glossary), browserCancel (glossary),
+message (glossary), browserBeforeNavigate (message),
+browserDownloadRequest (message), browserNavigateCompleteFrame (message)
+

@@ -4,24 +4,34 @@ Type: property
 
 Syntax: get the loadedTime of player "myPlayer"
 
-Summary: Specifies the time of a sound/movie, up to which the sound/movie can be played.
+Summary:
+Specifies the time of a sound/movie, up to which the sound/movie can be
+played. 
 
 Associations: player
 
 Introduced: 6.7
 
-OS: mac
+OS: mac, windows
 
 Platforms: desktop
 
 Example:
 put trunc(the loadedTime of me / the duration of me * 100) into tPercentLoaded
 
-Value: The <loadedTime> of a <player> is an integer.
+Value:
+The <loadedTime> of a <player> is an integer.
 
 Description:
-Use the <loadedTime> <property> to find out up to which time a movie or sound can be played.
+Use the <loadedTime> <property> to find out up to which time a movie or
+sound can be played.
 
-References: looping (property), endTime (property), showSelection (property), callbacks (property), startTime (property), property (glossary), player (keyword)
+Changes:
+Support for this property on Windows was added in version 8.1.0.
+
+References: property (glossary), player (keyword), looping (property),
+endTime (property), showSelection (property), callbacks (property),
+startTime (property)
 
 Tags: multimedia
+

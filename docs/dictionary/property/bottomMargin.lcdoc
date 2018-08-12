@@ -2,30 +2,49 @@ Name: bottomMargin
 
 Type: property
 
-Syntax: set the bottomMargin of {<button> | <field> | <group>} to <pixels> 
+Syntax: set the bottomMargin of {<button> | <field> | <group>} to <pixels>
 
-Summary: Specifies how close text within an <object> can come to the <object|object's> lower edge, and how close <object|objects> in a <group(command)> can come to the <group(glossary)|group's> lower edge.
+Summary:
+Specifies how close text within an <object(glossary)> can come to the
+<object|object's> lower edge, and how close <object|objects> in a
+<group(command)> can come to the <group(glossary)|group's> lower edge.
+
+Associations: button, field, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the bottomMargin of field "List" to 0
 
 Value:
 The <bottomMargin> is a <non-negative> <integer>.
-By default, the <bottomMargin> of a newly created <field(keyword)> is 8. If the <field(object)|field's> <wideMargins> <property> is true, the <field(object)|field's> <bottomMargin> is set to 14. The <default> <bottomMargin> setting for other controls is 4.
+By default, the <bottomMargin> of a newly created <field(keyword)> is 8.
+If the <field(object)|field's> <wideMargins> <property> is true, the
+<field(object)|field's> <bottomMargin> is set to 14. The <default>
+<bottomMargin> setting for other controls is 4.
 
 Description:
-Use the <bottomMargin> <property> to change the amount of blank space between an <object|object's> bottom edge and its contents.
+Use the <bottomMargin> <property> to change the amount of blank space
+between an <object|object's> bottom edge and its contents.
 
-The <bottomMargin> <property> of a <field> or <button> specifies how many blank <pixels> are left between the <object|object's> bottom edge and the lower edge of its text. The <bottomMargin> of a <group(command)> specifies how far the <group(glossary)|group's> bottom edge extends below its lowest <object>.
+The <bottomMargin> <property> of a <field> or <button> specifies how
+many blank <pixels> are left between the <object|object's> bottom edge
+and the lower edge of its text. The <bottomMargin> of a <group(command)>
+specifies how far the <group(glossary)|group's> bottom edge extends
+below its lowest <object(glossary)>.
 
-An object's <bottomMargin> <property> is equal to <item> 4 of its <margins> <property>.
+An object's <bottomMargin> <property> is equal to <item> 4 of its
+<margins> <property>.
 
-References: wideMargins (property), pixels (property), bottom (property), margins (property), default (keyword), item (keyword), button (keyword), field (keyword), integer (keyword), group (command), field (object), object (object), property (glossary), non-negative (glossary), group (glossary)
+References: group (command), object (glossary), property (glossary),
+non-negative (glossary), group (glossary), default (keyword),
+item (keyword), button (keyword), field (keyword), integer (keyword),
+field (object), wideMargins (property), pixels (property),
+bottom (property), margins (property)
 
 Tags: ui
+

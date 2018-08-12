@@ -1,12 +1,15 @@
 Name: gamma
 
-Synonyms: gamma curve,gamma setting,gamma
+Synonyms: gamma curve, gamma setting, gamma
 
 Type: glossary
 
 Description:
 The relationship between intensity and luminance of color. 
- 
-Gamma varies between monitors and between operating systems, so color images may look different--brighter or more washed out--on different systems.
+
+Gamma varies between monitors and between operating systems, so color
+images may look different--brighter or more washed out--on different
+systems. 
 
 Tags: ui
+

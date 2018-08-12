@@ -1,10 +1,12 @@
 Name: MIME
 
-Synonyms: MIME encoding,MIME encoded,MIME-encoding,MIME-encoded,MIME
+Synonyms: mime encoding, mime encoded, mime-encoding, mime-encoded, mime
 
 Type: glossary
 
 Description:
-Multipurpose Internet Mail Extensions. A standard for including data other than plain text in an email message.
+Multipurpose Internet Mail Extensions. A standard for including data
+other than plain text in an email message.
 
 Tags: text processing
+

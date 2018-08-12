@@ -4,24 +4,31 @@ Type: keyword
 
 Syntax: eighth
 
-Summary: Designates the eighth member of a set.
+Summary:
+Designates the eighth member of a set.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 send the eighth item of messagesList to the eighth card
 
 Description:
-Use the <eighth> <keyword> in an <object reference> or <chunk expression>.
+Use the <eighth> <keyword> in an <object reference> or 
+<chunk expression>. 
 
-The <eighth> <keyword> can be used to specify any <object> whose <number> <property> is 8. It can also be used to designate the eighth <chunk> in a <chunk expression>.
+The <eighth> <keyword> can be used to specify any <object(glossary)>
+whose <number> <property> is 8. It can also be used to designate the
+eighth <chunk> in a <chunk expression>.
 
 The word the is optional when using the <eighth> <keyword>.
 
-References: eight (constant), object (object), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
+References: eight (constant), number (function), object (glossary),
+keyword (glossary), property (glossary), object reference (glossary),
+chunk expression (glossary), chunk (glossary)
 
 Tags: math
+

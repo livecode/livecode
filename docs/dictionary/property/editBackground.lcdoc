@@ -1,38 +1,59 @@
 Name: editBackground
 
+Synonyms: editbkgnd, editbg
+
 Type: property
 
 Syntax: set the editBackground of <stack> to {true | false}
 
-Summary: Specifies that any <objects> created should be added to the <background>.
-
-Synonyms: editBkgnd,editBg
+Summary:
+Specifies that any <objects> created should be added to the
+<background>. 
 
 Associations: stack
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the editBackground of this stack to true
 
-Value (bool):The <editBackground> of a <stack> is true or false.
-By default, the <editBackground> <property> of newly created <stacks> is set to false.
+Value (bool):
+The <editBackground> of a <stack> is true or false.
+By default, the <editBackground> <property> of newly created <stacks> is
+set to false.
 
 Description:
-Use the <editBackground> <property> to edit the first <group> on the <current card>, or to find out whether the <stack> is in <group-editing mode>.
+Use the <editBackground> <property> to edit the first <group> on the
+<current card>, or to find out whether the <stack> is in 
+<group-editing mode>. 
 
-If the <editBackground> <property> is set to true, any newly created <object|objects> become part of the <group> being edited. If the <editBackground> is false, newly created <control|controls> are created as <card control|card controls> and only appear on the <current card>.
+If the <editBackground> <property> is set to true, any newly created
+<object|objects> become part of the <group> being edited. If the
+<editBackground> is false, newly created <control|controls> are created
+as <card control|card controls> and only appear on the <current card>.
 
-If the current card has more than one group, the group whose number is lowest is edited when you set the <editBackground> of the <stack> to true.
+If the current card has more than one group, the group whose number is
+lowest is edited when you set the <editBackground> of the <stack> to
+true. 
 
-You can use the <start editing> <command> to edit a specific <group>. Setting the <editBackground> <property> to false is equivalent to the <stop editing> <command>.
+You can use the <start editing> <command> to edit a specific <group>.
+Setting the <editBackground> <property> to false is equivalent to the
+<stop editing> <command>.
 
-By default, the <editBackground> is set to false.  This property is not preserved when the stack is saved, the property will always be false upon opening a stack.
+By default, the <editBackground> is set to false.  This property is not
+preserved when the stack is saved, the property will always be false
+upon opening a stack.
 
-References: relayerGroupedControls (property), groupIDs (property), stop editing (command), group (command), start editing (command), stack (object), control (object), object (object), property (glossary), current card (glossary), command (glossary), card control (glossary), object (glossary), background (glossary), group-editing mode (glossary), stacks (function)
+References: stop editing (command), group (command),
+start editing (command), stacks (function), object (glossary),
+property (glossary), current card (glossary), command (glossary),
+card control (glossary), object (glossary), background (glossary),
+group-editing mode (glossary), stack (object), control (object),
+relayerGroupedControls (property), groupIDs (property)
 
 Tags: objects
+

@@ -1,0 +1,1 @@
+# Prevent crash when deleting stack which has an open substack

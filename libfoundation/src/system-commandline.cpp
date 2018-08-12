@@ -237,6 +237,9 @@ __MCSCommandLineFinalize (void)
  * Windows-specific functions
  * ================================================================ */
 
+/* This is needed for CommandLineToArgvW */
+#pragma comment(lib, "shell32.lib")
+
 MC_DLLEXPORT_DEF bool
 MCSCommandLineCaptureWindows (void)
 {
@@ -281,7 +284,7 @@ __MCSWindowsCommandLineGet (uindex_t & r_argc,
 }
 
 static void
-__MCSWindowsCommandLineFree (size_t & p_argc,
+__MCSWindowsCommandLineFree (uindex_t& p_argc,
                              unichar_t **&p_argv)
 {
 	if (p_argv != NULL)

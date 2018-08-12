@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "paragraf.h"
 #include "text.h"
 #include "osspec.h"
-//#include "execpt.h"
+
 #include "mcstring.h"
 #include "uidc.h"
 #include "globals.h"
@@ -105,7 +105,7 @@ struct export_html_t
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static const char *s_export_html_tag_strings[] =
+static const char * const s_export_html_tag_strings[] =
 {
 	"a",
 	"span",
@@ -122,7 +122,7 @@ static const char *s_export_html_tag_strings[] =
 	"font"
 };
 
-static const char *s_export_html_list_types[] =
+static const char * const s_export_html_list_types[] =
 {
 	"",
 	"disc",
@@ -138,7 +138,7 @@ static const char *s_export_html_list_types[] =
 
 // This is the list of HTML entities for ISO8859-1 (unicode) codepoints in the range
 // 0x00A0 to 0x00FF inclusive.
-static const char *s_export_html_native_entities[] =
+static const char * const s_export_html_native_entities[] =
 {
 	"nbsp", "iexcl", "cent", "pound", "curren", "yen", "brvbar", "sect", 
 	"uml", "copy", "ordf", "laquo", "not", "shy", "reg", "macr", 
@@ -154,7 +154,7 @@ static const char *s_export_html_native_entities[] =
 	"oslash", "ugrave", "uacute", "ucirc", "uuml", "yacute", "thorn", "yuml", 
 };
 
-static struct { const char *entity; uint32_t codepoint; } s_export_html_unicode_entities[] =
+static const struct { const char *entity; uint32_t codepoint; } s_export_html_unicode_entities[] =
 {
 	{ "OElig", 0x0152 }, { "oelig", 0x0153 }, { "Scaron", 0x0160 }, 
 	{ "scaron", 0x0161 }, { "Yuml", 0x0178 }, { "fnof", 0x0192 }, { "circ", 0x02C6 }, 
@@ -196,6 +196,35 @@ static struct { const char *entity; uint32_t codepoint; } s_export_html_unicode_
 	{ "loz", 0x25CA }, { "spades", 0x2660 }, { "clubs", 0x2663 }, { "hearts", 0x2665 }, 
 	{ "diams", 0x2666 }, 
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+static int atoi(MCStringRef p_string)
+{
+	MCAutoNumberRef t_number;
+	if (!MCNumberParse(p_string, &t_number))
+	{
+		return 0;
+	}
+	
+	return MCNumberFetchAsInteger(*t_number);
+}
+
+static bool MCStringContainsCString(MCStringRef p_haystack,
+									const char *p_needle,
+									MCStringOptions p_options)
+{
+	MCAutoStringRef t_needle_str;
+	if (!MCStringCreateWithCString(p_needle,
+								   &t_needle_str))
+	{
+		return false;
+	}
+	
+	return MCStringContains(p_haystack,
+							*t_needle_str,
+							p_options);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -253,11 +282,39 @@ static void export_html_emit_char(char *p_output, uint32_t p_char, export_html_e
 
 static void export_html_emit_unicode_text(MCStringRef p_buffer, MCStringRef p_input, MCRange p_range, export_html_escape_type_t p_escape)
 {
-	for(uint32_t i = 0; i < p_range.length; i++)
+	uint32_t t_index = p_range.offset;
+	while(t_index < p_range.offset + p_range.length)
 	{
+		unichar_t t_unit =
+			MCStringGetCharAtIndex(p_input,
+								   t_index);
+		
+		// If the next unit is a low surrogate *and* there is a next unit
+		// *and* it is a high surrogate then map to a codepoint.
+		codepoint_t t_codepoint = t_unit;
+		if (MCUnicodeCodepointIsLeadingSurrogate(t_unit))
+		{
+			if (t_index + 1 < p_range.length)
+			{
+				unichar_t t_next_unit =
+					MCStringGetCharAtIndex(p_input,
+										   t_index + 1);
+				
+				if (MCUnicodeCodepointIsTrailingSurrogate(t_next_unit))
+				{
+					t_codepoint = MCUnicodeCombineSurrogates(t_unit,
+															 t_next_unit);
+					
+					t_index += 1;
+				}
+			}
+		}
+		
 		char t_output[16];
-		export_html_emit_char(t_output, MCStringGetCodepointAtIndex(p_input, p_range.offset+i), p_escape);
+		export_html_emit_char(t_output, t_codepoint, p_escape);
 		/* UNCHECKED */ MCStringAppendFormat(p_buffer, "%s", t_output);
+		
+		t_index += 1;
 	}
 }
 
@@ -543,6 +600,12 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 					/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, i == 0 ? "%d" : ",%d", t_style.tabs[i]);
 				/* UNCHECKED */ MCStringAppendChar(ctxt.m_text, '"');
 			}
+			if (ctxt . effective || t_style . has_tab_alignments)
+			{
+				MCAutoStringRef t_formatted_tabalign;
+				/* UNCHECKED */ MCField::formattabalignments(t_style.tab_alignments, t_style.tab_alignment_count, &t_formatted_tabalign);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " tabalign=\"%@\"", *t_formatted_tabalign);
+			}
 			if (t_style . has_background_color)
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " bgcolor=\"%s\"", export_html_hexcolor(t_style . background_color));
 			if (t_style . has_border_width || ctxt . effective)
@@ -609,23 +672,6 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 	
 	return true;
 }
-
-#ifdef LEGACY_EXEC
-void MCField::exportashtmltext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective)
-{
-	MCAutoStringRef t_string;
-
-	if (exportashtmltext(p_paragraphs, p_start_index, p_finish_index, p_effective, &t_string))
-		/* UNCHECKED */ ep . setvalueref(*t_string);
-	else
-		ep . clear();
-}
-
-void MCField::exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_effective)
-{
-	exportashtmltext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_effective);
-}
-#endif
 
 bool MCField::exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCDataRef& r_text)
 {
@@ -797,6 +843,7 @@ enum import_html_attr_type_t
 	kImportHtmlAttrSpaceAbove,
 	kImportHtmlAttrSpaceBelow,
 	kImportHtmlAttrTabStops,
+	kImportHtmlAttrTabAlignments,
 	kImportHtmlAttrBorderWidth,
 	kImportHtmlAttrBorderColor,
 	kImportHtmlAttrPadding,
@@ -835,6 +882,7 @@ static struct { const char *attr; import_html_attr_type_t type; } s_import_html_
 	{ "spaceabove", kImportHtmlAttrSpaceAbove},
 	{ "spacebelow", kImportHtmlAttrSpaceBelow },
 	{ "tabstops", kImportHtmlAttrTabStops },
+	{ "tabalign", kImportHtmlAttrTabAlignments },
 	{ "borderwidth", kImportHtmlAttrBorderWidth },
 	{ "bordercolor", kImportHtmlAttrBorderColor },
 	{ "padding", kImportHtmlAttrPadding },
@@ -854,7 +902,7 @@ static struct { const char *attr; import_html_attr_type_t type; } s_import_html_
 	{ "start", kImportHtmlAttrStart },
 };
 
-static struct { const char *entity; uint32_t codepoint; } s_import_html_entities[] =
+static const struct { const char *entity; uint32_t codepoint; } s_import_html_entities[] =
 {
 	{ "AElig", 0x00C6 }, { "Aacute", 0x00C1 }, { "Acirc", 0x00C2 }, { "Agrave", 0x00C0 }, 
 	{ "Alpha", 0x0391 }, { "Aring", 0x00C5 }, { "Atilde", 0x00C3 }, { "Auml", 0x00C4 }, 
@@ -925,7 +973,7 @@ static struct { const char *entity; uint32_t codepoint; } s_import_html_entities
 struct import_html_attr_t
 {
 	import_html_attr_type_t type;
-	char *value;
+	MCStringRef value;
 };
 
 struct import_html_tag_t
@@ -988,7 +1036,7 @@ static void import_html_copy_style(const MCFieldCharacterStyle& p_src, MCFieldCh
 	if (p_src . has_metadata)
 		r_dst . metadata = MCValueRetain(p_src . metadata);
 	if (p_src . has_text_font)
-		MCNameClone(p_src . text_font, r_dst . text_font);
+        r_dst.text_font = MCValueRetain(p_src.text_font);
 }
 
 static void import_html_free_style(MCFieldCharacterStyle& p_style)
@@ -996,7 +1044,7 @@ static void import_html_free_style(MCFieldCharacterStyle& p_style)
 	MCValueRelease(p_style . link_text);
 	MCValueRelease(p_style . image_source);
 	MCValueRelease(p_style . metadata);
-	MCNameDelete(p_style . text_font);
+	MCValueRelease(p_style . text_font);
 }
 
 static bool import_html_equal_style(const MCFieldCharacterStyle& left, const MCFieldCharacterStyle& right)
@@ -1022,7 +1070,7 @@ static bool import_html_lookup_tag(const char *p_start, const char *p_end, impor
 static void import_html_free_tag(import_html_tag_t& p_tag)
 {
 	for(uint32_t i = 0; i < p_tag . attr_count; i++)
-		MCCStringFree(p_tag . attrs[i] . value);
+		MCValueRelease(p_tag . attrs[i] . value);
 	MCMemoryDeleteArray(p_tag . attrs);
 }
 
@@ -1123,49 +1171,50 @@ static bool import_html_parse_entity(const char *& x_ptr, const char *p_limit, u
 
 // This method parses a (CDATA encoded) attribute value and returns it as a native
 // cstring.
-static bool import_html_parse_attr_value(const char *p_start_ptr, const char *p_end_ptr, char*& r_value)
+static bool import_html_parse_attr_value(const char *p_start_ptr, const char *p_end_ptr, MCStringRef& r_value)
 {
 	// First allocate room for the value - this is at most the length of the input
 	// string as all entities are strictly longer than what they encode.
-	char *t_value;
-	if (!MCMemoryNewArray(p_end_ptr - p_start_ptr + 1, t_value))
+	MCAutoStringRef t_value;
+	if (!MCStringCreateMutable((uindex_t)(p_end_ptr - p_start_ptr),
+							   &t_value))
+	{
 		return false;
+	}
 		
 	// Now loop through the input characters, emitting appropriate output chars
 	// at the tail of t_value.
-	char *t_value_ptr;
-	t_value_ptr = t_value;
 	while(p_start_ptr < p_end_ptr)
 	{
 		// If we encounter a '&' then check to see if its an entity - if it is
 		// then emit that char (if it can map to native!); otherwise the char is
 		// '&' and we emit the entity as written.
-		uint8_t t_char;
+		codepoint_t t_codepoint;
 		if (*p_start_ptr == '&')
 		{
-			uint32_t t_codepoint;
-			if (import_html_parse_entity(p_start_ptr, p_end_ptr, t_codepoint))
+			if (!import_html_parse_entity(p_start_ptr, p_end_ptr, t_codepoint))
 			{
-				unichar_t t_utf16_codepoint;
-				t_utf16_codepoint = t_codepoint;
-				if (!MCUnicodeMapToNative(&t_utf16_codepoint, 1, t_char))
-					t_char = '?';
+				t_codepoint = '&';
 			}
-			else
-				t_char = '&';
 		}
 		else
-			t_char = *p_start_ptr++;
+			t_codepoint = *p_start_ptr++;
 		
 		// Append the char to the value string we are accumulating.
-		*t_value_ptr++ = t_char;
+		if (!MCStringAppendCodepoint(*t_value,
+									 t_codepoint))
+		{
+			return false;
+		}
 	}
 	
-	// Make sure we terminate the string.
-	*t_value_ptr = '\0';
+	if (!t_value.MakeImmutable())
+	{
+		return false;
+	}
 	
 	// And return it.
-	r_value = t_value;
+	r_value = t_value.Take();
 	
 	return true;
 }
@@ -1189,7 +1238,7 @@ static bool import_html_parse_attr(const char*& x_ptr, const char *p_limit, impo
 	}
 	t_key_end_ptr = x_ptr;
 	
-	char *t_value;
+	MCAutoStringRef t_value;
 	if (*x_ptr == '=')
 	{
 		// MW-2014-03-11: [[ Bug 11888 ]] Ensure we consume as much as possible, else
@@ -1234,19 +1283,15 @@ static bool import_html_parse_attr(const char*& x_ptr, const char *p_limit, impo
 		
 		// MW-2012-03-16: [[ Bug ]] Make sure we un-entity encode the attribute value as
 		//   its a CDATA section.
-		if (!import_html_parse_attr_value(t_value_start_ptr, t_value_end_ptr, t_value))
+		if (!import_html_parse_attr_value(t_value_start_ptr, t_value_end_ptr, &t_value))
 			return false;
 	}
-	else
-		t_value = nil;
 		
 	if (import_html_lookup_attr(t_key_start_ptr, t_key_end_ptr, r_attr . type))
 	{
-		r_attr . value = t_value;
+		r_attr . value = t_value.Take();
 		return true;
 	}
-	
-	MCCStringFree(t_value);
 	
 	return false;
 }
@@ -1460,6 +1505,26 @@ static void import_html_append_unicode_char(import_html_t& ctxt, uint32_t p_code
 	ctxt . byte_count += 2;
 }
 
+static void import_html_append_stringref(import_html_t& ctxt, MCStringRef p_chars)
+{
+	// If the text is currently native (and there is some) or if the styling has changed
+	// then flush.
+	if ((!ctxt . is_unicode && ctxt . byte_count > 0) ||
+		!import_html_equal_style(ctxt . last_used_style, ctxt . styles[ctxt . style_index] . style))
+		import_html_flush_chars(ctxt);
+	
+	// Make sure there's enough room in the buffer.
+	if (!import_html_ensure_bytes(ctxt, sizeof(unichar_t) * MCStringGetLength(p_chars)))
+		return;
+	
+	// Append the text to the buffer.
+	ctxt . is_unicode = true;
+	MCStringGetChars(p_chars,
+					 MCRangeMake(0, MCStringGetLength(p_chars)),
+					 (unichar_t *)(ctxt.bytes + ctxt.byte_count));
+	ctxt.byte_count += sizeof(unichar_t) * MCStringGetLength(p_chars);
+}
+
 static void import_html_append_utf8_chars(import_html_t& ctxt, const char *p_chars, uint32_t p_char_count)
 {
 	while(p_char_count > 0)
@@ -1618,8 +1683,7 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 				// MW-2012-03-16: [[ Bug ]] LinkText without link style is encoded with a 'name' attr.
 				if (p_tag . attrs[i] . value != nil && (p_tag . attrs[i] . type == kImportHtmlAttrName || p_tag . attrs[i] . type == kImportHtmlAttrHref))
 				{
-					MCValueRelease(t_linktext);
-					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_tag . attrs[i] . value, strlen(p_tag . attrs[i] . value), t_linktext);
+					MCValueAssign(t_linktext, p_tag.attrs[i].value);
 					t_is_link = p_tag . attrs[i] . type == kImportHtmlAttrHref;
 				}
 			}
@@ -1647,8 +1711,7 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 					// Nil-check before passing it to strlen
 					if (p_tag . attrs[i] . value != nil)
 					{
-						MCValueRelease(t_src);
-						/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_tag . attrs[i] . value, strlen(p_tag . attrs[i] . value), t_src);
+						MCValueAssign(t_src, p_tag.attrs[i].value);
 					}
 				}
 			
@@ -1670,8 +1733,8 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 						{
 							t_style . has_text_font = true;
 							if (t_style . text_font != nil)
-								MCNameDelete(t_style . text_font);
-							MCNameCreateWithCString(p_tag . attrs[i] . value, t_style . text_font);
+								MCValueRelease(t_style . text_font);
+							MCNameCreate(p_tag . attrs[i] . value, t_style . text_font);
 						}
 						break;
 					case kImportHtmlAttrSize:
@@ -1681,7 +1744,10 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 							t_size = atoi(p_tag . attrs[i] . value);
 							if (t_size != 0)
 							{
-								if (p_tag . attrs[i] . value[0] == '+' || p_tag . attrs[i] . value[0] == '-')
+								unichar_t t_first_char =
+									MCStringGetCharAtIndex(p_tag.attrs[i].value,
+														   0);
+								if (t_first_char == '+' || t_first_char == '-')
 								{
 									t_size += 4;
 									if (t_size < 1)
@@ -1700,28 +1766,20 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 					case kImportHtmlAttrColor:
 						{
 							MCColor t_color;
-							MCAutoStringRef t_value;
-							/* UNCHECKED */ MCStringCreateWithCString(p_tag . attrs[i] . value, &t_value);
-							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(*t_value, t_color, nil))
+							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(p_tag . attrs[i] . value, t_color, nil))
 							{
-								MCscreen -> alloccolor(t_color);
-								
 								t_style . has_text_color = true;
-								t_style . text_color = t_color . pixel;
+								t_style . text_color = MCColorGetPixel(t_color);
 							}
 						}
 						break;
 					case kImportHtmlAttrBgColor:
 						{
-							MCAutoStringRef t_value;
-							/* UNCHECKED */ MCStringCreateWithCString(p_tag . attrs[i] . value, &t_value);
 							MCColor t_color;
-							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(*t_value, t_color, nil))
+							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(p_tag . attrs[i] . value, t_color, nil))
 							{
-								MCscreen -> alloccolor(t_color);
-								
 								t_style . has_background_color = true;
-								t_style . background_color = t_color . pixel;
+								t_style . background_color = MCColorGetPixel(t_color);
 							}
 						}
 						break;
@@ -1759,8 +1817,8 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
 				if (p_tag . attrs[i] . value != nil && p_tag . attrs[i] . type == kImportHtmlAttrMetadata)
 				{
-					MCValueRelease(t_metadata);
-					MCStringCreateWithCString(p_tag . attrs[i] . value, t_metadata);
+					MCValueAssign(t_metadata,
+								  p_tag.attrs[i].value);
 				}
 			
 			if (t_metadata != nil)
@@ -1812,10 +1870,11 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 {
 	for(uint32_t i = 0; i < p_tag . attr_count; i++)
 	{
-		const char *t_value;
-		t_value = p_tag . attrs[i] . value;
+		MCStringRef t_value = p_tag.attrs[i].value;
 		if (t_value == nil)
-			t_value = "";
+		{
+			t_value = kMCEmptyString;
+		}
 			
 		switch(p_tag . attrs[i] . type)
 		{
@@ -1827,11 +1886,9 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 					r_style . has_metadata = false;
 				}
 
-				if (*t_value != '\0')
+				if (!MCStringIsEmpty(t_value))
 				{
-                    MCStringRef t_valueref;
-                    /* UNCHECKED */ MCStringCreateWithCString(t_value, t_valueref);
-                    /* UNCHECKED */ MCValueInterAndRelease(t_valueref, r_style . metadata);
+                    /* UNCHECKED */ MCValueInter(t_value, r_style . metadata);
 					r_style . has_metadata = true;
 				}
 				break;
@@ -1839,7 +1896,9 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 				// MW-2012-05-01: [[ Bug 10183 ]] Crash and oddness when 'align' attribute is present
 				//   due to using i rather than j (oops!).
 				for(uint32_t j = 0; j < 4; j++)
-					if (MCCStringEqualCaseless(t_value, MCtextalignstrings[j]))
+					if (MCStringIsEqualToCString(t_value,
+												 MCtextalignstrings[j],
+												 kMCStringOptionCompareCaseless))
 					{
 						r_style . has_text_align = true;
 						r_style . text_align = j;
@@ -1878,24 +1937,33 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 					r_style . tabs = nil;
 					r_style . has_tabs = false;
 				}
-                MCAutoStringRef t_value_str;
-                /* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
-				if (MCField::parsetabstops(P_TAB_STOPS, *t_value_str, r_style . tabs, r_style . tab_count))
+				if (MCField::parsetabstops(P_TAB_STOPS, t_value, r_style . tabs, r_style . tab_count))
                 {
 					r_style . has_tabs = true;
                 }
             }
 			break;
+			case kImportHtmlAttrTabAlignments:
+			{
+				if (r_style . has_tab_alignments)
+				{
+					MCMemoryDeallocate(r_style . tab_alignments);
+					r_style . tab_alignments = nil;
+					r_style . tab_alignment_count = 0;
+				}
+				if (MCField::parsetabalignments(t_value, r_style . tab_alignments, r_style . tab_alignment_count))
+				{
+					r_style . has_tab_alignments = true;
+				}
+			}
+			break;
 			case kImportHtmlAttrBgColor:
             {
-				MCAutoStringRef t_value_str;
-				/* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
 				MCColor t_color;
-				if (MCscreen -> parsecolor(*t_value_str, t_color, nil))
+				if (MCscreen -> parsecolor(t_value, t_color, nil))
 				{
-					MCscreen -> alloccolor(t_color);
 					r_style . has_background_color = true;
-					r_style . background_color = t_color . pixel;
+					r_style . background_color = MCColorGetPixel(t_color);
 				}
             }
 			break;
@@ -1906,14 +1974,11 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 			break;
 			case kImportHtmlAttrBorderColor:
             {
-				MCAutoStringRef t_value_str;
-				/* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
 				MCColor t_color;
-				if (MCscreen -> parsecolor(*t_value_str, t_color, nil))
+				if (MCscreen -> parsecolor(t_value, t_color, nil))
 				{
-					MCscreen -> alloccolor(t_color);
 					r_style . has_border_color = true;
-					r_style . border_color = t_color . pixel;
+					r_style . border_color = MCColorGetPixel(t_color);
 				}
             }
 			break;
@@ -2061,7 +2126,9 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                                 if (t_tag . attrs[i] . type == kImportHtmlAttrType)
                                 {
                                     for(uint32_t j = 0; s_export_html_list_types[j] != nil; j++)
-                                        if (MCCStringEqual(t_tag . attrs[i] . value, s_export_html_list_types[j]))
+                                        if (MCStringIsEqualToCString(t_tag . attrs[i] . value,
+																	 s_export_html_list_types[j],
+																	 kMCStringOptionCompareCaseless))
                                         {
                                             t_style = j;
                                             break;
@@ -2084,7 +2151,9 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                             t_is_utf8 = false;
                             for(uint32_t i = 0; i < t_tag . attr_count; i++)
                                 if (t_tag . attrs[i] . type == kImportHtmlAttrContent || t_tag . attrs[i] . type == kImportHtmlAttrCharset)
-                                    if (MCCStringContains(t_tag . attrs[i] . value, "utf-8"))
+                                    if (MCStringContainsCString(t_tag . attrs[i] . value,
+																"utf-8",
+																kMCStringOptionCompareCaseless))
                                     {
                                         t_is_utf8 = true;
                                         break;
@@ -2191,8 +2260,8 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                         {
                             import_html_begin(ctxt, nil);
                             
-                            MCFieldCharacterStyle t_char_style;
-                            t_char_style = ctxt . styles[ctxt . style_index] . style;
+                            MCFieldCharacterStyle t_tag_style;
+                            t_tag_style = ctxt . styles[ctxt . style_index] . style;
                             
                             uint32_t t_font_size, t_font_style;
                             t_font_size = 0;
@@ -2218,16 +2287,15 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                                     t_font_size = 10, t_font_style = FA_BOLD;
                                     break;
 								default:
-									MCUnreachable();
 									break;
                             }
                             
                             if (t_font_style != 0)
-                                t_char_style . has_text_style = true, t_char_style . text_style = t_font_style;
+                                t_tag_style . has_text_style = true, t_tag_style . text_style = t_font_style;
                             if (t_font_size != 0)
-                                t_char_style . has_text_size = true, t_char_style . text_size = t_font_size;
+                                t_tag_style . has_text_size = true, t_tag_style . text_size = t_font_size;
 							
-                            import_html_push_tag(ctxt, t_tag . type, t_char_style);
+                            import_html_push_tag(ctxt, t_tag . type, t_tag_style);
                         }
                         else
                             import_html_pop_tag(ctxt, t_tag . type, true);
@@ -2250,14 +2318,21 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                         if (!t_tag . is_terminator)
                         {
                             import_html_change_style(ctxt, t_tag);
-                            
-                            const char *t_char;
-                            t_char = " ";
+							
+							MCStringRef t_chars = nil;
                             for(uint32_t i = 0; i < t_tag . attr_count; i++)
                                 if (t_tag . attrs[i] . type == kImportHtmlAttrChar)
-                                    t_char = t_tag . attrs[i] . value;
-                            
-                            import_html_append_native_chars(ctxt, t_char, 1);
+                                    t_chars = t_tag . attrs[i] . value;
+							
+							if (t_chars != nil)
+							{
+								import_html_append_stringref(ctxt, t_chars);
+							}
+							else
+							{
+								import_html_append_native_chars(ctxt, " ", 1);
+							}
+							
                             import_html_pop_tag(ctxt, kImportHtmlTagImage, false);
                         }
                         break;

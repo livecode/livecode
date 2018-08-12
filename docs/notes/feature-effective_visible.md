@@ -1,2 +1,0 @@
-# the effective visible
-You can now use the 'effective' adjective when getting the visible property of a control. This allows you to determine whether the given control will actually be visible if the card it is on is current and its stack is visible. Specifically, 'the effective visible' returns true if, and only if, if it visible and all parent groups are visible.

@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-module com.livecode.unittest.__IMPL
+module com.livecode.unittest.__impl
 -- DON'T USE THIS MODULE, USE com.livecode.unittest INSTEAD
 
 use com.livecode.foreign
@@ -43,7 +43,9 @@ end handler
 
 public handler MCUnitDiagnostic(in pMessage as any)
 	variable tCopyMessage as String
-	MCValueCopyDescription(pMessage, tCopyMessage)
+	unsafe
+		MCValueCopyDescription(pMessage, tCopyMessage)
+	end unsafe
 
 	variable tMessageLines as List
 	split tCopyMessage by "\n" into tMessageLines
@@ -94,7 +96,9 @@ public handler MCUnitOutput(in pMessage as String)
 	-- Encode as UTF-8, always.
 	-- FIXME this should use LCB encoding library rather than directly
 	-- calling into libfoundation
-	MCStringEncode(pMessage, 4 /* UTF-8 */, false, tEncoded)
+	unsafe
+		MCStringEncode(pMessage, 4 /* UTF-8 */, false, tEncoded)
+	end unsafe
 
 	write tEncoded to the output stream
 end handler

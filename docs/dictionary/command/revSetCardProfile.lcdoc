@@ -4,13 +4,17 @@ Type: command
 
 Syntax: revSetCardProfile <profileName> [, <stackName>]
 
-Summary: Changes the current <property profile|profile> used for a <card> and all its <object|objects>.
+Summary:
+Changes the current <property profile|profile> used for a <card> and all
+its <object|objects>.
+
+Associations: profile library
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web
+Platforms: desktop, server, mobile
 
 Example:
 revSetCardProfile "MetallicLook"
@@ -19,20 +23,47 @@ Example:
 revSetCardProfile "Master",the mainStack of this stack
 
 Parameters:
-profileName: The profileName specifies which profile to use.
-stackName: The short name of an open stack. If you don't specify a stack, the current card of the topStack is changed. >*Note:* Although the revSetCardProfile command changes a card, you specify a stack name, not a card name.
+profileName:
+The profileName specifies which profile to use.
+
+stackName:
+The short name of an open stack. If you don't specify a stack, the
+current card of the topStack is changed. >*Note:* Although the
+revSetCardProfile command changes a card, you specify a stack name, not
+a card name.
 
 Description:
-Use the <revSetCardProfile> <command> to change <property> settings on a <card> to a different set of stored settings.
+Use the <revSetCardProfile> <command> to change <property> settings on a
+<card> to a different set of stored settings.
 
->*Note:* Although the <revSetCardProfile> <command> changes a <card>, you specify a <stack> name, not a <card> name.
+>*Note:* Although the <revSetCardProfile> <command> changes a <card>,
+> you specify a <stack> name, not a <card> name.
 
-A profile is a set of property settings for an object. You create a profile for an object, and give it a name, using the Property Profiles pane in the object's property inspector. When you change that object to use a profile, the properties you specified in the profile are changed to the settings you specified. This helps you quickly switch the appearance and behavior of the <object> without needing to set its <properties> individually.
+A profile is a set of property settings for an object. You create a
+profile for an object, and give it a name, using the Property Profiles
+pane in the object's property inspector. When you change that object to
+use a profile, the properties you specified in the profile are changed
+to the settings you specified. This helps you quickly switch the
+appearance and behavior of the <object(glossary)> without needing to set
+its <properties> individually.
 
-The <revSetCardProfile> <command> changes the <property profile|profile> of the <current card> of the specified <stack> and all the <object|objects> on that <card>. If an <object> does not have a <property profile|profile> with the specified <profileName>, the <object|object's> <properties> are not changed.
+The <revSetCardProfile> <command> changes the <property profile|profile>
+of the <current card> of the specified <stack> and all the
+<object|objects> on that <card>. If an <object(glossary)> does not have
+a <property profile|profile> with the specified <profileName>, the
+<object|object's> <properties> are not changed.
 
->*Important:*  The <revSetCardProfile> <command> is part of the <Profile library>. To ensure that the <command> works in a <standalone application>, in the Profiles section on the General screen of the <Standalone Application Settings> window, make sure you choose to include profiles in your application.
+>*Important:*  The <revSetCardProfile> <command> is part of the
+> <Profile library>. To ensure that the <command> works in a
+> <standalone application>, in the Profiles section on the General
+> screen of the <Standalone Application Settings> window, make sure you
+> choose to include profiles in your application.
 
-References: card (keyword), properties (property), revSetStackFileProfile (command), stack (object), object (object), property (glossary), current card (glossary), Standalone Application Settings (glossary), property profile (glossary), command (glossary), standalone application (glossary), Profile library (library)
+References: revSetStackFileProfile (command), object (glossary),
+property (glossary), current card (glossary),
+Standalone Application Settings (glossary), property profile (glossary),
+command (glossary), standalone application (glossary), card (keyword),
+Profile library (library), stack (object), properties (property)
 
 Tags: properties
+

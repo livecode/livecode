@@ -2,36 +2,52 @@ Name: screenMouseLoc
 
 Type: property
 
-Syntax: set the screenMouseLoc to <horizontal>, <vertical> 
+Syntax: set the screenMouseLoc to <horizontal>, <vertical>
 
-Summary: Specifies the position of the <mouse pointer> relative to the screen.
+Summary:
+Specifies the position of the <mouse pointer> relative to the screen.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-put the localLoc(the screenMouseLoc) into localMouse
+put localLoc(the screenMouseLoc) into localMouse
 
 Example:
 set the screenMouseLoc to the topLeft of this stack
 
 Value:
-The <screenMouseLoc> consists of two <integer|integers>, separated by a comma. It reports the position of the <mouse pointer> in <absolute coordinates>--that is, relative to the top left of the main screen. (The <mouseLoc> <function> is similar, but its coordinates are relative to the <defaultStack> window rather than the screen.)
-If you set this property, the mouse pointer is moved to the specified location on the screen.
-
-<img src="202653"/> >*Important:* Taking over the position of the <mouse pointer> can disorient and confuse users, and <user interface|user-interface> standards warn against doing so for that reason. Consider setting the <screenMouseLoc> <property> only in unusual situations (such as for a kiosk application or game). In normal desktop applications, the user expects a consistent <user interface> without such surprises. You must use this power only for good.
+The <screenMouseLoc> consists of two <integer|integers>, separated by a
+comma. It reports the position of the <mouse pointer> in <absolute
+coordinates>--that is, relative to the top left of the main screen. (The
+<mouseLoc> <function> is similar, but its coordinates are relative to
+the <defaultStack> window rather than the screen.) If you set this
+property, the mouse pointer is moved to the specified location on the
+screen. 
 
 Description:
-Use the <screenMouseLoc> <property> to find out where the <mouse pointer> is, or to change the location of the <mouse pointer>.
+Use the <screenMouseLoc> <property> to find out where the <mouse
+pointer> is, or to change the location of the <mouse pointer>.
 
->*Important:*  Taking over the position of the <mouse pointer> can disorient and confuse users, and <user interface|user-interface> standards warn against doing so for that reason. Consider setting the <screenMouseLoc> <property> only in unusual situations (such as for a kiosk application or game). In normal desktop applications, the user expects a consistent <user interface> without such surprises. You must use this power only for good.
+>*Important:*  Taking over the position of the <mouse pointer> can
+> disorient and confuse users, and <user interface|user-interface>
+> standards warn against doing so for that reason. Consider setting the
+> <screenMouseLoc> <property> only in unusual situations (such as for a
+> kiosk application or game). In normal desktop applications, the user
+> expects a consistent <user interface> without such surprises. You must
+> use this power only for good.
 
 Changes:
-Support for using the screenMouseLoc with OS X systems was added in version 2.0.
+Support for using the screenMouseLoc with OS X systems was added in
+version 2.0.
 
-References: defaultStack (property), mouseLoc (function), mouseV (function), property (glossary), integer (glossary), mouse pointer (glossary), user interface (glossary), absolute coordinates (glossary), function (control_st)
+References: function (control structure), mouseLoc (function),
+mouseV (function), property (glossary), integer (glossary),
+mouse pointer (glossary), user interface (glossary),
+absolute coordinates (glossary), defaultStack (property)
 
 Tags: ui
+

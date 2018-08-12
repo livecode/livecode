@@ -1,18 +1,23 @@
 Name: layer
 
+Synonyms: partnumber
+
 Type: property
 
 Syntax: set the layer of <object> to {<layerNumber> | top | bottom}
 
-Summary: Specifies the back-to-front order of <object|objects> on a <card(keyword)> or the order of <card(object)|cards> in a <stack>.
+Summary:
+Specifies the back-to-front order of <object|objects> on a
+<card(keyword)> or the order of <card(object)|cards> in a <stack>.
 
-Synonyms: partNumber
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the layer of the mouseControl to top -- bring to front
@@ -23,33 +28,72 @@ set the layer of last card button to 10
 Example:
 set the layer of player "Splash" to (the number of controls)
 
-Value: The <layer> <property> of a control or <card> is an <integer>.
+Value:
+The <layer> <property> of a control or <card> is an <integer>.
 
 Description:
-Use the <layer> <property> to change the tab order of <control(object)|controls>, or to change the order of <card(object)|cards> within a <stack>.
+Use the <layer> <property> to change the tab order of
+<control(object)|controls>, or to change the order of
+<card(object)|cards> within a <stack>.
 
-If the <object> is a <control(keyword)>, it must appear on the <current card> in order for its <layer> to be changed; you can't set the <layer> of a <control(keyword)> on another <card(keyword)>.
+If the <object(glossary)> is a <control(keyword)>, it must appear on the
+<current card> in order for its <layer> to be changed; you can't set the
+<layer> of a <control(keyword)> on another <card(keyword)>.
 
-The <layer> of a <control(keyword)> is its order (from back to front) on the <card(keyword)>. If two <control(object)|controls> overlap, the one that covers the other has a higher <layer>. Each control is on a different <layer>.
+The <layer> of a <control(keyword)> is its order (from back to front) on
+the <card(keyword)>. If two <control(object)|controls> overlap, the one
+that covers the other has a higher <layer>. Each control is on a
+different <layer>.
 
-To bring a control forward, set its <layer> to a higher number. To send it back, set its <layer> to a lower number. You use the form
-  set the layer of <object> to top
-to bring the control all the way to the front, and
-  set the layer of <object> to bottom
+To bring a control forward, set its <layer> to a higher number. To send
+it back, set its <layer> to a lower number. You use the form set the
+layer of <object(glossary)> to top to bring the control all the way to
+the front, and set the layer of <object(glossary)> to bottom
 to send it all the way to the back.
 
-If you set the <layer> of a <control(keyword)> to a number greater than the number of <control(object)|controls> on the card, its <layer> is set equal to the number of <control(object)|controls>.
+If you set the <layer> of a <control(keyword)> to a number greater than
+the number of <control(object)|controls> on the card, its <layer> is set
+equal to the number of <control(object)|controls>.
 
-The <layer> of <control(object)|controls> also determines the tab order. When you press the Tab key, the next <control(keyword)> whose <traversalOn> <property> is true becomes the <active (focused) control(glossary)>. For example, to set the tab order of <field(object)|fields> in a data entry form, set the <layer> of each <field(keyword)> so that they are in order.
+The <layer> of <control(object)|controls> also determines the tab order.
+When you press the Tab key, the next <control(keyword)> whose
+<traversalOn> <property> is true becomes the <active (focused)
+control(glossary)>. For example, to set the tab order of
+<field(object)|fields> in a data entry form, set the <layer> of each
+<field(keyword)> so that they are in order.
 
-The <layer> of a <group> determines the back-to-front position of all the <control(object)|controls> in the group at once. The <group> behaves as a single <control(keyword)>, as far as its <layer> is concerned. When you group or ungroup a <group>, its <control(object)|controls> retain the same back-to-front placement relative to each other, but the <group> as a whole moves to the front. The <layer> of a <group> is one less than the <layer> of the lowest-layered <object> in the <group>.
+The <layer> of a <group> determines the back-to-front position of all
+the <control(object)|controls> in the group at once. The <group> behaves
+as a single <control(keyword)>, as far as its <layer> is concerned. When
+you group or ungroup a <group>, its <control(object)|controls> retain
+the same back-to-front placement relative to each other, but the <group>
+as a whole moves to the front. The <layer> of a <group> is one less than
+the <layer> of the lowest-layered <object(glossary)> in the <group>.
 
-It is not possible for other controls to be interspersed between the controls in a single group. If the <relayerGroupedControls> <property> is set to true, and you set the <layer> of a <grouped control> to a number greater than the topmost <control(keyword)> in the <group>, or lower than the bottom-most <control(keyword)> in the <group>, the <control(keyword)> is moved out of the <group>. If the <relayerGroupedControls> is false, you cannot set the <layer> of a <grouped control> without being in <group-editing mode>.
+It is not possible for other controls to be interspersed between the
+controls in a single group. If the <relayerGroupedControls> <property>
+is set to true, and you set the <layer> of a <grouped control> to a
+number greater than the topmost <control(keyword)> in the <group>, or
+lower than the bottom-most <control(keyword)> in the <group>, the
+<control(keyword)> is moved out of the <group>. If the
+<relayerGroupedControls> is false, you cannot set the <layer> of a
+<grouped control> without being in <group-editing mode>.
 
-The <layer> of a <card(keyword)> specifies its position in the <stack>. Setting the <layer> of a <card(keyword)> moves it to the specified position in the <stack>.
+The <layer> of a <card(keyword)> specifies its position in the <stack>.
+Setting the <layer> of a <card(keyword)> moves it to the specified
+position in the <stack>.
 
-Changing the <layer> of an <object> also changes its <number> <property>.
+Changing the <layer> of an <object(glossary)> also changes its <number>
+<property>. 
 
-References: control (keyword), integer (keyword), field (keyword), card (keyword), tabGroupBehavior (property), layer (property), relayerGroupedControls (property), traversalOn (property), group (command), ungroup (command), intersect (function), number (function), mouseControl (function), control (object), field (object), object (object), stack (object), card (object), property (glossary), current card (glossary), grouped control (glossary), group-editing mode (glossary), active control (glossary)
+References: group (command), ungroup (command), intersect (function),
+number (function), mouseControl (function), object (glossary),
+property (glossary), current card (glossary), grouped control (glossary),
+group-editing mode (glossary), active control (glossary),
+control (keyword), integer (keyword), field (keyword), card (keyword),
+control (object), field (object), stack (object), card (object),
+tabGroupBehavior (property), layer (property),
+relayerGroupedControls (property), traversalOn (property)
 
 Tags: ui
+

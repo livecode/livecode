@@ -1,12 +1,14 @@
 Name: BLOB
 
-Synonyms: BLOB
+Synonyms: blob
 
 Type: glossary
 
 Description:
-Binary Long OBject. A <SQL> database data structure capable of holding more than 64K of <binary file|binary data>.
+Binary Long OBject. A <SQL> database data structure capable of holding
+more than 64K of <binary file|binary data>.
 
 References: SQL (glossary), binary file (glossary)
 
 Tags: database
+

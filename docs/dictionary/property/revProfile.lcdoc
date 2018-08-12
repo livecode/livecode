@@ -2,17 +2,19 @@ Name: revProfile
 
 Type: property
 
-Syntax: set the revProfile of <object> to <profileName> 
+Syntax: set the revProfile of <object> to <profileName>
 
-Summary: Specifies the current <property profile|profile> for an <object>.
+Summary:
+Specifies the current <property profile|profile> for an
+<object(glossary)>. 
 
-Synonyms: cRevGeneral[&quot;profile&quot;],profile
+Associations: profile library
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web
+Platforms: desktop, server, mobile
 
 Example:
 set the revProfile of button "OK" to "French"
@@ -26,21 +28,45 @@ set the revProfile of me to "Master"
 Example:
 if the revProfile of this stack is "LargeFont" then beep
 
-Value (enum): The <revProfile> of an object is the name of one of the object's <property profile|profiles>
+Value (enum):
+The <revProfile> of an object is the name of one of the object's
+<property profile|profiles>
+
 
 Description:
-Use the <revProfile> <property> to switch sets of property values on the fly.
+Use the <revProfile> <property> to switch sets of property values on the
+fly. 
 
-When you change the value of a property for an object, the value is stored in the object's current profile. If you later switch back to that profile, the stored values are restored. For example, if you create a profile named "Fluffy" for a button, then set the button's backgroundColor <property> to "pink", that setting of the <backgroundColor> <property> is stored with the Fluffy <property profile|profile>. If you later set the <button|button's> <property profile|profile> to "Fluffy", the pink color is restored.
+When you change the value of a property for an object, the value is
+stored in the object's current profile. If you later switch back to that
+profile, the stored values are restored. For example, if you create a
+profile named "Fluffy" for a button, then set the button's
+backgroundColor <property> to "pink", that setting of the
+<backgroundColor> <property> is stored with the Fluffy
+<property profile|profile>. If you later set the <button|button's>
+<property profile|profile> to "Fluffy", the pink color is restored.
 
-If the <profileName> does not exist for the <object>, setting the <property profile|profile> either causes an error or creates a new <property profile|profile> with that name for the <object>. You change this setting in the "Property Profiles" pane of the Preferences window.
+If the <profileName> does not exist for the <object(glossary)>, setting
+the <property profile|profile> either fails silently or creates a new
+<property profile|profile> with that name for the <object(glossary)>.
+You change this setting using the <gRevAutoCreateProfiles> <variable>.
 
-(The <revProfile> <property> is implemented as a <custom property>, part of the "cRevGeneral" <custom property> set. For this reason, you can also refer to it using the <custom property> set notation, as cRevGeneral["profile"].)
+(The <revProfile> <property> is implemented as a <custom property>, part
+of the "cRevGeneral" <custom property> set. For this reason, you can
+also refer to it using the <custom property> set notation, as
+cRevGeneral["profile"].) 
 
->*Important:*  The <revProfile> property is part of the Profile library. To ensure that the property works in a standalone application, in the Profiles section on the General screen of the Standalone Application Settings window, make sure you choose to include profiles in your application.
+>*Important:*  The <revProfile> property is part of the Profile library.
+> To ensure that the property works in a standalone application, in the
+> Profiles section on the General screen of the Standalone Application
+> Settings window, make sure you choose to include profiles in your
+> application. 
 
->*Note:* When included in a standalone application, the Profile library is implemented as a hidden group and made available when the group receives its first openBackground message. During the first part of the applicati startup process, before this message is sent, the <revProfile> property is not yet available. This may affect attempts to use this property in startup, preOpenStack, openStack, or preOpenCard hand in the main stack. Once the application has finished starting up, the library is available and the <revProfile> property can be used in any handler.
-
-References: customPropertySets (property), revSetStackFileProfile (command), object (object), button (object), property (glossary), custom property (glossary), backgroundColor (glossary), property profile (glossary)
+References: revSetStackFileProfile (command), object (glossary),
+property (glossary), custom property (glossary),
+backgroundColor (glossary), property profile (glossary), button (object),
+customPropertySets (property), gRevAutoCreateProfiles (keyword),
+gRevProfileReadOnly (keyword), Profile library (library)
 
 Tags: properties
+

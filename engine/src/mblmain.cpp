@@ -37,6 +37,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "system.h"
 #include "font.h"
+#include "debug.h"
+#include "eventqueue.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,19 +74,40 @@ static Boolean byte_swapped()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
-int X_close();
-void X_clear_globals();
-
-extern void MCU_initialize_names();
-
 MCTheme *MCThemeCreateNative(void)
 {
 	return nil;
 }
 
-bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[])
+static bool
+X_initialize_mccmd(const X_init_options& p_options)
 {
+    return MCsystem->PathFromNative(p_options.argv[0],
+                                    MCcmd);
+}
+
+/* Compute the app code path - on mobile this is the folder containing
+ * the executable. */
+static bool
+X_initialize_mcappcodepath(const X_init_options& p_options)
+{
+    MCSAutoLibraryRef t_self;
+    MCAutoStringRef t_lib_path;
+    return MCSLibraryCreateWithAddress(reinterpret_cast<void *>(X_initialize_mcappcodepath),
+                                       &t_self) &&
+            MCSLibraryCopyPath(*t_self,
+                               &t_lib_path) &&
+            MCU_path_split(*t_lib_path,
+                           &MCappcodepath,
+                           nullptr);
+}
+
+bool X_init(const X_init_options& p_options)
+{
+    int argc = p_options.argc;
+    MCStringRef *argv = p_options.argv;
+    MCStringRef *envp = p_options.envp;
+
 	X_clear_globals();
 	
 	////	
@@ -96,14 +119,21 @@ bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[])
 	
 	MCS_init();
 	
+    X_initialize_mccmd(p_options);
+    
+    X_initialize_mcappcodepath(p_options);
+    
 	////
 
-	MCU_initialize_names();
+	X_initialize_names();
 	
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the font module.
 	MCFontInitialize();
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the logical font table module.
 	MCLogicalFontTableInitialize();
+
+	// Initialize the event queue
+	MCEventQueueInitialize();
 
     // MM-2014-02-10: [[ LipOpenSSL 1.0.1e ]] Attempt load revsecurity library on Java side.
 #if defined(TARGET_SUBPLATFORM_ANDROID)
@@ -113,8 +143,6 @@ bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[])
 #endif
     
 	////
-	
-	/* UNCHECKED */ MCsystem -> PathFromNative(argv[0], MCcmd);
 	
     // Create the basic locale and the system locale
     if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
@@ -146,7 +174,12 @@ bool X_main_loop_iteration(void)
 	// MW-2011-08-26: [[ Redraw ]] Make sure we flush any updates.
 	MCRedrawUpdateScreen();
 	MCabortscript = False;
-    if (!MCtodestroy -> isempty())
+	if (MCtracedobject)
+	{
+		MCtracedobject->message(MCM_trace_done);
+		MCtracedobject = nil;
+	}
+	if (!MCtodestroy -> isempty())
     {
         MCtooltip -> cleartip();
         MCtodestroy -> destroy();

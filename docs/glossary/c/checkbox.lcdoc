@@ -1,12 +1,14 @@
 Name: checkbox
 
-Synonyms: checkbox,checkboxes,check box,check boxes
+Synonyms: checkbox, checkboxes, check box, check boxes
 
 Type: glossary
 
 Description:
-A special <button> type consisting of a box with a mark in it. Clicking the <button> turns the mark on or off.
+A special <button> type consisting of a box with a mark in it. Clicking
+the <button> turns the mark on or off.
 
-References: button (object)
+References: button (glossary)
 
 Tags: objects
+

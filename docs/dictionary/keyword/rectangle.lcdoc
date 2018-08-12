@@ -1,18 +1,21 @@
 Name: rectangle
 
+Synonyms: rect
+
 Type: keyword
 
 Syntax: rectangle
 
-Summary: Specifies that a <button(object)>, <field>, or <graphic> <object> is shaped like a rectangle. It also designates the <paint tool> used to draw rectangles and squares.
-
-Synonyms: rect
+Summary:
+Specifies that a <button(object)>, <field>, or <graphic>
+<object(glossary)> is shaped like a rectangle. It also designates the
+<paint tool> used to draw rectangles and squares.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 choose rectangle tool
@@ -21,16 +24,32 @@ Example:
 set the style of button ID 3 to rectangle
 
 Description:
-Use the <rectangle> <keyword> to paint a rectangle or square with the <penColor> or to change a <graphic(keyword)> to a rectangle shape.
+Use the <rectangle> <keyword> to paint a rectangle or square with the
+<penColor> or to change a <graphic(keyword)> to a rectangle shape.
 
-When using the Rectangle tool, the cursor is a crosshairs shape (over stack windows) or an arrow (anywhere else). This tool is used to draw a rectangle or square in the penColor, filled with the <brushColor> (or <brushPattern>).
+When using the Rectangle tool, the cursor is a crosshairs shape (over
+stack windows) or an arrow (anywhere else). This tool is used to draw a
+rectangle or square in the penColor, filled with the <brushColor> (or
+<brushPattern>). 
 
-If you try to paint with the Rectangle tool on a card that has no images, an image the size of the card is created to hold the painting. If the current card already has one or more images, painting outside the image has no effect.
+If you try to paint with the Rectangle tool on a card that has no
+images, an image the size of the card is created to hold the painting.
+If the current card already has one or more images, painting outside the
+image has no effect.
 
-Setting the style of a <graphic(keyword)> to rectangle makes the graphic into a rectangle. Rectangle <graphic(object)|graphics>, unlike painted rectangles, can be changed and reshaped: use the <height> and <width> <properties> to change the shape and size of the rectangle.
+Setting the style of a <graphic(keyword)> to rectangle makes the graphic
+into a rectangle. Rectangle <graphic(object)|graphics>, unlike painted
+rectangles, can be changed and reshaped: use the <height> and <width>
+<properties> to change the shape and size of the rectangle.
 
-Setting the style of a <field> or <button> to rectangle <a/>makes it a rectangle shape.
+Setting the style of a <field> or <button> to rectangle <a/>makes it a
+rectangle shape.
 
-References: width (property), brushColor (property), height (property), properties (property), penColor (property), brushPattern (property), field (keyword), button (object), graphic (keyword), choose (command), object (object), graphic (object), keyword (glossary), paint tool (glossary)
+References: choose (command), object (glossary), keyword (glossary),
+paint tool (glossary), field (keyword), graphic (keyword),
+button (object), graphic (object), width (property),
+brushColor (property), height (property), properties (property),
+penColor (property), brushPattern (property)
 
 Tags: ui
+

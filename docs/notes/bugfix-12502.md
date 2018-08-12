@@ -1,1 +1,0 @@
-# Fix a null-pointer deref in PDF printing

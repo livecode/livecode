@@ -4,13 +4,16 @@ Type: keyword
 
 Syntax: of
 
-Summary: Designates the <object> a <property> belongs to, or the <parameter> of a <function>, or the <string> that contains a <chunk expression>.
+Summary:
+Designates the <object(glossary)> a <property> belongs to, or the
+<parameter> of a <function>, or the <string> that contains a <chunk
+expression>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the backgroundColor of field "Alert" to red
@@ -22,25 +25,16 @@ Example:
 put word 12 of it after field "Go On"
 
 Description:
-Use the <of> <keyword> to designate an attribute of an <object> or <chunk>, or to designate a <parameter> of a built-in <function(control_st)>.
+The <of> <keyword> is used to provide a connection between 
+the <property> <of> an <object (glossary)>, a <parameter> <of> 
+a <function>, or the <chunk expression> <of> a <string>
 
-When designating a property, use the <of> <keyword> between the <property> name and the <object reference>. (The <of> <keyword> is not used when referring to <global|global properties>, only <properties> of <object|objects>.)
-
-In an expression that includes a built-in function with one parameter, you can use either of two forms:
-
-  functionName(parameter)
-  functionName of parameter
-
-The <of> <keyword> cannot be used for <custom function|custom functions>, or for built-in <function(glossary)|functions> with more than one <parameter>.
-
-When designating a part of a string, use the <of> <keyword> after the <chunk> type. For example, to specify the first <word> of a <string>, use an <expression> like word 1 of string. In complex <chunk expression|chunk expressions> with multiple <chunk> types, use the <of> <keyword> after each <chunk> type. For example, to specify the last <character> of the second <line> of a <string>, use an <expression> like this:
-
-  last char of line 2 of string
-
-When designating the number of chunks in a string, use the <of> <keyword> after the <chunk> type. For example, to get the number of <lines> in a <string>, use an <expression> like this:
-
-  the number of lines of string
-
-References: string (keyword), character (keyword), lines (keyword), the (keyword), in (keyword), word (keyword), line (keyword), properties (property), object (object), function (control_st), property (glossary), custom function (glossary), chunk expression (glossary), global (glossary), chunk (glossary), keyword (glossary), expression (glossary), parameter (glossary), function (glossary), object reference (glossary)
+References: function (control structure), object (glossary),
+property (glossary), custom function (glossary), keyword (glossary),
+chunk expression (glossary), global (glossary), chunk (glossary),
+keyword (glossary), expression (glossary), parameter (glossary),
+function (glossary), object reference (glossary), string (keyword),
+character (keyword), lines (keyword), the (keyword), in (keyword),
+word (keyword), line (keyword), properties (property)
 
 Tags: text processing

@@ -1,12 +1,18 @@
 Name: property profile
 
-Synonyms: profile,property profile
+Synonyms: profile, property profile
 
 Type: glossary
 
-Description:
-A set of <property> settings for an <object>. You create and change an <object|object's> profiles using the Property Profiles pane in the <object|object's> <property inspector>.
+Associations: profile library
 
-References: property (glossary), property inspector (glossary), object (object)
+Description:
+A set of <property> settings for an <object(glossary)>. You create and
+change an <object|object's> profiles using the Property Profiles pane in
+the <object|object's> <property inspector>.
+
+References: property (glossary), property inspector (glossary),
+object (glossary)
 
 Tags: ui
+

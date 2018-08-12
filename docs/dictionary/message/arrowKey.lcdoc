@@ -2,17 +2,19 @@ Name: arrowKey
 
 Type: message
 
-Syntax: arrowKey {up | down | left | right}
+Syntax: arrowKey <pKey>
 
-Summary: the <active (focused) control(glossary)>, or to the <current card> if no <control> is <focus|focused>, when the user presses an arrow key.
-
-Associations: button
+Summary:
+Sent to the <active control(glossary)>, or to the <current card> if no
+<control> is <focus|focused>, when the user presses an arrow key.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+Associations: card, field
 
-Platforms: desktop,server,web
+OS: mac, windows, linux
+
+Platforms: desktop, server
 
 Example:
 on arrowKey theKey -- make Up arrow go to the first card
@@ -20,17 +22,40 @@ on arrowKey theKey -- make Up arrow go to the first card
   else pass arrowKey
 end arrowKey
 
+Parameters:
+pKey (enum):
+- "up": The up arrow key
+- "down": The down arrow key
+- "left": The left arrow key
+- "right": The right arrow key
+
 Description:
 The parameter indicates which arrow key was pressed.
 
-Handle the <arrowKey> <message> if you want to do something special when the user presses an arrow key.
+Handle the <arrowKey> <message> if you want to do something special when
+the user presses an arrow key.
 
-If the <arrowKey> <handler> does not <pass> the <message> or <send> it to a further <object> in the <message path>, LiveCode does not perform the usual arrow key action (moving the <insertion point>, moving the <selected> <object>, or navigating to another card). <pass|Passing> the <message> lets the arrow key action take place.
+If the <arrowKey> <handler> does not <pass> the <message> or <send> it
+to a further <object(glossary)> in the <message path>, LiveCode does not
+perform the usual arrow key action (moving the <insertion point>, moving
+the <selected> <object(glossary)>, or navigating to another card).
+<pass|Passing> the <message> lets the arrow key action take place.
 
-If the focused control is part of a group, and the group's tabGroupBehavior <property> is set to true, no <arrowKey> <message> is sent when the user presses an arrow key.
+If the focused control is part of a group, and the group's
+tabGroupBehavior <property> is set to true, no <arrowKey> <message> is
+sent when the user presses an arrow key.
 
->*Note:* Sending an <arrowKey> message does nothing unless there is an <arrowKey> <handler> in the <message path>. This is a difference from <HyperCard|HyperTalk's> handling of the <arrowKey> <message>.
+>*Note:* Sending an <arrowKey> message does nothing unless there is an
+> <arrowKey> <handler> in the <message path>. This is a difference from
+> <HyperCard|HyperTalk's> handling of the <arrowKey> <message>.
 
-References: navigationArrows (property), textArrows (property), selected (property), functionKey (message), selectionChanged (message), control (keyword), pass (control_st), property (glossary), current card (glossary), handler (glossary), focus (glossary), message path (glossary), pass (glossary), insertion point (glossary), message (glossary), HyperCard (glossary), active control (glossary), send (command), object (object)
+References: send (command), pass (control structure), property (glossary),
+current card (glossary), handler (glossary), focus (glossary),
+message path (glossary), pass (glossary), insertion point (glossary),
+message (glossary), HyperCard (glossary), active control (glossary),
+object (glossary), control (keyword), functionKey (message),
+selectionChanged (message), navigationArrows (property),
+textArrows (property), selected (property)
 
 Tags: ui
+

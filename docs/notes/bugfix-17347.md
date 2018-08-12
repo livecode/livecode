@@ -1,0 +1,1 @@
+# Browser: fix browser appearing clipped after card resize.

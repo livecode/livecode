@@ -1,1 +1,0 @@
-# The PDF Printing external is not being included in Windows Standalones.

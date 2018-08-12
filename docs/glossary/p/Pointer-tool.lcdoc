@@ -1,12 +1,16 @@
 Name: Pointer tool
 
-Synonyms: Pointer tool,Arrow tool
+Synonyms: pointer tool, arrow tool
 
 Type: glossary
 
 Description:
-<Tool> used in the LiveCode <development environment> to select, move, and resize <control|controls>. 
- 
-When the Pointer tool is being used, the <cursor> is in the shape of an arrow.
+<Tool> used in the LiveCode <development environment> to select, move,
+and resize <control|controls>.
 
-References: development environment (glossary), tool (glossary), cursor (glossary), control (object)
+When the Pointer tool is being used, the <cursor> is in the shape of an
+arrow. 
+
+References: development environment (glossary), tool (glossary),
+cursor (glossary), control (glossary)
+

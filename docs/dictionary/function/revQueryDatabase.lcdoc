@@ -1,67 +1,138 @@
 Name: revQueryDatabase
 
+Synonyms: revdb_query, revquerydatabaseblob
+
 Type: function
 
 Syntax: revQueryDatabase(<databaseID>, <SQLQuery> [,{<variablesList> | <arrayName>}])
 
-Summary: Selects <record|records> in a <database> according to a <SQL query>.
+Summary:
+Selects <record|records> in a <database> according to a <SQL query>.
 
-Synonyms: revdb_query,revQueryDatabaseBlob
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
-
-Example:
-revQueryDatabase(2,"SELECT * FROM EmpStats")
+Security: disk, network
 
 Example:
-revQueryDatabase(currentDB,field "Query")
+revQueryDatabase(2, "SELECT * FROM EmpStats")
 
 Example:
-revQueryDatabase(the database of me,myQuery,"myVar1","myVar2","myVar3")
+revQueryDatabase(currentDB, field "Query")
 
 Example:
-revQueryDatabase(tConnectionId, tQuery, "tInputData[id]", "tInputData[name]")
+revQueryDatabase(the database of me, myQuery, "myVar1", "myVar2", \
+"myVar3")
+
+Example:
+revQueryDatabase(tConnectionId, tQuery, "tInputData[id]", \
+"tInputData[name]")
 
 Parameters:
-databaseID: The number returned by the revOpenDatabase function when the database was opened.
-SQLQuery (string): A string in Structured Query Language that contains a SELECT statement. (Do not include a semicolon at the end of the SQLQuery.)
-variablesList: The variablesList consists of one or more variable names (or expressions that evaluate to variable names), separated by commas. As of version 2.9, each variable name can also be the name of an array element, for example "tInputData[myKey]".
-arrayName (array): The name of a single array variable whose keys are sequential numbers.>*Note:* The variable names or arrayName must be enclosed in quotes; otherwise, the variable's value rather than its name is passed to the revQueryDatabase function.
+databaseID:
+The number returned by the revOpenDatabase function when the database
+was opened.
 
-Returns: The <revQueryDatabase> <function> returns a record set ID which designates the <record set (database cursor)(glossary)> selected by the <SQLQuery>. The record set ID is an <integer>.
+SQLQuery (string):
+A string in Structured Query Language that contains a SELECT statement.
+(Do not include a semicolon at the end of the SQLQuery.)
+
+variablesList:
+The variablesList consists of one or more variable names (or expressions
+that evaluate to variable names), separated by commas. As of version
+2.9, each variable name can also be the name of an array element, for
+example "tInputData[myKey]".
+
+arrayName (array):
+The name of a single array variable whose keys are sequential
+numbers.>*Note:* The variable names or arrayName must be enclosed in
+quotes; otherwise, the variable's value rather than its name is passed
+to the revQueryDatabase function.
+
+
+Returns:
+The <revQueryDatabase> <function> returns a record set ID which
+designates the <record set (database cursor)(glossary)> selected by the
+<SQLQuery>. The record set ID is an <integer>.
 
 Description:
-Use the <revQueryDatabase> <function> to select <record|records> in a <database> to work on.
+Use the <revQueryDatabase> <function> to select <record|records> in a
+<database> to work on.
 
-The <SQLQuery> may contain one or more placeholders, which are sequential numbers <prepend|prepended> by a colon. The <revQueryDatabase> <function> substitutes the corresponding variable name in the <variablesList> for each of these placeholders. For example, if you have two <variable|variables> called "valueX" and "valueY", you can use a <SQLQuery> that includes placeholders as follows:
+The <SQLQuery> may contain one or more placeholders, which are
+sequential numbers <prepend|prepended> by a colon. The
+<revQueryDatabase> <function> substitutes the corresponding variable
+name in the <variablesList> for each of these placeholders. For example,
+if you have two <variable|variables> called "valueX" and "valueY", you
+can use a <SQLQuery> that includes placeholders as follows:
 
-  get revQueryDatabase(myID,"SELECT * FROM empStats WHERE id=:1 OR stat_id=:1 OR population=:2","valueX","valueY")
+    get revQueryDatabase(myID, "SELECT * FROM empStats WHERE id=:1" && \
+    "OR stat_id=:1 OR population=:2", "valueX", "valueY")
 
-The content of the variable valueX is substituted for the ":1" in the <SQLQuery> (in both places where ":1" appears), and the content of valueY is substituted for ":2".
 
-If you specify an <arrayName> rather than a list of ordinary <variable|variables>, the <revQueryDatabase> function substitutes the corresponding <element(keyword)> of the <array> for each of the placeholders in the <SQL query|query>:
+The content of the variable valueX is substituted for the ":1" in the
+<SQLQuery> (in both places where ":1" appears), and the content of
+valueY is substituted for ":2".
 
-  get revQueryDatabase(myID,"SELECT :1,:2 FROM empStats WHERE 1",myArray)
+If you specify an <arrayName> rather than a list of ordinary
+<variable|variables>, the <revQueryDatabase> function substitutes the
+corresponding <element(keyword)> of the <array> for each of the
+placeholders in the <SQL query|query>:
 
-The content of the element myArray[1] is substituted for the ":1" in the <SQLQuery> (in both places where ":1" appears), and the content of myArray[2] is substituted for ":2".
+    get revQueryDatabase(myID, "SELECT :1,:2 FROM empStats WHERE" && \
+    "id=:1", "myArray") 
 
-To pass binary data in a variable in the <variablesList>, <prepend> "*b" to the variable name. The <revQueryDatabase> <function> strips the binary marker "*b" and passes it to the database as binary data, rather than text data. To pass <binary file|binary data> in an <array> <element(keyword)>, prepend "*b" to the <element(glossary)|element's> value.
 
->*Tip:*  To execute a <SQL query> that does not return a <record set (database cursor)(glossary)> (such as INSERT or DELETE), use the <revExecuteSQLcommand> instead. Since <revExecuteSQL> does not allocate storage for returned data, it is more efficient than <revQueryDatabase> for <SQL query|SQL queries> where no data is returned.
+The content of the element myArray[1] is substituted for the ":1" in the
+<SQLQuery> (in both places where ":1" appears), and the content of
+myArray[2] is substituted for ":2".
 
-If the query is not successful, the <revQueryDatabase> <function> returns an error message.  The error message is never an <integer>, so you can check whether the query was successful by checking whether the <return value> is an <integer> or not.
+To pass binary data in a variable in the <variablesList>, <prepend> `"*b"`
+to the variable name. The <revQueryDatabase> <function> strips the
+binary marker `"*b"` and passes it to the database as binary data, rather
+than text data. To pass <binary file|binary data> in an <array>
+<element(keyword)>, prepend `"*b"` to the <element(glossary)|element's>
+value.  See <revDataFromQuery> for binary data examples.
 
->*Important:*  The <revQueryDatabase> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Tip:*  To execute a <SQL query> that does not return a <record set
+> (database cursor)(glossary)> (such as INSERT or DELETE), use the
+> <revExecuteSQL> <command> instead. Since <revExecuteSQL> does not
+> allocate storage for returned data, it is more efficient than
+> <revQueryDatabase> for <SQL query|SQL queries> where no data is
+> returned. 
+
+If the query is not successful, the <revQueryDatabase> <function>
+returns an error message. The error message is never an <integer>, so
+you can check whether the query was successful by checking whether the
+<return value> is an <integer> or not.
+
+>*Important:*  The <revQueryDatabase> <function> is part of the 
+> <Database library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
 Changes:
 The revQueryDatabase synonym was added in version 2.0.
 
-References: integer (keyword), element (keyword), Database library (library), LiveCode custom library (library), revExecuteSQLcommand (command), revCloseCursor (command), revExecuteSQL (command), revQueryIsAtStart (function), variable (glossary), element (glossary), standalone application (glossary), binary file (glossary), array (glossary), prepend (glossary), SQL query (glossary), record set (database cursor) (glossary), return value (glossary), record (glossary), Standalone Application Settings (glossary), database (glossary), function (control_st)
+References: command (glossary), revCloseCursor (command), 
+revDataFromQuery (function), revExecuteSQL (command), 
+function (control structure), revQueryIsAtStart (function), 
+LiveCode custom library (glossary), variable (glossary), element (glossary),
+standalone application (glossary), binary file (glossary),
+array (glossary), prepend (glossary), SQL query (glossary),
+record set (database cursor) (glossary), return value (glossary),
+record (glossary), Standalone Application Settings (glossary),
+database (glossary), integer (keyword), element (keyword),
+Database library (library)
 
 Tags: database
+

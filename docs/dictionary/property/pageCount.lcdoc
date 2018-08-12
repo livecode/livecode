@@ -2,15 +2,17 @@ Name: pageCount
 
 Type: property
 
-Syntax: get the pageCount of <EPSObject> 
+Syntax: get the pageCount of <EPSObject>
 
-Summary: Reports how many pages are in the <PostScript> code of an <EPS|EPS object>.
+Summary:
+Reports how many pages are in the <PostScript> code of an <EPS|EPS
+object>. 
 
 Introduced: 1.0
 
-OS: linux,ios,android
+OS: linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 add the pageCount of EPS "Watermark" to totalPages
@@ -23,10 +25,14 @@ The <pageCount> of an <EPS|EPS object> is a positive <integer>.
 This property is read-only and cannot be set.
 
 Description:
-Use the <pageCount> <property> to find out how many pages are in an <EPS|EPS object>.
+Use the <pageCount> <property> to find out how many pages are in an
+<EPS|EPS object>.
 
-This property is supported only on Unix systems with Display PostScript installed.
+This property is supported only on Unix systems with Display PostScript
+installed. 
 
-References: currentPage (property), prolog (property), postScript (property), EPS (glossary), property (glossary), integer (keyword)
+References: EPS (glossary), property (glossary), integer (keyword),
+currentPage (property), prolog (property), postScript (property)
 
 Tags: multimedia
+

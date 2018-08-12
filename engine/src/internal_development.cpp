@@ -40,7 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "exec.h"
 #include "handler.h"
 #include "scriptpt.h"
@@ -80,114 +80,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "ide.h"
 #include "bsdiff.h"
 
-#ifdef _WINDOWS
-#include "w32prefix.h"
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-#ifdef LEGACY_EXEC
-enum MCInternalType
-{
-	INTERNAL_TYPE_VOID,
-	INTERNAL_TYPE_BOOL,
-	INTERNAL_TYPE_BOOLEAN,
-	INTERNAL_TYPE_UINT8,
-	INTERNAL_TYPE_SINT8,
-	INTERNAL_TYPE_UINT16,
-	INTERNAL_TYPE_SINT16,
-	INTERNAL_TYPE_UINT32,
-	INTERNAL_TYPE_SINT32,
-	INTERNAL_TYPE_UINT64,
-	INTERNAL_TYPE_SINT64,
-	INTERNAL_TYPE_CSTRING,
-	INTERNAL_TYPE_STRING,
-	INTERNAL_TYPE_REAL4,
-	INTERNAL_TYPE_REAL8
-};
-
-struct MCInternalMethod
-{
-	MCInternalType return_type;
-	const char *name;
-	void (*pointer)(void **);
-};
-
-void internal_generate_uuid(void **r_result);
-void internal_notify_association_changed(void **r_result);
-
-static MCInternalMethod s_internal_methods[] =
-{
-	{INTERNAL_TYPE_CSTRING, "generate_uuid", internal_generate_uuid},
-#ifdef WIN32
-	{INTERNAL_TYPE_VOID, "notify_association_changed", internal_notify_association_changed},
-#endif
-	{INTERNAL_TYPE_VOID, NULL, NULL},
-};
-
-const int s_internal_method_count = sizeof(s_internal_methods) / sizeof(MCInternalMethod);
-
-////////////////////////////////////////////////////////////////////////////////
-
-static Exec_stat internal_get_value(MCExecPoint& ep, MCInternalType p_type, void *p_value)
-{
-	switch(p_type)
-	{
-		case INTERNAL_TYPE_BOOL:
-			ep . setboolean(*(bool *)p_value);
-		break;
-
-		case INTERNAL_TYPE_BOOLEAN:
-			ep . setboolean(*(Boolean *)p_value);
-		break;
-
-		case INTERNAL_TYPE_UINT8:
-			ep . setnvalue(*(uint1 *)p_value);
-		break;
-
-		case INTERNAL_TYPE_SINT8:
-			ep . setnvalue(*(int1 *)p_value);
-		break;
-
-		case INTERNAL_TYPE_UINT16:
-			ep . setnvalue(*(uint2 *)p_value);
-		break;
-
-		case INTERNAL_TYPE_SINT16:
-			ep . setnvalue(*(int2 *)p_value);
-		break;
-
-		case INTERNAL_TYPE_UINT32:
-			ep . setnvalue(*(uint4 *)p_value);
-		break;
-
-		case INTERNAL_TYPE_SINT32:
-			ep . setnvalue(*(int4 *)p_value);
-		break;
-
-		case INTERNAL_TYPE_CSTRING:
-			ep . copysvalue((char *)p_value, strlen((char *)p_value));
-		break;
-
-		case INTERNAL_TYPE_STRING:
-			ep . copysvalue(((MCString *)p_value) -> getstring(), ((MCString *)p_value) -> getlength());
-		break;
-
-		case INTERNAL_TYPE_REAL4:
-			ep . setnvalue(*(float *)p_value);
-		break;
-
-		case INTERNAL_TYPE_REAL8:
-			ep . setnvalue(*(double *)p_value);
-		break;
-
-		default:
-			ep . clear();
-		break;
-	}
-
-	return ES_NORMAL;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -236,32 +128,6 @@ public:
 
     void exec_ctxt(MCExecContext &ctxt)
     {
-#ifdef LEGACY_EXEC
-        if (m_noun -> eval(ep) != ES_NORMAL)
-            return ES_ERROR;
-
-		MCInternalMethod *t_method;
-		t_method = NULL;
-		for(int n = 0; n < s_internal_method_count; ++n)
-            if (ep . getsvalue() == s_internal_methods[n] . name)
-			{
-				t_method = &s_internal_methods[n];
-				break;
-			}
-
-		if (t_method == NULL)
-		{
-            MCeerror -> add(EE_PUT_CANTSET, line, pos);
-            return ES_ERROR;
-		}
-
-		void *t_value;
-        t_method -> pointer(&t_value);
-        if (internal_get_value(ep, t_method -> return_type, t_value) != ES_NORMAL)
-            return ES_ERROR;
-
-        return MCresult -> set(ep);
-#endif
 	}
 
 private:
@@ -481,13 +347,13 @@ private:
 
 struct MCObjectListenerTarget
 {
-	MCObjectHandle *target;
+	MCObjectHandle target;
 	MCObjectListenerTarget *next;
 };
 
 struct MCObjectListener
 {
-	MCObjectHandle *object;
+	MCObjectHandle object;
 	MCObjectListenerTarget *targets;
 	MCObjectListener *next;
 	double last_update_time;
@@ -524,7 +390,7 @@ static void prune_object_listeners()
         t_next_target = nil;
         
         bool t_listener_exists;
-        t_listener_exists = t_listener -> object -> Exists();
+        t_listener_exists = t_listener -> object . IsValid();
         
         // Check all the listener's targets to see if they can be pruned
         while (t_target != nil)
@@ -534,19 +400,17 @@ static void prune_object_listeners()
             // Prune target from listener target list if listener
             // doesn't exist, or if target doesn't exist, or if target
             // has been set to nil.
-            if (!t_listener_exists || t_target -> target == nil
-                || !t_target -> target -> Exists())
+            if (!t_listener_exists || !t_target->target.IsValid())
             {
                 // Release the target if it hasn't already been released
-                if (t_target -> target != nil)
-                    t_target -> target -> Release();
+                t_target->target = nil;
                 
                 if (t_prev_target != nil)
                     t_prev_target -> next = t_next_target;
                 else
                     t_listener -> targets = t_next_target;
                 
-                MCMemoryDelete(t_target);
+                MCMemoryDestroy(t_target);
             }
             else
             {
@@ -560,14 +424,14 @@ static void prune_object_listeners()
         // listener targets is nil, then prune from listener list.
         if (!t_listener_exists || t_listener -> targets == nil)
         {
-            t_listener -> object -> Release();
+            t_listener -> object = nil;
             
             if (t_prev_listener != nil)
                 t_prev_listener -> next = t_next_listener;
             else
                 s_object_listeners = t_next_listener;
             
-            MCMemoryDelete(t_listener);
+            MCMemoryDestroy(t_listener);
         }
         else
         {
@@ -593,30 +457,25 @@ void MCInternalObjectListenerMessagePendingListeners(void)
         
 		MCobjectpropertieschanged = False;
 		
-		MCObjectListener *t_prev_listener;
-		t_prev_listener = nil;
-		
 		MCObjectListener *t_listener;
 		t_listener = s_object_listeners;
 		while(t_listener != nil)
 		{
-			if (!t_listener -> object -> Exists())
+			if (!t_listener -> object.IsValid())
             {
                 t_changed = true;
             }
 			else
 			{
 				uint8_t t_properties_changed;
-				t_properties_changed = t_listener -> object -> Get() -> propertieschanged();
+				t_properties_changed = t_listener -> object -> propertieschanged();
 				if (t_properties_changed != kMCPropertyChangedMessageTypeNone)
                 {
                     MCExecContext ctxt(nil, nil, nil);
 					MCAutoStringRef t_string;
-					t_listener -> object -> Get() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_string);			
+					t_listener -> object -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_string);
 					MCObjectListenerTarget *t_target;
 					t_target = nil;
-					MCObjectListenerTarget *t_prev_target;
-					t_prev_target = nil;	
 					
 					double t_new_time;
 					t_new_time = MCS_time();
@@ -627,52 +486,51 @@ void MCInternalObjectListenerMessagePendingListeners(void)
                         
 						while (t_target != nil)
 						{
-                            MCObjectHandle *t_obj;
-                            t_obj = t_target -> target;
+                            MCObjectHandle t_obj = t_target -> target;
                             
                             bool t_target_exists;
-                            t_target_exists = t_obj != nil && t_obj -> Exists();
+                            t_target_exists = t_obj.IsValid();
                             
                             // Make sure the target object still exists and is still
                             // being listened to before sending any messages.
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypePropertyChanged)
                             {
-                                t_obj -> Get() -> message_with_valueref_args(MCM_property_changed, *t_string);
+                                t_obj -> message_with_valueref_args(MCM_property_changed, *t_string);
                                 t_obj = t_target -> target;
-                                t_target_exists = t_obj != nil && t_obj -> Exists();
+                                t_target_exists = t_obj.IsValid();
                             }
                             
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeResizeControlStarted)
                             {
-                                t_obj -> Get() -> message_with_valueref_args(MCM_resize_control_started, *t_string);
+                                t_obj -> message_with_valueref_args(MCM_resize_control_started, *t_string);
                                 t_obj = t_target -> target;
-                                t_target_exists = t_obj != nil && t_obj -> Exists();
+                                t_target_exists = t_obj.IsValid();
                             }
                                 
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeResizeControlEnded)
                             {
-                                t_obj -> Get() -> message_with_valueref_args(MCM_resize_control_ended, *t_string);
+                                t_obj -> message_with_valueref_args(MCM_resize_control_ended, *t_string);
                                 t_obj = t_target -> target;
-                                t_target_exists = t_obj != nil && t_obj -> Exists();
+                                t_target_exists = t_obj.IsValid();
                             }
                                 
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeGradientEditStarted)
                             {
-                                t_obj -> Get() -> message_with_valueref_args(MCM_gradient_edit_started, *t_string);
+                                t_obj -> message_with_valueref_args(MCM_gradient_edit_started, *t_string);
                                 t_obj = t_target -> target;
-                                t_target_exists = t_obj != nil && t_obj -> Exists();
+                                t_target_exists = t_obj.IsValid();
                             }
                                 
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeGradientEditEnded)
                             {
-                                t_obj -> Get() -> message_with_valueref_args(MCM_gradient_edit_ended, *t_string);
+                                t_obj -> message_with_valueref_args(MCM_gradient_edit_ended, *t_string);
                                 t_obj = t_target -> target;
-                                t_target_exists = t_obj != nil && t_obj -> Exists();
+                                t_target_exists = t_obj.IsValid();
                             }
                             
                             if (!t_target_exists)
@@ -680,15 +538,12 @@ void MCInternalObjectListenerMessagePendingListeners(void)
                                 t_changed = true;
                             }
 								
-                            t_prev_target = t_target;
 							t_target = t_target -> next;
 						}
 					}
 					else
-						t_listener -> object -> Get() -> signallistenerswithmessage(t_properties_changed);
+						t_listener -> object -> signallistenerswithmessage(t_properties_changed);
 				}
-				
-				t_prev_listener = t_listener;
 			}
 			
             t_listener = t_listener -> next;
@@ -704,11 +559,8 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
 {
     prune_object_listeners();
 	
-    MCObjectHandle *t_current_object;
-	t_current_object = ctxt . GetObject() -> gethandle();
-	
-	MCObjectListener *t_prev_listener;
-	t_prev_listener = nil;
+    MCObjectHandle t_current_object;
+	t_current_object = ctxt . GetObject() -> GetHandle();
 	
 	MCObjectListener *t_listener;
 	t_listener = s_object_listeners;
@@ -720,17 +572,15 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
 
         MCObjectListenerTarget *t_target;
         t_target = nil;
-        MCObjectListenerTarget *t_prev_target;
-        t_prev_target = nil;
         
-        if (t_listener -> object -> Exists())
+        if (t_listener -> object . IsValid())
         {
             MCAutoValueRef t_long_id;
-            t_listener -> object -> Get() -> names(P_LONG_ID, &t_long_id);
+            t_listener -> object -> names(P_LONG_ID, &t_long_id);
         
             for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
             {
-                if (t_target -> target ==  t_current_object)
+                if (t_target -> target == t_current_object)
                 {
                     ctxt . ConvertToString(*t_long_id, t_string);
                     t_listeners . Push(t_string);
@@ -738,7 +588,6 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
             }
         }
         
-        t_prev_listener = t_listener;
         t_listener = t_listener -> next;
 	}
     t_listeners . Take(r_listeners, r_count);
@@ -767,7 +616,7 @@ public:
 			MCperror -> add(PE_OBJECT_NAME, sp);
 			return PS_ERROR;
 		}				
-		m_object = new MCChunk(False);
+		m_object = new (nothrow) MCChunk(False);
 		if (m_object -> parse(sp, False) != PS_NORMAL)
 		{
 			MCperror -> add(PE_OBJECT_NAME, sp);
@@ -789,8 +638,8 @@ public:
 		MCObjectListener *t_listener;
 		t_listener = nil;
 		
-		MCObjectHandle *t_object_handle;
-		t_object_handle = t_object -> gethandle();
+		MCObjectHandle t_object_handle;
+		t_object_handle = t_object -> GetHandle();
 		
 		for (t_listener = s_object_listeners; t_listener != nil; t_listener = t_listener -> next)
 		{
@@ -800,14 +649,13 @@ public:
 			
 		if (t_listener == nil)
 		{
-			if (!MCMemoryNew(t_listener))
+			if (!MCMemoryCreate(t_listener))
 			{
                 ctxt . LegacyThrow(EE_NO_MEMORY);
                 return;
 			}
 			t_object -> listen();
 			t_listener -> object = t_object_handle;
-			t_listener -> object -> Retain();
 			t_listener -> targets = nil;
 			t_listener -> next = s_object_listeners;
 			t_listener -> last_update_time = 0.0;
@@ -817,7 +665,7 @@ public:
 		MCObjectListenerTarget *t_target;
 		t_target = nil;
 		
-		MCObjectHandle *t_target_object;
+		MCObjectHandle t_target_object;
         t_target_object = ctxt . GetObjectHandle();
 		
 		for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
@@ -828,13 +676,12 @@ public:
 		
 		if (t_target == nil)
 		{
-			if (!MCMemoryNew(t_target))
+			if (!MCMemoryCreate(t_target))
 			{
                 ctxt . LegacyThrow(EE_NO_MEMORY);
                 return;
 			}
 			t_target -> target = t_target_object;
-			t_target -> target -> Retain();
 			t_target -> next = t_listener -> targets;
 			t_listener -> targets = t_target;						
         }
@@ -871,7 +718,7 @@ public:
 			MCperror -> add(PE_OBJECT_NAME, sp);
 			return PS_ERROR;
 		}
-		m_object = new MCChunk(False);
+		m_object = new (nothrow) MCChunk(False);
 		if (m_object -> parse(sp, False) != PS_NORMAL)
 		{
 			MCperror -> add(PE_OBJECT_NAME, sp);
@@ -891,29 +738,24 @@ public:
             return;
         }
 		
-		MCObjectListener *t_prev_listener;
-		t_prev_listener = nil;
 		MCObjectListener *t_listener;
 		t_listener = nil;
 		
-		MCObjectHandle *t_object_handle;
-		t_object_handle = t_object -> gethandle();
+		MCObjectHandle t_object_handle;
+		t_object_handle = t_object -> GetHandle();
 		
 		for (t_listener = s_object_listeners; t_listener != nil; t_listener = t_listener -> next)
 		{
 			if (t_listener -> object == t_object_handle)
 				break;
-			t_prev_listener = t_listener;
 		}
 		
 		if (t_listener != nil)
 		{
 			MCObjectListenerTarget *t_target;
 			t_target = nil;
-			MCObjectListenerTarget *t_prev_target;
-			t_prev_target = nil;
 			
-			MCObjectHandle *t_target_object;
+			MCObjectHandle t_target_object;
             t_target_object = ctxt . GetObjectHandle();
 			
             bool t_changed;
@@ -922,12 +764,10 @@ public:
 			{
 				if (t_target -> target == t_target_object)
 				{
-                    t_target -> target -> Release();
                     t_target -> target = nil;
                     t_changed = true;
                     break;
 				}
-				t_prev_target = t_target;
 			}
             
             if (t_changed)
@@ -940,6 +780,28 @@ private:
 };
 
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCS_get_browsers(MCStringRef &r_browsers);
+
+class MCInternalListBrowsers: public MCStatement
+{
+public:
+    Parse_stat parse(MCScriptPoint& sp)
+    {
+        return PS_NORMAL;
+    }
+
+    void exec_ctxt(MCExecContext &ctxt)
+    {
+        MCAutoStringRef t_browsers;
+        if (MCS_get_browsers(&t_browsers))
+            ctxt.SetTheResultToValue(*t_browsers);
+        else
+            ctxt.SetTheResultToEmpty();
+    }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -974,30 +836,9 @@ MCInternalVerbInfo MCinternalverbs[] =
 #endif
 	{ "syntax", "tokenize", class_factory<MCIdeSyntaxTokenize> },
 	{ "syntax", "recognize", class_factory<MCIdeSyntaxRecognize> },
-	{ "syntax", "compile", class_factory<MCIdeSyntaxCompile> },
 	{ "filter", "controls", class_factory<MCIdeFilterControls> },
+    { "list", "browsers", class_factory<MCInternalListBrowsers> },
+
 	{ nil, nil, nil }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef LEGACY_EXEC
-void internal_generate_uuid(void **r_result)
-{
-	static char t_result[128];
-
-	if (!MCS_generate_uuid(t_result))
-		t_result[0] = '\0';
-	
-	*r_result = (void *)t_result;
-}
-
-#ifdef WIN32
-void internal_notify_association_changed(void **r_result)
-{
-	SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
-}
-
-#endif
-
-#endif

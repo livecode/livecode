@@ -4,13 +4,17 @@ Type: keyword
 
 Syntax: items
 
-Summary: Used with the <sort> <command>, <number> <function>, and <is among> and <is not among> <properties> to designate the comma-<delimit|delimited> portions (or portions <delimit|delimited> by the <character> in the <itemDelimiter> <property>) of a <string>.
+Summary:
+Used with the <sort> <command>, <number> <function>, and <is among> and
+<is not among> <properties> to designate the comma-<delimit|delimited>
+portions (or portions <delimit|delimited> by the <character> in the
+<itemDelimiter> <property>) of a <string>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if it is not among the items of field "Possible Answers" then beep
@@ -21,10 +25,23 @@ sort items of myVariable
 Description:
 Use the <items> <keyword>  to <sort> or <select> individual <items>.
 
-By default, an item is delimited by commas (,). However, you can set the <itemDelimiter> <property> to any <character> in order to directly address <chunk|chunks> <delimit|delimited> by that <character>. For example, you can set the <itemDelimiter> to <tab> in order to handle a database file whose fields are tab-<delimit|delimited>.
+By default, an item is delimited by commas (,). However, you can set the
+<itemDelimiter> <property> to any <character> in order to directly
+address <chunk|chunks> <delimit|delimited> by that <character>. For
+example, you can set the <itemDelimiter> to <tab> in order to handle a
+database file whose fields are tab-<delimit|delimited>.
 
-An item is a string of characters delimited by commas (or the <itemDelimiter> <character>). A single <item> can contain multiple <characters>, multiple <words>, and multiple <lines>.
+An item is a string of characters delimited by commas (or the
+<itemDelimiter> <character>). A single <item> can contain multiple
+<characters>, multiple <words>, and multiple <lines>.
 
-References: properties (property), itemDelimiter (property), tab (constant), is among (operator), is not among (operator), characters (keyword), string (keyword), item (keyword), character (keyword), lines (keyword), words (keyword), items (keyword), function (control_st), number (function), itemOffset (function), property (glossary), keyword (glossary), command (glossary), delimit (glossary), chunk (glossary), sort (command), select (command)
+References: sort (command), select (command), tab (constant),
+function (control structure), number (function), itemOffset (function),
+property (glossary), keyword (glossary), command (glossary),
+delimit (glossary), chunk (glossary), characters (keyword),
+string (keyword), item (keyword), character (keyword), lines (keyword),
+words (keyword), items (keyword), is among (operator),
+is not among (operator), properties (property), itemDelimiter (property)
 
 Tags: text processing
+

@@ -2,17 +2,18 @@ Name: abs
 
 Type: function
 
-Syntax: the abs of <number> 
+Syntax: the abs of <number>
 
 Syntax: abs(<number>)
 
-Summary: <return|Returns> the absolute value of a number.
+Summary:
+<return|Returns> the absolute value of a number.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 abs(14)
@@ -27,15 +28,25 @@ Example:
 abs(secondNum - firstNum)
 
 Parameters:
-number: A positive or negative number, or any expression that evaluates to a number.
+number:
+A positive or negative number, or any expression that evaluates to a
+number. 
 
-Returns: The <abs> <function> <return|returns> a positive number.
+Returns:
+The <abs> <function> <return|returns> a positive number.
 
 Description:
-Use the <abs> <function> if you need to know the magnitude of the number and are not concerned about whether it is negative or not.
-  
-The absolute value of a <number> is that number's distance from zero. If the <number> is positive, its absolute value is just the number; if the <number> is <negative>, its absolute value is the <negative> of the number. Because of this, the absolute value of a number is always positive.
+Use the <abs> <function> if you need to know the magnitude of the number
+and are not concerned about whether it is negative or not.
 
-References: function (control_st), trunc (function), round (function), negative (glossary), return (glossary)
+The absolute value of a <number> is that number's distance from zero. If
+the <number> is positive, its absolute value is just the number; if the
+<number> is <negative>, its absolute value is the <negative> of the
+number. Because of this, the absolute value of a number is always
+positive. 
+
+References: function (control structure), trunc (function),
+round (function), negative (glossary), return (glossary)
 
 Tags: math
+

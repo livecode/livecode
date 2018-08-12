@@ -5,8 +5,10 @@ Synonyms: layer
 Type: glossary
 
 Description:
-The position of a <control> relative to the front and back; the order in which <control|controls> are stacked on the <card>.
+The position of a <control> relative to the front and back; the order in
+which <control|controls> are stacked on the <card>.
 
-References: card (object), control (object)
+References: card (glossary), control (glossary)
 
 Tags: ui
+

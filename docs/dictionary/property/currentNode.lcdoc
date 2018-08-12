@@ -2,17 +2,20 @@ Name: currentNode
 
 Type: property
 
-Syntax: set the currentNode of <player> to <nodeID> 
+Syntax: set the currentNode of <player> to <nodeID>
 
-Summary: Specifies the current node in a <QuickTime VR> movie.
+Summary:
+Specifies the current node in a <QuickTime VR> movie.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,ios,android
+Deprecated: 8.1
 
-Platforms: desktop,server,web,mobile
+OS: mac, windows, ios, android
+
+Platforms: desktop, server, mobile
 
 Example:
 set the currentNode of player "Arctic" to 3
@@ -20,15 +23,31 @@ set the currentNode of player "Arctic" to 3
 Example:
 put the currentNode of player myPlayerName into myNode
 
-Value: The <currentNode> is a positive <integer>.
+Value:
+The <currentNode> is a positive <integer>.
 
 Description:
-Use the <currentNode> <property> to find out where the user is in a <QuickTime VR> movie.
+Use the <currentNode> <property> to find out where the user is in a
+<QuickTime VR> movie.
 
-Each node of a QuickTime VR movie is a viewpoint. The movie author sets the nodes during development of the movie. The user can change nodes using the navigational controls in the player; a handler can change nodes by setting the player's <currentNode> <property>.
+Each node of a QuickTime VR movie is a viewpoint. The movie author sets
+the nodes during development of the movie. The user can change nodes
+using the navigational controls in the player; a handler can change
+nodes by setting the player's <currentNode> <property>.
 
-If the player does not contain a QuickTime VR movie, its <currentNode> <property> is zero.
+If the player does not contain a QuickTime VR movie, its <currentNode>
+<property> is zero.
 
-References: nodes (property), integer (keyword), nodeChanged (message), QuickTime VR (glossary), property (glossary)
+Changes:
+This property was deprecated in version 8.1.0 due to the retirement of
+the QuickTime player implementation. In order to support 64-bit on Mac 
+we have been required to switch to using AVFoundation on Mac, which does 
+not support QTVR. In addition, the Windows player object is now based on 
+DirectShow, as Apple have dropped support for the QuickTime libraries 
+previously used.
+
+References: QuickTime VR (glossary), property (glossary),
+integer (keyword), nodeChanged (message), nodes (property)
 
 Tags: multimedia
+

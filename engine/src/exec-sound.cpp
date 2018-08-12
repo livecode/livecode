@@ -31,27 +31,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Sound, PlaySoundOnChannel, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Sound, StopSoundOnChannel, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Sound, PauseSoundOnChannel, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Sound, ResumeSoundOnChannel, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Sound, DeleteSoundOnChannel, 1)
-MC_EXEC_DEFINE_SET_METHOD(Sound, VolumeOfChannel, 2)
-MC_EXEC_DEFINE_GET_METHOD(Sound, VolumeOfChannel, 2)
-MC_EXEC_DEFINE_GET_METHOD(Sound, StatusOfChannel, 2)
-MC_EXEC_DEFINE_GET_METHOD(Sound, SoundOnChannel, 2)
-MC_EXEC_DEFINE_SET_METHOD(Sound, AudioCategory, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCSoundAudioCategoryElementInfo[] =
 {
-    { "ambient", kMCSoundAudioCategoryAmbient},
-    { "solo ambient", kMCSoundAudioCategorySoloAmbient},
-    { "playback", kMCSoundAudioCategoryPlayback},
-    { "record", kMCSoundAudioCategoryRecord},
-    { "play and record", kMCSoundAudioCategoryPlayAndRecord},
-    { "audio processing", kMCSoundAudioCategoryAudioProcessing}
+    { "ambient", kMCSoundAudioCategoryAmbient, false},
+    { "solo ambient", kMCSoundAudioCategorySoloAmbient, false},
+    { "playback", kMCSoundAudioCategoryPlayback, false},
+    { "record", kMCSoundAudioCategoryRecord, false},
+    { "play and record", kMCSoundAudioCategoryPlayAndRecord, false},
+    { "audio processing", kMCSoundAudioCategoryAudioProcessing, false}
 };
 
 static MCExecEnumTypeInfo _kMCSoundAudioCategoryTypeInfo =
@@ -65,9 +52,9 @@ MCExecEnumTypeInfo* kMCSoundAudioCategoryTypeInfo = &_kMCSoundAudioCategoryTypeI
 
 static MCExecEnumTypeElementInfo _kMCSoundChannelStatusElementInfo[] =
 {
-    { "stopped", kMCSoundChannelStatusStopped},
-    { "paused", kMCSoundChannelStatusPaused},
-    { "playing", kMCSoundChannelStatusPlaying}
+    { "stopped", kMCSoundChannelStatusStopped, false},
+    { "paused", kMCSoundChannelStatusPaused, false},
+    { "playing", kMCSoundChannelStatusPlaying, false}
 };
 
 static MCExecEnumTypeInfo _kMCSoundChannelStatusTypeInfo =
@@ -81,9 +68,9 @@ MCExecEnumTypeInfo* kMCSoundChannelStatusTypeInfo = &_kMCSoundChannelStatusTypeI
 
 static MCExecEnumTypeElementInfo _kMCSoundChannelPlayTypeElementInfo[] =
 {
-    { "play now", kMCSoundChannelPlayNow},
-    { "play next", kMCSoundChannelPlayNext},
-    { "play looping", kMCSoundChannelPlayLooping}
+    { "play now", kMCSoundChannelPlayNow, false},
+    { "play next", kMCSoundChannelPlayNext, false},
+    { "play looping", kMCSoundChannelPlayLooping, false}
 };
 
 static MCExecEnumTypeInfo _kMCSoundChannelPlayTypeInfo =
@@ -99,28 +86,10 @@ MCExecEnumTypeInfo* kMCSoundChannelPlayType = &_kMCSoundChannelPlayTypeInfo;
 
 void MCSoundExecPlaySoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel, MCStringRef p_file, intenum_t p_type)
 {
-#ifdef /* MCSoundExecPlaySoundOnChannel */ LEGACY_EXEC
     bool t_success;
 	t_success = true;
     
-    MCObjectHandle *t_handle;
-    t_handle = nil;
-    if (t_success)
-        t_handle = ctxt.GetObjectHandle();
-    
-	if (t_success)
-        t_success = MCSystemPlaySoundOnChannel(p_channel, p_file, p_type, t_handle);
-	if (!t_success)
-    {
-		ctxt.SetTheResultToStaticCString("could not play sound");
-        if (t_handle != nil)
-            t_handle->Release();
-    }
-#endif /* MCSoundExecPlaySoundOnChannel */
-    bool t_success;
-	t_success = true;
-    
-    MCObjectHandle *t_handle;
+    MCObjectHandle t_handle;
     t_handle = nil;
     if (t_success)
         t_handle = ctxt.GetObjectHandle();
@@ -130,22 +99,11 @@ void MCSoundExecPlaySoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel, M
 	if (!t_success)
     {
 		ctxt.SetTheResultToStaticCString("could not play sound");
-        if (t_handle != nil)
-            t_handle->Release();
     }
 }
 
 void MCSoundExecStopPlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
 {
-#ifdef /* MCSoundExecStopSoundOnChannel */ LEGACY_EXEC
-    bool t_success;
-	t_success = true;
-    
-	if (t_success)
-        t_success = MCSystemStopSoundChannel(p_channel);
-	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not find channel");
-#endif /* MCSoundExecStopSoundOnChannel */
     bool t_success;
 	t_success = true;
     
@@ -157,15 +115,6 @@ void MCSoundExecStopPlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
 
 void MCSoundExecPausePlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
 {
-#ifdef /* MCSoundExecPauseSoundOnChannel */ LEGACY_EXEC
-    bool t_success;
-	t_success = true;
-    
-	if (t_success)
-        t_success = MCSystemPauseSoundChannel(p_channel);
-	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not find channel");
-#endif /* MCSoundExecPauseSoundOnChannel */
     bool t_success;
 	t_success = true;
     
@@ -177,15 +126,6 @@ void MCSoundExecPausePlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channel
 
 void MCSoundExecResumePlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
 {
-#ifdef /* MCSoundExecResumeSoundOnChannel */ LEGACY_EXEC
-    bool t_success;
-	t_success = true;
-    
-	if (t_success)
-        t_success = MCSystemResumeSoundChannel(p_channel);
-	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not find channel");
-#endif /* MCSoundExecResumeSoundOnChannel */
     bool t_success;
 	t_success = true;
     
@@ -197,15 +137,6 @@ void MCSoundExecResumePlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channe
 
 void MCSoundExecDeleteSoundChannel(MCExecContext& ctxt, MCStringRef p_channel)
 {
-#ifdef /* MCSoundExecDeleteChannel */ LEGACY_EXEC
-    bool t_success;
-	t_success = true;
-    
-	if (t_success)
-        t_success = MCSystemDeleteSoundChannel(p_channel);
-	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not find channel");
-#endif /* MCSoundExecDeleteChannel */
     bool t_success;
 	t_success = true;
     
@@ -217,23 +148,6 @@ void MCSoundExecDeleteSoundChannel(MCExecContext& ctxt, MCStringRef p_channel)
 
 void MCSoundSetVolumeOfChannel(MCExecContext& ctxt, MCStringRef p_channel, int32_t p_volume)
 {
-#ifdef /* MCSoundSetVolumeOfChannel */ LEGACY_EXEC
-    bool t_success;
-	t_success = true;
-    
-    if (t_success)
-    {
-        if (p_volume < 0)
-            p_volume = 0;
-        else if (p_volume > 100)
-            p_volume = 100;
-    }
-    
-	if (t_success)
-        t_success = MCSystemSetSoundChannelVolume(p_channel, p_volume);
-	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not find channel");
-#endif /* MCSoundSetVolumeOfChannel */
     bool t_success;
 	t_success = true;
     
@@ -257,16 +171,6 @@ void MCSoundSetVolumeOfChannel(MCExecContext& ctxt, MCStringRef p_channel, int32
 
 void MCSoundGetVolumeOfChannel(MCExecContext& ctxt, MCStringRef p_channel, int32_t& r_volume)
 {
-#ifdef /* MCSoundGetVolumeOfChannel */ LEGACY_EXEC
-    bool t_success;
-	t_success = true;
-    
-	if (t_success)
-        t_success = MCSystemSoundChannelVolume(p_channel, r_volume);
-	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not find channel");
-    return t_success;
-#endif /* MCSoundGetVolumeOfChannel */
     bool t_success;
 	t_success = true;
     
@@ -282,16 +186,6 @@ void MCSoundGetVolumeOfChannel(MCExecContext& ctxt, MCStringRef p_channel, int32
 
 void MCSoundGetStatusOfChannel(MCExecContext& ctxt, MCStringRef p_channel, intenum_t& r_status)
 {
-#ifdef /* MCSoundGetStatusOfChannel */ LEGACY_EXEC
-    bool t_success;
-	t_success = true;
-    
-	if (t_success)
-        t_success = MCSystemSoundChannelStatus(p_channel, r_status);
-	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not find channel");
-    return t_success;
-#endif /* MCSoundGetStatusOfChannel */
     bool t_success;
 	t_success = true;
     
@@ -307,16 +201,6 @@ void MCSoundGetStatusOfChannel(MCExecContext& ctxt, MCStringRef p_channel, inten
 
 void MCSoundGetSoundOfChannel(MCExecContext& ctxt, MCStringRef p_channel, MCStringRef &r_sound)
 {
-#ifdef /* MCSoundGetSoundOfChannel */ LEGACY_EXEC
-    bool t_success;
-	t_success = true;
-    
-	if (t_success)
-        t_success = MCSystemSoundOnChannel(p_channel, r_sound);
-	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not find channel");
-    return t_success;
-#endif /* MCSoundGetSoundOfChannel */
     bool t_success;
 	t_success = true;
     
@@ -332,16 +216,6 @@ void MCSoundGetSoundOfChannel(MCExecContext& ctxt, MCStringRef p_channel, MCStri
 
 void MCSoundGetNextSoundOfChannel(MCExecContext& ctxt, MCStringRef p_channel, MCStringRef &r_sound)
 {
-#ifdef /* MCSoundGetNextSoundOfChannel */ LEGACY_EXEC
-    bool t_success;
-	t_success = true;
-    
-	if (t_success)
-        t_success = MCSystemNextSoundOnChannel(p_channel, r_sound);
-	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not find channel");
-    return t_success;
-#endif /* MCSoundGetNextSoundOfChannel */
     bool t_success;
 	t_success = true;
     
@@ -357,16 +231,6 @@ void MCSoundGetNextSoundOfChannel(MCExecContext& ctxt, MCStringRef p_channel, MC
 
 void MCSoundGetSoundChannels(MCExecContext& ctxt, MCStringRef &r_channels)
 {
-#ifdef /* MCSoundGetSoundChannels */ LEGACY_EXEC
-    bool t_success;
-	t_success = true;
-    
-	if (t_success)
-        t_success = MCSystemListSoundChannels(r_channels);
-	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not find channel");
-    return t_success;
-#endif /* MCSoundGetSoundChannels */
     bool t_success;
 	t_success = true;
     
@@ -383,14 +247,6 @@ void MCSoundGetSoundChannels(MCExecContext& ctxt, MCStringRef &r_channels)
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
 void MCSoundSetAudioCategory(MCExecContext &ctxt, intenum_t p_category)
 {
-#ifdef /* MCSoundSetAudioCategory */ LEGACY_EXEC
-    if(!MCSystemSetAudioCategory(p_category))
-    {
-        ctxt.SetTheResultToStaticCString("unable to set audio category");
-        return false;
-    }
-    return true;
-#endif /* MCSoundSetAudioCategory */
     if(MCSystemSetAudioCategory(p_category))
         return;
     

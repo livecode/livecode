@@ -4,31 +4,51 @@ Type: keyword
 
 Syntax: templateCard
 
-Summary: Used with the <set> <command> to set the <properties> of newly created <card|cards>.
+Summary:
+Used with the <set> <command> to set the <properties> of newly created
+<card|cards>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the backgroundColor of the templateCard to "yellow"
 
 Description:
-Use the <templateCard> <keyword> to set up <default> <properties> to be used for any new <card(object)|cards> you create.
+Use the <templateCard> <keyword> to set up <default> <properties> to be
+used for any new <card(object)|cards> you create.
 
-The <templateCard> can be thought of as a special, abstract <object>. It is not an actual <card(keyword)>, but it has all the <properties> of a <card(keyword)>. The <ID> <property> of the <templateCard> is zero.
+The <templateCard> can be thought of as a special, abstract
+<object(glossary)>. It is not an actual <card(keyword)>, but it has all
+the <properties> of a <card(keyword)>. The <ID> <property> of the
+<templateCard> is zero.
 
-You can use the <set> <command> to set the <properties> of the <templateCard> before creating a <card(keyword)>. The new <card(keyword)> has the <properties> of the <templateCard>, by <default>. Changing the <properties> of the <templateCard> does not affect existing <card(object)|cards>.
+You can use the <set> <command> to set the <properties> of the
+<templateCard> before creating a <card(keyword)>. The new
+<card(keyword)> has the <properties> of the <templateCard>, by
+<default>. Changing the <properties> of the <templateCard> does not
+affect existing <card(object)|cards>.
 
-The properties of the <templateCard> can be returned to the default settings using the <reset> command.
+The properties of the <templateCard> can be returned to the default
+settings using the <reset> command.
 
 You can refer to the <templateCard> using any of the following forms:
-        templateCard
-        the templateCard
-        templateCard()
 
->*Note:* The <templateCard> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
+    templateCard
+    the templateCard
+    templateCard()
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), card (keyword), card (object), object (object), keyword (glossary), property (glossary), command (glossary), expression (glossary), create card (command), reset (command), set (command), function (control_st)
+
+>*Note:* The <templateCard> <keyword> is implemented internally as a
+> <function> and appears in the <functionNames>. However, it cannot be
+> used as a <function> in an <expression>.
+
+References: create card (command), reset (command), set (command),
+function (control structure), functionNames (function), object (glossary),
+keyword (glossary), property (glossary), command (glossary),
+expression (glossary), templateScrollbar (keyword), default (keyword),
+card (keyword), card (object), properties (property), ID (property)
+

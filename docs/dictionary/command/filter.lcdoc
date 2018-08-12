@@ -2,24 +2,29 @@ Name: filter
 
 Type: command
 
-Syntax: filter [lines of | items of] <filterSource> {with | without | [not] matching} [wildcard pattern | regex pattern] <filterPattern> [into <targetContainer>]
+Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with | without | [not] matching} [{wildcard pattern | regex pattern}] <filterPattern> [into <targetContainer>]
 
-Summary: Filters each line or item in a source container or expression, removing the lines or items that do or don't match a pattern.
+Summary:
+Filters each line, item, key or element in a source container or
+expression, removing the lines, items, keys or elements that do or don't
+match a pattern.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 local tVar
 put the propertyNames into tVar
-filter tVar with "[az]*" -- tVar contains all property names beginning with a or z
+filter tVar with "[az]*"
+-- tVar contains all property names beginning with a or z
 
 Example:
 -- Filtering a string literal causes the filtered string to be placed in the it variable
-filter items of "apple,banana,cherry" with regex pattern "b.*" -- it contains "banana"
+filter items of "apple,banana,cherry" with regex pattern "b.*"
+-- it contains "banana"
 
 Example:
 local tSource, tBackscriptObjects
@@ -30,60 +35,111 @@ filter lines of tSource without regex pattern "^stack.*" into tBackscriptObjects
 Example:
 create field "Numbers"
 put "123,234,345,456,567,678,789" into field "Numbers"
-filter items of field "Numbers" matching "*[!35-9]" -- field contains "234"
+filter items of field "Numbers" matching "*[!35-9]"
+-- field contains "234"
+
+Example:
+local tArray
+put true into tArray["foo"]
+put false into tArray["bar"]
+filter keys of tArray with "f*"
+put the keys of tArray is "foo"
+
+Example:
+local tArray
+put true into tArray["foo"]
+put false into tArray["bar"]
+filter elements of tArray without "f*"
+put the keys of tArray is "foo"
 
 Parameters:
-filterSource: An expression that evaluates to a string, or a container.
-filterPattern: An expression used to match certain lines or items.
-targetContainer: An expression that evaluates to a container
+filterSource:
+An expression that evaluates to a string, array, or a container.
 
-It: 
-If the filter command is used on a <filterSource> which is not a container, and no 
-<targetContainer> is specified, the filtered string will be placed in the <it> variable.
+filterPattern:
+An expression used to match certain lines, items, keys or elements.
+
+targetContainer:
+An expression that evaluates to a container
+
+It:
+If the filter command is used on a <filterSource> which is not a
+container, and no <targetContainer> is specified, the filtered string
+or array will be placed in the <it> variable.
 
 Description:
-Use the <filter> command to pick specific lines or items in a container or expression.
+Use the <filter> command to pick specific lines, items, keys or elements
+in a container or expression.
 
-The <filter>...with form and the <filter>...matching form retain the lines or items that 
-contain a match for the specified <filterPattern>.
+The <filter>...with form and the <filter>...matching form retain the
+lines, items, keys or elements that contain a match for the specified
+<filterPattern>.
 
-The <filter>...without form and the <filter>...not matching form discard the lines or 
-items that do not contain a match for the specified <filterPattern>.
+The <filter>...without form and the <filter>...not matching form discard
+the lines, items, keys or elements that do not contain a match for the
+specified <filterPattern>. 
 
-If you don't specify lines or items, all lines of the container are filtered.
+If you don't specify lines, items, keys or elements then lines are
+filtered by default.
 
-If a regex pattern is specified, the <filterPattern> evaluates to a regular expression.
+If a regex pattern is specified, the <filterPattern> evaluates to a
+regular expression.
 
-If a wildcard <filterPattern> is specified, the <filterPattern> consists of a string of 
-characters to match, which may be combined with any number of the following special characters:
+If a wildcard <filterPattern> is specified, the <filterPattern> consists
+of a string of characters to match, which may be combined with any
+number of the following special characters:
 
-- * : Matches zero or more of any character. The <filterPattern> A*C matches "AC", "ABC", or "ADZXC".
-- ? : Matches exactly one character. The <filterPattern> A?C matches "ABC", but not "AC" or "ADZXC".
-- [chars] : Matches any one of the characters inside the brackets. The <filterPattern> A[BC]D matches "ABD" or "ACD", but not "AD" or "ABCD".
-- [char-char] : Matches any character whose unicode codepoint is between the first character and the second character.
-- [!chars] : Matches any character which is not one of the characters inside the brackets.
+- * : Matches zero or more of any character. The <filterPattern> A*C
+    matches "AC", "ABC", or "ADZXC".
+- ? : Matches exactly one character. The <filterPattern> A?C matches
+  "ABC", but not "AC" or "ADZXC".
+- [chars] : Matches any one of the characters inside the brackets. The
+  <filterPattern> A[BC]D matches "ABD" or "ACD", but not "AD" or "ABCD".
+- [char-char] : Matches any character whose unicode codepoint is between
+  the first character and the second character.
+- [!chars] : Matches any character which is not one of the characters
+  inside the brackets.
 
-The three bracketed forms can be combined to create more complex character classes, for
-example the pattern [!abcA-C] matches any character which is not a, b or c (upper or lower case)
 
-If no <filterPattern> type is specified, the <filterPattern> is handled as a wildcard.
+You can match instances of special chars as follows:
 
-If no <targetContainer> is specified, and you filter a container, the container contents 
-will be replaced by the filtered result.
+- `?` with `[?]`
+- `*` with `[*]`
+- `[` with `[[]`
+- `-` with `-`
+- `!` with `!`
+
+
+For example, the wildcard <filterPattern> `[[]A]*` will match any
+string beginning with `[A]`.
+
+The three bracketed forms can be combined to create more complex
+character classes, for example the pattern [!abcA-C] matches any
+character which is not a, b or c (upper or lower case)
+
+If no <filterPattern> type is specified, the <filterPattern> is handled
+as a wildcard.
+
+If no <targetContainer> is specified, and you filter a container, the
+container contents will be replaced by the filtered result.
 
 Changes:
-The <filter>...without form was added in version 2.1.1. In previous versions, the <filter> 
-command could be used only to retrieve lines that matched a wildcard expression.
-The <filter> items... form was added in version 6.1. In previous versions, the <filter> 
-command could be used only to retrieve lines.
-The ability to filter using a regular expression was added in version 6.1. In previous 
-versions, the <filter> command only supported wildcard expressions.
-The ability to filter an expression was added in version 6.1. In previous versions, the 
-<filter> command could be used only for a container.
-The <filter>...[not] matching form was added in version 6.1 to clarify the pattern handling.
-The <filter>...into form was added in version 6.1. In previous versions, the filter 
-command always replaced the contents of the original container.
+The <filter>...without form was added in version 2.1.1. In previous
+versions, the <filter> command could be used only to retrieve lines that
+matched a wildcard expression. The <filter> items... form was added in
+version 6.1. In previous versions, the <filter> command could be used
+only to retrieve lines. The ability to filter using a regular expression
+was added in version 6.1. In previous versions, the <filter> command
+only supported wildcard expressions. The ability to filter an expression
+was added in version 6.1. In previous versions, the <filter> command
+could be used only for a container. The <filter>...[not] matching form
+was added in version 6.1 to clarify the pattern handling. The
+<filter>...into form was added in version 6.1. In previous versions, the
+filter command always replaced the contents of the original container.
+Filtering of array keys and elements was added in version 8.1.
 
-References: caseSensitive (property), it (keyword), replace (command), sort (command), matchChunk (function), matchText (function), replaceText (function)
+References: replace (command), sort (command), matchChunk (function),
+matchText (function), replaceText (function), it (keyword),
+caseSensitive (property)
 
 Tags: text processing

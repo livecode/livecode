@@ -1,1 +1,0 @@
-# Setting the rect of a player object doesn't work correctly if the stack is pixelScaled or scaled in any fullscreen mode.

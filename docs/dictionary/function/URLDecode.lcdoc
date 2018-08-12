@@ -2,17 +2,19 @@ Name: URLDecode
 
 Type: function
 
-Syntax: the URLDecode of <formString> 
+Syntax: the URLDecode of <formString>
 
 Syntax: URLDecode(<formString>)
 
-Summary: <return|Returns> the <decode|decoded> form of a <URL> that was <encode|encoded> for posting to an <HTTP> <server>.
+Summary:
+<return|Returns> the <decode|decoded> form of a <URL> that was
+<encode|encoded> for posting to an <HTTP> <server>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 URLDecode("A+B%2F1+2") -- returns "A B/1 2"
@@ -21,15 +23,31 @@ Example:
 put URLDecode(field "Test URL") after URLToCheck
 
 Parameters:
-formString (string): 
+formString (string):
 
-Returns: The <URLDecode> <function> <return|returns> the <formString> with plus <sign|signs> "+" converted to spaces and characters in the form %NN converted to the ASCII equivalent of the <hexadecimal> number NN.
+
+Returns:
+The <URLDecode> <function> <return|returns> the <formString> with plus
+<sign|signs> "+" converted to spaces and characters in the form %NN
+converted to the ASCII equivalent of the <hexadecimal> number NN.
 
 Description:
-Use the <URLDecode> <function> to <decode> a <URL> that has been sent by another system.
+Use the <URLDecode> <function> to <decode> a <URL> that has been sent by
+another system.
 
-When the <URLDecode> function encounters a percent sign (%), it treats the next two characters as <hexadecimal> digits. (If one of the <characters> is not a <hexadecimal> digit, it's treated as a zero.) The number is converted to its <character> equivalent, using the <character set> currently in use.
+When the <URLDecode> function encounters a percent sign (%), it treats
+the next two characters as <hexadecimal> digits. (If one of the
+<characters> is not a <hexadecimal> digit, it's treated as a zero.) The
+number is converted to its <character> equivalent, using the <character
+set> currently in use.
 
-References: httpHeaders (property), URL (keyword), characters (keyword), character (keyword), http (keyword), post (command), decompress (function), macToISO (function), arrayDecode (function), charToNum (function), baseConvert (function), decode (glossary), return (glossary), sign (glossary), encode (glossary), character set (glossary), hexadecimal (glossary), server (glossary), function (control_st)
+References: post (command), function (control structure),
+decompress (function), macToISO (function), arrayDecode (function),
+charToNum (function), baseConvert (function), decode (glossary),
+return (glossary), sign (glossary), encode (glossary),
+character set (glossary), hexadecimal (glossary), server (glossary),
+URL (keyword), characters (keyword), character (keyword), http (keyword),
+httpHeaders (property)
 
 Tags: networking
+

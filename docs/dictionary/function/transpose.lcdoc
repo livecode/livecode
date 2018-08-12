@@ -4,13 +4,15 @@ Type: function
 
 Syntax: transpose(<array>)
 
-Summary: <return|Returns> a two-dimensional <array> after swapping the order of <keys> for each <element> of the <array>.
+Summary:
+<return|Returns> a two-dimensional <array> after swapping the order of
+<keys> for each <element> of the <array>.
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 transpose(myArray)
@@ -19,21 +21,43 @@ Example:
 put transpose(censusByHousehold) into censusByGroup
 
 Parameters:
-array (array): A two-dimensional array variable whose elements are numbers, and whose keys are sequential numbers.
+array (array):
+A two-dimensional array variable whose elements are numbers, and whose
+keys are sequential numbers.
 
-Returns: The <transpose> function <return|returns> an <array>.
+
+Returns:
+The <transpose> function <return|returns> an <array>.
 
 Description:
 Use the <transpose> <function> to swap rows and columns in a matrix.
 
-A two-dimensional array is an array whose elements have a two-part key to describe them. You can visualize such an array as a set of rows and columns: the first part of each element's key is the row number, and the second part is the column number. For example, the expression myArray[3,2] describes the element of myArray which is in the third row, second column.
+A two-dimensional array is an array whose elements have a two-part key
+to describe them. You can visualize such an array as a set of rows and
+columns: the first part of each element's key is the row number, and the
+second part is the column number. For example, the expression
+myArray[3,2] describes the element of myArray which is in the third row,
+second column.
 
-The <transpose> <function> simply swaps rows for columns. In other words, for each <element(keyword)> in the <array>, the corresponding <element(keyword)> in transpose(<array>) has its two parts switched one for the other. The value in the third row, second column is moved to the second row, third column.
+The <transpose> <function> simply swaps rows for columns. In other
+words, for each <element(keyword)> in the <array>, the corresponding
+<element(keyword)> in transpose(<array>) has its two parts switched one
+for the other. The value in the third row, second column is moved to the
+second row, third column.
 
-The <transpose> <function> is its own <inverse> : you can transpose a transposed array again to recover the original array.
+The <transpose> <function> is its own <inverse> : you can transpose a
+transposed array again to recover the original array.
 
->*Important:*  If the <array> has missing <element(glossary)|elements>, the <transpose> <function> will fail to work. For example, an <array> that contains <element(glossary)|elements> myArray[1,1], myArray[1,2], and myArray[2,2] cannot be transposed because the element myArray[2,1] <a/>is missing.
+>*Important:*  If the <array> has missing <element(glossary)|elements>,
+> the <transpose> <function> will fail to work. For example, an <array>
+> that contains <element(glossary)|elements> myArray[1,1], myArray[1,2],
+> and myArray[2,2] cannot be transposed because the element myArray[2,1]
+> <a/>is missing.
 
-References: inverse (keyword), element (keyword), keys (function), transpose (function), matrixMultiply (function), array (glossary), return (glossary), element (glossary), function (control_st)
+References: function (control structure), keys (function),
+transpose (function), matrixMultiply (function), array (glossary),
+return (glossary), element (glossary), inverse (keyword),
+element (keyword)
 
 Tags: properties
+

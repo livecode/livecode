@@ -2,16 +2,21 @@ Name: export snapshot
 
 Type: command
 
-Syntax: export snapshot [from rect[angle] <rectangle>] [of <object>] [(with | without) effects] ... | [from <object>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
+Syntax: export snapshot {[from rect[angle] <rectangle>] [of <object>] | from <object> [{with | without} effects]} [at size <size>] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
 
-Syntax: export snapshot [from rect[angle] <rectangle>] of <object> [(with | without) effects] ... | [from <object>] [at size width, height] [{with|and} metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
-
-Summary: Creates a picture file from a portion of the screen.
+Summary:
+Creates a picture file from a portion of the screen.
 
 Introduced: 2.1
 
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, mobile
+
+Security: privacy
+
 Example:
-export snapshot with effects to file "Test.ppm"
+export snapshot to file "Test.ppm"
 
 Example:
 export snapshot from rect "0,0,200,200" to file "Nav.jpg" as JPEG
@@ -29,36 +34,86 @@ Example:
 export snapshot from Group 1 with metadata theMetadataArray to file "File2.jpg" as JPEG
 
 Parameters:
-rectangle: Specifies the edges of the rectangle to be imported, separated by commas, in the same order as the rectangle property (left, top, right, bottom). If a window, stack or object is specified, the rectangle is given in relative (window) coordinates; otherwise, it is given in absolute coordinates.
-object: 
-metadata (array): The <metadata> is an array of metadata. Currently the only key supported is "density" with a value in pixels per inch (ppi).
-filePath: Specifies the name and location of the file you want to export to. If you specify a name but not a location, the file is created in the <defaultFolder>.
-container: A reference to a container, usually an image or a URL.
-format (enum): The desired file format to save.
-- paint : PBM
-- JPEG: Joint Photographic Experts Group
-- GIF: Graphics Interchange Format
-- PNG: Portable Network Graphics
-maskFile: Specifies the name and location of a file to export as an image mask. You can use a maskFile only when exporting in PBM format (paint).
-effect: Specifies whether graphic effects and a blendLevel should be applied to the object before rendering export.
-...: Denotes the usual possible suffixes for the export snapshot command.
+rectangle:
+Specifies the edges of the rectangle to be imported, separated by
+commas, in the same order as the rectangle property (left, top, right,
+bottom). If a window, stack or object is specified, the rectangle is
+given in relative (window) coordinates; otherwise, it is given in
+absolute coordinates.
+
+object:
+Any valid <object reference>.
+
+size:
+The width,height of the snapshot in pixels.
+
+metadata (array):
+The <metadata> is an array of metadata. Currently the only key supported
+is "density" with a value in pixels per inch (ppi).
+
+
+filePath:
+Specifies the name and location of the file you want to export to. If
+you specify a name but not a location, the file is created in the
+<defaultFolder>. 
+
+container:
+A reference to a container, usually an image or a URL.
+
+format (enum):
+The desired file format to save.
+
+-   paint: PBM
+-   JPEG: Joint Photographic Experts Group
+-   GIF: Graphics Interchange Format
+-   PNG: Portable Network Graphics
+
+maskFile:
+Specifies the name and location of a file to export as an image mask.
+You can use a maskFile only when exporting in PBM format (paint).
 
 Description:
-Use the <export snapshot> <command> to export a screenshot to a <file> or <container>.
+Use the <export snapshot> <command> to export a screenshot to a <file>
+or <container>.
 
-If you use the form export <format> to..., the selected <image> is exported.
-The <export snapshot> ... as paint form exports the image as a PBM, PGM, or PPM file, depending on the screen depth. (Optionally, you can specify a location for the mask file.) The <export snapshot> ... as JPEG form exports as a JPEG file, and the <export snapshot> ... as PNG form exports as a PNG file. If you do not specify a <format>, the file is exported as <PBM>, PGM, or <PPM>.
+If you use the form export <format> to..., the selected <image> is
+exported. The <export snapshot> ... as paint form exports the image as a
+PBM, PGM, or PPM file, depending on the screen depth. (Optionally, you
+can specify a location for the mask file.) The <export snapshot> ... as
+JPEG form exports as a JPEG file, and the <export snapshot> ... as PNG
+form exports as a PNG file. If you do not specify a <format>, the file
+is exported as <PBM>, PGM, or <PPM>.
 
-iOS supports both the object and screen snapshot variants of the export snapshot command. In the screen snapshot case, coordinates are given relative to the top-left of the screen and include the status bar.
+Using 'with' or 'without effects' specifies whether graphic effects and a 
+blendLevel should be applied to the object before rendering export.
 
->*Tip:*  If the <image> has an <alpha channel>, the <export snapshot> ... as PNG form creates a 32-bit PNG file.
-If taking a snapshot of an object, the rectangle's coordinates are relative to the top left corner of the card containing the object. The object is rendered into an image as if no other objects existed around it, the snapshot is taken without applying the object's blendlevel or ink. You can take a snapshot of an object regardless of its visibility or open status - in particular, snapshots can be taken of objects that are not on the current card or in stacks that are not open.
+iOS supports both the object and screen snapshot variants of the export
+snapshot command. In the screen snapshot case, coordinates are given
+relative to the top-left of the screen and include the status bar.
 
-If you don't specify a <rectangle>, LiveCode displays a crosshairs <cursor>. Click at one corner of the rectangle to be imported and drag to the opposite corner to <select> the area.
+>*Tip:*  If the <image> has an <alpha channel>, the <export snapshot>
+> ... as PNG form creates a 32-bit PNG file.
+If taking a snapshot of an object, the rectangle's coordinates are
+relative to the top left corner of the card containing the object. The
+object is rendered into an image as if no other objects existed around
+it, the snapshot is taken without applying the object's blendlevel or
+ink. You can take a snapshot of an object regardless of its visibility
+or open status - in particular, snapshots can be taken of objects that
+are not on the current card or in stacks that are not open.
 
-If you specify a <windowID>, the rectangle's coordinates are relative to the top left corner of the window you specify. However, if the window is partly overlapped by another window, whatever is visible on the screen within that rectangle is placed in the snapshot. In other words, you cannot take a snapshot of a part of a window that is hidden by another overlapping window.
+If you don't specify a <rectangle>, LiveCode displays a crosshairs
+<cursor>. Click at one corner of the rectangle to be imported and drag
+to the opposite corner to <select> the area.
 
-Use the at size extensions if you wish the engine to resize the snapshot taken to the dimensions specified.
+If you specify a <windowID>, the rectangle's coordinates are relative to
+the top left corner of the window you specify. However, if the window is
+partly overlapped by another window, whatever is visible on the screen
+within that rectangle is placed in the snapshot. In other words, you
+cannot take a snapshot of a part of a window that is hidden by another
+overlapping window.
+
+Use the at size extensions if you wish the engine to resize the snapshot
+taken to the dimensions specified.
 
 To export a snapshot for a portion of a stack you use the form:
 <export snapshot> from rect[angle] of window <windowID> to ...
@@ -66,18 +121,33 @@ Where windowId is the windowId property of the required stack.
 
 To export a snapshot of a specific (non-stack) object, use the form:
 <export snapshot> from [rect[angle]] of 'chunk' to ...
-Where 'chunk' is any chunk expression resolving to a control, or any expression evaluating to a control reference.
+Where 'chunk' is any chunk expression resolving to a control, or any
+expression evaluating to a control reference.
 
 To export a snapshot of an object in iOS use the form:
-<export snapshot> from [rectangle rect of] <object> 
+
+    <export snapshot> from [rectangle rect of] object 
 
 To export a snapshot of the screen in iOS use the form:
-<export snapshot> from rectangle rect
 
->*Note:*  There is no way to render the status bar without using private features of the iOS API. Therefore, if your snapshot rectangle includes part of the screen where the status bar is, it will be clipped out.
+    <export snapshot> from rectangle rect
 
->*Important:*  The 'at size' variant of the export snaptshot command is currently only when creating snapshots of objects.
+>*Note:*  There is no way to render the status bar without using private
+> features of the iOS API. Therefore, if your snapshot rectangle
+> includes part of the screen where the status bar is, it will be
+> clipped out.
 
-References: cursor (property), rectangle (property), windowID (property), file (keyword), image (keyword), export (command), import snapshot (command), select (command), screenRect (function), PPM (glossary), command (glossary), container (glossary), PBM (glossary), alpha channel (glossary)
+>*Important:*  The 'at size' variant of the export snapshot command is
+> currently only when creating snapshots of objects.
 
-Tags: file system
+Changes: The `at size` variant, which allows resizing of the exported 
+snapshot to specified dimensions, was added in version 6.0.
+
+References: export (command), import snapshot (command), select (command),
+screenRect (function), PPM (glossary), command (glossary),
+container (glossary), PBM (glossary), alpha channel (glossary),
+file (keyword), image (keyword), cursor (property), rectangle (property),
+windowID (property), object reference (glossary)
+
+Tags: file system, multimedia
+

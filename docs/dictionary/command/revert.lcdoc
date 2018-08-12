@@ -2,27 +2,45 @@ Name: revert
 
 Type: command
 
-Syntax: revert
+Syntax: revert [<targetStack>]
 
-Summary: Restores the <current stack> to its state when last saved, deleting all changes made since the last save.
+Summary:
+Restores a stack to its state when last saved, deleting all
+changes made since the last save.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 revert
 
 Example:
-if it is "Don't Save" then revert
+revert stack "MyStack"
+
+Parameters:
+targetStack:
+An optional stack reference.
 
 Description:
-Use the <revert> <command> to back out of any changes made to the <current stack> since the last save.
+Use the <revert> <command> to back out of any changes made to a stack 
+since the last save.
 
-The <revert> <command> also <undo|undoes> changes made to other <stacks> stored in the same <stack file>. That is, if you <revert> a <main stack>, all <substacks> of that <stack> also revert to the last save, and if you revert a <substack>, its <main stack> and any other <substacks> also revert.
+If no <targetStack> is specified, the <revert> command acts on the 
+<current stack>.
 
-References: substacks (property), mainStack (property), revRollBackDatabase (command), reset paint (command), revdb_rollback (function), stacks (function), substack (glossary), stack file (glossary), current stack (glossary), command (glossary), undo (glossary), main stack (glossary), stack (object)
+The <revert> <command> also <undo|undoes> changes made to other
+<stacks> stored in the same <stack file>. That is, if you <revert> a
+<main stack>, all <substacks> of that <stack> also revert to the last
+save, and if you revert a <substack>, its <main stack> and any other
+<substacks> also revert.
+
+References: stacks (function), substack (glossary), stack file (glossary),
+current stack (glossary), command (glossary), undo (glossary),
+main stack (glossary), stack (object), substacks (property),
+mainStack (property)
 
 Tags: file system
+

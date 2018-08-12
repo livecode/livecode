@@ -6,13 +6,15 @@ Syntax: the foundChunk
 
 Syntax: foundChunk()
 
-Summary: <return|Returns> a <chunk expression> describing the location of the text that was found by the most recent <find> <command>.
+Summary:
+<return|Returns> a <chunk expression> describing the location of the
+text that was found by the most recent <find> <command>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the foundChunk
@@ -20,17 +22,30 @@ the foundChunk
 Example:
 if the foundChunk is not word 1 of thingToFind then find thingToFind
 
-Returns: The <foundChunk> <function> <return|returns> a <chunk expression> of the form char startChar to endChar of field fieldNumber.
+Returns:
+The <foundChunk> <function> <return|returns> a <chunk expression> of the
+form char startChar to endChar of field fieldNumber.
 
 Description:
-Use the <foundChunk> function after a <find> <command> to determine where the text was found.
+Use the <foundChunk> function after a <find> <command> to determine
+where the text was found.
 
-The <foundChunk> <function> is cleared when the text <selection> moves into the <foundField> or when the <current card> is closed. At the same time, the box the <find> command draws around the found text disappears. If there is no box, the <foundChunk> function <return|returns> empty.
+The <foundChunk> <function> is cleared when the text <selection> moves
+into the <foundField> or when the <current card> is closed. At the same
+time, the box the <find> command draws around the found text disappears.
+If there is no box, the <foundChunk> function <return|returns> empty.
 
-The return value reports the text that was found: the startChar is the first <character> of the found text, and the endChar is the last <character>. For example, if the most recent <find> <command> was find "foo bar", either word might have been found.
+The return value reports the text that was found: the startChar is the
+first <character> of the found text, and the endChar is the last
+<character>. For example, if the most recent <find> <command> was find
+"foo bar", either word might have been found.
 
 To get the actual text that was found, use the foundText <function>.
 
-References: selection (keyword), character (keyword), find (command), selectedChunk (function), foundField (function), current card (glossary), command (glossary), return (glossary), chunk expression (glossary), function (control_st)
+References: find (command), function (control structure),
+selectedChunk (function), foundField (function), current card (glossary),
+command (glossary), return (glossary), chunk expression (glossary),
+selection (keyword), character (keyword)
 
 Tags: database
+

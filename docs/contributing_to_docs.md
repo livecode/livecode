@@ -10,9 +10,10 @@ instructive example? Or can you explain a concept better than it is
 currently explained? Please consider submitting your proposed changes 
 directly to the LiveCode repo on GitHub.
 
-If your changes constitute a substantial rewrite of a dictionary entry, 
-please familiarize yourself with the 
-[documentation format specification](guides/LiveCode Documentation Format Reference.md).
+Please consult the [documentation style guide](development/docs_style_guide.md)
+and the [documentation format specification](guides/LiveCode Documentation Format Reference.md)
+for information on the standards and structure we aim to maintain in our
+documentation.
 
 # Documentation Objectives
 
@@ -90,12 +91,12 @@ assume that strict compilation mode is on (i.e. always declare your variables)
 
 ```
 /*
-Returns the number at 1-based index pIndex in the Fibonacci sequence
+Returns the number at 1-based index pIndex >= 2 in the Fibonacci sequence
 */
 function fibonacciNumber pIndex
   local tFirst = 1, tSecond = 1
   local tCounter, tSum
-  repeat with tCounter = 3 to x
+  repeat with tCounter = 3 to pIndex
      put tFirst + tSecond into tSum
      put tSecond into tFirst
      put tSum into tSecond
@@ -125,6 +126,21 @@ the tag you want to add doesn't exist already in a slightly different
 form, and consider starting a dialogue about a new tag and what entries 
 could be most usefully tagged with it.
 
+## References
+
+One thing to look out for when auditing a dictionary entry's references
+is ambiguity of entry type. For example, there are two entries for URL:
+one is for URL as a keyword, and one is a general description of the 
+concept of a URL in the glossary. Sometimes two different references
+should be used in the same sentence, for example:
+
+	Use the <URL(keyword)> keyword to fetch the contents of a file 
+	located at the given <URL(glossary)>
+	
+If there are many references in a given entry, consider sorting them
+alphabetically - this helps prevent duplication and makes it easier to
+spot potential ambiguities.
+
 # Community Documentation Contribution Process
 
 After creating an account on GitHub at https://github.com/join, there 
@@ -139,10 +155,25 @@ website, without having to download any software or use the command line.
 
 ### Making your dictionary change
 
-**Navigate to the file you want to modify in the [dictionary folder of the community-docs branch](https://github.com/livecode/livecode/blob/community-docs/docs/dictionary).**
+**Navigate to the file you want to modify in the [dictionary folder of the develop-8.2 branch](https://github.com/livecode/livecode/blob/develop-8.2/docs/dictionary).**
 
 For example, the accept command is at:
-https://github.com/livecode/livecode/blob/community-docs/docs/dictionary/command/accept.lcdoc
+https://github.com/livecode/livecode/blob/develop-8.2/docs/dictionary/command/accept.lcdoc
+
+Either go directly to the community docs branch URL
+(https://github.com/livecode/livecode/tree/develop-8.2) or if you are 
+on the main LiveCode repository page, select 'develop-8.2' from the 
+branch dropdown menu:
+
+![](images/branch-dropdown.png)
+
+You should see that the develop-8.2 branch is selected both in the 
+label of the dropdown and the url of your browser.
+
+![](images/develop-branch.png)
+
+Now use the file system browser to find the file you want to modify, and
+click on it.
 
 ![](images/livecode-repo-filesystem.png)
 
@@ -209,7 +240,7 @@ and description
 
 >*Note:* Please ensure the pull request has the correct base branch and 
 comparison branch. The base fork should be `livecode/livecode`, with
-base branch `community-docs`, and the head fork should be 
+base branch `develop-8.2`, and the head fork should be 
 `<your user name>/livecode` with compare branch something like `patch-1`
 (unless you have renamed it).
 
@@ -234,7 +265,7 @@ Requests' menu item at the top of the GitHub website.
 
 **Sign the CLA if you haven't already**
 
-Go to the list of pull requests and click on the the link to your pull request.
+Go to the list of pull requests and click on the link to your pull request.
 If you have not signed the Contributor's Agreement, livecode-vulcan will have commented (or will soon!)
 to ask you to:
 1. Sign the LiveCode CLA
@@ -306,15 +337,15 @@ which shows all your outstanding pull requests).
 
 **Click on the 'Files Changed' tab**
 
-![](pull-request.png)
+![](images/pull-request.png)
 
 **Click on the pencil again to make further changes**
 
-![](edit-file-again.png)
+![](images/edit-file-again.png)
 
 **Commit your changes to the same branch**
 
-![](commit-new-changes.png)
+![](images/commit-new-changes.png)
 
 The pull request will be automatically updated.
 
@@ -377,7 +408,7 @@ Click commit to <branch>
 
 Then click "Submit pull request"
 
-Make sure the target branch is livecode/community-docs
+Make sure the target branch is livecode/develop-8.2
 
 Check the pull request has appeared in
 https://github.com/livecode/livecode/pulls
@@ -392,22 +423,27 @@ then in a terminal window, in a suitable directory, run
 
 `git clone --recursive https://github.com/<your user name>/livecode.git`
 
-once this is done, add the livecode repo as upstream
+once this is done, change directory into the newly created directory
+
+`cd livecode`
+
+and add the livecode repo as upstream
 
 `git remote add upstream https://github.com/livecode/livecode.git`
 
 make sure your name and email address are set up
 
 `git config --global user.name "<your name>"`
+
 `git config --global user.email "<your email address>"`
 
-checkout the `community-docs` branch
+checkout the `develop-8.2` branch
 
-`git checkout community-docs`
+`git checkout develop-8.2`
 
 ensure it is up to date
 
-`git pull upstream community-docs`
+`git pull upstream develop-8.2`
 
 create a new branch for your docs changes, for example
 
@@ -440,12 +476,12 @@ Push the changes to your fork of the repo
 
 `git push`
 
-Navigate to your fork on the Git website, https://github.com/<user name>/livecode/
+Navigate to your fork on the Git website, `https://github.com/<your user name>/livecode/`
 
 You should see a link to the recently pushed branch, and an invitation to submit a pull request.
 Click this. 
 
-Ensure the base fork is livecode/livecode, and the base is community-docs.
+Ensure the base fork is livecode/livecode, and the base is develop-8.2.
 
 Click create pull request.
 

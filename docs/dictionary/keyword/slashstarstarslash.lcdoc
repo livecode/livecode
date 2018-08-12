@@ -1,20 +1,23 @@
 Name: /**/
 
+Synonyms: /*, */
+
 Type: keyword
 
 Syntax: /**/
 
-Summary: <delimit|Delimits> a <block comment>.
-
-Synonyms: /*,*/
+Summary:
+<delimit|Delimits> a <block comment>.
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
+local whichPrompt
+put "Prompt text here." into whichPrompt
 answer whichPrompt /* use the prompt that was set earlier */
 
 Example:
@@ -22,14 +25,37 @@ Example:
    long, is a single comment. */
 
 Description:
-Anything between /* and */ is treated as a <comment> and is ignored by LiveCode when <execute|executing> the <handler>.
+Anything between /&ast; and &ast;/ is treated as a
+<comment> and is ignored by LiveCode when <execute|executing> the
+<handler>.
 
-Comments are useful for documenting and explaining your code, either for others who might need to read and modify it, or for yourself. (The code may be clear in your mind now, but in six months, you'll be glad you included comments.)
+<comment|Comments> are useful for documenting and explaining your code,
+either for others who might need to read and modify it, or for yourself.
+(The code may be clear in your mind now, but in six months, you'll be
+glad you included <comment|comments>.)
 
-The block comments created by </**/> differ from the line <comment|comments> created by -- because a <block comment> can span multiple <lines>, as well as a single <line> or part of a <line>. (A <comment> marked by <--> extends only to the end of the <line>.) A <comment> that starts with /* does not end until */, even if there are several lines in between.
+The <block comment|block comments> created by </&ast;&ast;/> differ from
+the line <comment|comments> created by <--> because a <block comment>
+can span multiple <line(glossary)|lines>, as well as a single
+<line(glossary)> or part of a <line(glossary)>. (A <comment> marked by
+<--> extends only to the end of the <line(glossary)>.) A <comment> that
+starts with /&ast; does not end until &ast;/, even if there are several
+<line(glossary)|lines> in between.
 
-Comments can be placed anywhere in a script--inside handlers or outside all handlers. In a long script with many handlers, it may be useful to divide the handlers into sections. Each section starts with a comment containing the section name and any other useful information. This practice helps you keep long scripts organized. Similarly, a lengthy handler can be made more readable by explanatory comments.
+<comment|Comments> can be placed anywhere in a <script>--inside
+<handler|handlers> or outside all <handler|handlers>. In a long <script>
+with many <handler|handlers>, it may be useful to divide the
+<handler|handlers> into sections. Each section can start with a
+<comment> containing the section name and any other useful information.
+This practice helps you keep long <script|scripts> organized. Similarly,
+a lengthy handler can be made more readable by explanatory comments.
 
-Comments can contain any text, including lines of LiveCode. If the code is within a comment, it's ignored. You can temporarily remove sections of code for debugging by putting those sections inside a comment.
+<comment|Comments> can contain any text, including <line(glossary)lines>
+of LiveCode scripting. If the code is within a <comment>, it's ignored.
+You can temporarily remove sections of code for debugging by putting
+those sections inside a <comment>.
 
-References: lines (keyword), -- (keyword), line (keyword), handler (glossary), comment (glossary), delimit (glossary), block comment (glossary), execute (glossary)
+References: line (glossary), handler (glossary), comment (glossary),
+delimit (glossary), block comment (glossary), execute (glossary),
+script (glossary), -- (keyword), line (keyword)
+

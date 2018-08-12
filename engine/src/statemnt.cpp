@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "uidc.h"
-//#include "execpt.h"
+
 #include "hndlrlst.h"
 #include "handler.h"
 #include "scriptpt.h"
@@ -37,7 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#include "syntax.h"
 #include "redraw.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,17 +55,6 @@ Parse_stat MCStatement::parse(MCScriptPoint &sp)
 	initpoint(sp);
 	return PS_NORMAL;
 }
-
-#ifdef LEGACY_EXEC
-Exec_stat MCStatement::exec(MCExecPoint &ep)
-{
-	MCExecContext ctxt(ep);
-	exec_ctxt(ctxt);
-	if (!ctxt . HasError())
-        return ctxt . GetExecStat();
-	return ctxt . Catch(line, pos);
-}
-#endif
 
 void MCStatement::exec_ctxt(MCExecContext&)
 {
@@ -144,7 +132,7 @@ Parse_stat MCStatement::gettargets(MCScriptPoint &sp, MCChunk **targets,
 			sp.backup();
 			return PS_NORMAL;
 		}
-		MCChunk *newptr = new MCChunk(forset);
+		MCChunk *newptr = new (nothrow) MCChunk(forset);
 		if (newptr->parse(sp, False) != PS_NORMAL)
 		{
 			delete newptr;
@@ -211,7 +199,7 @@ Parse_stat MCStatement::getparams(MCScriptPoint &sp, MCParameter **params)
 			sp.backup();
 			return PS_NORMAL;
 		}
-		MCParameter *newptr = new MCParameter;
+		MCParameter *newptr = new (nothrow) MCParameter;
 		if (newptr->parse(sp) != PS_NORMAL)
 		{
 			delete newptr;
@@ -343,19 +331,11 @@ void MCStatement::initpoint(MCScriptPoint &sp)
 	pos = sp.getpos();
 }
 
-void MCStatement::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-	MCSyntaxFactoryExecUnimplemented(ctxt);
-	MCSyntaxFactoryEndStatement(ctxt);
-};
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCComref::MCComref(MCNameRef n)
 {
-	/* UNCHECKED */ MCNameClone(n, name);
+    name = MCValueRetain(n);
 	handler = nil;
 	params = NULL;
 	resolved = false;
@@ -370,7 +350,7 @@ MCComref::~MCComref()
 		params = params->getnext();
 		delete tmp;
 	}
-	MCNameDelete(name);
+	MCValueRelease(name);
 }
 
 Parse_stat MCComref::parse(MCScriptPoint &sp)
@@ -391,146 +371,34 @@ Parse_stat MCComref::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-#if /* MCComref::exec */ LEGACY_EXEC
-Exec_stat MCComref::exec(MCExecPoint &ep)
-{
-	if (MCscreen->abortkey())
-	{
-		MCeerror->add(EE_HANDLER_ABORT, line, pos);
-		return ES_ERROR;
-	}
-
-	if (!resolved)
-	{
-		// MW-2008-01-28: [[ Inherited parentScripts ]]
-		// If we are in parentScript context, then the object we search for
-		// private handlers in is the parentScript's object, rather than the
-		// ep's.
-		MCParentScriptUse *t_parentscript;
-		t_parentscript = ep . getparentscript();
-
-		MCObject *t_object;
-		if (t_parentscript == NULL)
-			t_object = ep . getobj();
-		else
-			t_object = t_parentscript -> GetParent() -> GetObject();
-
-		// MW-2008-10-28: [[ ParentScripts ]] Private handlers are resolved
-		//   relative to the object containing the handler we are executing.
-		MCHandler *t_resolved_handler;
-		t_resolved_handler = t_object -> findhandler(HT_MESSAGE, name);
-		if (t_resolved_handler != NULL && t_resolved_handler -> isprivate())
-			handler = t_resolved_handler;
-
-		resolved = true;
-    }
-    
-	Exec_stat stat;
-    MCExecContext ctxt(ep);
-	MCParameter *tptr = params;
-	while (tptr != NULL)
-	{
-		MCVariable* t_var;
-		t_var = tptr -> evalvar(ep);
-        
-		if (t_var == NULL)
-		{
-			tptr -> clear_argument();
-			while ((stat = tptr->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				if (!MCB_error(ep, line, pos, EE_STATEMENT_BADPARAM))
-					break;
-			if (stat != ES_NORMAL)
-			{
-				MCeerror->add(EE_STATEMENT_BADPARAM, line, pos);
-				return ES_ERROR;
-			}
-			tptr->set_argument(ep);
-		}
-		else
-			tptr->set_argument_var(t_var);
-        
-		tptr = tptr->getnext();
-        
-	}
-	MCObject *p = ep.getobj();
-	MCExecContext *oldctxt = MCECptr;
-	MCECptr = &ctxt;
-	stat = ES_NOT_HANDLED;
-	Boolean added = False;
-	if (MCnexecutioncontexts < MAX_CONTEXTS)
-	{
-		ep.setline(line);
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
-		added = True;
-	}
-    
-#ifdef _MOBILE
-    if (platform_message)
-    {
-        stat = MCHandlePlatformMessage(name, params);
-    }
-#endif
-    
-	if (handler != nil)
-	{
-        // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
-        //   parent, then use a special method.
-        if (ep . getparentscript() == NULL)
-            stat = p -> exechandler(handler, params);
-        else
-            stat = p -> execparenthandler(handler, params, ep . getparentscript());
-        
-        switch(stat)
-        {
-            case ES_ERROR:
-            case ES_PASS:
-                MCeerror->add(EE_STATEMENT_BADCOMMAND, line, pos, handler -> getname());
-                if (MCerrorptr == NULL)
-                    MCerrorptr = p;
-                stat = ES_ERROR;
-                break;
-                
-            case ES_EXIT_HANDLER:
-                stat = ES_NORMAL;
-                break;
-                
-            default:
-                break;
-        }
-	}
-	else
-	{
-		stat = MCU_dofrontscripts(HT_MESSAGE, name, params);
-		Boolean olddynamic = MCdynamicpath;
-		MCdynamicpath = MCdynamiccard != NULL;
-		if (stat == ES_PASS || stat == ES_NOT_HANDLED)
-			switch (stat = p->handle(HT_MESSAGE, name, params, p))
-			{
-			case ES_ERROR:
-			case ES_NOT_FOUND:
-			case ES_NOT_HANDLED:
-			case ES_PASS:
-				MCeerror->add(EE_STATEMENT_BADCOMMAND, line, pos, name);
-				stat = ES_ERROR;
-				break;
-			case ES_EXIT_HANDLER:
-				stat = ES_NORMAL;
-				break;
-			default:
-				break;
-			}
-		MCdynamicpath = olddynamic;
-	}
-	MCECptr = oldctxt;
-	if (added)
-		MCnexecutioncontexts--;
-	return stat;
-}
-#endif
-
 void MCComref::exec_ctxt(MCExecContext& ctxt)
 {
     MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, global_handler, false);
+    
+    if (MCresultmode == kMCExecResultModeReturn)
+    {
+        // Do nothing!
+    }
+    else if (MCresultmode == kMCExecResultModeReturnValue)
+    {
+        // Set 'it' to the result and clear the result
+        MCAutoValueRef t_value;
+        if (!MCresult->eval(ctxt, &t_value))
+        {
+            ctxt.Throw();
+            return;
+        }
+        
+        ctxt.SetItToValue(*t_value);
+        ctxt.SetTheResultToEmpty();
+    }
+    else if (MCresultmode == kMCExecResultModeReturnError)
+    {
+        // Set 'it' to empty
+        ctxt.SetItToEmpty();
+        // Leave the result as is but make sure we reset the 'return mode' to default.
+        MCresultmode = kMCExecResultModeReturn;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

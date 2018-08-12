@@ -2,17 +2,18 @@ Name: hostNameToAddress
 
 Type: function
 
-Syntax: the hostNameToAddress of <domainName> 
+Syntax: the hostNameToAddress of <domainName>
 
 Syntax: hostNameToAddress(<domainName>, [<callback>])
 
-Summary: Returns the <IP address|IP addresses> corresponding to a <domain name>.
+Summary:
+Returns the <IP address|IP addresses> corresponding to a <domain name>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 hostNameToAddress("mail.example.org")
@@ -24,18 +25,34 @@ Example:
 hostNameToAddress("www.domain.com", myCallback)
 
 Parameters:
-domainName: A standard fully-qualified <domain name>.
-callback: The name of a message to send when the lookup completes.
+domainName:
+A standard fully-qualified <domain name>.
 
-The result: The <hostNameToAddress> <function> does a <DNS> lookup on the <domain name> in order to find the <IP address>. This means that the computer must be connected to the Internet in order to use this <function>. If a connection to the Internet is not available, the <hostNameToAddress> <function> returns an error message in the <result> function.
+callback:
+The name of a message to send when the lookup completes.
 
-Returns: The <hostNameToAddress> function returns the <IP address|IP addresses> corresponding to the <domain name>, one per line.
+Returns:
+The <hostNameToAddress> function returns the <IP address|IP addresses>
+corresponding to the <domain name>, one per line.
+
+The result:
+The <hostNameToAddress> <function> does a <DNS> lookup on the <domain
+name> in order to find the <IP address>. This means that the computer
+must be connected to the Internet in order to use this <function>. If a
+connection to the Internet is not available, the <hostNameToAddress>
+<function> returns an error message in the <result> function.
 
 Description:
-Use the <hostNameToAddress> <function> to find the <numeric> <IP address> of the computer or computers at a given <domain name>.
+Use the <hostNameToAddress> <function> to find the <numeric> 
+<IP address> of the computer or computers at a given <domain name>.
 
-If the <callback> parameter is specified then the call will return immediately and upon completion of the lookup, the callback will be invoked with the resolved address as a parameter.
+If the <callback> parameter is specified then the call will return
+immediately and upon completion of the lookup, the callback will be
+invoked with the resolved address as a parameter.
 
-References: numeric (keyword), accept (command), result (function), DNSServers (function), DNS (glossary), domain name (glossary), IP address (glossary), function (control_st)
+References: accept (command), function (control structure),
+result (function), DNSServers (function), DNS (glossary),
+domain name (glossary), IP address (glossary), numeric (keyword)
 
 Tags: networking
+

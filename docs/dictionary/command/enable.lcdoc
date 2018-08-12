@@ -2,15 +2,16 @@ Name: enable
 
 Type: command
 
-Syntax: enable <object> 
+Syntax: enable <object>
 
-Summary: Enables a <control> so that it responds to user actions.
+Summary:
+Enables a <control> so that it responds to user actions.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 enable the selectedObject
@@ -19,13 +20,19 @@ Example:
 enable field "Info" of stack "Entry"
 
 Parameters:
-object: Any control in an open stack.
+object:
+Any control in an open stack.
 
 Description:
-Use the <enable> <command> to allow an <object> to respond to mouse clicks or keypresses.
+Use the <enable> <command> to allow an <object(glossary)> to respond to
+mouse clicks or keypresses.
 
-The <enable> <command> is equivalent to setting the <object|object's> <enabled> <property> to true.
+The <enable> <command> is equivalent to setting the <object|object's>
+<enabled> <property> to true.
 
-References: control (keyword), enabled (property), hilite (command), enable menu (command), disable (command), object (object), command (glossary), property (glossary)
+References: hilite (command), enable menu (command), disable (command),
+object (glossary), command (glossary), property (glossary),
+control (keyword), enabled (property)
 
 Tags: ui
+

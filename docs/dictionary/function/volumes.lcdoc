@@ -1,20 +1,21 @@
 Name: volumes
 
+Synonyms: drives
+
 Type: function
 
 Syntax: the volumes
 
 Syntax: volumes()
 
-Summary: <return|Returns> a list of volumes.
-
-Synonyms: drives
+Summary:
+<return|Returns> a list of volumes.
 
 Introduced: 1.0
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: disk
 
@@ -24,21 +25,37 @@ the volumes
 Example:
 if myDisk is among the lines of the volumes then setNewDirectory
 
-Returns: The <volumes> <function> <return|returns> a list of volume names, one per <line>.
+Returns:
+The <volumes> <function> <return|returns> a list of volume names, one
+per <line>.
 
 Description:
-Use the <volumes> <function> to find out which disks are available for use.
+Use the <volumes> <function> to find out which disks are available for
+use. 
 
-A volume is usually a disk, but a single disk may be partitioned into multiple volumes, each of which appears as a separate icon. In this case, each partitioned volume is listed separately by the <volumes> <function>.
+A volume is usually a disk, but a single disk may be partitioned into
+multiple volumes, each of which appears as a separate icon. In this
+case, each partitioned volume is listed separately by the <volumes>
+<function>. 
 
-Disks which are physically installed or inserted into a disk drive, but are not currently mounted, do not appear in the list returned by the <volumes> <function>.
+Disks which are physically installed or inserted into a disk drive, but
+are not currently mounted, do not appear in the list returned by the
+<volumes> <function>.
 
->*Cross-platform note:*  On <Mac OS> and <OS X|OS X systems>, removable drives (such as floppy drives) that are connected, but do not contain a disk, do not appear in the list returned by the <volumes> <function>. On <Windows|Windows systems>, empty but connected removable drives are reported by the <volumes> <function>.
+>*Cross-platform note:*  On <Mac OS> and <OS X|OS X systems>, removable
+> drives (such as floppy drives) that are connected, but do not contain
+> a disk, do not appear in the list returned by the <volumes>
+> <function>. On <Windows|Windows systems>, empty but connected
+> removable drives are reported by the <volumes> <function>.
 
-This function always returns empty on Unix systems.
+>*Note:* On Mac OS and OS X systems, volumes may contain slash
+> characters (/) in their names. To use such a volume as part of a path,
+> <replace> the slash with a semi colon before constructing the path.
 
->*Note:* On Mac OS and OS X systems, volumes may contain slash characters (/) in their names. To use such a volume as part of a path, <replace> the slash with a semi colon before constructing the path.
-
-References: line (keyword), replace (command), folders (function), diskSpace (function), files (function), Windows (glossary), Mac OS (glossary), return (glossary), OS X (glossary), function (control_st)
+References: replace (command), function (control structure),
+folders (function), diskSpace (function), files (function),
+Windows (glossary), Mac OS (glossary), return (glossary), OS X (glossary),
+line (keyword)
 
 Tags: file system
+

@@ -2,17 +2,19 @@ Name: revStartXMLNode
 
 Type: message
 
-Syntax: revStartXMLNode <nodeName>, <nodeAttributes> 
+Syntax: revStartXMLNode <pNodeName>, <pNodeAttributes>
 
-Summary: Sent to the <current card> when the <revXMLCreateTreeFromFile> <function> encounters an opening <tag> while parsing an <XML> file.
+Summary:
+Sent to the <current card> when the <revXMLCreateTreeFromFile>
+<function> encounters an opening <tag> while parsing an <XML> file.
 
 Associations: card
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -26,14 +28,32 @@ on revStartXMLNode theAttributes -- create a new card for this node
 end revStartXMLNode
 
 Parameters:
-nodeName (string): A string containing the name of the XML element currently being parsed.
-nodeAttributes (string): A string containing the attributes of the XML element currently being parsed, one attribute per line. Each attribute name is separated from its value by a comma.
+pNodeName (string):
+A string containing the name of the XML element currently being parsed.
+
+pNodeAttributes (string):
+A string containing the attributes of the XML element currently being
+parsed, one attribute per line. Each attribute name is separated from
+its value by a comma.
 
 Description:
-Handle the <revStartXMLNode> <message> if you want to build your own subset of an <XML document>.
+Handle the <revStartXMLNode> <message> if you want to build your own
+subset of an <XML document>.
 
-The revXMLCreateTree or <revXMLCreateTreeFromFile> <function(glossary)|functions> take <XML> data and parse it. When you <call> either of these <function(glossary)|functions>, you can specify whether or not to send <message|messages> during the parsing operation.
+The revXMLCreateTree or <revXMLCreateTreeFromFile>
+<function(glossary)|functions> take <XML> data and parse it. When you
+<call> either of these <function(glossary)|functions>, you can specify
+whether or not to send <message|messages> during the parsing operation.
 
-If you have specified that you want the function to send messages, the <revStartXMLNode> <message> is sent when the <function(control_st)> encounters the start of a node. If you have specified that you don't want <message|messages> sent, no <revStartXMLNode> <message|messages> are sent.
+If you have specified that you want the function to send messages, the
+<revStartXMLNode> <message> is sent when the <function(control
+structure)> encounters the start of a node. If you have specified that
+you don't want <message|messages> sent, no <revStartXMLNode>
+<message|messages> are sent.
 
-References: revXMLStartTree (message), call (command), revXMLDeleteNode (command), function (control_st), revXMLCreateTreeFromFile (function), current card (glossary), tag (glossary), message (glossary), function (glossary), XML (glossary), XML document (glossary)
+References: call (command), revXMLDeleteNode (command),
+function (control structure), revXMLCreateTreeFromFile (function),
+current card (glossary), tag (glossary), message (glossary),
+function (glossary), XML (glossary), XML document (glossary),
+revXMLStartTree (message)
+

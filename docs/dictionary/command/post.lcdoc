@@ -2,15 +2,18 @@ Name: post
 
 Type: command
 
-Syntax: post <data> to URL <destinationURL> 
+Syntax: post <data> to URL <destinationURL>
 
-Summary: Sends data to a <web server> using the POST action of <HTTP>.
+Summary:
+Sends data to a <web server> using the POST action of <HTTP>.
+
+Associations: internet library
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android, html5
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: network
 
@@ -24,38 +27,77 @@ Example:
 post tData to URL tMyUrl
 
 Parameters:
-data: Any text that evaluates to a string.
-destinationURL: The URL where the data is to be sent.
+data:
+Any text that evaluates to a string.
 
-The result: If an error occurs, the <result> <function> is set to the error message. >*Important:* If a <blocking> operation involving a <URL> (using the <put> <command> to <upload> a <URL>, the <post> c <ommand>, the <delete URL> <command>, or a <statement> that gets an <ftp> or <HTTP> <URL>) is going on, no other <blocking> <URL> operation can start until the previous one is finished. If you attempt to use a <URL> in an <expression>, or put data into a <URL>, while another <blocking> <URL> operation is in progress, the <result> is set to "Error Previous request not completed".
+destinationURL:
+The URL where the data is to be sent.
 
-It: The value the web server returns is placed in the it <variable>.
+It:
+The value the web server returns is placed in the it <variable>.
+
+The result:
+If an error occurs, the <result> <function> is set to the error message.
+>*Important:* If a <blocking> operation involving a <URL> (using the
+> <put> <command> to <upload> a <URL>, the <post> c <ommand>, the
+> <delete URL> <command>, or a <statement> that gets an <ftp> or <HTTP>
+> <URL>) is going on, no other <blocking> <URL> operation can start
+> until the previous one is finished. If you attempt to use a <URL> in
+> an <expression>, or put data into a <URL>, while another <blocking>
+> <URL> operation is in progress, the <result> is set to
+> "Error Previous request not completed". 
 
 Description:
 Use the <post> <command> to submit data to a <web server>.
 
 Data you send should be encoded using the <URLEncode> <function>.
 
-The HTTP header sent with the POST request can be changed using either the <HTTPHeaders> <property> or the <libURLSetCustomHTTPHeaders> <command>. By default, the "Content-Type" header line is set to "application/x-www-form-urlencoded".
+The HTTP header sent with the POST request can be changed using either
+the <HTTPHeaders> <property> or the <libURLSetCustomHTTPHeaders>
+<command>. By default, the "Content-Type" header line is set to
+"application/x-www-form-urlencoded". 
 
->*Note:* Sending data with the <post> <command> is a <blocking> operation: that is, the <handler> pauses until LiveCode is finished sending the data. Since contacting a <server> may take some time, due to network lag, <URL> operations may take long enough to be noticeable to the user.
+>*Note:* Sending data with the <post> <command> is a <blocking>
+> operation: that is, the <handler> pauses until LiveCode is finished
+> sending the data. Since contacting a <server> may take some time, due
+> to network lag, <URL> operations may take long enough to be noticeable
+> to the user.
 
-To send a username and password with the <post> <command>, use the standard <syntax> for including this information in a URL. For example, to access http://www.example.com/ with the username "me" and the password "pass", use the following <statement> :
+To send a username and password with the <post> <command>, use the
+standard <syntax> for including this information in a URL. For example,
+to access http://www.example.com/ with the username "me" and the
+password "pass", use the following <statement> :
 
-  post someData to URL "http://me:pass@www.example.com/"
+    post someData to URL "http://me:pass@www.example.com/"
 
->*Important:* If your user name or password contains any of the characters ":", "@", "/", ".", or "|", use the <URLEncode> <function> to safely encode the user name or password before putting them into the <URL>. The following example constructs a <URL> for a user whose password contains the "@" character:
 
-put "name" into userName
-put "jdoe@example.com" into userPassword
-put "http://" & userName & ":" & URLEncode(userPassword) \
-                         & "@www.example.net/index.html" into fileURLToGet
-get URL fileURLToGet
+>*Important:* If your user name or password contains any of the
+> characters ":", "@", "/", ".", or "|", use the <URLEncode> <function>
+> to safely encode the user name or password before putting them into
+> the <URL>. The following example constructs a <URL> for a user whose
+> password contains the "@" character:
 
->*Important:* The <post> command is part of the Internet library on desktops. To ensure that the command works in a standalone application, you must include this custom library when you create your standalone. In the Inclusions section of the Standalone Application Settings window, make sure "Internet Library" is selected in the list of script libraries.
+    put "name" into userName
+    put "jdoe@example.com" into userPassword
+    put "http://" & userName & ":" & URLEncode(userPassword) \
 
->*Note:* When included in a standalone application, the Internet library is implemented as a hidden group and made available when the group receives its first openBackground message. During the first part of the application startup process, before this message is sent, the <post> command is not yet available. This may affect attempts to use this command in startup, preOpenStack, openStack, or preOpenCard hand in the main stack. Once the application has finished starting up, the library is available and the <post> command can be used in any handler.
+    & "@www.example.net/index.html" into fileURLToGet
+	get URL fileURLToGet
 
+
+>*Important:*  The <post> <command> is part of the 
+> <Internet library> on desktop platforms. To ensure that the <command> 
+> works in a desktop <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
+
+>*Cross-platform note:* On iOS and Android, the <post> <command>
+> is implemented in the engine. Therefore the <Internet library> is not 
+> needed to ensure the <command> works in a mobile 
+> <standalone application>. If included, the <Internet library> 
+> implementation will be used instead of the engine implementation.
 > *Note:* The Android and iOS engines do not support 'libUrl' but do
 > allow you to use <post> in the background. When specifying URLs for
 > Android or iOS, you must use the appropriate form that conforms to
@@ -63,4 +105,25 @@ get URL fileURLToGet
 > <URLEncode> any username and password fields appropriately for FTP
 > URLs.
 
-References: httpHeaders (property), HTTPProxy (property), urlProgress (message), URL (keyword), ftp (keyword), http (keyword), variable (glossary), ommand (glossary), property (glossary), blocking (glossary), web server (glossary), command (glossary), expression (glossary), syntax (glossary), server (glossary), upload (glossary), statement (glossary), handler (glossary), result (function), URLStatus (function), URLEncode (function), libURLFormData (function), URLDecode (function), libURLMultipartFormAddPart (function), libURLMultipartFormData (function), post (command), write to socket (command), delete URL (command), read from socket (command), put (command), libURLSetExpect100 (command), libURLSetLogField (command), open socket (command), libURLSetCustomHTTPHeaders (command), function (control_st)
+> *Cross-platform note:* The HTML5 engine only supports HTTP and HTTPs
+> protocols.
+
+> *Cross-platform note:* URLs fetched by the HTML5 engine from a domain
+> other than that of the hosting the page may be blocked by web browsers,
+> unless the server hosting the URL sets the "Access-Control-Origin" header
+> appropriately.
+
+References: post (command), write to socket (command),
+delete URL (command), read from socket (command), put (command),
+libURLSetExpect100 (command), libURLSetLogField (command),
+open socket (command), libURLSetCustomHTTPHeaders (command),
+function (control structure), result (function), URLStatus (function),
+URLEncode (function), libURLFormData (function), URLDecode (function),
+libURLMultipartFormAddPart (function), libURLMultipartFormData (function),
+variable (glossary), ommand (glossary), property (glossary),
+blocking (glossary), web server (glossary), command (glossary),
+expression (glossary), syntax (glossary), server (glossary),
+upload (glossary), statement (glossary), handler (glossary),
+URL (keyword), ftp (keyword), http (keyword), urlProgress (message),
+httpHeaders (property), HTTPProxy (property)
+

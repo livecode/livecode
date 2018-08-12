@@ -4,13 +4,14 @@ Type: function
 
 Syntax: deleteRegistry(<keyPath>)
 
-Summary: Removes an entry from the <registry|Windows system registry>.
+Summary:
+Removes an entry from the <registry|Windows system registry>.
 
 Introduced: 2.0
 
 OS: windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 deleteRegistry("HKEY_CLASSES_ROOT\.txt\")
@@ -19,19 +20,34 @@ Example:
 if not deleteRegistry(storedKey) then answer "Couldn't delete key."
 
 Parameters:
-keyPath: The keyPath parameter is the path to a registry entry.
+keyPath:
+The keyPath parameter is the path to a registry entry.
 
-The result: If Windows sends an error message to the application, the error message is returned in the result.
+Returns:
+The <deleteRegistry> <function> <return|returns> true if the entry was
+successfully deleted, false otherwise.
 
-Returns: The <deleteRegistry> <function> <return|returns> true if the entry was successfully deleted, false otherwise.
+The result:
+If Windows sends an error message to the application, the error message
+is returned in the result.
 
 Description:
-Use the <deleteRegistry> <function> to uninstall a <registry> entry your application has previously installed.
+Use the <deleteRegistry> <function> to uninstall a <registry> entry your
+application has previously installed.
 
->*Tip:*  To delete a subkey, use the <setRegistry> <function> to set the subkey's value to empty.
+>*Tip:*  To delete a subkey, use the <setRegistry> <function> to set the
+> subkey's value to empty.
 
-On Mac OS and Unix systems, the <deleteRegistry> <function> <return|returns> "not supported".
+On Mac OS and Unix systems, the <deleteRegistry> <function>
+<return|returns> "not supported".
 
->*Warning:*  Be careful to use only carefully debugged entries with the <deleteRegistry> <function>., and be very certain you know all the ramifications of the entry you're removing. Removing entries from the <registry|Windows registry> can cause the system to behave unexpectedly or stop functioning altogether.
+>*Warning:*  Be careful to use only carefully debugged entries with the
+> <deleteRegistry> <function>., and be very certain you know all the
+> ramifications of the entry you're removing. Removing entries from the
+> <registry|Windows registry> can cause the system to behave
+> unexpectedly or stop functioning altogether.
 
-References: function (control_st), setRegistry (function), queryRegistry (function), platform (function), registry (glossary), return (glossary)
+References: function (control structure), setRegistry (function),
+queryRegistry (function), platform (function), registry (glossary),
+return (glossary)
+

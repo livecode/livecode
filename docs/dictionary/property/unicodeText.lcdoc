@@ -2,22 +2,26 @@ Name: unicodeText
 
 Type: property
 
-Syntax: set the unicodeText of [<chunk> of] <field> to <unicodeString> 
+Syntax: set the unicodeText of [<chunk> of] <field> to <unicodeString>
 
-Syntax: set the unicodeText of <button> to <unicodeString> 
+Syntax: set the unicodeText of <button> to <unicodeString>
 
-Summary: Specifies the text in a <field>, represented as <Unicode> (double-byte characters).
+Summary:
+Specifies the text in a <field>, represented as <Unicode> (double-byte
+characters). 
 
-Associations: field,button
+Associations: field, button
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+Deprecated: 7.0
 
-Platforms: desktop,server,web,mobile
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
 
 Example:
-set the unicodeText of field 1 to URL binfile:Chinese.txt
+set the unicodeText of field 1 to URL "binfile:Chinese.txt"
 
 Example:
 set the unicodeText of line 4 of field 1 to mySavedText
@@ -25,21 +29,33 @@ set the unicodeText of line 4 of field 1 to mySavedText
 Example:
 set the unicodeText of button languages to tUnicodeLanguageList
 
-Value: The <unicodeText> is a UTF-16 string.
-
-The result: As of LiveCode 7.0 the unicodeText property has been deprecated. It will continue to work as in previous versions but shoud not be used in new code as the existing behaviour is incompatible with the new, transparent Unicode handling (the resulting value will be treated as binary data rather than text). This functions is only useful in combination with the also-deprecated uniEncode and uniDecode function.
+Value:
+The <unicodeText> is a UTF-16 string.
 
 Description:
-Use the <unicodeText> <property> to set or get the contents of a field or button as UTF-16.
+Use the <unicodeText> <property> to set or get the contents of a field 
+or button as UTF-16.
 
->*Important:* 
+>*Important:* As of LiveCode 7.0 the unicodeText property has been 
+deprecated. It will continue to work as in previous versions but should 
+not be used in new code as the existing behaviour is incompatible with 
+the new, transparent Unicode handling (the resulting value will be 
+treated as binary data rather than text). This functions is only useful 
+in combination with the also-deprecated uniEncode and uniDecode
+function. 
 
-Fields
-Use the <unicodeText> property to display a unicode string in a field or retrieve the text displayed in a field as a unicode string.
+For fields, use the <unicodeText> property to display a unicode string 
+in a field or retrieve the text displayed in a field as a unicode
+string. 
 
-Buttons
-Use the <unicodeText> property to set the menu contents of a button(if it is a menu) to a unicode string. To set the label of a button to a unicode string use the <unicodeLabel> property.
+For buttons, use the <unicodeText> property to set the menu contents of 
+a button(if it is a menu) to a unicode string. To set the label of a 
+button to a unicode string use the <unicodeLabel> property.
 
-References: dragData (property), text (property), HTMLText (property), unicodeLabel (property), field (keyword), uniDecode (function), charToNum (function), uniEncode (function), property (glossary), Unicode (glossary)
+References: uniDecode (function), charToNum (function),
+uniEncode (function), property (glossary), Unicode (glossary),
+field (keyword), dragData (property), text (property),
+HTMLText (property), unicodeLabel (property)
 
 Tags: text processing
+

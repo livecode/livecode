@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "param.h"
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "exec.h"
 #include "util.h"
 #include "object.h"
@@ -49,182 +49,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 Boolean tripleclick = False;
 
 uint32_t g_current_background_colour = 0;
-
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef LEGACY_EXEC
-extern void MCS_common_init(void);
-
-extern MCSystemInterface *MCServerCreatePosixSystem(void);
-extern MCSystemInterface *MCServerCreateMacSystem(void);
-extern MCSystemInterface *MCServerCreateWindowsSystem(void);
-
-extern "C" char *__cxa_demangle(const char *, char *, size_t *, int*);
-
-#ifdef _WINDOWS_SERVER
-static char *strndup(const char *s, uint32_t n)
-{
-	char *r;
-	r = (char *)malloc(n + 1);
-	strncpy(r, s, n);
-	r[n] = '\0';
-	return r;
-}
-#endif
-
-#ifdef _LINUX_SERVER
-#include <execinfo.h>
-#include <dlfcn.h>
-
-#define dl_info Dl_info
-
-static void handle_backtrace()
-{
-	void *t_callstack[16];
-	int t_frame_count;
-	t_frame_count = backtrace(t_callstack, 16);
-	
-	for(int i = 1; i < t_frame_count; i++)
-	{
-		dl_info t_info;
-		if (dladdr(t_callstack[i], &t_info) != 0 && t_info . dli_sname != NULL)
-		{
-			bool t_handled;
-			t_handled = false;
-			
-			if (t_info . dli_sname[0] == '_' && t_info . dli_sname[1] == 'Z')
-			{
-				int t_status;
-				char *t_symbol;
-				t_symbol = __cxa_demangle(t_info . dli_sname, NULL, NULL, &t_status);
-				if (t_status == 0)
-				{
-					fprintf(stderr, "  in %s @ %u\n", t_symbol, (char *)t_callstack[i] - (char *)t_info . dli_saddr);
-					t_handled = true;
-				}
-			}
-			
-			if (!t_handled)
-				fprintf(stderr, "  in %s @ %u\n", t_info . dli_sname, (char *)t_callstack[i] - (char *)t_info . dli_saddr);
-		}
-		else
-			fprintf(stderr, "  in <unknown> @ %p\n", t_callstack[i]);
-	}
-}
-#else
-void handle_backtrace(void)
-{
-}
-#endif
-
-#ifdef _WINDOWS_SERVER
-static void handle_signal(int p_signal)
-{
-	switch(p_signal)
-	{
-		case SIGTERM:
-			fprintf(stderr, "livecode-server exited by request\n");
-			MCquit = True;
-			MCexitall = True;
-			break;
-		case SIGILL:
-		case SIGSEGV:
-		case SIGABRT:
-			fprintf(stderr, "livecode-server exited due to fatal signal %d\n", p_signal);
-			handle_backtrace();
-			exit(-1);
-			break;
-		case SIGINT:
-			// We received an interrupt so let the debugger (if present) handle it.
-			MCServerDebugInterrupt();
-			break;
-		case SIGFPE:
-			errno = EDOM;
-			break;
-		default:
-			break;
-	}
-}
-#else
-static void handle_signal(int p_signal)
-{
-	switch(p_signal)
-	{
-		case SIGUSR1:
-			MCsiguser1++;
-			break;
-		case SIGUSR2:
-			MCsiguser2++;
-			break;
-		case SIGTERM:
-			fprintf(stderr, "livecode-server exited by request\n");
-			MCquit = True;
-			MCexitall = True;
-			break;
-		case SIGILL:
-		case SIGSEGV:
-		case SIGABRT:
-			fprintf(stderr, "livecode-server exited due to fatal signal %d\n", p_signal);
-			handle_backtrace();
-			exit(-1);
-			break;
-		case SIGINT:
-			// We received an interrupt so let the debugger (if present) handle it.
-			MCServerDebugInterrupt();
-			break;
-		case SIGHUP:
-		case SIGQUIT:
-			fprintf(stderr, "livecode-server exited due to termination signal %d\n", p_signal);
-			exit(1);
-			break;
-		case SIGFPE:
-			MCS_seterrno(EDOM);
-			break;
-		case SIGCHLD:
-			break;
-		case SIGALRM:
-			break;
-		case SIGPIPE:
-			break;
-		default:
-			break;
-	}
-}
-#endif
-
-void MCS_init(void)
-{
-#if defined(_WINDOWS_SERVER)
-	MCsystem = MCServerCreateWindowsSystem();
-#elif defined(_MAC_SERVER)
-	MCsystem = MCServerCreateMacSystem();
-#elif defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
-	MCsystem = MCServerCreatePosixSystem();
-#else
-#error Unknown server platform.
-#endif
-
-#ifndef _WINDOWS_SERVER
-	signal(SIGUSR1, handle_signal);
-	signal(SIGUSR2, handle_signal);
-	signal(SIGBUS, handle_signal);
-	signal(SIGHUP, handle_signal);
-	signal(SIGQUIT, handle_signal);
-	signal(SIGCHLD, handle_signal);
-	signal(SIGALRM, handle_signal);
-	signal(SIGPIPE, handle_signal);
-#endif
-	
-	signal(SIGTERM, handle_signal);
-	signal(SIGILL, handle_signal);
-	signal(SIGSEGV, handle_signal);
-	signal(SIGINT, handle_signal);
-	signal(SIGABRT, handle_signal);
-	signal(SIGFPE, handle_signal);
-
-	MCS_common_init();
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -580,7 +404,7 @@ static const char *url_execute_ftp_delete(void *p_state, CURL *p_curl)
 		t_file = strrchr(t_url, '/') + 1;
 
 		char *t_cmd_string;
-		t_cmd_string = new char[strlen(t_file) + 5 + 1];
+		t_cmd_string = new (nothrow) char[strlen(t_file) + 5 + 1];
 		if (t_cmd_string != NULL)
 		{
 			sprintf(t_cmd_string, "%s %s", (t_is_folder ? "RMD" : "DELE"), t_file); 
@@ -783,6 +607,7 @@ void MCA_setcolordialogcolors(MCColor* p_list, uindex_t p_count)
 
 void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
 {
+    r_count = 0;
 }
 
 

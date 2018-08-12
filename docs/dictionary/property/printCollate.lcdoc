@@ -6,26 +6,36 @@ Syntax: set the printCollate to {true | false}
 
 Syntax: get the printCollate
 
-Summary: Reports whether the next print job should automatically interleave multiple copies.
+Summary:
+Reports whether the next print job should automatically interleave
+multiple copies.
 
 Introduced: 2.9
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: printing
 
 Example:
-if "collate" is among the items of the printFeatures then
+if "collate" is among the items of the printerFeatures then
   set the printCollate to true
 end if
 
-Value: The <printCollate> is either "true" or "false". The default value is determined by the default setting of the current printer.
+Value:
+The <printCollate> is either "true" or "false". The default value is
+determined by the default setting of the current printer.
 
 Description:
-Use the <printCollate> property to specify whether to interleave multiple copies of a print job. If a print job has three pages, P1, P2 and P3, with <printCollate> set to true and <printCopies> set to 2 the output order will be P1, P2, P3, P1, P2, P3. With <printCollate> set to false the output will be P1, P1, P2, P2, P3, P3.
+Use the <printCollate> property to specify whether to interleave
+multiple copies of a print job. If a print job has three pages, P1, P2
+and P3, with <printCollate> set to true and <printCopies> set to 2 the
+output order will be P1, P2, P3, P1, P2, P3. With <printCollate> set to
+false the output will be P1, P1, P2, P2, P3, P3.
 
-References: print (command), printCopies (property), printDuplex (property)
+References: print (command), printCopies (property),
+printDuplex (property)
 
 Tags: printing
+

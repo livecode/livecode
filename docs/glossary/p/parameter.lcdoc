@@ -5,6 +5,9 @@ Synonyms: parameter
 Type: glossary
 
 Description:
-A <value> passed to a <function handler> or <message handler>. Also, the name of a <value> that can be passed to such a <handler>.
+A <value> passed to a <function handler> or <message handler>. Also, the
+name of a <value> that can be passed to such a <handler>.
 
-References: handler (glossary), message handler (glossary), function handler (glossary), value (glossary)
+References: handler (glossary), message handler (glossary),
+function handler (glossary), value (glossary)
+

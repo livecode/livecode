@@ -187,7 +187,7 @@ on TestImageIntersect
    set the alphadata of tImage1 to tHalfAlpha
    set the alphadata of tImage2 to tFullAlpha
    __testIntersect tImage1, tImage2, "bounds", true
-   __testIntersect tImage1, tImage2, "pixels", true, true // Broken
+   __testIntersect tImage1, tImage2, "pixels", true
    __testIntersect tImage1, tImage2, "opaque pixels", false
    __testIntersect tImage1, tImage2, 127, true, true // Broken
    __testIntersect tImage1, tImage2, 128, false
@@ -195,7 +195,7 @@ on TestImageIntersect
    set the alphadata of tImage1 to tFullAlpha
    set the alphadata of tImage2 to tHalfAlpha
    __testIntersect tImage1, tImage2, "bounds", true
-   __testIntersect tImage1, tImage2, "pixels", true, true // Broken
+   __testIntersect tImage1, tImage2, "pixels", true
    __testIntersect tImage1, tImage2, "opaque pixels", false
    __testIntersect tImage1, tImage2, 127, true, true // Broken
    __testIntersect tImage1, tImage2, 128, false
@@ -228,6 +228,7 @@ end TestMouse
 
 
 on TestMovingControls
+   TestSkipIfNot "wait"
 
    TestAssert "No moving controls", the movingControls is empty
    create button
@@ -412,6 +413,8 @@ end TestTopStack
 
 
 on TestWaitDepth
+   TestSkipIfNot "wait"
+   
    TestAssert "Waitdepth is an integer", the waitdepth is an integer
    
    global gWaitDepthTestResult
@@ -609,6 +612,28 @@ on TestFind
    TestAssert "find changes to the card having the searched text", the long id of the current card is tId
 end TestFind
 
+on TestFindInNamedField
+   create stack "Test"
+   set the defaultstack to "Test"
+   
+   local tId
+   
+   put the long id of the current card into tId
+   
+   create field "TestField1"
+   
+   put "foo" into field "TestField1"
+   
+   create card
+   create field "TestField2"
+   
+   put "bar" into field "TestField2"
+   
+   find "foo" in field "TestField1"
+   
+   TestAssert "find changes to the card having the named text field", the long id of the current card is tId
+end TestFindInNamedField
+
 on TestHilite
    create button
    
@@ -695,6 +720,7 @@ end TestSortField
 
 
 on TestMoveControl
+   TestSkipIfNot "wait"
 
    create button
    
@@ -720,7 +746,7 @@ on TestUndo
 
    __createFieldWithText "bar"
    
-   set the script of field kCreatedField to "on keyDown;select me;delete;undo;end keyDown"
+set the script of field kCreatedField to "on keyDown;select text of me;delete;undo;end keyDown"
    
    type "a"
    

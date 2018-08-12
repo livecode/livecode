@@ -1,1 +1,0 @@
-# 'The number of elements of tVar' for non-array tVar hangs LC7 

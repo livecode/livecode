@@ -1,0 +1,1 @@
+# Fix modal dialog opening behind other windows on Linux

@@ -1,1 +1,0 @@
-# Script Editor doesn't include hash symbol in token delimiters

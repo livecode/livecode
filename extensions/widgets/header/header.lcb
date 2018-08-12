@@ -16,17 +16,117 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /**
-This widget is a header bar. 
+A header bar intended for use by mobile apps.
+
+The header bar has a <label(property)>, which is displayed as its
+title, along with a set of actions.  Each action has a
+<itemNames|name>, which is used to identify it internally, and an
+<itemIcons|icon> and <itemLabels|label> which are displayed (depending
+on the chosen <itemStyle>).  One of the actions can optionally be
+displayed to the left of the header bar's title, when the
+<firstItemLeft> property is enabled.
+
+The header bar widget provides two theme modes, one for Android apps
+and one for iOS apps.  By default, it automatically selects the
+appropriate one depending on which platform it is running on.  To
+temporarily select a non-default different appearance, set the
+<theme(property)> property.
+
+The header bar widget works well when paired with the navigation bar
+widget.
+
+References: firstItemLeft (property), itemIcons (property),
+	itemLabels (property), itemNames (property),
+	itemStyle (property), label (property), theme (property)
+
+Name: mouseUp
+Type: message
+Syntax: mouseUp
+
+Summary: Sent when the header bar is clicked
+
+Example:
+	on mouseUp
+	   local tActionName
+	   put the mouseAction of the target into tActionName
+	   if tActionName is not empty then
+	      answer merge("The [[tActionName]] action was clicked")
+	   else
+	      answer "Try clicking on an action"
+	   end if
+	end mouseUp
+
+Description:
+The <mouseUp> message is sent when the header bar is clicked.
+
+Related: mouseAction (property)
+
+Name: foreColor
+Type: property
+
+Syntax: set the foreColor of <widget> to <pColor>
+Syntax: get the foreColor of <widget>
+
+Summary: The text color
+
+Description:
+The <foreColor> property controls the color of the header bar's
+<label|title text>.
+
+Related: label (property)
+
+Name: backColor
+Type: property
+
+Syntax: set the backColor of <widget> to <pColor>
+Syntax: get the backColor of <widget>
+
+Summary: The background color
+
+Description:
+The <backColor> property controls the color of the header bar's
+background.
+
+Related: opaque (property)
+
+Name: hiliteColor
+Type: property
+
+Syntax: set the hiliteColor of <widget> to <pColor>
+Syntax: get the hiliteColor of <widget>
+
+Summary: The color of the actions' icons and text
+
+Description:
+The <hiliteColor> property controls the color of the text and icons of
+the header bar's actions.
+
+Related: itemIcons (property), hilitedItemIcons (property),
+	itemLabels (property), itemStyle (property)
+
+Name: borderColor
+Type: property
+
+Syntax: set the borderColor of <widget> to <pColor>
+Syntax: get the borderColor of <widget>
+
+Summary: The border color
+
+Description:
+The <borderColor> property controls the color of the header bar's
+border.
+
+Related: showBorder (property)
 **/
 
 -- declaring the extension as a widget, followed by identifier
-widget com.livecode.widget.headerBar
+widget com.livecode.widget.headerbar
 
 -- dependency declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.library.iconSVG
+use com.livecode.library.iconsvg
 use com.livecode.library.widgetutils
 
 -- metadata
@@ -36,31 +136,70 @@ metadata version is "2.0.0"
 metadata preferredSize is "320,64"
 metadata svgicon is "M0,0v29.5h80.2V0H0z M13.2,20.6l-1.8,1.8l-7.5-7.5l0.1-0.1l-0.1-0.1l7.5-7.5l1.8,1.8l-5.8,5.8L13.2,20.6z M31.2,10.9h-3.8v10.3h-2.6V10.9H21V8.7h10.2V10.9z M34.7,21.2h-2.5v-9.3h2.5V21.2z M34.7,10.8h-2.5V8.6h2.5V10.8z M41.3,13.7h-1.5v4.9c0,0.4,0,0.6,0.1,0.7c0.1,0.1,0.4,0.1,0.9,0.1c0.1,0,0.2,0,0.2,0s0.2,0,0.2,0v1.8l-1.1,0c-1.1,0-1.9-0.2-2.3-0.6c-0.3-0.3-0.4-0.7-0.4-1.3v-5.7h-1.3V12h1.3V9.4h2.4V12h1.5V13.7z M45.4,21.2h-2.4V8.7h2.4V21.2z M56.2,17.3h-6.8c0,0.9,0.4,1.6,1,2c0.4,0.2,0.8,0.3,1.3,0.3c0.6,0,1-0.1,1.3-0.4c0.2-0.2,0.4-0.4,0.5-0.6h2.5c-0.1,0.6-0.4,1.1-0.9,1.7c-0.8,0.9-2,1.4-3.5,1.4c-1.2,0-2.3-0.4-3.3-1.1c-0.9-0.8-1.4-2-1.4-3.7c0-1.6,0.4-2.8,1.3-3.7c0.9-0.9,2-1.3,3.3-1.3c0.8,0,1.5,0.1,2.2,0.4c0.6,0.3,1.2,0.7,1.6,1.4c0.4,0.6,0.6,1.2,0.7,1.9c0,0,0,0.1,0,0.1h-2.5c-0.1-0.6-0.3-1-0.6-1.4c-0.4-0.3-0.9-0.5-1.4-0.5c-0.6,0-1.1,0.2-1.4,0.5c-0.3,0.4-0.6,0.8-0.6,1.4h3.1h1.1h2.5C56.2,16.1,56.2,16.6,56.2,17.3z M76.1,16.2h-4.6v4.6h-3v-4.6h-4.6v-3h4.6V8.7h3v4.6h4.6V16.2z"
 
-/**
-Summary: Sets the actions of the header bar
+----------------------------------------------------------------
+-- Engine-level property metadata
 
-Syntax: set the itemArray of <widget> to <pArray>
+metadata foregroundColor.editor		is "com.livecode.pi.color"
+metadata foregroundColor.section is "Colors"
+metadata foregroundColor.label is "Text color"
+metadata foregroundColor.default is "0,0,0"
+
+metadata backgroundColor.editor		is "com.livecode.pi.color"
+metadata backgroundColor.section is "Colors"
+metadata backgroundColor.label is "Background color"
+metadata backgroundColor.default is "244,244,244"
+
+metadata hiliteColor.editor		is "com.livecode.pi.color"
+metadata hiliteColor.section is "Colors"
+metadata hiliteColor.label is "Hilite color"
+metadata hiliteColor.default is "10,95,244"
+
+metadata borderColor.editor		is "com.livecode.pi.color"
+metadata borderColor.section is "Colors"
+metadata borderColor.label is "Border color"
+metadata borderColor.default is "109,109,109"
+
+metadata textSize.default is "16"
+
+metadata textAlign.user_visible	is "false"
+
+----------------------------------------------------------------
+
+/**
+Summary: The full header action data.
+
+Syntax: set the itemArray of <widget> to <array>
 Syntax: get the itemArray of <widget>
 
-Parameters:
-pArray (array): An array containing all the action data
+Value (array): An array containing all the action data
 
 Description:
-Sets the actions of the header bar from pActions, where pActions is a line delimited list of 
-the actions, where each line is a comma delimited list of the different components of the 
+The <itemArray> is a number-indexed array that contains all of the
+information about the header widget's actions.  It combines the data
+accessible via the <itemIcons>, <hilitedItemIcons>, <itemLabels> and
+<itemNames> properties.
 
-   { key (integer): The index of the navigation item
-     value (array): The array containing the data for the item at this index
-      { key : "name"
-        value (string): The name of this item
-        key : "label"
-        value (string): The label of this item
-        key : "icon_name"
-        value (string) : The name of the icon to display when the item is not highlighted
-        key : "hilited_icon_name"
-        value (string) : The name of the icon to display when the item is highlighted
-      }
-   }
+The structure of the <itemArray> must be:
+
+```
+{
+	key (integer): The index of the navigation item
+	value (array): The array containing the data for the item at this index
+	{
+		key : "name"
+		value (string): The name of this item
+		key : "label"
+		value (string): The label of this item
+		key : "icon_name"
+		value (string) : The name of the icon to display when the item is not highlighted
+		key : "hilited_icon_name"
+		value (string) : The name of the icon to display when the item is highlighted
+	}
+}
+```
+
+References: itemIcons (property), hilitedItemIcons (property),
+	itemLabels (property), itemNames (property)
 **/
 
 property itemArray get getHeaderActions set setHeaderActions
@@ -68,18 +207,20 @@ metadata itemArray.editor is "com.livecode.pi.navbar"
 metadata itemArray.label is "Header actions"
 
 /**
-Summary: Sets the header actions display style.
+Summary: The display style for header actions.
 
-Syntax: set the itemStyle of <widget> to <pActionStyle>
+Syntax: set the itemStyle of <widget> to <actionStyle>
 Syntax: get the itemStyle of <widget>
 
-Parameters:
-pActionStyle (enum): The style of the header actions display.
--"icons": Show the icons
--"text": Show the labels
+Value (enum): The way that actions are displayed.
+- "icons": Show the icons
+- "text": Show the labels
 
 Description:
-Sets the header actions display style of the control.
+Determines whether header bar actions are displayed with their icons
+or their labels.
+
+Related: firstItemLeft(property)
 **/
 property itemStyle get mActionStyle set setActionStyle
 metadata itemStyle.editor is "com.livecode.pi.enum"
@@ -88,111 +229,125 @@ metadata itemStyle.default is "icons"
 metadata itemStyle.label is "Action display style"
 
 /**
-Summary: Sets the action names of the header bar
+Summary: The identifying names for header actions.
 
-Syntax: set the itemNames of <widget> to <pNames>
+Syntax: set the itemNames of <widget> to <names>
 Syntax: get the itemNames of <widget>
 
-Parameters:
-pNames (string): A comma-delimited list of the action names
+Value (string): A comma-delimited list of action names
 
 Description:
-Sets the names of the header bar actions, where <pNames> is a comma delimited list of the names.
+The names of the header bar actions.
+
+The <itemNames> are used to identify the header bar actions, but are
+not ever displayed by the header bar.  Use the <itemLabels> to control
+the text displayed for each action.
+
+Related: itemArray (property), itemLabels (property)
 **/
 property itemNames get getActionNames set setActionNames
 metadata itemNames.label is "Action names"
 
 /**
-Summary: Sets the action labels of the header bar
+Summary: The labels for header actions.
 
-Syntax: set the itemLabels of <widget> to <pLabels>
+Syntax: set the itemLabels of <widget> to <labels>
 Syntax: get the itemLabels of <widget>
 
-Parameters:
-pLabels (string): A comma-delimited list of the action labels
+Value (string): A comma-delimited list of action labels.
 
 Description:
-Sets the labels of the header bar actions, where <pLabels> is a comma delimited list of 
-the labels.
+The labels of the header bar actions.
+
+The <itemLabels> are displayed by the header bar widget when the
+<itemStyle> is set to show text for each action.
+
+Related: itemArray (property), itemStyle (property)
 **/
 property itemLabels get getActionLabels set setActionLabels
 metadata itemLabels.user_visible is "false"
 
 /**
-Syntax: set the itemIcons of <widget> to <pIcons>
+Summary: The icons for actions when not highlighted.
+
+Syntax: set the itemIcons of <widget> to <iconNames>
 Syntax: get the itemIcons of <widget>
 
-Summary: The icons for the header bar actions when not highlighted
-
-Parameters:
-pIcons(string): A comma delimited list of icon names.
+Value(string): A comma delimited list of icon names.
 
 Description:
-The icons of the header bar actions.  Adding an item to the
-<itemIcons> causes a new header action to be created with the default label
-and name.
+The icons of the header bar actions.  These are the icons displayed by
+each action when not currently highlighted.
 
 Each icon name must be one of the predefined graphics provided by the "IconSVG"
 library.  You can get a list of available predefined path names by running
 `put iconNames()` in the Message Box.
 
-**Note:** Removing an item from the <itemIcons> does not cause the
-corresponding item to be removed from the header actions, but merely resets
-it to the default icon.
+If you set the <itemIcons> to a string that has more items than the
+current number of actions, the header bar will automatically create a
+new header action with a default label and name.
 
-References: hilitedItemIcons (property)
+However, setting the <itemIcons> to a string that has _fewer_ items
+than the current number of actions doesn't remove an action; it just
+resets any further actions to the default icon.
+
+Related: itemArray (property), hilitedItemIcons (property)
 **/
 property itemIcons get getActionIcons set setActionIcons
 metadata itemIcons.user_visible is "false"
 
 /**
-Syntax: set the hilitedItemIcons of <widget> to <pIcons>
+Summary: The icons for actions when highlighted.
+
+Syntax: set the hilitedItemIcons of <widget> to <iconNames>
 Syntax: get the hilitedItemIcons of <widget>
 
-Summary: The icons for the header bar actions when they are highlighted.
-
-Parameters:
-pIcons(string): A comma delimited list icon names.
+Value(string): A comma delimited list of icon names.
 
 Description:
-The icons for the header bar actions to be shown when the items are
-highlighted. An action is highlighted when the mouse button is pushed while the 
-mouse pointer is over it.  Adding an item to the <hilitedItemIcons> causes a new 
-header action to be created with the default label and name.
-
-The name of an icon must be one of the names returned by the iconNames() 
-function of the com.livecode.library.iconSVG library.
+The icons of the header bar actions.  These are the icons displayed by
+each action when highlighted.
 
 Each icon name must be one of the predefined graphics provided by the "IconSVG"
 library.  You can get a list of available predefined path names by running
 `put iconNames()` in the Message Box.
 
-**Note:** Removing an item from the <hilitedItemIcons> does not cause the
-corresponding item to be removed from the header actions, but merely resets
-it to the default icon.
+If you set the <hilitedItemIcons> to a string that has more items than the
+current number of actions, the header bar will automatically create a
+new header action with a default label and name.
 
-References: itemIcons (property)
+However, setting the <hilitedItemIcons> to a string that has _fewer_ items
+than the current number of actions doesn't remove an action; it just
+resets any further actions to the default icon.
+
+Related: itemArray (property), itemIcons (property)
 **/
+
 property hilitedItemIcons get getActionHilitedIcons set setActionHilitedIcons
 metadata hilitedItemIcons.user_visible is "false"
 
 /**
-Syntax: set the theme of <widget> to <pWidgetTheme>
+Name: theme
+Summary: The theme to use when drawing the header bar.
+
+Syntax: set the theme of <widget> to <widgetTheme>
 Syntax: get the theme of <widget>
 
-Summary: Specifies the theme to use when drawing the header bar.
-
-Parameters:
-pWidgetTheme (string): The <theme> of the header bar is a name identifying the style to 
-use when drawing it. 
+Value (string): The name of a theme supported by the header bar.
 
 Description:
-Use the <theme> property to control the general appearance of the header bar.  The 
-currently-supported values are "native", "iOS" and "Android".
+The <theme> controls the general appearance of the header bar.  The
+header widget currently supports "native", "iOS" and "Android".  If
+the <theme> is set to "native", then the header widget will use either
+the "iOS" or "Android" theme depending on the platform that LiveCode
+is running on.
 
->*Note*: The value of the <theme> property is not saved by the header bar. Set the 
-<theme> property to preview the way the header bar will appear when used on an 
-Android or iOS device.
+>*Note*: The value of the <theme> property is not saved by the header
+bar. Set the <theme> property to preview the way the header bar will
+appear when used on an Android or iOS device.
+
+>*Warning*: The meaning and behaviour of the <theme> property is
+experimental and is subject to change in a future release.
 **/
 property "theme" get mWidgetTheme set setWidgetTheme
 metadata theme.user_visible is "false"
@@ -200,29 +355,35 @@ metadata theme.options is "native,iOS,Android"
 metadata theme.default is "native"
 
 /**
-Summary: The label of the header bar
+Name: label
+Summary: The title displayed by the header bar.
 
-Syntax: set the label of <widget> to <pTitle>
+Syntax: set the label of <widget> to <title>
 Syntax: get the label of <widget>
 
-Parameters:
-pTitle (string): The text of the title of the header bar.
+Value (string): The text of the title of the header bar.
 
 Description:
-Use to display a title at the top of the header bar.
+The text displayed by the header bar as its title.
+
+Related: showLabel (property)
 **/
 property "label" get mHeaderTitle set setHeaderTitle
 metadata label.default is "Title"
 metadata label.label is "Title"
 
 /**
+Name: showLabel
+Summary: Whether or not to display a title
+
 Syntax: set the showLabel of <widget> to {true | false}
 Syntax: get the showLabel of <widget>
 
-Summary: Whether the title is visible or not
-
 Description:
-Use this property to determine whether the title is visible (true) or not (false).
+Controls whether the header bar displays the <label(property)> as a
+title (`true`) or whether no title is shown (`false`).
+
+Related: label (property)
 **/
 property "showLabel" get mShowTitle set setTitleVisibility
 metadata showLabel.default is "true"
@@ -241,102 +402,48 @@ If the <firstItemLeft> property is `true`, then the first action in the
 
 **Note:** In some <theme|themes>, the first action always has its
 label displayed when <firstItemLeft> is `true`.  If you don't want
-this to happen, you can set the action's label to the empty string.
+this to happen, you can set the action's <itemLabels|label> to the
+empty string.
 
-References: itemArray (property), theme (property)
+References: itemArray (property), theme (property), itemLabels (property)
 **/
 property firstItemLeft get mFirstActionLeft set setFirstActionLeft
 metadata firstItemLeft.default is "true"
 metadata firstItemLeft.label is "First action on left"
 
 /**
-Syntax: set the <opaque> of <widget> to {true | false}
-Syntax: get the <opaque> of <widget>
+Name: opaque
 
-Summary: Whether the background of the header bar is drawn opaque or not
+Syntax: set the opaque of <widget> to {true | false}
+Syntax: get the opaque of <widget>
+
+Summary: Whether the background of the header bar is filled
 
 Description:
-Use the <opaque> property to determine whether objects underneath the header bar are
-visible or not.
+If the <opaque> property is `true`, the background of the header bar
+is filled with the <backColor>.
+
+References: backColor (property)
 **/
 property "opaque" get mIsOpaque set setBackgroundOpacity
 metadata opaque.default is "true"
 metadata opaque.label is "Opaque background"
 
 /**
-Syntax: set the <showBorder> of <widget> to {true | false}
-Syntax: get the <showBorder> of <widget>
+Syntax: set the showBorder of <widget> to {true | false}
+Syntax: get the showBorder of <widget>
 
-Summary: Whether the dividing line at the bottom of the header bar is drawn or not
+Summary: Whether the header bar has a dividing line at the bottom
 
 Description:
-Use the <showBorder> property to determine whether the dividing line at the bottom of the
-header bar is drawn or not.
+If the <showBorder> property is `true`, a dividing line at the bottom
+of the header bar is drawn using the <borderColor>.
+
+References: borderColor (property)
 **/
 property showBorder get mShowDivide set setShowDivide
 metadata showBorder.default is "false"
 metadata showBorder.label is "Show bottom border"
-
-/**
-Syntax: set the foreColor of <widget> to <pColor>
-Syntax: get the foreColor of <widget>
-
-Summary: Manipulates the text color of the header bar
-
-Description:
-Use the <foreColor> property to control the text color of the header bar.
-**/
-metadata foregroundColor.editor		is "com.livecode.pi.color"
-metadata foregroundColor.section is "Colors"
-metadata foregroundColor.label is "Text color"
-metadata foregroundColor.default is "0,0,0"
-
-/**
-Syntax: set the backColor of <widget> to <pColor>
-Syntax: get the backColor of <widget>
-
-Summary: Manipulates the background color of the header bar
-
-Description:
-Use the <backColor> property to control the background color of the 
-header bar.
-**/
-metadata backgroundColor.editor		is "com.livecode.pi.color"
-metadata backgroundColor.section is "Colors"
-metadata backgroundColor.label is "Background color"
-metadata backgroundColor.default is "244,244,244"
-
-/**
-Syntax: set the hiliteColor of <widget> to <pColor>
-Syntax: get the hiliteColor of <widget>
-
-Summary: Manipulates the color of the icons on the header bar.
-
-Description:
-Use the <hiliteColor> property to control the color of the icons of the header bar.
-**/
-metadata hiliteColor.editor		is "com.livecode.pi.color"
-metadata hiliteColor.section is "Colors"
-metadata hiliteColor.label is "Hilite color"
-metadata hiliteColor.default is "10,95,244"
-
-/**
-Syntax: set the borderColor of <widget> to <pColor>
-Syntax: get the borderColor of <widget>
-
-Summary: Manipulates the border color of the header bar.
-
-Description:
-Use the <borderColor> property to control the color of the header bar border.
-**/
-
-metadata borderColor.editor		is "com.livecode.pi.color"
-metadata borderColor.section is "Colors"
-metadata borderColor.label is "Border color"
-metadata borderColor.default is "109,109,109"
-
-metadata textSize.default is "16"
-metadata textAlign.user_visible	is "false"
 
 /**
 Syntax: get the mouseAction of <widget>
@@ -346,9 +453,23 @@ Summary: The header action that the mouse pointer is currently over.
 Value (string):  The name of the header action that the mouse pointer is currently
 over.
 
+Example:
+	-- Go to the previous card when the header's "back" action is
+	-- clicked.
+	on mouseUp
+	   if the mouseAction of the target is "back" then
+	      go previous
+	   end if
+	end mouseUp
+
 Description:
-Use the <mouseAction> property to retrieve the name of the header action that 
-was just clicked in the widget's mouseUp handler.
+The <mouseAction> property contains the <itemNames|name> of the action
+that was just clicked, or empty when no action was clicked.
+
+You can read the <mouseAction> property to detect which action was
+activated when handling the <mouseUp> message.
+
+References: itemNames (property), mouseUp (message)
 **/
 property mouseAction get getMouseActionName
 metadata mouseAction.user_visible is "false"
@@ -794,6 +915,8 @@ end handler
 
 public handler OnMouseDown()
    -- the icons change color when they are pressed down
+   -- update the mouseAction
+   put locToAction(the mouse position) into mMouseAction
    if mMouseAction > 0 then
       put mMouseAction into mSelectedAction
       redraw all
@@ -801,11 +924,15 @@ public handler OnMouseDown()
 end handler
 
 public handler OnMouseUp()
+   -- update the mouseAction
+   put locToAction(the mouse position) into mMouseAction
+   if mMouseAction is mSelectedAction then
+      post "mouseUp"
+   end if
+   
    -- the icons change back to their original colors on mouse up
    put 0 into mSelectedAction
    redraw all
-
-   post "mouseUp"
 end handler 
 
 public handler OnMouseMove()

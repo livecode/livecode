@@ -1,1 +1,0 @@
-# In Dictionary the search box is only apparently selected when you come from Code Editor

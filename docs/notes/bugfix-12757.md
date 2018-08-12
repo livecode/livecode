@@ -1,1 +1,0 @@
-# [[Player]] Selecting "track" from a players property inspector, breaks stack interaction

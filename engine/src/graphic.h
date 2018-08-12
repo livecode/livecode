@@ -41,8 +41,17 @@ enum
 	kMCFillRuleEvenOdd
 };
 
-class MCGraphic : public MCControl
+typedef MCObjectProxy<MCGraphic>::Handle MCGraphicHandle;
+
+class MCGraphic : public MCControl, public MCMixinObjectHandle<MCGraphic>
 {
+public:
+    
+    enum { kObjectType = CT_GRAPHIC };
+    using MCMixinObjectHandle<MCGraphic>::GetHandle;
+    
+private:
+    
 	uint2 linesize;
 	uint2 angle;
 	uint2 startangle;
@@ -84,7 +93,9 @@ public:
 	virtual const char *gettypestring();
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
+    
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual Boolean mdown(uint2 which);
 	virtual Boolean mup(uint2 which, bool p_release);
@@ -93,13 +104,6 @@ public:
 	virtual void applyrect(const MCRectangle &nrect);
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
-#endif
-
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
@@ -110,6 +114,10 @@ public:
 
 	// MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);
+    
+    /* The drawselection method of the graphic renders any editMode decorations
+     * which have been requested. */
+    virtual void drawselection(MCDC *dc, const MCRectangle& dirty);
 
 	virtual Boolean maskrect(const MCRectangle &srect);
 	virtual void fliph();
@@ -124,9 +132,8 @@ public:
 	MCRectangle expand_minrect(const MCRectangle &trect);
 	MCRectangle reduce_minrect(const MCRectangle &trect);
 	void compute_minrect();
-	virtual MCRectangle geteffectiverect(void) const;
 	void delpoints();
-	void closepolygon(MCPoint *&pts, uint2 &npts);
+	bool closepolygon(MCPoint *&pts, uint2 &npts);
 	MCStringRef getlabeltext();
 	void drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCStringRef& s, uint2 fstyle);
 
@@ -146,11 +153,11 @@ public:
     
     ///////////////
     
-	bool get_points_for_rect(MCPoint*& r_points, uint2& r_point_count);
-	bool get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count);
-	bool get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_point_count);
-	bool get_points_for_oval(MCPoint*& r_points, uint2& r_point_count);
-
+	bool get_points_for_rect(MCPoint* &r_points, uindex_t &r_point_count);
+	bool get_points_for_roundrect(MCPoint* &r_points, uindex_t &r_point_count);
+	bool get_points_for_regular_polygon(MCPoint *&r_points, uindex_t &r_point_count);
+	bool get_points_for_oval(MCPoint* &r_points, uindex_t &r_point_count);
+	
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(MCRectangle drect);
@@ -163,6 +170,8 @@ public:
     void DoSetGradientFill(MCExecContext& ctxt, MCGradientFill*& p_fill, Draw_index p_di, MCNameRef p_prop, MCExecValue p_value);
     
     void DoCopyPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points, uindex_t& r_count, MCPoint*& r_points);
+    
+    void SetPointsCommon(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points, bool p_is_relative);
 
 	////////// PROPERTY ACCESSORS
 

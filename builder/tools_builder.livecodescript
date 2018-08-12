@@ -76,6 +76,81 @@ end toolsBuilderRunBundle
 
 ////////////////////////////////////////////////////////////////////////////////
 
+private command toolsBuilderFilterExternals pFolder, pPlatform
+   -- Enter the extension directory
+   local tOldFolder
+   put the defaultFolder into tOldFolder
+   set the defaultFolder to pFolder
+   if the result is not empty then
+      builderLog "error", merge("Failed to enter '[[pFolder]]': [[the result]]")
+      exit toolsBuilderFilterExternals
+   end if
+
+   local tFiles
+   -- Remove any iOS code if we're not building the OSX installer
+   if pPlatform is not "macosx" then
+      put the files into tFiles
+      filter lines of tFiles with "*.lcext"
+      
+      -- Don't remove lcext files ith Android externals in them
+      local tLCExt
+      repeat for each line tLCExt in tFiles
+         revZipOpenArchive pFolder & slash & tLCExt, "read"
+         if the result is not empty then
+            builderLog "error", "Cannot open lcext file" && tLCExt
+            exit toolsBuilderFilterExternals
+         end if
+         
+         local tArchiveFiles
+         put revZipEnumerateItems(pFolder & slash & tLCExt) into tArchiveFiles
+         filter tArchiveFiles with "Android/External-*"
+         revZipCloseArchive pFolder & slash & tLCExt
+         
+         if tArchiveFiles is empty then
+            get shell(merge("rm -fv '[[ tLCExt ]]'"))
+         end if
+      end repeat
+   end if
+
+   -- remove windows 64 bit builds only required for filemaker
+   get shell("rm -fv *x86_64.dll")
+   
+   -- If the directory contains no code any more, remove it
+   put the files & return & the folders into tFiles
+   filter lines of tFiles with regex pattern "^.*\.(so|dylib|bundle|dll|lcext)$"
+
+   set the defaultFolder to tOldFolder
+   if the result is not empty then
+      builderLog "error", merge("Failed to enter '[[tOldFolder]]': [[the result]]")
+   end if
+
+   return tFiles is not empty
+end toolsBuilderFilterExternals
+
+private command toolsBuilderPrepareExt pEdition, pPlatform
+   builderExtUnpack pEdition
+   
+   -- Remove un-needed files from the unpacked Ext collection
+   local tOldFolder
+   local tCollectionFolder
+   put builderUnpackFolder(pEdition) & slash & "Ext" into tCollectionFolder
+   put the defaultFolder into tOldFolder
+   set the defaultFolder to tCollectionFolder
+   repeat for each line tExtension in the folders
+      -- Skip special names
+      if tExtension is empty or tExtension is "." or tExtension is ".." then next repeat
+      
+      toolsBuilderFilterExternals tCollectionFolder & "/" & tExtension, pPlatform
+      if the result is false then
+         set the defaultFolder to tCollectionFolder
+         get shell(merge("rm -rf '[[tExtension]]'"))
+      end if
+   end repeat
+   set the defaultFolder to tOldFolder
+end toolsBuilderPrepareExt
+
+////////////////////////////////////////////////////////////////////////////////
+
 private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFolders, pIdeFolder, pDocsFolder
    local tPackageFile
    
@@ -83,15 +158,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    local tBaseEditionType
    put pEdition into tEditionType
    
-   switch tEditionType
-      case "Community"
-         put "Community" into tBaseEditionType
-         break
-      case "Indy"
-      case "Business"
-         put "Commercial" into tBaseEditionType
-         break
-   end switch
+   put editionBaseEditionType(pEdition) into tBaseEditionType
 
    -- Escape the version (by replacing all non-alphanumeric characters with "_")
    local tVersionEscaped
@@ -105,6 +172,9 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    -- Compute the package output file
    put builderWorkFolder() & slash & "tools-" & pPlatform & "-" & pVersion & ".zip" into tPackageFile
    builderEnsureFolderForFile tPackageFile
+   
+   -- Ensure that Ext is available for inclusion
+   toolsBuilderPrepareExt pEdition, pPlatform
    
    --return tPackageFile
    
@@ -131,7 +201,9 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSOurce tPackager, "emscripten", pEngineFolders["emscripten"]
    packageCompilerConfigureSource tPackager, "prebuilt", builderRepoFolder() & slash & "prebuilt"
    packageCompilerConfigureSource tPackager, "repo", builderRepoFolder()
-   if tEditionType is among the items of "indy,business" then
+   packageCompilerConfigureSource tPackager, "ext", builderUnpackFolder(pEdition)
+
+   if editionIsInPrivateRepo(tEditionType) then
       packageCompilerConfigureSource tPackager, "private", builderPrivateRepoFolder()
    end if
    
@@ -166,32 +238,28 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    
    -- Now all the names
    local tProductName
-   if pEdition is "Community" then
-      packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Community" && getReadableVersion(pVersion)
-      packageCompilerConfigureVariable tPackager, "ProductTag", "livecodecommunity_" & getTaggedVersion(pVersion)
-      put "LiveCode Community" into tProductName
-   else if pEdition is "Indy" then
-      packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Indy" && getReadableVersion(pVersion)
-      packageCompilerConfigureVariable tPackager, "ProductTag", "livecodeindy_" & getTaggedVersion(pVersion)
-      put "LiveCode Indy" into tProductName
-   else if pEdition is "Business" then
-      packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Business" && getReadableVersion(pVersion)
-      packageCompilerConfigureVariable tPackager, "ProductTag", "livecodebusiness_" & getTaggedVersion(pVersion)
-      put "LiveCode Business" into tProductName
-   end if
+   put "LiveCode" && editionDisplayName(pEdition) into tProductName
+
+   -- product tag is the lowercase product name with spaces removed
+   local tProductTag
+   put toLower(tProductName) into tProductTag
+   replace space with empty in tProductTag
+   
+   packageCompilerConfigureVariable tPackager, "ProductTitle", tProductName && getReadableVersion(pVersion)
+   packageCompilerConfigureVariable tPackager, "ProductTag", tProductTag & "_" & getTaggedVersion(pVersion)
+
    -- For Linux only, case-fold the product name to lowercase and
-   -- remove all spaces
+   -- remove all spaces - we can just use the product tag
    if pPlatform is "Linux" or pPlatform is "Linux-x86_64" or pPlatform is "Linux-armv6hf" then
-      put toLower(tProductName) into tProductName
-      replace " " with "" in tProductName
+      put tProductTag into tProductName
    end if
    packageCompilerConfigureVariable tPackager, "ProductName", tProductName
    
    -- The edition tags.
-   packageCompilerConfigureVariable tPackager, "EditionTagLower", "-" & toLower(char 1 of tEditionType) & char 2 to -1 of tEditionType
-   packageCompilerConfigureVariable tPackager, "EditionTagUpper", "-" & toUpper(char 1 of tEditionType) & char 2 to -1 of tEditionType
-   packageCompilerConfigureVariable tPackager, "BaseEditionTagLower", "-" & toLower(char 1 of tBaseEditionType) & char 2 to -1 of tBaseEditionType
-   packageCompilerConfigureVariable tPackager, "BaseEditionTagUpper", "-" & toUpper(char 1 of tBaseEditionType) & char 2 to -1 of tBaseEditionType
+   packageCompilerConfigureVariable tPackager, "EditionTagLower", "-" & toLower(tEditionType)
+   packageCompilerConfigureVariable tPackager, "EditionTagUpper", "-" & editionTitleCase(tEditionType)
+   packageCompilerConfigureVariable tPackager, "BaseEditionTagLower", "-" & toLower(tBaseEditionType)
+   packageCompilerConfigureVariable tPackager, "BaseEditionTagUpper", "-" & editionTitleCase(tBaseEditionType)
    
    local tSuccess
    put true into tSuccess
@@ -238,6 +306,7 @@ on toolsBuilderPackageReport pType, pMessage, pLine
    builderLog pType, pMessage
 end toolsBuilderPackageReport
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFolder, pPrivateFolder, pPackageFile
@@ -245,7 +314,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    lock messages
    
    -- Ensure the correct capitalisation of the edition name
-   put toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition) into pEdition
+   put editionTitleCase(pEdition) into pEdition
    
    -- Compute the deploy temp folder
    local tTempFolder
@@ -259,7 +328,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    builderEnsureFolderForFile tOutputFileStub
    
    local tInstaller
-   put the short name of stack (builderSystemFolder() & "/installer.rev") into tInstaller
+   put the short name of stack (builderSystemFolder() & "/installer.livecode") into tInstaller
    
    -- Choose the apporpriate skin to use for the installer
    local tResources
@@ -272,26 +341,43 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    set the mainStack of stack tResources to tInstaller
    
    -- Make sure the installer library knows what product it is (for logging file name)
-   if pEdition is "Community" then
-      set the uProduct of stack tInstaller to "LiveCode Community"
-      set the uProductTitle of stack tInstaller to "LiveCode Community" && getReadableVersion(pVersion)
-      set the uProductTag of stack tInstaller to "livecodecommunity-" & pVersion
-      set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
-      set the uProductLicense of stack tInstaller to loadTextFile(pIdeFolder & slash & "License Agreement.txt")
-   else if pEdition is "Indy" then
-      set the uProduct of stack tInstaller to "LiveCode Indy"
-      set the uProductTitle of stack tInstaller to "LiveCode Indy" && getReadableVersion(pVersion)
-      set the uProductTag of stack tInstaller to "livecodeindy-" & pVersion
-      set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
-      set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
-   else if pEdition is "Business" then
-      set the uProduct of stack tInstaller to "LiveCode Business"
-      set the uProductTitle of stack tInstaller to "LiveCode Business" && getReadableVersion(pVersion)
-      set the uProductTag of stack tInstaller to "livecodebusiness-" & pVersion
-      set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
-      set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
-   end if
+   local tProductName
+   put "LiveCode" && editionDisplayName(pEdition) into tProductName
+   local tProductTag
+   put toLower(tProductName) into tProductTag
+   replace space with empty in tProductTag
    
+   set the uProduct of stack tInstaller to tProductName
+   set the uProductTitle of stack tInstaller to tProductName && getReadableVersion(pVersion)
+   set the uProductTag of stack tInstaller to tProductTag & "-" & pVersion
+   set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
+   
+   switch pEdition
+      case "community"
+         set the uProductLicense of stack tInstaller to loadTextFile(pIdeFolder & slash & "License Agreement.txt")
+         break
+      case "communityplus"
+         set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "CommunityPlus License Agreement.txt")
+         break
+      default
+         set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
+         break
+   end switch
+   
+   -- move behaviors to substacks
+   local tInstallerBehaviors, tInstallerBehavior
+   put files(builderSystemFolder() & "/installer") into tInstallerBehaviors
+   filter tInstallerBehaviors without ".*"
+   
+   repeat for each line tInstallerBehavior in tInstallerBehaviors
+      local tInstallerBehaviorPath
+      put builderSystemFolder() & "/installer/" & tInstallerBehavior into tInstallerBehaviorPath
+      if there is a stack tInstallerBehaviorPath then
+         set the scriptOnly of stack tInstallerBehaviorPath to false
+         set the mainstack of stack tInstallerBehaviorPath to tInstaller
+      end if
+   end repeat
+   set the stackFiles of stack tInstaller to empty
    
    -- Save the restructured installer stack out to a temp file and delete from memory
    local tInstallerStackfile
@@ -323,6 +409,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    put pVersion into tParams["version"]["ProductVersion"]
    put pVersion into tParams["version"]["FileVersion"]
    
+   # TODO: Add the initialisation library and init libs in same way as normal standalone building
    # AL-2015-03-14: Use deploy parameters to include libURL scriptified stack in installer standalone
    local tAuxStackfiles
    if there is a stack "revLibUrl" then
@@ -331,18 +418,10 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
       put builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript" into tAuxStackfiles
    end if	
    put return & builderSystemFolder() & slash & "installer_utilities.livecodescript" after tAuxStackfiles
+   put tAuxStackfiles into tParams["auxiliary_stackfiles"]
    
-   start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revsblibrary.livecodescript")
-   repeat for each line tStackFile in tAuxStackfiles
-      local tTempStackFile
-      put builderMakeTemporaryFile(tTempFolder, "stack") into tTempStackFile
-      revSBResaveScriptOnlyStackAsProperStackFile the short name of stack tStackFile, tStackFile, tTempStackFile
-      put tTempStackFile & return after tParams["auxiliary_stackfiles"]
-   end repeat
-   delete the last char of tParams["auxiliary_stackfiles"]
-   
-   // revLibURL needs to initialise its custom props, and revLoadLibrary must therefore be called.
-   put merge("send [[quote]]revLoadLibrary[[quote]] to stack [[quote]]revLibUrl[[quote]]") into tParams["startup_script"]
+   // revLibURL needs to initialise its custom props, and extensionInitialize must therefore be called.
+   put merge("send [[quote]]extensionInitialize[[quote]] to stack [[quote]]revLibUrl[[quote]]") into tParams["startup_script"]
    put return & "insert script of stack" && quote & "InstallerUtilities" & quote && "into back" after tParams["startup_script"]
    
    switch pPlatform
@@ -385,7 +464,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
             put tCertificatesFolder & "/runrev_bin.spc" into tSignParams["certificate"]
             put tCertificatesFolder & "/runrev.pvk" into tSignParams["privatekey"]
             put word 1 of url ("file:" & tCertificatesFolder & "/runrev_password.txt") into tSignParams["passphrase"]
-            put "http://timestamp.verisign.com/scripts/timstamp.dll" into tSignParams["timestamper"]
+            put "http://timestamp.comodoca.com/authenticode" into tSignParams["timestamper"]
             put "http://www.livecode.com" into tSignParams["url"]
             if pEdition is "Community" then
                put "LiveCode Community Installer" into tSignParams["description"]
@@ -476,9 +555,26 @@ private function escapeArg pArg
    return pArg
 end escapeArg
 
+-- Needed on MacOS Sierra
+private command clearExtendedAttributes pAppBundle
+   -- make sure you have permission to clear extended attributes from bundle files
+   get shell("chmod -R u+w" && pAppBundle)
+   if the result is not zero then
+      builderLog "error", "Setting permissions failed with error:" && it
+      throw "failure"
+   end if
+      
+   -- clear extended attributes from bundle files
+   get shell("xattr -cr" && pAppBundle)
+   if the result is not zero then
+      builderLog "error", "Clearing extended attributes failed with error:" && it
+      throw "failure"
+   end if
+end clearExtendedAttributes
+
 private function findSigningIdentity
    get shell("/usr/bin/security -q find-identity -v")
-   filter it with "*Developer ID Application: Runtime Revolution Ltd*"
+   filter it with "*Developer ID Application:*"
    return it
 end findSigningIdentity
 
@@ -493,7 +589,7 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    put tOutputFileFolder & slash & getBundleFilenameStub(pVersion, pPlatform, pEdition) & ".app" into tAppBundle
    if there is a folder tAppBundle then
       builderLog "message", "Removing old macosx app bundle" && "'" & tAppBundle & "'"
-      get shell ("rm -r" && escapeArg(tAppBundle))
+      get shell ("chmod -Rvv u+w" && escapeArg(tAppBundle) && "&&" && "rm -r" && escapeArg(tAppBundle))
       if the result is not zero then
          builderLog "error", "Failed to remove old macosx app bundle:" && it
          throw "failure"
@@ -502,7 +598,7 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    
    -- Run the installer to generate the raw app bundle
    builderLog "message", "Installing macosx IDE to" && "'" & tAppBundle & "'"
-   get shell(tOutputFileStub & ".app/Contents/MacOS/installer install noui -log /dev/stderr -location" && escapeArg(tAppBundle))
+   get shell(tOutputFileStub & ".app/Contents/MacOS/installer install -ui -log /dev/stderr -location" && escapeArg(tAppBundle))
    if the result is not zero then
       builderLog "error", "Failed to run macosx installer:" && it
       throw "failure"
@@ -554,19 +650,111 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    -- Doing it here is ugly, but is temporary (only needed in 6.7 and 7.1).
    get shell ("rm -f" && escapeArg(tAppBundle & "/Contents/Frameworks/Chromium Embedded Framework.framework/Manifest"))
 
-   -- Find the signing identity and sign the app bundle
+   -- Ensure the permissions on the app bundle are correct
+   -- This needs to be done *before* signing as it affects the signature
+   -- Can't remove write permission yet, though, as signing writes into the bundle
+   get shell ("chmod -Rvv ugo+rX" && escapeArg(tAppBundle))
+   if the result is not zero then
+      builderLog "error", "Failed to set app bundle permissions:" && it
+      throw "failure"
+   end if
+
+   -- Find the signing identity
+   local tSigningId
    get findSigningIdentity()
+   put it into tSigningId
    if it is not empty then
+      -- Sign the iOS simulator dylibs
+      local tIosRuntimes
+      put folders(tAppBundle & "/Contents/Tools/Runtime/iOS") into tIosRuntimes
+      repeat for each line tLine in tIosRuntimes
+         -- Ignore device builds
+         if not (tLine begins with "Simulator-") then next repeat
+
+         -- Get the list of all iOS externals in this folder
+         local tRuntimeFolder
+         local tRuntimeContents
+         put tAppBundle & "/Contents/Tools/Runtime/iOS/" & tLine into tRuntimeFolder
+         put files(tRuntimeFolder) into tRuntimeContents
+         repeat for each line tFile in tRuntimeContents
+            -- Ignore files that aren't dylibs
+            local tFullPath
+            put tRuntimeFolder & "/" & tFile into tFullPath
+            get shell("file" && escapeArg(tFullPath))
+            if tFile is "Standalone" or "Mach-O" is not among the words of it then next repeat
+
+            clearExtendedAttributes escapeArg(tFullPath)
+			
+            -- Sign the extension
+            -- The "--force" parameter strips the existing signature (which was
+            -- made using a not-valid-for-distribution profile)
+            builderLog "message", "Signing iOS extension" && "'" & tFullPath & "'"
+            get shell("/usr/bin/codesign --sign" && word 2 of tSigningId && "--force --verbose=2" && escapeArg(tFullPath))
+            if the result is not zero then
+                builderLog "error", "Could not sign iOS extension:" && it
+                throw "failure"
+            end if
+         end repeat
+      end repeat
+      
+      -- Sign any extension code resources
+      local tExtensions
+      put folders(tAppBundle & "/Contents/Tools/Extensions") into tExtensions
+      repeat for each line tExtension in tExtensions
+         local tCodeFolders
+         put folders(tAppBundle & "/Contents/Tools/Extensions/" & tExtension & "/code") into tCodeFolders
+         filter tCodeFolders with "*iphonesimulator*"
+         if tCodeFolders is empty then next repeat
+         
+         
+         repeat for each line tCodeFolder in tCodeFolders
+            local tDylibs
+            filter files(tAppBundle & "/Contents/Tools/Extensions/" & tExtension & "/code/" & tCodeFolder) \
+               with "*.dylib" into tDylibs
+            if tDylibs is empty then next repeat
+            
+            repeat for each line tFile in tDylibs
+               -- Ignore files that aren't dylibs
+               local tFullCodePath
+               put tAppBundle & "/Contents/Tools/Extensions/" & tExtension & "/code/" & tCodeFolder & "/" & tFile into tFullCodePath
+               get shell("file" && escapeArg(tFullCodePath))
+               if "Mach-O" is not among the words of it then next repeat
+
+               clearExtendedAttributes escapeArg(tFullCodePath)
+   			
+               -- Sign the extension
+               -- The "--force" parameter strips the existing signature (which was
+               -- made using a not-valid-for-distribution profile)
+               builderLog "message", "Signing iOS extension" && "'" & tFullCodePath & "'"
+               get shell("/usr/bin/codesign --sign" && word 2 of tSigningId && "--force --verbose=2" && escapeArg(tFullCodePath))
+               if the result is not zero then
+                   builderLog "error", "Could not sign iOS extension:" && it
+                   throw "failure"
+               end if
+            end repeat
+         end repeat
+      end repeat
+
+      clearExtendedAttributes escapeArg(tAppBundle)
+    		
       builderLog "message", "Signing macosx app bundle" && "'" & tAppBundle & "'"
       wait 1 second
-      get shell("/usr/bin/codesign --sign" && word 2 of it && "--deep --verbose=2" && escapeArg(tAppBundle))
+      get shell("/usr/bin/codesign --sign" && word 2 of tSigningId && "--deep --verbose=2" && escapeArg(tAppBundle))
       if the result is not zero then
          builderLog "error", "Could not sign macosx app bundle:" && it
          throw "failure"
       end if
       builderLog "report", "Successfully signed macosx app bundle" && "'" & tAppBundle & "'"
    else
-      builderLog "warning", "No valid identity found for signing OSX app bundle"
+      builderLog "error", "No valid identity found for signing OSX app bundle"
+      throw "failure"
+   end if
+
+   -- One last permission change (but a non-signature-breaking one) to prevent accidental IDE modifications
+   get shell ("chmod -Rvv -w" && escapeArg(tAppBundle & slash & "Contents"))
+   if the result is not zero then
+      builderLog "error", "Failed to make app bundle read-only:" && it
+      throw "failure"
    end if
 end toolsBuilderMakeAppBundle
 
@@ -588,7 +776,7 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
    -- Remove any stale DMG folder
    if there is a folder tDmgFolder then
       builderLog "message", "Removing old DMG directory"
-      get shell ("rm -r" && escapeArg(tDmgFolder))
+      get shell ("chmod -Rvv u+w" && escapeArg(tDmgFolder) && "&&" && "rm -r" && escapeArg(tDmgFolder))
       if the result is not zero then
          builderLog "error","Failed to remove old DMG directory:" && it
          throw "failure"
@@ -599,8 +787,9 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
    create folder tDmgFolder
    
    -- Copy the app bundle into the DMG contents folder
+   -- Note the need to preserve permissions!
    builderLog "message", "Copying app bundle into DMG directory"
-   get shell ("cp -R" && escapeArg(tAppBundle) && escapeArg(tDmgFolder & slash))
+   get shell ("cp -Rp" && escapeArg(tAppBundle) && escapeArg(tDmgFolder & slash))
    if the result is not zero then
       builderLog "error", "Failed to copy app bundle into DMG directory:" && it
       throw "failure"
@@ -739,7 +928,7 @@ function getReadableVersion pVersion
 end getReadableVersion
 
 function getBundleFilenameStub pVersion, pPlatform, pEdition
-   return "LiveCode" && the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition && getFullReadableVersion(pVersion)
+   return "LiveCode" && editionDisplayName(pEdition) && getFullReadableVersion(pVersion)
 end getBundleFilenameStub
 
 function getInstallerFilenameStub pVersion, pPlatform, pEdition
@@ -757,7 +946,7 @@ function getInstallerFilenameStub pVersion, pPlatform, pEdition
       put "Linux" into pPlatform
    end if
 
-   return "LiveCode" & the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition & "Installer-" & pVersion & "-" & pPlatform
+   return "LiveCode" & editionTitleCase(pEdition) & "Installer-" & pVersion & "-" & pPlatform
 end getInstallerFilenameStub
 
 function getDmgFilenameStub pVersion, pPlatform, pEdition
@@ -774,7 +963,7 @@ function getDmgFilenameStub pVersion, pPlatform, pEdition
    else if pPlatform is "linux" or pPlatform is "linux-x64" or pPlatform is "linux-armv6hf" then
       put "Linux" into pPlatform
    end if
-   return "LiveCode" & the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition & "-" & pVersion & "-" & pPlatform
+   return "LiveCode" & editionTitleCase(pEdition) & "-" & pVersion & "-" & pPlatform
 end getDmgFilenameStub
 
 function loadTextFile pFile
@@ -783,4 +972,3 @@ function loadTextFile pFile
    replace numToChar(13) with return in it
    return it
 end loadTextFile
-

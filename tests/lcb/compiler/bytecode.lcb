@@ -1,0 +1,308 @@
+/*
+Copyright (C) 2016 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.compiler.bytecode.tests
+
+public unsafe handler TestJump()
+   variable tTest as Boolean
+   put false into tTest
+   bytecode
+         jump lAfterAssign
+         assign_constant tTest, true
+      lAfterAssign:
+   end bytecode
+   test "jump forward label" when tTest is false
+end handler
+
+public unsafe handler TestJumpIfFalse()
+   variable tTest as Boolean
+   put false into tTest
+   bytecode
+         register regTemp
+         assign_constant regTemp, false
+         jump_if_false regTemp, lAfterAssign
+         assign_constant tTest, true
+      lAfterAssign:
+   end bytecode
+   test "jumpiffalse forward label" when tTest is false
+end handler
+
+public unsafe handler TestJumpIfTrue()
+   variable tTest as Boolean
+   put false into tTest
+   bytecode
+         register regTemp
+         assign_constant regTemp, true
+         jump_if_true regTemp, lAfterAssign
+         assign_constant tTest, true
+      lAfterAssign:
+   end bytecode
+   test "jumpiffalse forward label" when tTest is false
+end handler
+
+public unsafe handler TestAssignConstant()
+   variable tTest
+   put "Hello World!" into tTest
+
+   bytecode
+         assign_constant tTest, nothing
+   end bytecode
+   test "assignconstant nothing literal" when tTest is nothing
+
+   bytecode
+         assign_constant tTest, false
+   end bytecode
+   test "assignconstant boolean literal" when tTest is false
+
+   bytecode
+         assign_constant tTest, 0
+   end bytecode
+   test "assignconstant int literal" when tTest is 0
+
+   bytecode
+         assign_constant tTest, 0.125
+   end bytecode
+   test "assignconstant float literal" when tTest is 0.125
+
+   bytecode
+         assign_constant tTest, "Foo"
+   end bytecode
+   test "assignconstant string literal" when tTest is "Foo"
+end handler
+
+private unsafe handler DoTestAssignParameter(in pSource)
+   bytecode
+         register regTemp
+         assign_constant regTemp, true
+         assign pSource, regTemp
+   end bytecode
+   test "assign temp to param" when pSource is true
+
+   variable tTarget
+   put true into tTarget
+   put false into pSource
+   bytecode
+         register regTemp
+         assign regTemp, pSource
+         assign tTarget, regTemp
+   end bytecode
+   test "assign param to temp" when tTarget is false
+end handler
+
+public unsafe handler TestAssign()
+   variable tTarget
+
+   put false into tTarget
+   bytecode
+         register regTemp
+         assign_constant regTemp, true
+         assign tTarget, regTemp
+   end bytecode
+   test "assign temp to local" when tTarget is true
+
+   variable tSource
+   put true into tSource
+   put false into tTarget
+   bytecode
+         register regTemp
+         assign regTemp, tSource
+         assign tTarget, regTemp
+   end bytecode
+   test "assign local to temp" when tTarget is true
+
+   DoTestAssignParameter(false)
+end handler
+
+private unsafe handler DoTestReturnNothing()
+   bytecode
+         return
+   end bytecode
+   return true
+end handler
+
+private unsafe handler DoTestReturnValue(in pValue)
+   bytecode
+         return pValue
+   end bytecode
+   return true
+end handler
+
+public unsafe handler TestReturn()
+   DoTestReturnNothing()
+   test "return nothing" when the result is nothing
+
+   DoTestReturnValue(100)
+   test "return value" when the result is 100
+end handler
+
+private handler DoTestInvoke(in pInput, out rOutput)
+   put pInput into rOutput
+   return true
+end handler
+
+public unsafe handler TestInvoke()
+   variable tOutput
+   variable tResult
+   put nothing into tOutput
+   put nothing into tResult
+   bytecode
+         register regTemp
+         assign_constant regTemp, 100
+         invoke DoTestInvoke, tResult, regTemp, tOutput
+   end bytecode
+   test "invoke in and out params" when tOutput is 100
+   test "invoke result" when tResult is true
+end handler
+
+public unsafe handler TestInvokeIndirect()
+   variable tOutput
+   variable tResult
+   put nothing into tOutput
+   put nothing into tResult
+   bytecode
+         register regTemp
+         register regHandler
+         fetch regHandler, DoTestInvoke
+         assign_constant regTemp, 100
+         invoke_indirect regHandler, tResult, regTemp, tOutput
+   end bytecode
+   test "invokeindirect in and out params" when tOutput is 100
+   test "invokeindirect result" when tResult is true
+end handler
+
+constant kConstantNothing is nothing
+constant kConstantBoolean is false
+constant kConstantInteger is 0
+constant kConstantFloat is 0.125
+constant kConstantString is "Foo"
+variable sModuleVariable
+
+handler type Return100Type()
+private handler Return100()
+   return 100
+end handler
+
+public unsafe handler TestFetch()
+   variable tTest
+
+   put "Hello World!" into tTest
+   bytecode
+         fetch tTest, kConstantNothing
+   end bytecode
+   test "fetch nothing literal" when tTest is kConstantNothing
+
+   put "Hello World!" into tTest
+   bytecode
+         fetch tTest, kConstantBoolean
+   end bytecode
+   test "fetch boolean literal" when tTest is kConstantBoolean
+
+   put "Hello World!" into tTest
+   bytecode
+         fetch tTest, kConstantInteger
+   end bytecode
+   test "fetch int literal" when tTest is kConstantInteger
+
+   put "Hello World!" into tTest
+   bytecode
+         fetch tTest, kConstantFloat
+   end bytecode
+   test "fetch float literal" when tTest is kConstantFloat
+
+   put "Hello World!" into tTest
+   bytecode
+         fetch tTest, kConstantString
+   end bytecode
+   test "fetch string literal" when tTest is kConstantString
+
+   put "Hello World!" into tTest
+   put 100 into sModuleVariable
+   bytecode
+         fetch tTest, sModuleVariable
+   end bytecode
+   test "fetch variable" when tTest is 100
+
+   put "Hello World!" into tTest
+   bytecode
+         fetch tTest, Return100
+   end bytecode
+   variable tTestHandler as Return100Type
+   put tTest into tTestHandler
+   test "fetch handler" when tTestHandler() is 100
+end handler
+
+public unsafe handler TestStore()
+   put nothing into sModuleVariable
+   bytecode
+         register regTemp
+         assign_constant regTemp, 100
+         store regTemp, sModuleVariable
+   end bytecode
+   test "store variable" when sModuleVariable is 100
+end handler
+
+public unsafe handler TestAssignList()
+   variable tTest
+
+   variable tElement1
+   variable tElement2
+   put 1 into tElement1
+   put 2 into tElement2
+   put nothing into tTest
+   bytecode
+         assign_list tTest, tElement1, tElement2
+   end bytecode
+   test "assignlist" when tTest is [1, 2]
+end handler
+
+public unsafe handler TestAssignArray()
+   variable tTest
+
+   variable tElement1
+   variable tElement2
+   variable tKey1
+   variable tKey2
+   put 1 into tElement1
+   put 2 into tElement2
+   put "foo" into tKey1
+   put "bar" into tKey2
+   put nothing into tTest
+   bytecode
+         assign_array tTest, tKey1, tElement1, tKey2, tElement2
+   end bytecode
+   test "assignarray" when the number of elements in tTest is 2 and \
+                           tTest["foo"] is 1 and tTest["bar"] is 2
+end handler
+
+public unsafe handler TestReset()
+   variable tTest as Boolean
+   put true into tTest
+   bytecode
+         reset tTest
+   end bytecode
+   test "reset handler variable" when tTest is false
+
+   put true into tTest
+   bytecode
+         register regTemp as Boolean
+         reset regTemp
+         assign tTest, regTemp
+   end bytecode
+   test "reset register variable" when tTest is false
+end handler
+
+end module

@@ -4,13 +4,15 @@ Type: function
 
 Syntax: getResources(<filePath> [, <resourceType>])
 
-Summary: <return|Returns> a list of the <resource|resources> in a <Mac OS> <file>.
+Summary:
+<return|Returns> a list of the <resource|resources> in a <Mac OS>
+<file>. 
 
 Introduced: 1.0
 
 OS: mac
 
-Platforms: desktop,web
+Platforms: desktop
 
 Security: disk
 
@@ -21,33 +23,62 @@ Example:
 getResources(it,"STR#")
 
 Parameters:
-filePath: The location and name of the file whose resource fork you want to list. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
-resourceType: The 4-character type of the resources you want to list. If you don't specify a resourceType, the getResources function lists all the resources of all resource types.
+filePath:
+The location and name of the file whose resource fork you want to list.
+If you specify a name but not a location, LiveCode assumes the file is
+in the defaultFolder.
 
-The result: If the <filePath> does not exist, the <result> is set to "can't find file". If the <filePath> exists, but the <file> has no <resource fork>, the <result> is set to "can't open resource fork". If the file has a resource fork but no <resource|resources>, the <result> is empty.
+resourceType:
+The 4-character type of the resources you want to list. If you don't
+specify a resourceType, the getResources function lists all the
+resources of all resource types.
 
-Returns (enum): The <getResources> <function> <return|returns> a list of <resource|resources>, one per <line>. Each <line> consists of four <items> :
-        - the 4:character resource type
+Returns (enum):
+The <getResources> <function> <return|returns> a list of
+<resource|resources>, one per <line>. Each <line> consists of four
+<items> :
+
         - the resource ID
         - the resource name
         - the resource size in bytes
-        - one or more resource flag characters. The possible resource flags are as follows:
+
 S       System heap
 U       Purgeable
 L       Locked
 P       Protected
 R       Preload
 C       Compressed resource
-If a flag is set to true, its character is included in the last item. If the flag is set to false, its character is not included. If none of these flags is set for a resource, the last item of that resource's line is empty.
+If a flag is set to true, its character is included in the last item. If
+the flag is set to false, its character is not included. If none of
+these flags is set for a resource, the last item of that resource's line
+is empty. If the file does not contain any resources, the <getResources>
+<function> <return|returns> empty
 
-If the file does not contain any resources, the <getResources> <function> <return|returns> empty
+-   the 4: character resource type
+-   one or more resource flag characters. The possible resource flags
+    are as follows:
+
+
+The result:
+If the <filePath> does not exist, the <result> is set to
+"can't find file". If the <filePath> exists, but the <file> has no
+<resource fork>, the <result> is set to "can't open resource fork". If
+the file has a resource fork but no <resource|resources>, the <result>
+is empty.
 
 Description:
-Use the <getResources> <function> to find out whether a <resource> already exists before using it or copying it.
+Use the <getResources> <function> to find out whether a <resource>
+already exists before using it or copying it.
 
 Changes:
-The order of items returned by the getResources function was changed in version 1.1. In previous versions, the getResources function returned these items for each resource:
+The order of items returned by the getResources function was changed in
+version 1.1. In previous versions, the getResources function returned
+these items for each resource:
 
-References: items (keyword), file (keyword), line (keyword), result (function), setResource (function), resource fork (glossary), resource (glossary), Mac OS (glossary), return (glossary), function (control_st)
+References: function (control structure), result (function),
+setResource (function), resource fork (glossary), resource (glossary),
+Mac OS (glossary), return (glossary), items (keyword), file (keyword),
+line (keyword)
 
 Tags: file system
+

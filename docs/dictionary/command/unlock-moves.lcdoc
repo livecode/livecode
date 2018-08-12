@@ -4,13 +4,15 @@ Type: command
 
 Syntax: unlock moves
 
-Summary: Sets the <lockMoves> <property> to false, allowing <object> motions caused with the <move> <command> to be seen.
+Summary:
+Sets the <lockMoves> <property> to false, allowing <object(glossary)>
+motions caused with the <move> <command> to be seen.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 unlock moves
@@ -19,10 +21,16 @@ Example:
 if the ticks &gt; timeToGo then unlock moves
 
 Description:
-Use the <unlock moves> <command> to begin all pending <move> <command|commands> at once.
+Use the <unlock moves> <command> to begin all pending <move>
+<command|commands> at once.
 
-The <unlock moves> command sets the <lockMoves> <property> to false. When all pending <handler|handlers> are finished <execute|executing>, the <lockMoves> <property> is automatically set  to false.
+The <unlock moves> command sets the <lockMoves> <property> to false.
+When all pending <handler|handlers> are finished <execute|executing>,
+the <lockMoves> <property> is automatically set to false.
 
-References: lockMoves (property), unlock screen (command), lock moves (command), move (command), object (object), property (glossary), handler (glossary), command (glossary), execute (glossary)
+References: unlock screen (command), lock moves (command), move (command),
+object (glossary), property (glossary), handler (glossary),
+command (glossary), execute (glossary), lockMoves (property)
 
 Tags: multimedia
+

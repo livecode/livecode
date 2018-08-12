@@ -2,34 +2,56 @@ Name: hotspots
 
 Type: property
 
-Syntax: get the hotspots of <player> 
+Syntax: get the hotspots of <player>
 
-Summary: Reports a list of the clickable hot spots in a <QuickTime VR> movie.
+Summary:
+Reports a list of the clickable hot spots in a <QuickTime VR> movie.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows
+Deprecated: 8.1
 
-Platforms: desktop,server,web
+OS: mac, windows
+
+Platforms: desktop, server
 
 Example:
 get the number of lines in the hotspots of player "Tut's Tomb"
 
-Value (enum): The <hotspots> consists of a list of hot spots, one per line. Each line consists of two <items>, separated by a comma:
+Value (enum):
+The <hotspots> consists of a list of hot spots, one per line. Each line
+consists of two <items>, separated by a comma:
+
         - the hot spot ID (an integer)
         - the hot spot type ("link", "url", or "undefined")
 
 The <hotspots> <property> is <read:only> and cannot be set
 
+
 Description:
-Use the <hotspots> <property> to list the clickable spots of a <QuickTime VR> movie.
+Use the <hotspots> <property> to list the clickable spots of a
+<QuickTime VR> movie.
 
-Each hot spot of a QuickTime VR movie is a clickable link, usually from one node to another. The movie author sets the hot spots during development of the movie. The user clicks a hot spot in the player to activate the link.
+Each hot spot of a QuickTime VR movie is a clickable link, usually from
+one node to another. The movie author sets the hot spots during
+development of the movie. The user clicks a hot spot in the player to
+activate the link.
 
-If the player does not contain a QuickTime VR movie, its <hotspots> <property> is empty.
+If the player does not contain a QuickTime VR movie, its <hotspots>
+<property> is empty.
 
-References: items (keyword), hotspotClicked (message), QuickTime VR (glossary), property (glossary), read-only (glossary)
+Changes:
+This property was deprecated in version 8.1.0 due to the retirement of
+the QuickTime player implementation. In order to support 64-bit on Mac 
+we have been required to switch to using AVFoundation on Mac, which does 
+not support QTVR. In addition, the Windows player object is now based on 
+DirectShow, as Apple have dropped support for the QuickTime libraries 
+previously used.
+
+References: QuickTime VR (glossary), property (glossary),
+read-only (glossary), items (keyword), hotspotClicked (message)
 
 Tags: multimedia
+

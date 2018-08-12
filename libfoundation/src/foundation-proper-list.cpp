@@ -70,6 +70,109 @@ bool MCProperListCreate(const MCValueRef *p_values, uindex_t p_length, MCProperL
 }
 
 MC_DLLEXPORT_DEF
+bool MCProperListCreateWithForeignValues(MCTypeInfoRef p_typeinfo, const void *p_values, uindex_t p_value_count, MCProperListRef& r_list)
+{
+    __MCAssertIsForeignTypeInfo(p_typeinfo);
+    MCAssert(p_values != nullptr || p_value_count == 0);
+
+    MCAutoProperListRef t_list;
+    if (!MCProperListCreateMutable(&t_list))
+    {
+        return false;
+    }
+
+    const MCForeignTypeDescriptor *t_descriptor =
+            MCForeignTypeInfoGetDescriptor(p_typeinfo);
+
+    while(p_value_count > 0)
+    {
+        MCAutoValueRef t_value;
+        if (t_descriptor->doimport != nil)
+        {
+            if (!t_descriptor->doimport(t_descriptor,
+                                        (void *)p_values,
+                                        false,
+                                        &t_value))
+            {
+                   return false;
+            }
+        }
+        else
+        {
+            if (!MCForeignValueCreate(p_typeinfo,
+                                      (void *)p_values,
+                                      (MCForeignValueRef&)&t_value))
+            {
+                   return false;
+            }
+        }
+
+        if (!MCProperListPushElementOntoBack(*t_list,
+                                             *t_value))
+        {
+            return false;
+        }
+
+        p_value_count -= 1;
+        p_values = (byte_t *)p_values + t_descriptor->size;
+    }
+
+    if (!t_list.MakeImmutable())
+    {
+            return false;
+    }
+
+    r_list = t_list.Take();
+
+    return true;
+}
+
+MC_DLLEXPORT_DEF
+bool MCProperListConvertToForeignValues(MCProperListRef self, MCTypeInfoRef p_typeinfo, void*& r_values_ptr, uindex_t& r_values_count)
+{
+    __MCAssertIsForeignTypeInfo(p_typeinfo);
+    
+    const MCForeignTypeDescriptor *t_descriptor =
+    MCForeignTypeInfoGetDescriptor(p_typeinfo);
+    
+    uindex_t t_values_count = MCProperListGetLength(self);
+    void *t_values = nullptr;
+    if (!MCMemoryNew(t_values_count * t_descriptor->size, t_values))
+    {
+        return false;
+    }
+    
+    byte_t *t_values_ptr = (byte_t*)t_values;
+    for(uindex_t t_index = 0; t_index < t_values_count; t_index++)
+    {
+        MCValueRef t_value = MCProperListFetchElementAtIndex(self, t_index);
+        if (MCValueGetTypeInfo(t_value) == p_typeinfo)
+        {
+            MCMemoryCopy(t_values_ptr, MCForeignValueGetContentsPtr(t_value), t_descriptor->size);
+        }
+        else if (MCValueGetTypeInfo(t_value) == t_descriptor->bridgetype)
+        {
+            if (!t_descriptor->doexport(t_descriptor, t_value, false, t_values_ptr))
+            {
+                MCMemoryDelete(t_values);
+                return false;
+            }
+        }
+        else
+        {
+            MCMemoryDelete(t_values);
+            return false;
+        }
+        t_values_ptr += t_descriptor->size;
+    }
+    
+    r_values_ptr = t_values;
+    r_values_count = t_values_count;
+    
+    return true;
+}
+
+MC_DLLEXPORT_DEF
 bool MCProperListCreateMutable(MCProperListRef& r_list)
 {
 	if (!__MCValueCreate(kMCValueTypeCodeProperList, r_list))
@@ -773,7 +876,7 @@ bool MCProperListStableSort(MCProperListRef self, bool p_reverse, MCProperListCo
         if (!__MCProperListResolveIndirect(self))
             return false;
     
-    MCValueRef *t_temp_array = new MCValueRef[t_item_count];
+    MCValueRef *t_temp_array = new (nothrow) MCValueRef[t_item_count];
     
     MCProperListDoStableSort(self -> list, t_item_count, t_temp_array, p_reverse, p_callback, context);
     
@@ -886,15 +989,58 @@ bool MCProperListIsHomogeneous(MCProperListRef self, MCValueTypeCode& r_type)
         t_contents = self -> contents;
     
     MCValueTypeCode t_type;
-    t_type = MCValueGetTypeCode(self -> list[0]);
+    t_type = MCValueGetTypeCode(t_contents -> list[0]);
     
-    if (MCProperListIsListOfType(self, t_type))
+    if (MCProperListIsListOfType(t_contents, t_type))
     {
         r_type = t_type;
         return true;
     }
     
     return false;
+}
+
+MC_DLLEXPORT_DEF
+bool MCProperListReverse(MCProperListRef self)
+{
+    MCAssert(MCProperListIsMutable(self));
+
+    // Ensure the list ref is not indirect
+    if (__MCProperListIsIndirect(self))
+        if (!__MCProperListResolveIndirect(self))
+            return false;
+
+    MCInplaceReverse(self->list, self->length);
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_DLLEXPORT_DEF
+bool MCProperListConvertToArray(MCProperListRef p_list, MCArrayRef& r_array)
+{
+    MCAutoArrayRef t_array;
+    if (!MCArrayCreateMutable(&t_array))
+    {
+        return false;
+    }
+    
+    for(uindex_t t_index = 0; t_index < MCProperListGetLength(p_list); t_index++)
+    {
+        if (!MCArrayStoreValueAtIndex(*t_array, t_index + 1, MCProperListFetchElementAtIndex(p_list, t_index)))
+        {
+            return false;
+        }
+    }
+    
+    if (!t_array.MakeImmutable())
+    {
+        return false;
+    }
+    
+    r_array = t_array.Take();
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1034,7 +1180,7 @@ static bool __MCProperListCreateIndirect(__MCProperList *p_contents, __MCProperL
 
 	r_list = self;
 	return true;
-};
+}
 
 
 static bool __MCProperListIsIndirect(__MCProperList *self)

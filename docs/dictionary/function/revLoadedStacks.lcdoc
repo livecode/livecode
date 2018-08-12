@@ -4,13 +4,15 @@ Type: function
 
 Syntax: revLoadedStacks([<whichStacks>])
 
-Summary: <return|Returns> a list of the names of all <stacks> that are <loaded into memory>.
+Summary:
+<return|Returns> a list of the names of all <stacks> that are <loaded
+into memory>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revLoadedStacks(all)
@@ -22,24 +24,58 @@ Example:
 revLoadedStacks()
 
 Parameters:
-whichStacks: One of the following
+whichStacks:
+One of the following
 : One of the following
 
-Returns: The <revLoadedStacks> <function> returns a list of the short names of all loaded <stacks>, one per line.
+Returns:
+The <revLoadedStacks> <function> returns a list of the short names of
+all loaded <stacks>, one per line.
 
 Description:
-Use the <revLoadedStacks> <function> if you need to perform some operation on all <stacks> that are <loaded into memory>. 
+Use the <revLoadedStacks> <function> if you need to perform some
+operation on all <stacks> that are <loaded into memory>.
 
-If the <whichStacks> <parameter> is all, the <revLoadedStacks> <function> returns all <stacks> that are <loaded into memory>, including <stacks> that are part of the LiveCode <development environment> (such as the <message box>, <property inspector>, and so on). 
+If the <whichStacks> <parameter> is all, the <revLoadedStacks>
+<function> returns all <stacks> that are <loaded into memory>, including
+<stacks> that are part of the LiveCode <development environment> (such
+as the <message box>, <property inspector>, and so on).
 
-If the <whichStacks> <parameter> is application, the <revLoadedStacks> <function> returns all loaded <stacks> that are not part of the <development environment>. 
+If the <whichStacks> <parameter> is application, the <revLoadedStacks>
+<function> returns all loaded <stacks> that are not part of the
+<development environment>.
 
-If the <whichStacks> <parameter> is preference, the <revLoadedStacks> <function> checks the setting of the "LiveCode UI Elements in Lists" item in the View menu, and returns either all <stacks>, or only <stacks> that are not part of the <development environment>, depending on the setting. 
+If the <whichStacks> <parameter> is preference, the <revLoadedStacks>
+<function> checks the setting of the "LiveCode UI Elements in Lists"
+item in the View menu, and returns either all <stacks>, or only <stacks>
+that are not part of the <development environment>, depending on the
+setting. 
 
-If you don't specify a <whichStacks> <parameter>, the <revLoadedStacks> <function> returns all loaded <stacks> that are not part of the <development environment>. This is the same behavior as if application had been specified as the whichStacks parameter.
+If you don't specify a <whichStacks> <parameter>, the <revLoadedStacks>
+<function> returns all loaded <stacks> that are not part of the
+<development environment>. This is the same behavior as if application
+had been specified as the whichStacks parameter.
 
->*Note:* When included in a <standalone application>, the <Common library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <revLoadedStacks> <function> is not yet available. This may affect attempts to use this <function> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <revLoadedStacks> <function> can be used in any <handler>.
+>*Note:* When included in a <standalone application>, the <Common
+> library> is implemented as a hidden <group> and made available when
+> the <group> receives its first <openBackground> message. During the
+> first part of the <application|application's> startup process, before
+> this <message> is sent, the <revLoadedStacks> <function> is not yet
+> available. This may affect attempts to use this <function> in
+> <startup>, <preOpenStack>, <openStack>, or <preOpenCard>
+> <handler|handlers> in the <main stack>. Once the <application> has
+> finished starting up, the <library> is available and the
+> <revLoadedStacks> <function> can be used in any <handler>.
 
-References: message box (keyword), Common library (library), library (library), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), stacks (function), mainStacks (function), return (glossary), loaded into memory (glossary), main stack (glossary), handler (glossary), development environment (glossary), message (glossary), group (glossary), standalone application (glossary), parameter (glossary), property inspector (glossary), application (glossary), function (control_st)
+References: function (control structure), stacks (function),
+mainStacks (function), return (glossary), loaded into memory (glossary),
+main stack (glossary), handler (glossary),
+development environment (glossary), message (glossary), group (glossary),
+standalone application (glossary), parameter (glossary),
+property inspector (glossary), application (glossary),
+message box (keyword), Common library (library), library (library),
+startup (message), openBackground (message), preOpenStack (message),
+openStack (message), preOpenCard (message)
 
 Tags: objects
+

@@ -4,13 +4,16 @@ Type: keyword
 
 Syntax: bytes
 
-Summary: Used with the <sort> <command>, <number> <function>, and <is among> and <is not among> <operator|operators> to designate each byte as a separate portion of a <string>.
+Summary:
+Used with the <sort> <command>, <number> <function>, and <is among> and
+<is not among> <operator|operators> to designate each byte as a separate
+portion of a <string>.
 
 Introduced: 4.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 get the number of bytes of field "Entry"
@@ -21,10 +24,19 @@ get the number of bytes of the compress of tString
 Description:
 Use the <bytes> <keyword> to <sort> or <select> individual bytes.
 
-A byte is a single letter, digit, punctuation mark, or control character.
+A byte is a single letter, digit, punctuation mark, or control
+character. 
 
->*Note:* At present the bytes keyword is identical in functionality to the characters keyword. However, it should be used when strings containing binary data are being manipulated to ensure future efficiency.
+>*Note:* At present the bytes keyword is identical in functionality to
+> the characters keyword. However, it should be used when strings
+> containing binary data are being manipulated to ensure future
+> efficiency. 
 
-References: character (keyword), characters (keyword), byte (keyword), string (keyword), is not among (operator), is among (operator), sort (command), select (command), number (function), command (glossary), operator (glossary), keyword (glossary), function (control_st)
+References: sort (command), select (command),
+function (control structure), number (function), command (glossary),
+operator (glossary), keyword (glossary), character (keyword),
+characters (keyword), byte (keyword), string (keyword),
+is not among (operator), is among (operator)
 
 Tags: database
+

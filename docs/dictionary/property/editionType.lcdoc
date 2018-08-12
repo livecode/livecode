@@ -4,18 +4,18 @@ Type: property
 
 Syntax: get the editionType
 
-Summary: Returns the edition type of the running engine.
+Summary:
+Returns the edition type of the running engine.
 
 Introduced: 6.7
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-if the edtionType is "community" then
-   displayMessage
-"Built with LiveCode Community"
+if the editionType is "community" then
+   displayMessage "Built with LiveCode Community"
 end if
 
 Value:
@@ -23,12 +23,19 @@ The editionType property returns community or commercial.
 This property is read-only and cannot be set.
 
 Description:
-Use the <editionType> global property to determine what edition of the engine is currently running.
+Use the <editionType> global property to determine what edition of the
+engine is currently running.
 
-The global property the editionType can be used to determine what edition of the engine is currently running.
+The global property the editionType can be used to determine what
+edition of the engine is currently running.
 
-The editionType returns "community" if the currently running engine is the LiveCode Community IDE or a standalone built with LiveCode Community.
+The editionType returns "community" if the currently running engine is
+the LiveCode Community IDE or a standalone built with LiveCode
+Community. 
 
-The editionType returns "commercial" if the currently running engine is the LiveCode Commercial IDE or a standalone built with LiveCode Commercial.
+The editionType returns "commercial" if the currently running engine is
+the LiveCode Commercial IDE or a standalone built with LiveCode
+Commercial. 
 
 References: revLicenseType (function), version (function)
+

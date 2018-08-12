@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "util.h"
 #include "sellst.h"
 #include "stack.h"
@@ -39,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "exec-interface.h"
+
+#include "stackfileformat.h"
 
 
 #define GRAPHIC_EXTRA_MITERLIMIT		(1UL << 0)
@@ -128,18 +130,18 @@ MCGraphic::MCGraphic(const MCGraphic &gref) : MCControl(gref)
 	markerlsize = gref.markerlsize;
 	if (gref.dashes != NULL)
 	{
-		dashes = new uint1[ndashes];
+		dashes = new (nothrow) uint1[ndashes];
 		memcpy(dashes, gref.dashes, ndashes);
 	}
 	else
 		dashes = NULL;
 	points = NULL;
 	if (gref.realpoints != NULL)
-		realpoints = new MCPoint[nrealpoints];
+		realpoints = new (nothrow) MCPoint[nrealpoints];
 	else
 		realpoints = NULL;
 	if (gref.markerpoints != NULL)
-		markerpoints = new MCPoint[nmarkerpoints];
+		markerpoints = new (nothrow) MCPoint[nmarkerpoints];
 	else
 		markerpoints = NULL;
 	uint2 i;
@@ -200,9 +202,9 @@ void MCGraphic::initialise(void)
 
 void MCGraphic::finalise(void)
 {
-	delete dashes;
-	delete points;
-	delete realpoints;
+	delete[] dashes; /* Allocated with new[] */
+	delete[] points; /* Allocated with new[] */
+	delete[] realpoints; /* Allocated with new[] */
 	delete markerpoints;
 	delete oldpoints;
 	MCValueRelease(label);
@@ -229,6 +231,11 @@ const char *MCGraphic::gettypestring()
 	return MCgraphicstring;
 }
 
+bool MCGraphic::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnGraphic(this);
+}
+
 Boolean MCGraphic::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || showinvisible())
@@ -245,7 +252,7 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 	        && (getstyleint(flags) == F_CURVE || getstyleint(flags) == F_POLYGON
 	            || getstyleint(flags) == F_LINE))
 	{
-		realpoints = new MCPoint[MCscreen->getmaxpoints()];
+		realpoints = new (nothrow) MCPoint[MCscreen->getmaxpoints()];
 		MCU_snap(rect.x);
 		MCU_snap(rect.y);
 		startx = rect.x;
@@ -283,19 +290,18 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 				real8 dx = (real8)(mx - startx);
 				real8 dy = (real8)(my - starty);
 				real8 length = sqrt(dx * dx + dy * dy);
-				real8 angle = atan2(dy, dx);
+				real8 t_angle = atan2(dy, dx);
 				real8 quanta = M_PI * 2.0 / (real8)MCslices;
-				angle = floor((angle + quanta / 2.0) / quanta) * quanta;
-				mx = startx + (int2)(cos(angle) * length);
-				my = starty + (int2)(sin(angle) * length);
+				t_angle = floor((t_angle + quanta / 2.0) / quanta) * quanta;
+                mx = startx + (int2)(cos(t_angle) * length);
+				my = starty + (int2)(sin(t_angle) * length);
 			}
 			realpoints[nrealpoints - 1].x = mx;
 			realpoints[nrealpoints - 1].y = my;
 		}
 		MCRectangle drect = rect;
 		compute_minrect();
-		// MW-2011-08-18: [[ Layers ]] Notify of a changed rect and invalidate.
-		layer_rectchanged(drect, true);
+		Redraw(drect);
 		message_with_args(MCM_mouse_move, x, y);
         
         // AL-2015-07-15: [[ Bug 15605 ]] Notify property listener of the change in points property
@@ -428,6 +434,13 @@ Boolean MCGraphic::doubleup(uint2 which)
 
 void MCGraphic::applyrect(const MCRectangle &nrect)
 {
+    /* If we are editing, then we must update the edit tool's selection
+     * layer. */
+    if (opened && m_edit_tool != nullptr)
+    {
+        getcard()->dirtyselection(m_edit_tool->drawrect());
+    }
+
 	if (realpoints != NULL)
 	{
 		if (nrect.width != rect.width || nrect.height != rect.height)
@@ -435,7 +448,7 @@ void MCGraphic::applyrect(const MCRectangle &nrect)
 			MCRectangle trect = reduce_minrect(nrect);
 			if (oldpoints == NULL)
 			{
-				oldpoints = new MCPoint[nrealpoints];
+				oldpoints = new (nothrow) MCPoint[nrealpoints];
 				uint2 i = nrealpoints;
 				while (i--)
 					oldpoints[i] = realpoints[i];
@@ -479,6 +492,13 @@ void MCGraphic::applyrect(const MCRectangle &nrect)
 
 	rect = nrect;
 	delpoints();
+    
+    /* If we are editing, then we must update the edit tool's selection
+     * layer. */
+    if (opened && m_edit_tool != nullptr)
+    {
+        getcard()->dirtyselection(m_edit_tool->drawrect());
+    }
 }
 
 void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &nrect)
@@ -520,351 +540,39 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 	}
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
-{
-	uint2 i;
-	int graphic_type;
-	uint2 nfakepoints;
-	MCPoint *fakepoints;
-	MCRectangle trect;
-
-	switch (which)
-	{
-#ifdef /* MCGraphic::getprop */ LEGACY_EXEC
-	case P_ANTI_ALIASED:
-		ep.setboolean(getflag(F_G_ANTI_ALIASED));
-		break;
-
-	// PROPERTY - FILL RULE
-	case P_FILL_RULE:
-		switch(getfillrule())
-		{
-		case kMCFillRuleNone:
-			ep . setstaticcstring("none");
-		break;
-
-		case kMCFillRuleNonZero:
-			ep . setstaticcstring("nonzero");
-		break;
-
-		case kMCFillRuleEvenOdd:
-			ep . setstaticcstring("evenodd");
-		break;
-		};
-	break;
-
-	case P_EDIT_MODE:
-		if (m_edit_tool == NULL)
-		{
-			ep.setstaticcstring("none");
-			break;
-		}
-		switch (m_edit_tool->type())
-		{
-		case kMCEditModeFillGradient:
-			ep.setstaticcstring("fillgradient");
-			break;
-		case kMCEditModeStrokeGradient:
-			ep.setstaticcstring("strokegradient");
-			break;
-		case kMCEditModePolygon:
-			ep.setstaticcstring("polygon");
-			break;
-		}
-		break;
-	case P_CAP_STYLE:
-		switch (getcapstyle())
-		{
-		case CapRound:
-			ep.setstaticcstring("round");
-			break;
-		case CapProjecting:
-			ep.setstaticcstring("square");
-			break;
-		case CapButt:
-			ep.setstaticcstring("butt");
-			break;
-		}
-		break;
-	case P_JOIN_STYLE:
-		switch (getjoinstyle())
-		{
-		case JoinBevel:
-			ep.setstaticcstring("bevel");
-			break;
-		case JoinRound:
-			ep.setstaticcstring("round");
-			break;
-		case JoinMiter:
-			ep.setstaticcstring("miter");
-			break;
-		}
-		break;
-	case P_MITER_LIMIT:
-		ep.setr8(m_stroke_miter_limit, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
-		break;
-	case P_LINE_SIZE:
-	case P_PEN_WIDTH:
-	case P_PEN_HEIGHT:
-		ep.setint(linesize);
-		break;
-	case P_POLY_SIDES:
-		ep.setint(nsides);
-		break;
-	case P_POINTS:
-		// MDW-2014-06-18: [[ rect_points ]] allow effective points as read-only
-		graphic_type = getstyleint(flags);
-		if (effective_points_only(graphic_type))
-		{
-				if (!effective)
-				{
-					ep.setstaticcstring("");
-					break;
-				}
-		}
-		switch (graphic_type)
-		{
-			case F_ROUNDRECT:
-			{
-				fakepoints = NULL;
-				nfakepoints = 0;
-				get_points_for_roundrect(fakepoints, nfakepoints);
-				MCU_unparsepoints(fakepoints, nfakepoints, ep);
-				delete fakepoints;
-				break;
-			}
-			case F_G_RECTANGLE:
-			{
-				nfakepoints = 4;
-				fakepoints = new MCPoint[nfakepoints];
-				get_points_for_rect(fakepoints, nfakepoints);
-				MCU_unparsepoints(fakepoints, nfakepoints, ep);
-				delete fakepoints;
-				break;
-			}
-			case F_REGULAR:
-			{
-				nfakepoints = nsides;
-				fakepoints = new MCPoint[nsides];
-				get_points_for_regular_polygon(fakepoints, nfakepoints);
-				MCU_unparsepoints(fakepoints, nfakepoints, ep);
-				delete fakepoints;
-				break;
-			}
-			// MDW-2014-06-21: [[ oval_points ]] allow effective points for ovals
-			case F_OVAL:
-			{
-				fakepoints = NULL;
-				nfakepoints = 0;
-				get_points_for_oval(fakepoints, nfakepoints);
-				MCU_unparsepoints(fakepoints, nfakepoints, ep);
-				delete fakepoints;
-				break;
-			}
-			default:
-				MCU_unparsepoints(realpoints, nrealpoints, ep);
-		}
-		break;
-	case P_RELATIVE_POINTS:
-		// MDW-2014-06-18: [[ rect_points ]] allow effective relativepoints as read-only
-		graphic_type = getstyleint(flags);
-		if (effective_points_only(graphic_type))
-		{
-				if (!effective)
-				{
-					ep.setstaticcstring("");
-					break;
-				}
-		}
-		trect = reduce_minrect(rect);
-		switch (graphic_type)
-		{
-			case F_ROUNDRECT:
-			{
-				fakepoints = NULL;
-				nfakepoints = 0;
-				get_points_for_roundrect(fakepoints, nfakepoints);
-				MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
-				MCU_unparsepoints(fakepoints, nfakepoints, ep);
-				delete fakepoints;
-				break;
-			}
-			case F_G_RECTANGLE:
-			{
-				nfakepoints = 4;
-				fakepoints = new MCPoint[nfakepoints];
-				get_points_for_rect(fakepoints, nfakepoints);
-				MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
-				MCU_unparsepoints(fakepoints, nfakepoints, ep);
-				delete fakepoints;
-				break;
-			}
-			case F_REGULAR:
-			{
-				nfakepoints = nsides;
-				fakepoints = new MCPoint[nsides];
-				get_points_for_regular_polygon(fakepoints, nfakepoints);
-				MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
-				MCU_unparsepoints(fakepoints, nfakepoints, ep);
-				delete fakepoints;
-				break;
-			}
-			// MDW-2014-06-21: [[ oval_points ]] allow effective points for ovals
-			case F_OVAL:
-			{
-				fakepoints = NULL;
-				nfakepoints = 0;
-				get_points_for_oval(fakepoints, nfakepoints);
-				MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
-				MCU_unparsepoints(fakepoints, nfakepoints, ep);
-				delete fakepoints;
-				break;
-			}
-			default:
-			{
-				MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
-				MCU_unparsepoints(realpoints, nrealpoints, ep);
-				MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
-			}
-		}
-		break;
-	case P_ANGLE:
-		if (getstyleint(flags) == F_OVAL)
-			ep.setint(startangle);
-		else
-			ep.setint(angle);
-		break;
-	case P_START_ANGLE:
-		ep.setint(startangle);
-		break;
-	case P_ARC_ANGLE:
-		ep.setint(arcangle);
-		break;
-	case P_ROUND_RADIUS:
-		ep.setint(roundradius);
-		break;
-	case P_ARROW_SIZE:
-		ep.setint(arrowsize);
-		break;
-	case P_START_ARROW:
-		ep.setboolean(getflag(F_START_ARROW));
-		break;
-	case P_END_ARROW:
-		ep.setboolean(getflag(F_END_ARROW));
-		break;
-	case P_MARKER_LSIZE:
-		ep.setint(markerlsize);
-		break;
-	case P_MARKER_DRAWN:
-		ep.setboolean(getflag(F_MARKER_DRAWN));
-		break;
-	case P_MARKER_OPAQUE:
-		ep.setboolean(getflag(F_MARKER_OPAQUE));
-		break;
-	case P_MARKER_POINTS:
-		MCU_unparsepoints(markerpoints, nmarkerpoints, ep);
-		break;
-	case P_DASHES:
-		ep.clear();
-		for (i = 0 ; i < ndashes ; i++)
-			ep.concatuint(dashes[i], EC_COMMA, i == 0);
-		break;
-	case P_ROUND_ENDS:
-		ep.setboolean(getflag(F_CAPROUND));
-		break;
-	case P_DONT_RESIZE:
-		ep.setboolean(getflag(F_DONT_RESIZE));
-		break;
-	case P_STYLE:
-		{
-			const char *t_style_string;
-			switch (getstyleint(flags))
-			{
-			case F_G_RECTANGLE:
-				if (linesize == 0 && flags & F_G_SHOW_NAME)
-					t_style_string = MCtextstring;
-				else
-					t_style_string = MCrectanglestring;
-				break;
-			case F_ROUNDRECT:
-				t_style_string = MCroundrectstring;
-				break;
-			case F_POLYGON:
-				t_style_string = MCpolygonstring;
-				break;
-			case F_OVAL:
-				t_style_string = MCovalstring;
-				break;
-			case F_REGULAR:
-				t_style_string = MCregularstring;
-				break;
-			case F_CURVE:
-				t_style_string = MCcurvestring;
-				break;
-			case F_LINE:
-				t_style_string = MClinestring;
-				break;
-			}
-			ep . setstaticcstring(t_style_string);
-		}
-		break;
-	case P_SHOW_NAME:
-		ep.setboolean(getflag(F_G_SHOW_NAME));
-		break;
-	// MW-2012-02-16: [[ IntrinsicUnicode ]] Add support for a 'unicodeLabel' property.
-	case P_TEXT:
-	case P_LABEL:
-	case P_UNICODE_TEXT:
-	case P_UNICODE_LABEL:
-		{
-			// Fetch the label, taking note of its encoding.
-			MCString slabel;
-			bool isunicode;
-			if (effective)
-				getlabeltext(slabel, isunicode);
-			else
-				slabel.set(label,labelsize), isunicode = hasunicode();
-
-			ep.setsvalue(slabel);
-
-			// If the label's encoding doesn't match the request, map.
-			ep.mapunicode(isunicode, (which == P_UNICODE_TEXT || which == P_UNICODE_LABEL));
-		}
-		break;
-#endif /* MCGraphic::getprop */
-	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
-	}
-	return ES_NORMAL;
-}
-#endif
-
 // MDW-2014-06-18: [[ rect_points ]] refactoring: return points for rectangles, round rects, and regular polygons
-bool MCGraphic::get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count)
+bool MCGraphic::get_points_for_roundrect(MCPoint* &r_points, uindex_t &r_point_count)
 {
 	r_points = NULL;
 	r_point_count = 0;
-	MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0, flags);
-	return (true);
+	return MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0, flags);
 }
 
-bool MCGraphic::get_points_for_rect(MCPoint*& r_points, uint2& r_point_count)
+bool MCGraphic::get_points_for_rect(MCPoint* &r_points, uindex_t &r_point_count)
 {
-	r_points[0].x = rect.x;
-	r_points[0].y = rect.y;
-	r_points[1].x = rect.x + rect.width;
-	r_points[1].y = rect.y;
-	r_points[2].x = rect.x + rect.width;
-	r_points[2].y = rect.y + rect.height;
-	r_points[3].x = rect.x;
-	r_points[3].y = rect.y + rect.height;
-	return (true);
+	MCAutoArray<MCPoint> t_points;
+	if (!t_points.New(4))
+		return false;
+	
+	t_points[0].x = rect.x;
+	t_points[0].y = rect.y;
+	t_points[1].x = rect.x + rect.width;
+	t_points[1].y = rect.y;
+	t_points[2].x = rect.x + rect.width;
+	t_points[2].y = rect.y + rect.height;
+	t_points[3].x = rect.x;
+	t_points[3].y = rect.y + rect.height;
+	
+	t_points.Take(r_points, r_point_count);
+	return true;
 }
 
-bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_point_count)
+bool MCGraphic::get_points_for_regular_polygon(MCPoint *&r_points, uindex_t &r_point_count)
 {
-	MCPoint fakepoint;
+	MCAutoArray<MCPoint> t_points;
+	
+	if (!t_points.New(nsides + 1))
+		return false;
 	
 	real8 dx = (real8)((rect.width >> 1) - 1);
 	real8 dy = (real8)((rect.height >> 1) - 1);
@@ -877,22 +585,21 @@ bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_poin
 	for (i = 0 ; i < nsides ; i++)
 	{
 		real8 iangle = rangle + (real8)i * factor;
-		fakepoint.x = cx + (int2)(cos(iangle) * dx);
-		fakepoint.y = cy + (int2)(sin(iangle) * dy);
-		r_points[i] = fakepoint;
+		t_points[i].x = cx + (int2)(cos(iangle) * dx);
+		t_points[i].y = cy + (int2)(sin(iangle) * dy);
 	}
     
     // SN-2014-11-11: [[ Bug 13974 ]] The last side is linked to the first point, for a
     // regular polygon.
-	r_points[nsides] = r_points[0];
-	r_point_count = nsides + 1;
-	return (true);
+	t_points[nsides] = t_points[0];
+	
+	t_points.Take(r_points, r_point_count);
+	return true;
 }
 
 // MDW-2014-07-06: [[ oval_points ]] treat an oval like a rounded rect with radius = 1/2 max(width, height)
-bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
+bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uindex_t& r_point_count)
 {
-	MCRectangle trect;
 	int	tRadius;
 	
 	r_points = NULL;
@@ -901,599 +608,14 @@ bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
 		tRadius = rect.height;
 	else
 		tRadius = rect.width;
-	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle, flags);
-	return (true);
+	
+	return MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle, flags);
 }
-
-#ifdef LEGACY_EXEC
-// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCGraphic::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
-{
-	switch(which)
-	{
-#ifdef /* MCGraphic::getarrayprop */ LEGACY_EXEC
-	case P_GRADIENT_FILL:
-		return MCGradientFillGetProperty(m_fill_gradient, ep, key);
-	break;
-	case P_GRADIENT_STROKE:
-		return MCGradientFillGetProperty(m_stroke_gradient, ep, key);
-	break;
-#endif /* MCGraphic::getarrayprop */
-	default:
-		return MCControl::getarrayprop_legacy(parid, which, ep, key, effective);
-	}
-	return ES_NORMAL;
-}
-#endif
-
-
-#ifdef LEGACY_EXEC
-Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
-{
-	Boolean dirty = True;
-	int2 i1;
-	MCRectangle drect = rect;
-	MCString data = ep.getsvalue();
-
-	switch (p)
-	{
-#ifdef /* MCGraphic::setprop */ LEGACY_EXEC
-	case P_ANTI_ALIASED:
-		if (!MCU_matchflags(data, flags, F_G_ANTI_ALIASED, dirty))
-		{
-			MCeerror -> add(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-
-	// PROPERTY - FILL RULE
-	case P_FILL_RULE:
-	{
-		uint1 t_new_fill_rule;
-		if (ep . getsvalue() == "evenodd")
-			t_new_fill_rule = kMCFillRuleEvenOdd;
-		else if (ep . getsvalue() == "nonzero")
-			t_new_fill_rule = kMCFillRuleNonZero;
-		else if (ep . getsvalue() == "none" || ep . getsvalue() == "")
-			t_new_fill_rule = kMCFillRuleNone;
-		else
-		{
-			MCeerror->add(EE_GRAPHIC_BADFILLRULE, 0, 0, data);
-			return ES_ERROR;
-		}
-
-		if (t_new_fill_rule != getfillrule())
-		{
-			setfillrule(t_new_fill_rule);
-			dirty = True;
-		}
-	}
-	break;
-	case P_CAP_STYLE:
-	{
-		uint2 t_new_style;
-		if (ep.getsvalue() == "butt")
-			t_new_style = CapButt;
-		else if (ep.getsvalue() == "round")
-			t_new_style = CapRound;
-		else if (ep.getsvalue() == "square")
-			t_new_style = CapProjecting;
-		else
-		{
-			MCeerror->add(EE_GRAPHIC_BADCAPSTYLE, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (t_new_style != getcapstyle())
-		{
-			setcapstyle(t_new_style);
-			dirty = true;
-			compute_minrect();
-		}
-	}
-	break;
-	case P_JOIN_STYLE:
-	{
-		uint2 t_new_style;
-		if (ep.getsvalue() == "bevel")
-			t_new_style = JoinBevel;
-		else if (ep.getsvalue() == "round")
-			t_new_style = JoinRound;
-		else if (ep.getsvalue() == "miter")
-			t_new_style = JoinMiter;
-		else
-		{
-			MCeerror->add(EE_GRAPHIC_BADJOINSTYLE, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (t_new_style != getjoinstyle())
-		{
-			setjoinstyle(t_new_style);
-			dirty = true;
-			compute_minrect();
-		}
-	}
-	break;
-	case P_MITER_LIMIT:
-	{
-		real8 t_new_limit;
-		if (!MCU_stor8(data, t_new_limit))
-		{
-			MCeerror->add
-			(EE_GRAPHIC_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		t_new_limit = MCU_fmax(1, t_new_limit);
-		if (m_stroke_miter_limit != t_new_limit)
-		{
-			dirty = true;
-			m_stroke_miter_limit = (real4)t_new_limit;
-			compute_minrect();
-		}
-	}
-	break;
-	case P_BACK_COLOR:
-	case P_BACK_PATTERN:
-		if (data.getlength() != 0 && m_fill_gradient != NULL)
-
-		{
-			MCGradientFillFree(m_fill_gradient);
-			m_fill_gradient = NULL;
-		}
-		return MCControl::setprop(parid, p, ep, effective);
-	break;
-	case P_FORE_COLOR:
-	case P_FORE_PATTERN:
-		if (data.getlength() != 0 && m_stroke_gradient != NULL)
-		{
-			MCGradientFillFree(m_stroke_gradient);
-			m_stroke_gradient = NULL;
-		}
-		return MCControl::setprop(parid, p, ep, effective);
-	break;
-	case P_EDIT_MODE:
-		{
-			MCEditMode t_old_mode;
-			if (m_edit_tool == NULL)
-				t_old_mode = kMCEditModeNone;
-			else
-				t_old_mode = m_edit_tool->type();
-
-			MCEditMode t_new_mode;
-			if (ep.getsvalue() == "none" || ep.isempty())
-			{
-				t_new_mode = kMCEditModeNone;
-			}
-			else if (ep.getsvalue() == "fillgradient")
-			{
-				t_new_mode = kMCEditModeFillGradient;
-			}
-			else if (ep.getsvalue() == "strokegradient")
-			{
-				t_new_mode = kMCEditModeStrokeGradient;
-			}
-			else if (ep.getsvalue() == "polygon")
-			{
-				t_new_mode = kMCEditModePolygon;
-			}
-			else
-			{
-				MCeerror->add(EE_GRAPHIC_BADEDITMODE, 0, 0, data);
-				return ES_ERROR;
-			}
-			if (t_old_mode != t_new_mode)
-			{
-				MCRectangle t_old_effective_rect;
-				t_old_effective_rect = geteffectiverect();
-
-				if (m_edit_tool != NULL)
-				{
-					delete m_edit_tool;
-					m_edit_tool = NULL;
-				}
-
-				MCEditTool *t_new_tool = NULL;
-				switch (t_new_mode)
-				{
-				case kMCEditModeFillGradient:
-					if (m_fill_gradient != NULL)
-						t_new_tool = new MCGradientEditTool(this, m_fill_gradient, t_new_mode);
-					break;
-				case kMCEditModeStrokeGradient:
-					if (m_stroke_gradient != NULL)
-						t_new_tool = new MCGradientEditTool(this, m_stroke_gradient, t_new_mode);
-					break;
-				case kMCEditModePolygon:
-					t_new_tool = new MCPolygonEditTool(this);
-					break;
-				}
-				m_edit_tool = t_new_tool;
-
-				layer_effectiverectchangedandredrawall(t_old_effective_rect);
-			}
-		}
-		break;
-	break;
-	case P_FILLED:
-	case P_OPAQUE:
-		if (!MCU_matchflags(data, flags, F_OPAQUE, dirty))
-		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (dirty && flags & F_OPAQUE)
-		{
-			closepolygon(realpoints, nrealpoints);
-		}
-		break;
-	case P_LINE_SIZE:
-	case P_PEN_WIDTH:
-	case P_PEN_HEIGHT:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add
-			(EE_GRAPHIC_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		linesize = i1;
-		compute_minrect();
-		delpoints();
-		break;
-	case P_POLY_SIDES:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add
-			(EE_GRAPHIC_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		nsides = MCU_max(i1, 3);
-		delpoints();
-		break;
-	case P_POINTS:
-		if (oldpoints != NULL)
-		{
-			delete oldpoints;
-			oldpoints = NULL;
-		}
-		MCU_parsepoints(realpoints, nrealpoints, data);
-		if (flags & F_OPAQUE)
-			closepolygon(realpoints, nrealpoints);
-		compute_minrect();
-		break;
-	case P_RELATIVE_POINTS:
-		{
-			if (oldpoints != NULL)
-			{
-				delete oldpoints;
-				oldpoints = NULL;
-			}
-			MCRectangle trect = reduce_minrect(rect);
-			MCU_parsepoints(realpoints, nrealpoints, data);
-			MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
-			if (flags & F_OPAQUE)
-				closepolygon(realpoints, nrealpoints);
-			compute_minrect();
-		}
-		break;
-	case P_ANGLE:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add
-			(EE_GRAPHIC_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		while (i1 < 0)
-			i1 += 360;
-		i1 %= 360;
-		if (getstyleint(flags) == F_OVAL)
-			startangle = i1;
-		else
-			angle = i1;
-		delpoints();
-		break;
-	case P_START_ANGLE:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add
-			(EE_GRAPHIC_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		while (i1 < 0)
-			i1 += 360;
-		startangle = i1 % 360;
-		break;
-	case P_ARC_ANGLE:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add
-			(EE_GRAPHIC_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		arcangle = MCU_max(MCU_min(360, i1), 0);
-		break;
-	case P_ROUND_RADIUS:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add
-			(EE_GRAPHIC_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		roundradius = i1;
-		delpoints();
-		break;
-	case P_ARROW_SIZE:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add
-			(EE_GRAPHIC_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		arrowsize = i1;
-		compute_minrect();
-		break;
-	case P_START_ARROW:
-		if (!MCU_matchflags(data, flags, F_START_ARROW, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		compute_minrect();
-		break;
-	case P_END_ARROW:
-		if (!MCU_matchflags(data, flags, F_END_ARROW, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		compute_minrect();
-		break;
-	case P_MARKER_LSIZE:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add
-			(EE_GRAPHIC_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		markerlsize = i1;
-		compute_minrect();
-		break;
-	case P_MARKER_DRAWN:
-		if (!MCU_matchflags(data, flags, F_MARKER_DRAWN, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		compute_minrect();
-		break;
-	case P_MARKER_OPAQUE:
-		if (!MCU_matchflags(data, flags, F_MARKER_OPAQUE, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (dirty && flags & F_MARKER_OPAQUE)
-			closepolygon(markerpoints, nmarkerpoints);
-		break;
-	case P_MARKER_POINTS:
-		if (data == MCnullmcstring)
-			flags &= ~F_MARKER_DRAWN;
-		else
-		{
-			MCU_parsepoints(markerpoints, nmarkerpoints, data);
-			flags |= F_MARKER_DRAWN;
-		}
-		if (flags & F_MARKER_DRAWN && flags & F_MARKER_OPAQUE)
-			closepolygon(markerpoints, nmarkerpoints);
-		compute_minrect();
-		break;
-	case P_DASHES:
-		{
-			uint1 *newdashes = NULL;
-			uint2 newndashes = 0;
-			uint4 l = data.getlength();
-			const char *sptr = data.getstring();
-			uint4 t_dash_len = 0;
-			while (l)
-			{
-				Boolean done;
-				i1 = MCU_strtol(sptr, l, ',', done);
-				if (i1 < 0 || i1 >= 256 || !done)
-				{
-					MCeerror->add(EE_GRAPHIC_NAN, 0, 0, data);
-					delete newdashes;
-					return ES_ERROR;
-				}
-				t_dash_len += i1;
-				MCU_realloc((char **)&newdashes, newndashes, newndashes + 1, 1);
-				newdashes[newndashes++] = (uint1)i1;
-			}
-			if (newndashes > 0 && t_dash_len == 0)
-			{
-				delete newdashes;
-				newdashes = NULL;
-				newndashes = 0;
-			}
-			delete dashes;
-			dashes = newdashes;
-			ndashes = newndashes;
-			if (newndashes == 0)
-				flags &= ~F_DASHES;
-			else
-				flags |= F_DASHES;
-		}
-		break;
-	case P_ROUND_ENDS:
-		if (!MCU_matchflags(data, flags, F_CAPROUND, dirty))
-		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_DONT_RESIZE:
-		if (!MCU_matchflags(data, flags, F_DONT_RESIZE, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_STYLE:
-		flags &= ~F_STYLE;
-		if (data == MCrectanglestring)
-			flags |= F_G_RECTANGLE;
-		else if (data == MCroundrectstring)
-			flags |= F_ROUNDRECT;
-		else if (data == MCpolygonstring)
-		{
-			flags |= F_POLYGON;
-			compute_minrect();
-		}
-		else if (data == MCovalstring)
-			flags |= F_OVAL;
-		else if (data == MCarcstring)
-		{
-			flags |= F_OVAL;
-			arcangle = 90;
-		}
-		else if (data == MCregularstring)
-			flags |= F_REGULAR;
-		else if (data == MCcurvestring)
-		{
-			flags |= F_CURVE;
-			compute_minrect();
-		}
-		else if (data == MCtextstring)
-		{
-			flags |= F_G_RECTANGLE | F_G_SHOW_NAME;
-			linesize = 0;
-		}
-		else if (data == MClinestring)
-		{
-			flags |= F_LINE;
-			compute_minrect();
-		}
-		delpoints();
-		break;
-	case P_SHOW_NAME:
-		if (!MCU_matchflags(data, flags, F_G_SHOW_NAME, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	// MW-2012-02-16: [[ IntrinsicUnicode ]] Add support for setting the unicodeLabel.
-	case P_LABEL:
-	case P_UNICODE_LABEL:
-		if (label == NULL ||
-			data.getlength() != labelsize ||
-			memcmp(data.getstring(), label, data.getlength()) != 0 ||
-			(p == P_UNICODE_LABEL) != hasunicode())
-		{
-			delete label;
-			label = NULL;
-			if (data != MCnullmcstring)
-			{
-				labelsize = data.getlength();
-				label = new char[labelsize];
-				memcpy(label, data.getstring(), labelsize);
-				flags |= F_G_LABEL;
-
-				// If we are setting the unicode label we become unicode; else we revert
-				// to native.
-				if (p == P_UNICODE_LABEL)
-					m_font_flags |= FF_HAS_UNICODE;
-				else
-					m_font_flags &= ~FF_HAS_UNICODE;
-			}
-			else
-			{
-				label = NULL;
-				labelsize = 0;
-				flags &= ~F_G_LABEL;
-			}
-		}
-		else
-			dirty = False;
-		break;
-#endif /* MCGraphic::setprop */
-	default:
-		return MCControl::setprop_legacy(parid, p, ep, effective);
-	}
-	if (dirty)
-	{
-		if (rect.x != drect.x || rect.y != drect.y
-		        || rect.width != drect.width || rect.height != drect.height)
-			if (resizeparent())
-				dirty = False;
-		if (dirty && opened)
-		{
-			// MW-2011-08-18: [[ Layers ]] Notify of rect changed and invalidate.
-			layer_rectchanged(drect, true);
-		}
-	}
-	return ES_NORMAL;
-}
-#endif
-
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-#ifdef LEGACY_EXEC
-Exec_stat MCGraphic::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
-{
-#ifdef /* MCGraphic::setarrayprop */ LEGACY_EXEC
-	Boolean dirty;
-	dirty = False;
-	switch(which)
-	{
-	case P_GRADIENT_FILL:
-	{
-		if (MCGradientFillSetProperty(m_fill_gradient, ep, key, dirty, rect) == ES_ERROR)
-			return ES_ERROR;
-		if (m_fill_gradient != NULL)
-		{
-			MCInterfaceNamedColor t_color;
-			t_color . name = kMCEmptyString;
-			MCExecContext ctxt(ep);
-			SetColor(ctxt, P_BACK_COLOR - P_FORE_COLOR, t_color);
-			setpattern(P_BACK_PATTERN - P_FORE_PATTERN, kMCEmptyString);
-		}
-	}
-	break;
-	case P_GRADIENT_STROKE:
-	{
-		if (MCGradientFillSetProperty(m_stroke_gradient, ep, key, dirty, rect) == ES_ERROR)
-			return ES_ERROR;
-		if (m_stroke_gradient != NULL)
-		{
-			MCInterfaceNamedColor t_color;
-			t_color . name = kMCEmptyString;
-			MCExecContext ctxt(ep);
-			SetColor(ctxt, P_FORE_COLOR - P_FORE_COLOR, t_color);
-			setpattern(P_FORE_COLOR - P_FORE_COLOR, kMCEmptyString);
-		}
-	}
-	break;
-	default:
-		return MCControl::setarrayprop_legacy(parid, which, ep, key, effective);
-	}
-
-	if (dirty && opened)
-	{
-		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-		layer_redrawall();
-	}
-#endif /* MCGraphic::setarrayprop */
-	return ES_NORMAL;
-}
-#endif
-
 MCControl *MCGraphic::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCGraphic *newgraphic = new MCGraphic(*this);
+	MCGraphic *newgraphic = new (nothrow) MCGraphic(*this);
 	if (attach)
 		newgraphic->attach(p, invisible);
 	return newgraphic;
@@ -1628,12 +750,12 @@ void MCGraphic::draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2)
 	if (arrowsize == 0 || (dx == 0.0 && dy == 0.0))
 		return;
 	MCPoint pts[3];
-	real8 angle = atan2(dy, dx);
-	real8 a1 = angle + 3.0 * M_PI / 4.0;
-	real8 a2 = angle - 3.0 * M_PI / 4.0;
+	real8 t_angle = atan2(dy, dx);
+	real8 a1 = t_angle + 3.0 * M_PI / 4.0;
+	real8 a2 = t_angle - 3.0 * M_PI / 4.0;
 	real8 size = get_arrow_size();
-	pts[0].x = p2.x + (int2)(cos(angle) * size);
-	pts[0].y = p2.y + (int2)(sin(angle) * size);
+	pts[0].x = p2.x + (int2)(cos(t_angle) * size);
+	pts[0].y = p2.y + (int2)(sin(t_angle) * size);
 	pts[1].x = p2.x + (int2)(cos(a1) * size);
 	pts[1].y = p2.y + (int2)(sin(a1) * size);
 	pts[2].x = p2.x + (int2)(cos(a2) * size);
@@ -1643,13 +765,13 @@ void MCGraphic::draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2)
 
 void MCGraphic::draw_lines(MCDC *dc, MCPoint *pts, uint2 npts)
 {
-	uint2 i = 0;
-	while (i < npts)
+	uindex_t i = 0;
+	while (i < uindex_t(npts))
 	{
-		bool t_degenerate;
+        bool t_degenerate;
 		t_degenerate = true;
 		
-		uint2 count = 0;
+		uindex_t count = 0;
 		while (i + count < npts && pts[count + i].x != MININT2)
 		{
 			if (count > 0 &&
@@ -1887,21 +1009,6 @@ void MCGraphic::compute_minrect()
 	}
 }
 
-MCRectangle MCGraphic::geteffectiverect(void) const
-{
-	MCRectangle t_effectiverect;
-	t_effectiverect = MCControl::geteffectiverect();
-
-	if (m_edit_tool != NULL)
-	{
-		MCRectangle t_tool_rect = m_edit_tool->drawrect();
-		if (t_tool_rect.width != 0 && t_tool_rect.height != 0)
-			t_effectiverect = MCU_union_rect(t_effectiverect, t_tool_rect);
-	}
-
-	return t_effectiverect;
-}
-
 void MCGraphic::delpoints()
 {
 	if (points != NULL)
@@ -1912,7 +1019,7 @@ void MCGraphic::delpoints()
 	}
 }
 
-void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
+bool MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 {
 	if (getstyleint(flags) == F_POLYGON && npts > 1)
 	{
@@ -1927,15 +1034,15 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
             npts -= 1;
         }
             
-		uint2 i ;
+		uindex_t i ;
 		uint2 t_count = 0 ;
 		MCPoint *startpt = pts ;
         
 		for (i=1; i<=npts; i++)
 		{
-			if ((i==npts) || (pts[i].x == MININT2))
+            if ((i==npts) || (pts[i].x == MININT2))
 			{
-				if (pts[i - 1].x != startpt->x || pts[i - 1].y != startpt->y)
+            	if (pts[i - 1].x != startpt->x || pts[i - 1].y != startpt->y)
 				{
 					t_count++ ;
 				}
@@ -1947,9 +1054,16 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
         if (t_has_trailing_break)
             t_count++;
 		
+        uindex_t t_check = (uindex_t) npts + (uindex_t) t_count;
+        
+        if (t_check > 65535)
+        {
+            return false;
+        }
+        
         if (t_count)
 		{
-			MCPoint *newpts = new MCPoint[npts+t_count] ;
+			MCPoint *newpts = new (nothrow) MCPoint[npts+t_count] ;
 			startpt = pts ;
 			MCPoint *currentpt = newpts ;
 			*(currentpt++) = pts[0] ;
@@ -1981,6 +1095,7 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 			oldpoints = NULL;
 		}
 	}
+    return true;
 }
 
 MCStringRef MCGraphic::getlabeltext()
@@ -2040,15 +1155,10 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		if (linesize != 0)
 			trect = MCU_reduce_rect(trect, linesize >> 1);
 		
-		if (npoints <= nsides)
-		{
-			npoints = nsides + 1;
-			if (points != NULL)
-				delete points;
-			points = new MCPoint[npoints];
-		}
 		// MDW-2014-06-18: [[ rect_points ]] refactored
-		get_points_for_regular_polygon(points, npoints);
+		uindex_t t_count;
+		/* UNCHECKED */ get_points_for_regular_polygon(points, t_count);
+        npoints = t_count;
 	}
 	if (points == NULL && getstyleint(flags) == F_OVAL)
 	{
@@ -2314,12 +1424,19 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 	if (!p_isolated)
 	{
 		dc -> end();
-        
-        if (m_edit_tool != NULL)
-            m_edit_tool->drawhandles(dc);
 	}
 
 	dc -> setquality(QUALITY_DEFAULT);
+}
+
+void MCGraphic::drawselection(MCDC *p_dc, const MCRectangle& p_dirty)
+{
+    MCControl::drawselection(p_dc, p_dirty);
+    
+    if (m_edit_tool != nullptr)
+    {
+        m_edit_tool->drawhandles(p_dc);
+    }
 }
 
 MCGradientFill *MCGraphic::getgradient()
@@ -2344,9 +1461,6 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
 	{
 		MCRectangle drect = rect;
 
-		MCRectangle t_old_effective_rect;
-		t_old_effective_rect = geteffectiverect();
-
 		realpoints[i].x = x;
 		realpoints[i].y = y;
 
@@ -2359,8 +1473,17 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
 		if (redraw)
 		{
 			if (flags & F_OPAQUE)
-				closepolygon(realpoints, nrealpoints);
+            {
+                bool t_succ = closepolygon(realpoints, nrealpoints);
+                if (!t_succ)
+                {
+                    return;
+                }
+            }
 			compute_minrect();
+            
+            /* If the minrect has changed, then invalidate the old coords in the
+             * gradients. */
 			if (rect.x != drect.x || rect.y != drect.y
 					|| rect.width != drect.width || rect.height != drect.height)
 			{
@@ -2369,14 +1492,14 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
 					m_fill_gradient->old_origin.x = MININT2;
 					m_fill_gradient->old_origin.y = MININT2;
 				}
-				if (resizeparent())
-					return;
+				if (m_stroke_gradient != NULL)
+				{
+					m_stroke_gradient->old_origin.x = MININT2;
+					m_stroke_gradient->old_origin.y = MININT2;
+				}
 			}
-			if (opened)
-			{
-				// MW-2011-08-18: [[ Layers ]] Notify of the change in effective rect and invalidate.
-				layer_effectiverectchangedandredrawall(t_old_effective_rect);
-			}
+            
+			Redraw(drect);
 		}
 	}
 }
@@ -2653,7 +1776,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32
 //---- 2.7+:
 //  . F_G_ANTI_ALIASED now defined, default false
 	uint4 t_old_flags;
-	if (p_version < 2700)
+	if (p_version < kMCStackFileFormatVersion_2_7)
 	{
 		t_old_flags = flags;
 		flags &= ~F_G_ANTI_ALIASED;
@@ -2667,7 +1790,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32
 		return stat;
 
 //---- 2.7+:
-	if (p_version < 2700)
+	if (p_version < kMCStackFileFormatVersion_2_7)
 		flags = t_old_flags;
 //----
 
@@ -2733,7 +1856,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32
 	//   legacy unicode output.
     if (flags & F_G_LABEL)
 	{
-		if (p_version < 7000)
+		if (p_version < kMCStackFileFormatVersion_7_0)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -2759,7 +1882,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 
 //---- 2.7+:
 //  . F_G_ANTI_ALIASED now defined
-	if (version < 2700)
+	if (version < kMCStackFileFormatVersion_2_7)
 		flags &= ~F_G_ANTI_ALIASED;
 //----
 
@@ -2796,7 +1919,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (nmarkerpoints != 0)
 		{
-			markerpoints = new MCPoint[nmarkerpoints];
+			markerpoints = new (nothrow) MCPoint[nmarkerpoints];
 			for (i = 0 ; i < nmarkerpoints ; i++)
 			{
 				if ((stat = IO_read_int2(&markerpoints[i].x, stream)) != IO_NORMAL)
@@ -2813,7 +1936,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (nrealpoints != 0)
 		{
-			realpoints = new MCPoint[nrealpoints];
+			realpoints = new (nothrow) MCPoint[nrealpoints];
 			for (i = 0 ; i < nrealpoints ; i++)
 			{
 				if ((stat = IO_read_int2(&realpoints[i].x, stream)) != IO_NORMAL)
@@ -2822,9 +1945,9 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 					return checkloadstat(stat);
 			}
 		}
-		if (version < 1400)
+		if (version < kMCStackFileFormatVersion_1_4)
 			loaddashes = True;
-		if (version <= 1400)
+		if (version <= kMCStackFileFormatVersion_1_4)
 			arrowsize = DEFAULT_ARROW_SIZE;
 		break;
 	}
@@ -2835,7 +1958,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 		if (ndashes != 0)
 		{
 			flags |= F_DASHES;
-			dashes = new uint1[ndashes];
+			dashes = new (nothrow) uint1[ndashes];
 			for (i = 0 ; i < ndashes ; i++)
 				if ((stat = IO_read_uint1(&dashes[i], stream)) != IO_NORMAL)
 					return checkloadstat(stat);
@@ -2857,7 +1980,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 	//   legacy unicode output.
 	if (flags & F_G_LABEL)
 	{
-		if (version < 7000)
+		if (version < kMCStackFileFormatVersion_7_0)
 		{
 			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return checkloadstat(stat);

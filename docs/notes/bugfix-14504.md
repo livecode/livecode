@@ -1,1 +1,0 @@
-# Strings which have been 'unnativized' by the engine lose the CanBeNative flag when copied

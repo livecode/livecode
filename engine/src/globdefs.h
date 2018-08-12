@@ -53,20 +53,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(_MOBILE)
-
-#undef _MACOSX
-#undef _LINUX
-#undef _WINDOWS
-
-#elif defined(_SERVER)
-
-#undef _MACOSX
-#undef _LINUX
-#undef _WINDOWS
-
-#endif
-
 #include "sysdefs.h"
 
 ////////////////////////////////////////////////////////////////////////////////

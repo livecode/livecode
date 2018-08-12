@@ -4,13 +4,17 @@ Type: function
 
 Syntax: revXMLTree(<treeID>, <startNode>, <nodeDelim>, <padding>, <includeChildCount>, <depth>)
 
-Summary: <return|Returns> a list of the <nodes> in an <XML tree>, in a form that shows their parent/child relationships.
+Summary:
+<return|Returns> a list of the <nodes> in an <XML tree>, in a form that
+shows their parent/child relationships.
+
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -24,26 +28,62 @@ Example:
 put revXMLTree(myTree,theNode,return,tab,false,-1) into field "Node List"
 
 Parameters:
-treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
-startNode: The path to the node where you want to start.
-nodeDelim (string): A string that separates each node's name from the rest.
-padding (string): A string that is placed before the name of each node to show its depth in the tree. No padding is placed before the startNode's name.
-includeChildCount (bool): If the includeChildCount is true, each node's name is followed by the node's positional predicate, ie which child number the node is.
-depth: The depth specifies how many generations of the XML tree to show. If you specify zero, only the startNode is shown; if you specify 1, the startNode and its child nodes are shown, but not their child nodes; and so on. To show all generations, specify -1 as the depth.
+treeID:
+The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+function when you created the XML tree.
 
-The result: Typically, you use <return> as the nodeDelimiter and <tab> as the <padding>. The resulting list of nodes is displayed one node per line, with as many leading tabs as the <node|node's> depth.
+startNode:
+The path to the node where you want to start.
 
-Returns: The <revXMLTree> <function> returns a <string>.
+nodeDelim (string):
+A string that separates each node's name from the rest.
+
+padding (string):
+A string that is placed before the name of each node to show its depth
+in the tree. No padding is placed before the startNode's name.
+
+includeChildCount (bool):
+If the includeChildCount is true, each node's name is followed by the
+node's positional predicate, ie which child number the node is.
+
+depth:
+The depth specifies how many generations of the XML tree to show. If you
+specify zero, only the startNode is shown; if you specify 1, the
+startNode and its child nodes are shown, but not their child nodes; and
+so on. To show all generations, specify -1 as the depth.
+
+Returns:
+The <revXMLTree> <function> returns a <string>.
+
+The result:
+Typically, you use <return> as the nodeDelimiter and <tab> as the
+<padding>. The resulting list of nodes is displayed one node per line,
+with as many leading tabs as the <node|node's> depth.
 
 Description:
-Use the <revXMLTree> <function> to obtain a text "tree-style" view of an <XML tree|XML tree's> <nodes>.
+Use the <revXMLTree> <function> to obtain a text "tree-style" view of an
+<XML tree|XML tree's> <nodes>.
 
-To display the entire XML tree, specify the root node returned by the revXMLRootNode <function> as the <startNode>.
+To display the entire XML tree, specify the root node returned by the
+revXMLRootNode <function> as the <startNode>.
 
-If the <revXMLTree> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLTree> <function> encounters an error, it <return|returns>
+an error message starting with "xmlerr".
 
->*Important:*  The <revXMLTree> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLTree> <function> is part of the 
+> <XML library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "XML" 
+> checkbox is checked.
 
-References: nodes (property), XML library (library), LiveCode custom library (library), tab (constant), Standalone Application Settings (glossary), node (glossary), standalone application (glossary), XML tree (glossary), return (glossary), revXMLText (function), revXMLMatchingNode (function), function (control_st), string (keyword)
+References: tab (constant), function (control structure),
+revXMLText (function), revXMLMatchingNode (function),
+LiveCode custom library (glossary),
+Standalone Application Settings (glossary), node (glossary),
+standalone application (glossary), XML tree (glossary), return (glossary),
+string (keyword), XML library (library), nodes (property)
 
 Tags: text processing
+

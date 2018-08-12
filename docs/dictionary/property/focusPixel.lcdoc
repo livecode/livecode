@@ -1,35 +1,50 @@
 Name: focusPixel
 
+Synonyms: eighthpixel
+
 Type: property
 
-Syntax: set the focusPixel of <object> to <colorNumber> 
+Syntax: set the focusPixel of <object> to <colorNumber>
 
-Summary: Specifies which entry in the <color table> is used for the color of an <object|object's> outline when it has the <insertion point> or is <active (focused)(glossary)>.
+Summary:
+Specifies which entry in the <color table> is used for the color of an
+<object|object's> outline when it has the <insertion point> or is
+<explicit focus|active focused>.
 
-Synonyms: eighthPixel
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the focusPixel of this stack to 33
 
 Value:
-The <focusPixel> of an <object> is an <integer> between zero and (the screenColors - 1). It designates an entry in the current color table.
-By default, the <focusPixel> for all <object|objects> is empty.
+The <focusPixel> of an <object(glossary)> is an <integer> between zero
+and (the screenColors - 1). It designates an entry in the current color
+table. By default, the <focusPixel> for all <object|objects> is empty.
 
 Description:
-Use the <focusPixel> <property> to change the focus color of an <object> when the <bit depth> of the screen is 8 <bit|bits> (256 colors) or less.
+Use the <focusPixel> <property> to change the focus color of an
+<object(glossary)> when the <bit depth> of the screen is 8 <bit|bits>
+(256 colors) or less.
 
-The <focusPixel> <property> specifies which entry in the <color table> is used for an <object|object's> focus color. It is similar to the <focusColor> <property>, but is specified as an entry in the current <color table>, rather than as a <color reference>.
+The <focusPixel> <property> specifies which entry in the <color table>
+is used for an <object|object's> focus color. It is similar to the
+<focusColor> <property>, but is specified as an entry in the current
+<color table>, rather than as a <color reference>.
 
 The color table can be set by changing the colorMap <property>.
 
-References: borderPixel (property), focusColor (property), integer (keyword), object (object), property (glossary), color reference (glossary), insertion point (glossary), bit (glossary), color table (glossary), active control (glossary), bit depth (glossary)
+References: object (glossary), property (glossary),
+color reference (glossary), insertion point (glossary), bit (glossary),
+color table (glossary), active control (glossary), bit depth (glossary),
+explicit focus (glossary), integer (keyword), borderPixel (property), 
+focusColor (property)
 
 Tags: ui
+

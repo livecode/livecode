@@ -157,11 +157,8 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 			CTRunRef t_run;
 			t_run = (CTRunRef)t_run_id;
 			
-			uint32_t t_glyph_count;
+			CFIndex t_glyph_count;
 			t_glyph_count = CTRunGetGlyphCount(t_run);
-			
-			CFRange t_char_range;
-			t_char_range = CTRunGetStringRange(t_run);
 			
 			CGGlyph *t_glyphs;
 			CGPoint *t_positions;
@@ -169,10 +166,25 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 			t_glyphs = new CGGlyph[t_glyph_count];
 			t_positions = new CGPoint[t_glyph_count];
 			t_indices = new CFIndex[t_glyph_count];
-			CTRunGetGlyphs(t_run, CFRangeMake(0, 0), t_glyphs);
-			CTRunGetPositions(t_run, CFRangeMake(0, 0), t_positions);
-			CTRunGetStringIndices(t_run, CFRangeMake(0, 0), t_indices);
+			CTRunGetGlyphs(t_run, CFRangeMake(0, t_glyph_count), t_glyphs);
+			CTRunGetPositions(t_run, CFRangeMake(0, t_glyph_count), t_positions);
+			CTRunGetStringIndices(t_run, CFRangeMake(0, t_glyph_count), t_indices);
 			
+			// Work out the string range of the run - the value returned by
+			// CTRunGetCharRange() can't be trusted as it considers a line
+			// 'as a whole' rather than individual runs. (This can happen with
+			// abugida scripts where you get several runs for one cluster due
+			// to font fallback).
+			CFIndex t_min_char_range = p_char_count;
+			CFIndex t_max_char_range = 0;
+			for(CFIndex i = 0; i < t_glyph_count; i++)
+			{
+				t_min_char_range = MCMin(t_min_char_range, t_indices[i]);
+				t_max_char_range = MCMax(t_max_char_range, t_indices[i] + 1);
+			}
+			CFRange t_char_range = CFRangeMake(t_min_char_range,
+											   t_max_char_range - t_min_char_range);
+
 			MCTextLayoutGlyph *t_layout_glyphs;
 			uint16_t *t_clusters;
 			t_layout_glyphs = new MCTextLayoutGlyph[t_glyph_count];
@@ -185,15 +197,16 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 			}
 			
 			// Compute the clusters.
-			for(uint32_t i = 0; i < t_char_range . length; i++)
+			for(CFIndex i = 0; i < t_char_range . length; i++)
 				t_clusters[i] = 65535;
-			for(uint32_t i = 0; i < t_glyph_count; i++)
-				t_clusters[t_indices[i] - t_char_range . location] = MCMin((uint32_t)t_clusters[t_indices[i]], i);
+			for(CFIndex i = 0; i < t_glyph_count; i++)
+				t_clusters[t_indices[i] - t_char_range . location] = (uint16_t)MCMin(i, UINT16_MAX);
 			
 			for(uint32_t i = 1; i < t_char_range . length; i++)
 			{
 				// If a cluster has 0xffff as its value it means it was never set and must be
-				// part of a surrogate, so we set it to the previous char.
+				// part of a surrogate (or an out of order cluster), so we just set it to the
+				// previous char.
 				if (t_clusters[i] == 0xffff)
 					t_clusters[i] = t_clusters[i - 1];
 			}
@@ -201,9 +214,9 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 			MCTextLayoutSpan t_span;
 			t_span . chars = p_chars + t_char_range . location;
 			t_span . clusters = t_clusters;
-			t_span . char_count = t_char_range . length;
+			t_span . char_count = (uint32_t)t_char_range . length;
 			t_span . glyphs = t_layout_glyphs;
-			t_span . glyph_count = t_glyph_count;
+			t_span . glyph_count = (uint32_t)t_glyph_count;
 			t_span . font = (void *)ctfont_from_ctfont((CTFontRef)CFDictionaryGetValue(CTRunGetAttributes(t_run), kCTFontAttributeName));
 			p_callback(p_context, &t_span);
             

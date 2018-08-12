@@ -6,13 +6,15 @@ Syntax: the platform
 
 Syntax: platform()
 
-Summary: <return|Returns> the name of the operating system LiveCode is running on.
+Summary:
+<return|Returns> the name of the operating system LiveCode is running
+on. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android,html5
+OS: mac, windows, linux, ios, android, html5
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the platform
@@ -20,12 +22,18 @@ the platform
 Example:
 if the platform is "MacOS" then set the activatePalettes to true
 
-Returns (string): "Win32", "MacOS", "Linux", "iphone", "android", or "HTML5"
+Returns (string):
+"Win32", "MacOS", "Linux", "iphone", "android", or "HTML5"
 
 Description:
-Use the <platform> <function> to change a <stack|stack's> <behavior> or <appearance> depending on the operating system.
+Use the <platform> <function> to change a <stack|stack's> <behavior> or
+<appearance> depending on the operating system.
 
-The <platform> <function> is compiled into each version of the LiveCode <engine>. This means that, for example, if you're developing on a <Mac OS|Mac OS system> and you build a <standalone application> for <Unix|Linux>, when you run the <standalone application> on a <Unix|Linux> system, the <platform> <function> <return|returns> "Linux".
+The <platform> <function> is compiled into each version of the LiveCode
+<engine>. This means that, for example, if you're developing on a <Mac
+OS|Mac OS system> and you build a <standalone application> for
+<Unix|Linux>, when you run the <standalone application> on a
+<Unix|Linux> system, the <platform> <function> <return|returns> "Linux".
 
 The possible values returned by the <platform> function are:
 
@@ -36,7 +44,14 @@ The possible values returned by the <platform> function are:
 * "android" on smartphones, tablets and other Android devices
 * "HTML5" when running in a web browser
 
+
 Changes:
 Support for HTML5 was added in version 8.0.0.
 
-References: function (control_st), stack (object), systemVersion (function), buildNumber (function), deleteRegistry (function), processor (function), MCISendString (function), return (glossary), OS X (glossary), engine (glossary), appearance (glossary), Unix (glossary), Mac OS (glossary), standalone application (glossary), behavior (glossary)
+References: function (control structure), systemVersion (function),
+buildNumber (function), deleteRegistry (function), processor (function),
+MCISendString (function), return (glossary), OS X (glossary),
+engine (glossary), appearance (glossary), Unix (glossary),
+Mac OS (glossary), standalone application (glossary), behavior (glossary),
+stack (object)
+

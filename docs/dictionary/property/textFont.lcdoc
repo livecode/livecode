@@ -6,15 +6,17 @@ Syntax: set the textFont of <object> to <fontName> [, <language>]
 
 Syntax: set the textFont of [<chunk> of] <field> to <fontName> [, <language>]
 
-Summary: Specifies the <font|font face> of text in an <object>.
+Summary:
+Specifies the <font|font face> of text in an <object(glossary)>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the textFont of button "Hello" to "Courier"
@@ -31,23 +33,41 @@ set the textFont of field "Text" to "Japanese"
 Example:
 set the textFont of button "Themed" to "(System UI Font - Messages)"
 
-Value: The <textFont> of an <object> or <chunk> is either empty or a <string>.
+Value:
+The <textFont> of an <object(glossary)> or <chunk> is either empty or a
+<string>. 
 
 Description:
 Use the <textFont> <property> to change the appearance of text.
 
-Setting the <textFont> of an <object> to empty allows the <textFont> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what <font> is used for the <object>, even if its own <textFont> is empty.
+Setting the <textFont> of an <object(glossary)> to empty allows the
+<textFont> of the <object|object's> <owner> to show through. Use the
+<effective> <keyword> to find out what <font> is used for the
+<object(glossary)>, even if its own <textFont> is empty.
 
-If the <chunk> contains more than one font, the <chunk|chunk's> <textFont> <property> reports "mixed".
+If the <chunk> contains more than one font, the <chunk|chunk's>
+<textFont> <property> reports "mixed".
 
-On Mac OS systems, if the specified font isn't available, the system font (which is set in the Appearance control panel and specifies the font used for menus) is used. On Unix systems, if the specified font isn't available, Helvetica is used. On Windows systems, if the specified font isn't available, the current Windows font is used.
+On Mac OS systems, if the specified font isn't available, the system
+font (which is set in the Appearance control panel and specifies the
+font used for menus) is used. On Unix systems, if the specified font
+isn't available, Helvetica is used. On Windows systems, if the specified
+font isn't available, the current Windows font is used.
 
 To get the list of available fonts, use the <fontNames> function.
 
-Some special font names can be used to request the themed fonts used for drawing UI elements. These are documented in the <fontNames> function.
+Some special font names can be used to request the themed fonts used for
+drawing UI elements. These are documented in the <fontNames> function.
 
-Setting the <textFont> to `(Default)` causes the control to use the default font for that type of control rather than inheriting the font from a parent object.
+Setting the <textFont> to `(Default)` causes the control to use the
+default font for that type of control rather than inheriting the font
+from a parent object.
 
-References: fontNames (function), printTextFont (property), owner (property), printFontTable (property), allowInlineInput (property), HTMLText (property), string (keyword), effective (keyword), object (object), property (glossary), keyword (glossary), font (glossary), chunk (glossary)
+References: fontNames (function), object (glossary), property (glossary),
+keyword (glossary), font (glossary), chunk (glossary), string (keyword),
+effective (keyword), printTextFont (property), owner (property),
+printFontTable (property), allowInlineInput (property),
+HTMLText (property)
 
 Tags: ui
+

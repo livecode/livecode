@@ -2,43 +2,54 @@ Name: sin
 
 Type: function
 
-Syntax: the sin of <angleInRadians> 
+Syntax: the sin of <angleInRadians>
 
 Syntax: sin(<angleInRadians>)
 
-Summary: <return|Returns> the sine of an angle (in <radian|radians>).
+Summary:
+<return|Returns> the sine of an angle (in <radian|radians>).
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
-
-Example:
-the sin of -pi/2 -- returns -1
+Platforms: desktop, server, mobile
 
 Example:
-sin(the startAngle of graphic "Pointer")
+put the sin of (-pi/2) -- returns -1
+
+Example:
+put sin(the startAngle of graphic "Pointer")
 
 Parameters:
-angleInRadians: 
-angle: A positive or negative number, or an expression that evaluates to a number.
+angleInRadians(number):
+A positive or negative number, or an expression that evaluates to a
+number.
 
-Returns: The <sin> <function> <return|returns> a number between -1 and 1.
+Returns(number):
+The <sin> <function> <return|returns> a number between -1 and 1.
 
 Description:
 Use the <sin> <function> to find the sine of an angle.
 
 The <sin> <function> repeats every 2*pi <radian|radians>:
-  sin(x) = sin(x + 2 * pi)
+
+    sin(x) = sin(x + 2 * pi)
+
 for any value of x.
 
-The <sin> <function> requires its input to be in <radian|radians>. To provide an angle in <degree|degrees>, use the following <custom function>:
+The <sin> <function> requires its input to be in <radian|radians>. To
+provide an angle in <degree|degrees>, use the following <custom
+function>:
 
-  function sinInDegrees angleInDegrees
+    function sinInDegrees angleInDegrees
     return sin(angleInDegrees * pi / 180)
-  end sinInDegrees
 
-References: pi (constant), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control_st)
+    end sinInDegrees
+
+
+References: pi (constant), function (control structure),
+radian (glossary), custom function (glossary), return (glossary),
+degree (glossary)
 
 Tags: math

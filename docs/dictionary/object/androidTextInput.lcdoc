@@ -4,7 +4,8 @@ Type: object
 
 Syntax: androidTextInput
 
-Summary: A native, single line, Android text input control.
+Summary:
+A native, single line, Android text input control.
 
 Introduced: 5.5.1
 
@@ -21,8 +22,15 @@ mobileControlCreate "input", "name entry"
 Description:
 A native Android control for text input.
 
-The input control allows the editing of a single line of text with the 'return' key ending editing and allowing you to perform an appropriate action.
+The input control allows the editing of a single line of text with the
+'return' key ending editing and allowing you to perform an appropriate
+action. 
 
-References: mobileControlDelete (command), mobileControlDo (command), mobileControlSet (command), mobileControlCreate (command), mobileControlGet (function), mobileControlTarget (function), inputEndEditing (message), inputReturnKey (message), inputBeginEditing (message), inputTextChanged (message)
+References: mobileControlDelete (command), mobileControlDo (command),
+mobileControlSet (command), mobileControlCreate (command),
+mobileControlGet (function), mobileControlTarget (function),
+inputEndEditing (message), inputReturnKey (message),
+inputBeginEditing (message), inputTextChanged (message)
 
 Tags: objects
+

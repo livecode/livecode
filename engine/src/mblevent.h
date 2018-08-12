@@ -22,25 +22,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCMovieTouchedEvent: public MCCustomEvent
 {
 public:
-	MCMovieTouchedEvent(MCObject *p_object)
+	MCMovieTouchedEvent(MCObject *p_object) :
+      m_object(p_object->GetHandle())
 	{
-		m_object = p_object -> gethandle();
 	}
+    
+    virtual ~MCMovieTouchedEvent()
+    {
+    }
 	
 	void Destroy(void)
 	{
-		m_object -> Release();
 		delete this;
 	}
 	
 	void Dispatch(void)
 	{
-		if (m_object -> Exists())
-			m_object -> Get() -> message(MCM_movie_touched);
+		if (m_object.IsValid())
+			m_object->message(MCM_movie_touched);
 	}
 	
 private:
-	MCObjectHandle *m_object;
+	MCObjectHandle m_object;
 };
 
 #endif // MBLEVENTS_H

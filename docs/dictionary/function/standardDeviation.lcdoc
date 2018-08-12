@@ -1,18 +1,19 @@
 Name: standardDeviation
 
+Synonyms: samplestandarddeviation, sampstddev, stddev
+
 Type: function
 
 Syntax: standardDeviation(<numbersList>)
 
-Summary: <return|Returns> the sample standard deviation of a list of numbers.
-
-Synonyms: sampleStandardDeviation,sampStdDev,stdDev
+Summary:
+<return|Returns> the sample standard deviation of a list of numbers.
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 standardDeviation(8,10,12) -- returns 2
@@ -21,15 +22,24 @@ Example:
 put standardDeviation(studentScores) into field "Sample Standard Deviation"
 
 Parameters:
-numbersList: A comma-separated list of numbers, or an expression that evaluates to such a list, or an array containing only numbers.
+numbersList:
+A comma-separated list of numbers, or an expression that evaluates to
+such a list, or an array containing only numbers.
 
-Returns: The <standardDeviation> function <return|returns> a number.
+Returns:
+The <standardDeviation> function <return|returns> a number.
 
 Description:
-Use the <standardDeviation> <function> to analyze the amount of spread in a list of numbers.
+Use the <standardDeviation> <function> to analyze the amount of spread
+in a list of numbers.
 
-The sample standard deviation is a measure of how widely distributed the numbers in the <numbersList> are.
+The sample standard deviation is a measure of how widely distributed the
+numbers in the <numbersList> are.
 
-References: function (control_st), populationVariance (function), averageDeviation (function), variance (function), average (function), median (function), populationStandardDeviation (function), sum (function), standardDeviation (function), return (glossary)
+References: function (control structure), populationVariance (function),
+averageDeviation (function), variance (function), average (function),
+median (function), populationStandardDeviation (function), sum (function),
+standardDeviation (function), return (glossary)
 
 Tags: math
+

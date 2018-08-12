@@ -4,15 +4,17 @@ Type: property
 
 Syntax: set the alwaysBuffer of {<stack> | <image> | <player>} to {true | false}
 
-Summary: Determines whether the contents of windows, <player|players>, and <image|images> are <buffer|buffered> offscreen.
+Summary:
+Determines whether the contents of windows, <player|players>, and
+<image|images> are <buffer|buffered> offscreen.
 
 Associations: image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, linux, ios, android, windows
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the alwaysBuffer of this stack to true
@@ -23,24 +25,61 @@ set the alwaysBuffer of image "Smile" to false
 Example:
 set the alwaysBuffer of the templatePlayer to true
 
-Value (bool): The <alwaysBuffer> of an <object> is true or false. By <default>, the <alwaysBuffer> <property> of newly created <image|images>, <player|players>, and <stacks> is set to false.
+Value (bool):
+The <alwaysBuffer> of an <object(glossary)> is true or false. By
+<default>, the <alwaysBuffer> <property> of newly created
+<image|images>, <player|players>, and <stack|stacks> is set to false.
 
 Description:
-Use the <alwaysBuffer> <property> to eliminate unwanted flicker when <object|objects> are being <redraw|redrawn>. This <property> is especially useful for eliminating flicker when using animation in a <stack>.
+Use the <alwaysBuffer> <property> to eliminate unwanted flicker when
+<object(glossary)|objects> are being <redraw|redrawn>. This <property>
+is especially useful for eliminating flicker when using animation in a
+<stack>. 
 
-Prior to 2.7, setting the <alwaysBuffer> of a stack to true would cause the stack's display to be double-buffered, eliminating flicker. However, 2.7 introduced a new rendering model which double-buffers a stacks contents as and when required. As a result, setting the <alwaysBuffer> of a stack no longer has any effect.
+Prior to 2.7, setting the <alwaysBuffer> of a <stack> to true would
+cause the <stack|stack's> display to be double-buffered, eliminating
+flicker. However, 2.7 introduced a new rendering model which
+double-buffers a <stack|stack's> contents as and when required. As a
+result, setting the <alwaysBuffer> of a <stack> no longer has any
+effect. 
 
-Setting an image's <alwaysBuffer> <property> to true forces the <image(keyword)> to <uncompress> immediately, even if the <image(keyword)> is hidden. This speeds up using the <show> command to display an <image(keyword)>. Setting the <alwaysBuffer> <property> of all <image(object)|images> to true is equivalent to setting the <global>  <bufferHiddenImages> <property> to true.
+Setting an <image|image's> <alwaysBuffer> <property> to true forces the
+<image> to <uncompress> immediately, even if the <image> is hidden. This
+speeds up using the <show> <command> to display an <image>. Setting the
+<alwaysBuffer> <property> of all <image|images> to true is equivalent to
+setting the <global> <bufferHiddenImages> <property> to true.
 
-Setting a player's <alwaysBuffer> <property> to true forces the movie to be drawn in an offscreen <buffer>. This prevents the movie from flickering when other <object|objects> (such as <button|buttons>) are drawn on top of it. It also allows the current frame to be seen when the <card> is printed.
+Setting a <player|player's> <alwaysBuffer> <property> to true forces the
+movie to be drawn in an offscreen <buffer>. This prevents the movie from
+flickering when other <object|objects> (such as <button|buttons>) are
+drawn on top of it. It also allows the current frame to be seen when the
+<card> is printed.
 
-If a player's movie contains only sound with no visual track, the setting of its <alwaysBuffer> <property> has no effect.
-If a player's <alwaysBuffer> is false, the movie it contains is drawn in front of all <object|objects>. The <visual effect> <command> does not affect the screen area inside the <rectangle> of a <player(keyword)> whose <alwaysBuffer> is false. If a player's <alwaysBuffer> is true, it cannot be controlled with the <controller bar> and must be operated by <script> <control>.
+If a <player|player's> movie contains only sound with no visual track,
+the setting of its <alwaysBuffer> <property> has no effect. If a
+<player|player's> <alwaysBuffer> is false, the movie it contains is
+drawn in front of all <object(glossary)|objects>. The <visual effect>
+<command> does not affect the screen area inside the <rectangle> of a
+<player> whose <alwaysBuffer> is false. If a <player|player's>
+<alwaysBuffer> is true, it cannot be controlled with the <controller
+bar> and must be operated by <script> control.
 
->*Note:* Setting a <player(object)|player's> <alwaysBuffer> to true always increases memory usage, and may make movie playing more jerky.
+>*Note:* Setting a <player|player's> <alwaysBuffer> to true always
+> increases memory usage, and may make movie playing more jerky.
 
->*Note:* The <alwaysBuffer> property has no effect on Windows if the global <dontUseQT property> is set to true.
+Changes:
+This property was removed from the Windows platform in version 8.1.0, 
+due to the change of player implementation from QuickTime to DirectShow.
 
-References: screenSharedMemory (property), dontUseQT property (property), script (property), constantMask (property), bufferHiddenImages (property), card (keyword), player (keyword), image (keyword), default (keyword), rectangle (keyword), control (keyword), visual effect (command), show (command), lock screen (command), global (command), heapSpace (function), stacks (function), hasMemory (function), button (object), image (object), player (object), object (object), stack (object), property (glossary), uncompress (glossary), controller bar (glossary), buffer (glossary), command (glossary), redraw (glossary)
+References: visual effect (command), show (command),
+lock screen (command), global (command), heapSpace (function),
+stacks (function), hasMemory (function), default (glossary),
+rectangle (glossary), object (glossary), property (glossary),
+uncompress (glossary), controller bar (glossary), buffer (glossary),
+command (glossary), redraw (glossary), control (keyword), card (object),
+button (object), image (object), player (object), stack (object),
+screenSharedMemory (property), dontUseQT (property), script (property),
+constantMask (property), bufferHiddenImages (property)
 
 Tags: multimedia
+

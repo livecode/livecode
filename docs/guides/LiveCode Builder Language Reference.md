@@ -5,41 +5,43 @@ group: reference
 # LiveCode Builder Language Reference
 
 ## Introduction
-LiveCode Builder is a variant of the current LiveCode scripting language 
-(LiveCode Script) which has been designed for 'systems' building. It is 
-statically compiled with optional static typing and direct foreign code 
+LiveCode Builder is a variant of the current LiveCode scripting language
+(LiveCode Script) which has been designed for 'systems' building. It is
+statically compiled with optional static typing and direct foreign code
 interconnect (allowing easy access to APIs written in other languages).
 
-Unlike most languages, LiveCode Builder has been designed around the 
-idea of extensible syntax. Indeed, the core language is very small - 
-comprising declarations and control structures - with the majority of 
+Unlike most languages, LiveCode Builder has been designed around the
+idea of extensible syntax. Indeed, the core language is very small -
+comprising declarations and control structures - with the majority of
 the language syntax and functionality being defined in modules.
 
-> **Note:** It is an eventual aim that control structures will also be 
+> **Note:** It is an eventual aim that control structures will also be
 > extensible, however this is not the case in the current incarnation).
 
-The syntax will be familiar to anyone familiar with LiveCode Script, 
-however LiveCode Builder is a great deal more strict - the reason being 
-it is intended that it will eventually be compilable to machine code 
-with the performance and efficiency you'd expect from any 'traditional' 
-programming language. Indeed, over time we hope to move the majority of 
-implementation of the whole LiveCode system over to being written in 
+The syntax will be familiar to anyone familiar with LiveCode Script,
+however LiveCode Builder is a great deal more strict - the reason being
+it is intended that it will eventually be compilable to machine code
+with the performance and efficiency you'd expect from any 'traditional'
+programming language. Indeed, over time we hope to move the majority of
+implementation of the whole LiveCode system over to being written in
 LiveCode Builder.
 
-> **Note:** One of the principal differences is that type conversion is 
-> strict - there is no automatic conversion between different types such 
-> as between number and string. Such conversion must be explicitly 
-> specified using syntax (currently this is using things like 
+> **Note:** One of the principal differences is that type conversion is
+> strict - there is no automatic conversion between different types such
+> as between number and string. Such conversion must be explicitly
+> specified using syntax (currently this is using things like
 > *... parsed as number* and *... formatted as string*.
 
 ## Tokens
 
-The structure of tokens is similar to LiveCode Script, but again a 
-little stricter. The regular expressions describing the tokens are as 
+The structure of tokens is similar to LiveCode Script, but again a
+little stricter. The regular expressions describing the tokens are as
 follows:
 
  - **Identifier**: [A-Za-z_][A-Za-z0-9_.]*
  - **Integer**: [0-9]+
+ - **Binary Integer**: 0b[01]+
+ - **Hexadecimal Integer**: 0x[0-9a-fA-F]+
  - **Real**: [0-9]+"."[0-9]+([eE][-+]?[0-9]+)?
  - **String**: "[^\n\r"]*"
  - **Separator**: Any whitespace containing at least one newline
@@ -53,27 +55,53 @@ Strings use backslash ('\') as an escape - the following are understood:
  - **\u{X...X}: character with unicode codepoint U+X...X - any number of nibbles may be specified, but any values greater than 0x10FFFF will be replaced by U+FFFD.
  - **\\**: backslash '\'
 
-> **Note:** The presence of '.' in identifiers are used as a namespace 
+> **Note:** The presence of '.' in identifiers are used as a namespace
 > scope delimiter.
 
 > **Note:** Source files are presumed to be in UTF-8 encoding.
 
+## Comments
+
+LiveCode Builder supports single line comments, which begin with `//`
+or `--` and extend to the end of the line.  There are also block
+comments, which begin with `/*` and end with `*/`, and can span
+multiple lines.
+
+- **Single-line comment**: (--|//)[^\n\r]*
+- **Block comment**: /\*([^*](\*[^/])?)*\*/
+
+> **Note:** A block comment that spans multiple lines terminates the
+> line of code that it begins on.
+
+## Line continuation
+
+A LiveCode builder statement or declaration can be continued onto
+multiple lines of code by placing the line continuation character `\`
+at the end each line.
+
+- **Line continuation**: \\[\t ]*(\n|\r\n|\r)
+
+> **Note:** Tab and space characters are allowed after the `\` and before the
+> newline, but no other characters.
+
+> **Note:** A line continuation cannot occur within a comment.
+
 ### Case-Sensitivity
 
-At the moment, due to the nature of the parser being used, keywords are 
-all case-sensitive and reserved. The result of this is that, using all 
-lower-case identifiers for names of definitions should be avoided. 
-However, identifiers *are* case-insensitive - so a variable with name 
+At the moment, due to the nature of the parser being used, keywords are
+all case-sensitive and reserved. The result of this is that, using all
+lower-case identifiers for names of definitions should be avoided.
+However, identifiers *are* case-insensitive - so a variable with name
 pFoo can also be referenced as PFOO, PfOO, pfoO etc.
 
-> **Aside:** The current parser and syntax rules for LiveCode Builder 
-> are constructed at build-time of the LiveCode Builder compiler and 
-> uses *bison* (a standard parser generator tool) to build the parser. 
-> Unfortunately, this means that any keywords have to be reserved as the 
-> parser cannot distinguish the use of an identifier in context (whether 
+> **Aside:** The current parser and syntax rules for LiveCode Builder
+> are constructed at build-time of the LiveCode Builder compiler and
+> uses *bison* (a standard parser generator tool) to build the parser.
+> Unfortunately, this means that any keywords have to be reserved as the
+> parser cannot distinguish the use of an identifier in context (whether
 > it is a keyword at a particular point, or a name of a definition).
 
-It is highly recommended that the following naming conventions be used 
+It is highly recommended that the following naming conventions be used
 for identifiers:
 
  - **tVar** - for local variables
@@ -85,20 +113,20 @@ for identifiers:
  - **kConstant** - for constants
  - Use identifiers starting with an uppercase letter for handler and type names.
 
-By following this convention, there will not be any ambiguity between 
+By following this convention, there will not be any ambiguity between
 identifiers and keywords. (All keywords are all lower-case).
 
-> **Note:** When we have a better parsing technology we will be 
-> evaluating whether to make keywords case-insensitive as well. At the 
-> very least, at that point, we expect to be able to make all keywords 
+> **Note:** When we have a better parsing technology we will be
+> evaluating whether to make keywords case-insensitive as well. At the
+> very least, at that point, we expect to be able to make all keywords
 > unreserved.
 
 ## Typing
 
-LiveCode Builder is a typed language, although typing is completely 
-optional in most places (the only exception being in foreign handler 
-declarations). If a type annotation is not specified it is simply taken 
-to be the most general type *optional any* (meaning any value, including 
+LiveCode Builder is a typed language, although typing is completely
+optional in most places (the only exception being in foreign handler
+declarations). If a type annotation is not specified it is simply taken
+to be the most general type *optional any* (meaning any value, including
 nothing).
 
 The range of core types is relatively small, comprising the following:
@@ -210,7 +238,7 @@ definitions can only be used within the module.
 
 > **Note**: Properties and events are, by their nature, always public as
 > they define things which only make sense to access from outside.
-> 
+>
 > **Note**: When writing a library module, all public handlers are added
 > to bottom of the message path in LiveCode Script.
 
@@ -221,9 +249,6 @@ definitions can only be used within the module.
 
 A constant definition defines a named constant. The value can be any
 expression which depends on only on constant values to evaluate.
-
-> **Note:** Constants are not currently implemented, although the syntax
-> is recognised.
 
 ### Types
 
@@ -273,7 +298,7 @@ The remaining types are as follows:
  - **Pointer**: a low-level pointer (this is used with foreign code interconnect and shouldn't be generally used).
 
 > **Note:** *Integer* and *Real* are currently the same as *Number*.
- 
+
 > **Note:** In a subsequent update you will be able to specify lists and
 > arrays of fixed types. For example, *List of String*.
 
@@ -299,6 +324,19 @@ parameter in a foreign handler definition.
 > creation of a function pointer. The lifetime of the function pointer
 > is the same as the widget or module which created it.
 
+### Record Types
+
+    RecordTypeDefinition
+      : 'record' 'type' <Name: Identifier> SEPARATOR
+        { RecordTypeFieldDefinition }
+        'end' 'record'
+
+    RecordTypeFieldDefinition
+      : <Name: Identifier> [ 'as' <TypeOf: Type> ]
+
+A record type definition defines a type that consists of 0 or more
+named fields, each with its own optional type.
+
 ### Variables
 
     VariableDefinition
@@ -313,10 +351,28 @@ The type specification for the variable is optional, if it is not
 specified the type of the variable is *optional any* meaning that it can
 hold any value, including being nothing.
 
+Variables whose type has a default value are initialized to that value at the
+point of definition. The default values for the standard types are:
+
+- **optional**: nothing
+- **Boolean**: false
+- **Integer**: 0
+- **Real**: 0.0
+- **Number**: 0
+- **String**: the empty string
+- **Data**: the empty data
+- **Array**: the empty array
+- **List**: the empty list
+- **nothing**: nothing
+
+Variables whose type do not have a default value will remain unassigned and it
+is a checked runtime error to fetch from such variables until they are assigned
+a value.
+
 ### Handlers
 
     HandlerDefinition
-      : 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ] SEPARATOR
+      : [ 'unsafe' ] 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ] SEPARATOR
           { Statement }
         'end' 'handler'
 
@@ -350,8 +406,10 @@ return.
 
 > **Note:** It is a checked runtime error to return from a handler
 > without ensuring all non-optional 'out' parameters have been assigned
-> a value.
-> 
+> a value. However, this will only occur for typed variables whose type does
+> not have a default value as those which do will be default initialized at the
+> start of the handler.
+
 An inout parameter means that the value from the caller is copied to the
 parameter variable in the callee handler on entry, and copied back out
 again on exit.
@@ -363,36 +421,85 @@ to be *optional any* meaning it can be of any type.
 > inout or out parameters. It is a checked compile-time error to pass a
 > non-assignable expression to such a parameter.
 
+If 'unsafe' is specified for the handler, then the handler itself is considered
+to be unsafe, and may only be called from other unsafe handlers or unsafe
+statement blocks.
+
 ### Foreign Handlers
 
     ForeignHandlerDefinition
       : 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ) ] 'binds' 'to' <Binding: String>
 
-    ForeignType
-      : Type
-      | 'CBool'
-      | 'CInt'
-      | 'CUInt'
-      | 'CFloat'
-      | 'CDouble'
-
 A foreign handler definition binds an identifier to a handler defined in
 foreign code.
 
-Foreign handler definitions can contain more types in their parameters
-than elsewhere - those specified in the ForeignType clause. These allow
-low-level types to be specified making it easier to interoperate.
+The last parameter in a foreign handler declaration may be '...' to indicate
+that the handler is variadic. This allows binding to C functions such as
+sprintf.
 
-Foreign types map to high-level types as follows:
+Note: No bridging of types will occur when passing a parameter in the non-fixed
+section of a variadic argument list. You must ensure the arguments you pass there
+are of the appropriate foreign type (e.g. CInt, CDouble).
 
- - bool maps to boolean 
- - int and uint map to integer (number) 
- - float and double map to real (number)
+There are a number of types defined in the foreign, java and objc modules which
+map to the appropriate foreign type when used in foreign handler signatures.
 
-This mapping means that a foreign handler with a bool parameter say,
-will accept a boolean from LiveCode Builder code when called.
+There are the standard machine types (defined in the foreign module):
 
-At present, only C binding is allowed and follow these rules:
+ - Bool maps to an 8-bit boolean
+ - Int8/SInt8 and UInt8 map to 8-bit integers
+ - Int16/SInt16 and UInt16 map to 16-bit integers
+ - Int32/SInt32 and UInt32 map to 32-bit integers
+ - Int64/SInt64 and UInt64 map to 64-bit integers
+ - IntSize/SIntSize and UIntSize map to the integer size needed to hold a memory size
+ - IntPtr/SIntPtr and UIntPtr map to the integer size needed to hold a pointer
+ - NaturalSInt and NaturalUInt map to 32-bit integers on 32-bit processors and
+   64-bit integers on 64-bit processors
+ - NaturalFloat maps to the 32-bit float type on 32-bit processors and the 64-bit
+   float (double) type on 64-bit processors
+
+There are the standard C primitive types (defined in the foreign module)
+
+ - CBool maps to 'bool'
+ - CChar, CSChar and CUChar map to 'char', 'signed char' and 'unsigned char'
+ - CShort/CSShort and CUShort map to 'signed short' and 'unsigned short'
+ - CInt/CSInt and CUInt map to 'signed int' and 'unsigned int'
+ - CLong/CSLong and CULong map to 'signed long' and 'unsigned long'
+ - CLongLong/CSLongLong and CULongLong map to 'signed long long' and 'unsigned long long'
+ - CFloat maps to 'float'
+ - CDouble maps to 'double'
+
+There are types specific to Obj-C types (defined in the objc module):
+
+  - ObjcObject wraps an obj-c 'id', i.e. a pointer to an objective-c object
+  - ObjcId maps to 'id'
+  - ObjcRetainedId maps to 'id', and should be used where a foreign handler
+    argument expects a +1 reference count, or where a foreign handler returns
+    an id with a +1 reference count.
+
+Note: When an ObjcId is converted to ObjcObject, the id is retained;
+when an ObjcObject converted to an ObjcId, the id is not retained. Conversely,
+when an ObjcRetainedId is converted to an ObjcObject, the object takes the
++1 reference count (so does not retain); when an ObjcObject is put into an
+ObjcRetainedId, a +1 reference count is taken (so does retain).
+
+There are aliases for the Java primitive types (defined in the java module)
+
+ - JBoolean maps to Bool
+ - JByte maps to Int8
+ - JShort maps to Int16
+ - JInt maps to Int32
+ - JLong maps to Int64
+ - JFloat maps to Float32
+ - JDouble maps to Float64
+
+All the primitive types above will implicitly bridge between corresponding
+high level types:
+
+  - CBool and Bool bridge to and from Boolean
+  - All integer and real types bridge to and from Number
+
+Other LCB types pass as follows into foreign handlers:
 
  - any type passes an MCValueRef
  - nothing type passes as the null pointer
@@ -404,12 +511,11 @@ At present, only C binding is allowed and follow these rules:
  - Data type passes an MCDataRef
  - Array type passes an MCArrayRef
  - List type passes an MCProperListRef
- - Pointer type passes a void *
- - CBool type passes a bool (i.e. an int - pre-C99).
- - CInt type passes an int
- - CUInt type passes an unsigned int
- - CFloat type passes a float
- - CDouble type passes a double
+
+Finally, the Pointer type passes as void * to foreign handlers. If you want
+a pointer which can be null, then use optional Pointer - LCB will throw an
+error if there is an attempt to map from the null pointer value to a slot
+with a non-optional Pointer type.
 
 Modes map as follows:
 
@@ -424,11 +530,21 @@ If an out parameter is of a Ref type, then it must be a copy (on exit)
 If an inout parameter is of a Ref type, then its existing value must be
 released, and replaced by a copy (on exit).
 
-The binding string for foreign handlers has the following form:
+The binding string for foreign handlers is language-specific and currently
+supported forms are explained in the following sections.
 
-    [lang:][library>][class.]function[!calling]
+Foreign handlers' bound symbols are resolved on first use and an error
+is thrown if the symbol cannot be found.
 
-Here *lang* specifies the language (must be 'c' at the moment)
+Foreign handlers are always considered unsafe, and thus may only be called
+from unsafe context - i.e. from within an unsafe handler, or unsafe statement
+block.
+
+#### The C binding string
+
+The C binding string has the following form:
+
+    "c:[library>][class.]function[!calling][?thread]"
 
 Here *library* specifies the name of the library to bind to (if no
 library is specified a symbol from the engine executable is assumed).
@@ -441,27 +557,151 @@ by listing it in a DEF module).
 
 Here *calling* specifies the calling convention which can be one of:
 
- - default
- - stdcall
- - thiscall
- - fastcall
- - cdecl
- - pascal
- - register
+ - `default`
+ - `stdcall`
+ - `thiscall`
+ - `fastcall`
+ - `cdecl`
+ - `pascal`
+ - `register`
 
-All but 'default' are Win32-only, and on Win32 'default' maps to
-'cdecl'. If a Win32-only calling convention is specified on a
-non-Windows platform then it is taken to be 'default'.
+All but `default` are Win32-only, and on Win32 `default` maps to
+`cdecl`. If a Win32-only calling convention is specified on a
+non-Windows platform then it is taken to be `default`.
 
-Foreign handler's bound symbols are resolved on first use and an error
-is thrown if the symbol cannot be found.
+Here *thread* is either empty or `ui`. The `ui` form is used to determine
+whether the method should be run on the UI thread (currently only applicable
+on Android and iOS).
 
-> **Note:** The current foreign handler definition is an initial
-> version, mainly existing to allow binding to implementation of the
-> syntax present in the standard language modules. It will be expanded
-> and improved in a subsequent version to make it very easy to import
-> and use functions (and types) from other languages including
-> Objective-C (on Mac and iOS) and Java (on Android).
+#### The Obj-C binding string
+
+The Obj-C binding string has the following form:
+
+    "objc:[class.](+|-)method[?thread]"
+
+Here *class* specifies the name of the class containing the method to
+bind to. If the method is an instance method, the class can be omitted,
+creating a 'dynamic binding', i.e. just resolving the selector.
+
+Here *method* specifies the method name to bind to in standard Obj-C selector
+form, e.g. addTarget:action:forControlEvents:. If the method is a class method
+then prefix it with '+', if it is an instance method then prefix it with '-'.
+
+Here *thread* is either empty or `ui`. The `ui` form is used to determine
+whether the method should be run on the UI thread (currently only applicable
+on Android and iOS).
+
+#### The Java binding string
+
+The Java binding string has the following form:
+
+    "java:[className>][functionType.]function[!calling][?thread]"
+
+Here *className* is the qualified name of the Java class to bind to.
+
+Here *functionType* is either empty, or `get` or `set`, which are 
+currently used for getting and setting member fields of a Java class.
+
+For example
+
+	"java:java.util.Calendar>set.time(J)"
+	"java:java.util.Calendar>get.time()J"
+
+are binding strings for setting and getting the `time` field of a 
+Calendar object.
+
+Here *function* specifies the name of the method or field to bind to. The
+function `new` may be used to call a class constructor. *function* also
+includes the specification of function signature, according to the 
+[standard rules for forming these](http://journals.ecs.soton.ac.uk/java/tutorial/native1.1/implementing/method.html) 
+when calling the JNI.
+
+The function `interface` may be used on Android to create an interface 
+proxy - that is an instance of a generic Proxy class for a given 
+interface. This effectively allows LCB handlers to be registered as the 
+targets for java interface callbacks, such as event listeners.
+
+The foreign handler binding to such a function takes a value that should 
+either be a `Handler` or an `Array` - if it is a `Handler`, the specified 
+listener should only have one available callback. If the listener has 
+multiple callbacks, an array can be used to assign handlers to each. Each 
+key in the array must match the name of a callback in the listener. The 
+specified handlers must match the callback's parameters and return type, 
+using JObject where primitive type parameters are used.
+
+Overloaded methods in the interface are not currently supported.
+
+For example:
+
+	handler type ClickCallback(in pView as JObject) returns nothing
+
+	foreign handler _JNI_OnClickListener(in pHandler as ClickCallback) returns JObject binds to "java:android.view.View$OnClickListener>interface()"
+
+	foreign handler _JNI_SetOnClickListener(in pButton as JObject, in pListener as JObject) returns nothing binds to "java:android.view.View>setOnClickListener(Landroid/view/View$OnClickListener;)V"	
+	
+	public handler ButtonClicked(in pView as JObject) returns nothing
+		post "buttonClicked"
+		MCEngineRunloopBreakWait()
+	end handler
+	
+	public handler SetOnClickListenerCallback(in pButton as JObject)
+		unsafe
+			variable tListener as JObject
+			put _JNI_OnClickListener(ButtonClicked) into tListener
+			_JNI_SetOnClickListener(pButton, tListener)
+		end unsafe
+	end handler
+	
+or
+
+	handler type MouseEventCallback(in pMouseEvent as JObject) returns nothing
+
+	foreign handler _JNI_MouseListener(in pCallbacks as Array) returns JObject binds to "java:java.awt.event.MouseListener>interface()"
+
+	foreign handler _JNI_SetMouseListener(in pJButton as JObject, in pListener as JObject) returns nothing binds to "java:java.awt.Component>addMouseListener(Ljava/awt/event/MouseListener;)V"	
+	
+	public handler MouseEntered(in pEvent as JObject) returns nothing
+		post "mouseEnter"
+		MCEngineRunloopBreakWait()
+	end handler
+	
+	public handler MouseExited(in pEvent as JObject)
+		-- do something on mouse entter
+	end handler
+	
+	public handler SetMouseListenerCallbacks(in pJButton as JObject)
+		variable tArray as Array
+		put MouseEntered into tArray["mouseEntered"]
+		put MouseExited into tArray["mouseExited"]
+		unsafe
+			variable tListener as JObject
+			put _JNI_MouseListener(tArray) into tListener
+			_JNI_SetMouseListener(pJButton, tListener)
+		end unsafe
+	end handler
+
+>*Important:* On Android, interface callbacks are *always* run on the
+> engine thread. This means JNI local references from other threads
+> (in particular the UI thread) are unavailable. Therefore it is not 
+> advised to do anything using the JNI in interface callbacks. 
+
+Here *calling* specifies the calling convention which can be one of:
+
+ - `instance`
+ - `static`
+ - `nonvirtual`
+
+Instance and nonvirtual calling conventions require instances of the given
+Java class, so the foreign handler declaration will always require a Java
+object parameter.
+
+Here, *thread* is either empty or `ui`. The `ui` form is used to determine
+whether the method should be run on the UI thread (currently only applicable
+on Android and iOS).
+
+> **Warning:** At the moment it is not advised to use callbacks that may be
+> executed on arbitrary threads, as this is likely to cause your application
+> to crash.
 
 ### Properties
 
@@ -508,6 +748,8 @@ environment.
       | SetStatement
       | GetStatement
       | CallStatement
+      | BytecodeStatement
+      | UnsafeStatement
 
 There are a number of built-in statements which define control flow,
 variables, and basic variable transfer. The remaining syntax for
@@ -519,20 +761,16 @@ statement is defined in auxiliary modules.
       : 'variable' <Name: Identifier> [ 'as' <TypeOf: Type> ]
 
 A variable statement defines a handler-scope variable. Such variables
-can be used after the variable statement, but not before.
+can be used after the variable statement and up to the end of the current statement
+block, but not before.
 
-> **Note:** Variables are currently not block-scoped, they are defined
-> from the point of declaration to the end of the handler - this might
-> change in a subsequent revision.
- 
-Variables are initially undefined and thus cannot be fetched without a
-runtime error occurring until a value is placed into them. If a variable
-has been annotated with an optional type, its initial value will be
-nothing.
+Variables whose type have a default value are initialized with that value at
+the point of definition in the handler. See the main Variables section for the
+defaults of the standard types.
 
-> **Note:** It is a checked runtime error to attempt to use a
-> non-optionally typed variable before it has a value.
- 
+> **Note:** It is a checked runtime error to attempt to use a variable whose
+> type has no default before it is assigned a value.
+
 The type specification for the variable is optional, if it is not
 specified the type of the variable is *optional any* meaning that it can
 hold any value, including being nothing.
@@ -550,6 +788,9 @@ hold any value, including being nothing.
 
 The if statement enables conditional execution based on the result of an
 expression which evaluates to a boolean.
+
+Each block of code in an if/else if/else statement defines a unique scope for
+handler-local variable definitions.
 
 > **Note:** It is a checked runtime error to use an expression which
 > does not evaluate to a boolean in any condition expression.
@@ -574,6 +815,9 @@ expression which evaluates to a boolean.
 The repeat statements allow iterative execute of a sequence of
 statements.
 
+The block of code present in a repeat statement defines a unique scope for
+handler-local variable definitions.
+
 The **repeat forever** form repeats the body continually. To exit the
 loop, either an error must be thrown, or **exit repeat** must be
 executed.
@@ -583,7 +827,7 @@ evaluates to a negative integer, it is taken to be zero.
 
 > **Note:** It is a checked runtime error to use an expression not
 > evaluating to a number as the Count.
- 
+
 The **repeat while** form repeats the body until the Condition
 expression evaluates to false.
 
@@ -595,7 +839,7 @@ expression evaluates to true.
 
 > **Note:** It is a checked runtime error to use an expression not
 > evaluating to a boolean as the Condition.
- 
+
 The **repeat with** form repeats the body until the Counter variable
 reaches or crosses (depending on iteration direction) the value of the
 Finish expression. The counter variable is adjusted by the value of the
@@ -606,7 +850,7 @@ statement.
 
 > **Note:** It is a checked runtime error to use expressions not
 > evaluating to a number as Start, Finish or Step.
- 
+
 The **repeat for each** form evaluates the Container expression, and
 then iterates through it in a custom manner depending on the Iterator
 syntax. For example:
@@ -706,6 +950,56 @@ result** expression.
 > **Note:** All handlers return a value, even if it is nothing. This
 > means that calling a handler will always change **the result**.
 
+### Bytecode Statements
+
+    BytecodeStatement
+      : 'bytecode' SEPARATOR
+            { BytecodeOperation }
+        'end'
+
+    BytecodeOperation
+      : <Label: Identifier> ':'
+      | 'register' <Name: Identifier> [ 'as' <Type: Type> ]
+      | <Opcode: Identifier> { BytecodeArgument , ',' }
+
+    BytecodeArgument
+      : ConstantValueExpression
+      | Identifier
+
+The bytecode statement allows bytecode to be written directly for the LiveCode
+Builder Virtual Machine.
+
+Bytecode operation arguments can either be a constant expression, the name of a
+definition in current scope, the name of a register, or the name of a label in
+the current bytecode block. The exact opcodes and allowed arguments are defined
+in the LiveCode Builder Bytecode Reference.
+
+Labels are local to the current bytecode block, and can be used as the target
+of one of the jump instructions.
+
+Register definitions define a named register which is local to the current
+bytecode block. Registers are the same as handler-local variables except
+that they do not undergo default initialization.
+
+Bytecode statements are considered to be unsafe and can only appear inside
+unsafe handlers or unsafe statement blocks.
+
+> **Note:** Bytecode blocks are not intended for general use and the actual
+> available operations are subject to change.
+
+### Unsafe Statements
+
+    UnsafeStatement
+      : 'unsafe' SEPARATOR
+            { Statement }
+        'end' 'unsafe'
+
+The unsafe statement allows a block of unsafe code to be written in a safe
+context.
+
+In particular, calls to unsafe handlers (including all foreign handlers) and
+bytecode blocks are allowed in unsafe statement blocks but nowhere else.
+
 ## Expressions
 
     Expression
@@ -768,7 +1062,8 @@ Result expressions are not assignable.
       : '[' [ <Elements: ExpressionList> ] ']'
 
 A list expression evaluates all the elements in the expression list from
-left to right and constructs a list value with them as elements.
+left to right and constructs a list value with them as elements. Each 
+expression is converted to `optional any` when constructing the list.
 
 The elements list is optional, so the empty list can be specified as
 *[]*.
@@ -786,7 +1081,8 @@ List expressions are not assignable.
 
 An array expression evaluates all of the key and value expressions
 from left to right, and constructs an **Array** value as appropriate.
-Each key expression must evaluate to a **String**.
+Each key expression must evaluate to a **String**. Each value expression 
+is converted to `optional any` when constructing the array.
 
 The contents are optional, so the empty array can be written as `{}`.
 
@@ -806,3 +1102,144 @@ available as **the result**.
 > **Note:** Handlers which return no value (i.e. have nothing as their
 > result type) can still be used in call expressions. In this case the
 > value of the call is **nothing**.
+
+## Namespaces
+
+Identifiers declared in a module are placed in a scope named using the
+module name. This allows disambiguation between an identifier declared
+in a module and an identical one declared in any of its imports, by
+using a fully qualified name.
+
+For example:
+
+	module com.livecode.module.importee
+
+	public constant MyName is "Importee"
+	public handler GetMyName() returns String
+		return MyName
+	end handler
+
+	public type MyType is Number
+
+	end module
+
+	module com.livecode.module.usesimport
+
+	use com.livecode.module.importee
+
+	public constant MyName is "Uses Import"
+	public handler GetMyName() returns String
+		return MyName
+	end handler
+	public type MyType is String
+
+	handler TestImports()
+		variable tVar as String
+		put MyName into tVar
+		-- tVar contains "Uses Import"
+
+		put com.livecode.module.importee.MyName into tVar
+		-- tVar contains "Importee"
+
+		put com.livecode.module.usesimport.MyName into tVar
+		-- tVar contains "Uses Import"
+
+		put com.livecode.module.importee.GetMyName() into tVar
+		-- tVar contains "Importee"
+
+		variable tVarMyType as MyType
+		put tVar into tVar1 -- valid
+
+		variable tVarImportedType as com.livecode.module.importee.MyType
+		put tVar into tVarImportedType -- compile error
+	end handler
+
+	end module
+
+## Experimental Features
+
+**Warning**: This section describes current language features and syntax
+that are considered experimental and unstable.  They are likely to change
+or go away without warning.
+
+### Safe Foreign Handlers
+
+    SafeForeignHandler
+      : '__safe' 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ) ] 'binds' 'to' <Binding: String>
+
+By default foreign handlers are considered unsafe and thus can only be used in
+unsafe blocks, or unsafe handlers. However, at the moment it is possible for a
+foreign handler to actually be safe if it has been explicitly written to wrap
+a foreign function so it can be easily used from LCB.
+
+Specifically, it is reasonable to consider a foreign handler safe if it
+conforms to the following rules:
+
+ - Parameter types and return type are either ValueRefs, or bridgeable types
+ - Return values of ValueRef type are retained
+ - If the function fails then MCErrorThrow has been used
+ - 'out' mode parameters are only changed if the function succeeds
+ - A return value is only provided if the function succeeds
+
+Examples of foreign handlers which can be considered safe are all the foreign
+handlers which bind to syntax in the LCB standard library.
+
+### Foreign Aggregate Types
+
+C-style aggregates (e.g. structs) can now be accessed from LCB via the new
+aggregate parameterized type. This allows calling foreign functions which has
+arguments taking aggregates by value, or has an aggregate return value.
+
+Aggregate types are foreign types and can be used in C and Obj-C foreign
+handler definitions. They bridge to and from the List type, allowing an
+aggregate's contents to be viewed as a sequence of discrete values.
+
+Aggregate types are defined using a `foreign type` clause and binding string.
+e.g.
+
+    public foreign type NSRect binds to "MCAggregateTypeInfo:qqqq"
+
+The structure of the aggregate is defined by using a sequence of type codes
+after the ':', each type code represents a specific foreign (C) type:
+
+| Char | Type         |
+| ---- | ------------ |
+|  a   | CBool        |
+|  b   | CChar        |
+|  c   | CUChar       |
+|  C   | CSChar       |
+|  d   | CUShort      |
+|  D   | CSShort      |
+|  e   | CUInt        |
+|  E   | CSInt        |
+|  f   | CULong       |
+|  F   | CSLong       |
+|  g   | CULongLong   |
+|  G   | CSLongLong   |
+|  h   | UInt8        |
+|  H   | SInt8        |
+|  i   | UInt16       |
+|  I   | SInt16       |
+|  j   | UInt32       |
+|  J   | SInt32       |
+|  k   | UInt64       |
+|  K   | SInt64       |
+|  l   | UIntPtr      |
+|  L   | SIntPtr      | 
+|  m   | UIntSize     |  
+|  M   | SIntSize     |  
+|  n   | Float        |
+|  N   | Double       |
+|  o   | LCUInt       |
+|  O   | LCSInt       |
+|  p   | NaturalUInt  |
+|  P   | NaturalSInt  |
+|  q   | NaturalFloat |
+|  r   | Pointer      |
+
+When importing an aggregate to a List, each field in the aggregate is also
+bridged, except for Pointer types which are left as Pointer. When exporting
+an aggregate from a List, each element is bridged to the target field type.
+
+*Note*: Any foreign type binding to an aggregate must be public otherwise the
+type will not work correctly.

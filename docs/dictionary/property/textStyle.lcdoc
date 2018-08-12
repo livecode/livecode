@@ -8,15 +8,17 @@ Syntax: set the textStyle of [<chunk> of] <field> to {empty | plain | <stylesLis
 
 Syntax: set the textStyle[<style>] of object to {true | false}
 
-Summary: Specifies the style or styles applied to text in an <object>.
+Summary:
+Specifies the style or styles applied to text in an <object(glossary)>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the textStyle of line 2 of field "Choices" to "italic,underline"
@@ -30,7 +32,10 @@ set the textStyle of button "Off" to "italic,bold"
 Example:
 set the textStyle["bold"] of field "name" to true
 
-Value: The <textStyle> of an <object> or <chunk> is either "plain", empty, "mixed", or one or more of the following, separated by commas:
+Value:
+The <textStyle> of an <object(glossary)> or <chunk> is either "plain",
+empty, "mixed", or one or more of the following, separated by commas:
+
         - bold
         - italic
         - underline
@@ -39,28 +44,50 @@ Value: The <textStyle> of an <object> or <chunk> is either "plain", empty, "mixe
         - threeDbox
         - link (or group)
 
+
 Description:
 Use the <textStyle> <property> to change the appearance of text.
 
-Setting the <textStyle> to "plain" turns off all styles. (Setting the <textStyle> to "plain" plus one or more additional styles may result in anomalous behavior.)
+Setting the <textStyle> to "plain" turns off all styles. (Setting the
+<textStyle> to "plain" plus one or more additional styles may result in
+anomalous behavior.)
 
-Setting the <textStyle> of an <object> to empty allows the <textStyle> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what style is used for the <object>, even if its own <textStyle> is empty. Similarly, use the <effective> <keyword> to find out what style is used for a <chunk> of text, even if the <chunk|chunk's> <textStyle> is empty.
+Setting the <textStyle> of an <object(glossary)> to empty allows the
+<textStyle> of the <object|object's> <owner> to show through. Use the
+<effective> <keyword> to find out what style is used for the
+<object(glossary)>, even if its own <textStyle> is empty. Similarly, use
+the <effective> <keyword> to find out what style is used for a <chunk>
+of text, even if the <chunk|chunk's> <textStyle> is empty.
 
-If you request the <textStyle> of a <chunk> which includes multiple style runs--for example, some bold and some plain text--the <property> reports "mixed".
+If you request the <textStyle> of a <chunk> which includes multiple
+style runs--for example, some bold and some plain text--the <property>
+reports "mixed".
 
-The "link" style can be used only for chunks of a field, not for objects. Setting the <textStyle> of a <chunk> to "link" turns it into a <grouped text|text group>.
+The "link" style can be used only for chunks of a field, not for
+objects. Setting the <textStyle> of a <chunk> to "link" turns it into a
+<grouped text|text group>.
 
 the <textStyle> [&lt;style&gt;]
 
-Here, style can be one of bold, condensed, expanded, italic, oblique, box, threedbox, underline, strikeout, link. For example
+Here, style can be one of bold, condensed, expanded, italic, oblique,
+box, threedbox, underline, strikeout, link. For example
 
 set the <textStyle> ["bold"] of field 1 to true
 
 Changes:
-The "link" style was introduced in version 1.1. In previous versions, the term "group" was used. The term "group" is still available as a partial synonym: setting the <textStyle> of a <chunk> to "group" sets it to "link".
+The "link" style was introduced in version 1.1. In previous versions,
+the term "group" was used. The term "group" is still available as a
+partial synonym: setting the <textStyle> of a <chunk> to "group" sets it
+to "link".
 
-As of version 5.0.2 a new array variant of the <textStyle> property has been added allowing for access to individual textStyles independently from the others by specifying the required style as an array key.
+As of version 5.0.2 a new array variant of the <textStyle> property has
+been added allowing for access to individual textStyles independently
+from the others by specifying the required style as an array key.
 
-References: effective (keyword), box (keyword), italic (keyword), owner (property), textStyle (property), fontStyles (function), object (object), property (glossary), keyword (glossary), grouped text (glossary), chunk (glossary)
+References: fontStyles (function), object (glossary), property (glossary),
+keyword (glossary), grouped text (glossary), chunk (glossary),
+effective (keyword), box (keyword), italic (keyword), owner (property),
+textStyle (property)
 
 Tags: ui
+

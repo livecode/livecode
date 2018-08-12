@@ -24,12 +24,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <float.h>
 
 extern "C" __declspec(noalias) void __cdecl free(void *memory);
 extern "C" __declspec(noalias) void * __cdecl malloc(size_t size);
 extern "C" __declspec(noalias) void * __cdecl realloc(void *memory, size_t size);
 
 extern "C" unsigned long __cdecl strtoul(const char *str, char **endptr, int radix);
+extern "C" long __cdecl strtol(const char *str, char **endptr, int radix);
 extern "C" double __cdecl strtod(const char *str, char **endptr);
 
 extern "C" int __cdecl _vscprintf(const char *format, va_list args);
@@ -49,6 +51,7 @@ extern "C" double __cdecl fmod(double x, double y);
 #include <math.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <float.h>
 
 #endif
 

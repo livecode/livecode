@@ -32,22 +32,22 @@ A comma-delimited list of synonyms for this API entry.
 #### Type (required)
 The type of this API entry. One of the following:
 (API-level)
-	* command
-	* function
-	* property
-	* message
-	* constant
-	* keyword
-	* control structure
-	* operator
-	* statement
-	* expression
+* command
+* function
+* property
+* message
+* constant
+* keyword
+* control structure
+* operator
+* statement
+* expression
 	
 (Glossary-level)
-	* library
-	* widget
-	* glossary
-	* object
+* library
+* widget
+* glossary
+* object
 
 The glossary-level entries have part of their content generated from the API-level entries.
 
@@ -58,14 +58,14 @@ A description of how to use or call this facet of the API. May just be the name 
 An entry may have a number of Syntax elements, if there are variations within the same entry.
 
 The following can be used to specify livecode syntax:
-- [optional]
-- ... (repeated)
-- { variant 1 | variant 2 }
-- <parameterName>
+- `[optional]`
+- `[repeated optional ...]`
+- `{ variant 1 | variant 2 }`
+- `<parameterName>`
 
 For example, the syntax for the first variant of the `split` command:
 
-	split <variable> {by | using | with} <primaryDelimiter> [and <secondaryDelimiter>]
+	split <variableToSplit> {by | using | with} <primaryDelimiter> [and <secondaryDelimiter>]
 	
 describes the following possible usages:
 - `split tVar by comma`
@@ -84,6 +84,8 @@ gives an example of the repetition notation, namely it allows something like
 	answer files with type tType1 or type tType2 or type tType3 or type tType4
 
 >*Note:* For inline docs, the Syntax elements are automatically generated
+
+All parameters described in the parameters section should appear in angle brackets in the syntax.
 
 #### Summary (required)
 A summary of the API entry being documented. The summary should be a single line. Anything more in-depth should be included in the description.
@@ -105,6 +107,7 @@ A comma-delimited list specifying which operating systems the API entry is avail
 * iOS
 * android
 * RPi
+* html5
 
 #### Platforms
 A comma-delimited list specifying which platforms the API entry is available for. One or more of the following:
@@ -115,7 +118,7 @@ A comma-delimited list specifying which platforms the API entry is available for
 * mobile
 
 #### Example
-Example elements should show how API entries are used in context. Each example with be displayed in the documentation viewer as a multiline code block. Where possible, an example should be entirely self contained, so that it is runnable as a block of code without any additions.
+Example elements should show how API entries are used in context. Each example will be displayed in the documentation viewer as a multiline code block. Where possible, an example should be entirely self contained, so that it is runnable as a block of code without any additions.
 
 An API entry can have any number of Example elements. 
 
@@ -164,6 +167,8 @@ The key type and value type are optional. If one of the values is a sub-array, a
 }
 ```
 The indentation is not necessary, but is helpful for readability.
+
+Any parameter specified using `<parameterName>` in the Syntax element should be described in the parameters section.
 
 #### Value and return parameters
 For simple return parameters, i.e. the direct return value of a function, use the Returns element.
@@ -234,7 +239,7 @@ etc.
 ### Inline documentation
 Documentation for LiveCode script and LiveCode extensions can be done in-line. In this case, the Name, Type, Syntax and Associated elements are auto-generated. 
 
-The code-block enclosed in /* */ immediately preceding the handler or syntax definition is used for the other elements of the documentation for that entry. In LiveCode extensions, the types of parameters are also pulled from the associated handler.
+The code-block enclosed in /** */ immediately preceding the handler or syntax definition is used for the other elements of the documentation for that entry. In LiveCode extensions, the types of parameters are also pulled from the associated handler.
 
 ### Separate docs files examples
 
@@ -343,13 +348,13 @@ In general, writing inline docs has fewer requirements since several of the elem
 #### LiveCode Builder syntax example
 
 ```
-/*  
+/**  
 This library consists of the operations on lists included in the standard library of LiveCode Builder.
 */
 
 module com.livecode.list
 
-/*
+/**
 Summary:        Returns the first element of <Target>.
 Target:         An expression which evaluates to a list.
 output:			The first element of <Target>
@@ -386,7 +391,7 @@ end module
 
 #### LiveCode Builder handler example
 ```
-/*
+/**
 Summary: Logs the result of a test to the <xResults> list
 
 Parameters:
@@ -414,7 +419,7 @@ end handler
 ```
 #### LiveCode script handler example
 ```
-/*
+/**
 Summary: Extracts the inline docs from a .lcb file
 
 pFile: The path to the .lcb file to extract docs from

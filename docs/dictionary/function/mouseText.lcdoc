@@ -6,13 +6,15 @@ Syntax: the mouseText
 
 Syntax: mouseText()
 
-Summary: <return|Returns> the <word> or <grouped text|text group> under the <mouse pointer>.
+Summary:
+<return|Returns> the <word> or <grouped text|text group> under the
+<mouse pointer>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the mouseText
@@ -20,19 +22,38 @@ the mouseText
 Example:
 if the style of the mouseText is "group" then showDef the mouseText
 
-Returns: The <mouseText> <function> <return|returns> the text that the mouse is over.
+Returns:
+The <mouseText> <function> <return|returns> the text that the mouse is
+over. 
 
 Description:
-Use the <mouseText> <function> within a <handler> to determine which <word> or <grouped text|text group> the <mouse pointer> is hovering over, in order to take some action based on the click.
+Use the <mouseText> <function> within a <handler> to determine which
+<word> or <grouped text|text group> the <mouse pointer> is hovering
+over, in order to take some action based on the click.
 
-The <mouseText> <function> only <return|returns> <words> in a <field>. If the <mouse pointer> is not over a <field>, the <mouseText> <function> <return|returns> empty.
+The <mouseText> <function> only <return|returns> <words> in a <field>.
+If the <mouse pointer> is not over a <field>, the <mouseText> <function>
+<return|returns> empty.
 
-The return value contains the word the mouse pointer is over. If the textStyle of the text is "link", the <return value> contains the entire <grouped text|text group>.
+The return value contains the word the mouse pointer is over. If the
+textStyle of the text is "link", the <return value> contains the entire
+<grouped text|text group>.
 
-To get the location of the word or text group clicked, use the mouseChunk <function>.
+To get the location of the word or text group clicked, use the
+mouseChunk <function>.
 
->*Important:*  Words are defined a little differently by the <mouseText> <function> than the way they are used in <chunk expression|chunk expressions>. A word, for purposes of the <mouseText>, is any text delimited by spaces, tabs, returns, or punctuation. If the mouse pointer is over a punctuation <character>, only that <character> is returned.
+>*Important:*  Words are defined a little differently by the <mouseText>
+> <function> than the way they are used in <chunk expression|chunk
+> expressions>. A word, for purposes of the <mouseText>, is any text
+> delimited by spaces, tabs, returns, or punctuation. If the mouse
+> pointer is over a punctuation <character>, only that <character> is
+> returned. 
 
-References: character (keyword), words (keyword), word (keyword), field (keyword), clickText (function), mouseCharChunk (function), handler (glossary), grouped text (glossary), mouse pointer (glossary), return (glossary), chunk expression (glossary), return value (glossary), function (control_st)
+References: function (control structure), clickText (function),
+mouseCharChunk (function), handler (glossary), grouped text (glossary),
+mouse pointer (glossary), return (glossary), chunk expression (glossary),
+return value (glossary), character (keyword), words (keyword),
+word (keyword), field (keyword)
 
 Tags: ui
+

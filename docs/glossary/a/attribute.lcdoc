@@ -5,8 +5,11 @@ Synonyms: attribute
 Type: glossary
 
 Description:
-Text that modifies and is included inside a <tag>. An attribute consists of a name and value, joined with an equals sign. <tag|Tags> can have any number of attributes.
+Text that modifies and is included inside a <tag>. An attribute consists
+of a name and value, joined with an equals sign. <tag|Tags> can have any
+number of attributes.
 
 References: tag (glossary)
 
 Tags: text processing
+

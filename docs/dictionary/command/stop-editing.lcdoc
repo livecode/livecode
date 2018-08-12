@@ -4,13 +4,16 @@ Type: command
 
 Syntax: stop editing [<group> [of <stack>]]
 
-Summary: Takes a <stack> out of group-editing mode.
+Summary:
+Takes a <stack> out of group-editing mode.
+
+Associations: group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 stop editing
@@ -19,18 +22,29 @@ Example:
 stop editing background "background" of this stack
 
 Parameters:
-group: A reference to the group being edited.   You must refer to the group using the background keyword.
-stack: A reference to the stack that contains the specified group.
+group:
+A reference to the group being edited.   You must refer to the group
+using the background keyword.
+
+stack:
+A reference to the stack that contains the specified group.
 
 Description:
 Use the <stop editing> <command> to stop editing a <group>.
 
->*Important:* You must refer to the group using the <background> keyword.
+>*Important:* You must refer to the group using the <background>
+> keyword. 
 
-The <stack> is a reference to the <stack> that contains the specified <group>.
+The <stack> is a reference to the <stack> that contains the specified
+<group>. 
 
-If you don't specify a <group>, the <group> currently being edited in the <defaultStack> is taken out of group-editing mode.
+If you don't specify a <group>, the <group> currently being edited in
+the <defaultStack> is taken out of group-editing mode.
 
-Any objects created after the <stop editing> <command> is <execute|executed> are added to the <current card>, not a <group>.
+Any objects created after the <stop editing> <command> is
+<execute|executed> are added to the <current card>, not a <group>.
 
-References: defaultStack (property), group (command), start editing (command), stack (object), current card (glossary), background (glossary), command (glossary), execute (glossary)
+References: group (command), start editing (command),
+current card (glossary), background (glossary), command (glossary),
+execute (glossary), stack (object), defaultStack (property)
+

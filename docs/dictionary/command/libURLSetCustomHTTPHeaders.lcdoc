@@ -2,15 +2,18 @@ Name: libURLSetCustomHTTPHeaders
 
 Type: command
 
-Syntax: libURLSetCustomHTTPHeaders <headersList> 
+Syntax: libURLSetCustomHTTPHeaders <headersList>
 
-Summary: Sets the headers to be sent with each request to an <HTTP> <server>.
+Summary:
+Sets the headers to be sent with each request to an <HTTP> <server>.
+
+Associations: internet library
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux, html5
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
@@ -21,35 +24,66 @@ Example:
 libURLSetCustomHTTPHeaders field "Headers"
 
 Parameters:
-headersList: A <string>, or an <expression> that <evaluate|evaluates> to a <string>.
+headersList:
+A <string>, or an <expression> that <evaluate|evaluates> to a <string>.
 
 Description:
-Use the <libURLSetCustomHTTPHeaders> <command> to implement an <HTTP> method other than GET, POST, DELETE, or PUT.
+Use the <libURLSetCustomHTTPHeaders> <command> to implement an <HTTP>
+method other than GET, POST, DELETE, or PUT.
 
-Whenever LiveCode contacts a web server (with the load <command>, the <post> command, or by using an <HTTP> <URL> in an <expression>), the <headersList> is sent to the <web server>.
+Whenever LiveCode contacts a web server (with the load <command>, the
+<post> command, or by using an <HTTP> <URL> in an <expression>), the
+<headersList> is sent to the <web server>.
 
-Usually, the <headersList> will include multiple lines. A typical <headersList> might look like the following example:
+Usually, the <headersList> will include multiple lines. A typical
+<headersList> might look like the following example:
 
 GET /catsdata/coldat.dat HTTP/1.1
-Connection: Close
+Connection:Close
 User-Agent: My Fancy Browser
-Host: www.cats-training.com
-Accept: image/gif, image/x-xbitmap, image/jpeg, image/png, */*
+Host:www.cats-training.com
+Accept:image/gif, image/x-xbitmap, image/jpeg, image/png, */*
 Accept-Encoding: gzip
 Accept-Charset: iso-8859-1,*,utf-8
 
-The <libURLSetCustomHTTPHeaders> setting takes effect for the next <HTTP> transaction. After the transaction, the headers are set back to the <default>. This means that if you want to do multiple <HTTP> transactions using the same set of custom headers, you must use the <libURLSetCustomHTTPHeaders> <command> before each transaction.
+The <libURLSetCustomHTTPHeaders> setting takes effect for the next
+<HTTP> transaction. After the transaction, the headers are set back to
+the <default>. This means that if you want to do multiple <HTTP>
+transactions using the same set of custom headers, you must use the
+<libURLSetCustomHTTPHeaders> <command> before each transaction.
 
-The <libURLSetCustomHTTPHeaders> setting replaces the <Internet library|Internet library's> <default> headers. To add to the <default> headers instead of replacing them, use the <httpHeaders> <property> instead.
+The <libURLSetCustomHTTPHeaders> setting replaces the <Internet
+library|Internet library's> <default> headers. To add to the <default>
+headers instead of replacing them, use the <httpHeaders> <property>
+instead. 
 
-If you specify a set of headers using the <libURLSetCustomHTTPHeaders> <command>, the <Internet library|Internet library's> <default> headers and the setting of the <httpHeaders> property are ignored, and the headers set by <libURLSetCustomHTTPHeaders> are used instead.
+If you specify a set of headers using the <libURLSetCustomHTTPHeaders>
+<command>, the <Internet library|Internet library's> <default> headers
+and the setting of the <httpHeaders> property are ignored, and the
+headers set by <libURLSetCustomHTTPHeaders> are used instead.
 
->*Important:*  The <libURLSetCustomHTTPHeaders> <command> is part of the <Internet library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:* The <libURLSetCustomHTTPHeaders> <command> is part of the 
+> <Internet library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
->*Note:*  When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <libURLSetCustomHTTPHeaders> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <libURLSetCustomHTTPHeaders> <command> can be used in any <handler>.
+For technical information about the standard headers recognized in the
+HTTP 1.1 protocol, see [RFC 2616](https://tools.ietf.org/html/rfc2616).
 
-For technical information about the standard headers recognized in the HTTP 1.1 protocol, see [RFC 2616](https://tools.ietf.org/html/rfc2616).
-
-References: httpHeaders (property), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), Internet library (library), LiveCode custom library (library), library (library), https (keyword), URL (keyword), default (keyword), http (keyword), application (glossary), standalone application (glossary), property (glossary), web server (glossary), command (glossary), expression (glossary), main stack (glossary), Standalone Application Settings (glossary), server (glossary), HTTP (glossary), message (glossary), handler (glossary), libURLLastHTTPHeaders (function), post (command), libURLSetCustomHTTPHeaders (command), group (command)
+References: post (command), libURLSetCustomHTTPHeaders (command),
+group (command), libURLLastHTTPHeaders (function),
+LiveCode custom library (glossary), application (glossary),
+standalone application (glossary), property (glossary),
+web server (glossary), command (glossary), expression (glossary),
+main stack (glossary), Standalone Application Settings (glossary),
+server (glossary), HTTP (glossary), message (glossary),
+handler (glossary), https (keyword), URL (keyword), default (keyword),
+http (keyword), Internet library (library), library (library),
+startup (message), openBackground (message), preOpenStack (message),
+openStack (message), preOpenCard (message), httpHeaders (property)
 
 Tags: networking
+

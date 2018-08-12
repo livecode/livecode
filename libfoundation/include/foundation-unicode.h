@@ -23,10 +23,34 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-codepoint_t MCUnicodeSurrogatesToCodepoint(uint16_t first, uint16_t second);
-// We assume that the unichar_t pointer already has enough memory to handle the addition of the surrogate pair
-// Returns true in case the codepoint actually generated a surrogate pair
-bool MCUnicodeCodepointToSurrogates(codepoint_t t_codepoint, unichar_t* r_surrogates);
+constexpr inline codepoint_t
+MCUnicodeSurrogatesToCodepoint(uint16_t first, uint16_t second)
+{
+    return 0x10000 + ((first & 0x3FF) << 10) + (second & 0x3FF);
+}
+
+/* Split p_codepoint into a surrogate pair, storing the leading
+ * component in r_leading and the trailing component in
+ * r_trailing.  If p_codepoint is in the BMP, set r_leading
+ * to p_codepoint, clear r_trailing, and return false. */
+inline bool MCUnicodeCodepointToSurrogates(codepoint_t p_codepoint,
+                                           unichar_t& r_leading,
+                                           unichar_t& r_trailing)
+{
+    if (p_codepoint < 0x10000)
+    {
+        r_leading = MCNarrowCast<unichar_t>(p_codepoint);
+        r_trailing = 0;
+        return false;
+    }
+    else
+    {
+        p_codepoint -= 0x10000;
+        r_leading = 0xD800 + (p_codepoint >> 10);
+        r_trailing = 0xDC00 + (p_codepoint & 0x3FF);
+        return true;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -330,10 +354,10 @@ bool    MCUnicodeCaseFold(const unichar_t *p_in, uindex_t p_in_length,
 // Comparison options
 enum MCUnicodeCompareOption
 {
-    kMCUnicodeCompareOptionExact = 0,       // Codepoint (not code unit!) equality
-    kMCUnicodeCompareOptionNormalised = 1,  // Normalise inputs before comparison
-    kMCUnicodeCompareOptionCaseless = 2,    // Both normalise and case fold
-    kMCUnicodeCompareOptionFolded = 3,      // Case fold inputs before comparison
+    kMCUnicodeCompareOptionExact = kMCStringOptionCompareExact,       // Codepoint (not code unit!) equality
+	kMCUnicodeCompareOptionNormalised = kMCStringOptionCompareNonliteral,  // Normalise inputs before comparison
+	kMCUnicodeCompareOptionFolded = kMCStringOptionCompareFolded,      // Case fold inputs before comparison
+    kMCUnicodeCompareOptionCaseless = kMCStringOptionCompareCaseless,    // Both normalise and case fold
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -526,7 +550,7 @@ inline bool MCUnicodeCodepointIsIdeographic(uinteger_t x)
 extern uinteger_t MCUnicodeCodepointGetBreakClass(uinteger_t x);
 
 // Returns true if the given codepoint is in the high surrogate area
-inline bool MCUnicodeCodepointIsHighSurrogate(uinteger_t x)
+inline bool MCUnicodeCodepointIsLeadingSurrogate(codepoint_t x)
 {
 	if (x < 0xD800)
 		return false;
@@ -537,14 +561,32 @@ inline bool MCUnicodeCodepointIsHighSurrogate(uinteger_t x)
 	return true;
 }
 
+inline bool MCUnicodeCodepointIsHighSurrogate(uinteger_t x)
+{
+	return MCUnicodeCodepointIsLeadingSurrogate(x);
+}
+
+
 // Returns true if the given codepoint is in the low surrogate area
-inline bool MCUnicodeCodepointIsLowSurrogate(uinteger_t x)
+inline bool MCUnicodeCodepointIsTrailingSurrogate(codepoint_t x)
 {
 	if (x < 0xDC00)
 		return false;
 	if (x > 0xDFFF)
 		return false;
 	return true;
+}
+
+inline bool MCUnicodeCodepointIsLowSurrogate(uinteger_t x)
+{
+	return MCUnicodeCodepointIsTrailingSurrogate(x);
+}
+
+inline uindex_t MCUnicodeCodepointGetCodeunitLength(codepoint_t cp)
+{
+	if (cp > UNICHAR_MAX)
+		return 2;
+	return 1;
 }
 
 // Returns true if the given codepoint is a base character
@@ -556,6 +598,12 @@ inline bool MCUnicodeCodepointIsBase(uinteger_t x)
 	return !MCUnicodeCodepointIsCombiner(x);
 }
 
+// Returns the codepoint formed by combining a low and high surrogate
+inline codepoint_t MCUnicodeCombineSurrogates(unichar_t p_leading, unichar_t p_trailing)
+{
+	return 0x10000U + (((p_leading - 0xD800U) << 10) | (p_trailing - 0xDC00U));
+}
+
 // Compute and advance the current surrogate pair (used by MCUnicodeCodepointAdvance to
 // help the compiler make good choices about inlining - effectively a 'trap' to a very
 // rare case).
@@ -565,7 +613,7 @@ inline uinteger_t MCUnicodeCodepointAdvanceSurrogate(const unichar_t* p_input, u
 	{
         // FG-2014-10-23: [[ Bugfix 13761 ]] Codepoint was calculated incorrectly
         uinteger_t t_codepoint;
-		t_codepoint = (0x10000U + ((p_input[x_index] - 0xD800U) << 10)) | (p_input[x_index + 1] - 0xDC00U);
+		t_codepoint = MCUnicodeCombineSurrogates(p_input[x_index], p_input[x_index + 1]);
 		x_index += 2;
 		return t_codepoint;
 	}

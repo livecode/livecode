@@ -1,1 +1,0 @@
-#    iphoneHeadingCalibrationTimeout returns empty

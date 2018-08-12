@@ -4,31 +4,51 @@ Type: keyword
 
 Syntax: templateEPS
 
-Summary: Used with the <set> <command> to set the <properties> of newly created <EPS|EPS objects>.
+Summary:
+Used with the <set> <command> to set the <properties> of newly created
+<EPS|EPS objects>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the prolog of the templateEPS to field "Set Prolog"
 
 Description:
-Use the <templateEPS> <keyword> to set up <default> <properties> to be used for any new <EPS|EPS objects> you create.
+Use the <templateEPS> <keyword> to set up <default> <properties> to be
+used for any new <EPS|EPS objects> you create.
 
-The <templateEPS> can be thought of as a special, abstract <object>. It is not an actual <EPS|EPS object>, but it has all the <properties> of an <EPS>. The <ID> <property> of the <templateEPS> is zero.
+The <templateEPS> can be thought of as a special, abstract
+<object(glossary)>. It is not an actual <EPS|EPS object>, but it has all
+the <properties> of an <EPS>. The <ID> <property> of the <templateEPS>
+is zero.
 
-You can use the <set> <command> to set the <properties> of the <templateEPS> before creating an <EPS|EPS object>. The new <EPS> has the <properties> of the <templateEPS>, by <default>. Changing the <properties> of the <templateEPS> does not affect existing <EPS> <object|objects>.
+You can use the <set> <command> to set the <properties> of the
+<templateEPS> before creating an <EPS|EPS object>. The new <EPS> has the
+<properties> of the <templateEPS>, by <default>. Changing the
+<properties> of the <templateEPS> does not affect existing <EPS>
+<object|objects>. 
 
-The properties of the <templateEPS> can be returned to the default settings using the <reset> command.
+The properties of the <templateEPS> can be returned to the default
+settings using the <reset> command.
 
 You can refer to the <templateEPS> using any of the following forms:
-        templateEPS
-        the templateEPS
-        templateEPS()
 
->*Note:* The <templateEPS> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
+    templateEPS
+    the templateEPS
+    templateEPS()
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), EPS (object), object (object), keyword (glossary), EPS (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+
+>*Note:* The <templateEPS> <keyword> is implemented internally as a
+> <function> and appears in the <functionNames>. However, it cannot be
+> used as a <function> in an <expression>.
+
+References: reset (command), set (command), function (control structure),
+functionNames (function), object (glossary), keyword (glossary),
+EPS (glossary), property (glossary), command (glossary),
+expression (glossary), templateScrollbar (keyword), default (keyword),
+EPS (object), properties (property), ID (property)
+

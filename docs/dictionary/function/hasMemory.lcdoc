@@ -2,17 +2,19 @@ Name: hasMemory
 
 Type: function
 
-Syntax: the hasMemory of <bytes> 
+Syntax: the hasMemory of <bytes>
 
 Syntax: hasMemory(<bytes>)
 
-Summary: <return|Returns> true if the specified amount of memory is available, false otherwise.
+Summary:
+<return|Returns> true if the specified amount of memory is available,
+false otherwise.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 hasMemory(2*1024*1024) -- returns true if 2M available
@@ -21,13 +23,29 @@ Example:
 if hasMemory(500*1024) then open stack "Explore Multimedia"
 
 Parameters:
-bytes: The number of bytes you require. If the amount of available memory is greater than or equal to the bytes, the function returns true.
+bytes:
+The number of bytes you require. If the amount of available memory is
+greater than or equal to the bytes, the function returns true.
 
 Description:
-Use the <hasMemory> <function> to check whether there's enough memory available for an action (such as displaying a large <graphic>) before you do it.
+Use the <hasMemory> <function> to check whether there's enough memory
+available for an action (such as displaying a large <graphic>) before
+you do it.
 
-This function is only partially implemented, and may not return useful values on some platforms. It is included in LiveCode for compatibility with imported SuperCard projects.
+This function is only partially implemented, and may not return useful
+values on some platforms. It is included in LiveCode for compatibility
+with imported SuperCard projects.
 
->*Cross-platform note:*  On <Mac OS|Mac OS systems>, the <value> <return|returned> depends on the amount of free memory in the application heap and does not take available temporary memory into account. This means that even if the <hasMemory> <function> <return|returns> false, there may be enough system memory available for the task, since LiveCode uses temporary memory when necessary.
+>*Cross-platform note:*  On <Mac OS|Mac OS systems>, the <value>
+> <return|returned> depends on the amount of free memory in the
+> application heap and does not take available temporary memory into
+> account. This means that even if the <hasMemory> <function>
+> <return|returns> false, there may be enough system memory available
+> for the task, since LiveCode uses temporary memory when necessary.
 
-References: size (property), destroyStack (property), alwaysBuffer (property), freeSize (property), graphic (keyword), revUnloadSpeech (command), heapSpace (function), stackSpace (function), value (function), diskSpace (function), Mac OS (glossary), return (glossary), function (control_st)
+References: revUnloadSpeech (command), function (control structure),
+heapSpace (function), stackSpace (function), value (function),
+diskSpace (function), Mac OS (glossary), return (glossary),
+graphic (keyword), size (property), destroyStack (property),
+alwaysBuffer (property), freeSize (property)
+

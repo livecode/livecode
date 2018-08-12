@@ -35,18 +35,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickDate, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickTime, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickDateAndTime, 6)
-MC_EXEC_DEFINE_GET_METHOD(Pick, SpecificCameraFeatures, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pick, CameraFeatures, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickMedia, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickPhoto, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickPhotoAndResize, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickOptionByIndex, 10)
-
-////////////////////////////////////////////////////////////////////////////////
-
 enum 
 {
     kMCPickDate,
@@ -58,9 +46,9 @@ enum
 
 static MCExecEnumTypeElementInfo _kMCPickButtonTypeElementInfo[] =
 {
-	{ "cancel", kMCPickButtonCancel },
-	{ "done", kMCPickButtonDone },
-	{ "canceldone", kMCPickButtonCancelAndDone },
+	{ "cancel", kMCPickButtonCancel, false },
+	{ "done", kMCPickButtonDone, false },
+	{ "canceldone", kMCPickButtonCancelAndDone, false },
 };
 
 static MCExecEnumTypeInfo _kMCPickButtonTypeTypeInfo =
@@ -147,11 +135,11 @@ static MCExecSetTypeInfo _kMCPickMediaTypesTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCPickPhotoSourceTypeElementInfo[] =
 {
-	{ "album", kMCCameraSourceTypeFront, false },
-	{ "library", kMCCameraSourceTypeRear, false },
-	{ "camera", kMCCameraSourceTypeUnknown, false },
-	{ "front camera", kMCCameraSourceTypeUnknown, false },
-	{ "rear camera", kMCCameraSourceTypeUnknown, false },
+	{ "album", kMCPhotoSourceTypeAlbum, false },
+	{ "library", kMCPhotoSourceTypeLibrary, false },
+	{ "camera", kMCPhotoSourceTypeCamera, false },
+	{ "front camera", kMCPhotoSourceTypeFrontCamera, false },
+	{ "rear camera", kMCPhotoSourceTypeRearCamera, false },
 };
 
 static MCExecEnumTypeInfo _kMCPickPhotoSourceTypeTypeInfo =
@@ -168,7 +156,7 @@ MCExecEnumTypeInfo *kMCPickCameraSourceTypeTypeInfo = &_kMCPickCameraSourceTypeT
 MCExecSetTypeInfo *kMCPickCameraFeaturesTypeInfo = &_kMCPickCameraFeaturesTypeInfo;
 MCExecSetTypeInfo *kMCPickCamerasFeaturesTypeInfo = &_kMCPickCamerasFeaturesTypeInfo;
 MCExecSetTypeInfo *kMCPickMediaTypesTypeInfo = &_kMCPickMediaTypesTypeInfo;
-MCExecEnumTypeInfo *kMCPickPhotoSourceTypeTypeInfo = &_kMCPickCameraSourceTypeTypeInfo;
+MCExecEnumTypeInfo *kMCPickPhotoSourceTypeTypeInfo = &_kMCPickPhotoSourceTypeTypeInfo;
 
 //////////
 
@@ -278,118 +266,21 @@ void MCPickDoPickDateTime(MCExecContext& ctxt, MCStringRef p_current, MCStringRe
 
 void MCPickExecPickDate(MCExecContext& ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, intenum_t p_buttons, MCRectangle p_button_rect)
 {
-#ifdef /* MCDialogExecPickDate */ LEGACY_EXEC
-    bool t_success = true;
-    bool t_canceled = false;
-    MCDateTime t_result;
-    
-    t_success = MCSystemPickDate(p_current, p_start, p_end, p_cancel_button, p_done_button, &t_result, t_canceled, p_button_rect);
-    
-    if (t_success)
-    {
-        if (t_canceled)
-            p_ctxt.SetTheResultToStaticCString("cancel");
-        else
-        {
-            p_ctxt.SetTheResultToEmpty();
-            MCExecPoint &ep = p_ctxt.GetEP();
-            MCD_convert_from_datetime(ep, CF_DATE, CF_UNDEFINED, t_result);
-        }
-    }
-#endif /* MCDialogExecPickDate */
     MCPickDoPickDateTime(ctxt, p_current, p_start, p_end, nil, (MCPickButtonType)p_buttons, p_button_rect, kMCPickDate);
 }
 
 void MCPickExecPickTime(MCExecContext &ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, int32_t *p_step, intenum_t p_buttons, MCRectangle p_button_rect)
 {
-#ifdef /* MCDialogExecPickTime */ LEGACY_EXEC
-    bool t_success = true;
-    bool t_canceled = false;
-    MCDateTime t_result;
-    
-    t_success = MCSystemPickTime(p_current, p_start, p_end, p_step, p_cancel_button, p_done_button, &t_result, t_canceled, p_button_rect);
-    
-    if (t_success)
-    {
-        if (t_canceled)
-            p_ctxt.SetTheResultToStaticCString("cancel");
-        else
-        {
-            p_ctxt.SetTheResultToEmpty();
-            MCExecPoint &ep = p_ctxt.GetEP();
-            MCD_convert_from_datetime(ep, CF_TIME, CF_UNDEFINED, t_result);
-        }
-    }
-#endif /* MCDialogExecPickTime */
     MCPickDoPickDateTime(ctxt, p_current, p_start, p_end, p_step, (MCPickButtonType)p_buttons, p_button_rect, kMCPickTime);
 }
 
 void MCPickExecPickDateAndTime(MCExecContext &ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, int32_t *p_step, intenum_t p_buttons, MCRectangle p_button_rect)
 {
-#ifdef /* MCDialogExecPickDateAndTime */ LEGACY_EXEC
-    bool t_success = true;
-    bool t_canceled = false;
-    MCDateTime t_result;
-    
-    t_success = MCSystemPickDateAndTime(p_current, p_start, p_end, p_step, p_cancel_button, p_done_button, &t_result, t_canceled, p_button_rect);
-    
-    if (t_success)
-    {
-        if (t_canceled)
-            p_ctxt.SetTheResultToStaticCString("cancel");
-        else
-        {
-            p_ctxt.SetTheResultToEmpty();
-            MCExecPoint &ep = p_ctxt.GetEP();
-            MCD_convert_from_datetime(ep, CF_DATE, CF_TIME, t_result);
-        }
-    }
-#endif /* MCDialogExecPickDateAndTime */
     MCPickDoPickDateTime(ctxt, p_current, p_start, p_end, p_step, (MCPickButtonType)p_buttons, p_button_rect, kMCPickDateAndTime);
 }
 
 void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCStringRef *p_option_lists, uindex_t p_option_list_count, uindex_t *p_initial_indices, uindex_t p_indices_count, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, MCRectangle p_button_rect)
 {
-#ifdef /* MCDialogExecPickOptionByIndex */ LEGACY_EXEC
-    bool t_success, t_cancelled;
-    const_cstring_array_t **t_option_lists = nil;
-    const_int32_array_t *t_option_result = nil;
-    uint32_t t_option_lists_count;
-    
-    char t_delimiter[2] = {'\0','\0'};
-    char *t_return_string = nil;
-    
-    // Create the multi dimensional option lists
-	t_success = SplitOptionListsByChunk(p_chunk_type, p_option_lists, t_option_lists, t_option_lists_count);
-    
-    // Open the picker and allow the user to select the options
-    if (t_success)
-        t_success = MCSystemPickOption(t_option_lists, p_initial_indices, t_option_lists_count, t_option_result, p_use_hilite_type, p_use_picker, p_use_cancel, p_use_done, t_cancelled, p_button_rect);
-    
-    p_ctxt.SetTheResultToEmpty();
-    
-    if (t_success)
-    {
-        if (t_cancelled)
-        {
-            // HC-2012-02-15 [[ BUG 9999 ]] Picker should return 0 if cancel was selected.
-            p_ctxt.GetEP().setnvalue(0);
-        }
-        else
-        {
-            if (t_success)
-                t_success = IndexesArrayToString (t_option_result, t_return_string, t_cancelled);
-            
-            p_ctxt.GetEP().setcstring(t_return_string);
-            // make execpoint take ownership of result string
-            p_ctxt.GetEP().grabsvalue();
-        }
-    }
-    
-    // Free memory
-    FreeStringArray (t_option_lists, t_option_lists_count);
-    FreeIndexArray(t_option_result);
-#endif /* MCDialogExecPickOptionByIndex */
     
     MCAutoArray<MCPickList> t_pick_lists;
     
@@ -423,14 +314,14 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
         
         while (t_success && MCStringFirstIndexOfChar(p_option_lists[i], t_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
         {
-            t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMake(t_old_offset, t_new_offset - t_old_offset), t_option);
+            t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMakeMinMax(t_old_offset, t_new_offset), t_option);
             if (t_success)
                 t_options . Push(t_option);
             
             t_old_offset = t_new_offset + 1;
         }
         // Append the remaining part of the options
-        t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMake(t_old_offset, MCStringGetLength(p_option_lists[i]) - t_old_offset), t_option);
+        t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMakeMinMax(t_old_offset, MCStringGetLength(p_option_lists[i])), t_option);
         if (t_success)
             t_options . Push(t_option);
         
@@ -484,11 +375,11 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
 void MCPickExecPickMedia(MCExecContext &ctxt, intset_t p_allowed_types, bool p_multiple)
 {
     MCAutoStringRef t_result;
+
+    ctxt . SetTheResultToEmpty();
+
     if (MCSystemPickMedia((MCMediaType)p_allowed_types, p_multiple, &t_result))
         ctxt . SetTheResultToValue(*t_result);
-    
-    ctxt . SetTheResultToEmpty();
-    
 }
 
 void MCPickGetSpecificCameraFeatures(MCExecContext& ctxt, intenum_t p_source, intset_t& r_features)
@@ -498,44 +389,11 @@ void MCPickGetSpecificCameraFeatures(MCExecContext& ctxt, intenum_t p_source, in
 
 void MCPickGetCameraFeatures(MCExecContext& ctxt, intset_t& r_features)
 {
-#ifdef /* MCCameraGetFeatures */ LEGACY_EXEC
-	r_features = MCSystemGetCameraFeatures(p_camera);
-#endif /* MCCameraGetFeatures */
     r_features = (intset_t)MCSystemGetAllCameraFeatures();
 }
 
 void MCPickExecPickPhotoAndResize(MCExecContext& ctxt, intenum_t p_source, uinteger_t p_width, uinteger_t p_height)
 {
-#ifdef /* MCCameraExecAcquirePhotoAndResize */ LEGACY_EXEC
-	if (!MCSystemCanAcquirePhoto(p_source))
-	{
-		ctxt . SetTheResultToStaticCString("source not available");
-		return;
-	}
-    
-	MCAutoRawMemoryBlock t_image_data;
-	size_t t_image_data_size;
-	if (!MCSystemAcquirePhoto(p_source, p_max_width, p_max_height, t_image_data, t_image_data_size))
-	{
-		ctxt . SetTheResultToStaticCString("error");
-		return;
-	}
-	
-	if (t_image_data . Borrow() == nil)
-	{
-		ctxt . SetTheResultToStaticCString("cancel");
-		return;
-	}
-	
-	MCtemplateimage->setparent((MCObject *)MCdefaultstackptr -> getcurcard());
-	MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-	MCtemplateimage->setparent(NULL);
-	iptr -> attach(OP_CENTER, false);
-	
-	MCExecPoint ep(nil, nil, nil);
-	ep . setsvalue(MCString((char *)t_image_data . Borrow(), t_image_data_size));
-	iptr -> setprop(0, P_TEXT, ep, false);
-#endif /* MCCameraExecAcquirePhotoAndResize */
     if (!MCSystemCanAcquirePhoto((MCPhotoSourceType)p_source))
     {
         ctxt . SetTheResultToStaticCString("source not available");
@@ -571,9 +429,6 @@ void MCPickExecPickPhotoAndResize(MCExecContext& ctxt, intenum_t p_source, uinte
 
 void MCPickExecPickPhoto(MCExecContext& ctxt, intenum_t p_source)
 {
-#ifdef /* MCCameraExecAcquirePhoto */ LEGACY_EXEC
-	MCCameraExecAcquirePhotoAndResize(ctxt, p_photo, 0, 0);
-#endif /* MCCameraExecAcquirePhoto */
     MCPickExecPickPhotoAndResize(ctxt, p_source, 0, 0);
 }
 

@@ -4,13 +4,15 @@ Type: function
 
 Syntax: offset(<charsToFind>, <stringToSearch> [, <charsToSkip>])
 
-Summary: <return|Returns> the number of <characters> between the first <character> of a <value> and an occurrence of a specified <string>.
+Summary:
+<return|Returns> the number of <characters> between the first
+<character> of a <value> and an occurrence of a specified <string>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 offset("c","abcde") -- returns 3
@@ -22,21 +24,44 @@ Example:
 offset("bark","embarking") -- returns 3
 
 Parameters:
-charsToFind (string): 
-stringToSearch (string): 
-charsToSkip: A non-negative integer. If you don't specify how many charsToSkip, the offset function does not skip any items and starts at the beginning of the stringToSearch.
+charsToFind (string):
 
-Returns: The <offset> <function> <return|returns> a <non-negative> <integer>.
+
+stringToSearch (string):
+
+
+charsToSkip:
+A non-negative integer. If you don't specify how many charsToSkip, the
+offset function does not skip any items and starts at the beginning of
+the stringToSearch.
+
+Returns:
+The <offset> <function> <return|returns> a <non-negative> <integer>.
 
 Description:
-Use the <offset> <function> to find where a <string> occurs in another <string>.
+Use the <offset> <function> to find where a <string> occurs in another
+<string>. 
 
-The value returned by the <offset> <function> is the number of the <character> where <charsToFind> appears in <stringToSearch>. If the <charsToFind> is not in <stringToSearch>, the <offset> <function> <return|returns> zero.
+The value returned by the <offset> <function> is the number of the
+<character> where <charsToFind> appears in <stringToSearch>. If the
+<charsToFind> is not in <stringToSearch>, the <offset> <function>
+<return|returns> zero.
 
-If the <charsToFind> contains more than one <character>, and the entire <charsToFind> appears in the <stringToSearch>, the <offset> <function> <return|returns> the <character> number where the <charsToFind> starts.
+If the <charsToFind> contains more than one <character>, and the entire
+<charsToFind> appears in the <stringToSearch>, the <offset> <function>
+<return|returns> the <character> number where the <charsToFind> starts.
 
-If you specify how many <charsToSkip>, the <offset> <function> skips the specified number of <characters> in the <stringToSearch>. The <value> <return|returned> is relative to this starting <point> instead of the beginning of the <stringToSearch>.
+If you specify how many <charsToSkip>, the <offset> <function> skips the
+specified number of <characters> in the <stringToSearch>. The <value>
+<return|returned> is relative to this starting <point> instead of the
+beginning of the <stringToSearch>.
 
-References: character (keyword), characters (keyword), integer (keyword), string (keyword), point (keyword), begins with (operator), find (command), sort container (command), wordOffset (function), itemOffset (function), length (function), lineOffset (function), value (function), return (glossary), non-negative (glossary), function (control_st)
+References: find (command), sort container (command),
+function (control structure), wordOffset (function),
+itemOffset (function), length (function), lineOffset (function),
+value (function), return (glossary), non-negative (glossary),
+character (keyword), characters (keyword), integer (keyword),
+string (keyword), point (keyword), begins with (operator)
 
 Tags: text processing
+

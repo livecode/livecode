@@ -4,15 +4,16 @@ Type: message
 
 Syntax: newScrollbar
 
-Summary: Sent to a new <scrollbar> right after it's created.
+Summary:
+Sent to a new <scrollbar> right after it's created.
 
 Associations: scrollbar
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on newScrollbar -- store its ID in a custom property of the card
@@ -20,12 +21,23 @@ on newScrollbar -- store its ID in a custom property of the card
 end newScrollbar
 
 Description:
-Handle the <newScrollbar> <message> if you want to create additional <object|objects>, switch <tool|tools>, or do other tasks when a new <scrollbar> is created.
+Handle the <newScrollbar> <message> if you want to create additional
+<object|objects>, switch <tool|tools>, or do other tasks when a new
+<scrollbar> is created.
 
-Normally, the <newScrollbar> <message> is handled at a higher level of the <message path>, since the newly-created <scrollbar> does not yet have a <script> unless the <templateScrollbar> contains one.
+Normally, the <newScrollbar> <message> is handled at a higher level of
+the <message path>, since the newly-created <scrollbar> does not yet
+have a <script> unless the <templateScrollbar> contains one.
 
-The actual creation is not triggered by the <newScrollbar> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <scrollbar> from being created.
+The actual creation is not triggered by the <newScrollbar> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <scrollbar> from being created.
 
-References: templateScrollbar (keyword), scrollbar (keyword), script (property), copy (command), clone (command), paste (command), object (object), trap (glossary), message (glossary), templateScrollbar (glossary), tool (glossary), message path (glossary), pass (control_st)
+References: copy (command), clone (command), paste (command),
+pass (control structure), object (glossary), trap (glossary),
+message (glossary), templateScrollbar (glossary), tool (glossary),
+message path (glossary), templateScrollbar (keyword), scrollbar (keyword),
+script (property)
 
 Tags: objects
+

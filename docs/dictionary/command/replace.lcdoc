@@ -2,15 +2,16 @@ Name: replace
 
 Type: command
 
-Syntax: replace <oldString> with <newString> in <container> 
+Syntax: replace <oldString> with <newString> in <container>
 
-Summary: Replaces text in a <container> with other text.
+Summary:
+Replaces text in a <container> with other text.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 replace "A" with "N" in thisVariable -- changes all As to Ns
@@ -24,18 +25,39 @@ replace somethingOld with "\" in it
 Example:
 replace ".com" with somethingNew in URL "file:stuff.txt"
 
+Example:
+put "12.34.56.78" into p
+replace "." with empty in char 4 to -1 of p  -- 12.345678
+
 Parameters:
-oldString (string): Any expression that evaluates to a string, and specifies the text to replace.
-newString (string): Any expression that evaluates to a string, and specifies the text to replace the oldString with.
-container: A field, button, or variable, or the message box.
+oldString (string):
+Any expression that evaluates to a string, and specifies the text to
+replace. 
+
+newString (string):
+Any expression that evaluates to a string, and specifies the text to
+replace the oldString with.
+
+container:
+A field, button, or variable, or the message box.
 
 Description:
-Use the <replace> <command> to replace all instances of one <string> with another <string>.
+Use the <replace> <command> to replace all instances of one <string>
+with another <string>.
 
-The <replace> <command> is faster than the <replaceText> <function>, but does not support <regular expression|regular expressions>: you can replace only an exact <string> of text.
+The <replace> <command> is faster than the <replaceText> <function>, but
+does not support <regular expression|regular expressions>: you can
+replace only an exact <string> of text.
 
->*Important:*  You can use the <replace> <command> on a <field(keyword)>, but doing so removes any formatting (fonts, styles, colors, and sizes) in the field. To preserve existing styling in fields use the <replace in field> command.
+>*Important:*  You can use the <replace> <command> on a
+> <field(keyword)>, but doing so removes any formatting (fonts, styles,
+> colors, and sizes) in the field. To preserve existing styling in
+> fields use the <replace in field> command.
 
-References: field (object), string (keyword), field (keyword), command (glossary), regular expression (glossary), container (glossary), replaceText (function), find (command), filter (command), replace (command), function (control_st), replace in field (command)
+References: find (command), filter (command), replace (command),
+replace in field (command), function (control structure),
+replaceText (function), command (glossary), regular expression (glossary),
+container (glossary), string (keyword), field (keyword), field (object)
 
 Tags: text processing
+

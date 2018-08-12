@@ -4,13 +4,17 @@ Type: keyword
 
 Syntax: http
 
-Summary: Used as a <URL> type with such <command|commands> as <put> and <get> to designate a <file> on the World Wide Web.
+Summary:
+Used as a <URL> type with such <command|commands> as <put> and <get> to
+designate a <file> on the World Wide Web.
+
+Associations: internet library
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: network
 
@@ -23,66 +27,164 @@ put URL "http://www.example.com/output?this=that" into testData
 Example:
 put line 2 of URL "http://www.example.com/stuff/" into testDate
 
-The result: If an error occurs during transfer of the data, the error is placed in the result <function>. The first <word> returned by the <result> <function> is "error", followed (where appropriate) by the text of the error message returned by the HTTP <server>, including the server response code. >*Important:*  If there is an error downloading an <http> <URL(keyword)>, the <URL(keyword)> <container> does not necessarily <evaluate> to empty. Most <HTTP> <server|servers> send an error page when the file is not found or another error occurs, and the URL <container> will evaluate to the contents of this page. Before using the data in a URL <container>, check the <result> to make sure it is empty and there was no error. >*Important:*  If a <blocking> operation involving a <URL(keyword)> (using the <put> <command> to <upload> a <URL(keyword)>, the <post> <command>, the <delete URL> <command>, or a <statement> that gets an <ftp> or <HTTP> <URL(keyword)>) is going on, no other <blocking> <URL(keyword)> operation can start until the previous one is finished. If you attempt to use a <URL(keyword)> in an <expression>, or put data into a <URL(keyword)>, while another <blocking> <URL(keyword)> operation is in progress, the <result> is set to "Error Previous request not completed". Downloading a URL does not prevent other messages from being sent during the download: the current handler is blocked during the download, but other handlers are not. This means that if, for example, your application has a button that downloads a URL, the user might click the button again (or click another <button> that <download|downloads> another <URL(keyword)>) while the first <URL(keyword)> is still being <download|downloaded>. In this case, the second <download> is not performed and the <result> is set to "error Previous request has not completed." To avoid this problem, you can set a flag while a URL is being <download|downloaded>, and check that <flag> when trying to <download> <URL(glossary)|URLs> to make sure that there is not already a current <download> in progress.
+The result:
+If an error occurs during transfer of the data, the error is placed in
+the result <function>. The first <word> returned by the <result>
+<function> is "error", followed (where appropriate) by the text of the
+error message returned by the HTTP <server>, including the server
+response code. >*Important:* If there is an error downloading an <http>
+<URL(keyword)>, the <URL(keyword)> <container> does not necessarily
+<evaluate> to empty. Most <HTTP> <server|servers> send an error page
+when the file is not found or another error occurs, and the URL
+<container> will evaluate to the contents of this page. Before using the
+data in a URL <container>, check the <result> to make sure it is empty
+and there was no error. 
+>*Important:* If a <blocking> operation
+involving a <URL(keyword)> (using the <put> <command> to <upload> a
+<URL(keyword)>, the <post> <command>, the <delete URL> <command>, or a
+<statement> that gets an <ftp> or <HTTP> <URL(keyword)>) is going on, no
+other <blocking> <URL(keyword)> operation can start until the previous
+one is finished. If you attempt to use a <URL(keyword)> in an
+<expression>, or put data into a <URL(keyword)>, while another
+<blocking> <URL(keyword)> operation is in progress, the <result> is set
+to "Error Previous request not completed". Downloading a URL does not
+prevent other messages from being sent during the download: the current
+handler is blocked during the download, but other handlers are not. This
+means that if, for example, your application has a button that downloads
+a URL, the user might click the button again (or click another <button>
+that <download|downloads> another <URL(keyword)>) while the first
+<URL(keyword)> is still being <download|downloaded>. In this case, the
+second <download> is not performed and the <result> is set to
+"error Previous request has not completed." To avoid this problem, you
+can set a flag while a URL is being <download|downloaded>, and check
+that <flag> when trying to <download> <URL(glossary)|URLs> to make sure
+that there is not already a current <download> in progress.
 
 Description:
 Use the <http> <keyword> to work with <files> on the Web.
 
-The URL scheme "http" indicates information located on a web server. An <http> <URL(keyword)> consists of:
+The URL scheme "http" indicates information located on a web server. An
+<http> <URL(keyword)> consists of:
 
 1. The string "http://"
-2. An optional user name and password, separated by a colon (:) and followed by "@"
-3. The name of the server (for instance, "example.net") followed by a slash
+2. An optional user name and password, separated by a colon (:) and
+   followed by "@"
+3. The name of the server (for instance, "example.net") followed by a
+   slash 
 4. The location of the resource (often, a file path).
+
 
 Here are some examples of valid <http> <URL(glossary)|URLs>:
 
-* `http://www.example.com`: The main page for the server `www.example.com`
+* `http://www.example.com`: The main page for the server
+  `www.example.com` 
 * `http://www.example.com/directory/`: A directory on the server
 * `http://www.example.com/directory/file.html`: A file on the server
-* `http://user:password@www.example.com/file.txt`: A file accessed by a user name and password
-* `http://www.example.com/directory/stuff.html?list=yes`: A page generated by a query--possibly generated by a CGI
+* `http://user:password@www.example.com/file.txt`: A file accessed by a
+  user name and password
+* `http://www.example.com/directory/stuff.html?list=yes`: A page
+  generated by a query--possibly generated by a CGI
 
->*Important:*  If your user name or password contains any of the characters ":", "@", "/", ".", or "|", use the URLEncode <function> to safely encode the user name or password before putting them into the <URL(keyword)>. The following example constructs a <URL(keyword)> for a user whose password contains the "@" character:
 
-        put "name" into userName
-        put "jdoe@example.com" into userPassword
-        put "http://" & userName & ":" & URLEncode(userPassword) \
-            & "@www.example.net/index.html" into fileURLToGet
-        get URL fileURLToGet
+>*Important:*  If your user name or password contains any of the
+> characters ":", "@", "/", ".", or "|", use the URLEncode <function> to
+> safely encode the user name or password before putting them into the
+> <URL(keyword)>. The following example constructs a <URL(keyword)> for
+> a user whose password contains the "@" character:
 
-An <http> <URL(keyword)> is a <container>, and you can use the <expression> URL httpURL in any statement where any other <container> type is used. When you get the <value> of an <http> <URL(keyword)>, LiveCode downloads the <URL(keyword)> from the <server>. (If you have previously <cache|cached> the URL with the <load> <command>, it fetches the <URL(keyword)> from the <cache>.)
+    put "name" into userName
+    put "jdoe@example.com" into userPassword
+    put "http://" & userName & ":" & URLEncode(userPassword) \
 
-You can upload data to a web server by putting a value into an <http> <URL(keyword)>, as in the following <statement> :
+    & "@www.example.net/index.html" into fileURLToGet
+
+    get URL fileURLToGet
+
+
+An <http> <URL(keyword)> is a <container>, and you can use the
+<expression> URL httpURL in any statement where any other <container>
+type is used. When you get the <value> of an <http> <URL(keyword)>,
+LiveCode downloads the <URL(keyword)> from the <server>. (If you have
+previously <cache|cached> the URL with the <load> <command>, it fetches
+the <URL(keyword)> from the <cache>.)
+
+You can upload data to a web server by putting a value into an <http>
+<URL(keyword)>, as in the following <statement> :
 
     put field "Info" into URL "http://www.example.net/info.html"
 
-However, because most web servers do not allow HTTP uploads, the attempt usually will not be successful. (Check with the server's administrator to find out how and where to upload files.)
 
->*Note:* Transferring a <URL(keyword)> by using it in an <expression> is a <blocking> operation: that is, the <handler> pauses until LiveCode is finished getting the <URL(keyword)>. Since contacting a <server> may take some time due to network lag, <URL(keyword)> operations may take long enough to be noticeable to the user.
+However, because most web servers do not allow HTTP uploads, the attempt
+usually will not be successful. (Check with the server's administrator
+to find out how and where to upload files.)
 
-The following example shows how to set a flag in a global variable to prevent multiple downloads. The variable "downloadInProgress" is set to true while a download is going on, and back to false when the download concludes. If the user clicks the button again while the download is still going on, the handler simply beeps:
+>*Note:* Transferring a <URL(keyword)> by using it in an <expression> is
+> a <blocking> operation: that is, the <handler> pauses until LiveCode
+> is finished getting the <URL(keyword)>. Since contacting a <server>
+> may take some time due to network lag, <URL(keyword)> operations may
+> take long enough to be noticeable to the user.
+
+The following example shows how to set a flag in a global variable to
+prevent multiple downloads. The variable "gDownloadInProgress" is set to
+true while a download is going on, and back to false when the download
+concludes. If the user clicks the button again while the download is
+still going on, the handler simply beeps:
 
     on mouseUp
-       global downloadInProgress
-       if downloadInProgress then
-          beep
-          exit mouseUp
-       end if
-       put true into downloadInProgress -- about to start
-       put URL (field "Page to get") into field "Command Result"
-       put false into downloadInProgress -- finished
+
+    global gDownloadInProgress
+    if gDownloadInProgress then
+        beep
+        exit mouseUp
+    end if
+    put true into gDownloadInProgress -- about to start
+    put URL (field "Page to get") into field "Command Result"
+    put false into gDownloadInProgress -- finished
+    
     end mouseUp
 
-For technical information about URLs and the <http> <URL(keyword)> scheme, see [RFC 1630](https://tools.ietf.org/html/rfc1630).
 
->*Important:*  The <http> <keyword> is part of the <Internet library>. To ensure that the <keyword> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+For technical information about URLs and the <http> <URL(keyword)>
+scheme, see [RFC 1630](https://tools.ietf.org/html/rfc1630).
 
->*Note:* When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <http> <keyword> is not yet available. This may affect attempts to use this <keyword> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <http> <keyword> can be used in any <handler>.
+>*Important:*  The <http> <keyword> is part of the 
+> <Internet library> on desktop platforms. To ensure that the <keyword> 
+> works in a desktop <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
+
+>*Cross-platform note:* On iOS and Android, you can use the <http> 
+> <keyword> without the need for the <Internet library>. When
+> specifying 
+> <URL(glossary)|URLs> for iOS and Android, you must use the
+> appropriate 
+> form that conforms to [RFC
+> 1630](https://tools.ietf.org/html/rfc1630). 
 
 Changes:
-The http keyword was moved to the Internet library in version 1.1. In previous versions, this functionality was part of the engine.
+The http keyword was moved to the Internet library in version 1.1. In
+previous versions, this functionality was part of the engine.
 
-References: startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), Internet library (library), library (library), LiveCode custom library (library), URL (keyword), file (keyword), ftp (keyword), button (keyword), word (keyword), http (keyword), application (glossary), standalone application (glossary), evaluate (glossary), server (glossary), blocking (glossary), cache (glossary), statement (glossary), URL (glossary), command (glossary), container (glossary), expression (glossary), main stack (glossary), keyword (glossary), Standalone Application Settings (glossary), upload (glossary), download (glossary), message (glossary), flag (glossary), handler (glossary), libURLLastRHHeaders (function), result (function), files (function), libURLErrorData (function), value (function), post (command), libURLSetStatusCallback (command), put (command), load (command), group (command), delete URL (command), get (command), libURLSetCustomHTTPHeaders (command), function (control_st)
+References: post (command), libURLSetStatusCallback (command),
+put (command), load (command), group (command), delete URL (command),
+get (command), libURLSetCustomHTTPHeaders (command),
+function (control structure), libURLLastRHHeaders (function),
+result (function), files (function), libURLErrorData (function),
+value (function), LiveCode custom library (glossary),
+application (glossary), standalone application (glossary),
+evaluate (glossary), server (glossary), blocking (glossary),
+cache (glossary), statement (glossary), URL (glossary),
+command (glossary), container (glossary), expression (glossary),
+main stack (glossary), keyword (glossary),
+Standalone Application Settings (glossary), upload (glossary),
+download (glossary), message (glossary), flag (glossary),
+handler (glossary), URL (keyword), file (keyword), ftp (keyword),
+button (keyword), word (keyword), http (keyword),
+Internet library (library), library (library), startup (message),
+openBackground (message), preOpenStack (message), openStack (message),
+preOpenCard (message)
 
 Tags: networking
+

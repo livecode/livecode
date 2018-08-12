@@ -1,12 +1,17 @@
 Name: Printing library
 
-Synonyms: Printing library,Printing libraries
+Synonyms: printing library, printing libraries
 
 Type: library
 
 Description:
-The <LiveCode custom library|LiveCode custom library> that supports text printing. The <revPrintField>, <revPrintText>, and <revShowPrintDialog> <command|commands> are part of the Printing library.
+The <LiveCode custom library|LiveCode custom library> that supports text
+printing. The <revPrintField>, <revPrintText>, and <revShowPrintDialog>
+<command|commands> are part of the Printing library.
 
-References: revShowPrintDialog (command), revPrintField (command), revPrintText (command), command (glossary), LiveCode custom library (library)
+References: revShowPrintDialog (command), revPrintField (command),
+revPrintText (command), command (glossary),
+LiveCode custom library (glossary)
 
 Tags: printing
+

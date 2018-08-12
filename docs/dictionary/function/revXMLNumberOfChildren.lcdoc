@@ -4,13 +4,17 @@ Type: function
 
 Syntax: revXMLNumberOfChildren(<treeID>, <startNode>, <childName> [, <depth>])
 
-Summary: <return|Returns> the number of <child node|child nodes> under the specified <node> in an <XML tree>.
+Summary:
+<return|Returns> the number of <child node|child nodes> under the
+specified <node> in an <XML tree>.
+
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -21,20 +25,53 @@ Example:
 repeat for revXMLNumberOfChildren(theTree,theNode,"Book",1) times
 
 Parameters:
-treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
-startNode: The path to the node whose child nodes you want to count.
-childName (string): A string specifying which child nodes to count. If it is empty, all child nodes are counted. Otherwise, only child nodes whose name matches the childName are counted.
-depth: The depth specifies how many generations to count. If you specify 0, only the parentNode's direct child nodes are counted, but not their child nodes. If you specify 1, the parentNode's child nodes are counted, along with their child nodes. To count all generations, specify -1 as the depth.
+treeID:
+The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+function when you created the XML tree.
 
-Returns: The <revXMLNumberOfChildren> <function> returns a <non-negative> <integer>.
+startNode:
+The path to the node whose child nodes you want to count.
+
+childName (string):
+A string specifying which child nodes to count. If it is empty, all
+child nodes are counted. Otherwise, only child nodes whose name matches
+the childName are counted.
+
+depth:
+The depth specifies how many generations to count. If you specify 0,
+only the parentNode's direct child nodes are counted, but not their
+child nodes. If you specify 1, the parentNode's child nodes are counted,
+along with their child nodes. To count all generations, specify -1 as
+the depth.
+
+Returns:
+The <revXMLNumberOfChildren> <function> returns a <non-negative>
+<integer>. 
 
 Description:
-Use the <revXMLNumberOfChildren> <function> to find out how many <child node|child nodes> a <parent node> has, or to find out how many of a particular kind of <child node|child nodes> it has.
+Use the <revXMLNumberOfChildren> <function> to find out how many <child
+node|child nodes> a <parent node> has, or to find out how many of a
+particular kind of <child node|child nodes> it has.
 
-If the <revXMLNumberOfChildren> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLNumberOfChildren> <function> encounters an error, it
+<return|returns> an error message starting with "xmlerr".
 
->*Important:*  The revXMLAddElement <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLNumberOfChildren> <function> is part of the 
+> <XML library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "XML" 
+> checkbox is checked.
 
-References: function (control_st), integer (keyword), revXMLChildContents (function), revXMLFirstChild (function), revXMLChildNames (function), XML library (library), LiveCode custom library (library), return (glossary), XML tree (glossary), child node (glossary), Standalone Application Settings (glossary), standalone application (glossary), non-negative (glossary), node (glossary), parent node (glossary)
+References: function (control structure), revXMLChildContents (function),
+revXMLFirstChild (function), revXMLChildNames (function),
+LiveCode custom library (glossary), return (glossary),
+XML tree (glossary), child node (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), non-negative (glossary),
+node (glossary), parent node (glossary), integer (keyword),
+XML library (library)
 
 Tags: text processing
+

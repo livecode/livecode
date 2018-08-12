@@ -30,19 +30,6 @@
 
 #include "mblcalendar.h"
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-MC_EXEC_DEFINE_EXEC_METHOD(Calendar, ShowEvent, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Calendar, CreateEvent, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Calendar, UpdateEvent, 1)
-MC_EXEC_DEFINE_GET_METHOD(Calendar, EventData, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Calendar, RemoveEvent, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Calendar, AddEvent, 2)
-MC_EXEC_DEFINE_GET_METHOD(Calendar, CalendarEvent, 0)
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCSystemCreateEvent(MCStringRef& r_result);
@@ -52,16 +39,6 @@ bool MCSystemCreateEvent(MCStringRef& r_result);
 
 void MCCalendarExecShowEvent(MCExecContext& ctxt, MCStringRef p_id)
 {
-#ifdef /* MCShowEventExec */ LEGACY_EXEC
-    char *t_result;
-    t_result = nil;
-    MCSystemShowEvent(p_event_id, t_result);
-    if (t_result != nil)
-        p_ctxt.SetTheResultToCString(t_result);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
-#endif /* MCShowEventExec */
     MCAutoStringRef t_result;
     if(MCSystemShowEvent(p_id, &t_result))
     {
@@ -75,16 +52,6 @@ void MCCalendarExecShowEvent(MCExecContext& ctxt, MCStringRef p_id)
 
 void MCCalendarExecCreateEvent(MCExecContext& ctxt)
 {
-#ifdef /* MCCreateEventExec */ LEGACY_EXEC
-    char *t_result;
-    t_result = nil;
-    MCSystemCreateEvent(t_result);
-    if (t_result != nil)
-        p_ctxt.SetTheResultToCString(t_result);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
-#endif /* MCCreateEventExec */
     MCAutoStringRef t_result;
     
     bool t = MCSystemCreateEvent(&t_result);
@@ -101,16 +68,6 @@ void MCCalendarExecCreateEvent(MCExecContext& ctxt)
 
 void MCCalendarExecUpdateEvent(MCExecContext& ctxt, MCStringRef p_id)
 {
-#ifdef /* MCUpdateEventExec */ LEGACY_EXEC
-    char *t_result;
-    t_result = nil;
-    MCSystemUpdateEvent(p_event_id, t_result);
-    if (t_result != nil)
-        p_ctxt.SetTheResultToCString(t_result);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
-#endif /* MCUpdateEventExec */
     MCAutoStringRef t_result;
     
     if(MCSystemUpdateEvent(p_id, &t_result))
@@ -125,14 +82,6 @@ void MCCalendarExecUpdateEvent(MCExecContext& ctxt, MCStringRef p_id)
 
 void MCCalendarGetEventData(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r_data)
 {
-#ifdef /* MCGetEventDataExec */ LEGACY_EXEC
-    MCVariableValue *r_event_data = nil;
-    MCSystemGetEventData(p_ctxt, p_event_id, r_event_data);
-    if (r_event_data == nil)
-        p_ctxt.SetTheResultToEmpty();
-    else
-        p_ctxt.GetEP().setarray(r_event_data, True);
-#endif /* MCGetEventDataExec */
     MCSystemGetEventData(ctxt, p_id, r_data);
     if (r_data == nil)
         ctxt.SetTheResultToEmpty();
@@ -142,16 +91,6 @@ void MCCalendarGetEventData(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r
 
 void MCCalendarExecRemoveEvent(MCExecContext& ctxt, MCStringRef p_id, bool p_reocurring)
 {
-#ifdef /* MCRemoveEventExec */ LEGACY_EXEC
-    char  *t_event_id_deleted;
-    t_event_id_deleted = nil;
-    MCSystemRemoveEvent (p_event_id, p_reocurring, t_event_id_deleted);
-    if (t_event_id_deleted != nil)
-        p_ctxt.SetTheResultToCString(t_event_id_deleted);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_event_id_deleted);
-#endif /* MCRemoveEventExec */
     MCAutoStringRef t_event_id_deleted;
     
     if(MCSystemRemoveEvent (p_id, p_reocurring, &t_event_id_deleted))
@@ -166,16 +105,6 @@ void MCCalendarExecRemoveEvent(MCExecContext& ctxt, MCStringRef p_id, bool p_reo
 
 void MCCalendarExecAddEvent(MCExecContext& ctxt, MCArrayRef p_data)
 {
-#ifdef /* MCAddEventExec */ LEGACY_EXEC
-    char *t_result;
-    t_result = nil;
-    MCSystemAddEvent(p_new_event_data, t_result);
-    if (t_result != nil)
-        p_ctxt.SetTheResultToCString(t_result);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
-#endif /* MCAddEventExec */
     MCAutoStringRef t_result;
     MCCalendar t_new_event_data;
     bool t_success;
@@ -197,16 +126,6 @@ void MCCalendarExecAddEvent(MCExecContext& ctxt, MCArrayRef p_data)
 
 void MCCalendarGetCalendars(MCExecContext& ctxt)
 {
-#ifdef /* MCGetCalendarsEventExec */ LEGACY_EXEC
-    char *t_result;
-    t_result = nil;
-    MCSystemGetCalendarsEvent(t_result);
-    if (t_result != nil)
-        p_ctxt.SetTheResultToCString(t_result);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
-#endif /* MCGetCalendarsEventExec */
     MCAutoStringRef t_result;
     
     if (MCSystemGetCalendarsEvent(&t_result))
@@ -221,16 +140,6 @@ void MCCalendarGetCalendars(MCExecContext& ctxt)
 
 void MCCalendarExecFindEvent(MCExecContext& ctxt, MCDateTime p_start_date, MCDateTime p_end_date)
 {
-#ifdef /* MCFindEventExec */ LEGACY_EXEC
-    char *t_result;
-    t_result = nil;
-    MCSystemFindEvent(p_start_date, p_end_date, t_result);
-    if (t_result != nil)
-        p_ctxt.SetTheResultToCString(t_result);
-    else
-        p_ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
-#endif /* MCFindEventExec */
     MCAutoStringRef t_result;
     
     if (MCSystemFindEvent(p_start_date, p_end_date, &t_result))

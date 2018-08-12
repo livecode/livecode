@@ -2,17 +2,19 @@ Name: editScript
 
 Type: message
 
-Syntax: editScript <objectID>, <atItems> 
+Syntax: editScript <pObjectID>, <pAtItems>
 
-Summary: Sent to the <current card> when the <object|object's> <script> is opened with the <edit> <command>.
+Summary:
+Sent to the <current card> when the <object|object's> <script> is opened
+with the <edit> <command>.
 
 Associations: card
 
 Introduced: 6.5
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 on editScript theObject -- save current script before editing
@@ -21,12 +23,24 @@ on editScript theObject -- save current script before editing
 end editScript
 
 Parameters:
-objectID: The long ID property of the object whose script is about to be opened.
-atItems: The atItems parameter may be sent if the optional edit script of object at syntax is used. By convention the atItems are used to provide a line and column that a script editor should be opened at.
+pObjectID:
+The long ID property of the object whose script is about to be opened.
+
+pAtItems:
+The pAtItems parameter may be sent if the optional edit script of object
+at syntax is used. By convention the pAtItems are used to provide a line
+and column that a script editor should be opened at.
 
 Description:
-Handle the <editScript> <message> if you want to intercept attempts to edit a <script> via the <message box> or a <handler>.
+Handle the <editScript> <message> if you want to intercept attempts to
+edit a <script> via the <message box> or a <handler>.
 
-The <editScript> <message> is sent when you use the <edit> command in a <handler>. However, it is not sent when the <development environment> is active.
+The <editScript> <message> is sent when you use the <edit> command in a
+<handler>. However, it is not sent when the <development environment> is
+active. 
 
-References: script (property), message box (keyword), edit (command), object (object), handler (glossary), current card (glossary), message (glossary), command (glossary), development environment (glossary)
+References: edit (command), object (glossary), handler (glossary),
+current card (glossary), message (glossary), command (glossary),
+development environment (glossary), message box (keyword),
+script (property)
+

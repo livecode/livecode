@@ -24,7 +24,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "param.h"
 #include "scriptpt.h"
 #include "chunk.h"
@@ -47,7 +47,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef class MCExternalVariable *MCExternalVariableRef;
-typedef MCObjectHandle *MCExternalObjectRef;
+typedef MCObjectProxy<MCObject>* MCExternalObjectRef;
 
 typedef void *MCExternalVariableIteratorRef;
 typedef uint32_t MCExternalValueOptions;
@@ -303,7 +303,8 @@ enum MCExternalLicenseType
 {
 	kMCExternalLicenseTypeNone = 0,
 	kMCExternalLicenseTypeCommunity = 1000,
-	kMCExternalLicenseTypeIndy = 2000,
+    kMCExternalLicenseTypeCommunityPlus = 1500,
+    kMCExternalLicenseTypeIndy = 2000,
 	kMCExternalLicenseTypeBusiness = 3000,
 };
 
@@ -506,7 +507,7 @@ public:
 class MCReferenceExternalVariable: public MCExternalVariable
 {
 public:
-    MCReferenceExternalVariable(MCVariable *value);
+    MCReferenceExternalVariable(MCContainer& value);
     ~MCReferenceExternalVariable(void);
     
     virtual bool IsTemporary(void);
@@ -515,13 +516,14 @@ public:
     virtual void SetValueRef(MCValueRef value);
     
 private:
-    MCVariable *m_variable;
+    MCContainer& m_container;
 };
 
 // MW-2014-01-22: [[ CompatV1 ]] This global holds the current handlers it-shim.
 static MCReferenceExternalVariable *s_external_v1_current_it = nil;
 // MW-2014-01-22: [[ CompatV1 ]] This global holds the result-shim.
 static MCReferenceExternalVariable *s_external_v1_result = nil;
+static MCContainer *s_external_v1_result_container = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 

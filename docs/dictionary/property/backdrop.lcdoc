@@ -4,11 +4,13 @@ Type: property
 
 Syntax: set the backdrop to {<colorName> | <RGBColor> | <patternNumber> | <imageID> | none}
 
-Summary: Places a solid or patterned <background> behind the <application|application's> windows, hiding any other applications.
+Summary:
+Places a solid or patterned <background> behind the
+<application|application's> windows, hiding any other applications.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
 Platforms: desktop
 
@@ -25,32 +27,71 @@ Value:
 The <backdrop> is a <color reference> or a pattern specifier.
 The <colorName> is any standard color name.
 
-The <RGBColor> consists of three comma-separated <integer|integers> between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three <hexadecimal> numbers, one for each of red, green, and blue.
+The <RGBColor> consists of three comma-separated <integer|integers>
+between zero and 255, specifying the level of each of red, green, and
+blue; or an HTML-style color consisting of a hash mark (#) followed by
+three <hexadecimal> numbers, one for each of red, green, and blue.
 
-A <patternNumber> is a built-in pattern number between 1 and 164. (These patterns correspond to LiveCode's built-in patterns 136 to 300.)
+A <patternNumber> is a built-in pattern number between 1 and 164. These
+patterns are provided for compatability with patterns available in
+MetaCard and correspond to LiveCode's built in image id 137 to 300. As
+with MetaCard pattern numbers 105 to 114 and 146 and above are 
+unavailable.
 
-An <imageID> is the ID of an <image> to use for a pattern. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+An <imageID> is the ID of an <image> to use for a pattern. LiveCode
+looks for the specified <image> first in the <current stack>, then in
+other open <stacks>.
 
 By default, the <backdrop> is "none".
 
 Description:
-Use the <backdrop> <property> to create a kiosk mode, or to limit distractions during a movie or similar presentation.
+Use the <backdrop> <property> to create a kiosk mode, or to limit
+distractions during a movie or similar presentation.
 
-Hiding other applications from the user is usually not recommended, since users may need or want to see other windows on their system. However, the ability to do this can be very useful for some applications (such as kiosk systems or games) or at times when you want to reduce distractions (such as during the playing of a movie).
+Hiding other applications from the user is usually not recommended,
+since users may need or want to see other windows on their system.
+However, the ability to do this can be very useful for some applications
+(such as kiosk systems or games) or at times when you want to reduce
+distractions (such as during the playing of a movie).
 
-Setting the <backdrop> <property> to "none" eliminates the backdrop and lets other windows be seen.
+Setting the <backdrop> <property> to "none" eliminates the backdrop and
+lets other windows be seen.
 
 Pattern images can be color or black-and-white.
 
->*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less, and both its <height> and <width> must be a power of 2. To be used on <Windows> and <Unix|Unix systems>, <height> and <width> must be divisible by 8. To be used as a fully cross-platform pattern, both an image's dimensions should be one of 8, 16, 32, 64, or 128.
+>*Cross-platform note:*  To be used as a pattern on
+> <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less,
+> and both its <height> and <width> must be a power of 2. To be used on
+> <Windows> and <Unix|Unix systems>, <height> and <width> must be
+> divisible by 8. To be used as a fully cross-platform pattern,
+> both an image's dimensions should be one of 8, 16, 32, 64, or 128.
 
->*Cross-platform note:*  On <Mac OS|Mac OS systems>, if you use the <launch> or <open process> <command|commands> to start up another application, or if the user brings another application to the front, its windows appear in front of the backdrop. (The backdrop remains visible even if the <application> is in the background.) Bringing the <application> to the front again hides the other application behind the backdrop. On <Unix> and <Windows|Windows systems>, any windows you open after setting the <backdrop> <property> remain in front of the backdrop, even if they belong to an application that is in the <background>.
+>*Cross-platform note:*  On <Mac OS|Mac OS systems>, if you use the
+> <launch> or <open process> <command|commands> to start up another
+> application, or if the user brings another application to the front,
+> its windows appear in front of the backdrop. (The backdrop remains
+> visible even if the <application> is in the background.) Bringing the
+> <application> to the front again hides the other application behind
+> the backdrop. On <Unix> and <Windows|Windows systems>, any windows you
+> open after setting the <backdrop> <property> remain in front of the
+> backdrop, even if they belong to an application that is in the
+> <background>. 
 
-If the system has multiple screens connected, the <backdrop> <property> affects only the main screen.
+If the system has multiple screens connected, the <backdrop> <property>
+affects only the main screen.
 
 Changes:
-The backdrop pattern option was introduced in version 1.1. In previous versions, the backdrop could be a solid color, but not a pattern.
+The backdrop pattern option was introduced in version 1.1. In previous
+versions, the backdrop could be a solid color, but not a pattern.
 
-References: raiseWindows (property), height (property), pixels (property), width (property), image (keyword), mouseUpInBackdrop (message), launch (command), open process (command), clickStack (function), stacks (function), property (glossary), command (glossary), hexadecimal (glossary), current stack (glossary), Windows (glossary), color reference (glossary), Mac OS (glossary), Unix (glossary), integer (glossary), background (glossary), application (glossary)
+References: launch (command), open process (command),
+clickStack (function), stacks (function), property (glossary),
+command (glossary), hexadecimal (glossary), current stack (glossary),
+Windows (glossary), color reference (glossary), Mac OS (glossary),
+Unix (glossary), integer (glossary), background (glossary),
+application (glossary), image (keyword), mouseUpInBackdrop (message),
+raiseWindows (property), height (property), pixels (property),
+width (property)
 
 Tags: ui
+

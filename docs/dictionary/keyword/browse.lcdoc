@@ -4,13 +4,15 @@ Type: keyword
 
 Syntax: browse
 
-Summary: Designates the <Browse tool>, which is used to interact with the <object|objects> of a <stack>.
+Summary:
+Designates the <Browse tool>, which is used to interact with the
+<object|objects> of a <stack>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,mobile
+Platforms: desktop, server, mobile
 
 Example:
 choose browse tool
@@ -18,10 +20,19 @@ choose browse tool
 Description:
 Use the <browse> <keyword> to enter normal (non-editing) mode.
 
-When using the Browse tool, the cursor is a pointing hand (or, over editable fields, an I-beam). This tool is used for user actions such as clicking buttons and typing in fields.
+When using the Browse tool, the cursor is a pointing hand (or, over
+editable fields, an I-beam). This tool is used for user actions such as
+clicking buttons and typing in fields.
 
-The Browse tool is always in effect for stacks whose cantModify <property> is true and for a <stack> being displayed as a <palette>, <modeless dialog box|modeless dialog>, or <modal dialog box|modal dialog>, regardless of which <tool> is currently chosen.
+The Browse tool is always in effect for stacks whose cantModify
+<property> is true and for a <stack> being displayed as a <palette>,
+<modeless dialog box|modeless dialog>, or <modal dialog box|modal
+dialog>, regardless of which <tool> is currently chosen.
 
-References: palette (command), choose (command), stack (object), object (object), keyword (glossary), Browse tool (glossary), property (glossary), modeless dialog box (glossary), modal dialog box (glossary), tool (function)
+References: palette (command), choose (command), tool (function),
+object (glossary), keyword (glossary), Browse tool (glossary),
+property (glossary), modeless dialog box (glossary),
+modal dialog box (glossary), stack (object)
 
 Tags: ui
+

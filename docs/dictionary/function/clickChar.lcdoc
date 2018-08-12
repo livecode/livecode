@@ -6,13 +6,14 @@ Syntax: the clickChar
 
 Syntax: clickChar()
 
-Summary: <return|Returns> the <character> the user last clicked in a <field>.
+Summary:
+<return|Returns> the <character> the user last clicked in a <field>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,web,mobile
+Platforms: desktop, mobile
 
 Example:
 the clickChar
@@ -20,19 +21,40 @@ the clickChar
 Example:
 if the clickChar is not "*" then beep 2
 
-Returns: The <clickChar> <function> <return|returns> a <character>.
+Returns:
+The <clickChar> <function> <return|returns> a <character>.
 
 Description:
-Use the <clickChar> <function> within a <mouseDown>, <mouseUp>, or <selectionChanged> <handler> to determine which <character> the user clicked, in order to provide <hypertext> (clickable text) or take some action based on the clicked <character>.
+Use the <clickChar> <function> within a <mouseDown>, <mouseUp>, or
+<selectionChanged> <handler> to determine which <character> the user
+clicked, in order to provide <hypertext> (clickable text) or take some
+action based on the clicked <character>.
 
-The <clickChar> <function> is cleared at the next mouse click, as well as after some editing actions such as deleting text. If the last click was not in a <field>, the <clickChar> <function> <return|returns> empty.
+The <clickChar> <function> is cleared at the next mouse click, as well
+as after some editing actions such as deleting text. If the last click
+was not in a <field>, the <clickChar> <function> <return|returns> empty.
 
-If the field is locked, the <clickChar> function is most useful within a <handler> (such as <mouseDown> or <mouseUp>) that is <trigger|triggered> by the mouse click.
+If the field is locked, the <clickChar> function is most useful within a
+<handler> (such as <mouseDown> or <mouseUp>) that is <trigger|triggered>
+by the mouse click.
 
-If the field is unlocked, mouseDown and <mouseUp> <message|messages> are not sent when the user clicks in the <field> (unless the user right-clicks or holds down the Control key while clicking). Use the <clickChar> <function> within a <selectionChanged> <handler> to determine what <characters> the user is editing in an <unlock|unlocked> <field>.
+If the field is unlocked, mouseDown and <mouseUp> <message|messages> are
+not sent when the user clicks in the <field> (unless the user
+right-clicks or holds down the Control key while clicking). Use the
+<clickChar> <function> within a <selectionChanged> <handler> to
+determine what <characters> the user is editing in an <unlock|unlocked>
+<field>. 
 
-To find the position of the <clickChar>, use the <clickChunk> <function>.
+To find the position of the <clickChar>, use the <clickChunk>
+<function>. 
 
-References: field (keyword), character (keyword), characters (keyword), mouseDown (message), mouseUp (message), selectionChanged (message), clickCharChunk (function), mouseChar (function), charToNum (function), clickChunk (function), clickText (function), handler (glossary), unlock (glossary), message (glossary), trigger (glossary), return (glossary), hypertext (glossary), function (control_st)
+References: function (control structure), clickCharChunk (function),
+mouseChar (function), charToNum (function), clickChunk (function),
+clickText (function), handler (glossary), unlock (glossary),
+message (glossary), trigger (glossary), return (glossary),
+hypertext (glossary), field (keyword), character (keyword),
+characters (keyword), mouseDown (message), mouseUp (message),
+selectionChanged (message)
 
 Tags: ui
+

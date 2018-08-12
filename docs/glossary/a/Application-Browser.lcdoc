@@ -1,12 +1,20 @@
 Name: Application Browser
 
-Synonyms: Application Overview,Application Overview window,App Overview,App Overview window,Application Browser,Application Browser window,App Browser,App Browser window
+Synonyms: application overview, application overview window, app overview,
+app overview window, application browser, application browser window,
+app browser, app browser window
 
 Type: glossary
 
 Description:
-Part of the LiveCode <development environment>. In the Application Browser, you can see a list of all open <stack|stacks>, and all <object|objects> in your <stack|stacks>--hidden or visible--and change their properties. 
- 
-You open the Application Browser by choosing <a> </a>Tools menu<img src="202656"></img>Application Browser>*Important:* .
+Part of the LiveCode <development environment>. In the Application
+Browser, you can see a list of all open <stack|stacks>, and all
+<object|objects> in your <stack|stacks>--hidden or visible--and change
+their properties.
 
-References: stack (object), object (object), development environment (glossary)
+You open the Application Browser by choosing Development → Plugins →
+revApplicationOverview from the menubar.
+
+References: stack (glossary), object (glossary),
+development environment (glossary)
+

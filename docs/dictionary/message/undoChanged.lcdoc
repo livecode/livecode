@@ -4,15 +4,16 @@ Type: message
 
 Syntax: undoChanged
 
-Summary: Sent to the <current card> when the Undo action changes.
+Summary:
+Sent to the <current card> when the Undo action changes.
 
 Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Example:
 on undoChanged
@@ -21,10 +22,16 @@ on undoChanged
 end undoChanged
 
 Description:
-Handle the <undoChanged> <message> if you want to intercept the "Undo" menu item, providing your own Undo stack.
+Handle the <undoChanged> <message> if you want to intercept the "Undo"
+menu item, providing your own Undo stack.
 
-Undoable actions include painting actions, deletion of objects, moving of controls, and editing actions in a field. When the user performs one of these actions, thus changing what happens as a result of choosing Edit menu<img src="202656"/>Undo, LiveCode sends the <undoChanged> <message> to the <current card>.
+Undoable actions include painting actions, deletion of objects, moving
+of controls, and editing actions in a field. When the user performs one
+of these actions, thus changing what happens as a result of choosing
+Edit → Undo from the menubar, LiveCode sends the <undoChanged> <message>
+to the <current card>.
 
 References: undo (command), current card (glossary), message (glossary)
 
 Tags: ui
+

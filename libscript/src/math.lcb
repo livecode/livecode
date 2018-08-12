@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This library consists of the mathematical operations included in the standard library of LiveCode Builder.
 */
 
@@ -76,13 +76,16 @@ public foreign handler MCMathEvalMaxNumber(in Left as Number, in Right as Number
 
 public foreign handler MCMathEvalRandomReal(out Value as CDouble) returns nothing binds to "<builtin>"
 
+public foreign handler MCMathEvalSqrtReal(in Operand as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCMathEvalSqrtNumber(in Operand as Number, out Value as Number) returns nothing binds to "<builtin>"
+
 public foreign handler MCMathEvalConvertBase(in Operand as String, in Source as LCInt, in Target as LCInt, out Value as String) returns nothing binds to "<builtin>"
 public foreign handler MCMathEvalConvertToBase10(in Operand as String, in Source as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
 public foreign handler MCMathEvalConvertFromBase10(in Operand as LCInt, in Target as LCInt, out Value as String) returns nothing binds to "<builtin>"
 
 --
 
-/*
+/**
 Summary:    Binary exponentiation operation.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -104,7 +107,7 @@ end syntax
 
 --
 
-/*
+/**
 Syntax:		sin(<Operand>)
 Summary:    Sin operator.
 Operand:    An expression that evaluates to a number.
@@ -128,11 +131,13 @@ end syntax
 
 public handler Sin(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalSinNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalSinNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
-/*
+/**
 Syntax:		cos(<Operand>)
 Summary:    Cos operator.
 Operand:    An expression that evaluates to a number.
@@ -152,11 +157,13 @@ end syntax
 
 public handler Cos(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalCosNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalCosNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
-/*
+/**
 Syntax:		tan(<Operand>)
 Summary:    Tan operator.
 Operand:    An expression that evaluates to a number.
@@ -180,11 +187,13 @@ end syntax
 
 public handler Tan(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalTanNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalTanNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
-/*
+/**
 Syntax:		asin(<Operand>)
 Summary:    Arcsin operator.
 Operand:    An expression that evaluates to a number.
@@ -211,11 +220,13 @@ end syntax
 
 public handler Asin(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalAsinNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalAsinNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
-/*
+/**
 Syntax:		acos(<Operand>)
 Summary:    Arccos operator.
 Operand:    An expression that evaluates to a number.
@@ -242,11 +253,13 @@ end syntax
 
 public handler Acos(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalAcosNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalAcosNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
-/*
+/**
 Syntax:		atan(<Operand>)
 Summary:    Arctan operator.
 Operand:    An expression that evaluates to a number.
@@ -273,11 +286,13 @@ end syntax
 
 public handler Atan(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalAtanNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalAtanNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
-/*
+/**
 Syntax:		atan2(<yCoord>,<xCoord>)
 Summary:    Binary arctan operator.
 yCoord:   	An expression that evaluates to a number.
@@ -306,13 +321,15 @@ end syntax
 
 public handler atan2(in pY as Number, in pX as Number) returns Number
     variable tVar as Number
-    MCMathEvalAtan2Number(pX, pY, tVar)
+    unsafe
+        MCMathEvalAtan2Number(pX, pY, tVar)
+    end unsafe
     return tVar
 end handler
 
 --
 
-/*
+/**
 Syntax:		log(<Operand>)
 Summary:    Base 10 log operator.
 Operand:    An expression that evaluates to a number.
@@ -332,13 +349,15 @@ end syntax
 
 public handler log10(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalBase10LogNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalBase10LogNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
 --
 
-/*
+/**
 Syntax:		ln(<Operand>)
 Summary:    Natural log operator.
 Operand:    An expression that evaluates to a number.
@@ -359,11 +378,13 @@ end syntax
 
 public handler Ln(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalNaturalLogNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalNaturalLogNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
-/*
+/**
 Syntax:		exp(<Operand>)
 Summary:    Exponentiation operator.
 Operand:    An expression that evaluates to a number.
@@ -385,13 +406,15 @@ end syntax
 
 public handler Exp(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalExpNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalExpNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
 --
 
-/*
+/**
 Summary:    Truncation operator.
 Operand:    An expression that evaluates to a number.
 
@@ -414,7 +437,7 @@ begin
     MCMathEvalTruncNumber(Operand, output)
 end syntax
 
-/*
+/**
 Summary:    Absolute value operator.
 Operand:    An expression that evaluates to a number.
 
@@ -438,7 +461,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Generates a pseudo-random number.
 
 Returns: 	A real between 0.0 and 1.0.
@@ -459,7 +482,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Min operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -477,11 +500,13 @@ end syntax
 
 public handler Min(in pX as Number, in pY as Number) returns Number
     variable tVar as Number
-    MCMathEvalMinNumber(pX, pY, tVar)
+    unsafe
+        MCMathEvalMinNumber(pX, pY, tVar)
+    end unsafe
     return tVar
 end handler
 
-/*
+/**
 Summary:    Max operator.
 Left:       An expression that evaluates to a number.
 Right:      An expression that evaluates to a number.
@@ -499,11 +524,13 @@ end syntax
 
 public handler Max(in pX as Number, in pY as Number) returns Number
     variable tVar as Number
-    MCMathEvalMaxNumber(pX, pY, tVar)
+    unsafe
+        MCMathEvalMaxNumber(pX, pY, tVar)
+    end unsafe
     return tVar
 end handler
 
-/*
+/**
 Summary:    Min operator.
 List:		An expression that evaluates to a list.
 
@@ -521,7 +548,7 @@ begin
     MCMathEvalMinList(ValueList, output)
 end syntax
 
-/*
+/**
 Summary:    Max operator.
 List:		An expression that evaluates to a list.
 
@@ -541,7 +568,43 @@ end syntax
 
 --
 
-/*
+/**
+Syntax:		sqrt(<Operand>)
+Summary:    Square root operator.
+Operand:    An expression that evaluates to a number.
+
+Example:
+variable tVar as Number
+put sqrt(9) into tVar -- tVar contains 3
+
+Example:
+variable tVar as Number
+put the square root of 4 into tVar -- tVar contains 2
+
+Description:
+The square root of a number is the number which must be
+squared to obtain number : sqrt(number)^2 is equal to number.
+
+Tags: Math
+*/
+
+syntax SquareRootOperator is prefix operator with function chunk precedence
+    "the" "square" "root" "of" <Operand: Expression>
+begin
+    MCMathEvalSqrtNumber(Operand, output)
+end syntax
+
+public handler Sqrt(in pOperand as Number) returns Number
+    variable tVar as Number
+    unsafe
+        MCMathEvalSqrtNumber(pOperand, tVar)
+    end unsafe
+    return tVar
+end handler
+
+--
+
+/**
 Summary:    Converts the base of <Operand>
 Operand:    An expression that evaluates to a string.
 Source:     An expression that evaluates to an integer.
@@ -562,7 +625,7 @@ begin
     MCMathEvalConvertToBase10(Operand, Source, output)
 end syntax
 
-/*
+/**
 Summary:    Converts the base of <Operand>
 Operand:    An expression that evaluates to an integer.
 Target:     An expression that evaluates to an integer.
@@ -583,7 +646,7 @@ begin
     MCMathEvalConvertFromBase10(Operand, Target, output)
 end syntax
 
-/*
+/**
 Summary:    Converts the base of <Operand>
 Operand:    An expression that evaluates to a string.
 Source:     An expression that evaluates to an integer.

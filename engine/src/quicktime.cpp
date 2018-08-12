@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -14,25 +14,30 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <algorithm>
+
 #include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-
-#include "graphics.h"
-#include "stack.h"
-#include "execpt.h"
-#include "player.h"
-#include "util.h"
+#include "globals.h"
 #include "osspec.h"
 #include "variable.h"
 
+/* Pretty much everything in this file is only needed if quicktime
+ * effects are enabled. */
+#if defined(FEATURE_QUICKTIME_EFFECTS)
+
+#include "graphics.h"
+#include "stack.h"
+
+#include "player.h"
+#include "util.h"
+
 #ifdef _WINDOWS_DESKTOP
-#include "w32prefix.h"
 #include "w32dc.h"
-#include "w32context.h"
 
 #include "digitalv.h"
 #include "QTML.h"
@@ -45,9 +50,6 @@
 #include <ImageCodec.h>
 
 #define PIXEL_FORMAT_32 k32BGRAPixelFormat
-// SN-2014-06-26 [[ PlatformPlayer ]]
-// Function used in both quicktime.cpp and player.cpp
-extern OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 
 #elif defined(_MAC_DESKTOP)
 #include <QuickTime/QuickTime.h>
@@ -84,8 +86,6 @@ void UnlockPixels(PixMapHandle pix);
 
 #endif
 
-#ifdef FEATURE_QUICKTIME_EFFECTS
-
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct
@@ -110,11 +110,8 @@ extern "C" int initialise_weak_link_QuickDraw(void);
 
 /////////
 
-bool MCQTInit(void)
+bool MCQTInitialize(void)
 {
-	if (MCdontuseQT)
-		return false;
-	
 	if (s_qt_initted)
 		return true;
 	
@@ -143,6 +140,14 @@ bool MCQTInit(void)
 #endif
 	
 	return s_qt_initted;
+}
+
+bool MCQTInit(void)
+{
+	if (MCdontuseQT)
+		return false;
+	
+	return MCQTInitialize();
 }
 
 void MCQTFinit(void)
@@ -235,6 +240,66 @@ static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 	return t_success;
 }
 
+#ifdef _WINDOWS
+// SN-2014-06-26 [[ PlatformPlayer ]]
+// Function used in both quicktime.cpp and player-legacy.cpp
+#define PATH_MAX 260
+OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
+{ //For QT movie only
+	MCAutoStringRef t_filename;
+	char *nativepath;
+	char *temp;
+    
+	/* UNCHECKED */ MCS_resolvepath(p_filename, &t_filename);
+    
+	if (MCStringGetNativeCharAtIndex(*t_filename, 1) != ':' &&
+		MCStringGetNativeCharAtIndex(*t_filename, 0) != '/')
+	{//not c:/mc/xxx, not /mc/xxx
+		MCAutoStringRef t_native;
+		MCAutoStringRef t_path;
+		MCAutoStringRef t_curdir;
+		
+		/* UNCHECKED */ MCS_getcurdir(&t_curdir);
+		/* UNCHECKED */ MCStringMutableCopy(*t_curdir, &t_path);
+		if (MCStringGetLength(p_filename) + MCStringGetLength(*t_curdir) < PATH_MAX)
+		{
+			// MW-2005-01-25: If the current directory is the root of a volume then it *does*
+			//   have a path separator so we don't need to add one
+			if (MCStringGetNativeCharAtIndex(*t_path, MCStringGetLength(*t_path) - 1) != '/')
+            /* UNCHECKED */ MCStringAppendChar(*t_path, '/');
+            
+			/* UNCHECKED */ MCStringAppend(*t_path, *t_filename);
+			/* UNCHECKED */ MCS_pathtonative(*t_path, &t_native);
+			/* UNCHECKED */ MCStringConvertToCString(*t_native, temp);
+			nativepath = strclone(temp);
+		}
+	}
+	else
+	{
+		/* UNCHECKED */ MCStringConvertToCString(*t_filename, temp);
+		nativepath = strclone(temp);
+	}
+    
+	OSErr err = NativePathNameToFSSpec(nativepath, fspec, 0);
+	delete nativepath;
+	return err;
+}
+#endif
+
+struct FormatTable
+{
+    const char *label;
+    OSType value;
+};
+
+static const FormatTable record_formats[] =
+{
+    { "aiff", kQTFileTypeAIFF },
+    { "wave", kQTFileTypeWave },
+    { "ulaw", kQTFileTypeMuLaw },
+    { "movie", kQTFileTypeMovie },
+};
+
 static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
 {
 	bool t_success = true;
@@ -282,21 +347,7 @@ static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
 		Component c;
 		ComponentDescription cd;
 		cd.componentType = MovieExportType;
-		switch (MCrecordformat)
-		{
-			case EX_WAVE:
-				cd.componentSubType = kQTFileTypeWave;
-				break;
-			case EX_ULAW:
-				cd.componentSubType = kQTFileTypeMuLaw;
-				break;
-			case EX_AIFF:
-				cd.componentSubType = kQTFileTypeAIFF;
-				break;
-			default:
-				cd.componentSubType = kQTFileTypeMovie;
-				break;
-		}
+        cd.componentSubType = MCrecordformat;
 		cd.componentManufacturer = AUDIO_MEDIA_TYPE;
 		cd.componentFlags = canMovieExportFiles;
 		cd.componentFlagsMask = canMovieExportFiles;
@@ -349,7 +400,7 @@ void MCQTStopRecording(void)
 			sgSoundComp = NULL;
 		}
 #ifdef _WINDOWS
-		if (MCrecordformat == EX_MOVIE)
+        if (MCrecordformat == kQTFileTypeMovie)
         {
             MCAutoStringRefAsWString t_tempfile, t_exportfile;
             /* UNCHECKED */ t_tempfile . Lock(recordtempfile);
@@ -420,7 +471,7 @@ void MCQTRecordSound(MCStringRef fname)
 	UnsignedFixed sampleRate = 44100 << 16;
 #ifdef _WINDOWS
 	
-	if (MCrecordformat == EX_MOVIE)
+    if (MCrecordformat == kQTFileTypeMovie)
 	{
 		short denominator = (short)(MAXINT2 / MCrecordrate);
 		short numerator = (short)(MCrecordrate * denominator);
@@ -499,7 +550,43 @@ void MCQTGetRecordLoudness(integer_t &r_loudness)
 		r_loudness = (uint2)((meterState[1] * 100) / 255);
 	}
 }
+        
+intenum_t MCQTGetRecordFormatId(MCStringRef p_string)
+{
+    for (auto&& t_format : record_formats)
+    {
+        if (MCStringIsEqualToCString(p_string, t_format.label, kMCCompareCaseless))
+            return t_format.value;
+    }
+    return 0;
+}
+        
+MCStringRef MCQTGetRecordFormatLabel(intenum_t p_id)
+{
+    for (auto&& t_format : record_formats)
+    {
+        if (p_id == t_iter.value)
+            return t_format.label;
+    }
+    
+    return kMCEmptyString;
+}
 
+bool MCQTGetRecordFormatList(MStringRef& r_string)
+{
+    MCAutoListRef t_list;
+    if (!MCListCreateMutable('\n', &t_list))
+        return false;
+    
+    for (auto&& t_format : record_formats)
+    {
+        if (!MCListAppendCString(*t_list, t_format.label))
+            return false;
+    }
+    
+    return MCListCopyAsString(*t_list, r_string);
+}
+        
 void MCQTGetRecordCompressionList(MCStringRef &r_string)
 {	
 	if (!MCQTInit())
@@ -610,10 +697,8 @@ void MCQTRecordDialog()
 
 static CGrafPtr s_qt_target_port = nil;
 
-static MCGImageRef s_qt_start_image = nil;
 static CGrafPtr s_qt_start_port = NULL;
 
-static MCGImageRef s_qt_end_image = nil;
 static CGrafPtr s_qt_end_port = NULL;
 
 static QTAtomContainer s_qt_effect_desc = NULL;
@@ -622,7 +707,7 @@ static ImageDescriptionHandle s_qt_sample_desc = NULL;
 static ImageDescriptionHandle s_qt_start_desc = NULL;
 static ImageDescriptionHandle s_qt_end_desc = NULL;
 static TimeBase s_qt_timebase = NULL;
-static ImageSequence s_qt_effect_seq = NULL;
+static ImageSequence s_qt_effect_seq = 0;
 
 static Boolean s_qt_reverse = False;
 
@@ -670,7 +755,7 @@ Boolean MCQTEffectsDialog(MCStringRef &r_data)
 			case codecParameterDialogConfirm:
 			case userCanceledErr:
 				QTDismissStandardParameterDialog(createdDialogID);
-				createdDialogID =nil;
+				createdDialogID = 0;
 				break;
 		}
 	}
@@ -682,7 +767,7 @@ Boolean MCQTEffectsDialog(MCStringRef &r_data)
 	}
 	HLock((Handle)effectdesc);
 	uint4 datasize = GetHandleSize(effectdesc) + sizeof(long) * 2;
-	char *dataptr = new char[datasize];
+	char *dataptr = new (nothrow) char[datasize];
 	long *aLong = (long *)dataptr;
 	HLock((Handle)effectdesc);
 	aLong[0] = EndianU32_NtoB(datasize);
@@ -780,7 +865,7 @@ static void QTEffectsQuery(void **effectatomptr)
 	numeffects = QTCountChildrenOfType(effectatom, kParentAtomIsContainer,
 	                                   kEffectNameAtom);
 	neffects = 0;
-	qteffects = new QTEffect[numeffects];
+	qteffects = new (nothrow) QTEffect[numeffects];
 	uint2 i;
 	for (i = 1; i <= numeffects; i++)
 	{
@@ -799,7 +884,7 @@ static void QTEffectsQuery(void **effectatomptr)
 			                    &qteffects[neffects].type, NULL);
 			QTLockContainer(effectatom);
 			QTGetAtomDataPtr(effectatom, nameatom, &datasize, (Ptr *)&sptr);
-			qteffects[neffects].token = new char[datasize+1];
+			qteffects[neffects].token = new (nothrow) char[datasize+1];
 			memcpy(qteffects[neffects].token,sptr,datasize);
 			qteffects[neffects].token[datasize] = '\0';
 			QTUnlockContainer(effectatom);
@@ -1123,7 +1208,7 @@ bool MCQTEffectStep(const MCRectangle &drect, MCStackSurface *p_target, uint4 p_
 void MCQTEffectEnd(void)
 {
 	if (s_qt_effect_seq != 0)
-		CDSequenceEnd(s_qt_effect_seq), s_qt_effect_seq = NULL;
+		CDSequenceEnd(s_qt_effect_seq), s_qt_effect_seq = 0;
 	
 	if (s_qt_timebase != NULL)
 		DisposeTimeBase(s_qt_timebase), s_qt_timebase = NULL;
@@ -1154,6 +1239,11 @@ void MCQTEffectEnd(void)
 }
 
 #else    // if not FEATURE_QUICKTIME_EFFECTS
+
+bool MCQTInitialize()
+{
+	return false;
+}
 
 bool MCQTInit()
 {
@@ -1188,6 +1278,23 @@ void MCQTGetRecordCompressionList(MCStringRef &r_compression_list)
     r_compression_list = MCValueRetain(kMCEmptyString);
 }
 
+intenum_t MCQTGetRecordFormatId(MCStringRef p_string)
+{
+    return 0;
+}
+    
+MCStringRef MCQTGetRecordFormatLabel(intenum_t p_id)
+{
+    return kMCEmptyString;
+}
+        
+bool MCQTGetRecordFormatList(MCStringRef &r_format_list)
+{
+    MCresult -> sets("not supported");
+    r_format_list = MCValueRetain(kMCEmptyString);
+    return true;
+}
+
 void MCQTStopRecording(void)
 {
 }
@@ -1210,5 +1317,5 @@ void MCQTGetVersion(MCStringRef& r_version)
 }
 
 
-#endif
+#endif /* !FEATURE_QUICKTIME_EFFECTS */
 

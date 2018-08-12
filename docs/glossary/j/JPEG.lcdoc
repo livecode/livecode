@@ -1,12 +1,14 @@
 Name: JPEG
 
-Synonyms: JPEG,JPG,.jpeg,.jpg
+Synonyms: jpeg, jpg, .jpeg, .jpg
 
 Type: glossary
 
 Description:
-Joint Photographic Experts Group. A <bitmap|bitmapped> color picture <format>.
+Joint Photographic Experts Group. A <bitmap|bitmapped> color picture
+<format>. 
 
 References: format (glossary), bitmap (glossary)
 
 Tags: multimedia
+

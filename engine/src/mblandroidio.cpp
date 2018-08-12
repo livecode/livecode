@@ -95,7 +95,7 @@ public:
 		return ftell(m_stream);
 	}
 	
-	virtual int64_t GetFileSize(void)
+	virtual uint64_t GetFileSize(void)
 	{
 		struct stat t_info;
 		if (fstat(fileno(m_stream), &t_info) != 0)
@@ -218,7 +218,7 @@ public:
 		return m_position;
 	}
 	
-	virtual int64_t GetFileSize(void)
+	virtual uint64_t GetFileSize(void)
 	{
 		return m_size;
 	}
@@ -296,7 +296,7 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
 			return NULL;
 		}
         
-		t_handle = new MCAssetFileHandle(t_stream, t_size, t_offset);
+		t_handle = new (nothrow) MCAssetFileHandle(t_stream, t_size, t_offset);
     }
 	else
 	{
@@ -314,7 +314,7 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
         if (t_stream == NULL)
             return NULL;
         
-        t_handle = new MCStdioFileHandle(t_stream);
+        t_handle = new (nothrow) MCStdioFileHandle(t_stream);
 	}
     
     return t_handle;

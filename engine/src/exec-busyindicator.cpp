@@ -31,14 +31,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StartBusyIndicator, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StopBusyIndicator, 0)
-
-MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StartActivityIndicator, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StopActivityIndicator, 0)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCBusyIndicatorElementInfo[] =
 {
 	{ "in line", kMCBusyIndicatorInLine, false },
@@ -76,9 +68,6 @@ MCExecEnumTypeInfo* kMCActivityIndicatorTypeInfo = &_kMCActivityIndicatorTypeInf
 // MM-2013-02-04: [[ Bug 10642 ]] Added new optional opacity parameter to busy indicator.
 void MCBusyIndicatorExecStartBusyIndicator(MCExecContext& ctxt, intenum_t p_indicator, MCStringRef p_label, int32_t p_opacity)
 {
-#ifdef /* MCBusyIndicatorExecStart */ LEGACY_EXEC
-    MCSystemBusyIndicatorStart(p_indicator, p_label, p_opacity);
-#endif /* MCBusyIndicatorExecStart */
     if(MCSystemBusyIndicatorStart(p_indicator, p_label, p_opacity))
         return;
     
@@ -87,9 +76,6 @@ void MCBusyIndicatorExecStartBusyIndicator(MCExecContext& ctxt, intenum_t p_indi
 
 void MCBusyIndicatorExecStopBusyIndicator(MCExecContext& ctxt)
 {
-#ifdef /* MCBusyIndicatorExecStop */ LEGACY_EXEC
-    MCSystemBusyIndicatorStop();
-#endif /* MCBusyIndicatorExecStop */
     if(MCSystemBusyIndicatorStop())
         return;
     
@@ -98,9 +84,6 @@ void MCBusyIndicatorExecStopBusyIndicator(MCExecContext& ctxt)
 
 void MCBusyIndicatorExecStartActivityIndicator(MCExecContext& ctxt, intenum_t p_indicator, integer_t* p_location_x, integer_t* p_location_y)
 {
-#ifdef /* MCActivityIndicatorExecStart */ LEGACY_EXEC
-    MCSystemActivityIndicatorStart (p_indicator, p_location);
-#endif /* MCActivityIndicatorExecStart */
     // Check whether the location is provided
     if (p_location_x == nil || p_location_y == nil)
         MCSystemActivityIndicatorStart(p_indicator, -1, -1);
@@ -110,8 +93,5 @@ void MCBusyIndicatorExecStartActivityIndicator(MCExecContext& ctxt, intenum_t p_
 
 void MCBusyIndicatorExecStopActivityIndicator(MCExecContext& ctxt)
 {
-#ifdef /* MCActivityIndicatorExecStop */ LEGACY_EXEC
-    MCSystemActivityIndicatorStop ();
-#endif /* MCActivityIndicatorExecStop */
     MCSystemActivityIndicatorStop ();
 }

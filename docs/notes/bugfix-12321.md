@@ -1,1 +1,0 @@
-# On Windows 7 Fullscreen set to false does not return to previous size

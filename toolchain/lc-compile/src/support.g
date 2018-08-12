@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -21,6 +21,7 @@
 
 'export'
     IsBootstrapCompile
+    IsNotBytecodeOutput
 
     NegateReal
 
@@ -31,6 +32,7 @@
     GetColumnOfCurrentPosition
     GetUndefinedPosition
     AddImportedModuleFile
+	AddImportedModuleName
     GetFilenameOfPosition
 
     InitializeLiterals
@@ -47,17 +49,25 @@
     IsStringEqualToString
 
     IsNameSuitableForDefinition
+    IsNameSuitableForNamespace
+    IsNameValidForNamespace
     IsStringSuitableForKeyword
 
+	ConcatenateNameParts
+	ContainsNamespaceOperator
+	SplitNamespace
+	
     InitializeScopes
     FinalizeScopes
     DumpScopes
     EnterScope
     LeaveScope
     DefineMeaning
+	DefineUnqualifiedMeaning
     UndefineMeaning
     HasLocalMeaning
     HasMeaning
+	HasUnqualifiedMeaning
 
     PushEmptySet
     DuplicateSet
@@ -122,12 +132,19 @@
     PushInMarkArgumentSyntaxMapping
     PushOutMarkArgumentSyntaxMapping
     PushInOutMarkArgumentSyntaxMapping
+    AddUnreservedSyntaxKeyword
 
     IsDependencyCompile
     DependStart
     DependFinish
     DependDefineMapping
     DependDefineDependency
+
+    BytecodeEnumerate
+    BytecodeLookup
+    BytecodeDescribe
+    BytecodeDescribeParameter
+    BytecodeIsValidArgumentCount
 
     EmitStart
     EmitFinish
@@ -146,10 +163,9 @@
     EmitTypeDefinition
     EmitConstantDefinition
     EmitVariableDefinition
-    EmitContextVariableDefinition
     EmitBeginHandlerDefinition
     EmitEndHandlerDefinition
-    EmitBeginContextHandlerDefinition
+    EmitBeginUnsafeHandlerDefinition
     EmitForeignHandlerDefinition
     EmitPropertyDefinition
     EmitEventDefinition
@@ -176,12 +192,6 @@
     EmitDefinedType
     EmitForeignType
     EmitOptionalType
-    EmitPointerType
-    EmitBoolType
-    EmitIntType
-    EmitUIntType
-    EmitFloatType
-    EmitDoubleType
     EmitAnyType
     EmitBooleanType
     EmitIntegerType
@@ -200,6 +210,7 @@
     EmitHandlerTypeInParameter
     EmitHandlerTypeOutParameter
     EmitHandlerTypeInOutParameter
+    EmitHandlerTypeVariadicParameter
     EmitEndHandlerType
     EmitHandlerParameter
     EmitHandlerVariable
@@ -242,16 +253,21 @@
     EmitStore
     EmitReturn
     EmitReturnNothing
+    EmitReset
     EmitAttachRegisterToExpression
     EmitDetachRegisterFromExpression
     EmitGetRegisterAttachedToExpression
     EmitPosition
+    EmitBeginOpcode
+    EmitContinueOpcode
+    EmitEndOpcode
 
     OutputBeginManifest
     OutputEnd
     OutputWrite
     OutputWriteI
     OutputWriteS
+    OutputWriteXmlS
 
     ErrorsDidOccur
     Fatal_OutOfMemory
@@ -260,6 +276,7 @@
     Error_MalformedToken
     Error_MalformedSyntax
     Error_MalformedEscapedString
+	Error_IllegalNamespaceOperator
     Error_IdentifierPreviouslyDeclared
     Error_IdentifierNotDeclared
     Error_InvalidNameForSyntaxMarkVariable
@@ -327,15 +344,31 @@
     Error_ConstantArrayKeyIsNotStringLiteral
     Error_ListExpressionTooLong
     Error_ArrayExpressionTooLong
+    Error_UnknownOpcode
+    Error_OpcodeArgumentMustBeLabel
+    Error_OpcodeArgumentMustBeRegister
+    Error_OpcodeArgumentMustBeConstant
+    Error_OpcodeArgumentMustBeHandler
+    Error_OpcodeArgumentMustBeVariable
+    Error_OpcodeArgumentMustBeDefinition
+    Error_IllegalNumberOfArgumentsForOpcode
+    Error_BytecodeNotAllowedInSafeContext
+    Error_UnsafeHandlerCallNotAllowedInSafeContext
+    Error_InvalidNameForNamespace
+    Error_VariadicParametersOnlyAllowedInForeignHandlers
+    Error_VariadicParameterMustBeLast
+    Error_VariadicArgumentNotExplicitlyTyped
+
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
-    Warning_UndefinedConstantDeprecated
+    Warning_UnsuitableNameForNamespace
     Warning_DeprecatedSyntax
 
 --------------------------------------------------------------------------------
 
 'condition' IsBootstrapCompile()
+'condition' IsNotBytecodeOutput()
 
 --------------------------------------------------------------------------------
 
@@ -354,6 +387,7 @@
 'action' GetUndefinedPosition(-> Position: POS)
 
 'condition' AddImportedModuleFile(Name: STRING)
+'action' AddImportedModuleName(Name: STRING)
 
 'action' GetFilenameOfPosition(Position: POS -> Filename: STRING)
 
@@ -363,7 +397,7 @@
 'action' FinalizeLiterals()
 
 'condition' MakeIntegerLiteral(Token: STRING -> Literal: INT)
-'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
+'condition' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
 'condition' UnescapeStringLiteral(Position:POS, String: STRING -> UnescapedString: STRING)
 'action' MakeNameLiteral(Token: STRING -> Literal: NAME)
@@ -375,7 +409,13 @@
 'condition' IsNameNotEqualToName(NAME, NAME)
 
 'condition' IsNameSuitableForDefinition(NAME)
+'condition' IsNameSuitableForNamespace(NAME)
+'condition' IsNameValidForNamespace(NAME)
 'condition' IsStringSuitableForKeyword(STRING)
+
+'action' ConcatenateNameParts(NAME, NAME -> NAME)
+'action' SplitNamespace(NAME -> NAME, NAME)
+'condition' ContainsNamespaceOperator(NAME)
 
 --------------------------------------------------------------------------------
 
@@ -401,10 +441,12 @@
 'action' EnterScope()
 'action' LeaveScope()
 
-'action' DefineMeaning(Name: NAME, Meaning: MEANING)
-'action' UndefineMeaning(Name: NAME)
+'action' DefineMeaning(Name: NAME, Namespace: NAME, Meaning: MEANING)
+'action' DefineUnqualifiedMeaning(Name: NAME, Meaning: MEANING)
+'action' UndefineMeaning(Name: NAME, Namespace: NAME)
 'condition' HasLocalMeaning(Name: NAME -> Meaning: MEANING)
-'condition' HasMeaning(Name: NAME -> Meaning: MEANING)
+'condition' HasMeaning(Name: NAME, Namespace: NAME -> Meaning: MEANING)
+'condition' HasUnqualifiedMeaning(Name: NAME -> Meaning: MEANING)
 
 --------------------------------------------------------------------------------
 
@@ -479,6 +521,8 @@
 'action' PushStringArgumentSyntaxMapping(Value: STRING)
 'action' PushIndexedMarkArgumentSyntaxMapping(MarkIndex: INT, Index: INT)
 
+'action' AddUnreservedSyntaxKeyword(Token: NAME)
+
 --------------------------------------------------------------------------------
 
 'condition' IsDependencyCompile()
@@ -486,6 +530,14 @@
 'action' DependFinish()
 'action' DependDefineMapping(ModuleName: NAME, SourceFile: STRING)
 'action' DependDefineDependency(ModuleName: NAME, RequiredModuleName: NAME)
+
+--------------------------------------------------------------------------------
+
+'condition' BytecodeEnumerate(Index: INT -> Name: NAME)
+'condition' BytecodeLookup(Name: STRING -> Opcode: INT)
+'action' BytecodeDescribe(Opcode: INT -> Name: NAME)
+'condition' BytecodeIsValidArgumentCount(Opcode: INT, Count: INT)
+'action' BytecodeDescribeParameter(Opcode: INT, Index: INT -> Type: INT)
 
 --------------------------------------------------------------------------------
 
@@ -507,15 +559,14 @@
 
 'action' EmitExportedDefinition(Index: INT)
 
-'action' EmitDefinitionIndex(-> Index: INT)
+'action' EmitDefinitionIndex(Kind: STRING -> Index: INT)
 
 'action' EmitTypeDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitConstantDefinition(Index: INT, Position: POS, Name: NAME, ConstIndex: INT)
 'action' EmitVariableDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
-'action' EmitContextVariableDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, DefaultIndex: INT)
 'action' EmitBeginHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
-'action' EmitBeginContextHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitEndHandlerDefinition()
+'action' EmitBeginUnsafeHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitForeignHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, Binding: STRING)
 'action' EmitPropertyDefinition(Index: INT, Position: POS, Name: NAME, GetIndex: INT, SetIndex: INT)
 'action' EmitEventDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
@@ -547,12 +598,6 @@
 'action' EmitOptionalType(INT -> INT)
 --'action' EmitNamedType(Module: NAME, Name: NAME -> INT)
 --'action' EmitAliasType(Name: NAME, TypeIndex: INT -> INT)
-'action' EmitPointerType(-> INT)
-'action' EmitBoolType(-> INT)
-'action' EmitIntType(-> INT)
-'action' EmitUIntType(-> INT)
-'action' EmitFloatType(-> INT)
-'action' EmitDoubleType(-> INT)
 'action' EmitAnyType(-> INT)
 'action' EmitBooleanType(-> INT)
 'action' EmitIntegerType(-> INT)
@@ -564,7 +609,7 @@
 'action' EmitListType(-> INT)
 'action' EmitUndefinedType(-> INT)
 
-'action' EmitBeginRecordType(BaseType: INT)
+'action' EmitBeginRecordType()
 'action' EmitRecordTypeField(Name: NAME, Type: INT)
 'action' EmitEndRecordType(-> INT)
 
@@ -573,6 +618,7 @@
 'action' EmitHandlerTypeInParameter(Name: NAME, Type: INT)
 'action' EmitHandlerTypeOutParameter(Name: NAME, Type: INT)
 'action' EmitHandlerTypeInOutParameter(Name: NAME, Type: INT)
+'action' EmitHandlerTypeVariadicParameter(Name: NAME)
 'action' EmitEndHandlerType(-> INT)
 
 'action' EmitHandlerParameter(Name: NAME, Type: INT -> Index: INT)
@@ -616,7 +662,11 @@
 'action' EmitStore(Register: INT, Var: INT, Level: INT)
 'action' EmitReturn(Register: INT)
 'action' EmitReturnNothing()
+'action' EmitReset(Register: INT)
 'action' EmitPosition(Position: POS)
+'action' EmitBeginOpcode(Opcode: STRING)
+'action' EmitContinueOpcode(Output: INT)
+'action' EmitEndOpcode()
 
 'action' EmitAttachRegisterToExpression(INT, EXPRESSION)
 'action' EmitDetachRegisterFromExpression(EXPRESSION)
@@ -627,6 +677,7 @@
 'action' OutputWrite(STRING)
 'action' OutputWriteI(STRING, NAME, STRING)
 'action' OutputWriteS(STRING, STRING, STRING)
+'action' OutputWriteXmlS(STRING, STRING, STRING)
 
 --------------------------------------------------------------------------------
 
@@ -640,10 +691,12 @@
 'action' Error_MalformedToken(Position: POS, Token: STRING)
 'action' Error_MalformedSyntax(Position: POS)
 'action' Error_MalformedEscapedString(Position: POS, Token: STRING)
+'action' Error_IllegalNamespaceOperator(Position: POS)
 'action' Error_IdentifierPreviouslyDeclared(Position: POS, Identifier: NAME, PreviousPosition: POS)
 'action' Error_IdentifierNotDeclared(Position: POS, Identifier: NAME)
 'action' Error_InvalidNameForSyntaxMarkVariable(Position: POS, Name: NAME)
 'action' Error_SyntaxMarkVariableAlreadyDefined(Position: POS, Name: NAME)
+'action' Error_InvalidNameForNamespace(Position: POS, Identifier: NAME)
 
 'action' Error_ExpressionSyntaxCannotStartWithExpression(Position: POS)
 'action' Error_ExpressionSyntaxCannotFinishWithExpression(Position: POS)
@@ -722,10 +775,26 @@
 'action' Error_ListExpressionTooLong(Position: POS)
 'action' Error_ArrayExpressionTooLong(Position: POS)
 
+'action' Error_UnknownOpcode(Position: POS, Opcode: NAME)
+'action' Error_OpcodeArgumentMustBeLabel(Position: POS)
+'action' Error_OpcodeArgumentMustBeRegister(Position: POS)
+'action' Error_OpcodeArgumentMustBeConstant(Position: POS)
+'action' Error_OpcodeArgumentMustBeHandler(Position: POS)
+'action' Error_OpcodeArgumentMustBeVariable(Position: POS)
+'action' Error_OpcodeArgumentMustBeDefinition(Position: POS)
+'action' Error_IllegalNumberOfArgumentsForOpcode(Position: POS)
+
+'action' Error_BytecodeNotAllowedInSafeContext(Position: POS)
+'action' Error_UnsafeHandlerCallNotAllowedInSafeContext(Position: POS, Identifier: NAME)
+
+'action' Error_VariadicParametersOnlyAllowedInForeignHandlers(Position: POS)
+'action' Error_VariadicParameterMustBeLast(Position: POS)
+'action' Error_VariadicArgumentNotExplicitlyTyped(Position: POS)
+
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
-'action' Warning_UndefinedConstantDeprecated(Position: POS)
+'action' Warning_UnsuitableNameForNamespace(Position: POS, Identifier: NAME)
 'action' Warning_DeprecatedSyntax(Position: POS, Message: STRING)
 
 --------------------------------------------------------------------------------

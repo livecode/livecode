@@ -4,20 +4,22 @@ Type: constant
 
 Syntax: ten
 
-Summary: Equivalent to the number 10.
+Summary:
+Equivalent to the number 10.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if ten is in field "Score" then beep
 
 Description:
-Use the <ten> <constant> when it is easier to read than the number 10<a/>.
+Use the <ten> <constant> when it is easier to read than the number 10. 
 
 References: constant (command), tenth (keyword)
 
 Tags: math
+

@@ -4,13 +4,15 @@ Type: keyword
 
 Syntax: from
 
-Summary: Used with several <command|commands>, usually to designate an origin point.
+Summary:
+Used with several <command|commands>, usually to designate an origin
+point. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 convert field "Date" from long date to short date
@@ -27,6 +29,15 @@ subtract 33 from thisValue
 Description:
 Use the <from> <keyword> to complete a <command> that requires it.
 
-The <from> <keyword> is used with the <convert>, <drag>, <import>, <import snapshot>, <move>, print card, <read from file>, <read from process>, <read from socket>, <remove>, <remove script>, <request>, and <subtract> <command|commands>.
+The <from> <keyword> is used with the <convert>, <drag>, <import>,
+<import snapshot>, <move>, print card, <read from file>, 
+<read from process>, <read from socket>, <remove>, <remove script>, 
+<request>, and <subtract> <command|commands>.
 
-References: to (keyword), command (glossary), keyword (glossary), read from file (command), import snapshot (command), convert (command), move (command), remove script (command), remove (command), request (command), drag (command), read from process (command), subtract (command), read from socket (command), import (command)
+References: read from file (command), import snapshot (command),
+convert (command), move (command), remove script (command),
+remove (command), request (command), drag (command),
+read from process (command), subtract (command),
+read from socket (command), import (command), command (glossary),
+keyword (glossary), to (keyword)
+

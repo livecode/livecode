@@ -34,31 +34,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "param.h"
 
-////////////////////////////////////////////////////////////////////////////////
-
-MC_EXEC_DEFINE_EXEC_METHOD(Debugging, Breakpoint, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Debugging, DebugDo, 3)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceAbort, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceAbort, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceDelay, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceDelay, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceReturn, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceReturn, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceStack, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceStack, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceUntil, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceUntil, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, MessageMessages, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, MessageMessages, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, Breakpoints, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, Breakpoints, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, DebugContext, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, DebugContext, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, ExecutionContexts, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, WatchedVariables, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, WatchedVariables, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Assert, 3)
+#include "chunk.h"
+#include "scriptpt.h"
+#include "osspec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,7 +56,11 @@ void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_
 	MCExecContext *t_ctxt_ptr;
 	t_ctxt_ptr = MCexecutioncontexts[MCdebugcontext];
 
-    t_ctxt_ptr->doscript(*t_ctxt_ptr, p_script, p_line, p_pos);
+    // Do not permit script to be executed in an inaccessible context
+    if (t_ctxt_ptr->GetObject()->getstack()->iskeyed())
+        t_ctxt_ptr->doscript(*t_ctxt_ptr, p_script, p_line, p_pos);
+    else
+        ctxt.LegacyThrow(EE_STACK_NOKEY);
     
     // AL-2014-03-21: [[ Bug 11940 ]] Ensure the debug context is not permanently in a state of error.
     t_ctxt_ptr -> IgnoreLastError();
@@ -91,7 +73,9 @@ void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_
 
 void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uinteger_t p_line, uinteger_t p_pos)
 {
-	MCB_break(ctxt, p_line, p_pos);
+    // Ignore breakpoints in inaccessible stacks
+    if (ctxt.GetObject()->getstack()->iskeyed())
+        MCB_break(ctxt, p_line, p_pos);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +112,7 @@ void MCDebuggingSetTraceReturn(MCExecContext& ctxtm, bool p_value)
 
 void MCDebuggingGetTraceStack(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCtracestackptr == nil)
+	if (!MCtracestackptr)
 	{
 		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
 		return;
@@ -218,11 +202,20 @@ void MCDebuggingGetDebugContext(MCExecContext& ctxt, MCStringRef& r_value)
 					MCListAppend(*t_list, *t_context_id);
 	}
 	
-	if (t_success)
-		t_success = MCListAppend(*t_list, MCexecutioncontexts[MCdebugcontext]->GetHandler()->getname());
+    // Don't display the handler name if the stack script is not available
+    if (MCexecutioncontexts[MCdebugcontext]->GetObject()->getstack()->iskeyed())
+    {
+        if (t_success)
+            t_success = MCListAppend(*t_list, MCexecutioncontexts[MCdebugcontext]->GetHandler()->getname());
 
-	if (t_success)
-        t_success = MCListAppendInteger(*t_list, MCexecutioncontexts[MCdebugcontext] -> GetLine());
+        if (t_success)
+            t_success = MCListAppendInteger(*t_list, MCexecutioncontexts[MCdebugcontext] -> GetLine());
+    }
+    else
+    {
+        if (t_success)
+            t_success = MCListAppend(*t_list, MCNAME("<protected>")) && MCListAppendInteger(*t_list, 0);
+    }
 	
 	if (t_success)
 		t_success = MCListCopyAsString(*t_list, r_value);
@@ -249,7 +242,14 @@ void MCDebuggingSetDebugContext(MCExecContext& ctxt, MCStringRef p_value)
 			MCInterfaceTryToResolveObject(ctxt, *t_head, t_object) &&
 			MCU_strtol(*t_tail, t_line))
 		{
-			for (uint2 i = 0; i < MCnexecutioncontexts; i++)
+            // If this object isn't debuggable, fail
+            if (!t_object.object->getstack()->iskeyed())
+            {
+                ctxt.LegacyThrow(EE_STACK_NOKEY);
+                return;
+            }
+            
+            for (uint2 i = 0; i < MCnexecutioncontexts; i++)
 			{
 				if (MCexecutioncontexts[i] -> GetObject() == t_object . object && 
                     MCexecutioncontexts[i] -> GetLine() == t_line)
@@ -298,30 +298,46 @@ void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value)
 			MCAutoListRef t_context;
 			t_success = MCListCreateMutable(',', &t_context);
 			
-			if (t_success)
-			{
-				MCAutoValueRef t_context_id;
-				t_success = MCexecutioncontexts[i]->GetObject()->names(P_LONG_ID, &t_context_id) &&
-							MCListAppend(*t_context, *t_context_id);
-			}
-			
-            // PM-2014-04-14: [[Bug 12125]] Do this check to avoid a crash in LC server
-            if (t_success && MCexecutioncontexts[i]->GetHandler() != NULL)
-				t_success = MCListAppend(*t_context, MCexecutioncontexts[i]->GetHandler()->getname());
-			
-			if (t_success)
-			{
-				MCAutoStringRef t_line;
-                t_success = MCStringFormat(&t_line, "%d", MCexecutioncontexts[i] -> GetLine()) &&
-							MCListAppend(*t_context, *t_line);
-			}
-			
-			if (t_success && MCexecutioncontexts[i] -> GetParentScript() != NULL)
-			{
-				MCAutoValueRef t_parent;
-				t_success = MCexecutioncontexts[i] -> GetParentScript() -> GetParent() -> GetObject() -> names(P_LONG_ID, &t_parent) &&
-							MCListAppend(*t_context, *t_parent);
-			}
+            // Don't display context information when not available
+            if (MCexecutioncontexts[i]->GetObject()->getstack()->iskeyed())
+            {
+                if (t_success)
+                {
+                    MCAutoValueRef t_context_id;
+                    t_success = MCexecutioncontexts[i]->GetObject()->names(P_LONG_ID, &t_context_id) &&
+                                MCListAppend(*t_context, *t_context_id);
+                }
+                
+                // PM-2014-04-14: [[Bug 12125]] Do this check to avoid a crash in LC server
+                if (t_success && MCexecutioncontexts[i]->GetHandler() != NULL)
+                    t_success = MCListAppend(*t_context, MCexecutioncontexts[i]->GetHandler()->getname());
+                
+                if (t_success)
+                {
+                    MCAutoStringRef t_line;
+                    t_success = MCStringFormat(&t_line, "%d", MCexecutioncontexts[i] -> GetLine()) &&
+                                MCListAppend(*t_context, *t_line);
+                }
+                
+                if (t_success && MCexecutioncontexts[i] -> GetParentScript() != NULL)
+                {
+                    MCAutoValueRef t_parent;
+                    t_success = MCexecutioncontexts[i] -> GetParentScript() -> GetParent() -> GetObject() -> names(P_LONG_ID, &t_parent) &&
+                                MCListAppend(*t_context, *t_parent);
+                }
+            }
+            else
+            {
+                if (t_success)
+                {
+                    MCAutoValueRef t_stack_id;
+                    t_success = MCexecutioncontexts[i]->GetObject()->getstack()->names(P_LONG_ID, &t_stack_id)
+                                && MCListAppend(*t_context, *t_stack_id)
+                                && MCListAppend(*t_context, MCNAME("<protected>"))
+                                && MCListAppendInteger(*t_context, 0);
+                }
+ 
+            }
 
 			if (t_success)
 				t_success = MCListAppend(*t_context_list, *t_context);
@@ -417,4 +433,12 @@ void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, b
 	t_object.setvalueref_argument(*t_long_id);
 	
 	ctxt . GetObject() -> message(MCM_assert_error, &t_handler);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCDebuggingExecPutIntoMessage(MCExecContext& ctxt, MCStringRef p_value, int p_where)
+{
+	if (!MCS_put(ctxt, p_where == PT_INTO ? kMCSPutIntoMessage : (p_where == PT_BEFORE ? kMCSPutBeforeMessage : kMCSPutAfterMessage), p_value))
+		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }

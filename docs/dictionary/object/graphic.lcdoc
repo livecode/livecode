@@ -1,18 +1,19 @@
 Name: graphic
 
+Synonyms: grc
+
 Type: object
 
 Syntax: graphic
 
-Summary: A <control> that is a resizeable geometric shape.
-
-Synonyms: grc
+Summary:
+A <control> that is a resizeable geometric shape.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the backgroundPattern of graphic "High Energy" to 3012
@@ -21,12 +22,22 @@ Example:
 move graphic "Arrow" to 45,104 in 3 seconds
 
 Description:
-Use the <graphic> <object type> to create a geometric shape, a straight or broken line, an arrow, or other shape.
+Use the <graphic> <object type> to create a geometric shape, a straight 
+or broken line, an arrow, or other shape.
 
-Graphics can be circles, ovals, arcs, squares, rectangles, regular polygons with any number of sides, irregular polygons (closed or open), lines (jagged or straight), or curves (smooth or broken). You specify a graphic's basic shape by setting its style <property>, and details of different basic shapes with the <points>, <arcAngle>, <startAngle>, <angle>, and <polySides> <properties>.
+Graphics can be circles, ovals, arcs, squares, rectangles, regular 
+polygons with any number of sides, irregular polygons (closed or open), 
+lines (jagged or straight), or curves (smooth or broken). You specify a 
+graphic's basic shape by setting its style <property>, and details of 
+different basic shapes with the <points>, <arcAngle>, <startAngle>, 
+<angle>, and <polySides> <properties>. Unlike an image, a graphic can
+be resized without losing detail or becoming "jagged".
 
-Unlike an image, a graphic can be resized without losing detail or becoming "jagged".
-A graphic is contained in a card, group, or background. Graphics cannot contain other objects.
-The graphic object has a number of properties and messages associated with it. To see a list of messages that can be sent to a graphic as a result of user actions or internal LiveCode events, open the "Dictionary" page of the main Documentation window, ensure that the graphic column is visible and use sort and filter to bring the relevant entries to the top
+A graphic is contained in a card, group, or background. Graphics cannot 
+contain other objects.
 
-References: startAngle (property), angle (property), editMode (property), points (property), arcAngle (property), properties (property), polySides (property), control (keyword), image (object), property (glossary), object type (glossary)
+References: property (glossary), object type (glossary),
+control (keyword), image (object), startAngle (property),
+angle (property), editMode (property), points (property),
+arcAngle (property), properties (property), polySides (property)
+

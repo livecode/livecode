@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "util.h"
 #include "stack.h"
 #include "tooltip.h"
@@ -56,12 +56,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "vclip.h"
 #include "redraw.h"
 #include "widget.h"
+#include "graphics_util.h"
 
 #include "globals.h"
 #include "mctheme.h"
 #include "context.h"
 
 #include "exec.h"
+
+#include "stackfileformat.h"
 
 MCRectangle MCCard::selrect;
 int2 MCCard::startx;
@@ -177,7 +180,7 @@ MCCard::MCCard(const MCCard &cref) : MCObject(cref)
 		MCObjptr *tptr = cref.objptrs;
 		do
 		{
-			MCObjptr *newoptr = new MCObjptr;
+			MCObjptr *newoptr = new (nothrow) MCObjptr;
 			newoptr->setparent(this);
 			newoptr->setid(tptr->getid());
 			newoptr->appendto(objptrs);
@@ -203,14 +206,6 @@ MCCard::~MCCard()
 		close();
 	while (objptrs != NULL)
 	{
-		if (state & CS_OWN_CONTROLS)
-		{
-			MCControl *cptr = objptrs->getref();
-			// MW-2011-08-09: [[ Groups ]] We mustn't delete a shared group even
-			//   if the card owns the controls.
-			if (cptr->gettype() != CT_GROUP || !static_cast<MCGroup *>(cptr)->isshared())
-				delete cptr;
-		}
 		MCObjptr *optr = objptrs->remove(objptrs);
 		delete optr;
 	}
@@ -671,8 +666,10 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 
 				MCRedrawUnlockScreen();
 
-				// MW-2011-08-19: [[ Layers ]] Ensure the selection rect is updated.
-				layer_selectedrectchanged(oldrect, selrect);
+                /* The set of selected controls has changed so dirty the old
+                 * rect, and the new. */
+				dirtyselection(oldrect);
+                dirtyselection(selrect);
 			}
 			message_with_args(MCM_mouse_move, x, y);
 			return true;
@@ -747,7 +744,7 @@ Boolean MCCard::mdown(uint2 which)
 	MCtooltip->closetip();
 	MCControl *cptr = NULL;
 
-	MCclickfield = NULL;
+	MCclickfield = nil;
 	mgrabbed = True;
 	if (mfocused != NULL)
 	{
@@ -825,22 +822,22 @@ Boolean MCCard::mdown(uint2 which)
 			case T_HELP:
 				break;
 			case T_BUTTON:
-				cptr = new MCButton(*MCtemplatebutton);
+				cptr = new (nothrow) MCButton(*MCtemplatebutton);
 				break;
 			case T_SCROLLBAR:
-				cptr = new MCScrollbar(*MCtemplatescrollbar);
+				cptr = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 				break;
 			case T_PLAYER:
-				cptr = new MCPlayer(*MCtemplateplayer);
+				cptr = new (nothrow) MCPlayer(*MCtemplateplayer);
 				break;
 			case T_GRAPHIC:
-				cptr = new MCGraphic(*MCtemplategraphic);
+				cptr = new (nothrow) MCGraphic(*MCtemplategraphic);
 				break;
 			case T_FIELD:
-				cptr = new MCField(*MCtemplatefield);
+				cptr = new (nothrow) MCField(*MCtemplatefield);
 				break;
 			case T_IMAGE:
-				cptr = new MCImage(*MCtemplateimage);
+				cptr = new (nothrow) MCImage(*MCtemplateimage);
 				break;
 			case T_DROPPER:
 				// IM-2013-09-23: [[ FullscreenMode ]] Get mouse loc in view coordinates
@@ -924,8 +921,10 @@ Boolean MCCard::mup(uint2 which, bool p_release)
 				if (state & CS_SIZE)
 				{
 					state &= ~CS_SIZE;
-					// MW-2011-08-18: // MW-2011-08-19: [[ Layers ]] Ensure the selection rect is updated.
-					layer_dirtyrect(selrect);
+                    
+                    /* The selection marquee has finished, so update the selection
+                     * layer. */
+                    dirtyselection(selrect);
 					
 					// MM-2012-11-05: [[ Object selection started/ended message ]]
 					if (m_selecting_objects)
@@ -1054,7 +1053,7 @@ Boolean MCCard::doubleup(uint2 which)
 
 void MCCard::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_idle, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 	{
 		if (opened)
 		{
@@ -1088,301 +1087,47 @@ void MCCard::timer(MCNameRef mptr, MCParameter *params)
 		MCObject::timer(mptr, params);
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCCard::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
+bool MCCard::isdeletable(bool p_check_flag)
 {
-	MCRectangle minrect;
-	uint2 num;
+    if (!parent || scriptdepth != 0 ||
+       (p_check_flag && getflag(F_C_CANT_DELETE)) ||
+       getstack() -> isediting())
+    {
+        MCAutoValueRef t_long_name;
+        getnameproperty(P_LONG_NAME, 0, &t_long_name);
+        MCeerror->add(EE_OBJECT_CANTREMOVE, 0, 0, *t_long_name);
+        return false;
+    }
 
-	switch (which)
-	{
-#ifdef /* MCCard::getprop */ LEGACY_EXEC
-	case P_NUMBER:
-	case P_LAYER:
-		getstack()->count(CT_CARD, CT_UNDEFINED, this, num);
-		ep.setint(num);
-		break;
-	case P_CANT_DELETE:
-		ep.setboolean(getflag(F_C_CANT_DELETE));
-		break;
-	case P_DONT_SEARCH:
-		ep.setboolean(getflag(F_C_DONT_SEARCH));
-		break;
-	case P_MARKED:
-		ep.setboolean(getflag(F_MARKED));
-		break;
-	case P_SHOW_PICT:
-		ep.setboolean(True);
-		break;
-	case P_FORMATTED_LEFT:
-		minrect = computecrect();
-		ep.setint(minrect.x);
-		break;
-	case P_FORMATTED_TOP:
-		minrect = computecrect();
-		ep.setint(minrect.y);
-		break;
-	case P_FORMATTED_HEIGHT:
-		minrect = computecrect();
-		ep.setint(minrect.height);
-		break;
-	case P_FORMATTED_WIDTH:
-		minrect = computecrect();
-		ep.setint(minrect.width);
-		break;
-	case P_FORMATTED_RECT:
-		minrect = computecrect();
-		ep.setrectangle(minrect);
-		break;
-	case P_BACKGROUND_NAMES:
-	case P_BACKGROUND_IDS:
-	case P_SHARED_GROUP_NAMES:
-	case P_SHARED_GROUP_IDS:
-	case P_GROUP_NAMES:
-	case P_GROUP_IDS:
-    case P_CONTROL_NAMES:
-    case P_CONTROL_IDS:
-    case P_CHILD_CONTROL_NAMES:
-    case P_CHILD_CONTROL_IDS:
-		// MERG-2013-05-01: [[ ChildControlProps ]] Add ability to list both
-		//   immediate and all descendent controls of a card.
-			
-        ep.clear();
-		clean();
-		if (objptrs != NULL)
-		{
-			bool t_want_background;
-			t_want_background = which == P_BACKGROUND_NAMES || which == P_BACKGROUND_IDS;
-			
-			bool t_want_shared;
-			t_want_shared = which == P_SHARED_GROUP_NAMES || which == P_SHARED_GROUP_IDS;
-
-			MCExecPoint t_other_ep(ep);
-            MCObjptr *optr = objptrs;
-			uint2 i = 0;
+    if (objptrs != NULL)
+    {
+        MCObjptr *t_object_ptr = objptrs;
+        do
+        {
+            MCGroup * t_group = t_object_ptr->getrefasgroup();
             
-            bool t_controls;
-			t_controls = which == P_CHILD_CONTROL_NAMES ||  which == P_CHILD_CONTROL_IDS || which == P_CONTROL_NAMES || which == P_CONTROL_IDS;
+            if (t_group != nil && t_group->isshared())
+            {
+                // if it's a shared group then don't check deletability because the object won't be deleted
+            }
+            else if (!t_object_ptr->getref()->isdeletable(true))
+                return false;
             
-            // MERG-2013-11-03: [[ ChildControlProps ]] No need to assign value to t_prop in each iteration
-            Properties t_prop;
-            if (which == P_BACKGROUND_NAMES || which == P_SHARED_GROUP_NAMES || which == P_GROUP_NAMES || which == P_CONTROL_NAMES || which == P_CHILD_CONTROL_NAMES)
-                t_prop = P_SHORT_NAME;
-            else
-                t_prop = P_SHORT_ID;
-            
-			do
-			{
-				MCObject *t_object;
-				t_object = optr -> getref();
-
-				optr = optr -> next();
-
-                if (t_object->gettype() == CT_GROUP)
-                {
-                    if (t_want_background && !static_cast<MCGroup *>(t_object)  -> isbackground())
-                        continue;
-                    
-                    if (t_want_shared && !static_cast<MCGroup *>(t_object) -> isshared())
-                        continue;
-                }
-                else if (!t_controls)
-					continue;
-                
-				t_object->getprop(0, t_prop, t_other_ep, False);
-				ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
-                
-                if (t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
-                {
-                    t_object->getprop(parid, which, t_other_ep, false);
-                    
-                    // MERG-2013-11-03: [[ ChildControlProps ]] Handle empty groups
-                    if (!t_other_ep.isempty())
-                        ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
-                }
-			}
-			while (optr != objptrs);
-			
-			if (!opened)
-				clear();
-		}
-		break;
-	case P_DEFAULT_BUTTON:
-		if (defbutton == NULL && odefbutton == NULL)
-			ep.clear();
-		else
-			if (defbutton != NULL)
-				defbutton->getprop(0, P_LONG_ID, ep, False);
-			else
-				odefbutton->getprop(0, P_LONG_ID, ep, False);
-		break;
-	case P_VISIBLE:
-	case P_INVISIBLE:
-	case P_ENABLED:
-	case P_DISABLED:
-	case P_TRAVERSAL_ON:
-	case P_SHADOW:
-	case P_LOCK_LOCATION:
-	case P_TOOL_TIP:
-	// MW-2012-03-13: [[ UnicodeToolTip ]] Card's don't have tooltips.
-	case P_UNICODE_TOOL_TIP:
-		MCeerror->add(EE_OBJECT_SETNOPROP, 0, 0);
-		return ES_ERROR;
-#endif /* MCCard::getprop */
-	default:
-		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
-	}
-	return ES_NORMAL;
+            t_object_ptr = t_object_ptr->next();
+        }
+        while (t_object_ptr != objptrs);
+    }
+    
+    return true;
 }
 
-Exec_stat MCCard::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Boolean MCCard::del(bool p_check_flag)
 {
-	Boolean dirty = False;
-	uint4 newnumber;
-	MCString data = ep.getsvalue();
-
-	switch (which)
-	{
-#ifdef /* MCCard::setprop */ LEGACY_EXEC
-	// MW-2011-09-20: [[ Bug 9741 ]] Make sure we update the card completely if
-	//   any of these are set.
-	case P_FORE_PIXEL:
-	case P_BACK_PIXEL:
-	case P_HILITE_PIXEL:
-	case P_BORDER_PIXEL:
-	case P_TOP_PIXEL:
-	case P_BOTTOM_PIXEL:
-	case P_SHADOW_PIXEL:
-	case P_FOCUS_PIXEL:
-	case P_FORE_COLOR:
-	case P_BACK_COLOR:
-	case P_HILITE_COLOR:
-	case P_BORDER_COLOR:
-	case P_TOP_COLOR:
-	case P_BOTTOM_COLOR:
-	case P_SHADOW_COLOR:
-	case P_FOCUS_COLOR:
-	case P_COLORS:
-	case P_FORE_PATTERN:
-	case P_BACK_PATTERN:
-	case P_HILITE_PATTERN:
-	case P_BORDER_PATTERN:
-	case P_TOP_PATTERN:
-	case P_BOTTOM_PATTERN:
-	case P_SHADOW_PATTERN:
-	case P_FOCUS_PATTERN:
-	case P_TEXT_FONT:
-	case P_TEXT_SIZE:
-	case P_TEXT_STYLE:
-	case P_TEXT_HEIGHT:
-		// Try to set the property.
-		if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
-			return ES_ERROR;
-		
-		// Now dirty everything in the stack (inc. flush tilecache since
-		// these props are inherited!).
-		getstack() -> dirtyall();
-		break;
-			
-	case P_LOCATION:
-	case P_LEFT:
-	case P_TOP:
-	case P_RIGHT:
-	case P_BOTTOM:
-	case P_TOP_LEFT:
-	case P_TOP_RIGHT:
-	case P_BOTTOM_LEFT:
-	case P_BOTTOM_RIGHT:
-	case P_WIDTH:
-	case P_HEIGHT:
-	case P_RECTANGLE:
-	case P_VISIBLE:
-	case P_INVISIBLE:
-	case P_ENABLED:
-	case P_DISABLED:
-	case P_TRAVERSAL_ON:
-	case P_SHADOW:
-	case P_LOCK_LOCATION:
-	case P_TOOL_TIP:
-	// MW-2012-03-13: [[ UnicodeToolTip ]] Cards don't have tooltips.
-	case P_UNICODE_TOOL_TIP:
-		MCeerror->add(EE_OBJECT_SETNOPROP, 0, 0);
-		return ES_ERROR;
-	case P_LAYER:
-	case P_NUMBER:
-		if (data == MCtopstring)
-			newnumber = MAXUINT4;
-		else
-			if (data == MCbottomstring)
-				newnumber = 1;
-			else
-				if (!MCU_stoui4(data, newnumber))
-				{
-					MCeerror->add
-					(EE_OBJECT_NAN, 0, 0, data);
-					return ES_ERROR;
-				}
-		if (parent != NULL)
-			getstack()->renumber(this, newnumber);
-		break;
-	case P_MARKED:
-		if (!MCU_matchflags(data, flags, F_MARKED, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_SHOW_PICT:
-		break;
-	case P_CANT_DELETE:
-		if (!MCU_matchflags(data, flags, F_C_CANT_DELETE, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_DONT_SEARCH:
-		if (!MCU_matchflags(data, flags, F_C_DONT_SEARCH, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-#endif /* MCCard::setprop */
-	default:
-		return MCObject::setprop_legacy(parid, which, ep, effective);
-	}
-	return ES_NORMAL;
-}
-#endif
-
-Boolean MCCard::del()
-{
-	if (parent == NULL || scriptdepth != 0 || getstack()->islocked()
-	        || getstack()->isediting() || flags & F_C_CANT_DELETE)
-	{
-		MCeerror->add(EE_OBJECT_CANTREMOVE, 0, 0);
-		return False;
-	}
-	clean();
-	if (objptrs != NULL)
-	{
-		MCObjptr *optr = objptrs;
-		do
-		{
-			if (optr->getref()->getscriptdepth() != 0)
-			{
-				MCeerror->add
-				(EE_OBJECT_CANTREMOVE, 0, 0);
-				return False;
-			}
-			optr = optr->next();
-		}
-		while (optr != objptrs);
-	}
+	if (!isdeletable(p_check_flag))
+	    return False;
+	
+    clean();
+    
 	MCselected->remove(this);
 	
 	// MW-2008-10-31: [[ ParentScripts ]] Make sure we close the controls
@@ -1391,7 +1136,7 @@ Boolean MCCard::del()
 	message(MCM_delete_card);
 	
 	MCundos->freestate();
-	state |= CS_NO_MESSAGES | CS_OWN_CONTROLS;
+	state |= CS_NO_MESSAGES;
 	getstack()->removecard(this);
 	state &= ~CS_NO_MESSAGES;
 	if (objptrs != NULL)
@@ -1410,19 +1155,22 @@ Boolean MCCard::del()
 			}
 			else
 			{
-				getstack()->removecontrol(optr->getref());
+                MCControl *cptr = optr->getref();
+                
+                cptr->removereferences();
+				getstack()->removecontrol(cptr);
+                cptr->scheduledelete();
 			}
-			MCCdata *dptr = optr->getref()->getdata(obj_id, False);
-			if (dptr != NULL)
-				dptr->appendto(savedata);
 			optr = optr->next();
 		}
 		while (optr != objptrs);
 	}
     
+    removereferences();
+    
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
-    return MCObject::del();
+    return MCObject::del(p_check_flag);
 }
 
 struct UpdateDataIdsVisitor: public MCObjectVisitor
@@ -1532,7 +1280,7 @@ Exec_stat MCCard::handle(Handler_type htype, MCNameRef mess, MCParameter *params
 				stat = ES_PASS;
 		}
 
-		if (parent != NULL && (stat == ES_PASS || stat == ES_NOT_HANDLED))
+		if (parent && (stat == ES_PASS || stat == ES_NOT_HANDLED))
 		{
 			Exec_stat oldstat = stat;
 			stat = parent->handle(htype, mess, params, this);
@@ -1541,7 +1289,7 @@ Exec_stat MCCard::handle(Handler_type htype, MCNameRef mess, MCParameter *params
 		}
 	}
 
-	if (stat == ES_ERROR && MCerrorptr == NULL)
+	if (stat == ES_ERROR && !MCerrorptr)
 		MCerrorptr = this;
 
 	return stat;
@@ -1573,6 +1321,54 @@ void MCCard::toolchanged(Tool p_new_tool)
         }
         while (optr != objptrs);
     }
+}
+
+void MCCard::OnViewTransformChanged()
+{
+	if (objptrs != nil)
+	{
+		MCObjptr *t_ptr = objptrs;
+		do
+		{
+			MCObject *t_obj = t_ptr->getref();
+			if (t_obj != nil)
+				t_obj->OnViewTransformChanged();
+			t_ptr = t_ptr->next();
+		}
+		while (t_ptr != objptrs);
+	}
+}
+
+void MCCard::OnAttach()
+{
+	if (objptrs != NULL)
+	{
+		MCObjptr *optr = objptrs;
+		do
+		{
+			MCObject *t_obj = optr->getref();
+			if (t_obj != nil)
+				t_obj->OnAttach();
+			optr = optr->next();
+		}
+		while (optr != objptrs);
+	}
+}
+
+void MCCard::OnDetach()
+{
+	if (objptrs != NULL)
+	{
+		MCObjptr *optr = objptrs;
+		do
+		{
+			MCObject *t_obj = optr->getref();
+			if (t_obj != nil)
+				t_obj->OnDetach();
+			optr = optr->next();
+		}
+		while (optr != objptrs);
+	}
 }
 
 void MCCard::kfocusset(MCControl *target)
@@ -1615,17 +1411,18 @@ void MCCard::kfocusset(MCControl *target)
 	}
 }
 
-MCCard *MCCard::clone(Boolean attach, Boolean controls)
+MCCard *MCCard::clone(Boolean attach, Boolean controls, MCStack *p_parent)
 {
 	clean();
-	MCCard *newcptr = new MCCard(*this);
-	newcptr->parent = MCdefaultstackptr;
+	MCCard *newcptr = new (nothrow) MCCard(*this);
+    if (p_parent == nullptr)
+    {
+        p_parent = MCdefaultstackptr;
+    }
+	newcptr->parent = p_parent;
 	Boolean diffstack = getstack() != MCdefaultstackptr;
-
 	if (controls)
 	{
-		if (!attach)
-			newcptr->state |= CS_OWN_CONTROLS;
 		if (objptrs != NULL)
 		{
 			newcptr->clonedata(this);
@@ -1655,13 +1452,7 @@ MCCard *MCCard::clone(Boolean attach, Boolean controls)
 						newcontrol->setparent(newcptr);
 					if (attach)
 					{
-						if (state & CS_OWN_CONTROLS && oldcontrol->getid() != 0)
-						{
-							newcontrol->setid(oldcontrol->getid());
-							oldcontrol->setid(0);
-						}
-						else
-							newcontrol->setid(newcptr->getstack()->newid());
+                        newcontrol->setid(newcptr->getstack()->newid());
 						newoptr->setid(newcontrol->getid());
 						newcptr->getstack()->appendcontrol(newcontrol);
 					}
@@ -1674,15 +1465,8 @@ MCCard *MCCard::clone(Boolean attach, Boolean controls)
 		}
 		if (attach)
 		{
-			if (state & CS_OWN_CONTROLS && obj_id != 0)
-			{
-				newcptr->obj_id = obj_id;
-				obj_id = 0;
-			}
-			else
-				newcptr->obj_id = newcptr->getstack()->newid();
+            newcptr->obj_id = newcptr->getstack()->newid();
 			newcptr->getstack()->appendcard(newcptr);
-			newcptr->state &= ~CS_OWN_CONTROLS;
 			if (diffstack)
 				newcptr->replacedata(getstack());
 			else
@@ -1703,7 +1487,7 @@ MCCard *MCCard::clone(Boolean attach, Boolean controls)
 				//   place it on the new card.
 				if (optr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(optr -> getref()) -> isbackground())
 				{
-					MCObjptr *newoptr = new MCObjptr;
+					MCObjptr *newoptr = new (nothrow) MCObjptr;
 					newoptr->setparent(newcptr);
 					newoptr->setid(optr->getid());
 					newoptr->appendto(newcptr->objptrs);
@@ -1727,7 +1511,7 @@ void MCCard::clonedata(MCCard *source)
 		MCCdata *cptr = source->savedata;
 		do
 		{
-			MCCdata *dptr = new MCCdata(*cptr);
+			MCCdata *dptr = new (nothrow) MCCdata(*cptr);
 			dptr->appendto(savedata);
 			cptr = cptr->next();
 		}
@@ -1859,7 +1643,7 @@ void MCCard::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 {	
 	// Add the control to the card's objptr list.
 	MCObjptr *t_control_ptr;
-	t_control_ptr = new MCObjptr;
+	t_control_ptr = new (nothrow) MCObjptr;
 	t_control_ptr -> setparent(this);
 	t_control_ptr -> setref(p_control);
 	p_control -> setparent(this);
@@ -1946,60 +1730,84 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 	}
 	else
 	{
-		MCObjptr *newptr = new MCObjptr;
-		newptr->setparent(this);
-		newptr->setref(optr);
-		optr->setparent(this);
-		getstack()->appendcontrol(optr);
-		if (foundobj == NULL)
-			if (newlayer <= 1)
-				newptr->insertto(objptrs);
-			else
-				newptr->appendto(objptrs);
-		else
-		{
-			Boolean g = False;
-			if (!MCrelayergrouped)
-			{
-				while (foundobj->getparent() != this)
+        /* Find place in the object pointer list at which the
+         * relayered object should be placed.  If t_before, the object
+         * should be placed immediately before the iterator. */
+        MCObjptr *t_insert_iter = objptrs;
+        bool t_before = false;
+        if (foundobj == nullptr)
+        {
+            t_before = (newlayer <= 1);
+        }
+        else
+        {
+            /* If there's a target object for relayering, and group
+             * relayering is banned, then we need to find the outer
+             * group of the target object. */
+            bool t_found_in_group = false;
+            while (!MCrelayergrouped &&
+                   foundobj->getparent() != this)
+            {
+                foundobj = MCObjectCast<MCControl>(foundobj->getparent());
+                t_found_in_group = true;
+            }
+
+            do
+            {
+				if (foundobj == t_insert_iter->getref())
 				{
-					foundobj = (MCControl *)foundobj->getparent();
-					g = True;
-				}
-			}
-			tptr = objptrs;
-			do
-			{
-				if (tptr->getref() == foundobj)
-				{
-					if (g)
+					if (t_found_in_group)
 					{
-						uint2 tnum;
-						count(CT_LAYER, CT_UNDEFINED, tptr->next()->getref(), tnum, True);
-						if (tptr->next() == objptrs || newlayer < tnum)
+						uint2 t_minimum_layer = 0;
+						count(CT_LAYER, CT_UNDEFINED, t_insert_iter->next()->getref(),
+							  t_minimum_layer, True);
+						if (t_insert_iter->next() == objptrs ||
+							newlayer < t_minimum_layer)
 						{
-							if (tptr == objptrs)
-								newptr->insertto(objptrs);
-							else
-								tptr->prev()->append(newptr);
-							break;
+							t_before = true;
+							if (t_insert_iter == objptrs)
+								foundobj = nullptr;
 						}
 					}
-					tptr->append(newptr);
 					break;
 				}
-				tptr = tptr->next();
-			}
-			while (tptr != objptrs);
-		}
+				t_insert_iter = t_insert_iter->next();            }
+            while (t_insert_iter != objptrs);
+        }
 
-		layer_added(optr, newptr -> prev() != objptrs -> prev() ? newptr -> prev() : nil, newptr -> next() != objptrs ? newptr -> next() : nil);
+        /* Create and insert an object pointer */
+        MCObjptr *newptr = new (nothrow) MCObjptr();
+        if (newptr == nullptr)
+            return ES_ERROR;
+        newptr->setparent(this);
+        newptr->setref(optr);
+        optr->setparent(this);
+        getstack()->appendcontrol(optr);
+
+        if (foundobj == nullptr)
+        {
+            if (t_before)
+                newptr->insertto(objptrs);
+            else
+                newptr->appendto(objptrs);
+        }
+        else
+        {
+            if (t_before)
+                t_insert_iter->prev()->append(newptr);
+            else
+                t_insert_iter->append(newptr);
+        }
+
+        layer_added(optr,
+                    (newptr->prev() != objptrs->prev()) ? newptr->prev() : nil,
+                    (newptr->next() != objptrs)         ? newptr->next() : nil);
 	}
 
 	if (oldparent == this)
 	{
 		MCObjptr *newoptr = NULL;
-		MCObjptr *tptr = objptrs;
+		tptr = objptrs;
 		do
 		{
 			if (tptr->getref() == optr)
@@ -2027,10 +1835,37 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 	return ES_NORMAL;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+struct ViewportChangedVisitor: public MCObjectVisitor
+{
+	MCRectangle m_viewport_rect;
+
+	ViewportChangedVisitor(const MCRectangle &p_viewport_rect)
+		: m_viewport_rect(p_viewport_rect)
+	{
+	}
+
+	bool OnObject(MCObject *p_object)
+	{
+		p_object->viewportgeometrychanged(m_viewport_rect);
+		return true;
+	}
+};
+
+void MCCard::geometrychanged(const MCRectangle &p_rect)
+{
+	MCObject::geometrychanged(p_rect);
+
+	// notify children of viewport change
+	ViewportChangedVisitor t_visitor(p_rect);
+	visit_children(kMCObjectVisitorHeirarchical, 0, &t_visitor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCCard *MCCard::findname(Chunk_term type, MCNameRef inname)
 {
-   // MCNewAutoNameRef t_name;
-   // /* UNCHECKED */ MCNameCreateWithOldString(inname, &t_name);
 	if (type == CT_CARD && MCU_matchname(inname, CT_CARD, getname()))
 		return this;
 	else
@@ -2340,199 +2175,6 @@ MCControl *MCCard::getchild(Chunk_term etype, MCStringRef p_expression,
 
 	return getnumberedchild(num + 1, otype, ptype);
 }
-#ifdef OLD_EXEC
-MCControl *MCCard::getchild(Chunk_term etype, const MCString &expression,
-                            Chunk_term otype, Chunk_term ptype)
-{
-	if (otype <= CT_CARD)
-		return NULL;
-	
-	// MM-2012-12-02: [[ Bug ]] Make sure we clean the object list before checking if null.
-	if (!opened)
-		clean();
-	
-	MCObjptr *optr = objptrs;
-	if (optr == NULL)
-		return NULL;
-	
-	if (otype != CT_LAYER && otype != CT_MENU && ptype == CT_UNDEFINED
-	        && (getstack()->hcaddress()
-	            || (getstack()->hcaddress() && etype == CT_ID)))
-		ptype = otype == CT_FIELD ? CT_BACKGROUND : CT_CARD;
-
-	uint2 num = 0;
-
-	switch (etype)
-	{
-	case CT_FIRST:
-	case CT_SECOND:
-	case CT_THIRD:
-	case CT_FOURTH:
-	case CT_FIFTH:
-	case CT_SIXTH:
-	case CT_SEVENTH:
-	case CT_EIGHTH:
-	case CT_NINTH:
-	case CT_TENTH:
-		num = etype - CT_FIRST;
-		break;
-	case CT_LAST:
-	case CT_MIDDLE:
-	case CT_ANY:
-		count(otype, ptype, NULL, num, True);
-		switch (etype)
-		{
-		case CT_LAST:
-			num--;
-			break;
-		case CT_MIDDLE:
-			num >>= 1;
-			break;
-		case CT_ANY:
-			num = MCU_any(num);
-			break;
-		default:
-			break;
-		}
-		break;
-	case CT_ID:
-		uint4 tofindid;
-		if (MCU_stoui4(expression, tofindid))
-		{
-			MCStack *t_stack;
-			t_stack = getstack();
-			
-			// MW-2012-10-10: [[ IdCache ]] First check the id-cache.
-			MCObject *t_object;
-			t_object = t_stack -> findobjectbyid(tofindid);
-			if (t_object != nil)
-			{
-				MCObject *t_parent;
-				t_parent = t_object -> getparent();
-				while(t_parent -> gettype() != CT_CARD && t_parent -> gettype() != CT_STACK)
-					t_parent = t_parent -> getparent();
-				if (t_parent == this)
-				{
-					Chunk_term ttype = optr->getref()->gettype();
-					if (ptype == CT_UNDEFINED
-				        || otype == CT_GROUP && ttype == CT_GROUP
-				        || ptype != CT_BACKGROUND && ttype != CT_GROUP
-				        || (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
-					{
-						if (otype == CT_LAYER && t_object -> gettype() > CT_CARD || t_object -> gettype() == otype)
-							return (MCControl *)t_object;
-					}
-				}
-			}
-		
-			do
-			{
-				MCControl *foundobj = NULL;
-				Chunk_term ttype = optr->getref()->gettype();
-
-				// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
-				if (ptype == CT_UNDEFINED
-				        || otype == CT_GROUP && ttype == CT_GROUP
-				        || ptype != CT_BACKGROUND && ttype != CT_GROUP
-				        || (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
-				{
-					if (!optr->getref()->getopened())
-						optr->getref()->setparent(this);
-					foundobj = optr->getref()->findid(otype, tofindid, True);
-				}
-				if (foundobj != NULL)
-				{
-					if (foundobj->getparent()->gettype() == CT_STACK)
-						foundobj->setparent(this);
-						
-					// MW-2012-10-10: [[ IdCache ]] Put the object in the id cache.
-					t_stack -> cacheobjectbyid(foundobj);
-
-					return foundobj;
-				}
-				optr = optr->next();
-			}
-			while (optr != objptrs);
-
-			// If we are in group editing mode, also search the controls on the
-			// phantom card if the ids match.
-			MCGroup *t_editing;
-			t_editing = getstack() -> getediting();
-
-			// OK-2008-10-27 : [[Bug 7355]] - Infinite loop caused by incorrect
-			// assumption that getcurcard() will always be equal to this.
-			MCObjptr *t_objects;
-			t_objects = getstack() -> getcurcard() -> objptrs;
-
-			if (t_editing != NULL && t_editing -> getcard() -> obj_id == obj_id)
-			{
-				optr = t_objects;
-				do
-				{
-					MCControl *foundobj = NULL;
-					Chunk_term ttype = optr->getref()->gettype();
-
-					// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
-					if (ptype == CT_UNDEFINED
-							|| otype == CT_GROUP && ttype == CT_GROUP
-							|| ptype != CT_BACKGROUND && ttype != CT_GROUP
-							|| (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
-						foundobj = optr->getref()->findid(otype, tofindid, True);
-					if (foundobj != NULL)
-					{
-						// MW-2012-10-10: [[ IdCache ]] Cache the object by id.
-						t_stack -> cacheobjectbyid(foundobj);
-						return foundobj;
-					}
-					optr = optr->next();
-				}
-				while (optr != t_objects);
-			}
-		}
-		return NULL;
-	case CT_EXPRESSION:
-		if (MCU_stoui2(expression, num))
-		{
-			if (num < 1)
-				return NULL;
-			num--;
-		}
-		else
-		{
-			do
-			{
-				MCControl *foundobj = NULL;
-				Chunk_term ttype = optr->getref()->gettype();
-
-				// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
-				if (ptype == CT_UNDEFINED
-				        || otype == CT_GROUP && ttype == CT_GROUP
-				        || ptype != CT_BACKGROUND && ttype != CT_GROUP
-				        || (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
-				{
-					if (!optr->getref()->getopened())
-						optr->getref()->setparent(this);
-					foundobj = optr->getref()->findname(otype, expression);
-				}
-				if (foundobj != NULL)
-				{
-					if (foundobj->getparent()->gettype() == CT_STACK)
-						foundobj->setparent(this);
-					return foundobj;
-				}
-				optr = optr->next();
-			}
-			while (optr != objptrs);
-			return NULL;
-		}
-		break;
-	default:
-		return NULL;
-	}
-
-	return getnumberedchild(num + 1, otype, ptype);
-}
-#endif
 
 MCControl *MCCard::getchildbyordinal(Chunk_term p_ordinal_type, Chunk_term p_object_type, Chunk_term p_parent_type)
 {
@@ -2826,12 +2468,14 @@ void MCCard::resize(uint2 width, uint2 height)
 	rect.x = rect.y = 0;
 	rect.width = width;
 	rect.height = height;
+
+	geometrychanged(rect);
 }
 
 MCImage *MCCard::createimage()
 {
 	MCtemplateimage->setrect(rect);
-	MCImage *iptr = new MCImage(*MCtemplateimage);
+	MCImage *iptr = new (nothrow) MCImage(*MCtemplateimage);
 	getstack()->appendcontrol(iptr);
 	mfocused = newcontrol(iptr, False);
 	return iptr;
@@ -2921,7 +2565,7 @@ MCObjptr *MCCard::newcontrol(MCControl *cptr, Boolean needredraw)
 	if (opened)
 		cptr->setparent(this);
 
-	MCObjptr *newptr = new MCObjptr;
+	MCObjptr *newptr = new (nothrow) MCObjptr;
 	newptr->setparent(this);
 	newptr->setref(cptr);
 	newptr->appendto(objptrs);
@@ -3053,7 +2697,7 @@ MCObjptr *MCCard::getobjptrforcontrol(MCControl *p_control)
 
 void MCCard::clean()
 {
-	if (objptrs == NULL || state & CS_OWN_CONTROLS)
+	if (objptrs == NULL)
 		return;
 	clear();
 	MCObjptr *tptr = objptrs;
@@ -3061,12 +2705,13 @@ void MCCard::clean()
 	do
 	{
 		check = False;
-		MCControl *control = tptr->getref();
+		MCObjectHandle control = tptr->Get();
 		MCObjptr *ntptr = tptr->next();
-		if (control == NULL)
+        
+        // If the control has been deleted, remove it from the object list
+		if (!control.IsValid())
 		{
-			tptr->remove
-			(objptrs);
+			tptr->remove(objptrs);
 			delete tptr;
 			if (objptrs == NULL)
 				break;
@@ -3079,8 +2724,6 @@ void MCCard::clean()
 
 void MCCard::clear()
 {
-	if (state & CS_OWN_CONTROLS)
-		return;
 	MCObjptr *tptr = objptrs;
 	do
 	{
@@ -3131,7 +2774,7 @@ bool MCCard::selectedbutton(integer_t p_family, bool p_background, MCStringRef& 
 	MCButton *bptr;
 	while (nil != (bptr = (MCButton *)getnumberedchild(i, CT_BUTTON, ptype)))
 	{
-		if (bptr->getfamily() == p_family && bptr->gethilite(obj_id))
+		if (bptr->getfamily() == p_family && !(bptr->gethilite(obj_id).isFalse()))
 		{
 			uint2 bnum = 0;
 			getcard()->count(CT_BUTTON, ptype, bptr, bnum, True);
@@ -3177,27 +2820,44 @@ MCRectangle MCCard::computecrect()
 }
 
 void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
-                             const MCRectangle &selrect, MCRectangle &drect)
+                             const MCRectangle &p_selrect, MCRectangle &drect)
 {
 	// MW-2008-01-30: [[ Bug 5749 ]] Make sure we check to see if the object is
 	//   selectable - this will recurse up the object tree as necessary.
 	if (!cptr -> isselectable()
 	        && (!MCselectgrouped || cptr->gettype() != CT_GROUP))
 		return;
-	MCGroup *gptr = (MCGroup *)cptr;
 	
 	// MW-2008-12-04: [[ Bug ]] Make sure we honour group-local selectGrouped for
 	//   select-tool drags
-	if (MCselectgrouped && cptr->gettype() == CT_GROUP
-	        && gptr->getcontrols() != NULL && gptr->getflag(F_VISIBLE) && !gptr->getflag(F_SELECT_GROUP))
+	if (MCselectgrouped && cptr->gettype() == CT_GROUP)
 	{
-		cptr = gptr->getcontrols();
-		do
+        MCGroup *gptr = MCObjectCast<MCGroup>(cptr);
+
+		if (gptr->getcontrols() != NULL && gptr->getflag(F_VISIBLE) && !gptr->getflag(F_SELECT_GROUP))
 		{
-			updateselection(cptr, oldrect, selrect, drect);
-			cptr = cptr->next();
+			cptr = gptr->getcontrols();
+        
+			MCRectangle t_group_rect;
+			t_group_rect = gptr -> getrect();
+			
+			MCRectangle t_group_oldrect;
+			t_group_oldrect = MCU_intersect_rect(oldrect, t_group_rect);
+			
+			MCRectangle t_group_selrect;
+			t_group_selrect = MCU_intersect_rect(p_selrect, t_group_rect);
+			
+			do
+			{
+			    MCRectangle t_rect;
+			    t_rect = cptr -> getrect();
+			    if (MCU_line_intersect_rect(t_group_rect, t_rect))
+				updateselection(cptr, t_group_oldrect, t_group_selrect, drect);
+			    
+			    cptr = cptr->next();
+			}
+			while (cptr != gptr->getcontrols());
 		}
-		while (cptr != gptr->getcontrols());
 	}
 	else
 	{
@@ -3205,7 +2865,7 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
 		if (MCselectintersect)
 		{
             was = cptr->maskrect(oldrect);
-            is = cptr->maskrect(selrect);
+            is = cptr->maskrect(p_selrect);
 
             // AL-2015-10-07:: [[ External Handles ]] If either dimension is 0,
             //  recheck the selection intersect
@@ -3218,13 +2878,13 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
                     was = MCU_line_intersect_rect(oldrect, t_rect);
                 
                 if (!is)
-                    is = MCU_line_intersect_rect(selrect, t_rect);
+                    is = MCU_line_intersect_rect(p_selrect, t_rect);
             }
 		}
 		else
 		{
 			was = MCU_rect_in_rect(cptr->getrect(), oldrect);
-			is = MCU_rect_in_rect(cptr->getrect(), selrect);
+			is = MCU_rect_in_rect(cptr->getrect(), p_selrect);
 		}
 		if (is != was)
 		{
@@ -3373,60 +3033,51 @@ void MCCard::drawbackground(MCContext *p_context, const MCRectangle &p_dirty)
 	p_context->fillrect(p_dirty);
 }
 
-// IM-2013-09-13: [[ RefactorGraphics ]] Factor out card selection rect drawing to separate method
-void MCCard::drawselectionrect(MCContext *p_context)
-{
-    drawmarquee(p_context, selrect);
-}
-
-void MCCard::drawselectedchildren(MCDC *dc)
+/* The card's drawselection method first renders the selections of all children
+ * and then renders the marquee. */
+void MCCard::drawselection(MCContext *p_context, const MCRectangle& p_dirty)
 {
     MCObjptr *tptr = objptrs;
     if (tptr == nil)
         return;
+
     do
     {
-        if (tptr -> getref() -> getstate(CS_SELECTED))
-            tptr->getref()->drawselected(dc);
-        
-        if (tptr -> getrefasgroup() != nil)
-            tptr -> getrefasgroup() -> drawselectedchildren(dc);
+        MCControl *t_control = tptr->getref();
+        if (t_control != nullptr &&
+            t_control->getopened() != 0 &&
+            (t_control->getflag(F_VISIBLE) || showinvisible()))
+        {
+            t_control->drawselection(p_context, p_dirty);
+        }
             
         tptr = tptr->next();
     }
     while (tptr != objptrs);
+    
+    if (getstate(CS_SIZE))
+    {
+        drawmarquee(p_context, selrect);
+    }
 }
 
-bool MCCard::updatechildselectedrect(MCRectangle& x_rect)
+void MCCard::dirtyselection(const MCRectangle &p_rect)
 {
-    bool t_updated;
-    t_updated = false;
+    MCRectangle t_rect = MCU_reduce_rect(p_rect, -(1 + MCsizewidth / 2));
     
-    MCObjptr *t_objptr = objptrs;
-    if (t_objptr == nil)
-        return t_updated;
-    do
+    MCTileCacheRef t_tilecache = getstack()->view_gettilecache();
+    if (t_tilecache != nullptr)
     {
-        MCControl *t_control;
-        t_control = t_objptr -> getref();
+        MCGAffineTransform t_transform =
+                getstack()->getdevicetransform();
         
-        if (t_control -> getstate(CS_SELECTED))
-        {
-            x_rect = MCU_union_rect(t_control -> geteffectiverect(), x_rect);
-            t_updated = true;
-        }
+        MCRectangle32 t_device_rect =
+                MCRectangle32GetTransformedBounds(t_rect, t_transform);
         
-        if (t_control -> gettype() == CT_GROUP)
-        {
-            MCGroup *t_group = static_cast<MCGroup *>(t_control);
-            t_updated = t_updated | t_group -> updatechildselectedrect(x_rect);
-        }
-        
-        t_objptr = t_objptr->next();
+        MCTileCacheUpdateScenery(t_tilecache, m_fg_layer_id, t_device_rect);
     }
-    while (t_objptr != objptrs);
     
-    return t_updated;
+    layer_dirtyrect(t_rect);
 }
 
 void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
@@ -3447,23 +3098,21 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 		MCObjptr *tptr = objptrs;
 		do
 		{
-			tptr->getref()->redraw(dc, dirty);
+            MCControl *t_control = tptr->getref();
+            if (t_control != nullptr)
+                t_control->redraw(dc, dirty);
 			tptr = tptr->next();
 		}
 		while (tptr != objptrs);
 	}
-    
-    // Draw the selection outline and handles on top of everything
-    drawselectedchildren(dc);
-    
+
 	dc -> setopacity(255);
 	dc -> setfunction(GXcopy);
 
 	if (t_draw_cardborder)
 		drawcardborder(dc, dirty);
 	
-	if (getstate(CS_SIZE))
-		drawselectionrect(dc);
+    drawselection(dc, dirty);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3491,7 +3140,7 @@ IO_stat MCCard::load(IO_handle stream, uint32_t version)
 //---- 2.7+:
 //  . F_OPAQUE is now valid - default true
 //  . ink is now valid - default GXcopy
-	if (version < 2700)
+	if (version < kMCStackFileFormatVersion_2_7)
 	{
 		flags |= F_OPAQUE;
 		ink = GXcopy;
@@ -3508,7 +3157,7 @@ IO_stat MCCard::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (type == OT_PTR)
 		{
-			MCObjptr *newptr = new MCObjptr;
+			MCObjptr *newptr = new (nothrow) MCObjptr;
 			if ((stat = newptr->load(stream)) != IO_NORMAL)
 			{
 				delete newptr;
@@ -3544,37 +3193,37 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 			switch(t_object_type)
 			{
 			case OT_GROUP:
-				t_control = new MCGroup;
+				t_control = new (nothrow) MCGroup;
 			break;
 			case OT_BUTTON:
-				t_control = new MCButton;
+				t_control = new (nothrow) MCButton;
 			break;
 			case OT_FIELD:
-				t_control = new MCField;
+				t_control = new (nothrow) MCField;
 			break;
 			case OT_IMAGE:
-				t_control = new MCImage;
+				t_control = new (nothrow) MCImage;
 			break;
 			case OT_SCROLLBAR:
-				t_control = new MCScrollbar;
+				t_control = new (nothrow) MCScrollbar;
 			break;
 			case OT_GRAPHIC:
-				t_control = new MCGraphic;
+				t_control = new (nothrow) MCGraphic;
 			break;
 			case OT_PLAYER:
-				t_control = new MCPlayer;
+				t_control = new (nothrow) MCPlayer;
 			break;
 			case OT_MCEPS:
-				t_control = new MCEPS;
+				t_control = new (nothrow) MCEPS;
 			break;
             case OT_WIDGET:
-                t_control = new MCWidget;
+                t_control = new (nothrow) MCWidget;
                 break;
 			case OT_MAGNIFY:
-				t_control = new MCMagnify;
+				t_control = new (nothrow) MCMagnify;
 			break;
 			case OT_COLORS:
-				t_control = new MCColors;
+				t_control = new (nothrow) MCColors;
 			break;
 			default:
 				return checkloadstat(IO_ERROR);
@@ -3609,7 +3258,7 @@ IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t 
 //---- 2.7+: 
 //  . F_OPAQUE valid - must be true in older versions
 //  . ink valid - must be GXcopy in older versions
-	if (p_version < 2700)
+	if (p_version < kMCStackFileFormatVersion_2_7)
 	{
 		t_old_flags = flags;
 		t_old_ink = GXcopy;
@@ -3621,7 +3270,7 @@ IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t 
 		return stat;
 
 //---- 2.7+
-	if (p_version < 2700)
+	if (p_version < kMCStackFileFormatVersion_2_7)
 	{
 		flags = t_old_flags;
 		ink = t_old_ink;
@@ -3792,8 +3441,8 @@ Exec_stat MCCard::closecontrols(void)
 // is a property of the mouseControl. Will return NULL if no mouseControl exists.
 MCControl *MCCard::getmousecontrol(void)
 {
-	if (MCmousestackptr == NULL)
-		return NULL;
+	if (!MCmousestackptr)
+		return nil;
 
 	MCControl *t_focused;
 	t_focused = MCmousestackptr -> getcard() -> getmfocused();
@@ -3884,25 +3533,8 @@ void MCCard::scheduledelete(bool p_is_child)
 {
     MCObject::scheduledelete(p_is_child);
     
-    if (objptrs != NULL)
-    {
-        MCObjptr *optr = objptrs;
-        do
-        {
-            // MW-2011-08-09: [[ Groups ]] Shared groups just get reparented, rather
-            //   than removed from the stack since they cannot be 'owned' by the card.
-            if (optr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(optr->getref())->isshared())
-            {
-                // Do nothing for shared groups as they move to the stack.
-            }
-            else
-            {
-                optr -> getref() -> scheduledelete(true);
-            }
-            optr = optr->next();
-        }
-        while (optr != objptrs);
-    }
+    /* No need to recurse through children, as they are scheduled for
+     * deletion in ::del */
 }
 
 MCPlatformControlType MCCard::getcontroltype()

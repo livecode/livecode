@@ -2,17 +2,18 @@ Name: statRound
 
 Type: function
 
-Syntax: the statRound of <number> 
+Syntax: the statRound of <number>
 
 Syntax: statRound(<number>, <precision>)
 
-Summary: Rounds off a number.
+Summary:
+Rounds off a number.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the statRound of 2.5 -- yields 2, because 2 is even (rounds down)
@@ -27,20 +28,41 @@ Example:
 statRound(723.2, -1) -- yields 720
 
 Parameters:
-number: Any number or expression that evaluates to a number.
-precision (integer): An integer giving the decimal place to round off to.
+number:
+Any number or expression that evaluates to a number.
 
-Returns: The <statRound> <function> <return|returns> a number.
+precision (integer):
+An integer giving the decimal place to round off to.
+
+Returns:
+The <statRound> <function> <return|returns> a number.
 
 Description:
-Use the <statRound> <function> to round off numbers and eliminate insignificant digits for statistical applications.
+Use the <statRound> <function> to round off numbers and eliminate
+insignificant digits for statistical applications.
 
-The <statRound> <function> performs statistical rounding. If the <number> is exactly halfway between two numbers, <statRound> rounds the <number> to the nearest even <integer>. (To round off numbers such numbers upward, as is the convention for financial applications, use the <round> <function> instead.) Because of this, a set of numbers rounded with <statRound> is not skewed upward, the way it is with the <round> <function>. Therefore, you should use <statRound> when statistical accuracy is required.
+The <statRound> <function> performs statistical rounding. If the
+<number> is exactly halfway between two numbers, <statRound> rounds the
+<number> to the nearest even <integer>. (To round off numbers such
+numbers upward, as is the convention for financial applications, use the
+<round> <function> instead.) Because of this, a set of numbers rounded
+with <statRound> is not skewed upward, the way it is with the <round>
+<function>. Therefore, you should use <statRound> when statistical
+accuracy is required.
 
-A positive <precision> indicates a place to the right of the <decimal point>, and a <negative> <precision> indicates a place to the left. For example, 1 rounds off to the nearest tenth, 2 rounds off to the nearest hundredth, -1 rounds off by ten, and so on. If you don't specify a <precision>, zero is used, meaning that the <number> is rounded off to a whole number.
+A positive <precision> indicates a place to the right of the <decimal
+point>, and a <negative> <precision> indicates a place to the left. For
+example, 1 rounds off to the nearest tenth, 2 rounds off to the nearest
+hundredth, -1 rounds off by ten, and so on. If you don't specify a
+<precision>, zero is used, meaning that the <number> is rounded off to a
+whole number.
 
->*Note:* The <statRound> <function> is equivalent to <HyperCard|HyperTalk's> "round" <function>.
+>*Note:* The <statRound> <function> is equivalent to
+> <HyperCard|HyperTalk's> "round" <function>.
 
-References: integer (keyword), average (function), round (function), function (control_st), negative (glossary), HyperCard (glossary), return (glossary), decimal point (glossary)
+References: function (control structure), average (function),
+round (function), negative (glossary), HyperCard (glossary),
+return (glossary), decimal point (glossary), integer (keyword)
 
 Tags: math
+

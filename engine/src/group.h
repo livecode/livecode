@@ -24,15 +24,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCScrollbar;
 
-class MCGroup : public MCControl
+typedef MCObjectProxy<MCGroup>::Handle MCGroupHandle;
+
+class MCGroup : public MCControl, public MCMixinObjectHandle<MCGroup>
 {
+public:
+    
+    enum { kObjectType = CT_GROUP };
+    using MCMixinObjectHandle<MCGroup>::GetHandle;
+
+private:
+    
 	friend class MCHcbkgd;
 	friend class MCHcstak;
 	MCControl *controls;
 	MCControl *kfocused;
 	MCControl *oldkfocused;
 	MCControl *newkfocused;
-	MCControl *mfocused;
+	MCControlHandle mfocused;
 	MCScrollbar *vscrollbar;
 	MCScrollbar *hscrollbar;
 	int4 scrollx;
@@ -83,12 +92,8 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void applyrect(const MCRectangle &nrect);
 
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
-    
-	virtual Boolean del();
+    virtual void removereferences(void);
+	virtual Boolean del(bool p_check_flag);
 	virtual void recompute();
 
 	// MW-2012-02-14: [[ Fonts ]] Recompute the font inheritence hierarchy.
@@ -130,7 +135,12 @@ public:
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
 	virtual void toolchanged(Tool p_new_tool);
+	
+	virtual void OnAttach();
+	virtual void OnDetach();
 
+	virtual void OnViewTransformChanged();
+	
 	virtual void geometrychanged(const MCRectangle &p_rect);
 
 	virtual void viewportgeometrychanged(const MCRectangle &p_rect);
@@ -141,13 +151,11 @@ public:
 	
     virtual void scheduledelete(bool p_is_child);
     
-    // This call computes the pixel bounds of the group, rather than
-    // just its active bounds - transients, bitmap effects and selection
-    // handles of a group's children may extend beyond the group's bounds.
-    virtual MCRectangle geteffectiverect(void) const;
+    virtual bool isdeletable(bool p_check_flag);
     
-    void drawselectedchildren(MCDC *dc);
-    bool updatechildselectedrect(MCRectangle& x_rect);
+    /* The drawselection method of the group recurses to draw all child control
+     * selection decorations. */
+    virtual void drawselection(MCDC *dc, const MCRectangle& p_dirty);
     
 	MCControl *findchildwithid(Chunk_term type, uint4 p_id);
 
@@ -156,9 +164,6 @@ public:
 	void drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawframe);
 	void drawbord(MCDC *dc, const MCRectangle &dirty);
 	MCControl *getchild(Chunk_term etype, MCStringRef p_expression,Chunk_term otype, Chunk_term ptype);
-#ifdef OLD_EXEC
-	MCControl *getchild(Chunk_term etype, const MCString &,Chunk_term otype, Chunk_term ptype);
-#endif
     MCControl *getchildbyordinal(Chunk_term p_ordinal, Chunk_term o);
     MCControl *getchildbyid(uinteger_t p_id, Chunk_term o);
     MCControl *getchildbyname(MCNameRef p_name, Chunk_term o);
@@ -173,15 +178,6 @@ public:
 	void clearfocus(MCControl *cptr);
 	void radio(uint4 parid, MCControl *focused);
 	MCButton *gethilitedbutton(uint4 parid);
-#ifdef OLD_EXEC
-	uint2 gethilited(uint4 parid);
-	uint4 gethilitedid(uint4 parid);
-	MCNameRef gethilitedname(uint4 parid);
-	void sethilited(uint4 parid, uint2 toset);
-	void sethilitedid(uint4 parid, uint4 toset);
-	void sethilitedname(uint4 parid, MCNameRef bname);
-	void setchildprops(uint4 parid, Properties which, MCExecPoint &ep);
-#endif
 	MCRectangle getgrect();
 	void computecrect();
 	bool computeminrect(Boolean scrolling);

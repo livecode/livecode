@@ -6,13 +6,14 @@ Syntax: the openSockets
 
 Syntax: openSockets()
 
-Summary: <return|Returns> a list of the currently open <socket|sockets>.
+Summary:
+<return|Returns> a list of the currently open <socket|sockets>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,iOS,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: network
 
@@ -22,15 +23,30 @@ the openSockets
 Example:
 if line thisLine of the openSockets is "example.com:80" then beep
 
-Returns: The <openSockets> <function> <return|returns> a list of the open <socket|sockets>, one per <line>.
+Returns:
+The <openSockets> <function> <return|returns> a list of the open
+<socket|sockets>, one per <line>.
 
 Description:
-Use the <openSockets> <function> to find out which <socket|sockets> need to be closed, or to check whether a <socket> is already open before reading from it or writing to it.
+Use the <openSockets> <function> to find out which <socket|sockets> need
+to be closed, or to check whether a <socket> is already open before
+reading from it or writing to it.
 
-Each line of the list returned by the <openSockets> function is a <socket> identifier. A <socket> identifier consists of the <host> and <port> number the <socket> is connected to, separated by a colon. If a connection name or number was assigned when the <socket> was opened, it is <append|appended> to the identifier, separated from the <port> number by a vertical bar (|).
+Each line of the list returned by the <openSockets> function is a
+<socket> identifier. A <socket> identifier consists of the <host> and
+<port> number the <socket> is connected to, separated by a colon. If a
+connection name or number was assigned when the <socket> was opened, it
+is <append|appended> to the identifier, separated from the <port> number
+by a vertical bar (|).
 
->*Note:* Several of the commands and functions in the Internet library use sockets, so the openSockets func may return sockets opened by the Internet library in addition to any sockets you have opened with the open socket com.
+>*Note:* Several of the commands and functions in the Internet library
+> use sockets, so the openSockets func may return sockets opened by the
+> Internet library in addition to any sockets you have opened with the
+> open socket com.
 
-References: line (keyword), socketTimeout (message), accept (command), function (control_st), socket (glossary), host (glossary), append (glossary), return (glossary), port (glossary)
+References: accept (command), function (control structure),
+socket (glossary), host (glossary), append (glossary), return (glossary),
+port (glossary), line (keyword), socketTimeout (message)
 
 Tags: networking
+

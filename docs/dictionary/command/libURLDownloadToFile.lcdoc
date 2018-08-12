@@ -4,13 +4,17 @@ Type: command
 
 Syntax: libURLDownloadToFile <downloadURL>, <filePath> [, <callbackMessage>]
 
-Summary: <download|Downloads> a file from an Internet <server> asynchronously via FTP, HTTP or HTTPS
+Summary:
+<download|Downloads> a file from an Internet <server> asynchronously via
+FTP, HTTP or HTTPS
+
+Associations: internet library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android, html5
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: network
 
@@ -21,27 +25,77 @@ Example:
 libURLDownloadToFile myFile,newPath,"downloadComplete"
 
 Parameters:
-downloadURL: The downloadURL specifies the server and file to download, in the form of an FTP, HTTP or HTTPS url.
-filePath: The filePath specifies the name and location to save the downloaded file in. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
-callbackMessage: The name of a message to send after the download is finished.
+downloadURL:
+The downloadURL specifies the server and file to download, in the form
+of an FTP, HTTP or HTTPS url.
+
+filePath:
+The filePath specifies the name and location to save the downloaded file
+in. If you specify a name but not a location, LiveCode assumes the file
+is in the defaultFolder.
+
+callbackMessage:
+The name of a message to send after the download is finished.
 
 Description:
-Use the <libURLDownloadToFile> <command> to <download> a <file(keyword)> from an FTP Server or Web Server. 
+Use the <libURLDownloadToFile> <command> to <download> a <file(keyword)>
+from an FTP Server or Web Server.
 
-The <libURLDownloadToFile> <command> transfers the data directly from the <file(keyword)> to the <server>. Unlike simply using the <put> <command> to put the contents of a <URL> into a <file(keyword)>, using the <libURLDownloadToFile> <command> does not load all the data into memory at once, so this <command> is a better choice for large <files>.
+The <libURLDownloadToFile> <command> transfers the data directly from
+the <file(keyword)> to the <server>. Unlike simply using the <put>
+<command> to put the contents of a <URL> into a <file(keyword)>, using
+the <libURLDownloadToFile> <command> does not load all the data into
+memory at once, so this <command> is a better choice for large <files>.
 
-The <libURLDownloadToFile> <command> transfers the file in <binary> mode.
+The <libURLDownloadToFile> <command> transfers the file in <binary>
+mode. 
 
-The <callbackMessage> is sent to the <object> whose <script> contains the <libURLDownloadToFile> <command>, after the <download> is complete, so you can handle the <callbackMessage> to perform any tasks you want to delay until the file has been <download|downloaded>. Two <parameter|parameters> are sent with the <message> : the <URL> and the <URLStatus> of the <file(keyword)>.
+The <callbackMessage> is sent to the <object(glossary)> whose <script>
+contains the <libURLDownloadToFile> <command>, after the <download> is
+complete, so you can handle the <callbackMessage> to perform any tasks
+you want to delay until the file has been <download|downloaded>. Two
+<parameter|parameters> are sent with the <message> : the <URL> and the
+<URLStatus> of the <file(keyword)>.
 
->*Tip:*  On <Mac OS> and <OS X|OS X systems>, the new <file(glossary)|file's> <creator signature> and <type signature|file type> is set to the value specified in the <fileType> <property>.
+>*Tip:*  On <Mac OS> and <OS X|OS X systems>, the new
+> <file(glossary)|file's> <creator signature> and <type signature|file
+> type> is set to the value specified in the <fileType> <property>.
 
->*Important:*  The <libURLDownloadToFile> <command> is part of the <Internet library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:*  The <libURLDownloadToFile> <command> is part of the 
+> <Internet library> on desktop platforms. To ensure that the <command> 
+> works in a desktop <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
->*Note:* When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <libURLDownloadToFile> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <libURLDownloadToFile> <command> can be used in any <handler>.
+>*Cross-platform note:* On iOS and Android, <libURLDownloadToFile> is 
+> implemented in the engine. Therefore the <Internet library> is not 
+> needed to ensure the <command> works in a mobile 
+> <standalone application>. If included, the <Internet library> 
+> implementation will be used instead of the engine implementation.
 
->*Cross-platform note:* On iOS and Android <libURLDownloadToFile> is blocking until the download is complete. Completion of the download is notified by the <urlProgress> message, where you can test if the downloaded status is set.
+>*Cross-platform note:* On iOS and Android <libURLDownloadToFile> is 
+> blocking until the download is complete. Completion of the download 
+> is notified by the <urlProgress> message, where you can test if the 
+> downloaded status is set.
 
-References: fileType (property), script (property), urlProgress (message), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), Internet library (library), library (library), LiveCode custom library (library), URL (keyword), ftp (keyword), file (keyword), application (glossary), standalone application (glossary), message (glossary), property (glossary), file (glossary), Standalone Application Settings (glossary), command (glossary), main stack (glossary), OS X (glossary), type signature (glossary), group (glossary), creator signature (glossary), binary (glossary), server (glossary), download (glossary), parameter (glossary), Mac OS (glossary), handler (glossary), URLStatus (function), files (function), libURLSetStatusCallback (command), libURLFollowHttpRedirects (command), unload (command), put (command), load (command), libURLSetFTPStopTime (command), libURLftpUploadFile (command), object (object)
+References: libURLSetStatusCallback (command),
+libURLFollowHttpRedirects (command), unload (command), put (command),
+load (command), libURLSetFTPStopTime (command),
+libURLftpUploadFile (command), URLStatus (function), files (function),
+LiveCode custom library (glossary), application (glossary),
+standalone application (glossary), message (glossary),
+property (glossary), file (glossary),
+Standalone Application Settings (glossary), command (glossary),
+main stack (glossary), OS X (glossary), type signature (glossary),
+group (glossary), creator signature (glossary), binary (glossary),
+server (glossary), download (glossary), parameter (glossary),
+Mac OS (glossary), handler (glossary), object (glossary), URL (keyword),
+ftp (keyword), file (keyword), Internet library (library),
+library (library), urlProgress (message), startup (message),
+openBackground (message), preOpenStack (message), openStack (message),
+preOpenCard (message), fileType (property), script (property)
 
 Tags: networking
+

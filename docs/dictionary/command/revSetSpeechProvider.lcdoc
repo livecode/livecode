@@ -2,15 +2,19 @@ Name: revSetSpeechProvider
 
 Type: command
 
-Syntax: revSetSpeechProvider <speechProvider> 
+Syntax: revSetSpeechProvider <speechProvider>
 
-Summary: The <speechProvider> is either "sapi4", "sapi5" or "speechmanager", or empty for the default.
+Summary:
+The <speechProvider> is either "sapi4", "sapi5" or "speechmanager", or
+empty for the default.
+
+Associations: speech library
 
 Introduced: 2.8.1
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revSetSpeechProvider "speechmanager"
@@ -19,12 +23,41 @@ Example:
 revSetSpeechProvider "sapi5"
 
 Parameters:
-speechProvider: 
+speechProvider:
 
-The result: Sets the API that LiveCode uses to speak. SAPI4 and SAPI5 are only supported on Windows.  SpeechManager is only supported on OS X.  This command will not return anything in the result. If an invalid API is specified, the default API for the currrent platform will be used. Changes to the speech provider will take affect straight away if the speech library was not loaded (i.e. nothing has been spoken), otherwise they will not take affect until the speech library is reloaded using the <revUnloadSpeech command> followed by the <revUnloadSpeech command>.  If the specified speech provider cannot be loaded then the <revUnloadSpeech command> will return "sperr, unable to load speech provider" in the <result>.
+
+The result:
+This command will not return anything in the result. If
+the specified speech provider cannot be loaded then the 
+<revUnloadSpeech> <command> will return "sperr, unable to load speech 
+provider" in the <result>.
 
 Description:
+Sets the API that LiveCode uses to speak. SAPI4 and SAPI5 are only 
+supported on Windows.  SpeechManager is only supported on OS X.
 
-The default is speechManager on OS X and SAPI5 on Windows (falling back to SAPI4 if SAPI5 is not supported).
+If an invalid API is specified, the default API for the currrent 
+platform will be used. Changes to the speech provider will take affect 
+straight away if the speech library was not loaded (i.e. nothing has 
+been spoken), otherwise they will not take affect until the speech 
+library is reloaded using the <revUnloadSpeech> <command> followed by
+the <revLoadSpeech> <command>.
 
-References: revSetSpeechSpeed (command), revUnloadSpeech (command), revUnloadSpeech command (command), revSetSpeechVolume (command), result (function), revSpeechVoices (function)
+The default is speechManager on OS X and SAPI5 on Windows (falling back 
+to SAPI4 if SAPI5 is not supported).
+
+>*Important:*  The <revSetSpeechProvider> <command> is part of the 
+> <Speech library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Speech" 
+> library checkbox is checked.
+
+References: revSetSpeechSpeed (command), revUnloadSpeech (command),
+revUnloadSpeech (command), revSetSpeechVolume (command),
+result (function), revSpeechVoices (function),
+Standalone Application Settings (glossary),
+standalone application (glossary), command (glossary),
+LiveCode custom library (glossary), Speech library (library)
+

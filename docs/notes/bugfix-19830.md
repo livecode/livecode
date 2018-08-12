@@ -1,0 +1,1 @@
+# Fixed regression introduced by bugfix-19535

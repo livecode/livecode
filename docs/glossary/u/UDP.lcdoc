@@ -1,12 +1,14 @@
 Name: UDP
 
-Synonyms: user datagram protocol,UDP
+Synonyms: user datagram protocol, udp
 
 Type: glossary
 
 Description:
-User Datagram Protocol. A method of sending a self-contained clump of data (a <datagram>) to another system.
+User Datagram Protocol. A method of sending a self-contained clump of
+data (a <datagram>) to another system.
 
 References: datagram (glossary)
 
 Tags: networking
+

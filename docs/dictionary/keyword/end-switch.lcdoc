@@ -4,20 +4,24 @@ Type: keyword
 
 Syntax: end switch
 
-Summary: Ends a <switch> <control> <control structure|structure>.
+Summary:
+Ends a <switch> <control> <control structure|structure>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 end switch
 
 Description:
-Use the <end switch> <keyword> to mark the end of a <switch> <control structure>.
+Use the <end switch> <keyword> to mark the end of a <switch> 
+<control structure>. 
 
 The <end switch> <keyword> occurs on a line by itself.
 
-References: end (keyword), control (keyword), keyword (glossary), control structure (glossary), switch (control_st)
+References: switch (control structure), keyword (glossary),
+control structure (glossary), end (keyword), control (keyword)
+

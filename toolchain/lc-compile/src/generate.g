@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -28,6 +28,9 @@
 
 'var' ModuleDependencyList : NAMELIST
 
+-- Keep a list of all modules for which bytecode is being generated
+'var' CompiledModuleList : NAMELIST
+
 'var' IgnoredModuleList : NAMELIST
 
 'var' GeneratingModuleIndex : INT
@@ -35,6 +38,8 @@
 'action' GenerateModules(MODULELIST)
 
     'rule' GenerateModules(List):
+        ModuleDependencyList <- nil
+        CompiledModuleList <- nil
         GeneratingModuleIndex <- 1
         EmitStart()
         GenerateForEachModule(List)
@@ -54,6 +59,7 @@
 'action' Generate(MODULE)
 
     'rule' Generate(Module):
+        CompiledModuleList <- nil
         GeneratingModuleIndex <- 1
         EmitStart()
         GenerateSingleModule(Module)
@@ -61,11 +67,20 @@
 
 'action' GenerateSingleModule(MODULE)
 
+    'rule' GenerateSingleModule(Module:module(_, import, Id, Definitions)):
+		-- do nothing for import modules
+
     'rule' GenerateSingleModule(Module:module(_, Kind, Id, Definitions)):
-        ModuleDependencyList <- nil
+
+        (|
+            -- If this is not a bootstrap compile, don't reinit the dependency list
+            IsBootstrapCompile()
+            ModuleDependencyList <- nil
+        ||
+        |)
         
         QueryModuleId(Id -> Info)
-        Id'Name -> ModuleName
+        GetQualifiedName(Id -> ModuleName)
         (|
             where(Kind -> module)
             EmitBeginModule(ModuleName -> ModuleIndex)
@@ -77,6 +92,9 @@
             where(Kind -> library)
             EmitBeginLibraryModule(ModuleName -> ModuleIndex)
         |)
+
+        AddModuleToCompiledList(ModuleName)
+
         Info'Index <- ModuleIndex
         GeneratingModuleIndex -> Generator
         Info'Generator <- Generator
@@ -122,7 +140,7 @@
         ImportContainsCanvas(Right)
         
     'rule' ImportContainsCanvas(import(_, Id)):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         MakeNameLiteral("com.livecode.canvas" -> CanvasModuleName)
         IsNameEqualToName(Name, CanvasModuleName)
 
@@ -132,24 +150,24 @@
 
     'rule' GenerateManifest(module(_, Kind, Id, Definitions)):
         OutputBeginManifest()
-        Id'Name -> Name
+    	GetQualifiedName(Id -> Name)
         OutputWrite("<package version=\"0.0\">\n")
         OutputWriteI("  <name>", Name, "</name>\n")
         [|
             QueryMetadata(Definitions, "title" -> TitleString)
-            OutputWriteS("  <title>", TitleString, "</title>\n")
+            OutputWriteXmlS("  <title>", TitleString, "</title>\n")
         |]
         [|
             QueryMetadata(Definitions, "author" -> AuthorString)
-            OutputWriteS("  <author>", AuthorString, "</author>\n")
+            OutputWriteXmlS("  <author>", AuthorString, "</author>\n")
         |]
         [|
             QueryMetadata(Definitions, "description" -> DescriptionString)
-            OutputWriteS("  <description>", DescriptionString, "</description>\n")
+            OutputWriteXmlS("  <description>", DescriptionString, "</description>\n")
         |]
         [|
             QueryMetadata(Definitions, "version" -> VersionString)
-            OutputWriteS("  <version>", VersionString, "</version>\n")
+            OutputWriteXmlS("  <version>", VersionString, "</version>\n")
         |]
         OutputWrite("  <license>community</license>\n")
         (|
@@ -183,12 +201,33 @@
 'action' AddModuleToDependencyList(NAME)
 
     'rule' AddModuleToDependencyList(Name):
+        -- If this is in the list of compiled modules, then don't
+        -- include in list of required modules in manifest - in
+        -- particular if we are creating a multi-module assembly,
+        -- then this is not an external dependency.
+        CompiledModuleList -> NoDependencyList
+        IsNameInList(Name, NoDependencyList)
+
+    'rule' AddModuleToDependencyList(Name):
         ModuleDependencyList -> List
         IsNameInList(Name, List)
         
     'rule' AddModuleToDependencyList(Name):
         ModuleDependencyList -> List
         ModuleDependencyList <- namelist(Name, List)
+
+'action' AddModuleToCompiledList(NAME)
+
+    'rule' AddModuleToCompiledList(Name):
+        IsNotBytecodeOutput()
+
+    'rule' AddModuleToCompiledList(Name):
+        CompiledModuleList -> List
+        IsNameInList(Name, List)
+
+    'rule' AddModuleToCompiledList(Name):
+        CompiledModuleList -> List
+        CompiledModuleList <- namelist(Name, List)
         
 'action' GenerateManifestRequires(NAMELIST)
 
@@ -204,7 +243,10 @@
     'rule' GenerateManifestDefinitions(sequence(Left, Right)):
         GenerateManifestDefinitions(Left)
         GenerateManifestDefinitions(Right)
-        
+
+    'rule' GenerateManifestDefinitions(unsafe(_, Definition)):
+        GenerateManifestDefinitions(Definition)
+
     'rule' GenerateManifestDefinitions(metadata(_, Key, Value)):
         (|
             IsStringEqualToString(Key, "title")
@@ -215,8 +257,8 @@
         ||
             IsStringEqualToString(Key, "version")
         ||
-            OutputWriteS("  <metadata key=\"", Key, "\">")
-            OutputWriteS("", Value, "</metadata>\n")
+            OutputWriteXmlS("  <metadata key=\"", Key, "\">")
+            OutputWriteXmlS("", Value, "</metadata>\n")
         |)
 
     'rule' GenerateManifestDefinitions(type(_, public, Name, _)):
@@ -225,9 +267,7 @@
     
     'rule' GenerateManifestDefinitions(variable(_, public, Name, _)):
 
-    'rule' GenerateManifestDefinitions(contextvariable(_, public, Name, _, _)):
-
-    'rule' GenerateManifestDefinitions(handler(_, public, Name, _, Signature, _, _)):
+    'rule' GenerateManifestDefinitions(handler(_, public, Name, Signature, _, _)):
         GenerateManifestHandlerDefinition(Name, Signature)
 
     'rule' GenerateManifestDefinitions(foreignhandler(_, public, Name, Signature, _)):
@@ -303,7 +343,7 @@
         OutputWrite("any")
 
     'rule' GenerateManifestTypeBody(undefined(_)):
-        OutputWrite("undefined")
+        OutputWrite("nothing")
 
     'rule' GenerateManifestTypeBody(boolean(_)):
         OutputWrite("boolean")
@@ -445,7 +485,7 @@
         
         -- Ensure we have a dependency for the module
         GenerateModuleDependency(ModuleId -> ModuleIndex)
-        ModuleId'Name -> ModuleName
+        GetQualifiedName(ModuleId -> ModuleName)
         AddModuleToDependencyList(ModuleName)
         
         -- Fetch the info about the symbol.
@@ -496,8 +536,8 @@
         [|
             -- If the module has been depended on yet, it will have index -1
             ne(CurrentGenerator, Generator)
-            Id'Name -> ModuleName
-            
+            GetQualifiedName(Id -> ModuleName)
+
             -- Emit a dependency for the module and get its index
             EmitModuleDependency(ModuleName -> NewModuleIndex)
             ModuleInfo'Index <- NewModuleIndex
@@ -515,47 +555,47 @@
     'rule' GenerateDefinitionIndexes(sequence(Left, Right)):
         GenerateDefinitionIndexes(Left)
         GenerateDefinitionIndexes(Right)
-        
+
+    'rule' GenerateDefinitionIndexes(unsafe(_, Definition)):
+        GenerateDefinitionIndexes(Definition)
+
     'rule' GenerateDefinitionIndexes(type(_, _, Name, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("type", Name)
     
     'rule' GenerateDefinitionIndexes(constant(_, _, Name, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("constant", Name)
     
     'rule' GenerateDefinitionIndexes(variable(_, _, Name, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("variable", Name)
     
-    'rule' GenerateDefinitionIndexes(contextvariable(_, _, Name, _, _)):
-        GenerateDefinitionIndex(Name)
-    
-    'rule' GenerateDefinitionIndexes(handler(_, _, Name, _, _, _, _)):
-        GenerateDefinitionIndex(Name)
+    'rule' GenerateDefinitionIndexes(handler(_, _, Name, _, _, _)):
+        GenerateDefinitionIndex("handler", Name)
 
     'rule' GenerateDefinitionIndexes(foreignhandler(_, _, Name, _, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("foreignhandler", Name)
 
     'rule' GenerateDefinitionIndexes(property(_, _, Name, _, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("property", Name)
 
     'rule' GenerateDefinitionIndexes(event(_, _, Name, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("event", Name)
 
     'rule' GenerateDefinitionIndexes(syntax(_, _, Name, _, _, _, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("syntax", Name)
     
     'rule' GenerateDefinitionIndexes(_):
         -- nothing
 
-'action' GenerateDefinitionIndex(ID)
+'action' GenerateDefinitionIndex(STRING, ID)
 
-    'rule' GenerateDefinitionIndex(Id):
+    'rule' GenerateDefinitionIndex(String, Id):
         QuerySyntaxId(Id -> Info)
-        EmitDefinitionIndex(-> Index)
+        EmitDefinitionIndex(String -> Index)
         Info'Index <- Index
 
-    'rule' GenerateDefinitionIndex(Id):
+    'rule' GenerateDefinitionIndex(String, Id):
         QuerySymbolId(Id -> Info)
-        EmitDefinitionIndex(-> Index)
+        EmitDefinitionIndex(String -> Index)
         Info'Index <- Index
 
 'condition' IsRValueMethodPresent(SYNTAXMETHODLIST)
@@ -598,7 +638,10 @@
     'rule' GenerateExportedDefinitions(sequence(Left, Right)):
         GenerateExportedDefinitions(Left)
         GenerateExportedDefinitions(Right)
-        
+
+    'rule' GenerateExportedDefinitions(unsafe(_, Definition)):
+        GenerateExportedDefinitions(Definition)
+
     'rule' GenerateExportedDefinitions(type(_, public, Id, _)):
         GenerateExportedDefinition(Id)
         
@@ -608,10 +651,7 @@
     'rule' GenerateExportedDefinitions(variable(_, public, Id, _)):
         GenerateExportedDefinition(Id)
 
-    'rule' GenerateExportedDefinitions(contextvariable(_, public, Id, _, _)):
-        GenerateExportedDefinition(Id)
-
-    'rule' GenerateExportedDefinitions(handler(_, public, Id, _, _, _, _)):
+    'rule' GenerateExportedDefinitions(handler(_, public, Id, _, _, _)):
         GenerateExportedDefinition(Id)
 
     'rule' GenerateExportedDefinitions(foreignhandler(_, public, Id, _, _)):
@@ -649,7 +689,10 @@
     'rule' GenerateDefinitions(sequence(Left, Right)):
         GenerateDefinitions(Left)
         GenerateDefinitions(Right)
-        
+
+    'rule' GenerateDefinitions(unsafe(_, Definition)):
+        GenerateDefinitions(Definition)
+
     'rule' GenerateDefinitions(type(Position, _, Id, Type)):
         GenerateType(Type -> TypeIndex)
         
@@ -673,27 +716,19 @@
         Info'Index -> DefIndex
         EmitVariableDefinition(DefIndex, Position, Name, TypeIndex)
 
-    'rule' GenerateDefinitions(contextvariable(Position, _, Id, Type, Default)):
-        GenerateType(Type -> TypeIndex)
-        EmitConstant(Default -> ConstIndex)
-
-        QuerySymbolId(Id -> Info)
-        Id'Name -> Name
-        Info'Index -> DefIndex
-        EmitContextVariableDefinition(DefIndex, Position, Name, TypeIndex, ConstIndex)
-
-    'rule' GenerateDefinitions(handler(Position, _, Id, Scope, Signature:signature(Parameters, _), _, Body)):
+    'rule' GenerateDefinitions(handler(Position, _, Id, Signature:signature(Parameters, _), _, Body)):
         GenerateType(handler(Position, normal, Signature) -> TypeIndex)
         
         QuerySymbolId(Id -> Info)
         Id'Name -> Name
+        Info'Safety -> Safety
         Info'Index -> DefIndex
         (|
-            where(Scope -> normal)
+            where(Safety -> safe)
             EmitBeginHandlerDefinition(DefIndex, Position, Name, TypeIndex)
         ||
-            where(Scope -> context)
-            EmitBeginContextHandlerDefinition(DefIndex, Position, Name, TypeIndex)
+            where(Safety -> unsafe)
+            EmitBeginUnsafeHandlerDefinition(DefIndex, Position, Name, TypeIndex)
         |)
         GenerateParameters(Parameters)
         CreateParameterRegisters(Parameters)
@@ -831,12 +866,17 @@
 
 'action' GenerateParameters(PARAMETERLIST)
 
-    'rule' GenerateParameters(parameterlist(parameter(_, _, Id, Type), Rest)):
+    'rule' GenerateParameters(parameterlist(parameter(Position, Mode, Id, Type), Rest)):
         QuerySymbolId(Id -> Info)
         Id'Name -> Name
         GenerateType(Type -> TypeIndex)
         EmitHandlerParameter(Name, TypeIndex -> Index)
         Info'Index <- Index
+        [|
+            where(Mode -> out)
+            EmitPosition(Position)
+            EmitReset(Index)
+        |]
         GenerateParameters(Rest)
 
     'rule' GenerateParameters(nil):
@@ -856,6 +896,9 @@
     'rule' CreateVariableRegisters(STATEMENT'variable(_, _, _)):
         EmitCreateRegister(-> Register)
 
+    'rule' CreateVariableRegisters(BYTECODE'register(_, _, _)):
+        EmitCreateRegister(-> Register)
+
 'action' DestroyParameterRegisters(PARAMETERLIST)
 
     'rule' DestroyParameterRegisters(parameterlist(parameter(_, _, Id, _), Rest)):
@@ -867,19 +910,29 @@
     'rule' DestroyParameterRegisters(nil):
         -- nothing
 
-'action' DestroyVariableRegisters(STATEMENT)
+'action' RemoveIndexFromInvokeSignature(INVOKESIGNATURE, INT -> INVOKESIGNATURE)
 
-    'rule' DestroyVariableRegisters(sequence(Left, Right)):
-        DestroyVariableRegisters(Left)
-        DestroyVariableRegisters(Right)
+    'rule' RemoveIndexFromInvokeSignature(invokesignature(_, Index, Remaining), RemoveIndex -> Remaining):
+        eq(Index, RemoveIndex)
 
-    'rule' DestroyVariableRegisters(variable(_, Id, _)):
+    'rule' RemoveIndexFromInvokeSignature(invokesignature(Mode, Index, Tail), RemoveIndex -> ChangedSig):
+        RemoveIndexFromInvokeSignature(Tail, RemoveIndex -> ChangedTail)
+        where(invokesignature(Mode, Index, ChangedTail) -> ChangedSig)
+
+    'rule' RemoveIndexFromInvokeSignature(nil, _ -> nil):
+
+
+'sweep' DestroyVariableRegisters(ANY)
+
+    'rule' DestroyVariableRegisters(STATEMENT'variable(_, Id, _)):
         QuerySymbolId(Id -> Info)
         Info'Index -> Index
         EmitDestroyRegister(Index)
 
-    'rule' DestroyVariableRegisters(_):
-        -- nothing
+    'rule' DestroyVariableRegisters(BYTECODE'register(_, Id, _)):
+        QuerySymbolId(Id -> Info)
+        Info'Index -> Index
+        EmitDestroyRegister(Index)
 
 'action' GenerateBody(INT, INT, STATEMENT)
 
@@ -893,6 +946,8 @@
         GenerateType(Type -> TypeIndex)
         EmitHandlerVariable(Name, TypeIndex -> Index)
         Info'Index <- Index
+        EmitPosition(Position)
+        EmitReset(Index)
     
     'rule' GenerateBody(Result, Context, if(Position, Condition, Consequent, Alternate)):
         EmitDeferLabel(-> AlternateLabel)
@@ -1077,21 +1132,34 @@
         
         EmitPosition(Position)
         EmitCreateRegister(-> IteratorReg)
+        EmitCreateRegister(-> IterationVarTempReg)
         EmitAssignUndefined(IteratorReg)
+        EmitAssignUndefined(IterationVarTempReg)
         GenerateExpression(Result, Context, Container -> TargetReg)
-        
-        EmitResolveLabel(RepeatHead)
+
+        -- Remove the variable of iteration from the argument list as a
+        -- temporary will be used in the invoke
         GenerateDefinitionGroupForInvokes(IteratorInvokes, iterate, Arguments -> Index, Signature)
-        GenerateInvoke_EvaluateArguments(Result, Context, Signature, Arguments)
+        RemoveIndexFromInvokeSignature(Signature, 0 -> RemainingSignature)
+        where(Arguments -> expressionlist(IterationVar, RemainingArgs))
+
+        EmitResolveLabel(RepeatHead)
+        GenerateInvoke_EvaluateArgumentForOut(Result, Context, IterationVar)
+        GenerateInvoke_EvaluateArguments(Result, Context, RemainingSignature, RemainingArgs)
         EmitCreateRegister(-> ContinueReg)
         EmitBeginInvoke(Index, Context, ContinueReg)
         EmitContinueInvoke(IteratorReg)
-        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitContinueInvoke(IterationVarTempReg)
+        GenerateInvoke_EmitInvokeArguments(RemainingArgs)
         EmitContinueInvoke(TargetReg)
         EmitEndInvoke()
 
         EmitJumpIfFalse(ContinueReg, RepeatTail)
-        
+
+        -- Iteration successful, copy the temporary iteration var into its place
+        EmitGetRegisterAttachedToExpression(IterationVar -> IterationVarReg)
+        EmitAssign(IterationVarReg, IterationVarTempReg)
+
         GenerateInvoke_AssignArguments(Result, Context, Signature, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
         
@@ -1101,8 +1169,9 @@
         
         EmitJump(RepeatHead)
         
-        EmitDestroyRegister(IteratorReg)
         EmitDestroyRegister(TargetReg)
+        EmitDestroyRegister(IterationVarTempReg)
+        EmitDestroyRegister(IteratorReg)
 
         EmitResolveLabel(RepeatTail)
 
@@ -1160,6 +1229,7 @@
     'rule' GenerateBody(Result, Context, get(Position, Value)):
         GenerateExpression(Result, Context, Value -> Reg)
         EmitAssign(Result, Reg)
+        EmitDestroyRegister(Reg)
 
     'rule' GenerateBody(Result, Context, invoke(Position, Invokes, Arguments)):
         EmitPosition(Position)
@@ -1176,6 +1246,7 @@
         GenerateExpression(Result, Context, Error -> Reg)
         GenerateBeginBuiltinInvoke("Throw", Context, Result)
         EmitContinueInvoke(Reg)
+        EmitEndInvoke()
         EmitDestroyRegister(Reg)
         EmitAssignUndefined(Result)
         
@@ -1204,6 +1275,13 @@
         GenerateInvoke_FreeArgument(Target)
         EmitAssignUndefined(Result)
 
+    'rule' GenerateBody(Result, Context, bytecode(Position, Block)):
+        GenerateBytecodeDeferLabels(Block)
+        GenerateBytecode(Block)
+
+    'rule' GenerateBody(Result, Context, unsafe(Position, Block)):
+        GenerateBody(Result, Context, Block)
+
     'rule' GenerateBody(Result, Context, nil):
         -- nothing
 
@@ -1216,6 +1294,66 @@
         EmitUndefinedType(-> SymbolTypeIndex)
         EmitImportedHandler(ModuleIndex, InvokeName, SymbolTypeIndex -> SymbolIndex)
         EmitBeginInvoke(SymbolIndex, ContextReg, ResultReg)
+
+--
+
+'sweep' GenerateBytecodeDeferLabels(ANY)
+
+    'rule' GenerateBytecodeDeferLabels(BYTECODE'label(Position, Name)):
+        QuerySymbolId(Name -> Info)
+        EmitDeferLabel(-> Label)
+        Info'Index <- Label
+
+
+'action' GenerateBytecode(BYTECODE)
+
+    'rule' GenerateBytecode(sequence(Left, Right)):
+        GenerateBytecode(Left)
+        GenerateBytecode(Right)
+
+    'rule' GenerateBytecode(label(Position, Name)):
+        QuerySymbolId(Name -> Info)
+        Info'Index -> Label
+        EmitResolveLabel(Label)
+
+    'rule' GenerateBytecode(register(Position, Id, Type)):
+        QuerySymbolId(Id -> Info)
+        Id'Name -> Name
+        GenerateType(Type -> TypeIndex)
+        EmitHandlerVariable(Name, TypeIndex -> Index)
+        Info'Index <- Index
+
+    'rule' GenerateBytecode(opcode(Position, Opcode, Arguments)):
+        GetStringOfNameLiteral(Opcode -> OpcodeString)
+        EmitPosition(Position)
+        EmitBeginOpcode(OpcodeString)
+        GenerateBytecodeArguments(Arguments)
+        EmitEndOpcode()
+
+    'rule' GenerateBytecode(nil):
+        -- do nothing
+
+
+'action' GenerateBytecodeArguments(EXPRESSIONLIST)
+
+    'rule' GenerateBytecodeArguments(expressionlist(Head, Tail)):
+        GenerateBytecodeArgument(Head)
+        GenerateBytecodeArguments(Tail)
+
+    'rule' GenerateBytecodeArguments(nil):
+        -- do nothing
+
+'action' GenerateBytecodeArgument(EXPRESSION)
+
+    'rule' GenerateBytecodeArgument(slot(Position, Name)):
+        QuerySymbolId(Name -> Info)
+        Info'Index -> Index
+        EmitContinueOpcode(Index)
+
+    'rule' GenerateBytecodeArgument(Constant):
+        IsExpressionSimpleConstant(Constant)
+        EmitConstant(Constant -> Index)
+        EmitContinueOpcode(Index)
 
 ----
 
@@ -1248,6 +1386,13 @@
         
     'rule' GenerateInvoke_EvaluateArguments(_, _, nil, _):
         -- do nothing.
+
+'action' GenerateInvoke_EvaluateVariadicArgument(INT, INT, EXPRESSIONLIST, INT)
+
+    'rule' GenerateInvoke_EvaluateVariadicArgument(ResultReg, ContextReg, Args, Index):
+        GetExpressionAtIndex(Args, Index -> Expr)
+        GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, Expr)
+        GenerateInvoke_EvaluateVariadicArgument(ResultReg, ContextReg, Args, Index + 1)
 
 -- In arguments are simple, just evaluate the expr into a register attached to the
 -- node.
@@ -1365,15 +1510,12 @@
     'rule' GenerateInvoke_AssignArgument(ResultReg, ContextReg, Invoke:invoke(_, Invokes, Arguments)):
         EmitGetRegisterAttachedToExpression(Invoke -> InputReg)
         GenerateDefinitionGroupForInvokes(Invokes, assign, Arguments -> Index, Signature)
-        [|
-            ne(Signature, nil)
-            EmitCreateRegister(-> IgnoredResultReg)
-            EmitBeginInvoke(Index, ContextReg, IgnoredResultReg)
-            EmitContinueInvoke(InputReg)
-            GenerateInvoke_EmitInvokeArguments(Arguments)
-            EmitEndInvoke()
-            EmitDestroyRegister(IgnoredResultReg)
-        |]
+        EmitCreateRegister(-> IgnoredResultReg)
+        EmitBeginInvoke(Index, ContextReg, IgnoredResultReg)
+        EmitContinueInvoke(InputReg)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitEndInvoke()
+        EmitDestroyRegister(IgnoredResultReg)
         GenerateInvoke_AssignArguments(ResultReg, ContextReg, Signature, Arguments)
         
     'rule' GenerateInvoke_AssignArgument(ResultReg, ContextReg, Slot:slot(_, Id)):
@@ -1568,7 +1710,11 @@
         Info'Kind -> Kind
         Info'Type -> Type
         FullyResolveType(Type -> handler(_, _, signature(HandlerSig, _)))
-        GenerateCall_GetInvokeSignature(HandlerSig, 0 -> InvokeSig)
+
+        -- Pass the actual argument count to invoke sig computation to take into
+        -- account variadic parameters.
+        QueryExpressionListLength(Arguments -> ArgCount)
+        GenerateCall_GetInvokeSignature(HandlerSig, 0, ArgCount -> InvokeSig)
 
         (|
             -- If the Id is not a handler it must be a variable
@@ -1598,12 +1744,22 @@
             EmitDestroyRegister(HandlerReg)
         |]
 
-'action' GenerateCall_GetInvokeSignature(PARAMETERLIST, INT -> INVOKESIGNATURE)
+'action' GenerateCall_GetInvokeSignature(PARAMETERLIST, INT, INT -> INVOKESIGNATURE)
 
-    'rule' GenerateCall_GetInvokeSignature(parameterlist(parameter(_, Mode, _, _), ParamRest), Index -> invokesignature(Mode, Index, InvokeRest)):
-        GenerateCall_GetInvokeSignature(ParamRest, Index + 1 -> InvokeRest)
+    -- When we encounter a variadic parameter, we generate in parameters for the
+    -- rest of the arg list.
+    'rule' GenerateCall_GetInvokeSignature(ParamRest:parameterlist(parameter(_, variadic, _, _), _), Index, ArgCount -> invokesignature(in, Index, InvokeRest)):
+        (|
+            lt(Index, ArgCount)
+            GenerateCall_GetInvokeSignature(ParamRest, Index + 1, ArgCount -> InvokeRest)
+        ||
+            where(INVOKESIGNATURE'nil -> InvokeRest)
+        |)
+
+    'rule' GenerateCall_GetInvokeSignature(parameterlist(parameter(_, Mode, _, _), ParamRest), Index, ArgCount -> invokesignature(Mode, Index, InvokeRest)):
+        GenerateCall_GetInvokeSignature(ParamRest, Index + 1, ArgCount -> InvokeRest)
     
-    'rule' GenerateCall_GetInvokeSignature(nil, _ -> nil):
+    'rule' GenerateCall_GetInvokeSignature(nil, _, ArgCount -> nil):
         -- do nothing
 
 ----
@@ -1970,7 +2126,7 @@
             where(Type -> handler(_, _, _))
             where(ThisType -> Base)
         ||
-            where(Type -> record(_, _, _))
+            where(Type -> record(_, _))
             where(ThisType -> Base)
         ||
             where(Type -> Base)
@@ -2005,9 +2161,8 @@
     'rule' GenerateBaseType(foreign(_, Binding) -> Index):
         EmitForeignType(Binding -> Index)
 
-    'rule' GenerateBaseType(record(_, Base, Fields) -> Index):
-        GenerateType(Base -> BaseTypeIndex)
-        EmitBeginRecordType(BaseTypeIndex)
+    'rule' GenerateBaseType(record(_, Fields) -> Index):
+        EmitBeginRecordType()
         GenerateRecordTypeFields(Fields)
         EmitEndRecordType(-> Index)
 
@@ -2078,9 +2233,12 @@
         ||
             where(Mode -> inout)
             EmitHandlerTypeInOutParameter(Name, TypeIndex)
+        ||
+            where(Mode -> variadic)
+            EmitHandlerTypeVariadicParameter(Name)
         |)
         GenerateHandlerTypeParameters(Rest)
-        
+
     'rule' GenerateHandlerTypeParameters(nil):
         -- nothing
 
@@ -2092,7 +2250,6 @@
         -- Ungenerated if generator is not the current generator
         QuerySymbolId(Id -> Info)
         Info'Generator -> Generator
-        Id'Name -> Name
         GeneratingModuleIndex -> CurrentGenerator
         ne(Generator, CurrentGenerator)
 
@@ -2132,6 +2289,7 @@
         
 -- Defined in check.g
 'action' QueryId(ID -> MEANING)
+'action' GetQualifiedName(ID -> NAME)
 'condition' QuerySyntaxId(ID -> SYNTAXINFO)
 'condition' QuerySyntaxMarkId(ID -> SYNTAXMARKINFO)
 

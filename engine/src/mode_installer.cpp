@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "scriptpt.h"
 #include "dispatch.h"
 #include "stack.h"
@@ -58,9 +58,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "bsdiff.h"
 #include "osspec.h"
 
-#if defined(_WINDOWS_DESKTOP)
-#include "w32prefix.h"
-#elif defined(_MAC_DESKTOP)
+#if defined(_MAC_DESKTOP)
 #include "osxprefix.h"
 #include <sys/stat.h>
 #include <unistd.h>
@@ -170,6 +168,10 @@ static MCMiniZipRef s_payload_minizip = nil;
 static void *s_payload_loaded_data = nil;
 static void *s_payload_mapped_data = nil;
 static uint32_t s_payload_mapped_size = 0;
+#else
+#ifdef _DEBUG
+static void *s_payload_data = nil;
+#endif
 #endif
 
 #ifdef _WINDOWS
@@ -178,10 +180,6 @@ static uint32_t s_payload_mapped_size = 0;
 HANDLE s_payload_file_handle = nil;
 HANDLE s_payload_file_map = nil;
 static void *s_payload_mapped_data = nil;
-#endif
-
-#ifdef _DEBUG
-static void *s_payload_data = nil;
 #endif
 
 class MCInternalPayloadOpen: public MCStatement
@@ -211,27 +209,22 @@ public:
 			return;
 		
 		// MM-2011-03-23: Added optional paramater, allowing the payload to be specified by file path.
-        MCAutoStringRef t_string;
-		const char *t_filename;
-		t_filename = nil;
-		if (m_filename != nil)
-		{
-            if (!ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
-                return;
-
-            char *temp;
-            /* UNCHECKED */ MCStringConvertToCString(*t_string, temp);
-			t_filename = temp;
-		}
 
 		const void *t_payload_data;
 		t_payload_data = nil;
 		uint32_t t_payload_size;
 
 		// MM-2011-03-23: If a file is specified, fetch the payload from the file.
-		if(t_filename != nil)
+		if (m_filename != nullptr)
 		{
-			mmap_payload_from_file(t_filename, t_payload_data, t_payload_size);
+            MCAutoStringRef t_string;
+            if (!ctxt.EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
+                return;
+
+            MCAutoStringRefAsCString t_filename;
+            /* UNCHECKED */ t_filename.Lock(*t_string);
+
+			mmap_payload_from_file(*t_filename, t_payload_data, t_payload_size);
 			if (t_payload_data == nil)
 			{
 				ctxt . SetTheResultToCString("could not load paylod from file");
@@ -550,6 +543,8 @@ public:
 			{
                 MCAutoStringRef t_string;
 				MCStringFormat(&t_string, ",%u,%u,,%u,", t_info . checksum, t_info . uncompressed_size, t_info . compressed_size);
+                
+                ctxt.SetTheResultToEmpty();
                 ctxt . SetItToValue(*t_string);
 			}
 			else
@@ -614,19 +609,19 @@ public:
         if (!ctxt . EvalOptionalExprAsStringRef(m_file_expr, kMCEmptyString, EE_PUT_BADEXP, &t_file))
             return;
 		
-
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
-			t_context . target = MCtargetptr . object -> gethandle();
+			t_context . target = MCtargetptr;
 			t_context . name = *t_item;
-            t_context . var = ctxt . GetIt() -> evalvar(ctxt);
+            if (!ctxt.GetIt()->evalcontainer(ctxt, t_context.var))
+                return;
 			t_context . stream = nil;
 
 			if (!MCStringIsEmpty(*t_file))
 				t_context . stream = MCS_open(*t_file, kMCOpenFileModeWrite, False, False, 0);
 
-			t_context . var -> clear();
+			t_context.var.clear();
 			if (MCStringIsEmpty(*t_file) || t_context . stream != nil)
 			{
 				if (MCMiniZipExtractItem(s_payload_minizip, t_context . name, extract_item, &t_context))
@@ -639,8 +634,6 @@ public:
 			
 			if (t_context . stream != nil)
 				MCS_close(t_context . stream);
-
-			t_context . target -> Release();
 		}
 		else
 			ctxt . SetTheResultToCString("payload not open");
@@ -649,10 +642,10 @@ public:
 private:
 	struct ExtractContext
 	{
-		MCObjectHandle *target;
+		MCObjectHandle target;
 		MCStringRef name;
 		IO_handle stream;
-		MCVariable *var;
+		MCContainer var;
 	};
 
 	static bool extract_item(void *p_context, const void *p_data, uint32_t p_data_length, uint32_t p_data_offset, uint32_t p_data_total)
@@ -670,20 +663,10 @@ private:
 			MCExecContext ctxt;
 			MCAutoStringRef t_data;
 			/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_data, p_data_length, kMCStringEncodingNative, false, &t_data);
-			MCStringRef t_value;
-            MCAutoValueRef t_valueref;
-            context -> var -> copyasvalueref(&t_valueref);
-			/* UNCHECKED */ ctxt . ConvertToString(*t_valueref, t_value);
-			/* UNCHECHED */ MCStringMutableCopyAndRelease(t_value, t_value);
-			if (!MCStringAppend(t_value, *t_data))
-				return false;
-            context -> var ->setvalueref(t_value);
-			MCValueRelease(t_value);
+            context->var.set(ctxt, *t_data, kMCVariableSetAfter);
 		}
-
-		MCObject *t_target;
-		t_target = context -> target -> Get();
-		if (t_target != nil)
+        
+		if (context->target.IsValid())
 		{
 			MCParameter p1, p2, p3;
 			p1 . setnext(&p2);
@@ -692,9 +675,7 @@ private:
 			p2 . setn_argument(p_data_offset + p_data_length);
 			p3 . setn_argument(p_data_total);
 
-			MCAutoNameRef t_message_name;
-			/* UNCHECKED */ t_message_name . CreateWithCString("payloadProgress");
-			t_target -> message(t_message_name, &p1);
+			context->target->message(MCNAME("payloadProgress"), &p1);
 		}
 
 		return true;
@@ -909,33 +890,6 @@ public:
 		return PS_NORMAL;
 	}
     
-#ifdef LEGACY_EXEC
-	Exec_stat exec(MCExecPoint& ep)
-	{
-		bool t_success;
-		t_success = true;
-
-		if (m_module -> eval(ep) != ES_NORMAL)
-			return ES_ERROR;
-
-		char *t_module;
-		t_module = ep . getsvalue() . clone();
-		
-		ep . clear();
-
-		State t_state;
-		t_state . module = t_module;
-		t_state . ep = &ep;
-		t_state . first = true;
-		MCSystemListProcesses(ListProcessCallback, &t_state);
-
-		MCresult -> set(ep);
-
-		delete t_module;
-
-		return ES_NORMAL;
-	}
-#endif
     
     void exec_ctxt(MCExecContext& ctxt)
 	{
@@ -1176,7 +1130,7 @@ MCInternalVerbInfo MCinternalverbs[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of MCDispatch::startup method for STANDALONE mode.
+//  Implementation of MCDispatch::startup method for INSTALLER mode.
 //
 
 extern IO_stat readheader(IO_handle& stream, char *version);
@@ -1220,7 +1174,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	}
 	break;
 
-	case kMCCapsuleSectionTypeStack:
+	case kMCCapsuleSectionTypeMainStack:
 		if (MCdispatcher -> readstartupstack(p_stream, self -> stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read project stack");
@@ -1231,6 +1185,18 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         //   the startup script and such work.
         MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
 	break;
+            
+    case kMCCapsuleSectionTypeScriptOnlyMainStack:
+        if (MCdispatcher -> readscriptonlystartupstack(p_stream, p_length, self -> stack) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read project stack");
+            return false;
+        }
+        
+        // MW-2012-10-25: [[ Bug ]] Make sure we set these to the main stack so that
+        //   the startup script and such work.
+        MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
+        break;
 
 	case kMCCapsuleSectionTypeDigest:
 		uint8_t t_read_digest[16];
@@ -1249,7 +1215,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeStartupScript:
     {
         char *t_script;
-        t_script = new char[p_length];
+        t_script = new (nothrow) char[p_length];
         if (IO_read(t_script, p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read startup script");
@@ -1269,19 +1235,45 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     case kMCCapsuleSectionTypeAuxiliaryStack:
     {
         MCStack *t_aux_stack;
-        if (MCdispatcher -> readfile(NULL, NULL, p_stream, t_aux_stack) != IO_NORMAL)
+        const char *t_result;
+        if (MCdispatcher -> trytoreadbinarystack(kMCEmptyString,
+                                                 kMCEmptyString,
+                                                 p_stream, nullptr,
+                                                 t_aux_stack, t_result) != IO_NORMAL)
         {
             MCresult -> sets("failed to read auxillary stack");
             return false;
         }
+        MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
+    }
+        break;
+            
+    case kMCCapsuleSectionTypeScriptOnlyAuxiliaryStack:
+    {
+        MCStack *t_aux_stack;
+        const char *t_result;
+        if (MCdispatcher -> trytoreadscriptonlystackofsize(kMCEmptyString,
+                                                           p_stream,
+                                                           p_length,
+                                                           nullptr,
+                                                           t_aux_stack,
+                                                           t_result)
+            != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read auxillary stack");
+            return false;
+        }
+        MCdispatcher -> processstack(kMCEmptyString, t_aux_stack);
     }
         break;
 			
 	case kMCCapsuleSectionTypeLicense:
 	{
-		// Just read the edition byte and ignore it in installer mode.
-		char t_edition_byte;
-		if (IO_read(&t_edition_byte, 1, p_stream) != IO_NORMAL)
+		// Just read the license info and ignore it in installer mode.
+		uint8_t t_class;
+        MCAutoValueRef t_addons;
+        if (IO_read(&t_class, 1, p_stream) != IO_NORMAL ||
+            (p_length > 1 && IO_read_valueref_new(&t_addons, p_stream) != IO_NORMAL))
 		{
 			MCresult -> sets("failed to read license");
 			return false;
@@ -1308,8 +1300,7 @@ IO_stat MCDispatch::startup(void)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = t_mccmd; //point to MCcmd string
-
+	
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
 	
@@ -1333,9 +1324,9 @@ IO_stat MCDispatch::startup(void)
 	t_project_info = (MCCapsuleInfo *)MCExecutableFindSection(PROJECT_SECTION_NAME);
 	if (t_project_info == nil || t_project_info -> size <= sizeof(MCCapsuleInfo))
 	{
-//#ifdef _DEBUG
-#if 0
-		MCStack *t_stack;
+#if DEBUG_INSTALLER_STARTUP
+        char *openpath = t_mccmd; //point to MCcmd string
+        MCStack *t_stack;
 		IO_handle t_stream;
 		t_stream = MCS_open(getenv("TEST_STACK"), IO_READ_MODE, False, False, 0);
 		if (MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
@@ -1350,6 +1341,8 @@ IO_stat MCDispatch::startup(void)
 		
 		t_stack -> extraopen(false);
 		
+        MCdispatcher->resolveparentscripts();
+        
 		MCscreen->resetcursors();
 		MCImage::init();
 		send_startup_message();
@@ -1406,12 +1399,13 @@ IO_stat MCDispatch::startup(void)
 		return IO_ERROR;
 	}
 
-	///* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
 	MCCapsuleClose(t_capsule);
 
 	t_info . stack -> extraopen(false);
-
+    
+    MCdispatcher->resolveparentscripts();
+    
 	MCscreen->resetcursors();
 	MCtemplateimage->init();
 	send_startup_message();
@@ -1423,20 +1417,8 @@ IO_stat MCDispatch::startup(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of MCStack::mode* hooks for STANDALONE mode.
+//  Implementation of MCStack::mode* hooks for INSTALLER mode.
 //
-
-#ifdef LEGACY_EXEC
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
 
 void MCStack::mode_load(void)
 {
@@ -1505,33 +1487,6 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 #endif
 
 
-#ifdef LEGACY_EXEC
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Implementation of MCObject::mode_get/setprop for STANDALONE mode.
-//
-
-Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Implementation of MCProperty::mode_eval/mode_set for INSTALLER mode.
-//
-
-Exec_stat MCProperty::mode_set(MCExecPoint& ep)
-{
-	return ES_NOT_HANDLED;
-}
-
-Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of mode hooks for INSTALLER mode.
@@ -1550,10 +1505,12 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef filename)
 	return IO_NORMAL;
 }
 
-// In standalone mode, the environment depends on various command-line/runtime
-// globals.
+// In installer mode, the environment depends on the command line args
 MCNameRef MCModeGetEnvironment(void)
 {
+    if (MCnoui)
+        return MCN_installer_cmdline;
+    
 	return MCN_installer;
 }
 
@@ -1622,18 +1579,12 @@ bool MCModeShouldCheckCantStandalone(void)
 	return true;
 }
 
-// The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef)
-{
-	return false;
-}
-
 // The standalone mode causes a relaunch message.
 bool MCModeHandleRelaunch(MCStringRef &r_id)
 {
 #ifdef _WINDOWS
 	bool t_do_relaunch;
-    t_do_relaunch = MCdefaultstackptr -> hashandler(HT_MESSAGE, MCM_relaunch) == True;
+    t_do_relaunch = MCdefaultstackptr -> handlesmessage(MCM_relaunch) == True;
     /* UNCHECKED */ MCStringCopy(MCNameGetString(MCdefaultstackptr -> getname()), r_id);
     return t_do_relaunch;
 #else
@@ -1654,24 +1605,12 @@ bool MCModeCanLoadHome(void)
 
 MCStatement *MCModeNewCommand(int2 which)
 {
-	switch(which)
-	{
-	case S_INTERNAL:
-		return new MCInternal;
-	default:
-		break;
-	}
-
 	return NULL;
 }
 
 MCExpression *MCModeNewFunction(int2 which)
 {
 	return NULL;
-}
-
-void MCModeObjectDestroyed(MCObject *object)
-{
 }
 
 MCObject *MCModeGetU3MessageTarget(void)
@@ -1693,7 +1632,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == NULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }
@@ -1756,10 +1695,21 @@ bool MCModeHasHomeStack(void)
 	return false;
 }
 
+// Pixel scaling can be enabled in the installer
+bool MCModeCanEnablePixelScaling()
+{
+	return true;
+}
+
 // IM-2014-08-08: [[ Bug 12372 ]] Pixel scaling is enabled for the installer
 bool MCModeGetPixelScalingEnabled(void)
 {
 	return true;
+}
+
+void MCModeFinalize(void)
+{
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1787,16 +1737,9 @@ void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, u
 {
 }
 
-#ifdef _MACOSX
-uint32_t MCModePopUpMenu(MCMacSysMenuHandle p_menu, int32_t p_x, int32_t p_y, uint32_t p_index, MCStack *p_stack)
-{
-	return 0;
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Windows-specific mode hooks for STANDALONE mode.
+//  Implementation of Windows-specific mode hooks for INSTALLER mode.
 //
 
 #ifdef TARGET_PLATFORM_WINDOWS
@@ -1827,16 +1770,11 @@ bool MCModeHandleMessage(LPARAM lparam)
 	return false;
 }
 
-bool MCPlayer::mode_avi_closewindowonplaystop()
-{
-	return true;
-}
-
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Mac OS X-specific mode hooks for DEVELOPMENT mode.
+//  Implementation of Mac OS X-specific mode hooks for INSTALLER mode.
 //
 
 #ifdef _MACOSX
@@ -1850,7 +1788,7 @@ bool MCModePreWaitNextEvent(Boolean anyevent)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Linux-specific mode hooks for DEVELOPMENT mode.
+//  Implementation of Linux-specific mode hooks for INSTALLER mode.
 //
 
 #ifdef _LINUX
@@ -1921,8 +1859,8 @@ static void *MCExecutableFindSection(const char *p_name)
 			if (MCMemoryEqual(t_segment -> segname, p_name, MCMin(16, strlen(p_name) + 1)))
 			{
 				const section *t_section;
-				t_section = (const section *)(t_segment + 1);
-				return (void *)t_section -> addr;
+                t_section = (const section *)(t_segment + 1);
+				return reinterpret_cast<char *>(t_section -> addr) + _dyld_get_image_vmaddr_slide(0);
 			}
 		}
 		
@@ -1978,7 +1916,7 @@ static void *MCExecutableFindSection(const char *p_name)
 		t_success = MCMemoryAllocate(sizeof(Elf_Shdr) * t_header . e_shnum, t_sections);
 
 	// Now read in the sections
-	for(uint32_t i = 0; i < t_header . e_shnum && t_success; i++)
+	for(uint32_t i = 0; t_success && i < t_header . e_shnum; i++)
 	{
 		if (fseek(t_exe, t_header . e_shoff + i * t_header . e_shentsize, SEEK_SET) != 0 ||
 			fread(&t_sections[i], sizeof(Elf_Shdr), 1, t_exe) != 1)
@@ -1997,7 +1935,7 @@ static void *MCExecutableFindSection(const char *p_name)
 	// Now we can search for our section
 	void *t_address;
 	t_address = NULL;
-	for(uint32_t i = 0; i < t_header . e_shnum && t_success; i++)
+	for(uint32_t i = 0; t_success && i < t_header . e_shnum; i++)
 		if (strcmp(p_name, t_strings + t_sections[i] . sh_name) == 0)
 		{
 			t_address = (void *)t_sections[i] . sh_addr;

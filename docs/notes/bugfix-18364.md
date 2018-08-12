@@ -1,0 +1,1 @@
+# savingStandalone and standaloneSaved should only be sent once when building for multiple platforms

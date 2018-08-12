@@ -4,13 +4,17 @@ Type: function
 
 Syntax: libURLLastHTTPHeaders()
 
-Summary: <return|Returns> the <value> of the <httpHeaders> <property> used for the previous <HTTP> request.
+Summary:
+<return|Returns> the <value> of the <httpHeaders> <property> used for
+the previous <HTTP> request.
+
+Associations: internet library
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux, html5
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
@@ -20,15 +24,38 @@ put libURLLastHTTPHeaders() into headersToAnalyze
 Example:
 if probReq is among the lines of libURLLastHTTPHeaders() then tryAgain
 
-Returns: The <libURLLastHTTPHeaders> <function> <return|returns> a string.
+Returns:
+The <libURLLastHTTPHeaders> <function> <return|returns> a string.
 
 Description:
-Use the <libURLLastHTTPHeaders> <function> to debug problems with <HTTP> transfers, or to report errors to advanced users.
+Use the <libURLLastHTTPHeaders> <function> to debug problems with <HTTP>
+transfers, or to report errors to advanced users.
 
-You can set the <httpHeaders> <property> to send custom headers in addition to the default headers. Whenever LiveCode contacts a <web server> to <download> a page (with the <load> <command> or by using a <URL> in an <expression>) or to post data (with the <post> <command>), the contents of the <httpHeaders> <property> is sent to the <web server>. The <libURLLastHTTPHeaders> <function> returns the last set of custom headers used.
+You can set the <httpHeaders> <property> to send custom headers in
+addition to the default headers. Whenever LiveCode contacts a <web
+server> to <download> a page (with the <load> <command> or by using a
+<URL> in an <expression>) or to post data (with the <post> <command>),
+the contents of the <httpHeaders> <property> is sent to the 
+<web server>. The <libURLLastHTTPHeaders> <function> returns the last 
+set of custom headers used.
 
->*Important:*  The <libURLLastHTTPHeaders> <function> is part of the <Internet library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:* The <libURLLastHTTPHeaders> <function> is part of the 
+> <Internet library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
-References: httpHeaders (property), Internet library (library), LiveCode custom library (library), URL (keyword), http (keyword), property (glossary), return (glossary), web server (glossary), Standalone Application Settings (glossary), download (glossary), standalone application (glossary), expression (glossary), command (glossary), libURLLastRHHeaders (function), value (function), post (command), libURLSetCustomHTTPHeaders (command), libURLFollowHttpRedirects (command), load (command), function (control_st)
+References: post (command), libURLSetCustomHTTPHeaders (command),
+libURLFollowHttpRedirects (command), load (command),
+function (control structure), libURLLastRHHeaders (function),
+value (function), LiveCode custom library (glossary), property (glossary),
+return (glossary), web server (glossary),
+Standalone Application Settings (glossary), download (glossary),
+standalone application (glossary), expression (glossary),
+command (glossary), URL (keyword), http (keyword),
+Internet library (library), httpHeaders (property)
 
 Tags: networking
+

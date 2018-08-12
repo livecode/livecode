@@ -4,13 +4,14 @@ Type: function
 
 Syntax: the [[effective] working] screenRect[s]
 
-Summary: <return|Returns> the geometry of screens connected to the computer.
+Summary:
+<return|Returns> the geometry of screens connected to the computer.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the screenRect
@@ -19,22 +20,42 @@ Example:
 set the rect of this stack to line 2 of the working screenRects
 
 Returns:
-The <screenRect> <function> <return|returns> four <integer|integers>, separated by commas.
-The screenRects <function> <return|returns> a return-delimited list of four <integer|integers>, separated by commas.
+The <screenRect> <function> <return|returns> four <integer|integers>,
+separated by commas. The screenRects <function> <return|returns> a
+return-delimited list of four <integer|integers>, separated by commas.
 
 Description:
-Use the <screenRect> <function> to find out the available screen sizes and to scale windows to the size of the screen.
+Use the <screenRect> <function> to find out the available screen sizes
+and to scale windows to the size of the screen.
 
-In its singular form (<screenRect>) this function returns the virtual co-ordinates of the primary display.
+In its singular form (<screenRect>) this function returns the virtual
+co-ordinates of the primary display.
 
-In its plural form (screenRects) this function returns a list containing the virtual co-ordinates of all the screens currently attached to the system. The first line is always that of the primary display, and the order of the rest are in an OS-specific order.
+In its plural form (screenRects) this function returns a list containing
+the virtual co-ordinates of all the screens currently attached to the
+system. The first line is always that of the primary display, and the
+order of the rest are in an OS-specific order.
 
-The virtual co-ordinates of a screen a quadruple of four integers specifying the left, top, right and bottom of the rectangle. The right and bottom edges are not included in the screen's area.
+The virtual co-ordinates of a screen a quadruple of four integers
+specifying the left, top, right and bottom of the rectangle. The right
+and bottom edges are not included in the screen's area.
 
-Adding the working adjective to either form returns the virtual co-ordinates of each screen's working-area. The working-area of a screen is defined to be the area not covered by OS furniture (such as the task bar on Windows, and the Dock and Menubar on Mac OS X).
-    
-Adding the effective adjective to either form returns the area of the screen the application has to itself. In particular, if the keyboard is activated, it take into account if the keyboard is taking up space on the screen. (Android and iOS only)
+Adding the working adjective to either form returns the virtual
+co-ordinates of each screen's working-area. The working-area of a screen
+is defined to be the area not covered by OS furniture (such as the task
+bar on Windows, and the Dock and Menubar on Mac OS X).
 
->*Note:* The co-ordinates returned by the screenRect family of functions can be anywhere in the virtual desktop defined by the OS - their values will depend on the user's local configuration. In particular, they can take both positive and negative values.
+Adding the effective adjective to either form returns the area of the
+screen the application has to itself. In particular, if the keyboard is
+activated, it take into account if the keyboard is taking up space on
+the screen. (Android and iOS only)
 
-References: fullscreen (property), export snapshot (command), screenType (function), screenLoc (function), return (glossary), integer (glossary), function (control_st)
+>*Note:* The co-ordinates returned by the screenRect family of functions
+> can be anywhere in the virtual desktop defined by the OS - their
+> values will depend on the user's local configuration. In particular,
+> they can take both positive and negative values.
+
+References: export snapshot (command), function (control structure),
+screenType (function), screenLoc (function), return (glossary),
+integer (glossary), fullscreen (property)
+

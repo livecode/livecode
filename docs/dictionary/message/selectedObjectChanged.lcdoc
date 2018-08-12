@@ -4,15 +4,17 @@ Type: message
 
 Syntax: selectedObjectChanged
 
-Summary: Sent to an <object> when it is <selected>.
+Summary:
+Sent to an <object(glossary)> when it is <selected>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on selectedObjectChanged -- update a property-display stack 
@@ -22,10 +24,17 @@ on selectedObjectChanged -- update a property-display stack
 end selectedObjectChanged
 
 Description:
-Handle the <selectedObjectChanged> <message> if you want to perform some action when an <object> is <selected>.
+Handle the <selectedObjectChanged> <message> if you want to perform some
+action when an <object(glossary)> is <selected>.
 
-When an object is selected, the <selectedObjectChanged> <message> is sent to the newly <selected> <object>.
+When an object is selected, the <selectedObjectChanged> <message> is
+sent to the newly <selected> <object(glossary)>.
 
-When an object is deselected and no other object is selected--for example, when the user clicks the card or chooses the Browse tool--the <selectedObjectChanged> <message> is sent to the <object> being deselected.
+When an object is deselected and no other object is selected--for
+example, when the user clicks the card or chooses the Browse tool--the
+<selectedObjectChanged> <message> is sent to the <object(glossary)>
+being deselected.
 
-References: selected (property), selectionChanged (message), choose (command), object (object), message (glossary)
+References: choose (command), object (glossary), message (glossary),
+selectionChanged (message), selected (property)
+

@@ -2,15 +2,43 @@ Name: if
 
 Type: control structure
 
-Syntax: if <condition> then <statement> [else <elseStatement>]
+Syntax:
+if <condition> then
+   <statementList>
+[else
+   <elseStatementList>]
+end if
 
-Summary: <execute|Executes> a list of <statement|statements> if a condition is true.
+Syntax:if <condition> then
+   <statementList>
+ [else if <condition> then
+   <elseifStatementList>]
+ [else 
+   <elseStatementList>]
+end if
+
+
+Summary:
+Evaluates a <condition|conditional expression> to determine if it is true
+and if so <execute|executes> a subsequent <statement> or <statementlist|statement list>.
+
+If the <conditional expression|condition> is false and the <if> <control structure> contains
+an <else> keyword the <statement> or <statementlist|statement list> following the <else>
+<keyword> is executed.
+
+The <if> <control structure> may contain one or more <else if> <keyword|keywords> which have a
+<condition|conditional expression>. If the <condition|conditional expression> for one of these evaluates to be
+true then the <statment|statement> or <statementlist|statement list> following that <else if>
+<keyword> is executed. 
+
+If the <if> <control structure> contains
+more than one line then the <if> <control structure> must end with an <end if> keyword.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 if tSpeed &lt; 2 then
@@ -24,44 +52,89 @@ else
 end if
 
 Parameters:
-condition (bool): 
-statement: 
-elseStatement: 
-statementList: The statementList or elseStatementList consists of one or more LiveCode statements, and can also include if, switch, try, or repeat control structures. The statement or elseStatement consists of a single LiveCode statement.
+condition (bool):
+Any <expression>. (If the <condition> <evaluate|evaluates> to true, 
+the <statement|statements> execute for that <condition>.
+If the <condition> <evaluate|evaluates> to false, the <statement> or 
+<statementlist|statement list> following that <condition> is
+skipped.)
+
+statementList:
+Of one or more <LiveCode> <statement|statements>, and can also include
+<if>, <switch>, <try>, or <repeat> <control structure|control
+structures>. 
+
+elseIfStatementList:
+Of one or more <LiveCode> <statement|statements>, and can also include
+<if>, <switch>, <try>, or <repeat> <control structure|control
+structures>. 
+
+elseStatementList:
+Of one or more <LiveCode> <statement|statements>, and can also include
+<if>, <switch>, <try>, or <repeat> <control structure|control
+structures>. 
 
 Description:
-Use the <if> <control structure> to <execute> a <statement> (or list of <statement|statements>) only under certain circumstances.
+Use the <if> <control structure> to <execute> a <statement>
+(or <statementlist|list of statements>) only under certain circumstances. 
 
-Form:
-The <if> <control structure> always begins with the <word> if. There are four forms of the <if> <control structure>:
+The <if> <control structure> always begins with the word if. There
+are four forms of the <if> <control structure>:
 
-if <condition> then <statement> [else <elseStatement>]
-(This form may have a line break before the words then or else or both.)
+    if condition then statementList [else elseStatementList]
 
-if <condition> then
-<statementList> 
-[else
-elseStatementList]
-end if
+This form may have a line break before the words `then` or `else` or both.
 
-if <condition> 
-then <statement> 
-[else
-elseStatementList]
-end if
+    if condition then
+       statementList 
+    [else
+       elseStatementList]
+    end if
+    
+    -- OR
+    if condition 
+    then statement 
+    [else
+       elseStatementList]
+    end if
 
-if <condition> then
-<statementList> 
-else <elseStatement> 
+    -- OR
+    if condition then
+       statementList 
+    else elseStatement
+    end if
 
-If the <condition> <evaluate|evaluates> to true, the <statement> or <statementList> is <execute|executed>; if the <condition> <evaluate|evaluates> to false, the <statement> or <statementList> is skipped.
+If the <condition> <evaluate|evaluates> to true, the statement or
+<statementList> is <execute|executed>; if the <condition>
+<evaluate|evaluates> to false, the statement or <statementList> is
+skipped. 
 
-If the <if> <control structure> contains an <else> clause, the <elseStatement> or elseStatementList is <execute|executed> if the <condition> is false.
+if the <condition> evaluates to false and the <if> <control structure>
+contains an <else> <keyword>, the <elseStatement> or <elseStatementList>
+which follows it is <execute|executed>.
 
-If one <if> <control structure> is nested inside another, use of the second form described above is recommended, since the other forms may cause ambiguities in interpreting which <else> clause belongs with which <if> statement.
+If the <if> <control structure> contains one or more <else if>
+<keyword|keywords> which have a <condition|conditional expression>,
+and one of those <condition|conditional expressions> evaluates to be
+true, then the respective <elseIfstatement|else if statement> or
+<elseIfstatementlist|else if statement list> following that
+<else if> <keyword> is executed.
 
-The <if> <control structure> is most suitable when you want to check a single <condition>. If you need to check for multiple possibilities, doing something different for each one, use a <switch> <control structure> instead.
+If one <if> <control structure> is nested inside another, use of the
+second form described above is recommended, since the other forms may
+cause ambiguities in interpreting which <else> clause belongs with which
+<if> statement.
 
->*Note:* The <if> <control structure> is implemented internally as a <command> and appears in the <commandNames>.
+The <if> <control structure> is most suitable when you want to check a
+single <condition>. If you need to check for multiple possibilities,
+doing something different for each one, use 
+a <switch> <control structure> instead.
 
-References: then (keyword), else (keyword), end if (keyword), word (keyword), switch (control_st), statement (glossary), command (glossary), evaluate (glossary), execute (glossary), control structure (glossary), commandNames (function)
+>*Note:* The <if> <control structure> is implemented internally as a
+> <command> and appears in the <commandNames>.
+
+References: switch (control structure), commandNames (function),
+statement (glossary), command (glossary), evaluate (glossary),
+execute (glossary), control structure (glossary), then (keyword),
+else (keyword), else if (keyword), end if (keyword), word (keyword)
+

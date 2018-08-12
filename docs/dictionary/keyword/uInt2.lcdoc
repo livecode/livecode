@@ -1,18 +1,21 @@
 Name: uInt2
 
+Synonyms: uint2s
+
 Type: keyword
 
 Syntax: uInt2
 
-Summary: Used with the <read from file>, <read from process>, and <read from socket> <command|commands> to signify a <chunk> of <binary file|binary data> the size of an unsigned 2-byte <integer>.
-
-Synonyms: uInt2s
+Summary:
+Used with the <read from file>, <read from process>, and <read from
+socket> <command|commands> to signify a <chunk> of <binary file|binary
+data> the size of an unsigned 2-byte <integer>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 read from file "/etc/datoids" for 1 uInt2
@@ -20,8 +23,15 @@ read from file "/etc/datoids" for 1 uInt2
 Description:
 Use the <uInt2> <keyword> to read data from a <binary file>.
 
-If you specify <uInt2> as the <chunk> type in a <read from file>, <read from process>, or <read from socket> <command>, the data is returned as a series of numbers separated by commas, one for each unsigned <integer> read.
+If you specify <uInt2> as the <chunk> type in a <read from file>, <read
+from process>, or <read from socket> <command>, the data is returned as
+a series of numbers separated by commas, one for each unsigned <integer>
+read. 
 
-References: read from socket (command), read from process (command), write to driver (command), read from file (command), keyword (glossary), binary file (glossary), command (glossary), chunk (glossary), integer (keyword)
+References: read from socket (command), read from process (command),
+write to driver (command), read from file (command), keyword (glossary),
+binary file (glossary), command (glossary), chunk (glossary),
+integer (keyword)
 
 Tags: text processing
+

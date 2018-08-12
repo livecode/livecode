@@ -2,19 +2,22 @@ Name: HTMLText
 
 Type: property
 
-Syntax: set the HTMLText of [<chunk> of] <field> to <htmlString> 
+Syntax: set the HTMLText of [<chunk> of] <field> to <htmlString>
 
-Syntax: get the [effective] HTMLText of [<chunk> of] <field> 
+Syntax: get the [effective] HTMLText of [<chunk> of] <field>
 
-Summary: Specifies the contents of a <field>, with its text <format|formatting> represented as <HTML> tags and special characters represented as <HTML> entities.
+Summary:
+Specifies the contents of a <field>, including all text
+<textStyle|styles> and paragraph <format|formatting>, represented as
+<HTML> tags and special characters represented as <HTML> entities.
 
 Associations: field
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the HTMLText of field "White Paper" to "&lt;b&gt;&lt;i&gt;Click here!&lt;/i&gt;&lt;/b&gt;"
@@ -28,74 +31,180 @@ write the HTMLText of field "Story" to file myWebFile
 Example:
 put the effective htmlText of field "description"
 
+Example:
+set the HTMLText of field "display" to URL "http://www.server.com/somepage.html"
+
 Description:
-Use the <HTMLText> <property> to display text from a web page in a <field(keyword)>, or copy or export a <field(object)|field's> contents with the text <format|formatting> intact.
-The <HTMLText> of a <field(keyword)> or <chunk> is a <string>.
-If the effective keyword is specified the <htmlText> property retuns the html of the field with explicit formatting. For example if the <textFont> of the stack is set this is not included in the <htmlText> but is inlcuded in the effective <htmlText>.
+Use the <HTMLText> <property> to copy or export a
+<field(object)|field's> contents with the text and paragraph
+<format|formatting> intact. Setting the <HTMLText> of a field can also
+be a way of displaying simple <HTML>-formatted text from a web page or
+external file. It should be emphasized that the <HTMLText> property is
+not a complete <HTML> rendering engine. Instead, it can be understood as
+a way to faithfully represent the entire contents of a field, including
+text and paragraph formatting, using HTML-style tags and attributes.
 
-The <HTMLText> <property> is a representation of the styled text of the <field(keyword)>. LiveCode uses a subset of <HTML> tags that includes font, size, style, and text color information.
+The <HTMLText> of a <field(object)> or <chunk> is a <string>.
+If the <effective> keyword is specified the <HTMLText> property returns
+the <HTML> of the field with explicit formatting. For example if the
+<textFont> of the stack is set this is not included in the <HTMLText>
+but is included in the <effective> <HTMLText>.
 
-Setting the <HTMLText> of a <field(keyword)> (or a <chunk> of a <field(keyword)>) sets both the text contents and the style attributes corresponding to the tags listed below. (Other tags are ignored.)
+The <HTMLText> <property> is a representation of the styled text and
+paragraph formatting of the <field(object)>. LiveCode uses a subset of
+<HTML> tags that includes font, size, style, and text color information,
+along with paragraph alignment, indentation, spacing, padding and other
+information. 
 
-Getting the <HTMLText> <property> reports a <string> consisting of the text of the <field(keyword)> (or <chunk> of a <field(keyword)>), with any font, size, style, or color <properties> embedded in the text in the form of the tags listed below.
+<set(command)|Setting> the <HTMLText> of a <field(object)> (or a <chunk>
+of a <field(object)>) sets both the text contents and the style
+attributes corresponding to the tags listed below. (Other tags are
+ignored.) 
+
+<get(command)|Getting> the <HTMLText> <property> reports a <string>
+consisting of the text of the <field(object)> (or <chunk> of a
+<field(object)>), with any font, size, style, or color <properties>
+embedded in the text in the form of the tags listed below.
 
 The tags translate as follows:
 
 &lt;p&gt; &lt;/p&gt;
-Encloses a line of text. (Blank lines are also enclosed in &lt;p&gt; &lt;/p&gt;.)
+Encloses a line of text. (Blank lines are also enclosed in &lt;p&gt;
+&lt;/p&gt;.) These properties are represented as attributes of the
+&lt;p&gt; tag:
+
+* align="left|center|right" appears if an <textAlign|alignment> has been
+  applied to the line.
+* firstindent="N" (where N is an integer representing number of pixels)
+  appears if the <firstIndent> has been set for the line.
+* leftindent="N" appears if the <leftIndent> has been set for the line.
+* rightindent="N" appears if the <rightIndent> has been set for the
+  line. 
+* spaceabove="N" appears if the <spaceAbove> has been set for the line.
+* spacebelow="N" appears if the <spaceBelow> has been set for the line.
+* tabstops="N" appears if <tabStops> have been set for the line.
+* tabAlign="left|center|right[,left|center|right...]" appears if <tabAlign> has been set for the line.
+* borderwidth="N" if a <borderWidth> has been set for the line.
+* hgrid="true|false" if the <vGrid> property has been set for the line.
+* vgrid="true|false" if the <hGrid> property has been set for the line.
+* dontwrap="true|false" if the <dontWrap> property has been set for the
+  line. 
+* padding="N" if the <padding> has been set for the line.
+* hidden="true|false" if the <hidden> property has been set for the
+  line. 
+* bgcolor="#NNNNNN" if a <backgroundColor> has been set for the line.
+* bordercolor="#NNNNNN" if a <borderColor> has been set for the line.
+
+>*Note:* An <HTML>-style color definition consists of a hash mark (#)
+> followed by three 2-digit hexadecimal numbers,
+one each for red, green, and blue. E.g., "#FF9900" represents an orange
+color. 
 
 &lt;sub&gt; &lt;/sub&gt;
-Encloses text whose textShift is a positive <integer>. (The &lt;sub&gt; tag is not nested for additional levels of subscription: it appears once for a run of subscripted text, regardless of the value of the <textShift>.)
+Encloses text whose <textShift> is a positive <integer>. 
+(The &lt;sub&gt; tag is not nested for additional levels of
+subscription: it appears once for a run of subscripted text, regardless
+of the value of the <textShift>.)
+
+* shift="N" where N is the number of pixels text is subscripted.
+
 
 &lt;sup&gt; &lt;/sup&gt;
-Encloses text whose textShift is a <negative> <integer>. (The &lt;sup&gt; tag is not nested for additional levels of superscription: it appears once for a run of superscripted text, regardless of the value of the <textShift>.)
+Encloses text whose <textShift> is a <negative> <integer>. (The
+&lt;sup&gt; tag is not nested for additional levels of superscription:
+it appears once for a run of superscripted text, regardless of the value
+of the <textShift>.)
+
+* shift="-N" where N is the number of pixels text is superscripted.
+
 
 &lt;i&gt; &lt;/i&gt;
-Encloses text whose textStyle is "italic".
+Encloses text whose <textStyle> is "italic".
+>*Note:* If a field is set to <HTML> text that includes text enclosed by
+> &lt;em&gt; &lt;/em&gt;,
+the tag will be converted to &lt;i&gt; &lt;/i&gt;.
 
 &lt;b&gt; &lt;/b&gt;
-Encloses text whose textStyle is "bold".
+Encloses text whose <textStyle> is "bold".
+>*Note:* If a field is set to <HTML> text that includes text enclosed by
+> &lt;strong&gt; &lt;/strong&gt;,
+the tag will be converted to &lt;b&gt; &lt;/b&gt;.
 
 &lt;strike&gt; &lt;/strike&gt;
-Encloses text whose textStyle is "strikeout".
+Encloses text whose <textStyle> is "strikeout".
 
 &lt;u&gt; &lt;/u&gt;
-Encloses text whose textStyle is "underline".
+Encloses text whose <textStyle> is "underline".
 
 &lt;box&gt; &lt;/box&gt;
-Encloses text whose textStyle is "box".
+Encloses text whose <textStyle> is "box".
 
 &lt;threedbox&gt; &lt;/threedbox&gt;
-Encloses text whose textStyle is "threeDBox".
+Encloses text whose <textStyle> is "threeDBox".
 
 &lt;font&gt; &lt;/font&gt;
-Encloses text whose <textFont>, <textSize>, <foregroundColor>, or <backgroundColor> is different from the <field(object)|field's> <default>. These five <properties> are represented as attributes of the &lt;font&gt; tag.
-* face="fontName" appears in the &lt;font&gt; tag if the <textFont> is not the <default>.
-* size="pointSize" appears if the <textSize> is not the <default>.
-In standard HTML, the size attribute normally takes a value between 1 and 7, representing a relative text size, with 3 being the normal text size for the web page. To accommodate this convention, when setting the <HTMLText> of a <field(keyword)>, if the pointSize is between 1 and 7, the <textSize> of the text is set to a standard value:
+Encloses text whose <textFont>, <textSize>, <foregroundColor>, or
+<backgroundColor> is different from the <field(object)|field's>
+<default>. These five <property|properties> are represented as
+attributes of the &lt;font&gt; tag.
 
-pointSize | textSize
-:----------:|:---------:
-1 | 8 point
-2 | 10 point
-3 | 12 point
-4 | 14 point
-5 | 17 point
-6 | 20 point
-7 | 25 point
-* lang="languageName" appears if the <textFont> includes a language specification.
-* color="colorSpec" appears if the <foregroundColor> is not the <default>.
-* bgcolor="colorSpec" appears if the backgroundColor is not the <default>.
+* face="fontName" appears in the &lt;font&gt; tag if the <textFont> is
+  not the <default>.
+* size="N" (where N is the point size of the font) appears if the
+  <textSize> is not the <default>.
+* lang="languageName" appears if the <textFont> includes a
+  <fontLanguage|language> specification.
+* color="#NNNNNN" appears if the <foregroundColor> is not the <default>.
+* bgcolor="#NNNNNN" appears if the <backgroundColor> is not the
+  > <default>. 
 
-When getting the <htmlText> of a <field(keyword)>, a color is represented as an <HTML> -style color consisting of a hash mark (#) followed by three 2-digit <hexadecimal> numbers, one for each of red, green, and blue.
+>*Note:* An <HTML>-style color definition consists of a hash mark (#)
+> followed by three 2-digit hexadecimal numbers,
+one each for red, green, and blue. E.g., "#FF9900" represents an orange
+color. 
+
+&lt;ol type="lower latin|upper latin|lower roman|upper roman"&gt;
+&lt;/ol&gt; Encloses lines of text whose <listStyle> <property> is one
+of the following:
+
+* lower latin
+* upper latin
+* lower roman
+* upper roman
+
+
+&lt;ul type="disc|circle|square|skip"&gt; &lt;/ul&gt; 
+Encloses lines of text whose <listStyle> <property> is one of the
+following: 
+
+* "disc"
+* "circle"
+* "square"
+* "skip"
+
+
+&lt;li&gt; &lt;/li&gt;
+Encloses a line of text whose <listStyle> <property> has been set to one
+of the <listStyle|listStyles> listed above.
 
 &lt;a&gt; &lt;/a&gt;
-Encloses text whose textStyle is "link" or whose <linkText> <property> is not empty. If the <textStyle> of the text contains "link", the <linkText> is included as the value of the "href" attribute. Otherwise, it is included as the value of the "name" attribute.
+Encloses text whose <textStyle> is "link" or whose <linkText> <property>
+is not empty. If the <textStyle> of the text contains "link", the
+<linkText> is included as the value of the "href" attribute. Otherwise,
+it is included as the value of the "name" attribute.
 
 &lt;img src="imageSpecifier"&gt;
-Replaces a character whose imageSource <property> is not empty. The value of the <imageSource> <property> is included as the value of the "src" attribute.
+Replaces a character whose <imageSource> <property> is not empty. The
+value of the <imageSource> <property> is included as the value of the
+"src" attribute.
 
-When you set the <HTMLText> of a <field(keyword)>, all tags other than those above are ignored, except heading tags (&lt;h1&gt;--&lt;h6&gt;), which change the size of the text in the heading element:
+&lt;span metadata="string"&gt; &lt;/span&gt; 
+Encloses a run of text whose <metadata> property is set to the string
+indicated. 
+
+When you set the <HTMLText> of a <field(object)>, all tags other than
+those above are ignored, except heading tags (&lt;h1&gt;--&lt;h6&gt;),
+which change the size of the text in the heading element:
 
 tag | textSize
 :----:|:---------:
@@ -106,125 +215,97 @@ tag | textSize
 &lt;h5&gt; | 12 point
 &lt;h6&gt; | 10 point
 
-You can use LiveCode color references for the "color" and "bgcolor" attributes. LiveCode translates these into standard HTML-style color specifications.
+When <set|setting> the <HTMLText> of a <field(object) to an
+<HTML>-formatted string, you can use LiveCode color references for the
+"color" and "bgcolor" attributes. LiveCode translates these into
+standard HTML-style color specifications.
 
-If a chunk of text includes more than one of the above styles, LiveCode encloses the text in the tags corresponding to each style, from the inside out. For example, if the word "Flail" in a field is underlined and bold, its corresponding <HTMLText> is "&lt;u&gt;&lt;b&gt;Flail&lt;/b&gt;&lt;/u&gt;".
+If a chunk of text includes more than one of the above styles, LiveCode
+encloses the text in the tags corresponding to each style, from the
+inside out. For example, if the word "Flail" in a field is underlined
+and bold, its corresponding <HTMLText> is
+"&lt;u&gt;&lt;b&gt;Flail&lt;/b&gt;&lt;/u&gt;". 
 
-Special characters (whose ASCII value is greater than 127) are <encode|encoded> as <HTML> entities. LiveCode recognizes the following named entities:
+Special characters (whose ASCII value is greater than 127) are encoded
+as <HTML> entities. Named <HTML> entities are enclosed by a leading
+ampersand and trailing semicolon; e.g. &amp;agrave; for &agrave; and
+&amp;euro; for &euro;. LiveCode recognizes all 253 entities defined in
+the XHTML specification at
+<http://www.w3.org/TR/html4/sgml/entities.html>. 
 
-character | entity
-:----------:|:-------:
-Á | &amp;Aacute;
-á | &amp;aacute;
-Â | &amp;Acirc;
-â | &amp;acirc;
-´ | &amp;acute;
-Æ | &amp;AElig;
-æ | &amp;aelig;
-À | &amp;Agrave;
-à | &amp;agrave;
-Å | &amp;Aring;
-å | &amp;aring;
-Ã | &amp;Atilde;
-ã | &amp;atilde;
-Ä | &amp;Auml;
-ä | &amp;auml;
-¦ | &amp;brvbar;
-Ç | &amp;Ccedil;
-ç | &amp;ccedil;
-¸ | &amp;cedil;
-¢ | &amp;cent;
-© | &amp;copy;
-¤ | &amp;curren;
-° | &amp;deg;
-÷ | &amp;divide;
-É | &amp;Eacute;
-é | &amp;eacute;
-Ê | &amp;Ecirc;
-ê | &amp;ecirc;
-È | &amp;Egrave;
-è | &amp;egrave;
-Ð | &amp;ETH;
-ð | &amp;eth;
-Ë | &amp;Euml;
-ë | &amp;euml;
-½ | &amp;frac12;
-¼ | &amp;frac14;
-¾ | &amp;frac34;
-&gt; | &amp;gt;
-Í | &amp;Iacute;
-í | &amp;iacute;
-Î | &amp;Icirc;
-î | &amp;icirc;
-¡ | &amp;iexcl;
-Ì | &amp;Igrave;
-ì | &amp;igrave;
-¿ | &amp;iquest;
-Ï | &amp;Iuml;
-ï | &amp;iuml;
-« | &amp;laquo;
-&lt; | &amp;lt;
-¯ | &amp;macr;
-µ | &amp;micro;
-· | &amp;middot;
-  | &amp;nbsp;
-¬ | &amp;not;
-Ñ | &amp;Ntilde;
-ñ | &amp;ntilde;
-Ó | &amp;Oacute;
-ó | &amp;oacute;
-Ô | &amp;Ocirc;
-ô | &amp;ocirc;
-Ò | &amp;Ograve;
-ò | &amp;ograve;
-ª | &amp;ordf;
-º | &amp;ordm;
-Ø | &amp;Oslash;
-ø | &amp;oslash;
-Õ | &amp;Otilde;
-õ | &amp;otilde;
-Ö | &amp;Ouml;
-ö | &amp;ouml;
-¶ | &amp;para;
-± | &amp;plusmn;
-£ | &amp;pound;
-» | &amp;raquo;
-® | &amp;reg;
-§ | &amp;sect;
-­ | &amp;shy;
-¹ | &amp;sup1;
-² | &amp;sup2;
-³ | &amp;sup3;
-ß | &amp;szlig;
-Þ | &amp;THORN;
-þ | &amp;thorn;
-× | &amp;times;
-Ú | &amp;Uacute;
-ú | &amp;uacute;
-Û | &amp;Ucirc;
-û | &amp;ucirc;
-Ù | &amp;Ugrave;
-ù | &amp;ugrave;
-¨ | &amp;uml;
-Ü | &amp;Uuml;
-ü | &amp;uuml;
-Ý | &amp;Yacute;
-ý | &amp;yacute;
-¥ | &amp;yen;
-ÿ | &amp;yuml;
+Unicode characters whose decimal numeric value is greater than 255 are
+encoded as "bignum" entities, with a leading ampersand and trailing
+semicolon. For example, the Japanese character whose numeric value is
+12387 is encoded as an entity like this:&amp;#12387;.
 
-Unicode characters whose numeric value is greater than 255 are encoded as "bignum" entities, with a leading ampersand and trailing semicolon. For example, the Japanese character whose numeric value is 12387 is encoded as "#12387;".
+>*Note:* The <HTMLText> of a <field(object)> or <chunk> includes
+> formatting information for the text, but does not include information
+about the text <properties> of the <field(object)> itself. If you use
+the <HTMLText> <property> to transfer text between
+<field(object)|fields>, you must make sure that the destination
+<field(object)|field's> <textFont> and other text <properties> match the
+settings of the source field, if you want the text in both
+<field(object)|fields> to look identical.
 
->*Note:* The <HTMLText> of a <field(keyword)> or <chunk> includes formatting information for the text, but does not include information about the text <properties> of the <field(keyword)> itself. If you use the <HTMLText> <property> to transfer text between <field(object)|fields>, you must make sure that the destination <field(object)|field's> <textFont> and other text <properties> match the settings of the source field, if you want the text in both <field(object)|fields> to look identical.
+>*Important:* The <HTMLText> <property> uses a tag structure that is
+> HTML-like, but is not completely standard <HTML>,
+in order to accommodate the full range of text styling available in
+LiveCode. Specifically:
 
->*Important:* The <HTMLText> <property> uses a tag <control structure|structure> that is HTML-like, but is not completely standard <HTML>, in order to accommodate the full <range> of text styling available in LiveCode. Specifically:
-* The link, box and threedbox tags, as well as the bgColor attribute of the font tag, have been added to accommodate styles that don't exist in standard HTML.
-* The size attribute of the font tag can encode the font's point size, in addition to the standard 7 HTML sizes.
-* The <HTMLText> reports entities whose <ASCII|ASCII value> is between 129 and 159. These correspond to characters in the <Windows> <character set> (code page 1252) that are not legal <HTML> entities.
+* The link, box and threedbox tags, as well as the bgColor attribute of
+  the font tag, have been added to accommodate styles that don't exist
+  in standard HTML.
+* The size attribute of the font tag can encode the font's point size,
+  in addition to the standard 7 HTML sizes.
+* The <HTMLText> reports entities whose <ASCII|ASCII value> is between
+  129 and 159. These correspond to characters in the <Windows>
+  <character set> (Code Page 1252) that are not legal <HTML> entities.
+
 
 Changes:
-The lang attribute, and the ability to encode Unicode characters, was added in version 2.0.
+The lang attribute, and the ability to encode Unicode characters, was
+added in version 2.0.
 
-References: URL (keyword), default (keyword), integer (keyword), field (keyword), string (keyword), foregroundColor (property), textSize (property), HTMLText (property), unicodeText (property), textShift (property), properties (property), linkText (property), mimeText (property), RTFText (property), backgroundColor (property), textFont (property), imageSource (property), dragData (property), textStyle (property), colorNames (function), charToNum (function), format (function), numToChar (function), negative (glossary), property (glossary), character set (glossary), HTML (glossary), Windows (glossary), control structure (glossary), hexadecimal (glossary), chunk (glossary), ASCII (glossary), format (glossary), encode (glossary), range (glossary), field (object)
+The following enhancements were added in version 5.5: 
+
+* Support for fully representing paragraph formatting by means of
+  &lt;p&gt; tag attributes;
+* Support for representing ordered and unordered lists and list styles
+  by means of &lt;ul&gt; and &lt;ol&gt; tags, and list items by means of
+  &lt;li&gt; tag attributes;
+* Support for representing metadata in text runs by means of a
+  &lt;span&gt; tag and metadata attribute;
+* Complete support for HTML entities;
+* Complete support for representing all LiveCode text styles in HTML
+  tags; 
+* Improved representation of linkText and imageSource by means of
+  &lt;a&gt; tag attributes and &lt;img&gt; tag attributes respectively.
+
+
+Support was added for &lt;strong&gt; and &lt;em&gt; tags in version 6.0.
+
+Support for the <tabAlign> property was added in version 8.1.2
+
+References: get (command), set (command), charToNum (function),
+colorNames (function), format (function), numToChar (function),
+fontLanguage (function)
+ASCII (glossary), character set (glossary), chunk (glossary),
+default (glossary), encode (glossary), format (glossary),
+hexadecimal (glossary), HTML (glossary), integer (glossary),
+negative (glossary), property (glossary), string (glossary),
+Windows (glossary), effective (keyword), field (keyword), URL (keyword),
+field (object), backgroundColor (property), borderColor (property),
+borderWidth (property), dontWrap (property), dragData (property),
+firstIndent (property),
+foregroundColor (property), hGrid (property), hidden (property),
+HTMLText (property), imageSource (property), leftIndent (property),
+linkText (property), listStyle (property), metadata (property),
+mimeText (property), padding (property), rightIndent (property),
+RTFText (property), spaceAbove (property), spaceBelow (property),
+tabAlign (property),
+tabStops (property), textAlign (property), textFont (property),
+textShift (property), textSize (property), textStyle (property),
+unicodeText (property), vGrid (property)
 
 Tags: text processing
+

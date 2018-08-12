@@ -1,1 +1,0 @@
-# mobileSetAllowedOrientations broken on android

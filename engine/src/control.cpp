@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "util.h"
 #include "sellst.h"
 #include "stack.h"
@@ -47,7 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
-MCControl *MCControl::focused;
+MCControlHandle MCControl::focused;
 int2 MCControl::defaultmargin = 4;
 int2 MCControl::xoffset;
 int2 MCControl::yoffset;
@@ -126,8 +126,8 @@ MCControl::MCControl(const MCControl &cref) : MCObject(cref)
 
 MCControl::~MCControl()
 {
-	if (focused == this)
-		focused = NULL;
+	if (focused.IsBoundTo(this))
+		focused = nullptr;
     
 	MCscreen->stopmove(this, False);
 
@@ -155,9 +155,10 @@ void MCControl::open()
 void MCControl::close()
 {
 	// MW-2008-01-09: [[ Bug 5739 ]] Changing group layer cancels mousedown
-	if (opened == 1)
-		if (focused == this)
-			focused = NULL;
+	if (opened == 1 && focused.IsBoundTo(this))
+    {
+        focused = nullptr;
+    }
 	MCObject::close();
 }
 
@@ -263,7 +264,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
     
 	if (is || state & CS_MFOCUSED)
 	{
-		if (focused == this || getstack() -> gettool(this) == T_POINTER)
+		if (focused.IsBoundTo(this) || getstack() -> gettool(this) == T_POINTER)
 		{
 			if (MCdispatcher -> isdragtarget())
 				message_with_args(MCM_drag_move, x, y);
@@ -300,7 +301,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 
 void MCControl::munfocus()
 {
-	if (focused == this)
+	if (focused.IsBoundTo(this))
 	{
 		if (state & CS_MFOCUSED)
 		{
@@ -378,7 +379,7 @@ Boolean MCControl::doubleup(uint2 which)
 
 void MCControl::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_idle, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 	{
 		if (opened && getstack()->gettool(this) == T_BROWSE)
 		{
@@ -422,323 +423,30 @@ uint2 MCControl::gettransient() const
 	return 0;
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCControl::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive = false)
-{
-	switch (which)
-	{
-#ifdef /* MCControl::getprop */ LEGACY_EXEC
-	case P_MARGINS:
-		if (leftmargin == rightmargin && leftmargin == topmargin && leftmargin == bottommargin)
-			ep.setint(leftmargin);
-		else
-			ep.setrectangle(leftmargin, topmargin, rightmargin, bottommargin);
-		break;
-	case P_LEFT_MARGIN:
-		ep.setint(leftmargin);
-		break;
-	case P_RIGHT_MARGIN:
-		ep.setint(rightmargin);
-		break;
-	case P_TOP_MARGIN:
-		ep.setint(topmargin);
-		break;
-	case P_BOTTOM_MARGIN:
-		ep.setint(bottommargin);
-		break;
-	// MW-2012-03-013: [[ UnicodeToolTip ]] If normal tool tip is requested convert to
-	//   native.
-	case P_TOOL_TIP:
-		ep.setsvalue(tooltip);
-		ep.utf8tonative();
-		break;
-	// MW-2012-03-013: [[ UnicodeToolTip ]] If unicode tool tip is requested convert to
-	//   UTF-16.
-	case P_UNICODE_TOOL_TIP:
-		ep.setsvalue(tooltip);
-		ep.utf8toutf16();
-		break;
-
-	// MW-2011-08-25: [[ Layers ]] Handle layerMode property fetch.
-	case P_LAYER_MODE:
-	{
-		// MW-2011-09-21: [[ Layers ]] Updated to use layerMode hint system.
-		MCLayerModeHint t_mode;
-		if (effective)
-			t_mode = layer_geteffectivemode();
-		else
-			t_mode = m_layer_mode_hint;
-
-		const char *t_value;
-		switch(t_mode)
-		{
-		case kMCLayerModeHintStatic:
-			t_value = "static";
-			break;
-		case kMCLayerModeHintDynamic:
-			t_value = "dynamic";
-			break;
-		case kMCLayerModeHintScrolling:
-			t_value = "scrolling";
-			break;
-		case kMCLayerModeHintContainer:
-			t_value = "container";
-			break;
-		}
-
-		ep.setstaticcstring(t_value);
-	}
-	break;
-#endif /* MCControl::getprop */
-	default:
-		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
-	}
-	return ES_NORMAL;
-}
-
-// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCControl::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
-{
-	switch(which)
-	{
-#ifdef /* MCControl::getarrayprop */ LEGACY_EXEC
-	// MW-2009-06-09: [[ Bitmap Effects ]]
-	case P_BITMAP_EFFECT_DROP_SHADOW:
-	case P_BITMAP_EFFECT_INNER_SHADOW:
-	case P_BITMAP_EFFECT_OUTER_GLOW:
-	case P_BITMAP_EFFECT_INNER_GLOW:
-	case P_BITMAP_EFFECT_COLOR_OVERLAY:
-		return MCBitmapEffectsGetProperties(m_bitmap_effects, which, ep, key);
-#endif /* MCControl::getarrayprop */
-	default:
-		return MCObject::getarrayprop_legacy(parid, which, ep, key, effective);
-	}
-	return ES_NORMAL;
-}
-
-Exec_stat MCControl::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
-{
-	Boolean dirty = True;
-	int2 i1, i2, i3, i4;
-	MCString data = ep.getsvalue();
-
-	switch (which)
-	{
-#ifdef /* MCControl::setprop */ LEGACY_EXEC
-	case P_MARGINS:
-		if (MCU_stoi2(data, i1))
-			leftmargin = rightmargin = topmargin = bottommargin = i1;
-		else
-		{
-			if (!MCU_stoi2x4(data, i1, i2, i3, i4))
-			{
-				MCeerror->add(EE_OBJECT_MARGINNAN, 0, 0, data);
-				return ES_ERROR;
-			}
-			leftmargin = i1;
-			topmargin = i2;
-			rightmargin = i3;
-			bottommargin = i4;
-		}
-		break;
-	case P_LEFT_MARGIN:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add(EE_OBJECT_MARGINNAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		leftmargin = i1;
-		break;
-	case P_RIGHT_MARGIN:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add(EE_OBJECT_MARGINNAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		rightmargin = i1;
-		break;
-	case P_TOP_MARGIN:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add(EE_OBJECT_MARGINNAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		topmargin = i1;
-		break;
-	case P_BOTTOM_MARGIN:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add(EE_OBJECT_MARGINNAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		bottommargin = i1;
-		break;
-	// MW-2012-03-13: [[ UnicodeToolTip ]] Handle the unicodeToolTip property - same
-	//   as tooltip except expects UTF-16 encoded string, rather than native.
-	case P_TOOL_TIP:
-	case P_UNICODE_TOOL_TIP:
-		if (tooltip != MCtooltip->gettip())
-			dirty = False;
-		delete tooltip;
-		
-		// MW-2012-03-13: [[ UnicodeToolTip ]] Convert the value to UTF-8 - either
-		//   from native or UTF-16 depending on what prop was set.
-		if (which == P_TOOL_TIP)
-			ep.nativetoutf8();
-		else
-			ep.utf16toutf8();
-		data = ep . getsvalue();
-		
-		if (data != MCnullmcstring)
-			tooltip = data.clone();
-		else
-			tooltip = NULL;
-		if (dirty && focused == this)
-		{
-			MCtooltip->settip(tooltip);
-			dirty = False;
-		}
-		break;
-
-	// MW-2011-08-25: [[ TileCache ]] Handle layerMode property store.
-	case P_LAYER_MODE:
-	{
-		// MW-2011-09-21: [[ Layers ]] Updated to use new layermode hint system.
-		MCLayerModeHint t_mode;
-		if (data == "static")
-			t_mode = kMCLayerModeHintStatic;
-		else if (data == "dynamic")
-			t_mode = kMCLayerModeHintDynamic;
-		else if (data == "scrolling")
-			t_mode = kMCLayerModeHintScrolling;
-#if NOT_YET_IMPLEMENTED
-		else if (data == "container")
-			t_mode = kMCLayerModeHintContainer;
-#endif
-		else
-		{
-			MCeerror -> add(EE_CONTROL_BADLAYERMODE, 0, 0, data);
-			return ES_ERROR;
-		}
-		
-		// If the layer mode hint has changed, update and mark the attrs
-		// for recompute. If the hint hasn't changed, then there's no need
-		// to redraw.
-		if (t_mode != m_layer_mode_hint)
-		{
-			m_layer_attr_changed = true;
-			m_layer_mode_hint = t_mode;
-		}
-		else
-			dirty = False;
-	}
-	break;
-
-	// MW-2011-09-21: [[ Layers ]] There are numerous properties which
-	//   can affect the layer attributes, thus in those cases we pass back
-	//   the handling and then mark the attrs for a recompute.
-
-	// The 'ink' property affects whether a layer can be static.
-	case P_INK:
-	// The border, focus border and shadow properties can affect whether the layer
-	// is direct.
-	case P_SHOW_BORDER:
-	case P_SHOW_FOCUS_BORDER:
-	case P_SHADOW:
-	// The opaque property can affect the layer's opaqueness.
-	case P_FILLED:
-	case P_OPAQUE:
-		if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
-			return ES_ERROR;
-
-		// Mark the layer attrs for recompute.
-		m_layer_attr_changed = true;
-		return ES_NORMAL;
-#endif /* MCControl::setprop */
-	default:
-		return MCObject::setprop_legacy(parid, which, ep, effective);
-	}
-
-	if (dirty && opened)
-	{
-		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-		layer_redrawall();
-	}
-	return ES_NORMAL;
-}
-
-Exec_stat MCControl::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
-{
-	Boolean dirty;
-	dirty = False;
-	switch(which)
-	{
-#ifdef /* MCControl::setarrayprop */ LEGACY_EXEC
-	case P_BITMAP_EFFECT_DROP_SHADOW:
-	case P_BITMAP_EFFECT_INNER_SHADOW:
-	case P_BITMAP_EFFECT_OUTER_GLOW:
-	case P_BITMAP_EFFECT_INNER_GLOW:
-	case P_BITMAP_EFFECT_COLOR_OVERLAY:
-	{	
-		MCRectangle t_old_effective_rect = geteffectiverect();
-		if (MCBitmapEffectsSetProperties(m_bitmap_effects, which, ep, key, dirty) != ES_NORMAL)
-			return ES_ERROR;
-
-		if (dirty && opened)
-		{
-			// MW-2011-09-21: [[ Layers ]] Mark the attrs as needing redrawn.
-			m_layer_attr_changed = true;
-
-			// MW-2011-08-17: [[ Layers ]] Make sure any redraw needed due to effects
-			//   changing occur.
-			layer_effectschanged(t_old_effective_rect);
-		}
-	}
-	return ES_NORMAL;
-#endif /* MCControl::setarrayprop */
-	default:
-		break;
-	}
-	return MCObject::setarrayprop_legacy(parid, which, ep, key, effective);
-}
-#endif
-
 void MCControl::select()
 {
 	state |= CS_SELECTED;
 	kunfocus();
 
-	// MW-2011-09-23: [[ Layers ]] Mark the layer attrs as having changed - the selection
-	//   setting can influence the layer type.
-	m_layer_attr_changed = true;
-
-	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-	layer_redrawall();
+	getcard()->dirtyselection(rect);
 }
 
 void MCControl::deselect()
 {
 	if (state & CS_SELECTED)
 	{
-		// MW-2011-09-23: [[ Layers ]] Mark the layer attrs as having changed - the selection
-		//   setting can influence the layer type.
-		m_layer_attr_changed = true;
+		getcard()->dirtyselection(rect);
 
-		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-		layer_redrawall();
-        
         state &= ~(CS_SELECTED | CS_MOVE | CS_SIZE | CS_CREATE);
 	}
 }
 
-Boolean MCControl::del()
+Boolean MCControl::del(bool p_check_flag)
 {
-	if (parent == NULL || scriptdepth != 0 || getstack()->islocked())
-	{
-		MCeerror->add(EE_OBJECT_CANTREMOVE, 0, 0);
-		return False;
-	}
-	switch (gettype())
+	if (!isdeletable(p_check_flag))
+	    return False;
+	
+    switch (gettype())
 	{
 	case CT_BUTTON:
 		message(MCM_delete_button);
@@ -771,30 +479,10 @@ Boolean MCControl::del()
 	default:
 		break;
 	}
-	uint2 num = 0;
-	getcard()->count(CT_LAYER, CT_UNDEFINED, this, num, True);
-	switch (parent->gettype())
-	{
-	case CT_CARD:
-		{
-			MCCard *cptr = (MCCard *)parent;
-			if (!cptr->removecontrol(this, False, True))
-				return False;
-			getstack()->removecontrol(this);
-			break;
-		}
-	case CT_GROUP:
-		{
-			MCGroup *gptr = (MCGroup *)parent;
-			gptr->removecontrol(this, True);
-			break;
-		}
-	default:
-		{ //stack
-			MCStack *sptr = (MCStack *)parent;
-			sptr->removecontrol(this);
-		}
-	}
+
+	// IM-2016-10-05: [[ Bug 17008 ]] Dirty selection handles when object deleted
+	if (getselected())
+		getcard()->dirtyselection(rect);
 
     // IM-2012-05-16 [[ BZ 10212 ]] deleting the dragtarget control in response
     // to a 'dragdrop' message would leave these globals pointing to the deleted
@@ -808,9 +496,32 @@ Boolean MCControl::del()
     if (MCdragsource == this)
         MCdragsource = nil;
     
+	switch (parent->gettype())
+	{
+        case CT_STACK:
+            removereferences();
+            parent.GetAs<MCStack>()->removecontrol(this);
+            break;
+        
+        case CT_CARD:
+            if (!parent.GetAs<MCCard>()->removecontrol(this, False, True))
+				return False;
+            removereferences();
+			getstack()->removecontrol(this);
+			break;
+        
+        case CT_GROUP:
+			parent.GetAs<MCGroup>()->removecontrol(this, True);
+            removereferences();
+			break;
+
+        default:
+            MCUnreachable();
+	}
+    
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
-    return MCObject::del();
+    return MCObject::del(p_check_flag);
 }
 
 void MCControl::paste(void)
@@ -819,7 +530,7 @@ void MCControl::paste(void)
 		return;
 
 	parent = MCdefaultstackptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
-	MCCard *cptr = (MCCard *)parent;
+	MCCard *cptr = parent.GetAs<MCCard>();
 	obj_id = 0;
 	//newcontrol->resetfontindex(oldstack);
 	if (!MCU_point_in_rect(cptr->getrect(), rect.x + (rect.width >> 1),
@@ -835,6 +546,44 @@ void MCControl::paste(void)
 		layer_redrawall();
 	}
 }
+
+/* The MCRereferenceChildrenVisitor visits each of a control's descendents
+ * recursively and makes sure they have a weak-proxy and that the parent is
+ * updated. */
+class MCRereferenceChildrenVisitor: public MCObjectVisitor
+{
+public:
+    static void Visit(MCControl *p_control)
+    {
+        MCRereferenceChildrenVisitor t_visitor(p_control);
+        
+        /* Make sure the control has a weak proxy (needed to set the parent of
+         * its children!). */
+        p_control->ensure_weak_proxy();
+        
+        /* Now visit the controls children. */
+        p_control->visit_children(0, 0, &t_visitor);
+    }
+
+private:
+    MCRereferenceChildrenVisitor(MCObject *p_new_parent)
+        : m_new_parent(p_new_parent)
+    {
+    }
+
+    bool OnControl(MCControl* p_control)
+    {
+        /* Update the control's parent */
+        p_control->setparent(m_new_parent);
+        
+        /* Update its children */
+        MCRereferenceChildrenVisitor::Visit(p_control);
+        
+        return true;
+    }
+    
+    MCObject *m_new_parent;
+};
 
 void MCControl::undo(Ustruct *us)
 {
@@ -858,6 +607,11 @@ void MCControl::undo(Ustruct *us)
 		{
 			MCCard *card = (MCCard *)parent->getcard();
 			getstack()->appendcontrol(this);
+            
+            /* Visit the control and its children, creating weak_proxys and
+             * reparenting as we go. */
+            MCRereferenceChildrenVisitor::Visit(this);
+            
 			card->newcontrol(this, False);
 			Boolean oldrlg = MCrelayergrouped;
 			MCrelayergrouped = True;
@@ -872,7 +626,7 @@ void MCControl::undo(Ustruct *us)
 		}
 		return;
 	case UT_REPLACE:
-		del();
+		del(true);
 		us->type = UT_DELETE;
 		return;
 	default:
@@ -1022,7 +776,7 @@ void MCControl::attach(Object_pos p, bool invisible)
 	if (invisible)
 		setflag(False, F_VISIBLE);
 
-	if (parent == NULL || parent->gettype() == CT_CARD
+	if (!parent || parent->gettype() == CT_CARD
 	        || parent->gettype() == CT_STACK)
 	{
 		MCCard *card = getcard(cid);
@@ -1031,7 +785,7 @@ void MCControl::attach(Object_pos p, bool invisible)
 	}
 	else
 	{
-		MCGroup *gptr = (MCGroup *)parent;
+		MCGroup *gptr = parent.GetAs<MCGroup>();
 		gptr->appendcontrol(this);
 	}
 	newmessage();
@@ -1073,20 +827,20 @@ void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 	}
 }
 
-void MCControl::sizerects(MCRectangle *rects)
+void MCControl::sizerects(const MCRectangle &p_object_rect, MCRectangle r_rects[8])
 {
 	int2 x[3];
 	int2 y[3];
 
 	uint2 handlesize = MCsizewidth;
-    
-    x[0] = rect.x - (handlesize >> 1);
- 	x[1] = rect.x + ((rect.width - handlesize) >> 1);
-    x[2] = rect.x + rect.width - (handlesize >> 1);
-    y[0] = rect.y - (handlesize >> 1);
- 	y[1] = rect.y + ((rect.height - handlesize) >> 1);
-    y[2] = rect.y + rect.height - (handlesize >> 1);
 
+	x[0] = p_object_rect.x - (handlesize >> 1);
+	x[1] = p_object_rect.x + ((p_object_rect.width - handlesize) >> 1);
+	x[2] = p_object_rect.x + p_object_rect.width - (handlesize >> 1);
+	y[0] = p_object_rect.y - (handlesize >> 1);
+	y[1] = p_object_rect.y + ((p_object_rect.height - handlesize) >> 1);
+	y[2] = p_object_rect.y + p_object_rect.height - (handlesize >> 1);
+	
 	uint2 i;
 	uint2 j;
 	uint2 k = 0;
@@ -1094,17 +848,21 @@ void MCControl::sizerects(MCRectangle *rects)
 		for (j = 0 ; j < 3 ; j++)
 			if (i != 1 || j != 1)
 			{
-				rects[k].width = rects[k].height = handlesize;
-				rects[k].x = x[j];
-				rects[k].y = y[i];
+				r_rects[k].width = r_rects[k].height = handlesize;
+				r_rects[k].x = x[j];
+				r_rects[k].y = y[i];
 				k++;
 			}
 }
 
-void MCControl::drawselected(MCDC *dc)
+void MCControl::drawselection(MCDC *dc, const MCRectangle& p_dirty)
 {
-    if (!opened || !(getflag(F_VISIBLE) || showinvisible()))
+    MCAssert(getopened() != 0 && (getflag(F_VISIBLE) || showinvisible()));
+    
+    if (!getselected())
+    {
         return;
+    }
     
 	if (MCdragging)
 		return;
@@ -1116,7 +874,7 @@ void MCControl::drawselected(MCDC *dc)
     drawmarquee(dc, rect);
     
     MCRectangle rects[8];
-    sizerects(rects);
+    sizerects(rect, rects);
     if (flags & F_LOCK_LOCATION)
         dc->setfillstyle(FillStippled, nil, 0, 0);
     else
@@ -1381,11 +1139,11 @@ void MCControl::continuesize(int2 x, int2 y)
 		}
 		else
 		{
-			int2 newwidth;
-			newwidth = (int2)(newrect.height / aspect);
+			int2 t_newwidth;
+			t_newwidth = (int2)(newrect.height / aspect);
 			if (state & CS_SIZEL)
-				newrect.x += newrect.width - newwidth;
-			newrect.width = newwidth;
+				newrect.x += newrect.width - t_newwidth;
+			newrect.width = t_newwidth;
 		}
 	}
 	else if (MCmodifierstate & MS_MOD1)
@@ -1456,7 +1214,7 @@ uint2 MCControl::sizehandles(int2 px, int2 py)
 	if (!(flags & F_LOCK_LOCATION))
 	{
 		MCRectangle rects[8];
-		sizerects(rects);
+		sizerects(rect, rects);
 		int2 i;
 		for (i = 7 ; i >= 0 ; i--)
         {
@@ -1543,7 +1301,7 @@ void MCControl::start(Boolean canclone)
 			}
 			else
 			{
-				Ustruct *us = new Ustruct;
+				Ustruct *us = new (nothrow) Ustruct;
 				us->type = UT_SIZE;
 				us->ud.rect = rect;
 				MCundos->freestate();
@@ -1613,23 +1371,38 @@ Boolean MCControl::moveable()
 
 void MCControl::newmessage()
 {
-	char *messptr = new char[strlen(gettypestring()) + 4];
-	strcpy(messptr, "new");
-	strcpy(&messptr[3], gettypestring());
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_message_str;
+	if (t_success)
+		t_success = MCStringFormat(&t_message_str, "new%s", gettypestring());
+	
+	MCNewAutoNameRef t_message;
+	if (t_success)
+		t_success = MCNameCreate(*t_message_str, &t_message);
+	
+	if (t_success)
+		message(*t_message);
 
-	MCAutoNameRef t_message;
-	/* UNCHECKED */ t_message . CreateWithCString(messptr);
-	message(t_message);
-
-	delete messptr;
 	if (gettype() == CT_GROUP)
 		message(MCM_new_background);
 }
 
 void MCControl::enter()
 {
-	if (focused != NULL && focused != this)
-		leave();
+    MCControlHandle t_this(this);
+    
+    if (focused.IsValid() && !focused.IsBoundTo(this))
+    {
+        leave();
+    }
+    
+    if (!t_this.IsValid())
+    {
+        return;
+    }
+    
 	if (MCdispatcher -> isdragtarget())
 	{
 		MCdragaction = DRAG_ACTION_NONE;
@@ -1653,7 +1426,11 @@ void MCControl::enter()
 	else
 		message(MCM_mouse_enter);
     // AL-2013-01-14: [[ Bug 11343 ]] Add timer if the object handles mouseWithin in the behavior chain.
-	if (handlesmessage(MCM_mouse_within) && !(hashandlers & HH_IDLE))
+    if(!t_this.IsValid())
+    {
+        return;
+    }
+    if (handlesmessage(MCM_mouse_within) && !(hashandlers & HH_IDLE))
 		MCscreen->addtimer(this, MCM_idle, MCidleRate);
 	if (getstack()->gettool(this) == T_BROWSE)
 		MCtooltip->settip(tooltip);
@@ -1662,27 +1439,33 @@ void MCControl::enter()
 
 void MCControl::leave()
 {
-	MCControl *oldfocused = focused;
+	MCControlHandle oldfocused = focused;
 	if (MCdispatcher -> isdragtarget())
 	{
 		// MW-2013-08-08: [[ Bug 10655 ]] If oldfocused is a field and has dragText set,
 		//   then make sure we unset it (otherwise the caret will continue moving around
 		//   on mouseMove).
-		if (oldfocused->gettype() == CT_FIELD
+		if (oldfocused.IsValid())
+        {
+            if (oldfocused->gettype() == CT_FIELD
 		        && oldfocused -> getstate(CS_DRAG_TEXT))
-		{
-			MCField *fptr = (MCField *)oldfocused;
-			fptr->removecursor();
-			getstack()->clearibeam();
-			oldfocused->state &= ~(CS_DRAG_TEXT | CS_IBEAM);
-		}
-		oldfocused->message(MCM_drag_leave);
+            {
+                MCField *fptr = oldfocused.GetAs<MCField>();
+                fptr->removecursor();
+                getstack()->clearibeam();
+                oldfocused->state &= ~(CS_DRAG_TEXT | CS_IBEAM);
+            }
+            oldfocused->message(MCM_drag_leave);
+        }
 		MCdragaction = DRAG_ACTION_NONE;
-		MCdragdest = NULL;
+		MCdragdest = nil;
 	}
-	else
+	else if (oldfocused.IsValid())
+    {
 		oldfocused->message(MCM_mouse_leave);
-	focused = NULL;
+    }
+    
+    focused = nullptr;
 }
 
 Boolean MCControl::sbfocus(int2 x, int2 y, MCScrollbar *hsb, MCScrollbar *vsb)
@@ -1846,7 +1629,7 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 		{
 			if (flags & F_HSCROLLBAR)
 			{
-				hsb = new MCScrollbar(*MCtemplatescrollbar);
+				hsb = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 				hsb->setparent(this);
 				hsb->setflag(False, F_TRAVERSAL_ON);
 				hsb->setflag(flags & F_3D, F_3D);
@@ -1892,7 +1675,7 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 		{
 			if (flags & F_VSCROLLBAR)
 			{
-				vsb = new MCScrollbar(*MCtemplatescrollbar);
+				vsb = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 				vsb->setparent(this);
 				vsb->setflag(False, F_TRAVERSAL_ON);
 				vsb->setflag(flags & F_3D, F_3D);
@@ -1997,9 +1780,6 @@ MCRectangle MCControl::geteffectiverect(void) const
 	MCRectangle t_rect;
 	t_rect = MCU_reduce_rect(rect, -gettransient());
 
-    if (state & CS_SELECTED)
-        t_rect = MCU_reduce_rect(t_rect, -MCsizewidth);
-    
 	if (m_bitmap_effects != nil)
 		MCBitmapEffectsComputeBounds(m_bitmap_effects, t_rect, t_rect);
 

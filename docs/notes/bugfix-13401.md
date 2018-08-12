@@ -1,1 +1,0 @@
-# Setting a button label to empty when it has one already does not reinstate button name as label

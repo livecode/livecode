@@ -2,17 +2,20 @@ Name: width
 
 Type: property
 
-Syntax: set the width of <object> to <numberOfPixels> 
+Syntax: set the width of <object> to <numberOfPixels>
 
-Summary: The <width> of an <object> is the distance from its left edge to its right edge.
+Summary:
+The <width> of an <object(glossary)> is the distance from its left edge
+to its right edge.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the width of the target to 100
@@ -20,23 +23,49 @@ set the width of the target to 100
 Example:
 set the width of button 1 to the formattedWidth of button 1
 
-Value: The <width> of an <object> is a positive integer.
+Value:
+The <width> of an <object(glossary)> is a positive integer.
 
 Description:
-Use the <width> <property> to determine how much horizontal space an <object> needs, or to make it wider or narrower.
+Use the <width> <property> to determine how much horizontal space an
+<object(glossary)> needs, or to make it wider or narrower.
 
-The <width> of a <card(keyword)> is always the same as the <width> of its <stack window>. You can set the <width> of a <card(keyword)>, but doing so has no effect and doesn't change the <card(object)|card's> <width> <property>.
+The <width> of a <card(keyword)> is always the same as the <width> of
+its <stack window>. You can set the <width> of a <card(keyword)>, but
+doing so has no effect and doesn't change the <card(object)|card's>
+<width> <property>.
 
-If you reduce the <width> of a <stack>, some <object|objects> may end up outside the <stack window>. These <object|objects> are not shown; however, they are still there, and will be displayed if you make the window wide enough.
+If you reduce the <width> of a <stack>, some <object|objects> may end up
+outside the <stack window>. These <object|objects> are not shown;
+however, they are still there, and will be displayed if you make the
+window wide enough.
 
-If the object's <lockLocation property> is false, when you change its width, it shrinks or grows from the center:  the <object|object's> left and right edges both shift, while the object's <location property> stays the same. If the <object|object's> <lockLocation> <property> is true, it shrinks or grows from the top left corner: the <object|object's> left edge stays in the same place, and the right edge moves.
+If the object's <lockLocation> <property> is false, when you change its
+width, it shrinks or grows from the center: the <object|object's> left
+and right edges both shift, while the object's <location> <property> stays
+the same. If the <object|object's> <lockLocation> <property> is true, it
+shrinks or grows from the top left corner: the <object|object's> left
+edge stays in the same place, and the right edge moves.
 
-The <width> of an object cannot be set to zero. Attempting to do so will set the <width> to 1 instead.
+The <width> of an object cannot be set to zero. Attempting to do so will
+set the <width> to 1 instead.
 
->*Cross-platform note:*  On <Mac OS> and <OS X|OS X systems>, the maximum <width> of an <image> is 16384 divided by the screen's <bit depth>. (For example, if the number of colors is "Millions", the maximum image width is 4096 <pixels>.)
+>*Cross-platform note:*  On <Mac OS> and <OS X|OS X systems>, the
+> maximum <width> of an <image> is 16384 divided by the screen's <bit
+> depth>. (For example, if the number of colors is "Millions", the
+> maximum image width is 4096 <pixels>.)
 
->*Note:* The current architecture uses 16-bit signed integers for all co-ordinates, which means that the value range is -32768 to 32767.
+>*Note:* The current architecture uses 16-bit signed integers for all
+> co-ordinates, which means that the value range is -32768 to 32767.
 
-References: backSize (property), left (property), titleWidth (property), lockLocation property (property), orientation (property), tabStops (property), pixels (property), lockLocation (property), location property (property), hScrollbar (property), maxWidth (property), card (keyword), image (keyword), revChangeWindowSize (command), stack (object), object (object), card (object), property (glossary), bit depth (glossary), Mac OS (glossary), stack window (glossary), OS X (glossary)
+References: revChangeWindowSize (command), object (glossary),
+property (glossary), bit depth (glossary), Mac OS (glossary),
+stack window (glossary), OS X (glossary), card (keyword), image (keyword),
+stack (object), card (object), backSize (property), left (property),
+titleWidth (property),
+orientation (property), tabStops (property), pixels (property),
+lockLocation (property), location (property),
+hScrollbar (property), maxWidth (property)
 
 Tags: ui
+

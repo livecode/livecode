@@ -7,6 +7,7 @@ Type: glossary
 Description:
 The <card> currently being displayed in a <stack window>.
 
-References: card (object), stack window (glossary)
+References: card (glossary), stack window (glossary)
 
 Tags: navigation
+

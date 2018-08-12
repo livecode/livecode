@@ -2,28 +2,49 @@ Name: productRequestError
 
 Type: message
 
-Syntax: productRequestError <productID>, <error> 
+Syntax: productRequestError <pProductID>, <pError>
 
-Summary: Sent by the store when the request for specific product details is unsuccessful.
+Summary:
+Sent by the store when the request for specific product details is
+unsuccessful. 
 
 Introduced: 6.7
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
 Example:
 on productRequestError pProduct, pError
-   "Error:" && pError && "when requesting details for " && pProduct
+   put "Error:" && pError && "when requesting details for " && pProduct
 end productRequestError
 
 Parameters:
-productID: The identidier of the product for which the request for details was made.
-error (string): A string that describes the error.
+pProductID:
+The identidier of the product for which the request for details was
+made. 
+
+pError (string):
+A string that describes the error.
 
 Description:
-Use the <productRequestError> message to handle unsuccessful request for details of a specific product. 
+Use the <productRequestError> message to handle unsuccessful request for
+details of a specific product.
 
-The message <productRequestError> is sent in response to the <mobileStoreRequestProductDetails> command, when the request is not successful.
+The message <productRequestError> is sent in response to the
+<mobileStoreRequestProductDetails> command, when the request is not
+successful. 
 
-References: mobileStoreRestorePurchases (command), mobileStoreDisablePurchaseUpdates (command), mobileStoreEnablePurchaseUpdates (command), mobileStoreRequestProductDetails (command), mobileStoreMakePurchase (command), mobileStoreSetProductType (command), mobileStoreConsumePurchase (command), mobileStoreConfirmPurchase (command), mobileStoreVerifyPurchase (command), mobileStoreProductProperty (function), mobileStorePurchasedProducts (function), mobileStorePurchaseError (function), mobileStoreCanMakePurchase (function), purchaseStateUpdate (message), productDetailsReceived (message)
+References: mobileStoreRestorePurchases (command),
+mobileStoreDisablePurchaseUpdates (command),
+mobileStoreEnablePurchaseUpdates (command),
+mobileStoreRequestProductDetails (command),
+mobileStoreMakePurchase (command), mobileStoreSetProductType (command),
+mobileStoreConsumePurchase (command),
+mobileStoreConfirmPurchase (command), mobileStoreVerifyPurchase (command),
+mobileStoreProductProperty (function),
+mobileStorePurchasedProducts (function),
+mobileStorePurchaseError (function),
+mobileStoreCanMakePurchase (function), purchaseStateUpdate (message),
+productDetailsReceived (message)
+

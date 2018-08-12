@@ -28,8 +28,8 @@
 		'SHARED_PRECOMPS_DIR': '$(OBJROOT)/Precompiled/$(CURRENT_ARCH)',
 		'GCC_VERSION': '',
 		'ALWAYS_SEARCH_USER_PATHS': 'NO',
-		'IPHONEOS_DEPLOYMENT_TARGET[arch=armv7]': '5.1.1',
-		'IPHONEOS_DEPLOYMENT_TARGET[arch=i386]': '5.1.1',
+		'IPHONEOS_DEPLOYMENT_TARGET[arch=armv7]': '6.0.0',
+		'IPHONEOS_DEPLOYMENT_TARGET[arch=i386]': '6.0.0',
 		'IPHONEOS_DEPLOYMENT_TARGET[arch=arm64]': '7.0.0',
 		'IPHONEOS_DEPLOYMENT_TARGET[arch=x86_64]': '7.0.0',
 		'ENABLE_BITCODE': 'No',
@@ -40,8 +40,10 @@
 		'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
 		'COPY_PHASE_STRIP': 'NO',
 		'STRIP_INSTALLED_PRODUCT': 'NO',
+		'CLANG_CXX_LANGUAGE_STANDARD': 'c++0x',
 		
 		'CODE_SIGN_IDENTITY[sdk=iphoneos*]': 'iPhone Developer',
+		'DEVELOPMENT_TEAM': 'KR649NSGHP',
 	},
 	
 	'target_defaults':
@@ -49,6 +51,7 @@
 		'variables':
 		{
 			'ios_external_symbol_list': '',
+			'ios_external_copy_to': '',
 			
 			'app_bundle_suffix': '.ios-engine',
 			'ext_bundle_suffix': '.ios-extension',
@@ -130,6 +133,7 @@
 								'<@(_inputs)',
 								'>(ios_external_symbols)',
 								'>(ios_external_symbol_list)',
+								'>(ios_external_copy_to)',
 							],
 						},
 					],
@@ -162,8 +166,8 @@
 						'CLANG_WARN_CONSTANT_CONVERSION': 'YES',
 						'GCC_WARN_64_TO_32_BIT_CONVERSION': 'YES',
 						'CLANG_WARN_ENUM_CONVERSION': 'YES',
-						'CLANG_WARN_INT_CONVERSION': 'YES',
-						'CLANG_WARN_IMPLICIT_SIGN_CONVERSION': 'YES',
+						#'CLANG_WARN_INT_CONVERSION': 'YES',
+						#'CLANG_WARN_IMPLICIT_SIGN_CONVERSION': 'YES',
 						'GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED': 'YES',
 						'GCC_WARN_ABOUT_RETURN_TYPE': 'YES',
 						'GCC_WARN_MISSING_PARENTHESES': 'YES',
@@ -188,11 +192,19 @@
 						[ 
 							'-Wall', 
 							'-Wextra', 
+
+							'-Wno-conversion',
+							'-Wno-shorten-64-to-32',
+
 							'-Werror=declaration-after-statement',
+							'-Werror=delete-non-virtual-dtor',
+							'-Werror=overloaded-virtual',
 							'-Wno-unused-parameter',
 							'-Werror=uninitialized',
 							'-Werror=return-type',
 							'-Werror=tautological-compare',
+							'-Werror=logical-not-parentheses',
+							'-Werror=conversion-null',
 						],
 					},
 				},

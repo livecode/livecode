@@ -1,18 +1,19 @@
 Name: videoClip
 
+Synonyms: vc
+
 Type: object
 
 Syntax: videoClip
 
-Summary: An <object type> that contains movie data.
-
-Synonyms: vc
+Summary:
+An <object type> that contains movie data.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop
 
 Example:
 play videoClip "Spartacus"
@@ -21,16 +22,46 @@ Example:
 delete videoClip ID 2485
 
 Description:
-Use the <videoClip> <object type> to display a movie that is stored in the <stack>, rather than in another file.
+Use the <videoClip> <object type> to display a movie that is stored in 
+the <stack>, rather than in another file.
 
-Unlike a player, a video clip contains the movie that it displays. This increases the memory required by your stack, because the movie data is loaded into memory whenever the stack file is open. However, it prevents the movie from being accidentally separated from the stack file and lost.
+Unlike a player, a video clip contains the movie that it displays. This 
+increases the memory required by your stack, because the movie data is 
+loaded into memory whenever the stack file is open. However, it
+prevents the movie from being accidentally separated from the stack file
+and lost.
 
 Video clips can be in QuickTime, AVI, or MPEG format.
 
-A video clip is contained in a stack. Video clips cannot contain other objects. (A video clip is not a control, since it has no user interface and cannot be owned by a card.)
+A video clip is contained in a stack. Video clips cannot contain other 
+objects. (A video clip is not a control, since it has no user interface 
+and cannot be owned by a card.)
 
-To play a videoClip, use the syntax "play videoClip &lt;filename_of_videoclip&gt;".
-To pause a videoClip, use the syntax "play pause videoClip &lt;filename_of_videoclip&gt;".
-To stop a videoClip, use the syntax "play stop videoClip &lt;filename_of_videoclip&gt;".
+To play a <videoClip>, use the syntax 
 
-References: videoClipPlayer (property), templateVideoClip (keyword), stack (object), object type (glossary)
+    play videoClip <filename_of_videoclip>
+
+
+To pause a videoClip, use the syntax 
+
+    play pause videoClip <filename_of_videoclip>
+
+
+To stop a videoClip, use the syntax 
+
+    play stop videoClip <filename_of_videoclip>
+
+
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: object type (glossary), templateVideoClip (keyword),
+stack (object), videoClipPlayer (property)
+
+Tags: multimedia

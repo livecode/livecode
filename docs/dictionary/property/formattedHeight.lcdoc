@@ -2,19 +2,21 @@ Name: formattedHeight
 
 Type: property
 
-Syntax: get the formattedHeight of <object> 
+Syntax: get the formattedHeight of <object>
 
-Syntax: get the formattedHeight of [<chunk> of] <field> 
+Syntax: get the formattedHeight of [<chunk> of] <field>
 
-Summary: Reports the height needed by an <object> to display its full contents without scrolling.
+Summary:
+Reports the height needed by an <object(glossary)> to display its full
+contents without scrolling.
 
-Associations: button
+Associations: card, field, button, player, image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the height of field 1 to the formattedHeight of field 1
@@ -22,20 +24,46 @@ put the formattedHeight of the clickLine into selectedHeight
 get the formattedHeight of word 1 to 17 of field "Info"
 
 Value:
-The <formattedHeight> of an <object> is a positive <integer>. The <object> must be on the <current card> of an open <stack>.
+The <formattedHeight> of an <object(glossary)> is a positive <integer>.
+The <object(glossary)> must be on the <current card> of an open <stack>.
 This property is read-only and cannot be set.
 
 Description:
-Use the <formattedHeight> <property> to determine how much vertical space an <object> needs. For example, if your <stack> has a <field(keyword)> whose contents change for each <card>, use the <field(object)|field's> <formattedHeight> <property> in an openCard <handler> to resize the <field(keyword)> for its contents on each <card>.
+Use the <formattedHeight> <property> to determine how much vertical
+space an <object(glossary)> needs. For example, if your <stack> has a
+<field(keyword)> whose contents change for each <card>, use the
+<field(object)|field's> <formattedHeight> <property> in an openCard
+<handler> to resize the <field(keyword)> for its contents on each
+<card>. 
 
-If you specify a card or group, the <formattedHeight> reports the height of a rectangle that includes all <object|objects> in that <card> or <group> whose <visible> <property> is true.
+If you specify a card or group, the <formattedHeight> reports the height
+of a rectangle that includes all <object|objects> in that <card> or
+<group> whose <visible> <property> is true.
 
-If you specify an image or player, the <formattedHeight> <property> reports the original un-scaled height of the <image> or movie.
+If you specify an image or player, the <formattedHeight> <property>
+reports the original un-scaled height of the <image> or movie.
 
-If you specify an object in a group, the value reported is the <formattedHeight> that <object> requires for the <current card>, so if you want to get the <formattedHeight> of a <field(object)|field's> text on a certain <card>, you must go to that <card> first.
+If you specify an object in a group, the value reported is the
+<formattedHeight> that <object(glossary)> requires for the 
+<current card>, so if you want to get the <formattedHeight> of a
+<field(object)|field's> text on a certain <card>, you must go to that
+<card> first.
 
-The <formattedHeight> of a <chunk> in a <field(keyword)> is the amount of vertical space that portion of the <field(object)|field's> text requires, taking line breaks into account.
+The <formattedHeight> of a <field(keyword)> is the amount of vertical
+space the <field(object)|field's> text requires, taking line breaks into
+account and including top and bottom margins.
 
-References: formattedTop (property), visible (property), thumbSize (property), fixedLineHeight (property), margins (property), integer (keyword), image (keyword), field (keyword), card (keyword), revChangeWindowSize (command), group (command), textHeightSum (function), stack (object), object (object), field (object), property (glossary), handler (glossary), current card (glossary), chunk (glossary)
+The <formattedHeight> of a <chunk> in a <field(keyword)> is the amount
+of vertical space that portion of the <field(object)|field's> text
+requires, taking line breaks into account but disregarding margins.
+
+References: revChangeWindowSize (command), group (command),
+textHeightSum (function), object (glossary), property (glossary),
+handler (glossary), current card (glossary), chunk (glossary),
+integer (keyword), image (keyword), field (keyword), card (keyword),
+stack (object), field (object), formattedTop (property),
+visible (property), thumbSize (property), fixedLineHeight (property),
+margins (property)
 
 Tags: ui
+

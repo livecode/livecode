@@ -37,7 +37,7 @@ bool MCCefV8ValueConvertToString(CefRefPtr<CefV8Context> p_context, CefRefPtr<Ce
 
 	CefRefPtr<CefV8Value> t_string_func;
 	if (t_success)
-		t_success = p_context->Eval("String", t_string_func, t_exception);
+		t_success = p_context->Eval("String", "", 1, t_string_func, t_exception);
 
 	CefRefPtr<CefV8Value> t_string_value;
 	if (t_success)
@@ -73,7 +73,7 @@ bool MCCefHandleExecuteScript(CefRefPtr<CefBrowser> p_browser, const CefString &
 	t_success = t_context != NULL;
 
 	if (t_success)
-		t_success = t_context->Eval(p_script, t_return_value, t_exception);
+		t_success = t_context->Eval(p_script, "", 1, t_return_value, t_exception);
 
 	if (t_success)
 		r_return_value = t_return_value;
@@ -129,6 +129,9 @@ bool MCCefListToV8List(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefListValue
 		case VTYPE_LIST:
 			/* TODO - IMPLEMENT */
 			t_success = false;
+			break;
+		case VTYPE_INVALID:
+			t_success = false;
 		}
 
 		t_success = t_v8 != NULL;
@@ -162,7 +165,7 @@ bool MCCefHandleCallScript(CefRefPtr<CefBrowser> p_browser, const CefString &p_f
 	t_success = t_context != NULL;
 
 	if (t_success)
-		t_success = t_context->Eval(p_function_name, t_function, t_exception);
+		t_success = t_context->Eval(p_function_name, "", 1, t_function, t_exception);
 
 	if (t_success)
 		t_success = MCCefListToV8List(t_context, p_args, t_args);
@@ -207,7 +210,7 @@ bool MCCefHandleGetSelectedText(CefRefPtr<CefBrowser> p_browser, CefString &r_re
 	t_success = true;
 
 	MCGetSelectedTextDOMVisitor *t_dom_visitor;
-	t_dom_visitor = new MCGetSelectedTextDOMVisitor();
+	t_dom_visitor = new (nothrow) MCGetSelectedTextDOMVisitor();
 	t_success = t_dom_visitor != nil;
 
 	CefRefPtr<CefDOMVisitor> t_visitor_ref;
@@ -247,7 +250,7 @@ bool MCCefHandleGetTitle(CefRefPtr<CefBrowser> p_browser, CefString &r_return_va
 	t_success = true;
 
 	MCGetTitleDOMVisitor *t_dom_visitor;
-	t_dom_visitor = new MCGetTitleDOMVisitor();
+	t_dom_visitor = new (nothrow) MCGetTitleDOMVisitor();
 	t_success = t_dom_visitor != nil;
 
 	CefRefPtr<CefDOMVisitor> t_visitor_ref;
@@ -425,7 +428,7 @@ private:
 			}
 			else
 			{
-				t_obj = CefV8Value::CreateObject(nil);
+				t_obj = CefV8Value::CreateObject(nullptr, nullptr);
 				t_success = t_obj != nil;
 				
 				if (t_success)
@@ -465,7 +468,7 @@ private:
 			if (!t_livecode_obj->HasValue(p_name))
 			{
 				CefRefPtr<CefV8Handler> t_handler;
-				t_success = nil != (t_handler = new MCCefLCFuncHandler(p_name));
+				t_success = nil != (t_handler = new (nothrow) MCCefLCFuncHandler(p_name));
 				
 				CefRefPtr<CefV8Value> t_func;
 				if (t_success)
@@ -612,7 +615,7 @@ public:
 bool MCCefCreateApp(CefRefPtr<CefApp> &r_app)
 {
 	MCCefRenderApp *t_app;
-	t_app = new MCCefRenderApp();
+	t_app = new (nothrow) MCCefRenderApp();
 	
 	if (t_app == nil)
 	{

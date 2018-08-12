@@ -2,36 +2,43 @@ Name: pixmapID
 
 Type: property
 
-Syntax: get the pixmapID of <stack> 
+Syntax: get the pixmapID of <stack>
 
-Summary: Specifies the ID of the data <control structure|structure> the operating system uses to hold the screen <image> of the <current card>.
+Summary:
+Specifies the ID of the data <control structure|structure> the operating
+system uses to hold the screen <image> of the <current card>.
 
 Associations: stack
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 get colorAnimate(the pixmapID of this stack) -- an XFCN
 
 Value:
-The <pixmapID> of a stack is an <integer>.
-This property is read-only and cannot be set.
-
-<img src="202653"/> >*Important:* The pixmapID property is not supported in version 2.7 of LiveCode and always returns 0.
+The <pixmapID> of a stack is an <integer>. This property is
+read-only and cannot be set.
 
 Description:
-Use the <pixmapID> <property> to pass to an <external> that needs to manipulate the window.
+Use the <pixmapID> <property> to pass to an <external> that needs to
+manipulate the window.
 
->*Important:*  The pixmapID property is not supported in version 2.7 of LiveCode and always returns 0.
+>*Important:*  The pixmapID property is not supported in version 2.7 of
+> LiveCode and always returns 0.
 
 The pixmap ID is provided by the operating system.
 
-Some externals need to manipulate the contents of the image directly, and do so by referencing the ID. Such externals require you to pass the ID when you use the external.
+Some externals need to manipulate the contents of the image directly,
+and do so by referencing the ID. Such externals require you to pass the
+ID when you use the external.
 
-References: imagePixmapID (property), image (keyword), integer (keyword), property (glossary), current card (glossary), external (glossary), control structure (glossary)
+References: property (glossary), current card (glossary),
+external (glossary), control structure (glossary), image (keyword),
+integer (keyword), imagePixmapID (property)
 
 Tags: multimedia
+

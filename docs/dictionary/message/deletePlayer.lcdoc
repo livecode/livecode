@@ -4,15 +4,16 @@ Type: message
 
 Syntax: deletePlayer
 
-Summary: Sent to a <player> just before it is removed from the <stack>.
+Summary:
+Sent to a <player> just before it is removed from the <stack>.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on deletePlayer -- delete the corresponding movie file
@@ -21,17 +22,28 @@ on deletePlayer -- delete the corresponding movie file
 end deletePlayer
 
 Description:
-Handle the <deletePlayer> message if you want to perform cleanup before a <player> is removed from the <stack>.
+Handle the <deletePlayer> message if you want to perform cleanup before
+a <player> is removed from the <stack>.
 
-The actual deletion is not triggered by the <deletePlayer> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <player> from being removed.
+The actual deletion is not triggered by the <deletePlayer> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <player> from being removed.
 
-However, the undo <command> will restore a <player> after it is deleted by the user. For example, the following <handler>, placed in a <card> or stack <script>, effectively prevents a <player> from being deleted by the user:
+However, the undo <command> will restore a <player> after it is deleted
+by the user. For example, the following <handler>, placed in a <card> or
+stack <script>, effectively prevents a <player> from being deleted by
+the user:
 
-  on deletePlayer
-    beep
-    send "undo" to this card in 5 milliseconds
-  end deletePlayer
+    on deletePlayer
+        beep
+        send "undo" to this card in 5 milliseconds
+    end deletePlayer
 
-References: card (keyword), player (keyword), script (property), delete (command), stack (object), handler (glossary), player (glossary), message (glossary), command (glossary), trap (glossary), pass (control_st)
+
+References: delete (command), pass (control structure),
+handler (glossary), player (glossary), message (glossary),
+command (glossary), trap (glossary), card (keyword), player (keyword),
+stack (object), script (property)
 
 Tags: objects
+

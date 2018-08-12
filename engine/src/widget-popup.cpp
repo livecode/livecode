@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -171,7 +171,7 @@ private:
 		if (m_widget != nil)
 			return true;
 		
-		m_widget = new MCWidget();
+		m_widget = new (nothrow) MCWidget();
 		if (m_widget == nil)
 			return MCErrorThrowOutOfMemory();
 		
@@ -245,7 +245,6 @@ private:
 	
 	void getwidgetgeometry(uint32_t &r_width, uint32_t &r_height)
 	{
-		MCPoint t_size;
 		if (!getwidgetpreferredsize(r_width, r_height))
 		{
 			MCRectangle t_rect;
@@ -347,9 +346,11 @@ extern "C" MC_DLLEXPORT_DEF MCStringRef MCWidgetExecPopupMenuAtLocation(MCString
 	}
 	
 	t_button->SetVisible(ctxt, 0, false);
-	t_button->del();
-	t_button->scheduledelete();
-	
+    MCerrorlock++;
+    if (t_button->del(false))
+        t_button->scheduledelete();
+    MCerrorlock--;
+    
 	MCAutoStringRef t_string;
 	
 	if (t_handler.GetPick() != nil)
@@ -370,7 +371,7 @@ bool MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at
 	MCWidgetPopup *t_popup;
 	t_popup = nil;
 	
-	t_popup = new MCWidgetPopup();
+	t_popup = new (nothrow) MCWidgetPopup();
 	if (t_popup == nil)
 	{
 		// TODO - throw memory error
@@ -404,9 +405,11 @@ bool MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at
 	MCValueRef t_result;
 	t_result = MCValueRetain(t_popup->getpopupresult());
 	
-	t_popup->del();
-	t_popup->scheduledelete();
-	
+    MCerrorlock++;
+    if (t_popup->del(false))
+        t_popup->scheduledelete();
+    MCerrorlock--;
+    
 	s_widget_popup = t_old_popup;
 	
 	r_result = t_result;
@@ -466,7 +469,7 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopupWithResult(MCValueRef p_r
 	s_widget_popup->close();
 }
 
-extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopup(MCValueRef p_result)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopup()
 {
 	MCWidgetExecClosePopupWithResult(kMCNull);
 }

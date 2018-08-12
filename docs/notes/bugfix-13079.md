@@ -1,1 +1,0 @@
-# select before | after text selects all text of field

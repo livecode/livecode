@@ -2,19 +2,21 @@ Name: ID
 
 Type: property
 
-Syntax: set the ID of {image | stack} to <number> 
+Syntax: set the ID of {image | stack} to <number>
 
-Syntax: get the [{ long | abbr[ev[iated]] | short }] ID of <object> 
+Syntax: get the [{ long | abbreviated | short }] ID of <object>
 
-Summary: Reports the unique ID number assigned to an <object>.
+Summary:
+Reports the unique ID number assigned to an <object(glossary)>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 send mouseUp to button ID 2214
@@ -25,14 +27,24 @@ set the ID of image "Custom Cursor" to 2314
 Example:
 put the long ID of this card into savedID
 
-Value: The <ID> of an <object> is a non-negative <integer>.
+Value:
+The <ID> of an <object(glossary)> is a non-negative <integer>.
 
 Description:
-Use an object's <ID> <property> to refer to the <object> in an unambiguous way. 
+Use an object's <ID> <property> to refer to the <object(glossary)> in an
+unambiguous way.
 
-A stack's <ID> is equal to the <ID> that will be assigned to the next <object> created within that <stack>, so the <stack> <ID> is subject to change. You can set the <ID> of a <stack>, but only to a greater number than its current <ID>. 
+A stack's <ID> is equal to the <ID> that will be assigned to the next
+<object(glossary)> created within that <stack>, so the <stack> <ID> is
+subject to change. You can set the <ID> of a <stack>, but only to a
+greater number than its current <ID>.
 
-You can set the <ID> of an <image>. Be careful not to set an <image> ID to a number that's the <ID> of another <object> in the same <stack> :  since LiveCode uses IDs to keep track of <object|objects>, a conflict may prevent LiveCode from being able to access one or both <object|objects>. The following ID numbers are reserved and should not be used for <image> IDs:
+You can set the <ID> of an <image>. Be careful not to set an <image> ID
+to a number that's the <ID> of another <object(glossary)> in the same
+<stack> : since LiveCode uses IDs to keep track of <object|objects>, a
+conflict may prevent LiveCode from being able to access one or both
+<object|objects>. The following ID numbers are reserved and should not
+be used for <image> IDs:
 
 * 1-100: reserved for built-in cursors
 * 101-135: reserved for built-in brush shapes
@@ -41,34 +53,85 @@ You can set the <ID> of an <image>. Be careful not to set an <image> ID to a num
 * 101,000-103,000: reserved
 * 200,000-299,999: reserved for application use
 
-For all other objects, the <ID> <property> is assigned when the <object> is created and never changes. This means that for all <object|objects> except <stacks> and <image(object)|images>, the <ID> <property> is guaranteed to be persistent. An <object|object's> <name> or <number> may change, but its <ID> does not. 
 
-For all objects, the <ID> is guaranteed to be unique within a <stack>. IDs are not reused if the <object> is deleted. 
+For all other objects, the <ID> <property> is assigned when the
+<object(glossary)> is created and never changes. This means that for all
+<object|objects> except <stacks> and <image(object)|images>, the <ID>
+<property> is guaranteed to be persistent. An <object|object's> <name>
+or <number> may change, but its <ID> does not.
 
->*Note:* An <object> that is created by copying and pasting, or with the <copy> <command>, is assigned a new <ID>. If you cut an <object> and paste it into the same <stack>, it retains its original <ID>. 
+For all objects, the <ID> is guaranteed to be unique within a <stack>.
+IDs are not reused if the <object(glossary)> is deleted.
 
-The short ID of an object is its ID number. If you don't specify a modifier for the ID property, you get the short ID form. 
+>*Note:* An <object(glossary)> that is created by copying and pasting,
+> or with the <copy> <command>, is assigned a new <ID>. If you cut an
+> <object(glossary)> and paste it into the same <stack>, it retains its
+> original <ID>.
 
-The abbreviated ID of an object is the object's type, followed by "id", followed by the object's short ID. For example, if a button's short ID is "27", its abbreviated ID is "button id 27". 
+The short ID of an object is its ID number. If you don't specify a
+modifier for the ID property, you get the short ID form.
 
-The long id of an object includes information about its owner (and about the <owner> of that <object>, and so forth). For example, suppose a <stack> named "My Stack" contains a <card> whose ID is 11. This <card> has a <group> whose ID is 28, which in turn contains a <button> whose ID is 34. The <card> also has a <card control|card field> whose ID is 46. If "My Stack" is a <main stack> and it's in a <file> whose <file path|path> is "/Drive/Folder/Stack. rev", the long IDs of these <object|objects> look like this:
+The abbreviated ID of an object is the object's type, followed by "id",
+followed by the object's short ID. For example, if a button's short ID
+is "27", its abbreviated ID is "button id 27".
+
+The <long> id of an object includes information about its owner (and about
+the <owner> of that <object(glossary)>, and so forth). For example,
+suppose a <stack> named "My Stack" contains a <card> whose ID is 11.
+This <card> has a <group> whose ID is 28, which in turn contains a
+<button> whose ID is 34. The <card> also has a <card control|card field>
+whose ID is 46. If "My Stack" is a <main stack> and it's in a <file>
+whose <file path|path> is "/Drive/Folder/Stack. rev", the <long> IDs of
+these <object|objects> look like this:
+
 * The stack: stack "/Drive/Folder/Stack. rev"
-* The group: group id 28 of card ID 11 of stack "/Drive/Folder/Stack. rev"
+* The group: group id 28 of card ID 11 of stack
+  "/Drive/Folder/Stack. rev" 
 * The card: card id 11 of stack "/Drive/Folder/Stack. rev"
-* The grouped button: button id 34 of group id 28 of card id 11 of stack "/Drive/Folder/Stack. rev"
-* The card field: field id 46 of card id 11 of stack "/Drive/Folder/Stack. rev"
-If the stack is a substack, its <ID> is included in the long <name> of each of its <object|objects>, before the <file path|path> of the <main stack>. 
+* The grouped button: button id 34 of group id 28 of card id 11 of stack
+  "/Drive/Folder/Stack. rev" 
+* The card field: field id 46 of card id 11 of stack
+  "/Drive/Folder/Stack. rev" If the stack is a substack, its <ID> is
+  included in the <long> <name> of each of its <object|objects>, before
+  the <file path|path> of the <main stack>.
 
-The long ID of a group includes the <ID> of the <current card>. If the <group> does not appear on the <current card>, requesting its <ID> causes an <execution error>. If you need to get the <ID> of a <group>, use the "<background>" terminology instead. 
 
-The long ID of a background includes the <ID> of the <current card>, if the <background> appears on the <current card>. If not, the long <ID> of the <background> includes the ID of the first <card> the <background> appears on. 
+The <long> ID of a group includes the <ID> of the <current card>. If the
+<group> does not appear on the <current card>, requesting its <ID>
+causes an <execution error>. If you need to get the <ID> of a <group>,
+use the "<background>" terminology instead.
 
-If an object's name is empty, getting its <name> yields its <ID> <property> instead. 
+The <long> ID of a background includes the <ID> of the <current card>, if
+the <background> appears on the <current card>. If not, the <long> <ID> of
+the <background> includes the ID of the first <card> the <background>
+appears on.
 
->*Important:* If a <stack> was originally created with <HyperCard> and then imported into LiveCode, the <ID> of each <control> in the <stack> is guaranteed unique only within its <domain>. (You can check a <stack|stack's> <HCStack> <property> to determine whether it began life in <HyperCard>. )
+If an object's name is empty, getting its <name> yields its <ID>
+<property> instead.
 
->*Note:* If a <stack|stack's> <HCAddressing> <property> is set to true, the <long> or <abbreviated> <ID> of a <control> in that <stack> begins with the word "background" if the <control> is part of a <group>, and with the word "card" if not.
+>*Important:* If a <stack> was originally created with <HyperCard> and
+> then imported into LiveCode, the <ID> of each <control> in the <stack>
+> is guaranteed unique only within its <domain>. (You can check a
+> <stack|stack's> <HCStack> <property> to determine whether it began
+> life in <HyperCard>. )
 
-References: name (property), HCAddressing (property), owner (property), groupIDs (property), HCStack (property), altID (property), cardIDs (property), file (keyword), button (keyword), long (keyword), integer (keyword), copy (command), group (command), libURLSetLogField (command), push (command), stack (object), object (object), image (object), card control (glossary), file path (glossary), property (glossary), control (glossary), command (glossary), image (glossary), execution error (glossary), main stack (glossary), abbreviated (glossary), card (glossary), current card (glossary), background (glossary), HyperCard (glossary), domain (glossary), stacks (function), number (function)
+>*Note:* If a <stack|stack's> <HCAddressing> <property> is set to true,
+> the <long> or <abbreviated> <ID> of a <control> in that <stack> begins
+> with the word "background" if the <control> is part of a <group>, and
+> with the word "card" if not.
+
+References: copy (command), group (command), libURLSetLogField (command),
+push (command), stacks (function), number (function), object (glossary),
+card control (glossary), file path (glossary), property (glossary),
+control (glossary), command (glossary), image (glossary),
+execution error (glossary), main stack (glossary),
+card (glossary), current card (glossary), background (glossary),
+HyperCard (glossary), domain (glossary), abbreviated (keyword),
+file (keyword), button (keyword),
+long (keyword), integer (keyword), stack (object), image (object),
+name (property), HCAddressing (property), owner (property),
+groupIDs (property), HCStack (property), altID (property),
+cardIDs (property)
 
 Tags: objects
+

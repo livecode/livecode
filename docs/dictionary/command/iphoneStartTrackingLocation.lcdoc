@@ -4,7 +4,8 @@ Type: command
 
 Syntax: iphoneStartTrackingLocation
 
-Summary: Starts tracking the location of the device.
+Summary:
+Starts tracking the location of the device.
 
 Introduced: 4.5.2
 
@@ -16,8 +17,13 @@ Example:
 iphoneStartTrackingLocation
 
 Description:
-Use the <iphoneStartTrackingLocation> command to start tracking the location of the device
+Use the <iphoneStartTrackingLocation> command to start tracking the
+location of the device
 
-The <iphoneStartTrackingLocation> command starts tracking the location of the device using CoreLocation.
+The <iphoneStartTrackingLocation> command starts tracking the location
+of the device using CoreLocation.
 
-References: iphoneStopTrackingLocation (command), mobileCurrentLocation (function), trackingError (message), locationChanged (message)
+References: iphoneStopTrackingLocation (command),
+mobileCurrentLocation (function), trackingError (message),
+locationChanged (message)
+

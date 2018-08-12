@@ -6,13 +6,14 @@ Syntax: the mouseStack
 
 Syntax: mouseStack()
 
-Summary: <return|Returns> the name of the window the <mouse pointer> is over.
+Summary:
+<return|Returns> the name of the window the <mouse pointer> is over.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the mouseStack
@@ -20,15 +21,26 @@ the mouseStack
 Example:
 if the mouseStack is "Message box" then hide message
 
-Returns: The <mouseStack> <function> <return|returns> the short <name> <property> of the window the mouse is over.
+Returns:
+The <mouseStack> <function> <return|returns> the short <name> <property>
+of the window the mouse is over.
 
 Description:
-Use the <mouseStack> <function> to determine which window the mouse is over, or, in conjunction with the <mouseControl>, <mouseLine>, or <mouseChunk>, to determine which <field> the mouse is over.
+Use the <mouseStack> <function> to determine which window the mouse is
+over, or, in conjunction with the <mouseControl>, <mouseLine>, or
+<mouseChunk>, to determine which <field> the mouse is over.
 
-If the mouse is not over any LiveCode window, the <mouseStack> <return|returns> empty.
+If the mouse is not over any LiveCode window, the <mouseStack>
+<return|returns> empty.
 
-If the mouse is over a stack's title bar or border, the  <mouseStack> <return|returns> empty.
+If the mouse is over a stack's title bar or border, the  <mouseStack>
+<return|returns> empty.
 
-References: property (glossary), mouse pointer (glossary), return (glossary), name (property), field (keyword), function (control_st), mouseCharChunk (function), mouseColor (function), mouseV (function), mouseChunk (function), clickStack (function), mouseControl (function), mouseLine (function), focus (command), stack (object)
+References: focus (command), function (control structure),
+mouseCharChunk (function), mouseColor (function), mouseV (function),
+mouseChunk (function), clickStack (function), mouseControl (function),
+mouseLine (function), property (glossary), mouse pointer (glossary),
+return (glossary), field (keyword), stack (object), name (property)
 
 Tags: ui
+

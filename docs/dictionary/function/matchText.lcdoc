@@ -4,13 +4,15 @@ Type: function
 
 Syntax: matchText(<string>, <regularExpression> [, <foundTextVarsList>])
 
-Summary: <return|Returns> true if a <regular expression> is found in the specified <string>, false otherwise.
+Summary:
+<return|Returns> true if a <regular expression> is found in the
+specified <string>, false otherwise.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 matchText("Goodbye","bye")
@@ -22,34 +24,82 @@ Example:
 matchText(phoneNumber,"([0-9]+)-([0-9]+-[0-9]+)",areaCode,phone)
 
 Parameters:
-string (string): 
-regularExpression: Any expression that evaluates to a regular expression.
-foundTextVarsList: The optional foundTextVarsList consists of one or more names of existing variables, separated by commas.
+string (string):
 
-Returns (bool): The <matchText> <function> returns true or false.
+
+regularExpression:
+Any expression that evaluates to a regular expression.
+
+foundTextVarsList:
+The optional foundTextVarsList consists of one or more names of existing
+variables, separated by commas.
+
+Returns (bool):
+The <matchText> <function> returns true or false.
 
 Description:
-Use the <matchText> <function(control_st)> to check whether a <string> contains a specified pattern.
+Use the <matchText> <function(control structure)> to check whether a
+<string> contains a specified pattern.
 
-If the <regularExpression> includes a pair of parentheses, the substring matching the part of the <regular expression> inside the parentheses is placed in the first <variable> in the <foundTextVarsList>. Additional substrings, matching additional parenthetical expressions within the <regularExpression>, are placed in additional <variable|variables> in the <foundTextVarsList>. The number of parenthetical expressions in the <regularExpression> should match the number of <variable|variables> in the <foundTextVarsList>.
+If the <regularExpression> includes a pair of parentheses, the substring
+matching the part of the <regular expression> inside the parentheses is
+placed in the first <variable> in the <foundTextVarsList>. Additional
+substrings, matching additional parenthetical expressions within the
+<regularExpression>, are placed in additional <variable|variables> in
+the <foundTextVarsList>. The number of parenthetical expressions in the
+<regularExpression> should match the number of <variable|variables> in
+the <foundTextVarsList>.
 
-If the <matchText> <function(control_st)> returns false, the <value(glossary)|values> of the <variable|variables> in the <foundTextVarsList> are not changed.
+If the <matchText> <function(control structure)> returns false, the
+<value(glossary)|values> of the <variable|variables> in the
+<foundTextVarsList> are not changed.
 
-For example, the following <matchText> <function call> extracts the user name and email address from a typical email "From" line:
+For example, the following <matchText> <function call> extracts the user
+name and email address from a typical email "From" line:
 
-  matchText(myVar,"^From: (.*) &lt;(.+@.+)&gt;",userName,userAddress)
+    matchText(myVar,"^From: (.*) &lt;(.+@.+)&gt;",userName,userAddress)
 
-There are two parenthetical expressions in the <regularExpression> above: "(.*)" and  "(.+@.+)". If the function returns true--that is, if the <string> in myVar matches the regular expression--then the substring of myVar that matches the first of these parenthetical expressions is placed in the variable called userName; the second is placed in the variable userAddress.
 
-The <string> and <regularExpression> are always <case-sensitive>, regardless of the setting of the <caseSensitive> <property>. (If you need to make a <case-insensitive> comparison, use "(?i)" at the start of the <regularExpression> to make the match case-insensitive.)
+There are two parenthetical expressions in the <regularExpression>
+above: "(.*)" and "(.+@.+)". If the function returns true--that is, if
+the <string> in myVar matches the regular expression--then the substring
+of myVar that matches the first of these parenthetical expressions is
+placed in the variable called userName; the second is placed in the
+variable userAddress.
 
->*Important:*  It is no longer necessary to create the variables in the foundTextVarsList before the <matchText> function is called. These are now created by the compiler, and will appear in the <localNames> of the handler or function in which the <matchText> was called from.
+The <string> and <regularExpression> are always <case-sensitive>,
+regardless of the setting of the <caseSensitive> <property>. (If you
+need to make a <case-insensitive> comparison, use "(?i)" at the start of
+the <regularExpression> to make the match case-insensitive.)
 
-The <matchText> and <matchChunk> <function(glossary)|functions> return the same <value(function)>, given the same <string> and <regularExpression>. The difference between the two is that the <matchText> <function(control_st)> records the text of matched substrings in the optional <foundTextVarsList>, which the <matchChunk> <function(control_st)> records the character positions of the matched substrings.
+>*Important:*  It is no longer necessary to create the variables in the
+> foundTextVarsList before the <matchText> function is called. These are
+> now created by the compiler, and will appear in the <localNames> of
+> the handler or function in which the <matchText> was called from.
 
->*Tip:*  LiveCode implements <regular expression|regular expressions> compatible with the PCRE library. For detailed information about <regular expression> elements you can use with this <function(control_st)>, see the PCRE manual at http://www.pcre.org/man.txt.
+The <matchText> and <matchChunk> <function(glossary)|functions> return
+the same <value(function)>, given the same <string> and
+<regularExpression>. The difference between the two is that the
+<matchText> <function(control structure)> records the text of matched
+substrings in the optional <foundTextVarsList>, which the <matchChunk>
+<function(control structure)> records the character positions of the
+matched substrings.
+
+>*Tip:* LiveCode implements <regular expression|regular expressions>
+> compatible with the PCRE library. For detailed information about
+> <regular expression> elements you can use with this
+> <function(control structure)>, see the PCRE pattern documentation at
+> http://www.pcre.org/original/doc/html/pcrepattern.html.
 
 Changes:
-The regular expression format changed in version 2.0 to use PCRE compatible syntax.
+The regular expression format changed in version 2.0 to use PCRE
+compatible syntax.
 
-References: string (keyword), caseSensitive (property), find (command), filter (command), function (control_st), property (glossary), return (glossary), variable (glossary), value (glossary), function call (glossary), regular expression (glossary), case-sensitive (glossary), case-insensitive (glossary), function (glossary), matchChunk (function), value (function), localNames (function)
+References: find (command), filter (command),
+function (control structure), matchChunk (function), value (function),
+localNames (function), property (glossary), return (glossary),
+variable (glossary), value (glossary), function call (glossary),
+regular expression (glossary), case-sensitive (glossary),
+case-insensitive (glossary), function (glossary), string (keyword),
+caseSensitive (property)
+

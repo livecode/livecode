@@ -2,17 +2,18 @@ Name: trunc
 
 Type: function
 
-Syntax: the trunc of <number> 
+Syntax: the trunc of <number>
 
 Syntax: trunc(<number>)
 
-Summary: <return|Returns> the <integer> part of a number.
+Summary:
+<return|Returns> the <integer> part of a number.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 trunc(33.567) -- returns 33
@@ -21,15 +22,23 @@ Example:
 trunc(-6.3) -- returns -6
 
 Parameters:
-number: Any number, or expression that evaluates to a number.
+number:
+Any number, or expression that evaluates to a number.
 
-Returns: The <trunc> <function> <return|returns> an <integer>.
+Returns:
+The <trunc> <function> <return|returns> an <integer>.
 
 Description:
 Use the <trunc> <function> to round a number down.
 
-The <trunc> <function> is different from <round> in that truncation completely ignores the fractional part of the number. For example, round(4.9) <return(glossary)|returns> 5, but trunc(4.9) <return(glossary)|returns> 4. This means that the <trunc> function does not always <return(constant)> the <integer> closest to the <number>.
+The <trunc> <function> is different from <round> in that truncation
+completely ignores the fractional part of the number. For example,
+round(4.9) <return(glossary)|returns> 5, but trunc(4.9)
+<return(glossary)|returns> 4. This means that the <trunc> function does
+not always <return(constant)> the <integer> closest to the <number>.
 
-References: integer (keyword), return (constant), abs (function), round (function), return (glossary), function (control_st)
+References: return (constant), function (control structure),
+abs (function), round (function), return (glossary), integer (keyword)
 
 Tags: math
+

@@ -1,18 +1,19 @@
 Name: revBrowserOpen
 
+Synonyms: xbrowser_open
+
 Type: function
 
 Syntax: revBrowserOpen(<windowId> [, <url> ] )
 
 Syntax: XBrowser_Open <windowId> [, <url>]
 
-Summary: Opens and initialises a new browser
-
-Synonyms: XBrowser_Open
+Summary:
+Opens and initialises a new browser
 
 Introduced: 2.8.1
 
-OS: mac,windows
+OS: mac, windows
 
 Platforms: desktop
 
@@ -20,7 +21,8 @@ Security: network
 
 Example:
 local tBrowserId
-put revBrowserOpen(the windowId of this stack, "http://www.livecode.com") into tBrowserId
+put revBrowserOpen(the windowId \
+      of this stack, "http://www.livecode.com" ) into tBrowserId
 if tBrowserId is not an integer then
   answer "Failed to open browser"
 end if
@@ -30,40 +32,95 @@ XBrowser_Open the windowId of this stack, "http://www.livecode.com"
 put the result into tBrowserId
 
 Parameters:
-windowId: The operating system's ID for a stack window as given in the windowID property.
-url: Any url that can be accessed by the browser object in use.
+windowId:
+The operating system's ID for a stack window as given in the windowID
+property. 
 
-The result: If successful this will be an integer browser instance id, if unsuccessful, the result will be empty. The browser library functions will throw an execution error if they encounter a problem. These can be caught by handling the <errorDialog message> or by using a <try / catch block>. In general there is no need to check the <result>, as nearly all the commands and functions put empty into it.
+url:
+Any url that can be accessed by the browser object in use.
 
-Returns: The <revBrowserOpen> function returns a value. If successful this will be an integer browser instance id, if unsuccessful, the result will be empty.
+Returns:
+The <revBrowserOpen> function returns a value. If successful this will
+be an integer browser instance id, if unsuccessful, the result will be
+empty. 
+
+The result:
+If successful this will be an integer browser instance id, if
+unsuccessful, the result will be empty. The browser library functions
+will throw an execution error if they encounter a problem. These can be
+caught by handling the <errorDialog> <message> or by using a <try / catch
+block>. In general there is no need to check the <result>, as nearly all
+the commands and functions put empty into it.
 
 Description:
-The <revBrowserOpen> function opens a new browser in the window with the given <windowId>. If a <url> is given, the new browser immediately navigates to this url.
+The <revBrowserOpen> function opens a new browser in the window with the
+given <windowId>. If a <url> is given, the new browser immediately
+navigates to this url.
 
->*Note:* The <url> must be a standards-compliant URL.  In particular, `file:` URLs must be of the form `file://<absolute path>`, and the path should be <URLEncode|URL-encoded>.
+>*Note:* The <url> must be a standards-compliant URL.  In particular,
+> `file:` URLs must be of the form `file://<absolute path>`, and the
+> path should be <URLEncode|URL-encoded>.
 
->*Cross-platform note:*  On Windows systems, the Internet Explorer browser is used by the <revBrowserOpen> function while on OS X Systems the Safari browser is used. To ensure cross-platform compatibility, don't use features that are not supported by both browsers, eg "ftp://" urls, which are only supported by Internet Explorer. 
+>*Cross-platform note:*  On Windows systems, the Internet Explorer
+> browser is used by the <revBrowserOpen> function while on OS X Systems
+> the Safari browser is used. To ensure cross-platform compatibility,
+> don't use features that are not supported by both browsers, eg
+> "ftp://" urls, which are only supported by Internet Explorer.
 
-It is no longer necessary to initialise the Browser using XBrowser_Init, and this command now does nothing, but is still included to prevent legacy code causing script errors.
+It is no longer necessary to initialise the Browser using XBrowser_Init,
+and this command now does nothing, but is still included to prevent
+legacy code causing script errors.
 
-There is a sample stack for revBrowser at the following location in the LiveCode folder: Resources/Examples/Browser Samper.rev. This stack demonstrates, with many examples, how to use browser objects in an application.
+There is a sample stack for revBrowser at the following location in the
+LiveCode folder: Resources/Examples/Browser Samper.rev. This stack
+demonstrates, with many examples, how to use browser objects in an
+application. 
 
 General Notes on Using the Browser Library
 
-The older XBrowser forms of all Browser library commands, functions and messages have been retained for backwards compatiblity and these are documented as synonyms. The XBrowser functions are deprecated, this means that they should not normally be used in new code except for the maintainance of older applications that depend on them.
+The older XBrowser forms of all Browser library commands, functions and
+messages have been retained for backwards compatiblity and these are
+documented as synonyms. The XBrowser functions are deprecated, this
+means that they should not normally be used in new code except for the
+maintainance of older applications that depend on them.
 
-The syntax of these older functions differs slightly from that documented and used in the new functions. 
+The syntax of these older functions differs slightly from that
+documented and used in the new functions.
 
-The revBrowser functions (with the exception of <revBrowserOpen>) all require a browser id, which tells LiveCode which browser object to act upon. This id is returned by the revBrowserOpen function and should be saved in the calling application. The browser id is always the first parameter given to any revBrowser function and always the first parameter passed to any browser callback.
+The revBrowser functions (with the exception of <revBrowserOpen>) all
+require a browser id, which tells LiveCode which browser object to act
+upon. This id is returned by the revBrowserOpen function and should be
+saved in the calling application. The browser id is always the first
+parameter given to any revBrowser function and always the first
+parameter passed to any browser callback.
 
-The deprecated XBrowser functions can optionally take a browser id parameter. If the browser id is not given, then the last browser created by the XBrowser_Open command is used. The browser id is always the last parameter passed to an XBrowser function.
+The deprecated XBrowser functions can optionally take a browser id
+parameter. If the browser id is not given, then the last browser created
+by the XBrowser_Open command is used. The browser id is always the last
+parameter passed to an XBrowser function.
 
-Do not mix the revBrowser and XBrowser functions in an application. The two sets of functions have not been designed to be compatible with each other and mixing them will almost certainly cause unexpected results.
+Do not mix the revBrowser and XBrowser functions in an application. The
+two sets of functions have not been designed to be compatible with each
+other and mixing them will almost certainly cause unexpected results.
 
-The default rect of a new browser instance is 0,0,0,0. To change this, set the "rect" property using the <revBrowserSet> command.
+The default rect of a new browser instance is 0,0,0,0. To change this,
+set the "rect" property using the <revBrowserSet> command.
 
-The callbacks sent by the browser depend on whether the browser was opened using revBrowserOpen or XBrowser_Open. If revBrowserOpen was used, the callbacks prefixed with "browser" are used, otherwise, those prefixed by "XBrowser_" are used.
+The callbacks sent by the browser depend on whether the browser was
+opened using revBrowserOpen or XBrowser_Open. If revBrowserOpen was
+used, the callbacks prefixed with "browser" are used, otherwise, those
+prefixed by "XBrowser_" are used.
 
-It is currently possible to cancel browser operations by setting the browserCancel global variable to true. If using the XBrowser functions, then the global variable XBrowserCancel should be used instead.
+It is currently possible to cancel browser operations by setting the
+browserCancel global variable to true. If using the XBrowser functions,
+then the global variable XBrowserCancel should be used instead.
 
-References: browserOver (message), browserNewInstance (message), browserNewUrlWindow (message), browserDownloadRequest (message), errorDialog message (message), browserNavigateCompleteFrame (message), revBrowserStop (command), revBrowserPrint (command), revBrowserSet (command), revBrowserMakeTextBigger (command), revBrowserNavigate (command), XBrowser_Init (command), XBrowser_Focus (command), revBrowserClose (command), try / catch block (control_st), result (function)
+References: revBrowserStop (command), revBrowserPrint (command),
+revBrowserSet (command), revBrowserMakeTextBigger (command),
+revBrowserNavigate (command), XBrowser_Init (command),
+XBrowser_Focus (command), revBrowserClose (command),
+try / catch block (control structure), result (function),
+browserOver (message), browserNewInstance (message),
+browserNewUrlWindow (message), browserDownloadRequest (message),
+errorDialog (message), message (glossary), browserNavigateCompleteFrame (message)
+

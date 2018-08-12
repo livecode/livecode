@@ -4,13 +4,16 @@ Type: message
 
 Syntax: resizeControl
 
-Summary: Sent to a <control> right after the user resizes it.
+Summary:
+Sent to a <control(glossary)> right after the user resizes it.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+Associations: field, button, graphic, scrollbar, player, image
 
-Platforms: desktop,server,web,mobile
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
 
 Example:
 on resizeControl -- make sure a label stays at the bottom edge
@@ -19,12 +22,24 @@ on resizeControl -- make sure a label stays at the bottom edge
 end resizeControl
 
 Description:
-Handle the <resizeControl> message if you want to update other <object|objects>, or do other tasks, in response to the user resizing a <control(keyword)>.
+Handle the <resizeControl> message if you want to update other
+<object|objects>, or do other tasks, in response to the user resizing a
+<control(glossary)>. 
 
-The <resizeControl> <message> is only sent when the user resizes a <control(keyword)> by dragging its handles. It is not sent if a <handler> changes the size of a control by changing its <properties> (<width>, <height>, and so on).
+The <resizeControl> <message> is only sent when the user resizes a
+<control(glossary)> by dragging its handles. It is not sent if a
+<handler> changes the size of a <control(glossary)> by changing its
+<properties> (<width>, <height>, and so on).
 
-The <resizeControl> <message> is sent after the resizing is finished. This means that you cannot prevent a <control(object)|control's> size from being changed by <trap|trapping> this <message>.
+The <resizeControl> <message> is sent after the resizing is finished.
+This means that you cannot prevent a <control(glossary)|control's> size
+from being changed by <trap|trapping> this <message>.
 
-References: control (keyword), properties (property), width (property), height (property), moveStack (message), resizeStack (message), revCacheGeometry (command), control (object), object (object), trap (glossary), handler (glossary), message (glossary)
+References: revCacheGeometry (command), control (glossary),
+handler (glossary), message (glossary), object (glossary),
+trap (glossary), control (keyword), moveStack (message),
+resizeStack (message), height (property), properties (property),
+width (property)
 
 Tags: ui
+

@@ -1,1 +1,0 @@
-#     mobileShowContact cannot be dismissed

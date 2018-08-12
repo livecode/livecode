@@ -6,13 +6,14 @@ Syntax: the licensed
 
 Syntax: licensed()
 
-Summary: <return|Returns> true if the <development environment> is running.
+Summary:
+<return|Returns> true if the <development environment> is running.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 the licensed
@@ -20,13 +21,22 @@ the licensed
 Example:
 if not licensed() then hide button "Edit Script"
 
-Returns (bool): The <licensed> function <return|returns> true or false.
+Returns (bool):
+The <licensed> function <return|returns> true or false.
 
 Description:
-Use the <licensed> <function> to determine whether the user is using a <standalone application> or the <development environment>.
+Use the <licensed> <function> to determine whether the user is using a
+<standalone application> or the <development environment>.
 
-If the <licensed> <function> is false, the current application is a standalone, which has certain limitations on scripting. These limitations are described by the <scriptLimits> <function>.
+If the <licensed> <function> is false, the current application is a
+standalone, which has certain limitations on scripting. These
+limitations are described by the <scriptLimits> <function>.
 
->*Note:* If the user has the Evaluation Edition, the <licensed> <function> returns true.
+>*Note:* If the user has the Evaluation Edition, the <licensed>
+> <function> returns true.
 
-References: edit (command), mcLicense (function), revLicenseType (function), scriptLimits (function), development environment (glossary), return (glossary), standalone application (glossary), function (control_st)
+References: edit (command), function (control structure),
+revLicenseType (function), scriptLimits (function),
+development environment (glossary), return (glossary),
+standalone application (glossary)
+

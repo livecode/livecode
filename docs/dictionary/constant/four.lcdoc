@@ -4,20 +4,23 @@ Type: constant
 
 Syntax: four
 
-Summary: Equivalent to the number 4.
+Summary:
+Equivalent to the number 4.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 divide quarterlyRevenue by four -- same as "...by 4"
 
 Description:
-Use the <four> <constant> when it is easier to read in a <handler> than the numeral 4<a/>.
+Use the <four> <constant> when it is easier to read in a <handler> than
+the numeral 4.
 
-References: constant (command), fourth (keyword), handler (glossary)
+References: constant (command), handler (glossary), fourth (keyword)
 
 Tags: math
+

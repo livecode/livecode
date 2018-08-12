@@ -4,13 +4,14 @@ Type: command
 
 Syntax: cancel printing
 
-Summary: Cancels the current print job.
+Summary:
+Cancels the current print job.
 
 Introduced: 2.9
 
-OS: mac,windows,linux,ios
+OS: mac, windows, linux, ios
 
-Platforms: desktop,web
+Platforms: desktop
 
 Security: printing
 
@@ -25,8 +26,13 @@ on mouseUp
 end mouseUp
 
 Description:
-Use the cancel printing command during a printing loop to cancel the current print job. After using this command, no print commands will have any effect until the current loop has been closed (by using <close printing>).
+Use the cancel printing command during a printing loop to cancel the
+current print job. After using this command, no print commands will have
+any effect until the current loop has been closed (by using 
+<close printing>). 
 
-References: close printing (command), print (command), open printing (command)
+References: close printing (command), print (command),
+open printing (command)
 
 Tags: printing
+

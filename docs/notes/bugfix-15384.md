@@ -1,0 +1,1 @@
+# Fix incorrect handling of a 204 response from a server.

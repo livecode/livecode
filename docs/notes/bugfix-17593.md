@@ -1,0 +1,1 @@
+# Inlcude mergAnswerColor resources in correct location

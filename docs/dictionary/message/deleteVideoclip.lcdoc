@@ -1,0 +1,35 @@
+Name: deleteVideoclip
+
+Type: message
+
+Syntax: deleteVideoclip
+
+Summary:
+Sent to a <videoclip(object)> just before it is removed from the
+<stack>. 
+
+Associations: videoclip
+
+Introduced: 8.1
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Description:
+Handle the <deleteVideoclip> message if you want to perform cleanup
+before a <videoclip(object)> is removed from the <stack>.
+
+The actual deletion is not triggered by the <deleteVideoclip> <message>,
+so <trap|trapping> the <message> and not allowing it to <pass> does
+not prevent the <videoclip(object)> from being removed.
+
+However, the undo <command> will restore a <videoclip(object)> after
+it is deleted by the user.
+
+References: delete (command), pass (control structure), trap (glossary),
+button (glossary), message (glossary), command (glossary),
+videoclip (object), stack (object)
+
+Tags: objects
+

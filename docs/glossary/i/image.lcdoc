@@ -1,12 +1,13 @@
 Name: image
 
-Synonyms: image,image object
+Synonyms: image, image object
 
-Type: object
+Type: glossary
 
 Description:
-An <object> that contains a <bitmap|bitmapped> picture.
+An <object(glossary)> that contains a <bitmap|bitmapped> picture.
 
-References: object (object), bitmap (glossary)
+References: object (glossary), bitmap (glossary)
 
 Tags: multimedia
+

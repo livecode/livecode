@@ -4,35 +4,49 @@ Type: property
 
 Syntax: set the lockMoves to {true | false}
 
-Summary: Specifies whether the motion of <object|objects> moved by the <move> <command> is seen immediately or delayed.
+Summary:
+Specifies whether the motion of <object|objects> moved by the <move>
+<command> is seen immediately or delayed.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the lockMoves to true
 
-Value (bool):The <lockMoves> is true or false.
-By default, the <lockMoves> <property> is set to false. It is <reset> to false when no <handler|handlers> are <execute|executing>.
+Value (bool):
+The <lockMoves> is true or false.
+By default, the <lockMoves> <property> is set to false. It is <reset> to
+false when no <handler|handlers> are <execute|executing>.
 
 Description:
-Use the <lockMoves> <property> to <synchronize> <object> movements.
+Use the <lockMoves> <property> to <synchronize> <object(glossary)>
+movements. 
 
-If the <lockMoves> <property> is set to true, when you use the <move> command to move an <object> around the screen, the movement does not become visible until the <lockMoves> is set to false. You can set the <lockMoves> <property> to true, start several <object|objects> moving, then set the <lockMoves> to false to begin the motion, as in the following example:
+If the <lockMoves> <property> is set to true, when you use the <move>
+command to move an <object(glossary)> around the screen, the movement
+does not become visible until the <lockMoves> is set to false. You can
+set the <lockMoves> <property> to true, start several <object|objects>
+moving, then set the <lockMoves> to false to begin the motion, as in the
+following example:
 
-  on mouseUp
-    set the lockMoves to true
-    move button 1 to 300,200 in 2 seconds -- doesn't move yet
-    move field 2 to 0,0 in 2 seconds -- doesn't move yet
-    move graphic 3 to 0,400 in 2 seconds -- doesn't move yet
-    set the lockMoves to false -- all three objects start moving
-  end mouseUp
+    on mouseUp
+        set the lockMoves to true
+        move button 1 to 300,200 in 2 seconds -- doesn't move yet
+        move field 2 to 0,0 in 2 seconds -- doesn't move yet
+        move graphic 3 to 0,400 in 2 seconds -- doesn't move yet
+        set the lockMoves to false -- all three objects start moving
+    end mouseUp
+
 
 If the <lockMoves> is false, the movement takes place immediately.
 
-References: unlock moves (command), reset (command), move (command), object (object), property (glossary), synchronize (glossary), handler (glossary), command (glossary), execute (glossary)
+References: unlock moves (command), reset (command), move (command),
+object (glossary), property (glossary), synchronize (glossary),
+handler (glossary), command (glossary), execute (glossary)
 
 Tags: multimedia
+

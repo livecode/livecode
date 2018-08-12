@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 #include "osspec.h"
 #include "parsedef.h"
-//#include "execpt.h"
+
 
 #include "system.h"
 #include "srvmultipart.h"
@@ -407,8 +407,6 @@ bool MCMultiPartParseHeader(const char *p_header, MCMultiPartHeaderCallback p_ca
 	bool t_success = true;
 	
 	uint32_t t_index = 0;
-	char *t_value = NULL;
-	char *t_name = NULL;
 	const char *t_next_param = NULL;
 	
 	t_success = read_name(p_header, p_header, t_header.name);
@@ -462,7 +460,7 @@ bool MCMultiPartReadHeaders(IO_handle p_stream, uint32_t &r_bytes_read, MCMultiP
 	bool t_success = true;
 	
 	MCBoundaryReader *t_reader;
-	t_reader = new MCBoundaryReader(p_stream, MCSTR("\r\n"));
+	t_reader = new (nothrow) MCBoundaryReader(p_stream, MCSTR("\r\n"));
 	
 	r_bytes_read = 0;
 	
@@ -557,7 +555,7 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, MCStringRef p_boundary
             t_success = false;
         else
         {
-            t_reader = new MCBoundaryReader(p_stream, *t_boundary_tail);
+            t_reader = new (nothrow) MCBoundaryReader(p_stream, *t_boundary_tail);
             t_success = t_reader != NULL;
         }
 	}
@@ -924,7 +922,6 @@ static MCMultiPartTempFileList *s_temp_files = NULL;
 bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_handle, MCStringRef &r_temp_name)
 {
 	bool t_success = true;
-	bool t_blocked = true;
 	MCAutoStringRef t_temp_name_string;
 	
 	IO_handle t_file_handle = NULL;

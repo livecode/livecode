@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This library consists of the operations on codeunits included in the standard library of LiveCode Builder.
 */
 
@@ -29,10 +29,10 @@ public foreign handler MCCodeunitStoreCodeunitRangeOf(in Value as String, in Sta
 
 public foreign handler MCCodeunitEvalNumberOfCodeunitsIn(in Target as String, out Count as LCUIndex) returns nothing binds to "<builtin>"
 
-public foreign handler MCCodeunitEvalIsAmongTheCodeunitsOf(in Needle as String, in Target as String, out Value as CBool) returns nothing binds to "<builtin>"
-
+/* No implementation
 public foreign handler MCCodeunitStoreBeforeCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
 public foreign handler MCCodeunitStoreAfterCodeunitOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+*/
 
 public foreign handler MCCodeunitEvalOffsetOfCodeunits(in IsLast as CBool, in Needle as String, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
 public foreign handler MCCodeunitEvalOffsetOfCodeunitsBefore(in IsLast as CBool, in Needle as String, in Before as LCIndex, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
@@ -58,7 +58,7 @@ public foreign handler MCCodeunitExecDeleteFirstCodeunitOf(inout Target as Strin
 
 --
 
-/*
+/**
 Summary:            Counts the number of codeunits in <Target>.
 
 Target: 			An expression which evaluates to a string.
@@ -94,8 +94,7 @@ end syntax
 
 --
 
-/*
-
+/**
 Summary:            Designates the codeunit at index <Index> in <Target>.
 Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				An expression which evaluates to a string.           
@@ -118,8 +117,7 @@ begin
 	MCCodeunitStoreCodeunitOf(input, Index, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the codeunits between indices <Start> and <Finish> in <Target>.
 
 Start:              An expression which evaluates to a valid integer index of <Target>.
@@ -144,8 +142,7 @@ begin
 	MCCodeunitStoreCodeunitRangeOf(input, Start, Finish, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the first codeunit in <Target>.
 Target:				An expression which evaluates to a string.
 
@@ -171,8 +168,7 @@ begin
 	MCCodeunitStoreFirstCodeunitOf(input, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the last codeunit in <Target>.
 Target:				An expression which evaluates to a string.
 
@@ -200,8 +196,7 @@ end syntax
 
 --
 
-/*
-
+/**
 Summary:            Deletes the codeunit at index <Index> in <Target>.
 Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				A string container.
@@ -225,8 +220,7 @@ begin
 	MCCodeunitExecDeleteCodeunitOf(Index, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Deletes the codeunits between indices <Start> and <Finish> in <Target>.
 
 Start:              An expression which evaluates to a valid integer index of <Target>.
@@ -252,8 +246,7 @@ begin
 	MCCodeunitExecDeleteCodeunitRangeOf(Start, Finish, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Deletes the first codeunit in <Target>.
 Target:				A string container.
 
@@ -276,8 +269,7 @@ begin
 	MCCodeunitExecDeleteFirstCodeunitOf(Target)
 end syntax
 
-/*
-
+/**
 Summary:            Deletes the last codeunit in <Target>.
 Target:				A string container.
 
@@ -302,29 +294,7 @@ end syntax
 
 --
 
-/*
-Summary:            Determines whether <Needle> is in <Target>.
-Needle: 			An expression which evaluates to a codeunit.
-Target: 			An expression which evaluates to a string.
-
-Returns: 	True if <Needle> is among the codeunits of <Target>, and false otherwise.
-
-Description:
->*Note:* It is an error if <Needle> evaluates to a string consisting of more than one codeunit.
-
-Tags: Strings
-*/
-
-syntax CodeunitIsInString is neutral binary operator with comparison precedence
-    <Needle: Expression> "is" "in" <Source: Expression>
-begin
-    MCCodeunitEvalIsAmongTheCodeunitsOf(Needle, Source, output)
-end syntax
-
---
-
-/*
-
+/**
 Summary:            Finds the first or last occurrence of <Needle> within <Target>
 
 Needle: 			An expression which evaluates to a string.
@@ -357,8 +327,7 @@ begin
     MCCodeunitEvalOffsetOfCodeunits(IsLast, Needle, Target, output)
 end syntax
 
-/*
-
+/**
 Summary:            Finds the first or last occurrence of <Needle> after a specified index in <Target>
 
 Needle: 			An expression which evaluates to a string.
@@ -383,8 +352,7 @@ begin
     MCCodeunitEvalOffsetOfCodeunitsAfter(IsLast, Needle, After, Target, output)
 end syntax
 
-/*
-
+/**
 Summary:            Finds the first or last occurrence of <Needle> before a specified index in <Target>.
 
 Needle: 			An expression which evaluates to a string.
@@ -417,7 +385,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:        Repeat over the codeunits of a string
 Iterand:        A string container.
 

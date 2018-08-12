@@ -1,12 +1,14 @@
 Name: PPM
 
-Synonyms: PPM,.PPM
+Synonyms: ppm, .ppm
 
 Type: glossary
 
 Description:
-Portable Pix Map. A color picture <format> created for the "pbmplus" image conversion program and usually used on <Unix|Unix systems>.
+Portable Pix Map. A color picture <format> created for the "pbmplus"
+image conversion program and usually used on <Unix|Unix systems>.
 
 References: format (glossary), Unix (glossary)
 
 Tags: multimedia
+

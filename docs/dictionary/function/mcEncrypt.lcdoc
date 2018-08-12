@@ -4,12 +4,17 @@ Type: function
 
 Syntax: mcEncrypt
 
-Summary: <reserved word|Reserved> for internal use.
+Summary:
+<reserved word|Reserved> for internal use.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
-References: ask password (command), password (property), reserved word (glossary)
+Description:
+<reserved word|Reserved> for internal use.
+
+References: ask password (command), reserved word (glossary),
+password (property)

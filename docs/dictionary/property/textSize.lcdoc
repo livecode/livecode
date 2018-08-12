@@ -2,19 +2,21 @@ Name: textSize
 
 Type: property
 
-Syntax: set the textSize of <object> to <pointSize> 
+Syntax: set the textSize of <object> to <pointSize>
 
-Syntax: set the textSize of [<chunk> of] <field> to <pointSize> 
+Syntax: set the textSize of [<chunk> of] <field> to <pointSize>
 
-Summary: Specifies the <point> size of text displayed by an <object>.
+Summary:
+Specifies the <point> size of text displayed by an <object(glossary)>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the textSize of card "Intro" to 24
@@ -22,17 +24,34 @@ set the textSize of card "Intro" to 24
 Example:
 set the textSize of word 1 of field ID 3 to 9
 
-Value: The <textSize> of an <object> or <chunk> is either empty or an integer greater than 4.
+Value:
+The <textSize> of an <object(glossary)> or <chunk> is either empty or an
+integer greater than 4.
 
 Description:
 Use the <textSize> <property> to change the <appearance> of text.
 
-Setting the <textSize> of an <object> to empty allows the <textSize> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what size is used for the <object>, even if its own <textSize> is empty.
+Setting the <textSize> of an <object(glossary)> to empty allows the
+<textSize> of the <object|object's> <owner> to show through. Use the
+<effective> <keyword> to find out what size is used for the
+<object(glossary)>, even if its own <textSize> is empty.
 
-The textSize of an object defines the height of the text and is specified in points. The engine ensures that this is equivalent to pixels, for example, if you set the textSize of a field to 8 points, then the engine outputs text that is 8 pixels high on all platforms. The height of the text is measured from the bottom of the lowest reaching character to the top of the highest reaching character.
+The textSize of an object defines the height of the text and is
+specified in points. The engine ensures that this is equivalent to
+pixels, for example, if you set the textSize of a field to 8 points,
+then the engine outputs text that is 8 pixels high on all platforms. The
+height of the text is measured from the bottom of the lowest reaching
+character to the top of the highest reaching character.
 
->*Note:* The <textHeight> of an object is like the line spacing, it is the amout of space between the lines, not the height of the actual text.
+>*Note:* The <textHeight> of an object is like the line spacing, it is
+> the amout of space between the lines, not the height of the actual
+> text. 
 
-References: textAlign (property), textHeight (property), owner (property), HTMLText (property), fixedLineHeight (property), printTextSize (property), point (keyword), effective (keyword), object (object), property (glossary), keyword (glossary), appearance (glossary), chunk (glossary)
+References: object (glossary), property (glossary), keyword (glossary),
+appearance (glossary), chunk (glossary), point (keyword),
+effective (keyword), textAlign (property), textHeight (property),
+owner (property), HTMLText (property), fixedLineHeight (property),
+printTextSize (property)
 
 Tags: ui
+

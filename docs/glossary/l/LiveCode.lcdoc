@@ -1,6 +1,6 @@
 Name: LiveCode
 
-Synonyms: LiveCode, LiveCode Script
+Synonyms: livecode, livecode script
 
 Type: glossary
 
@@ -8,3 +8,4 @@ Description:
 The language in which LiveCode <script|scripts> are written.
 
 References: script (glossary)
+

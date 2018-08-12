@@ -1,1 +1,0 @@
-# Setting large htmltext is very slow

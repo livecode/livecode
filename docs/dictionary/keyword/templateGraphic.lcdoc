@@ -4,31 +4,51 @@ Type: keyword
 
 Syntax: templateGraphic
 
-Summary: Used with the <set> <command> to set the <properties> of newly created <graphic|graphics>.
+Summary:
+Used with the <set> <command> to set the <properties> of newly created
+<graphic|graphics>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the style of the templateGraphic to rectangle
 
 Description:
-Use the <templateGraphic> <keyword> to set up <default> <properties> to be used for any new <graphic(object)|graphics> you create.
+Use the <templateGraphic> <keyword> to set up <default> <properties> to
+be used for any new <graphic(object)|graphics> you create.
 
-The <templateGraphic> can be thought of as a special, abstract <object>. It is not an actual <graphic(keyword)>, but it has all the <properties> of a <graphic(keyword)>. The <ID> <property> of the <templateGraphic> is zero.
+The <templateGraphic> can be thought of as a special, abstract
+<object(glossary)>. It is not an actual <graphic(keyword)>, but it has
+all the <properties> of a <graphic(keyword)>. The <ID> <property> of the
+<templateGraphic> is zero.
 
-You can use the <set> <command> to set the <properties> of the <templateGraphic> before creating a <graphic(keyword)>. The new <graphic(keyword)> has the <properties> of the <templateGraphic>, by <default>. Changing the <properties> of the <templateGraphic> does not affect existing <graphic(object)|graphics>.
+You can use the <set> <command> to set the <properties> of the
+<templateGraphic> before creating a <graphic(keyword)>. The new
+<graphic(keyword)> has the <properties> of the <templateGraphic>, by
+<default>. Changing the <properties> of the <templateGraphic> does not
+affect existing <graphic(object)|graphics>.
 
-The properties of the <templateGraphic> can be returned to the default settings using the <reset> command.
+The properties of the <templateGraphic> can be returned to the default
+settings using the <reset> command.
 
 You can refer to the <templateGraphic> using any of the following forms:
-        templateGraphic
-        the templateGraphic
-        templateGraphic()
 
->*Note:* The <templateGraphic> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
+    templateGraphic
+    the templateGraphic
+    templateGraphic()
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), graphic (keyword), object (object), graphic (object), keyword (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+
+>*Note:* The <templateGraphic> <keyword> is implemented internally as a
+> <function> and appears in the <functionNames>. However, it cannot be
+> used as a <function> in an <expression>.
+
+References: reset (command), set (command), function (control structure),
+functionNames (function), object (glossary), keyword (glossary),
+property (glossary), command (glossary), expression (glossary),
+templateScrollbar (keyword), default (keyword), graphic (keyword),
+graphic (object), properties (property), ID (property)
+

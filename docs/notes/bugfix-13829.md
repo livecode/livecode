@@ -1,1 +1,0 @@
-# Change in how formattedRect of chunk is reported

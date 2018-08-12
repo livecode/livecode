@@ -1,20 +1,25 @@
 Name: cachedURLs
 
+Synonyms: cachedurl
+
 Type: function
 
 Syntax: the cachedURLs
 
 Syntax: cachedURLs()
 
-Summary: <return|Returns> a list of the <URL|URLs> that have been <download|downloaded> and copied to the <cache> using the <load> <command>.
+Summary:
+<return|Returns> a list of the <URL|URLs> that have been
+<download|downloaded> and copied to the <cache> using the <load>
+<command>. 
 
-Synonyms: cachedURL
+Associations: internet library
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux, html5
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
@@ -24,26 +29,53 @@ the cachedURLs
 Example:
 if myURL is not among the lines of the cachedURLs then load myURL
 
-Returns: The <cachedURLs> <function> <return|returns> a list of currently <load|loaded> <URL|URLs>, one per <line>.
+Returns:
+The <cachedURLs> <function> <return|returns> a list of currently
+<load|loaded> <URL|URLs>, one per <line>.
 
 Description:
-Use the <cachedURLs> <function> to determine which <files> have been <download|downloaded> and are currently in the <cache>. A <cache|cached> <URL(keyword)> can be accessed more quickly than one that is not <cache|cached>.
+Use the <cachedURLs> <function> to determine which <files> have been
+<download|downloaded> and are currently in the <cache>. A <cache|cached>
+<URL(keyword)> can be accessed more quickly than one that is not
+<cache|cached>. 
 
-The <cachedURLs> <function> includes all <URL(glossary)|URLs> that you have successfully <load|loaded> with the <load> <command>. If an unsuccessful attempt has been made to <load> a <URL(keyword)>, it does not appear in the <cachedURLs>. Only <URL(glossary)|URLs> whose <URLStatus> is "cached" appear in the <cachedURLs>.
+The <cachedURLs> <function> includes all <URL(glossary)|URLs> that you
+have successfully <load|loaded> with the <load> <command>. If an
+unsuccessful attempt has been made to <load> a <URL(keyword)>, it does
+not appear in the <cachedURLs>. Only <URL(glossary)|URLs> whose
+<URLStatus> is "cached" appear in the <cachedURLs>.
 
-Cached files consume memory. To release this memory after you are finished with a URL, use the <unload> <command> to remove it from the <cache>. You can use this <handler> to unload all <URL(glossary)|URLs>:
+Cached files consume memory. To release this memory after you are
+finished with a URL, use the <unload> <command> to remove it from the
+<cache>. You can use this <handler> to unload all <URL(glossary)|URLs>:
 
-  on unloadAll
-    repeat for each line thisURL in the cachedURLs
-      unload URL thisURL
-    end repeat
-  end unloadAll
+    on unloadAll
+        repeat for each line tThisURL in the cachedURLs
+            unload URL tThisURL
+        end repeat
+    end unloadAll
 
->*Important:*  The <cachedURLs> <function> is part of the <Internet library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+
+>*Important:* The <cachedURLs> <function> is part of the 
+> <Internet library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
 Changes:
-The URLStatus function became part of the Internet library in version 1.1. In previous versions, it was not a library function.
+The <cachedURLs> <function> became part of the <Internet library> in 
+version 1.1. In previous versions, it was not a library function.
 
-References: URL (keyword), line (keyword), Internet library (library), LiveCode custom library (library), unload (command), load (command), files (function), libURLErrorData (function), URLStatus (function), cachedURLs (function), return (glossary), handler (glossary), download (glossary), cache (glossary), Standalone Application Settings (glossary), URL (glossary), standalone application (glossary), command (glossary), load (glossary), function (control_st)
+References: unload (command), load (command),
+function (control structure), files (function),
+libURLErrorData (function), URLStatus (function), cachedURLs (function),
+LiveCode custom library (glossary), return (glossary), handler (glossary),
+download (glossary), cache (glossary),
+Standalone Application Settings (glossary), URL (glossary),
+standalone application (glossary), command (glossary), load (glossary),
+URL (keyword), line (keyword), Internet library (library)
 
 Tags: networking
+

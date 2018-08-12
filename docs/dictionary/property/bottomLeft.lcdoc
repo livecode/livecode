@@ -1,20 +1,23 @@
 Name: bottomLeft
 
+Synonyms: botleft
+
 Type: property
 
-Syntax: set the bottomLeft of <object> to <left>, <bottom> 
+Syntax: set the bottomLeft of <object> to <left>, <bottom>
 
-Summary: Specifies the location of the specified <object|object's> lower left corner.
+Summary:
+Specifies the location of the specified <object|object's> lower left
+corner. 
 
-Synonyms: botLeft
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the bottomLeft of this stack to 400,250
@@ -23,22 +26,48 @@ Example:
 set the bottomLeft of button myButton to 100,the bottom of button 1
 
 Value:
-The <bottomLeft> of an <object> is any expression that <evaluate|evaluates> to a <point> --two <integer|integers> separated by a comma.
-The first item of the <bottomLeft> is the distance in <pixels> from the left edge of the screen (for <stacks>) or <card> to the left edge of the <object>. The second <item> is the distance in <pixels> from the top edge of the screen (for <stacks>) or <card> to the bottom edge of the <object>.
+The <bottomLeft> of an <object(glossary)> is any expression that
+<evaluate|evaluates> to a <point> --two <integer|integers> separated by
+a comma. The first item of the <bottomLeft> is the distance in <pixels>
+from the left edge of the screen (for <stacks>) or <card> to the left
+edge of the <object(glossary)>. The second <item> is the distance in
+<pixels> from the top edge of the screen (for <stacks>) or <card> to the
+bottom edge of the <object(glossary)>.
 
 For cards, the <bottomLeft> <property> is <read-only> and cannot be set.
 
 Description:
-Use the <bottomLeft> <property> to change the placement of a <control> or window.
+Use the <bottomLeft> <property> to change the placement of a <control>
+or window.
 
-The <bottomLeft> of a stack is in <absolute (screen) coordinates(glossary)>. The first <item> (the <left>) of a <card|card's> <bottomLeft> <property> is always zero; the second <item> (the <bottom>) is always the height of the <stack window>. The <bottomLeft> of a group or control is in <relative (window) coordinates(glossary)>.
+The <bottomLeft> of a stack is in 
+<absolute coordinates(glossary)|absolute (screen) coordinates>. 
+The first <item> (the <left>) of a <card|card's>
+<bottomLeft> <property> is always zero; the second <item> (the <bottom>)
+is always the height of the <stack window>. The <bottomLeft> of a group
+or control is in 
+<relative coordinates(glossary)|relative (window) coordinates>.
 
-In window coordinates, the point 0,0 is at the top left of the stack window. In screen coordinates, the point 0,0 is at the top left of the screen.
+In window coordinates, the point 0,0 is at the top left of the stack
+window. In screen coordinates, the point 0,0 is at the top left of the
+screen. 
 
-Changing the <bottomLeft> of an <object> moves it to the new position without resizing it. To change an <object|object's> size, set its <height>, <width>, or <rectangle> <properties>.
+Changing the <bottomLeft> of an <object(glossary)> moves it to the new
+position without resizing it. To change an <object|object's> size, set
+its <height>, <width>, or <rectangle> <properties>.
 
->*Important:*  The order of the <bottom> and <left> <parameter|parameters> is reversed compared to the <property> name: left comes first, then bottom.
+>*Important:*  The order of the <bottom> and <left>
+> <parameter|parameters> is reversed compared to the <property> name:
+> left comes first, then bottom.
 
-References: topRight (property), left (property), pixels (property), height (property), width (property), bottom (property), properties (property), card (keyword), item (keyword), rectangle (keyword), point (keyword), control (keyword), left (constant), card (object), object (object), property (glossary), stack window (glossary), absolute coordinates (glossary), read-only (glossary), relative coordinates (glossary), parameter (glossary), integer (glossary), evaluate (glossary), stacks (function)
+References: left (constant), stacks (function), object (glossary),
+property (glossary), stack window (glossary),
+absolute coordinates (glossary), read-only (glossary),
+relative coordinates (glossary), parameter (glossary), integer (glossary),
+evaluate (glossary), card (keyword), item (keyword), rectangle (keyword),
+point (keyword), control (keyword), card (object), topRight (property),
+left (property), pixels (property), height (property), width (property),
+bottom (property), properties (property)
 
 Tags: ui
+

@@ -4,13 +4,17 @@ Type: message
 
 Syntax: mouseEnter
 
-Summary: Sent when the <mouse pointer> moves into an <object>.
+Summary:
+Sent when the <mouse pointer> moves into an <object(glossary)>.
+
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on mouseEnter -- show a Help field for the control the mouse is over
@@ -18,16 +22,33 @@ on mouseEnter -- show a Help field for the control the mouse is over
 end mouseEnter
 
 Description:
-Handle the <mouseEnter> <message> to perform an action (for example, display additional information or <highlight> a <button(object)>) when the <mouse pointer> enters an <object>.
+Handle the <mouseEnter> <message> to perform an action (for example,
+display additional information or <highlight> a <button(object)>) when
+the <mouse pointer> enters an <object(glossary)>.
 
-The <mouseEnter> <message> is sent only when the <Browse tool> is being used.
+The <mouseEnter> <message> is sent only when the <Browse tool> is being
+used. 
 
-If two controls overlap, a <mouseEnter> <message> is sent whenever the <mouse pointer> crosses into a visible portion of a <control>. The <control> on the bottom receives a <mouseEnter> <message> only when the <mouse pointer> enters part of the <control> that can be seen. A <control> that is completely hidden by another <control> on top of it will never receive a <mouseEnter> <message>.
+If two controls overlap, a <mouseEnter> <message> is sent whenever the
+<mouse pointer> crosses into a visible portion of a <control>. The
+<control> on the bottom receives a <mouseEnter> <message> only when the
+<mouse pointer> enters part of the <control> that can be seen. A
+<control> that is completely hidden by another <control> on top of it
+will never receive a <mouseEnter> <message>.
 
-If the mouse button is down when the mouse pointer enters the control, no <mouseEnter> <message> is sent unless the mouse button is released while the pointer is still in the <control>.
+If the mouse button is down when the mouse pointer enters the control,
+no <mouseEnter> <message> is sent unless the mouse button is released
+while the pointer is still in the <control>.
 
-If a control is shown (by changing its visible <property> to true or using the <show> <command>), and the <mouse pointer> is over the <control> when it is shown, LiveCode sends a <mouseEnter> <message> to the <control>.
+If a control is shown (by changing its visible <property> to true or
+using the <show> <command>), and the <mouse pointer> is over the
+<control> when it is shown, LiveCode sends a <mouseEnter> <message> to
+the <control>.
 
-References: control (keyword), dragEnter (message), show (command), mouseControl (function), property (glossary), highlight (glossary), button (object), Browse tool (glossary), message (glossary), mouse pointer (glossary), command (glossary), object (object)
+References: show (command), mouseControl (function), property (glossary),
+highlight (glossary), Browse tool (glossary), message (glossary),
+mouse pointer (glossary), command (glossary), object (glossary),
+control (keyword), dragEnter (message), button (object)
 
 Tags: ui
+

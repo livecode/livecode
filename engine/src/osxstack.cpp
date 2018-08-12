@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "util.h"
 #include "param.h"
-//#include "execpt.h"
+
 #include "debug.h"
 #include "globals.h"
 #include "mode.h"
@@ -83,7 +83,7 @@ extern void MCMacEnableScreenUpdates();
 void MCStack::setgeom()
 {
 	//set stack(window) size or position from script
-	if (MCnoui || !opened)
+	if (!opened)
 		return;
 	
 	// MW-2009-09-25: Ensure things are the right size when doing

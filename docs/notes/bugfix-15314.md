@@ -1,1 +1,0 @@
-# "secure socket" crashes livecode

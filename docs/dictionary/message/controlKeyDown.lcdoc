@@ -2,15 +2,18 @@ Name: controlKeyDown
 
 Type: message
 
-Syntax: controlKeyDown <keyName> 
+Syntax: controlKeyDown <pKeyName>
 
-Summary: Sent when a Control <key combination> is pressed.
+Summary:
+Sent when a Control <key combination> is pressed.
+
+Associations: card, field
 
 Introduced: 1.0
 
-OS: mac,linux
+OS: mac, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 on controlKeyDown pKey -- make Control-D delete the current card
@@ -22,17 +25,35 @@ on controlKeyDown pKey -- make Control-D delete the current card
 end controlKeyDown
 
 Parameters:
-keyName: The actual character of the pressed key.
+pKeyName:
+The actual character of the pressed key.
 
 Description:
-Handle the <controlKeyDown> <message> if you want to provide Control-key shortcuts on <Mac OS|Mac OS systems>.
+Handle the <controlKeyDown> <message> if you want to provide Control-key
+shortcuts on <Mac OS|Mac OS systems>.
 
-The message is sent to the active (focused) control, or to the current card if no control is focused.
+The message is sent to the active (focused) control, or to the current
+card if no control is focused.
 
-If the Control key is pressed along with the Return key, Tab key, or Enter key, or with an arrow key, no <controlKeyDown> <message> is sent. Instead, the <returnKey>, <tabKey>, <enterKey>, or <arrowKey> <message> is sent. To trap a combination such as Control-Return, use a <returnKey> <handler> and check the <controlKey> <function> inside the <handler>.
+If the Control key is pressed along with the Return key, Tab key, or
+Enter key, or with an arrow key, no <controlKeyDown> <message> is sent.
+Instead, the <returnKey>, <tabKey>, <enterKey>, or <arrowKey> <message>
+is sent. To trap a combination such as Control-Return, use a <returnKey>
+<handler> and check the <controlKey> <function> inside the <handler>.
 
->*Cross-platform note:*  On <Mac OS|Mac OS systems>, the <controlKeyDown> <message> is sent when a control <key combination> is pressed. On <Windows|Windows systems>, a control <key combination> sends a <commandKeyDown> message instead, and the <controlKeyDown> <message> is never sent. On <Unix|Unix systems>, the <controlKeyDown> <message> is sent only if Mod2 has been defined.
+>*Cross-platform note:*  On <Mac OS|Mac OS systems>, the
+> <controlKeyDown> <message> is sent when a control <key combination> is
+> pressed. On <Windows|Windows systems>, a control <key combination>
+> sends a <commandKeyDown> message instead, and the <controlKeyDown>
+> <message> is never sent. On <Unix|Unix systems>, the <controlKeyDown>
+> <message> is sent only if Mod2 has been defined.
 
-References: enterKey (message), optionKeyDown (message), tabKey (message), commandKeyDown (message), keyDown (message), arrowKey (message), returnKey (message), controlKey (function), keysDown (function), handler (glossary), Windows (glossary), key combination (glossary), message (glossary), Mac OS (glossary), Unix (glossary), function (control_st)
+References: function (control structure), controlKey (function),
+keysDown (function), handler (glossary), Windows (glossary),
+key combination (glossary), message (glossary), Mac OS (glossary),
+Unix (glossary), enterKey (message), optionKeyDown (message),
+tabKey (message), commandKeyDown (message), keyDown (message),
+arrowKey (message), returnKey (message)
 
 Tags: ui
+

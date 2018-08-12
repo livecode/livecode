@@ -4,13 +4,18 @@ Type: message
 
 Syntax: openControl
 
-Summary: Sent to a <group> right after you go to the card that contains it or to a <background group> right after going from a card where it was is not placed on to one where it is.
+Summary:
+Sent to a <group> right after you go to the card that contains it or to
+a <background group> right after going from a card where it was is not
+placed on to one where it is.
+
+Associations: group
 
 Introduced: 3.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on openControl
@@ -19,10 +24,21 @@ on openControl
 end openControl
 
 Description:
-Handle the <openControl> message to change a group's objects or perform other updates, when a card with the group on is visited.
+Handle the <openControl> message to change a group's objects or perform
+other updates, when a card with the group on is visited.
 
-For groups with their <backgroundBehavior property> set to true, the <openControl> message is sent immediately after the <openBackground message> is sent to the card being opened. For non-background groups, it is sent after the <openCard message>.
+For groups with their <backgroundBehavior> <property> set to true, the
+<openControl> message is sent immediately after the <openBackground
+message> is sent to the card being opened. For non-background groups, it
+is sent after the <openCard> <message>.
 
-For nested groups, the <openControl> message is sent to the parent group first, if it is passed or not handled by the parent group, then it passes though each child group in reverse layer order (i.e from highest to lowest).
+For nested groups, the <openControl> message is sent to the parent group
+first, if it is passed or not handled by the parent group, then it
+passes though each child group in reverse layer order (i.e from highest
+to lowest).
 
-References: background group (property), backgroundBehavior property (property), preOpenBackground (message), openCard (message), openBackground message (message), preOpenControl (message), closeControl (message), openCard message (message), group (object)
+References: preOpenBackground (message), openCard (message),
+openBackground message (message), preOpenControl (message),
+closeControl (message), message (glossary), group (object),
+background group (property), backgroundBehavior (property), property (glossary)
+

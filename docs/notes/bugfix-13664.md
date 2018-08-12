@@ -1,1 +1,0 @@
-# Livecode 7.0 rc 2 does not sort certain strings correctly when the numeric form is used

@@ -2,15 +2,16 @@ Name: gridSize
 
 Type: property
 
-Syntax: set the gridSize to <pixelSize> 
+Syntax: set the gridSize to <pixelSize>
 
-Summary: Specifies the size of squares in the drag grid.
+Summary:
+Specifies the size of squares in the drag grid.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the gridSize to 10 -- objects are aligned to a 10-pixel mesh
@@ -20,10 +21,19 @@ The <gridSize> is a positive <integer>.
 By default, the <gridSize> <property> is set to 2.
 
 Description:
-Use the <gridSize> <property> to align <object|objects> in a coarse or fine grid.
+Use the <gridSize> <property> to align <object|objects> in a coarse or
+fine grid.
 
-If the <grid> <property> is set to true, any <object> the user moves or resizes is moved or resized to the nearest <point> on the grid. If the <object> is moved, its <top> and <left> are multiples of the <gridSize>. If the <object> is resized, its <height> and <width> are multiples of the <gridSize>.
+If the <grid> <property> is set to true, any <object(glossary)> the user
+moves or resizes is moved or resized to the nearest <point> on the grid.
+If the <object(glossary)> is moved, its <top> and <left> are multiples
+of the <gridSize>. If the <object(glossary)> is resized, its <height>
+and <width> are multiples of the <gridSize>.
 
-If the <grid> is false, the setting of the <gridSize> <property> has no effect.
+If the <grid> is false, the setting of the <gridSize> <property> has no
+effect. 
 
-References: height (property), centered (property), width (property), grid (property), integer (keyword), point (keyword), top (keyword), left (constant), object (object), property (glossary)
+References: left (constant), object (glossary), property (glossary),
+integer (keyword), point (keyword), top (keyword), height (property),
+centered (property), width (property), grid (property)
+

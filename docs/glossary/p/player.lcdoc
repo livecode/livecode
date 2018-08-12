@@ -2,11 +2,14 @@ Name: player
 
 Synonyms: player
 
-Type: object
+Type: glossary
 
 Description:
-An <object> that presents a file containing a <QuickTime> movie, or audio or video data in one of the <format|formats> supported by <QuickTime>.
+An <object(glossary)> that presents a file containing a movie, or audio
+or video data in one of the <format|formats> supported by AVFoundation
+on Mac or DirectShow on Windows.
 
-References: object (object), QuickTime (glossary), format (glossary)
+References: object (glossary), QuickTime (glossary), format (glossary)
 
 Tags: multimedia
+

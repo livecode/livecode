@@ -6,13 +6,15 @@ Syntax: the clickLine
 
 Syntax: clickLine()
 
-Summary: <return|Returns> the number of the <line> that  the user last clicked in a <field>.
+Summary:
+<return|Returns> the number of the <line> that  the user last clicked in
+a <field>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,web,mobile
+Platforms: desktop, mobile
 
 Example:
 select the clickLine
@@ -20,21 +22,43 @@ select the clickLine
 Example:
 put the value of the clickLine into textOfClickedLine
 
-Returns: The <clickLine> <function> <return|returns> a <chunk expression> of the form line lineNumber of field fieldNumber.
+Returns:
+The <clickLine> <function> <return|returns> a <chunk expression> of the
+form line lineNumber of field fieldNumber.
 
 Description:
-Use the <clickLine> <function> within a <mouseDown>, <mouseUp>, or <selectionChanged> <handler> to determine which <line> the user clicked, in order to provide <hypertext> (clickable text) or take some action based on the click.
+Use the <clickLine> <function> within a <mouseDown>, <mouseUp>, or
+<selectionChanged> <handler> to determine which <line> the user clicked,
+in order to provide <hypertext> (clickable text) or take some action
+based on the click.
 
-The <clickLine> <function> is cleared at the next mouse click, as well as after some editing actions such as deleting text. If the last click was not in a <field>, the <clickLine> <function> <return|returns> empty.
+The <clickLine> <function> is cleared at the next mouse click, as well
+as after some editing actions such as deleting text. If the last click
+was not in a <field>, the <clickLine> <function> <return|returns> empty.
 
-The returned value indicates the line that the mouse pointer was over when the mouse was clicked. Moving the mouse before the mouse button is released does not affect the value returned by the <clickLine>.
+The returned value indicates the line that the mouse pointer was over
+when the mouse was clicked. Moving the mouse before the mouse button is
+released does not affect the value returned by the <clickLine>.
 
-If the field is locked, the <clickLine> function is most useful within a <handler> (such as <mouseDown> or <mouseUp>) that is <trigger|triggered> by the mouse click.
+If the field is locked, the <clickLine> function is most useful within a
+<handler> (such as <mouseDown> or <mouseUp>) that is <trigger|triggered>
+by the mouse click.
 
-If the field is unlocked, mouseDown and <mouseUp> <message|messages> are not sent when the user clicks in the <field> (unless the user right-clicks or holds down the Control key while clicking). Use the <clickLine> <function> within a <selectionChanged> <handler> to determine what <line> the user is editing in an <unlock|unlocked> <field>.
+If the field is unlocked, mouseDown and <mouseUp> <message|messages> are
+not sent when the user clicks in the <field> (unless the user
+right-clicks or holds down the Control key while clicking). Use the
+<clickLine> <function> within a <selectionChanged> <handler> to
+determine what <line> the user is editing in an <unlock|unlocked>
+<field>. 
 
-To get  a chunk expression describing the word or text group that was clicked, use the clickChunk <function>.
+To get  a chunk expression describing the word or text group that was
+clicked, use the clickChunk <function>.
 
-References: field (keyword), line (keyword), mouseDown (message), mouseUp (message), selectionChanged (message), clickStack (function), mouseLine (function), return (glossary), chunk expression (glossary), handler (glossary), trigger (glossary), message (glossary), unlock (glossary), hypertext (glossary), function (control_st)
+References: function (control structure), clickStack (function),
+mouseLine (function), return (glossary), chunk expression (glossary),
+handler (glossary), trigger (glossary), message (glossary),
+unlock (glossary), hypertext (glossary), field (keyword), line (keyword),
+mouseDown (message), mouseUp (message), selectionChanged (message)
 
 Tags: ui
+

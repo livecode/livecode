@@ -1,14 +1,19 @@
 Name: trigger
 
-Synonyms: triggered,triggering,trigger
+Synonyms: triggered, triggering, trigger
 
 Type: glossary
 
 Description:
-To cause an action to happen. In particular, to cause an <on> or <setProp> <handler> to <execute>. 
- 
-Also, the <set> instruction sent to an <object> that triggers a <setProp> <handler>.
+To cause an action to happen. In particular, to cause an <on> or
+<setProp> <handler> to <execute>.
 
-References: set (command), on (control_st), setProp (control_st), execute (glossary), handler (glossary), object (object)
+Also, the <set> instruction sent to an <object(glossary)> that triggers
+a <setProp> <handler>.
+
+References: set (command), on (control structure),
+setProp (control structure), execute (glossary), handler (glossary),
+object (glossary)
 
 Tags: objects
+

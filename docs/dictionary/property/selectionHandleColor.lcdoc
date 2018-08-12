@@ -4,13 +4,15 @@ Type: property
 
 Syntax: set the selectionHandleColor to {colorName | RGBColor}
 
-Summary: The selectionHandlerColor <property> specifies the color of the handle boxes used to resize a <selected> <object>.
+Summary:
+The selectionHandlerColor <property> specifies the color of the handle
+boxes used to resize a <selected> <object(glossary)>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the selectionHandleColor to "red"
@@ -19,19 +21,26 @@ Example:
 set the selectionHandleColor to "255,0,0"
 
 Example:
-set the selectionColor to the hiliteColor
+set the selectionHandleColor to the hiliteColor
 
 Value:
 The <selectionHandleColor> is a <color reference>.
 The colorName is any standard color name.
 
-The RGBColor consists of three comma-separated <integer|integers> between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three <hexadecimal> numbers, one for each of red, green, and blue.
+The RGBColor consists of three comma-separated <integer|integers>
+between zero and 255, specifying the level of each of red, green, and
+blue; or an HTML-style color consisting of a hash mark (#) followed by
+three <hexadecimal> numbers, one for each of red, green, and blue.
 
 By default, the <selectionHandleColor> is "0,0,0" (black).
 
 Description:
-Use the <selectionHandleColor> <property> to change the appearance of <selected> <object|objects>.
+Use the <selectionHandleColor> <property> to change the appearance of
+<selected> <object|objects>.
 
-References: selected (property), borderColor (property), colorNames (function), property (glossary), hexadecimal (glossary), integer (glossary), color reference (glossary), object (object)
+References: colorNames (function), property (glossary),
+hexadecimal (glossary), integer (glossary), color reference (glossary),
+object (glossary), selected (property), borderColor (property)
 
 Tags: ui
+

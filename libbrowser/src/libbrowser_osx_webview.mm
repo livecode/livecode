@@ -124,9 +124,9 @@ bool MCNSArrayToBrowserList(NSArray *p_array, MCBrowserListRef &r_list)
 
 bool MCNSNumberToBrowserValue(NSNumber *p_number, MCBrowserValue &r_value)
 {
-	if (p_number == @(YES))
+	if ([p_number isEqual:@YES])
 		return MCBrowserValueSetBoolean(r_value, true);
-	else if (p_number == @(NO))
+	else if ([p_number isEqual:@NO])
 		return MCBrowserValueSetBoolean(r_value, false);
 	else if (MCCStringEqual([p_number objCType], @encode(int)))
 		return MCBrowserValueSetInteger(r_value, [p_number intValue]);
@@ -341,7 +341,6 @@ bool MCJSObjectToBrowserValue(JSContextRef p_context, JSObjectRef p_object, MCBr
 {
 	MCWebViewBrowser *m_instance;
 	bool m_pending_request;
-	bool m_frame_request;
 	char *m_request_url;
 	char *m_frame_request_url;
 }
@@ -378,6 +377,11 @@ bool MCJSObjectToBrowserValue(JSContextRef p_context, JSObjectRef p_object, MCBr
 
 - (NSUInteger)webView:(WebView *)webView dragDestinationActionMaskForDraggingInfo:(id<NSDraggingInfo>)draggingInfo;
 - (NSUInteger)webView:(WebView *)webView dragSourceActionMaskForPoint:(NSPoint)point;
+
+- (void)webView:(WebView *)webView runJavaScriptAlertPanelWithMessage:(NSString*)message initiatedByFrame:(WebFrame*)frame;
+- (BOOL)webView:(WebView *)sender runJavaScriptConfirmPanelWithMessage:(NSString *)message initiatedByFrame:(WebFrame *)frame;
+- (void)webView:(WebView *)sender runOpenPanelForFileButtonWithResultListener:(id<WebOpenPanelResultListener>)resultListener;
+- (void)webView:(WebView *)sender runOpenPanelForFileButtonWithResultListener:(id<WebOpenPanelResultListener>)resultListener allowMultipleFiles:(BOOL)allowMultipleFiles;
 
 @end
 
@@ -514,6 +518,48 @@ bool MCWebViewBrowser::GetHTMLText(char *&r_htmltext)
 bool MCWebViewBrowser::SetHTMLText(const char *p_htmltext)
 {
 	return ExecLoad(LIBBROWSER_DUMMY_URL, p_htmltext);
+}
+
+bool MCWebViewBrowser::GetUserAgent(char*& r_user_agent)
+{
+	WebView *t_view;
+	if (!GetView(t_view))
+		return false;
+	
+	__block char *t_result;
+	t_result = nil;
+	MCBrowserRunBlockOnMainFiber(^{
+		NSString *t_user_agent;
+		t_user_agent = [t_view customUserAgent];
+		
+		t_result = strdup(t_user_agent != nil ? [t_user_agent cStringUsingEncoding: NSUTF8StringEncoding] : "");
+	});
+	
+	if (t_result == nil)
+		return false;
+	
+	r_user_agent = t_result;
+	
+	return true;
+}
+
+bool MCWebViewBrowser::SetUserAgent(const char *p_user_agent)
+{
+	WebView *t_view;
+	if (!GetView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		NSString *t_ns_user_agent;
+		if (strcmp(p_user_agent, "") == 0)
+			t_ns_user_agent = nil;
+		else
+			t_ns_user_agent = [NSString stringWithCString: p_user_agent encoding: NSUTF8StringEncoding];
+		
+		[t_view setCustomUserAgent: t_ns_user_agent];
+	});
+	
+	return true;
 }
 
 bool MCWebViewBrowser::GetJavaScriptHandlers(char *&r_handlers)
@@ -712,6 +758,9 @@ bool MCWebViewBrowser::SetStringProperty(MCBrowserProperty p_property, const cha
 		case kMCBrowserJavaScriptHandlers:
 			return SetJavaScriptHandlers(p_utf8_string);
 			
+		case kMCBrowserUserAgent:
+			return SetUserAgent(p_utf8_string);
+			
 		default:
 			break;
 	}
@@ -731,6 +780,9 @@ bool MCWebViewBrowser::GetStringProperty(MCBrowserProperty p_property, char *&r_
 			
 		case kMCBrowserJavaScriptHandlers:
 			return GetJavaScriptHandlers(r_utf8_string);
+			
+		case kMCBrowserUserAgent:
+			return GetUserAgent(r_utf8_string);
 			
 		default:
 			break;
@@ -972,7 +1024,7 @@ bool MCWebViewBrowser::Init(void)
 
 - (void)webView:(WebView *)sender didStartProvisionalLoadForFrame:(WebFrame *)frame
 {
-	m_frame_request = ![sender.mainFrame isEqual: frame];
+	bool t_frame_request = ![sender.mainFrame isEqual: frame];
 	
 	if (m_pending_request)
 	{
@@ -983,14 +1035,14 @@ bool MCWebViewBrowser::Init(void)
 	NSURLRequest *t_request;
 	t_request = frame.provisionalDataSource.initialRequest;
 
-	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	char *&t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url != nil)
 		MCCStringFree(t_url);
 	t_url = nil;
 	
 	/* UNCHECKED */ MCCStringClone([t_request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding], t_url);
 	
-	if (!m_frame_request)
+	if (!t_frame_request)
 		m_instance->OnNavigationBegin(false, t_url);
 	
 	return;
@@ -998,24 +1050,28 @@ bool MCWebViewBrowser::Init(void)
 
 - (void)webView:(WebView *)sender didCommitLoadForFrame:(WebFrame *)frame
 {
-	if (!m_frame_request)
+	bool t_frame_request = ![sender.mainFrame isEqual: frame];
+	
+	if (!t_frame_request)
 		m_instance->SyncJavaScriptHandlers();
 	
-	char *t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	char *t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url == nil)
 		return;
 	
-	m_instance->OnDocumentLoadBegin(m_frame_request, t_url);
+	m_instance->OnDocumentLoadBegin(t_frame_request, t_url);
 }
 
 - (void)webView:(WebView *)sender didFinishLoadForFrame:(WebFrame *)frame
 {
-	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	bool t_frame_request = ![sender.mainFrame isEqual: frame];
+	
+	char *&t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url == nil)
 		return;
 	
-	m_instance->OnDocumentLoadComplete(m_frame_request, t_url);
-	if (!m_frame_request)
+	m_instance->OnDocumentLoadComplete(t_frame_request, t_url);
+	if (!t_frame_request)
 		m_instance->OnNavigationComplete(false, t_url);
 	
 	MCCStringFree(t_url);
@@ -1024,15 +1080,17 @@ bool MCWebViewBrowser::Init(void)
 
 - (void)webView:(WebView *)sender didFailProvisionalLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
 {
-	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	bool t_frame_request = ![sender.mainFrame isEqual: frame];
+	
+	char *&t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url == nil)
 		return;
 	
 	const char *t_error;
 	t_error = [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding];
 	
-	m_instance->OnDocumentLoadFailed(m_frame_request, m_frame_request ? m_frame_request_url : m_request_url, t_error);
-	if (!m_frame_request)
+	m_instance->OnDocumentLoadFailed(t_frame_request, t_frame_request ? m_frame_request_url : m_request_url, t_error);
+	if (!t_frame_request)
 		m_instance->OnNavigationFailed(false, m_request_url, t_error);
 	
 	MCCStringFree(t_url);
@@ -1041,15 +1099,17 @@ bool MCWebViewBrowser::Init(void)
 
 - (void)webView:(WebView *)sender didFailLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
 {
-	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	bool t_frame_request = ![sender.mainFrame isEqual: frame];
+	
+	char *&t_url = t_frame_request ? m_frame_request_url : m_request_url;
 	if (t_url == nil)
 		return;
 	
 	const char *t_error;
 	t_error = [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding];
 	
-	m_instance->OnDocumentLoadFailed(m_frame_request, m_frame_request ? m_frame_request_url : m_request_url, t_error);
-	if (!m_frame_request)
+	m_instance->OnDocumentLoadFailed(t_frame_request, t_frame_request ? m_frame_request_url : m_request_url, t_error);
+	if (!t_frame_request)
 		m_instance->OnNavigationFailed(false, m_request_url, t_error);
 	
 	MCCStringFree(t_url);
@@ -1081,6 +1141,16 @@ bool MCWebViewBrowser::Init(void)
 	[super dealloc];
 }
 
+- (void)webView:(WebView *)webView
+        decidePolicyForNewWindowAction:(NSDictionary *)actionInformation
+        request:(NSURLRequest *)request
+        newFrameName:(NSString *)frameName
+        decisionListener:(id<WebPolicyDecisionListener>)listener
+{
+    [listener ignore];
+    [[webView mainFrame] loadRequest:request];
+}
+
 - (void)webView:(WebView *)webView decidePolicyForMIMEType:(NSString *)type request:(NSURLRequest *)request frame:(WebFrame *)frame decisionListener:(id<WebPolicyDecisionListener>)listener
 {
 	if ([WebView canShowMIMEType:type])
@@ -1088,7 +1158,10 @@ bool MCWebViewBrowser::Init(void)
 	else
 	{
 		[listener ignore];
-		m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        if (request.URL.absoluteString != nil)
+        {
+            m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        }
 	}
 }
 
@@ -1099,13 +1172,24 @@ bool MCWebViewBrowser::Init(void)
 	else
 	{
 		[listener ignore];
-		m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        if (request.URL.absoluteString != nil)
+        {
+            m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+        }
 	}
 }
 
 @end
 
 @implementation MCWebUIDelegate
+
+- (WebView *)webView:(WebView *)webView
+            createWebViewWithRequest:(NSURLRequest *)request
+{
+    [[webView frameLoadDelegate] setPendingRequest: false];
+    [[webView mainFrame] loadRequest:request];
+    return webView;
+}
 
 - (NSUInteger)webView:(WebView *)webView dragDestinationActionMaskForDraggingInfo:(id<NSDraggingInfo>)draggingInfo
 {
@@ -1115,6 +1199,64 @@ bool MCWebViewBrowser::Init(void)
 - (NSUInteger)webView:(WebView *)webView dragSourceActionMaskForPoint:(NSPoint)point
 {
 	return WebDragSourceActionNone;
+}
+
+- (void)webView:(WebView *)webView runJavaScriptAlertPanelWithMessage:(NSString*)message initiatedByFrame:(WebFrame*)frame
+{
+    NSAutoreleasePool* t_pool = [[NSAutoreleasePool alloc] init];
+    NSAlert* t_alert = [[[NSAlert alloc] init] autorelease];
+    [t_alert setMessageText:message];
+    [t_alert runModal];
+    [t_pool release];
+}
+
+- (BOOL)webView:(WebView *)sender runJavaScriptConfirmPanelWithMessage:(NSString *)message initiatedByFrame:(WebFrame *)frame
+{
+    NSAutoreleasePool* t_pool = [[NSAutoreleasePool alloc] init];
+    NSAlert* t_alert = [[[NSAlert alloc] init] autorelease];
+    NSInteger t_response;
+    [t_alert setMessageText:message];
+    [t_alert addButtonWithTitle:@"Cancel"];
+    t_response = [t_alert runModal];
+    [t_pool release];
+    return (t_response == NSAlertFirstButtonReturn);
+}
+
+- (void)webView:(WebView *)sender runOpenPanelForFileButtonWithResultListener:(id<WebOpenPanelResultListener>)resultListener
+{
+    [self webView: sender runOpenPanelForFileButtonWithResultListener: resultListener allowMultipleFiles: NO];
+}
+
+- (void)webView:(WebView *)sender runOpenPanelForFileButtonWithResultListener:(id<WebOpenPanelResultListener>)resultListener allowMultipleFiles:(BOOL)allowMultipleFiles
+{
+    NSAutoreleasePool* t_pool = [[NSAutoreleasePool alloc] init];
+    
+    // Create an open-file panel that allows a single file to be chosen
+    NSOpenPanel* t_dialog = [NSOpenPanel openPanel];
+    [t_dialog setCanChooseDirectories:NO];
+    [t_dialog setCanChooseFiles:YES];
+    [t_dialog setAllowsMultipleSelection:allowMultipleFiles];
+    
+    // Run the dialogue
+    NSInteger t_result = [t_dialog runModal];
+    
+    // If the user didn't cancel it, get the selection
+    if (t_result == NSFileHandlingPanelOKButton)
+    {
+        NSMutableArray *t_paths = [[[NSMutableArray alloc] init] autorelease];
+        for(NSURL *t_url in [t_dialog URLs])
+        {
+            [t_paths addObject: [[t_url filePathURL] path]];
+        }
+        [resultListener chooseFilenames: t_paths];
+    }
+    else
+    {
+        // The dialogue was cancelled and no selection was made
+        [resultListener cancel];
+    }
+    
+    [t_pool release];
 }
 
 @end

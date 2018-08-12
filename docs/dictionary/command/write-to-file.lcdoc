@@ -4,13 +4,15 @@ Type: command
 
 Syntax: write <value> to {file <pathName> | stdout} [at {<start> | EOF | end}]
 
-Summary: Places data in a <file> that has been opened with the <open file> <command>.
+Summary:
+Places data in a <file> that has been opened with the <open file>
+<command>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -30,41 +32,84 @@ Example:
 mouseUp
    local tFile
    put specialFolderPath("desktop")  & "/test.txt" into tFile
-   open file tFile for text 
+   open file tFile for text write
 
    write "one 222" to file tFile -- Writes to the start of the file
    write "two" to file tFile at 4 -- Writes to the file from character 4
    write " three" to file tFile at EOF -- Writes to the end of the file
    write " four" to file tFile at end -- Writes to the end of the file
-   
+
    close file tFile
 mouseUp
 
 Parameters:
-value (string): 
-pathName: The pathName specifies the name and location of the file you want to write to. It must be the same as the path you used with the open file command. The pathName is case-sensitive, even on platforms where file names are not case-sensitive.  If you specify the name of a serial port on Mac OS or Windows systems, LiveCode writes to the specified port. The names of serial ports end in a colon (:).
-start (enum): The start specifies the character or byte position in the file where you want to begin writing. A positive number begins start characters after the beginning of the file; a negative number begins start characters before the end of the file.  If you specify either of the synonyms EOF or end, the write begins after the last character in the file. If you don't specify a start, the write begins:
--  at the position determined by the seek command, or 
--  if you haven't used the seek command, wherever the last read from file or write to file command to the file left off, or
--  if you haven't accessed the file with read from file or write to file since it was opened, after the last character (if the file was opened in append mode) or at the first character (if the file was opened in any other mode).
+value (string):
+The data to be written to the file.
 
-The result: The file to write to must be opened first with the <open file command>, and the mode the <file> was opened in must be write, append, or update. If the file is not open or is open read-only, the <result> function is set to "File is not open for write.".
+pathName:
+The pathName specifies the name and location of the file you want to
+write to. It must be the same as the path you used with the open file
+command. The pathName is case-sensitive, even on platforms where file
+names are not case-sensitive. If you specify the name of a serial port
+on Mac OS or Windows systems, LiveCode writes to the specified port. The
+names of serial ports end in a colon (:).
+
+start (enum):
+The start specifies the character or byte position in the file where you
+want to begin writing. A positive number begins start characters after
+the beginning of the file; a negative number begins start characters
+before the end of the file. If you specify either of the synonyms EOF or
+end, the write begins after the last character in the file. If you don't
+specify a start, the write begins:
+
+-  at the position determined by the seek command, or 
+-  if you haven't used the seek command, wherever the last read from
+   file or write to file command to the file left off, or
+-  if you haven't accessed the file with read from file or write to file
+   since it was opened, after the last character (if the file was opened
+   in append mode) or at the first character (if the file was opened in
+   any other mode).
+
+
+The result:
+The file to write to must be opened first with the <open file> <command>,
+and the mode the <file> was opened in must be write, append, or update.
+If the file is not open or is open read-only, the <result> function is
+set to "File is not open for write.".
 
 Description:
 Use the <write to file> <command> to change the contents of a <file>.
 
-If the file was opened in write mode, the <write to file> <command> completely replaces the file contents from the <start>. For example, if the <file> originally contains "ABC", and you write "1" to it, after the <write to file> <command> is <execute|executed> the file contains "1".
+If the file was opened in write mode, the <write to file> <command>
+completely replaces the file contents from the <start>. For example, if
+the <file> originally contains "ABC", and you write "1" to it, after the
+<write to file> <command> is <execute|executed> the file contains "1".
 
-If the file was opened in update mode, if you write less data to the file than it already contains, the <write to file> <command> does not remove <characters> from it. For example, if the <file> originally contains "ABC", and you write "1" to it, after the <write to file> <command> is <execute|executed> the file contains "1BC".
+If the file was opened in update mode, if you write less data to the
+file than it already contains, the <write to file> <command> does not
+remove <characters> from it. For example, if the <file> originally
+contains "ABC", and you write "1" to it, after the <write to file>
+<command> is <execute|executed> the file contains "1BC".
 
-If the file was opened in append mode, the write begins at the end of the file.
+If the file was opened in append mode, the write begins at the end of
+the file.
 
->*Important:* After writing, you must close the file with the <close filecommand>.
+>*Important:* After writing, you must close the file with the
+> <close file> <command>.
 
-The write to stdout form writes to the standard output (on Unix systems). The standard output is always open, so you can write to it without first opening it.
+The write to stdout form writes to the standard output (on Unix
+systems). The standard output is always open, so you can write to it
+without first opening it.
 
->*Tip:* As an alternative to the <open file> and <write to file> <command|commands>, you can also use the <URLkeyword> with the <putcommand> to change the contents of a <file>.
+>*Tip:* As an alternative to the <open file> and <write to file>
+> <command|commands>, you can also use the <URL> <keyword> with the
+> <put> <command> to change the contents of a <file>.
 
-References: file (keyword), characters (keyword), stdout (keyword), URLkeyword (keyword), open file (command), close file (command), write to driver (command), open file command (command), putcommand (command), close filecommand (command), result (function), command (glossary), execute (glossary)
+References: open file (command), close file (command),
+write to driver (command),
+put (command), result (function),
+command (glossary), execute (glossary), file (keyword),
+characters (keyword), stdout (keyword), URL (keyword)
 
 Tags: file system
+

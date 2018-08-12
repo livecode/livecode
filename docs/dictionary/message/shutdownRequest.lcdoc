@@ -4,15 +4,17 @@ Type: message
 
 Syntax: shutdownRequest
 
-Summary: Sent to the <current card of the defaultStack (glossary)>when the user tries to quit the <application>.
+Summary:
+Sent to the <current card> of the <defaultStack> when the user
+tries to quit the <application>.
 
-Associations: stack
+Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on shutdownRequest
@@ -21,19 +23,38 @@ on shutdownRequest
 end shutdownRequest
 
 Description:
-Handle the <shutdownRequest> <message> if you want to prevent the user from quitting the <application>.
+Handle the <shutdownRequest> <message> if you want to prevent the user
+from quitting the <application>.
 
-If the <shutdownRequest> <handler> does not <pass> the <message> or send it to a further <object> in the <message path>, the <application> does not exit. <pass|Passing> the <message> allows the <application> to quit.
+If the <shutdownRequest> <handler> does not <pass> the <message> or send
+it to a further <object(glossary)> in the <message path>, the
+<application> does not exit. <pass|Passing> the <message> allows the
+<application> to quit.
 
-In standalones, some care is needed to ensure you receive the <shutdownRequest> message if your application uses multiple stacks. The most reliable approach is to install a library stack or backscript to handle the message when your application starts up.
+In standalones, some care is needed to ensure you receive the
+<shutdownRequest> message if your application uses multiple stacks. The
+most reliable approach is to install a library stack or backscript to
+handle the message when your application starts up.
 
-On OS X and Unix systems, if the operating system sends a SIGTERM signal to the application, LiveCode sends a <shutdownRequest> <message> to the <current stack>. <pass|Passing> the <message> causes the application to quit normally. If the <message> is <trap|trapped>, the signal is ignored. 
- 
->*Note:* Applications will not receive this message when running in the IDE.
- 
+On OS X and Unix systems, if the operating system sends a SIGTERM signal
+to the application, LiveCode sends a <shutdownRequest> <message> to the
+<current stack>. <pass|Passing> the <message> causes the application to
+quit normally. If the <message> is <trap|trapped>, the signal is
+ignored. 
+
+>*Note:* Applications will not receive this message when running in the
+> IDE. 
+
 Changes:
-Handling of the SIGTERM signal was introduced in version 2.0. In previous versions, the SIGTERM signal did not cause a message to be sent.
+Handling of the SIGTERM signal was introduced in version 2.0. In
+previous versions, the SIGTERM signal did not cause a message to be
+sent. 
 
-References: quit (command), pass (control_st), application (glossary), current card of the defaultStack (glossary), current stack (glossary), handler (glossary), message path (glossary), pass (glossary), message (glossary), trap (glossary), object (object)
+References: quit (command), pass (control structure),
+application (glossary), current card (glossary), current stack (glossary),
+handler (glossary), message path (glossary), pass (glossary),
+message (glossary), trap (glossary), object (glossary),
+defaultStack (property)
 
 Tags: windowing
+

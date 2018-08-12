@@ -6,28 +6,49 @@ Syntax: the DNSServers
 
 Syntax: DNSServers()
 
-Summary: <return|Returns> a list of the <DNS> servers listed in the system's <TCP|TCP/IP> network configuration.
+Summary:
+<return|Returns> a list of the <DNS> servers listed in the system's
+<TCP|TCP/IP> network configuration.
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 put the DNSServers into myDNSList
 
-Returns: The <DNSServers> <function> <return|returns> a list of <IP address|IP addresses>, one per line.
+Returns:
+The <DNSServers> <function> <return|returns> a list of <IP address|IP
+addresses>, one per line.
 
 Description:
-Use the <DNSServers> <function> to find the <IP address> of the <server|servers> that will be used to translate <IP address|IP addresses> into <domain name|domain names>.
+Use the <DNSServers> <function> to find the <IP address> of the
+<server|servers> that will be used to translate <IP address|IP
+addresses> into <domain name|domain names>.
 
->*Cross-platform note:*  On <Mac OS|Mac OS systems>, the <DNSServers> <function> returns only the first <IP address>.
+>*Cross-platform note:*  On <Mac OS|Mac OS systems>, the <DNSServers>
+> <function> returns only the first <IP address>.
 
-When an application requests contact with a system specified by its domain name, the domain name must first be translated into an IP address. A DNS server performs this translation function. In your system's TCP/IP configuration, one or more DNS servers are specified by their IP addresses, and these servers are queried when a domain name needs to be translated to an IP address. (Typically, one or more DNS servers will be configured for an ISP or corporate network; name service is usually centralized.)
+When an application requests contact with a system specified by its
+domain name, the domain name must first be translated into an IP
+address. A DNS server performs this translation function. In your
+system's TCP/IP configuration, one or more DNS servers are specified by
+their IP addresses, and these servers are queried when a domain name
+needs to be translated to an IP address. (Typically, one or more DNS
+servers will be configured for an ISP or corporate network; name service
+is usually centralized.)
 
-Since the <DNSServers> <function> reads the value set in the network configuration, it is available even if the system is not currently connected to the <Internet>.
+Since the <DNSServers> <function> reads the value set in the network
+configuration, it is available even if the system is not currently
+connected to the <Internet>.
 
-References: internet (keyword), hostName (function), hostAddress (function), hostNameToAddress (function), peerAddress (function), return (glossary), IP address (glossary), Mac OS (glossary), DNS (glossary), TCP (glossary), domain name (glossary), server (glossary), function (control_st)
+References: function (control structure), hostName (function),
+hostAddress (function), hostNameToAddress (function),
+peerAddress (function), return (glossary), IP address (glossary),
+Mac OS (glossary), DNS (glossary), TCP (glossary), domain name (glossary),
+server (glossary), internet (keyword)
 
 Tags: networking
+

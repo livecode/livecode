@@ -1,1 +1,0 @@
-# Prevent crash in revBrowser on OSX when there is no data source

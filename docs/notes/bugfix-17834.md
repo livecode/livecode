@@ -1,0 +1,1 @@
+# Prevent possible assertion failure related to revMessageBoxRedirect

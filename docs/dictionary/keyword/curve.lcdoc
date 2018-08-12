@@ -4,13 +4,16 @@ Type: keyword
 
 Syntax: curve
 
-Summary: Designates the <paint tool> used to draw curved <lines>. It also specifies, through the <style> <property>, that a <graphic> is a curved <line>.
+Summary:
+Designates the <paint tool> used to draw curved <lines>. It also
+specifies, through the <style> <property>, that a <graphic> is a curved
+<line>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 choose curve tool
@@ -19,12 +22,25 @@ Example:
 set the style of last graphic to curve
 
 Description:
-Use the <curve> <keyword> to paint a curved line with the <penColor> or to change a <graphic(keyword)> <object> to a curved <line>.
+Use the <curve> <keyword> to paint a curved line with the <penColor> or
+to change a <graphic(keyword)> <object(glossary)> to a curved <line>.
 
-When using the Curve tool, the cursor is a crosshairs shape (over stack windows) or an arrow (anywhere else). This tool is used to draw a freehand line in the penColor (or <penPattern>).
+When using the Curve tool, the cursor is a crosshairs shape (over stack
+windows) or an arrow (anywhere else). This tool is used to draw a
+freehand line in the penColor (or <penPattern>).
 
-If you try to paint with the Curve tool on a card that has no images, an image the size of the card is created to hold the painting. If the current card already has one or more images, painting outside the image has no effect.
+If you try to paint with the Curve tool on a card that has no images, an
+image the size of the card is created to hold the painting. If the
+current card already has one or more images, painting outside the image
+has no effect.
 
-Setting the <style> of a <graphic(keyword)> to curve makes the graphic into a curved line. Curve <graphic(object)|graphics>, unlike painted curves, can be changed and reshaped: use the <points> <property> to change the shape of the curve.
+Setting the <style> of a <graphic(keyword)> to curve makes the graphic
+into a curved line. Curve <graphic(object)|graphics>, unlike painted
+curves, can be changed and reshaped: use the <points> <property> to
+change the shape of the curve.
 
-References: graphic (keyword), line (keyword), lines (keyword), style (property), points (property), penPattern (property), penColor (property), choose (command), object (object), graphic (object), property (glossary), keyword (glossary), paint tool (glossary)
+References: choose (command), object (glossary), property (glossary),
+keyword (glossary), paint tool (glossary), graphic (keyword),
+line (keyword), lines (keyword), graphic (object), style (property),
+points (property), penPattern (property), penColor (property)
+

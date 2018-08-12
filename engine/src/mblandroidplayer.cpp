@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -58,11 +58,6 @@ public:
     MCAndroidPlayerControl(void);
     
     virtual MCNativeControlType GetType(void);
-#ifdef LEGACY_EXEC
-    virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
-    virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
-    virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
-#endif
     
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
@@ -267,174 +262,6 @@ void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, integer_t r_siz
     r_size[1] = t_height;
 }
 
-#ifdef /* MCAndroidPlayerControl::Set */ LEGACY_EXEC
-Exec_stat MCAndroidPlayerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
-{
-    bool t_bool = false;
-    int32_t t_integer;
-    
-    jobject t_view;
-    t_view = GetView();
-    
-    switch (p_property)
-    {
-        case kMCNativeControlPropertyContent:
-        {
-            bool t_success = true;
-            MCCStringFree(m_path);
-            t_success = MCCStringClone(ep.getcstring(), m_path);
-            if (MCCStringBeginsWith(m_path, "http://") || MCCStringBeginsWith(m_path, "https://"))
-            {
-                MCAndroidObjectRemoteCall(t_view, "setUrl", "bs", &t_success, m_path);
-            }
-            else
-            {
-                char *t_resolved_path = nil;
-                bool t_is_asset = false;
-                const char *t_asset_path = nil;
-                
-                t_resolved_path = MCS_resolvepath(m_path);
-                t_is_asset = path_to_apk_path(t_resolved_path, t_asset_path);
-                
-                MCAndroidObjectRemoteCall(t_view, "setFile", "bsb", &t_success, t_is_asset ? t_asset_path : t_resolved_path, t_is_asset);
-                
-                MCCStringFree(t_resolved_path);
-            }
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyShowController:
-        {
-            if (!ParseBoolean(ep, t_bool))
-                return ES_ERROR;
-            MCAndroidObjectRemoteCall(t_view, "setShowController", "vb", nil, t_bool);
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyCurrentTime:
-        {
-            if (!ParseInteger(ep, t_integer))
-                return ES_ERROR;
-            MCAndroidObjectRemoteCall(t_view, "setCurrentTime", "vi", nil, t_integer);
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyLooping:
-        {
-            if (!ParseBoolean(ep, t_bool))
-                return ES_ERROR;
-            MCAndroidObjectRemoteCall(t_view, "setLooping", "vb", nil, t_bool);
-            return ES_NORMAL;
-        }
-            
-        default:
-            break;
-    }
-    
-    return MCAndroidControl::Set(p_property, ep);
-}
-#endif /* MCAndroidPlayerControl::Set */
-
-#ifdef /* MCAndroidPlayerControl::Get */ LEGACY_EXEC
-Exec_stat MCAndroidPlayerControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
-{
-    bool t_bool = false;
-    int32_t t_integer;
-    
-    jobject t_view;
-    t_view = GetView();
-    
-    switch (p_property)
-    {
-        case kMCNativeControlPropertyContent:
-        {
-            ep.setsvalue(m_path);
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyShowController:
-        {
-            MCAndroidObjectRemoteCall(t_view, "getShowController", "b", &t_bool);
-            FormatBoolean(ep, t_bool);
-            return ES_NORMAL;
-        }
-        
-        case kMCNativeControlPropertyLooping:
-        {
-            MCAndroidObjectRemoteCall(t_view, "getLooping", "b", &t_bool);
-            FormatBoolean(ep, t_bool);
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyDuration:
-        {
-            MCAndroidObjectRemoteCall(t_view, "getDuration", "i", &t_integer);
-            FormatInteger(ep, t_integer);
-            return ES_NORMAL;
-        }
-		
-		// PM-2015-09-15: [[ Bug 15925 ]] Allow mobileControlGet(myPlayer, "playableDuration" on Android
-		case kMCNativeControlPropertyPlayableDuration:
-		{
-			MCAndroidObjectRemoteCall(t_view, "getPlayableDuration", "i", &t_integer);
-			FormatInteger(ep, t_integer);
-			return ES_NORMAL;
-		}
-			
-        case kMCNativeControlPropertyCurrentTime:
-        {
-            MCAndroidObjectRemoteCall(t_view, "getCurrentTime", "i", &t_integer);
-            FormatInteger(ep, t_integer);
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyNaturalSize:
-        {
-            int32_t t_width = 0, t_height = 0;
-            MCAndroidObjectRemoteCall(t_view, "getVideoWidth", "i", &t_width);
-            MCAndroidObjectRemoteCall(t_view, "getVideoHeight", "i", &t_height);
-			char t_buffer[I2L * 2 + 3];
-            sprintf(t_buffer, "%d,%d", t_width, t_height);
-            ep.setuint(strlen(t_buffer));
-            return ES_NORMAL;
-        }
-            
-        default:
-            break;
-    }
-    
-    return MCAndroidControl::Get(p_property, ep);
-}
-#endif /* MCAndroidPlayerControl::Get */
-
-#ifdef /* MCAndroidPlayerControl::Do */ LEGACY_EXEC
-Exec_stat MCAndroidPlayerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-    jobject t_view;
-    t_view = GetView();
-    
-    switch (p_action)
-    {
-        case kMCNativeControlActionPlay:
-            MCAndroidObjectRemoteCall(t_view, "start", "v", nil);
-            return ES_NORMAL;
-            
-        case kMCNativeControlActionPause:
-            MCAndroidObjectRemoteCall(t_view, "pause", "v", nil);
-            return ES_NORMAL;
-            
-        case kMCNativeControlActionStop:
-            MCAndroidObjectRemoteCall(t_view, "stop", "v", nil);
-            return ES_NORMAL;
-            
-        default:
-            break;
-    }
-    
-    return MCAndroidControl::Do(p_action, p_parameters);
-}
-#endif /* MCAndroidPlayerControl::Do */
-
 // Player-specific actions
 void MCAndroidPlayerControl::ExecPlay(MCExecContext& ctxt)
 {
@@ -490,7 +317,7 @@ void MCAndroidPlayerControl::DeleteView(jobject p_view)
 
 bool MCNativePlayerControlCreate(MCNativeControl *&r_control)
 {
-    r_control = new MCAndroidPlayerControl();
+    r_control = new (nothrow) MCAndroidPlayerControl();
     return true;
 }
 
@@ -543,7 +370,7 @@ void MCAndroidPlayerControl::HandlePropertyAvailableEvent(const char *p_property
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPlayerFinished(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPlayerFinished(JNIEnv *env, jobject object)
 {
-    MCLog("doPlayerFinished", nil);
+    MCLog("doPlayerFinished");
     MCAndroidControl *t_control = nil;
     
     if (MCAndroidControl::FindByView(object, t_control))
@@ -553,7 +380,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPlay
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPlayerError(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPlayerError(JNIEnv *env, jobject object)
 {
-    MCLog("doPlayerError", nil);
+    MCLog("doPlayerError");
     MCAndroidControl *t_control = nil;
     
     if (MCAndroidControl::FindByView(object, t_control))
@@ -569,7 +396,7 @@ typedef enum
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPropertyAvailable(JNIEnv *env, jobject object, jint availableProperty) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doPropertyAvailable(JNIEnv *env, jobject object, jint availableProperty)
 {
-    MCLog("doPropertyAvailable", nil);
+    MCLog("doPropertyAvailable");
     MCAndroidControl *t_control = nil;
     
     if (MCAndroidControl::FindByView(object, t_control))
@@ -586,7 +413,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doProp
         }
         MCAndroidPlayerControl *t_player = (MCAndroidPlayerControl*)t_control;
         MCCustomEvent *t_event;
-        t_event = new MCNativePlayerPropertyAvailableEvent(t_player, t_prop_name);
+        t_event = new (nothrow) MCNativePlayerPropertyAvailableEvent(t_player, t_prop_name);
         MCEventQueuePostCustom(t_event);
     }
 }
@@ -595,7 +422,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doProp
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doMovieTouched(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doMovieTouched(JNIEnv *env, jobject object)
 {
-    MCLog("doMovieTouched", nil);
+    MCLog("doMovieTouched");
     MCAndroidControl *t_control = nil;
     
     if (MCAndroidControl::FindByView(object, t_control))

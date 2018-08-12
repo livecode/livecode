@@ -4,15 +4,16 @@ Type: property
 
 Syntax: get the sharedGroupNames of {<card> | <stack>}
 
-Summary: Reports the names of all the shared groups of the card or stack
+Summary:
+Reports the names of all the shared groups of the card or stack
 
-Associations: stack,card
+Associations: stack, card
 
 Introduced: 4.6.4
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 get the sharedGroupNames of stack myStack
@@ -26,14 +27,22 @@ put it into tGroupIds
 
 Example:
 repeat for each line tGroupName in the sharedGroupNames of this card
-   remove group the ID of group tGroupName of this card
+   remove group tGroupName from this card
 end repeat
 
 Value:
-The <sharedGroupNames> of a stack returns a list of short names, one per line, of all groups owned by the stack which have <sharedBehavior> set to true regardless of which cards they may be placed on.
-The <sharedGroupNames> of a card returns a list of short names, one per line, of all groups which are placed onto the card which have <sharedBehavior> set to true.
+The <sharedGroupNames> of a stack returns a list of short names, one per
+line, of all groups owned by the stack which have <sharedBehavior> set
+to true regardless of which cards they may be placed on. The
+<sharedGroupNames> of a card returns a list of short names, one per
+line, of all groups which are placed onto the card which have
+<sharedBehavior> set to true.
 
 Description:
-Use the <sharedGroupNames> property to get a list of all the names of the shared groups on the card or stack.
+Use the <sharedGroupNames> property to get a list of all the names of
+the shared groups on the card or stack.
 
-References: delete (command), place (command), remove (command), backgroundBehavior (property), sharedBehavior (property), sharedGroupIds (property)
+References: delete (command), place (command), remove (command),
+backgroundBehavior (property), sharedBehavior (property),
+sharedGroupIds (property)
+

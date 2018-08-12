@@ -2,39 +2,73 @@ Name: touchMove
 
 Type: message
 
-Syntax: touchMove <touchID>, <touchX>, <touchY> 
+Syntax: touchMove <pTouchID>, <pTouchX>, <pTouchY>
 
-Summary: Sent when the point at which the user is touching the screen changes.
+Summary:
+Sent when the point at which the user is touching the screen changes.
 
 Introduced: 4.5.2
 
-OS: ios,android
+OS: ios, android
 
-Platforms: desktop
+Platforms: mobile
 
 Example:
-on touchMove pTouchID, pX, pY
-   if pX &gt; lastX then
-     -- user has moved to the right
+local sLastX
+on touchMove pTouchID, pTouchX, pTouchY
+   -- sLastX[pTouchID] will be empty when the first move
+   -- message for pTouchID is sent
+   if sLastX[pTouchID] is not empty and \
+         pTouchX > sLastX[pTouchID] then
+      -- user has moved to the right
    end if
+   put pTouchX into sLastX[pTouchID]
 end touchMove
 
 Parameters:
-touchID: A number which uniquely identifies a sequence of touch messages corresponding to an individual, physical touch action. This is the same id as the touchStart message which started the sequence.
-touchX: The horizontal coordinate of the touchPosition
-touchY: The vertical coordinate of the touchPostition
+pTouchID:
+A number which uniquely identifies a sequence of touch messages
+corresponding to an individual, physical touch action. This is the same
+id as the touchStart message which started the sequence.
+
+pTouchX:
+The horizontal coordinate of the touchPosition
+
+pTouchY:
+The vertical coordinate of the touchPosition
 
 Description:
-Handle the <touchMove> message if you want to perform some action when the user changes the touch position without ending the touch or if you want to keep continuous track of the touch position.
+Handle the <touchMove> message if you want to perform some action when
+the user changes the touch position without ending the touch or if you
+want to keep continuous track of the touch position.
 
-The <touchMove> message is sent to the control which recived the <touchStart> message to begin the touch sequence.
+The <touchMove> message is sent to the control which received the
+<touchStart> message to begin the touch sequence.
 
-The <touchID> parameter is a number which uniquely identifies a sequence of touch messages corresponding to an individual, physical touch action. All such sequences start with a <touchStart (message)>message, have one or more <touchMove> messages and finish with either a <touchEnd> or a <touchRelease> message.
+The <pTouchID> parameter is a number which uniquely identifies a sequence
+of touch messages corresponding to an individual, physical touch action.
+All such sequences start with a <touchStart(message)> message, have one
+or more <touchMove> messages and finish with either a <touchEnd> or a
+<touchRelease> message.
 
-No two touch sequences will have the same id, and it is possible to have multiple (interleaving) such sequences occurring at once. This allows handling of more than one physical touch at once and, for example, allows you to track two fingers moving on the iPhone's screen.
+No two touch sequences will have the same id, and it is possible to have
+multiple (interleaving) such sequences occurring at once. This allows
+handling of more than one physical touch at once and, for example,
+allows you to track two fingers moving on the device screen.
 
-The sequence of touch messages is tied to the control in which the touch started, in much the same way mouse messages are tied to the object a mouse down starts in. The test used to determine what object a touch starts in is identical to that used to determine whether the pointer is inside a control. In particular, invisible and disabled controls will not considered viable candidates.
+The sequence of touch messages is tied to the control in which the touch
+started, in much the same way mouse messages are tied to the object a
+mouse down starts in. The test used to determine what object a touch
+starts in is identical to that used to determine whether the pointer is
+inside a control. In particular, invisible and disabled controls will
+not considered viable candidates.
 
-References: touchRelease (message), touchStart (message), touchEnd (message)
+Since the current touch position is reported for each move message, the
+previous position will need to be tracked to calculate direction and/or
+distance moved.
+
+References: touchRelease (message), touchStart (message),
+touchEnd (message)
 
 Tags: ui
+

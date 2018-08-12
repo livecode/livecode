@@ -1,1 +1,0 @@
-# Lc 7.0 DP3 does not sanitize data when setting points of polygon

@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -57,10 +57,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern Bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[]);
 extern void X_main_loop(void);
-extern bool X_main_loop_iteration(void);
-extern int X_close(void);
 extern void send_startup_message(bool p_do_relaunch = true);
 extern void setup_simulator_hooks(void);
 
@@ -215,6 +212,11 @@ static void MCFiberCallSelectorWithObject(MCFiberRef p_fiber, id object, SEL sel
 void MCIPhoneCallOnMainFiber(void (*handler)(void *), void *context)
 {
 	MCFiberCall(s_main_fiber, handler, context);
+}
+
+bool MCIPhoneIsOnMainFiber(void)
+{
+    return MCFiberIsCurrentThread(s_main_fiber);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -408,7 +410,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	MCS_resolvepath(env -> sound, &t_sound_path);
 	
 	NSURL *t_url;
-	t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: *t_sound_path]];
+	t_url = [NSURL fileURLWithPath: MCStringConvertToAutoreleasedNSString(*t_sound_path)];
 	
 	OSStatus t_status;
 	t_status = AudioServicesCreateSystemSoundID((CFURLRef)t_url, &t_new_sound);
@@ -617,8 +619,19 @@ static void MCScreenDCDoSnapshot(void *p_env)
 										  -[window bounds].size.height * [[window layer] anchorPoint].y);
 					
 					// Render the layer hierarchy to the current context
-					[[window layer] renderInContext:t_img_context];
-					
+                    if ([window respondsToSelector: @selector(drawViewHierarchyInRect:afterScreenUpdates:)])
+                    {
+                        // This method is supported in iOS7+ and will capture many
+                        // native view's content.
+                        UIGraphicsPushContext(t_img_context);
+                        [window drawViewHierarchyInRect:[window bounds] afterScreenUpdates:YES];
+                        UIGraphicsPopContext();
+                    }
+                    else
+                    {
+                        [[window layer] renderInContext:t_img_context];
+					}
+                    
 					// Restore the context
 					CGContextRestoreGState(t_img_context);
 				}
@@ -1209,7 +1222,7 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	
 	// Convert the arguments into stringrefs
 	MCStringRef args[1];
-	MCStringCreateWithCFString((CFStringRef)[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0], args[0]);
+	MCStringCreateWithCFStringRef((CFStringRef)[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0], args[0]);
 
     // SN-2015-09-22: [[ Bug 15987 ]] Use NSProcessInfo to get the env variables
 	// Convert the environment variables into stringrefs
@@ -1242,8 +1255,8 @@ static void MCIPhoneDoDidBecomeActive(void *)
 
             // We convert the CFStringRef that we got from the dictionary into
             //  StringRefs, and create a Bash-like environment variable
-            if (MCStringCreateWithCFString((CFStringRef)t_value, &t_value_str)
-                    && MCStringCreateWithCFString((CFStringRef)t_key, &t_variable_str)
+            if (MCStringCreateWithCFStringRef((CFStringRef)t_value, &t_value_str)
+                    && MCStringCreateWithCFStringRef((CFStringRef)t_key, &t_variable_str)
                     && MCStringFormat(t_env_var, "%@=%@", *t_variable_str, *t_value_str))
                 t_envp[t_index] = t_env_var;
 
@@ -1255,8 +1268,14 @@ static void MCIPhoneDoDidBecomeActive(void *)
     }
 	
 	// Initialize the engine.
+    struct X_init_options t_options;
+    t_options.argc = 1;
+    t_options.argv = args;
+    t_options.envp = *t_envp;
+    t_options.app_code_path = nullptr;
+    
 	Bool t_init_success;
-    t_init_success = X_init(1, args, envc, *t_envp);
+    t_init_success = X_init(t_options);
 	
     [t_pool release];
 	
@@ -1324,7 +1343,7 @@ static void MCIPhoneDoWillTerminate(void *)
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
 	// Ensure shutdown is called.
-	if (MCdefaultstackptr != nil)
+	if (MCdefaultstackptr)
 		MCdefaultstackptr->getcard()->message(MCM_shut_down, (MCParameter*)NULL, True, True);
 	
 	// Shutdown the engine
@@ -1514,7 +1533,7 @@ void MCIPhoneHandleEndTextInput(void)
 
 void MCIPhoneHandleProcessTextInput(uint32_t p_char_code, uint32_t p_key_code)
 {
-	if (MCactivefield == nil)
+	if (!MCactivefield)
 		return;
 
 	static_cast<MCScreenDC *>(MCscreen) -> handle_key_press(0, p_char_code, p_key_code);

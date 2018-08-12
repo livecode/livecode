@@ -15,8 +15,12 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
-This module specifies the syntax definitions and bindings for file i/o operations in modular LiveCode.
+/**
+This module specifies the syntax definitions and bindings for
+filesystem operations in LiveCode Builder.
+
+>*Note:* This module is currently experimental and unstable.  The
+>syntax is likely to change in future versions of LiveCode.
 */
 
 module com.livecode.file
@@ -26,10 +30,10 @@ module com.livecode.file
 public foreign handler MCFileExecGetContents(in File as String, out Contents as Data) returns nothing binds to "<builtin>"
 public foreign handler MCFileExecSetContents(in Contents as Data, in File as String) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	The data stored in a file.
 
-File:		An expression that evaluates to a filename.
+File:		An expression that evaluates to a filesystem path.
 
 Description:
 The raw data stored in a file.
@@ -50,13 +54,13 @@ end syntax
 
 public foreign handler MCFileExecDeleteFile(in File as String) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	Delete a file from the filesystem.
 
-File:		An expression that evaluates to a filename.
+File:		An expression that evaluates to a filesystem path.
 
 Description:
-Deletes the specified file.
+Deletes the specified file.  The file must exist.
 
 Tags: IO, Filesystem
 */
@@ -72,13 +76,13 @@ public foreign handler MCFileExecCreateDirectory(in Directory as String) returns
 public foreign handler MCFileExecDeleteDirectory(in Directory as String) returns nothing binds to "<builtin>"
 public foreign handler MCFileExecGetDirectoryEntries(in Directory as String, out Entries as List) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	Create a named directory.
 
-Directory:	An expression that evaluates to a filename.
+Directory:	An expression that evaluates to a filesystem path.
 
 Description:
-Creates a new, empty directory.
+Creates a new, empty directory.  The directory must not already exist.
 
 Tags: IO, Filesystem
 */
@@ -88,10 +92,10 @@ begin
 	MCFileExecCreateDirectory(Directory)
 end syntax
 
-/*
+/**
 Summary:	Delete a directory.
 
-Directory:	An expression that evaluates to a filename.
+Directory:	An expression that evaluates to a filesystem path.
 
 Description:
 Deletes a directory.  The directory must be empty.
@@ -104,13 +108,14 @@ begin
 	MCFileExecDeleteDirectory(Directory)
 end syntax
 
-/*
+/**
 Summary:	List the contents of a directory.
 
-Directory:	An expression that evaluates to a filename.
+Directory:	An expression that evaluates to a filesystem path.
 
 Description:
-Creates a new, empty directory.
+Returns a List containing the directory entries of a directory.  The
+directory must exist.
 
 Tags: IO, Filesystem
 */

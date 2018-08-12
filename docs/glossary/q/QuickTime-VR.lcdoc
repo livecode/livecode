@@ -1,10 +1,23 @@
 Name: QuickTime VR
 
-Synonyms: Quicktime VR,QTVR,QT VR,QT-VR
+Synonyms: quicktime vr, qtvr, qt vr, qt-vr
 
 Type: glossary
 
 Description:
-Enhanced video system that allows you to display and rotate objects in three dimensions.
+Enhanced video system that allows you to display and rotate objects in
+three dimensions.
+
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: dontUseQT (property), dontUseQTEffects (property)
 
 Tags: multimedia
+

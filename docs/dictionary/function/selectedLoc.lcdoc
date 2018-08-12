@@ -6,13 +6,15 @@ Syntax: the selectedLoc
 
 Syntax: selectedLoc()
 
-Summary: <return|Returns> the location of the top left corner of the text <selection>.
+Summary:
+<return|Returns> the location of the top left corner of the text
+<selection>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the selectedLoc
@@ -20,15 +22,32 @@ the selectedLoc
 Example:
 if the selectedLoc is not within the rect of me then unScrollField
 
-Returns: The <selectedLoc> <function> <return|returns> two positive <integer|integers> separated by a comma.
+Returns:
+The <selectedLoc> <function> <return|returns> two positive
+<integer|integers> separated by a comma.
 
 Description:
-Use the <selectedLoc> <function> to determine the location in the <stack window> where the text <selection> appears.
+Use the <selectedLoc> <function> to determine the location in the <stack
+window> where the text <selection> appears.
 
-When text is selected, a box around it is filled with the hiliteColor or <hilitePattern>. The first <item> of the <return value> is the horizontal distance in <pixels> from the left edge of the stack to the left edge of this box. The second <item> of the <return value> is the vertical distance from the top edge of the <stack> to the top of the box.
+When text is selected, a box around it is filled with the hiliteColor or
+<hilitePattern>. The first <item> of the <return value> is the
+horizontal distance in <pixels> from the left edge of the stack to the
+left edge of this box. The second <item> of the <return value> is the
+vertical distance from the top edge of the <stack> to the top of the
+box. 
 
-If the text selection is in a scrolling field and the selection is not in the visible portion of the field, the <selectedLoc> <function> is adjusted by the amount of scroll.
+If the text selection is in a scrolling field and the selection is not
+in the visible portion of the field, the <selectedLoc> <function> is
+adjusted by the amount of scroll.
 
-References: topLeft (property), pixels (property), hilitePattern (property), stack (object), selection (keyword), item (keyword), integer (glossary), return value (glossary), return (glossary), stack window (glossary), selectedLine (function), selectedField (function), localLoc (function), clickLoc (function), mouseLoc (function), selectedText (function), selectedChunk (function), foundLoc (function), select (command), function (control_st)
+References: select (command), function (control structure),
+selectedLine (function), selectedField (function), localLoc (function),
+clickLoc (function), mouseLoc (function), selectedText (function),
+selectedChunk (function), foundLoc (function), integer (glossary),
+return value (glossary), return (glossary), stack window (glossary),
+selection (keyword), item (keyword), stack (object), topLeft (property),
+pixels (property), hilitePattern (property)
 
 Tags: ui
+

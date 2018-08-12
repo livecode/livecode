@@ -52,6 +52,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+#include "module-engine.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct _PropList
@@ -61,7 +63,7 @@ typedef struct _PropList
 }
 PropList;
 
-static PropList stackprops[] =
+static const PropList stackprops[] =
     {
         {"altId", P_ALT_ID},
         {"alwaysBuffer", P_ALWAYS_BUFFER},
@@ -131,7 +133,7 @@ static PropList stackprops[] =
         {"windowShape", P_WINDOW_SHAPE}
     };
 
-static PropList cardprops[] =
+static const PropList cardprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -169,7 +171,7 @@ static PropList cardprops[] =
         {"topPattern", P_TOP_PATTERN}
     };
 
-static PropList groupprops[] =
+static const PropList groupprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -185,6 +187,7 @@ static PropList groupprops[] =
         {"boundingRect", P_BOUNDING_RECT},
         {"cantDelete", P_CANT_DELETE},
         {"cantSelect", P_CANT_SELECT},
+        {"clipsToRect", P_CLIPS_TO_RECT},
         {"colorOverlay", P_BITMAP_EFFECT_COLOR_OVERLAY},
         {"disabled", P_DISABLED},
         {"dontSearch", P_DONT_SEARCH},
@@ -238,7 +241,7 @@ static PropList groupprops[] =
         {"vScrollbar", P_VSCROLLBAR}
     };
 
-static PropList buttonprops[] =
+static const PropList buttonprops[] =
     {
         {"accelKey", P_ACCELERATOR_KEY},
         {"accelMods", P_ACCELERATOR_MODIFIERS},
@@ -326,7 +329,7 @@ static PropList buttonprops[] =
         {"visitedIcon", P_VISITED_ICON}
     };
 
-static PropList fieldprops[] =
+static const PropList fieldprops[] =
     {
         {"altId", P_ALT_ID},
         {"autoHilite", P_AUTO_HILITE},
@@ -406,7 +409,7 @@ static PropList fieldprops[] =
         {"vScrollbar", P_VSCROLLBAR}
     };
 
-static PropList imageprops[] =
+static const PropList imageprops[] =
     {
         {"altId", P_ALT_ID},
         {"angle", P_ANGLE},
@@ -467,7 +470,7 @@ static PropList imageprops[] =
         {"yHot", P_YHOT}
     };
 
-static PropList graphicprops[] =
+static const PropList graphicprops[] =
     {
         {"altId", P_ALT_ID},
         {"angle", P_ANGLE},
@@ -546,7 +549,7 @@ static PropList graphicprops[] =
         {"miterLimit", P_MITER_LIMIT},
     };
 
-static PropList scrollbarprops[] =
+static const PropList scrollbarprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -604,7 +607,7 @@ static PropList scrollbarprops[] =
         {"thumbSize", P_THUMB_SIZE}
     };
 
-static PropList playerprops[] =
+static const PropList playerprops[] =
     {
         {"altId", P_ALT_ID},
         {"alwaysBuffer", P_ALWAYS_BUFFER},
@@ -665,7 +668,7 @@ static PropList playerprops[] =
         {"visible", P_VISIBLE},
     };
 
-static PropList epsprops[] =
+static const PropList epsprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -720,7 +723,7 @@ static PropList epsprops[] =
         {"yScale", P_Y_SCALE}
     };
 
-static PropList colorpaletteprops[] =
+static const PropList colorpaletteprops[] =
     {
         {"name", P_SHORT_NAME},
         {"id", P_ID},
@@ -728,7 +731,7 @@ static PropList colorpaletteprops[] =
         {"rect", P_RECTANGLE}
     };
 
-static PropList audioclipprops[] =
+static const PropList audioclipprops[] =
     {
         {"altID", P_ALT_ID},
         {"id", P_ID},
@@ -736,7 +739,7 @@ static PropList audioclipprops[] =
         {"playLoudness", P_PLAY_LOUDNESS},
     };
 
-static PropList videoclipprops[] =
+static const PropList videoclipprops[] =
     {
         {"altID", P_ALT_ID},
         {"dontRefresh", P_DONT_REFRESH},
@@ -817,7 +820,7 @@ static void MCInterfaceTextStyleParse(MCExecContext& ctxt, MCStringRef p_input, 
 		while (MCStringGetNativeCharAtIndex(p_input, t_old_offset) == ' ')
 			t_old_offset++;
 
-		t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_text_style);
+		t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_text_style);
 
 		if (t_success)
 		{
@@ -1121,13 +1124,14 @@ void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterf
 {
     if (MCStringIsEqualToCString(p_input, "mixed", kMCCompareCaseless))
     {
-        r_output . mixed = Mixed;
-        r_output . type = kMCInterfaceTriStateMixed;
+        r_output . value = kMCTristateMixed;
+        return;
     }
-    
-    if (MCTypeConvertStringToBool(p_input, r_output . state))
+
+    bool t_bool = false;
+    if (MCTypeConvertStringToBool(p_input, t_bool))
     {
-        r_output . type = kMCInterfaceTriStateBoolean;
+        r_output . value = t_bool;
         return;
     }
     
@@ -1136,16 +1140,14 @@ void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterf
 
 void MCInterfaceTriStateFormat(MCExecContext& ctxt, const MCInterfaceTriState& p_input, MCStringRef& r_output)
 {
-    if (p_input . type == kMCInterfaceTriStateBoolean)
+    if (p_input.value.isMixed())
     {
-        r_output = MCValueRetain(p_input . state ? kMCTrueString : kMCFalseString);
+        if (!MCStringCreateWithCString("mixed", r_output))
+            ctxt.Throw();
         return;
     }
-    
-    if (MCStringCreateWithCString("mixed", r_output))
-        return;
-    
-    ctxt . Throw();
+
+    r_output = MCValueRetain(p_input.value.isFalse() ? kMCFalseString : kMCTrueString);
 }
 
 void MCInterfaceTriStateFree(MCExecContext& ctxt, MCInterfaceTriState& p_input)
@@ -1167,7 +1169,6 @@ MCExecEnumTypeElementInfo _kMCInterfaceEncodingElementInfo[] =
 {
 	{ MCnativestring, 0, true },
 	{ MCunicodestring, 1, true },
-	{ MCmixedstring, 2, true },
 };
 
 MCExecEnumTypeInfo _kMCInterfaceEncodingTypeInfo =
@@ -1252,6 +1253,24 @@ MCExecEnumTypeInfo _kMCInterfaceThemeControlTypeTypeInfo =
     _kMCInterfaceThemeControlTypeElementInfo
 };
 
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceScriptStatusElementInfo[] =
+{
+    { "compiled", kMCInterfaceScriptStatusCompiled, false },
+    { "uncompiled", kMCInterfaceScriptStatusUncompiled, false },
+    { "warning", kMCInterfaceScriptStatusWarning, false },
+    { "error", kMCInterfaceScriptStatusError, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceScriptStatusTypeInfo =
+{
+    "Interface.ScriptStatus",
+    sizeof(_kMCInterfaceScriptStatusElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceScriptStatusElementInfo
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCInterfaceLayerTypeInfo = &_kMCInterfaceLayerTypeInfo;
@@ -1264,6 +1283,7 @@ MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo = &_kMCInterfaceTriStateTypeI
 MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo = &_kMCInterfaceListStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceThemeTypeInfo = &_kMCInterfaceThemeTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceThemeControlTypeTypeInfo = &_kMCInterfaceThemeControlTypeTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceScriptStatusTypeInfo = &_kMCInterfaceScriptStatusTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1336,7 +1356,7 @@ void MCObject::SetId(MCExecContext& ctxt, uint32_t p_new_id)
 	
 	// MW-2011-02-08: Don't allow id change if the parent is nil as this means its a template
 	//   object which doesn't really have an id.
-	if (parent == nil)
+	if (!parent)
 		return;
 	
 	MCStack *t_stack;
@@ -1375,7 +1395,7 @@ void MCObject::SetId(MCExecContext& ctxt, uint32_t p_new_id)
 		t_stack -> visit(VISIT_STYLE_DEPTH_FIRST, 0, &t_visitor);
 	}
 	else if (parent -> gettype() == CT_CARD)
-		static_cast<MCCard *>(parent) -> resetid(obj_id, p_new_id);
+		parent.GetAs<MCCard>()->resetid(obj_id, p_new_id);
 
 	// MW-2012-10-10: [[ IdCache ]] If the object is in the cache, then remove
 	//   it since its id is changing.
@@ -1447,10 +1467,9 @@ void MCObject::SetName(MCExecContext& ctxt, MCStringRef p_name)
 	//   change case of names of objects.
 	if (t_success && getname() != *t_new_name)
 	{
-		MCAutoNameRef t_old_name;
-		t_old_name . Clone(getname());
+		MCNewAutoNameRef t_old_name = getname();
 		setname(*t_new_name);
-		message_with_valueref_args(MCM_name_changed, t_old_name, getname());
+		message_with_valueref_args(MCM_name_changed, *t_old_name, getname());
 	}
 	
 	if (t_success)
@@ -1501,7 +1520,7 @@ void MCObject::GetLayer(MCExecContext& ctxt, uint32_t part, MCInterfaceLayer& r_
 	// the group being edited in edit group mode.
 	
 	uint2 num = 0;
-	if (parent != nil)
+	if (parent)
 	{
 		MCCard *t_card;
 		t_card = getcard(part);
@@ -1524,7 +1543,7 @@ void MCObject::GetLayer(MCExecContext& ctxt, uint32_t part, MCInterfaceLayer& r_
 
 void MCObject::SetLayer(MCExecContext& ctxt, uint32_t part, const MCInterfaceLayer& p_layer)
 {
-	if (parent == NULL || getcard(part)->relayer((MCControl *)this, p_layer . layer) != ES_NORMAL)
+	if (!parent || getcard(part)->relayer((MCControl *)this, p_layer . layer) != ES_NORMAL)
 		ctxt . LegacyThrow(EE_OBJECT_BADRELAYER);
 }
 
@@ -1542,16 +1561,9 @@ void MCObject::GetScript(MCExecContext& ctxt, MCStringRef& r_script)
 		return;
 	}
 
-	bool t_success = true;
-	
 	getstack() -> unsecurescript(this);
 	r_script = MCValueRetain(_script);
 	getstack() -> securescript(this);
-	
-	if (t_success)
-		return;
-
-	ctxt . Throw();
 }
 
 void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
@@ -1677,19 +1689,30 @@ void MCObject::GetParentScript(MCExecContext& ctxt, MCStringRef& r_parent_script
 
 void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_script)
 {
-	// MW-2008-10-25: Add the setting logic for parent scripts. This code is a
+    MCObject *t_current_parent = nil;
+    if (parent_script != nil)
+    {
+        t_current_parent = parent_script -> GetParent() -> GetObject();
+    }
+    
+    // MW-2008-10-25: Add the setting logic for parent scripts. This code is a
 	//   modified version of what goes on in MCChunk::getobj when the final
 	//   target for a chunk is an expression. We first parse the string as a
 	//   chunk expression, then attempt to get the object of it. If the object
 	//   doesn't exist, the set fails.
-	bool t_success;
-	t_success = true;
-
+	
 	// MW-2008-11-02: [[ Bug ]] Setting the parentScript of an object to
 	//   empty should unset the parent script property and not throw an
 	//   error.
-	if (new_parent_script == nil || MCStringGetLength(new_parent_script) == 0)
+	if (MCStringIsEmpty(new_parent_script))
 	{
+        if (t_current_parent != nil &&
+            t_current_parent -> getscriptdepth() > 0)
+        {
+            ctxt . LegacyThrow(EE_PARENTSCRIPT_EXECUTING);
+            return;
+        }
+        
 		if (parent_script != NULL)
 			parent_script -> Release();
 		parent_script = NULL;
@@ -1701,34 +1724,44 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	MCScriptPoint sp(new_parent_script);
 
 	// Create a new chunk object to parse the reference into
-	MCChunk *t_chunk;
-	t_chunk = new MCChunk(False);
+	/* UNCHECKED */ MCAutoPointer<MCChunk> t_chunk = new (nothrow) MCChunk(False);
 
 	// Attempt to parse a chunk. We also check that there is no 'junk' at
 	// the end of the string - if there is, its an error. Note the errorlock
 	// here - it stops parse errors being pushed onto MCperror.
 	Symbol_type t_next_type;
 	MCerrorlock++;
-	t_success = (t_chunk -> parse(sp, False) == PS_NORMAL && sp.next(t_next_type) == PS_EOF);
+	bool t_success = (t_chunk -> parse(sp, False) == PS_NORMAL &&
+	                  sp.next(t_next_type) == PS_EOF);
 	MCerrorlock--;
 
 	// Now attempt to evaluate the object reference - this will only succeed
     // if the object exists.
-	MCObject *t_object;
+	MCObject *t_object = nil;
 	uint32_t t_part_id;
 	if (t_success)
-        t_success = t_chunk -> getobj(ctxt, t_object, t_part_id, False);
-    
-    // Check that the object is a button or a stack.
-    if (t_success &&
-        t_object -> gettype() != CT_BUTTON &&
-        t_object -> gettype() != CT_STACK)
-        t_success = false;
-    
+		t_success = t_chunk -> getobj(ctxt, t_object, t_part_id, False);
+	
+	// Check to see if we are already parent-linked to t_object and if so
+	// do nothing.
+	if (t_current_parent == t_object)
+		return;
+	
+	if (t_current_parent != nil &&
+	    t_current_parent -> getscriptdepth() > 0)
+	{
+		ctxt . LegacyThrow(EE_PARENTSCRIPT_EXECUTING);
+		return;
+	}
+	
+	// Check that the object is a button or a stack.
+	if (t_success &&
+		t_object -> gettype() != CT_BUTTON &&
+		t_object -> gettype() != CT_STACK)
+		t_success = false;
+	
 	// MW-2013-07-18: [[ Bug 11037 ]] Make sure the object isn't in the hierarchy
 	//   of the parentScript.
-	bool t_is_cyclic;
-	t_is_cyclic = false;
 	if (t_success)
 	{
 		MCObject *t_parent_object;
@@ -1737,8 +1770,8 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 		{
 			if (t_parent_object == this)
 			{
-				t_is_cyclic = true;
-				break;
+				ctxt . LegacyThrow(EE_PARENTSCRIPT_CYCLICOBJECT);
+				return;
 			}
 			
 			MCParentScript *t_super_parent_script;
@@ -1748,83 +1781,65 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 			else
 				t_parent_object = nil;
 		}
+	}
+
+	if (!t_success)
+	{
+		ctxt . LegacyThrow(EE_PARENTSCRIPT_BADOBJECT);
+		return;
+	}
 		
-		if (t_is_cyclic)
-			t_success = false;
-	}
+	// We have the target object, so extract its rugged id. That is the
+	// (id, stack, mainstack) triple. Note that mainstack is NULL if the
+	// object lies on a mainstack.
+	//
+	uint32_t t_id;
+	t_id = t_object -> getid();
 
+	// If the object is a stack, then it has an id of zero.
+	if (t_object -> gettype() == CT_STACK)
+		t_id = 0;
+	
+	MCNameRef t_stack;
+	t_stack = t_object -> getstack() -> getname();
+
+	// Now attempt to acquire a parent script use object. This can only
+	// fail if memory is exhausted, so in this case just return an error
+	// stat.
+	MCParentScriptUse *t_use;
+	t_use = MCParentScript::Acquire(this, t_id, t_stack);
+	t_success = t_use != nil;
+
+	// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we resolve the the
+	//   parent script as pointing to the object (so Inherit works correctly).
 	if (t_success)
+		t_use -> GetParent() -> Resolve(t_object);
+	
+	// MW-2013-05-30: [[ InheritedPscripts ]] Next we have to ensure the
+	//   inheritence hierarchy is in place (The inherit call will create
+	//   super-uses, and will return false if there is not enough memory).
+	if (t_success)
+		t_success = t_use -> Inherit();
+
+	// We have succeeded in creating a new use of an object as a parent
+	// script, so now release the old parent script this object points
+	// to (if any) and install the new one.
+	if (parent_script != NULL)
+		parent_script -> Release();
+
+	parent_script = t_use;
+
+	// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we update all the
+	//   uses of this object if it is being used as a parentScript. This
+	//   is because the inheritence hierarchy has been updated and so the
+	//   super_use chains need to be remade.
+	MCParentScript *t_this_parent;
+	if (getisparentscript())
 	{
-		// Check to see if we are already parent-linked to t_object and if so
-		// do nothing.
-		//
-		if (parent_script == NULL || parent_script -> GetParent() -> GetObject() != t_object)
-		{
-			// We have the target object, so extract its rugged id. That is the
-			// (id, stack, mainstack) triple. Note that mainstack is NULL if the
-			// object lies on a mainstack.
-			//
-			uint32_t t_id;
-			t_id = t_object -> getid();
-
-            // If the object is a stack, then it has an id of zero.
-            if (t_object -> gettype() == CT_STACK)
-                t_id = 0;
-            
-			MCNameRef t_stack;
-			t_stack = t_object -> getstack() -> getname();
-
-			// Now attempt to acquire a parent script use object. This can only
-			// fail if memory is exhausted, so in this case just return an error
-			// stat.
-			MCParentScriptUse *t_use;
-			t_use = MCParentScript::Acquire(this, t_id, t_stack);
-			t_success = t_use != nil;
-
-            // MW-2013-05-30: [[ InheritedPscripts ]] Make sure we resolve the the
-			//   parent script as pointing to the object (so Inherit works correctly).
-            if (t_success)
-                t_use -> GetParent() -> Resolve(t_object);
-            
-            // MW-2013-05-30: [[ InheritedPscripts ]] Next we have to ensure the
-			//   inheritence hierarchy is in place (The inherit call will create
-			//   super-uses, and will return false if there is not enough memory).
-			if (t_success)
-				t_success = t_use -> Inherit();
-
-			// We have succeeded in creating a new use of an object as a parent
-			// script, so now release the old parent script this object points
-			// to (if any) and install the new one.
-			if (parent_script != NULL)
-				parent_script -> Release();
-
-			parent_script = t_use;
-
-			// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we update all the
-			//   uses of this object if it is being used as a parentScript. This
-			//   is because the inheritence hierarchy has been updated and so the
-			//   super_use chains need to be remade.
-			MCParentScript *t_this_parent;
-			if (getisparentscript())
-			{
-				t_this_parent = MCParentScript::Lookup(this);
-				if (t_success && t_this_parent != nil)
-					t_success = t_this_parent -> Reinherit();
-			}
-		}
+		t_this_parent = MCParentScript::Lookup(this);
+		if (t_success && t_this_parent != nil)
+			t_success = t_this_parent -> Reinherit();
 	}
-	else
-	{
-		// MW-2013-07-18: [[ Bug 11037 ]] Report an appropriate error if the hierarchy
-		//   is cyclic.
-		if (!t_is_cyclic)
-			ctxt . LegacyThrow(EE_PARENTSCRIPT_BADOBJECT);
-		else
-			ctxt . LegacyThrow(EE_PARENTSCRIPT_CYCLICOBJECT);
-	}
-
-	// Delete our temporary chunk object.
-	delete t_chunk;
 
 	if (t_success)
 		return;
@@ -1859,7 +1874,7 @@ bool MCObject::GetPixel(MCExecContext& ctxt, Properties which, bool effective, u
     
     if (GetColor(ctxt, t_which, effective, t_color))
     {
-        r_pixel = t_color.color.pixel & 0x00FFFFFF;
+        r_pixel = MCColorGetPixel(t_color.color) & 0x00FFFFFF;
         
         MCInterfaceNamedColorFree(ctxt, t_color);
         return true;
@@ -1874,8 +1889,7 @@ void MCObject::SetPixel(MCExecContext& ctxt, Properties which, uinteger_t pixel)
 	if (!getcindex(which - P_FORE_PIXEL, i))
 		i = createcindex(which - P_FORE_PIXEL);
 
-	colors[i] . pixel = pixel;
-	MCscreen -> querycolor(colors[i]);
+	MCColorSetPixel(colors[i], pixel);
 	if (colornames[i] != nil)
 	{
 		MCValueRelease(colornames[i]);
@@ -2072,8 +2086,6 @@ void MCObject::SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedCo
 		{
 			i = createcindex(index);
 			colors[i].red = colors[i].green = colors[i].blue = 0;
-			if (opened)
-				MCscreen->alloccolor(colors[i]);
 		}
 		set_interface_color(colors[i], colornames[i], p_color);
 
@@ -2084,8 +2096,6 @@ void MCObject::SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedCo
 				MCpatternlist->freepat(patterns[j].pattern);
 			destroypindex(index, j);
 		}
-		if (opened)
-			MCscreen->alloccolor(colors[i]);
 	}
 }
 
@@ -2096,19 +2106,14 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
 	{
 		get_interface_color(colors[i], colornames[i], r_color);
         
-        // AL-2015-05-20: [[ Bug 15378 ]] Reinstate fix for bug 9419:
-        //  If the object isn't already open, then alloc the color first.
-        if (!opened)
-            MCscreen -> alloccolor(r_color . color);
-        
-		return true;	
+		return true;
 	}
 	else if (effective)
     {
         bool t_found;
         t_found = false;
         
-        if (parent != NULL)
+        if (parent)
             t_found = parent -> GetColor(ctxt, which, effective, r_color, true);
         
         if (!t_found && !recursive)
@@ -2125,7 +2130,6 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
                 if (MCPlatformGetControlThemePropColor(t_control_type, t_control_part, t_control_state, t_control_prop, t_color))
                 {
                     t_found = true;
-                    MCscreen->alloccolor(t_color);
                     r_color.color = t_color;
                     r_color.name = nil;
                 }
@@ -2370,10 +2374,12 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 		else if (t_new_offset > t_old_offset)
 		{
 			MCInterfaceNamedColor t_color;
-			t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_color_string);
+			t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_color_string);
 			if (t_success)
+			{
 				MCInterfaceNamedColorParse(ctxt, *t_color_string, t_color);
 				t_success = !ctxt . HasError();
+			}
 			if (t_success)
 			{
 				uint2 i, j;
@@ -2385,33 +2391,22 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 				}
 				if (!getcindex(index, i))
 				{
-					if (t_color . color . flags)
-					{
-						i = createcindex(index);
-						colors[i] = t_color . color;
-						if (opened)
-							MCscreen->alloccolor(colors[i]);
-						colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
-					}
+					i = createcindex(index);
+					colors[i] = t_color . color;
+					colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
 				}
 				else
 				{
-					if (t_color . color . flags)
+					if (colornames[i] != nil)
 					{
-						if (colornames[i] != nil)
-						{
-							MCValueRelease(colornames[i]);
-							colornames[i] = nil;
-						}
-						if (opened)
-						{
-							colors[i] = t_color . color;
-							MCscreen->alloccolor(colors[i]);
-						}
-						colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
+						MCValueRelease(colornames[i]);
+						colornames[i] = nil;
 					}
-					else
-						destroycindex(index, i);
+					if (opened)
+					{
+						colors[i] = t_color . color;
+					}
+					colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
 				}
 				MCInterfaceNamedColorFree(ctxt, t_color);
 			}
@@ -2445,7 +2440,7 @@ bool MCObject::GetPattern(MCExecContext& ctxt, Properties which, bool effective,
     uint2 i;
     if (getpindex(which - P_FORE_PATTERN, i))
     {
-        if (patterns[i].id < PI_END && patterns[i].id > PI_PATTERNS)
+        if (patterns[i].id <= PI_END && patterns[i].id >= PI_PATTERNS)
             *r_pattern = patterns[i].id - PI_PATTERNS;
         else
             *r_pattern = patterns[i].id;
@@ -2455,7 +2450,7 @@ bool MCObject::GetPattern(MCExecContext& ctxt, Properties which, bool effective,
     {
         if (effective)
         {
-            if (parent != NULL)
+            if (parent)
                 return parent->GetPattern(ctxt, which, effective, r_pattern);
             else
             {
@@ -2475,7 +2470,7 @@ void MCObject::SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_
     uint2 i;
     bool t_isopened;
     t_isopened = (opened != 0) || (gettype() == CT_STACK && static_cast<MCStack*>(this)->getextendedstate(ECS_ISEXTRAOPENED));
-    if (p_new_id == nil)
+    if (p_new_id == nil || *p_new_id == 0)
     {
         if (getpindex(p_new_pixmap, i))
         {
@@ -2491,7 +2486,7 @@ void MCObject::SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_
         else
             if (t_isopened)
                 MCpatternlist->freepat(patterns[i].pattern);
-        if (*p_new_id < PI_PATTERNS)
+        if (*p_new_id <= PI_END - PI_PATTERNS)
             *p_new_id += PI_PATTERNS;
         patterns[i].id = *p_new_id;
         if (t_isopened)
@@ -2714,7 +2709,7 @@ void MCObject::GetPatterns(MCExecContext& ctxt, MCStringRef& r_patterns)
 	ctxt . Throw();
 }
 
-void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef patterns)
+void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef p_patterns)
 {
 	bool t_success;
 	t_success = true;
@@ -2722,18 +2717,18 @@ void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef patterns)
 	uindex_t t_old_offset = 0;
 	uindex_t t_new_offset = 0;
 	uindex_t t_length;
-	t_length = MCStringGetLength(patterns);
+	t_length = MCStringGetLength(p_patterns);
 
 	for (uint2 p = P_FORE_PATTERN; p <= P_FOCUS_PATTERN; p++)
 	{
 		MCAutoStringRef t_pattern;
 		uint4 t_id;
-		if (!MCStringFirstIndexOfChar(patterns, '\n', t_old_offset, kMCCompareExact, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_patterns, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
 		if (t_new_offset > t_old_offset)
 		{
-			t_success = MCStringCopySubstring(patterns, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_pattern);
+			t_success = MCStringCopySubstring(p_patterns, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_pattern);
 			if (t_success)
 				t_success = MCU_stoui4(*t_pattern, t_id);
 			if (t_success)
@@ -2789,7 +2784,7 @@ bool MCObject::TextPropertyMapFont()
 	//   *not* to attempt to mapfonts on it!
 	// MW-2013-03-28: [[ Bug 10791 ]] Exceptions to every rule - the home stack
 	//   can be open but with no font...
-	if ((opened == 0 || m_font == nil) && gettype() == CT_STACK && parent != nil)
+	if ((opened == 0 || m_font == nil) && gettype() == CT_STACK && parent)
 	{
 		mapfont();
 		return true;
@@ -2903,7 +2898,7 @@ void MCObject::SetTextFont(MCExecContext& ctxt, MCStringRef font)
 		//   to ensure substacks update properly.
 		// MW-2013-03-21: [[ Bug ]] Unless its the templateStack (parent == nil) in which
 		//   case we don't want to do any font recomputation.
-		if ((gettype() == CT_STACK && parent != nil) || opened)
+		if ((gettype() == CT_STACK && parent) || opened)
 		{
 			if (recomputefonts(parent -> getfontref()))
 			{
@@ -2968,7 +2963,7 @@ void MCObject::SetTextSize(MCExecContext& ctxt, uinteger_t* size)
 	//   to ensure substacks update properly.
 	// MW-2013-03-21: [[ Bug ]] Unless its the templateStack (parent == nil) in which
 	//   case we don't want to do any font recomputation.
-	if ((gettype() == CT_STACK && parent != nil) || opened)
+	if ((gettype() == CT_STACK && parent) || opened)
 	{
 		if (recomputefonts(parent -> getfontref()))
 		{
@@ -3023,7 +3018,7 @@ void MCObject::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_s
 	//   to ensure substacks update properly.
 	// MW-2013-03-21: [[ Bug ]] Unless its the templateStack (parent == nil) in which
 	//   case we don't want to do any font recomputation.
-	if ((gettype() == CT_STACK && parent != nil) || opened)
+	if ((gettype() == CT_STACK && parent) || opened)
 	{
 		if (recomputefonts(parent -> getfontref()))
 		{
@@ -3042,7 +3037,7 @@ void MCObject::GetEffectiveTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& 
 {
 	if ((m_font_flags & FF_HAS_TEXTSIZE) == 0)
 	{
-		if (parent != nil)
+		if (parent)
 			parent -> GetEffectiveTextStyle(ctxt, r_style);
 		else
 			MCdispatcher -> GetDefaultTextStyle(ctxt, r_style);
@@ -3179,7 +3174,13 @@ void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
     {
         // MW-2011-08-18: [[ Layers ]] Take note of the change in visibility.
         if (gettype() >= CT_GROUP)
+		{
             static_cast<MCControl *>(this) -> layer_visibilitychanged(t_old_effective_rect);
+
+			// IM-2016-10-05: [[ Bug 17008 ]] Dirty selection handles when object shown / hidden
+			if (getselected())
+				getcard()->dirtyselection(rect);
+		}
     }
     
 	if (dirty)
@@ -3276,31 +3277,31 @@ void MCObject::SetTraversalOn(MCExecContext& ctxt, bool setting)
 
 void MCObject::GetOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
-	if (parent != nil)
+	if (parent)
 		parent -> GetName(ctxt, r_owner);
 }
 
 void MCObject::GetShortOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
-	if (parent != nil)
+	if (parent)
 		parent -> GetShortName(ctxt, r_owner);
 }
 
 void MCObject::GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
-	if (parent != nil)
+	if (parent)
 		parent -> GetAbbrevName(ctxt, r_owner);
 }
 
 void MCObject::GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_owner)
 {
-	if (parent != nil)
+	if (parent)
         parent -> GetLongName(ctxt, p_part_id, r_owner);
 }
 
 void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props)
 {
-	PropList *table;
+	const PropList *table;
 	uint2 tablesize;
 
 	switch (gettype())
@@ -3448,7 +3449,7 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_PATTERNS, "patterns" },
 };
 
-void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props)
+void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef p_props)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
 	MCRedrawLockScreen();
@@ -3464,7 +3465,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
     {
 		// MERG-2013-06-24: [[ RevisedPropsProp ]] Make sure we do a case-insensitive search
 		//   for the property name.
-        if (!MCArrayFetchValue(props, false, MCNAME(s_preprocess_props[j].tag), t_value))
+        if (!MCArrayFetchValue(p_props, false, MCNAME(s_preprocess_props[j].tag), t_value))
             continue;
 
         // MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only set the
@@ -3483,7 +3484,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
 	uintptr_t t_iterator;
 	t_iterator = 0;
     MCNameRef t_key;
-	while(MCArrayIterate(props, t_iterator, t_key, t_value))
+	while(MCArrayIterate(p_props, t_iterator, t_key, t_value))
 	{
 		MCScriptPoint sp(MCNameGetString(t_key));
 		Symbol_type type;
@@ -3715,7 +3716,7 @@ void MCObject::SetBlendLevel(MCExecContext& ctxt, uinteger_t level)
 		if (gettype() < CT_GROUP || !static_cast<MCControl *>(this) -> layer_issprite())
 			Redraw();
 		else
-			static_cast<MCCard *>(parent) -> layer_dirtyrect(static_cast<MCControl *>(this) -> geteffectiverect());
+			parent.GetAs<MCCard>()->layer_dirtyrect(static_cast<MCControl *>(this) -> geteffectiverect());
 	}
 }
 
@@ -4187,9 +4188,9 @@ void MCObject::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool 
         
         MCF_changetextstyle(t_style_set, t_style, p_setting);
         
-        MCInterfaceTextStyle t_style;
-        t_style . style = t_style_set;
-        SetTextStyle(ctxt, t_style);
+        MCInterfaceTextStyle t_interface_style;
+        t_interface_style . style = t_style_set;
+        SetTextStyle(ctxt, t_interface_style);
         return;
     }
     
@@ -4375,3 +4376,474 @@ void MCObject::GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_th
 {
     r_theme = getcontroltype();
 }
+
+void MCObject::GetScriptStatus(MCExecContext& ctxt, intenum_t& r_status)
+{
+    if (hashandlers & HH_DEAD_SCRIPT)
+        r_status = kMCInterfaceScriptStatusError;
+    else if (hlist == nil && flags & F_SCRIPT)
+        r_status = kMCInterfaceScriptStatusUncompiled;
+    else
+        r_status = kMCInterfaceScriptStatusCompiled;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  REFLECTIVE PROPERTIES - MOVED FROM DEVELOPMENT ENGINE 8.1.5-rc-1 ONWARDS
+//
+
+/* This functions are designed for, and should only be used for
+ * revAvailableHandlers as they are tied to its requirements at present. */
+static bool MCObjectListAppendObject(MCObjectList *&x_list, MCObject *p_object)
+{
+	if (x_list != nil)
+	{
+		MCObjectList *t_object;
+		t_object = x_list;
+		
+		do
+		{
+			if (t_object->getobject() == p_object)
+				return true;
+			t_object = t_object->next();
+		}
+		while (t_object != x_list);
+	}
+
+	MCObjectList *t_newobject;
+	t_newobject = nil;
+	
+    /* Make sure the object's script is compiled so that we can enumerate the
+     * handlers, assuming it compiles. */
+    p_object -> parsescript(False);
+    
+	t_newobject = new (nothrow) MCObjectList(p_object);
+	
+	if (t_newobject == nil)
+		return false;
+	
+	if (x_list == nil)
+		x_list = t_newobject;
+	else
+		x_list->append(t_newobject);
+	
+	return true;
+}
+
+static bool MCObjectListAppendObjectAndBehaviors(MCObjectList *&x_list, MCObject *p_object)
+{
+    if (!MCObjectListAppendObject(x_list, p_object))
+    {
+        return false;
+    }
+    
+    MCParentScript *t_parent_script = p_object->getparentscript();
+    while(t_parent_script != nullptr)
+    {
+        // If the behavior is blocked, then there are no more behaviors in the
+        // chain.
+        if (t_parent_script->IsBlocked())
+        {
+            break;
+        }
+        
+        MCObject *t_parent_object = t_parent_script->GetObject();
+        
+        // If the behavior object has been deleted, then it won't currently be
+        // blocked, but will have a null object.
+        if (t_parent_object == nullptr)
+        {
+            break;
+        }
+        
+        // We have a parent object, so add it.
+        if (!MCObjectListAppendObject(x_list, t_parent_object))
+        {
+            return false;
+        }
+        
+        t_parent_script = t_parent_object->getparentscript();
+    }
+    
+    return true;
+}
+
+static bool MCObjectListAppendObjectList(MCObjectList *&x_list, MCObjectList *p_list)
+{
+	bool t_success;
+	t_success = true;
+	
+	if (p_list != nil)
+	{
+		MCObjectList *t_object;
+		t_object = p_list;
+		
+		do
+		{
+			if (!t_object->getremoved())
+				t_success = MCObjectListAppendObjectAndBehaviors(x_list, t_object->getobject());
+			t_object = t_object->next();
+		}
+		while (t_success && t_object != p_list);
+	}
+	
+	return t_success;
+}
+
+static void MCObjectListFree(MCObjectList *p_list)
+{
+	if (p_list == nil)
+		return;
+	
+	while (p_list->next() != p_list)
+		delete p_list->next();
+	
+	delete p_list;
+}
+
+void MCObject::GetRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers)
+{
+    // MW-2010-07-09: [[ Bug 8848 ]] Previously scripts were being compiled into
+    //   separate hlists causing script local variable loss in the behavior
+    //   case. Instead we just use parsescript in non-reporting mode.
+    
+    parsescript(False);
+    if (hlist == nil)
+    {
+        r_count = 0;
+        return;
+    }
+    
+    hlist -> enumerate(ctxt, true, true, r_count, r_handlers);
+}
+
+static bool get_message_path_object_list_for_object(MCObject* p_object, MCObjectList*& r_object_list)
+{
+    
+    bool t_success;
+    t_success = true;
+    
+    MCObjectList *t_object_list;
+    t_object_list = nil;
+    
+    t_success = MCObjectListAppendObjectList(t_object_list, MCfrontscripts);
+    
+    for (MCObject *t_object = p_object; t_success && t_object != NULL; t_object = t_object -> getparent())
+    {
+        t_success = MCObjectListAppendObjectAndBehaviors(t_object_list, t_object);
+    }
+    
+    if (t_success)
+        t_success = MCObjectListAppendObjectList(t_object_list, MCbackscripts);
+    
+    for (uint32_t i = 0; t_success && i < MCnusing; i++)
+    {
+        if (MCusing[i] == p_object)
+            continue;
+        t_success = MCObjectListAppendObjectAndBehaviors(t_object_list, MCusing[i]);
+    }
+    
+    if (!t_success && t_object_list)
+    {
+        MCObjectListFree(t_object_list);
+        t_object_list = nil;
+    }
+    
+    r_object_list = t_object_list;
+    
+    return t_success;
+}
+
+void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers)
+{
+    bool t_first;
+    t_first = true;
+    
+    MCAutoArray<MCStringRef> t_handlers;
+    
+    bool t_success;
+    t_success = true;
+    
+    // IM-2014-02-25: [[ Bug 11841 ]] Collect non-repeating objects in the message path
+    MCObjectList *t_object_list;
+    if (t_success)
+        t_success = get_message_path_object_list_for_object(this, t_object_list);
+    
+    // IM-2014-02-25: [[ Bug 11841 ]] Enumerate the handlers for each object
+    if (t_success)
+    {
+        MCObjectList *t_object_ref;
+        t_object_ref = t_object_list;
+        do
+        {
+            // AL-2014-05-23: [[ Bug 12491 ]] The object list checks for uniqueness,
+            //  so no need to check if the object is itself a frontscript.
+            
+            t_first = true;
+            MCHandlerlist *t_handler_list;
+            
+            if (!t_object_ref -> getremoved() && t_object_ref -> getobject() -> getstack() -> iskeyed())
+                t_handler_list = t_object_ref -> getobject() -> hlist;
+            else
+                t_handler_list = NULL;
+            
+            if (t_handler_list != NULL)
+            {
+                MCStringRef *t_handler_array;
+                t_handler_array = nil;
+                uindex_t t_count;
+                
+                t_first = t_handler_list -> enumerate(ctxt, t_object_ref->getobject() == this, t_first, t_count, t_handler_array);
+            
+                for (uindex_t i = 0; i < t_count; i++)
+                    t_handlers . Push(t_handler_array[i]);
+                
+                MCMemoryDeleteArray(t_handler_array);
+            }
+            
+            t_object_ref = t_object_ref -> next();
+        }
+        while(t_object_ref != t_object_list);
+    }
+    
+    MCObjectListFree(t_object_list);
+     
+    t_handlers . Take(r_handlers, r_count);
+}
+
+void MCObject::GetRevAvailableVariablesNonArray(MCExecContext& ctxt, MCStringRef& r_variables)
+{
+    GetRevAvailableVariables(ctxt, nil, r_variables);
+}
+
+void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_variables)
+{
+    // OK-2008-04-23 : Added for script editor
+    if (hlist == NULL)
+    {
+        r_variables = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    // A handler can be specified using array notation in the form <handler_type>,<handler_name>.
+    // Where handler type is a single letter using the same conventation as the revAvailableHandlers.
+    //
+    // If a handler is specified, the list of variables for that handler is returned in the same format
+    // as the variableNames property.
+    //
+    // If no handler is specified, the property returns the list of script locals for the object followed
+    // by the list of script-declared globals.
+    //
+    // At the moment, no errors are thrown, just returns empty if it doesn't like something.
+    if (p_key == nil)
+    {
+        MCAutoListRef t_list;
+        if (!MCListCreateMutable('\n', &t_list))
+            return;
+        
+        MCAutoListRef t_global_list, t_local_list;
+        
+        if (!(hlist->getlocalnames(&t_local_list) &&
+              MCListAppend(*t_list, *t_local_list)))
+        {
+            ctxt . Throw();
+            return;
+        }
+        
+        if (!(hlist->getglobalnames(&t_global_list) &&
+                MCListAppend(*t_list, *t_global_list)))
+        {
+            ctxt . Throw();
+            return;
+        }
+        
+        MCListCopyAsString(*t_list, r_variables);
+        return;
+    }
+
+    
+    MCStringRef t_key;
+    t_key = MCNameGetString(p_key);
+    
+    // The handler name begins after the comma character
+    MCAutoStringRef t_handler_name;
+    uindex_t t_comma_offset;
+    if (!MCStringFirstIndexOfChar(t_key, ',', 0, kMCCompareExact, t_comma_offset))
+    {
+        r_variables = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    if (!MCStringCopySubstring(t_key, MCRangeMake(t_comma_offset + 1, MCStringGetLength(t_key) - t_comma_offset - 1), &t_handler_name))
+    {
+        ctxt . Throw();
+        return;
+    }
+    
+    // The handler code must be the first char of the string
+    const char_t t_handler_code = MCStringGetNativeCharAtIndex(t_key, 0);
+    
+    Handler_type t_handler_type;
+    switch (t_handler_code)
+    {
+        case 'M':
+            t_handler_type = HT_MESSAGE;
+            break;
+        case 'C':
+            t_handler_type = HT_MESSAGE;
+            break;
+        case 'F':
+            t_handler_type = HT_FUNCTION;
+            break;
+        case 'G':
+            t_handler_type = HT_GETPROP;
+            break;
+        case 'S':
+            t_handler_type = HT_SETPROP;
+            break;
+        case 'A':
+            t_handler_type = HT_AFTER;
+            break;
+        case 'B':
+            t_handler_type = HT_BEFORE;
+            break;
+        default:
+            t_handler_type = HT_MESSAGE;
+            break;
+    }
+    
+    Exec_stat t_status;
+    MCNewAutoNameRef t_name;
+    MCNameCreate(*t_handler_name, &t_name);
+    // The handler list class allows us to locate the handler, just return empty if it can't be found.
+    MCHandler *t_handler;
+    t_status = hlist -> findhandler(t_handler_type, *t_name, t_handler);
+
+    if (t_status == ES_NORMAL)
+    {
+        MCAutoListRef t_list;
+        t_handler -> getvarnames(true, &t_list);
+        MCListCopyAsString(*t_list, r_variables);
+    }
+    else
+        r_variables = nil;
+}
+
+void MCObject::GetRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_status)
+{
+    if (!getstack() -> iskeyed())
+    {
+        ctxt . LegacyThrow(EE_STACK_NOKEY);
+        return;
+    }
+    
+    MCAutoValueRefBase<MCScriptObjectRef> t_object_ref;
+    
+    if (MCEngineScriptObjectCreate(this, 0, &t_object_ref))
+    {
+        r_status = MCEngineExecDescribeScriptOfScriptObject(*t_object_ref);
+        if (MCExtensionConvertToScriptType(ctxt, r_status))
+            return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCObject::GetEffectiveRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_descriptions)
+{
+    bool t_success;
+    t_success = true;
+    
+    MCAutoArrayRef t_descriptions;
+    t_success = MCArrayCreateMutable(&t_descriptions);
+    
+    MCObjectList *t_object_list;
+    if (t_success)
+        t_success = get_message_path_object_list_for_object(this, t_object_list);
+    
+    if (t_success)
+    {
+        MCObjectList *t_object_ref;
+        t_object_ref = t_object_list;
+        
+        index_t t_index = 1;
+        do
+        {
+            if (!t_object_ref -> getremoved() && t_object_ref -> getobject() -> getstack() -> iskeyed())
+            {
+                MCAutoValueRef t_description;
+                
+                MCAutoValueRefBase<MCScriptObjectRef> t_script_object_ref;
+                
+                if (t_success)
+                    t_success = MCEngineScriptObjectCreate(t_object_ref -> getobject(), 0, &t_script_object_ref);
+                
+                MCAutoArrayRef t_object_description;
+                if (t_success)
+                {
+                    t_description = MCEngineExecDescribeScriptOfScriptObject(*t_script_object_ref, t_object_ref -> getobject() == this);
+                
+                    MCAutoStringRef t_object_id;
+                    t_object_ref -> getobject() -> GetLongId(ctxt, 0, &t_object_id);
+                    
+                    MCNameRef t_keys[2];
+                    t_keys[0] = MCNAME("object");
+                    t_keys[1] = MCNAME("description");
+                    
+                    MCValueRef t_values[2];
+                    t_values[0] = *t_object_id;
+                    t_values[1] = *t_description;
+                    
+                    t_success = MCArrayCreate(false,
+                                              t_keys,
+                                              t_values,
+                                              sizeof(t_keys) / sizeof(t_keys[0]),
+                                              &t_object_description);
+                }
+                
+                if (t_success)
+                    t_success = MCArrayStoreValueAtIndex(*t_descriptions,
+                                                         t_index,
+                                                         *t_object_description);
+                
+                ++t_index;
+                
+            }
+            
+            t_object_ref = t_object_ref -> prev();
+        }
+        while(t_success && t_object_ref != t_object_list);
+    }
+    
+    MCObjectListFree(t_object_list);
+    
+    MCValueRef t_value;
+    if (t_success)
+    {
+        t_value = t_descriptions.Take();
+        t_success = MCExtensionConvertToScriptType(ctxt, t_value);
+    }
+    
+    if (!t_success)
+        ctxt . Throw();
+    else
+        r_descriptions = t_value;
+}
+
+void MCObject::GetRevBehaviorUses(MCExecContext& ctxt, MCArrayRef& r_objects)
+{
+    MCParentScript *t_parent;
+    t_parent = MCParentScript::Lookup(this);
+    
+    if (t_parent == nullptr)
+    {
+        r_objects = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
+    if (!t_parent->CopyUses(r_objects))
+    {
+        ctxt.Throw();
+        return;
+    }
+}
+

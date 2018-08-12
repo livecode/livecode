@@ -2,11 +2,14 @@ Name: stack
 
 Synonyms: stack
 
-Type: object
+Type: glossary
 
 Description:
-An <object> that contains <card|cards>, which may contain other <object|objects>. Each <object> in LiveCode is part of a specific stack.
+An <object(glossary)> that contains <card|cards>, which may contain
+other <object|objects>. Each <object(glossary)> in LiveCode is part of a
+specific stack.
 
-References: card (object), object (object)
+References: card (glossary), object (glossary)
 
 Tags: objects
+

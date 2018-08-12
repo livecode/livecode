@@ -3,9 +3,9 @@ lc-compile(1) -- compile LiveCode Builder source code
 
 ## SYNOPSIS
 
-**lc-compile** [_OPTION_ ...] --output _OUTFILE_ [--] _LCBFILE_
+**lc-compile** [_OPTION_ ...] --output _OUTFILE_ [--] _LCBFILE_...
 
-**lc-compile** [_OPTION_ ...] --outputc _OUTFILE_ [--] _LCBFILE_
+**lc-compile** [_OPTION_ ...] --outputc _OUTFILE_ [--] _LCBFILE_...
 
 **lc-compile** [_OPTION_ ...] --deps [_DEPSMODE_] [--] _LCBFILE_...
 
@@ -14,25 +14,33 @@ lc-compile(1) -- compile LiveCode Builder source code
 **lc-compile** compiles the named input _LCBFILE_ to bytecode, saving the
 resulting bytecode to _OUTFILE_.
 
-If one or more `--modulepath` options are provided, **lc-compile** may
-additionally generate an interface (`.lci`) file in the first `--modulepath`
-specified.
+If one or more `--modulepath` options are provided, and the `--interface` option
+is not specified, then **lc-compile** may additionally generate an interface
+(`.lci`) file in the first `--modulepath` specified.
 
 ## OPTIONS
 
 * --modulepath _PATH_:
   Search for interface (`.lci`) files in _PATH_, which should be a directory.
-  The first `--modulepath` option specified determines the directory in which
-  an interface file may be created for _LCBFILE_.
+  If the `--interface` option is not specified, then the first `--modulepath`
+  option specified determines the directory in which an interface file may be
+  created for _LCBFILE_.
 
 * --output _OUTFILE_:
   Generate LiveCode bytecode in _OUTFILE_, which should be the path to a `.lcm`
   file.  If _OUTFILE_ already exists, it will be overwritten.
 
 * --outputc _OUTFILE_:
-  Generate LiveCode bytecode as a static array embedded in C source code in
+  Generate LiveCode bytecode as a static array(s) embedded in C source code in
   _OUTFILE_, which should be the path to a `.c` file.  If _OUTFILE_ already
   exists, it will be overwritten.
+
+* --outputauxc _OUTFILE_:
+  Generate LiveCode bytecode as a static array(s) embedded in C source code in
+  _OUTFILE_, which should be the path to a `.c` file.  If _OUTFILE_ already
+  exists, it will be overwritten.
+  This is the same as --outputc mode, except that it does not emit the 'builtin'
+  module (so should be used for additional sets of C embedded modules).
 
 * --deps [_DEPSMODE_]:
   Generate dependency information on standard output.  _DEPSMODE_ may
@@ -43,6 +51,9 @@ specified.
 * --manifest _MANIFEST_:
   Generate a module manifest in _MANIFEST_.  This is used by the LiveCode IDE.
 
+* --interface _INTERFACE_:
+  Generate the module interface file in _INTERFACE_.
+
 * -Werror:
   Turn all warnings into errors.
 
@@ -52,7 +63,7 @@ specified.
 * --:
   Stop processing options.  This is useful in case _LCBFILE_ begins with `--`.
 
-The `--output` and `--outputc` options cannot be used together.
+The `--output` and `--outputc` / `--outputauxc` options cannot be used together.
 
 ## DEPENDENCY INFORMATION
 

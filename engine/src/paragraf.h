@@ -133,6 +133,20 @@ struct MCParagraphAttrs
 
 class MCSegment;
 
+/* MCParagraphCursorType describes the type of cursor (caret) which can be
+ * requested when using 'getcursorrect'. */
+enum MCParagraphCursorType
+{
+    /* The full cursor rect, ignoring RTL split cursors. */
+    kMCParagraphCursorTypeFull,
+    
+    /* The primary part of an RTL cursor. */
+    kMCParagraphCursorTypePrimary,
+    
+    /* The secondary part of an RTL cursor. */
+    kMCParagraphCursorTypeSecondary,
+};
+
 // Don't change this until everything dealing with fields, paragraphs, etc
 // is capable of dealing with 32-bit offsets or things will break!
 #define PARAGRAPH_MAX_LEN	INT32_MAX
@@ -140,7 +154,7 @@ class MCSegment;
 class MCParagraph : public MCDLlist
 {
 	MCField *parent;
-	MCStringRef m_text;
+	MCAutoStringRef m_text;
 	MCBlock *blocks;
     MCSegment *segments;
 	MCLine *lines;
@@ -173,13 +187,14 @@ public:
 	// below to ensure surrogate pairs are handled properly.
 	codepoint_t GetCodepointAtIndex(findex_t p_index)
 	{
+		MCAssert(p_index >= 0);
 		// This assumes that the input string is valid UTF-16 and all surrogate
 		// pairs are matched correctly.
 		unichar_t t_lead, t_tail;
-		t_lead = MCStringGetCharAtIndex(m_text, p_index);
-		if (MCStringIsValidSurrogatePair(m_text, p_index))
+		t_lead = MCStringGetCharAtIndex(*m_text, p_index);
+		if (MCStringIsValidSurrogatePair(*m_text, p_index))
 		{
-            t_tail = MCStringGetCharAtIndex(m_text, p_index + 1);
+            t_tail = MCStringGetCharAtIndex(*m_text, p_index + 1);
 			return MCStringSurrogatesToCodepoint(t_lead, t_tail);
 		}
 		return t_lead;
@@ -189,11 +204,13 @@ public:
 	// surrogate pairs when it does so.
 	findex_t IncrementIndex(findex_t p_in)
 	{
-		unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in);
+		if (p_in < 0)
+			return 0;
+		unichar_t t_char = MCStringGetCharAtIndex(*m_text, p_in);
         // SN-2015-09-08: [[ Bug 15895 ]] A field can end with half of a
         //  surrogate pair - in which case the index only increments by 1.
 		if (0xD800 <= t_char && t_char < 0xDC00)
-            return (findex_t)MCU_min((uindex_t)(p_in + 2), MCStringGetLength(m_text));
+            return (findex_t)MCU_min((uindex_t)(p_in + 2), MCStringGetLength(*m_text));
 		return p_in + 1;
 	}
 	
@@ -201,9 +218,9 @@ public:
 	// surrogate pairs when it does so.
 	findex_t DecrementIndex(findex_t p_in)
 	{
-		if (p_in == 0)
+		if (p_in <= 0)
             return 0;
-        unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in - 1);
+        unichar_t t_char = MCStringGetCharAtIndex(*m_text, p_in - 1);
 		if (0xDC00 <= t_char && t_char < 0xE000)
 			return p_in - 2;
 		return p_in - 1;
@@ -254,7 +271,7 @@ public:
 	// paragraph in any way and should not be retained.
 	MCStringRef GetInternalStringRef() const
 	{
-		return m_text;
+		return *m_text;
 	}
 	
 	////////// BIDIRECTIONAL SUPPORT
@@ -276,6 +293,8 @@ public:
 	
 	bool visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor);
 
+	uint32_t getminimumstackfileversion(void);
+	
 	// MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then this paragraph
 	//   has an attribute extension.
 	IO_stat load(IO_handle stream, uint32_t version, bool is_ext);
@@ -431,13 +450,13 @@ public:
 			
         if (p_char_indices)
         {
-            MCRange t_cu_range = {0,MCStringGetLength(m_text)};
+            MCRange t_cu_range = {0,MCStringGetLength(*m_text)};
             MCRange t_char_range;
-            MCStringUnmapIndices(m_text, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+            MCStringUnmapIndices(*m_text, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
             return t_char_range . length;
         }
         else
-            return MCStringGetLength(m_text);
+            return MCStringGetLength(*m_text);
 	}
 
 	// Same as gettextsize, except adjust by one for the CR character.
@@ -460,10 +479,6 @@ public:
 	// Return the text as HTML formatted string.
 	// Called by:
 	//   MCField::gethtmltext
-#ifdef LEGACY_EXEC
-	void gethtmltext(MCExecPoint &ep);
-#endif
-
 	// Clear everything in the current paragraph and set the text to the
 	// given string.
 	// Called by:
@@ -597,9 +612,6 @@ public:
 	//   field indices to char indices.
     // MW-2013-07-31: [[ Bug 10957 ]] Pass in the start of the paragraph as a byte
 	//   offset so that the correct char offset can be calculated.
-#ifdef LEGACY_EXEC
-	void getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t si, findex_t ei, int32_t p_delta);
-#endif
     void getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFieldRanges& r_ranges);
     
 	// Return true if the paragraph completely fits in theight. Otherwise, return
@@ -623,21 +635,11 @@ public:
 	void cleanattrs(void);
     
 	// Sets the given paragraph attribute to the value in ep.
-#ifdef LEGACY_EXEC
-	Exec_stat setparagraphattr(Properties which, MCExecPoint& ep);
-#endif
 	// Gets the given paragraph attribute into the given ep.
-#ifdef LEGACY_EXEC
-    Exec_stat getparagraphattr(Properties which, MCExecPoint& ep, Boolean effective);
-#endif
 	// Copies the given attribute from the given paragraph.
 	void copysingleattr(Properties which, MCParagraph *other);
 	// Copies all the attributes from the given paragraph.
 	void copyattrs(const MCParagraph& other);
-#ifdef LEGACY_EXEC
-	// Stores the paragraph attributes into the dst array.
-	void storeattrs(MCArrayRef dst);
-#endif
 	// Fetches the paragraph attributes from the src array.
     void fetchattrs(MCArrayRef src);
 	// Clears the paragraph attributes.
@@ -784,8 +786,7 @@ public:
 	//   MCField::fcenter
 	//   MCField::fmove
 	//   MCField::getcompositionrect
-	MCRectangle getcursorrect(findex_t fi, uint2 fixedheight, bool include_space);
-    MCRectangle getsplitcursorrect(findex_t fi, uint2 fixedheight, bool include_space, bool primary);
+	MCRectangle getcursorrect(findex_t fi, uint2 fixedheight, bool include_space, MCParagraphCursorType type = kMCParagraphCursorTypeFull);
 
 	// Compute the (x, y) location of the given index in the paragraph
 	// Called by:
@@ -820,12 +821,6 @@ public:
 	// Called by:
 	//   MCField::finsert (for charset purposes)
 	//   MCField::gettextatts
-#ifdef LEGACY_EXEC
-	Boolean getatts(uint2 si, uint2 ei, Properties which, Font_textstyle spec_style, const char *&fname, uint2 &size,
-	                uint2 &style, const MCColor *&color,
-	                const MCColor *&backcolor, int2 &shift, bool& specstyle, uint2 &mixed);
-#endif
-
 	// Set the attributes on the given range.
 	// Called by:
 	//   MCField::finsert (for charset change purposes)
@@ -833,10 +828,6 @@ public:
 	//   MCField::htmltoparagraphs
 	//   MCField::settextatts
 	//   MCHcfield::buildf
-#ifdef LEGACY_EXEC
-	void setatts(findex_t si, findex_t ei, Properties which, void *value, bool from_html = false);
-#endif
-
 	void restricttoline(findex_t& si, findex_t& ei);
 	uint2 heightoflinewithindex(findex_t si, uint2 fixedheight);
 	

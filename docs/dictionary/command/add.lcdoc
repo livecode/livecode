@@ -2,44 +2,90 @@ Name: add
 
 Type: command
 
-Syntax: add <number> to [<chunk> of] <container> 
+Syntax: add <number> to [<chunk> of] <container>
 
-Syntax: add {<number> | <array>} to <arrayContainer> 
+Syntax: add {<number> | <array>} to <arrayContainer>
 
-Summary: Adds a number to a <container> and places the resulting <value> in the <container>.
+Summary:
+Adds a number to a <container> and places the resulting <value> in the
+<container>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 add 7 to field 1
 
 Example:
+local tSummaryOfInventory
 add field "New" to tSummaryOfInventory
 
 Example:
+local qty, price, tOrder
 add (qty * price) to last line of tOrder
 
+Example:
+# Assume the following handler in a button, along with
+# field "list1" and field "list2" each containing 
+# an equal number of return-separated numerals.
+# Field "added" is empty.
+on mouseUp
+    local tNumList1, tNumList2
+    put fld "list1" into tNumList1
+    put fld "list2" into tNumList2
+    split tNumList1 by return
+    split tNumList2 by return
+    add tNumList2 to tNumList1
+    combine tNumList1 by row
+    put tNumList1 into fld "added"
+end mouseUp
+
 Parameters:
-number: An expression that evaluates to a number.
-chunk: A chunk expression specifying a portion of the container.
-container: A field, button, or variable, or the message box.
-array (array): 
-arrayContainer (array): An array variable each of whose elements is a number.
+number:
+An expression that evaluates to a number.
+
+chunk:
+A chunk expression specifying a portion of the container.
+
+container:
+A field, button, or variable, or the message box.
+
+array (array):
+An array variable each of whose elements is a number.
+
+
+arrayContainer (array):
+An array variable each of whose elements is a number.
+
 
 Description:
-Use the <add> <command> to add a number to a <container> or a portion of a <container>, or to add two <array|arrays> containing numbers.
+Use the <add> <command> to add a number to a <container> or a portion of
+a <container>, or to add two <array|arrays> containing numbers.
 
-The contents of the <container> (or the <chunk> of the <container>) must be a number or an <expression> that <evaluate|evaluates> to a number.
+The contents of the <container> (or the <chunk> of the <container>) must
+be a number or an <expression> that <evaluate|evaluates> to a number.
 
-If a <number> is added to an <arrayContainer>, the <number> is added to each <element(keyword)>. If an <array> is added to an <arrayContainer>, both <array|arrays> must have the same number of <element(glossary)|elements> and the same dimension, and each <element(keyword)> in the <array> is added to the corresponding <element(keyword)> of the <arrayContainer>.
+If a <number> is added to an <arrayContainer>, the <number> is added to
+each <element(glossary)>. If an <array> is added to an <arrayContainer>,
+both <array|arrays> must have the same number of
+<element(glossary)|elements> and the same dimension, and each
+<element(glossary)> in the <array> is added to the corresponding
+<element(glossary)> of the <arrayContainer>.
 
-If the <container> or an <element(keyword)> of the <arrayContainer> is empty, the <add> <command> treats its contents as zero.
-If <container> is a <field> or <button>, the <format> of the sum is determined by the <numberFormat> <property>.
+If the <container> or an <element(glossary)> of the <arrayContainer> is
+empty, the <add> <command> treats its contents as zero.
+If <container> is a <field> or <button>, the <format> of the sum is
+determined by the <numberFormat> <property>.
 
-References: field (keyword), element (keyword), button (keyword), numberFormat (property), union (command), multiply (command), sum (function), value (function), format (function), property (glossary), element (glossary), container (glossary), expression (glossary), array (glossary), evaluate (glossary), command (glossary)
+References: combine (command), multiply (command), split (command),
+union (command), sum (function), value (function), array (glossary),
+command (glossary), container (glossary), element (glossary),
+evaluate (glossary), expression (glossary), format (glossary),
+property (glossary), element (keyword), button (object), field (object),
+numberFormat (property)
 
 Tags: math
+

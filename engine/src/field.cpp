@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "sellst.h"
 #include "stack.h"
 #include "card.h"
@@ -46,6 +46,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "exec-interface.h"
+
+#include "stackfileformat.h"
 
 int2 MCField::clickx;
 int2 MCField::clicky;
@@ -153,7 +155,7 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_LEFT, Int32, MCField, FormattedLeft)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_WIDTH, Int32, MCField, FormattedWidth)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_HEIGHT, Int32, MCField, FormattedHeight)
-	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_RECT, Rectangle, MCField, FormattedRect)
+	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_RECT, Rectangle32, MCField, FormattedRect)
 	DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(P_LINK_TEXT, String, MCField, LinkText)
 	DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(P_IMAGE_SOURCE, String, MCField, ImageSource)
 	DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(P_METADATA, String, MCField, Metadata)
@@ -201,7 +203,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfLooseUInt, MCField, TabWidths)
 	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfLooseUInt, MCField, TabWidths)
 	DEFINE_RW_OBJ_LINE_CHUNK_MIXED_PROPERTY(P_INVISIBLE, Bool, MCField, Invisible)
-
+    DEFINE_RW_OBJ_LINE_CHUNK_MIXED_PROPERTY(P_VISIBLE, Bool, MCField, Visible)
+    
 	DEFINE_RW_OBJ_CHAR_CHUNK_NON_EFFECTIVE_MIXED_CUSTOM_PROPERTY(P_FORE_COLOR, InterfaceNamedColor, MCField, ForeColor)
     DEFINE_RO_OBJ_CHAR_CHUNK_EFFECTIVE_MIXED_CUSTOM_PROPERTY(P_FORE_COLOR, InterfaceNamedColor, MCField, ForeColor)
     DEFINE_RW_OBJ_CHAR_CHUNK_NON_EFFECTIVE_MIXED_CUSTOM_PROPERTY(P_BACK_COLOR, InterfaceNamedColor, MCField, BackColor)
@@ -272,7 +275,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
     text_direction= fref.text_direction;
 	if (fref.vscrollbar != NULL)
 	{
-		vscrollbar = new MCScrollbar(*fref.vscrollbar);
+		vscrollbar = new (nothrow) MCScrollbar(*fref.vscrollbar);
 		vscrollbar->setparent(this);
 		vscrollbar->allowmessages(False);
 		vscrollbar->setflag(flags & F_3D, F_3D);
@@ -284,7 +287,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 		vscrollbar = NULL;
 	if (fref.hscrollbar != NULL)
 	{
-		hscrollbar = new MCScrollbar(*fref.hscrollbar);
+		hscrollbar = new (nothrow) MCScrollbar(*fref.hscrollbar);
 		hscrollbar->setparent(this);
 		hscrollbar->allowmessages(False);
 		hscrollbar->setflag(flags & F_3D, F_3D);
@@ -298,7 +301,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 	ntabs = fref.ntabs;
 	if (ntabs)
 	{
-		tabs = new uint2[ntabs];
+		tabs = new (nothrow) uint2[ntabs];
 		uint2 i;
 		for (i = 0 ; i < ntabs ; i++)
 			tabs[i] = fref.tabs[i];
@@ -308,19 +311,20 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
     nalignments = fref.nalignments;
     if (nalignments)
     {
-        alignments = new intenum_t[ntabs];
+        /* UNCHECKED */ alignments = new (nothrow) intenum_t[nalignments];
         uint2 i;
         for (i = 0; i < nalignments; i++)
             alignments[i] = fref.alignments[i];
     }
     else
         alignments = NULL;
+	
 	if (fref.fdata != NULL)
 	{
 		MCCdata *fptr = fref.fdata;
 		do
 		{
-			MCCdata *newfdata = new MCCdata(*fptr);
+			MCCdata *newfdata = new (nothrow) MCCdata(*fptr, this);
 			newfdata->appendto(fdata);
 			fptr = fptr->next();
 		}
@@ -370,7 +374,7 @@ MCField::~MCField()
 	else
 		delete vscrollbar;
 
-	delete tabs;
+	delete[] tabs; /* Allocated with new[] */
 
 	MCValueRelease(label);
 }
@@ -470,7 +474,7 @@ void MCField::open()
 		{
 			foundoffset = 0;
 			foundlength = 0;
-			MCfoundfield = NULL;
+			MCfoundfield = nil;
 		}
 	}
 	else
@@ -531,14 +535,14 @@ void MCField::close()
 		if ((state & CS_IBEAM) != 0)
 			getstack() -> clearibeam();
 		if (MCclickfield == this)
-			MCclickfield = NULL;
+			MCclickfield = nil;
 		if (MCactivefield == this)
-			MCactivefield = NULL;
+			MCactivefield = nil;
 		if (MCfoundfield == this)
 		{
 			foundoffset = 0;
 			foundlength = 0;
-			MCfoundfield = NULL;
+			MCfoundfield = nil;
 		}
 		if (paragraphs != NULL)
 		{
@@ -570,7 +574,7 @@ void MCField::kfocus()
 		t_old_trans = gettransient();
 		state |= CS_KFOCUSED;
         
-        if (MCactivefield != NULL && MCactivefield != this)
+        if (MCactivefield && MCactivefield != this)
             MCactivefield->unselect(True, True);
         MCactivefield = this;
         clearfound();
@@ -660,7 +664,7 @@ void MCField::kunfocus()
 			if (!(state & CS_KFOCUSED) && MCactivefield == this
 			        && !focusedparagraph->isselection()
 			        && firstparagraph == lastparagraph)
-				MCactivefield = NULL;
+				MCactivefield = nil;
 		}
 	}
     
@@ -767,6 +771,9 @@ Boolean MCField::kdown(MCStringRef p_string, KeySym key)
 
 			finsertnew(function, p_string, key);
 		}
+		break;
+	case FT_SELECTALL:
+		seltext(0, getpgsize(nil), True);
 		break;
 	case FT_DELBCHAR:
     case FT_DELBSUBCHAR:
@@ -1346,7 +1353,7 @@ Boolean MCField::doubleup(uint2 which)
 
 void MCField::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
 		if (opened && (state & CS_KFOCUSED)
 		        && !(state & CS_DRAG_TEXT))
@@ -1358,7 +1365,7 @@ void MCField::timer(MCNameRef mptr, MCParameter *params)
 			MCscreen->addtimer(this, MCM_internal, MCblinkrate);
 		}
 	}
-	else if (MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
+	else if (MCNameIsEqualToCaseless(mptr, MCM_internal2))
 		{
 			if (opened)
 			{
@@ -1421,271 +1428,6 @@ void MCField::applyrect(const MCRectangle &nrect)
     if (state & CS_SIZE)
         m_recompute = true;
 }
-
-#ifdef LEGACY_EXEC
-Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
-{
-	switch (which)
-	{
-#ifdef /* MCField::getprop */ LEGACY_EXEC
-    // MW-2012-02-11: [[ TabWidths ]] Handle both tabStops and tabWidths by deferring
-    //   to the format method.
-    case P_TAB_STOPS:
-    case P_TAB_WIDTHS:
-        formattabstops(which, ep, tabs, ntabs);
-        break;
-	case P_AUTO_TAB:
-		ep.setboolean(getflag(F_AUTO_TAB));
-		break;
-	case P_DONT_SEARCH:
-		ep.setboolean(getflag(F_F_DONT_SEARCH));
-		break;
-	case P_DONT_WRAP:
-		ep.setboolean(getflag(F_DONT_WRAP));
-		break;
-	case P_FIXED_HEIGHT:
-		ep.setboolean(getflag(F_FIXED_HEIGHT));
-		break;
-	case P_LOCK_TEXT:
-		ep.setboolean(getflag(F_LOCK_TEXT));
-		break;
-	case P_SHARED_TEXT:
-		ep.setboolean(getflag(F_SHARED_TEXT));
-		break;
-	case P_SHOW_LINES:
-		ep.setboolean(getflag(F_SHOW_LINES));
-		break;
-	case P_HGRID:
-		ep.setboolean(getflag(F_HGRID));
-		break;
-	case P_VGRID:
-		ep.setboolean(getflag(F_VGRID));
-		break;
-	case P_STYLE:
-		{
-			const char *t_style_string;
-			if (flags & F_VSCROLLBAR)
-				t_style_string = MCscrollingstring;
-			else if (!(flags & F_OPAQUE))
-				t_style_string = MCtransparentstring;
-			else if (flags & F_SHADOW)
-				t_style_string = MCshadowstring;
-			else if (!(flags & F_SHOW_BORDER))
-				t_style_string = MCopaquestring;
-			else
-				t_style_string = MCrectanglestring;
-			ep . setstaticcstring(t_style_string);
-		}
-		break;
-	case P_AUTO_HILITE:
-		ep.setboolean((flags & F_NO_AUTO_HILITE) == 0);
-		break;
-	case P_AUTO_ARM:
-		ep.setboolean(getflag(F_F_AUTO_ARM));
-		break;
-	case P_FIRST_INDENT:
-		ep.setint(indent);
-		break;
-	case P_WIDE_MARGINS:
-		ep . setboolean(leftmargin >= widemargin);
-		break;
-	case P_HSCROLL:
-		ep.setint(textx);
-		break;
-	case P_VSCROLL:
-		ep.setint(texty);
-		break;
-	case P_HSCROLLBAR:
-		ep.setboolean(getflag(F_HSCROLLBAR));
-		break;
-	case P_VSCROLLBAR:
-		ep.setboolean(getflag(F_VSCROLLBAR));
-		break;
-	case P_SCROLLBAR_WIDTH:
-		ep.setint(scrollbarwidth);
-		break;
-	case P_FORMATTED_HEIGHT:
-		if (opened)
-			ep.setint(textheight + rect.height - getfheight()
-			          + topmargin + bottommargin - TEXT_Y_OFFSET);
-		else
-			ep.setint(0);
-		break;
-	case P_FORMATTED_WIDTH:
-		if (opened)
-			ep.setint(textwidth + rect.width - getfwidth()
-			          + leftmargin + rightmargin
-			          + (flags & F_VSCROLLBAR ? (flags & F_DONT_WRAP ? 0 : -vscrollbar->getrect().width) : 0));
-		else
-			ep.setint(0);
-		break;
-	case P_LIST_BEHAVIOR:
-		ep.setboolean(getflag(F_LIST_BEHAVIOR));
-		break;
-	case P_MULTIPLE_HILITES:
-		ep.setboolean(getflag(F_MULTIPLE_HILITES));
-		break;
-	case P_NONCONTIGUOUS_HILITES:
-		ep.setboolean(getflag(F_NONCONTIGUOUS_HILITES));
-		break;
-	case P_HILITED_LINES:
-		hilitedlines(ep);
-		break;
-	case P_TEXT:
-		// MW-2012-02-21: [[ FieldExport ]] Use the new text export method.
-		exportastext(parid, ep, 0, INT32_MAX, false);
-		break;
-	case P_UNICODE_TEXT:
-		// MW-2012-02-21: [[ FieldExport ]] Use the new text export method.
-		exportastext(parid, ep, 0, INT32_MAX, true);
-		break;
-	case P_HTML_TEXT:
-		// MW-2012-03-05: [[ FieldExport ]] Use the new html text export method.
-		exportashtmltext(parid, ep, 0, INT32_MAX, effective == True);
-		break;
-	case P_RTF_TEXT:
-		// MW-2012-02-27: [[ FieldExport ]] Use the new rtf text export method.
-		exportasrtftext(parid, ep, 0, INT32_MAX);
-		break;
-	case P_STYLED_TEXT:
-	case P_FORMATTED_STYLED_TEXT:
-		// MW-2012-02-21: [[ FieldExport ]] Use the new styled text export method.
-		exportasstyledtext(parid, ep, 0, INT32_MAX, which == P_FORMATTED_STYLED_TEXT, effective == True);
-		break;
-	case P_PLAIN_TEXT:
-		// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
-		exportasplaintext(parid, ep, 0, INT32_MAX, false);
-		break;
-	case P_UNICODE_PLAIN_TEXT:
-		// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
-		exportasplaintext(parid, ep, 0, INT32_MAX, true);
-		break;
-	case P_FORMATTED_TEXT:
-		// MW-2012-02-21: [[ FieldExport ]] Use the new formatted text export method.
-		exportasformattedtext(parid, ep, 0, INT32_MAX, false);
-		break;
-	case P_UNICODE_FORMATTED_TEXT:
-		// MW-2012-02-21: [[ FieldExport ]] Use the new formatted text export method.
-		exportasformattedtext(parid, ep, 0, INT32_MAX, true);
-		break;
-	case P_LABEL:
-		if (label == NULL)
-			selectedtext(ep);
-		else
-			ep.setsvalue(label);
-		break;
-	case P_TOGGLE_HILITE:
-		ep.setboolean(getflag(F_TOGGLE_HILITE));
-		break;
-	case P_3D_HILITE:
-		ep.setboolean(getflag(F_3D_HILITE));
-		break;
-	case P_PAGE_HEIGHTS:
-		ep.clear();
-		if (opened)
-		{
-			MCParagraph *pgptr = paragraphs;
-			uint2 height = getfheight();
-			uint2 theight = height;
-			MCLine *lastline = NULL;
-			uint2 j = 0;
-			while (True)
-			{
-				MCLine *oldlast = lastline;
-				if (!pgptr->pageheight(fixedheight, theight, lastline))
-				{
-					if (theight == height)
-					{
-						ep.concatuint(pgptr->getheight(fixedheight), EC_RETURN, j++ == 0);
-						lastline = NULL;
-					}
-					else
-					{
-						ep.concatuint(height - theight, EC_RETURN, j++ == 0);
-						theight = height;
-						if (oldlast == NULL || lastline != NULL)
-							continue;
-					}
-				}
-				pgptr = pgptr->next();
-				if (pgptr == paragraphs)
-					break;
-			}
-            // SN-2014-09-17: [[ Bug 13462 ]] If no break has been found, we return the height of the field
-			if (theight != height)
-            {
-                if (j)
-                    ep.concatuint(height - theight, EC_RETURN, false);
-                else
-                    ep.concatuint(height, EC_RETURN, true);
-            }
-		}
-		break;
-    // JS-2013-05-15: [[ PageRanges ]] Return the pageRanges of the whole field.
-    case P_PAGE_RANGES:
-        ep.clear();
-        if (opened)
-        {
-            MCParagraph *pgptr = paragraphs;
-            uint2 height = getfheight();
-            uint2 theight = height;
-            // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
-            uint4 tstart = 1;
-            uint4 tend = 0;
-            MCLine *lastline = NULL;
-            uint2 j = 0;
-            while (True)
-            {
-                MCLine *oldlast = lastline;
-                if (!pgptr->pagerange(fixedheight, theight, tend, lastline))
-                {
-                    if (theight == height)
-                    {
-                        ep.concatuint(tstart, EC_RETURN, j++ == 0);
-                        ep.concatuint(tend, EC_COMMA, false);
-                        tstart = tend + 1;
-                        lastline = NULL;
-                    }
-                    else
-                    {
-                        ep.concatuint(tstart, EC_RETURN, j++ == 0);
-                        ep.concatuint(tend, EC_COMMA, false);
-                        tstart = tend + 1;
-                        theight = height;
-                        if (oldlast == NULL || lastline != NULL)
-                            continue;
-                    }
-                }
-                else
-                    tend += 1;
-
-                pgptr = pgptr->next();
-                if (pgptr == paragraphs)
-                    break;
-            }
-            if (theight != height) {
-                ep.concatuint(tstart, EC_RETURN, j++ == 0);
-                ep.concatuint(tend, EC_COMMA, false);
-            }
-        }
-        break;
-    // MW-2012-02-08: [[ FlaggedRanges ]] Return the flaggedRanges of the whole field.
-	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
-	case P_FLAGGED_RANGES:
-		return gettextatts(parid, P_FLAGGED_RANGES, ep, nil, False, 0, INT32_MAX, false);
-	// MW-2012-02-22: [[ IntrinsicUnicode ]] Fetch the encoding property of the field, this is
-	//   actually the encoding of the content.
-	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
-	case P_ENCODING:
-		// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
-		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, INT32_MAX, false);
-#endif /* MCField::getprop */
-	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
-	}
-	return ES_NORMAL;
-}
-#endif
 
 // MW-2012-01-25: [[ ParaStyles ]] Parse the given string as a list of tab-stops.
 // MW-2012-02-11: [[ TabWidths ]] The 'which' parameter determines what style of tabStops to
@@ -1756,498 +1498,89 @@ void MCField::formattabstops(Properties which, uint16_t *tabs, uint16_t tab_coun
     /* UNCHECKED */ MCListCopyAsString(*t_list, r_result);
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+bool MCField::parsetabalignments(MCStringRef p_data, intenum_t *&r_alignments, uindex_t &r_alignment_count)
 {
-	Boolean dirty = False;
-	Boolean reset = False;
-	int4 savex = textx;
-	int4 savey = texty;
-	Boolean dummy;
-	uint4 tflags = flags;
-	MCString data = ep.getsvalue();
-	int2 i1;
-	MCExecPoint *oldep;
-	switch (p)
-	{
-#ifdef /* MCField::setprop */ LEGACY_EXEC
-	// MW-2012-02-11: [[ TabWidths ]] Handle the new tabWidths property (parsetabstops
-	//   can now do either stops or widths).
-	case P_TAB_WIDTHS:
-	case P_TAB_STOPS:
-		{
-			// MW-2012-01-25: [[ ParaStyles ]] Use the refactored tabStop parsing method.
-			uint2 *newtabs = NULL;
-			uint2 newntabs = 0;
-            MCAutoStringRef t_data;
-            /* UNCHECKED */ MCStringCreateWithOldString(data, &t_data);
-			if (!parsetabstops(p, *t_data, newtabs, newntabs))
-				return ES_ERROR;
+    MCAutoProperListRef t_list;
+    if (!MCStringSplitByDelimiter(p_data, MCSTR(","), kMCStringOptionCompareExact, &t_list))
+		return false;
 
-			delete tabs;
-			if (newtabs != NULL)
-			{
-				tabs = newtabs;
-				ntabs = newntabs;
-				flags |= F_TABS;
-			}
-			else
-			{
-				tabs = NULL;
-				ntabs = 0;
-				flags &= ~F_TABS;
-			}
-			dirty = True;
-			reset = True;
-		}
-		break;
-	case P_AUTO_TAB:
-		if (!MCU_matchflags(data, flags, F_AUTO_TAB, dummy))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_DONT_SEARCH:
-		if (!MCU_matchflags(data, flags, F_F_DONT_SEARCH, dummy))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_AUTO_HILITE:
-		if (!MCU_matchflags(data, flags, F_NO_AUTO_HILITE, dummy))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		flags ^= F_NO_AUTO_HILITE;
-		break;
-	case P_AUTO_ARM:
-		if (!MCU_matchflags(data, flags, F_F_AUTO_ARM, dummy))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_DONT_WRAP:
-		if (!MCU_matchflags(data, flags, F_DONT_WRAP, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		reset = True;
-		if (flags & (F_LIST_BEHAVIOR | F_VGRID))
-			flags |= F_DONT_WRAP;
-		break;
-	case P_FIXED_HEIGHT:
-		if (!MCU_matchflags(data, flags, F_FIXED_HEIGHT, dirty))
-		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
+    uindex_t t_count;
+	t_count = MCProperListGetLength(*t_list);
+    
+    MCAutoArray<intenum_t> t_alignments;
+	if (!t_alignments.Extend(t_count))
+		return false;
+    
+    for (uindex_t i = 0; i < t_count; i++)
+    {
+        MCValueRef t_item;
+		t_item = MCProperListFetchElementAtIndex(*t_list, i);
 
-		// MW-2012-12-25: [[ Bug ]] Changing the fixedHeight requires a recalculation.
-		reset = True;
-		break;
-	case P_LOCK_TEXT:
-	case P_TRAVERSAL_ON:
-		if (!MCU_matchflags(data, tflags, p == P_LOCK_TEXT ? F_LOCK_TEXT : F_TRAVERSAL_ON, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (flags & F_LIST_BEHAVIOR)
-		{
-			flags |= F_LOCK_TEXT;
-			dirty = True;
-		}
-		if (dirty)
-		{
-			bool t_was_locked;
-			t_was_locked = (flags & F_LOCK_TEXT) != 0;
-			flags = tflags;
-			if (state & CS_IBEAM)
-			{
-				state &= ~CS_IBEAM;
-				getstack()->clearibeam();
-			}
-			if (state & CS_KFOCUSED && !(flags & F_TRAVERSAL_ON))
-			{
-				unselect(True, True);
-				getcard()->kfocusset(NULL);
-			}
-			
-			// MW-2011-09-28: [[ Bug 9610 ]] If the lockText has changed then make sure
-			//   keyboard state is in sync.
-			if (t_was_locked != (getflag(F_LOCK_TEXT) == True) && getstate(CS_KFOCUSED))
-				MCModeActivateIme(getstack(), !getflag(F_LOCK_TEXT));
-			
-			if (vscrollbar != NULL)
-				vscrollbar->setflag(False, F_TRAVERSAL_ON);
-			if (hscrollbar != NULL)
-				hscrollbar->setflag(False, F_TRAVERSAL_ON);
-		}
-		break;
-	case P_SHARED_TEXT:
-		if (!MCU_matchflags(data, flags, F_SHARED_TEXT, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (dirty && opened)
-		{
-			MCCdata *fptr;
-			if (flags & F_SHARED_TEXT)
-				fptr = getcarddata(fdata, 0, True);
-			else
-				fptr = getcarddata(fdata, getcard()->getid(), True);
-			MCParagraph *pgptr = fptr->getparagraphs();
-			fdata->setparagraphs(pgptr);
-			fdata = fptr;
-			fdata->setparagraphs(paragraphs);
-			reset = True;
-		}
-		break;
-	case P_SHOW_LINES:
-		if (!MCU_matchflags(data, flags, F_SHOW_LINES, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_HGRID:
-		if (!MCU_matchflags(data, flags, F_HGRID, dirty))
-		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-
-		// MW-2012-12-25: [[ Bug ]] Changing the hGrid requires a recalculation.
-		reset = True;
-		break;
-	case P_VGRID:
-		if (!MCU_matchflags(data, flags, F_VGRID, dirty))
-		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (flags & F_VGRID)
-			flags |= F_DONT_WRAP;
-
-		// MW-2012-12-25: [[ Bug ]] Changing the vGrid requires a recalculation.
-		reset = True;
-		break;
-	case P_STYLE:
-		flags &= ~(F_DISPLAY_STYLE);
-		if (data == MCscrollingstring)
-		{
-			if (!(flags & F_VSCROLLBAR))
-				setsbprop(P_VSCROLLBAR, MCtruemcstring, textx, texty,
-				          scrollbarwidth, hscrollbar, vscrollbar, dirty);
-			flags |= F_SHOW_BORDER | F_OPAQUE;
-		}
-		else
-		{
-			if (flags & F_HSCROLLBAR)
-			{
-				delete hscrollbar;
-				hscrollbar = NULL;
-				flags &= ~F_HSCROLLBAR;
-			}
-			if (flags & F_VSCROLLBAR)
-			{
-				delete vscrollbar;
-				vscrollbar = NULL;
-				flags &= ~F_VSCROLLBAR;
-			}
-			if (data == MCtransparentstring)
-				flags |= F_3D;
-			else
-				if (data == MCshadowstring)
-					flags |= F_SHOW_BORDER | F_OPAQUE | F_SHADOW;
-				else
-					if (data == MCopaquestring)
-						flags |= F_OPAQUE;
-					else
-						flags |= F_SHOW_BORDER | F_OPAQUE;
-		}
-		dirty = flags != tflags;
-		reset = True;
-
-		// MW-2011-09-21: [[ Layers ]] Make sure we recompute the layer attrs since
-		//   various props have changed!
-		if (dirty)
-			m_layer_attr_changed = true;
-
-		break;
-	case P_HSCROLLBARID:
-		{
-			MCScrollbar *t_control;
-			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, data, CT_SCROLLBAR, CT_UNDEFINED);
-			if (t_control == NULL)
-			{
-				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
-				return ES_ERROR;
-			}
-
-			if (hscrollbar != NULL && getstate(CS_FOREIGN_HSCROLLBAR))
-			{
-				hscrollbar -> link(NULL);
-				hscrollbar = NULL;
-			}
-
-			if (hscrollbar == NULL)
-			{
-				hscrollbar = t_control;
-				hscrollbar -> link(this);
-				setstate(True, CS_FOREIGN_HSCROLLBAR);
-			}
-		}
-		break;
-	case P_VSCROLLBARID:
-		{
-			MCScrollbar *t_control;
-			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, data, CT_SCROLLBAR, CT_UNDEFINED);
-			if (t_control == NULL)
-			{
-				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
-				return ES_ERROR;
-			}
-
-			if (vscrollbar != NULL && getstate(CS_FOREIGN_VSCROLLBAR))
-			{
-				vscrollbar -> link(NULL);
-				vscrollbar = NULL;
-			}
-
-			if (vscrollbar == NULL)
-			{
-				vscrollbar = t_control;
-				vscrollbar -> link(this);
-				setstate(True, CS_FOREIGN_VSCROLLBAR);
-			}
-		}
-		break;
-	case P_HSCROLL:
-	case P_VSCROLL:
-	case P_HSCROLLBAR:
-	case P_VSCROLLBAR:
-	case P_SCROLLBAR_WIDTH:
-		if (setsbprop(p, data, textx, texty, scrollbarwidth,
-		              hscrollbar, vscrollbar, dirty) == ES_ERROR)
-			return ES_ERROR;
-		// MW-2014-01-06: [[ Bug 11576 ]] Make sure we force a relayout if the layout width
-		//   has changed due to the vscrollbar visibility / width changing.
-		if (dirty && (p == P_VSCROLLBAR || p == P_SCROLLBAR_WIDTH))
-			reset = True;
-		break;
-	case P_MARGINS:
-	case P_LEFT_MARGIN:
-	case P_RIGHT_MARGIN:
-	case P_TOP_MARGIN:
-	case P_BOTTOM_MARGIN:
-	case P_WIDTH:
-	case P_HEIGHT:
-	case P_RECTANGLE:
-		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
-			return ES_ERROR;
-		dirty = reset = True;
-		break;
-	case P_FIRST_INDENT:
-		if (!MCU_stoi2(data, i1))
-		{
-			MCeerror->add
-			(EE_OBJECT_MARGINNAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		indent = i1;
-		dirty = True;
-		break;
-	case P_WIDE_MARGINS:
-		Boolean wide;
-		if (!MCU_stob(data, wide))
-			return ES_ERROR;
-		if (wide)
-		{
-			if (leftmargin != widemargin)
-			{
-				leftmargin = rightmargin = topmargin = bottommargin = widemargin;
-				dirty = True;
-			}
-		}
-		else
-			if (leftmargin != narrowmargin)
-			{
-				leftmargin = rightmargin = topmargin = bottommargin = narrowmargin;
-				dirty = True;
-			}
-		break;
-	case P_LIST_BEHAVIOR:
-		if (!MCU_matchflags(data, flags, F_LIST_BEHAVIOR, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (opened)
-			clearhilites();
-		if (dirty)
-			if (flags & F_LIST_BEHAVIOR)
-				flags |= F_DONT_WRAP | F_LOCK_TEXT;
-			else
-				if (state & CS_KFOCUSED)
-					MCscreen->addtimer(this, MCM_internal, MCblinkrate);
-		reset = True;
-		break;
-	case P_MULTIPLE_HILITES:
-		if (!MCU_matchflags(data, flags, F_MULTIPLE_HILITES, dummy))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_NONCONTIGUOUS_HILITES:
-		if (!MCU_matchflags(data, flags, F_NONCONTIGUOUS_HILITES, dummy))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_HILITED_LINES:
-		if (!opened)
-			return ES_NORMAL;
-		if (flags & F_LIST_BEHAVIOR)
-			if (sethilitedlines(data) != ES_NORMAL)
-				return ES_ERROR;
-		// MW-2011-08-18: [[ Layers ]] Just redraw the content (we don't need a recompute).
-		layer_redrawall();
-		break;
-	case P_TEXT:
-		settext(parid, data, False);
-		dirty = False;
-		break;
-	case P_HTML_TEXT:
-		oldep = MCEPptr;
-		MCEPptr = &ep;
-		sethtml(parid, data);
-		dirty = False;
-		MCEPptr = oldep;
-		break;
-	case P_UNICODE_TEXT:
-		oldep = MCEPptr;
-		MCEPptr = &ep;
-		setpartialtext(parid, data, true);
-		dirty = False;
-		MCEPptr = oldep;
-		break;
-	// MW-2011-12-08: [[ StyledText ]] Add support for setting the styledText of the
-	//   object.
-	case P_STYLED_TEXT:
-		oldep = MCEPptr;
-		MCEPptr = &ep;
-		setstyledtext(parid, ep);
-		dirty = False;
-		MCEPptr = oldep;
-		break;
-	case P_RTF_TEXT:
-		oldep = MCEPptr;
-		MCEPptr = &ep;
-		setrtf(parid, data);
-		dirty = False;
-		MCEPptr = oldep;
-		break;
-	case P_LABEL:
-		delete label;
-		label = data.clone();
-		dirty = False;
-		break;
-	case P_FORMATTED_TEXT:
-		settext(parid, data, True);
-		dirty = True;
-		reset = True;
-		break;
-	case P_TOGGLE_HILITE:
-		if (!MCU_matchflags(data, flags, F_TOGGLE_HILITE, dummy))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_3D_HILITE:
-		if (!MCU_matchflags(data, flags, F_3D_HILITE, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		break;
-	case P_SHADOW:
-	case P_SHOW_BORDER:
-	case P_TEXT_FONT:
-	case P_TEXT_HEIGHT:
-	case P_TEXT_SIZE:
-	case P_TEXT_STYLE:
-	case P_3D:
-	case P_OPAQUE:
-	case P_DISABLED:
-	case P_ENABLED:
-	case P_BORDER_WIDTH:
-		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
-			return ES_ERROR;
-
-		if (p == P_3D || p == P_OPAQUE || p == P_ENABLED || p == P_DISABLED)
-		{
-			if (vscrollbar != NULL)
-			{
-				vscrollbar->setflag(flags & F_3D, F_3D);
-				vscrollbar->setflag(flags & F_OPAQUE, F_OPAQUE);
-				vscrollbar->setflag(flags & F_DISABLED, F_DISABLED);
-			}
-			if (hscrollbar != NULL)
-			{
-				hscrollbar->setflag(flags & F_3D, F_3D);
-				hscrollbar->setflag(flags & F_OPAQUE, F_OPAQUE);
-				hscrollbar->setflag(flags & F_DISABLED, F_DISABLED);
-			}
-		}
-		reset = dirty = True;
-		setsbrects();
-		break;
-	// MW-2012-02-08: [[ FlaggedField ]] Set the flaggedRanges of the whole field.
-	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
-	case P_FLAGGED_RANGES:
-		return settextatts(parid, P_FLAGGED_RANGES, ep, nil, 0, INT32_MAX, false);
-#endif /* MCField::setprop */
-	default:
-		return MCControl::setprop_legacy(parid, p, ep, effective);
-	}
-	if (dirty && opened)
-	{
-		do_recompute(reset);
-		if (reset)
-			resetparagraphs();
-		hscroll(savex - textx, False);
-		vscroll(savey - texty, False);
-		resetscrollbars(True);
-
-		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-		layer_redrawall();
-	}
-	return ES_NORMAL;
+        if (MCStringIsEqualToCString((MCStringRef)t_item, "left", kMCStringOptionCompareCaseless))
+        {
+            t_alignments[i] = kMCParagraphTextAlignLeft;
+        }
+        else if (MCStringIsEqualToCString((MCStringRef)t_item, "right", kMCStringOptionCompareCaseless))
+        {
+            t_alignments[i] = kMCParagraphTextAlignRight;
+        }
+        else if (MCStringIsEqualToCString((MCStringRef)t_item, "center", kMCStringOptionCompareCaseless))
+        {
+            t_alignments[i] = kMCParagraphTextAlignCenter;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    
+    t_alignments . Take(r_alignments, r_alignment_count);
+	return true;
 }
-#endif
+
+bool MCField::formattabalignments(const intenum_t *p_alignments, uindex_t p_alignment_count, MCStringRef &r_result)
+{
+    if (p_alignment_count == 0)
+    {
+        r_result = MCValueRetain(kMCEmptyString);
+        return true;
+    }
+    
+    MCAutoListRef t_list;
+    if (!MCListCreateMutable(',', &t_list))
+		return false;
+    
+    for (uindex_t i = 0; i < p_alignment_count; i++)
+    {
+        switch (p_alignments[i])
+        {
+            case kMCParagraphTextAlignLeft:
+                if (!MCListAppendCString(*t_list, "left"))
+					return false;
+                break;
+                
+            case kMCParagraphTextAlignRight:
+                if (!MCListAppendCString(*t_list, "right"))
+					return false;
+                break;
+                
+            case kMCParagraphTextAlignCenter:
+                if (!MCListAppendCString(*t_list, "center"))
+					return false;
+                break;
+                
+            case kMCParagraphTextAlignJustify:
+                if (!MCListAppendCString(*t_list, "justify"))
+					return false;
+                break;
+                
+            default:
+				MCUnreachableReturn(false);
+        }
+    }
+    
+    return MCListCopyAsString(*t_list, r_result);
+}
 
 void MCField::undo(Ustruct *us)
 {
@@ -2416,7 +1749,7 @@ MCControl *MCField::clone(Boolean attach, Object_pos p, bool invisible)
 {
 	if (opened && fdata != NULL)
 		fdata->setparagraphs(paragraphs);
-	MCField *newfield = new MCField(*this);
+	MCField *newfield = new (nothrow) MCField(*this);
 	if (attach)
 		newfield->attach(p, invisible);
 	return newfield;
@@ -2482,7 +1815,7 @@ MCCdata *MCField::getdata(uint4 cardid, Boolean clone)
 		}
 		while (fptr != fdata);
 	}
-	MCCdata *newptr = new MCCdata(cardid);
+	MCCdata *newptr = new (nothrow) MCCdata(cardid);
 	return newptr;
 }
 
@@ -2886,7 +2219,7 @@ void MCField::do_recompute(bool p_force_layout)
 	while (pgptr != paragraphs);
 	resetscrollbars(False);
 	if (MCclickfield == this)
-		MCclickfield = NULL;
+		MCclickfield = nil;
 
 	// MW-2006-03-21: Bug 3344/3377 - Fix the focus border lingering
 	if (cursorfield == this)
@@ -2965,7 +2298,7 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
         // Count the number of chars in this paragraph. The only paragraph
         // with a non-zero si valus is the first paragraph.
         MCRange t_cu_range, t_char_range;
-        t_cu_range = MCRangeMake(si, t_pg->gettextlength() - si);
+        t_cu_range = MCRangeMakeMinMax(si, t_pg->gettextlength());
         // SN-2014-09-11: [[ Bug 13361 ]] We need to remove the codeunits we skipped in the paragraph before counting.
         ei -= si;
         si = 0;
@@ -2986,7 +2319,7 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
     if (!t_stop)
     {
         MCRange t_char_range, t_cu_range;
-        t_cu_range = MCRangeMake(si, ei - si);
+        t_cu_range = MCRangeMakeMinMax(si, ei);
         /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
         t_count += t_char_range.length;
     }
@@ -3190,7 +2523,7 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 
 	// MW-2009-06-14: If the field is opaque, then render the contents with that
 	//   marked.
-	bool t_was_opaque;
+	bool t_was_opaque = false;
 	if (getflag(F_OPAQUE))
 		t_was_opaque = dc -> changeopaque(true);
 	drawrect(dc, dirty);
@@ -3386,7 +2719,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 			MCCdata *tptr;
 			tptr = getcarddata(fdata, 0, False);
 			if (tptr != NULL)
-				if ((stat = tptr -> save(stream, OT_FDATA, 0, p_version)) != IO_NORMAL)
+				if ((stat = tptr -> save(stream, OT_FDATA, 0, this, p_version)) != IO_NORMAL)
 					return stat;
 		}
 		else
@@ -3394,7 +2727,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 			MCCdata *tptr = fdata;
 			do
 			{
-				if ((stat = tptr->save(stream, OT_FDATA, p_part, p_version)) != IO_NORMAL)
+				if ((stat = tptr->save(stream, OT_FDATA, p_part, this, p_version)) != IO_NORMAL)
 					return stat;
 				tptr = tptr->next();
 			}
@@ -3445,13 +2778,13 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 	{
 		if ((stat = IO_read_uint2(&ntabs, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
-		tabs = new uint2[ntabs];
+		tabs = new (nothrow) uint2[ntabs];
 		uint2 i;
 		for (i = 0 ; i < ntabs ; i++)
 			if ((stat = IO_read_uint2(&tabs[i], stream)) != IO_NORMAL)
 				return checkloadstat(stat);
 	}
-	if (version <= 2000)
+	if (version <= kMCStackFileFormatVersion_2_0)
 	{
 		rect = MCU_reduce_rect(rect, MCfocuswidth);
 		if (flags & F_LIST_BEHAVIOR)
@@ -3468,7 +2801,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (type == OT_FDATA)
 		{
-			MCCdata *newfdata = new MCCdata;
+			MCCdata *newfdata = new (nothrow) MCCdata;
 			if ((stat = newfdata->load(stream, this, version)) != IO_NORMAL)
 			{
 				delete newfdata;
@@ -3481,7 +2814,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 			{
 				if (flags & F_VSCROLLBAR && vscrollbar == NULL)
 				{
-					vscrollbar = new MCScrollbar;
+					vscrollbar = new (nothrow) MCScrollbar;
 					vscrollbar->setparent(this);
 					if ((stat = vscrollbar->load(stream, version)) != IO_NORMAL)
 						return checkloadstat(stat);
@@ -3493,7 +2826,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 				else
 					if (flags & F_HSCROLLBAR && hscrollbar == NULL)
 					{
-						hscrollbar = new MCScrollbar;
+						hscrollbar = new (nothrow) MCScrollbar;
 						hscrollbar->setparent(this);
 						if ((stat = hscrollbar->load(stream, version)) != IO_NORMAL)
 							return checkloadstat(stat);
@@ -3542,17 +2875,20 @@ bool MCField::imagechanged(MCImage *p_image, bool p_deleting)
 	bool t_used = false;
 	MCParagraph *t_para = paragraphs;
 
-	do
+	if (t_para != NULL)
 	{
-		t_used = t_para->imagechanged(p_image, p_deleting) || t_used;
-		t_para = t_para->next();
-	}
-	while (t_para != paragraphs);
-
-	if (t_used)
-	{
-		do_recompute(true);
-		layer_redrawall();
+		do
+		{
+			t_used = t_para->imagechanged(p_image, p_deleting) || t_used;
+			t_para = t_para->next();
+		}
+		while (t_para != paragraphs);
+		
+		if (t_used)
+		{
+			do_recompute(true);
+			layer_redrawall();
+		}
 	}
 
 	return t_used;

@@ -1,22 +1,24 @@
 Name: foregroundPattern
 
+Synonyms: forepattern, textpattern, thumbpattern
+
 Type: property
 
 Syntax: set the foregroundPattern of <object> to {<patternNumber> | <imageID> | empty}
 
 Syntax: set the foregroundPattern of [<chunk> of] <field> to {<patternNumber> | <imageID> | empty}
 
-Summary: Specifies the pattern used for <object> text and borders.
+Summary:
+Specifies the pattern used for <object(glossary)> text and borders.
 
-Synonyms: forePattern,textPattern,thumbPattern
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the foregroundPattern of me to 1034
@@ -25,40 +27,99 @@ Example:
 set the textPattern of line 2 of field "Cards" to 111
 
 Value:
-The <foregroundPattern> of an <object> is a pattern specifier.
-A <patternNumber> is a built-in pattern number between 1 and 164. (These patterns correspond to LiveCode's built-in patterns 136 to 300.)
+The <foregroundPattern> of an <object(glossary)> is a pattern specifier.
+A <patternNumber> is a built-in pattern number between 1 and 164. These
+patterns are provided for compatibility with patterns available in
+MetaCard and correspond to LiveCode's built in image id 137 to 300. As
+with MetaCard pattern numbers 105 to 114 and 146 and above are 
+unavailable.
 
-An <imageID> is the ID of an <image> to use for a pattern. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+An <imageID> is the ID of an <image> to use for a pattern. LiveCode
+looks for the specified <image> first in the <current stack>, then in
+other open <stacks>.
 
 By default, the <foregroundPattern> for all <object|objects> is empty.
 
 Description:
-Use the <foregroundPattern> <property> to change the pattern used for text or the pattern that fills an <object>.
+Use the <foregroundPattern> <property> to change the pattern used for
+text or the pattern that fills an <object(glossary)>.
 
 Pattern images can be color or black-and-white.
 
->*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less, and both its <height> and <width> must be a power of 2. To be used on <Windows> and <Unix|Unix systems>, <height> and <width> must be divisible by 8. To be used as a fully cross-platform pattern, both an image's dimensions should be one of 8, 16, 32, 64, or 128.
+>*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS
+> systems>, an <image> must be 128x128 <pixels> or less, and both its
+> <height> and <width> must be a power of 2. To be used on <Windows> and
+> <Unix|Unix systems>, <height> and <width> must be divisible by 8. To
+> be used as a fully cross-platform pattern, both an image's dimensions
+> should be one of 8, 16, 32, 64, or 128.
 
-The <foregroundPattern> of <control(object)|controls> is drawn starting at the <control(object)|control's> upper right corner: if the <control(keyword)> is moved, the pattern does not shift.
+The <foregroundPattern> of <control(object)|controls> is drawn starting
+at the <control(object)|control's> upper right corner: if the
+<control(keyword)> is moved, the pattern does not shift.
 
-Setting the <foregroundPattern> of an <object> to empty allows the <foregroundPattern> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what pattern is used for the <object>, even if its own <foregroundPattern> is empty.
+Setting the <foregroundPattern> of an <object(glossary)> to empty allows
+the <foregroundPattern> of the <object|object's> <owner> to show
+through. Use the <effective> <keyword> to find out what pattern is used
+for the <object(glossary)>, even if its own <foregroundPattern> is
+empty. 
 
-The setting of the <foregroundPattern> <property> has different effects, depending on the <object type>:
-* The <foregroundPattern> of a <stack>, <card>, or <group> determines the <foregroundPattern> of each <object> in the <stack>, <card>, or <group> that does not have its own <foregroundPattern>.
+The setting of the <foregroundPattern> <property> has different effects,
+depending on the <object type>:
 
-* On Unix systems, the <foregroundPattern> of a <button(keyword)> is used for the text of the <button(keyword)>. If the <button(object)|button's> <showName> <property> is false, the <foregroundPattern> has no effect.
+* The <foregroundPattern> of a <stack>, <card>, or <group> determines
+  the <foregroundPattern> of each <object(glossary)> in the <stack>,
+  <card>, or <group> that does not have its own <foregroundPattern>.
 
-* On Unix systems, the <foregroundPattern> of a <field(keyword)> determines the color of the <field(object)|field's> text. If you set the <foregroundColor> of a <chunk> of a <field(keyword)>, only that <chunk> is affected. The <foregroundPattern> also determines the color of the blinking <insertion point> when it is in the <field(keyword)>.
 
-* On Unix systems, the <foregroundPattern> of a <scrollbar(keyword)> determines the pattern of the text used to show the <value> of the <scrollbar(object)|scrollbar's> current position. If the <scrollbar(object)|scrollbar's> <showValue> <property> is false, the <foregroundPattern> has no effect.
+* On Unix systems, the <foregroundPattern> of a <button(keyword)> is
+  used for the text of the <button(keyword)>. If the
+  <button(object)|button's> <showName> <property> is false, the
+  <foregroundPattern> has no effect.
 
-* The <foregroundPattern> of a <graphic(keyword)> determines the pattern used for the <graphic(object)|graphic's> outline. (The <borderPattern> determines the pattern used for the <graphic(object)|graphic's> border, which is outside the outline.)
 
-* The <foregroundPattern> of a <player>, <image>, <audio clip>, <video clip>, or <EPS|EPS object> has no effect.
-If an object's <foregroundPattern> is set, the pattern is shown instead of the color specified by <foregroundColor>.
+* On Unix systems, the <foregroundPattern> of a <field(keyword)>
+  determines the color of the <field(object)|field's> text. If you set
+  the <foregroundColor> of a <chunk> of a <field(keyword)>, only that
+  <chunk> is affected. The <foregroundPattern> also determines the color
+  of the blinking <insertion point> when it is in the <field(keyword)>.
 
->*Cross-platform note:*  On <Mac OS> and <Windows|Windows systems>, the <foregroundPattern> applies only to <object> borders, not to text; text cannot be drawn with a pattern, only with a color.
 
-References: borderPattern (property), foregroundColor (property), pixels (property), bottomPattern (property), width (property), height (property), backgroundPattern (property), dashes (property), showName (property), penPattern (property), owner (property), showValue (property), effective (keyword), field (keyword), image (keyword), button (keyword), card (keyword), scrollbar (keyword), player (keyword), graphic (keyword), control (keyword), group (command), control (object), button (object), scrollbar (object), object (object), stack (object), field (object), graphic (object), Unix (glossary), current stack (glossary), property (glossary), Windows (glossary), video clip (glossary), keyword (glossary), audio clip (glossary), chunk (glossary), insertion point (glossary), value (glossary), object type (glossary), EPS (glossary), Mac OS (glossary), stacks (function)
+* On Unix systems, the <foregroundPattern> of a <scrollbar(keyword)>
+  determines the pattern of the text used to show the <value> of the
+  <scrollbar(object)|scrollbar's> current position. If the
+  <scrollbar(object)|scrollbar's> <showValue> <property> is false, the
+  <foregroundPattern> has no effect.
+
+
+* The <foregroundPattern> of a <graphic(keyword)> determines the pattern
+  used for the <graphic(object)|graphic's> outline. (The <borderPattern>
+  determines the pattern used for the <graphic(object)|graphic's>
+  border, which is outside the outline.)
+
+
+* The <foregroundPattern> of a <player>, <image>, <audio clip>, 
+  <video clip>, or <EPS|EPS object> has no effect. If an object's
+  <foregroundPattern> is set, the pattern is shown instead of the color
+  specified by <foregroundColor>.
+
+
+>*Cross-platform note:*  On <Mac OS> and <Windows|Windows systems>, the
+> <foregroundPattern> applies only to <object(glossary)> borders, not to
+> text; text cannot be drawn with a pattern, only with a color.
+
+References: group (command), stacks (function), object (glossary),
+Unix (glossary), current stack (glossary), property (glossary),
+Windows (glossary), video clip (glossary), keyword (glossary),
+audio clip (glossary), chunk (glossary), insertion point (glossary),
+value (glossary), object type (glossary), EPS (glossary),
+Mac OS (glossary), effective (keyword), field (keyword), image (keyword),
+button (keyword), card (keyword), scrollbar (keyword), player (keyword),
+graphic (keyword), control (keyword), control (object), button (object),
+scrollbar (object), stack (object), field (object), graphic (object),
+borderPattern (property), foregroundColor (property), pixels (property),
+bottomPattern (property), width (property), height (property),
+backgroundPattern (property), dashes (property), showName (property),
+penPattern (property), owner (property), showValue (property)
 
 Tags: ui
+

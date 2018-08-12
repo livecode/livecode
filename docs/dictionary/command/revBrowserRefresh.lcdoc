@@ -1,18 +1,19 @@
 Name: revBrowserRefresh
 
+Synonyms: xbrowser_refresh
+
 Type: command
 
-Syntax: revBrowserRefresh <instanceId> 
+Syntax: revBrowserRefresh <instanceId>
 
 Syntax: XBrowser_Refresh [ <instanceId>]
 
-Summary: Refreshes the specified browser.
-
-Synonyms: XBrowser_Refresh
+Summary:
+Refreshes the specified browser.
 
 Introduced: 2.8.1
 
-OS: mac,windows
+OS: mac, windows
 
 Platforms: desktop
 
@@ -22,13 +23,19 @@ Example:
 revBrowserRefresh tBrowserId
 
 Parameters:
-instanceId: The integer identifier of a browser object
+instanceId:
+The integer identifier of a browser object
 
-The result: The <revBrowserRefresh> command puts empty into the <result>.
+The result:
+The <revBrowserRefresh> command puts empty into the <result>.
 
 Description:
-The <revBrowserRefresh> command reloads the current page of the browser specified by the <instanceId>.
+The <revBrowserRefresh> command reloads the current page of the browser
+specified by the <instanceId>.
 
->*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+>*Note:* For general information on using the browser library, see the
+> notes in the <revBrowserOpen> <function> reference.
 
-References: revBrowserStop (command), revBrowserNavigate (command), result (function), revBrowserOpen function (function)
+References: revBrowserStop (command), revBrowserNavigate (command),
+result (function), revBrowserOpen (function), function (glossary)
+

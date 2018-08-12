@@ -1,0 +1,42 @@
+Name: newVideoclip
+
+Type: message
+
+Syntax: newVideoclip
+
+Summary:
+Sent to a new video clip right after it's created.
+
+Associations: videoclip
+
+Introduced: 8.1
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Example:
+on newVideoclip -- play a new video clip as soon as it is created
+   play the target
+end newVideoclip
+
+Description:
+Handle the <newVideoclip> <message> if you want to create additional
+<object|objects>, switch <tool|tools>, or do other tasks when a new
+<videoclip(object)> is created.
+
+Normally, the <newVideoclip> <message> is handled at a higher level of
+the <message path>, since the newly created <videoclip(object)> does not
+yet have a <script> unless the <templateVideoclip> contains one.
+
+The actual creation is not triggered by the <newVideoclip> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <videoclip(object)> from being created.
+
+References: copy (command), clone (command), paste (command),
+pass (control structure), object (glossary), trap (glossary),
+message (glossary), tool (glossary), message path (glossary),
+templateVideoclip (keyword), videoclip (object), script (property)
+
+Tags: objects
+

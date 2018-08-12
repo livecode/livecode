@@ -2,39 +2,60 @@ Name: ISOToMac
 
 Type: function
 
-Syntax: the ISOToMac of <ISOString> 
+Syntax: the ISOToMac of <ISOString>
 
 Syntax: ISOToMac(<ISOString>)
 
-Summary: <return|Returns> the equivalent of a Windows Latin 1 <string>, in the <Mac OS> <character set>.
+Summary:
+<return|Returns> the equivalent of a Windows Latin 1 <string>, in the
+<Mac OS> <character set>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 ISOToMac("Ab4+")
 
 Example:
-ISOToMac(")
+ISOToMac("")
 
 Example:
 charToNum(ISOToMac(numToChar(myASCIIVal)))
 
 Parameters:
-ISOString (string): 
+ISOString (string):
 
-Returns: The <ISOToMac> <function> <return|returns> the <ISOString>, with <characters> whose <ASCII|ASCII value> is greater than 127 converted to their equivalent in the <Mac OS> <character set>. <Characters(keyword)> whose <ASCII|ASCII value> is less than 128 are left unchanged.
+
+Returns:
+The <ISOToMac> <function> <return|returns> the <ISOString>, with
+<characters> whose <ASCII|ASCII value> is greater than 127 converted to
+their equivalent in the <Mac OS> <character set>. <Characters(keyword)>
+whose <ASCII|ASCII value> is less than 128 are left unchanged.
 
 Description:
-Use the <ISOToMac> <function> to translate data that was created on a <Unix> or <Windows|Windows system> to the <Mac OS> <character set>.
+Use the <ISOToMac> <function> to translate data that was created on a
+<Unix> or <Windows|Windows system> to the <Mac OS> <character set>.
 
-LiveCode automatically translates text in fields and scripts, as well as the names of custom properties, into the appropriate character set when you move a stack from one platform to another. It is therefore not necessary to translate them. However, the contents of custom properties, since they may contain binary data, are not translated automatically and must be translated if they contain characters whose ASCII value is 128 or greater.
+LiveCode automatically translates text in fields and scripts, as well as
+the names of custom properties, into the appropriate character set when
+you move a stack from one platform to another. It is therefore not
+necessary to translate them. However, the contents of custom properties,
+since they may contain binary data, are not translated automatically and
+must be translated if they contain characters whose ASCII value is 128
+or greater.
 
-Characters whose ASCII value is less than 128 are the same in the Mac OS character set and ISO 8859-1, so they are not changed by the <ISOToMac> <function>. These <characters> include uppercase and lowercase letters, numbers, and most punctuation.
+Characters whose ASCII value is less than 128 are the same in the Mac OS
+character set and ISO 8859-1, so they are not changed by the <ISOToMac>
+<function>. These <characters> include uppercase and lowercase letters,
+numbers, and most punctuation.
 
-References: string (keyword), characters (keyword), numToChar (function), uniDecode (function), Unix (glossary), Windows (glossary), Mac OS (glossary), return (glossary), character set (glossary), ASCII (glossary), function (control_st)
+References: function (control structure), numToChar (function),
+uniDecode (function), Unix (glossary), Windows (glossary),
+Mac OS (glossary), return (glossary), character set (glossary),
+ASCII (glossary), string (keyword), characters (keyword)
 
 Tags: text processing
+

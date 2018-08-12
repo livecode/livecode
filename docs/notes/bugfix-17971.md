@@ -1,0 +1,1 @@
+# Fix formatting of resizeStack message docs entry

@@ -4,11 +4,13 @@ Type: message
 
 Syntax: inputBeginEditing
 
-Summary: Sent when a mobile text input control has become focused and editing has commenced.
+Summary:
+Sent when a mobile text input control has become focused and editing has
+commenced. 
 
 Introduced: 4.6
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -18,10 +20,20 @@ on inputBeginEditing -- disable the next button while editing
 end inputBeginEditing
 
 Description:
-The <inputBeginEditing> message is sent when an mobile text input control has become focused and editing has commenced. 
+The <inputBeginEditing> message is sent when an mobile text input
+control has become focused and editing has commenced.
 
-Handle the <inputBeginEditing> message if you want to move LiveCode controls, make changes to the interface or perform an action when the user starts editing text in an iosTextInput, iosMultiline, androidTextInput or androidMultiline control.
+Handle the <inputBeginEditing> message if you want to move LiveCode
+controls, make changes to the interface or perform an action when the
+user starts editing text in an iosTextInput, iosMultiline,
+androidTextInput or androidMultiline control.
 
-The <inputBeginEditing> message is sent to the object containing the script that created the text input control.
+The <inputBeginEditing> message is sent to the object containing the
+script that created the text input control.
 
-References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), inputReturnKey (message), inputTextChanged (message), inputEndEditing (message)
+References: mobileControlCreate (command), mobileControlDelete (command),
+mobileControlSet (command), mobileControlGet (function),
+mobileControlTarget (function), mobileControls (function),
+inputReturnKey (message), inputTextChanged (message),
+inputEndEditing (message)
+

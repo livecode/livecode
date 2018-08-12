@@ -1,5 +1,6 @@
 /* --PATCH-- */ #include <stdlib.h>
 /* --PATCH-- */ #include <stdio.h>
+/* --PATCH-- */ #include <stdint.h>
 /*
    GENTLE 97 CAMPUS EDITION
 
@@ -16,7 +17,7 @@
 char *THIS_RUNTIME_SYSTEM =
 "Gentle 3.0 01100401 (C) 1992, 1997";
 
-typedef long * yyt;
+typedef intptr_t * yyt;
 
 yyt yyh;
 yyt yyhx;
@@ -25,7 +26,7 @@ yyt yyhx;
 
 yyExtend()
 {
-   yyh = (yyt) malloc(HEAPPIECE * sizeof(long));
+   yyh = (yyt) malloc(HEAPPIECE * sizeof(intptr_t));
    yyhx = yyh + HEAPPIECE - 100;
    if (yyh == 0) {
       printf ("HEAP STORAGE FULL\n");
@@ -63,7 +64,7 @@ static yyt NEWBLOCK()
 static FREEBLOCK (p)
    yyt p;
 {
-   *p = (long) FREELIST;
+   *p = (intptr_t) FREELIST;
    FREELIST = p;
 }
 
@@ -76,7 +77,7 @@ yyt yyAllocCntl(n)
       yyt b;
       b = NEWBLOCK();
       *b = 0;
-      *CURBLOCK = (long) b;
+      *CURBLOCK = (intptr_t) b;
       CURBLOCK = b;
       CURPOS = CURBLOCK + 1;
       p = CURPOS;

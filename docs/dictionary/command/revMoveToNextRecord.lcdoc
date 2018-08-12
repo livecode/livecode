@@ -2,17 +2,21 @@ Name: revMoveToNextRecord
 
 Type: command
 
-Syntax: revMoveToNextRecord <recordSetID> 
+Syntax: revMoveToNextRecord <recordSetID>
 
-Summary: Moves to the next <record> in a <record set (database cursor)(glossary)>.
+Summary:
+Moves to the next <record> in a <record set (database
+cursor)(glossary)>. 
+
+Associations: database library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revMoveToNextRecord myCurrentItems
@@ -21,17 +25,45 @@ Example:
 revMoveToNextRecord (line x of field "Current Recordsets")
 
 Parameters:
-recordSetID: The number returned by the revQueryDatabase function when the record set was created.
+recordSetID:
+The number returned by the revQueryDatabase function when the record set
+was created.
 
-The result: If the command could not move to the next record because it's already at the end or there are no records in the record set, the result <function> returns false.
+The result:
+If the command could not move to the next record because it's already at
+the end or there are no records in the record set, the result <function>
+returns false.
 
 Description:
-Use the <revMoveToNextRecord> <command> to move around within the selected set of <record|records>.
+Use the <revMoveToNextRecord> <command> to move around within the
+selected set of <record|records>.
 
->*Note:* Not all <database|databases> support the <revMoveToNextRecord> <command>. All the major database types that LiveCode can connect to do support this, however certain ODBC data sources may not, if in doubt, refer to the documentation for your ODBC data source driver.
+>*Note:* Not all <database|databases> support the <revMoveToNextRecord>
+> <command>. All the major database types that LiveCode can connect to
+> do support this, however certain ODBC data sources may not, if in
+> doubt, refer to the documentation for your ODBC data source driver.
 
->*Important:*  The <revMoveToNextRecord> <command> is part of the <Database library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revMoveToNextRecord> <command> is part of the 
+> <Database library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
-References: function (control_st), revMoveToFirstRecord (command), revMoveToRecord (command), revMoveToPreviousRecord (command), revMoveToLastRecord (command), revdb_movefirst (function), revdb_movelast (function), revCurrentRecordIsFirst (function), revQueryIsAtEnd (function), revdb_moveprev (function), revCurrentRecord (function), revCurrentRecordIsLast (function), revNumberOfRecords (function), revDatabaseColumnNumbered (function), revdb_movenext (function), Standalone Application Settings (glossary), record (glossary), command (glossary), record set (database cursor) (glossary), standalone application (glossary), database (glossary), Database library (library), LiveCode custom library (library)
+References: revMoveToFirstRecord (command), revMoveToRecord (command),
+revMoveToPreviousRecord (command), revMoveToLastRecord (command),
+function (control structure), revdb_movefirst (function),
+revdb_movelast (function), revCurrentRecordIsFirst (function),
+revQueryIsAtEnd (function), revdb_moveprev (function),
+revCurrentRecord (function), revCurrentRecordIsLast (function),
+revNumberOfRecords (function), revDatabaseColumnNumbered (function),
+revdb_movenext (function), Standalone Application Settings (glossary),
+record (glossary), command (glossary),
+record set (database cursor) (glossary),
+standalone application (glossary), database (glossary),
+LiveCode custom library (glossary), Database library (library)
 
 Tags: database
+

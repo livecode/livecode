@@ -1,0 +1,37 @@
+Name: minStackFileVersion
+
+Type: property
+
+Syntax: get the minStackFileVersion of <stack>
+
+Summary:
+Get the minimum <stack version|stack file version> for a stack that
+will allow it to be safely <save|saved> without data loss.
+
+Associations: stack
+
+Introduced: 8.1
+
+OS: mac, windows, linux, ios, android, html5
+
+Platforms: desktop, server, mobile
+
+Example:
+save this stack with format (the minStackFileVersion of this stack)
+
+Value (string):
+The <minStackFileVersion> <property> of a <stack> is a LiveCode version
+string. The <minStackFileVersion> <property> is read only and determined
+by the content of the stack file.
+
+Description:
+Use the <minStackFileVersion> <property> to ensure that no data loss
+occurs when <save|saving> a <stack> file. Older <stack version|stack file versions>
+may not support <save|saving> some newer features. For example, stacks
+with widgets must be saved with at least a stack file version of 8.0.
+The minimum <stack version> reported by the property is 7.0.
+
+References: property (glossary), stack version (glossary), 
+save (command)
+
+Tags: windowing

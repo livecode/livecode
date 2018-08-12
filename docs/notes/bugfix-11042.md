@@ -1,1 +1,0 @@
-# Autoscript "compile error" with new menu items

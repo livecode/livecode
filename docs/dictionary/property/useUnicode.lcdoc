@@ -4,33 +4,58 @@ Type: property
 
 Syntax: set the useUnicode to {true | false}
 
-Summary: Specifies whether the charToNum and numToChar functions assume a character is double-byte.
+Summary:
+Specifies whether the charToNum and numToChar functions assume a
+character is double-byte.
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+Deprecated: 7.0
 
-Platforms: desktop,server,web,mobile
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
 
 Example:
+create field "russianLetter"
 set the useUnicode to true
+set the unicodeText of field "russianLetter" to numToChar(1083)
 
-Example:
-set the useUnicode to (the number of items of myFont is 2)
-
-Value: By default, the <useUnicode> property is false.
+Value:
+By default, the <useUnicode> property is false.
 
 Description:
-Use the <useUnicode> property to prepare to convert between Unicode characters and their numeric values.
+Use the <useUnicode> property to prepare to convert between Unicode
+characters and their numeric values.
 
-If the useUnicode property is set to true, the numToChar and charToNum functions use double-byte characters. You can pass a number greater than 255 to the numToChar function in order to generate a double-byte character, and you can pass a double-byte character to the charToNum function.
+If the <useUnicode> property is set to true, the <numToChar> and
+<charToNum> functions use double-byte characters. You can pass a number
+greater than 255 to the <numToChar> function in order to generate a
+double-byte character, and you can pass a double-byte character to the
+<charToNum> function.
 
-If the useUnicode is false, the numToChar and charToNum functions use single-byte characters. Passing a double-byte character to charToNum or a number larger than 255 to numToChar will produce incorrect results if the useUnicode is false.
+If the <useUnicode> is false, the <numToChar> and <charToNum> functions
+use single-byte characters. Passing a double-byte character to
+<charToNum> or a number larger than 255 to <numToChar> will produce
+incorrect results if the <useUnicode> is false.
 
-Since the useUnicode is a local property, its value is reset to false when the current handler finishes executing. It retains its value only for the current handler, and setting it in one handler does not affect its value in other handlers it calls.
+Since the <useUnicode> is a local property, its value is reset to false
+when the current handler finishes executing. It retains its value only
+for the current handler, and setting it in one handler does not affect
+its value in other handlers it calls.
 
-Deprecated: In LiveCode 7.0 the language was changed to handle unicode transparently. This means that language functionality which previously aided unicode text manipulation is no longer required. This property should not be used in new code, as it only affects the behaviour of numToChar and charToNum, which are themselves deprecated.
+>*Note:* The <useUnicode> property is deprecated. In LiveCode 7.0 the
+language was changed to handle unicode transparently. This means that
+language functionality which previously aided unicode text manipulation
+is no longer required. This property should not be used in new code, as
+it only affects the behaviour of <numToChar> and <charToNum>, which are
+themselves deprecated.
 
-References: allowInlineInput (property), numToChar (function)
+Changes:
+As of LiveCode 7.0 the <useUnicode> property is deprecated.
+
+References: charToNum (function), numToChar (function),
+allowInlineInput (property), unicodeText (property)
 
 Tags: text processing
+

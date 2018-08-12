@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "date.h"
 #include "param.h"
-//#include "execpt.h"
+
 #include "notify.h"
 #include "eventqueue.h"
 #include "region.h"
@@ -394,7 +394,7 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		// MM-2012-09-04: Make sure MCModeQueueEvents is called.  This is used by the property listener feature.
 		MCModeQueueEvents();
 		
-		if (MCplayers != NULL)
+		if (MCplayers)
 			IO_cleanprocesses();
 
 		if (modalclosed ||

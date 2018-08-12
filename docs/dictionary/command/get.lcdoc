@@ -2,21 +2,22 @@ Name: get
 
 Type: command
 
-Syntax: get <expression> 
+Syntax: get <expression>
 
-Summary: Places the <value> of an <expression> in the <it> <variable>.
+Summary:
+Places the <value> of an <expression> in the <it> <variable>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
-
-Example:
-get the colors
+Platforms: desktop, server, mobile
 
 Example:
-get 2 * 25 * pi -- gets area of circle with radius 25
+get the colors of button 1
+
+Example:
+get 2 * 25 * pi -- gets circumference of circle with radius 25
 
 Example:
 get message -- evaluates expression in message box
@@ -25,14 +26,17 @@ Example:
 get URL "https://www.livecode.com"
 
 Parameters:
-expression: Any expression that yields a value.
+expression:
+Any expression that yields a value.
 
 Description:
 Use the <get> command to fetch the value of an <expression>.
 
-The <get> <command> is a shorthand way of writing the following statement:
+The <get> <command> is a shorthand way of writing the following
+statement: 
 
-  put expression into it
+    put expression into it
+
 
 > *Note:* When specifying URLs for iOS or Android, you must use the
 > appropriate form that conforms to [RFC
@@ -41,6 +45,11 @@ The <get> <command> is a shorthand way of writing the following statement:
 > URLs. The Android and iOS engines do not support 'libUrl', which
 > would allow characters such as @ in the username.
 
-References: it (keyword), post (command), unload (command), put (command), libURLSetFTPStopTime (command), load (command), set (command), libURLSetLogField (command), getProp (control_st), value (function), URLEncode (function), expression (glossary), command (glossary), variable (glossary)
+References: post (command), unload (command), put (command),
+libURLSetFTPStopTime (command), load (command), set (command),
+libURLSetLogField (command), getProp (control structure),
+value (function), URLEncode (function), expression (glossary),
+command (glossary), variable (glossary), it (keyword)
 
 Tags: properties
+

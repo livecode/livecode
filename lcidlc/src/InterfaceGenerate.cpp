@@ -54,6 +54,8 @@ static const char *type_to_cstring(NameRef p_type, bool p_is_ref)
 		return p_is_ref ? "char *" : "const char *";
 	else if (NameEqualToCString(p_type, "c-data"))
 		return "LCBytes";
+	else if (NameEqualToCString(p_type, "lc-array"))
+		return p_is_ref ? "LCArrayRef" : "const LCArrayRef";
 	else if (NameEqualToCString(p_type, "integer"))
 		return "int";
 	else if (NameEqualToCString(p_type, "real"))
@@ -150,6 +152,8 @@ static NativeType map_native_type(HandlerMapping p_mapping, NameRef p_type)
             return kNativeTypeJavaUTF8Data;
         case kNativeTypeUTF16CData:
             return kNativeTypeJavaUTF16Data;
+		default:
+			break;
 		}
 	}
 	
@@ -161,6 +165,8 @@ static NativeType map_native_type(HandlerMapping p_mapping, NameRef p_type)
 class TypeMapper
 {
 public:
+	virtual ~TypeMapper() {};
+
 	virtual const char *GetTypedef(ParameterType mode) = 0;
 	
 	virtual void Initialize(CoderRef coder, ParameterType mode, const char *name) = 0;
@@ -446,6 +452,58 @@ public:
 		}
 	}
 	
+protected:
+	const char *GetTag(void) {return m_tag;}
+    
+private:
+    const char* m_tag;
+};
+
+class LCArrayTypeMapper: public CTypesTypeMapper
+{
+public:
+    
+    LCArrayTypeMapper(NativeType p_type)
+    {
+        m_tag = NativeTypeGetTag(p_type);
+    }
+    
+	virtual const char *GetTypedef(ParameterType mode)
+	{
+		return mode == kParameterTypeIn ? "const LCArrayRef" : "LCArrayRef";
+	}
+
+	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		if (p_mode == kParameterTypeInOut)
+		{
+			CoderWriteStatement(p_coder, "LCArrayRef %s, original__%s", p_name, p_name);
+			CoderWriteStatement(p_coder, "original__%s = %s = nil;", p_name, p_name);
+		}
+		else
+		{
+			CoderWriteStatement(p_coder, "LCArrayRef %s", p_name);
+			CoderWriteStatement(p_coder, "%s = nil", p_name);
+		}
+	}
+	
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "success = false", StringGetCStringPtr(p_value), p_name);
+		CodeInOutCopy(p_coder, p_mode, p_name);
+	}
+	
+	virtual void Finalize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		CoderWriteStatement(p_coder, "LCArrayRelease(%s)", p_name);
+		if (p_mode == kParameterTypeInOut)
+		{
+			CoderBeginIf(p_coder, "%s != original__%s", p_name, p_name);
+			CoderWriteStatement(p_coder, "LCArrayRelease(original__%s)", p_name);
+			CoderEndIf(p_coder);
+		}
+	}
+
 protected:
 	const char *GetTag(void) {return m_tag;}
     
@@ -1114,8 +1172,7 @@ static TypeMapper *map_parameter_type(InterfaceRef self, HandlerMapping p_mappin
     case kNativeTypeUTF8CData:
     case kNativeTypeUTF16CData:
         return new CDataTypeMapper(t_type);
-//	case kNativeTypeCArray:
-//	case kNativeTypeCDictionary:
+	case kNativeTypeLCArray: return new LCArrayTypeMapper(t_type);
 	case kNativeTypeObjcString: return new ObjcStringTypeMapper;
 	case kNativeTypeObjcNumber: return new ObjcNumberTypeMapper;
 	case kNativeTypeObjcData: return new ObjcDataTypeMapper;
@@ -1129,8 +1186,16 @@ static TypeMapper *map_parameter_type(InterfaceRef self, HandlerMapping p_mappin
     case kNativeTypeJavaUTF8Data:
     case kNativeTypeJavaUTF16Data:
         return new JavaDataTypeMapper(t_type);
+	case kNativeTypeCArray:
+	case kNativeTypeCDictionary:
+	case kNativeTypeJavaArray:
+	case kNativeTypeJavaNumber:
+	case kNativeTypeJavaDictionary:
+	case kNativeTypeNone:
+		return nil;
 	}
-	return nil;
+	
+	MCUnreachableReturn(nil);
 }
 
 static void map_parameter(InterfaceRef self, HandlerMapping p_mapping, HandlerParameter *p_parameter, uint32_t k, MappedParameter& r_param)
@@ -1156,7 +1221,7 @@ static void InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 	t_is_java = p_mapping == kHandlerMappingJava;
 	
 	MappedParameter *t_mapped_params;
-	t_mapped_params = new MappedParameter[t_variant -> parameter_count];
+	t_mapped_params = new (nothrow) MappedParameter[t_variant -> parameter_count];
 	for(uint32_t k = 0; k < t_variant -> parameter_count; k++)
 		map_parameter(self, p_mapping, &t_variant -> parameters[k], k, t_mapped_params[k]);
 	
@@ -1518,10 +1583,14 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 			CoderWriteLine(p_coder, "\tenv . argv = argv;");
 			CoderWriteLine(p_coder, "\tenv . argc = argc;");
 			CoderWriteLine(p_coder, "\tenv . result = result;");
+			CoderWriteLine(p_coder, "#if defined(__IOS__) || defined(__ANDROID__)");
 			CoderWriteLine(p_coder, "\tif (s_interface -> version >= 4)");
 			CoderWriteLine(p_coder, "\t\ts_interface -> engine_run_on_main_thread((void *)do_handler__%s, &env, kMCRunOnMainThreadJumpToUI);", NameGetCString(t_handler -> name));
 			CoderWriteLine(p_coder, "\telse");
 			CoderWriteLine(p_coder, "\t\tdo_handler__%s(&env);", NameGetCString(t_handler -> name));
+			CoderWriteLine(p_coder, "#else");
+			CoderWriteLine(p_coder, "\t\tdo_handler__%s(&env);", NameGetCString(t_handler -> name));
+			CoderWriteLine(p_coder, "#endif");
 			CoderWriteLine(p_coder, "\treturn env . return_value;");
 			CoderWriteLine(p_coder, "}");
 		}
@@ -1640,7 +1709,7 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 			NameGetCString(t_handler -> name),
 			NameGetCString(t_handler -> name));
 	}
-	CoderWriteLine(p_coder, "\t{ 0 }\n};");
+	CoderWriteLine(p_coder, "\t{ 0, NULL, NULL }\n};");
 	
 	CoderWriteLine(p_coder, "");
 	

@@ -2,17 +2,19 @@ Name: queryRegistry
 
 Type: function
 
-Syntax: the queryRegistry of <keyPath> 
+Syntax: the queryRegistry of <keyPath>
 
 Syntax: queryRegistry(<keyPath> [, <typeVariable>])
 
-Summary: The <queryRegistry> <function> <return|returns> the <value> of an entry in the <registry|Windows system registry>.
+Summary:
+The <queryRegistry> <function> <return|returns> the <value> of an entry
+in the <registry|Windows system registry>.
 
 Introduced: 1.0
 
 OS: windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: registry
 
@@ -23,23 +25,39 @@ Example:
 queryRegistry(winFilePath,myType)
 
 Parameters:
-keyPath: The keyPath parameter is the path to a registry entry.
-typeVariable: Any legal variable name.
+keyPath:
+The keyPath parameter is the path to a registry entry.
 
-Returns: The <queryRegistry> <function> <return|returns> a <string>.
+typeVariable:
+Any legal variable name.
+
+Returns:
+The <queryRegistry> <function> <return|returns> a <string>.
 
 Description:
-Use the <queryRegistry> <function> to get system settings on a <Windows|Windows system>.
+Use the <queryRegistry> <function> to get system settings on a
+<Windows|Windows system>.
 
-The first part of the <keyPath> should be one of the predefined handle <value|values>. If the <keyPath> ends in "\", the value <return|returned> is the <default> value for the key.
+The first part of the <keyPath> should be one of the predefined handle
+<value|values>. If the <keyPath> ends in "\", the value
+<return|returned> is the <default> value for the key.
 
-If you specify a <typeVariable>, the type of the data in the <registry> entry is placed in that <variable>.
+If you specify a <typeVariable>, the type of the data in the <registry>
+entry is placed in that <variable>.
 
->*Tip:*  To convert <binary file|binary data> you get from the <registry> to a <string>, use the <binaryDecode> <function>.
+>*Tip:*  To convert <binary file|binary data> you get from the
+> <registry> to a <string>, use the <binaryDecode> <function>.
 
-On Mac OS, OS X, and Unix systems, the <queryRegistry> function <return|returns> "not supported".
+On Mac OS, OS X, and Unix systems, the <queryRegistry> function
+<return|returns> "not supported".
 
 Changes:
-The typeVariable parameter was added in version 2.0. In previous versions, the type information was not available.
+The typeVariable parameter was added in version 2.0. In previous
+versions, the type information was not available.
 
-References: default (keyword), string (keyword), function (control_st), deleteRegistry (function), value (function), binaryDecode (function), MCISendString (function), binary file (glossary), variable (glossary), Windows (glossary), return (glossary), registry (glossary), value (glossary)
+References: function (control structure), deleteRegistry (function),
+value (function), binaryDecode (function), MCISendString (function),
+binary file (glossary), variable (glossary), Windows (glossary),
+return (glossary), registry (glossary), value (glossary),
+default (keyword), string (keyword)
+

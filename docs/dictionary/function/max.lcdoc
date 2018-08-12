@@ -4,13 +4,14 @@ Type: function
 
 Syntax: max(<numbersList>)
 
-Summary: <return|Returns> the largest number from a list of numbers.
+Summary:
+<return|Returns> the largest number from a list of numbers.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 max(17,34,8,1) -- returns 34
@@ -19,22 +20,35 @@ Example:
 put max(returnedValues) into upperLimit
 
 Parameters:
-numbersList: A comma-separated list of numbers, or an expression that evaluates to such a list, or an array containing only numbers.
+numbersList:
+A comma-separated list of numbers, or an expression that evaluates to
+such a list, or an array containing only numbers.
 
-Returns: The <max> <function> <return|returns> a number.
+Returns:
+The <max> <function> <return|returns> a number.
 
 Description:
-Use the <max> <function(control_st)> to find the highest value in a set of <value|values>.
+Use the <max> <function(control structure)> to find the highest value in
+a set of <value|values>.
 
-You can use the <max> and <min> <function(glossary)|functions> together to limit a value to a certain <range>. For example, the expression
-  max(10,min(myValue,100))
-yields a number between 10 and 100. If myValue is within the limits, the expression is equal to myValue; if it is greater than 100, the expression evaluates to 100; and if it is less than 10, the expression evaluates to 10.
+You can use the <max> and <min> <function(glossary)|functions> together
+to limit a value to a certain <range>. For example, the expression
+max(10,min(myValue,100)) yields a number between 10 and 100. If myValue
+is within the limits, the expression is equal to myValue; if it is
+greater than 100, the expression evaluates to 100; and if it is less
+than 10, the expression evaluates to 10.
 
-If the <numbersList> is empty, the <max> <function(control_st)> returns zero.
+If the <numbersList> is empty, the <max> <function(control structure)>
+returns zero.
 
 Changes:
-The ability to use an array was introduced in version 1.1. In previous versions, only lists of numbers could be used with the max function.
+The ability to use an array was introduced in version 1.1. In previous
+versions, only lists of numbers could be used with the max function.
 
-References: &gt;= (operator), &lt;= (operator), &gt; (operator), extents (function), sum (function), min (function), average (function), value (glossary), function (glossary), return (glossary), range (glossary), function (control_st)
+References: function (control structure), extents (function),
+sum (function), min (function), average (function), value (glossary),
+function (glossary), return (glossary), range (glossary),
+&gt;= (operator), &lt;= (operator), &gt; (operator)
 
 Tags: math
+

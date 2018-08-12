@@ -2,48 +2,57 @@ Name: fontLanguage
 
 Type: function
 
-Syntax: the fontLanguage of <fontName> 
+Syntax: the fontLanguage of <fontName>
 
 Syntax: fontLanguage(<fontName>)
 
-Summary: Returns the language associated with a <Unicode> font.
+Summary:
+Returns the language associated with a <Unicode> font.
 
 Introduced: 2.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 the fontLanguage of "Osaka"
 
 Parameters:
-fontName: The name of any font that is installed on the current system.
+fontName:
+The name of any font that is installed on the current system.
 
 Returns (enum):
-- ANSI: for English-language fonts
-- Arabic:
-- Bulgarian:
-- Chinese:
-- Greek:
-- Hebrew:
-- Japanese:
-- Korean:
-- Polish:
-- Roman:
-- Russian:
-- Thai:
-- Turkish:
-- SimpleChinese:
-- Ukrainian:
+
+-   ANSI: for English-language fonts
+-   Arabic: 
+-   Bulgarian: 
+-   Chinese: 
+-   Greek: 
+-   Hebrew: 
+-   Japanese: 
+-   Korean: 
+-   Polish: 
+-   Roman: 
+-   Russian: 
+-   Thai: 
+-   Turkish: 
+-   SimpleChinese: 
+-   Ukrainian: 
+
 
 Description:
-Use the <fontLanguage> <function> to list only the fonts intended for a particular language.
+Use the <fontLanguage> <function> to list only the fonts intended for a
+particular language.
 
-For a list of all fonts installed on the current system, use the fontNames function.
+For a list of all fonts installed on the current system, use the
+fontNames function.
 
->*Cross-platform note:*  On <Unix|Unix systems>, the <fontLanguage> always returns "English".
+>*Cross-platform note:*  On <Unix|Unix systems>, the <fontLanguage>
+> always returns "English".
 
-References: function (control_st), uniDecode (function), Unix (glossary), Unicode (glossary)
+References: function (control structure), uniDecode (function),
+Unix (glossary), Unicode (glossary)
 
 Tags: text processing
+

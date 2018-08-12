@@ -4,31 +4,49 @@ Type: property
 
 Syntax: set the dynamicPaths of <stack> to {true | false}
 
-Summary: Specifies whether the <message path> includes the <current card> and its <owner|owners>.
+Summary:
+Specifies whether the <message path> includes the <current card> and its
+<owner|owners>. 
 
 Associations: stack
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the dynamicPaths of this stack to true
 
-Value (bool):The <dynamicPaths> of a <stack> is true or false.
-By default, the <dynamicPaths> <property> of newly created <stacks> is set to false.
+Value (bool):
+The <dynamicPaths> of a <stack> is true or false.
+By default, the <dynamicPaths> <property> of newly created <stacks> is
+set to false.
 
 Description:
-Use the <dynamicPaths> <property> for compatibility with imported <HyperCard> <stacks> that rely on <HyperCard|HyperCard's> dynamic path <behavior>.
+Use the <dynamicPaths> <property> for compatibility with imported
+<HyperCard> <stacks> that rely on <HyperCard|HyperCard's> dynamic path
+<behavior>. 
 
-If a stack's <dynamicPaths> <property> is true, when a <handler> in that <stack> uses the <go> or <find> <command> to go to a <card(keyword)> other than the original <card(keyword)>, that destination <card(object)|card's> <message path> is inserted into the <message path> as long as the <handler> is on that <card(keyword)>.
+If a stack's <dynamicPaths> <property> is true, when a <handler> in that
+<stack> uses the <go> or <find> <command> to go to a <card(keyword)>
+other than the original <card(keyword)>, that destination
+<card(object)|card's> <message path> is inserted into the <message path>
+as long as the <handler> is on that <card(keyword)>.
 
-If the <dynamicPaths> is false, the <message path> does not change even when a <handler> visits another <card(keyword)>.
+If the <dynamicPaths> is false, the <message path> does not change even
+when a <handler> visits another <card(keyword)>.
 
-The <dynamicPaths> <property> of <stacks> imported from <HyperCard> is set to true by <default>.
+The <dynamicPaths> <property> of <stacks> imported from <HyperCard> is
+set to true by <default>.
 
-References: backgroundBehavior (property), stack (object), card (object), card (keyword), default (keyword), pass (control_st), property (glossary), current card (glossary), owner (glossary), handler (glossary), message path (glossary), HyperCard (glossary), command (glossary), behavior (glossary), find (command), go (command), stacks (function)
+References: find (command), go (command), pass (control structure),
+stacks (function), property (glossary), current card (glossary),
+owner (glossary), handler (glossary), message path (glossary),
+HyperCard (glossary), command (glossary), behavior (glossary),
+card (keyword), default (keyword), stack (object), card (object),
+backgroundBehavior (property)
 
 Tags: objects
+

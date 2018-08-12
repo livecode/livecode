@@ -2,13 +2,14 @@ Name: sessionName
 
 Type: property
 
-Syntax: set the sessionName to <cookieName> 
+Syntax: set the sessionName to <cookieName>
 
-Summary: Specifies the name of the cookie used to store the session id.
+Summary:
+Specifies the name of the cookie used to store the session id.
 
 Introduced: 5.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
 Platforms: server
 
@@ -19,13 +20,19 @@ Example:
 set the sessionName to "MYSESSION"
 
 Parameters:
-cookieName: the name of the cookie
+cookieName:
+the name of the cookie
 
 Description:
-Use the <sessionName> property to set the name of the cookie used to store the session id.
+Use the <sessionName> property to set the name of the cookie used to
+store the session id.
 
-Use the <sessionName> property to set the the name of the cookie used to store the session id.
+Use the <sessionName> property to set the the name of the cookie used to
+store the session id.
 
-If the <sessionName> is not specified then the default, LCSESSION, is used.
+If the <sessionName> is not specified then the default, LCSESSION, is
+used. 
 
-References: sessionSavePath (property), sessionLifetime (property), sessionID (property)
+References: sessionSavePath (property), sessionLifetime (property),
+sessionID (property)
+

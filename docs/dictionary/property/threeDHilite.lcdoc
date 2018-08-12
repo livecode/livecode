@@ -4,32 +4,49 @@ Type: property
 
 Syntax: set the threeDHilite of <field> to {true | false}
 
-Summary: Specifies whether <selected> <lines> in a <list field> look like they're receding into the screen.
+Summary:
+Specifies whether <selected> <lines> in a <list field> look like they're
+receding into the screen.
 
 Associations: field
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the threeDHilite of field "Options" to false
 
 Example:
-set the threeDHilite of the fieldTemplate to true
+set the threeDHilite of the templateField to true
 
-Value (bool):The <threeDHilite> of a <field(keyword)> is true or false.
-By default, the <threeDHilite> <property> of newly created <field(object)|fields> is set to false.
+Value (bool):
+The <threeDHilite> of a <field(keyword)> is true or false.
+By default, the <threeDHilite> <property> of newly created
+<field(object)|fields> is set to false.
 
 Description:
-Use the <threeDHilite> <property> to control the <appearance> of <list field|list fields>.
+Use the <threeDHilite> <property> to control the <appearance> of <list
+field|list fields>.
 
-If the <threeDHilite> <property> is true, <select|selected> lines in a <list field> are drawn with a three-D box around them. (The box is drawn using the <field|field's> <effective> <topColor> and <bottomColor> properties.) If the <threeDHilite> is false, the <select|selected> lines are simply <highlight|highlighted>.
+If the <threeDHilite> <property> is true, <select|selected> lines in a
+<list field> are drawn with a three-D box around them. (The box is drawn
+using the <field|field's> <effective> <topColor> and <bottomColor>
+properties.) If the <threeDHilite> is false, the <select|selected> lines
+are simply <highlight|highlighted>.
 
-If the field's <listBehavior> <property> is set to false, this <property> has no effect.
+If the field's <listBehavior> <property> is set to false, this
+<property> has no effect.
 
-References: field (keyword), effective (keyword), lines (keyword), threeD (property), selected (property), topPattern (property), bottomColor (property), listBehavior (property), noncontiguousHilites (property), bottomPattern (property), toggleHilites (property), hilitedLine (property), field (object), property (glossary), highlight (glossary), list field (glossary), topColor (glossary), appearance (glossary), select (glossary)
+References: property (glossary), highlight (glossary),
+list field (glossary), topColor (glossary), appearance (glossary),
+select (glossary), field (keyword), effective (keyword), lines (keyword),
+field (object), threeD (property), selected (property),
+topPattern (property), bottomColor (property), listBehavior (property),
+noncontiguousHilites (property), bottomPattern (property),
+toggleHilites (property), hilitedLine (property)
 
 Tags: ui
+

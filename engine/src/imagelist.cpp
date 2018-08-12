@@ -371,7 +371,7 @@ MCPatternRef MCImageList::allocpat(uint4 id, MCObject *optr)
 	if (newim == nil)
 		return nil;
 	
-	MCPatternRef pat;
+	MCPatternRef pat = nullptr;
 	MCImageListNode *tptr = images;
 	if (tptr != nil)
 		do
@@ -382,9 +382,9 @@ MCPatternRef MCImageList::allocpat(uint4 id, MCObject *optr)
 		}
 	while (tptr != images);
 	
-	/* UNCHECKED */ tptr = new MCImageListNode(newim);
+	/* UNCHECKED */ tptr = new (nothrow) MCImageListNode(newim);
 	tptr->appendto(images);
-	tptr->allocimage(newim, pat);
+	/* UNCHECKED */ tptr->allocimage(newim, pat);
 	return pat;
 }
 

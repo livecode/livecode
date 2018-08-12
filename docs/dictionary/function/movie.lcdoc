@@ -1,20 +1,21 @@
 Name: movie
 
+Synonyms: movies
+
 Type: function
 
 Syntax: the movie
 
 Syntax: movie()
 
-Summary: <return|Returns> the name of the currently playing <video clip>.
-
-Synonyms: movies
+Summary:
+<return|Returns> the name of the currently playing <video clip>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 the movie
@@ -22,13 +23,19 @@ the movie
 Example:
 repeat until myMovie is not among the lines of the movies
 
-Returns: The <movie> <function> <return|returns> a list of <video clip> names, one per line.
+Returns:
+The <movie> <function> <return|returns> a list of <video clip> names,
+one per line.
 
 Description:
 Use the <movie> <function> to <synchronize> other actions with sounds.
 
-If no video clip is playing, the <movie> <function> <return|returns> <done>.
+If no video clip is playing, the <movie> <function> <return|returns>
+<done>. 
 
-References: done (constant), start (command), prepare (command), function (control_st), synchronize (glossary), video clip (glossary), return (glossary)
+References: start (command), prepare (command), done (constant),
+function (control structure), synchronize (glossary),
+video clip (glossary), return (glossary)
 
 Tags: multimedia
+

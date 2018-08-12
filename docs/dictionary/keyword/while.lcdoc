@@ -4,13 +4,15 @@ Type: keyword
 
 Syntax: while
 
-Summary: Used with the <repeat> <control structure> to specify that the <loop> is to repeat as long as the specified condition remains true.
+Summary:
+Used with the <repeat> <control structure> to specify that the <loop> is
+to repeat as long as the specified condition remains true.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 repeat while the mouse is down
@@ -19,10 +21,21 @@ Example:
 repeat while myVariable is empty
 
 Description:
-Use the <while> <keyword> to repeat a sequence of instructions as long as a condition continues to be true.
+Use the <while> <keyword> to repeat a sequence of instructions as long
+as a condition continues to be true.
 
-LiveCode evaluates the condition each time the loop repeats, at the top of the loop (before the statements in the <repeat structure> are executed). If the condition is false, the <loop> is skipped and <execute|execution> <resume|resumes> with the <statement> after the <end repeat> statement.
+LiveCode evaluates the condition each time the loop repeats, at the top
+of the loop (before the statements in the <repeat structure> are
+executed). If the condition is false, the <loop> is skipped and
+<execute|execution> <resume|resumes> with the <statement> after the <end
+repeat> statement.
 
-If the condition is already false when LiveCode reaches the <repeat statement>, the <loop> is not <execute|executed> at all.
+If the condition is already false when LiveCode reaches the <repeat
+statement>, the <loop> is not <execute|executed> at all.
 
-References: forever (keyword), for (keyword), end repeat (keyword), keyword (glossary), resume (glossary), statement (glossary), loop (glossary), control structure (glossary), execute (glossary), repeat statement (control_st), repeat structure (control_st), repeat (control_st)
+References: repeat statement (control structure),
+repeat structure (control structure), repeat (control structure),
+keyword (glossary), resume (glossary), statement (glossary),
+loop (glossary), control structure (glossary), execute (glossary),
+forever (keyword), for (keyword), end repeat (keyword)
+

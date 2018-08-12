@@ -106,7 +106,7 @@ struct MCActiveTouch
 MCScreenDC::MCScreenDC(void)
 {
 	// Initialize the window stacks.
-	m_main_windows = new MCWindowStack;
+	m_main_windows = new (nothrow) MCWindowStack;
 	
 	// Initialize the list of active touches.
 	m_active_touches = nil;
@@ -133,28 +133,19 @@ void MCScreenDC::common_open(void)
 	
 	black_pixel.red = black_pixel.green = black_pixel.blue = 0;
 	white_pixel.red = white_pixel.green = white_pixel.blue = 0xFFFF;
-	black_pixel.pixel = 0;
-	white_pixel.pixel = 0xFFFFFF;
 	
 	MCselectioncolor = MCpencolor = black_pixel;
-	alloccolor(MCselectioncolor);
-	alloccolor(MCpencolor);
 	
 	MConecolor = MCbrushcolor = white_pixel;
-	alloccolor(MCbrushcolor);
 	
 	gray_pixel.red = gray_pixel.green = gray_pixel.blue = 0x8080;
-	alloccolor(gray_pixel);
 	
 	MChilitecolor.red = MChilitecolor.green = 0x0000;
 	MChilitecolor.blue = 0x8080;
-	alloccolor(MChilitecolor);
 	
 	MCaccentcolor = MChilitecolor;
-	alloccolor(MCaccentcolor);
 	
 	background_pixel.red = background_pixel.green = background_pixel.blue = 0xC0C0;
-	alloccolor(background_pixel);
 	
 	// Initialize the common vars.
 	m_window_left = 0;
@@ -263,7 +254,7 @@ void MCScreenDC::process_touch(MCEventTouchPhase p_phase, void *p_touch_handle, 
 			uint32_t t_touch_id;
 			t_touch_id = ++m_last_touch_id;
 			
-			t_touch = new MCActiveTouch;
+			t_touch = new (nothrow) MCActiveTouch;
 			t_touch -> ident = t_touch_id;
 			t_touch -> touch = p_touch_handle;
 			t_touch -> next = m_active_touches;
@@ -490,6 +481,9 @@ void MCScreenDC::refresh_window(Window p_window)
 		//   the need to only do OpenGL calls on the main thread.
         t_old_stack -> deactivatetilecache();
 		
+		// IM-2016-08-17: [[ Bug 18100 ]] Detach old stack from window
+		t_old_stack->OnDetach();
+		
 		m_current_window = nil;
 		m_current_focus = false;
 		m_mouse_x = -100000;
@@ -517,6 +511,9 @@ void MCScreenDC::refresh_window(Window p_window)
 		if (!m_current_focus)
 			focus_window(p_window);
 		
+		// IM-2016-08-17: [[ Bug 18100 ]] Attach new stack to window
+		t_new_stack->OnAttach();
+		
 #ifdef _IOS_MOBILE
 		// MW-2012-03-05: [[ ViewStack ]] Make sure we tell the app's view
 		//   which stack to use.
@@ -526,7 +523,7 @@ void MCScreenDC::refresh_window(Window p_window)
 		do_fit_window(false, true);
 		
 		if (t_need_redraw)
-			t_new_stack -> view_dirty_all();
+			t_new_stack -> dirtyall();
 	}
 }
 
@@ -535,7 +532,7 @@ void MCScreenDC::redraw_current_window(void)
 	MCStack *t_stack;
 	t_stack = (MCStack *)m_current_window;
 	if (t_stack != nil)
-		t_stack -> view_dirty_all();
+		t_stack -> dirtyall();
 }
 
 void MCScreenDC::unfocus_current_window(void)
@@ -551,7 +548,7 @@ void MCScreenDC::unfocus_current_window(void)
 MCMobileBitmap *MCMobileBitmapCreate(uint32_t width, uint32_t height, bool mono)
 {
 	MCMobileBitmap *t_bitmap;
-	t_bitmap = new MCMobileBitmap;
+	t_bitmap = new (nothrow) MCMobileBitmap;
 	t_bitmap -> width = width;
 	t_bitmap -> height = height;
 	if (mono)
@@ -851,12 +848,6 @@ MCPrinter *MCScreenDC::createprinter(void)
 {
 	return new MCDummyPrinter;
 }
-
-#ifdef LEGACY_EXEC
-void MCScreenDC::listprinters(MCExecPoint& ep)
-{
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

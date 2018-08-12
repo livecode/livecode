@@ -18,7 +18,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	BUTTON_H
 
 #include "mccontrol.h"
-
+#include "stack.h"
+#include "mctristate.h"
 
 #define AQUA_FUDGE 8
 
@@ -103,8 +104,17 @@ public:
 
 class ButtonMenuCallback;
 
-class MCButton : public MCControl
+typedef MCObjectProxy<MCButton>::Handle MCButtonHandle;
+
+class MCButton : public MCControl, public MCMixinObjectHandle<MCButton>
 {
+public:
+    
+    enum { kObjectType = CT_BUTTON };
+    using MCMixinObjectHandle<MCButton>::GetHandle;
+    
+private:
+    
 	friend class MCHcbutton;
 	MCCdata *bdata;
 	iconlist *icons;
@@ -112,7 +122,7 @@ class MCButton : public MCControl
 	MCNameRef menuname;
 	MCStringRef menustring;
 	MCField *entry;
-	MCStack *menu;
+	MCStackHandle menu;
 	MCStringRef acceltext;
 	MCArrayRef tabs;
 	MCPlatformMenuRef m_system_menu;
@@ -137,7 +147,7 @@ class MCButton : public MCControl
 	static uint2 focusedtab;
 	static uint2 mnemonicoffset;
 	static MCRectangle optionrect;
-	static Keynames button_keys[];
+	static const Keynames button_keys[];
 	static uint4 clicktime;
 	static uint2 menubuttonheight;
 	static Boolean starthilite;
@@ -156,6 +166,7 @@ class MCButton : public MCControl
     bool m_animate_posted : 1;
 
 public:
+    
 	MCButton();
 	MCButton(const MCButton &bref);
 	// virtual functions from MCDLlist
@@ -185,17 +196,12 @@ public:
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
-#ifdef _MACOSX
+#ifdef _MAC_DESKTOP
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 #endif
 
 	virtual uint2 gettransient() const;
 	virtual void applyrect(const MCRectangle &nrect);
-
-#ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-    virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
 
 	virtual void closemenu(Boolean kfocus, Boolean disarm);
 	
@@ -228,10 +234,10 @@ public:
 	void setupmnemonic();
 	MCCdata *getbptr(uint4 cardid);
 	uint2 getfamily();
-	Boolean gethilite(uint4 parid);
+	MCTristate gethilite(uint4 parid);
 	void setdefault(Boolean def);
-	Boolean sethilite(uint4 parid, Boolean hilite);
-	void resethilite(uint4 parid, Boolean hilite);
+	Boolean sethilite(uint4 parid, MCTristate hilite);
+	void resethilite(uint4 parid, MCTristate hilite);
 
 	// MW-2011-09-30: [[ Redraw ]] This function conditionally does a redraw all
 	//   if flags means it might need to be.
@@ -274,11 +280,9 @@ public:
 	{
 		menuhasitemtags = p_hastags;
 	}
-	MCStack *getmenu()
-	{
-		return menu;
-	}
-	uint2 getaccelkey()
+    MCStack *getmenu();
+    
+    uint2 getaccelkey()
 	{
 		return accelkey;
 	}

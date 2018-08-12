@@ -1,45 +1,67 @@
 Name: label
 
-Type: property
-
-Syntax: set the label of <object> to <labelString> 
-
-Summary: Specifies the <string> shown in a <stack window|stack window's> <title bar>, or a text label to be displayed on the specified <object> if its <showName> <property> is true.
-
 Synonyms: title
 
-Associations: stack,button,graphic
+Type: property
+
+Syntax: set the label of <object> to <labelString>
+
+Summary:
+Specifies the <string> shown in a <stack window|stack window's> <title
+bar>, or a text label to be displayed on the specified
+<object(glossary)> if its <showName> <property> is true.
+
+Associations: stack, button, graphic
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the label of button 1 to "Hello" & return & "World"
 
 Example:
-get the label of button "Choices Popup" <a name="code tag=">-- current menu choice</a>
+get the label of button "Choices Popup" -- current menu choice
 
 Example:
 set the label of this stack to the short name of this card
 
 Value:
-The <label> of an <object> is a <string>.
-By default, the <label> <property> of newly created <button|buttons>, <graphic|graphics>, <group|groups>, and <stacks> is set to empty.
+The <label> of an <object(glossary)> is a <string>.
+By default, the <label> <property> of newly created <button|buttons>,
+<graphic|graphics>, <group|groups>, and <stacks> is set to empty.
 
 Description:
-Use the <label> <property> as a user-visible replacement for an ungainly <name>, or to change the visible name of a window or <object> when changing the actual <name> would require changing code that refers to it.
+Use the <label> <property> as a user-visible replacement for an ungainly
+<name>, or to change the visible name of a window or <object(glossary)>
+when changing the actual <name> would require changing code that refers
+to it.
 
-If a button's menuMode is either "option" or "comboBox", the <button|button's> <label> is the text of the currently selected menu option. Setting the <label> <property> changes the currently selected option. (To change the currently selected option while sending the appropriate <message>, set the <button|button's> <menuHistory> instead.)
+If a button's menuMode is either "option" or "comboBox", the
+<button|button's> <label> is the text of the currently selected menu
+option. Setting the <label> <property> changes the currently selected
+option. (To change the currently selected option while sending the
+appropriate <message>, set the <button|button's> <menuHistory> instead.)
 
-To create a multiple-line label for a button or graphic, place a return <constant> in the <label>.
+To create a multiple-line label for a button or graphic, place a return
+<constant> in the <label>.
 
-If an object's <label> is empty, the <object|object's> <name> <property> is displayed instead. In this case, the <expression> the effective label of button reports the button's <name> <property>.
+If an object's <label> is empty, the <object|object's> <name> <property>
+is displayed instead. In this case, the <expression> the effective label
+of button reports the button's <name> <property>.
 
-To create a blank title bar, set the stack's <label> <property> to a space.
+To create a blank title bar, set the stack's <label> <property> to a
+space. 
 
-References: name (property), showName (property), longWindowTitles (property), unicodeTitle (property), acceleratorText (property), menuHistory (property), titleWidth (property), string (keyword), effective (keyword), constant (command), graphic (object), object (object), button (object), property (glossary), title bar (glossary), message (glossary), stack window (glossary), group (glossary), expression (glossary), stacks (function)
+References: constant (command), stacks (function), object (glossary),
+property (glossary), title bar (glossary), message (glossary),
+stack window (glossary), group (glossary), expression (glossary),
+string (keyword), effective (keyword), graphic (object), button (object),
+name (property), showName (property), longWindowTitles (property),
+unicodeTitle (property), acceleratorText (property),
+menuHistory (property), titleWidth (property)
 
 Tags: ui
+

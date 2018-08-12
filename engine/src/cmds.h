@@ -19,9 +19,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "statemnt.h"
 #include "objdefs.h"
+#include "express.h"
 #include "regex.h"
 #include "util.h"
 #include "uidc.h"
+#include "variable.h"
+#include "chunk.h"
 
 // general commands in cmds.cc
 
@@ -41,7 +44,6 @@ public:
 	virtual ~MCAssertCmd(void);
 	virtual Parse_stat parse(MCScriptPoint& sp);
 	virtual void exec_ctxt(MCExecContext& ctxt);
-    virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCChoose : public MCStatement
@@ -57,7 +59,6 @@ public:
 	virtual ~MCChoose();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext& ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCConvert : public MCStatement
@@ -81,7 +82,6 @@ public:
 	virtual ~MCConvert();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 	Parse_stat parsedtformat(MCScriptPoint &sp, Convert_form &firstform,
 	                         Convert_form &secondform);
 };
@@ -93,7 +93,7 @@ class MCDo : public MCStatement
 	MCChunk *widget;
 protected:
 	bool browser : 1;
-	Boolean debug : 1;
+	bool debug : 1;
 	bool caller : 1;
 public:
 	MCDo()
@@ -109,7 +109,6 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &);
 	void deletestatements(MCStatement *statements);
 	virtual void exec_ctxt(MCExecContext& ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCDebugDo : public MCDo
@@ -142,7 +141,6 @@ public:
 	virtual ~MCDoMenu();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext& ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCEdit : public MCStatement
@@ -159,7 +157,6 @@ public:
 	virtual ~MCEdit();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCFind : public MCStatement
@@ -177,7 +174,6 @@ public:
 	virtual ~MCFind();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCGet : public MCStatement
@@ -191,7 +187,6 @@ public:
 	virtual ~MCGet();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext&);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCMarking : public MCStatement
@@ -245,7 +240,6 @@ public:
 	virtual ~MCPost();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCPut : public MCStatement
@@ -256,7 +250,6 @@ class MCPut : public MCStatement
 	// MW-2012-02-23: [[ UnicodePut ]] Indicates if the 'unicode' adjective
 	//   was present.
 	bool is_unicode : 1;
-	bool overlap : 1;
 
 	//cookie
 	MCExpression *name;
@@ -272,7 +265,6 @@ public:
 		// MW-2011-06-22: [[ SERVER ]] Make a distinction between 'put' and 'put .. into msg'
 		prep = PT_UNDEFINED;
 		dest = NULL;
-		overlap = false;
 		// cookie
 		name = NULL;
 		path = NULL;
@@ -287,12 +279,6 @@ public:
 	virtual ~MCPut();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
-	
-
-#ifdef LEGACY_EXEC
-	Exec_stat exec_cookie(MCExecPoint &);
-#endif
 };
 
 class MCQuit : public MCStatement
@@ -306,7 +292,6 @@ public:
 	virtual ~MCQuit();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext&);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCReset : public MCStatement
@@ -315,25 +300,31 @@ class MCReset : public MCStatement
 public:
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCReturn : public MCStatement
 {
+    enum Kind
+    {
+        kReturn,
+        kReturnValue,
+        kReturnError,
+        kReturnWithUrlResult,
+    };
 	MCExpression *source;
-	MCExpression *url;
-	MCVarref *var;
+	MCExpression *extra_source;
+    Kind kind;
 public:
 	MCReturn()
 	{
-		source = url = NULL;
-		var = NULL;
+        source = NULL;
+        extra_source = NULL;
+        kind = kReturn;
 	}
 	virtual ~MCReturn();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual uint4 linecount();
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 // relayer <control> ( before | after ) layer <expr>
@@ -409,8 +400,6 @@ public:
 	virtual ~MCSort();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &);
-	//static void additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort_type form, MCValueRef p_value, MCExpression *by);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCWait : public MCStatement
@@ -428,7 +417,6 @@ public:
 	virtual ~MCWait();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 // creation related commands in cmdsc.cc
@@ -448,7 +436,6 @@ public:
 	virtual ~MCClone();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCClipboardCmd: public MCStatement
@@ -467,16 +454,11 @@ public:
 
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 
 protected:
 	virtual bool iscut(void) const = 0;
 
 private:
-#ifdef LEGACY_EXEC
-	Exec_errors processtocontainer(MCExecPoint& ep, MCObjectRef *p_objects, uint4 p_object_count, MCObject *p_dst);
-	Exec_errors processtoclipboard(MCExecPoint& ep, MCObjectRef *p_objects, uint4 p_object_count);
-#endif
 };
 
 class MCCopyCmd: public MCClipboardCmd
@@ -499,11 +481,11 @@ class MCCreate : public MCStatement
 	MCExpression *file;
     MCExpression *kind;
     MCChunk *container;
-    Boolean directory: 1;
-    Boolean visible: 1;
-    Boolean alias: 1;
+    bool directory: 1;
+    bool visible: 1;
+    bool alias: 1;
     // MW-2014-09-30: [[ ScriptOnlyStack ]] For 'create script only stack ...' form.
-    Boolean script_only_stack : 1;
+    bool script_only_stack : 1;
 public:
 	MCCreate()
 	{
@@ -522,7 +504,6 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
 	MCControl *getobject(MCObject *&parent);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCCustomProp : public MCStatement
@@ -580,7 +561,6 @@ public:
 	virtual ~MCDelete();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCChangeProp : public MCStatement
@@ -597,7 +577,6 @@ public:
 	virtual ~MCChangeProp();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCDisable : public MCChangeProp
@@ -653,7 +632,6 @@ public:
 	virtual ~MCCrop();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCFlip : public MCStatement
@@ -669,7 +647,6 @@ public:
 	virtual ~MCFlip();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCGrab : public MCStatement
@@ -683,7 +660,6 @@ public:
 	virtual ~MCGrab();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCLaunch : public MCStatement
@@ -703,7 +679,6 @@ public:
 	virtual ~MCLaunch();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCLoad : public MCStatement
@@ -724,7 +699,6 @@ public:
 	virtual ~MCLoad();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCUnload : public MCStatement
@@ -740,7 +714,6 @@ public:
 	virtual ~MCUnload();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCMakeGroup : public MCStatement
@@ -754,7 +727,6 @@ public:
 	virtual ~MCMakeGroup();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCPasteCmd : public MCStatement
@@ -766,7 +738,6 @@ public:
 	virtual ~MCPasteCmd();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCPlace : public MCStatement
@@ -782,7 +753,6 @@ public:
 	virtual ~MCPlace();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCRecord : public MCStatement
@@ -798,7 +768,6 @@ public:
 	virtual ~MCRecord();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCRedo : public MCStatement
@@ -824,7 +793,6 @@ public:
 	virtual ~MCRemove();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCRename : public MCStatement
@@ -839,7 +807,6 @@ public:
 	virtual ~MCRename();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCReplace : public MCStatement
@@ -866,14 +833,16 @@ public:
 	virtual ~MCReplace();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCRevert : public MCStatement
 {
+    MCChunk *stack;
 public:
-	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
+    MCRevert() : stack(NULL) {}
+    virtual ~MCRevert();
+    virtual Parse_stat parse(MCScriptPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
 };
 
 class MCRotate : public MCStatement
@@ -889,7 +858,6 @@ public:
 	virtual ~MCRotate();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCSelect : public MCStatement
@@ -907,7 +875,6 @@ public:
 	virtual ~MCSelect();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCUngroup : public MCStatement
@@ -921,14 +888,12 @@ public:
 	virtual ~MCUngroup();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCUndoCmd : public MCStatement
 {
 public:
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 // event related comands in cmdse.cc
@@ -953,7 +918,6 @@ public:
 	virtual ~MCAccept();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCBeep : public MCStatement
@@ -967,15 +931,12 @@ public:
 	virtual ~MCBeep();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext& ctxt);
-	
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCBreakPoint : public MCStatement
 {
 public:
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCCancel : public MCStatement
@@ -989,7 +950,6 @@ public:
 	virtual ~MCCancel();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCClickCmd : public MCStatement
@@ -1008,7 +968,6 @@ public:
 	virtual ~MCClickCmd();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCDrag : public MCStatement
@@ -1029,7 +988,6 @@ public:
 	virtual ~MCDrag();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 // MW-2008-11-05: [[ Dispatch Command ]] The statement class for the 'dispatch' command.
@@ -1066,7 +1024,6 @@ public:
 	virtual ~MCFocus();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCInsert : public MCStatement
@@ -1081,50 +1038,49 @@ public:
 	virtual ~MCInsert();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCMessage : public MCStatement
 {
-	MCExpression *message;
-	MCExpression *eventtype;
-	MCChunk *target;
-	MCExpression *in;
+	MCAutoPointer<MCExpression> message;
+	MCAutoPointer<MCExpression> eventtype;
+	MCAutoPointer<MCChunk> target;
+	MCAutoPointer<MCExpression> in;
 	Functions units;
 	Boolean program;
 	Boolean reply;
-protected:
 	Boolean send;
+    Boolean script;
 public:
-	MCMessage()
+    MCMessage(Boolean p_send) :
+        message(nullptr),
+        eventtype(nullptr),
+        target(nullptr),
+        in(nullptr),
+        units(F_TICKS),
+        program(False),
+        reply(True),
+        script(False)
 	{
-		message = eventtype = NULL;
-		target = NULL;
-		in = NULL;
-		program = False;
-		reply = True;
-	}
-	virtual ~MCMessage();
+        send = p_send;
+    }
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCCall : public MCMessage
 {
 public:
-	MCCall()
+    MCCall() : MCMessage(False)
 	{
-		send = False;
-	}
+    }
 };
 
 class MCSend : public MCMessage
 {
 public:
-	MCSend()
+    MCSend(): MCMessage(True)
 	{
-		send = True;
 	}
 };
 
@@ -1149,7 +1105,6 @@ public:
 	virtual ~MCMove();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCMM : public MCStatement
@@ -1187,7 +1142,6 @@ public:
 	virtual ~MCMM();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCPlay : public MCMM
@@ -1222,7 +1176,6 @@ public:
 	virtual ~MCReply();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCRequest : public MCStatement
@@ -1239,7 +1192,6 @@ public:
 	virtual ~MCRequest();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCStart : public MCStatement
@@ -1264,7 +1216,6 @@ public:
 	virtual ~MCStart();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCLibrary : public MCStart
@@ -1294,7 +1245,6 @@ public:
 	virtual ~MCStop();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCType : public MCStatement
@@ -1311,7 +1261,6 @@ public:
 	virtual ~MCType();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 // file related comands in cmdsf.cc
@@ -1321,7 +1270,6 @@ class MCClose : public MCStatement
 	Open_argument arg;
 	MCExpression *fname;
 	MCChunk *stack;
-	Boolean immediate;
 public:
 	MCClose()
 	{
@@ -1332,7 +1280,6 @@ public:
 	virtual ~MCClose();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 // MW-2004-11-26: Initialise format and sformat (VG)
@@ -1377,7 +1324,6 @@ public:
 	virtual ~MCExport();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCEncryptionOp : public MCStatement
@@ -1407,8 +1353,6 @@ public:
 	virtual ~MCEncryptionOp();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-//	virtual Exec_stat exec_rsa(MCExecPoint &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCCipherEncrypt : public MCEncryptionOp
@@ -1455,12 +1399,8 @@ public:
 		discardmatches = False;
 	}
 	virtual ~MCFilter();
-#ifdef LEGACY_EXEC
-    char *filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher);
-#endif
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCImport : public MCStatement
@@ -1483,7 +1423,6 @@ public:
 	virtual ~MCImport();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCKill : public MCStatement
@@ -1496,11 +1435,9 @@ public:
 		sig = NULL;
 		pname = NULL;
 	}
-	int4 lookup(MCStringRef s);
 	virtual ~MCKill();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCOpen : public MCStatement
@@ -1517,19 +1454,20 @@ class MCOpen : public MCStatement
 	MCStringRef destination;
 	Open_argument arg : 4;
 	Open_mode mode : 4;
-	Boolean dialog : 1;
-	Boolean datagram : 1;
-	Boolean sheet : 1;
-	Boolean secure : 1;
-	Boolean secureverify : 1;
-    Boolean textmode : 1;
+	bool dialog : 1;
+	bool datagram : 1;
+	bool sheet : 1;
+	bool secure : 1;
+	bool secureverify : 1;
+    bool textmode : 1;
 
 	// MW-2010-05-09: Indicates that the process should be opened with elevated
 	//   (admin) permissions
-	Boolean elevated : 1;
+	bool elevated : 1;
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added new "open socket <socket> with verification for <host>" variant.
 	MCExpression *verifyhostname;
+    MCAutoPointer<MCExpression> fromaddress;
 public:
 	MCOpen()
 	{
@@ -1549,7 +1487,6 @@ public:
 	virtual ~MCOpen();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCRead : public MCStatement
@@ -1576,17 +1513,8 @@ public:
         ;
 	}
 	virtual ~MCRead();
-#ifdef LEGACY_EXEC
-	IO_stat readfor(IO_handle stream, int4 pindex, File_unit unit,
-	                uint4 bytes, MCExecPoint &ep, real8 duration);
-	IO_stat readuntil(IO_handle stream, int4 pindex, uint4 count,
-	                  const char *sptr, MCExecPoint &ep, Boolean words,
-	                  real8 duration);
-	IO_stat readuntil_binary(IO_handle stream, int4 pindex, uint4 count, const MCString &sptr, MCExecPoint &ep,Boolean words, real8 duration);
-#endif
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCSeek : public MCStatement
@@ -1603,7 +1531,6 @@ public:
 	virtual ~MCSeek();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCWrite : public MCStatement
@@ -1624,7 +1551,6 @@ public:
 	virtual ~MCWrite();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 // math comands in cmdsm.cc
@@ -1634,19 +1560,16 @@ class MCAdd : public MCStatement
 	MCExpression *source;
 	MCChunk *dest;
 	MCVarref *destvar;
-	bool overlap;
 public:
 	MCAdd()
 	{
 		source = NULL;
 		dest = NULL;
 		destvar = NULL;
-		overlap = false;
 	}
 	virtual ~MCAdd();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCDivide : public MCStatement
@@ -1654,19 +1577,16 @@ class MCDivide : public MCStatement
 	MCExpression *source;
 	MCChunk *dest;
 	MCVarref *destvar;
-	bool overlap;
 public:
 	MCDivide()
 	{
 		source = NULL;
 		dest = NULL;
 		destvar = NULL;
-		overlap = false;
 	}
 	virtual ~MCDivide();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCMultiply : public MCStatement
@@ -1674,19 +1594,16 @@ class MCMultiply : public MCStatement
 	MCExpression *source;
 	MCChunk *dest;
 	MCVarref *destvar;
-	bool overlap;
 public:
 	MCMultiply()
 	{
 		source = NULL;
 		dest = NULL;
 		destvar = NULL;
-		overlap = false;
 	}
 	virtual ~MCMultiply();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCSubtract : public MCStatement
@@ -1694,19 +1611,16 @@ class MCSubtract : public MCStatement
 	MCExpression *source;
 	MCChunk *dest;
 	MCVarref *destvar;
-	bool overlap;
 public:
 	MCSubtract()
 	{
 		source = NULL;
 		dest = NULL;
 		destvar = NULL;
-		overlap = false;
 	}
 	virtual ~MCSubtract();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCArrayOp : public MCStatement
@@ -1749,7 +1663,6 @@ public:
 	virtual ~MCArrayOp();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCCombine : public MCArrayOp
@@ -1772,42 +1685,34 @@ public:
 
 class MCSetOp : public MCStatement
 {
-	MCVarref *destvar;
-	MCExpression *source;
-protected:
-	Boolean intersect : 1;
-	bool overlap : 1;
-    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
-    bool recursive : 1;
 public:
-	MCSetOp()
-	{
-		source = NULL;
-		destvar = NULL;
-	}
-	virtual ~MCSetOp();
+    enum Op
+    {
+        kOpNone,
+        kOpUnion,
+        kOpUnionRecursively,
+        kOpIntersect,
+        kOpIntersectRecursively,
+        kOpDifference,
+        kOpSymmetricDifference
+    };
+    
+private:
+	MCAutoPointer<MCVarref> destvar;
+    MCAutoPointer<MCExpression> destexpr;
+	MCAutoPointer<MCExpression> source;
+    Op op = kOpNone;
+    bool is_into = false;
+    
+public:
+    MCSetOp(Op p_op)
+        : op(p_op)
+    {
+    }
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCArrayIntersectCmd : public MCSetOp
-{
-public:
-	MCArrayIntersectCmd()
-	{
-		intersect = True;
-	}
-};
-
-class MCArrayUnionCmd : public MCSetOp
-{
-public:
-	MCArrayUnionCmd()
-	{
-		intersect = False;
-	}
-};
 
 // MCStack manipulation comands in cmdss.cc
 
@@ -1822,7 +1727,6 @@ public:
 	virtual ~MCCompact();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCGo : public MCStatement
@@ -1856,10 +1760,6 @@ public:
 	virtual ~MCGo();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-    virtual void compile(MCSyntaxFactoryRef);
-#ifdef OLD_EXEC
-	MCStack *findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr);
-#endif
     MCStack *findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term etype, MCCard *&cptr);
 };
 
@@ -1879,7 +1779,6 @@ public:
 	virtual ~MCHide();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCLock : public MCStatement
@@ -1896,7 +1795,6 @@ public:
 	virtual ~MCLock(void);
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCPop : public MCStatement
@@ -1911,7 +1809,6 @@ public:
 	virtual ~MCPop();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCPush : public MCStatement
@@ -1927,7 +1824,6 @@ public:
 	virtual ~MCPush();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCSave : public MCStatement
@@ -1941,7 +1837,6 @@ public:
 	virtual ~MCSave();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCShow : public MCStatement
@@ -1950,7 +1845,6 @@ class MCShow : public MCStatement
 	Boolean card;
 	MCChunk *ton;
 	MCExpression *location;
-	Boolean all;
 	MCVisualEffect *effect;
 public:
 	MCShow()
@@ -1963,7 +1857,6 @@ public:
 	virtual ~MCShow();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCSubwindow : public MCStatement
@@ -1993,7 +1886,6 @@ public:
 	virtual ~MCSubwindow();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCTopLevel : public MCSubwindow
@@ -2090,7 +1982,6 @@ public:
 	virtual ~MCUnlock();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 };
 
 // MCPrinting cmdsp.cc
@@ -2109,7 +2000,6 @@ public:
 	virtual ~MCPrint();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 private:
     bool evaluate_src_rect(MCExecContext& ctxt, MCPoint& r_from, MCPoint& r_to);
 };
@@ -2126,7 +2016,6 @@ public:
 	virtual ~MCInclude(void);
 	virtual Parse_stat parse(MCScriptPoint& sp);
 	virtual void exec_ctxt(MCExecContext& ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 
 private:
 	bool is_require;
@@ -2144,7 +2033,6 @@ public:
 	virtual ~MCEcho(void);
 	virtual Parse_stat parse(MCScriptPoint& sp);
 	virtual void exec_ctxt(MCExecContext& ctxt);
-	virtual void compile(MCSyntaxFactoryRef);
 
 private:
 	MCStringRef data;
@@ -2181,7 +2069,6 @@ public:
     virtual Parse_stat parse(MCScriptPoint &p_sp);
     
     virtual void exec_ctxt(MCExecContext &ctxt);
-    virtual void compile(MCSyntaxFactoryRef);
     
 private:
     MCChunk *m_relative_object;
@@ -2204,11 +2091,10 @@ public:
 	virtual ~MCSecure();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext&);
-    virtual void compile(MCSyntaxFactoryRef);
 	
 private:
 	MCExpression *m_sock_name;
-	Boolean secureverify : 1;
+	bool secureverify : 1;
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added new host name variant for use with verification.
 	MCExpression *m_verify_host_name;

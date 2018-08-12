@@ -6,13 +6,14 @@ Syntax: the recordLoudness
 
 Syntax: recordLoudness()
 
-Summary: <return|Returns> the volume of the sound currently being recorded.
+Summary:
+<return|Returns> the volume of the sound currently being recorded.
 
 Introduced: 1.1
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 the recordLoudness
@@ -20,13 +21,21 @@ the recordLoudness
 Example:
 if the recordLoudness is zero then pauseRecording
 
-Returns: The <recordLoudness> function <return|returns> a positive integer.
+Returns:
+The <recordLoudness> function <return|returns> a positive integer.
 
 Description:
-Use the <recordLoudness> function to determine whether a sound is currently being made while recording is taking place, or to provide feedback on the input sound level.
+Use the <recordLoudness> function to determine whether a sound is
+currently being made while recording is taking place, or to provide
+feedback on the input sound level.
 
-The <recordLoudness> <function> returns zero if no recording is currently taking place (that is, if the <recording> <property> is false).
+The <recordLoudness> <function> returns zero if no recording is
+currently taking place (that is, if the <recording> <property> is
+false). 
 
-References: playLoudness (property), recording (property), beepLoudness (property), record sound (command), function (control_st), property (glossary), return (glossary)
+References: record sound (command), function (control structure),
+property (glossary), return (glossary), playLoudness (property),
+recording (property), beepLoudness (property)
 
 Tags: multimedia
+

@@ -2,15 +2,17 @@ Name: doubleClickInterval
 
 Type: property
 
-Syntax: set the doubleClickInterval to <timeInterval> 
+Syntax: set the doubleClickInterval to <timeInterval>
 
-Summary: Specifies how long the delay can be between two clicks for them to be considered a <double-click|double click>.
+Summary:
+Specifies how long the delay can be between two clicks for them to be
+considered a <double-click|double click>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the doubleClickInterval to 100 -- 1/10 second
@@ -18,19 +20,35 @@ set the doubleClickInterval to 100 -- 1/10 second
 Example:
 set the doubleClickInterval to 250 -- 1/4 second
 
-Value: The <doubleClickInterval> is an <integer> between zero and 65535. The value of the <doubleClickInterval> is expressed in <milliseconds>.
+Value:
+The <doubleClickInterval> is an <integer> between zero and 65535. The
+value of the <doubleClickInterval> is expressed in <milliseconds>.
 
 Description:
-Use the <doubleClickInterval> <property> to fine-tune <double-click|double-clicking>.
+Use the <doubleClickInterval> <property> to fine-tune
+<double-click|double-clicking>. 
 
-Increase the <doubleClickInterval> to make the mouse less sensitive to slow <double-click|double clicks>; decrease it to make it less likely that two separate clicks will be mistaken for a <double-click|double click>.
+Increase the <doubleClickInterval> to make the mouse less sensitive to
+slow <double-click|double clicks>; decrease it to make it less likely
+that two separate clicks will be mistaken for a <double-click|double
+click>. 
 
-If more time than the <doubleClickInterval> elapses between the first and second click, no <mouseDoubleDown> or <mouseDoubleUp> <message> is sent to the clicked <object>.
+If more time than the <doubleClickInterval> elapses between the first
+and second click, no <mouseDoubleDown> or <mouseDoubleUp> <message> is
+sent to the clicked <object(glossary)>.
 
-On Mac OS systems, the <doubleClickInterval> is set to the current setting (in the Mouse control panel) when LiveCode starts up. Normally, you should not change the <doubleClickInterval> setting, since doing so may discombobulate the user.
+On Mac OS systems, the <doubleClickInterval> is set to the current
+setting (in the Mouse control panel) when LiveCode starts up. Normally,
+you should not change the <doubleClickInterval> setting, since doing so
+may discombobulate the user.
 
-On Windows systems, the <doubleClickInterval> <property> is <read-only> and cannot be set.
+On Windows systems, the <doubleClickInterval> <property> is <read-only>
+and cannot be set.
 
-References: integer (keyword), mouseDoubleUp (message), mouseDoubleDown (message), object (object), property (glossary), message (glossary), read-only (glossary), double-click (glossary), milliseconds (function)
+References: milliseconds (function), object (glossary),
+property (glossary), message (glossary), read-only (glossary),
+double-click (glossary), integer (keyword), mouseDoubleUp (message),
+mouseDoubleDown (message)
 
 Tags: ui
+

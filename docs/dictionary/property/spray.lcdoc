@@ -4,30 +4,42 @@ Type: property
 
 Syntax: set the spray to {<brushID> | <imageID>}
 
-Summary: Specifies the shape used for painting with the Spray Can <tool>.
+Summary:
+Specifies the shape used for painting with the Spray Can <tool>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the spray to 30
 
 Value:
 The <spray> is a brush specifier.
-A <brushID> is a built-in brush number between 1 and 100. (These brushes correspond to LiveCode's built-in patterns 100 to 135.)
+A <brushID> is a built-in brush number between 1 and 36. (These brushes
+correspond to LiveCode's built-in patterns 101 to 136.)
 
-An <imageID> is the ID of an <image> to use for painting with the spray can. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+An <imageID> is the ID of an <image> to use for painting with the spray
+can. LiveCode looks for the specified <image> first in the <current
+stack>, then in other open <stacks>.
 
 By default, the <spray> is set to 34 (a round splatter pattern).
 
 Description:
-Use the <spray> <property> to specify which shape is painted by the Spray Can <tool>.
+Use the <spray> <property> to specify which shape is painted by the
+Spray Can <tool>.
 
-The entire painted area of the brush is used as the spray can shape. The shape painted by the spray can is drawn in the brushColor, regardless of what colors might be in the <image> used for the spray can shape.
+The entire painted area of the brush is used as the spray can shape. The
+shape painted by the spray can is drawn in the brushColor, regardless of
+what colors might be in the <image> used for the spray can shape.
 
-When the Spray Can tool is in use, the cursor is the same as the spray can shape. You can use any size image as a spray can, but the cursor may appear distorted on some systems if the image is not 16x16 pixels.
+When the Spray Can tool is in use, the cursor is the same as the spray
+can shape. You can use any size image as a spray can, but the cursor may
+appear distorted on some systems if the image is not 16x16 pixels.
 
-References: brush (property), eraser (property), image (keyword), choose (command), tool (function), stacks (function), property (glossary), current stack (glossary)
+References: choose (command), tool (function), stacks (function),
+property (glossary), current stack (glossary), image (keyword),
+brush (property), eraser (property)
+

@@ -1,1 +1,0 @@
-# Script Editor does not resize correctly with the resize handle

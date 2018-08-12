@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -60,11 +60,11 @@ void MCQuit(void)
 {
 	// IM-2013-05-01: [[ BZ 10586 ]] send shutdown message when closing due
 	// to unhandled backKey message
-	if (MCdefaultstackptr != nil)
+	if (MCdefaultstackptr)
 		MCdefaultstackptr->getcard()->message(MCM_shut_down);
 	MCquit = True;
 	MCexitall = True;
-	MCtracestackptr = NULL;
+	MCtracestackptr = nil;
 	MCtraceabort = True;
 	MCtracereturn = True;
 	// IM-2013-05-01: [[ BZ 10586 ]] No longer call finishActivity from here,
@@ -75,15 +75,15 @@ class MCMessageEvent : public MCCustomEvent
 {
 public:
 	template <class C>
-	static MCMessageEvent* create(MCObjectHandle *p_object, const char *p_message)
+	static MCMessageEvent* create(MCObjectHandle p_object, const char *p_message)
 	{
 		C *t_event = nil;
-		if (!MCMemoryNew(t_event))
+		if (!MCMemoryCreate(t_event))
 			return nil;
 
 		if (!t_event->setMessage(p_message))
 		{
-			MCMemoryDelete(t_event);
+			MCMemoryDestroy(t_event);
 			return nil;
 		}
 
@@ -92,7 +92,7 @@ public:
 		return t_event;
 	}
     
-    static MCMessageEvent* create(MCObjectHandle *p_object, const char *p_message)
+    static MCMessageEvent* create(MCObjectHandle p_object, const char *p_message)
     {
         return create<MCMessageEvent>(p_object, p_message);
     }
@@ -100,33 +100,28 @@ public:
 	void Dispatch(void)
 	{
         //MCLog("dispatch message \"%@\"", MCNameGetString(m_message));
-		MCObject *t_object;
-		t_object = m_object -> Get();
-		if (t_object != nil)
-			t_object -> message(m_message);
+		if (m_object.IsValid())
+			m_object -> message(m_message);
 	}
 
 	void Destroy(void)
 	{
-		MCNameDelete(m_message);
-		if (m_object != nil)
-			m_object->Release();
+		MCValueRelease(m_message);
 		delete this;
 	}
 
 protected:
 	MCNameRef m_message;
-	MCObjectHandle *m_object;
+	MCObjectHandle m_object;
 
 	bool setMessage(const char *p_message)
 	{
-		return MCNameCreateWithCString(p_message, m_message);
+		return MCNameCreateWithNativeChars((const char_t*)p_message, strlen(p_message), m_message);
 	}
 
-	bool setObject(MCObjectHandle *p_object)
+	bool setObject(MCObjectHandle p_object)
 	{
 		m_object = p_object;
-		m_object->Retain();
 		return true;
 	}
 };
@@ -274,7 +269,56 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 
 bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect)
 {
-	return false;
+	r_chosen_index = 0;
+	
+	MCStringRef *t_options_array = nil;
+	MCPickList *t_pick_list = nil;
+	
+	MCAutoProperListRef t_options_list;
+	uindex_t t_count = 0;
+	
+	// Split the string on new lines
+	bool t_success = true;
+	t_success = MCStringSplitByDelimiter(p_options, kMCLineEndString, kMCStringOptionCompareExact, &t_options_list);
+	
+	if (t_success)
+	{
+		t_count = MCProperListGetLength(*t_options_list);
+		t_success = MCMemoryNewArray(t_count, t_options_array);
+		
+		for (uindex_t i = 0; t_success && i < t_count; i++)
+			t_options_array[i] = static_cast<MCStringRef>(MCProperListFetchElementAtIndex(*t_options_list, i));
+	}
+	
+	if (t_success)
+	{
+		t_success = MCMemoryNew(t_pick_list);
+		
+		t_pick_list -> options = t_options_array;
+		t_pick_list -> option_count = t_count;
+		t_pick_list -> initial = p_initial_index;
+	}
+	
+	if (t_success)
+	{
+		uindex_t *t_result = nil;
+		uint32_t t_chosen_index;
+		
+		bool t_cancelled;
+		
+		t_success = MCSystemPickOption(t_pick_list, 1, t_result, t_chosen_index, p_use_checkmark, false, false, false, t_cancelled, p_button_rect);
+		
+		r_chosen_index = t_cancelled ? 0 : *t_result;
+	}
+	
+	if (t_success)
+	{
+		// cleanup
+		MCMemoryDeleteArray(t_options_array);
+		MCMemoryDelete(t_pick_list);
+	}
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -462,11 +506,9 @@ public:
 	void Dispatch()
 	{
 		//MCLog("dispatching backPressed event", nil);
-		MCObject *t_object;
-		t_object = m_object -> Get();
-		if (t_object != nil)
+		if (m_object.IsValid())
 		{
-			Exec_stat t_stat = t_object -> message(m_message);
+			Exec_stat t_stat = m_object -> message(m_message);
 			//MCLog("message result: %d", t_stat);
 			if (ES_PASS == t_stat || ES_NOT_HANDLED == t_stat)
 			{
@@ -479,212 +521,40 @@ public:
 
 void MCAndroidBackPressed()
 {
+    if (!MCdefaultstackptr.IsValid())
+        return;
+    
 	MCMessageEvent *t_event;
-	MCObjectHandle *t_handle;
-	t_handle = MCdefaultstackptr->getcurcard()->gethandle();
+	MCObjectHandle t_handle;
+	t_handle = MCdefaultstackptr->getcurcard()->GetHandle();
 	t_event = MCMessageEvent::create<MCBackPressedEvent>(t_handle, "backKey");
-	t_handle->Release();
 	MCEventQueuePostCustom(t_event);
 }
 
 void MCAndroidMenuKey()
 {
+    if (!MCdefaultstackptr.IsValid())
+        return;
+    
     MCMessageEvent *t_event;
-    MCObjectHandle *t_handle;
-    t_handle = MCdefaultstackptr->getcurcard()->gethandle();
+    MCObjectHandle t_handle;
+    t_handle = MCdefaultstackptr->getcurcard()->GetHandle();
     t_event = MCMessageEvent::create(t_handle, "menuKey");
-    t_handle->Release();
     MCEventQueuePostCustom(t_event);
 }
 
 void MCAndroidSearchKey()
 {
+    if (!MCdefaultstackptr.IsValid())
+        return;
+    
     //MCLog("MCAndroidSearchKey()", nil);
     MCMessageEvent *t_event;
-    MCObjectHandle *t_handle;
-    t_handle = MCdefaultstackptr->getcurcard()->gethandle();
+    MCObjectHandle t_handle;
+    t_handle = MCdefaultstackptr->getcurcard()->GetHandle();
     t_event = MCMessageEvent::create(t_handle, "searchKey");
-    t_handle->Release();
     MCEventQueuePostCustom(t_event);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef /* MCHandleLibUrlDownloadToFileAndroid */ LEGACY_EXEC
-static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
-{
-	char *t_url, *t_filename;
-	t_url = nil;
-	t_filename = nil;
-	
-	MCExecPoint ep(nil, nil, nil);
-	
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		t_url = ep . getsvalue() . clone();
-		p_parameters = p_parameters -> getnext();
-	}
-	
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		t_filename = ep . getsvalue() . clone();
-		p_parameters = p_parameters -> getnext();
-	}
-	
-	extern void MCS_downloadurl(MCObject *, const char *, const char *);
-	MCS_downloadurl(MCtargetptr, t_url, t_filename);
-	
-	return ES_NORMAL;
-}
-#endif /* MCHandleLibUrlDownloadToFileAndroid */
-
-// MW-2013-10-02: [[ MobileSSLVerify ]] Handle libUrlSetSSLVerification for Android.
-#ifdef /* MCHandleLibUrlSetSSLVerificationAndroid */ LEGACY_EXEC
-static Exec_stat MCHandleLibUrlSetSSLVerification(void *context, MCParameter *p_parameters)
-{
-	bool t_success;
-	t_success = true;
-	
-	bool t_enabled;
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "b", &t_enabled);
-	
-	extern void MCS_seturlsslverification(bool enabled);
-	if (t_success)
-		MCS_seturlsslverification(t_enabled);
-	
-	return ES_NORMAL;
-}
-#endif /* MCHandleLibUrlSetSSLVerificationAndroid */
-
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef /* MCHandleCameraFeaturesAndroid */ LEGACY_EXEC
-static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
-{
-	char *t_camera_dir = nil;
-	int32_t t_cam_count = 0;
-	char *t_info_string = nil;
-    
-	MCAndroidEngineCall("getCameraDirections", "s", &t_camera_dir);
-	t_cam_count = MCCStringLength(t_camera_dir);
-	bool t_front_cam = false;
-	bool t_rear_cam = false;
-	for (int32_t i = 0; i < t_cam_count; i++)
-	{
-		if (t_camera_dir[i] == 'f')
-			t_front_cam = true;
-		else if (t_camera_dir[i] == 'b')
-			t_rear_cam = true;
-	}
-	bool t_no_args = true;
-	MCExecPoint ep(nil, nil, nil);
-	ep.clear();
-	if (p_parameters != nil)
-	{
-		t_no_args = false;
-		p_parameters->eval_argument(ep);
-		if (ep.getsvalue() == "front")
-		{
-			if (t_front_cam)
-				MCCStringAppend(t_info_string, "photo,");
-		}
-		else if (ep.getsvalue() == "rear")
-		{
-			if (t_front_cam)
-				MCCStringAppend(t_info_string, "photo,");
-		}
-		else
-			t_no_args = true;
-	}
-	if (t_no_args)
-	{
-		if (t_front_cam)
-			MCCStringAppend(t_info_string, "front photo,");
-		if (t_rear_cam)
-			MCCStringAppend(t_info_string, "rear photo,");
-	}
-    
-	if (MCCStringLength(t_info_string) == 0)
-		MCresult->clear();
-	else
-		MCresult->copysvalue(MCString(t_info_string, MCCStringLength(t_info_string) - 1));
-    
-	MCCStringFree(t_info_string);
-	MCCStringFree(t_camera_dir);
-	return ES_NORMAL;
-}
-#endif /* MCHandleCameraFeaturesAndroid */
-
-/* moved to mblhandlers.cpp ASK_ALI
-void MCMobileCreateImageFromData(const char *p_bytes, uint32_t p_length)
-{
-	MCtemplateimage->setparent((MCObject *)MCdefaultstackptr -> getcurcard());
-	MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-	MCtemplateimage->setparent(NULL);
-	iptr -> attach(OP_CENTER, false);
-	
-	MCExecPoint ep(nil, nil, nil);
-	ep . setsvalue(MCString(p_bytes, p_length));
-	iptr -> setprop(0, P_TEXT, ep, false);
-}
-*/
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef /* MCHandlePickPhotoAndroid */ LEGACY_EXEC
-static Exec_stat MCHandlePickPhoto(void *context, MCParameter *p_parameters)
-{
-	MCExecPoint ep(nil, nil, nil);
-	ep . clear();
-	
-	MCParameter *t_source_param, *t_width_param, *t_height_param;
-	t_source_param = p_parameters;
-	t_width_param = t_source_param != nil ? t_source_param -> getnext() : nil;
-	t_height_param = t_width_param != nil ? t_width_param -> getnext() : nil;
-	
-	int32_t t_width, t_height;
-	t_width = t_height = 0;
-	if (t_width_param != nil)
-	{
-		t_width_param -> eval_argument(ep);
-		t_width = ep . getint4();
-	}
-	if (t_height_param != nil)
-	{
-		t_height_param -> eval_argument(ep);
-		t_height = ep . getint4();
-	}
-	
-	if (p_parameters != nil)
-		p_parameters -> eval_argument(ep);
-	s_pick_photo_returned = false;
-
-	MCMobilePickPhoto(ep.getcstring(), t_width, t_height);
-
-	while (!s_pick_photo_returned)
-		MCscreen->wait(60.0, False, True);
-
-	if (s_pick_photo_data != nil)
-	{
-		//MCLog("photo picked", nil);
-		MCMobileCreateImageFromData(s_pick_photo_data, s_pick_photo_size);
-		MCMemoryDeallocate(s_pick_photo_data);
-		s_pick_photo_data = nil;
-
-		MCresult->clear();
-	}
-	else
-	{
-		//MCLog("photo pick canceled", nil);
-		MCresult->grab(s_pick_photo_err, MCCStringLength(s_pick_photo_err));
-		s_pick_photo_err = nil;
-	}
-
-	return ES_NORMAL;
-}
-#endif /* MCHandlePickPhotoAndroid */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -736,19 +606,6 @@ bool MCSystemSetStatusBarStyle(intenum_t p_status_bar_style)
 
 bool MCSystemShowStatusBar()
 {
-#ifdef /* MCHandleSetStatusbarVisibility */ LEGACY_EXEC
-    Exec_stat MCHandleSetStatusbarVisibility(void *context, MCParameter *parameters)
-    {
-        
-        bool t_visible;
-        t_visible = ((uint32_t)context) != 0;
-        
-        MCAndroidEngineRemoteCall("setStatusbarVisibility", "vb", nil, t_visible);
-        
-        return ES_NORMAL;
-        
-    }
-#endif /* MCHandleSetStatusbarVisibility */
     MCAndroidEngineRemoteCall("setStatusbarVisibility", "vb", nil, true);
     
     return true;
@@ -780,20 +637,12 @@ bool MCSystemGetLaunchData(MCArrayRef &r_launch_data)
 ////////////////////////////////////////////////////////////////////////////////
 bool MCSystemBeep (int32_t p_number_of_beeps)
 {
-#ifdef /* MCSystemBeepAndroid */ LEGACY_EXEC
-    MCAndroidEngineRemoteCall("doBeep", "vi", nil, p_number_of_beeps);
-    return true;
-#endif /* MCSystemBeepAndroid */
     MCAndroidEngineRemoteCall("doBeep", "vi", nil, p_number_of_beeps);
     return true;
 }
 
 bool MCSystemVibrate (int32_t p_number_of_vibrates)
 {
-#ifdef /* MCSystemVibrateAndroid */ LEGACY_EXEC
-    MCAndroidEngineRemoteCall("doVibrate", "vi", nil, p_number_of_vibrates);
-    return true;
-#endif /* MCSystemVibrateAndroid */
     MCAndroidEngineRemoteCall("doVibrate", "vi", nil, p_number_of_vibrates);
     return true;
 }
@@ -883,7 +732,7 @@ bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces)
     MCAutoStringRef t_interfaces;
 	MCAndroidEngineCall("getNetworkInterfaces", "x", &(&t_interfaces));
 
-	if (*t_interfaces == nil)
+    if (MCStringIsEmpty(*t_interfaces))
 		r_interfaces = MCValueRetain(kMCEmptyString);
 	else
 		r_interfaces = MCValueRetain(*t_interfaces);
@@ -893,33 +742,12 @@ bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef /* MCHandleCurrentLocaleAndroid */ LEGACY_EXEC
-Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
-{
-    char *r_preferred_locale = NULL;
-    MCAndroidEngineCall("getPreferredLocale", "s", &r_preferred_locale);
-    MCresult -> sets(r_preferred_locale);
-    return ES_NORMAL;
-}
-#endif /* MCHandleCurrentLocaleAndroid */
-
-
 bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages)
 {
     MCAndroidEngineCall("getPreferredLanguages", "x", &r_preferred_languages);
     
     return true;
 }
-
-#ifdef /* MCHandlePreferredLanguagesAndroid */ LEGACY_EXEC
-Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
-{
-    char *r_preferred_languages = NULL;
-    MCAndroidEngineCall("getPreferredLanguages", "s", &r_preferred_languages);
-    MCresult -> sets(r_preferred_languages);
-    return ES_NORMAL;
-}
-#endif /* MCHandlePreferredLanguagesAndroid */
 
 bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale)
 {
@@ -974,66 +802,6 @@ bool MCSystemBuildInfo(MCStringRef p_key, MCStringRef& r_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MOVED TO mblhandlers.cpp
-#ifdef /* MCHandleLibUrlDownloadToFileAndroid */ LEGACY_EXEC
-static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
-{
-	char *t_url, *t_filename;
-	t_url = nil;
-	t_filename = nil;
-
-	MCExecPoint ep(nil, nil, nil);
-
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		t_url = ep . getsvalue() . clone();
-		p_parameters = p_parameters -> getnext();
-	}
-
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		t_filename = ep . getsvalue() . clone();
-		p_parameters = p_parameters -> getnext();
-	}
-
-	extern void MCS_downloadurl(MCObject *, const char *, const char *);
-	MCS_downloadurl(MCtargetptr, t_url, t_filename);
-
-	return ES_NORMAL;
-}
-#endif /* MCHandleLibUrlDownloadToFileAndroid */
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* MOVED TO mblandroididletimer.cpp */
-
-#ifdef /* MCHandleLockIdleTimerAndroid */ LEGACY_EXEC
-Exec_stat MCHandleLockIdleTimer(void *context, MCParameter *p_parameters)
-{
-	MCAndroidEngineCall("doLockIdleTimer", "v", nil);
-	return ES_NORMAL;
-}
-#endif /* MCHandleLockIdleTimerAndroid */
-
-#ifdef /* MCHandleUnlockIdleTimerAndroid */ LEGACY_EXEC
-Exec_stat MCHandleUnlockIdleTimer(void *context, MCParameter *p_parameters)
-{
-	MCAndroidEngineCall("doUnlockIdleTimer", "v", nil);
-	return ES_NORMAL;
-}
-#endif /* MCHandleUnlockIdleTimerAndroid */
-
-#ifdef /* MCHandleIdleTimerLockedAndroid */ LEGACY_EXEC
-Exec_stat MCHandleIdleTimerLocked(void *context, MCParameter *p_parameters)
-{
-    bool r_idle_timer_locked = false;
-	MCAndroidEngineCall("getLockIdleTimerLocked", "b", &r_idle_timer_locked);
-    MCresult -> sets(MCU_btos(r_idle_timer_locked));
-	return ES_NORMAL;
-}
-#endif /* MCHandleIdleTimerLockedAndroid */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1052,149 +820,8 @@ static bool is_jpeg_data(const MCString& p_data)
 	return p_data . getlength() > 2 && MCMemoryEqual(p_data . getstring(), "\xff\xd8", 2);
 }
 
-#ifdef /* MCHandleSetKeyboardTypeAndroid */ LEGACY_EXEC
-Exec_stat MCHandleSetKeyboardType(void *context, MCParameter *p_parameters)
-{
-	MCExecPoint ep(nil, nil, nil);
-    
-	if (p_parameters != nil)
-	{
-		int32_t t_type;
-		
-		p_parameters -> eval_argument(ep);
-		if (ep . getsvalue() == "default")
-			t_type = 1;
-		else if (ep . getsvalue() == "alphabet")
-			t_type = 1;
-		else if (ep . getsvalue() == "numeric" || ep . getsvalue() == "decimal")
-			t_type = 3;
-		else if (ep . getsvalue() == "number")
-			t_type = 2;
-		else if (ep . getsvalue() == "phone")
-			t_type = 4;
-		else if (ep . getsvalue() == "email")
-			t_type = 5;
-		else
-			t_type = 1;
-		
-		g_android_keyboard_type = t_type;
-	}
-	
-	MCAndroidEngineRemoteCall("setTextInputMode", "vi", nil, g_android_keyboard_type);
-	
-	return ES_NORMAL;
-}
-#endif /* MCHandleSetKeyboardTypeAndroid */
-
-#ifdef /* MCHandleExportImageToAlbumAndroid */ LEGACY_EXEC
-Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
-{
-    char *r_save_result = NULL;
-    char *t_file_name = NULL;
-    char t_file_extension[5];
-    t_file_extension[0] = '\0';
-    MCString t_raw_data = NULL;
-    bool t_success = true;
-    MCLog("MCHandleExportImageToAlbum() called", nil);
-    
-    if (p_parameters == nil)
-        return ES_NORMAL;
-    
-    MCExecPoint ep(nil, nil, nil);
-    p_parameters -> eval_argument(ep);
-    
-    // SN-2015-01-05: [[ Bug 11417 ]] The extension can't finish with a LF
-    if (is_png_data(ep . getsvalue()))
-    {
-        sprintf (t_file_extension, ".png");
-    }
-    else if (is_gif_data(ep . getsvalue()))
-    {
-        sprintf (t_file_extension, ".gif");
-    }
-    else if (is_jpeg_data(ep . getsvalue()))
-    {
-        sprintf (t_file_extension, ".jpg");
-    }
-    if (t_file_extension[0] != '\0')
-    {
-        t_raw_data = ep . getsvalue();
-    }
-    else
-    {
-        MCLog("Type not found", nil);
-        uint4 parid;
-        MCObject *objptr;
-        MCChunk *tchunk = new MCChunk(False);
-        MCerrorlock++;
-        MCScriptPoint sp(ep);
-        Parse_stat stat = tchunk->parse(sp, False);
-        if (stat != PS_NORMAL || tchunk->getobj(ep, objptr, parid, True) != ES_NORMAL)
-        {
-            MCLog("could not find image", nil);
-            MCresult -> sets("could not find image");
-            MCerrorlock--;
-            delete tchunk;
-            return ES_NORMAL;
-        }
-        
-        if (objptr -> gettype() != CT_IMAGE)
-        {
-            MCLog("not an image", nil);
-            MCresult -> sets("not an image");
-            return ES_NORMAL;
-        }
-        
-        MCImage *t_image;
-        t_image = static_cast<MCImage *>(objptr);
-        // SN-2015-01-05: [[ Bug 11417 ]] The extension can't finish with a LF
-        if (t_image -> getcompression() == F_PNG)
-        {
-            sprintf (t_file_extension, ".png");
-        }
-        else if (t_image -> getcompression() == F_JPEG)
-        {
-            sprintf (t_file_extension, ".jpg");
-        }
-        else if (t_image -> getcompression() == F_GIF)
-        {
-            sprintf (t_file_extension, ".gif");
-        }
-        else
-        {
-            MCLog("not a supported image", nil);
-            MCresult -> sets("not a supported format");
-            return ES_NORMAL;
-        }
-        MCLog("MCHandleExportImageToAlbum() converting to raw data", nil);
-        t_raw_data = t_image -> getrawdata();
-    }
-    // See if the user provided us with a file name
-    if (t_success)
-    {
-        if (p_parameters != nil)
-        {
-            p_parameters = p_parameters -> getnext();
-            if (p_parameters != nil)
-            {
-                p_parameters -> eval_argument(ep);
-                t_file_name = ep . getsvalue() . clone();
-            }
-        }
-        MCAndroidEngineCall("exportImageToAlbum", "sdss", &r_save_result, &t_raw_data, t_file_name, t_file_extension);
-        MCresult -> sets(r_save_result);
-    }
-    else
-    {
-        MCresult -> sets("export failed");
-    }
-    return ES_NORMAL;
-}
-#endif /* MCHandleExportImageToAlbumAndroid */
-
 ////////////////////////////////////////////////////////////////////////////////
 
-// MOVED TO mblmhandlers.cpp
 extern Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters);
@@ -1216,23 +843,6 @@ extern Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters);
-
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef /* MCHandleClearTouchesAndroid */ LEGACY_EXEC
-static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
-{
-	MCscreen -> wait(1/25.0, False, False);
-	static_cast<MCScreenDC *>(MCscreen) -> clear_touches();
-	MCEventQueueClearTouches();
-
-    // PM-2015-03-16: [[ Bug 14333 ]] Make sure the object that triggered a mouse down msg is not focused, as this stops later mouse downs from working
-    if (MCtargetptr != nil)
-        MCtargetptr -> munfocus();
-
-	return ES_NORMAL;
-}
-#endif /* MCHandleClearTouchesAndroid */
 
 ////////////////////////////////////////////////////////////////////////////////
 //

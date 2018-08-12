@@ -4,29 +4,47 @@ Type: property
 
 Syntax: set the hideConsoleWindows to {true | false}
 
-Summary: Hides the main window of applications run with the <open process> <command> or <shell> <function> on <Windows|Windows systems>.
+Summary:
+Hides the main window of applications run with the <open process>
+<command> or <shell> <function> on <Windows|Windows systems>.
 
 Introduced: 1.0
 
 OS: windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the hideConsoleWindows to true
 
-Value (bool):The <hideConsoleWindows> is true or false.
+Value (bool):
+The <hideConsoleWindows> is true or false.
 By default, the <hideConsoleWindows> <property> is set to false.
 
 Description:
-Use the <hideConsoleWindows> <property> to run <command line> applications without the user seeing them.
+Use the <hideConsoleWindows> <property> to run <command line>
+applications without the user seeing them.
 
-On Windows systems, when you run a command line program with the <launch> or <open process> <command>, a <console|console window> appears. If the <hideConsoleWindows> <property> is true, the window is not shown. (You can still use the <write to process> and <read from process> <command|commands> to send data to the program and get data from it.)
+On Windows systems, when you run a command line program with the
+<launch> or <open process> <command>, a <console|console window>
+appears. If the <hideConsoleWindows> <property> is true, the window is
+not shown. (You can still use the <write to process> and 
+<read from process> <command|commands> to send data to the program and 
+get data from it.)
 
-The setting of this property affects Windows applications with a GUI as well as command line programs.
+The setting of this property affects Windows applications with a GUI as
+well as command line programs.
 
->*Important:*  If you run a program that requires user interaction, make sure the <hideConsoleWindows> <property> is set to false beforehand. Otherwise, the program will not be displayed and the user will not be able to see it.
+>*Important:*  If you run a program that requires user interaction, make
+> sure the <hideConsoleWindows> <property> is set to false beforehand.
+> Otherwise, the program will not be displayed and the user will not be
+> able to see it.
 
 The setting of this property has no effect on Mac OS or Unix systems.
 
-References: shellCommand (property), open process (command), launch (command), write to process (command), read from process (command), shell (function), property (glossary), Windows (glossary), console (glossary), command (glossary), command line (glossary), function (control_st)
+References: open process (command), launch (command),
+write to process (command), read from process (command),
+function (control structure), shell (function), property (glossary),
+Windows (glossary), console (glossary), command (glossary),
+command line (glossary), shellCommand (property)
+

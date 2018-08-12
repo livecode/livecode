@@ -28,134 +28,164 @@ is copyright © Ivan Boyko, and is licensed under the terms of the
 
 Name: browserDocumentLoadBegin
 Type: message
-Syntax: browserDocumentLoadBegin pUrl
+Syntax: browserDocumentLoadBegin <pUrl>
 
 Summary: Sent when a document begins loading in the browser.
 
 Parameters:
-pUrl(string): The URL of the loading document.
+pUrl (string): The URL of the loading document.
 
 Description:
-The <browserDocumentLoadBegin> message is sent to the widget's script object when a new document begins to load in the browser. This will happen whenever the browser navigates to a new page. The <pUrl> parameter contains the URL of the loading document.
+The <browserDocumentLoadBegin> message is sent to the widget's script 
+object when a new document begins to load in the browser. This will 
+happen whenever the browser navigates to a new page. The <pUrl> 
+parameter contains the URL of the loading document.
 
 Name: browserDocumentLoadComplete
 Type: message
-Syntax: browserDocumentLoadComplete pUrl
+Syntax: browserDocumentLoadComplete <pUrl>
 
 Summary: Sent when a document has completed loading in the browser.
 
 Parameters:
-pUrl(string): The URL of the loaded document.
+pUrl (string): The URL of the loaded document.
 
 Description:
-The <browserDocumentLoadComplete> message is sent to the widget's script object when a new document has completed loading in the browser. The <pUrl> parameter contains the URL of the loaded document.
+The <browserDocumentLoadComplete> message is sent to the widget's script 
+object when a new document has completed loading in the browser. The 
+<pUrl> parameter contains the URL of the loaded document.
 
 
 Name: browserDocumentLoadFailed
 Type: message
-Syntax: browserDocumentLoadFailed pUrl, pError
+Syntax: browserDocumentLoadFailed <pUrl>, <pError>
 
 Summary: Sent when a document has failed to load in the browser.
 
 Parameters:
-pUrl(string): The URL of the document.
-pError(string): An error message describing the reason for the failure.
+pUrl (string): The URL of the document.
+pError (string): An error message describing the reason for the failure.
 
 Description:
-The <browserDocumentLoadFailed> message is sent to the widget's script object when a new document has failed to load in the browser. The <pUrl> parameter contains the URL of the document, and the <pError> parameter gives the reason for the failure.
+The <browserDocumentLoadFailed> message is sent to the widget's script 
+object when a new document has failed to load in the browser. The <pUrl> 
+parameter contains the URL of the document, and the <pError> parameter 
+gives the reason for the failure.
 
 
 Name: browserFrameDocumentLoadBegin
 Type: message
-Syntax: browserFrameDocumentLoadBegin pUrl
+Syntax: browserFrameDocumentLoadBegin <pUrl>
 
 Summary: Sent when a document begins loading in a frame of the browser.
 
 Parameters:
-pUrl(string): The URL of the loading document.
+pUrl (string): The URL of the loading document.
 
 Description:
-The <browserFrameDocumentLoadBegin> message is sent to the widget's script object when a new document begins to load in a frame of the browser. This will happen whenever the browser navigates to a new page with multiple frames. The <pUrl> parameter contains the URL of the loading document.
+The <browserFrameDocumentLoadBegin> message is sent to the widget's 
+script object when a new document begins to load in a frame of the 
+browser. This will happen whenever the browser navigates to a new page 
+with multiple frames. The <pUrl> parameter contains the URL of the 
+loading document.
 
 
 Name: browserFrameDocumentLoadComplete
 Type: message
-Syntax: browserFrameDocumentLoadComplete pUrl
+Syntax: browserFrameDocumentLoadComplete <pUrl>
 
 Summary: Sent when a document has completed loading in a frame of the browser.
 
 Parameters:
-pUrl(string): The URL of the loaded document.
+pUrl (string): The URL of the loaded document.
 
 Description:
-The <browserFrameDocumentLoadComplete> message is sent to the widget's script object when a new document has completed loading in a frame of the browser. The <pUrl> parameter contains the URL of the loaded document.
+The <browserFrameDocumentLoadComplete> message is sent to the widget's 
+script object when a new document has completed loading in a frame of 
+the browser. The <pUrl> parameter contains the URL of the loaded 
+document.
 
 
 Name: browserFrameDocumentLoadFailed
 Type: message
-Syntax: browserFrameDocumentLoadFailed pUrl, pError
+Syntax: browserFrameDocumentLoadFailed <pUrl>, <pError>
 
-Summary: Sent when a document has failed to load in a frame of the browser.
+Summary: Sent when a document has failed to load in a frame of the 
+browser.
 
 Parameters:
-pUrl(string): The URL of the document.
-pError(string): An error message describing the reason for the failure.
+pUrl (string): The URL of the document.
+pError (string): An error message describing the reason for the failure.
 
 Description:
-The <browserFrameDocumentLoadFailed> message is sent to the widget's script object when a new document has failed to load in a frame of the browser. The <pUrl> parameter contains the URL of the document, and the <pError> parameter gives the reason for the failure.
+The <browserFrameDocumentLoadFailed> message is sent to the widget's 
+script object when a new document has failed to load in a frame of the 
+browser. The <pUrl> parameter contains the URL of the document, and the 
+<pError> parameter gives the reason for the failure.
 
 
 Name: browserNavigateBegin
 Type: message
-Syntax: browserNavigateBegin pUrl
+Syntax: browserNavigateBegin <pUrl>
 
 Summary: Sent when the browser begins navigation to a new page.
 
 Parameters:
-pUrl(string): The URL of the new page.
+pUrl (string): The URL of the new page.
 
 Description:
-The <browserNavigateBegin> message is sent to the widget's script object when the browser begins navigation to a new page. This can be triggered by launching a URL in the browser, or clicking a link within the browser. The <pUrl> parameter contains the URL of the new page.
+The <browserNavigateBegin> message is sent to the widget's script object 
+when the browser begins navigation to a new page. This can be triggered 
+by launching a URL in the browser, or clicking a link within the 
+browser. The <pUrl> parameter contains the URL of the new page.
 
 
 Name: browserNavigateComplete
 Type: message
-Syntax: browserNavigateComplete pUrl
+Syntax: browserNavigateComplete <pUrl>
 
 Summary: Sent when the browser successfully navigates to a new page.
 
 Parameters:
-pUrl(string): The URL of the new page.
+pUrl (string): The URL of the new page.
 
 Description:
-The <browserNavigateComplete> message is sent to the widget's script object when the browser successfully navigates to a new page. The <pUrl> parameter contains the URL of the new page.
+The <browserNavigateComplete> message is sent to the widget's script 
+object when the browser successfully navigates to a new page. The <pUrl> 
+parameter contains the URL of the new page.
 
 
 Name: browserNavigateFailed
 Type: message
-Syntax: browserNavigateFailed pUrl, pError
+Syntax: browserNavigateFailed <pUrl>, <pError>
 
 Summary: Sent when the browser has failed to navigate to a new page.
 
 Parameters:
-pUrl(string): The URL of the document.
-pError(string): An error message describing the reason for the failure.
+pUrl (string): The URL of the document.
+pError (string): An error message describing the reason for the failure.
 
 Description:
-The <browserNavigateFailed> message is sent to the widget's script object when the browser has failed to navigate to a new page. The <pUrl> parameter contains the URL of the new page, and the <pError> parameter gives the reason for the failure.
+The <browserNavigateFailed> message is sent to the widget's script 
+object when the browser has failed to navigate to a new page. The <pUrl> 
+parameter contains the URL of the new page, and the <pError> parameter 
+gives the reason for the failure.
 
 
 Name: browserUnhandledLoadRequest
 Type: message
-Syntax: browserUnhandledLoadRequest pUrl
+Syntax: browserUnhandledLoadRequest <pUrl>
 
 Summary: Sent when the browser is unable to handle a load request.
 
 Parameters:
-pUrl(string): The URL of the request.
+pUrl (string): The URL of the request.
 
 Description:
-The <browserUnhandledLoadRequest> message is sent to the widget's script object when the browser is unable to load a URL, typically due to an unrecognised URL scheme. The <pUrl> parameter contains the URL of the unhandled request.
+The <browserUnhandledLoadRequest> message is sent to the widget's script 
+object when the browser is unable to load a URL, typically due to an 
+unrecognised URL scheme. The <pUrl> parameter contains the URL of the 
+unhandled request.
 */
 
 -- declaring extension as widget, followed by identifier
@@ -176,6 +206,7 @@ metadata title is "Browser"
 metadata author is "LiveCode"
 metadata version is "1.0.0"
 metadata svgicon is "M21.7,12c0,5.4-4.4,9.7-9.7,9.7S2.3,17.4,2.3,12S6.6,2.3,12,2.3S21.7,6.6,21.7,12z M11.9,16.6c0-0.2-0.1-0.3-0.3-0.4  C11,16,10.4,16,9.9,15.5c-0.1-0.2-0.1-0.4-0.2-0.6c-0.2-0.2-0.7-0.3-1-0.4c-0.4,0-0.8,0-1.3,0c-0.2,0-0.5,0-0.7,0  c-0.3-0.1-0.5-0.5-0.7-0.8C6,13.6,6,13.4,5.8,13.4c-0.2-0.1-0.4,0.1-0.6,0c-0.1-0.1-0.1-0.2-0.1-0.3c0-0.3,0.2-0.6,0.4-0.8  c0.3-0.2,0.6,0.1,0.9,0.1c0.1,0,0.1,0,0.2,0.1C6.9,12.6,7,13,7,13.3c0,0.1,0,0.2,0,0.2c0,0.1,0.1,0.1,0.2,0.1c0.1-0.5,0.1-1,0.2-1.5  c0-0.6,0.6-1.2,1.1-1.4c0.2-0.1,0.3,0.1,0.5,0c0.6-0.2,2.1-0.8,1.8-1.6C10.6,8.4,10,7.7,9.2,7.8C9,7.9,8.9,8,8.7,8.1  C8.4,8.3,7.8,8.9,7.5,8.9C7,8.8,7,8.1,7.1,7.8c0.1-0.4,1-1.7,1.6-1.5C8.8,6.4,9,6.6,9.1,6.7c0.2,0.1,0.5,0.1,0.8,0.1  c0.1,0,0.2,0,0.3-0.1c0.1-0.1,0.1-0.1,0.1-0.2c0-0.3-0.3-0.6-0.5-0.8C9.6,5.5,9.3,5.3,9,5.2C8,4.9,6.4,5.3,5.6,6  C4.8,6.7,4.2,7.9,3.8,8.9C3.6,9.5,3.4,10.3,3.3,11c-0.1,0.5-0.2,0.9,0.1,1.4C3.7,13,4.3,13.6,4.9,14c0.4,0.3,1.2,0.3,1.6,0.8  c0.3,0.4,0.2,0.9,0.2,1.4c0,0.6,0.4,1.1,0.6,1.6c0.1,0.3,0.2,0.7,0.3,1c0,0.1,0.1,0.7,0.1,0.8c0.6,0.3,1.1,0.6,1.8,0.8  c0.1,0,0.5-0.6,0.5-0.7c0.3-0.3,0.5-0.7,0.8-0.9c0.2-0.1,0.4-0.2,0.6-0.4c0.2-0.2,0.3-0.6,0.4-0.9C11.9,17.3,12,16.9,11.9,16.6z   M12.1,7.4c0.1,0,0.2-0.1,0.4-0.2c0.3-0.2,0.6-0.5,0.9-0.7c0.3-0.2,0.6-0.5,0.8-0.7c0.3-0.2,0.5-0.6,0.6-0.9  c0.1-0.2,0.4-0.6,0.3-0.9c-0.1-0.2-0.6-0.3-0.8-0.4c-0.8-0.2-1.5-0.3-2.3-0.3c-0.3,0-0.7,0.1-0.8,0.4c-0.1,0.5,0.3,0.4,0.7,0.5  c0,0,0.1,0.8,0.1,0.9c0.1,0.5-0.2,0.8-0.2,1.3c0,0.3,0,0.8,0.2,1C12,7.4,12.1,7.4,12.1,7.4z M20.5,14.4c0.1-0.2,0.1-0.5,0.2-0.7  c0.1-0.5,0.1-1,0.1-1.5c0-1-0.1-2-0.4-2.9C20.2,9,20.1,8.7,20,8.4c-0.2-0.5-0.5-1-0.9-1.4c-0.4-0.5-0.9-1.9-1.8-1.5  c-0.3,0.1-0.5,0.5-0.7,0.7c-0.2,0.3-0.4,0.6-0.6,0.9c-0.1,0.1-0.2,0.3-0.1,0.4c0,0.1,0.1,0.1,0.2,0.1c0.2,0.1,0.3,0.1,0.5,0.2  c0.1,0,0.2,0.1,0.1,0.2c0,0,0,0.1-0.1,0.1c-0.5,0.5-1,0.9-1.5,1.4c-0.1,0.1-0.2,0.3-0.2,0.4c0,0.1,0.1,0.1,0.1,0.2  c0,0.1-0.1,0.1-0.2,0.2c-0.2,0.1-0.4,0.2-0.5,0.3c-0.1,0.2,0,0.5-0.1,0.7c-0.1,0.5-0.4,0.9-0.6,1.4c-0.2,0.3-0.3,0.6-0.5,0.9  c0,0.4-0.1,0.7,0.1,1c0.5,0.7,1.4,0.3,2.1,0.6c0.2,0.1,0.4,0.1,0.5,0.3c0.3,0.3,0.3,0.8,0.4,1.1c0.1,0.4,0.2,0.8,0.4,1.2  c0.1,0.5,0.3,1,0.4,1.4c0.9-0.7,1.7-1.5,2.3-2.5C19.9,16,20.2,15.2,20.5,14.4z"
+metadata _ide is "true"
 --
 
 -- property declarations
@@ -190,7 +221,7 @@ get the URL of <widget>
 Summary: The URL displayed by the browser.
 
 Parameters:
-pUrl(string): A string specifying a URL.
+pUrl (string): A string specifying a URL.
 
 Example:
 	-- Navigate to livecode.com by setting the url property,
@@ -202,11 +233,18 @@ Example:
 Description:
 The <URL> is the URL of the content be displayed in the browser.
 
->*Note:* The <URL> must be a standards-compliant URL.  In particular, `file:` URLs must be of the form `file://<absolute path>`, and the path should be URL-encoded.  See [RFC 1738, section 2.2](https://tools.ietf.org/html/rfc1738#section-2.2).
+>*Note:* The <URL> must be a standards-compliant URL.  In particular, 
+> `file:` URLs must be of the form `file://<absolute path>`, and the 
+> path should be URL-encoded.  
+> See [RFC 1738, section 2.2](https://tools.ietf.org/html/rfc1738#section-2.2).
 
->*Note:* The <URL> reflects the currently displaying page in the browser, and will change when navigating to another page. Setting the htmlText will result in the <URL> being empty.
+>*Note:* The <URL> reflects the currently displaying page in the 
+> browser, and will change when navigating to another page. Setting the 
+> htmlText will result in the <URL> being empty.
 
->*Note:* Setting the <URL> to empty will clear the currently loaded page, resulting in a blank page being displayed and the <URL> and <htmlText> of the widget being empty.
+>*Note:* Setting the <URL> to empty will clear the currently loaded 
+> page, resulting in a blank page being displayed and the <URL> and 
+> <htmlText> of the widget being empty.
 
 References: htmlText (property)
 */
@@ -224,7 +262,8 @@ get the htmlText of <widget>
 Summary: The HTML text of the content displayed by the browser.
 
 Parameters:
-pHtmlText(string): A string containing HTML data to be displayed by the browser.
+pHtmlText (string): A string containing HTML data to be displayed by the 
+browser.
 
 Example:
 
@@ -232,11 +271,12 @@ Example:
 	-- content
 	local tHTML
 	put "<html><head><title>My Page Title</title></head>" & \
-	      "<body>My Page Contents</body></html>" into tHTML
+		  "<body>My Page Contents</body></html>" into tHTML
 	set the htmlText of widget "myBrowser" to tHTML
 
 Description:
-The <htmlText> is the HTML representation of the content displayed in the browser.
+The <htmlText> is the HTML representation of the content displayed in 
+the browser.
 
 *Note:* When the <htmlText> has been set, the <URL> property will be
 empty. When the <URL> property is not empty, the <htmlText> will
@@ -259,7 +299,13 @@ get the vScrollbar of <widget>
 
 Summary: Controls the visibility of the browser's vertical scrollbar.
 
-Value (boolean): `true` if the vertical scrollbar should be enabled and displayed; `false` otherwise.
+Value (boolean): 
+`true` if the vertical scrollbar should be enabled and displayed; 
+`false` otherwise.
+
+Description:
+Use the <vScrollbar> property to control the visibility of the browser's
+vertical scrollbar
 
 References: hScrollbar (property)
 */
@@ -278,7 +324,13 @@ get the hScrollbar of <widget>
 
 Summary: Controls the visibility of the browser's horizontal scrollbar.
 
-Value (boolean): `true` if the horizontal scrollbar should be enabled and displayed; `false` otherwise.
+Value (boolean): 
+`true` if the horizontal scrollbar should be enabled and displayed; 
+`false` otherwise.
+
+Description:
+Use the <hScrollbar> property to control the visibility of the browser's
+horizontal scrollbar
 
 References: vScrollbar (property)
 */
@@ -290,6 +342,8 @@ metadata hScrollbar.label is "Horizontal scrollbar"
 /**
 Name: userAgent
 Type: property
+
+OS: mac,windows,linux,android
 
 Syntax:
 set the userAgent of <widget> to <pUserAgent>
@@ -337,11 +391,11 @@ Example:
 		-- Do appropriate actions here.
 		-- ...
 	end myJSHandler
-	
+
 	-- Set up the browser javascript handler list
 	-- This code goes in a suitable setup handler
 	set the javascriptHandlers to "myJSHandler" & return & "myOtherJSHandler"
-	
+
 	// Calling the handler from JavaScript within the browser
 	liveCode.myJSHandler("myMessage", 12345);
 
@@ -402,45 +456,64 @@ public handler OnCreate()
 end handler
 
 --
+constant kOpenStateClosed is 0
+constant kOpenStateOpen is 1
+constant kOpenStateFailed is -1
+variable mOpenState as Number
 
-private handler InitBrowserView()
+private unsafe handler InitBrowserView()
 	variable tParent as Pointer
-	
+
 	// put my native window into tParent
 	MCWidgetGetMyStackNativeView(tParent)
-		
+
 	variable tFactory as MCBrowserFactoryRef
 	if not MCBrowserFactoryGet(the empty string, tFactory) then
+		put kOpenStateFailed into mOpenState
 		throw "error getting browser factory"
 	end if
-	
-	variable tDisplay as Pointer
+
+	variable tDisplay as optional Pointer
 	MCWidgetGetMyStackNativeDisplay(tDisplay)
-	
+
 	if not MCBrowserFactoryCreateBrowser(tFactory, tDisplay, tParent, mBrowser) then
+		put kOpenStateFailed into mOpenState
 		throw "error creating browser"
 	end if
+	put kOpenStateOpen into mOpenState
 	
 	variable tBrowserView as Pointer
 	put MCBrowserGetNativeLayer(mBrowser) into tBrowserView
+	set my native layer to tBrowserView
 	
-	// set my native layer to tBrowserView
-	MCWidgetSetMyNativeLayer(tBrowserView)
 	// tell native layer that we can't render a snapshot of the browser view.
 	MCWidgetSetMyNativeLayerCanRenderToContext(false)
-	
+
 	MCBrowserSetRequestHandler(mBrowser, OnBrowserRequestCallback, nothing)
 	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
 
 	applyProperties(mProperties)
 end handler
 
-private handler FinalizeBrowserView()
-	//set my native layer to nothing
-	MCWidgetSetMyNativeLayer(nothing)
-	
-	MCBrowserRelease(mBrowser)
-	put nothing into mBrowser
+private unsafe handler FinalizeBrowserView()
+	if mOpenState is not kOpenStateClosed then
+		set my native layer to nothing
+
+		if mBrowser is not nothing then
+			MCBrowserRelease(mBrowser)
+			put nothing into mBrowser
+		end if
+		
+		put kOpenStateClosed into mOpenState
+	else
+		schedule timer in 0.1 seconds
+	end if
+end handler
+
+public handler OnTimer()
+	unsafe
+		FinalizeBrowserView()
+	end unsafe
 end handler
 
 --
@@ -452,11 +525,15 @@ public handler OnOpen()
 
 	put true into mOpened
 
-	InitBrowserView()
+	unsafe
+		InitBrowserView()
+	end unsafe
 end handler
 
 public handler OnClose()
-	FinalizeBrowserView()
+	unsafe
+		FinalizeBrowserView()
+	end unsafe
 
 	put false into mOpened
 end handler
@@ -467,7 +544,7 @@ private handler Capitalize(in pString as String) returns String
 	if pString is empty then
 		return the empty string
 	end if
-	
+
 	put (the upper of char 1 of pString) into char 1 of pString
 	return pString
 end handler
@@ -477,14 +554,14 @@ end handler
 private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as CBool, in pUrl as ZStringUTF8, in pError as optional ZStringUTF8) returns nothing
 	variable tType as String
 	put element (pType + 1) of kMCBrowserRequestTypeMap into tType
-	
+
 	variable tState as String
 	put element (pState + 1) of kMCBrowserRequestStateMap into tState
-	
+
 	if pState is kMCBrowserRequestStateFailed then
 		log "Failed: %@" with [pError]
 	end if
-	
+
 	/* Dispatch browser message */
 	variable tMessage as String
 	if tType is "navigate" and tState is "unhandled" then
@@ -496,18 +573,18 @@ private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBr
 			put "browser" & Capitalize(tType) & Capitalize(tState) into tMessage
 		end if
 	end if
-	
+
 	variable tArgs as List
 	if pState is kMCBrowserRequestStateFailed then
 		put [pUrl, pError] into tArgs
 	else
 		put [pUrl] into tArgs
 	end if
-	
+
 	if pType is kMCBrowserRequestTypeNavigate and pState is kMCBrowserRequestStateBegin and not pFrame then
 		updateUrlProperty(pUrl)
 	end if
-	
+
 	post tMessage to mScriptObject with tArgs
 end handler
 
@@ -563,9 +640,11 @@ private handler setUrl(in pUrl as String)
 		updateUrlProperty(pUrl)
 
 		if mBrowser is not nothing then
-			if not MCBrowserGoToURL(mBrowser, pUrl) then
-				throw "error launching url " & pUrl
-			end if
+			unsafe
+				if not MCBrowserGoToURL(mBrowser, pUrl) then
+					throw "error launching url " & pUrl
+				end if
+			end unsafe
 		end if
 	end if
 end handler
@@ -663,17 +742,21 @@ end handler
 
 public handler OnGoBack()
 	if mBrowser is not nothing then
-		if not MCBrowserGoBack(mBrowser) then
-			throw "error going back"
-		end if
+		unsafe
+			if not MCBrowserGoBack(mBrowser) then
+				throw "error going back"
+			end if
+		end unsafe
 	end if
 end handler
 
 public handler OnGoForward()
 	if mBrowser is not nothing then
-		if not MCBrowserGoForward(mBrowser) then
-			throw "error going forward"
-		end if
+		unsafe
+			if not MCBrowserGoForward(mBrowser) then
+				throw "error going forward"
+			end if
+		end unsafe
 	end if
 end handler
 
@@ -684,65 +767,23 @@ end handler
 private handler browserEvaluateJavaScript(in pScript as String) returns String
 	if mBrowser is not nothing then
 		variable tResult as String
-		if not MCBrowserEvaluateJavaScript(mBrowser, pScript, tResult) then
-			throw "error evaluating javascript"
-		end if
-		
+		unsafe
+			if not MCBrowserEvaluateJavaScript(mBrowser, pScript, tResult) then
+				throw "error evaluating javascript"
+			end if
+		end unsafe
+
 		return tResult
 	end if
-	
+
 	return the empty string
 end handler
 
 ----------
 
 constant kSvgIcon is "M21.7,12c0,5.4-4.4,9.7-9.7,9.7S2.3,17.4,2.3,12S6.6,2.3,12,2.3S21.7,6.6,21.7,12z M11.9,16.6c0-0.2-0.1-0.3-0.3-0.4  C11,16,10.4,16,9.9,15.5c-0.1-0.2-0.1-0.4-0.2-0.6c-0.2-0.2-0.7-0.3-1-0.4c-0.4,0-0.8,0-1.3,0c-0.2,0-0.5,0-0.7,0  c-0.3-0.1-0.5-0.5-0.7-0.8C6,13.6,6,13.4,5.8,13.4c-0.2-0.1-0.4,0.1-0.6,0c-0.1-0.1-0.1-0.2-0.1-0.3c0-0.3,0.2-0.6,0.4-0.8  c0.3-0.2,0.6,0.1,0.9,0.1c0.1,0,0.1,0,0.2,0.1C6.9,12.6,7,13,7,13.3c0,0.1,0,0.2,0,0.2c0,0.1,0.1,0.1,0.2,0.1c0.1-0.5,0.1-1,0.2-1.5  c0-0.6,0.6-1.2,1.1-1.4c0.2-0.1,0.3,0.1,0.5,0c0.6-0.2,2.1-0.8,1.8-1.6C10.6,8.4,10,7.7,9.2,7.8C9,7.9,8.9,8,8.7,8.1  C8.4,8.3,7.8,8.9,7.5,8.9C7,8.8,7,8.1,7.1,7.8c0.1-0.4,1-1.7,1.6-1.5C8.8,6.4,9,6.6,9.1,6.7c0.2,0.1,0.5,0.1,0.8,0.1  c0.1,0,0.2,0,0.3-0.1c0.1-0.1,0.1-0.1,0.1-0.2c0-0.3-0.3-0.6-0.5-0.8C9.6,5.5,9.3,5.3,9,5.2C8,4.9,6.4,5.3,5.6,6  C4.8,6.7,4.2,7.9,3.8,8.9C3.6,9.5,3.4,10.3,3.3,11c-0.1,0.5-0.2,0.9,0.1,1.4C3.7,13,4.3,13.6,4.9,14c0.4,0.3,1.2,0.3,1.6,0.8  c0.3,0.4,0.2,0.9,0.2,1.4c0,0.6,0.4,1.1,0.6,1.6c0.1,0.3,0.2,0.7,0.3,1c0,0.1,0.1,0.7,0.1,0.8c0.6,0.3,1.1,0.6,1.8,0.8  c0.1,0,0.5-0.6,0.5-0.7c0.3-0.3,0.5-0.7,0.8-0.9c0.2-0.1,0.4-0.2,0.6-0.4c0.2-0.2,0.3-0.6,0.4-0.9C11.9,17.3,12,16.9,11.9,16.6z   M12.1,7.4c0.1,0,0.2-0.1,0.4-0.2c0.3-0.2,0.6-0.5,0.9-0.7c0.3-0.2,0.6-0.5,0.8-0.7c0.3-0.2,0.5-0.6,0.6-0.9  c0.1-0.2,0.4-0.6,0.3-0.9c-0.1-0.2-0.6-0.3-0.8-0.4c-0.8-0.2-1.5-0.3-2.3-0.3c-0.3,0-0.7,0.1-0.8,0.4c-0.1,0.5,0.3,0.4,0.7,0.5  c0,0,0.1,0.8,0.1,0.9c0.1,0.5-0.2,0.8-0.2,1.3c0,0.3,0,0.8,0.2,1C12,7.4,12.1,7.4,12.1,7.4z M20.5,14.4c0.1-0.2,0.1-0.5,0.2-0.7  c0.1-0.5,0.1-1,0.1-1.5c0-1-0.1-2-0.4-2.9C20.2,9,20.1,8.7,20,8.4c-0.2-0.5-0.5-1-0.9-1.4c-0.4-0.5-0.9-1.9-1.8-1.5  c-0.3,0.1-0.5,0.5-0.7,0.7c-0.2,0.3-0.4,0.6-0.6,0.9c-0.1,0.1-0.2,0.3-0.1,0.4c0,0.1,0.1,0.1,0.2,0.1c0.2,0.1,0.3,0.1,0.5,0.2  c0.1,0,0.2,0.1,0.1,0.2c0,0,0,0.1-0.1,0.1c-0.5,0.5-1,0.9-1.5,1.4c-0.1,0.1-0.2,0.3-0.2,0.4c0,0.1,0.1,0.1,0.1,0.2  c0,0.1-0.1,0.1-0.2,0.2c-0.2,0.1-0.4,0.2-0.5,0.3c-0.1,0.2,0,0.5-0.1,0.7c-0.1,0.5-0.4,0.9-0.6,1.4c-0.2,0.3-0.3,0.6-0.5,0.9  c0,0.4-0.1,0.7,0.1,1c0.5,0.7,1.4,0.3,2.1,0.6c0.2,0.1,0.4,0.1,0.5,0.3c0.3,0.3,0.3,0.8,0.4,1.1c0.1,0.4,0.2,0.8,0.4,1.2  c0.1,0.5,0.3,1,0.4,1.4c0.9-0.7,1.7-1.5,2.3-2.5C19.9,16,20.2,15.2,20.5,14.4z"
-constant kBorderWidth is 5
-
-private handler expandRectangle(in pRect as Rectangle, in pExp as Number) returns Rectangle
-	return rectangle [ the left of pRect - pExp, the top of pRect - pExp, the right of pRect + pExp, the bottom of pRect + pExp]
-end handler
-
 public handler OnPaint() returns nothing
-	// Draw placeholder image - the browser icon
-	variable tFillPaint as Paint
-	variable tStrokePaint as Paint
-	put solid paint with color [0.875, 0.875, 0.875] into tFillPaint
-	put solid paint with color [0.75, 0.75, 0.75] into tStrokePaint
-	
-	variable tBounds as Rectangle
-	put my bounds into tBounds
-	
-	set the paint of this canvas to tFillPaint
-	fill rectangle path of tBounds on this canvas
-	set the paint of this canvas to tStrokePaint
-	set the stroke width of this canvas to kBorderWidth
-	set the join style of this canvas to "bevel"
-	stroke rectangle path of expandRectangle(tBounds, -kBorderWidth / 2) on this canvas
-	
-	variable tPath as Path
-	put path kSvgIcon into tPath
-	constrainPathToRect(expandRectangle(tBounds, -2 * kBorderWidth), tPath)
-	fill tPath on this canvas
-	
-	// Draw the control name
-	put solid paint with color [1, 1, 1] into tFillPaint
-	put solid paint with color [0.25, 0.25, 0.25] into tStrokePaint
-
-	variable tNameString as String
-	put my name into tNameString
-	
-	set the font of this canvas to font "Arial" at size 14
-
-	variable tTextBounds as Rectangle
-	put the image bounds of text tNameString on this canvas into tTextBounds
-	
-	translate this canvas by [ the width of tBounds / 2, the height of tBounds / 2]
-	translate this canvas by [ -(the width of tTextBounds / 2), the height of tTextBounds / 2]
-	set the paint of this canvas to tFillPaint
-	fill rounded rectangle path of expandRectangle(tTextBounds, kBorderWidth) with radius 5 on this canvas
-	set the paint of this canvas to tStrokePaint
-	fill text tNameString at point [0, 0] on this canvas
+    paintPlaceholderImage(this canvas, my bounds, kSvgIcon, my name, nothing, nothing)
 end handler
 
 ----------

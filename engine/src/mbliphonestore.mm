@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "util.h"
 #include "globals.h"
 
@@ -123,7 +123,7 @@ bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_co
 		if (t_success)
         {
 			t_ios_data->product_id = MCValueRetain(p_product_id);
-			t_success = nil != (t_ios_data->payment = [SKMutablePayment paymentWithProductIdentifier: [NSString stringWithMCStringRef:t_ios_data->product_id]]);
+			t_success = nil != (t_ios_data->payment = [SKMutablePayment paymentWithProductIdentifier: MCStringConvertToAutoreleasedNSString(t_ios_data->product_id)]);
 		}
 		if (t_success)
 		{
@@ -160,71 +160,6 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
 	
 	MCMemoryDelete(t_ios_data);
 }
-
-#ifdef /* MCPurchaseSet */ LEGACY_EXEC
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
-{
-	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
-	switch (p_property)
-	{
-		case kMCPurchasePropertyQuantity:
-		{
-			uint32_t t_quantity;
-			if (!MCU_stoui4(ep . getsvalue(), t_quantity))
-			{
-				MCeerror->add(EE_OBJECT_NAN, 0, 0, ep.getsvalue());
-				return ES_ERROR;
-			}
-			if (t_ios_data->payment != nil)
-				[t_ios_data->payment setQuantity: t_quantity];
-			return ES_NORMAL;
-		}
-			break;
-		default:
-			break;
-	}
-	
-	return ES_NOT_HANDLED;
-}
-#endif /* MCPurchaseSet */
-
-#ifdef /* MCStoreGetPurchaseProperty */ LEGACY_EXEC
-char* MCStoreGetPurchaseProperty(const char *p_product_id, const char*  p_prop_name)
-{
-    bool t_success = true;
-    MCPurchase *t_purchase = nil;
-	MCPurchaseProperty t_property;
-
-	if (t_success)
-		t_success =
-		MCPurchaseFindByProdId(p_product_id, t_purchase) &&
-		MCPurchaseLookupProperty(p_prop_name, t_property);
-        
-        /*
-    if (t_success)
-		t_success = MCPurchaseLookupProperty(p_prop_name, t_property);
-    
-    if (t_success)
-        MCLog("Success in lookUpProperty!...",nil);
-    
-    if (t_success)
-		t_success = MCPurchaseFindByProdId(p_product_id, t_purchase);
-    
-    if (t_success)
-        MCLog("Success in finding Purchase!...",nil);
-        */
-
-	
-	MCExecPoint ep(nil, nil, nil);
-	if (t_success)
-		t_success = MCPurchaseGet(t_purchase, t_property, ep) == ES_NORMAL;
-	
-    char *temp;
-    MCCStringFormat(temp, "%s", ep.getcstring());
-    return temp;
-	
-}
-#endif
 
 // PM-2015-01-12: [[ Bug 14343 ]] Implemented MCStoreGetPurchaseProperty/MCStoreSetPurchaseProperty for iOS
 extern MCPropertyInfo *lookup_purchase_property(const MCPurchasePropertyTable *p_table, Properties p_which);
@@ -276,98 +211,6 @@ void MCStoreSetPurchaseProperty(MCExecContext& ctxt, MCStringRef p_product_id, M
     ctxt . Throw();
 }
 
-#ifdef /* MCPurchaseGet */ LEGACY_EXEC
-Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
-{
-	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
-
-	SKPayment *t_payment = nil;
-	SKPaymentTransaction *t_transaction = nil;
-	SKPaymentTransaction *t_original_transaction = nil;
-	
-	if (t_ios_data->transaction != nil)
-	{
-		t_transaction = t_ios_data->transaction;
-		t_payment = [t_transaction payment];
-		t_original_transaction = [t_transaction originalTransaction];
-	}
-	else
-		t_payment = t_ios_data->payment;
-	
-	switch (p_property)
-	{
-		case kMCPurchasePropertyProductIdentifier:
-			if (t_payment == nil)
-				break;
-			
-			ep.copysvalue([[t_payment productIdentifier] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-			return ES_NORMAL;
-			
-		case kMCPurchasePropertyQuantity:
-			if (t_payment == nil)
-				break;
-			
-			ep.setuint([t_payment quantity]);
-			return ES_NORMAL;
-			
-		case kMCPurchasePropertyReceipt:
-		{
-			if (t_transaction == nil)
-				break;
-			
-			NSData *t_bytes = [t_transaction transactionReceipt];
-			ep.copysvalue((const char*)[t_bytes bytes], [t_bytes length]);
-			return ES_NORMAL;
-		}
-			
-		case kMCPurchasePropertyPurchaseDate:
-			if (t_transaction == nil)
-				break;
-			
-			ep.setnvalue([[t_transaction transactionDate] timeIntervalSince1970]);
-            ep.ntos();
-			return ES_NORMAL;
-
-		case kMCPurchasePropertyTransactionIdentifier:
-            // PM-2015-03-10: [[ Bug 14858 ]] transactionIdentifier can be nil if the purchase is still in progress (i.e when purchaseStateUpdate msg is sent with state=sendingRequest)
-			if (t_transaction == nil || [t_transaction transactionIdentifier] == nil)
-				break;
-			
-			ep.copysvalue([[t_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding]);
-			return ES_NORMAL;
-			
-		case kMCPurchasePropertyOriginalReceipt:
-		{
-			if (t_original_transaction == nil)
-				break;
-			
-			NSData *t_bytes = [t_original_transaction transactionReceipt];
-			ep.copysvalue((const char*)[t_bytes bytes], [t_bytes length]);
-			return ES_NORMAL;
-		}
-			
-		case kMCPurchasePropertyOriginalPurchaseDate:
-			if (t_original_transaction == nil)
-				break;
-			
-			ep.setnvalue([[t_original_transaction transactionDate] timeIntervalSince1970]);
-			return ES_NORMAL;
-
-		case kMCPurchasePropertyOriginalTransactionIdentifier:
-			if (t_original_transaction == nil)
-				break;
-			
-			ep.copysvalue([[t_original_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding]);
-			return ES_NORMAL;
-			
-		default:
-			break;
-	}
-	
-	return ES_NOT_HANDLED;
-}
-#endif /* MCPurchaseGet */
-
 void MCPurchaseGetProductIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase, MCStringRef& r_productIdentifier)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
@@ -381,7 +224,7 @@ void MCPurchaseGetProductIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase,
 	else
 		t_payment = t_ios_data->payment;
     
-    if (t_payment != nil && MCStringCreateWithCFString((CFStringRef)[t_payment productIdentifier], r_productIdentifier))
+    if (t_payment != nil && MCStringCreateWithCFStringRef((CFStringRef)[t_payment productIdentifier], r_productIdentifier))
         return;
     
     ctxt . Throw();
@@ -450,7 +293,7 @@ void MCPurchaseGetTransactionIdentifier(MCExecContext& ctxt, MCPurchase *p_purch
     // PM-2015-03-10: [[ Bug 14858 ]] transactionIdentifier can be nil if the purchase is still in progress (i.e when purchaseStateUpdate msg is sent with state=sendingRequest)
     if (t_transaction != nil
             && [t_transaction transactionIdentifier] != nil
-            && MCStringCreateWithCFString((CFStringRef)[t_transaction transactionIdentifier], r_identifier))
+            && MCStringCreateWithCFStringRef((CFStringRef)[t_transaction transactionIdentifier], r_identifier))
         return;
     
     ctxt . Throw();
@@ -538,27 +381,6 @@ void MCPurchaseGetOriginalReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, M
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef /* MCPurchaseSet */ LEGACY_EXEC
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
-{
-	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
-	switch (p_property)
-	{
-		case kMCPurchasePropertyQuantity:
-		{
-			if (t_ios_data->payment != nil)
-				[t_ios_data->payment setQuantity: p_quantity];
-			return ES_NORMAL;
-		}
-			break;
-		default:
-			break;
-	}
-	
-	return ES_NOT_HANDLED;
-}
-#endif /* MCPurchaseSet */
 
 void MCPurchaseSetQuantity(MCExecContext& ctxt, MCPurchase *p_purchase, uinteger_t p_quantity)
 {
@@ -689,7 +511,7 @@ void update_purchase_state(MCPurchase *p_purchase)
 				{
 					p_purchase->state = kMCPurchaseStateError;
                     MCValueRelease(t_ios_data->error);
-                    MCStringCreateWithCFString((CFStringRef)[t_error localizedDescription], t_ios_data->error);
+                    MCStringCreateWithCFStringRef((CFStringRef)[t_error localizedDescription], t_ios_data->error);
 				}
 				break;
 			}
@@ -735,7 +557,7 @@ void update_purchase_state(MCPurchase *p_purchase)
 			
 			t_success = MCMemoryNew(t_ios_data);
 			if (t_success)
-				t_success = MCStringCreateWithCFString((CFStringRef)[[t_transaction payment] productIdentifier], t_ios_data->product_id);
+				t_success = MCStringCreateWithCFStringRef((CFStringRef)[[t_transaction payment] productIdentifier], t_ios_data->product_id);
 
 			if (t_success)
 				t_success = MCPurchaseCreate(t_ios_data->product_id, t_ios_data, t_purchase);
@@ -878,7 +700,7 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
         for (NSString *t_invalid_id in response.invalidProductIdentifiers)
         {
             MCAutoStringRef t_string;
-            /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_invalid_id, &t_string);
+            /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_invalid_id, &t_string);
             MCStorePostProductRequestError(*t_string, MCSTR("invalid product identifier"));
         }
     }
@@ -901,8 +723,8 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 {
     MCAutoStringRef t_product, t_error;
     
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[(com_runrev_livecode_MCProductsRequest*)request getProductId], &t_product);
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error description], &t_error);
+    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[(com_runrev_livecode_MCProductsRequest*)request getProductId], &t_product);
+    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[error description], &t_error);
 
     MCStorePostProductRequestError(*t_product, *t_error);
     [request release];
@@ -917,7 +739,7 @@ bool MCStoreRequestProductDetails(MCStringRef p_product_id)
     
     NSString *t_product_id = nil;
     
-    t_product_id = [NSString stringWithMCStringRef: p_product_id];
+    t_product_id = MCStringConvertToAutoreleasedNSString(p_product_id);
     t_request = [[com_runrev_livecode_MCProductsRequest alloc] initWithProductId: t_product_id];
     
     [t_request setDelegate: [[com_runrev_livecode_MCProductsRequestDelegate alloc] init]];
@@ -1036,119 +858,7 @@ bool MCNSStringToUnicode(NSString *p_ns_string, unichar_t *&r_uni_string, uint32
 }
 
 void MCStoreProductRequestResponseEvent::Dispatch()
-{
-/*    bool t_success = true;
-    
-    const char *t_product_id = nil;
-    const char *t_description = nil;
-    const char *t_title = nil;
-    const char *t_currency_code = nil;
-    const char *t_currency_symbol = nil;
-    
-    unichar_t *t_unicode_description = nil;
-    uint32_t t_unicode_description_length = 0;
-
-    unichar_t *t_unicode_title = nil;
-    uint32_t t_unicode_title_length = 0;
-    
-    unichar_t *t_unicode_currency_symbol = nil;
-    uint32_t t_unicode_currency_symbol_length = 0;
-    
-    double t_price = 0.0;
-    
-    NSString *t_locale_currency_code = nil;
-    NSString *t_locale_currency_symbol = nil;
-    
-    t_locale_currency_code = [[m_product priceLocale] objectForKey: NSLocaleCurrencyCode];
-    t_locale_currency_symbol = [[m_product priceLocale] objectForKey: NSLocaleCurrencySymbol];
-    
-    t_product_id = [[m_product productIdentifier] cStringUsingEncoding: NSMacOSRomanStringEncoding];
-    t_description = [[m_product localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding];
-    t_title = [[m_product localizedTitle] cStringUsingEncoding: NSMacOSRomanStringEncoding];
-    t_currency_code = [t_locale_currency_code cStringUsingEncoding: NSMacOSRomanStringEncoding];
-    t_currency_symbol = [t_locale_currency_symbol cStringUsingEncoding: NSMacOSRomanStringEncoding];
-    
-    if (t_success)
-        t_success = MCNSStringToUnicode([m_product localizedDescription], t_unicode_description, t_unicode_description_length);
-    
-    if (t_success)
-        t_success = MCNSStringToUnicode([m_product localizedTitle], t_unicode_title, t_unicode_title_length);
-    
-    if (t_success)
-        t_success = MCNSStringToUnicode(t_locale_currency_symbol, t_unicode_currency_symbol, t_unicode_currency_symbol_length);
-    
-    if (t_success)
-    {
-        MCExecPoint ep(nil, nil, nil);
-        
-        MCVariableValue *t_response = nil;
-        t_response = new MCVariableValue();
-        
-        MCVariableValue *t_element = nil;
-        
-        t_response->lookup_element(ep, "price", t_element);
-        t_element->assign_real([[m_product price] doubleValue]);
-        
-        if (t_description != nil)
-        {
-            t_response->lookup_element(ep, "description", t_element);
-            t_element->assign_string(MCString(t_description));
-        }
-        
-        if (t_title != nil)
-        {
-            t_response->lookup_element(ep, "title", t_element);
-            t_element->assign_string(MCString(t_title));
-        }
-        
-        if (t_currency_code != nil)
-        {
-            t_response->lookup_element(ep, "currency code", t_element);
-            t_element->assign_string(MCString(t_currency_code));
-        }
-        
-        if (t_currency_symbol != nil)
-        {
-            t_response->lookup_element(ep, "currency symbol", t_element);
-            t_element->assign_string(MCString(t_currency_symbol));
-        }
-        
-        if (t_unicode_description != nil)
-        {
-            t_response->lookup_element(ep, "unicode description", t_element);
-            t_element->assign_string(MCString((char*)t_unicode_description, 2 * t_unicode_description_length));
-        }
-        
-        if (t_unicode_title != nil)
-        {
-            t_response->lookup_element(ep, "unicode title", t_element);
-            t_element->assign_string(MCString((char*)t_unicode_title, 2 * t_unicode_title_length));
-        }
-        
-        if (t_unicode_currency_symbol != nil)
-        {
-            t_response->lookup_element(ep, "unicode currency symbol", t_element);
-            t_element->assign_string(MCString((char*)t_unicode_currency_symbol, 2 * t_unicode_currency_symbol_length));
-        }
-        
-        
-        ep.setarray(t_response, True);
-
-        MCParameter p1, p2;
-        p1.sets_argument(MCString(t_product_id));
-        p1.setnext(&p2);
-        p2.set_argument(ep);
-        
-        MCdefaultstackptr->getcurcard()->message(MCM_product_details_received, &p1);
-    }
-    
-    if (t_unicode_description != nil)
-        MCMemoryDeleteArray(t_unicode_description);
-    if (t_unicode_title != nil)
-        MCMemoryDeleteArray(t_unicode_title);
-    if (t_unicode_currency_symbol != nil)
-        MCMemoryDeleteArray(t_unicode_currency_symbol); */
-    
+{    
     bool t_success = true;
     
     MCAutoStringRef t_product_id, t_description, t_title, t_currency_code, t_currency_symbol;
@@ -1161,11 +871,11 @@ void MCStoreProductRequestResponseEvent::Dispatch()
     t_locale_currency_code = [[m_product priceLocale] objectForKey: NSLocaleCurrencyCode];
     t_locale_currency_symbol = [[m_product priceLocale] objectForKey: NSLocaleCurrencySymbol];
     
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[m_product productIdentifier], &t_product_id);
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[m_product localizedDescription], &t_description);
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[m_product localizedTitle], &t_title);
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_locale_currency_code, &t_currency_code);
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_locale_currency_symbol, &t_currency_symbol);
+    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[m_product productIdentifier], &t_product_id);
+    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[m_product localizedDescription], &t_description);
+    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[m_product localizedTitle], &t_title);
+    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_locale_currency_code, &t_currency_code);
+    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_locale_currency_symbol, &t_currency_symbol);
 
     unichar_t *t_unicode_description = nil;
     uint32_t t_unicode_description_length = 0;
@@ -1191,59 +901,48 @@ void MCStoreProductRequestResponseEvent::Dispatch()
     
     MCAutoNumberRef t_price_number;
     
-    MCNewAutoNameRef t_price_key, t_description_key, t_title_key, t_currency_code_key, t_currency_symbol_key;
-    MCNewAutoNameRef t_unicode_description_key, t_unicode_title_key, t_unicode_currency_symbol_key;
-    
     MCAutoArrayRef t_array;
     if (t_success)
         t_success = MCArrayCreateMutable(&t_array);
     
     if (t_success)
         t_success = (MCNumberCreateWithReal([[m_product price] doubleValue], &t_price_number)
-                     && MCNameCreateWithCString("price", &t_price_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_price_key, *t_price_number));
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("price"), *t_price_number));
 
         
     if (t_success && *t_description != nil)
     {
-        t_success = (MCNameCreateWithCString("description", &t_description_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_description_key, *t_description));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("description"), *t_description);
     }
     
     if (t_success && *t_title != nil)
     {
-        t_success = (MCNameCreateWithCString("title", &t_title_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_title_key, *t_title));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("title"), *t_title);
     }
     
     if (t_success && *t_currency_code != nil)
     {
-        t_success = (MCNameCreateWithCString("currency code", &t_currency_code_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_currency_code_key, *t_currency_code));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("currency code"), *t_currency_code);
     }
     
     if (t_success && *t_currency_symbol != nil)
     {
-        t_success = (MCNameCreateWithCString("currency symbol", &t_currency_symbol_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_currency_symbol_key, *t_currency_symbol));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("currency symbol"), *t_currency_symbol);
     }
     
-    if (t_success && *t_unicode_description != nil)
+    if (t_success && *t_unicode_description != 0)
     {
-        t_success = (MCNameCreateWithCString("unicode description", &t_unicode_description_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_description_key, *t_utf16_description));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("unicode description"), *t_utf16_description);
     }
     
-    if (t_success && *t_unicode_title != nil)
+    if (t_success && *t_unicode_title != 0)
     {
-        t_success = (MCNameCreateWithCString("unicode title", &t_unicode_title_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_title_key, *t_utf16_title));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("unicode title"), *t_utf16_title);
     }
     
-    if (t_success && *t_unicode_currency_symbol != nil)
+    if (t_success && *t_unicode_currency_symbol != 0)
     {
-        t_success = (MCNameCreateWithCString("unicode currency symbol", &t_unicode_currency_symbol_key)
-                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_currency_symbol_key, *t_utf16_currency_symbol));
+        t_success = MCArrayStoreValue(*t_array, kMCCompareCaseless, MCNAME("unicode currency symbol"), *t_utf16_currency_symbol);
     }
     
     MCParameter p1, p2;

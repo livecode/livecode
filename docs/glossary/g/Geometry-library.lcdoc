@@ -1,12 +1,19 @@
 Name: Geometry library
 
-Synonyms: Geometry libraries,Geometry library
+Synonyms: geometry libraries, geometry library
 
 Type: library
 
-Description:
-The <LiveCode custom library|LiveCode custom library> that supports the Geometry pane in the <property inspector>. The <revCacheGeometry> and <revUpdateGeometry> <command|commands> are part of the Geometry library.
+Associations: geometry library
 
-References: revCacheGeometry (command), revUpdateGeometry (command), command (glossary), property inspector (glossary), LiveCode custom library (library)
+Description:
+The <LiveCode custom library|LiveCode custom library> that supports the
+Geometry pane in the <property inspector>. The <revCacheGeometry> and
+<revUpdateGeometry> <command|commands> are part of the Geometry library.
+
+References: revCacheGeometry (command), revUpdateGeometry (command),
+command (glossary), property inspector (glossary),
+LiveCode custom library (glossary), geometry management (glossary)
 
 Tags: ui
+

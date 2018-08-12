@@ -4,13 +4,15 @@ Type: keyword
 
 Syntax: pointer
 
-Summary: Designates the Pointer <tool>, which is used to <select> <object|objects>.
+Summary:
+Designates the Pointer <tool>, which is used to <select>
+<object|objects>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 choose pointer tool
@@ -18,8 +20,19 @@ choose pointer tool
 Description:
 Use the <pointer> <keyword> to edit a <stack>.
 
-When using the Pointer tool, the cursor is an arrow. Use this tool to select, resize, and move controls.
+When using the Pointer tool, the cursor is an arrow. Use this tool to
+select, resize, and move <control(glossary)|controls>.
 
-You cannot edit the objects in stacks whose cantModify <property> is true or <stacks> which are being displayed as a <palette>, <modeless dialog box|modeless dialog>, or <modal dialog box|modal dialog>. Only <stacks> displayed as an <editable window> can be edited. (Use the <topLevel> <command> to display a <stack> in an <editable window>.)
+You cannot edit the objects in stacks whose <cantModify> <property> is
+true or <stacks> which are being displayed as a <palette>, <modeless
+dialog box|modeless dialog>, or <modal dialog box|modal dialog>. Only
+<stacks> displayed as an <editable window> can be edited. (Use the
+<topLevel> <command> to display a <stack> in an <editable window>.)
 
-References: topLevel (command), select (command), palette (command), choose (command), tool (function), stacks (function), stack (object), object (object), keyword (glossary), property (glossary), modeless dialog box (glossary), editable window (glossary), modal dialog box (glossary), command (glossary)
+References: topLevel (command), select (command), palette (command),
+choose (command), tool (function), stacks (function), object (glossary),
+keyword (glossary), property (glossary), modeless dialog box (glossary),
+editable window (glossary), modal dialog box (glossary),
+command (glossary), control(glossary), stack (object),
+cantModify (property)
+

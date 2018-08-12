@@ -1,1 +1,1 @@
-# backgroundpattern of a field out of sync if formattedHeight > roughly 32768
+# Ensure background pattern stays aligned in long fields

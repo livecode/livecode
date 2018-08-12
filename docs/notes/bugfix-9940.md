@@ -1,2 +1,0 @@
-# Stepping through "open printing" forces a crash
-On Mac, the open printing command opened a modal dialog which prevented further user interaction when debugging. The behavior of open printing has been changed so that no dialog is opened when the command is issued in script debug mode.

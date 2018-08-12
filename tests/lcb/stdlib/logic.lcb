@@ -1,0 +1,24 @@
+module com.livecode.logic.tests
+
+public handler TestFormatString()
+	test "formatted as string" when true formatted as string is "true"
+
+	variable tString as String
+
+	format false as string into tString
+	test "format as string" when tString is "false"
+end handler
+
+public handler TestParseString()
+	test "parsed as boolean" when "true" parsed as boolean
+
+	variable tBool as optional Boolean
+
+	parse "false" as boolean into tBool
+	test "parse as boolean" when not tBool
+
+	parse "sdfthtoeu" as boolean into tBool
+	test "parse as boolean (invalid)" when tBool is nothing
+end handler
+
+end module

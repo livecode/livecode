@@ -2,15 +2,17 @@ Name: unload
 
 Type: command
 
-Syntax: unload [URL] <cachedURL> 
+Syntax: unload [URL] <cachedURL>
 
-Summary: Removes a <file> that was placed in the local <cache> by the <load> <command>, or cancels a <download> or <upload> in progress.
+Summary:
+Removes a <file> that was placed in the local <cache> by the <load>
+<command>, or cancels a <download> or <upload> in progress.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux, html5
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
@@ -24,21 +26,44 @@ Example:
 unload URL "ftp://ftp.example.org/newfiles/latest.txt"
 
 Parameters:
-cachedURL: Any URL in the cachedURLs or any URL whose transfer was started with the libURLftpUpload, libURLftpUploadFile, or libURLDownloadToFile command.
+cachedURL:
+Any URL in the cachedURLs or any URL whose transfer was started with the
+libURLftpUpload, libURLftpUploadFile, or libURLDownloadToFile command.
 
-The result: If the <cachedURL> is not in the <cache> and not currently being <upload|uploaded> or <download|downloaded>, the <result> <function> is set to "can't find url".
+The result:
+If the <cachedURL> is not in the <cache> and not currently being
+<upload|uploaded> or <download|downloaded>, the <result> <function> is
+set to "can't find url".
 
 Description:
-Use the <unload> <command> to release memory used by a <cache|cached> <URL(keyword)> when you no longer need it.
+Use the <unload> <command> to release memory used by a <cache|cached>
+<URL(keyword)> when you no longer need it.
 
-If the <cachedURL> is still being <download|downloaded> with the <load> <command>, the <unload> command cancels the <download>.
+If the <cachedURL> is still being <download|downloaded> with the <load>
+<command>, the <unload> command cancels the <download>.
 
-The <unload> <command> can be used to cancel any <non-blocking> <FTP> or <HTTP> file transfer in progress, but it does not cancel file transfers that were initiated by using a <URL(keyword)> <container> in an <expression> or by putting something into a <URL(keyword)>.
+The <unload> <command> can be used to cancel any <non-blocking> <FTP> or
+<HTTP> file transfer in progress, but it does not cancel file transfers
+that were initiated by using a <URL(keyword)> <container> in an
+<expression> or by putting something into a <URL(keyword)>.
 
-The <unload> <command> removes the <cachedURL> from the <URLStatus> <function>. This includes <URL(glossary)|URLs> that have been <upload|uploaded> with the <libURLftpUpload> <command>, as well as those that have been <cache|cached> with the <load> <command>.
+The <unload> <command> removes the <cachedURL> from the <URLStatus>
+<function>. This includes <URL(glossary)|URLs> that have been
+<upload|uploaded> with the <libURLftpUpload> <command>, as well as those
+that have been <cache|cached> with the <load> <command>.
 
->*Note:* You can use a <URL(keyword)> with the <URL(keyword)> <keyword> even after it has been unloaded from the <cache>, but <cache|caching> speeds up access to the <URL(keyword)>.
+>*Note:* You can use a <URL(keyword)> with the <URL(keyword)> <keyword>
+> even after it has been unloaded from the <cache>, but <cache|caching>
+> speeds up access to the <URL(keyword)>.
 
-References: URL (keyword), file (keyword), ftp (keyword), http (keyword), revUnloadSpeech (command), libURLftpUpload (command), libURLDownloadToFile (command), get (command), load (command), result (function), cachedURLs (function), URLStatus (function), non-blocking (glossary), upload (glossary), download (glossary), cache (glossary), container (glossary), expression (glossary), URL (glossary), command (glossary), keyword (glossary), function (control_st)
+References: revUnloadSpeech (command), libURLftpUpload (command),
+libURLDownloadToFile (command), get (command), load (command),
+function (control structure), result (function), cachedURLs (function),
+URLStatus (function), non-blocking (glossary), upload (glossary),
+download (glossary), cache (glossary), container (glossary),
+expression (glossary), URL (glossary), command (glossary),
+keyword (glossary), URL (keyword), file (keyword), ftp (keyword),
+http (keyword)
 
 Tags: networking
+

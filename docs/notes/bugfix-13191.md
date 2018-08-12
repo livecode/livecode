@@ -1,1 +1,0 @@
-# FIX: flip graphic horizontally and vertically for complex graphics

@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "util.h"
 #include "undolst.h"
 #include "sellst.h"
@@ -120,6 +120,8 @@ void MCMutableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_fram
 
 bool MCMutableImageRep::LockBitmap(uindex_t p_frame, MCGFloat p_density, MCImageBitmap *&r_bitmap)
 {
+    MCAssert(m_locked_bitmap == nullptr);
+    
 	if (p_frame > 0)
 		return false;
 	
@@ -193,6 +195,8 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	m_gframe.image = nil;
 	
 	m_gframe.x_scale = m_gframe.y_scale = 1.0;
+    
+    m_is_locked = false;
 }
 
 MCMutableImageRep::~MCMutableImageRep()
@@ -405,21 +409,22 @@ void MCMutableImageRep::startdraw()
 	starty = my;
 	MCRectangle brect;
 	brect.width = brect.height = 0;
-	if (MCactiveimage != NULL && MCactiveimage != m_owner
+	if (MCactiveimage && MCactiveimage != m_owner
 	        && t_tool == T_SELECT)
 		MCactiveimage->endsel();
 
 	state |= CS_EDITED;
-	if (!MCscreen->getlockmods())
-	{
-		MCundos->freestate();
-		Ustruct *us = new Ustruct;
-		us->type = UT_PAINT;
-		MCundos->savestate(m_owner, us);
-		MCImageFreeBitmap(m_undo_image);
-		m_undo_image = nil;
-		/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
-	}
+	
+	MCundos->freestate();
+	Ustruct *us = new (nothrow) Ustruct;
+	us->type = UT_PAINT;
+	Lock();
+	MCundos->savestate(m_owner, us);
+	Unlock();
+	MCImageFreeBitmap(m_undo_image);
+	m_undo_image = nil;
+	/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
+
 	switch (t_tool)
 	{
 	case T_BRUSH:
@@ -442,7 +447,7 @@ void MCMutableImageRep::startdraw()
 	case T_CURVE:
 		if (points != NULL)
 			delete points;
-		points = new MCPoint[MCscreen->getmaxpoints()];
+		points = new (nothrow) MCPoint[MCscreen->getmaxpoints()];
 		npoints = MCscreen->getmaxpoints();
 		points[0].x = mx;
 		points[0].y = my;
@@ -476,7 +481,7 @@ void MCMutableImageRep::startdraw()
 		brect = drawroundrect();
 		break;
 	case T_SELECT:
-		if (MCactiveimage != NULL && MCactiveimage != m_owner)
+		if (MCactiveimage && MCactiveimage != m_owner)
 			MCactiveimage->endsel();
 		if (state & CS_OWN_SELECTION)
 		{
@@ -879,7 +884,7 @@ void MCMutableImageRep::endsel()
 		m_selection_image = nil;
 	}
 	state &= ~(CS_BEEN_MOVED | CS_OWN_SELECTION);
-	MCactiveimage = NULL;
+	MCactiveimage = nil;
 	selrect.x += rect.x;
 	selrect.y += rect.y;
 	// MW-2011-08-18: [[ Layers ]] Invalidate the selected rect.
@@ -1114,7 +1119,7 @@ void MCMutableImageRep::bucket_fill(MCImageBitmap *p_src, uint4 scolor, MCGRaste
 	if (!gotpoint)
 		return;
 
-	MCstacktype *pstack = new MCstacktype[PSTACKSIZE];
+	MCstacktype *pstack = new (nothrow) MCstacktype[PSTACKSIZE];
 	uint2 pstackptr = 0;
 	uint2 pstacktop = 1;
 	bool collision;
@@ -1463,8 +1468,8 @@ MCRectangle MCMutableImageRep::drawoval()
 	t_center.y = newrect.y + 0.5 * newrect.height;
 
 	MCGSize t_radii;
-	t_radii.width = newrect.width;
-	t_radii.height = newrect.height;
+	t_radii.width = newrect.width * 0.5;
+	t_radii.height = newrect.height * 0.5;
 
 	MCGPathRef t_path = nil;
 	/* UNCHECKED */ MCGPathCreateMutable(t_path);
@@ -1669,11 +1674,14 @@ void MCMutableImageRep::selimage()
 	MCeditingimage = m_owner;
 	state |= CS_EDITED;
 	MCundos->freestate();
-	Ustruct *us = new Ustruct;
+	Ustruct *us = new (nothrow) Ustruct;
 	us->type = UT_PAINT;
 
-	MCundos->savestate(m_owner, us);
-	if (m_undo_image != nil)
+    Lock();
+    MCundos->savestate(m_owner, us);
+    Unlock();
+    
+    if (m_undo_image != nil)
 		MCImageFreeBitmap(m_undo_image);
 	m_undo_image = nil;
 	/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
@@ -1832,10 +1840,12 @@ void MCMutableImageRep::rotatesel(int2 angle)
 	if (clearundo)
 	{
 		MCundos->freestate();
-		Ustruct *us = new Ustruct;
+		Ustruct *us = new (nothrow) Ustruct;
 		us->type = UT_PAINT;
+        Lock();
 		MCundos->savestate(m_owner, us);
-		MCImageFreeBitmap(m_undo_image);
+        Unlock();
+        MCImageFreeBitmap(m_undo_image);
 		m_undo_image = nil;
 		/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
 	}
@@ -2021,4 +2031,21 @@ bool MCMutableImageRep::GetMetadata(MCImageMetadata& r_metadata)
     r_metadata = m_metadata;
     
     return true;
+}
+
+void MCMutableImageRep::Lock()
+{
+    MCAssert(!m_is_locked);
+    m_is_locked = true;
+}
+
+void MCMutableImageRep::Unlock()
+{
+    MCAssert(m_is_locked);
+    m_is_locked = false;
+}
+
+bool MCMutableImageRep::IsLocked() const
+{
+    return m_is_locked;
 }

@@ -6,13 +6,15 @@ Syntax: the dragDestination
 
 Syntax: dragDestination()
 
-Summary: <return|Returns> the long ID of the <object> that dragged data was dropped on.
+Summary:
+<return|Returns> the long ID of the <object(glossary)> that dragged data
+was dropped on.
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server
+Platforms: desktop, server
 
 Example:
 the dragDestination
@@ -20,13 +22,24 @@ the dragDestination
 Example:
 put the rect of the dragDestination into whereWeDragged
 
-Returns: The <dragDestination> <function> <return|returns> the long <ID> <property> of the <object>.
+Returns:
+The <dragDestination> <function> <return|returns> the long <ID>
+<property> of the <object(glossary)>.
 
 Description:
-Use the <dragDestination> <function> to determine which <object> received a <drag and drop>.
+Use the <dragDestination> <function> to determine which
+<object(glossary)> received a <drag and drop>.
 
-The <dragDestination> function only <return|returns> a value while a <dragDrop> <handler> is being <execute|executed>: that is, you can use it in a <dragDrop> <handler>, or in a <handler> that's called by a <dragDrop> <handler>. If called from another <handler>, the <dragDestination> <function> <return|returns> empty.
+The <dragDestination> function only <return|returns> a value while a
+<dragDrop> <handler> is being <execute|executed>: that is, you can use
+it in a <dragDrop> <handler>, or in a <handler> that's called by a
+<dragDrop> <handler>. If called from another <handler>, the
+<dragDestination> <function> <return|returns> empty.
 
-References: function (control_st), ID (property), dragEnd (message), dragDrop (message), dropChunk (function), target (function), handler (glossary), property (glossary), return (glossary), execute (glossary), drag and drop (glossary), object (object)
+References: function (control structure), dropChunk (function),
+target (function), handler (glossary), property (glossary),
+return (glossary), execute (glossary), drag and drop (glossary),
+object (glossary), dragEnd (message), dragDrop (message), ID (property)
 
 Tags: ui
+

@@ -4,15 +4,17 @@ Type: message
 
 Syntax: shutdown
 
-Summary: Sent to the <current card of the defaultStack> when the <application> is quitting.
+Summary:
+Sent to the <current card> of the <defaultStack> when the
+<application> is quitting.
 
-Associations: stack
+Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on shutdown
@@ -21,14 +23,26 @@ on shutdown
 end shutdown
 
 Description:
-Handle the <shutdown> <message> if you want to perform cleanup tasks before the <application> quits. 
+Handle the <shutdown> <message> if you want to perform cleanup tasks
+before the <application> quits.
 
-The actual quit process is not triggered by the <shutdown> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <application> from quitting. 
+The actual quit process is not triggered by the <shutdown> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <application> from quitting.
 
-In standalones, some care is needed to ensure you receive the <shutdown> message if your application uses multiple stacks. The most reliable approach is to install a library stack or backscript to handle the message when your application starts up.
+In standalones, some care is needed to ensure you receive the <shutdown>
+message if your application uses multiple stacks. The most reliable
+approach is to install a library stack or backscript to handle the
+message when your application starts up.
 
->*Note:* Applications will not receive this message when running in the IDE.
+>*Note:* Applications will not receive this message when running in the
+> IDE. 
 
-References: defaultStack (property), closeStack (message), closeCard (message), closeBackground (message), suspend (message), quit (command), pass (control_st), application (glossary), trap (glossary), message (glossary), current card of the defaultStack (glossary)
+References: quit (command), pass (control structure),
+application (glossary), trap (glossary), message (glossary),
+current card (glossary), closeStack (message), closeCard (message),
+closeBackground (message), suspend (message), defaultStack (property),
+defaultStack (property)
 
 Tags: windowing
+

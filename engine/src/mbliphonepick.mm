@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "uidc.h"
-//#include "execpt.h"
+
 #include "globals.h"
 #include "mblsyntax.h"
 
@@ -476,6 +476,7 @@ return 1;
         t_toolbar_landscape_height = 32;
 		
 		// create the pick wheel
+        // If you create an instance with a width and height of 0, they will be overridden with the appropriate default width and height, which you can get by frame.size.width/height.
 		pickerView = [[UIPickerView alloc] initWithFrame: CGRectMake(0, (t_is_landscape ? t_toolbar_landscape_height : t_toolbar_portrait_height), 0, 0)];
 
 		pickerView.delegate = self;
@@ -555,9 +556,15 @@ return 1;
             
             // PM-2015-03-25: [[ Bug 15070 ]] Make the rect of the m_action_sheet_view to be of fixed height
             if (!t_is_landscape)
+            {
+                [pickerView setFrame:CGRectMake(0, t_toolbar_portrait_height, [[UIScreen mainScreen] bounds] . size . width, t_pick_wheel_height)];
                 t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_portrait_height - t_pick_wheel_height, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_portrait_height + t_pick_wheel_height);
+            }
             else
+            {
+                [pickerView setFrame:CGRectMake(0, t_toolbar_landscape_height, [[UIScreen mainScreen] bounds] . size . height, t_pick_wheel_height)];
                 t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_landscape_height - t_pick_wheel_height, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_landscape_height + t_pick_wheel_height);
+            }
             
             m_action_sheet_view = [[UIView alloc] initWithFrame:t_rect];
 
@@ -904,7 +911,7 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 		t_success = MCSystemPickN(t_option_list_array, p_use_checkmark, false, false, false, t_initial_index_array, t_return_index, p_button_rect);
 	
 	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_return_index, &t_result);
+	/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_return_index, &t_result);
 	if (t_success)
 		MCresult -> setvalueref (*t_result);
 	r_chosen_index = atoi ([t_return_index cStringUsingEncoding:NSMacOSRomanStringEncoding]);
@@ -968,7 +975,7 @@ bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, ui
         [t_temp_picker_array retain];
         for (int j = 0; j < p_pick_lists[i] . option_count; j++)
         {
-            t_options = [NSString stringWithMCStringRef: p_pick_lists[i] . options[j]];
+            t_options = MCStringConvertToAutoreleasedNSString(p_pick_lists[i] . options[j]);
             t_temp_picker_array = [t_temp_picker_array arrayByAddingObject: t_options];
         }
         t_option_list_array = [t_option_list_array arrayByAddingObject: t_temp_picker_array];

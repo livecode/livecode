@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "globals.h"
 #include "dispatch.h"
 #include "stack.h"
@@ -210,7 +210,7 @@ void MCAndroidCustomFontsLoad()
         if (!MCStringFirstIndexOfChar(*t_file_list, '\n', t_old_offset, kMCCompareExact, t_offset))
             break;
             
-        t_success = MCStringCopySubstring(*t_file_list, MCRangeMake(t_old_offset, t_offset - t_old_offset), &t_file);
+        t_success = MCStringCopySubstring(*t_file_list, MCRangeMakeMinMax(t_old_offset, t_offset), &t_file);
         
         if (t_success)
         {
@@ -222,7 +222,7 @@ void MCAndroidCustomFontsLoad()
             if (!MCStringFirstIndexOfChar(*t_file_list, '\n', ++t_old_offset, kMCCompareExact, t_offset))
                 t_offset = t_length;
             
-           t_success = MCStringCopySubstring(*t_file_list, MCRangeMake(t_old_offset, t_offset - t_old_offset), &t_is_folder_string);
+           t_success = MCStringCopySubstring(*t_file_list, MCRangeMakeMinMax(t_old_offset, t_offset), &t_is_folder_string);
         }
     
         if (t_success)
@@ -516,6 +516,23 @@ static bool create_font_face_from_custom_font_name_and_style(MCStringRef p_name,
     return t_success;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void* MCAndroidCustomFontCreateTypeface(MCStringRef p_name, bool p_bold, bool p_italic)
+{
+    jobject t_typeface = nil;
+    
+    MCAndroidCustomFont *t_font = look_up_custom_font(p_name, p_bold, p_italic);
+    if (t_font != nil)
+    {
+        MCAutoStringRef t_font_path;
+        if (!MCStringFormat(&t_font_path, "%@%@", s_font_folder, t_font->path))
+            return nullptr;
+        MCAndroidEngineCall("createTypefaceFromAsset", "ox", &t_typeface, *t_font_path);
+    }
+
+    return t_typeface;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 void *android_font_create(MCStringRef name, uint32_t size, bool bold, bool italic)

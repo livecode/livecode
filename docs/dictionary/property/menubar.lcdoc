@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the menubar of <stack> to {<groupname> | empty}
 
-Summary: Specifies the name of a <menu bar> to use when a <stack> is frontmost.
+Summary:
+Specifies the name of a <menu bar> to use when a <stack> is frontmost.
 
 Associations: stack
 
@@ -12,7 +13,7 @@ Introduced: 1.0
 
 OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the menubar of this stack to "Menus"
@@ -22,14 +23,37 @@ The <menubar> of a <stack> is the name of a <group>.
 By default, the <menubar> of newly created <stacks> is set to empty.
 
 Description:
-Use the <menubar> <property> to specify which <menus> appear in the <menu bar> on <Mac OS|Mac OS systems> when a <stack> is the <active window>.
+Use the <menubar> <property> to specify which <menus> appear in the
+<menu bar> on <Mac OS|Mac OS systems> when a <stack> is the 
+<active window>. 
 
-On Mac OS systems, the menu bar appears at the top of the screen. On Unix and Windows systems, the menu bar appears at the top of the stack window. (LiveCode menus are created with buttons. Each menu is a button whose menuMode <property> is set to "pulldown"; these <button|buttons> are then grouped to form a <menu bar>.)
+On Mac OS systems, the menu bar appears at the top of the screen. On
+Unix and Windows systems, the menu bar appears at the top of the stack
+window. (LiveCode menus are created with buttons. Each menu is a button
+whose menuMode <property> is set to "pulldown" ; these <button|buttons>
+are then grouped to form a <menu bar>.)
 
-The <menubar> is the <group(command)> that contains the <button|buttons> used to build the <menu bar>. This <menu bar> is used when the <stack window> is active, replacing the <defaultMenubar>. If the <menubar> of a <stack> is empty, the <stack> does not have its own custom <menu bar>, and the <defaultMenubar> is used when the <stack> is active.
+The <menubar> is the <group(command)> that contains the <button|buttons>
+used to build the <menu bar>. This <menu bar> is used when the 
+<stack window> is active, replacing the <defaultMenubar>. If the 
+<menubar> of a <stack> is empty, the <stack> does not have its own 
+custom <menu bar>, and the <defaultMenubar> is used when the <stack> is 
+active.
 
-On Mac OS systems, when a stack's <menubar> <property> is set, the <stack> is scrolled and resized on <Mac OS|Mac OS systems> so that the <group(command)> is not visible in the <stack window>. (On <Unix> and <Windows|Windows systems>, this is not necessary, since the <menu bar> is normally displayed in the window.) To scroll the <stack window> back down so you can see and select the <group(glossary)|group's> <object|objects>, set the <editMenus> <property> to true.
+On Mac OS systems, when a stack's <menubar> <property> is set, the
+<stack> is scrolled and resized on <Mac OS|Mac OS systems> so that the
+<group(command)> is not visible in the <stack window>. (On <Unix> and
+<Windows|Windows systems>, this is not necessary, since the <menu bar>
+is normally displayed in the window.) To scroll the <stack window> back
+down so you can see and select the <group(glossary)|group's>
+<object|objects>, set the <editMenus> <property> to true.
 
-References: raiseMenus (property), editMenus (property), defaultMenubar (property), menuName (property), group (command), stacks (function), menus (function), property (glossary), stack window (glossary), active window (glossary), Windows (glossary), menu bar (glossary), group (glossary), Mac OS (glossary), Unix (glossary), stack (object), object (object), button (object)
+References: group (command), stacks (function), menus (function),
+property (glossary), stack window (glossary), active window (glossary),
+Windows (glossary), menu bar (glossary), group (glossary),
+Mac OS (glossary), Unix (glossary), object (glossary), stack (object),
+button (object), raiseMenus (property), editMenus (property),
+defaultMenubar (property), menuName (property)
 
 Tags: menus
+

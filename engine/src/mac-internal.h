@@ -86,25 +86,22 @@ class MCMacPlatformSurface;
 // MW-2014-04-22: [[ Bug 12259 ]] Override sendEvent so that we always get a chance
 //   at the MouseSync event.
 @interface com_runrev_livecode_MCApplication: NSApplication
-{
-    NSWindow* m_pseudo_modal_for;
-}
-
--(id)init;
 
 - (void)sendEvent:(NSEvent *)event;
 
-// FG-2014-11-07: [[ Bugfix 13628 ]] Fake being modal for a non-modal window
-- (void)becomePseudoModalFor: (NSWindow*)window;
-- (NSWindow*)pseudoModalFor;
+@end
 
-- (OSErr)preDispatchAppleEvent: (const AppleEvent *)p_event withReply: (AppleEvent *)p_reply;
+@protocol com_runrev_livecode_MCMovingFrame <NSObject>
+
+- (NSRect)movingFrame;
+- (void)setMovingFrame:(NSRect)p_moving_frame;
 
 @end
 
-@interface com_runrev_livecode_MCWindow: NSWindow
+@interface com_runrev_livecode_MCWindow: NSWindow <com_runrev_livecode_MCMovingFrame>
 {
 	bool m_can_become_key : 1;
+    NSRect m_moving_frame;
 }
 
 - (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)windowStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
@@ -117,14 +114,16 @@ class MCMacPlatformSurface;
 // MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
 - (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
 
-
 @end
 
-@interface com_runrev_livecode_MCPanel: NSPanel
+void MCMacPlatformWindowWindowMoved(NSWindow *p_self, MCPlatformWindowRef p_window);
+
+@interface com_runrev_livecode_MCPanel: NSPanel  <com_runrev_livecode_MCMovingFrame>
 {
 	bool m_can_become_key : 1;
     bool m_is_popup : 1;
     id m_monitor;
+    NSRect m_moving_frame;
 }
 
 - (void)setCanBecomeKeyWindow: (BOOL)value;
@@ -138,6 +137,13 @@ class MCMacPlatformSurface;
 - (void)popupAndMonitor;
 
 @end
+
+bool MCMacPlatformApplicationSendEvent(NSEvent *p_event);
+bool MCMacPlatformApplicationWindowIsMoving(MCPlatformWindowRef p_window);
+void MCMacPlatformApplicationWindowStartedMoving(MCPlatformWindowRef p_window);
+void MCMacPlatformApplicationWindowStoppedMoving(MCPlatformWindowRef p_window);
+void MCMacPlatformApplicationBecomePseudoModalFor(NSWindow *p_window);
+NSWindow *MCMacPlatformApplicationPseudoModalFor(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -195,11 +201,15 @@ class MCMacPlatformSurface;
 // MW-2014-04-23: [[ Bug 12270 ]] Returns the value of 'm_user_reshape'
 - (bool)inUserReshape;
 
+- (void)windowMoveFinished;
+
 //////////
 
 - (BOOL)windowShouldClose:(id)sender;
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize;
+
+- (void)windowWillMove:(NSNotification *)notification;
 - (void)windowDidMove:(NSNotification *)notification;
 
 - (void)windowWillStartLiveResize:(NSNotification *)notification;
@@ -664,22 +674,6 @@ struct MCMacPlatformWindowMask
 void MCMacPlatformEnableEventChecking(void);
 void MCMacPlatformDisableEventChecking(void);
 bool MCMacPlatformIsEventCheckingEnabled(void);
-
-////////////////////////////////////////////////////////////////////////////////
-
-// The function pointer for objc_msgSend_fpret needs to be cast in order
-// to get the correct return type, otherwise we can get strange results
-// on x86_64 because "long double" return values are returned in
-// different registers to "float" or "double".
-extern "C" void objc_msgSend_fpret(void);
-template <class R, class... Types> R objc_msgSend_fpret_type(id p_id, SEL p_sel, Types... p_params)
-{
-    // Cast the obj_msgSend_fpret function to the correct type
-    R (*t_send)(id, SEL, ...) = reinterpret_cast<R (*)(id, SEL, ...)> (&objc_msgSend_fpret);
-    
-    // Perform the call
-    return t_send(p_id, p_sel, p_params...);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

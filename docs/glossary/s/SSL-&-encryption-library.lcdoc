@@ -1,0 +1,11 @@
+Name: SSL & Encryption library
+
+Type: library
+
+Description:
+The <LiveCode custom library|LiveCode custom library> that supports the 
+commands and functions associated with encryption and secure sockets.
+
+References: encrypt (command), decrypt (command), command (glossary),
+LiveCode custom library (glossary)
+

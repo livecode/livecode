@@ -2,15 +2,18 @@ Name: &lt;=
 
 Type: operator
 
-Syntax: <value1> &lt;= <value2> 
+Syntax: <value1> &lt;= <value2>
 
-Summary: Compares two <value(glossary)|values> and <return|returns> true if the first <value(function)> is less than or equal to the second <value(function)>, false otherwise.
+Summary:
+Compares two <value(glossary)|values> and <return|returns> true if the
+first <value(function)> is less than or equal to the second
+<value(function)>, false otherwise.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 22 &lt;= 21
@@ -22,22 +25,47 @@ Example:
 "a" &lt;= "a"
 
 Parameters:
-value1: The operands value1 and value2 can be numbers, literal strings of characters (delimited with double quotes), or any sources of value.
-value2: 
+value1:
+The operands value1 and value2 can be numbers, literal strings of
+characters (delimited with double quotes), or any sources of value.
+
+value2:
+
 
 Description:
-Use the <&lt;=> (less than or equal to) <operator> to compare two numbers or to compare the alphabetical order of two <string|strings>.
+Use the <&lt;=> (less than or equal to) <operator> to compare two
+numbers or to compare the alphabetical order of two <string|strings>.
 
-When comparing strings, the <&lt;=> <operator> compares the two <value|values> <character> by <character>, using the <ASCII|ASCII value> of each <character>. For example, "a" comes before "b" in the <ASCII> <character set>, so the following are all true:
+When comparing strings, the <&lt;=> <operator> compares the two
+<value|values> <character> by <character>, using the <ASCII|ASCII value>
+of each <character>. For example, "a" comes before "b" in the <ASCII>
+<character set>, so the following are all true:
 
-  "a" &lt;= "a"
-  "a" &lt;= "b"
-  "ab" &lt;= "bb"
+    "a" &lt;= "a"
+    "a" &lt;= "b"
+    "ab" &lt;= "bb"
 
-If the strings are of different lengths, so that the trailing characters in one string are compared to missing characters in the other, the missing characters are considered to have lower value than any character. For example, "abc" &lt;= "ab" is false.
 
-If the <caseSensitive> <property> is true, the comparison between two <string|strings> treats uppercase letters as coming before lowercase letters. If the <caseSensitive> <property> is false, the comparison is not <case-sensitive>, so "a" is considered equivalent to "A".
+If the strings are of different lengths, so that the trailing characters
+in one string are compared to missing characters in the other, the
+missing characters are considered to have lower value than any
+character. For example, "abc" &lt;= "ab" is false.
 
-<img src="202654"/> Cross-platform caution! The synonym  can be used only on <Mac OS> and <OS X|OS X systems>. If you use a <script> containing the  character on a <Windows> or <Unix|Unix system>, a <error|script error> may result. To ensure cross-platform compatibility, use the synonym <&lt;=> instead.
+If the <caseSensitive> <property> is true, the comparison between two
+<string|strings> treats uppercase letters as coming before lowercase
+letters. If the <caseSensitive> <property> is false, the comparison is
+not <case-sensitive>, so "a" is considered equivalent to "A".
 
-References: caseSensitive (property), script (property), &gt;= (operator), &lt; (operator), character (keyword), min (function), max (function), value (function), return (glossary), string (glossary), property (glossary), operator (glossary), character set (glossary), Windows (glossary), error (glossary), OS X (glossary), case-sensitive (glossary), ASCII (glossary), value (glossary), Unix (glossary), Mac OS (glossary)
+>*Cross-platform note:* The synonym ≤ can be used only on <OS X|OS X
+> systems>. If you use a <script> containing the ≤ character on a
+> <Windows> or <Unix|Unix system>, a <error|script error> may result. To
+> ensure cross-platform compatibility, use the synonym <&lt;=> instead.
+
+References: min (function), max (function), value (function),
+return (glossary), string (glossary), property (glossary),
+operator (glossary), character set (glossary), Windows (glossary),
+error (glossary), OS X (glossary), case-sensitive (glossary),
+ASCII (glossary), value (glossary), Unix (glossary), character (keyword),
+&gt;= (operator), &lt; (operator), caseSensitive (property),
+script (property)
+

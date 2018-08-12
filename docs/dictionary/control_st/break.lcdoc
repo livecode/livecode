@@ -1,18 +1,20 @@
 Name: break
 
+Synonyms: exit switch
+
 Type: control structure
 
 Syntax: break
 
-Summary: Skips the rest of the current <switch> <control structure|structure> and goes to the <statement> following the <end switch>.
-
-Synonyms: exit switch
+Summary:
+Skips the rest of the current <switch> <control structure|structure> and
+goes to the <statement> following the <end switch>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 switch thisVariable
@@ -25,17 +27,37 @@ case false
 end switch
 
 Description:
-Use the <break> <control structure> to end each case section in a <switch> <control structure|structure>.
+Use the <break> <control structure> to end each case section in a
+<switch> <control structure|structure>. 
 
-Form:
-The word break appears on a line by itself, within a <case> section of a <switch> <control structure>.
+**Form:** The word break appears on a line by itself, within a <case> section of 
+a <switch> <control structure>. 
 
-A <switch> <control structure> consists of one or more conditions. For each condition, a set of <statement|statements> is executed. The <break> <control structure> ends this set of <statement|statements> and breaks out of the <switch> <control structure|structure>.
+A <switch> <control structure> consists of one or more conditions. For
+each condition, a set of <statement|statements> is executed. The <break>
+<control structure> ends this set of <statement|statements> and breaks
+out of the <switch> <control structure|structure>.
 
-If no <break> appears, LiveCode <execute|executes> each set of <statement|statements> in the following case sections, whether or not the condition in the case is true. This means that if you leave out the <break> <control structure>, more than one case in the <switch> <statement> may be executed. Occasionally, this is desirable, but usually you should include the <break> <control structure> at the end of each case, to ensure that only one set of <statement|statements> is executed.
+If no <break> appears, LiveCode <execute|executes> each set of
+<statement|statements> in the following case sections, whether or not
+the condition in the case is true. This means that if you leave out the
+<break> <control structure>, more than one case in the <switch>
+<statement> may be executed. Occasionally, this is desirable, but
+usually you should include the <break> <control structure> at the end of
+each case, to ensure that only one set of <statement|statements> is
+executed. 
 
->*Note:* The <break> <control structure> is implemented internally as a <command> and appears in the <commandNames>.
+>*Note:* The <break> <control structure> is implemented internally as a
+> <command> and appears in the <commandNames>.
 
-The <break> <command> should not be used outside a <switch> structure: such use is nonstandard, so it may not be apparent to whoever reads the code that the use is intentional. If it appears outside a <switch> <control structure|structure>, it has the same effect as the <exit> <control structure>.
+The <break> <command> should not be used outside a <switch> structure:
+such use is nonstandard, so it may not be apparent to whoever reads the
+code that the use is intentional. If it appears outside a <switch>
+<control structure|structure>, it has the same effect as the <exit>
+<control structure>.
 
-References: case (keyword), end if (keyword), end switch (keyword), exit (control_st), switch (control_st), statement (glossary), command (glossary), control structure (glossary), execute (glossary), commandNames (function)
+References: exit (control structure), switch (control structure),
+commandNames (function), statement (glossary), command (glossary),
+control structure (glossary), execute (glossary), case (keyword),
+end if (keyword), end switch (keyword)
+

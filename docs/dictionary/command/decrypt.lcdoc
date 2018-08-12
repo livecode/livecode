@@ -2,38 +2,110 @@ Name: decrypt
 
 Type: command
 
-Syntax: decrypt <source> using <cipher> with [password|key] <passorkey> [and salt saltvalue] [and IV <IVvalue>] [at <bitvalue> bit]
+Syntax: decrypt <source> using <cipher> with {password|key} <passorkey> [and salt <saltvalue>] [and IV <IVvalue>] [at <bitvalue> bit]
 
-Summary: 
+Summary:
+Decrypt data using a cipher
+
+Associations: ssl & encryption
 
 Introduced: 2.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: network
 
+Example:
+-- the following copies a file from disk, stores it in a variable (myData), decrypts the result, then copies the file back to disk.
+
+local path2input, myData, path2ouput
+-- put the file path to your input and output files into path2input and path2output
+put URL ("binfile:" & path2input) into myData
+decrypt myData using "aes-256-cbc" with password "@&^2fy"
+put it into URL("binfile:" & path2output)
+
 Parameters:
-source: 
-cipher: 
-passorkey: 
-IVvalue: 
-bitvalue: 
+source:
+the source input data
 
-The result: On failure encrypt/decrypt set the result to the appropriate  ssl error message. To use OpenSSL functionality with LiveCode, make sure that the openssl shared library is installed, and in a place where LiveCode can find it. It is pre-installed with OSX. You can download and build OpenSSL at www.openssl.org and sitribute with your apps. LiveCode includes a prebuilt openssl dll which is required to use OpenSSL for windows (libeay32.dll) which needs to be in the application, current, or system directory. If LiveCode cannot load SSL, it will return the error in the result "ssl library not found".
+cipher:
+the format used to decrypt the data
 
-It: On success the variable it will contain the  encrypted or decrypted data.
+passorkey:
+a password or key provided to the decryption routine, as necessary
+
+saltvalue:
+the password may also be accompanied by a salt value
+
+IVvalue:
+an IV (initialization vector) value may be specified for some cipher
+methods 
+
+bitvalue:
+the bit value specifies the key length in bits (ie. 64, 128, 192, 256,
+etc) 
+
+It:
+On success the variable it will contain the  encrypted or decrypted
+data. 
+
+The result:
+On failure encrypt/decrypt set the result to the appropriate
+ssl error message. To use OpenSSL functionality with LiveCode, make sure
+that the openssl shared library is installed, and in a place where
+LiveCode can find it. It is pre-installed with OSX. You can download and
+build OpenSSL at www.openssl.org and distribute with your apps. LiveCode
+includes a prebuilt openssl dll which is required to use OpenSSL for
+windows (libeay32.dll) which needs to be in the application, current, or
+system directory. If LiveCode cannot load SSL, it will return the error
+in the result "ssl library not found".
 
 Description:
-The encrypt and decrypt commands accept the source data that will be encrypted or decrypted. The cipher is the name of the cipher obtained using the ciphernames function. The passorkey specifies the password or key that will be use for encryption or decryption as determined by the keyword before it. If you specify key then the key needs to be the same size (in bits, eight per byte) as the specified cipher key length. The key may optionally be accompanied by the IVvalue used by some ciphers. If you specify password or don't specify a key mode, then a password, tyically text, will be used. The password may optionally be accompanied by a saltvalue. The bits specifies the key length in bits (for example, 64, 128, 192 or 256) and may be zero or empty for the default length (that listed with the cipherNames function). Some ciphers have fixed key lengths and using an unsupported value will result in an error.
+The <encrypt> and <decrypt> commands accept the source data that will
+be encrypted or decrypted. The <cipher> is the name of the cipher
+obtained using the <ciphernames> function. The <passorkey> specifies the
+password or key that will be use for encryption or decryption as
+determined by the keyword before it. If you specify key then the key
+needs to be the same size (in bits, eight per byte) as the specified
+<cipher> key length. The key may optionally be accompanied by the
+<IVvalue> used by some ciphers. If you specify password or don't specify
+a key mode, then a password, tyically text, will be used. The password
+may optionally be accompanied by a <saltvalue>. The bits specifies the
+key length in bits (for example, 64, 128, 192 or 256) and may be zero or
+empty for the default length (that is listed with the cipherNames
+function). Some ciphers have fixed key lengths and using an unsupported
+value will result in an error.
 
-The key and IV value are the fundamental determiner in block ciphers. The IV value is typically the width (in bits) of the block associated with the cipher. The default value is zero. Its use is beyond the scope of this documentation.
+The key and IV value are the fundamental determiner in block ciphers.
+The IV value is typically the width (in bits) of the block associated
+with the cipher. The default value is zero. Its use is beyond the scope
+of this documentation.
 
-The password and salt value are combined and scrambled to form the key and IV which are used as described above. The key derivation process is the same as that used in the openSSL utility. A 16-byte salt prefix is prepended to the encrypted data, based on the salt value. This is used in decryption. If no salt value is specified for a password, one is randomly generated. The use of a randomized salt value is a protection against dictionary attacks.
+The password and salt value are combined and scrambled to form the key
+and IV which are used as described above. The key derivation process is
+the same as that used in the openSSL utility. A 16-byte salt prefix is
+prepended to the encrypted data, based on the salt value. This is used
+in decryption. If no salt value is specified for a password, one is
+randomly generated. The use of a randomized salt value is a protection
+against dictionary attacks.
 
-Some modes of block ciphers will pad data to be a multiple of block size. The padding method is that used by the openSSL utility and is a minimum of one byte.
+Some modes of block ciphers will pad data to be a multiple of block
+size. The padding method is that used by the openSSL utility and is a
+minimum of one byte.
 
->*Important:*  The decryptcommand is part of the SSL & Encryption library. To ensure that the command works in a standalone application, you must include this custom library when you create your standalone. In the Inclusions section on the General screen of the Standalone Application Settings window, make sure "SSL & Encryption" is selected in the list of script libraries.
+>*Important:*  The <decrypt> <command> is part of the 
+> <SSL & Encryption library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the
+> "SSL & Encryption" 
+> library checkbox is checked.
 
-References: encrypt (command)
+References: encrypt (command), cipherNames (function),
+Standalone Application Settings (glossary), command (glossary),
+LiveCode custom library (glossary), SSL & Encryption library (library),
+sslcertificates (property)
+

@@ -2,17 +2,18 @@ Name: isNumber
 
 Type: function
 
-Syntax: the isNumber of <value> 
+Syntax: the isNumber of <value>
 
 Syntax: isNumber(<value>)
 
-Summary: <return|Returns> true if a <value> is a number, false if it is not.
+Summary:
+<return|Returns> true if a <value> is a number, false if it is not.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 isNumber(8) -- returns true
@@ -24,15 +25,25 @@ Example:
 isNumber(foo) -- returns false
 
 Parameters:
-value: Any source of value.
+value:
+Any source of value.
 
-Returns (bool): The <isNumber> <function> <return|returns> true or false.
+Returns (bool):
+The <isNumber> <function> <return|returns> true or false.
 
 Description:
-Use the <isNumber> <function> to determine whether a <value> is a number. For example, attempting to do an arithmetic <operation> on a <value> that's not a number causes an <error>. You can check the <value> beforehand to prevent this.
+Use the <isNumber> <function> to determine whether a <value> is a
+number. For example, attempting to do an arithmetic <operation> on a
+<value> that's not a number causes an <error>. You can check the <value>
+beforehand to prevent this.
 
-This function exists for compatibility with imported SuperCard projects. You can use the <is a> <operator> to <validate> numbers, as well as other data types.
+This function exists for compatibility with imported SuperCard projects.
+You can use the <is a> <operator> to <validate> numbers, as well as
+other data types.
 
-References: is a (operator), value (function), exists (function), operation (glossary), operator (glossary), validate (glossary), return (glossary), error (glossary), function (control_st)
+References: function (control structure), value (function),
+exists (function), operation (glossary), operator (glossary),
+validate (glossary), return (glossary), error (glossary), is a (operator)
 
 Tags: math
+

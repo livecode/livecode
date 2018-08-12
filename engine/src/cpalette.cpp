@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "util.h"
 #include "sellst.h"
 #include "stack.h"
@@ -54,6 +54,11 @@ Chunk_term MCColors::gettype() const
 const char *MCColors::gettypestring()
 {
 	return MCcolorstring;
+}
+
+bool MCColors::visit_self(MCObjectVisitor* p_visitor)
+{
+    return p_visitor -> OnControl(this);
 }
 
 static void getcells(uint2 &xcells, uint2 &ycells)
@@ -126,7 +131,7 @@ Boolean MCColors::mdown(uint2 which)
 			getcells(xcells, ycells);
 			MCscreen->getpaletteentry((my - rect.y) * ycells / rect.height * xcells
 			                          + (mx - rect.x) * xcells / rect.width, color);
-			selectedcolor = color.pixel;
+			selectedcolor = MCColorGetPixel(color);
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
 			message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
@@ -174,62 +179,6 @@ Boolean MCColors::mup(uint2 which, bool p_release)
 	return True;
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
-{
-	switch (which)
-	{
-#ifdef /* MCColors::getprop */ LEGACY_EXEC
-	case P_SELECTED_COLOR:
-		MCColor color;
-		color.pixel = selectedcolor;
-		MCscreen->querycolor(color);
-		ep.setcolor(color);
-		break;
-#endif /* MCColors::getprop */ 
-	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
-	}
-	return ES_NORMAL;
-}
-
-Exec_stat MCColors::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
-{
-	Boolean dirty = True;
-	MCString data = ep.getsvalue();
-
-	switch (p)
-	{
-#ifdef /* MCColors::setprop */ LEGACY_EXEC
-	case P_SELECTED_COLOR:
-	{
-		MCColor color;
-		char *colorname = NULL;
-		if (!MCscreen->parsecolor(data, &color, &colorname))
-		{
-			MCeerror->add
-			(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (colorname != NULL)
-			delete colorname;
-		MCscreen->alloccolor(color);
-		selectedcolor = color.pixel;
-	}
-        break;
-#endif /* MCColors::setprop */
-	default:
-		return MCControl::setprop_legacy(parid, p, ep, effective);
-	}
-	if (dirty && opened)
-	{
-		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-		layer_redrawall();
-	}
-	return ES_NORMAL;
-}
-#endif
-
 Boolean MCColors::count(Chunk_term type, MCObject *stop, uint2 &num)
 {
 	if (type == CT_COLOR_PALETTE || type == CT_LAYER)
@@ -241,7 +190,7 @@ Boolean MCColors::count(Chunk_term type, MCObject *stop, uint2 &num)
 
 MCControl *MCColors::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCColors *newcolors = new MCColors(*this);
+	MCColors *newcolors = new (nothrow) MCColors(*this);
 	if (attach)
 		newcolors->attach(p, invisible);
 	return newcolors;
@@ -274,7 +223,7 @@ void MCColors::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_
 			MCscreen->getpaletteentry(i * xcells + j, c);
 			dc->setforeground(c);
 			dc->fillrect(trect);
-			if (c.pixel == selectedcolor)
+			if (MCColorGetPixel(c) == selectedcolor)
 				draw3d(dc, trect, ETCH_SUNKEN, borderwidth);
 		}
 	if (flags & F_SHOW_BORDER)

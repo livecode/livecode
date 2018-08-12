@@ -2,17 +2,19 @@ Name: nodeChanged
 
 Type: message
 
-Syntax: nodeChanged <newNodeID> 
+Syntax: nodeChanged <pNewNodeID>
 
-Summary: Sent to a <player> containing a <QuickTime VR> movie when the current node is changed.
+Summary:
+Sent to a <player> containing a <QuickTime VR> movie when the current
+node is changed.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows
+OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop
 
 Example:
 on nodeChanged theNode -- show some text from a custom property
@@ -20,15 +22,32 @@ on nodeChanged theNode -- show some text from a custom property
 end nodeChanged
 
 Parameters:
-newNodeID: The ID of the QuickTime VR node being moved to.
+pNewNodeID:
+The ID of the QuickTime VR node being moved to.
 
 Description:
-Handle the <nodeChanged> <message> if you want to make updates when the user navigates to a new node in a <QuickTime VR> movie.
+Handle the <nodeChanged> <message> if you want to make updates when the
+user navigates to a new node in a <QuickTime VR> movie.
 
-If the user navigates to another node by clicking a hot spot in the QuickTime VR movie, the <hotspotClicked> <message> is sent before the <nodeChanged> <message>.
+If the user navigates to another node by clicking a hot spot in the
+QuickTime VR movie, the <hotspotClicked> <message> is sent before the
+<nodeChanged> <message>.
 
-A handler can change the node by setting the player's <currentNode> <property>.
+A handler can change the node by setting the player's <currentNode>
+<property>. 
 
-References: currentNode (property), player (keyword), hotspotClicked (message), QuickTime VR (glossary), message (glossary), property (glossary)
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: QuickTime VR (glossary), message (glossary),
+property (glossary), player (keyword), hotspotClicked (message),
+currentNode (property)
 
 Tags: multimedia
+

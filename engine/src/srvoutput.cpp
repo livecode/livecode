@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "util.h"
 
 #include "srvmain.h"
@@ -304,7 +304,7 @@ static void MCServerOutputUnicodeChars(const unichar_t *p_chars, uint32_t p_char
 	while(t_index < p_char_count)
 	{
 		if (p_chars[t_index] == 10 ||
-			p_chars[t_index] < 128 && (t_index == p_char_count - 1 || p_chars[t_index + 1] < 128))
+			(p_chars[t_index] < 128 && (t_index == p_char_count - 1 || p_chars[t_index + 1] < 128)))
 		{
 			if (p_chars[t_index] != 10)
 				t_output[t_output_count++] = (char)p_chars[t_index];
@@ -358,7 +358,7 @@ static void MCServerOutputUnicodeMarkup(const unichar_t *p_chars, uint32_t p_cha
 	{
 		if (p_chars[t_index] == 10 ||
 			(p_is_content && (p_chars[t_index] == '&' || p_chars[t_index] == '<' || p_chars[t_index] == '>' || p_chars[t_index] == '"')) ||
-			p_chars[t_index] < 128 && (t_index == p_char_count - 1 || p_chars[t_index + 1] < 128))
+			(p_chars[t_index] < 128 && (t_index == p_char_count - 1 || p_chars[t_index + 1] < 128)))
 		{
 			MCServerOutputMarkupChar((char)p_chars[t_index], p_is_content, t_output, t_output_count);
 			t_index += 1;
@@ -510,8 +510,8 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	if (t_success)
 	{
         MCservercgicookies[t_index].name = MCStringIsEmpty(p_name) ? strdup("") : strdup(MCStringGetCString(p_name));
-		MCservercgicookies[t_index].value = strdup(MCStringGetCString(*t_encoded));
-        MCservercgicookies[t_index].path = MCStringIsEmpty(p_domain) ? strdup("") : strdup(MCStringGetCString(p_path));
+		MCservercgicookies[t_index].value = MCStringIsEmpty(p_value) ? strdup("") :strdup(MCStringGetCString(*t_encoded));
+        MCservercgicookies[t_index].path = MCStringIsEmpty(p_path) ? strdup("") : strdup(MCStringGetCString(p_path));
         MCservercgicookies[t_index].domain = MCStringIsEmpty(p_domain) ? strdup("") : strdup(MCStringGetCString(p_domain));
 
 		MCservercgicookies[t_index].expires = p_expires;

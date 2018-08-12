@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-//#include "execpt.h"
+
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
@@ -186,8 +186,6 @@ bool MCDeployCapsuleDefine(MCDeployCapsuleRef self, MCCapsuleSectionType p_type,
 bool MCDeployCapsuleDefineString(MCDeployCapsuleRef self, MCCapsuleSectionType p_type, MCStringRef p_string)
 {
     MCAutoStringRefAsCString t_auto_cstring;
-    uindex_t t_length;
-    char_t* t_native;
     /* UNCHECKED */ t_auto_cstring . Lock(p_string);
     return MCDeployCapsuleDefine(self, p_type, *t_auto_cstring, strlen(*t_auto_cstring) + 1);
 }
@@ -391,7 +389,7 @@ static bool MCDeployCapsuleFilterFlush(MCDeployCapsuleFilterState& self)
 		self . stream . next_in = self . input;
 	}
 
-	// If a buf error occured, we either need more space, or more input
+	// If a buf error occurred, we either need more space, or more input
 	if (t_result == Z_BUF_ERROR)
 	{
 		// If the input buffer is not maxed out, return as we need more input

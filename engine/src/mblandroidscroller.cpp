@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -60,11 +60,6 @@ public:
     MCAndroidScrollerControl(void);
     
 	virtual MCNativeControlType GetType(void);
-#ifdef LEGACY_EXEC    
-    virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
-    virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
-    virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
-#endif
     
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
@@ -445,218 +440,6 @@ bool MCScrollViewIsDragging(jobject p_view, bool &r_dragging)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef LEGACY_EXEC
-Exec_stat scroller_set_property(jobject p_view, MCRectangle32 &x_content_rect, MCNativeControlProperty p_property, MCExecPoint&ep)
-{
-	Boolean t_bool;
-	real8 t_double;
-	
-	switch (p_property)
-	{
-		case kMCNativeControlPropertyContentRectangle:
-			if (!MCNativeControl::ParseRectangle32(ep, x_content_rect))
-				return ES_ERROR;
-            
-            // MM-2013-11-26: [[ Bug 11485 ]] COnvert the content rect from user to device space before setting.
-            MCGRectangle t_rect;
-            t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(x_content_rect . x, x_content_rect . y, x_content_rect . width, x_content_rect . height));
-            
-			if (p_view != nil)
-                MCAndroidObjectRemoteCall(p_view, "setContentSize", "vii", nil, (int32_t) t_rect . size . width, (int32_t) t_rect . size . height);
-			return ES_NORMAL;
-            
-        case kMCNativeControlPropertyHScroll:
-            int32_t t_hscroll;
-            if (!MCNativeControl::ParseInteger(ep, t_hscroll))
-                return ES_ERROR;
-            
-            MCScrollViewSetHScroll(p_view, t_hscroll - x_content_rect.x);
-            return ES_NORMAL;
-            
-        case kMCNativeControlPropertyVScroll:
-            int32_t t_vscroll;
-            if (!MCNativeControl::ParseInteger(ep, t_vscroll))
-                return ES_ERROR;
-            
-            MCScrollViewSetVScroll(p_view, t_vscroll - x_content_rect.y);
-            return ES_NORMAL;
-            
-        case kMCNativeControlPropertyShowHorizontalIndicator:
-            if (MCU_stob(ep.getsvalue(), t_bool))
-                MCScrollViewSetHorizontalIndicator(p_view, t_bool);
-            else
-            {
-                MCeerror->add(EE_OBJECT_NAB, 0, 0, ep.getsvalue());
-                return ES_ERROR;
-            }
-            return ES_NORMAL;
-            
-        case kMCNativeControlPropertyShowVerticalIndicator:
-            if (MCU_stob(ep.getsvalue(), t_bool))
-                MCScrollViewSetVerticalIndicator(p_view, t_bool);
-            else
-            {
-                MCeerror->add(EE_OBJECT_NAB, 0, 0, ep.getsvalue());
-                return ES_ERROR;
-            }
-            return ES_NORMAL;
-            
-        case kMCNativeControlPropertyScrollingEnabled:
-            if (MCU_stob(ep.getsvalue(), t_bool))
-                MCScrollViewSetScrollingEnabled(p_view, t_bool);
-            else
-            {
-                MCeerror->add(EE_OBJECT_NAB, 0, 0, ep.getsvalue());
-                return ES_ERROR;
-            }
-            return ES_NORMAL;
-            
-        default:
-            break;
-	}
-	return ES_NOT_HANDLED;
-}
-#endif
-
-#ifdef /* MCAndroidScrollerControl::Set */ LEGACY_EXEC
-Exec_stat MCAndroidScrollerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
-{
-    jobject t_view;
-    t_view = GetView();
-    
-	Exec_stat t_state;
-	t_state = scroller_set_property(t_view, m_content_rect, p_property, ep);
-    
-	if (t_state == ES_NOT_HANDLED)
-        return MCAndroidControl::Set(p_property, ep);
-	else
-		return t_state;
-
-}
-#endif /* MCAndroidScrollerControl::Set */
-
-#ifdef LEGACY_EXEC
-Exec_stat scroller_get_property(jobject p_view, const MCRectangle32 &p_content_rect, MCNativeControlProperty p_property, MCExecPoint &ep)
-{
-	switch (p_property)
-	{
-		case kMCNativeControlPropertyContentRectangle:
-			if (p_view != nil)
-				ep.setrectangle(p_content_rect);
-			else
-				ep.clear();
-			return ES_NORMAL;
-            
-        case kMCNativeControlPropertyHScroll:
-        {
-            int32_t t_hscroll = 0;
-            if (MCScrollViewGetHScroll(p_view, t_hscroll))
-                ep.setnvalue(p_content_rect.x + t_hscroll);
-            else
-                ep.setnvalue(0);
-            return ES_NORMAL;
-        }
-        case kMCNativeControlPropertyVScroll:
-        {
-            int32_t t_vscroll = 0;
-            if (MCScrollViewGetVScroll(p_view, t_vscroll))
-                ep.setnvalue(p_content_rect.y + t_vscroll);
-            else
-                ep.setnvalue(0);
-            return ES_NORMAL;
-        }
-        
-        case kMCNativeControlPropertyShowHorizontalIndicator:
-        {
-            bool t_show = false;
-            if (MCScrollViewGetHorizontalIndicator(p_view, t_show))
-                ep.setsvalue(MCU_btos(t_show));
-            else
-                ep.setempty();
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyShowVerticalIndicator:
-        {
-            bool t_show = false;
-            if (MCScrollViewGetVerticalIndicator(p_view, t_show))
-                ep.setsvalue(MCU_btos(t_show));
-            else
-                ep.setempty();
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyScrollingEnabled:
-        {
-            bool t_show = false;
-            if (MCScrollViewGetScrollingEnabled(p_view, t_show))
-                ep.setsvalue(MCU_btos(t_show));
-            else
-                ep.setempty();
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyTracking:
-        {
-            bool t_tracking = false;
-            if (MCScrollViewIsTracking(p_view, t_tracking))
-                ep.setsvalue(MCU_btos(t_tracking));
-            else
-                ep.setempty();
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyDragging:
-        {
-            bool t_dragging = false;
-            if (MCScrollViewIsDragging(p_view, t_dragging))
-                ep.setsvalue(MCU_btos(t_dragging));
-            else
-                ep.setempty();
-            return ES_NORMAL;
-        }
-            
-        default:
-            break;
-	}
-	return ES_NOT_HANDLED;
-}
-#endif
-
-#ifdef /* MCAndroidScrollerControl::Get */ LEGACY_EXEC
-Exec_stat MCAndroidScrollerControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
-{
-    jobject t_view;
-    t_view = GetView();
-    
-	Exec_stat t_state;
-	t_state = scroller_get_property(t_view, m_content_rect, p_property, ep);
-    
-	if (t_state == ES_NOT_HANDLED)
-        return MCAndroidControl::Get(p_property, ep);
-	else
-		return t_state;
-}
-#endif /* MCAndroidScrollerControl::Get */
-
-#ifdef /* MCAndroidScrollerControl::Do */ LEGACY_EXEC
-Exec_stat MCAndroidScrollerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-    jobject t_view;
-    t_view = GetView();
-    
-    switch (p_action)
-    {
-        default:
-            break;
-    }
-    
-    return MCAndroidControl::Do(p_action, p_parameters);
-}
-#endif /* MCAndroidScrollerControl::Do */
-
-////////////////////////////////////////////////////////////////////////////////
-
 class MCNativeScrollerScrollEvent : public MCCustomEvent
 {
 public:
@@ -715,7 +498,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doS
         {
             t_scroller->SetCanPostScrollEvent(false);
             MCCustomEvent *t_event;
-            t_event = new MCNativeScrollerScrollEvent(t_scroller);
+            t_event = new (nothrow) MCNativeScrollerScrollEvent(t_scroller);
             MCEventQueuePostCustom(t_event);
         }
     }
@@ -724,7 +507,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doS
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollBeginDrag(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollBeginDrag(JNIEnv *env, jobject object)
 {
-    MCLog("scrollViewBeginDrag", nil);
+    MCLog("scrollViewBeginDrag");
     MCAndroidControl *t_control = nil;
     char *t_url = nil;
     
@@ -735,7 +518,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doS
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollEndDrag(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollEndDrag(JNIEnv *env, jobject object)
 {
-    MCLog("scrollViewEndDrag", nil);
+    MCLog("scrollViewEndDrag");
     MCAndroidControl *t_control = nil;
     char *t_url = nil;
     
@@ -764,7 +547,7 @@ void MCAndroidScrollerControl::DeleteView(jobject p_view)
 
 bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 {
-    r_control = new MCAndroidScrollerControl();
+    r_control = new (nothrow) MCAndroidScrollerControl();
     return true;
 }
 

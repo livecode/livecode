@@ -63,7 +63,7 @@ static NSPoint cocoa_point_from_carbon(CGFloat x, CGFloat y)
 
 static NSRect cocoa_rect_from_carbon(CGRect p_rect)
 {
-	NSPoint t_top_left, t_bottom_right;
+	NSPoint t_top_left;
 	t_top_left = cocoa_point_from_carbon(p_rect . origin . x, p_rect . origin . y + p_rect . size . height);
 	return NSMakeRect(t_top_left . x, t_top_left . y, p_rect . size . width, p_rect . size . height);
 }
@@ -281,12 +281,12 @@ static void wait_for_refresh(void)
     s_display_link_fired = false;
     
     while(!s_display_link_fired)
-		MCPlatformWaitForEvent(60.0, false);
+		MCPlatformWaitForEvent(60.0, true);
     
     s_display_link_fired = false;
     
     while(!s_display_link_fired)
-		MCPlatformWaitForEvent(60.0, false);
+		MCPlatformWaitForEvent(60.0, true);
     
     CVDisplayLinkStop(t_link);
     
@@ -402,8 +402,13 @@ void MCPlatformScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImag
     // MW-2014-06-11: [[ Bug 12436 ]] Wait for the screen to be up to date.
     wait_for_refresh();
     
+	// IM-2017-04-21: [[ Bug 19529 ]] CGWindowListCreateImage assumes coords with origin at top-left of primary screen,
+	//    so our capture area needs to be offset onto that coordinate system
+	MCRectangle t_origin;
+	MCPlatformGetScreenViewport(0, t_origin);
+	
 	CGRect t_area;
-	t_area = CGRectMake(p_screen_rect . x, p_screen_rect . y, p_screen_rect . width, p_screen_rect . height);
+	t_area = CGRectMake(p_screen_rect.x - t_origin.x, p_screen_rect.y - t_origin.y, p_screen_rect.width, p_screen_rect.height);
 	
 	CGImageRef t_image;
 	t_image = CGWindowListCreateImage(t_area, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);

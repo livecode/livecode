@@ -4,11 +4,12 @@ Type: command
 
 Syntax: mobileEnablePurchaseUpdates
 
-Summary: Enables the receipt of purchaseStateUpdate messages
+Summary:
+Enables the receipt of purchaseStateUpdate messages
 
 Introduced: 5.0.1
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -18,8 +19,20 @@ if tMonitorPurchases is true then
 end if
 
 Description:
-Use the <mobileEnablePurchaseUpdates> command to enable the receipt of <purchaseStateUpdate> messages.
+Use the <mobileEnablePurchaseUpdates> command to enable the receipt of
+<purchaseStateUpdate> messages.
 
-Throughout the purchase process the App Store sends <purchaseStateUpdate> messages to your app which report any changes in the status of active purchases. The <mobileEnablePurchaseUpdates> command enables the receipt of <purchaseStateUpdate> messages.
+Throughout the purchase process the App Store sends
+<purchaseStateUpdate> messages to your app which report any changes in
+the status of active purchases. The <mobileEnablePurchaseUpdates>
+command enables the receipt of <purchaseStateUpdate> messages.
 
-References: mobilePurchaseSet (command), mobileDisablePurchaseUpdates (command), mobilePurchaseVerify (command), mobileRestorePurchases (command), iphoneRequestProductDetails (command), mobilePurchaseSendRequest (command), mobilePurchaseConfirmDelivery (command), mobilePurchaseCreate (command), mobilePurchaseState (function), mobilePurchaseError (function), mobileCanMakePurchase (function), mobilePurchaseGet (function), mobilePurchases (function), purchaseStateUpdate (message)
+References: mobilePurchaseSet (command),
+mobileDisablePurchaseUpdates (command), mobilePurchaseVerify (command),
+mobileRestorePurchases (command), iphoneRequestProductDetails (command),
+mobilePurchaseSendRequest (command),
+mobilePurchaseConfirmDelivery (command), mobilePurchaseCreate (command),
+mobilePurchaseState (function), mobilePurchaseError (function),
+mobileCanMakePurchase (function), mobilePurchaseGet (function),
+mobilePurchases (function), purchaseStateUpdate (message)
+

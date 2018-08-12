@@ -456,7 +456,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // Uses CS_VSCROLL 15
 #define CS_SENDING_RESIZE		(1UL << 16)
 // MCCard state
-#define CS_OWN_CONTROLS         (1UL << 14)
 #define CS_INSIDE               (1UL << 15)
 // MCStack state
 #define CS_BEEN_MOVED           (1UL << 13)
@@ -483,7 +482,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define ECS_MEDIA_ORIGIN		(1UL << 28)
 #define ECS_EXTERNALS_RESOLVED	(1UL << 27)
 #define ECS_DURING_STARTUP		(1UL << 26)
-#define ECS_IDE					(1UL << 25)
 #define ECS_FULLSCREEN			(1UL << 24)
 
 // MW-2008-10-28: [[ ParentScripts ]] If this extended state flag is set it
@@ -738,7 +736,8 @@ enum Field_translations {
 	FT_SCROLLPAGEUP,
 	FT_SCROLLBOTTOM,
 	FT_SCROLLPAGEDOWN,
-    FT_IMEINSERT
+    FT_IMEINSERT,
+	FT_SELECTALL,
 };
 
 inline uint4 getstyleint(uint4 flags)

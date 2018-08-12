@@ -2,15 +2,16 @@ Name: ink
 
 Type: property
 
-Syntax: set the ink of <object> to <inkMode> 
+Syntax: set the ink of <object> to <inkMode>
 
-Summary: Specifies the kind of transparency an <object> is drawn with.
+Summary:
+Specifies the kind of transparency an <object(glossary)> is drawn with.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the ink of graphic "Floating" to blendClear
@@ -19,82 +20,83 @@ Example:
 set the ink of field "Ghost" to blendPlus
 
 Parameters:
-object: the name of the object
-inkmode: the name of the ink
+object:
+the name of the object
 
-Value (enum): The <ink> of an <object> is a <string> designating one of 48 <transfer mode|transfer modes>.By default, the <ink> of newly created <object|objects> is "srcCopy"
+inkmode:
+the name of the ink
+
+Value (enum):
+The <ink> of an <object(glossary)> is a <string> designating one of 48
+<transfer mode|transfer modes>.By default, the <ink> of newly created
+<object|objects> is "srcCopy"
+
 
 Description:
-Use the <ink> <property> to specify how the color of each <pixel> of an <object> combines with the color of the <pixel> underneath it to create the final color shown on the screen.
+Use the <ink> <property> to specify how the color of each <pixel> of an
+<object(glossary)> combines with the color of the <pixel> underneath it
+to create the final color shown on the screen.
 
-The srcCopy mode simply puts the <object> on top of the <background>; the <background> does not show through or affect the final color at all.
+The srcCopy mode simply puts the <object(glossary)> on top of the
+<background>; the <background> does not show through or affect the final
+color at all.
 
-You can use other transfer modes with the <ink> <property> to create special transparent or partially transparent effects, or to invert the colors of an <object> or the colors underneath the <object>, or to combine the <object|object's> colors with the colors under the <object>.
+You can use other transfer modes with the <ink> <property> to create
+special transparent or partially transparent effects, or to invert the
+colors of an <object(glossary)> or the colors underneath the
+<object(glossary)>, or to combine the <object|object's> colors with the
+colors under the <object(glossary)>.
 
-There are 48 transfer modes:
+There are 25 transfer modes:
 
 Structural Blends (Porter Duff operators):
-        * blendClear
-        * blendSrc
-        * blendDst
-        * blendSrcOver
-        * blendDstOver
-        * blendSrcIn
-        * blendDstIn
-        * blendSrcOut
-        * blendDstOut
-        * blendSrcAtop
-        * blendDstAtop
-        * blendXor
+
+* blendClear
+* blendSrc
+* blendDst
+* blendSrcOver
+* blendDstOver
+* blendSrcIn
+* blendDstIn
+* blendSrcOut
+* blendDstOut
+* blendSrcAtop
+* blendDstAtop
+* blendXor
+
 
 Image Processing Blends (SVG/PDF operators):
-        * blendPlus
-        * blendMultiply
-        * blendScreen
-        * blendOverlay
-        * blendDarken
-        * blendLighten
-        * blendDodge
-        * blendBurn
-        * blendHardLight
-        * blendSoftLight
-        * blendDifference
-        * blendExclusion
 
-Bitwise - These inks have been deprecated from version 5.0
-        * clear
-        * noop
-        * notSrcAnd
-        * notSrcAndReverse
-        * notSrcCopy
-        * notSrcOr
-        * notSrcOrReverse
-        * notSrcXor
-        * reverse
-        * set
-        * srcAnd
-        * srcAndReverse
-        * srcCopy
-        * srcOr
-        * srcOrReverse
-        * srcXor
+* blendPlus
+* blendMultiply
+* blendScreen
+* blendOverlay
+* blendDarken
+* blendLighten
+* blendDodge
+* blendBurn
+* blendHardLight
+* blendSoftLight
+* blendDifference
+* blendExclusion
 
-Arithmetc: - These inks have been deprecated from version 5.0
-        * blend
-        * addPin
-        * addOver
-        * subPin
-        * transparent
-        * adMin
-        * addMax
 
-The rendered pixels of an object are combined with the corresponding background pixels using the specified ink before the blendLevel is applied.
+Bitwise - This ink has been deprecated from version 5.0
 
->*Note:* Most of the structural blends require that an ancestor of the object be a container with an alpha channel. If this is not the case the behaviour of the blend is undefined. Containers (cards and groups) can be forced to have an alpha channel by setting their ink to something other than srcCopy, or by setting their blendLevel to something other than 0.
+* srcCopy
 
->*Note:* 
-The bitwise and arithmetic inks (apart from srcCopy) should be considered as legacy modes and not used in new applications. In general, the behaviour of the structural and image processing blends should be preferred as these naturally work well with alpha-channels.
+The rendered pixels of an object are combined with the corresponding
+background pixels using the specified ink before the blendLevel is
+applied. 
 
-References: colorOverlay (property), innerGlow (property), innerShadow (property), blendLevel (property), dropShadow (property), outerGlow (property), string (keyword), notSrcCopy (keyword), object (object), property (glossary), pixel (glossary), background (glossary), transfer mode (glossary)
+>*Note:* Most of the structural blends require that an ancestor of the
+> object be a container with an alpha channel. If this is not the case
+> the behaviour of the blend is undefined. Containers (cards and groups)
+> can be forced to have an alpha channel by setting their ink to
+> something other than srcCopy, or by setting their blendLevel to
+> something other than 0.
+
+References: object (glossary), property (glossary), pixel (glossary),
+background (glossary), string (keyword)
 
 Tags: ui

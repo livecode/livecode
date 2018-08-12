@@ -186,7 +186,7 @@ extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListDescendingNumeric(MCProperLis
     MCSortExecSortListNumeric(x_target, true);
 }
 
-void MCSortExecSortListDateTime(MCProperListRef& x_target, bool p_descending)
+static void MCSortExecSortListDateTime(MCProperListRef& x_target, bool p_descending)
 {
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -201,12 +201,12 @@ void MCSortExecSortListDateTime(MCProperListRef& x_target, bool p_descending)
     MCValueAssign(x_target, *t_sorted_list);
 }
 
-void MCSortExecSortListAscendingDateTime(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListAscendingDateTime(MCProperListRef& x_target)
 {
     MCSortExecSortListDateTime(x_target, false);
 }
 
-void MCSortExecSortListDescendingDateTime(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListDescendingDateTime(MCProperListRef& x_target)
 {
    MCSortExecSortListDateTime(x_target, true);
 }

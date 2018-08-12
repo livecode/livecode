@@ -2,18 +2,16 @@ Name: read from socket
 
 Type: command
 
-Syntax: read from socket <socketID> [until <string> | for <amount> [<chunkType>]] [with message <callbackMessage>]
+Syntax: read from socket <socketID> [{until <dataString> | for <readAmount> [<chunkType>]}] [with message <callbackMessage>]
 
-Summary: Accepts data from a <socket> and places the data in the <it> <variable>.
+Summary:
+Accepts data from a <socket> and places the data in the <it> <variable>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,iOS,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
-
-Example:
-read from socket "www.example.net:80" -- reads next character
+Platforms: desktop, server, mobile
 
 Example:
 read from socket "www.example.net:80" for 50 -- reads next 50 chars
@@ -25,23 +23,68 @@ Example:
 read from socket mySocket for 30 uInt2s with message "gotData"
 
 Parameters:
-socketID: The identifier (set when you opened the socket) of the socket you want to get data from. The socket identifier starts with the IP address of the host the socket is connected to, and may optionally include a port number (separated from the IP address by a colon). If there is more than one socket connected to that host and port, you can specify which socket by appending the connection name or number that was assigned when the socket was opened, separated from the port number by a vertical bar (|).
-string (string): When LiveCode encounters the string in the socket data, it stops reading. If the string is not encountered, the read from socket command continues reading as long as there is data to be read.
-amount: A positive integer and specifies how much data to read.
-chunkType: One of chars, characters, words, items, lines, int1, uInt1, int2, uint2, int4, or uint4. The read from socket command reads amount of the specified chunkType. If you don't specify a chunkType, amount characters are read.
-callbackMessage: The name of a message to be sent when the read is successfully completed.
+socketID (IP_addr):
+The identifier (set when you opened the socket) of the socket you want
+to get data from. The socket identifier starts with the IP address of
+the host the socket is connected to, and may optionally include a port
+number (separated from the IP address by a colon). If there is more than
+one socket connected to that host and port, you can specify which socket
+by appending the connection name or number that was assigned when the
+socket was opened, separated from the port number by a vertical bar (|).
 
-The result: The socket to read from must be opened first with the open socket <command>. If the <socket> is not open, the <result> <function> is set to "Socket is not open.".
+dataString (string):
+When LiveCode encounters the string in the socket data, it stops
+reading. If the string is not encountered, the read from socket command
+continues reading as long as there is data to be read.
 
-It: If you don't specify a <callbackMessage>, the <handler> pauses until the read has been completed, or until the time set in the <socketTimeoutInterval> <property> has passed. The data is placed in the <it> variable after reading. If you specified a <binary file|binary data> <chunkType> (int1, uInt1, int2, uint2, int4, or uint4), the data consists of a comma-separated list of numbers, one for the numerical value of each chunk that was read. Otherwise, the data is placed in the <it> <variable> as it appears in the incoming data stream.
+readAmount (int):
+A positive integer and specifies how much data to read.
+
+chunkType (enum):
+One of *chars, characters, words, items, lines, int1, uInt1, int2, uint2,
+int4, or uint4*. The read from socket command reads amount of the
+specified chunkType. If you don't specify a chunkType, <readAmount> of 
+*characters* are read.
+
+callbackMessage (string):
+The name of a message to be sent when the read is successfully
+completed. 
+
+It:
+If you don't specify a <callbackMessage>, the <handler> pauses until the
+read has been completed, or until the time set in the
+<socketTimeoutInterval> <property> has passed. The data is placed in the
+<it> variable after reading. If you specified a <binary file|binary
+data> <chunkType> (int1, uInt1, int2, uint2, int4, or uint4), the data
+consists of a comma-separated list of numbers, one for the numerical
+value of each chunk that was read. Otherwise, the data is placed in the
+<it> <variable> as it appears in the incoming data stream.
+
+The result:
+The socket to read from must be opened first with the <open socket>
+<command>. If the <socket> is not open, the <result> <function> is set
+to "Socket is not open.".
 
 Description:
-Use the <read from socket> <command> to get data from another system via a <TCP> <socket>.
+Use the <read from socket> <command> to get data from another system via
+a <TCP> <socket>.
 
-The until <string> form reads data until the specified string is encountered. The for <amount> form reads data until the specified number of chunks have arrived. If you don't specify a <string> or <amount>, the <read from socket> <command> reads the next <character> of data from the <socket>.
+The until <string> form reads data until the specified string is
+encountered. The for <amount> form reads data until the specified number
+of <chunk|chunks> have arrived.
 
-If you specify a <callbackMessage>, the <message> is sent to the <object> whose <script> contains the <read from socket> <command>, as soon as the read is finished. This message has two <parameter|parameters>: the <socketID> and the data received from the <socket>.
+If you specify a <callbackMessage>, the <message> is sent to the
+<object(glossary)> whose <script> contains the <read from socket>
+<command>, as soon as the read is finished. This <message> has two
+<parameter|parameters>: the <socketID> and the data received from the
+<socket>. 
 
-References: socketTimeoutInterval (property), script (property), object (object), socketTimeout (message), character (keyword), it (keyword), function (control_st), property (glossary), binary file (glossary), variable (glossary), handler (glossary), message (glossary), socket (glossary), parameter (glossary), TCP (glossary), command (glossary), accept (command), post (command), result (function)
+References: accept (command), post (command), open socket (command)
+function (control structure), result (function), object (glossary),
+property (glossary), binary file (glossary), variable (glossary),
+handler (glossary), message (glossary), socket (glossary),
+parameter (glossary), TCP (glossary), command (glossary),
+character (keyword), it (keyword), socketTimeout (message),
+socketTimeoutInterval (property), script (property)
 
 Tags: networking

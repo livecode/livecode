@@ -2,32 +2,49 @@ Name: maskData
 
 Type: property
 
-Syntax: set the maskData of <image> to <binaryData> 
+Syntax: set the maskData of <image> to <binaryData>
 
-Summary: Specifies which <pixels> of an <image> are displayed.
+Summary:
+Specifies which <pixels> of an <image> are displayed.
 
 Associations: image
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the maskData of image "Download" into dataToAnalyze
 
-Value: The <maskData> of an <image> consists of a sequence of <binary> values.
+Value:
+The <maskData> of an <image> consists of a sequence of <binary> values.
 
 Description:
-Use the <maskData> <property> to change the appearance of an <image> without changing its image data, or to examine the <mask> of the <image>.
+Use the <maskData> <property> to change the appearance of an <image>
+without changing its image data, or to examine the <mask> of the
+<image>. 
 
-Each pixel is represented by 8 bits (1 byte) of mask data, with pixels numbered from the top left corner of the image, left to right, then top to bottom.
+Each pixel is represented by 8 bits (1 byte) of mask data, with pixels
+numbered from the top left corner of the image, left to right, then top
+to bottom.
 
-Since each pixel is represented by 8 bits (1 byte or 1 character), you can obtain the numeric value for a given pixel using the charToNum <function>. For example, the numeric value of the <maskData> for the tenth <pixel> is given by the <expression> charToNum(char 10 of the mask of <image>).
+Since each pixel is represented by 8 bits (1 byte or 1 character), you
+can obtain the numeric value for a given pixel using the charToNum
+<function>. For example, the numeric value of the <maskData> for the
+tenth <pixel> is given by the <expression> charToNum(char 10 of the mask
+of <image>).
 
-A value of zero means the pixel is fully transparent; any other value means the pixel is fully opaque. Unlike the <alphaData> <property>, the <maskData> stores only complete transparency or complete opacity, and does not support partial transparency.
+A value of zero means the pixel is fully transparent; any other value
+means the pixel is fully opaque. Unlike the <alphaData> <property>, the
+<maskData> stores only complete transparency or complete opacity, and
+does not support partial transparency.
 
-References: pixels (property), windowShape (property), alphaData (property), image (keyword), function (control_st), property (glossary), pixel (glossary), binary (glossary), mask (glossary), expression (glossary)
+References: function (control structure), property (glossary),
+pixel (glossary), binary (glossary), mask (glossary),
+expression (glossary), image (keyword), pixels (property),
+windowShape (property), alphaData (property)
 
 Tags: multimedia
+

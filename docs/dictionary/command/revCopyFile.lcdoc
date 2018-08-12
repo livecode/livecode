@@ -2,15 +2,16 @@ Name: revCopyFile
 
 Type: command
 
-Syntax: revCopyFile <fileToCopy>, <folderToCopyTo> 
+Syntax: revCopyFile <fileToCopy>, <folderToCopyTo>
 
-Summary: Copies a <file>.
+Summary:
+Copies a <file>.
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revCopyFile "/Disk/myfile","/Disk/Folder/"
@@ -22,24 +23,66 @@ Example:
 revCopyFile the sourceFile of this card, it
 
 Parameters:
-fileToCopy: The fileToCopy specifies the name and location of the file. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
-folderToCopyTo: The folderToCopyTo specifies the name and location of the folder where the copied file should be placed. If you specify a name but not a location, LiveCode assumes the destination folder is in the defaultFolder.
+fileToCopy:
+The fileToCopy specifies the name and location of the file. If you
+specify a name but not a location, LiveCode assumes the file is in the
+defaultFolder. 
 
-The result: The <revCopyFile> <command> uses system services on each <platform> to perform the copy. On <Mac OS|Mac OS systems>, it uses <AppleScript>; on <OS X>, <Windows> and <Unix> systems, it uses the <shell> <function>. Any errors encountered are <return|returned> in the <result> <function>.
+folderToCopyTo:
+The folderToCopyTo specifies the name and location of the folder where
+the copied file should be placed. If you specify a name but not a
+location, LiveCode assumes the destination folder is in the
+defaultFolder. 
+
+The result:
+The <revCopyFile> <command> uses system services on each <platform> to
+perform the copy. On <Mac OS|Mac OS systems>, it uses <AppleScript>; on
+<OS X>, <Windows> and <Unix> systems, it uses the <shell> <function>.
+Any errors encountered are <return|returned> in the <result> <function>.
 
 Description:
-Use the <revCopyFile> <command> to make a copy of a <file(keyword)> to another <folder>.
+Use the <revCopyFile> <command> to make a copy of a <file(keyword)> to
+another <folder>.
 
->*Important:*  Use this command to copy a <application bundle|bundle> on <OS X|OS X systems> 
+>*Important:*  Use this command to copy a <application bundle|bundle> on
+> <OS X|OS X systems>
 
-You can also copy a file using the put <command>, in a <statement> like the following:
+You can also copy a file using the put <command>, in a <statement> like
+the following:
 
-  put URL "binfile:/Disk/myfile" into URL "binfile:/Disk/Folder/myfile"
+    put URL "binfile:/Disk/myfile" into URL
+    "binfile:/Disk/Folder/myfile" 
 
-However, the <revCopyFile> <command> provides certain advantages. It copies file attributes (such as <type signature|file type>) and <Mac OS> <resource fork|resource forks> along with the <file(keyword)>. It also does not require reading the entire <file(keyword)> into memory, so even extremely large <file(function)|files> can be copied.
 
->*Note:* In a standalone application the <Common library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <revCopyFile> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <revCopyFile> <command> can be used in any <handler>.
+However, the <revCopyFile> <command> provides certain advantages. It
+copies file attributes (such as <type signature|file type>) and <Mac OS>
+<resource fork|resource forks> along with the <file(keyword)>. It also
+does not require reading the entire <file(keyword)> into memory, so even
+extremely large <file(function)|files> can be copied.
 
-References: resfile (keyword), file (keyword), binfile (keyword), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), rename (command), answer file (command), create alias (command), function (control_st), Common library (library), library (library), application bundle (glossary), type signature (glossary), Unix (glossary), command (glossary), main stack (glossary), folder (glossary), file (glossary), return (glossary), group (glossary), message (glossary), statement (glossary), result (glossary), Mac OS (glossary), shell (glossary), OS X (glossary), AppleScript (glossary), platform (glossary), application (glossary), resource fork (glossary), handler (glossary), Windows (glossary)
+>*Note:* In a standalone application the <Common library> is implemented
+> as a hidden <group> and made available when the <group> receives its
+> first <openBackground> message. During the first part of the
+> <application|application's> startup process, before this <message> is
+> sent, the <revCopyFile> <command> is not yet available. This may
+> affect attempts to use this <command> in <startup>, <preOpenStack>,
+> <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>.
+> Once the <application> has finished starting up, the <library> is
+> available and the <revCopyFile> <command> can be used in any
+> <handler>. 
+
+References: rename (command), answer file (command),
+create alias (command), function (control structure),
+application bundle (glossary), type signature (glossary), Unix (glossary),
+command (glossary), main stack (glossary), folder (glossary),
+file (glossary), return (glossary), group (glossary), message (glossary),
+statement (glossary), result (glossary), Mac OS (glossary),
+shell (glossary), OS X (glossary), AppleScript (glossary),
+platform (glossary), application (glossary), resource fork (glossary),
+handler (glossary), Windows (glossary), resfile (keyword), file (keyword),
+binfile (keyword), Common library (library), library (library),
+startup (message), openBackground (message), preOpenStack (message),
+openStack (message), preOpenCard (message)
 
 Tags: file system
+

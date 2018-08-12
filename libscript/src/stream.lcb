@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This module specifies the syntax definitions and bindings for
 stream input and output operations in modular LiveCode.
 */
@@ -29,7 +29,7 @@ public foreign type Stream binds to "MCStreamTypeInfo"
 public foreign handler MCStreamExecGetStandardOutput(out Stdout as Stream) returns nothing binds to "<builtin>"
 public foreign handler MCStreamExecGetStandardError(out Stderr as Stream) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	Default output stream.
 Returns:	The default output stream.
 
@@ -48,7 +48,7 @@ begin
 	MCStreamExecGetStandardOutput(output)
 end syntax
 
-/*
+/**
 Summary:	Default error stream.
 Returns:	The default error stream.
 
@@ -71,7 +71,7 @@ end syntax
 
 public foreign handler MCStreamExecWriteToStream(in Buffer as Data, in Destination as Stream) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	Write data to a stream.
 
 Buffer:	An expression that evaluates to binary data.

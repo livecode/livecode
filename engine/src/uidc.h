@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "graphics.h"
 #include "imagebitmap.h"
+#include "object.h"
 
 enum
 {
@@ -106,15 +107,80 @@ enum Transfer_mode {
 // Converts a keysym to its lower-case equivalent
 KeySym MCKeySymToLower(KeySym p_key);
 
-typedef struct
+class MCPendingMessage
 {
-	MCObject *object;
-	MCNameRef message;
-	real8 time;
-	MCParameter *params;
-	uint4 id;
-}
-MCMessageList;
+public:
+    
+    MCObjectHandle      m_object;
+    MCNewAutoNameRef    m_message;
+    real64_t            m_time = 0;
+    MCParameter*        m_params = nullptr;
+    uint32_t            m_id = 0;
+
+    constexpr MCPendingMessage() = default;
+
+    MCPendingMessage(const MCPendingMessage& other) = default;
+
+    // [[ C++11 ]] Replace with `MCPendingMessage(MCObject*, MCNameRef, real64_t, MCParameter*, uint32_t) = default;`
+    MCPendingMessage(MCObject* p_object, MCNameRef p_message, real64_t p_time, MCParameter* p_params, uint32_t p_id) :
+      m_object(p_object),
+      m_message(p_message),
+      m_time(p_time),
+      m_params(p_params),
+      m_id(p_id)
+    {
+    }
+
+    MCPendingMessage& operator= (const MCPendingMessage& other)
+    {
+        m_object = other.m_object;
+        m_message.Reset(*other.m_message);
+        m_time = other.m_time;
+        m_params = other.m_params;
+        m_id = other.m_id;
+        
+        return *this;
+    }
+    
+    void DeleteParameters();
+};
+
+// [[ C++ ]] This should probably be a std::vector
+class MCPendingMessagesList
+{
+public:
+    
+    MCPendingMessagesList() :
+      m_array(nil),
+      m_capacity(0),
+      m_count(0)
+    {
+    }
+    
+    ~MCPendingMessagesList();
+    
+    const MCPendingMessage& operator[] (size_t offset) const
+    {
+        MCAssert(offset < m_count);
+        return m_array[offset];
+    }
+    
+    bool InsertMessageAtIndex(size_t index, const MCPendingMessage&);
+    void DeleteMessage(size_t index, bool delete_params);
+    void ShiftMessageTo(size_t to, size_t from, real64_t newtime);
+    
+    size_t GetCount() const
+    {
+        return m_count;
+    }
+    
+private:
+    
+    MCPendingMessage*   m_array;
+    
+    size_t m_capacity;
+    size_t m_count;
+};
 
 // IM-2014-01-23: [[ HiDPI ]] Add screen pixelScale field to display info
 // IM-2014-01-23: [[ HiDPI ]] Remove device-coordinate versions of viewport & workarea rects
@@ -176,7 +242,7 @@ typedef void *MCColorTransformRef;
 class MCMovingList : public MCDLlist
 {
 public:
-	MCObject *object;
+	MCObjectHandle object;
 	MCPoint *pts;
 	uint2 lastpt;
 	uint2 curpt;
@@ -271,14 +337,11 @@ public:
     };
     
 protected:
-	MCMessageList *messages;
+	MCPendingMessagesList m_messages;
 	MCMovingList *moving;
 	Boolean lockmoves;
 	real8 locktime;
 	uint4 messageid;
-    // MW-2014-05-28: [[ Bug 12463 ]] Change these to 32-bit to stop wrap-around of messages.
-	uint32_t nmessages;
-	uint32_t maxmessages;
 	MCColor *colors;
 	MCStringRef *colornames;
 	int2 *allocs;
@@ -363,7 +426,7 @@ public:
 	
 	uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
 	
-	// IM-2014-01-28: [[ HiDPI ]] Update the currently held display info, returning whether or not an changes have occured
+	// IM-2014-01-28: [[ HiDPI ]] Update the currently held display info, returning whether or not an changes have occurred
 	void updatedisplayinfo(bool &r_changed);
 
 	// IM-2014-01-24: [[ HiDPI ]] Clear the currently held display information. Should be called
@@ -498,7 +561,7 @@ public:
 	// as soon as something notable happens. If an abort/quit occurs while the
 	// wait is occuring, True will be returned.
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
-	// Notify any current wait loop that something has occured that it might
+	// Notify any current wait loop that something has occurred that it might
 	// not be aware of. This will cause any OS loop to be exited and events
 	// and such to be processed. If the wait was called with 'anyevent' True
 	// then it will cause termination of the wait.
@@ -560,7 +623,7 @@ public:
 	// with the data.
 	//
 	// The method returns the actual result of the drag-drop operation - DRAG_ACTION_NONE meaning
-	// that no drop occured.
+	// that no drop occurred.
 	//
 	virtual MCDragAction dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
 	
@@ -595,12 +658,12 @@ public:
     //
 
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
-	void cancelmessageindex(uint2 i, Boolean dodelete);
+	void cancelmessageindex(size_t i, bool dodelete);
 	void cancelmessageid(uint4 id);
 	void cancelmessageobject(MCObject *optr, MCNameRef name, MCValueRef param = nil);
     bool listmessages(MCExecContext& ctxt, MCListRef& r_list);
     void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params = nil);
-    int doshiftmessage(int index, real8 newtime);
+    size_t doshiftmessage(size_t index, real8 newtime);
     
     void addsubtimer(MCObject *target, MCValueRef subtarget, MCNameRef name, uint4 delay);
     void cancelsubtimer(MCObject *target, MCNameRef name, MCValueRef subtarget);
@@ -608,6 +671,9 @@ public:
     // MW-2014-05-28: [[ Bug 12463 ]] This is used by 'send in time' - separating user sent messages from
     //   engine sent messages. The former are subject to a limit to stop pending message queue overflow.
     bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
+    
+    // Returns true if there are any pending messages to dispatch right now.
+    bool hasmessagestodispatch(void);
     
 	Boolean handlepending(real8 &curtime, real8 &eventtime, Boolean dispatch);
 	Boolean getlockmoves() const;
@@ -624,18 +690,14 @@ public:
 	Boolean parsecolor(MCStringRef s, MCColor& r_color, MCStringRef *cname);
 	Boolean parsecolors(const MCString &values, MCColor *colors,
 	                    char *cnames[], uint2 ncolors);
-	void alloccolor(MCColor &color);
-	void querycolor(MCColor &color);
-#ifdef LEGACY_EXEC
-	Boolean getcolors(MCExecPoint &);
-#endif
 	Boolean setcolors(const MCString &);
 	bool getcolornames(MCStringRef&);
 	void getpaletteentry(uint4 n, MCColor &c);
 
+    
 	Boolean hasmessages()
 	{
-		return nmessages != 0;
+		return m_messages.GetCount() != 0;
 	}
 	void closemodal()
 	{
@@ -671,5 +733,22 @@ public:
         return background_pixel;
     }
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MCColor Utility functions
+static inline uint32_t MCColorGetPixel(const MCColor &p_color, MCGPixelFormat p_format = kMCGPixelFormatNative)
+{
+	return MCGPixelPack(p_format, p_color.red >> 8, p_color.green >> 8, p_color.blue >> 8, 0xFF);
+}
+
+static inline void MCColorSetPixel(MCColor &x_color, uint32_t p_pixel, MCGPixelFormat p_format = kMCGPixelFormatNative)
+{
+	uint8_t r, g, b, a;
+	MCGPixelUnpack(p_format, p_pixel, r, g, b, a);
+	x_color.red = (uint16_t)((r << 8) | r);
+	x_color.green = (uint16_t)((g << 8) | g);
+	x_color.blue = (uint16_t)((b << 8) | b);
+}
 
 #endif

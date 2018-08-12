@@ -4,26 +4,34 @@ Type: keyword
 
 Syntax: codepoints
 
-Summary: Used with the <number> <function to designate> codepoints as a separate portion of a <string>.
+Summary:
+Used with the <number> <function(glossary)> to designate codepoints as a separate
+portion of a <string>.
 
 Introduced: 7.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 get the number of codepoints of tString
 
 Description:
-Use the <codepoints> keyword to count the number of codepoints making up a string.
+Use the <codepoints> keyword to count the number of codepoints making up
+a string.
 
-A codepoint refers to the integer identifiers associated with Unicode characters. A single <character> is composed of one or more codepoints.
+A codepoint refers to the integer identifiers associated with Unicode
+characters. A single <character> is composed of one or more codepoints.
 
 Use the expression 
 
-the number of codepoints of tString
+	the number of codepoints of tString
 
 to find out how many codepoints make up a Unicode string.
 
-References: characters (keyword), codepoint (keyword), codeunits (keyword), character (keyword), string (keyword), codeunit (keyword), bytes (keyword), byte (keyword), number (function), function to designate (control_st)
+References: function (glossary), number (function),
+characters (keyword), codepoint (keyword), codeunits (keyword),
+character (keyword), string (keyword), codeunit (keyword),
+bytes (keyword), byte (keyword)
+

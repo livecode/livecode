@@ -1,14 +1,21 @@
 Name: group
 
-Synonyms: group,grouping,grouped
+Synonyms: group, grouping, grouped
 
 Type: glossary
 
 Description:
-An <object> that contains one or more <button|buttons>, <field|fields>, <scrollbar|scrollbars>, <image|images>, <player|players>, <EPS|EPS objects>, or <graphic|graphics>, or other groups. 
- 
-A group can be placed on any <card> in a <stack, and can optionally have borders or scrollbars(glossary)>.
+An <object(glossary)> that contains one or more <button|buttons>,
+<field|fields>, <scrollbar|scrollbars>, <image|images>,
+<player|players>, <EPS|EPS objects>, or <graphic|graphics>, or other
+groups. 
 
-References: graphic (object), image (object), button (object), scrollbar (object), player (object), object (object), field (object), card (object), EPS (glossary)
+A group can be placed on any <card> in a <stack, and can optionally have
+borders or scrollbars(glossary)>.
+
+References: graphic (glossary), image (glossary), button (glossary),
+scrollbar (glossary), player (glossary), object (glossary),
+field (glossary), card (glossary), EPS (glossary)
 
 Tags: objects
+

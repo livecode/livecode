@@ -4,13 +4,15 @@ Type: function
 
 Syntax: revMacFromUnixPath(<unixPathname> [, <convertOSX>])
 
-Summary: Converts a Unix-style <file path|pathname> to a <Mac OS>-style <file path|pathname>.
+Summary:
+Converts a Unix-style <file path|pathname> to a <Mac OS>-style <file
+path|pathname>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revMacFromUnixPath("/usr/bin/stuff")
@@ -19,27 +21,83 @@ Example:
 revMacFromUnixPath(it)
 
 Parameters:
-unixPathname: A file or folder pathname in the standard format used by LiveCode for file paths.
-convertOSX (bool): If you don't specify the <convertOSX>, if OS X is running, LiveCode assumes you want to convert an OS X-style path to a Mac OS-style path; otherwise, it assumes you don't want to convert between the OS X style and Mac OS style.
+unixPathname:
+A file or folder pathname in the standard format used by LiveCode for
+file paths.
 
-Returns: The <revMacFromUnixPath> <function> returns a <string> with the <file path> in the format expected by the <Mac OS>.
+convertOSX (bool):
+If you don't specify the <convertOSX>, if OS X is running, LiveCode
+assumes you want to convert an OS X-style path to a Mac OS-style path;
+otherwise, it assumes you don't want to convert between the OS X style
+and Mac OS style.
+
+Returns:
+The <revMacFromUnixPath> <function> returns a <string> with the <file
+path> in the format expected by the <Mac OS>.
 
 Description:
-Use the <revMacFromUnixPath> <function> to convert a LiveCode-style <file path> to the <Mac OS> <file path> format (for example, if you need to pass a <file path|pathname> to an <external>). 
+Use the <revMacFromUnixPath> <function> to convert a LiveCode-style
+<file path> to the <Mac OS> <file path> format (for example, if you need
+to pass a <file path|pathname> to an <external>).
 
-The <revMacFromUnixPath> <function> converts slashes (/) to colons (:), the folder-level <delimiter> for <Mac OS> <file path|pathnames>. It also deletes leading slashes, so that <file path|pathnames> are rooted in the volume name (the standard for <Mac OS> <file path|pathnames>). It also adjusts relative pathnames. 
+The <revMacFromUnixPath> <function> converts slashes (/) to colons (:),
+the folder-level <delimiter> for <Mac OS> <file path|pathnames>. It also
+deletes leading slashes, so that <file path|pathnames> are rooted in the
+volume name (the standard for <Mac OS> <file path|pathnames>). It also
+adjusts relative pathnames.
 
-On Mac OS systems, absolute paths always begin with the name of the disk that the file or folder is on. On OS X systems, the startup disk's name does not appear in absolute file paths. Instead, if a file or folder is on the startup disk, the first part of the file path is the top-level folder that the file is in. If a file or folder is on a disk other than the startup disk, its absolute path starts with "Volumes", followed by the disk name. 
+On Mac OS systems, absolute paths always begin with the name of the disk
+that the file or folder is on. On OS X systems, the startup disk's name
+does not appear in absolute file paths. Instead, if a file or folder is
+on the startup disk, the first part of the file path is the top-level
+folder that the file is in. If a file or folder is on a disk other than
+the startup disk, its absolute path starts with "Volumes", followed by
+the disk name.
 
-The OS X path convention is used by LiveCode, but the old Mac OS-style path convention is required by certain applications (such as AppleScript), even on OS X systems. If the <convertOSX> is true (or if you don't specify the <convertOSX> and the application is running under <OS X>), the <revMacFromUnixPath> <function> automatically converts <absolute file path|absolute paths> from the <OS X> standard to the <Mac OS> standard, adding the startup disk's name to paths that are on the startup disk, and stripping the "Volumes" element from paths that are not on the startup disk. If the <convertOSX> is false, the <revMacFromUnixPath> <function> does not make these changes to <absolute file path|absolute paths>. 
+The OS X path convention is used by LiveCode, but the old Mac OS-style
+path convention is required by certain applications (such as
+AppleScript), even on OS X systems. If the <convertOSX> is true (or if
+you don't specify the <convertOSX> and the application is running under
+<OS X>), the <revMacFromUnixPath> <function> automatically converts
+<absolute file path|absolute paths> from the <OS X> standard to the <Mac
+OS> standard, adding the startup disk's name to paths that are on the
+startup disk, and stripping the "Volumes" element from paths that are
+not on the startup disk. If the <convertOSX> is false, the
+<revMacFromUnixPath> <function> does not make these changes to <absolute
+file path|absolute paths>.
 
-LiveCode always uses the Unix pathname standard for cross-platform compatibility, and automatically converts pathnames to the correct standard for the current platform when executing commands. You need to convert the pathname only if you are passing it to another program or external. If you are using only LiveCode commands and functions, you do not need to convert the pathname, since LiveCode does it for you. 
+LiveCode always uses the Unix pathname standard for cross-platform
+compatibility, and automatically converts pathnames to the correct
+standard for the current platform when executing commands. You need to
+convert the pathname only if you are passing it to another program or
+external. If you are using only LiveCode commands and functions, you do
+not need to convert the pathname, since LiveCode does it for you.
 
->*Note:* When included in a <standalone application>, the <Common library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <revMacFromUnixPath> <function> is not yet available. This may affect attempts to use this <function> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <revMacFromUnixPath> <function> can be used in any <handler>.
+>*Note:* When included in a <standalone application>, the <Common
+> library> is implemented as a hidden <group> and made available when
+> the <group> receives its first <openBackground> message. During the
+> first part of the <application|application's> startup process, before
+> this <message> is sent, the <revMacFromUnixPath> <function> is not yet
+> available. This may affect attempts to use this <function> in
+> <startup>, <preOpenStack>, <openStack>, or <preOpenCard>
+> <handler|handlers> in the <main stack>. Once the <application> has
+> finished starting up, the <library> is available and the
+> <revMacFromUnixPath> <function> can be used in any <handler>.
 
 Changes:
-The <convertOSX> <parameter> was introduced in version 2.1.1. In previous versions, the <revMacFromUnixPath> <function> did not attempt to convert between the <Mac OS> and <OS X> conventions described above.
+The <convertOSX> <parameter> was introduced in version 2.1.1. In
+previous versions, the <revMacFromUnixPath> <function> did not attempt
+to convert between the <Mac OS> and <OS X> conventions described above.
 
-References: string (keyword), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), answer file (command), function (control_st), application (glossary), standalone application (glossary), file path (glossary), external (glossary), main stack (glossary), OS X (glossary), group (glossary), absolute file path (glossary), Mac OS (glossary), message (glossary), parameter (glossary), delimiter (glossary), handler (glossary), Common library (library), library (library)
+References: answer file (command), function (control structure),
+application (glossary), standalone application (glossary),
+file path (glossary), external (glossary), main stack (glossary),
+OS X (glossary), group (glossary), absolute file path (glossary),
+Mac OS (glossary), message (glossary), parameter (glossary),
+delimiter (glossary), handler (glossary), string (keyword),
+Common library (library), library (library), startup (message),
+openBackground (message), preOpenStack (message), openStack (message),
+preOpenCard (message)
 
 Tags: file system
+

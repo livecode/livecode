@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "paragraf.h"
 #include "cdata.h"
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "exec.h"
 #include "util.h"
 #include "MCBlock.h"
@@ -126,13 +126,18 @@ static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const M
 		MCField::formattabstops(P_TAB_STOPS, p_style . tabs, p_style . tab_count, &t_string);
         /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("tabStops"), *t_string);
 	}
+	if (p_style . has_tab_alignments || p_effective)
+	{
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCField::formattabalignments(p_style . tab_alignments, p_style . tab_alignment_count, &t_string);
+		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("tabAlign"), *t_string);
+	}
 	if (p_style . has_background_color)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . background_color >> 16) & 0xFF;
-        uint32_t g = (p_style . background_color >> 8) & 0xFF;
-        uint32_t b = (p_style . background_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . background_color);
+        /* UNCHECKED */ MCU_format_color(t_color, &t_string);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("backgroundColor"), *t_string);
 	}
 	if (p_style . has_border_width || p_effective)
@@ -152,10 +157,9 @@ static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const M
 	if (p_style . has_border_color || p_effective)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . border_color >> 16) & 0xFF;
-        uint32_t g = (p_style . border_color >> 8) & 0xFF;
-        uint32_t b = (p_style . border_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . border_color);
+        /* UNCHECKED */ MCU_format_color(t_color, &t_string);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("borderColor"), *t_string);
 	}
 	if (p_style . has_dont_wrap || p_effective)
@@ -168,103 +172,13 @@ static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const M
         /* UNCHECKED */ MCNumberCreateWithInteger(p_style . padding, &t_padding);
         /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("padding"), *t_padding);
     }
+    
+    if (p_style . hidden  || p_effective)
+    {
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("hidden"), p_style . hidden == True ? kMCTrue : kMCFalse);
+    }
 }
 
-
-#ifdef LEGACY_EXEC
-// Copy the styles from the struct into the array.
-static void export_styled_text_paragraph_style(MCExecPoint& ep, MCArrayRef p_style_array, const MCFieldParagraphStyle& p_style, bool p_effective)
-{
-	if (p_style . has_text_align || p_effective)
-	{
-		MCF_unparsetextatts(P_TEXT_ALIGN, ep, p_style . text_align << F_ALIGNMENT_SHIFT, nil, 0, 0, 0);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "textAlign");
-	}
-	if (p_style . has_list_style)
-	{
-		ep . setstaticcstring(MCliststylestrings[p_style . list_style]);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "listStyle");
-		// MW-2012-02-22: [[ Bug ]] The listDepth property is stored internally as depth - 1, so adjust.
-		ep . setint(p_style . list_depth + 1);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "listDepth");
-		if (p_style . has_list_indent)
-		{
-			ep . setint(p_style . list_indent);
-			/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "listIndent");
-		}
-	}
-	if (!p_style . has_list_indent && (p_style . has_first_indent || p_effective))
-	{
-		ep . setint(p_style . first_indent);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "firstIndent");
-	}
-	if (p_style . has_left_indent || p_effective)
-	{
-		ep . setint(p_style . left_indent);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "leftIndent");
-	}
-	if (p_style . has_list_index)
-	{
-		ep . setint(p_style . list_index);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "listIndex");
-	}
-	if (p_style . has_right_indent || p_effective)
-	{
-		ep . setint(p_style . right_indent);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "rightIndent");
-	}
-	if (p_style . has_space_above || p_effective)
-	{
-		ep . setint(p_style . space_above);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "spaceAbove");
-	}
-	if (p_style . has_space_below || p_effective)
-	{
-		ep . setint(p_style . space_below);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "spaceBelow");
-	}
-	if (p_style . has_tabs || p_effective)
-	{
-		MCField::formattabstops(P_TAB_STOPS, ep, p_style . tabs, p_style . tab_count);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "tabStops");
-	}
-	if (p_style . has_background_color)
-	{
-		ep . setpixel(p_style . background_color);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "backgroundColor");
-	}
-	if (p_style . has_border_width || p_effective)
-	{
-		ep . setint(p_style . border_width);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "borderWidth");
-	}
-	if (p_style . has_hgrid || p_effective)
-	{
-		ep . setboolean(p_style . hgrid);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "hGrid");
-	}
-	if (p_style . has_vgrid || p_effective)
-	{
-		ep . setboolean(p_style . vgrid);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "vGrid");
-	}
-	if (p_style . has_border_color || p_effective)
-	{
-		ep . setpixel(p_style . border_color);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "borderColor");
-	}
-	if (p_style . has_dont_wrap || p_effective)
-	{
-		ep . setboolean(p_style . dont_wrap);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "dontWrap");
-	}
-	if (p_style . has_padding || p_effective)
-	{
-		ep . setint(p_style . padding);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "padding");
-	}
-}
-#endif
 
 // Copy the styles from the struct into the array.
 static void export_styled_text_character_style(MCArrayRef p_style_array, const MCFieldCharacterStyle& p_style, bool p_effective)
@@ -272,19 +186,17 @@ static void export_styled_text_character_style(MCArrayRef p_style_array, const M
 	if (p_style . has_text_color || p_effective)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . text_color >> 16) & 0xFF;
-        uint32_t g = (p_style . text_color >> 8) & 0xFF;
-        uint32_t b = (p_style . text_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . text_color);
+        /* UNCHECKED */ MCU_format_color(t_color, &t_string);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("textColor"), *t_string);
 	}
 	if (p_style . has_background_color)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . background_color >> 16) & 0xFF;
-        uint32_t g = (p_style . background_color >> 8) & 0xFF;
-        uint32_t b = (p_style . background_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . background_color);
+        /* UNCHECKED */ MCU_format_color(t_color, &t_string);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("backgroundColor"), *t_string);
 	}
 	if (p_style . has_link_text)
@@ -348,13 +260,6 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
             /* UNCHECKED */ MCArrayStoreValue(ctxt . paragraph_array, true, MCNAME("metadata"), p_event_data . paragraph_style . metadata);
 		}
 		
-		// MW-2012-03-05: [[ HiddenText ]] If the paragraph is hidden, mark it as such in the
-		//   array.
-		if (p_event_data . paragraph_style . hidden)
-		{
-            /* UNCHECKED */ MCArrayStoreValue(ctxt . paragraph_array, true, MCNAME("hidden"), kMCTrue);
-		}
-
 		// Now create the 'runs' entry in the paragraph array.
 		/* UNCHECKED */ MCArrayCreateMutable(ctxt . runs_array);
 
@@ -461,18 +366,6 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 // block. If the block has no non-default styles then the style key is not
 // present.
 //
-#ifdef LEGACY_EXEC
-void MCField::exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective)
-{
-	MCAutoArrayRef t_array;
-
-	if (exportasstyledtext(p_part_id, p_start_index, p_finish_index, p_formatted, p_effective, &t_array))
-		/* UNCHECKED */ ep . setvalueref(*t_array);
-	else
-		ep . clear();
-}
-#endif
-
 bool MCField::exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array)
 {
     return exportasstyledtext(resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_formatted, p_effective, r_array);
@@ -522,19 +415,6 @@ bool MCField::exportasstyledtext(MCParagraph* p_paragraphs, int32_t p_start_inde
 //			else if tEntry is an array then
 //				append tEntry["text"] with style tEntry["style"]
 //
-#ifdef LEGACY_EXEC
-MCParagraph *MCField::styledtexttoparagraphs(MCExecPoint& ep)
-{	
-	// Get the array itself, and if it is not a sequence, do nothing.
-	MCAutoArrayRef t_array;
-	/* UNCHECKED */ ep . copyasarrayref(&t_array);
-	if (ep . isempty())
-		return nil;
-	else
-		return styledtexttoparagraphs(*t_array);
-}
-#endif
-
 MCParagraph *MCField::styledtexttoparagraphs(MCArrayRef p_array)
 {	
 	if (!MCArrayIsSequence(p_array))
@@ -550,7 +430,7 @@ MCParagraph *MCField::styledtexttoparagraphs(MCArrayRef p_array)
 MCParagraph *MCField::parsestyledtextappendparagraph(MCArrayRef p_style, MCStringRef p_metadata, bool p_split, MCParagraph*& x_paragraphs)
 {
 	MCParagraph *t_new_paragraph;
-	t_new_paragraph = new MCParagraph;
+	t_new_paragraph = new (nothrow) MCParagraph;
 	t_new_paragraph -> setparent(this);
 	t_new_paragraph -> inittext();
 	
@@ -737,8 +617,8 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
     if (MCArrayFetchValue(p_block_value, false, MCNAME("style"), t_valueref) && !MCValueIsEmpty(t_valueref))
 	{
 		MCArrayRef t_array;
-		/* UNCHECKED */ ctxt . ConvertToArray(t_valueref, t_array);
-		/* UNCHECKED */ MCArrayCopyAndRelease(t_array, &t_style_entry);	
+		if (ctxt . ConvertToArray(t_valueref, t_array))
+            /* UNCHECKED */ MCArrayCopyAndRelease(t_array, &t_style_entry);
 	}
 	// Get the metadata (if any)
 	MCAutoStringRef t_metadata;
@@ -776,24 +656,19 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
         
 		if (MCStringFirstIndexOfChar(*t_temp, '\n', t_start_index, kMCStringOptionCompareExact, t_text_end_index))
 		{
-			// MW-2012-05-17: [[ Bug ]] Make sure we reduce the remaining text length since
-			//   we are advancing ptr - otherwise we get random chars at the end of paragraph
-			//   sometimes.
 			t_start_index = t_text_end_index + 1;
-			t_text_length -= (t_text_end_index - t_text_initial_start_index);
 			t_add_paragraph = true;
 		}
 		else
 		{
 			t_start_index += t_text_length;
-			t_text_length = 0;
 			t_text_end_index = t_start_index;
 			t_add_paragraph = false;
 		}
 
 		// We now add the range initial...final as a block.
         MCAutoStringRef t_substring;
-        MCStringCopySubstring(*t_temp, MCRangeMake(t_text_initial_start_index, t_text_end_index - t_text_initial_start_index), &t_substring);
+        MCStringCopySubstring(*t_temp, MCRangeMakeMinMax(t_text_initial_start_index, t_text_end_index), &t_substring);
 		parsestyledtextappendblock(t_paragraph, *t_style_entry, *t_substring, *t_metadata);
 
 		// And, if we need a new paragraph, add it.

@@ -4,15 +4,17 @@ Type: message
 
 Syntax: revXMLEndTree
 
-Summary: Sent to the <current card> when the <revXMLCreateTreeFromFile> <function> finishes parsing an <XML document>.
+Summary:
+Sent to the <current card> when the <revXMLCreateTreeFromFile>
+<function> finishes parsing an <XML document>.
 
 Associations: card
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -22,10 +24,22 @@ on revXMLEndTree
 end revXMLEndTree
 
 Description:
-Handle the revEndXMLTree <message> if you want to build your own subset of an <XML document>.
+Handle the revEndXMLTree <message> if you want to build your own subset
+of an <XML document>.
 
-The revXMLCreateTree or <revXMLCreateTreeFromFile> <function(glossary)|functions> take <XML> data and parse it. When you <call> either of these <function(glossary)|functions>, you can specify whether or not to send <message|messages> during the parsing operation.
+The revXMLCreateTree or <revXMLCreateTreeFromFile>
+<function(glossary)|functions> take <XML> data and parse it. When you
+<call> either of these <function(glossary)|functions>, you can specify
+whether or not to send <message|messages> during the parsing operation.
 
-If you have specified that you want the function to send messages, the <revXMLEndTree> <message> is sent when the <function(control_st)> encounters the final tag in the file. If you have specified that you don't want <message|messages> sent, no <revXMLEndTree> <message|messages> are sent.
+If you have specified that you want the function to send messages, the
+<revXMLEndTree> <message> is sent when the <function(control structure)>
+encounters the final tag in the file. If you have specified that you
+don't want <message|messages> sent, no <revXMLEndTree>
+<message|messages> are sent.
 
-References: revXMLStartTree (message), call (command), revXMLCreateTreeFromFile (function), function (control_st), current card (glossary), message (glossary), XML document (glossary), function (glossary), XML (glossary)
+References: call (command), function (control structure),
+revXMLCreateTreeFromFile (function), current card (glossary),
+message (glossary), XML document (glossary), function (glossary),
+XML (glossary), revXMLStartTree (message)
+

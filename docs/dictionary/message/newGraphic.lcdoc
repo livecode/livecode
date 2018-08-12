@@ -4,15 +4,16 @@ Type: message
 
 Syntax: newGraphic
 
-Summary: Sent to a new <graphic> right after it's created.
+Summary:
+Sent to a new <graphic> right after it's created.
 
 Associations: graphic
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on newGraphic
@@ -21,12 +22,23 @@ on newGraphic
 end newGraphic
 
 Description:
-Handle the <newGraphic> <message> if you want to create additional <object|objects>, switch <tool|tools>, or do other tasks when a new <graphic> is created.
+Handle the <newGraphic> <message> if you want to create additional
+<object|objects>, switch <tool|tools>, or do other tasks when a new
+<graphic> is created.
 
-Normally, the <newGraphic> <message> is handled at a higher level of the <message path>, since the newly created <graphic> does not yet have a <script> unless the <templateGraphic> contains one.
+Normally, the <newGraphic> <message> is handled at a higher level of the
+<message path>, since the newly created <graphic> does not yet have a
+<script> unless the <templateGraphic> contains one.
 
-The actual creation is not triggered by the <newGraphic> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <graphic> from being created.
+The actual creation is not triggered by the <newGraphic> <message>, so
+<trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <graphic> from being created.
 
-References: templateGraphic (keyword), graphic (keyword), script (property), copy (command), clone (command), paste (command), object (object), trap (glossary), message path (glossary), message (glossary), tool (glossary), graphic (glossary), pass (control_st)
+References: copy (command), clone (command), paste (command),
+pass (control structure), object (glossary), trap (glossary),
+message path (glossary), message (glossary), tool (glossary),
+graphic (glossary), templateGraphic (keyword), graphic (keyword),
+script (property)
 
 Tags: objects
+

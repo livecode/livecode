@@ -1,0 +1,1 @@
+# Fixed bug causing incorrect formattedWidth to be returned for buttons

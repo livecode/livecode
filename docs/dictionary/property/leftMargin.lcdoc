@@ -2,17 +2,20 @@ Name: leftMargin
 
 Type: property
 
-Syntax: set the leftMargin of {<button> | <field> | <group>} to <pixels> 
+Syntax: set the leftMargin of {<button> | <field> | <group>} to <pixels>
 
-Summary: Specifies how close text within an <object> can come to the <object|object's> left edge, and how close <object|objects> in a <group(command)> can come to the <group(glossary)|group's> left edge.
+Summary:
+Specifies how close text within an <object(glossary)> can come to the
+<object|object's> left edge, and how close <object|objects> in a
+<group(command)> can come to the <group(glossary)|group's> left edge.
 
-Associations: button
+Associations: button, field, group
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the leftMargin of field "Melting Point" to 10
@@ -22,15 +25,29 @@ set the leftMargin of last button to the leftMargin of first button
 
 Value:
 The <leftMargin> is a <non-negative> <integer>.
-By default, the <leftMargin> of a newly created <field(keyword)> is 8. If the <field(object)|field's> <wideMargins> <property> is true, the <field(object)|field's> <leftMargin> is set to 14. The <default> <leftMargin> setting for a <button> or <group> is 4.
+By default, the <leftMargin> of a newly created <field(keyword)> is 8.
+If the <field(object)|field's> <wideMargins> <property> is true, the
+<field(object)|field's> <leftMargin> is set to 14. The <default>
+<leftMargin> setting for a <button> or <group> is 4.
 
 Description:
-Use the <leftMargin> <property> to change the amount of blank space between an <object|object's> left edge and its contents.
+Use the <leftMargin> <property> to change the amount of blank space
+between an <object|object's> left edge and its contents.
 
-The <leftMargin> <property> of a <field> or <button> specifies how many blank <pixels> are left between the <object|object's> left edge and the left edge of its text. The <leftMargin> of a <group(command)> specifies how far the <group(glossary)|group's> left edge extends below its leftmost <object>.
+The <leftMargin> <property> of a <field> or <button> specifies how many
+blank <pixels> are left between the <object|object's> left edge and the
+left edge of its text. The <leftMargin> of a <group(command)> specifies
+how far the <group(glossary)|group's> left edge extends below its
+leftmost <object(glossary)>.
 
-An object's <leftMargin> <property> is equal to <item> 1 of its <margins> <property>.
+An object's <leftMargin> <property> is equal to <item> 1 of its
+<margins> <property>.
 
-References: left (property), wideMargins (property), pixels (property), margins (property), firstIndent (property), default (keyword), item (keyword), button (keyword), field (keyword), integer (keyword), group (command), field (object), object (object), property (glossary), non-negative (glossary), group (glossary)
+References: group (command), object (glossary), property (glossary),
+non-negative (glossary), group (glossary), default (keyword),
+item (keyword), button (keyword), field (keyword), integer (keyword),
+field (object), left (property), wideMargins (property),
+pixels (property), margins (property), firstIndent (property)
 
 Tags: ui
+

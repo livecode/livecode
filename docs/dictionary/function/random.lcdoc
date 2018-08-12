@@ -2,17 +2,18 @@ Name: random
 
 Type: function
 
-Syntax: the random of <upperLimit> 
+Syntax: the random of <upperLimit>
 
 Syntax: random(<upperLimit>)
 
-Summary: <return|Returns> a <random> <integer>.
+Summary:
+<return|Returns> a <random> <integer>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 random(22) -- returns a number between 1 and 22
@@ -24,21 +25,33 @@ Example:
 sort lines of myVar by random(the number of lines of myVar)
 
 Parameters:
-upperLimit: A number.
+upperLimit:
+A number.
 
-Returns: The <random> <function> <return|returns> an <integer>.
+Returns:
+The <random> <function> <return|returns> an <integer>.
 
 Description:
-Use the <random> <function> to pick a <random> member of a set, or to generate a <random> number.
+Use the <random> <function> to pick a <random> member of a set, or to
+generate a <random> number.
 
-If the <upperLimit> is a positive <integer>, the <random> <function> <return|returns> an <integer> between 1 and the <upperLimit>. If the <upperLimit> is a number that is not an <integer>, the <random> function <return|returns> an <integer> between 1 and round(<upperLimit>).
+If the <upperLimit> is a positive <integer>, the <random> <function>
+<return|returns> an <integer> between 1 and the <upperLimit>. If the
+<upperLimit> is a number that is not an <integer>, the <random> function
+<return|returns> an <integer> between 1 and round(<upperLimit>).
 
-To generate a random number between two integers, use a handler like this:
+To generate a random number between two integers, use a handler like
+this: 
 
-  function randomInRange lowerLimit,upperLimit
+    function randomInRange lowerLimit,upperLimit
     return random(upperLimit - lowerLimit + 1) + lowerLimit - 1
-  end randomInRange
 
-References: any (keyword), integer (keyword), randomSeed (property), round (function), random (function), return (glossary), function (control_st)
+    end randomInRange
+
+
+References: function (control structure), round (function),
+random (function), return (glossary), any (keyword), integer (keyword),
+randomSeed (property)
 
 Tags: math
+

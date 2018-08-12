@@ -6,32 +6,50 @@ Syntax: the driverNames
 
 Syntax: driverNames()
 
-Summary: <return|Returns> a list of available serial <device driver|drivers>.
+Summary:
+<return|Returns> a list of available serial <device driver|drivers>.
 
 Introduced: 2.0
 
 OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: disk
 
 Example:
 put firstItems(the driverNames) into menu "Choose a driver:"
 
-The result: If the <driverNames> <function> is called on a <Mac OS>, <Unix>, or <Windows|Windows system>, it returns empty and the <result> returns "not supported".
-
 Returns:
-The <driverNames> <function> <return|returns> a list of <device driver|drivers>, one per <line>. Each <line> consists of three <items>, separated by commas:
+The <driverNames> <function> <return|returns> a list of 
+<device driver|drivers>, one per <line>. Each <line> consists of 
+three <items>, separated by commas:
+
 1. The name of the driver.
 2. The name and location of the TTY device file for the driver.
 3. The name and location of the callout device (CU) file for the driver.
 
+
+The result:
+If the <driverNames> <function> is called on a <Mac OS>, <Unix>, or
+<Windows|Windows system>, it returns empty and the <result> returns
+"not supported". 
+
 Description:
-Use the <driverNames> <function> to find out which serial <device driver|drivers> can be used with the <open driver>, <read from driver>, <write to driver>, and <close driver> <command|commands>.
+Use the <driverNames> <function> to find out which serial <device
+driver|drivers> can be used with the <open driver>, <read from driver>,
+<write to driver>, and <close driver> <command|commands>.
 
-Usually, you use the callout file name--the third item in the line for the driver you want--with the open driver, <read from driver>, <write to driver>, and <close driver> <command|commands>.
+Usually, you use the callout file name--the third item in the line for
+the driver you want--with the open driver, <read from driver>, 
+<write to driver>, and <close driver> <command|commands>.
 
-References: items (keyword), line (keyword), open driver (command), write to driver (command), read from driver (command), close driver (command), function (control_st), Unix (glossary), Windows (glossary), command (glossary), return (glossary), Mac OS (glossary), device driver (glossary), result (function)
+References: open driver (command), write to driver (command),
+read from driver (command), close driver (command),
+function (control structure), result (function), Unix (glossary),
+Windows (glossary), command (glossary), return (glossary),
+Mac OS (glossary), device driver (glossary), items (keyword),
+line (keyword)
 
 Tags: networking
+

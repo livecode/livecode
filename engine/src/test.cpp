@@ -23,7 +23,7 @@
 
 #include "globals.h"
 #include "stack.h"
-#include "execpt.h"
+
 #include "dispatch.h"
 #include "mcio.h"
 #include "variable.h"

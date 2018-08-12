@@ -2,48 +2,70 @@ Name: time
 
 Type: function
 
-Syntax: the [{ long | abbr[ev[iated]] | short }] [{ english | system }] time
+Syntax: the [{ long | abbreviated | short }] [{ english | system }] time
 
 Syntax: time()
 
-Summary: <return|Returns> the current time.
+Summary:
+<return|Returns> the current time.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-put the time into the lastModifiedTime of this card
+set the lastModifiedTime of this card to the time 
 
 Example:
 set the label of button "Clock" to the short system time
 
 Returns:
-If the <useSystemDate> <property> is set to true or if you specify the <system> time, the times returned by the <time> <function> are <format|formatted> according to the user's system preferences.
-If the <useSystemDate> is false or if you specify the <english> time, the times are in the <format> described below:
+If the <useSystemDate> <property> is set to true or if you specify the
+<system> time, the times returned by the <time> <function> are
+<format|formatted> according to the user's system preferences. If the
+<useSystemDate> is false or if you specify the <english> time, the times
+are in the <format> described below:
 
-The time form returns the hour and minute separated by a colon, a space, and "AM" or "PM".
+The time form returns the hour and minute separated by a colon, a space,
+and "AM" or "PM".
 
 The short time form returns the same value as the time form.
 
 The abbreviated time form returns the same value as the time form.
 
-The long time form returns the hour, minute, and second separated by colons, a space, and "AM" or "PM".
+The <long> time form returns the hour, minute, and second separated by
+colons, a space, and "AM" or "PM".
 
 Description:
-Use the <time> <function> to display the current time to the user, or to store the time for later use.
+Use the <time> <function> to display the current time to the user, or to
+store the time for later use.
 
-If the twelveHourTime <property> is set to false, the value <return|returned> by the <time> <function> does not include "AM" or "PM".
+If the twelveHourTime <property> is set to false, the value
+<return|returned> by the <time> <function> does not include "AM" or
+"PM". 
 
-The format of the system time forms is set by the Date & Time control panel (on Mac OS systems), the Date control panel (on <Windows|Windows systems>), or the LANG environment variable (on <Unix|Unix systems>).
+The <format> of the system time forms is set by the Date & Time control
+panel (on Mac OS systems), the Date control panel (on <Windows|Windows
+systems>), or the LANG environment variable (on <Unix|Unix systems>).
 
->*Note:* Linux systems don't have a short system time, so the engine modifies the system time format string to remove the seconds. This works in most locales, but not all and our advice is to stick to using the long system time on Linux systems.
+>*Note:* Linux systems don't have a short system time, so the engine
+> modifies the system time format string to remove the seconds. This
+> works in most locales, but not all and our advice is to stick to using
+> the <long> <system> <time> on Linux systems.
 
 Changes:
-The ability to use the time format preferred by the user was introduced in version 1.1. In previous versions, the time function, along with the date function, consistently used the standard U.S. format, even if the operating system's settings specified another language or time format.
+The ability to use the time format preferred by the user was introduced
+in version 1.1. In previous versions, the time function, along with the
+date function, consistently used the standard U.S. format, even if the
+operating system's settings specified another language or time format.
 
-References: system (keyword), english (keyword), abbreviated (keyword), useSystemDate (property), convert (command), ticks (function), format (function), property (glossary), Windows (glossary), Unix (glossary), format (glossary), return (glossary), function (control_st)
+References: convert (command), function (control structure),
+ticks (function), property (glossary),
+Windows (glossary), Unix (glossary), format (glossary), return (glossary),
+system (keyword), english (keyword), abbreviated (keyword),
+useSystemDate (property)
 
 Tags: math
+

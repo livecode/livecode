@@ -1,0 +1,1 @@
+# Allow libUrlFtpUpload and libUrlFtpUploadFile to support SFTP URLs

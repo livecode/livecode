@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 #include "w32dsk-legacy.h"
 
 #include "globdefs.h"
@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "util.h"
-//#include "execpt.h"
+
 #include "debug.h"
 #include "param.h"
 #include "osspec.h"
@@ -128,16 +128,12 @@ static uint2 shift_keysyms[] =
 		/* 0xD8 */ 0x0000, 0x0000, 0x0000, 0x007B, 0x007C, 0x007D, 0x0022
     };
 
-#ifdef LEGACY_EXEC
-static bool build_pick_string(MCExecPoint& p_ep, HMENU p_menu, UINT32 p_command);
-#endif
-
 void MCScreenDC::appendevent(MCEventnode *tptr)
 {
 	tptr->appendto(pendingevents);
 }
 
-void CALLBACK mouseproc(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
+void CALLBACK mouseproc(UINT id, UINT msg, DWORD_PTR user, DWORD_PTR dw1, DWORD_PTR dw2)
 {
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	pms->setmousetimer(0);
@@ -209,7 +205,24 @@ KeySym MCScreenDC::getkeysym(WPARAM wParam, LPARAM lParam)
 		}
 	}
 	KeySym keysym;
-	setmods();
+
+	// We need to update the modifier state here. If the current event being
+	// processed is not live then we must rely on the state of MCmodifierstate
+	// as it is. Otherwise, we must fetch the synchronous key state.
+	if (curinfo -> live)
+	{
+		uint2 t_state = 0;
+		if (GetKeyState(VK_CONTROL) & 0x8000)
+			t_state |= MS_CONTROL;
+		if (GetKeyState(VK_MENU) & 0x8000)
+			t_state |= MS_MOD1;
+		if (GetKeyState(VK_SHIFT) & 0x8000)
+			t_state |= MS_SHIFT;
+		if (GetKeyState(VK_CAPITAL) & 0x0001)
+			t_state |= MS_CAPS_LOCK;
+		MCmodifierstate = t_state;
+	}
+
 	if (curks == KS_ALTGR)
 		if (MCmodifierstate & MS_CONTROL && MCmodifierstate & MS_MOD1)
 			MCmodifierstate &= ~(MS_CONTROL| MS_MOD1);
@@ -287,14 +300,15 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 	{
 		if (dispatch && pendingevents != NULL)
 		{
+			MCEventnode *tptr = pendingevents->remove(pendingevents);;
 			curinfo->live = False;
-			MCEventnode *tptr = (MCEventnode *)pendingevents->remove(pendingevents);
 			MCmodifierstate = tptr->modifier;
 			msg.hwnd = tptr->hwnd;
 			msg.message = tptr->msg;
 			msg.wParam = tptr->wParam;
 			msg.lParam = tptr->lParam;
 			msg.pt.x = msg.pt.y = 0;
+            msg.time = tptr->time;
 			delete tptr;
 		}
 
@@ -302,7 +316,6 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 		t_keymessage = msg.message == WM_KEYDOWN || msg.message == WM_KEYUP;
 		t_syskeymessage = msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP;
 
-		curinfo->live = True;
 		MCeventtime = msg.time;
 		if (t_keymessage || t_syskeymessage)
 			curinfo->keysym = getkeysym(msg.wParam, msg.lParam);
@@ -345,9 +358,6 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 		else
 			MCWindowProc(msg.hwnd, msg.message, msg.wParam, msg.lParam);
 	}
-	
-	extern void MCQTHandleRecord(void);
-	MCQTHandleRecord();
 
 	abort = curinfo->abort;
 	reset = curinfo->reset;
@@ -597,7 +607,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 						MCParameter *t_parameter;
 						MCAutoStringRef t_param;
 						/* UNCHECKED */ MCStringCopySubstring(*t_cmdline, MCRangeMake(t_argument, t_argument_length), &t_param);
-						t_parameter = new MCParameter;
+						t_parameter = new (nothrow) MCParameter;
 						t_parameter -> setvalueref_argument(*t_param);
 						if (t_first_parameter == NULL)
 							t_first_parameter = t_parameter;
@@ -683,7 +693,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		else
 		{
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 		}
@@ -697,7 +707,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		else
 		{
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 		}
@@ -716,10 +726,20 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		// Don't bother processing if we're not dispatching
 		if (!curinfo->dispatch)
 		{
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 			break;
+		}
+		
+		// If the repeat count > 1 then we only process one event right now
+		// and push a pending event onto the queue for the rest. This means that
+		// 'flushEvents' can purge any repeated key messages.
+		if (LOWORD(lParam) > 1)
+		{
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, MAKELPARAM(LOWORD(lParam) - 1, HIWORD(lParam)), 0, MCmodifierstate, MCeventtime);
+			pms->appendevent(tptr);
+			lParam = MAKELPARAM(1, HIWORD(lParam));
 		}
 
 		// SN-2014-09-10: [[ Bug 13348 ]] The keysym is got as for the WM_KEYDOWN case
@@ -803,34 +823,30 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 
 		if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
 		{
-			// Submit the character as both text and a key stroke
-			uint16_t count = LOWORD(lParam);
-
-			while (count--)
+			// SN-2014-09-05: [[ Bug 13348 ]] Call the appropriate message
+			//	 [[ MERGE-6_7_RC_2 ]] and add the KeyDown/Up in case we follow
+			//   a dead-key started sequence
+			// SN-2015-05-18: [[ Bug 15040 ]] We must send the char resulting
+			//  from an Alt+<number> sequence.
+            // If the current event isn't live, then we cannot trust the keymove
+            // field, so we assume that we must process it.
+			if (!curinfo->live || curinfo->keymove == KM_KEY_DOWN || deadcharfollower || isInAltPlusSequence)
 			{
-				// SN-2014-09-05: [[ Bug 13348 ]] Call the appropriate message
-				//	 [[ MERGE-6_7_RC_2 ]] and add the KeyDown/Up in case we follow
-				//   a dead-key started sequence
-				// SN-2015-05-18: [[ Bug 15040 ]] We must send the char resulting
-				//  from an Alt+<number> sequence.
-				if (curinfo->keymove == KM_KEY_DOWN || deadcharfollower || isInAltPlusSequence)
-				{
-					// Pressing Alt and the key "+" starts a number-typing sequence.
-					//  Otherwise, we are not in such a sequence - be it because a normal
-					//  char has been typed, or because the sequence is terminated.
-					isInAltPlusSequence = (t_keysym == '+' && MCmodifierstate == MS_ALT);
+				// Pressing Alt and the key "+" starts a number-typing sequence.
+				//  Otherwise, we are not in such a sequence - be it because a normal
+				//  char has been typed, or because the sequence is terminated.
+				isInAltPlusSequence = (t_keysym == '+' && MCmodifierstate == MS_ALT);
 
-					// We don't want to send any Key message for the "+" pressed
-					//  to start the Alt+<number> sequence
-					if (isInAltPlusSequence
-							|| (!MCdispatcher->wkdown(dw, *t_input, t_keysym)
-								&& msg == WM_SYSCHAR))
-						return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
-				}
-				
-				if (curinfo->keymove == KM_KEY_UP || deadcharfollower)
-  					MCdispatcher->wkup(dw, *t_input, t_keysym);
+				// We don't want to send any Key message for the "+" pressed
+				//  to start the Alt+<number> sequence
+				if (isInAltPlusSequence
+						|| (!MCdispatcher->wkdown(dw, *t_input, t_keysym)
+							&& msg == WM_SYSCHAR))
+					return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 			}
+				
+			if (curinfo->keymove == KM_KEY_UP || deadcharfollower)
+  				MCdispatcher->wkup(dw, *t_input, t_keysym);
 
 			curinfo->handled = curinfo->reset = true;
 		}
@@ -903,7 +919,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		else
 		{
 			// Dispatch isn't currently enabled; accumulate to the event queue.
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, keysym,
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, keysym,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 		}
@@ -961,7 +977,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		else
 		{
 			// Add to the event queue
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 		}
@@ -1021,7 +1037,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				unichar_t *t_resstr;
 				MCAutoStringRef t_string;
 				t_reslen = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
-				t_resstr = new unichar_t[t_reslen/sizeof(unichar_t) + 1];
+				t_resstr = new (nothrow) unichar_t[t_reslen/sizeof(unichar_t) + 1];
 				/* UNCHECKED */ ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, t_resstr, t_reslen);
 				/* UNCHECKED */ MCStringCreateWithCharsAndRelease(t_resstr, t_reslen/2, &t_string);
 				MCactivefield->finsertnew(FT_IMEINSERT, *t_string, 0);
@@ -1036,7 +1052,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				unichar_t *t_compstr;
 				MCAutoStringRef t_string;
 				t_complen = ImmGetCompositionStringW(hIMC, GCS_COMPSTR, NULL, 0);
-				t_compstr = new unichar_t[t_complen/sizeof(unichar_t) + 1];
+				t_compstr = new (nothrow) unichar_t[t_complen/sizeof(unichar_t) + 1];
 				/* UNCHECKED */ ImmGetCompositionStringW(hIMC, GCS_COMPSTR, t_compstr, t_complen);
 				/* UNCHECKED */ MCStringCreateWithCharsAndRelease(t_compstr, t_complen/2, &t_string);
 				MCactivefield->finsertnew(FT_IMEINSERT, *t_string, 0);
@@ -1094,18 +1110,18 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		if (curinfo->live && !pms->isgrabbed() && LOWORD(lParam) != HTCLIENT)
 			return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 		MCmousestackptr = MCdispatcher->findstackd(dw);
-		if (MCmousestackptr != NULL)
+		if (MCmousestackptr)
 		{
 			MCmousestackptr->resetcursor(True);
 			if (pms->getmousetimer() == 0)
 				pms->setmousetimer(timeSetEvent(LEAVE_CHECK_INTERVAL, 100,
 				                                mouseproc, 0, TIME_ONESHOT));
 		}
-		if (omousestack != MCmousestackptr)
+		if (!MCmousestackptr.IsBoundTo(omousestack))
 		{
 			if (omousestack != NULL && omousestack != MCtracestackptr)
 				omousestack->munfocus();
-			if (MCmousestackptr != NULL && MCmousestackptr != MCtracestackptr)
+			if (MCmousestackptr && MCmousestackptr != MCtracestackptr)
 				MCmousestackptr->enter();
 		}
 		break;
@@ -1149,7 +1165,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					MCscreen->setmouseloc(MCdispatcher->findstackd(dw), t_mouseloc);
 				if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
 				{
-					if (t_old_mousestack != NULL && MCmousestackptr != t_old_mousestack)
+					if (t_old_mousestack != NULL && !MCmousestackptr.IsBoundTo(t_old_mousestack))
 						t_old_mousestack->munfocus();
 					if (msg == WM_MOUSEMOVE)
 					{
@@ -1165,14 +1181,14 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 						}
 					}
 					else
-						if (MCmousestackptr != NULL)
+						if (MCmousestackptr)
 							MCmousestackptr->munfocus();
 					curinfo->handled = True;
 				}
 			}
 			else
 			{
-				MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+				MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
 				                                    MCmodifierstate, MCeventtime);
 				pms->appendevent(tptr);
 			}
@@ -1181,7 +1197,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 		break;
 	case WM_APP:
-		if (MCmousestackptr != NULL && MCdispatcher->getmenu() == NULL)
+		if (MCmousestackptr && MCdispatcher->getmenu() == NULL)
 		{
 			// IM-2014-04-17: [[ Bug 12227 ]] Convert logical stack rect to screen coords when testing for mouse intersection
 			// IM-2014-08-01: [[ Bug 13058 ]] Use stack view rect to get logical window rect
@@ -1282,7 +1298,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		else
 		{
-			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, lParam, 0,
+			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
 			                                    MCmodifierstate, MCeventtime);
 			pms->appendevent(tptr);
 		}
@@ -1298,19 +1314,30 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					if (target->isiconic())
 					{
 						MCstacks->restack(target);
-						target->view_configure(true);
+						MCdispatcher->wreshape(dw);
 						target->uniconify();
 						SetWindowPos((HWND)target -> getwindow() -> handle . window, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 					}
 					else
-						target->view_configure(true);
+						MCdispatcher->wreshape(dw);
 				curinfo->handled = True;
 			}
 		}
 		break;
 	case WM_MOVE:
-		MCdispatcher->configure(dw);
-		curinfo->handled = True;
+		// IM-2016-04-14: [[ Bug 16749 ]] WM_MOVE can arrive before WM_SIZE when minimized.
+		//   - check if window is minimized before reconfiguring the stack
+		if (IsIconic(hwnd))
+		{
+			MCStack *target = MCdispatcher->findstackd(dw);
+			if (target != NULL)
+				target->iconify();
+		}
+		else
+		{
+			MCdispatcher->wreshape(dw);
+			curinfo->handled = True;
+		}
 		break;
 	case WM_CLOSE:
 		MCdispatcher->wclose(dw);
@@ -1325,7 +1352,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		break;
 	case WM_TIMER:
 		curinfo->handled = True;
-		if (MCmousestackptr != NULL && MCdispatcher->getmenu() == NULL)
+		if (MCmousestackptr && MCdispatcher->getmenu() == NULL)
 		{
 			int2 x, y;
 			pms->querymouse(x, y);
@@ -1335,7 +1362,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			        && !MCU_point_in_rect(rect, x, y))
 			{
 				MCmousestackptr->munfocus();
-				MCmousestackptr = NULL;
+				MCmousestackptr = nil;
 			}
 		}
 		break;
@@ -1353,25 +1380,6 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			MCdispatcher->wmfocus(dw, MCmousex, MCmousey);
 		}
 		break;
-	case MM_MCINOTIFY:
-		if (wParam == MCI_NOTIFY_SUCCESSFUL)
-		{
-			MCPlayer *tptr = MCplayers;
-			while (tptr != NULL)
-			{
-				if (lParam == (LPARAM)tptr->getDeviceID())
-				{
-					if (tptr->isdisposable())
-						tptr->playstop();
-					else
-						tptr->message_with_valueref_args(MCM_play_stopped, tptr->getname());
-					break;
-				}
-				tptr = tptr->getnextplayer();
-			}
-			curinfo->handled = True;
-		}
-		break;
 	case WM_USER:
 		{
 			uint2 i;
@@ -1386,7 +1394,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			{
 				if (WSAGETSELECTERROR(lParam))
 				{
-					MCsockets[i]->error = new char[16 + I4L];
+					MCsockets[i]->error = new (nothrow) char[16 + I4L];
 					sprintf(MCsockets[i]->error, "Error %d on socket",
 					        WSAGETSELECTERROR(lParam));
 					MCsockets[i]->doclose();
@@ -1520,7 +1528,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 	case WM_MOUSEWHEEL:
 	case WM_MOUSEHWHEEL:
-		if (MCmousestackptr != NULL)
+		if (MCmousestackptr)
 		{
 			MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
 			if (mfocused == NULL)

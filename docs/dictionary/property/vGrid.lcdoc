@@ -4,37 +4,62 @@ Type: property
 
 Syntax: set the vGrid [of line <lineNumber>] of <field> to {true | false}
 
-Summary: Specifies whether a <field|field's> <tab stop|tab stops> are treated as cell boundaries.
+Summary:
+Specifies whether a <field|field's> <tab stop|tab stops> are treated as
+cell boundaries.
 
 Associations: field
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
-set the vGrid of the fieldTemplate to true
+set the vGrid of the templateField to true
 
 Example:
 set the vGrid of line 10 to -1 of field 1 to true
 
-Value (bool):The <vGrid> of a <field(keyword)> is true or false.
-By default, the <vGrid> <property> of newly created <field(object)|fields> is set to false.
+Value (bool):
+The <vGrid> of a <field(keyword)> is true or false.
+By default, the <vGrid> <property> of newly created
+<field(object)|fields> is set to false.
 
 Description:
-Use the <vGrid> <property> to make a field behave like a spreadsheet with a grid of cells.
+Use the <vGrid> <property> to make a field behave like a spreadsheet
+with a grid of cells.
 
-If the  <vGrid> <property> is true, LiveCode draws a vertical line at each <tab stop> position in the <field(keyword)>. The lines are drawn in the <field(object)|field's> <borderColor>. This <property> is useful for <field(object)|fields> that are used like a spreadsheet, with each <tab stop> marking a column.
+If the  <vGrid> <property> is true, LiveCode draws a vertical line at
+each <tab stop> position in the <field(keyword)>. The lines are drawn in
+the <field(object)|field's> <borderColor>. This <property> is useful for
+<field(object)|fields> that are used like a spreadsheet, with each <tab
+stop> marking a column.
 
-Any text in a column is truncated when it reaches the right edge of the column. To show the entire contents of the column, drag over the text to select it. If text at the end of a line does not have a tab following it--that is, if it's the last column in the field--it is not truncated.
+Any text in a column is truncated when it reaches the right edge of the
+column. To show the entire contents of the column, drag over the text to
+select it. If text at the end of a line does not have a tab following
+it--that is, if it's the last column in the field--it is not truncated.
 
-If the field's <tabStops> <property> is set to empty, the <vGrid> lines are drawn every 32 <pixels>, but the text is not truncated to individual cells.
+If the field's <tabStops> <property> is set to empty, the <vGrid> lines
+are drawn every 32 <pixels>, but the text is not truncated to individual
+cells. 
 
 Changes:
-The use of the <borderColor> to draw grid lines was introduced in version 2.0. In previous versions, the grid lines were drawn in the <hiliteColor>.
+The use of the <borderColor> to draw grid lines was introduced in
+version 2.0. In previous versions, the grid lines were drawn in the
+<hiliteColor>. 
 
-References: leftIndent (property), borderWidth (property), textAlign (property), dontWrap (property), formattedText (property), spaceAbove (property), backgroundColor (property), hiliteColor (property), listBehavior (property), listIndent (property), hidden (property), textSize (property), firstIndent (property), listStyle (property), spaceBelow (property), tabStops (property), rightIndent (property), listDepth (property), hgrid (property), pixels (property), hScrollbar (property), borderColor (property), formattedWidth (property), field (keyword), field (object), property (glossary), tab stop (glossary)
+References: property (glossary), tab stop (glossary), field (keyword),
+field (object), leftIndent (property), borderWidth (property),
+textAlign (property), dontWrap (property), formattedText (property),
+spaceAbove (property), backgroundColor (property), hiliteColor (property),
+listBehavior (property), listIndent (property), hidden (property),
+textSize (property), firstIndent (property), listStyle (property),
+spaceBelow (property), tabStops (property), rightIndent (property),
+listDepth (property), hgrid (property), pixels (property),
+hScrollbar (property), borderColor (property), formattedWidth (property)
 
 Tags: ui
+

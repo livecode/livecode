@@ -1,1 +1,0 @@
-# centerRect and iconGravity need to be added to the properties

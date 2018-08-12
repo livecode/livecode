@@ -1,0 +1,118 @@
+/*
+Copyright (C) 2016 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.compiler.lexical_scoping.tests
+
+public handler TestIfLexicalScoping()
+   variable tValue as Boolean
+
+   put true into tValue
+   if true then
+      variable tValue as Boolean
+      test "shadowing var in if consequent is default" when tValue is false
+      put false into tValue
+   end if
+   test "shadowed var after if consequence is unchanged" when tValue is true
+
+   put true into tValue
+   if false then
+   else
+      variable tValue as Boolean
+      test "shadowing var in if alternate is default" when tValue is false
+   end if
+   test "shadowed var after if alternate is unchanged" when tValue is true
+
+   put true into tValue
+   if false then
+   else if true then
+      variable tValue as Boolean
+      test "shadowing var in else-if is default" when tValue is false
+   end if
+   test "shadowed var after else-if is unchanged" when tValue is true
+
+end handler
+
+public handler TestRepeatLexicalScoping()
+   variable tValue as Integer
+   variable tCounter as Integer
+
+   put 0 into tValue
+   put 0 into tCounter
+   repeat forever
+      variable tInnerValue as Integer
+      add 1 to tInnerValue
+      put tInnerValue into tValue
+      add 1 to tCounter
+      if tCounter is 5 then
+         exit repeat
+      end if
+   end repeat
+   test "inner var is reset on each iteration in repeat forever" when tValue is 1
+
+   put 0 into tValue
+   repeat 5 times
+      variable tInnerValue as Integer
+      add 1 to tInnerValue
+      put tInnerValue into tValue
+   end repeat
+   test "inner var is reset on each iteration in repeat counted" when tValue is 1
+
+   put 0 into tCounter
+   repeat while tCounter < 5
+      variable tInnerValue as Integer
+      add 1 to tInnerValue
+      put tInnerValue into tValue
+      add 1 to tCounter
+   end repeat
+   test "inner var is reset on each iteration in repeat while" when tValue is 1
+
+   put 0 into tCounter
+   repeat until tCounter is 5
+      variable tInnerValue as Integer
+      add 1 to tInnerValue
+      put tInnerValue into tValue
+      add 1 to tCounter
+   end repeat
+   test "inner var is reset on each iteration in repeat until" when tValue is 1
+
+   put 0 into tValue
+   repeat with tCounter from 1 up to 5
+      variable tInnerValue as Integer
+      add 1 to tInnerValue
+      put tInnerValue into tValue
+   end repeat
+   test "inner var is reset on each iteration in repeat up to" when tValue is 1
+
+   put 0 into tValue
+   repeat with tCounter from 5 down to 1
+      variable tInnerValue as Integer
+      add 1 to tInnerValue
+      put tInnerValue into tValue
+   end repeat
+   test "inner var is reset on each iteration in repeat down to" when tValue is 1
+
+   put 0 into tValue
+   repeat for each element tCounter in [1,2,3,4,5]
+      variable tInnerValue as Integer
+      add 1 to tInnerValue
+      put tInnerValue into tValue
+   end repeat
+   test "inner var is reset on each iteration in repeat for each" when tValue is 1
+
+end handler
+
+end module

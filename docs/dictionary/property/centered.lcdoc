@@ -4,29 +4,48 @@ Type: property
 
 Syntax: set the centered to {true | false}
 
-Summary: Specifies whether <object|objects> are drawn from the center to the edge, or from corner to corner.
+Summary:
+Specifies whether <object|objects> are drawn from the center to the
+edge, or from corner to corner.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the centered to true
 
-Value (bool):The <centered> is true or false.
+Value (bool):
+The <centered> is true or false.
 By default, the <centered> is set to false.
 
 Description:
-Use the <centered> <property> to change the way <object|objects> are drawn when they are created with the <object|object's> <tool>, and to change how <object|objects> are resized.
+Use the <centered> <property> to change the way <object|objects> are
+drawn when they are created with the <object|object's> <tool>, and to
+change how <object|objects> are resized.
 
-If the <centered> <property> is set to true, when the user creates an <object> by clicking and dragging with the appropriate <tool>, the first <point> clicked is the center of the <object>, and the user drags to an edge to complete the <object>.
+If the <centered> <property> is set to true, when the user creates an
+<object(glossary)> by clicking and dragging with the appropriate <tool>,
+the first <point> clicked is the center of the <object(glossary)>, and
+the user drags to an edge to complete the <object(glossary)>.
 
-If the <centered> is false, the first <point> clicked is a corner, and the user drags to the opposite corner to complete the <object>.
+If the <centered> is false, the first <point> clicked is a corner, and
+the user drags to the opposite corner to complete the
+<object(glossary)>. 
 
-The <centered> also affects how <object|objects> are resized with the <Pointer tool>. If the <centered> is true, dragging a <handle> at the corner or side of an <object> resizes the <object> symmetrically, so its center remains in the same place. If the <centered> is false, dragging a corner or side moves only that corner or side.
+The <centered> also affects how <object|objects> are resized with the
+<Pointer tool>. If the <centered> is true, dragging a <handle> at the
+corner or side of an <object(glossary)> resizes the <object(glossary)>
+symmetrically, so its center remains in the same place. If the
+<centered> is false, dragging a corner or side moves only that corner or
+side. 
 
-References: powerKeys (property), slices (property), multiple (property), gridSize (property), point (keyword), object (object), tool (function), property (glossary), Pointer tool (glossary), handle (glossary)
+References: tool (function), object (glossary), property (glossary),
+Pointer tool (glossary), handle (glossary), point (keyword),
+powerKeys (property), slices (property), multiple (property),
+gridSize (property)
 
 Tags: ui
+

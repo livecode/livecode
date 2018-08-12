@@ -4,13 +4,15 @@ Type: keyword
 
 Syntax: templateButton
 
-Summary: Used with the <set> <command> to set the <properties> of newly created <button|buttons>.
+Summary:
+Used with the <set> <command> to set the <properties> of newly created
+<button|buttons>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the height of the templateButton to 20
@@ -19,24 +21,43 @@ Example:
 set the textFont of the templateButton to "Arial"
 
 Description:
-Use the <templateButton> <keyword> to set up <default> <properties> to be used for any new <button(object)|buttons> you create.
+Use the <templateButton> <keyword> to set up <default> <properties> to
+be used for any new <button(object)|buttons> you create.
 
-The <templateButton> can be thought of as a special, abstract <object>. It is not an actual <button(keyword)>, but it has all the <properties> of a <button(keyword)>. The <ID> <property> of the <templateButton> is zero.
+The <templateButton> can be thought of as a special, abstract
+<object(glossary)>. It is not an actual <button(keyword)>, but it has
+all the <properties> of a <button(keyword)>. The <ID> <property> of the
+<templateButton> is zero.
 
-You can use the <set> <command> to set the <properties> of the <templateButton> before creating a <button(keyword)>. The new <button(keyword)> has the <properties> of the <templateButton>, by <default>. This example creates a <radio button>:
+You can use the <set> <command> to set the <properties> of the
+<templateButton> before creating a <button(keyword)>. The new
+<button(keyword)> has the <properties> of the <templateButton>, by
+<default>. This example creates a <radio button>:
 
-  on makeRadio
+    on makeRadio
     set the style of the templateButton to "radioButton"
     create button "Red" -- "Red" is a radio button
-  end makeRadio
 
-The properties of the <templateButton> can be returned to the default settings using the <reset> command.
+    end makeRadio
+
+
+The properties of the <templateButton> can be returned to the default
+settings using the <reset> command.
 
 You can refer to the <templateButton> using any of the following forms:
-        templateButton
-        the templateButton
-        templateButton()
 
->*Note:* The <templateButton> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
+    templateButton
+    the templateButton
+    templateButton()
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), button (keyword), object (object), button (object), keyword (glossary), property (glossary), radio button (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+
+>*Note:* The <templateButton> <keyword> is implemented internally as a
+> <function> and appears in the <functionNames>. However, it cannot be
+> used as a <function> in an <expression>.
+
+References: reset (command), set (command), function (control structure),
+functionNames (function), object (glossary), keyword (glossary),
+property (glossary), radio button (glossary), command (glossary),
+expression (glossary), templateScrollbar (keyword), default (keyword),
+button (keyword), button (object), properties (property), ID (property)
+

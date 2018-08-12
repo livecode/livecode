@@ -4,41 +4,73 @@ Type: keyword
 
 Syntax: $
 
-Summary: The character <$> (dollar sign) is used to indicate an <environment variable> on <Unix|Unix systems> and a command-line parameter on <Unix> or <Windows|Windows systems>.
+Summary:
+The character <$> (dollar sign) is used to indicate an 
+<environment variable> on <Unix|Unix systems> and a command-line
+parameter on <Unix> or <Windows|Windows systems>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put $LOGNAME into field "Login Name"
 
 Example:
-if $0 is not myAppName then answer "Problem initializing!"
+if $0 is not "myAppName" then answer "Problem initializing!"
 
 Description:
-Use the <$> <keyword> to interact with the system environment and to find out what <argument|arguments> were used if the application was started up from the command line.
+Use the <$> <keyword> to interact with the system environment and to
+find out what <argument|arguments> were used if the application was
+started up from the command line.
 
-The <$> character marks two kinds of special <variable|variables>: <command line|command-line> <argument|arguments> (on <OS X>, <Unix>, and <Windows|Windows systems>) and <environment variable|environment variables> (on <OS X> and <Unix|Unix systems>).
+The <$> character marks two kinds of special <variable|variables>:
+<command line|command-line> <argument|arguments> (on <OS X>, <Unix>, and
+<Windows|Windows systems>) and 
+<environment variable|environment variables> (on <OS X> and 
+<Unix|Unix systems>).
 
-If you start up the application from the command line (on OS X, Unix or Windows systems), the command name is stored in the global variable $0 and any arguments passed on the command line are stored in numbered variables starting with the <$> character. For example, if you start the application by typing the following <shell> command:
+If you start up the application from the command line (on OS X, Unix or
+Windows systems), the command name is stored in the global variable $0
+and any arguments passed on the command line are stored in numbered
+variables starting with the <$> character. For example, if you start the
+application by typing the following <shell> command:
 
-  myrevapp -h name
+    myrevapp -h name
 
-then the global variable $0 contains "myrevapp" (the name of the application), $1 contains "-h", and $2 contains "name".
 
-If an argument includes spaces, it must be enclosed in quotes on the command line:
+then the global variable $0 contains "myrevapp" (the name of the
+application), $1 contains "-h", and $2 contains "name".
 
-  myrevapp -in "new info.txt"  -out "new info.xml"
+If an argument includes spaces, it must be enclosed in quotes on the
+command line:
 
-On Unix and OS X systems, a variable whose name begins with the <$> character is exported to the <application|application's> environment, and is inherited by <process|processes> started up by the <shell> <function> or the <open process> <command>. Use this technique to create your own <environment variable|environment variables>.
+    myrevapp -in "new info.txt"  -out "new info.xml"
 
-You can access existing environment variables by prepending the <$> character to the <environment variable|environment variable's> name. For example, the following <statement> gets the contents of the LOGNAME <environment variable>:
 
-  get $LOGNAME
+On Unix and OS X systems, a variable whose name begins with the <$>
+character is exported to the <application|application's> environment,
+and is inherited by <process|processes> started up by the <shell>
+<function> or the <open process> <command>. Use this technique to create
+your own <environment variable|environment variables>.
 
-References: @ (keyword), relaunch (message), open process (command), paramCount (function), shell (function), function (control_st), setProp (control_st), application (glossary), variable (glossary), command line (glossary), argument (glossary), command (glossary), Windows (glossary), environment variable (glossary), OS X (glossary), keyword (glossary), Unix (glossary), statement (glossary), process (glossary)
+You can access existing environment variables by prepending the <$>
+character to the <environment variable|environment variable's> name. For
+example, the following <statement> gets the contents of the LOGNAME
+<environment variable>:
+
+    get $LOGNAME
+
+
+References: open process (command), function (control structure),
+setProp (control structure), paramCount (function), shell (function),
+application (glossary), variable (glossary), command line (glossary),
+argument (glossary), command (glossary), Windows (glossary),
+environment variable (glossary), OS X (glossary), keyword (glossary),
+Unix (glossary), statement (glossary), process (glossary), @ (keyword),
+relaunch (message)
 
 Tags: properties
+

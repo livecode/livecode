@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/* 
+/**
 This library consists of the operations for performing complex type conversion in LiveCode Builder.
 */
 
@@ -25,7 +25,7 @@ public foreign handler MCTypeConvertExecCombineListWithDelimiter(in Target as Li
 
 --
 
-/*
+/**
 Summary:        Splits the string in <Target> into a list of strings, using <Delimiter>
                 as the delimiter.
 
@@ -38,8 +38,7 @@ Example:
 	variable tVar as String
     put "first,second,third,fourth,fifth" into tVar
     variable tSplit as List
-    split tVar by ","
-    put the result into tSplit
+    split tVar by "," into tSplit
     put element 1 of tSplit into tFirstElement // tFirstElement contains "first"
     
 Description:
@@ -54,7 +53,7 @@ begin
     MCTypeConvertExecSplitStringByDelimiter(Target, Delimiter)
 end syntax
 
-/*
+/**
 Summary:        Combines the list of strings in <Target>, using <Delimiter>
                 as the delimiter. 
                 
@@ -64,13 +63,13 @@ Delimiter:      An expression that evaluates to a string.
 The result: 	The combined string.
 
 Example:
-	variable tDigits as List
-	put [1,2,3,4,5,6,7,8,9] into tDigits
+	variable tWords as List
+	put ["A","List","of","words"] into tWords
 	
 	variable tString as String
-    combine tDigits with "|" 
-    put the result into tString // tString contains "1|2|3|4|5|6|7|8|9"
-            
+	combine tWords with " " into tString
+	-- tString contains "A List of words"
+
 Description:
 Use the combine command to convert a list into a string representation of the list.
 

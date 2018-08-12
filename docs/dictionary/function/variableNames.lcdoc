@@ -6,13 +6,15 @@ Syntax: the variableNames
 
 Syntax: variableNames()
 
-Summary: <return|Returns> a list of all <parameter|parameters>, <local variable|local variables>, and <global> <variable|variables>.
+Summary:
+<return|Returns> a list of all <parameter|parameters>, <local
+variable|local variables>, and <global> <variable|variables>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the variableNames
@@ -21,17 +23,30 @@ Example:
 repeat with x=1 to the number of items of line 4 of the variableNames
 
 Returns:
-The <variableNames> function <return|returns> a value consisting of four <lines> :
-        1. Parameters passed to the current handler (including leading '@' for parameters passed by-reference)
+The <variableNames> function <return|returns> a value consisting of four
+<lines> :
+
+        1. Parameters passed to the current handler (including leading
+           '@' for parameters passed by-reference)
         2. Local variables created in the current handler
-        3. Local variables created in the current script but outside all handlers
+        3. Local variables created in the current script but outside all
+           handlers 
         4. Global variables
 
-Within each line, the variable or parameter names are separated by commas.
+
+Within each line, the variable or parameter names are separated by
+commas. 
 
 Description:
-Use the <variableNames> <function> to find out which sources of <value> are available to the current <handler>, or to see whether a <variable> name is available for use.
+Use the <variableNames> <function> to find out which sources of <value>
+are available to the current <handler>, or to see whether a <variable>
+name is available for use.
 
-References: lines (keyword), global (command), local (command), functionNames (function), paramCount (function), globalNames (function), value (function), parameter (glossary), handler (glossary), variable (glossary), return (glossary), local variable (glossary), function (control_st)
+References: global (command), local (command),
+function (control structure), functionNames (function),
+paramCount (function), globalNames (function), value (function),
+parameter (glossary), handler (glossary), variable (glossary),
+return (glossary), local variable (glossary), lines (keyword)
 
 Tags: properties
+

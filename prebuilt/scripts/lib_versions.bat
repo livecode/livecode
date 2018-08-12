@@ -1,7 +1,9 @@
 REM # This file sets the libraries versions defined in versions/
 
-FOR /f %%A IN ('type versions\openssl') DO SET OpenSSL_VERSION=%%A
-FOR /f %%A IN ('type versions\icu') DO SET ICU_VERSION=%%A
-FOR /f %%A IN ('type versions\icu_major') DO SET ICU_VERSION_MAJOR=%%A
-FOR /f %%A IN ('type versions\cef') DO SET CEF_VERSION=%%A
-FOR /f %%A IN ('type versions\curl') DO SET Curl_VERSION=%%A
+FOR %%L in (OpenSSL ICU CEF Curl) DO (
+	SET PREBUILT_LIB=%%L
+	SET /P !PREBUILT_LIB!_VERSION=<versions\!PREBUILT_LIB!
+	IF EXIST "versions\!PREBUILT_LIB!_buildrevision" (
+		SET /P !PREBUILT_LIB!_BUILDREVISION=<versions\!PREBUILT_LIB!_buildrevision
+	)
+)

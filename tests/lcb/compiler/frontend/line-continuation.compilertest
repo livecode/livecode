@@ -1,0 +1,65 @@
+%% Copyright (C) 2016 LiveCode Ltd.
+%%
+%% This file is part of LiveCode.
+%%
+%% LiveCode is free software; you can redistribute it and/or modify it under
+%% the terms of the GNU General Public License v3 as published by the Free
+%% Software Foundation.
+%%
+%% LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+%% WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+%% for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+%% Continuation characters allow long lines of code to be spread
+%% across multiple lines in the source file by escaping the following
+%% newline character.
+%TEST Continuation
+module \
+		compiler_test
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%% Continuation characters may be followed by any number of spaces and tabs
+%TEST ContinuationWhiteSpace
+module \ 	 	
+		compiler_test
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%% Line continuation characters can't occur within a line, because
+%% they consume a following newline.
+%TEST ContinuationNoNewline
+module %{CONTINUATION_IN_LINE}\ compiler_test
+end module
+%EXPECT PASS
+%ERROR "Illegal token '\'" AT CONTINUATION_IN_LINE
+%ENDTEST
+
+%% A line continuation character consumes a following newline.  A
+%% backslash followed by a comment isn't a line continuation.
+%TEST ContinuationPreComment
+module %{CONTINUATION_BEFORE_COMMENT}\ -- test
+		compiler_test
+end module
+%EXPECT PASS
+%ERROR "Illegal token '\'" AT CONTINUATION_BEFORE_COMMENT
+%ENDTEST
+
+%% Line comments consume all characters up to the following newline
+%% and therefore cannot be continued
+%TEST CommentedContinuation
+module compiler_test
+-- comment \
+with%{SYNTAX} continuation character
+end module
+%EXPECT PASS
+%ERROR "syntax error" AT SYNTAX
+%ENDTEST

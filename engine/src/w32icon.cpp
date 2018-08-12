@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "globals.h"
 #include "uidc.h"
-//#include "execpt.h"
+
 #include "card.h"
 #include "stack.h"
 #include "image.h"
@@ -348,7 +348,7 @@ static HMENU create_icon_menu(MCStringRef p_menu)
 			t_item_start++;
 
 		MenuItemDescriptor *t_item;
-		t_item = new MenuItemDescriptor;
+		t_item = new (nothrow) MenuItemDescriptor;
 	
 		if (t_current_item == NULL)
 			t_items = t_item, t_current_item = t_items;
@@ -363,12 +363,12 @@ static HMENU create_icon_menu(MCStringRef p_menu)
 		}
 
 		MCValueRelease(t_item->m_name);
-		/* UNCHECKED */ MCStringCopySubstring(p_menu, MCRangeMake(t_item_start, t_tag_sep - t_item_start), t_item->m_name);
+		/* UNCHECKED */ MCStringCopySubstring(p_menu, MCRangeMakeMinMax(t_item_start, t_tag_sep), t_item->m_name);
 
 		if (t_tag_sep != t_item_end)
 		{
 			MCValueRelease(t_item->m_tag);
-			/* UNCHECKED */ MCStringCopySubstring(p_menu, MCRangeMake(t_tag_sep + 1, t_item_end - t_tag_sep - 1), t_item->m_tag);
+			/* UNCHECKED */ MCStringCopySubstring(p_menu, MCRangeMakeMinMax(t_tag_sep + 1, t_item_end), t_item->m_tag);
 		}
 
 		t_item -> depth = t_item_start - t_offset;
@@ -466,16 +466,14 @@ bool build_pick_string(HMENU p_menu, UINT32 p_command, MCStringRef x_mutable)
 		{
 			if (t_info . hSubMenu != NULL && build_pick_string(t_info . hSubMenu, p_command, x_mutable))
 			{
-				/* UNCHECKED */ MCStringAppendChar(x_mutable, '|');
-				t_success = true;
+				t_success = MCStringPrependChar(x_mutable, '|');
 			}
 		}
 		
 		if (t_success)
 		{
 			// SN-2014-80-28: [[ Bug 13289 ]] dwItemData contains what has been selected (the tag, if not the name).
-			/* UNCHECKED */ MCStringAppendChars(x_mutable, (unichar_t*)t_info . dwItemData, lstrlenW((unichar_t*)t_info . dwItemData));
-			return true;
+			return MCStringPrependChars(x_mutable, (unichar_t*)t_info . dwItemData, lstrlenW((unichar_t*)t_info . dwItemData));
 		}
 	}
 	
@@ -537,7 +535,7 @@ void MCScreenDC::processtaskbarnotify(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
 		if (!s_got_dblclick)
 		{
-			if (MCdefaultstackptr != nil)
+			if (MCdefaultstackptr)
 				MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_status_icon_click, t_button);
 		}
 		else
@@ -558,7 +556,7 @@ void MCScreenDC::processtaskbarnotify(HWND hwnd, WPARAM wparam, LPARAM lparam)
 			t_button = 3;
 
 		s_got_dblclick = true;
-		if (MCdefaultstackptr != nil)
+		if (MCdefaultstackptr)
 			MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_status_icon_double_click, t_button);
 	}
 	break;

@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 #include "objdefs.h"
-//#include "execpt.h"
+
 #include "exec.h"
 #include "mcerror.h"
 #include "ans.h"
@@ -169,11 +169,6 @@ char * get_filter_masks (const char * p_type )
     const char *t_ptr ;
 	uint4 a ;
 
-	// MW-2010-10-14: Make sure we have enough room to do this.
-	char *ret;
-	ret = strdup(p_type);
-	memset(ret, 0, strlen(p_type));
-
 	a = 0 ;
 	t_ptr = p_type ;
 	
@@ -185,6 +180,11 @@ char * get_filter_masks (const char * p_type )
 		return (NULL);	// Something went wrong!
 	t_ptr++; // Move over the breaking char
 	
+    // MW-2010-10-14: Make sure we have enough room to do this.
+    char *ret;
+    ret = strdup(p_type);
+    memset(ret, 0, strlen(p_type));
+    
 	while ( *t_ptr != '|' && *t_ptr != '\0' )
 		ret[a++] = *t_ptr++;
 	
@@ -272,7 +272,7 @@ char * get_filter_mask ( uint4 p_mask_id, char * p_masks )
 void make_front_widget ( GtkWidget *p_widget)
 {
 	Window t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == DNULL && MCtopstackptr != NULL)
+	if (t_window == DNULL && MCtopstackptr)
 		t_window = MCtopstackptr -> getwindow();
 
 	gtk_widget_realize( GTK_WIDGET( p_widget )) ;
@@ -668,7 +668,7 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
             else
             {
                 MCAutoStringRef t_tmp_folder;
-                MCStringCopySubstring(p_initial, MCRangeMake(t_last_slash + 1, MCStringGetLength(p_initial) - (t_last_slash+1)), &t_name);
+                MCStringCopySubstring(p_initial, MCRangeMakeMinMax(t_last_slash + 1, MCStringGetLength(p_initial)), &t_name);
                 MCStringCopySubstring(p_initial, MCRangeMake(0, t_last_slash), &t_tmp_folder);
 
                 if (MCS_exists(*t_tmp_folder, False))

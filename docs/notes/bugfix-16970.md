@@ -1,0 +1,1 @@
+# Prevent crash when setting the screenPixelScale

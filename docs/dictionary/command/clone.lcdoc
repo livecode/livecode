@@ -2,15 +2,16 @@ Name: clone
 
 Type: command
 
-Syntax: clone [invisible] <object> 
+Syntax: clone [invisible] <object> [as <newName>]
 
-Summary: Duplicates an <object>.
+Summary:
+Duplicates an <object(glossary)>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 clone field 1
@@ -19,27 +20,54 @@ Example:
 clone the selectedObject
 
 Example:
-clone this card
+clone this card as "clonedCard"
 
 Example:
 clone invisible stack "myStack"
 
 Parameters:
-object: An object or stack reference or an expression that resolves to either.
+object:
+An object or stack reference or an expression that resolves to either.
 
-It: The <clone> command places the long id property of the newly created object in the <it Keyword>.
+newName:
+An optional name for the new object.
+
+It:
+The <clone> command places the long id property of the newly created
+object in the <it> variable.
 
 Description:
-Use the <clone> <command> to create a copy of an existing <object>.
+Use the <clone> <command> to create a copy of an existing
+<object(glossary)>. 
 
-If the <object> is a <control>, its copy is placed on the <current card>, 32 <pixels> below and to the right of the original <object>. The copy's <name> and other <properties> are the same as those of the original. If the <object> is a <grouped control>, the clone is also <owner|owned> by the <group>.
+If the <object(glossary)> is a <control>, its copy is placed on the 
+<current card>, 32 <pixels> below and to the right of the original 
+<object(glossary)>. The copy's <name> and other <properties> are the
+same as those of the original. If the <object(glossary)> is a <grouped
+control>, the clone is also <owner|owned> by the <group>.
 
->*Note:*  If invisible is specified the new object will have its visible property set to false.
+>*Note:*  If invisible is specified the new object will have its
+> visible 
+>property set to false.
 
-If the <object> is a <card>, the copy becomes the <current card>.
+If the <object(glossary)> is a <card>, the copy becomes the 
+<current card>. 
 
-If the <object> is a <stack>, the newly created <stack> is opened. It is named "Copy of" and the stack's name.
+If the <object(glossary)> is a <stack>, the newly created <stack> is
+opened. It is named "Copy of" and the stack's name.
 
 The <clone> <command> does not affect the contents of the <clipboard>.
 
-References: pixels (property), properties (property), name (property), newButton (message), newCard (message), newGroup (message), newPlayer (message), newGraphic (message), newField (message), newScrollbar (message), newEPS (message), newImage (message), card (keyword), control (keyword), it Keyword (keyword), stack (object), object (object), grouped control (glossary), current card (glossary), owner (glossary), command (glossary), create card (command), paste (command), group (command), copy (command), create stack (command), clipboard (function)
+If the 'as' variant is used, the newly created object is given the 
+specified name.
+
+References: create card (command), paste (command), group (command),
+copy (command), create stack (command), clipboard (function),
+object (glossary), grouped control (glossary), current card (glossary),
+owner (glossary), command (glossary), card (keyword), control (keyword),
+it (keyword), newAudioclip (message), newButton (message),
+newCard (message), newGroup (message), newPlayer (message),
+newGraphic (message), newField (message), newScrollbar (message),
+newEPS (message), newImage (message), newVideoclip (message),
+stack (object), pixels (property), properties (property), name (property)
+

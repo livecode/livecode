@@ -6,13 +6,15 @@ Syntax: the selectedImage
 
 Syntax: selectedImage()
 
-Summary: Returns the number of the <image> which is partly or completely <selected> with the Select tool.
+Summary:
+Returns the number of the <image> which is partly or completely
+<selected> with the Select tool.
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the selectedImage
@@ -21,16 +23,26 @@ Example:
 put the short name of the selectedImage into field "Current Image"
 
 Returns:
-The <selectedImage> <function> returns the word "image" followed by an <image|image's> <number>.
-If nothing is selected with the select tool, the <selectedImage> <function> returns empty.
+The <selectedImage> <function> returns the word "image" followed by an
+<image|image's> <number>. If nothing is selected with the select tool,
+the <selectedImage> <function> returns empty.
 
 Description:
-Use the <selectedImage> <function> to find out which <image> the user is painting in.
+Use the <selectedImage> <function> to find out which <image> the user is
+painting in.
 
-You use the Pointer tool to select entire objects (including images), but you use the Select tool (which is one of the paint tools) to select a rectangular portion of the picture that's contained in an image. The <selectedImage> <function> reports on the Select tool's selection, not the <Pointer tool|Pointer tool's>.
+You use the Pointer tool to select entire objects (including images),
+but you use the Select tool (which is one of the paint tools) to select
+a rectangular portion of the picture that's contained in an image. The
+<selectedImage> <function> reports on the Select tool's selection, not
+the <Pointer tool|Pointer tool's>.
 
-To find out which objects are selected with the Pointer tool, use the selectedObject <function> instead.
+To find out which objects are selected with the Pointer tool, use the
+selectedObject <function> instead.
 
-References: selected (property), number (function), image (keyword), function (control_st), Pointer tool (glossary), choose (command), image (object)
+References: choose (command), function (control structure),
+number (function), Pointer tool (glossary), image (keyword),
+image (object), selected (property)
 
 Tags: multimedia
+

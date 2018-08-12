@@ -2,35 +2,62 @@ Name: revCloseDatabase
 
 Type: command
 
-Syntax: revCloseDatabase <databaseID> 
+Syntax: revCloseDatabase <databaseID>
 
-Summary: Closes the connection to a <database>.
+Summary:
+Closes the connection to a <database>.
+
+Associations: database library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revCloseDatabase savedBudgetDB
 
 Parameters:
-databaseID: The number returned by the revOpenDatabase function when the database was opened.
+databaseID:
+The number returned by the revOpenDatabase function when the database
+was opened.
 
-The result: If the closure is not successful, the result <function> returns an error message that begins with the <string> "revdberr".
+The result:
+If the closure is not successful, the result <function> returns an error
+message that begins with the <string> "revdberr".
 
 Description:
-Use the <revCloseDatabase> <command> to cleanly log off from a <database>.
+Use the <revCloseDatabase> <command> to cleanly log off from a
+<database>. 
 
-All open databases are closed automatically when the application quits. However, it is recommended practice to explicitly close database connections when your stack is finished with them.
+All open databases are closed automatically when the application quits.
+However, it is recommended practice to explicitly close database
+connections when your stack is finished with them.
 
-The <revCloseDatabase> <command> closes all open <record sets (database cursors)(glossary)> opened by the <database>, as well as closing the <database> itself.
+The <revCloseDatabase> <command> closes all open <record sets (database
+cursors)(glossary)> opened by the <database>, as well as closing the
+<database> itself.
 
->*Important:*  The <revCloseDatabase> <command> is part of the <Database library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revCloseDatabase> <command> is part of the 
+> <Database library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
-References: string (keyword), Database library (library), LiveCode custom library (library), revCloseCursor (command), revRollBackDatabase (command), revDatabaseConnectResult (function), revdb_rollback (function), revDatabaseID (function), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), record set (database cursor) (glossary), command (glossary), function (control_st)
+References: revCloseCursor (command), revRollBackDatabase (command),
+function (control structure), revDatabaseConnectResult (function),
+revdb_rollback (function), revDatabaseID (function),
+LiveCode custom library (glossary),
+Standalone Application Settings (glossary), database (glossary),
+standalone application (glossary),
+record set (database cursor) (glossary), command (glossary),
+string (keyword), Database library (library)
 
 Tags: database
+

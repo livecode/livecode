@@ -4,13 +4,15 @@ Type: command
 
 Syntax: import <type> from file <filePath> [with mask <maskFilePath>]
 
-Summary: Creates an <image>, <EPS>, <audio clip>, or <video clip> and copies the contents of a <file> into the <object>.
+Summary:
+Creates an <image>, <EPS>, <audio clip>, or <video clip> and copies the
+contents of a <file> into the <object(glossary)>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,web,mobile
+Platforms: desktop, mobile
 
 Security: disk
 
@@ -24,20 +26,69 @@ Example:
 import paint from file it with mask "/etc/res/oval.pbm"
 
 Parameters:
-type: One of paint, EPS, audioClip, or videoClip.
-filePath: The filePath specifies the name and location of the file you want to import from. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
-maskFilePath: The maskFilePath specifies the name and location of a one-bit mask file for an image. You can use a mask file only if the file being imported is in the PBM format.
+type:
+One of paint, EPS, audioClip, or videoClip.
+
+filePath:
+The filePath specifies the name and location of the file you want to
+import from. If you specify a name but not a location, LiveCode assumes
+the file is in the defaultFolder.
+
+maskFilePath:
+The maskFilePath specifies the name and location of a one-bit mask file
+for an image. You can use a mask file only if the file being imported is
+in the PBM format.
 
 Description:
-Use the <import> <command> to place a sound, movie, or <image> in a <stack>, instead of creating a <referenced control> that uses an external file.
+Use the <import> <command> to place a sound, movie, or <image> in a
+<stack>, instead of creating a <referenced control> that uses an
+external file.
 
-The imported object is placed in the current stack. To change the current stack before importing, set the <defaultStack> <property> to the stack you want to import into, then import the <file>.
-Importing a paint file creates an image object on the current card. The <import> command can import <GIF>, <JPEG>, <PNG>, <BMP>, <XWD>, <XBM>, <XPM>, or <PBM>, <PGM>, or <PPM> <files>. On <Mac OS|Mac OS systems>, <PICT> <files> can also be <import|imported> (but they cannot be displayed on <Unix> or <Windows|Windows systems>).
-Importing an EPS file creates an EPS object on the current card.
-Importing an audioClip or videoClip file creates an audio clip or video clip in the current stack. Audio files can be in WAV, AIFF, or AU format. Video files can be in <QuickTime>, <AVI>, or <MPEG> <format>.
+The imported object is placed in the current stack. To change the
+current stack before importing, set the <defaultStack> <property> to the
+stack you want to import into, then import the <file>. Importing a paint
+file creates an image object on the current card. The <import> command
+can import <GIF>, <JPEG>, <PNG>, <BMP>, <XWD>, <XBM>, <XPM>, or <PBM>,
+<PGM>, or <PPM> <files>. On <Mac OS|Mac OS systems>, <PICT> <files> can
+also be <import|imported> (but they cannot be displayed on <Unix> or
+<Windows|Windows systems>). Importing an EPS file creates an EPS object
+on the current card. Importing an audioClip or videoClip file creates an
+audio clip or video clip in the current stack. Audio files can be in
+WAV, AIFF, or AU format. Video files can be in <QuickTime>, <AVI>, or
+<MPEG> <format>.
 
->*Note:* The <import> <command> places the data in the <stack file> itself. This assures that the information stays with the <stack> if it's moved, but it also increases the <stack|stack's> size and the amount of memory used by the <stack>. If you prefer to keep the data outside the <stack file>, you can display a picture file without importing it by creating an <image> and setting its <filenameproperty>, or by choosing File menu<img src="202656"/>New Referenced Control<img src="202656"/>Image File. To allow playing a sound or movie without importing it, create a pl and set its filename prop, or choose File menu<img src="202656"/>New Referenced Control<img src="202656"/>QuickTime-Supported File.
+>*Note:* The <import> <command> places the data in the <stack file>
+> itself. This assures that the information stays with the <stack> if
+> it's moved, but it also increases the <stack|stack's> size and the
+> amount of memory used by the <stack>. If you prefer to keep the data
+> outside the <stack file>, you can display a picture file without
+> importing it by creating an <image> and setting its
+> <filename> <property>, or by choosing File → New Referenced Control →
+> Image File… from the menubar. To allow playing a sound or movie
+> without importing it, create a player and set its filename prop, or
+> choose File → New Referenced Control → Video File… .
 
-References: defaultStack (property), filename (property), JPEGQuality (property), filenameproperty (property), paintCompression (property), file (keyword), image (keyword), paint (keyword), export (command), import snapshot (command), play (command), EPS (object), object (object), stack (object), referenced control (glossary), MPEG (glossary), import (glossary), video clip (glossary), PICT (glossary), property (glossary), command (glossary), Unix (glossary), BMP (glossary), QuickTime (glossary), Mac OS (glossary), PBM (glossary), GIF (glossary), JPEG (glossary), XPM (glossary), PGM (glossary), XWD (glossary), audio clip (glossary), PPM (glossary), XBM (glossary), PNG (glossary), stack file (glossary), Windows (glossary), AVI (glossary), format (function), files (function)
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: export (command), import snapshot (command), play (command),
+format (function), files (function), object (glossary),
+referenced control (glossary), MPEG (glossary), import (glossary),
+video clip (glossary), PICT (glossary), property (glossary),
+command (glossary), Unix (glossary), BMP (glossary), QuickTime (glossary),
+Mac OS (glossary), PBM (glossary), GIF (glossary), JPEG (glossary),
+XPM (glossary), PGM (glossary), XWD (glossary), audio clip (glossary),
+PPM (glossary), XBM (glossary), PNG (glossary), stack file (glossary),
+Windows (glossary), AVI (glossary), file (keyword), image (keyword),
+paint (keyword), EPS (object), stack (object), defaultStack (property),
+filename (property), JPEGQuality (property),
+paintCompression (property)
 
 Tags: file system
+

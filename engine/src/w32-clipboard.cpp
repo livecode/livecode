@@ -16,6 +16,13 @@
 
 
 #include "w32-clipboard.h"
+#include "osspec.h"
+
+#include "globdefs.h"
+#include "filedefs.h"
+#include "mcio.h"
+#include "imagebitmap.h"
+#include "image.h"
 
 #include <ObjIdl.h>
 #include <ShlObj.h>
@@ -163,8 +170,9 @@ MCWin32RawClipboardItem* MCWin32RawClipboardCommon::CreateNewItem()
 		return NULL;
 
 	// Create a new data item
-	m_item = new MCWin32RawClipboardItem(this);
+	m_item = new (nothrow) MCWin32RawClipboardItem(this);
 	m_item->Retain();
+	
 	return m_item;
 }
 
@@ -294,25 +302,264 @@ MCStringRef MCWin32RawClipboardCommon::DecodeTransferredFileList(MCDataRef p_dat
 	}
 
 	// Decode the paths into a StringRef
-	MCStringRef t_decoded = NULL;
+	MCAutoStringRef t_decoded;
 	if (t_dropfiles->fWide)
-		MCStringCreateWithBytes(t_bytes, t_path_char_count*2, kMCStringEncodingUTF16, false, t_decoded);
+		MCStringCreateWithBytes(t_bytes, t_path_char_count*2, kMCStringEncodingUTF16, false, &t_decoded);
 	else 
-		MCStringCreateWithBytes(t_bytes, t_path_char_count*1, kMCStringEncodingNative, false, t_decoded);
-
-	// Replace the NULs with newlines and trim the trailing newline
-	if (t_decoded != NULL 
-		&& (!MCStringMutableCopyAndRelease(t_decoded, t_decoded)
-		|| !MCStringFindAndReplaceChar(t_decoded, '\0', '\n', kMCStringOptionCompareExact)
-		|| !MCStringRemove(t_decoded, MCRangeMake(MCStringGetLength(t_decoded)-1, 1))
-		|| !MCStringCopyAndRelease(t_decoded, t_decoded)))
-	{
-		MCValueRelease(t_decoded);
-		return NULL;
-	}
+		MCStringCreateWithBytes(t_bytes, t_path_char_count*1, kMCStringEncodingNative, false, &t_decoded);
+    
+    if (*t_decoded == nullptr)
+        return nullptr;
+    
+    // Create a mutable list ref.
+    MCAutoListRef t_output;
+    if (!MCListCreateMutable('\n', &t_output))
+        return nullptr;
+    
+    // Split the file name list into individual paths
+    MCAutoArrayRef t_native_paths;
+    if (!MCStringSplit(*t_decoded, kMCNulString, NULL, kMCStringOptionCompareExact, &t_native_paths))
+        return nullptr;
+    
+    uindex_t npaths = MCArrayGetCount(*t_native_paths);
+    
+    for (uindex_t i = 0; i < npaths; i++)
+    {
+        MCValueRef t_native_path_val = nil;
+        if (!MCArrayFetchValueAtIndex(*t_native_paths, i + 1, t_native_path_val))
+            return nullptr;
+        MCStringRef t_native_path = (MCStringRef)t_native_path_val;
+        if (!MCStringIsEmpty(t_native_path))
+        {
+            MCAutoStringRef t_path;
+            if(!MCS_pathfromnative(t_native_path, &t_path) || !MCListAppend(*t_output, *t_path))
+                return nullptr;
+        }
+    }
+    
+    MCAutoStringRef t_result;
+    if (!MCListCopyAsString(*t_output, &t_result))
+        return nullptr;
 
 	// Done
-	return t_decoded;
+    return t_result.Take();
+}
+
+MCDataRef MCWin32RawClipboardCommon::EncodeHTMLFragmentForTransfer(MCDataRef p_html) const
+{
+	const char *t_header_template = "Version:0.9\r\nStartHTML:%010d\r\nEndHTML:%010d\r\nStartFragment:%010d\r\nEndFragment:%010d\r\n";
+	const char *t_doc_prefix = "<html><body><!--StartFragment -->";
+	const char *t_doc_suffix = "<!--EndFragment --></body></html>";
+
+	uindex_t t_starthtml, t_endhtml, t_startfragment, t_endfragment;
+	// length of header will be length of template + difference between placeholder length and inserted string length
+	// numbers are padded to 10 digits using '0's
+	t_starthtml = strlen(t_header_template) + 4 * (10 - 5);
+	t_startfragment = t_starthtml + strlen(t_doc_prefix);
+	t_endfragment = t_startfragment + MCDataGetLength(p_html);
+	t_endhtml = t_endfragment + strlen(t_doc_suffix);
+
+	MCAutoStringRef t_header;
+	MCAutoStringRef t_start_string;
+	MCAutoStringRef t_end_string;
+
+	if (!MCStringFormat(&t_header, t_header_template, t_starthtml, t_endhtml, t_startfragment, t_endfragment))
+		return nil;
+
+	MCAutoDataRef t_header_data;
+	if (!MCStringEncode(*t_header, kMCStringEncodingUTF8, false, &t_header_data))
+		return nil;
+
+	MCAutoDataRef t_data;
+	if (!MCDataMutableCopy(*t_header_data, &t_data))
+		return nil;
+
+	if (!MCDataAppendBytes(*t_data, (const byte_t*)t_doc_prefix, strlen(t_doc_prefix)))
+		return nil;
+
+	if (!MCDataAppend(*t_data, p_html))
+		return nil;
+
+	if (!MCDataAppendBytes(*t_data, (const byte_t*)t_doc_suffix, strlen(t_doc_suffix)))
+		return nil;
+
+	return t_data.Take();
+}
+
+bool MCWin32RawClipboardGetHTMLDataHeader(MCDataRef p_data, uindex_t &x_index, MCStringRef &r_key, MCStringRef &r_value)
+{
+	MCAutoStringRef t_key;
+	MCAutoStringRef t_value;
+
+	uindex_t t_length;
+	t_length = MCDataGetLength(p_data);
+
+	const byte_t *t_data_ptr;
+	t_data_ptr = MCDataGetBytePtr(p_data);
+
+	uindex_t t_index = x_index;
+
+	for (uint32_t i = t_index; i < t_length; i++)
+	{
+		if (char(t_data_ptr[i]) == ':')
+		{
+			if (!MCStringCreateWithBytes(t_data_ptr + t_index, i - t_index, kMCStringEncodingUTF8, false, &t_key))
+				return false;
+			t_index = i + 1;
+			break;
+		}
+
+		// end of line with no ':' char - not a header
+		if (char(t_data_ptr[i]) == '\r' || char(t_data_ptr[i]) == '\n')
+			return false;
+
+		// start of html data - no header
+		if (char(t_data_ptr[i]) == '<')
+			return false;
+	}
+
+	// reached end without finding key
+	if (*t_key == nil)
+		return false;
+
+	// look for end of line - may be cr, lf, or crlf
+	for (uindex_t i = t_index; i < t_length; i++)
+	{
+		// end of line
+		if (char(t_data_ptr[i]) == '\r' || char(t_data_ptr[i]) == '\n')
+		{
+			if (!MCStringCreateWithBytes(t_data_ptr + t_index, i - t_index, kMCStringEncodingUTF8, false, &t_value))
+				return false;
+			t_index = i + 1;
+			// check for crlf
+			if (char(t_data_ptr[i]) == '\r' && t_index < t_length && char(t_data_ptr[t_index]) == '\n')
+				t_index++;
+
+			break;
+		}
+	}
+
+	// reached end without finding line ending
+	if (*t_value == nil)
+		return false;
+
+	r_key = t_key.Take();
+	r_value = t_value.Take();
+
+	x_index = t_index;
+
+	return true;
+}
+
+MCDataRef MCWin32RawClipboardCommon::DecodeTransferredHTML(MCDataRef p_data) const 
+{
+	bool t_success = true;
+
+	uindex_t t_index = 0;
+
+	index_t t_starthtml = -1;
+	index_t t_endhtml = -1;
+	index_t t_startfragment = -1;
+	index_t t_endfragment = -1;
+	index_t t_startselection = -1;
+	index_t t_endselection = -1;
+
+	MCStringRef t_headerkey = nil;
+	MCStringRef t_headervalue = nil;
+
+	while (MCWin32RawClipboardGetHTMLDataHeader(p_data, t_index, t_headerkey, t_headervalue))
+	{
+		MCAutoNumberRef t_number;
+		if (MCStringIsEqualToCString(t_headerkey, "starthtml", kMCStringOptionCompareCaseless))
+		{
+			if (MCNumberParse(t_headervalue, &t_number))
+				t_starthtml = MCNumberFetchAsInteger(*t_number);
+		}
+		else if (MCStringIsEqualToCString(t_headerkey, "endhtml", kMCStringOptionCompareCaseless))
+		{
+			if (MCNumberParse(t_headervalue, &t_number))
+				t_endhtml = MCNumberFetchAsInteger(*t_number);
+		}
+		else if (MCStringIsEqualToCString(t_headerkey, "startfragment", kMCStringOptionCompareCaseless))
+		{
+			if (MCNumberParse(t_headervalue, &t_number))
+				t_startfragment = MCNumberFetchAsInteger(*t_number);
+		}
+		else if (MCStringIsEqualToCString(t_headerkey, "endfragment", kMCStringOptionCompareCaseless))
+		{
+			if (MCNumberParse(t_headervalue, &t_number))
+				t_endfragment = MCNumberFetchAsInteger(*t_number);
+		}
+		else if (MCStringIsEqualToCString(t_headerkey, "startselection", kMCStringOptionCompareCaseless))
+		{
+			if (MCNumberParse(t_headervalue, &t_number))
+				t_startselection = MCNumberFetchAsInteger(*t_number);
+		}
+		else if (MCStringIsEqualToCString(t_headerkey, "endselection", kMCStringOptionCompareCaseless))
+		{
+			if (MCNumberParse(t_headervalue, &t_number))
+				t_endselection = MCNumberFetchAsInteger(*t_number);
+		}
+
+		MCValueRelease(t_headerkey);
+		MCValueRelease(t_headervalue);
+		t_headerkey = nil;
+		t_headervalue = nil;
+	}
+
+	uindex_t t_start = -1;
+	uindex_t t_end = -1;
+
+	// Strip off the HTML fragment headers but leave the context elements intact;
+	// the legacy clipboard round-trips through a field object so these will get
+	// removed then while they will be retained for the fullClipboardData.
+	if (t_starthtml != -1 && t_endhtml != -1)
+	{
+		t_start = t_starthtml;
+		t_end = t_endhtml;
+	}
+
+	t_end = MCClamp(t_end, 0, MCDataGetLength(p_data));
+	t_start = MCClamp(t_start, 0, t_end);
+
+	MCDataRef t_decoded;
+	if (MCDataCopyRange(p_data, MCRangeMakeMinMax(t_start, t_end), t_decoded))
+		return t_decoded;
+
+	return nil;
+}
+
+MCDataRef MCWin32RawClipboardCommon::EncodeBMPForTransfer(MCDataRef p_bmp) const
+{
+	// Strip the BITMAPFILEHEADER structure from the BMP and pass the BMP in its in-memory form
+	MCAutoDataRef t_data;
+	size_t t_offset = sizeof(BITMAPFILEHEADER);
+	if (!MCDataCopyRange(p_bmp, MCRangeMakeMinMax(t_offset, MCDataGetLength(p_bmp)), &t_data))
+		return nil;
+	return *t_data;
+}
+
+MCDataRef MCWin32RawClipboardCommon::DecodeTransferredBMP(MCDataRef p_bmp) const
+{
+	// Add a BITMAPFILEHEADER structure to the front of the in-memory form
+	BITMAPFILEHEADER t_header = { 0 };
+	t_header.bfType = 'MB';
+	t_header.bfSize = sizeof(BITMAPFILEHEADER) + MCDataGetLength(p_bmp);
+	t_header.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPV5HEADER);
+
+	MCAutoDataRef t_bmp;
+	if (!MCDataCreateMutable(0, &t_bmp))
+		return nil;
+
+	// Add the header
+	if (!MCDataAppendBytes(*t_bmp, (const byte_t*)&t_header, sizeof(BITMAPFILEHEADER)))
+		return nil;
+
+	// Add the bitmap data
+	if (!MCDataAppend(*t_bmp, p_bmp))
+		return nil;
+
+	return t_bmp.Take();
 }
 
 void MCWin32RawClipboardCommon::SetDirty()
@@ -335,7 +582,7 @@ bool MCWin32RawClipboardCommon::SetToIDataObject(IDataObject* p_object)
 
 	// Create a wrapper for this object
 	m_external_data = true;
-	m_item = new MCWin32RawClipboardItem(this, p_object);
+	m_item = new (nothrow) MCWin32RawClipboardItem(this, p_object);
 	return true;
 }
 
@@ -443,10 +690,15 @@ MCStringRef MCWin32RawClipboardCommon::CopyTypeForAtom(UINT p_atom)
 
 bool MCWin32RawClipboard::IsOwned() const
 {
+	// Get the IDataObject that we are placing onto the clipboard
+	IDataObject* t_data_object = NULL;
+	if (m_item != NULL)
+		t_data_object = m_item->GetIDataObject();
+
 	// Check if our data object is the current clipboard data object
-	if (m_item == NULL)
-		return false;
-	return S_OK == OleIsCurrentClipboard(m_item->GetIDataObject());
+	if (t_data_object == NULL)
+		return true;
+	return S_OK == OleIsCurrentClipboard(t_data_object);
 }
 
 
@@ -468,11 +720,6 @@ bool MCWin32RawClipboard::PushUpdates()
 	// Clipboard is now clean
 	if (t_result == S_OK)
 	{
-		// Flush the clipboard. By doing this now, we ensure that other apps
-		// won't hang if LiveCode is busy processing something and they
-		// attempt to fetch data from the clipboard.
-		OleFlushClipboard();
-		
 		m_dirty = false;
 	}
 
@@ -482,7 +729,7 @@ bool MCWin32RawClipboard::PushUpdates()
 bool MCWin32RawClipboard::PullUpdates()
 {
 	// If we're still the owner of the clipboard, do nothing
-	if (IsOwned())
+	if (m_item != NULL && IsOwned())
 		return true;
 
 	// Release the current clipboard contents
@@ -498,7 +745,7 @@ bool MCWin32RawClipboard::PullUpdates()
 
 	// Create a new item to wrap this data object
 	m_external_data = true;
-	m_item = new MCWin32RawClipboardItem(this, t_contents);
+	m_item = new (nothrow) MCWin32RawClipboardItem(this, t_contents);
 
 	if (t_contents != NULL)
 		t_contents->Release();
@@ -536,17 +783,6 @@ bool MCWin32RawClipboardNull::FlushData()
 	return true;
 }
 
-
-MCWin32RawClipboardItem::MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_clipboard) :
-  MCRawClipboardItem(),
-  m_clipboard(p_clipboard),
-  m_object_is_external(false),
-  m_object(NULL),
-  m_reps()
-{
-	;
-}
-
 MCWin32RawClipboardItem::MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_clipboard, IDataObject* p_object) :
   MCRawClipboardItem(),
   m_clipboard(p_clipboard),
@@ -556,6 +792,18 @@ MCWin32RawClipboardItem::MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_cl
 {
 	if (m_object != nil)
 		m_object->AddRef();
+}
+
+MCWin32RawClipboardItem::MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_clipboard) :
+	MCRawClipboardItem(),
+	m_clipboard(p_clipboard),
+	m_object_is_external(false),
+	m_object(nullptr),
+	m_reps()
+{
+	// create data object and push it to the clipboard
+	IDataObject * t_contents = GetDataObject();
+	OleSetClipboard(t_contents);
 }
 
 MCWin32RawClipboardItem::~MCWin32RawClipboardItem()
@@ -625,7 +873,7 @@ bool MCWin32RawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_
 			return false;
 
 		// Allocate a new representation object.
-		m_reps[t_index] = t_rep = new MCWin32RawClipboardItemRep(this, p_type, p_bytes);
+		m_reps[t_index] = t_rep = new (nothrow) MCWin32RawClipboardItemRep(this, p_type, p_bytes);
 	}
 
 	// If we still have no rep, something went wrong
@@ -668,6 +916,87 @@ bool MCWin32RawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_
 				return false;
 		}
 	}
+
+    // If we are adding a PNG, JPG or GIF image, then make sure we add a DIB
+    // too. Windows automatically synthesizes DIB from DIBV5.
+    if (MCWin32RawClipboardCommon::CopyAtomForType(p_type) == MCWin32RawClipboardCommon::CopyAtomForType(MCSTR("PNG")) ||
+        MCWin32RawClipboardCommon::CopyAtomForType(p_type) == MCWin32RawClipboardCommon::CopyAtomForType(MCSTR("GIF")) ||
+        MCWin32RawClipboardCommon::CopyAtomForType(p_type) == MCWin32RawClipboardCommon::CopyAtomForType(MCSTR("JFIF")))
+    {
+        MCAutoDataRef t_data;
+
+	    IO_handle t_stream = 
+                MCS_fakeopen((const char *)MCDataGetBytePtr(p_bytes), MCDataGetLength(p_bytes));
+        if (t_stream == nullptr)
+        {
+            return false;
+        }
+
+        MCBitmapFrame *t_frames = nullptr;
+        uindex_t t_frame_count = 0;
+        if (!MCImageDecode(t_stream, t_frames, t_frame_count))
+        {
+            MCS_close(t_stream);
+            return false;
+        }
+
+        MCS_close(t_stream);
+
+        MCImageBitmap *t_bitmap = t_frames[0].image;
+        size_t t_stride = t_bitmap->width * 4;
+
+        size_t t_dib_size = sizeof(BITMAPV5HEADER) + t_bitmap->height * t_stride;
+        void *t_dib = malloc(t_dib_size);
+        if (t_dib == nullptr)
+        {
+            MCImageFreeFrames(t_frames, t_frame_count);
+            return false;
+        }
+            
+	    BITMAPV5HEADER *t_header = (BITMAPV5HEADER*)t_dib;
+	    MCMemoryClear(t_header, sizeof(BITMAPV5HEADER));
+	    t_header -> bV5Size = sizeof(BITMAPV5HEADER);
+	    t_header -> bV5Width = t_bitmap->width;
+	    t_header -> bV5Height = t_bitmap->height;
+	    t_header -> bV5Planes = 1;
+	    t_header -> bV5BitCount = 32;
+	    t_header -> bV5Compression = BI_RGB;
+	    t_header -> bV5SizeImage = 0;
+	    t_header -> bV5XPelsPerMeter = 0;
+	    t_header -> bV5YPelsPerMeter = 0;
+	    t_header -> bV5ClrUsed = 0;
+	    t_header -> bV5ClrImportant = 0;
+	    t_header -> bV5AlphaMask = 0xFF000000;
+	    t_header -> bV5RedMask =   0x00FF0000;
+	    t_header -> bV5GreenMask = 0x0000FF00;
+	    t_header -> bV5BlueMask =  0x000000FF;
+	    t_header -> bV5CSType = LCS_WINDOWS_COLOR_SPACE;
+            
+	    uint8_t *t_dst_ptr = (uint8_t*)t_dib + sizeof(BITMAPV5HEADER);
+	    uint8_t *t_src_ptr = (uint8_t*)t_bitmap->data + (t_bitmap->height - 1) * t_bitmap->stride;
+
+	    for (uindex_t y = 0; y < t_bitmap->height; y++)
+	    {
+		    MCMemoryCopy(t_dst_ptr, t_src_ptr, t_stride);
+		    t_dst_ptr += t_stride;
+		    t_src_ptr -= t_bitmap->stride;
+	    }
+            
+        MCImageFreeFrames(t_frames, t_frame_count);
+
+        if (!MCDataCreateWithBytesAndRelease(static_cast<byte_t *>(t_dib), t_dib_size, &t_data))
+        {
+            free(t_dib);
+            return false;
+        }
+
+        if (!AddRepresentation(MCSTR("CF_DIBV5"), *t_data))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool MCWin32RawClipboardItem::AddRepresentation(MCStringRef p_type, render_callback_t p_render, void* p_context)
@@ -688,7 +1017,7 @@ MCWin32DataObject* MCWin32RawClipboardItem::GetDataObject()
 
 	// If the data object doesn't exist yet, create it now
 	if (m_object == NULL)
-		m_object = new MCWin32DataObject;
+		m_object = new (nothrow) MCWin32DataObject;
 
 	return static_cast<MCWin32DataObject*> (m_object);
 }
@@ -721,7 +1050,7 @@ void MCWin32RawClipboardItem::GenerateRepresentations() const
 			break;
 
 		// Create a new representation object
-		m_reps[t_index] = new MCWin32RawClipboardItemRep(const_cast<MCWin32RawClipboardItem*> (this), t_format);
+		m_reps[t_index] = new (nothrow) MCWin32RawClipboardItemRep(const_cast<MCWin32RawClipboardItem*> (this), t_format);
 	}
 
 	// Release the enumerator object
@@ -1021,7 +1350,7 @@ HRESULT MCWin32DataObject::EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC** ppe
 	}
 
 	// Create a new enumerator object
-	*ppenumFormatEtc = new MCWin32DataObjectFormatEnum(this, 0);
+	*ppenumFormatEtc = new (nothrow) MCWin32DataObjectFormatEnum(this, 0);
 	return S_OK;
 }
 
@@ -1187,7 +1516,7 @@ HRESULT MCWin32DataObjectFormatEnum::Clone(IEnumFORMATETC** ppenum)
 		return E_INVALIDARG;
 
 	// Create a copy of this object
-	*ppenum = new MCWin32DataObjectFormatEnum(m_object, m_index);
+	*ppenum = new (nothrow) MCWin32DataObjectFormatEnum(m_object, m_index);
 	return S_OK;
 }
 

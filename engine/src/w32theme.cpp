@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "w32prefix.h"
+#include "prefix.h"
 
 #include "globdefs.h"
 #include "objdefs.h"
@@ -26,13 +26,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "globals.h"
 #include "osspec.h"
-//#include "execpt.h"
+
 #include "context.h"
 #include "button.h"
 
 #include "w32dc.h"
 #include "w32theme.h"
-#include "w32context.h"
 
 #include "exec.h"
 #include "graphics_util.h"
@@ -1611,9 +1610,6 @@ bool MCNativeTheme::settooltiptextcolor(MCContext *p_context)
 	t_color . red = 64;
 	t_color . green = 64;
 	t_color . blue = 64;
-	t_color . pad = 0;
-	t_color . pixel = (64 << 16) | (64 << 8) | (64);
-	t_color . flags = 8;
 	p_context -> setforeground(t_color);
 
 	return true;

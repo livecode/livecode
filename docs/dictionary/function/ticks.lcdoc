@@ -1,20 +1,21 @@
 Name: ticks
 
+Synonyms: tick
+
 Type: function
 
 Syntax: the ticks
 
 Syntax: ticks()
 
-Summary: <return|Returns> the number of <ticks> since the start of the <eon>.
-
-Synonyms: tick
+Summary:
+<return|Returns> the number of <ticks> since the start of the <eon>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the ticks
@@ -22,15 +23,27 @@ the ticks
 Example:
 put the ticks - startTicks into elapsedTicks
 
-Returns: The <ticks> <function> <return|returns> a positive <integer>.
+Returns:
+The <ticks> <function> <return|returns> a positive <integer>.
 
 Description:
-Use the <ticks> <function> to time <event|events> that must be checked more often than once per second.
+Use the <ticks> <function> to time <event|events> that must be checked
+more often than once per second.
 
-Unlike HyperTalk's "ticks" function, the <ticks> function <return|returns> the total number of <ticks> since midnight GMT, January 1, 1970, rather than the total number of <ticks> since the last system startup.
+Unlike HyperTalk's "ticks" function, the <ticks> function
+<return|returns> the total number of <ticks> since midnight GMT, January
+1, 1970, rather than the total number of <ticks> since the last system
+startup. 
 
-A tick is one-sixtieth of a second. If you don't need to time events with this much precision, use the seconds <function>. If you need to time <event|events> with greater <precision>, use the <milliseconds> <function>.
+A tick is one-sixtieth of a second. If you don't need to time events
+with this much precision, use the seconds <function>. If you need to
+time <event|events> with greater <precision>, use the <milliseconds>
+<function>. 
 
-References: ticks (keyword), integer (keyword), idleTicks (property), wait (command), time (function), milliseconds (function), date (function), ticks (function), precision (glossary), eon (glossary), return (glossary), event (glossary), function (control_st)
+References: wait (command), function (control structure), time (function),
+milliseconds (function), date (function), ticks (function),
+precision (glossary), eon (glossary), return (glossary), event (glossary),
+ticks (keyword), integer (keyword), idleTicks (property)
 
 Tags: math
+

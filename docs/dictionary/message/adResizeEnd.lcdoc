@@ -2,15 +2,14 @@ Name: adResizeEnd
 
 Type: message
 
-Syntax: adResizeEnd <adName> 
+Syntax: adResizeEnd <pAdName>
 
-Summary: Sent whan an ad finished resizing.
-
-Associations: stack
+Summary:
+Sent whan an ad finished resizing.
 
 Introduced: 6.0
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -20,11 +19,17 @@ on adResizeEnd pAdName
 end adResizeEnd
 
 Parameters:
-adName: The name of ad that has been expanded (as specified in mobileAdCreate)
+pAdName:
+The name of ad that has been expanded (as specified in <mobileAdCreate>)
 
 Description:
-Handle the <adResizeEnd> message if you want to perform an action when an ad finished resizing.
+Handle the <adResizeEnd> message if you want to perform an action when
+an ad finished resizing.
 
-The <adResizeEnd> message is sent to the current card when an ad has finished resizing.
+The <adResizeEnd> message is sent to the current card when an ad has
+finished resizing.
 
-References: mobileAdCreate (command), mobileAdRegister (command), mobileAdDelete (command), adLoaded (message), adLoadFailed (message), adResizeStart (message)
+References: mobileAdCreate (command), mobileAdRegister (command),
+mobileAdDelete (command), adLoaded (message), adLoadFailed (message),
+adResizeStart (message)
+

@@ -18,6 +18,8 @@
 #define PLAYER_INTERFACE_H
 
 typedef uint4 MCPlayerMediaTypeSet;
+typedef uint64_t MCPlayerDuration;
+
 enum
 {
 	PLAYER_MEDIA_TYPE_VIDEO_BIT = 0,
@@ -74,15 +76,19 @@ protected:
 	Boolean istmpfile;
 	real8 scale;
 	real8 rate;
-	uint4 starttime;
-	uint4 endtime;
+	MCPlayerDuration starttime;
+	MCPlayerDuration endtime;
 	MCStringRef userCallbackStr;  //string contains user movie callbacks
 	uint2 formattedwidth;
 	uint2 formattedheight;
 	uint2 loudness;
-    int4 lasttime;
+    MCPlayerDuration lasttime;
     Boolean dontuseqt;
     Boolean usingqt;
+	
+    double m_left_balance;
+    double m_right_balance;
+    double m_audio_pan;
     
 public:
     MCPlayerInterface(){};
@@ -90,10 +96,10 @@ public:
     
 	virtual bool getversion(MCStringRef& r_string) = 0;
 	virtual void freetmp() = 0;
-	virtual uint4 getduration() = 0;    //get movie duration/length
-	virtual uint4 gettimescale() = 0;  //get movie time scale
-	virtual uint4 getmoviecurtime() = 0;//get movie current time
-	virtual void setcurtime(uint4 curtime, bool notify) = 0;
+	virtual MCPlayerDuration getduration() = 0;    //get movie duration/length
+	virtual MCPlayerDuration gettimescale() = 0;  //get movie time scale
+	virtual MCPlayerDuration getmoviecurtime() = 0;//get movie current time
+	virtual void setcurtime(MCPlayerDuration curtime, bool notify) = 0;
 	virtual void setselection(bool notify) = 0;                  //set movie selection
 	virtual void setlooping(Boolean loop) = 0;        //to loop or not to loop a movie
 	virtual void setplayrate() = 0;                   //set the movie playing rate
@@ -108,13 +114,12 @@ public:
 	virtual MCRectangle getpreferredrect() = 0;
 	virtual uint2 getloudness() = 0;
 	virtual void setloudness() = 0;
-    
-#ifdef LEGACY_EXEC
-	void gettracks(MCExecPoint &ep);
-	void getenabledtracks(MCExecPoint &ep);
-	void getnodes(MCExecPoint &ep);
-	void gethotspots(MCExecPoint &ep);
-#endif
+	virtual double getleftbalance() = 0;
+	virtual void setleftbalance(double p_left_balance) = 0;
+	virtual double getrightbalance() = 0;
+	virtual void setrightbalance(double p_right_balance) = 0;
+	virtual double getaudiopan() = 0;
+	virtual void setaudiopan(double p_pan) = 0;
 
     Boolean isdisposable()
     {
@@ -138,22 +143,22 @@ public:
 	virtual void setvolume(uint2 tloudness) = 0;
 	virtual void setfilename(MCStringRef vcname, MCStringRef fname, Boolean istmp) = 0;
     
-	uint4 getstarttime()
+	MCPlayerDuration getstarttime()
 	{
 		return starttime;
 	}
-	uint4 getendtime()
+	MCPlayerDuration getendtime()
 	{
 		return endtime;
 	}
-	int4 getlasttime()
+	MCPlayerDuration getlasttime()
 	{
 		return lasttime;
 	}
     
-	virtual void setstarttime(uint4 stime) = 0;
-	virtual void setendtime(uint4 etime) = 0;
-	virtual void setlasttime(int4 ltime) = 0;
+	virtual void setstarttime(MCPlayerDuration stime) = 0;
+	virtual void setendtime(MCPlayerDuration etime) = 0;
+	virtual void setlasttime(MCPlayerDuration ltime) = 0;
     
     
 	virtual void syncbuffering(MCContext *dc) = 0;
@@ -201,11 +206,11 @@ public:
 	virtual void SetFileName(MCExecContext& ctxt, MCStringRef p_name) = 0;
 	virtual void GetDontRefresh(MCExecContext& ctxt, bool& r_setting) = 0;
 	virtual void SetDontRefresh(MCExecContext& ctxt, bool setting) = 0;
-	virtual void GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time) = 0;
-	virtual void SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time) = 0;
-	virtual void GetDuration(MCExecContext& ctxt, uinteger_t& r_duration) = 0;
+	virtual void GetCurrentTime(MCExecContext& ctxt, double& r_time) = 0;
+	virtual void SetCurrentTime(MCExecContext& ctxt, double p_time) = 0;
+	virtual void GetDuration(MCExecContext& ctxt, double& r_duration) = 0;
     // PM-2014-11-03: [[ Bug 13920 ]] Make sure we support loadedTime property
-    virtual void GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_loaded_time) = 0;
+    virtual void GetLoadedTime(MCExecContext& ctxt, double& r_loaded_time) = 0;
 	virtual void GetLooping(MCExecContext& ctxt, bool& r_setting) = 0;
 	virtual void SetLooping(MCExecContext& ctxt, bool setting) = 0;
 	virtual void GetPaused(MCExecContext& ctxt, bool& r_setting) = 0;
@@ -214,10 +219,10 @@ public:
 	virtual void SetAlwaysBuffer(MCExecContext& ctxt, bool setting) = 0;
 	virtual void GetPlayRate(MCExecContext& ctxt, double& r_rate) = 0;
 	virtual void SetPlayRate(MCExecContext& ctxt, double p_rate) = 0;
-	virtual void GetStartTime(MCExecContext& ctxt, uinteger_t*& r_time) = 0;
-	virtual void SetStartTime(MCExecContext& ctxt, uinteger_t* p_time) = 0;
-	virtual void GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time) = 0;
-	virtual void SetEndTime(MCExecContext& ctxt, uinteger_t* p_time) = 0;
+	virtual void GetStartTime(MCExecContext& ctxt, double*& r_time) = 0;
+	virtual void SetStartTime(MCExecContext& ctxt, double* p_time) = 0;
+	virtual void GetEndTime(MCExecContext& ctxt, double*& r_time) = 0;
+	virtual void SetEndTime(MCExecContext& ctxt, double* p_time) = 0;
 	virtual void GetShowBadge(MCExecContext& ctxt, bool& r_setting) = 0;
 	virtual void SetShowBadge(MCExecContext& ctxt, bool setting) = 0;
 	virtual void GetShowController(MCExecContext& ctxt, bool& r_setting) = 0;
@@ -228,7 +233,7 @@ public:
 	virtual void SetShowSelection(MCExecContext& ctxt, bool setting) = 0;
 	virtual void GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks) = 0;
 	virtual void SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks) = 0;
-	virtual void GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale) = 0;
+	virtual void GetTimeScale(MCExecContext& ctxt, double& r_scale) = 0;
 	virtual void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height) = 0;
 	virtual void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width) = 0;
 	virtual void GetMovieControllerId(MCExecContext& ctxt, integer_t& r_id) = 0;
@@ -245,7 +250,13 @@ public:
 	virtual void SetTilt(MCExecContext& ctxt, double p_tilt) = 0;
 	virtual void GetZoom(MCExecContext& ctxt, double& r_zoom) = 0;
 	virtual void SetZoom(MCExecContext& ctxt, double p_zoom) = 0;
-    
+	virtual void GetLeftBalance(MCExecContext& ctxt, double &r_left_balance) = 0;
+	virtual void SetLeftBalance(MCExecContext& ctxt, double p_left_balance) = 0;
+	virtual void GetRightBalance(MCExecContext& ctxt, double &r_right_balance) = 0;
+	virtual void SetRightBalance(MCExecContext& ctxt, double p_right_balance) = 0;
+	virtual void GetAudioPan(MCExecContext& ctxt, double &r_pan) = 0;
+	virtual void SetAudioPan(MCExecContext& ctxt, double p_pan) = 0;
+
 	virtual void GetTracks(MCExecContext& ctxt, MCStringRef& r_tracks) = 0;
     
 	virtual void GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& r_constraints) = 0;

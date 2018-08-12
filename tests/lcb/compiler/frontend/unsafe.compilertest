@@ -1,0 +1,154 @@
+%% Copyright (C) 2016 LiveCode Ltd.
+%%
+%% This file is part of LiveCode.
+%%
+%% LiveCode is free software; you can redistribute it and/or modify it under
+%% the terms of the GNU General Public License v3 as published by the Free
+%% Software Foundation.
+%%
+%% LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+%% WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+%% for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+%TEST BytecodeInSafeHandler
+module compiler_test
+handler SafeHandler()
+   %{BEFORE_BYTECODE}bytecode
+   end bytecode
+end handler
+end module
+%EXPECT PASS
+%ERROR "Bytecode blocks can only be present in unsafe context" AT BEFORE_BYTECODE
+%ENDTEST
+
+%TEST BytecodeInUnsafeBlock
+module compiler_test
+handler SafeHandler()
+   unsafe
+      bytecode
+      end bytecode
+   end unsafe
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST BytecodeInUnsafeHandler
+module compiler_test
+unsafe handler UnsafeHandler()
+   bytecode
+   end bytecode
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%%
+
+%TEST SafeHandlerCallInSafeContext
+module compiler_test
+handler OtherSafeHandler(in pArg)
+end handler
+handler SafeHandler()
+   OtherSafeHandler(OtherSafeHandler(nothing))
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST SafeHandlerCallInUnsafeHandler
+module compiler_test
+handler OtherSafeHandler(in pArg)
+end handler
+unsafe handler UnsafeHandler()
+   OtherSafeHandler(OtherSafeHandler(nothing))
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST SafeHandlerCallInUnsafeContext
+module compiler_test
+handler SafeHandler(in pArg)
+end handler
+handler Handler()
+   unsafe
+      SafeHandler(SafeHandler(nothing))
+   end unsafe
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST UnsafeHandlerCallInSafeContext
+module compiler_test
+unsafe handler CmdUnsafeHandler(in pArg)
+end handler
+unsafe handler FuncUnsafeHandler(in pArg)
+end handler
+handler SafeHandler()
+   %{BEFORE_CALL}CmdUnsafeHandler(%{BEFORE_EVAL}FuncUnsafeHandler(nothing))
+end handler
+end module
+%EXPECT PASS
+%ERROR "Unsafe handler 'CmdUnsafeHandler' can only be called in unsafe context" AT BEFORE_CALL
+%ERROR "Unsafe handler 'CmdUnsafeHandler' can only be called in unsafe context" AT BEFORE_EVAL
+%ENDTEST
+
+%TEST UnsafeHandlerCallInUnsafeHandler
+module compiler_test
+unsafe handler OtherUnsafeHandler(in pArg)
+end handler
+unsafe handler UnsafeHandler()
+   OtherUnsafeHandler(OtherUnsafeHandler(nothing))
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST UnsafeHandlerCallInUnsafeContext
+module compiler_test
+unsafe handler UnsafeHandler(in pArg)
+end handler
+handler SafeHandler()
+   unsafe
+      UnsafeHandler(UnsafeHandler(nothing))
+   end unsafe
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST ForeignHandlerCallInSafeContext
+module compiler_test
+foreign handler ForeignHandler(in pArg as optional any) returns nothing binds to "<builtin>"
+handler SafeHandler()
+    %{BEFORE_CALL}ForeignHandler(%{BEFORE_EVAL}ForeignHandler(nothing))
+end handler
+end module
+%EXPECT PASS
+%ERROR "Unsafe handler 'ForeignHandler' can only be called in unsafe context" AT BEFORE_CALL
+%ERROR "Unsafe handler 'ForeignHandler' can only be called in unsafe context" AT BEFORE_EVAL
+%ENDTEST
+
+%TEST SafeForeignHandlerCallInSafeContext
+module compiler_test
+__safe foreign handler SafeForeignHandler(in pArg as optional any) returns nothing binds to "<builtin>"
+handler SafeHandler()
+    %{BEFORE_CALL}SafeForeignHandler(%{BEFORE_EVAL}SafeForeignHandler(nothing))
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST

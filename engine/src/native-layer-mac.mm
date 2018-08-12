@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -90,7 +90,7 @@ void MCNativeLayerMac::doAttach()
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
 	
-	doSetGeometry(m_object->getrect());
+	doSetGeometry(m_rect);
 	doSetVisible(ShouldShowLayer());
 }
 
@@ -102,15 +102,17 @@ void MCNativeLayerMac::doDetach()
 
 bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
 {
+    NSRect t_bounds = [m_view bounds];
+    
     // Get an image rep suitable for storing the cached bitmap
     if (m_cached == nil)
     {
-        m_cached = [[m_view bitmapImageRepForCachingDisplayInRect:[m_view bounds]] retain];
+        m_cached = [[m_view bitmapImageRepForCachingDisplayInRect:t_bounds] retain];
     }
     
     // Draw the widget
     bzero([m_cached bitmapData], [m_cached bytesPerRow] * [m_cached pixelsHigh]);
-    [m_view cacheDisplayInRect:[m_view bounds] toBitmapImageRep:m_cached];
+    [m_view cacheDisplayInRect:t_bounds toBitmapImageRep:m_cached];
     
     // Turn the NSBitmapImageRep into something we can actually draw
     MCGRaster t_raster;
@@ -124,9 +126,9 @@ bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
     if (!MCGImageCreateWithRasterNoCopy(t_raster, t_gimage))
 		return false;
     
-    // Draw the image
-    // FG-2014-10-10: a y offset of 1 is needed to keep things lined up, for some reason...
-    MCGRectangle rect = {{0, 1}, {t_raster.width, t_raster.height}};
+    // Draw the image - we use the bounds width/height as the cached bitmap
+    // might be retina sized (NSBitmapImageRep has not concept of resolution)
+    MCGRectangle rect = {{0, 0}, {MCGFloat(t_bounds.size.width), MCGFloat(t_bounds.size.height)}};
     MCGContextDrawImage(p_context, t_gimage, rect, kMCGImageFilterNone);
     MCGImageRelease(t_gimage);
     
@@ -135,17 +137,27 @@ bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
 
 NSRect MCNativeLayerMac::calculateFrameRect(const MCRectangle &p_rect)
 {
-	int32_t t_gp_height;
-	t_gp_height = m_object->getcard()->getrect().height;
+	// IM-2017-04-20: [[ Bug 19327 ]] Transform rect to ui view coords
+	MCRectangle t_view_rect;
+	t_view_rect = MCRectangleGetTransformedBounds(p_rect, m_object->getstack()->getviewtransform());
 	
+    MCRectangle t_parent_view_rect;
+    t_parent_view_rect = MCRectangleGetTransformedBounds(m_object->getparent()->getrect(), m_object->getstack()->getviewtransform());
+    
+    // First compute rect of this object relative to parent
+    t_view_rect.y -= t_parent_view_rect.y;
+    t_view_rect.x -= t_parent_view_rect.x;
+    
+    // Now compute the (y-inverted) NSView rect
 	NSRect t_rect;
-	t_rect = NSMakeRect(p_rect.x, t_gp_height - (p_rect.y + p_rect.height), p_rect.width, p_rect.height);
+	t_rect = NSMakeRect(t_view_rect.x, t_parent_view_rect.height - (t_view_rect.y + t_view_rect.height), t_view_rect.width, t_view_rect.height);
 	
 	return t_rect;
 }
 
 void MCNativeLayerMac::doSetViewportGeometry(const MCRectangle &p_rect)
 {
+    doSetGeometry(m_object->getrect());
 }
 
 void MCNativeLayerMac::doSetGeometry(const MCRectangle &p_rect)
@@ -195,7 +207,13 @@ void MCNativeLayerMac::doRelayer()
 
 NSWindow* MCNativeLayerMac::getStackWindow()
 {
-    return ((MCMacPlatformWindow*)(m_object->getstack()->getwindow()))->GetHandle();
+    MCMacPlatformWindow *t_window;
+    t_window = (MCMacPlatformWindow*)(m_object->getstack()->getwindow());
+    
+    if (t_window != nil)
+        return t_window -> GetHandle();
+    
+    return nil;
 }
 
 bool MCNativeLayerMac::getParentView(NSView *&r_view)
@@ -205,16 +223,22 @@ bool MCNativeLayerMac::getParentView(NSView *&r_view)
 		MCNativeLayer *t_container;
 		t_container = nil;
 		
-		if (!((MCGroup*)m_object->getparent())->getNativeContainerLayer(t_container))
-			return false;
-		
-		return t_container->GetNativeView((void*&)r_view);
+		if (((MCGroup*)m_object->getparent())->getNativeContainerLayer(t_container))
+            return t_container->GetNativeView((void*&)r_view);
 	}
 	else
 	{
-		r_view = [getStackWindow() contentView];
-		return true;
+        NSWindow* t_window;
+        t_window = getStackWindow();
+        
+        if (t_window != nil)
+        {
+            r_view = [t_window contentView];
+            return true;
+        }
 	}
+
+    return false;
 }
 
 bool MCNativeLayerMac::GetNativeView(void *&r_view)
@@ -235,14 +259,7 @@ MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view
 
 //////////
 
-// IM-2015-12-16: [[ NativeLayer ]] Keep the coordinate system of group contents the same as
-//                the top-level window view by keeping its bounds the same as its frame.
-//                This allows us to place contents in terms of window coords without having to
-//                adjust for the location of the group container.
 @interface com_runrev_livecode_MCContainerView: NSView
-
-- (void)setFrameOrigin:(NSPoint)newOrigin;
-- (void)setFrameSize:(NSSize)newSize;
 
 @end
 
@@ -250,21 +267,9 @@ MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view
 
 @implementation com_runrev_livecode_MCContainerView
 
-- (void)setFrameOrigin:(NSPoint)newOrigin
-{
-	[super setFrameOrigin:newOrigin];
-	[self setBoundsOrigin:newOrigin];
-}
-
-- (void)setFrameSize:(NSSize)newSize
-{
-	[super setFrameSize:newSize];
-	[self setBoundsSize:newSize];
-}
-
 @end
 
-bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_view)
 {
 	NSView *t_view;
 	t_view = [[[ MCContainerView alloc] init] autorelease];

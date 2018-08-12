@@ -6,28 +6,44 @@ Syntax: the stacks
 
 Syntax: stacks()
 
-Summary: <return|Returns> a list of <stack file|stack files> that contain an open <stack>.
+Summary:
+<return|Returns> a list of <stack file|stack files> that contain an open
+<stack>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the stacks
 
-Returns: The <stacks> function <return|returns> a list of <file path|file paths> of open <stacks>, one per <line>.
+Returns:
+The <stacks> function <return|returns> a list of <file path|file paths>
+of open <stacks>, one per <line>.
 
 Description:
-Use the <stacks> <function> to find out which <stack file|stack files> are open.
+Use the <stacks> <function> to find out which <stack file|stack files>
+are open.
 
-Since unsaved stacks have no file name, the file names of unsaved stacks are not included in the list. Instead, each unsaved stack is represented by a blank line in the list.
+Since unsaved stacks have no file name, the file names of unsaved stacks
+are not included in the list. Instead, each unsaved stack is represented
+by a blank line in the list.
 
-The file paths of substacks are included, but the stack names themselves are not. This means that if more than one stack in a file is open, that file's path appears more than once in the list returned by the <stacks> <function>.
+The file paths of substacks are included, but the stack names themselves
+are not. This means that if more than one stack in a file is open, that
+file's path appears more than once in the list returned by the <stacks>
+<function>. 
 
-The list includes any open LiveCode windows (such as the message box and menu bar). It also includes stacks that have been opened during the current session and then closed, unless the stack's destroyStack <property> is set to true.
+The list includes any open LiveCode windows (such as the message box and
+menu bar). It also includes stacks that have been opened during the
+current session and then closed, unless the stack's destroyStack
+<property> is set to true.
 
-References: function (control_st), line (keyword), stack (object), stacks (function), mainStacks (function), property (glossary), stack file (glossary), file path (glossary), return (glossary)
+References: function (control structure), stacks (function),
+mainStacks (function), property (glossary), stack file (glossary),
+file path (glossary), return (glossary), line (keyword), stack (object)
 
 Tags: file system
+

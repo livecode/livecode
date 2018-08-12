@@ -4,13 +4,15 @@ Type: command
 
 Syntax: edit [the] script of <object> [at line,column]
 
-Summary: Opens the <script> of an <object> in the <development environment>.
+Summary:
+Opens the <script> of an <object(glossary)> in the 
+<development environment>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 edit the script of this card
@@ -22,13 +24,25 @@ Example:
 edit the script of player "Show Me"
 
 Parameters:
-object: Any object reference. Usint the optional at syntax will pass the subsequent items to the editScript handler as a second parameter. By convention the first two parameters should be a line number and a column character offset from the start of the line.
+object:
+Any object reference. Usint the optional at syntax will pass the
+subsequent items to the editScript handler as a second parameter. By
+convention the first two parameters should be a line number and a column
+character offset from the start of the line.
 
 Description:
-Use the <edit> <command> in the <development environment> to open the LiveCode <script editor> with the <script> of the specified <object>.
+Use the <edit> <command> in the <development environment> to open the
+LiveCode <script editor> with the <script> of the specified
+<object(glossary)>. 
 
-The <edit> <command> is equivalent to selecting the object and choosing Object menu then Object Script.
+The <edit> <command> is equivalent to selecting the object and choosing
+Object menu then Object Script.
 
->*Important:* . If the script editor is not open, the <edit> command opens a window that shows the script.
+>*Important:* . If the script editor is not open, the <edit> command
+> opens a window that shows the script.
 
-References: userLevel (property), editScripts (property), script (property), editScript (message), licensed (function), object (object), development environment (glossary), command (glossary), script editor (glossary)
+References: licensed (function), object (glossary),
+development environment (glossary), command (glossary),
+script editor (glossary), editScript (message), userLevel (property),
+editScripts (property), script (property)
+

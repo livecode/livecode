@@ -32,16 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Scripting, AlternateLanguages, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Scripting, DoAsAlternateLanguage, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Scripting, SendToProgram, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Scripting, ReplyError, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Scripting, Reply, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Scripting, RequestAppleEvent, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Scripting, RequestFromProgram, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCScriptingEvalAlternateLanguages(MCExecContext& ctxt, MCStringRef& r_list)
 {
 	if (!MCSecureModeCanAccessDoAlternate())

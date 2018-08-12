@@ -1,18 +1,20 @@
 Name: control
 
+Synonyms: part
+
 Type: keyword
 
 Syntax: control
 
-Summary: Designates all <object type|object types> that can be placed on a <card>.
-
-Synonyms: part
+Summary:
+Designates all <object type|object types> that can be placed on a
+<card>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 put the number of controls into index
@@ -23,10 +25,16 @@ select control 5
 Description:
 Use the <control> <keyword> in an <object reference>.
 
-A control is any object that can be placed on a card: a button, field,  scrollbar, image, graphic, player, EPS object, or group.
+A control is any object that can be placed on a card: a button, field,
+scrollbar, image, graphic, player, EPS object, or group.
 
-You can refer to a control by number or by name. The expression control 2 refers to the control whose <layer> is 2. The <expression> control "this" refers to the first control whose short <name> is "this".
+You can refer to a control by number or by name. The expression control
+2 refers to the control whose <layer> is 2. The <expression> control
+"this" refers to the first control whose short <name> is "this".
 
-References: name (property), layer (property), card (keyword), number (function), mouseControl (function), keyword (glossary), object reference (glossary), object type (glossary), expression (glossary)
+References: number (function), mouseControl (function),
+keyword (glossary), object reference (glossary), object type (glossary),
+expression (glossary), card (keyword), name (property), layer (property)
 
 Tags: objects
+

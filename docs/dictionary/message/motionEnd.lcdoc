@@ -2,13 +2,14 @@ Name: motionEnd
 
 Type: message
 
-Syntax: motionEnd <motion> 
+Syntax: motionEnd <pMotion>
 
-Summary: Sent when a motion ends
+Summary:
+Sent when a motion ends
 
 Introduced: 4.5.2
 
-OS: ios,android
+OS: ios, android
 
 Platforms: desktop
 
@@ -18,15 +19,19 @@ on motionEnd
 end motionEnd
 
 Parameters:
-motion: The type of motion detected by the device.
+pMotion:
+The type of motion detected by the device.
 
 Description:
 Handle the <motionEnd> message to perform an action when a motion stops.
 
-The <motionEnd> message is send to the current card of the defaultStack when the end of a motion is detected by the device.
+The <motionEnd> message is send to the current card of the defaultStack
+when the end of a motion is detected by the device.
 
->*Note:* As of iPhoneOS 3.0 the only motion that is generated is "shake".
+>*Note:* As of iPhoneOS 3.0 the only motion that is generated is
+> "shake". 
 
 References: motionRelease (message), motionStart (message)
 
 Tags: ui
+

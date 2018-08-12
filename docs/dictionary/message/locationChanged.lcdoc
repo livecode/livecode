@@ -2,13 +2,15 @@ Name: locationChanged
 
 Type: message
 
-Syntax: locationChanged <latitude>, <longitude>, <altitude> 
+Syntax: locationChanged <pLatitude>, <pLongitude>, <pAltitude>
 
-Summary: Sent to the current card of the default stack when the location of the device changes.
+Summary:
+Sent to the current card of the default stack when the location of the
+device changes.
 
 Introduced: 4.5.2
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -19,20 +21,42 @@ end locationChanged
 
 Example:
 on locationChanged
-   put mobileCurrentLocation() into theLocation
-   updateMapPosition theLocation -- update the marker on the map showing the current location
+   put mobileSensorReading("location", true) into theLocation
+    -- update the marker on the map showing the current location
+   updateMapPosition theLocation
 end locationChanged
 
 Parameters:
-latitude: the latitude of the device
-longitude: the longitude of the device
-altitude: the altitude of the device
+pLatitude:
+the latitude of the device
+
+pLongitude:
+the longitude of the device
+
+pAltitude:
+the altitude of the device
 
 Description:
-Handle the <locationChanged> message if you want to perform tasks when the location of the device changes.
+Handle the <locationChanged> message if you want to perform tasks when
+the location of the device changes.
 
-The <locationChanged> message is sent to the current card of the default stack when the location of the device changes. 
+The <locationChanged> message is sent to the current card of the default
+stack when the location of the device changes.
 
-If location tracking cannot be started (typically due to the user 'not allowing' access to CoreLocation) then a trackingError message is sent instead.
+If location tracking cannot be started (typically due to the user 'not
+allowing' access to CoreLocation) then a <trackingError> message is sent
+instead. 
 
-References: mobileStopTrackingSensor (command), mobileStartTrackingSensor (command), mobileCurrentLocation (function), trackingError (message)
+Changes:
+In version 8.1 GPS behavior on iOS was changed to bring it inline with
+the behavior on Android. On both platforms, the location reading 
+returned by the <mobileSensorReading> function is that which was sent 
+with the last system <locationChanged> event.
+
+References: mobileSetLocationHistoryLimit (command),
+mobileStopTrackingSensor (command), mobileStartTrackingSensor (command),
+mobileGetLocationHistoryLimit (function),
+mobileSensorAvailable (function), mobileSensorReading (function),
+mobileLocationAuthorizationStatus (function), locationChanged (message),
+trackingError (message)
+

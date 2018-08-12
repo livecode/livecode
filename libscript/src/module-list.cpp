@@ -615,6 +615,36 @@ MCListEvalOffsetOfListBefore (bool p_is_first,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+extern "C" MC_DLLEXPORT_DEF void
+MCListEvalConcatenate(MCProperListRef p_left,
+                      MCProperListRef p_right,
+                      MCProperListRef & r_result)
+{
+	MCAutoProperListRef t_result;
+	if (!MCProperListMutableCopy(p_left, &t_result))
+		return;
+	if (!MCProperListAppendList(*t_result, p_right))
+		return;
+	r_result = t_result.Take();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT_DEF void
+MCListExecReverseElementsOf(MCProperListRef& x_list)
+{
+    MCAutoProperListRef t_list;
+    if (!MCProperListMutableCopy(x_list, &t_list))
+        return;
+    if (!MCProperListReverse(*t_list))
+        return;
+    if (!t_list.MakeImmutable())
+        return;
+    MCValueAssign(x_list, *t_list);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 extern "C" bool com_livecode_list_Initialize(void)
 {
     return true;

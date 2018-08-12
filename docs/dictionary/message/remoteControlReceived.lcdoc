@@ -1,10 +1,12 @@
 Name: remoteControlReceived
 
-Type: function
+Type: message
 
-Syntax: remoteControlReceived <eventType> 
+Syntax: remoteControlReceived <pEventType>
 
-Summary: Sent when the remote control is enabled and a remote control operation occurs.
+Summary:
+Sent when the remote control is enabled and a remote control operation
+occurs. 
 
 Introduced: 6.1
 
@@ -18,7 +20,7 @@ on remoteControlReceived pEventType
 end remoteControlReceived
 
 Parameters:
-eventType (enum): A string describing the event type which occurred. One of
+pEventType (enum): A string describing the event type which occurred.
 - "pause"
 - "stop"
 - "toggle play pause"
@@ -29,13 +31,22 @@ eventType (enum): A string describing the event type which occurred. One of
 - "end seeking forward"
 - "end seeking backward"
 
+
 Description:
-Handle the <remoteControlReceived> message if you want to perform an action when a remote control event occurs.
+Handle the <remoteControlReceived> message if you want to perform an
+action when a remote control event occurs.
 
-The remote control feature on iOS allows access to the audio controls both on an external device and also on the device itself when in lock screen (via double-tapping on the Home button).
+The remote control feature on iOS allows access to the audio controls
+both on an external device and also on the device itself when in lock
+screen (via double-tapping on the Home button).
 
-When the remote control is enabled and a remote control event occurs the <remoteControlReceived> message is send to the current card.
+When the remote control is enabled and a remote control event occurs the
+<remoteControlReceived> message is send to the current card.
 
 >*Note:* This functionality is only available on iOS 5.x and above.
 
-References: iphoneDisableRemoteControl (command), iphoneSetAudioCategory (command), iphoneEnableRemoteControl (command), iphoneSetRemoteControlDisplay (command), iphoneRemoteControlEnabled (function)
+References: iphoneDisableRemoteControl (command),
+iphoneSetAudioCategory (command), iphoneEnableRemoteControl (command),
+iphoneSetRemoteControlDisplay (command),
+iphoneRemoteControlEnabled (function)
+

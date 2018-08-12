@@ -90,7 +90,7 @@ static void dispatch_notification_events(void)
         MCAutoStringRef t_text;
 		// PM-2015-10-27: [[ Bug 16279 ]] Prevent crash when the payload is empty
 		if (t_event -> text != nil)
-			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_event -> text, &t_text);
+			/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_event -> text, &t_text);
 		else
 			t_text = MCValueRetain(kMCEmptyString);
 
@@ -262,13 +262,17 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     // MW-2014-10-02: [[ iOS 8 Support ]] We need this global initialized as early as
     //   possible.
     // Setup the value of the major OS version global.
-    NSString *t_sys_version;
-    t_sys_version = [[UIDevice currentDevice] systemVersion];
-    MCmajorosversion = ([t_sys_version characterAtIndex: 0] - '0') * 100;
-    MCmajorosversion += ([t_sys_version characterAtIndex: 2] - '0') * 10;
-    if ([t_sys_version length] == 5)
-        MCmajorosversion += [t_sys_version characterAtIndex: 4] - '0';
+	// PM-2016-09-08: [[ Bug 18327 ]] Take into account if x.y.z version of iOS has more than one digits in x,y,z
+    NSArray *t_sys_version_array = [[UIDevice currentDevice].systemVersion componentsSeparatedByString:@"."];
     
+    MCmajorosversion = [[t_sys_version_array objectAtIndex:0] intValue] * 100;
+    MCmajorosversion += [[t_sys_version_array objectAtIndex:1] intValue] * 10;
+    
+    if ([t_sys_version_array count] == 3)
+    {
+        MCmajorosversion += [[t_sys_version_array objectAtIndex:2] intValue];
+    }
+
 	// We are done (successfully) so return ourselves.
 	return self;
 }
@@ -384,7 +388,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     if (t_launch_url)
     {    
         MCAutoStringRef t_url_text;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_launch_url absoluteString], &t_url_text);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[t_launch_url absoluteString], &t_url_text);
         MCValueAssign(m_launch_url, *t_url_text);
 		
         // HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
@@ -483,20 +487,8 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 - (void)application:(UIApplication *)p_application didReceiveLocalNotification:(UILocalNotification *)p_notification
 {
     MCLog("application:didReceiveLocalNotification:");
-    UIApplicationState t_state = [p_application applicationState];
-    MCAutoStringRef t_mc_reminder_text;
     NSString *t_reminder_text = [p_notification.userInfo objectForKey:@"payload"];
 	
-	// PM-2015-10-27: [[ Bug 16279 ]] Prevent crash when the payload is empty
-	if (t_reminder_text != nil)
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_reminder_text, &t_mc_reminder_text);
-	else
-		t_mc_reminder_text = MCValueRetain(kMCEmptyString);
-    if (m_did_become_active)
-    {
-		MCNotificationPostLocalNotificationEvent(*t_mc_reminder_text);
-    }
-    
     // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
     queue_notification_event(kMCPendingNotificationEventTypeDidReceiveLocalNotification, t_reminder_text);
     
@@ -504,27 +496,11 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     if (m_did_become_active)
         dispatch_notification_events();
     
-/*    t_mc_reminder_text.set ([t_reminder_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_reminder_text length]);
-    if (m_did_become_active)
-    {
-        if (t_state == UIApplicationStateInactive)
-        {
-            // The application is running the in the background, so launch the reminder text.
-            MCNotificationPostLocalNotificationEvent (t_mc_reminder_text);
-        }
-        else
-        {
-            // Send a message to indicate that we have received a Local Notification. Include the reminder text.
-            MCNotificationPostLocalNotificationEvent (t_mc_reminder_text);
-        }
-    }*/
 }
 
 - (void)application:(UIApplication *)p_application didReceiveRemoteNotification:(NSDictionary *)p_dictionary
 {
     MCLog("application:didReceiveRemoteNotification:");
-    UIApplicationState t_state = [p_application applicationState];
-    MCAutoStringRef t_mc_push_notification_text;
 	id t_reminder_text_value = [p_dictionary objectForKey:@"payload"];
 	
 	// Prevent crash when sending push notifications while the app is running:
@@ -537,40 +513,12 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 		// t_reminder_text_value is NSNull, not NSString
 		t_reminder_text = nil;
 	
-	
-	// PM-2015-10-27: [[ Bug 16279 ]] Prevent crash when the payload is empty
-	if (t_reminder_text != nil)
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_reminder_text, &t_mc_push_notification_text);
-	else
-		t_mc_push_notification_text = MCValueRetain(kMCEmptyString);
-	
-    if (m_did_become_active)
-    {
-		MCNotificationPostPushNotificationEvent(*t_mc_push_notification_text);
-    }
-    
     // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
     queue_notification_event(kMCPendingNotificationEventTypeDidReceiveRemoteNotification, t_reminder_text);
     
     // If we are already active, dispatch.
     if (m_did_become_active)
         dispatch_notification_events();
-    
-/*    if (t_reminder_text != nil)
-        t_mc_push_notification_text.set ([t_reminder_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_reminder_text length]);
-    if (m_did_become_active)
-    {
-        if (t_state == UIApplicationStateInactive)
-        {
-            // The application is running the in the background, so launch the reminder text.
-            MCNotificationPostPushNotificationEvent(t_mc_push_notification_text);
-        }
-        else
-        {
-            // Send a message to indicate that we have received a Local Notification. Include the reminder text.
-            MCNotificationPostPushNotificationEvent (t_mc_push_notification_text);
-        }
-    }*/
 }
 
 - (void)application:(UIApplication*)p_application didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)p_device_token
@@ -581,7 +529,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     if (t_registration_text != nil)
     {
         MCAutoStringRef t_device_token;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_registration_text, &t_device_token);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_registration_text, &t_device_token);
         MCValueAssign(m_device_token, *t_device_token);
     
         // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
@@ -631,7 +579,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     if (p_url != nil)
     {
         MCAutoStringRef t_url_text;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[p_url absoluteString], &t_url_text);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[p_url absoluteString], &t_url_text);
 		MCValueAssign(m_launch_url, *t_url_text);
         if (m_did_become_active)
             MCNotificationPostUrlWakeUp(m_launch_url);
@@ -714,7 +662,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
     if (m_pending_local_notification != nil)
     {
         MCAutoStringRef t_mc_reminder_text;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)m_pending_local_notification, &t_mc_reminder_text);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)m_pending_local_notification, &t_mc_reminder_text);
 		MCNotificationPostLocalNotificationEvent(*t_mc_reminder_text);
 		
 		// HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
@@ -724,7 +672,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
     if (m_pending_push_notification != nil)
     {
         MCAutoStringRef t_mc_reminder_text;
-		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)m_pending_push_notification, &t_mc_reminder_text);
+		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)m_pending_push_notification, &t_mc_reminder_text);
         MCNotificationPostPushNotificationEvent(*t_mc_reminder_text);
        
 		// HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
@@ -1513,10 +1461,16 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 		{
 			default:
 			case UIInterfaceOrientationPortrait:
+            case UIInterfaceOrientationPortraitUpsideDown:
                 if (t_is_retina)
                 {
                     t_image_names[t_img_cnt] = @"Default-Portrait@2x.png";
                     t_image_angles[t_img_cnt++] = 0.0f;
+                    
+                    // iPad Pro 12.9 has retina
+                    t_image_names[t_img_cnt] = @"Default-iPadProPortrait@2x.png";
+                    t_image_angles[t_img_cnt++] = 0.0f;
+
                 }
 				t_image_names[t_img_cnt] = @"Default-Portrait.png";
 				t_image_angles[t_img_cnt++] = 0.0f;
@@ -1524,34 +1478,15 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 				t_image_angles[t_img_cnt++] = 0.0f;
 				t_image_names[t_img_cnt] = nil;
 				break;
-			case UIInterfaceOrientationPortraitUpsideDown:
-                if (t_is_retina)
-                {
-                    t_image_names[t_img_cnt] = @"Default-Portrait@2x.png";
-                    t_image_angles[t_img_cnt++] = 0.0f;
-                }
-                t_image_names[t_img_cnt] = @"Default-Portrait.png";
-                t_image_angles[t_img_cnt++] = 0.0f;
-                t_image_names[t_img_cnt] = @"Default.png";
-                t_image_angles[t_img_cnt++] = 0.0f;
-                t_image_names[t_img_cnt] = nil;
-                break;
-			case UIInterfaceOrientationLandscapeLeft:
-                if (t_is_retina)
-                {
-                    t_image_names[t_img_cnt] = @"Default-Landscape@2x.png";
-                    t_image_angles[t_img_cnt++] = 0.0f;
-                }
-                t_image_names[t_img_cnt] = @"Default-Landscape.png";
-                t_image_angles[t_img_cnt++] = 0.0f;
-                t_image_names[t_img_cnt] = @"Default.png";
-                t_image_angles[t_img_cnt++] = -90.0f;
-                t_image_names[t_img_cnt] = nil;
-                break;
+            case UIInterfaceOrientationLandscapeLeft:
             case UIInterfaceOrientationLandscapeRight:
                 if (t_is_retina)
                 {
                     t_image_names[t_img_cnt] = @"Default-Landscape@2x.png";
+                    t_image_angles[t_img_cnt++] = 0.0f;
+                    
+                    // iPad Pro 12.9 has retina
+                    t_image_names[t_img_cnt] = @"Default-iPadProLandscape@2x.png";
                     t_image_angles[t_img_cnt++] = 0.0f;
                 }
                 t_image_names[t_img_cnt] = @"Default-Landscape.png";
@@ -1582,6 +1517,26 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
             }
             t_image_names[1] = nil;
         }
+        
+        // the iPhone X allows for portrait and landscape splash screens
+        else if ([[UIScreen mainScreen] bounds] . size . height == 812 || [[UIScreen mainScreen] bounds] . size . width == 812)
+        {
+            switch(p_new_orientation)
+            {
+                case UIInterfaceOrientationPortrait:
+                case UIInterfaceOrientationPortraitUpsideDown:
+                    t_image_names[0] = @"Default-812h@3x.png";
+                    t_image_angles[0] = 0.0f;
+                    break;
+                case UIInterfaceOrientationLandscapeLeft:
+                case UIInterfaceOrientationLandscapeRight:
+                    t_image_names[0] = @"Default-375h@3x.png";
+                    t_image_angles[0] = 0.0f;
+                    break;
+            }
+            t_image_names[1] = nil;
+        }
+
         else
         {
             // On iPhone there is only ever a 'Default' image, which we must
@@ -2062,8 +2017,6 @@ static char *my_strndup(const char * p, int n)
 	return s;
 }
 
-extern "C" bool MCModulesInitialize();
-
 MC_DLLEXPORT_DEF int platform_main(int argc, char *argv[], char *envp[])
 {
 #if defined(_DEBUG) && defined(_VALGRIND)
@@ -2074,8 +2027,9 @@ MC_DLLEXPORT_DEF int platform_main(int argc, char *argv[], char *envp[])
 	}
 #endif
 	
-    if (!MCInitialize() || !MCSInitialize() ||
-        !MCModulesInitialize() || !MCScriptInitialize())
+    if (!MCInitialize() ||
+        !MCSInitialize() ||
+        !MCScriptInitialize())
         return -1;
     
 	int t_exit_code;

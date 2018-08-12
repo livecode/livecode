@@ -2,17 +2,18 @@ Name: compositorType
 
 Type: property
 
-Syntax: set the compositorType of <stack> to <compositorType> 
+Syntax: set the compositorType of <stack> to <compositorType>
 
-Summary: Specifies which compositor is used when rendering a stack.
+Summary:
+Specifies which compositor is used when rendering a stack.
 
 Associations: stack
 
 Introduced: 5.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,mobile
+Platforms: desktop, mobile
 
 Example:
 set the compositorType of this stack to "software"
@@ -21,17 +22,29 @@ Example:
 put "none" into tCompositorType
 set the compositorType of this stack to tCompositorType
 
-Value (enum): A string containing the type of compositor to use, or <empty>.
-- none: Do not use accelerated rendering (the default when empty).
-- software: Use the built-in rendering engine to composite.
-- coregraphics: Use CoreGraphics to composite (Mac / iOS only) (Recommended for Mac OS).
-- opengl: Use OpenGL to composite (iOS only).
+Value (enum):
+A <string> containing the type of compositor to use, or <empty>.
+
+-   none: Do not use <acceleratedRendering|accelerated rendering> (the default when empty).
+-   software: Use the built-in rendering engine to composite (all platforms).
+-   coregraphics: Use CoreGraphics to composite (Mac / iOS only)
+    (Recommended).
+-   opengl: Use OpenGL to composite (iOS and Android only).
+
 
 Description:
-Use the compositorType property to specify which compositor is used when rendering your stack. Setting this property puts LiveCode into accelerated rendering mode which offers performance benefits, particularly when animating.
+Use the compositorType property to specify which compositor is used when
+rendering your stack. Setting this property puts LiveCode into
+<acceleratedRendering|accelerated rendering> mode which offers performance benefits,
+particularly when animating.
 
->*Note:* Set the compositor properties in a preOpenStack or preOpenCard handler - they are not persistent (not saved into the stackfile).
+>*Note:* Set the compositor properties in a preOpenStack or preOpenCard
+> handler - they are not persistent (not saved into the stackfile) but do
+carry through from card to card.
 
-References: compositorCacheLimit (property), compositorTileSize (property), layerMode (property), empty (constant)
+References: empty (constant), compositorCacheLimit (property),
+compositorTileSize (property), layerMode (property),
+acceleratedRendering (property), string (keyword)
 
 Tags: windowing
+

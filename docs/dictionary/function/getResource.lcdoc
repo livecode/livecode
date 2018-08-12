@@ -4,13 +4,14 @@ Type: function
 
 Syntax: getResource(<filePath>, <resourceType>,{<resourceName> | <resourceID>})
 
-Summary: <return|Returns> the data in a <Mac OS> <resource>.
+Summary:
+<return|Returns> the data in a <Mac OS> <resource>.
 
 Introduced: 1.1
 
 OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: disk
 
@@ -19,20 +20,39 @@ getResource("/Hard Drive/Stuff","DLOG",128)
 getResource(it,"BNDL","Application")
 
 Parameters:
-filePath: The location and name of the file that holds the resource you want. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
-resourceType: The 4-character type of the resource you want.
-resourceName (string): 
-resourceID (integer): 
+filePath:
+The location and name of the file that holds the resource you want. If
+you specify a name but not a location, LiveCode assumes the file is in
+the defaultFolder.
 
-The result: If the <filePath> does not exist, the <result> is set to "can't find file". If the <filePath> exists, but the <file> has no <resource fork>, the <result> is set to "can't open resource fork". If the filePath contains a <resource fork> but does not contain the specified resource, the result is set to "can't find specified resource<a/>".
+resourceType:
+The 4-character type of the resource you want.
+
+resourceName (string):
+
+
+resourceID (integer):
+
 
 Returns:
-The <getResource> <function> <return|returns> the text or binary data in the specified <resource>.
-If the specified resource does not exist, the <getResource> <function> returns empty.
+The <getResource> <function> <return|returns> the text or binary data in
+the specified <resource>. If the specified resource does not exist, the
+<getResource> <function> returns empty.
+
+The result:
+If the <filePath> does not exist, the <result> is set to
+"can't find file". If the <filePath> exists, but the <file> has no
+<resource fork>, the <result> is set to "can't open resource fork". If
+the filePath contains a <resource fork> but does not contain the
+specified resource, the result is set to
+"can't find specified resource". 
 
 Description:
 Use the <getResource> <function> to get the contents of a resource.
 
-References: file (keyword), result (function), setResource (function), resource fork (glossary), resource (glossary), Mac OS (glossary), return (glossary), function (control_st)
+References: function (control structure), result (function),
+setResource (function), resource fork (glossary), resource (glossary),
+Mac OS (glossary), return (glossary), file (keyword)
 
 Tags: file system
+

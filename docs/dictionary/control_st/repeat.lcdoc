@@ -2,147 +2,323 @@ Name: repeat
 
 Type: control structure
 
-Syntax: repeat <loopForm> <statementList> end repeat
+Syntax:
+repeat [{forever | while <condition> | until <condition>}]
+    <statementList>
+end repeat
 
-Summary: <execute|Executes> a set of <statement|statements> repeatedly.
+Syntax:
+repeat [for] <number> [times]
+    <statementList>
+end repeat
+
+Syntax: 
+repeat with <counterVariable> = <startValue> {to | down to} <endValue> [step <increment>]
+    <statementList>
+end repeat
+
+Syntax:
+repeat for each <chunkType> <labelVariable> in <container>
+    <statementList>
+end repeat
+
+Syntax:
+repeat for each {element | key} <labelVariable> in <array>
+    <statementList>
+end repeat
+
+
+Summary:
+<execute|Executes> a set of <statement|statements> repeatedly.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
-
-Example:
--- To create a numbered set of variables with similar names
--- eg myVar1, myVar2, ... myVar20, you can use a repeat loop
--- together with concatenation in the following form. Note that
--- this structure will only work with variable checking turned off.
--- If you prefer to declare your variables then an array is the
--- recommended way of doing this.
-local tPrefix = "myVar"
-local tVarCount = 20
-repeat with tVarNum = 1 to 20
-  put tPrefix  x into tVarName
-  do "put empty into "  tVarNameend repeat
+Platforms: desktop, server, mobile
 
 Example:
--- Loops with using 0 are validrepeat with tVarNum = 0 to 5 put tVarNum  comma after tTextend repeatput tTexttText = 0,1,2,3,4,5,
+-- counter variables in repeat with loops may use 0
+local tVarNum, tText
+repeat with tVarNum = 0 to 5
+  put tVarNum & comma after tText
+end repeat
+put tText
+-- tText = 0,1,2,3,4,5,
 
 Example:
--- Loops can also make use of negative numbersrepeat with tVarNum = 3 down to -5 put tVarNum  comma after tTextend repeatput tTexttText = 3,2,1,0,-1,-2,-3,-4,-5,
+-- Repeat with loops can also make use of negative numbers
+local tVarNum, tText
+repeat with tVarNum = 3 down to -5
+  put tVarNum & comma after tText
+end repeat
+put tText
+-- tText = 3,2,1,0,-1,-2,-3,-4,-5,
+
+Example:
+-- Put a given number of X's at the end of a field
+local tCount
+put 5 into tCount
+repeat tCount times
+  put "X" after field "counting"
+end repeat
 
 Parameters:
-loopForm (enum): The loopForm is one of the following forms:
-- "forever"
-- "until condition"
-- "while condition"
-- "[for] number times"
-- "with counter = startValue [to | down to] endValue [step increment]"
-- "for each chunkType labelVariable in container"
-- "for each element labelVariable in array"
-- "for each key labelVariable in array"
-statementList: One or more LiveCode statements, and can also include if, switch, try, or repeat control structures.
-condition (bool): 
-number, startValue, endValue, and increment: Numbers or expressions that evaluate to numbers.
-counter or labelVariable: A legal variable name.
-chunkType: One of byte, codeunit, codepoint, character (or char), token, trueword, word (or segment), item, sentence, paragraph or line.
-container: Any existing container.
-array (array): Any existing container that contains an array of values.
+statementList:
+One or more LiveCode statements, and can also include `if`, `switch`,
+`try`, or `repeat` <control structure|control structures>.
+
+condition (bool):
+Any <expression> that <evaluate|evaluates> to true or false.
+
+number (number):
+A numbers or an <expression|expressions> that evaluates to a number.
+
+startValue (number):
+A numbers or an <expression|expressions> that evaluates to a number.
+
+endValue (number):
+A numbers or an <expression|expressions> that evaluates to a number.
+
+increment (number):
+A numbers or an <expression|expressions> that evaluates to a number.
+
+counterVariable:
+A legal <variable> name.
+
+labelVariable:
+A legal <variable> name.
+
+chunkType:
+One of these text chunk types: byte, codeunit, codepoint, character (or
+char), token, trueword, word (or segment), item, sentence, paragraph or
+line. 
+
+container:
+Any existing <container>; e.g. a <variable> or a <field>.
+
+array (array):
+Any existing container, usually a variable, that contains an <array> of
+values. 
+
 
 Description:
-Use the <repeat> <control structure> to perform the same set of actions for each member of a set: for example, for each <card> in a <stack>, or each <line> in a <variable>.
+Use the <repeat> <control structure> to perform the same series of
+actions for each member of a set: for example, for each <card> in a
+<stack>, or each <line> in a <variable>.
 
-Form:
-The <repeat> <control structure> always begins with the word "repeat".
-The last line of a <repeat> <control structure> is the <end repeat> <keyword>.
+####Loop Form:
+The loop form is one of the following forms:
 
-How many times the <statementList> is <execute|executed> depends on the <loopForm> you use.
+  - `forever`
+  - `until `*`condition`*
+  - `while `*`condition`*
+  - `[for] `*`number`*` [times]`
+  - `with `*`counterVariable`*` = `*`startValue`*` {to | down to}
+    `*`endValue`*` [step `*`increment`*`]`
+  - `for each `*`chunkType`* *`labelVariable`*` in `*`container`*
+  - `for each element `*`labelVariable`*` in `*`array`*
+  - `for each key `*`labelVariable`*` in `*`array`*
 
-<Forever> 
-The forever form continues repeating the statements in the statementList until an exit, exit repeat, pass, or return statement is executed. Usually, one of these control structures is included in an if control structure within the statementList.
+The <repeat> <control structure> always begins with the `repeat` <keyword>.
+The last line of a <repeat> <control structure> is always the `end repeat` <keyword>.
 
-Use the forever form if you want to test a condition at the bottom of the loop, after the statementList is executed. In the following example, the go command is executed at least once, since the mouseClick is not checked until after the go command:
+How many times the <statementList> is <execute|executed> depends on the
+loop form you use. Here are details of the possible forms:
 
-  repeat forever
-    go next card
-    if the mouseClick then exit repeat -- user clicked
-  end repeat
+#####<forever|Forever> 
+The `forever` form continues repeating the statements in the
+<statementList> until an `exit`, `exit repeat`, `pass`, or `return`
+statement is executed. Usually, one of these <control structure|control
+structures> is included in an `if` <control structure> within the
+<statementList>.
 
-If no loopForm is specified, the forever form is used.
+Use the `forever` form if you want to test a <conditional|condition> at
+the bottom of the loop, after the <statementList> is executed. In the
+following example, the `go` command is executed at least once, since
+`the mouseClick` is not checked until after the `go` command:
 
-<Until> 
-The until condition and while condition forms repeat the statementList as long as the condition is false or as long as it is true, respectively. LiveCode re-evaluates the condition before each iteration.
+    repeat forever
+        go next card
+        if the mouseClick then exit repeat -- user clicked
+    end repeat
 
-Use the until condition or while condition form if you want to test a condition at the top of the loop, before the statements are executed. This example scrolls through the cards until the user clicks the mouse:
-  repeat until the mouseClick
-    go next
-    wait for 100 milliseconds
-  end repeat
 
-For number times
-The for number times form repeats the statementList for the specified number of times.
-The number is evaluated when the loop is first entered, and is not re-evaluated as a result of any actions performed in the statementList. For example, if the number is the number of cards, and the statementList contains a create card command, the loop is executed as many times as there were cards when the loop began, even though the current number of cards is changing with each iteration through the loop.
+If no <loopForm> is specified, the `forever` form is used.
 
-If the number is not an integer, it is rounded to the nearest integer, using the same rules as the round function.
-Use the for number times form if you want to execute the statementList a fixed number of times. The following simple example beeps three times:
+#####<until|Until> and <while>
+The `until` <conditional|condition> and `while` <conditional|condition>
+forms repeat the <statementList> as long as the <conditional|condition>
+is false or as long as it is true, respectively. LiveCode re-evaluates
+the <conditional|condition> before each <iteration>.
 
-  repeat for 3 times
-    beep
-  end repeat
+Use the `until `*`condition`* or `while `*`condition`* form if you want
+to test a <conditional|condition> at the top of the loop, before the
+statements are executed. This example scrolls through the cards until
+the user clicks the mouse:
 
-With counter
-The with counter = startValue to endValue form and the with counter = startValue down to endValue form set the counter to the startValue at the beginning of the loop, and increase (or decrease, if you're using the down to form) the countVariable by 1 each time through the loop. When the counter is greater than or equal to the endValue, (less than or equal to, if you're using the down to form), the loop performs its final iteration and then ends.
+    repeat until the mouseClick
+        go next card
+        wait for 100 milliseconds
+    end repeat
 
-If you specify an increment, the increment is added to the counter each time through the loop, rather than the counter being increased by 1. (The increment is not treated as an absolute value: if you're using the down to form, the increment must be negative.)
 
-As with the for number times form described above, the startValue and endValue are evaluated when the loop is first entered, and are not re-evaluated as a result of any actions performed in the statementList.
+This example repeats as long as the total number of characters in a
+field is less than the given amount:
 
-Use one of these forms if you want to perform an action on each member of a set, and you need to refer to the member by number within the statementList. The following example loops through all the controls on the current card. The counter x is 1 during the first iteration, 2 during the second, and so on:
+    local tCount
+    put empty into field "myField"
+    put 20 into tCount
+    repeat while the number of characters in field "myField" < tCount
+        put "X" after field "myField"
+    end repeat
 
-  repeat with x = 1 to the number of controls
-    show control x
-  end repeat
 
-The following example loops backwards through a set of lines. The counter myLine is 20 during the first iteration, 18 during the second, and so on:
+#####[For] *number* [times]
+The `for `*`number`*` times` form repeats the <statementList> for the
+specified number of times.
+The *number* is evaluated when the loop is first entered, and is not
+re-evaluated as a result of any actions performed in the
+<statementList>. For example, if the *number* is the number of cards,
+and the <statementList> contains a `create card` command, the loop is
+executed as many times as there were cards when the loop began, even
+though the current number of cards is changing with each <iteration>
+through the loop.
 
-  repeat with myLine = 20 down to 1 step -2
-    put myLine
-  end repeat
+If the *number* is not an <integer>, it is rounded to the nearest
+<integer>, using the same rules as the <round> <function>.
+Use the for number times form if you want to execute the <statementList>
+a fixed number of times. The following simple example beeps three times:
 
->*Note:*  It is possible to change the counter variable in a statement in the loop. However, doing this is not recommended, because it makes the loop logic difficult to follow:
+    repeat for 3 times
+        beep
+    end repeat
 
-  repeat with x = 1 to 20 -- this loop actually repeats ten times
-    answer x
-    add 1 to x -- not recommended
-  end repeat
 
-For each
-The for each chunkType labelVariable in container form sets the labelVariable to the first chunk of the specified chunkType in the container at the beginning of the loop, then sets it to the next chunk for each iteration. For example, if the chunkType is word, the labelVariable is set to the next word in the container for each iteration of the loop.
+Note that `for` and `times` are optional. For example the following is
+also valid:
 
-Use the for each form if you want to perform an action on each chunk in a container. This form is much faster than the with countVariable = startValue to endValue form when looping through the chunks of a container. The following example changes a return-delimited list to a comma-delimited list:
+    repeat 3
+        beep
+    end repeat
 
-  repeat for each line thisLine in myList
-    put thisLine  comma after newList
-  end repeat
-  delete the last char of newList
 
-The for each element labelVariable in array form sets the labelVariable to the first element in the array at the beginning of the loop, then sets it to the next element for each iteration.
+#####With *counterVariable*
+The `with `*`counter`*` = `*`startValue`*` to `*`endValue`* form and the
+`with `*`counter`*` = `*`startValue`*` down to `*`endValue`* form set
+the counter to the *startValue* at the beginning of the loop, and
+increase (or decrease, if you're using the `down to` form) the
+*countVariable* by 1 each time through the loop. When the *counter* is
+greater than or equal to the *endValue*, (less than or equal to, if
+you're using the `down to` form), the loop performs its final
+<iteration> and then ends.
 
-Use the for each form if you want to perform an action on each element in an array. The following example gets only the multi-word entries in an array of phrases:
+If you specify an *increment*, the *increment* is added to the *counter*
+each time through the loop, rather than the *counter* being increased 
+by 1. (The *increment* is not treated as an absolute value: if you're 
+using the `down to` form, the *increment* must be negative.)
 
-  repeat for each element thisIndexTerm in listOfTerms
-    if the number of words in thisIndexTerm  1 then
-      put thisIndexTerm  return after multiWordTerms
-    end if
-  end repeat
+As with the `for `*`number`*` times` form described above, the
+*startValue* and *endValue* are evaluated when the loop is first
+entered, and are not re-evaluated as a result of any actions performed
+in the <statementList>.
 
->*Important:* In any of the for each loops, you should not change the labelVariable or container in a statement inside the loop. Doing so will not cause a script error, but will almost certainly produce unexpected results.
+Use one of these forms if you want to perform an action on each member
+of a set, and you need to refer to the member by number within the
+<statementList>. The following example loops through all the controls on
+the current card. The *counterVariable* *x* is 1 during the first
+<iteration>, 2 during the second, and so on:
 
->*Note:*  The repeat control structure is implemented internally as a command and appears in the commandNames.
+    repeat with x = 1 to the number of controls
+        show control x
+    end repeat
 
-The ability to iterate through the keys of an array using repeat for each key was added in version 2.7.2
+
+The following example loops backwards through a set of lines. The
+*counterVariable* *myLine* is 20 during the first <iteration>, 18
+during the second, and so on:
+
+    repeat with myLine = 20 down to 1 step -2
+        put myLine
+    end repeat
+
+
+>*Note:*  It is possible to change the *counterVariable* in a statement 
+in the loop. However, doing this is not recommended, because it makes 
+the loop logic difficult to follow:
+
+    repeat with x = 1 to 20 -- this loop actually repeats ten times
+        answer x
+        add 1 to x -- not recommended
+    end repeat
+
+
+#####For each
+The `for each `*`chunkType labelVariable`*` in `*`container`* form sets
+the *labelVariable* to the first <chunk> of the specified *chunkType* in
+the container at the beginning of the loop, then sets it to the next
+<chunk> for each <iteration>. For example, if the *chunkType* is `word`,
+the *labelVariable* is set to the next word in the container for each
+<iteration> of the loop.
+
+Use the `for each` form if you want to perform an action on each <chunk>
+in a container. This form is much faster than the `with
+`*`countVariable`*` = `*`startValue`*` to `*`endValue`* form when
+looping through the <chunk|chunks> of a <container>. The following
+example changes a return-<delimit|delimited> list to a
+comma-<delimit|delimited> list:
+
+    repeat for each line thisLine in myList
+        put thisLine & comma after newList
+    end repeat
+    delete the last char of newList
+
+
+The `for each element `*`labelVariable`*` in `*`array`* form sets the
+*labelVariable* to the first <element(glossary)> in the <array> at the
+beginning of the loop, then sets it to the next <element(glossary)> for
+each <iteration>.
+
+Use the `for each`*`element`* form if you want to perform an action on
+each <element(glossary)> in an <array>. The following example gets only
+the multi-word entries in an <array> of phrases:
+
+    repeat for each element thisIndexTerm in arrayOfTerms
+        if the number of words in thisIndexTerm > 1 then
+            put thisIndexTerm & return after multiWordTerms
+        end if
+    end repeat
+
+
+>*Note:* In any of the `for each` loops, you may change the
+*labelVariable* in a statement inside the loop. However, this is not
+recommended because it will make the logic difficult to follow. You may
+modify the *<container>* variable inside a loop, but the modifications
+will not affect what is being <iterate|iterated> over.
+
+>*Note:*  The repeat control structure is implemented internally as a
+command and appears in the commandNames.
 
 Changes:
-The ability to specify an increment for the repeat with counter = startValue to endValue form was added in version 2.0. In previous versions, this form of the repeat control structure always incremented or decremented the counter by 1 each time through the loop.
+The ability to specify an increment for the repeat with form was added
+in version 2.0. In previous versions, this form of the repeat control
+structure is always incremented or decremented the counter by 1 each
+time through the loop.
 
-References: end repeat (keyword), forever (keyword), until (keyword), element (keyword), card (keyword), each (keyword), for (keyword), line (keyword), while (keyword), wait (command), next repeat (control_st), keyword (glossary), statement (glossary), variable (glossary), execute (glossary), control structure (glossary), stack (object)
+The ability to iterate through the keys of an array using repeat for
+each key was added in version 2.7.2. 
+
+Starting in version 7.0 it is possible to modify the container
+variable inside a for each loop without affecting the
+iterations of the loop.
+
+References: wait (command), next repeat (control structure),
+round (function), iteration (glossary), array (glossary),
+chunk (glossary), conditional (glossary), container (glossary),
+control structure (glossary), delimit (glossary), element (glossary),
+execute (glossary), field (glossary), function (glossary),
+integer (glossary), keyword (glossary), statement (glossary),
+value (glossary), variable (glossary), card (keyword), each (keyword),
+element (keyword), end repeat (keyword), for (keyword), forever (keyword),
+line (keyword), until (keyword), while (keyword), stack (object)
+

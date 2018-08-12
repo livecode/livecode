@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This library provides low-level system functionality for modular
 LiveCode programs.
 */
@@ -28,7 +28,7 @@ public foreign handler MCDateExecGetLocalDate(out rDateTime as List) returns not
 public foreign handler MCDateExecGetUniversalDate(out rDateTime as List) returns nothing binds to "<builtin>"
 public foreign handler MCDateExecGetUniversalTime(out rSeconds as CDouble) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	The local Gregorian date
 
 Example:
@@ -60,7 +60,7 @@ begin
 	MCDateExecGetLocalDate(output)
 end syntax
 
-/*
+/**
 Summary:	The UTC Gregorian date
 
 Example:
@@ -85,7 +85,8 @@ begin
 	MCDateExecGetUniversalDate(output)
 end syntax
 
-/*Summary:	The seconds
+/**
+Summary:	The seconds
 
 Example:
 	variable tTime as real

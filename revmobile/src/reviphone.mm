@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -24,7 +24,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static NSTask *s_simulator_task = nil;
 static NSDistantObject *s_simulator_proxy = nil;
-static uint32_t s_session_id = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -187,7 +186,8 @@ static bool fetch_named_simulator_root(const char *p_display_name, DTiPhoneSimul
 			if ([[t_candidate name] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
 				[[t_candidate identifier] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
 				[[t_candidate root] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
-				[[t_candidate versionString] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame)
+				[[t_candidate versionString] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
+                [[t_candidate versionString] hasPrefix: t_sdk_string])
 			{
 				t_runtime = t_candidate;
 				t_root = [s_simulator_proxy getRootWithSimRuntime: t_runtime];
@@ -211,7 +211,9 @@ static bool fetch_named_simulator_root(const char *p_display_name, DTiPhoneSimul
 		}
 	}
 	
-	if (t_root != nil)
+    // As of Xcode 8, DTiPhoneSimulatorSystemRoot is no longer used, so don't worry if we can't find one.
+    // As long as we have a SimRuntime we can still launch apps.
+	if (t_root != nil || t_runtime != nil)
 	{
 		r_root = t_root;
 		r_runtime = t_runtime;
@@ -250,7 +252,6 @@ bool revIPhoneSetSimulatorSDK(MCVariableRef *argv, uint32_t argc, MCVariableRef 
 		{
 			char *t_sdk_cstring = nil;
 			
-			MCError t_status;
 			t_success = CheckError(MCVariableFetch(argv[0], kMCOptionAsCString, &t_sdk_cstring));
 			if (t_success)
 			{
@@ -520,11 +521,6 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 	
 	if (t_success)
 	{
-		if (s_simulator_system_root == nil)
-		{
-			s_simulator_system_root = [s_simulator_proxy getDefaultRoot];
-			[s_simulator_system_root retain];
-		}
 		
 		DTiPhoneSimulatorApplicationSpecifier *t_app_spec;
 		DTiPhoneSimulatorSessionConfig *t_session_config;
@@ -537,21 +533,35 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 		t_app_spec = [s_simulator_proxy specifierWithApplicationPath: [NSString stringWithUTF8String:t_app.buffer]];
 		
 		t_session_config = [s_simulator_proxy newSessionConfig];
+        
 		
 		[t_session_config setApplicationToSimulateOnStart:t_app_spec];
 		
-		[t_session_config setSimulatedSystemRoot:s_simulator_system_root];
+        // As of Xcode 8, DTiPhoneSimulatorSystemRoot (s_simulator_system_root) is no longer used.
+        if ([t_session_config respondsToSelector: @selector(setSimulatedSystemRoot:)])
+        {
+            if (s_simulator_system_root == nil)
+            {
+                s_simulator_system_root = [s_simulator_proxy getDefaultRoot];
+                [s_simulator_system_root retain];
+            }
+            [t_session_config setSimulatedSystemRoot:s_simulator_system_root];
+        }
 		
 		// MM-2014-10-07: [[ Bug 13584 ]] As well as setting the sys root, also set the sim runtime where applicable.
 		//   Ensures we launch the correct version of the simulator.
 		if (s_simulator_runtime != nil && [t_session_config respondsToSelector: @selector(setRuntime:)])
+        {
 			[t_session_config setRuntime: s_simulator_runtime];
-		
+        }
 		[t_session_config setSimulatedApplicationShouldWaitForDebugger: NO];
 		[t_session_config setSimulatedApplicationLaunchArgs: [NSArray array]];
 		[t_session_config setSimulatedApplicationLaunchEnvironment: [NSDictionary dictionary]];
-		[t_session_config setLocalizedClientName: @"LiveCode"];
-		
+        
+        // As of Xcode 8.3 the property NSString *localizedClientName is no longer available in DTiPhoneSimulatorSessionConfig class
+        if ([t_session_config respondsToSelector: @selector(setLocalizedClientName:)])
+            [t_session_config setLocalizedClientName: @"LiveCode"];
+        
 		bool t_is_ipad;
 		t_is_ipad = strcasecmp(t_family, "ipad") == 0;
 		
@@ -583,32 +593,36 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 			// Each device has a plist with a state entry. A state of 3 appears to suggest it's the last run.
 			for (t_device in t_devices)
 			{
-				if (!(t_is_ipad && [[t_device name] hasPrefix: @"iPad"] || !t_is_ipad && [[t_device name] hasPrefix: @"iPhone"]))
+				if (!((t_is_ipad && [[t_device name] hasPrefix: @"iPad"]) || (!t_is_ipad && [[t_device name] hasPrefix: @"iPhone"])))
 					continue;
-				
+
 				NSString *t_dev_plist_path;
 				t_dev_plist_path = [[t_device devicePath] stringByAppendingPathComponent: @"device.plist"];
 				if ([[NSFileManager defaultManager] fileExistsAtPath: t_dev_plist_path])
 				{					
 					NSDictionary *t_dev_plist;
-					t_dev_plist= [NSDictionary dictionaryWithContentsOfFile: t_dev_plist_path];					
-					if (t_dev_plist != nil)
-					{
-						NSNumber *t_state;
-						t_state = [t_dev_plist objectForKey: @"state"];		
-						if (t_state != nil && [t_state intValue] == 3 && [t_device runtime] == s_simulator_runtime)
-						{
-							t_found_device = true;
-							break;
-						}
-					}
+					t_dev_plist = [NSDictionary dictionaryWithContentsOfFile: t_dev_plist_path];
+                    if (t_dev_plist != nil)
+                    {
+                        NSNumber *t_state;
+                        t_state = [t_dev_plist objectForKey: @"state"];
+                        // In Xcode 9+ you can run multiple simulator instances. This seems to have broken the check [t_device runtime] == s_simulator_runtime.
+                        // So check for matching identifiers to detect if a simulator device is already up and running
+                        bool t_maching_runtimes = [t_device runtime] == s_simulator_runtime;
+                        bool t_maching_runtime_identifiers = [t_device.runtime.identifier compare: s_simulator_runtime.identifier] == NSOrderedSame;
+                        if (t_state != nil && [t_state intValue] == 3 && (t_maching_runtimes || t_maching_runtime_identifiers))
+                        {
+                            t_found_device = true;
+                            break;
+                        }
+                    }
 				}				
 			}
 			
 			// If the last run device is not suitable or not found, then just choose the first device in the list of the desired type.
 			if (!t_found_device)
 				for (t_device in t_devices)
-					if ((t_is_ipad && [[t_device name] hasPrefix: @"iPad"] || !t_is_ipad && [[t_device name] hasPrefix: @"iPhone"])
+					if (((t_is_ipad && [[t_device name] hasPrefix: @"iPad"]) || (!t_is_ipad && [[t_device name] hasPrefix: @"iPhone"]))
 						&& [t_device runtime] == s_simulator_runtime)
 					{
 						t_found_device = true;
@@ -806,9 +820,9 @@ bool revIPhoneSetToolset(MCVariableRef *argv, uint32_t argc, MCVariableRef resul
 	{
 		NSBundle *t_bundle;
 		t_bundle = [NSBundle bundleForClass: objc_getClass("revIPhoneLaunchDelegate")];
-		t_id = [NSString stringWithFormat: @"com.runrev.reviphoneproxy.%08x.%08x", getpid(), clock()];
+		t_id = [NSString stringWithFormat: @"com.runrev.reviphoneproxy.%08x.%08lx", getpid(), clock()];
 		t_task = [NSTask launchedTaskWithLaunchPath: [t_bundle pathForAuxiliaryExecutable: @"reviphoneproxy"] //[(NSURL *)t_url path]] //@"/Volumes/Macintosh HD/Users/mark/Workspace/revolution/trunk-mobile/_build/Debug/reviphoneproxy"
-										  arguments: [NSArray arrayWithObjects: t_path, t_id, nil]];
+										  arguments: [NSArray arrayWithObjects: t_path, t_id, (NSString*)nil]];
 		if (t_task == nil)
 			t_success = Throw("unable to start proxy");
 	}

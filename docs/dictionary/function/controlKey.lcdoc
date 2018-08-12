@@ -1,20 +1,21 @@
 Name: controlKey
 
+Synonyms: ctrlkey
+
 Type: function
 
 Syntax: the controlKey
 
 Syntax: controlKey()
 
-Summary: <return|Returns> the state of the Control key.
-
-Synonyms: ctrlKey
+Summary:
+<return|Returns> the state of the Control key.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 put (the controlKey is up) and (the shiftKey is up) into ctrlShift
@@ -23,12 +24,19 @@ Example:
 if controlKey() is down then go back
 
 Returns:
-The <controlKey> <function(control_st)> <return|returns> <down> if the key is pressed and <up> if it's not.
-On Unix and Windows systems, the commandKey function <return|returns> the same value as the <controlKey> <function(control_st)>: the two <function(glossary)|functions> are synonyms.
+The <controlKey> <function(control structure)> <return|returns> <down>
+if the key is pressed and <up> if it's not. On Unix and Windows systems,
+the commandKey function <return|returns> the same value as the
+<controlKey> <function(control structure)>: the two
+<function(glossary)|functions> are synonyms.
 
 Description:
-Use the <controlKey> <function> to check whether the user is pressing the Control key.
+Use the <controlKey> <function> to check whether the user is pressing
+the Control key.
 
-References: down (constant), left (constant), up (constant), commandKeyDown (message), keysDown (function), return (glossary), function (glossary), function (control_st)
+References: down (constant), left (constant), up (constant),
+function (control structure), keysDown (function), return (glossary),
+function (glossary), commandKeyDown (message)
 
 Tags: ui
+

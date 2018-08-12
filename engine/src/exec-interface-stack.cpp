@@ -47,6 +47,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 #include "osspec.h"
+#include "stackfileformat.h"
+#include "mcerror.h"
 
 //////////
 
@@ -118,7 +120,6 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
 {
     // TODO
     uint2 decorations;
-    uint4 flags;
     decorations = WD_CLEAR;
     
     if (MCStringIsEqualToCString(p_input, MCdefaultstring, kMCCompareCaseless))
@@ -131,72 +132,68 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
             decorations = i1 | WD_WDEF;
         else
         {
-            if (decorations & WD_WDEF)
-                decorations |= ~WD_WDEF;
-            else
-            {
-                uindex_t t_start_pos, t_end_pos;
-                t_end_pos = 0;
-                while (t_end_pos < MCStringGetLength(p_input))
-                {
-                    t_start_pos = t_end_pos;
-                    // skip spaces at the beginning or after a comma (if any)
-                    MCU_skip_spaces(p_input, t_start_pos);
-                    
-                    uindex_t t_comma;
-                    if (!MCStringFirstIndexOfChar(p_input, ',', t_start_pos, kMCCompareExact, t_comma))
-                        t_end_pos = MCStringGetLength(p_input) + 1;
-                    else
-                        t_end_pos = t_comma + 1;
-                    
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCtitlestring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_TITLE;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCmenustring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_MENU | WD_TITLE;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCminimizestring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_MINIMIZE | WD_TITLE;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCmaximizestring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_MAXIMIZE | WD_TITLE;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCclosestring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_CLOSE | WD_TITLE;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCmetalstring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_METAL; //metal can not have title
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCutilitystring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_UTILITY;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCnoshadowstring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_NOSHADOW;
-                        continue;
-                    }
-                    if (MCStringSubstringIsEqualTo(p_input, MCRangeMake(t_start_pos, t_end_pos - t_start_pos - 1), MCSTR(MCforcetaskbarstring), kMCCompareCaseless))
-                    {
-                        decorations |= WD_FORCETASKBAR;
-                        continue;
-                    }
-                    ctxt . LegacyThrow(EE_STACK_BADDECORATION);
-                    return;
-                }
+			uindex_t t_start_pos, t_end_pos;
+			t_end_pos = 0;
+			while (t_end_pos < MCStringGetLength(p_input))
+			{
+				t_start_pos = t_end_pos;
+				// skip spaces at the beginning or after a comma (if any)
+				MCU_skip_spaces(p_input, t_start_pos);
+				
+				uindex_t t_comma;
+				if (!MCStringFirstIndexOfChar(p_input, ',', t_start_pos, kMCCompareExact, t_comma))
+					t_end_pos = MCStringGetLength(p_input) + 1;
+				else
+					t_end_pos = t_comma + 1;
+
+                MCRange t_range = MCRangeMakeMinMax(t_start_pos, t_end_pos - 1);
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCtitlestring), kMCCompareCaseless))
+				{
+					decorations |= WD_TITLE;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCmenustring), kMCCompareCaseless))
+				{
+					decorations |= WD_MENU | WD_TITLE;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCminimizestring), kMCCompareCaseless))
+				{
+					decorations |= WD_MINIMIZE | WD_TITLE;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCmaximizestring), kMCCompareCaseless))
+				{
+					decorations |= WD_MAXIMIZE | WD_TITLE;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCclosestring), kMCCompareCaseless))
+				{
+					decorations |= WD_CLOSE | WD_TITLE;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCmetalstring), kMCCompareCaseless))
+				{
+					decorations |= WD_METAL; //metal can not have title
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCutilitystring), kMCCompareCaseless))
+				{
+					decorations |= WD_UTILITY;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCnoshadowstring), kMCCompareCaseless))
+				{
+					decorations |= WD_NOSHADOW;
+					continue;
+				}
+				if (MCStringSubstringIsEqualTo(p_input, t_range, MCSTR(MCforcetaskbarstring), kMCCompareCaseless))
+				{
+					decorations |= WD_FORCETASKBAR;
+					continue;
+				}
+				ctxt . LegacyThrow(EE_STACK_BADDECORATION);
+				return;
             }
         }
     }
@@ -305,13 +302,13 @@ static MCExecCustomTypeInfo _kMCInterfaceStackPasswordTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceStackFullscreenModeElementInfo[] =
 {
-	{"", kMCStackFullscreenResize},
-	{"exactfit", kMCStackFullscreenExactFit},
-	{"letterbox", kMCStackFullscreenLetterbox},
-	{"noborder", kMCStackFullscreenNoBorder},
-	{"noscale", kMCStackFullscreenNoScale},
+	{"", kMCStackFullscreenResize, false},
+	{"exactfit", kMCStackFullscreenExactFit, false},
+	{"letterbox", kMCStackFullscreenLetterbox, false},
+	{"noborder", kMCStackFullscreenNoBorder, false},
+	{"noscale", kMCStackFullscreenNoScale, false},
     // AL-2014-05-27: [[ Bug 12509 ]] showAll not added to refactored fullscreen modes
-    {"showAll", kMCStackFullscreenShowAll},
+    {"showAll", kMCStackFullscreenShowAll, false},
 	{"", kMCStackFullscreenModeNone, true},
 };
 
@@ -407,17 +404,21 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 	MCNewAutoNameRef t_old_name;
 	if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
 	{
-		if (t_success)
-			t_success = MCNameClone(getname(), &t_old_name);
+        t_old_name = getname();
 	}
 
 	// We don't allow ',' in stack names - so coerce to '_'.
-	MCStringFindAndReplaceChar(p_name, ',', '_', kMCCompareExact);
+	MCAutoStringRef t_new_string;
+	if (t_success)
+		t_success = MCStringMutableCopy(p_name, &t_new_string);
+	
+	if (t_success)
+		t_success = MCStringFindAndReplaceChar(*t_new_string, ',', '_', kMCCompareExact);
 
 	if (t_success)
 	{
 		// If the name is going to be empty, coerce to 'Untitled'.
-		if (MCStringGetLength(p_name) == 0)
+		if (MCStringGetLength(*t_new_string) == 0)
 		{
 			MCAutoStringRef t_untitled;
 			t_success = MCStringCreateWithCString(MCuntitledstring, &t_untitled);
@@ -425,7 +426,7 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 				MCObject::SetName(ctxt, *t_untitled);
 		}
 		else
-			MCObject::SetName(ctxt, p_name);
+			MCObject::SetName(ctxt, *t_new_string);
 	}
 
 	if (t_success && !ctxt . HasError())
@@ -489,10 +490,10 @@ void MCStack::GetNumber(MCExecContext& ctxt, uinteger_t& r_number)
 {
 	uint2 num;
 
-	if (parent != nil && !MCdispatcher -> ismainstack(this))
+	if (parent && !MCdispatcher -> ismainstack(this))
 	{
 		MCStack *sptr;
-		sptr = (MCStack *)parent;
+		sptr = parent.GetAs<MCStack>();
 		sptr -> count(CT_STACK, CT_UNDEFINED, this, num);
 	}
 	else
@@ -528,7 +529,7 @@ void MCStack::GetEffectiveFileName(MCExecContext& ctxt, MCStringRef& r_file_name
 	if (!MCdispatcher -> ismainstack(this))
 	{
 		MCStack *sptr;
-		sptr = (MCStack *)parent;
+		sptr = parent.GetAs<MCStack>();
 		sptr -> GetEffectiveFileName(ctxt, r_file_name);
 		return;
 	}
@@ -1000,7 +1001,7 @@ void MCStack::SetIcon(MCExecContext& ctxt, uinteger_t p_id)
 
 void MCStack::GetOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
-	if (parent != nil && !MCdispatcher -> ismainstack(this))
+	if (parent && !MCdispatcher -> ismainstack(this))
 		parent -> GetLongId(ctxt, 0, r_owner);
 }
 
@@ -1008,8 +1009,8 @@ void MCStack::GetMainStack(MCExecContext& ctxt, MCStringRef& r_main_stack)
 {
 	MCStack *sptr = this;
 
-	if (parent != nil && !MCdispatcher->ismainstack(sptr))
-		sptr = (MCStack *)parent;
+	if (parent && !MCdispatcher->ismainstack(sptr))
+		sptr = parent.GetAs<MCStack>();
 
 	r_main_stack = MCValueRetain(MCNameGetString(sptr->getname()));
 }
@@ -1032,7 +1033,7 @@ void MCStack::SetMainStack(MCExecContext& ctxt, MCStringRef p_main_stack)
 		return;
 	}
 	
-	if (parent != nil && this != MCdispatcher -> gethome() && (substacks == nil || stackptr == this))
+	if (parent && this != MCdispatcher -> gethome() && (substacks == nil || stackptr == this))
 	{
 		bool t_this_is_mainstack;
 		t_this_is_mainstack = MCdispatcher -> ismainstack(this) == True;
@@ -1052,7 +1053,7 @@ void MCStack::SetMainStack(MCExecContext& ctxt, MCStringRef p_main_stack)
 			MCdispatcher -> removestack(this);
 		else
 		{
-			MCStack *pstack = (MCStack *)parent;
+			MCStack *pstack = parent.GetAs<MCStack>();
 			remove(pstack -> substacks);
 			// MW-2012-09-07: [[ Bug 10372 ]] If the stack no longer has substacks, then 
 			//   make sure we undo the extraopen.
@@ -1154,12 +1155,11 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 	while (t_success && t_old_offset <= t_length)
 	{
 		MCAutoStringRef t_name_string;
-		MCNewAutoNameRef t_name;
 		
 		if (!MCStringFirstIndexOfChar(p_substacks, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 
-		t_success = MCStringCopySubstring(p_substacks, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_name_string);
+		t_success = MCStringCopySubstring(p_substacks, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_name_string);
 		if (t_success && t_new_offset > t_old_offset)
 		{
 			// If tsub is one of the existing substacks of the stack, it is set to
@@ -1169,10 +1169,10 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 			{
 				// Lookup 't_name_string' as a name, if it doesn't exist it can't exist as a substack
 				// name.
-				&t_name = MCValueRetain(MCNameLookup(*t_name_string));
-				if (*t_name != nil)
-				{
-					while (tsub -> hasname(*t_name))
+                MCNameRef t_name = MCNameLookupCaseless(*t_name_string);
+                if (t_name != nullptr)
+                {
+					while (tsub -> hasname(t_name))
 					{
 						tsub = (MCStack *)tsub->nptr;
 						if (tsub == oldsubs)
@@ -1187,13 +1187,13 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 			bool t_was_mainstack;
 			if (tsub == nil)
 			{
-				MCNewAutoNameRef t_name;
-				/* UNCHECKED */ MCNameCreate(*t_name_string, &t_name);
-				MCStack *toclone = MCdispatcher -> findstackname(*t_name);
+				MCNewAutoNameRef t_stack_name;
+				/* UNCHECKED */ MCNameCreate(*t_name_string, &t_stack_name);
+				MCStack *toclone = MCdispatcher -> findstackname(*t_stack_name);
 				t_was_mainstack = MCdispatcher -> ismainstack(toclone) == True;	
 
 				if (toclone != nil)
-					tsub = new MCStack(*toclone);
+					tsub = new (nothrow) MCStack(*toclone);
 			}
 			else
 			{
@@ -1485,7 +1485,7 @@ void MCStack::SetStackFiles(MCExecContext& ctxt, MCStringRef p_files)
 		MCValueRelease(stackfiles[nstackfiles].stackname);
 		MCValueRelease(stackfiles[nstackfiles].filename);
 	}
-	delete stackfiles;
+	delete[] stackfiles; /* Allocated with new[] */
 
     if (stringtostackfiles(p_files, &stackfiles, nstackfiles))
         return;
@@ -1508,25 +1508,23 @@ void MCStack::SetMenuBar(MCExecContext& ctxt, MCStringRef p_menubar)
 	if (t_success)
 		t_success = MCNameCreate(p_menubar, &t_new_menubar);
 
-	if (t_success && !MCNameIsEqualTo(getmenubar(), *t_new_menubar, kMCCompareCaseless))
+	if (t_success && !MCNameIsEqualToCaseless(getmenubar(), *t_new_menubar))
 	{
-		MCNameDelete(_menubar);
-		t_success = MCNameClone(*t_new_menubar, _menubar);
-		if (t_success)
-		{
-			if (!hasmenubar())
-				flags &= ~F_MENU_BAR;
-			else
-				flags |= F_MENU_BAR;
-			if (opened)
-			{
-				setgeom();
-				updatemenubar();
+        MCValueAssign(_menubar, *t_new_menubar);
+        
+        if (!hasmenubar())
+            flags &= ~F_MENU_BAR;
+        else
+            flags |= F_MENU_BAR;
+        
+        if (opened)
+        {
+            setgeom();
+            updatemenubar();
 
-				// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
-				dirtyall();
-			}
-		}
+            // MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
+            dirtyall();
+        }
 	}
 
 	if (t_success)
@@ -1597,14 +1595,11 @@ void MCStack::SetLinkAtt(MCExecContext& ctxt, Properties which, MCInterfaceNamed
 	{
 		if (linkatts == nil)
 		{
-			/* UNCHECKED */ linkatts = new Linkatts;
+			/* UNCHECKED */ linkatts = new (nothrow) Linkatts;
 			MCMemoryCopy(linkatts, &MClinkatts, sizeof(Linkatts));
 			linkatts->colorname = MClinkatts.colorname == nil ? nil : MCValueRetain(MClinkatts.colorname);
 			linkatts->hilitecolorname = MClinkatts.hilitecolorname == nil ? nil : MCValueRetain(MClinkatts.hilitecolorname);
 			linkatts->visitedcolorname = MClinkatts.visitedcolorname == nil ? nil : MCValueRetain(MClinkatts.visitedcolorname);
-			MCscreen->alloccolor(linkatts->color);
-			MCscreen->alloccolor(linkatts->hilitecolor);
-			MCscreen->alloccolor(linkatts->visitedcolor);
 		}
 		switch (which)
 		{
@@ -1726,14 +1721,11 @@ void MCStack::SetUnderlineLinks(MCExecContext& ctxt, bool* p_value)
     {
         if (linkatts == nil)
         {
-            /* UNCHECKED */ linkatts = new Linkatts;
+            /* UNCHECKED */ linkatts = new (nothrow) Linkatts;
             MCMemoryCopy(linkatts, &MClinkatts, sizeof(Linkatts));
             linkatts->colorname = MClinkatts.colorname == nil ? nil : MCValueRetain(MClinkatts.colorname);
             linkatts->hilitecolorname = MClinkatts.hilitecolorname == nil ? nil : MCValueRetain(MClinkatts.hilitecolorname);
             linkatts->visitedcolorname = MClinkatts.visitedcolorname == nil ? nil : MCValueRetain(MClinkatts.visitedcolorname);
-            MCscreen->alloccolor(linkatts->color);
-            MCscreen->alloccolor(linkatts->hilitecolor);
-            MCscreen->alloccolor(linkatts->visitedcolor);
         }
 
         linkatts->underline = *p_value;
@@ -1811,7 +1803,11 @@ void MCStack::GetScreen(MCExecContext& ctxt, integer_t& r_screen)
 {
 	const MCDisplay *t_display;
 	t_display = MCscreen -> getnearestdisplay(rect);
-	r_screen = t_display -> index + 1;
+    
+    if (t_display != nil)
+        r_screen = t_display -> index + 1;
+    else
+        r_screen = 0;
 }
 
 void MCStack::GetCurrentCard(MCExecContext& ctxt, MCStringRef& r_card)
@@ -1918,7 +1914,7 @@ void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p
             if (window != NULL)
             {
                 stop_externals();
-                MCscreen->destroywindow(window);
+                destroywindow();
 				MCValueAssign(titlestring, kMCEmptyString);
             }
         }
@@ -2152,16 +2148,28 @@ void MCStack::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_st
     MCRedrawDirtyScreen();
 }
 
-void MCStack::GetPassword(MCExecContext& ctxt, MCDataRef& r_value)
+void MCStack::GetPassword(MCExecContext& ctxt, MCValueRef& r_value)
 {
 	r_value = MCValueRetain(kMCEmptyData);
 }
 
-void MCStack::GetKey(MCExecContext& ctxt, bool& r_value)
+void MCStack::SetPassword(MCExecContext &ctxt, MCValueRef p_password)
+{
+    MCeerror->add(EE_STACK_PASSWORD_NOT_SUPPORTED, 0, 0);
+    ctxt . Throw();
+}
+
+void MCStack::GetKey(MCExecContext& ctxt, MCValueRef& r_value)
 {
     // OK-2010-02-11: [[Bug 8610]] - Passkey property more useful if it returns
     //   whether or not the script is available.
-    r_value = iskeyed();
+    r_value = MCValueRetain(iskeyed() ? kMCTrue : kMCFalse);
+}
+
+void MCStack::SetKey(MCExecContext &ctxt, MCValueRef p_password)
+{
+    MCeerror->add(EE_STACK_PASSWORD_NOT_SUPPORTED, 0, 0);
+    ctxt . Throw();
 }
 
 // SN-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter for the P_IGNORE_MOUSE_EVENTS property
@@ -2184,6 +2192,12 @@ void MCStack::GetScriptOnly(MCExecContext& ctxt, bool& r_script_only)
 
 void MCStack::SetScriptOnly(MCExecContext& ctxt, bool p_script_only)
 {
+    if (haspassword())
+    {
+        ctxt . LegacyThrow(EE_SCRIPT_ONLY_STACK_NOPASSWORD);
+        return;
+    }
+    
     m_is_script_only = p_script_only;
 }
 
@@ -2253,4 +2267,25 @@ void MCStack::SetShowInvisibleObjects(MCExecContext &ctxt, bool *p_show_invisibl
 void MCStack::GetEffectiveShowInvisibleObjects(MCExecContext& ctxt, bool& r_value)
 {
 	r_value = geteffectiveshowinvisibleobjects();
+}
+
+void MCStack::GetMinStackFileVersion(MCExecContext &ctxt, MCStringRef& r_stack_file_version)
+{
+    uint32_t t_version = geteffectiveminimumstackfileversion();
+    
+    if (t_version < kMCStackFileFormatVersion_7_0)
+        t_version = kMCStackFileFormatVersion_7_0;
+    
+    if (t_version % 100 == 0)
+    {
+        if (MCStringFormat(r_stack_file_version, "%d.%d", t_version / 1000, (t_version % 1000) / 100))
+            return;
+    }
+    else
+    {
+        if (MCStringFormat(r_stack_file_version, "%d.%d.%d", t_version / 1000, (t_version % 1000) / 100, (t_version % 100) / 10))
+            return;
+    }
+    
+    ctxt . Throw();    
 }

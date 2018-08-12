@@ -2,15 +2,16 @@ Name: recordCompression
 
 Type: property
 
-Syntax: set the recordCompression to <codecName> 
+Syntax: set the recordCompression to <codecName>
 
-Summary: Specifies which <codec> is used to <compress> recorded sounds.
+Summary:
+Specifies which <codec> is used to <compress> recorded sounds.
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the recordCompression to "MAC6"
@@ -23,14 +24,33 @@ The <recordCompression> is a four-character string.
 By default, the <recordCompression> <property> is "raw ".
 
 Description:
-Use the <recordCompression> <property> to trade off between sound quality and disk space when you record a sound.
+Use the <recordCompression> <property> to trade off between sound
+quality and disk space when you record a sound.
 
-The <recordCompression> <property> determines what kind of <compress|compression> is used when you use the <record sound> <command> to record sound to a file.
+The <recordCompression> <property> determines what kind of
+<compress|compression> is used when you use the <record sound> <command>
+to record sound to a file.
 
-Not all codecs are compatible with all supported sound file formats. If you try to record sound using a <recordCompression> that is not compatible with the file <format> specified by the <recordFormat> <property>, the <compress|compression> type will be changed automatically to a <codec> that is compatible with the specified <recordFormat>.
+Not all codecs are compatible with all supported sound file formats. If
+you try to record sound using a <recordCompression> that is not
+compatible with the file <format> specified by the <recordFormat>
+<property>, the <compress|compression> type will be changed
+automatically to a <codec> that is compatible with the specified
+<recordFormat>. 
 
-The codecs are installed by <QuickTime>. You can obtain a list of available <codec|codecs> using the <recordCompressionTypes> <function>. The <default> setting, "raw " (note the trailing space), indicates no <compress|compression> will be used.
+The codecs are installed by <QuickTime>. You can obtain a list of
+available <codec|codecs> using the <recordCompressionTypes> <function>.
+The <default> setting, "raw " (note the trailing space), indicates no
+<compress|compression> will be used.
 
->*Note:* The <answer record> <command> sets the <recordCompression> <property> according to what the user chose in the <answer record> <dialog box>.
+>*Note:* The <answer record> <command> sets the <recordCompression>
+> <property> according to what the user chose in the <answer record>
+> <dialog box>.
 
-References: recordFormat (property), recordSampleSize (property), default (keyword), answer record (command), record sound (command), compress (function), format (function), recordCompressionTypes (function), property (glossary), dialog box (glossary), command (glossary), QuickTime (glossary), codec (glossary), compress (glossary), function (control_st)
+References: answer record (command), record sound (command),
+function (control structure), compress (function), format (function),
+recordCompressionTypes (function), property (glossary),
+dialog box (glossary), command (glossary), QuickTime (glossary),
+codec (glossary), compress (glossary), default (keyword),
+recordFormat (property), recordSampleSize (property)
+

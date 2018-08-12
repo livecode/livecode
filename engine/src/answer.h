@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __COMMANDS_ANSWER_H
 
 #ifndef __EXECUTION_POINT_H
-//#include "execpt.h"
+
 #endif
 
 #ifndef __VARIABLE_H
@@ -80,7 +80,6 @@ public:
 	
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
 	
 private:
 	Parse_errors parse_pagesetup(MCScriptPoint& sp);

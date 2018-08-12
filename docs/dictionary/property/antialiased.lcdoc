@@ -4,27 +4,37 @@ Type: property
 
 Syntax: set the antialiased of <graphic> to { true | false }
 
-Summary: Specifies whether the edges of the graphic object should be smoothed or not.
+Summary:
+Specifies whether the edges of the graphic object should be smoothed or
+not. 
 
 Associations: graphic
 
 Introduced: 2.7
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the antialiased of graphic "Title" to true
 
-Value (bool):The <antialiased> of a graphic is a boolean value, i.e. it is either true or false.
-By default, the <antialiased> <property> of newly created <object|objects> is set to true.
+Value (bool):
+The <antialiased> of a graphic is a boolean value, i.e. it is either
+true or false. By default, the <antialiased> <property> of newly created
+<object|objects> is set to true.
 
 Description:
-Use the <antialiased> <property> to enable or disable the smoothing of the edges of graphic objects.
+Use the <antialiased> <property> to enable or disable the smoothing of
+the edges of graphic objects.
 
->*Note:* Anitialised graphics cannot be displayed with dashed lines.  The property inspector adjusts for this by unsetting the antialised property when the <dashes> property is set.
+>*Note:* Anitialised graphics cannot be displayed with dashed lines.
+> The property inspector adjusts for this by unsetting the antialised
+> property when the <dashes> property is set.
 
-References: capStyle (property), joinStyle (property), fillRule (property), miterLimit (property), fillGradient (property), strokeGradient (property), dashes (property), property (glossary), object (object)
+References: property (glossary), object (glossary), capStyle (property),
+joinStyle (property), fillRule (property), miterLimit (property),
+fillGradient (property), strokeGradient (property), dashes (property)
 
 Tags: multimedia
+

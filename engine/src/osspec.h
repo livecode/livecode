@@ -19,6 +19,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "foundation-locale.h"
 
+#include "object.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 // Types for values stored in the Win32 registry
@@ -41,6 +43,7 @@ enum MCSRegistryValueType
 ///////////////////////////////////////////////////////////////////////////////
 
 
+extern void MCS_preinit();
 extern void MCS_init();
 extern void MCS_shutdown();
 extern void MCS_seterrno(int value);
@@ -60,7 +63,7 @@ extern void MCS_sleep(real8);
 extern bool MCS_getenv(MCStringRef name, MCStringRef& r_result);
 extern void MCS_setenv(MCStringRef name, MCStringRef value);
 extern void MCS_unsetenv(MCStringRef name);
-extern void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file);
+extern void MCS_downloadurl(MCObjectHandle p_target, MCStringRef p_url, MCStringRef p_file);
 
 extern bool MCS_pathfromnative(MCStringRef p_native_path, MCStringRef& r_livecode_path);
 extern bool MCS_pathtonative(MCStringRef p_livecode_path, MCStringRef& r_native_path);
@@ -78,7 +81,7 @@ extern bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path);
 extern void MCS_getcurdir(MCStringRef& r_path);
 /* LEGACY */ extern char *MCS_getcurdir();
 extern Boolean MCS_setcurdir(MCStringRef p_path);
-extern bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list);
+extern bool MCS_getentries(MCStringRef p_folder, bool p_files, bool p_detailed, MCListRef& r_list);
 
 extern bool MCS_getDNSservers(MCListRef& r_list);
 extern Boolean MCS_getdevices(MCStringRef& r_list);
@@ -109,9 +112,6 @@ extern bool MCS_savetextfile(MCStringRef f, MCStringRef data);
 extern void MCS_saveresfile(MCStringRef p_path, MCDataRef data);
 
 extern bool MCS_query_registry(MCStringRef p_key, MCValueRef& r_value, MCStringRef& r_type, MCStringRef& r_error);
-#ifdef LEGACY_EXEC
-/* LEGACY */ extern void MCS_query_registry(MCExecPoint &dest);
-#endif
 extern bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error);
 extern bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error);
 extern bool MCS_set_registry(MCStringRef p_key, MCValueRef p_value, MCSRegistryValueType p_type, MCStringRef& r_error);
@@ -148,10 +148,6 @@ extern void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_lengt
 extern void MCS_nativetoutf8(const char *p_native, uint4 p_native_length, char *&p_utf8, uint4& p_utf16_length);
 extern void MCS_utf8tonative(const char *p_utf8, uint4 p_uitf8_length, char *&p_native, uint4& p_native_length);
 
-extern MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename);
-extern MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
-extern void MCS_unloadmodule(MCSysModuleHandle p_module);
-
 extern void MCS_getlocaldatetime(MCDateTime& x_datetime);
 extern bool MCS_datetimetouniversal(MCDateTime& x_datetime);
 extern bool MCS_datetimetolocal(MCDateTime& x_datetime);
@@ -171,8 +167,6 @@ extern bool MCS_isnan(double p_value);
 
 extern bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error);
 
-bool MCS_generate_uuid(char buffer[128]);
-
 bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -191,7 +185,7 @@ extern void MCS_setplayloudness(uint2 p_loudness);
 
 extern bool MCS_init_sockets();
 extern bool MCS_compare_host_domain(MCStringRef p_host_a, MCStringRef p_host_b);
-extern MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef p_end_hostname);
+extern MCSocket *MCS_open_socket(MCNameRef name, MCNameRef from, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef p_end_hostname);
 extern void MCS_close_socket(MCSocket *s);
 extern MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef m);
 extern void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef m);
@@ -242,23 +236,21 @@ MCSErrorMode MCS_get_errormode(void);
 
 enum MCSOutputTextEncoding
 {
-	kMCSOutputTextEncodingUndefined,
-	
 	kMCSOutputTextEncodingWindows1252,
 	kMCSOutputTextEncodingMacRoman,
 	kMCSOutputTextEncodingISO8859_1,
 	kMCSOutputTextEncodingUTF8,
-	
-#if defined(__MACROMAN__)
-	kMCSOutputTextEncodingNative = kMCSOutputTextEncodingMacRoman,
-#elif defined(__WINDOWS_1252__)
-	kMCSOutputTextEncodingNative = kMCSOutputTextEncodingWindows1252,
-#elif defined(__ISO_8859_1__)
-	kMCSOutputTextEncodingNative = kMCSOutputTextEncodingISO8859_1,
-#else
-#error Unknown native text encoding
-#endif
 };
+
+#if defined(__MACROMAN__)
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingMacRoman;
+#elif defined(__WINDOWS_1252__)
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingWindows1252;
+#elif defined(__ISO_8859_1__)
+static const MCSOutputTextEncoding kMCSOutputTextEncodingNative = kMCSOutputTextEncodingISO8859_1;
+#else
+#   error Unknown native text encoding
+#endif
 
 void MCS_set_outputtextencoding(MCSOutputTextEncoding encoding);
 MCSOutputTextEncoding MCS_get_outputtextencoding(void);

@@ -7,6 +7,17 @@
 		'version_build': "<!(perl <(DEPTH)/util/decode_version.pl BUILD_REVISION <(DEPTH)/version)",
 		'version_string': "<!(perl <(DEPTH)/util/decode_version.pl BUILD_SHORT_VERSION <(DEPTH)/version)",
 
-		'git_revision': '<!(git rev-parse HEAD)',
+		'conditions':
+		[
+			[
+				'build_edition == "commercial"',
+				{
+					'git_revision': '<!(git -C <(DEPTH)/.. rev-parse HEAD)',
+				},
+				{
+					'git_revision': '<!(git -C <(DEPTH) rev-parse HEAD)',
+				},
+			],
+		],
 	},
 }

@@ -2,21 +2,31 @@ Name: define
 
 Type: command
 
-Syntax: define <property> of <object> 
+Syntax: define <property> of <object>
 
-Summary: Has no effect and is included in <LiveCode> for compatibility with imported <SuperCard> projects.
+Summary:
+Has no effect and is included in <LiveCode> for compatibility with
+imported <SuperCard> projects.
 
 Introduced: 1.0
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Parameters:
-property: 
-object: 
+property:
+
+
+object:
+
 
 Description:
-In SuperCard and Oracle Media Objects, the <define> <command> is used to create a <custom property|user property>.
+In SuperCard and Oracle Media Objects, the <define> <command> is used to
+create a <custom property|user property>.
 
-In LiveCode, you can use a custom property simply by setting its value with the set <command>, without creating it first, so this <command> is not needed.
+In LiveCode, you can use a custom property simply by setting its value
+with the set <command>, without creating it first, so this <command> is
+not needed.
 
-References: undefine (command), custom property (glossary), SuperCard (glossary), command (glossary), LiveCode (glossary)
+References: undefine (command), custom property (glossary),
+SuperCard (glossary), command (glossary), LiveCode (glossary)
+

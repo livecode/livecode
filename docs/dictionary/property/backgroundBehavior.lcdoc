@@ -1,18 +1,22 @@
 Name: backgroundBehavior
 
+Synonyms: bgbehavior
+
 Type: property
 
 Syntax: set the backgroundBehavior of <group> to {true | false}
 
-Summary: Specifies whether a group behaves as a background and come after it's card on the message path.
+Summary:
+Specifies whether a group behaves as a background and come after it's
+card on the message path.
 
-Synonyms: bgBehavior
+Associations: group
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the backgroundBehavior of group 1 to false
@@ -25,29 +29,54 @@ if the backgroundBehavior of group "backgroundObjects" is true then
  -- do something
 end if
 
-Value (bool):The <backgroundBehavior> of a group is true or false.
-By default, the <backgroundBehavior> property of newly created groups is set to false.
+Value (bool):
+The <backgroundBehavior> of a group is true or false.
+By default, the <backgroundBehavior> property of newly created groups is
+set to false.
 
 Description:
-Use the <backgroundBehavior> property to make groups behave like backgrounds and to automatically place groups on newly created cards.
+Use the <backgroundBehavior> property to make groups behave like
+backgrounds and to automatically place groups on newly created cards.
 
-Only top-level groups may be background groups; an attempt to set the <backgroundBehavior> of a nested group to true throws an error.
+Only top-level groups may be background groups; an attempt to set the
+<backgroundBehavior> of a nested group to true throws an error.
 
 A background group differs from a normal group in the following ways:
-  * The group's script is placed behind the card in the message path for any message not originating from a control within it.
+
+  * The group's script is placed behind the card in the message path for
+    any message not originating from a control within it.
   * The group can be referred to using the 'background' chunk.
-  * The card on which the group is placed receives <preOpenBackground> / <openBackground> / <closeBackground> messages (these messages occur instead of <preOpenControl> / <openControl> / <closeControl> being sent to the group itself).
+  * The card on which the group is placed receives <preOpenBackground> /
+    <openBackground> / <closeBackground> messages (these messages occur
+    instead of <preOpenControl> / <openControl> / <closeControl> being
+    sent to the group itself).
   * The group can be placed onto multiple cards.
-  * If the group is placed on 'this card' at the time a new card is created, it is automatically placed onto the new (empty) card.
+  * If the group is placed on 'this card' at the time a new card is
+    created, it is automatically placed onto the new (empty) card.
 
-A background group is also a shared group. This means that when the <backgroundBehavior> is set to true, the <sharedBehavior> is also set to true (if it is not already).
 
->*Note:* Setting the <backgroundBehavior> of a group to false does not affect the <sharedBehavior> property, in particular the latter is not be set to false until it is explicitly done so.
+A background group is also a shared group. This means that when the
+<backgroundBehavior> is set to true, the <sharedBehavior> is also set to
+true (if it is not already).
 
->*Note:* Only groups whose <backgroundBehavior> is true appear in the list reported by the <backgroundNames> and <backgroundIDs> properties.
+>*Note:* Setting the <backgroundBehavior> of a group to false does not
+> affect the <sharedBehavior> property, in particular the latter is not
+> be set to false until it is explicitly done so.
 
->*Note:* If a stack created in a version of LiveCode earlier than 1.1 is opened in 1.1 or later, the <backgroundBehavior> of all its groups is set to true by default. This also applies to imported HyperCard stacks.
+>*Note:* Only groups whose <backgroundBehavior> is true appear in the
+> list reported by the <backgroundNames> and <backgroundIDs> properties.
 
-References: HCAddressing (property), sharedBehavior (property), backgroundNames (property), backgroundIDs (property), dynamicPaths (property), preOpenBackground (message), openControl (message), openBackground (message), closeBackground (message), preOpenControl (message), closeControl (message), place (command), send (command), pass (control_st)
+>*Note:* If a stack created in a version of LiveCode earlier than 1.1 is
+> opened in 1.1 or later, the <backgroundBehavior> of all its groups is
+> set to true by default. This also applies to imported HyperCard
+> stacks. 
+
+References: place (command), send (command), pass (control structure),
+preOpenBackground (message), openControl (message),
+openBackground (message), closeBackground (message),
+preOpenControl (message), closeControl (message), HCAddressing (property),
+sharedBehavior (property), backgroundNames (property),
+backgroundIDs (property), dynamicPaths (property)
 
 Tags: objects
+

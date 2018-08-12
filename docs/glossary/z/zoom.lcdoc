@@ -1,14 +1,17 @@
 Name: zoom
 
-Synonyms: zooming,zoomed,zoom,zoom in,zoomed in,zooms in,zooming in
+Synonyms: zooming, zoomed, zoom, zoom in, zoomed in, zooms in, zooming in
 
 Type: glossary
 
 Description:
-To enlarge an <object> for viewing. 
- 
-Also, to enlarge a window to the full size of the screen. (On <Windows|Windows systems>, the term "<maximize>" is usually used instead.)
+To enlarge an <object(glossary)> for viewing. 
 
-References: Windows (glossary), maximize (glossary), object (object)
+Also, to enlarge a window to the full size of the screen. (On
+<Windows|Windows systems>, the term "<maximize>" is usually used
+instead.) 
+
+References: Windows (glossary), maximize (glossary), object (glossary)
 
 Tags: ui
+

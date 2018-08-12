@@ -1,1 +1,0 @@
-# DataGrid throws error when setting show vscrollbar to false in preOpenControl on mobile.

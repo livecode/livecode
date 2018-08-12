@@ -1,1 +1,0 @@
-# Text wraps when field width set to formattedWidth

@@ -6,13 +6,15 @@ Syntax: the mouseControl
 
 Syntax: mouseControl()
 
-Summary: <return|Returns> the number of the <control> the <mouse pointer> is over.
+Summary:
+<return|Returns> the number of the <control> the <mouse pointer> is
+over. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the mouseControl
@@ -20,19 +22,37 @@ the mouseControl
 Example:
 if the number of the mouseControl is 2 then set the cursor to hand
 
-Returns: The <mouseControl> <function> <return|returns> a <string> of the form control controlNumber.
+Returns:
+The <mouseControl> <function> <return|returns> a <string> of the form
+control controlNumber.
 
 Description:
-Use the <mouseControl> <function> to change the <stack|stack's> behavior depending on what <control(keyword)> the mouse is over, or to perform some action on the <control(keyword)> the mouse is over.
+Use the <mouseControl> <function> to change the <stack|stack's> behavior
+depending on what <control(keyword)> the mouse is over, or to perform
+some action on the <control(keyword)> the mouse is over.
 
-The control number returned in the <mouseControl> function is the same as the <control(object)|control's> <layer> <property>.
+The control number returned in the <mouseControl> function is the same
+as the <control(object)|control's> <layer> <property>.
 
-If the mouse is not over a control, the <mouseControl> <function> <return|returns> empty.
+If the mouse is not over a control, the <mouseControl> <function>
+<return|returns> empty.
 
-If the mouse button is down, the <mouseControl> <function> <return|returns> the <control(keyword)> that was clicked, even if the mouse has moved to another <control(keyword)>.
+If the mouse button is down, the <mouseControl> <function>
+<return|returns> the <control(keyword)> that was clicked, even if the
+mouse has moved to another <control(keyword)>.
 
-If the mouse is over a graphic that is not selected, its interior is considered to be within the graphic only if the graphic's filled <property> is true. If the <graphic(object)|graphic's> <filled> is false and the <graphic(keyword)> is not selected, the <mouseControl> <return|returns> the <graphic(object)|graphic's> number only if the mouse is over the <graphic(object)|graphic's> border.
+If the mouse is over a graphic that is not selected, its interior is
+considered to be within the graphic only if the graphic's filled
+<property> is true. If the <graphic(object)|graphic's> <filled> is false
+and the <graphic(keyword)> is not selected, the <mouseControl>
+<return|returns> the <graphic(object)|graphic's> number only if the
+mouse is over the <graphic(object)|graphic's> border.
 
-References: filled (property), layer (property), mouseEnter (message), mouseLeave (message), string (keyword), control (keyword), graphic (keyword), property (glossary), mouse pointer (glossary), return (glossary), within (function), mouseCharChunk (function), stack (object), control (object), graphic (object), function (control_st)
+References: function (control structure), within (function),
+mouseCharChunk (function), property (glossary), mouse pointer (glossary),
+return (glossary), string (keyword), control (keyword), graphic (keyword),
+mouseEnter (message), mouseLeave (message), stack (object),
+control (object), graphic (object), filled (property), layer (property)
 
 Tags: ui
+

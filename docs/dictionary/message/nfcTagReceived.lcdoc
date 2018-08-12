@@ -1,0 +1,55 @@
+Name: nfcTagReceived
+
+Type: message
+
+Syntax: nfcTagReceived <ncfTag>
+
+Summary:
+Sent to the <current card> when the <application> receives data from an NFC tag read by
+the device.
+
+Introduced: 9.0
+
+OS: android
+
+Platforms: mobile
+
+Example:
+on nfcTagReceived pTag
+   handleNewTagID pTag["id"]
+   
+   if pTag["ndef"] is an array then
+      // handle first Ndef record on tag
+      handleNdefData pTag["ndef"][1]
+   end if
+end nfcTagReceived
+
+Parameters:
+ncfTag (array):
+The NFC tag data received, formatted as an array with the following entries
+
+- "id" : the hardware ID of the tag, as assigned by the manufacturer
+- "ndef" : the Ndef-formatted message if present on the tag. This is presented in the form
+  of a numerically-indexed array of Ndef records, each of which is an array with the
+  the following entries:
+    - "id": The Ndef message ID as binary data.
+    - "tnf": The Ndef message type-name field as an integer.
+    - "type": The Ndef message type as binary data.
+    - "payload": The Ndef message payload as binary data.
+
+Description:
+When an NFC tag is read by the device, information about that tag will be dispatched to
+apps which are configured to handle that tag data. The <nfcTagReceived> handler will be
+called whenever NFC tag data is dispatched to your app, and can then be used to obtain the
+tag information.
+
+The <mobileEnableNFCDispatch> command can be used to ensure NFC tag data is sent to your
+app while it is running in the foreground.
+
+If your application no longer needs to intercept NFC tag data then call
+<mobileDisableNFCDispatch> to allow tag data to be dispatched to other apps once more.
+
+References: mobileIsNFCAvailable (function), mobileIsNFCEnabled (function),
+mobileEnableNFCDispatch (command), mobileDisableNFCDispatch (command),
+current card (glossary), application (glossary)
+

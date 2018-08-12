@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -213,156 +213,6 @@ void MCAndroidControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlCo
         GetViewBackgroundColor(m_view, p_color . r, p_color . g, p_color . b, p_color . a);
 }
 
-#ifdef /* MCAndroidControl::Set */ LEGACY_EXEC
-Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
-{
-    switch (p_property)
-    {
-        case kMCNativeControlPropertyRectangle:
-        {
-            int16_t i1, i2, i3, i4;
-            if (MCU_stoi2x4(ep.getsvalue(), i1, i2, i3, i4))
-            {
-                // MM-2013-11-26: [[ Bug 11485 ]] The rect of the control is passed in user space. Convert to device space when setting on view.
-                MCGRectangle t_rect;
-                t_rect = MCGRectangleMake(i1, i2, i3 - i1, i4 -i2);
-                t_rect = MCNativeControlUserRectToDeviceRect(t_rect);
-                i1 = (int16_t) roundf(t_rect . origin . x);
-                i2 = (int16_t) roundf(t_rect . origin . y);
-                i3 = (int16_t) roundf(t_rect . size . width) + i1;
-                i4 = (int16_t) roundf(t_rect . size . height) + i2;
-                
-                if (m_view != nil)
-                    MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, i1, i2, i3, i4);
-            }
-            else
-            {
-                MCeerror->add(EE_OBJECT_NAR, 0, 0, ep.getsvalue());
-                return ES_ERROR;
-            }
-            return ES_NORMAL;
-        }
-        
-        case kMCNativeControlPropertyVisible:
-        {
-            Boolean t_value;
-            if (MCU_stob(ep.getsvalue(), t_value))
-            {
-                if (m_view != nil)
-                    MCAndroidObjectRemoteCall(m_view, "setVisible", "vb", nil, t_value);
-            }
-            else
-            {
-                MCeerror->add(EE_OBJECT_NAB, 0, 0, ep.getsvalue());
-                return ES_ERROR;
-            }
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyAlpha:
-        {
-            uint16_t t_alpha;
-            if (MCU_stoui2(ep.getsvalue(), t_alpha))
-            {
-                if (m_view != nil)
-                    MCAndroidObjectRemoteCall(m_view, "setAlpha", "vi", nil, t_alpha);
-            }
-            else
-            {
-                MCeerror->add(EE_OBJECT_NAN, 0, 0, ep.getsvalue());
-                return ES_ERROR;
-            }
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyBackgroundColor:
-        {
-            uint16_t t_r, t_g, t_b, t_a;
-            if (MCNativeControl::ParseColor(ep, t_r, t_g, t_b, t_a))
-            {
-                if (m_view != nil)
-                    MCAndroidObjectRemoteCall(m_view, "setBackgroundColor", "viiii", nil, t_r >> 8, t_g >> 8, t_b >> 8, t_a >> 8);
-            }
-            else
-            {
-                MCeerror->add(EE_OBJECT_BADCOLOR, 0, 0, ep.getsvalue());
-                return ES_ERROR;
-            }
-            return ES_NORMAL;
-        }
-        default:
-            break;
-    }
-    
-    return ES_NOT_HANDLED;
-}
-#endif /* MCAndroidControl::Set */
-
-#ifdef /* MCAndroidControl::Get */ LEGACY_EXEC
-Exec_stat MCAndroidControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
-{
-    switch (p_property)
-    {
-        case kMCNativeControlPropertyId:
-            ep.setnvalue(GetId());
-            return ES_NORMAL;
-            
-        case kMCNativeControlPropertyName:
-            ep.copysvalue(GetName() == nil ? "" : GetName());
-            return ES_NORMAL;
-            
-        case kMCNativeControlPropertyRectangle:
-        {
-            if (m_view != nil)
-            {
-                int16_t i1, i2, i3, i4;
-                GetViewRect(m_view, i1, i2, i3, i4);
-                MCExecPointSetRect(ep, i1, i2, i3, i4);
-            }
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyVisible:
-        {
-            if (m_view != nil)
-            {
-                bool t_visible;
-                MCAndroidObjectRemoteCall(m_view, "getVisible", "b", &t_visible);
-                ep.setsvalue(MCU_btos(t_visible));
-            }
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyAlpha:
-        {
-            if (m_view != nil)
-            {
-                int32_t t_alpha;
-                MCAndroidObjectRemoteCall(m_view, "getAlpha", "i", &t_alpha);
-                ep.setnvalue(t_alpha);
-            }
-            return ES_NORMAL;
-        }
-            
-        case kMCNativeControlPropertyBackgroundColor:
-        {
-            uint16_t t_red, t_green, t_blue, t_alpha;
-            if (m_view != nil)
-            {
-                GetViewBackgroundColor(m_view, t_red, t_green, t_blue, t_alpha);
-                FormatColor(ep, t_red, t_blue, t_green, t_alpha);
-            }
-            return ES_NORMAL;
-        }
-            
-        default:
-            break;
-    }
-    
-    return ES_ERROR;
-}
-#endif /* MCAndroidControl::Get */
-
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct
@@ -433,7 +283,7 @@ private:
 void MCAndroidControl::PostNotifyEvent(MCNameRef p_message)
 {
     MCCustomEvent *t_event;
-    t_event = new MCAndroidControlNotifyEvent(this, p_message);
+    t_event = new (nothrow) MCAndroidControlNotifyEvent(this, p_message);
     MCEventQueuePostCustom(t_event);
 }
 

@@ -4,15 +4,17 @@ Type: property
 
 Syntax: set the hidden of <line> of <field> to {true | false}
 
-Summary: Specifies whether a line of text (paragraph) of a field is hidden from the user.
+Summary:
+Specifies whether a line of text (paragraph) of a field is hidden from
+the user.
 
 Associations: field
 
 Introduced: 5.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the hidden of line 2 of field 1 to true
@@ -20,19 +22,24 @@ set the hidden of line 2 of field 1 to true
 Example:
 -- Toggle visibility of a line
 if the hidden of line 1 of field 1 is true then
-   set the hidden of line 1 of field 1 is false
+   set the hidden of line 1 of field 1 to false
 else
-   set the hidden of line 1 of field 1 is true
+   set the hidden of line 1 of field 1 to true
 end if
 
-Value (bool): The <hidden> of a line of a field is true or false.
+Value (bool):
+The <hidden> of a line of a field is true or false.
 
 Description:
-Use the <hidden> property to control whether lines of text in a field are hidden from the user.
+Use the <hidden> property to control whether lines of text in a field
+are hidden from the user.
 
-If the <hidden> property of a line of text in a field is set to true, that line is hidden from the user. The content of the field remains unchanged however, allowing for the normal data parsing.
+If the <hidden> property of a line of text in a field is set to true,
+that line is hidden from the user. The content of the field remains
+unchanged however, allowing for the normal data parsing.
 
-For example, take the following content of text in a field and their associated <hidden> property settings:
+For example, take the following content of text in a field and their
+associated <hidden> property settings:
 
 This is the text of line 1 -- hidden property 'false'
 This is the text of line 2 -- hidden property 'true'
@@ -45,6 +52,13 @@ This is the text of line 3
 
 Executing 'put line 2 of field' results in 'This is the text of line 2'.
 
-References: hScrollbar (property), listDepth (property), borderColor (property), tabstops (property), listBehavior (property), formattedWidth (property), textAlign (property), spaceBelow (property), rightIndent (property), firstIndent (property), formattedText (property), borderWidth (property), hgrid (property), spaceAbove (property), vgrid (property), dontWrap (property), backgroundColor (property), listStyle (property)
+References: hScrollbar (property), listDepth (property),
+borderColor (property), tabstops (property), listBehavior (property),
+formattedWidth (property), textAlign (property), spaceBelow (property),
+rightIndent (property), firstIndent (property), formattedText (property),
+borderWidth (property), hgrid (property), spaceAbove (property),
+vgrid (property), dontWrap (property), backgroundColor (property),
+listStyle (property)
 
 Tags: ui
+

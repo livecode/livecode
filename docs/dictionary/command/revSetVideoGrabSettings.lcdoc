@@ -2,34 +2,61 @@ Name: revSetVideoGrabSettings
 
 Type: command
 
-Syntax: revSetVideoGrabSettings <variableName> 
+Syntax: revSetVideoGrabSettings <variableName>
 
-Summary: Restores video settings saved by the <revVideoGrabSettings> <function>.
+Summary:
+Restores video settings saved by the <revVideoGrabSettings> <function>.
+
+Associations: video library
 
 Introduced: 2.0
 
-OS: mac,windows
+Deprecated: 9.0
+
+OS:
 
 Platforms: desktop
 
-Security: disk,privacy
+Security: disk, privacy
 
 Example:
 local tSettings
-put the cSavedSettings of me into tSettingsrevSetVideoGrabSettings "tSettings"
+put the cSavedSettings of me into tSettings
+revSetVideoGrabSettings "tSettings"
 
 Parameters:
-variableName: The name of a LiveCode variable that contains the settings string. The settings string is a block of binary data returned by the revVideoGrabSettings function.
+variableName:
+The name of a LiveCode variable that contains the settings string. The
+settings string is a block of binary data returned by the
+revVideoGrabSettings function.
 
 Description:
-Use the <revSetVideoGrabSettings> <command> to restore settings for <video capture>.
+The <revSetVideoGrabSettings> is ignored and and has no effect.
 
-You specify settings for video capture in the video capture dialog box, which is displayed by the revVideoGrabDialog <command>. You can get the current settings with the <revVideoGrabSettings> <function> and restore them later with the <revSetVideoGrabSettings> <command>. This allows you to make changes to the <video capture|video-capture> settings under script control.
+>*Important:*  The <revSetVideoGrabSettings> <command> is part of the 
+> <Video library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the
+> "Video Grabber" 
+> library checkbox is checked.
 
->*Important:*  The <revSetVideoGrabSettings> <command> works only for <QuickTime> <video capture>.
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect.
 
->*Important:*  The <revSetVideoGrabSettings> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+Support for the "Video Grabber" library on Mac OS X ended in LiveCode
+9.0.
 
-References: revVideoGrabSettings (command), function (control_st), video capture (glossary), Standalone Application Settings (glossary), standalone application (glossary), QuickTime (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+References: revVideoGrabSettings (command), function (control structure),
+video capture (glossary), Standalone Application Settings (glossary),
+standalone application (glossary), QuickTime (glossary),
+command (glossary), LiveCode custom library (glossary),
+Video library (library)
 
 Tags: multimedia
+

@@ -2,13 +2,18 @@ Name: revStopAnimation
 
 Type: command
 
-Syntax: revStopAnimation <animationName> 
+Syntax: revStopAnimation <animationName>
 
-Summary: No longer supported and included for backwards compatibility, halts an animation created with the Animation Builder in LiveCode versions older than 2.5.
+Summary:
+No longer supported and included for backwards compatibility, halts an
+animation created with the Animation Builder in LiveCode versions older
+than 2.5.
+
+Associations: animation library
 
 Introduced: 1.0
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revStopAnimation "Flying Circus"
@@ -17,21 +22,43 @@ Example:
 revStopAnimation (the animName of the target)
 
 Parameters:
-animationName: An expression that evaluates to the name of an animation on the current card.
+animationName:
+An expression that evaluates to the name of an animation on the current
+card. 
 
 Description:
-The <revStopAnimation> command is no longer supported as the Animation Builder was removed in LiveCode 2.5, however it is included for backwards compatibility with older applications that used the Animation Builder.
+The <revStopAnimation> command is no longer supported as the Animation
+Builder was removed in LiveCode 2.5, however it is included for
+backwards compatibility with older applications that used the Animation
+Builder. 
 
-Use the <revStopAnimation> <command> from within a <handler> that's <trigger|triggered> by a <key frame> to stop the current animation from playing.
+Use the <revStopAnimation> <command> from within a <handler> that's
+<trigger|triggered> by a <key frame> to stop the current animation from
+playing. 
 
-Animations were created using the Animation Builder in old versions of LiveCode. The Animation builder is no longer available.
+Animations were created using the Animation Builder in old versions of
+LiveCode. The Animation builder is no longer available.
 
-The <animationName> must be an animation that was created on the <current card> of the <defaultStack>.
+The <animationName> must be an animation that was created on the
+<current card> of the <defaultStack>.
 
->*Important:*  The <revStopAnimation> <command> is part of the <Animation library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Animation Library" is selected in the list of script libraries.
+>*Important:*  The <revStopAnimation> <command> is part of the 
+> <Animation library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Animation" 
+> library checkbox is checked.
 
->*Note:* When included in a <standalone application>, the <Animation library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <revStopAnimation> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCardhandlers(message)> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <revStopAnimation> <command> can be used in any <handler>.
-
-References: defaultStack (property), startup (message), openBackground (message), preOpenStack (message), openStack (message), stop (command), revPlayAnimation (command), revGoToFramePaused (command), play (command), current card (glossary), main stack (glossary), handler (glossary), key frame (glossary), Standalone Application Settings (glossary), group (glossary), standalone application (glossary), trigger (glossary), message (glossary), command (glossary), application (glossary), LiveCode custom library (library), Animation library (library), library (library)
+References: stop (command), revPlayAnimation (command),
+revGoToFramePaused (command), play (command), current card (glossary),
+main stack (glossary), handler (glossary), key frame (glossary),
+Standalone Application Settings (glossary), group (glossary),
+standalone application (glossary), trigger (glossary), message (glossary),
+command (glossary), application (glossary),
+LiveCode custom library (glossary), Animation library (library),
+library (library), startup (message), openBackground (message),
+preOpenStack (message), openStack (message), defaultStack (property)
 
 Tags: multimedia
+

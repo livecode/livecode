@@ -66,11 +66,6 @@ bool MCChunkIsAmongTheChunksOfRange(MCStringRef p_chunk, MCStringRef p_string, M
 
 bool MCChunkOffsetOfChunkInRange(MCStringRef p_string, MCStringRef p_needle, MCStringRef p_delimiter, bool p_whole_matches, MCStringOptions p_options, MCRange p_range, uindex_t& r_offset);
 
-typedef bool (*MCChunkApplyCallback)(void *context, MCStringRef string, MCRange chunk_range);
-bool MCChunkApplyInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, MCChunkApplyCallback p_callback, void *context);
-
-bool MCChunkIterate(MCRange& x_range, MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, bool p_first);
-
 void MCChunkSkipWord(MCStringRef p_string, MCStringRef p_line_delimiter, MCStringOptions p_options, bool p_skip_spaces, uindex_t& x_offset);
 
 class MCTextChunkIterator

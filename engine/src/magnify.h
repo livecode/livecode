@@ -22,8 +22,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mccontrol.h"
 
-class MCMagnify : public MCControl
+class MCMagnify;
+typedef MCObjectProxy<MCMagnify>::Handle MCMagnifyHandle;
+
+class MCMagnify : public MCControl, public MCMixinObjectHandle<MCMagnify>
 {
+public:
+    
+    enum { kObjectType = CT_MAGNIFY };
+    using MCMixinObjectHandle<MCMagnify>::GetHandle;
+    
 protected:
 	uint2 inside;
 public:
@@ -32,6 +40,9 @@ public:
 	// virtual functions from MCObject
 	virtual ~MCMagnify();
 	virtual Chunk_term gettype() const;
+    
+    virtual bool visit_self(MCObjectVisitor *p_visitor);
+    
 	virtual void open();
 	virtual void close();
 	virtual Boolean kfocusnext(Boolean top);

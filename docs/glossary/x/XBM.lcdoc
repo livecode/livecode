@@ -1,12 +1,14 @@
 Name: XBM
 
-Synonyms: .xbm,XBM
+Synonyms: .xbm, xbm
 
 Type: glossary
 
 Description:
-X Bit Map. A black-and-white icon <format> used on some <Unix|Unix systems>.
+X Bit Map. A black-and-white icon <format> used on some <Unix|Unix
+systems>. 
 
 References: format (glossary), Unix (glossary)
 
 Tags: multimedia
+

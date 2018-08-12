@@ -156,12 +156,19 @@ struct MCStackAttachment
     MCStackAttachmentCallback callback;
 };
 
-class MCStack : public MCObject
+typedef MCObjectProxy<MCStack>::Handle MCStackHandle;
+
+class MCStack : public MCObject, public MCMixinObjectHandle<MCStack>
 {
-	friend class MCHcstak;
-	friend class MCHccard;
+public:
+    
+    enum { kObjectType = CT_STACK };
+    using MCMixinObjectHandle<MCStack>::GetHandle;
 
 protected:
+    
+    friend class MCHcstak;
+    friend class MCHccard;
     
 	Window window;
 	MCCursorRef cursor;
@@ -216,7 +223,7 @@ protected:
 #endif
 
 	// IM-2014-07-23: [[ Bug 12930 ]] The stack whose window is parent to this stack
-	MCObjectHandle *m_parent_stack;
+	MCStackHandle m_parent_stack;
 	
 	MCExternalHandlerList *m_externals;
 
@@ -293,6 +300,11 @@ protected:
     
     // MW-2014-09-30: [[ ScriptOnlyStack ]] If true, the stack is a script-only-stack.
     bool m_is_script_only : 1;
+    
+    // BWM-2017-08-16: [[ Bug 17810 ]] Line endings for imported script-only-stack.
+    MCStringLineEndingStyle m_line_encoding_style : 3;
+	
+	bool m_is_ide_stack : 1;
 	
 	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
 	bool m_purge_fonts;
@@ -309,6 +321,7 @@ protected:
 	MCStackObjectVisibility m_hidden_object_visibility;
     
 public:
+    
 	Boolean menuwindow;
 
 	MCStack(void);
@@ -343,19 +356,23 @@ public:
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual void applyrect(const MCRectangle &nrect);
 
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
-
-	virtual Boolean del();
+    virtual void removereferences(void);
+    Boolean dodel(void);
+	virtual Boolean del(bool p_check_flag);
+    virtual bool isdeletable(bool p_check_flag);
+    
 	virtual void paste(void);
 
-	virtual MCStack *getstack();
+	virtual MCStackHandle getstack();
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
 	virtual void recompute();
 	
     virtual void toolchanged(Tool p_new_tool);
+	
+	virtual void OnViewTransformChanged();
+	
+	virtual void OnAttach();
+	virtual void OnDetach();
     
 	// MW-2011-09-20: [[ Collision ]] Compute shape of stack.
 	virtual bool lockshape(MCObjectShape& r_shape);
@@ -399,6 +416,11 @@ public:
 	//   window using the given callback to perform the drawing.
 	// IM-2014-01-24: [[ HiDPI ]] The request region is specified in logical coordinates.
 	void view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
+	
+	// Some platforms require the entire window to be redrawn when resized.
+	// This method indicates whether or not to mark the entire view as dirty
+	//   when resized.
+	bool view_platform_dirtyviewonresize() const;
 	
 	//////////
 	
@@ -511,8 +533,6 @@ public:
 	void view_reset_updates(void);
 	// IM-2013-10-14: [[ FullscreenMode ]] Mark the given view region as needing redrawn
 	void view_dirty_rect(const MCRectangle &p_rect);
-	// IM-2013-10-14: [[ FullscreenMode ]] Mark the entire view surface as needing redrawn
-	void view_dirty_all(void);
 	// IM-2013-10-14: [[ FullscreenMode ]] Request a redraw of the marked areas
 	void view_updatewindow(void);
 	// IM-2013-10-14: [[ FullscreenMode ]] Ensure the view content is up to date
@@ -584,14 +604,6 @@ public:
     
 	//////////
 	
-    // MW-2014-12-17: [[ Widgets ]] Returns true if one of the stacks substacks have widgets.
-    bool substackhaswidgets();
-
-    /* Return true iff the stack or one of its substacks has widgets. */
-    virtual bool haswidgets();
-    
-	//////////
-    
 	void setgeom();
 	
 	//////////
@@ -731,9 +743,6 @@ public:
 	void renumber(MCCard *card, uint4 newnumber);
 	MCObject *getAV(Chunk_term etype, MCStringRef, Chunk_term otype);
 	MCCard *getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term otype);
-#ifdef OLD_EXEC
-	MCCard *getchild(Chunk_term etype, const MCString &, Chunk_term otype);
-#endif  
     MCCard *getchildbyordinal(Chunk_term p_ordinal);
     MCCard *getchildbyid(uinteger_t p_id);
     MCCard *getchildbyname(MCNameRef p_name);
@@ -819,15 +828,9 @@ public:
 	                 Find_mode fmode);
 	Boolean findone(MCExecContext &ctxt, Find_mode mode, MCStringRef *strings,
 	                uint2 nstrings, MCChunk *field, Boolean firstcard);
-#ifdef LEGACY_EXEC
-	void find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target);
-#endif
 	void find(MCExecContext &ctxt, Find_mode mode, MCStringRef, MCChunk *field);
 	void markfind(MCExecContext &ctxt, Find_mode mode, MCStringRef,
 	              MCChunk *, Boolean mark);
-#ifdef LEGACY_EXEC
-	void mark(MCExecPoint &ep, MCExpression *where, Boolean mark);
-#endif
     void mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark);
 	Linkatts *getlinkatts();
 	Boolean cantabort()
@@ -842,7 +845,7 @@ public:
 	{
 		if (!MCStringIsEmpty(title))
 			return title;
-		return MCNameGetString(_name);
+		return MCNameGetString(getname());
 	}
 	MCControl *getcontrols()
 	{
@@ -892,6 +895,9 @@ public:
 	// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
 	void setsizehints();
     
+	bool createwindow();
+	void destroywindow();
+	
 	void destroywindowshape();
     void updatewindowshape(MCWindowShape *shape);
 
@@ -947,6 +953,17 @@ public:
     bool isscriptonly(void) const { return m_is_script_only; }
     void setasscriptonly(MCStringRef p_script);
     
+    // BWM-2017-08-16: [[ Bug 17810 ]] Get/set line endings for imported script-only-stack.
+    MCStringLineEndingStyle getlineencodingstyle(void) const
+    {
+        return m_line_encoding_style;
+    }
+    
+    void setlineencodingstyle(MCStringLineEndingStyle p_line_encoding_style)
+    {
+        m_line_encoding_style = p_line_encoding_style;
+    }
+
 	inline bool getextendedstate(uint4 flag) const
 	{
 		return (f_extended_state & flag) != 0;
@@ -1232,8 +1249,10 @@ public:
 	void GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& p_size);
 	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t* p_size);
 
-	void GetPassword(MCExecContext& ctxt, MCDataRef& r_value);
-    void GetKey(MCExecContext& ctxt, bool& r_value);
+	void GetPassword(MCExecContext& ctxt, MCValueRef& r_value);
+    void SetPassword(MCExecContext &ctxt, MCValueRef p_password);
+    void GetKey(MCExecContext& ctxt, MCValueRef& r_value);
+    void SetKey(MCExecContext &ctxt, MCValueRef p_password);
     
     // SN-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter added
     void SetIgnoreMouseEvents(MCExecContext &ctxt, bool p_ignore);
@@ -1251,6 +1270,8 @@ public:
 	void GetShowInvisibleObjects(MCExecContext &ctxt, bool *&r_show_invisibles);
 	void SetShowInvisibleObjects(MCExecContext &ctxt, bool *p_show_invisibles);
 	void GetEffectiveShowInvisibleObjects(MCExecContext &ctxt, bool &r_show_invisibles);
+    
+    void GetMinStackFileVersion(MCExecContext &ctxt, MCStringRef& r_stack_file_version);
     
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
@@ -1290,6 +1311,9 @@ public:
 #endif
     
 private:
+    /* Explicitly forbid use of the base class's load() method */
+	using MCObject::load;
+
 	void loadexternals(void);
 	void unloadexternals(void);
     
@@ -1297,11 +1321,6 @@ private:
     void updatedocumentfilename(void);
 
 	void mode_load(void);
-
-#ifdef LEGACY_EXEC
-	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
-	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef cprop, MCStringRef carray, Boolean effective);
-#endif
 
 	void mode_getrealrect(MCRectangle& r_rect);
 	void mode_takewindow(MCStack *other);

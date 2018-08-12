@@ -1,6 +1,6 @@
 Name: chunk
 
-Synonyms: chunk,chunking
+Synonyms: chunk, chunking
 
 Type: glossary
 
@@ -10,3 +10,4 @@ A part of the text in a <container>.
 References: container (glossary)
 
 Tags: text processing
+

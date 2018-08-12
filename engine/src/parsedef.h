@@ -33,8 +33,10 @@ constant;
 #define ELEMENTS(table) (sizeof(table) / sizeof(table[0]))
 
 enum Accept_constants {
-    AC_UNDEFINED,
-    AC_DATAGRAM,
+    AC_CONNECTIONS,
+	AC_ON,
+	AC_PORT,
+	AC_DATAGRAM,
     AC_SECURE
 };
 
@@ -489,6 +491,7 @@ enum Functions {
     F_QUERY_REGISTRY,
     F_RANDOM,
     F_RECORD_COMPRESSION_TYPES,
+    F_RECORD_FORMATS,
     F_RECORD_LOUDNESS,
     F_REPLACE_TEXT,
     F_RESULT,
@@ -554,6 +557,7 @@ enum Functions {
     F_TIME,
     F_TO_LOWER,
     F_TO_UPPER,
+    F_TOKEN_OFFSET,
     F_TOP_STACK,
     F_TRANSPOSE,
     F_TRUEWORD_OFFSET,
@@ -579,6 +583,7 @@ enum Functions {
 	F_ARRAY_DECODE,
 	F_RANDOM_BYTES,
 	F_SHA1_DIGEST,
+    F_MESSAGE_DIGEST,
 	
 	// MW-2012-10-08: [[ HitTest ]] New functions for returning control at a point.
 	F_CONTROL_AT_LOC,
@@ -594,11 +599,26 @@ enum Functions {
     F_NORMALIZE_TEXT,
     
     F_CODEPOINT_PROPERTY,
+    
+    F_VECTOR_DOT_PRODUCT,
+    
+    F_EVENT_CAPSLOCK_KEY,
+    F_EVENT_COMMAND_KEY,
+    F_EVENT_CONTROL_KEY,
+    F_EVENT_OPTION_KEY,
+    F_EVENT_SHIFT_KEY,
 };
 
+/* The HT_MIN and HT_MAX elements of the enum delimit the range of the handler
+ * arrays in MCHandlerlst so iteration over the type should be
+ * HT_MIN <= i <= HT_MAX */
 enum Handler_type {
+    
     HT_UNDEFINED = 0,
-    HT_MESSAGE,
+
+    HT_MIN,
+    
+    HT_MESSAGE = HT_MIN,
     HT_FUNCTION,
     HT_GETPROP,
     HT_SETPROP,
@@ -608,9 +628,9 @@ enum Handler_type {
 	HT_BEFORE,
 	HT_AFTER,
 
-		HT_PRIVATE,
+    HT_PRIVATE,
 
-		HT_MAX = HT_PRIVATE
+    HT_MAX = HT_PRIVATE
 };
 
 enum If_format {
@@ -1039,6 +1059,7 @@ enum Properties {
     P_FILE_TYPE,
     P_STACK_FILE_TYPE,
 		P_STACK_FILE_VERSION,
+    P_MIN_STACK_FILE_VERSION,
     P_SECURE_MODE,
     P_SERIAL_CONTROL_STRING,
     P_TOOL,
@@ -1354,6 +1375,9 @@ enum Properties {
     P_PAN,
     P_CONSTRAINTS,
     P_HOT_SPOTS,
+    P_LEFT_BALANCE,
+    P_RIGHT_BALANCE,
+    P_AUDIO_PAN,
     // EPS properties
     P_POSTSCRIPT,
     P_ANGLE,
@@ -1547,12 +1571,11 @@ enum Properties {
     // color palette properties
     P_SELECTED_COLOR,
 
-    P_REV_LICENSE_LIMITS, // DEVELOPMENT only
+    P_REV_LICENSE_LIMITS,
 	P_REV_CRASH_REPORT_SETTINGS, // DEVELOPMENT only
 	P_REV_AVAILABLE_HANDLERS, // DEVELOPMENT only
-	P_REV_MESSAGE_BOX_LAST_OBJECT, // DEVELOPMENT only
-	P_REV_MESSAGE_BOX_REDIRECT, // DEVELOPMENT only
-	P_REV_LICENSE_INFO, // DEVELOPMENT only
+	P_MESSAGE_BOX_LAST_OBJECT,
+	P_REV_LICENSE_INFO,
 
 	P_REV_RUNTIME_BEHAVIOUR,
 	
@@ -1671,6 +1694,7 @@ enum Properties {
     P_MEDIA_PLAYBACK_REQUIRES_USER_ACTION,
     P_MANAGE_RETURN_KEY,
     P_MINIMUM_FONT_SIZE,
+    P_MAXIMUM_TEXT_LENGTH,
     P_AUTO_CLEAR,
     P_CLEAR_BUTTON_MODE,
     P_BORDER_STYLE,
@@ -1722,6 +1746,14 @@ enum Properties {
     
     P_THEME,
     P_THEME_CONTROL_TYPE,
+    
+    P_SCRIPT_STATUS,
+    
+    P_LONG_NAME_NO_FILENAME,
+    P_REV_SCRIPT_DESCRIPTION,
+    P_REV_BEHAVIOR_USES,
+    
+    P_REV_LIBRARY_MAPPING,
     
     __P_LAST,
 };
@@ -1956,6 +1988,10 @@ enum Sugar_constants {
 	SG_REPLACING,
 	SG_PRESERVING,
 	SG_STYLES,
+    
+    SG_URL_RESULT,
+    SG_ERROR,
+    SG_VALUE,
 };
 
 enum Statements {
@@ -1987,6 +2023,7 @@ enum Statements {
     S_DECRYPT,
     S_DEFINE,
     S_DELETE,
+    S_DIFFERENCE,
     S_DISABLE,
 	// MW-2008-11-05: [[ Dispatch Command ]] This is the 'dispatch' token's tag
 	S_DISPATCH,
@@ -2080,6 +2117,7 @@ enum Statements {
     S_START,
     S_STOP,
     S_SUBTRACT,
+    S_SYMMETRIC,
     S_SWITCH,
     S_THROW,
     S_TOP_LEVEL,
@@ -2124,7 +2162,9 @@ enum {
     ST_ID,
     ST_ESC,
     ST_LIT,
-	
+	ST_LC,
+    ST_RC,
+    
 	// MW-2009-03-03: The ST_DATA symbol type is a string that shoudl be treated
 	//   as an echoed literal - it represents the data between <?rev ?> blocks in
 	//   SERVER mode. ST_TAG is the type of '?' so we can identify '?>'.
@@ -2286,6 +2326,13 @@ enum Server_keywords
 	SK_UNICODE,
 	SK_SECURE,
 	SK_HTTPONLY,
+};
+
+enum MCExecResultMode
+{
+    kMCExecResultModeReturn,
+    kMCExecResultModeReturnValue,
+    kMCExecResultModeReturnError,
 };
 
 #include "parseerrors.h"

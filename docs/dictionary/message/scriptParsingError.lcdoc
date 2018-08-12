@@ -2,36 +2,54 @@ Name: scriptParsingError
 
 Type: message
 
-Syntax: scriptParsingError <errorContents> 
+Syntax: scriptParsingError <pErrorContents>
 
-Summary: Sent to an <object> when its <script> cannot be <compile|compiled>.
-
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Summary:
+Sent to an <object(glossary)> when its <script> cannot be
+<compile|compiled>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+Deprecated: 6.0
 
-Platforms: desktop,server,web,mobile
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
 
 Parameters:
-errorContents: The errorContents specifies the details of the problem that caused the scriptParsingError message to be sent.
-
-The result: >*Note:* The <scriptParsingError> message is no longer sent. Instead, any parse error is now put into the result immediately after setting the script of an object.
+pErrorContents:
+Specifies the details of the problem that caused the
+<scriptParsingError> message to be sent.
 
 Description:
+Handle the <scriptParsingError> <message> to prevent the standard error
+window from appearing, when you want to <handle> the <error> in a custom
+handler. 
 
-Handle the <scriptParsingError> <message> to prevent the standard error window from appearing, when you want to <handle> the <error> in a custom handler.
+The <scriptParsingError> <message> is sent when a <compile error>
+occurs. If the <script> contains an <execution error>, the <errorDialog>
+<message> is sent instead when the <handler> containing the <error>
+attempts to run.
 
-The <scriptParsingError> <message> is sent when a <compile error> occurs. If the <script> contains an <execution error>, the <errorDialog> <message> is sent instead when the <handler> containing the <error> attempts to run.
+A list of possible compile errors is contained in the "cScriptErrors"
+property of the first card of the stack "revErrorDisplay". You can view
+the list with the following statement:
 
-A list of possible compile errors is contained in the "cScriptErrors" property of the first card of the stack "revErrorDisplay". You can view the list with the following statement:
+    answer the cScriptErrors of card 1 of stack "revErrorDisplay"
 
-  answer the cScriptErrors of card 1 of stack "revErrorDisplay"
-
->*Note:* The exact <format> of the <errorContents> may change from release to release.
+>*Note:* The exact <format> of the <errorContents> may change from
+> release to release.
 
 Changes:
-The errorContents parameter was introduced in version 1.1. In previous versions, this information was stored in the scriptError property.
+The errorContents parameter was introduced in version 1.1. In previous
+versions, this information was stored in the scriptError property.
 
-References: lockErrorDialogs (property), script (property), errorDialog (message), object (object), handle (glossary), handler (glossary), error (glossary), message (glossary), execution error (glossary), compile (glossary), compile error (glossary), format (function)
+>*Note:* The <scriptParsingError> message is no longer sent. Instead,
+> any parse error is now put into the result immediately after setting
+> the script of an object.
+
+References: format (function), object (glossary), handle (glossary),
+handler (glossary), error (glossary), message (glossary),
+execution error (glossary), compile (glossary), compile error (glossary),
+errorDialog (message), lockErrorDialogs (property), script (property)
+

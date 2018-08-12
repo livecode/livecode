@@ -4,13 +4,17 @@ Type: function
 
 Syntax: revXMLAttribute(<treeID>, <node>, <attributeName>)
 
-Summary: <return|Returns> the value of the specified <attribute> of the specified <node> of an <XML tree>.
+Summary:
+<return|Returns> the value of the specified <attribute> of the specified
+<node> of an <XML tree>.
+
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -22,19 +26,39 @@ put revXMLAttribute(currTree,currNode,the short name of field x) \
    into field x
 
 Parameters:
-treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
-node: The path to the node whose attribute value you want to get.
-attributeName: The name of the attribute.
+treeID:
+The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+function when you created the XML tree.
 
-Returns: The <revXMLAttribute> <function> returns a <string>.
+node:
+The path to the node whose attribute value you want to get.
+
+attributeName:
+The name of the attribute.
+
+Returns:
+The <revXMLAttribute> <function> returns a <string>.
 
 Description:
 Use the <revXMLAttribute> <function> to get an attribute's value.un
 
-If the <revXMLAttribute> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLAttribute> <function> encounters an error, it
+<return|returns> an error message starting with "xmlerr".
 
->*Important:*  The <revXMLAttribute> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLAttribute> <function> is part of the 
+> <XML library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "XML" 
+> checkbox is checked.
 
-References: function (control_st), string (keyword), revXMLAttributes (function), revXMLNodeContents (function), XML library (library), LiveCode custom library (library), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), attribute (glossary), XML tree (glossary)
+References: function (control structure), revXMLAttributes (function),
+revXMLNodeContents (function), LiveCode custom library (glossary),
+node (glossary), Standalone Application Settings (glossary),
+standalone application (glossary), return (glossary),
+attribute (glossary), XML tree (glossary), string (keyword),
+XML library (library)
 
 Tags: text processing
+

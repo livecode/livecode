@@ -19,8 +19,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 on TestBug17112
 	local tLines
 	put "a" & return & "b" into tLines
-	TestAssert "char range of line overrun", char 1 to 100 of line 1 of tLines is "a"
+	TestAssert "char range of line end overrun", char 1 to 100 of line 1 of tLines is "a"
 end TestBug17112
+
+on TestBug17391
+   local tVar
+   put "a" & return & "b" into tVar
+   TestAssert "char range of line start overrun", char 3 to -1 of line 1 of tVar is ""
+end TestBug17391
 
 on TestPutIntoItemOfLineAdd
 	local tLines

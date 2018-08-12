@@ -1,16 +1,23 @@
-﻿script "revLibURL"
+script "revLibURL"
 ##libUrl v1.2.0 2010-09-16
 #
-on revLoadLibrary
-   # MW-2015-01-28: [[ ScriptifyLibURL ]] Use the scriptified stack.
-   insert the script of stack "revLibUrl" into back
-    // AL-2015-01-29: [[ Scriptify revLibUrl ]] Initialise custom properties when library is loaded
-   initialiseCustomProps
-end revLoadLibrary
+on extensionInitialize
+   if the target is me then
+      # MW-2015-01-28: [[ ScriptifyLibURL ]] Use the scriptified stack.
+      insert the script of stack "revLibUrl" into back
+      // AL-2015-01-29: [[ Scriptify revLibUrl ]] Initialise custom properties when library is loaded
+      initialiseCustomProps
+   end if
+end extensionInitialize
 
-on revUnloadLibrary
-   remove the script of stack "revLibUrl" from back
-end revUnloadLibrary
+on extensionFinalize
+   if the target is me then
+      remove the script of stack "revLibUrl" from back
+      -- CW-2016-06-11: [[ External driver support ]] Ensure external driver is unloaded properly.
+      # remove external library if in use
+      unloadExternalDriver true
+   end if
+end extensionFinalize
 ---------------------------------------------------------------------
 ##shared locals
 local lvCount,lvBlockingUrl,lvBlockBypass,lvAuthBlockBypass,lvLogField, lvTickle
@@ -39,6 +46,9 @@ local lvProxyInitialized       -- If we have already attempted to extract the sy
 local lvUsePACFileForProxy     -- If we should use the configured PAC file for proxy settings
 local lvHTTPProxy              -- The proxy server (if any) configured by the system
 local lvProxyBypassList        -- URLs that bypass any proxy settings
+
+-- CW-2016-06-11: [[ External driver support ]] Add support for using an external library for network functions.
+local lvExtDriver
 
 ---------------------------------------------------------------------
 ##http locals
@@ -73,6 +83,64 @@ on libraryStack
    initialiseCustomProps
 end libraryStack
 ------------------------------------------------
+-- CW-2016-06-11: [[ External driver support ]] Add function to select external driver for use with libUrl.
+## Set driver to use for libUrl
+on libUrlSetDriver pDriver
+   # Do nothing if we are setting the driver to the currently used one.
+   if lvExtDriver is not pDriver then
+      libUrlResetAll
+
+      unloadExternalDriver false
+      put pDriver into lvExtDriver
+
+      if pDriver is not empty then
+         return loadExternalDriver()
+      else
+         send "libUrlSetBehavior" to me in 0
+         return empty
+      end if
+   else
+      return empty
+   end if
+end libUrlSetDriver
+
+command libUrlSetBehavior
+   if the behavior of me is not lvExtDriver then
+      set the behavior of me to lvExtDriver
+   end if
+end libUrlSetBehavior
+
+-- CW-2016-06-11: [[ External driver support ]] Call driver specific init/remove commands if external driver is in use.
+## Send initialise command to external library
+private function loadExternalDriver
+   local tResult
+
+   # Add the external driver as a behavior for libURL, the script must already be loaded
+   set the behavior of me to lvExtDriver
+
+   put ulExtInitDriver() into tResult
+   if tResult is not empty then
+      # External driver initialisation failed, so don't use it as a behavior for libURL
+      put empty into lvExtDriver
+      send "libUrlSetBehavior" to me in 0
+   end if
+
+   return tResult
+end loadExternalDriver
+
+## Send shutdown command to external library
+private command unloadExternalDriver pSetBehavior
+   if lvExtDriver is not empty then
+      ulExtRemoveDriver
+      put empty into lvExtDriver
+   end if
+
+   if pSetBehavior then
+      # Stop using the external driver as a behavior for libURL
+      set the behavior of me to empty
+   end if
+end unloadExternalDriver
+------------------------------------------------
 on initialiseCustomProps
    # initialise ftp codes prop set
    local tFtpCodes
@@ -81,7 +149,8 @@ on initialiseCustomProps
    set the customProperties["cFtpGoodCodes"] of me to tFtpCodes
    
    # initialise default header
-   set the cDefaultHeader of me to "METHOD --- HTTP/1.1" & return & "Host:" & return & "User-Agent: "
+   set the cDefaultHeader of me to "METHOD --- HTTP/1.1" & return & \
+      "Host: " & return & "User-Agent: "
    
    # initialise version
    set the cVersion of me to "1.2.0"
@@ -99,7 +168,7 @@ on initialiseCustomProps
 end initialiseCustomProps
 
 ## for debugging ##
-function md5 pString
+private function md5 pString
    local tHex
    get binaryDecode("h*", md5digest(pString), tHex)
    return tHex
@@ -117,11 +186,11 @@ on loadUrl x,y
       put "6923" into lvCount
    end if
    switch
-      case newUrl is among the lines of  the keys of laLoadingUrls
+      case newUrl is among the keys of laLoadingUrls
          ##don't allow loads if the same url is waiting to load
          return "error  URL is currently loading" ##with empty
          break
-      case newUrl is not among the lines of  the keys of laLoadedUrls OR laUrlLoadStatus[newUrl] is not "cached"
+      case newUrl is not among the keys of laLoadedUrls OR laUrlLoadStatus[newUrl] is not "cached"
          
          ##  put the long id of the target &","& item 2 of the params into laMessg[newUrl]
          ##dc 081104
@@ -155,7 +224,7 @@ on loadUrl x,y
          end if
          -----------------------
          break
-      case newUrl is among the lines of  the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" #url is in cache
+      case newUrl is among the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" #url is in cache
          
          ## put the long id of the target &","& item 2 of the params into laMessg[newUrl]
          ##dc 081104
@@ -170,12 +239,12 @@ end loadUrl
 on unloadUrl pUrl
    put ulStripUrl(pUrl) into pUrl
    ##need to check if it is loading or in loadQ
-   if pUrl is among the lines of keys(laLoadingUrls) then
+   if pUrl is among the keys of laLoadingUrls then
       delete local laLoadingUrls[pUrl]
       ulCancelRequest pUrl ##stop any current downloads
       delete local laData[pUrl] ##in case download hasn't started
       return empty
-   else if pUrl is among the lines of keys(laUrlLoadStatus) then
+   else if pUrl is among the keys of laUrlLoadStatus then
       delete local laLoadedUrls[pUrl]
       delete local laUrlLoadStatus[pUrl]
       delete local laUrlErrorStatus[pUrl]
@@ -192,17 +261,13 @@ on getUrl x
    local newUrl,tRetResult,tRetData
    put false into lvJumpOut
    put ulStripUrl(x) into newUrl
-   if newUrl is among the lines of the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" then
-      if "2.4.1" is in the version then
-         return  empty  with  laLoadedUrls[newUrl]
-      else
-         return  empty  with cachedUrl laLoadedUrls[newUrl]
-      end if
+   if newUrl is among the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" then
+      return empty  with urlResult laLoadedUrls[newUrl]
    end if
-   if newUrl is among the lines of keys(laLoadingUrls) and (lvAuthBlockBypass is not true) then
-      return "error  URL is currently loading" with empty
+   if newUrl is among the keys of laLoadingUrls and (lvAuthBlockBypass is not true) then
+      return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty or lvBlockBypass is true or lvAuthBlockBypass is true then
+   if lvBlockingUrl is empty or lvBlockBypass is true or lvAuthBlockBypass is true or (lvExtDriver is not empty and ulExtIsBlocked() is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -223,21 +288,16 @@ on getUrl x
          
          put laUrlErrorStatus[newUrl] into tRetResult
          delete local  laUrlErrorStatus[newUrl]
-         if "2.4.1" is in the version then
-            ##for mc 2.4.1 engine only
-            put laData[newUrl] into tRetData ##swap data before deleting laData
-            delete local laData[newUrl]
-            put empty into lvBlockingUrl ##clear
-            return tRetResult  with tRetData
-         else
-            put empty into lvBlockingUrl ##clear
-            return tRetResult with url laData[newUrl]
-         end if
+
+         put laData[newUrl] into tRetData ##swap data before deleting laData
+         delete local laData[newUrl]
+         put empty into lvBlockingUrl ##clear
+         return tRetResult with urlResult tRetData
       else
          return 1
       end if
    else ##blocked by previous request
-      return "error Previous request not completed" with empty
+      return "error Previous request not completed" with urlResult empty
    end if
 end getUrl
 
@@ -249,9 +309,9 @@ on postUrl y,x
    put false into lvJumpOut
    put ulStripUrl(x) into newUrl
    if newUrl is among the lines of keys(laLoadingUrls) then
-      return "error  URL is currently loading" with empty
+      return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true then
+   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true or (lvExtDriver is not empty and ulExtIsBlocked() is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -272,23 +332,18 @@ on postUrl y,x
          
          put laUrlErrorStatus[newUrl] into tRetResult
          delete local  laUrlErrorStatus[newUrl]
-         if "2.4.1" is in the version then
-            ##for mc 2.4.1 engine only
-            put laData[newUrl] into tRetData
-            delete local laData[newUrl]
-            put empty into lvBlockingUrl ##clear
-            return tRetResult  with tRetData
-         else
-            put empty into lvBlockingUrl ##clear
-            return tRetResult with url laData[newUrl]
-         end if
+
+         put laData[newUrl] into tRetData
+         delete local laData[newUrl]
+         put empty into lvBlockingUrl ##clear
+         return tRetResult with urlResult tRetData
       else
          return 1
       end if
       -----------------------------------
    else ##blocked by previous request
       put "error Previous request not completed" into tRetResult
-      return tRetResult with empty
+      return tRetResult with urlResult empty
    end if
 end postUrl
 
@@ -300,9 +355,9 @@ on putUrl y,x
    put false into lvJumpOut
    put ulStripUrl(x) into newUrl
    if newUrl is among the lines of keys(laLoadingUrls) then
-      return "error  URL is currently loading" with empty
+      return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true then
+   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true or (lvExtDriver is not empty and ulExtIsBlocked() is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -323,16 +378,11 @@ on putUrl y,x
          
          put laUrlErrorStatus[newUrl] into tRetResult
          delete local  laUrlErrorStatus[newUrl]
-         if "2.4.1" is in the version then
-            ##for mc 2.4.1 engine only
-            put laData[newUrl] into tRetData
-            delete local laData[newUrl]
-            put empty into lvBlockingUrl ##clear
-            return tRetResult  with tRetData
-         else
-            put empty into lvBlockingUrl ##clear
-            return tRetResult with url laData[newUrl]
-         end if
+
+         put laData[newUrl] into tRetData
+         delete local laData[newUrl]
+         put empty into lvBlockingUrl ##clear
+         return tRetResult with urlResult tRetData
       else
          return 1
       end if
@@ -340,7 +390,7 @@ on putUrl y,x
       
    else ##blocked by previous request
       put "error Previous request not completed" into tRetResult
-      return tRetResult with empty
+      return tRetResult with urlResult empty
    end if
 end putUrl
 
@@ -351,9 +401,9 @@ on deleteUrl x
    put false into lvJumpOut
    put ulStripUrl(x) into newUrl
    if newUrl is among the lines of keys(laLoadingUrls) then
-      return "error  URL is currently loading" with empty
+      return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty  or lvBlockBypass is true then
+   if lvBlockingUrl is empty  or lvBlockBypass is true or (lvExtDriver is not empty and ulExtIsBlocked() is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -368,21 +418,16 @@ on deleteUrl x
       delete local laStatus[newUrl]
       put laUrlErrorStatus[newUrl] into tRetResult
       delete local  laUrlErrorStatus[newUrl]
-      if "2.4.1" is in the version then
-         ##for mc 2.4.1 engine only
-         put laData[newUrl] into tRetData
-         delete local laData[newUrl]
-         put empty into lvBlockingUrl ##clear
-         return tRetResult  with tRetData
-      else
-         put empty into lvBlockingUrl ##clear
-         return tRetResult with url laData[newUrl]
-      end if
+
+      put laData[newUrl] into tRetData
+      delete local laData[newUrl]
+      put empty into lvBlockingUrl ##clear
+      return tRetResult with urlResult tRetData
       -----------------------------------
       
    else ##blocked by previous request
       put "error Previous request not completed" into tRetResult
-      return tRetResult with empty
+      return tRetResult with urlResult empty
    end if
 end deleteUrl
 
@@ -476,60 +521,80 @@ on ulGetFormat pUrl,pCount
          put _proxyForURL(pURL) into laUrlProxy[pURL]
          ulLogIt "Proxy for URL:" && laUrlProxy[pURL] & cr
          
-         -- MM-2014-02-27: [[ HTTPS Proxy ]] We now support fetching https URLs through a proxy.
-         if laUrlProxy[pURL] is not empty then
-            ## for now don't allow https connections through proxies
-            ## will look at this again later
-            put tHost into tURLHost
-            put laUrlProxy[pURL] into tHost
-            replace "http://" with "" in tHost ##not sure if this is possible but just in case
-            if tPort <> empty then
-               put tPort into tUrlPort ##save this for setting laFilename below
-            else if tPre is "https" then
-               put ":443" into tUrlPort
-            else
-               put ":80" into tUrlPort
+         -- CW-2016-08-14: [[ External driver support ]] Bypass URL/Proxy manipulation and async check for external drivers.
+         if lvExtDriver is empty then
+            -- CW-2016-08-14: If we are not using an external driver, asynchronous HTTP uploads are not supported.
+            if laAction[pUrl] is "putData" and laLoadReq[pUrl] is true then
+               put "HTTP async uploads not supported in this version" into laUrlErrorStatus[pUrl]
+               put "error" into laUrlLoadStatus[pUrl]
+               delete local laLoadingUrls[pUrl]
+               exit "ulGetFormat"
             end if
-            #get the proxy port
-            put the itemdel into tSavedDel
-            set the itemdel to ":"
-            if the number of items of tHost > 1 and item -1 of tHost is a number then
-               put ":" &  item -1 of tHost into tPort
-               delete item -1 of tHost #remove port for now
-            else
-               put ":80" into tPort
-            end if
-            set the itemDel to tSavedDel
-         else if tPort is empty then
-            if tPre is "https" then
-               put ":443" into tPort
-            else
-               put ":80" into tPort
+            
+            -- MM-2014-02-27: [[ HTTPS Proxy ]] We now support fetching https URLs through a proxy.
+            if laUrlProxy[pURL] is not empty then
+               ## for now don't allow https connections through proxies
+               ## will look at this again later
+               put tHost into tURLHost
+               put laUrlProxy[pURL] into tHost
+               replace "http://" with "" in tHost ##not sure if this is possible but just in case
+               if tPort <> empty then
+                  put tPort into tUrlPort ##save this for setting laFilename below
+               else if tPre is "https" then
+                  put ":443" into tUrlPort
+               else
+                  put ":80" into tUrlPort
+               end if
+               #get the proxy port
+               put the itemdel into tSavedDel
+               set the itemdel to ":"
+               if the number of items of tHost > 1 and item -1 of tHost is a number then
+                  put ":" &  item -1 of tHost into tPort
+                  delete item -1 of tHost #remove port for now
+               else
+                  put ":80" into tPort
+               end if
+               set the itemDel to tSavedDel
+            else if tPort is empty then
+               if tPre is "https" then
+                  put ":443" into tPort
+               else
+                  put ":80" into tPort
+               end if
             end if
          end if
          
          break
-      case "ftp"
-         if tFilename is empty then ## require a file or directory path for FTP
-            put "invalid URL: " & quote & pUrl & quote into laUrlErrorStatus[pUrl]
+      case "sftp"
+         -- CW-2016-06-11: [[ External driver support ]] SFTP is only supported by external drivers.
+         if lvExtDriver is empty then
+            put "sftp protocol not supported in this version" into laUrlErrorStatus[pUrl]
             if laLoadReq[pUrl] then put "error" into laUrlLoadStatus[pUrl]
             exit "ulGetFormat"
          end if
+      case "ftp"
+         -- CW-2016-06-11: [[ External driver support ]] This processing is only needed by the internal driver.
+         if lvExtDriver is empty then
+            if tPort is empty then put ":21" into tPort
          
-         if tPort is empty then put ":21" into tPort
-         
-         if tUser is empty then
-            put "anonymous" into tUser
-            put "guest" into tPass
+            if tUser is empty then
+               put "anonymous" into tUser
+               put "guest" into tPass
+            end if
          end if
          
-         break
+         if tFilename is not empty then
+            break
+         end if
       default
          put "invalid URL: " & quote & pUrl & quote into laUrlErrorStatus[pUrl]
          if laLoadReq[pUrl] then put "error" into laUrlLoadStatus[pUrl]
          exit "ulGetFormat"
          break
    end switch
+   
+   ##store current state of httpHeaders ad use when request is actually processed
+   put the httpHeaders into laCurrentHttpHeaders[pURL]
    
    if laUrlFormat[pUrl]["references"] > 0 then
       add 1 to laUrlFormat[pUrl]["references"]
@@ -546,40 +611,34 @@ on ulGetFormat pUrl,pCount
       put tURLHost into laURLFormat[pURL]["urlhost"]
    end if
    
-   ##store current state of httpHeaders ad use when request is actually processed
-   put the httpHeaders into laCurrentHttpHeaders[pURL]
-   
-   local tResolveHost
-   put merge("[[tHost]]|[[pURL]]") into tResolveHost
-   # clear status before resolving hostname
-   put empty into laStatus[pUrl]
-   
-   ## I.M 2010.03.24  with engine versions < 4.5 calling hostnametoaddress with
-   ## an extra parameter will throw an error, so encase in a try ... catch block
-   ## and call without callback handler
-   try
+   -- CW-2016-06-11: [[ External driver support ]] Call external library to handle request rather than process directly.
+   if lvExtDriver is not empty then
+      ulExtHandleRequest pUrl, laAction[pUrl], laCurrentHttpHeaders[pUrl], laPostData[pUrl], laUrlProxy[pUrl]
+   else
+      local tResolveHost
+      put merge("[[tHost]]|[[pURL]]") into tResolveHost
+      # clear status before resolving hostname
+      put empty into laStatus[pUrl]
+      
       get hostNameToAddress(tResolveHost, "ulHostnameToAddressCallback")
-   catch pError
-      get hostNameToAddress(tResolveHost)
-      if the result is empty then ulHostNameToAddressCallback tResolveHost, it
-   end try
-   ## I.M. 2010-03-11  Need to check result and handle immediate failure where
-   ##  no callback message will be sent
-   if the result is not empty then
-      ulHostNameToAddressCallback tResolveHost, empty
-   end if
-   
-   if laLoadReq[pUrl] is empty or  laAuthRecursCount[pUrl] > 0 then ##dc 170205
-      repeat while laStatus[pUrl] is empty
-         if lvJumpOut then exit to top
-         wait for messages
-      end repeat
+      ## I.M. 2010-03-11  Need to check result and handle immediate failure where
+      ##  no callback message will be sent
+      if the result is not empty then
+         ulHostNameToAddressCallback tResolveHost, empty, the result
+      end if
+      
+      if laLoadReq[pUrl] is empty or  laAuthRecursCount[pUrl] > 0 then ##dc 170205
+         repeat while laStatus[pUrl] is empty
+            if lvJumpOut then exit to top
+            wait for messages
+         end repeat
+      end if
    end if
 end ulGetFormat
 
 ################################################################################
 
-on ulHostNameToAddressCallback, pHostname, pIP
+on ulHostNameToAddressCallback pHostname, pIP, pOptionalError
    local tURL, tOffset
    local tPre, tHost, tPort, tUser, tPass, tFilename, tURLHost, tURLPort
    local tConnectHost, tBadAddress
@@ -607,7 +666,11 @@ on ulHostNameToAddressCallback, pHostname, pIP
    end if
    
    if tBadAddress then
-      put "invalid host address" into laUrlErrorStatus[tURL]
+      if pOptionalError is not empty then
+         put pOptionalError into laUrlErrorStatus[tURL]
+      else
+         put "invalid host address" into laUrlErrorStatus[tURL]
+      end if
       if laLoadReq[tURL] then
          put "error" into laUrlLoadStatus[tURL]
          delete local laLoadingUrls[tURL]
@@ -655,7 +718,7 @@ on ulHostNameToAddressCallback, pHostname, pIP
       end if
    end if
    
-   ## AL-2013-07-30: [[ Bug 10796 ]]  HTTP "get URL" omits port number from HOST header
+   ## AL-2013-07-30: [[ Bug 10796 ]] HTTP "get URL" omits port number from HOST header
    ## delete this array at the end so that 'get url' can use the port and protocol data.
    subtract 1 from laURLFormat[tURL]["references"]
    if laURLFormat[tURL]["references"] is 0 then
@@ -1249,6 +1312,7 @@ on ulDoProcess x,y
          
          ##normal case
       case laLength[laUrl[x]] is not empty
+      case laStatusCode[laUrl[x]] is "204"  -- When a 204 is returned no data is returned, just the length of the data in the header.
          
          put  laTmpData[laUrl[x]] into tData
          ulStoreData laUrl[x],tData
@@ -1716,14 +1780,19 @@ command ulDecodeData pUrl
    local tEncoding
    put empty into tEncoding
    
+   local tHeadSize
    --   Only look for the encoding in the head part
    put offset("</head>", laData[pUrl]) into tHeadSize
    
    if tHeadSize is 0 then exit "ulDecodeData"
    
+   local tHead
    put char 1 to tHeadSize of laData[pUrl] into tHead
+   
+   local tCharsetRegex
    put "<meta .*charset=" & quote & "?([a-zA-Z0-9 -]+)" & quote & ".*>" into tCharsetRegex
    
+   local tCharset
    if matchtext(tHead, tCharsetRegex, tCharset) then      
       switch ulNormaliseEncoding(tCharset)
          case "utf8"            
@@ -1738,6 +1807,7 @@ command ulDecodeData pUrl
       end switch
       
       if tEncoding is not empty then
+         local tDecoded
          put uniEncode(laData[pUrl], tEncoding) into tDecoded
          put uniDecode(tDecoded) into laData[pUrl]   
       end if
@@ -1940,15 +2010,27 @@ end ulWhichSocket
 
 private command _AddProxyAuthToRequest pUrl, @pRequest      
    set the itemDel to "|"
+   local tConnectHost
    put item 1 of laConnectHost[pUrl] into tConnectHost
    set the itemDel to comma
+   
+   local tFilter
    put tConnectHost & ",*" into tFilter
+   
+   local tAuthKeys
    put keys(laProxyAuthTokens) into tAuthKeys
    filter tAuthKeys with tFilter
    if tAuthKeys <> empty then
+      local tKey
       put line 1 of tAuthKeys into tKey
+      
+      local tToken
       put item 2 of laProxyAuthTokens[tKey] into tToken
+      
+      local tUseAgain
       put item 1 of laProxyAuthTokens[tKey] into tUseAgain
+      
+      local tHeader
       put "Proxy-Authorization:" && tToken into tHeader
       
       put return & tHeader after pRequest
@@ -1983,7 +2065,7 @@ function ulBuildHttpRequest pUrl
          end if
       end repeat
       if laSocketSecured[tSocket] is false then
-         put "CONNECT" &&  laUrlFormat[pUrl]["urlHost"] & ":" & laUrlFormat[pUrl]["urlPort"] && "HTTP/1.1" & cr & "Host:" && laUrlFormat[pUrl]["urlHost"] & ":" & laUrlFormat[pUrl]["urlPort"] into tRequest
+         put "CONNECT" &&  laUrlFormat[pUrl]["urlHost"] & laUrlFormat[pUrl]["urlPort"] && "HTTP/1.1" & cr & "Host:" && laUrlFormat[pUrl]["urlHost"] & laUrlFormat[pUrl]["urlPort"] into tRequest
          
          -- MM-2014-06-05: [[ Bug 12566 ]] Make sure we authenticate the proxy.
          if laUrlProxy[pUrl] <> empty then
@@ -2020,7 +2102,11 @@ function ulBuildHttpRequest pUrl
       put  laHost[pUrl]  after line 2 of tRequest
       ## AL-2013-07-30: [[ Bug 10796 ]]  HTTP "get URL" omits port number from HOST header
       ## add port if not default
+      
+      local tPort
       put laUrlFormat[pUrl]["port"] into tPort
+      
+      local tProtocol
       put laUrlFormat[pUrl]["protocol"] into tProtocol
       
       -- MM-2014-02-27: [[ HTTPS Proxy ]] We now support HTTPS URLs over a proxy, so ammend port accordingly.
@@ -3156,6 +3242,12 @@ on socketError x, pErr
       if x is among the lines of keys(laFTPCommandStatus) then ##may be waiting for a server reply
          put pErr into laFTPCommandStatus[x] ##unblock waits
       end if
+      
+      ## Handle cleanup for load url
+      if laLoadReq[laUrl[x]] then
+         ulHttpLateCleanUp x
+      end if
+        
    else if x is among the lines of keys(laControlXDataMap)then##must be ftp passive data socket
       put laControlXDataMap[x] into tControlSocket
       put false into laStatus[laUrl[tControlSocket]] ##unblock waits
@@ -3179,20 +3271,32 @@ end socketError
 on libUrlResetAll
   local i
   
-  if there is a stack "libUrl" then put empty into fld "log1" of stack "libURL"
-  repeat for each line i in the openSockets
-    close socket i
-  end repeat
-  ulDeleteLocals
-  put true into lvJumpOut
-  send "ulDeleteLocals" to me in 5 milliseconds
+  -- CW-2016-06-11: [[ External driver support ]] Call driver specific reset command if external driver is in use.
+  if lvExtDriver is not empty then
+    ulDeleteLocals
+    ulExtResetDriver
+  else
+    if there is a stack "libUrl" then put empty into fld "log1" of stack "libURL"
+    repeat for each line i in the openSockets
+      close socket i
+    end repeat
+    
+    ulDeleteLocals
+    put true into lvJumpOut
+    send "ulDeleteLocals" to me in 5 milliseconds
+  end if
 end libUrlResetAll
 
 # OK-2008-09-19 : Added for revOnline to allow post commands to be cancelled, 
 # not sure if this works yet...
 
 command libUrlCancel
-   put true into lvJumpOut
+   -- CW-2016-06-11: [[ External driver support ]] Call driver specific reset command if external driver is in use.
+   if lvExtDriver is not empty then
+      ulExtResetDriver
+   else
+      put true into lvJumpOut
+   end if
 end libUrlCancel
 
 --------------------------------------------
@@ -3200,8 +3304,11 @@ on ulDeleteLocals
   local e
   
   repeat for each item e in line 3 of the localNames
-    get "delete" && "local" && e
-    do it
+    -- CW-2016-06-11: [[ External driver support ]] Don't clear locals that determine what driver is in use.
+    if e is not "lvExtDriver" then
+      get "delete" && "local" && e
+      do it
+    end if
   end repeat
 end ulDeleteLocals
 ----------------------------------------------
@@ -3247,18 +3354,15 @@ on libUrlFtpUpload pData,pUrl,pMessage
   
   put false into lvJumpOut
   put ulStripUrl(pUrl) into newUrl
-  if char 1 to 3 of newUrl <> "ftp" then
-    return "invalid url"
-  end if
   if lvCount is empty then
     put "6923" into lvCount
   else
     #add 1 to lvCount
   end if
   switch
-  case newUrl is among the lines of  the keys of laLoadingUrls
+  case newUrl is among the keys of laLoadingUrls
     ##don't allow loads if the same url is waiting to load
-    return "error  URL is currently loading" with empty
+    return "error  URL is currently loading" with urlResult empty
     break
   default
     put pData into laPostData[newUrl]
@@ -3296,9 +3400,6 @@ on libUrlFtpUploadFile pFile,pUrl,pMessage
   
   put false into lvJumpOut
   put ulStripUrl(pUrl) into newUrl
-  if char 1 to 3 of newUrl <> "ftp" then
-    return "invalid url"
-  end if
   
   #removed from here in 1.1.6b1
   #  open file pFile for binary read
@@ -3313,9 +3414,9 @@ on libUrlFtpUploadFile pFile,pUrl,pMessage
     #add 1 to lvCount
   end if
   switch
-  case newUrl is among the lines of  the keys of laLoadingUrls
+  case newUrl is among the keys of laLoadingUrls
     ##don't allow loads if the same url is waiting to load
-    return "error  URL is currently loading" with empty
+    return "error  URL is currently loading" with urlResult empty
     break
     #case newUrl is not among the lines of  the keys of laLoadedUrls OR laUrlLoadStatus[newUrl] is not "cached"
   default
@@ -3369,9 +3470,9 @@ on libUrlDownloadToFile pUrl,pFile,pMessage
     #add 1 to lvCount
   end if
   switch
-  case newUrl is among the lines of  the keys of laLoadingUrls
+  case newUrl is among the keys of laLoadingUrls
     ##don't allow loads if the same url is waiting to load
-    return "error  URL is currently loading" with empty
+    return "error  URL is currently loading" with urlResult empty
     break
     #case newUrl is not among the lines of  the keys of laLoadedUrls OR laUrlLoadStatus[newUrl] is not "cached"
  default
@@ -3413,19 +3514,29 @@ end libUrlErrorData
 -----------------------------------------------
 on libUrlSetFtpMode pMode
   ##default to passive
-  if pMode is "active" or pMode is "a" then
-    put "active" into lvFtpMode
+  -- CW-2016-06-11: [[ External driver support ]] Call the external driver implementation if it is enabled.
+  if lvExtDriver is not empty then
+    ulExtSetFtpMode pMode
   else
-    put "passive" into lvFtpMode
+    if pMode is "active" or pMode is "a" then
+      put "active" into lvFtpMode
+    else
+      put "passive" into lvFtpMode
+    end if
   end if
 end libUrlSetFtpMode
 
 ----------------------------
 on libUrlSetFtpListCommand pCommand
-  if pCommand is "NLST" then
-    put "NLST" into lvFtpListCommand
+  -- CW-2016-06-11: [[ External driver support ]] Call the external driver implementation if it is enabled.
+  if lvExtDriver is not empty then
+    ulExtSetFtpListCommand pCommand
   else
-    put "LIST" into lvFtpListCommand
+    if pCommand is "NLST" then
+      put "NLST" into lvFtpListCommand
+    else
+      put "LIST" into lvFtpListCommand
+    end if
   end if
 end libUrlSetFtpListCommand
 -----------------------------
@@ -3455,11 +3566,22 @@ on libUrlSetLogField pField
   else
     put empty into lvLogField
   end if
+
+  -- CW-2016-06-11: [[ External driver support ]] Call the external driver implementation if it is enabled.
+  if lvExtDriver is not empty then
+    ulExtSetLogField lvLogField
+  end if
 end libUrlSetLogField
 ---------------------------
 on libUrlSetStatusCallback pMessage,pObject
   ##pObject must be a long ID
-  if pMessage <> empty and exists(pObject)  then
+  ##Allow empty value in which case we use send to self.
+  if pMessage is not empty and the paramCount is 1 then
+    put pMessage & comma into lvStatusCallback
+  else if pMessage is not empty and the paramCount is 2 then
+    if not exists(pObject) then
+      return "invalid callback target object" for error
+    end if
     put pMessage & comma & pObject into lvStatusCallback
   else
     put empty into lvStatusCallback
@@ -3543,28 +3665,18 @@ function libUrlMultipartFormData @pFormData, pParam
       put "--" & tBoundary & CRLF after pFormData
       put "Content-Disposition: form-data; name=" & quote & item 1 of pParam[tKey] & quote after pFormData
       put item 2 to -1 of pParam[tKey] into tValue
-      if char 1 to 6 of tValue = "<file>" then
-        
-        put   tValue into tFile
+      if char 1 to 6 of tValue = "<file>" then  
+        put tValue into tFile
         put empty into tValue
-        put the number of items of tFile into tNumFiles
         put char 7 to -1 of tFile into tFilepath
-        if tNumFiles = 1 then ##single file
-          set the itemDel to "/"
-          put item -1 of tFilepath into tFilename
-          set the itemDel to comma
-          put ";" && "filename=" & quote & tFilename & quote after pFormData
-          put CRLF & "Content-Type: application/octet-stream" after pFormData
-          put url ("binfile:" & tFilepath) into tValue
-          if the result <> empty then
-            return "error" && the result
-          end if
-        else ##muliple files
-          put "__subPart__" & ulFormBoundary() into tSubBoundary
-          put CRLF & "Content-Type: multipart/mixed; boundary=" & quote & tSubBoundary & quote after pFormData
-          get ulSubForm(tValue, tFilepath, tSubBoundary)
-          if it is not empty then return it
-          
+        set the itemDel to "/"
+        put item -1 of tFilepath into tFilename
+        set the itemDel to comma
+        put ";" && "filename=" & quote & tFilename & quote after pFormData
+        put CRLF & "Content-Type: application/octet-stream" after pFormData
+        put url ("binfile:" & tFilepath) into tValue
+        if the result <> empty then
+          return "error" && the result
         end if
       end if
       put CRLF & CRLF after pFormData
@@ -3587,28 +3699,17 @@ function libUrlMultipartFormData @pFormData, pParam
         put param(i) into tValue
         
         if char 1 to 6 of tValue = "<file>" then
-          put   tValue into tFile
+          put tValue into tFile
           put empty into tValue
-          put the number of items of tFile into tNumFiles
-          put char 7 to -1 of tFile into tFilepath
-          if tNumFiles = 1 then ##single file
-            
-            set the itemDel to "/"
-            put item -1 of tFilepath into tFilename
-            set the itemDel to comma
-            put ";" && "filename=" & quote & tFilename & quote after pFormData
-            put CRLF & "Content-Type: application/octet-stream" after pFormData
-            put url ("binfile:" & tFilepath) into tValue
-            if the result <> empty then
-              return "error" && the result
-            end if
-            
-          else ##multiple files
-            put "__subPart__" & ulFormBoundary() into tSubBoundary
-            put CRLF & "Content-Type: multipart/mixed; boundary=" & quote & tSubBoundary & quote after pFormData
-            get ulSubForm(tValue, tFilepath, tSubBoundary)
-            if it is not empty then return it
-            
+          put char 7 to -1 of tFile into tFilepath            
+          set the itemDel to "/"
+          put item -1 of tFilepath into tFilename
+          set the itemDel to comma
+          put ";" && "filename=" & quote & tFilename & quote after pFormData
+          put CRLF & "Content-Type: application/octet-stream" after pFormData
+          put url ("binfile:" & tFilepath) into tValue
+          if the result <> empty then
+            return "error" && the result
           end if
         end if
         put CRLF & CRLF after pFormData
@@ -3637,33 +3738,21 @@ function libUrlMultipartFormAddPart @pFormData,pName,pValue,pMimeType,pEncoding
     
     put   pValue into tFile
     put empty into pValue
-    put the number of items of tFile into tNumFiles
     put char 7 to -1 of tFile into tFilepath
     
-    if tNumFiles = 1 then ##single file
-      set the itemDel to "/"
-      put item -1 of tFilepath into tFilename
-      set the itemDel to comma
-      put ";" && "filename=" & quote & tFilename & quote after tPartData
-      
-      put url ("binfile:" & tFilepath) into pValue
-      if the result <> empty then return "error" && the result
-      
-      if pMimeType is empty then put "application/octet-stream" into pMimeType
-      if pEncoding is empty then
-        put "Binary" into pEncoding
-      end if
-      
-    else ##multiple files
-      put "__subPart__" & ulFormBoundary() into tSubBoundary
-      put pMimeType into tSubMimeTypes
-      put pEncoding into tSubEncodings
-      put  "multipart/mixed; boundary=" & quote & tSubBoundary & quote into pMimeType
-      put empty into pEncoding
-      get ulSubForm(pValue, tFilepath, tSubBoundary, tSubMimeTypes, tSubEncodings)
-      if it is not empty then return it
-      
+    set the itemDel to "/"
+    put item -1 of tFilepath into tFilename
+    set the itemDel to comma
+    put ";" && "filename=" & quote & tFilename & quote after tPartData
+    
+    put url ("binfile:" & tFilepath) into pValue
+    if the result <> empty then return "error" && the result
+    
+    if pMimeType is empty then put "application/octet-stream" into pMimeType
+    if pEncoding is empty then
+      put "Binary" into pEncoding
     end if
+    
   end if
   if pMimeType <> empty then
     put CRLF & "Content-Type:" && pMimeType after tPartData
@@ -3768,18 +3857,28 @@ function libUrlBasicAuthToken pName, pPass
 end libUrlBasicAuthToken
 ------------------------
 on libUrlSetSSLVerification pWhich
-  if pWhich is false then
-    put false into lvSSLVerification
+  -- CW-2016-06-11: [[ External driver support ]] Call the external driver implementation if it is enabled.
+  if lvExtDriver is not empty then
+    ulExtSetSSLVerification pWhich
   else
-    put true into lvSSLVerification
+    if pWhich is false then
+      put false into lvSSLVerification
+    else
+      put true into lvSSLVerification
+    end if
   end if
 end libUrlSetSSLVerification
 -------------------------
 on libUrlFollowHttpRedirects pWhich
-  if pWhich is false then
-    put false into lvFollowHttpRedirects
+  -- CW-2016-06-11: [[ External driver support ]] Call the external driver implementation if it is enabled.
+  if lvExtDriver is not empty then
+    ulExtFollowHttpRedirects pWhich
   else
-    put true into lvFollowHttpRedirects
+    if pWhich is false then
+      put false into lvFollowHttpRedirects
+    else
+      put true into lvFollowHttpRedirects
+    end if
   end if
 end libUrlFollowHttpRedirects
 -------------------------
@@ -3796,7 +3895,7 @@ on ulSendAuthMessage pMethod, pUrl, pHeaderString
     end if
   end repeat
   if tMessage <> empty and exists(tObject) then
-    send tMessage && quote & pUrl & quote & "," & pHeaderString to tObject
+    send tMessage &&  "pUrl, pHeaderString" to tObject
     return the result ## must ensure this contains data
   else
     return empty ##possible problems
@@ -3823,15 +3922,20 @@ on ulSendMessage pUrl
 end ulSendMessage
 ----------------------------
 on ulSendCallback pUrl, pStatus
-  local tMessage,tObject
+  local tMessage,tObject,tSendStr
   
   if lvStatusCallback is empty then exit ulSendCallback
   put item 1 of lvStatusCallback into tMessage
 
   put item 2 to -1 of lvStatusCallback into tObject   ##modified dc 220905
+  put tMessage && "pURL, pStatus" into tSendStr
+  
   if exists(tObject) then
     ## need quotes for the url formatting and the possibility of multiple items in second argument
-    send tMessage &&  quote & pUrl & quote & comma & quote & pStatus & quote to tObject in 0 milliseconds
+    send tSendStr to tObject in 0 milliseconds
+   else
+    # If no target then just send to self so it propagates through message path.
+    send tSendStr to me in 0 milliseconds
   end if
 end ulSendCallback
 -----------------------------
@@ -4017,8 +4121,13 @@ on ulCancelRequest pUrl
   
   put true into laCancelled[pUrl]
   put "error cancelled" into tError
-  ulStopRequest pUrl,tError
   
+  if lvExtDriver is not empty then
+    put tError into laUrlErrorStatus[pUrl]
+    ulExtCancelRequest pURL
+  else
+    ulStopRequest pUrl,tError
+  end if  
 end ulCancelRequest
 -----------------------------
 on ulStopRequest pUrl, pErrMessage
@@ -4093,15 +4202,50 @@ function ulStripUrl pUrl
 end ulStripUrl
 --------------------------------
 function ul_TraceLocals ##DEBUG ROUTINE, used in development
-  local e,tRetVal,tDoString
+  local e,tRetVal,tDoString,tKeys
   
   repeat for each item e in line 3 of the localNames
     put e & cr after tRetVal
-    put "put keys(" & e & ") & cr after tRetVal" into tDoString
+    put "put the keys of" && e && "into tKeys" into tDoString
+    do tDoString
+    if tKeys is empty then
+       put "put" && e && "& cr after tRetVal" into tDoString
+    else
+       put "put ul_PrintKeys(" & e & ") & cr after tRetVal" into tDoString
+    end if
     do tDoString
   end repeat
   return tRetVal
 end ul_TraceLocals
+--------------------------------
+function ul_PrintKeys @pArray, pDimension
+   local tKeys, tKey, tText
+   
+   if pDimension is empty then put 0 into pDimension
+    
+   put the keys of pArray into tKeys
+   sort tKeys numeric
+     
+   repeat for each line tKey in tKeys
+      if pArray[tKey] is an array then
+         put _printCharXTimes(space, pDimension * 5) & tKey & cr after tText
+         put ul_PrintKeys(pArray[tKey], pDimension + 1) after tText
+      else
+         put _printCharXTimes(space, pDimension * 5) &  tKey & ":" && line 1 of pArray[tKey] & cr after tText
+      end if
+   end repeat
+     
+   return tText
+end ul_PrintKeys
+-------------------------------- 
+private function _printCharXTimes pChar, pTimes
+   local tStr
+     
+   repeat with i = 1 to pTimes
+      put pChar after tStr
+   end repeat
+   return tStr
+end _printCharXTimes
 --------------------------------
 function ulFtpCommand pCommandString, pSocket
   ##executes ftp commands
@@ -4221,7 +4365,12 @@ end ulFtpGoodReply
 function libUrlFtpCommand pCommand, pHost, pUser, pPass
    local tHost,tPort,tRegEx,tTempHost,tConnectHost,tDummyUrl,tSocket
    local tLogonReply,tFtpReply
-   
+    
+   -- CW-2016-06-11: [[ External driver support ]] Call the external driver implementation if it is enabled.
+   if lvExtDriver is not empty then
+      return ulExtFtpCommand(pCommand, pHost, pUser, pPass)
+   end if
+
    put false into lvJumpOut
    if lvCount is empty then
       put "6923" into lvCount
@@ -4433,7 +4582,7 @@ function ulSubForm @pData, ,pFiles, pSubBoundary, pMimeTypes, pEncodings
     put CRLF & "Content-Transfer-Encoding:" &&  tEnc after pData
     put CRLF & CRLF after pData
     put url ("binfile:" & tFile) after pData
-    if the result <> empty then return "error" & the result
+    if the result <> empty then return "error" && the result
     put CRLF after pData
   end repeat
   put "--" & pSubBoundary & "--" after pData
@@ -4452,24 +4601,28 @@ end ulGetCaller
 
 -- MM-2014-02-27: [[ PAC Support ]]
 private function _extractHost pURL
-    ## http://bob:jones@www.screensteps.com
-    put pURL into theHost
-    set the itemDelimiter to slash
-    put offset("://", theHost) into theCharNo
-    if theCharNo is 0 then
-        put item 1 of pURL into theHost
-    else
-        put item 3 of pURL into theHost
-    end if
-    
-    ## strip username/password
-    put offset("@", theHost) into theCharNo
-    if theCharNo > 0 then delete char 1 to theCharNo of theHost
-    
-    ## clip port
-    put offset(":", theHost) into theCharNo
-    if theCharNo > 0 then delete char theCharNo to -1 of theHost
-    return theHost
+   ## http://bob:jones@www.screensteps.com
+   
+   local tHost
+   put pURL into tHost
+   set the itemDelimiter to slash
+   
+   local tCharNo
+   put offset("://", tHost) into tCharNo
+   if tCharNo is 0 then
+      put item 1 of pURL into tHost
+   else
+      put item 3 of pURL into tHost
+   end if
+   
+   ## strip username/password
+   put offset("@", tHost) into tCharNo
+   if tCharNo > 0 then delete char 1 to tCharNo of tHost
+   
+   ## clip port
+   put offset(":", tHost) into tCharNo
+   if tCharNo > 0 then delete char tCharNo to -1 of tHost
+   return tHost
 end _extractHost
 
 ---------------------------------------------
@@ -4601,9 +4754,15 @@ private command _proxyConfig_SetHTTPProxyUsingWPADAndPAC
       ulLogIt "pac file that wpad found: " & tPacURL
       _proxyConfig_ProcessPACURL tPacURL
       put the result into tError
-      ulLogIt "wpad pac error:" && tError      
    end if
-   
+
+   if tError is empty then
+      ulLogIt "using wpad PAC file"
+      put true into lvUsePACFileForProxy
+   else
+      ulLogIt "wpad pac error:" && tError
+   end if
+
    return tError
 end _proxyConfig_SetHTTPProxyUsingWPADAndPAC
 
@@ -5164,3 +5323,46 @@ private function _proxyfromHTTPProxy pURL, pProxy
 end _proxyFromHTTPProxy
 
 --------------------------------------------------
+-- CW-2016-06-11: [[ External driver support ]] Add support for using an external library for network functions.
+
+-- Mapping commands for externals to set appropriate local variables as needed by libUrl
+command ulExtSetLoadStatus pUrl, pStatus
+   put pStatus into laUrlLoadStatus[pUrl]
+end ulExtSetLoadStatus
+
+command ulExtSetErrorStatus pUrl, pStatus
+   put pStatus into laUrlErrorStatus[pUrl]
+end ulExtSetErrorStatus
+
+command ulExtSetAsLoaded pUrl pData
+   put pData into laLoadedUrls[pUrl]
+end ulExtSetAsLoaded
+
+command ulExtRemoveLoadingVars pUrl
+   delete local laLoadingUrls[pUrl]
+   delete local laLoadReq[pUrl]
+end ulExtRemoveLoadingVars
+
+command ulExtSetData pUrl pData
+   put pData into laData[pUrl]
+end ulExtSetData
+
+function ulExtIsLoadReq pUrl
+   return laLoadReq[pUrl]
+end ulExtIsLoadReq
+
+function ulExtIsFileTransfer pUrl
+   return laFile[pUrl]
+end ulExtIsFileTransfer
+
+command ulExtSetLastHTTPHeaders pHeaders
+   set the lastHTTPHeaders of me to pHeaders
+end ulExtSetLastHTTPHeaders
+
+command ulExtSetLastRHHeaders pHeaders
+   set the lastRhHeaders of me to pHeaders
+end ulExtSetLastRHHeaders
+
+function ulExtGetMaxPostWithoutExpect
+   return laMaxPostWithoutExpect
+end ulExtGetMaxPostWithoutExpect

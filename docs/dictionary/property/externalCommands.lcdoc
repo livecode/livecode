@@ -2,17 +2,18 @@ Name: externalCommands
 
 Type: property
 
-Syntax: get the externalCommands of <stack> 
+Syntax: get the externalCommands of <stack>
 
-Summary: Lists the available <external|external commands> for a <stack>.
+Summary:
+Lists the available <external|external commands> for a <stack>.
 
 Associations: stack
 
 Introduced: 1.0
 
-OS: windows,linux
+OS: windows, linux
 
-Platforms: desktop,server
+Platforms: desktop, server
 
 Example:
 answer the externalCommands of stack "Basics"
@@ -22,17 +23,22 @@ if myExternal is among the lines of the externalCommands \
   of this stack then do myExternal
 
 Value:
-The <externalCommands> of a <stack> reports a list of available <external|external commands>, one per <line>.
-This property is read-only and cannot be set.
+The <externalCommands> of a <stack> reports a list of available
+<external|external commands>, one per <line>. This property is read-only
+and cannot be set.
 
 Description:
-Use the <externalCommands> <property> to find out whether a particular <external|external command> is available for use in <handler|handlers>, or to list all the available <external|external commands>.
+Use the <externalCommands> <property> to find out whether a particular
+<external|external command> is available for use in <handler|handlers>,
+or to list all the available <external|external commands>.
 
-You use an external command in a handler the same way you use one of LiveCode's built-in commands.
-
-<img src="202654"/> Cross-platform caution! It is not possible to load externals written for PowerPC in an application running natively on an Intel Mac. To get around this limitation either use Universal Binary externals, or run the program under Rosetta.
+You use an external command in a handler the same way you use one of
+LiveCode's built-in commands.
 
 Changes:
-Support for using the externalCommands property on OS X systems was added in version 2.0.
+Support for using the externalCommands property on OS X systems was
+added in version 2.0.
 
-References: externalPackages (property), line (keyword), stack (object), external (glossary), property (glossary), handler (glossary)
+References: external (glossary), property (glossary), handler (glossary),
+line (keyword), stack (object), externalPackages (property)
+

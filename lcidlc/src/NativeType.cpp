@@ -32,6 +32,8 @@ NativeType NativeTypeFromName(NameRef p_type)
 		return kNativeTypeCString;
 	else if (NameEqualToCString(p_type, "c-data"))
 		return kNativeTypeCData;
+	else if (NameEqualToCString(p_type, "lc-array"))
+		return kNativeTypeLCArray;
 	else if (NameEqualToCString(p_type, "utf8-c-string"))
 		return kNativeTypeUTF8CString;
 	else if (NameEqualToCString(p_type, "utf8-c-data"))
@@ -74,6 +76,8 @@ const char *NativeTypeGetTypedef(NativeType p_type)
         case kNativeTypeUTF8CData:
         case kNativeTypeUTF16CData:
             return "LCBytes";
+        case kNativeTypeLCArray:
+            return "LCArrayRef";
         case kNativeTypeObjcString:
             return "NSString*";
         case kNativeTypeObjcNumber:
@@ -117,9 +121,9 @@ const char *NativeTypeGetSecondaryPrefix(NativeType p_type)
         case kNativeTypeObjcArray:
         case kNativeTypeObjcDictionary:
             return "*";
+		default:
+			return "";
 	}
-	
-	return "";
 }
 
 const char *NativeTypeGetTag(NativeType p_type)
@@ -140,6 +144,8 @@ const char *NativeTypeGetTag(NativeType p_type)
             return "utf8cdata";
         case kNativeTypeUTF16CData:
             return "utf16cdata";
+        case kNativeTypeLCArray:
+            return "lc_array";
         case kNativeTypeInteger:
             return "int";
         case kNativeTypeReal:
@@ -190,6 +196,7 @@ const char *NativeTypeGetInitializer(NativeType p_type)
         case kNativeTypeCString:
         case kNativeTypeUTF8CString:
         case kNativeTypeUTF16CString:
+        case kNativeTypeLCArray:
         case kNativeTypeObjcString:
         case kNativeTypeObjcNumber:
         case kNativeTypeObjcData:
@@ -313,6 +320,8 @@ const char *native_type_to_type_in_cstring(NativeType p_type)
 		case kNativeTypeUTF8CData:
 		case kNativeTypeUTF16CData:
 			return "LCBytes";
+		case kNativeTypeLCArray:
+			return "const LCArrayRef";
 		case kNativeTypeInteger:
 		case kNativeTypeEnum:
 			return "int";
@@ -338,6 +347,8 @@ const char *native_type_to_type_out_cstring(NativeType p_type)
 		case kNativeTypeUTF8CData:
 		case kNativeTypeUTF16CData:
 			return "LCBytes";
+		case kNativeTypeLCArray:
+			return "LCArrayRef";
 		case kNativeTypeInteger:
 		case kNativeTypeEnum:
 			return "int";

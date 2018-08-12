@@ -5,8 +5,10 @@ Synonyms: server
 Type: glossary
 
 Description:
-A system that provides services to other systems on the same network. For example, a <web server> provides access to web pages.
+A system that provides services to other systems on the same network.
+For example, a <web server> provides access to web pages.
 
 References: web server (glossary)
 
 Tags: networking
+

@@ -6,13 +6,14 @@ Syntax: the errorObject
 
 Syntax: errorObject()
 
-Summary: Removed in version 1.1.
+Summary:
+Removed in version 1.1.
 
 Introduced: 1.0
 
-OS: ios,android
+OS: ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the errorObject
@@ -21,8 +22,17 @@ Example:
 edit script of the errorObject
 
 Description:
-The <errorObject> <function> <return|returned> the name of the <object> whose <script> had the most recent <execution error>.
+The <errorObject> <function> <return|returned> the name of the
+<object(glossary)> whose <script> had the most recent <execution error>.
 
-For the information formerly returned by the <errorObject> <function>, use the <target> <function> inside an <errorDialog> <handler>. The <errorDialog> message is sent to the object whose <script> caused the <error>, so checking the <target> <function> will <return> the name of that <object>.
+For the information formerly returned by the <errorObject> <function>,
+use the <target> <function> inside an <errorDialog> <handler>. The
+<errorDialog> message is sent to the object whose <script> caused the
+<error>, so checking the <target> <function> will <return> the name of
+that <object(glossary)>.
 
-References: lockErrorDialogs (property), script (property), errorDialog (message), handler (glossary), error (glossary), return (glossary), execution error (glossary), function (control_st), object (object), target (function), return (constant)
+References: return (constant), function (control structure),
+target (function), handler (glossary), error (glossary),
+return (glossary), execution error (glossary), object (glossary),
+errorDialog (message), lockErrorDialogs (property), script (property)
+

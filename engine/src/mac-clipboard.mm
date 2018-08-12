@@ -236,6 +236,9 @@ MCDataRef MCMacRawClipboard::EncodeFileListForTransfer(MCStringRef p_file_path) 
         return NULL;
     if (!MCStringFindAndReplace(*t_modified, MCSTR("%2F"), MCSTR("/"), kMCStringOptionCompareExact))
         return NULL;
+    // Undo the transformation of spaces to '+'
+    if (!MCStringFindAndReplace(*t_modified, MCSTR("+"), MCSTR(" "), kMCStringOptionCompareExact))
+        return NULL;
     
     // Add the required "file://" prefix to the path
     if (!MCStringPrepend(*t_modified, MCSTR("file://")))
@@ -274,6 +277,16 @@ MCStringRef MCMacRawClipboard::DecodeTransferredFileList(MCDataRef p_encoded_pat
     return t_path;
 }
 
+MCDataRef MCMacRawClipboard::EncodeHTMLFragmentForTransfer(MCDataRef p_html) const
+{
+	return MCValueRetain(p_html);
+}
+
+MCDataRef MCMacRawClipboard::DecodeTransferredHTML(MCDataRef p_html) const
+{
+	return MCValueRetain(p_html);
+}
+
 MCStringRef MCMacRawClipboard::CopyAsUTI(MCStringRef p_key)
 {
     // If the key is already in UTI form, just pass it out
@@ -305,7 +318,7 @@ MCStringRef MCMacRawClipboard::CopyAsUTI(MCStringRef p_key)
     
     // Convert the UTI to a StringRef
     MCStringRef t_return = NULL;
-    MCStringCreateWithCFString(t_uti, t_return);
+    MCStringCreateWithCFStringRef(t_uti, t_return);
     CFRelease(t_uti);
     return t_return;
 }
@@ -564,7 +577,7 @@ MCStringRef MCMacRawClipboardItemRep::CopyTypeString() const
     
     // Convert the NSString into a StringRef
     MCStringRef t_type_string;
-    if (!MCStringCreateWithCFString((CFStringRef)t_type, t_type_string))
+    if (!MCStringCreateWithCFStringRef((CFStringRef)t_type, t_type_string))
         return NULL;
     
     m_type = t_type_string;
@@ -602,7 +615,7 @@ MCDataRef MCMacRawClipboardItemRep::CopyData() const
         
         // Turn this path into a LiveCode string
         MCAutoStringRef t_path_string;
-        if (!MCStringCreateWithCFString((CFStringRef)t_path, &t_path_string))
+        if (!MCStringCreateWithCFStringRef((CFStringRef)t_path, &t_path_string))
             return NULL;
         
         // Because this needs to return data, UTF-8 encode the result

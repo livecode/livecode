@@ -2,15 +2,16 @@ Name: printScale
 
 Type: property
 
-Syntax: set the printScale to <ratio> 
+Syntax: set the printScale to <ratio>
 
-Summary: Specifies how much <card|cards> are shrunk or expanded when printing.
+Summary:
+Specifies how much <card|cards> are shrunk or expanded when printing.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios
+OS: mac, windows, linux, ios
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: printing
 
@@ -25,12 +26,21 @@ The <printScale> is a positive number.
 By default, the <printScale> <property> is set to 1.
 
 Description:
-Use the <printScale> <property> to control the size of printed <card(object)|cards>.
+Use the <printScale> <property> to control the size of printed
+<card(object)|cards>. 
 
-The <printScale> specifies the ratio between the number of <pixels> in the <card(keyword)> and the number of <points> on the printed page. A <ratio> of 1 means the printed and screen <card(keyword)> should be the same size, if the screen's resolution is 72 <pixels> per inch.
+The <printScale> specifies the ratio between the number of <pixels> in
+the <card(keyword)> and the number of <points> on the printed page. A
+<ratio> of 1 means the printed and screen <card(keyword)> should be the
+same size, if the screen's resolution is 72 <pixels> per inch.
 
-For example, if a card is 360 pixels wide and you want its printed image to be 4 inches (288 points) across, set the <printScale> to 0.8 (288 pixels divided by 360 points).
+For example, if a card is 360 pixels wide and you want its printed image
+to be 4 inches (288 points) across, set the <printScale> to 0.8 (288
+pixels divided by 360 points).
 
-References: points (property), pixels (property), printRotated (property), printRowsFirst (property), printCommand (property), card (keyword), card (object), property (glossary)
+References: property (glossary), card (keyword), card (object),
+points (property), pixels (property), printRotated (property),
+printRowsFirst (property), printCommand (property)
 
 Tags: printing
+

@@ -44,6 +44,8 @@ public:
 	virtual bool GoForward();
 	virtual bool GoToURL(const char *p_url);
 	virtual bool EvaluateJavaScript(const char *p_script, char *&r_result);
+	
+	bool AttachJSHandlers();
 
 protected:
 	bool GetUrl(char *& r_url);

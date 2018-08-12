@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "util.h"
 #include "date.h"
 #include "sellst.h"
@@ -70,7 +70,7 @@ MCVideoClip::MCVideoClip(const MCVideoClip &mref) : MCObject(mref)
 	size = mref.size;
 	if (mref.frames != NULL)
 	{
-		frames = new uint1[size];
+		frames = new (nothrow) uint1[size];
 		memcpy((char *)frames, (char *)mref.frames, size);
 	}
 	else
@@ -92,102 +92,21 @@ const char *MCVideoClip::gettypestring()
 	return MCvideostring;
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCVideoClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
+bool MCVideoClip::visit_self(MCObjectVisitor* p_visitor)
 {
-	switch (which)
-	{
-#ifdef /* MCVideoClip::getprop */ LEGACY_EXEC
-	case P_DONT_REFRESH:
-		ep.setboolean(getflag(F_DONT_REFRESH));
-		break;
-	case P_FRAME_RATE:
-		if (flags & F_FRAME_RATE)
-			ep.setint(framerate);
-		else
-			ep.clear();
-		break;
-	case P_SCALE:
-		ep.setnvalue(scale);
-		break;
-	case P_SIZE:
-		ep.setint(size);
-		break;
-	case P_TEXT:
-		{
-			MCString s((const char *)frames, size);
-			ep.setsvalue(s);
-		}
-		break;
-#endif /* MCVideoClip::getprop */
-	default:
-		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
-	}
-	return ES_NORMAL;
+    return p_visitor -> OnVideoClip(this);
 }
-#endif
 
-#ifdef LEGACY_EXEC
-Exec_stat MCVideoClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+Boolean MCVideoClip::del(bool p_check_flag)
 {
-	MCString data = ep.getsvalue();
-
-	Boolean dirty = False;
-	switch (p)
-	{
-#ifdef /* MCVideoClip::setprop */ LEGACY_EXEC
-	case P_DONT_REFRESH:
-		if (!MCU_matchflags(data, flags, F_DONT_REFRESH, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		return ES_NORMAL;
-	case P_FRAME_RATE:
-		if (data.getlength() == 0)
-			flags &= ~F_FRAME_RATE;
-		else
-		{
-			if (!MCU_stoui2(data, framerate))
-			{
-				MCeerror->add
-				(EE_OBJECT_NAN, 0, 0, data);
-				return ES_ERROR;
-			}
-			flags |= F_FRAME_RATE;
-		}
-		return ES_NORMAL;
-	case P_SCALE:
-		if (!MCU_stor8(data, scale))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		flags |= F_SCALE_FACTOR;
-		return ES_NORMAL;
-	case P_TEXT:
-		delete frames;
-		size = data.getlength();
-		frames = new uint1[size];
-		memcpy(frames, data.getstring(), size);
-		return ES_NORMAL;
-#endif /* MCVideoClip::setprop */
-	default:
-		break;
-	}
-	return MCObject::setprop_legacy(parid, p, ep, effective);
-}
-#endif
-
-Boolean MCVideoClip::del()
-{
-	getstack()->removevclip(this);
+    if (!isdeletable(p_check_flag))
+        return False;
+    
+    getstack()->removevclip(this);
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
-    return MCObject::del();
+    return MCObject::del(p_check_flag);
 }
 
 void MCVideoClip::paste(void)
@@ -229,7 +148,7 @@ Boolean MCVideoClip::import(MCStringRef fname, IO_handle fstream)
     uindex_t t_last_slash;
     MCStringRef t_path;
     if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_last_slash))
-        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_last_slash + 1, MCStringGetLength(fname) - t_last_slash - 1), t_path);
+        /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMakeMinMax(t_last_slash + 1, MCStringGetLength(fname)), t_path);
     else
         t_path = MCValueRetain(fname);
     
@@ -237,7 +156,7 @@ Boolean MCVideoClip::import(MCStringRef fname, IO_handle fstream)
     /* UNCHECKED */ MCNameCreateAndRelease(t_path, &t_path_name);
 	setname(*t_path_name);
 	size = (uint4)MCS_fsize(fstream);
-	frames = new uint1[size];
+	frames = new (nothrow) uint1[size];
 	if (MCS_readfixed(frames, size, fstream) != IO_NORMAL)
 		return False;
 	return True;
@@ -284,7 +203,7 @@ IO_stat MCVideoClip::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	if (size != 0)
 	{
-		frames = new uint1[size];
+		frames = new (nothrow) uint1[size];
 		if ((stat = IO_read(frames, size, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
 	}

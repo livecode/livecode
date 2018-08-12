@@ -2,17 +2,19 @@ Name: URLEncode
 
 Type: function
 
-Syntax: the URLEncode of <formString> 
+Syntax: the URLEncode of <formString>
 
 Syntax: URLEncode(<formString>)
 
-Summary: <return|Returns> a <string> that has been transformed so that it can be posted to an <HTTP> <server> as a <URL>.
+Summary:
+<return|Returns> a <string> that has been transformed so that it can be
+posted to an <HTTP> <server> as a <URL>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: network
 
@@ -23,18 +25,47 @@ Example:
 URLEncode("Test string $$") -- returns "Test+string+%24%24"
 
 Example:
-put URLEncode("http://www.example.net/document.html") into newURL
+local tGoodURL
+put "http://www.example.net/" & URLEncode("A File Name with spaces.html") into tGoodURL
 
 Parameters:
-formString (string): 
+formString (string):
 
-Returns: The <URLEncode> <function> <return|returns> the <formString>, with spaces converted to "+" and characters other than letters and numbers converted to their hexadecimal <Escape key|escape> representation.
+
+Returns:
+The <URLEncode> <function> <return|returns> the <formString>, with
+spaces converted to "+" and characters other than letters and numbers
+converted to their hexadecimal escape representation.
 
 Description:
-Use the <URLEncode> <function> to <encode> a <URL> so it can be safely posted to an <HTTP> <server>.
+Use the <URLEncode> <function> to <encode> a <URL> so it can be safely
+posted to an <HTTP> <server>.
 
-Letters and numbers (alphanumeric characters) are not transformed by the <URLEncode> <function>. The representation used for non-alphanumeric characters is a percent sign followed by two <hexadecimal> digits. For example, the <ASCII|ASCII value> of the <character>  ~ is 126; the hexadecimal equivalent of 126 is 7E. So wherever the <character>  ~ <a/>appears in the formString, it is converted to "%7E".
+Letters and numbers (alphanumeric characters) are not transformed by the
+<URLEncode> <function>. The representation used for non-alphanumeric
+characters is a percent sign followed by two <hexadecimal> digits. For
+example, the <ASCII|ASCII value> of the <character> ~ is 126; the
+hexadecimal equivalent of 126 is 7E. So wherever the <character> ~
+appears in the formString, it is converted to "%7E".
 
-References: URL (keyword), character (keyword), http (keyword), string (keyword), post (command), function (control_st), hexadecimal (glossary), encode (glossary), Escape key (glossary), ASCII (glossary), return (glossary), server (glossary)
+>*Note:* The URLEncode function does not conform to RFC3986. In order 
+> to produce a string that does conform to it, you would first encode
+> the string to UTF-8 and then after performing URLEncode, replace all
+> instances of "+" with "%20". For example:
+
+    function urlEncodeRFC pString
+        if pString is strictly a string then
+            put textEncode(pString,"UTF-8") into pString
+        end if
+        put URLEncode(pString) into pString
+        replace "+" with "%20" in pString
+        return pString
+    end urlEncodeRFC
+
+References: post (command), function (control structure),
+hexadecimal (glossary), encode (glossary), ASCII (glossary), 
+return (glossary), server (glossary), URL (keyword), 
+character (keyword), http (keyword), string (keyword)
 
 Tags: networking
+

@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "line.h"
 #include "field.h"
 #include "paragraf.h"
-//#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "text.h"
@@ -40,43 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "exec-interface.h"
 
-const char *ER_reverse[256] =
-    {
-        "&#0;", "&#1;", "&#2;", "&#3;", "&#4;",
-        "&#5;", "&#6;", "&#7;", "&#8;", "&#9;", "&#10;", "&#11;", "&#12;",
-        "&#13;", "&#14;", "&#15;", "&#16;", "&#17;", "&#18;", "&#19;",
-        "&#20;", "&#21;", "&#22;", "&#23;", "&#24;", "&#25;", "&#26;",
-        "&#27;", "&#28;", "&#29;", "&#30;", "&#31;", NULL, NULL, "&quot;", NULL,
-        NULL, NULL, "&amp;", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, "&lt;", NULL, "&gt;", NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, "&#127;", "&#128;", "&#129;", "&#130;", "&#131;",
-        "&#132;", "&#133;", "&#134;", "&#135;", "&#136;", "&#137;", "&#138;",
-        "&#139;", "&#140;", "&#141;", "&#142;", "&#143;", "&#144;", "&#145;",
-        "&#146;", "&#147;", "&#148;", "&#149;", "&#150;", "&#151;", "&#152;",
-        "&#153;", "&#154;", "&#155;", "&#156;", "&#157;", "&#158;", "&#159;",
-        "&nbsp;", "&iexcl;", "&cent;", "&pound;", "&curren;", "&yen;",
-        "&brvbar;", "&sect;", "&uml;", "&copy;", "&ordf;", "&laquo;", "&not;",
-        "&shy;", "&reg;", "&macr;", "&deg;", "&plusmn;", "&sup2;", "&sup3;",
-        "&acute;", "&micro;", "&para;", "&middot;", "&cedil;", "&sup1;",
-        "&ordm;", "&raquo;", "&frac14;", "&frac12;", "&frac34;", "&iquest;",
-        "&Agrave;", "&Aacute;", "&Acirc;", "&Atilde;", "&Auml;", "&Aring;",
-        "&AElig;", "&Ccedil;", "&Egrave;", "&Eacute;", "&Ecirc;", "&Euml;",
-        "&Igrave;", "&Iacute;", "&Icirc;", "&Iuml;", "&ETH;", "&Ntilde;",
-        "&Ograve;", "&Oacute;", "&Ocirc;", "&Otilde;", "&Ouml;", "&times;",
-        "&Oslash;", "&Ugrave;", "&Uacute;", "&Ucirc;", "&Uuml;", "&Yacute;",
-        "&THORN;", "&szlig;", "&agrave;", "&aacute;", "&acirc;", "&atilde;",
-        "&auml;", "&aring;", "&aelig;", "&ccedil;", "&egrave;", "&eacute;",
-        "&ecirc;", "&euml;", "&igrave;", "&iacute;", "&icirc;", "&iuml;",
-        "&eth;", "&ntilde;", "&ograve;", "&oacute;", "&ocirc;", "&otilde;",
-        "&ouml;", "&divide;", "&oslash;", "&ugrave;", "&uacute;", "&ucirc;",
-        "&uuml;", "&yacute;", "&thorn;", "&yuml;"
-    };
+#include "stackfileformat.h"
 
 const char *CHARSET_HTML[] =
     {
@@ -106,7 +70,7 @@ uint2 MCParagraph::cursorwidth = 1;
 MCParagraph::MCParagraph()
 {
 	parent = NULL;
-	/* UNCHECKED */ MCStringCreateMutable(0, m_text);
+	/* UNCHECKED */ MCStringCreateMutable(0, &m_text);
 	blocks = NULL;
     segments = NULL;
 	lines = NULL;
@@ -128,7 +92,7 @@ MCParagraph::MCParagraph()
 MCParagraph::MCParagraph(const MCParagraph &pref) : MCDLlist(pref)
 {
 	parent = pref.parent;
-	/* UNCHECKED */ MCStringMutableCopy(pref.m_text, m_text);
+	/* UNCHECKED */ MCStringMutableCopy(*pref.m_text, &m_text);
 	
 	blocks = NULL;
 	if (pref.blocks != NULL)
@@ -136,7 +100,7 @@ MCParagraph::MCParagraph(const MCParagraph &pref) : MCDLlist(pref)
 		MCBlock *bptr = pref.blocks;
 		do
 		{
-			MCBlock *tbptr = new MCBlock(*bptr);
+			MCBlock *tbptr = new (nothrow) MCBlock(*bptr);
 			tbptr->appendto(blocks);
 			tbptr->setparent(this);
 			bptr = bptr->next();
@@ -176,9 +140,6 @@ MCParagraph::~MCParagraph()
 	deletelines();
 
 	clearattrs();
-	
-	// Don't let the text go away until anything referencing it is gone
-	MCValueRelease(m_text);
 }
 
 MCBlock* MCParagraph::AppendText(MCStringRef p_string)
@@ -192,7 +153,7 @@ MCBlock* MCParagraph::AppendText(MCStringRef p_string)
 	if (t_block->GetLength() > 0)
 	{
 		// Block already contains data, create a new one
-		MCBlock *t_newblock = new MCBlock;
+		MCBlock *t_newblock = new (nothrow) MCBlock;
 		t_newblock->setparent(this);
 		t_block->append(t_newblock);
 		t_block = t_newblock;
@@ -206,7 +167,7 @@ MCBlock* MCParagraph::AppendText(MCStringRef p_string)
 	// Append the text as requested
 	// TODO: trunctation
 	findex_t t_cur_len = gettextlength();
-	/* UNCHECKED */ MCStringAppend(m_text, p_string);
+	/* UNCHECKED */ MCStringAppend(*m_text, p_string);
 	
 	// Set the indices for the block containing this text
 	t_block->SetRange(t_cur_len, t_new_length);
@@ -216,14 +177,14 @@ MCBlock* MCParagraph::AppendText(MCStringRef p_string)
 findex_t MCParagraph::NextChar(findex_t p_in)
 {
     uindex_t t_index;
-    t_index = MCStringGraphemeBreakIteratorAdvance(m_text, p_in);
-    return (t_index == kMCLocaleBreakIteratorDone) ? MCStringGetLength(m_text) : t_index;
+    t_index = MCStringGraphemeBreakIteratorAdvance(*m_text, p_in);
+    return (t_index == kMCLocaleBreakIteratorDone) ? MCStringGetLength(*m_text) : t_index;
 }
 
 findex_t MCParagraph::PrevChar(findex_t p_in)
 {
     uindex_t t_index;
-    t_index = MCStringGraphemeBreakIteratorRetreat(m_text, p_in);
+    t_index = MCStringGraphemeBreakIteratorRetreat(*m_text, p_in);
     return (t_index == kMCLocaleBreakIteratorDone) ? 0 : t_index;
 }
 
@@ -231,18 +192,18 @@ findex_t MCParagraph::NextWord(findex_t p_in)
 {
     MCBreakIteratorRef t_iter;
     /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeWord, t_iter);
-    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, m_text);
+    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, *m_text);
     uindex_t t_index;
     t_index = MCLocaleBreakIteratorAfter(t_iter, p_in);
     MCLocaleBreakIteratorRelease(t_iter);
-    return (t_index == kMCLocaleBreakIteratorDone) ? MCStringGetLength(m_text) : t_index;
+    return (t_index == kMCLocaleBreakIteratorDone) ? MCStringGetLength(*m_text) : t_index;
 }
 
 findex_t MCParagraph::PrevWord(findex_t p_in)
 {
     MCBreakIteratorRef t_iter;
     /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeWord, t_iter);
-    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, m_text);
+    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, *m_text);
     uindex_t t_index;
     t_index = MCLocaleBreakIteratorBefore(t_iter, p_in);
     MCLocaleBreakIteratorRelease(t_iter);
@@ -276,10 +237,17 @@ bool MCParagraph::TextIsPunctuation(codepoint_t p_codepoint)
 
 bool MCParagraph::TextFindNextParagraph(MCStringRef p_string, findex_t p_after, findex_t &r_next)
 {
-	codepoint_t t_cp;
 	uindex_t t_length = MCStringGetLength(p_string);
-	while (p_after < t_length && !TextIsParagraphBreak(MCStringGetCodepointAtIndex(p_string, p_after)))
-		p_after++;
+	while (p_after < t_length)
+	{
+		codepoint_t t_char =
+			MCStringGetCodepointAtIndex(p_string, p_after);
+		
+		if (TextIsParagraphBreak(t_char))
+			break;
+		
+		p_after += MCUnicodeCodepointGetCodeunitLength(t_char);
+	}
 	
 	if (p_after == t_length)
 		return false;
@@ -298,7 +266,7 @@ void MCParagraph::SetBlockDirectionLevel(findex_t si, findex_t ei, uint8_t level
         if (t_block_index < si)
         {
             // Starts part of the way through this block
-            MCBlock *tbptr = new MCBlock(*bptr);
+            MCBlock *tbptr = new (nothrow) MCBlock(*bptr);
             bptr->append(tbptr);
             bptr->SetRange(t_block_index, si - t_block_index);
             tbptr->SetRange(si, t_block_length - (si - t_block_index));
@@ -312,7 +280,7 @@ void MCParagraph::SetBlockDirectionLevel(findex_t si, findex_t ei, uint8_t level
         if (t_block_index + t_block_length > ei)
         {
             // Ends part of the way through this block
-            MCBlock *tbptr = new MCBlock(*bptr);
+            MCBlock *tbptr = new (nothrow) MCBlock(*bptr);
             if (getopened())
                 tbptr->open(getparent()->getfontref());
             bptr->append(tbptr);
@@ -339,12 +307,12 @@ void MCParagraph::resolvetextdirections()
     else if (parent->gettextdirection() == kMCTextDirectionRTL)
         t_base_level = 1;
     else // == kMCTextDirectionAuto
-        t_base_level = MCBidiFirstStrongIsolate(m_text, 0);
+        t_base_level = MCBidiFirstStrongIsolate(*m_text, 0);
     
     MCAutoArray<uint8_t> t_levels;
    
     // SN-2014-04-03 [[ Bug 12078 ]] Text direction resolving relocated in foundation-bidi.h
-    /* UNCHECKED */ MCBidiResolveTextDirection(m_text, t_base_level, t_levels . PtrRef(), t_levels . SizeRef());
+    /* UNCHECKED */ MCBidiResolveTextDirection(*m_text, t_base_level, t_levels . PtrRef(), t_levels . SizeRef());
     
     // Using the calculated levels, do the appropriate block creation
     uindex_t i = 0;
@@ -386,16 +354,16 @@ uint8_t MCParagraph::firststrongisolate(uindex_t p_offset) const
     bool t_found = false;
     uindex_t t_depth = 0;
     uint8_t t_level = 0;
-    while (!t_found && p_offset < MCStringGetLength(m_text))
+    while (!t_found && p_offset < MCStringGetLength(*m_text))
     {
         codepoint_t t_char;
-        t_char = MCStringGetCharAtIndex(m_text, p_offset);
+        t_char = MCStringGetCharAtIndex(*m_text, p_offset);
         
         // Get the surrogate pair, if required
         uindex_t t_increment = 1;
         codepoint_t t_low;
         if (MCUnicodeCodepointIsHighSurrogate(t_char) &&
-            MCUnicodeCodepointIsLowSurrogate(t_low = MCStringGetCharAtIndex(m_text, p_offset + 1)))
+            MCUnicodeCodepointIsLowSurrogate(t_low = MCStringGetCharAtIndex(*m_text, p_offset + 1)))
         {
             t_char = MCUnicodeSurrogatesToCodepoint(t_char, t_low);
             t_increment = 2;
@@ -462,6 +430,11 @@ bool MCParagraph::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObj
 	return t_continue;
 }
 
+uint32_t MCParagraph::getminimumstackfileversion(void)
+{
+	return kMCStackFileFormatMinimumExportVersion;
+}
+
 // **** mutate blocks
 IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 {
@@ -469,22 +442,21 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 	uint1 type;
 
     // The constructor-created string of the paragraph must be reset
-    MCValueRelease(m_text);
-    m_text = nil;
+    m_text.Reset();
 
 	// MW-2013-11-20: [[ UnicodeFileFormat ]] Prior to 7.0, paragraphs were mixed runs
 	//   of UTF-16 and native text. 7.0 plus they are just a stringref.
-	if (version < 7000)
+	if (version < kMCStackFileFormatVersion_7_0)
 	{
 		uint32_t t_length;
-		MCAutoPointer<char> t_text_data;
+		MCAutoCustomPointer<char,MCMemoryDeleteArray> t_text_data;
         
 		// This string can contain a mixture of Unicode and native - t_length is the number
         // of bytes.
         if ((stat = IO_read_string_legacy_full(&t_text_data, t_length, stream, 2, true, false)) != IO_NORMAL)
 			return checkloadstat(stat);
 
-        if (!MCStringCreateMutable(0, m_text))
+        if (!MCStringCreateMutable(0, &m_text))
 			return checkloadstat(IO_ERROR);
 
         // MW-2012-03-04: [[ StackFile5500 ]] If this is an extended paragraph then
@@ -508,14 +480,14 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 				case OT_BLOCK:
 				case OT_BLOCK_EXT:
 				{
-					MCBlock *newblock = new MCBlock;
+					/* UNCHECKED */ MCAutoPointer<MCBlock> newblock =
+						new (nothrow) MCBlock;
 					newblock->setparent(this);
 					
 					// MW-2012-03-04: [[ StackFile5500 ]] If the tag was actually an
 					//   extended block, then pass in 'true' for is_ext.
 					if ((stat = newblock->load(stream, version, type == OT_BLOCK_EXT)) != IO_NORMAL)
 					{
-						delete newblock;
 						return checkloadstat(IO_ERROR);
 					}
 					
@@ -545,7 +517,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
                     }
                     
                     uindex_t t_index;
-                    t_index = MCStringGetLength(m_text);
+                    t_index = MCStringGetLength(*m_text);
 
 					if (newblock->IsSavedAsUnicode())
 					{
@@ -572,7 +544,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 							}
 
                             // Append to the paragraph text
-							if (!MCStringAppendChars(m_text, t_unicode_buffer.Ptr(),
+							if (!MCStringAppendChars(*m_text, t_unicode_buffer.Ptr(),
 							                         t_unicode_buffer.Size()))
 							{
                                 return checkloadstat(IO_ERROR);
@@ -583,7 +555,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 							for (uindex_t i = t_buffer_len; i < uindex_t(len); ++i)
 							{
 								unichar_t t_trailing = (*t_text_data)[index + i];
-								if (!MCStringAppendChar(m_text, t_trailing))
+								if (!MCStringAppendChar(*m_text, t_trailing))
 								{
 									return checkloadstat(IO_ERROR);
 								}
@@ -610,13 +582,13 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 #endif
 
 						// String is in native format. Append to paragraph text
-                        if (!MCStringAppendNativeChars(m_text, (const char_t*)(*t_text_data + index), len))
+                        if (!MCStringAppendNativeChars(*m_text, (const char_t*)(*t_text_data + index), len))
                             return checkloadstat(IO_ERROR);
 
                         // Fix the indices used by the block
                         newblock->SetRange(t_index, len);
 					}
-					newblock->appendto(blocks);
+					newblock.Release()->appendto(blocks);
 				}
 					break;
 				default:
@@ -633,7 +605,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					// there were no blocks to say it was unicode, it must be native.
 					if (t_last_added == 0)
 					{
-                        if (!MCStringAppendNativeChars(m_text, (const char_t*)*t_text_data, t_length))
+                        if (!MCStringAppendNativeChars(*m_text, (const char_t*)*t_text_data, t_length))
 							return checkloadstat(IO_ERROR);
 						t_last_added = t_length;
 					}
@@ -651,11 +623,12 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] The text is just a stringref, so no
 		//   magical swizzling to be done.
-		if ((stat = IO_read_stringref_new(m_text, stream, true)) != IO_NORMAL)
+        MCAutoStringRef t_read_text;
+		if ((stat = IO_read_stringref_new(&t_read_text, stream, true)) != IO_NORMAL)
 			return checkloadstat(stat);
         
         // The paragraph text *must* be mutable
-        /* UNCHECKED */ MCStringMutableCopyAndRelease(m_text, m_text);
+        /* UNCHECKED */ MCStringMutableCopyAndRelease(t_read_text.Take(), &m_text);
 
         // MW-2012-03-04: [[ StackFile5500 ]] If this is an extended paragraph then
         //   load in the attribute extension record.
@@ -674,7 +647,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 				case OT_BLOCK:
 				case OT_BLOCK_EXT:
 				{
-					MCBlock *newblock = new MCBlock;
+					MCBlock *newblock = new (nothrow) MCBlock;
 					newblock->setparent(this);
 					
 					// MW-2012-03-04: [[ StackFile5500 ]] If the tag was actually an
@@ -714,7 +687,7 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	// MW-2012-03-04: [[ StackFile5500 ]] If the paragraph has attributes and 5.5
 	//   stackfile format has been requested, then output an extended paragraph.
 	bool t_is_ext;
-	if (p_version >= 5500 && attrs != nil)
+	if (p_version >= kMCStackFileFormatVersion_5_5 && attrs != nil)
 		t_is_ext = true;
 	else
 		t_is_ext = false;
@@ -722,16 +695,16 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	if ((stat = IO_write_uint1(t_is_ext ? OT_PARAGRAPH_EXT : OT_PARAGRAPH, stream)) != IO_NORMAL)
 		return stat;
 	
-	if (p_version < 7000)
+	if (p_version < kMCStackFileFormatVersion_7_0)
 	{
 		// The string data that will get written out. It can't be just done as a
 		// StringRef without breaking file format compatibility.
 		uindex_t t_data_len;
 		const char *t_data;
-		if (MCStringIsNative(m_text))
+		if (MCStringIsNative(*m_text))
 		{
-			t_data_len = MCStringGetLength(m_text);
-			t_data = (const char *)MCStringGetNativeCharPtr(m_text);
+			t_data_len = MCStringGetLength(*m_text);
+			t_data = (const char *)MCStringGetNativeCharPtr(*m_text);
 		}
 		else
 		{
@@ -740,18 +713,18 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 			if (blocks == nil)
 				inittext();
 			
-			t_data_len = MCStringGetLength(m_text) * sizeof(unichar_t);
-			t_data = (const char *)MCStringGetCharPtr(m_text);
+			t_data_len = MCStringGetLength(*m_text) * sizeof(unichar_t);
+			t_data = (const char *)MCStringGetCharPtr(*m_text);
 		}
 		
-		if (!MCStringIsNative(m_text))
+		if (!MCStringIsNative(*m_text))
 		{
 			// For file format compatibility, swap_uint2 must be called on each 
 			// character in the UTF-16 string (Unicodeness is now a paragraph
 			// property, not a block property, so it is done for all the text)
-			unichar_t *t_swapped_data = new unichar_t[t_data_len/sizeof(unichar_t)];
+			unichar_t *t_swapped_data = new (nothrow) unichar_t[t_data_len/sizeof(unichar_t)];
 			memcpy(t_swapped_data, t_data, t_data_len);
-			for (uindex_t i = 0; i < MCStringGetLength(m_text); i++)
+			for (uindex_t i = 0; i < MCStringGetLength(*m_text); i++)
 			{
 				swap_uint2((uint2*)&t_swapped_data[i]);
 			}
@@ -764,14 +737,14 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 			return stat;
 
 		// If the string had to be byte swapped, delete the allocated data
-		if (!MCStringIsNative(m_text))
+		if (!MCStringIsNative(*m_text))
 			delete[] t_data;
 	}
 	else
 	{
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] The text is just a stringref, so no
 		//   magical swizzling to be done.
-		if ((stat = IO_write_stringref_new(m_text, stream, true)) != IO_NORMAL)
+		if ((stat = IO_write_stringref_new(*m_text, stream, true)) != IO_NORMAL)
 			return stat;
 	}
 		
@@ -1059,7 +1032,7 @@ void MCParagraph::flow(void)
     deletelines();
     
     // Initially, add all of the blocks to the one line (this segments them)
-    MCLine *lptr = new MCLine(this);
+    MCLine *lptr = new (nothrow) MCLine(this);
     lptr->appendall(blocks, true);
     
     // Do the line wrapping
@@ -1102,7 +1075,7 @@ void MCParagraph::noflow(void)
 	// selections didn't work.
 	defrag();
 	deletelines();
-    lines = new MCLine(this);
+    lines = new (nothrow) MCLine(this);
 	lines->appendall(blocks, false);
     lines->NoFlowLayout();
 
@@ -1251,7 +1224,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                     ei = bi + bl;
                 
                 // Get the X coordinates for the selection
-                int2 bix, bex;
+                coord_t bix, bex;
                 // SN-2014-08-14: [[ Bug 13106 ]] GetCursorX includes the cell padding, which we don't want
                 bix = bptr->GetCursorX(si) - sgptr -> GetPadding();
                 bex = bptr->GetCursorX(ei) - sgptr -> GetPadding();
@@ -1260,22 +1233,29 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 // Re-ordering will be required if the block is RTL
                 if (bix > bex)
                 {
-                    int2 t_temp;
+                    coord_t t_temp;
                     t_temp = bix;
                     bix  = bex;
                     bex = t_temp;
                 }
+                
+                coord_t temp_x,temp_width;
 
                 if (t_segment_front)
-                    srect.x = x + sgptr -> GetLeft();
+                    temp_x = x + sgptr -> GetLeft();
                 else
-                    srect.x = x + sgptr -> GetLeftEdge() + bix;
+                    temp_x = x + sgptr -> GetLeftEdge() + bix;
                 
                 // AL-2014-07-29: [[ Bug 12951 ]] If selection traverses a segment boundary, include the boundary in the fill rect.
+                
+                srect.x = MCClamp(temp_x, INT16_MIN, INT16_MAX);
+                
                 if (t_segment_back)
-                    srect.width = x + sgptr -> GetRight() - srect . x;
+                    temp_width = x + sgptr -> GetRight() - srect . x;
                 else
-                    srect.width = x + sgptr -> GetLeftEdge() + bex - srect . x;
+                    temp_width = x + sgptr -> GetLeftEdge() + bex - srect . x;
+                
+                srect.width = MCClamp(temp_width, INT16_MIN, INT16_MAX);
                 
                 // Draw this block
                 dc->fillrect(srect);
@@ -1311,9 +1291,6 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
         // Draw the right-hand side, if required
         if (t_show_back || endindex > i + l)
         {
-            // AL-2014-07-30: [[ Bug 12924 ]] Get last visual block in the line for back selection fill
-            MCBlock *t_last_visual = lptr -> GetLastSegment() -> GetLastVisualBlock();
-            
             // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
             // SN-2014-09-11: [[ Bug 13407 ]] Include the part not drawn in case of text overflow
             srect.x = x + lptr -> GetLastSegment() -> GetRightEdge();
@@ -1449,7 +1426,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	
 	dc->save();
 
-	coord_t ascent, descent, leading, linespace, baseline;
+	coord_t ascent, descent, leading, linespace;
 	ascent = fixeda;
 	descent = fixedd;
     leading = 0;
@@ -1474,7 +1451,8 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 
 	// MW-2012-01-25: [[ ParaStyles ]] Compute the inner and outer rects of the
 	//   paragraph.
-	MCRectangle t_outer_rect, t_inner_rect;
+	MCRectangle t_outer_rect(kMCEmptyRectangle);
+	MCRectangle t_inner_rect(kMCEmptyRectangle);
 	computerects(x, y, textwidth, t_paragraph_width, pgheight, t_outer_rect, t_inner_rect); 
 
 	// MW-2012-02-09: [[ ParaStyles ]] Compute the inner rect excluding padding (for
@@ -1496,8 +1474,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	if (attrs != nil && (attrs -> flags & PA_HAS_BACKGROUND_COLOR) != 0)
 	{
 		MCColor t_color;
-		t_color . pixel = attrs -> background_color;
-		MCscreen -> querycolor(t_color);
+		MCColorSetPixel(t_color, attrs -> background_color);
 		dc -> setforeground(t_color);
 		dc -> fillrect(t_inner_border_rect);
 		parent->setforeground(dc, DI_FORE, False, True);
@@ -1572,11 +1549,11 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 					if (IsMacLF() && !parent->isautoarm())
 					{
 						MCPatternRef t_pattern;
-						int2 x, y;
+						int2 t_x, t_y;
 						MCColor fc, hc;
-						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc -> gettype(), parent);
-						parent->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc -> gettype(), parent);
-						if (hc.pixel == fc.pixel)
+						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, t_x, t_y, dc -> gettype(), parent);
+						parent->getforecolor(DI_HILITE, False, True, hc, t_pattern, t_x, t_y, dc -> gettype(), parent);
+						if (MCColorGetPixel(hc) == MCColorGetPixel(fc))
 							parent->setforeground(dc, DI_BACK, False, True);
 					}
 					else
@@ -1595,14 +1572,14 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 					parent -> setforeground(dc, DI_FORE, False, True);
 			}
 
-			lptr->draw(dc, t_current_x, ceilf(t_current_y + ascent - 1), si, ei, m_text, pstyle);
+			lptr->draw(dc, t_current_x, ceilf(t_current_y + ascent - 1), si, ei, *m_text, pstyle);
 			if (fstart != fend)
 				drawfound(dc, lptr, t_current_x, t_current_y, ceilf(linespace), fstart, fend);
 			if (compstart != compend)
 				drawcomposition(dc, lptr, t_current_x, t_current_y, ceilf(linespace), compstart, compend, compconvstart, compconvend);
 		}
 
-		t_current_y += linespace;
+		t_current_y += ceilf(linespace);
 
 		lptr = lptr->next();
 	}
@@ -1617,8 +1594,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 		if (attrs != nil && (attrs -> flags & PA_HAS_BORDER_COLOR) != 0)
 		{
 			MCColor t_color;
-			t_color . pixel = attrs -> border_color;
-			MCscreen -> querycolor(t_color);
+			MCColorSetPixel(t_color, attrs -> border_color);
 			dc -> setforeground(t_color);
 		}
 		else
@@ -1644,7 +1620,8 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 				dc -> fillrect(MCU_make_rect(t_outer_rect . x, t_outer_rect . y, t_outer_rect . width, MCMax(gethgrid() ? 1 : 0, t_inner_border_rect . y - t_outer_rect . y)));
 			else
 			{
-				MCRectangle t_prev_inner, t_prev_outer;
+				MCRectangle t_prev_inner(kMCEmptyRectangle);
+				MCRectangle t_prev_outer(kMCEmptyRectangle);
 				prev() -> computerects(x, y, textwidth, prev() -> getwidth(), pgheight, t_prev_outer, t_prev_inner);
 				
 				// MW-2012-02-10: [[ FixedTable ]] The adjustrects method uses both rects so make
@@ -1706,17 +1683,17 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 			t_limit = parent -> getrect() . x + parent -> getrect() . width;
 
 			uint2 ct = 0; 
-			int4 x = t[0] + t_delta;
-			while (x <= t_limit)
+			int4 t_x = t[0] + t_delta;
+			while (t_x <= t_limit)
 			{
-				dc->drawline(x, t_inner_border_rect . y, x, t_inner_border_rect . y + t_inner_border_rect . height);
+				dc->drawline(t_x, t_inner_border_rect . y, t_x, t_inner_border_rect . y + t_inner_border_rect . height);
 				
 				if (ct < nt - 1)
-					x = t_delta + t[++ct];
+					t_x = t_delta + t[++ct];
 				else if (nt == 1)
-					x += t[0];
+					t_x += t[0];
 				else
-					x += t[nt - 1] - t[nt - 2];
+					t_x += t[nt - 1] - t[nt - 2];
 
 				// MW-2012-02-10: [[ FixedTable ]] If we have reached the final tab in fixed
 				//   table mode, we are done.
@@ -1732,335 +1709,6 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 		parent->setforeground(dc, DI_FORE, False, True);
 	}
 }
-
-#ifdef LEGACY_EXEC
-// PM-2014-04-10: [[Bug 11933]] Added a "Properties which" parameter. Previously this function was
-// returning True if any of the properties are set - rather than just the one that is being processed
-// (as specified by which). This had as a result that when the "effective" property of a chunk was queried,
-// empty was returned if the specified property was not set, instead of the nearest parent's property which has it set.
-Boolean MCParagraph::getatts(uint2 si, uint2 ei, Properties which, Font_textstyle textstyle, const char *&fname,
-                             uint2 &size, uint2 &fstyle, const MCColor *&color,
-                             const MCColor *&backcolor, int2 &shift, bool& specstyle,
-                             uint2 &mixed)
-{			    
-    Boolean has_font = False;
-    Boolean has_size = False;
-    Boolean has_style = False;
-	Boolean has_forecolor = False;
-	Boolean has_backcolor = False;
-	Boolean has_shift = False;
-    
-	const char *defname = fname;
-	uint2 defsize = size;
-	uint2 defstyle = fstyle;
-	bool defspecstyle = specstyle;
-	if (ei > gettextlength())
-		ei = gettextlength();
-	MCBlock *startptr = indextoblock(si, False);
-	MCBlock *bptr = startptr;
-	findex_t i, l;
-	bptr->GetRange(i, l);
-	
-	// MW-2009-01-16: [[ Bug 7548 ]] The problem here is that indextoblock() isn't
-	//   returning quite what we need. When inserting text, the block used for styling
-	//   is (in order):
-	//     - the empty block at the index (if any)
-	//     - the block to the immediate left (if any)
-	//     - the block to the immediate right.
-	//   In comparison, indextoblock returns the block after the first one containing
-	//   the index. Which is the following (in order):
-	//     - the empty block at the index (if any)
-	//     - the block to the immediate right (if any)
-	//     - the block to the immediate left.
-	//   Thus we need to adjust the output of indextoblock in the case of a [si, ei)
-	//   being empty.
-	if (si == ei && si == i && l != 0 && bptr != blocks)
-	{
-		bptr = bptr -> prev();
-		bptr -> GetRange(i, l);
-		startptr = bptr;
-	}
-	
-	do
-	{
-
-        switch (which)
-        {
-            case P_TEXT_FONT:
-                {
-                    const char *tname;
-                    if (bptr -> gettextfont(tname))
-                    {
-                        if (bptr == startptr)
-                            fname = tname;
-                        has_font = True;
-                    }
-                    else
-                        tname = defname;
-                    
-                    if (has_font)
-                        if (fname != tname)
-                            mixed |= MIXED_NAMES;
-                }
-                break;
-                
-            case P_TEXT_SIZE:
-                {
-                    uint2 tsize;
-                    if (bptr -> gettextsize(tsize))
-                    {
-                        if (bptr == startptr)
-                            size = tsize;
-                        has_size = True;
-                    }
-                    else
-                        tsize = defsize;
-                    
-                    if (has_size)
-                        if (tsize != size)
-                            mixed |= MIXED_SIZES;
-                }
-                break;
-            
-            case P_TEXT_STYLE:
-                {
-                    uint2 tstyle;
-                    bool tspecstyle;
-                    if (bptr -> gettextstyle(tstyle))
-                    {
-                        tspecstyle = MCF_istextstyleset(tstyle, textstyle);
-                        if (bptr == startptr)
-                        {
-                            fstyle = tstyle;
-                            specstyle = tspecstyle;
-                        }
-                        has_style = True;
-                    }
-                    else
-                        tstyle = defstyle, tspecstyle = defspecstyle;
-                    
-                    if (has_style)
-                    {
-                        if (tstyle != fstyle)
-                            mixed |= MIXED_STYLES;
-                        if (tspecstyle != specstyle)
-                            mixed |= MIXED_SPEC_STYLE;
-                    }
-                }
-                break;
-            
-            case P_FORE_COLOR:
-                {
-                    const MCColor *tcolor = color;
-                    if (bptr->getcolor(tcolor))
-                        if (has_forecolor)
-                        {
-                            if (tcolor->red != color->red || tcolor->green != color->green
-                                || tcolor->blue != color->blue)
-                                mixed |= MIXED_COLORS;
-                        }
-                        else
-                        {
-                            if (bptr != startptr)
-                                mixed |= MIXED_COLORS;
-                            has_forecolor = True;
-                            color = tcolor;
-                        }
-                        else
-                            if (has_forecolor)
-                                mixed |= MIXED_COLORS;
-                }
-                break;
-            
-            case P_BACK_COLOR:
-                {
-                    const MCColor *btcolor = color;
-                    if (bptr->getbackcolor(btcolor))
-                        if (has_backcolor)
-                        {
-                            if (btcolor->red != backcolor->red
-                                || btcolor->green != backcolor->green
-                                || btcolor->blue != backcolor->blue)
-                                mixed |= MIXED_COLORS;
-                        }
-                        else
-                        {
-                            if (bptr != startptr)
-                                mixed |= MIXED_COLORS;
-                            has_backcolor = True;
-                            backcolor = btcolor;
-                        }
-                        else
-                            if (has_backcolor)
-                                mixed |= MIXED_COLORS;
-                }
-                break;
-            
-            case P_TEXT_SHIFT:
-                {
-                    int2 tshift;
-                    if (bptr->getshift(tshift))
-                        if (has_shift)
-                        {
-                            if (tshift != shift)
-                                mixed |= MIXED_SHIFT;
-                        }
-                        else
-                        {
-                            if (bptr != startptr)
-                                mixed |= MIXED_SHIFT;
-                            has_shift = True;
-                            shift = tshift;
-                        }
-                        else
-                            if (has_shift)
-                                mixed |= MIXED_SHIFT;
-                }
-                break;
-            
-            default:
-                break;
-                
-            
-                
-        }
-		
-		bptr->getindex(i, l);
-		bptr = bptr->next();
-    }
-	while (i + l < ei);
-	
-	switch (which)
-    {
-        case P_TEXT_FONT:
-            return has_font;
-                    
-        case P_TEXT_SIZE:
-            return has_size;
-            
-        case P_TEXT_STYLE:
-            return has_style;
-            
-        case P_FORE_COLOR:
-            return has_forecolor;
-            
-        case P_BACK_COLOR:
-            return has_backcolor;
-            
-        case P_TEXT_SHIFT:
-            return has_shift;
-            
-        default:
-            return False;
-    }
-    
-}
-#endif
-
-#ifdef LEGACY_EXEC
-void MCParagraph::setatts(findex_t si, findex_t ei, Properties p, void *value, bool p_from_html)
-{
-	bool t_blocks_changed;
-	t_blocks_changed = false;
-	
-	// MP-2013-09-02: [[ FasterField ]] Keep track of changes.
-	bool t_needs_layout;
-	t_needs_layout = false;
-
-	defrag();
-	MCBlock *bptr = indextoblock(si, False);
-	findex_t i, l;
-	do
-	{
-		bptr->GetRange(i, l);
-		if (i < si)
-		{
-			MCBlock *tbptr = new MCBlock(*bptr);
-			bptr->append(tbptr);
-			bptr->SetRange(i, si - i);
-			tbptr->SetRange(si, l - (si - i));
-			bptr = bptr->next();
-			bptr->GetRange(i, l);
-			t_blocks_changed = true;
-		}
-		else
-			bptr->close();
-		if (i + l > ei)
-		{
-			MCBlock *tbptr = new MCBlock(*bptr);
-			// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
-			//   fontref so it can compute its.
-			if (opened)
-				tbptr->open(parent -> getfontref());
-			bptr->append(tbptr);
-			bptr->SetRange(i, ei - i);
-			tbptr->SetRange(ei, l - ei + i);
-			t_blocks_changed = true;
-		}
-		switch (p)
-		{
-		case P_FORE_COLOR:
-			bptr->setcolor((MCColor *)value);
-			break;
-		case P_BACK_COLOR:
-			bptr->setbackcolor((MCColor *)value);
-			break;
-		case P_TEXT_SHIFT:
-			bptr->setshift((uint4)(intptr_t)value);
-			// MP-2013-09-02: [[ FasterField ]] Shifting requires layout change.
-			t_needs_layout = true;
-			break;
-		case P_IMAGE_SOURCE:
-			{
-				bptr->setatts(p, value);
-				
-				// MP-2013-09-02: [[ FasterField ]] Image source changes require layout change.
-				t_needs_layout = true;
-				
-				// MW-2008-04-03: [[ Bug ]] Only add an extra block if this is coming from
-				//   html parsing.
-				if (p_from_html)
-				{
-					MCBlock *tbptr = new MCBlock(*bptr); // need a new empty block
-					tbptr->freerefs();                   // for HTML continuation
-					// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
-					//   fontref so it can compute its.
-					if (opened)
-						tbptr->open(parent -> getfontref());
-					bptr->append(tbptr);
-					tbptr->SetRange(ei, 0);
-					t_blocks_changed = true;
-				}
-			}
-			break;
-		default:
-			bptr->setatts(p, value);
-				
-			// MP-2013-09-02: [[ FasterField ]] Block attribute changes need layout.
-			t_needs_layout = true;
-			break;
-		}
-		// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
-		//   fontref so it can compute its.
-		if (opened)
-			bptr->open(parent -> getfontref());
-		bptr = bptr->next();
-	}
-	while (i + l < ei);
-
-	if (t_blocks_changed)
-	{
-		state |= PS_LINES_NOT_SYNCHED;
-	}
-	
-	// MP-2013-09-02: [[ FasterField ]] If attributes on existing blocks needing layout changed,
-	//   or the blocks themselves changed, we need layout.
-	if (t_needs_layout || t_blocks_changed)
-	{
-		needs_layout = true;
-	}
-}
-#endif
 
 // MW-2008-03-27: [[ Bug 5093 ]] Rewritten to more correctly insert blocks around
 //   imagesource characters.
@@ -2101,7 +1749,7 @@ MCBlock *MCParagraph::indextoblock(findex_t tindex, Boolean forinsert, bool for_
 					{
                         MCExecContext ctxt(nil, nil, nil);
 						MCBlock *t_new_block;
-						t_new_block = new MCBlock(*t_block);
+						t_new_block = new (nothrow) MCBlock(*t_block);
                         t_new_block -> SetImageSource(ctxt, kMCEmptyString);
 
 						// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
@@ -2129,7 +1777,7 @@ MCBlock *MCParagraph::indextoblock(findex_t tindex, Boolean forinsert, bool for_
 					{
                         MCExecContext ctxt(nil, nil, nil);
 						MCBlock *t_new_block;
-						t_new_block = new MCBlock(*t_block);
+						t_new_block = new (nothrow) MCBlock(*t_block);
                         t_new_block -> SetImageSource(ctxt, kMCEmptyString);
 
 						// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
@@ -2223,8 +1871,8 @@ void MCParagraph::join(bool p_preserve_zero_length_styles_if_zero)
 		return;
 	}
 
-	focusedindex = MCStringGetLength(m_text);
-	/* UNCHECKED */ MCStringAppend(m_text, pgptr->m_text);
+	focusedindex = MCStringGetLength(*m_text);
+	/* UNCHECKED */ MCStringAppend(*m_text, *pgptr->m_text);
 
 	MCBlock *bptr = blocks->prev();
 	bptr->append(pgptr->blocks);
@@ -2252,7 +1900,7 @@ void MCParagraph::replacetextwithparagraphs(findex_t p_start, findex_t p_finish,
     deletestring(p_start, p_finish);
 
     // Split the paragraph if needed
-    if (p_start < MCStringGetLength(m_text))
+    if (p_start < MCStringGetLength(*m_text))
         split(p_start);
 
     // Append the right part of the split to the end
@@ -2269,7 +1917,7 @@ void MCParagraph::replacetextwithparagraphs(findex_t p_start, findex_t p_finish,
     }
 
     // Append p_pglist to this if this is not the only, empty paragraph
-    if (MCStringIsEmpty(m_text) && next() == this)
+    if (MCStringIsEmpty(*m_text) && next() == this)
     {
         MCParagraph *t_old = this;
         delete t_old;
@@ -2288,10 +1936,20 @@ void MCParagraph::split(findex_t p_position)
     MCBlock *bptr = indextoblock(p_position, False);
 	findex_t skip = 0;
 	
-    if (p_position < MCStringGetLength(m_text) && TextIsLineBreak(GetCodepointAtIndex(p_position)))
+    // Reinstate original check for the presence of '\n' after the split.
+    // We believe this check was there as previously when importing text
+    // into a field, it would be set in a paragraph and then the paragraph
+    // would be iteratively split - which entailed removing the \n's.
+    // The 'm_text' field of a paragraph should never contain '\n' now so
+    // whilst we leave this check in (to be on the safe side) it should never
+    // trigger - hence the assert.
+    if (p_position < MCStringGetLength(*m_text) && GetCodepointAtIndex(p_position) == '\n')
+    {
+        MCAssert(false);
         skip = IncrementIndex(p_position) - p_position;
-	
-	MCParagraph *pgptr = new MCParagraph;
+    }
+    
+	MCParagraph *pgptr = new (nothrow) MCParagraph;
 	pgptr->parent = parent;
 
 	// MW-2012-01-25: [[ ParaStyles ]] Copy the attributes from the first para.
@@ -2300,14 +1958,15 @@ void MCParagraph::split(findex_t p_position)
 	//   list index.
 	pgptr -> setlistindex(0);
 
-	if (!MCStringIsEmpty(m_text))
+    pgptr->m_text.Reset();
+	if (!MCStringIsEmpty(*m_text))
 	{
-        MCRange t_range = MCRangeMake(p_position, MCStringGetLength(m_text) - p_position);
-		/* UNCHECKED */ MCStringMutableCopySubstring(m_text, t_range, pgptr->m_text);
-        /* UNCHECKED */ MCStringSubstring(m_text, MCRangeMake(0, p_position));
+        MCRange t_range = MCRangeMakeMinMax(p_position, MCStringGetLength(*m_text));
+		/* UNCHECKED */ MCStringMutableCopySubstring(*m_text, t_range, &pgptr->m_text);
+        /* UNCHECKED */ MCStringSubstring(*m_text, MCRangeMake(0, p_position));
 	}
 	else
-		/* UNCHECKED */ MCStringCreateMutable(0, pgptr->m_text);
+		/* UNCHECKED */ MCStringCreateMutable(0, &pgptr->m_text);
 
 	// Trim the block containing the split so that it ends at the split point
     bptr = indextoblock(p_position, False);
@@ -2317,7 +1976,7 @@ void MCParagraph::split(findex_t p_position)
 	
 	// Create a new block to cover the range from the split point to the end
 	// of the original block.
-	MCBlock *tbptr = new MCBlock(*bptr);
+	MCBlock *tbptr = new (nothrow) MCBlock(*bptr);
 	bptr->append(tbptr);
 	blocks->splitat(tbptr);
 	pgptr->blocks = tbptr;
@@ -2336,9 +1995,9 @@ void MCParagraph::split(findex_t p_position)
 	}
 
     // Set the focusedindex at the right position
-    if (focusedindex >= MCStringGetLength(m_text))
+    if (focusedindex >= MCStringGetLength(*m_text))
     {
-        pgptr -> focusedindex = focusedindex - MCStringGetLength(m_text);
+        pgptr -> focusedindex = focusedindex - MCStringGetLength(*m_text);
         focusedindex = 0;
     }
 	
@@ -2399,7 +2058,7 @@ void MCParagraph::deletestring(findex_t si, findex_t ei, MCFieldStylingMode p_st
 			sbptr = sbptr -> next();
 		}
 		MCBlock *t_empty_block;
-		t_empty_block = new MCBlock;
+		t_empty_block = new (nothrow) MCBlock;
 		t_empty_block -> setparent(this);
 		t_empty_block -> SetRange(si, 0);
 		if (sbptr == blocks)
@@ -2477,8 +2136,7 @@ void MCParagraph::deletestring(findex_t si, findex_t ei, MCFieldStylingMode p_st
 	}
 	
 	// Excise the deleted range from the paragraph text
-	uindex_t t_length = gettextlength();
-	/* UNCHECKED */ MCStringRemove(m_text, MCRangeMake(si, ei-si));
+	/* UNCHECKED */ MCStringRemove(*m_text, MCRangeMakeMinMax(si, ei));
 
 	// Eliminate any zero length blocks *after* one we might have ensured
 	// is present for styling purposes.
@@ -2494,9 +2152,9 @@ MCParagraph *MCParagraph::copystring(findex_t si, findex_t ei)
 {
 	// The string is copied by duplicating this paragraph and then removing all
 	// text outside of the range [si, ei). This preserves all attributes, etc
-	MCParagraph *pgptr = new MCParagraph(*this);
+	MCParagraph *pgptr = new (nothrow) MCParagraph(*this);
 	
-	if (ei != MCStringGetLength(m_text))
+	if (ei != MCStringGetLength(*m_text))
 	{
 		// Discard any text after the desired end index,
 		pgptr->focusedindex = ei;
@@ -2561,7 +2219,7 @@ void MCParagraph::finsertnobreak(MCStringRef p_string, MCRange t_range)
 	// If the byte length exceeds the space we have, truncate it.
 	uindex_t t_new_length, t_cur_length;
 	t_new_length = t_range.length;
-	t_cur_length = MCStringGetLength(m_text);
+	t_cur_length = MCStringGetLength(*m_text);
 	if (t_new_length >= PARAGRAPH_MAX_LEN - t_cur_length - 1)
 	{
 		t_new_length = PARAGRAPH_MAX_LEN - t_cur_length - 1;
@@ -2575,7 +2233,7 @@ void MCParagraph::finsertnobreak(MCStringRef p_string, MCRange t_range)
 		
 		// Insert the new text into the appropriate spot of the paragraph text
 		// TODO: truncation if the paragraph would be too long
-		/* UNCHECKED */ MCStringInsertSubstring(m_text, focusedindex, p_string, t_range);
+		/* UNCHECKED */ MCStringInsertSubstring(*m_text, focusedindex, p_string, t_range);
 
 		// The block containing the insert and subsequent blocks need to have
 		// their indices updated to account for the new text.
@@ -2615,7 +2273,7 @@ Boolean MCParagraph::finsertnew(MCStringRef p_string)
 		{
             // We found a line-break, so insert it into the current paragraph and then split at
 			// the end.
-			MCRange t_range = MCRangeMake(t_index, t_nextpara - t_index - 1);
+			MCRange t_range = MCRangeMakeMinMax(t_index, t_nextpara - 1);
             t_paragraph -> finsertnobreak(p_string, t_range);
 			t_paragraph -> split();
 			t_paragraph = t_paragraph -> next();
@@ -2629,7 +2287,7 @@ Boolean MCParagraph::finsertnew(MCStringRef p_string)
 		{
 			// We didn't find a line-break, so insert the string into the current paragraph and
 			// we must be done.
-			t_paragraph -> finsertnobreak(p_string, MCRangeMake(t_index, t_length - t_index));
+			t_paragraph -> finsertnobreak(p_string, MCRangeMakeMinMax(t_index, t_length));
 			t_index = t_length;
 		}
 	}
@@ -2695,13 +2353,13 @@ int2 MCParagraph::fdelete(Field_translations type, MCParagraph *&undopgptr)
         // Get the bit of text we need to decompose and do so
         MCAutoStringRef t_composed, t_decomposed;
         MCRange t_range;
-        t_range = MCRangeMake(t_charstart, t_charend - t_charstart);
-        /* UNCHECKED */ MCStringCopySubstring(m_text, t_range, &t_composed);
+        t_range = MCRangeMakeMinMax(t_charstart, t_charend);
+        /* UNCHECKED */ MCStringCopySubstring(*m_text, t_range, &t_composed);
         /* UNCHECKED */ MCStringNormalizedCopyNFD(*t_composed, &t_decomposed);
         
         // Replace the character with its decomposed form. This requires adjusting
         // all the blocks to alter their indices.
-        /* UNCHECKED */ MCStringReplace(m_text, t_range, *t_decomposed);
+        /* UNCHECKED */ MCStringReplace(*m_text, t_range, *t_decomposed);
         
         findex_t t_delta = MCStringGetLength(*t_decomposed) - MCStringGetLength(*t_composed);
         MCBlock *t_bptr = indextoblock(t_charstart, False);
@@ -3436,7 +3094,7 @@ void MCParagraph::inittext()
 {
 	deletelines();
 	deleteblocks();
-	blocks = new MCBlock;
+	blocks = new (nothrow) MCBlock;
 	blocks->setparent(this);
 	blocks->SetRange(0, gettextlength());
 	state |= PS_LINES_NOT_SYNCHED;
@@ -3477,7 +3135,7 @@ void MCParagraph::marklines(findex_t si, findex_t ei)
 
 // MW-2012-01-25: [[ ParaStyles ]] The 'include_space' parameter, if true, means that
 //   the returned rect will take into account space before and after.
-MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_include_space)
+MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_include_space, MCParagraphCursorType p_type)
 {
 	if (fi < 0)
 		fi = focusedindex;
@@ -3494,7 +3152,7 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 
 	// MW-2012-01-08: [[ ParaStyles ]] Top of text starts after spacing above.
 	MCRectangle drect;
-	drect.y = 1 + t_space_above;
+	drect.y = int2(1 + t_space_above);
 
 	MCLine *lptr;
 	findex_t i, l;
@@ -3513,80 +3171,19 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 		t_first_line = false;
 	};
 	if (fixedheight == 0)
-		drect.height = ceilf(lptr->GetHeight()) - 2;
+		drect.height = uint2(ceilf(lptr->GetHeight()) - 2);
 	else
 		drect.height = fixedheight - 2;
-	drect.x = lptr->GetCursorXPrimary(fi, moving_forward);
-	
-	// MW-2012-01-08: [[ ParaStyles ]] If we want the 'full height' of the
-	//   cursor (inc space), adjust appropriately depending on which line we are
-	//   on.
-	if (p_include_space)
-	{
-		if (t_first_line)
-		{
-			drect.y -= t_space_above;
-			drect.height += t_space_above;
-		}
-		if (lptr -> next() == lines)
-			drect.height += t_space_below;
+    if (p_type == kMCParagraphCursorTypeFull ||
+        p_type == kMCParagraphCursorTypePrimary)
+    {
+        drect.x = int2(lptr->GetCursorXPrimary(fi, moving_forward));
 	}
-    
-    // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
-    if (!getvgrid())
-        drect.x += computelineoffset(lptr);
-
-	drect.width = cursorwidth;
-
-	return drect;
-}
-
-// MW-2012-01-25: [[ ParaStyles ]] The 'include_space' parameter, if true, means that
-//   the returned rect will take into account space before and after.
-MCRectangle MCParagraph::getsplitcursorrect(findex_t fi, uint2 fixedheight, bool p_include_space, bool primary)
-{
-	if (fi < 0)
-		fi = focusedindex;
-    
-	// MW-2005-08-31: If we get here even though we have no lines,
-	//   noflow to make up for it.
-	if (lines == NULL)
-		noflow();
-    
-	// MW-2012-01-08: [[ ParaStyles ]] Compute spacing before and after.
-	int32_t t_space_above, t_space_below;
-	t_space_above = computetopmargin();
-	t_space_below = computebottommargin();
-    
-	// MW-2012-01-08: [[ ParaStyles ]] Top of text starts after spacing above.
-	MCRectangle drect;
-	drect.y = t_space_above;
-    
-	MCLine *lptr;
-	findex_t i, l;
-	bool t_first_line;
-	lptr = lines;
-	lptr->GetRange(i, l);
-	t_first_line = true;
-	while (fi >= i + l && lptr->next() != lines)
-	{
-		if (fixedheight == 0)
-			drect.y += floorf(lptr->GetHeight());
-		else
-			drect.y += fixedheight;
-		lptr = lptr->next();
-		lptr->GetRange(i, l);
-		t_first_line = false;
-	};
-	if (fixedheight == 0)
-		drect.height = floorf(lptr->GetHeight()) - 2;
-	else
-		drect.height = fixedheight - 2;
-    if (primary)
-        drect.x = lptr->GetCursorXPrimary(fi, moving_forward);
     else
-        drect.x = lptr->GetCursorXSecondary(fi, moving_forward);
-	
+    {
+        drect.x = int2(lptr->GetCursorXSecondary(fi, moving_forward));
+    }
+    
 	// MW-2012-01-08: [[ ParaStyles ]] If we want the 'full height' of the
 	//   cursor (inc space), adjust appropriately depending on which line we are
 	//   on.
@@ -3604,26 +3201,26 @@ MCRectangle MCParagraph::getsplitcursorrect(findex_t fi, uint2 fixedheight, bool
     // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
     if (!getvgrid())
         drect.x += computelineoffset(lptr);
-    
+
 	drect.width = cursorwidth;
-    
-    // Adjust the height
-    if (primary)
+
+    // Adjust the height - if primary or secondary cursor is requested.
+    if (p_type == kMCParagraphCursorTypePrimary)
     {
         drect.height /= 2;
     }
-    else
+    else if (p_type == kMCParagraphCursorTypeSecondary)
     {
         drect.y += drect.height/2;
         drect.height /= 2;
     }
-    
+
 	return drect;
 }
 
 bool MCParagraph::copytextasstringref(MCStringRef& r_string)
 {
-	return MCStringCopy(m_text, r_string);
+	return MCStringCopy(*m_text, r_string);
 }
 
 void MCParagraph::settext(MCStringRef p_string)
@@ -3631,22 +3228,22 @@ void MCParagraph::settext(MCStringRef p_string)
 	deletelines();
 	deleteblocks();
 	
-	MCValueRelease(m_text);
-	/* UNCHECKED */ MCStringMutableCopy(p_string, m_text);
+	m_text.Reset();
+	/* UNCHECKED */ MCStringMutableCopy(p_string, &m_text);
 	
-	blocks = new MCBlock;
+	blocks = new (nothrow) MCBlock;
 	blocks->setparent(this);
-	blocks->SetRange(0, MCStringGetLength(m_text));
+	blocks->SetRange(0, MCStringGetLength(*m_text));
 }
 
 void MCParagraph::resettext(MCStringRef p_string)
 {
-	MCValueRelease(m_text);
-	/* UNCHECKED */ MCStringMutableCopy(p_string, m_text);
+    m_text.Reset();
+	/* UNCHECKED */ MCStringMutableCopy(p_string, &m_text);
 	findex_t i, l;
 	if (blocks == NULL)
 	{
-		blocks = new MCBlock;
+		blocks = new (nothrow) MCBlock;
 		blocks->setparent(this);
 
 		state |= PS_LINES_NOT_SYNCHED;
@@ -4089,7 +3686,7 @@ findex_t MCParagraph::findwordbreakbefore(MCBlock *p_block, findex_t p_index)
 	// Create the word break iterator
     MCBreakIteratorRef t_breaker;
     MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, t_breaker);
-    MCLocaleBreakIteratorSetText(t_breaker, m_text);
+    MCLocaleBreakIteratorSetText(t_breaker, *m_text);
     
     // Find the preceding word break
     findex_t t_break;
@@ -4104,14 +3701,14 @@ findex_t MCParagraph::findwordbreakafter(MCBlock *p_block, findex_t p_index)
 	// Create the word break iterator
     MCBreakIteratorRef t_breaker;
     MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, t_breaker);
-    MCLocaleBreakIteratorSetText(t_breaker, m_text);
+    MCLocaleBreakIteratorSetText(t_breaker, *m_text);
     
     // Find the succeeding word break
     findex_t t_break;
     t_break = MCLocaleBreakIteratorAfter(t_breaker, p_index);
     MCLocaleBreakIteratorRelease(t_breaker);
     
-    return (t_break == kMCLocaleBreakIteratorDone) ? MCStringGetLength(m_text) : t_break;
+    return (t_break == kMCLocaleBreakIteratorDone) ? MCStringGetLength(*m_text) : t_break;
 }
 
 void MCParagraph::sethilite(Boolean newstate)
@@ -4196,77 +3793,6 @@ bool MCParagraph::getflagstate(uint32_t flag, findex_t si, findex_t ei, bool& r_
 
 // This method accumulates the ranges of the paragraph that have 'flagged' set
 // to true. The output is placed in ep as a return-delimited list, with indices
-// adjusted by the 'delta'.
-#ifdef LEGACY_EXEC
-void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t si, findex_t ei, int32_t p_delta)
-{
-	// If the paragraph is empty, there is nothing to do.
-	if (gettextlength() == 0)
-		return;
-	
-	if (ei > gettextlength())
-		ei = gettextlength();
-
-	// Get the block and make appropriate adjustments to ensure we are looking
-	// at the right one.
-	MCBlock *bptr = indextoblock(si, False);
-	findex_t i, l;
-	bptr->GetRange(i, l);
-	if (si == ei && si == i && l != 0 && bptr != blocks)
-	{
-		bptr = bptr -> prev();
-		bptr -> GetRange(i, l);
-	}
-
-	// Now loop through all the blocks until we reach the end.
-	int32_t t_flagged_start, t_flagged_end;
-	t_flagged_start = -1;
-	t_flagged_end = -1;
-	for(;;)
-	{
-		// Ignore any blocks of zero width;
-		if (bptr -> GetLength() != 0)
-		{
-			// If this block is flagged, update the start/end.
-			if (bptr -> getflagged())
-			{
-				// If we don't have a start, take the start of this block.
-				if (t_flagged_start == -1)
-					t_flagged_start = MCMax(si, i);
-
-				// Always extend to the end.
-				t_flagged_end = MCMin(ei, i + l);
-			}
-
-			// If we have a flagged range and we are reaching the end or have a block
-			// which is not flagged then append the range.
-			if (t_flagged_start != -1 && (!bptr -> getflagged() || i + l >= ei))
-			{
-				if (!ep . isempty())
-					ep . appendnewline();
-				
-				// MW-2012-02-24: [[ FieldChars ]] Map the field indices back to char indices.
-				findex_t t_start, t_end;
-				t_start = p_delta + t_flagged_start;
-				t_end = p_delta + t_flagged_end;
-				parent -> unresolvechars(p_part_id, t_start, t_end);
-				ep.appendstringf("%d,%d", t_start + 1, t_end);
-
-				t_flagged_start = t_flagged_end = -1;
-			}
-
-			// If we have reached the end, break.
-			if (i + l >= ei)
-				break;
-		}
-		
-		// Advance to the end of the block.
-		bptr = bptr -> next();
-		bptr -> GetRange(i, l);
-	}
-}
-#endif
-
 // This method accumulates the ranges of the paragraph that have 'flagged' set
 // to true. The output is placed in the uinteger_t array, with indices
 // adjusted by the 'delta'.

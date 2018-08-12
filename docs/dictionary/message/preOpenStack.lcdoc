@@ -4,15 +4,16 @@ Type: message
 
 Syntax: preOpenStack
 
-Summary: Sent to the destination <card> when you open a <stack>.
+Summary:
+Sent to the destination <card> when you open a <stack>.
 
 Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on preOpenStack -- center the stack on the main screen
@@ -21,12 +22,25 @@ on preOpenStack -- center the stack on the main screen
 end preOpenStack
 
 Description:
-Handle the <preOpenStack> <message> to update a <card(object)|card's> appearance before the <card(keyword)> appears on screen.
+Handle the <preOpenStack> <message> to update a <card(object)|card's>
+appearance before the <card(keyword)> appears on screen.
 
-The <preOpenStack> <message> is sent before the <openStack> <message>. Unlike <openStack>, <preOpenStack> <handler|handlers> are <execute|executed> before the <stack window> appears. Because of this, the <preOpenStack> <handler> is a good place to put code that adjusts the size, position, and appearance of <object|objects>; the changes are made before the <stack> appears.
+The <preOpenStack> <message> is sent before the <openStack> <message>.
+Unlike <openStack>, <preOpenStack> <handler|handlers> are
+<execute|executed> before the <stack window> appears. Because of this,
+the <preOpenStack> <handler> is a good place to put code that adjusts
+the size, position, and appearance of <object|objects>; the changes are
+made before the <stack> appears.
 
-The actual navigation is not triggered by the <preOpenStack> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <stack> from opening.
+The actual navigation is not triggered by the <preOpenStack> <message>,
+so <trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <stack> from opening.
 
-References: card (keyword), openStack (message), closeStack (message), preOpenCard (message), stack (object), object (object), card (object), handler (glossary), trap (glossary), message (glossary), stack window (glossary), execute (glossary), pass (control_st)
+References: pass (control structure), object (glossary),
+handler (glossary), trap (glossary), message (glossary),
+stack window (glossary), execute (glossary), card (keyword),
+openStack (message), closeStack (message), preOpenCard (message),
+stack (object), card (object)
 
 Tags: navigation
+

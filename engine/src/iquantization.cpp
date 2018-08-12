@@ -60,9 +60,8 @@ bool init_s_dist_lookup()
 
 uint32_t MCImageMapColorToPalette(uint32_t p_pixel, MCColor *p_palette, uint32_t p_palette_size)
 {
-	int32_t rb = (p_pixel >> 16) & 0xFF;
-	int32_t gb = (p_pixel >> 8) & 0xFF;
-	int32_t bb = p_pixel & 0xFF;
+	uint8_t rb, gb, bb, ab;
+	MCGPixelUnpackNative(p_pixel, rb, gb, bb, ab);
 
 	uint32_t t_mindist = MAXUINT4;
 	uint32_t t_mincell = 0;
@@ -75,15 +74,15 @@ uint32_t MCImageMapColorToPalette(uint32_t p_pixel, MCColor *p_palette, uint32_t
 	{
 #ifdef IQSQUARELOOKUP
 		uint32_t t_dist = 0;
-		uint32_t r = MCU_abs(rb - (p_palette[i].red >> 8));
+		uint32_t r = MCU_abs(int32_t(rb) - (p_palette[i].red >> 8));
 		t_dist += s_square_lookup[r];
 		if (t_dist >= t_mindist)
 			continue;
-		uint32_t g = MCU_abs(gb - (p_palette[i].green >> 8));
+		uint32_t g = MCU_abs(int32_t(gb) - (p_palette[i].green >> 8));
 		t_dist += s_square_lookup[g];
 		if (t_dist >= t_mindist)
 			continue;
-		uint32_t b = MCU_abs(bb - (p_palette[i].blue >> 8));
+		uint32_t b = MCU_abs(int32_t(bb) - (p_palette[i].blue >> 8));
 		t_dist += s_square_lookup[b];
 		if (t_dist >= t_mindist)
 			continue;
@@ -122,11 +121,12 @@ uint32_t MCImageMapColorToPalette(uint32_t p_pixel, MCColor *p_palette, uint32_t
 
 static inline uint32_t apply_error(uint32_t p_pixel, int32_t p_re, int32_t p_ge, int32_t p_be)
 {
-	uint32_t r, g, b;
-	r = MCU_min(0xFF, MCU_max(0, (int32_t)((p_pixel >> 16) & 0xFF) + p_re));
-	g = MCU_min(0xFF, MCU_max(0, (int32_t)((p_pixel >> 8) & 0xFF) + p_ge));
-	b = MCU_min(0xFF, MCU_max(0, (int32_t)((p_pixel >> 0) & 0xFF) + p_be));
-	return (p_pixel & 0xFF000000) | (r << 16) | (g << 8) | b;
+	uint8_t r, g, b, a;
+	MCGPixelUnpackNative(p_pixel, r, g, b, a);
+	r = MCClamp(int32_t(r) + p_re, 0, 255);
+	g = MCClamp(int32_t(g) + p_ge, 0, 255);
+	b = MCClamp(int32_t(b) + p_be, 0, 255);
+	return MCGPixelPackNative(r, g, b, a);
 }
 
 static inline uint32_t apply_error(uint32_t p_pixel, int32_t *p_errors)
@@ -187,14 +187,14 @@ bool MCImageQuantizeImageBitmap(MCImageBitmap *p_bitmap, MCColor *p_colors, uind
 			while (width--)
 			{
 				uint32_t t_pixel = *t_src_row++;
-				if ((t_pixel >> 24) == 0 && p_add_transparency_index)
+				if (MCGPixelGetNativeAlpha(t_pixel) == 0 && p_add_transparency_index)
 				{
 					t_success = MCImageIndexedBitmapAddTransparency(t_indexed);
 					if (t_success)
 						*t_dst_row++ = t_indexed->transparent_index;
 				}
 				else
-					*t_dst_row++ = MCImageMapColorToPalette(t_pixel & 0xFFFFFF, p_colors, p_color_count);
+					*t_dst_row++ = MCImageMapColorToPalette(t_pixel, p_colors, p_color_count);
 			}
 		}
 		else
@@ -212,7 +212,7 @@ bool MCImageQuantizeImageBitmap(MCImageBitmap *p_bitmap, MCColor *p_colors, uind
 			while (width--)
 			{
 				uint32_t t_pixel = *t_src_row;
-				if ((t_pixel >> 24) == 0 && p_add_transparency_index)
+				if (MCGPixelGetNativeAlpha(t_pixel) == 0 && p_add_transparency_index)
 				{
 					t_success = MCImageIndexedBitmapAddTransparency(t_indexed);
 					if (t_success)
@@ -220,11 +220,14 @@ bool MCImageQuantizeImageBitmap(MCImageBitmap *p_bitmap, MCColor *p_colors, uind
 				}
 				else
 				{
-					t_pixel = apply_error(t_pixel & 0xFFFFFF, &t_current_errors[t_error_index]);
+					t_pixel = apply_error(t_pixel, &t_current_errors[t_error_index]);
 					uint32_t t_index = MCImageMapColorToPalette(t_pixel, p_colors, p_color_count);
-					int32_t re = (int32_t)((t_pixel >> 16) & 0xFF) - (int32_t)(p_colors[t_index].red >> 8);
-					int32_t ge = (int32_t)((t_pixel >> 8) & 0xFF) - (int32_t)(p_colors[t_index].green >> 8);
-					int32_t be = (int32_t)((t_pixel >> 0) & 0xFF) - (int32_t)(p_colors[t_index].blue >> 8);
+					uint8_t r, g, b, a;
+					MCGPixelUnpackNative(t_pixel, r, g, b, a);
+					
+					int32_t re = (int32_t)(r) - (int32_t)(p_colors[t_index].red >> 8);
+					int32_t ge = (int32_t)(g) - (int32_t)(p_colors[t_index].green >> 8);
+					int32_t be = (int32_t)(b) - (int32_t)(p_colors[t_index].blue >> 8);
 					*t_dst_row = t_index;
 					if (width > 0)
 						accumulate_error(t_current_errors + t_error_index + (t_direction * 3), re, ge, be, 7);
@@ -345,7 +348,6 @@ bool MCImageGenerateWebsafePalette(uint32_t &r_palette_size, MCColor *&r_colours
 					r_colours[t_index].red = (red << 8) | red;
 					r_colours[t_index].green = (green << 8) | green;
 					r_colours[t_index].blue = (blue << 8) | blue;
-					r_colours[t_index++].pixel = 0xFF000000 | (red << 16) | (green << 8) | blue;
 				}
 		r_palette_size = t_index;
 	}

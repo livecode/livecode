@@ -4,20 +4,25 @@ Type: keyword
 
 Syntax: end repeat
 
-Summary: Ends a <repeat> <control> <control structure|structure>.
+Summary:
+Ends a <repeat> <control> <control structure|structure>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 end repeat
 
 Description:
-Use the <end repeat> <keyword> to mark the end of a <repeat> <control structure>.
+Use the <end repeat> <keyword> to mark the end of a <repeat> 
+<control structure>. 
 
 The <end repeat> <keyword> occurs on a line by itself.
 
-References: end (keyword), control (keyword), keyword (glossary), control structure (glossary), next repeat (control_st), repeat (control_st)
+References: next repeat (control structure), repeat (control structure),
+keyword (glossary), control structure (glossary), end (keyword),
+control (keyword)
+

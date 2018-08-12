@@ -2,15 +2,17 @@ Name: yScale
 
 Type: property
 
-Syntax: set the yScale of <EPSObject> to <number> 
+Syntax: set the yScale of <EPSObject> to <number>
 
-Summary: Specifies the ratio of the height of an <EPS|EPS object's> <PostScript> bounding box to the object's screen height.
+Summary:
+Specifies the ratio of the height of an <EPS|EPS object's> <PostScript>
+bounding box to the object's screen height.
 
 Introduced: 1.0
 
 OS: linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Example:
 set the yScale of last EPS to 2 -- PS image twice the height of screen
@@ -18,19 +20,32 @@ set the yScale of last EPS to 2 -- PS image twice the height of screen
 Example:
 set the yScale of EPS "Guido" to 0.25 -- one-fourth the height
 
-Value: The <yScale> of an <EPS|EPS object> is a positive number.
+Value:
+The <yScale> of an <EPS|EPS object> is a positive number.
 
 Description:
-Use the <yScale> <property> to control an <EPS|EPS object's> screen appearance.
+Use the <yScale> <property> to control an <EPS|EPS object's> screen
+appearance. 
 
-The <number> 1 indicates no scaling--that is, the <EPS|EPS object's> height is the same as the height specified by the <PostScript> code it contains. Numbers greater than one indicate that the <object|object's> height is less than the <PostScript> height; the screen <object> is scaled down. Numbers less than one indicate that the <object|object's> height is greater than the <PostScript> height, and the screen <object> is scaled up from the <PostScript>.
+The <number> 1 indicates no scaling--that is, the <EPS|EPS object's>
+height is the same as the height specified by the <PostScript> code it
+contains. Numbers greater than one indicate that the <object|object's>
+height is less than the <PostScript> height; the screen
+<object(glossary)> is scaled down. Numbers less than one indicate that
+the <object|object's> height is greater than the <PostScript> height,
+and the screen <object(glossary)> is scaled up from the <PostScript>.
 
 In geometric terms, yScale = yExtent/height.
 
-If the object's <scaleIndependently property> is false, the <yScale> <property> is equal to the <scale> of the <object>.
+If the object's <scaleIndependently> <property> is false, the <yScale>
+<property> is equal to the <scale> of the <object(glossary)>.
 
-This property is supported only on Unix systems with Display PostScript installed.
+This property is supported only on Unix systems with Display PostScript
+installed. 
 
-References: scaleIndependently (property), postScript (property), scale (property), scaleIndependently property (property), EPS (glossary), property (glossary), object (object)
+References: EPS (glossary), property (glossary), object (glossary),
+scaleIndependently (property), postScript (property), scale (property),
+
 
 Tags: multimedia
+

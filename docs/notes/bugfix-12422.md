@@ -1,1 +1,0 @@
-# Sort puts a "p" after the last character and foreign letters is not sorted correct

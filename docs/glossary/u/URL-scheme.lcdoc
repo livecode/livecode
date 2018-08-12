@@ -1,12 +1,16 @@
 Name: URL scheme
 
-Synonyms: scheme,URL scheme
+Synonyms: scheme, url scheme
 
 Type: glossary
 
 Description:
-A type of <URL>, specified by the part of the <URL> before the "://". URL schemes supported by LiveCode unclude <http>, <ftp>, <file>, <resfile>, and <binfile>.
+A type of <URL>, specified by the part of the <URL> before the "://".
+URL schemes supported by LiveCode include <http>, <ftp>, <file>,
+<resfile>, and <binfile>.
 
-References: URL (glossary), FTP (glossary), file (glossary), binfile (glossary), HTTP (glossary), resfile (glossary)
+References: URL (glossary), FTP (glossary), file (glossary),
+binfile (keyword), HTTP (glossary), resfile (keyword)
 
 Tags: networking
+
