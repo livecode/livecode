@@ -136,11 +136,11 @@ metadata dayHourHandColor.label is "Hour hand color (day)"
 Syntax: set the nightHourHandColor of <widget> to <color>
 Syntax: get the nightHourHandColor of <widget>
 
-Summary: Determines the color of the numbers on the clock during the night
+Summary: Determines the color of the hour hand on the clock during the night
 
 Description:
-Use the <nightHourHandColor> property to get or set the text color of the numbers
-on the face of the clock during the night. To determine if the clock is
+Use the <nightHourHandColor> property to get or set the color of the hour
+hand of the clock during the night. To determine if the clock is
 displaying its daytime or night-time colors, use the read-only property
 <isDay>.
 */
@@ -194,7 +194,7 @@ public handler OnLoad(in pProperties as Array)
 	if "nightNumberColor" is among the keys of pProperties then
 		put stringToColor(pProperties["nightNumberColor"]) into mNightNumberColor
 	else
-		put color kBlack into mNightNumberColor
+		put color kWhite into mNightNumberColor
 	end if
 	if "dayHourHandColor" is among the keys of pProperties then
 		put stringToColor(pProperties["dayHourHandColor"]) into mDayHourHandColor
