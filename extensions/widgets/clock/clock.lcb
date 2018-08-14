@@ -114,6 +114,42 @@ metadata nightNumberColor.default is "255,255,255"
 metadata nightNumberColor.section is "Colors"
 metadata nightNumberColor.label is "Number color (night)"
 
+/**
+Syntax: set the dayHourHandColor of <widget> to <color>
+Syntax: get the dayHourHandColor of <widget>
+
+Summary: Determines the color of the hour hand on the clock during the day
+
+Description:
+Use the <dayHourHandColor> property to get or set the color of the hour
+hand of the clock during the day. To determine if the clock is
+displaying its daytime or night-time colors, use the read-only property
+<isDay>.
+*/
+property dayHourHandColor get getDayHourHandColor set setDayHourHandColor
+metadata dayHourHandColor.editor is "com.livecode.pi.color"
+metadata dayHourHandColor.default is "0,0,0"
+metadata dayHourHandColor.section is "Colors"
+metadata dayHourHandColor.label is "Hour hand color (day)"
+
+/**
+Syntax: set the nightHourHandColor of <widget> to <color>
+Syntax: get the nightHourHandColor of <widget>
+
+Summary: Determines the color of the numbers on the clock during the night
+
+Description:
+Use the <nightHourHandColor> property to get or set the text color of the numbers
+on the face of the clock during the night. To determine if the clock is
+displaying its daytime or night-time colors, use the read-only property
+<isDay>.
+*/
+property nightHourHandColor get getNightHourHandColor set setNightHourHandColor
+metadata nightHourHandColor.editor is "com.livecode.pi.color"
+metadata nightHourHandColor.default is "255,255,255"
+metadata nightHourHandColor.section is "Colors"
+metadata nightHourHandColor.label is "Hour hand color (night)"
+
 --
 
 -- private instance variables
@@ -125,6 +161,8 @@ private variable mCentre as List
 private variable mFontSize 		as Real
 private variable mDayNumberColor as Color
 private variable mNightNumberColor as Color
+private variable mDayHourHandColor as Color
+private variable mNightHourHandColor as Color
 --
 
 -- constants
@@ -141,6 +179,8 @@ public handler OnSave(out rProperties as Array)
 	put mTimeZone into rProperties["timeZone"]
 	put colorToString(mDayNumberColor,true) into rProperties["dayNumberColor"]
 	put colorToString(mNightNumberColor,true) into rProperties["nightNumberColor"]
+	put colorToString(mDayHourHandColor,true) into rProperties["dayHourHandColor"]
+	put colorToString(mNightHourHandColor,true) into rProperties["nightHourHandColor"]
 end handler
 
 public handler OnLoad(in pProperties as Array)
@@ -156,6 +196,16 @@ public handler OnLoad(in pProperties as Array)
 	else
 		put color kBlack into mNightNumberColor
 	end if
+	if "dayHourHandColor" is among the keys of pProperties then
+		put stringToColor(pProperties["dayHourHandColor"]) into mDayHourHandColor
+	else
+		put color kBlack into mDayHourHandColor
+	end if
+	if "nightHourHandColor" is among the keys of pProperties then
+		put stringToColor(pProperties["nightHourHandColor"]) into mNightHourHandColor
+	else
+		put color kWhite into mNightHourHandColor
+	end if
 end handler
 
 -- called when widget is created
@@ -166,6 +216,8 @@ public handler OnCreate()
 	put 12 into mFontSize
 	put color kBlack into mDayNumberColor
 	put color kWhite into mNightNumberColor
+	put color kBlack into mDayHourHandColor
+	put color kWhite into mNightHourHandColor
 end handler
 
 public handler OnOpen()
@@ -338,6 +390,13 @@ private handler getPaint(in pObject as String) returns Paint
 			return solid paint with mNightNumberColor
 		end if
 
+	else if pObject is "hour hand" then
+		if mIsDay is true then
+			return solid paint with mDayHourHandColor
+		else
+			return solid paint with mNightHourHandColor
+		end if
+
 	else
 		if mIsDay is true then
 			return solid paint with color kBlack
@@ -425,6 +484,24 @@ end handler
 
 public handler setNightNumberColor(in pColor as String)
 	put stringToColor(pColor) into mNightNumberColor
+	redraw all
+end handler
+
+public handler getDayHourHandColor() returns String
+	return colorToString(mDayHourHandColor, true)
+end handler
+
+public handler setDayHourHandColor(in pColor as String)
+	put stringToColor(pColor) into mDayHourHandColor
+	redraw all
+end handler
+
+public handler getNightHourHandColor() returns String
+	return colorToString(mNightHourHandColor, true)
+end handler
+
+public handler setNightHourHandColor(in pColor as String)
+	put stringToColor(pColor) into mNightHourHandColor
 	redraw all
 end handler
 
