@@ -970,7 +970,8 @@ bool MCArraysSplitIndexes(MCNameRef p_key, integer_t*& r_indexes, uindex_t& r_co
 			return false;
 		
         MCAutoNumberRef t_number;
-        if (!MCNumberParse(*t_substring, &t_number))
+        
+        if (!MCNumberParseInteger(*t_substring, &t_number))
         {
             if (!t_indexes . Push(0))
 				return false;
@@ -979,12 +980,6 @@ bool MCArraysSplitIndexes(MCNameRef p_key, integer_t*& r_indexes, uindex_t& r_co
             break;
         }
         
-        if (!MCNumberIsInteger(*t_number))
-        {
-            r_all_integers = false;
-            break;
-        }
-
         if (!t_indexes . Push(MCNumberFetchAsInteger(*t_number)))
 			return false;
 			
