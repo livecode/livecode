@@ -33,6 +33,7 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.math
+use com.livecode.library.widgetutils
 --
 
 -- adding metadata to ensure the extension displays correctly in livecode
@@ -76,6 +77,43 @@ UTC that the clock should display.
 property timeZone		get mTimeZone		set setTimeZone
 metadata timeZone.editor is "com.livecode.pi.timezone"
 metadata timeZone.label is "Timezone"
+
+/**
+Syntax: set the dayNumberColor of <widget> to <color>
+Syntax: get the dayNumberColor of <widget>
+
+Summary: Determines the color of the numbers on the clock during the day
+
+Description:
+Use the <dayNumberColor> property to get or set the text color of the numbers
+on the face of the clock during the day. To determine if the clock is
+displaying its daytime or night-time colors use the read-only property
+<isDay>.
+*/
+property dayNumberColor get getDayNumberColor set setDayNumberColor
+metadata dayNumberColor.editor is "com.livecode.pi.color"
+metadata dayNumberColor.default is "0,0,0"
+metadata dayNumberColor.section is "Colors"
+metadata dayNumberColor.label is "Number color (day)"
+
+/**
+Syntax: set the nightNumberColor of <widget> to <color>
+Syntax: get the nightNumberColor of <widget>
+
+Summary: Determines the color of the numbers on the clock during the night
+
+Description:
+Use the <nightNumberColor> property to get or set the text color of the numbers
+on the face of the clock during the night. To determine if the clock is
+displaying its daytime or night-time colors use the read-only property
+<isDay>.
+*/
+property nightNumberColor get getNightNumberColor set setNightNumberColor
+metadata nightNumberColor.editor is "com.livecode.pi.color"
+metadata nightNumberColor.default is "255,255,255"
+metadata nightNumberColor.section is "Colors"
+metadata nightNumberColor.label is "Number color (night)"
+
 --
 
 -- private instance variables
@@ -85,6 +123,8 @@ private variable mCurrentTime 	as List
 private variable mRadius as Number
 private variable mCentre as List
 private variable mFontSize 		as Real
+private variable mDayNumberColor as Color
+private variable mNightNumberColor as Color
 --
 
 -- constants
@@ -99,10 +139,23 @@ public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 
 	put mTimeZone into rProperties["timeZone"]
+	put colorToString(mDayNumberColor,true) into rProperties["dayNumberColor"]
+	put colorToString(mNightNumberColor,true) into rProperties["nightNumberColor"]
 end handler
 
 public handler OnLoad(in pProperties as Array)
 	put pProperties["timeZone"] into mTimeZone
+
+	if "dayNumberColor" is among the keys of pProperties then
+		put stringToColor(pProperties["dayNumberColor"]) into mDayNumberColor
+	else
+		put color kBlack into mDayNumberColor
+	end if
+	if "nightNumberColor" is among the keys of pProperties then
+		put stringToColor(pProperties["nightNumberColor"]) into mNightNumberColor
+	else
+		put color kBlack into mNightNumberColor
+	end if
 end handler
 
 -- called when widget is created
@@ -111,6 +164,8 @@ public handler OnCreate()
 	put false into mIsDay
 	put [0,0,0] into mCurrentTime
 	put 12 into mFontSize
+	put color kBlack into mDayNumberColor
+	put color kWhite into mNightNumberColor
 end handler
 
 public handler OnOpen()
@@ -276,6 +331,13 @@ private handler getPaint(in pObject as String) returns Paint
 	else if pObject is "second hand" or pObject is "inner nub" then
 		return solid paint with color kRed
 
+	else if pObject is "numbers" then
+		if mIsDay is true then
+			return solid paint with mDayNumberColor
+		else
+			return solid paint with mNightNumberColor
+		end if
+
 	else
 		if mIsDay is true then
 			return solid paint with color kBlack
@@ -345,6 +407,24 @@ public handler setTimeZone(in pTimeZone as optional Number) returns nothing
 
 	put pTimeZone into mTimeZone
 	put getTimeComponents() into mCurrentTime
+	redraw all
+end handler
+
+public handler getDayNumberColor() returns String
+	return colorToString(mDayNumberColor, true)
+end handler
+
+public handler setDayNumberColor(in pColor as String)
+	put stringToColor(pColor) into mDayNumberColor
+	redraw all
+end handler
+
+public handler getNightNumberColor() returns String
+	return colorToString(mNightNumberColor, true)
+end handler
+
+public handler setNightNumberColor(in pColor as String)
+	put stringToColor(pColor) into mNightNumberColor
 	redraw all
 end handler
 
