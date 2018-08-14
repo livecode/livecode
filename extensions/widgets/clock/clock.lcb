@@ -185,6 +185,42 @@ metadata nightMinuteHandColor.editor is "com.livecode.pi.color"
 metadata nightMinuteHandColor.default is "255,255,255"
 metadata nightMinuteHandColor.section is "Colors"
 metadata nightMinuteHandColor.label is "Minute hand color (night)"
+
+/**
+Syntax: set the daySecondHandColor of <widget> to <color>
+Syntax: get the daySecondHandColor of <widget>
+
+Summary: Determines the color of the second hand on the clock during the day
+
+Description:
+Use the <daySecondHandColor> property to get or set the color of the second
+hand of the clock during the day. To determine if the clock is
+displaying its daytime or night-time colors, use the read-only property
+<isDay>.
+*/
+property daySecondHandColor get getDaySecondHandColor set setDaySecondHandColor
+metadata daySecondHandColor.editor is "com.livecode.pi.color"
+metadata daySecondHandColor.default is "255,0,0"
+metadata daySecondHandColor.section is "Colors"
+metadata daySecondHandColor.label is "Second hand color (day)"
+
+/**
+Syntax: set the nightSecondHandColor of <widget> to <color>
+Syntax: get the nightSecondHandColor of <widget>
+
+Summary: Determines the color of the second hand on the clock during the night
+
+Description:
+Use the <nightSecondHandColor> property to get or set the color of the second
+hand of the clock during the night. To determine if the clock is
+displaying its daytime or night-time colors, use the read-only property
+<isDay>.
+*/
+property nightSecondHandColor get getNightSecondHandColor set setNightSecondHandColor
+metadata nightSecondHandColor.editor is "com.livecode.pi.color"
+metadata nightSecondHandColor.default is "255,0,0"
+metadata nightSecondHandColor.section is "Colors"
+metadata nightSecondHandColor.label is "Second hand color (night)"
 --
 
 -- private instance variables
@@ -200,6 +236,8 @@ private variable mDayHourHandColor as Color
 private variable mNightHourHandColor as Color
 private variable mDayMinuteHandColor as Color
 private variable mNightMinuteHandColor as Color
+private variable mDaySecondHandColor as Color
+private variable mNightSecondHandColor as Color
 --
 
 -- constants
@@ -220,6 +258,8 @@ public handler OnSave(out rProperties as Array)
 	put colorToString(mNightHourHandColor,true) into rProperties["nightHourHandColor"]
 	put colorToString(mDayMinuteHandColor,true) into rProperties["dayMinuteHandColor"]
 	put colorToString(mNightMinuteHandColor,true) into rProperties["nightMinuteHandColor"]
+	put colorToString(mDaySecondHandColor,true) into rProperties["daySecondHandColor"]
+	put colorToString(mNightSecondHandColor,true) into rProperties["nightSecondHandColor"]
 end handler
 
 public handler OnLoad(in pProperties as Array)
@@ -255,6 +295,16 @@ public handler OnLoad(in pProperties as Array)
 	else
 		put color kWhite into mNightMinuteHandColor
 	end if
+	if "daySecondHandColor" is among the keys of pProperties then
+		put stringToColor(pProperties["daySecondHandColor"]) into mDaySecondHandColor
+	else
+		put color kRed into mDaySecondHandColor
+	end if
+	if "nightSecondHandColor" is among the keys of pProperties then
+		put stringToColor(pProperties["nightSecondHandColor"]) into mNightSecondHandColor
+	else
+		put color kRed into mNightMinuteHandColor
+	end if
 end handler
 
 -- called when widget is created
@@ -267,6 +317,10 @@ public handler OnCreate()
 	put color kWhite into mNightNumberColor
 	put color kBlack into mDayHourHandColor
 	put color kWhite into mNightHourHandColor
+	put color kBlack into mDayMinuteHandColor
+	put color kWhite into mNightMinuteHandColor
+	put color kRed into mDaySecondHandColor
+	put color kRed into mNightSecondHandColor
 end handler
 
 public handler OnOpen()
@@ -437,7 +491,11 @@ private handler getPaint(in pObject as String) returns Paint
 		end if
 
 	else if pObject is "second hand" or pObject is "inner nub" then
-		return solid paint with color kRed
+		if mIsDay is true then
+			return solid paint with mDaySecondHandColor
+		else
+			return solid paint with mNightSecondHandColor
+		end if
 
 	else if pObject is "numbers" then
 		if mIsDay is true then
@@ -576,6 +634,24 @@ end handler
 
 public handler setNightMinuteHandColor(in pColor as String)
 	put stringToColor(pColor) into mNightMinuteHandColor
+	redraw all
+end handler
+
+public handler getDaySecondHandColor() returns String
+	return colorToString(mDaySecondHandColor, true)
+end handler
+
+public handler setDaySecondHandColor(in pColor as String)
+	put stringToColor(pColor) into mDaySecondHandColor
+	redraw all
+end handler
+
+public handler getNightSecondHandColor() returns String
+	return colorToString(mNightSecondHandColor, true)
+end handler
+
+public handler setNightSecondHandColor(in pColor as String)
+	put stringToColor(pColor) into mNightSecondHandColor
 	redraw all
 end handler
 
