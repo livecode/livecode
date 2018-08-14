@@ -978,6 +978,12 @@ bool MCArraysSplitIndexes(MCNameRef p_key, integer_t*& r_indexes, uindex_t& r_co
             r_all_integers = false;
             break;
         }
+        
+        if (!MCNumberIsInteger(*t_number))
+        {
+            r_all_integers = false;
+            break;
+        }
 
         if (!t_indexes . Push(MCNumberFetchAsInteger(*t_number)))
 			return false;
