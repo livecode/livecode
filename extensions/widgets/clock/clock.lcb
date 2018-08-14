@@ -538,7 +538,7 @@ private handler getPaint(in pObject as String) returns Paint
 			return solid paint with mNightFaceColor
 		end if
 
-	else if pObject is "minute hand" then
+	else if pObject is "minute hand" or pObject is "outer nub" then
 		if mIsDay is true then
 			return solid paint with mDayMinuteHandColor
 		else
@@ -564,13 +564,6 @@ private handler getPaint(in pObject as String) returns Paint
 			return solid paint with mDayHourHandColor
 		else
 			return solid paint with mNightHourHandColor
-		end if
-
-	else
-		if mIsDay is true then
-			return solid paint with color kBlack
-		else
-			return solid paint with color kWhite
 		end if
 
 	end if
