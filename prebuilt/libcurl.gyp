@@ -10,6 +10,8 @@
 			'target_name': 'libcurl',
 			'type': 'none',
 			
+			'toolsets': ['host', 'target'],
+
 			'dependencies':
 			[
 				'fetch.gyp:fetch',
@@ -18,10 +20,10 @@
 			
 			'direct_dependent_settings':
 			{
-				'conditions':
+				'target_conditions':
 				[
 					[
-						'OS == "win"',
+						'toolset_os == "win"',
 						{
 							'include_dirs':
 							[
@@ -30,7 +32,7 @@
 						},
 					],
 					[
-						'OS != "win"',
+						'toolset_os != "win"',
 						{
 							'include_dirs':
 							[
@@ -43,10 +45,10 @@
 			
 			'link_settings':
 			{
-				'conditions':
+				'target_conditions':
 				[
 					[
-						'OS == "mac"',
+						'toolset_os == "mac"',
 						{
 							'libraries':
 							[
@@ -55,11 +57,11 @@
 						},
 					],
 					[
-						'OS == "linux"',
+						'toolset_os == "linux"',
 						{
 							'library_dirs':
 							[
-								'lib/linux/<(target_arch)',
+								'lib/linux/>(toolset_arch)',
 							],
 							
 							'libraries':
@@ -70,7 +72,7 @@
 						},
 					],
 					[
-						'OS == "win"',
+						'toolset_os == "win"',
 						{
 							'library_dirs':
 							[

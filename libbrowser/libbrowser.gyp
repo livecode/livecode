@@ -9,6 +9,8 @@
 		{
 			'target_name': 'libbrowser',
 			'type': 'static_library',
+
+			'toolsets': ['host', 'target'],
 			
 			'dependencies':
 			[
@@ -54,12 +56,12 @@
 				'src/libbrowser_ios_factories.cpp',
 			],
 			
-			'conditions':
+			'target_conditions':
 			[
 				## Exclusions
 				# Only use CEF on desktop platforms
 				[
-					'OS != "win" and OS != "linux"',
+					'not (toolset_os == "win" or (toolset_os == "linux" and toolset_arch in ("x86", "x86_64")))',
 					{
 						'sources!':
 						[
@@ -69,7 +71,7 @@
 				],
 				
 				[
-					'OS != "mac"',
+					'toolset_os != "mac"',
 					{
 						'sources!':
 						[
@@ -83,7 +85,7 @@
 				],
 				
 				[
-					'OS != "win"',
+					'toolset_os != "win"',
 					{
 						'sources!':
 						[
@@ -97,7 +99,7 @@
 				],
 				
 				[
-					'OS != "linux"',
+					'toolset_os != "linux"',
 					{
 						'sources!':
 						[
@@ -108,9 +110,19 @@
 						],
 					},
 				],
+
+				[
+					'toolset_os == "linux" and not toolset_arch in ("x86", "x86_64")',
+					{
+						'sources!':
+						[
+							'src/libbrowser_cef_lnx.cpp',
+						],
+					},
+				],
 				
 				[
-					'OS != "ios"',
+					'toolset_os != "ios"',
 					{
 						'sources!':
 						[
@@ -121,7 +133,7 @@
 				],
 				
 				[
-					'OS != "android"',
+					'toolset_os != "android"',
 					{
 						'sources!':
 						[
@@ -129,11 +141,14 @@
 						],
 					},
 				],
-				
+			],
+
+			'link_settings':
+			{
+				'target_conditions':
 				[
-					'OS == "mac"',
-					{
-						'link_settings':
+					[
+						'toolset_os == "mac"',
 						{
 							'libraries':
 							[
@@ -141,12 +156,16 @@
 								'$(SDKROOT)/System/Library/Frameworks/JavaScriptCore.framework',
 							],
 						},
-					},
+					],
 				],
-
+			},
+			
+			# Gyp doesn't like dependencies in 'target_conditions'...
+			'conditions':
+			[
 				[
 					# Only the CEF platforms need libbrowser-cefprocess
-					'OS == "win" or OS == "linux"',
+					'OS in ("linux", "win") or host_os in ("linux", "win")',
 					{
 						'dependencies':
 						[
@@ -194,7 +213,7 @@
     'conditions':
     [
         [
-            'OS == "win" or OS == "linux"',
+            'OS in ("linux", "win") or host_os in ("linux", "win")',
             {
                 'targets':
                 [
@@ -204,6 +223,8 @@
                         'mac_bundle': 1,
                         'product_name': 'libbrowser-cefprocess',
                         
+			'toolsets': ['host', 'target'],
+
                         'dependencies':
                         [
                             '../libcore/libcore.gyp:libCore',
@@ -225,11 +246,17 @@
                             'src/libbrowser_cefprocess_win.cpp',
                         ],
                         
-                        'conditions':
+                        'target_conditions':
                         [
-                            ## Exclusions
                             [
-                                'OS != "win"',
+								'toolset_os not in ("win", "linux")',
+								{
+									'type': 'none',
+								},
+							],
+							## Exclusions
+                            [
+                                'toolset_os != "win"',
                                 {
                                     'sources!':
                                     [
@@ -239,7 +266,7 @@
                             ],
                             
                             [
-                                'OS != "linux"',
+                                'toolset_os != "linux"',
                                 {
                                     'sources!':
                                     [
@@ -249,15 +276,15 @@
                             ],
                             
                             [
-                                'OS == "win"',
+                                'toolset_os == "win"',
                                 {	
                                     'copies':
                                     [
                                         {
-                                            'destination':'<(PRODUCT_DIR)\Externals\CEF',
+                                            'destination':'<(PRODUCT_DIR)/CEF/',
                                             'files':
                                             [
-                                                '<(PRODUCT_DIR)\libbrowser-cefprocess.exe',
+                                                '<(PRODUCT_DIR)/libbrowser-cefprocess.exe',
                                             ],
                                         },
                                     ],
@@ -275,11 +302,11 @@
                             ],
                             
                             [
-                                'OS == "linux"',
+                                'toolset_os == "linux"',
                                 {
                                     'library_dirs':
                                     [
-                                        '../prebuilt/lib/linux/<(target_arch)/CEF/',
+                                        '../prebuilt/lib/linux/>(toolset_arch)/CEF/',
                                     ],
                     
                                     'libraries':
@@ -294,24 +321,33 @@
                                     ],
                                 },
                             ],
-                            
+
                             [
-                                'OS == "win" or OS == "linux"',
+                                'toolset_os == "linux" and not toolset_arch in ("x86", "x86_64")',
                                 {
-                                    # Distributing the OSX version is done separately
-                                    'all_dependent_settings':
-                                    {
-                                        'variables':
-                                        {
-                                            'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(exe_suffix)' ],
-                                        },
-                                    },
+                                    'type': 'none',
                                 },
                             ],
                         ],
+
+			'all_dependent_settings':
+			{
+				'conditions':
+				[
+					[
+						'OS == "win" or (OS == "linux" and target_arch in ("x86", "x86_64"))',
+						{
+							'variables':
+							{
+								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(exe_suffix)' ],
+							},
+						},
+					],
+				],
+			},
                     },
                 ],
             },
         ],
-	],
+    ],
 }
