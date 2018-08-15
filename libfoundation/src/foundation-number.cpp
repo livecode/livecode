@@ -137,21 +137,21 @@ compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self)
 /////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF
-bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, bool p_integer_only, MCNumberRef &r_number)
+bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number)
 {
-    return __MCNumberParseOffset(p_string, offset, char_count, p_integer_only, r_number);
+    return __MCNumberParseOffset(p_string, offset, char_count, false, r_number);
 }
 
 MC_DLLEXPORT_DEF
 bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
 {
-    return MCNumberParseOffset(p_string, 0, MCStringGetLength(p_string), false, r_number);
+    return __MCNumberParseOffset(p_string, 0, MCStringGetLength(p_string), false, r_number);
 }
 
 MC_DLLEXPORT_DEF
 bool MCNumberParseInteger(MCStringRef p_string, MCNumberRef &r_number)
 {
-    return MCNumberParseOffset(p_string, 0, MCStringGetLength(p_string), true, r_number);
+    return __MCNumberParseOffset(p_string, 0, MCStringGetLength(p_string), true, r_number);
 }
 
 MC_DLLEXPORT_DEF

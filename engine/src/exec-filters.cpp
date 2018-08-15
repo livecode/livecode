@@ -335,7 +335,7 @@ static bool MCU_gettemplate(MCStringRef format, uindex_t &x_offset, unichar_t &c
         while (isdigit(MCStringGetCharAtIndex(format, x_offset + t_number_size)))
             t_number_size++;
 
-        if (MCNumberParseOffset(format, x_offset, t_number_size, false, &t_number))
+        if (MCNumberParseOffset(format, x_offset, t_number_size, &t_number))
         {        
             count = MCNumberFetchAsUnsignedInteger(*t_number);
             x_offset += t_number_size;
