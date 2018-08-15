@@ -46,9 +46,9 @@ on TestGetDefaultFaceColor
 end TestGetDefaultFaceColor
 
 on TestSettingFaceColor
-   set the dayFaceColor of widget "testClock" to "0,255,0"
+   set the dayFaceColor of widget "testClock" to "0,255,0,255"
    TestAssert "dayFaceColor sucessfully set to non-default", the dayFaceColor of widget "testClock" is "0,255,0,255"
-   set the nightFaceColor of widget "testClock" to "0,0,255"
+   set the nightFaceColor of widget "testClock" to "0,0,255,255"
    TestAssert "nightFaceColor sucessfully set to non-default", the nightFaceColor of widget "testClock" is "0,0,255,255"
 end TestSettingFaceColor
 
@@ -58,9 +58,9 @@ on TestDefaultSecondHandColor
 end TestDefaultSecondHandColor
 
 on TestSettingSecondHandColor
-   set the daySecondHandColor of widget "testClock" to "0,255,0"
+   set the daySecondHandColor of widget "testClock" to "0,255,0,255"
    TestAssert "daySecondHandColor sucessfully set to non-default", the daySecondHandColor of widget "testClock" is "0,255,0,255"
-   set the nightSecondHandColor of widget "testClock" to "0,0,255"
+   set the nightSecondHandColor of widget "testClock" to "0,0,255,255"
    TestAssert "nightSecondHandColor sucessfully set to non-default", the nightSecondHandColor of widget "testClock" is "0,0,255,255"
 end TestSettingSecondHandColor
 
@@ -70,9 +70,9 @@ on TestDefaultMinuteHandColor
 end TestDefaultMinuteHandColor
 
 on TestSettingMinuteHandColor
-   set the dayMinuteHandColor of widget "testClock" to "0,255,0"
+   set the dayMinuteHandColor of widget "testClock" to "0,255,0,255"
    TestAssert "dayMinuteHandColor sucessfully set to non-default", the dayMinuteHandColor of widget "testClock" is "0,255,0,255"
-   set the nightMinuteHandColor of widget "testClock" to "0,0,255"
+   set the nightMinuteHandColor of widget "testClock" to "0,0,255,255"
    TestAssert "nightMinuteHandColor sucessfully set to non-default", the nightMinuteHandColor of widget "testClock" is "0,0,255,255"
 end TestSettingMinuteHandColor
 
@@ -82,9 +82,9 @@ on TestDefaultHourHandColor
 end TestDefaultHourHandColor
 
 on TestSettingHourHandColor
-   set the dayHourHandColor of widget "testClock" to "0,255,0"
+   set the dayHourHandColor of widget "testClock" to "0,255,0,255"
    TestAssert "dayHourHandColor sucessfully set to non-default", the dayHourHandColor of widget "testClock" is "0,255,0,255"
-   set the nightHourHandColor of widget "testClock" to "0,0,255"
+   set the nightHourHandColor of widget "testClock" to "0,0,255,255"
    TestAssert "nightHourHandColor sucessfully set to non-default", the nightHourHandColor of widget "testClock" is "0,0,255,255"
 end TestSettingHourHandColor
 
@@ -94,8 +94,8 @@ on TestDefaultNumberColor
 end TestDefaultNumberColor
 
 on TestSettingNumberColor
-   set the dayNumberColor of widget "testClock" to "0,255,0"
+   set the dayNumberColor of widget "testClock" to "0,255,0,255"
    TestAssert "dayNumberColor sucessfully set to non-default", the dayNumberColor of widget "testClock" is "0,255,0,255"
-   set the nightNumberColor of widget "testClock" to "0,0,255"
+   set the nightNumberColor of widget "testClock" to "0,0,255,255"
    TestAssert "nightNumberColor sucessfully set to non-default", the nightNumberColor of widget "testClock" is "0,0,255,255"
 end TestSettingNumberColor
