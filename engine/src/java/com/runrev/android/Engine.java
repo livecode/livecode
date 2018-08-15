@@ -502,12 +502,12 @@ public class Engine extends View implements EngineApi
 					// IM-2013-02-21: [[ BZ 10684 ]]
 					// allow BaseInputConnection to do the handling of commitText(), etc
 					// and instead catch the raw key events that are generated.
-					if (key.getKeyCode() == KeyEvent.KEYCODE_UNKNOWN)
+					if (t_key_code == KeyEvent.KEYCODE_UNKNOWN)
 					{
 						// handle string of chars
 						CharSequence t_chars = key.getCharacters();
 						for (int i = 0; i < t_chars.length(); i++)
-							doKeyPress(0, t_chars.charAt(i), 0);
+							handleKey(t_key_code, t_chars.charAt(i));
 					}
 					else
 					{
@@ -548,10 +548,10 @@ public class Engine extends View implements EngineApi
 				
 				// send backspaces
 				for (int i = 0; i < t_current_length - t_match_length; i++)
-					doKeyPress(0, 0, 0xff08);
+					handleKey(KeyEvent.KEYCODE_DEL, 0);
 				// send new text
 				for (int i = t_match_length; i < t_new_length; i++)
-					doKeyPress(0, p_new.charAt(i), 0);
+					handleKey(KeyEvent.KEYCODE_UNKNOWN, p_new.charAt(i));
 				
 				m_composing_text = p_new;
 				
