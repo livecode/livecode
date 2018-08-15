@@ -123,7 +123,9 @@ on TestExtentsDecimal
    TestAssert "Extents of array with a decimal key", the extents of tArray is empty
    
    delete variable tArray[1.0]
-   TestAssert "Extents of array without key", the extents of tArray is (item 1 of tSequenceKeys, item -1 of tSequenceKeys)
+   local tSequenceKeys
+   put __keysForArray(kSequenceArray) into tSequenceKeys
+   TestAssert "Extents of array without a decimal key", the extents of tArray is (item 1 of tSequenceKeys, item -1 of tSequenceKeys)
    
    put "false" into tArray[pi]
    TestAssert "Extents of array with another decimal key", the extents of tArray is empty
