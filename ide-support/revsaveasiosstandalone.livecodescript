@@ -317,6 +317,13 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          create folder (pAppBundle & "/Frameworks")
          put "Frameworks/" & tSourceFile into tCopiedExternals[tSourceName]["location"]
       end if
+
+      -- hack to uniquify modules
+      -- tCopiedExternals should be changed to be keyed on file path
+      -- however that has consequences for external mappings
+      if tSourceFile ends with ".lcm" then
+         put uuid() into tSourceName
+      end if
       
       if pTarget is "Device" then
          put "extension-code-resource" into tCopiedExternals[tSourceName]["type"]
@@ -338,21 +345,25 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
    --
    local tDeployExternals, tLibraryMappings
+   put pSettings["ios,library"] into tLibraryMappings 
    repeat for each key tExternalName in tCopiedExternals
       local tExternalRec
       put tCopiedExternals[tExternalName] into tExternalRec
       if tExternalRec["type"] is among the words of "external external-tmp" then
          put tExternalName & return after tDeployExternals
       end if
-      if not (tExternalRec["location"] ends with ".a" or \
+      if tLibraryMappings is not empty then
+         put return after tLibraryMappings
+      end if
+      if not (tExternalRec["location"] ends with ".lcm" or \
+            tExternalRec["location"] ends with ".a" or \
             (tExternalRec["location"] ends with ".lcext" \
             and pTarget is "Device")) then
-         put tExternalName & ":" & "./" & tExternalRec["location"] & return after tLibraryMappings
+         put tExternalName & ":" & "./" & tExternalRec["location"] after tLibraryMappings
       end if
    end repeat
    delete the last char of tDeployExternals
    put tDeployExternals into pSettings["externals"]
-   delete the last char of tLibraryMappings
    put tLibraryMappings into pSettings["ios,library"]
    
    local tDeploy
@@ -413,12 +424,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          -- SN-2015-02-23: [[ Bug 14625 ]] Use a iOS 5.1/iOS 7.0 consistent stdlib
          put "-stdlib=libc++" & return after tLinkCommand
          
-         -- MW-2013-06-26: [[ CloneAndRun ]] Only dead strip if an installed env.
-         if revEnvironmentIsInstalled() then
-            -- Strip any dead code and data from the engine
-            put "-dead_strip" & return after tLinkCommand
-         end if
-         
          -- Add reference to the partially linked standalone engine
          put quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote & space after tLinkCommand
          
@@ -477,6 +482,23 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
                   -- multiple resource bundles and frameworks
                   throw "The contents of the embeddedframework folder should be added to the module code resource folder not the embeddedframework folder itself:" & return & tCopiedExternals[tLinkExt][tInstSet]
                   break
+               case "lcm"
+                  local tModuleFolder
+                  set the itemDelimiter to slash
+                  put tCopiedExternals[tLinkExt][tInstSet] into tModuleFolder
+                  
+                  local tModule
+                  put item -4 of tModuleFolder into tModule
+                  
+                  local tModuleFile
+                  filter tDeploy["modules"] without ("*/" & tModule  & "/*")
+                  if tDeploy["modules"] is not empty then
+                     put return after tDeploy["modules"]
+                  end if
+                  put tCopiedExternals[tLinkExt][tInstSet] after tDeploy["modules"]
+                  
+                  set the itemDelimiter to "."
+                  break
                case "lcext"
                default
                   put tCopiedExternals[tLinkExt][tInstSet] into tLinkExts[tLinkExt] 
@@ -485,11 +507,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
                      put true into tLinkDeps[tLine]
                   end repeat 
                   
-                  -- Add references to each partially linked extension file, also make sure we force the
-                  -- presence of the ___libinfoptr_* symbol for each one - this stops dead-stripping
-                  -- from occuring.
+                  -- Add references to each partially linked extension file
                   put quote & tLinkExts[tLinkExt] & quote & return after tLinkCommand
-                  put "-u" && "___libinfoptr_" & tLinkExt & return after tLinkCommand
                   break
             end switch
          end repeat
