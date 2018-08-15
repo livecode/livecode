@@ -94,8 +94,8 @@ displaying its daytime or night-time colors use the read-only property
 <isDay>.
 */
 property dayNumberColor get getDayNumberColor set setDayNumberColor
-metadata dayNumberColor.editor is "com.livecode.pi.color"
-metadata dayNumberColor.default is "0,0,0"
+metadata dayNumberColor.editor is "com.livecode.pi.colorwithalpha"
+metadata dayNumberColor.default is "0,0,0,255"
 metadata dayNumberColor.section is "Colors"
 metadata dayNumberColor.label is "Number color (day)"
 
@@ -112,8 +112,8 @@ displaying its daytime or night-time colors use the read-only property
 <isDay>.
 */
 property nightNumberColor get getNightNumberColor set setNightNumberColor
-metadata nightNumberColor.editor is "com.livecode.pi.color"
-metadata nightNumberColor.default is "255,255,255"
+metadata nightNumberColor.editor is "com.livecode.pi.colorwithalpha"
+metadata nightNumberColor.default is "255,255,255,255"
 metadata nightNumberColor.section is "Colors"
 metadata nightNumberColor.label is "Number color (night)"
 
@@ -130,8 +130,8 @@ displaying its daytime or night-time colors, use the read-only property
 <isDay>.
 */
 property dayHourHandColor get getDayHourHandColor set setDayHourHandColor
-metadata dayHourHandColor.editor is "com.livecode.pi.color"
-metadata dayHourHandColor.default is "0,0,0"
+metadata dayHourHandColor.editor is "com.livecode.pi.colorwithalpha"
+metadata dayHourHandColor.default is "0,0,0,255"
 metadata dayHourHandColor.section is "Colors"
 metadata dayHourHandColor.label is "Hour hand color (day)"
 
@@ -148,8 +148,8 @@ displaying its daytime or night-time colors, use the read-only property
 <isDay>.
 */
 property nightHourHandColor get getNightHourHandColor set setNightHourHandColor
-metadata nightHourHandColor.editor is "com.livecode.pi.color"
-metadata nightHourHandColor.default is "255,255,255"
+metadata nightHourHandColor.editor is "com.livecode.pi.colorwithalpha"
+metadata nightHourHandColor.default is "255,255,255,255"
 metadata nightHourHandColor.section is "Colors"
 metadata nightHourHandColor.label is "Hour hand color (night)"
 
@@ -166,8 +166,8 @@ displaying its daytime or night-time colors, use the read-only property
 <isDay>.
 */
 property dayMinuteHandColor get getDayMinuteHandColor set setDayMinuteHandColor
-metadata dayMinuteHandColor.editor is "com.livecode.pi.color"
-metadata dayMinuteHandColor.default is "0,0,0"
+metadata dayMinuteHandColor.editor is "com.livecode.pi.colorwithalpha"
+metadata dayMinuteHandColor.default is "0,0,0,255"
 metadata dayMinuteHandColor.section is "Colors"
 metadata dayMinuteHandColor.label is "Minute hand color (day)"
 
@@ -184,8 +184,8 @@ displaying its daytime or night-time colors, use the read-only property
 <isDay>.
 */
 property nightMinuteHandColor get getNightMinuteHandColor set setNightMinuteHandColor
-metadata nightMinuteHandColor.editor is "com.livecode.pi.color"
-metadata nightMinuteHandColor.default is "255,255,255"
+metadata nightMinuteHandColor.editor is "com.livecode.pi.colorwithalpha"
+metadata nightMinuteHandColor.default is "255,255,255,255"
 metadata nightMinuteHandColor.section is "Colors"
 metadata nightMinuteHandColor.label is "Minute hand color (night)"
 
@@ -202,8 +202,8 @@ displaying its daytime or night-time colors, use the read-only property
 <isDay>.
 */
 property daySecondHandColor get getDaySecondHandColor set setDaySecondHandColor
-metadata daySecondHandColor.editor is "com.livecode.pi.color"
-metadata daySecondHandColor.default is "255,0,0"
+metadata daySecondHandColor.editor is "com.livecode.pi.colorwithalpha"
+metadata daySecondHandColor.default is "255,0,0,255"
 metadata daySecondHandColor.section is "Colors"
 metadata daySecondHandColor.label is "Second hand color (day)"
 
@@ -220,8 +220,8 @@ displaying its daytime or night-time colors, use the read-only property
 <isDay>.
 */
 property nightSecondHandColor get getNightSecondHandColor set setNightSecondHandColor
-metadata nightSecondHandColor.editor is "com.livecode.pi.color"
-metadata nightSecondHandColor.default is "255,0,0"
+metadata nightSecondHandColor.editor is "com.livecode.pi.colorwithalpha"
+metadata nightSecondHandColor.default is "255,0,0,255"
 metadata nightSecondHandColor.section is "Colors"
 metadata nightSecondHandColor.label is "Second hand color (night)"
 
@@ -238,7 +238,7 @@ displaying its daytime or night-time colors, use the read-only property
 <isDay>.
 */
 property dayFaceColor get getDayFaceColor set setDayFaceColor
-metadata dayFaceColor.editor is "com.livecode.pi.color"
+metadata dayFaceColor.editor is "com.livecode.pi.colorwithalpha"
 metadata dayFaceColor.default is "224,224,224,64"
 metadata dayFaceColor.section is "Colors"
 metadata dayFaceColor.label is "Face color (day)"
@@ -256,8 +256,8 @@ displaying its daytime or night-time colors, use the read-only property
 <isDay>.
 */
 property nightFaceColor get getNightFaceColor set setNightFaceColor
-metadata nightFaceColor.editor is "com.livecode.pi.color"
-metadata nightFaceColor.default is "0,0,0"
+metadata nightFaceColor.editor is "com.livecode.pi.colorwithalpha"
+metadata nightFaceColor.default is "0,0,0,255"
 metadata nightFaceColor.section is "Colors"
 metadata nightFaceColor.label is "Face color (night)"
 
