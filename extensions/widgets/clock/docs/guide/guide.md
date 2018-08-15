@@ -19,11 +19,22 @@ Alternatively it can be created in script using:
 
 ## Clock Display
 
-When the clock is displaying an AM time, the hands are dark on a light 
-background, and when displaying a PM time, the hands are light on a dark 
-background. 
+The clock has two different styles, depending on whether it is day or
+night. By default the hands are dark on a light background when displaying
+a time at night (between 8PM and 6AM), and the hands are light on a dark
+background when displaying a time during the day.
 
 ![AM PM clocks](images/clocks.png)
 
-The read-only property `isDay` also reflects whether the current time is 
+These colors can be customised using the `dayNumberColor`, `dayHourHandColor`, `dayMinuteHandColor`, `daySecondHandColor` and `dayFaceColor` properties,
+and the equivalent properties for night.
+
+The read-only property `isDay` also reflects whether the current time is
 AM or PM.
+
+The time displayed by the clock can differ from the current system local time by setting the timeZone property, an integer which adjusts the time displayed relative to universal time (UTC). For instance, to set the clock to display
+a time that is 6 hours ahead of UCT time ("+06:00"):
+
+`set the timeZone of widget "Clock" to 21600`
+
+as 21600 seconds is 6 hours.
