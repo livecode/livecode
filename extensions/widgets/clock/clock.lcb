@@ -313,53 +313,33 @@ public handler OnLoad(in pProperties as Array)
 	--these properties were added in version 1.1.3
 	if "dayNumberColor" is among the keys of pProperties then
 		put stringToColor(pProperties["dayNumberColor"]) into mDayNumberColor
-	else
-		put color kBlack into mDayNumberColor
 	end if
 	if "nightNumberColor" is among the keys of pProperties then
 		put stringToColor(pProperties["nightNumberColor"]) into mNightNumberColor
-	else
-		put color kWhite into mNightNumberColor
 	end if
 	if "dayHourHandColor" is among the keys of pProperties then
 		put stringToColor(pProperties["dayHourHandColor"]) into mDayHourHandColor
-	else
-		put color kBlack into mDayHourHandColor
 	end if
 	if "nightHourHandColor" is among the keys of pProperties then
 		put stringToColor(pProperties["nightHourHandColor"]) into mNightHourHandColor
-	else
-		put color kWhite into mNightHourHandColor
 	end if
 	if "dayMinuteHandColor" is among the keys of pProperties then
 		put stringToColor(pProperties["dayMinuteHandColor"]) into mDayMinuteHandColor
-	else
-		put color kBlack into mDayMinuteHandColor
 	end if
 	if "nightMinuteHandColor" is among the keys of pProperties then
 		put stringToColor(pProperties["nightMinuteHandColor"]) into mNightMinuteHandColor
-	else
-		put color kWhite into mNightMinuteHandColor
 	end if
 	if "daySecondHandColor" is among the keys of pProperties then
 		put stringToColor(pProperties["daySecondHandColor"]) into mDaySecondHandColor
-	else
-		put color kRed into mDaySecondHandColor
 	end if
 	if "nightSecondHandColor" is among the keys of pProperties then
 		put stringToColor(pProperties["nightSecondHandColor"]) into mNightSecondHandColor
-	else
-		put color kRed into mNightMinuteHandColor
 	end if
 	if "dayFaceColor" is among the keys of pProperties then
 		put stringToColor(pProperties["dayFaceColor"]) into mDayFaceColor
-	else
-		put color [224/255,224/255,224/255,0.25] into mDayFaceColor
 	end if
 	if "nightFaceColor" is among the keys of pProperties then
 		put stringToColor(pProperties["nightFaceColor"]) into mNightFaceColor
-	else
-		put color kBlack into mNightMinuteHandColor
 	end if
 end handler
 
