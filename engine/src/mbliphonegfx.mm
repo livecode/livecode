@@ -102,7 +102,7 @@ protected:
 	MCGRegionRef m_region;
 	bool m_own_region;
 	   
-	virtual void FlushBits(MCGIntegerRectangle p_area, void *p_bits, uint32_t p_stride) = 0;
+	virtual void FlushBits(MCGIntegerRectangle p_area, void *p_bits, uint32_t p_stride, bool &x_taken) = 0;
 
 public:
 	MCIPhoneStackSurface(MCGRegionRef p_region)
@@ -197,10 +197,16 @@ public:
 		if (p_raster . pixels == nil)
 			return;
 
+        bool t_taken = false;
+        
 		if (p_update)
-			FlushBits(p_area, p_raster . pixels, p_raster . stride);
+			FlushBits(p_area, p_raster . pixels, p_raster . stride, t_taken);
+        
+        if (!t_taken)
+        {
+            free(p_raster.pixels);
+        }
 		
-		free(p_raster . pixels);
 	}
 	
 	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
@@ -337,7 +343,7 @@ public:
 	
 protected:
     // MM-2014-07-31: [[ ThreadedRendering ]] Updated to pass in the area we wish to draw.
-	void FlushBits(MCGIntegerRectangle p_area, void *p_bits, uint32_t p_stride)
+	void FlushBits(MCGIntegerRectangle p_area, void *p_bits, uint32_t p_stride, bool &x_taken)
 	{
 		void *t_target;
 		if (!LockTarget(kMCStackSurfaceTargetCoreGraphics, t_target))
@@ -368,6 +374,8 @@ protected:
 		
 		if (MCGRasterToCGImage(t_raster, MCGIntegerRectangleMake(0, 0, p_area.size.width, p_area.size.height), t_colorspace, false, false, t_image))
 		{
+            x_taken = true;
+            
 			CGContextDrawImage(t_context, CGRectMake((float)p_area.origin.x, (float)(m_height - (p_area.origin.y + p_area.size.height)), (float)p_area.size.width, (float)p_area.size.height), t_image);
 			CGImageRelease(t_image);
 		}
@@ -521,7 +529,7 @@ public:
 
 protected:
     // MM-2014-07-31: [[ ThreadedRendering ]] Updated to pass in the area we wish to draw.
-	void FlushBits(MCGIntegerRectangle p_area, void *p_bits, uint32_t p_stride)
+	void FlushBits(MCGIntegerRectangle p_area, void *p_bits, uint32_t p_stride, bool& x_taken)
 	{
 		GLuint t_texture;
 		glGenTextures(1, &t_texture);
@@ -582,7 +590,7 @@ protected:
 			}
 		
 		glDeleteTextures(1, &t_texture);
-	}
+    }
 };
 
 @implementation MCIPhoneOpenGLDisplayView
