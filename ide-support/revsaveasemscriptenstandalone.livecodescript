@@ -202,7 +202,10 @@ private command storeDeployedStack pZip, pDeployPath, pBuildFolder, pMainStack, 
    put tTempStackPath into pDeployParams["stackfile"]
    put tTempDeployPath into pDeployParams["output"]
    put empty into pDeployParams["engine"]
-   
+
+   // Externals are not yet supported in emscripten builds
+   put empty into pDeployParams["externals"]
+
    ---------- Perform standalone deployment
    logDebug "deploy", "Deploying standalone"
    
