@@ -14,7 +14,7 @@ Syntax: the number of [marked] cards [{in | of} <stackRef>]
 
 Syntax: the number of {char[acters] | items | words | lines} {in | of} <textString>
 
-Syntax: the number of elements {in|of} <array>
+Syntax: the number of elements {in | of} <arrayExpr>
 
 Summary:
 <return|Returns> the number of <object|objects> of a certain kind, or
@@ -60,7 +60,7 @@ textString (string):
 Any string or expression that evaluates to a string.
 
 array (array):
-The name of an array
+Any array or expression that evaluates to an array.
 
 Returns(integer):
 The <number> <function> <return|returns> a <non-negative> <integer>.
