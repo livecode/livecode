@@ -4329,8 +4329,9 @@ void MCInterfaceExecChooseTool(MCExecContext& ctxt, MCStringRef p_input, int p_t
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, int p_mode, bool p_this_stack, bool p_visible, bool p_explicit_visibility)
+void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, int p_mode, bool p_this_stack, MCGoStackVisibility p_visibility_type)
 {
+	
 	if (p_card == nil)
     {
         if (MCresult -> isclear())
@@ -4452,11 +4453,14 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 	MCtrace = False;
 
 	// MW-2007-02-11: [[ Bug 4029 ]] - 'go invisible' fails to close stack window if window already open
-	if (p_explicit_visibility)
+	if (p_visibility_type != kImplicit)
 	{
 		if (t_stack -> getwindow() != NULL)
 			MCscreen -> closewindow(t_stack -> getwindow());
-		t_stack->setflag(p_visible, F_VISIBLE);
+		if (p_visibility_type == kExplicitVisible)
+			t_stack->setflag(true, F_VISIBLE);
+		if (p_visibility_type == kExplicitInvisible)
+			t_stack->setflag(false, F_VISIBLE);
 	}
 
 	// MW-2011-02-27: [[ Bug ]] Make sure that if we open as a sheet, we have a parent pointer!
@@ -4539,14 +4543,14 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 		ctxt . Throw();
 }
 
-void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, bool p_visible, bool p_explicit_visibility, bool p_this_stack)
+void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, MCGoStackVisibility p_visibility_type, bool p_this_stack)
 {
-	MCInterfaceExecGo(ctxt, p_card, nil, p_mode, p_this_stack, p_visible, p_explicit_visibility);
+	MCInterfaceExecGo(ctxt, p_card, nil, p_mode, p_this_stack, p_visibility_type);
 }
 
-void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, bool p_visible, bool p_explicit_visibility, bool p_this_stack)
+void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, MCGoStackVisibility p_visibility_type, bool p_this_stack)
 {
-	MCInterfaceExecGo(ctxt, p_card, p_window, WM_MODELESS, p_this_stack, p_visible, p_explicit_visibility);
+	MCInterfaceExecGo(ctxt, p_card, p_window, WM_MODELESS, p_this_stack, p_visibility_type);
 }
 
 void MCInterfaceExecGoRecentCard(MCExecContext& ctxt)
@@ -4572,7 +4576,8 @@ void MCInterfaceExecGoHome(MCExecContext& ctxt, MCCard *p_card)
 		MCdefaultstackptr->close();
 		MCdefaultstackptr->checkdestroy();
 	}
-	MCInterfaceExecGo(ctxt, p_card, nil, 0, false, true, false);
+	MCGoStackVisibility visibilityType = kImplicit;
+	MCInterfaceExecGo(ctxt, p_card, nil, 0, false, visibilityType);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

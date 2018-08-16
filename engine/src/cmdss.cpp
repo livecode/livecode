@@ -111,14 +111,10 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 	Chunk_term lterm = CT_UNDEFINED;
 
 	initpoint(sp);
-	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_INVISIBLE) == PS_NORMAL) {
-		visible = False;
-		explicit_visibility = True;
-	}
-	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_VISIBLE) == PS_NORMAL) {
-		visible = True;
-		explicit_visibility = True;
-	}
+	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_INVISIBLE) == PS_NORMAL)
+		visibilityType = kExplicitInvisible;
+	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_VISIBLE) == PS_NORMAL)
+		visibilityType = kExplicitVisible;
 	while (True)
 	{
 		if (sp.next(type) != PS_NORMAL)
@@ -750,9 +746,9 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 		}
 	}
 	else if (window != nil)
-		MCInterfaceExecGoCardInWindow(ctxt, cptr, *t_window, visible == True, explicit_visibility == True, thisstack == True);
+		MCInterfaceExecGoCardInWindow(ctxt, cptr, *t_window, visibilityType, thisstack == True);
 	else
-        MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visible == True, explicit_visibility == True, thisstack == True);
+        MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visibilityType, thisstack == True);
 }
 
 MCHide::~MCHide()

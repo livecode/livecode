@@ -2449,8 +2449,9 @@ void MCInterfaceExecReplaceInField(MCExecContext& ctxt, MCStringRef p_pattern, M
 
 void MCInterfaceExecChooseTool(MCExecContext& ctxt, MCStringRef p_input, int p_tool);
 
-void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, bool p_visible, bool p_explicit_visibility, bool p_this_stack);
-void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, bool p_visible, bool p_explicit_visibility, bool p_this_stack);
+enum MCGoStackVisibility { kImplicit, kExplicitVisible, kExplicitInvisible };
+void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, MCGoStackVisibility p_visibility_type, bool p_this_stack);
+void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, MCGoStackVisibility p_visibility_type, bool p_this_stack);
 void MCInterfaceExecGoRecentCard(MCExecContext& ctxt);
 void MCInterfaceExecGoCardRelative(MCExecContext& ctxt, bool p_forward, real8 p_amount);
 void MCInterfaceExecGoCardEnd(MCExecContext& ctxt, bool p_is_start);

@@ -1738,7 +1738,7 @@ class MCGo : public MCStatement
 	Window_mode mode;
 	Boolean marked;
 	Boolean visible;
-	Boolean explicit_visibility = False;
+	MCGoStackVisibility visibilityType = kImplicit;
 	Boolean thisstack;
 	
 	MCChunk *widget;
