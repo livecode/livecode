@@ -256,13 +256,9 @@ private function getStartupScript pGeneratedStartupScript
       throw tTemplateFile & ":" && the result
    end if
    close file tTemplateFile
-   
-   -- Trim to the actual script
-   delete line 1 of tScript
-      
+
    -- Make substitutions in the startup script
    replace "@ENGINE_VERSION@" with the version in tScript
-   replace "@MODULE_VERSION@" with extensionLCCompileVersion() in tScript
    replace "@STARTUP_SCRIPT@" with pGeneratedStartupScript in tScript
    return tScript
 end getStartupScript
