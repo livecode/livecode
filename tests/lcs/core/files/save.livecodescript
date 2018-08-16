@@ -37,6 +37,7 @@ command TestSetup
    create invisible stack "widget"
    put it into sTestStackWidget
    set the defaultstack to sTestStackWidget
+   TestLoadExtension "com.livecode.library.widgetutils" --required for clock
    TestLoadExtension "com.livecode.widget.clock"
    create widget as "com.livecode.widget.clock"
    
