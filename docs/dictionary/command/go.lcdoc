@@ -4,11 +4,11 @@ Synonyms: open
 
 Type: command
 
-Syntax: go [invisible] [to] <card> [of <stack>] [{as <mode> |in [a] new window|in <window>}]
+Syntax: go [{visible | invisible}] [to] <card> [of <stack>] [{as <mode> |in [a] new window|in <window>}]
 
-Syntax: go [invisible] [to] {first | prev[ious]| next | last | any} [marked] [<card>]
+Syntax: go [{visible | invisible}] [to] {first | prev[ious]| next | last | any} [marked] [<card>]
 
-Syntax: go [invisible] [to] {recent | start | finish | home} <card>
+Syntax: go [{visible | invisible}] [to] {recent | start | finish | home} <card>
 
 Syntax: go {forward | forth | back[ward]} [<number>]
 
@@ -35,6 +35,9 @@ go back 7
 
 Example:
 go invisible stack "Preferences"
+
+Example:
+go visible stack "Script-only stack"
 
 Example:
 local tStackFile, tStackFolder
@@ -153,12 +156,21 @@ among the previously-visited cards:
   form moves forward in the recent cards list. "forward" and "forth" are
   synonyms. 
 
+If you use the <go> visible form, the stack is made visible after being
+opened. (When going to a stack, this form sets the stack's <visible>
+<property> to true.) Use this form of the <go> command to display a
+script-only stack without explicitly setting the <visible (property)>
+in the <openStack> or <preOpenStack> handlers.
 
 If you use the <go> invisible form, the window or card change does not
 show on the screen. (When going to a stack, this form sets the stack's
 <visible> <property> to false.) Use this form of the <go> command to open
 a stack without displaying it on screen. To display the stack later, use
 the <show> <command> or set its <visible (property)>to true.
+
+Note that if a stack’s <visible> property is set in either the <openStack>
+or <preOpenStack> handlers, then this will override the expected behaviour
+of the <go> visible and <go> invisible forms.
 
 Any visual effects that have been queued with the visual effect command
 are displayed when the <go> command is executed (unless the screen is
