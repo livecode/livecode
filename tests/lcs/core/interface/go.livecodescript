@@ -55,7 +55,7 @@ on TestGoCardUnquotedName
 end TestGoCardUnquotedName
 
 local sStackFileName
-command _TestCreateStack pBinary pVisible
+command _TestCreateStack pBinary, pVisible
    local tStack
    put "stackToGo" into tStack
    
@@ -123,7 +123,7 @@ on TestGoToCard
 	TestAssert "closeCard sent to closed card", the cClosed of card 2
 end TestGoToCard
 
-on _TestGoInvisibleVisibleStack pMode pWhich pVisible
+on _TestGoInvisibleVisibleStack pMode, pWhich, pVisible
    TestSkipIfNot "write"
    local tStack
    _TestCreateStack pWhich is "binary", pVisible is "visible"
