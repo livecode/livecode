@@ -112,9 +112,9 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 
 	initpoint(sp);
 	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_INVISIBLE) == PS_NORMAL)
-		visibilityType = kMCInterfaceExecGoVisibilityExplicitInvisible;
+		visibility_type = kMCInterfaceExecGoVisibilityExplicitInvisible;
 	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_VISIBLE) == PS_NORMAL)
-		visibilityType = kMCInterfaceExecGoVisibilityExplicitVisible;
+		visibility_type = kMCInterfaceExecGoVisibilityExplicitVisible;
 	while (True)
 	{
 		if (sp.next(type) != PS_NORMAL)
@@ -746,9 +746,9 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 		}
 	}
 	else if (window != nil)
-		MCInterfaceExecGoCardInWindow(ctxt, cptr, *t_window, visibilityType, thisstack == True);
+		MCInterfaceExecGoCardInWindow(ctxt, cptr, *t_window, visibility_type, thisstack == True);
 	else
-        MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visibilityType, thisstack == True);
+        MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visibility_type, thisstack == True);
 }
 
 MCHide::~MCHide()

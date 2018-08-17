@@ -4576,8 +4576,7 @@ void MCInterfaceExecGoHome(MCExecContext& ctxt, MCCard *p_card)
 		MCdefaultstackptr->close();
 		MCdefaultstackptr->checkdestroy();
 	}
-	MCInterfaceExecGoVisibility visibilityType = kMCInterfaceExecGoVisibilityImplicit;
-	MCInterfaceExecGo(ctxt, p_card, nil, 0, false, visibilityType);
+	MCInterfaceExecGo(ctxt, p_card, nil, 0, false, MCInterfaceExecGoVisibility(kMCInterfaceExecGoVisibilityImplicit));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
