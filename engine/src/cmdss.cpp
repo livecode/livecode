@@ -112,9 +112,9 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 
 	initpoint(sp);
 	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_INVISIBLE) == PS_NORMAL)
-		visibilityType = kExplicitInvisible;
+		visibilityType = kMCInterfaceExecGoVisibilityExplicitInvisible;
 	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_VISIBLE) == PS_NORMAL)
-		visibilityType = kExplicitVisible;
+		visibilityType = kMCInterfaceExecGoVisibilityExplicitVisible;
 	while (True)
 	{
 		if (sp.next(type) != PS_NORMAL)
