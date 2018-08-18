@@ -1,0 +1,1 @@
+# Fix crash on startup in iOS 12 beta
