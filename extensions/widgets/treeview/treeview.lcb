@@ -759,7 +759,7 @@ public handler OnMouseDown() returns nothing
 	end if
 end handler
 
-public handler OnMouseMove() returns nothing			
+public handler OnMouseMove() returns nothing
 	if scrollDragging() then
 		variable tScrollPositionRatio as Real
 		scrollbarDrag(mViewHeight)
@@ -1511,7 +1511,7 @@ private handler addKey(in pListElt as Integer, in pPath as List, in pLevel as In
 	else
 		variable tArray as Array
 		put the empty array into tArray	
-		put "" into tArray[1 formatted as string]
+		put tElement into tArray[1 formatted as string]
 		put tArray into xArray[pPath[pLevel + 1]]
 		put false into xList[pListElt]["leaf"]
 	end if
