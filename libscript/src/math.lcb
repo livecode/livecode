@@ -322,7 +322,7 @@ end syntax
 public handler atan2(in pY as Number, in pX as Number) returns Number
     variable tVar as Number
     unsafe
-        MCMathEvalAtan2Number(pX, pY, tVar)
+        MCMathEvalAtan2Number(pY, pX, tVar)
     end unsafe
     return tVar
 end handler
