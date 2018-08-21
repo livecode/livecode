@@ -20,6 +20,7 @@ local sTestExtension
 on TestSetup
    TestSkipIfNot "lcb"
    
+   TestLoadExtension "com.livecode.library.widgetutils" --required for clock
     TestLoadExtension "com.livecode.library.json"
     TestLoadExtension "com.livecode.widget.clock"
 
