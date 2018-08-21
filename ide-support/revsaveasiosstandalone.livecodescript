@@ -311,21 +311,26 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       set the itemDelimiter to "."
       put item 1 to -2 of tSourceFile into tSourceName
       
+      if there is a file tLib then
+         put tSourceFile into tCopiedExternals[tSourceName]["location"]
+      else
+         create folder (pAppBundle & "/Frameworks")
+         put "Frameworks/" & tSourceFile into tCopiedExternals[tSourceName]["location"]
+      end if
+      
       if pTarget is "Device" then
          put "extension-code-resource" into tCopiedExternals[tSourceName]["type"]
          put tLib into tCopiedExternals[tSourceName]["arm"]
-         put tSourceFile into tCopiedExternals[tSourceName]["location"]
       else
          --!TODO Add support for static libraries and frameworks by linking the engine for a simulator build
          if there is a file tLib then
             revSBCopyFileToFile tLib, pAppBundle & slash & tSourceFile, "revStandaloneProgressCallback", the long id of me
          else
             -- framework
-            revSBCopyFolderToDestination tLib, pAppBundle, "revStandaloneProgressCallback", the long id of me
+            revSBCopyFolderToDestination tLib, pAppBundle & "/Frameworks", "revStandaloneProgressCallback", the long id of me
          end if
          put "extension-code-resource" into tCopiedExternals[tSourceName]["type"]
          put tLib into tCopiedExternals[tSourceName]["sim"]
-         put tSourceFile into tCopiedExternals[tSourceName]["location"]
       end if
    end repeat
    
@@ -455,12 +460,12 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
                      put "-force_load" && quote & tCopiedExternals[tLinkExt][tInstSet] & "/" & tFileName & quote & return after tLinkCommand
                   else
                      -- dynamic framework iOS 8+
-                     revSBCopyFolderToDestination tCopiedExternals[tLinkExt][tInstSet], pAppBundle, "revStandaloneProgressCallback", the long id of me
+                     revSBCopyFolderToDestination tCopiedExternals[tLinkExt][tInstSet], pAppBundle & "/Frameworks", "revStandaloneProgressCallback", the long id of me
                      if tCopiedExternals[tLinkExt][tInstSet] ends with ".framework" then
                         -- remove simulator slices
                         -- if we are copying a bundle these can only be used for resources
                         local tCopiedFrameworkBinary
-                        put quote & pAppBundle & "/" & tFileName & ".framework/" & tFileName  & quote into tCopiedFrameworkBinary
+                        put quote & pAppBundle & "/Frameworks/" & tFileName & ".framework/" & tFileName  & quote into tCopiedFrameworkBinary
                         repeat for each word tArch in "i386 x86_64"
                            get shell("lipo -remove" && quote & tArch & quote && "-output" && tCopiedFrameworkBinary && tCopiedFrameworkBinary)
                         end repeat
@@ -801,7 +806,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       --try
       -- Perform the codesigning of the main bundle
       local tResult
-      __CodesignFrameworks pAppBundle, tCertificate, tEntitlementsFile
+      __CodesignFrameworks pAppBundle & "/Frameworks", tCertificate, tEntitlementsFile
       put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & tCertificate & quote && \
             "--entitlements" && quote & tEntitlementsFile & quote && \
             quote & pAppBundle & quote) into tResult
