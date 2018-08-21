@@ -5668,9 +5668,8 @@ void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canv
 	if (!MCCanvasPropertiesPush(*t_canvas))
 		return;
 
-	MCGBitmapEffects t_effects;
-	t_effects.has_color_overlay = t_effects.has_drop_shadow = t_effects.has_inner_glow = t_effects.has_inner_shadow = t_effects.has_outer_glow = false;
-	
+	MCGBitmapEffects t_effects = MCGBitmapEffects();
+
 	__MCCanvasEffectImpl *t_effect_impl;
 	t_effect_impl = MCCanvasEffectGet(p_effect);
 	
