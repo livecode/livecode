@@ -5658,8 +5658,21 @@ static void MCPolarCoordsToCartesian(MCGFloat p_distance, MCGFloat p_angle, MCGF
 	r_y = p_distance * sin(p_angle);
 }
 
+void _MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas, bool p_isolated);
+
 MC_DLLEXPORT_DEF
 void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas)
+{
+	_MCCanvasBeginLayerWithEffect(p_effect, p_canvas, false);
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasBeginEffectOnlyLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas)
+{
+	_MCCanvasBeginLayerWithEffect(p_effect, p_canvas, true);
+}
+
+void _MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas, bool p_isolated)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
@@ -5675,6 +5688,8 @@ void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canv
 	
 	MCCanvasFloat t_spread;
 	t_spread = MCClamp(t_effect_impl->spread, 0.0, 1.0);
+	
+	t_effects.isolated = p_isolated;
 	
 	switch (t_effect_impl->type)
 	{

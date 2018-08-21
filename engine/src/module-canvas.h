@@ -563,6 +563,7 @@ extern "C" MC_DLLEXPORT void MCCanvasSaveState(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasRestoreState(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasBeginLayer(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasBeginEffectOnlyLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasEndLayer(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasFill(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasFillPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas);

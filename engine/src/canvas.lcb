@@ -4281,6 +4281,7 @@ public foreign handler MCCanvasSaveState(in pCanvas as Canvas) returns nothing b
 public foreign handler MCCanvasRestoreState(in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasBeginLayer(in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasBeginLayerWithEffect(in pEffect as Effect, in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasBeginEffectOnlyLayerWithEffect(in pEffect as Effect, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasEndLayer(in pCanvas as Canvas) returns nothing binds to "<builtin>"
 
 public foreign handler MCCanvasFill(in pCanvas as Canvas) returns nothing binds to "<builtin>"
@@ -4485,6 +4486,11 @@ syntax CanvasOperationBeginLayer is statement
 begin
 	MCCanvasBeginLayer(mCanvas)
 	MCCanvasBeginLayerWithEffect(mEffect, mCanvas)
+end syntax
+syntax CanvasOperationBeginEffectOnlyLayer is statement
+	"begin" "effect" "only" "layer" "with" <mEffect: Expression> "on" <mCanvas: Expression>
+begin
+	MCCanvasBeginEffectOnlyLayerWithEffect(mEffect, mCanvas)
 end syntax
 
 //////////
