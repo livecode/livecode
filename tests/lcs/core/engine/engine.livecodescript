@@ -501,3 +501,19 @@ wait 2 ticks
 TestAssert "the ticks change with time", the ticks - tTime >= 2
 end TestTicks
 
+on TestUngroupAndQuit
+    -- Bug 21500: run a subprocess in which we ungroup a group and
+    -- then quit, to test that it no longer crashes
+   local tStackToRun, tOptions
+   put the effective filename of me into tStackToRun
+   set the itemdelimiter to slash
+   if the environment is not "server" then
+      put "_ungroupandquit.livecodescript" into item -1 of tStackToRun
+      if the environment contains "command line" then
+         put "-ui" into tOptions
+      end if
+   end if
+   TestRunStack tOptions, tStackToRun
+   TestAssert "ungroup does not crash on quit", the result is empty
+end TestUngroupAndQuit
+
