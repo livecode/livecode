@@ -1,1 +1,1 @@
-# Fix crash when moving a group before calling quit
+# Fix crash when ungrouping a group before calling quit
