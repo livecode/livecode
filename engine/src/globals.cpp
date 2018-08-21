@@ -1342,6 +1342,7 @@ int X_close(void)
 	while (MCsavegroupptr != NULL)
 	{
 		MCControl *gptr = MCsavegroupptr->remove(MCsavegroupptr);
+        gptr -> removereferences();
 		delete gptr;
 	}
 
