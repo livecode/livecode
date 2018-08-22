@@ -53,6 +53,23 @@ command deployDo pTargetStack, pTargetDevice
       put "com.yourcompany.yourapp" into tIdentifier
    end if
    
+   if tError is empty then
+      revStandaloneProgress "Checking target device architecture..."
+      
+      executeShellCommand pathToAdb(), "-s", word 2 to -1 of pTargetDevice, "shell", "getprop", "ro.product.cpu.abi"
+      local tABI
+      put line 1 of the result into tABI
+      if not (tABI is among the items of "armeabi-v7a,arm64-v8a,x86,x86_64") then
+         put "Checking target device architecture failed:" && the result into tError
+      end if
+      
+      local tArch
+      put __ABIArch(tABI) into tArch
+      repeat for each item tItem in revSBPlatformArchitectures("Android")
+         put tItem is tArch into tSettings["Android",tItem]
+      end repeat
+   end if
+   
    local tTempApkFIle
    if tError is empty then
       // SN-2014-10-27: [[ Bug 13800 ]] The APK must be "specified as a full path to an .apk file"
@@ -93,6 +110,20 @@ command deployDo pTargetStack, pTargetDevice
    
    return tError
 end deployDo
+
+private function __ABIArch pABI
+   switch pABI
+      case "armeabi"
+         return "armv6"
+      case "armeabi-v7a"
+         return "armv7"
+      case "arm64-v8"
+         return "arm64"
+      case "x86"
+      case "x86_64"
+         return pABI
+   end switch
+end __ABIArch
 
 command deployAutoconfigure
    local tSDK
