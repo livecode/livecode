@@ -3831,7 +3831,7 @@ Returns:	The bounding box of <mText> when drawn at point 0,0 with font <mFont>. 
 Example:
 	// Set up tFont as size 18 Arial
 	variable tFont as Font
-	put font "Arail" at size 18 into tFont
+	put font "Arial" at size 18 into tFont
 
 	// Measure text with tFont
 	variable tBounds as Rectangle
