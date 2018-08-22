@@ -708,7 +708,7 @@ end revSBTargetToPlatform
 constant kWindowsArchitectures = "x86-32"
 constant kMacOSXArchitectures = "x86-32,x86-64"
 constant kLinuxArchitectures =  "x86-32,x86-64,armv6-hf"
-constant kAndroidArchitectures =  "armv6"
+constant kAndroidArchitectures =  "armv7,arm64,x86,x86_64"
 constant kiOSArchitectures =  "armv7,arm64"
 constant kEmscriptenArchitectures =  "js"
 

@@ -2,7 +2,6 @@
 ################################################################################
 
 local sJavaRoot
-constant kArchs = "armeabi"
 
 ################################################################################
 
@@ -103,8 +102,37 @@ private function badAndroidApiMessage
    return "Not a valid Android API"
 end badAndroidApiMessage
 
+private function __ArchABI pArch
+   switch pArch
+      case "armv6"
+         return "armeabi"
+      case "armv7"
+         return "armeabi-v7a"
+      case "arm64"
+         return "arm64-v8a"
+      case "x86"
+      case "x86_64"
+         return pArch
+   end switch
+end __ArchABI
+
 constant kAndroidExternals = "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql"
+
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettings
+   local tArchABIs, tArchs
+   repeat for each item tItem in revSBPlatformArchitectures("Android")
+      if pSettings["android",tItem] then
+         put true into tArchABIs[__ArchABI(tItem)]
+         put true into tArchs[tItem]
+      end if
+   end repeat
+   if the number of elements of tArchABIs is 0 then
+      put true into tArchABIs["armeabi-v7a"]
+      put true into tArchs["armv7"]
+   end if
+   combine tArchABIs by comma as set
+   combine tArchs by comma as set
+   
    dispatch "revIDEDeployAndroidInitialize" to stack "revDeployLibrary"
    
    -- If we're searching for inclusions, do it here 
@@ -120,7 +148,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    end if
    
    -- Make sure all dependencies are included
-   revSBUpdateForDependencies "android", "armv6", , pSettings
+   revSBUpdateForDependencies "android", tArchs, , pSettings
    revSBEnsurePerExtensionSettings "android", pSettings
    if the result is not empty then
       return the result
@@ -259,7 +287,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    
    try
       ------- Create the build folder
-      local tBuildFolder, tResBuildFolder, tDrawableResBuildFolder, tLayoutResBuildFolder, tClassesBuildFolder, tLibsBuildFolder, tArmLibsBuildFolder, tXMLResBuildFolder
+      local tBuildFolder, tResBuildFolder, tDrawableResBuildFolder, tLayoutResBuildFolder
+      local tLibsBuildFolder, tClassesBuildFolder, tXMLResBuildFolder
       put tempName() into tBuildFolder
       create folder tBuildFolder
       if the platform is "win32" then
@@ -269,15 +298,22 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put tBuildFolder & slash & "classes_app" into tClassesBuildFolder
       put tBuildFolder & slash & "libs" into tLibsBuildFolder
       
-      // MERG: TODO when support for other Archs is added this needs work
-      put tLibsBuildFolder & slash & kArchs into tArmLibsBuildFolder
       put tBuildFolder & slash & "res-build/res" into tResBuildFolder
       put tResBuildFolder & slash & "drawable" into tDrawableResBuildFolder
       put tResBuildFolder & slash & "layout" into tLayoutResBuildFolder
       put tResBuildFolder & slash & "xml" into tXMLResBuildFolder
       create folder tClassesBuildFolder
       create folder tLibsBuildFolder
-      create folder tArmLibsBuildFolder
+      
+      local tArchLibsBuildFolders
+      repeat for each item tArch in tArchABIs
+         put tLibsBuildFolder & slash & tArch into tArchLibsBuildFolders[tArch]
+         create folder tArchLibsBuildFolders[tArch]
+         if there is not folder tArchLibsBuildFolders[tArch] then
+            throw "could not create build folders"
+         end if
+      end repeat
+      
       revSBEnsureFolder tResBuildFolder
       if there is no folder tDrawableResBuildFolder then
          create folder tDrawableResBuildFolder
@@ -289,7 +325,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          create folder tXMLResBuildFolder
       end if
       if there is no folder tBuildFolder or there is no folder tClassesBuildFolder or \
-            there is no folder tLibsBuildFolder or there is no folder tArmLibsBuildFolder or \
+            there is no folder tLibsBuildFolder or \
             there is no folder tResBuildFolder or there is no folder tDrawableResBuildFolder  or \
             there is no folder tLayoutResBuildFolder or there is no folder tXMLResBuildFolder then
          throw "could not create build folders"
@@ -335,7 +371,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          -- MERG-2013-09-05: [[ Bug 11152 ]] Only list the external if it was successfully
          --   extracted.
          -- Now attempt to process the external
-         if addExternalFromFile(tFile["resolved"], tClassesBuildFolder, tLibsBuildFolder) then
+         if addExternalFromFile(tFile["resolved"], tClassesBuildFolder, tArchLibsBuildFolders) then
             -- Add the external to the list to load
             put char 1 to -7 of tFile["name"] & return after tExternals
          end if
@@ -791,39 +827,36 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          put return & tEntry & ":" & "./lib" & tEntry after pSettings["android,library"]
       end repeat
       
-      repeat for each line tLib in pSettings["extension_code_resources"]
-         local tSourceFile, tSourceName
-         set the itemdelimiter to slash
-         put item -1 of tLib into tSourceFile
-         set the itemDelimiter to "."
-         put item 1 to -2 of tSourceFile into tSourceName
-         
-         if not(tSourceFile begins with "lib") then
-            put "lib" before tSourceFile
-         end if
-         put url ("binfile:" & tLib) into url ("binfile:" & tArmLibsBuildFolder & slash & tSourceFile)
-         
-         put return & tSourceName & ":./" & tSourceFile after pSettings["android,library"]
+      repeat for each item tArch in tArchs
+         local tArchCodeResources
+         filter pSettings["extension_code_resources"] \
+               with ("*code/" & tArch & "-android*") into tArchCodeResources
+         repeat for each line tLib in tArchCodeResources
+            local tSourceFile, tSourceName
+            set the itemdelimiter to slash
+            put item -1 of tLib into tSourceFile
+            set the itemDelimiter to "."
+            put item 1 to -2 of tSourceFile into tSourceName
+            
+            if not(tSourceFile begins with "lib") then
+               put "lib" before tSourceFile
+            end if
+            
+            put url ("binfile:" & tLib) into \
+                  url ("binfile:" & tArchLibsBuildFolders[__ArchABI(tArch)] & slash & tSourceFile)
+            
+            put return & tSourceName & ":./" & tSourceFile after pSettings["android,library"]
+         end repeat
       end repeat
-      
       
       local tDeploy
       -- Update the deploy params with script library and extension inclusions
       revSBUpdateDeployParams pStack, "android", pSettings, tDeploy
       
-      -- Engine to use
-      put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Standalone") into tDeploy["engine"]
-      // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occurred
-      if there is no file tDeploy["engine"] then
-         throw "Could not find standalone engine"
-      end if
       -- Stackfile to use
       put the effective filename of stack pStack into tDeploy["stackfile"]
       
-      -- Output file to create
-      put tArmLibsBuildFolder & slash & "librevandroid.so" into tDeploy["output"]
-      
-      -- Splash to use (if non-commercial)
+       -- Splash to use (if non-commercial)
       if line 3 of the revLicenseInfo is among the words of "Educational Personal" then
          -- MW-2011-03-17: Make sure absolute paths work correctly
          if pSettings["android,splash"] is not empty and pathIsRelative(pSettings["android,splash"]) then
@@ -832,12 +865,24 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
             put pSettings["android,splash"] into tDeploy["splash"]
          end if
       end if
-      
-      _internal deploy android tDeploy
-      if the result is not empty then
-         throw the result
-      end if
-      
+
+      repeat for each key tArch in tArchLibsBuildFolders
+         -- Engine to use
+         put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tArch & slash & "Standalone") into tDeploy["engine"]
+         // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occurred
+         if there is no file tDeploy["engine"] then
+            throw "Could not find standalone engine"
+         end if
+         
+         -- Output file to create
+         put tArchLibsBuildFolders[tArch] & slash & "librevandroid.so" into tDeploy["output"]
+         
+         _internal deploy android tDeploy
+         if the result is not empty then
+            throw the result
+         end if
+      end repeat
+
       -------- Assembling Assets
       revStandaloneProgress "Assembling assets..."
       
@@ -876,30 +921,34 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          delete file tUnalignedApkFile
       end if
       
-      -- MM-2014-01-29: [[ OpenSSL ]] Include the revsecurity library.
-      if pSettings["android,include revsecurity"] then
-         put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "revsecurity")) into url ("binfile:" & tArmLibsBuildFolder & slash & "librevsecurity.so")
+      repeat for each key tArch in tArchLibsBuildFolders
+         -- MM-2014-01-29: [[ OpenSSL ]] Include the revsecurity library.
+         if pSettings["android,include revsecurity"] then
+            put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tArch & slash & "revsecurity")) \
+                  into url ("binfile:" & tArchLibsBuildFolders[tArch] & slash & "librevsecurity.so")
+            
+            // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occurred
+            if the result is not empty then
+               throw "Could not find revsecurity library"
+            end if
+         end if
          
-         // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occurred
-         if the result is not empty then
-            throw "Could not find revsecurity library"
-         end if
-      end if
-      
-      -- Copy across the externals into the libs folder
-      repeat for each line tEntry in tExternals
-         -- Only copy across an external from the Runtime folder if we haven't
-         -- already copied from a lcext.
-         if there is a file (tArmLibsBuildFolder & slash & "lib" & tEntry & ".so") then
-            next repeat
-         end if
-         put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tEntry)) into url ("binfile:" & tArmLibsBuildFolder & slash & "lib" & tEntry & ".so")
-         // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occurred
-         if the result is not empty then
-            throw "Could not find " & tEntry && "library"
-         end if
+         -- Copy across the externals into the libs folder
+         repeat for each line tEntry in tExternals
+            -- Only copy across an external from the Runtime folder if we haven't
+            -- already copied from a lcext.
+            if there is a file (tArchLibsBuildFolders[tArch] & slash & tArch & slash & "lib" & tEntry & ".so") then
+               next repeat
+            end if
+            put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tArch & slash & tEntry)) \
+                  into url ("binfile:" & tArchLibsBuildFolders[tArch] & slash & "lib" & tEntry & ".so")
+            // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occurred
+            if the result is not empty then
+               throw "Could not find " & tEntry && "library"
+            end if
+         end repeat
       end repeat
-      
+
       -- Work out whether to produce an unsigned apk
       local tUnsignedParam
       if (pTarget contains "build") and tUnsigned then
@@ -914,10 +963,12 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       if the result contains "Debug Certificate Expired" then
          throw "debug certificate has expired, please refresh"
       end if
-      if not (the result contains "=> lib/armeabi/librevandroid.so") then
-         throw "apk preparation failed"
-      end if
-      
+      repeat for each key tArch in tArchLibsBuildFolders
+         if not (the result contains "=> lib/" & tArch & "/librevandroid.so") then
+            throw "apk preparation failed"
+         end if
+      end repeat
+
       ------- Signing the Package
       if pTarget contains "build" and tKey is not empty then
          revStandaloneProgress "Signing package..."
@@ -975,18 +1026,20 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    if there is a file tUnalignedApkFile then delete file tUnalignedApkFile
    if there is a file tAssetArchive then delete file tAssetArchive
    if there is a file tLiveCodeClassesFile then delete file tLiveCodeClassesFile
-   if there is a file (tArmLibsBuildFolder & slash & "librevandroid.so") then delete file  (tArmLibsBuildFolder & slash & "librevandroid.so")
-   if there is a file (tArmLibsBuildFolder & slash & "librevsecurity.so") then delete file  (tArmLibsBuildFolder & slash & "librevsecurity.so")
-   repeat for each line tEntry in tExternals
-      if there is a file (tArmLibsBuildFolder & slash & "lib" & tEntry & ".so") then delete file (tArmLibsBuildFolder & slash & "lib" & tEntry & ".so")
+   
+   repeat for each element tFolder in tArchLibsBuildFolders
+      repeat for each line tFile in files(tFolder)
+         delete file (tFolder & slash & tFile)
+      end repeat
+      if there is a folder tFolder then delete folder tFolder
    end repeat
+   
    set the itemDelimiter to slash
    repeat for each line tJarFile in pSettings["jarFiles"]
       if there is a file (tLibsBuildFolder & slash & item -1 of tJarFile) then 
          delete file (tLibsBuildFolder & slash & item -1 of tJarFile)
       end if
    end repeat
-   if there is a folder tArmLibsBuildFolder then delete folder tArmLibsBuildFolder
    if there is a folder tLibsBuildFolder then delete folder tLibsBuildFolder
    if there is a file tClassesFile then delete file tClassesFile
    repeat for each line tClassFile in tBuiltClassFiles
@@ -1237,7 +1290,7 @@ end fileIsZipArchive
 
 -- MERG-2013-09-05: [[ Bug 11152 ]]  Change to function - returns true if external was successfully
 --   extracted.
-private function addExternalFromFile pExternal, pClassesFolder, pLibsFolder
+private function addExternalFromFile pExternal, pClassesFolder, pArchLibsFolders
    -- If the file is not a zip archive then there is nothing to do.
    if not fileIsZipArchive(pExternal) then
       exit addExternalFromFile
@@ -1276,16 +1329,16 @@ private function addExternalFromFile pExternal, pClassesFolder, pLibsFolder
          end if
       end repeat
       
-      repeat for each word tArch in kArchs
+      repeat for each key tArch in pArchLibsFolders
          local tPattern
          put "^Android/(?:External-" & tArch & "|lib.+" & tArch & "\.so)$" into tPattern
          filter tZipItems with regex pattern tPattern into tZipItemsFiltered
-         put pLibsFolder & slash & tArch & slash & "lib" & tExternalName & ".so" into tLibFileA[tArch]
+         put pArchLibsFolders[tArch] & slash & "lib" & tExternalName & ".so" into tLibFileA[tArch]
          
          repeat for each line tZipItem in tZipItemsFiltered
             if tZipItem ends with ".so" then
                revZipExtractItemToFile pExternal, tZipItem, \
-                     pLibsFolder & slash & tArch & slash & the last item of tZipItem 
+                     pArchLibsFolders[tArch] & slash & the last item of tZipItem 
             else 
                # will be External-<Arch> file
                revZipExtractItemToFile pExternal, tZipItem, tLibFileA[tArch]
@@ -1297,7 +1350,7 @@ private function addExternalFromFile pExternal, pClassesFolder, pLibsFolder
    end if
    
    if there is a file tClassesFile then
-      repeat for each word tArch in kArchs
+      repeat for each key tArch in pArchLibsFolders
          if there is no file tLibFileA[tArch] then
             throw "android external contains classes but no library for " & tArch
          end if
@@ -1455,14 +1508,14 @@ private function pathToZipAlign pRoot
 end pathToZipAlign
 
 // SN-2015-07-02: [[ GypifiedAndroid ]] Get the right folder for android binaries
-private function pathToRepoAndroidBinaries
+private function pathToRepoAndroidBinaries pArch
    local tBuild
    if revEnvironmentBinariesPath() contains "/Debug" then
       put "Debug" into tBuild
    else
       put "Release" into tBuild
    end if
-   return revEnvironmentRepositoryPath() & "/build-android-armv6/livecode/out/" & tBuild
+   return revEnvironmentRepositoryPath() & "/build-android-" & pArch & "/livecode/out/" & tBuild
 end pathToRepoAndroidBinaries
 
 private function pathToDex pRoot
@@ -1524,7 +1577,18 @@ function mapFilePath pPath
    local tPath
    local tBinariesFolder, tComponent, tSuffix
    set the itemDelimiter to slash
-   put pathToRepoAndroidBinaries() into tBinariesFolder
+   local tArch
+   repeat for each item tItem in revSBPlatformArchitectures("Android")
+      if pPath contains ("/" & __ArchABI(tItem) & "/") then
+         put tItem into tArch
+      end if
+   end repeat
+
+   if tArch is empty then
+      put "armv7" into tArch
+   end if
+
+   put pathToRepoAndroidBinaries(tArch) into tBinariesFolder
    
    // SN-2015-07-02: [[ GypifiedAndroid ]] Throw an error if there is
    //  not the expected build folder
