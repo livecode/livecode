@@ -186,7 +186,7 @@ Example:
 	// Create a timer loop
 	public handler OnTimer()
 		...
-		schedule timer in 1 second
+		schedule timer in 1 seconds
 	end handler
 Description:
 Handle the <OnTimer> message to perform an action at a scheduled time.
@@ -439,7 +439,7 @@ Example:
 	// Create a timer loop
 	public handler OnTimer()
 		...
-		schedule timer in 1 second
+		schedule timer in 1 seconds
 	end handler
 
 Description:
