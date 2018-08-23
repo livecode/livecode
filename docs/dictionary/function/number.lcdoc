@@ -59,7 +59,7 @@ Any stack reference.
 textString (string):
 Any string or expression that evaluates to a string.
 
-array (array):
+arrayExpr (array):
 Any array or expression that evaluates to an array.
 
 Returns(integer):
