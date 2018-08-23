@@ -880,7 +880,14 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 	MCRectangle t_device_viewport;
 	t_device_viewport = logicaltoscreenrect(t_virtual_viewport);
 
-	HWND hwndsnap = CreateWindowExA(WS_EX_TRANSPARENT | WS_EX_TOPMOST,
+	DWORD t_ex_options = WS_EX_TRANSPARENT | WS_EX_TOPMOST;
+	// use layered if we don't need to select the snapshot area via cursor
+	if (window != 0 || r.x != -32768)
+	{
+		t_ex_options |= WS_EX_LAYERED;
+	}
+
+	HWND hwndsnap = CreateWindowExA(t_ex_options,
 	                               MC_SNAPSHOT_WIN_CLASS_NAME,"", WS_POPUP, t_device_viewport . x, t_device_viewport . y,
 	                               t_device_viewport . width, t_device_viewport . height, invisiblehwnd,
 	                               NULL, MChInst, NULL);
