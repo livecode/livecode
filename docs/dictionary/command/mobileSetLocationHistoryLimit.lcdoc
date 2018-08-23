@@ -66,10 +66,10 @@ the last sample in the history). e.g.
 
 
 References: mobileStopTrackingSensor (command),
-mobileStartTrackingSensor (command), function (control structure),
+mobileStartTrackingSensor (command),
 mobileGetLocationHistory (function),
 mobileGetLocationHistoryLimit (function),
 mobileSensorAvailable (function), mobileSensorReading (function),
-mobileLocationAuthorizationStatus (function), array (glossary), 
+mobileLocationAuthorizationStatus (function),
 locationChanged (message), trackingError (message)
 
