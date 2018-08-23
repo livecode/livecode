@@ -33,6 +33,7 @@ use com.livecode.library.androidutils
 metadata version is "0.0.0"
 metadata author is "LiveCode"
 metadata title is "Android Background Audio"
+metadata os is "android"
 
 ----
 

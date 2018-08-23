@@ -23,7 +23,7 @@ the "any later version" clause.
 ### Module name
 
 The module name uses reverse DNS notation.  For example, a module created by
-the Example Organisation would use module names beginning with `org.example`.
+the Example Organization would use module names beginning with `org.example`.
 
 Replace any hyphen (`-`) characters in a domain name with underscore (`_`)
 characters.  For example, a module derived from the `fizz-buzz.example.org`

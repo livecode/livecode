@@ -18,8 +18,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /**
 A library for displaying toasts on mobile
 
-Platforms: android
-
 Description:
 A toast is a non-modal temporary notification displayed to the user. 
 */
@@ -31,6 +29,7 @@ use com.livecode.java
 metadata version is "1.0.0"
 metadata author is "LiveCode"
 metadata title is "Toast Notification Library"
+metadata os is "android"
 
 --==============================================================================
 -- Foreign handlers
@@ -77,8 +76,6 @@ end handler
 /**
 Display a toast notification
 
-Platforms: android
-
 Example:
 mobileToast "Hello, I am a toast!", "short"
 
@@ -118,8 +115,6 @@ end handler
 
 /**
 Cancel the current toast
-
-Platforms: android
 
 Description:
 Use <mobileToastCancel> to cancel the currently displayed toast.

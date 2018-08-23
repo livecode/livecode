@@ -188,6 +188,8 @@ At the moment, the following keys are understood:
  - description: a simple description of the module's purpose
  - version: a string in the form X.Y.Z (with X, Y and Z integers) describing the modules version
  - author: the name of the author of the module
+ - os: the operating systems where the module can be used
+ - platforms: the platforms where the module can be used
 
 > **Note:** The current metadata mechanism is unlikely to remain part of
 > the language. It is intended that it will be replaced by a package
