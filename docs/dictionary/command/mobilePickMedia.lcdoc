@@ -76,15 +76,17 @@ to select multiple items on iOS, the user has to select the Done button,
 once all of the selections have been made.
 
 The remaining arguments specify the type of media items the user should
-> be allowed to select from the iPod library. On Android, it is not
-> necessary to specify any arguments. The application that is launched
-> is in control of the audio media types that are to be selected.
+be allowed to select from the iPod library. On Android, it is not
+necessary to specify any arguments. The application that is launched
+is in control of the audio media types that are to be selected.
 >*Note:* <mobilePickMedia> does not return anything for m4p files or
 > iCloud files that are not physically on the device, even if they are
 > displayed in the picker itself.
+
 >*Note:* On iOS, <mobilePickMedia> returns references to the iTunes data
 > store on the iOS device. These media references can only be played
 > with the <mobilePlaySoundOnChannel> command.
+
 >*Note:* <mobilePickMedia> is not available on the iOS simulator.
 
 References: mobilePlaySoundOnChannel (command), mobilePick (command),

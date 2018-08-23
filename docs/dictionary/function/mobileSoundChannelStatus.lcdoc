@@ -22,7 +22,7 @@ Example:
 put mobileSoundChannelStatus() into tChannelStatus
 
 Returns (enum):
-The <mobileSoundChannelStatus> function returns one of:
+The <mobileSoundChannelStatus> function returns a string value.
 
 -   stopped: there is no sound currently playing, nor any sound
     scheduled to be playing
