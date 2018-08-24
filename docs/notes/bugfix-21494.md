@@ -1,1 +1,1 @@
-# Correct missing text issue in the ROund function dictionary entry.
+# Correct missing text issue in the Round function dictionary entry.
