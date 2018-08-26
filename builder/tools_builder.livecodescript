@@ -15,7 +15,7 @@ command toolsBuilderRun pPlatform, pEdition, pVersion
    -- If on windows or linux, we can't do anything macosxy due to lack of lipo/strip :o(
    local tEngineFolders
 
-   get "windows linux-x86 linux-x86_64 linux-armv6hf macosx ios android emscripten"
+   get "windows linux-x86 linux-x86_64 linux-armv6hf macosx ios android-armeabi-v7a android-arm64-v8a android-x86 android-x86_64 emscripten"
       
    repeat for each word tPlatform in it
       builderFetchEngine pVersion, tPlatform
@@ -197,7 +197,10 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSource tPackager, "linux-armv6-hf", pEngineFolders["linux-armv6hf"]
    packageCompilerConfigureSource tPackager, "windows", pEngineFolders["windows"]
    packageCompilerConfigureSource tPackager, "ios", pEngineFolders["ios"]
-   packageCompilerConfigureSource tPackager, "android", pEngineFolders["android"]
+   packageCompilerConfigureSource tPackager, "android-armeabi-v7a", pEngineFolders["android-armeabi-v7a"]
+   packageCompilerConfigureSource tPackager, "android-arm64-v8a", pEngineFolders["android-arm64-v8a"]
+   packageCompilerConfigureSource tPackager, "android-x86", pEngineFolders["android-x86"]
+   packageCompilerConfigureSource tPackager, "android-x86_64", pEngineFolders["android-x86_64"]
    packageCompilerConfigureSOurce tPackager, "emscripten", pEngineFolders["emscripten"]
    packageCompilerConfigureSource tPackager, "prebuilt", builderRepoFolder() & slash & "prebuilt"
    packageCompilerConfigureSource tPackager, "repo", builderRepoFolder()

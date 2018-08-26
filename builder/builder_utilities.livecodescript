@@ -165,8 +165,14 @@ command builderFetchEngine pVersion, pPlatform
             return sEngineDir & slash & "mac-bin"
          case "ios"
             return sEngineDir & slash & "ios-bin"
-         case "android"
-            return sEngineDir & slash & "android-armv6-bin"
+         case "android-armeabi-v7a"
+            return sEngineDir & slash & "android-armv7-bin"
+         case "android-arm64-v8a"
+            return sEngineDir & slash & "android-arm64-bin"
+         case "android-x86"
+            return sEngineDir & slash & "android-x86-bin"
+         case "android-x86_64"
+            return sEngineDir & slash & "android-x86_64-bin"
          case "emscripten"
             return sEngineDir & slash & "emscripten-bin"
          default
@@ -191,7 +197,10 @@ command builderFetchEngine pVersion, pPlatform
       case "ios"
          get "ios"
          break
-      case "android"
+      case "android-armeabi-v7a"
+      case "android-arm64-v8a"
+      case "android-x86"
+      case "android-x86_64"
          get "android/release"
          break
    end switch
