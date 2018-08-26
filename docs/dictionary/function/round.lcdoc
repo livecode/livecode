@@ -47,12 +47,12 @@ the <number> up if positive, down if <negative>. (To round off numbers
 without introducing any statistical upward bias, use the <statRound>
 <function> instead.)
 
-A positive <precision> indicates a place to the right of the <decimal
-point>, and a <negative> <precision> indicates a place to the left. For
-example, 1 rounds off to the nearest tenth, 2 rounds off to the nearest
-hundredth, -1 rounds off by ten, and so on. If you don't specify a
-<precision>, zero is used, meaning that the <number> is rounded off to a
-whole number.
+A positive <precision> indicates a place to the right of the 
+<decimal point>, and a <negative> <precision> indicates a place to the 
+left. For example, 1 rounds off to the nearest tenth, 2 rounds off to 
+the nearest hundredth, -1 rounds off by ten, and so on. If you don't 
+specify a <precision>, zero is used, meaning that the <number> is 
+rounded off to a whole number.
 
 >*Note:* The <statRound> <function> is equivalent to
 > <HyperCard|HyperTalk's> "round" <function>.
