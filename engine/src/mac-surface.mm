@@ -317,7 +317,6 @@ void MCMacPlatformSurface::Unlock(void)
         // IM-2014-10-03: [[ Bug 13432 ]] Render with copy blend mode to replace destination alpha with the source alpha.
         MCMacRenderRasterToCG(m_cg_context, t_dst_rect, m_raster, MCGRectangleMake(0, 0, m_raster.width, m_raster.height), 1.0, kMCGBlendModeCopy);
         
-        free(m_raster . pixels);
         m_raster . pixels = nil;
     }
 
