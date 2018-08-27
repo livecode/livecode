@@ -274,7 +274,7 @@ class MCContainer
 public:
     MCContainer() = default;
     
-    MCContainer(MCVariable *var) : m_variable(var) {}
+    MCContainer(MCVariable *var) : m_path_length(0), m_variable(var) {}
 
     ~MCContainer(void);
 
@@ -283,12 +283,9 @@ public:
     bool remove(MCExecContext& ctxt);
     
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
-    bool eval_on_path(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCValueRef& r_value);
+    bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
-    bool set_on_path(MCExecContext& ctxt, MCSpan<MCNameRef> path, MCValueRef p_value);
-    
-    bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     
 	bool replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range);
@@ -302,19 +299,22 @@ public:
 
     MCSpan<MCNameRef> getpath();
 
-	static bool createwithvariable(MCVariable *var, MCContainer& r_container);
-	static bool createwithpath(MCVariable *var, MCNameRef *path, uindex_t length, MCContainer& r_container);
-    static bool copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer& r_container);
-    
     MCVariable *getvar()
     {
         return m_variable;
     }
     
 private:
+    uindex_t m_path_length = 0;
+    union
+    {
+        MCNameRef m_short_path[4];
+        MCNameRef *m_long_path;
+    };
 	MCVariable *m_variable = nullptr;
-    MCAutoNameRefArray m_path;
-	bool m_case_sensitive = false;
+    
+    friend class MCVarref;
+    friend class MCContainerBuilder;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
