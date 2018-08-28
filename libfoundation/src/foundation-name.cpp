@@ -45,6 +45,70 @@ static inline void __MCNameSetHash(__MCName* p_name, hash_t p_hash)
     p_name->flags = (p_name->flags & kMCValueFlagsTypeCodeMask) | (p_hash & kMCValueFlagsNameHashMask);
 }
 
+static void __MCNameIndexToNativeChars(index_t p_value, char_t r_chars[16], uindex_t& r_char_count)
+{
+    static const char kDigits[201] =
+        "0001020304050607080910111213141516171819"
+        "2021222324252627282930313233343536373839"
+        "4041424344454647484950515253545556575859"
+        "6061626364656667686970717273747576777879"
+        "8081828384858687888990919293949596979899";
+    
+    r_char_count = 0;
+    
+    uindex_t t_value;
+    if (p_value < 0)
+    {
+        r_chars[r_char_count++] = '-';
+        t_value = -p_value;
+    }
+    else
+    {
+        t_value = p_value;
+    }
+    
+    uint32_t t_length = 1;
+    for (;;) {
+        if (t_value < 10) break;
+        if (t_value < 100) { t_length += 1; break; }
+        if (t_value < 1000) { t_length += 2; break; }
+        if (t_value < 10000) { t_length += 3; break; }
+        t_value /= 10000U;
+        t_length += 4;
+    }
+    
+    r_char_count += t_length;
+    
+    uindex_t t_next =
+        r_char_count - 1;
+    
+    while(t_value >= 100)
+    {
+        index_t t_offset =
+                    (t_value % 100) * 2;
+        
+        t_value /= 100;
+        
+        r_chars[t_next] = kDigits[t_offset + 1];
+        r_chars[t_next - 1] = kDigits[t_offset];
+        
+        t_next -= 2;
+    }
+    
+    if (t_value < 10)
+    {
+        r_chars[t_next] = '0' + t_value;
+    }
+    else
+    {
+        index_t t_offset =
+        t_value * 2;
+        
+        r_chars[t_next] = kDigits[t_offset + 1];
+        r_chars[t_next - 1] = kDigits[t_offset];
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF
@@ -202,6 +266,15 @@ bool MCNameCreateWithChars(const unichar_t *p_chars, uindex_t p_count, MCNameRef
 }
 
 MC_DLLEXPORT_DEF
+bool MCNameCreateWithIndex(index_t p_index, MCNameRef& r_name)
+{
+    char_t t_chars[16];
+    uindex_t t_char_count;
+    __MCNameIndexToNativeChars(p_index, t_chars, t_char_count);
+    return MCNameCreateWithNativeChars(t_chars, t_char_count, r_name);
+}
+
+MC_DLLEXPORT_DEF
 bool MCNameCreateAndRelease(MCStringRef p_string, MCNameRef& r_name)
 {
 	if (MCNameCreate(p_string, r_name))
@@ -248,6 +321,47 @@ MCNameRef MCNameLookupCaseless(MCStringRef p_string)
 	}
 
 	return t_key_name;
+}
+
+MC_DLLEXPORT_DEF
+MCNameRef MCNameLookupIndex(index_t p_index)
+{
+    char_t t_chars[16];
+    uindex_t t_char_count;
+    __MCNameIndexToNativeChars(p_index, t_chars, t_char_count);
+    
+    // Compute the hash of the characters, up to case.
+    hash_t t_hash;
+    t_hash = MCHashNativeChars(t_chars, t_char_count);
+    
+    // Reduce the hash to the size we store
+    t_hash &= kMCValueFlagsNameHashMask;
+    
+    // Calculate the index of the chain in the name table where this name might
+    // be found. The capacity is always a power-of-two, so its just a mask op.
+    uindex_t t_index;
+    t_index = t_hash & (s_name_table_capacity - 1);
+    
+    // Search for the first representative of the would-be name's equivalence class.
+    __MCName *t_key_name;
+    t_key_name = s_name_table[t_index];
+    while(t_key_name != nil)
+    {
+        // If the string matches, then we are done - notice we compare the full
+        // hash first.
+        if (t_hash == __MCNameGetHash(t_key_name) &&
+            MCStringIsEqualToNativeChars(t_key_name -> string, t_chars, t_char_count, kMCStringOptionCompareExact))
+            break;
+        
+        // Otherwise skip all other members of the same equivalence class.
+        while(t_key_name -> next != nil && t_key_name -> key == t_key_name -> next -> key)
+            t_key_name = t_key_name -> next;
+        
+        // Next name must be the next one
+        t_key_name = t_key_name -> next;
+    }
+    
+    return t_key_name;
 }
 
 MC_DLLEXPORT_DEF
