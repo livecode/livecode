@@ -80,9 +80,13 @@ MCCamerasFeaturesType MCSystemGetAllCameraFeatures()
     return t_features;
 }
 
+extern bool MCAndroidCheckRuntimePermission(MCStringRef p_permission);
 bool MCAndroidPickPhoto(const char *p_source, int32_t p_max_width, int32_t p_max_height)
 {
-	MCAndroidEngineCall("showPhotoPicker", "vsii", nil, p_source, p_max_width, p_max_height);
+    if (!MCAndroidCheckRuntimePermission(MCSTR("android.permission.CAMERA")))
+        return false;
+    
+    MCAndroidEngineCall("showPhotoPicker", "vsii", nil, p_source, p_max_width, p_max_height);
     // SN-2014-09-03: [[ Bug 13329 ]] MCAndroidPickPhoto's return value is ignored in 6.x,
     // but not in 7.0 - whence the failure in mobilePickPhoto
     return true;

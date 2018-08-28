@@ -61,11 +61,13 @@ Before running each test command, the test framework inserts a test library stac
 * `TestAssert pDescription, pExpectTrue`: Make a test assertion.  The test is recorded as a failure if *pExpectTrue* is false.  *pDescription* should be a short string that describes the test (e.g. "clipboard is clear").
 * `TestSkip pDescription, pReasonSkipped`: Record a test as having been skipped.  *pReasonSkipped* should be a short explanation of why the test was skipped (e.g. "not supported on Windows").
 * `TestSkipIf pRequirement, pOptions`: Skip a test if the requirements 
-are met. `pOptions` varies depending on the `pRequirement` enum. The
-following requirements are implemented:
-   - `ide` - the IDE repo is available. No options.
+are met. `pOptions` varies depending on the `pRequirement` enum (if no 
+options are explicitly specified then no options are available for that
+particular `pRequirement`. The following requirements are implemented:
+   - `ide` - the IDE repo is available
    - `lcb` - LCB compilation supported
-   - `docs` - the docs are available. No options.
+   - `docs` - the docs are available
+   - `standalone` - the test is running in the standalone test runner
    - `securityPermissions` - Option `set` to skip if a test should not
    set the `securityPermissions`
    - `platform` - options are comma delimited platform strings
@@ -73,6 +75,19 @@ following requirements are implemented:
    - `stack` - options are comma delimited stack names to test if they
    are available
    - `environment` - options are comma delimited environment strings
+   - `clipboard` - access to the clipboard is available
+   - `wait` - the `wait` command is available and works as expected
+   - `security` - the security module is available
+   - `write` - write access to the filesystem is available
+   - `ui` - the test is running in a graphical environment (as opposed
+   to the command line)
+   - `desktop` - the test is running on a desktop computer
+   - `mobile` - the test is running on a mobile device
+   - `external` - an external module can be loaded/used. Options are a
+   comma delimited list of external module names
+   - `database` - an database module can be loaded/used. Options are a
+   comma delimited list of external module names
+   - `jvm` - the Java Virtual Machine is available
 * `TestSkipIfNot pRequirement, pOptions`: Skip a test if the 
 requirements are not met. Requirements and options are the same as for 
 `TestSkipIf`.

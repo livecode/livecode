@@ -202,7 +202,10 @@ private command storeDeployedStack pZip, pDeployPath, pBuildFolder, pMainStack, 
    put tTempStackPath into pDeployParams["stackfile"]
    put tTempDeployPath into pDeployParams["output"]
    put empty into pDeployParams["engine"]
-   
+
+   // Externals are not yet supported in emscripten builds
+   put empty into pDeployParams["externals"]
+
    ---------- Perform standalone deployment
    logDebug "deploy", "Deploying standalone"
    
@@ -253,13 +256,9 @@ private function getStartupScript pGeneratedStartupScript
       throw tTemplateFile & ":" && the result
    end if
    close file tTemplateFile
-   
-   -- Trim to the actual script
-   delete line 1 of tScript
-      
+
    -- Make substitutions in the startup script
    replace "@ENGINE_VERSION@" with the version in tScript
-   replace "@MODULE_VERSION@" with extensionLCCompileVersion() in tScript
    replace "@STARTUP_SCRIPT@" with pGeneratedStartupScript in tScript
    return tScript
 end getStartupScript
