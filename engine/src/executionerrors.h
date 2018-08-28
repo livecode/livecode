@@ -2774,6 +2774,9 @@ enum Exec_errors
     // {EE-0908} fontLanguage: bad font name
     EE_FONTLANGUAGE_BADFONTNAME,
     
+    // {EE-0909} android permission: bad permission name
+    EE_BAD_PERMISSION_NAME,
+    
 };
 
 extern const char *MCexecutionerrors;

@@ -599,14 +599,10 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 	MCRectangle32 t_device_rect;
 	t_device_rect = MCRectangle32GetTransformedBounds(t_dirty_rect, t_transform);
 	
-	// Notify any tilecache of the changes.
-	if (t_tilecache != nil)
+    // Notify any tilecache of the changes
+    // If the layer id is zero, there is nothing to do.
+	if (t_tilecache != nil && t_control -> m_layer_id != 0)
 	{
-		// We must be in tile-cache mode with a top-level control, but if the layer
-		// id is zero, there is nothing to do.
-		if (t_control -> m_layer_id == 0)
-			return;
-
 		// How we handle the layer depends on whether it is a sprite or not.
 		if (!t_control -> layer_issprite())
 		{

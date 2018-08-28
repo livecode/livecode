@@ -1,0 +1,1 @@
+# Fix visual effects not working when acceleratedRendering is true on Android
