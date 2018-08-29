@@ -18,6 +18,11 @@ __safe foreign handler NSNumberGetFloatValue(in pObj as ObjcId) returns CFloat b
 __safe foreign handler NSNumberCreateWithDouble(in pInt as CDouble) returns ObjcAutoreleasedId binds to "objc:NSNumber.+numberWithDouble:"
 __safe foreign handler NSNumberGetDoubleValue(in pObj as ObjcId) returns CDouble binds to "objc:NSNumber.doubleValue"
 
+__safe foreign handler NSImageAlloc() \
+	returns ObjcRetainedId binds to "objc:Appkit.framework>NSImage.+alloc"
+__safe foreign handler NSImageInitWithContentsOfFile(in pObj as ObjcRetainedId, in pFilename as ObjcId) \
+	returns optional ObjcRetainedId binds to "objc:Appkit.framework>NSImage.-initWithContentsOfFile:"
+
 ---------
 
 -- NEED TO CHECK class and instance methods, existant and non-existant
@@ -118,6 +123,52 @@ public handler TestObjcInterop_ObjcUnsafeAllocInit()
 	put tInitObjcId into tObjcObject
 
 	test "unsafe alloc init has correct retain count" when NSObjectGetRetainCount(tObjcObject) is 1
+end handler
+
+public handler TestObjcInterop_ObjcInlineAllocInitFailure()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc inline alloc init is nothing when init fails" because "not implemented on" && the operating system
+		return
+	end if
+
+	variable tObjcObject as optional ObjcObject
+	put NSImageInitWithContentsOfFile(NSImageAlloc(), StringToNSString("non-existant-image.png")) into tObjcObject
+	test "objc inline alloc init is nothing when init fails" when tObjcObject is nothing
+end handler
+
+public handler TestObjcInterop_ObjcIndirectAllocInitFailure()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc indirect alloc init is nothing when init fails" because "not implemented on" && the operating system
+		return
+	end if
+
+	variable tAllocObjcObject as optional ObjcObject
+	put NSImageAlloc() into tAllocObjcObject
+
+	variable tInitObjcObject as optional ObjcObject
+	put NSImageInitWithContentsOfFile(tAllocObjcObject, StringToNSString("non-existant-image.png")) into tInitObjcObject
+	
+	put nothing into tAllocObjcObject
+
+	test "objc indirect alloc init is nothing when init fails" when tInitObjcObject is nothing
+end handler
+
+public handler TestObjcInterop_ObjcUnsafeAllocInitFailure()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc unsafe alloc init is nothing when init fails" because "not implemented on" && the operating system
+		return
+	end if
+
+	variable tAllocObjcId as ObjcRetainedId
+	put NSImageAlloc() into tAllocObjcId
+
+	variable tInitObjcId as optional ObjcRetainedId
+	put NSImageInitWithContentsOfFile(tAllocObjcId, StringToNSString("non-existant-image.png")) into tInitObjcId
+	
+	variable tObjcObject as optional ObjcObject
+	put tInitObjcId into tObjcObject
+
+	test "objc unsafe alloc init is nothing when init fails" when tObjcObject is nothing
 end handler
 
 ---------
