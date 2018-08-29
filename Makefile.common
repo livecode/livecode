@@ -43,6 +43,10 @@ guess_linux_arch_script := \
 	case `uname -p` in \
 	    x86_64) echo x86_64 ;; \
 	    x86|i*86) echo x86 ;; \
+	    unknown) case `uname -m` in \
+	        x86_64) echo x86_64 ;; \
+                x86|i*86) echo x86 ;; \
+	    esac ;; \
 	esac
 guess_linux_arch := $(shell $(guess_linux_arch_script))
 

@@ -32,8 +32,8 @@ density on Android.
 
 The <mobilePixelDensity> function returns the scale of the device screen
 (relative to a non-Retinal display on iOS), this is 2 on a retina
-display and 1 otherwise. On Android this function return the Display
-Metrics. 
+display and 1 otherwise. On Android this function returns the display
+metrics. 
 
 References: iphoneUseDeviceResolution (command),
 iphoneDeviceScale (function), iphoneDeviceResolution (function)

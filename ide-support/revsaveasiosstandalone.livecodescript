@@ -801,7 +801,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       --try
       -- Perform the codesigning of the main bundle
       local tResult
-      put shell("/usr/bin/codesign --verbose -f -s" && quote & tCertificate & quote && \
+      __CodesignFrameworks pAppBundle, tCertificate, tEntitlementsFile
+      put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & tCertificate & quote && \
             "--entitlements" && quote & tEntitlementsFile & quote && \
             quote & pAppBundle & quote) into tResult
       -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
@@ -816,6 +817,23 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       
    end if
 end revSaveAsMobileStandaloneMain
+
+private command __CodesignFrameworks pPath, pCertificate, pEntitlements
+   local tFrameworks
+   put folders(pPath) into tFrameworks
+   filter tFrameworks with "*.framework"
+   repeat for each line tFramework in tFrameworks
+      __CodesignFrameworks pPath & "/" & tFramework & "/Frameworks", pCertificate, pEntitlements
+      
+      local tResult
+      put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & pCertificate & quote && \
+            "--entitlements" && quote & pEntitlements & quote && \
+            quote & pPath & "/" & tFramework & quote) into tResult
+      if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
+         throw "codesigning failed with" && tResult
+      end if
+   end repeat
+end __CodesignFrameworks
 
 command revSaveAsMobileDeployer pDeployAppBundle, pAppBundle, pAppName, pAppId, pAppExecutables
    create folder pDeployAppBundle
@@ -1689,9 +1707,11 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    if 2 is among the items of tDeviceFamily then      
       if tIPadOrientations contains "Portrait" then
          put "Default-Portrait|Default-Portrait|{768, 1024}|Portrait" & return after tSplashScreens
+         put "Default-iPadProPortrait|Default-iPadProPortrait|{1024, 1366}|Portrait" & return after tSplashScreens
       end if
       if tIPadOrientations contains "Landscape" then
          put "Default-Landscape|Default-Landscape|{768, 1024}|Landscape" & return after tSplashScreens
+         put "Default-iPadProLandscape|Default-iPadProLandscape|{1024, 1366}|Landscape" & return after tSplashScreens
       end if
    end if
    

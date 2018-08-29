@@ -19,8 +19,7 @@ Example:
 put mobileOrientation() into theInterfaceOrientation
 
 Returns (enum):
-The <mobileDeviceOrientation> function returns one of
-
+The <mobileDeviceOrientation> function returns a string value.
 -   portrait: the device is being held upward with the home button at
     the bottom
 -   portrait upside down: the device is being held upward with the home

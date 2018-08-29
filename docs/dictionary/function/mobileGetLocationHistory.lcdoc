@@ -19,50 +19,30 @@ local tHistory
 put mobileGetLocationHistory() into tHistory
 
 Returns (array):
-A numerically keyed <array> of all accumulated samples
+A numerically keyed, nested <array> of all accumulated samples
 since the last time it was called with lower indices being older 
-samples. Calling the function clears the internal history. The default 
-history limit is 1 - meaning that only one sample is ever kept at a 
+samples. Each index of the <array> has the following keys:
+ - "horizontal accuracy": the maximum error in meters of the
+position indicated by longitude and latitude
+ - "latitude": the latitude of the current location, measured in degrees
+relative to the equator. Positive values indicate positions in the 
+Northern Hemisphere, negative values in the Southern.
+ - "longitude": the longitude of the current location, measured in
+degrees relative to the zero meridian. Positive values extend east
+of the meridian, negative values extend west.
+ - "altitude": the distance in meters of the height of the device 
+relative to sea level. Positive values extend upward of sea level,
+negative values downward.
+ - "timestamp": the time at which the measurement was taken, in
+seconds since 1970.
+
+Calling the function clears the internal history. The default 
+history limit is 1, meaning that only one sample is ever kept at a 
 time. If an application wants historical access to all samples, then it 
 should set the location history limit using the 
-<mobileSetLocationistoryLimit> <command> to the maximum number of 
+<mobileSetLocationHistoryLimit> <command> to the maximum number of 
 samples it ever wants to record, or 0 to record the entire history 
 (between calls to <mobileGetLocationHistory>).
-
-{
-
--    (integer) : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--   : 
--    (real) : 
--   : 
--   : 
--   : 
-
-}
 
 
 Description:
@@ -82,14 +62,11 @@ sample provided with the <locationChanged> event (which will always be
 the last sample in the history). e.g.
 
     on locationChanged
-
-    local tHistory
-    put mobileGetLocationHistory() into tHistory
-    repeat for each element tSample in tHistory
-
-    processLocationChanged tSample
-
-    end repeat
+        local tHistory
+        put mobileGetLocationHistory() into tHistory
+        repeat for each element tSample in tHistory
+            processLocationChanged tSample
+        end repeat
     end locationChanged
 
 
@@ -97,6 +74,6 @@ References: mobileSetLocationHistoryLimit (command),
 mobileStopTrackingSensor (command), mobileStartTrackingSensor (command),
 mobileGetLocationHistoryLimit (function),
 mobileSensorAvailable (function), mobileSensorReading (function),
-mobileLocationAuthorizationStatus (function), locationChanged (message),
-trackingError (message)
+mobileLocationAuthorizationStatus (function),
+locationChanged (message), trackingError (message)
 

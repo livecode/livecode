@@ -1,0 +1,1 @@
+# Ensure iOS apps with embedded frameworks are correctly signed

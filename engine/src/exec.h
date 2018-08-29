@@ -4043,6 +4043,9 @@ void MCMiscExecLibUrlDownloadToFile(MCExecContext& ctxt, MCStringRef p_url, MCSt
 void MCMiscExecLibUrlSetSSLVerification(MCExecContext& ctxt, bool p_enabled);
 
 void MCMiscGetBuildInfo(MCExecContext& ctxt, MCStringRef p_key, MCStringRef& r_value);
+void MCMiscExecRequestPermission(MCExecContext& ctxt, MCStringRef p_permission, bool& r_granted);
+void MCMiscExecPermissionExists(MCExecContext& ctxt, MCStringRef p_permission, bool& r_exists);
+void MCMiscExecHasPermission(MCExecContext& ctxt, MCStringRef p_permission, bool& r_permission_granted);
 
 void MCMiscExecEnableRemoteControl(MCExecContext& ctxt);
 void MCMiscExecDisableRemoteControl(MCExecContext& ctxt);

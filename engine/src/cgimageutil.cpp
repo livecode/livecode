@@ -114,7 +114,7 @@ bool MCGRasterCreateCGDataProvider(const MCGRaster &p_raster, const MCGIntegerRe
 	t_width = p_src_rect.size.width;
 	t_height = p_src_rect.size.height;
 	
-	const uint8_t *t_src_ptr = (uint8_t*)MCGRasterGetPixelPtr(p_raster, t_x, t_y);
+	uint8_t *t_src_ptr = (uint8_t*)MCGRasterGetPixelPtr(p_raster, t_x, t_y);
 	
 	uint32_t t_dst_stride;
 	
@@ -125,8 +125,10 @@ bool MCGRasterCreateCGDataProvider(const MCGRaster &p_raster, const MCGIntegerRe
 	if (!p_copy)
 	{
 		t_dst_stride = p_raster.stride;
-		t_data_provider = CGDataProviderCreateWithData(nil, t_src_ptr, t_height * p_raster.stride, nil);
+		t_data_provider = CGDataProviderCreateWithData(nil, t_src_ptr, t_height * p_raster.stride, __CGDataProviderDeallocate);
 		t_success = t_data_provider != nil;
+        if (!t_success)
+            MCMemoryDeallocate(t_src_ptr);
 	}
 	else
 	{
